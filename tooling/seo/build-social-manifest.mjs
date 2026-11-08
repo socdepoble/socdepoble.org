@@ -83,7 +83,20 @@ export const LLISTES = Object.freeze([
    totes les claus: notes_shared, amb el logotip SVG, no és cap presentació, i
    /page/notes és la fitxa pública, no l'eina privada /notes. */
 export const PAGINES_INFORMATIVES = Object.freeze(['publicar_mur', 'publicar_mercat', 'publicar_calendari', 'publicar_mapa',
-  'vehicle_compartit', 'animalets', 'treball', 'habitatge', 'notes', 'wikidepoble']);
+  'vehicle_compartit', 'animalets', 'treball', 'habitatge', 'notes', 'wikidepoble',
+  /* P0-60 / IDEA-191 (ordre del Mestre, 08-11-2026 17:09) · Les pàgines públiques de patrimoni
+     (PageDetailSection, sense ruta pròpia a navigation.js), amb la seua il·lustració Ibáñez. */
+  'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals']);
+
+/* P0-60 / IDEA-191 · Les adreces /page/<clau> que navigation.js (resolvePageSlugPath) porta a
+   una publicació del Mur: l'àlies servix el mateix <head> que la publicació. Llista tancada. */
+export const PAGINES_A_PUBLICACIONS = Object.freeze(['anatomia-rural']);
+
+/* P0-60 / IDEA-191 · Les pàgines que pageContent.js afig a PAGE_COPY fora del literal
+   (Object.assign): [font, exportació]. */
+export const FONTS_DE_PAGINES = Object.freeze([
+  Object.freeze(['src/sections/text/pageContent.patrimoniR9.js', 'PAGINES_PATRIMONI_R9'])
+]);
 
 /* Ordre del Mestre (30-10-2026, prompt 2208, T1.1 i T2.1) · Les fonts JS de les
    rutes de la Consola: la regla (seoConsola.js) i les dades que llig. Totes
@@ -92,13 +105,21 @@ export const FONTS_CONSOLA = Object.freeze(['src/sections/consola/seoConsola.js'
   'src/sections/consola/govern/governConsola.js', 'src/sections/consola/imatgesConsola.js']);
 
 /* Les llavors del repositori amb detall públic (decisió per defecte del
-   261028, D3): [secció, font, exportació]. Una font absent no hi entra. */
+   261028, D3): [secció, font, exportació]. Una font absent no hi entra.
+   P0-60 / IDEA-191 (ordre del Mestre, 08-11-2026 17:09) · També les publicacions de llavor del
+   Mur, les mateixes que servix el client (data/sectionContent.js: l'article del Pou de Neu i
+   MOCK_FEED): sense elles, /mur/<id> compartit a WhatsApp duia la targeta genèrica. L'article és
+   un sol objecte, no una llista. */
 export const LLAVORS = Object.freeze([
   ['mercat', 'src/sections/mercat/marketSeed.js', 'MOCK_MARKET_ITEMS'],
   ['events', 'src/sections/mur/eventsSeed.js', 'CALENDAR_EVENTS'],
   ['events', 'src/sections/mur/eventsSeed.js', 'FEATURED_EVENTS'],
-  ['pobles', 'src/sections/pobles/townsSeed.js', 'MOCK_TOWNS']
+  ['pobles', 'src/sections/pobles/townsSeed.js', 'MOCK_TOWNS'],
+  ['mur', 'src/sections/mur/articles/novesTecnologiesCulturaRuralContent.js', 'NOVES_TECNOLOGIES_CULTURA_RURAL_POST'],
+  ['mur', 'src/sections/mur/feedSeed.js', 'MOCK_FEED']
 ].map(entrada => Object.freeze(entrada)));
+/* Les publicacions del Mur són articles (og:type), com les remotes del snapshot. */
+const TIPUS_DE_LLAVOR = Object.freeze({ mur: 'article' });
 
 /* El text pla del client (metadadesSocials.js · textPla) amb les guardes del
    build: una entrada massa gran o amb un possible secret no es publica. */
@@ -203,6 +224,17 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     const file=confinedFile(policyRoot,path.join(policyRoot,rel));if(!file)throw new Error(`Mòdul de política absent: ${rel}`);record(file,fs.readFileSync(file),policyRoot);
   }
   const PAGE_COPY=staticModule('src/sections/text/pageContent.js').get('PAGE_COPY');
+  /* P0-60 / IDEA-191 · pageContent.js hi afig al final, amb Object.assign(PAGE_COPY, …), les pàgines
+     de patrimoni d'Onada R9 (banc de llavors, rutes de poble i arbres monumentals), fetes amb una
+     funció: el literal no les porta. Es carreguen com les llavors (dades JS del repositori, sense
+     imports) i s'hi afigen amb la mateixa regla que el client. */
+  for(const [rel,name] of FONTS_DE_PAGINES) {
+    if(!hiEs(rel))continue;
+    const file=sourceFile(rel);
+    const pagines=(await import(`${pathToFileURL(file).href}?sha=${sha(fs.readFileSync(file))}`))[name];
+    if(!pagines||typeof pagines!=='object'||Array.isArray(pagines))throw new Error(`Font de pàgines sense objecte: ${rel}#${name}`);
+    Object.assign(PAGE_COPY,pagines);
+  }
   const SOCIAL_IMAGES=hiEs('src/config/socialImages.js')
     ? staticModule('src/config/socialImages.js').get('SOCIAL_IMAGES') : {};
   const system=staticModule('src/config/systemPages.js');
@@ -412,14 +444,18 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     if(!hiEs(rel))continue;
     const file=sourceFile(rel);
     // Les llavors són dades JS del repositori (com les executa el build de Vite).
-    const items=(await import(`${pathToFileURL(file).href}?sha=${sha(fs.readFileSync(file))}`))[name];
-    if(!Array.isArray(items))throw new Error(`Llavor sense llista: ${rel}#${name}`);
+    const valor=(await import(`${pathToFileURL(file).href}?sha=${sha(fs.readFileSync(file))}`))[name];
+    // P0-60 · Una publicació sola (l'article del Mur) compta com una llista d'un element.
+    const items=Array.isArray(valor)?valor:(valor&&typeof valor==='object'?[valor]:null);
+    if(!items)throw new Error(`Llavor sense llista: ${rel}#${name}`);
     for(const item of items) {
       if(!item||typeof item!=='object'||!publicMetadata(item))continue;
       if(typeof item.id!=='string'||!ID_DETALL.test(item.id))throw new Error(`ID de llavor invàlid a ${rel}.`);
       const route=`/${section}/${item.id}`;
-      const meta=metadadesDeDetall(section,item,imageOptions);blocked(route,meta.imatge);
-      add(route,{title:meta.title,description:meta.description,image:meta.image,own:true});
+      const meta=metadadesDeDetall(section,item,imageOptions);
+      if(!meta)throw new Error(`Llavor sense regla de detall: ${section}.`);
+      blocked(route,meta.imatge);
+      add(route,{title:meta.title,description:meta.description,image:meta.image,type:TIPUS_DE_LLAVOR[section]||'website',own:true});
       const key=normalizedKey(route,origin);deLlavor.set(key.toLowerCase(),key);
     }
   }
@@ -445,6 +481,17 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     add(route,{title:item.title,description:item.description,image:item.image,imageAlt:item.imageAlt,type:'article',own:strictSnapshot});
   }
   if(publicSnapshot.length)sources.set('projection:public-section-submissions',sha(JSON.stringify(publicSnapshot)));
+  /* P0-60 / IDEA-191 · /page/<clau> que navigation.js porta a una publicació del Mur: el mateix head
+     que la publicació (de llavor o remota, que ja ha substituït la llavor del mateix camí). Una clau
+     que navigation.js ja no porta al Mur és un inventari trencat (porta roja); una destinació que no
+     és al manifest (un arbre sense la llavor) no hi entra, com una font absent. La prova de l'arbre de
+     veres (build-social-manifest.test.mjs) fixa que l'àlies hi és. */
+  for(const key of PAGINES_A_PUBLICACIONS) {
+    const desti=resolvePageSlugPath(key);
+    if(!desti||!/^\/mur\//.test(desti))throw new Error(`Àlies de publicació sense ruta del Mur: /page/${key}.`);
+    const clau=Object.keys(routes).find(ruta=>ruta.toLowerCase()===normalizedKey(desti,origin).toLowerCase());
+    if(clau)alias(`/page/${key}`,clau);
+  }
   for(const [file,digest] of sourcePaths)if(sha(fs.readFileSync(file))!==digest)throw new Error('Una font ha canviat durant el build; regenereu el manifest.');
   const manifest={schema:'sdp.social-manifest.v1',origin,routes:Object.fromEntries(Object.entries(routes).sort(([a],[b])=>a.localeCompare(b))),aliases:Object.fromEntries(Object.entries(aliases).sort(([a],[b])=>a.localeCompare(b)))};
   const inputSources=Object.fromEntries([...sources].sort(([a],[b])=>a.localeCompare(b)));

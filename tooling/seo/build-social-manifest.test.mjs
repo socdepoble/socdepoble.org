@@ -271,7 +271,8 @@ test('les presentacions /page/<clau>: l’inventari explícit, ni una clau més'
   const {manifest}=await buildSocialManifest({root,origin,policyRoot,estricte:true});
   assert.deepEqual(manifest.routes['/page/publicar_mur'].image,{url:origin+'/assets/mur.jpg',alt:'Veïns'});
   for(const ruta of ['/page/treball','/page/notes_shared','/page/altra'])assert.equal(manifest.routes[ruta],undefined,ruta);
-  assert.equal(PAGINES_INFORMATIVES.length,10);
+  // P0-60 / IDEA-191 · + l'herbari, el banc de llavors, les rutes de poble i els arbres monumentals.
+  assert.equal(PAGINES_INFORMATIVES.length,14);
 });
 
 /* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · La Consola entra amb el head
@@ -306,12 +307,11 @@ test('la Consola: les rutes de seoConsola.js, a l’evidència; una imatge bloqu
 const PLUGINS_DE_L_ORDRE=Object.freeze(['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv','genealogia']);
 const EXCLOSES_DE_PAGE=Object.freeze({
   notes_shared:'còpia antiga de la fitxa del Bloc de notes (/page/notes), amb el logotip SVG com a imatge: no és cap presentació pròpia',
-  'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers',
-  'anatomia-rural':'visor d’Anatomia Rural (IDEA-109, /page/anatomia-rural): sense portada pròpia fins que hi haja una il·lustració real; no s’inventa cap imatge',
-  herbari:'Herbari de La Torre (IDEA-110, /page/herbari): sense portada pròpia, l’Excel de l’Herbari no porta cap imatge per espècie; no s’inventa cap imatge',
-  'banc-de-llavors':'Banc de llavors (IDEA-112, /page/banc-de-llavors): sense portada pròpia, els tres catàlegs no porten cap imatge pròpia nostra; no s’inventa cap imatge',
-  'rutes-de-poble':'Rutes de poble (IDEA-113, /page/rutes-de-poble): sense portada pròpia, cap imatge de la font no té els drets verificats (Decisió 3, 261007); no s’inventa cap imatge',
-  'arbres-monumentals':'Arbres monumentals (IDEA-115, /page/arbres-monumentals): sense portada pròpia, les fotos de la WP 619 són de tercers (Decisió 3, 261007); no s’inventa cap imatge'
+  'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers'
+  /* P0-60 / IDEA-191 (ordre del Mestre, 08-11-2026 17:09) · L'herbari, el banc de llavors, les rutes de
+     poble i els arbres monumentals ja porten la seua il·lustració Ibáñez (la variant social és a
+     VARIANTS_SOCIALS) i entren a PAGINES_INFORMATIVES; /page/anatomia-rural és l'àlies de l'article
+     del Pou de Neu al Mur. Cap motiu d'exclusió seguix vigent. */
 });
 test('cobertura de l’arbre de veres: les 18 presentacions, /disseny, /wikidepoble i la Consola, amb portada pròpia servible',async()=>{
   const {manifest}=await buildSocialManifest({root:policyRoot,origin,policyRoot,estricte:true});
@@ -320,7 +320,14 @@ test('cobertura de l’arbre de veres: les 18 presentacions, /disseny, /wikidepo
     'src/sections/consola/govern/governConsola.js','src/sections/text/pageContent.js','src/config/navigation.js'].map(importa));
   const inventari=[...PAGINES_INFORMATIVES.map(clau=>`/page/${clau}`),...PLUGINS_DE_L_ORDRE.map(id=>`/plugin/${id}`),'/disseny','/wikidepoble','/consola',
     ...IDS_PAGINES.map(id=>`/consola/${id}`),...IDS_GOVERN.map(id=>`/consola/govern/${id}`)];
-  assert.equal(inventari.length,10+9+3+9+4);
+  assert.equal(inventari.length,14+9+3+9+4);
+  /* P0-60 / IDEA-191 · L'article del Pou de Neu i el Manifest de Poble (llavors del Mur) tenen el seu
+     head, amb la variant JPEG de la il·lustració, i /page/anatomia-rural n'és l'àlies. */
+  const POU='/mur/noves-tecnologies-aplicades-a-la-cultura-rural';
+  inventari.push(POU,'/mur/manifest-de-poble');
+  assert.equal(manifest.aliases['/page/anatomia-rural'],POU);
+  assert.equal(manifest.routes[POU].type,'article');
+  assert.equal(manifest.routes[POU].image.url,`${origin}/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez-social-1200x630.jpg`);
   for(const ruta of inventari) {
     const entrada=manifest.routes[ruta];
     assert.ok(entrada,`${ruta}: absent del manifest`);

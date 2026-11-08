@@ -110,12 +110,21 @@ const DETALLS = Object.freeze({
   pobles: Object.freeze({
     titol: (item) => item.author || nomDeLaGent(item.title || item.name) || 'Gent de Poble',
     descripcio: (item) => item.entradilla || item.content || item.title || item.name
+  }),
+  /* P0-60 / IDEA-191 (ordre del Mestre, 08-11-2026) · Les publicacions de llavor del Mur
+     (l'article del Pou de Neu i MOCK_FEED): el getTitle i el getSubtitle del Mur
+     (buildMurDetailSectionMeta) darrere de l'entradilla de paginaDElement (entradilla o lead),
+     en l'ordre del <head> d'ItemDetailSection. L'alt de la imatge és el títol (heroAlt), com al
+     client: el head servit i el de l'app diuen el mateix. */
+  mur: Object.freeze({
+    titol: (item) => item.title || 'Publicació',
+    descripcio: (item) => item.entradilla || item.lead || item.post_subtitle || item.subtitle || item.description
   })
 });
 export const SECCIONS_DE_DETALL = Object.freeze(Object.keys(DETALLS));
 
 /**
- * Les metadades del detall d'un element de llavor (/mercat/<id>,
+ * Les metadades del detall d’un element de llavor (/mercat/<id>, /mur/<id>,
  * /events/<id>, /pobles/<id>), amb la mateixa forma que metadadesDePagina:
  * la imatge és primeraImatgeSocial(seccio) i el seu alt, el títol (heroAlt).
  * Una secció sense regla ací torna null.

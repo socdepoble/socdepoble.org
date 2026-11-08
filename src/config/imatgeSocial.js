@@ -219,47 +219,53 @@ export const IMATGES_DE_RESERVA = Object.freeze([
  * mateix nom al costat del .png li llevaria la bessona WebP
  * (politicaDeMitjans.js · bessonesDe).
  */
-export const VARIANTS_SOCIALS = Object.freeze({
-  '/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png': '/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812-social-1200x630.jpg',
-  '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png': '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221-social-1200x630.jpg',
-  '/assets/nano_cards/drets_autor_comic.jpg': '/assets/nano_cards/drets_autor_comic-social-1200x630.jpg',
-  '/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png': '/assets/uploads/brain/forensic_psychiatry_ai_1775882113147-social-1200x630.jpg',
-  '/assets/uploads/brain/llibre_anima_cover_1776032370908.png': '/assets/uploads/brain/llibre_anima_cover_1776032370908-social-1200x630.jpg',
-  '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png': '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey-social-1200x630.jpg',
-  '/assets/uploads/brain/mac_mini_m4_1787721966622.jpg': '/assets/uploads/brain/mac_mini_m4_1787721966622-social-1200x630.jpg',
-  '/assets/towns/relleu/1.jpg': '/assets/towns/relleu/1-social-1200x630.jpg',
-  '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp': '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431-social-1200x630.jpg',
-  '/assets/uploads/brain/nano_descarregues_app.webp': '/assets/uploads/brain/nano_descarregues_app-social-1200x630.jpg',
-  '/assets/towns/benifallim/1.jpg': '/assets/towns/benifallim/1-social-1200x630.jpg',
-  '/assets/towns/penaguila/1.jpg': '/assets/towns/penaguila/1-social-1200x630.jpg',
-  '/assets/towns/alcoleja/1.jpg': '/assets/towns/alcoleja/1-social-1200x630.jpg',
-  '/assets/towns/xixona/1.jpg': '/assets/towns/xixona/1-social-1200x630.jpg',
-  '/assets/uploads/brain/xat_portada.webp': '/assets/uploads/brain/xat_portada-social-1200x630.jpg',
-  '/assets/ui/plugins/fedivers_vinyeta.webp': '/assets/ui/plugins/fedivers_vinyeta-social-1200x630.jpg',
-  '/assets/uploads/brain/nano_mixa_socis_1774215027069.png': '/assets/uploads/brain/nano_mixa_socis_1774215027069-social-1200x630.jpg',
+/* P0-60 / IDEA-191 (261108) · Totes les variants es diuen igual: l'original sense l'extensió i
+   «-social-1200x630.jpg». El mapa només escriu els originals i en deriva la variant: el mateix mapa
+   de sempre (original → variant; imatgeSocial.pes300.test.js en comprova cada parell al disc) amb
+   la meitat de bytes a l'entrada del paquet, on queden pocs bytes de marge sota el sostre. */
+const SUFIX_VARIANT_SOCIAL = '-social-1200x630.jpg';
+const variantSocialDe = (original) => `${original.replace(/\.[A-Za-z0-9]+$/, '')}${SUFIX_VARIANT_SOCIAL}`;
+export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
+  '/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png',
+  '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png',
+  '/assets/nano_cards/drets_autor_comic.jpg',
+  '/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png',
+  '/assets/uploads/brain/llibre_anima_cover_1776032370908.png',
+  '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png',
+  '/assets/uploads/brain/mac_mini_m4_1787721966622.jpg',
+  '/assets/towns/relleu/1.jpg',
+  '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp',
+  '/assets/uploads/brain/nano_descarregues_app.webp',
+  '/assets/towns/benifallim/1.jpg',
+  '/assets/towns/penaguila/1.jpg',
+  '/assets/towns/alcoleja/1.jpg',
+  '/assets/towns/xixona/1.jpg',
+  '/assets/uploads/brain/xat_portada.webp',
+  '/assets/ui/plugins/fedivers_vinyeta.webp',
+  '/assets/uploads/brain/nano_mixa_socis_1774215027069.png',
   /* Revisió final (261029, OG-01) · El cartell de l'Aplec (723x1024) és la foto
      d'una publicació remota de producció: la seua bessona .webp arribava al
      <head>. */
-  '/assets/events/aplec_2023_cartell.jpg': '/assets/events/aplec_2023_cartell-social-1200x630.jpg',
+  '/assets/events/aplec_2023_cartell.jpg',
   /* AH-18 (261104) · El cartell A4 de l'Aplec (1,3 MB) és el de la fitxa; WhatsApp en rep una variant social (còpia de la de sempre del mateix cartell, 1200×630, 261 KB). */
-  '/assets/events/aplec-2023/aplec-pel-territori-2023-A4-1900px-1.jpg': '/assets/events/aplec-2023/aplec-pel-territori-2023-A4-1900px-1-social-1200x630.jpg',
-  '/assets/events/cartell_pedra_en_sec_fageca_2026.webp': '/assets/events/cartell_pedra_en_sec_fageca_2026-social-1200x630.jpg',
-  '/assets/events/cartell_pedra_en_sec_alcosser_2026.webp': '/assets/events/cartell_pedra_en_sec_alcosser_2026-social-1200x630.jpg',
+  '/assets/events/aplec-2023/aplec-pel-territori-2023-A4-1900px-1.jpg',
+  '/assets/events/cartell_pedra_en_sec_fageca_2026.webp',
+  '/assets/events/cartell_pedra_en_sec_alcosser_2026.webp',
   /* OG-02 (pla 261029_1305, Bloc B, M1.1) · Les sis imatges de llavor que no
      feien 1200x630: les dos vinyetes de les pàgines del Cervell i de la Consola
      (480x480) i quatre portades de pobles. Mateixa convenció que la resta:
      retall de cobertura centrat, JPEG baseline, ≤300 000 B, sense APP1. */
-  '/assets/ui/plugins/cervell_vinyeta.jpg': '/assets/ui/plugins/cervell_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/consola_vinyeta.jpg': '/assets/ui/plugins/consola_vinyeta-social-1200x630.jpg',
-  '/assets/towns/la-torre-de-les-macanes/1.jpg': '/assets/towns/la-torre-de-les-macanes/1-social-1200x630.jpg',
-  '/assets/towns/orxeta/1.jpg': '/assets/towns/orxeta/1-social-1200x630.jpg',
-  '/assets/towns/sella/1.jpg': '/assets/towns/sella/1-social-1200x630.jpg',
-  '/assets/towns/tibi/1.jpg': '/assets/towns/tibi/1-social-1200x630.jpg',
+  '/assets/ui/plugins/cervell_vinyeta.jpg',
+  '/assets/ui/plugins/consola_vinyeta.jpg',
+  '/assets/towns/la-torre-de-les-macanes/1.jpg',
+  '/assets/towns/orxeta/1.jpg',
+  '/assets/towns/sella/1.jpg',
+  '/assets/towns/tibi/1.jpg',
   /* Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · La
      portada de /page/fediversity és una WebP de 1024x1024 (WhatsApp no en
      pinta). Mateixa convenció: retall de cobertura centrat de la .webp,
      JPEG baseline, ≤300 000 B, sense APP1. */
-  '/assets/uploads/fediversity-hero.webp': '/assets/uploads/fediversity-hero-social-1200x630.jpg',
+  '/assets/uploads/fediversity-hero.webp',
   /* Ordre del Mestre (30-10-2026, prompt 2208, T1 i T2.1) · Les portades de
      les rutes públiques que el manifest social encara no portava: les deu
      /page/* informatives, /wikidepoble, /disseny, les huit /plugin/*, les
@@ -268,34 +274,49 @@ export const VARIANTS_SOCIALS = Object.freeze({
      convenció: retall de cobertura centrat, JPEG baseline q85 (un punt menys
      fins que hi cap), ≤300 000 B, sense APP1. De Disseny i de la Wiki, el
      .png canònic (la .webp n'és la bessona i hi arriba per ambVariantSocial). */
-  '/assets/nano_cards/mur_nano_card.jpg': '/assets/nano_cards/mur_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/mercat_nano_card.webp': '/assets/nano_cards/mercat_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/calendari_nano_card.jpg': '/assets/nano_cards/calendari_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/vehicle_nano_card.jpg': '/assets/nano_cards/vehicle_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/animalets_nano_card.jpg': '/assets/nano_cards/animalets_nano_card-social-1200x630.jpg',
-  '/assets/notes/bloc_notes_vintage.jpg': '/assets/notes/bloc_notes_vintage-social-1200x630.jpg',
-  '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png': '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip-social-1200x630.jpg',
-  '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png': '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211-social-1200x630.jpg',
-  '/assets/ui/plugins/mapa_vinyeta.webp': '/assets/ui/plugins/mapa_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/treball_vinyeta.webp': '/assets/ui/plugins/treball_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/habitatge_vinyeta.webp': '/assets/ui/plugins/habitatge_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/vehicle_vinyeta.webp': '/assets/ui/plugins/vehicle_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/animalets_vinyeta.webp': '/assets/ui/plugins/animalets_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/gestoria_vinyeta.jpg': '/assets/ui/plugins/gestoria_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/rebost_vinyeta.webp': '/assets/ui/plugins/rebost_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/salut_vinyeta.webp': '/assets/ui/plugins/salut_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/genealogia_vinyeta.webp': '/assets/ui/plugins/genealogia_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/rss_vinyeta.jpg': '/assets/ui/plugins/rss_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/tpv_vinyeta.webp': '/assets/ui/plugins/tpv_vinyeta-social-1200x630.jpg',
-  '/assets/ui/plugins/bascula_vinyeta.jpg': '/assets/ui/plugins/bascula_vinyeta-social-1200x630.jpg',
-  '/assets/nano_cards/metriques_nano_card.jpg': '/assets/nano_cards/metriques_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/lector_rss_nano_card.jpg': '/assets/nano_cards/lector_rss_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/cervell_nano_card.jpg': '/assets/nano_cards/cervell_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/govern_requeriments_nano_card.jpg': '/assets/nano_cards/govern_requeriments_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/govern_balanc_nano_card.jpg': '/assets/nano_cards/govern_balanc_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/govern_certificacio_nano_card.jpg': '/assets/nano_cards/govern_certificacio_nano_card-social-1200x630.jpg',
-  '/assets/nano_cards/govern_comunicacio_nano_card.jpg': '/assets/nano_cards/govern_comunicacio_nano_card-social-1200x630.jpg'
-});
+  '/assets/nano_cards/mur_nano_card.jpg',
+  '/assets/nano_cards/mercat_nano_card.webp',
+  '/assets/nano_cards/calendari_nano_card.jpg',
+  '/assets/nano_cards/vehicle_nano_card.jpg',
+  '/assets/nano_cards/animalets_nano_card.jpg',
+  '/assets/notes/bloc_notes_vintage.jpg',
+  '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png',
+  '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png',
+  '/assets/ui/plugins/mapa_vinyeta.webp',
+  '/assets/ui/plugins/treball_vinyeta.webp',
+  '/assets/ui/plugins/habitatge_vinyeta.webp',
+  '/assets/ui/plugins/vehicle_vinyeta.webp',
+  '/assets/ui/plugins/animalets_vinyeta.webp',
+  '/assets/ui/plugins/gestoria_vinyeta.jpg',
+  '/assets/ui/plugins/rebost_vinyeta.webp',
+  '/assets/ui/plugins/salut_vinyeta.webp',
+  '/assets/ui/plugins/genealogia_vinyeta.webp',
+  '/assets/ui/plugins/rss_vinyeta.jpg',
+  '/assets/ui/plugins/tpv_vinyeta.webp',
+  '/assets/ui/plugins/bascula_vinyeta.jpg',
+  '/assets/nano_cards/metriques_nano_card.jpg',
+  '/assets/nano_cards/lector_rss_nano_card.jpg',
+  '/assets/nano_cards/cervell_nano_card.jpg',
+  '/assets/nano_cards/govern_requeriments_nano_card.jpg',
+  '/assets/nano_cards/govern_balanc_nano_card.jpg',
+  '/assets/nano_cards/govern_certificacio_nano_card.jpg',
+  '/assets/nano_cards/govern_comunicacio_nano_card.jpg',
+  /* P0-60 / IDEA-191 (ordre del Mestre, 08-11-2026 17:09) · Les cinc il·lustracions de patrimoni
+     (1200x896 WebP, 460–530 KB): la del Pou de Neu (la portada de l'article del Mur i de l'àlies
+     /page/anatomia-rural) i les de l'Herbari, el Banc de llavors, les Rutes de poble i els Arbres
+     monumentals. Mateixa convenció (tooling/seo/tria-imatge-seo.mjs · generaVariantSocial1200x630):
+     retall de cobertura una mica alt (posicioY 0,15: la cúpula del pou queda sencera), JPEG
+     baseline q85, ≤300 000 B, sense APP1. */
+  '/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp',
+  '/assets/uploads/patrimoni/herbari-la-torre-ibanez.webp',
+  '/assets/uploads/patrimoni/banc-de-llavors-ibanez.webp',
+  '/assets/uploads/patrimoni/rutes-de-poble-ibanez.webp',
+  '/assets/uploads/patrimoni/arbres-monumentals-ibanez.webp',
+  /* P0-60 · El logotip circular del Manifest de Poble (1024x891 WebP), portada de la seua
+     publicació de llavor del Mur. Variant «contenida», no de cobertura: el segell sencer a
+     600 px d'alt, centrat sobre blanc (el seu fons) en 1200x630; JPEG baseline, sense APP1. */
+  '/assets/mur/manifest-de-poble/logo-manifest-de-poble-retallat.webp'
+].map((original) => [original, variantSocialDe(original)])));
 
 /* L'esquema d'una referència ('https', 'sdp-media', 'data'…), en minúscules, o
    null si és un camí. Una lletra de disc de Windows ('c:/…') també en dona un,

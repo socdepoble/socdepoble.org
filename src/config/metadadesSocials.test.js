@@ -11,8 +11,10 @@ import { PAGE_COPY } from '../sections/text/pageContent.js';
 import { MOCK_MARKET_ITEMS } from '../sections/mercat/marketSeed.js';
 import { CALENDAR_EVENTS } from '../sections/mur/eventsSeed.js';
 import { MOCK_TOWNS } from '../sections/pobles/townsSeed.js';
+import { FEED_POSTS, elementDelMurDeLaLlavor } from '../sections/mur/feedContent.js';
+import { NOVES_TECNOLOGIES_CULTURA_RURAL_POST } from '../sections/mur/articles/novesTecnologiesCulturaRuralContent.js';
 import {
-  buildEventsDetailSectionMeta, buildMercatDetailSectionMeta, buildPoblesDetailSectionMeta
+  buildEventsDetailSectionMeta, buildMercatDetailSectionMeta, buildMurDetailSectionMeta, buildPoblesDetailSectionMeta
 } from '../sections/detail/detailSectionMeta.jsx';
 import { paginaDElement } from '../sections/detail/elementDeSeccio.js';
 
@@ -101,12 +103,22 @@ describe('metadadesDeDetall · paritat amb el detall de veres (ItemDetailSection
   const SECCIONS = {
     mercat: [buildMercatDetailSectionMeta({ marketItems: MOCK_MARKET_ITEMS, t }), MOCK_MARKET_ITEMS],
     events: [buildEventsDetailSectionMeta({ events: CALENDAR_EVENTS, t }), CALENDAR_EVENTS],
-    pobles: [buildPoblesDetailSectionMeta({ towns: MOCK_TOWNS, t }), MOCK_TOWNS]
+    pobles: [buildPoblesDetailSectionMeta({ towns: MOCK_TOWNS, t }), MOCK_TOWNS],
+    /* P0-60 / IDEA-191 · Les publicacions de llavor del Mur, tal com les servix el client
+       (data/sectionContent.js: l'article del Pou de Neu davant de MOCK_FEED). */
+    mur: [buildMurDetailSectionMeta({ feedPosts: [], t }), [elementDelMurDeLaLlavor(NOVES_TECNOLOGIES_CULTURA_RURAL_POST), ...FEED_POSTS]]
   };
-  test('les tres seccions amb llavor al repositori, i cap més', () => {
+  test('les quatre seccions amb llavor al repositori, i cap més', () => {
     expect([...SECCIONS_DE_DETALL].sort()).toEqual(Object.keys(SECCIONS).sort());
-    expect(metadadesDeDetall('mur', { title: 'x' }, OPCIONS)).toBeNull();
     expect(metadadesDeDetall('constructor', { title: 'x' }, OPCIONS)).toBeNull();
+    expect(metadadesDeDetall('xat', { title: 'x' }, OPCIONS)).toBeNull();
+  });
+  test('P0-60 · l’article del Pou de Neu porta al <head> el seu títol, l’entradilla i la variant social JPEG de la il·lustració', () => {
+    const { title, description, image } = metadadesDeDetall('mur', NOVES_TECNOLOGIES_CULTURA_RURAL_POST, OPCIONS);
+    expect(title).toBe(NOVES_TECNOLOGIES_CULTURA_RURAL_POST.title);
+    expect(description).toBe(textPla(NOVES_TECNOLOGIES_CULTURA_RURAL_POST.entradilla, LIMIT_DESCRIPCIO));
+    expect(image.url).toBe('https://socdepoble.org/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez-social-1200x630.jpg');
+    expect(image.alt).toBe(textPla(NOVES_TECNOLOGIES_CULTURA_RURAL_POST.title, 160));
   });
   test.each(Object.keys(SECCIONS))('%s: el títol i la descripció del <head> d’ItemDetailSection, en text pla', (seccio) => {
     const [section, items] = SECCIONS[seccio];
