@@ -32,7 +32,7 @@ import { NOMS_PER_FITXER_DE_PEDRA_SECA, VERSIO_NUCLI, exposaElNom, portaDeLaFont
 import {
   ADRECES_DE_TOTS, DECLARACIONS_DELS_MODULS, MAGATZEMS, XARXA, declaracioDe, hostsDe, infraccionsDelText
 } from './guardesDelModul.js';
-import { NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3 } from './__fixtures__/nomsDelNucli.js';
+import { NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const PONT = 'src/apps/gestoria/AppGestoria.jsx';
@@ -509,6 +509,21 @@ describe('6 · Onada 7: Pedra Seca i el router a tot l’arbre de les quatre app
     for (const [clau, noms] of Object.entries(NOMS_DEL_NUCLI_1_3)) {
       expect(clau).toBe('plataforma');
       expect(noms.filter((nom) => !delLector.has(nom)), clau).toEqual([]);
+    }
+  });
+
+  test('R14: cada servei nou i Botonera té un consumidor real per la porta del nucli', () => {
+    const usatsPerPorta = { plataforma: new Set(), pedraSeca: new Set() };
+    for (const carril of ['src/apps/bar', 'src/apps/nevera']) {
+      for (const ruta of fitxersDe(carril)) {
+        for (const { especificador, noms } of importacions(llig(ruta))) {
+          const porta = portaDeLaFont(resol(ruta, especificador) || '');
+          if (porta && usatsPerPorta[porta.clau]) for (const nom of noms) usatsPerPorta[porta.clau].add(nom);
+        }
+      }
+    }
+    for (const [clau, noms] of Object.entries(NOMS_DEL_NUCLI_1_4)) {
+      expect(noms.filter((nom) => !usatsPerPorta[clau].has(nom)), clau).toEqual([]);
     }
   });
 });

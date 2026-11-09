@@ -19,7 +19,7 @@ import { ESTABLIMENT_EXEMPLE, llavorCarta } from '../nucli/llavor.js';
 
 /* La de La Parròquia, darrere del literal de compilació EXACTE. */
 const carregaLaParroquia = import.meta.env.DEV || import.meta.env.VITE_SDP_BAR_LLAVOR_LA_PARROQUIA === '1'
-  ? () => import('./laParroquia.js').then((m) => m.llavorLaParroquia())
+  ? () => import('./laParroquia.js').then((m) => m.llavorLaParroquiaR14())
   : null;
 
 /*

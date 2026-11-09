@@ -1,3 +1,4 @@
+import { VERSIO_POLITICA_PRIVACITAT } from '../src/config/politicaPrivacitat.js';
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { randomBytes } from 'node:crypto';
@@ -14,7 +15,7 @@ const sourceRoot = fs.existsSync(new URL('../tooling/node0/hidrata-postgres-node
 const { creaPlaMigracions, preparaHidratacio, generaSql } = await import(new URL('tooling/node0/hidrata-postgres-node0.mjs', sourceRoot));
 
 const headers = { origin: 'https://socdepoble.cat', 'content-type': 'application/json' };
-const consent = { accepta_rgpd: true, versio_politica: '2.5' };
+const consent = { accepta_rgpd: true, versio_politica: VERSIO_POLITICA_PRIVACITAT };
 const pass = 'Synthetic owner password 2026!';
 const request = body => ({ headers, body, remoteAddress: '198.51.100.101' });
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -167,8 +168,8 @@ test('R8 PostgreSQL migration and synthetic owner lifecycle preserve verified se
     assert.equal((await q('SELECT full_name,username FROM public.profiles WHERE id=$1', [id]))[0].full_name, 'Earlier pending display');
     const candidate = fs.readFileSync(new URL('../tooling/node0/auth-node0.sql', import.meta.url), 'utf8');
     await pg.exec(candidate); await pg.exec(candidate);
-    await t.test('migration is idempotent with 81 canonical migrations (R9: plus the /legal 2.5 seal; R33: plus P1-75 seed revisions; R13-C7: plus the session counts) and existing pending records', async () => {
-      assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n, 81);
+    await t.test('migration is idempotent with 85 canonical migrations (R54: current2.6 plus preserved80 historical SQL) and existing pending records', async () => {
+      assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n, 85);
       assert.equal((await q('SELECT count(*)::int n FROM auth.users'))[0].n, 1);
       assert.equal((await q('SELECT count(*)::int n FROM public.consentiments WHERE user_id=$1', [id]))[0].n, 0);
       const access = (await q("SELECT has_function_privilege('node0_authenticator','private.node0_auth_challenge_ready(text,text)','EXECUTE') ready,has_function_privilege('node0_authenticator','private.node0_auth_sweep_pending()','EXECUTE') sweep,has_function_privilege('node0_authenticator','private.node0_auth_purge_pending(text)','EXECUTE') purge"))[0];
@@ -213,7 +214,7 @@ test('R8 PostgreSQL migration and synthetic owner lifecycle preserve verified se
       const result = await call('register', { email: 'new-pending@example.invalid', password: pass, metadata: { ...consent, full_name: 'Pending choice', username: 'pending-choice', town_name: 'Alcoi' } });
       assert.equal(result.status, 202);
       const user = (await q("SELECT id,raw_user_meta_data FROM auth.users WHERE email='new-pending@example.invalid'"))[0];
-      assert.deepEqual(user.raw_user_meta_data, { accepta_rgpd: false, versio_politica: '2.5', tenant_id: NODE0_AUTH_TENANT });
+      assert.deepEqual(user.raw_user_meta_data, { accepta_rgpd: false, versio_politica: VERSIO_POLITICA_PRIVACITAT, tenant_id: NODE0_AUTH_TENANT });
       assert.equal((await call('login', { email: 'new-pending@example.invalid', password: pass })).status, 401);
     });
     await t.test('periodic sweep removes unrelated expired pending older than 48h and preserves verified accounts', async () => {

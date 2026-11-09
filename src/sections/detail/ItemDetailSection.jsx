@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
+import { Link, Navigate, useLocation, useNavigate, useParams, useRouter } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
 import { elementTraduible, totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
@@ -105,7 +105,10 @@ function DetallDeRecepta() {
 export default function ItemDetailSection() {
   const { sectionId, itemId } = useParams();
   const { search, hash } = useLocation();
-  const desti = sectionId === 'multimedia' ? destiDeMultimedia(itemId, search, hash ?? '') : null;
+  // Legacy multimedia redirects keep their established memory-router contract.
+  // Canonical memory routes still retain their own R56 fragments.
+  const memoria = useRouter()?.memoria === true;
+  const desti = sectionId === 'multimedia' ? destiDeMultimedia(itemId, search, memoria ? '' : hash ?? '') : null;
   if (desti) return <Navigate to={desti} replace />;
   if (sectionId === SECCIO_DE_RECEPTES) return <DetallDeRecepta />;
   return <DetallDElement />;

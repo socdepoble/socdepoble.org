@@ -31,6 +31,8 @@ import path from 'node:path';
 /* Correccions literals transcrites del PDF, només on el kit falla (preparacions buides, capçaleres convertides en
    passos, blocs d'ingredients barrejats, la nota que el kit perd). Passen per la mateixa verificació que la resta. */
 import { CORRECCIONS, SUBSTITUCIONS } from './que-dinem-correccions.mjs';
+/* Onada R15 (P3-1 i LCP) · L'ample i l'alt de cada làmina, llegits de la capçalera de la WebP. */
+import { midesWebp } from './mides-webp.mjs';
 
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, a, i, tot) => {
@@ -134,8 +136,11 @@ function slugDe(titol) {
 /* ---------- Notes: el text de la nota al peu, sense el número de crida ni la frase del canal de YouTube ---------- */
 /* La frase que remet al canal es trau (el vídeo va a youtubeId); si porta un matís («, però al forn,») es conserva
    la frase sense l'enllaç, perquè diu una cosa que el vídeo sol no diu.
-   L'URL s'emporta també la cua de paràmetres («&feature=youtu.be», p. 57, #48): si no, quedava com a nota brossa. */
-const FRASE_YOUTUBE = /Podeu veure l[’']elaboració d[’']aquesta recepta(,[^:]*?,)?\s*en el nostre canal de Youtube:\s*https?:\/\/www\.youtube\.com\/watch\?v=[A-Za-z0-9_-]{11}(?:[&?#][^\s]*)?/gi;
+   L'URL s'emporta també la cua de paràmetres («&feature=youtu.be», p. 57, #48): si no, quedava com a nota brossa.
+   Onada R15 (P3-5) · La frase amb matís es conserva tal com la imprimix el llibre, lletra a lletra i signe a signe,
+   fins als dos punts («…canal de Youtube:»): abans es reescrivia i acabava amb un punt que el llibre no porta
+   (#14, p. 22). Només en cau l'URL que la seguix, que és el youtubeId de la recepta. */
+const FRASE_YOUTUBE = /(Podeu veure l[’']elaboració d[’']aquesta recepta(,[^:]*?,)?\s*en el nostre canal de Youtube:)\s*https?:\/\/www\.youtube\.com\/watch\?v=[A-Za-z0-9_-]{11}(?:[&?#][^\s]*)?/gi;
 /* Cap rastre d'URL ni de paràmetres de consulta al text de les dades. */
 const RASTRE_D_URL = /https?:|www\.|youtu\.be|youtube\.com|watch\?|[?&][a-z_]+=/i;
 /* Un pronom feble amb guionet enganxat a un altre sense guionet («traieu-losen»): és un guionet de final de línia
@@ -143,7 +148,7 @@ const RASTRE_D_URL = /https?:|www\.|youtu\.be|youtube\.com|watch\?|[?&][a-z_]+=/
 const PRONOMS_ENGANXATS = /-(?:l[aeio]s?|[nv]os|[mst]e)(?:en|hi|ho|ne)(?![\p{L}])/iu;
 const TALL = '\u0000';
 const trosNotes = (text) => espais(String(text || ''))
-  .replace(FRASE_YOUTUBE, (_tot, matis) => (matis ? `${TALL}Podeu veure l’elaboració d’aquesta recepta${matis} en el nostre canal de Youtube.${TALL}` : TALL))
+  .replace(FRASE_YOUTUBE, (_tot, frase, matis) => (matis ? `${TALL}${frase}${TALL}` : TALL))
   .split(TALL)
   .map(espais)
   .filter((tros) => /\p{L}{2}/u.test(tros));
@@ -157,6 +162,15 @@ const webpDisponibles = new Set(readdirSync(args.webp).filter((n) => /^p\d{3}\.w
 const laminaDe = (pags) => {
   const nom = pags.map((p) => `p${String(p).padStart(3, '0')}.webp`).find((n) => webpDisponibles.has(n) && !LAMINES_EXCLOSES.has(n));
   return nom ? `${RUTA_LAMINES}/${nom}` : null;
+};
+/* Onada R15 (P3-1) · La pàgina de la làmina és la de la WebP (pNNN.webp és la pàgina NNN del PDF), que no sempre és
+   la primera de la recepta: l'olla de carn (#79) comença a la p. 88 i la làmina és a la p. 89; els cocotets (#115),
+   a la p. 126 i la làmina a la p. 127. Les mides són les de la capçalera de la WebP (cap descodificació). */
+const dadesDeLamina = (lamina) => {
+  const nom = path.basename(lamina);
+  const mides = midesWebp(readFileSync(path.join(args.webp, nom)));
+  if (!mides || !mides.ample || !mides.alt) throw new Error(`La làmina ${nom} no és una WebP amb mides llegibles.`);
+  return { pagina: Number(/^p(\d{3})\.webp$/.exec(nom)[1]), ample: mides.ample, alt: mides.alt };
 };
 
 /* ---------- Construcció ---------- */
@@ -219,6 +233,12 @@ const receptes = index.map((entrada, i) => {
     b.linies.forEach((l) => comprova('preparació', l));
   }
   notes.forEach((n) => comprova('nota', n));
+  /* Onada R15 (P3-5) · Les notes, a més, signe a signe: la comparació de dalt ignora la puntuació i no veia el punt
+     que el generador posava a la nota de #14. Cada nota ha de ser al text de les pàgines amb la mateixa puntuació,
+     un cop ajuntades les línies (amb el guionet de final de línia conservat o llevat, com el llibre el partisca). */
+  const brutPdf = pags.map((p) => pagines.get(p) || '').join('\n');
+  const textLiteral = [espais(brutPdf), espais(brutPdf.replace(/-\n/g, '-')), espais(brutPdf.replace(/-\n/g, ''))];
+  for (const n of notes) if (!textLiteral.some((t) => t.includes(n))) errors.push(`#${numero} nota: puntuació no literal → «${n.slice(0, 90)}»`);
   if (!preparacio.some((b) => b.linies.length)) errors.push(`#${numero}: preparació buida`);
   /* Una capçalera del llibre convertida en pas: línia curta sense punt final i quasi tota en majúscules. */
   const esCapcalera = (l) => l.length < 60 && !/[.:;]$/.test(l) && (l.match(/\p{Lu}/gu) || []).length >= (l.match(/\p{L}/gu) || []).length * 0.7;
@@ -250,6 +270,10 @@ const slugs = new Set(receptes.map((r) => r.slug));
 if (slugs.size !== receptes.length) errors.push('Hi ha slugs repetits.');
 const lamines = receptes.map((r) => r.lamina).filter(Boolean);
 if (new Set(lamines).size !== lamines.length) errors.push('Hi ha làmines repetides.');
+const dadesLamines = Object.fromEntries(lamines.map((l) => [l, dadesDeLamina(l)]));
+for (const r of receptes) {
+  if (r.lamina && !r.pagines.includes(dadesLamines[r.lamina].pagina)) errors.push(`#${r.numero}: la làmina ${r.lamina} no és de les pàgines ${r.pagines}`);
+}
 
 if (args.diagnosi !== undefined || errors.length) {
   console.log(`Errors: ${errors.length}`);
@@ -275,6 +299,9 @@ const OBRA = {
   apartats: APARTATS.map(({ id, titol, pagina }) => ({ id, titol, pagina }))
 };
 const json = (v) => JSON.stringify(v, null, 2);
+/* Una làmina per línia: 148 entrades de tres números no demanen el sagnat de la resta. */
+const jsonLamines = (lamines) => `{\n${Object.entries(lamines)
+  .map(([src, d]) => `  ${JSON.stringify(src)}: { "pagina": ${d.pagina}, "ample": ${d.ample}, "alt": ${d.alt} }`).join(',\n')}\n}`;
 const modul = `/* «Què dinem?» · receptari de l'Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta»
    (Muro, El Comtat, 2019; dipòsit legal A 373-2019). Text i làmines amb permís d'ús (el Llibre Mestre recull que
    el PDF arriba «amb tots els permisos d'ús de text i imatges», declaració del Mestre); vídeos del canal
@@ -286,6 +313,8 @@ const modul = `/* «Què dinem?» · receptari de l'Associació Gastronòmica i 
      recepta; el generador ho comprova). Les notes són les notes al peu, sense el número de crida ni la frase que
      remet al canal de YouTube (el vídeo va al camp youtubeId).
    - youtubeId: l'identificador que el PDF imprimix a la pàgina de la recepta. lamina: la WebP de la pàgina.
+   - LAMINES_QUE_DINEM: la pàgina del llibre on és impresa cada làmina (no sempre la primera de la recepta) i les
+     mides de la WebP (ample i alt, per a reservar-ne el lloc); laminaDeRecepta(recepta) les ajunta.
    - Cap camp per damunt del llibre: només el que el PDF dona per a cada recepta (text, vídeo i làmina).
    - ISBN: el que hi ha imprés té 14 dígits i no és vàlid; es conserva literal amb isbnValid: false.
    Empremtes: PDF ${sha(args.pdf)} (SHA-256). */
@@ -319,6 +348,15 @@ export function receptaPerSlug(slug) {
 
 /** Totes les línies d'ingredients d'una recepta, en l'ordre del llibre. */
 export const liniesIngredients = (recepta) => recepta.ingredients.flatMap((bloc) => bloc.linies);
+
+/** Cada làmina: la pàgina del llibre on és impresa i les mides de la WebP, en píxels. */
+export const LAMINES_QUE_DINEM = congela(${jsonLamines(dadesLamines)});
+
+/** La làmina d'una recepta ({ src, pagina, ample, alt }), o null si no en té. */
+export function laminaDeRecepta(recepta) {
+  const src = recepta && typeof recepta.lamina === 'string' ? recepta.lamina : null;
+  return src && Object.hasOwn(LAMINES_QUE_DINEM, src) ? { src, ...LAMINES_QUE_DINEM[src] } : null;
+}
 
 export const RECOMPTES_QUE_DINEM = congela({
   receptes: RECEPTES_QUE_DINEM.length,

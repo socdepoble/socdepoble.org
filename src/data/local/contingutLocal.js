@@ -254,7 +254,6 @@ export function creaContingutLocal(e) {
       const sectionId = String(submission?.sectionId || '').trim();
       if (!SECCIONS.has(sectionId)) throw new Error('Secció no suportada per a connectar.');
       const id = String(submission?.id || e.nouId());
-      const createdAt = submission?.createdAt || e.ara().toISOString();
       const basePayload = esObjectePla(submission?.payload) ? submission.payload : {};
       const actor = submission?.actor;
       if (actor?.tipus === 'entitat' && !actor.id) throw new Error('Falta l’entitat que signa la publicació.');
@@ -264,6 +263,13 @@ export function creaContingutLocal(e) {
       }
       const previa = publicacions.get(id);
       if (previa && previa.ownerUserId !== ownerUserId) throw Object.assign(new Error(SENSE_PERMIS), { status: 403 });
+      /* R56 · Les mateixes invariants que section_submissions al servidor:
+         reintentar o republicar no redaten ni mouen la fila a una altra
+         secció. La comprovació precedix qualsevol canvi al magatzem. */
+      if (previa && previa.sectionId !== sectionId) {
+        throw Object.assign(new Error('SDP-SEC-002: section_id is immutable'), { code: 'P0001', status: 400 });
+      }
+      const createdAt = previa?.createdAt || submission?.createdAt || e.ara().toISOString();
       const payload = mapSectionSubmissionToItem({ ...submission, id, ownerUserId, sectionId, createdAt,
         payload: { ...basePayload, id, ownerUserId, sectionId, created_at: basePayload.created_at || createdAt } });
       /* Sense actor (una crida d'abans d'I2), la signatura que ja tenia es conserva. */

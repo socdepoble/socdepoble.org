@@ -329,3 +329,19 @@ export function validaProducteUniversal(producte) {
   if (producte.font !== undefined && !esIdOpac(producte.font)) errors.push('font: ha de ser un id opac');
   return errors;
 }
+
+/** P0-69: identitat i procedència comunes, sense duplicar les dades del domini.
+ * Les presentacions comercials continuen usant validaProducteUniversal.
+ * La projecció de catàleg no inventa imports, al·lèrgens ni relacions confirmades.
+ */
+export const TIPUS_ITEM_CATALEG = Object.freeze(['producte', 'recepta', 'llavor', 'planta', 'article']);
+
+export function universalItemCataleg({ id, tipus, nom, font, connexions = [], dades = {} }) {
+  if (!esIdOpac(id) || !TIPUS_ITEM_CATALEG.includes(tipus) || typeof nom !== 'string' || !nom.trim()) throw new TypeError('Identitat del catàleg no vàlida.');
+  if (!font || typeof font.document !== 'string' || !font.document.trim() || typeof font.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(font.sha256)) throw new TypeError('Cal document i SHA-256 de procedència.');
+  const links = connexions.map((link) => {
+    if (!esIdOpac(link.id) || !['candidat', 'confirmat'].includes(link.estat) || !TIPUS_ITEM_CATALEG.includes(link.tipus)) throw new TypeError('Connexió sense identitat o revisió.');
+    return Object.freeze({ id: link.id, tipus: link.tipus, estat: link.estat, motiu: String(link.motiu || '') });
+  });
+  return Object.freeze({ id, tipus, nom: nom.trim(), font: Object.freeze({ ...font }), connexions: Object.freeze(links), dades: Object.freeze({ ...dades }) });
+}

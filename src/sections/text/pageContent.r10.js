@@ -285,6 +285,51 @@ const fitaAppStore = (language) => {
  return `${section('h3', titol, obertura)}\n      ${subSection(apartat, cos)}\n\n      `;
 };
 
+/* Encàrrec mestre R13+R14 (ordre del Mestre, 08-11-2026 23:00, punt 4) · La crònica de les Onades R13
+   i R14 obri /versions, davant de la fita de l'App Store, en les cinc llengües. Xifres de les dades
+   (src/data/patrimoni/queDinem.js: 149 receptes, 148 làmines, 47 vídeos; la prova les deriva de
+   RECOMPTES_QUE_DINEM). Cap altra plataforma mòbil al bloc (regla 2.3.10): la card d'administració es
+   nomena pel seu nom, sense el parèntesi de les botigues, i en valencià en totes les llengües (és el
+   títol que es veu a l'Administració, que no es traduïx). Només el que R13 i R14 han desplegat: els
+   recomptes de la card depenen del servidor, i el text ho diu.
+   L'enllaç al receptari és intern de l'SPA (com els de /page/… de les altres pàgines): sense
+   target=_blank, que obriria una finestra nova. Densitat de negretes de cada paràgraf:
+   pageContent.versions.test.js (Onada 6 en valencià i R13+R14 en les cinc llengües). */
+const ENLLAC_RECEPTES = '/page/receptes';
+const enllacIntern = (ruta, text) => `<a href="${ruta}">${text}</a>`;
+const CARD_USUARIS = '<strong>«Usuaris, Dispositius i Botigues»</strong>';
+const FITA_R13_R14 = {
+ ca: ['9 de novembre de 2026 · Onades R13 i R14 · El receptari «Què dinem?», la targeta d’usuaris i dispositius i el Segon Brain',
+  `Ja podeu llegir el <strong>receptari «Què dinem?»</strong> de l’Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta» (Muro, El Comtat, 2019): <strong>149 receptes</strong> amb el <strong>text literal</strong> del llibre, <strong>148 làmines</strong>, <strong>47 vídeos</strong> del seu canal i el <strong>llibre sencer en PDF</strong>, a ${enllacIntern(ENLLAC_RECEPTES, 'la pàgina de receptes')}. Els <strong>al·lèrgens no estan revisats</strong>: consulteu sempre els ingredients.`,
+  ['Novetat · Administració del sistema', `La <strong>setena targeta</strong>, ${CARD_USUARIS}, reunix els <strong>recomptes per canal</strong> quan el <strong>servidor</strong> els pot donar, i <strong>diu clarament</strong> quan encara no els té.`],
+  ['Novetat · Segon Brain', 'A <strong>/consola/taxonomia</strong>, el <strong>mapa de categories i etiquetes</strong> del Mas, amb <strong>xifres que es poden comprovar</strong>.'],
+  ['Novetat · Notes i accés', 'En <strong>/notes</strong>, el que s’enganxa als <strong>camps de capçalera</strong> (títol, subtítol i entradilla) hi entra com a <strong>text pla</strong>, i un <strong>document sencer</strong> enganxat al títol d’una <strong>nota buida</strong> es reparteix en títol, subtítol, entradilla i cos. Des de <strong>/control</strong> s’arriba a «Compte i contrasenya».']],
+ es: ['9 de noviembre de 2026 · Oleadas R13 y R14 · El recetario «Què dinem?», la tarjeta de usuarios y dispositivos y el Segon Brain',
+  `Ya podéis leer el <strong>recetario «Què dinem?»</strong> de la Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta» (Muro, El Comtat, 2019): <strong>149 recetas</strong> con el <strong>texto literal</strong> del libro, en valenciano, <strong>148 láminas</strong>, <strong>47 vídeos</strong> de su canal y el <strong>libro entero en PDF</strong>, en ${enllacIntern(ENLLAC_RECEPTES, 'la página de recetas')}. Los <strong>alérgenos no están revisados</strong>: consultad siempre los ingredientes.`,
+  ['Novedad · Administración del sistema', `La <strong>séptima tarjeta</strong>, ${CARD_USUARIS}, reúne los <strong>recuentos por canal</strong> cuando el <strong>servidor</strong> puede darlos, y <strong>dice claramente</strong> cuándo todavía no los tiene.`],
+  ['Novedad · Segon Brain', 'En <strong>/consola/taxonomia</strong>, el <strong>mapa de categorías y etiquetas</strong> del Mas, con <strong>cifras que se pueden comprobar</strong>.'],
+  ['Novedad · Notas y acceso', 'En <strong>/notes</strong>, lo que se pega en los <strong>campos de cabecera</strong> (título, subtítulo y entradilla) entra como <strong>texto plano</strong>, y un <strong>documento entero</strong> pegado en el título de una <strong>nota vacía</strong> se reparte en título, subtítulo, entradilla y cuerpo. Desde <strong>/control</strong> se llega a «Cuenta y contraseña».']],
+ en: ['9 November 2026 · Waves R13 and R14 · The «Què dinem?» recipe book, the users and devices card and the Segon Brain',
+  `You can now read the <strong>«Què dinem?» recipe book</strong> by the Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta» (Muro, El Comtat, 2019): <strong>149 recipes</strong> with the book’s <strong>literal text</strong>, in Valencian, <strong>148 plates</strong>, <strong>47 videos</strong> from their channel and the <strong>whole book as a PDF</strong>, on ${enllacIntern(ENLLAC_RECEPTES, 'the recipes page')}. <strong>Allergens have not been reviewed</strong>: always check the ingredients.`,
+  ['New · System administration', `The <strong>seventh card</strong>, ${CARD_USUARIS}, gathers the <strong>counts per channel</strong> when the <strong>server</strong> can provide them, and <strong>says clearly</strong> when it cannot yet.`],
+  ['New · Segon Brain', 'At <strong>/consola/taxonomia</strong>, the <strong>map of categories and tags</strong> of the Mas, with <strong>figures you can check</strong>.'],
+  ['New · Notes and access', 'In <strong>/notes</strong>, whatever is pasted into the <strong>header fields</strong> (title, subtitle and standfirst) goes in as <strong>plain text</strong>, and a <strong>whole document</strong> pasted onto the title of an <strong>empty note</strong> is split into title, subtitle, standfirst and body. <strong>/control</strong> now leads to «Account and password».']],
+ eu: ['2026ko azaroaren 9a · R13 eta R14 olatuak · «Què dinem?» errezeta-liburua, erabiltzaile eta gailuen txartela eta Segon Brain',
+  `Orain irakur dezakezue <strong>«Què dinem?» errezeta-liburua</strong>, Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta» elkartearena (Muro, El Comtat, 2019): <strong>149 errezeta</strong> liburuaren <strong>testu literalarekin</strong>, valentzieraz, <strong>148 irudi</strong>, haien kanaleko <strong>47 bideo</strong> eta <strong>liburu osoa PDFn</strong>, ${enllacIntern(ENLLAC_RECEPTES, 'errezeten orrian')}. <strong>Alergenoak ez daude berrikusita</strong>: begiratu beti osagaiak.`,
+  ['Berritasuna · Sistemaren administrazioa', `<strong>Zazpigarren txartelak</strong>, ${CARD_USUARIS} izenekoak, kanal bakoitzeko <strong>zenbaketak</strong> biltzen ditu zerbitzariak eman ditzakeenean, eta argi esaten du oraindik ez dituenean.`],
+  ['Berritasuna · Segon Brain', '<strong>/consola/taxonomia</strong> orrian, Mas-eko <strong>kategoria eta etiketen mapa</strong>, <strong>egiaztatu daitezkeen zifrekin</strong>.'],
+  ['Berritasuna · Oharrak eta sarbidea', '<strong>/notes</strong> orrian, <strong>goiburuko eremuetan</strong> (izenburua, azpititulua eta sarrera) itsasten dena <strong>testu arrunt</strong> gisa sartzen da, eta <strong>ohar huts</strong> baten izenburuan itsatsitako <strong>dokumentu osoa</strong> izenburu, azpititulu, sarrera eta gorputzean banatzen da. <strong>/control</strong> orritik «Kontua eta pasahitza» atalera iristen da.']],
+ gl: ['9 de novembro de 2026 · Ondas R13 e R14 · O receitario «Què dinem?», a tarxeta de usuarios e dispositivos e o Segon Brain',
+  `Xa podedes ler o <strong>receitario «Què dinem?»</strong> da Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta» (Muro, El Comtat, 2019): <strong>149 receitas</strong> co <strong>texto literal</strong> do libro, en valenciano, <strong>148 láminas</strong>, <strong>47 vídeos</strong> da súa canle e o <strong>libro enteiro en PDF</strong>, na ${enllacIntern(ENLLAC_RECEPTES, 'páxina de receitas')}. Os <strong>alérxenos non están revisados</strong>: consultade sempre os ingredientes.`,
+  ['Novidade · Administración do sistema', `A <strong>sétima tarxeta</strong>, ${CARD_USUARIS}, reúne os <strong>recontos por canle</strong> cando o <strong>servidor</strong> os pode dar, e <strong>di claramente</strong> cando aínda non os ten.`],
+  ['Novidade · Segon Brain', 'En <strong>/consola/taxonomia</strong>, o <strong>mapa de categorías e etiquetas</strong> do Mas, con <strong>cifras que se poden comprobar</strong>.'],
+  ['Novidade · Notas e acceso', 'En <strong>/notes</strong>, o que se pega nos <strong>campos de cabeceira</strong> (título, subtítulo e entradiña) entra como <strong>texto plano</strong>, e un <strong>documento enteiro</strong> pegado no título dunha <strong>nota baleira</strong> repártese en título, subtítulo, entradiña e corpo. Desde <strong>/control</strong> chégase a «Conta e contrasinal».']]
+};
+const fitaR13R14 = (language) => {
+ const [titol, obertura, ...apartats] = FITA_R13_R14[language];
+ return `${section('h3', titol, obertura)}\n      ${apartats.map(([t, c]) => subSection(t, c)).join('\n      ')}\n\n      `;
+};
+
 const ruralPage = (row) => ({ title: row[0], subtitle: row[1], lead: row[2], html: section('h3', row[1])+'\n      '+row.slice(3).map(s => section('h5', ...s)).join('\n      '), labels: [] });
 /* Onada R9 (ordre del Mestre del 261106, 14:06) · El balanç de /fedivers, /page/fediversity i
    /page/node-zero passa al 6 de novembre (producció R1–R8: COMMIT R8 = 70b651636, desplegat a
@@ -296,7 +341,16 @@ const ruralPage = (row) => ({ title: row[0], subtitle: row[1], lead: row[2], htm
    desplegat el 7-11) i nomena el COMMIT R10. La lectura HTTP del 7-11-2026 (09:14, només GET)
    troba «R9 i R10» al fragment pageContent de socdepoble.org (1) i no al de socdepoble.cat (0):
    el pilot no servix el mateix COMMIT, i el balanç ho diu datat. */
-const statusHtml = (d) => '\n      '+[
+/* New local inventory is separate from historical production receipts. */
+const CURRENT_CONTRACT_NOTE = {
+  "ca": "<strong>9 de novembre de 2026</strong> · <strong>Inventari del codi local.</strong> El contracte declara <strong>48 capacitats</strong> i <strong>141 mètodes</strong> amb <strong>195 casos</strong>. El balanç anterior conserva les xifres històriques de <strong>46/138/190</strong>. Este inventari <strong>no acredita activació</strong>, desplegament, interoperabilitat remota ni lliurament a dispositius.",
+  "es": "<strong>9 de noviembre de 2026</strong> · <strong>Inventario del código local.</strong> El contrato declara <strong>48 capacidades</strong> y <strong>141 métodos</strong> con <strong>195 casos</strong>. El balance anterior conserva las cifras históricas de <strong>46/138/190</strong>. Este inventario <strong>no acredita activación</strong>, despliegue, interoperabilidad remota ni entrega a dispositivos.",
+  "en": "<strong>9 November 2026</strong> · <strong>Local code inventory.</strong> The contract declares <strong>48 capabilities</strong> and <strong>141 methods</strong> with <strong>195 cases</strong>. The earlier balance retains its historical figures of <strong>46/138/190</strong>. This inventory <strong>does not establish activation</strong>, deployment, remote interoperability or device delivery.",
+  "eu": "<strong>2026ko azaroaren 9a</strong> · <strong>Tokiko kodeko inbentarioa.</strong> Kontratuak <strong>48 gaitasun</strong> eta <strong>141 metodo</strong> ditu <strong>195 kasurekin</strong>. Aurreko balantzeak <strong>46/138/190</strong> zenbaki historikoak gordetzen ditu. Inbentario honek <strong>ez du aktibazioa</strong>, hedapena, urruneko elkarreragingarritasuna edo gailuetarako entrega frogatzen.",
+  "gl": "<strong>9 de novembro de 2026</strong> · <strong>Inventario do código local.</strong> O contrato declara <strong>48 capacidades</strong> e <strong>141 métodos</strong> con <strong>195 casos</strong>. O balance anterior conserva as cifras históricas de <strong>46/138/190</strong>. Este inventario <strong>non acredita activación</strong>, despregamento, interoperabilidade remota nin entrega a dispositivos."
+};
+const currentContractHtml = language => `<p>${CURRENT_CONTRACT_NOTE[language]}</p>`;
+const statusHtml = (d, language) => '\n      '+[
  section('h3', `${d.balanceDate} · ${d.current}`, ...d.balanceProd, d.db, d.bridge),
  section('h3', d.prepared, ...d.balanceKit),
  section('h3', d.pending, d.todo, ...d.balanceTodo),
@@ -308,7 +362,7 @@ const statusHtml = (d) => '\n      '+[
  subSection(d.aiNode0Title, d.aiNode0),
  subSection(d.aiVoiceTitle, d.aiVoice),
  subSection(d.aiTelerTitle, d.aiTeler)
-].join('\n      ');
+].join('\n      ')+'\n      '+currentContractHtml(language);
 
 /** Authored translations belong to the page, not the UI dictionary. Remote/custom
  * pages without translations keep their own content and original language. */
@@ -336,17 +390,18 @@ export function aplicaDossierR10(copy) {
     const entry = section('h3', `${d.date} · ${d.version}`, d.prod, d.db, d.bridge, d.kit, d.todo);
     // The old register is history in its original language; do not present it as translated.
     // P0-62 · La fita de l'App Store obri la pàgina, en la llengua de la pàgina.
-    const fita = fitaAppStore(language);
+    // Encàrrec R13+R14 · La crònica de les Onades R13 i R14 va davant de la fita de l'App Store.
+    const fita = `${fitaR13R14(language)}${fitaAppStore(language)}`;
     content = language === 'ca' ? { html:`\n      ${fita}${entry}\n      ${originals.versions.html}` } : {
      title: ({es:'Versiones',en:'Versions',eu:'Bertsioak',gl:'Versións'})[language], subtitle:d.version, lead:d.lead,
      html:`\n      ${fita}${entry}<div lang="ca">${originals.versions.html}</div>`, labels:[]
     };
    } else {
     const title = d.titles[['fedivers','fediversity','node-zero'].indexOf(key)];
-    content = { title, subtitle:d.subtitle, lead:d.lead, html: statusHtml(d), labels:[] };
+    content = { title, subtitle:d.subtitle, lead:d.lead, html: statusHtml(d, language), labels:[] };
     if (key === 'fediversity') content.html = section('h3', 'NLnet · NGI Fediversity', `<a href="https://nlnet.nl/fediversity/" target="_blank" rel="noopener noreferrer"><img class="page-title-logo" src="/assets/uploads/ngi-fediversity-tag.svg" alt="NGI Fediversity" width="2040" height="503" /></a>`, d.grant)+content.html;
     // The detailed Valencian dossier remains readable after its dated update.
-    if (language === 'ca') content = { lead:key === 'fediversity' ? originals[key].lead : d.lead, html:statusHtml(d)+ (key==='fediversity'?section('h3','Candidatura NLnet · estat de la sol·licitud',d.grant):'') + actualitzaDossierAnterior(originals[key].html) };
+    if (language === 'ca') content = { lead:key === 'fediversity' ? originals[key].lead : d.lead, html:statusHtml(d, language)+ (key==='fediversity'?section('h3','Candidatura NLnet · estat de la sol·licitud',d.grant):'') + actualitzaDossierAnterior(originals[key].html) };
    }
    translations[language] = content;
   }

@@ -14,6 +14,7 @@ const CENS = Object.freeze([
   'src/data/conformitat/qualitat.test.js',
   'src/data/conformitat/kit.js',
   'src/data/conformitat/kit.test.js',
+  'src/data/supabase/conformitat.r54.test.js',
   'src/data/supabase/conformitat.test.js',
   /* T1 · D01 (assalt 261101) · el segon adaptador complet, les seues proves,
      l'equivalència amb Supabase en seed i el senyal de Storage (P1-27). */

@@ -27,6 +27,7 @@
    registre, només recomptes i classes («web expulsa 410»). */
 import { capcaleresDeServei } from '../_shared/apple.js';
 import { creaEnviadorWeb, formaDeLEndpoint } from './webpush.js';
+import { MAXIM_LLIURAMENTS, PROTOCOL_PUSH, formaDelsLliuraments, resultatPerConfirmar } from './leases.js';
 
 export const NOTIFICA = Object.freeze({
   /* La capçalera del cron, la mateixa de compte-apple i purga-fitxers (SDP_CRON_SECRET). */
@@ -51,7 +52,7 @@ export const NOTIFICA = Object.freeze({
 
 /* Les úniques RPC que pot cridar el worker (també els enviadors natius, per a
    la caché de credencials): les cinc de service_role de la migració. */
-export const RPC_DEL_WORKER = Object.freeze(['xat_push_neteja', 'xat_push_reclama', 'xat_push_expulsa', 'xat_push_credencial', 'xat_push_desa_credencial']);
+export const RPC_DEL_WORKER = Object.freeze(['xat_push_neteja', 'xat_push_reclama_v2', 'xat_push_confirma_v2', 'xat_push_credencial', 'xat_push_desa_credencial']);
 
 /* La llengua de l'avís natiu (la de la fila; el web la tria el navegador). */
 export const LLENGUES_AVIS = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);
@@ -153,6 +154,13 @@ const ambSostre = (promesa, ms) => new Promise((resol, rebutja) => {
   promesa.then(resol, rebutja).finally(() => clearTimeout(rellotge));
 });
 
+/* A response that arrives after cancellation must never escape to a caller
+   or keep a provider's streaming body alive. Cancellation is best-effort. */
+function cancellaResposta(r) {
+  if (!r?.body || r.body.locked || typeof r.body.cancel !== 'function') return;
+  try { Promise.resolve(r.body.cancel()).catch(() => {}); } catch { /* No late transport error escapes. */ }
+}
+
 /**
  * fetch amb topall (el patró de purga-fitxers, P1-18): el topall dura fins
  * que `llig` ha consumit la resposta, i el cos que `llig` no vol es
@@ -162,15 +170,21 @@ async function ambTopall(fetch, url, opcions, topallMs, llig) {
   const control = new AbortController();
   const rellotge = setTimeout(() => control.abort(), topallMs);
   let r = null;
+  let tancat = false;
   try {
-    r = await fetch(url, { ...opcions, signal: control.signal });
+    const pendent = Promise.resolve().then(() => fetch(url, { ...opcions, signal: control.signal }));
+    pendent.then((tardana) => { if (tancat || control.signal.aborted) cancellaResposta(tardana); }, () => {});
+    r = await finsAlTopall(pendent, control.signal);
     return await finsAlTopall(Promise.resolve().then(() => llig(r, control.signal)), control.signal);
   } catch (error) {
     if (control.signal.aborted) throw errorDe('temps');
     throw error?.codi ? error : errorDe('xarxa');
   } finally {
+    tancat = true;
     clearTimeout(rellotge);
-    if (r && r.body && !r.body.locked && typeof r.body.cancel === 'function') r.body.cancel().catch(() => {});
+    cancellaResposta(r);
+    // The bounded reader has finished; release request-wrapper listeners.
+    control.abort();
   }
 }
 
@@ -236,19 +250,40 @@ export function creaGestor({
       registre.error('[notifica-xat] Falta la configuració de la funció.');
       return resposta(503, { ok: false, error: 'config' });
     }
-    if (!(await igualsEnTempsConstant(textNet(req.headers.get(o.CAPCALERA)), secret, subtle))) {
+    // Authentication is bounded separately (8s by default). The 45s pass
+    // budget starts only after this constant-time comparison has succeeded.
+    let autoritzat;
+    try {
+      autoritzat = await ambSostre(igualsEnTempsConstant(textNet(req.headers.get(o.CAPCALERA)), secret, subtle), o.TOPALL_MS);
+    } catch {
+      registre.error('[notifica-xat] No s’ha pogut verificar la porta del cron.');
+      return resposta(503, { ok: false, error: 'config' });
+    }
+    if (!autoritzat) {
       return resposta(401, { ok: false, error: 'no-autoritzat' });
     }
 
     const servei = capcaleresDeServei(clau);
+    let finalitzat = false;
+    let timerDePassada = null;
+    const controlDePassada = new AbortController();
+    const finalitza = () => {
+      finalitzat = true;
+      if (timerDePassada !== null) clearTimeout(timerDePassada);
+      controlDePassada.abort();
+    };
+    let tempsRpc = () => o.TOPALL_MS;
+    let request = fetch;
     const rpc = (nom, cos = {}) => {
       if (!RPC_DEL_WORKER.includes(nom)) return Promise.reject(errorDe('rpc'));
-      return ambTopall(fetch, `${base}/rest/v1/rpc/${nom}`, {
+      const topall = tempsRpc();
+      if (finalitzat || topall <= 0) return Promise.reject(errorDe('temps'));
+      return ambTopall(request, `${base}/rest/v1/rpc/${nom}`, {
         method: 'POST',
         redirect: 'error',
         headers: { ...servei, 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify(cos)
-      }, o.TOPALL_MS, async (r, senyal) => {
+      }, topall, async (r, senyal) => {
         if (!r.ok) throw errorDe(`base ${r.status}`);
         return llegixJsonFitat(r, o.MAXIM_COS_BASE, senyal);
       });
@@ -260,29 +295,64 @@ export function creaGestor({
         const n = await rpc('xat_push_neteja', {});
         const neteja = { dispositius: enter(n?.dispositius), cua: enter(n?.cua) };
         registre.info(`[notifica-xat] apagat · neteja dispositius=${neteja.dispositius} cua=${neteja.cua}`);
+        finalitza();
         return resposta(200, { ok: true, apagat: true, neteja });
       } catch (error) {
         registre.error('[notifica-xat] La base no respon:', codiDe(error));
+        finalitza();
         return resposta(502, { ok: false, apagat: true, error: 'base' });
       }
     }
 
     const inici = ara();
     const queda = () => o.PRESSUPOST_MS - (ara() - inici);
+    timerDePassada = setTimeout(() => controlDePassada.abort(), o.PRESSUPOST_MS);
+    tempsRpc = () => Math.max(0, Math.min(o.TOPALL_MS, queda()));
+    request = async (url, options = {}) => {
+      if (finalitzat || queda() <= 0 || controlDePassada.signal.aborted) throw errorDe('temps');
+      const control = new AbortController();
+      const neteja = () => {
+        controlDePassada.signal.removeEventListener('abort', aborta);
+        options.signal?.removeEventListener('abort', aborta);
+      };
+      const aborta = () => { neteja(); control.abort(); };
+      controlDePassada.signal.addEventListener('abort', aborta, { once: true });
+      options.signal?.addEventListener('abort', aborta, { once: true });
+      if (options.signal?.aborted) aborta();
+      // Headers do not finish a streaming response. Keep cancellation linked
+      // until the caller's bounded reader or the whole pass closes it.
+      try {
+        const r = await fetch(url, { ...options, signal: control.signal });
+        if (finalitzat || control.signal.aborted) {
+          cancellaResposta(r);
+          neteja();
+          throw errorDe('temps');
+        }
+        // No body means there is no later streaming phase to protect.
+        if (!r?.body) neteja();
+        return r;
+      }
+      catch (error) { neteja(); throw error; }
+    };
     const recompte = { missatges: 0, retallats: 0, dispositius: 0, enviats: 0, expulsats: 0, fallits: 0, sense_proveidor: 0, sense_provar: 0, lots: 0 };
     const classes = new Map();
     let esgotat = false;
 
     let web = null;
-    try { web = await creaEnviadorWeb({ env, fetch, subtle, ara, topallMs: o.TOPALL_MS }); } catch { web = null; }
+    try {
+      const topall = Math.max(1, Math.min(o.TOPALL_MS, queda()));
+      web = await ambSostre(Promise.resolve().then(() => creaEnviadorWeb({ env, fetch: request, subtle, ara, topallMs: topall })), topall);
+    } catch { web = null; }
     if (!web) registre.warn('[notifica-xat] Sense VAPID vàlid (SDP_PUSH_VAPID_*): els aparells web no es desperten ni s’esborren.');
 
     /* Els natius, una vegada per passada i només si algun lot en porta. */
     let natius = null;
     const preparaNatius = async () => {
       if (typeof creaEnviadorsNatius !== 'function') return {};
+      if (queda() <= 0) { esgotat = true; return {}; }
       try {
-        const creats = await ambSostre(Promise.resolve().then(() => creaEnviadorsNatius({ env, fetch, subtle, ara, rpc, topallMs: o.TOPALL_MS, registre })), 3 * o.TOPALL_MS);
+        const restant = Math.max(1, queda());
+        const creats = await ambSostre(Promise.resolve().then(() => creaEnviadorsNatius({ env, fetch: request, subtle, ara, rpc, topallMs: Math.min(o.TOPALL_MS, restant), registre })), Math.min(3 * o.TOPALL_MS, restant));
         const nets = {};
         for (const tipus of ['apns', 'fcm']) if (creats && typeof creats[tipus] === 'function') nets[tipus] = creats[tipus];
         return nets;
@@ -304,11 +374,11 @@ export function creaGestor({
     const aparellsRetallats = new Set();
     const pausat = (d) => configDolenta.has(d.tipus) || ritme.has(d.clauDePausa) || aparellsRetallats.has(`${d.tipus} ${d.adreca}`);
 
-    const compta = (d, perExpulsar, { resultat, estat }) => {
+    const compta = (d, { resultat, estat }) => {
       const classe = `${d.tipus} ${resultat}${estat ? ` ${estat}` : ''}`;
       classes.set(classe, (classes.get(classe) ?? 0) + 1);
       if (resultat === 'enviat') { recompte.enviats += 1; return; }
-      if (resultat === 'expulsa') { perExpulsar.push(d.id); return; }
+      if (resultat === 'expulsa') return;
       if (resultat === 'invalid') { recompte.sense_provar += 1; return; }
       recompte.fallits += 1;
       if (resultat === 'config') configDolenta.add(d.tipus);
@@ -316,7 +386,8 @@ export function creaGestor({
       else if (resultat === 'reintenta' && estat === 429) aparellsRetallats.add(`${d.tipus} ${d.adreca}`);
     };
 
-    const envia = (perExpulsar) => async (d) => {
+    const envia = (resultats) => async (d) => {
+      resultats.set(d.id, 'reintenta');
       const enviador = enviadorDe(d.tipus);
       if (!enviador) { recompte.sense_proveidor += 1; return; }
       if (pausat(d)) { recompte.sense_provar += 1; return; }
@@ -324,19 +395,20 @@ export function creaGestor({
       const crida = d.tipus === 'web'
         ? () => enviador({ endpoint: d.adreca })
         : () => enviador({ tipus: d.tipus, adreca: d.adreca, llengua: d.llengua });
-      const r = await ambSostre(Promise.resolve().then(crida), 2 * o.TOPALL_MS)
+      const r = await ambSostre(Promise.resolve().then(crida), Math.max(1, Math.min(2 * o.TOPALL_MS, queda())))
         .then(resultatDe, () => ({ resultat: 'reintenta', estat: null }));
-      compta(d, perExpulsar, r);
+      compta(d, r);
+      resultats.set(d.id, resultatPerConfirmar(r.resultat));
     };
 
     try {
       await rpc('xat_push_neteja', {});
       while (recompte.lots < o.MAX_LOTS) {
         if (queda() < 2 * o.TOPALL_MS) { esgotat = true; break; }
-        const lot = await rpc('xat_push_reclama', { p_limit: o.LOT });
-        if (!lot || typeof lot !== 'object' || Array.isArray(lot)) throw errorDe('forma');
+        const lot = await rpc('xat_push_reclama_v2', { p_limit: o.LOT });
+        if (!lot || typeof lot !== 'object' || Array.isArray(lot) || lot.protocol !== PROTOCOL_PUSH) throw errorDe('forma');
         const missatges = enter(lot.missatges);
-        if (missatges === 0) break;
+        if (missatges === 0 && enter(lot.treballs) === 0) break;
         recompte.lots += 1;
         recompte.missatges += missatges;
         recompte.retallats += enter(lot.retallats);
@@ -346,29 +418,42 @@ export function creaGestor({
         /* Una fila amb mala forma (o repetida, o de més) no es busca mai. */
         const valids = [];
         const vistos = new Set();
+        const claims = new Set();
         files.forEach((fila, index) => {
           const d = index < o.MAXIM_DISPOSITIUS ? formaDelDispositiu(fila) : null;
-          if (!d || vistos.has(d.id)) { recompte.sense_provar += 1; return; }
+          const lliuraments = d ? formaDelsLliuraments(fila.lliuraments) : null;
+          if (!d || vistos.has(d.id) || !lliuraments
+            || claims.size + lliuraments.length > MAXIM_LLIURAMENTS
+            || lliuraments.some((claim) => claims.has(claim.id))) { recompte.sense_provar += 1; return; }
           vistos.add(d.id);
-          valids.push(d);
+          for (const claim of lliuraments) claims.add(claim.id);
+          valids.push({ ...d, lliuraments });
         });
         if (natius === null && valids.some((d) => d.tipus !== 'web')) natius = await preparaNatius();
 
-        const perExpulsar = [];
-        await enviaAmbLimit(valids, o.CONCURRENCIA, envia(perExpulsar));
-        for (const tros of trossos(perExpulsar, o.MAXIM_EXPULSA)) {
-          recompte.expulsats += enter(await rpc('xat_push_expulsa', { p_ids: tros }));
+        const resultats = new Map();
+        await enviaAmbLimit(valids, o.CONCURRENCIA, envia(resultats));
+        const confirmacions = valids.flatMap((d) => d.lliuraments.map((claim) => ({
+          ...claim, resultat: resultats.get(d.id) || 'reintenta'
+        })));
+        for (const tros of trossos(confirmacions, o.MAXIM_EXPULSA)) {
+          if (queda() < o.TOPALL_MS) { esgotat = true; break; }
+          const ack = await rpc('xat_push_confirma_v2', { p_resultats: tros });
+          if (!ack || typeof ack !== 'object' || Array.isArray(ack)) throw errorDe('ack');
+          recompte.expulsats += enter(ack.expulsats);
         }
         if (esgotat) break;
       }
     } catch (error) {
-      /* La base no respon: el lot reclamat ja s'ha esborrat (com a molt una vegada, D-B8S-12). */
+      /* Unacknowledged leases expire; accepted deliveries stay terminal. */
       registre.error('[notifica-xat] La base no respon:', codiDe(error));
+      finalitza();
       return resposta(502, { ok: false, error: 'base', ...recompte, esgotat });
     }
 
     const resum = [...classes.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([c, n]) => `${c}=${n}`).join(', ');
     registre.info(`[notifica-xat] missatges=${recompte.missatges} dispositius=${recompte.dispositius} enviats=${recompte.enviats} expulsats=${recompte.expulsats} fallits=${recompte.fallits} sense_proveidor=${recompte.sense_proveidor} sense_provar=${recompte.sense_provar} lots=${recompte.lots} esgotat=${esgotat}${resum ? ` · ${resum}` : ''}`);
+    finalitza();
     return resposta(200, { ok: true, ...recompte, esgotat });
   };
 }

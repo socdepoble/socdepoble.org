@@ -31,7 +31,7 @@ const noDeclarades = (adaptador) => Object.keys(CAPACITATS)
   .filter((capacitat) => CAPACITATS[capacitat].every((metode) => typeof adaptador[metode] !== 'function'));
 /* Els casos que depenen d'un fil real del Xat (un cas anterior deixa filId, filEscrivible o la subscripció). */
 const CLAUS_DEL_XAT = new Set(['filId', 'filEscrivible', 'subscrit', 'seqEnviat']);
-const OPT_INS = new Set(['compteOperatiu', 'compteModeProva', 'compteSenseSessio', 'publicacioOperativa', 'credencialsDeProva', 'contrasenyaLocal', 'destinatariDirecte', 'transportXifrat', 'filDirecte', 'adminMultipobleAutoritzat', 'tenantAdministrat']);
+const OPT_INS = new Set(['compteOperatiu', 'compteModeProva', 'compteSenseSessio', 'publicacioOperativa', 'credencialsDeProva', 'contrasenyaLocal', 'destinatariDirecte', 'transportXifrat', 'filDirecte', 'adminMultipobleAutoritzat', 'tenantAdministrat', 'iaiaOperativa', 'xatRitmeOperatiu']);
 const casosDelXat = () => CASOS.filter((c) => c.requerix.some((clau) => CLAUS_DEL_XAT.has(clau)));
 
 /**
@@ -58,8 +58,8 @@ function passada(nom, { crea, prepara = () => {}, omissionsAdmeses, ambSessio = 
         return presents > 0 && presents < metodes.length;
       });
       expect(parcials).toEqual([]);
-      expect(Object.keys(CAPACITATS)).toHaveLength(46);
-      expect(CAPACITATS_NO_DECLARADES).toEqual(['importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+      expect(Object.keys(CAPACITATS)).toHaveLength(48);
+      expect(CAPACITATS_NO_DECLARADES).toEqual(['iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
       expect(noDeclarades(adaptador)).toEqual(CAPACITATS_NO_DECLARADES);
     });
 
@@ -84,7 +84,7 @@ function passada(nom, { crea, prepara = () => {}, omissionsAdmeses, ambSessio = 
       /* Una capacitat no declarada a posta: el kit l'omet amb el seu motiu, i res més. */
       const perCapacitat = omesos.filter(([c, r]) => c.capacitat && absents.includes(c.capacitat) && r.motiu === `capacitat ${c.capacitat} absent`);
       const resta = omesos.filter((omes) => !perCapacitat.includes(omes)).map(([c]) => c);
-      const esperades = CASOS.filter(c => omissionsAdmeses().includes(c) || c.requerix.some(k => OPT_INS.has(k) && !ctx[k]));
+      const esperades = CASOS.filter(c => !absents.includes(c.capacitat) && (omissionsAdmeses().includes(c) || c.requerix.some(k => OPT_INS.has(k) && !ctx[k])));
       expect(resta).toEqual(esperades);
       expect(adaptador.getCurrentUser()).toBeNull();
     });

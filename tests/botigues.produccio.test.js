@@ -282,19 +282,22 @@ describe('preflight: el context de producció i la família «Avisos push»', ()
     expect(amb.linies.indexOf('Avisos push')).toBeGreaterThan(amb.linies.indexOf('Arbre'));
   });
 
-  test.skipIf(SENSE_NATIUS)('l’arbre real (només lectura): cap connector, cap reenviament d’APNs; sense --push cap ✗, amb --push el del connector', () => {
+  test.skipIf(SENSE_NATIUS)('l’arbre real (només lectura): connector cablejat i APNs reenviat; FCM absent bloqueja Android amb i sense --push', () => {
     const estat = p.estatDelPush(ARREL);
-    expect(estat.connector).toEqual({ paquet: false, ios: false, android: false });
-    expect(estat.ios.reenviaRegistre, 'AppDelegate.swift viu: cap reenviament del registre d’APNs (ARB-B9-05)').toBe(false);
-    expect(estat.android.postNotifications, 'POST_NOTIFICATIONS arriba del connector de notificacions locals').toBe(true);
+    expect(estat.connector).toEqual({ paquet: true, ios: true, android: true });
+    expect(estat.ios.reenviaRegistre, 'R54: el delegat reenvia registre i fallada d’APNs a Capacitor').toBe(true);
+    expect(estat.ios.apsEnvironment).toBe('development');
+    expect(estat.android.postNotifications).toBe(true);
     expect(estat.android.googleServices.hiEs).toBe(false);
     expect(estat.android.connectorGoogleServices).toBe(true);
-    const sense = p.liniesDelPush(estat, { plataformes: ['ios', 'android'] });
-    expect(sense.mal).toEqual([]);
-    expect(sense.linies.join('\n')).toMatch(/✓ push: l'app no porta cap connector/);
-    const amb = p.liniesDelPush(estat, { push: true, plataformes: ['ios', 'android'] });
-    expect(amb.mal).toHaveLength(1);
-    expect(amb.mal[0]).toMatch(/^--push: el connector @capacitor\/push-notifications no és al projecte/);
+    for (const push of [false, true]) {
+      const result = p.liniesDelPush(estat, { push, plataformes: ['ios', 'android'] });
+      expect(result.mal).toEqual(["falta android/app/google-services.json (Firebase › configuració del projecte; git l'ignora)"]);
+      expect(result.linies.join('\n')).toContain("AppDelegate.swift reenvia el registre d'APNs");
+      expect(result.linies.join('\n')).not.toContain("l'app no porta cap connector");
+      expect(result.linies.join('\n')).not.toMatch(/--push: el connector .* no és al projecte/);
+      expect(result.linies.join('\n')).toContain("l'IPA de l'App Store l'ha de portar en production: es mira després d'exportar");
+    }
   });
 
   test.skipIf(SENSE_NATIUS)('avisos de producció de l’arbre real: Google de reserva i iPad a iOS, la prova tancada a Android; cap ✗', () => {

@@ -841,8 +841,46 @@ self.addEventListener('message', (event) => {
    mostrar, el push acaba igual. Sense pushsubscriptionchange: tornar a desar
    des d'ací demanaria la sessió dins del worker; la pàgina ho sincronitza en
    cada càrrega (src/pwa/avisosPush.js). */
+/* R54 · Token efímer per instància i wake. Un worker reiniciat té un token
+   diferent: una lectura antiga no pot confirmar-lo. Cap sessió ni disc. */
+let marcaPendent = null;
+let cuaInsignia = Promise.resolve();
+const novaMarcaPendent = () => {
+  try { return self.crypto?.randomUUID?.() || null; } catch { return null; }
+};
+const enCuaInsignia = feina => {
+  cuaInsignia = cuaInsignia.then(feina).catch(() => {});
+  return cuaInsignia;
+};
+const clientPropi = client => {
+  try { return new URL(client?.url).origin === self.location.origin; } catch { return false; }
+};
+self.addEventListener('message', event => {
+  if (!clientPropi(event.source)) return;
+  if (event.data?.tipus === 'sdp-badge-token') {
+    marcaPendent ||= novaMarcaPendent();
+    if (marcaPendent) event.source.postMessage({ tipus: 'sdp-badge-token', token: marcaPendent });
+  } else if (event.data?.tipus === 'sdp-badge-zero' && typeof event.data.token === 'string') {
+    const token = event.data.token;
+    event.waitUntil(enCuaInsignia(async () => {
+      if (!marcaPendent || token !== marcaPendent) return;
+      const avisos = await self.registration.getNotifications?.({ tag: ETIQUETA_AVIS_XAT }) || [];
+      if (token !== marcaPendent) return;
+      for (const avis of avisos) if (avis.tag === ETIQUETA_AVIS_XAT) avis.close();
+      await self.navigator?.clearAppBadge?.();
+    }));
+  }
+});
 self.addEventListener('push', (event) => {
-  event.waitUntil(Promise.resolve().then(mostraAvisCec).catch(() => {}));
+  /* R54 · Un wake no conté cap recompte ni sessió: només pendent genèric.
+     La insígnia no substituïx l'avís visible obligatori. */
+  marcaPendent = novaMarcaPendent();
+  const pendent = enCuaInsignia(async () => {
+    try { await self.navigator?.setAppBadge?.(); } catch { /* L'avís visible continua. */ }
+    const clients = await self.clients.matchAll?.({ type: 'window' }) || [];
+    for (const client of clients) if (marcaPendent && clientPropi(client)) client.postMessage({ tipus: 'sdp-badge-token', token: marcaPendent });
+  });
+  event.waitUntil(Promise.all([Promise.resolve().then(mostraAvisCec).catch(() => {}), pendent]));
 });
 
 /* El toc d'un avís del Xat (els d'altres etiquetes no són nostres): el tanca i

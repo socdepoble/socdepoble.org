@@ -214,7 +214,9 @@ test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xif
   expect(delsEmpaquetats).toEqual([RUTA_EMPAQUETATS]);
   const delBrain = cap('/consola', screen.getByRole('navigation', { name: 'Brain de taxonomia' }));
   expect(delBrain).toEqual(['/consola/taxonomia']);
-  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length + delGovern.length + delsEmpaquetats.length + delBrain.length);
+  const deBotigues = cap('/consola', screen.getByRole('region', { name: 'Botigues i verificadors' }));
+  expect(deBotigues).toEqual(['/consola/botigues']);
+  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length + delGovern.length + delsEmpaquetats.length + deBotigues.length + delBrain.length);
   expect(errors).not.toHaveBeenCalled();
 });
 

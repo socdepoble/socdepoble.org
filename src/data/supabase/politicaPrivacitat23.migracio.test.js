@@ -183,11 +183,35 @@ describe('2611012257 · la política de privacitat 2.3 segellada (T11-05)', () =
     }
   });
 
+  /* Sanejament R15 (B1 · P0-01, PRIV-04, R15-REG-01) · Una versió segellada POSTERIOR a la que /legal
+     servix només s'admet com a proposta declarada «NO aplicada» al README, i hui només la 2.6
+     (2611080440): el client continua amb la 2.5 fins que el Mestre l'aplique, i la seua prova
+     (politicaPrivacitat26.migracio.test.js) lliga el seu text a la 2.5 servida. La §18 es comprova
+     sobre la resta (la darrera publicable porta el /legal d'avui) i, amb la proposta inclosa, com si
+     es publicara (unicitat, empremtes i dates creixents). */
+  const versioNum = (v) => (/^\d+\.\d+$/.test(String(v)) ? Number(String(v).split('.')[0]) * 1000 + Number(String(v).split('.')[1]) : NaN);
+  const PROPOSTES_PENDENTS = ORDRE.filter((f) => INSERCIO_SEGELLADA.test(llig(f))
+    && README.includes(`- \`migrations/${f}\`\n  **NO aplicada: l'aplica el Mestre.**`)
+    && versioNum(filaDe(llig(f))?.versio) > versioNum(rotulDe(HTML)?.versio));
+  const ORDRE_PUBLICABLE = ORDRE.filter((f) => !PROPOSTES_PENDENTS.includes(f));
+
+  test('R15 · l’única proposta segellada posterior a /legal és la 2.6 de 2611080440, declarada NO aplicada, i amb ella la §18 també quadra', () => {
+    expect(PROPOSTES_PENDENTS.every((f) => f === '2611080440_politica_privacitat_2_6.sql')).toBe(true);
+    // Hui (R15): la migració hi és i /legal servix la 2.5, així que l'excepció no és buida.
+    if (ORDRE.includes('2611080440_politica_privacitat_2_6.sql') && rotulDe(HTML)?.versio === '2.5') expect(PROPOSTES_PENDENTS).toEqual(['2611080440_politica_privacitat_2_6.sql']);
+    for (const f of PROPOSTES_PENDENTS) {
+      expect(README).toContain(`| \`${f.slice(0, 10)}\` | \`${f}\` | **NO aplicada: l’aplica el Mestre** |`);
+      expect(problemesParagraf18(ORDRE, llig, filaDe(llig(f)).text)).toEqual([]);
+    }
+    // Sense la declaració «NO aplicada», la proposta torna a comptar com la darrera i /legal (2.5) no quadra.
+    if (PROPOSTES_PENDENTS.length) expect(problemesParagraf18(ORDRE, llig, HTML).length).toBeGreaterThan(0);
+  });
+
   test('§18 de /legal: la darrera migració que segella porta el text que /legal servix hui', () => {
-    expect(problemesParagraf18(ORDRE, llig, HTML)).toEqual([]);
+    expect(problemesParagraf18(ORDRE_PUBLICABLE, llig, HTML)).toEqual([]);
     // I un /legal editat sense versió nova: la guarda ho diu, i no demana reescriure una migració aplicada.
-    const darrera = ORDRE.filter((f) => INSERCIO_SEGELLADA.test(llig(f))).at(-1);
-    const editat = problemesParagraf18(ORDRE, llig, `${HTML}<p>Un retoc sense versió nova.</p>`);
+    const darrera = ORDRE_PUBLICABLE.filter((f) => INSERCIO_SEGELLADA.test(llig(f))).at(-1);
+    const editat = problemesParagraf18(ORDRE_PUBLICABLE, llig, `${HTML}<p>Un retoc sense versió nova.</p>`);
     expect(editat).toHaveLength(1);
     expect(editat[0].startsWith(`/legal no és el text que segella ${darrera} (versió ${filaDe(llig(darrera)).versio}). `)).toBe(true);
     expect(editat[0]).toMatch(/puja la versió del rètol de \/legal i segella-la en una migració nova/);

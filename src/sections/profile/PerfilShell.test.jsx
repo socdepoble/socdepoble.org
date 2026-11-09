@@ -652,3 +652,30 @@ test('T9 · una instància federada hi pot afegir nodes, que mai són actius', (
   expect(fills.map((li) => li.getAttribute('aria-current'))).toEqual(['true', null]);
   expect(fills[0].querySelector('.sdp-pilot').getAttribute('data-estat')).toBe('connectant');
 });
+
+// P0-63: el pont ha d'obrir el compte de la persona, també si actua com a organització.
+test('R14 P0-63 · ?apartat=compte selecciona el compte personal i el detall mòbil', () => {
+  m.actor = { tipus: 'entitat', id: 'O' };
+  m.params = new URLSearchParams('apartat=compte');
+  render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo', itemId: 'jo-compte' });
+  expect(m.workspace.mestreDetall).toEqual({ clau: 'perfil', element: 'vista=compte' });
+  render(m.workspace.renderDetail({ item: item(m.workspace.initialSelection.itemId) }));
+  expect(screen.getByText('compte de Pep')).toBeTruthy();
+});
+
+test('R14 P0-63 · entrar al compte amb el Perfil obert canvia la clau del Workspace', () => {
+  const vista = render(<PerfilShell />);
+  const abans = m.workspace.model.workspaceKey;
+  m.params = new URLSearchParams('apartat=compte');
+  vista.rerender(<PerfilShell />);
+  expect(m.workspace.model.workspaceKey).not.toBe(abans);
+  expect(m.workspace.initialSelection.itemId).toBe('jo-compte');
+});
+
+test('R14 P0-63 · un apartat desconegut no selecciona cap panell administratiu', () => {
+  m.params = new URLSearchParams('apartat=admin-empaquetats');
+  render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo' });
+  expect(m.workspace.model.items.some((fila) => fila.id.startsWith('admin-'))).toBe(false);
+});

@@ -9,6 +9,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ pagina: null, item: null, itemId: null, sectionId: 'mur', navigate: vi.fn(), t: (_, alternativa) => alternativa,
   sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false }, status: undefined, seo: vi.fn(), search: '', redireccio: null }));
 vi.mock('../../app/contexts/RouterContext', () => ({
+  useRouter: () => ({ memoria: false }),
   useParams: () => ({ sectionId: mocks.sectionId, itemId: mocks.itemId ?? mocks.item?.id }),
   useNavigate: () => mocks.navigate,
   useLocation: () => ({ pathname: `/${mocks.sectionId}/${mocks.item?.id}`, search: mocks.search, state: { preloadedItem: mocks.item } }),

@@ -1,4 +1,5 @@
 import { BookOpen, Coffee, HeartHandshake, Landmark, Receipt, ShoppingCart } from 'lucide-react';
+import { metadadesAplicacioDelNode, metadadesDatesDelPerfil } from './datesDelPerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    APLICACIONS DEL PERFIL · configuració pura (sense React)
@@ -69,8 +70,12 @@ export const ESTATS_APLICACIO = Object.freeze({
   connectada: 'Connectada en este node',
 });
 
+/* R55 · Només el catàleg local rep les dates canòniques. El validador de
+   llistes federades no les resol per ID: conserva les que aporte cada node. */
+const aplicacioDelNode = entrada => Object.freeze({ ...entrada, ...metadadesAplicacioDelNode(entrada.id) });
+
 export const APLICACIONS = Object.freeze([
-  Object.freeze({
+  aplicacioDelNode({
     id: 'gestoria',
     nom: 'Gestoria de Poble',
     descripcio: 'Comptabilitat i facturació trimestral.',
@@ -78,7 +83,7 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
     panell: 'gestoria',
   }),
-  Object.freeze({
+  aplicacioDelNode({
     id: 'rebost',
     nom: 'Rebost Domèstic',
     descripcio: 'La nevera i el rebost de casa.',
@@ -86,7 +91,7 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
     panell: 'rebost',
   }),
-  Object.freeze({
+  aplicacioDelNode({
     id: 'salut',
     nom: 'Salut',
     descripcio: 'Un quadern per a cuidar dels nostres.',
@@ -94,7 +99,7 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
     panell: 'salut',
   }),
-  Object.freeze({
+  aplicacioDelNode({
     id: 'genealogia',
     nom: 'Arbre Genealògic',
     descripcio: 'La memòria de la família, els malnoms i els masos.',
@@ -102,7 +107,7 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
     panell: 'genealogia',
   }),
-  Object.freeze({
+  aplicacioDelNode({
     id: 'lector-rss',
     nom: 'Lector RSS',
     descripcio: 'Les notícies de les entitats del poble, juntes.',
@@ -110,7 +115,7 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
     panell: 'rss',
   }),
-  Object.freeze({
+  aplicacioDelNode({
     id: 'tpv',
     nom: 'TPV del Bar',
     descripcio: 'La caixa del bar o del casino.',
@@ -118,14 +123,14 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
     panell: 'tpv',
   }),
-  Object.freeze({
+  aplicacioDelNode({
     id: 'snippet',
     nom: 'Snippet',
     descripcio: 'Extensió de Chrome per a desar webs al Bloc.',
     icona: BookOpen,
     estat: 'pendent',
   }),
-  Object.freeze({
+  aplicacioDelNode({
     id: 'metriques',
     nom: 'Consola de Mètriques',
     descripcio: 'Monitorització i auditoria de la IA.',
@@ -136,7 +141,7 @@ export const APLICACIONS = Object.freeze([
     /* Gauntlet 261016 (Bloc 3.4) · Maquinària interna: només superadmin. */
     intern: true,
   }),
-  Object.freeze({
+  aplicacioDelNode({
     id: 'cervell',
     nom: 'Cervell (Node Graph)',
     descripcio: 'Mapa visual de relacions i categories.',
@@ -185,6 +190,7 @@ export function aplicacionsValides(llista) {
       ruta: connectada ? entrada.ruta : null,
       panell: entrada.panell === null || ID_VALID.test(String(entrada.panell ?? '')) ? entrada.panell : entrada.id,
       ...(entrada.intern === true ? { intern: true } : null),
+      ...metadadesDatesDelPerfil(entrada),
     }));
   }
   return valides;

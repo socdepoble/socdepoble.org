@@ -3,6 +3,7 @@ import { resolveAsset } from '../../config/assetResolver';
 import { COPYRIGHT_SDP, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, insigniaDeCalendari, rutaCalendariDeLaData } from './editorial.js';
 import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
+import { ofereixTraduir, planTraduccioPublicacio, propia } from './traduccio/planTraduccioPublicacio.js';
 import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
 
 export { insigniaDeCalendari };
@@ -106,7 +107,11 @@ export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
    cap text), `modeTraduccio` (el translation_mode, que UniversalCard torna a
    comprovar) i `avis` (l'avís d'una traducció mal configurada, al capdamunt
    del cos). Sense elles, el DOM de sempre. */
-export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar, ambModeracio = false, enquadramentTargeta = null, showTranslate = true, translate, modeTraduccio, avis = null }) {
+export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar, ambModeracio = false, enquadramentTargeta = null, showTranslate = true, translate, modeTraduccio, avis = null, plaTraduccio = null, avisTraduccio = null }) {
+  // R56: standalone cards obey the declared mode; preserve R51 caller props.
+  const pla = plaTraduccio ?? planTraduccioPublicacio(item, propia(item, 'source_language'));
+  const potTraduir = showTranslate && ofereixTraduir(pla);
+  const avisUnic = avisTraduccio ?? avis;
   const data = dataDeLActe(esdeveniment, item);
   const insignia = insigniaDeCalendari(esdeveniment, data.dateTime, item);
 
@@ -114,8 +119,8 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
   const entradilla = item.ometEntradillaTargeta === true
     ? null
     : (item.entradilla || item.lead || (item.description ? <p className="sp-card-text">{item.description}</p> : null));
-  const bodyContent = avis
-    ? <>{avis}{typeof entradilla === 'string' ? <p className="sp-card-text">{entradilla}</p> : entradilla}</>
+  const bodyContent = avisUnic
+    ? <>{avisUnic}{typeof entradilla === 'string' ? <p className="sp-card-text">{entradilla}</p> : entradilla}</>
     : entradilla;
 
   // Custom badges for event
@@ -130,6 +135,7 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       title={item.title || item.name}
       subtitle={item.subtitle}
       body={bodyContent}
+      llenguaContingut={pla?.llengua || undefined}
       imageUrl={fontImatgePropia(resolveAsset((typeof item.image_url === 'string' ? item.image_url : null) || (typeof item.image === 'string' ? item.image : null) || ''))}
       imageAlt={item.imageAlt || item.title || item.name || ''}
       videoUrl={typeof item.video_url === 'string' && item.video_url.trim() ? fontVideoPropia(resolveAsset(item.video_url)) : undefined}
@@ -165,9 +171,9 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       mainHref={esRutaInterna(item.mainHref) ? item.mainHref : `/events/${item.id}`}
       showPin={item.isAvis || false}
       hasFooter={true}
-      showTranslate={showTranslate}
-      translate={translate}
-      modeTraduccio={modeTraduccio}
+      showTranslate={potTraduir}
+      translate={potTraduir ? translate : 'no'}
+      modeTraduccio={modeTraduccio ?? propia(item, 'translation_mode')}
       showComment={true}
       showShare={true}
       showConnect={true}

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-const state = vi.hoisted(() => ({ calls: [], prepare: null, seal: null, layer: null, registrats: [] }));
+const state = vi.hoisted(() => ({ calls: [], prepare: null, seal: null, layer: null, registrats: [], missatges: Object.freeze({ addEventListener() {}, removeEventListener() {} }) }));
 vi.mock('./css/index.css?inline', () => ({ default: '' }));
 vi.mock('react-dom/client', () => ({ createRoot: () => { state.calls.push('createRoot'); return { render: () => state.calls.push('render') }; } }));
 vi.mock('./PedraSecaEmbed.jsx', () => ({ default: () => null }));
@@ -12,7 +12,7 @@ vi.mock('./config/capaDelPaquet.js', () => ({
   fixaCapaDelPaquet: capa => { state.layer = capa; state.calls.push('capaLegacy'); },
   capaDelPaquet: () => state.layer || {}
 }));
-vi.mock('./pwa/registre.js', () => ({ registraServiceWorker() {}, registreActiu() {}, registreDelSw() {}, ESDEVENIMENT_AVIS_XAT: 'test' }));
+vi.mock('./pwa/registre.js', () => ({ registraServiceWorker() {}, registreActiu() {}, registreDelSw() {}, portMissatgesAvisos: () => state.missatges, ESDEVENIMENT_AVIS_XAT: 'test' }));
 /* Onada R9 (C3, G8-08) · La bandera és la de debò (encesa des del 261106): el
    bloc dels avisos de main.jsx corre de veres, amb el motor i l'adaptador
    simulats, i no ha de tocar l'ordre de l'arrencada ni escriure a la consola. */
@@ -65,7 +65,9 @@ test('main per defecte conserva la capa anterior i pinta sense esperar el segell
   /* Amb la bandera de debò (encesa): un sol registre de l'adaptador web, fora de l'ordre de l'arrencada. */
   await vi.waitFor(() => expect(state.registrats).toHaveLength(1));
   expect(state.registrats[0].adaptadorFals).toBe(true);
-  expect(Object.keys(state.registrats[0].opcions).sort()).toEqual(['clau', 'esdevenimentToc', 'produccio', 'registreActiu', 'registreDelSw']);
+  expect(Object.keys(state.registrats[0].opcions).sort()).toEqual(['clau', 'esdevenimentToc', 'missatges', 'produccio', 'registreActiu', 'registreDelSw']);
+  // R54: el port de lectura del worker es transmet sense perdre'n la identitat.
+  expect(state.registrats[0].opcions.missatges).toBe(state.missatges);
   expect(state.calls).toEqual(['capaLegacy', 'configura', 'exposaGlobal', 'arrenca', 'createRoot', 'render']);
 });
 

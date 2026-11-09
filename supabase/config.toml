@@ -1,0 +1,3 @@
+# Public relay keeps gateway JWT validation in addition to Auth lookup in the handler.
+[functions.notifica-xat-desperta]
+verify_jwt = true

@@ -71,7 +71,7 @@ describe('constants i bandera', () => {
     expect(codi).toMatch(/^export const AVISOS_PUSH_XAT_ACTIUS = true;$/m);
     expect(Object.isFrozen(r.ESTAT_AVISOS)).toBe(true);
     expect(Object.values(r.ESTAT_AVISOS)).toEqual(['no-disponible', 'no-oferit', 'inactiu', 'actiu', 'denegat',
-      'sense-gest', 'sense-worker', 'sense-connector', 'sense-servidor', 'error']);
+      'sense-gest', 'sense-worker', 'sense-connector', 'sense-config', 'sense-servidor', 'error']);
   });
 });
 

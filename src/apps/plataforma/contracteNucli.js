@@ -29,6 +29,9 @@
  *           el servei de notícies neutral que la plataforma dona al Lector.
  *           Només s'afig un nom: un mòdul de '^1.0', '^1.1' o '^1.2' continua
  *           valent (un mòdul no rep el servei: torna null).
+ *   1.4.0 · R14: serveis de catàleg i càlcul de Menjar i Beure, de només
+ *           lectura, i Botonera. Les apps no arrosseguen src/data al cos.
+ *           Els mòduls nous demanen ^1.4; les portes anteriors es conserven.
  *
  * MAI hi entren el port del backend, SessionContext ni IdentitatContext
  * (Model B i Llei de l'Enxufabilitat): un mòdul només sap si té dades del
@@ -36,7 +39,7 @@
  */
 
 export const ESQUEMA_MODUL = 'sdp.modul.v1';
-export const VERSIO_NUCLI = '1.3.0';
+export const VERSIO_NUCLI = '1.4.0';
 /* L'expressió global de l'objecte: el build dels mòduls hi penja cada porta. */
 export const GLOBAL_DEL_NUCLI = 'SocDePoble.nucli';
 
@@ -85,6 +88,8 @@ const PEDRA_SECA_V1 = Object.freeze([
      sessió ni un context de la pàgina. */
   ['composicio/index.jsx', ['Fila', 'Pila']],
   ['molecules/PillToggle.jsx', ['PillToggle']],
+  /* Nucli1.4.0: centred navigation/actions shared by food-domain apps. */
+  ['molecules/Botonera.jsx', ['Botonera']],
   ['organismes/AfegitRapid.jsx', ['AfegitRapid']],
   ['organismes/BarraResum.jsx', ['BarraResum']],
   ['organismes/DetallArticle.jsx', ['DetallArticle']],
@@ -128,7 +133,10 @@ export const PORTES_DEL_NUCLI = congela([
     noms: ['ClosaAplicacio', 'ENTITAT_PROJECTE', 'ESDEVENIMENT_NAVEGA', 'ESQUEMA_APP', 'NOMS_ICONES', 'PANELLS_ESTRET', 'VALIDADORS',
       'autoriaDe', 'coincidixRuta', 'esData', 'esIdOpac', 'esSegmentSegur', 'esSlug', 'esUuid', 'lazyRoute', 'rutaDeApp', 'titolDe',
       'useApp', 'useClosaAplicacio', 'useInterruptorsApp', 'useParametresConsulta', 'useRutaApp', 'useServeiNoticies', 'useSessioApp',
-      'validaRutes', 'validaTaulaDeClosa']
+      'validaRutes', 'validaTaulaDeClosa',
+      'carregaCatalegParroquia', 'carregaFotosParroquia', 'carregaMercadona', 'carregaReceptes', 'comparaOfertaRural',
+      'costCopaDeTarifaParroquia', 'enriqueixCartaParroquia', 'fiscalVenda', 'ingredientDeTarifaParroquia',
+      'itemsCatalegCartaParroquia', 'mesuraIngredient', 'tarifesCompraParroquia', 'validaEsborranyTrasllat']
   },
   {
     clau: 'pedraSeca',

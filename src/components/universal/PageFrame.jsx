@@ -90,10 +90,12 @@ export function ancoraDe(element) {
   return valor.length <= 80 && RE_ANCORA.test(valor) ? valor : null;
 }
 
-/* El fragment del document, com useLocation (RouterContext.jsx): només al navegador i
-   dins de la base. En memòria i fora de base, el fragment és de l'amfitrió. */
+/* En memòria només el fragment propi de l'entrada; mai el hash de l'amfitrió.
+   Al navegador, el del document dins de la base, com useLocation. */
 function fragmentDelDocument(router) {
-  if (!router || router.memoria === true || typeof router.currentPath !== 'string' || typeof window === 'undefined') return '';
+  if (!router || typeof router.currentPath !== 'string') return '';
+  if (router.memoria === true) return router.fragment || '';
+  if (typeof window === 'undefined') return '';
   return window.location.hash || '';
 }
 

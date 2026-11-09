@@ -114,7 +114,7 @@ function TaulaSalut({ salut }) {
 
 function TaulaArestes({ arestes }) {
   return (
-    <Taula titol="Arestes del mapa" densa>
+    <Taula titol="Arestes del mapa" densa className="sdp-taula--identificadors">
       <thead>
         <tr><th scope="col">De</th><th scope="col">A</th><th scope="col">Relació</th><th scope="col">Confiança</th><th scope="col">Evidència</th></tr>
       </thead>

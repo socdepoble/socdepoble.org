@@ -27,6 +27,7 @@ import {
   afig, afigPerNom, afigPropostes, amagaSeccio, commuta, creaArticlePropi, creaLlista, esborraArticlePropi, esborraLlista,
   estatInicial, lleva, marcaACasa, marcaComprat, mouSeccio, normalitzaEstat, reanomenaLlista, restableixSeccions, triaLlista
 } from './nucli/index.js';
+import { afigIngredientsRecepta } from './trasllatRecepta.js';
 
 const codiDe = (error) => (typeof error?.codi === 'string' ? error.codi : 'DESCONEGUT');
 
@@ -117,6 +118,7 @@ export function useNevera(magatzem) {
       afig: fes(afig),
       afigPerNom: fes(afigPerNom),
       afigPropostes: fes(afigPropostes),
+      afigIngredientsRecepta: fes(afigIngredientsRecepta),
       amagaSeccio: fes(amagaSeccio),
       commuta: fes(commuta),
       creaArticlePropi: fes(creaArticlePropi),

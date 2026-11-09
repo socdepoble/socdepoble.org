@@ -8,6 +8,8 @@ import federacioIaia from './tooling/vite/federacio-iaia.mjs';
 import opendataPublica from './tooling/vite/opendata-publica.mjs';
 import associacioApps from './tooling/vite/associacio-apps.mjs';
 import publicNet from './tooling/vite/public-net.mjs';
+import fotosParroquiaPrivades from './tooling/vite/fotos-parroquia-privades.mjs';
+import banderesDeCapacitat from './tooling/vite/banderes-de-capacitat.mjs';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -88,6 +90,11 @@ export function trossDArrencada(id) {
   if (cami.includes('/node_modules/')) return undefined;
   if (cami.endsWith('/src/css/index.css?inline')) return 'estils';
   if (cami.endsWith('/src/config/idiomes/ca.js')) return 'ca';
+  // R56 · Identitat/scroll nous i política pura existent byteintacta;
+  // síncrons i precarregats, sense RouterContext ni cicle cap a l'entrada.
+  if (cami.endsWith('/src/hooks/useScrollDeNavegacio.js')
+      || cami.endsWith('/src/app/contexts/historialDeRuta.js')
+      || cami.endsWith('/src/app/contexts/politicaRouter.js')) return 'navegacio';
   // AH-27 + Onada R6: dades pures (sense imports), cachejables a banda de la closca.
   // R38: el vocabulari curt compartix este tros ja existent; les traduccions continuen diferides.
   if (
@@ -135,6 +142,16 @@ export default defineConfig(({ command, mode, isPreview }) => {
   return {
     plugins: [
       react(),
+      /* Ordre del Mestre 261109 · R15a (PRIV-01) · Fora de DEV i sense
+         VITE_SDP_BAR_LLAVOR_LA_PARROQUIA=1, parroquiaFotos.js és un mòdul buit: les
+         fotos locals de La Parròquia no ixen en cap build públic encara que siguen
+         al disc (tooling/vite/fotos-parroquia-privades.mjs). */
+      fotosParroquiaPrivades(),
+      /* Sanejament R15 (B2/B3) · VITE_SDP_XAT_RITME, VITE_SDP_IAIA_SERVIDOR i
+         VITE_SDP_PUSH_NATIU, literals en compilar: sense '1', l'adaptador no anuncia
+         el ritme ni la IAIA amb servidor i el push natiu no s'arrenca
+         (tooling/vite/banderes-de-capacitat.mjs). */
+      banderesDeCapacitat(),
       publicNet(),
       consolaIaia(),
       /* IDEA-31 (QA-R2-13) · Només-dev: POST /__iaia/traduir, el Traductor Sobirà amb

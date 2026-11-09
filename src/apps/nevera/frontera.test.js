@@ -69,6 +69,17 @@ describe('el que pot importar', () => {
     expect(qui).toEqual([`${APP}/importador.js`]);
   });
 
+  test('el catàleg ampliat entra pel nucli i cap vista importa dades o el generat', () => {
+    expect(PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => resol(f, e).startsWith('src/data/')))).toEqual([]);
+    expect(especificadors(llig(`${APP}/vistes/Mercadona.jsx`))).toContain('../../plataforma/index.js');
+    expect(PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => e.includes('mercadona.generated')))).toEqual([]);
+  });
+
+  test('la recepció de receptes rep el servei del nucli sense importar el corpus', () => {
+    expect(especificadors(llig(`${APP}/vistes/RecepcioRecepta.jsx`))).toContain('../../plataforma/index.js');
+    expect(PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => e.includes('queDinem.generated')))).toEqual([]);
+  });
+
   test('només paquets permesos, fitxers propis o les portes públiques de la plataforma, l’esquelet, Pedra Seca i el magatzem', () => {
     const fora = PRODUCCIO.flatMap((fitxer) => especificadors(llig(fitxer)).map((e) => [fitxer, e, resol(fitxer, e)])
       .filter(([, , desti]) => !PAQUETS.has(desti) && !desti.startsWith(`${APP}/`) && !PERMESOS_DE_FORA.has(desti))

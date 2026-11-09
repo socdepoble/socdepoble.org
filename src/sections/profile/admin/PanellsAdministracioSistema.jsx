@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Alerta, Boto, Camp, CampText, Insignia } from '../../../components/PedraSeca/index.js';
+import { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { Alerta, Boto, Camp, CampText, Carregant, Insignia } from '../../../components/PedraSeca/index.js';
 import { Interruptor } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import { carpetesAmagadesDe, desaCarpetaAmagada, subscriuCarpetesVisibles } from '../../../components/universal/workspace/carpetesVisibles.js';
@@ -12,6 +12,13 @@ import { useSuperadminEstable } from '../../../hooks/useSuperadminEstable.js';
 import { aplica, base, CANON_BLAU, deltaDe, previsualitza, restaura } from '../../../config/crom.js';
 import { AVISOS_PUSH_XAT_ACTIUS, escoltaAvisosPush, instantaniaAvisosPush } from '../../../config/avisosPushXat.js';
 import { CANALS_BOTIGUES, ESTAT_SERVIDOR_PUSH, FITXA_NATIVA, PASSOS_SERVIDOR_PUSH, QR_GUIA_DESCARREGUES, URL_GUIA_DESCARREGUES, frasePushDelNavegador } from './assistentBotigues.js';
+
+const BotiguesSistema = lazy(() => import('../../botigues/BotiguesSistema.jsx'));
+
+export function PanellBotiguesVerificadors() {
+  return <Suspense fallback={<Carregant etiqueta="Carregant botigues i verificadors…" />}><BotiguesSistema /></Suspense>;
+}
+
 /* La mostra de color es pinta per DOM (la propietat --sdp-crom-mostra només s'accepta si és un HEX6);
    el Design Guard no admet style en línia fora de PanellCrom.jsx. */
 function pintaMostraCrom(el, hex) {

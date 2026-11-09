@@ -81,10 +81,10 @@ describe('R13-C7 · estàtica: admin_resum_sessions_dispositius()', () => {
     assert.match(CODI, /notify pgrst, 'reload schema';\s*commit;\s*$/);
   });
 
-  test('el README la cataloga com a NO aplicada (vinyeta i fila 81) i nomena la prova', () => {
+  test('el README la cataloga com a NO aplicada (vinyeta i fila 85) i nomena la prova', () => {
     const readme = fs.readFileSync(path.join(ARREL, 'supabase/README.md'), 'utf8');
     assert.ok(readme.includes(`- \`migrations/${FITXER}\``));
-    assert.match(readme, /^\| 81 \| `2611082238` \| `2611082238_admin_resum_sessions_dispositius\.sql` \| \*\*NO aplicada: l'aplica el Mestre\*\* \|/m);
+    assert.match(readme, /^\| 85 \| `2611082238` \| `2611082238_admin_resum_sessions_dispositius\.sql` \| \*\*NO aplicada: l'aplica el Mestre\*\* \|/m);
     assert.ok(readme.includes('tests/migracio-admin-resum-sessions-dispositius.test.mjs'));
   });
 

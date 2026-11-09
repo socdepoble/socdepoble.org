@@ -12,8 +12,9 @@ import { ARTICLES_BASE, ARTICLES_PRODUCTES, CATEGORIES, FONT, ID_PROPIS, LIMITS,
 import { PRODUCTES } from './productes.js';
 
 const ARREL = process.cwd();
-const FULL = '_wiki_de_poble/04_escriptori/01_produccio/mercadona/Llista de la compra - Mercadona.csv';
-const HI_HA_FULL = existsSync(path.join(ARREL, FULL));
+const FULL = process.env.SDP_MERCADONA_CSV || '_wiki_de_poble/04_escriptori/01_produccio/mercadona/Llista de la compra - Mercadona.csv';
+const RUTA_FULL = path.resolve(ARREL, FULL);
+const HI_HA_FULL = existsSync(RUTA_FULL);
 const SECCIONS = new Set(CATEGORIES.map((categoria) => categoria.id));
 
 describe('la font i la forma de les files', () => {
@@ -119,7 +120,7 @@ describe('els ids publicats', () => {
 
 describe('la deriva respecte del full', () => {
   test.skipIf(!HI_HA_FULL)('l’importador aplicat al full sobre el tall publicat dona EXACTAMENT PRODUCTES, i només avisa de la nota', () => {
-    const { productes, avisos } = importaProductes(readFileSync(path.join(ARREL, FULL)), { publicats: PRODUCTES, delimitador: ',' });
+    const { productes, avisos } = importaProductes(readFileSync(RUTA_FULL), { publicats: PRODUCTES, delimitador: ',' });
     expect(avisos).toHaveLength(1);
     expect(avisos[0]).toMatch(/és una nota, no un producte/);
     expect(productes).toEqual(PRODUCTES.map((fila) => [...fila]));

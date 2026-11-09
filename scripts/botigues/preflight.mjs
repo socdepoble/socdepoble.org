@@ -104,8 +104,8 @@ export function sdkFacebookIos(arrel) {
 }
 
 /* ───────────── B9 · Avisos push (marató 261101_2143, spec B9-BOTIGUES §3.1.2) ─────────────
-   Hui l'app no porta el connector d'avisos remots (B8 en fase N1, decisió D-WP-7 del Mestre): sense
-   connector ni --push no cal aps-environment ni FCM. Amb el connector, cada peça que falte és un ✗
+   Sense connector ni --push no cal aps-environment ni FCM. Amb el connector present,
+   cada peça que falte és un ✗
    de la família de l'arbre (7). Només llig, i de google-services.json no ix mai cap valor. */
 export const PAQUET_PUSH = '@capacitor/push-notifications';
 export const PRODUCTE_SPM_PUSH = 'CapacitorPushNotifications';

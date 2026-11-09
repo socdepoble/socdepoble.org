@@ -2,10 +2,12 @@
  * A cookie session is an opaque server credential. This module never reads a
  * cookie, constructs a JWT, persists an identity or falls back to another DB.
  */
+import {capturaConsultaIAIA,validaRespostaIAIA} from '../iaiaProtocol.js';
 import {CONTRACTE_NUCLI,VERSIO_NORMES_CONVIVENCIA} from '../contracte.js';
 import {BACKEND_ID_NODE_ZERO,CONVIDAT_NODE_ZERO} from './adaptadorNodeZeroHttp.js';
 import {capturaAdminUsuaris,validaLlistaAdminUsuaris,validaInvitacioAdmin,validaConnexioAdmin} from '../adminUsuaris.js';
 import {validaLotDadesObertes} from '../dadesObertesLot.js';
+import {validaRitmeXat,validaPresenciaXat} from '../xatRitme.js';
 const UUID=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const plain=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const fail=(codi,message='Esta operació no està disponible al Node 0.',extra={})=>Object.assign(new Error(message),{codi,code:codi,retriable:false,...extra});
@@ -90,6 +92,7 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
   const publications=status.capabilities.sectionSubmissions===true&&bound;
   const pages=status.capabilities.paginacioSeccions===true&&bound;
   const norms=status.capabilities.norms===true&&bound;
+  const ritme=status.capabilities.xatRitme===true&&bound;
   let epoch=0,user=null,state='unknown',closed=false,uncertain=false,queue=Promise.resolve(),pending=0;
   const emit=()=>{const detail=Object.freeze({user,backendId:cfg.backendId,backendUrl:cfg.backendUrl,tenantId:cfg.tenantId,epoch,sessionState:state});
     queueMicrotask(()=>{try{emetCanvi(detail);}catch{/* UI listeners cannot roll back a server authentication. */}});};
@@ -196,6 +199,13 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
     return {elements,complete:result.complete,nextCursor:cursorOut?encodeCursor(section,captured.id,cursorOut):null};
   }
   const adapter={...publicAdapter};
+  if(bound&&status.capabilities.iaia===true&&typeof transport.demanaIAIA==='function'){
+    adapter.consultaIAIA=async(input,options={})=>{
+      const captured=actor(),body=capturaConsultaIAIA(input);
+      const value=await transport.demanaIAIA(body,{...config(options),expectedActor:captured.id});
+      current(captured.ticket);if(options.signal?.aborted)throw options.signal.reason??new DOMException('Cancelled','AbortError');if(user?.id!==captured.id)throw stale();return validaRespostaIAIA(value,body);
+    };
+  }
   if(bound&&status.capabilities.restauracioDadesObertes===true){
     adapter.restauraDadesObertes=async(lot,options={})=>{
       const captured=dataCopy(lot);if(validaLotDadesObertes(captured).length||captured.versio!=='1.2.0')throw fail('NODE0_PAQUET_INVALID');
@@ -332,11 +342,20 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
       return normsDto(await authBound('norms',{accept:true,version},options),true);
     };
   }
+  if(ritme){
+    const ritmeActor=options=>{if(options.ritmeActorId!==undefined&&options.ritmeActorId!==actor().id)throw stale();};
+    adapter.loadRitmeXat=async(filId,options={})=>{ritmeActor(options);return validaRitmeXat(await rpc('loadRitmeXat',{filId},options));};
+    adapter.actualitzaPresenciaXat=async(filId,value,options={})=>{
+      ritmeActor(options);
+      const p=validaPresenciaXat(value),res=await rpc('actualitzaPresenciaXat',{filId,...p},options,true);
+      if(res?.acceptat!==true)throw invalid();return {acceptat:true};
+    };
+  }
   // Include the mapper's final microtask in the epoch boundary as well. A
   // completed HTTP request must not deliver actor A's DTO after login B starts.
   for(const name of ['getProfile','updateProfile','listMyOrganizations','createOrganization','updateOrganization','loadNotes','createNote','updateNote',
     'loadFils','loadMissatges','enviaMissatge','marcaLlegit','creaFilDirecte','carregaMembres',...(roles?['elMeuRol']:[]),
-    ...(publications?['appendSectionSubmissionNetworkOnly']:[]),...(pages?['loadMur','loadMultimedia','loadSeccioPage']:[]),...(norms?['estatNormes','acceptaNormes']:[])]){
+    ...(publications?['appendSectionSubmissionNetworkOnly']:[]),...(pages?['loadMur','loadMultimedia','loadSeccioPage']:[]),...(norms?['estatNormes','acceptaNormes']:[]),...(ritme?['loadRitmeXat','actualitzaPresenciaXat']:[])]){
     const method=adapter[name];adapter[name]=(...args)=>{open();const ticket=epoch;return Promise.resolve().then(()=>{current(ticket);return method(...args);})
       .then(value=>{current(ticket);return value;},error=>{if(ticket!==epoch)throw stale();throw error;});};
   }

@@ -9,7 +9,7 @@
    (patró de src/utils/temporada/qualitat.test.js). */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { ESLint } from 'eslint';
+import { ESLint, Linter } from 'eslint';
 import { describe, expect, test } from 'vitest';
 import {
   ABREVIATURES_ALERGENS, ALERGENS, CANALS, DOMINIS, ESTATS_IMATGE, NOMS_ALERGENS, UNITATS, canalsDe, esDelCanal, esIdOpac, ordenaAlergens,
@@ -466,12 +466,33 @@ describe('qualitat de src/utils/productes', () => {
   }, 120000);
 
   test('JS pur: cap import, cap rellotge, atzar, DOM, React, xarxa ni emmagatzematge', () => {
-    const impurs = new RegExp(t('\\b(?:Da', 'te|React|use[A-Z]\\w*|win', 'dow|docu', 'ment|navi', 'gator|global', 'This|set', 'Timeout|set',
-      'Interval|fet', 'ch|XMLHttp', 'Request|local', 'Storage|session', 'Storage|indexed', 'DB)\\b|Math\\.ran', 'dom|cryp', 'to\\.'));
-    expect(impurs.test(t('new Da', 'te()'))).toBe(true);
+    const impurs = new RegExp(t('^(?:Da', 'te|React|use[A-Z]\\w*|win', 'dow|docu', 'ment|navi', 'gator|global', 'This|set', 'Timeout|set',
+      'Interval|fet', 'ch|XMLHttp', 'Request|local', 'Storage|session', 'Storage|indexed', 'DB|cryp', 'to)$'));
+    const linter = new Linter();
+    const verifica = (codi) => linter.verify(codi, [{
+      languageOptions: { ecmaVersion: 2022, sourceType: 'module' },
+      plugins: { puresa: { rules: { referencies: { create(context) { return {
+        Identifier(node) {
+          const pare = node.parent;
+          if (pare.type === 'MemberExpression' && pare.property === node && !pare.computed) return;
+          if (pare.type === 'Property' && pare.key === node && !pare.computed && !pare.shorthand) return;
+          if (impurs.test(node.name)) context.report({ node, message: 'Referència impura' });
+        },
+        MemberExpression(node) {
+          const propietat = node.computed ? node.property.value : node.property.name;
+          if (node.object.type === 'Identifier' && node.object.name === 'Math' && propietat === 'random') context.report({ node, message: 'Atzar' });
+        }
+      }; } } } } },
+      rules: { 'puresa/referencies': 'error' }
+    }]);
+    expect(verifica(t('new Da', 'te()'))).not.toEqual([]);
+    expect(verifica(t('docu', 'ment.querySelector("x")'))).not.toEqual([]);
+    expect(verifica(t('global', 'This["docu', 'ment"]'))).not.toEqual([]);
+    expect(verifica(t('Math["ran', 'dom"]()'))).not.toEqual([]);
+    expect(verifica('const font = { document: "PDF" }; font.document;')).toEqual([]);
     for (const fitxer of PRODUCCIO) {
       const codi = senseComentaris(llig(fitxer));
-      expect(codi.match(impurs), fitxer).toBeNull();
+      expect(verifica(codi), fitxer).toEqual([]);
       expect(/\bimport\b|\brequire\s*\(/.test(codi), fitxer).toBe(false);
     }
   });

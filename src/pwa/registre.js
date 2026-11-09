@@ -99,6 +99,26 @@ export function motiuPerNoRegistrar({ produccio, navegador, finestra } = {}) {
   return null;
 }
 
+/** Port de lectura dels missatges del worker propi. Només l'entrada web
+ * l'injecta a l'adaptador: cap registre, controlador, escriptura ni contenidor
+ * cru travessa esta frontera. Fora de producció o de la pàgina pròpia, null. */
+export function portMissatgesAvisos({ produccio = import.meta.env.PROD, navegador = globalThis.navigator, finestra = globalThis.window } = {}) {
+  try {
+    if (motiuPerNoRegistrar({ produccio, navegador, finestra })) return null;
+    const sw = navegador.serviceWorker;
+    if (typeof sw?.addEventListener !== 'function') return null;
+    const listenerValid = rep => typeof rep === 'function' || (rep && typeof rep.handleEvent === 'function');
+    return Object.freeze({
+      addEventListener(tipus, rep, opcions) {
+        try { if (tipus === 'message' && listenerValid(rep)) sw.addEventListener('message', rep, opcions); } catch { /* ajuda opcional */ }
+      },
+      removeEventListener(tipus, rep, opcions) {
+        try { if (tipus === 'message' && listenerValid(rep)) sw.removeEventListener?.('message', rep, opcions); } catch { /* ajuda opcional */ }
+      }
+    });
+  } catch { return null; }
+}
+
 /**
  * El missatge d'escalfament per al worker, o null fora de /app/*. Pura.
  * `entrades`: les de performance.getEntriesByType('resource'), de les quals

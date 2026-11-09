@@ -472,11 +472,42 @@ describe('B8C-4 · els avisos push natius, darrere de la bandera', () => {
     expect(pintats).toHaveLength(1);
   });
 
+  /* Sanejament R15 (B3 · P1-03) · El build natiu d'avui no porta VITE_SDP_PUSH_NATIU=1 (ni
+     google-services.json): el registre rep l'adaptador amb motiu 'sense-config', sense que ningú
+     pregunte al pont si té el connector, i res a la consola. */
+  test('sense la bandera de build VITE_SDP_PUSH_NATIU: una sola vegada, motiu sense-config, el pont ni es consulta', async () => {
+    const consola = ['log', 'info', 'warn', 'error', 'debug'].map((nivell) => vi.spyOn(console, nivell).mockImplementation(() => {}));
+    const nucli = { Capacitor: { isPluginAvailable: vi.fn(() => true), getPlatform: vi.fn(() => 'android') }, registerPlugin: vi.fn() };
+    ambAdaptador(nucli);
+    ambBanderaEncesa();
+    vi.stubEnv('VITE_SDP_PUSH_NATIU', '');
+    try {
+      await avalua();
+      const registre = await import('../config/avisosPushXat.js');
+      await vi.waitFor(() => expect(registre.avisosPushDisponibles()).toBe(true));
+      expect(registre.registraAvisosPush).toHaveBeenCalledTimes(1);
+      expect(registre.instantaniaAvisosPush()).toMatchObject({ disponible: true, tipus: 'natiu', motiu: 'sense-config', ambServidor: false });
+      expect(registre.fixaServidorAvisosPush({ ambit: 'persona-a', desa: vi.fn(), retira: vi.fn() })).toBe(true);
+      expect(await registre.activaAvisosPush()).toEqual({ estat: 'sense-config' });
+      expect(await registre.sincronitzaAvisosPush()).toEqual({ estat: 'sense-config' });
+      await registre.baixaLocalAvisosPushEnEntrar();
+      expect(nucli.Capacitor.isPluginAvailable).not.toHaveBeenCalled();
+      expect(nucli.registerPlugin).not.toHaveBeenCalled();
+      expect(pintats).toHaveLength(1);
+      for (const espia of consola) expect(espia).not.toHaveBeenCalled();
+    } finally {
+      vi.stubEnv('VITE_SDP_PUSH_NATIU', undefined);
+      for (const espia of consola) espia.mockRestore();
+    }
+  });
+
   test('amb la bandera encesa i el pont sense el connector: una sola vegada, motiu sense-connector, cap crida nativa ni res a la consola', async () => {
     const consola = ['log', 'info', 'warn', 'error', 'debug'].map((nivell) => vi.spyOn(console, nivell).mockImplementation(() => {}));
     const nucli = nucliSenseConnector();
     ambAdaptador(nucli);
     ambBanderaEncesa();
+    // Sanejament R15 (B3): el camí 'sense-connector' és el d'un build amb VITE_SDP_PUSH_NATIU=1.
+    vi.stubEnv('VITE_SDP_PUSH_NATIU', '1');
     try {
       await avalua();
       const registre = await import('../config/avisosPushXat.js');
@@ -484,13 +515,14 @@ describe('B8C-4 · els avisos push natius, darrere de la bandera', () => {
       expect(registre.registraAvisosPush).toHaveBeenCalledTimes(1);
       expect(registre.instantaniaAvisosPush()).toMatchObject({ disponible: true, tipus: 'natiu', motiu: 'sense-connector', estat: 'inactiu', ambServidor: false });
       expect(carrega.vegades).toBe(1);
-      // L'entrada el construïx amb el nucli de per defecte: cap opció seua.
-      expect(carrega.fabrica.mock.calls).toEqual([[]]);
+      // Nucli de per defecte i noms de canal de la llengua triada.
+      expect(carrega.fabrica.mock.calls).toEqual([[null, expect.objectContaining({ canal: expect.any(Function) })]]);
       expect(nucli.Capacitor.isPluginAvailable).toHaveBeenCalledWith('PushNotifications');
       expect(nucli.registerPlugin).not.toHaveBeenCalled();
       expect(pintats).toHaveLength(1);
       for (const espia of consola) expect(espia).not.toHaveBeenCalled();
     } finally {
+      vi.stubEnv('VITE_SDP_PUSH_NATIU', undefined);
       for (const espia of consola) espia.mockRestore();
     }
   });

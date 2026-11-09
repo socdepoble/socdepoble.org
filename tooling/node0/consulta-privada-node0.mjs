@@ -13,8 +13,9 @@ export const POLITICA_LOG_PRIVAT_NODE0=Object.freeze({
 });
 const fail=()=>{throw new TypeError('node0_private_query_invalid');};
 const MARKER=/convert_from\(decode\('([A-Za-z0-9+/]*={0,2})','base64'\),'UTF8'\)/g;
-const PRECHECK=`DO $node0_private_logs$ BEGIN IF current_user <> 'node0_authenticator' OR ${Object.entries(POLITICA_LOG_PRIVAT_NODE0).map(([key,value])=>`current_setting('${key}') IS DISTINCT FROM '${value}'`).join(' OR ')} THEN RAISE EXCEPTION 'node0_private_logging_policy_required' USING ERRCODE='42501'; END IF; END $node0_private_logs$;`;
-export function preparaConsultaPrivadaNodeZero(input){
+const precheck=role=>`DO $node0_private_logs$ BEGIN IF current_user <> '${role}' OR ${Object.entries(POLITICA_LOG_PRIVAT_NODE0).map(([key,value])=>`current_setting('${key}') IS DISTINCT FROM '${value}'`).join(' OR ')} THEN RAISE EXCEPTION 'node0_private_logging_policy_required' USING ERRCODE='42501'; END IF; END $node0_private_logs$;`;
+export function preparaConsultaPrivadaNodeZero(input,{role='node0_authenticator'}={}){
+  if(!['node0_authenticator','node0_iaia_authenticator'].includes(role))fail();
   if(typeof input!=='string'||!input.trim()||Buffer.byteLength(input)>4*1024*1024||input.includes('\0'))fail();
   let sql=input.trim();
   // Fixed backend compiler owns this outer transaction. Do not nest it: the
@@ -31,7 +32,7 @@ export function preparaConsultaPrivadaNodeZero(input){
   // No quotes, backslashes, newline, variable substitution or command text can
   // originate in a bound value. \bind uses the extended query protocol.
   const encoded=Buffer.from(JSON.stringify(values),'utf8').toString('base64');
-  const script=`${PRECHECK}\nBEGIN;\nWITH bound AS MATERIALIZED (SELECT set_config('node0.private_parameters',convert_from(decode($1,'base64'),'UTF8'),true)) SELECT 1 AS installed FROM bound \\bind '${encoded}' \\gset node0_internal_\n${sql}\nCOMMIT;\n`;
+  const script=`${precheck(role)}\nBEGIN;\nWITH bound AS MATERIALIZED (SELECT set_config('node0.private_parameters',convert_from(decode($1,'base64'),'UTF8'),true)) SELECT 1 AS installed FROM bound \\bind '${encoded}' \\gset node0_internal_\n${sql}\nCOMMIT;\n`;
   const safe={schema:'sdp.node0.private-bind.v1',parameterCount:values.length};
   return Object.freeze({sql,script,parameterCount:values.length,toJSON:()=>safe,[inspect.custom]:()=>safe});
 }

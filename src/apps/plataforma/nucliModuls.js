@@ -28,6 +28,7 @@ import { Carregant, EstatBuit, Esquelet, Progres } from '../../components/PedraS
 import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
 import { Fila, Pila } from '../../components/PedraSeca/composicio/index.jsx';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
+import { Botonera } from '../../components/PedraSeca/molecules/Botonera.jsx';
 import { PillToggle } from '../../components/PedraSeca/molecules/PillToggle.jsx';
 import { Accordion, AccordionItem } from '../../components/PedraSeca/organismes/Accordion.jsx';
 import { AfegitRapid } from '../../components/PedraSeca/organismes/AfegitRapid.jsx';
@@ -72,7 +73,7 @@ export const NUCLI = Object.freeze({
   }),
   plataforma: copiaCongelada(plataformaDelNucli),
   pedraSeca: Object.freeze({
-    Accordion, AccordionItem, ActionControl, AfegitRapid, Alerta, AreaText, BarraResum, Boto, Camp, CampFitxer, CampText, Carregant,
+    Accordion, AccordionItem, ActionControl, AfegitRapid, Alerta, AreaText, BarraResum, Boto, Botonera, Camp, CampFitxer, CampText, Carregant,
     Casella, ControlContrasenya, DateTimeControl, DetallArticle, Dialeg, DialegConfirmacio, ESTATS_ARTICLE, EstatBuit, Esquelet,
     Fila, GraellaArticles, GraellaTargetes, GrupCamps, GrupOpcions, Histograma, IconButton, Insignia, Interruptor, LiniaDelTemps,
     LiniesColleccio, LlistaArticles, MarcColumna, NavegacioPeriode, OrdenaCategories, PaginaApp, Pestanyes, Pila, PillToggle,

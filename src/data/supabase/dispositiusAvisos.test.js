@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { desaDispositiuAvisos, retiraDispositiuAvisos } from './dispositiusAvisos.js';
 import { CODI_DISPOSITIU_ALIE } from '../../config/avisosPushXat.js';
 
+const USUARI = '00000000-0000-4000-a000-000000000001';
 const ORIGEN = 'https://avisos.supabase.test';
 const CLAU = 'sb_publishable_de_proves';
 const REMOT = Object.freeze({ dataMode: 'remote', supabaseUrl: ORIGEN, supabaseAnonKey: CLAU });
@@ -32,6 +33,17 @@ const errorDe = async (promesa) => {
   try { await promesa; } catch (error) { return error; }
   throw new Error('havia de rebutjar');
 };
+
+test('R54: sense usuari esperat UUID no hi ha retirada, i una RPC segura absent mai recau en l’antiga', async () => {
+  for (const usuariEsperat of [undefined, null, '', 'b', {}, ['a']]) {
+    expect(await errorDe(retiraDispositiuAvisos({ plataforma: 'web', adreca: WEB, usuariEsperat }, REMOT))).toMatchObject({ code: 'AVISOS_INVALID' });
+  }
+  expect(servidor).not.toHaveBeenCalled();
+  servidor.mockResolvedValueOnce(resposta({ code: 'PGRST202', message: 'function missing' }, 404));
+  expect(await errorDe(retiraDispositiuAvisos({ plataforma: 'web', adreca: WEB, usuariEsperat: USUARI }, REMOT))).toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(servidor).toHaveBeenCalledTimes(1);
+  expect(crida().url).toContain('/xat_push_retira_segura');
+});
 
 beforeEach(() => {
   servidor.mockReset();
@@ -95,7 +107,7 @@ describe('coacció primitiva abans del transport', () => {
       { plataforma: 'web', adreca: web2048 }, { plataforma: 'ios', adreca: 'a'.repeat(64) }, { plataforma: 'ios', adreca: 'F'.repeat(200) },
       { plataforma: 'android', adreca: 'f'.repeat(32) }, { plataforma: 'android', adreca: 'f'.repeat(1024) }
     ]) {
-      await expect(retiraDispositiuAvisos(d, REMOT), `${d.plataforma} ${d.adreca.length}`).resolves.toBeUndefined();
+      await expect(retiraDispositiuAvisos({ ...(d), usuariEsperat: USUARI }, REMOT), `${d.plataforma} ${d.adreca.length}`).resolves.toBeUndefined();
     }
     expect(servidor).toHaveBeenCalledTimes(5);
   });
@@ -160,9 +172,9 @@ describe('el cos exacte de B8-SERVIDOR §2.9', () => {
       [{ plataforma: 'android', adreca: FCM }, { p_plataforma: 'android', p_adreca: FCM }]
     ];
     for (const [i, [d, esperat]] of respostes.entries()) {
-      expect(await retiraDispositiuAvisos(d, REMOT)).toBeUndefined();
-      expect(crida(i).url).toBe(`${ORIGEN}/rest/v1/rpc/xat_push_retira`);
-      expect(crida(i).cos).toEqual(esperat);
+      expect(await retiraDispositiuAvisos({ ...(d), usuariEsperat: USUARI }, REMOT)).toBeUndefined();
+      expect(crida(i).url).toBe(`${ORIGEN}/rest/v1/rpc/xat_push_retira_segura`);
+      expect(crida(i).cos).toEqual({ ...esperat, p_usuari_esperat: USUARI });
     }
   });
 
@@ -170,7 +182,7 @@ describe('el cos exacte de B8-SERVIDOR §2.9', () => {
     servidor.mockResolvedValueOnce(resposta('6f1c1d1e-0000-4000-8000-000000000001'));
     expect(await desaDispositiuAvisos({ plataforma: 'web', adreca: WEB }, REMOT)).toBeUndefined();
     servidor.mockResolvedValueOnce(resposta(true));
-    expect(await retiraDispositiuAvisos({ plataforma: 'web', adreca: WEB }, REMOT)).toBeUndefined();
+    expect(await retiraDispositiuAvisos({ ...({ plataforma: 'web', adreca: WEB }), usuariEsperat: USUARI }, REMOT)).toBeUndefined();
   });
 });
 
@@ -181,7 +193,7 @@ describe('els errors del servidor', () => {
     servidor.mockResolvedValueOnce(resposta({ code: 'PGRST202', message: 'Could not find the function public.xat_push_desa' }, 404));
     expect(await errorDe(desaDispositiuAvisos({ plataforma: 'web', adreca: WEB }, REMOT))).toMatchObject({ code: 'NO-DISPONIBLE' });
     servidor.mockResolvedValueOnce(resposta({ code: 'PGRST202', message: 'Could not find the function public.xat_push_retira' }, 400));
-    expect(await errorDe(retiraDispositiuAvisos({ plataforma: 'web', adreca: WEB }, REMOT))).toMatchObject({ code: 'NO-DISPONIBLE' });
+    expect(await errorDe(retiraDispositiuAvisos({ ...({ plataforma: 'web', adreca: WEB }), usuariEsperat: USUARI }, REMOT))).toMatchObject({ code: 'NO-DISPONIBLE' });
   });
 
   test('SDP-PUSH-010 (avisos apagats, 55000 → 500): NO-DISPONIBLE, amb la causa', async () => {
@@ -211,7 +223,7 @@ describe('els errors del servidor', () => {
     expect(intern).toMatchObject({ status: 500 });
     expect(intern.code).toBeUndefined();
     servidor.mockResolvedValueOnce(pgrst('SDP-PUSH-001: cal la sessió iniciada.', 403));
-    const sensesessio = await errorDe(retiraDispositiuAvisos({ plataforma: 'web', adreca: WEB }, REMOT));
+    const sensesessio = await errorDe(retiraDispositiuAvisos({ ...({ plataforma: 'web', adreca: WEB }), usuariEsperat: USUARI }, REMOT));
     expect(sensesessio).toMatchObject({ status: 403 });
     expect(sensesessio.message).toContain('SDP-PUSH-001');
     servidor.mockRejectedValueOnce(new TypeError('Failed to fetch'));
@@ -242,20 +254,22 @@ describe('els errors del servidor', () => {
    l'adaptador, i les plataformes que el servidor mapeja són PLATAFORMES_AVISOS. */
 test('paritat amb la migració: paràmetres de xat_push_desa i xat_push_retira i plataformes del servidor', async () => {
   const carpeta = resolve(process.cwd(), 'supabase/migrations');
-  const sql = readdirSync(carpeta).filter((f) => f.endsWith('.sql')).sort()
-    .map((f) => readFileSync(resolve(carpeta, f), 'utf8'))
-    .filter((text) => text.includes('create or replace function public.xat_push_desa('));
+  const tots = readdirSync(carpeta).filter((f) => f.endsWith('.sql')).sort()
+    .map((f) => readFileSync(resolve(carpeta, f), 'utf8'));
+  const sql = tots.filter((text) => text.includes('create or replace function public.xat_push_desa('));
   expect(sql.length, 'una migració defineix xat_push_desa').toBeGreaterThan(0);
   const darrera = sql.at(-1);
   const parametres = (nom) => {
-    const inici = darrera.indexOf(`create or replace function public.${nom}(`);
-    const signatura = darrera.slice(inici, darrera.indexOf(')', inici));
+    const font = tots.filter(s => s.includes(`create or replace function public.${nom}(`)).at(-1);
+    expect(font, nom).toBeTruthy();
+    const inici = font.indexOf(`create or replace function public.${nom}(`);
+    const signatura = font.slice(inici, font.indexOf(')', inici));
     return [...signatura.matchAll(/\b(p_[a-z_]+)\s+[a-z]/g)].map((m) => m[1]);
   };
   await desaDispositiuAvisos({ plataforma: 'web', adreca: WEB, gest: true }, REMOT);
-  await retiraDispositiuAvisos({ plataforma: 'web', adreca: WEB }, REMOT);
+  await retiraDispositiuAvisos({ ...({ plataforma: 'web', adreca: WEB }), usuariEsperat: USUARI }, REMOT);
   expect(Object.keys(crida(0).cos).sort()).toEqual(parametres('xat_push_desa').sort());
-  expect(Object.keys(crida(1).cos).sort()).toEqual(parametres('xat_push_retira').sort());
+  expect(Object.keys(crida(1).cos).sort()).toEqual(parametres('xat_push_retira_segura').sort());
   const { PLATAFORMES_AVISOS } = await import('../contracte.js');
   const mapa = /case p_plataforma ((?:when '[a-z]+' then '[a-z]+' )+)else null end/.exec(darrera)?.[1];
   expect([...mapa.matchAll(/when '([a-z]+)'/g)].map((m) => m[1])).toEqual([...PLATAFORMES_AVISOS]);

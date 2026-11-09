@@ -1367,6 +1367,13 @@ details[open] summary.accordion-header svg:last-child {
   color: var(--sdp-sobre-accio);
 }
 
+/* R55 · La prosa del resum conserva sencers també els estats i identificadors llargs.
+   Les taules i les seues regions de scroll no entren en esta regla. */
+.sdp-consola__comunicacio {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
 .sdp-badge-category {
   background: var(--sdp-accio-subtil);
   color: var(--sdp-accio-text);
@@ -4259,7 +4266,18 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-marques { display: inline-flex; align-items: center; color: var(--sdp-text-suau); }
   .sdp-xat-marques--pendent,
-  .sdp-xat-marques--enviat { color: var(--sdp-text-suau); }
+  .sdp-xat-marques--enviat,
+  .sdp-xat-marques--lliurat { color: var(--sdp-text-suau); }
+  .sdp-xat-escrivint {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-capcalera .sdp-xat-escrivint { color: var(--sdp-crom-text-suau); }
   .sdp-xat-marques--llegit { color: var(--sdp-accio-text); }
   .sdp-xat-marques--error { color: var(--sdp-error-text); }
   .sdp-xat-bombolla__error {
@@ -14889,7 +14907,6 @@ details[open] summary.accordion-header svg:last-child {
     gap: var(--sdp-space-2);
   }
 
-  .sdp-admin-importacio__badges,
   .sdp-admin-importacio__accions {
     display: flex;
     flex-wrap: wrap;
@@ -15370,8 +15387,9 @@ details[open] summary.accordion-header svg:last-child {
 
   /* ── Onada R14 · El receptari «Què dinem?» (ReceptaDetailSection.jsx, /receptes/:slug). La fila de
      quadrats-botó és la pell del quadrat de les targetes (.sp-card-calendar-badge), sense flotar i a mida de
-     fila; el premut (aria-pressed) porta la vora i el fons de l'acció. El commutador entre el vídeo i la làmina
-     va centrat. La làmina del llibre fa uns 360 px d'ample: es pinta a la seua mida i no s'estira. ── */
+     fila; el premut (aria-pressed) porta la vora i el fons de l'acció. La làmina del llibre fa uns 360 px d'ample:
+     es pinta a la seua mida i no s'estira (porta l'ample i l'alt de la WebP; height: auto conserva la proporció
+     quan la columna és més estreta). Onada R15 (P3-4) · Sense commutador: el vídeo és un bloc com els altres. ── */
   .sdp-recepta {
     display: flex;
     flex-direction: column;
@@ -15397,7 +15415,6 @@ details[open] summary.accordion-header svg:last-child {
     border-radius: var(--sdp-radi-g);
   }
 
-  .sdp-recepta__commutador,
   .sdp-recepta__quadrats {
     display: flex;
     flex-wrap: wrap;
@@ -15425,14 +15442,43 @@ details[open] summary.accordion-header svg:last-child {
     line-height: 1;
   }
 
+  /* Onada R15 (P3-3) · L'etiqueta cap dins del quadrat en les cinc llengües. Amb 1rem (16 px), «Ingredientes» (es, gl)
+     feia 102,5 px en una caixa útil de 92 px (96 px menys la vora de 2 px) i eixia del quadrat. Al sòl de mida de
+     lletra (--sdp-text-meta, 14 px) en fa 89,7: hi cap amb 2,3 px de marge. I si un dia una etiqueta no hi cap, parteix
+     línia dins del quadrat (amb guionet on el navegador en sàpia) en lloc d'eixir-ne: max-width i overflow-wrap. */
   .sdp-recepta__quadrat-text {
-    font-size: 1rem;
+    max-width: 100%;
+    font-size: var(--sdp-text-meta);
     font-weight: 700;
+    line-height: 1.15;
     text-align: center;
+    overflow-wrap: anywhere;
+    hyphens: auto;
   }
 
   .sdp-recepta__ajuda {
     text-align: center;
     color: var(--sdp-text-suau);
   }
+}
+
+/* R56 · Cos de Botigues: mateixes tres regles, ara dins del full canònic. */
+@layer components {
+.sdp-botigues-sistema {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sdp-botigues-sistema .sdp-alerta__accions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.sdp-botigues-sistema li .sdp-insignia {
+  max-width: 100%;
+  height: auto;
+  white-space: normal;
+}
 }

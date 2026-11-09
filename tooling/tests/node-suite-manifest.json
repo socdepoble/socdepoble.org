@@ -8,8 +8,6 @@
     "health": "Verd primari i CI no certifiquen verd de laboratori/sessió. npm run test:node:all conserva la visibilitat del deute complet; cap prova ni asserció es retira."
   },
   "requiredPrimary": [
-    "tests/exportacio-federacio-postgres.test.mjs",
-    "tests/seed-revisions-r11.test.mjs",
     "tests/admin-invitacions-r20b.test.mjs",
     "tests/administracio-multipoble-postgres.test.mjs",
     "tests/antigravity-hook.test.mjs",
@@ -41,6 +39,7 @@
     "tests/enxufe-plugin.test.mjs",
     "tests/enxufe-runtime.test.mjs",
     "tests/enxufe-traduccio.test.mjs",
+    "tests/exportacio-federacio-postgres.test.mjs",
     "tests/fediversity-nixos-module.test.mjs",
     "tests/fonts-vigilancia.test.mjs",
     "tests/fortificacio.test.mjs",
@@ -49,6 +48,13 @@
     "tests/higiene-estructural.test.mjs",
     "tests/higiene-paquets.test.mjs",
     "tests/hooks-local.test.mjs",
+    "tests/iaia/bot-ritme.test.mjs",
+    "tests/iaia/edge-index-wake.test.mjs",
+    "tests/iaia/edge-portability.test.mjs",
+    "tests/iaia/runtime.test.mjs",
+    "tests/iaia/server.test.mjs",
+    "tests/iaia/sql.test.mjs",
+    "tests/iaia/wake.test.mjs",
     "tests/karpathy-wiki-cli.test.mjs",
     "tests/karpathy-wiki-compiler.test.mjs",
     "tests/kit-carril.test.mjs",
@@ -73,6 +79,7 @@
     "tests/node0-client-publicacions.test.mjs",
     "tests/node0-daemon-adversarial.test.mjs",
     "tests/node0-http-adapter.test.mjs",
+    "tests/node0-iaia-private-role.test.mjs",
     "tests/node0-install.test.mjs",
     "tests/node0-institutional.test.mjs",
     "tests/node0-kit-cas.test.mjs",
@@ -121,10 +128,12 @@
     "tests/node0-workspace-mirror.test.mjs",
     "tests/node0-workspace-resolver.test.mjs",
     "tests/node0-workspace-sources.test.mjs",
+    "tests/node0-xat-ritme.test.mjs",
     "tests/opendata-fediversity.test.mjs",
     "tests/opfs-rural.test.mjs",
     "tests/persistencia-local-rural.test.mjs",
     "tests/plantilla-viva-escriptori.test.mjs",
+    "tests/policy26-sql.test.mjs",
     "tests/pont-emergencia-rural.test.mjs",
     "tests/pont-mastodon.test.mjs",
     "tests/porta-olivera-v3.test.mjs",
@@ -135,6 +144,7 @@
     "tests/restauracio-independent-r20b.test.mjs",
     "tests/search-cli-wire.test.mjs",
     "tests/security-chain.test.mjs",
+    "tests/seed-revisions-r11.test.mjs",
     "tests/sessio-rural-crdt-opfs.test.mjs",
     "tests/sessio-rural-privadesa.test.mjs",
     "tests/sincronitzador-carpeta-local.test.mjs",
@@ -167,16 +177,6 @@
     "tooling/wiki/tests/contradiction_engine.t11.test.mjs"
   ],
   "files": [
-    {
-      "path": "tests/exportacio-federacio-postgres.test.mjs",
-      "suite": "primary",
-      "reason": "P2-08/P2-09: exportació federada amb dos comptes i esquema explícit en PostgreSQL WASM; aïllament sense dades de producció."
-    },
-    {
-      "path": "tests/seed-revisions-r11.test.mjs",
-      "suite": "primary",
-      "reason": "P1-75: migració idempotent, font autoritativa, CAS per peça, RLS i dos comptes en PostgreSQL WASM explícit; cap producció."
-    },
     {
       "path": "tests/action-contrast.test.mjs",
       "suite": "primary",
@@ -453,6 +453,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/exportacio-federacio-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "P2-08/P2-09: exportació federada amb dos comptes i esquema explícit en PostgreSQL WASM; aïllament sense dades de producció."
+    },
+    {
       "path": "tests/fatiga-261002.test.mjs",
       "suite": "laboratory",
       "reason": "Assaig de lease del paquet 261002: contrasta les bases congelades del pegat contra el disc viu. El CAS roig no és una regressió del producte instal·lat."
@@ -573,6 +578,41 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/iaia/bot-ritme.test.mjs",
+      "suite": "primary",
+      "reason": "R54: fixtures PostgreSQL portables de bots registrats, receipts humans i presència; regressió d’autoritat del producte sense node remot."
+    },
+    {
+      "path": "tests/iaia/edge-index-wake.test.mjs",
+      "suite": "primary",
+      "reason": "R54: entrada Edge real i callback després de persistir, amb dobles de transport locals; no acredita lliurament remot."
+    },
+    {
+      "path": "tests/iaia/edge-portability.test.mjs",
+      "suite": "primary",
+      "reason": "R54: contracte Edge/Node0, orígens exactes, JWT verificat, límits de rol i model local sintètic; regressió portable de producte."
+    },
+    {
+      "path": "tests/iaia/runtime.test.mjs",
+      "suite": "primary",
+      "reason": "R54: inferència opcional amb transport HTTP local, lease/replay/cancel·lació i autenticació; cap configuració de servei extern."
+    },
+    {
+      "path": "tests/iaia/server.test.mjs",
+      "suite": "primary",
+      "reason": "R54: ruta HTTP real del servidor Node0 amb fixtures locals; CORS, contingut i abort de la petició privada."
+    },
+    {
+      "path": "tests/iaia/sql.test.mjs",
+      "suite": "primary",
+      "reason": "R54: migració IAIA real sobre PostgreSQL descartable amb esquema sintètic; leases, revocacions i aïllament de tenant. Requerix SDP_PGLITE_MODULE explícit."
+    },
+    {
+      "path": "tests/iaia/wake.test.mjs",
+      "suite": "primary",
+      "reason": "R54: notificació de resposta després de COMMIT; errors i cancel·lació no inventen receipt ni desfan persistència."
+    },
+    {
       "path": "tests/inicia-node-germa.test.mjs",
       "suite": "primary",
       "reason": "B4 261101 (T3.4): l’instal·lador de nodes germans amb una font immutable (git archive de HEAD), per a Xixona en os.tmpdir(), i la federació que el node publicaria; el repositori viu no es toca."
@@ -598,17 +638,27 @@
       "reason": "O3-CODEX-1 · kits CAS: generació/aplicació amb staging, rollback, paths/symlinks i Frontissa real sobre candidat; fixtures portables, sense xarxa ni temporitzadors."
     },
     {
+      "path": "tests/lint-sessio.test.mjs",
+      "suite": "session",
+      "reason": "FITXERS és una selecció temporal del torn per a lectura engabiada. ESLint complet continua al workflow i a npm run lint."
+    },
+    {
+      "path": "tests/lint-torn-261002.test.mjs",
+      "suite": "session",
+      "reason": "Corredor de lots declarats per la sessió 261002; exclou deliberadament part del producte. ESLint complet continua al workflow."
+    },
+    {
+      "path": "tests/lint_calendari.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
       "path": "tests/lint_calendari_fonts.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
       "path": "tests/lint_calendari_mes.test.mjs",
-      "suite": "primary",
-      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
-    },
-    {
-      "path": "tests/lint_calendari.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
@@ -631,16 +681,6 @@
       "path": "tests/lint_xat.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
-    },
-    {
-      "path": "tests/lint-sessio.test.mjs",
-      "suite": "session",
-      "reason": "FITXERS és una selecció temporal del torn per a lectura engabiada. ESLint complet continua al workflow i a npm run lint."
-    },
-    {
-      "path": "tests/lint-torn-261002.test.mjs",
-      "suite": "session",
-      "reason": "Corredor de lots declarats per la sessió 261002; exclou deliberadament part del producte. ESLint complet continua al workflow."
     },
     {
       "path": "tests/literals-secrets-node0.test.mjs",
@@ -816,6 +856,11 @@
       "path": "tests/node0-http-native.test.mjs",
       "suite": "session",
       "reason": "R5: HTTP real de loopback i connexió directa node0_authenticator, només LAB PostgreSQL 17 explícit; alta, correu capturat, dues persones i neteja de fixtures, sense producció ni xarxa externa."
+    },
+    {
+      "path": "tests/node0-iaia-private-role.test.mjs",
+      "suite": "primary",
+      "reason": "R54/R55: adaptador de procés real i PostgreSQL descartable comproven logs privats, rol exacte i graf de pertinença del worker; sense connexió nativa ni producció."
     },
     {
       "path": "tests/node0-install.test.mjs",
@@ -1068,6 +1113,11 @@
       "reason": "AH11: selecció explícitament pública, dates/URL desconegudes null, fonts Mastodon preservades, mitjans GET/MIME/magic i ZIP canònic verificat; cap dada privada ni xarxa real."
     },
     {
+      "path": "tests/node0-xat-ritme.test.mjs",
+      "suite": "primary",
+      "reason": "R54: contracte de compilació SQL i HTTP privat per ritme/presència del xat, amb fixtures portables; cap text de borrador exposat."
+    },
+    {
       "path": "tests/olivera-arxiva-261002.test.mjs",
       "suite": "laboratory",
       "reason": "Assaig del paquet de laboratori 261002 sobre hashes de la base històrica; no és una prova estable de la instal·lació actual."
@@ -1116,6 +1166,11 @@
       "path": "tests/plantilla-viva-installacio.test.mjs",
       "suite": "laboratory",
       "reason": "Assaig de pegats d’instal·lació del laboratori 260924; construeix preimatges antigues de Context i hooks. Les proves permanents de documental/hooks corren a primary."
+    },
+    {
+      "path": "tests/policy26-sql.test.mjs",
+      "suite": "primary",
+      "reason": "R54 amb R13-C7: política2.6 en catàleg85 real sobre PostgreSQL descartable; hash publicat, consentiment i immutabilitat. Requerix SDP_PGLITE_MODULE explícit."
     },
     {
       "path": "tests/pont-emergencia-rural.test.mjs",
@@ -1211,6 +1266,11 @@
       "path": "tests/security-chain.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/seed-revisions-r11.test.mjs",
+      "suite": "primary",
+      "reason": "P1-75: migració idempotent, font autoritativa, CAS per peça, RLS i dos comptes en PostgreSQL WASM explícit; cap producció."
     },
     {
       "path": "tests/self-describe-coherencia.test.mjs",

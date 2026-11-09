@@ -36,6 +36,16 @@ describe('trossDArrencada (vite.config.js)', () => {
     ['/x/node_modules/react-dom/test-utils.js', null],
     ['/x/src/css/index.css?inline', 'estils'],
     ['/x/src/config/idiomes/ca.js', 'ca'],
+    // R56 · Només les dues fulles noves de navegació, amb preload síncron.
+    ['/x/src/hooks/useScrollDeNavegacio.js', 'navegacio'],
+    ['/x/src/app/contexts/historialDeRuta.js', 'navegacio'],
+    ['/x/src/app/contexts/politicaRouter.js', 'navegacio'],
+    ['/x/src/app/contexts/RouterContext.jsx', null],
+    ['/x/src/app/contexts/objectesDeContext.js', null],
+    ['/x/src/app/App.jsx', null],
+    ['/x/src/hooks/useMemoriaScrollDeRuta.js', null],
+    ['/x/src/hooks/useBarresAmbScroll.js', null],
+    ['/x/src/components/universal/PageFrame.jsx', null],
     ['/x/src/sections/pobles/poblesAplecViquipedia.js', 'pobles-aplec'],
     ['/x/src/sections/mur/articles/aplec2023Content.js', 'pobles-aplec'],
     ['/x/src/sections/mur/articles/manifestDePobleContent.js', 'pobles-aplec'],
@@ -94,6 +104,9 @@ console.log(JSON.stringify({
      React i DOMPurify no depenen de cap paquet de fora del tros 'react'. */
   test('els trossos d’arrencada són fulles: no arrosseguen cap mòdul de fora', () => {
     expect(especificadors(path.join(ARREL, 'src/config/idiomes/ca.js'))).toEqual([]);
+    expect(especificadors(path.join(ARREL, 'src/hooks/useScrollDeNavegacio.js'))).toEqual([{ especificador: 'react', text: false }, { especificador: '../app/contexts/historialDeRuta.js', text: false }]);
+    expect(especificadors(path.join(ARREL, 'src/app/contexts/historialDeRuta.js'))).toEqual([]);
+    expect(especificadors(path.join(ARREL, 'src/app/contexts/politicaRouter.js'))).toEqual([]);
     expect(especificadors(path.join(ARREL, 'src/sections/pobles/poblesAplecViquipedia.js'))).toEqual([]);
     expect(especificadors(path.join(ARREL, 'src/sections/mur/articles/aplec2023Content.js'))).toEqual([]);
     expect(especificadors(path.join(ARREL, 'src/sections/mur/articles/manifestDePobleContent.js'))).toEqual([]);

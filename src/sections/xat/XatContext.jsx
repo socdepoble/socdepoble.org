@@ -257,8 +257,13 @@ import { recordaRutaForaDelXat } from './informeDError.js';
 import { recordaOrigenDelXat } from './origenDelXat.js';
 import { clauDia } from './temps.js';
 import {
-  avisaNatiu, avisosNatiusActius, avisosNatiusDisponibles, demanaPermisAvisos, idDAvis, netejaAvisosNatius, refrescaPermisAvisos
+  avisaNatiu, avisosNatiusActius, avisosNatiusDisponibles, idDAvis, netejaAvisosNatius, refrescaPermisAvisos
 } from '../../config/avisosNatius.js';
+import { instantaniaAvisosPush, capturaLecturaAvisosPush, confirmaZeroAvisosPush } from '../../config/avisosPushXat.js';
+const pushNatiuPortaElsAvisos = () => {
+  const estat = instantaniaAvisosPush();
+  return estat.tipus === 'natiu' && estat.motiu === null;
+};
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { anotaFilsBloquejats, anotaMissatgesBloquejats, senseDirectesBloquejats } from '../../config/moderacio.js';
 import { CODI_NORMES_SERVIDOR, esRebuigDeNormes } from '../../data/errorsBackend.js';
@@ -535,31 +540,27 @@ function AvisadorXat({ registra, ambSessio }) {
          abans del schedule: la pàgina encara amagada I la mateixa persona que
          quan va nàixer l'avís (deLaPersona, la generació d'avisaSiCal). Sense
          eixa guarda, l'avís no ix. */
-      if (paginaAmagada() && !silenciat && avisaNatiu({
+      if (ambSessio && paginaAmagada() && !silenciat && !pushNatiuPortaElsAvisos() && avisaNatiu({
         id: idDAvis(filId),
         titol: nom || t('section.xat.avisNatiu.titol', 'Sóc de Poble'),
         cos: t('section.xat.avisNatiu.cos', 'Missatge nou'),
         filId,
-        vigent: () => paginaAmagada() && typeof deLaPersona === 'function' && deLaPersona() === true
+        vigent: () => paginaAmagada() && !pushNatiuPortaElsAvisos() && typeof deLaPersona === 'function' && deLaPersona() === true
       })) return;
       if (RUTA_XAT.test(String(pathname || ''))) return;
       const plantilla = t('section.xat.avisNouMissatge', 'Missatge nou de {nom}');
       showToast(String(plantilla).replace('{nom}', nom || ''));
     });
     return () => registra(null);
-  }, [registra, pathname, showToast, t]);
+  }, [registra, pathname, showToast, t, ambSessio]);
   /* El toc d'un avís obri el seu xat: ho fa ReceptorCompartit (App.jsx), que té el router sencer. */
-  /* El permís es demana amb context: la primera vegada que s'entra al Xat amb
-     sessió. Qui ja ha dit que sí o que no no ho torna a vore (avisosNatius.js). */
-  const alXat = RUTA_XAT.test(String(pathname || ''));
-  useEffect(() => {
-    if (ambSessio && alXat && avisosNatiusDisponibles()) demanaPermisAvisos();
-  }, [ambSessio, alXat]);
+  /* R54 · Entrar al xat mai demana permís. El gest explícit viu en
+     Ajustos → Notificacions; el permís local no és consentiment push. */
   /* El permís es pot canviar als ajustos del sistema: es torna a llegir en tornar. */
   useEffect(() => {
     if (!avisosNatiusDisponibles() || typeof document === 'undefined') return undefined;
     /* I els avisos que ja són a la barra sobren: la persona ja és dins. */
-    const alTornar = () => { if (!paginaAmagada()) { refrescaPermisAvisos(); netejaAvisosNatius(); } };
+    const alTornar = () => { if (!paginaAmagada()) { refrescaPermisAvisos(); if (!pushNatiuPortaElsAvisos()) netejaAvisosNatius(); } };
     document.addEventListener('visibilitychange', alTornar);
     return () => document.removeEventListener('visibilitychange', alTornar);
   }, []);
@@ -1064,6 +1065,7 @@ export function XatProvider({ children, config }) {
   const carregaFils = useCallback(async () => {
     const op = captura();
     if (!vigent(op)) return false;
+    const lecturaAvisos = capturaLecturaAvisosPush(joId);
     const meua = ++genFils.current;
     if (!joId) {
       mutaFils((previs) => (previs.length ? [] : previs));
@@ -1113,6 +1115,7 @@ export function XatProvider({ children, config }) {
       reintentableLlistaRef.current = true;
       setLlistaFresca(true);
       setAvisLlista(null);
+      if (modeDades === 'remote' && sumaNoLlegits(nous) === 0) confirmaZeroAvisosPush(lecturaAvisos);
       for (const f of nous) avisaSiCal(f.id, f.ultimSeq, f.ultimAutorId, f.name);
       baseAvisosRef.current = true;
       return true;
@@ -1142,7 +1145,7 @@ export function XatProvider({ children, config }) {
     } finally {
       if (vigent(op) && meua === genFils.current) setEstat('ready');
     }
-  }, [joId, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaFils, mutaVisitants]);
+  }, [joId, modeDades, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaFils, mutaVisitants]);
 
   /* ── Missatges d'un fil: complet la primera vegada, incremental (despresDeSeq) després ──
      Torna true o false com carregaFils.

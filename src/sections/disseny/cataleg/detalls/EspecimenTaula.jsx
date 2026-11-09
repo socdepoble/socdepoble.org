@@ -1,3 +1,5 @@
+/* Pla 261109 · R56: traça de la variant d’identificadors llargs;
+   conserva les taules prèvies i reserva 12ch només a les columnes indicades. */
 import { Especimen } from '../Especimen.jsx';
 import { Taula, Insignia } from '../../../../components/PedraSeca/index.js';
 
@@ -14,6 +16,7 @@ export default function EspecimenTaula() {
       contracte={[
         ['titol', 'string', '—', 'Obligatori: aria-label de la regió. Una taula sense nom no es pot navegar.'],
         ['densa', 'boolean', 'false', 'Files més curtes per a taules de referència.'],
+        ['className', 'string', '—', 'sdp-taula--identificadors reserva lectura a les dues primeres columnes d’IDs; la resta de taules conserva l’amplària pròpia.'],
         ['children', '<thead> · <tbody>', '—', 'Sempre amb <th scope="col"> a la capçalera.']
       ]}
       a11y={['Capçaleres amb scope.', 'Estat en text (Insignia), mai només color.']}
@@ -35,6 +38,16 @@ export default function EspecimenTaula() {
           <tr><td>Plaça Major</td><td>Lloc</td><td>—</td></tr>
           <tr><td>Entrevista a l’alcalde</td><td>Notícia</td><td>03/06/2024</td></tr>
         </tbody>
+      </Taula>
+      <h4>Identificadors llargs</h4>
+      <p>Exemple de referència: les dues primeres columnes conserven espai de lectura i la regió permet arribar a totes les dades amb teclat.</p>
+      <Taula titol="Identificadors llargs (exemple)" densa className="sdp-taula--identificadors">
+        <thead><tr><th scope="col">De</th><th scope="col">A</th><th scope="col">Relació</th><th scope="col">Confiança</th><th scope="col">Evidència</th></tr></thead>
+        <tbody><tr>
+          <td><code>hook:exemple:BeforeRead:identificador_de_fitxer_llarg</code></td>
+          <td><code>skill:exemple:lectura_documental_i_verificacio</code></td>
+          <td>consulta</td><td><Insignia to="neutre">Exemple</Insignia></td><td>Dades de mostra del catàleg; cap servei consultat</td>
+        </tr></tbody>
       </Taula>
     </Especimen>
   );

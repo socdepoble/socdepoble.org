@@ -7,9 +7,9 @@ import { XAT_SEED_IDS, XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } fr
 
 /* modePerDefecte fa de política d'execució del host (host.js): és el mode que
    resol una crida sense config, com la baixa que fa XatContext. */
-const mock = vi.hoisted(() => ({ getClient: vi.fn(), user: { id: 'A' }, modePerDefecte: 'remote' }));
+const mock = vi.hoisted(() => ({ getClient: vi.fn(), user: { id: 'A' }, modePerDefecte: 'remote', epoch: 0 }));
 vi.mock('./config.js', () => ({ getClient: mock.getClient }));
-vi.mock('../identitat.js', () => ({ usuariDeSessio: () => mock.user, getDefaultUserId: () => mock.user?.id || 'convidat-seed' }));
+vi.mock('../identitat.js', () => ({ get versioSessio() { return mock.epoch; }, usuariDeSessio: () => mock.user, getDefaultUserId: () => mock.user?.id || 'convidat-seed' }));
 vi.mock('./runtime.js', () => ({
   getResolvedConfig: config => ({ ...config, runtimeDataMode: config.dataMode || mock.modePerDefecte }),
   generateUUID: () => 'uuid-generat'
@@ -25,7 +25,7 @@ const ALTRE = '00000000-0000-4000-8000-000000000042';
 const SEED = { dataMode: 'seed', tenantId: '00000000-0000-4000-8000-000000000000' };
 let query, client;
 beforeEach(() => {
-  vi.clearAllMocks(); mock.user = { id: 'A' }; mock.modePerDefecte = 'remote'; reiniciaLocalXat();
+  vi.clearAllMocks(); mock.epoch = 0; mock.user = { id: 'A' }; mock.modePerDefecte = 'remote'; reiniciaLocalXat();
   query = { data: [], error: null, abortSignal: vi.fn().mockReturnThis() };
   client = { rpc: vi.fn().mockReturnValue(query), from: vi.fn().mockReturnValue(query), channel: vi.fn(), removeChannel: vi.fn().mockResolvedValue('ok') };
   mock.getClient.mockResolvedValue(client);
@@ -953,4 +953,32 @@ it('XC-05: una RPC d’entrega absent no cau a l’RPC de lectura', async () => 
  client.rpc.mockResolvedValue({data:null,error:{code:'PGRST202'},status:404});
  await expect(marcaLlegit('fil',{...REMOT,rebutFinsSeq:5,llegitFinsSeq:0})).rejects.toMatchObject({code:'SENSE_CAPACITAT_REBUTS'});
  expect(client.rpc.mock.calls.map(c=>c[0])).toEqual(['xat_marca_rebut']);
+});
+
+describe('R54 · human send wakes only after durable confirmation, without affecting send result',()=>{
+ const ID='00000000-0000-4000-8000-000000000001';
+ /* Sanejament R15 (B2) · El desvetllador només amb la bandera literal VITE_SDP_XAT_RITME==='1'. */
+ beforeEach(()=>{vi.stubEnv('VITE_SDP_XAT_RITME','1');client.functions={invoke:vi.fn().mockResolvedValue({data:{ok:true}})};query.data=[{id:ID,seq:4,creat_al:'2026-11-08T04:00:00Z'}];});
+ afterEach(()=>vi.unstubAllEnvs());
+ it.each(['','0'])('sense la bandera (%j), un enviament confirmat no invoca notifica-xat-desperta ni cap altra funció',async valor=>{
+  vi.stubEnv('VITE_SDP_XAT_RITME',valor);const result=await enviaMissatge('fil',{id:ID,text:'fixture'},REMOT);await buidaCua();expect(result).toMatchObject({id:ID,seq:4,text:'fixture'});expect(client.rpc).toHaveBeenCalled();expect(client.functions.invoke).not.toHaveBeenCalled();
+ });
+ it('invokes the public relay after xat_envia returns a valid seq, carrying no author or recipient data',async()=>{
+  const result=await enviaMissatge('fil',{id:ID,text:'fixture'},REMOT);await buidaCua();expect(result).toMatchObject({id:ID,seq:4,text:'fixture'});expect(client.functions.invoke).toHaveBeenCalledWith('notifica-xat-desperta',{body:{missatgeId:ID},timeout:8000});expect(client.rpc.mock.invocationCallOrder[0]).toBeLessThan(client.functions.invoke.mock.invocationCallOrder[0]);
+ });
+ it.each([0,-1,null,true,'1.2',NaN])('invalid confirmation seq%s never wakes',async seq=>{
+  query.data=[{id:ID,seq}];await expect(enviaMissatge('fil',{id:ID,text:'fixture'},REMOT)).rejects.toMatchObject({code:'SENSE_CONFIRMACIO'});expect(client.functions.invoke).not.toHaveBeenCalled();
+ });
+ it('seed/local path never invokes a remote function',async()=>{
+  await enviaMissatge(XAT_SEED_IDS.filIaia,{id:ID,text:'fixture'},SEED);await buidaCua();expect(client.functions.invoke).not.toHaveBeenCalled();
+ });
+ it('failed RPC never invokes a remote function',async()=>{
+  query.error={message:'SDP-XAT-006',code:'42501'};await expect(enviaMissatge('fil',{id:ID,text:'fixture'},REMOT)).rejects.toBeTruthy();expect(client.functions.invoke).not.toHaveBeenCalled();
+ });
+ it.each(['actor','epoch'])('changed%s after persistence skips wake without changing confirmed send',async change=>{
+  const pending=deferred();query.then=pending.promise.then.bind(pending.promise);const result=enviaMissatge('fil',{id:ID,text:'fixture'},REMOT);await vi.waitFor(()=>expect(client.rpc).toHaveBeenCalled());if(change==='actor')mock.user={id:'B'};else mock.epoch++;pending.resolve({data:[{id:ID,seq:4}],error:null});expect(await result).toMatchObject({seq:4});await buidaCua();expect(client.functions.invoke).not.toHaveBeenCalled();
+ });
+ it.each(['throw','reject','never'])('wake%s cannot reject or delay a confirmed send',async kind=>{
+  client.functions.invoke.mockImplementation(()=>{if(kind==='throw')throw Error('offline');if(kind==='reject')return Promise.reject(Error('offline'));return new Promise(()=>{});});expect(await enviaMissatge('fil',{id:ID,text:'fixture'},REMOT)).toMatchObject({id:ID,seq:4});await buidaCua();expect(client.functions.invoke).toHaveBeenCalledOnce();
+ });
 });

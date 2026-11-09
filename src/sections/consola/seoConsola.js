@@ -21,6 +21,12 @@ import { metadadesDePagina } from '../../config/metadadesSocials.js';
 import { IDS_PAGINES, RUTA_CONSOLA, copyConsola, paginaConsola } from './consolaPagines.js';
 import { IDS_GOVERN, paginaGovern } from './govern/governConsola.js';
 import { imatgeDePagina } from './imatgesConsola.js';
+import { BOTIGUES_SISTEMA_META } from '../botigues/botiguesSistemaMeta.js';
+
+/** Mateixa font de títol/entradeta per al head client i el servit sense JavaScript. */
+export function metadadesDeBotigues(copy = copyConsola(), opcions) {
+  return metadadesDePagina({ title: `${BOTIGUES_SISTEMA_META.title} · ${copy.title}`, lead: BOTIGUES_SISTEMA_META.lead, image: BOTIGUES_SISTEMA_META.image, imageAlt: BOTIGUES_SISTEMA_META.imageAlt }, opcions);
+}
 
 /** El head del tauler (/consola): { title, description, imatge, image }. */
 export function metadadesDelTauler(copy = copyConsola(), opcions) {
@@ -47,6 +53,7 @@ export function rutesPubliquesDeLaConsola(opcions) {
   const copy = copyConsola();
   return [
     { ruta: RUTA_CONSOLA, ...metadadesDelTauler(copy, opcions) },
+    { ruta: BOTIGUES_SISTEMA_META.ruta, ...metadadesDeBotigues(copy, opcions) },
     ...IDS_PAGINES.map((id) => paginaConsola(id)).map((pagina) => ({ ruta: pagina.ruta, ...metadadesDeSubpagina(pagina, copy, opcions) })),
     ...IDS_GOVERN.map((id) => paginaGovern(id)).map((pagina) => ({ ruta: pagina.ruta, ...metadadesDeSubpagina(pagina, copy, opcions) }))
   ];

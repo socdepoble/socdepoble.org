@@ -34,12 +34,21 @@ const NO_OFERIT = 'no-oferit';
  * { navegador } i tornen el registre del worker propi o null.
  */
 export function creaAvisosPushWeb({
-  registreActiu, registreDelSw, clau, produccio, esdevenimentToc,
+  registreActiu, registreDelSw, clau, produccio, esdevenimentToc, missatges,
   finestra = globalThis.window, navegador = globalThis.navigator
 } = {}) {
   const registreDe = (resol) => () => (typeof resol === 'function' ? resol({ navegador }) : null);
   const perSubscriure = registreDe(registreActiu);
   const perDesfer = registreDe(registreDelSw);
+  let marcaLectura = null;
+  missatges?.addEventListener?.('message', event => {
+    if (event.data?.tipus !== 'sdp-badge-token' || typeof event.data.token !== 'string') return;
+    try {
+      const font = new URL(event.source?.scriptURL);
+      if (font.origin === finestra.location.origin && font.pathname === '/sw.js') marcaLectura = event.data.token;
+    } catch { /* No és el worker propi. */ }
+  });
+  const enviaAlWorker = data => Promise.resolve().then(perDesfer).then(registre => registre?.active?.postMessage?.(data)).catch(() => {});
 
   /* Per què no s'oferix, o null. SÍNCRON i sense xarxa (el registre el llig en cada canvi). */
   const motiu = () => motiuPerNoOferirPush({ produccio, actiu: true, clau, finestra, navegador });
@@ -81,7 +90,10 @@ export function creaAvisosPushWeb({
 
     /* La baixa: unsubscribe i, amb `retira`, la retirada de cortesia. Sense `retira`, només local. */
     desactiva({ retira } = {}) {
-      return desactivaAvisosPush({ registre: perDesfer, retira: retiraAmb(retira) });
+      return Promise.all([
+        desactivaAvisosPush({ registre: perDesfer, retira: retiraAmb(retira) }),
+        netejaAvisosPush({ registre: perDesfer, navegador })
+      ]).then(([resultat]) => resultat);
     },
 
     /* Mai pregunta. Sense servidor o sense oferta fa d'interruptor (desfà).
@@ -97,8 +109,15 @@ export function creaAvisosPushWeb({
       return perque ? fet.then((r) => (r && r.estat !== ESTAT_PUSH.ERROR ? { estat: NO_OFERIT } : r)) : fet;
     },
 
-    neteja() {
-      return netejaAvisosPush({ registre: perDesfer, navegador });
+    async neteja({ noLlegits } = {}) {
+      if (noLlegits === 0) return netejaAvisosPush({ registre: perDesfer, navegador });
+    },
+    capturaLectura() {
+      enviaAlWorker({ tipus: 'sdp-badge-token' });
+      return marcaLectura;
+    },
+    confirmaLectura(token) {
+      return typeof token === 'string' ? enviaAlWorker({ tipus: 'sdp-badge-zero', token }) : Promise.resolve();
     },
 
     oblida() {

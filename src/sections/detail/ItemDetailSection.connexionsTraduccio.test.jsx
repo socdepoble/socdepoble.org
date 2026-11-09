@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false }
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({
+  useRouter: () => ({ memoria: false }),
   useParams: () => ({ sectionId: mocks.sectionId, itemId: mocks.itemId }),
   useNavigate: () => mocks.navigate,
   useLocation: () => ({ pathname: `/${mocks.sectionId}/${mocks.itemId}`, state: null }),

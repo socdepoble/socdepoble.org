@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 import PedraSecaEmbed from './PedraSecaEmbed.jsx';
 import { configura, arrenca, exposaGlobal } from './host.js';
 import { capaDelPaquet, fixaCapaDelPaquet } from './config/capaDelPaquet.js';
-import { registraServiceWorker, registreActiu, registreDelSw, ESDEVENIMENT_AVIS_XAT } from './pwa/registre.js';
+import { registraServiceWorker, registreActiu, registreDelSw, portMissatgesAvisos, ESDEVENIMENT_AVIS_XAT } from './pwa/registre.js';
 import { AVISOS_PUSH_XAT_ACTIUS, registraAvisosPush } from './config/avisosPushXat.js';
 import { capturaInstalacio } from './pwa/instalacio.js';
 import { pintaAmbDiccionari } from './config/i18n.js';
@@ -132,6 +132,7 @@ if (AVISOS_PUSH_XAT_ACTIUS) {
     .then(() => import('./pwa/adaptadorAvisosPush.js'))
     .then(({ creaAvisosPushWeb }) => registraAvisosPush(creaAvisosPushWeb({
       registreActiu, registreDelSw, esdevenimentToc: ESDEVENIMENT_AVIS_XAT,
+      missatges: portMissatgesAvisos(),
       clau: import.meta.env.VITE_PUSH_VAPID_PUBLICA, produccio: import.meta.env.PROD
     })))
     .catch(() => { /* sense avisos push, l'app continua igual */ });

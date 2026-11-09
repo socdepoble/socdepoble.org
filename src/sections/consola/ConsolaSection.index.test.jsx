@@ -242,7 +242,9 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: l’Índex no p
   const totes = [...document.querySelectorAll('img.sp-card-media')].map((img) => img.getAttribute('src'));
   expect([...screen.getByRole('navigation', { name: ETIQUETA_NAV_GOVERN }).querySelectorAll('img.sp-card-media')]
     .map((img) => img.getAttribute('src'))).toEqual(IDS_GOVERN.map((id) => `/assets/nano_cards/govern_${id}_nano_card.webp`));
-  expect(totes).toHaveLength(IDS_PAGINES.length + IDS_GOVERN.length);
+  // P0-53 · Una portada addicional per a la nova card de botigues, sense duplicar les tretze anteriors.
+  expect(totes).toHaveLength(IDS_PAGINES.length + IDS_GOVERN.length + 1);
+  expect(totes).toContain('/assets/uploads/brain/nano_descarregues_app.webp');
   expect(new Set(totes).size).toBe(totes.length);
   expect(errors).not.toHaveBeenCalled();
 });

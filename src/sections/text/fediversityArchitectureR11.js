@@ -22,7 +22,7 @@ export const SDP_NIX_EVIDENCE = Object.freeze(['nix/module.nix', 'tests/fedivers
 export const FEDIVERSITY_ARCHITECTURE_TEXTS = Object.freeze({
   ca: {
     title: 'Responsabilitats i portabilitat de Fediversity', source: 'Arquitectura oficial · juliol de 2025',
-    contract: 'Contracte del codi R11: {capacitats} capacitats opcionals i {metodes} mètodes.',
+    contract: 'Contracte del codi actual: {capacitats} capacitats opcionals i {metodes} mètodes.',
     sourceUi: "El PDF descriu un «demo front-end» per a configurar aplicacions. Nix-Panel API és la integració que volem verificar; la font no acredita eixa API.",
     actors: {maintainers: 'Manté els mòduls, les configuracions i el procés de desplegament.', developers: 'Desenvolupa i aporta mòduls d’aplicació.', hostingProvider: 'Aporta la infraestructura i administra els recursos disponibles.', operator: 'Tria i configura aplicacions i administra la comunitat.', user: 'Utilitza les aplicacions i hi publica contingut.'},
     flow: 'El mòdul declara les opcions i els recursos requerits per l’aplicació. El mapatge creua eixos requisits amb els recursos disponibles i la configuració del proveïdor. La configuració preparada i la desplegada són estats diferents.',
@@ -32,7 +32,7 @@ export const FEDIVERSITY_ARCHITECTURE_TEXTS = Object.freeze({
   },
   es: {
     title: 'Responsabilidades y portabilidad de Fediversity', source: 'Arquitectura oficial · julio de 2025',
-    contract: 'Contrato del código R11: {capacitats} capacidades opcionales y {metodes} métodos.',
+    contract: 'Contrato del código actual: {capacitats} capacidades opcionales y {metodes} métodos.',
     sourceUi: "El PDF describe un «demo front-end» para configurar aplicaciones. Nix-Panel API es la integración que queremos verificar; la fuente no acredita esa API.",
     actors: {maintainers: 'Mantiene los módulos, las configuraciones y el proceso de despliegue.', developers: 'Desarrolla y aporta módulos de aplicación.', hostingProvider: 'Aporta la infraestructura y administra los recursos disponibles.', operator: 'Elige y configura aplicaciones y administra la comunidad.', user: 'Utiliza las aplicaciones y publica contenido.'},
     flow: 'El módulo declara las opciones y los recursos requeridos por la aplicación. El mapeo cruza esos requisitos con los recursos disponibles y la configuración del proveedor. La configuración preparada y la desplegada son estados distintos.',
@@ -42,7 +42,7 @@ export const FEDIVERSITY_ARCHITECTURE_TEXTS = Object.freeze({
   },
   en: {
     title: 'Fediversity responsibilities and portability', source: 'Official architecture · July 2025',
-    contract: 'R11 code contract: {capacitats} optional capabilities and {metodes} methods.',
+    contract: 'Current code contract: {capacitats} optional capabilities and {metodes} methods.',
     sourceUi: "The PDF describes a “demo front-end” for configuring applications. Nix-Panel API is the integration we intend to verify; the source does not establish that API.",
     actors: {maintainers: 'Maintains modules, configurations and deployment workflows.', developers: 'Develops and contributes application modules.', hostingProvider: 'Provides infrastructure and administers available resources.', operator: 'Selects and configures applications and administers the community.', user: 'Uses applications and publishes content.'},
     flow: 'The module declares application options and required resources. Mapping combines those requirements with available resources and provider configuration. Staged and deployed configurations are distinct states.',
@@ -52,7 +52,7 @@ export const FEDIVERSITY_ARCHITECTURE_TEXTS = Object.freeze({
   },
   eu: {
     title: 'Fediversityren ardurak eta eramangarritasuna', source: 'Arkitektura ofiziala · 2025eko uztaila',
-    contract: 'R11 kodearen kontratua: aukerako {capacitats} gaitasun eta {metodes} metodo.',
+    contract: 'Uneko kodearen kontratua: aukerako {capacitats} gaitasun eta {metodes} metodo.',
     sourceUi: "PDFak aplikazioak konfiguratzeko «demo front-end» bat deskribatzen du. Nix-Panel API egiaztatu nahi dugun integrazioa da; iturriak ez du API hori frogatzen.",
     actors: {maintainers: 'Moduluak, konfigurazioak eta hedapen prozesua mantentzen ditu.', developers: 'Aplikazio moduluak garatzen eta ekartzen ditu.', hostingProvider: 'Azpiegitura eskaintzen du eta baliabide erabilgarriak administratzen ditu.', operator: 'Aplikazioak aukeratu eta konfiguratzen ditu eta komunitatea administratzen du.', user: 'Aplikazioak erabiltzen ditu eta edukia argitaratzen du.'},
     flow: 'Moduluak aplikazioaren aukerak eta beharrezko baliabideak deklaratzen ditu. Mapatzeak eskakizun horiek baliabide erabilgarriekin eta hornitzailearen konfigurazioarekin lotzen ditu. Prestatutako eta hedatutako konfigurazioak egoera desberdinak dira.',
@@ -62,7 +62,7 @@ export const FEDIVERSITY_ARCHITECTURE_TEXTS = Object.freeze({
   },
   gl: {
     title: 'Responsabilidades e portabilidade de Fediversity', source: 'Arquitectura oficial · xullo de 2025',
-    contract: 'Contrato do código R11: {capacitats} capacidades opcionais e {metodes} métodos.',
+    contract: 'Contrato do código actual: {capacitats} capacidades opcionais e {metodes} métodos.',
     sourceUi: "O PDF describe un «demo front-end» para configurar aplicacións. Nix-Panel API é a integración que queremos verificar; a fonte non acredita esa API.",
     actors: {maintainers: 'Mantén os módulos, as configuracións e o proceso de despregamento.', developers: 'Desenvolve e achega módulos de aplicación.', hostingProvider: 'Achega a infraestrutura e administra os recursos dispoñibles.', operator: 'Escolle e configura aplicacións e administra a comunidade.', user: 'Utiliza as aplicacións e publica contido.'},
     flow: 'O módulo declara as opcións e os recursos requiridos pola aplicación. O mapeo cruza eses requisitos cos recursos dispoñibles e a configuración do provedor. A configuración preparada e a despregada son estados distintos.',

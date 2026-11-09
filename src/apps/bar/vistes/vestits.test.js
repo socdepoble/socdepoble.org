@@ -8,11 +8,20 @@
 import { describe, expect, test } from 'vitest';
 import { ALERGENS, resolModificadors } from '../nucli/cataleg.js';
 import { afegeixProducte, creaComanda } from '../nucli/comanda.js';
-import { llavorCarta } from '../nucli/llavor.js';
+import { llavorCarta as llavorOriginal } from '../nucli/llavor.js';
 import { articlesDeCarta, articlesDelTpv, descripcioTria, euros, llegixOpcio, opcionsDetall } from './vestits.js';
 
 const ARA = '2026-10-02T07:30:00.000Z';
 const perId = (articles) => new Map(articles.map((a) => [a.id, a]));
+/* A deliberately documented synthetic fixture, never a source for the production seed. */
+function llavorCarta() {
+  const carta = llavorOriginal();
+  for (const producte of carta.productes) {
+    producte.fontAlergens = `Fitxa de prova del producte ${producte.id}, revisió 2026-11-08`;
+    producte.alergensAbsents = ALERGENS.filter((id) => !producte.alergens.includes(id));
+  }
+  return carta;
+}
 const senseAlergens = ({ alergens, ...resta }) => {
   void alergens;
   return resta;
@@ -29,6 +38,15 @@ function comandaAmb(carta, origen, unitats) {
 }
 
 describe('articlesDelTpv: els al·lèrgens de cada producte', () => {
+  test('les anotacions antigues sense font són desconegudes; no es pinten ingredients ni traces com a declarats', () => {
+    const carta = llavorOriginal();
+    const flam = carta.productes.find((p) => p.id === 'flam');
+    flam.tracesAlergens = ['gluten'];
+    const article = perId(articlesDelTpv(carta)).get('flam');
+    expect(article).not.toHaveProperty('alergens');
+    expect(article.secundari).toContain('Al·lèrgens pendents');
+    expect(article.secundari).not.toContain('T:');
+  });
   test('un producte amb al·lèrgens els porta en l’ordre del Reglament; un sense, no en porta la clau', () => {
     const articles = perId(articlesDelTpv(llavorCarta()));
     /* La llavor els desa en un altre ordre: croquetes [gluten, llet, ous] i calamars [molluscs, gluten]. */

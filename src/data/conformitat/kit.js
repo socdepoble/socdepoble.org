@@ -376,6 +376,21 @@ function casosFedi17() {
   ];
 }
 
+const uuidR54 = v => typeof v === 'string' && /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(v);
+const fallesDescobertaIAIA = v => esObjecte(v) && v.source === 'configuration' && v.inference === false
+  && typeof v.available === 'boolean' && (v.group === null || esObjecte(v.group) && uuidR54(v.group.threadId) && uuidR54(v.group.botId))
+  ? [] : ['la descoberta IAIA ha de ser configuració explícita, mai inferència'];
+const fallesRitmeR54 = v => {
+  if (!esObjecte(v) || !esEnter(v.rebutPelsAltresFinsSeq) || !esEnter(v.llegitPelsAltresFinsSeq)
+    || v.llegitPelsAltresFinsSeq > v.rebutPelsAltresFinsSeq || !Array.isArray(v.escrivint) || v.escrivint.length > 20) return ['DTO de ritme invàlid'];
+  const ids = new Set();
+  for (const p of v.escrivint) {
+    if (!uuidR54(p?.usuariId) || !Number.isSafeInteger(p.vigentMs) || p.vigentMs < 1 || p.vigentMs > 8000 || ids.has(p.usuariId)) return ['presència aliena, repetida o fora de termini'];
+    ids.add(p.usuariId);
+  }
+  return [];
+};
+
 export const CASOS = Object.freeze([
   /* Lot 2 PN-01: casos comuns als transports seed i remote. */
   cas({ metode: 'resolveAsset', capacitat: 'mitjans', titol: 'resolveAsset preserva una URL pública sense consultar Storage', arguments: ctx => ['https://example.org/public.webp', ctx.config], comprova: v => v === 'https://example.org/public.webp' ? [] : ['URL pública alterada'] }),
@@ -1221,7 +1236,24 @@ export const CASOS = Object.freeze([
   cas({metode:'adminActualitzaPublicacioEditorial',capacitat:'edicioEditorial',espera:'rebutja',titol:'R12: entrada editorial malformada rebutja abans de qualsevol efecte',arguments:ctx=>[{},ctx.config],comprova:rebuigAmbCodi('editorial-invalid')}),
   ...['adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari'].map(metode=>cas({metode,capacitat:'administracioUsuaris',espera:'rebutja',titol:`R13: ${metode} rebutja arguments invàlids abans de qualsevol efecte`,arguments:ctx=>[{limit:0},ctx.config],comprova:error=>error?.name==='TypeError'?[]:['cal TypeError abans d’operar']})),
   cas({metode:'importaMunicipiOpenData',capacitat:'importacioPaquetMunicipal',espera:'rebutja',titol:'R13: un paquet municipal sense bytes ni SHA no s’importa',arguments:ctx=>[null,'',ctx.config],comprova:error=>error instanceof Error?[]:['cal rebutjar el paquet invàlid']}),
-  ...['loadSeedRevisions', 'desaRevisioSeed'].map(metode => cas({ metode, capacitat: 'revisionsLlavor', espera: 'rebutja', titol: `P1-75: ${metode} rebutja dades malformades abans de qualsevol efecte`, arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('seed-invalid') }))
+  ...['loadSeedRevisions', 'desaRevisioSeed'].map(metode => cas({ metode, capacitat: 'revisionsLlavor', espera: 'rebutja', titol: `P1-75: ${metode} rebutja dades malformades abans de qualsevol efecte`, arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('seed-invalid') })),
+  // R54: optional server operations require an explicitly configured fixture.
+  cas({ metode: 'consultaIAIA', capacitat: 'iaia', requerix: ['iaiaOperativa'],
+    titol: 'R54: descoberta IAIA retorna configuració sense pregunta ni inferència',
+    arguments: ctx => [{ mode: 'discover' }, ctx.config], comprova: fallesDescobertaIAIA }),
+  cas({ metode: 'consultaIAIA', capacitat: 'iaia', requerix: ['iaiaOperativa'], espera: 'rebutja',
+    titol: 'R54: consulta IAIA malformada rebutja abans de qualsevol transport',
+    arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('IAIA_INVALID') }),
+  cas({ metode: 'loadRitmeXat', capacitat: 'xatRitme', requerix: ['xatRitmeOperatiu', 'filId'],
+    titol: 'R54: ritme explícit conserva mínims humans i presència acotada',
+    arguments: ctx => [ctx.filId, ctx.config], comprova: fallesRitmeR54 }),
+  cas({ metode: 'actualitzaPresenciaXat', capacitat: 'xatRitme', escriu: true, requerix: ['xatRitmeOperatiu', 'filId'],
+    titol: 'R54: presència sintètica confirmada sense enviar esborrany',
+    arguments: ctx => [ctx.filId, { instancia: ctx.idMissatge, revisio: 0, escrivint: false }, ctx.config],
+    comprova: v => esObjecte(v) && v.acceptat === true && Object.keys(v).length === 1 ? [] : ['presència no confirmada'] }),
+  cas({ metode: 'actualitzaPresenciaXat', capacitat: 'xatRitme', requerix: ['xatRitmeOperatiu', 'filId'], espera: 'rebutja',
+    titol: 'R54: presència malformada rebutja abans de qualsevol transport',
+    arguments: ctx => [ctx.filId, null, ctx.config], comprova: e => e instanceof TypeError ? [] : ['cal TypeError per presència invàlida'] })
 ]);
 
 /**
@@ -1231,7 +1263,7 @@ export const CASOS = Object.freeze([
 export function contextDeConformitat({ config = {}, escriptures = false, adminMultipobleAutoritzat = false, tenantAdministrat = null, escenaris = {} } = {}) {
   return {
     config, escriptures, adminMultipobleAutoritzat: adminMultipobleAutoritzat === true, tenantAdministrat,
-    ...Object.fromEntries(['compteOperatiu', 'compteModeProva', 'compteSenseSessio', 'publicacioOperativa', 'credencialsDeProva', 'contrasenyaLocal', 'transportXifrat'].map(k => [k, escenaris[k] === true])),
+    ...Object.fromEntries(['compteOperatiu', 'compteModeProva', 'compteSenseSessio', 'publicacioOperativa', 'credencialsDeProva', 'contrasenyaLocal', 'transportXifrat', 'iaiaOperativa', 'xatRitmeOperatiu'].map(k => [k, escenaris[k] === true])),
     destinatariDirecte: typeof escenaris.destinatariDirecte === 'string' && escenaris.destinatariDirecte.trim() ? escenaris.destinatariDirecte : null,
     idPublicacio: globalThis.crypto.randomUUID(), idXifrat: globalThis.crypto.randomUUID(),
     ownerUserId: null, filId: null, filEscrivible: null, subscripcio: null, subscrit: false, avisos: [],

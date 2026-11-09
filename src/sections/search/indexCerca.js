@@ -24,6 +24,7 @@ import {
 import { fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { AMBITS, esFitxaDAmbit, normalitzaEstat, rutaDAmbit, textCercable } from '../../utils/publicacioUniversal.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
+import { normalizePublicationDate } from '../../utils/publicationDateControl.js';
 
 /* Els tipus de la cerca, en l'ordre en què es pinten els grups i els filtres.
    `text` és el valor per defecte de la clau d'i18n `clau`.
@@ -648,6 +649,16 @@ export function dePoble(poble) {
    la triada al calendari i, si no n'hi ha, la de creació. */
 const dataDePublicacio = (post) => post?.date || post?.publish_date || post?.created_at || null;
 
+/* R56 · El producte compartix amb el Mur la data editorial triada. Una
+   dada present però invàlida no cau a creació; sense data triada, el llegat
+   conserva la seua font de creació. La data de celebració dels actes i la
+   d'edició no intervenen en esta faceta. */
+const dataDeProducte = producte => {
+  const triada = producte?.publish_date;
+  if (triada == null || triada === '') return producte?.created_at ?? null;
+  try { return normalizePublicationDate(triada); } catch { return null; }
+};
+
 /* IDEA-61 (T0, prompt 261102_1532) · L'àmbit vertical explícit d'un element
    del port (esFitxaDAmbit: mercat, vehicle, treball o habitatge), o null per
    a tot el que és de sempre; i el seu text cercable (els camps estructurats,
@@ -751,7 +762,7 @@ export function deProducte(producte) {
        Sense cap foto pròpia que es puga pintar, la reserva de sempre. */
     imatge: { src: primeraImatge(imatgesDeProducte(producte), producte?.imageSrc, producte?.image_url, producte?.image) },
     href: resolveItemPath({ ...producte, sectionId: producte?.sectionId || 'mercat' }),
-    data: producte?.created_at,
+    data: dataDeProducte(producte),
     ambit: ambitVertical(producte),
     estat: producte?.estat
   });

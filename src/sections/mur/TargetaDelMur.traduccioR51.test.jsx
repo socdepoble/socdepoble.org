@@ -86,3 +86,27 @@ test.each([
   const botons = [...targeta.querySelectorAll('.sp-card-footer button')].map((boto) => boto.getAttribute('aria-label'));
   expect(botons).toEqual(['Comentar Crònica', 'Compartir Crònica', 'Connectar amb Crònica']);
 });
+
+test.each([
+  ['none', { translation_mode: 'none', source_language: 'ca' }],
+  ['curated', { translation_mode: 'curated_5_langs', source_language: 'ca', translations: revisades() }],
+  ['curated incompleta', { translation_mode: 'curated_5_langs', source_language: 'ca', translations: {} }],
+  ['invàlid', { translation_mode: 'auto', source_language: 'ca' }],
+])('R56 · la branca EventCard amb %s tampoc oferix Traduir ni entra al motor de pàgina', (_, extra) => {
+  ui.language = 'en';
+  const targeta = pinta(publicacio({ type: 'event', ...extra }));
+  expect(targeta.querySelector('article').getAttribute('translate')).toBe('no');
+  expect([...targeta.querySelectorAll('.sp-card-footer button')].some(b => b.getAttribute('aria-label')?.startsWith('Traduir'))).toBe(false);
+  if (extra.translations && Object.keys(extra.translations).length) {
+    expect(targeta.querySelector('.sp-card-title').textContent).toBe('Crònica en');
+    expect(targeta.querySelector('.sp-card-title').getAttribute('lang')).toBe('en');
+    expect(targeta.textContent).not.toContain('Entradeta original');
+  }
+  if (extra.translation_mode === 'auto' || extra.translations && !Object.keys(extra.translations).length) expect(targeta.textContent).toContain(AVIS);
+});
+
+test.each([{}, { translation_mode: 'on_the_fly', source_language: 'ca' }])('R56 · EventCard sense mode o automàtic conserva el peu de sempre: %j', extra => {
+  const targeta = pinta(publicacio({ type: 'event', ...extra }));
+  expect(targeta.querySelector('article').hasAttribute('translate')).toBe(false);
+  expect([...targeta.querySelectorAll('.sp-card-footer button')].some(b => b.getAttribute('aria-label')?.startsWith('Traduir'))).toBe(true);
+});

@@ -2,7 +2,7 @@
    'avisosPush' de l'adaptador Supabase: els aparells que reben els avisos
    push del Xat. Contracte únic amb el servidor, B8-SERVIDOR §2.9:
      desaDispositiuAvisos(d, config)   → xat_push_desa(p_plataforma, p_adreca, p_caduca_al, p_llengua, p_gest)
-     retiraDispositiuAvisos(d, config) → xat_push_retira(p_plataforma, p_adreca)
+     retiraDispositiuAvisos(d, config) → xat_push_retira_segura(p_plataforma, p_adreca, p_usuari_esperat)
    d = { plataforma: 'web'|'ios'|'android', adreca, caducaMs?, llengua?, gest? }.
    Cap dels dos no torna res del servidor. Paràmetres amb nom i cap jsonb: el
    cos és exactament eixe, camp a camp, i mai porta les claus de la
@@ -45,6 +45,7 @@ const MAXIM_DATA_MS = 8.64e15;
 const RE_WEB = /^https:\/\/[!-~]+$/;
 const RE_APNS = /^[0-9a-f]{64,200}$/;
 const RE_FCM = /^[A-Za-z0-9_:-]+$/;
+const RE_USUARI = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /* El mateix codi que CODI_DISPOSITIU_ALIE del registre (prova de paritat). */
 const CODI_ALIE = 'AVISOS_ALIE';
 
@@ -125,14 +126,16 @@ export async function desaDispositiuAvisos(d, config = {}) {
 }
 
 /**
- * Retira l'aparell d'avisos de la persona de la sessió (de cortesia i
+ * Retira l'aparell de l'usuariEsperat capturat abans de l'operació (de cortesia i
  * idempotent: també amb els avisos apagats al servidor). Mai torna res.
  */
 export async function retiraDispositiuAvisos(d, config = {}) {
   exigixServidor(config);
   const { plataforma, adreca } = aparellDe(d);
+  const usuariEsperat = typeof d?.usuariEsperat === 'string' ? d.usuariEsperat : '';
+  if (!RE_USUARI.test(usuariEsperat)) throw invalid();
   try {
-    await rpc('xat_push_retira', { p_plataforma: plataforma, p_adreca: adreca }, config, { timeoutMs: TOPALL_AVISOS_MS });
+    await rpc('xat_push_retira_segura', { p_plataforma: plataforma, p_adreca: adreca, p_usuari_esperat: usuariEsperat }, config, { timeoutMs: TOPALL_AVISOS_MS });
   } catch (error) {
     throw errorDelServidor(error);
   }

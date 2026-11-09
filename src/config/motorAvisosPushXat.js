@@ -141,8 +141,8 @@ function desatDeLaGeneracio(gen, gest, enError) {
       .then(() => s.desa(dades))
       .then((resposta) => {
         if (gen === generacio) return resposta;
-        Promise.resolve().then(() => s.retira(dadesRetirar(dades))).catch(() => {});
-        throw obsolet();
+        return Promise.resolve().then(() => s.retira(dadesRetirar(dades))).catch(() => {})
+          .then(() => { throw obsolet(); });
       }, (error) => {
         try { enError(error); } catch { /* només anota */ }
         throw error;
@@ -194,7 +194,15 @@ function activa() {
   const desa = desatDeLaGeneracio(gen, true, (error) => { if (esNoDisponible(error)) noDisponible = true; });
   let crida;
   try {
-    crida = Promise.resolve(adaptador.activa({ desa }));
+    const renova = (dades) => {
+      ocupades += 1;
+      publica();
+      return desatDeLaGeneracio(gen, false)(dades).finally(() => {
+        ocupades = Math.max(0, ocupades - 1);
+        publica();
+      });
+    };
+    crida = Promise.resolve(adaptador.activa({ desa, renova, retira: retiraDe(servidor), ambit: servidor.ambit }));
   } catch {
     crida = Promise.resolve({ estat: ESTAT_AVISOS.ERROR });
   }
@@ -253,10 +261,18 @@ async function sincronitza() {
   return net;
 }
 
-function neteja() {
+function neteja(opcions) {
   if (!adaptador) return Promise.resolve();
   const a = adaptador;
-  return promesaDe(() => a.neteja()).then(() => undefined);
+  return promesaDe(() => a.neteja(opcions)).then(() => undefined);
+}
+function capturaLectura(ambit) {
+  if (!servidor || servidor.ambit !== ambit || eixint || typeof adaptador?.capturaLectura !== 'function') return null;
+  return { generacio, ambit, marca: adaptador.capturaLectura() };
+}
+function confirmaZero(lectura) {
+  if (!lectura || lectura.generacio !== generacio || lectura.ambit !== servidor?.ambit || eixint || typeof adaptador?.confirmaLectura !== 'function') return Promise.resolve();
+  return promesaDe(() => adaptador.confirmaLectura(lectura.marca)).then(() => undefined);
 }
 
 function baixaEnEixir(opcions = {}) {
@@ -343,6 +359,8 @@ connectaMotorAvisosPush({
   desactiva,
   sincronitza,
   neteja,
+  capturaLectura,
+  confirmaZero,
   baixaEnEixir,
   oblidaEnEixir,
   reprenTrasEixidaFallida,

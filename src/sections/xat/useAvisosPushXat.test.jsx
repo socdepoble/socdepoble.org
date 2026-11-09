@@ -100,6 +100,18 @@ const buida = () => act(async () => { await Promise.resolve(); await new Promise
 const fixats = () => registre.fixaServidorAvisosPush.mock.calls.map(([s]) => (s === null ? null : s.ambit));
 const ordreDe = (fn) => fn.mock.invocationCallOrder;
 
+test('R54: la retirada d’A captura A encara que la sessió ja siga B', async () => {
+  mock.sessio = dins('A');
+  const vista = render(<Sincro />);
+  await buida();
+  const servidorA = registre.fixaServidorAvisosPush.mock.calls.find(([s]) => s?.ambit === 'A')[0];
+  mock.sessio = dins('B');
+  vista.rerender(<Sincro />);
+  await buida();
+  await servidorA.retira({ plataforma: 'web', adreca: ADRECA });
+  expect(mock.retiraDispositiuAvisos).toHaveBeenLastCalledWith({ plataforma: 'web', adreca: ADRECA, usuariEsperat: 'A' }, mock.config);
+});
+
 beforeEach(() => {
   registre.fixaServidorAvisosPush(null);
   mock.sessio = null;
@@ -264,7 +276,7 @@ describe('useSincronitzaAvisosPush', () => {
     expect(registre.sincronitzaAvisosPush).toHaveBeenCalledTimes(1);
   });
 
-  test('(6) tornar a la vista amb la sessió dins sincronitza i neteja; amb la sessió fora, res', async () => {
+  test('(6) tornar a la vista sincronitza, però no neteja amb un zero antic; amb la sessió fora, res', async () => {
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
     mock.sessio = dins('A');
     const vista = render(<Sincro />);
@@ -273,8 +285,8 @@ describe('useSincronitzaAvisosPush', () => {
     await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
     await buida();
     expect(registre.sincronitzaAvisosPush).toHaveBeenCalledTimes(1);
-    expect(registre.netejaAvisosPushMostrats).toHaveBeenCalledTimes(1);
-    expect(adaptador.neteja).toHaveBeenCalledTimes(1);
+    expect(registre.netejaAvisosPushMostrats).not.toHaveBeenCalled();
+    expect(adaptador.neteja).not.toHaveBeenCalled();
 
     mock.sessio = { estat: 'fora', currentUser: null };
     vista.rerender(<Sincro />);
@@ -338,7 +350,7 @@ describe('useSincronitzaAvisosPush', () => {
     );
     /* La retirada: només plataforma i adreça. */
     await act(async () => { await registre.desactivaAvisosPush(); });
-    expect(mock.retiraDispositiuAvisos).toHaveBeenCalledWith({ plataforma: 'web', adreca: ADRECA }, mock.config);
+    expect(mock.retiraDispositiuAvisos).toHaveBeenCalledWith({ plataforma: 'web', adreca: ADRECA, usuariEsperat: 'A' }, mock.config);
   });
 
   test('l\'àmbit és la persona, no l\'actor: parlar en nom d\'una entitat no rota res', async () => {

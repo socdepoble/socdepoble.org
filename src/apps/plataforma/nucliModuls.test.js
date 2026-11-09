@@ -17,7 +17,7 @@ import {
   globalDeLaPorta, nucliSatisfa, portaDeLaFont
 } from './contracteNucli.js';
 import { NUCLI } from './nucliModuls.js';
-import { NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3 } from './__fixtures__/nomsDelNucli.js';
+import { NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const ordenat = (llista) => [...llista].sort();
@@ -136,14 +136,16 @@ describe('el contracte (contracteNucli.js)', () => {
      '^1.2' no entrava, i la porta 'workspace' (1.2.0) és exactament el que
      ho canvia. El que no entra ara és un de '^1.3'.
      Actualitzada a posta (261024 T5): l'1.3.0 afig useServeiNoticies a la porta 'plataforma'; un
-     mòdul de '^1.3' ja entra, i el primer que no, el de '^1.4'. */
-  test('el rang: amb el nucli 1.3.0, un mòdul compilat contra l’1.0, l’1.1 o l’1.2 continua entrant, i un de l’1.4 encara no', () => {
-    expect(VERSIO_NUCLI).toBe('1.3.0');
+     mòdul de '^1.3' ja entra. R14: els serveis de Menjar i Beure i Botonera
+     entren en1.4; el primer rang futur rebutjat és ara '^1.5'. */
+  test('el rang1.4 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
+    expect(VERSIO_NUCLI).toBe('1.4.0');
     expect(nucliSatisfa('^1.0')).toBe(true);
     expect(nucliSatisfa('^1.1')).toBe(true);
     expect(nucliSatisfa('^1.2')).toBe(true);
     expect(nucliSatisfa('^1.3')).toBe(true);
-    expect(nucliSatisfa('^1.4')).toBe(false);
+    expect(nucliSatisfa('^1.4')).toBe(true);
+    expect(nucliSatisfa('^1.5')).toBe(false);
   });
 
   /* La promesa de cada menor («només s'afig») amb noms, no amb números. Cada
@@ -154,8 +156,9 @@ describe('el contracte (contracteNucli.js)', () => {
      (261016), una porta sencera que cap versió d'abans no tenia i que
      modulDeBuild.test.jsx compila de veritat.
      Actualitzada a posta (261024 T5): i NOMS_DEL_NUCLI_1_3, un nom nou a una porta que ja hi era
-     (useServeiNoticies, a la de la plataforma), cap porta nova. */
-  test('el nucli 1.3.0 conserva cada porta i cada nom de l’1.0.0, i només afig els de l’1.1.0, la porta de l’1.2.0 i el nom de l’1.3.0', () => {
+     (useServeiNoticies, a la de la plataforma), cap porta nova.
+     R14: NOMS_DEL_NUCLI_1_4 fixa els serveis de domini i Botonera. */
+  test('el nucli1.4 conserva tots els noms publicats i només afig els declarats per versió', () => {
     for (const clau of Object.keys(NOMS_DEL_NUCLI_1_2)) {
       expect(Object.hasOwn(NOMS_DEL_NUCLI_1_0, clau) || Object.hasOwn(NOMS_DEL_NUCLI_1_1, clau), `${clau}: porta nova`).toBe(false);
     }
@@ -174,6 +177,6 @@ describe('el contracte (contracteNucli.js)', () => {
       const nous = noms.filter((nom) => !abans.includes(nom));
       if (nous.length) afegits[clau] = ordenat(nous);
     }
-    expect(afegits).toEqual(fusiona(NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3));
+    expect(afegits).toEqual(fusiona(NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4));
   });
 });

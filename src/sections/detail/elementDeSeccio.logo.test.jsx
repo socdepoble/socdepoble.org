@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   capacitats: new Set(), resol: vi.fn()
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({
+  useRouter: () => ({ memoria: false }),
   useParams: () => ({ sectionId: mocks.sectionId, itemId: mocks.itemId }),
   useNavigate: () => mocks.navigate,
   useLocation: () => ({ pathname: `/${mocks.sectionId}/${mocks.itemId}`, state: null }),

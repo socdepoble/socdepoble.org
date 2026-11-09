@@ -11,6 +11,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <!-- R54: cap registre FCM ni Analytics abans de l'opt-in explícit. -->
+        <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_sdp" />
 
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
@@ -69,8 +73,8 @@
     <!-- Avisos del xat (261026). @capacitor/local-notifications porta POST_NOTIFICATIONS
          (Android 13+ el demana en temps d'execució) i tres permisos per a
          avisos programats. L'App només avisa al moment, mai programa res: fora
-         l'alarma exacta, l'arrencada i el wake lock. -->
+         l'alarma exacta i l'arrencada. El transport remot conserva el wake lock del SDK. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" tools:node="remove" />
+    <!-- El transport FCM necessita el wake lock del seu SDK per al push remot. -->
 </manifest>

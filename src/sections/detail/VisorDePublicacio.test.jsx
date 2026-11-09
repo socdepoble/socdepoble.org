@@ -46,6 +46,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => {
   };
 });
 vi.mock('../../app/contexts/RouterContext', () => ({
+  useRouter: () => ({ memoria: false }),
   useParams: () => ({ sectionId: mocks.sectionId, itemId: mocks.itemId }),
   useNavigate: () => mocks.navigate,
   useLocation: () => ({ pathname: `/${mocks.sectionId}/${mocks.itemId}`, search: '', state: null }),

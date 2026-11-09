@@ -33,7 +33,11 @@ function setup(t) {
  const good=(cmd,args)=>{const r=run(cmd,args);assert.equal(r.status,0,r.stderr+r.stdout);return r.stdout;};
  // Sense registre d'empremtes la frontissa falla tancada (registre-absent): s'inicia i entra al commit.
  good(process.execPath,['tooling/gates/frontissa-contingut.mjs','--inicia','--per','Fixture']);
- good('git',['init','--quiet']);good('git',['config','user.name','Fixture']);good('git',['config','user.email','fixture@example.invalid']);
+ good('git',['init','--quiet']);
+ // The hook fixture owns no background maintenance. Auto-packing can outlive
+ // commit and race its teardown (ENOTEMPTY in .git/objects/info or pack).
+ good('git',['config','gc.auto','0']);good('git',['config','maintenance.auto','false']);
+ good('git',['config','user.name','Fixture']);good('git',['config','user.email','fixture@example.invalid']);
  good('git',['add','.']);good('git',['commit','--quiet','-m','fixture']);
  const reflex=(...args)=>good(process.execPath,['tooling/wiki/reflex_petorreta.mjs',...args]);
  reflex('init');

@@ -106,7 +106,8 @@ export const FONTS_DE_PAGINES = Object.freeze([
    rutes de la Consola: la regla (seoConsola.js) i les dades que llig. Totes
    entren a l'evidència; una font canviada a mig build és porta roja. */
 export const FONTS_CONSOLA = Object.freeze(['src/sections/consola/seoConsola.js', 'src/sections/consola/consolaPagines.js',
-  'src/sections/consola/govern/governConsola.js', 'src/sections/consola/imatgesConsola.js']);
+  'src/sections/consola/govern/governConsola.js', 'src/sections/consola/imatgesConsola.js',
+  'src/sections/botigues/botiguesSistemaMeta.js']);
 
 /* Les llavors del repositori amb detall públic (decisió per defecte del
    261028, D3): [secció, font, exportació]. Una font absent no hi entra.

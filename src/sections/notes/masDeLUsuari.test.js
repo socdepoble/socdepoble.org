@@ -86,6 +86,8 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
   test('les catorze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
     expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length + PATRIMONI_AL_MUR.length);
     expect(SYSTEM_PAGES).toHaveLength(14);
+    expect(AL_MUR).toHaveLength(18);
+    expect(AL_MUR.map(item => item.key)).not.toContain('anatomia-rural');
     for (const alies of [ENTITAT_LLAVOR, ENTITAT_REMOTA]) {
       expect(esAliesDelProjecte(alies)).toBe(true);
       const items = itemsPublicatsDe({ feedPosts: SISTEMA }, alies);

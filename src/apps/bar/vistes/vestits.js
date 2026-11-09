@@ -19,7 +19,7 @@ import {
   Beer, Coffee, CupSoda, GlassWater, IceCreamCone, Martini, Sandwich, Soup, Utensils, UtensilsCrossed, Wheat, Wine
 } from 'lucide-react';
 import { formatEuros } from '../../../utils/diners.js';
-import { ordenaAlergens } from '../../../utils/productes/producteUniversal.js';
+import { ALERGENS, NOMS_ALERGENS, ordenaAlergens } from '../../../utils/productes/producteUniversal.js';
 import { cartaDelCanal, grupsDe, teGrupObligatori } from '../nucli/cataleg.js';
 import { totals } from '../nucli/comanda.js';
 import { brutLinia, totalLinia } from '../nucli/linia.js';
@@ -43,7 +43,15 @@ export function categoriesVestides(carta) {
 /** El camí de la foto definitiva (§A.10); sense foto, el marcador 1:1 de l'esquelet. */
 export function imatgeDe(producte, establiment) {
   if (producte?.imatge?.estat !== 'definitiva') return undefined;
-  return `/assets/uploads/empresa/${establiment?.slug || 'el-meu-bar'}/bar/${producte.categoriaId}/${producte.imatge.slug}.webp`;
+  if (producte.imatge.origen === 'corpus-parroquia') {
+    const { url, sha256 } = producte.imatge;
+    if (typeof url !== 'string' || !/^[a-f0-9]{64}$/.test(sha256)) return undefined;
+    const imageInline = /^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/=]+$/i.test(url);
+    const local = /^(?!\/\/)[a-z0-9_./-]+$/i.test(url) && !url.includes('\\');
+    const name = new RegExp(`^p-${sha256}(?:-[a-z0-9_-]+)?\\.(?:jpe?g|png|webp)$`, 'i');
+    return imageInline || (local && name.test(url.split('/').at(-1))) ? url : undefined;
+  }
+  return `/assets/uploads/empresa/${establiment?.slug || 'el-meu-bar'}/bar/${producte.categoriaOrigenId || producte.categoriaId}/${producte.imatge.slug}.webp`;
 }
 
 /** El valor de la rajola: el preu si n'hi ha un de sol, «N variants» si no, «Preu obert». */
@@ -253,8 +261,16 @@ export function articlesDelTpv(carta, { comanda = null, establiment } = {}) {
   const perId = new Map((delCanal?.productes || []).map((p) => [p.id, p]));
   return articlesDeCarta(delCanal, { aComanda: new Set(unitats.keys()), establiment })
     .map((article) => {
-      const alergens = ordenaAlergens(perId.get(article.id)?.alergens);
-      const vestit = alergens.length ? { ...article, alergens } : article;
+      const producte = perId.get(article.id);
+      const ambFont = typeof producte?.fontAlergens === 'string' && Boolean(producte.fontAlergens.trim());
+      const alergens = ambFont ? ordenaAlergens(producte?.alergens) : [];
+      const traces = ambFont ? ordenaAlergens(producte?.tracesAlergens) : [];
+      const informats = new Set([...alergens, ...traces, ...(ambFont ? producte?.alergensAbsents || [] : [])]);
+      const teAnotacions = [producte?.alergens, producte?.tracesAlergens, producte?.alergensAbsents].some((ids) => ids?.length);
+      const avisAlergens = [traces.length ? `T: ${traces.map((id) => NOMS_ALERGENS[id]).join(', ')}` : null,
+        (producte?.alergensEstat || teAnotacions) && informats.size < ALERGENS.length ? 'Al·lèrgens pendents' : null].filter(Boolean).join(' · ');
+      const vestit = { ...article, ...(alergens.length ? { alergens } : {}),
+        ...(avisAlergens ? { secundari: [article.secundari, avisAlergens].filter(Boolean).join(' · ') } : {}) };
       return unitats.has(article.id)
         ? { ...vestit, insignia: String(unitats.get(article.id)), insigniaLector: `${textUnitats(unitats.get(article.id))} a la comanda` }
         : vestit;

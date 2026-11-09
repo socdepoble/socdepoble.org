@@ -54,6 +54,7 @@
 import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaXatDePagina } from '../../config/navigation.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { creditDeCommons, dretsDe, origenDe } from './origenImatges.js';
+import { esElementPublic } from '../../components/universal/traduccio/visibilitatTraduible.js';
 
 const ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/;
 
@@ -77,6 +78,22 @@ export function autorDeclarat(item) {
   if (!item) return null;
   if (Object.hasOwn(item, 'autor')) return textNet(item.autor);
   return item.tag !== 'Poble' ? textNet(item.source) : null;
+}
+
+/* P0-54 · El creador explícit de la foto per a la barra, sense convertir
+   una procedència/motor (source) en identitat. El panell conserva el seu
+   contracte de procedència; cap avatar, perfil ni data es deduïx del nom. */
+const nomDAutoria = (valor) => {
+  if (typeof valor !== 'string' || /[<>\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u.test(valor)) return null;
+  const nom = valor.replace(/\s+/gu, ' ').trim();
+  return nom && nom.length <= 500 ? nom : null;
+};
+
+export function nomDAutoriaDeLaFoto(item, { exif = null } = {}) {
+  const declarat = item && Object.hasOwn(item, 'autor') ? autorDeclarat({ autor: item.autor }) : null;
+  return nomDAutoria(esElementPublic(item) ? creditDeCommons(item)?.autor : null)
+    || nomDAutoria(exif?.autor)
+    || nomDAutoria(declarat);
 }
 
 /** «38.59190, -0.41840 · 456,7 m», o null. */

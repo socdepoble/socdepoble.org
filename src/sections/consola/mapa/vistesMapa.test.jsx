@@ -320,7 +320,8 @@ describe('les altres vistes del Mapa també són targetes amb boina i pàgina pr
     cleanup();
     render(<MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: MAPA, error: null, carrega: vi.fn() }} />);
     expect(regio('Avisos del mapa')).toBe('sdp-taula sdp-taula--densa');
-    expect(regio('Arestes del mapa')).toBe('sdp-taula sdp-taula--densa');
+    // R56 · Només les dues columnes d’IDs guanyen lectura; cap caixa vertical.
+    expect(regio('Arestes del mapa')).toBe('sdp-taula sdp-taula--densa sdp-taula--identificadors');
   });
 
   test('el calendari conserva a la taula el que abans deien les caixes', () => {

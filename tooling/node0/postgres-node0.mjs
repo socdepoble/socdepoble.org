@@ -23,7 +23,7 @@ export function creaPostgres({ env = process.env, executable = env.NODE0_PSQL ||
   const query = (sql, options = {}) => new Promise((resolve, reject) => {
     if(options===null||typeof options!=='object'||Array.isArray(options)||Object.keys(options).some(key=>!['privateValues','signal'].includes(key))||options.privateValues!==undefined&&typeof options.privateValues!=='boolean'||options.signal!==undefined&&!(options.signal instanceof AbortSignal))throw new TypeError('node0_query_options_invalid');
     if(options.signal?.aborted)return reject(new Error('node0_database_aborted'));
-    const script=options.privateValues===true||env.PGUSER==='node0_authenticator'?preparaConsultaPrivadaNodeZero(sql).script:sql;
+    const script=options.privateValues===true||['node0_authenticator','node0_iaia_authenticator'].includes(env.PGUSER)?preparaConsultaPrivadaNodeZero(sql,{role:env.PGUSER}).script:sql;
     const child = spawn(executable, ['-X', '-w', '-qAt', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=sqlstate'], { env: { ...env, LC_ALL:'C', LANG:'C', PGCONNECT_TIMEOUT: '5' }, stdio: ['pipe', 'pipe', 'pipe'] });
     const data=[];let bytes=0,finished=false,stopping=null,diagnostics='',timer,killTimer;
     const settle = (error,value) => {

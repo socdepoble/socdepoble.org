@@ -334,7 +334,7 @@ describe('els adaptadors natius', () => {
     expect(dinamic).toBeGreaterThan(bandera);
     const dinsDeLaBandera = codi.slice(bandera, finsA(codi, bandera + 'if (AVISOS_PUSH_XAT_ACTIUS) {'.length, (c) => c === '}'));
     expect(dinsDeLaBandera).toContain("import('./avisosPushNatius.js')");
-    expect(dinsDeLaBandera).toContain('registraAvisosPush(adaptadorPushNatiuPerAlRegistre())');
+    expect(dinsDeLaBandera).toContain('registraAvisosPush(adaptadorPushNatiuPerAlRegistre(null, { canal: canalDelXat }))');
     expect(codi).toMatch(/import \{ AVISOS_PUSH_XAT_ACTIUS, registraAvisosPush \} from '\.\.\/config\/avisosPushXat\.js';/);
   });
 

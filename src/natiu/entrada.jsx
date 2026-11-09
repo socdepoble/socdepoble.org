@@ -104,9 +104,8 @@ const init = () => {
     };
     try { registraAvisosNatius(creaAvisosNatius({ plataforma: plataformaDelDispositiu(), canal: canalDelXat })); }
     catch (e) { console.error('[natiu] Avisos natius no registrats:', e); }
-    /* B8 (marató 261101_2143) · Els avisos push del Xat, només amb la bandera
-       (D-B8C-3). Sense el connector PushNotifications, que esta nit no
-       s'instal·la, motiu() diu 'sense-connector': cap interruptor, cap crida
+    /* R54 · PushNotifications oficial8.1.3, només amb la bandera.
+       Si falta el connector al binari, motiu() diu 'sense-connector': cap crida
        nativa i res a la consola. L'adaptador arriba per import() i no per un
        import estàtic (D-B8C4-1): @capacitor/core no és lliure d'efectes i, amb
        la bandera apagada, un import estàtic el posaria al tros d'entrada i
@@ -117,7 +116,7 @@ const init = () => {
     if (AVISOS_PUSH_XAT_ACTIUS) {
       import('../config/motorAvisosPushXat.js')
         .then(() => import('./avisosPushNatius.js'))
-        .then(({ adaptadorPushNatiuPerAlRegistre }) => registraAvisosPush(adaptadorPushNatiuPerAlRegistre()))
+        .then(({ adaptadorPushNatiuPerAlRegistre }) => registraAvisosPush(adaptadorPushNatiuPerAlRegistre(null, { canal: canalDelXat })))
         .catch((e) => console.error('[natiu] Avisos push no registrats:', e));
     }
     /* P0-24 (G2120-07, marató 261101_2143) · L'Arrere d'Android tanca primer la

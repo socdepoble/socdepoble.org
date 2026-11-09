@@ -1,0 +1,43 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+const modulePath=process.env.SDP_PGLITE_MODULE;if(!modulePath)throw new Error('Explicit local PGlite runtime required');
+const {PGlite}=await import(pathToFileURL(modulePath));
+const U='10000000-0000-4000-8000-000000000001',B='10000000-0000-4000-8000-000000000002',A='10000000-0000-4000-8000-000000000003',O='10000000-0000-4000-8000-000000000004',T='20000000-0000-4000-8000-000000000001',F='30000000-0000-4000-8000-000000000001';
+const migration=await readFile(new URL('../../supabase/migrations/2611080430_iaia_xat.sql',import.meta.url),'utf8');
+const f0=await readFile(new URL('../../supabase/migrations/2609270200_xat_f0_fonament.sql',import.meta.url),'utf8');
+const e2ee=await readFile(new URL('../../supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql',import.meta.url),'utf8');
+function fn(source,name){const start=source.toLowerCase().indexOf('create or replace function '+name.toLowerCase()+'(');assert.ok(start>=0);const end=source.indexOf('$$;',source.indexOf('$$',start)+2);return source.slice(start,end+3);}
+async function fixture(){const db=new PGlite();await db.exec(`
+CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role;
+CREATE SCHEMA auth;CREATE SCHEMA private;
+CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
+CREATE TABLE auth.users(id uuid PRIMARY KEY,banned_until timestamptz);CREATE TABLE public.towns(id uuid PRIMARY KEY);CREATE TABLE public.user_platform_roles(user_id uuid,role text);
+CREATE TABLE public.xat_fils(id uuid PRIMARY KEY,tenant_id uuid NOT NULL,tipus text NOT NULL,subjecte_tipus text,subjecte_id text,interlocutor_id uuid,org_id uuid,epoca_actual int NOT NULL DEFAULT 0,cap_epoca_hash text,e2ee_des_de_seq bigint,ultim_seq bigint NOT NULL DEFAULT 0,actualitzat_al timestamptz,temporal_segons int);
+CREATE TABLE public.xat_participants(fil_id uuid,usuari_id uuid,visible_fins_seq bigint,eixit_al timestamptz,com_org_id uuid,visible_des_de_seq bigint NOT NULL DEFAULT 0,buidat_fins_seq bigint NOT NULL DEFAULT 0,PRIMARY KEY(fil_id,usuari_id));
+CREATE TABLE public.town_memberships(town_id uuid,user_id uuid,PRIMARY KEY(town_id,user_id));
+CREATE TABLE public.organization_memberships(organization_id uuid,tenant_id uuid,user_id uuid,role text);CREATE TABLE public.organizations(id uuid,visibility text);
+CREATE TABLE public.xat_missatges(id uuid PRIMARY KEY,fil_id uuid REFERENCES public.xat_fils,usuari_id uuid REFERENCES auth.users,text text,tipus text DEFAULT 'text',resposta_a uuid,metadades jsonb NOT NULL DEFAULT '{}',es_ia boolean NOT NULL DEFAULT false,versio_xifrat int NOT NULL DEFAULT 0,esborrat_al timestamptz,seq bigint NOT NULL,creat_al timestamptz,caduca_al timestamptz,UNIQUE(fil_id,seq));
+GRANT USAGE ON SCHEMA public,auth TO authenticated;GRANT EXECUTE ON FUNCTION auth.uid(),auth.jwt() TO authenticated;
+INSERT INTO auth.users(id) VALUES('${U}'),('${B}'),('${A}'),('${O}');UPDATE auth.users SET banned_until='infinity' WHERE id='${B}';INSERT INTO towns VALUES('${T}');INSERT INTO town_memberships VALUES('${T}','${U}'),('${T}','${B}');INSERT INTO user_platform_roles VALUES('${A}','superadmin');
+INSERT INTO xat_fils(id,tenant_id,tipus,subjecte_tipus) VALUES('${F}','${T}','grup','pagina');INSERT INTO xat_participants(fil_id,usuari_id) VALUES('${F}','${U}'),('${F}','${B}');
+`);
+await db.exec(await readFile(new URL('../../supabase/migrations/2610061448_superadmin_aal2.sql',import.meta.url),'utf8'));
+await db.exec(fn(f0,'private.xat_assigna_seq')+`;CREATE TRIGGER xat_missatges_seq BEFORE INSERT ON public.xat_missatges FOR EACH ROW EXECUTE FUNCTION private.xat_assigna_seq();`);
+await db.exec(fn(e2ee,'private.xat_e2ee_abast'));
+await db.exec(fn(await readFile(new URL('../../supabase/migrations/2609282100_xat_de_pagina.sql',import.meta.url),'utf8'),'private.xat_participant_vigent'));
+await db.exec(migration);
+await db.exec(`ALTER TABLE xat_participants ADD COLUMN rebut_fins_seq bigint DEFAULT 0,ADD COLUMN llegit_fins_seq bigint DEFAULT 0,ADD COLUMN no_llegit_manual boolean DEFAULT true;CREATE TABLE bloquejos(bloquejador uuid,bloquejat_tipus text,bloquejat_persona uuid);`);
+await db.exec(await readFile(new URL('../../supabase/migrations/2611080432_xat_lliurament_i_presencia.sql',import.meta.url),'utf8'));return db;}
+async function scalar(db,sql){return (await db.query(sql)).rows[0].v;}
+async function as(db,user,aal='aal2'){await db.exec(`SELECT set_config('request.jwt.claim.sub','${user}',false),set_config('request.jwt.claims','{"aal":"${aal}"}',false);`);}
+async function bind(db){await as(db,A);await scalar(db,`SELECT public.xat_iaia_register_principal('${B}') v`);return scalar(db,`SELECT public.xat_iaia_bind('${T}','${F}','${B}',true,'IAIA és un assistent amb model; este grup compartix preguntes explícites.',0) v`);}
+
+async function botFixture(){const db=await fixture();await bind(db);return db;}
+test('registered bound bot0 does not hold all-human2 receipt/read minima at0',async()=>{const db=await botFixture();try{await db.exec(`INSERT INTO town_memberships VALUES('${T}','${O}');INSERT INTO xat_participants(fil_id,usuari_id,rebut_fins_seq,llegit_fins_seq) VALUES('${F}','${O}',2,2);UPDATE xat_fils SET ultim_seq=2 WHERE id='${F}'`);await as(db,U);const r=await scalar(db,`SELECT public.xat_ritme('${F}') v`);assert.equal(r.rebutPelsAltresFinsSeq,2);assert.equal(r.llegitPelsAltresFinsSeq,2);}finally{await db.close();}});
+test('no other human peer keeps delivery/read unknown0 rather than vacuously read',async()=>{const db=await botFixture();try{await db.exec(`UPDATE xat_participants SET rebut_fins_seq=2,llegit_fins_seq=2 WHERE usuari_id='${B}'`);await as(db,U);const r=await scalar(db,`SELECT public.xat_ritme('${F}') v`);assert.equal(r.rebutPelsAltresFinsSeq,0);assert.equal(r.llegitPelsAltresFinsSeq,0);}finally{await db.close();}});
+test('a real human with receipt0 cannot exclude themselves or mutate the authoritative bot registry',async()=>{const db=await botFixture();try{await db.exec(`INSERT INTO town_memberships VALUES('${T}','${O}');INSERT INTO xat_participants(fil_id,usuari_id) VALUES('${F}','${O}');UPDATE xat_participants SET rebut_fins_seq=2,llegit_fins_seq=2 WHERE usuari_id='${B}'`);await as(db,O);await db.exec('SET ROLE authenticated');await assert.rejects(scalar(db,`SELECT public.xat_iaia_register_principal('${O}') v`),e=>e.code==='42501');await assert.rejects(db.exec(`INSERT INTO private.xat_iaia_principals VALUES('${O}','${O}')`),e=>e.code==='42501');await as(db,U);const r=await scalar(db,`SELECT public.xat_ritme('${F}') v`);assert.equal(r.rebutPelsAltresFinsSeq,0);assert.equal(r.llegitPelsAltresFinsSeq,0);}finally{await db.close();}});
+test('registered bot is excluded only in its exact bound thread, including disabled IAIA, never globally',async()=>{const db=await botFixture();try{const other='90000000-0000-4000-8000-000000000001';await db.exec(`UPDATE private.xat_iaia_binding SET enabled=false;INSERT INTO xat_fils(id,tenant_id,tipus,subjecte_tipus,ultim_seq) VALUES('${other}','${T}','grup','pagina',2);INSERT INTO xat_participants(fil_id,usuari_id,rebut_fins_seq,llegit_fins_seq) VALUES('${other}','${U}',0,0),('${other}','${B}',2,2)`);await as(db,U);assert.equal(await scalar(db,`SELECT private.xat_ritme_es_bot('${F}','${B}') v`),true);assert.equal(await scalar(db,`SELECT private.xat_ritme_es_bot('${other}','${B}') v`),false);const r=await scalar(db,`SELECT public.xat_ritme('${other}') v`);assert.equal(r.rebutPelsAltresFinsSeq,2);}finally{await db.close();}});
+test('bound bot cannot publish human typing and old bot presence is excluded while real human typing remains',async()=>{const db=await botFixture();try{const inst='80000000-0000-4000-8000-000000000001';await as(db,B);await assert.rejects(scalar(db,`SELECT public.xat_presencia('${F}','${inst}',1,true) v`),e=>e.code==='42501');await db.exec(`INSERT INTO private.xat_presencia VALUES('${F}','${B}','${inst}',1,true,now()+interval '8 seconds',now());INSERT INTO town_memberships VALUES('${T}','${O}');INSERT INTO xat_participants(fil_id,usuari_id) VALUES('${F}','${O}')`);await as(db,O);await scalar(db,`SELECT public.xat_presencia('${F}','${inst}',1,true) v`);await as(db,U);const r=await scalar(db,`SELECT public.xat_ritme('${F}') v`);assert.deepEqual(r.escrivint.map(v=>v.usuariId),[O]);}finally{await db.close();}});

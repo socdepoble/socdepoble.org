@@ -205,18 +205,15 @@ export function seqMinim(missatges) {
  * servidor l'ha numerat; `llegit` (XAT-C04) quan els altres membres han
  * llegit fins a eixe `seq`; `error` (XAT-C10) es conserva tal com ve.
  *
- * No hi ha «entregat» (les dos marques grises habituals): el `rebut_fins_seq`
- * que torna el port és el rebut PROPI (jo.rebut_fins_seq a xat_fils_meus,
- * meu.rebutFinsSeq a localXat.js), no el dels altres. Fins que el contracte
- * no porte un rebut dels altres explícit, pintar-lo seria mentir (auditoria
- * de Codex 2150, ronda C3; torn 260930).
+ * `lliurat` només amb el mínim explícit de rebut dels altres, mai el propi.
  */
-export function derivaEstat(m, llegitPelsAltresFinsSeq) {
+export function derivaEstat(m, llegitPelsAltresFinsSeq, rebutPelsAltresFinsSeq = 0) {
   if (m.estatEnviament === 'pendent' || m.estatEnviament === 'error') return m.estatEnviament;
   if (m.sender !== 'me') return 'enviat';
   const s = seqDe(m);
   if (s == null) return 'pendent';
-  return s <= numero(llegitPelsAltresFinsSeq) ? 'llegit' : 'enviat';
+  if (s <= numero(llegitPelsAltresFinsSeq)) return 'llegit';
+  return s <= numero(rebutPelsAltresFinsSeq) ? 'lliurat' : 'enviat';
 }
 
 /**

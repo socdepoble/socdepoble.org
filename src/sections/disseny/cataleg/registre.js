@@ -26,6 +26,7 @@ export const PAGINES = [
 ];
 
 export const REGISTRE = [
+  { nom: 'VistaBotiguesSistema', fitxer: 'sections/botigues/VistaBotiguesSistema.jsx', pagina: 'estructura', estat: 'viu', fora: true },
   // Formularis
   { nom: 'Camp', fitxer: 'PedraSeca/organismes/formulari.jsx', pagina: 'formularis', estat: 'viu' },
   { nom: 'CampText', fitxer: 'PedraSeca/organismes/formulari.jsx', pagina: 'formularis', estat: 'viu' },

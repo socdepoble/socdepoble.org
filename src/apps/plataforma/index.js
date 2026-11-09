@@ -52,3 +52,10 @@ export { ENTITAT_PROJECTE, autoriaDe } from './autoria.js';
 
 /* Loading delegates recovery to the enclosing route owner. */
 export { lazyRoute } from './lazyRoute.js';
+
+/* Nucli1.4.0: source catalogues and pure accounting are supplied by the host. */
+export {
+  carregaCatalegParroquia, carregaFotosParroquia, carregaMercadona, carregaReceptes, comparaOfertaRural,
+  costCopaDeTarifaParroquia, enriqueixCartaParroquia, fiscalVenda, ingredientDeTarifaParroquia,
+  itemsCatalegCartaParroquia, mesuraIngredient, tarifesCompraParroquia, validaEsborranyTrasllat
+} from './menjarIBeure.js';

@@ -431,6 +431,7 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
       {children}
       {Dialegs ? (
         <Dialegs
+          externalConfig={config}
           denuncia={{
             obert: dialeg?.tipus === 'denuncia',
             objectiu: dialeg?.tipus === 'denuncia' ? objectiu : null,

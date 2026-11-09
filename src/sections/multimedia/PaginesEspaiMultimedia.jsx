@@ -57,7 +57,7 @@ import { DetallArxiuLocal } from './DetallArxiuLocal.jsx';
 import { MissatgeLocal, PanellGestorLocal } from './GestorMultimediaLocal.jsx';
 import { formatKb } from './motorMultimediaLocal.js';
 import { esFotoDePersona } from './origenImatges.js';
-import { filesDelPanell, formataDataHora } from './panellDeLaFoto.js';
+import { filesDelPanell, formataDataHora, nomDAutoriaDeLaFoto } from './panellDeLaFoto.js';
 import { nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_ESPAI as E, segonsNombre } from './textosEspaiMultimedia.js';
 import { TEXTOS_LOCAL as T, tradueix } from './textosGestorLocal.js';
@@ -301,6 +301,12 @@ export function FitxaWeb({ espai, item }) {
          el de la fila «Publicat a»). Sense mode, el de sempre. */
       traduccio={esElementPublic(item) && publicacioTraduible(item)}
       {...dataHoraDeBarra({ creat: textNet(item.created_at) || null })}
+      topBarData={{
+        authorName: nomDAutoriaDeLaFoto(item, { exif }) || t('section.multimedia.visor.desconegut', 'Desconegut'),
+        authorAvatar: '',
+        authorLocation: '',
+        authorHref: null
+      }}
     >
       <div className="sdp-espai-multimedia__cos">
         {/* H1 → H2 → h3 (Gauntlet 261029, cicle 1): sense etiqueta ni font no hi ha

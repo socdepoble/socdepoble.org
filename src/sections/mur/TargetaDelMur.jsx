@@ -150,6 +150,8 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
     return (
       <EventCard
         item={item}
+        plaTraduccio={plaTraduccio}
+        avisTraduccio={errorDeTraduccio}
         esdeveniment={esdeveniment}
         objecte={acte}
         authorHref={rutaDePerfilDAutor(item) || undefined}

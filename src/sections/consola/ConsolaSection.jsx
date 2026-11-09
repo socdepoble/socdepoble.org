@@ -4,6 +4,7 @@ import {
   Activity, ArrowLeftRight, Bot, CalendarClock, HeartPulse, Network, Puzzle, RefreshCw, Users, Workflow
 } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { dataDeDocument, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import {
   Alerta, Boto, Carregant, EstatBuit, Interruptor, MollaPa
 } from '../../components/PedraSeca';
@@ -30,7 +31,8 @@ import { resolvePageSlugPath } from '../../config/navigation.js';
 import { carregaEmpaquetats, esRutaEmpaquetats, paginaEmpaquetats } from './empaquetats.js';
 import { PaginaEmpaquetats, SeccioEmpaquetats } from './EmpaquetatsConsola.jsx';
 import { miniaturaDePagina } from './imatgesConsola.js';
-import { metadadesDeSubpagina, metadadesDelTauler } from './seoConsola.js';
+import { metadadesDeBotigues, metadadesDeSubpagina, metadadesDelTauler } from './seoConsola.js';
+import { PaginaBotiguesConsola, SeccioBotiguesConsola } from './BotiguesConsola.jsx';
 // Ordre del Mestre (30-10-2026, prompt 2208; SEO-CRIT-02) · Del mòdul pur de config/, no de TextSection.jsx.
 import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
 import { XIFRA_DE_CODI, segmentXifra, xifraDelMas, xifresDeLaGraella, xifresDeVista } from './xifresMas.js';
@@ -116,6 +118,15 @@ const ICONES = Object.freeze({
    pròpia del seu text. Si hi ha instantània i és més recent, mana la
    instantània (TargetaConsola). */
 const dataDelCopy = () => copyConsola().date;
+
+/* R55 · La versió del tauler és la més recent de les fonts realment carregades.
+   Es conserva el valor original: convertir un dia en Date inventaria una hora. */
+function dataDelTauler(...fonts) {
+  const versio = fonts.reduce((recent, font) => (
+    dataDeDocument({ creat: recent, modificat: font })?.font === 'modificat' ? font : recent
+  ), dataDelCopy());
+  return dataHoraDeBarra({ creat: versio });
+}
 
 /** Una lectura de /__iaia/consola.json. Un error conserva l'última instantània bona.
     `actiu: false` (o un paquet sense fonts) no llig res, ni en muntar ni amb `carrega`.
@@ -426,7 +437,8 @@ function ContingutPagina({ id, consola, mapa, locale }) {
    seua pàgina (lliçó 261004 de sdp-universal-page). No en fa la portada
    (hero): la Llei Visual del quadrat no cobrix la portada de PageFrame i
    canviaria els píxels de nou pàgines sense l'ordre del Mestre. */
-function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, deTaxonomia, privat }) {
+function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, deTaxonomia, deBotigues, privat }) {
+  if (deBotigues) return headPublic(metadadesDeBotigues(copy, opcionsDeLaImatgeSocial()));
   if (slugXifra !== null) {
     // Mentre les fonts es lligen no se sap si la xifra existix (PaginaXifra espera).
     if (!xifra && llegint) return { title: `Sóc de Poble en xifres · ${copy.title}`, description: copy.lead };
@@ -481,7 +493,8 @@ export default function ConsolaSection() {
   const deEmpaquetats = slugXifra === null && idPanell === null && idGovern === null && esRutaEmpaquetats(comodi);
   // P0-61 / IDEA-192 · /consola/taxonomia, el Brain de categories i etiquetes.
   const deTaxonomia = slugXifra === null && idPanell === null && idGovern === null && !deEmpaquetats && esRutaBrainTaxonomia(comodi);
-  const sensePropia = slugXifra === null && idPanell === null && idGovern === null && !deEmpaquetats && !deTaxonomia;
+  const deBotigues = comodi === 'botigues' || comodi === 'botigues/';
+  const sensePropia = slugXifra === null && idPanell === null && idGovern === null && !deEmpaquetats && !deTaxonomia && !deBotigues;
   const id = sensePropia ? segmentPagina(comodi) : '';
   const pagina = sensePropia && id ? paginaConsola(id) : null;
   const paginaDeGovern = idGovern === null ? null : paginaGovern(idGovern);
@@ -499,12 +512,12 @@ export default function ConsolaSection() {
   const panell = idPanell === null ? null : panellPols(idPanell);
 
   const llegint = mapa.estat === 'loading' || consola.estat === 'loading';
-  useSEO(seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, deTaxonomia, privat }));
+  useSEO(seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, deTaxonomia, deBotigues, privat }));
 
   /* /consola/* és un sol element muntat: canviar de pàgina no desmunta res i
      el contenidor de scroll de l'aplicació es quedava on era. P0-61 · També en
      entrar a /consola/taxonomia des de la seua targeta, al peu del tauler. */
-  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id, slugXifra, idPanell, idGovern, deEmpaquetats, deTaxonomia]);
+  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id, slugXifra, idPanell, idGovern, deEmpaquetats, deTaxonomia, deBotigues]);
 
   /* Obrir una pàgina amb la seua font carregada la marca com a vista: el
      tauler només dirà «Canvis nous» si el resum canvia després. */
@@ -550,6 +563,8 @@ export default function ConsolaSection() {
       </UniversalPage>
     );
   }
+
+  if (deBotigues) return <PaginaBotiguesConsola cimRef={cim} />;
 
   if (id === null) return <Navigate to={RUTA_CONSOLA} replace />;
 
@@ -601,11 +616,13 @@ export default function ConsolaSection() {
          interfície en una altra llengua en porten el lang (llenguaDelContingut). Les dades i
          els botons de dins, no. */
       <UniversalPage title={copy.title} subtitle={copy.subtitle} lead={copy.lead} chrome="system" nivellMaxIndex={6}
+        topBarData={dataDelTauler(consola.dades?.generat, mapa.mapa?.generat, govern.matriu?.at, govern.servidor?.generat, empaquetats.valor?.generat)}
         traduccio={false} llenguaDelContingut="ca">
         <PrivacitatConsola.Provider value={privat}>
           <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={ara} cimRef={cim} ambImatges locale={locale} />
           <SeccioEmpaquetats font={empaquetats} />
           <SeccioBrainTaxonomia />
+          <SeccioBotiguesConsola />
           <IndexConsola fonts={fontsDe(consola, mapa)} govern={govern} empaquetats={empaquetats} locale={locale} ara={ara} />
           <DiagnosiConsola fonts={fontsDe(consola, mapa)} locale={locale} ara={ara} />
         </PrivacitatConsola.Provider>
@@ -615,6 +632,7 @@ export default function ConsolaSection() {
 
   return (
     <UniversalPage title={pagina.title} subtitle={pagina.subtitle} lead={pagina.lead} chrome="system" nivellMaxIndex={6}
+      topBarData={dataHoraDeBarra({ creat: dataDelCopy(), modificat: pagina.id === 'pols' ? consola.dades?.generat : mapa.mapa?.generat })}
       traduccio={false} llenguaDelContingut="ca">
       <PrivacitatConsola.Provider value={privat}>
         <MollaPa className="sdp-molla--panell"

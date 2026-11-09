@@ -186,10 +186,30 @@ describe('/legal 2.5 · cada afirmació dels avisos push té el codi al darrere'
     expect(cct).not.toMatch(/push/i);
   });
 
-  test('l’app nativa encara no porta els avisos push: si arriba el connector, cal una versió nova del text', () => {
+  /* Sanejament R15 (B1/B3 · P0-01, PRIV-05, P1-03) · El connector R54 és al projecte, però el
+     cicle natiu no fa res sense la bandera de build VITE_SDP_PUSH_NATIU==='1': l'app per al mòbil
+     encara no porta avisos push, i la 2.5 ho diu. Encendre la bandera (en qualsevol fitxer
+     d'entorn d'esta arrel) sense una versió del text posterior a la 2.5 fa caure la prova. */
+  test('l’app nativa encara no porta els avisos push: el connector hi és però apagat per la bandera de build; encendre-la demana una versió nova del text', () => {
     const paquet = JSON.parse(llig('package.json'));
     const deps = { ...paquet.dependencies, ...paquet.devDependencies };
-    expect(Object.keys(deps).filter((nom) => /push-notifications/.test(nom))).toEqual([]);
+    const connectors = Object.keys(deps).filter((nom) => /push-notifications/.test(nom));
+    expect(connectors.every((nom) => nom === '@capacitor/push-notifications')).toBe(true);
+    if (connectors.length) {
+      const natiu = llig('src/natiu/avisosPushNatius.js');
+      expect(natiu).toContain("const pushNatiuConfigurat = () => import.meta.env.VITE_SDP_PUSH_NATIU === '1';");
+      expect(natiu).toMatch(/export function motiuPushNatiu\([^)]*\) \{\n[^\n]*\n {2}if \(!pushNatiuConfigurat\(\)\) return ESTAT_PUSH_NATIU\.SENSE_CONFIG;/);
+      expect(natiu).toMatch(/export function creaAvisosPushNatius\(.*\) \{\n[^\n]*\n {2}if \(!pushNatiuConfigurat\(\)\) return adaptadorSenseConfig\(\);/);
+      expect(llig('tooling/vite/banderes-de-capacitat.mjs')).toContain("valors[nom] === '1' ? '1' : ''");
+    }
+    // Només es mira si la bandera hi és encesa; mai s'escriu cap valor d'un .env a l'eixida.
+    const FITXERS_ENV = ['.env', '.env.local', '.env.production', '.env.production.local', '.env.natiu', '.env.natiu.local', '.env.botigues.local'];
+    const encesa = FITXERS_ENV.some((fitxer) => { try { return /^\s*(?:export\s+)?VITE_SDP_PUSH_NATIU\s*=\s*['"]?1['"]?\s*$/m.test(llig(fitxer)); } catch { return false; } });
+    if (connectors.length && encesa) {
+      expect(HTML).not.toMatch(/Versió 2\.[0-5] ·/);
+      expect(pla(apartat(8))).not.toContain("A l'aplicació per al mòbil encara no hi ha avisos push");
+      return;
+    }
     expect(pla(apartat(8))).toContain("A l'aplicació per al mòbil encara no hi ha avisos push");
   });
 });

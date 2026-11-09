@@ -89,6 +89,90 @@ const comencaPer = (text) => (nom) => nom.startsWith(text);
 const davallDe = (boto) => boto.closest('article.sp-card')?.querySelector('.sp-card-text')?.textContent ?? null;
 const titolsDeSeccio = () => detall().getAllByRole('heading', { level: 3 }).map((titol) => titol.textContent);
 
+describe('P0-66 · catàleg complet Mercadona a la seua llista', () => {
+  test('crea i reobri la mateixa llista; els 592 productes són elegibles i no omplin casa automàticament', async () => {
+    const entorn = munta('/app/nevera/llista/casa');
+    const boto = await screen.findByRole('button', { name: 'Obri Mercadona' });
+    fireEvent.click(boto);
+    await waitFor(() => expect(desat(entorn.idb)?.llistes).toHaveLength(2));
+    const llista = desat(entorn.idb).llistes.find((l) => l.nom === 'Mercadona');
+    expect(ubicacio()).toBe(`/app/nevera/llista/${llista.id}`);
+    await screen.findByText(/592 productes\. Preus del tall 2026-10-03/);
+    expect(document.querySelectorAll('#app-grid-main [data-element^="mer-"]')).toHaveLength(592);
+    expect(desat(entorn.idb).casa).toEqual([]);
+    expect(llista.linies).toEqual([]);
+    fireEvent.click(botoDetall(PRODUCTE.id, PRODUCTE.nom));
+    await waitFor(() => expect(liniesDesades(entorn.idb, llista.id)).toEqual([{ articleId: PRODUCTE.id, especificacio: '' }]));
+    expect(liniesDesades(entorn.idb, 'casa')).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Obri Mercadona' }));
+    expect(desat(entorn.idb).llistes).toHaveLength(2);
+    expect([...document.querySelectorAll('#app-grid-main img')].every((img) => !img.src.includes('imgix'))).toBe(true);
+  }, 20000);
+
+  test('la fitxa compara una oferta real introduïda amb les mateixes unitats i dates explícites', async () => {
+    const entorn = prepara();
+    const estat = creaLlista(estatInicial(), 'Mercadona');
+    await entorn.magatzem.desa(estat);
+    munta(`/app/nevera/llista/${estat.darreraLlista}?fitxa=mer-salsa-de-tomate-basilico-con-albahaca`, entorn);
+    await screen.findByRole('group', { name: 'Comparador rural' });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Preu de l’oferta local (€)' }), { target: { value: '0,90' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Quantitat de l’oferta' }), { target: { value: '145' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Unitat de l’oferta' }), { target: { value: 'g' } });
+    fireEvent.change(screen.getByLabelText('Data de l’oferta local'), { target: { value: '2026-11-08' } });
+    expect(screen.getByText(/Per a la mateixa quantitat: Mercadona 0,75 €, La Torre \/ Cooperativa 0,90 €/)).toBeTruthy();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Unitat de l’oferta' }), { target: { value: 'l' } });
+    expect(screen.getByText(/Les unitats no són comparables/)).toBeTruthy();
+    expect(desat(entorn.idb).llistes.find((l) => l.nom === 'Mercadona').linies).toEqual([]);
+  }, 20000);
+});
+
+describe('P0-65 · recepció explícita del llibre «Què dinem?»', () => {
+  test('obrir la URL no afig res; confirma racions i cada ingredient conserva nom i quantitat', async () => {
+    const entorn = prepara();
+    await entorn.magatzem.desa(estatInicial());
+    munta('/app/nevera/llista/casa?recepta=pa-rustic&racions=8', entorn);
+    await screen.findByRole('group', { name: 'Ingredients de «Pa rústic»' });
+    expect(liniesDesades(entorn.idb)).toEqual([]);
+    expect(screen.getByRole('textbox', { name: 'Racions de la recepta original' }).value).toBe('');
+    expect(screen.getByRole('textbox', { name: 'Racions que vols preparar' }).value).toBe('');
+    expect(screen.getByRole('textbox', { name: 'Quantitat o indicació 1' }).value).toBe('');
+    expect(screen.getByRole('button', { name: 'Afig els ingredients de la recepta' }).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Afig els ingredients de la recepta' }));
+    expect(liniesDesades(entorn.idb)).toEqual([]);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Racions que vols preparar' }), { target: { value: '8' } });
+    expect(screen.getByRole('button', { name: 'Afig els ingredients de la recepta' }).disabled).toBe(true);
+    expect(screen.getByRole('textbox', { name: 'Quantitat o indicació 1' }).value).toBe('');
+    expect(liniesDesades(entorn.idb)).toEqual([]);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Racions de la recepta original' }), { target: { value: '2' } });
+    expect(screen.getByRole('textbox', { name: 'Quantitat o indicació 1' }).value).toBe('4 kg');
+    expect(screen.getByRole('textbox', { name: 'Ingredient 1' }).value).toBe('Farina');
+    expect(screen.getByRole('textbox', { name: 'Ingredient 2' }).value).toBe('aigua tèbia');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Quantitat o indicació 1' }), { target: { value: '3 kg, segons la pasta' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Racions que vols preparar' }), { target: { value: '4' } });
+    expect(screen.getByRole('textbox', { name: 'Quantitat o indicació 1' }).value).toBe('3 kg, segons la pasta');
+    expect(screen.getByRole('textbox', { name: 'Quantitat o indicació 2' }).value).toBe('1400 ml');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Racions que vols preparar' }), { target: { value: '8' } });
+    expect(screen.getByRole('textbox', { name: 'Quantitat o indicació 1' }).value).toBe('3 kg, segons la pasta');
+    expect(screen.getByRole('textbox', { name: 'Quantitat o indicació 2' }).value).toBe('2800 ml');
+    fireEvent.click(screen.getByRole('button', { name: 'Afig els ingredients de la recepta' }));
+    await waitFor(() => expect(liniesDesades(entorn.idb)).toHaveLength(4));
+    const files = liniesDesades(entorn.idb);
+    expect(files.find((l) => l.articleId === 'farina').especificacio).toBe('3 kg, segons la pasta');
+    expect(files.find((l) => l.articleId === 'sal').especificacio).toBe('80 g');
+    expect(new Set(files.map((l) => l.articleId)).size).toBe(4);
+    expect(desat(entorn.idb).propis.some((p) => p.nom === 'aigua tèbia')).toBe(true);
+  });
+
+  test('una recepta desconeguda només mostra un avís', async () => {
+    const entorn = prepara();
+    await entorn.magatzem.desa(estatInicial());
+    munta('/app/nevera/llista/casa?recepta=no-existix', entorn);
+    await screen.findByText('La recepta no existix');
+    expect(liniesDesades(entorn.idb)).toEqual([]);
+    expect(screen.queryByRole('button', { name: 'Afig els ingredients de la recepta' })).toBeNull();
+  });
+});
+
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
   ambAmplada(1400);

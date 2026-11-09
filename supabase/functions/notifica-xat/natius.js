@@ -210,7 +210,7 @@ export function peticioApns({ entorn = 'produccio', topic = APNS.TOPIC_PER_DEFEC
         'content-type': 'application/json'
       },
       body: JSON.stringify({
-        aps: { alert: { title: titol, body: cos }, sound: 'default', 'thread-id': AVIS_NATIU.ETIQUETA },
+        aps: { alert: { title: titol, body: cos }, badge: 1, sound: 'default', 'thread-id': AVIS_NATIU.ETIQUETA },
         sdp: { v: 1, desti: AVIS_NATIU.DESTI }
       })
     }

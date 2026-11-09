@@ -257,7 +257,7 @@ describe('peticioApns: URL, capçaleres i un cos amb només aps i sdp', () => {
     const cos = JSON.parse(opcions.body);
     expect(Object.keys(cos)).toEqual(['aps', 'sdp']);
     expect(cos).toEqual({
-      aps: { alert: { title: TEXTOS_AVIS[llengua].titol, body: TEXTOS_AVIS[llengua].cos }, sound: 'default', 'thread-id': 'sdp-xat' },
+      aps: { alert: { title: TEXTOS_AVIS[llengua].titol, body: TEXTOS_AVIS[llengua].cos }, badge: 1, sound: 'default', 'thread-id': 'sdp-xat' },
       sdp: { v: 1, desti: '/xat' }
     });
     expect(opcions.body).not.toMatch(/loc-key|loc_key|fil|remitent/i);
@@ -931,7 +931,13 @@ describe('integració amb el gestor real: mai expulsar per un error de configura
   const peticio = () => new Request(`${URL_SB}/functions/v1/notifica-xat`, { method: 'POST', headers: { 'x-sdp-cron': SECRET_CRON } });
 
   function creaMonGestor({ dispositius = [], lots: perLots = null, apns = () => ({ estat: 200 }), fcm = () => ({ estat: 200 }) }) {
-    const lots = (perLots ?? [dispositius]).map((d) => ({ missatges: 1, retallats: 0, dispositius: d }));
+    let nextClaim=10000;
+    const claimDevice=new Map();
+    const lots = (perLots ?? [dispositius]).map((devices) => ({ protocol:'lease-v2',missatges:1,treballs:devices.length,retallats:0,
+      dispositius:devices.map(d=>{
+        const claim={id:id(++nextClaim),lease:id(nextClaim+10000)};claimDevice.set(claim.id,d.id);
+        return {...d,lliuraments:[claim]};
+      }) }));
     const mon = {
       base: [], expulsats: [], apns: [], fcm: [], oauth: [],
       fetch: async (url, opcions = {}) => {
@@ -941,8 +947,12 @@ describe('integració amb el gestor real: mai expulsar per un error de configura
           const cos = JSON.parse(opcions.body);
           mon.base.push({ nom, cos, capcaleres: opcions.headers });
           if (nom === 'xat_push_neteja') return Response.json({ dispositius: 0, cua: 0 });
-          if (nom === 'xat_push_reclama') return Response.json(lots.shift() ?? { missatges: 0, retallats: 0, dispositius: [] });
-          if (nom === 'xat_push_expulsa') { mon.expulsats.push([...cos.p_ids]); return Response.json(cos.p_ids.length); }
+          if (nom === 'xat_push_reclama_v2') return Response.json(lots.shift() ?? { protocol:'lease-v2',missatges:0,treballs:0,retallats:0,dispositius:[] });
+          if (nom === 'xat_push_confirma_v2') {
+            const retired=cos.p_resultats.filter(c=>c.resultat==='expulsa').map(c=>claimDevice.get(c.id));
+            if(retired.length)mon.expulsats.push(retired);
+            return Response.json({expulsats:retired.length});
+          }
           if (nom === 'xat_push_credencial') return Response.json(null);
           if (nom === 'xat_push_desa_credencial') return Response.json(true);
           return new Response('{}', { status: 404 });
@@ -1071,7 +1081,7 @@ describe('integració amb el gestor real: mai expulsar per un error de configura
     expect(mon.apns).toEqual([]);
     expect(mon.fcm).toEqual([]);
     expect(mon.oauth).toEqual([]);
-    expect(mon.base.map((b) => b.nom)).toEqual(['xat_push_neteja', 'xat_push_reclama', 'xat_push_reclama']);
+    expect(mon.base.map((b) => b.nom)).toEqual(['xat_push_neteja', 'xat_push_reclama_v2', 'xat_push_confirma_v2', 'xat_push_reclama_v2']);
   });
 
   test('les credencials passen pel rpc del gestor (PostgREST amb la clau de servei), una vegada per proveïdor', async () => {

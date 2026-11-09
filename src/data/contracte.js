@@ -76,6 +76,11 @@ export const SECCIONS_PAGINABLES = Object.freeze({
 });
 
 export const CAPACITATS = Object.freeze({
+  /* R54: authenticated optional inference; request/configuration receipts are not inference. */
+  iaia: Object.freeze(['consultaIAIA']),
+  /* R54 · Rebuts explícits dels altres i presència autoritzada amb TTL de servidor.
+     Opcional i completa: cap canvi als 32 mètodes del nucli ni a la Frontissa. */
+  xatRitme: Object.freeze(['loadRitmeXat', 'actualitzaPresenciaXat']),
   carpetesNotes: Object.freeze(['creaCarpetaNotes']),
   /* R12: patch d'un element existent d'app_content; whole-row version CAS, superadmin+aal2 al servidor. */
   edicioEditorial: Object.freeze(['adminActualitzaPublicacioEditorial']),
@@ -669,7 +674,9 @@ export const CAPACITATS = Object.freeze({
          del servidor); gest, cert només quan naix del gest de la persona
          (activar): sense gest, el servidor no canvia mai l'amo d'un aparell.
          Mai cap clau de la subscripció (p256dh, auth) ni cap dada de tornada.
-         retiraDispositiuAvisos és de cortesia i idempotent (la baixa en eixir).
+         retiraDispositiuAvisos exigix també usuariEsperat, capturat abans de
+         l'operació: xat_push_retira_segura rebutja un canvi de sessió. No hi
+         ha fallback a l'RPC antiga. És de cortesia i idempotent en eixir.
      Errors amb `code`: AVISOS_INVALID (una entrada que no casa la forma,
      sense cap petició, o SDP-PUSH-002/003/004 del servidor), AVISOS_ALIE
      (SDP-PUSH-011: l'aparell és d'una altra sessió i cal el gest) i

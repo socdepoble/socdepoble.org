@@ -25,7 +25,7 @@ describe('AH-22 · rural content and dated production balance in five languages'
  test.each(languages)('%s distinguishes production, sealed kits and open custody', language => {
   for (const key of ['fedivers','fediversity','node-zero','versions']) {
    const page=localitzaPagina(PAGE_COPY[key], language), body=doc(page.html);
-   for (const fact of ['PostgreSQL 17.11','40','32',String(Object.keys(CAPACITATS).length),String(CONTRACTE_BACKEND.length),String(CASOS.length),'R5','R6','R8','R9','R-5','3-2-1','Supabase','Nix','SKOS']) expect(body.body.textContent).toContain(fact);
+   for (const fact of ['PostgreSQL 17.11','40','32',String(key==='versions'?46:Object.keys(CAPACITATS).length),String(key==='versions'?138:CONTRACTE_BACKEND.length),String(key==='versions'?190:CASOS.length),'R5','R6','R8','R9','R-5','3-2-1','Supabase','Nix','SKOS']) expect(body.body.textContent).toContain(fact);
    expect(body.querySelector('a[href="https://socdepoble.cat/api/v1/node0/status"]')).not.toBeNull();
    expect(body.querySelector('a[href="https://mastodont.cat/@depoble"]')).not.toBeNull();
    expect(body.querySelector('table')).toBeNull();
@@ -39,11 +39,15 @@ describe('AH-22 · rural content and dated production balance in five languages'
  });
  test.each(languages)('%s keeps contract counts aligned with code without announcing activation', language => {
   const text=doc(localitzaPagina(PAGE_COPY.fediversity,language).html).body.textContent;
-  const phrases={ca:'46 capacitats i 138 mètodes amb 190 casos',es:'46 capacidades y 138 métodos con 190',en:'46 capabilities and 138 methods with 190',eu:'46 gaitasun eta 138 metodo ditu 190',gl:'46 capacidades e 138 métodos con 190'};
-  expect(Object.keys(CAPACITATS)).toHaveLength(46);
-  expect(CONTRACTE_BACKEND).toHaveLength(138);
-  expect(CASOS).toHaveLength(190);
+  const phrases={ca:'48 capacitats i 141 mètodes amb 195 casos',es:'48 capacidades y 141 métodos con 195',en:'48 capabilities and 141 methods with 195',eu:'48 gaitasun eta 141 metodo ditu 195',gl:'48 capacidades e 141 métodos con 195'};
+  expect(Object.keys(CAPACITATS)).toHaveLength(48);
+  expect(CONTRACTE_BACKEND).toHaveLength(141);
+  expect(CASOS).toHaveLength(195);
   expect(text).toContain(phrases[language]);
+  const notes=[...doc(localitzaPagina(PAGE_COPY.fediversity,language).html).querySelectorAll('p')].filter(p=>p.textContent.includes(phrases[language])&&p.textContent.includes('46/138/190'));
+  expect(notes).toHaveLength(1);const note=notes[0];
+  expect(note.textContent).toContain(phrases[language]);
+  expect(note.textContent).toContain('46/138/190');
   expect(text).not.toMatch(/43 (?:capacitats|capacidades|capabilities|gaitasun)/);
   // El canvi és un inventari local; els pendents reals conserven la seua
   // qualificació i no es convertixen en èxits de desplegament.

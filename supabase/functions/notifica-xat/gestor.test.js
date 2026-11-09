@@ -50,9 +50,16 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const W = (n, host = FCM) => ({ id: id(n), tipus: 'web', adreca: `https://${host}/canari/endpoint-${n}`, llengua: 'ca' });
 const IOS = (n, llengua = 'en') => ({ id: id(n), tipus: 'apns', adreca: n.toString(16).padStart(64, 'c'), llengua });
 const AND = (n, llengua = 'gl') => ({ id: id(n), tipus: 'fcm', adreca: `canari_fcm_${n}_${'x'.repeat(32)}`, llengua });
-const lot = (dispositius, { missatges = 1, retallats = 0 } = {}) => ({ missatges, retallats, dispositius });
+let seqClaim = 0;
+const lot = (dispositius, { missatges = 1, retallats = 0 } = {}) => ({
+  protocol: 'lease-v2', missatges, retallats, treballs: dispositius.length,
+  dispositius: dispositius.map((d) => d && typeof d === 'object' && !Array.isArray(d) ? {
+    ...d, lliuraments: Object.hasOwn(d, 'lliuraments') ? d.lliuraments
+      : [{ id: id(700000 + ++seqClaim), lease: id(800000 + seqClaim) }]
+  } : d)
+});
 const espera = (ms) => new Promise((resol) => { setTimeout(resol, ms); });
-/* Una barreja determinista (mulberry32 + Fisher-Yates): l'ordre de xat_push_reclama és `order by random()`. */
+/* Una barreja determinista (mulberry32 + Fisher-Yates): l'ordre de xat_push_reclama_v2 és `order by random()`. */
 const barreja = (llista, llavor) => {
   let s = llavor >>> 0;
   const aleatori = () => {
@@ -87,6 +94,8 @@ function creaMon({ lots = [], push = () => ({ estat: 201 }), base = () => null, 
     crides: [],
     push: [],
     expulsats: [],
+    confirmacions: [],
+    claims: new Map(),
     enVol: 0,
     maxEnVol: 0,
     fetch: async (url, opcions = {}) => {
@@ -98,8 +107,19 @@ function creaMon({ lots = [], push = () => ({ estat: 201 }), base = () => null, 
         const falla = await base(u.pathname, cos, opcions);
         if (falla) return falla;
         if (u.pathname === '/rest/v1/rpc/xat_push_neteja') return Response.json(neteja);
-        if (u.pathname === '/rest/v1/rpc/xat_push_reclama') return Response.json(mon.lots.shift() ?? { missatges: 0, retallats: 0, dispositius: [] });
-        if (u.pathname === '/rest/v1/rpc/xat_push_expulsa') { mon.expulsats.push([...cos.p_ids]); return Response.json(cos.p_ids.length); }
+        if (u.pathname === '/rest/v1/rpc/xat_push_reclama_v2') {
+          const batch = mon.lots.shift() ?? lot([], { missatges: 0 });
+          for (const d of batch.dispositius || []) for (const c of d?.lliuraments || []) mon.claims.set(c.id, d.id);
+          return Response.json(batch);
+        }
+        if (u.pathname === '/rest/v1/rpc/xat_push_confirma_v2') {
+          mon.confirmacions.push(cos.p_resultats);
+          const expulsats = [...new Set(cos.p_resultats.filter((r) => r.resultat === 'expulsa').map((r) => mon.claims.get(r.id)))];
+          if (expulsats.length) mon.expulsats.push(expulsats);
+          return Response.json({ expulsats: expulsats.length,
+            acceptats: cos.p_resultats.filter((r) => r.resultat === 'acceptat').length,
+            reintentats: cos.p_resultats.filter((r) => r.resultat === 'reintenta').length });
+        }
         if (u.pathname === '/rest/v1/rpc/xat_push_credencial') return Response.json(null);
         return new Response('{}', { status: 404 });
       }
@@ -247,8 +267,8 @@ describe('el camí bo', () => {
     const r = await gestorDe(mon)(peticio());
     expect(r.status).toBe(200);
     expect(await r.json()).toEqual({ ...RESPOSTA_BUIDA, missatges: 2, retallats: 4, dispositius: 3, enviats: 3, lots: 1 });
-    expect(cami(mon)).toEqual(['xat_push_neteja', 'xat_push_reclama', 'xat_push_reclama']);
-    expect(mon.crides.find((c) => c.cami.endsWith('xat_push_reclama')).cos).toEqual({ p_limit: NOTIFICA.LOT });
+    expect(cami(mon)).toEqual(['xat_push_neteja', 'xat_push_reclama_v2', 'xat_push_confirma_v2', 'xat_push_reclama_v2']);
+    expect(mon.crides.find((c) => c.cami.endsWith('xat_push_reclama_v2')).cos).toEqual({ p_limit: NOTIFICA.LOT });
     expect(mon.push.map((c) => c.url).sort()).toEqual([W(1, FCM), W(2, MOZ), W(3, APPLE)].map((d) => d.adreca).sort());
     for (const c of mon.push) {
       expect(c.metode).toBe('POST');
@@ -298,7 +318,7 @@ describe('el camí bo', () => {
     const mon = creaMon();
     const r = await gestorDe(mon)(peticio());
     expect(await r.json()).toEqual(RESPOSTA_BUIDA);
-    expect(cami(mon)).toEqual(['xat_push_neteja', 'xat_push_reclama']);
+    expect(cami(mon)).toEqual(['xat_push_neteja', 'xat_push_reclama_v2']);
     expect(mon.push).toEqual([]);
   });
 
@@ -311,13 +331,13 @@ describe('el camí bo', () => {
     const mon = creaMon({ lots: Array.from({ length: 5 }, (_, i) => lot([W(i + 1)])) });
     const r = await gestorDe(mon, { opcions: { MAX_LOTS: 2 } })(peticio());
     expect(await r.json()).toMatchObject({ enviats: 2, lots: 2, esgotat: false });
-    expect(cami(mon).filter((c) => c === 'xat_push_reclama')).toHaveLength(2);
+    expect(cami(mon).filter((c) => c === 'xat_push_reclama_v2')).toHaveLength(2);
     expect(mon.lots).toHaveLength(3);
   });
 });
 
 describe('les expulsions: només 404 i 410', () => {
-  test('404 i 410 → xat_push_expulsa amb aquells ids i prou; 500, la xarxa i el topall són fallits', async () => {
+  test('404 i 410 → xat_push_confirma_v2 amb aquells ids i prou; 500, la xarxa i el topall són fallits', async () => {
     const estats = { 1: 201, 2: 404, 3: 410, 4: 500, 5: 'xarxa', 6: 'penja' };
     const mon = creaMon({
       lots: [lot([1, 2, 3, 4, 5, 6].map((n) => W(n, n % 2 ? FCM : MOZ)))],
@@ -344,7 +364,7 @@ describe('les expulsions: només 404 i 410', () => {
     const mon = creaMon({ lots: [lot([W(1), W(2), W(3)])], push: (_c, i) => ({ estat: [201, 403, 401][i] }) });
     const r = await gestorDe(mon, { opcions: { CONCURRENCIA: 1 } })(peticio());
     expect(await r.json()).toMatchObject({ enviats: 1, fallits: 2, expulsats: 0 });
-    expect(cami(mon)).not.toContain('xat_push_expulsa');
+    expect(mon.confirmacions.flat().filter((c) => c.resultat === 'expulsa')).toEqual([]);
   });
 });
 
@@ -371,7 +391,7 @@ describe('les pauses: només la credencial pròpia i el ritme (ARB-B8S-02, G1-B-
     const r = await gestorDe(mon)(peticio());
     expect(await r.json()).toMatchObject({ enviats: 0, fallits: 10, sense_provar: 0, expulsats: 0 });
     expect(mon.push).toHaveLength(10);
-    expect(cami(mon)).not.toContain('xat_push_expulsa');
+    expect(mon.confirmacions.flat().filter((c) => c.resultat === 'expulsa')).toEqual([]);
   });
 
   test('amb un enviat abans, els 403 no pausen: es proven tots', async () => {
@@ -423,7 +443,7 @@ describe('G1-B-seg-01: una resposta d’un sol aparell no atura els avisos dels 
     const r = await gestorDe(mon, { opcions: { CONCURRENCIA: 1 } })(peticio());
     expect(await r.json()).toMatchObject({ enviats: 40, fallits: 1, sense_provar: 0, expulsats: 0 });
     expect(mon.push).toHaveLength(41);
-    expect(cami(mon)).not.toContain('xat_push_expulsa');
+    expect(mon.confirmacions.flat().filter((c) => c.resultat === 'expulsa')).toEqual([]);
   });
 
   test.each([[401], [403]])('deu subscripcions amb %i (el sostre d’un compte) barrejades a l’atzar entre quaranta: tots els legítims, en les 25 passades', async (estat) => {
@@ -454,7 +474,7 @@ describe('G1-B-seg-01: una resposta d’un sol aparell no atura els avisos dels 
     })(peticio());
     expect(await r.json()).toMatchObject({ lots: 2, enviats: 30, fallits: 10, sense_provar: 0, expulsats: 0 });
     expect(crides).toHaveLength(40);
-    expect(cami(mon)).not.toContain('xat_push_expulsa');
+    expect(mon.confirmacions.flat().filter((c) => c.resultat === 'expulsa')).toEqual([]);
   });
 
   /* Els controls: el senyal global sí que pausa, i només el seu proveïdor. */
@@ -622,7 +642,7 @@ describe('el pressupost de temps i la concurrència', () => {
     const mon = creaMon({ lots: [lot([W(1), W(2)]), lot([W(3)])], push: () => { t += 45; return { estat: 201 }; } });
     const r = await gestorDe(mon, { ara: () => t, opcions: { PRESSUPOST_MS: 100, TOPALL_MS: 30, CONCURRENCIA: 1 } })(peticio());
     expect(await r.json()).toMatchObject({ enviats: 2, lots: 1, esgotat: true });
-    expect(cami(mon).filter((c) => c === 'xat_push_reclama')).toHaveLength(1);
+    expect(cami(mon).filter((c) => c === 'xat_push_reclama_v2')).toHaveLength(1);
   });
 
   /* ARB-N01-02 (A15): el cas que discrimina la regla de §2.6 pas 5. Hi cap un topall (50 ≥ 30) però no dos (50 < 60). */
@@ -633,7 +653,7 @@ describe('el pressupost de temps i la concurrència', () => {
     /* 0 ms: lot (100 ≥ 60) · 1 → 25 · 2 (75 ≥ 30) → 50 · lot nou? 50 < 60: no. */
     expect(t).toBe(50);
     expect(await r.json()).toEqual({ ...RESPOSTA_BUIDA, missatges: 1, dispositius: 2, enviats: 2, lots: 1, esgotat: true });
-    expect(cami(mon).filter((c) => c === 'xat_push_reclama')).toHaveLength(1);
+    expect(cami(mon).filter((c) => c === 'xat_push_reclama_v2')).toHaveLength(1);
     expect(mon.lots).toHaveLength(1);
   });
 
@@ -674,7 +694,7 @@ describe('sense VAPID o sense natius: sense_proveidor, mai expulsió', () => {
     const r = await creaGestor({ env: envBase(extra), fetch: mon.fetch, registre })(peticio());
     expect(await r.json()).toMatchObject({ ok: true, dispositius: 2, sense_proveidor: 2, enviats: 0, expulsats: 0 });
     expect(mon.push).toEqual([]);
-    expect(cami(mon)).not.toContain('xat_push_expulsa');
+    expect(mon.confirmacions.flat().filter((c) => c.resultat === 'expulsa')).toEqual([]);
     expect(registre.linies.some((l) => l.includes('Sense VAPID'))).toBe(true);
   });
 
@@ -702,7 +722,12 @@ describe('els enviadors natius (S3, preparats i inactius)', () => {
     const [deps] = crides;
     expect(Object.keys(deps).sort()).toEqual(['ara', 'env', 'fetch', 'registre', 'rpc', 'subtle', 'topallMs']);
     expect(deps.env).toBe(env);
-    expect(deps.fetch).toBe(mon.fetch);
+    expect(deps.fetch).toEqual(expect.any(Function));
+    // Transport is guarded by the lifetime of this pass; it cannot escape
+    // through the native provider factory after the handler has returned.
+    const abans = mon.crides.length;
+    await expect(deps.fetch(`${URL_SB}/rest/v1/rpc/xat_push_credencial`, {})).rejects.toMatchObject({ codi: 'temps' });
+    expect(mon.crides).toHaveLength(abans);
     expect(deps.topallMs).toBe(NOTIFICA.TOPALL_MS);
     expect(deps.registre).toBe(registre);
   });
@@ -710,17 +735,23 @@ describe('els enviadors natius (S3, preparats i inactius)', () => {
   test('el rpc que reben va a PostgREST amb la clau de servei, i només a les RPC del worker', async () => {
     let rpc = null;
     const mon = creaMon({ lots: [lot([IOS(1)])] });
-    await gestorDe(mon, { creaEnviadorsNatius: async (deps) => { rpc = deps.rpc; return {}; } })(peticio());
-    const abans = mon.crides.length;
-    expect(await rpc('xat_push_credencial', { p_proveidor: 'apns' })).toBeNull();
-    const crida = mon.crides[abans];
+    let crida;
+    await gestorDe(mon, { creaEnviadorsNatius: async (deps) => {
+      rpc = deps.rpc;
+      const abans = mon.crides.length;
+      expect(await rpc('xat_push_credencial', { p_proveidor: 'apns' })).toBeNull();
+      crida = mon.crides[abans];
+      return {};
+    } })(peticio());
     expect(crida.url).toBe(`${URL_SB}/rest/v1/rpc/xat_push_credencial`);
     expect(crida.cos).toEqual({ p_proveidor: 'apns' });
     expect(crida.capcaleres).toMatchObject({ apikey: CLAU_LEGADA });
     await expect(rpc('pg_sleep', {})).rejects.toMatchObject({ codi: 'rpc' });
     await expect(rpc('xat_push_desa', {})).rejects.toMatchObject({ codi: 'rpc' });
-    expect(mon.crides).toHaveLength(abans + 1);
-    expect(RPC_DEL_WORKER).toEqual(['xat_push_neteja', 'xat_push_reclama', 'xat_push_expulsa', 'xat_push_credencial', 'xat_push_desa_credencial']);
+    const despres = mon.crides.length;
+    await expect(rpc('xat_push_credencial', {})).rejects.toMatchObject({ codi: 'temps' });
+    expect(mon.crides).toHaveLength(despres);
+    expect(RPC_DEL_WORKER).toEqual(['xat_push_neteja', 'xat_push_reclama_v2', 'xat_push_confirma_v2', 'xat_push_credencial', 'xat_push_desa_credencial']);
   });
 
   test('cada enviador natiu rep només { tipus, adreca, llengua } validats', async () => {
@@ -757,7 +788,7 @@ describe('els enviadors natius (S3, preparats i inactius)', () => {
     const r = await gestorDe(mon, { creaEnviadorsNatius: async () => ({ [tipus]: async (d) => { crides.push(d); return resposta; } }) })(peticio());
     expect(await r.json()).toMatchObject({ enviats: 0, fallits: 10, sense_provar: 0, expulsats: 0 });
     expect(crides).toHaveLength(10);
-    expect(cami(mon)).not.toContain('xat_push_expulsa');
+    expect(mon.confirmacions.flat().filter((c) => c.resultat === 'expulsa')).toEqual([]);
   });
 
   test('l’«expulsa» d’APNs (410) i d’FCM (404 UNREGISTERED) sí que expulsa', async () => {
@@ -782,7 +813,7 @@ describe('els enviadors natius (S3, preparats i inactius)', () => {
       })
     })(peticio());
     expect(await r.json()).toEqual({ ...RESPOSTA_BUIDA, missatges: 1, dispositius: 3, sense_provar: 3, lots: 1 });
-    expect(cami(mon)).not.toContain('xat_push_expulsa');
+    expect(mon.confirmacions.flat().filter((c) => c.resultat === 'expulsa')).toEqual([]);
     expect(mon.expulsats).toEqual([]);
   });
 
@@ -806,7 +837,7 @@ describe('els enviadors natius (S3, preparats i inactius)', () => {
 describe('la base que falla o penja', () => {
   test.each([
     ['la neteja', 'xat_push_neteja'],
-    ['la reclamació', 'xat_push_reclama']
+    ['la reclamació', 'xat_push_reclama_v2']
   ])('si %s respon 500: 502 i cap push', async (_, rpc) => {
     const mon = creaMon({ lots: [lot([W(1)])], base: (c) => (c.endsWith(rpc) ? new Response('{"message":"x"}', { status: 500 }) : null) });
     const r = await gestorDe(mon)(peticio());
@@ -819,7 +850,7 @@ describe('la base que falla o penja', () => {
   test('si falla l’expulsió: 502 amb els recomptes de la passada', async () => {
     const mon = creaMon({
       lots: [lot([W(1), W(2)])], push: (_c, i) => ({ estat: i === 0 ? 201 : 410 }),
-      base: (c) => (c.endsWith('xat_push_expulsa') ? new Response('{}', { status: 503 }) : null)
+      base: (c) => (c.endsWith('xat_push_confirma_v2') ? new Response('{}', { status: 503 }) : null)
     });
     const r = await gestorDe(mon, { opcions: { CONCURRENCIA: 1 } })(peticio());
     expect(r.status).toBe(502);
@@ -827,7 +858,7 @@ describe('la base que falla o penja', () => {
   });
 
   test.each([[[]], [null], ['text'], [7]])('una reclamació amb forma estranya (%j) és 502', async (forma) => {
-    const mon = creaMon({ base: (c) => (c.endsWith('xat_push_reclama') ? Response.json(forma) : null) });
+    const mon = creaMon({ base: (c) => (c.endsWith('xat_push_reclama_v2') ? Response.json(forma) : null) });
     const r = await gestorDe(mon)(peticio());
     expect(r.status).toBe(502);
     expect(registre.linies).toContain('[notifica-xat] La base no respon: forma');
@@ -862,7 +893,7 @@ describe('la base que falla o penja', () => {
       cancel() { estat.cancel += 1; }
     }, { highWaterMark: 0 });
     let senyal = null;
-    const mon = creaMon({ base: (c, _cos, opcions) => { if (!c.endsWith('xat_push_reclama')) return null; senyal = opcions.signal; return new Response(flux, { status: 200 }); } });
+    const mon = creaMon({ base: (c, _cos, opcions) => { if (!c.endsWith('xat_push_reclama_v2')) return null; senyal = opcions.signal; return new Response(flux, { status: 200 }); } });
     const inici = Date.now();
     const r = await gestorDe(mon, { opcions: { TOPALL_MS: 20, PRESSUPOST_MS: 5000 } })(peticio());
     expect(r.status).toBe(502);
@@ -875,7 +906,7 @@ describe('la base que falla o penja', () => {
   test('el cos d’un error de la base que penja es cancel·la sense esperar-lo', async () => {
     const estat = { cancel: 0 };
     const flux = new ReadableStream({ pull: () => new Promise(() => {}), cancel() { estat.cancel += 1; } }, { highWaterMark: 0 });
-    const mon = creaMon({ base: (c) => (c.endsWith('xat_push_reclama') ? new Response(flux, { status: 500 }) : null) });
+    const mon = creaMon({ base: (c) => (c.endsWith('xat_push_reclama_v2') ? new Response(flux, { status: 500 }) : null) });
     const inici = Date.now();
     const r = await gestorDe(mon, { opcions: { TOPALL_MS: 5000 } })(peticio());
     expect(r.status).toBe(502);
@@ -893,8 +924,8 @@ describe('cap endpoint, testimoni, JWT ni secret ix del worker (canaris)', () =>
       { push: () => ({ estat: 410 }) },
       { push: () => ({ estat: 401 }) },
       { push: (c) => { throw new TypeError(`fetch failed ${c.url}`); } },
-      { base: (c) => (c.endsWith('xat_push_expulsa') ? new Response(JSON.stringify({ message: W(1).adreca }), { status: 500 }) : null), push: () => ({ estat: 404 }) },
-      { base: (c) => (c.endsWith('xat_push_reclama') ? new Response(JSON.stringify({ message: `${IOS(4).adreca} ${AND(5).adreca}` }), { status: 500 }) : null) }
+      { base: (c) => (c.endsWith('xat_push_confirma_v2') ? new Response(JSON.stringify({ message: W(1).adreca }), { status: 500 }) : null), push: () => ({ estat: 404 }) },
+      { base: (c) => (c.endsWith('xat_push_reclama_v2') ? new Response(JSON.stringify({ message: `${IOS(4).adreca} ${AND(5).adreca}` }), { status: 500 }) : null) }
     ];
     for (const extra of camins) {
       for (const actiu of ['si', undefined]) {
@@ -929,6 +960,50 @@ describe('cap endpoint, testimoni, JWT ni secret ix del worker (canaris)', () =>
   });
 });
 
+describe('lease-v2: ACK durable i contingut cec', () => {
+  test.each([[201, 'acceptat'], [503, 'reintenta'], [410, 'expulsa'], [400, 'reintenta']])(
+    'proveïdor %s confirma %s només amb els ids i nonces de la base', async (estat, resultat) => {
+      const batch = lot([W(1)]);
+      const mon = creaMon({ lots: [batch], push: () => ({ estat }) });
+      expect((await gestorDe(mon)(peticio())).status).toBe(200);
+      expect(mon.confirmacions.flat()).toEqual(batch.dispositius[0].lliuraments.map((c) => ({ ...c, resultat })));
+      expect(mon.push).toHaveLength(1);
+      expect(mon.push[0].opcions).not.toHaveProperty('body');
+      expect(JSON.stringify(mon.push)).not.toContain(batch.dispositius[0].lliuraments[0].lease);
+    });
+  test('sense proveïdor, el treball es confirma com a reintent, no com a entrega ni descart', async () => {
+    const mon = creaMon({ lots: [lot([W(1)])] });
+    const r = await gestorDe(mon, { env: envBase({ SDP_PUSH_VAPID_PRIVADA: '' }) })(peticio());
+    expect(r.status).toBe(200);expect(mon.push).toHaveLength(0);
+    expect(mon.confirmacions.flat().map((c) => c.resultat)).toEqual(['reintenta']);
+  });
+  test('dos missatges reclamats del mateix aparell fan un sol wake i dos ACKs', async () => {
+    const claims = [{ id: id(9001), lease: id(9002) }, { id: id(9003), lease: id(9004) }];
+    const mon = creaMon({ lots: [lot([{ ...W(1), lliuraments: claims }], { missatges: 2 })] });
+    expect((await gestorDe(mon)(peticio())).status).toBe(200);
+    expect(mon.push).toHaveLength(1);
+    expect(mon.confirmacions.flat()).toEqual(claims.map((c) => ({ ...c, resultat: 'acceptat' })));
+  });
+  test.each([[], [{ id: [id(1)], lease: id(2) }], [{ id: id(1), lease: id(2), extra: 'no' }],
+    [{ id: id(1), lease: id(2) }, { id: id(1), lease: id(3) }]].map((claims, index) => [index, claims]))(
+    'lease malformat, cas %s: cap petició al proveïdor', async (_, claims) => {
+      const mon = creaMon({ lots: [lot([{ ...W(1), lliuraments: claims }])] });
+      expect((await gestorDe(mon)(peticio())).status).toBe(200);
+      expect(mon.push).toHaveLength(0);expect(mon.confirmacions).toHaveLength(0);
+    });
+  test('un protocol vell falla tancat, sense tornar a la reclamació destructiva', async () => {
+    const mon = creaMon({ lots: [{ ...lot([W(1)]), protocol: 'old' }] });
+    expect((await gestorDe(mon)(peticio())).status).toBe(502);
+    expect(mon.push).toHaveLength(0);
+    expect(cami(mon)).not.toContain('xat_push_reclama');
+  });
+  test('un ACK fallit després del proveïdor no inventa una confirmació ni reenvia dins de la passada', async () => {
+    const mon = creaMon({ lots: [lot([W(1)])], base: (p) => p.endsWith('xat_push_confirma_v2') ? new Response(null, { status: 503 }) : null });
+    expect((await gestorDe(mon)(peticio())).status).toBe(502);
+    expect(mon.push).toHaveLength(1);expect(mon.confirmacions).toHaveLength(0);
+  });
+});
+
 describe('la frontera', () => {
   const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
   const fitxers = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -943,7 +1018,7 @@ describe('la frontera', () => {
   /* Gauntlet R10 · VFC-05 · La frontera cobrix les cinc RPC del worker, també xat_push_desa_credencial (la
      dels enviadors natius, natius.js), i no les del client (xat_push_desa i xat_push_retira, de
      dispositiusAvisos.js) ni la funció privada de validació que els comentaris de src/ citen. */
-  const RPC_FRONTERA = /xat_push_(?:reclama|expulsa|neteja|(?:desa_)?credencial)/;
+  const RPC_FRONTERA = /xat_push_(?:reclama|confirma|expulsa|neteja|(?:desa_)?credencial)/;
   const FRONTERA = new RegExp(`${RPC_FRONTERA.source}|SDP_PUSH_VAPID_PRIVADA|SDP_APNS_CLAU_P8|SDP_FCM_COMPTE_SERVEI`);
 
   test('VFC-05 · la frontera cobrix cada RPC de RPC_DEL_WORKER i deixa passar les del client', () => {
@@ -985,10 +1060,50 @@ describe('la frontera', () => {
   });
 
   test('el gestor i webpush.js no usen APIs fora del Baseline compartit, i només importen el que toca', () => {
-    for (const [nom, imports] of [['gestor.js', ['../_shared/apple.js', './webpush.js']], ['webpush.js', ['../_shared/apple.js']]]) {
+    for (const [nom, imports] of [['gestor.js', ['../_shared/apple.js', './webpush.js', './leases.js']], ['webpush.js', ['../_shared/apple.js']], ['leases.js', []]]) {
       const codi = sensComentaris(readFileSync(path.join(ARREL, 'supabase/functions/notifica-xat', nom), 'utf8'));
       expect(codi).not.toMatch(/\bBuffer\b|\bDeno\.|AbortSignal\.(timeout|any)|\brequire\(|from 'node:|\bprocess\./);
       expect([...codi.matchAll(/^\s*import\s[^;]*?from\s+'([^']+)'/gm)].map((m) => m[1])).toEqual(imports);
     }
+  });
+});
+
+describe('pressupost: primitives asíncrones limitades i cossos tardans', () => {
+  test('un digest previ al cron que penja retorna config sense xarxa', async () => {
+    const mon = creaMon();
+    const r = await gestorDe(mon, { subtle: { digest: () => new Promise(() => {}) }, opcions: { TOPALL_MS: 20 } })(peticio());
+    expect(r.status).toBe(503);
+    expect(await r.json()).toEqual({ ok: false, error: 'config' });
+    expect(mon.crides).toEqual([]);
+  });
+
+  test('VAPID que no acaba d’importar no impedeix els enviaments natius', async () => {
+    const mon = creaMon({ lots: [lot([IOS(1)])] });
+    const r = await gestorDe(mon, {
+      subtle: { digest: (...args) => subtle.digest(...args), importKey: () => new Promise(() => {}) },
+      opcions: { TOPALL_MS: 20, PRESSUPOST_MS: 5000 },
+      creaEnviadorsNatius: async () => ({ apns: async () => ({ resultat: 'enviat', estat: 200 }) })
+    })(peticio());
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ enviats: 1 });
+  });
+
+  test('fetch que ignora abort i no torna capçalera queda limitat igualment', async () => {
+    const mon = creaMon({ base: () => new Promise(() => {}) });
+    const r = await gestorDe(mon, { opcions: { TOPALL_MS: 20, PRESSUPOST_MS: 5000 } })(peticio());
+    expect(r.status).toBe(502);
+    expect(mon.push).toEqual([]);
+  });
+
+  test('una resposta RPC que arriba després del topall es cancel·la sense consumir-ne el cos', async () => {
+    let cancel = 0;
+    let llegit = 0;
+    const cos = new ReadableStream({ pull() { llegit += 1; return new Promise(() => {}); }, cancel() { cancel += 1; } }, { highWaterMark: 0 });
+    const mon = creaMon({ base: async () => { await espera(70); return new Response(cos); } });
+    const r = await gestorDe(mon, { opcions: { TOPALL_MS: 20, PRESSUPOST_MS: 5000 } })(peticio());
+    expect(r.status).toBe(502);
+    await espera(90);
+    expect(cancel).toBe(1);
+    expect(llegit).toBe(0);
   });
 });

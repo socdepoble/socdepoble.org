@@ -54,8 +54,9 @@ const sri384 = (text) => `sha384-${createHash('sha384').update(text).digest('bas
 const NOMES_ASCII = /^[\u0000-~]*$/;
 /* El rang que demana un mòdul compilat contra este nucli. Actualitzat a posta (261016): l'1.2.0,
    que afig la porta 'workspace'; abans, l'1.1.0 de l'Onada 7.
-   Actualitzada a posta (261024 T5): l'1.3.0, que afig useServeiNoticies a la porta 'plataforma'. */
-const RANG = '^1.3';
+   Actualitzada a posta (261024 T5): l'1.3.0, que afig useServeiNoticies a la porta 'plataforma'.
+   R14: l'1.4.0 afig serveis de Menjar i Beure i Botonera; un host1.3 no els exposa. */
+const RANG = '^1.4';
 
 describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => {
   test.each(['gestoria', 'bar', 'salut', 'nevera', 'lector'])('%s: dada pura, sense carrega, i el manifest de mòdul és vàlid', (id) => {
@@ -73,7 +74,7 @@ describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => 
   });
 
   test('el rang del nucli és el de la versió contra la qual es compila', () => {
-    expect(VERSIO_NUCLI).toBe('1.3.0');
+    expect(VERSIO_NUCLI).toBe('1.4.0');
     expect(rangDelNucli()).toBe(RANG);
     expect(rangDelNucli('1.4.2')).toBe('^1.4');
   });

@@ -3,7 +3,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 const ruta = vi.hoisted(() => ({ comodi: '' }));
-const fonts = vi.hoisted(() => ({ mapa: null, consola: null }));
+const fonts = vi.hoisted(() => ({ mapa: null, consola: null, seo: null }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ '*': ruta.comodi }),
   useNavigate: () => vi.fn(),
@@ -19,7 +19,7 @@ vi.mock('../../components/universal/UniversalPage', () => ({
     </main>
   )
 }));
-vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
+vi.mock('../../hooks/useSEO', () => ({ useSEO: (head) => { fonts.seo = head; } }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIState: () => ({ locale: 'ca-ES' }) }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../components/universal/graph/BrainGraph', () => ({ default: () => null }));
@@ -49,10 +49,39 @@ import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 afterEach(() => {
   cleanup();
   ruta.comodi = ''; fonts.mapa = null; fonts.consola = null;
+  fonts.seo = null;
   localStorage.clear();
 });
 
 const PAGINES = ['pols', 'explorador', 'fluxos', 'calendari', 'inventari', 'entrades', 'agents', 'actors', 'salut'];
+
+test('P0-53 · /consola/botigues té cos real, un H1 i el seu propi head client/prerender', async () => {
+  const { BOTIGUES_SISTEMA_META: meta } = await import('../botigues/botiguesSistemaMeta.js');
+  const { metadadesDeBotigues } = await import('./seoConsola.js');
+  ruta.comodi = 'botigues';
+  const { container } = render(<ConsolaSection />);
+  expect(await screen.findByText('2/12')).toBeTruthy();
+  expect(screen.getByText('14')).toBeTruthy();
+  expect(container.querySelectorAll('h1')).toHaveLength(1);
+  expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(meta.title);
+  expect(screen.getAllByText('Estat operatiu no verificat')).toHaveLength(12);
+  const head = metadadesDeBotigues();
+  expect(fonts.seo.title).toBe(head.title);
+  expect(fonts.seo.description).toBe(head.description);
+  expect(screen.queryByRole('button', { name: /^Refrescar$/ })).toBeNull();
+  expect(screen.queryByTestId('redirigix')).toBeNull();
+});
+
+test('P0-53 · la card del tauler conserva títol, subtítol i entradilla de la pàgina dedicada', async () => {
+  const { BOTIGUES_SISTEMA_META: meta } = await import('../botigues/botiguesSistemaMeta.js');
+  const { container } = render(<ConsolaSection />);
+  const card = [...container.querySelectorAll('.sdp-consola__targeta')].find(el => el.textContent.includes(meta.title));
+  expect(card).toBeTruthy();
+  expect(card.textContent).toContain(meta.subtitle);
+  expect(card.textContent).toContain(meta.lead);
+  expect(card.querySelector(`a[href="${meta.ruta}"]`)).toBeTruthy();
+  expect(card.querySelector('.btn-date-time')).toBeTruthy();
+});
 
 const MAPA = {
   schema: 'sdp.mapa.v1', generat: '2026-09-25T13:12:23.715Z', tall: null,
@@ -174,7 +203,7 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
      empaquetats (EmpaquetatsConsola.jsx), amb la seua targeta. Expectativa
      actualitzada a propòsit: «Sóc de Poble en xifres» just davant de l'Índex. */
   expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent))
-    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'Sóc de Poble en xifres', 'Empaquetats i llançament', 'Categories i etiquetes', 'Índex de la Consola', 'Diagnòstic de Sóc de Poble']);
+    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'Sóc de Poble en xifres', 'Empaquetats i llançament', 'Categories i etiquetes', 'Botigues i verificadors', 'Índex de la Consola', 'Diagnòstic de Sóc de Poble']);
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 

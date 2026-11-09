@@ -134,11 +134,12 @@ describe('l’adaptador local (conversesLocal)', () => {
       setBackendImplementation(a);
       expect(teCapacitat('avisosPush')).toBe(true);
       expect(teCapacitat('silenciXat')).toBe(true);
-      // No email service exists in the offline adapter; preserve every prior
-      // capability, including push's explicit no-service rejection.
-      expect(CAPACITATS_NO_DECLARADES).toEqual(['importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
-      /* Onada R6 · R12 (migració 76) · +carpetesNotes i +edicioEditorial: 43 capacitats. */
-      expect(Object.keys(CAPACITATS)).toHaveLength(46);
+      // R54 incorpora dos grups al contracte; el node local no els declara.
+      // Les capacitats locals prèvies, push i silenci incloses, es conserven.
+      expect(CAPACITATS_NO_DECLARADES).toEqual(['iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+      const absents = Object.keys(CAPACITATS).filter(cap => CAPACITATS[cap].every(metode => typeof a[metode] !== 'function'));
+      expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
+      expect(Object.keys(CAPACITATS)).toHaveLength(48);
     } finally {
       await a.destroy();
     }

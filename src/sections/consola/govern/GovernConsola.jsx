@@ -26,6 +26,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { BadgeCheck, Download, ListChecks, MessagesSquare, RefreshCw, Scale, SearchX, X } from 'lucide-react';
 import { UniversalPage } from '../../../components/universal/UniversalPage';
+import { dataHoraDeBarra } from '../../../components/universal/editorial.js';
 import {
   Alerta, AreaText, Boto, Camp, CampFitxer, Carregant, DialegConfirmacio, EstatBuit, Insignia, Interruptor,
   LiniaDelTemps, MollaPa, PillToggle, Taula
@@ -651,7 +652,7 @@ function PaginaCertificacio({ govern, vista, locale }) {
 function PaginaComunicacio({ resums }) {
   if (!resums) return null;
   return (
-    <>
+    <div className="sdp-consola__comunicacio">
       <Bloc titol="Com va la tanda">
         {resums.general.map((frase) => <p key={frase}>{frase}</p>)}
       </Bloc>
@@ -670,7 +671,7 @@ function PaginaComunicacio({ resums }) {
           <ul>{resums.p1Oberts.map((p) => <li key={p.id}>{p.frase}</li>)}</ul>
         )}
       </Bloc>
-    </>
+    </div>
   );
 }
 
@@ -823,6 +824,7 @@ export function PaginaDeGovern({ id, govern, privat, onPrivat, locale = 'ca-ES',
   return (
     <UniversalPage title={titol} subtitle={pagina?.subtitle ?? TITOL_GOVERN}
       lead={pagina?.lead ?? 'Esta adreça no correspon a cap pàgina del govern del Mestre.'} chrome="system" nivellMaxIndex={6}
+      topBarData={dataHoraDeBarra({ creat: copy.date, modificat: pagina?.id === 'certificacio' ? null : derivat.vista?.at })}
       traduccio={false} llenguaDelContingut="ca">
       <PrivacitatConsola.Provider value={privat}>
         <MollaPa className="sdp-molla--panell" passos={[{ etiqueta: copy.title, a: RUTA_CONSOLA }, { etiqueta: titol }]} />

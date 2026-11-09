@@ -74,6 +74,11 @@ export function validaBackendImplementation(impl) {
       owner = Object.getPrototypeOf(owner);
     }
     if (!descriptor) continue;
+    /* Sanejament R15 (B2) · Una capacitat opcional que l'adaptador apaga en compilar
+       s'exporta com a `undefined` (src/data/supabase/index.js, banderes de build literals):
+       és absent, com si no s'exportara. Un getter o un altre valor continuen rebutjats, i
+       un mètode del nucli absent ho diu la comprovació «Nucli incomplet» de baix. */
+    if ('value' in descriptor && descriptor.value === undefined && !CONTRACTE_NUCLI.includes(name)) continue;
     if (!('value' in descriptor) || typeof descriptor.value !== 'function')
       throw new TypeError(`[backendPort] ${name} ha de ser un mètode`);
     candidate[name] = descriptor.value.bind(impl);
@@ -168,6 +173,8 @@ export const loadFils = asseguraMetode('loadFils');
 export const loadMissatges = asseguraMetode('loadMissatges');
 export const enviaMissatge = asseguraMetode('enviaMissatge');
 export const marcaLlegit = asseguraMetode('marcaLlegit');
+export const loadRitmeXat = asseguraMetode('loadRitmeXat');
+export const actualitzaPresenciaXat = asseguraMetode('actualitzaPresenciaXat');
 export const creaFilDirecte = asseguraMetode('creaFilDirecte');
 export const carregaMembres = asseguraMetode('carregaMembres');
 export const subscribeToXat = asseguraMetode('subscribeToXat');
@@ -374,3 +381,5 @@ export const connexionsPubliquesDe = asseguraMetode('connexionsPubliquesDe');
 export const membresIEntitatsConnectadesDe = asseguraMetode('membresIEntitatsConnectadesDe');
 export const inclouPersonaEnEntitat = asseguraMetode('inclouPersonaEnEntitat');
 export const solicitaUnirSeAEntitat = asseguraMetode('solicitaUnirSeAEntitat');
+
+export const consultaIAIA = asseguraMetode('consultaIAIA');

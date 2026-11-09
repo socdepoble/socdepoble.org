@@ -1547,6 +1547,30 @@ description: "Documentació canònica de Sóc de Poble."
   **NO aplicada: l'aplica el Mestre** després de verificar la font i el client.
   Prova: `tests/seed-revisions-r11.test.mjs`.
 
+- `migrations/2611080430_iaia_xat.sql`
+  **NO aplicada: proposta R54 en còpia.** Després del catàleg de xat/E2EE vigent. Registre d'un principal no interactiu existent i d'un únic grup no xifrat per tenant, tots dos explícits i amb disclosure; no crea ni inventa el compte, el grup Beta o el model. RPC de worker restringides; rol Node0 separat sense ampliar l'autenticador de sessions. La pertinença canònica i eixit_al es revaliden abans/després d'inferència. Jobs amb lease i idempotència; la resposta s'escriu amb el principal del bot i marca IA. Abans d'aplicar-la, comprovar esquema i permisos en una base de prova amb dos connexions; PGlite sintètica no acredita GoTrue/PostgREST ni totes les polítiques reals.
+
+- `migrations/2611080431_xat_push_leases.sql`
+  **NO aplicada: proposta R54 en còpia.** Depén de2611020417. Pausar el cron antic durant la transició: la migració tanca les RPC destructivesv1 i el treballador nou exigix lease-v2, sense fallback. Cua privada sense FK en cascada: purga limitada100 per insert i5000 per reclam; el límit és treball i requerix activitat posterior, no TTL físic autònom. Nonce CAS120s, caducitat15min,8 intents amb backoff i revalidació de destinatari/propietari/renovació. Un proveïdor que accepte abans d'una fallada d'ACK pot generar un wake duplicat en recuperació; no es promet exactament-un. xat_push_retira_segura fixa la identitat capturada i no pot retirar l'aparell d'una sessió posterior. Després d'aplicar-la, verificar concessions, versions i recuperació d'un lease en una base de prova.
+
+- `migrations/2611080432_xat_lliurament_i_presencia.sql`
+  **NO aplicada: proposta R54 en còpia.** Per a este kit compost, després de2611080430. Rebuts d'entrega real per altres persones, mínim de lectura i TTL d'escrivint; el bot només s'exclou si consta al registre privat i al binding del fil/tenant. Sense altres humans, el mínim continua0. Ningú pot declarar-se bot o marcat com llegit des del navegador. Després d'aplicar-la, provar denegació a no membres, revocació i identitats E2EE en una base de prova.
+
+- `migrations/2611080440_politica_privacitat_2_6.sql`
+  **NO aplicada: l'aplica el Mestre.** Registre append-only de l'HTML publicat 2.6, SHA-256 `ae73f12713ba2d7e86cc3610ae828cb231edb89a98749c27df9fddb177be5ab0` (61194 caràcters). Conserva totes les versions anteriors; no canvia més text legal. Proves: `src/data/supabase/politicaPrivacitat26.migracio.test.js` i `tests/policy26-sql.test.mjs`.
+  ORDRE: **aturar les altes** en tots els punts d'entrada (GoTrue, OAuth i Node0), construir/desplegar web i connector amb `/legal` 2.6, extraure i comprovar l'HTML real, aplicar 2611080440 i verificar la fila vigent real. Només reobrir altes després de `tooling/privacy/verifica-politica-publicada.mjs` amb resultat `valid:true`, evidència recent i comprovació operativa que continuen aturades fins a eixe instant. El gate local no configura ni bloqueja GoTrue per si mateix. Si no es poden aturar totes les altes, **no habilitar el nou client**: cal una proposta d'arquitectura d'alta abans de publicar.
+  Supabase `handle_new_user` substituïx silenciosament una 2.6 absent per la vigent (2.5); eixa transició no acredita consentiment a 2.6 i no es dona per provada. Node0 rebutja `consent_version_invalid`. No canviar cap versió mostrada després de consentir.
+  L'empremta anterior és de l'HTML, igual a `PAGE_COPY.legal.html`; `d10b0acf880499e531df03779572ced8f2fc8cffc33a7d3a69ffbf729c987374` és de `JSON.stringify(PAGE_COPY.legal)` per a Frontissa i és legítimament diferent.
+  **Sanejament R15 (B1):** el client continua mostrant, servint i enviant la 2.5 (`VERSIO_POLITICA_PRIVACITAT`, `/legal` i l'alta), amb el mateix text i la mateixa clau de Frontissa que HEAD ec865. El text 2.6 viu només dins d'esta migració, i la prova estàtica el segella pel hash i comprova que és la 2.5 servida més els paràgrafs R54 autoritzats. La 2.6 (text de `/legal`, versió del client i clau `legal` de Frontissa) es publica en un commit posterior, junt amb esta migració i l'ordre de dalt. Abans d'aplicar-la, cal posar-hi la data real de publicació, perquè «8 de novembre de 2026» ja és retroactiva (PRIV-05), i recalcular l'empremta a tots els fitxers que la fixen. Les banderes de build que activen el que només descriu la 2.6, `VITE_SDP_IAIA_SERVIDOR` (IAIA amb servidor, apartat 14) i `VITE_SDP_PUSH_NATIU` (push natiu, apartats 8, 11 i 20), no s'encenen abans de publicar-la. `VITE_SDP_XAT_RITME` espera `2611080430`, `2611080431` i `2611080432` i la funció `notifica-xat-desperta`.
+
+  Gate local (sense xarxa, no aplica SQL ni canvia cap interruptor):
+  `node tooling/privacy/verifica-politica-publicada.mjs --html /ruta/HTML-publicat-exacte.html --evidence /ruta/evidencia-politica.json`
+  L'HTML d'entrada és el contingut font publicat de `/legal` (abans de normalitzacions de serialització DOM), no `JSON.stringify(PAGE_COPY.legal)` ni un text copiat de pantalla. Obtindre'l del desplegament que es pretén habilitar i conservar l'artefacte i la captura d'identitat. Si no es pot obtindre amb identitat verificable, el gate no acredita la publicació i les altes continuen aturades.
+  L'evidència JSON ha de portar `schema: "sdp.policy-publication-evidence.v1"`, `backend: "supabase"` o `"node0"`, `observedAt` ISO recent (màxim15min), `signupsPaused: true` **només després de verificar operativament totes les portes d'alta**, `currentVersion` i `policy` amb la fila vigent completa (`versio`, `url`, `text_sha256`, `text_complet`, `vigent_des_de`). Per a Node0, afegir `node0Policy` de la seua ruta autenticadora `policy`, amb `privacy.version/url/sha256` coherents. És evidència aportada per l'operador, no una autenticació de l'estat remot feta pel script.
+  Lectura del servidor per a `currentVersion` i `policy` (l'operador la captura; el kit no l'executa remotament):
+  `select private.versio_vigent() as "currentVersion", to_jsonb(p) as policy, clock_timestamp() as "observedAt" from public.politiques_privacitat p where p.versio = private.versio_vigent();`
+  Comprovar els dos punts d'entrada i repetir el gate immediatament abans de reobrir. Si falta una dada, és antiga, no coincidix, o Node0 encara declara2.5, el procés ix amb codi1. Les proves sintètiques no són autorització ni prova de l'aplicació remota. INVERSA operativa: tornar a aturar altes; no esborra ni reescriu la2.6 segellada.
+
 - `migrations/2611082238_admin_resum_sessions_dispositius.sql`
   R13-C7 (ordre del Mestre del 8-11-2026, apartat «👥 Usuaris, Dispositius i
   Botigues» de l'Administració del sistema): `admin_resum_sessions_dispositius()`
@@ -1559,9 +1583,9 @@ description: "Documentació canònica de Sóc de Poble."
   `refreshed_at` de GoTrue. Abans (lectura): les tres columnes existixen.
   Després (lectura): la funció existix i `anon` no la pot executar.
   **NO aplicada: l'aplica el Mestre.** Mentre no hi siga, el panell ho diu i no
-  mostra cap xifra. Al Node 0 amb POSSE, el catàleg sencer de 81 té el seu pin a
-  `tooling/node0/posse/posse-ledger.sql` (i els perfils anteriors l'excloen): un
-  canvi d'este fitxer obliga a recalcular el pin 81.
+  mostra cap xifra. El perfil històric R13-C7 de 81 conserva el seu pin a
+  `tooling/node0/posse/posse-ledger.sql`; la composició R13/R54/R55 incorpora
+  85 migracions amb un pin separat. Els sis pins històrics 76–81 es preserven.
   Prova: `tests/migracio-admin-resum-sessions-dispositius.test.mjs`.
 
 - `seed.sql`
@@ -1662,6 +1686,7 @@ verificador sense avisos.
 
   13. Primer tornar a construir i desplegar web/connector amb `/legal` 2.4 i verificar-ne l'empremta; després `2611030330` (Onada 6; conserva la 2.3, demana nou consentiment; cap agent no l'aplica).
   14. Primer tornar a construir i desplegar web/connector amb `/legal` 2.5 i verificar-ne l'empremta; després `2611061520` (Onada R9, avisos push del xat; conserva la 2.3 i la 2.4, demana nou consentiment; cap agent no l'aplica). Al Node 0 amb POSSE (`SDP_NODE0_POSSE=1`), no es torna a hidratar fins que `tooling/node0/posse/posse-ledger.sql` no porte els llibres 77 i 79 amb esta migració exacta (R9V-C3-01): si el text de la 2.5 canvia, els pins s'han de tornar a calcular.
+  15. Per a R54 2.6, aturar totes les altes; construir/desplegar `/legal` 2.6 i verificar-ne l’HTML i l’empremta; després `2611080440`. Reobrir només després del gate `altes-politica-2-6` amb la fila vigent real, mai durant el fallback silenciós de Supabase. No aplicada ni comprovada remotament.
 
 ### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + marató 2611012257 i 2611020106 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
@@ -1747,7 +1772,11 @@ verificador sense avisos.
 | 78 | `2611060010` | `2611060010_restauracio_municipal_opendata.sql` | Aplicada a producció (lectura REST del 6-11: `llegix_municipi_open_data_per_slug` respon 200 a anon; aplicada pel Mestre el 6-11) | upsert atòmic Open Data 1.2.0 per tenant, lectura pública fitada i conflictes globals; independent de la 77, no esborra dades absents |
 | 79 | `2611061520` | `2611061520_politica_privacitat_2_5.sql` | Aplicada a producció (lectura REST del 6-11: `politiques_privacitat` té la 2.5, vigent des del 2026-11-05T23:00Z, amb l'empremta `ea13f0c4…` d'esta migració; aplicada pel Mestre el 6-11) | política 2.5: avisos push del xat, 2.3 i 2.4 intactes (Onada R9) |
 | 80 | `2611070600` | `2611070600_seed_revisions.sql` | **NO aplicada: l'aplica el Mestre** | P1-75: revisió vigent de llavor, CAS per peça i autoria autoritativa |
-| 81 | `2611082238` | `2611082238_admin_resum_sessions_dispositius.sql` | **NO aplicada: l'aplica el Mestre** | R13-C7: recomptes de persones amb sessió activa per camí (24 h, 7 i 14 dies), superadmin amb aal2 |
+| 81 | `2611080430` | `2611080430_iaia_xat.sql` | **NO aplicada: proposta R54 en còpia** | Principal IAIA no interactiu i binding explícit; lease, revocació i resposta de bot posterior al commit |
+| 82 | `2611080431` | `2611080431_xat_push_leases.sql` | **NO aplicada: proposta R54 en còpia** | Cua durable per aparell, ACK CAS, reintent, baixa amb identitat i despertador posterior al commit |
+| 83 | `2611080432` | `2611080432_xat_lliurament_i_presencia.sql` | **NO aplicada: proposta R54 en còpia** | Entrega/lectura de persones i presència efímera; exclusió només del bot autoritatiu |
+| 84 | `2611080440` | `2611080440_politica_privacitat_2_6.sql` | **NO aplicada: l’aplica el Mestre** | Text 2.6 append-only; altes aturades fins al gate HTML/hash/versió vigent |
+| 85 | `2611082238` | `2611082238_admin_resum_sessions_dispositius.sql` | **NO aplicada: l'aplica el Mestre** | R13-C7: recomptes de persones amb sessió activa per camí (24 h, 7 i 14 dies), superadmin amb aal2 |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -2384,7 +2413,7 @@ Fitxers: `supabase/functions/notifica-xat/index.ts` (l'embolcall Deno, que
 només li passa les variables de baix), `gestor.js`, `webpush.js` i
 `natius.js` (la lògica, provada a `gestor.test.js`, `webpush.test.js`,
 `natius.test.js` i `paritat.test.js`). Necessita
-`migrations/2611020417_xat_avisos_push.sql` aplicada.
+`migrations/2611020417_xat_avisos_push.sql` i `migrations/2611080431_xat_push_leases.sql` aplicades. El contracte0417 és històric; R54 exigix lease/ACK v2, sense fallbackv1.
 
 Què fa cada passada (un POST amb la capçalera `x-sdp-cron`):
 
@@ -2394,17 +2423,12 @@ Què fa cada passada (un POST amb la capçalera `x-sdp-cron`):
 2. `xat_push_neteja`: aparells caducats o sense renovar en 60 dies, i la cua
    de més d'una hora (el disparador ja la poda sol: com a molt 100 files per
    missatge, també amb els avisos apagats).
-3. `xat_push_reclama` (50 missatges, `FOR UPDATE SKIP LOCKED`, s'esborren en
-   reclamar-los: com a molt una vegada): els aparells dels destinataris (els
-   filtres són a la vinyeta de la migració), un per lot, com a molt 5.000 en
-   ordre aleatori i 1.800.000 octets de JSON, perquè la funció llig com a
-   molt 2 MiB de la base i el lot ja és esborrat (`retallats` diu quants
-   s'han quedat fora).
+3. `xat_push_reclama_v2`: lliuraments per missatge/aparell, claim amb nonce i lease120s, caducitat15min i màxim8 intents. Un treballador interromput deixa el lliurament recuperable; el reintent revalida pertinença, autor i dispositiu. La purga limitada requerix activitat posterior, també amb push apagat: no és un TTL físic autònom.
 4. Web Push amb VAPID (ES256, WebCrypto), sense cos: `TTL: 86400`,
    `Urgency: normal`, `Topic: sdp-xat`. APNs i FCM, si tenen secrets, amb el
    text literal en la llengua de l'aparell.
 5. Només s'expulsa amb web 404 i 410, APNs 410 i FCM 404 `UNREGISTERED`
-   (`xat_push_expulsa`). Web 401 i 403, APNs `BadDeviceToken` o
+   (retirada vinculada al nonce de `xat_push_confirma_v2`, sense expulsióv1). Web 401 i 403, APNs `BadDeviceToken` o
    `DeviceTokenNotForTopic` i FCM `SENDER_ID_MISMATCH` o
    `THIRD_PARTY_AUTH_ERROR` es compten per aparell: mai expulsen ni pausen
    el proveïdor, perquè una sola persona els pot provocar (G1-B-seg-01).
@@ -2413,14 +2437,13 @@ Què fa cada passada (un POST amb la capçalera `x-sdp-cron`):
    el proveïdor natiu, excepte el `TooManyRequests` d'Apple (APNs i Web Push
    d'Apple: massa avisos seguits a un sol aparell), que només salta eixe
    aparell la resta de la passada.
-6. Com a molt 10 lots, 45 s, 8 peticions alhora i 8 s per petició. Respon
+6. Cada acceptació del proveïdor es confirma amb `xat_push_confirma_v2` i el nonce vigent; el client no pot fer ACK. Com a molt 10 lots, 45 s, 8 peticions alhora i 8 s per petició. Respon
    només recomptes: `{ok, missatges, retallats, dispositius, enviats,
    expulsats, fallits, sense_proveidor, sense_provar, lots, esgotat}`.
 
 Panys (tot apagat per defecte): `private.ajustos` `push_xat_actiu` = `si`
 (sense, la cua no creix i desar dona `SDP-PUSH-010`), `SDP_PUSH_ACTIU=si` a la
-funció i la bandera del client. Són independents per a enviar, no per a la
-retenció: en cap combinació la cua guarda més d'una hora.
+funció i la bandera del client. Són independents per a enviar. La neteja retira la cua original de més d’una hora i els lliuramentsv2 caducats amb purga limitada; requerix activitat posterior, també amb push apagat. Cap termini és una garantia de supressió física sense eixa activitat.
 
 Secrets. `SUPABASE_URL` i `SUPABASE_SERVICE_ROLE_KEY` els injecta Supabase.
 `SDP_CRON_SECRET` és el mateix de `compte-apple` i `purga-fitxers`.
@@ -2475,8 +2498,7 @@ select tipus, llengua, count(*) from public.xat_dispositius_push group by 1, 2;
 select count(*), min(creat_al) from private.xat_push_cua;
 ```
 
-Límits coneguts: com a molt una vegada (un avís perdut si el worker cau a
-mitges); APNs exigix HTTP/2 (cal provar-lo en sandbox, en un projecte de
+Límits coneguts R54: reintents amb lease/ACK v2, sense promesa d’exactament-un. Si el proveïdor accepta i l’ACK falla, pot arribar un avís duplicat en recuperar el lease; APNs exigix HTTP/2 (cal provar-lo en sandbox, en un projecte de
 proves, abans d'encendre iOS); el General i els Avisos de comunitat i de
 pàgina no avisen si `push_xat_generals` no és `si`; els aparells no entren a
 `exporta_les_meues_dades` (D-B8S-7: la persona els llig per RLS i la purga
@@ -2833,3 +2855,29 @@ Proves locals: `src/data/supabase/connexionsPubliques.test.js`, `src/data/supaba
 Les preferències pròpies de persona i les administratives d'entitat també inclouen pertinences vives sense seguiment, amb el flag propi de vincle real. Es poden configurar amb global privat, sense publicar-les: el selector públic continua requerint consentiment independent dels extrems. Seguiment i pertinença de la mateixa parella es dedupliquen; el rol visible prové sempre de la pertinença actual. Un UUID explícit de poble també s'ha de confirmar exactament en la resposta del client; només un slug pot resoldre's a un UUID nou.
 
 Les preferències autoritzades inclouen també les pertinences vives entre entitats, als dos extrems del vincle, sense exigir un seguiment. La mateixa fitxa pública segura i els bloquejos continuen filtrant cada fila; la publicació manté les regles de consentiment globals i individuals.
+
+
+## R54 · IAIA, ritme del xat i push durable (proposta local)
+
+### Ordre de la proposta R54
+
+2611080430 abans de2611080432.2611020417 abans de2611080431. El catàleg canònic i la inversió històrica1800→2000→1900 continuen manant. Preparar còpia/rollback i comprovar estat real abans de l'aplicació; estos fitxers no són evidència d'estat remot.
+
+1. Instal·lar les tres migracions segons el pla canònic, amb els interruptors operatius apagats durant la transició.
+2. Desplegar notifica-xat compatible lease-v2 i notifica-xat-desperta amb verify_jwt=true; el relay valida el JWT amb Auth i sols reclama el missatge recent del seu autor verificat. El treball s'executa dins el mateix worker via waitUntil, sense HTTP anidat entre funcions. El cron conserva la recuperació.
+3. Desplegar iaia amb el seu Auth, límits de model i callback de wake de servidor. Node0 conserva el seu autenticador i rol de worker separat. No inferir res si falta configuració; el fallback documental no es presenta com un model real.
+4. Publicar el client i /legal2.6 amb les descripcions tècniques de push natiu; verificar l'empremta. Els tokens no van a logs ni al consentiment persistent. Només guardar opt-in del mateix compte i mostrar permís del sistema després del gest explícit.
+5. Configurar el model real i el binding real del grup Beta amb administració autenticada; comprovar amb un compte de prova autoritzat i sense suplir usuaris. Configurar VAPID/APNs/FCM, provisioning i cron en el seu entorn; cap valor secret pertany al kit. Activar push només després de validar els dos panys existents. Provar recepció en dispositius Android/iOS reals, permís denegat, canvi A→B, reinici, so, badge i baixa.
+
+El badge natiu conserva prudentment el pendent fins baixa/logout perquè el SDK8.1.3 no oferix CAS per a un wake concurrent durant l'esborrament global. Això és una limitació oberta de producte, no una acreditació de paritat total. Provider accepted tampoc prova device received. El kit no firma apps, desplega SQL, configura comptes ni envia missatges externs.
+
+
+### R54 · Desplegament IAIA propi i privacitat de la pregunta
+
+El model gestionat és una capacitat de desplegament, no un servei que es done per operatiu. Configurar SDP_IAIA_MODEL_ENDPOINT i SDP_IAIA_MODEL només per a un model propi en infraestructura pròpia de Sóc de Poble; el token, si cal, només viu al servidor. No habilitar cap companyia d'IA externa fins que el seu nom conste a /legal i s'haja publicat l'avís nou exigit per l'apartat18. No s'acredita eixa propietat només perquè una URL passe la validació sintàctica: és un requisit de configuració i verificació del desplegament. Sense configuració/activació, conservar el fallback documental local i no presentar-lo com una inferència real.
+
+La consulta privada requereix Auth i només envia la pregunta explícita; el fil i l'historial visible es mantenen temporalment al navegador. No es publiquen per fer una consulta privada. El servei no rep historial automàtic: context[] en consultes directes i en la SQL0430 del grup. No s'envien Mur, Notes, altres xats ni missatges anteriors d'altres membres. No s'ha habilitat cap canvi d'E2EE.
+
+El grup públic legacy de la pàgina IAIA conserva els missatges públics i la cortesia documental local. La resposta persistent del model correspon únicament al grup autoritzat pel binding real, a una pregunta explícita ja confirmada i a un bot amb principal propi no interactiu. El registre/binding exigeixen administració autenticada AAL2 i la publicació es revalida després de la inferència. Esta descripció tècnica no modifica drets, terminis de retenció ni la llista d'encarregats de /legal.
+
+IAIA Node0 usa el login separat `node0_iaia_authenticator` (NOINHERIT, només `node0_iaia_worker`). Abans d’activar grups, l’operador aplica `tooling/node0/privacitat-iaia-postgres-node0.sql` al catàleg complet85; la connexió privada comprova tots els GUC de registre i el rol exacte abans de vincular valors. No s’amplia el login web de dos rols. No executat remotament en esta integració.

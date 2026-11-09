@@ -12,6 +12,8 @@ import { VARIANTS_SOCIALS } from './src/config/imatgeSocial.js';
 import { PAGINES_PATRIMONI_R14 } from './src/sections/text/pageContent.patrimoniR14.js';
 import { esHostLocal, politicaDeMitjans, recursosPublicsDelPlugin, segellDeBuild } from './vite.standalone.config.js';
 import { SEGELL, segellDelArbre } from './scripts/botigues/entorn.mjs';
+import fotosParroquiaPrivades from './tooling/vite/fotos-parroquia-privades.mjs';
+import banderesDeCapacitat from './tooling/vite/banderes-de-capacitat.mjs';
 
 /**
  * Build de l'app nativa (Fases 1 i 2 de l'empaquetat mòbil, 261003).
@@ -460,6 +462,16 @@ export default defineConfig(({ mode, command, isPreview }) => {
     base: '/',
     plugins: [
       react(),
+      /* Ordre del Mestre 261109 · R15a (PRIV-01) · Fora de DEV i sense
+         VITE_SDP_BAR_LLAVOR_LA_PARROQUIA=1, parroquiaFotos.js és un mòdul buit: les
+         fotos locals de La Parròquia no ixen en cap build públic encara que siguen
+         al disc (tooling/vite/fotos-parroquia-privades.mjs). */
+      fotosParroquiaPrivades(),
+      /* Sanejament R15 (B3 · P1-03, R15A-NAT-01) · Sense VITE_SDP_PUSH_NATIU=1 (declarada a
+         .env.natiu.local, amb google-services.json i el compte de servei d'FCM), el cicle de
+         push natiu no fa res: cap register() ni unregister() que faça petar l'APK. Igual
+         per al ritme del xat i la IAIA amb servidor (tooling/vite/banderes-de-capacitat.mjs). */
+      banderesDeCapacitat(),
       /* Els recursos de public/ sense els propis del lloc (PROPIS_DEL_LLOC):
          ni sw.js ni manifest.webmanifest, ni auth/, ni robots.txt. Amb la
          política, sense els originals que tenen bessona (Fase C, tasca 2), i

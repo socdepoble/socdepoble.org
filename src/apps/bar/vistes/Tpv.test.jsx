@@ -14,6 +14,7 @@
    (261006): sense permís els tiquets oberts es miren; la tornada de la xarxa
    no buida el teclat del preu (TPV i Caixa); «Cobra» i «Dividix» de la
    comanda del costat i la divisió conserven la tornada al TPV. */
+import { existsSync } from 'node:fs';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { muntaPlataforma, ENTORN_OBERT } from '../../plataforma/__fixtures__/munta.jsx';
@@ -611,7 +612,174 @@ describe('per emportar', () => {
   });
 });
 
+/* Sanejament R15 (PRIV-06) · La instantània del repositori no porta el preu de compra del pack (només la
+   completa, local i fora de git: src/data/menjarIBeure/parroquiaDades.privat.json). Les proves de la
+   calculadora escriuen el preu amb la seua font, i així passen igual amb la completa o sense. */
+const INSTANTANIA_COMPLETA = existsSync('src/data/menjarIBeure/parroquiaDades.privat.json');
+const FONT_DEL_PREU = 'Factura de prova F-3, 2026-11-09';
+
 describe('els canals de la fitxa del producte (Carta.jsx)', () => {
+  test('la compra d’una tarifa real es normalitza amb règim explícit i es desa voluntàriament en la variant', async () => {
+    const magatzem = await magatzemDeProva();
+    const { llavorLaParroquiaR14 } = await import('../llavors/laParroquia.js');
+    const { carta } = await llavorLaParroquiaR14();
+    // Keep the original product and source fields; the full 327-row catalogue has its own integration suite.
+    await magatzem.desaCarta({ ...carta, productes: carta.productes.filter((p) => p.id === 'bombo') });
+    munta('/app/bar/escandalls/bombo', magatzem, DINS);
+    fireEvent.click(await screen.findByRole('button', { name: 'Obri la calculadora de compres' }));
+    const tariff = await screen.findByRole('combobox', { name: 'Tarifa de compra de la font' });
+    expect(tariff.value).toBe('parroquia-preus-1-7');
+    const preu = screen.getByRole('textbox', { name: 'Preu base del pack (€)' });
+    expect(preu.value).toBe(INSTANTANIA_COMPLETA ? '0,40' : '');
+    fireEvent.change(preu, { target: { value: '0,40' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Font del preu revisat' }), { target: { value: FONT_DEL_PREU } });
+    fireEvent.click(screen.getByRole('button', { name: 'Calcula la compra' }));
+    expect(screen.queryByRole('button', { name: /^Desa el cost d’una unitat/ })).toBeNull();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Contingut d’una unitat comprada' }), { target: { value: '1' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Unitat del contingut' }), { target: { value: 'u' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'IVA de compra' }), { target: { value: '10' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Règim fiscal de la compra' }), { target: { value: 'deduible' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Calcula la compra' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Desa el cost d’una unitat comprada en «Unitat»' }));
+    await screen.findByText('Cost normalitzat desat en la variant. Les comandes anteriors no canvien.');
+    const variant = (await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'bombo').variants[0];
+    expect(variant).toMatchObject({ costCents: 40, costConfirmat: true, costBaseFiscal: 'base-cost-deduccions', compraOrigen: { compra: { preuCents: 40, quantitatCompra: 1, unitatCompra: 'u' } } });
+    expect(variant.fontCost).toContain('Begudes - La Parròquia, fila 7');
+    expect(within(screen.getByRole('row', { name: /^Guany abans/ })).getByRole('cell').textContent).toBe(euros(96));
+  });
+
+  test('la calculadora de copa usa les 24 botelles de la tarifa real i la minva indicada', async () => {
+    const magatzem = await magatzemDeProva();
+    const { llavorLaParroquiaR14 } = await import('../llavors/laParroquia.js');
+    const seed = await llavorLaParroquiaR14();
+    const water = seed.carta.productes.find((p) => p.categoriaHostaleria === 'B2' && p.nom === 'Aigua');
+    expect(water).toBeTruthy();
+    await magatzem.desaCarta({ ...seed.carta, productes: [water] });
+    munta(`/app/bar/escandalls/${water.id}`, magatzem, DINS);
+    fireEvent.click(await screen.findByRole('button', { name: 'Obri la calculadora de compres' }));
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Tarifa de compra de la font' }), { target: { value: 'parroquia-preus-1-23' } });
+    expect(screen.getByRole('textbox', { name: 'Unitats del pack' }).value).toBe('24');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Preu base del pack (€)' }), { target: { value: '7,20' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Font del preu revisat' }), { target: { value: FONT_DEL_PREU } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'IVA de compra' }), { target: { value: '10' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Règim fiscal de la compra' }), { target: { value: 'deduible' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Volum real de la botella (cl)' }), { target: { value: '33' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Volum servit per copa (cl)' }), { target: { value: '11' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Minva de la beguda (%)' }), { target: { value: '0' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Calcula el cost de la copa' }));
+    // 7,20 € el pack de 24 × 33 cl = 792 cl; una copa d'11 cl sense minva: 720 × 11 / 792 = 10 cèntims.
+    expect(await screen.findByText('Cost normalitzat de la copa: 0,10 €. Minva: 0 %.')).toBeTruthy();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Unitats del pack' }), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Calcula el cost de la copa' }));
+    expect(screen.queryByRole('button', { name: /^Desa el cost de copa/ })).toBeNull();
+  });
+
+  test('l’escandall calcula base, IVA i guany sobre la variant triada', async () => {
+    const magatzem = await magatzemDeProva();
+    const carta = (await magatzem.carrega()).carta;
+    await magatzem.desaCarta({ ...carta, productes: carta.productes.map((p) => p.id === 'aigua'
+      ? { ...p, variants: p.variants.map((v) => ({ ...v, costBaseFiscal: 'base-cost-deduccions' })) } : p) });
+    munta('/app/bar/escandalls/aigua', magatzem, DINS);
+    const tria = await screen.findByRole('combobox', { name: 'Variant de l’escandall' });
+    const valor = (nom) => within(screen.getByRole('row', { name: new RegExp(`^${nom}`) })).getByRole('cell').textContent;
+    expect(valor('Base imposable de venda')).toBe(euros(91));
+    expect(valor('IVA de venda')).toBe(euros(9));
+    expect(valor('Guany abans d’altres costos')).toBe(euros(61));
+    fireEvent.change(tria, { target: { value: 'gran' } });
+    expect(valor('Base imposable de venda')).toBe(euros(164));
+    expect(valor('IVA de venda')).toBe(euros(16));
+    expect(valor('Guany abans d’altres costos')).toBe(euros(114));
+    expect(screen.getByText(/Abans d’impostos directes i altres costos no informats/)).toBeTruthy();
+  });
+
+  test('un producte sense cost no mostra cap guany calculat com si el cost fora zero', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/escandalls/cava', magatzem, DINS);
+    await screen.findByRole('row', { name: /^Food cost/ });
+    expect(screen.queryByRole('row', { name: /^Guany abans/ })).toBeNull();
+  });
+
+  test('un cost conegut sense base fiscal normalitzada no genera marge ni PVP suggerit', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/escandalls/aigua', magatzem, DINS);
+    await screen.findByRole('row', { name: /^Food cost/ });
+    expect(screen.queryByRole('row', { name: /^Guany abans/ })).toBeNull();
+    expect(within(screen.getByRole('row', { name: /^PVP suggerit/ })).getByRole('cell').textContent).toBe('—');
+    expect(screen.getByText(/Normalitza la base fiscal del cost a la fitxa/)).toBeTruthy();
+  });
+
+  test('un zero antic no confirmat continua sent cost pendent encara que tinga una base fiscal marcada', async () => {
+    const magatzem = await magatzemDeProva();
+    const carta = (await magatzem.carrega()).carta;
+    await magatzem.desaCarta({ ...carta, productes: carta.productes.map((p) => p.id === 'cava'
+      ? { ...p, variants: p.variants.map((v) => ({ ...v, costCents: 0, costBaseFiscal: 'base-cost-deduccions' })) } : p) });
+    munta('/app/bar/escandalls/cava', magatzem, DINS);
+    await screen.findByRole('row', { name: /^Food cost/ });
+    expect(screen.queryByRole('row', { name: /^Guany abans/ })).toBeNull();
+    await ves('/app/bar/productes/cava');
+    expect((await screen.findByRole('textbox', { name: 'Cost de la variant (€)' })).value).toBe('');
+  });
+
+  test('el cost manual de la variant distingeix un zero comprovat d’un cost pendent', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/productes/cava', magatzem, DINS);
+    const cost = await screen.findByRole('textbox', { name: 'Cost de la variant (€)' });
+    expect(cost.value).toBe('');
+    fireEvent.change(cost, { target: { value: '0,00' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Base fiscal del cost' }), { target: { value: 'cost-final-no-deduible' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Desa el producte' }));
+    await screen.findByText('Desat. Les comandes ja fetes no canvien.');
+    expect((await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'cava').variants[0]).toMatchObject({ costCents: 0, costConfirmat: true, costBaseFiscal: 'cost-final-no-deduible' });
+    fireEvent.change(cost, { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Desa el producte' }));
+    await waitFor(async () => expect((await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'cava').variants[0].costCents).toBeUndefined());
+  });
+
+  test('la fitxa desa ingredient, traça i absència comprovada sense confondre un camp pendent', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/productes/cava', magatzem, DINS);
+    const gluten = await screen.findByRole('combobox', { name: 'Gluten' });
+    expect(gluten.value).toBe('pendent');
+    fireEvent.change(gluten, { target: { value: 'traca' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Llet' }), { target: { value: 'ingredient' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Ous' }), { target: { value: 'absent' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Font de la declaració d’al·lèrgens' }), { target: { value: 'Fitxa tècnica de prova, lot A, revisió 2026-11-08' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Desa el producte' }));
+    await screen.findByText('Desat. Les comandes ja fetes no canvien.');
+    const producte = (await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'cava');
+    expect(producte.tracesAlergens).toEqual(['gluten']);
+    expect(producte.alergens).toEqual(['llet']);
+    expect(producte.alergensAbsents).toEqual(['ous']);
+    expect(producte.alergensEstat).toBe('revisio_manual');
+    expect(producte.fontAlergens).toBe('Fitxa tècnica de prova, lot A, revisió 2026-11-08');
+    expect(screen.getByRole('combobox', { name: 'Soja' }).value).toBe('pendent');
+    fireEvent.change(gluten, { target: { value: 'ingredient' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Font de la declaració d’al·lèrgens' }), { target: { value: 'Fitxa tècnica de prova, lot B, revisió 2026-11-08' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Desa el producte' }));
+    await waitFor(async () => expect((await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'cava').tracesAlergens).toEqual([]));
+  });
+
+  test('canviar un estat invalida la font anterior i impedix desar una declaració sense font nova', async () => {
+    const magatzem = await magatzemDeProva();
+    const carta = (await magatzem.carrega()).carta;
+    await magatzem.desaCarta({ ...carta, productes: carta.productes.map((p) => p.id === 'cava'
+      ? { ...p, fontAlergens: 'Fitxa tècnica de prova, lot A, revisió 2026-11-08' } : p) });
+    munta('/app/bar/productes/cava', magatzem, DINS);
+    const gluten = await screen.findByRole('combobox', { name: 'Gluten' });
+    expect(screen.getByRole('combobox', { name: 'Diòxid de sofre i sulfits' }).value).toBe('ingredient');
+    fireEvent.change(gluten, { target: { value: 'traca' } });
+    expect(screen.queryByText(/^Font vigent:/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Desa el producte' }));
+    await screen.findByText(/Indica una font actual per a la declaració/);
+    expect((await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'cava').tracesAlergens).toBeUndefined();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Font de la declaració d’al·lèrgens' }), { target: { value: 'Fitxa tècnica de prova, lot B, revisió 2026-11-08' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Desa el producte' }));
+    await screen.findByText('Desat. Les comandes ja fetes no canvien.');
+    const producte = (await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'cava');
+    expect(producte.fontAlergens).toBe('Fitxa tècnica de prova, lot B, revisió 2026-11-08');
+    expect(producte.tracesAlergens).toEqual(['gluten']);
+  });
+
   /* Apaga un interruptor de la fitxa i desa el producte. */
   const apagaIDesa = async (nom) => {
     const interruptor = await screen.findByRole('switch', { name: nom });

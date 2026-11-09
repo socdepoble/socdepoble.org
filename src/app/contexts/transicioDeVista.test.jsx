@@ -32,6 +32,17 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { BrowserRouter, Link, MemoryRouter, NavLink, Route, Routes, useLocation, useNavigate, useSearchParams } from './RouterContext.jsx';
 import { ambTransicioDeVista } from './transicioDeVista.js';
 
+/* R56 · Els oracles raw antics es conserven a WIP_BASELINE_VITEST (21/21).
+   L'extensió interna aprovada exigix esquema privat exacte i projecció
+   pública original. Les proves de vista visible i MemoryRouter no canvien. */
+function estatPublicHistorial() {
+  const marker = window.history.state?.__sdp_router_entry;
+  expect(Object.keys(marker).sort()).toEqual(['key', 'state', 'version']);
+  expect(marker.version).toBe(2);
+  expect(marker.key).toMatch(/^sdp:[a-z0-9]{1,16}:[1-9]\d{0,12}$/);
+  return marker.state;
+}
+
 /* Per a la prova de l'app de veres (la darrera), com a App.test.jsx:
    l'amfitrió ja és llest i Notes no té esborranys. */
 vi.mock('../../host.js', () => ({ quanLlest: async () => undefined }));
@@ -217,7 +228,7 @@ describe('RouterProvider amb transicio', () => {
     munta('/');
     fireEvent.click(boto('Amb estat'));
     await acabaLesFoses(registre);
-    expect(window.history.state).toEqual({ espaiIdentitat: 7 });
+    expect(estatPublicHistorial()).toEqual({ espaiIdentitat: 7 });
     expect(registre.fotoNova).toEqual(['Vista del mur']);
 
     const push = vi.spyOn(window.history, 'pushState');
@@ -316,7 +327,7 @@ describe('ARB-B7a-01 · la finestra entre el pushState i el callback de la fosa'
     fireEvent.click(enllac('Pobles'));
     // L'historial ja és el nou; la vista, encara la vella i sencera.
     expect(window.location.pathname + window.location.hash).toBe('/pobles#mapa');
-    expect(window.history.state).toBeNull();
+    expect(estatPublicHistorial()).toBeNull();
     expect(lectures.at(-1)).toEqual({ pathname: '/detall', state: { preloadedItem: 'Fira de Tardor' }, hash: '' });
     expect(titol()).toBe('Fira de Tardor');
     await acabaLesFoses(registre);
@@ -511,7 +522,7 @@ describe('App.jsx · la navegació principal fa la fosa', () => {
       fireEvent.click(avatar);
       expect(document.startViewTransition.mock.calls.length).toBe(abans + 1);
       expect(window.location.pathname).toBe('/el-meu-perfil');
-      expect(Number.isInteger(window.history.state?.[CLAU_RECUPERACIO_ESPAI])).toBe(true);
+      expect(Number.isInteger(estatPublicHistorial()?.[CLAU_RECUPERACIO_ESPAI])).toBe(true);
       await acabaLesFoses(registre);
       expect(window.location.pathname).toBe('/el-meu-perfil');
     } finally {

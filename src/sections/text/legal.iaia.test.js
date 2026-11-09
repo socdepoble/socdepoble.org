@@ -82,13 +82,39 @@ describe('P1-24 · la IAIA de /legal és la IAIA del codi', () => {
     expect(dependencies.length).toBeGreaterThan(10);
     expect(dependencies.filter((nom) => NOM_DE_PAQUET_IA.test(nom))).toEqual([]);
     expect(SRC.filter((rel) => FUNCIO_IAIA.test(llig(rel)))).toEqual([]);
-    expect(readdirSync(path.join(ARREL, 'supabase/functions')).filter((nom) => /iaia/i.test(nom))).toEqual([]);
+    /* Sanejament R15 (B1/B2) · La funció R54 supabase/functions/iaia (model propi, NO desplegada)
+       pot ser al repo, i només ella; el client no la crida sense VITE_SDP_IAIA_SERVIDOR==='1' (la
+       prova «R15 · la IAIA amb servidor…» de baix). Les guardes d'URL i de SDK de dalt també la miren. */
+    expect(['[]', '["iaia"]']).toContain(JSON.stringify(readdirSync(path.join(ARREL, 'supabase/functions')).filter((nom) => /iaia/i.test(nom))));
   });
 
   test('cap fitxer de la IAIA del client fa cap crida de xarxa', () => {
     const iaia = SRC.filter((rel) => /iaia/i.test(path.basename(rel)));
     expect(iaia).toContain('src/data/iaiaLocal.js');
     expect(iaia.filter((rel) => XARXA.test(llig(rel)))).toEqual([]);
+  });
+
+  /* Sanejament R15 (B1/B2 · P0-01, R15-REG-01, R15-REG-05, P1-01) · La 2.5 no descriu cap consulta
+     privada a un model als nostres servidors. L'adaptador Supabase només exporta consultaIAIA amb
+     la bandera de build literal, i la consulta directa espera el discover available===true.
+     Encendre la bandera (en qualsevol fitxer d'entorn d'esta arrel) sense una versió del text
+     posterior a la 2.5 que en parle fa caure la prova. */
+  test('R15 · la IAIA amb servidor (functions/v1/iaia) no és al client sense la bandera de build; encendre-la demana un text posterior a la 2.5', () => {
+    const adaptador = llig('src/data/supabase/index.js');
+    expect(adaptador).toContain("export const consultaIAIA = import.meta.env.VITE_SDP_IAIA_SERVIDOR === '1' ? consultaIAIAAmbServidor : undefined;");
+    expect(adaptador).not.toMatch(/export\s*\{[^}]*\bconsultaIAIA\b[^}]*\}/);
+    expect(adaptador).not.toMatch(/export\s*\*\s*from\s*'\.\/iaia\.js'/);
+    expect(llig('src/sections/xat/IAIAProvider.jsx')).toContain("if(teCapacitat('iaia')&&configuration.current?.available===true){");
+    expect(llig('tooling/vite/banderes-de-capacitat.mjs')).toContain("'VITE_SDP_IAIA_SERVIDOR'");
+    // Només es mira si la bandera hi és encesa; mai s'escriu cap valor d'un .env a l'eixida.
+    const FITXERS_ENV = ['.env', '.env.local', '.env.production', '.env.production.local', '.env.natiu', '.env.natiu.local', '.env.botigues.local'];
+    const encesa = FITXERS_ENV.some((fitxer) => { try { return /^\s*(?:export\s+)?VITE_SDP_IAIA_SERVIDOR\s*=\s*['"]?1['"]?\s*$/m.test(llig(fitxer)); } catch { return false; } });
+    if (!encesa) {
+      expect(pla(apartat(14))).not.toMatch(/model propi/);
+      return;
+    }
+    expect(HTML).not.toMatch(/Versió 2\.[0-5] ·/);
+    expect(pla(apartat(14))).toMatch(/model propi/);
   });
 
   test('l’apartat 11 no nomena cap proveïdor d’intel·ligència artificial com a encarregat, ni parla de la IAIA', () => {

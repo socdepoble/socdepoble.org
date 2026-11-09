@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Boto, Camp, CampText, Selector, UniversalCard } from '../../components/PedraSeca/index.js';
-import { useUIActions } from '../../app/contexts/UIContext';
+import { useUIActions, useUIStateOpcional } from '../../app/contexts/UIContext';
 import { useNavigate } from '../../app/contexts/RouterContext';
-import { OBRA_QUE_DINEM, RECEPTES_QUE_DINEM } from '../../data/patrimoni/queDinem.js';
+import { traduccioDePaginesDisponible } from '../../components/PedraSeca/hooks/useTraduccioPagina.js';
+import { OBRA_QUE_DINEM, RECEPTES_QUE_DINEM, laminaDeRecepta } from '../../data/patrimoni/queDinem.js';
 import CreditsQueDinem from './CreditsQueDinem.jsx';
 import { etiquetaDApartat, filtraReceptes, rutaDeRecepta } from './cercaReceptes.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
@@ -38,9 +39,18 @@ function quadratDeRecepta(recepta, tr, navega) {
   };
 }
 
+/* Onada R15 (P3-1) · El text alternatiu de la làmina diu la pàgina on és impresa (la 79 → p. 89, la 115 → p. 127). */
+const altDeLamina = (recepta, tr) => {
+  const lamina = laminaDeRecepta(recepta);
+  return lamina ? tr('patrimoni.receptes.altLamina', 'Làmina de la pàgina {n} del llibre', { n: lamina.pagina }) : '';
+};
+
 /** Cos viu de TextSection a /page/receptes. */
 export default function ReceptesQueDinemSection() {
   const { t } = useUIActions();
+  /* Onada R15 (P3-6) · El botó Traduir només traduïx on hi ha servei (el mateix criteri que useTraduccioPagina i
+     /traduccions): al web propi sí; a l'app nativa, no, i el botó ho diu. La frase diu el mateix que el botó. */
+  const traduccioDisponible = traduccioDePaginesDisponible(useUIStateOpcional()?.externalConfig?.traductorUrl);
   const navega = useNavigate();
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const [apartat, setApartat] = useState('');
@@ -63,7 +73,10 @@ export default function ReceptesQueDinemSection() {
       <h3>{titol}</h3>
       <p>
         {tr('patrimoni.receptes.recompte', '{videos} tenen vídeo i {lamines} porten la làmina del llibre.', { videos: ambVideo, lamines: ambLamina })}{' '}
-        {tr('patrimoni.receptes.literal', 'Els títols, els ingredients, l’elaboració i les notes són el text literal del llibre, en la seua llengua, i no s’hi afig res. El botó Traduir en dona una traducció automàtica.')}
+        {tr('patrimoni.receptes.literal', 'Els títols, els ingredients, l’elaboració i les notes són el text literal del llibre, en la seua llengua, i no s’hi afig res.')}{' '}
+        {traduccioDisponible
+          ? tr('patrimoni.receptes.traduir', 'El botó Traduir en dona una traducció automàtica.')
+          : tr('patrimoni.receptes.traduirNoDisponible', 'Ací la traducció automàtica no està disponible.')}
       </p>
       <CreditsQueDinem tr={tr} />
       <Camp etiqueta={tr('patrimoni.receptes.apartat', 'Apartat del llibre')}>
@@ -81,7 +94,7 @@ export default function ReceptesQueDinemSection() {
               title={recepta.titol}
               llenguaContingut="ca"
               imageUrl={recepta.lamina || undefined}
-              imageAlt={recepta.lamina ? tr('patrimoni.receptes.altLamina', 'Làmina de la pàgina {n} del llibre', { n: recepta.pagina }) : ''}
+              imageAlt={altDeLamina(recepta, tr)}
               mainHref={rutaDeRecepta(recepta)}
               squareBadge={quadratDeRecepta(recepta, tr, navega)}
               labels={[

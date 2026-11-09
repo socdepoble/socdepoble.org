@@ -4,6 +4,8 @@ import React, { useContext, useState, useEffect, useLayoutEffect, useMemo, useCa
 import { RouteParamsContext, RouterContext, RouterPrefixContext } from './objectesDeContext.js';
 import { normalitzaBase, resolRuta, treuBase } from './politicaRouter.js';
 import { ambTransicioDeVista } from './transicioDeVista.js';
+import { estatPublicDeHistorial, estatDeNovaEntrada, ubicacioAmbIdentitat } from './historialDeRuta.js';
+import { useCapturaDeNavegacio, useIdentitatDelDocument } from '../../hooks/useScrollDeNavegacio.js';
 
 /* `currentPath` és la ruta de l'app, o `null` FORA DE BASE: el router de
    navegador té una base declarada i la URL del document no hi cau (és una
@@ -14,9 +16,9 @@ import { ambTransicioDeVista } from './transicioDeVista.js';
 // Origen fictici per a partir una ruta de l'app en camí i consulta.
 const ORIGEN_RUTES = 'http://x.invalid';
 
-function entradaDeMemoria(ruta, state = null) {
+function entradaDeMemoria(ruta, state = null, clau = 0) {
   const url = new URL(ruta, ORIGEN_RUTES);
-  return { path: url.pathname, search: url.searchParams, state };
+  return { path: url.pathname, search: url.searchParams, hash: url.hash, state, clau };
 }
 
 /* La ruta inicial es revalida ací encara que l'element ja la sanege: el
@@ -40,16 +42,23 @@ function safeDecode(val) {
 export function RouterProvider({ children, basename = '' }) {
   // Base declarada per l'amfitrió; una d'invàlida val com a absent.
   const base = useMemo(() => normalitzaBase(basename), [basename]);
+  const [inicial, accio] = useIdentitatDelDocument();
+  const [captura, subscriuAbansDeNavegar] = useCapturaDeNavegacio();
 
   // Fora de base la consulta tampoc és nostra: la de l'amfitrió no arriba a l'app.
   const llegeixUbicacio = useCallback(() => {
     const ruta = treuBase(window.location.pathname, base);
-    return { ruta, cerca: new URLSearchParams(ruta === null ? '' : window.location.search) };
-  }, [base]);
+    return ubicacioAmbIdentitat(ruta, new URLSearchParams(ruta === null ? '' : window.location.search),
+      window.location, window.history.state, inicial.current, accio.current);
+  }, [base, inicial, accio]);
 
   const [ubicacio, setUbicacio] = useState(llegeixUbicacio);
   const currentPath = ubicacio.ruta;
   const searchParams = ubicacio.cerca;
+
+  /* L'entrada inicial no es reescriu: la seua identitat viu al ref. Només
+     les entrades que crea navigate porten metadada; una entrada aliena
+     anterior sense marca no hereta la posició inicial, tampoc amb la mateixa URL. */
 
   /* ARB-B7a-01 (corrector B7a) · Entre el pushState d'una fosa i el seu callback,
      l'historial ja és el nou però la vista pintada encara és la vella. Ací es
@@ -71,10 +80,10 @@ export function RouterProvider({ children, basename = '' }) {
 
   useEffect(() => {
     // L'amfitrió pot tornar arrere a una pàgina seua: llavors la ruta és null i l'app queda inert.
-    const handlePopState = () => { confirma(); };
+    const handlePopState = () => { captura(); accio.current = 'POP'; confirma(); };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [confirma]);
+  }, [confirma, captura, accio]);
 
   const navigate = useCallback((to, options = {}) => {
     if (!to) return;
@@ -92,17 +101,19 @@ export function RouterProvider({ children, basename = '' }) {
     const ruta = resolRuta(to, llegeixUbicacio().ruta || '/');
     if (ruta === null) return;
     const targetPath = base + ruta;
-
-    const state = options.state || null;
+    captura();
+    const anterior = window.history.state;
+    const privada = estatDeNovaEntrada(anterior, options);
+    accio.current = options.replace ? 'REPLACE' : 'PUSH';
     const ambFosa = options.transicio === true;
     // La foto de l'entrada que es veu ara, abans d'escriure la nova (ARB-B7a-01).
     const pintada = ambFosa ? { estat: window.history.state, hash: window.location.hash } : null;
 
     // L'historial s'escriu abans i en sincronia: qui llig la URL just després de navigate() ja veu la nova.
     if (options.replace) {
-      window.history.replaceState(state, '', targetPath);
+      window.history.replaceState(privada, '', targetPath);
     } else {
-      window.history.pushState(state, '', targetPath);
+      window.history.pushState(privada, '', targetPath);
     }
 
     /* PS-01 (B7) · Amb { transicio: true }, la vista nova es pinta dins de la
@@ -115,7 +126,7 @@ export function RouterProvider({ children, basename = '' }) {
       return;
     }
     confirma();
-  }, [base, llegeixUbicacio, confirma]);
+  }, [base, llegeixUbicacio, confirma, captura, accio]);
 
   const contextValue = useMemo(() => ({
     currentPath,
@@ -123,9 +134,12 @@ export function RouterProvider({ children, basename = '' }) {
     navigate,
     basename: base,
     memoria: false,
+    fragment: ubicacio.fragment,
+    navegacio: ubicacio.navegacio,
+    subscriuAbansDeNavegar,
     fosaPendent,
     ubicacioViva: llegeixUbicacio
-  }), [currentPath, searchParams, navigate, base, fosaPendent, llegeixUbicacio]);
+  }), [ubicacio, currentPath, searchParams, navigate, base, fosaPendent, llegeixUbicacio, subscriuAbansDeNavegar]);
 
   return (
     <RouterContext.Provider value={contextValue}>
@@ -150,29 +164,29 @@ export function useNavigate() {
 /* `state`: en memòria ve de l'entrada del router (navigate(to, { state })),
    mai de window.history.state, que és de l'amfitrió. Al navegador l'app és
    ama de l'historial i el pot llegir, excepte fora de base.
-   Gauntlet 261017 (M07, C07) · `hash`, camp nou: el fragment (#…) de la URL
-   del document, al navegador i dins de la base. En memòria i fora de base,
-   '': l'entrada de memòria no el guarda i el fragment de fora és de
-   l'amfitrió. Els dobles d'abans no el porten: qui el llig hi posa ''.
+   R56 · `hash`: al navegador és el del document dins de la base; en
+   memòria, el de l'entrada pròpia. Fora de base continua buit, i el hash
+   de l'amfitrió no arriba mai al MemoryRouter. Els contextos vells sense
+   fragment conserven ''. La identitat privada no arriba a state públic.
    ARB-B7a-01 · Mentre una fosa no ha pintat la vista nova, state i hash són
    els de l'entrada que encara es veu (fosaPendent), no els de l'historial,
    que ja és el nou: la vista vella no es pinta amb l'estat de la nova. */
 export function useLocation() {
-  const { currentPath, searchParams, memoria, estat, fosaPendent } = useRouter();
+  const { currentPath, searchParams, memoria, estat, fragment = '', fosaPendent } = useRouter();
   const foraDeBase = currentPath === null;
   let state = null;
   let hash = '';
-  if (memoria) state = estat;
+  if (memoria) { state = estat; hash = fragment; }
   else if (!foraDeBase) {
     const pintada = typeof fosaPendent === 'function' ? fosaPendent() : null;
-    state = pintada ? pintada.estat : window.history.state;
+    state = estatPublicDeHistorial(pintada ? pintada.estat : window.history.state);
     hash = pintada ? pintada.hash : window.location.hash;
   }
   return { pathname: foraDeBase ? '' : currentPath, search: searchParams.toString(), state, hash };
 }
 
 export function useSearchParams() {
-  const { searchParams, navigate, currentPath, ubicacioViva } = useRouter();
+  const { searchParams, navigate, currentPath, fragment, ubicacioViva } = useRouter();
 
   /* ARB-B7a-01 · Al navegador, la consulta nova es resol sobre la URL viva (la
      darrera escrita a l'historial), com resol navigate() les relatives. Dins
@@ -183,6 +197,7 @@ export function useSearchParams() {
     const viva = typeof ubicacioViva === 'function' ? ubicacioViva() : null;
     const currentUrl = new URL((viva ? viva.ruta : currentPath) || '/', 'http://localhost');
     currentUrl.search = (viva ? viva.cerca : searchParams).toString();
+    currentUrl.hash = (viva ? viva.fragment : fragment) || '';
     if (newParams instanceof URLSearchParams) {
       currentUrl.search = newParams.toString();
     } else {
@@ -194,8 +209,8 @@ export function useSearchParams() {
         }
       });
     }
-    navigate(currentUrl.pathname + currentUrl.search, options);
-  }, [navigate, currentPath, searchParams, ubicacioViva]);
+    navigate(currentUrl.pathname + currentUrl.search + currentUrl.hash, options);
+  }, [navigate, currentPath, searchParams, fragment, ubicacioViva]);
   
   return [searchParams, setParams];
 }
@@ -395,10 +410,13 @@ export function BrowserRouter({ children, basename }) {
    (la que el popstate del navegador assenyala) en lloc de reescriure l'última. */
 export function MemoryRouter({ children, basename = '', rutaInicial = '/', onCanvi, alSaltar }) {
   const base = useMemo(() => normalitzaBase(basename), [basename]);
+  const [captura, subscriuAbansDeNavegar] = useCapturaDeNavegacio();
 
   const [state, setState] = useState(() => ({
     history: [entradaInicial(rutaInicial)],
-    index: 0
+    index: 0,
+    seguent: 1,
+    accio: 'INITIAL'
   }));
 
   const entrada = state.history[state.index];
@@ -410,43 +428,44 @@ export function MemoryRouter({ children, basename = '', rutaInicial = '/', onCan
   const onCanviRef = useRef(onCanvi);
   useEffect(() => { onCanviRef.current = onCanvi; }, [onCanvi]);
   const cerca = searchParams.toString();
-  const rutaActual = cerca ? `${currentPath}?${cerca}` : currentPath;
+  const rutaActual = (cerca ? `${currentPath}?${cerca}` : currentPath) + entrada.hash;
   useEffect(() => {
     if (typeof onCanviRef.current === 'function') onCanviRef.current(rutaActual);
   }, [rutaActual]);
 
   const navigate = useCallback((to, options = {}) => {
     if (!to && to !== 0) return;
+    captura();
     if (typeof to === 'number' && typeof alSaltar === 'function' && alSaltar(to) === true) return;
 
     setState(prev => {
       if (typeof to === 'number') {
         const newIdx = Math.max(0, Math.min(prev.index + to, prev.history.length - 1));
-        return { ...prev, index: newIdx };
+        return newIdx === prev.index ? prev : { ...prev, index: newIdx, accio: 'POP' };
       }
 
       // La relativa es resol sobre la ruta de l'app; un destí de fora no mou res.
       const ruta = resolRuta(to, prev.history[prev.index].path);
       if (ruta === null) return prev;
 
-      const newEntry = entradaDeMemoria(ruta, options.state ?? null);
+      const newEntry = entradaDeMemoria(ruta, options.state ?? null, prev.seguent);
       /* `posicio` (el reflex, en un popstate): si la llista ja té esta ruta
          en eixa posició, s'hi va sense retallar res i amb el seu estat. */
       const vella = Number.isInteger(options.posicio) ? prev.history[options.posicio] : null;
-      if (vella && vella.path === newEntry.path && vella.search.toString() === newEntry.search.toString()) {
-        return { ...prev, index: options.posicio };
+      if (vella && vella.path === newEntry.path && vella.search.toString() === newEntry.search.toString() && vella.hash === newEntry.hash) {
+        return { ...prev, index: options.posicio, accio: 'POP' };
       }
       let newHistory = prev.history.slice(0, prev.index + 1);
       
       if (options.replace) {
         newHistory[newHistory.length - 1] = newEntry;
-        return { history: newHistory, index: newHistory.length - 1 };
+        return { history: newHistory, index: newHistory.length - 1, seguent: prev.seguent + 1, accio: 'REPLACE' };
       } else {
         newHistory.push(newEntry);
-        return { history: newHistory, index: newHistory.length - 1 };
+        return { history: newHistory, index: newHistory.length - 1, seguent: prev.seguent + 1, accio: 'PUSH' };
       }
     });
-  }, [alSaltar]);
+  }, [alSaltar, captura]);
 
   const index = state.index;
   const contextValue = useMemo(() => ({
@@ -456,8 +475,11 @@ export function MemoryRouter({ children, basename = '', rutaInicial = '/', onCan
     basename: base,
     memoria: true,
     estat,
-    index
-  }), [currentPath, searchParams, navigate, base, estat, index]);
+    index,
+    fragment: entrada.hash,
+    navegacio: { clau: entrada.clau, accio: state.accio },
+    subscriuAbansDeNavegar
+  }), [state, currentPath, searchParams, estat, index, entrada.hash, entrada.clau, navigate, base, subscriuAbansDeNavegar]);
 
   return (
     <RouterContext.Provider value={contextValue}>

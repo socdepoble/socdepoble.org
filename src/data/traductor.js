@@ -109,8 +109,29 @@ export class ErrorTraductor extends Error {
 /** La marca de privadesa domina qualsevol consentiment de traducció. */
 export const contingutNoTraduible = valor => Boolean(valor && typeof valor === 'object' &&
   (valor.e2ee === true || valor.privat === true || valor.seguretat?.xifrat === true || valor.xifrat != null || valor.visibility === 'private'));
+/* R56 · Un mode editorial explícit només autoritza el transport automàtic
+   amb on_the_fly. La revisada, none i un mode invàlid fallen abans del cau
+   i de qualsevol motor. Cerquem dades pròpies o heretades sense executar
+   getters/setters; absent/null
+   conserva el contracte anterior dels textos sense mode declarat. */
+const modeNoAutomatic = valor => {
+  if (!valor || typeof valor !== 'object') return false;
+  const vistos = new Set();
+  try {
+    for (let objecte = valor; objecte !== null; objecte = Object.getPrototypeOf(objecte)) {
+      if (vistos.has(objecte)) return true;
+      vistos.add(objecte);
+      const mode = Object.getOwnPropertyDescriptor(objecte, 'translation_mode');
+      if (mode) return !Object.hasOwn(mode, 'value') || (mode.value != null && mode.value !== 'on_the_fly');
+    }
+    return false;
+  } catch { return true; }
+};
 export function exigixTraduccioPublica(textos, context) {
-  if(contingutNoTraduible(context)||Array.isArray(textos)&&textos.some(contingutNoTraduible))throw new ErrorTraductor(CODI_TRADUCCIO.NO_DISPONIBLE);
+  if (modeNoAutomatic(context) || Array.isArray(textos) && textos.some(modeNoAutomatic)
+      || contingutNoTraduible(context) || Array.isArray(textos) && textos.some(contingutNoTraduible)) {
+    throw new ErrorTraductor(CODI_TRADUCCIO.NO_DISPONIBLE);
+  }
 }
 
 /** Caràcters Unicode (punts de codi), com els compta el servidor (preg_match_all('/./us')). */

@@ -111,3 +111,29 @@ GoogleService-Info.plist
 !/.agents/runtime/turns/*.json
 /.agents/runtime/contracts/*
 !/.agents/runtime/contracts/*.json
+
+# Ordre del Mestre 261109 · R15a · Fotos i captures que no es versionen mai.
+# Fotos locals de La Parròquia: només per a builds opt-in
+# (VITE_SDP_BAR_LLAVOR_LA_PARROQUIA=1), mai al repositori públic. Porten GPS,
+# metadades de tercers i drets reservats d'agències i de marques. El manifest
+# (src/data/menjarIBeure/parroquiaFotos.generated.json) sí que es versiona.
+/src/assets/bar/parroquia/
+# Originals del Pou de Neu amb GPS: les versions netes ja són a src/.
+/_wiki_de_poble/90_arxiu_historic/2026-11/08/
+# Captures amb dades personals: no es versionen.
+/_wiki_de_poble/04_escriptori/01_produccio/261107_1615_captura_supabase_sessions_origen_entrada_reals.jpg
+/_wiki_de_poble/04_escriptori/01_produccio/261108_1406_captura_notes_enganxar_text_brut_h1_entradilla_cos_netejar_format.jpg
+# Sanejament R15 (P0, 261109) · Captures amb dades personals de tercers (noms,
+# usuaris, correus, xats): no es versionen mai. Les 11 de 261106 (commit
+# 6a444026a) ixen de l'índex amb `git rm --cached` i es queden al disc del
+# Mestre; purgar-les de l'historial publicat és decisió seua.
+/_wiki_de_poble/**/*captura_supabase*
+/_wiki_de_poble/**/*captura_google_groups*
+/_wiki_de_poble/**/*captura_languagetool*
+/_wiki_de_poble/**/*captura_whatsapp*
+/_wiki_de_poble/**/*usuaris_reals*
+# Sanejament R15 (PRIV-06, 261109) · La instantània completa de La Parròquia
+# (preus de compra per pack, recàrrec d'equivalència i cel·les d'origen amb
+# costos, marges i fórmules) només en local, per als builds opt-in i DEV. Al
+# repositori va parroquiaDades.generated.json, la versió sense eixos camps.
+/src/data/menjarIBeure/parroquiaDades.privat.json

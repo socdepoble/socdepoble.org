@@ -324,7 +324,7 @@ export default function Conversa({
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
   entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false,
   carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false, respostaLocalIAIA = respostaDeLaIAIA,
-  senseSessio = false
+  senseSessio = false, escrivint = 0, onEscrivint = null
 }) {
   /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
      guarda la de l'últim render confirmat. */
@@ -437,8 +437,9 @@ export default function Conversa({
     revisioCompositorRef.current += 1;
     esborranyPropiRef.current = true;
     setText(valor);
+    onEscrivint?.(valor.trim().length > 0);
     desaEsborrany(clauEsborrany, valor);
-  }, [clauEsborrany]);
+  }, [clauEsborrany, onEscrivint]);
 
   /* Si la llista és a baix (a menys de LLINDAR_FONS_PX): ho recorda la ref,
      per a decidir en arribar un missatge, i l'estat, per al botó. Durant el
@@ -835,6 +836,7 @@ export default function Conversa({
   const envia = useCallback(async () => {
     const value = text.trim();
     if (!value) return;
+    onEscrivint?.(false);
     const revisio = ++revisioCompositorRef.current;
     const citat = resposta;
     /* Enviar buida l'esborrany només si el camp era l'esborrany de la
@@ -878,7 +880,7 @@ export default function Conversa({
        de sempre (RESPOSTA_IAIA). */
     if (!enviat) return;
     encuaRespostaLocal(value, idPropi, previs);
-  }, [text, resposta, fil, onSendMessage, clauEsborrany, cortesiaIAIA, encuaRespostaLocal]);
+  }, [text, resposta, fil, onSendMessage, clauEsborrany, cortesiaIAIA, encuaRespostaLocal, onEscrivint]);
 
   const enviaPreguntaRapida = useCallback(async (preguntaSuggerida) => {
     const value = String(preguntaSuggerida ?? '').trim();
@@ -1213,9 +1215,10 @@ export default function Conversa({
   revisaCanvisRef.current = E2EE_ACTIU_PER_DEFECTE ? canvisClau.revisaEnviament ?? null : null;
 
   return (
-    <div className="sdp-xat-conversa" ref={arrelRef} onKeyDown={alTeclatDeLaConversa}>
+    <div className="sdp-xat-conversa" ref={arrelRef} onKeyDown={alTeclatDeLaConversa} onBlurCapture={() => onEscrivint?.(false)}>
       <CapcaleraConversa
         fil={fil}
+        escrivint={escrivint}
         onTorna={onBack}
         onTornaAOrigen={onTornaAOrigen}
         onSeleccionar={() => setModeSeleccio(true)}

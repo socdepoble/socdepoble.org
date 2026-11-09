@@ -33,10 +33,13 @@ export default function IAIALocalProvider({ children, respostaIAIA = respostaDeL
     usuariId: IAIA_ID, is_ai: true, text: BENVINGUDA_IAIA, creatAl: new Date().toISOString()
   }]);
   const seguent = useRef(0);
+  const epoch = useRef(0), controls = useRef(new Set());
   const muntat = useRef(true);
   const originalRef = useRef(original);
   originalRef.current = original;
-  useEffect(() => { muntat.current = true; return () => { muntat.current = false; }; }, []);
+  const avorta = useCallback(() => { epoch.current++; for (const c of controls.current) c.abort(); controls.current.clear(); }, []);
+  useEffect(() => { muntat.current = true; return () => { muntat.current = false; avorta(); }; }, [avorta]);
+  useEffect(() => { if (original.iaiaApagada) avorta(); }, [original.iaiaApagada, avorta]);
   const fil = useMemo(() => ({
     id: ID_FIL_LOCAL_IAIA, tipus: 'iaia', name: AJUDA_PER_CLAU.iaia.nom, title: AJUDA_PER_CLAU.iaia.nom,
     avatar_url: AJUDA_PER_CLAU.iaia.avatar, filLocalIAIA: true, potEscriure: true,
@@ -54,8 +57,10 @@ export default function IAIALocalProvider({ children, respostaIAIA = respostaDeL
     posaMissatges((previs) => [...previs, pregunta].slice(-MAXIM_MISSATGES_IAIA_LOCAL));
     // Cada resposta s'ancora a la seua pregunta; una consulta lenta no frena
     // les altres i mai no respon a una altra persona després de desmuntar.
-    Promise.resolve().then(() => respostaIAIA(valor)).catch(() => null).then((trobada) => {
-      if (!muntat.current || originalRef.current.iaiaApagada) return;
+    const ticket = epoch.current, control = new AbortController(); controls.current.add(control);
+    Promise.resolve().then(() => control.signal.aborted ? null : respostaIAIA(valor, { signal: control.signal })).catch(() => null).then((trobada) => {
+      controls.current.delete(control);
+      if (control.signal.aborted || ticket !== epoch.current || !muntat.current || originalRef.current.iaiaApagada) return;
       const resposta = { id: `${id}:resposta`, sender: 'other', author: AJUDA_PER_CLAU.iaia.nom,
         usuariId: IAIA_ID, is_ai: true, text: typeof trobada === 'string' && trobada.trim() ? trobada : RESPOSTA_IAIA,
         creatAl: new Date().toISOString() };

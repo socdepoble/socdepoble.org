@@ -200,6 +200,9 @@
 						DevelopmentTeam = 9KNUA4JR8P;
 						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Push = { enabled = 1; };
+						};
 					};
 					5DF0C000000000000000000C = {
 						CreatedOnToolsVersion = 16.0;

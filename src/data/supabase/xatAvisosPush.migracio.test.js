@@ -33,6 +33,7 @@ const NOMS = ORDRE.filter((f) => /^\d{10}_xat_avisos_push\.sql$/.test(f));
 const NOM = NOMS[0];
 const VERSIO = NOM?.slice(0, 10);
 const SQL = NOM ? readFileSync(path.join(MIGRACIONS, NOM), 'utf8') : '';
+const SQL_LEASE=readFileSync(path.join(MIGRACIONS,'2611080431_xat_push_leases.sql'),'utf8');
 const README = readFileSync(path.join(ARREL, 'supabase/README.md'), 'utf8');
 const ORDRE_DESPLEGAMENT = JSON.parse(readFileSync(path.join(ARREL, 'supabase/ordre_desplegament.json'), 'utf8'));
 const FUNCIO = path.join(ARREL, 'supabase/functions/notifica-xat');
@@ -447,12 +448,17 @@ function comprovaParitat(sql, serveis = SERVEIS_DE_PUSH, forma = formaDeLaSubscr
 }
 
 /* R13: cada rpc() del worker existix a la migració amb eixos noms de paràmetre, i els obligatoris hi són. */
-function comprovaCridesDelWorker(sql, worker = WORKER, ambNatius = NATIUS_JS !== null) {
+function comprovaCridesDelWorker(sql, worker = WORKER, ambNatius = NATIUS_JS !== null, lease=SQL_LEASE) {
   const crides = [...worker.matchAll(/rpc\('(xat_push_\w+)',\s*\{([^}]*)\}/g)].map((m) => ({ nom: m[1], claus: [...m[2].matchAll(/(\w+):/g)].map((c) => c[1]) }));
-  const cridades = Object.keys(SERVIDOR).filter((nom) => ambNatius || !RPC_NATIUS.includes(nom));
+  // Legacy migration invariants below remain unchanged. The active worker's
+  // exact contract is now supplied by the additive lease-v2 migration.
+  const servidor=['xat_push_neteja','xat_push_reclama_v2','xat_push_confirma_v2',...RPC_NATIUS];
+  const cridades = servidor.filter((nom) => ambNatius || !RPC_NATIUS.includes(nom));
   expect(new Set(crides.map((c) => c.nom))).toEqual(new Set(cridades));
   for (const { nom, claus } of crides) {
-    const f = funcio(sql, 'public', nom);
+    // CREATE OR REPLACE in the later migration is the effective contract.
+    const active = funcions(lease).some(f => f.esquema === 'public' && f.nom === nom) ? lease : sql;
+    const f = funcio(active, 'public', nom);
     const params = f.params ? f.params.split(',').map((p) => pla(p)) : [];
     const noms = params.map((p) => p.split(' ')[0]);
     for (const c of claus) expect(noms, `${nom}: ${c}`).toContain(c);
@@ -461,7 +467,7 @@ function comprovaCridesDelWorker(sql, worker = WORKER, ambNatius = NATIUS_JS !==
   const rpcDelWorker = worker.match(/export const RPC_DEL_WORKER = Object\.freeze\(\[([^\]]*)\]\)/);
   expect(rpcDelWorker, 'RPC_DEL_WORKER de gestor.js').not.toBeNull();
   /* Amb natius, exactament les cinc de service_role; sense, la spec admet també la llista sense les credencials (§2.6). */
-  const admeses = ambNatius ? [Object.keys(SERVIDOR).sort()] : [Object.keys(SERVIDOR).sort(), [...cridades].sort()];
+  const admeses = ambNatius ? [[...servidor].sort()] : [[...servidor].sort(), [...cridades].sort()];
   expect(admeses).toContainEqual([...rpcDelWorker[1].matchAll(/'([^']+)'/g)].map((m) => m[1]).sort());
 }
 
@@ -523,7 +529,7 @@ function comprovaDocumentacio(readme, ordre) {
   const porta = ordre.portes.find((p) => p.id === 'funcio-notifica-xat');
   expect(porta, 'la porta funcio-notifica-xat').toBeDefined();
   expect(porta.tipus).toBe('funcio');
-  expect(porta.despres).toEqual([VERSIO]);
+  expect(porta.despres).toEqual([VERSIO, '2611080431']);
   expect(porta.abans).toEqual([]);
   expect(porta.font).toBe('README «Funció notifica-xat»');
   expect(porta.descripcio).toMatch(/push_xat_actiu = si/);
@@ -623,16 +629,21 @@ describe('mutacions: cada comprovació mossega', () => {
   test('el worker que crida un paràmetre que la migració no té, o se’n deixa un d’obligatori', () => {
     expect(() => comprovaCridesDelWorker(SQL)).not.toThrow();
     /* ARB-P01-05: l'àncora no depén del nom de la variable local de gestor.js. */
-    const expulsa = /rpc\('xat_push_expulsa',\s*\{\s*p_ids:/;
+    const expulsa = /rpc\('xat_push_confirma_v2',\s*\{\s*p_resultats:/;
     expect(WORKER).toMatch(expulsa);
-    expect(() => comprovaCridesDelWorker(SQL, WORKER.replace(expulsa, "rpc('xat_push_expulsa', { p_id:"))).toThrow();
-    expect(() => comprovaCridesDelWorker(SQL.replace('xat_push_reclama(p_limit integer default 50)', 'xat_push_reclama(p_lot integer default 50)'))).toThrow();
+    expect(() => comprovaCridesDelWorker(SQL, WORKER.replace(expulsa, "rpc('xat_push_confirma_v2', { p_resultat:"))).toThrow();
+    const altered=SQL_LEASE.replace('xat_push_reclama_v2(p_limit integer default 50)','xat_push_reclama_v2(p_lot integer default 50)');
+    expect(altered).not.toBe(SQL_LEASE);
+    expect(() => comprovaCridesDelWorker(SQL,WORKER,true,altered)).toThrow();
+    const netejaObligatoria = SQL_LEASE.replace('function public.xat_push_neteja()', 'function public.xat_push_neteja(p_obligatori integer)');
+    expect(netejaObligatoria).not.toBe(SQL_LEASE);
+    expect(() => comprovaCridesDelWorker(SQL,WORKER,true,netejaObligatoria)).toThrow();
   });
 
   test('la variant sense natius.js (S2 sense S3, §2.6): gestor.js sol és conforme, i sense natius no es poden exigir les credencials', () => {
     expect(() => comprovaCridesDelWorker(SQL, GESTOR, false)).not.toThrow();
     expect(() => comprovaCridesDelWorker(SQL, GESTOR, true)).toThrow();
-    const sensCredencials = GESTOR.replace(/export const RPC_DEL_WORKER = Object\.freeze\(\[[^\]]*\]\)/, "export const RPC_DEL_WORKER = Object.freeze(['xat_push_neteja', 'xat_push_reclama', 'xat_push_expulsa'])");
+    const sensCredencials = GESTOR.replace(/export const RPC_DEL_WORKER = Object\.freeze\(\[[^\]]*\]\)/, "export const RPC_DEL_WORKER = Object.freeze(['xat_push_neteja', 'xat_push_reclama_v2', 'xat_push_confirma_v2'])");
     expect(sensCredencials).not.toBe(GESTOR);
     expect(() => comprovaCridesDelWorker(SQL, sensCredencials, false)).not.toThrow();
     expect(() => comprovaCridesDelWorker(SQL, sensCredencials, true)).toThrow();
@@ -668,6 +679,8 @@ describe('mutacions: cada comprovació mossega', () => {
     expect(() => comprovaDocumentacio(README, ORDRE_DESPLEGAMENT)).not.toThrow();
     const sensePorta = { ...ORDRE_DESPLEGAMENT, portes: ORDRE_DESPLEGAMENT.portes.filter((p) => p.id !== 'funcio-notifica-xat') };
     expect(() => comprovaDocumentacio(README, sensePorta)).toThrow();
+    const senseLeaseV2 = { ...ORDRE_DESPLEGAMENT, portes: ORDRE_DESPLEGAMENT.portes.map((p) => (p.id === 'funcio-notifica-xat' ? { ...p, despres: [VERSIO] } : p)) };
+    expect(() => comprovaDocumentacio(README, senseLeaseV2)).toThrow();
     const altraVersio = { ...ORDRE_DESPLEGAMENT, portes: ORDRE_DESPLEGAMENT.portes.map((p) => (p.id === 'funcio-notifica-xat' ? { ...p, despres: ['2611012257'] } : p)) };
     expect(() => comprovaDocumentacio(README, altraVersio)).toThrow();
     expect(() => comprovaDocumentacio(README.replace(`\n- \`migrations/${NOM}\`\n`, '\n'), ORDRE_DESPLEGAMENT)).toThrow();

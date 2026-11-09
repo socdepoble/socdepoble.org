@@ -76,3 +76,16 @@ test('MD · amb ?organitzacio= («Edita la fitxa de…») la fitxa s’obri dire
   expect(obertes(container)).toEqual(['#app-grid-main']);
   expect(within(container.querySelector('#app-grid-main')).getByRole('heading', { level: 1 }).textContent).toBe('fitxa de Forn');
 });
+
+test.each(['vista=compte', 'apartat=compte'])('el compte %s es veu en canviar la consulta amb el Perfil mòbil ja muntat', (consulta) => {
+  const { container, rerender } = render(<PerfilShell />);
+  expect(obertes(container)).toEqual(['#app-grid-sidebar']);
+  m.params = new URLSearchParams(consulta);
+  rerender(<PerfilShell />);
+  expect(obertes(container)).toEqual(['#app-grid-main']);
+  expect(within(container.querySelector('#app-grid-main')).getByText('compte de Pep')).toBeTruthy();
+  const compte = within(container.querySelector('#app-grid-main')).getByText('compte de Pep');
+  m.perfil = { ...m.perfil, identitats: m.perfil.identitats.map((i) => ({ ...i })) };
+  rerender(<PerfilShell />);
+  expect(within(container.querySelector('#app-grid-main')).getByText('compte de Pep')).toBe(compte);
+});

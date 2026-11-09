@@ -20,6 +20,18 @@
       "despres": "2611032100",
       "motiu": "FEDI23 reutilitza el catàleg complet anterior, les RPC concurrents de membres i els seguiments d’entitat; aplicar abans del client de connexions públiques.",
       "font": "README FEDI23; capçalera de 2611032100"
+    },
+    {
+      "abans": "2611020417",
+      "despres": "2611080431",
+      "motiu": "El protocol lease-v2 amplia les taules i RPC push existents.",
+      "font": "README R54; capçalera0431"
+    },
+    {
+      "abans": "2611080430",
+      "despres": "2611080432",
+      "motiu": "El kit compost exclou el bot dels mínims humans mitjançant el registre privat IAIA.",
+      "font": "README R54; bot peers0432"
     }
   ],
   "portes": [
@@ -121,12 +133,66 @@
     {
       "id": "funcio-notifica-xat",
       "tipus": "funcio",
-      "descripcio": "Desplegar supabase/functions/notifica-xat (secrets SDP_CRON_SECRET, SDP_PUSH_ACTIU i SDP_PUSH_VAPID_*) i programar-la; només després, posar push_xat_actiu = si a private.ajustos.",
+      "descripcio": "Desplegar supabase/functions/notifica-xat (secrets SDP_CRON_SECRET, SDP_PUSH_ACTIU i SDP_PUSH_VAPID_*) i programar-la; només després, posar push_xat_actiu = si a private.ajustos. R54: aturar cron antic, publicar el treballador lease-v2 després de0431 i reprendre el cron només després de la verificació; cap fallbackv1.",
       "despres": [
-        "2611020417"
+        "2611020417",
+        "2611080431"
       ],
       "abans": [],
       "font": "README «Funció notifica-xat»"
+    },
+    {
+      "id": "funcio-notifica-xat-desperta",
+      "tipus": "funcio",
+      "descripcio": "Desplegar relay JWT verificat, wake SQL recent i treballador en procés amb waitUntil; cap secret al client.",
+      "despres": [
+        "2611080431"
+      ],
+      "abans": [],
+      "font": "README R54"
+    },
+    {
+      "id": "funcio-iaia-r54",
+      "tipus": "funcio",
+      "descripcio": "Desplegar IAIA autenticada, model configurat i callback postcommit; binding Beta explícit, no inferit de seed.",
+      "despres": [
+        "2611080430",
+        "2611080431"
+      ],
+      "abans": [],
+      "font": "README R54"
+    },
+    {
+      "id": "client-xat-r54",
+      "tipus": "client",
+      "descripcio": "Publicar client R54 i text tècnic legal2.6; comprovar empremta abans d’encendre push natiu. Dispositiu/provisioning requereixen evidència separada.",
+      "despres": [
+        "2611080430",
+        "2611080431",
+        "2611080432"
+      ],
+      "abans": [],
+      "font": "README R54"
+    },
+    {
+      "id": "web-legal-politica-2-6",
+      "tipus": "client",
+      "descripcio": "Amb totes les altes aturades, publicar HTML2.6 exacte i comprovar empremta abans del registre append-only.",
+      "despres": [],
+      "abans": [
+        "2611080440"
+      ],
+      "font": "README R54 política2.6"
+    },
+    {
+      "id": "altes-politica-2-6",
+      "tipus": "client",
+      "descripcio": "Abans de reobrir altes, gate local fail-closed amb HTML real servit i evidència recent de política vigent del servidor; GoTrue fallback no acredita2.6.",
+      "despres": [
+        "2611080440"
+      ],
+      "abans": [],
+      "font": "README R54 política2.6"
     }
   ],
   "fantasmes": [

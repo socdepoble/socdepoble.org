@@ -10,7 +10,7 @@
    veres (src/config/avisosPushXat.js) de punta a punta. */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { importaElModul } from '../../tests/helpers/especificadorsImport.js';
 
 const simulat = vi.hoisted(() => ({
@@ -37,6 +37,7 @@ function connectorFals({
   const manses = [];
   const ordre = [];
   const metodes = {
+    createChannel: vi.fn(async () => {}),
     unregister: vi.fn(async () => {
       ordre.push('unregister');
       if (unregisterFalla) throw new Error('no');
@@ -56,7 +57,7 @@ function connectorFals({
     }),
     addListener: vi.fn((nom, funcio) => {
       oients.set(nom, funcio);
-      const mansa = { remove: vi.fn(async () => { oients.delete(nom); }) };
+      const mansa = { remove: vi.fn(async () => { if (oients.get(nom) === funcio) oients.delete(nom); }) };
       manses.push(mansa);
       return Promise.resolve(mansa);
     })
@@ -99,7 +100,16 @@ async function registreFresc() {
   return import('../config/avisosPushXat.js');
 }
 
+beforeEach(() => {
+  const values = new Map();
+  vi.stubGlobal('localStorage', { getItem: k => values.get(k) ?? null, setItem: (k, v) => values.set(k, v), removeItem: k => values.delete(k) });
+  /* Sanejament R15 (B3) · Estes proves són el push natiu ENCÈS (build amb VITE_SDP_PUSH_NATIU=1).
+     L'apagat (el build d'avui) té el seu bloc: «sense la bandera de build». */
+  vi.stubEnv('VITE_SDP_PUSH_NATIU', '1');
+});
 afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 
@@ -254,20 +264,47 @@ describe('desactiva (la baixa de l\'App)', () => {
     expect(await avisos.desactiva({ retira })).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
     expect(connector.ordre).toEqual(['unregister', 'removeAllDeliveredNotifications', 'retira']);
     expect(retira).toHaveBeenCalledWith({ testimoni: TESTIMONI, plataforma: 'android' });
+    // Sanejament R15 (B3 · P1-03): la baixa ja feta no deixa res a desfer; només un opt-in desat la repetix.
     expect(await avisos.desactiva({ retira })).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
+    expect(connector.metodes.unregister).toHaveBeenCalledTimes(1);
+    expect(await avisos.desactiva({ retira, ambOptIn: true })).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
     expect(connector.metodes.unregister).toHaveBeenCalledTimes(2);
     expect(retira).toHaveBeenCalledTimes(1);
     expect(connector.desconeguts).toEqual([]);
   });
 
-  test('sense haver activat en esta obertura de l\'App (no en sap el testimoni): fa la baixa i no retira res; no pregunta ni registra', async () => {
+  test('sense haver activat en esta obertura de l\'App però amb opt-in desat (ambOptIn): fa la baixa i no retira res; no pregunta ni registra', async () => {
     const { nucli, connector } = nucliFals({ connector: connectorFals({ permis: 'granted' }) });
     const retira = vi.fn(async () => {});
-    expect(await creaAvisosPushNatius({ nucli, desa: vi.fn(async () => {}) }).desactiva({ retira })).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
+    expect(await creaAvisosPushNatius({ nucli, desa: vi.fn(async () => {}) }).desactiva({ retira, ambOptIn: true })).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
     expect(connector.metodes.unregister).toHaveBeenCalledTimes(1);
     expect(retira).not.toHaveBeenCalled();
     expect(connector.metodes.requestPermissions).not.toHaveBeenCalled();
     expect(connector.metodes.register).not.toHaveBeenCalled();
+  });
+
+  /* Sanejament R15 (B3 · P1-03, R15A-NAT-01) · Sense google-services.json, unregister() peta
+     l'APK. Si esta obertura no ha demanat cap registre, no té cap testimoni i no hi ha opt-in
+     desat, no hi ha res a desfer: cap crida nativa. */
+  test.each([undefined, {}, { retira: null }, { ambOptIn: false }, { ambOptIn: 'true' }, { ambOptIn: 1 }])('sense registre en esta obertura ni opt-in desat (%j): cap unregister ni cap altra crida nativa', async (opcions) => {
+    const { nucli, connector } = nucliFals({ connector: connectorFals({ permis: 'granted' }) });
+    const retira = vi.fn(async () => {});
+    const avisos = creaAvisosPushNatius({ nucli, desa: vi.fn(async () => {}) });
+    expect(await avisos.desactiva(opcions === undefined ? undefined : { ...opcions, ...(opcions.retira === undefined ? { retira } : {}) })).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
+    expect(await avisos.desactiva({ retira })).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
+    for (const metode of ['unregister', 'removeAllDeliveredNotifications', 'register', 'requestPermissions']) expect(connector.metodes[metode], metode).not.toHaveBeenCalled();
+    expect(retira).not.toHaveBeenCalled();
+  });
+
+  test('després d’un registre demanat en esta obertura (encara que el testimoni no arribe), la baixa sí que crida unregister; i una altra baixa ja no', async () => {
+    const { nucli, connector } = nucliFals({ connector: connectorFals({ permis: 'granted', registreFalla: true }) });
+    const avisos = creaAvisosPushNatius({ nucli, desa: vi.fn(async () => {}), topallMs: 5 });
+    expect(await avisos.activa()).toEqual({ estat: ESTAT_PUSH_NATIU.ERROR });
+    expect(connector.metodes.register).toHaveBeenCalledTimes(1);
+    expect(await avisos.desactiva()).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
+    expect(connector.metodes.unregister).toHaveBeenCalledTimes(1);
+    expect(await avisos.desactiva()).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
+    expect(connector.metodes.unregister).toHaveBeenCalledTimes(1);
   });
 
   test('si unregister falla, error (i es retira igual); si només falla llevar els avisos, inactiu; una retirada que falla es torna a provar', async () => {
@@ -509,7 +546,7 @@ describe('B8C-4 · adaptadorPushNatiuPerAlRegistre', () => {
       const { nucli } = nucliFals({ plataforma });
       const adaptador = adaptadorPushNatiuPerAlRegistre(undefined, { nucli });
       const desa = vi.fn(async () => {});
-      expect(await adaptador.activa({ desa })).toEqual({ estat: ESTAT_PUSH_NATIU.ACTIU });
+      expect(await adaptador.activa({ desa, ambit: 'persona-a' })).toEqual({ estat: ESTAT_PUSH_NATIU.ACTIU });
       expect(desa).toHaveBeenCalledTimes(1);
       expect(desa.mock.calls[0]).toEqual([{ plataforma, adreca: TESTIMONI, caducaMs: null, gest: true }]);
       const retira = vi.fn(async () => {});
@@ -523,12 +560,12 @@ describe('B8C-4 · adaptadorPushNatiuPerAlRegistre', () => {
       const { nucli } = nucliFals({ plataforma });
       if (plataforma === null) nucli.Capacitor.getPlatform.mockImplementation(() => { throw new Error('sense pont'); });
       const desa = vi.fn(async () => {});
-      expect(await adaptadorPushNatiuPerAlRegistre(undefined, { nucli }).activa({ desa }), String(plataforma)).toEqual({ estat: ESTAT_PUSH_NATIU.ERROR });
+      expect(await adaptadorPushNatiuPerAlRegistre(undefined, { nucli }).activa({ desa, ambit: 'persona-a' }), String(plataforma)).toEqual({ estat: ESTAT_PUSH_NATIU.ERROR });
       expect(desa).not.toHaveBeenCalled();
     }
     const desa = vi.fn(async () => {});
     const falsPush = { activa: vi.fn(async ({ desa: d }) => { try { await d({ testimoni: '', plataforma: 'ios' }); return { estat: 'actiu' }; } catch (e) { return { estat: 'error', codi: e.code }; } }) };
-    expect(await adaptadorPushNatiuPerAlRegistre(falsPush).activa({ desa })).toEqual({ estat: 'error', codi: 'AVISOS_INVALID' });
+    expect(await adaptadorPushNatiuPerAlRegistre(falsPush, { nucli: nucliFals().nucli }).activa({ desa, ambit: 'persona-a' })).toEqual({ estat: 'error', codi: 'AVISOS_INVALID' });
     expect(desa).not.toHaveBeenCalled();
   });
 
@@ -538,7 +575,12 @@ describe('B8C-4 · adaptadorPushNatiuPerAlRegistre', () => {
     for (const crida of [undefined, {}, { desa: null }]) expect(await adaptador.activa(crida)).toEqual({ estat: ESTAT_PUSH_NATIU.SENSE_SERVIDOR });
     expect(connector.metodes.requestPermissions).not.toHaveBeenCalled();
     for (const crida of [undefined, {}, { retira: null }]) expect(await adaptador.desactiva(crida)).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
-    expect(connector.metodes.unregister).toHaveBeenCalledTimes(3);
+    // Sanejament R15 (B3 · P1-03): ni registre en esta obertura ni opt-in desat → cap unregister.
+    expect(connector.metodes.unregister).not.toHaveBeenCalled();
+    localStorage.setItem('sdp.push.optin.v1', 'persona-a');
+    expect(await adaptador.desactiva({ retira: null })).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
+    expect(connector.metodes.unregister).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem('sdp.push.optin.v1')).toBeNull();
   });
 
   test('estat(): on l’adaptador cru diu sense-servidor, inactiu (AUTO-02); la resta, tal qual', async () => {
@@ -547,10 +589,12 @@ describe('B8C-4 · adaptadorPushNatiuPerAlRegistre', () => {
     expect(await adaptadorPushNatiuPerAlRegistre(undefined, { nucli: amb.nucli }).estat()).toEqual({ estat: ESTAT_PUSH_NATIU.INACTIU });
     expect(await adaptadorPushNatiuPerAlRegistre(undefined, { nucli: nucliFals({ disponible: false }).nucli }).estat()).toEqual({ estat: ESTAT_PUSH_NATIU.SENSE_CONNECTOR });
     expect(await adaptadorPushNatiuPerAlRegistre(undefined, { nucli: nucliFals({ connector: connectorFals({ permis: 'denied' }) }).nucli }).estat()).toEqual({ estat: ESTAT_PUSH_NATIU.DENEGAT });
-    expect(await adaptadorPushNatiuPerAlRegistre({ estat: async () => { throw new Error('no'); } }).estat()).toEqual({ estat: ESTAT_PUSH_NATIU.ERROR });
+    // Amb un motiu (sense connector o sense config) el cicle ja no pregunta l'adaptador: l'error es prova amb el connector present.
+    expect(await adaptadorPushNatiuPerAlRegistre({ estat: async () => { throw new Error('no'); } }, { nucli: nucliFals().nucli }).estat()).toEqual({ estat: ESTAT_PUSH_NATIU.ERROR });
+    expect(await adaptadorPushNatiuPerAlRegistre({ estat: async () => { throw new Error('no'); } }).estat()).toEqual({ estat: ESTAT_PUSH_NATIU.SENSE_CONNECTOR });
   });
 
-  test('sincronitza MAI registra cap testimoni sense gest, tampoc amb el permís ja donat i un servidor (D-B8C-12)', async () => {
+  test('sense opt-in previ del mateix compte, sincronitza no registra encara que el permís estiga concedit', async () => {
     const { nucli, connector } = nucliFals({ connector: connectorFals({ permis: 'granted' }) });
     const adaptador = adaptadorPushNatiuPerAlRegistre(undefined, { nucli });
     const desa = vi.fn(async () => {});
@@ -601,7 +645,8 @@ describe('B8C-4 · amb el registre de veres (src/config/avisosPushXat.js)', () =
     /* La sincronització de visibilitychange (també en tornar del diàleg del permís). */
     expect(await registre.sincronitzaAvisosPush()).toEqual({ estat: 'actiu' });
     expect(registre.instantaniaAvisosPush().estat).toBe('actiu');
-    expect(connector.metodes.register).toHaveBeenCalledTimes(1);
+    expect(connector.metodes.register).toHaveBeenCalledTimes(2);
+    expect(desa.mock.calls[1][0].gest).toBe(false);
     await registre.baixaAvisosPushEnEixir();
     expect(connector.metodes.unregister).toHaveBeenCalledTimes(1);
     expect(retira.mock.calls).toEqual([[{ plataforma: 'android', adreca: TESTIMONI }]]);
@@ -609,7 +654,7 @@ describe('B8C-4 · amb el registre de veres (src/config/avisosPushXat.js)', () =
     registre.fixaServidorAvisosPush(null);
     expect(registre.fixaServidorAvisosPush({ ambit: 'persona-b', desa: vi.fn(), retira: vi.fn() })).toBe(true);
     expect(await registre.sincronitzaAvisosPush()).toEqual({ estat: 'inactiu' });
-    expect(connector.metodes.register).toHaveBeenCalledTimes(1);
+    expect(connector.metodes.register).toHaveBeenCalledTimes(2);
   });
 
   test('el toc del connector arriba al registre com {}, també el que ha obert l’App abans que ningú escolte (una sola vegada)', async () => {
@@ -631,12 +676,12 @@ describe('B8C-4 · amb el registre de veres (src/config/avisosPushXat.js)', () =
   });
 });
 
-describe('fase N2: només l’entrada nativa l’importa, sense paquets nous', () => {
+describe('fase N2: només l’entrada nativa l’importa, amb helpers purs de cicle i consentiment', () => {
   const codi = readFileSync(path.join(ARREL, FITXER), 'utf8');
 
-  test('només importa el nucli del pont (cap paquet de push, cap import() dinàmic)', () => {
+  test('importa el nucli del pont i els dos helpers, cap altre paquet ni import() dinàmic', () => {
     const especificadors = [...codi.matchAll(/\b(?:from|import)\s*\(?\s*['"`]([^'"`]+)['"`]/g)].map((m) => m[1]);
-    expect(especificadors).toEqual(['@capacitor/core']);
+    expect(especificadors).toEqual(['@capacitor/core', './cicleAvisosPush.js', './consentimentPush.js']);
     expect(codi).not.toMatch(/\bimport\s*\(/);
   });
 
@@ -665,5 +710,102 @@ describe('fase N2: només l’entrada nativa l’importa, sense paquets nous', (
     expect(importaLAdaptador("import { creaAvisosPushNatius } from './avisosPushNatius.js';\n", 'entrada.jsx')).toBe(true);
     expect(importaLAdaptador("if (x) import('./avisosPushNatius.js').then(() => {});\n", 'entrada.jsx')).toBe(true);
     expect(fitxers.filter((ruta) => ruta !== FITXER && importaLAdaptador(readFileSync(path.join(ARREL, ruta), 'utf8'), ruta))).toEqual(['src/natiu/entrada.jsx']);
+  });
+});
+
+/* Sanejament R15 (B3 · P1-03, R15A-NAT-01, P2-03) · El build d'avui: sense VITE_SDP_PUSH_NATIU=1
+   (ni google-services.json ni el compte de servei d'FCM), el cicle diu 'sense-config' i no toca
+   el pont: ni isPluginAvailable, ni registerPlugin, ni permisos, ni register(), ni unregister(),
+   encara que el connector siga al binari, el permís estiga concedit i hi haja un opt-in desat. */
+describe('sense la bandera de build VITE_SDP_PUSH_NATIU: sense-config i cap crida nativa', () => {
+  const VALORS = ['', '0', 'true', ' 1', 'yes'];
+  const senseCrides = ({ nucli, connector }) => {
+    expect(nucli.Capacitor.isPluginAvailable).not.toHaveBeenCalled();
+    expect(nucli.registerPlugin).not.toHaveBeenCalled();
+    for (const [metode, espia] of Object.entries(connector.metodes)) expect(espia, metode).not.toHaveBeenCalled();
+  };
+  const memoriaAmbOptIn = (ambit) => {
+    let valor = ambit;
+    return { llegeix: vi.fn(() => valor), desa: vi.fn((v) => { valor = v; }), oblida: vi.fn(() => { valor = null; }) };
+  };
+
+  test.each(VALORS)('motiuPushNatiu amb %j: sense-config, sense mirar el pont', (valor) => {
+    vi.stubEnv('VITE_SDP_PUSH_NATIU', valor);
+    const fals = nucliFals({ connector: connectorFals({ permis: 'granted' }) });
+    expect(motiuPushNatiu({ nucli: fals.nucli })).toBe(ESTAT_PUSH_NATIU.SENSE_CONFIG);
+    expect(motiuPushNatiu()).toBe('sense-config');
+    senseCrides(fals);
+  });
+
+  test('l’adaptador cru és inert: estat, activa i desactiva diuen sense-config; cap oient', async () => {
+    vi.stubEnv('VITE_SDP_PUSH_NATIU', '');
+    const fals = nucliFals({ connector: connectorFals({ permis: 'granted' }) });
+    const avisos = creaAvisosPushNatius({ nucli: fals.nucli, desa: vi.fn(async () => {}) });
+    for (const crida of [() => avisos.estat(), () => avisos.activa(), () => avisos.activa({ gest: true }), () => avisos.desactiva({ ambOptIn: true, retira: vi.fn() })]) {
+      expect(await crida()).toEqual({ estat: 'sense-config' });
+    }
+    await avisos.preparaCanal(); await avisos.neteja();
+    const fn = vi.fn();
+    for (const escolta of [avisos.escoltaToc, avisos.escoltaPendent, avisos.escoltaRegistre]) expect(typeof escolta(fn)).toBe('function');
+    senseCrides(fals);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  test('el cicle del registre: amb opt-in desat i permís concedit, ni sincronitza, ni activa, ni la baixa toquen el pont', async () => {
+    vi.stubEnv('VITE_SDP_PUSH_NATIU', '');
+    const fals = nucliFals({ connector: connectorFals({ permis: 'granted' }) });
+    const memoria = memoriaAmbOptIn('persona-a');
+    const desa = vi.fn(async () => {}), retira = vi.fn(async () => {});
+    const cicle = adaptadorPushNatiuPerAlRegistre(undefined, { nucli: fals.nucli, memoria });
+    expect(cicle.motiu()).toBe('sense-config');
+    expect(await cicle.estat()).toEqual({ estat: 'sense-config' });
+    expect(await cicle.sincronitza({ actiu: true, ambit: 'persona-a', desa, retira })).toEqual({ estat: 'sense-config' });
+    expect(await cicle.sincronitza({ actiu: false, ambit: 'persona-b', desa, retira })).toEqual({ estat: 'sense-config' });
+    expect(await cicle.activa({ ambit: 'persona-a', desa, retira })).toEqual({ estat: 'sense-config' });
+    expect(await cicle.desactiva({ retira })).toEqual({ estat: 'sense-config' });
+    expect(cicle.escoltaToc(vi.fn())).toBeTypeOf('function');
+    senseCrides(fals);
+    expect(desa).not.toHaveBeenCalled();
+    expect(retira).not.toHaveBeenCalled();
+    expect(memoria.desa).not.toHaveBeenCalled();
+  });
+
+  test('al registre: motiu sense-config (cap interruptor); activar, sincronitzar, eixir i entrar no toquen el pont', async () => {
+    vi.stubEnv('VITE_SDP_PUSH_NATIU', '');
+    const registre = await registreFresc();
+    const fals = nucliFals({ connector: connectorFals({ permis: 'granted' }) });
+    expect(registre.registraAvisosPush(adaptadorPushNatiuPerAlRegistre(undefined, { nucli: fals.nucli }))).toBe(true);
+    expect(registre.instantaniaAvisosPush()).toMatchObject({ disponible: true, tipus: 'natiu', motiu: 'sense-config' });
+    expect(registre.fixaServidorAvisosPush({ ambit: 'persona-a', desa: vi.fn(), retira: vi.fn() })).toBe(true);
+    expect(await registre.activaAvisosPush()).toEqual({ estat: 'sense-config' });
+    expect(await registre.sincronitzaAvisosPush()).toEqual({ estat: 'sense-config' });
+    await registre.baixaLocalAvisosPushEnEntrar();
+    await registre.baixaAvisosPushEnEixir();
+    expect(registre.instantaniaAvisosPush().estat).not.toBe('error');
+    senseCrides(fals);
+  });
+});
+
+describe('amb la bandera: la baixa del cicle només desfà el que hi ha (P1-03)', () => {
+  test('una sessió que no ha fet mai l’opt-in: sincronitzar (entrar, tornar a la vista) no crida unregister', async () => {
+    const fals = nucliFals({ connector: connectorFals({ permis: 'granted' }) });
+    const memoria = { llegeix: vi.fn(() => null), desa: vi.fn(), oblida: vi.fn() };
+    const cicle = adaptadorPushNatiuPerAlRegistre(undefined, { nucli: fals.nucli, memoria });
+    expect(cicle.motiu()).toBeNull();
+    for (let i = 0; i < 3; i++) expect(await cicle.sincronitza({ actiu: true, ambit: 'persona-a', desa: vi.fn(), retira: vi.fn() })).toEqual({ estat: 'inactiu' });
+    expect(await cicle.desactiva({ retira: vi.fn() })).toEqual({ estat: 'inactiu' });
+    for (const metode of ['unregister', 'register', 'requestPermissions', 'removeAllDeliveredNotifications']) expect(fals.connector.metodes[metode], metode).not.toHaveBeenCalled();
+  });
+  test('amb un opt-in desat d’una obertura anterior, la baixa sí que desfà el testimoni (unregister)', async () => {
+    const fals = nucliFals({ connector: connectorFals({ permis: 'granted' }) });
+    let desat = 'persona-a';
+    const memoria = { llegeix: vi.fn(() => desat), desa: vi.fn((v) => { desat = v; }), oblida: vi.fn(() => { desat = null; }) };
+    const cicle = adaptadorPushNatiuPerAlRegistre(undefined, { nucli: fals.nucli, memoria });
+    expect(await cicle.desactiva({ retira: vi.fn() })).toEqual({ estat: 'inactiu' });
+    expect(fals.connector.metodes.unregister).toHaveBeenCalledTimes(1);
+    expect(desat).toBeNull();
+    // Ja no hi ha opt-in ni registre: una segona baixa no torna a cridar el pont.
+    expect(await cicle.desactiva({ retira: vi.fn() })).toEqual({ estat: 'inactiu' });
+    expect(fals.connector.metodes.unregister).toHaveBeenCalledTimes(1);
   });
 });

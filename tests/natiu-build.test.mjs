@@ -721,7 +721,13 @@ test('vite.natiu.config.js no importa res de Capacitor ni de src/natiu/: es pot 
   // Revisió final 261029 (OG-03) · imatgeSocial.js és una fulla sense imports (com publicCredentials.js): el mapa de variants socials exclou del paquet les imatges que només van al <head>.
   // BOT-A4 (261025, rebasat a l'assalt 261101) · entorn.mjs dona el segell de dist-natiu/ (SEGELL i segellDelArbre): només mòduls de Node.
   // Onada R14 (arreglos) · pageContent.patrimoniR14.js, una altra fulla sense imports: la portada social de /page/receptes (og_image) també és només del <head>.
-  assert.deepEqual(especificadors, ['./scripts/botigues/entorn.mjs', './src/config/imatgeSocial.js', './src/config/publicCredentials.js', './src/sections/text/pageContent.patrimoniR14.js', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
+  // Ordre del Mestre 261109 · R15a (PRIV-01) · fotos-parroquia-privades.mjs: el connector que deixa fora del build les fotos locals de La Parròquia; només importa node:fs, node:path i vite.
+  // Sanejament R15 (B2/B3) · banderes-de-capacitat.mjs: el define literal de VITE_SDP_XAT_RITME, VITE_SDP_IAIA_SERVIDOR i VITE_SDP_PUSH_NATIU; només importa node:path i vite.
+  assert.deepEqual(especificadors, ['./scripts/botigues/entorn.mjs', './src/config/imatgeSocial.js', './src/config/publicCredentials.js', './src/sections/text/pageContent.patrimoniR14.js', './tooling/vite/banderes-de-capacitat.mjs', './tooling/vite/fotos-parroquia-privades.mjs', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
+  const connector = fs.readFileSync(path.join(ARREL, 'tooling/vite/fotos-parroquia-privades.mjs'), 'utf8');
+  assert.deepEqual([...connector.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1]).sort(), ['node:fs', 'node:path', 'vite'], 'el connector de les fotos continua sent una fulla de Node');
+  const banderes = fs.readFileSync(path.join(ARREL, 'tooling/vite/banderes-de-capacitat.mjs'), 'utf8');
+  assert.deepEqual([...banderes.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1]).sort(), ['node:path', 'vite'], 'el connector de les banderes continua sent una fulla de Node');
   const fulla = fs.readFileSync(path.join(ARREL, 'src/sections/text/pageContent.patrimoniR14.js'), 'utf8');
   assert.ok(!/\bimport\b/.test(fulla.replace(/\/\*[\s\S]*?\*\//g, '')), 'pageContent.patrimoniR14.js continua sent una fulla sense imports');
 });

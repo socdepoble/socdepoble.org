@@ -126,3 +126,27 @@ describe('T7-P1 · capacitats E2EE opcionals del port', () => {
     expect(impl.fixaAmbit).not.toHaveBeenCalled();
   });
 });
+
+/* Sanejament R15 (B2) · Una capacitat opcional apagada en compilar (export undefined de
+   src/data/supabase/index.js) és absent; cap altre valor no funcional passa, i el nucli no. */
+describe('R15 · capacitat opcional exportada com a undefined', () => {
+  test('iaia i xatRitme a undefined: vàlid, sense capacitat i sense mètode al candidat', () => {
+    const impl = { ...nucli(), consultaIAIA: undefined, loadRitmeXat: undefined, actualitzaPresenciaXat: undefined };
+    const { candidate } = port.validaBackendImplementation(impl);
+    for (const nom of ['consultaIAIA', 'loadRitmeXat', 'actualitzaPresenciaXat']) expect(Object.hasOwn(candidate, nom), nom).toBe(false);
+    port.setBackendImplementation(impl);
+    expect(port.teCapacitat('iaia')).toBe(false);
+    expect(port.teCapacitat('xatRitme')).toBe(false);
+    expect(() => port.consultaIAIA({ mode: 'discover' })).toThrow(/no està implementat/);
+  });
+  test('mig grup (un mètode real i l’altre undefined) continua sent una capacitat parcial', () => {
+    expect(() => port.validaBackendImplementation({ ...nucli(), loadRitmeXat: () => null, actualitzaPresenciaXat: undefined })).toThrow('Capacitat parcial: xatRitme');
+  });
+  test.each([null, 0, '', false, {}])('un valor no funcional diferent d’undefined (%j) continua rebutjat', (valor) => {
+    expect(() => port.validaBackendImplementation({ ...nucli(), consultaIAIA: valor })).toThrow('ha de ser un mètode');
+  });
+  test('un mètode del nucli a undefined continua rebutjat', () => {
+    const impl = nucli(); impl[contracte.CONTRACTE_NUCLI[0]] = undefined;
+    expect(() => port.validaBackendImplementation(impl)).toThrow('ha de ser un mètode');
+  });
+});

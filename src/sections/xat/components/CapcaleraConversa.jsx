@@ -69,6 +69,7 @@ import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere
 import { AvatarFil } from './FilaConversa.jsx';
 import { rutaCanonicaDelXat } from '../actorsDelXat.js';
 import { mouFocusDelMenu } from './Compositor.jsx';
+import IndicadorEscrivint from './IndicadorEscrivint.jsx';
 
 /* «{n} participants» (o «1 participant»); res si el backend no ho diu. */
 function participantsDe(n, t) {
@@ -96,7 +97,7 @@ function focusPerdut(node) {
 export default function CapcaleraConversa({
   fil, onTorna, onSeleccionar, seleccio = null, t,
   onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
-  onTornaAOrigen = null, accioXifratge = null, accioSilenci = null
+  onTornaAOrigen = null, accioXifratge = null, accioSilenci = null, escrivint = 0
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -217,7 +218,8 @@ export default function CapcaleraConversa({
       <AvatarFil fil={fil} nom={nom} mida="sm" />
       <div className="sdp-xat-capcalera__info">
         <strong className="sdp-xat-capcalera__nom">{nom}</strong>
-        {sobre || linia ? (
+        {escrivint > 0 ? <IndicadorEscrivint quants={escrivint} t={t} /> : null}
+        {!escrivint && (sobre || linia) ? (
           <span className="sdp-xat-capcalera__sub" id={idSub}>
             {sobre}
             {sobre && linia ? ' · ' : null}

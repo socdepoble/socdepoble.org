@@ -48,6 +48,7 @@ const estat = vi.hoisted(() => {
 vi.mock('../../app/contexts/RouterContext', async () => {
   const { createElement } = await import('react');
   return {
+  useRouter: () => ({ memoria: false }),
     useNavigate: () => () => {},
     useParams: () => estat.params,
     useLocation: () => ({ pathname: '/', search: estat.search, state: estat.preloadedItem ? { preloadedItem: estat.preloadedItem } : null }),
@@ -171,10 +172,17 @@ const perfilPublic = (perfil, nom) => async () => {
 
 const AMB_HORA = 'amb hora';
 const DIA_SOL = 'dia sol';
+const APLICACIONS_DEL_NODE = aplicacionsValides(APLICACIONS);
 
 /* [pàgina, forma que li toca segons la seua font, pastilla que li toca (la
    regla sobre les dates de la seua font), pinta] */
 const PAGINES = [
+  // R55 resol el deute T51: cada utilitat local aporta la seua font real.
+  ...APLICACIONS_DEL_NODE.map(aplicacio => {
+    const esperada = pastillaDe(aplicacio);
+    return [`DetallAplicacio · ${aplicacio.id}`, esperada.length === 2 ? AMB_HORA : DIA_SOL, esperada,
+      () => render(<DetallAplicacio aplicacio={aplicacio} />)];
+  }),
   ['PublicacioDetall (publicació del MAS)', AMB_HORA, pastillaDe({ creat: '2026-09-20T09:15:00Z' }), () => render(<PublicacioDetall item={{
     title: 'Recepta de coca', labels: [],
     data: { seccio: 'mur', ruta: '/mur/p1', item: { id: 'p1', title: 'Recepta de coca', content: '<p>Farina.</p>', created_at: '2026-09-20T09:15:00Z' } }
@@ -242,9 +250,6 @@ async function wikiSenseData() {
    no porta cap data real. [pàgina, motiu i qui el resol, font sense data
    (quantes entrades en falten), pinta amb la font de veres]. */
 const PENDENTS = [
-  ['DetallAplicacio (utilitat del node)', 'aplicacions.js no declara cap data per utilitat (i aplicacionsValides no en deixaria passar cap)',
-    async () => aplicacionsValides(APLICACIONS).filter((a) => !['creat', 'modificat', 'created_at', 'updated_at'].some((camp) => camp in a)).length,
-    () => render(<DetallAplicacio aplicacio={aplicacionsValides(APLICACIONS)[0]} />)],
   ['Wiki · document del manifest generat sense `date` ni segell', 'el generador (tooling/wiki/compile-wiki-to-app.mjs) no posa cap data al manifest (hui, 73 de 74 documents)',
     async () => (await wikiSenseData()).sense.length,
     async () => {
@@ -307,6 +312,27 @@ describe('T51 · barra taronja en lectura: data i hora sempre (el dia sol, si la
       `${dos(d.getHours())}:${dos(d.getMinutes())}`,
       `${dos(d.getDate())}/${dos(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`
     ]);
+  });
+
+  test('R55 · totes les utilitats locals arriben amb la seua data declarada, mai la d’ara', () => {
+    expect(APLICACIONS_DEL_NODE.length).toBeGreaterThan(0);
+    expect(APLICACIONS_DEL_NODE).toHaveLength(APLICACIONS.length);
+    for (const aplicacio of APLICACIONS_DEL_NODE) {
+      expect(pastillaDe(aplicacio).length, aplicacio.id).toBeGreaterThan(0);
+      expect(pastillaDe(aplicacio), aplicacio.id).not.toEqual(PASTILLA_D_ARA);
+    }
+  });
+
+  test.each(['gestoria', 'utilitat-federada'])('R55 · una utilitat federada sense font (%s) no hereta la data local ni la d’ara', id => {
+    const [aplicacio] = aplicacionsValides([{ id, nom: 'Utilitat d’un altre node', estat: 'pendent' }]);
+    const { container } = render(<DetallAplicacio aplicacio={aplicacio} />);
+    expect(pastilla(container)).toBeNull();
+  });
+
+  test('R56 · una data externa malformada no hereta la font local del mateix id', () => {
+    const [externa] = aplicacionsValides([{ id: 'cervell', nom: 'Data malformada externa', creat: 'no-data', panell: null }]);
+    const { container } = render(<DetallAplicacio aplicacio={externa} />);
+    expect(pastilla(container)).toBeNull();
   });
 
   test.each(PENDENTS)('pendent · %s: %s (la font encara no en porta; la pàgina, sense pastilla i mai la d’ara)', async (_, __, fontSenseData, pinta) => {

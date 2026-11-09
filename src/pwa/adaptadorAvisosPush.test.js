@@ -317,7 +317,7 @@ describe('desactiva, neteja i estat', () => {
 
   test('neteja tanca només els avisos del Xat i la insígnia, amb registreDelSw', async () => {
     const { adaptador, registre, navegador, registreDelSw } = munta();
-    await expect(adaptador.neteja()).resolves.toBeUndefined();
+    await expect(adaptador.neteja({ noLlegits: 0 })).resolves.toBeUndefined();
     expect(registreDelSw).toHaveBeenCalled();
     expect(registre.getNotifications).toHaveBeenCalledWith({ tag: 'sdp-xat' });
     expect(registre.avisos[0].close).toHaveBeenCalledTimes(1);

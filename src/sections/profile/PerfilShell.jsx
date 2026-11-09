@@ -215,7 +215,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
      espaiIdentitat): triar la mateixa identitat la torna a obrir encara que la
      persona n'haja mirat una altra a la primera columna. Recarregar les dades
      (desar la fitxa, una organització nova) no la canvia. */
-  const workspaceKey = JSON.stringify(['perfil', initialSelection.categoryId, recuperacio]);
+  const workspaceKey = JSON.stringify(['perfil', initialSelection.categoryId, recuperacio, ...(initialSelection.itemId ? [initialSelection.itemId] : [])]);
 
   /* T7 · P1-22 (261101) · «Privacitat i dades» es pinta en la llengua de la
      interfície (TEXTOS_PRIVACITAT_LLISTA); fora de l'app o en valencià, el
@@ -381,6 +381,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
   return (
     <div className="sdp-gestor-pagina perfil-pagina">
       <UniversalWorkspace
+        key={vista === VISTA_COMPTE ? 'perfil-compte' : 'perfil'}
         model={model}
         initialSelection={initialSelection}
         /* MD (ordre del Mestre, 261003) · En mòbil, primer PERFIL; amb
@@ -446,7 +447,7 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
   const [params] = useSearchParams();
   const preferidaRuta = params?.get?.(PARAM_FITXA_ORGANITZACIO) || null;
   /* P0-63 (261108) · ?vista=compte, «El compte» de la persona; cap altre valor. */
-  const vista = params?.get?.(PARAM_VISTA) === VISTA_COMPTE ? VISTA_COMPTE : null;
+  const vista = (params?.get?.(PARAM_VISTA) === VISTA_COMPTE || params?.get?.('apartat') === VISTA_COMPTE) ? VISTA_COMPTE : null;
   /* Revisió adversarial (261018) · La clau del Workspace depén de l'actor: si
      una relectura de les pertinences falla (IdentitatContext buida la llista i
      l'actor cau a la persona), es conserva l'organització d'abans i el Perfil

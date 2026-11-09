@@ -62,16 +62,16 @@
       "data": "2026-11-07"
     },
     "fedivers": {
-      "sha256": "b0513b57f965b35f11556d223a6b710da1b0fcaebc23e5e851d71eb861140645",
-      "html": 21289,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "f276ca52c52309a731dfebac991f504958b2efe2e9ac7affbe0ec2f97dc1753e",
+      "html": 21707,
+      "aprovat_per": "Mestre Javi (ordre del 09-11: aplicar el kit ec865; text revisat per Claude, revocable)",
+      "data": "2026-11-09"
     },
     "fediversity": {
-      "sha256": "63417e2e2568b880c8bb9d7a7954fc5c8d87e7bdc36e9dd4bfff131b543006ca",
-      "html": 62498,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "e099383083381f6fcf56424cabded0b84aab509bb36e1d7b4ed3039056c580db",
+      "html": 62968,
+      "aprovat_per": "Mestre Javi (ordre del 09-11: aplicar el kit ec865; text revisat per Claude, revocable)",
+      "data": "2026-11-09"
     },
     "habitatge": {
       "sha256": "77c25f12150cc07c8bb56b6ebd1f3b5a2d057ac6ec3f02997f47654ce0b94da2",
@@ -92,10 +92,10 @@
       "data": "2026-11-07"
     },
     "node-zero": {
-      "sha256": "9aa3749bd96899622a9ec91d3c7e13a0dd12fad31bb3343e6233e5c1b82f2639",
-      "html": 21177,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "554484d5b28f41a59693da264fbc747c75b7fd06cb610b968c89da5f2c125ce3",
+      "html": 21595,
+      "aprovat_per": "Mestre Javi (ordre del 09-11: aplicar el kit ec865; text revisat per Claude, revocable)",
+      "data": "2026-11-09"
     },
     "notes": {
       "sha256": "336230c5e5b9c3ce193ba63d75cd66d2d51261e3efad78d6f294af702697f42d",
@@ -116,8 +116,8 @@
       "data": "2026-11-05"
     },
     "receptes": {
-      "sha256": "e1dd794b67c6d60f41543f73f59e61177a7be2fe0d6af1e307d2c8a766fab56f",
-      "html": 648,
+      "sha256": "abffe7746c43e4975f9453bb9ccd4f5a51bdeadbaee4a85473bd06bec70dc0ec",
+      "html": 640,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-09"
     },
@@ -140,10 +140,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "73d7e6708618d6c31c58f0c05a4e2247b09135533be7124838c8d416a278db05",
-      "html": 41391,
+      "sha256": "5796b1044d2a061fd04037558ab69da905a2ed3ac70cafa64c18aa07c3eb7906",
+      "html": 42956,
       "aprovat_per": "Mestre Javi",
-      "data": "2026-11-08"
+      "data": "2026-11-09"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

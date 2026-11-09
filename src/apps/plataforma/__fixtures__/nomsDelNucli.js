@@ -54,3 +54,13 @@ export const NOMS_DEL_NUCLI_1_2 = congela({
 export const NOMS_DEL_NUCLI_1_3 = congela({
   plataforma: ['useServeiNoticies']
 });
+
+/* R14: domain services supplied by the host, and its centred action bar. */
+export const NOMS_DEL_NUCLI_1_4 = congela({
+  plataforma: [
+    'carregaCatalegParroquia', 'carregaFotosParroquia', 'carregaMercadona', 'carregaReceptes', 'comparaOfertaRural',
+    'costCopaDeTarifaParroquia', 'enriqueixCartaParroquia', 'fiscalVenda', 'ingredientDeTarifaParroquia',
+    'itemsCatalegCartaParroquia', 'mesuraIngredient', 'tarifesCompraParroquia', 'validaEsborranyTrasllat'
+  ],
+  pedraSeca: ['Botonera']
+});

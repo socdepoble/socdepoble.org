@@ -28,7 +28,7 @@ import { costDeVenda } from '../nucli/escandall.js';
 import { ESTABLIMENT_EXEMPLE, llavorCarta } from '../nucli/llavor.js';
 import { DENOMINACIONS } from '../nucli/torn.js';
 import { necessitaTria, triaLaVariant } from '../vistes/vestits.js';
-import { IMATGES_DISPONIBLES, codiDe, importaLaParroquia, llavorLaParroquia, netejaNom } from './laParroquia.js';
+import { IMATGES_DISPONIBLES, codiDe, importaLaParroquia, llavorLaParroquia, llavorLaParroquiaR14, netejaNom } from './laParroquia.js';
 import { LLAVORS, nomDeLlavor, obteLlavor } from './index.js';
 
 const ARREL = process.cwd();
@@ -244,7 +244,7 @@ describe('el registre de llavors', () => {
 
   test('la d’exemple és la de la primera càrrega i no porta nom; La Parròquia, la de l’adaptador; una que no existix rebutja amb LLAVOR', async () => {
     expect(await obteLlavor('exemple')).toEqual({ carta: llavorCarta(), establiment: { slug: ESTABLIMENT_EXEMPLE.slug }, avisos: [], resum: null });
-    expect(JSON.stringify(await obteLlavor('la-parroquia'))).toBe(JSON.stringify(LLAVOR));
+    expect(await obteLlavor('la-parroquia')).toEqual(await llavorLaParroquiaR14());
     await expect(obteLlavor('cap')).rejects.toMatchObject({ codi: 'LLAVOR' });
     await expect(obteLlavor('toString')).rejects.toMatchObject({ codi: 'LLAVOR' });
   });

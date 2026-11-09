@@ -455,7 +455,7 @@ describe('Ajustos › Carta (Onada 3, T2): la llavor de La Parròquia', () => {
     const magatzem = await magatzemDeProva({ ambTorn: false });
     await magatzem.desaMeta('establiment', PROPI);
     const ajust = await carrega(magatzem);
-    expect(await ajust.findByText(/té 327 productes en 12 categories/, {}, { timeout: 10000 })).toBeTruthy();
+    expect(await ajust.findByText(/té 327 productes en 11 categories/, {}, { timeout: 10000 })).toBeTruthy();
     expect(ubicacio()).toBe('/app/bar/ajustos/carta');
     expect(ajust.getByRole('heading', { level: 3 }).textContent).toBe('Carta 327 productes');
     expect((await magatzem.base.obte('cataleg', 'carta')).productes).toHaveLength(327);

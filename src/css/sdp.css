@@ -77,6 +77,11 @@
   .sdp-taula--densa :where(th, td) {
     padding-block: var(--sdp-space-1);
   }
+  /* R56 · Variant explícita: les dues primeres columnes contenen IDs.
+     Manté una amplària de lectura; l’excés continua en la regió horitzontal. */
+  .sdp-taula--identificadors :where(td:nth-child(-n + 2)) {
+    min-inline-size: 12ch;
+  }
   .sdp-taula--plana :where(tbody tr:nth-child(even)) {
     background: transparent;
   }

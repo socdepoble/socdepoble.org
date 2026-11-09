@@ -15,7 +15,11 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenPouNeu3D.jsx, manifest.js i detailRegistry.jsx, 2026-11-07T00:56:59+01:00,
+ * Darrera posada al dia: EspecimenTaula.jsx, 2026-11-09T03:51:29+01:00,
+ * pla 261109: traça editorial de la variant R56 i conservació de les mostres prèvies.
+ * Versió anterior: EspecimenTaula.jsx, 2026-11-08T10:39:48+01:00,
+ * R56: variant de lectura d’identificadors llargs, abans del consumidor.
+ * Versió anterior: EspecimenPouNeu3D.jsx, manifest.js i detailRegistry.jsx, 2026-11-07T00:56:59+01:00,
  * IDEA-143 R31: anatomia 3D del pou de neu amb set assemblatges i model didàctic.
  * Versió anterior: EspecimenUniversalWorkspace.jsx i EspecimenColumnes.jsx, 2026-11-04T23:55:00+01:00,
  * pla 261104_1636 (AH-16, ordre directa del Mestre): unificació de collapsibleNavigation={false} a totes les pàgines
@@ -322,4 +326,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-07T00:56:59+01:00';
+export const VERSIO_CATALEG = '2026-11-09T03:51:29+01:00';

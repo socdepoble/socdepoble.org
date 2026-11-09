@@ -9,7 +9,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   ABAST_DEL_SW, ESDEVENIMENT_APP_VISITADA, ESDEVENIMENT_AVIS_XAT, ESPERA_ESCALFAMENT_MS, MISSATGE_AVIS_XAT, MISSATGE_ESCALFAMENT, RUTA_DEL_SW,
   TOPALL_REGISTRE_ACTIU_MS, escoltaAvisosDelWorker, escoltaEscalfament, missatgeDEscalfament, motiuPerNoRegistrar, registraServiceWorker,
-  registreActiu, registreDelSw
+  registreActiu, registreDelSw, portMissatgesAvisos
 } from './registre.js';
 import { importaElModul } from '../../tests/helpers/especificadorsImport.js';
 
@@ -660,11 +660,15 @@ describe('frontera', () => {
       expect(p.computed).toBe(false);
       valor.set(p.key.name, p.value);
     }
-    expect([...valor.keys()].sort()).toEqual(['clau', 'esdevenimentToc', 'produccio', 'registreActiu', 'registreDelSw']);
+    expect([...valor.keys()].sort()).toEqual(['clau', 'esdevenimentToc', 'missatges', 'produccio', 'registreActiu', 'registreDelSw']);
     const importat = (node) => (node?.type === 'Identifier' ? delRegistre.get(node.name) ?? null : null);
     expect(importat(valor.get('registreActiu')), 'per a SUBSCRIURE').toBe('registreActiu');
     expect(importat(valor.get('registreDelSw')), 'per a la BAIXA, l\'interruptor i la neteja').toBe('registreDelSw');
     expect(importat(valor.get('esdevenimentToc')), 'el toc del worker').toBe('ESDEVENIMENT_AVIS_XAT');
+    const missatges = valor.get('missatges');
+    expect(missatges.type).toBe('CallExpression');
+    expect(missatges.arguments).toEqual([]);
+    expect(importat(missatges.callee), 'port de missatges de l’únic propietari').toBe('portMissatgesAvisos');
     const variableDEntorn = (node) => (node?.type === 'MemberExpression' && !node.computed && node.object?.type === 'MemberExpression' &&
       !node.object.computed && esImportMeta(node.object.object) && node.object.property.name === 'env' ? node.property.name : null);
     expect(variableDEntorn(valor.get('clau'))).toBe('VITE_PUSH_VAPID_PUBLICA');
@@ -745,5 +749,37 @@ describe('frontera', () => {
     const importen = PRODUCCIO.filter((ruta) => /from\s+['"][^'"]*escalfamentMemoriaCau(?:\.js)?['"]/.test(llig(ruta)));
     expect(importen).toEqual(['src/apps/plataforma/RutaApps.jsx']);
     expect(llig('src/apps/plataforma/RutaApps.jsx')).toMatch(/^\s+useEscalfamentMemoriaCau\(\);/m);
+  });
+});
+
+
+describe('R54 · portMissatgesAvisos conserva l’únic propietari', () => {
+  test('fora de producció no llig ni tan sols el contenidor antic', () => {
+    const read = vi.fn(() => { throw Error('no access'); });
+    const navegador = Object.defineProperty({}, 'serviceWorker', { get: read });
+    expect(portMissatgesAvisos({ produccio: false, navegador, finestra: entorn().finestra })).toBeNull();
+    expect(read).not.toHaveBeenCalled();
+  });
+  test('el port congelat només permet missatges i retirar-ne l’escolta, sense exposar APIs del contenidor', () => {
+    const sw = { addEventListener: vi.fn(), removeEventListener: vi.fn(), register: vi.fn(), controller: { postMessage: vi.fn() } };
+    const port = portMissatgesAvisos({ produccio: true, navegador: { serviceWorker: sw }, finestra: entorn().finestra });
+    expect(Object.isFrozen(port)).toBe(true);
+    expect(Object.keys(port).sort()).toEqual(['addEventListener', 'removeEventListener']);
+    const rep = vi.fn(), options = { once: true };
+    port.addEventListener('message', rep, options);port.removeEventListener('message', rep, options);
+    expect(sw.addEventListener).toHaveBeenCalledWith('message', rep, options);
+    expect(sw.removeEventListener).toHaveBeenCalledWith('message', rep, options);
+    port.addEventListener('controllerchange', rep);port.addEventListener('push', rep);port.addEventListener('message', null);
+    expect(sw.addEventListener).toHaveBeenCalledTimes(1);
+    expect(sw.register).not.toHaveBeenCalled();expect(sw.controller.postMessage).not.toHaveBeenCalled();
+  });
+  test('iframe, natiu, context insegur, suport absent i getters hostils fallen tancats', () => {
+    const sw = { addEventListener: vi.fn() };
+    for (const finestra of [entorn({ incrustat: true }).finestra, entorn({ segur: false }).finestra, entorn({ capacitor: { isNativePlatform: () => true } }).finestra]) {
+      expect(portMissatgesAvisos({ produccio: true, navegador: { serviceWorker: sw }, finestra })).toBeNull();
+    }
+    expect(portMissatgesAvisos({ produccio: true, navegador: {}, finestra: entorn().finestra })).toBeNull();
+    expect(portMissatgesAvisos({ produccio: true, navegador: Object.defineProperty({}, 'serviceWorker', { get() { throw Error('blocked'); } }), finestra: entorn().finestra })).toBeNull();
+    expect(sw.addEventListener).not.toHaveBeenCalled();
   });
 });

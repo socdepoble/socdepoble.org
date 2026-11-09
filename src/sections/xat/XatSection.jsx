@@ -90,6 +90,8 @@ import { useModeImmersiu } from '../../app/contexts/ModeImmersiuContext.jsx';
 /* Fase D (261020, L4) · El document destacat (TextSection i PAGE_COPY) arriba en diferit. */
 import { esErrorLazy, lazyRoute, lazyRouteRenovable } from '../../apps/plataforma/lazyRoute.js';
 import { esperaDeLaLlista, useXat } from './XatContext';
+import { useRitmeXat } from './useRitmeXat.js';
+import { derivaEstat } from './missatges.js';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../notes/NotesDataContext';
@@ -125,7 +127,7 @@ import { desaEsborrany, llegixEsborrany } from './esborranys.js';
 import { descartaCompartit, prenTextCompartit, triaDestiCompartit } from '../../config/compartirNatiu.js';
 import { esComunitat } from './components/FilaConversa.jsx';
 import FakeChatOnboarding from './components/FakeChatOnboarding.jsx';
-import IAIALocalProvider from './IAIALocalProvider.jsx';
+import IAIAProvider from './IAIAProvider.jsx';
 import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
 /* Ordre del Mestre (261007) · Les files d'ajuda per defecte i on porten. */
@@ -309,8 +311,18 @@ export { textDeFalladaDirecte };
 const esPaginaDeLaIAIA = (objecte) => Boolean(objecte) && esXatDeLaIAIA({ tipus: 'grup', subjecte: objecte });
 const ID_FILA_DE_LA_IAIA = `${PREFIX_PER_DEFECTE}iaia`;
 
+/* Sanejament R15 (B4 · R15-REG-05) · La nota diu el que passa en este build: sense la capacitat
+   iaia (Supabase sense VITE_SDP_IAIA_SERVIDOR=1, l'R15 de producció), la conversa és local, com a
+   HEAD; només amb la capacitat (IAIAProvider ho publica al context) avisa que la pregunta es pot
+   enviar al servidor IAIA. */
+export function AvisPrivadesaIAIA({ t }) {
+  const { iaiaAmbServidor } = useXat();
+  return <p className="sdp-xat-conversa-buida" role="note">{t(iaiaAmbServidor === true ? 'section.xat.iaia.servidor.conversa' : 'section.xat.iaia.local.conversa')}</p>;
+}
+
 export default function XatSection() {
   const xat = useXat();
+  const { language = 'ca' } = useUIState();
   const { t } = useUIActions();
   /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · La pàgina de l'app
      d'on s'ha entrat a la conversa (origenDelXat.js). Viu ací, per damunt de
@@ -331,7 +343,7 @@ export default function XatSection() {
     );
   }
   if (xat.modeDades === 'remote') {
-    return <IAIALocalProvider key={xat.ambitEstable ?? 'xat'} t={t}><XatWorkspace origen={origen} /></IAIALocalProvider>;
+    return <IAIAProvider language={language} key={xat.ambitEstable ?? 'xat'} t={t}><XatWorkspace origen={origen} /></IAIAProvider>;
   }
   return <XatWorkspace key={xat.ambitEstable ?? 'xat'} origen={origen} />;
 }
@@ -1184,11 +1196,18 @@ function XatWorkspace({ origen = null }) {
      restaurada arrenquen amb joId null, status 'ready' i encara no
      senseSessio, i el 404 tapava la closca fins que la sessió arribava. La
      guarda de ?sobre= i de la ruta per defecte (`!joId && !senseSessio`). */
+  const missatgesDelContext = activeThread ? getThreadMessages(activeThread.id) : CAP;
+  const { ritme, onEscrivint } = useRitmeXat({ fil: activeThread, joId, modeDades, senseSessio, ambit: ambitEstable, config: externalConfig });
+  const messages = useMemo(() => missatgesDelContext.map(m => {
+    const estat = derivaEstat(m, Math.max(activeThread?.llegitPelsAltresFinsSeq ?? 0, ritme.llegitPelsAltresFinsSeq), ritme.rebutPelsAltresFinsSeq);
+    return estat === m.estatEnviament ? m : { ...m, estatEnviament: estat };
+  }), [missatgesDelContext, activeThread?.llegitPelsAltresFinsSeq, ritme]);
+
   if (threadId && !trobat && status === 'ready' && llistaFresca && sessioResolta && !reobrint && !dinsDeLaIAIA && !clauDeLaRuta) {
     return <NotFoundPage />;
   }
 
-  const messages = activeThread ? getThreadMessages(activeThread.id) : CAP;
+
 
   /* P1-36 · Netejar la cerca també la plega: cap terme amagat darrere de la
      lupa no pot canviar la llista per uns resultats sense que es veja. */
@@ -1782,7 +1801,7 @@ function XatWorkspace({ origen = null }) {
           key={`${activeThread.id}\n${revisioEsborrany}`}
           clauEsborrany={ambitEstable ? `${ambitEstable}::${activeThread.id}` : null}
           initialText={connectionContext}
-          peu={activeThread.filLocalIAIA ? <p className="sdp-xat-conversa-buida">{t('section.xat.iaia.local.conversa')}</p> : null}
+          peu={activeThread.filLocalIAIA ? <AvisPrivadesaIAIA t={t} /> : null}
           cortesiaIAIA={modeDades === 'remote' && !senseSessio && !iaiaApagada && !activeThread.filLocalIAIA && esXatDeLaIAIA(activeThread)}
           consultaIAIA={!iaiaApagada && (esXatDeLaIAIA(activeThread) || (senseSessio && activeThread.id === ID_FIL_DE_MOSTRA_DE_LA_IAIA))}
           fil={activeThread}
@@ -1790,6 +1809,8 @@ function XatWorkspace({ origen = null }) {
           moderacio={moderacioDelXat}
           actorLlista={actorLlista}
           messages={messages}
+          escrivint={ritme.escrivint.length}
+          onEscrivint={onEscrivint}
           onSendMessage={sendChatMessage}
           onSendMedia={modeDades === 'remote' && !senseSessio && !esXatDeLaIAIA(activeThread) ? sendChatMedia : null}
           configAdjunts={externalConfig}

@@ -36,6 +36,7 @@ export const ICONES_ESPECIMENS = Object.freeze({
     'publicacions-actor': '📚'
   }),
   estructura: Object.freeze({
+    'botigues-sistema': '📲',
     'pou-neu-3d': '❄️',
     arbre: '🌳', shell: '🐚', page: '📄', gestor: '🏛️', universalworkspace: '🖥️',
     columnes: '📰', divisor: '↔️', composicio: '🧩', 'barra-eines': '🛠️',
@@ -184,6 +185,8 @@ const FONAMENTS = [
 /* Estructura: primer l'arbre (qui és el pare de qui), després la closca
    d'App.jsx i les plantilles que penjen d'ella. */
 const ESTRUCTURA = [
+  especimen('estructura', 'botigues-sistema', 'Botigues, verificadors i flota', 'sections/botigues/VistaBotiguesSistema.jsx', ['plantilla', 'dades', 'administracio'],
+    'El mateix cos de lectura per al perfil i la Consola, amb procedència de les xifres, canals configurats i cens separat de salut en viu.', 'botigues verificadors play testflight flota administracio'),
   especimen('estructura', 'arbre', 'Arbre universal', 'Com s’encaixen les peces', ['plantilla', 'arquitectura'],
     'La closca conté el gestor i la pàgina. L’editor hereta PageFrame; la targeta té codi propi. El mapa i els espècimens expliquen com es relacionen estes peces.',
     "pare fill jerarquia llinatge munta versio instancia Qui és el pare de qui: closca, gestor, pàgina, targeta i editor"),

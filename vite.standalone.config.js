@@ -12,6 +12,8 @@ const __dirname = path.dirname(__filename);
 import { validatePublicCredentials } from './src/config/publicCredentials.js';
 import { CONTRACTE_AMFITRIO_V1 } from './src/config/contracteAmfitrio.js';
 import { MITJANS_EXTERNS_DEL_DIRECTORI, bessonesDe, esHostLocal, separaRecursos } from './src/config/politicaDeMitjans.js';
+import fotosParroquiaPrivades from './tooling/vite/fotos-parroquia-privades.mjs';
+import banderesDeCapacitat from './tooling/vite/banderes-de-capacitat.mjs';
 
 /**
  * El que hi ha a public/ i és del SERVIDOR de socdepoble.org, no de l'app.
@@ -649,6 +651,14 @@ export default defineConfig(({ mode, command }) => {
   return {
     plugins: [
     react(),
+    /* Ordre del Mestre 261109 · R15a (PRIV-01) · Fora de DEV i sense
+       VITE_SDP_BAR_LLAVOR_LA_PARROQUIA=1, parroquiaFotos.js és un mòdul buit: les
+       fotos locals de La Parròquia no ixen en cap build públic encara que siguen
+       al disc (tooling/vite/fotos-parroquia-privades.mjs). */
+    fotosParroquiaPrivades(),
+    /* Sanejament R15 (B2/B3) · Ritme del xat, IAIA amb servidor i push natiu, només amb
+       la seua bandera literal (tooling/vite/banderes-de-capacitat.mjs). */
+    banderesDeCapacitat(),
     recursosPublicsDelPlugin({ politica: mitjans }),
     manifestDeReleasePlugin({ versio, node, generat, variant, format, mitjans }),
     ...(perWordPress ? [senseReactIncrustat()] : []),

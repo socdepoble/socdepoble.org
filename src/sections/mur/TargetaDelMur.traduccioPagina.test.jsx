@@ -106,3 +106,13 @@ test('V2-01 · la targeta del Mercat: amb «none», ni Traduir a la targeta ni c
   expect(accions(deSempre).some((nom) => nom.startsWith('Traduir'))).toBe(true);
   expect(accions(sense).some((nom) => nom.startsWith('Traduir'))).toBe(false);
 });
+
+test('R56 · el Traduir real de la pàgina exclou també els actes none, curated i invàlids', async () => {
+  const { textos } = await textosEnviats([DE_SEMPRE, AUTOMATICA, SENSE, REVISADA, INVALIDA]
+    .map(item => <TargetaDelMur key={item.id} item={{ ...item, type: 'event' }} />));
+  const enviat = textos.join('\n');
+  expect(textos).toContain('Mur del poble');
+  expect(textos).toContain('Festa de sempre');
+  expect(textos).toContain('Festa automàtica');
+  for (const fora of ['Crònica sense traducció', 'Crònica revisada ca', 'Crónica original', 'Entradilla original', 'Crònica mal configurada', 'no té la traducció ben configurada']) expect(enviat, fora).not.toContain(fora);
+});

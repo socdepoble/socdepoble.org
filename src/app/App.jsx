@@ -3,6 +3,7 @@ import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import { ATRIBUT_CURTA, esPantallaCurta, useArrelTactil, useBarresAmbScroll } from '../hooks/useBarresAmbScroll.js';
 import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
+import { useScrollDeNavegacio } from '../hooks/useScrollDeNavegacio.js';
 import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState, useSyncExternalStore } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useParams, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
@@ -85,7 +86,7 @@ import ReceptorCompartit from '../sections/xat/ReceptorCompartit.jsx';
 import { ProveidorModeracio } from './contexts/ModeracioContext.jsx';
 /* Fase D (261020, tasca 2) · Els tres diàlegs de la moderació (denúncia,
    bloqueig i normes), que el proveïdor pinta en este ordre. */
-import { DialegsModeracio } from '../components/universal/DialegsModeracio.jsx';
+import DialegsModeracio from './DialegsModeracioAjornats.jsx';
 const XatControlSection = lazyRoute(() => import('../sections/xat/XatControlSection'));
 import { MultimediaProvider } from '../sections/multimedia/MultimediaContext';
 import { useUIActions, useUIState } from './contexts/UIContext';
@@ -327,7 +328,7 @@ function AppShell({ children, mobileNav }) {
   const { language, llenguaDelText = language, status, themeMode, contrastMode, externalConfig } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
-  const { basename, memoria } = useRouter();
+  const { basename, memoria, navegacio, subscriuAbansDeNavegar } = useRouter();
   const location = useLocation();
   /* R · correcció de la revisió · La closca es pot muntar sense proveïdor de
      sessió (catàleg, proves): llavors no hi ha cap recuperació en curs.
@@ -339,6 +340,7 @@ function AppShell({ children, mobileNav }) {
   const titolMenu = useTitolBarraLateral();
   const mainRef = useRef(null);
   const contentRef = useRef(null);
+  useScrollDeNavegacio({ contentRef, ...location, navegacio, subscriuAbansDeNavegar });
 
   /* Enxufe universal, T2 (260929) · Quan l'amfitrió declara el nom del poble,
      la closca el diu: a la barra negra en escriptori, en una franja davall

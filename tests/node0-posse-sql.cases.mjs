@@ -14,14 +14,15 @@ const sha=text=>createHash('sha256').update(text).digest('hex');
 // R9 (R9V-C3-01): the deployed canonical 76, it plus the /legal 2.5 seal (77), the R20b pair (78) and everything (79).
 // R13-C7: the superadmin-only session counts (81) are left out of every earlier profile, as SQL80 was.
 const R20B=['2611052345','2611060010'],SEGELL25=['2611061520'],SEED80=['2611070600'],SESSIONS81=['2611082238'],PERFILS=[[...R20B,...SEGELL25,...SEED80,...SESSIONS81],[...R20B,...SEED80,...SESSIONS81],[...SEGELL25,...SEED80,...SESSIONS81],[...SEED80,...SESSIONS81],SESSIONS81,[]];
+PERFILS.forEach(profile=>profile.push('2611080430','2611080431','2611080432','2611080440'));PERFILS.push([]);
 const catalogues=(()=>{const all=creaPlaMigracions().migrations;return PERFILS.map(exclou=>all.filter(m=>!exclou.includes(m.version)));})();
 const ledgerHash=rows=>sha([...rows].sort((a,b)=>a.version<b.version?-1:a.version>b.version?1:0).map(m=>`${m.version}\t${m.file}\t${m.sha256}`).join('\n'));
 function ready(rows){
  const functionHashes=Object.fromEntries(['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'].map(name=>{const start=sqlPosse.indexOf(`CREATE OR REPLACE FUNCTION node0_posse.${name}(`),body=sqlPosse.indexOf('AS $f$',start),end=sqlPosse.indexOf('$f$;',body+6);return[name,sha(sqlPosse.slice(body+6,end))];}));
  return{version:'posse.r11.v1',migrations:rows.length,migrationLedgerSha256:ledgerHash(rows),ownerStable:true,tablesPrivate:true,sourceInstalled:true,remoteInstalled:true,functionHashes};
 }
-test('R23/R33/R13-C7 readiness accepts only exact canonical source ledgers 76 through 81',async()=>{
- assert.deepEqual(catalogues.map(rows=>rows.length),[76,77,78,79,80,81]);
+test('R23/R33/R13-C7 readiness accepts only exact canonical source ledgers76..81 and the full85 composition',async()=>{
+ assert.deepEqual(catalogues.map(rows=>rows.length),[76,77,78,79,80,81,85]);
  for(const rows of catalogues){let calls=0;assert.equal(await verificaEsquemaPosseNodeZero({db:{async query(sql,options){calls++;assert.equal(sql,'SELECT node0_posse.readiness();');assert.equal(options.privateValues,true);return ready(rows);}}}),true);assert.equal(calls,1);}
 });
 test('R23 counts without exact source identity proof never establish readiness',async()=>{
@@ -35,7 +36,7 @@ test('R39 POSSE hashes use the PostgreSQL core without a pgcrypto schema assumpt
  assert.doesNotMatch(sqlPosse,/\b(?:public\.)?digest\(/);
  assert.equal([...sqlPosse.matchAll(/pg_catalog\.sha256\(convert_to\(/g)].length,8);
 });
-test('R23/R33/R13-C7 PostgreSQL installs six exact profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
+test('R23/R33/R13-C7 PostgreSQL installs seven exact profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
  for(const [index,exclou] of PERFILS.entries()){
   const f=await creaFixturePosse({exclou});
   try{

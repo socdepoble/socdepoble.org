@@ -191,8 +191,10 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
       expect(seccio(body, BALANC.ca[1]).map((n) => n.textContent).join(' ')).not.toContain('segellats en còpia aïllada');
     }
     const versions = doc(PAGE_COPY.versions.html).body;
-    // P0-62 (08-11-2026) · La fita de l'App Store obri /versions; l'entrada del 5 de novembre és la segona, intacta.
-    expect([...versions.querySelectorAll('h3')].slice(0, 2).map((h3) => h3.textContent)).toEqual([
+    // P0-62 (08-11-2026) i encàrrec R13+R14 (09-11-2026) · La crònica de les Onades R13 i R14 obri /versions, la fita
+    // de l'App Store és la segona i l'entrada del 5 de novembre, la tercera, intacta.
+    expect([...versions.querySelectorAll('h3')].slice(0, 3).map((h3) => h3.textContent)).toEqual([
+      '9 de novembre de 2026 · Onades R13 i R14 · El receptari «Què dinem?», la targeta d’usuaris i dispositius i el Segon Brain',
       '6 de novembre de 2026 · Fita · L’app d’iPhone i iPad, publicada a l’App Store (versió 1.0)',
       '5 de novembre de 2026 · v1.2.0 · suplement pendent d’integració'
     ]);
@@ -458,7 +460,7 @@ describe('Gauntlet R9 · G1-01, G1-06 i G3-N02 · el balanç diu què falta de v
     expect(push).toContain("2610201500. Després: el desplegament de notifica-xat i el cron; només\n-- després, 'push_xat_actiu' = 'si'");
     const funcio = JSON.parse(llegix('supabase/ordre_desplegament.json')).portes.find((p) => p.id === 'funcio-notifica-xat');
     expect(funcio.descripcio).toContain('només després, posar push_xat_actiu = si');
-    expect(funcio.despres).toEqual(['2611020417']);
+    expect(funcio.despres).toEqual(['2611020417','2611080431']);
     expect(llegix('src/main.jsx')).toContain('import.meta.env.VITE_PUSH_VAPID_PUBLICA');
   });
 });

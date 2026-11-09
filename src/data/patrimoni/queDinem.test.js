@@ -8,8 +8,9 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-  OBRA_QUE_DINEM, RECEPTES_QUE_DINEM, RECOMPTES_QUE_DINEM, liniesIngredients, receptaPerSlug
+  LAMINES_QUE_DINEM, OBRA_QUE_DINEM, RECEPTES_QUE_DINEM, RECOMPTES_QUE_DINEM, laminaDeRecepta, liniesIngredients, receptaPerSlug
 } from './queDinem.js';
+import { midesWebp } from '../../../tooling/patrimoni/mides-webp.mjs';
 
 const PUBLIC = path.join(process.cwd(), 'public');
 const DIR_LAMINES = path.join(PUBLIC, 'assets/uploads/patrimoni/que-dinem');
@@ -91,6 +92,11 @@ describe('Què dinem? · les 149 receptes de l’índex', () => {
       }
     }
     expect(RECEPTES_QUE_DINEM[47].notes).toEqual([]);
+    /* Onada R15 (P3-5) · La nota de #14 és la del llibre signe a signe (p. 22): «…canal de Youtube:» i, darrere, l'URL,
+       que és el youtubeId. Abans acabava amb un punt que el llibre no porta. */
+    expect(RECEPTES_QUE_DINEM[13].notes[0]).toBe('Podeu veure l’elaboració d’aquesta recepta, però al forn, en el nostre canal de Youtube:');
+    expect(RECEPTES_QUE_DINEM[13].youtubeId).toBe('xBAv9FYHDUE');
+    expect(RECEPTES_QUE_DINEM.flatMap((r) => r.notes).filter((n) => /canal de Youtube/.test(n))).toEqual([RECEPTES_QUE_DINEM[13].notes[0]]);
     expect(RECEPTES_QUE_DINEM[134].preparacio.flatMap((b) => b.linies).join(' ')).toContain('traieu-los-en');
     expect(RECEPTES_QUE_DINEM[65].preparacio.flatMap((b) => b.linies).join(' ')).toContain('col.loqueu-los');
   });
@@ -153,6 +159,33 @@ describe('Què dinem? · làmines, PDF i vídeos', () => {
     expect(RECEPTES_QUE_DINEM[125].lamina).toBeNull();
     expect(RECEPTES_QUE_DINEM.filter((r) => r.lamina?.endsWith('/p009.webp')).map((r) => r.numero)).toEqual([1]);
     expect(textDe(RECEPTES_QUE_DINEM)).not.toContain('p163');
+  });
+
+  /* Onada R15 (P3-1) · La pàgina de la làmina és la de la WebP (pNNN = pàgina NNN del PDF): l'índex d'imatges del PDF
+     (r14_triatge/receptes/imatges_pdf.tsv) en dona una a la p. 89 i a la p. 127, i cap a la p. 88, 126 ni 138. */
+  it('cada làmina porta la pàgina on és impresa: la 79 → p. 89 i la 115 → p. 127, no la primera de la recepta', () => {
+    expect(Object.keys(LAMINES_QUE_DINEM)).toEqual(RECEPTES_QUE_DINEM.map((r) => r.lamina).filter(Boolean));
+    expect(Object.isFrozen(LAMINES_QUE_DINEM)).toBe(true);
+    for (const r of RECEPTES_QUE_DINEM) {
+      const lamina = laminaDeRecepta(r);
+      if (!r.lamina) { expect(lamina, `#${r.numero}`).toBeNull(); continue; }
+      expect(lamina.src).toBe(r.lamina);
+      expect(lamina.pagina, `#${r.numero}`).toBe(Number(/p(\d{3})\.webp$/.exec(r.lamina)[1]));
+      expect(r.pagines, `#${r.numero}`).toContain(lamina.pagina);
+    }
+    const desplacades = RECEPTES_QUE_DINEM.filter((r) => r.lamina && laminaDeRecepta(r).pagina !== r.pagina);
+    expect(desplacades.map((r) => [r.numero, r.pagina, laminaDeRecepta(r).pagina])).toEqual([[79, 88, 89], [115, 126, 127]]);
+    for (const dolent of [null, undefined, {}, { lamina: '/assets/uploads/patrimoni/que-dinem/p163.webp' }, { lamina: 'constructor' }]) {
+      expect(laminaDeRecepta(dolent)).toBeNull();
+    }
+  });
+
+  /* LCP · La làmina de capçalera porta l'ample i l'alt de la WebP: si no casen amb el fitxer, la pàgina salta. */
+  it('les mides de cada làmina són les del fitxer WebP', () => {
+    for (const [src, dades] of Object.entries(LAMINES_QUE_DINEM)) {
+      expect(midesWebp(readFileSync(path.join(PUBLIC, src))), src).toEqual({ ample: dades.ample, alt: dades.alt });
+      expect(dades.ample > 0 && dades.alt > 0 && dades.ample <= 400 && dades.alt <= 400, src).toBe(true);
+    }
   });
 
   it('al directori públic no hi ha cap làmina sense recepta, ni la p163', () => {

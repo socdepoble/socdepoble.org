@@ -224,13 +224,14 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     const arrel = /<manifest\b([^>]*)>/.exec(manifest)?.[1] ?? '';
     expect(atributs(arrel)['xmlns:tools']).toBe('http://schemas.android.com/tools');
     const permisos = [...manifest.matchAll(/<uses-permission\b[^>]*\/>/g)].map(([tros]) => atributs(tros));
-    for (const nom of ['SCHEDULE_EXACT_ALARM', 'RECEIVE_BOOT_COMPLETED', 'WAKE_LOCK']) {
+    for (const nom of ['SCHEDULE_EXACT_ALARM', 'RECEIVE_BOOT_COMPLETED']) {
       const declarats = permisos.filter((p) => p['android:name'] === `android.permission.${nom}`);
       /* Una sola declaració, i és la que el lleva del manifest fusionat. */
       expect(declarats, nom).toHaveLength(1);
       expect(declarats[0]['tools:node'], nom).toBe('remove');
     }
-    /* El permís de veres dels avisos no es lleva. */
+    /* R54: el SDK FCM necessita el wake lock, i el permís d'avisos es conserva. */
+    expect(permisos.some(p => p['android:name'] === 'android.permission.WAKE_LOCK' && p['tools:node'] === 'remove')).toBe(false);
     expect(permisos.some((p) => p['android:name'] === 'android.permission.POST_NOTIFICATIONS' && p['tools:node'] === 'remove')).toBe(false);
   });
 

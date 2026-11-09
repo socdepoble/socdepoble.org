@@ -432,8 +432,9 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
 
   /* 261026 (ordre del Mestre, prompt 261026_1615, tasca 1) · I l'App Group que
      compartix amb l'extensió «Compartir»: és per on li arriben les captures. */
-  test('App.entitlements: Sign in with Apple i l’App Group del menú Compartir, i res més', () => {
+  test('App.entitlements: Sign in with Apple, App Group i capacitat APNs de desenvolupament (signatura real pendent)', () => {
     expect(llegixPlist(llig(APP, 'App.entitlements'))).toEqual({
+      'aps-environment': 'development',
       'com.apple.developer.applesignin': ['Default'],
       'com.apple.security.application-groups': ['group.org.socdepoble.app']
     });

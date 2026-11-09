@@ -62,7 +62,7 @@ export function sqlContextSessioNodeZero(hash,expectedActor){
   END $node0_context$;\nSET LOCAL ROLE authenticated;\n`;
 }
 
-export function compilaOperacioNodeZero(action,body,tenantId){
+export function compilaOperacioNodeZero(action,body,tenantId,{xatRitmeReady=false}={}){
   const tenant=`${sqlText(uuid(tenantId))}::uuid`;
   if(!plain(body))fail('invalid_body');
   if(action==='restauraDadesObertes'){
@@ -78,7 +78,7 @@ export function compilaOperacioNodeZero(action,body,tenantId){
     return result(`public.admin_connecta_usuari(${tenant},${sqlText(input.usuariId)}::uuid)`);
   }
   // Unknown top-level keys are rejected, including owner_user_id, userId and tenantId.
-  const keys={adminActualitzaPublicacioEditorial:['edicio'],getProfile:[],elMeuRol:[],updateProfile:['updates'],loadNotes:['noteId','cursor','limit'],createNote:['input'],updateNote:['id','updates','expectedRevision'],listMyOrganizations:[],createOrganization:['organization'],updateOrganization:['id','updates'],appendSectionSubmissionNetworkOnly:['submission'],loadSeccioPage:['sectionId','cursor','limit'],loadFils:[],loadMissatges:['filId','before','after','limit'],enviaMissatge:['filId','id','text','tipus','respostaA','metadades'],marcaLlegit:['filId','rebutFinsSeq','llegitFinsSeq'],creaFilDirecte:['altreUsuariId','titol'],carregaMembres:['cerca','limit']};
+  const keys={adminActualitzaPublicacioEditorial:['edicio'],getProfile:[],elMeuRol:[],updateProfile:['updates'],loadNotes:['noteId','cursor','limit'],createNote:['input'],updateNote:['id','updates','expectedRevision'],listMyOrganizations:[],createOrganization:['organization'],updateOrganization:['id','updates'],appendSectionSubmissionNetworkOnly:['submission'],loadSeccioPage:['sectionId','cursor','limit'],loadFils:[],loadMissatges:['filId','before','after','limit'],enviaMissatge:['filId','id','text','tipus','respostaA','metadades'],marcaLlegit:['filId','rebutFinsSeq','llegitFinsSeq'],loadRitmeXat:['filId'],actualitzaPresenciaXat:['filId','instancia','revisio','escrivint'],creaFilDirecte:['altreUsuariId','titol'],carregaMembres:['cerca','limit']};
   if(!Object.hasOwn(keys,action))fail('operation_unavailable',501);
   if(Object.keys(body).some(key=>!keys[action].includes(key)))fail('unexpected_field');
   if(action==='adminActualitzaPublicacioEditorial'){
@@ -201,20 +201,28 @@ export function compilaOperacioNodeZero(action,body,tenantId){
     if(body.metadades!==undefined&&(!plain(body.metadades)||Object.keys(body.metadades).length))fail('message_metadata_unavailable',501);
     return scope+result(rows(`SELECT * FROM public.xat_envia(${sqlText(uuid(body.id))}::uuid,${sqlText(fil)}::uuid,'text',${sqlText(text(body.text,10000))},${maybeUuid(body.respostaA)},'{}'::jsonb)`),201);
   }
+  if(['loadRitmeXat','actualitzaPresenciaXat'].includes(action)){
+    if(xatRitmeReady!==true)fail('operation_unavailable',501);
+    if(action==='loadRitmeXat')return scope+result(`public.xat_ritme(${sqlText(fil)}::uuid)`);
+    if(typeof body.escrivint!=='boolean')fail('invalid_boolean');
+    return scope+result(`public.xat_presencia(${sqlText(fil)}::uuid,${sqlText(uuid(body.instancia))}::uuid,${bigintSql(integer(body.revisio,0,Number.MAX_SAFE_INTEGER))},${sqlText(body.escrivint?'true':'false')}::boolean)`);
+  }
   if(action==='marcaLlegit'){
     const received=maybeInt(body.rebutFinsSeq),read=maybeInt(body.llegitFinsSeq);
     const onlyReceived=body.rebutFinsSeq!=null&&(body.llegitFinsSeq==null||body.llegitFinsSeq===0);
-    // The 75 canonical migrations do not install xat_marca_rebut. Never turn
-    // delivery into a false read acknowledgement through xat_marca fallback.
-    if(onlyReceived)fail('delivery_receipt_unavailable',501);
+    // Independent delivery requires the verified R54 migration, never a read fallback.
+    if(onlyReceived){
+      if(!xatRitmeReady)fail('delivery_receipt_unavailable',501);
+      return scope+result(rows(`SELECT * FROM public.xat_marca_rebut(${sqlText(fil)}::uuid,${received})`));
+    }
     return scope+result(rows(`SELECT * FROM public.xat_marca(${sqlText(fil)}::uuid,${received},${read})`));
   }
   fail('operation_unavailable',501);
 }
 
-export function creaBackendPrivatNodeZero({db,tenantId,origin='https://socdepoble.cat',editorialReady=false,adminUsuarisReady=false,restauracioReady=false}={}){
+export function creaBackendPrivatNodeZero({db,tenantId,origin='https://socdepoble.cat',editorialReady=false,adminUsuarisReady=false,restauracioReady=false,xatRitmeReady=false}={}){
   if(typeof db?.query!=='function')throw new TypeError('node0_backend_database_required');uuid(tenantId);
-  return Object.freeze({capabilities:Object.freeze({actorBinding:true,roleRead:true,createOrganization:true,sectionSubmissions:true,paginacioSeccions:true,edicioEditorial:editorialReady===true,administracioUsuaris:adminUsuarisReady===true,restauracioDadesObertes:restauracioReady===true}),async handle(action,{headers={},body={}}={}){
+  return Object.freeze({capabilities:Object.freeze({actorBinding:true,roleRead:true,createOrganization:true,sectionSubmissions:true,paginacioSeccions:true,edicioEditorial:editorialReady===true,administracioUsuaris:adminUsuarisReady===true,restauracioDadesObertes:restauracioReady===true,xatRitme:xatRitmeReady===true}),async handle(action,{headers={},body={}}={}){
     if(headers.origin!==origin)return {status:403,body:{error:'origin_rejected'}};
     try{
       if(action==='adminActualitzaPublicacioEditorial'&&editorialReady!==true)fail('operation_unavailable',501);
@@ -227,7 +235,7 @@ export function creaBackendPrivatNodeZero({db,tenantId,origin='https://socdepobl
         let parsed;try{parsed=await llegeixPaquetOpenData(new Uint8Array(Buffer.from(body.zipBase64,'base64')),{sha256Esperat:body.sha256Esperat});}catch{fail('invalid_opendata_package');}
         compiledAction='restauraDadesObertes';compiledBody={lot:parsed.lot};
       }
-      const operation=compilaOperacioNodeZero(compiledAction,compiledBody,tenantId);
+      const operation=compilaOperacioNodeZero(compiledAction,compiledBody,tenantId,{xatRitmeReady});
       // This header is an assertion to compare, never a source for owner/claims.
       // A cross-tab cookie change must not silently act as the new person.
       const expected=headers['x-sdp-expected-actor'];

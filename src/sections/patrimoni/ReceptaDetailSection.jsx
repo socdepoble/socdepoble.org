@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react';
+import { lazy, Suspense, useId, useMemo, useState } from 'react';
 import { Link, useParams } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -7,7 +7,7 @@ import { Alerta, Boto } from '../../components/PedraSeca/index.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import { useSEO } from '../../hooks/useSEO.js';
 import NotFoundPage from '../../pages/NotFoundPage';
-import { OBRA_QUE_DINEM, receptaPerSlug } from '../../data/patrimoni/queDinem.js';
+import { OBRA_QUE_DINEM, laminaDeRecepta, receptaPerSlug } from '../../data/patrimoni/queDinem.js';
 import CreditsQueDinem from './CreditsQueDinem.jsx';
 import { etiquetaDApartat, RUTA_DEL_RECEPTARI } from './cercaReceptes.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
@@ -15,14 +15,27 @@ import { traductorPatrimoni } from './textosPatrimoni.js';
 /* Onada R14 · /receptes/:slug: la pàgina pròpia d'una recepta del llibre «Què dinem?» (ItemDetailSection la carrega
    en un tros diferit quan sectionId és 'receptes'). La recepta es busca pel slug exacte (receptaPerSlug): un slug que
    no existix dona el «no trobat» canònic (NotFoundPage, amb noindex), mai una altra recepta.
-   · Capçalera: el vídeo del llibre (VideoEditorial: youtube-nocookie i façana de clic) si en té; si no, la làmina.
-     Si en té tots dos, un commutador centrat tria què es veu a dalt.
+   · Capçalera: la làmina del llibre, si en té (148 de les 149). És la candidata a LCP de la pàgina: porta l'ample i
+     l'alt de la WebP (LAMINES_QUE_DINEM, la pàgina no salta en carregar-la), loading="eager" i
+     fetchpriority="high". El text alternatiu diu la pàgina on és impresa la làmina, que no sempre és la primera de
+     la recepta (la 79 → p. 89, la 115 → p. 127).
    · Una fila de quadrats-botó (la pell del quadrat de les targetes, .sp-card-calendar-badge) amb aria-pressed:
      prémer-ne un mostra només eixe bloc; tornar-lo a prémer ho mostra tot. Els blocs que la recepta no té
      (notes, vídeo, làmina) no tenen quadrat.
+   · Onada R15 (P3-4) · Un sol botó «Vídeo»: el quadrat. El vídeo és un bloc com els altres, davall de les notes,
+     i hi va la façana de VideoEditorial (youtube-nocookie): res de YouTube no es carrega fins que el veí prem
+     «Veure el vídeo». Abans hi havia, a més, un commutador «Vídeo / Làmina del llibre» a la capçalera, que
+     repetia el quadrat.
    · Ingredients, elaboració i notes: el text literal del llibre, amb lang="ca"; els títols de bloc que porta el
      llibre (p. ex. «Variant») es conserven. La interfície és a les claus patrimoni.receptes.* dels 5 diccionaris.
-   · Al·lèrgens: el llibre no en diu res i ací no se n'inventa cap; només un avís honest. */
+   · Al·lèrgens: el llibre no en diu res i ací no se n'inventa cap; només un avís honest.
+   · Onada R15 (P1-02, R15-REG-06, P2-04) · «Calcula i prepara la compra» (MotorHoritzontalRecepta, amb el catàleg i
+     els preus de Mercadona) va amb la Nevera: la mateixa porta de compilació que src/apps/nevera/manifest.js, com a
+     literal exacte que Vite plega. Sense VITE_SDP_APP_NEVERA=1, el build públic no porta ni el botó, ni el motor, ni
+     el tros de Mercadona, i la pàgina és la del R14: el llibre i res més. En desenvolupament, sí. */
+const MotorDeLaRecepta = import.meta.env.DEV || import.meta.env.VITE_SDP_APP_NEVERA === '1'
+  ? lazy(() => import('./MotorHoritzontalRecepta.jsx').then((modul) => ({ default: modul.MotorDeReceptaEditorial })))
+  : null;
 const BLOCS = [
   { id: 'ingredients', icona: '🧺', te: () => true },
   { id: 'elaboracio', icona: '🥘', te: () => true },
@@ -42,40 +55,20 @@ const nomsDeBloc = (tr) => ({
   alergens: tr('patrimoni.receptes.bloc.alergens', 'Al·lèrgens')
 });
 
-function Lamina({ recepta, tr }) {
-  return (
-    <figure className="sdp-recepta__lamina">
-      <img
-        src={resolRecursPropi(recepta.lamina)}
-        alt={tr('patrimoni.receptes.altLamina', 'Làmina de la pàgina {n} del llibre', { n: recepta.pagina })}
-        loading="lazy"
-        decoding="async"
-      />
-    </figure>
-  );
-}
-
-/* La tria del commutador (vista) viu a la pàgina: un filtre que amaga la capçalera no l'oblida. */
-function Capcalera({ recepta, filtre, vista, setVista, noms, tr }) {
-  const ambVideo = Boolean(recepta.youtubeId);
-  const ambLamina = Boolean(recepta.lamina);
-  if (!ambVideo && !ambLamina) return null;
-  const mode = filtre === 'video' || filtre === 'lamina' ? filtre : vista;
+/* La làmina de capçalera: les mides reserven el lloc i, com que és la imatge gran de dalt, es demana de seguida. */
+function Lamina({ lamina, tr }) {
   return (
     <div className="sdp-recepta__capcalera">
-      {mode === 'video' && ambVideo
-        ? <VideoEditorial id={recepta.youtubeId} title={tr('patrimoni.receptes.titolVideo', 'Elaboració de «{titol}»', { titol: recepta.titol })} />
-        : ambLamina && <Lamina recepta={recepta} tr={tr} />}
-      {filtre === null && ambVideo && ambLamina && (
-        <div className="sdp-recepta__commutador" role="group" aria-label={tr('patrimoni.receptes.vista', 'Què vols vore a dalt?')}>
-          <Boto varietat={vista === 'video' ? 'primari' : 'secundari'} aria-pressed={vista === 'video'} onClick={() => setVista('video')}>
-            {noms.video}
-          </Boto>
-          <Boto varietat={vista === 'lamina' ? 'primari' : 'secundari'} aria-pressed={vista === 'lamina'} onClick={() => setVista('lamina')}>
-            {tr('patrimoni.receptes.vista.lamina', 'Làmina del llibre')}
-          </Boto>
-        </div>
-      )}
+      <figure className="sdp-recepta__lamina">
+        <img
+          src={resolRecursPropi(lamina.src)}
+          alt={tr('patrimoni.receptes.altLamina', 'Làmina de la pàgina {n} del llibre', { n: lamina.pagina })}
+          width={lamina.ample}
+          height={lamina.alt}
+          loading="eager"
+          fetchpriority="high"
+        />
+      </figure>
     </div>
   );
 }
@@ -95,7 +88,8 @@ function PaginaDeRecepta({ recepta }) {
   const { t } = useUIActions();
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const [filtre, setFiltre] = useState(null);
-  const [vista, setVista] = useState(recepta.youtubeId ? 'video' : 'lamina');
+  const [calculaCompra, setCalculaCompra] = useState(false);
+  const lamina = laminaDeRecepta(recepta);
   const idAjuda = useId();
   const obra = OBRA_QUE_DINEM;
   useSEO({
@@ -119,9 +113,7 @@ function PaginaDeRecepta({ recepta }) {
           {' · '}
           <Link to={RUTA_DEL_RECEPTARI}>{tr('patrimoni.receptes.totes', 'Totes les receptes')}</Link>
         </p>
-        {(filtre === null || filtre === 'video' || filtre === 'lamina') && (
-          <Capcalera recepta={recepta} filtre={filtre} vista={vista} setVista={setVista} noms={noms} tr={tr} />
-        )}
+        {lamina && visible('lamina') && <Lamina lamina={lamina} tr={tr} />}
         <div className="sdp-recepta__quadrats" role="group" aria-label={tr('patrimoni.receptes.filtre', 'Tria què vols vore')} aria-describedby={idAjuda}>
           {blocs.map((b) => (
             <button
@@ -158,12 +150,28 @@ function PaginaDeRecepta({ recepta }) {
             <ul lang="ca">{recepta.notes.map((nota, i) => <li key={`${i}-${nota}`}>{nota}</li>)}</ul>
           </section>
         )}
+        {recepta.youtubeId && visible('video') && (
+          <section aria-label={noms.video} data-bloc="video">
+            <h2>{noms.video}</h2>
+            <VideoEditorial id={recepta.youtubeId} title={tr('patrimoni.receptes.titolVideo', 'Elaboració de «{titol}»', { titol: recepta.titol })} />
+          </section>
+        )}
         {visible('alergens') && (
           <section aria-label={noms.alergens} data-bloc="alergens">
             <h2>{noms.alergens}</h2>
             <Alerta to="avis" viva={false}>
               {tr('patrimoni.receptes.alergens', 'Al·lèrgens no revisats: consulta la llista d’ingredients; si tens una al·lèrgia, pregunta-ho a qui cuina.')}
             </Alerta>
+          </section>
+        )}
+        {MotorDeLaRecepta && (
+          <section aria-label="Prepara una compra amb esta recepta">
+            <Boto aria-expanded={calculaCompra} onClick={() => setCalculaCompra(actual => !actual)}>Calcula i prepara la compra</Boto>
+            {calculaCompra && (
+              <Suspense fallback={null}>
+                <MotorDeLaRecepta key={recepta.slug} recepta={recepta} obra={obra} />
+              </Suspense>
+            )}
           </section>
         )}
         <CreditsQueDinem tr={tr} nivell="h2" />

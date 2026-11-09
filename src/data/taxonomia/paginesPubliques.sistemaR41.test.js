@@ -217,6 +217,7 @@ describe('R41 independent public-page contract',()=>{
   const before=structuredClone(copy);
   const cards=targetesDeSistema(copy,{nativa:false,language});
   expect(cards.map(card=>card.id).sort()).toEqual([...PUBLISHED_18].sort());
+  expect(cards).toHaveLength(18);expect(cards.map(card=>card.id)).not.toContain('anatomia-rural');
   for(const card of cards){
    const [,category,tag]=PAGES.find(([key])=>key===card.id);
    assertClassification(card.labels,card.id,category,tag,language);

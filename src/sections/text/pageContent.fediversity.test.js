@@ -682,11 +682,11 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       const oferides=Object.entries(CAPACITATS).filter(([,metodes])=>metodes.every(nom=>typeof local[nom]==='function')).map(([nom])=>nom);
       const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(absents).toEqual(['importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+      expect(absents).toEqual(['iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');
-      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(5);
-      expect(fet).toContain('els seus cinc casos s’ometen en local');
+      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(10);
+      expect(fet).toContain('els seus deu casos s’ometen en local');
     }finally{await local.destroy();}
 
     expect(fet).toContain('no certifica les '+total+' operacions contra un servidor remot');

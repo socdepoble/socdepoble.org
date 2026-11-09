@@ -16,14 +16,18 @@
  * UniversalCard de l'esquelet (les rajoles pròpies ja no). La resta, igual.
  */
 import { Clock, Trash2 } from 'lucide-react';
-import { Boto } from '../../../components/PedraSeca/index.js';
+import { useNavigate } from '../../../app/contexts/RouterContext';
+import { Boto, Botonera } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions, useVistaCataleg } from '../../comu/esquelet/index.js';
-import { articlePerId, liniesOrdenades, recentsDisponibles } from '../nucli/index.js';
+import { ARTICLES_PRODUCTES, LIMITS, articlePerId, liniesOrdenades, recentsDisponibles } from '../nucli/index.js';
+import { ambPreusMercadona, esLlistaMercadona } from '../mercadona.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
 import { COMPRA } from './constants.js';
 import { llistaDelCami, textArticles, useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
+import { AvisCatalegMercadona, ComparadorMercadona, useMercadona } from './Mercadona.jsx';
+import { RecepcioRecepta } from './RecepcioRecepta.jsx';
 import {
   articlesVestits, entradetaDe, liniesVestides, perArticle, productesALaGraella, seccionsDe, subtitolDe, suggerimentsVestits
 } from './vestits.js';
@@ -43,7 +47,9 @@ const TEXTOS_LLISTA_DESCONEGUDA = Object.freeze({
 
 /** «Les meues llistes»: cada targeta és un enllaç a /app/nevera/llista/<id>. */
 export function ColumnaLlistes({ params }) {
-  const { estat, ruta, obriNovaLlista, llistaVigent } = useVistaNevera();
+  const { estat, accions, ruta, obriNovaLlista, llistaVigent, mode, llegit } = useVistaNevera();
+  const navigate = useNavigate();
+  const mercadona = estat.llistes.find(esLlistaMercadona);
   return (
     <ColumnaColleccions
       titol="Les meues llistes"
@@ -53,6 +59,14 @@ export function ColumnaLlistes({ params }) {
       onCrea={obriNovaLlista}
       textCrea="Crea una llista"
       textComptador={textArticles}
+      avis={(
+        <Botonera etiqueta="Catàlegs de compra">
+          <Boto disabled={!mercadona && (!llegit || mode === 'lectora' || estat.llistes.length >= LIMITS.llistes)} onClick={() => {
+            const id = mercadona?.id || accions.creaLlista('Mercadona');
+            if (id) navigate(ruta(COMPRA.entrada, id));
+          }}>Obri Mercadona</Boto>
+        </Botonera>
+      )}
     />
   );
 }
@@ -77,6 +91,7 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
       onTria={(linia) => accions.marcaComprat(llista.id, linia.articleId)}
       onEdita={ambEdicio ? (linia) => obriDetall(linia.articleId) : undefined}
       textos={TEXTOS_LLISTA}
+      avis={<RecepcioRecepta llista={llista} />}
       peu={<AvisNevera />}
       primer={COMPRA.primer}
       tram={COMPRA.tram}
@@ -100,9 +115,14 @@ export function ColumnaCatalegCompra({ params }) {
   /* La fitxa d'un producte de botiga també el posa a la graella, com el detall (vestits.js). */
   const { article: obert, fitxa } = useVistaCataleg();
   const llista = llistaDe(params);
+  const deMercadona = esLlistaMercadona(llista);
+  const { dades: catalegMercadona, error: errorMercadona } = useMercadona(deMercadona || Boolean((obert || fitxa)?.startsWith('mer-')));
   const linies = perArticle(llista);
   const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio };
-  const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista?.id, obert || fitxa), autoria: autoriaDArticle });
+  const productes = deMercadona ? ARTICLES_PRODUCTES : productesALaGraella(estat, llista?.id, obert || fitxa);
+  const vestits = articlesVestits(estat, { ...vestit, productes, autoria: autoriaDArticle })
+    .filter((article) => !deMercadona || article.id.startsWith('mer-') || linies.has(article.id));
+  const articles = ambPreusMercadona(vestits, catalegMercadona?.productes);
   const recents = llista ? recentsDisponibles(estat, llista.id) : [];
   const destacats = recents.length ? [{
     id: 'recents',
@@ -126,6 +146,7 @@ export function ColumnaCatalegCompra({ params }) {
     <ColumnaCataleg
       forma="targetes"
       titol="Catàleg"
+      avis={deMercadona ? <AvisCatalegMercadona dades={catalegMercadona} error={errorMercadona} /> : null}
       categories={seccionsDe(estat, llista?.id)}
       articles={articles}
       destacats={destacats}
@@ -139,6 +160,10 @@ export function ColumnaCatalegCompra({ params }) {
         onCrea: (text) => accions.afigPerNom(llista.id, text)
       } : null}
       detall={llista ? {
+        contingutDe: (article) => {
+          const producte = catalegMercadona?.productes.find((p) => p.id === article.id);
+          return producte ? <ComparadorMercadona key={producte.id} producte={producte} /> : null;
+        },
         ambQuantitat: false,
         etiquetaNota: 'Especificació',
         textAccepta: 'Posa-ho a la llista',

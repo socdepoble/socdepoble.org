@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   pagina: null, item: null, towns: [], t: (_, alternativa) => alternativa, seo: vi.fn(), cauImportada: 0, panellImportat: 0
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({
+  useRouter: () => ({ memoria: false }),
   useParams: () => ({ sectionId: 'pobles', itemId: mocks.item?.id }),
   useNavigate: () => vi.fn(),
   useLocation: () => ({ pathname: `/pobles/${mocks.item?.id}`, search: '', state: null }),

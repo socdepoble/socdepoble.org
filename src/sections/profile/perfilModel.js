@@ -79,8 +79,8 @@ export const VISTA_COMPTE = 'compte';
  * categoria i l'element), per damunt de l'actor actiu i de la ruta: la
  * contrasenya és del compte de la persona, no d'una organització.
  */
-export function seleccioInicialDePerfil(identitats, preferides = [], { superadmin = false, vista = null } = {}) {
-  const persona = vista === VISTA_COMPTE ? identitats.find(esPersona) : null;
+export function seleccioInicialDePerfil(identitats, preferides = [], { superadmin = false, vista = null, apartat = null } = {}) {
+  const persona = (vista === VISTA_COMPTE || apartat === VISTA_COMPTE) ? identitats.find(esPersona) : null;
   if (persona) return { categoryId: String(persona.id), itemId: `${persona.id}-compte` };
   const seleccionables = identitats.filter((identitat) => !esPersona(identitat));
   /* Onada R6 · Bloc 2 (P1-b) · La ruta no obri l'administració a qui no és superadmin. */

@@ -28,6 +28,10 @@
 import TEXT_LOYVERSE from './la-parroquia-loyverse.csv?raw';
 import { importaLoyverse, slugDe } from '../nucli/loyverse.js';
 import { DENOMINACIONS } from '../nucli/torn.js';
+import { carregaCatalegParroquia, carregaFotosParroquia, enriqueixCartaParroquia, itemsCatalegCartaParroquia } from '../../plataforma/index.js';
+
+const importaFotos = import.meta.env.DEV || import.meta.env.VITE_SDP_BAR_LLAVOR_LA_PARROQUIA === '1'
+  ? () => carregaFotosParroquia() : null;
 
 export const ESTABLIMENT_LA_PARROQUIA = Object.freeze({ nom: 'La Parròquia · Menjar i Beure', slug: 'la-parroquia', ivaPerDefecte: 10 });
 
@@ -106,4 +110,15 @@ export function importaLaParroquia(text) {
 /** La llavor de La Parròquia amb la còpia del CSV del repo. */
 export function llavorLaParroquia() {
   return importaLaParroquia(TEXT_LOYVERSE);
+}
+
+/** R14: same source prices and REF, canonical categories and explicit missing information. */
+export async function llavorLaParroquiaR14() {
+  const llavor = llavorLaParroquia();
+  const dades = await carregaCatalegParroquia();
+  const { incorporaFotosParroquia } = await importaFotos();
+  const ambFotos = incorporaFotosParroquia(enriqueixCartaParroquia(llavor.carta, dades));
+  const carta = { ...ambFotos, itemsCataleg: itemsCatalegCartaParroquia(ambFotos) };
+  return { ...llavor, carta, resum: { ...llavor.resum, categories: carta.categories.length, categoriesHostaleria: 10, fotos: carta.fotosParroquia.productesAmbFoto },
+    avisos: [...llavor.avisos, { codi: 'FONT_HISTORICA', text: 'Preus històrics. Revisa costos, opcions dels modificadors i al·lèrgens abans de vendre.' }] };
 }

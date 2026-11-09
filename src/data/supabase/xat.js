@@ -41,7 +41,8 @@
  */
 
 import { getClient } from './config.js';
-import { usuariDeSessio } from '../identitat.js';
+import { usuariDeSessio, versioSessio } from '../identitat.js';
+import { despertaXatConfirmat } from './despertaXat.js';
 import { DURADES_SILENCI, finsAlDelSilenci, subjecteDeXat } from '../contracte.js';
 import { PREFIX_PER_DEFECTE, ambXatsPerDefecte, vestixLaIAIA } from '../xatsPerDefecte.js';
 import { generateUUID, getResolvedConfig } from './runtime.js';
@@ -544,6 +545,7 @@ export const enviaMissatge = async (filId, cos, config = {}) => {
   try {
     comprovaSenyal(config);
     const user = usuariDeSessio();
+    const epoch = versioSessio;
     const seed = await local(config);
     if (seed) return seed.enviaMissatge(filId, normalitzaCos(cos), config);
     if (!user) throw errorLocal('Cal iniciar sessió per a escriure al xat.', 'SESSIO');
@@ -581,6 +583,8 @@ export const enviaMissatge = async (filId, cos, config = {}) => {
     if (!Number.isSafeInteger(seq) || seq < 1) {
       throw errorLocal('El servidor no ha confirmat el missatge.', 'SENSE_CONFIRMACIO', true);
     }
+    despertaXatConfirmat(supabase, { missatgeId: fila.id || entrada.id, seq, signal: config.signal },
+      () => usuariDeSessio()?.id === user.id && versioSessio === epoch);
     return {
       id: fila.id || entrada.id,
       filId,

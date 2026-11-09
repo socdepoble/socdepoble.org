@@ -189,6 +189,7 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
   const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
   test('una pàgina del sistema que no és de text (Disseny, Notes, Wiki) no pinta cap cos: la capçalera i «Obri la pàgina»', () => {
     expect(SISTEMA).toHaveLength(18);
+    expect(SISTEMA.map(item => item.id)).not.toContain('anatomia-rural');
     for (const targeta of SISTEMA) {
       const { container, unmount } = render(<PublicacioDetall item={pagina(targeta.id)} />);
       const cos = container.querySelector('article.cms-preview');

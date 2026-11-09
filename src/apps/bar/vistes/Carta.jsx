@@ -19,7 +19,7 @@
 import { useState } from 'react';
 import { Calculator, Coffee } from 'lucide-react';
 import {
-  Alerta, BarraResum, Boto, Camp, CampText, Casella, EstatBuit, GrupCamps, Interruptor, OrdenaCategories, Selector, Taula,
+  Alerta, BarraResum, Boto, Camp, CampText, EstatBuit, GrupCamps, Interruptor, OrdenaCategories, Selector, Taula,
   mouCategoria
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions } from '../../comu/esquelet/index.js';
@@ -30,12 +30,19 @@ import { ALERGENS, NOMS_ALERGENS, ivaDe, validaCataleg, variantDe } from '../nuc
 import { MICRO_PER_CENT, costDeVenda, costEscandall, costUnitariMicro, foodCostPermil, pvpSuggerit, textPermil } from '../nucli/escandall.js';
 import { mitjaAmunt } from '../nucli/comu.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
+import { fiscalVenda } from '../../plataforma/index.js';
 import { AvisDeLaColumna, AvisOperacio, AvisSessio, Columna, NoTrobat, Preparat } from './comu.jsx';
 import { useVes } from './punt.js';
 import { articlesDeCarta, categoriesVestides, euros } from './vestits.js';
+import { CalculadoraCompraParroquia } from './CalculadoraCompraParroquia.jsx';
 
 const ambEuros = (cents) => formatEuros(cents, { simbol: false });
 const textProductes = (n) => `${n} ${n === 1 ? 'producte' : 'productes'}`;
+const BASES_COST_NORMALITZAT = Object.freeze(['base-cost-deduccions', 'cost-final-no-deduible']);
+const baseDeCost = (variant) => variant?.costBaseFiscal || 'desconegut';
+const costNormalitzat = (variant, costCents) => costCents !== null && BASES_COST_NORMALITZAT.includes(baseDeCost(variant))
+  && (costCents !== 0 || variant?.costConfirmat === true);
+const teFontAlergens = (producte) => typeof producte?.fontAlergens === 'string' && Boolean(producte.fontAlergens.trim());
 
 export function ProductesCarta({ params }) {
   return (
@@ -82,10 +89,21 @@ function Editor({ params }) {
 
 function FormulariProducte({ producte }) {
   const { carta, accions, permis } = useBar();
-  const [esborrany, setEsborrany] = useState(() => ({
-    ...structuredClone(producte),
-    preus: producte.variants.map((v) => ambEuros(v.preuCents))
-  }));
+  const [esborrany, setEsborrany] = useState(() => {
+    const ambFont = teFontAlergens(producte);
+    return {
+      ...structuredClone(producte),
+      alergens: ambFont ? [...producte.alergens] : [],
+      tracesAlergens: ambFont ? [...(producte.tracesAlergens || [])] : [],
+      alergensAbsents: ambFont ? [...(producte.alergensAbsents || [])] : [],
+      fontAlergens: ambFont ? producte.fontAlergens.trim() : '',
+      novaFontAlergens: '', alergensCanviats: false,
+      ...(!ambFont && [producte.alergens, producte.tracesAlergens, producte.alergensAbsents].some((ids) => ids?.length)
+        ? { alergensOrigenNoVerificats: { ingredients: producte.alergens, traces: producte.tracesAlergens || [], absents: producte.alergensAbsents || [] } } : {}),
+      preus: producte.variants.map((v) => ambEuros(v.preuCents)),
+      costos: producte.variants.map((v) => Number.isSafeInteger(v.costCents) && (v.costCents !== 0 || v.costConfirmat === true) ? ambEuros(v.costCents) : '')
+    };
+  });
   const [errors, setErrors] = useState([]);
   const [desat, setDesat] = useState(false);
   const canvia = (canvis) => {
@@ -98,8 +116,35 @@ function FormulariProducte({ producte }) {
       setErrors(['Algun preu no es pot llegir: escriu-lo com «1,50».']);
       return;
     }
-    const nou = { ...esborrany, exemple: false, variants: esborrany.variants.map((v, i) => ({ ...v, preuCents: preus[i] })) };
+    const costos = esborrany.costos.map((text) => text.trim() === '' ? undefined : parseEuros(text));
+    if (costos.some((cents) => cents === null || cents < 0)) {
+      setErrors(['Algun cost no es pot llegir. Deixa’l buit si encara no el coneixes.']);
+      return;
+    }
+    const fontAlergens = esborrany.novaFontAlergens.trim() || (esborrany.alergensCanviats ? '' : esborrany.fontAlergens);
+    const declaraAlergens = [esborrany.alergens, esborrany.tracesAlergens, esborrany.alergensAbsents].some((ids) => ids.length);
+    if (declaraAlergens && !fontAlergens) {
+      setErrors(['Indica una font actual per a la declaració d’al·lèrgens: fitxa del proveïdor, lot, recepta revisada o document i data.']);
+      return;
+    }
+    const nou = { ...esborrany, fontAlergens, exemple: false, variants: esborrany.variants.map((v, i) => {
+      const variant = { ...v, preuCents: preus[i] };
+      if (costos[i] === undefined) {
+        delete variant.costCents;
+        variant.costConfirmat = false;
+        variant.costBaseFiscal = 'desconegut';
+      } else {
+        variant.costCents = costos[i];
+        variant.costConfirmat = true;
+        variant.costBaseFiscal = baseDeCost(v);
+      }
+      if (v.costEstat !== undefined) variant.costEstat = costos[i] === undefined ? 'pendent' : 'revisat';
+      return variant;
+    }) };
     delete nou.preus;
+    delete nou.costos;
+    delete nou.novaFontAlergens;
+    delete nou.alergensCanviats;
     const novaCarta = { ...carta, productes: carta.productes.map((p) => (p.id === nou.id ? nou : p)) };
     const validacio = validaCataleg(novaCarta);
     if (!validacio.ok) {
@@ -108,12 +153,14 @@ function FormulariProducte({ producte }) {
     }
     setErrors([]);
     const r = await accions.desaCarta(novaCarta);
+    if (r.ok) setEsborrany((actual) => ({ ...actual, ...nou, fontAlergens, novaFontAlergens: '', alergensCanviats: false }));
     setDesat(r.ok);
   };
   return (
     <Columna titol={producte.nom} torna={{ etiqueta: 'Torna als productes', trams: ['productes'] }}>
       <AvisOperacio />
       {producte.exemple ? <Alerta to="info" viva={false}>Este producte encara porta el preu d’exemple: en desar-lo, passa a ser el teu.</Alerta> : null}
+      {producte.font?.cataleg === 'la-parroquia' ? <Alerta to="info" viva={false}>Carta històrica de La Parròquia. Revisa preus, costos i al·lèrgens abans de vendre.</Alerta> : null}
       {errors.length ? <Alerta to="error">{errors.join(' · ')}</Alerta> : null}
       {desat ? <Alerta to="exit">Desat. Les comandes ja fetes no canvien.</Alerta> : null}
       <Camp etiqueta="Nom">
@@ -125,6 +172,7 @@ function FormulariProducte({ producte }) {
       </Camp>
       {esborrany.variants.map((v, i) => (
         <GrupCamps key={v.id} llegenda={`Variant: ${v.nom}`}>
+          {v.ref ? <p>{`REF: ${v.ref}`}</p> : null}
           <Camp etiqueta="Nom de la variant">
             <CampText value={v.nom} maxLength={40}
               onChange={(event) => canvia({ variants: esborrany.variants.map((x, j) => (j === i ? { ...x, nom: event.target.value } : x)) })} />
@@ -132,6 +180,18 @@ function FormulariProducte({ producte }) {
           <Camp etiqueta="Preu amb IVA (€)">
             <CampText inputMode="decimal" value={esborrany.preus[i]}
               onChange={(event) => canvia({ preus: esborrany.preus.map((p, j) => (j === i ? event.target.value : p)) })} />
+          </Camp>
+          <Camp etiqueta="Cost de la variant (€)" ajuda="Buit vol dir cost pendent. Un zero només és vàlid si l’has comprovat. Normalitza la base fiscal per a calcular marges.">
+            <CampText inputMode="decimal" value={esborrany.costos[i]}
+              onChange={(event) => canvia({ costos: esborrany.costos.map((cost, j) => j === i ? event.target.value : cost),
+                variants: esborrany.variants.map((x, j) => j === i ? { ...x, costBaseFiscal: 'desconegut' } : x) })} />
+          </Camp>
+          <Camp etiqueta="Base fiscal del cost" ajuda="Tria-la només després de revisar si els impostos de compra són deduïbles.">
+            <Selector value={baseDeCost(v)} opcions={[
+              { valor: 'desconegut', etiqueta: 'Pendent de normalitzar' },
+              { valor: 'base-cost-deduccions', etiqueta: 'Cost sense IVA deduïble' },
+              { valor: 'cost-final-no-deduible', etiqueta: 'Cost final amb impostos no deduïbles' }
+            ]} onChange={(event) => canvia({ variants: esborrany.variants.map((x, j) => j === i ? { ...x, costBaseFiscal: event.target.value } : x) })} />
           </Camp>
         </GrupCamps>
       ))}
@@ -142,10 +202,28 @@ function FormulariProducte({ producte }) {
         onCanvi={(cartaDigital) => canvia({ canals: { ...canalsDe(esborrany), cartaDigital } })} />
       <Interruptor etiqueta="Per emportar" actiu={canalsDe(esborrany).perEmportar}
         onCanvi={(perEmportar) => canvia({ canals: { ...canalsDe(esborrany), perEmportar } })} />
+      {producte.grupsModificadorsPendents?.length ? <p>{`Grups de modificadors de la font: ${producte.grupsModificadorsPendents.join(', ')}. Cal definir-ne les opcions i els suplements abans d’activar-los.`}</p> : null}
       <GrupCamps llegenda="Al·lèrgens (els manté el bar)">
+        <p>• indica ingredient i T indica traça. «Pendent» no acredita absència. Una declaració requerix una font actual.</p>
+        {esborrany.alergensOrigenNoVerificats ? <Alerta to="info" viva={false}>Les anotacions anteriors no tenen font i es mostren pendents.</Alerta> : null}
+        {esborrany.fontAlergens && !esborrany.alergensCanviats ? <p>{`Font vigent: ${esborrany.fontAlergens}`}</p> : null}
+        <Camp etiqueta="Font de la declaració d’al·lèrgens" ajuda="Indica document, proveïdor o recepta revisada i data. Quan canvies un estat, cal tornar a informar la font.">
+          <CampText value={esborrany.novaFontAlergens} maxLength={240} onChange={(event) => canvia({ novaFontAlergens: event.target.value })} />
+        </Camp>
         {ALERGENS.map((a) => (
-          <Casella key={a} etiqueta={NOMS_ALERGENS[a]} checked={esborrany.alergens.includes(a)}
-            onChange={(event) => canvia({ alergens: event.target.checked ? [...esborrany.alergens, a] : esborrany.alergens.filter((x) => x !== a) })} />
+          <Camp key={a} etiqueta={NOMS_ALERGENS[a]}>
+            <Selector value={esborrany.alergens.includes(a) ? 'ingredient' : (esborrany.tracesAlergens || []).includes(a) ? 'traca' : (esborrany.alergensAbsents || []).includes(a) ? 'absent' : 'pendent'}
+              opcions={[{ valor: 'pendent', etiqueta: 'Pendent' }, { valor: 'ingredient', etiqueta: '• Present com a ingredient' }, { valor: 'traca', etiqueta: 'T Present com a traça' }, { valor: 'absent', etiqueta: 'Absència comprovada' }]}
+              onChange={(event) => {
+                const estat = event.target.value;
+                canvia({
+                  alergens: [...esborrany.alergens.filter((id) => id !== a), ...(estat === 'ingredient' ? [a] : [])],
+                  tracesAlergens: [...(esborrany.tracesAlergens || []).filter((id) => id !== a), ...(estat === 'traca' ? [a] : [])],
+                  alergensAbsents: [...(esborrany.alergensAbsents || []).filter((id) => id !== a), ...(estat === 'absent' ? [a] : [])],
+                  alergensEstat: 'revisio_manual', fontAlergens: '', alergensCanviats: true
+                });
+              }} />
+          </Camp>
         ))}
       </GrupCamps>
       <Boto varietat="primari" ple disabled={!permis.potEscriure} onClick={desa}>Desa el producte</Boto>
@@ -189,7 +267,10 @@ function Grups({ params }) {
   const { ruta } = useVes();
   return (
     <ColumnaColleccions titol="Modificadors" actiu={params?.grup || null}
-      colleccions={carta.grups.map((g) => ({ id: g.id, nom: g.nom, comptador: g.opcions.length, secundari: g.min >= 1 ? 'Obligatori' : 'Opcional' }))}
+      colleccions={[
+        ...carta.grups.map((g) => ({ id: g.id, nom: g.nom, comptador: g.opcions.length, secundari: g.min >= 1 ? 'Obligatori' : 'Opcional' })),
+        ...(carta.grupsPendents || []).map((g) => ({ id: g.id, nom: g.nom, comptador: 0, secundari: 'Opcions pendents de la font' }))
+      ]}
       hrefDe={(g) => ruta('modificadors', g.id)} textComptador={(n) => `${n} opcions`} avis={<AvisDeLaColumna />} />
   );
 }
@@ -205,6 +286,17 @@ export function GrupTriat({ params }) {
 function Grup({ params }) {
   const { carta } = useBar();
   const grup = carta.grups.find((g) => g.id === params?.grup) || null;
+  const pendent = (carta.grupsPendents || []).find((g) => g.id === params?.grup) || null;
+  if (pendent) {
+    const productes = carta.productes.filter((p) => p.grupsModificadorsPendents?.includes(pendent.nom)).map((p) => p.nom);
+    return (
+      <Columna titol={pendent.nom}>
+        <Alerta to="info" viva={false}>L’exportació de Loyverse indica quins productes porten este grup, però no n’inclou les opcions ni els suplements.</Alerta>
+        <p>El grup continua pendent. No s’aplica cap suplement a les comandes.</p>
+        <p>{productes.length ? `El porten a la font: ${productes.join(', ')}.` : 'Cap producte el porta a la font.'}</p>
+      </Columna>
+    );
+  }
   if (!grup) {
     return (
       <Columna titol="Modificadors">
@@ -240,7 +332,13 @@ function Apagats({ titol }) {
  */
 function costDe(carta, producte) {
   const escandall = carta.escandalls.find((e) => e.producteId === producte.id);
-  return costDeVenda(carta, producte, escandall?.varianteId);
+  return costRevisat(carta, producte, escandall?.varianteId);
+}
+
+function costRevisat(carta, producte, varianteId) {
+  const resultat = costDeVenda(carta, producte, varianteId);
+  return resultat.costCents === 0 && variantDe(producte, varianteId)?.costConfirmat !== true
+    ? { ...resultat, costCents: null } : resultat;
 }
 
 export function EscandallsCarta({ params }) {
@@ -259,11 +357,11 @@ function Escandalls() {
   const articles = carta.productes.map((p) => {
     const { costCents } = costDe(carta, p);
     const variant = variantDe(p);
-    const fc = costCents !== null && variant ? foodCostPermil(costCents, variant.preuCents, ivaDe(p, establiment.ivaPerDefecte)) : null;
+    const fc = costNormalitzat(variant, costCents) && !p.preuObert ? foodCostPermil(costCents, variant.preuCents, ivaDe(p, establiment.ivaPerDefecte)) : null;
     return {
       id: p.id, nom: p.nom, categoriaId: p.categoriaId,
       valor: costCents === null ? 'Sense cost' : `Cost ${euros(costCents)}`,
-      ...(fc !== null ? { secundari: `Food cost ${textPermil(fc)}` } : {})
+      ...(fc !== null ? { secundari: `Food cost normalitzat ${textPermil(fc)}` } : costCents !== null ? { secundari: 'Base fiscal del cost pendent' } : {})
     };
   });
   return (
@@ -282,6 +380,7 @@ export function EscandallTriat({ params }) {
 
 function Escandall({ params }) {
   const { carta, establiment } = useBar();
+  const [tria, setTria] = useState({ producteId: null, varianteId: undefined });
   const actius = useEscandallsActius();
   if (!actius) return <Apagats titol="Escandall" />;
   const producte = carta.productes.find((p) => p.id === params?.producte) || null;
@@ -292,8 +391,9 @@ function Escandall({ params }) {
       </Columna>
     );
   }
-  const { escandall, costCents } = costDe(carta, producte);
-  const variant = variantDe(producte, escandall?.varianteId);
+  const varianteId = tria.producteId === producte.id ? tria.varianteId : undefined;
+  const { escandall, costCents } = costRevisat(carta, producte, varianteId);
+  const variant = variantDe(producte, varianteId);
   const iva = ivaDe(producte, establiment.ivaPerDefecte);
   const objectiu = escandall?.objectiuFoodCostPercent ?? 30;
   let detall = null;
@@ -302,7 +402,10 @@ function Escandall({ params }) {
   } catch {
     detall = null;
   }
-  const fc = costCents !== null ? foodCostPermil(costCents, variant.preuCents, iva) : null;
+  const normalitzat = costNormalitzat(variant, costCents);
+  const fc = normalitzat ? foodCostPermil(costCents, variant.preuCents, iva) : null;
+  const fiscal = normalitzat && !producte.preuObert && [4, 10, 21].includes(iva)
+    ? fiscalVenda({ pvpCents: variant.preuCents, costCompraCents: costCents, ivaVendaPercent: iva }) : null;
   return (
     <ColumnaColleccio titol={`Escandall: ${producte.nom}`}
       linies={(detall?.linies || []).map((l) => {
@@ -316,13 +419,32 @@ function Escandall({ params }) {
       resum={{ etiqueta: 'Cost per ració', comptador: detall?.linies.length || 0, textComptador: (n) => `${n} ingredients`, total: costCents === null ? 'Sense cost' : euros(costCents) }}
       textos={{ buit: 'Sense escandall', buitText: escandall ? 'Revisa els ingredients.' : 'Este producte no té escandall: el cost és el manual de la variant, si n’hi ha.' }}
       peu={(
-        <Taula titol="Preu i food cost" densa>
-          <tbody>
-            <tr><th scope="row">{`PVP (${variant.nom})`}</th><td>{euros(variant.preuCents)}</td></tr>
-            <tr><th scope="row">Food cost</th><td>{fc === null ? '—' : textPermil(fc)}</td></tr>
-            <tr><th scope="row">{`PVP suggerit (objectiu ${objectiu} %)`}</th><td>{costCents === null ? '—' : euros(pvpSuggerit(costCents, objectiu, iva))}</td></tr>
-          </tbody>
-        </Taula>
+        <>
+          {producte.variants.length > 1 ? (
+            <Camp etiqueta="Variant de l’escandall">
+              <Selector value={variant.id} opcions={producte.variants.map((v) => ({ valor: v.id, etiqueta: v.nom }))}
+                onChange={(event) => setTria({ producteId: producte.id, varianteId: event.target.value })} />
+            </Camp>
+          ) : null}
+          <Taula titol="Preu i food cost" densa>
+            <tbody>
+              <tr><th scope="row">{`PVP (${variant.nom})`}</th><td>{producte.preuObert ? 'Preu obert' : euros(variant.preuCents)}</td></tr>
+              <tr><th scope="row">Food cost</th><td>{fc === null || producte.preuObert ? '—' : textPermil(fc)}</td></tr>
+              <tr><th scope="row">{`PVP suggerit (objectiu ${objectiu} %)`}</th><td>{normalitzat ? euros(pvpSuggerit(costCents, objectiu, iva)) : '—'}</td></tr>
+              <tr><th scope="row">Base fiscal del cost</th><td>{normalitzat ? (baseDeCost(variant) === 'base-cost-deduccions' ? 'Cost sense IVA deduïble' : 'Cost final amb impostos no deduïbles') : 'Pendent de normalitzar'}</td></tr>
+              {fiscal ? <>
+                <tr><th scope="row">Base imposable de venda</th><td>{euros(fiscal.baseImposableCents)}</td></tr>
+                <tr><th scope="row">{`IVA de venda (${iva} %)`}</th><td>{euros(fiscal.ivaVendaCents)}</td></tr>
+                <tr><th scope="row">Guany abans d’altres costos</th><td>{euros(fiscal.guanyNetCents)}</td></tr>
+                <tr><th scope="row">Marge sobre la base imposable</th><td>{fiscal.margePermil === null ? '—' : `${(fiscal.margePermil / 10).toFixed(1).replace('.', ',')} %`}</td></tr>
+              </> : null}
+            </tbody>
+          </Taula>
+          {fiscal ? <p>{`${fiscal.limit}. S’ha emprat el cost normalitzat declarat per a la variant.`}</p> : null}
+          {costCents !== null && !normalitzat ? <p>Normalitza la base fiscal del cost a la fitxa del producte abans de calcular el marge o el PVP suggerit.</p> : null}
+          {producte.preuObert ? <p>El marge es calcularà quan s’informe el preu de venda.</p> : null}
+          {producte.font?.cataleg === 'la-parroquia' ? <CalculadoraCompraParroquia key={`${producte.id}-${variant.id}`} producte={producte} variant={variant} /> : null}
+        </>
       )} avis={<AvisDeLaColumna />} />
   );
 }

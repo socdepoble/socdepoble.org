@@ -13,6 +13,19 @@ export * from './organizations.js';
 export * from './auth.js';
 export * from './notes.js';
 export * from './xat.js';
+/* Sanejament R15 (B2 · P1-01, R15-REG-05, Q-06) · El ritme del xat (RPC xat_ritme i
+   xat_presencia, migracions 2611080430/0431/0432) i la IAIA amb servidor (funció
+   iaia) NO són a la producció de Supabase. L'adaptador només anuncia eixes
+   capacitats si el build ho demana amb una bandera literal (Vite la plega:
+   tooling/vite/banderes-de-capacitat.mjs). Apagada, l'export val undefined:
+   backendPort la tracta com a absent (teCapacitat fals, cap petició) i Rollup
+   deixa fora xatRitme.js i iaia.js. El Node 0 ho decidix pel seu estat
+   (clientPrivatNodeZero.js) i no passa per ací. */
+import { loadRitmeXat as loadRitmeXatAmbServidor, actualitzaPresenciaXat as actualitzaPresenciaXatAmbServidor } from './xatRitme.js';
+import { consultaIAIA as consultaIAIAAmbServidor } from './iaia.js';
+export const loadRitmeXat = import.meta.env.VITE_SDP_XAT_RITME === '1' ? loadRitmeXatAmbServidor : undefined;
+export const actualitzaPresenciaXat = import.meta.env.VITE_SDP_XAT_RITME === '1' ? actualitzaPresenciaXatAmbServidor : undefined;
+export const consultaIAIA = import.meta.env.VITE_SDP_IAIA_SERVIDOR === '1' ? consultaIAIAAmbServidor : undefined;
 /* E1.2 (pla 261029_1305) · Explícit: transportAdjunts és intern de la branca xifrada, no del port. */
 export { quotaXat, publicaAdjuntXat, urlAdjuntXat, descartaAdjuntXat } from './xatMultimedia.js';
 export * from './storage.js';

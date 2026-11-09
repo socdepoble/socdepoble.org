@@ -93,6 +93,8 @@ function validaVariants(p, on, errors) {
     if (!esText(v?.nom, MAX_NOM)) errors.push(`${onV}: cal un nom`);
     if (!esEnterEntre(v?.preuCents, 0, 10000000)) errors.push(`${onV}: preuCents ha de ser un enter ≥ 0`);
     if (v?.costCents !== undefined && !esEnterEntre(v.costCents, 0, 10000000)) errors.push(`${onV}: costCents ha de ser un enter ≥ 0`);
+    if (v?.costBaseFiscal !== undefined && !['base-cost-deduccions', 'cost-final-no-deduible', 'desconegut'].includes(v.costBaseFiscal)) errors.push(`${onV}: costBaseFiscal desconegut`);
+    if (v?.costConfirmat !== undefined && typeof v.costConfirmat !== 'boolean') errors.push(`${onV}: costConfirmat ha de ser booleà`);
     if (v?.ml !== undefined && !esEnterEntre(v.ml, 1, 100000)) errors.push(`${onV}: ml ha de ser un enter positiu`);
     if (v?.escandallId !== undefined && !esSlug(v.escandallId)) errors.push(`${onV}: escandallId ha de ser un slug`);
   });
@@ -112,6 +114,17 @@ function validaProductes(productes, categories, grups, errors) {
     else for (const id of p.grupsModificadors) if (!grups.has(id)) errors.push(`${on}: el grup «${String(id)}» no existix`);
     if (p.ivaPercent !== undefined && !esEnterEntre(p.ivaPercent, 0, 100)) errors.push(`${on}: ivaPercent ha de ser un enter de 0 a 100`);
     for (const error of validaAlergens(p.alergens)) errors.push(`${on}.${error}`);
+    for (const camp of ['tracesAlergens', 'alergensAbsents']) {
+      if (p[camp] !== undefined) for (const error of validaAlergens(p[camp])) errors.push(`${on}.${camp}: ${error}`);
+    }
+    const ingredients = new Set(Array.isArray(p.alergens) ? p.alergens : []);
+    const traces = new Set(Array.isArray(p.tracesAlergens) ? p.tracesAlergens : []);
+    const absents = new Set(Array.isArray(p.alergensAbsents) ? p.alergensAbsents : []);
+    if ([...traces].some((id) => ingredients.has(id)) || [...absents].some((id) => ingredients.has(id) || traces.has(id))) {
+      errors.push(`${on}: un al·lergen no pot ser ingredient, traça i absent alhora`);
+    }
+    if (p.fontAlergens !== undefined && (typeof p.fontAlergens !== 'string' || p.fontAlergens.length > 240)) errors.push(`${on}: fontAlergens ha de ser text de fins a 240 caràcters`);
+    if (p.alergensEstat === 'revisio_manual' && ingredients.size + traces.size + absents.size > 0 && !(typeof p.fontAlergens === 'string' && p.fontAlergens.trim())) errors.push(`${on}: una declaració d’al·lèrgens requerix font actual`);
     if (!p.imatge || !esSlug(p.imatge.slug) || !ESTATS_IMATGE.includes(p.imatge.estat)) errors.push(`${on}: imatge { slug, estat: marcador | definitiva }`);
     for (const camp of ['reposaNevera', 'preuObert', 'actiu', 'exemple']) {
       if (typeof p[camp] !== 'boolean') errors.push(`${on}: ${camp} ha de ser booleà`);

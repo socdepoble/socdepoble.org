@@ -164,3 +164,25 @@ test('dues capes: el menú «⋯» d’un missatge damunt de la resposta; el pri
   expect(capesEnrereObertes()).toBe(0);
   expect(arrere()).toBe(false);
 });
+
+/* R56 · El menú d’un missatge sense text pot dependre només d’un callback. */
+test.each([
+  ['resposta', { onRespon: () => {} }, {}],
+  ['denúncia', { onDenuncia: () => {} }, {}],
+  ['bloqueig', { onBloqueja: () => {}, nomAutor: 'Pep' }, { onBloqueja: () => {}, nomAutor: '' }]
+])('R56 · retirar %s tanca la capa visible i restaurar-lo no reobri el menú', (_, abans, despres) => {
+  const missatge = { ...MISSATGE, text: '' };
+  const arbre = (callbacks) => <MemoryRouter><ul><Bombolla missatge={missatge} locale="ca-ES" t={t} {...callbacks}/></ul></MemoryRouter>;
+  const { rerender, unmount } = render(arbre(abans));
+  fireEvent.click(opcionsDe(document.body));
+  expect(menu()).toBeTruthy(); expect(capesEnrereObertes()).toBe(1);
+  rerender(arbre(despres));
+  expect(menu()).toBeNull(); expect(capesEnrereObertes()).toBe(0);
+  expect(arrere()).toBe(false);
+  expect(fireEvent.keyDown(document.body, { key: 'Escape' })).toBe(true);
+  rerender(arbre(abans));
+  expect(menu()).toBeNull(); expect(capesEnrereObertes()).toBe(0);
+  fireEvent.click(opcionsDe(document.body));
+  expect(capesEnrereObertes()).toBe(1);
+  unmount(); expect(capesEnrereObertes()).toBe(0);
+});

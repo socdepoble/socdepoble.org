@@ -1,37 +1,22 @@
-/* Ordre nocturna 261030_0252 (Fase 3, WP) · L'adaptador dels avisos push de
-   l'App. Fase N2 (B8-CLIENT, marató 261101_2143): només l'importa l'entrada
-   nativa (src/natiu/entrada.jsx), darrere de la bandera AVISOS_PUSH_XAT_ACTIUS
-   i amb una importació dinàmica, i el registre neutre (src/config/avisosPushXat.js) el rep
-   embolcallat amb adaptadorPushNatiuPerAlRegistre.
-   Sense npm install: el connector PushNotifications (el paquet oficial de
-   Capacitor, amb FCM a Android i APNs a iOS) no és a l'App fins que el Mestre
-   ho decidisca (D-WP-7, D-B8C-3). Fins llavors el pont diu que no hi és,
-   motiuPushNatiu() diu 'sense-connector' i tot és net: cap interruptor, cap
-   crida al natiu i res a la consola.
-   Del nucli del pont (ja instal·lat) només s'usen isPluginAvailable i
-   registerPlugin, i registerPlugin només quan el connector hi és, una sola
-   vegada per nucli (dos registres del mateix nom avisen a la consola).
-   Compte: registerPlugin torna un Proxy que respon a qualsevol nom, també a
-   `then` (avisosNatius.js). Una promesa que es resol AMB ell no es resol mai.
-   Per això el connector només el torna una funció síncrona, i les asíncrones
-   en tornen sempre un objecte pla.
-   El mateix despertador cec que el web (src/pwa/avisosPush.js): el text de
-   l'avís el posa el servidor, literal i sense cap dada (B8-SERVIDOR §2.6).
-   Este adaptador no veu ni pinta cap avís, i el toc (escoltaToc) arriba sense
-   cap dada: la del connector (també el `desti` del servidor) s'ignora a posta.
-   Estats, en este ordre: sense-connector; denegat (el permís, llegit sense
-   preguntar); actiu si el testimoni d'esta obertura de l'App és al servidor;
-   sense-servidor (sense `desa` no es pregunta ni es registra: demanar el
-   permís seria prometre el que no passarà); inactiu.
-   La baixa (desactiva, Gauntlet matinal 261030: ALT-01.2 de Gemini i
-   MILLORA-C10 de Codex), també només amb el connector al pont: unregister (a
-   Android esborra el testimoni de FCM; a iOS dona de baixa l'APNs), lleva els
-   avisos ja mostrats i, de cortesia, retira el testimoni al servidor. */
+/* R54 · Transport oficial PushNotifications8.1.3. El pont és inert sense
+   connector; permisos només per gest explícit. El cicle recupera únicament
+   l’opt-in del mateix compte. Tokens només en memòria; avís i toc cecs. */
 import { Capacitor, registerPlugin } from '@capacitor/core';
+import { cicleAvisosPush } from './cicleAvisosPush.js';
+import { memoriaConsentimentPush } from './consentimentPush.js';
 
 export const CONNECTOR_PUSH = 'PushNotifications';
 
+/* Sanejament R15 (B3 · P1-03, R15A-NAT-01) · Sense google-services.json, register() i
+   unregister() del connector criden FirebaseMessaging.getInstance() sense FirebaseApp i
+   l'APK peta (RuntimeException al fil CapacitorPlugins). El push natiu només s'encén amb la
+   bandera de build literal VITE_SDP_PUSH_NATIU==='1' (tooling/vite/banderes-de-capacitat.mjs),
+   que es declara a .env.natiu.local quan hi ha la configuració d'FCM i APNs. Apagada, tot el
+   cicle diu 'sense-config' i no toca el pont. Es llig en cada crida (les proves la canvien). */
+const pushNatiuConfigurat = () => import.meta.env.VITE_SDP_PUSH_NATIU === '1';
+
 export const ESTAT_PUSH_NATIU = Object.freeze({
+  SENSE_CONFIG: 'sense-config',
   SENSE_CONNECTOR: 'sense-connector',
   DENEGAT: 'denegat',
   SENSE_SERVIDOR: 'sense-servidor',
@@ -47,8 +32,6 @@ export const TOPALL_TESTIMONI_MS = 15000;
 const TOC_DEL_CONNECTOR = 'pushNotificationActionPerformed';
 
 /* Les plataformes que el servidor accepta per a un testimoni natiu (B8-SERVIDOR §2.9). */
-const PLATAFORMES_NATIVES = new Set(['ios', 'android']);
-
 /* Els permisos que encara es poden preguntar. */
 const PREGUNTABLES = new Set(['prompt', 'prompt-with-rationale']);
 
@@ -124,14 +107,17 @@ function testimoniDelRegistre(push, topallMs) {
 }
 
 /**
- * Per què el registre no ha d'oferir els avisos push de l'App: 'sense-connector'
+ * Per què el registre no ha d'oferir els avisos push de l'App: 'sense-config' si el build
+ * no porta VITE_SDP_PUSH_NATIU=1 (Sanejament R15, B3); 'sense-connector'
  * si el pont no té el connector PushNotifications, o null si el té.
  * SÍNCRONA i sense efectes (B8-CLIENT, ARB-06): només isPluginAvailable, mai
  * registerPlugin, cap permís ni cap xarxa. Mai llança.
  * @param {{ nucli?: { Capacitor: object, registerPlugin: Function } }} [opcions]
- * @returns {('sense-connector'|null)}
+ * @returns {('sense-config'|'sense-connector'|null)}
  */
 export function motiuPushNatiu(opcions = {}) {
+  // Sanejament R15 (B3): sense la bandera de build, 'sense-config' abans de mirar el pont.
+  if (!pushNatiuConfigurat()) return ESTAT_PUSH_NATIU.SENSE_CONFIG;
   try {
     const nucli = opcions && opcions.nucli !== undefined ? opcions.nucli : nucliPerDefecte();
     const pont = nucli && nucli.Capacitor;
@@ -155,7 +141,14 @@ export function motiuPushNatiu(opcions = {}) {
  *   desactiva(opcions?: { retira?: (dades: { testimoni: string, plataforma: (string|null) }) => Promise<unknown> }) => Promise<{ estat: string }>,
  *   escoltaToc(fn: (dades: {}) => void) => () => void }}
  */
-export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, topallMs = TOPALL_TESTIMONI_MS } = {}) {
+export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, topallMs = TOPALL_TESTIMONI_MS, canal = null } = {}) {
+  /* Sanejament R15 (B3) · Sense la bandera de build, l'adaptador ni tan sols mira el pont. */
+  if (!pushNatiuConfigurat()) return adaptadorSenseConfig();
+  /* Sanejament R15 (B3 · P1-03) · Cert des que esta obertura de l'App ha demanat register()
+     (o n'ha rebut un testimoni) fins a una baixa feta. Sense això, ni cap testimoni ni cap
+     opt-in desat (opcions.ambOptIn, que passa el cicle), desactiva no crida unregister():
+     no hi ha res a desfer, i el connector sense FirebaseApp petaria. */
+  let registreDemanat = false;
   /* El testimoni que este adaptador ha passat al servidor, només en memòria
      (no s'escriu enlloc) i fins que el servidor en confirma la retirada:
      desactiva el dona a retira. Després de reobrir l'App no se sap: el
@@ -197,8 +190,9 @@ export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, t
         let permis = textDelPermis(await push.checkPermissions());
         if (permis === 'denied') return { estat: ESTAT_PUSH_NATIU.DENEGAT };
         if (typeof desaAra !== 'function') return { estat: ESTAT_PUSH_NATIU.SENSE_SERVIDOR };
-        if (PREGUNTABLES.has(permis)) permis = textDelPermis(await push.requestPermissions());
+        if (PREGUNTABLES.has(permis) && opcions.gest !== false) permis = textDelPermis(await push.requestPermissions());
         if (permis !== 'granted') return { estat: ESTAT_PUSH_NATIU.DENEGAT };
+        registreDemanat = true;
         const testimoni = await testimoniDelRegistre(push, topallMs);
         if (!testimoni) return { estat: ESTAT_PUSH_NATIU.ERROR };
         await desaAra({ testimoni, plataforma: plataformaDe(nucli) });
@@ -223,10 +217,13 @@ export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, t
       const push = connectorDe(nucli);
       if (!push) return { estat: ESTAT_PUSH_NATIU.SENSE_CONNECTOR };
       registrat = false;
+      // Sanejament R15 (B3 · P1-03): res registrat en esta obertura, cap testimoni ni opt-in desat → cap crida nativa.
+      if (!registreDemanat && !testimoniDesat && opcions?.ambOptIn !== true) return { estat: ESTAT_PUSH_NATIU.INACTIU };
       const retira = opcions && typeof opcions.retira === 'function' ? opcions.retira : null;
       let desfet = true;
       try {
         await push.unregister();
+        registreDemanat = false;
       } catch {
         desfet = false;
       }
@@ -253,6 +250,40 @@ export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, t
      * d'escoltar: des d'eixe moment fn no es torna a cridar, encara que el
      * connector tarde a llevar l'oient. Mai llança.
      */
+    async preparaCanal() {
+      const push = connectorDe(nucli);
+      const textos = (typeof canal === 'function' ? canal() : canal) || {};
+      if (push && plataformaDe(nucli) === 'android') await push.createChannel({ id: 'xat', name: textos.nom || 'Missatges del xat', description: textos.descripcio || 'Avisos dels missatges nous de Sóc de Poble', importance: 4, visibility: 0, vibration: true, lights: true });
+    },
+    async neteja() {
+      const push = connectorDe(nucli);
+      if (push) await push.removeAllDeliveredNotifications();
+    },
+    escoltaPendent(fn) {
+      const push = connectorDe(nucli);
+      if (!push) return () => {};
+      let viu = true;
+      const avisa = () => { if (viu) fn(); };
+      const oient = Promise.resolve(push.addListener('pushNotificationReceived', avisa));
+      oient.catch(() => {});
+      globalThis.document?.addEventListener?.('visibilitychange', avisa);
+      return () => {
+        viu = false;
+        globalThis.document?.removeEventListener?.('visibilitychange', avisa);
+        oient.then(m => m?.remove()).catch(() => {});
+      };
+    },
+    escoltaRegistre(fn) {
+      const push = connectorDe(nucli);
+      if (!push || typeof fn !== 'function') return () => {};
+      let viu = true;
+      const oient = Promise.resolve(push.addListener('registration', d => {
+        if (typeof d?.value === 'string' && d.value) registreDemanat = true; // un testimoni viu d'esta obertura
+        if (viu) Promise.resolve(fn({ testimoni: d?.value, plataforma: plataformaDe(nucli) })).catch(() => {});
+      }));
+      oient.catch(() => {});
+      return () => { viu = false; oient.then(m => m?.remove()).catch(() => {}); };
+    },
     escoltaToc(fn) {
       if (typeof fn !== 'function') return () => {};
       const push = connectorDe(nucli);
@@ -277,36 +308,23 @@ export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, t
   };
 }
 
-/* Un testimoni sense plataforma coneguda no es desa: el servidor el
-   rebutjaria igual (SDP-PUSH-002) i és millor no enviar-lo. */
-function desaPerAlRegistre(desa, dades) {
-  const testimoni = dades && dades.testimoni;
-  const plataforma = dades && dades.plataforma;
-  if (!PLATAFORMES_NATIVES.has(plataforma) || typeof testimoni !== 'string' || !testimoni) {
-    return Promise.reject(Object.assign(new Error('Plataforma de push desconeguda.'), { code: 'AVISOS_INVALID', codi: 'AVISOS_INVALID' }));
-  }
-  return Promise.resolve().then(() => desa({ plataforma, adreca: testimoni, caducaMs: null, gest: true }));
+/* Sanejament R15 (B3) · L'adaptador quan el build no porta VITE_SDP_PUSH_NATIU=1: la mateixa
+   forma, cap crida al pont (ni registerPlugin), cap permís, cap oient. */
+function adaptadorSenseConfig() {
+  const senseConfig = async () => ({ estat: ESTAT_PUSH_NATIU.SENSE_CONFIG });
+  const capOient = () => () => {};
+  return {
+    estat: senseConfig, activa: senseConfig, desactiva: senseConfig,
+    async preparaCanal() {}, async neteja() {},
+    escoltaPendent: capOient, escoltaRegistre: capOient, escoltaToc: capOient
+  };
 }
 
-/**
- * L'adaptador natiu amb la forma del registre neutre (src/config/avisosPushXat.js,
- * B8-CLIENT §3): { tipus, motiu, estat, activa, desactiva, sincronitza,
- * neteja, oblida, escoltaToc }. El servidor el porta el registre a cada crida
- * (desa i retira de la persona de la sessió), per això l'adaptador es
- * construïx sense `desa`.
- *   · motiu(): motiuPushNatiu, SÍNCRON;
- *   · estat(): 'sense-servidor' es diu 'inactiu' (AUTO-02);
- *   · activa({ desa }): desa({ plataforma, adreca, caducaMs: null, gest: true });
- *   · desactiva({ retira }): retira({ plataforma, adreca }), o només la baixa local;
- *   · sincronitza(): només l'estat. MAI registra cap testimoni sense gest
- *     (D-B8C-12: a Android el permís és el mateix dels avisos locals).
- * @param {object|null} [push] un adaptador de creaAvisosPushNatius (per defecte, un de nou)
- * @param {{ nucli?: { Capacitor: object, registerPlugin: Function } }} [opcions]
- */
+/* Cicle del registre: opt-in, canal, rotació i confirmació de lectures. */
 export function adaptadorPushNatiuPerAlRegistre(push = null, opcions = {}) {
   const nucli = opcions && opcions.nucli !== undefined ? opcions.nucli : undefined;
   const ambNucli = nucli !== undefined ? { nucli } : {};
-  const avisos = push && typeof push === 'object' ? push : creaAvisosPushNatius(ambNucli);
+  const avisos = push && typeof push === 'object' ? push : creaAvisosPushNatius({ ...ambNucli, canal: opcions.canal });
   const estatPerAlRegistre = async () => {
     let resultat;
     try {
@@ -316,21 +334,10 @@ export function adaptadorPushNatiuPerAlRegistre(push = null, opcions = {}) {
     }
     return resultat && resultat.estat === ESTAT_PUSH_NATIU.SENSE_SERVIDOR ? { estat: ESTAT_PUSH_NATIU.INACTIU } : resultat;
   };
-  return Object.freeze({
-    tipus: 'natiu',
+  return cicleAvisosPush({
+    avisos: { ...avisos, estat: estatPerAlRegistre },
     motiu: () => motiuPushNatiu(ambNucli),
-    estat: estatPerAlRegistre,
-    activa: (crida = {}) => {
-      const desa = crida && typeof crida.desa === 'function' ? crida.desa : null;
-      return avisos.activa({ desa: desa ? (dades) => desaPerAlRegistre(desa, dades) : undefined });
-    },
-    desactiva: (crida = {}) => {
-      const retira = crida && typeof crida.retira === 'function' ? crida.retira : null;
-      return avisos.desactiva({ retira: retira ? ({ testimoni, plataforma }) => retira({ plataforma, adreca: testimoni }) : null });
-    },
-    sincronitza: () => estatPerAlRegistre(),
-    neteja: async () => {},
-    oblida: () => {},
-    escoltaToc: (fn) => avisos.escoltaToc(fn)
+    memoria: opcions.memoria || memoriaConsentimentPush(),
+    visible: opcions.visible
   });
 }

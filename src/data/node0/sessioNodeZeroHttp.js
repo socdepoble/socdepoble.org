@@ -23,6 +23,7 @@ const PRIVAT = Object.freeze({
   listMyOrganizations: [], createOrganization: ['organization'], updateOrganization: ['id','updates'], loadFils: [],
   appendSectionSubmissionNetworkOnly: ['submission'], loadSeccioPage: ['sectionId','cursor','limit'],
   loadMissatges: ['filId','before','after','limit'], enviaMissatge: ['filId','id','text','tipus','respostaA','metadades'],
+  loadRitmeXat: ['filId'], actualitzaPresenciaXat: ['filId','instancia','revisio','escrivint'],
   marcaLlegit: ['filId','rebutFinsSeq','llegitFinsSeq'], creaFilDirecte: ['altreUsuariId','titol'], carregaMembres: ['cerca','limit']
 });
 const ERRORS_SERVIDOR = new Set([
@@ -129,10 +130,10 @@ export function creaSessioNodeZeroHttp(opcions = {}) {
   let closed = false; const controls = new Set();
   const obert = () => { if (closed) throw error('NODE0_TANCAT','El transport privat del Node 0 està tancat.'); };
   async function demana(tipus, action, body = {}, config = {}) {
-    obert(); const actions = tipus === 'auth' ? AUTH : PRIVAT;
+    obert(); const actions = tipus === 'auth' ? AUTH : tipus === 'iaia' ? {consultaIAIA:['mode','requestId','question','threadId','messageId','language']} : PRIVAT;
     if (typeof action !== 'string' || !Object.hasOwn(actions,action)) throw error('sense-capacitat','Esta operació no està disponible al Node 0.');
     claus(config,['signal','expectedActor']);
-    const bound = tipus === 'private' || AUTH_BOUND.has(action);
+    const bound = tipus === 'private' || tipus === 'iaia' || AUTH_BOUND.has(action);
     const suppliedActor = Object.hasOwn(config,'expectedActor');
     if (!bound && suppliedActor) throw configuracioInvalida();
     if (bound && (typeof config.expectedActor !== 'string' || !UUID.test(config.expectedActor))) {
@@ -150,7 +151,7 @@ export function creaSessioNodeZeroHttp(opcions = {}) {
     const interruption = new Promise((_,reject) => { interrupted = () => reject(controller.signal.reason ?? cancelacio()); controller.signal.addEventListener('abort',interrupted,{once:true}); });
     const timer = setTimeout(() => controller.abort(error(CODI_BACKEND_INABASTABLE,'El Node 0 no ha respost a temps.')),timeoutMs);
     const method = tipus === 'auth' && ['policy','session'].includes(action) ? 'GET' : 'POST';
-    const url = `${base}/${tipus}/${action}`;
+    const url = tipus === 'iaia' ? `${base}/iaia` : `${base}/${tipus}/${action}`;
     try {
       const work = Promise.resolve().then(async () => {
         if (controller.signal.aborted) throw controller.signal.reason;
@@ -171,6 +172,7 @@ export function creaSessioNodeZeroHttp(opcions = {}) {
     } finally { clearTimeout(timer); controls.delete(controller); signal?.removeEventListener('abort',onAbort); controller.signal.removeEventListener('abort',interrupted); }
   }
   return Object.freeze({
+    demanaIAIA: (body,config) => demana('iaia','consultaIAIA',body,config),
     demanaAuth: (action,body,config) => demana('auth',action,body,config),
     demanaPrivat: (action,body,config) => demana('private',action,body,config),
     destroy() { if (closed) return; closed = true; for (const controller of controls) controller.abort(error('NODE0_TANCAT','El transport privat del Node 0 està tancat.')); controls.clear(); }

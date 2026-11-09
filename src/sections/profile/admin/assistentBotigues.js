@@ -12,8 +12,12 @@
  *     app-store de src/config/canalsDeBotiga.js); Google Play encara no en té cap de pública. El camí
  *     SVG és precalculat (qrGuiaDescarregues.js) amb el codificador de la
  *     Gestoria, que des d'ací no es pot importar (G8-14);
- *   · el canal d'Android és el canal LOCAL d'avisos «Missatges del xat» (LocalNotifications), no
- *     cap canal de FCM (G8-16): l'app nativa encara no porta avisos push remots;
+ *   · R54 incorpora el connector de push natiu i els permisos al projecte. El canal local i
+ *     el registre del client no acrediten credencials del servidor o recepció en dispositiu.
+ *     Sanejament R15 (B3 · P1-03, R15A-NAT-01, P2-05): el cicle de push natiu només s'encén amb
+ *     la bandera de build VITE_SDP_PUSH_NATIU=1. Apagada (avui), el canal d'Android és el canal
+ *     LOCAL d'avisos «Missatges del xat», no cap canal de FCM (G8-16), i els passos diuen el que
+ *     falta, com a HEAD: google-services.json i el compte de servei de FCM;
  *   · P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · l'App Store oberta (la fitxa i la
  *     versió de la botiga, 1.0, a part de la del projecte, 1.1.0 build 2) i, a Google Play, els tres
  *     passos dels verificadors, els mateixos de /page/descarregues.
@@ -25,6 +29,10 @@ export { QR_GUIA_DESCARREGUES };
 
 /** La guia pública (també el destí del QR). */
 export const URL_GUIA_DESCARREGUES = QR_GUIA_DESCARREGUES.text;
+
+/* Sanejament R15 (B3) · La bandera del push natiu, literal (tooling/vite/banderes-de-capacitat.mjs):
+   la mateixa que governa src/natiu/avisosPushNatius.js. */
+const PUSH_NATIU_ACTIU = import.meta.env.VITE_SDP_PUSH_NATIU === '1';
 
 /** El que diuen els fitxers del projecte (assistentBotigues.test.js ho contrasta). */
 export const FITXA_NATIVA = Object.freeze({
@@ -86,7 +94,9 @@ export const CANALS_BOTIGUES = Object.freeze([
     passos: Object.freeze([
       'Per a instal·lar-la: a l’iPhone o a l’iPad, obri la fitxa de l’App Store (el botó «Disponible a l’App Store») i instal·la-la, gratis.',
       'Per a una versió nova: obri ios/App/App.xcodeproj amb Xcode → Product › Archive → Distribute App › App Store Connect, i envia-la a revisió d’Apple.',
-      'Els avisos push natius encara no hi són: falten el connector de push natiu de Capacitor (push-notifications), aps-environment a App.entitlements i la clau d’APNs als secrets de notifica-xat. Decidir-ho és del Mestre.'
+      PUSH_NATIU_ACTIU
+        ? 'El connector de push natiu i els permisos ja estan construïts. Cal verificar la configuració del servidor, la signatura i el provisioning, i la recepció en un iPhone real.'
+        : 'Els avisos push natius encara no hi són: el connector de push natiu i aps-environment ja són al projecte, però este build no els encén (VITE_SDP_PUSH_NATIU) i falta la clau d’APNs als secrets de notifica-xat. Decidir-ho és del Mestre.'
     ])
   }),
   Object.freeze({
@@ -100,7 +110,9 @@ export const CANALS_BOTIGUES = Object.freeze([
     comandament: 'npm run build:natiu && npx cap sync android && cd android && ./gradlew bundleRelease',
     passos: Object.freeze([
       'Genera l’AAB signat: android/app/build/outputs/bundle/release/app-release.aab.',
-      'Puja l’AAB a Google Play Console (prova interna o tancada). Els avisos push natius (FCM) encara no hi són: falten el connector, google-services.json i el compte de servei de FCM als secrets de notifica-xat.'
+      PUSH_NATIU_ACTIU
+        ? 'Puja l’AAB a Google Play Console (prova interna o tancada). El connector de push natiu ja està construït; la configuració del servidor, la signatura i la recepció en Android s’han de verificar per separat.'
+        : 'Puja l’AAB a Google Play Console (prova interna o tancada). Els avisos push natius (FCM) encara no hi són: falten google-services.json i el compte de servei de FCM als secrets de notifica-xat. El connector és al projecte, però apagat fins que el build es faça amb VITE_SDP_PUSH_NATIU=1.'
     ])
   })
 ]);
@@ -137,5 +149,7 @@ export const ESTAT_SERVIDOR_PUSH = 'La migració supabase/migrations/2611020417_
 export const PASSOS_SERVIDOR_PUSH = Object.freeze([
   'Falta la clau pública VAPID al build web (VITE_PUSH_VAPID_PUBLICA): sense ella, cap navegador no es pot subscriure.',
   `Si cal, revisar la funció supabase/functions/notifica-xat (secrets, desplegament i cron) i l’ajust push_xat_actiu: des d’este panell no es veu si estan fets. Els noms i l’ordre són a ${CATALEG_SERVIDOR_PUSH}.`,
-  `Per a l’app nativa: el connector de push natiu, aps-environment, els secrets d’APNs, google-services.json i el compte de servei d’FCM (també a ${CATALEG_SERVIDOR_PUSH}).`
+  PUSH_NATIU_ACTIU
+    ? `Per a l’app nativa: el connector i els permisos ja estan construïts. Verificar la configuració del servidor, la signatura/provisioning i la recepció en dispositiu; la guia és a ${CATALEG_SERVIDOR_PUSH}.`
+    : `Per a l’app nativa: els secrets d’APNs, google-services.json i el compte de servei d’FCM, i compilar amb VITE_SDP_PUSH_NATIU=1 a .env.natiu.local. El connector de push natiu i aps-environment ja són al projecte, apagats (també a ${CATALEG_SERVIDOR_PUSH}).`
 ]);

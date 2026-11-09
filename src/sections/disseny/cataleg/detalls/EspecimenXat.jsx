@@ -46,6 +46,7 @@ import Compositor from '../../../xat/components/Compositor.jsx';
 import ControlsAdjunt from '../../../xat/components/ControlsAdjunt.jsx';
 import CapcaleraConversa from '../../../xat/components/CapcaleraConversa.jsx';
 import MarquesEstat from '../../../xat/components/MarquesEstat.jsx';
+import IndicadorEscrivint from '../../../xat/components/IndicadorEscrivint.jsx';
 import PastillaNoLlegits from '../../../xat/components/PastillaNoLlegits.jsx';
 import SeparadorNoLlegits from '../../../xat/components/SeparadorNoLlegits.jsx';
 import BotoBaixar from '../../../xat/components/BotoBaixar.jsx';
@@ -300,7 +301,7 @@ export default function EspecimenXat() {
         ['CitaResposta', '{ citat, onVes?, interactiva?, t }', 'interactiva = true', 'Botó cap a l’original; «Missatge no carregat» sense acció si citat és null.'],
         ['CapcaleraConversa', '{ fil, onTorna, onSeleccionar, seleccio?, t }', '—', 'Avatar, nom i línia. Un fil de pàgina porta «Sobre: …» i els participants, i tot el bloc enllaça a la pàgina; un canal, el megàfon.'],
         ['PastillaNoLlegits', '{ quants, t }', '0', 'Res si quants és 0; «99+» per damunt de 99.'],
-        ['MarquesEstat', "{ estat: 'pendent'|'enviat'|'llegit'|'error', t }", "'enviat'", 'Icona més text per al lector de pantalla.']
+        ['MarquesEstat', "{ estat: 'pendent'|'enviat'|'lliurat'|'llegit'|'error', t }", "'enviat'", 'Icona més text per al lector de pantalla.']
       ]}
       a11y={[
         'La fila és un <button> amb aria-current per a la conversa oberta; l’avatar porta alt="" perquè el nom ja està escrit.',
@@ -361,6 +362,10 @@ export default function EspecimenXat() {
       <h4>Compositor als Avisos (sense permís) i al xat públic d’una pàgina</h4>
       <CompositorsDePagina />
 
+      <h4>Presència observada al servidor (R54, mostra fixa)</h4>
+      <CapcaleraConversa fil={FILS[0]} escrivint={2} onTorna={() => {}} t={t} />
+      <IndicadorEscrivint quants={1} t={t} />
+      <IndicadorEscrivint quants={3} t={t} />
       <h4>Pastilla de no llegits i marques d’estat (UX-B05)</h4>
       <div className="sdp-especimen__fila">
         <PastillaNoLlegits quants={1} t={t} />
@@ -370,6 +375,7 @@ export default function EspecimenXat() {
       <ul>
         <li>Pendent (rellotge): <MarquesEstat estat="pendent" t={t} /></li>
         <li>Enviat (una marca): <MarquesEstat estat="enviat" t={t} /></li>
+        <li>Lliurat als altres (dos marques): <MarquesEstat estat="lliurat" t={t} /></li>
         <li>Llegit (dos marques, blau acció): <MarquesEstat estat="llegit" t={t} /></li>
         <li>No enviat (avís): <MarquesEstat estat="error" t={t} /></li>
       </ul>

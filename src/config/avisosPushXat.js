@@ -61,6 +61,8 @@ export const ESTAT_AVISOS = Object.freeze({
   SENSE_GEST: 'sense-gest',
   SENSE_WORKER: 'sense-worker',
   SENSE_CONNECTOR: 'sense-connector',
+  /* Sanejament R15 (B3) · L'app nativa compilada sense VITE_SDP_PUSH_NATIU=1: no s'oferix res. */
+  SENSE_CONFIG: 'sense-config',
   SENSE_SERVIDOR: 'sense-servidor',
   ERROR: 'error'
 });
@@ -195,9 +197,14 @@ export function sincronitzaAvisosPush() {
 }
 
 /** Tanca els avisos del Xat ja mostrats i la insígnia (en tornar a la vista). Mai rebutja. */
-export function netejaAvisosPushMostrats() {
-  return motor !== null ? motor.neteja() : Promise.resolve();
+export function netejaAvisosPushMostrats(opcions) {
+  return motor !== null ? motor.neteja(opcions) : Promise.resolve();
 }
+
+/* R54: una lectura confirmada només pot netejar el wake que ja coneixia
+   abans de començar. Ni el token ni el zero contenen dades de conversa. */
+export const capturaLecturaAvisosPush = ambit => motor?.capturaLectura?.(ambit) ?? null;
+export const confirmaZeroAvisosPush = lectura => motor?.confirmaZero?.(lectura) ?? Promise.resolve();
 
 /**
  * L'eixida de veres, ABANS de tancar la sessió (encara vàlida, per a retirar

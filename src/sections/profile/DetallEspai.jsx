@@ -1,6 +1,7 @@
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Link } from '../../app/contexts/RouterContext';
-import { dataDeFila, dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { dataDeFila } from '../../components/universal/editorial.js';
+import { datesDAdministracio, datesDAplicacio } from './datesDelPerfil.js';
 import { LlistaNodes } from '../../components/universal/connexio/LlistaNodes.jsx';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
@@ -41,16 +42,9 @@ const autoriaDeLaPersona = (persona) => ({
 import { useState, useEffect } from 'react';
 import { desaUtilitatActiva, estaAlPanell, subscriuUtilitatsActives } from './utilitatsActives.js';
 
-/* T51 · Pendent: la declaració d'una utilitat del Perfil (aplicacions.js,
-   aplicacionsValides) no porta cap camp de data i esta pàgina no se n'inventa
-   cap: cal que la configuració en porte una.
-   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
-   Ja no és cert que «una utilitat encara no té cap data real»: la targeta
-   del Panell de la Gestoria i del Lector RSS porta la data del registre de
-   plugins (registrePlugins.js, camp `data`), i la del Snippet, la seua
-   (destiSnippet.js, DATA_DEL_SNIPPET). Esta fitxa del Perfil encara no les
-   llig: la seua barra taronja continua sense pastilla. Pintar-la ací és un
-   canvi de pantalla que l'ordre no nomena; queda pendent del Mestre. */
+/* T51 / P0-54 · La configuració local reutilitza les dates canòniques de
+   plugins, Snippet i PAGE_COPY. Les fitxes federades aporten les seues;
+   datesDAplicacio no hi assigna una data local pel mateix ID. */
 export function DetallAplicacio({ aplicacio }) {
   /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · La preferència
      es llig i s'escriu amb l'id del Panell (aplicacions.js, camp `panell`):
@@ -96,6 +90,7 @@ export function DetallAplicacio({ aplicacio }) {
       title={aplicacio.nom}
       lead={aplicacio.descripcio}
       labels={[{ text: 'Aplicació' }]}
+      {...datesDAplicacio(aplicacio)}
       topBarData={AUTORIA_NODE}
     >
       <div className="perfil-compte">
@@ -212,16 +207,17 @@ export function DetallNodes({ persona, nodes = [], estat, etiquetaEstat }) {
  * .sdp-universal-page-container--contained amb desplaçament vertical natiu.
  */
 export function DetallAdministracio({ item, children }) {
-  const datesBarra = dataHoraDeBarra({
-    creat: item?.creat || item?.created_at || new Date().toISOString(),
-    modificat: item?.modificat || item?.updated_at,
-  });
+  const datesBarra = datesDAdministracio(item);
+  const ambEntradilla = typeof item?.entradilla === 'string' && item.entradilla.trim() !== '';
   return (
     <UniversalPage
       chrome="context"
       layout="contained"
       title={item?.title || 'Administració del sistema'}
-      lead={item?.subtitle || ''}
+      {...(item?.image ? { heroImage: item.image } : null)}
+      {...(item?.imageAlt ? { heroAlt: item.imageAlt } : null)}
+      {...(ambEntradilla ? { subtitle: item?.subtitle || '' } : null)}
+      lead={ambEntradilla ? item.entradilla : item?.subtitle || ''}
       labels={[{ text: 'Administració del sistema' }]}
       {...datesBarra}
       topBarData={AUTORIA_NODE}

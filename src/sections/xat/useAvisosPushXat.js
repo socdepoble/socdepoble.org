@@ -22,8 +22,8 @@
          (v)   amb la sessió 'dins' i fora d'una eixida: el servidor de la
                persona (en remot i amb la capacitat) o cap, i sincronitza;
                sense servidor, sincronitzar fa d'interruptor i desfà;
-         (vi)  en tornar a la vista amb la sessió 'dins': sincronitza i tanca
-               els avisos del Xat ja mostrats.
+         (vi) en tornar a la vista sincronitza. Només una lectura confirmada
+              posterior al wake pot netejar el pendent (productor carregaFils).
        L'àmbit és la persona (currentUser.id), no l'actor: parlar en nom
        d'una entitat no rota cap subscripció. El canvi de llengua no torna a
        fixar res: el servidor la llig en cada desat.
@@ -42,7 +42,7 @@ import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { desaDispositiuAvisos, retiraDispositiuAvisos, teCapacitat } from '../../data/backendPort.js';
 import {
   ESTAT_AVISOS, LIMIT_BAIXA_PUSH_MS, activaAvisosPush, desactivaAvisosPush, escoltaAvisosPush, fixaServidorAvisosPush,
-  instantaniaAvisosPush, netejaAvisosPushMostrats, sincronitzaAvisosPush
+  instantaniaAvisosPush, sincronitzaAvisosPush
 } from '../../config/avisosPushXat.js';
 import { useXat } from './XatContext';
 
@@ -175,7 +175,7 @@ export function useSincronitzaAvisosPush() {
           desa: (d) => desaDispositiuAvisos({
             plataforma: d?.plataforma, adreca: d?.adreca, caducaMs: d?.caducaMs ?? null, gest: d?.gest === true, llengua: llengua.current
           }, config.current),
-          retira: (d) => retiraDispositiuAvisos({ plataforma: d?.plataforma, adreca: d?.adreca }, config.current)
+          retira: (d) => retiraDispositiuAvisos({ plataforma: d?.plataforma, adreca: d?.adreca, usuariEsperat: persona }, config.current)
         }
         : null;
       if (!fixaServidorAvisosPush(servidor)) return;
@@ -204,7 +204,6 @@ export function useSincronitzaAvisosPush() {
     const enTornar = () => {
       if (doc.visibilityState !== 'visible' || estatViu.current !== 'dins' || instantaniaAvisosPush().eixint) return;
       sincronitzaAvisosPush();
-      netejaAvisosPushMostrats();
     };
     doc.addEventListener('visibilitychange', enTornar);
     return () => { doc.removeEventListener('visibilitychange', enTornar); };

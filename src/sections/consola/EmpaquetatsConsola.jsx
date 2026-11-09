@@ -16,6 +16,7 @@ import { gestionaTeclaGraella } from '../../components/universal/workspace/naveg
 import { useEffect, useId, useRef, useState } from 'react';
 import { Package, Rocket } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { Alerta, AreaText, Boto, Camp, Carregant, EstatBuit, Insignia, MollaPa } from '../../components/PedraSeca';
 import { RUTA_CONSOLA, copyConsola } from './consolaPagines.js';
 import { DestiVersions, Mono, Privat, PrivacitatConsola, TargetaConsola } from './peces.jsx';
@@ -283,6 +284,7 @@ export function PaginaEmpaquetats({ font, privat, peu }) {
   const plataformes = plataformesEmpaquetades(font.valor);
   return (
     <UniversalPage title={pagina.title} subtitle={pagina.subtitle} lead={pagina.lead} chrome="system" nivellMaxIndex={6}
+      topBarData={dataHoraDeBarra({ creat: copy.date, modificat: font.valor?.generat })}
       traduccio={false} llenguaDelContingut="ca">
       <PrivacitatConsola.Provider value={privat}>
         <MollaPa className="sdp-molla--panell" passos={[{ etiqueta: copy.title, a: RUTA_CONSOLA }, { etiqueta: pagina.title }]} />

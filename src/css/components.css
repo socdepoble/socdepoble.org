@@ -1001,6 +1001,27 @@
    darrere de la regla de dalt: dins de .sp-card-labels (PageFrame), una
    sola classe perdria contra `.sp-card-labels .sp-card-label` i tornaria el
    coixí doble; la forma relacional d'abans també pesava (0,2,0). */
+/* R55 · Les categories llargues de la capçalera caben a mòbil sense retallar text.
+   La pastilla curta conserva els 24px del token i la diana tàctil existent. */
+.page-title-labels {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+.page-title-labels .sp-card-label {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  height: auto;
+  min-height: var(--sdp-space-6);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.page-title-labels .sp-card-label__action {
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .sp-card-label.sp-card-label--amb-accio {
   padding: 0;
 }

@@ -17,7 +17,15 @@ const mock = vi.hoisted(() => ({
   loadFils: vi.fn(), loadMissatges: vi.fn(), enviaMissatge: vi.fn(), marcaLlegit: vi.fn(),
   creaFilDirecte: vi.fn(), carregaMembres: vi.fn(), subscribeToXat: vi.fn(), unsubscribeFromXat: vi.fn(),
   obriFilDePagina: vi.fn(), teCapacitat: vi.fn()
+  , push: { tipus: null, motiu: null }, capturaZero: vi.fn(), confirmaZero: vi.fn()
 }));
+vi.mock('../../config/avisosPushXat.js', async importOriginal => {
+  const real = await importOriginal();
+  return { ...real, instantaniaAvisosPush: () => mock.push,
+    capturaLecturaAvisosPush: (...args) => { mock.capturaZero(...args); return real.capturaLecturaAvisosPush(...args); },
+    confirmaZeroAvisosPush: (...args) => { mock.confirmaZero(...args); return real.confirmaZeroAvisosPush(...args); }
+  };
+});
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => mock.session }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorKey: mock.actorKey, identitats: undefined }) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useLocation: () => ({ pathname: mock.pathname }) }));
@@ -79,6 +87,7 @@ async function llest() {
 }
 
 beforeEach(async () => {
+  mock.push = { tipus: null, motiu: null };
   vi.clearAllMocks(); localStorage.clear(); mock.pathname = '/mur';
   mock.loadFils.mockResolvedValue(fils(2));
   mock.loadMissatges.mockResolvedValue([]);
@@ -96,6 +105,26 @@ test('amb l’App a la vista i fora del xat, un missatge nou d’una altra perso
   await waitFor(() => expect(mock.showToast).toHaveBeenCalledTimes(1));
   expect(mock.showToast).toHaveBeenCalledWith('Missatge nou de Pepa');
   expect(adaptador.avisa).not.toHaveBeenCalled();
+});
+
+test('R54: si el transport push natiu porta els avisos, el sondeig no genera una segona alerta local', async () => {
+  mock.push = { tipus: 'natiu', motiu: null };
+  await llest();
+  amaga();
+  mock.loadFils.mockResolvedValue(fils(3));
+  await avanca(26000);
+  expect(adaptador.avisa).not.toHaveBeenCalled();
+  expect(adaptador.demanaPermis).not.toHaveBeenCalled();
+});
+test('R54: carregaFils captura abans de llegir, i només confirma zero després d’una resposta vigent buida', async () => {
+  await llest();
+  expect(mock.capturaZero).toHaveBeenCalledWith('A');
+  expect(mock.capturaZero.mock.invocationCallOrder[0]).toBeLessThan(mock.loadFils.mock.invocationCallOrder[0]);
+  expect(mock.confirmaZero).not.toHaveBeenCalled();
+  mock.loadFils.mockResolvedValueOnce([]);
+  await act(async () => { await value.recarrega(); });
+  expect(mock.confirmaZero).toHaveBeenCalledTimes(1);
+  expect(mock.confirmaZero.mock.invocationCallOrder[0]).toBeGreaterThan(mock.loadFils.mock.invocationCallOrder.at(-1));
 });
 
 test('amb l’App amagada i el permís concedit, el sondeig continua cada minut i l’avís és del sistema, sense toast', async () => {
@@ -126,8 +155,8 @@ test('amb l’App amagada al xat (/xat/…), l’avís natiu arriba igual i no t
      crida que es mira siga la d'entrar al xat amb sessió, i no la d'abans. */
   adaptador.estatPermis.mockClear();
   await llest();
-  /* Entrar al xat amb sessió consulta el permís; ja concedit, cap diàleg. */
-  expect(adaptador.estatPermis).toHaveBeenCalledTimes(1);
+  /* R54: entrar no consulta ni demana el permís. */
+  expect(adaptador.estatPermis).not.toHaveBeenCalled();
   expect(adaptador.demanaPermis).not.toHaveBeenCalled();
   amaga();
   mock.loadFils.mockResolvedValue(fils(3));
@@ -138,7 +167,7 @@ test('amb l’App amagada al xat (/xat/…), l’avís natiu arriba igual i no t
   expect(adaptador.demanaPermis).not.toHaveBeenCalled();
 });
 
-test('amb el permís encara per decidir, entrar al xat amb sessió el demana una sola vegada; fora del xat, mai', async () => {
+test('amb el permís encara per decidir, entrar al xat amb sessió mai el demana', async () => {
   estatDelPermis = 'prompt';
   await refrescaPermisAvisos();
   adaptador.estatPermis.mockClear();
@@ -157,12 +186,12 @@ test('amb el permís encara per decidir, entrar al xat amb sessió el demana una
   mock.loadFils.mockClear();
   mock.loadFils.mockResolvedValue(fils(3));
   await llest();
-  await waitFor(() => expect(adaptador.demanaPermis).toHaveBeenCalledTimes(1));
+  expect(adaptador.demanaPermis).not.toHaveBeenCalled();
   mock.loadFils.mockResolvedValue(fils(4));
   await avanca(26000);
   await waitFor(() => expect(mock.loadFils).toHaveBeenCalledTimes(2));
   await avanca(1000);
-  expect(adaptador.demanaPermis).toHaveBeenCalledTimes(1);
+  expect(adaptador.demanaPermis).not.toHaveBeenCalled();
 });
 
 test('sense el permís concedit, amagada no es mira la llista ni arriba cap avís (com abans)', async () => {

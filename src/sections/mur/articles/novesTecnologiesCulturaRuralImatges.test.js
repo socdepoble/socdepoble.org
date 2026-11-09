@@ -4,6 +4,7 @@
    el GPS a l'EXIF: es purguen amb netejaJpeg (netejaMetadades.js), sense tornar
    a codificar cap píxel, i les empremtes de davall són les dels bytes nets. */
 import { createHash } from 'node:crypto';
+import { jpegRenderR56Fingerprint } from '../../../../tests/helpers/jpegRenderR56.js';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -13,69 +14,109 @@ import { sanitizeHtml } from '../../../utils/sanitize.js';
 import { cosPerAPintar } from './cosCanonic.js';
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_HTML, NOVES_TECNOLOGIES_IMATGES } from './novesTecnologiesCulturaRuralContent.js';
 
+/* R56: sourceSha256 pins the original R53 bytes. The six public own photos
+   lose all private EXIF via the canonical cleaner. renderSha256 pins independent
+   JPEG coding tables, frames, scans and color segments from those originals.
+   Three corpus photographs keep their original whole-file hash. */
 const FONTS_FIXADES = [
   {
     "id": "exterior",
     "filename": "pou-neu-rentonar-exterior-frontal-2023.jpg",
     "sha256": "c644e8bd76a31ad6ad77f9218241f52649cfb9c369a817a0b97e2d30899fa1ba",
     "width": 1600,
-    "height": 1200
+    "height": 1200,
+    "sourceSha256": "cc7085ce7d0a59e843958ef91405db1aac2dd70c043f9a6394417394023c8c0a",
+    "renderSha256": "c644e8bd76a31ad6ad77f9218241f52649cfb9c369a817a0b97e2d30899fa1ba",
+    "iccSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scans": 1
   },
   {
     "id": "escala-humana",
     "filename": "pou-neu-rentonar-cupula-escala-humana-2023.jpg",
     "sha256": "f5c3334f4e62535956c479cd6efb9f6d8b98a02578b8fad3763a9fe8a5269eee",
     "width": 1600,
-    "height": 1200
+    "height": 1200,
+    "sourceSha256": "4b3fa7311b9f1e81256d48cb5a503d479a6fb6e4e34c1f69e94ebb830b43be6b",
+    "renderSha256": "f5c3334f4e62535956c479cd6efb9f6d8b98a02578b8fad3763a9fe8a5269eee",
+    "iccSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scans": 1
   },
   {
     "id": "galeria-sud",
     "filename": "pou-neu-rentonar-galeria-sud-volta-2023.jpg",
     "sha256": "dc3a5c9ca54057ff47fb7b55201226850fb3f097dc75fb6f94a16f0b40358c8c",
     "width": 1600,
-    "height": 1200
+    "height": 1200,
+    "sourceSha256": "71326d996fea5c59f6533e051459ef162d2ad2ae70d8b51cedb73e0ed5a22d0a",
+    "renderSha256": "dc3a5c9ca54057ff47fb7b55201226850fb3f097dc75fb6f94a16f0b40358c8c",
+    "iccSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scans": 1
   },
   {
     "id": "interior",
     "filename": "pou-neu-rentonar-interior-cilindre-finestres-2023.jpg",
     "sha256": "727af0606a5b8b8393a6f375e3f19dc75779b60ca85dd3736671904b30968643",
     "width": 1600,
-    "height": 1200
+    "height": 1200,
+    "sourceSha256": "69466c262836658cabb4be8792cd5a89fb18f1abd92f3e9af865fb3ab73e5c15",
+    "renderSha256": "727af0606a5b8b8393a6f375e3f19dc75779b60ca85dd3736671904b30968643",
+    "iccSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scans": 1
   },
   {
     "id": "falsa-volta",
     "filename": "pou-neu-rentonar-falsa-volta-filades-2023.jpg",
     "sha256": "5897b5c2d6711ec44f50844fe2488bfe379f4c5fb349b76e6f280a48c2fb0926",
     "width": 1600,
-    "height": 1200
+    "height": 1200,
+    "sourceSha256": "657535fcca8e42576bd9c567e4aa7424549e155a0752bf0858f57a00110e1ec4",
+    "renderSha256": "5897b5c2d6711ec44f50844fe2488bfe379f4c5fb349b76e6f280a48c2fb0926",
+    "iccSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scans": 1
   },
   {
     "id": "carrasca",
     "filename": "pou-neu-rentonar-carrasca-entorn-2023.jpg",
     "sha256": "39139dbc40caa4407515c3a114c056a7b026fd5d42574d928d90a3b8f038cb81",
     "width": 1600,
-    "height": 1200
+    "height": 1200,
+    "sourceSha256": "fe9efc8d810d3b5d446b6c650618d3f46390b41cff1440d60897db37d56b4a47",
+    "renderSha256": "39139dbc40caa4407515c3a114c056a7b026fd5d42574d928d90a3b8f038cb81",
+    "iccSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scans": 1
   },
   {
     "id": "planta",
     "filename": "pou-neu-rentonar-planta-segura-1987.jpg",
     "sha256": "e617632e7a183ebf2fd158c50fb566c8e5e9eaf3223c9882a0c8dc56dd05a104",
     "width": 702,
-    "height": 589
+    "height": 589,
+    "sourceSha256": "e617632e7a183ebf2fd158c50fb566c8e5e9eaf3223c9882a0c8dc56dd05a104",
+    "renderSha256": "dc7e25c75514078aab424d217d8f6980da5053175a51bc94de5ef42ac007b906",
+    "iccSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scans": 1
   },
   {
     "id": "seccions",
     "filename": "pou-neu-rentonar-seccions-segura-1987.jpg",
     "sha256": "b168e34a975d83f11fb5b00ffec62b8f95146d07b117d6691cf6274ecb26c7eb",
     "width": 716,
-    "height": 602
+    "height": 602,
+    "sourceSha256": "b168e34a975d83f11fb5b00ffec62b8f95146d07b117d6691cf6274ecb26c7eb",
+    "renderSha256": "0f8d816ae820537d3864e289fb5ee430a37e449fc56fbc816d1bddc7e38f33ca",
+    "iccSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scans": 1
   },
   {
     "id": "fissura",
     "filename": "pou-neu-rentonar-fissura-sostre-2020.jpg",
     "sha256": "1610b1c518ce069003752b58f845cfcfa67c48c2231a628d56efbb309428feae",
     "width": 1600,
-    "height": 900
+    "height": 900,
+    "sourceSha256": "1610b1c518ce069003752b58f845cfcfa67c48c2231a628d56efbb309428feae",
+    "renderSha256": "04db684753185512f39c8e1b7a5c256439cd4ccd1ddadaf547f68d3c8b02e340",
+    "iccSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scans": 1
   }
 ];
 const ORDRE_EDITORIAL = ['exterior', 'escala-humana', 'planta', 'interior', 'galeria-sud', 'seccions', 'falsa-volta', 'fissura', 'carrasca'];
@@ -87,11 +128,12 @@ function seccioDe(figura) {
 }
 
 describe('P0-52 · fonts visuals documentades del Pou de Neu', () => {
-  test.each(FONTS_FIXADES)('$id: JPEG exacte i mides reals sense retall ni recodificació', ({ id, filename, sha256, width, height }) => {
+  test.each(FONTS_FIXADES)('$id: JPEG públic fixat, mateix flux d’imatge, color i mides sense recodificació', ({ id, filename, sha256, renderSha256, iccSha256, scans, width, height }) => {
     const imatge = NOVES_TECNOLOGIES_IMATGES.find((fila) => fila.id === id);
     expect(imatge).toMatchObject({ src: `/assets/uploads/patrimoni/${filename}`, width, height });
     const bytes = readFileSync(path.resolve(process.cwd(), 'public', imatge.src.slice(1)));
     expect(createHash('sha256').update(bytes).digest('hex')).toBe(sha256);
+    expect(jpegRenderR56Fingerprint(bytes)).toEqual({ renderSha256, iccSha256, scans, width, height });
     expect(mides(bytes)).toEqual({ format: 'jpeg', amplada: width, alcada: height, orientacio: 1 });
     expect(Object.isFrozen(imatge)).toBe(true);
   });

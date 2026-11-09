@@ -138,10 +138,10 @@ export async function repActivitat({ req, bytes, db, request, now, admetActor })
   return result;
 }
 
-export function creaServidor({ db, claus, token, mastodonToken, auth = null, backend = null, posse = null, resilience = null, mastodonInbound = null, identificaClient = null, request = peticioMastodont, now = Date.now } = {}) {
+export function creaServidor({ db, claus, token, mastodonToken, auth = null, backend = null, iaia = null, posse = null, resilience = null, mastodonInbound = null, identificaClient = null, request = peticioMastodont, now = Date.now } = {}) {
   if (!db || !claus) throw new TypeError('node0_dependencies_required');
   const userBackendReady=typeof auth?.handle==='function'&&typeof backend?.handle==='function'&&typeof identificaClient==='function';
-  const privateCapabilities=Object.fromEntries(['actorBinding','roleRead','createOrganization','sectionSubmissions','paginacioSeccions','edicioEditorial','administracioUsuaris','restauracioDadesObertes'].map(key=>[key,userBackendReady&&backend.capabilities?.[key]===true]));
+  const privateCapabilities=Object.fromEntries(['actorBinding','roleRead','createOrganization','sectionSubmissions','paginacioSeccions','edicioEditorial','administracioUsuaris','restauracioDadesObertes','xatRitme'].map(key=>[key,userBackendReady&&backend.capabilities?.[key]===true]));
   const actors = new Map();let coarseStart=now(),coarseCount=0;let active = 0;
   const admetActor=actor=>{
     const time=now(),entry=actors.get(actor);
@@ -179,6 +179,17 @@ export function creaServidor({ db, claus, token, mastodonToken, auth = null, bac
       }
       // Identity-bearing routes are handled before the public CORS branch.
       // Every private operation is a same-origin JSON POST, including reads.
+      if(route==='/api/v1/node0/iaia'){
+        if(!userBackendReady||typeof iaia?.handle!=='function')throw errorHttp(503,'iaia_unavailable');
+        if(req.method!=='POST'||url.search)throw errorHttp(405,'method_not_allowed');
+        if(req.headers.origin!==ORIGIN)throw errorHttp(403,'origin_rejected');
+        if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']||''))throw errorHttp(415,'json_required');
+        let body;try{body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(await llegixCos(req,8192)));}catch(e){if(e.status===413)throw e;throw errorHttp(400,'invalid_json');}
+        const control=new AbortController(),abort=()=>control.abort();req.once('aborted',abort);res.once('close',abort);
+        try{const answer=await iaia.handle({headers:req.headers,body,signal:control.signal});if(!res.destroyed)return json(res,answer.status,answer.body);}
+        finally{req.removeListener('aborted',abort);res.removeListener('close',abort);}
+        return;
+      }
       const privateRoute=/^\/api\/v1\/node0\/(auth|private)\/([a-zA-Z-]{1,64})$/.exec(route);
       if(privateRoute){
         if(url.search)throw errorHttp(400,'private_query_rejected');
@@ -219,7 +230,7 @@ export function creaServidor({ db, claus, token, mastodonToken, auth = null, bac
           try { pg = await db.status(); } catch { return json(res, 503, { node: 'node0', postgresql: { ok: false }, activitypub: { active: false }, ed25519: { fingerprint: claus.fingerprint } }); }
           let resilienceState=normalitzaResiliencia(null,now());
           try{if(typeof resilience?.status==='function')resilienceState=normalitzaResiliencia(await resilience.status(),now());}catch{/* Health inspection failure never fabricates a protected backup. */}
-          return json(res, 200, { node: 'node0', postgresql: { ...pg, latencyMs: now() - start }, resilience:resilienceState, activitypub: { active: true, ...pg.activitypub, signatureProfile:'rfc9421-ed25519', remoteInteropVerified: false }, ed25519: { fingerprint: claus.fingerprint }, mastodon: { account: '@depoble@mastodont.cat', outboundConfigured: Boolean(mastodonToken), tokenPreflight:'verify_credentials', automaticSync: inboundState.enabled, inbound: inboundState, outboundPublication:'manual-confirmation' }, capabilities: { publicRead: true, adminPublish: false, possePrepared:posse?.capabilities?.prepared===true,possePublish:posse?.capabilities?.publish===true, userSessions:userBackendReady,...privateCapabilities,norms:userBackendReady&&auth.capabilities?.norms===true,emailDelivery:userBackendReady&&auth.capabilities?.emailDelivery===true,emailVerificationWithPassword:userBackendReady&&auth.capabilities?.emailVerificationWithPassword===true,emailPasswordRecovery:userBackendReady&&auth.capabilities?.emailPasswordRecovery===true } });
+          return json(res, 200, { node: 'node0', postgresql: { ...pg, latencyMs: now() - start }, resilience:resilienceState, activitypub: { active: true, ...pg.activitypub, signatureProfile:'rfc9421-ed25519', remoteInteropVerified: false }, ed25519: { fingerprint: claus.fingerprint }, mastodon: { account: '@depoble@mastodont.cat', outboundConfigured: Boolean(mastodonToken), tokenPreflight:'verify_credentials', automaticSync: inboundState.enabled, inbound: inboundState, outboundPublication:'manual-confirmation' }, capabilities: { publicRead: true, adminPublish: false, possePrepared:posse?.capabilities?.prepared===true,possePublish:posse?.capabilities?.publish===true, userSessions:userBackendReady,iaia:userBackendReady&&typeof iaia?.handle==='function',...privateCapabilities,norms:userBackendReady&&auth.capabilities?.norms===true,emailDelivery:userBackendReady&&auth.capabilities?.emailDelivery===true,emailVerificationWithPassword:userBackendReady&&auth.capabilities?.emailVerificationWithPassword===true,emailPasswordRecovery:userBackendReady&&auth.capabilities?.emailPasswordRecovery===true } });
         }
         const kinds = route === '/api/v1/node0/core' ? ['towns','pages','agents'] : route === '/api/v1/node0/mur' ? ['feedPosts','events','marketItems'] : route === '/api/v1/node0/multimedia' ? ['mediaItems'] : null;
         if (kinds) { const values = await Promise.all(kinds.map((kind) => db.documents(kind))); return json(res, 200, Object.fromEntries(kinds.map((kind, index) => [kind, values[index]]))); }
@@ -333,8 +344,20 @@ export async function main(env = process.env, dependencies = {}) {
         backend:creaBackendPrivatNodeZero({db:authDb,tenantId:NODE0_AUTH_TENANT,
           editorialReady:await rpcReady(env.SDP_NODE0_EDITORIAL,'public.admin_actualitza_publicacio_editorial(text,text,jsonb,integer,uuid)'),
           adminUsuarisReady:await rpcReady(env.SDP_NODE0_ADMIN_USUARIS,'public.admin_llista_usuaris_registrats(uuid,timestamptz,uuid,integer)'),
-          restauracioReady:await rpcReady(env.SDP_NODE0_RESTAURACIO,'public.importa_municipi_open_data(uuid,jsonb)')}),
+          restauracioReady:await rpcReady(env.SDP_NODE0_RESTAURACIO,'public.importa_municipi_open_data(uuid,jsonb)'),
+          xatRitmeReady:(await Promise.all(['public.xat_ritme(uuid)','public.xat_presencia(uuid,uuid,bigint,boolean)','public.xat_marca_rebut(uuid,bigint)'].map(signature=>rpcReady(env.SDP_NODE0_XAT_RITME,signature)))).every(Boolean)}),
         identificaClient:creaIdentificadorClientNodeZero({proxySecret:env.SDP_NODE0_PROXY_SECRET})};
+      if(env.SDP_NODE0_IAIA==='1'){
+        const {creaServeiIAIANodeZero,verificaWorkerIAIA}=await import('./iaia-node0.mjs');
+        let workerDb=null;
+        if(env.SDP_NODE0_IAIA_GROUPS==='1'){
+          if(!env.SDP_NODE0_IAIA_PGPASSWORD)throw new Error('iaia_worker_configuration_required');
+          workerDb=createDb({env:{...env,PGUSER:'node0_iaia_authenticator',PGPASSWORD:env.SDP_NODE0_IAIA_PGPASSWORD}});
+          await verificaWorkerIAIA(workerDb);
+        }
+        userBackend.iaia=creaServeiIAIANodeZero({db:authDb,workerDb,tenantId:NODE0_AUTH_TENANT,env});
+      }
+
       if(posseServiceFactory){
         // Runtime cannot install privileged schema or invent institutional
         // owners/bindings. Explicit activation requires the reviewed ledger.
