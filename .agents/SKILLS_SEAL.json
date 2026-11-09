@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-11-08T07:32:21.565Z",
-  "hash": "5f74f08d9558f1d6b128b87ea5ff5dd96b45585d23d569a1ab52675171cc2a37",
+  "timestamp": "2026-11-09T17:05:43.216Z",
+  "hash": "faeed50e4b5ce1a29abee49c2842d8c4c9c7e6d13583973a7a200d5749698a9a",
   "filesCount": 44,
   "manifest": {
-    ".agents/skills/00_INDEX_SKILLS.md": "b439baf81efaa56f2fa581b54a9950c4d855ac1de158c5342616792441f2e5d0",
-    ".agents/skills/core-automillora/SKILL.md": "bbd92b5d1252788fda100b1b2973f3643acaaeaa0cb33c731c1cc5cbeceb4a56",
+    ".agents/skills/00_INDEX_SKILLS.md": "ca38909728894660eef000009e085ab8286a9d38b9bde16d11e055bc18595659",
+    ".agents/skills/core-automillora/SKILL.md": "f14ac32cb6bce7b26db5b1d8a568532371061fac1a8ac783ffc8e1a115ac0cfc",
     ".agents/skills/core-calibratge-visual-nano/SKILL.md": "07dece6a7fb4e54296c2f3180df07f56da9cf39bb9664edf4b43aba568a0673a",
-    ".agents/skills/core-comprensio-reflexiva/SKILL.md": "2eb05336863e420ccd26e773d6e6b0c2e91785c94699ebecef745238f8e1dbb9",
+    ".agents/skills/core-comprensio-reflexiva/SKILL.md": "91dc8464016577e7d793c9a154b1ff51fd5458c85afd5f1ca43bf321a98cfd86",
     ".agents/skills/core-consell-i-colmena/SKILL.md": "1cc9d40a959191f659b3f4b3901da8b141345afa4fc954ff1dff597a076e258b",
     ".agents/skills/core-context-panic/SKILL.md": "c570055041fd84a0071fd2b8b8af78d350b95870f8f1f44e54b74454cf220500",
     ".agents/skills/core-direccio-autonoma/SKILL.md": "3e075a17b88370519433a96de153ac35759939b098a1f068939428079a4c1915",
@@ -28,7 +28,7 @@
     ".agents/skills/core-secretaria-auditoria/SKILL.md": "dcd10694d39463043e74dc9651fbd9eaed8a8923183ebf40e2ff5e6dc076abc8",
     ".agents/skills/core-seguretat-audit/SKILL.md": "8b47b97b09df2a6feda65feae764fa9509cf146fba7d123568f229ce909747bb",
     ".agents/skills/core-taxonomia-estricta/SKILL.md": "d6813399ce96dae6e971676003d9f56e9f09ecebc7a6b4aa12f383746b0d9d50",
-    ".agents/skills/core-tecniques-investigacio/SKILL.md": "8b0224ec17a4fb12c6e13db50f0c486072b927df36f314a1a0759ea8c5c0ca1c",
+    ".agents/skills/core-tecniques-investigacio/SKILL.md": "a3d74a1787b3969881e5746c86a3e64ae11e7693ee5390a8badec220d01c44e8",
     ".agents/skills/core-telemetria-huma/SKILL.md": "ebaa794731a8d9531a0b676d93fa57ca4b36acfa397e795b3cc69de0af832834",
     ".agents/skills/core-temps-termodinamic/SKILL.md": "7d3ad9a836c6c77c9f902e482f8f9088b61b75e5c6d47ae2d54a138b6ea8de44",
     ".agents/skills/sdp-app-grid-shell/SKILL.md": "740c1ecb48b29f5fa70ab577d409bc37fcb7403254173815e4cb6c38ce04954d",
@@ -42,11 +42,11 @@
     ".agents/skills/sdp-universal-editor/SKILL.md": "1c086d6a0e3c704a7a889437c375f95a4693b913992117cf51d8bbd519a21afd",
     ".agents/skills/sdp-universal-page/SKILL.md": "df53d776e40cf13a813ee6989152e56528a156402ec7498fcd1486861c855bee",
     ".agents/skills/sdp-vigilant-tellado/SKILL.md": "78b6d7bec4015c5fc11126f95eea186486d4c166122aff2b75f6fe8b67ad987c",
-    ".agents/skills/sdp-workflow/SKILL.md": "30fb3978bd59303d970cbcbfc189bb262d2dfac6eda83f2c2d27ff6f8af1950b",
+    ".agents/skills/sdp-workflow/SKILL.md": "8f382c2047b5bca31bd7fc35cd578b8f6cc23ae9e5eb722e4bbc6ee599a84fd5",
     ".agents/skills/wiki-busca-skills/SKILL.md": "11a6a67cf6e44957e3fe77eb999635503a986f2ea34cbe8ee8a8d5d0022517ff",
     ".agents/skills/wiki-cicle-de-vida/SKILL.md": "7ff7d78e75fd08fe8158f2e55c842d0734bf75367fec2871356a480bf9b9401a",
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "763f5f7c69406da008f196e4f944fa063d1cd404b8a12016e31fdd164e46b8bb",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "40d6bd46a45395327f51535581dddacfeaa7f1b1269cc37ab97aebf904e69947"
   },
-  "transaction": "4c2a226c-5d22-4269-838f-99955ec75a64"
+  "transaction": "476a1353-f507-49ad-8b9a-b12519a21ee8"
 }

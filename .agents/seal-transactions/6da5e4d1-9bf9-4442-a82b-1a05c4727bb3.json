@@ -1,0 +1,17 @@
+{
+  "id": "6da5e4d1-9bf9-4442-a82b-1a05c4727bb3",
+  "session": "857d4086-72ce-42e3-a0ff-a3d9bf36214f",
+  "operationId": "5abc44e9-5af3-4e04-b273-8beb840d138c",
+  "claim": "857d4086-72ce-42e3-a0ff-a3d9bf36214f:governance-write",
+  "planHash": "1e486d917a130c23924b27a0fa2f8271adf75e96644535dfd6ee9cb2f24a96e4",
+  "beforeSeal": "c879752c50889d1219240c0ad30605a97b635846913ce72cdfd0b8cac1211371",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "11acfc74d92aa40c76806240c843e96807ff8509d705edc3b52d5ed34688ea06",
+      "after": "447f61f8f47d1119abc9883b90f6fe108ea76a7c8e5f8758069f6fe14aa053ca"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "faeed50e4b5ce1a29abee49c2842d8c4c9c7e6d13583973a7a200d5749698a9a"
+}

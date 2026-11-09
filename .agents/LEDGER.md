@@ -1330,4 +1330,93 @@ Informe: 261101_2143_auditoria_claude.
 <!-- HASH: 0ecb0eca1a630cc70996a99edaf379b7122480c7d03a14f595efcfc898211e17 -->
 
 
-<!-- HASH: b4bf00ecf3e0f0603496b8dcaeaa0b939d07e7b164849dd2392f0ed9e3464bf2 -->
+<!-- CODEX:R52:HANDOFF -->
+## 2026-11-08 · Codex R52 · lliurament local amb límits explícits
+
+Torn torn_524e53a0-e5cd-4757-b405-1fd3d7a8da97. Ordre nocturna del Mestre: auditoria R11b, CAS consumidors R51 i arnès d'evidència Fediversity. Commit real auditat71e75c518 (1720cd86 absent), Frontissa25/25, quatre punts173/173, portes56/58 (Cens/Doctrina també roges al pare), build seed249208 B gzip d'entrada. Bateria global i contraprova al pare: consultar STEP1_RECEIPT, sense afirmar verd global. CAS35 payloads/10 precondicions, replay511/511 i18 controls independents; build seed246542 B. Arnès58/58+replay58/58+18 independents i restauració física PGlite sintètica1/1. Fediversity100 operatiu no acreditat. Cap commit,push,deploy,SQL remot o canvi src viu per Codex.
+
+Lliurament persistent: ../_investigacio_ia_de_poble/261108_kit_codex_r52_fediversity_100_i_auditoria_r11b, STEP1/2/3_RECEIPT.json, CHECKPOINT.md, manifests. Diari ampliat: _wiki_de_poble/04_escriptori/261106_0146_auditoria_codex.md. Tancament formal separat: documents concurrents i SCC pendents no es corregixen fora d'abast. Esta anotació no declara torn closed.
+
+
+<!-- HASH: afec8803e9cd4e580be8b71f2aa3ab3e47c3c1c0c15e573492f676fab3753a7e -->
+
+## R53 segellat · 2026-11-08T03:25:20.688Z · Codex · torn_524e53a0-e5cd-4757-b405-1fd3d7a8da97
+
+- **Lliurable:** ../_investigacio_ia_de_poble/261108_kit_codex_r53_mur_sense_duplicat_i_fotos_pou_neu/README.md i RECEIPT.json. 822membres, verificacio0discrepancies; manifest global SHA256 b91198e9d1abf5021b60a28c08b0305decca5afe24bd4c5feb084eda18560f3e.
+- **Integracio:** CAS vigent integration/live95e-cas,23payloads19precondicions; manifest 3fcd4fe43d0bbfb6ccd4c213f9dd842e398013969657c428cdaa7574263e5dfe; preflightviu95e sense aplicar i Frontissa25/25. Preserva3comentaris21:20 de Claude amb eixida compiladaigual. Candidat funcional provat71e; cap passada global95e atribuida.
+- **P0-51/P0-52:** duplicat retirat del Mur/Calendari; alias a article complet;9JPEG originals amb atribucio i dimensions. Guarda real4fonts,alias,imatges i empremtes; cap whitelist.
+- **Verificacio:**1089/1089ampliades75fitxers;despres guardaV4 38/38 i replay196/196,lint14fitxers0missatges;buildseed249234Bgzipentrada,marge766B,arrencada471512B separada;Chrome33/33 a1440/390/320,12captures,fonts/distintactes. Workers deliberadamentpausats: no acceptacioPWA/produccio. Revisio independent7/7+adaptador4/4. No sumar proves solapades.
+- **Governanca:** torn del clon torn_874bc6ba-604c-4982-9851-f802a5f7c10b tancat realment. El torn documental viu524conserva el seu estat anterior i el deute aliè; no es declara tancat per derivacio.
+- **Seguiment:** R54 prioritari xat/IAIA/push,despresR55consola/barres/botigues,R56Fediversity/deute iR57estudi civic. StudyPush1061/1061,9sondes: manca connector natiu i registreAPNs; cap evidencia de dispositiu,cron ocredencials. Cap font viva,push,deploy ni missatge extern executat per Codex.
+
+
+<!-- HASH: 1f2558e283c830dbb83b7d5b67f966a1ddfa44df553eda239be0a42a77a89a4e -->
+
+## R54 en construcció · 2026-11-08T05:08:53.766Z · Codex · torn documental viu524
+
+Treball preservat en ../_investigacio_ia_de_poble/261108_kit_codex_r54_xat_iaia_i_push/. CURRENT_STATE.md i STATE_RECEIPT.json contenen el punt de represa detallat; events/runs preserven PRE/POST i eixides. R52/R53 segellats immutables. R54 encara no té CAS global ni rebut final.
+
+IAIA+ritme: cadena CAS49fitxers integrada amb688controls independents, nucli32 exacte; push41fitxers en adaptador explícit i Frontissa25/25. Cua durable i retenció100/5000:49controls Node de root passen amb worker+PGlite real i transport injectat. Pressupost:8s autenticació separats de45s posteriors; WebCrypto/Fetch penjats acotats, continuacions tardanes cercades. Relay6+PWA3 aplicats amb CAS;17controls Node de relay passen a root. Correccions de fixtures/signatures RPC296/296.
+
+Primer conjunt:3917casos,3880pass34fail3sentinelles condicionals saltades.16fallades corregides i repetides; IAIA síncrona/graf E2EE/fidelitat del peu de privadesa encara en correcció abans de repetir el conjunt. No es transforma eixe resultat en un verd. Primer build sobre95e+R53: entrada249527Bgzip9, arrencada471868B; falta repetir al candidat final. Browser amb SW real s'està preparant; cap recepció en dispositiu acreditada.
+
+Main és ara7b2a4860f. El primer CAS R53 rebutja correctament un oracle coincident; adaptador nou separat integration/r53-on7b preserva l'oracle de Claude, comprova array literal igual amb parser i conserva la contraprova d'àlies R53.23payloads19precondicions, Frontissa25/25 i157/157 proves en base7b+R53. El kit R53 original no es modifica.
+
+Operatiu: GET públic04:48UTC a.cat és JSON Node0 ambuserSessionsfalse; .org retornaHTML200 en eixa ruta. Detall i empremtes a integration/PUBLIC_STATUS.json. No confondre autodeclaració pública amb prova de model, Beta, VAPID/APNs/FCM, provisioning, backup o interoperabilitat. Encara no100%operatiu. Cap font de producte viva, SQL remot, missatge extern, push o desplegament executat per este carril. R55 Study inicial separat; R56/R57 pendents. Goal actiu.
+
+
+<!-- HASH: a55680154145e8f9efa457b424ae3cf3070093af023be7817cb89b8ba48a6cdd -->
+
+<!-- CODEX:R54:CHECKPOINT-0600 -->
+## R54 · checkpoint de composició · 2026-11-08T06:00:51.669Z
+
+Kit encara sense segell final: ../_investigacio_ia_de_poble/261108_kit_codex_r54_xat_iaia_i_push. CURRENT_STATE.md/events/runs són el punt de represa. Replay net7b+R53+R54; CASv3candidat118payloads98precondicions, pendent correccions finals. No aplicar subkits solapats. Cap producte viu modificat.
+
+Bateria ampliada6325:6316PASS6FAIL3sentinelles condicionals. Primera3917conservada amb34fallades:17fixtures/static,15IAIA,2PWA. Els errors IAIA/PWA ja no fallen en l'ampliada. Dos falles documentals de cua corregides64/64 amb negativa sense0431; fixtureH1R53reutilitzada14/14; RLS/Design/lintfocalsverds. Primer cens57portes+Buildomesa té8roges;6tambéenbase7b+R53. No declarar repositori globalverd.
+
+CFREV-01: neteja ambpushapagat deixa lliuramentv2caducat. Fix1SQL preparat8/8i8/8replay, integraciórootenverificació. Paquetagent sense sidecar rebutjatabansd'escriure; adaptadorcanònic ambpayloadexacte preserva l'original. Política2.6visible però config/últimregistreSQL2.5: append-only2.6enconstrucció,80SQLhistòriquesintactes, pla1.5vinculatabansBuild. HTMLservitSHAae73f12713ba2d7e86cc3610ae828cb231edb89a98749c27df9fddb177be5ab0; FrontissaSHAobjecteJSONd10b0acf... sónobjectesdiferents,noHTMLdiferent. SQL83anterior20+12passa nomésperempremtesanteriors; cal84final.
+
+Operatiuencarasenseacreditar:modelpropi,Beta real,VAPID/APNs/FCM,cron,signatura/provisioning,recepcióAndroid/iOS iwakeNode0propi. No missatgesexterns,SQLremot odeploy. R55Studycomplet66rutes87visites;15capçaleresconsolasensedata,BuildpendentdesprésR54. R56/R57pendents. Goalactiu; torn documental viu524noestanca peresta anotació.
+
+
+<!-- HASH: 325a2c767d32b6542c1e1c7dc972027eeedb6a4b25e74ca7279b76fe0e678046 -->
+
+<!-- CODEX:R54:GLOBAL-SEALED-20261108 -->
+## R54 segellat · 2026-11-08T07:26:42.111Z
+
+**Entrega de codi amb acceptació operativa oberta.** Kit: ../_investigacio_ia_de_poble/261108_kit_codex_r54_xat_iaia_i_push. Entrades: README.md, RECEIPT.json, CURRENT_STATE.md i FOUR_LOOPS.md. Segell global: **7.818 membres, zero discrepàncies**, SHA256 223ba2f261c051afaed80a906d3abf638727e17a0b6aadef9e8bed04f45979a6. Només CHECKPOINT.md és mutable. Cap producte viu, commit, push, deploy, missatge extern o SQL remot executats.
+
+Entrega atòmica R53+R54 sobre HEAD **881ced87**, que ja integra R51 de Claude: 159 payloads / 171 precondicions. Variant de còpia Git: integration/live881-adapter/cas, SHA37616f92792433fe9bb0d3c34cd36dbea16175d8a0dceaa8827e3b2aea1a6d84. Variant física amb cinc precondicions0600: cas-live-modes, SHAb252fa0d43f8bb65ce546fa6a05c730eef227101c476306700923ceffb24e3ae. Mateixes postimatges; seleccionar una sola variant segons bytes/modes. Sense force o chmod viu. Replays, doble aplicació i negatives de modes creuats preservats;330estats vius comprovats només lectura.
+
+Sobre881:247Vitest+67Node, zero fallades/salts, Frontissa25/25, lint/Enxufe verds. Build seed propi **249.680B gzip9**, sostre249.999; arrencada472.472B sense sostre configurat. Les18claus R51 per llengua i Mur es conserven. Sobre7b: bateria conjunta7.490=7.487PASS+0FAIL+3sentinelles condicionals; SQL84 amb80històriques exactes; nucli32 exacte. No sumar carrils solapats ni atribuir els binaris/navegador7b a881.
+
+Compilacions reals iOSReleasearm64 i AndroidRelease sense signatura de distribució;805recursos exactes, carril natiu294membres. Backend sintètic: **binaris de prova, no distribuïbles**. UI7b:210controls geomètrics,45interaccions i28deviewport curt en carrils separats; fonts/dist intactes i perfils/processos propis netejats. DOM/CDP, no teclat o dispositiu físic.
+
+**Push visible continua sense acceptació completa.** En l'últim CONTROL inicial, el worker veu una fila en la primera consulta i la pàgina cap en86mostres; després worker buit. Prerequisit roig i21oracles posteriors no executats. RECEIPT_ERRATUM.json corregix una frase del rebut preservat que deia cap fila als dos APIs. Causa no inferida, cap guarda relaxada ni reintent. Les fonts exactes de Chromium descriuen un mecanisme de retirada de files, sense provar que siga la causa d'este cas.
+
+Pendents operatius: model propi/Beta real, VAPID/APNs/FCM, cron, wake/drain Node0, signatura/provisioning, botigues i dispositius. Proveïdor acceptat no és recepció. Badge natiu prudent fins baixa/logout, possible wake duplicat si fallaACK, purga limitada per activitat/cron, transició de política2.6 amb gate offline que no autentica ni pausa altes. No declarar100%operatiu o zero regressions. Portes globals de producte encara tenen deute/negatives de fixture; tancament documental no les substituïx.
+
+Torn aïllat torn_096ee895-4c0b-4d30-9ec2-3997b3c3b78c: **closed real**, nou comprovacions verdes. Torn documental viu torn_524e53a0-e5cd-4757-b405-1fd3d7a8da97: continua planned, cap tancament heretat. Dos hooks de scroll vius sense seguiment són aliens.
+
+**Continua el goal:** R55 Build en còpies881+R54 segellat, consola/data i setena card botigues/verificadors/flota; R56 i R57 després. R55 Study antic tenia una fallada d'indexConsola/genealogia que881 ja ha corregit: repetir abans de tocar. No s'ha començat Build R55 abans del segell R54.
+
+
+<!-- CODEX:R55:GLOBAL-SEALED-20261108 -->
+## R55 segellat · 2026-11-08T09:07:58.436Z
+
+**Entrega local de codi i auditoria finita; operació externa oberta.** Kit: ../_investigacio_ia_de_poble/261108_kit_codex_r55_consola_barra_i_botigues. Entrades README.md, RECEIPT.json, FOUR_LOOPS.md i R56_REQUIRED_FOLLOWUP.md. Segell global: 3299 membres, zero discrepàncies; SHA256 87ffc3b197d865d8113ccf2c0832d2eec8c9e1701d0748ae29f0807ab6f690df. Només CHECKPOINT.md mutable.
+
+P0-53: setena card darrere de la guarda de rol i nova /consola/botigues, amb vista compartida, fonts separades de 2/12 Play i 14 web, cinc canals configurats i cens sanejat de dotze IAs. Configuració i cens no són estat operatiu. P0-54: quinze capçaleres de consola amb dates acreditades, dates de perfil/apps, reflow, autoria explícita sanejada i cens de nou fotos R53; registres previs preservats. SA02 de dotze col·leccions continua sense data pròpia acreditada, no s'inventa hui.
+
+Entrega atòmica R53/R54/R55 sobre b41640cb: 199 operacions / 505 pins. Còpia Git: integration-replay/atomic-b416-v1, SHA f9291570117280c8fcfc99ff2dbc3e6701ddd04bb76265eb71d0727ee9a09ca3. Variant física observada amb onze source_mode0600: atomic-b416-physical600-v1, SHA 9f5c071c5d5259604be2633133947437d67919f9471bfe11923156d4535a4fda. Payloads exactes, triar-ne només una. Replays, modes creuats, doble aplicació i negatives sense escriptures; Frontissa25/25 i últim preflight de lectura sobre704estats passen. Cap chmod viu. Nou merges preserven R94/R51, amb revisió independent de59rutes upstream i5.298estats.
+
+B416 candidat/replay:3.624 PASS,zero FAIL,quatre omissions del laboratori arxivat. 881 candidat/replay:3.440 PASS,zero FAIL,quatre omissions. Lint/Design/Frontissa/Enxufe/Catàleg i18NodeSocial verds; no sumar passades. Buildb416249.726B gzip9 (sostre249.999; marge273), arrencada472.585B sense sostre,dist1.296membres. Build881249.711B i arrencada472.572B. RAGcanònic82documents verificat, generat preservat i preimatge de treball restaurada. Backend sintètic: artefactes de prova no distribuïbles.
+
+Navegador només881:72observacions naturals,45capçaleres,54Enter,21taules desplegades i9JPEG carregats; fonts/dist exactes, zero errorsruntime o remots permesos i cleanup. **Overall roig preservat:** tres observacionsP3 heretades de crèdit legal amb ellipsis però nom accessible complet, ellipsis de Calendari/llista i identificadors estrets. Suplements, captures i fallades de l'arnès conservats. No navegadorb416, sessióadminreal, dispositiu o acceptaciópush.
+
+Torn privat torn_ab2eab61-2a7a-45b3-a743-49903c353bfd tancat realment, nou comprovacions verdes. Torn documental viu524 continua amb el seu estat anterior. ENOSPC recuperat per APFS COW de packs Git byteidèntics en clon privat tancat; cap font, dependència, kit o directori perduts. Cap producte viu, commit,push,deploy,SQLremot o missatge extern executat.
+
+**Continua el goal:** R56 des de b416+entrega atòmica, segons R56_REQUIRED_FOLLOWUP; Fediversity i deute pendents. R57 després. No es declara100%operatiu o zero regressions.
+
+
+<!-- HASH: 54b55dfdf3e7a9d488bd8f9009e0bce455ed26079ed627d5045ed9d213a73d89 -->

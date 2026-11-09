@@ -3,10 +3,10 @@
   "turn_id": "torn_d36b2582-3998-4cb7-8893-e0b6e44cf7f1",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-11-07T03:57:40.878Z",
-  "updatedAt": "2026-11-07T03:58:25.429Z",
+  "updatedAt": "2026-11-08T14:58:09.835Z",
   "expiresAt": "2026-11-08T03:57:40.878Z",
   "contractHash": "991dd78cf520045e1a0a0144bc2a0efc35d43623f2ebc4d04bb99b623fdd45e5",
   "humanInventoryVersion": 1,
@@ -5274,6 +5274,17 @@
       "file": "_wiki_de_poble/10_actes/261107_0457_acta_marmota_tancament_onada_r10_i_relleu_r11.md",
       "at": "2026-11-07T03:58:25.429Z",
       "hash": "0abee1e30e490e94fc713f630b767920f7187bd1ac3750519b0587df57589432"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-11-08T14:58:09.835Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-11-08T14:58:09.835Z",
+    "previousState": "context_loaded"
+  }
 }

@@ -1,0 +1,132 @@
+{
+  "id": "476a1353-f507-49ad-8b9a-b12519a21ee8",
+  "session": "839ef481-7b34-4529-8600-6ef15d6f535b",
+  "operationId": "r15a-protegits-261109",
+  "claim": "839ef481-7b34-4529-8600-6ef15d6f535b:governance-write",
+  "planHash": "4a472495dcbe0a6a9e8ba7350d0339dc634400bd7461a7f9265076a76dbac289",
+  "beforeSeal": "1ceb917e21666e052cb9528ff587b530382d27e7293b5598b2f28ba5f375bd76",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "b9d624e99cfe101cabb0ea79987436f06316661c826d4f663137af5c77ee3733",
+      "after": "e768f644bb5e34b527ce054169e7a4312d5cb2e78be57cff6bc303f327848b06"
+    },
+    {
+      "path": "package-lock.json",
+      "before": "749a85a3a5cc6ea8544b4ea9e8f79f85e42f33e71104f388368c32a774393b51",
+      "after": "6a5a547677505212521d67e051c5273ee2d26baff636dcc44d5e0f61217994fb"
+    },
+    {
+      "path": "package.json",
+      "before": "6fcfc8234a581451d1346ed40300fa3fae213714c6727668324e35df9a117de1",
+      "after": "1a930c2098a73a872dba83e81fa7a478e36aa59b49909d84879b512cdbb372e9"
+    },
+    {
+      "path": "scripts/botigues/preflight.mjs",
+      "before": "655a472f228a217e0f714e9d550c1395e6b8affc319442282766c043e6f00d5a",
+      "after": "9fe7e6a329ca32d1a0aa6855d1209202eac28af2b9c3bb33e9cfa0a8b445af45"
+    },
+    {
+      "path": "tooling/fediversity/verifyLocalPostgresFediversity.mjs",
+      "before": null,
+      "after": "52bc0095f771fbf2097fdb656654acfe6f988d3000e327e1be7bce8f1cda26df"
+    },
+    {
+      "path": "tooling/menjarIBeure/importa-mercadona.mjs",
+      "before": null,
+      "after": "a89e7b18120eaf763b97adec3f9cc3ffc6f1a1d7405007cef2883c16ed08891b"
+    },
+    {
+      "path": "tooling/menjarIBeure/importaParroquia.py",
+      "before": null,
+      "after": "fdabfc8937fbdb4b7275e7292b71d2bb657271b69edd99e8b52836700a4d4f6b"
+    },
+    {
+      "path": "tooling/menjarIBeure/importaParroquiaFotos.py",
+      "before": null,
+      "after": "36974d9ef6f4009545d6c9209c4edb014e3ca1604d09c2d5bbb10f70df0f3d4b"
+    },
+    {
+      "path": "tooling/node0/backend-node0.mjs",
+      "before": "5ecc68ddfb194f7de2038aa651e1b3ebbef098c50969b13598bbd9c9cb1b391b",
+      "after": "48f3ec477d11eebdb6f4f204e7a9026a6352135e9a5507862eeac7a6497ebe21"
+    },
+    {
+      "path": "tooling/node0/consulta-privada-node0.mjs",
+      "before": "4ae11bb7c106ce79ae4e1d5aee1b4a337bd88a654e9a9ae3b7d6ff9e2841aaee",
+      "after": "497cebd694e5fef1bd3839e7cd2dda580bff700b02c39ac0140b9e5ba013c615"
+    },
+    {
+      "path": "tooling/node0/iaia-node0.mjs",
+      "before": null,
+      "after": "60bdd3893d063c1d1cccc4b0a71423aa519badcf0a4d591d3b14c7757ee4f474"
+    },
+    {
+      "path": "tooling/node0/posse/instal-la-posse-node0.mjs",
+      "before": "a56add2ff1fa3bc32a97724090810ff9e01b78076d0803577d6cbdd082d8525c",
+      "after": "02f6e33a2442316b9e2a80602e763fc89a87428b06baafce33f3988e9d973679"
+    },
+    {
+      "path": "tooling/node0/posse/posse-ledger.sql",
+      "before": "67792ef6ec47d81ac68a94d70e8bfd8bc4613048a96d473207db8fba73cb5c5a",
+      "after": "e04933f276e32767c93b419a715ba4f7b4754d0e99aa0286805bcbfdf3e52671"
+    },
+    {
+      "path": "tooling/node0/postgres-node0.mjs",
+      "before": "19fcce48f548cd66776b540038384707df2f80f25e4e2be084501a195240f3a1",
+      "after": "dc43b965ad6f2c1d0c0a7a8b3cdb7d06086afd449390f4829913f2ca83adbf9d"
+    },
+    {
+      "path": "tooling/node0/privacitat-iaia-postgres-node0.sql",
+      "before": null,
+      "after": "06d0d2ba9bc242ec67be07586a93f7a850efa0ba27a914de59d3f1b4707a207c"
+    },
+    {
+      "path": "tooling/node0/servidor-node0-soberania.mjs",
+      "before": "fc23ae2963d7bda1325458145c69cb88a530e6f29d4d17f29e8d2d95986c9641",
+      "after": "3bcfaeabafbfd2daf99949aced31d76a0b937c8cf1ccfaeca395a0ea3355120e"
+    },
+    {
+      "path": "tooling/patrimoni/genera-que-dinem.mjs",
+      "before": "7cf2ddfe0d81b78eb9987661a09e6af8a70107ae7db66d17b42b71eb21ec017e",
+      "after": "36ae11cf4b2f58be91c199a0283d7bf8f43f2b6267157b3a6ce609790f104803"
+    },
+    {
+      "path": "tooling/patrimoni/mides-webp.mjs",
+      "before": null,
+      "after": "00c2177d3cea82498bcae16140f784afc99f1b6f493327461fa25e59e9edfab1"
+    },
+    {
+      "path": "tooling/privacy/verifica-politica-publicada.mjs",
+      "before": null,
+      "after": "62773127f98cb90bac6e84e2faa222318741475ddb987e9082bb84520ab19ca9"
+    },
+    {
+      "path": "tooling/seo/build-social-manifest.mjs",
+      "before": "d1a842e16cc9c2a4b5b3f365410ce7f5577815a8ad54b0b06788c1e4ff0c98d0",
+      "after": "aaf7d5ddbcd2d735b4a1b112d2f30bd8cc8c187c4a8396b169506c755d76ff92"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "2c3bd12593b3e38f664c9899e8b8ef9fc7f613c489be513a4e9f3f255ad6ed25",
+      "after": "f8f7451fbb3ea11550d916d2cbd0dac9f522fb3ac940a86606ae742aececb856"
+    },
+    {
+      "path": "tooling/vite/banderes-de-capacitat.mjs",
+      "before": null,
+      "after": "895ed8c7c4fbdfb13c4e257b4e8eaa86cbe130c5686cb049b92c913ac062fcc7"
+    },
+    {
+      "path": "tooling/vite/fotos-parroquia-privades.mjs",
+      "before": null,
+      "after": "f883a5cb6fb7aaed23474436ac5ff2f228d75a119ae18101a71a4e55ff0fd48b"
+    },
+    {
+      "path": "tooling/wiki/wiki-baseline.lock.json",
+      "before": "155fc4ab58594b294160fa2c071a2d4768129b618ded99ae479e8a62835a25a5",
+      "after": "fd22c3495722dc39f459bee05fc8aae0772dabe1fe85e304f9434287534e4800"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "faeed50e4b5ce1a29abee49c2842d8c4c9c7e6d13583973a7a200d5749698a9a"
+}

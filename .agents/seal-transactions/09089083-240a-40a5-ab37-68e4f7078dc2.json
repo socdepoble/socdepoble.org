@@ -1,0 +1,37 @@
+{
+  "id": "09089083-240a-40a5-ab37-68e4f7078dc2",
+  "session": "4bf2b574-f46c-40e3-a29b-140d94e2aad8",
+  "operationId": "de28a4a4-a64b-4609-8cc3-13552362daa9",
+  "claim": "4bf2b574-f46c-40e3-a29b-140d94e2aad8:governance-write",
+  "planHash": "db2b9a2327c6eedf3fdc2385749c7f156969701595c3dc4e03d10b672b17e741",
+  "beforeSeal": "0a7c8552390923fb5a98bd49edc286494cb87db1b7dc496e14a616321957b556",
+  "files": [
+    {
+      "path": ".agents/skills/core-comprensio-reflexiva/SKILL.md",
+      "before": "2eb05336863e420ccd26e773d6e6b0c2e91785c94699ebecef745238f8e1dbb9",
+      "after": "91dc8464016577e7d793c9a154b1ff51fd5458c85afd5f1ca43bf321a98cfd86"
+    },
+    {
+      "path": ".agents/skills/core-automillora/SKILL.md",
+      "before": "bbd92b5d1252788fda100b1b2973f3643acaaeaa0cb33c731c1cc5cbeceb4a56",
+      "after": "f14ac32cb6bce7b26db5b1d8a568532371061fac1a8ac783ffc8e1a115ac0cfc"
+    },
+    {
+      "path": ".agents/skills/core-tecniques-investigacio/SKILL.md",
+      "before": "8b0224ec17a4fb12c6e13db50f0c486072b927df36f314a1a0759ea8c5c0ca1c",
+      "after": "a3d74a1787b3969881e5746c86a3e64ae11e7693ee5390a8badec220d01c44e8"
+    },
+    {
+      "path": ".agents/skills/sdp-workflow/SKILL.md",
+      "before": "30fb3978bd59303d970cbcbfc189bb262d2dfac6eda83f2c2d27ff6f8af1950b",
+      "after": "8f382c2047b5bca31bd7fc35cd578b8f6cc23ae9e5eb722e4bbc6ee599a84fd5"
+    },
+    {
+      "path": ".agents/skills/00_INDEX_SKILLS.md",
+      "before": "b439baf81efaa56f2fa581b54a9950c4d855ac1de158c5342616792441f2e5d0",
+      "after": "ca38909728894660eef000009e085ab8286a9d38b9bde16d11e055bc18595659"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "faeed50e4b5ce1a29abee49c2842d8c4c9c7e6d13583973a7a200d5749698a9a"
+}

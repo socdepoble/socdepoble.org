@@ -123,6 +123,8 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[10_actes/261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7.md]]
 - [[10_actes/261106_1408_acta_marmota_commit_r7_r8_70b651636_fediversity_anatomia_herbari_i_onada_r9.md]]
 - [[10_actes/261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9.md]]
+- [[10_actes/261107_0457_acta_marmota_tancament_onada_r10_i_relleu_r11.md]]
+- [[10_actes/261108_1311_acta_marmota_marato_r12_fediversity_pou_neu_xat_push_i_218gb.md]]
 
 ## Escriptori i Safata d'Entrada
 

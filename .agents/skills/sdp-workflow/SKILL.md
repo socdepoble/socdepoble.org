@@ -1,7 +1,7 @@
 ---
 type: skill
 status: canonic
-description: Workflow principal de treball i Spec-Driven Development
+description: Workflow principal de treball, Spec-Driven Development i Mètode MIT d'Estudi en Xarxa Semàntica
 tags:
   - govern
 name: sdp-workflow
@@ -25,11 +25,17 @@ contracte.escriu:
 ---
 # ⚙️ Workflow de Sóc de Poble (Alta Definició)
 
-Aquest és el workflow mestre per a l'execució de tasques. Regeix la manera en què la IA pensa, planifica i executa canvis al sistema per assegurar que mai es treballa a cegues (Spec-Driven Development).
+Aquest és el workflow mestre per a l'execució de tasques. Regeix la manera en què la IA pensa, estudia, planifica i executa canvis al sistema per assegurar que mai es treballa a cegues (Spec-Driven Development + Mètode MIT).
 
-## 0. Llei del Caçador i l'Estudi Previ
+## 0. Llei del Caçador, l'Estudi Previ i la Quàdruple Tècnica (`MIT + EGM + REA + Craft`)
 Abans de proposar una solució a un problema tècnic complex que no està explícitament cobert als nostres manuals:
 - **Teniu l'obligació de consultar la `wiki-busca-skills`**: Has d'investigar com ho resol l'avantguarda de la IA o GitHub (p. ex: usant repositoris MCP, *Vertical Slices*, sistemes de disseny globals) a partir del catàleg viu `.agents/skills/00_INDEX_SKILLS.md`. L’arxiu històric queda fora de la descoberta automàtica (AGENTS §5). No reinventes la roda. Adapta les solucions globals al nostre *Trellat*.
+- **Aplicació obligatòria del Mètode MIT d'Acumulació de Context i Memòria Semàntica en Xarxa (`P0-61 / IDEA-192`) per a totes les IAs:** En cada cas d'ús, totes les IAs (Claude, Codex, Gemini, MarIA i el Node 0) han de dedicar tokens d'estudi per recórrer les 5 fases del Mètode MIT abans i durant la tasca:
+  1. **Fase 0 (Acumulació multidireccional de context):** Reunir i creuar la doctrina, el codi dels components connectats, les proves i les captures reals en lloc de mirar un sol fitxer aïllat.
+  2. **Fase 1 (Els 5 nuclis centrals i la Xarxa Semàntica):** Identificar els 5 conceptes nuclears del cas d'ús, com es connecten entre si (`nodreix`, `depén_de`, `es_diferencia_de`), quin error superficial típic eviten i quin impacte tenen per al veí.
+  3. **Fase 2 (Filtre Feynman sense llibre obert):** Explicar l'arquitectura de forma atòmica i senzilla, separant el tronc essencial de l'accessori i convertint qualsevol excepció de codi en una funcionalitat universal del sistema.
+  4. **Fase 3 (Test socràtic de lògica subjacent):** Formular-se preguntes de casos límit per verificar si la solució és estructural o només un pedaç superficial.
+  5. **Fase 4 (Correcció dura però útil i consolidació d'1 pàgina):** Auditar el propi resultat indicant quina part és vàlida, on s'ha quedat en la superfície, quina connexió de la xarxa falta i sintetitzar el repàs executiu.
 
 ## 1. Spec-Driven Development (Prototipatge Lògic)
 - **MAI Piquem Codi a Cegues:** Tens terminantment prohibit escriure codi de noves funcionalitats o redissenys sense haver generat prèviament un esborrany o PRD (Product Requirements Document) a l'Escriptori físic `_wiki_de_poble/04_escriptori/`, pel circuit documental vigent; l'índex només l'ancora i no substituïx el pla.
@@ -74,3 +80,4 @@ Per a una eina de capçalera, contrasta primer l’Índex de `PageFrame` i `Cala
 
 ## Vincles
 - [[00_INDEX_SKILLS]]
+

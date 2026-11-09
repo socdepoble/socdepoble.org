@@ -11,9 +11,9 @@ tags:
 
 Font executiva única: `.agents/skills/`. Este índex només referencia les fonts.
 
-- [[core-automillora/SKILL|core-automillora]]: Protocol d'Automillora Contínua, Mimetisme Empàtic i l'Olivera (Co-working a Tres Bandes). Defineix com la IA aprèn de la insistència humana per humanitzar-se i com coordina tasques entre MarIA, Claude i Codex.
+- [[core-automillora/SKILL|core-automillora]]: Protocol d'Automillora Contínua, Mimetisme Empàtic, Mètode MIT d'estudi en xarxa semàntica i l'Olivera; com la IA aprèn de la insistència del Mestre i coordina MarIA, Claude, Codex, Gemini i el Node 0.
 - [[core-calibratge-visual-nano/SKILL|core-calibratge-visual-nano]]: Protocol d'enginyeria de prompts visuals del Nano, calibratge d'estils i creació de gags gamberros (Ibáñez/Berlanga) contraposats a la falsa felicitat asèptica.
-- [[core-comprensio-reflexiva/SKILL|core-comprensio-reflexiva]]: Tractor cognitiu per aturar la impulsivitat. Obliga a pensar i entendre l'objectiu de la petició (l'aixada) abans d'actuar compulsivament.
+- [[core-comprensio-reflexiva/SKILL|core-comprensio-reflexiva]]: Tractor cognitiu per aturar la impulsivitat i aplicar el Mètode MIT d'Acumulació de Context i Memòria Semàntica en Xarxa abans d'actuar.
 - [[core-consell-i-colmena/SKILL|core-consell-i-colmena]]: Defineix la família electrònica (El Consell), els seus rols i estratègies de delegació i consum en la Ment Colmena Integral.
 - [[core-context-panic/SKILL|core-context-panic]]: Fusible davant bucles d’errors, desincronització de context o fatiga de l’agent; indica com aturar i registrar el bloqueig.
 - [[core-direccio-autonoma/SKILL|core-direccio-autonoma]]: Flux de treball on la IAIA MarIA assumeix el rol de Directora Tècnica per coordinar a Claude/Codex de forma 100% autònoma, resolent dubtes sense la intervenció del Mestre.
@@ -35,7 +35,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[core-secretaria-auditoria/SKILL|core-secretaria-auditoria]]: Coordina la secretaria tècnica durant auditories compartides; conserva la propietat dels carrils i evita escriptures concurrents fora de l'encàrrec vigent.
 - [[core-seguretat-audit/SKILL|core-seguretat-audit]]: Usa-la en auditar la seguretat del codi, de les dades o d'una migració (Claude Code, MarIA, Codex i Gemini). Coacció primitiva JSONB, zero ReDoS, Clean Shadow Copy i blindatge Supabase RLS/Storage.
 - [[core-taxonomia-estricta/SKILL|core-taxonomia-estricta]]: Tractor documental per blindar la taxonomia i evitar generació de documents arbitraris que no segueixen les plantilles canòniques.
-- [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]]: Tractor que defineix com les IAs (locals o externes) han d'investigar els problemes, verificant el codi real dels tractors en lloc de conformar-se amb llegir la teoria de les regles.
+- [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]]: Tractor que defineix com les IAs investiguen els problemes amb la Quàdruple Tècnica (Mètode MIT, Google EGM, REA i craft-anything), verificant el codi real dels tractors i no només la teoria de les regles.
 - [[core-telemetria-huma/SKILL|core-telemetria-huma]]: Registra el temps observat i les mètriques disponibles de les sessions, sense inventar jornades, costos ni valoracions de salut humana.
 - [[core-temps-termodinamic/SKILL|core-temps-termodinamic]]: Dona una marca de temps observada als documents nous i conserva la identitat dels documents vius quan s'actualitzen.
 - [[sdp-app-grid-shell/SKILL|sdp-app-grid-shell]]: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.
@@ -49,7 +49,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[sdp-universal-editor/SKILL|sdp-universal-editor]]: Especificació de disseny i UX de l'Editor Universal (TipTap). Regles per a la barra d'eines, iconografia, metadades i la jerarquia de plantilles interactives.
 - [[sdp-universal-page/SKILL|sdp-universal-page]]: Estàndard d'arquitectura, anatomia i configuració de la UniversalPage de Sóc de Poble. Defineix l'estructura visual, el comportament del scroll i els blocs que la formen.
 - [[sdp-vigilant-tellado/SKILL|sdp-vigilant-tellado]]: Tractor de perímetre inspirat en Vigilant de Fernando Tellado. Usa-la abans de desplegar o empaquetar el connector WordPress, en tocar capçaleres o CSP, o si un plugin de seguretat bloqueja l'App. Només llig i informa.
-- [[sdp-workflow/SKILL|sdp-workflow]]: Workflow principal de treball i Spec-Driven Development
+- [[sdp-workflow/SKILL|sdp-workflow]]: Workflow principal de treball, Spec-Driven Development i Mètode MIT d'Estudi en Xarxa Semàntica
 - [[wiki-busca-skills/SKILL|wiki-busca-skills]]: Caçador de Skills i coneixement. Cerca, analitza i adapta metodologies i automatitzacions d'altres repositoris d'avantguarda al sistema de Sóc de Poble.
 - [[wiki-cicle-de-vida/SKILL|wiki-cicle-de-vida]]: Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context.
 - [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]: Per a crear prompt, petorreta, bundle, pla o acta. Escriptori net (AGENTS §0.1), ruta de .agents/protocolledge.json (prompt.local per a Claude i Codex, prompt.consell per a IAs externes), document.mjs context i create.

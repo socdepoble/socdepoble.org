@@ -6,7 +6,7 @@ description: Inventari verificable del port i requisits d'allotjament Model B
 # API del port neutral i allotjament Model B
 
 **Contrast inicial:** arbre de l'assalt 261101_1246, 2026-11-01. **Recompte actualitzat**
-des de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-07 (R33: revisions de llavor i exportació pròpia; recompte executable vigent).
+des de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-09 (composició R13/R54/R55: IAIA i ritme de xat opcionals; recompte executable vigent).
 **Esborrany. Inventari de codi**; **no acredita cap nou desplegament** ni l'aprovació d'una ADR.
 Les **signatures i DTO** són a `src/data/contracte.js` i a les **implementacions**;
 la **llista següent** enumera noms.
@@ -48,13 +48,13 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 46 capacitats atòmiques opcionals (`CAPACITATS`)
+## 48 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**106 mètodes addicionals**; **138 mètodes** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**109 mètodes addicionals**; **141 mètodes** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
-un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 46 són **grups declarats al contracte**, no 46 serveis implementats o desplegats per cada adaptador.
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 48 són **grups declarats al contracte**, no 48 serveis implementats o desplegats per cada adaptador.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
@@ -75,6 +75,8 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `xatMultimedia` | `quotaXat`, `publicaAdjuntXat`, `urlAdjuntXat`, `descartaAdjuntXat` |
 | `clausXat` | `publicaIdentitatXat`, `laMevaIdentitatXat`, `desaFraseXat`, `clausDeXat`, `desaLlibretaXat`, `laMevaLlibretaXat`, `estatXifratXat`, `epoquesDelFilXat`, `sobresMeusXat`, `obriEpocaXat`, `enviaXifratXat`, `reembolcallaXat`, `demanaXifratXat` |
 | `xatMultimediaXifrat` | `publicaAdjuntXifratXat`, `bytesAdjuntXat` |
+| `iaia` | `consultaIAIA` |
+| `xatRitme` | `loadRitmeXat`, `actualitzaPresenciaXat` |
 | `agenda` | `loadActesAgenda` |
 | `compte` | `exportaLesMeuesDades`, `estatBaixa`, `demanaBaixa`, `cancelaBaixa` |
 | `consentiment` | `estatConsentiment`, `registraConsentiment`, `revocaConsentiment` |
@@ -105,6 +107,8 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `avisosPush` | `desaDispositiuAvisos`, `retiraDispositiuAvisos` |
 | `silenciXat` | `silenciaFil` |
 
+Les opcions `iaia` i `xatRitme` declaren tres mètodes i cinc casos neutrals nous. El magatzem local no les anuncia. La inferència opcional requerix configuració i autoritat de servidor; el ritme de xat requerix les RPC corresponents. La presència del contracte i les proves descartables no acrediten inferència desplegada, entrega a dispositius ni interoperabilitat remota.
+
 ## Validació i conformitat
 
 `src/data/backendPort.js` exporta `validaBackendImplementation`,
@@ -125,11 +129,11 @@ inoperants. No hi ha les API `verificaContracteBackend` o `executaKitDeConformit
 Esta cobertura contractual local **no acredita 120 èxits de servidor remot**,
 ni totes les branques possibles de cada mètode.
 
-### Recompte local vigent (R33) i verificació per correu (R6)
+### Recompte local vigent (R13/R54/R55) i verificació per correu (R6)
 
-El recompte actual és de **190 casos sobre 138 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+El recompte actual és de **195 casos sobre 141 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
 
-L’adaptador local oferix **43 dels 46 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`; els **cinc casos** d’estos grups (un d’importació i quatre de correu) s’ometen per **capacitat absent**. Les omissions per dades o autorització dels altres casos continuen sent **explícites**. Les **138 declaracions** del port **no són 138 operacions verificades en un servidor remot**.
+L’adaptador local oferix **43 dels 48 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`; els **deu casos** d’estos grups (dos d’IAIA, tres de ritme de xat, un d’importació i quatre de correu) s’ometen per **capacitat absent**. Les omissions per dades o autorització dels altres casos continuen sent **explícites**. Les **141 declaracions** del port **no són 141 operacions verificades en un servidor remot**.
 
 ### Carpetes privades del Bloc de Notes (R12)
 
@@ -195,8 +199,8 @@ requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
 **no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
 real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
 
-L'adaptador local oferix **43 dels 46 grups declarats**; `CAPACITATS_NO_DECLARADES`
-conté `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`. `versioMinimaClient` torna honestament `null`, sense transport.
+L'adaptador local oferix **43 dels 48 grups declarats**; `CAPACITATS_NO_DECLARADES`
+conté `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`. `versioMinimaClient` torna honestament `null`, sense transport.
 L'administració multipoble està **denegada per defecte**: requerix el catàleg i
 la política `administracioLocal` injectats en construir la instància. La política
 només autoritza amb `true`, i **no deriva permisos** de rols o MFA del client.
