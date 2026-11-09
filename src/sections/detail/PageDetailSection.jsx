@@ -21,11 +21,14 @@ const AparadorFediversity=lazy(()=>import('../text/AparadorFediversity.jsx'));
 const PAGINA_DEL_WHATSAPP_DE_LA_IAIA = 'node-zero';
 const IaiaWhatsappCard = lazy(() => import('../../components/patrimoni/IaiaWhatsappCard.jsx'));
 /* Onada R9 (carril C5; IDEA-112, IDEA-113 i IDEA-115) · Les consultes de patrimoni, cadascuna en un chunk lazy:
-   només es baixen a la seua pàgina, davall del text breu de PAGE_COPY (com l'herbari). */
+   només es baixen a la seua pàgina, davall del text breu de PAGE_COPY (com l'herbari).
+   Onada R14 · /page/receptes, el receptari «Què dinem?»: la llista de les receptes del llibre (les dades,
+   src/data/patrimoni/queDinem.js, van dins del seu tros i no arriben a l'entrada). */
 const SECCIONS_DE_PATRIMONI = {
   'banc-de-llavors': lazy(() => import('../patrimoni/BancLlavorsSection.jsx')),
   'rutes-de-poble': lazy(() => import('../patrimoni/RutesDePobleSection.jsx')),
-  'arbres-monumentals': lazy(() => import('../patrimoni/ArbresMonumentalsSection.jsx'))
+  'arbres-monumentals': lazy(() => import('../patrimoni/ArbresMonumentalsSection.jsx')),
+  receptes: lazy(() => import('../patrimoni/ReceptesQueDinemSection.jsx'))
 };
 
 /* IDEA-109 + IDEA-143 · El visor d'Anatomia Rural és un chunk lazy: només es

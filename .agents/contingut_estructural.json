@@ -115,6 +115,12 @@
       "aprovat_per": "Codex · ordre directa AH-22 del Mestre 05-11-2026",
       "data": "2026-11-05"
     },
+    "receptes": {
+      "sha256": "e1dd794b67c6d60f41543f73f59e61177a7be2fe0d6af1e307d2c8a766fab56f",
+      "html": 648,
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-09"
+    },
     "roadmap": {
       "sha256": "ad6c52700476ea5352ac533f441566557c5b4c72449ce58c70c6b13e5382831d",
       "html": 31391,

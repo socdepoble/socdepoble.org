@@ -12,12 +12,12 @@ const revisades = () => Object.fromEntries(LLENGUES.map((llengua) => [llengua, {
 const pagina = (extra) => ({ title: 'Títol ca', subtitle: 'Subtítol ca', html: '<p>Cos ca</p>', labels: ['Patrimoni'], source_language: 'ca', ...extra });
 
 describe('planTraduccioPagina', () => {
-  test('sense translation_mode propi, null: el camí de sempre (avui, les 31 pàgines de PAGE_COPY)', () => {
+  test('sense translation_mode propi, null: el camí de sempre (avui, les 32 pàgines de PAGE_COPY, amb /page/receptes d’R14)', () => {
     expect(planTraduccioPagina(pagina({}), 'en')).toBeNull();
     expect(planTraduccioPagina(Object.create({ translation_mode: 'none' }), 'en')).toBeNull();
     for (const brossa of [null, undefined, 'pàgina', [], 0]) expect(planTraduccioPagina(brossa, 'en')).toBeNull();
     const claus = Object.keys(PAGE_COPY);
-    expect(claus.length).toBe(31);
+    expect(claus.length).toBe(32);
     expect(claus.filter((clau) => planTraduccioPagina(PAGE_COPY[clau], 'en') !== null)).toEqual([]);
   });
 

@@ -86,7 +86,10 @@ export const PAGINES_INFORMATIVES = Object.freeze(['publicar_mur', 'publicar_mer
   'vehicle_compartit', 'animalets', 'treball', 'habitatge', 'notes', 'wikidepoble',
   /* P0-60 / IDEA-191 (ordre del Mestre, 08-11-2026 17:09) · Les pàgines públiques de patrimoni
      (PageDetailSection, sense ruta pròpia a navigation.js), amb la seua il·lustració Ibáñez. */
-  'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals']);
+  'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals',
+  /* Onada R14 · El receptari «Què dinem?» (Muro, El Comtat, 2019), amb la variant social de la làmina de
+     l'olleta murera com a og_image (pageContent.patrimoniR14.js). */
+  'receptes']);
 
 /* P0-60 / IDEA-191 · Les adreces /page/<clau> que navigation.js (resolvePageSlugPath) porta a
    una publicació del Mur: l'àlies servix el mateix <head> que la publicació. Llista tancada. */
@@ -95,7 +98,8 @@ export const PAGINES_A_PUBLICACIONS = Object.freeze(['anatomia-rural']);
 /* P0-60 / IDEA-191 · Les pàgines que pageContent.js afig a PAGE_COPY fora del literal
    (Object.assign): [font, exportació]. */
 export const FONTS_DE_PAGINES = Object.freeze([
-  Object.freeze(['src/sections/text/pageContent.patrimoniR9.js', 'PAGINES_PATRIMONI_R9'])
+  Object.freeze(['src/sections/text/pageContent.patrimoniR9.js', 'PAGINES_PATRIMONI_R9']),
+  Object.freeze(['src/sections/text/pageContent.patrimoniR14.js', 'PAGINES_PATRIMONI_R14'])
 ]);
 
 /* Ordre del Mestre (30-10-2026, prompt 2208, T1.1 i T2.1) · Les fonts JS de les
@@ -398,6 +402,9 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     const meta=metadadesDePagina(page,imageOptions);blocked(route,meta.imatge);
     add(route,{title:meta.title,description:meta.description,image:meta.image,own:true});
   }
+  // Onada R14 · /receptes, l'adreça curta del receptari «Què dinem?» (App.jsx, una redirecció a /page/receptes,
+  // que acaba d'entrar amb l'inventari de dalt).
+  if(routes['/page/receptes'])alias('/receptes','/page/receptes');
   /* Ordre del Mestre (30-10-2026, prompt 2208, T1.1) · Les huit /plugin/<id>.
      registrePlugins.js importa el router (registreApps.js): es llig l'AST i
      només els literals de cada plugin({…}); la imatge és la regla de la fàbrica

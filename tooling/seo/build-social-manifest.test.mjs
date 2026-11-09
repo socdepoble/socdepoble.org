@@ -272,7 +272,8 @@ test('les presentacions /page/<clau>: l’inventari explícit, ni una clau més'
   assert.deepEqual(manifest.routes['/page/publicar_mur'].image,{url:origin+'/assets/mur.jpg',alt:'Veïns'});
   for(const ruta of ['/page/treball','/page/notes_shared','/page/altra'])assert.equal(manifest.routes[ruta],undefined,ruta);
   // P0-60 / IDEA-191 · + l'herbari, el banc de llavors, les rutes de poble i els arbres monumentals.
-  assert.equal(PAGINES_INFORMATIVES.length,14);
+  // Onada R14 · + el receptari «Què dinem?» (/page/receptes).
+  assert.equal(PAGINES_INFORMATIVES.length,15);
 });
 
 /* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · La Consola entra amb el head
@@ -320,12 +321,15 @@ test('cobertura de l’arbre de veres: les 18 presentacions, /disseny, /wikidepo
     'src/sections/consola/govern/governConsola.js','src/sections/text/pageContent.js','src/config/navigation.js'].map(importa));
   const inventari=[...PAGINES_INFORMATIVES.map(clau=>`/page/${clau}`),...PLUGINS_DE_L_ORDRE.map(id=>`/plugin/${id}`),'/disseny','/wikidepoble','/consola',
     ...IDS_PAGINES.map(id=>`/consola/${id}`),...IDS_GOVERN.map(id=>`/consola/govern/${id}`)];
-  assert.equal(inventari.length,14+9+3+9+4);
+  assert.equal(inventari.length,15+9+3+9+4);
   /* P0-60 / IDEA-191 · L'article del Pou de Neu i el Manifest de Poble (llavors del Mur) tenen el seu
      head, amb la variant JPEG de la il·lustració, i /page/anatomia-rural n'és l'àlies. */
   const POU='/mur/noves-tecnologies-aplicades-a-la-cultura-rural';
   inventari.push(POU,'/mur/manifest-de-poble');
   assert.equal(manifest.aliases['/page/anatomia-rural'],POU);
+  // Onada R14 · /receptes és l'àlies de /page/receptes (App.jsx, una redirecció), amb la portada de l'olleta murera.
+  assert.equal(manifest.aliases['/receptes'],'/page/receptes');
+  assert.equal(manifest.routes['/page/receptes'].image.url,`${origin}/assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg`);
   assert.equal(manifest.routes[POU].type,'article');
   assert.equal(manifest.routes[POU].image.url,`${origin}/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez-social-1200x630.jpg`);
   for(const ruta of inventari) {

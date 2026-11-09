@@ -401,7 +401,15 @@ export const EXCLOSES = Object.freeze({
     /* Pla 261022_1645 (ordre del Mestre) · De mapa_cuadrat_halo es queda el .png (canònic); el .jpg ja no és a public/. */
     ...['apaisat.jpg', 'classic.jpg', 'foto.jpg', 'mapa_apaisat.jpg', 'mapa_cuadrat_blanc.jpg',
       'mapa_cuadrat_halo.png', 'verd_net.jpg'].map((nom) => `/assets/uploads/poble/la-torre-de-les-macanes/og_gentdelatorre_${nom}`)
-  ].map((src) => [src, 'targeta social (OpenGraph): no és cap foto de l’Arxiu']))
+  ].map((src) => [src, 'targeta social (OpenGraph): no és cap foto de l’Arxiu'])),
+  /* Onada R14 · El receptari «Què dinem?» (Muro, 2019): les làmines del llibre que pinten /page/receptes i
+     /receptes/:slug (src/data/patrimoni/queDinem.js) i la seua portada social, que només va al <head>. Són pàgines
+     d'un llibre amb permís d'ús, no fotos de l'Arxiu. Rangs de pàgines del llibre: fora les pàgines sense làmina de
+     recepta (55, 88, 115, 126, 138 i 156) i la foto de grup de la 163, que no es publica. */
+  ...Object.fromEntries([[9, 54], [56, 87], [89, 114], [116, 125], [127, 137], [139, 155], [157, 162]]
+    .flatMap(([de, a]) => Array.from({ length: a - de + 1 }, (_, i) => `/assets/uploads/patrimoni/que-dinem/p${String(de + i).padStart(3, '0')}.webp`))
+    .map((src) => [src, 'làmina del llibre «Què dinem?» (receptari amb permís d’ús): no és cap foto de l’Arxiu'])),
+  '/assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg': 'targeta social (OpenGraph) de /page/receptes: només per al <head>'
 });
 
 /* El camí de l'original que nomena el motiu d'una còpia: «còpia de /assets/…»

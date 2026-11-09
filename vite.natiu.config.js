@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 
 import { esquemaInvertitDeGoogleIos, validatePublicCredentials } from './src/config/publicCredentials.js';
 import { VARIANTS_SOCIALS } from './src/config/imatgeSocial.js';
+import { PAGINES_PATRIMONI_R14 } from './src/sections/text/pageContent.patrimoniR14.js';
 import { esHostLocal, politicaDeMitjans, recursosPublicsDelPlugin, segellDeBuild } from './vite.standalone.config.js';
 import { SEGELL, segellDelArbre } from './scripts/botigues/entorn.mjs';
 
@@ -356,8 +357,11 @@ export const RECURSOS_QUE_L_APP_NO_LLIG = Object.freeze(['rag-index.json', 'slug
 
 /* Revisió final 261029 (OG-03) · Les variants socials (R-01, imatgeSocial.js ·
    VARIANTS_SOCIALS) només van al <head> OpenGraph del lloc, que l'app nativa no
-   emet mai: fora del paquet (−3,7 MB en 17 fitxers). Camins relatius a public/. */
-export const RECURSOS_NOMES_DEL_HEAD = Object.freeze(Object.values(VARIANTS_SOCIALS).map((cami) => cami.replace(/^\//, '')));
+   emet mai: fora del paquet (−3,7 MB en 17 fitxers). Camins relatius a public/.
+   Onada R14 (arreglos) · La mateixa regla per a les portades socials que una pàgina de PAGE_COPY tria amb og_image
+   sense passar per VARIANTS_SOCIALS (que viatja a l'entrada): hui, la de /page/receptes. */
+const PORTADES_SOCIALS_DE_PAGINA = Object.values(PAGINES_PATRIMONI_R14).map((pagina) => pagina.og_image).filter(Boolean);
+export const RECURSOS_NOMES_DEL_HEAD = Object.freeze([...Object.values(VARIANTS_SOCIALS), ...PORTADES_SOCIALS_DE_PAGINA].map((cami) => cami.replace(/^\//, '')));
 
 /**
  * La política de mitjans de l'app a partir de la de l'autònom

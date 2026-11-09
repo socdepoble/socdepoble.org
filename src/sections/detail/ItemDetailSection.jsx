@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
@@ -77,6 +77,20 @@ function useSessioSegura() {
   }
 }
 
+/* Onada R14 · /receptes/:slug, la pàgina d'una recepta del llibre «Què dinem?»: un tros diferit propi (import
+   directe, no la llista de /page/receptes), amb el seu useSEO i el seu «no trobat». No passa per
+   buildDetailSectionMeta: les receptes no són contingut de la gent ni de cap proveïdor. */
+const SECCIO_DE_RECEPTES = 'receptes';
+const ReceptaDetailSection = lazy(() => import('../patrimoni/ReceptaDetailSection.jsx'));
+function DetallDeRecepta() {
+  const { t } = useUIActions();
+  return (
+    <Suspense fallback={<Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />}>
+      <ReceptaDetailSection />
+    </Suspense>
+  );
+}
+
 /* Onada 0.3 (Gauntlet 261016, M04 i M07; pla 261016_1530) · /multimedia/:id
    ja no és cap pàgina de detall. La ruta continua viva (fils de xat de pàgina,
    el servidor, enllaços copiats) i porta, amb replace i conservant la
@@ -93,6 +107,7 @@ export default function ItemDetailSection() {
   const { search, hash } = useLocation();
   const desti = sectionId === 'multimedia' ? destiDeMultimedia(itemId, search, hash ?? '') : null;
   if (desti) return <Navigate to={desti} replace />;
+  if (sectionId === SECCIO_DE_RECEPTES) return <DetallDeRecepta />;
   return <DetallDElement />;
 }
 

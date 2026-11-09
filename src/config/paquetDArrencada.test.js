@@ -185,7 +185,13 @@ const DIFERITS = [
   'src/sections/disseny/cataleg/dades/emojisUnicode18.js',
   // P0-61 / IDEA-192 · El Brain de categories i etiquetes, el seu model i el graf.
   'src/sections/taxonomia/BrainTaxonomia.jsx', 'src/data/taxonomia/brainTaxonomia.js',
-  'src/components/universal/graph/BrainGraph.jsx'
+  'src/components/universal/graph/BrainGraph.jsx',
+  /* Onada R14 · El receptari «Què dinem?»: les dades (149 receptes, ~205 KB), les dues seccions i els seus textos
+     en 5 llengües només es baixen a /page/receptes i a /receptes/:slug (les claus de la interfície són al
+     diccionari valencià, que és un tros d'arrencada propi i no compta en l'entrada). */
+  'src/data/patrimoni/queDinem.js',
+  'src/sections/patrimoni/ReceptesQueDinemSection.jsx', 'src/sections/patrimoni/ReceptaDetailSection.jsx',
+  'src/sections/patrimoni/cercaReceptes.js', 'src/sections/patrimoni/CreditsQueDinem.jsx', 'src/sections/text/pageContent.patrimoniR14.js'
 ];
 const PAQUETS_DIFERITS = ['@tiptap/core', '@tiptap/react', '@tiptap/starter-kit', 'leaflet', '@supabase/supabase-js'];
 

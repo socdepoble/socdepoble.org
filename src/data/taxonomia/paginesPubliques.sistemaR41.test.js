@@ -56,8 +56,8 @@ const categoryText=(id,language)=>CATEGORIES[id][LANGUAGES.indexOf(language)];
 
 // Literal editorial matrix: one mandatory tag anchor per page. It detects a
 // blanket category or an entry removed from both production tables.
-// Arbitratge R46, Loop 3 (L2-04) · P6 (directriu 261003_2325 del Mestre) i P0-40: de les 31 claus de PAGE_COPY,
-// 23 es classifiquen i les 8 pàgines d'acció de DESTINS_CONTROL no porten cap etiqueta (ACTION_PAGES).
+// Arbitratge R46, Loop 3 (L2-04) · P6 (directriu 261003_2325 del Mestre) i P0-40: de les 31 claus de PAGE_COPY (32 des de R14),
+// 23 es classifiquen (24 amb /page/receptes) i les 8 pàgines d'acció de DESTINS_CONTROL no porten cap etiqueta (ACTION_PAGES).
 const PAGES=[
  ['projecte','tecnologia-lliure','Projecte Sóc de Poble'],
  ['constitucio','comunitat-rural','Associacionisme'],
@@ -81,7 +81,9 @@ const PAGES=[
  ['herbari','natura-excursions','Herbari'],
  ['banc-de-llavors','recursos-locals','Llavors'],
  ['rutes-de-poble','natura-excursions','Rutes'],
- ['arbres-monumentals','natura-excursions','Arbres Monumentals']
+ ['arbres-monumentals','natura-excursions','Arbres Monumentals'],
+ // Onada R14 · /page/receptes, el receptari «Què dinem?».
+ ['receptes','patrimoni-cultura','Patrimoni']
 ];
 // P6 · les huit pàgines d'acció (publicar i saber-ne més del Panell): cap etiqueta, en cap llengua.
 const ACTION_PAGES=['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge'];
@@ -128,13 +130,13 @@ const sentinels=()=>({
 });
 
 describe('R41 independent public-page contract',()=>{
- it('the fixture covers exactly the original 31 public keys (23 classified + 8 P6 action pages) and the 6/49 normative vocabularies',()=>{
-  expect(PAGES).toHaveLength(23);expect(ACTION_PAGES).toHaveLength(8);
-  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(31);
+ it('the fixture covers exactly the 32 public keys (24 classified, with R14 receptes, + 8 P6 action pages) and the 6/49 normative vocabularies',()=>{
+  expect(PAGES).toHaveLength(24);expect(ACTION_PAGES).toHaveLength(8);
+  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(32);
   expect(Object.keys(PAGE_COPY).sort()).toEqual(keys.sort());
   expect(Object.keys(CATEGORIES)).toHaveLength(6);expect(new Set(TAGS_49).size).toBe(49);
  });
- describe.each(LANGUAGES)('%s literal 23-page matrix',language=>{
+ describe.each(LANGUAGES)('%s literal 24-page matrix',language=>{
   it.each(PAGES)('%s has one System, its editorial mother and canonical tags',(key,category,tag)=>{
    const localized=localitzaPagina(PAGE_COPY[key],language);
    assertClassification(localized.labels,key,category,tag,language);
@@ -160,7 +162,7 @@ describe('R41 independent public-page contract',()=>{
    assertClassification(etiquetesDePaginaPublica('versions',originals,language),'versions','tecnologia-lliure','Documentació',language);
   }
  });
- it('classification preserves bodies, routes, sections, dates and authors in all 31 pages, and is idempotent',()=>{
+ it('classification preserves bodies, routes, sections, dates and authors in all 32 pages, and is idempotent',()=>{
   const copy=Object.fromEntries([...PAGES.map(([key])=>key),...ACTION_PAGES].map(key=>[key,sentinels()]));
   const fields=withoutLabels(structuredClone(copy));
   const actionBefore=structuredClone(Object.fromEntries(ACTION_PAGES.map(key=>[key,copy[key]])));

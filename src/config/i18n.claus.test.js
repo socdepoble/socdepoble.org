@@ -48,6 +48,11 @@ import ES from './idiomes/es.js';
 import EN from './idiomes/en.js';
 import EU from './idiomes/eu.js';
 import GL from './idiomes/gl.js';
+/* Onada R14 · El receptari «Què dinem?»: les crides tr('patrimoni.receptes.*', reserva) de les dues seccions. */
+import fontReceptesLlista from '../sections/patrimoni/ReceptesQueDinemSection.jsx?raw';
+import fontReceptaDetall from '../sections/patrimoni/ReceptaDetailSection.jsx?raw';
+import fontCreditsReceptes from '../sections/patrimoni/CreditsQueDinem.jsx?raw';
+import fontCercaReceptes from '../sections/patrimoni/cercaReceptes.js?raw';
 
 const CLAUS = {
   'nav.panel': {
@@ -977,5 +982,52 @@ describe('claus i18n del torn T1–T4', () => {
 
   test.each(Object.entries({ es: ES, en: EN, eu: EU, gl: GL }))('%s: cap clau que el valencià no tinga', (codi, dic) => {
     expect(Object.keys(dic).filter((clau) => !Object.hasOwn(CA, clau))).toEqual([]);
+  });
+});
+
+/* Onada R14 · Les claus patrimoni.receptes.* del receptari «Què dinem?» (interfície; el text del llibre no és ací: és literal i
+   el botó Traduir de la pàgina en dona la traducció automàtica). Cada clau, una sola vegada en cada llengua i amb valor propi; la reserva de qui la crida és
+   el valor valencià; i cap clau sense ús. Iguals al valencià només on la paraula és la mateixa: «Notes» i
+   «Ingredients» en anglés, «Vídeo» i «VÍDEO» en castellà i gallec. */
+describe('claus i18n del receptari «Què dinem?» (patrimoni.receptes.*)', () => {
+  const DICS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+  const IGUALS = Object.freeze({
+    'patrimoni.receptes.bloc.notes': ['en'],
+    'patrimoni.receptes.bloc.ingredients': ['en'],
+    'patrimoni.receptes.bloc.video': ['es', 'gl'],
+    'patrimoni.receptes.quadrat.video': ['es', 'gl']
+  });
+  const claus = Object.keys(CA).filter((clau) => clau.startsWith('patrimoni.receptes.'));
+  const font = [fontReceptesLlista, fontReceptaDetall, fontCreditsReceptes, fontCercaReceptes].join('\n');
+  const crides = [...font.matchAll(/tr\('(patrimoni\.receptes\.[\w.]+)', '([^']*)'/g)].map(([, clau, reserva]) => [clau, reserva]);
+
+  test('les 5 llengües tenen les mateixes claus, cadascuna una sola vegada', () => {
+    expect(claus.length).toBeGreaterThanOrEqual(40);
+    for (const [codi, dic] of Object.entries(DICS)) {
+      expect([codi, Object.keys(dic).filter((clau) => clau.startsWith('patrimoni.receptes.')).sort()]).toEqual([codi, [...claus].sort()]);
+    }
+    for (const clau of claus) expect([clau, fontI18n.split(`'${clau}':`).length - 1]).toEqual([clau, LLENGUES.length]);
+  });
+
+  test('valor propi en cada llengua (cap cau en el valencià per falta d’entrada)', () => {
+    for (const clau of claus) {
+      for (const codi of LLENGUES) {
+        const valor = createTranslator(codi)(clau);
+        expect([codi, clau, typeof valor === 'string' && valor.trim().length > 0 && valor !== clau]).toEqual([codi, clau, true]);
+        if (codi !== 'ca' && !(IGUALS[clau]?.includes(codi) ?? false)) expect([codi, clau, valor === CA[clau]]).toEqual([codi, clau, false]);
+      }
+    }
+  });
+
+  test('la reserva de cada crida és el valor valencià, i cap clau es queda sense ús', () => {
+    expect(crides.length).toBeGreaterThanOrEqual(claus.length);
+    for (const [clau, reserva] of crides) expect([clau, reserva]).toEqual([clau, CA[clau]]);
+    const usades = new Set(crides.map(([clau]) => clau));
+    expect(claus.filter((clau) => !usades.has(clau))).toEqual([]);
+  });
+
+  test('els marcadors {…} són els mateixos en totes les llengües', () => {
+    const marcadors = (text) => [...String(text).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+    for (const clau of claus) for (const [codi, dic] of Object.entries(DICS)) expect([codi, clau, marcadors(dic[clau])]).toEqual([codi, clau, marcadors(CA[clau])]);
   });
 });

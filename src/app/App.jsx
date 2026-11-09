@@ -1166,6 +1166,10 @@ function ActorRoutes({ agents }) {
           SYSTEM_PAGES, /page/fediversity (PageDetailSection), com
           /descarregues. Cap component nou. */}
       <Route path="fediversity" element={<Navigate to="/page/fediversity" replace />} />
+      {/* Onada R14 · /receptes, l'adreça curta del receptari «Què dinem?»: una redirecció a /page/receptes
+          (PageDetailSection), com /descarregues. Cada recepta, /receptes/:slug, va pel comodí de davall
+          (ItemDetailSection, tros diferit). Cap component nou. */}
+      <Route path="receptes" element={<Navigate to="/page/receptes" replace />} />
 
       <Route path=":sectionId/:itemId" element={<ItemDetailSection />} />
       <Route path="*" element={<NotFoundPage />} />

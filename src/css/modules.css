@@ -15367,4 +15367,72 @@ details[open] summary.accordion-header svg:last-child {
     align-items: center;
     gap: var(--sdp-space-1);
   }
+
+  /* ── Onada R14 · El receptari «Què dinem?» (ReceptaDetailSection.jsx, /receptes/:slug). La fila de
+     quadrats-botó és la pell del quadrat de les targetes (.sp-card-calendar-badge), sense flotar i a mida de
+     fila; el premut (aria-pressed) porta la vora i el fons de l'acció. El commutador entre el vídeo i la làmina
+     va centrat. La làmina del llibre fa uns 360 px d'ample: es pinta a la seua mida i no s'estira. ── */
+  .sdp-recepta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+
+  .sdp-recepta__capcalera {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-recepta__lamina {
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .sdp-recepta__lamina img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--sdp-radi-g);
+  }
+
+  .sdp-recepta__commutador,
+  .sdp-recepta__quadrats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-recepta__quadrats .sp-card-calendar-badge {
+    float: none;
+    margin: 0;
+    width: 96px;
+    height: 96px;
+    gap: var(--sdp-space-1);
+    cursor: pointer;
+  }
+
+  .sdp-recepta__quadrats .sp-card-calendar-badge[aria-pressed="true"] {
+    border-color: var(--sdp-accio);
+    background-color: var(--sdp-accio-subtil);
+    color: var(--sdp-accio-text);
+  }
+
+  .sdp-recepta__quadrat-icona {
+    font-size: 1.75rem;
+    line-height: 1;
+  }
+
+  .sdp-recepta__quadrat-text {
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .sdp-recepta__ajuda {
+    text-align: center;
+    color: var(--sdp-text-suau);
+  }
 }

@@ -720,7 +720,15 @@ test('vite.natiu.config.js no importa res de Capacitor ni de src/natiu/: es pot 
   const especificadors = [...codi.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1]).sort();
   // Revisió final 261029 (OG-03) · imatgeSocial.js és una fulla sense imports (com publicCredentials.js): el mapa de variants socials exclou del paquet les imatges que només van al <head>.
   // BOT-A4 (261025, rebasat a l'assalt 261101) · entorn.mjs dona el segell de dist-natiu/ (SEGELL i segellDelArbre): només mòduls de Node.
-  assert.deepEqual(especificadors, ['./scripts/botigues/entorn.mjs', './src/config/imatgeSocial.js', './src/config/publicCredentials.js', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
+  // Onada R14 (arreglos) · pageContent.patrimoniR14.js, una altra fulla sense imports: la portada social de /page/receptes (og_image) també és només del <head>.
+  assert.deepEqual(especificadors, ['./scripts/botigues/entorn.mjs', './src/config/imatgeSocial.js', './src/config/publicCredentials.js', './src/sections/text/pageContent.patrimoniR14.js', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
+  const fulla = fs.readFileSync(path.join(ARREL, 'src/sections/text/pageContent.patrimoniR14.js'), 'utf8');
+  assert.ok(!/\bimport\b/.test(fulla.replace(/\/\*[\s\S]*?\*\//g, '')), 'pageContent.patrimoniR14.js continua sent una fulla sense imports');
+});
+
+test('OG-03 · la portada social de /page/receptes (og_image, fora de VARIANTS_SOCIALS) tampoc no viatja a l’app', () => {
+  assert.ok(RECURSOS_NOMES_DEL_HEAD.includes('assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg'));
+  assert.ok(fs.existsSync(path.join(ARREL, 'public/assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg')));
 });
 
 /* BOT-A4 (261025) · El segell es pren en començar el build, de l'arrel de la config, i ix a

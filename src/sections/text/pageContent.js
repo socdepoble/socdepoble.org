@@ -2,6 +2,7 @@ import { aplicaDossierR10 } from './pageContent.r10.js';
 import { afigPrimeraTargetaFediversity } from './pageContent.targetaMur.js';
 import { legalContent } from './legalContent.js';
 import { PAGINES_PATRIMONI_R9, TRADUCCIONS_ANATOMIA } from './pageContent.patrimoniR9.js';
+import { PAGINES_PATRIMONI_R14 } from './pageContent.patrimoniR14.js';
 
 /*
  * `date` · l'instant de publicació de cada pàgina (T4 del prompt 1140, ordre
@@ -949,6 +950,9 @@ export const PAGE_COPY = {
    verificades (banc de llavors, rutes de poble i arbres monumentals), al costat de l'herbari i l'anatomia.
    El text i les traduccions són a pageContent.patrimoniR9.js; aplicaDossierR10 no les toca. */
 Object.assign(PAGE_COPY, PAGINES_PATRIMONI_R9);
+/* Onada R14 · /page/receptes, el receptari «Què dinem?» (Muro, El Comtat, 2019): el text breu de la pàgina, en les
+   5 llengües, és a pageContent.patrimoniR14.js; la llista de receptes va davall (PageDetailSection, tros diferit). */
+Object.assign(PAGE_COPY, PAGINES_PATRIMONI_R14);
 
 // AH-22 · suplement editorial localitzat, sense declarar-lo desplegat.
 aplicaDossierR10(PAGE_COPY);
