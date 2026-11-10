@@ -1,0 +1,102 @@
+{
+  "id": "5a953fbf-dd4e-4a5e-b575-21336cfbd5da",
+  "session": "078071bd-038a-48c8-9b55-636050e55d6c",
+  "operationId": "r15b-protegits-261109",
+  "claim": "078071bd-038a-48c8-9b55-636050e55d6c:governance-write",
+  "planHash": "0831755dd8e952d22ccaf8571374d4d4c2f6e27339f6e327d1ff88be5bcb28ba",
+  "beforeSeal": "131d74e089516ffb19993e6f5bd58b99b2b3d1938ce5497d005caffe8770d95f",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "e768f644bb5e34b527ce054169e7a4312d5cb2e78be57cff6bc303f327848b06",
+      "after": "4f730b5d20b8aa8fa1e8d3bc8859abec05840e554b8e3f97d8ca992485aae82d"
+    },
+    {
+      "path": "package.json",
+      "before": "1a930c2098a73a872dba83e81fa7a478e36aa59b49909d84879b512cdbb372e9",
+      "after": "289a9829319917f45e370e7bf494bbd6ea04c969621861a53beee2c732411ae9"
+    },
+    {
+      "path": "scripts/supabase/verifica_migracions_r15.sql",
+      "before": null,
+      "after": "f0bc1be5fb78148eb8d69072a9fac884b443ea435fd1588433a3b3c377a068ce"
+    },
+    {
+      "path": "tooling/fediversity/verifyLocalPostgresFediversity.mjs",
+      "before": "52bc0095f771fbf2097fdb656654acfe6f988d3000e327e1be7bce8f1cda26df",
+      "after": "7fe9922febdd7a8d1ec8f6b4a22c0002fc4258e105c4d2d63db17700aa28a83d"
+    },
+    {
+      "path": "tooling/gates/tractor-rls.mjs",
+      "before": "ffd7157113f63ed268205a1e9df607b9e3431b2c7967cfc3551f020aa7d82e05",
+      "after": "5ff5ec346d71ca972da470981a7ca95f68a8b5fb9fb4a34abcf3cf531e84d004"
+    },
+    {
+      "path": "tooling/instalador/inventari-estatic.mjs",
+      "before": "20faed3eea45bb04662fa0eca5c4d69aef43c0b8bdc399ee6d681d20bfeef43e",
+      "after": "88d416f876ad735623031783e22f53c09a55a94863fa5c5d98ce1b3dbd25b8d5"
+    },
+    {
+      "path": "tooling/instalador/inventari-estatic.test.mjs",
+      "before": "0ab30d00505f190bf54b8a64acdc5bf1f52d986a7254070ef0b78717b9680a0f",
+      "after": "04e26e7e4f00df326b279103261b289468b93ef2a9d32961d409ba3f24816ebc"
+    },
+    {
+      "path": "tooling/nixos/verifica-flake-reproduible.mjs",
+      "before": "a2f419c7cb5fb8d50df2c511498633c5be940c794af702db77bde83928d99659",
+      "after": "b50f4aa8e444ef394aca7b2d06c0bec0ee08f454ce6737fa905c5c06ca74c611"
+    },
+    {
+      "path": "tooling/node0/manifest-mirall-staging.json",
+      "before": "fd438a49062a106203af746c23a58f895e8fd5b5a730120ffdb572d714d5ff3d",
+      "after": "3b0a4a772524af50b93ef6dad14a0f4194539feb62077a497a5c52b9518611a0"
+    },
+    {
+      "path": "tooling/node0/posse/instal-la-posse-node0.mjs",
+      "before": "02f6e33a2442316b9e2a80602e763fc89a87428b06baafce33f3988e9d973679",
+      "after": "8f2b2fbcd3dfd623766db6e9b4d4db249e9f936967160b1b99679852beafe3b7"
+    },
+    {
+      "path": "tooling/node0/posse/posse-ledger.sql",
+      "before": "e04933f276e32767c93b419a715ba4f7b4754d0e99aa0286805bcbfdf3e52671",
+      "after": "df2acc713ce01966af9667d2e430c20212d6904a9415ab65a5f84e4bf8f6bdf5"
+    },
+    {
+      "path": "tooling/seo/build-social-manifest.test.mjs",
+      "before": "b30930cb971181e64e4da0a3739801ca7a41da8bc99755a78b7409c2c0114733",
+      "after": "8f5692c87da75029453b2f78e7c82ea635884fcfc199de6098808aed49a37ab5"
+    },
+    {
+      "path": "tooling/seo/prerender-social.test.mjs",
+      "before": "6541050cfe262721a770a10c95cb208d57c0014d5948d8a722d0f217a5972b72",
+      "after": "3b336e92f63ecc495f40a1e7e719ebea5bff9bbc97b58d37629fae92e486192b"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "f8f7451fbb3ea11550d916d2cbd0dac9f522fb3ac940a86606ae742aececb856",
+      "after": "24c99ed18634b6ff5047a02fcdf83e8cde4b5822461d146aefe026c2f04e06cb"
+    },
+    {
+      "path": "tooling/vite/fotos-parroquia-privades.mjs",
+      "before": "f883a5cb6fb7aaed23474436ac5ff2f228d75a119ae18101a71a4e55ff0fd48b",
+      "after": "025cf48702661ed71816b300331065d73e6a8ba2569d90fdecb71b2a087f2e97"
+    },
+    {
+      "path": "tooling/vite/fotos-parroquia-privades.r15_2.test.mjs",
+      "before": null,
+      "after": "0b5fc5224820fc13433b123fa74301c3c0c2fba92b9cfb27dfb6466b91e0c326"
+    },
+    {
+      "path": "tooling/vite/trossos-arrencada.mjs",
+      "before": null,
+      "after": "acdc970548ac3133aa17e097c8f0c5ce732c6d7a642fcca9737598f989cef589"
+    },
+    {
+      "path": "tooling/wiki/wiki-baseline.lock.json",
+      "before": "fd22c3495722dc39f459bee05fc8aae0772dabe1fe85e304f9434287534e4800",
+      "after": "d8a8f4515882b74cf08e423782958975362b1afc113102a23da81a502e88c6fe"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "faeed50e4b5ce1a29abee49c2842d8c4c9c7e6d13583973a7a200d5749698a9a"
+}

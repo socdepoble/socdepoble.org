@@ -7,6 +7,18 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-11-09T19:10:00+01:00 · Claude (Opus 5.5, àrbitre) · torn_46022a28-c731-4b8b-a2c3-e12b3f8e8988 · COMMIT R15a (Kit Unificat ec865 de Codex sanejat) pujat i desplegat en viu a socdepoble.org i socdepoble.cat
+
+- **Fet i verificat (PAS A de l'ordre del Mestre del 09/11):**
+  - **COMMIT R15a en tres parts, totes amb el hook sencer (sense `--no-verify`):** `9bec76846` (documentació i govern), `688f4c2a5` (codi) i `b1294ecab` (captures ancorades). El límit de 16 MiB del diff binari del Reflex obliga a partir-lo. Pujat: `ec865dcfd..b1294ecab` a `fork/backup-notes-publish`.
+  - **En viu (19:02):** socdepoble.org amb Firebase `e4af4336e8b34ea7` («web b1294ecab»; per a tornar enrere, `d2b5b255cd509d17`) i socdepoble.cat (Node 0, `rsync` en dues passades sense `--delete`). Tots dos servixen `/assets/index-BT0UxFfw.js` (246.536 B gzip). Sonda de consola: 8 rutes a .org i 4 a .cat, 0 errors.
+  - **Sanejament del kit (revisió adversària de 27 agents):** fora del repositori i dels builds les 397 fotos de La Parròquia (GPS, un correu de fotògraf, fotos d'agències amb drets reservats); política de privacitat 2.5 fins que s'aplique `2611080440`; ritme del xat, IAIA amb servidor, despertador i push natiu darrere de banderes de build apagades; Mercadona només amb la bandera de la Nevera; tarifes de compra de La Parròquia en versió pública.
+  - **Privadesa:** 11 captures del 06/11 amb noms i correus de persones usuàries reals ixen de l'índex (queden al disc del Mestre i a `.gitignore`); 3 captures noves amb dades personals no entren.
+  - **Proves:** Vitest sencer sobre l'arbre exacte 35.725/1 (la fallada, `App.appsLocals`, passa sola 35/35: lentitud de la màquina); hook complet a cada commit; Frontissa 26/26.
+- **En curs:** COMMIT R15b amb el kit fortificat R15.2 de Codex (194/196 operacions encaixen sobre R15a; Frontissa 27/27; entrada 247.109 B) en revisió adversària; els kits de Gemini, en comparació.
+- **Decisions pendents del Mestre:** purgar o no l'historial públic de les 11 captures (i revisar les 54 imatges de `WhatsApp-Clon-01/02`); aplicar `2611080440` amb les altes aturades; publicar o no les fotos de La Parròquia amb llicència; P3-4 (làmina com a capçalera de la recepta).
+- **Responsables:** Claude, R15b; Codex i Gemini, kits en clons aïllats.
+
 ## ESTAT_ACTUAL · 2026-11-09T14:22:00+01:00 · IAIA MarIA (Elefant Responedor Delegat) · torn_1029e939-b6d3-4f63-9b4b-77d02bb8076f · Informe Matinal Post-Marató Nocturna (`COMMIT R13 c074d6abf` + `COMMIT R14 ec865dcfd` Desplegats en Viu a `socdepoble.org` i `socdepoble.cat`, Kit Unificat `Codex 05:00 CET` Segellat amb `35.624 PASS / 0 FAIL` i `246.580 B gzip`, Kits `Gemini R15` Segellats i `+178 GiB` de Clons Temporals Purgats de `/private/tmp` i `/private/var/folders`)
 
 - **Balanç Complet de la Nit (Verificat a les `14:22 CET` del `09/11/2026`):**

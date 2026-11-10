@@ -1,0 +1,17 @@
+{
+  "id": "0174540b-ed1f-4e55-955b-0093bf4d3b9a",
+  "session": "fe5c4130-3bad-4801-abc3-1d175ece91f8",
+  "operationId": "r15a-estat-261109",
+  "claim": "fe5c4130-3bad-4801-abc3-1d175ece91f8:governance-write",
+  "planHash": "7ee058d058b71c53549d0f63fdeedc415f4a149b2e7aab3191dbecbd7622dca6",
+  "beforeSeal": "2ac2dec5447d94e5d2d05684623889efee67333a39bfe01e6f34473f85409f6c",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "1cb6e43605c1fe848b2f6165d2de905a1e502a8b0b4a01824ae10e8555b40618",
+      "after": "59665c369357aba28a90752a749848e7cac7900e0b693314c40ca84c46ab2a20"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "faeed50e4b5ce1a29abee49c2842d8c4c9c7e6d13583973a7a200d5749698a9a"
+}
