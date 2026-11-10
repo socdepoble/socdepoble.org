@@ -34,7 +34,9 @@ const MODULS_NOUS = Object.freeze([
   'src/sections/pobles/CreditsDeViquipedia.jsx',
   'src/sections/pobles/PanellDeViquipedia.jsx',
   /* D-5 (pla 261101_1246) · La lògica dels àlies de poble: cap nom de poble. */
-  'src/sections/pobles/aliesDePobles.js'
+  'src/sections/pobles/aliesDePobles.js',
+  /* R16-S (P0-79) · El catàleg del selector de la fitxa i el nomenclàtor de l'INE. */
+  'src/sections/pobles/nomenclatorIne.js'
 ]);
 const FITXERS = Object.freeze([
   ...MODULS_NOUS,
@@ -68,7 +70,8 @@ const FITXERS = Object.freeze([
   'src/data/adaptadors/viquipedia/client.test.js',
   /* D-5 (pla 261101_1246) · Les dades dels àlies (llavor: porta noms) i les seues proves. */
   'src/sections/pobles/aliesDePoblesSeed.js',
-  'src/sections/pobles/aliesDePobles.test.js'
+  'src/sections/pobles/aliesDePobles.test.js',
+  'src/sections/pobles/nomenclatorIne.test.js'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

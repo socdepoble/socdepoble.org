@@ -1,4 +1,24 @@
-import { beforeEach, expect, test } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+/* P0-72 / IDEA-203 (ordre del Mestre, 09-11-2026: «només la IAIA MarIA com a
+   IA») · El catàleg de veres ja no porta cap IA fora de la IAIA ni cap
+   personatge ANIMAL. Per a continuar provant la fitxa pública d'IA que el
+   magatzem dona a un agent del catàleg que no és la IAIA (publicDelCataleg,
+   localPerfils.js), s'hi afigen dues fitxes sintètiques de prova, una AI i una
+   ANIMAL. La resta del catàleg és el de veres. */
+const { IA_DE_PROVA, ANIMAL_DE_PROVA } = vi.hoisted(() => {
+  const ia = Object.freeze({
+    id: 'assistent-de-prova', personaKey: 'PROVA_IA', name: 'Assistent de prova', role: 'Rol de prova', type: 'AI', tag: 'GENT',
+    town_name: 'Benilloba', avatar_url: '/assets/prova/assistent.webp', lema: 'Lema de prova', short_bio: '<p>Fitxa de prova.</p>'
+  });
+  return {
+    IA_DE_PROVA: ia,
+    ANIMAL_DE_PROVA: Object.freeze({ ...ia, id: 'animal-de-prova', personaKey: 'PROVA_ANIMAL', name: 'Animal de prova', type: 'ANIMAL', avatar_url: '/assets/prova/animal.webp' })
+  };
+});
+vi.mock('./agentsSeed.js', async (importOriginal) => {
+  const real = await importOriginal();
+  return { ...real, AGENTS_MAP: { ...real.AGENTS_MAP, PROVA_IA: IA_DE_PROVA, PROVA_ANIMAL: ANIMAL_DE_PROVA } };
+});
 import { createLocalPerfilsAdapter, PERSONES_SEED } from './localPerfils.js';
 import {
   AGENTS_IA_SEED, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, entitatSeed, rolALEntitat
@@ -383,24 +403,23 @@ test('Front 3 · la regla de la llavor no s’estén a Rentonar: qui té sessió
    agentsSeed.js · tipusDAgent): la seua fitxa pública és d'IA, amb `esIA`, i
    la resta de la fitxa del catàleg no canvia. Una IA del catàleg continua
    sent-ho; una persona, també.
-   Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
-   261021_0015 §12) · El catàleg és el dels cinc assistents oficials: l'únic
-   personatge ANIMAL és El Gall (fora Súper Ratolí, La Mixa i Sultan), i les
-   IA que no canvien són els dos assistents nous (Flash ja no hi és). */
+   Expectativa actualitzada a propòsit (P0-72 / IDEA-203) · Abans ho provaven
+   El Gall, El Pregoner, L'Acompanyant de Paraula i Andreu Soler, que ja no són
+   al catàleg: la IA i l'ANIMAL són les fitxes sintètiques de dalt, i la
+   persona, la pilot (AGENTS_MAP.JAVI), que és del catàleg de veres. */
 test('Gauntlet 261016 · un personatge ANIMAL del catàleg té fitxa pública d’IA; PERSON i AI no canvien', () => {
-  for (const clau of ['GALL']) {
-    const agent = AGENTS_MAP[clau];
+  for (const agent of [ANIMAL_DE_PROVA, IA_DE_PROVA]) {
     for (const usuari of [null, USUARI]) {
-      expect([clau, adapter.loadPerfilPublic(agent.id, usuari)]).toEqual([clau, expect.objectContaining({
+      expect([agent.name, adapter.loadPerfilPublic(agent.id, usuari)]).toEqual([agent.name, expect.objectContaining({
         tipus: 'ia', esIA: true, id: agent.id, nom: agent.name, avatar: agent.avatar_url, poble: agent.town_name,
         presentacioHtml: agent.short_bio, propietari: false
       })]);
     }
-    expect(agent.type).toBe('ANIMAL');
   }
-  expect(adapter.loadPerfilPublic(AGENTS_MAP.PREGONER.id, null)).toMatchObject({ tipus: 'ia', esIA: true });
-  expect(adapter.loadPerfilPublic(AGENTS_MAP.ACOMPANYANT.id, null)).toMatchObject({ tipus: 'ia', esIA: true });
-  expect(adapter.loadPerfilPublic(AGENTS_MAP.CAPATAS.id, null)).toMatchObject({ tipus: 'persona', esIA: false });
+  expect(ANIMAL_DE_PROVA.type).toBe('ANIMAL');
+  expect(adapter.loadPerfilPublic(AGENTS_MAP.JAVI.id, null)).toMatchObject({
+    tipus: 'persona', esIA: false, id: AGENTS_MAP.JAVI.id, nom: AGENTS_MAP.JAVI.name, poble: AGENTS_MAP.JAVI.town_name, propietari: false
+  });
 });
 
 /* Pla aprovat, Onada 1.5 · 'javi-llinares' és un àlies de la persona pilot:

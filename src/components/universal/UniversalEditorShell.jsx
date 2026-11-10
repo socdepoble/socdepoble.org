@@ -7,6 +7,8 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import { inserixTextAlCursor, normalitzaText, textPlaDelPortaretalls, unaLinia } from './enganxatCamps.js';
 import useHeroImageHandler, { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
+import { ambClassesDelMarc, useEnquadramentDeImatge } from '../../hooks/useEnquadramentDeImatge.js';
+import { ambEnquadrament } from '../../utils/enquadramentUrl.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import { Component, useRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useState } from 'react';
 import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
@@ -52,7 +54,9 @@ export const TEXTOS_CLOSCA = Object.freeze({
   imatgeErrorDesar: parellCloscaEditor('imatge.errorDesar', "No s'ha pogut desar la imatge."),
   formaCapcalera: parellCloscaEditor('forma.capcalera', 'Recomanat: la miniatura del llistat i la targeta del Mur ensenyen la mateixa imatge sencera. Si la nota ja és al Mur, la targeta no canvia fins que la tornes a publicar.'),
   formaLliure: parellCloscaEditor('forma.lliure', 'La pàgina l’ensenya sencera; la miniatura del llistat i la targeta del Mur la retallen en quadrat.'),
-  enquadramentDescripcio: parellCloscaEditor('enquadrament.descripcio', 'Tria la forma, mou la foto i amplia-la fins que el que importa quede dins del marc. Només es guarda el que hi ha dins.'),
+  /* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · Ja no és veritat que
+     «només es guarda el que hi ha dins»: la capçalera es guarda sencera. */
+  enquadramentDescripcio: parellCloscaEditor('enquadrament.descripcio', 'Tria la forma, mou la foto i amplia-la fins que el que importa quede dins del marc. La foto es guarda sencera: el marc només tria el que es veu, i el que queda fora també es publica.'),
   editaCapcalera: parellCloscaEditor('edita.capcalera', 'Editar capçalera'),
   editaLogotip: parellCloscaEditor('edita.logotip', 'Editar logotip'),
   editaLogotipFosc: parellCloscaEditor('edita.logotipFosc', 'Editar logotip de mode nit'),
@@ -974,6 +978,11 @@ function ImageUploaderUI({
   const idBase = useId();
   // P1-22 · Els textos de la ranura, en la llengua de la interfície.
   const t = useTraductorOpcional();
+  /* P0-80 / IDEA-211 · La capçalera desada es pinta amb el seu marc
+     (#sdp-crop=), en la forma del marc, com a la lectura (ImatgeDePortada).
+     Sense fragment (el logotip, una imatge d'abans), el DOM de sempre. */
+  const srcVist = image ? (resolvedImage || (image.startsWith('sdp-media://') ? undefined : resolRecursPropi(image))) : undefined;
+  const pintor = useEnquadramentDeImatge(srcVist, { caixa: isLogo ? 'mesura' : 'marc', ref: imgRef });
   const altText = imageLabel ?? tradueix(t, isLogo ? TEXTOS_CLOSCA.altLogotip : TEXTOS_CLOSCA.altCapcalera);
   const nomDeLaImatge = onEdit ? tradueix(t, isLogo ? TEXTOS_CLOSCA.opcionsLogotip : TEXTOS_CLOSCA.opcionsCapcalera) : undefined;
   const cssImgClass = isLogo ? "sdp-logo-personalitzat sdp-logo-personalitzat--editable" : "sdp-hero__imatge";
@@ -1006,20 +1015,44 @@ function ImageUploaderUI({
   };
 
   if (image && !handler.isEditing) {
+    /* Revisió final R16a (troballa 1, WCAG 2.4.7) · Amb un marc ampliat
+       (#sdp-crop= amb zoom per damunt d'1), la capçalera es pinta amb transform
+       i clip-path (modules.css, bloc ENQUADRAMENT NO DESTRUCTIU), i el clip-path
+       retallava també l'anell de focus de l'<img> enfocable: ni el Tab ni
+       enfocaHero (després de desar el marc) deixaven cap anell visible. Llavors
+       el control és un <button> sense pell que embolcalla la foto i no es
+       retalla (.sdp-hero__obridor, el patró de .sdp-visor__obridor de la
+       lectura): l'anell de sempre (base.css) hi cau sencer. El nom, el títol i
+       el clic passen al botó; la foto conserva l'alt. Sense retall (zoom 1,
+       sense marc, el logotip), el DOM de sempre. */
+    const imatge = !isLogo && Number(pintor.enquadrament?.zoom) > 1 ? (
+      <button type="button" className="sdp-hero__obridor" aria-label={nomDeLaImatge} title={titleText} onClick={clicaImatge}>
+        <img
+          ref={pintor.ref}
+          src={pintor.src}
+          onLoad={pintor.onLoad}
+          alt={altText}
+          className={ambClassesDelMarc(cssImgClass, pintor.className)}
+        />
+      </button>
+    ) : (
+      <img
+        ref={pintor.ref}
+        src={pintor.src}
+        onLoad={pintor.onLoad}
+        alt={altText}
+        aria-label={nomDeLaImatge}
+        className={ambClassesDelMarc(cssImgClass, pintor.className)}
+        role="button"
+        tabIndex="0"
+        onClick={clicaImatge}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), clicaImatge(e))}
+        title={titleText}
+      />
+    );
     return (
       <>
-        <img
-          ref={imgRef}
-          src={resolvedImage || (image.startsWith('sdp-media://') ? undefined : resolRecursPropi(image))}
-          alt={altText}
-          aria-label={nomDeLaImatge}
-          className={cssImgClass}
-          role="button"
-          tabIndex="0"
-          onClick={clicaImatge}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), clicaImatge(e))}
-          title={titleText}
-        />
+        {imatge}
         <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
           <button ref={botoRef} type="button" className="sdp-boto sdp-boto--secundari" disabled={pujant}
             aria-describedby={ajudaEnRepos ? idAjuda : undefined}
@@ -1174,9 +1207,10 @@ function useEditorShell({
   /* T46 (ordre del Mestre, 260928) · Re-enquadrament de la capçalera (la
      mateixa heroImage que pinten ItemMedia i la targeta del Mur). Una foto
      nova passa pel diàleg abans de desar-se; una d'existent s'hi obri amb
-     «Enquadrar». L'enquadrament es cou dins de l'arxiu: el diàleg torna un
-     File i el desa processaFitxer, el camí de sempre. El Perfil (onHeroEdit)
-     queda igual: ni diàleg ni botó. */
+     «Enquadrar». P0-80 / IDEA-211 · L'enquadrament ja no es cou dins de
+     l'arxiu: la foto es puja sencera i el marc va al fragment #sdp-crop= de
+     la heroImage (desaEnquadrament). El Perfil (onHeroEdit) queda igual: ni
+     diàleg ni botó (la seua finestra és useImatgeDeFitxa). */
   const potEnquadrar = typeof onHeroEdit !== 'function';
   const [enquadrament, setEnquadrament] = useState(null);
   const [enfocaHero, setEnfocaHero] = useState(false);
@@ -1242,11 +1276,31 @@ function useEditorShell({
      P1-64 (pla 261028_1526 §3.1.1) · metadades.exif porta també la precisió
      de les píndoles (`precisio`): el fitxer ix amb la ubicació arrodonida, i
      publishNote la deriva a payload.geolocalitzacio (geoDeLesFotos.js). */
+  /* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO
+     DESTRUCTIU) · El diàleg (noDestructiu, CAPCALERA) lliura la foto SENCERA
+     amb info.enquadrament, el marc, que la pujada desa al fragment #sdp-crop=
+     de l'adreça (opcions.enquadrament). Re-enquadrar la que ja hi ha només
+     canvia el marc: el diàleg torna un text i es desa la heroImage DESADA (la
+     referència, mai l'adreça resolta, que pot ser una URL signada que
+     caduca) amb el marc nou. Cap pujada i cap retall.
+     R16a (revisió final, troballa 3) · Si el diàleg ha de tornar a codificar
+     la que ja hi ha (la casella desmarcada o una precisió del GPS més
+     grossa), lliura la foto sencera (un File) i puja pel camí d'una de nova,
+     amb la precisió i el marc. */
   const desaEnquadrament = async (fitxer, info, metadades) => {
     // La sessió d'este diàleg: en acabar es tanca ella, mai una altra.
     const sessio = enquadrament;
     errorHeroRef.current = null;
-    const fet = await heroHandler.processaFitxer(fitxer, { forma: 'capcalera', midaMaxima: costatDeSortida('capcalera'), ...metadades?.exif });
+    if (typeof fitxer === 'string') {
+      onSaveField?.('heroImage', ambEnquadrament(heroImage || fitxer, info?.enquadrament));
+      setEnquadrament((actual) => (actual === sessio ? null : actual));
+      setEnfocaHero(true);
+      return true;
+    }
+    const fet = await heroHandler.processaFitxer(fitxer, {
+      forma: 'capcalera', midaMaxima: costatDeSortida('capcalera'), ...metadades?.exif,
+      ...(info?.enquadrament ? { enquadrament: info.enquadrament } : null),
+    });
     if (!fet) throw new Error(errorHeroRef.current || tradueix(t, TEXTOS_CLOSCA.imatgeErrorDesar));
     setEnquadrament((actual) => (actual === sessio ? null : actual));
     setEnfocaHero(true);
@@ -1258,13 +1312,17 @@ function useEditorShell({
      és al body o dins de la capçalera (on era el disparador): si mentrestant
      s'escriu en un altre camp, no se li roba, i queda desarmat.
      Gauntlet 261016 (Bloc 3.9) · Amb «Edició avançada», la ranura de la
-     capçalera viu dins del desplegable: el seu lloc compta igual. */
+     capçalera viu dins del desplegable: el seu lloc compta igual.
+     Revisió final R16a (troballa 1) · Amb un marc ampliat, el control
+     enfocable és el botó que embolcalla la foto (.sdp-hero__obridor), no la
+     foto retallada. */
   useEffect(() => {
     if (!enfocaHero || !heroImgRef.current) return;
     const imatge = heroImgRef.current;
+    const control = imatge.closest('.sdp-hero__obridor') || imatge;
     const actiu = imatge.getRootNode().activeElement ?? document.activeElement;
     const lliure = !actiu || actiu === document.body || Boolean(imatge.closest('.hero-image, [data-sdp-ranura="capcalera"]')?.contains(actiu));
-    if (lliure) imatge.focus();
+    if (lliure) control.focus();
     setEnfocaHero(false);
   }, [enfocaHero, heroImage, heroHandler.isEditing]);
 
@@ -1359,7 +1417,7 @@ function useEditorShell({
        pel costat llarg (derogada la Llei del Quadrat per a la capçalera). */
     dialegEnquadrament: enquadrament ? (
       <DialegEnquadrament font={enquadrament.font} formatInicial={enquadrament.formatInicial ?? CAPCALERA.formatInicial} formats={formatsDelDialeg}
-        descripcio={descripcioDelDialeg} sortida={enquadrament.sortida}
+        descripcio={descripcioDelDialeg} sortida={enquadrament.sortida} noDestructiu={CAPCALERA.noDestructiu}
         onTanca={() => setEnquadrament(null)} onDesa={desaEnquadrament} ofereixConservarExif />
     ) : null
   };

@@ -192,7 +192,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   const {
     saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
     notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey,
-    nomesLectura = false, motiuModeTraduccio = null, modeTraduccioNomesLocal = false
+    nomesLectura = false, motiuModeTraduccio = null, modeTraduccioNomesLocal = false, versioAlMur = null
   } = useNotes();
   // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
   const { actorId, actor, memberships } = useIdentitatOReserva();
@@ -353,6 +353,15 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       : creacioPreparada;
   }, [scopeKey, idDesament, desament, conflicte, creacioPreparada, reintentaPreparada, t]);
   const dataNomesAlDispositiu = Boolean(estatDesament) && Boolean(desament?.quarantena?.includes('publishDate'));
+  /* Revisió final R16a (carril FA) · Una nota publicada s'edita com a
+     esborrany i el Mur només canvia amb «Actualitzar al Mur» (publishNote):
+     «desat» no vol dir «al Mur». El context diu si el Mur té la versió
+     confirmada (true), si ja no la té (false) o si no ho sap (null); sense qui
+     ho diga, no se sap. Es llig a cada pintada: la cua avisa (desament) quan
+     es publica o es desa. La còpia de prova i la nota preparada no són al Mur. */
+  const publicacioAlDia = notaEnEdicio?.isPublished && !esSandbox && !esPreparada
+    ? (typeof versioAlMur === 'function' ? versioAlMur(notaEnEdicio) ?? null : null)
+    : undefined;
 
   /* ── Classificació (botonera davall del títol) ───────────────────────── */
   const [dialeg, setDialeg] = useState(null); // 'carpeta' | 'categories' | 'etiquetes' | 'emoticona' | 'esborrar' | null
@@ -907,11 +916,14 @@ export default function NotesEditor({ activeNote, onToast = null }) {
         )
       } : {}),
       ...(estatDesament ? { estatDesament } : {}),
+      /* Revisió final R16a (carril FA) · Només per a una nota publicada: el
+         verd «Publicat» demana que el Mur tinga esta versió (DocumentEditor). */
+      ...(publicacioAlDia !== undefined ? { publicacioAlDia } : {}),
       /* Bloc 3.8 (261016) · Inserir al cursor (la icona «Emojis» de NOTES) i
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

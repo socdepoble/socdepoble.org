@@ -25,6 +25,7 @@ import { coordenadesValides, llegixExif } from '../../components/universal/enqua
 import { extreuTiff, precisioDeGps } from '../../components/universal/enquadrament/exifIncrustat.js';
 import { PRECISIONS, geolocalitzacio } from '../../components/universal/enquadrament/geolocalitzacio.js';
 import { fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
+import { llevaEnquadrament } from '../../utils/enquadramentUrl.js';
 import { resolveAsset } from '../../data/backendPort.js';
 import { atributsDEtiqueta, esFontDeFotoGeo, etiquetesDImatge } from '../../data/mapejadorSeccions.js';
 import { esLlegible, llegixExifRemot } from '../multimedia/useMetadadesFoto.js';
@@ -135,8 +136,11 @@ function bytesDeDataUrl(src) {
  * La ubicació i la data del hero (vegeu dalt): { geolocalitzacio?,
  * dataCaptura? }, mai rebutja. `resol` i `llegix` són injectables per a les
  * proves (el port de recursos i llegixExifRemot).
+ * P0-80 / IDEA-211 · El marc de la capçalera (#sdp-crop=) no és de la foto:
+ * l'EXIF es llig de la foto sencera, la base.
  */
-export async function geoDelHero(src, { resol = resolveAsset, llegix = llegixExifRemot, temps = TEMPS_HERO_MS } = {}) {
+export async function geoDelHero(srcAmbMarc, { resol = resolveAsset, llegix = llegixExifRemot, temps = TEMPS_HERO_MS } = {}) {
+  const src = llevaEnquadrament(srcAmbMarc);
   if (typeof src !== 'string' || !src) return {};
   try {
     if (src.startsWith('data:')) {

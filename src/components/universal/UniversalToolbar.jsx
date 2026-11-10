@@ -82,12 +82,15 @@ const BlocIcon = forwardRef(function BlocIcon({ icon: Icon, active, label, ...pr
   );
 });
 
-const BlocAction = forwardRef(function BlocAction({ label, active, children, ...props }, ref) {
+/* R16-T · La classe del botó de publicar per a cada estat del document (modules.css). */
+const CLASSE_ESTAT_PUBLICACIO = Object.freeze({ pendent: 'sdp-bloc-action--publicar', publicat: 'sdp-bloc-action--publicat' });
+
+const BlocAction = forwardRef(function BlocAction({ label, active, className = '', children, ...props }, ref) {
   return (
     <button
       ref={ref}
       type="button"
-      className="sdp-bloc-action"
+      className={className ? `sdp-bloc-action ${className}` : 'sdp-bloc-action'}
       aria-pressed={active}
       {...props}
     >
@@ -291,6 +294,11 @@ export default function UniversalToolbar({
   /* T5 · una nota connectada no es publica: es compartix. L'etiqueta la
      decidix l'adaptador del document; sense ella, «Publicar» com sempre. */
   publishLabel = null,
+  /* R16-T (P0-80 / IDEA-211, ordre del Mestre del 261109) · L'estat del
+     document, si l'editor el sap: 'pendent' (blau, «Publicar») o 'publicat'
+     (verd, «Publicat»). Sense (null), la pastilla taronja de sempre. Amb
+     publishLabel, mana l'etiqueta de l'adaptador. */
+  publishState = null,
   /* T41 (ordre del Mestre, 260928) · Quan PUBLICAR obri una finestra (el
      selector de visibilitat), el botó ho diu: aria-haspopup. La barra continua
      muda: només rep dades. */
@@ -388,7 +396,7 @@ export default function UniversalToolbar({
       quantes += 1;
     }
     if (quantes !== caben) setCaben(quantes);
-  }, [compact, amplada, caben, onDelete, onPublish, onProposaCard, publishLabel, t]);
+  }, [compact, amplada, caben, onDelete, onPublish, onProposaCard, publishLabel, publishState, t]);
 
   /* MD (261003) · La mateixa tornada que la fletxa blava quan la closca
      l'oferix (mestre-detall en estret); si no, la d'abans. */
@@ -545,7 +553,8 @@ export default function UniversalToolbar({
           )}
           {onPublish && (
             <BlocAction
-              label={publishLabel || t('section.notes.publish', 'Publicar')}
+              label={publishLabel || (publishState === 'publicat' ? t('section.notes.published', 'Publicat') : t('section.notes.publish', 'Publicar'))}
+              className={Object.hasOwn(CLASSE_ESTAT_PUBLICACIO, publishState) ? CLASSE_ESTAT_PUBLICACIO[publishState] : ''}
               disabled={publishDisabled}
               aria-haspopup={publishPopup || undefined}
               onClick={onPublish}

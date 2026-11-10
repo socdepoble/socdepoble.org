@@ -90,6 +90,7 @@ import { createPortal } from 'react-dom';
 import { resolveAsset } from '../../config/assetResolver.js';
 import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
+import { ambClassesDelMarc, proporcioVisible, useEnquadramentDeImatge } from '../../hooks/useEnquadramentDeImatge.js';
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
@@ -231,17 +232,25 @@ export function VisorDePublicacio({ fotos, dades, etiquetaObri, alt = '', sencer
   /* Correccions del 261024 (R4-03) · El segon clic d'un doble clic (detail 2)
      no torna a obrir, com a CosAmbVisor; Intro i Espai (detail 0), sempre. */
   const vertical = Boolean(carregada && carregada.src === font && carregada.vertical);
+  /* P0-80 / IDEA-211 · Amb el marc (#sdp-crop=), la forma que es veu és la del marc. */
   const onCarrega = (ev) => {
     const { naturalWidth: amplada, naturalHeight: alcada } = ev.currentTarget;
-    if (amplada > 0 && alcada > 0) setCarregada({ src: font, vertical: alcada > amplada });
+    if (amplada > 0 && alcada > 0) setCarregada({ src: font, vertical: proporcioVisible(font, amplada, alcada) < 1 });
   };
+  /* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · La portada sencera amb el
+     seu marc, com ImatgeDePortada (caixa 'marc'). El visor que s'obri ensenya
+     la foto sencera. Sense fragment, l'<img> de sempre. */
+  const pintor = useEnquadramentDeImatge(font, { caixa: 'marc', onLoad: onCarrega });
   const classeVertical = sencera === true ? 'sdp-visor__obridor sdp-visor__obridor--vertical sdp-visor__obridor--sencer' : 'sdp-visor__obridor sdp-visor__obridor--vertical';
+  /* Revisió final R16a (troballa 1) · Amb marc, la foto es pinta damunt de
+     l'anell del botó: --enquadrat el pinta per damunt (components.css). */
+  const classeObridor = vertical ? classeVertical : 'sdp-visor__obridor';
   const disparador = typeof children === 'function' ? children(obri) : ref && !font ? null : (
-    <button type="button" className={vertical ? classeVertical : 'sdp-visor__obridor'}
+    <button type="button" className={ambClassesDelMarc(classeObridor, pintor.enquadrament ? 'sdp-visor__obridor--enquadrat' : '')}
       aria-haspopup="dialog" aria-label={etiquetaObri}
       onPointerEnter={precarregaElVisor} onFocus={precarregaElVisor}
       onClick={(event) => { if (event.detail <= 1) obri(0, event.currentTarget); }}>
-      <img alt={alt} src={font} fetchpriority="high" onLoad={onCarrega} />
+      <img ref={pintor.ref} alt={alt} src={pintor.src} className={ambClassesDelMarc(pintor.className)} fetchpriority="high" onLoad={pintor.onLoad} />
     </button>
   );
 

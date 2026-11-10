@@ -204,3 +204,42 @@ test('FBV-04 · el fet llegit va abans de la llista i la llista del que falta no
   expect([...llista.querySelectorAll('li')].map((li) => li.textContent)).toEqual([...PASSOS_SERVIDOR_PUSH]);
   expect(llista.textContent).not.toMatch(/ja és a producció/);
 });
+
+/* Revisió final R16a (troballa 2, P0-74 residual) · Amb la columna de la pàgina entre ~480 i 540 px,
+   la taula d'«Artefactes i Portes de Seguretat» ixia del panell (i a 480, de la pàgina): la regla
+   @container només partia el <code> i les capçaleres, i la Insignia i la <strong> marcaven un mínim
+   de ~422 px. Ara va dins de .sdp-admin-taxonomia__table-wrap, com les d'Importació: fa scroll dins
+   del panell i cap paraula no es trossija (directriu del 261025: break-word, mai anywhere). La
+   variant --sense-marc lleva la vora, els cantons i el fons de la capsa: en ample, la taula de
+   sempre (Llei del Píxel; mesurat amb Noto Sans a 480-1440 px, barra clàssica i superposada). */
+test('R16a · la taula d’Artefactes va dins del table-wrap sense marc i cap regla no la trossija', () => {
+  munta();
+  const panell = screen.getByRole('heading', { name: /Artefactes i Portes de Seguretat/ }).closest('section');
+  expect(panell.className).toBe('sdp-admin-taxonomia__panel');
+  const taula = within(panell).getByRole('table');
+  const capsa = taula.parentElement;
+  expect(capsa.className).toBe('sdp-admin-taxonomia__table-wrap sdp-admin-taxonomia__table-wrap--sense-marc');
+  expect(capsa.parentElement).toBe(panell);
+  expect([...capsa.children]).toEqual([taula]);
+  const css = readFileSync(path.join(process.cwd(), 'src/css/modules.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+  // La regla de l'àrbitre ja no tenia cap taula filla directa del panell: ni ella ni cap anywhere a la taula.
+  expect(css).not.toContain('.sdp-admin-taxonomia__panel > .sdp-admin-table');
+  expect(css).not.toMatch(/\.sdp-admin-table[^{}]*\{[^}]*overflow-wrap: anywhere/);
+  const inici = css.indexOf('.sdp-admin-taxonomia__table-wrap--sense-marc {');
+  expect(inici).toBeGreaterThan(-1);
+  expect(css.slice(inici, css.indexOf('}', inici) + 1))
+    .toBe('.sdp-admin-taxonomia__table-wrap--sense-marc { border: 0; border-radius: 0; background: none; }');
+  // Dins de @layer components, després de la capsa de sempre (que conserva l'overflow-x: auto).
+  const capa = css.lastIndexOf('@layer components {', inici);
+  let fons = 0;
+  for (let i = css.indexOf('{', capa); i < inici; i += 1) {
+    if (css[i] === '{') fons += 1;
+    else if (css[i] === '}') fons -= 1;
+  }
+  expect(fons).toBe(1);
+  const base = css.indexOf('.sdp-admin-taxonomia__table-wrap {');
+  expect(base).toBeGreaterThan(capa);
+  expect(base).toBeLessThan(inici);
+  expect(css.slice(base, css.indexOf('}', base))).toContain('overflow-x: auto;');
+});

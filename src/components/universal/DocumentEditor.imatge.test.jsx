@@ -20,6 +20,9 @@ import { DocumentEditor } from './DocumentEditor.jsx';
 
 const DOC = { id: 'd1', title: 'Document propi', subtitle: '', lead: '', content: '', heroImage: '' };
 const URL_PUJADA = 'sdp-media://mitjans/t/u/portades/prova.webp';
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · La portada es desa sencera
+   amb el marc al fragment: el quadrat de sèrie, centrat i sense ampliar. */
+const PORTADA_DESADA = `${URL_PUJADA}#sdp-crop=format=1%3A1&zoom=1&cx=0.5&cy=0.5`;
 const DESAR = 'Desar l’enquadrament';
 const inputHero = (vista) => vista.container.querySelector('.hero-image input[type="file"]');
 const foto = () => new File(['foto'], 'logotip-apaisat.jpg', { type: 'image/jpeg' });
@@ -74,7 +77,7 @@ test('retallar la imatge passa pel port uploadMedia i desa només al document qu
   expect(fitxer).toBeInstanceOf(File);
   expect(fitxer.type).toBe('image/webp');
   expect(port.saveRemote).toHaveBeenCalledOnce();
-  expect(port.saveRemote).toHaveBeenCalledWith(DOC.id, 'heroImage', URL_PUJADA);
+  expect(port.saveRemote).toHaveBeenCalledWith(DOC.id, 'heroImage', PORTADA_DESADA);
   expect(fetch.mock.calls.every(([url]) => String(url).startsWith('data:'))).toBe(true);
   expect(vista.queryByRole('dialog', { name: 'Enquadrar la imatge' })).toBeNull();
 });
@@ -111,7 +114,7 @@ test('una pujada pendent del document anterior no s’aplica al nou id', async (
   const nou = { ...DOC, id: 'd2', title: 'Altre document' };
   vista.rerender(<DocumentEditor adapter={{ ...port, document: nou }} />);
   await act(async () => { resol(URL_PUJADA); });
-  expect(port.saveRemote).toHaveBeenCalledWith(DOC.id, 'heroImage', URL_PUJADA);
+  expect(port.saveRemote).toHaveBeenCalledWith(DOC.id, 'heroImage', PORTADA_DESADA);
   expect(port.saveRemote.mock.calls.some(([id]) => id === nou.id)).toBe(false);
   expect(vista.getByRole('heading', { level: 1, name: nou.title })).toBeTruthy();
   expect(vista.container.querySelector('img.sdp-hero__imatge')).toBeNull();

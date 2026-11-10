@@ -101,3 +101,35 @@ describe('promoteToPublic · ni baixa ni puja un camí que moga la URL', () => {
     ]);
   });
 });
+
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+   Una capçalera desada porta el marc al fragment #sdp-crop=: el fragment no
+   és del camí. Es resol i es promou la base (amb la mateixa guarda F5) i
+   l'adreça que en ix torna amb el marc. Un camí brut amb el marc no passa. */
+describe('el marc de la capçalera (#sdp-crop=) viatja amb la referència', () => {
+  const MARC = '#sdp-crop=format=16%3A9&zoom=1.5&cx=0.4&cy=0.6';
+
+  test('el bucket públic: la URL pública de la base, amb el marc', async () => {
+    expect(await resolveAsset(`sdp-media://mitjans/${RUTA}${MARC}`, {}))
+      .toBe(`${ORIGEN}/storage/v1/object/public/mitjans/${RUTA}${MARC}`);
+    expect(peticions).toEqual([]);
+  });
+
+  test('el bucket privat: es firma la base (el fragment no arriba a Storage) i la URL signada porta el marc', async () => {
+    const url = await resolveAsset(`sdp-media://mitjans_privats/${RUTA}${MARC}`, {});
+    expect(desti(peticions[0])).toBe(`/storage/v1/object/sign/mitjans_privats/${RUTA}`);
+    expect(url.endsWith(MARC)).toBe(true);
+  });
+
+  test('publicar promou la base i la referència pública conserva el marc', async () => {
+    expect(await promoteToPublic(`sdp-media://mitjans_privats/${RUTA}${MARC}`, {})).toBe(`sdp-media://mitjans/${RUTA}${MARC}`);
+    expect(peticions.map(desti)).toEqual([`/storage/v1/object/mitjans_privats/${RUTA}`, `/storage/v1/object/mitjans/${RUTA}`]);
+  });
+
+  test('un camí que mou la URL, amb el marc, continua sense cap petició', async () => {
+    const bruta = `sdp-media://mitjans_privats/${POBLE}/../../../../rest/v1/rpc/qualsevol${MARC}`;
+    expect(await resolveAsset(bruta, {})).toBe(bruta);
+    expect(await promoteToPublic(bruta, {})).toBe(bruta);
+    expect(peticions).toEqual([]);
+  });
+});

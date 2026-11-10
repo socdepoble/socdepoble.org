@@ -603,6 +603,9 @@ export function NotesProvider({ children }) {
     // La revisió en memòria s'anota en l'acte; si l'escriptura local fallara, la
     // publicació continua feta i, com a molt, una recàrrega demanaria decidir.
     bgSaveManager.confirmRevision(scopeKey, activeNote.id, saved.revision).catch(() => {});
+    /* Revisió final R16a (carril FA) · El Mur té ara la nota a esta revisió:
+       l'editor pot dir «Publicat» fins al pròxim desat (versioAlMur, baix). */
+    bgSaveManager.marcaPublicada(scopeKey, activeNote.id, saved?.revision);
     assertCurrent();
     clearLocalNoteFields(activeNote.id, changes);
     showToast(compartir ? 'Compartit al teu mur, citant l’origen.' : 'Nota publicada correctament al mur!', 'success');
@@ -649,6 +652,14 @@ export function NotesProvider({ children }) {
   }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t, rebuigDePublicacio, publicacioCarregada]);
 
   const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
+
+  /* Revisió final R16a (carril FA) · Si el Mur té la versió d'esta nota que
+     el servidor ha confirmat: true, false o null (no se sap). Una nota
+     publicada s'edita com a esborrany i el Mur només canvia amb publishNote:
+     el verd «Publicat» de l'editor ho demana (GlobalSaveManager · versioAlMur). */
+  const versioAlMur = useCallback((nota) => (
+    nota?.id == null ? null : bgSaveManager.versioAlMur(scopeKey, nota.id, nota.revision)
+  ), [scopeKey]);
 
   /* IDEA-61 (T0, prompt 261102_1532) · Les notes vives (amb la capa local), en
      una referència: canviaEstatPublicacio no ha de canviar a cada tecla. Qui
@@ -839,6 +850,8 @@ export function NotesProvider({ children }) {
     setLocalNoteField,
     publishNote,
     compartirNota,
+    /* Revisió final R16a (carril FA) · si el Mur té la versió de la nota. */
+    versioAlMur,
     /* IDEA-61 · el canvi d'estat d'una fitxa d'àmbit (Disponible / Reservat / Complet / Tancat). */
     canviaEstatPublicacio,
     creaNota,
@@ -866,7 +879,7 @@ export function NotesProvider({ children }) {
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField,
     publishNote, compartirNota, canviaEstatPublicacio, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, currentUser, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
-    mouNota, esborraNota, potEsborrar, t, nomesLectura, rebuigDePublicacio
+    mouNota, esborraNota, potEsborrar, t, nomesLectura, rebuigDePublicacio, versioAlMur
   ]);
 
   return (

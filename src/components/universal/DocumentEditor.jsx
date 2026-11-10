@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, u
 import { closeHistory, isHistoryTransaction } from '@tiptap/pm/history';
 import { createDocument, getHTMLFromFragment } from '@tiptap/core';
 import { UniversalEditorShell } from './UniversalEditorShell';
+import { teCanvisSenseConfirmar } from './EstatDesament.jsx';
 /* P0-58 · Els camps plans que torna el repartiment (enganxatCamps.js) i el text d'un camp. */
 import { normalitzaText, unaLinia } from './enganxatCamps.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
@@ -137,6 +138,11 @@ function campsQueTornen(actual, de, a) {
  *                            // calendari i desa el camp 'publishDate' (ISO | null).
  *   avisDataPublicacio: String|null // Opcional (T40). Avís honest dins del calendari
  *                            // quan la data no es desa com la resta (columna en quarantena).
+ *   publicacioAlDia: true|false|null // Opcional (revisió final R16a, carril FA).
+ *                            // Quan la publicació no és el document desat (el Bloc:
+ *                            // el Mur només canvia en publicar), si ja té la versió
+ *                            // desada. false: botó 'pendent'; null (no se sap): la
+ *                            // pastilla de sempre. Sense la clau, desat és publicat.
  *   uploadMedia: async (file) => String, // Lògica de pujada d'imatges (retorna URL).
  *   labels: Array, // Etiquetes visuals del document (ex: estat, lloc).
  *   emptyPlaceholder: String, // Text per a l'estat buit (títol de reserva).
@@ -423,6 +429,10 @@ export function DocumentEditor({ adapter, onToast }) {
     publish,
     /* T5 · «Compartir» per a una nota connectada; sense valor, «Publicar». */
     publishLabel = null,
+    /* Revisió final R16a (carril FA) · si la publicació té la versió desada
+       (true, false o null: no se sap); sense la clau, el servidor és la
+       publicació. No passa per ...rest. */
+    publicacioAlDia = undefined,
     uploadMedia,
     deleteDocument,
     labels,
@@ -1133,6 +1143,21 @@ export function DocumentEditor({ adapter, onToast }) {
   const propostaDesfeible = Boolean(ambProposta && propostaViva && !propostaViva.desfeta && propostaViva.id === document.id
     && editor && !editor.isDestroyed && editor.state.doc.eq(propostaViva.docDespres));
 
+  /* R16-T (P0-80 / IDEA-211, ordre del Mestre del 261109) · El botó diu
+     l'estat del document: 'publicat' (verd) si és públic i el servidor ho té
+     tot, 'pendent' (blau) si és privat o hi ha canvis sense confirmar
+     (estatDesament de l'adaptador, que la closca també pinta). Una nota que
+     es compartix (publishLabel) no es publica: cap estat, el botó de sempre.
+     Revisió final R16a (carril FA) · Quan la publicació no és el document
+     desat (una nota s'edita com a esborrany i el Mur només canvia en
+     publicar-la), l'adaptador diu si la té (publicacioAlDia): false és
+     'pendent' i null (no se sap) torna la pastilla de sempre, mai el verd.
+     Sense la clau (el Perfil), el desat ja és la publicació, com abans. */
+  const estatPublicacio = publishLabel
+    ? null
+    : (!esPublica || teCanvisSenseConfirmar(rest.estatDesament) || publicacioAlDia === false ? 'pendent'
+      : (publicacioAlDia === null ? null : 'publicat'));
+
   const topBar = (
     <UniversalRichTextToolbar
       state={state}
@@ -1140,6 +1165,7 @@ export function DocumentEditor({ adapter, onToast }) {
       onPublish={obreVisibilitat}
       publishPopup="dialog"
       publishLabel={publishLabel}
+      publishState={estatPublicacio}
       onDelete={deleteDocument ? esborra : undefined}
       /* IDEA-41 · Sense motor, cap clau nova: la barra de sempre. */
       {...(ambProposta ? {

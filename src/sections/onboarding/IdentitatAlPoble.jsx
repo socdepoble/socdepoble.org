@@ -4,6 +4,7 @@ import { Alerta, Boto, Camp, CampText, GrupCamps, Selector } from '../../compone
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../config/moderacio.js';
 import { POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
+import { carregaNomenclatorIne, cercaMunicipisIne, nomsAmbMunicipisIne } from '../pobles/nomenclatorIne.js';
 import { llistaDePobles } from '../pobles/nomsDelPoble.js';
 import { MAXIM_USERNAME, netejaUsernameEnEscriure, normalitzaUsername, validaUsername } from './onboardingModel.js';
 
@@ -18,7 +19,13 @@ import { MAXIM_USERNAME, netejaUsernameEnEscriure, normalitzaUsername, validaUse
    servidor (validaUsername) i, si ja és d'algú, la proposta que torna.
    El poble: el principal, del catàleg del Mas, amb La Torre de les Maçanes
    preseleccionada si encara no n'hi ha cap (ordre del Mestre del 261028).
-   Canviar-lo conserva els altres pobles triats a «El compte». */
+   Canviar-lo conserva els altres pobles triats a «El compte».
+   R16-S (P0-79 / IDEA-210, ordre del Mestre del 261109) · A la mateixa fitxa,
+   els altres pobles (afegir-ne i llevar-ne: el principal sempre queda) i el
+   cercador dels 8.132 municipis de l'INE, que es baixen en un tros a banda
+   quan s'hi escriu (nomenclatorIne.js) i entren a les dues llistes. Un
+   homònim hi va amb la província. La cita de la font (condició de
+   reutilització de l'INE) és a l'ajuda del cercador. */
 const p = (nom, reserva) => Object.freeze([`section.onboarding.identitatPoble.${nom}`, reserva]);
 export const TEXTOS_IDENTITAT_AL_POBLE = Object.freeze({
   titol: p('titol', 'El teu identificador i el teu poble'),
@@ -26,7 +33,7 @@ export const TEXTOS_IDENTITAT_AL_POBLE = Object.freeze({
   etiquetaPoble: p('etiquetaPoble', 'El teu poble'),
   etiquetaDesaUsuari: p('etiquetaDesaUsuari', 'Desa l’identificador'),
   ajudaUsuari: p('ajudaUsuari', 'Es veu amb una @ davant a la teua fitxa pública, només si el teu perfil és públic.'),
-  ajudaPoble: p('ajudaPoble', 'El teu poble principal. Si en tens més, es trien a «El compte».'),
+  ajudaPoble: p('ajudaPoble', 'El teu poble principal. Si en tens més, afig-los ací davall o a «El compte».'),
   desat: p('desat', 'Desat.'),
   pendentTitol: p('pendentTitol', 'Pendent de migració al servidor'),
   pendentUsuari: p('pendentUsuari', '{missatge} El teu identificador @{usuari} es queda escrit ací, sense desar: torna-ho a provar quan s’haja aplicat.'),
@@ -38,6 +45,14 @@ export const TEXTOS_IDENTITAT_AL_POBLE = Object.freeze({
   proposatDacord: p('proposatDacord', 'D’acord, vull @{usuari}'),
   proposatExplicacio: p('proposatExplicacio', 'L’hem fet amb el teu nom. Si t’agrada, queda-te’l; si no, escriu-ne un altre ací davall.'),
   fesServirProposta: p('fesServirProposta', 'Fes servir @{proposta}'),
+  etiquetaCercaIne: p('etiquetaCercaIne', 'Cerca entre els 8.132 municipis d’Espanya'),
+  ajudaCercaIne: p('ajudaCercaIne', 'Escriu el nom d’un municipi i apareixerà a les llistes de davall.'),
+  fontIne: p('fontIne', 'Font: elaboració pròpia amb dades de l’INE (www.ine.es), relació de municipis a 1 de gener de 2026.'),
+  placeholderCercaIne: p('placeholderCercaIne', 'Per exemple, Busot'),
+  etiquetaAltresPobles: p('etiquetaAltresPobles', 'Altres pobles'),
+  ajudaAltresPobles: p('ajudaAltresPobles', 'Pots ser de més d’un poble: el principal va primer i la resta, darrere.'),
+  triaAltrePoble: p('triaAltrePoble', 'Afig un altre poble…'),
+  llevaPoble: p('llevaPoble', 'Lleva {poble}'),
 });
 export const TITOL_IDENTITAT_AL_POBLE = TEXTOS_IDENTITAT_AL_POBLE.titol[1];
 export const ETIQUETA_USUARI = TEXTOS_IDENTITAT_AL_POBLE.etiquetaUsuari[1];
@@ -59,6 +74,18 @@ export function pobleAmbPrincipal(actual, principal) {
   return [principal, ...llistaDePobles(actual).filter((nom) => nom !== principal)].join(' · ');
 }
 
+/** Un altre poble darrere dels triats, sense repetir-lo. Sense cap triat, darrere de `principal` (el preseleccionat). */
+function pobleAmbAfegit(actual, nou, principal = '') {
+  const triats = llistaDePobles(actual);
+  return llistaDePobles([...(triats.length ? triats : [principal]), nou]).join(' · ');
+}
+
+/** Els triats sense `llevat`; el principal no se'n va mai. */
+function pobleSenseLlevat(actual, llevat) {
+  const [principal, ...altres] = llistaDePobles(actual);
+  return llistaDePobles([principal, ...altres.filter((nom) => nom !== llevat)]).join(' · ');
+}
+
 export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', pobles = [], desactivat = false, onDesaUsuari, onDesaPoble }) {
   const t = useTraductorOpcional();
   const [valor, setValor] = useState(usuari);
@@ -72,6 +99,9 @@ export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', p
   const [desant, setDesant] = useState(false);
   const [confirmatAra, setConfirmatAra] = useState(false);
   const [vist, setVist] = useState(usuari);
+  const [cercaIne, setCercaIne] = useState('');
+  const [municipisIne, setMunicipisIne] = useState([]);
+  const consultaIne = useRef(0);
   /* Ajust en pintar: un identificador nou del servidor (una altra lectura) torna al camp. */
   if (vist !== usuari) {
     setVist(usuari);
@@ -120,27 +150,48 @@ export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', p
     }
   };
 
-  const nomsDelCataleg = [...new Set((pobles || []).map((nom) => String(nom || '').trim()).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, 'ca'));
-  const principal = llistaDePobles(poble)[0] || (nomsDelCataleg.includes(POBLE_FUNDACIONAL) ? POBLE_FUNDACIONAL : '');
+  /* R16-S · Cada lletra del cercador llança una cerca a l'INE; només la de
+     l'última consulta entra a les llistes (una de vella que arriba tard no
+     xafa la nova). Buit, cap municipi de més. */
+  const canviaCercaIne = (event) => {
+    const text = event.target.value;
+    const torn = consultaIne.current + 1;
+    consultaIne.current = torn;
+    setCercaIne(text);
+    if (!text.trim()) {
+      setMunicipisIne([]);
+      return;
+    }
+    void cercaMunicipisIne(text).then((trobats) => {
+      if (consultaIne.current === torn) setMunicipisIne(trobats);
+    });
+  };
+
+  const nomsDelCataleg = nomsAmbMunicipisIne(pobles, municipisIne);
+  const triats = llistaDePobles(poble);
+  const principal = triats[0] || (nomsDelCataleg.includes(POBLE_FUNDACIONAL) ? POBLE_FUNDACIONAL : '');
   const opcionsDePoble = [
     ...(principal ? [] : [{ valor: '', etiqueta: tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.triaPoble) }]),
     ...[...new Set([...(principal ? [principal] : []), ...nomsDelCataleg])]
       .sort((a, b) => a.localeCompare(b, 'ca')).map((nom) => ({ valor: nom, etiqueta: nom })),
   ];
-  const canviaPoble = async (event) => {
-    const nou = event.target.value;
-    if (!nou || nou === principal || typeof onDesaPoble !== 'function') return;
+  const opcionsAltresPobles = [
+    { valor: '', etiqueta: tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.triaAltrePoble) },
+    ...nomsDelCataleg.filter((nom) => nom !== principal && !triats.includes(nom)).map((nom) => ({ valor: nom, etiqueta: nom })),
+  ];
+  /* `mostrat` és el que diu l'avís si el servidor encara no té la columna. */
+  const desaPobles = async (cadena, mostrat = cadena) => {
+    if (!cadena || cadena === poble || typeof onDesaPoble !== 'function') return;
     setEstat('');
     setErrorPoble('');
     setPendent('');
     setDesant(true);
     try {
-      await onDesaPoble(pobleAmbPrincipal(poble, nou));
+      await onDesaPoble(cadena);
       setEstat(tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.desat));
     } catch (err) {
       if (esPendentDeMigracio(err)) {
-        setPendent(omple(tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.pendentPoble), { missatge: err.message, poble: nou }));
+        setPendent(omple(tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.pendentPoble), { missatge: err.message, poble: mostrat }));
         return;
       }
       setErrorPoble(String(err?.message || tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.errorDesaPoble)));
@@ -148,6 +199,13 @@ export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', p
       setDesant(false);
     }
   };
+  const canviaPoble = (event) => {
+    const nou = event.target.value;
+    if (!nou || nou === principal) return undefined;
+    return desaPobles(pobleAmbPrincipal(poble, nou), nou);
+  };
+  const afegeixPoble = (event) => (event.target.value ? desaPobles(pobleAmbAfegit(poble, event.target.value, principal)) : undefined);
+  const llevaPoble = (nom) => desaPobles(pobleSenseLlevat(poble, nom));
 
   const proposat = Boolean(usuari) && !confirmat && !confirmatAra;
   return (
@@ -189,9 +247,41 @@ export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', p
           ) : null}
         </div>
         {nomsDelCataleg.length && typeof onDesaPoble === 'function' ? (
-          <Camp etiqueta={tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.etiquetaPoble)} ajuda={tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.ajudaPoble)} error={errorPoble || undefined}>
-            <Selector name="poble" opcions={opcionsDePoble} value={principal} onChange={canviaPoble} disabled={desactivat || desant} />
-          </Camp>
+          <>
+            <Camp
+              etiqueta={tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.etiquetaCercaIne)}
+              ajuda={`${tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.ajudaCercaIne)} ${tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.fontIne)}`}
+            >
+              <CampText
+                name="cercaMunicipi"
+                value={cercaIne}
+                placeholder={tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.placeholderCercaIne)}
+                onFocus={() => { void carregaNomenclatorIne(); }}
+                onChange={canviaCercaIne}
+                autoComplete="off"
+                spellCheck={false}
+                enterKeyHint="search"
+                disabled={desactivat || desant}
+              />
+            </Camp>
+            <Camp etiqueta={tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.etiquetaPoble)} ajuda={tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.ajudaPoble)} error={errorPoble || undefined}>
+              <Selector name="poble" opcions={opcionsDePoble} value={principal} onChange={canviaPoble} disabled={desactivat || desant} />
+            </Camp>
+            {opcionsAltresPobles.length > 1 ? (
+              <Camp etiqueta={tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.etiquetaAltresPobles)} ajuda={tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.ajudaAltresPobles)}>
+                <Selector name="altrePoble" opcions={opcionsAltresPobles} value="" onChange={afegeixPoble} disabled={desactivat || desant} />
+              </Camp>
+            ) : null}
+            {triats.length > 1 ? (
+              <div className="sdp-alerta__accions">
+                {triats.slice(1).map((nom) => (
+                  <Boto key={nom} varietat="fantasma" onClick={() => llevaPoble(nom)} disabled={desactivat || desant}>
+                    {omple(tradueix(t, TEXTOS_IDENTITAT_AL_POBLE.llevaPoble), { poble: nom })}
+                  </Boto>
+                ))}
+              </div>
+            ) : null}
+          </>
         ) : null}
       </GrupCamps>
       {/* R4 · Sempre muntada i buida en repòs: «Desat.» hi entra després i el

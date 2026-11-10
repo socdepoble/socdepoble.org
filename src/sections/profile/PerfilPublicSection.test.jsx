@@ -703,17 +703,23 @@ test.each([
   expect(dretsDelTitol(container)).toBe(drets);
 });
 
-/* Ordre del Mestre · Els personatges ANIMAL del catàleg (hui, Marc El Gall)
-   són IA: personatges simbòlics, bots amb systemPrompt. La fitxa del catàleg
-   es conserva, també el seu type 'ANIMAL'; només canvia com es classifica
-   (data/agentsSeed.js · tipusDAgent, la font única del directori, del perfil
-   públic, de localPerfils i del Cercador).
-   Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
-   261021_0015 §12) · El catàleg és el dels cinc assistents oficials: fora
-   Súper Ratolí, La Mixa, Flash i Sultan. La fitxa sense el port es prova per
-   als quatre assistents que no són la IAIA (ella té la seua pàgina). */
-const ANIMALS = ['GALL'].map((clau) => AGENTS_MAP[clau]);
-const ASSISTENTS = ['NANOBANANA', 'GALL', 'PREGONER', 'ACOMPANYANT'].map((clau) => AGENTS_MAP[clau]);
+/* Ordre del Mestre · Els personatges ANIMAL són IA: personatges simbòlics,
+   bots amb systemPrompt. La fitxa es conserva, també el seu type 'ANIMAL';
+   només canvia com es classifica (data/agentsSeed.js · tipusDAgent, la font
+   única del directori, del perfil públic, de localPerfils i del Cercador).
+   Expectativa actualitzada a propòsit (P0-72 / IDEA-203, ordre del Mestre
+   del 09-11-2026: «només la IAIA MarIA com a IA») · El catàleg del paquet ja
+   no porta cap assistent fora de la IAIA ni cap personatge ANIMAL, però el
+   contingut remot (la fila `agents` d'app_content) en pot portar: la fitxa
+   d'una IA que no és la IAIA es prova amb dues fitxes sintètiques de prova,
+   una AI i una ANIMAL, que la pàgina rep pel catàleg (`agents`) o pel port. */
+const IA_DE_PROVA = Object.freeze({
+  id: 'assistent-de-prova', name: 'Assistent de prova', role: 'Rol de prova', type: 'AI', tag: 'GENT',
+  town_name: 'Benilloba', avatar_url: '/assets/prova/assistent.webp', lema: 'Lema de prova', short_bio: '<p>Fitxa de prova.</p>'
+});
+const ANIMAL_DE_PROVA = Object.freeze({ ...IA_DE_PROVA, id: 'animal-de-prova', name: 'Animal de prova', type: 'ANIMAL', avatar_url: '/assets/prova/animal.webp' });
+const ANIMALS = [ANIMAL_DE_PROVA];
+const ASSISTENTS = [IA_DE_PROVA, ANIMAL_DE_PROVA];
 
 test('Gauntlet 261016 · perfilDelCataleg: els personatges ANIMAL són IA, amb la seua fitxa sencera', async () => {
   const { perfilDelCataleg } = await import('./PerfilPublicSection.jsx');
@@ -725,7 +731,7 @@ test('Gauntlet 261016 · perfilDelCataleg: els personatges ANIMAL són IA, amb l
     });
   }
   /* PERSON continua sent persona, AI una IA i COMPANY una entitat. */
-  expect([AGENTS_MAP.JAVI, AGENTS_MAP.PREGONER, AGENTS_MAP.SOCDEPOBLE].map(tipusDAgent)).toEqual(['persona', 'ia', 'entitat']);
+  expect([AGENTS_MAP.JAVI, IA_DE_PROVA, AGENTS_MAP.SOCDEPOBLE].map(tipusDAgent)).toEqual(['persona', 'ia', 'entitat']);
 });
 
 /* El prefix de la ruta és orientatiu (App.jsx munta esta pàgina a /gent/:agentId
@@ -751,17 +757,16 @@ test.each(ASSISTENTS.map((agent) => [agent.name, agent]))('Gauntlet 261016 · se
   expect(container.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(agent.avatar_url);
 });
 
-/* En llavor, pel port (localPerfils.js, que fa de servidor): una IA del
-   catàleg que no és la IAIA i un personatge ANIMAL.
-   Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
-   261021_0015 §12) · El personatge ANIMAL és El Gall (Sultan ja no és al
-   catàleg), i s'hi afig un dels dos assistents nous. */
-test.each([['una IA del catàleg', 'NANOBANANA'], ['un personatge ANIMAL', 'GALL'], ['un assistent nou del catàleg', 'ACOMPANYANT']])('Gauntlet 261016 · en llavor, pel port, %s porta l’avís i el botó amb el seu nom', async (_que, clau) => {
-  const agent = AGENTS_MAP[clau];
-  const perfils = createLocalPerfilsAdapter();
-  mocks.config = { dataMode: 'seed' };
+/* Pel port: el servidor torna la fitxa d'una IA que no és la IAIA, o d'un
+   personatge ANIMAL (el contingut remot és l'únic on n'hi pot haver).
+   Expectativa actualitzada a propòsit (P0-72 / IDEA-203) · Abans es provava
+   en llavor amb Nano Banana, El Gall i L'Acompanyant, que ja no són al
+   catàleg: el magatzem local (localPerfils.js) ja no en pot servir cap. */
+test.each([['una IA que no és la IAIA', IA_DE_PROVA], ['un personatge ANIMAL', ANIMAL_DE_PROVA]])('Gauntlet 261016 · pel port, %s porta l’avís i el botó amb el seu nom', async (_que, agent) => {
+  const { perfilDelCataleg } = await import('./PerfilPublicSection.jsx');
+  mocks.config = { dataMode: 'remote' };
   mocks.id = agent.id;
-  mocks.load.mockImplementation(async (id) => perfils.loadPerfilPublic(id, null));
+  mocks.load.mockResolvedValue(perfilDelCataleg(agent));
   render(<PerfilPublicSection agents={[]} />);
   await screen.findByRole('heading', { level: 1, name: agent.name });
   expect(mocks.load).toHaveBeenCalledWith(agent.id, { ...mocks.config, signal: expect.any(AbortSignal) });

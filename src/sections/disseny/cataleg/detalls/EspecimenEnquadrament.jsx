@@ -12,6 +12,8 @@ import { MIDA_AVATAR } from '../../../../utils/pujadaImatge.js';
 import { resolRecursPropi } from '../../../../config/assetResolver';
 import { Llinatge } from '../Llinatge.jsx';
 import { VisorDePublicacio } from '../../../detail/VisorDePublicacio.jsx';
+import { ambClassesDelMarc, useEnquadramentDeImatge } from '../../../../hooks/useEnquadramentDeImatge.js';
+import { ambEnquadrament } from '../../../../utils/enquadramentUrl.js';
 
 /* T46 (ordre del Mestre, 260928) · Re-enquadrar la capçalera. Una foto
    apaisada del mateix origen (1376×768): en quadrat es veu que el marc talla i
@@ -87,6 +89,19 @@ function descriuSenzill(forma, fitxer, { rect, format }) {
   return `${mida.amplada} × ${mida.alcada} px${detall}, ${nom}, ${Math.max(1, Math.round(fitxer.size / 1024))} KB`;
 }
 
+/* P0-80 / IDEA-211 (llei del Mestre, onada R16: ENQUADRAMENT NO DESTRUCTIU) ·
+   La capçalera ix sencera i el marc viatja al fragment #sdp-crop=: el
+   resultat es pinta com a la fitxa (useEnquadramentDeImatge, caixa 'marc').
+   Re-enquadrar una adreça no fa cap fitxer: el diàleg torna l'adreça amb el
+   marc nou, i la llegenda ho diu. */
+function ResultatEnquadrat({ src, alt }) {
+  const pintor = useEnquadramentDeImatge(src, { caixa: 'marc' });
+  return <img ref={pintor.ref} src={pintor.src} alt={alt} className={ambClassesDelMarc(pintor.className)} onLoad={pintor.onLoad} />;
+}
+const descriuMarc = ({ enquadrament, format }) => (enquadrament
+  ? `el marc ${enquadrament.format} (zoom ${enquadrament.zoom}) de la foto sencera, a la seua adreça (#sdp-crop=), sense cap fitxer nou`
+  : `la foto sencera en ${format}, sense cap fitxer nou`);
+
 /** Un resultat amb la seua vista (objectURL), que es revoca en canviar-lo i en eixir. */
 function useResultat() {
   const [resultat, setResultat] = useState(null);
@@ -114,7 +129,13 @@ export default function EspecimenEnquadrament() {
   const senzill = (forma) => ({
     forma,
     onEnquadrat: async (fitxer, info) => {
-      setResultatSenzill({ url: urlDe(fitxer), text: descriuSenzill(forma, fitxer, info), redo: forma === 'avatar' });
+      // P0-80 · Un text és la mateixa adreça amb el marc nou: cap fitxer.
+      if (typeof fitxer === 'string') {
+        setResultatSenzill({ url: null, vista: fitxer, text: descriuMarc(info), redo: false, senseFitxer: true });
+        return;
+      }
+      const url = urlDe(fitxer);
+      setResultatSenzill({ url, vista: ambEnquadrament(url, info?.enquadrament), text: descriuSenzill(forma, fitxer, info), redo: forma === 'avatar' });
     },
   });
   const avatarSenzill = useEnquadramentImatge(senzill('avatar'));
@@ -167,7 +188,7 @@ export default function EspecimenEnquadrament() {
     <Llinatge id="enquadrament" />
     <Especimen id="enquadrament" nom="DialegEnquadrament · re-enquadrar una foto"
       fitxer="src/components/universal/enquadrament/DialegEnquadrament.jsx · src/components/universal/enquadrament/useEnquadramentImatge.jsx · src/sections/profile/useEnquadramentAvatar.jsx"
-      descripcio={`La foto de capçalera d’una nota és també la miniatura del llistat i la targeta del Mur. Abans de desar-la, este diàleg deixa triar-ne la forma (superpanoràmic, panoràmic, apaisat, quadrat, vertical o l’original; el quadrat, de sèrie i recomanat), moure-la i ampliar-la perquè el que importa no quede tallat. En quadrat, la miniatura i la targeta ensenyen la mateixa imatge sencera; en una altra forma, la pàgina l’ensenya sencera i la miniatura i la targeta la retallen en quadrat. La closca de les Notes i la fitxa del Perfil en demanen l’eixida de la capçalera: 1.200 px pel costat llarg (Directiva del Mestre, 261024). El retall es guarda dins de l’arxiu: la resta de la foto no es conserva. Si la nota ja és al Mur, la targeta no canvia fins que es torna a publicar. Si la foto porta la ubicació o la data, la casella «${ETIQUETA_CONSERVA_EXIF}» les conserva de sèrie. L’avatar de l’ajust d’imatge hi passa sempre amb una sola forma, el quadrat de 400 × 400, i sense l’opció de geolocalitzar. Les imatges de la fitxa del Perfil (avatar en cercle, logotip i capçalera) passen per la finestra senzilla, calcada de la de Claude.`}
+      descripcio={`La foto de capçalera d’una nota és també la miniatura del llistat i la targeta del Mur. Abans de desar-la, este diàleg deixa triar-ne la forma (superpanoràmic, panoràmic, apaisat, quadrat, vertical o l’original; el quadrat, de sèrie i recomanat), moure-la i ampliar-la perquè el que importa no quede tallat. En quadrat, la miniatura i la targeta ensenyen la mateixa imatge sencera; en una altra forma, la pàgina l’ensenya sencera i la miniatura i la targeta la retallen en quadrat. La closca de les Notes i la fitxa del Perfil en demanen l’eixida de la capçalera: 1.200 px pel costat llarg (Directiva del Mestre, 261024). La capçalera es guarda sencera i el marc viatja al fragment #sdp-crop= de la seua adreça (P0-80): es pot tornar a enquadrar sense perdre res, i el que queda fora del marc també es publica. L’avatar i el logotip encara es retallen dins de l’arxiu. Si la nota ja és al Mur, la targeta no canvia fins que es torna a publicar. Si la foto porta la ubicació o la data, la casella «${ETIQUETA_CONSERVA_EXIF}» les conserva de sèrie. L’avatar de l’ajust d’imatge hi passa sempre amb una sola forma, el quadrat de 400 × 400, i sense l’opció de geolocalitzar. Les imatges de la fitxa del Perfil (avatar en cercle, logotip i capçalera) passen per la finestra senzilla, calcada de la de Claude.`}
       contracte={[
         ['obert', 'boolean', 'true', 'El pare el sol muntar només quan cal (la closca, l’espècimen).'],
         ['font', 'File | string', '—', 'Una foto nova (File) o l’adreça ja resolta de la capçalera existent.'],
@@ -292,15 +313,17 @@ export default function EspecimenEnquadrament() {
       </Accions>
       {resultatSenzill ? (
         <figure className="sdp-enquadrament__resultat">
-          {resultatSenzill.url ? (
+          {resultatSenzill.vista ? (
             resultatSenzill.redo ? (
               <div className="sdp-avatar sdp-avatar--xl">
-                <img src={resultatSenzill.url} alt="El resultat de la finestra senzilla" className="sdp-avatar__imatge" />
+                <img src={resultatSenzill.vista} alt="El resultat de la finestra senzilla" className="sdp-avatar__imatge" />
               </div>
-            ) : <img src={resultatSenzill.url} alt="El resultat de la finestra senzilla" />
+            ) : <ResultatEnquadrat src={resultatSenzill.vista} alt="El resultat de la finestra senzilla" />
           ) : null}
           <figcaption className="sdp-camp__ajuda">
-            Ha eixit un fitxer de {resultatSenzill.text}. Al Perfil puja com un sol fitxer, sense tornar-lo a reduir.
+            {resultatSenzill.senseFitxer
+              ? <>Ha eixit {resultatSenzill.text}. Al Perfil es desa sobre la referència de la imatge, sense cap pujada.</>
+              : <>Ha eixit un fitxer de {resultatSenzill.text}. Al Perfil puja com un sol fitxer, sense tornar-lo a reduir.</>}
           </figcaption>
         </figure>
       ) : null}

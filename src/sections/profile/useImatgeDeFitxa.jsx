@@ -6,6 +6,7 @@ import {
 import { TEXTOS_ENQUADRAMENT } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { AJUDA_IMATGE_PUJANT as AVIS_IMATGE_PUJANT, TEXTOS_CLOSCA } from '../../components/universal/UniversalEditorShell.jsx';
+import { ambEnquadrament } from '../../utils/enquadramentUrl.js';
 
 /* Un pas que falla sense missatge propi (no hauria de passar: el hook l'avisa).
    P1-22 (marató 261101_2143, B3-I18N §3.C) · En parell [clau, reserva], i es
@@ -94,9 +95,24 @@ const paraCancel = (e) => e.stopPropagation();
  *   (després de «Llevar avatar»). Guardar puja el retall pel camí de sempre
  *   (processaFitxer i onDesaCamp): la persona no torna a triar cap fitxer, i
  *   una adreça desada sencera no té res a desar (DialegEnquadrament, T46).
+ *
+ * P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+ * La capçalera (forma 'capcalera') no es retalla: Guardar puja la foto
+ * SENCERA i desa la seua adreça amb el marc al fragment #sdp-crop=
+ * (processaFitxer, opcions.enquadrament). Re-enquadrar la que ja hi ha
+ * (ajusta) no puja res: la finestra torna un text i es desa
+ * onDesaCamp(camp, el valor DESAT amb el marc nou), mai l'adreça resolta (una
+ * URL signada caduca). Per això ajusta(font, control, desat) rep, de tercer,
+ * el valor desat del camp (sdp-media://…); sense, el de la font. R16a
+ * (revisió final, troballa 3) · Si la finestra l'ha de tornar a codificar (la
+ * casella desmarcada o una precisió del GPS més grossa), torna la foto
+ * sencera (un File), que puja com una de nova, amb la precisió i el marc.
+ *   noDestructiu (true) · false torna a la capçalera retallada de sempre (la
+ *     d'una organització: PerfilEditor). L'avatar i el logotip no canvien.
  */
 export function useImatgeDeFitxa({
   camp = 'heroImage', forma = 'capcalera', onImageUpload = null, onDesaCamp, onError, onDesat, finestra = null, identitat = false,
+  noDestructiu = true,
 } = {}) {
   const inputRef = useRef(null);
   const controlRef = useRef(null);
@@ -147,9 +163,12 @@ export function useImatgeDeFitxa({
   const { canviaFoto: ambCanviaFoto = false, ...restaFinestra } = finestra || {};
   const extres = finestra ? { ...restaFinestra, ...(ambCanviaFoto ? { onCanviaFoto: canviaFoto, acceptFoto: ACCEPT_FOTO } : null) } : null;
 
+  /* P0-80 · El valor desat del camp que s'està re-enquadrant (ajusta). */
+  const valorDesatRef = useRef(null);
   const enquadrament = useEnquadramentImatge({
     forma,
     identitat,
+    noDestructiu,
     extres,
     onError: (missatge) => errorRef.current?.(missatge),
     onEnquadrat: async (fitxer, info, exif) => {
@@ -160,15 +179,23 @@ export function useImatgeDeFitxa({
       try {
         errorPujada.current = null;
         desat.current = null;
-        /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La forma va amb el
-           fitxer: l'avatar d'una persona es desa al camp logoImage i ha de
-           pujar com a avatar (dins del pressupost), no com a logotip.
-           Bloc 1.2 · I la tria de la casella de l'EXIF (`exif`, la de
-           useEnquadramentImatge), si n'hi ha hagut. */
-        const fet = await handlerRef.current.processaFitxer(fitxer, {
-          pesMaxim: PES_MAXIM_FOTO, midaMaxima: costatDeSortida(forma), forma, ...exif,
-        });
-        if (!fet) throw new Error(errorPujada.current || tradueix(tRef.current, PARELL_ERROR_DESAT_IMATGE));
+        if (typeof fitxer === 'string') {
+          /* P0-80 · Només ha canviat el marc: el valor desat (la referència, no
+             l'adreça resolta) amb el fragment nou. Cap pujada. */
+          desat.current = Promise.resolve(desaCampRef.current?.(camp, ambEnquadrament(valorDesatRef.current || fitxer, info?.enquadrament)));
+        } else {
+          /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La forma va amb el
+             fitxer: l'avatar d'una persona es desa al camp logoImage i ha de
+             pujar com a avatar (dins del pressupost), no com a logotip.
+             Bloc 1.2 · I la tria de la casella de l'EXIF (`exif`, la de
+             useEnquadramentImatge), si n'hi ha hagut.
+             P0-80 · I el marc de la foto sencera, si n'hi ha (info.enquadrament). */
+          const fet = await handlerRef.current.processaFitxer(fitxer, {
+            pesMaxim: PES_MAXIM_FOTO, midaMaxima: costatDeSortida(forma), forma, ...exif,
+            ...(info?.enquadrament ? { enquadrament: info.enquadrament } : null),
+          });
+          if (!fet) throw new Error(errorPujada.current || tradueix(tRef.current, PARELL_ERROR_DESAT_IMATGE));
+        }
         /* Bloc 3.5.4 · Abans s'esperava sense mirar-ne el resultat: un 403
            tancava la finestra com si s'haguera desat. */
         if ((await desat.current) === false) throw new Error(tradueix(tRef.current, PARELL_ERROR_DESAT_IMATGE));
@@ -198,6 +225,7 @@ export function useImatgeDeFitxa({
       return;
     }
     controlRef.current = typeof control?.acaba === 'function' ? control : null;
+    valorDesatRef.current = null;
     inputRef.current?.click();
   }, []);
 
@@ -206,13 +234,15 @@ export function useImatgeDeFitxa({
      Correcció F3 de la revisió · El retall ix en el format de la imatge
      carregada (formatDeLaFont): un avatar PNG amb transparència no torna
      amb fons blanc. */
-  const ajusta = useCallback((font, control) => {
+  const ajusta = useCallback((font, control, desatDelCamp) => {
     if (pujantRef.current) {
       errorRef.current?.(tradueix(tRef.current, TEXTOS_CLOSCA.imatgePujant), 'info');
       return false;
     }
     if (typeof font !== 'string' || !font) return false;
     controlRef.current = typeof control?.acaba === 'function' ? control : null;
+    // P0-80 · El valor desat, perquè un marc nou es dese sobre la referència i no sobre l'adreça resolta.
+    valorDesatRef.current = typeof desatDelCamp === 'string' && desatDelCamp ? desatDelCamp : null;
     return obriFinestra(font, { formatDeLaFont: true });
   }, [obriFinestra]);
 
@@ -224,6 +254,7 @@ export function useImatgeDeFitxa({
       errorRef.current?.(tradueix(tRef.current, TEXTOS_CLOSCA.imatgePujant), 'info');
       return;
     }
+    valorDesatRef.current = null;
     if (!obriFinestra(fitxer)) controlRef.current = null;
   };
 

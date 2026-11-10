@@ -2710,8 +2710,12 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
    línia: la del panell obert (Enrere, Esborrar) és de sempre, també a
    Notes, i canviar-la és decisió del Mestre (Llei del Píxel). La capçalera
    buida (.hero-image--buit) no té marc taronja i no hi casa: sense imatge
-   no hi ha cap <img> davant del camp. */
+   no hi ha cap <img> davant del camp.
+   Revisió final R16a (troballa 1) · Una capçalera amb un marc ampliat va dins
+   del seu botó (.sdp-hero__obridor, modules.css): la mateixa línia, el mateix
+   color. */
 @layer components {
+  .hero-image > .sdp-hero__obridor + .sdp-camp > .sdp-camp__ajuda,
   .hero-image > img + .sdp-camp > .sdp-camp__ajuda {
     color: var(--sdp-sobre-accent);
   }
@@ -3169,6 +3173,25 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .sdp-edicio-avancada {
     margin-block: var(--sdp-space-4);
   }
+  /* R16-S (P0-79 / IDEA-210, ordre del Mestre del 261109) · A la ranura
+     despresAutoria (PageFrame: davall de la barra taronja i damunt de l'H1),
+     l'«Edició avançada» naix dins de la mateixa peça blanca que la capçalera
+     (header.page-title, layout.css): el mateix fons i el mateix marge lateral,
+     enganxada a la barra, i el desplegable 24 px (--sdp-space-6) més estret
+     per cada costat. La capçalera de davall continua la peça amb menys aire
+     dalt. Fora d'esta ranura, el desplegable de sempre. */
+  .sdp-universal-page-container > .sdp-pagina-despres-autoria {
+    width: auto;
+    margin: 0 var(--sdp-pad-contenidor);
+    padding: var(--sdp-space-5) var(--sdp-space-6) 0;
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-universal-page-container > .sdp-pagina-despres-autoria > .sdp-edicio-avancada {
+    margin-block: 0;
+  }
+  .sdp-universal-page-container > .sdp-pagina-despres-autoria + header.page-title {
+    padding-block-start: var(--sdp-space-5);
+  }
   .sdp-edicio-avancada__resum {
     display: flex;
     align-items: center;
@@ -3208,9 +3231,13 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
     outline-offset: var(--sdp-space-1);
   }
+  /* R16-S · La rajola blava, alineada a dalt encara que el subtítol ocupe
+     tres línies. */
   .sdp-edicio-avancada__icona {
     display: inline-flex;
     flex: none;
+    align-self: flex-start;
+    margin-block-start: var(--sdp-space-1);
     align-items: center;
     justify-content: center;
     inline-size: var(--sdp-space-10);
@@ -3750,6 +3777,23 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
     outline-offset: calc(-1 * var(--sdp-focus-gruix));
     min-block-size: var(--sdp-touch);
+  }
+  /* Revisió final R16a (troballa 1, el mateix defecte a la lectura) · Una
+     portada amb marc (#sdp-crop=) porta transform i clip-path (modules.css,
+     bloc ENQUADRAMENT NO DESTRUCTIU): la foto es pinta en una capa pròpia,
+     damunt de l'outline del botó, i l'anell per dins no es veia, ni amb zoom 1
+     (WCAG 2.4.7). VisorDePublicacio hi posa --enquadrat i l'anell es pinta
+     en un ::after posicionat, que va damunt de la foto, al mateix lloc i amb
+     el mateix gruix, i no rep el punter. Sense focus, cap píxel no canvia;
+     sense marc, cap classe nova. */
+  .sdp-visor__obridor--enquadrat { position: relative; }
+  .sdp-visor__obridor--enquadrat:focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+    pointer-events: none;
   }
   /* T4 (pla 261024_1315, P1-06) · Les fotos del cos d'un detall que obrin el
      visor (CosAmbVisor, detail/VisorDePublicacio.jsx, les marca després de

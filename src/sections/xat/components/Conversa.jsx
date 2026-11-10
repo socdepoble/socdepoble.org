@@ -933,9 +933,22 @@ export default function Conversa({
     setResposta(null);
     campRef.current?.focus();
   }, []);
+  /* D-T2b-1 (R16-G) · L'Arrere en estret cancel·la la resposta igual, però el
+     focus va a la llista i no al camp: enfocar el camp reobriria el teclat del
+     mòbil damunt de la conversa (com «Baixa al final», #6). En ample, el camí
+     de l'Escape del camp (cancelaResposta). */
+  const cancelaRespostaDesDEnrere = useCallback(() => {
+    if (!estret) {
+      cancelaResposta();
+      return;
+    }
+    revisioCompositorRef.current += 1;
+    setResposta(null);
+    llistaRef.current?.focus({ preventScroll: true });
+  }, [estret, cancelaResposta]);
   /* P0-24b (T2b, prompt 261102_1532) · Amb resposta, la barra és a la pila de
-     l'Arrere d'Android amb el camí de l'Escape del camp (cancelaResposta). */
-  useCapaEnrere(Boolean(resposta), cancelaResposta);
+     l'Arrere d'Android (cancelaRespostaDesDEnrere). */
+  useCapaEnrere(Boolean(resposta), cancelaRespostaDesDEnrere);
 
   const baixaAlFinal = () => {
     const ol = llistaRef.current;

@@ -173,13 +173,15 @@ export function IconaEnllacImatge({ strokeWidth = 2, ...props }) {
   );
 }
 
-/** Més eines: tres punts en filera («⋯»). */
+/** Més eines (o, en compacte, «Format del text»): R16-T (P0-80 / IDEA-211,
+    ordre del Mestre del 261109) · un llapis damunt d'una ratlla, el PenLine de
+    lucide, en lloc dels tres punts («⋯»): a primer colp d'ull, la part
+    d'edició del text. */
 export function IconaMesEines(props) {
   return (
     <Icona nom="mes-eines" {...props}>
-      <circle cx="6" cy="12" r="1.6" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
-      <circle cx="18" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
     </Icona>
   );
 }

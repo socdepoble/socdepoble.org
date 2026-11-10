@@ -23,6 +23,7 @@ import { createTranslator } from '../../config/i18n.js';
 import { consentimentMostrat } from '../../config/politicaPrivacitat.js';
 import { CODI_ENTRADA_NATIVA, abandonaCredencialNativa, botonsNatius, esSilenciNatiu, plataformaNativa } from '../../config/entradaNativa.js';
 import { EntradaNativa } from './EntradaNativa.jsx';
+import { LogotipGoogle } from './LogotipsDeMarca.jsx';
 import { entraAmbProveidorNatiu } from './fluxEntradaNativa.js';
 
 /* Fase D (261020, tasca 1) · Les proves que simulen useUIState sense `t`
@@ -724,18 +725,24 @@ export default function OnboardingSection() {
                     </p>
                     {/* Encàrrec 261018_1220 (Tasca 2, ordre del Mestre: «destacar
                         el botó Entrar amb Google com a via preferent d'un sol
-                        clic») · Primari: és l'acció principal de la pàgina. */}
+                        clic»): ple, a tota l'amplada de la targeta.
+                        R16-L (P0-71 / IDEA-202) · El botó de marca de Google,
+                        el mateix d'EntradaNativa: la G i les classes de marca
+                        (--sdp-marca-google-*, sense cap :hover propi, com mana
+                        la seua guia). Sense sdp-boto--primari: el seu :hover
+                        blau deixava el text de Google il·legible (2,29:1). */}
                     <div className="onboarding-card__action--ple">
                       <button
                         ref={botoGoogle}
                         type="button"
-                        className="sdp-boto sdp-boto--primari sdp-boto--ple"
+                        className="sdp-boto sdp-boto--ple sdp-boto--marca sdp-boto--google"
                         onClick={googleLogin}
                         disabled={(canviDeModePendent && !simulaLocal) || busyStep !== null}
                         aria-busy={busyStep === 'google' ? 'true' : undefined}
                       >
-                        {busyStep === 'google' ? <LoaderCircle className="sdp-boto__gir" size={18} aria-hidden="true" /> : null}
-                        {tr('section.login.google.boto', 'Entrar amb Google')}
+                        <LogotipGoogle />
+                        <span>{tr('section.login.google.boto', 'Entrar amb Google')}</span>
+                        {busyStep === 'google' ? <LoaderCircle className="sdp-boto__gir" size={18} aria-hidden="true" focusable="false" /> : null}
                       </button>
                     </div>
                     {busyStep === 'google' ? (

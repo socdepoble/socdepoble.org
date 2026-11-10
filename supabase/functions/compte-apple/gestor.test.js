@@ -686,7 +686,9 @@ describe('la frontera de src/ i el README', () => {
   test('el README de supabase/ explica els secrets, el desplegament, el buidatge, el camí manual i el tauler', () => {
     const readme = readFileSync(path.join(ARREL, 'supabase/README.md'), 'utf8');
     const inici = readme.indexOf('## Funció `compte-apple` (revocació d\'Apple)');
-    expect(inici, 'falta la secció').toBeGreaterThan(readme.indexOf('## Vincles'));
+    /* R16-E: «## Vincles» tanca el README; les funcions viuen entre «## Notes» i Vincles. */
+    expect(inici, 'falta la secció').toBeGreaterThan(readme.indexOf('\n## Notes\n'));
+    expect(inici, 'la secció va abans de Vincles').toBeLessThan(readme.indexOf('\n## Vincles\n'));
     /* Els salts de línia del paràgraf no compten. */
     const seccio = readme.slice(inici).replace(/\s+/g, ' ');
     for (const nom of ['APPLE_TEAM_ID', 'APPLE_KEY_ID', 'APPLE_CLIENT_ID', 'APPLE_PRIVATE_KEY', 'APPLE_TESTIMONIS_CLAU', 'SDP_CRON_SECRET']) {

@@ -17,7 +17,8 @@
  *                            Detall, estret? } i les columnes ixen de la URL;
  *                            o, en lloc de columnes, { path, params?, Unica }:
  *                            una sola àrea a tota la caixa (el TPV, 261006)
- *   useClosaAplicacio()    · dins d'una columna: { mida, panellObert, obriPanell, tancaPanells }
+ *   useClosaAplicacio()    · dins d'una columna: { mida, panellObert, obriPanell, tancaPanells,
+ *                            idioma } (idioma: la llengua del text de la closca, R16-F)
  *   useSessioApp()         · el pont de sessió, de només lectura: { estat, teSessio,
  *                            potEscriure, motiu, enLinia, modeProves,
  *                            marca: { nom, logotip, slug } | null, rutaEntrada };

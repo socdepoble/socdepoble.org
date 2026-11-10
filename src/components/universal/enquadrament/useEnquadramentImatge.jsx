@@ -75,6 +75,20 @@ import { MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP } from '../../../utils/pujada
  *     la imatge que ja hi ha (una adreça): el retall ix en el format de la
  *     imatge carregada (FORMAT_DE_LA_FONT), no en JPEG, i un PNG o un WebP
  *     amb transparència no torna amb fons blanc. Sense l'opció, el de sempre.
+ *
+ * P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+ * La CAPÇALERA ja no es retalla (FORMES.capcalera.noDestructiu i
+ * DialegEnquadrament noDestructiu): onEnquadrat rep la foto SENCERA (un
+ * File, 1.200 pel costat llarg de la foto) amb info.enquadrament, el marc,
+ * que qui puja desa al fragment #sdp-crop= de l'adreça que torne la pujada
+ * (useHeroImageHandler, opcions.enquadrament). Re-enquadrar la que ja hi ha
+ * (una adreça) rep un TEXT, la mateixa adreça amb el marc nou, i no puja res
+ * (useImatgeDeFitxa el desa sobre el valor desat). L'ajuda ho diu
+ * (AJUDA_RETALL_SENCERA): la foto es publica sencera. Amb { noDestructiu:
+ * false } (configDeForma i el ganxo), la capçalera de sempre, retallada: la
+ * de les organitzacions, fins que la purga de baixa compare hero_url sense el
+ * fragment (PerfilEditor). L'avatar i el logotip no canvien: Llei del Quadrat
+ * (400 × 400 i 600 × 600 exactes), que ha de reconciliar el Mestre.
  */
 
 /** Pes màxim de la foto que es tria per a una fitxa (el retall que ix és molt més menut). */
@@ -87,6 +101,8 @@ export const ACCEPT_FOTO = TIPUS_FOTO.join(',');
 export const AJUDA_FOTO = 'PNG, JPEG o WebP, fins a 10 MB.';
 /** La línia d'ajuda de davall del títol, com a la finestra de Claude. */
 export const AJUDA_RETALL = 'Arrossega o usa les fletxes per a reposicionar. Usa el lliscador o la roda per a fer zoom.';
+/** P0-80 · La mateixa, quan la foto es guarda sencera: el que queda fora del marc també es publica. */
+export const AJUDA_RETALL_SENCERA = `${AJUDA_RETALL} La foto es guarda sencera: el marc només tria el que es veu, i el que queda fora també es publica.`;
 
 export const ERROR_SENSE_FOTO = 'No has triat cap imatge.';
 export const ERROR_TIPUS_FOTO = 'Només pots pujar fotos PNG, JPEG o WebP.';
@@ -135,6 +151,8 @@ export const FORMES = Object.freeze({
   capcalera: Object.freeze({
     format: PROPORCIO_CAPCALERA.valor, formats: FORMATS_CAPCALERA, mascara: null, titol: 'Retalla la capçalera',
     midaSortida: AMPLADA_CAPCALERA, costatLlarg: AMPLADA_CAPCALERA, conservaExif: true,
+    // P0-80 / IDEA-211 · La foto es puja sencera i el marc va al fragment #sdp-crop=.
+    noDestructiu: true,
   }),
 });
 
@@ -149,6 +167,7 @@ export const PARELLS_DE_SERIE = new Map([
   [FORMES.logotip.titol, Object.freeze(['editor.enquadrament.titolLogotip', FORMES.logotip.titol])],
   [FORMES.capcalera.titol, Object.freeze(['editor.enquadrament.titolCapcalera', FORMES.capcalera.titol])],
   [AJUDA_RETALL, Object.freeze(['editor.enquadrament.ajudaRetall', AJUDA_RETALL])],
+  [AJUDA_RETALL_SENCERA, Object.freeze(['editor.enquadrament.ajudaRetallSencera', AJUDA_RETALL_SENCERA])],
   [AJUDA_FOTO, Object.freeze(['editor.enquadrament.ajudaFoto', AJUDA_FOTO])],
   [ERROR_SENSE_FOTO, Object.freeze(['editor.enquadrament.errorSenseFoto', ERROR_SENSE_FOTO])],
   [ERROR_TIPUS_FOTO, Object.freeze(['editor.enquadrament.errorTipusFoto', ERROR_TIPUS_FOTO])],
@@ -194,16 +213,19 @@ const tipusDe = (font) => tipusDeSortida(typeof Blob !== 'undefined' && font ins
  * GPS (la capçalera d'una persona). Els noms de forma no canvien: menaDeImatge
  * i MIDES (useHeroImageHandler.js) en depenen.
  */
-export function configDeForma(forma, { identitat = false } = {}) {
+export function configDeForma(forma, { identitat = false, noDestructiu = true } = {}) {
   const f = formaDe(forma);
   const delPerfil = identitat || f.avisGpsEliminat === true;
+  /* P0-80 · La forma que no es retalla (la capçalera), si qui crida no ho atura. */
+  const sencera = noDestructiu !== false && f.noDestructiu === true;
   return {
     senzill: true,
     mascara: f.mascara,
     formatInicial: f.format,
     formats: f.formats,
     titol: f.titol,
-    descripcio: AJUDA_RETALL,
+    descripcio: sencera ? AJUDA_RETALL_SENCERA : AJUDA_RETALL,
+    noDestructiu: sencera,
     valida: validaFotoDeFitxa,
     /* Directiva 261024 · `costatLlarg` (la capçalera) passa a l'eixida quan la forma el porta. */
     sortida: (font) => ({
@@ -216,9 +238,9 @@ export function configDeForma(forma, { identitat = false } = {}) {
 }
 
 export function useEnquadramentImatge({
-  forma = 'avatar', config = null, onEnquadrat, onError, extres = null, identitat = false,
+  forma = 'avatar', config = null, onEnquadrat, onError, extres = null, identitat = false, noDestructiu = true,
 } = {}) {
-  const cfg = config || configDeForma(forma, { identitat });
+  const cfg = config || configDeForma(forma, { identitat, noDestructiu });
   const cfgRef = useRef(cfg);
   cfgRef.current = cfg;
   /* P1-22 · El traductor (o null) i el darrer, per als callbacks estables. */
@@ -281,6 +303,7 @@ export function useEnquadramentImatge({
       descripcio={textDeSerie(cfg.descripcio, t)}
       ofereixConservarExif={cfg.avisGpsEliminat !== true && cfg.conservaExif !== false}
       {...(cfg.avisGpsEliminat === true ? { avisaGpsEliminat: true } : null)}
+      {...(cfg.noDestructiu === true ? { noDestructiu: true } : null)}
       onTanca={tanca}
       onDesa={async (fitxer, info, metadades) => {
         /* Bloc 1.2 · La tria de la casella (o res) va a qui puja, com a tercer argument.

@@ -99,7 +99,8 @@ describe('la finestra senzilla del Perfil (useEnquadramentImatge) dins de l’Ap
     const vista = muntaHook('es');
     await obri(vista);
     const d = vista.getByRole('dialog', { name: 'Recorta la cabecera' });
-    expect(d.querySelector('.sdp-dialeg__descripcio').textContent).toBe(ES['editor.enquadrament.ajudaRetall']);
+    // P0-80 · Actualitzada a posta: la capçalera es guarda sencera i l'ajuda ho diu.
+    expect(d.querySelector('.sdp-dialeg__descripcio').textContent).toBe(ES['editor.enquadrament.ajudaRetallSencera']);
     expect(peu(vista)).toEqual(['Restablecer', 'Cancelar', 'Guardar']);
     const allunya = within(d).getByRole('button', { name: 'Alejar' });
     expect(allunya.getAttribute('title')).toBe('Alejar');

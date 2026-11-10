@@ -1568,7 +1568,7 @@ description: "Documentació canònica de Sóc de Poble."
   L'HTML d'entrada és el contingut font publicat de `/legal` (abans de normalitzacions de serialització DOM), no `JSON.stringify(PAGE_COPY.legal)` ni un text copiat de pantalla. Obtindre'l del desplegament que es pretén habilitar i conservar l'artefacte i la captura d'identitat. Si no es pot obtindre amb identitat verificable, el gate no acredita la publicació i les altes continuen aturades.
   L'evidència JSON ha de portar `schema: "sdp.policy-publication-evidence.v1"`, `backend: "supabase"` o `"node0"`, `observedAt` ISO recent (màxim15min), `signupsPaused: true` **només després de verificar operativament totes les portes d'alta**, `currentVersion` i `policy` amb la fila vigent completa (`versio`, `url`, `text_sha256`, `text_complet`, `vigent_des_de`). Per a Node0, afegir `node0Policy` de la seua ruta autenticadora `policy`, amb `privacy.version/url/sha256` coherents. És evidència aportada per l'operador, no una autenticació de l'estat remot feta pel script.
   Lectura del servidor per a `currentVersion` i `policy` (l'operador la captura; el kit no l'executa remotament):
-  `select private.versio_vigent() as "currentVersion", to_jsonb(p) as policy, clock_timestamp() as "observedAt" from public.politiques_privacitat p where p.versio = private.versio_vigent();`
+  `select private.versio_vigent() as "currentVersion", jsonb_build_object('versio', p.versio, 'url', p.url, 'text_sha256', p.text_sha256, 'text_complet', p.text_complet, 'vigent_des_de', p.vigent_des_de) as policy, now() as "observedAt" from public.politiques_privacitat p where p.versio = private.versio_vigent();`
   Comprovar els dos punts d'entrada i repetir el gate immediatament abans de reobrir. Si falta una dada, és antiga, no coincidix, o Node0 encara declara2.5, el procés ix amb codi1. Les proves sintètiques no són autorització ni prova de l'aplicació remota. INVERSA operativa: tornar a aturar altes; no esborra ni reescriu la2.6 segellada.
 
 - `migrations/2611082238_admin_resum_sessions_dispositius.sql`
@@ -2203,10 +2203,6 @@ comptes temporals i els retira en `finally`; no admet una URL remota.
 - El frontend admet `VITE_DATA_MODE=remote|seed|local`; qualsevol altre valor, o cap, és `remote` (`src/config/dataMode.js`).
 - Regenerar el SQL de dades seed és una mutació governada i requerix el segell
   criptogràfic de `canonada.mjs`.
-
-## Vincles
-
-- [[00_index]]
 
 ## Funció `compte-apple` (revocació d'Apple)
 
@@ -2896,3 +2892,7 @@ La 2611082238 conserva intacta la RPC agregada `admin_resum_sessions_dispositius
 Les RPC `estat_curadoria_cultural`, `llista_aportacions_culturals`, `envia_aportacio_cultural` i `revisa_aportacio_cultural` distingixen revisió d’ingestió: `aprovat` no publica res ni incorpora l’aportació a cap servei, i esta migració no connecta cap ingestió. El client només anuncia la capacitat `curadoriaCultural` amb la bandera de build `VITE_SDP_CURADORIA_CULTURAL=1`, que s’ha d’encendre només després d’aplicar esta migració; apagada, /page/nodrir-la-iaia ho diu, no fa cap petició i no recull res. Sense servidor, migració o permís, la interfície mostra l’estat pendent; no fabrica una safata buida ni un èxit. Esta tanda només aporta text/enllaços, sense pujada binària o d’àudio.
 
 La migració no s’ha executat contra cap base de producció. La prova seca `tests/migracions-r15-prevol.test.mjs` l’executa en PostgreSQL WASM (PGlite) amb una fixture sintètica de GoTrue; no acredita Supabase. Requerix revisió i verificació SQL real pel carril integrador. Les proves de transport amb dobles del servidor no acrediten permisos desplegats, assignacions de rol ni ingestió remota.
+
+## Vincles
+
+- [[00_index]]

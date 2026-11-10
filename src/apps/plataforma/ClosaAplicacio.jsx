@@ -40,7 +40,7 @@
  *   · Les rutes de columnes no porten cap classe pròpia ni cap píxel nou: la
  *     geometria és la d'AppGridShell. L'única classe pròpia és la de l'àrea.
  */
-import { useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import AppGridShell, { useAppGrid } from '../../components/layout/AppGridShell.jsx';
@@ -55,6 +55,11 @@ const PANELL_DE = Object.freeze({ esquerra: 'left', mig: 'middle', detall: null 
 const COLUMNA_DE = Object.freeze({ left: 'esquerra', middle: 'mig' });
 /* Només les claus pròpies: 'constructor' no és cap columna. */
 const esColumna = (columna) => typeof columna === 'string' && Object.hasOwn(PANELL_DE, columna);
+
+/* R16-F · La llengua del text de la closca, per a useClosaAplicacio().idioma. És un context propi
+   d'un sol valor, que canvia només quan canvia la llengua: les apps no se subscriuen a tot
+   UIContext. Fora de ClosaAplicacio (una columna muntada a soles), 'ca'. */
+const IdiomaClosa = createContext('ca');
 
 /**
  * La taula d'una ClosaAplicacio: validaRutes amb columnes, i a més el primer
@@ -137,23 +142,27 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
   if (esRutaUnica(ruta)) {
     const { Unica } = ruta;
     return (
-      <div className="sdp-app-unica" role="region" aria-label={titol}>
-        <Unica params={params} />
-      </div>
+      <IdiomaClosa.Provider value={llenguaDelText || 'ca'}>
+        <div className="sdp-app-unica" role="region" aria-label={titol}>
+          <Unica params={params} />
+        </div>
+      </IdiomaClosa.Provider>
     );
   }
   const { Esquerra, Mig, Detall } = ruta;
   return (
-    <AppGridShell
-      aria-label={titol}
-      leftTitle={titols.esquerra || 'Navegació'}
-      middleTitle={titols.mig || 'Llista'}
-      leftColumn={Esquerra ? <Esquerra params={params} /> : null}
-      middleColumn={<Mig params={params} />}
-      rightColumn={<Detall params={params} />}
-    >
-      <PanellEstret columna={ruta.estret || 'mig'} />
-    </AppGridShell>
+    <IdiomaClosa.Provider value={llenguaDelText || 'ca'}>
+      <AppGridShell
+        aria-label={titol}
+        leftTitle={titols.esquerra || 'Navegació'}
+        middleTitle={titols.mig || 'Llista'}
+        leftColumn={Esquerra ? <Esquerra params={params} /> : null}
+        middleColumn={<Mig params={params} />}
+        rightColumn={<Detall params={params} />}
+      >
+        <PanellEstret columna={ruta.estret || 'mig'} />
+      </AppGridShell>
+    </IdiomaClosa.Provider>
   );
 }
 
@@ -163,9 +172,17 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
  *   panellObert · 'esquerra' | 'mig' | null
  *   obriPanell(columna) · 'esquerra' o 'mig'; 'detall' tanca els panells
  *   tancaPanells()
+ *   idioma · R16-F · la llengua del text de la closca (la dels seus títols):
+ *            'ca', 'es', 'en', 'eu' o 'gl'. Una app no pot llegir el context
+ *            de la interfície (fronteres.test.js) i hi tria els seus textos.
+ *            Fora de ClosaAplicacio (una columna muntada a soles), 'ca'. Un
+ *            amfitrió anterior no el dona (undefined): la vista ha de caure
+ *            a 'ca'. És una clau nova del retorn, no un nom del nucli
+ *            (VERSIO_NUCLI no canvia).
  */
 export function useClosaAplicacio() {
   const { mida, panellObert, setPanellObert, tancaPanells } = useAppGrid();
+  const idioma = useContext(IdiomaClosa);
   const obriPanell = useCallback((columna) => {
     if (!esColumna(columna)) return;
     if (PANELL_DE[columna]) setPanellObert(PANELL_DE[columna]);
@@ -175,6 +192,7 @@ export function useClosaAplicacio() {
     mida,
     panellObert: Object.hasOwn(COLUMNA_DE, panellObert ?? '') ? COLUMNA_DE[panellObert] : null,
     obriPanell,
-    tancaPanells
-  }), [mida, panellObert, obriPanell, tancaPanells]);
+    tancaPanells,
+    idioma
+  }), [mida, panellObert, obriPanell, tancaPanells, idioma]);
 }

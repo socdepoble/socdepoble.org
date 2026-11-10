@@ -249,6 +249,13 @@ export class GlobalSaveManager {
     this.oients = new Set();
     this.versionsEstat = new Map();
     this.instantanies = new Map();
+    /* Revisió final R16a (carril FA) · Què sap esta pestanya de la versió que
+       té el Mur de cada nota (versioAlMur): la revisió que hi ha deixat una
+       publicació confirmada (marcaPublicada) o, si després el servidor ha
+       confirmat un desat sense cap publicació coneguda, null. Sense clau, no
+       se sap (publicada en una altra sessió o des d'un altre dispositiu). La
+       nota (taula notes) no guarda cap marca de la versió publicada. */
+    this.revisionsAlMur = new Map();
     if (finestra?.addEventListener) {
       finestra.addEventListener('online', () => this.reprenFallades(['temporal']));
       /* La sessió s'ha renovat (o ha canviat): el que esperava sessió o xarxa ix
@@ -457,6 +464,11 @@ export class GlobalSaveManager {
     this.posaEnQuarantena(key, noDesats);
     const desat = sense(payload, noDesats);
     if (saved) {
+      /* Revisió final R16a (carril FA) · El servidor té un desat que el Mur no
+         té (només el canvia una publicació): sense cap publicació coneguda,
+         ara se sap que el Mur no té la versió de la nota. Amb una, la seua
+         revisió ja no és l'actual (versioAlMur). */
+      if (!this.revisionsAlMur.has(key)) this.revisionsAlMur.set(key, null);
       try {
         this.setRevision(scope, id, saved.revision);
         await this.write(key, current => {
@@ -666,6 +678,7 @@ export class GlobalSaveManager {
     this.cancelaCua(key);
     await this.write(key, () => null);
     this.knownRevisions.delete(key);
+    this.revisionsAlMur.delete(key);
     this.oblidaEstat(key);
   }
 
@@ -682,6 +695,7 @@ export class GlobalSaveManager {
     const conservat = await this.write(key, current =>
       Object.keys(draftFields(current)).length ? current : null);
     this.knownRevisions.delete(key);
+    this.revisionsAlMur.delete(key);
     this.oblidaEstat(key);
     return Object.keys(draftFields(conservat || {}));
   }
@@ -723,11 +737,12 @@ export class GlobalSaveManager {
     if (!String(usuariId ?? '')) return [];
     const claus = new Set([
       ...this.queues.keys(), ...this.knownRevisions.keys(), ...this.problemes.keys(),
-      ...this.quarantenes.keys(), ...this.memoria.keys(), ...this.versionsEstat.keys()
+      ...this.quarantenes.keys(), ...this.memoria.keys(), ...this.versionsEstat.keys(), ...this.revisionsAlMur.keys()
     ].filter(esDeLUsuari));
     for (const key of claus) {
       this.cancelaCua(key);
       this.knownRevisions.delete(key);
+      this.revisionsAlMur.delete(key);
       this.memoria.delete(key);
       this.oblidaEstat(key);
     }
@@ -794,6 +809,28 @@ export class GlobalSaveManager {
       if (!Object.keys(previous).length) return null;
       return (previous._baseRevision ?? 0) < revision ? { ...previous, _baseRevision: revision } : previous;
     });
+  }
+
+  /** Revisió final R16a (carril FA) · Una publicació confirmada (publishNote):
+   * el Mur té la nota tal com és a esta revisió. Avisa: l'editor torna a
+   * pintar el botó de publicar. Una revisió que no és vàlida no marca res. */
+  marcaPublicada(scope, id, revision) {
+    if (!Number.isSafeInteger(revision) || revision < 0) return;
+    const key = `${scope}:${id}`;
+    this.revisionsAlMur.set(key, revision);
+    this.avisa(key);
+  }
+
+  /** Revisió final R16a (carril FA) · Si el Mur té la versió de la nota que el
+   * servidor ha confirmat: true (la publicació confirmada és de la revisió
+   * actual), false (des d'aleshores s'ha desat algun canvi) o null (esta
+   * pestanya no ho sap). Els canvis que encara no han arribat al servidor els
+   * diu l'estat de la cua (estat), no esta funció. */
+  versioAlMur(scope, id, revisioDeLaNota = 0) {
+    const key = `${scope}:${id}`;
+    if (!this.revisionsAlMur.has(key)) return null;
+    const publicada = this.revisionsAlMur.get(key);
+    return publicada !== null && this.getExpectedRevision(scope, id, revisioDeLaNota) === publicada;
   }
 }
 

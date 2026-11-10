@@ -434,7 +434,9 @@ test('el catàleg supabase/README.md la nomena després de 2610220240 i abans de
 
 test('el README explica la funció purga-fitxers al final i la secció de la baixa ja no diu que falta el worker', () => {
   const seccio = README.indexOf('## Funció `purga-fitxers` (cua de fitxers de la baixa)');
-  expect(seccio, 'falta la secció').toBeGreaterThan(README.indexOf('## Vincles'));
+  /* R16-E: «## Vincles» tanca el README; les funcions viuen entre «## Notes» i Vincles. */
+  expect(seccio, 'falta la secció').toBeGreaterThan(README.indexOf('\n## Notes\n'));
+  expect(seccio, 'la secció va abans de Vincles').toBeLessThan(README.indexOf('\n## Vincles\n'));
   const text = README.slice(seccio);
   for (const peca of ['SUPABASE_SERVICE_ROLE_KEY', 'SDP_CRON_SECRET', 'x-sdp-cron', '03:17', '47 * * * *', 'purga_fitxers_max_intents',
     'supabase functions deploy purga-fitxers --no-verify-jwt', 'SDP-PURGA-002', 'update private.purga_storage_pendent set intents = 0']) {

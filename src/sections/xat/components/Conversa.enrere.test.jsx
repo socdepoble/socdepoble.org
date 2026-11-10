@@ -4,7 +4,9 @@
    camp; B3-BACK §6). Amb el calaix d'emoticones damunt (ja apuntat), el primer
    Arrere tanca el calaix i el segon cancel·la la resposta, com els dos Escapes
    de Compositor.emoticones.test.jsx. La geometria fixa de la llista és la de
-   Conversa.test.jsx. Patró: PedraSeca/organismes/Dialeg.enrere.test.jsx. */
+   Conversa.test.jsx. Patró: PedraSeca/organismes/Dialeg.enrere.test.jsx.
+   D-T2b-1 (R16-G) · En estret, l'Arrere cancel·la la resposta i deixa el focus
+   a la llista: no el torna al camp, que reobriria el teclat del mòbil. */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter } from '../../../app/contexts/RouterContext.jsx';
@@ -45,10 +47,10 @@ afterEach(() => {
 let rellotge = 10_000;
 const arrere = () => { let r; act(() => { rellotge += 1000; r = tancaCapaSuperior(rellotge); }); return r; };
 
-function pinta() {
+function pinta(mida = 'ample') {
   return render(
     <MemoryRouter>
-      <AppGridContext.Provider value={{ mida: 'ample' }}>
+      <AppGridContext.Provider value={{ mida }}>
         <Conversa
           fil={FIL} messages={[m('1', 1, 'other'), m('2', 2, 'me')]} onSendMessage={vi.fn().mockResolvedValue(undefined)} onBack={vi.fn()}
           onEnviaAlBloc={vi.fn()} onCopia={vi.fn()} hiHaMes={false} carregantMes={false} onCarregaMes={vi.fn()} onReintenta={vi.fn()}
@@ -118,4 +120,31 @@ test('amb resposta i el calaix d’emoticones damunt, el primer Arrere tanca el 
   expect(document.activeElement).toBe(camp());
   expect(capesEnrereObertes()).toBe(0);
   expect(arrere()).toBe(false);
+});
+
+test('D-T2b-1: en estret, l’Arrere cancel·la la resposta i el focus va a la llista, no al camp; l’Escape del camp continua al camp', () => {
+  pinta('estret');
+  const llista = document.querySelector('.sdp-xat-missatges');
+  respon('1');
+  expect(barra()).toBeTruthy();
+  expect(capesEnrereObertes()).toBe(1);
+  // Amb el focus al camp (el teclat obert), l'Arrere el trau del camp.
+  expect(document.activeElement).toBe(camp());
+  expect(arrere()).toBe(true);
+  expect(barra()).toBeNull();
+  expect(document.activeElement).toBe(llista);
+  expect(document.activeElement).not.toBe(camp());
+  expect(capesEnrereObertes()).toBe(0);
+  // Amb el focus a la ✕, tampoc no va al camp.
+  respon('1');
+  screen.getByRole('button', { name: 'Cancel·la la resposta' }).focus();
+  expect(arrere()).toBe(true);
+  expect(barra()).toBeNull();
+  expect(document.activeElement).toBe(llista);
+  // L'Escape del camp és un gest de teclat: cancel·la i el focus es queda al camp.
+  respon('1');
+  expect(fireEvent.keyDown(camp(), { key: 'Escape' })).toBe(false);
+  expect(barra()).toBeNull();
+  expect(document.activeElement).toBe(camp());
+  expect(capesEnrereObertes()).toBe(0);
 });

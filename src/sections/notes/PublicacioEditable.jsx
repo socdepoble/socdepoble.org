@@ -53,10 +53,17 @@ export function PublicacioEditable({ item }) {
   const { esSuperadmin } = useSuperadminEstable();
   const inicial = useMemo(() => notaDeLaPublicacio(item), [item]);
   /* L'esborrany, per publicació: una altra publicació oberta torna a partir
-     de la seua; una recàrrega de la font (mateix id) no el xafa. */
-  const [estat, setEstat] = useState(() => ({ clau: inicial.id, nota: inicial }));
-  if (estat.clau !== inicial.id) setEstat({ clau: inicial.id, nota: inicial });
+     de la seua; una recàrrega de la font (mateix id) no el xafa.
+     Revisió final R16a (carril FA) · `alMur` és la nota que el Mur té segur:
+     en obrir-la, la mateixa que s'edita (ix de la publicació); després, la
+     que ha enviat l'última publicació que ha acabat bé. */
+  const [estat, setEstat] = useState(() => ({ clau: inicial.id, nota: inicial, alMur: inicial }));
+  if (estat.clau !== inicial.id) setEstat({ clau: inicial.id, nota: inicial, alMur: inicial });
   const nota = estat.clau === inicial.id ? estat.nota : inicial;
+  /* Revisió final R16a (carril FA) · El verd «Publicat» de l'editor vol dir
+     que el Mur té esta versió. Cada canvi fa una nota nova (escriu): qualsevol
+     edició que no ha passat per una publicació bona la deixa «pendent». */
+  const alDia = estat.clau === inicial.id ? estat.nota === estat.alMur : true;
   const viva = useRef(nota);
   viva.current = nota;
   /* La nota adoptada ({ id, revision, lligada }): un reintent no en crea cap altra. */
@@ -64,6 +71,9 @@ export function PublicacioEditable({ item }) {
 
   const escriu = useCallback((id, camp, valor) => {
     if (String(id) !== viva.current.id) return;
+    /* Revisió final R16a (carril FA) · Tornar a escriure el mateix valor no és
+       cap edició: ni nota nova ni botó «pendent». */
+    if (Object.is(viva.current[camp], valor)) return;
     const nova = { ...viva.current, [camp]: valor, ...(camp === 'heroImage' ? { coverImage: valor || undefined } : null) };
     viva.current = nova;
     setEstat((previ) => (previ.clau === nova.id ? { ...previ, nota: nova } : previ));
@@ -134,6 +144,16 @@ export function PublicacioEditable({ item }) {
     return base.publishNote({ ...actual, id, revision, publishedSubmissionId: actual.publishedSubmissionId, isPublished: true });
   }, [actor, base, esSuperadmin, inicial, item, params, setParams, showToast]);
 
+  /* Revisió final R16a (carril FA) · Només una publicació que acaba bé (cap
+     error ni `false`) diu que el Mur té la nota enviada. Si mentrestant s'ha
+     tornat a editar, la nota ja és una altra i el botó continua «pendent». */
+  const publicaIMarca = useCallback(async (doc) => {
+    const enviada = viva.current;
+    const resultat = await publica(doc);
+    if (resultat) setEstat((previ) => (previ.clau === enviada.id ? { ...previ, alMur: enviada } : previ));
+    return resultat;
+  }, [publica]);
+
   /* R51 (P0-46 / IDEA-177), fase A · El mode de traducció d'una publicació
      oberta només el canvia qui la signa o el superadmin estable: la mateixa
      guarda pura de signatura aliena (motiuPublicacioDAltri). Amb motiu,
@@ -157,13 +177,16 @@ export function PublicacioEditable({ item }) {
       escriu(id, camp, nou);
       return Promise.resolve(true);
     },
-    publishNote: publica,
+    publishNote: publicaIMarca,
+    /* Revisió final R16a (carril FA) · La nota en memòria no passa per la cua
+       de desat: si el Mur la té ho diu esta peça, no el gestor (NotesEditor). */
+    versioAlMur: (doc) => (doc?.id != null && String(doc.id) === nota.id ? alDia : null),
     compartirNota: null,
     canviaEstatPublicacio: undefined,
     mouNota: undefined,
     esborraNota: undefined,
     potEsborrar: false
-  } : null), [base, escriu, publica, motiuModeTraduccio, modeTraduccioNomesLocal]);
+  } : null), [base, escriu, publicaIMarca, motiuModeTraduccio, modeTraduccioNomesLocal, nota.id, alDia]);
 
   if (!valor) return null;
   return (

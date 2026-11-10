@@ -20,6 +20,7 @@ import { handleError } from './utils.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable } from '../errorsBackend.js';
 import { tempsLimitPujada } from '../xatMultimedia.js';
 import { controlStorageDe, informaReconciliacioStorage } from './controlStorage.js';
+import { conservaEnquadrament, llevaEnquadrament } from '../../utils/enquadramentUrl.js';
 
 /* Límits per fitxer (ARQ-G07): 25 MiB al bucket privat, 5 MiB al públic. */
 const MIDA_MAX_PRIVADA = 26214400;
@@ -443,7 +444,7 @@ const camiNet = (cami) => !cami.endsWith(' ') && cami.split('/').every(segmentNe
  * @param {string} ref - Referència opaca, ex. sdp-media://mitjans_privats/tenant_id/user_id/...
  * @param {object} config
  */
-export const resolveAsset = async (ref, config = {}) => {
+const resolAssetSenseMarc = async (ref, config = {}) => {
   if (!ref || typeof ref !== 'string') return ref;
   if (!ref.startsWith('sdp-media://')) return ref; // Backwards compatibility
 
@@ -486,7 +487,7 @@ export const resolveAsset = async (ref, config = {}) => {
  * @param {object} config
  * @returns {Promise<string>} La nova referència promoguda
  */
-export const promoteToPublic = async (ref, config = {}) => {
+const promouSenseMarc = async (ref, config = {}) => {
   if (!ref || typeof ref !== 'string') return ref;
   if (!ref.startsWith('sdp-media://mitjans_privats/')) return ref; 
   
@@ -525,6 +526,15 @@ export const promoteToPublic = async (ref, config = {}) => {
 
   return `sdp-media://mitjans/${path}`;
 };
+
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+   Una capçalera desada porta el seu marc al fragment #sdp-crop= de la
+   referència (utils/enquadramentUrl.js). El fragment no és del camí: es
+   resol i es promou la base, amb la mateixa guarda F5 (camiNet), i l'adreça
+   que en ix torna amb el marc, perquè qui la pinta el sàpia. Un fragment que
+   no és el nostre continua sense passar (un '#' al camí, tal qual). */
+export const resolveAsset = async (ref, config = {}) => conservaEnquadrament(await resolAssetSenseMarc(llevaEnquadrament(ref), config), ref);
+export const promoteToPublic = async (ref, config = {}) => conservaEnquadrament(await promouSenseMarc(llevaEnquadrament(ref), config), ref);
 
 /* ═══ Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) ═══
    LA BIBLIOTECA DE FOTOS PRÒPIES (capacitat 'mitjansPropis', contracte.js).

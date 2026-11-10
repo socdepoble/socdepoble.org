@@ -25,7 +25,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   afig, afigPerNom, afigPropostes, amagaSeccio, commuta, creaArticlePropi, creaLlista, esborraArticlePropi, esborraLlista,
-  estatInicial, lleva, marcaACasa, marcaComprat, mouSeccio, normalitzaEstat, reanomenaLlista, restableixSeccions, triaLlista
+  estatInicial, fusionaLlistaCompartida, lleva, marcaACasa, marcaComprat, mouSeccio, normalitzaEstat, reanomenaLlista,
+  restableixSeccions, triaLlista
 } from './nucli/index.js';
 import { afigIngredientsRecepta } from './trasllatRecepta.js';
 
@@ -132,6 +133,16 @@ export function useNevera(magatzem) {
       restableixSeccions: fes(restableixSeccions),
       triaLlista: fes(triaLlista),
       creaLlista: (nom) => (aplica((actual) => creaLlista(actual, nom)) ? estatRef.current.darreraLlista : null),
+      /* R16-F · Una llista compartida a la llista `llistaId`: { afegits, conservats, descartats },
+         o null si ara no es pot escriure (el disc sense llegir o una altra pestanya escriu). */
+      fusionaLlistaCompartida: (llistaId, paquet) => {
+        let resum = null;
+        aplica((actual) => {
+          resum = fusionaLlistaCompartida(actual, llistaId, paquet);
+          return resum.estat;
+        });
+        return resum && { afegits: resum.afegits, conservats: resum.conservats, descartats: resum.descartats };
+      },
       /** Substituïx totes les dades per les d'una còpia (ja llegida amb llegixCopia). */
       importa: (nou) => aplica(() => normalitzaEstat(nou)),
       esborraTot: () => aplica(() => estatInicial()),

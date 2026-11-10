@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 
 import { compressImage } from '../utils/imageUtils.js';
+import { ambEnquadrament } from '../utils/enquadramentUrl.js';
 import {
   MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP, fitxerDeDataUrl, fotoDinsDelPressupost,
 } from '../utils/pujadaImatge.js';
@@ -132,7 +133,12 @@ export default function useHeroImageHandler({
      logotip no en porta mai: no té casella i, en Safari 16, ix en PNG.
      P1-64 (pla 261028_1526 §3.1.1) · `opcions.precisio` ('exacta', '100m' o
      'poble', les píndoles del diàleg) va amb `conservaExif`: la ubicació que
-     porta el fitxer ix arrodonida (fotoDinsDelPressupost). Sense, l'exacta. */
+     porta el fitxer ix arrodonida (fotoDinsDelPressupost). Sense, l'exacta.
+     P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · `opcions.enquadrament`
+     ({ format, zoom, cx, cy }, el marc del DialegEnquadrament noDestructiu):
+     el fitxer és la foto SENCERA i el valor que es desa és l'adreça de la
+     pujada (o el data URL) amb el marc al fragment #sdp-crop=
+     (ambEnquadrament). Sense, o amb null, el valor de sempre. */
   const processaFitxer = async (file, opcions) => {
     if (!file) return false;
     const pesMaxim = Number(opcions?.pesMaxim) > 0 ? Number(opcions.pesMaxim) : maxSizeBytes;
@@ -149,9 +155,11 @@ export default function useHeroImageHandler({
       const exif = opcions?.conservaExif === true
         ? { conservaExif: true, original: opcions.original || null, ...(opcions.precisio ? { precisio: opcions.precisio } : null) }
         : null;
-      const valor = mena === 'logotip'
+      const pujat = mena === 'logotip'
         ? await valorDelLogotip(file, maxSize, fieldName, onImageUpload)
         : await valorDeLaFoto(file, maxSize, fieldName, onImageUpload, exif);
+      /* P0-80 / IDEA-211 · La foto sencera i el seu marc, a l'adreça. */
+      const valor = opcions?.enquadrament ? ambEnquadrament(pujat, opcions.enquadrament) : pujat;
 
       if (massaGranPerDesar(valor)) {
         throw new Error("La imatge no s'ha pogut pujar al servidor i és massa gran (més de 150KB) per desar-la directament.");

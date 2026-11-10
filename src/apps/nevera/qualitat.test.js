@@ -65,6 +65,8 @@ describe('el cens', () => {
       /* Onada 12 (261011; ordres 261011_0130, punt 6) · Les receptes amb el que hi ha al rebost. */
       'nucli/ingredients.js', 'nucli/receptes.js', 'nucli/recomanador.js', 'vistes/perReceptes.js', 'vistes/Receptes.jsx',
       'nucli/ingredients.test.js', 'nucli/recomanador.test.js', 'vistes/perReceptes.test.js', 'Receptes.test.jsx',
+      /* R16-F (261110) · Compartir la llista de la compra (el nucli, la vista i les proves). */
+      'nucli/comparticio.js', 'vistes/ComparticioLlistaCompra.jsx', 'nucli/comparticio.test.js', 'ComparticioLlista.test.jsx',
       'nucli/nevera.test.js', 'nucli/copia.test.js', 'nucli/productes.test.js', 'importador.test.js', 'magatzem.test.js',
       'vistes/vestits.test.js', 'vistes/perTemporada.test.js', 'AppNevera.test.jsx', 'Temporada.test.jsx',
       'frontera.test.js', 'qualitat.test.js'

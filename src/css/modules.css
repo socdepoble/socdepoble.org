@@ -3381,6 +3381,26 @@ details[open] summary.accordion-header svg:last-child {
   @media (hover: hover) and (pointer: fine) {
     .sdp-bloc-action:hover:not(:disabled) { background: var(--sdp-accent-hover); }
   }
+  /* R16-T (P0-80 / IDEA-211, ordre del Mestre del 261109) · Quan l'editor sap
+     l'estat del document (publishState de UniversalToolbar), el botó el diu:
+     blau i «Publicar» si és privat o té canvis que el servidor encara no ha
+     confirmat; verd i «Publicat» si és públic i tot hi ha arribat. El blau és
+     el de control (--sdp-accio-control, el de .sdp-boto--primari): el blanc hi
+     passa l'AA, que sobre --sdp-accio no arriba (3,87:1). El verd, --sdp-exit
+     amb el blanc que no s'invertix (5,19:1), no canvia en passar-hi el ratolí.
+     Sense estat (una nota que es compartix), la pastilla taronja de sempre. */
+  .sdp-bloc-action--publicar {
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-bloc-action--publicat {
+    background: var(--sdp-exit);
+    color: var(--sdp-sobre-color);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-bloc-action--publicar:hover:not(:disabled) { background: var(--sdp-accio-control-hover); }
+    .sdp-bloc-action--publicat:hover:not(:disabled) { background: var(--sdp-exit); }
+  }
   [data-compact="true"] > .sdp-bloc-action {
     width: var(--sdp-bloc-control);
     padding-inline: 0;
@@ -14822,6 +14842,14 @@ details[open] summary.accordion-header svg:last-child {
     min-width: 0;
   }
 
+  /* P0-74 (ordre del Mestre, captura del 09/11 a les 20:00; R16-I) · Amb la columna de la pàgina a
+     ~520-560 px (les tres columnes de l'esquerra i les DevTools obertes), «📦 Empaquetats i
+     Desplegament» ixia per la dreta. Revisió final R16a (troballa 2) · La taula d'Artefactes ja va
+     dins de .sdp-admin-taxonomia__table-wrap, com les d'Importació: en estret fa scroll dins del
+     panell i cap paraula no es trossija (la directriu del 261025: el break-word de sdp.css, mai
+     anywhere). La @container que partia el <code> i les capçaleres d'esta taula ja no tenia res a
+     casar i s'ha llevat. */
+
   .sdp-admin-taxonomia__section h3,
   .sdp-admin-taxonomia__panel h3,
   .sdp-admin-taxonomia__simulador h3 {
@@ -14923,6 +14951,15 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-fons-targeta);
   }
 
+  /* Revisió final R16a (troballa 2) · La taula d'Artefactes (PanellsAdministracioSistema) fa scroll
+     com les d'Importació, però sense la capsa: la vora d'1px i els cantons de la capsa la movien i
+     la retallaven també en ample, on hi cap (Llei del Píxel). */
+  .sdp-admin-taxonomia__table-wrap--sense-marc {
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+
   .sdp-admin-table,
   .sdp-table {
     width: 100%;
@@ -15008,6 +15045,35 @@ details[open] summary.accordion-header svg:last-child {
     }
   }
 
+  /* P0-74 · Dins de l'Administració, la llista és contenidor d'ella mateixa i col·lapsa per la seua
+     amplària, no per la del visor: davall de 24rem, cada dt i cada dd ocupa la fila sencera (el
+     mateix que feia el @media de dalt). El mínim de la segona columna ja no és el de contingut: una
+     URL dins de <code> (break-word, que no rebaixa l'amplària mínima) eixamplava la llista i la fitxa
+     sencera. Però sí que en té un, de 14rem (el que resta si no hi cap): la primera columna (auto)
+     creix fins al dt més llarg abans que la fr reba res, i sense mínim un dt llarg (572 px al «🧠 Com
+     funciona el Node 0») deixava el dd a 0 px, lletra a lletra. A HEAD el mínim era, per atzar, el
+     <code> més llarg del dd (218 px). Una llista no porta cap títol ni paràgraf de mida fluida (cqi).
+     Va darrere del @media i amb :where(), amb l'especificitat de .sdp-admin-dl: fora de
+     l'Administració res no canvia. */
+  :where(.sdp-admin-taxonomia) .sdp-admin-dl {
+    grid-template-columns: minmax(9rem, auto) minmax(min(14rem, calc(100% - 9rem - var(--sdp-space-4))), 1fr);
+    container: sdp-admin-dl / inline-size;
+  }
+
+  /* En mòbil, una columna com sempre, també als navegadors sense @container (Baseline 2022). */
+  @media (max-width: 640px) {
+    :where(.sdp-admin-taxonomia) .sdp-admin-dl {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @container sdp-admin-dl (max-width: 24rem) {
+    .sdp-admin-dl > dt,
+    .sdp-admin-dl > dd {
+      grid-column: 1 / -1;
+    }
+  }
+
   .sdp-admin-dl dt {
     font-weight: 700;
     color: var(--sdp-text-titol);
@@ -15061,15 +15127,26 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-fons-superficie);
   }
 
+  /* P0-74 · Amb la columna de la pàgina estreta (47rem ≈ 42rem de panell), una sola columna: el QR
+     damunt de la fitxa i els avisos push damunt de la conformitat, en lloc de dues de 16rem. */
+  @container (max-width: 47rem) {
+    .sdp-admin-botiga-detall {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   .sdp-admin-botiga-detall__qr {
     display: grid;
     justify-items: center;
     gap: var(--sdp-space-2);
   }
 
+  /* P0-74 · La columna de la fitxa no creix amb el contingut (una ruta llarga en un paràgraf). */
   .sdp-admin-botiga-detall__info {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sdp-space-2);
+    overflow-wrap: break-word;
   }
 
   .sdp-admin-qr__svg {
@@ -15701,3 +15778,62 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 /* ═══ FI DEL BLOC sessionsDispositius ═══ */
+
+/* ═══ BLOC ENQUADRAMENT NO DESTRUCTIU · P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) ═══
+   Una foto pujada és sencera i el marc que tria la persona viu al fragment
+   #sdp-crop= de la seua adreça. useEnquadramentDeImatge (src/hooks) el llig i
+   escriu, des d'una ref, --enquadrament-x i -y (object-position i
+   transform-origin, en %), --enquadrament-zoom (l'ampliació), --enquadrament-retall
+   (el clip-path inset() que deixa la foto ampliada dins de la seua caixa,
+   sense dependre del contenidor) i, en la portada, --enquadrament-forma (la
+   forma del marc). Fins que la foto carrega, centrada i sense ampliar.
+   Pes (0,2,1): guanya a les regles de les caixes (.sp-card-media,
+   .sdp-consola__targeta .sp-card-media, .sdp-gestor-fitxa__imatge), que
+   només en donaven la mida, el cover i l'ancoratge. Una imatge sense
+   fragment no porta la classe: cap píxel canvia. */
+@layer components {
+  img.sdp-imatge-enquadrada[src] {
+    object-fit: cover;
+    object-position: var(--enquadrament-x, 50%) var(--enquadrament-y, 50%);
+    transform-origin: var(--enquadrament-x, 50%) var(--enquadrament-y, 50%);
+    transform: scale(var(--enquadrament-zoom, 1));
+    clip-path: var(--enquadrament-retall, none);
+  }
+  /* La portada (.hero-image, el visor de la publicació, la ranura de
+     l'editor): la caixa pren la forma del marc, a l'amplada de sempre. */
+  img.sdp-imatge-enquadrada--marc[src] {
+    aspect-ratio: var(--enquadrament-forma, auto);
+  }
+  /* Revisió final R16a (troballa 1, WCAG 2.4.7) · Amb un zoom per damunt d'1,
+     el clip-path de dalt retalla també l'outline: la capçalera editable
+     ampliada no pot ser ella el control enfocable. UniversalEditorShell
+     (ImageUploaderUI) l'embolcalla llavors en un <button> sense pell que no es
+     retalla i rep l'anell de sempre (base.css, per fora). Com
+     .sdp-visor__obridor (components.css): sense vora, fons, farciment ni el
+     mínim de --sdp-touch de tot botó, i sense l'encongiment en prémer. Ocupa
+     l'amplada de la ranura, com la caixa on es pinta la foto: una amplada
+     ajustada a la foto (fit-content) la tornava a calcular contra el botó i
+     l'alçada canviava una fracció de píxel. Sense focus, cap píxel no canvia
+     (Llei del Píxel). Només la foto rep el punter: als costats d'una miniatura
+     centrada (l'«Edició avançada»), un clic no obri res, com abans. */
+  .sdp-hero__obridor {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    appearance: none;
+    transform: none;
+    pointer-events: none;
+  }
+  .sdp-hero__obridor > img {
+    pointer-events: auto;
+  }
+}
+/* ═══ FI DEL BLOC ENQUADRAMENT NO DESTRUCTIU ═══ */

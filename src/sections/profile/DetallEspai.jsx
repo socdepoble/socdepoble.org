@@ -209,8 +209,13 @@ export function DetallNodes({ persona, nodes = [], estat, etiquetaEstat }) {
 export function DetallAdministracio({ item, children }) {
   const datesBarra = datesDAdministracio(item);
   const ambEntradilla = typeof item?.entradilla === 'string' && item.entradilla.trim() !== '';
+  /* P0-74 (R16-I) · Cada apartat és una pàgina nova. Sense clau, React reaprofitava el contenidor
+     que fa scroll i el nou apartat s'obria a l'altura on s'havia deixat l'anterior; amb la clau
+     el contenidor es torna a muntar i comença a dalt, sense cap cerca global al document. */
+  const clauApartat = item?.id || item?.title || 'admin';
   return (
     <UniversalPage
+      key={clauApartat}
       chrome="context"
       layout="contained"
       title={item?.title || 'Administració del sistema'}

@@ -996,10 +996,22 @@ function ambVariantSocial(url, cami) {
   return variant ? new URL(variant, url.origin).href : url.href;
 }
 
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+   Una capçalera desada és la foto sencera amb el marc al fragment #sdp-crop=
+   (utils/enquadramentUrl.js · llevaEnquadrament, la mateixa regla: el primer
+   '#' i només si és el nostre; esta fulla no importa res). Un rastrejador no
+   pinta CSS ni rep mai el fragment: la imatge social és la foto SENCERA
+   (decisió del carril 5, R16), i el fragment no fa caure una pujada del bucket
+   públic en 'cami'. */
+const senseMarc = (text) => {
+  const posicio = text.indexOf('#');
+  return posicio !== -1 && text.startsWith('#sdp-crop=', posicio) ? text.slice(0, posicio) : text;
+};
+
 /* { url } o { motiu }: la regla d'urlSocialDe, amb el perquè. */
 function analitza(ref, { origen, supabaseUrl, permesos } = {}) {
   if (typeof ref !== 'string' || ref.trim() === '') return { motiu: 'no-analitzable' };
-  const text = ref.trim();
+  const text = senseMarc(ref.trim());
   if (text.length > MAXIM_REFERENCIA) return { motiu: 'llargaria' };
   if (CARACTER_PROHIBIT.test(text) || CODI_DE_CAMI.test(text) || segmentsDeRetorn(text)) return { motiu: 'cami' };
   if (MITJA_PRIVAT.test(text)) return { motiu: 'privat' };

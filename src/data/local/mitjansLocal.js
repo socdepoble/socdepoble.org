@@ -14,6 +14,7 @@
  * llista és buida i esborrar rebutja amb 'no-disponible'.
  */
 import { CODI_SEGON_FACTOR } from '../errorsBackend.js';
+import { conservaEnquadrament, llevaEnquadrament } from '../../utils/enquadramentUrl.js';
 
 const PREFIX = 'sdp-media://';
 const BUCKET_PUBLIC = 'mitjans';
@@ -105,23 +106,27 @@ export function creaMitjansLocal(e) {
     /* Una URL externa o un valor que no és una referència es tornen tal qual;
        una referència que este node no té (o que no és teua, si és privada),
        també: les peces que la pinten descarten el que torna encara opac. */
-    async resolveAsset(ref) {
+    /* P0-80 / IDEA-211 · Com storage.js: el marc (#sdp-crop=) no és del camí; es
+       resol la base i l'adreça torna amb el marc. */
+    async resolveAsset(refAmbMarc) {
+      const ref = llevaEnquadrament(refAmbMarc);
       const parts = delaRef(ref);
-      if (!parts || !visible(ref, parts.bucket)) return ref;
+      if (!parts || !visible(ref, parts.bucket)) return refAmbMarc;
       const uid = e.usuari()?.id;
       const url = await urlDe(ref);
       // La identitat pot canviar durant blob.arrayBuffer(). Revalida en acabar.
       return visible(ref, parts.bucket)
-        && (parts.bucket !== BUCKET_PRIVAT || e.usuari()?.id === uid) ? url : ref;
+        && (parts.bucket !== BUCKET_PRIVAT || e.usuari()?.id === uid) ? conservaEnquadrament(url, refAmbMarc) : refAmbMarc;
     },
 
-    async promoteToPublic(ref) {
-      if (typeof ref !== 'string' || !ref.startsWith(`${PREFIX}${BUCKET_PRIVAT}/`)) return ref;
+    async promoteToPublic(refAmbMarc) {
+      const ref = llevaEnquadrament(refAmbMarc);
+      if (typeof ref !== 'string' || !ref.startsWith(`${PREFIX}${BUCKET_PRIVAT}/`)) return refAmbMarc;
       const parts = delaRef(ref);
-      if (!parts || !visible(ref, BUCKET_PRIVAT)) return ref;
+      if (!parts || !visible(ref, BUCKET_PRIVAT)) return refAmbMarc;
       const publica = `${PREFIX}${BUCKET_PUBLIC}/${parts.cami}`;
       if (!objectes.has(publica)) objectes.set(publica, { ...objectes.get(ref) });
-      return publica;
+      return conservaEnquadrament(publica, refAmbMarc);
     },
 
     async llistaElsMeusMitjans() {

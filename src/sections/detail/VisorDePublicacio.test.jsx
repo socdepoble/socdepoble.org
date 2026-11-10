@@ -21,6 +21,8 @@
  *   · Fora del Mur, i amb una portada opaca (sdp-media://), com abans.
  */
 import React from 'react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { act, cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import '../../../tests/helpers/diccionaris.js';
@@ -68,7 +70,7 @@ vi.mock('../../app/contexts/SessionContext', () => ({
 vi.mock('../../hooks/useSEO.js', () => ({ useSEO: () => {} }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import ItemDetailSection from './ItemDetailSection.jsx';
-import { fotosDeLaPublicacio } from './VisorDePublicacio.jsx';
+import { VisorDePublicacio, fotosDeLaPublicacio } from './VisorDePublicacio.jsx';
 import { MARKET_ITEMS } from '../../data/sectionContent.js';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
 import fontPortada from './detailSectionMeta.jsx?raw';
@@ -392,5 +394,40 @@ describe('i18n del botó', () => {
       expect([code, valor === clau]).toEqual([code, false]);
       if (code !== 'ca') expect([code, valor === OBRI]).toEqual([code, false]);
     }
+  });
+});
+
+/* Revisió final R16a (troballa 1, el mateix defecte a la lectura; WCAG 2.4.7) · Una portada amb
+   marc (#sdp-crop=) porta transform i clip-path (modules.css, ENQUADRAMENT NO DESTRUCTIU): la foto
+   es pinta en una capa pròpia, damunt de l'anell per dins del botó, que no es veia ni amb zoom 1
+   (mesurat amb Chrome i Tab real a eines_fc: 0 píxels de l'anell a 375, 768 i 1440). Amb marc, el
+   botó porta --enquadrat i l'anell es pinta en un ::after posicionat, damunt de la foto. Sense marc,
+   la classe de sempre. */
+describe('R16a · la portada amb marc: l’anell del botó, per damunt de la foto', () => {
+  test('amb marc, el botó porta --enquadrat (també amb zoom 1); sense, la classe de sempre', () => {
+    const portada = (src) => <VisorDePublicacio fotos={[src]} dades={{ titol: 'Aplec' }} etiquetaObri={OBRI} alt="Aplec 2023" />;
+    for (const zoom of ['1', '1.5']) {
+      const { container, unmount } = render(portada(`/assets/aplec.webp#sdp-crop=format=16%3A9&zoom=${zoom}&cx=0.5&cy=0.5`));
+      const boto = container.querySelector('button');
+      expect(boto.className).toBe('sdp-visor__obridor sdp-visor__obridor--enquadrat');
+      expect(boto.firstElementChild.classList.contains('sdp-imatge-enquadrada')).toBe(true);
+      unmount();
+    }
+    const { container } = render(portada('/assets/aplec.webp'));
+    expect(container.querySelector('button').className).toBe('sdp-visor__obridor');
+    expect(container.querySelector('img').className).toBe('');
+  });
+
+  test('CSS: el ::after posicionat, amb el mateix anell per dins i sense punter, dins del bloc VISOR D’IMATGES', () => {
+    const font = readFileSync(path.join(process.cwd(), 'src/css/components.css'), 'utf8');
+    const inici = font.indexOf("VISOR D'IMATGES ──");
+    const bloc = font.slice(inici, font.indexOf('/* ── ', inici + 10)).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+    expect(bloc).toContain('.sdp-visor__obridor--enquadrat { position: relative; }');
+    const selector = '.sdp-visor__obridor--enquadrat:focus-visible::after {';
+    const regla = bloc.slice(bloc.indexOf(selector) + selector.length, bloc.indexOf('}', bloc.indexOf(selector))).trim();
+    expect(regla).toBe("content: ''; position: absolute; inset: 0; outline: var(--sdp-focus-gruix) solid var(--sdp-focus); "
+      + 'outline-offset: calc(-1 * var(--sdp-focus-gruix)); pointer-events: none;');
+    // L'anell de sempre del botó, el mateix gruix, color i separació.
+    expect(bloc).toContain('.sdp-visor__obridor:focus-visible { outline: var(--sdp-focus-gruix) solid var(--sdp-focus); outline-offset: calc(-1 * var(--sdp-focus-gruix));');
   });
 });

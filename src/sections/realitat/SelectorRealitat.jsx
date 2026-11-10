@@ -40,7 +40,9 @@ const NIVELLS = [
   },
   {
     id: 3, etiqueta: 'Connexió total', Icona: Network, descripcio: "Tots els agents del Mas t'acompanyen alhora, sense triar-los.",
-    estat: "El Mas connectat en comunitat plena. Tots els assistents (la IAIA MarIA, El Gall del temps, El Pregoner, L'Artiste Nano Banana...) col·laboren automàticament per dinamitzar i cuidar el poble.",
+    /* P0-72 / IDEA-203 · Fora la llista d'assistents purgats (El Gall, El
+       Pregoner i Nano Banana): el text no en nomena cap. */
+    estat: "El Mas connectat en comunitat plena. Tots els assistents col·laboren automàticament per dinamitzar i cuidar el poble.",
     detall: 'Comunitat plena · Tot el Mas al teu servei'
   }
 ];
@@ -89,8 +91,8 @@ export default function SelectorRealitat() {
   /* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL del
      catàleg són IA) · Els acompanyants són els agents que el catàleg classifica
      com a IA (tipusDAgent, la font única de data/agentsSeed.js): les IA i els
-     personatges ANIMAL (hui, Marc el Gall: planter oficial de cinc, pla
-     261021_0015 §12). Abans era una
+     personatges ANIMAL (hui, només la IAIA MarIA: P0-72 / IDEA-203, ordre
+     del Mestre del 09-11-2026). Abans era una
      quarta còpia del vocabulari (AI o MASTER) que els deixava fora. Cap agent
      del catàleg porta el tipus MASTER (és l'abast, `scope`, de la IAIA, de Javi
      i de l'entitat), i un tipus desconegut és una persona: no hi entra. */

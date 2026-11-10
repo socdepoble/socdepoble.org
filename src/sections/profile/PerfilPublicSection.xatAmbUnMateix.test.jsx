@@ -182,12 +182,18 @@ test('xat-flux-04 · una IA de la qual eres propietari (la IAIA en llavor) conse
   expect(rutaDelXatDeLaIAIA('seed', false)).toBe(`/xat?amb=${IAIA_ID}`);
 });
 
-test('xat-flux-04 · una altra IA pròpia (un agent del catàleg) conserva «Parla amb…»', async () => {
-  const agent = AGENTS_MAP.NANOBANANA;
+/* Expectativa actualitzada a propòsit (P0-72 / IDEA-203) · Abans ho provava un
+   assistent del catàleg (Nano Banana), que ja no hi és: ara, la IA d'una
+   entitat que administres (una fitxa sintètica de prova, com les que el
+   servidor torna per a les IA de les entitats). La branca genèrica «Parla amb
+   {nom}» continua viva per a totes les IA que no són la IAIA. */
+test('xat-flux-04 · una altra IA pròpia (la d’una entitat, no la IAIA) conserva «Parla amb…»', async () => {
+  const agent = Object.freeze({ id: '7e6d5c4b-3a29-4180-9f7e-6d5c4b3a2918', name: 'Assistent de la Colla' });
   mocks.id = agent.id;
   mocks.load.mockResolvedValue({ ...BASE, tipus: 'ia', id: agent.id, slug: null, nom: agent.name, esIA: true, propietari: true });
   render(<PerfilPublicSection agents={[]} />);
   await screen.findByRole('heading', { level: 1, name: agent.name });
+  expect(screen.queryByRole('button', { name: 'Parla amb la IAIA' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: `Parla amb ${agent.name}` }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(`/xat?amb=${agent.id}`);
 });

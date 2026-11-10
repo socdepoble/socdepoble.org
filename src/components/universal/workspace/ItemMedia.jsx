@@ -2,6 +2,7 @@ import { useContext, useState } from 'react';
 import {
   useResolvedAssetState
 } from '../../../hooks/useResolvedAsset.js';
+import { ambClassesDelMarc, useEnquadramentDeImatge } from '../../../hooks/useEnquadramentDeImatge.js';
 import { GlifCategoriaContext, emojiInicial, esGlif, primerGlif } from './NavGlyph.jsx';
 import { emojiSol } from '../../../utils/emoji.js';
 
@@ -14,17 +15,25 @@ import { emojiSol } from '../../../utils/emoji.js';
 const CLASSE_INICIAL = 'sdp-gestor-fitxa__inicial';
 const CLASSE_EMOJI_XL = `${CLASSE_INICIAL} sdp-fitxa-emoji-xl`;
 
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+   La miniatura d'una nota o d'una fitxa amb la capçalera sencera i el seu marc
+   (#sdp-crop=, que el port conserva) ensenya el que ensenyava el retall
+   d'abans en el seu quadrat (useEnquadramentDeImatge, la caixa mesurada).
+   Sense fragment, l'<img> de sempre. */
 function ResolvedImage({ src, fallback }) {
   const [failed, setFailed] = useState(false);
+  const pintor = useEnquadramentDeImatge(src, { caixa: 'mesura' });
 
   if (failed) return fallback;
 
   return (
     <img
-      className="sdp-gestor-fitxa__imatge"
-      src={src}
+      ref={pintor.ref}
+      className={ambClassesDelMarc('sdp-gestor-fitxa__imatge', pintor.className)}
+      src={pintor.src}
       alt=""
       loading="lazy"
+      onLoad={pintor.onLoad}
       onError={() => setFailed(true)}
     />
   );

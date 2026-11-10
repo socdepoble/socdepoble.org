@@ -191,6 +191,9 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
   membres: Object.freeze([])
 })]);
 
+/* P0-72 / IDEA-203 (ordre del Mestre, 09-11-2026) · El padró d'agents d'IA
+   del paquet és només la IAIA MarIA, l'única IA del Mas: cap bot secundari
+   (agentsSeed.js · AGENTS_MAP). */
 export const AGENTS_IA_SEED = Object.freeze([Object.freeze({
   id: IAIA_ID,
   slug: 'iaia-maria',

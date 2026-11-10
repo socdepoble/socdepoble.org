@@ -27,6 +27,7 @@ import { COMPRA } from './constants.js';
 import { llistaDelCami, textArticles, useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
 import { AvisCatalegMercadona, ComparadorMercadona, useMercadona } from './Mercadona.jsx';
+import { ComparticioLlistaCompra } from './ComparticioLlistaCompra.jsx';
 import { RecepcioRecepta } from './RecepcioRecepta.jsx';
 import {
   articlesVestits, entradetaDe, liniesVestides, perArticle, productesALaGraella, seccionsDe, subtitolDe, suggerimentsVestits
@@ -91,7 +92,13 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
       onTria={(linia) => accions.marcaComprat(llista.id, linia.articleId)}
       onEdita={ambEdicio ? (linia) => obriDetall(linia.articleId) : undefined}
       textos={TEXTOS_LLISTA}
-      avis={<RecepcioRecepta llista={llista} />}
+      avis={(
+        <>
+          <RecepcioRecepta llista={llista} />
+          {/* R16-F · Compartir la llista i rebre'n una (#compartida=…). */}
+          <ComparticioLlistaCompra key={llista.id} llista={llista} />
+        </>
+      )}
       peu={<AvisNevera />}
       primer={COMPRA.primer}
       tram={COMPRA.tram}

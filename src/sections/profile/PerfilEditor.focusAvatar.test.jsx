@@ -203,5 +203,6 @@ test('Auditoria 261007 · la capçalera desada no mou el focus a l’avatar ni a
   expect(botoAvatar()).not.toBeNull();
   expect(document.activeElement).not.toBe(botoAvatar());
   expect(ranura()).toBeNull();
-  expect(m.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ hero_url: '/assets/nou.webp' }), CONFIG);
+  // P0-80 · Actualitzada a posta: la capçalera es desa sencera, amb el marc al fragment.
+  expect(m.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ hero_url: '/assets/nou.webp#sdp-crop=format=1%3A1&zoom=1&cx=0.5&cy=0.5' }), CONFIG);
 });

@@ -460,7 +460,8 @@ describe('l’espècimen del catàleg · els tres modes senzills', () => {
       const casos = [
         ['Avatar en cercle', 'Retalla la foto', true, '400 × 400 px exactes, avatar en cercle'],
         ['Logotip quadrat (600 × 600)', 'Retalla el logotip', false, '600 × 600 px exactes, logotip quadrat'],
-        ['Capçalera de forma lliure (1.200 pel costat llarg)', 'Retalla la capçalera', false, '1200 × 1200 px, 1200 pel costat llarg, capçalera en 1:1'],
+        /* P0-80 · Actualitzada a posta: re-enquadrar una adreça no fa cap fitxer; el marc va a l'adreça. */
+        ['Capçalera de forma lliure (1.200 pel costat llarg)', 'Retalla la capçalera', false, 'el marc 1:1 (zoom 1.1) de la foto sencera, a la seua adreça (#sdp-crop=), sense cap fitxer nou'],
       ];
       for (const [boto, finestra, cercle, text] of casos) {
         await act(async () => { fireEvent.click(screen.getByRole('button', { name: boto })); });

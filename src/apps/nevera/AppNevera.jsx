@@ -67,7 +67,7 @@ export default function AppNevera({ magatzem: magatzemPropi = null, descarrega =
   const { estat, accions } = nevera;
   const { ruta } = useApp();
   const navigate = useNavigate();
-  const { search } = useLocation();
+  const { search, hash } = useLocation();
   const coincidencia = useRutaApp(RUTES);
   const entrada = coincidencia ? coincidencia.ruta.path.split('/')[0] : null;
   const delCami = coincidencia ? llistaDelCami(coincidencia.params) : null;
@@ -89,11 +89,13 @@ export default function AppNevera({ magatzem: magatzemPropi = null, descarrega =
     if (llistaPestanya !== estat.darreraLlista) accions.triaLlista(llistaPestanya);
   }, [estat, llistaPestanya, accions]);
 
-  /* El camí canònic, si el d'ara no ho és (replace: l'historial no guanya cap pas). */
+  /* El camí canònic, si el d'ara no ho és (replace: l'historial no guanya cap pas).
+     R16-F · També conserva el fragment: una llista compartida arriba a
+     /app/nevera/llista#compartida=… i ha de quedar a la llista per defecte. */
   let canonic = null;
   if (estat && coincidencia && ENTRADES_AMB_LLISTA.includes(entrada)) {
     const valida = delCami !== null && (llistaPerId(estat, delCami) || entrada === COMPRA.entrada);
-    if (!valida) canonic = `${ruta(...tramsAmbLlista(coincidencia.ruta.path, perDefecte))}${search ? `?${search}` : ''}`;
+    if (!valida) canonic = `${ruta(...tramsAmbLlista(coincidencia.ruta.path, perDefecte))}${search ? `?${search}` : ''}${hash}`;
   }
   useEffect(() => {
     if (canonic) navigate(canonic, { replace: true });

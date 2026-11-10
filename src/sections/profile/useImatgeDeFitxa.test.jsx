@@ -25,9 +25,16 @@ import { ERROR_PRESSUPOST } from '../../utils/pujadaImatge.js';
 import { UIActionsContext } from '../../app/contexts/objectesDeContext.js';
 import { createTranslator } from '../../config/i18n.js';
 import EN from '../../config/idiomes/en.js';
+import { ETIQUETA_CONSERVA_EXIF } from '../../components/universal/enquadrament/exifIncrustat.js';
+import { gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 
 const MB = 1024 * 1024;
 const URL_MITJA = 'sdp-media://mitjans/t/u/avatars/hero.webp';
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · La capçalera es desa
+   sencera amb el seu marc al fragment: el quadrat de sèrie, centrat i sense
+   ampliar, sobre una foto de 4.000 × 2.000. */
+const MARC_QUADRAT = '#sdp-crop=format=1%3A1&zoom=1&cx=0.5&cy=0.5';
+const URL_AMB_MARC = `${URL_MITJA}${MARC_QUADRAT}`;
 const DATA_URL = 'data:image/webp;base64,AAAA';
 
 /** Una foto de `mb` megabytes (només la mida: el contingut no es llig). */
@@ -172,7 +179,10 @@ describe('el filtre de pes i de tipus, abans d’obrir res', () => {
 describe('Guardar · una pujada', () => {
   /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Abans el retall de la
      capçalera era de 1.200 × 675 (16:9); ara és un quadrat de 1.200 × 1.200. */
-  test('capçalera: el retall de 1.200 × 1.200 puja UNA vegada sense tornar-lo a reduir, i es desa el camp', async () => {
+  /* P0-80 · Actualitzada a posta: cap retall. La foto de 4.000 × 2.000 ix
+     SENCERA (rect { 0, 0, 4.000, 2.000 }) a 1.200 pel costat llarg, puja UNA
+     vegada sense tornar-la a reduir i el camp es desa amb el quadrat al fragment. */
+  test('capçalera: la foto SENCERA (1.200 × 600) puja UNA vegada sense tornar-la a reduir, i el camp porta el marc #sdp-crop=', async () => {
     const acaba = vi.fn();
     const vista = munta({ control: { acaba } });
     fireEvent.click(screen.getByRole('button', { name: 'Obrir' }));
@@ -180,13 +190,14 @@ describe('Guardar · una pujada', () => {
     expect(vista.onImageUpload).not.toHaveBeenCalled();
     await guarda('Retalla la capçalera');
     expect(dobles.exportaRetall).toHaveBeenCalledTimes(1);
-    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 1200, alcada: 1200, tipus: 'image/jpeg' });
+    expect(dobles.exportaRetall.mock.calls[0][1]).toEqual({ x: 0, y: 0, w: 4000, h: 2000 });
+    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 1200, alcada: 600, tipus: 'image/jpeg' });
     const retallat = await dobles.exportaRetall.mock.results[0].value;
     expect(dobles.compressImage).toHaveBeenCalledTimes(1);
     expect(dobles.compressImage).toHaveBeenCalledWith(retallat, { maxSize: 1200, format: 'image/webp', quality: 0.8 });
     expect(vista.onImageUpload).toHaveBeenCalledTimes(1);
     expect(vista.onImageUpload.mock.calls[0][0].name).toBe('heroImage.webp');
-    expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_MITJA]]);
+    expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_AMB_MARC]]);
     expect(acaba).toHaveBeenCalledTimes(1);
     expect(vista.onDesat).toHaveBeenCalledWith('heroImage');
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -291,7 +302,7 @@ describe('Cancel·lar i els errors', () => {
     expect(screen.getByRole('status').textContent).toBe('quiet');
     await guarda('Retalla la capçalera');
     expect(onImageUpload).toHaveBeenCalledTimes(2);
-    expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_MITJA]]);
+    expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_AMB_MARC]]);
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
@@ -380,7 +391,7 @@ describe('Escape a mitja pujada', () => {
     await act(async () => { estat.resol(URL_MITJA); });
     await waitFor(() => expect(screen.getByRole('status').textContent).toBe('quiet'));
     expect(onImageUpload).toHaveBeenCalledTimes(1);
-    expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_MITJA]]);
+    expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_AMB_MARC]]);
     expect(acaba).toHaveBeenCalledTimes(1);
     expect(vista.onDesat).toHaveBeenCalledWith('heroImage');
     // Acabada la pujada, es torna a poder obrir.
@@ -664,5 +675,100 @@ describe('P1-22 · en anglés', () => {
     await act(async () => { resol(URL_MITJA); });
     await waitFor(() => expect(screen.getByRole('status').textContent).toBe('quiet'));
     expect(p.onDesaCamp.mock.calls).toEqual([['logoImage', URL_MITJA]]);
+  });
+});
+
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+   Re-enquadrar la capçalera que ja hi ha (ajusta) no puja res ni retalla res:
+   es desa el valor DESAT (la referència, no l'adreça resolta, que pot ser una
+   URL signada) amb el marc nou. I la capçalera d'una organització
+   (noDestructiu: false) continua retallada fins que el Mestre decidisca la
+   migració de la purga. */
+describe('P0-80 · el viatge d’anada i tornada de la capçalera', () => {
+  const RESOLTA = 'https://abc.supabase.co/storage/v1/object/public/mitjans/t/u/avatars/hero.webp';
+  const MARC_DESAT = '#sdp-crop=format=16%3A9&zoom=1.5&cx=0.4&cy=0.6';
+
+  function ProvaAjusta({ font, desat, ...opcions }) {
+    const imatge = useImatgeDeFitxa(opcions);
+    return (
+      <>
+        <button type="button" onClick={() => imatge.ajusta(font, undefined, desat)}>Ajusta</button>
+        {imatge.input}
+        {imatge.dialeg}
+      </>
+    );
+  }
+  const muntaAjusta = (props) => {
+    const p = { onImageUpload: vi.fn(async () => URL_MITJA), onDesaCamp: vi.fn(async () => true), onError: vi.fn(), onDesat: vi.fn(), ...props };
+    render(<ProvaAjusta camp="heroImage" forma="capcalera" {...p} />);
+    return p;
+  };
+  const obriIAmplia = async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Ajusta' }));
+    await act(async () => {});
+    const dialeg = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
+    act(() => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Apropar' })); });
+  };
+
+  test('una capçalera amb marc: es carrega sencera, i un marc nou es desa sobre la referència, sense cap exportació ni pujada', async () => {
+    const p = muntaAjusta({ font: `${RESOLTA}${MARC_DESAT}`, desat: `${URL_MITJA}${MARC_DESAT}` });
+    await obriIAmplia();
+    expect(dobles.carregaImatge.mock.calls[0][0]).toBe(RESOLTA);
+    await guarda('Retalla la capçalera');
+    expect(dobles.exportaRetall).not.toHaveBeenCalled();
+    expect(p.onImageUpload).not.toHaveBeenCalled();
+    expect(p.onDesaCamp.mock.calls).toEqual([['heroImage', `${URL_MITJA}#sdp-crop=format=16%3A9&zoom=1.6&cx=0.4&cy=0.6`]]);
+    expect(p.onDesat).toHaveBeenCalledWith('heroImage');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  test('obrir i tornar a desar sense moure res: no es desa res', async () => {
+    const p = muntaAjusta({ font: `${RESOLTA}${MARC_DESAT}`, desat: `${URL_MITJA}${MARC_DESAT}` });
+    fireEvent.click(screen.getByRole('button', { name: 'Ajusta' }));
+    await act(async () => {});
+    await guarda('Retalla la capçalera');
+    expect(dobles.exportaRetall).not.toHaveBeenCalled();
+    expect(p.onDesaCamp).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  test('una capçalera d’abans, ja retallada i sense marc: no es torna a retallar; el marc nou només s’hi afig', async () => {
+    const p = muntaAjusta({ font: RESOLTA, desat: URL_MITJA });
+    await obriIAmplia();
+    await guarda('Retalla la capçalera');
+    expect(dobles.exportaRetall).not.toHaveBeenCalled();
+    expect(p.onImageUpload).not.toHaveBeenCalled();
+    expect(p.onDesaCamp.mock.calls).toEqual([['heroImage', `${URL_MITJA}#sdp-crop=format=original&zoom=1.1&cx=0.5&cy=0.5`]]);
+  });
+
+  /* R16a (revisió final, troballa 3, P1 de privadesa) · La capçalera d'agent
+     i d'espai desada amb GPS: «Només el poble» torna a pujar la foto SENCERA
+     (la compressió hi arrodonix el GPS) i desa la referència nova amb el marc.
+     Sense cap canvi de precisió, el marc nou continua sense pujar res. */
+  test('R16a · capçalera desada amb GPS i «Només el poble»: puja la foto sencera amb la precisió i desa la referència nova amb el marc', async () => {
+    const blob = new Blob([jpegAmbExif({ gps: gpsTorre() })], { type: 'image/jpeg' });
+    dobles.carregaImatge.mockResolvedValue({ amplada: 4000, alcada: 2000, tipus: 'image/jpeg', element: {}, allibera: vi.fn(), blob });
+    const p = muntaAjusta({ font: `${RESOLTA}${MARC_DESAT}`, desat: `${URL_MITJA}${MARC_DESAT}` });
+    fireEvent.click(screen.getByRole('button', { name: 'Ajusta' }));
+    await act(async () => {});
+    const dialeg = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
+    await within(dialeg).findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_EXIF) });
+    act(() => { fireEvent.click(within(dialeg).getByRole('radio', { name: 'Només el poble' })); });
+    act(() => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Apropar' })); });
+    await guarda('Retalla la capçalera');
+    expect(dobles.exportaRetall.mock.calls.map((c) => c[1])).toEqual([{ x: 0, y: 0, w: 4000, h: 2000 }]);
+    expect(dobles.compressImage.mock.calls[0][1]).toMatchObject({ conservaExif: true, original: blob, precisio: 'poble' });
+    expect(p.onImageUpload).toHaveBeenCalledTimes(1);
+    expect(p.onDesaCamp.mock.calls).toEqual([['heroImage', `${URL_MITJA}#sdp-crop=format=16%3A9&zoom=1.6&cx=0.4&cy=0.6`]]);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  test('noDestructiu: false (una organització): el retall de sempre, sense fragment', async () => {
+    const vista = munta({ noDestructiu: false });
+    await tria(vista, foto(1));
+    await guarda('Retalla la capçalera');
+    // 4.000 × 2.000 en quadrat: el quadrat central, retallat dins del fitxer.
+    expect(dobles.exportaRetall.mock.calls[0][1]).toEqual({ x: 1000, y: 0, w: 2000, h: 2000 });
+    expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_MITJA]]);
   });
 });

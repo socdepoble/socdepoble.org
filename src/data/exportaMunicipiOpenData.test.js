@@ -329,6 +329,18 @@ describe('cap contingut inventat (defectes del codi de Gemini)', () => {
     }
   });
 
+  /* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · Qui reutilitza les dades
+     obertes no pinta el nostre CSS: una capçalera enquadrada (#sdp-crop=) ix
+     com la foto sencera, i abans el fragment la feia caure. */
+  test('P0-80 · una capçalera amb el marc al fragment ix com la foto sencera', () => {
+    const MARC = '#sdp-crop=format=16%3A9&zoom=1.5&cx=0.4&cy=0.6';
+    expect(imatgeDe(`sdp-media://mitjans/poble/x.webp${MARC}`)).toBe('sdp-media://mitjans/poble/x.webp');
+    expect(imatgeDe(`https://abc.supabase.co/storage/v1/object/public/mitjans/a.webp${MARC}`)).toBe('sdp-media://mitjans/a.webp');
+    expect(imatgeDe(`/assets/a.jpg${MARC}`, ORIGEN)).toBe('https://socdepoble.org/assets/a.jpg');
+    // Un fragment que no és el nostre continua sense passar.
+    expect(imatgeDe('https://exemple.test/a.jpg#x')).toBeNull();
+  });
+
   test('imatges: ruta pròpia, referència opaca, Storage de Supabase reescrit; res amb consulta, http ni credencials', () => {
     expect(imatgeDe('/assets/a.jpg', ORIGEN)).toBe('https://socdepoble.org/assets/a.jpg');
     expect(imatgeDe('/assets/a.jpg')).toBe('/assets/a.jpg');

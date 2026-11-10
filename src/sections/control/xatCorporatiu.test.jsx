@@ -69,7 +69,6 @@ import { createTranslator } from '../../config/i18n.js';
 import { ESPERA_DESPRES_DE_FALLADA_MS, objecteDe, objecteDePerfil } from '../../config/navigation.js';
 import { resolRuta } from '../../app/contexts/politicaRouter.js';
 import { ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT } from '../../data/identitatsSeed.js';
-import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import { XAT_SEED_IDS, XAT_SEED_MEMBRES } from '../../data/xatSeed.js';
 import { localXat } from '../../data/localXat.js';
 
@@ -522,8 +521,12 @@ describe('Onada 8 · el proveïdor de veres: qui mira i el padró de la llavor',
   const AMB_SESSIO = Object.freeze({ actor: PERSONA, identitats: [PERSONA, COOP] });
   const CONVIDAT = Object.freeze({ actor: { tipus: 'persona', id: 'convidat-1', rol: 'convidat' }, identitats: [] });
   const SEED = Object.freeze({ externalConfig: { dataMode: 'seed' } });
-  /* Un agent del catàleg que no és al padró del xat (com els 11111111-… de /perfil). */
-  const FORA_DEL_PADRO = Object.values(AGENTS_MAP).find((a) => !XAT_SEED_MEMBRES.some((m) => m.usuariId === a.id));
+  /* Un autor amb un UUID ben format (com els de /perfil) que no és al padró
+     del xat. Expectativa actualitzada a propòsit (P0-72 / IDEA-203) · Abans
+     era un agent del catàleg fora del padró (un personatge de ficció); després
+     de la purga, els tres que queden en són membres, i l'autor és una fitxa
+     sintètica de prova. */
+  const FORA_DEL_PADRO = Object.freeze({ id: 'f0f0f0f0-0000-4000-8000-0000000000f0', nom: 'Veïna forastera' });
 
   test('esDeQuiMira: l’actor, les organitzacions on mana (id i slug) i, en llavor, els àlies de la persona pilot', () => {
     estat.ui = SEED;
@@ -556,7 +559,7 @@ describe('Onada 8 · el proveïdor de veres: qui mira i el padró de la llavor',
       expect([membre.usuariId, directeDeLlavor({ tipus: membre.tipus, id: membre.usuariId })]).toEqual([membre.usuariId, membre.usuariId]);
     }
     for (const alies of PERSONA_PILOT.alies) expect([alies, directeDeLlavor({ tipus: 'persona', id: alies })]).toEqual([alies, XAT_SEED_IDS.javi]);
-    expect(FORA_DEL_PADRO).toBeTruthy();
+    expect(XAT_SEED_MEMBRES.some((membre) => membre.usuariId === FORA_DEL_PADRO.id)).toBe(false);
     expect(directeDeLlavor({ tipus: 'persona', id: FORA_DEL_PADRO.id })).toBeNull();
     /* Les entitats mantenen el destinatari; la validació és del backend. */
     expect(directeDeLlavor({ tipus: 'entitat', id: 'javillinares' })).toBe('javillinares');
@@ -617,12 +620,12 @@ describe('Onada 8 · el proveïdor de veres: qui mira i el padró de la llavor',
     estat.ui = SEED;
     estat.identitat = { ...CONVIDAT, actor: { tipus: 'entitat', id: 'org-coop', slug: 'coop', rol: 'owner' } };
     const PROPIA = objecteDe({ id: 'p1', title: 'Pa de la coop', author_org_id: 'org-coop', author_name: 'La Coop' }, 'mur');
-    const ANDREU = objecteDePerfil({ tipus: 'persona', id: FORA_DEL_PADRO.id, nom: 'Andreu Soler' });
+    const FORASTERA = objecteDePerfil({ tipus: 'persona', id: FORA_DEL_PADRO.id, nom: FORA_DEL_PADRO.nom });
     const MAC = objecteDe({ id: 'mac', title: 'Mac Mini', author_id: 'javillinares', author_name: 'Javi' }, 'mercat');
     render(
       <ProveidorXatSocDePoble>
         <UniversalCard title="Pa de la coop" hasFooter objecte={PROPIA} />
-        <UniversalCard title="Andreu Soler" hasFooter objecte={ANDREU} />
+        <UniversalCard title={FORA_DEL_PADRO.nom} hasFooter objecte={FORASTERA} />
         <UniversalCard title="Mac Mini" hasFooter objecte={MAC} />
       </ProveidorXatSocDePoble>
     );
@@ -634,7 +637,7 @@ describe('Onada 8 · el proveïdor de veres: qui mira i el padró de la llavor',
       return [detall, estat.navigate.mock.calls.at(-1)?.[0]];
     };
     expect(enPrivat('Pa de la coop')).toEqual([TEXTOS_COMENTAR.privatDetall[1], XAT_SOCDEPOBLE_DE_LLAVOR.href]);
-    expect(enPrivat('Andreu Soler')).toEqual([TEXTOS_COMENTAR.privatDetall[1], XAT_SOCDEPOBLE_DE_LLAVOR.href]);
+    expect(enPrivat(FORA_DEL_PADRO.nom)).toEqual([TEXTOS_COMENTAR.privatDetall[1], XAT_SOCDEPOBLE_DE_LLAVOR.href]);
     expect(enPrivat('Mac Mini')).toEqual(['Un xat només entre tu i Javi', `/xat?amb=${XAT_SEED_IDS.javi}`]);
     expect(estat.toast).not.toHaveBeenCalled();
   });

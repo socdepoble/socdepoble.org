@@ -109,6 +109,7 @@ import { instantEnLaZona, ZONA_PER_DEFECTE } from '../utils/esdeveniment.js';
 import { creaZip, llegeixZip } from '../utils/fulls/zip.js';
 import { escapa as escapaTextIcs, plega as plegaLiniaIcs } from '../utils/ics.js';
 import { nomDeLaGent } from '../sections/pobles/nomsDelPoble.js';
+import { llevaEnquadrament } from '../utils/enquadramentUrl.js';
 
 export const FORMAT_DADES_OBERTES = 'socdepoble.dadesobertes.v1';
 /* La versió de l'esquema del paquet (schemaVersion a datapackage.json), en
@@ -371,9 +372,13 @@ const refSegura = (cami) => {
  * abans un host supabase.co o *.supabase.co fora de /storage/v1/ (el web de
  * Supabase, d'un tercer) no ixia mai, i la referència podia portar «%» o un
  * segment buit (…/public/mitjans%2F..%2Fmitjans_privats/a.webp).
+ * P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · Una capçalera desada és la
+ * foto sencera amb el marc al fragment #sdp-crop=: qui reutilitza les dades
+ * obertes no pinta el nostre CSS, i rep la foto sencera (sense el fragment,
+ * que abans feia caure la imatge).
  */
 export function imatgeDe(valor, base = null) {
-  const text = typeof valor === 'string' ? valor.trim() : '';
+  const text = typeof valor === 'string' ? llevaEnquadrament(valor.trim()) : '';
   if (!text || text.length > 2048) return null;
   if (text.startsWith(REF_OPACA)) return refSegura(text.slice(REF_OPACA.length)) ? text : null;
   if (CAMI_PROPI.test(text)) return ambSegmentsBruts(text) ? null : `${base ?? ''}${text}`;

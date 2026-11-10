@@ -146,3 +146,20 @@ describe('P1-64 · geoDelHero', () => {
     expect(llegix).not.toHaveBeenCalled();
   });
 });
+
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · El marc de la capçalera
+   (#sdp-crop=) no és de la foto: l'EXIF del hero es llig de la foto sencera. */
+describe('P0-80 · geoDelHero amb el marc al fragment', () => {
+  const MARC = '#sdp-crop=format=16%3A9&zoom=1.5&cx=0.4&cy=0.6';
+  test('una foto del bucket públic amb marc: es resol la referència sense el fragment', async () => {
+    const resol = vi.fn(async () => '/assets/uploads/notes/a.webp');
+    const llegix = vi.fn(async () => ({ orientacio: 1, gps: null, dataCaptura: '2017-05-14T10:22:33' }));
+    expect(await geoDelHero(`${SRC}${MARC}`, { resol, llegix })).toEqual({ dataCaptura: '2017-05-14T10:22:33' });
+    expect(resol).toHaveBeenCalledWith(SRC, { signal: expect.any(AbortSignal) });
+  });
+
+  test('un data: URL amb marc (el mode sense servidor): es llig igual que sense', async () => {
+    const bytes = jpegAmbExif({ exif: dataOriginal('2017:05:14 10:22:33') });
+    expect(await geoDelHero(`${dataUrl(bytes)}${MARC}`)).toEqual(await geoDelHero(dataUrl(bytes)));
+  });
+});

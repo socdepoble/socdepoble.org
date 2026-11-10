@@ -234,7 +234,11 @@ async function recorre(codi) {
   /* Google: l'espera amb «Cancel·la l’entrada». */
   m.google.mockReturnValue(new Promise(() => {}));
   await pinta();
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: d['section.login.google.boto'] })); });
+  /* R16-L · El botó de marca de Google, amb la G decorativa: el nom és el text traduït. */
+  const botoGoogle = screen.getByRole('button', { name: d['section.login.google.boto'] });
+  expect(botoGoogle.querySelector('svg.sdp-boto__logotip--google[aria-hidden="true"]')).not.toBeNull();
+  expect([...botoGoogle.classList].filter((classe) => /^sdp-boto--(marca|google|primari)$/.test(classe)).sort()).toEqual(['sdp-boto--google', 'sdp-boto--marca']);
+  await act(async () => { fireEvent.click(botoGoogle); });
   expect(screen.getByRole('button', { name: d['section.login.nativa.cancela'] })).toBeTruthy();
   tanca();
   /* Dins d'un marc d'un altre origen: l'eixida a una pestanya nova. */

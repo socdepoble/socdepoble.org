@@ -66,6 +66,17 @@ const AMB_DETALL = Object.freeze(['error', 'sessio']);
    'reintent' és un 'error' que la cua torna a provar sola (`reintentant`). */
 const EN_CAMI = Object.freeze(['pendent', 'enviant', 'sessio', 'reintent']);
 
+/**
+ * R16-T (P0-80 / IDEA-211) · Cert si hi ha canvis que el servidor encara no
+ * ha confirmat: tot estat que no siga 'net' ('pendent', 'enviant', 'sessio' i
+ * 'error', amb `reintentant` o sense). Sense estat (cap desament a vigilar),
+ * fals. El botó de publicar de l'editor només es posa verd sense canvis.
+ */
+export function teCanvisSenseConfirmar(estatDesament) {
+  const estat = estatDesament?.estat;
+  return Boolean(estat) && estat !== 'net';
+}
+
 const estatConegut = (estat) => (Object.hasOwn(TEXTOS_ESTAT_DESAMENT, estat) ? estat : 'pendent');
 const textDe = (estat, detall) => detall || TEXTOS_ESTAT_DESAMENT[estatConegut(estat)];
 

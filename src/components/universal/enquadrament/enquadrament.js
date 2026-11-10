@@ -7,10 +7,18 @@
  * marc és el rectangle més gran de la proporció triada que cap dins de la
  * imatge (zoom 1), dividit pel zoom. Tot el que ix d'ací passa per `limita`:
  * el marc no ix mai de la foto i el retall no baixa de MIDA_MINIMA_RETALL px.
+ *
+ * P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · L'estat també viatja al
+ * fragment #sdp-crop= de l'adreça de la foto sencera, i la seua pintura CSS
+ * (ratioDelMarc, posicioEnCaixa, retallCssDelZoom) viu a
+ * utils/enquadramentUrl.js: una fulla sense taules, perquè la portada de
+ * l'entrada (PageFrame) no arrossegue FORMATS ni els textos del diàleg.
  */
+import { ZOOM_MAXIM_ENQUADRAMENT } from '../../../utils/enquadramentUrl.js';
 
 export const FORMAT_PER_DEFECTE = '1:1';
-export const ZOOM_MAX = 4;
+/* La mateixa font que el fragment (enquadramentUrl.js): un zoom desat sempre es pot tornar a obrir. */
+export const ZOOM_MAX = ZOOM_MAXIM_ENQUADRAMENT;
 /** Costat llarg màxim del fitxer que ix del diàleg (després, compressImage). */
 export const MIDA_SORTIDA = 1200;
 /** Costat curt mínim del retall, en píxels de la imatge original. */

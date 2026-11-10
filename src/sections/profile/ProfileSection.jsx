@@ -14,10 +14,9 @@ import { ETIQUETA_IA } from './fitxaDePerfil.js';
    agents són IA «no com a humans», «preservant la seua fitxa») · L'etiqueta
    de la targeta del directori: per a una IA (tipusDAgent 'ia': AI i ANIMAL),
    la marca d'IA, ETIQUETA_IA, la de la seua fitxa pública; mai l'etiqueta
-   humana del catàleg (El Pregoner i L'Acompanyant de Paraula hi porten
-   'GENT'; ordre del Mestre, 261021, pla 261021_0015 §12). La fitxa del
-   catàleg no es toca: només canvia el que pinta la targeta. La resta, el tag
-   de sempre. */
+   humana de la fitxa (una IA del contingut remot hi pot portar 'GENT'; el
+   catàleg del paquet ja només té la IAIA, P0-72 / IDEA-203). La fitxa no es
+   toca: només canvia el que pinta la targeta. La resta, el tag de sempre. */
 const etiquetaDeLaTargeta = (agent) => (tipusDAgent(agent) === 'ia' ? ETIQUETA_IA : agent?.tag);
 
 /* Gauntlet 261016 (Bloc 3; ordre del Mestre: «mostrar clarament el poble de

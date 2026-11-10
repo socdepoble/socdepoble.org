@@ -22,6 +22,7 @@ import {
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { IdentitatAlPoble } from '../onboarding/IdentitatAlPoble.jsx';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { nomsCatalegCompletDePobles } from '../pobles/nomenclatorIne.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
@@ -680,9 +681,17 @@ export function PerfilEditor({ identitat }) {
   const finestraCapcalera = useMemo(() => (fitxa.heroImage ? {
     canviaFoto: true, ajudaFoto: AJUDA_FOTO,
   } : null), [fitxa.heroImage]);
+  /* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · La capçalera de la
+     persona i de l'agent es puja sencera, amb el marc al fragment #sdp-crop=
+     de hero_url (useImatgeDeFitxa). La d'una ORGANITZACIÓ continua retallada
+     fins que el Mestre decidisca la migració: la purga de la baixa completa
+     (2610241440_baixa_completa_ugc_i_fitxers.sql) compara
+     organizations.hero_url pel FINAL del text, i amb el fragment prendria la
+     foto per no referenciada i l'esborraria quan es dona de baixa qui la va
+     pujar. */
   const capcalera = useImatgeDeFitxa({
     camp: 'heroImage', forma: 'capcalera', onImageUpload: uploadMedia, onDesaCamp: desaImatgeDeLaFinestra, onError: avisImatge,
-    identitat: mena === 'persona', finestra: finestraCapcalera,
+    identitat: mena === 'persona', finestra: finestraCapcalera, noDestructiu: mena !== 'organitzacio',
   });
   /* Ordre del Mestre (18-10-2026, Pla 2000, punt 2) · La finestra de retall
      de l'avatar (persona i agent) agrupa el que abans eren les píndoles de
@@ -711,8 +720,9 @@ export function PerfilEditor({ identitat }) {
   } = imatgePropia;
   const ajustaCapcalera = useCallback(() => {
     if (!fontDeLaCapcalera) return;
-    ajustaFitxerCapcalera(fontDeLaCapcalera);
-  }, [fontDeLaCapcalera, ajustaFitxerCapcalera]);
+    // P0-80 · El valor desat (la referència), perquè un marc nou no es dese sobre l'adreça resolta.
+    ajustaFitxerCapcalera(fontDeLaCapcalera, undefined, fitxa.heroImage);
+  }, [fontDeLaCapcalera, ajustaFitxerCapcalera, fitxa.heroImage]);
   /* La ranura crida amb el control de la closca ({ acaba }); l'avatar redó
      (PageFrame), amb l'esdeveniment del clic, que dona l'arrel.
      Correcció de la revisió de la línia I2 · I el control mateix (l'avatar
@@ -853,6 +863,9 @@ export function PerfilEditor({ identitat }) {
      reserva ni una baixa). L'identificador va per guardarCampPerfil →
      updateProfile → RPC, fora de l'autodesament; el poble, per la columna
      de sempre (town_name). Els pobles, del catàleg del Mas.
+     R16-S (P0-79 / IDEA-210) · El catàleg sencer: els pobles vius, la
+     llavor i els municipis de referència (nomsCatalegCompletDePobles); la
+     resta de municipis d'Espanya, pel cercador de l'INE d'IdentitatAlPoble.
      Revisió del Bloc H (R1) · Germà del DocumentEditor, el detall
      (overflow: hidden, PerfilShell.css) deixava l'editor a 0 px en mòbil i
      el selector del poble retallat. Ara va per la ranura peuDePagina de
@@ -869,7 +882,7 @@ export function PerfilEditor({ identitat }) {
       usuari={dades.username}
       confirmat={Boolean(dades.username_confirmat_at)}
       poble={typeof dades.town_name === 'string' ? dades.town_name : ''}
-      pobles={(Array.isArray(towns) ? towns : []).map((town) => town?.title)}
+      pobles={nomsCatalegCompletDePobles(towns)}
       onDesaUsuari={desaUsuari}
       onDesaPoble={desaPoble}
     />

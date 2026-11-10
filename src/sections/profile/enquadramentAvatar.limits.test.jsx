@@ -252,7 +252,8 @@ test('Onada 4 · el retall que ix de la fitxa passa pel límit de 10 MB, no pels
   });
   expect(screen.queryByRole('alert')).toBeNull();
   expect(vista.onImageUpload).toHaveBeenCalledTimes(1);
-  expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_MITJA]]);
+  // P0-80 · Actualitzada a posta: la capçalera sencera es desa amb el seu marc al fragment.
+  expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', `${URL_MITJA}#sdp-crop=format=1%3A1&zoom=1&cx=0.5&cy=0.5`]]);
 });
 
 /* ── L'ajust d'imatge (DetallAjust) ── */

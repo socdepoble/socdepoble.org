@@ -334,15 +334,17 @@ describe('les finestres', () => {
 
   /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Abans 16:9 i 1.200 × 675
      (ordre 261008): la capçalera és ara la mateixa imatge que la targeta. */
-  test('«Capçalera» → «Retalla la capçalera» en quadrat → 1.200 × 1.200 → hero_url; el botó torna a la imatge', async () => {
+  /* P0-80 / IDEA-211 · Actualitzada a posta: la foto (1.600 × 1.200) puja sencera, a 1.200 pel costat llarg, i el quadrat
+     viatja a hero_url#sdp-crop=. La imatge de l'editor es pinta sense el fragment (la base) i amb la classe del marc. */
+  test('«Capçalera» → «Retalla la capçalera» en quadrat → la foto sencera → hero_url#sdp-crop=; el botó torna a la imatge', async () => {
     render(<PerfilEditor identitat={jo} />);
     /* Encàrrec d'harmonització (261018) · El botó «Capçalera» viu dins d'«Edició avançada». */
     obriEdicioAvancada();
     fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
     const { guarda } = await triaIGuarda('heroImage', 'Retalla la capçalera');
     await guarda();
-    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 1200, alcada: 1200, tipus: 'image/png' });
-    expect(m.updateProfile).toHaveBeenCalledWith({ hero_url: '/assets/nou.webp' }, CONFIG);
+    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 1200, alcada: 900, tipus: 'image/png' });
+    expect(m.updateProfile).toHaveBeenCalledWith({ hero_url: '/assets/nou.webp#sdp-crop=format=1%3A1&zoom=1&cx=0.5&cy=0.5' }, CONFIG);
     expect(document.querySelector('img.sdp-hero__imatge').getAttribute('src')).toBe('/assets/nou.webp');
   });
 });
@@ -411,7 +413,8 @@ describe('la guarda de pujada', () => {
     expect(boto.disabled).toBe(true);
     expect(ajudaDe(boto)).toBe(AJUDA_IMATGE_PUJANT);
     await act(async () => { estat.resol('/assets/nou.webp'); });
-    await waitFor(() => expect(m.updateProfile).toHaveBeenCalledWith({ hero_url: '/assets/nou.webp' }, CONFIG));
+    // P0-80 · Actualitzada a posta: la capçalera es desa amb el seu marc al fragment.
+    await waitFor(() => expect(m.updateProfile).toHaveBeenCalledWith({ hero_url: '/assets/nou.webp#sdp-crop=format=1%3A1&zoom=1&cx=0.5&cy=0.5' }, CONFIG));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Capçalera' }).disabled).toBe(false));
     expect(document.querySelector('img.sdp-hero__imatge').getAttribute('src')).toBe('/assets/nou.webp');
     // Expectativa actualitzada a propòsit (Pla 2000, punt 2) · acabada la pujada, cap línia en repòs.
@@ -974,7 +977,8 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     await triaIGuardaSenseTancar('heroImage', 'Retalla la capçalera');
     await waitFor(() => expect(avisDeLaFinestra('Retalla la capçalera')).toBe(AVIS_403));
     expect(capcaleres()).toEqual({ editor: NOVA, pagina: NOVA, fila: NOVA });
-    expect(cuaDesament.llig(refDe('jo', 'perfil')).camps.heroImage).toBe(NOVA);
+    // P0-80 · Actualitzada a posta: la cua guarda la capçalera amb el seu marc (#sdp-crop=); les superfícies pinten la base.
+    expect(cuaDesament.llig(refDe('jo', 'perfil')).camps.heroImage).toBe(`${NOVA}#sdp-crop=format=1%3A1&zoom=1&cx=0.5&cy=0.5`);
     // L'avatar no s'ha mogut de cap banda.
     expect(imatgesPropies()).toEqual(totes(VELLA));
   });

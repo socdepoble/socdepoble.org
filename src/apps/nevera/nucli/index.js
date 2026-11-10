@@ -17,3 +17,8 @@ export { ESQUEMA_COPIA, MAX_COPIA, creaCopia, llegixCopia, serialitzaCopia } fro
 export { ingredientDArticle, ingredientPerId, nomEnFrase } from './ingredients.js';
 export { RECEPTES, receptaPerId } from './receptes.js';
 export { faltaPerCuinar, recomana } from './recomanador.js';
+/* R16-F (261110) · Compartir la llista de la compra: el fitxer i l'enllaç amb el fragment #compartida=. */
+export {
+  PREFIX_FRAGMENT_COMPARTIDA, enllacLlistaCompartida, exportaLlistaCompra, fusionaLlistaCompartida, importaLlistaCompra,
+  serialitzaLlistaCompartida
+} from './comparticio.js';

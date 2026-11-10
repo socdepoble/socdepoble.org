@@ -117,7 +117,8 @@ describe('P1-64 · la capçalera de la fitxa: identitat només per a la persona'
     expect(casella(dialeg)).toBeNull();
     fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Retalla la capçalera' })).toBeNull());
-    expect(m.updateProfile).toHaveBeenCalledWith({ hero_url: '/assets/nou.webp' }, CONFIG);
+    // P0-80 · Actualitzada a posta: la foto sencera, neta, amb el marc al fragment.
+    expect(m.updateProfile).toHaveBeenCalledWith({ hero_url: '/assets/nou.webp#sdp-crop=format=1%3A1&zoom=1&cx=0.5&cy=0.5' }, CONFIG);
     expect(dobles.compressImage).toHaveBeenCalled();
     expect(dobles.compressImage.mock.calls.every(([, opcions]) => opcions?.conservaExif !== true)).toBe(true);
     expect(m.showToast).toHaveBeenCalledWith(AVIS_GPS_ELIMINAT_PERFIL, 'info');

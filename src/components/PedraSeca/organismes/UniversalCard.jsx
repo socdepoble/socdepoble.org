@@ -170,6 +170,8 @@ import { carregaTraductorLliure } from '../../../data/traductorDelLloc.js';
 import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
 import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
 import { posicioDeRetall } from '../../universal/enquadrament/enquadrament.js';
+import { ambClassesDelMarc, useEnquadramentDeImatge } from '../../../hooks/useEnquadramentDeImatge.js';
+import { posicioEnCaixa, separaEnquadrament } from '../../../utils/enquadramentUrl.js';
 import { MenuTraduir } from '../../universal/traduccio/MenuTraduir.jsx';
 import { allowsMachineTranslation } from '../../universal/traduccio/translationMode.js';
 import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
@@ -329,19 +331,42 @@ function EnllacDrets({ children }) {
    fotograma centrada. */
 const FORMA_MITJA_16_9 = '16:9';
 
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+   Una foto sense punt focal de la targeta però amb el seu marc (#sdp-crop=, la
+   capçalera de l'autor) es pinta en 16:9 com es veia el seu retall:
+   posicioEnCaixa amb la caixa 16:9 i el cover centrat d'esta classe. El punt
+   focal de la targeta (IDEA-42) continua manant. */
+const RATIO_MITJA_16_9 = 16 / 9;
+
 function MitjaEnquadrada({ imatge, imageAlt, privada, posicio }) {
   const ref = useRef(null);
+  const { base, enquadrament } = separaEnquadrament(imatge);
+  const font = enquadrament ? base : imatge;
   const [carregada, setCarregada] = useState(null);
-  const ratio = carregada && carregada.src === imatge ? carregada.ratio : null;
-  const punt = posicioDeRetall(posicio, ratio);
+  const ratio = carregada && carregada.src === font ? carregada.ratio : null;
+  const punt = posicioDeRetall(posicio, ratio) ?? (enquadrament ? posicioEnCaixa(enquadrament, ratio, RATIO_MITJA_16_9) : null);
   usePropietatsCss(ref, punt ? { '--targeta-mitja-x': `${punt.x}%`, '--targeta-mitja-y': `${punt.y}%`, '--targeta-mitja-zoom': punt.zoom } : {});
   const onCarrega = (ev) => {
     const { naturalWidth: amplada, naturalHeight: alcada } = ev.currentTarget;
-    if (amplada > 0 && alcada > 0) flushSync(() => setCarregada({ src: imatge, ratio: amplada / alcada }));
+    if (amplada > 0 && alcada > 0) flushSync(() => setCarregada({ src: font, ratio: amplada / alcada }));
   };
   return (
     <div className="sp-card-media-container sp-card-media-container--16-9">
-      <img ref={ref} className="sp-card-media" src={imatge} alt={imageAlt} loading="lazy" decoding="async" onLoad={onCarrega} {...(privada ? SENSE_REFERENT : null)} />
+      <img ref={ref} className="sp-card-media" src={font} alt={imageAlt} loading="lazy" decoding="async" onLoad={onCarrega} {...(privada ? SENSE_REFERENT : null)} />
+    </div>
+  );
+}
+
+/* P0-80 / IDEA-211 · El mitjà quadrat de sempre, amb el marc de la foto
+   (#sdp-crop=) si en porta: useEnquadramentDeImatge mesura la caixa i en llig
+   l'ancoratge (dalt, a la Targeta Universal) en carregar, i pinta el que la
+   targeta ensenyava del retall d'abans. Sense fragment, el DOM de sempre. */
+function MitjaDeLaTargeta({ imatge, imageAlt, privada }) {
+  const pintor = useEnquadramentDeImatge(imatge, { caixa: 'mesura' });
+  return (
+    <div className="sp-card-media-container">
+      <img ref={pintor.ref} className={ambClassesDelMarc('sp-card-media', pintor.className)} src={pintor.src} alt={imageAlt} loading="lazy" decoding="async"
+        onLoad={pintor.onLoad} {...(privada ? SENSE_REFERENT : null)} />
     </div>
   );
 }
@@ -364,9 +389,7 @@ function CardBody({ imatge, imageAlt, video, calendarBadge, squareBadge, price, 
       ) : imatge && formaMitja === FORMA_MITJA_16_9 ? (
         <MitjaEnquadrada imatge={imatge} imageAlt={imageAlt} privada={privada} posicio={posicioMitja} />
       ) : imatge && (
-        <div className="sp-card-media-container">
-          <img className="sp-card-media" src={imatge} alt={imageAlt} loading="lazy" decoding="async" {...(privada ? SENSE_REFERENT : null)} />
-        </div>
+        <MitjaDeLaTargeta imatge={imatge} imageAlt={imageAlt} privada={privada} />
       )}
       <div
         className={[

@@ -182,19 +182,17 @@ test('Gauntlet 261016 · acompanyants: la IA i el personatge ANIMAL, mai una per
 /* El cas MASTER s'ha tret perquè el catàleg de veres no en porta cap: el seu
    vocabulari és el de tipusDAgent (PERSON, AI, ANIMAL i COMPANY), i hi
    entren com a acompanyants totes les IA i el personatge ANIMAL.
-   Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
-   261021_0015 §12) · El catàleg és el dels cinc assistents oficials, en este
-   ordre; l'únic ANIMAL és Marc (El Gall). */
-test('Gauntlet 261016 · el catàleg de veres no porta cap tipus MASTER, i els seus ANIMAL són acompanyants', async () => {
+   Expectativa actualitzada a propòsit (P0-72 / IDEA-203, ordre del Mestre
+   del 09-11-2026: «només la IAIA MarIA com a IA») · Dels cinc assistents
+   oficials (pla 261021_0015 §12) només es queda la IAIA, i el catàleg ja no
+   porta cap personatge ANIMAL: l'únic acompanyant de veres és ella. Que un
+   ANIMAL siga acompanyant ho continua provant el catàleg falsejat de dalt. */
+test('Gauntlet 261016 + P0-72 · el catàleg de veres no porta cap tipus MASTER, i l’únic acompanyant és la IAIA MarIA', async () => {
   const cataleg = await vi.importActual('../../data/agentsSeed.js');
   expect(cataleg.AGENTS.filter((agent) => agent.type === 'MASTER')).toEqual([]);
-  expect(new Set(cataleg.AGENTS.map((agent) => agent.type))).toEqual(new Set(['COMPANY', 'PERSON', 'AI', 'ANIMAL']));
+  expect(new Set(cataleg.AGENTS.map((agent) => agent.type))).toEqual(new Set(['COMPANY', 'PERSON', 'AI']));
   const acompanyants = cataleg.AGENTS.filter((agent) => cataleg.tipusDAgent(agent) === 'ia');
-  expect(acompanyants.filter((agent) => agent.type === 'ANIMAL').map((agent) => agent.name))
-    .toEqual(['Marc (El Gall)']);
-  expect(acompanyants.map((agent) => agent.name))
-    .toEqual(['IAIA MarIA', 'Nano Banana', 'Marc (El Gall)', 'El Pregoner', "L'Acompanyant de Paraula"]);
-  expect(acompanyants.every((agent) => agent.type === 'AI' || agent.type === 'ANIMAL')).toBe(true);
+  expect(acompanyants.map((agent) => [agent.name, agent.type])).toEqual([['IAIA MarIA', 'AI']]);
 });
 
 test('T44 · un nivell desat fora de rang torna a Passiva', () => {

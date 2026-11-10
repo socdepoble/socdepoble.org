@@ -6,6 +6,7 @@ import { Camera, Image as ImageIcon, LoaderCircle, Trash2 } from 'lucide-react';
 import { isSafeAsset, isSafeUrl, DEFAULT_AUTHOR, MARQUES_SVG_ANTIGUES, PAGE_CHROME_MODES, esAvatarSegur, esMarcaDeLEntitat, esRutaDelProjecte } from './UniversalUtils';
 import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
+import { ambClassesDelMarc, proporcioVisible, useEnquadramentDeImatge } from '../../hooks/useEnquadramentDeImatge.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { escriuSeccio, llegixSeccio, rutaAmbConsulta, seccioDelFragment, slugsDeSeccions } from './workspace/seleccioUrl.js';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
@@ -990,9 +991,10 @@ export function PageFrame({
   const heroVertical = midaHero
     ? midaHero.height > midaHero.width
     : Boolean(portadaCarregada && portadaCarregada.src === barHeroImage && portadaCarregada.vertical);
+  /* P0-80 · Amb el marc (#sdp-crop=), la forma que es veu és la del marc, no la de la foto sencera. */
   const onCarregaPortada = (ev) => {
     const { naturalWidth: amplada, naturalHeight: alcada } = ev.currentTarget;
-    if (amplada > 0 && alcada > 0) setPortadaCarregada({ src: barHeroImage, vertical: alcada > amplada });
+    if (amplada > 0 && alcada > 0) setPortadaCarregada({ src: barHeroImage, vertical: proporcioVisible(barHeroImage, amplada, alcada) < 1 });
   };
 
   const resolvedChrome = PAGE_CHROME_MODES.has(chrome) ? chrome : 'page';
@@ -1294,11 +1296,17 @@ export function PageFrame({
 /* Una portada pujada és una referència opaca: només el port la pot
    convertir en URL. Mentre es resol, o si falla, no es demana cap imatge.
    La resta de fonts conserva la resolució síncrona de l'amfitrió. */
-export function ImatgeDePortada({ src, ...props }) {
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+   La portada sencera amb el seu marc (#sdp-crop=, que el port i resolveAsset
+   conserven): la caixa pren la forma del marc i la foto s'hi pinta amb CSS
+   (useEnquadramentDeImatge, caixa 'marc'), com s'ensenyava el retall d'abans.
+   Sense fragment, l'<img> de sempre. */
+export function ImatgeDePortada({ src, className, onLoad, ...props }) {
   const ref = esMitjaOpac(src) ? src.trim().replace(/^sdp-media:/i, 'sdp-media:') : '';
   const { url } = useResolvedAssetState(ref);
   const font = ref ? (!esMitjaOpac(url) && isSafeAsset(url) ? url : '') : resolveAsset(src);
-  return font ? <img {...props} src={font} /> : null;
+  const pintor = useEnquadramentDeImatge(font, { caixa: 'marc', onLoad });
+  return font ? <img {...props} ref={pintor.ref} src={pintor.src} className={ambClassesDelMarc(className, pintor.className)} onLoad={pintor.onLoad} /> : null;
 }
 
 /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · Un src de

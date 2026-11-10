@@ -140,18 +140,21 @@ test('Onada 4 · cancel·lar el retall: cap pujada, l’avatar d’abans intacte
 
 /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La capçalera deixa el 16:9 de
    l'ordre 261008 (1.200 × 675): és la mateixa imatge que la targeta, un
-   quadrat de 1.200 × 1.200. */
-test('Onada 4 · «Capçalera»: la mateixa finestra en quadrat → 1.200 × 1.200, comprimida a 1.200 i desada a hero_url', async () => {
+   quadrat de 1.200 × 1.200.
+   P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · Actualitzada a posta: la
+   foto ja no es retalla. Puja SENCERA (1.600 × 1.200 → 1.200 × 900) i el
+   quadrat viatja al fragment #sdp-crop= de hero_url. */
+test('P0-80 · «Capçalera»: la mateixa finestra en quadrat → la foto sencera a 1.200 pel costat llarg i el quadrat a hero_url#sdp-crop=', async () => {
   m.puja.mockResolvedValue('sdp-media://mitjans/t/u/avatars/hero.webp');
   const { acaba } = await triaFoto({ boto: 'onHeroEdit', camp: 'heroImage' });
   const retallador = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
   expect(retallador.querySelector('.sdp-enquadrament__visor-caixa--cercle')).toBeNull();
   await guarda('Retalla la capçalera');
-  // 1600×1200 en quadrat: tota l'alçada i el quadrat central de 1200.
-  expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([{ x: 200, y: 0, w: 1200, h: 1200 }, { amplada: 1200, alcada: 1200, tipus: 'image/jpeg' }]);
+  // 1600×1200 en quadrat: la foto sencera (cap píxel fora) i el quadrat central, al fragment.
+  expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([{ x: 0, y: 0, w: 1600, h: 1200 }, { amplada: 1200, alcada: 900, tipus: 'image/jpeg' }]);
   expect(dobles.compressImage.mock.calls.map(([, o]) => o.maxSize)).toEqual([1200]);
   expect(m.puja.mock.calls.map(([f, carpeta]) => [f.name, carpeta])).toEqual([['heroImage.webp', 'avatars']]);
-  expect(m.updateProfile.mock.calls).toEqual([[{ hero_url: 'sdp-media://mitjans/t/u/avatars/hero.webp' }, CONFIG]]);
+  expect(m.updateProfile.mock.calls).toEqual([[{ hero_url: 'sdp-media://mitjans/t/u/avatars/hero.webp#sdp-crop=format=1%3A1&zoom=1&cx=0.5&cy=0.5' }, CONFIG]]);
   expect(acaba).toHaveBeenCalledTimes(1);
 });
 

@@ -162,6 +162,37 @@
  * sempre, lletra per lletra. titol, descripcio, etiquetaCanviaFoto,
  * etiquetaLleva i etiquetaDesa: si el pare els passa, es respecten tal qual;
  * si no, els de sèrie en la llengua de la interfície.
+ *
+ * P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+ * Deroga el PRINCIPI de dalt («l'enquadrament es cou dins de l'arxiu») per a
+ * qui passa `noDestructiu` (la capçalera: les Notes, el Mur, les targetes i
+ * la fitxa del Perfil). Sense la prop, el contracte d'abans, lletra per
+ * lletra (l'avatar i el logotip: Llei del Quadrat, pendent del Mestre).
+ *   noDestructiu (false) · Cap foto es retalla:
+ *     · Una foto nova (File) ix SEMPRE sencera, rect { x: 0, y: 0, w: W, h:
+ *       H }, a l'eixida de `sortida` sense `exacta` (la capçalera: 1.200 pel
+ *       costat llarg de la foto), i onDesa rep info = { format, rect (el
+ *       sencer), sencera: true, retall (el rect del marc, informatiu),
+ *       enquadrament (l'estat net del marc, o null si és la foto sencera) }.
+ *       Qui puja desa l'adreça que torne amb el fragment #sdp-crop= de
+ *       l'enquadrament (utils/enquadramentUrl.js · ambEnquadrament).
+ *     · Una adreça (re-enquadrar la que ja hi ha) es carrega SENSE el seu
+ *       fragment, i el diàleg comença en el marc que porta (si la forma és de
+ *       `formats`). En desar, si no cal tornar a codificar res, onDesa rep un
+ *       TEXT: la mateixa adreça amb el fragment nou. Cap pujada ni cap
+ *       retall: obrir i tornar a desar no perd cap píxel. Si el marc no ha
+ *       canviat, es tanca sense desar (com una adreça sencera abans). Cal
+ *       tornar a codificar (la foto sencera, mai el retall) quan la casella de
+ *       l'EXIF s'ha desmarcat, quan una foto d'identitat porta GPS o amb la
+ *       geolocalització: llavors un File sencer, com una foto nova.
+ *     · R16a (revisió final, troballa 3) · Les píndoles de la precisió s'obrin
+ *       en la que ja porta el GPS del fitxer (precisioDeGps; una càmera,
+ *       l'exacta). Triar-ne una de més grossa és un canvi encara que el marc no
+ *       es moga, i torna a codificar la foto sencera: la pujada hi arrodonix la
+ *       ubicació (metadades.exif.precisio). Si no es canvia, cap pujada.
+ *     · Una imatge d'abans, ja retallada i sense fragment, s'obri tal com és
+ *       (en «Original»): no es torna a retallar, i desar-la amb un marc nou
+ *       només hi afig el fragment.
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Camera, Minus, Plus, Trash2 } from 'lucide-react';
@@ -174,15 +205,26 @@ import {
 } from './enquadrament.js';
 import { llegixMetadadesImatge, senseDades } from './exif.js';
 import {
-  errorExifNoConservable, esNoConservable, etiquetaConservaExif, exifPublicable, teData, teExifPerConservar, teUbicacio,
+  errorExifNoConservable, esNoConservable, etiquetaConservaExif, exifPublicable, precisioDeGps, teData, teExifPerConservar,
+  teUbicacio,
 } from './exifIncrustat.js';
 import {
-  PRECISIO_PER_DEFECTE, PRECISIO_PER_DEFECTE_PUBLICACIO, errorUbicacio, geolocalitzacio, llegixCoordenada, precisionsTraduides,
-  textUbicacio,
+  PRECISIONS, PRECISIO_PER_DEFECTE, PRECISIO_PER_DEFECTE_PUBLICACIO, errorUbicacio, geolocalitzacio, llegixCoordenada,
+  precisionsTraduides, textUbicacio,
 } from './geolocalitzacio.js';
 import { carregaImatge, dibuixaVisor, exportaRetall } from './imatgeCanvas.js';
 import { comprovaDimensions, comprovaPes, esHeic, missatgeLimit } from './limits.js';
 import { TEXTOS_UBICACIO, UbicacioImatge } from './UbicacioImatge.jsx';
+import {
+  ambEnquadrament, enquadramentNet, llevaEnquadrament, mateixEnquadrament, separaEnquadrament,
+} from '../../../utils/enquadramentUrl.js';
+
+/* P0-80 / IDEA-211 · L'eixida de la foto sencera: la de `sortida` sense la
+   mida exacta (que és la d'un retall: l'avatar i el logotip no hi passen).
+   Sense `sortida`, la de sempre (midaSortida). */
+const sortidaSencera = (sortida) => (sortida
+  ? Object.fromEntries(Object.entries(sortida).filter(([clau]) => clau !== 'exacta'))
+  : null);
 
 /* P1-22 (assalt 261101) · La forma original, curta, a la seua píndola. */
 const PARELL_ORIGINAL_CURTA = Object.freeze(['editor.enquadrament.formaOriginalCurta', 'Orig.']);
@@ -297,6 +339,18 @@ const EPSILON_ZOOM = 1e-6;
 const esFitxer = (font) => typeof Blob !== 'undefined' && font instanceof Blob;
 const distancia = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
+/* R16a (revisió final, troballa 3: la precisió del GPS en re-enquadrar) · La
+   precisió que ja porta la ubicació d'una lectura (la marca que hi deixa
+   ajustaPrecisioGps: precisioDeGps del bloc TIFF), o null si no en porta cap.
+   Una ubicació sense la marca, o que no s'entén, es pren per l'exacta: mai es
+   dona per arrodonit el que potser no ho és. */
+const precisioDelFitxer = (dades) => (teUbicacio(dades) ? (precisioDeGps(dades.tiff) || 'exacta') : null);
+const metresDePrecisio = (valor) => PRECISIONS.find((p) => p.valor === valor)?.precisio_m ?? 0;
+/* La precisió triada és més grossa (més vaga) que la que ja porta el fitxer?
+   Llavors el fitxer s'ha de tornar a codificar: si no, es publicaria més
+   precís del que diu el diàleg. Una de més fina no hi pot afegir res. */
+const baixaLaPrecisio = (triada, delFitxer) => Boolean(delFitxer) && metresDePrecisio(triada) > metresDePrecisio(delFitxer);
+
 /* Ordre del Mestre (18-10-2026, Pla 2000, punt 2) · Els noms de sèrie dels
    botons nous: la persona els llig tal com els va escriure el Mestre. */
 export const ETIQUETA_CANVIA_FOTO = 'Canviar foto';
@@ -381,6 +435,7 @@ export function DialegEnquadrament({
   mascara = null,
   ofereixConservarExif = false,
   avisaGpsEliminat = false,
+  noDestructiu = false,
   onCanviaFoto = null,
   etiquetaCanviaFoto,
   acceptFoto = 'image/*',
@@ -413,6 +468,8 @@ export function DialegEnquadrament({
   const muntatRef = useRef(false);
   const formatsRef = useRef(formats);
   formatsRef.current = formats;
+  const noDestructiuRef = useRef(noDestructiu);
+  noDestructiuRef.current = noDestructiu;
   const [imatge, setImatge] = useState(null);
   const [errorCarrega, setErrorCarrega] = useState(null);
   /* { text, intent }: cada intent fallit és un valor nou, encara que el text
@@ -508,6 +565,10 @@ export function DialegEnquadrament({
        límits nous). */
     if (canviaFotoRef.current && fontObertaRef.current !== font) actualitza(estatInicial(estatRef.current.format));
     fontObertaRef.current = font;
+    /* P0-80 · Una adreça amb el seu marc (#sdp-crop=) s'obri en eixe marc, si
+       la forma és d'esta finestra: la foto sencera, i el marc on era. */
+    const delFragment = noDestructiuRef.current && typeof font === 'string' ? separaEnquadrament(font).enquadrament : null;
+    if (delFragment && formatsRef.current.some((f) => f.valor === delFragment.format)) actualitza({ ...delFragment });
     // Onada 4, T3a · Una foto massa pesada no es descodifica: l'avís arriba abans.
     if (esFitxer(font) && comprovaPes(font)) {
       setErrorCarrega(missatgeLimit(comprovaPes(font), tRef.current));
@@ -515,7 +576,8 @@ export function DialegEnquadrament({
     }
     (async () => {
       try {
-        const img = await carregador(font, { signal: controlador.signal });
+        /* P0-80 · El fragment no és de la foto: es carrega la base (una adreça sense fragment, tal qual). */
+        const img = await carregador(typeof font === 'string' ? llevaEnquadrament(font) : font, { signal: controlador.signal });
         if (!viu) { img?.allibera?.(); return; }
         // Siga quin siga el carregador, una foto de massa píxels no s'enquadra.
         if (comprovaDimensions(img.amplada, img.alcada)) {
@@ -561,7 +623,18 @@ export function DialegEnquadrament({
       if (!viu) return;
       if (avisaGpsEliminat) {
         if (teUbicacio(dades)) setGpsEliminat(true);
-      } else if (teExifPerConservar(dades)) setExifOriginal(dades);
+      } else if (teExifPerConservar(dades)) {
+        setExifOriginal(dades);
+        /* R16a (troballa 3) · Amb noDestructiu, les píndoles s'obrin en la
+           precisió que ja porta el fitxer (la d'una càmera és l'exacta, la de
+           sèrie): la línia «Es desarà» diu el que hi ha, i tornar a desar sense
+           canviar-la no torna a pujar res. Només en re-enquadrar una adreça
+           desada (un text): una foto nova (un File) s'obri en l'exacta, com
+           sempre (Llei del Píxel). */
+        if (noDestructiuRef.current && typeof font === 'string' && teUbicacio(dades)) {
+          setPrecisioExif(precisioDelFitxer(dades));
+        }
+      }
     });
     return () => { viu = false; };
   }, [obert, font, origenExif, ofereixConservarExif, avisaGpsEliminat, lectorExif]);
@@ -804,7 +877,16 @@ export function DialegEnquadrament({
     const treuExif = casellaVista && !conservaExif;
     /* P1-64 · La lectura d'esta foto (el File o el blob de l'adreça), si n'hi ha. */
     const lecturaDeLaFont = () => (lecturaExif.current?.font === font ? lecturaExif.current : null);
-    if (sencera && !esFitxer(font) && !geo.actiu && !treuExif) {
+    /* P0-80 · El marc que es desarà (null: la foto sencera) i, d'una adreça,
+       si és el mateix que ja porta: llavors no hi ha res a desar. */
+    const enquadrament = noDestructiu && !sencera ? enquadramentNet(e) : null;
+    const senseCanvi = noDestructiu
+      ? !esFitxer(font) && mateixEnquadrament(enquadrament, separaEnquadrament(font).enquadrament)
+      : sencera;
+    /* R16a (troballa 3) · Una precisió més grossa que la del fitxer també és
+       un canvi: triar «Només el poble» sense moure el marc no tanca sense desar. */
+    const baixaVista = casellaVista && conservaExif && baixaLaPrecisio(precisioExif, precisioDelFitxer(exifOriginal));
+    if (senseCanvi && !esFitxer(font) && !geo.actiu && !treuExif && !baixaVista) {
       /* P1-64 · Una adreça d'identitat sencera que porta GPS no es dona per
          bona: es torna a retallar (i ix neta). Sense GPS, es tanca com sempre. */
       const lecturaAbans = avisaGpsEliminat ? lecturaDeLaFont() : null;
@@ -864,8 +946,31 @@ export function DialegEnquadrament({
         }
       }
       let fitxer = font;
-      // Bloc B · Una adreça no és cap fitxer per a lliurar: sempre el retall.
-      if (!sencera || recodifica || !esFitxer(font)) {
+      let info = { format: e.format, rect, sencera };
+      if (noDestructiu) {
+        /* P0-80 · Mai el retall: la foto sencera (un File nou o una foto que
+           s'ha de tornar a codificar, sense l'EXIF o sense el GPS) o, d'una
+           adreça que no cal tocar, la mateixa adreça amb el marc nou. */
+        const rectSencer = { x: 0, y: 0, w: W, h: H };
+        info = { format: e.format, rect: rectSencer, sencera: true, retall: rect, enquadrament };
+        /* R16a (troballa 3) · Una adreça amb una ubicació conservada i una
+           precisió més grossa que la del fitxer també: la foto sencera passa per
+           la pujada, que hi arrodonix el GPS (ajustaPrecisioGps). */
+        const baixaPrecisio = metadades.exif?.conservaExif === true
+          && baixaLaPrecisio(metadades.exif.precisio, precisioDelFitxer(llegit));
+        const calCodificar = esFitxer(font) || treuExif || geo.actiu || metadades.gpsEliminat === true || baixaPrecisio;
+        if (calCodificar) {
+          try {
+            fitxer = await exportador(imatge.element, rectSencer, opcionsSortida(rectSencer, imatge.tipus, sortidaSencera(sortida)));
+          } catch {
+            fallaDesat(text(TEXTOS_ENQUADRAMENT.errorExporta));
+            return;
+          }
+        } else {
+          fitxer = ambEnquadrament(font, enquadrament);
+        }
+      } else if (!sencera || recodifica || !esFitxer(font)) {
+        // Bloc B · Una adreça no és cap fitxer per a lliurar: sempre el retall.
         try {
           fitxer = await exportador(imatge.element, rect, opcionsSortida(rect, imatge.tipus, sortida));
         } catch {
@@ -873,7 +978,7 @@ export function DialegEnquadrament({
           return;
         }
       }
-      await onDesa?.(fitxer, { format: e.format, rect, sencera }, metadades);
+      await onDesa?.(fitxer, info, metadades);
     } catch (err) {
       fallaDesat(err?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
     } finally {

@@ -949,3 +949,22 @@ describe('VARIANTS_SOCIALS: la variant va al <head>; l’original, a la pàgina 
     expect(primeraImatgeSocial('pobles', { image_url: '/assets/towns/sella/2.jpg' }).url).toBe('https://socdepoble.org/assets/towns/sella/2.jpg');
   });
 });
+
+/* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
+   Decisió del carril 5 (R16) per als rastrejadors, que no pinten CSS: la
+   imatge social d'una capçalera enquadrada és la foto SENCERA. El fragment
+   #sdp-crop= no la fa caure en 'cami' ni viatja a og:image. */
+describe('P0-80 · una capçalera amb el marc al fragment', () => {
+  const MARC = '#sdp-crop=format=16%3A9&zoom=1.5&cx=0.4&cy=0.6';
+  test('del bucket públic: la URL pública de la foto sencera, sense el fragment', () => {
+    expect(urlSocialDe(`sdp-media://mitjans/poble/uid/mur/x.jpg${MARC}`, { supabaseUrl: SUPABASE })).toBe(`${PUBLIC_DE_MITJANS}poble/uid/mur/x.jpg`);
+  });
+  test('d’una URL o d’un camí propi: la mateixa que sense el marc', () => {
+    expect(urlSocialDe(`/assets/uploads/mercat/foto.jpg${MARC}`)).toBe(urlSocialDe('/assets/uploads/mercat/foto.jpg'));
+    expect(urlSocialDe(`${PUBLIC_DE_MITJANS}poble/x.jpg${MARC}`, { supabaseUrl: SUPABASE })).toBe(`${PUBLIC_DE_MITJANS}poble/x.jpg`);
+  });
+  test('primeraImatgeSocial: la capçalera enquadrada d’una publicació del Mur és triada, no bloquejada', () => {
+    const triada = primeraImatgeSocial('mur', { image_url: `sdp-media://mitjans/poble/uid/mur/x.jpg${MARC}` }, { supabaseUrl: SUPABASE });
+    expect(triada).toMatchObject({ estat: 'triada', url: `${PUBLIC_DE_MITJANS}poble/uid/mur/x.jpg` });
+  });
+});

@@ -124,7 +124,8 @@ describe('les reserves són el valencià del diccionari', () => {
     expect(AJUDA_IMATGE_PUJANT).toBe('Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.');
     expect(AJUDA_FORMA_LLIURE).toBe('La pàgina l’ensenya sencera; la miniatura del llistat i la targeta del Mur la retallen en quadrat.');
     expect(AJUDA_FORMA_CAPCALERA).toMatch(/^Recomanat: la miniatura del llistat i la targeta del Mur ensenyen/);
-    expect(DESCRIPCIO_ENQUADRAMENT_CAPCALERA).toBe('Tria la forma, mou la foto i amplia-la fins que el que importa quede dins del marc. Només es guarda el que hi ha dins.');
+    // P0-80 / IDEA-211 · Actualitzada a posta: la capçalera ja no es retalla i el text ho diu.
+    expect(DESCRIPCIO_ENQUADRAMENT_CAPCALERA).toBe('Tria la forma, mou la foto i amplia-la fins que el que importa quede dins del marc. La foto es guarda sencera: el marc només tria el que es veu, i el que queda fora també es publica.');
     expect(NOM_OPCIONS_CAPCALERA).toBe('Opcions de la capçalera');
     expect(NOM_OPCIONS_LOGOTIP).toBe('Opcions del logotip');
     // Els apòstrofs rectes de sempre continuen rectes (D-2 de l'especificació).

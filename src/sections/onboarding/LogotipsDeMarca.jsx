@@ -1,5 +1,6 @@
 /* Fase D (261020, tasca 1; ordre del Mestre) · Els logotips de marca dels botons
-   natius «Continua amb Apple» i «Continua amb Google» (EntradaNativa.jsx).
+   natius «Continua amb Apple» i «Continua amb Google» (EntradaNativa.jsx) i, la G,
+   també el del web «Entrar amb Google» (OnboardingSection.jsx, R16-L).
    PROVISIONALS: cal substituir-los pels originals oficials abans d'enviar l'app a
    les botigues (pendent del Mestre): el logotip d'Apple Design Resources («Logo –
    SIWA», amb el seu farciment propi) i la G del paquet de marca de l'inici de

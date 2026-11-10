@@ -631,37 +631,44 @@ export function PanellEmpaquetatsDesplegament() {
 
       <section className="sdp-admin-taxonomia__panel">
         <h3>📦 Artefactes i Portes de Seguretat</h3>
-        <table className="sdp-admin-table">
-          <thead>
-            <tr>
-              <th>Artefacte / Porta</th>
-              <th>Ubicació / Comandament</th>
-              <th>Estat</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Connector WordPress (.zip)</strong></td>
-              <td><code>wordpress-plugin/soc-de-poble/</code> · <code>npm run build:wp</code></td>
-              <td><Insignia to="exit">A punt (Shadow DOM + CSS aïllat)</Insignia></td>
-            </tr>
-            <tr>
-              <td><strong>Aplicació Web + PWA + Open Data</strong></td>
-              <td><code>dist/</code> · <code>npm run build:web</code></td>
-              <td><Insignia to="exit">Verificat (JSON-LD + ActivityStreams 2.0)</Insignia></td>
-            </tr>
-            <tr>
-              <td><strong>Porta de Secrets i Literals (R8/R55)</strong></td>
-              <td><code>tooling/gates/literals-secrets-node0.mjs</code></td>
-              <td><Insignia to="exit">18/18 tests verds (turns/contracts auditats)</Insignia></td>
-            </tr>
-            <tr>
-              <td><strong>Sentinella Multimèdia Aplec 2023</strong></td>
-              <td><code>tooling/media/sentinella-video-aplec2023.mjs</code></td>
-              <td><Insignia to="exit">42 fotografies + cartell + vídeo verificats</Insignia></td>
-            </tr>
-          </tbody>
-        </table>
+        {/* Revisió final R16a (troballa 2, P0-74 residual) · Com les taules
+            d'Importació: en una columna estreta, la taula fa scroll dins del
+            panell i no trossija cap paraula (directriu del Mestre del 261025).
+            --sense-marc: en ample, la taula de sempre, sense la vora de la
+            capsa (Llei del Píxel). */}
+        <div className="sdp-admin-taxonomia__table-wrap sdp-admin-taxonomia__table-wrap--sense-marc">
+          <table className="sdp-admin-table">
+            <thead>
+              <tr>
+                <th>Artefacte / Porta</th>
+                <th>Ubicació / Comandament</th>
+                <th>Estat</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Connector WordPress (.zip)</strong></td>
+                <td><code>wordpress-plugin/soc-de-poble/</code> · <code>npm run build:wp</code></td>
+                <td><Insignia to="exit">A punt (Shadow DOM + CSS aïllat)</Insignia></td>
+              </tr>
+              <tr>
+                <td><strong>Aplicació Web + PWA + Open Data</strong></td>
+                <td><code>dist/</code> · <code>npm run build:web</code></td>
+                <td><Insignia to="exit">Verificat (JSON-LD + ActivityStreams 2.0)</Insignia></td>
+              </tr>
+              <tr>
+                <td><strong>Porta de Secrets i Literals (R8/R55)</strong></td>
+                <td><code>tooling/gates/literals-secrets-node0.mjs</code></td>
+                <td><Insignia to="exit">18/18 tests verds (turns/contracts auditats)</Insignia></td>
+              </tr>
+              <tr>
+                <td><strong>Sentinella Multimèdia Aplec 2023</strong></td>
+                <td><code>tooling/media/sentinella-video-aplec2023.mjs</code></td>
+                <td><Insignia to="exit">42 fotografies + cartell + vídeo verificats</Insignia></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat-ampli">
           <Link className="sdp-boto sdp-boto--primari" to="/versions">
