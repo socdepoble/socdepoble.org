@@ -549,7 +549,8 @@ export function UniversalCard({
      profunditat: amb un mode protegit ('curated_5_langs', 'none' o invàlid; translationMode.js ·
      allowsMachineTranslation) la targeta no oferix Traduir encara que qui la pinta el demane, i el motor
      (tradueixTot) el rep i el refusa. Sense la prop, el DOM de sempre. */
-  modeTraduccio
+  modeTraduccio,
+  dataTestId
 }) {
   const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
@@ -902,7 +903,7 @@ export function UniversalCard({
   const ariaPremuda = typeof premuda === 'boolean' ? { 'aria-pressed': premuda ? 'true' : 'false' } : null;
 
   return (
-    <article className={cardClasses} aria-current={ambPrincipal ? undefined : ariaActual} translate={translate === 'no' ? 'no' : undefined}>
+    <article className={cardClasses} data-testid={dataTestId || undefined} aria-current={ambPrincipal ? undefined : ariaActual} translate={translate === 'no' ? 'no' : undefined}>
       {(autor || centre || pin || headerAction || dataHora || accioModeracio) && (
         <CardHeader autor={autor} autorHref={safeAuthorHref} centre={centre} pin={pin} dataHora={dataHora} headerAction={headerAction}
           accioModeracio={accioModeracio} />

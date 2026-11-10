@@ -123,6 +123,33 @@ const PRIMERA_DEL_PROJECTE = 'projecte';
 const casaSeccio = (pathname, section) => [section.path, ...(section.subrutes || [])]
   .some((ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`));
 
+/* T27, R16-W1 i R16b · Les filles del Panell de Control: /control, /utilitats,
+   cada plugin (/plugin/<id>) i la pàgina d'acció (/page/<clau>) de cada
+   targeta de publicació. Les claus són el camp `pagina` de DESTINS_CONTROL
+   (sections/control/destinsControl.js), en el seu ordre; no s'importen
+   d'allí perquè destinsControl.js porta PAGE_COPY (pageContent.js), que ja
+   no viatja al tros d'entrada (TextRouteAmbCopiaLocal, més avall).
+   App.controlActiu.test.jsx munta l'App a cada pàgina de DESTINS_CONTROL:
+   si la taula en guanya una, la prova cau. /page/iaia-sabuda no hi és: és
+   un àlies que PageDetailSection porta a /page/la-iaia-sabuda (navigation.js,
+   resolvePageSlugPath). */
+const RUTES_DEL_PANELL = /^\/(control|utilitats|plugin)(\/|$)/;
+const PAGINES_DACCIO_DEL_PANELL = Object.freeze([
+  'publicar_mur', 'publicar_mercat', 'publicar_calendari', 'publicar_mapa',
+  'vehicle_compartit', 'animalets', 'treball', 'habitatge'
+]);
+/* La IAIA Sabuda només és filla del Panell quan hi té targeta: amb la
+   curadoria cultural encesa (VITE_SDP_CURADORIA_CULTURAL=1, la guarda
+   d'ambCuradoriaCultural a ControlSection.jsx). Es llig en cada crida perquè
+   vi.stubEnv la governe. */
+const PAGINA_IAIA_SABUDA = 'la-iaia-sabuda';
+const esFillaDelPanell = (pathname) => {
+  if (RUTES_DEL_PANELL.test(pathname)) return true;
+  const pagina = /^\/page\/([^/]+)(?:\/|$)/.exec(pathname)?.[1];
+  if (pagina === PAGINA_IAIA_SABUDA) return import.meta.env.VITE_SDP_CURADORIA_CULTURAL === '1';
+  return PAGINES_DACCIO_DEL_PANELL.includes(pagina);
+};
+
 /* Punt de tall de la barra lateral (ordre del Mestre, 260926; abans 1100):
    fins a 1023px és calaix (Dialeg) i des de 1024px és columna fixa.
    layout.css talla al mateix número (@media (max-width: 1023px)): si canvia
@@ -173,12 +200,15 @@ function RouteFallback() {
 }
 
 const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar, language, navigate }) => {
-  /* T27 · el Panell de control també és una ubicació: a /control i /utilitats
-     el botó CONTROL és l'element actiu de la barra. */
+  /* T27 i R16-W1 · el Panell de control també és una ubicació: a /control,
+     /utilitats i en qualsevol pàgina d'aterratge o plugin fill del Panell
+     (esFillaDelPanell), el botó CONTROL és l'element actiu de la barra. Les
+     verticals del Mur (/mapa, /vehicle, /animalets, /treball i /habitatge) són
+     seccions pròpies, no filles del Panell (R16b, C6-12). */
   const { pathname } = useLocation();
   const t = useTraductorOpcional();
   const nom = (parell) => tradueix(t, parell);
-  const controlActiu = /^\/(control|utilitats)(\/|$)/.test(pathname);
+  const controlActiu = esFillaDelPanell(pathname);
   /* «Sistema» s'obri sol quan la ruta activa és dins: l'entrada encesa sempre es veu. */
   const sistemaActiu = SYSTEM_SECTIONS.some((section) => casaSeccio(pathname, section));
   const [sistemaObert, setSistemaObert] = useState(sistemaActiu);

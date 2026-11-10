@@ -113,7 +113,7 @@ export async function loadProjeccionsCataleg(input = {}, config = {}) {
 
 /* PRODNM-07 (revisió R15b) · Les RPC de curadoria cultural són de la migració 2611091500, que la
    producció encara NO té: cridar-les deixa un 404 de PostgREST a la consola de cada visita a
-   /page/nodrir-la-iaia. L'adaptador només anuncia la capacitat 'curadoriaCultural' si el build
+   /page/la-iaia-sabuda. L'adaptador només anuncia la capacitat 'curadoriaCultural' si el build
    ho demana amb VITE_SDP_CURADORIA_CULTURAL=1, que s'encén després d'aplicar la migració.
    Apagada, les quatre valen undefined: el port la tracta com a absent (teCapacitat fals, cap
    petició) i la pàgina diu que no recull res. Sempre les quatre juntes: una capacitat parcial

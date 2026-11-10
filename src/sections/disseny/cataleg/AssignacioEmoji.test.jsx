@@ -59,7 +59,7 @@ const CERCA = 'Cerca una nota, una pàgina o una carpeta';
    «Descàrregues i Aplicacions», l'última de SYSTEM_PAGES.
    Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · Amb
    «Candidatura Europea NLnet · NGI Fediversity», ara l'última. */
-const PAGINES = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'nodrir-la-iaia', 'fediversity', 'anima', 'fedivers'];
+const PAGINES = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'la-iaia-sabuda', 'fediversity', 'anima', 'fedivers'];
 
 beforeEach(() => {
   setLocalNoteField.mockReset();

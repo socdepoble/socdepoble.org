@@ -8,6 +8,10 @@ import { TEXTOS_HERBARI } from './textosHerbari.js';
 const m = vi.hoisted(() => ({ language: 'ca' }));
 vi.mock('../../app/contexts/UIContext', async orig => ({ ...await orig(), useUIActions: () => ({ language: m.language, t: (_k, fallback) => fallback }) }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast() {} }) }));
+/* R16b (tercera ronda) · Amb `page`, el detall passa per la TextSection de veres; només se substituïxen
+   la UniversalPage (la seua maquinària no entra en joc) i el <head> (useSEO), com a TextSection.test.jsx. */
+vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: ({ children }) => <div data-pagina="herbari">{children}</div> }));
+vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 beforeEach(() => { vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }); vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); m.language = 'ca'; });
 const munta = locutor => render(<MemoryRouter rutaInicial="/herbari-proposta"><HerbariWorkspaceSection locutor={locutor} /></MemoryRouter>);
@@ -74,5 +78,49 @@ test('a documentary toxicity warning is preserved inline and never converted to 
   fireEvent.click(within(llista()).getByRole('button', { name: `Obri fitxa: ${species.nomValencia}` }));
   expect(within(detall()).getByText(TEXTOS_HERBARI.ca.toxicitatAdvertida)).toBeTruthy();
   expect(within(detall()).queryByText(TEXTOS_HERBARI.ca.toxicitatDesconeguda)).toBeNull();
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+/* R16b · La capçalera de la fitxa porta el botó de tornar (onClose del Workspace): tanca la fitxa i torna al text
+   documental, en cada llengua de la interfície. La fitxa és la de sempre (FitxaHerbari): cap fitxa científica. */
+test('the back button in the species header closes the inline record and returns to the documentary text', () => {
+  for (const language of Object.keys(TEXTOS_HERBARI)) {
+    m.language = language;
+    const vista = munta();
+    fireEvent.click(within(llista()).getByRole('button', { name: 'Acacia robínia' }));
+    expect(within(detall()).getByRole('heading', { name: 'Acacia robínia' })).toBeTruthy();
+    fireEvent.click(within(detall()).getByRole('button', { name: `← ${TEXTOS_HERBARI[language].titol}` }));
+    expect(within(detall()).queryByRole('heading', { name: 'Acacia robínia' })).toBeNull();
+    expect(detall().textContent).toContain(TEXTOS_HERBARI[language].documental);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    vista.unmount();
+  }
+});
+
+/* R16b (tercera ronda) · amagaCos: amb la pàgina, el cos (page.html) es pinta sense fitxa i desapareix
+   amb una fitxa oberta, i torna en tancar-la. L'avís de toxicitat que la fitxa ja pinta (advertida o
+   desconeguda) continua visible amb el cos amagat. */
+test('with the page, its body shows without a record, hides while a record is open and the toxicity notice stays', () => {
+  render(<MemoryRouter rutaInicial="/page/herbari"><HerbariWorkspaceSection page={{ html: '<p>COS</p>' }} /></MemoryRouter>);
+  const cos = () => within(detall()).queryByText('COS');
+  expect(cos()).toBeTruthy();
+  expect(cos().closest('article.cms-preview')).toBeTruthy();
+  expect(detall().textContent).toContain(TEXTOS_HERBARI.ca.documental);
+
+  const toxica = ESPECIES_HERBARI_LA_TORRE_117.find(e => e.esToxica === true);
+  fireEvent.click(within(llista()).getByRole('button', { name: `Obri fitxa: ${toxica.nomValencia}` }));
+  expect(within(detall()).getByRole('heading', { name: toxica.nomValencia })).toBeTruthy();
+  expect(cos()).toBeNull();
+  expect(detall().querySelector('article.cms-preview')).toBeNull();
+  expect(within(detall()).getByText(TEXTOS_HERBARI.ca.toxicitatAdvertida)).toBeTruthy();
+
+  fireEvent.click(within(llista()).getByRole('button', { name: 'Obri fitxa: Acacia robínia' }));
+  expect(within(detall()).getByRole('heading', { name: 'Acacia robínia' })).toBeTruthy();
+  expect(cos()).toBeNull();
+  expect(within(detall()).getByText(TEXTOS_HERBARI.ca.toxicitatDesconeguda)).toBeTruthy();
+
+  fireEvent.click(within(detall()).getByRole('button', { name: `← ${TEXTOS_HERBARI.ca.titol}` }));
+  expect(within(detall()).queryByRole('heading', { name: 'Acacia robínia' })).toBeNull();
+  expect(cos()).toBeTruthy();
   expect(screen.queryByRole('dialog')).toBeNull();
 });

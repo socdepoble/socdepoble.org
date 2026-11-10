@@ -31,6 +31,10 @@ const PAGE_ROUTE_MAP = {
   fedivers: '/fedivers',
   /* Àlies defensiu cap a la candidatura NLnet Fediversity (/page/fediversity). */
   'projecte-fediversity': '/page/fediversity',
+  /* R16-W2 · Àlies defensius de La IAIA Sabuda: /page/iaia-sabuda i l'adreça de R15,
+     /page/nodrir-la-iaia, van a /page/la-iaia-sabuda (R16b, C4-12). */
+  'iaia-sabuda': '/page/la-iaia-sabuda',
+  'nodrir-la-iaia': '/page/la-iaia-sabuda',
   /* Ordre del Mestre (R53, 261108) · Una sola publicació completa del pou:
      l'adreça antiga entra a l'article del Mur amb el replace de PageDetailSection. */
   'anatomia-rural': '/mur/noves-tecnologies-aplicades-a-la-cultura-rural'

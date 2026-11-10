@@ -221,8 +221,9 @@ describe('usePublicacionsDeLActor', () => {
 describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
   const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
   const SENSE_PAGINES = POSTS.filter((post) => !post.isSystem);
-  /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, Nodrir la IAIA no és cap targeta del Mur. */
-  const CLAUS = [...SYSTEM_PAGES.map((pagina) => pagina.key).filter(esTargetaDelMur), 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals'].map((key) => `mur:${key}`);
+  /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, La IAIA Sabuda no és cap targeta del Mur.
+     R16b · «Què dinem?» (/page/receptes, la pàgina de l'Onada R14) és la cinquena de patrimoni (targetesMur.js). */
+  const CLAUS = [...SYSTEM_PAGES.map((pagina) => pagina.key).filter(esTargetaDelMur), 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals', 'receptes'].map((key) => `mur:${key}`);
 
   test('sense proveïdor: cap targeta, la mateixa constant congelada entre pintades, i cap espera', () => {
     const { result, rerender } = renderHook(() => usePaginesDelSistema());
@@ -241,13 +242,13 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
      Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) ·
      Catorze: hi entra «Candidatura Europea NLnet · NGI Fediversity». Abans,
      tretze. */
-  test('amb el contingut core: les14 pàgines i les4 de patrimoni del Mur, memoritzades sobre pageCopy', () => {
+  test('amb el contingut core: les14 pàgines i les5 de patrimoni del Mur, memoritzades sobre pageCopy', () => {
     mocks.core = NUCLI;
     const { result, rerender } = renderHook(() => useTargetesDeSistema());
     expect(SYSTEM_PAGES).toHaveLength(15);
-    expect(CLAUS).toHaveLength(18);
-    expect(CLAUS).not.toContain('mur:nodrir-la-iaia');
-    expect(result.current).toHaveLength(18);
+    expect(CLAUS).toHaveLength(19);
+    expect(CLAUS).not.toContain('mur:la-iaia-sabuda');
+    expect(result.current).toHaveLength(19);
     expect(result.current.some((targeta) => targeta.id === 'anatomia-rural')).toBe(false);
     expect(PAGE_COPY['anatomia-rural']).toBeDefined(); // El document directe es conserva; la targeta no forma part de la projecció del Mur.
     expect(result.current.map((targeta) => targeta.id)).toEqual(CLAUS.map((key) => key.slice(4)));
@@ -271,7 +272,7 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
     expect(renderHook(() => usePaginesDelSistema()).result.current.carregant).toBe(false);
   });
 
-  test('el Mur de l’entitat pilot (llavor i remot) porta les18 pàgines amb les seues publicacions, en l’ordre del Mur', () => {
+  test('el Mur de l’entitat pilot (llavor i remot) porta les19 pàgines amb les seues publicacions, en l’ordre del Mur', () => {
     mocks.core = NUCLI;
     mocks.mur = { ...mocks.mur, sortedFeedPosts: SENSE_PAGINES };
     const llavor = renderHook(() => usePublicacionsDeLActor('mur')).result.current.elements;
@@ -342,7 +343,7 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
     mocks.mur = { status: 'ready', error: null, refresh: vi.fn(), sortedFeedPosts: [], sortedMarketItems: [], sortedEvents: [] };
     const llest = renderHook(() => usePublicacionsDeLActor('mur')).result.current.elements;
     expect(ids(llest)).toEqual(expect.arrayContaining(CLAUS));
-    expect(llest).toHaveLength(18);
+    expect(llest).toHaveLength(19);
     expect(ids(llest)).not.toContain('mur:anatomia-rural');
   });
 

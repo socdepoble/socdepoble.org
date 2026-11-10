@@ -4,7 +4,7 @@
    naix amb el Mur triat. USA-05: la vista persistix per superfície. USA-01,
    USA-03: la fitxa es porta a la vista i el focus va al títol (gest o enllaç
    profund), es queda a la llista amb les fletxes i hi torna en tancar. */
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
 import { delVal } from '../../config/storage.js';
@@ -44,7 +44,7 @@ const opcions = (etiqueta = 'Pàgina de destinació') => [...screen.getByLabelTe
 
 test('producció sense apps: cap destí al Rebost ni al Bar, ni el nom del negoci', () => {
   vi.stubEnv('DEV', false); vi.stubEnv('VITE_SDP_APP_NEVERA', ''); vi.stubEnv('VITE_SDP_APP_BAR', '');
-  mount({ font: 'herbari', destiPublicacio: 'herbari', rutaInicial: '/page/herbari?fitxa=planta-1' });
+  mount({ font: 'herbari', destiPublicacio: 'herbari', permetreEdicioDestins: true, rutaInicial: '/page/herbari?fitxa=planta-1' });
   expect(opcions()).toEqual([['/page/herbari', 'Herbari'], ['/page/banc-de-llavors', 'Banc de llavors'], ['/page/receptes', 'Receptes']]);
   expect(screen.queryByRole('checkbox', { name: 'Rebost privat' })).toBeNull();
   expect(screen.queryByRole('checkbox', { name: 'TPV Bar privat' })).toBeNull();
@@ -69,19 +69,23 @@ test('una pàgina que no és entre les opcions obri la que mostra el selector', 
   expect(screen.getByTestId('path').textContent).toBe('/page/herbari');
 });
 
-test('l’anònim no veu el selector de destins; qui publica el veu amb el Mur triat', () => {
-  pub.autoritzat = false;
+test('la lectura pública és la mateixa per a qui administra i per a qualsevol visitant: per defecte no es mostra On es publica?; amb permetreEdicioDestins=true ho veu qui publica', () => {
+  pub.autoritzat = true;
   mount({ font: 'herbari', destiPublicacio: 'herbari', rutaInicial: '/page/herbari?fitxa=planta-1' });
   expect(screen.queryByRole('heading', { name: 'On es publica?' })).toBeNull();
   expect(screen.queryByRole('checkbox', { name: 'Mur' })).toBeNull();
+  cleanup(); pub.autoritzat = false;
+  mount({ font: 'herbari', destiPublicacio: 'herbari', permetreEdicioDestins: true, rutaInicial: '/page/herbari?fitxa=planta-1' });
+  expect(screen.queryByRole('heading', { name: 'On es publica?' })).toBeNull();
+  expect(screen.queryByRole('checkbox', { name: 'Mur' })).toBeNull();
   cleanup(); pub.autoritzat = true;
-  mount({ font: 'herbari', destiPublicacio: 'herbari', rutaInicial: '/page/herbari?fitxa=planta-1' });
+  mount({ font: 'herbari', destiPublicacio: 'herbari', permetreEdicioDestins: true, rutaInicial: '/page/herbari?fitxa=planta-1' });
   expect(screen.getByRole('checkbox', { name: 'Mur' }).checked).toBe(true);
 });
 
 test('una fitxa privada no naix amb cap destí públic triat', () => {
   vi.stubEnv('DEV', true);
-  mount({ font: 'nevera', destiPublicacio: 'rebost', privateItems: true, rutaInicial: '/page/herbari?fitxa=planta-1' });
+  mount({ font: 'nevera', destiPublicacio: 'rebost', privateItems: true, permetreEdicioDestins: true, rutaInicial: '/page/herbari?fitxa=planta-1' });
   const caselles = screen.getAllByRole('checkbox').filter(casella => casella.closest('fieldset'));
   expect(caselles.length).toBeGreaterThan(0);
   expect(caselles.filter(casella => casella.checked)).toEqual([]);
@@ -136,5 +140,81 @@ test('un enllaç profund ?fitxa= obri la fitxa amb el focus al títol', async ()
   await marcs();
   expect(overlay(container, 'planta-3').getAttribute('aria-current')).toBe('true');
   expect(titolDeLaFitxa(container).textContent).toBe('Sàlvia');
+  expect(document.activeElement).toBe(titolDeLaFitxa(container));
+});
+
+/* C6-04 (R16b) · El panell substituïx el Dialeg i en conserva el focus: entra al títol en obrir-se,
+   torna a la roda en tancar-se (mai a <body>) i Escape el tanca. */
+const RODA = 'Configuració de l’espai de treball';
+const roda = () => screen.getAllByRole('button', { name: RODA })[0];
+const titolDelPanell = () => within(screen.getByTestId('workspace-settings-inline-panel')).getByRole('heading', { level: 2, name: RODA });
+
+test('Llei Zero Finestres Flotants: la roda dentada obri la Configuració en la columna 3 amb botons Tornar i sense dialog', async () => {
+  mount();
+  fireEvent.click(roda());
+  expect(screen.queryByRole('dialog')).toBeNull();
+  const panell = screen.getByTestId('workspace-settings-inline-panel');
+  expect(panell).toBeTruthy();
+  expect(screen.getByTestId('workspace-settings-inline-top-back')).toBeTruthy();
+  expect(screen.getByTestId('workspace-settings-inline-bottom-back')).toBeTruthy();
+  await marcs();
+  expect(document.activeElement).toBe(titolDelPanell());
+  fireEvent.click(screen.getByTestId('workspace-settings-inline-bottom-back'));
+  expect(screen.queryByTestId('workspace-settings-inline-panel')).toBeNull();
+  await marcs();
+  expect(document.activeElement).not.toBe(document.body);
+  expect(document.activeElement).toBe(roda());
+});
+
+test('C6-04 · Escape dins del panell el tanca i el focus torna a la roda', async () => {
+  mount();
+  fireEvent.click(roda());
+  await marcs();
+  expect(document.activeElement).toBe(titolDelPanell());
+  fireEvent.keyDown(document.activeElement, { key: 'Escape' });
+  expect(screen.queryByTestId('workspace-settings-inline-panel')).toBeNull();
+  await marcs();
+  expect(document.activeElement).toBe(roda());
+});
+
+test('C6-04 · amagar la carpeta activa des del panell no el tanca: la tornada a «Tot» és del mateix panell', async () => {
+  mount();
+  fireEvent.click(screen.getByRole('button', { name: 'Carpeta A' }));
+  fireEvent.click(roda());
+  await marcs();
+  fireEvent.click(within(screen.getByTestId('workspace-settings-inline-panel')).getByRole('switch', { name: 'Vull vore Carpeta A' }));
+  await marcs();
+  expect(screen.getByTestId('workspace-settings-inline-panel')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Carpeta A' })).toBeNull();
+});
+
+test('C6-04 · en estret la roda queda en una columna inert: en tancar, el focus va a l’arrel de la columna 3, no a <body>', async () => {
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(375);
+  const { container } = mount();
+  fireEvent.click(roda());
+  await marcs();
+  expect(document.activeElement).toBe(titolDelPanell());
+  fireEvent.click(screen.getByTestId('workspace-settings-inline-top-back'));
+  await marcs();
+  expect(document.activeElement).not.toBe(document.body);
+  expect(document.activeElement).toBe(container.querySelector('.sdp-workspace-detail'));
+});
+
+/* R16b (3a ronda) · Una tria explícita a la llista tanca el panell també sobre la fitxa que ja és
+   activa: abans només el tancava un canvi de selecció i el clic no feia res. */
+test('C6-04 · amb una fitxa activa i el panell obert, tornar a clicar la mateixa fitxa torna la columna 3 a la fitxa', async () => {
+  const { container } = mount();
+  fireEvent.click(overlay(container, 'planta-2'));
+  await marcs();
+  expect(titolDeLaFitxa(container).textContent).toBe('Timonet');
+  fireEvent.click(roda());
+  await marcs();
+  expect(screen.getByTestId('workspace-settings-inline-panel')).toBeTruthy();
+  expect(titolDeLaFitxa(container)).toBeNull();
+  fireEvent.click(overlay(container, 'planta-2'));
+  expect(screen.queryByTestId('workspace-settings-inline-panel')).toBeNull();
+  await marcs();
+  expect(titolDeLaFitxa(container).textContent).toBe('Timonet');
+  expect(overlay(container, 'planta-2').getAttribute('aria-current')).toBe('true');
   expect(document.activeElement).toBe(titolDeLaFitxa(container));
 });

@@ -12,7 +12,7 @@ import { codiDErrorResumSessions } from '../../data/resumSessionsDispositius.js'
    sap que la migració 2611091500 és aplicada) la pàgina ho diu, no fa cap petició i no recull res. */
 const TEXTOS = {
   ca: {
-    seccio: 'Aportacions i curadoria de Nodrir la IAIA',
+    seccio: 'Aportacions i curadoria de La IAIA Sabuda',
     avisEstat: 'La revisió la fa una persona amb rol de curadoria verificat al servidor. Aprovar una aportació no la publica ni la incorpora al coneixement de la IAIA.',
     senseCapacitat: 'Este servidor encara no té activa la curadoria cultural. Esta pàgina no recull cap aportació fins que s’active.',
     titol: 'Comparteix cultura de poble',
@@ -40,7 +40,7 @@ const TEXTOS = {
     }
   },
   es: {
-    seccio: 'Aportaciones y curaduría de Alimentar a la IAIA',
+    seccio: 'Aportaciones y curaduría de La IAIA Sabia',
     avisEstat: 'La revisión la hace una persona con rol de curaduría verificado en el servidor. Aprobar una aportación no la publica ni la incorpora al conocimiento de la IAIA.',
     senseCapacitat: 'Este servidor aún no tiene activa la curaduría cultural. Esta página no recoge ninguna aportación hasta que se active.',
     titol: 'Comparte cultura de pueblo',
@@ -68,7 +68,7 @@ const TEXTOS = {
     }
   },
   en: {
-    seccio: 'Contributions and curation for Feed IAIA',
+    seccio: 'Contributions and curation for The Wise IAIA',
     avisEstat: 'Review is done by a person with a curator role verified on the server. Approving a contribution does not publish it or add it to IAIA’s knowledge.',
     senseCapacitat: 'This server does not have cultural curation enabled yet. This page does not collect any contributions until it is enabled.',
     titol: 'Share village culture',
@@ -96,7 +96,7 @@ const TEXTOS = {
     }
   },
   eu: {
-    seccio: 'IAIA elikatu: ekarpenak eta berrikuspena',
+    seccio: 'IAIA Jakintsua: ekarpenak eta berrikuspena',
     avisEstat: 'Berrikuspena zerbitzarian egiaztatutako kultura-arduradun rola duen pertsona batek egiten du. Ekarpen bat onartzeak ez du argitaratzen, ezta IAIAren jakintzara gehitzen ere.',
     senseCapacitat: 'Zerbitzari honek ez du oraindik kultura-berrikuspena aktibatuta. Orri honek ez du ekarpenik jasotzen aktibatu arte.',
     titol: 'Partekatu herriko kultura',
@@ -124,7 +124,7 @@ const TEXTOS = {
     }
   },
   gl: {
-    seccio: 'Achegas e curadoría de Nutrir a IAIA',
+    seccio: 'Achegas e curadoría de A IAIA Sabia',
     avisEstat: 'A revisión faina unha persoa con rol de curadoría verificado no servidor. Aprobar unha achega non a publica nin a incorpora ao coñecemento da IAIA.',
     senseCapacitat: 'Este servidor aínda non ten activa a curadoría cultural. Esta páxina non recolle ningunha achega ata que se active.',
     titol: 'Comparte cultura de aldea',

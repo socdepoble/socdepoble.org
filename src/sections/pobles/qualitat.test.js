@@ -36,7 +36,9 @@ const MODULS_NOUS = Object.freeze([
   /* D-5 (pla 261101_1246) · La lògica dels àlies de poble: cap nom de poble. */
   'src/sections/pobles/aliesDePobles.js',
   /* R16-S (P0-79) · El catàleg del selector de la fitxa i el nomenclàtor de l'INE. */
-  'src/sections/pobles/nomenclatorIne.js'
+  'src/sections/pobles/nomenclatorIne.js',
+  /* R16-X1 (Onada R16.12) · Subnavegació Pobles ↔ Gent i Entitats ↔ Demografia. */
+  'src/sections/pobles/SubnavigacioPoblesIGent.jsx'
 ]);
 const FITXERS = Object.freeze([
   ...MODULS_NOUS,

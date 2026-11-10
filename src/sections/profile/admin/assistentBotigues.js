@@ -5,7 +5,8 @@
  * Res no s'inventa ni es certifica:
  *   · FITXA_NATIVA són els valors dels fitxers del projecte (package.json, android/variables.gradle,
  *     android/app/build.gradle i el .pbxproj d'iOS); assistentBotigues.test.js els torna a llegir
- *     amb scripts/botigues/estat.mjs i cau si divergixen (G8-04: minSdk 24, targetSdk 36, 1.1.0);
+ *     amb scripts/botigues/estat.mjs i cau si divergixen (G8-04: minSdk, targetSdk i la versió, els
+ *     de FITXA_NATIVA; cap xifra copiada en este comentari);
  *   · el QR és el de la guia pública de descàrregues, l'única adreça que existix per als tres
  *     canals: /descarregues redirigix a /page/descarregues i no llig cap paràmetre de plataforma
  *     (App.jsx, <Navigate>). P0-62 (08-11-2026) · La guia ja enllaça la fitxa de l'App Store (canal
@@ -19,7 +20,8 @@
  *     LOCAL d'avisos «Missatges del xat», no cap canal de FCM (G8-16), i els passos diuen el que
  *     falta, com a HEAD: google-services.json i el compte de servei de FCM;
  *   · P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · l'App Store oberta (la fitxa i la
- *     versió de la botiga, 1.0, a part de la del projecte, 1.1.0 build 2) i, a Google Play, els tres
+ *     versió de la botiga, la d'ESTAT_APP_STORE, a part de la del projecte, la versió i el build de
+ *     FITXA_NATIVA) i, a Google Play, els tres
  *     passos dels verificadors, els mateixos de /page/descarregues.
  * Pur: sense React, DOM ni xarxa.
  */
@@ -36,10 +38,10 @@ const PUSH_NATIU_ACTIU = import.meta.env.VITE_SDP_PUSH_NATIU === '1';
 
 /** El que diuen els fitxers del projecte (assistentBotigues.test.js ho contrasta). */
 export const FITXA_NATIVA = Object.freeze({
-  versioWeb: '1.1.0',
+  versioWeb: '1.1.12',
   paquet: 'org.socdepoble.app',
   extensioCompartir: 'org.socdepoble.app.compartir',
-  versio: '1.1.0',
+  versio: '1.1.12',
   build: 2,
   iosMinim: '16.0',
   minSdk: 24,
@@ -57,7 +59,7 @@ export const ESTAT_APP_STORE = 'Publicada en obert a l’App Store (id6826441844
    La fitxa és la del canal app-store de src/config/canalsDeBotiga.js (la prova la contrasta: ací no
    s'importa, perquè el panell va en un altre tros diferit). L'adreça dels verificadors és un enllaç
    d'instruccions, NO cap canal de botiga: google-play continua tancat a canalsDeBotiga.js. */
-export const URL_FITXA_APP_STORE = 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844';
+export const URL_FITXA_APP_STORE = 'https://apps.apple.com/es/app/soc-de-poble/id6826441844';
 export const ADRECA_VERIFICADORS_GOOGLE_PLAY = 'https://play.google.com/apps/testing/org.socdepoble.app';
 /* Google demana 12 verificadors amb l'app instal·lada durant 14 dies seguits per a publicar-la (P0-53). */
 export const VERIFICADORS_DE_GOOGLE = Object.freeze({ persones: 12, dies: 14 });

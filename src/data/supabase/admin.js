@@ -70,6 +70,9 @@ export async function adminLligPersonalitzacio(config = {}) {
   return personalitzacioDeFiles(resultat.files);
 }
 
+/**
+ * R16.6 · Consulta el directori de sessions i dispositius registrats (superadmin aal2).
+ */
 export async function adminLlistaSessionsDispositius(entrada = {}, config = {}) {
   const vigilaSessio = capturaSessio();
   const { capturaFiltreSessions, validaSessionsDispositius } = await import('../sessionsDispositius.js');

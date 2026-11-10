@@ -125,7 +125,7 @@ describe('les ranures de botiga', () => {
     render(<Ranures />);
     const enllacos = [...ranura().querySelectorAll('a')];
     expect(enllacos.map((a) => [a.getAttribute('href'), a.className, a.textContent])).toEqual([
-      ['https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844', CLASSE_APP_STORE, "Disponible a l'App Store"],
+      ['https://apps.apple.com/es/app/soc-de-poble/id6826441844', CLASSE_APP_STORE, "Disponible a l'App Store"],
       [WORDPRESS, CLASSE_BOTIGA, 'WordPress.org']
     ]);
     expect(enllacos.map((a) => a.parentElement.className)).toEqual(['sdp-accions', 'sdp-accions']);

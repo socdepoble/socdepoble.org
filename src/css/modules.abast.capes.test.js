@@ -473,3 +473,28 @@ test('Bancal · el pes de l’Índex no torna a pujar: H1-H3 els de sempre i H4,
     expect(pesos[n], `H${n + 1} no pesa més que H${n}`).toBeLessThanOrEqual(pesos[n - 1]);
   }
 });
+
+/* R16A-03 (R16b) · Guarda de cascada del P0-74. `word-break` i `overflow-wrap` s'hereten: una
+   regla que els posa a un contenidor de l'Administració arriba a les td i th de la taula
+   d'Artefactes (.sdp-admin-table no en porta cap de pròpia) i la torna a trossejar, encara que
+   cap regla no nomene la taula. Tampoc no s'escampen per rols ARIA ni per .sp-card (C6-01):
+   qui necessite partir paraules llargues ho fa amb una classe pròpia. */
+const CONTENIDORS_SENSE_TALL = new Set([
+  '.sdp-admin-taxonomia',
+  '.sdp-admin-taxonomia__panel',
+  '.sdp-admin-taxonomia__section',
+  '.sdp-admin-taxonomia__card',
+  '.sdp-admin-taxonomia__table-wrap',
+  '[role="alert"]',
+  '[role="status"]',
+  '.sp-card'
+]);
+
+test('R16A-03 · cap word-break ni overflow-wrap: anywhere damunt d’un contenidor de l’Administració, d’un rol ARIA o de .sp-card', () => {
+  const trossejadora = (cos) => declaracions(cos).some(([propietat, valor]) =>
+    propietat === 'word-break' || (propietat === 'overflow-wrap' && valor === 'anywhere'));
+  const dolentes = MODULS
+    .filter((r) => trossejadora(r.cos))
+    .flatMap((r) => r.prelud.split(',').map((s) => s.trim()).filter((s) => CONTENIDORS_SENSE_TALL.has(s)).map((s) => `${s} ← ${r.prelud}`));
+  expect(dolentes).toEqual([]);
+});

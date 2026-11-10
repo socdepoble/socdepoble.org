@@ -164,22 +164,22 @@ export default function RevisorEditorialNode0Panel({
           <h4>{textos.proposalTitle}</h4>
           <p data-testid="proposta-content-node0">{resultat.proposta.content}</p>
 
-          <dl className="sdp-admin-dl">
-            <div>
-              <dt>{textos.suggestedCategoryLabel}</dt>
-              <dd data-testid="categoria-suggerida-node0">
+          <div className="sdp-admin-editorial-stack" data-testid="taxonomia-suggerida-editorial-node0">
+            <div className="sdp-admin-editorial-bloc">
+              <h5>{textos.suggestedCategoryLabel}</h5>
+              <p data-testid="categoria-suggerida-node0">
                 {resultat.taxonomia.categoriaMare || textos.noTaxonomy}
-              </dd>
+              </p>
             </div>
-            <div>
-              <dt>{textos.suggestedTagsLabel}</dt>
-              <dd data-testid="etiquetes-suggerides-node0">
+            <div className="sdp-admin-editorial-bloc">
+              <h5>{textos.suggestedTagsLabel}</h5>
+              <p data-testid="etiquetes-suggerides-node0">
                 {resultat.taxonomia.etiquetesSkos.length > 0
                   ? resultat.taxonomia.etiquetesSkos.map((t) => `#${t}`).join(' · ')
                   : textos.noTaxonomy}
-              </dd>
+              </p>
             </div>
-          </dl>
+          </div>
         </div>
       )}
     </section>

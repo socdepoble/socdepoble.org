@@ -144,9 +144,22 @@ test('SEG-R15b-02 · P7: cap text de la secció ni de PAGE_COPY nomena una perso
       v.unmount();
     }
   }
-  const pagina = PAGINA_NODRIR_IAIA['nodrir-la-iaia'];
+  const pagina = PAGINA_NODRIR_IAIA['la-iaia-sabuda'];
+  expect(pagina.title.startsWith('La IAIA Sabuda')).toBe(true);
+  /* R16b (tercera ronda) · El subtítol neutre de R16a, en les cinc llengües: no afirma cap acció que
+     el lead (curadoria encara no activa) negue. */
+  expect(pagina.subtitle).toBe('Aportacions culturals amb curadoria humana');
+  expect(pagina.image).toBe('/assets/ui/plugins/nodrir_la_iaia_vinyeta.webp');
+  expect(pagina.imageAlt.length).toBeGreaterThan(20);
   expect(Object.keys(pagina.translations).sort()).toEqual(['en', 'es', 'eu', 'gl']);
+  expect(Object.fromEntries(Object.entries(pagina.translations).map(([llengua, copia]) => [llengua, copia.subtitle]))).toEqual({
+    es: 'Aportaciones culturales con revisión humana',
+    en: 'Cultural contributions with human review',
+    eu: 'Kultura ekarpenak, giza berrikuspenarekin',
+    gl: 'Achegas culturais con revisión humana'
+  });
   for (const copia of [pagina, ...Object.values(pagina.translations)]) {
+    expect(copia.imageAlt?.length).toBeGreaterThan(20);
     expect(JSON.stringify(copia)).not.toMatch(PROHIBIT);
     expect(copia.html).toMatch(/<h3>[^<]+<\/h3><p>[^<]+<\/p>/);
   }

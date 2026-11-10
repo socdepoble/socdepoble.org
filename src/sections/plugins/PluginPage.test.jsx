@@ -239,8 +239,8 @@ describe('Onada 10 · la pàgina porta la data i les etiquetes de la targeta', (
   const AMB_DATA = PLUGINS.filter((p) => p.data !== null);
   const SENSE_DATA = PLUGINS.filter((p) => p.data === null);
 
-  test('el cens: cinc amb data i etiquetes (Gestoria, Rebost, Salut, Lector RSS i TPV); tres sense', () => {
-    expect(AMB_DATA.map((p) => p.id)).toEqual(['gestoria', 'rebost', 'salut', 'genealogia', 'rss', 'tpv']);
+  test('el cens: sis amb data i etiquetes (Gestoria, TPV, Rebost, Salut, Arbre Genealògic i Lector RSS); tres sense', () => {
+    expect(AMB_DATA.map((p) => p.id)).toEqual(['gestoria', 'tpv', 'rebost', 'salut', 'genealogia', 'rss']);
     expect(SENSE_DATA.map((p) => p.id)).toEqual(['mapa', 'vehicle', 'animalets']);
     expect(PLUGINS.filter((p) => p.etiquetes.length > 0)).toEqual(AMB_DATA);
   });
@@ -768,7 +768,7 @@ describe('textos nous de la UI en les cinc llengües', () => {
 const AMB_APP = PLUGINS.filter((p) => p.obrir?.startsWith('/app/')).map((p) => p.id);
 
 test('el cens de les eines amb app de la plataforma (l’estat sense destí val per a totes)', () => {
-  expect(AMB_APP).toEqual(['gestoria', 'rebost', 'salut', 'rss', 'tpv']);
+  expect(AMB_APP).toEqual(['gestoria', 'tpv', 'rebost', 'salut', 'rss']);
 });
 
 test.each(AMB_APP)('%s: desactivar la trau del Panell, conserva dades i es pot desfer', (id) => {

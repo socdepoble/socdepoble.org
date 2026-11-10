@@ -95,10 +95,10 @@ export function BrainTaxonomiaVista({ model, paginacio = [] }) {
       </div>
     </> : <section aria-labelledby={`${id}-laboratori`}>
       <h4 id={`${id}-laboratori`}>Provar abans de decidir</h4><p>Simulació en memòria: cap nom ni classificació es publica. Una coaparició no prova que dos conceptes siguen sinònims.</p>
-      <details><summary>Dissonàncies entre identificador i nom visible</summary><dl>
-        <dt><code>natura-excursions</code></dt><dd>{perId.get('category:natura-excursions').label}: el nom inclou Patrimoni i l’identificador conserva Excursions.</dd>
-        <dt><code>patrimoni-cultura</code></dt><dd>{perId.get('category:patrimoni-cultura').label}: l’identificador inclou Patrimoni i el nom actual no.</dd>
-      </dl><p>Són identitats heretades diferents. Provar un nom no canvia cap identificador ni reclassifica articles.</p></details>
+      <details><summary>Dissonàncies entre identificador i nom visible</summary><div className="sdp-admin-editorial-stack" data-testid="dissonancies-editorial-stack">
+        <div className="sdp-admin-editorial-bloc"><h5><code>natura-excursions</code></h5><p>{perId.get('category:natura-excursions').label}: el nom inclou Patrimoni i l’identificador conserva Excursions.</p></div>
+        <div className="sdp-admin-editorial-bloc"><h5><code>patrimoni-cultura</code></h5><p>{perId.get('category:patrimoni-cultura').label}: l’identificador inclou Patrimoni i el nom actual no.</p></div>
+      </div><p>Són identitats heretades diferents. Provar un nom no canvia cap identificador ni reclassifica articles.</p></details>
       <Camp etiqueta="Concepte per a escurçar"><Selector value={seleccio} opcions={[{ valor: '', etiqueta: 'Tria un concepte…' }, ...model.nodes.map((node) => ({ valor: node.id, etiqueta: node.label }))]} onChange={(event) => tria(event.target.value)}/></Camp>
       <section aria-label="Sis noms proposats pel Mestre"><h5>Propostes del Mestre</h5><p>Tria primer un concepte. Cada botó prova un nom sobre eixa identitat; no crea cap categoria ni reclassifica articles.</p><div className="sdp-taxonomia__accions">{PROPOSTES_MESTRE_BRAIN.map((nom) => <Boto key={nom} varietat="secundari" disabled={!seleccionat} onClick={() => setNoms((valors) => ({ ...valors, [seleccio]: nom }))}>Prova el nom: {nom}</Boto>)}</div><p>L’exemple proporcionat «{EXEMPLE_MESTRE_BRAIN}» té {longitudNomBrain(EXEMPLE_MESTRE_BRAIN)} caràcters i no és una de les sis categories d’aquest vocabulari. Les propostes es conserven separades dels noms canònics.</p></section>
       <details><summary>Exemples demanats i vocabulari disponible</summary><p>Podcast, Documental i Govern no són etiquetes canòniques d’aquesta instantània. Ajuntament de La Torre és la identitat concreta disponible; La Torre és també un lloc, i Associacionisme és el concepte canònic relacionat amb l’exemple genèric «Associació». Aquests exemples no afegixen etiquetes ni assignacions als documents.</p></details>

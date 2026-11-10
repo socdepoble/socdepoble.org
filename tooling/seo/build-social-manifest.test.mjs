@@ -308,7 +308,7 @@ test('la Consola: les rutes de seoConsola.js, a l’evidència; una imatge bloqu
 const PLUGINS_DE_L_ORDRE=Object.freeze(['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv','genealogia']);
 const EXCLOSES_DE_PAGE=Object.freeze({
   notes_shared:'còpia antiga de la fitxa del Bloc de notes (/page/notes), amb el logotip SVG com a imatge: no és cap presentació pròpia',
-  'nodrir-la-iaia':'espai de curadoria amb rol verificat i safata privada; no és una presentació pública per a rastrejadors',
+  'la-iaia-sabuda':'espai de curadoria amb rol verificat i safata privada; no és una presentació pública per a rastrejadors',
   'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers'
   /* P0-60 / IDEA-191 (ordre del Mestre, 08-11-2026 17:09) · L'herbari, el banc de llavors, les rutes de
      poble i els arbres monumentals ja porten la seua il·lustració Ibáñez (la variant social és a
@@ -345,7 +345,7 @@ test('cobertura de l’arbre de veres: presentacions inventariades, /disseny, /w
     assert.match(sniffImage(bytes)?.type??'',/^image\/(?:png|jpeg)$/,ruta);
   }
   assert.ok(Object.keys(manifest.routes).filter(ruta=>ruta.startsWith('/plugin/')).every(ruta=>inventari.includes(ruta)),'cap plugin fora de l’ordre');
-  for(const ruta of ['/notes','/xat','/el-meu-perfil','/control','/gestoria','/page/notes_shared','/page/nodrir-la-iaia'])assert.equal(manifest.routes[ruta]??manifest.aliases[ruta],undefined,ruta);
+  for(const ruta of ['/notes','/xat','/el-meu-perfil','/control','/gestoria','/page/notes_shared','/page/la-iaia-sabuda'])assert.equal(manifest.routes[ruta]??manifest.aliases[ruta],undefined,ruta);
   const senseCobertura=Object.keys(PAGE_COPY).filter(clau=>!resolvePageSlugPath(clau)&&!manifest.routes[`/page/${clau}`]&&!manifest.aliases[`/page/${clau}`]
     &&!Object.hasOwn(EXCLOSES_DE_PAGE,clau));
   assert.deepEqual(senseCobertura,[],'claus de /page/ sense head social ni motiu');

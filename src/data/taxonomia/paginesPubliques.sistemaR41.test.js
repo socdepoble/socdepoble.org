@@ -56,7 +56,7 @@ const categoryText=(id,language)=>CATEGORIES[id][LANGUAGES.indexOf(language)];
 
 // Literal editorial matrix: one mandatory tag anchor per page. It detects a
 // blanket category or an entry removed from both production tables.
-// Arbitratge R46 i P6: 33 claus públiques amb Receptes (R14) i Nodrir la IAIA (P0-64).
+// Arbitratge R46 i P6: 33 claus públiques amb Receptes (R14) i La IAIA Sabuda (P0-64).
 // 25 es classifiquen; les 8 pàgines d'acció de DESTINS_CONTROL continuen sense etiquetes.
 const PAGES=[
  ['projecte','tecnologia-lliure','Projecte Sóc de Poble'],
@@ -83,15 +83,15 @@ const PAGES=[
  ['rutes-de-poble','natura-excursions','Rutes'],
  ['arbres-monumentals','natura-excursions','Arbres Monumentals'],
  // P0-64 · curadoria cultural; mateix vocabulari editorial de Documentació.
- ['nodrir-la-iaia','patrimoni-cultura','Documentació'],
+ ['la-iaia-sabuda','patrimoni-cultura','Documentació'],
  // Onada R14 · /page/receptes, el receptari «Què dinem?».
  ['receptes','patrimoni-cultura','Patrimoni']
 ];
 // P6 · les huit pàgines d'acció (publicar i saber-ne més del Panell): cap etiqueta, en cap llengua.
 const ACTION_PAGES=['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge'];
-// Publicació vigent: 15 documents del sistema amb Nodrir la IAIA (P0-64) + 4 de patrimoni.
+// Publicació vigent: 15 documents del sistema amb La IAIA Sabuda (P0-64) + 5 de patrimoni, amb el receptari «Què dinem?» (R16).
 // P0-51 / IDEA-182 conserva Anatomia rural fora de les targetes del Mur.
-const PUBLISHED_19=['projecte','wikidepoble','constitucio','roadmap','notes','disseny','consola','cervell','versions','legal','xat','drets-autor','descarregues','nodrir-la-iaia','fediversity','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals'];
+const PUBLISHED_20=['projecte','wikidepoble','constitucio','roadmap','notes','disseny','consola','cervell','versions','legal','xat','drets-autor','descarregues','la-iaia-sabuda','fediversity','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals','receptes'];
 
 function assertClassification(labels,key,category,requiredTag,language){
  expect(Array.isArray(labels)).toBe(true);
@@ -132,7 +132,7 @@ const sentinels=()=>({
 });
 
 describe('R41 independent public-page contract',()=>{
- it('the fixture covers exactly the 33 public keys (25 classified, with R14 receptes and P0-64 Nodrir, + 8 P6 action pages) and the 6/49 normative vocabularies',()=>{
+ it('the fixture covers exactly the 33 public keys (25 classified, with R14 receptes and P0-64 La IAIA Sabuda, + 8 P6 action pages) and the 6/49 normative vocabularies',()=>{
   expect(PAGES).toHaveLength(25);expect(ACTION_PAGES).toHaveLength(8);
   const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(33);
   expect(Object.keys(PAGE_COPY).sort()).toEqual(keys.sort());
@@ -218,9 +218,10 @@ describe('R41 independent public-page contract',()=>{
   copy['private-note']={private:true,html:'Secret original',labels:[{text:'Eina',className:'sdp-badge-category'}]};
   const before=structuredClone(copy);
   const cards=targetesDeSistema(copy,{nativa:false,language});
-  // PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, Nodrir la IAIA no és cap targeta: en queden 18.
-  expect(cards.map(card=>card.id).sort()).toEqual(PUBLISHED_19.filter(key=>key!=='nodrir-la-iaia').sort());
-  expect(cards).toHaveLength(18);expect(cards.map(card=>card.id)).not.toContain('anatomia-rural');expect(cards.map(card=>card.id)).not.toContain('nodrir-la-iaia');
+  // PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, La IAIA Sabuda no és cap targeta, ni al Mur
+  // (targetesMur.js) ni al Panell de Control (ControlSection.jsx): només en té amb la bandera. En queden 19.
+  expect(cards.map(card=>card.id).sort()).toEqual(PUBLISHED_20.filter(key=>key!=='la-iaia-sabuda').sort());
+  expect(cards).toHaveLength(19);expect(cards.map(card=>card.id)).not.toContain('anatomia-rural');expect(cards.map(card=>card.id)).not.toContain('la-iaia-sabuda');
   for(const card of cards){
    const [,category,tag]=PAGES.find(([key])=>key===card.id);
    assertClassification(card.labels,card.id,category,tag,language);

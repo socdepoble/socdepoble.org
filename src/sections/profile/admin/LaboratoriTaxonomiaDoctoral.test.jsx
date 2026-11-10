@@ -138,14 +138,18 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
     localStorage.clear();
   });
 
-  test('6. El panell «🌐 Nodes, Fedivers i Resiliència 3-2-1» mostra PostgreSQL 17.11, les 40 taules, els 32 documents públics, @depoble@mastodont.cat i la còpia 3-2-1 amb age', () => {
-    render(<PanellNodesFediversResiliencia />);
+  test('6. El panell «🌐 Nodes, Fedivers i Resiliència 3-2-1» mostra PostgreSQL 17.11, les 40 taules, els 32 documents públics, @depoble@mastodont.cat i la còpia 3-2-1 amb age amb jerarquia editorial h4 + p', () => {
+    const { container } = render(<PanellNodesFediversResiliencia />);
     expect(screen.getByRole('article', { name: /Nodes, Fedivers i Resiliència 3-2-1/i })).toBeTruthy();
     expect(screen.queryByRole('heading', { level: 2, name: /Nodes, Fedivers i Resiliència 3-2-1/i })).toBeNull();
     expect(screen.getAllByText('17.11').length).toBeGreaterThan(0);
     expect(screen.getAllByText('40').length).toBeGreaterThan(0);
     expect(screen.getAllByText('32').length).toBeGreaterThan(0);
     expect(screen.getAllByText('@depoble@mastodont.cat').length).toBeGreaterThan(0);
+    const explicatiu = screen.getByTestId('admin-node0-explicatiu-consola');
+    expect(explicatiu.querySelectorAll('h4').length).toBe(3);
+    expect(explicatiu.querySelectorAll('dl').length).toBe(0);
+    expect(container.querySelectorAll('.sdp-admin-editorial-bloc p').length).toBeGreaterThanOrEqual(8);
   });
 
   test('R34 · el laboratori bloqueja termes retirats i neteja l’estat antic en desar un canvi vàlid',()=>{

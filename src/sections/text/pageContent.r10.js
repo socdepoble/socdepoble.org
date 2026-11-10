@@ -256,7 +256,7 @@ const dossier = {
    de les entregues (h3, obertura i un apartat «Novetat ·»), en les cinc llengües. L'adreça és la del
    canal app-store de src/config/canalsDeBotiga.js (pageContent.versions.test.js ho contrasta). Cap
    altra plataforma mòbil al bloc: /versions s'obri dins de l'app d'iPhone (regla 2.3.10). */
-const FITXA_APP_STORE = 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844';
+const FITXA_APP_STORE = 'https://apps.apple.com/es/app/soc-de-poble/id6826441844';
 const FITA_APP_STORE = {
  ca: ['6 de novembre de 2026 · Fita · L’app d’iPhone i iPad, publicada a l’App Store (versió 1.0)',
   '<strong>Apple</strong> ha <strong>aprovat i publicat</strong> l’app de Sóc de Poble per a <strong>iPhone</strong> i <strong>iPad</strong>: la <strong>versió 1.0</strong> és a l’<strong>App Store</strong> des del <strong>6 de novembre de 2026</strong>, <strong>gratis</strong> i per a iOS i iPadOS 16 o posterior. Ho hem comprovat el 8 de novembre a la consulta pública d’Apple.',
@@ -337,7 +337,8 @@ const fitaR13R14 = (language) => {
    etiquetes Llista/Rajola són les de textosCatalegWorkspace i els símbols, els del panell (textosAlergens). Cap
    altra plataforma mòbil (regla 2.3.10), l'enllaç és intern i sense target=_blank, i la densitat de negretes és la
    de la fita anterior (pageContent.versions.test.js). PRODUCCIO-02 bis · La pàgina es diu pel títol de la seua
-   llengua (pageContent.nodrirIaia.js): Nodrir la IAIA, Alimentar a la IAIA, Feed IAIA, IAIA elikatu, Nutrir a IAIA. */
+   llengua aquell dia (pageContent.nodrirIaia.js de R16a; ara, NOMS_R15 a pageContent.versions.test.js): Nodrir la
+   IAIA, Alimentar a la IAIA, Feed IAIA, IAIA elikatu, Nutrir a IAIA. */
 const MIGRACIO_R15 = '<code>2611091500</code>';
 const FITA_R15 = {
  ca: ['9 de novembre de 2026 · Onada R15 · El Workspace dels catàlegs i la proposta d’al·lèrgens',
@@ -368,6 +369,57 @@ const FITA_R15 = {
 };
 const fitaR15 = (language) => {
  const [titol, obertura, ...apartats] = FITA_R15[language];
+ return `${section('h3', titol, obertura)}\n      ${apartats.map(([t, c]) => subSection(t, c)).join('\n      ')}\n\n      `;
+};
+
+/* Onada R16 (R16b) · La fita R16 obri /versions, davant de la fita R15, en les cinc llengües: explica la versió de
+   la capçalera. Fets d'este codi el 10-11-2026, comprovats en escriure-la; pageContent.versions.test.js (R16b) els
+   fixa literals com a història: el codi web i la configuració de les apps passen a la 1.1.12, el número del
+   connector de WordPress (package.json, versionName i MARKETING_VERSION), i el número de build, el 2, no canvia (no
+   ha arribat cap app nova a les botigues); el Panell de Control en tres espais (TEXTOS_ESPAIS_PLUGINS i «Maquinària i
+   Sistema» del diccionari); «Nodrir la IAIA» es diu La IAIA Sabuda (TEXTOS_IAIA_SABUDA; navigation.js porta
+   l'adreça antiga a la nova) i al Panell només té targeta amb la curadoria cultural encesa (ControlSection.jsx);
+   «Què dinem?» entra al Mur amb la portada del llibre (targetesMur.js i pageContent.patrimoniR14.js); i la
+   subnavegació de Pobles i Gent (TEXTOS_SUBNAV_POBLES_GENT). La fita R15 és història del 9-11-2026 i conserva els
+   noms d'aquell dia. Cap altra
+   plataforma mòbil (regla 2.3.10), els enllaços són interns i sense target=_blank, i la densitat de negretes és
+   la de les fites anteriors. */
+const ENLLAC_PANELL = '/control';
+const ENLLAC_IAIA_SABUDA = '/page/la-iaia-sabuda';
+const FITA_R16 = {
+ ca: ['10 de novembre de 2026 · Onada R16 · La versió 1.1.12, el Panell de Control en tres espais i La IAIA Sabuda',
+  'Amb l’<strong>Onada R16</strong>, el <strong>codi web</strong> i la configuració de les <strong>apps</strong> passen a la <strong>versió 1.1.12</strong>, el <strong>mateix número</strong> que el <strong>connector de WordPress</strong>. El número de build de les apps, el 2, no canvia.',
+  ['Novetat · El Panell de Control, en tres espais', `Davall de les targetes de publicació, el ${enllacIntern(ENLLAC_PANELL, 'Panell de Control')} s’ordena ara en <strong>tres espais</strong>: <strong>«Economia i Empresa»</strong>, <strong>«La llar»</strong> i <strong>«Maquinària i Sistema»</strong>.`],
+  ['Novetat · La IAIA Sabuda', `La pàgina <strong>«Nodrir la IAIA»</strong> es diu ara ${enllacIntern(ENLLAC_IAIA_SABUDA, '<strong>La IAIA Sabuda</strong>')}, i l’<strong>adreça antiga</strong> hi porta. Al <strong>Panell de Control</strong>, la seua targeta només es veu amb la <strong>curadoria cultural</strong> encesa.`],
+  ['Novetat · «Què dinem?» al Mur', `El ${enllacIntern(ENLLAC_RECEPTES, 'receptari «Què dinem?»')} entra al <strong>Mur</strong> com una targeta més, amb la <strong>portada del llibre</strong>.`],
+  ['Novetat · La subnavegació de Pobles i Gent', '<strong>Pobles</strong>, <strong>Gent i Entitats</strong> i <strong>Demografia</strong> es connecten amb una <strong>subnavegació</strong> comuna, en les cinc llengües de l’App.']],
+ es: ['10 de noviembre de 2026 · Oleada R16 · La versión 1.1.12, el Panel de Control en tres espacios y La IAIA Sabia',
+  'Con la <strong>Oleada R16</strong>, el <strong>código web</strong> y la configuración de las <strong>apps</strong> pasan a la <strong>versión 1.1.12</strong>, el <strong>mismo número</strong> que el <strong>conector de WordPress</strong>. El número de build de las apps, el 2, no cambia.',
+  ['Novedad · El Panel de Control, en tres espacios', `Debajo de las <strong>tarjetas de publicación</strong>, el ${enllacIntern(ENLLAC_PANELL, 'Panel de Control')} se ordena ahora en <strong>tres espacios</strong>: <strong>«Economía y Empresa»</strong>, <strong>«El hogar»</strong> y <strong>«Maquinaria y Sistema»</strong>.`],
+  ['Novedad · La IAIA Sabia', `La página <strong>«Alimentar a la IAIA»</strong> se llama ahora ${enllacIntern(ENLLAC_IAIA_SABUDA, '<strong>La IAIA Sabia</strong>')}, y la <strong>dirección antigua</strong> lleva a ella. En el <strong>Panel de Control</strong>, su tarjeta solo se ve con la <strong>curaduría cultural</strong> activada.`],
+  ['Novedad · «Què dinem?» en el Muro', `El ${enllacIntern(ENLLAC_RECEPTES, 'recetario «Què dinem?»')} entra en el <strong>Muro</strong> como una tarjeta más, con la <strong>portada del libro</strong>.`],
+  ['Novedad · La subnavegación de Pueblos y Gente', '<strong>Pueblos</strong>, <strong>Gente y Entidades</strong> y <strong>Demografía</strong> se conectan con una <strong>subnavegación</strong> común, en las cinco lenguas de la App.']],
+ en: ['10 November 2026 · Wave R16 · Version 1.1.12, the Control Panel in three spaces and The Wise IAIA',
+  'With <strong>Wave R16</strong>, the <strong>web code</strong> and the <strong>apps</strong>’ configuration move to <strong>version 1.1.12</strong>, the <strong>same number</strong> as the <strong>WordPress plugin</strong>. The apps’ build number, 2, does not change.',
+  ['New · The Control Panel, in three spaces', `Below the publishing cards, the ${enllacIntern(ENLLAC_PANELL, 'Control Panel')} is now arranged in <strong>three spaces</strong>: <strong>«Economy &amp; Business»</strong>, <strong>«The Home»</strong> and <strong>«Machinery and System»</strong>.`],
+  ['New · The Wise IAIA', `The <strong>«Feed IAIA»</strong> page is now called ${enllacIntern(ENLLAC_IAIA_SABUDA, '<strong>The Wise IAIA</strong>')}, and the <strong>old address</strong> leads to it. In the <strong>Control Panel</strong>, its card only shows with <strong>cultural curation</strong> switched on.`],
+  ['New · «Què dinem?» on the Wall', `The ${enllacIntern(ENLLAC_RECEPTES, '«Què dinem?» recipe book')} joins the <strong>Wall</strong> as one more card, with the <strong>book’s cover</strong>.`],
+  ['New · Towns and People sub-navigation', '<strong>Towns</strong>, <strong>People &amp; Entities</strong> and <strong>Demographics</strong> are linked by a shared <strong>sub-navigation</strong>, in the five languages of the App.']],
+ eu: ['2026ko azaroaren 10a · R16 olatua · 1.1.12 bertsioa, Kontrol panela hiru gunetan eta IAIA Jakintsua',
+  '<strong>R16 olatuarekin</strong>, <strong>webgunearen kodea</strong> eta aplikazioen konfigurazioa <strong>1.1.12 bertsiora</strong> igarotzen dira, <strong>WordPress konektorearen zenbaki bera</strong>. Aplikazioen build zenbakia, 2, ez da aldatzen.',
+  ['Berritasuna · Kontrol panela, hiru gunetan', `Argitalpen-txartelen azpian, ${enllacIntern(ENLLAC_PANELL, 'Kontrol panela')} <strong>hiru gunetan</strong> antolatzen da orain: <strong>«Ekonomia eta Enpresa»</strong>, <strong>«Etxea»</strong> eta <strong>«Makineria eta Sistema»</strong>.`],
+  ['Berritasuna · IAIA Jakintsua', `<strong>«IAIA elikatu»</strong> orriak ${enllacIntern(ENLLAC_IAIA_SABUDA, '<strong>IAIA Jakintsua</strong>')} du izena orain, eta <strong>helbide zaharrak</strong> hara eramaten du. <strong>Kontrol panelean</strong>, bere txartela <strong>kultura-zaintza</strong> piztuta dagoenean bakarrik ikusten da.`],
+  ['Berritasuna · «Què dinem?» Horman', `${enllacIntern(ENLLAC_RECEPTES, '«Què dinem?» errezeta-liburua')} <strong>Horman</strong> sartzen da beste txartel bat bezala, <strong>liburuaren azalarekin</strong>.`],
+  ['Berritasuna · Herrien eta Jendearen azpinabigazioa', '<strong>Herriak</strong>, <strong>Jendea eta Entitateak</strong> eta <strong>Demografia</strong> <strong>azpinabigazio</strong> komun batek lotzen ditu, Aplikazioaren bost hizkuntzetan.']],
+ gl: ['10 de novembro de 2026 · Onda R16 · A versión 1.1.12, o Panel de control en tres espazos e A IAIA Sabia',
+  'Coa <strong>Onda R16</strong>, o <strong>código web</strong> e a configuración das <strong>apps</strong> pasan á <strong>versión 1.1.12</strong>, o <strong>mesmo número</strong> que o <strong>conector de WordPress</strong>. O número de build das apps, o 2, non cambia.',
+  ['Novidade · O Panel de control, en tres espazos', `Debaixo das tarxetas de publicación, o ${enllacIntern(ENLLAC_PANELL, 'Panel de control')} ordénase agora en <strong>tres espazos</strong>: <strong>«Economía e Empresa»</strong>, <strong>«O fogar»</strong> e <strong>«Maquinaria e Sistema»</strong>.`],
+  ['Novidade · A IAIA Sabia', `A páxina <strong>«Nutrir a IAIA»</strong> chámase agora ${enllacIntern(ENLLAC_IAIA_SABUDA, '<strong>A IAIA Sabia</strong>')}, e o <strong>enderezo antigo</strong> leva a ela. No <strong>Panel de control</strong>, a súa tarxeta só se ve coa <strong>curadoría cultural</strong> acendida.`],
+  ['Novidade · «Què dinem?» no Muro', `O ${enllacIntern(ENLLAC_RECEPTES, 'receitario «Què dinem?»')} entra no <strong>Muro</strong> como unha tarxeta máis, coa <strong>portada do libro</strong>.`],
+  ['Novidade · A subnavegación de Vilas e Xente', '<strong>Vilas</strong>, <strong>Xente e Entidades</strong> e <strong>Demografía</strong> conéctanse cunha <strong>subnavegación</strong> común, nas cinco linguas da App.']]
+};
+const fitaR16 = (language) => {
+ const [titol, obertura, ...apartats] = FITA_R16[language];
  return `${section('h3', titol, obertura)}\n      ${apartats.map(([t, c]) => subSection(t, c)).join('\n      ')}\n\n      `;
 };
 
@@ -442,7 +494,8 @@ export function aplicaDossierR10(copy) {
     // P0-62 · La fita de l'App Store obri la pàgina, en la llengua de la pàgina.
     // Encàrrec R13+R14 · La crònica de les Onades R13 i R14 va davant de la fita de l'App Store.
     // Onada R15b (PRODNM-08) · La fita R15 va davant de la crònica R13+R14.
-    const fita = `${fitaR15(language)}${fitaR13R14(language)}${fitaAppStore(language)}`;
+    // Onada R16 (R16b) · La fita R16, la de la versió 1.1.12, va davant de la fita R15.
+    const fita = `${fitaR16(language)}${fitaR15(language)}${fitaR13R14(language)}${fitaAppStore(language)}`;
     content = language === 'ca' ? { html:`\n      ${fita}${entry}\n      ${originals.versions.html}` } : {
      title: ({es:'Versiones',en:'Versions',eu:'Bertsioak',gl:'Versións'})[language], subtitle:d.version, lead:d.lead,
      html:`\n      ${fita}${entry}<div lang="ca">${originals.versions.html}</div>`, labels:[]

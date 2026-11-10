@@ -80,7 +80,7 @@ function elementDeLaLlista(arrel, id) {
 }
 
 /** One catalogue shell; the domain retains its data, actions and inline page. */
-export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta, privateItems = false, font = null, destiPublicacio = null }) {
+export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta, privateItems = false, font = null, destiPublicacio = null, permetreEdicioDestins = false }) {
   const ui = useUIActionsOpcional();
   const textos = textosCatalegWorkspace(ui?.language);
   /* USA-05 · La vista persistix per superfície (vistaCataleg.js). */
@@ -148,6 +148,8 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
   return <UniversalWorkspace idEspai={id} model={modelAmbProjeccions} labels={{ count: textos.count, ...labels }} tagFilter={false}
     selection={selection} onSelectionChange={canviaSeleccio}
     collapsibleNavigation={false} mestreDetall={{ clau: id, element: fitxaEnllacada }}
+    ajustosEnDetall={true}
+    titolTornadaAjustos={labels?.items || null}
     className="sdp-cataleg-workspace"
     listClassName={`sdp-cataleg-workspace__${vista}`}
     accionsLlista={[
@@ -186,8 +188,10 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
       return <>{renderDetail({ ...props,
         onTriaItem: itemId => { setSelection(current => ({ ...current, itemId })); if (itemId != null) demana('obri', itemId, true); },
         onClose: () => { const obert = selection.itemId; setSelection(current => ({ ...current, itemId: null })); if (obert != null) demana('tanca', obert, true); } })}
-        {/* PRODNM-06, USA-13 · Qui no pot publicar no veu el selector de destins. */}
-        {referencia && publicacio.autoritzat ? <SelectorDestinsPublicacio key={JSON.stringify([font, referencia.id, publicacio.ownerId])}
+        {/* PRODNM-06, USA-13 · La lectura pública és la mateixa per a qui administra i per a qualsevol visitant:
+            no es mostra «On es publica?». Només amb permetreEdicioDestins, que cap cridador de producció no passa
+            (C6-10). La funció desapareix de la interfície; no s'ha traslladat a l'Edició avançada del Bloc. */}
+        {permetreEdicioDestins && referencia && publicacio.autoritzat ? <SelectorDestinsPublicacio key={JSON.stringify([font, referencia.id, publicacio.ownerId])}
           font={referencia} inicials={inicials} desa={publicacio.desa} autoritzat={publicacio.autoritzat}
           error={files.some(row => row.pendent) && publicacio.error?.desatLocal === true ? publicacio.error : null} persistent={publicacio.persistent} language={ui?.language}
           estat={files.length ? files.some(row => row.pendent) ? 'pendent' : 'confirmat' : null} /> : null}

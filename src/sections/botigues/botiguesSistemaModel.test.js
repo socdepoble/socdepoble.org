@@ -90,12 +90,14 @@ test('la projecció del cens és exacta i sanejada, sense importar el BIOS o afi
   expect(MODEL_BOTIGUES.flota.runtimeVerified).toBe(false);
 });
 
-test('versió del connector comprovada contraPHP i stable tag; no es confon amb la web', () => {
+/* R16b (tercera ronda) · La font de VERSIO_WORDPRESS_LOCAL és el connector: la capçalera PHP
+   (Version) i el Stable tag del readme. La versió de la web (package.json) en va a part: la prova no
+   imposa que siguen iguals ni diferents. */
+test('versió del connector comprovada contra la capçalera PHP i el Stable tag, sense lligar-la a la de la web', () => {
   const php = readFileSync('wordpress-plugin/socdepoble-enxufe.php','utf8');
   const readme = readFileSync('wordpress-plugin/readme.txt','utf8');
   expect(php.match(/^\s*\*?\s*Version:\s*(\S+)/m)?.[1]).toBe(VERSIO_WORDPRESS_LOCAL);
   expect(readme.match(/^Stable tag:\s*(\S+)/m)?.[1]).toBe(VERSIO_WORDPRESS_LOCAL);
-  expect(JSON.parse(readFileSync('package.json','utf8')).version).not.toBe(VERSIO_WORDPRESS_LOCAL);
 });
 
 test('la nova fitxa reutilitza el recurs aprovat i el seu alt sense modificar la font original', () => {

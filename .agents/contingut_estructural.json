@@ -44,10 +44,10 @@
       "data": "2026-11-07"
     },
     "descarregues": {
-      "sha256": "5ab60519370f542b4588a9fc67a459f2beb84338a34aaa25b65c80f8b09ddc94",
-      "html": 9909,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-08"
+      "sha256": "3eb4ed7a05f625fd3cdf74ebcd6f4c0d74d9e0e54bd3a8b662f834cd671f16f9",
+      "html": 9904,
+      "aprovat_per": "Mestre Javi (ordre del 10-11: «Fes R16b», arbitrar la feina posterior a R16a perquè producció torne a eixir d'un commit; text revisat per Claude amb verificació adversària per carril, revocable)",
+      "data": "2026-11-10"
     },
     "disseny": {
       "sha256": "da7b7421eb914af150d8eb92311ba494020e2423a0dd77c3af901b0868dd57f6",
@@ -85,6 +85,12 @@
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
+    "la-iaia-sabuda": {
+      "sha256": "324e7c13f13b4588e2a1ab3dde2a02703d385205202c1e8c4fdf080c3fe3fd92",
+      "html": 307,
+      "aprovat_per": "Mestre Javi (ordre del 10-11: «Fes R16b», arbitrar la feina posterior a R16a perquè producció torne a eixir d'un commit; text revisat per Claude amb verificació adversària per carril, revocable)",
+      "data": "2026-11-10"
+    },
     "legal": {
       "sha256": "0a08fd743c2b4139e322cdd457e489f5dab6003bfe53d93a5d424cb457495b94",
       "html": 59594,
@@ -95,12 +101,6 @@
       "sha256": "f61aac812ac0b704ad1dbfa7175b03cdc7b4673b11228ed584462ac5baf1bedb",
       "html": 21595,
       "aprovat_per": "Mestre Javi, ordre explícita R15.2 261109; base R15-A3 revisada per Claude, delta Codex pendent de revisió integradora i revocable",
-      "data": "2026-11-09"
-    },
-    "nodrir-la-iaia": {
-      "sha256": "88e211e7c09cc5fd670f44a4c60062818d3ebb3c8d1407ce4970d9c7c4fc5ac8",
-      "html": 307,
-      "aprovat_per": "Mestre Javi (ordre del 09-11: absorbir els kits verificats en R15b i desplegar-lo; text revisat per Claude amb verificació adversària per carril, revocable)",
       "data": "2026-11-09"
     },
     "notes": {
@@ -122,10 +122,10 @@
       "data": "2026-11-05"
     },
     "receptes": {
-      "sha256": "08217823c18c44b3bc0ac95a7256e36eb30ebc425e80b60de82bf11236d361ed",
+      "sha256": "3b0b9f75243fb1cdcf705b3e57d97b2ad661f320fb1a6a1c5c9f3f04f6eb8b04",
       "html": 866,
-      "aprovat_per": "Mestre Javi (ordre del 09-11: absorbir els kits verificats en R15b i desplegar-lo; text revisat per Claude amb verificació adversària per carril, revocable)",
-      "data": "2026-11-09"
+      "aprovat_per": "Mestre Javi (ordre del 10-11: «Fes R16b», arbitrar la feina posterior a R16a perquè producció torne a eixir d'un commit; text revisat per Claude amb verificació adversària per carril, revocable)",
+      "data": "2026-11-10"
     },
     "roadmap": {
       "sha256": "ad6c52700476ea5352ac533f441566557c5b4c72449ce58c70c6b13e5382831d",
@@ -146,10 +146,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "1ea7436b3f77673bd483efc205eda8068607681eca247841622f6963958e9d47",
-      "html": 44721,
-      "aprovat_per": "Mestre Javi (ordre del 09-11: absorbir els kits verificats en R15b i desplegar-lo; text revisat per Claude amb verificació adversària per carril, revocable)",
-      "data": "2026-11-09"
+      "sha256": "821285331882de7e334f295173a91e231a6790181325431e25503e6cdc404f5f",
+      "html": 46247,
+      "aprovat_per": "Mestre Javi (ordre del 10-11: «Fes R16b», arbitrar la feina posterior a R16a perquè producció torne a eixir d'un commit; text revisat per Claude amb verificació adversària per carril, revocable)",
+      "data": "2026-11-10"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

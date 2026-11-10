@@ -5,10 +5,11 @@ import { useSEO } from '../../hooks/useSEO';
 import { Link } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
+import SubnavigacioPoblesIGent from '../pobles/SubnavigacioPoblesIGent.jsx';
 
 export default function PoblacioSection() {
   const { sortedTowns } = useCoreContent();
-  const { t } = useUIActions();
+  const { t, language } = useUIActions();
 
   useSEO({
     title: t('section.poblacio.title'),
@@ -32,6 +33,7 @@ export default function PoblacioSection() {
       chrome="system"
       showLogos={true}
     >
+      <SubnavigacioPoblesIGent actiu="poblacio" idioma={language} />
       <div >
         {/* Gauntlet 261029 (cicle 1, a11y; IDEA-57 L3, P1-16) · La caixa
             desplaça la taula en horitzontal (.sdp-taula, overflow-x: auto): una

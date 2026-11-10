@@ -14,9 +14,10 @@ import { ItemMedia } from './ItemMedia.jsx';
 import { NavGlyph, GlifCategoriaContext, GLIF_DOCUMENT, emojiInicial, primerGlif } from './NavGlyph.jsx';
 /* IDEA-58 (ordre del Mestre, 29-10-2026 23:22 CET) · Les fletxes del teclat a
    les tres columnes, com al Finder: navegacioTeclat.js. */
-import { enfoca, fitxaPrincipal, gestionaEscapeDelDetall, gestionaTeclaArbre, gestionaTeclaLlista, gestionaTeclaRail } from './navegacioTeclat.js';
+import { enfoca, fitxaPrincipal, gestionaEscapeDelDetall, gestionaTeclaArbre, gestionaTeclaLlista, gestionaTeclaRail, ignoraTecla } from './navegacioTeclat.js';
 import { Dialeg, Boto, Insignia } from '../../PedraSeca/index.js';
 import { Interruptor } from '../../PedraSeca/organismes/formulari.jsx';
+import { useCapaEnrere } from '../../PedraSeca/hooks/useCapaEnrere.js';
 /* El traductor de la interfície, o null fora de l'app (o amb una prova que
    simula UIContext sense esta exportació): aleshores, la reserva en
    valencià. La còpia única de Pedra Seca (revisió del 261007). */
@@ -439,11 +440,10 @@ const TORNADES_MAXIMES = 2;
  *     carpetes (Admin), la secció no es pinta.
  * En tancar, el Dialeg torna el focus a la roda que l'havia obert.
  */
-function WorkspaceSettingsDialog({ obert, onTanca, labels, grupsDeCarpetes = CAP, amagades, onAlterna, ambTot = true }) {
+function WorkspaceSettingsContent({ id, labels, grupsDeCarpetes = CAP, amagades, onAlterna, ambTot = true }) {
   const { applyPreset, columnWidths } = useAppGrid();
   const t = useTraductorOpcional();
   const text = (parell) => tradueix(t, parell);
-  const id = useId();
   const titolAmplada = text(TEXTOS_AJUSTOS.amplada);
   /* Sense «Tot» (el mode compacte), l'última carpeta a la vista no s'amaga. */
   const visibles = grupsDeCarpetes.reduce(
@@ -453,6 +453,74 @@ function WorkspaceSettingsDialog({ obert, onTanca, labels, grupsDeCarpetes = CAP
   const ambSubtitols = grupsDeCarpetes.length > 1;
   const textosEstat = { si: text(TEXTOS_AJUSTOS.si), no: text(TEXTOS_AJUSTOS.no) };
   return (
+    <div className="sdp-workspace-settings">
+      <section className="sdp-workspace-settings__seccio" aria-labelledby={`${id}-amplada`}>
+        <h3 id={`${id}-amplada`} className="sdp-workspace-settings__titol">{titolAmplada}</h3>
+        <p className="sdp-workspace-settings__estat">
+          {omple(text(TEXTOS_AJUSTOS.ara), { esquerra: columnWidths.left, mig: columnWidths.middle })}
+        </p>
+        <div className="sdp-workspace-settings__opcions" role="group" aria-label={titolAmplada}>
+          {PRESETS_AMPLARIA.map(([preset, etiqueta]) => (
+            <Boto key={preset} varietat="secundari" onClick={() => applyPreset(preset)}>{text(etiqueta)}</Boto>
+          ))}
+        </div>
+        <Boto varietat="secundari" className="sdp-workspace-settings__restableix" onClick={() => applyPreset('defecte')}>
+          {text(TEXTOS_AJUSTOS.restableix)}
+        </Boto>
+      </section>
+      {grupsDeCarpetes.length ? (
+        <section className="sdp-workspace-settings__seccio" aria-labelledby={`${id}-carpetes`}>
+          <h3 id={`${id}-carpetes`} className="sdp-workspace-settings__titol">{text(TEXTOS_AJUSTOS.carpetes)}</h3>
+          {/* M2-09 · En compacte no hi ha «Tot»: l'ajuda no l'esmenta. */}
+          <p className="sdp-workspace-settings__ajuda">
+            {ambTot ? omple(text(TEXTOS_AJUSTOS.ajuda), { tot: labels.all }) : text(TEXTOS_AJUSTOS.ajudaCompacte)}
+            {ambTot ? null : ` ${text(TEXTOS_AJUSTOS.ultima)}`}
+          </p>
+          {grupsDeCarpetes.map(({ grup, arrels }) => {
+            const nomDelGrup = grup.label || labels.categories;
+            return (
+              <div key={grup.id}>
+                {ambSubtitols ? <h4 className="sdp-workspace-settings__subtitol">{nomDelGrup}</h4> : null}
+                <ul className="sdp-workspace-settings__carpetes" aria-label={nomDelGrup}>
+                  {arrels.map((node) => {
+                    const visible = !amagades.has(node.id);
+                    const nom = nomDe(node);
+                    return (
+                      <li key={node.id}>
+                        <Interruptor
+                          className="sdp-workspace-settings__carpeta"
+                          etiqueta={(
+                            <>
+                              <span className="sdp-workspace-settings__glif" aria-hidden="true">
+                                <NavGlyph glyph={glifDeclarat(node, grup)} size={20} />
+                              </span>
+                              <span className="sdp-sr-only">{omple(text(TEXTOS_AJUSTOS.vullVore), { carpeta: nom })}</span>
+                              <span aria-hidden="true">{nom}</span>
+                            </>
+                          )}
+                          textosEstat={textosEstat}
+                          actiu={visible}
+                          desactivat={visible && ultimaBloquejada}
+                          onCanvi={(actiu) => onAlterna?.(node.id, actiu)}
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+function WorkspaceSettingsDialog({ obert, onTanca, labels, grupsDeCarpetes = CAP, amagades, onAlterna, ambTot = true }) {
+  const t = useTraductorOpcional();
+  const text = (parell) => tradueix(t, parell);
+  const id = useId();
+  return (
     <Dialeg
       obert={obert}
       onTanca={onTanca}
@@ -461,67 +529,61 @@ function WorkspaceSettingsDialog({ obert, onTanca, labels, grupsDeCarpetes = CAP
       descripcio={text(TEXTOS_AJUSTOS.descripcio)}
       accions={<Boto varietat="secundari" onClick={() => onTanca?.('boto')}>{text(TEXTOS_AJUSTOS.fet)}</Boto>}
     >
-      <div className="sdp-workspace-settings">
-        <section className="sdp-workspace-settings__seccio" aria-labelledby={`${id}-amplada`}>
-          <h3 id={`${id}-amplada`} className="sdp-workspace-settings__titol">{titolAmplada}</h3>
-          <p className="sdp-workspace-settings__estat">
-            {omple(text(TEXTOS_AJUSTOS.ara), { esquerra: columnWidths.left, mig: columnWidths.middle })}
-          </p>
-          <div className="sdp-workspace-settings__opcions" role="group" aria-label={titolAmplada}>
-            {PRESETS_AMPLARIA.map(([preset, etiqueta]) => (
-              <Boto key={preset} varietat="secundari" onClick={() => applyPreset(preset)}>{text(etiqueta)}</Boto>
-            ))}
-          </div>
-          <Boto varietat="secundari" className="sdp-workspace-settings__restableix" onClick={() => applyPreset('defecte')}>
-            {text(TEXTOS_AJUSTOS.restableix)}
-          </Boto>
-        </section>
-        {grupsDeCarpetes.length ? (
-          <section className="sdp-workspace-settings__seccio" aria-labelledby={`${id}-carpetes`}>
-            <h3 id={`${id}-carpetes`} className="sdp-workspace-settings__titol">{text(TEXTOS_AJUSTOS.carpetes)}</h3>
-            {/* M2-09 · En compacte no hi ha «Tot»: l'ajuda no l'esmenta. */}
-            <p className="sdp-workspace-settings__ajuda">
-              {ambTot ? omple(text(TEXTOS_AJUSTOS.ajuda), { tot: labels.all }) : text(TEXTOS_AJUSTOS.ajudaCompacte)}
-              {ambTot ? null : ` ${text(TEXTOS_AJUSTOS.ultima)}`}
-            </p>
-            {grupsDeCarpetes.map(({ grup, arrels }) => {
-              const nomDelGrup = grup.label || labels.categories;
-              return (
-                <div key={grup.id}>
-                  {ambSubtitols ? <h4 className="sdp-workspace-settings__subtitol">{nomDelGrup}</h4> : null}
-                  <ul className="sdp-workspace-settings__carpetes" aria-label={nomDelGrup}>
-                    {arrels.map((node) => {
-                      const visible = !amagades.has(node.id);
-                      const nom = nomDe(node);
-                      return (
-                        <li key={node.id}>
-                          <Interruptor
-                            className="sdp-workspace-settings__carpeta"
-                            etiqueta={(
-                              <>
-                                <span className="sdp-workspace-settings__glif" aria-hidden="true">
-                                  <NavGlyph glyph={glifDeclarat(node, grup)} size={20} />
-                                </span>
-                                <span className="sdp-sr-only">{omple(text(TEXTOS_AJUSTOS.vullVore), { carpeta: nom })}</span>
-                                <span aria-hidden="true">{nom}</span>
-                              </>
-                            )}
-                            textosEstat={textosEstat}
-                            actiu={visible}
-                            desactivat={visible && ultimaBloquejada}
-                            onCanvi={(actiu) => onAlterna?.(node.id, actiu)}
-                          />
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              );
-            })}
-          </section>
-        ) : null}
-      </div>
+      <WorkspaceSettingsContent
+        id={id}
+        labels={labels}
+        grupsDeCarpetes={grupsDeCarpetes}
+        amagades={amagades}
+        onAlterna={onAlterna}
+        ambTot={ambTot}
+      />
     </Dialeg>
+  );
+}
+
+/* C6-04 (R16b) · El panell substituïx el Dialeg, i en conserva el teclat: el títol
+   (tabIndex -1, cap parada de tabulació nova) rep el focus en obrir-se (WorkspaceFrame),
+   Escape el tanca i l'Arrere d'Android fa el mateix camí que l'Escape (useCapaEnrere,
+   P0-24). Una tecla que ja ha gastat una capa de dins (defaultPrevented) no el tanca. */
+function WorkspaceSettingsInlinePanel({ onTanca, labels, grupsDeCarpetes = CAP, amagades, onAlterna, ambTot = true, titolTornada = null, titolRef = null }) {
+  const t = useTraductorOpcional();
+  const text = (parell) => tradueix(t, parell);
+  const id = useId();
+  const etiquetaTornar = titolTornada ? `← ${titolTornada}` : `← ${text(TEXTOS_AJUSTOS.fet)}`;
+  useCapaEnrere(true, onTanca);
+  const tancaAmbEscape = (event) => {
+    if (event.key !== 'Escape' || ignoraTecla(event)) return;
+    event.preventDefault();
+    onTanca?.();
+  };
+  return (
+    <article className="sdp-admin-taxonomia sdp-workspace-settings-inline" aria-label={labels.settings} data-testid="workspace-settings-inline-panel"
+      onKeyDown={tancaAmbEscape}>
+      <div className="sdp-workspace-settings-inline__barra">
+        <Boto varietat="secundari" onClick={onTanca} data-testid="workspace-settings-inline-top-back">
+          {etiquetaTornar}
+        </Boto>
+      </div>
+      <section className="sdp-admin-taxonomia__panel">
+        <header className="sdp-admin-taxonomia__header">
+          <h2 ref={titolRef} tabIndex={-1}>{labels.settings}</h2>
+          <p className="sdp-admin-taxonomia__lead">{text(TEXTOS_AJUSTOS.descripcio)}</p>
+        </header>
+        <WorkspaceSettingsContent
+          id={id}
+          labels={labels}
+          grupsDeCarpetes={grupsDeCarpetes}
+          amagades={amagades}
+          onAlterna={onAlterna}
+          ambTot={ambTot}
+        />
+      </section>
+      <div className="sdp-workspace-settings-inline__barra">
+        <Boto varietat="primari" onClick={onTanca} data-testid="workspace-settings-inline-bottom-back">
+          {etiquetaTornar}
+        </Boto>
+      </div>
+    </article>
   );
 }
 
@@ -598,7 +660,9 @@ export function UniversalWorkspace({
   idEspai,
   accionsLlista = CAP,
   peuNavegacio = null,
-  amagaRodaAjustos = false
+  amagaRodaAjustos = false,
+  ajustosEnDetall = false,
+  titolTornadaAjustos = null
   /* Decisió 4 del Mestre (30-10-2026 ~15:00) · obridorALaLlista ja no hi és:
      només llevava la carpeta de la capçalera de la llista en «mitja», on el
      rail fix de la navegació (railEsquerra) era una altra porta. Amb les
@@ -753,6 +817,8 @@ export function UniversalWorkspace({
         peuNavegacio={peuNavegacio}
         etiquetaEspai={etiquetaEspai}
         amagaRodaAjustos={amagaRodaAjustos}
+        ajustosEnDetall={ajustosEnDetall}
+        titolTornadaAjustos={titolTornadaAjustos}
       />
     </WorkspaceProvider>
     </TextosDeLaColumna.Provider>
@@ -764,10 +830,43 @@ function WorkspaceFrame({
   labels, icons, tagFilter, collapsibleNavigation, sortable, canCreate, onRetry, listClassName, detailClassName, className,
   /* etiquetaEspai: sense valor per defecte (B3 · P1-22). L'únic que la crida,
      UniversalWorkspace, sempre li passa la traduïda de TEXT_ESPAI_DE_TREBALL. */
-  accionsLlista, etiquetaEspai, peuNavegacio = null, amagaRodaAjustos = false
+  accionsLlista, etiquetaEspai, peuNavegacio = null, amagaRodaAjustos = false, ajustosEnDetall = false, titolTornadaAjustos = null
 }) {
   const workspace = useWorkspace();
   const focusAfterLayout = useFocusAfterLayout();
+  const [settingsInlineOpen, setSettingsInlineOpen] = useState(false);
+  const grupsDeCarpetesFrame = useMemo(
+    () => grups.filter((group) => group.tree.roots.length > 0).map((group) => ({ grup: group, arrels: group.tree.roots })),
+    [grups]
+  );
+  const primeraALaVistaFrame = useCallback(
+    (excepte = null) => grupsDeCarpetesFrame.flatMap(({ arrels }) => arrels).find((node) => node.id !== excepte && !amagades.has(node.id))?.id ?? null,
+    [grupsDeCarpetesFrame, amagades]
+  );
+  /* C6-04 (R16b) · La carpeta a la qual torna el mateix panell en amagar l'activa: eixe canvi de
+     selecció no el tanca (undefined: cap tornada pendent). */
+  const destiDelPanellRef = useRef(undefined);
+  const alternaCarpetaFrame = useCallback((id, visible) => {
+    desaCarpetaAmagada(espai, id, !visible);
+    if (visible || arrelDeCategoria(grups, workspace.state.activeCategoryId) !== id) return;
+    const desti = compacte ? primeraALaVistaFrame(id) : ALL_CATEGORY_ID;
+    if (desti != null) {
+      destiDelPanellRef.current = desti;
+      workspace.selectCategory(desti);
+    }
+  }, [espai, grups, workspace, compacte, primeraALaVistaFrame]);
+  useEffect(() => {
+    if (destiDelPanellRef.current !== undefined && destiDelPanellRef.current === workspace.state.activeCategoryId) {
+      destiDelPanellRef.current = undefined;
+      return;
+    }
+    destiDelPanellRef.current = undefined;
+    setSettingsInlineOpen(false);
+  }, [workspace.state.activeCategoryId, workspace.state.activeItemId]);
+  /* R16b (3a ronda) · Cada tria explícita de la persona a la llista (el clic, l'Enter, el rail de
+     documents: chooseItem) tanca el panell, també la de la fitxa que ja és activa, que no canvia la
+     selecció i l'efecte de dalt no veu. El focus és el de la tria (chooseItem i la secció). */
+  const tancaAjustosPerTria = useCallback(() => setSettingsInlineOpen(false), []);
   /* Prompt 261014_0400 · L'últim plegat, per a la remuntada per workspaceKey
      (UniversalWorkspace, columnesRef). */
   const plegat = workspace.state.collapsed;
@@ -794,6 +893,22 @@ function WorkspaceFrame({
   const expandMiddleRef = useRef(null);
   /* IDEA-58 · L'<aside> de la navegació: on porta ← des de la llista. */
   const navegacioRef = useRef(null);
+  /* C6-04 (R16b) · En obrir-se, el focus va al títol del panell (després de la guarda de
+     tancaPanells en estret: focusAfterLayout espera dos fotogrames). En tancar-se, torna a la
+     roda que l'ha obert si és a la vista; en estret la roda queda dins d'una columna inert, i
+     el focus va a l'arrel de la columna 3, on vivia el panell. Mai cau a <body>. */
+  const settingsTitolRef = useRef(null);
+  const obriAjustosEnDetall = useCallback(() => {
+    setSettingsInlineOpen(true);
+    focusAfterLayout(settingsTitolRef);
+  }, [focusAfterLayout]);
+  const etiquetaAjustos = labels.settings;
+  const tancaAjustosEnDetall = useCallback(() => {
+    setSettingsInlineOpen(false);
+    const roda = [...(navegacioRef.current?.querySelectorAll('button') ?? [])].find((boto) => boto.getAttribute('aria-label') === etiquetaAjustos
+      && !boto.disabled && !boto.closest('[inert], [aria-hidden="true"], [hidden]'));
+    focusAfterLayout(roda ? { current: roda } : detailFocusRef);
+  }, [focusAfterLayout, etiquetaAjustos]);
 
   return (
     <AppGridShell
@@ -856,6 +971,7 @@ function WorkspaceFrame({
           llistaRef={listFocusRef}
           peuNavegacio={peuNavegacio}
           amagaRodaAjustos={amagaRodaAjustos}
+          onOpenSettingsInline={ajustosEnDetall ? obriAjustosEnDetall : null}
         />
       }
       middleColumn={
@@ -882,6 +998,7 @@ function WorkspaceFrame({
             accionsLlista={accionsLlista}
             navegacioRef={navegacioRef}
             expandirNavegacioRef={expandLeftRef}
+            onTriaExplicita={tancaAjustosPerTria}
           />
         </SlotErrorBoundary>
       }
@@ -903,6 +1020,18 @@ function WorkspaceFrame({
             visibleItemIds={visibleItemIds}
             filtered={filtrat}
             llistaRef={listFocusRef}
+            settingsInlinePanel={ajustosEnDetall && settingsInlineOpen ? (
+              <WorkspaceSettingsInlinePanel
+                onTanca={tancaAjustosEnDetall}
+                titolRef={settingsTitolRef}
+                labels={labels}
+                grupsDeCarpetes={grupsDeCarpetesFrame}
+                amagades={amagades}
+                onAlterna={alternaCarpetaFrame}
+                ambTot={!compacte}
+                titolTornada={titolTornadaAjustos || labels.items}
+              />
+            ) : null}
           />
         </SlotErrorBoundary>
       }
@@ -915,7 +1044,7 @@ function WorkspaceFrame({
 function CategoryColumn({
   compacte, espai, grups: groupsToRender, amagades, vigilaAmagada = false, mestreDetall = false, collapsibleNavigation, focusTarget,
   onManageCategories, labels, icon, collapseBtnRef, expandBtnRef, focusAfterLayout, rootRef = null, llistaRef = null,
-  peuNavegacio = null, amagaRodaAjustos = false
+  peuNavegacio = null, amagaRodaAjustos = false, onOpenSettingsInline = null
 }) {
   const { state, status, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
@@ -1117,10 +1246,17 @@ function CategoryColumn({
       id: 'settings',
       etiqueta: labels.settings,
       icona: Settings,
-      onAcciona: () => setSettingsOpen(true)
+      onAcciona: () => {
+        if (onOpenSettingsInline) {
+          onOpenSettingsInline();
+          if (mida !== 'ample') tancaPanells();
+          return;
+        }
+        setSettingsOpen(true);
+      }
     }])
   ];
-  const settingsDialog = amagaRodaAjustos ? null : (
+  const settingsDialog = amagaRodaAjustos || onOpenSettingsInline ? null : (
     <WorkspaceSettingsDialog
       obert={settingsOpen}
       onTanca={() => setSettingsOpen(false)}
@@ -1482,7 +1618,7 @@ function CategoryBranch({
 function ItemListColumn({
   mestreDetall = false, tornaDeLaLlista = null, rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
   tagFilter, sortable, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef, focusAfterLayout,
-  accionsLlista = CAP, navegacioRef = null, expandirNavegacioRef = null
+  accionsLlista = CAP, navegacioRef = null, expandirNavegacioRef = null, onTriaExplicita = null
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
@@ -1680,8 +1816,10 @@ function ItemListColumn({
   };
 
   const chooseItem = (itemId) => {
-    /* El clic i l'Enter tanquen el recorregut de fletxes, també sobre la fitxa que ja és activa. */
+    /* El clic i l'Enter tanquen el recorregut de fletxes, també sobre la fitxa que ja és activa,
+       i el panell d'ajustos de la columna 3 (onTriaExplicita, de WorkspaceFrame). */
     recorregutObert.current = false;
+    onTriaExplicita?.();
     selectItem(itemId);
     tancaPanells();
     if (mida === 'estret') focusAfterLayout(detailFocusRef);
@@ -2075,12 +2213,15 @@ function TornadaDelDetall({ etiqueta }) {
 
 const DetailColumn = memo(function DetailColumn({
   rootRef, error, renderDetail, labels, className, activeItem, status, activeCategoryId, activeItemId, resolution, onRetry,
-  onRetryLoad = null, visibleItemIds = CAP, filtered = false, llistaRef = null
+  onRetryLoad = null, visibleItemIds = CAP, filtered = false, llistaRef = null, settingsInlinePanel = null
 }) {
   let content;
   /* Si el contingut és un estat propi (sense la fletxa d'una Pàgina Universal). */
   let estatPropi = true;
-  if (status === 'loading') {
+  if (settingsInlinePanel) {
+    estatPropi = false;
+    content = settingsInlinePanel;
+  } else if (status === 'loading') {
     content = <p role="status">{labels.loading}</p>;
   } else if (status === 'error') {
     /* T7C · En mode compacte la llista (que porta «Reintentar») és plegada:

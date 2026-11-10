@@ -1971,10 +1971,8 @@ export default {
   'section.control.habitatge.saberMes': 'Saber más: Vivienda',
   /* control-06 (revisió del Panell, 261104) · Els encapçalaments, les entradilles i
      els dos botons de baix del Panell, abans escrits a mà (ControlSection.jsx). */
-  'section.control.utilitats.titol': 'Utilidades y Conectores (Plugins)',
-  'section.control.utilitats.lead': 'El sistema se irá enriqueciendo con este tipo de utilidades (o plugins), que se pueden activar si se necesitan. Son independientes del sistema base, lo que permite conectar funcionalidades a medida solo para los usuarios o clientes que las piden.',
   'section.control.maquinaria.titol': 'Maquinaria y Sistema',
-  'section.control.maquinaria.lead': 'Paneles de administración y herramientas internas de la plataforma. Estas utilidades normalmente solo se activan para el equipo de administración.',
+  'section.control.maquinaria.lead': 'Otras herramientas de la plataforma, como el Lector RSS y el Snippet, la extensión de Chrome para guardar webs en el Bloc de notas.',
   'section.control.dubtes': 'Mensajes para dudas',
   'section.control.compte': 'Cuenta y contraseña',
   'section.control.eixir': 'Salir del pueblo',
@@ -3740,4 +3738,25 @@ export default {
   'section.notes.publicacio.revisioDesada': "Revisión guardada en este navegador: el Muro y la página ya la muestran.",
   'section.notes.publicacio.revisioDesadaServidor': "Revisión guardada en el servidor: el Muro y la página ya la muestran a todo el mundo.",
   'section.notes.publicacio.revisioNomesNavegador': "El servidor no ha aceptado la revisión: queda guardada solo en este navegador.",
+  /* Onada R16b (C5-09) · Els dos patrons nous de l'espècimen del Contracte de Pedra Seca a /disseny
+     (EspecimenContracte.jsx): el quadre blanc editorial i on s'obrin els ajustos de l'espai de treball. */
+  'section.disseny.contracte.quadreBlanc.titol': "Ley del cuadro blanco editorial y del falso tablero en columnas",
+  'section.disseny.contracte.quadreBlanc.alertaTitol': "Encabezados y párrafos dentro de los cuadros informativos",
+  'section.disseny.contracte.quadreBlanc.alerta': "Dentro de un cuadro informativo blanco, toda explicación (funcionamiento, pasos o arquitectura) se escribe con encabezados (h3, h4, h5) y párrafos o listas a todo el ancho de la columna. Una explicación no se disfraza de tablero de dos columnas: una lista de definiciones (dl) con títulos largos a la izquierda y párrafos estrechos a la derecha.",
+  'section.disseny.contracte.quadreBlanc.diagnostic': "Cuadros blancos editoriales y listas técnicas cortas",
+  'section.disseny.contracte.quanUsar': "Cuándo usarlo:",
+  'section.disseny.contracte.estructura': "Estructura:",
+  'section.disseny.contracte.modals.titol': "Ajustes del espacio de trabajo: columna 3 en los catálogos, diálogo en el resto",
+  'section.disseny.contracte.modals.columna3.titol': "Catálogos: ajustes en la columna 3",
+  'section.disseny.contracte.modals.columna3.text': "Los ajustes del espacio de trabajo de los catálogos hechos con CatalegWorkspace (Herbario, Banco de semillas, Recetas, Fediversity, Despensa y catálogo del TPV) se pintan dentro de la columna 3 de detalle, con un botón de vuelta arriba y otro abajo, y no en un modal flotante que tape el contexto.",
+  'section.disseny.contracte.modals.dialeg.titol': "Resto de espacios: ajustes en un diálogo",
+  'section.disseny.contracte.modals.dialeg.text': "Los demás espacios de trabajo hechos con UniversalWorkspace, cuando tienen ajustes, todavía los abren en un diálogo (WorkspaceSettingsDialog). La hoja de Ajustes del chat (FullAjustos) también se abre en un diálogo.",
+  'section.disseny.contracte.patro.editorial': "Redacción editorial (h4/h5 + p)",
+  'section.disseny.contracte.quanUsar.editorial': "Explicaciones de dominio, crónicas técnicas, protocolos y bloques didácticos con párrafos de más de 80 caracteres.",
+  'section.disseny.contracte.canonic': "Canónico",
+  'section.disseny.contracte.patro.parella': "Pareja técnica corta (dl)",
+  'section.disseny.contracte.quanUsar.parella': "Metadatos clave-valor estrictos (versión, puerto, licencia, SHA-256 corto o identificadores) de menos de 80 caracteres.",
+  'section.disseny.contracte.patro.falsTauler': "Falso tablero en columnas (dl con párrafos largos)",
+  'section.disseny.contracte.quanUsar.falsTauler': "Nunca: ningún dl, dt ni dd en dos o tres columnas para encajar frases largas o explicaciones; se escribe con h4/h5 + p.",
+  'section.disseny.contracte.prohibit': "Prohibido",
 };

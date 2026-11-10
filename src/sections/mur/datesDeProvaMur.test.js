@@ -171,11 +171,11 @@ describe('la llavor del Mur amb les dates de prova', () => {
   });
 
   test('P0-64 · Nodrir conserva el 9 de novembre; el 2 de setembre és només la data de demostració', () => {
-    expect(PAGE_COPY['nodrir-la-iaia'].date).toBe('2026-11-09T14:40:43.030Z');
-    expect(APP_SEED.pages.find(({ id }) => id === 'nodrir-la-iaia').date).toBe('2026-11-09T14:40:43.030Z');
+    expect(PAGE_COPY['la-iaia-sabuda'].date).toBe('2026-11-09T14:40:43.030Z');
+    expect(APP_SEED.pages.find(({ id }) => id === 'la-iaia-sabuda').date).toBe('2026-11-09T14:40:43.030Z');
     const demo = llavorAmbDatesDeProva(APP_SEED, new Date(2026, 10, 9, 14, 0));
-    expect(demo.pages.find(({ id }) => id === 'nodrir-la-iaia').date).toBe('2026-09-02T10:00:00+02:00');
-    expect(APP_SEED.pages.find(({ id }) => id === 'nodrir-la-iaia').date).toBe('2026-11-09T14:40:43.030Z');
+    expect(demo.pages.find(({ id }) => id === 'la-iaia-sabuda').date).toBe('2026-09-02T10:00:00+02:00');
+    expect(APP_SEED.pages.find(({ id }) => id === 'la-iaia-sabuda').date).toBe('2026-11-09T14:40:43.030Z');
   });
 
   /* PRODUCCIO-02 (revisió R15b) · Amb la data real del 9 de novembre, Nodrir seria la targeta de sistema més nova del
@@ -185,14 +185,14 @@ describe('la llavor del Mur amb les dates de prova', () => {
     expect(import.meta.env.VITE_SDP_CURADORIA_CULTURAL ?? '').not.toBe('1');
     expect(TECNIQUES_DEL_MUR.map(clau)).toEqual(['pages:versions']);
     const remot = targetesDeSistema(PAGE_COPY, { nativa: false });
-    expect(remot.map(({ id }) => id)).not.toContain('nodrir-la-iaia');
+    expect(remot.map(({ id }) => id)).not.toContain('la-iaia-sabuda');
     // La més nova del sistema en remot ja no és cap pàgina del 9-11 que no recull res.
     const mesNova = [...remot].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
-    expect(Date.parse(mesNova.created_at)).toBeLessThan(Date.parse(PAGE_COPY['nodrir-la-iaia'].date));
+    expect(Date.parse(mesNova.created_at)).toBeLessThan(Date.parse(PAGE_COPY['la-iaia-sabuda'].date));
     const demo = llavorAmbDatesDeProva(APP_SEED, new Date(2026, 10, 9, 14, 0));
     const pageCopyDemo = Object.fromEntries(demo.pages.map((pagina) => [pagina.id, pagina]));
-    expect(targetesDeSistema(pageCopyDemo, { nativa: false }).map(({ id }) => id)).not.toContain('nodrir-la-iaia');
-    expect(targetesDelMur(demo).map(({ clau: c }) => c)).not.toContain('pages:nodrir-la-iaia');
+    expect(targetesDeSistema(pageCopyDemo, { nativa: false }).map(({ id }) => id)).not.toContain('la-iaia-sabuda');
+    expect(targetesDelMur(demo).map(({ clau: c }) => c)).not.toContain('pages:la-iaia-sabuda');
   });
 
   test('cap data de prova no té la forma d’un dia serialitzat (mitjanit UTC exacta), que es llegiria sense hora', () => {

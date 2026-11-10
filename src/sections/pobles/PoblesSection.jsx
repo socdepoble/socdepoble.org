@@ -14,13 +14,14 @@ import { nomDeLaGent } from './nomsDelPoble.js';
 import { poblesAmbUltimaPublicacio } from './clauDelPoble.js';
 import { objecteDelPobleXat } from './xatDelPoble.js';
 import { ArbreTerritorial } from './TerritoriDelPoble.jsx';
+import SubnavigacioPoblesIGent from './SubnavigacioPoblesIGent.jsx';
 import { filtraTerritori } from './territoriDelPoble.js';
 import { usePoblesHidratats } from './usePobleHidratat.js';
 
 export default function PoblesSection() {
   const { sortedTowns, status, error } = useCoreContent();
   const { feedPosts, marketItems, events } = useMur();
-  const { t } = useUIActions();
+  const { t, language } = useUIActions();
   const navigate = useNavigate();
   const [cerca] = useSearchParams();
 
@@ -81,6 +82,7 @@ export default function PoblesSection() {
       chrome="system"
       showLogos={true}
     >
+      <SubnavigacioPoblesIGent actiu="pobles" idioma={language} />
       <ArbreTerritorial pobles={poblesVisibles} t={t} />
       <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
         {status === 'loading' && (

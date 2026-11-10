@@ -17,6 +17,11 @@
    deia «cap data»: la pastilla amb la data FIXA del registre és l'única xifra
    admesa. La resta de R1 continua sencera.
 
+   R16-W1 · «L’empresa» passa a dir-se «Economia i Empresa» i hi van la
+   Gestoria, el TPV del Bar i el Rebost Domèstic; «La llar» porta Salut i
+   l'Arbre Genealògic. Ho diu el registre (camp `espai`), i la secció
+   «Utilitats i Connectors (Plugins)», que es quedava buida, ja no es pinta.
+
    Router propi en memòria i les targetes de veres (UniversalCard); se
    substituïxen la UniversalPage, l'eixida segura, el toast i l'i18n, com a
    ControlSection.test.jsx. En producció, la Gestoria no navega: ho prova
@@ -33,12 +38,15 @@ import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plug
 import { AUTORIA_SOCDEPOBLE } from './destinsControl.js';
 import fontApp from '../../app/App.jsx?raw';
 
-const estat = vi.hoisted(() => ({ toast: vi.fn() }));
+/* R16b · `idioma` és la llengua de la interfície; sense, la de sempre.
+   R16b (tercera ronda) · El Panell la llig de useUIActions (la mateixa `language` que UIProvider
+   posa a l'estat): l'estat del mock ja no en porta cap. */
+const estat = vi.hoisted(() => ({ toast: vi.fn(), idioma: undefined }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({
   useToast: () => ({ showToast: estat.toast })
 }));
 vi.mock('../../app/contexts/UIContext', () => ({
-  useUIActions: () => ({ t: (_clau, reserva) => reserva, resolveAsset: (valor) => valor }),
+  useUIActions: () => ({ t: (_clau, reserva) => reserva, resolveAsset: (valor) => valor, language: estat.idioma }),
   useUIState: () => ({ externalConfig: { dataMode: 'seed' } })
 }));
 vi.mock('../../components/universal/EixidaSegura.jsx', () => ({
@@ -96,6 +104,7 @@ const rutesEstatiques = () => new Set([...fontApp.matchAll(/<Route\s+path="([^"]
 
 beforeEach(() => {
   estat.toast.mockReset();
+  estat.idioma = undefined;
   localStorage.removeItem(CLAU_UTILITATS);
   localStorage.removeItem(CLAU_PROPIA);
 });
@@ -105,13 +114,12 @@ afterEach(() => {
   localStorage.removeItem(CLAU_PROPIA);
 });
 
-test('els dos espais existixen, en ordre entre «Publica al poble» i les Utilitats, amb la seua entradeta', () => {
+test('els dos espais existixen, en ordre entre «Publica al poble» i «Maquinària i Sistema», amb la seua entradeta', () => {
   pinta();
   const ordre = [
     screen.getByRole('heading', { level: 2, name: 'Publica al poble' }).closest('section'),
-    seccioDe('L’empresa'),
+    seccioDe('Economia i Empresa'),
     seccioDe('La llar'),
-    seccioDe('Utilitats i Connectors (Plugins)'),
     seccioDe('Maquinària i Sistema')
   ];
   expect(ordre.every(Boolean)).toBe(true);
@@ -126,19 +134,38 @@ test('els dos espais existixen, en ordre entre «Publica al poble» i les Utilit
   }
 });
 
-test('R3 · separats: «L’empresa» porta la Gestoria i «La llar» el Rebost i Salut; cap targeta en dos llocs', () => {
+/* R16b (C3-12) · Els espais parlen la llengua de la interfície: amb el castellà (també amb la
+   variant regional), el títol i l'entradeta de TEXTOS_ESPAIS_PLUGINS.es, i les mateixes targetes. */
+test.each(['es', 'es-ES'])('cinc llengües · amb la interfície en %s, els espais es diuen «Economía y Empresa» i «El hogar», amb la seua entradeta', (idioma) => {
+  estat.idioma = idioma;
   pinta();
-  expect(targetesDe(seccioDe('L’empresa')).map(titolDe)).toEqual(['Gestoria']);
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Salut', 'Arbre Genealògic']);
+  expect(seccioDe('Economia i Empresa')).toBeNull();
+  expect(seccioDe('La llar')).toBeNull();
+  const empresa = seccioDe('Economía y Empresa');
+  const llar = seccioDe('El hogar');
+  expect(empresa.querySelector('p.lead').textContent).toBe('Las herramientas de la actividad: la gestoría, el TPV del bar y la despensa doméstica. El Panel no muestra ninguna cifra de tus datos; los datos solo se ven dentro de cada herramienta.');
+  expect(llar.querySelector('p.lead').textContent).toBe('Las herramientas de casa: el cuaderno de salud y la memoria de la familia. Viven separadas de las de la empresa, y el Panel no muestra ningún dato tuyo.');
+  expect(targetesDe(empresa).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
+  expect(targetesDe(llar).map(titolDe)).toEqual(['Salut', 'Arbre Genealògic']);
+  /* En el mateix lloc: entre «Publica al poble» i «Maquinària i Sistema». */
+  const maquinaria = seccioDe('Maquinària i Sistema');
+  expect(empresa.compareDocumentPosition(llar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(llar.compareDocumentPosition(maquinaria) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
+test('R3 · separats: «Economia i Empresa» porta Gestoria, TPV del Bar i Rebost Domèstic, i «La llar» Salut i l’Arbre Genealògic; cap targeta en dos llocs', () => {
+  pinta();
+  expect(targetesDe(seccioDe('Economia i Empresa')).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Salut', 'Arbre Genealògic']);
   expect(ESPAIS_PLUGINS.map((espai) => targetesDe(seccioDe(espai.titol)).map(titolDe)))
     .toEqual(ESPAIS_PLUGINS.map((espai) => pluginsDeLEspai(espai.id).map((plugin) => plugin.titol)));
   /* Cada targeta d'un espai es pinta UNA vegada en tot el Panell: ni a l'altre
-     espai, ni a Utilitats, ni a Maquinària, ni dalt. */
+     espai, ni a Maquinària, ni dalt. */
   const titols = [...document.querySelectorAll('article.sp-card .sp-card-title')].map((titol) => titol.textContent);
   for (const plugin of PLUGINS.filter((p) => p.espai)) {
     expect([plugin.id, titols.filter((titol) => titol === plugin.titol).length]).toEqual([plugin.id, 1]);
   }
-  const empresa = new Set(targetesDe(seccioDe('L’empresa')).map(titolDe));
+  const empresa = new Set(targetesDe(seccioDe('Economia i Empresa')).map(titolDe));
   expect(targetesDe(seccioDe('La llar')).map(titolDe).filter((titol) => empresa.has(titol))).toEqual([]);
 });
 
@@ -278,7 +305,7 @@ test('R1 · Onada 10 · als dos espais, l’única xifra és la pastilla de la d
    (W4-11). Cap enllaç a l'eina local de la Wiki, a /gestoria ni a una app. */
 test('D3 · cap targeta dels espais porta a l’eina local, a /gestoria ni directament a una app', () => {
   pinta();
-  const gestoria = targetesDe(seccioDe('L’empresa')).find((targeta) => titolDe(targeta) === 'Gestoria');
+  const gestoria = targetesDe(seccioDe('Economia i Empresa')).find((targeta) => titolDe(targeta) === 'Gestoria');
   expect(gestoria.querySelector('a.sp-card-link-overlay').getAttribute('href')).toBe('/plugin/gestoria');
   const hrefs = ESPAIS_PLUGINS.flatMap((espai) => [...seccioDe(espai.titol).querySelectorAll('[href]')].map((el) => el.getAttribute('href')));
   expect(hrefs.length).toBeGreaterThan(0);
@@ -310,19 +337,19 @@ test('R2 · Compartir de cada targeta dels espais comparteix la seua pàgina pú
 });
 
 /* La preferència de DetallEspai (exclusió amb un false explícit) també val
-   als espais: llevar la Gestoria buida «L’empresa», i un espai buit no pinta
-   cap capçalera. La llar no en depén. */
+   als espais: llevar les tres d'«Economia i Empresa» la buida, i un espai buit
+   no pinta cap capçalera. La llar no en depén. */
 test('la preferència amaga una targeta d’un espai; un espai buit no es pinta i l’altre continua', () => {
-  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ gestoria: false }));
+  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ gestoria: false, tpv: false, rebost: false }));
   pinta();
-  expect(seccioDe('L’empresa')).toBeNull();
+  expect(seccioDe('Economia i Empresa')).toBeNull();
   expect(screen.queryByText('Gestoria', { selector: '.sp-card-title' })).toBeNull();
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Salut', 'Arbre Genealògic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Salut', 'Arbre Genealògic']);
   cleanup();
   localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ salut: false }));
   pinta();
-  expect(targetesDe(seccioDe('L’empresa')).map(titolDe)).toEqual(['Gestoria']);
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Arbre Genealògic']);
+  expect(targetesDe(seccioDe('Economia i Empresa')).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Arbre Genealògic']);
 });
 
 /* Higiene d'amfitrió (ordre del Mestre, 261004) · Quan DetallEspai lleva una
@@ -334,12 +361,12 @@ test('una utilitat llevada des de DetallEspai desapareix del Panell a la vista, 
   const aWindow = vi.spyOn(window, 'dispatchEvent');
   try {
     pinta();
-    expect(targetesDe(seccioDe('L’empresa')).map(titolDe)).toEqual(['Gestoria']);
+    expect(targetesDe(seccioDe('Economia i Empresa')).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
     act(() => { expect(desaUtilitatActiva('gestoria', false)).toBe(true); });
-    expect(seccioDe('L’empresa')).toBeNull();
+    expect(targetesDe(seccioDe('Economia i Empresa')).map(titolDe)).toEqual(['TPV del Bar', 'Rebost Domèstic']);
     expect(JSON.parse(localStorage.getItem(CLAU_PROPIA))).toEqual({ gestoria: false });
     act(() => { desaUtilitatActiva('gestoria', true); });
-    expect(targetesDe(seccioDe('L’empresa')).map(titolDe)).toEqual(['Gestoria']);
+    expect(targetesDe(seccioDe('Economia i Empresa')).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
     expect(aWindow).not.toHaveBeenCalled();
   } finally {
     aWindow.mockRestore();
@@ -351,6 +378,6 @@ test('la clau amb prefix mana sobre la de llegat, i la de llegat val si no n’h
   localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ gestoria: false }));
   localStorage.setItem(CLAU_PROPIA, JSON.stringify({ gestoria: true, salut: false }));
   pinta();
-  expect(targetesDe(seccioDe('L’empresa')).map(titolDe)).toEqual(['Gestoria']);
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Arbre Genealògic']);
+  expect(targetesDe(seccioDe('Economia i Empresa')).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Arbre Genealògic']);
 });

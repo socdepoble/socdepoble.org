@@ -520,3 +520,23 @@ test('IDEA-58 · les fletxes recorren les fitxes del directori', () => {
   fireEvent.keyDown(botons[0], { key: 'ArrowDown' }); expect(document.activeElement).toBe(botons[1]);
   fireEvent.keyDown(botons[1], { key: 'ArrowUp' }); expect(document.activeElement).toBe(botons[0]);
 });
+
+test('R16-X1 · /pobles mostra la subnavegació amb Pobles actiu i accés directe a Gent i Entitats (/perfil) i Demografia (/poblacio)', () => {
+  render(<PoblesSection />);
+  const subnav = screen.getByRole('navigation', { name: 'Directori de pobles i gent' });
+  expect(subnav).not.toBeNull();
+  /* R16b (3a ronda) · El nom accessible és el text, sense l'emoji: l'emoji va a part en un span
+     aria-hidden (getByRole compara el nom sencer). La posició fixa l'ordre. */
+  const enllacos = within(subnav).getAllByRole('link');
+  expect(enllacos).toHaveLength(3);
+  expect(['Pobles', 'Gent i Entitats', 'Demografia'].map((nom) => {
+    const a = within(subnav).getByRole('link', { name: nom });
+    return [enllacos.indexOf(a), a.getAttribute('href'), a.getAttribute('aria-current'), a.querySelector('[aria-hidden="true"]')?.textContent ?? null, a.textContent];
+  })).toEqual([
+    [0, '/pobles', 'page', '🏘️', '🏘️ Pobles'],
+    [1, '/perfil', null, '👥', '👥 Gent i Entitats'],
+    [2, '/poblacio', null, '📊', '📊 Demografia']
+  ]);
+  /* Els filtres només els porta /perfil: ací, cap grup de filtres. */
+  expect(screen.queryByRole('group', { name: 'Filtra el directori per tipus' })).toBeNull();
+});

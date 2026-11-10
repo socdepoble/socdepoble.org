@@ -275,7 +275,7 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     const { html } = PAGE_COPY.descarregues;
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const oberts = canalsOberts().map((canal) => canal.url);
-    expect(oberts).toEqual(['https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844', 'https://wordpress.org/plugins/socdepoble/']);
+    expect(oberts).toEqual(['https://apps.apple.com/es/app/soc-de-poble/id6826441844', 'https://wordpress.org/plugins/socdepoble/']);
     const ADRECA_VERIFICADORS = 'https://play.google.com/apps/testing/org.socdepoble.app';
     // Les de veres, en l'ordre del cos: el pas 1 d'Android, la fitxa de l'App Store i la de WordPress.org.
     expect([...new Set([...html.matchAll(/https?:\/\/[^"'\s<]+/gi)].map((m) => m[0]))]).toEqual([ADRECA_VERIFICADORS, ...oberts]);

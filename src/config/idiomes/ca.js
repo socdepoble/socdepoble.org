@@ -2015,10 +2015,8 @@ export default {
   'section.control.habitatge.saberMes': 'Saber-ne més: Habitatge',
   /* control-06 (revisió del Panell, 261104) · Els encapçalaments, les entradilles i
      els dos botons de baix del Panell, abans escrits a mà (ControlSection.jsx). */
-  'section.control.utilitats.titol': 'Utilitats i Connectors (Plugins)',
-  'section.control.utilitats.lead': "El sistema s'anirà enriquint amb aquest tipus d'utilitats (o plugins) que es poden activar si es necessiten. Són independents del sistema base, cosa que permet endollar funcionalitats a mesura només per als usuaris o clients que les demanen.",
   'section.control.maquinaria.titol': 'Maquinària i Sistema',
-  'section.control.maquinaria.lead': "Panells d'administració i eines internes de la plataforma. Aquestes utilitats normalment s'activen només per a l'equip d'administració.",
+  'section.control.maquinaria.lead': 'Altres eines de la plataforma, com el Lector RSS i el Snippet, l’extensió de Chrome per a desar webs al Bloc.',
   'section.control.dubtes': 'Missatges per a dubtes',
   'section.control.compte': 'Compte i contrasenya',
   'section.control.eixir': 'Eixir del poble',
@@ -3809,4 +3807,25 @@ export default {
   'section.notes.publicacio.revisioDesada': "Revisió desada en este navegador: el Mur i la pàgina ja la mostren.",
   'section.notes.publicacio.revisioDesadaServidor': "Revisió desada al servidor: el Mur i la pàgina ja la mostren a tothom.",
   'section.notes.publicacio.revisioNomesNavegador': "El servidor no ha acceptat la revisió: queda desada només en este navegador.",
+  /* Onada R16b (C5-09) · Els dos patrons nous de l'espècimen del Contracte de Pedra Seca a /disseny
+     (EspecimenContracte.jsx): el quadre blanc editorial i on s'obrin els ajustos de l'espai de treball. */
+  'section.disseny.contracte.quadreBlanc.titol': "Llei del quadre blanc editorial i del fals tauler en columnes",
+  'section.disseny.contracte.quadreBlanc.alertaTitol': "Encapçalaments i paràgrafs dins dels quadres informatius",
+  'section.disseny.contracte.quadreBlanc.alerta': "Dins d’un quadre informatiu blanc, tota explicació (funcionament, passos o arquitectura) s’escriu amb encapçalaments (h3, h4, h5) i paràgrafs o llistes a tota l’amplària de la columna. Una explicació no es disfressa de tauler de dues columnes: una llista de definicions (dl) amb títols llargs a l’esquerra i paràgrafs escanyats a la dreta.",
+  'section.disseny.contracte.quadreBlanc.diagnostic': "Quadres blancs editorials i llistes tècniques curtes",
+  'section.disseny.contracte.quanUsar': "Quan usar-lo:",
+  'section.disseny.contracte.estructura': "Estructura:",
+  'section.disseny.contracte.modals.titol': "Ajustos de l’espai de treball: columna 3 als catàlegs, diàleg a la resta",
+  'section.disseny.contracte.modals.columna3.titol': "Catàlegs: ajustos en la columna 3",
+  'section.disseny.contracte.modals.columna3.text': "Els ajustos de l’espai de treball dels catàlegs fets amb CatalegWorkspace (Herbari, Banc de llavors, Receptes, Fediversity, Rebost i catàleg del TPV) es pinten dins de la columna 3 de detall, amb un botó de tornada dalt i un altre davall, i no en un modal flotant que tape el context.",
+  'section.disseny.contracte.modals.dialeg.titol': "Resta d’espais: ajustos en un diàleg",
+  'section.disseny.contracte.modals.dialeg.text': "Els altres espais de treball fets amb UniversalWorkspace, quan tenen ajustos, encara els obrin en un diàleg (WorkspaceSettingsDialog). El full d’Ajustos del xat (FullAjustos) també s’obri en un diàleg.",
+  'section.disseny.contracte.patro.editorial': "Redacció editorial (h4/h5 + p)",
+  'section.disseny.contracte.quanUsar.editorial': "Explicacions de domini, cròniques tècniques, protocols i blocs didàctics amb paràgrafs de més de 80 caràcters.",
+  'section.disseny.contracte.canonic': "Canònic",
+  'section.disseny.contracte.patro.parella': "Parella tècnica curta (dl)",
+  'section.disseny.contracte.quanUsar.parella': "Metadades clau-valor estrictes (versió, port, llicència, SHA-256 curt o identificadors) de menys de 80 caràcters.",
+  'section.disseny.contracte.patro.falsTauler': "Fals tauler en columnes (dl amb paràgrafs llargs)",
+  'section.disseny.contracte.quanUsar.falsTauler': "Mai: cap dl, dt ni dd en dues o tres columnes per a encabir frases llargues o explicacions; s’escriu amb h4/h5 + p.",
+  'section.disseny.contracte.prohibit': "Prohibit",
 };

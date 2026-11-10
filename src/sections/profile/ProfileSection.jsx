@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import SectionItemCard from '../../components/SectionItemCard';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
@@ -9,6 +10,7 @@ import { objecteDePerfil, rutaConnectarPerfil, rutaDePerfil, rutaXatDePagina } f
    un personatge ANIMAL és una IA; abans n'hi havia una còpia ací. */
 import { tipusDAgent } from '../../data/agentsSeed.js';
 import { ETIQUETA_IA } from './fitxaDePerfil.js';
+import SubnavigacioPoblesIGent, { filtraAgentsDelDirectori } from '../pobles/SubnavigacioPoblesIGent.jsx';
 
 /* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL i els
    agents són IA «no com a humans», «preservant la seua fitxa») · L'etiqueta
@@ -36,8 +38,10 @@ const boinaDelPoble = (agent) => {
  * al perfil públic (PerfilPublicSection, rutes /gent, /empresa i /perfil/:id).
  */
 export default function ProfileSection({ agents = [] }) {
-  const { t } = useUIActions();
+  const { t, language } = useUIActions();
   const navigate = useNavigate();
+  const [filtreTipus, canviaFiltreTipus] = useState('');
+  const agentsVisibles = filtraAgentsDelDirectori(agents, filtreTipus);
   /* T43 (ordre del Mestre, 260928) · Connectar una persona, entitat o IA del
      directori porta el seu descriptor (tipus, id i ruta del perfil públic) i,
      per a una entitat, `organitzacio=ID`: el mateix camí que la fitxa pública. */
@@ -65,8 +69,14 @@ export default function ProfileSection({ agents = [] }) {
       chrome="system"
       showLogos={true}
     >
+      <SubnavigacioPoblesIGent
+        actiu="perfil"
+        idioma={language}
+        filtreActiu={filtreTipus}
+        onCanviaFiltre={canviaFiltreTipus}
+      />
       <div className="feed-grid">
-        {agents.map((agent, index) => (
+        {agentsVisibles.map((agent, index) => (
           <SectionItemCard
             key={`${agent.id}-${index}`}
             to={rutaDePerfil(tipusDAgent(agent), agent.id)}

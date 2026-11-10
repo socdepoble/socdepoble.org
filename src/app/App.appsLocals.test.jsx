@@ -468,15 +468,18 @@ test('sense sessió i en un build (DEV false), /consola es pinta i no porta a /r
 }, 10000);
 
 /* D5 · No n'hi ha prou amb l'aria-current de la barra (controlActiu, a
-   App.jsx): es pinta per la ruta, encara que ControlSection no s'haja muntat. S'espera el
+   App.jsx, amb esFillaDelPanell; les altres filles del Panell, a
+   App.controlActiu.test.jsx): es pinta per la ruta, encara que ControlSection no s'haja muntat. S'espera el
    Panell de veres: la secció «Maquinària i Sistema» (section.sdp-control-maquinaria
    de ControlSection.jsx) i «Eixir del poble» (el seu .sdp-control-actions), que
    només pinta PanellControl.
    Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Les cites
    portaven números de línia del Panell (373-374 i 408-416), que ja eren rancis
    i es tornen a moure: les tres targetes de sistema ixen de la secció. Ara es
-   cita per nom. La secció i el seu h2 es conserven, amb el Lector RSS i el TPV
-   del Bar: les assercions no canvien. */
+   cita per nom. La secció i el seu h2 es conserven: les assercions no canvien.
+   R16-W1 · El TPV del Bar ha passat a «Economia i Empresa» (registrePlugins.js,
+   camp `espai`): «Maquinària i Sistema» porta el Lector RSS i el Snippet, i La
+   IAIA Sabuda només amb la curadoria cultural encesa (ControlSection.jsx). */
 test('sense sessió, /control continua sense guarda: es pinta el Panell, com abans', async () => {
   await munta('/control', async () => {
     const maquinaria = await screen.findByRole('heading', { level: 2, name: 'Maquinària i Sistema' }, { timeout: 8000 });

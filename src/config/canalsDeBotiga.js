@@ -59,7 +59,7 @@ const FITXER_APK = '/descarregues/socdepoble-android-latest.apk';
 export const CANALS_DE_BOTIGA = Object.freeze([
   Object.freeze({ id: 'google-play', nom: 'Google Play', url: null }),
   // P0-62 · La fitxa pública d'Apple (trackId 6826441844), oberta el 08-11-2026.
-  Object.freeze({ id: 'app-store', nom: 'App Store', url: 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844' }),
+  Object.freeze({ id: 'app-store', nom: 'App Store', url: 'https://apps.apple.com/es/app/soc-de-poble/id6826441844' }),
   // IDEA-60 (T1, prompt 261102_1532) · Tancades fins que el Mestre done l'adreça (una línia cada una).
   Object.freeze({ id: 'apk-directe', nom: 'APK directe', url: null }),
   Object.freeze({ id: 'testflight', nom: 'TestFlight', url: null }),

@@ -73,7 +73,7 @@ const VINYETES = [
   ['animalets', 'Vinyeta d’Animalets', 'webp'], ['bascula', 'Vinyeta de la Bàscula'], ['cervell', 'Vinyeta del Cervell'],
   ['consola', 'Vinyeta de la Consola'], ['disseny', 'Vinyeta de Disseny'], ['fedivers', 'Vinyeta del Fedivers', 'webp'],
   ['gestoria', 'Vinyeta de la Gestoria'], ['habitatge', 'Vinyeta d’Habitatge', 'webp'], ['mapa', 'Vinyeta del Mapa', 'webp'],
-  ['rebost', 'Vinyeta del Rebost', 'webp'], ['rss', 'Vinyeta de Notícies'], ['salut', 'Vinyeta de Salut', 'webp'],
+  ['nodrir_la_iaia', 'Vinyeta de La IAIA Sabuda', 'webp'], ['rebost', 'Vinyeta del Rebost', 'webp'], ['rss', 'Vinyeta de Notícies'], ['salut', 'Vinyeta de Salut', 'webp'],
   ['treball', 'Vinyeta de Treball', 'webp'], ['vehicle', 'Vinyeta de Vehicles', 'webp']
 ];
 
@@ -413,7 +413,8 @@ export const EXCLOSES = Object.freeze({
   ...Object.fromEntries([[9, 54], [56, 87], [89, 114], [116, 125], [127, 137], [139, 155], [157, 162]]
     .flatMap(([de, a]) => Array.from({ length: a - de + 1 }, (_, i) => `/assets/uploads/patrimoni/que-dinem/p${String(de + i).padStart(3, '0')}.webp`))
     .map((src) => [src, 'làmina del llibre «Què dinem?» (receptari amb permís d’ús): no és cap foto de l’Arxiu'])),
-  '/assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg': 'targeta social (OpenGraph) de /page/receptes: només per al <head>'
+  '/assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg': 'targeta social (OpenGraph) de /page/receptes: només per al <head>',
+  '/assets/uploads/patrimoni/portada_que_dinem_muro.webp': 'portada del llibre «Què dinem?» (receptari amb permís d’ús): no és cap foto de l’Arxiu'
 });
 
 /* El camí de l'original que nomena el motiu d'una còpia: «còpia de /assets/…»

@@ -19,12 +19,13 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
     labels={{ categories: 'Catàlegs', items: 'Varietats', all: 'Tots els catàlegs' }}
     renderDetail={({ item, onClose, onTriaItem }) => {
       const entrada = item?.entrada;
-      return <TextSection page={page} pageKey="banc-de-llavors" accioPrincipal={accioPrincipal}>
-        {(item ? [item.font] : FONTS_BANC_LLAVORS).map(font => <section className="sdp-cataleg-workspace__fitxa" key={font.id}><h3>{font.autoria}</h3><FitxaDeLaFont font={font} tr={tr} /></section>)}
+      return <TextSection page={page} pageKey="banc-de-llavors" accioPrincipal={accioPrincipal} amagaCos={Boolean(item)}>
         {item && <div className="sdp-cataleg-workspace__fitxa"><Fitxa key={entrada.id} entrada={entrada} autoFocus={false}
           totes={entradesDelCataleg(item.font.id)} font={item.font} tr={tr}
           onTriaEntrada={nou => onTriaItem(nou.id)}
-          onTanca={onClose} /></div>}{children}
+          onTanca={onClose} /></div>}
+        {(item ? [item.font] : FONTS_BANC_LLAVORS).map(font => <section className={item ? 'sdp-cataleg-workspace__font' : 'sdp-cataleg-workspace__fitxa'} key={font.id}><h3>{font.autoria}</h3><FitxaDeLaFont font={font} tr={tr} /></section>)}
+        {children}
       </TextSection>;
     }} />;
 }

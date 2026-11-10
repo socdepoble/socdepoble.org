@@ -1971,10 +1971,8 @@ export default {
   'section.control.habitatge.saberMes': 'Learn more: Housing',
   /* control-06 (revisió del Panell, 261104) · Els encapçalaments, les entradilles i
      els dos botons de baix del Panell, abans escrits a mà (ControlSection.jsx). */
-  'section.control.utilitats.titol': 'Utilities and Connectors (Plugins)',
-  'section.control.utilitats.lead': 'The system will grow with utilities (or plugins) like these, which can be switched on when needed. They are independent of the core system, so tailored features can be plugged in only for the users or clients who ask for them.',
   'section.control.maquinaria.titol': 'Machinery and System',
-  'section.control.maquinaria.lead': 'Administration panels and internal platform tools. These utilities are usually enabled only for the administration team.',
+  'section.control.maquinaria.lead': 'Other platform tools, such as the RSS reader and Snippet, the Chrome extension for saving web pages to the Notebook.',
   'section.control.dubtes': 'Messages for questions',
   'section.control.compte': 'Account and password',
   'section.control.eixir': 'Leave the village',
@@ -3740,4 +3738,25 @@ export default {
   'section.notes.publicacio.revisioDesada': "Revision saved in this browser: the Wall and the page already show it.",
   'section.notes.publicacio.revisioDesadaServidor': "Revision saved on the server: the Wall and the page now show it to everyone.",
   'section.notes.publicacio.revisioNomesNavegador': "The server did not accept the revision: it is saved only in this browser.",
+  /* Onada R16b (C5-09) · Els dos patrons nous de l'espècimen del Contracte de Pedra Seca a /disseny
+     (EspecimenContracte.jsx): el quadre blanc editorial i on s'obrin els ajustos de l'espai de treball. */
+  'section.disseny.contracte.quadreBlanc.titol': "Law of the editorial white box and the fake column dashboard",
+  'section.disseny.contracte.quadreBlanc.alertaTitol': "Headings and paragraphs inside information boxes",
+  'section.disseny.contracte.quadreBlanc.alerta': "Inside a white information box, every explanation (how it works, steps or architecture) is written with headings (h3, h4, h5) and paragraphs or lists across the full width of the column. An explanation is not disguised as a two-column dashboard: a definition list (dl) with long titles on the left and squeezed paragraphs on the right.",
+  'section.disseny.contracte.quadreBlanc.diagnostic': "Editorial white boxes and short technical lists",
+  'section.disseny.contracte.quanUsar': "When to use it:",
+  'section.disseny.contracte.estructura': "Structure:",
+  'section.disseny.contracte.modals.titol': "Workspace settings: column 3 in catalogues, a dialog elsewhere",
+  'section.disseny.contracte.modals.columna3.titol': "Catalogues: settings in column 3",
+  'section.disseny.contracte.modals.columna3.text': "The workspace settings of the catalogues built with CatalegWorkspace (Herbarium, Seed bank, Recipes, Fediversity, Pantry and POS catalogue) are drawn inside detail column 3, with one back button at the top and another at the bottom, and not in a floating modal that hides the context.",
+  'section.disseny.contracte.modals.dialeg.titol': "Other spaces: settings in a dialog",
+  'section.disseny.contracte.modals.dialeg.text': "The other workspaces built with UniversalWorkspace, when they have settings, still open them in a dialog (WorkspaceSettingsDialog). The chat Settings sheet (FullAjustos) also opens in a dialog.",
+  'section.disseny.contracte.patro.editorial': "Editorial writing (h4/h5 + p)",
+  'section.disseny.contracte.quanUsar.editorial': "Domain explanations, technical reports, protocols and teaching blocks with paragraphs longer than 80 characters.",
+  'section.disseny.contracte.canonic': "Canonical",
+  'section.disseny.contracte.patro.parella': "Short technical pair (dl)",
+  'section.disseny.contracte.quanUsar.parella': "Strict key-value metadata (version, port, licence, short SHA-256 or identifiers) under 80 characters.",
+  'section.disseny.contracte.patro.falsTauler': "Fake column dashboard (dl with long paragraphs)",
+  'section.disseny.contracte.quanUsar.falsTauler': "Never: no dl, dt or dd in two or three columns to fit long sentences or explanations; write it with h4/h5 + p.",
+  'section.disseny.contracte.prohibit': "Forbidden",
 };

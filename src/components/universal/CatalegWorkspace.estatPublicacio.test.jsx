@@ -11,7 +11,7 @@ vi.mock('../PedraSeca/index.js', () => ({ UniversalCard: () => null, Boto: ({ ch
 import CatalegWorkspace from './CatalegWorkspace.jsx';
 const fila = (id = 'timonet', pendent = true) => ({ id: '6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c9d', ownerUserId: m.ownerId, sectionId: 'mur', title: 'Timonet',
   projeccioCataleg: { v: 1, font: 'herbari', id, destins: ['mur'], audiencia: 'publica' }, _projeccioPendent: pendent });
-const mount = () => render(<CatalegWorkspace id="test" font="herbari" destiPublicacio="herbari" model={{ items: [m.item], categories: [] }} renderDetail={() => <header className="page-title"><h1>Fitxa</h1></header>} />);
+const mount = () => render(<CatalegWorkspace id="test" font="herbari" destiPublicacio="herbari" permetreEdicioDestins={true} model={{ items: [m.item], categories: [] }} renderDetail={() => <header className="page-title"><h1>Fitxa</h1></header>} />);
 beforeEach(() => { m.rows = []; m.error = null; });
 afterEach(cleanup);
 test('la lectura fallida sense cap publicació no es presenta com una tria pendent', () => {

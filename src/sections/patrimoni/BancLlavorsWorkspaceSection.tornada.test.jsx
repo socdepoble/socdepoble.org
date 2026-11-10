@@ -10,7 +10,11 @@ import BancLlavorsWorkspaceSection from './BancLlavorsWorkspaceSection.jsx';
 const ui = vi.hoisted(() => ({ language: 'ca', t: (_key, fallback) => fallback }));
 vi.mock('../../app/contexts/UIContext', async original => ({ ...await original(), useUIActions: () => ui, useUIActionsOpcional: () => ui }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast() {} }) }));
-vi.mock('../text/TextSection', () => ({ default: ({ children }) => <article>{children}</article> }));
+/* R16b (tercera ronda) · La TextSection de veres (amagaCos és seu): només se substituïxen la
+   UniversalPage (la seua maquinària no entra en joc) i el <head> (useSEO), com a TextSection.test.jsx.
+   Abans, la TextSection sencera era un embolcall buit. */
+vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: ({ children }) => <article>{children}</article> }));
+vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
@@ -47,4 +51,34 @@ test('Tancar torna el focus a l’element de la llista i una germana el porta al
   expect(titol()).toBeNull();
   expect(document.activeElement).not.toBe(document.body);
   expect(document.activeElement).toBe(element(germana.id));
+});
+
+/* R16b (tercera ronda) · amagaCos: amb la pàgina, el cos (page.html) es pinta sense fitxa, desapareix
+   amb una fitxa oberta (també en passar a una varietat germana) i torna en tancar-la. */
+test('el cos de la pàgina es pinta sense fitxa, desapareix amb una fitxa oberta i torna en tancar-la', async () => {
+  const { container } = render(<MemoryRouter rutaInicial="/page/banc-de-llavors"><BancLlavorsWorkspaceSection page={{ html: '<p>COS</p>' }} /></MemoryRouter>);
+  const detall = () => container.querySelector('#app-grid-main');
+  const cos = () => within(detall()).queryByText('COS');
+  const element = id => container.querySelector(`#app-grid-list .sp-card-link-overlay[data-element="${id}"]`);
+  const titol = () => container.querySelector('.sdp-fitxa-didactica__titol');
+  expect(cos()).toBeTruthy();
+  expect(cos().closest('article.cms-preview')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Tots els catàlegs', exact: true }));
+  expect(cos()).toBeTruthy();
+
+  fireEvent.click(element(primera.id));
+  await marcs();
+  expect(titol().textContent).toBe(primera.nom);
+  expect(cos()).toBeNull();
+  expect(detall().querySelector('article.cms-preview')).toBeNull();
+
+  fireEvent.click(within(container.querySelector('.sdp-fitxa-didactica__variants')).getByRole('button', { name: germana.nom }));
+  await marcs();
+  expect(titol().textContent).toBe(germana.nom);
+  expect(cos()).toBeNull();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Tancar' }));
+  await marcs();
+  expect(titol()).toBeNull();
+  expect(cos()).toBeTruthy();
 });

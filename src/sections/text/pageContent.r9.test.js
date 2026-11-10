@@ -191,9 +191,11 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
       expect(seccio(body, BALANC.ca[1]).map((n) => n.textContent).join(' ')).not.toContain('segellats en còpia aïllada');
     }
     const versions = doc(PAGE_COPY.versions.html).body;
-    // P0-62 (08-11-2026), encàrrec R13+R14 (09-11-2026) i R15b (PRODNM-08) · La fita R15 obri /versions, la crònica de
-    // les Onades R13 i R14 és la segona, la fita de l'App Store la tercera i l'entrada del 5 de novembre, la quarta, intacta.
-    expect([...versions.querySelectorAll('h3')].slice(0, 4).map((h3) => h3.textContent)).toEqual([
+    // P0-62 (08-11-2026), encàrrec R13+R14 (09-11-2026), R15b (PRODNM-08) i R16b · La fita R16 obri /versions, la fita
+    // R15 és la segona, la crònica de les Onades R13 i R14 la tercera, la fita de l'App Store la quarta i l'entrada del
+    // 5 de novembre, la cinquena, intacta.
+    expect([...versions.querySelectorAll('h3')].slice(0, 5).map((h3) => h3.textContent)).toEqual([
+      '10 de novembre de 2026 · Onada R16 · La versió 1.1.12, el Panell de Control en tres espais i La IAIA Sabuda',
       '9 de novembre de 2026 · Onada R15 · El Workspace dels catàlegs i la proposta d’al·lèrgens',
       '9 de novembre de 2026 · Onades R13 i R14 · El receptari «Què dinem?», la targeta d’usuaris i dispositius i el Segon Brain',
       '6 de novembre de 2026 · Fita · L’app d’iPhone i iPad, publicada a l’App Store (versió 1.0)',

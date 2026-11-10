@@ -15725,6 +15725,10 @@ details[open] summary.accordion-header svg:last-child {
     min-height: var(--sdp-alt-accio);
     min-width: 0;
   }
+  .sdp-cataleg-workspace__font {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
   .sdp-cataleg-workspace__publicacio input { flex-shrink: 0; }
   /* Direct dt/dd pairs also occur in recipe credits and Fediversity documents.
      An intrinsic max-content label must never push the second column outside. */
@@ -15775,6 +15779,158 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-admin-sessions th,
   .sdp-admin-sessions td {
     overflow-wrap: anywhere;
+  }
+
+  /* ═══ Onada R16.12 (R16-X1) · Subnavegació Pobles ↔ Gent i Entitats ↔ Demografia ═══ */
+  .sdp-subnav-pobles-gent-contenidor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin-block-end: var(--sdp-space-4);
+  }
+
+  .sdp-subnav-pobles-gent__llista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sdp-subnav-pobles-gent__enllac {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--sdp-alt-accio);
+    padding-inline: var(--sdp-space-4);
+    padding-block: var(--sdp-space-2);
+    border-radius: var(--sdp-radi-boto);
+    border: 1px solid var(--sdp-vora-control);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color var(--sdp-t), border-color var(--sdp-t), color var(--sdp-t);
+  }
+
+  .sdp-subnav-pobles-gent__enllac--actiu {
+    background: var(--sdp-accio-control);
+    border-color: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+
+  .sdp-directori-filtres {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-directori-filtres__botons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-directori-filtres__boto {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--sdp-alt-accio);
+    padding-inline: var(--sdp-space-4);
+    padding-block: var(--sdp-space-2);
+    border-radius: var(--sdp-radi-boto);
+    border: 1px solid var(--sdp-vora-control);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--sdp-t), border-color var(--sdp-t), color var(--sdp-t);
+  }
+
+  .sdp-directori-filtres__boto--actiu {
+    background: var(--sdp-accio-control);
+    border-color: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+
+  /* Llei de Redacció Editorial en Quadre Blanc (H3 / H4 + <p> vs. Fals <dl>) */
+  .sdp-admin-editorial-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .sdp-admin-editorial-bloc {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding-block-end: var(--sdp-space-3);
+    border-block-end: 1px solid var(--sdp-vora);
+    min-width: 0;
+  }
+
+  .sdp-admin-editorial-bloc:last-child {
+    padding-block-end: 0;
+    border-block-end: 0;
+  }
+
+  /* El títol d'un bloc és h4 o h5 segons la jerarquia de la pàgina (h5 sota un h4 de secció:
+     BancImportacioEditorial, BrainTaxonomia, EspecimenContracte i RevisorEditorialNode0Panel, de les
+     Notes). Mateix marge i color; la mida, la fluida del seu nivell, la mateixa de base.css
+     (@layer legacy): amb --sdp-text-h4/h5, fixes, esta capa guanyava i al mòbil el títol del bloc
+     quedava més gran que el de la seua secció. */
+  .sdp-admin-editorial-bloc :is(h4, h5) {
+    margin: 0;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-admin-editorial-bloc h4 {
+    font-size: var(--sdp-fluid-h4);
+  }
+
+  .sdp-admin-editorial-bloc h5 {
+    font-size: var(--sdp-fluid-h5);
+  }
+
+  .sdp-admin-editorial-bloc p {
+    margin: 0;
+    color: var(--sdp-text-cos);
+  }
+
+  /* R16-AA6..AA8 · Capçalera de la fitxa de l'Herbari (botó de tornar) i Configuració de l'espai de treball en columna de detall */
+  .sdp-herbari-fitxa__capcalera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    margin-block-end: var(--sdp-space-3);
+  }
+
+  .sdp-herbari-fitxa__tornar {
+    flex-shrink: 0;
+  }
+
+  .sdp-workspace-settings-inline {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border-radius: var(--sdp-radi-m);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-superficie);
+  }
+
+  .sdp-workspace-settings-inline__barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--sdp-space-2);
   }
 }
 /* ═══ FI DEL BLOC sessionsDispositius ═══ */

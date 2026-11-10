@@ -31,7 +31,7 @@ export const CLASSIFICACIO_PAGINES_PUBLIQUES=Object.freeze({
  'rutes-de-poble':['natura-excursions','Rutes'],
  'arbres-monumentals':['natura-excursions','Arbres Monumentals'],
  // Onada R14 · El receptari «Què dinem?» (Muro, El Comtat, 2019): cultura i patrimoni del poble.
- 'nodrir-la-iaia':['patrimoni-cultura','Documentació'],
+ 'la-iaia-sabuda':['patrimoni-cultura','Documentació'],
  receptes:['patrimoni-cultura','Patrimoni']
 });
 

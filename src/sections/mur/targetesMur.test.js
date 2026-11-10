@@ -139,6 +139,13 @@ describe('P0-51 · invariant antiduplicats del Mur i del Calendari', () => {
 
 
 describe('targetesDeSistema', () => {
+  /* R16b · «Què dinem?» entra al Mur com a pàgina de patrimoni, amb la portada del llibre (pageContent.patrimoniR14.js). */
+  test('la targeta de «Què dinem?» porta a /page/receptes i du la portada del llibre', () => {
+    const targeta = targetesDeSistema(PAGE_COPY, { nativa: false }).find((t) => t.id === 'receptes');
+    expect(targeta?.mainHref).toBe('/page/receptes');
+    expect(targeta?.image).toBe('/assets/uploads/patrimoni/portada_que_dinem_muro.webp');
+  });
+
   test('cada pàgina del copy és una targeta del sistema amb la data de CREACIÓ, mai com a dia d’acte', () => {
     const [primera] = targetesDeSistema({ projecte: { title: 'El projecte', date: '2026-08-20T00:00:00.000Z' } });
     expect(primera).toMatchObject({
@@ -151,40 +158,40 @@ describe('targetesDeSistema', () => {
   test('una pàgina declarada i absent no es pinta i ho diu a qui la demana', () => {
     const quanFalta = vi.fn();
     expect(targetesDeSistema({}, { quanFalta })).toEqual([]);
-    // PRODUCCIO-02 (R15b) · Sense la bandera de curadoria, Nodrir la IAIA no és cap targeta: no falta, i no avisa.
-    expect(quanFalta.mock.calls.map(([clau]) => clau)).toEqual(SYSTEM_PAGES.map((p) => p.key).filter((clau) => clau !== 'nodrir-la-iaia'));
+    // PRODUCCIO-02 (R15b) · Sense la bandera de curadoria, La IAIA Sabuda no és cap targeta: no falta, i no avisa.
+    expect(quanFalta.mock.calls.map(([clau]) => clau)).toEqual(SYSTEM_PAGES.map((p) => p.key).filter((clau) => clau !== 'la-iaia-sabuda'));
     expect(targetesDeSistema(undefined)).toEqual([]);
   });
 
-  /* PRODUCCIO-02 (revisió R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1 (producció), /page/nodrir-la-iaia no recull res:
+  /* PRODUCCIO-02 (revisió R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1 (producció), /page/la-iaia-sabuda no recull res:
      la pàgina no és cap targeta del Mur, del Calendari ni del Bloc de l'entitat, encara que la seua data de creació
      (9-11-2026) siga la més nova. La ruta i SYSTEM_PAGES no canvien. Amb la bandera exacta '1', hi torna. */
-  describe('PRODUCCIO-02 · Nodrir la IAIA, només amb la curadoria encesa', () => {
+  describe('PRODUCCIO-02 · La IAIA Sabuda, només amb la curadoria encesa', () => {
     afterEach(() => vi.unstubAllEnvs());
     const claus = () => targetesDeSistema(PAGE_COPY, { nativa: false }).map((targeta) => targeta.id);
 
     test.each([[undefined], [''], ['0'], ['true'], [' 1']])('bandera %j: cap targeta de Nodrir, cap avís de falta, i la ruta continua', (valor) => {
       if (valor !== undefined) vi.stubEnv('VITE_SDP_CURADORIA_CULTURAL', valor);
-      expect(esTargetaDelMur('nodrir-la-iaia')).toBe(false);
-      expect(claus()).not.toContain('nodrir-la-iaia');
+      expect(esTargetaDelMur('la-iaia-sabuda')).toBe(false);
+      expect(claus()).not.toContain('la-iaia-sabuda');
       const quanFalta = vi.fn();
       targetesDeSistema({}, { quanFalta, nativa: false });
-      expect(quanFalta.mock.calls.flat()).not.toContain('nodrir-la-iaia');
-      expect(SYSTEM_PAGES.find((pagina) => pagina.key === 'nodrir-la-iaia')).toMatchObject({ href: '/page/nodrir-la-iaia' });
-      expect(PAGE_COPY['nodrir-la-iaia'].date).toBe('2026-11-09T14:40:43.030Z');
+      expect(quanFalta.mock.calls.flat()).not.toContain('la-iaia-sabuda');
+      expect(SYSTEM_PAGES.find((pagina) => pagina.key === 'la-iaia-sabuda')).toMatchObject({ href: '/page/la-iaia-sabuda' });
+      expect(PAGE_COPY['la-iaia-sabuda'].date).toBe('2026-11-09T14:40:43.030Z');
       // La resta de pàgines del sistema, totes.
-      for (const { key } of SYSTEM_PAGES.filter((pagina) => pagina.key !== 'nodrir-la-iaia')) expect(esTargetaDelMur(key)).toBe(true);
+      for (const { key } of SYSTEM_PAGES.filter((pagina) => pagina.key !== 'la-iaia-sabuda')) expect(esTargetaDelMur(key)).toBe(true);
     });
 
     test('bandera «1»: la targeta hi és, amb la seua ruta i la data de creació real', () => {
       vi.stubEnv('VITE_SDP_CURADORIA_CULTURAL', '1');
-      expect(esTargetaDelMur('nodrir-la-iaia')).toBe(true);
-      const targeta = targetesDeSistema(PAGE_COPY, { nativa: false }).find((element) => element.id === 'nodrir-la-iaia');
-      expect(targeta).toMatchObject({ mainHref: '/page/nodrir-la-iaia', created_at: '2026-11-09T14:40:43.030Z', isSystem: true });
+      expect(esTargetaDelMur('la-iaia-sabuda')).toBe(true);
+      const targeta = targetesDeSistema(PAGE_COPY, { nativa: false }).find((element) => element.id === 'la-iaia-sabuda');
+      expect(targeta).toMatchObject({ mainHref: '/page/la-iaia-sabuda', created_at: '2026-11-09T14:40:43.030Z', isSystem: true });
       const amb = claus();
       vi.unstubAllEnvs();
       // Només hi entra Nodrir: la resta, igual i en el mateix ordre.
-      expect(amb.filter((clau) => clau !== 'nodrir-la-iaia')).toEqual(claus());
+      expect(amb.filter((clau) => clau !== 'la-iaia-sabuda')).toEqual(claus());
       expect(amb).toHaveLength(claus().length + 1);
     });
 

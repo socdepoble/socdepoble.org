@@ -20,7 +20,7 @@ import { PAGE_COPY } from '../sections/text/pageContent.js';
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
 const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
 /* P0-62 · La fitxa pública de Sóc de Poble a l'App Store (consulta d'Apple del 08-11-2026). */
-const APP_STORE = 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844';
+const APP_STORE = 'https://apps.apple.com/es/app/soc-de-poble/id6826441844';
 /* IDEA-60 · L'APK signat al domini propi i un enllaç públic de TestFlight. */
 const APK = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 const TESTFLIGHT = 'https://testflight.apple.com/join/AbCd1234';
@@ -75,10 +75,13 @@ describe('urlDeCanal', () => {
     expect(urlDeCanal({ id: 'wordpress-org', url: WORDPRESS })).toBe(WORDPRESS);
     expect(urlDeCanal({ id: 'wordpress-org', url: 'https://wordpress.org/plugins/socdepoble' })).toBe('https://wordpress.org/plugins/socdepoble');
     expect(urlDeCanal({ id: 'google-play', url: 'HTTPS://PLAY.GOOGLE.COM/store/apps/details?id=org.socdepoble.app' })).toBe(PLAY);
-    // B9 · «beta» dins d'una altra paraula no és de proves, i un nom amb %-codis bons tampoc no es rebutja.
+    // B9 · «beta» dins d'una altra paraula no és de proves, un nom amb %-codis bons tampoc no es rebutja,
+    // i l'slug ASCII pur de la fitxa oberta passa net.
     expect(urlDeCanal({ id: 'app-store', url: 'https://apps.apple.com/app/betanzos/id1234567890' })).toBe('https://apps.apple.com/app/betanzos/id1234567890');
     expect(urlDeCanal({ id: 'app-store', url: 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id1234567890' }))
       .toBe('https://apps.apple.com/es/app/s%C3%B3c-de-poble/id1234567890');
+    expect(urlDeCanal({ id: 'app-store', url: 'https://apps.apple.com/es/app/soc-de-poble/id6826441844' }))
+      .toBe('https://apps.apple.com/es/app/soc-de-poble/id6826441844');
     // IDEA-60 · L'APK signat (el camí exacte) i l'enllaç públic de TestFlight (/join/ i un codi de 4 a 32 caràcters), normalitzats.
     expect(urlDeCanal({ id: 'apk-directe', url: APK })).toBe(APK);
     expect(urlDeCanal({ id: 'apk-directe', url: 'HTTPS://SOCDEPOBLE.ORG/descarregues/socdepoble-android-latest.apk' })).toBe(APK);

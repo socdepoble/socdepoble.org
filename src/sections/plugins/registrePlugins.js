@@ -32,7 +32,8 @@
  * Cada plugin: { id, titol, subtitol, entradilla, imatge, imatgeAlt, obrir,
  * entorn, espai, etiquetaObrir, data, etiquetes }.
  *   · espai  · Onada 2 de la Gestoria (261004) · l'espai del Panell on viu
- *     la targeta, «L'empresa» o «La llar» (ESPAIS_PLUGINS), o null.
+ *     la targeta, «Economia i Empresa» (abans «L'empresa»; R16-W1) o «La
+ *     llar» (ESPAIS_PLUGINS), o null.
  *   · data i etiquetes · Onada 10 (261010; pla 261010_1121; decisió del
  *     Mestre del 261010, M4: «totes les targetes de plugin del Panell passen
  *     a targeta canònica») · El que li faltava a la targeta de plugin per a
@@ -48,8 +49,8 @@
  *                   className }; buida si el plugin no en porta. Sense
  *                   `href` (D3 del Panell: cap enllaç que no siga el perfil,
  *                   els drets o /plugin/<id>) i sense cap xifra.
- *     Les porten els cinc que tenen targeta de plugin al Panell: gestoria,
- *     rebost, salut, rss i tpv. Mapa, Vehicle Compartit i Animalets NO: la
+ *     Les porten els sis que tenen targeta de plugin al Panell: gestoria,
+ *     rebost, salut, genealogia, rss i tpv. Mapa, Vehicle Compartit i Animalets NO: la
  *     seua targeta del Panell és la de dalt, la de publicació (W4-08), que
  *     llig la data de PAGE_COPY; ací es queden amb null i la llista buida, i
  *     la seua pàgina no canvia ni un píxel.
@@ -145,8 +146,10 @@ export const RUTA_PLUGINS = '/plugin';
    build web en publica la instantània sanejada), ja no són del registre
    (Onada 8).
    espai · l'espai del Panell de Control on viu la targeta ('empresa' o
-   'llar', ESPAIS_PLUGINS), o null si va a les graelles d'Utilitats o de
-   Maquinària. Un sol valor per plugin: cap targeta pot viure en dos espais.
+   'llar', ESPAIS_PLUGINS), o null si no viu en cap espai. R16-W1 · La graella
+   d'Utilitats ja no es pinta: amb null, la targeta de baix només es pinta si
+   és de «Maquinària i Sistema» (ControlSection.jsx, IDS_MAQUINARIA). Un sol
+   valor per plugin: cap targeta pot viure en dos espais.
    data i etiquetes · Onada 10 (261010; pla 261010_1121; decisió del Mestre
    del 261010, M4) · opcionals: sense, null i una llista buida (el plugin es
    pinta com sempre). La llista i cada etiqueta ixen congelades, i de cada
@@ -220,6 +223,10 @@ const classificacio = (etiqueta, categoria = 'Eina') => [
    les Utilitats. Mateix panell, dos espais separats i cap targeta compartida
    (R3: la llar mai es barreja amb l'empresa). Per W4-08, el que viu en un
    espai ix de les graelles d'Utilitats i de Maquinària.
+   R16-W1 · «L'empresa» es diu «Economia i Empresa», i els dos espais van entre
+   «Publica al poble» i «Maquinària i Sistema»: la graella d'Utilitats ja no
+   es pinta. DEROGAT M3 per al Rebost Domèstic, que passa de «La llar» a
+   «Economia i Empresa» (camp `espai`); Salut continua a «La llar».
    Targetes ESTÀTIQUES (R1): cap xifra, comptador, data d'un apunt ni avís que
    isca de les dades. El Panell també es munta dins de l'amfitrió
    (WordPress): les xifres només viuen dins de cada eina, mai ací.
@@ -232,15 +239,64 @@ const classificacio = (etiqueta, categoria = 'Eina') => [
 export const ESPAIS_PLUGINS = Object.freeze([
   Object.freeze({
     id: 'empresa',
-    titol: 'L’empresa',
-    entradeta: 'Les eines de l’activitat: el que es declara o es justifica davant d’Hisenda i de la gestoria. El Panell no mostra cap xifra de les teues dades; les dades només es veuen dins de cada eina.'
+    titol: 'Economia i Empresa',
+    entradeta: 'Les eines de l’activitat: la gestoria, el TPV del bar i el rebost domèstic. El Panell no mostra cap xifra de les teues dades; les dades només es veuen dins de cada eina.'
   }),
   Object.freeze({
     id: 'llar',
     titol: 'La llar',
-    entradeta: 'Les eines de casa: el rebost, la compra i el quadern de salut. Viuen separades de les de l’empresa, i el Panell no mostra cap dada teua.'
+    entradeta: 'Les eines de casa: el quadern de salut i la memòria de la família. Viuen separades de les de l’empresa, i el Panell no mostra cap dada teua.'
   })
 ]);
+
+/* R16b (C3-12) · El títol i l'entradeta de cada espai en les cinc llengües de l'App (ca, es, en, eu
+   i gl), per l'id de l'espai. El valencià no es copia: és ESPAIS_PLUGINS mateix, l'única font. El
+   Panell (ControlSection.jsx, EspaiDelPanell) llig la llengua de la interfície i, si no la troba ací,
+   torna a ESPAIS_PLUGINS. */
+const textosDeLEspai = (titol, entradeta) => Object.freeze({ titol, entradeta });
+export const TEXTOS_ESPAIS_PLUGINS = Object.freeze({
+  ca: Object.freeze(Object.fromEntries(ESPAIS_PLUGINS.map(({ id, titol, entradeta }) => [id, textosDeLEspai(titol, entradeta)]))),
+  es: Object.freeze({
+    empresa: textosDeLEspai(
+      'Economía y Empresa',
+      'Las herramientas de la actividad: la gestoría, el TPV del bar y la despensa doméstica. El Panel no muestra ninguna cifra de tus datos; los datos solo se ven dentro de cada herramienta.'
+    ),
+    llar: textosDeLEspai(
+      'El hogar',
+      'Las herramientas de casa: el cuaderno de salud y la memoria de la familia. Viven separadas de las de la empresa, y el Panel no muestra ningún dato tuyo.'
+    )
+  }),
+  en: Object.freeze({
+    empresa: textosDeLEspai(
+      'Economy & Business',
+      'Activity tools: bookkeeping, bar POS and home pantry. The Panel shows no figures from your data; data is only visible inside each tool.'
+    ),
+    llar: textosDeLEspai(
+      'The Home',
+      'Home tools: the health notebook and family memory. They live separate from business tools, and the Panel shows none of your data.'
+    )
+  }),
+  eu: Object.freeze({
+    empresa: textosDeLEspai(
+      'Ekonomia eta Enpresa',
+      'Jardueraren tresnak: gestoria, tabernako TPVa eta etxeko jakitegia. Panelak ez du zure datuen zifrarik erakusten; datuak tresna bakoitzaren barruan bakarrik ikusten dira.'
+    ),
+    llar: textosDeLEspai(
+      'Etxea',
+      'Etxeko tresnak: osasun-koadernoa eta familiaren oroimena. Enpresakoetatik bereizita bizi dira, eta Panelak ez du zure daturik erakusten.'
+    )
+  }),
+  gl: Object.freeze({
+    empresa: textosDeLEspai(
+      'Economía e Empresa',
+      'As ferramentas da actividade: a xestoría, o TPV do bar e a despensa doméstica. O Panel non mostra ningunha cifra dos teus datos; os datos só se ven dentro de cada ferramenta.'
+    ),
+    llar: textosDeLEspai(
+      'O fogar',
+      'As ferramentas da casa: o caderno de saúde e a memoria da familia. Viven separadas das da empresa, e o Panel non mostra ningún dato teu.'
+    )
+  })
+});
 
 /* L'ordre és el del Mestre (prompt 261004_0015, T2): el de la graella, el del
    DOM i el del focus. */
@@ -312,13 +368,29 @@ export const PLUGINS = Object.freeze([
     etiquetes: classificacio('Factures')
   }),
   plugin({
+    id: 'tpv',
+    titol: 'TPV del Bar',
+    subtitol: 'La caixa del bar o del casino',
+    entradilla: 'Comandes, taules, tiquets i tancament del torn. Les dades es guarden en este dispositiu.',
+    imatgeAlt: 'El cambrer apunta comandes a la barra del Bar Casino, ple de veïns, entrepans i embotits penjats',
+    obrir: rutaDeApp('bar'),
+    espai: 'empresa',
+    etiquetaObrir: 'Obrir el Bar',
+    data: DATA_DE_L_ORDRE,
+    etiquetes: classificacio('Hostaleria'),
+    /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La vinyeta nova, el
+       mateix cambrer: 1.200 × 1.200 en WebP de menys de 80 KB. El .jpg
+       d'abans es conserva al disc (cap esborrat). */
+    extensioImatge: 'webp'
+  }),
+  plugin({
     id: 'rebost',
     titol: 'Rebost Domèstic',
     subtitol: 'La nevera i el rebost de casa',
     entradilla: 'Apunta el que tens a casa i el que cal comprar, dins de La Nevera de Casa. Les llistes es guarden només en este dispositiu.',
     imatgeAlt: 'Dues iaies etiqueten pots de conserva en un rebost ple de botifarres, tomaques i olives',
     obrir: rutaDeApp('nevera', 'casa'),
-    espai: 'llar',
+    espai: 'empresa',
     etiquetaObrir: 'Obrir el Rebost',
     data: DATA_DE_L_ORDRE,
     etiquetes: classificacio('Compra'),
@@ -364,21 +436,6 @@ export const PLUGINS = Object.freeze([
     etiquetaObrir: 'Obrir el Lector',
     data: DATA_DE_L_ORDRE,
     etiquetes: classificacio('Notícies')
-  }),
-  plugin({
-    id: 'tpv',
-    titol: 'TPV del Bar',
-    subtitol: 'La caixa del bar o del casino',
-    entradilla: 'Comandes, taules, tiquets i tancament del torn. Les dades es guarden en este dispositiu.',
-    imatgeAlt: 'El cambrer apunta comandes a la barra del Bar Casino, ple de veïns, entrepans i embotits penjats',
-    obrir: rutaDeApp('bar'),
-    etiquetaObrir: 'Obrir el Bar',
-    data: DATA_DE_L_ORDRE,
-    etiquetes: classificacio('Hostaleria'),
-    /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La vinyeta nova, el
-       mateix cambrer: 1.200 × 1.200 en WebP de menys de 80 KB. El .jpg
-       d'abans es conserva al disc (cap esborrat). */
-    extensioImatge: 'webp'
   })
   /* Ordre del Mestre (261007) · Bàscula descartada per ara: ja no és cap
      plugin. Viu només com a llavor del Full de ruta (vegeu la capçalera). */

@@ -13,23 +13,23 @@
  * dues fitxes sintètiques de prova, una AI i una ANIMAL.
  */
 import React from 'react';
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ navigate: vi.fn() }));
+const mocks = vi.hoisted(() => ({ navigate: vi.fn(), language: 'ca' }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useNavigate: () => mocks.navigate,
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, reserva) => reserva }) }));
+vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, reserva) => reserva, language: mocks.language }) }));
 
 import ProfileSection from './ProfileSection.jsx';
 import { AGENTS, AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
 import { ETIQUETA_IA } from './fitxaDePerfil.js';
 
 afterEach(cleanup);
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => { vi.clearAllMocks(); mocks.language = 'ca'; });
 
 const targeta = (arrel, nom) => [...arrel.querySelectorAll('article.sp-card')].find((a) => a.querySelector('.sp-card-title')?.textContent === nom);
 /* Expectativa actualitzada a propòsit (P0-72 / IDEA-203, ordre del Mestre del
@@ -135,4 +135,93 @@ test('P0-72 · al directori del paquet, l’única targeta d’IA és la de la I
     .filter((fitxa) => etiquetesDe(fitxa).includes(ETIQUETA_IA))
     .map((fitxa) => fitxa.querySelector('.sp-card-title').textContent);
   expect(ambMarcaDIA).toEqual(ASSISTENTS_OFICIALS);
+});
+
+/* R16b (3a ronda) · Els enllaços de la subnavegació pel seu nom accessible, amb la posició: el text
+   sense l'emoji, que va a part en un span aria-hidden (getByRole compara el nom sencer). */
+const enllacosDeLaSubnav = (subnav, noms) => {
+  const enllacos = within(subnav).getAllByRole('link');
+  return noms.map((nom) => {
+    const a = within(subnav).getByRole('link', { name: nom });
+    return [enllacos.indexOf(a), a.getAttribute('href'), a.getAttribute('aria-current'), a.querySelector('[aria-hidden="true"]')?.textContent ?? null, a.textContent];
+  });
+};
+
+test('R16-X1 · SubnavigacioPoblesIGent connecta Pobles, Gent i Entitats i Demografia i filtra per tipus i visibilitat pública; el grup de filtres no porta cap enllaç', () => {
+  const mostra = [
+    { id: 'pepa', name: 'Pepa', type: 'PERSON', role: 'Fornera', town_name: 'Benilloba', publicat: true },
+    { id: 'forn', name: 'Forn de la Plaça', type: 'COMPANY', role: 'Forn', tag: 'Comerç', town_name: 'Benilloba', publicat: true },
+    { id: 'iaia', name: 'IAIA MarIA', type: 'AI', role: 'Agent', tag: 'TECNOLOGIA', town_name: 'La Torre de les Maçanes', publicat: true },
+    { id: 'ocult', name: 'Perfil Ocult', type: 'PERSON', role: 'Privat', town_name: 'Benilloba', publicat: false },
+    { id: 'privat', name: 'Perfil Privat', type: 'COMPANY', role: 'Privat', town_name: 'Benilloba', visibility: 'private' }
+  ];
+  const { container } = render(<ProfileSection agents={mostra} />);
+
+  const subnav = screen.getByRole('navigation', { name: 'Directori de pobles i gent' });
+  expect(subnav).not.toBeNull();
+  expect(within(subnav).getAllByRole('link')).toHaveLength(3);
+  expect(enllacosDeLaSubnav(subnav, ['Pobles', 'Gent i Entitats', 'Demografia'])).toEqual([
+    [0, '/pobles', null, '🏘️', '🏘️ Pobles'],
+    [1, '/perfil', 'page', '👥', '👥 Gent i Entitats'],
+    [2, '/poblacio', null, '📊', '📊 Demografia']
+  ]);
+
+  /* La píndola «Gent» cap a /perfil mateix no era cap filtre: fora del grup i de la pàgina. */
+  const filtres = screen.getByRole('group', { name: 'Filtra el directori per tipus' });
+  expect(within(filtres).queryAllByRole('link')).toEqual([]);
+  expect(within(filtres).getAllByRole('button')).toHaveLength(4);
+  expect(screen.queryByRole('link', { name: 'Gent' })).toBeNull();
+
+  const titols = () => [...container.querySelectorAll('article.sp-card .sp-card-title')].map((el) => el.textContent);
+  expect(titols()).toEqual(['Pepa', 'Forn de la Plaça', 'IAIA MarIA']);
+
+  const botonsFiltre = [...container.querySelectorAll('button.sdp-directori-filtres__boto')];
+  expect(botonsFiltre.map((b) => [b.textContent, b.getAttribute('aria-pressed')])).toEqual([
+    ['Tots', 'true'],
+    ['Persones', 'false'],
+    ['Entitats i Grups', 'false'],
+    ['IA', 'false']
+  ]);
+
+  fireEvent.click(botonsFiltre[1]);
+  expect(botonsFiltre[1].getAttribute('aria-pressed')).toBe('true');
+  expect(titols()).toEqual(['Pepa']);
+
+  fireEvent.click(botonsFiltre[2]);
+  expect(botonsFiltre[2].getAttribute('aria-pressed')).toBe('true');
+  expect(titols()).toEqual(['Forn de la Plaça']);
+
+  fireEvent.click(botonsFiltre[3]);
+  expect(botonsFiltre[3].getAttribute('aria-pressed')).toBe('true');
+  expect(titols()).toEqual(['IAIA MarIA']);
+
+  fireEvent.click(botonsFiltre[0]);
+  expect(botonsFiltre[0].getAttribute('aria-pressed')).toBe('true');
+  expect(titols()).toEqual(['Pepa', 'Forn de la Plaça', 'IAIA MarIA']);
+});
+
+/* C6-05 (R16b) · La subnavegació i els filtres del directori parlen la llengua de la interfície
+   (useUIActions().language), no sempre en valencià; una llengua que la interfície no servix cau en
+   valencià. */
+test('C6-05 · amb la interfície en castellà, la subnavegació i els filtres ixen en castellà', () => {
+  mocks.language = 'es';
+  render(<ProfileSection agents={[{ id: 'pepa', name: 'Pepa', type: 'PERSON', town_name: 'Benilloba' }]} />);
+  const subnav = screen.getByRole('navigation', { name: 'Directorio de pueblos y gente' });
+  expect(within(subnav).getAllByRole('link')).toHaveLength(3);
+  expect(enllacosDeLaSubnav(subnav, ['Pueblos', 'Gente y Entidades', 'Demografía'])).toEqual([
+    [0, '/pobles', null, '🏘️', '🏘️ Pueblos'],
+    [1, '/perfil', 'page', '👥', '👥 Gente y Entidades'],
+    [2, '/poblacio', null, '📊', '📊 Demografía']
+  ]);
+  const filtres = screen.getByRole('group', { name: 'Filtrar el directorio por tipo' });
+  expect(within(filtres).getAllByRole('button').map((b) => b.textContent)).toEqual(['Todos', 'Personas', 'Entidades y Grupos', 'IA']);
+  expect(within(filtres).queryAllByRole('link')).toEqual([]);
+});
+
+test('C6-05 · una llengua que la interfície no servix cau en valencià', () => {
+  mocks.language = 'fr';
+  render(<ProfileSection agents={[]} />);
+  expect(screen.getByRole('navigation', { name: 'Directori de pobles i gent' })).toBeTruthy();
+  expect(within(screen.getByRole('group', { name: 'Filtra el directori per tipus' })).getAllByRole('button').map((b) => b.textContent))
+    .toEqual(['Tots', 'Persones', 'Entitats i Grups', 'IA']);
 });

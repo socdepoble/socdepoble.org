@@ -72,10 +72,10 @@ test('261007 · totes les targetes de sistema, el mateix menú; la via privada, 
       <MurSection />
     </XatSocDePobleContext.Provider>
   );
-  // PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, Nodrir la IAIA és al copy però no és cap targeta del Mur.
+  // PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, La IAIA Sabuda és al copy però no és cap targeta del Mur.
   expect(container.querySelectorAll('article.sp-card')).toHaveLength(totes.filter(esTargetaDelMur).length);
-  expect(totes.filter(esTargetaDelMur)).toEqual(totes.filter((clau) => clau !== 'nodrir-la-iaia'));
-  expect(container.querySelector('a[href="/page/nodrir-la-iaia"]')).toBeNull();
+  expect(totes.filter(esTargetaDelMur)).toEqual(totes.filter((clau) => clau !== 'la-iaia-sabuda'));
+  expect(container.querySelector('a[href="/page/la-iaia-sabuda"]')).toBeNull();
   for (const boto of container.querySelectorAll('.sp-card-footer button[aria-label^="Comentar "]')) {
     expect([boto.getAttribute('aria-label'), boto.getAttribute('aria-haspopup')]).toEqual([boto.getAttribute('aria-label'), 'menu']);
   }

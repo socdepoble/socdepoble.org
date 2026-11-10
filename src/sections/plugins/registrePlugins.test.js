@@ -33,15 +33,15 @@ import { segmentPagina } from '../consola/consolaPagines.js';
 import { DESTINS_CONTROL } from '../control/destinsControl.js';
 import { CAMPS } from '../../utils/publicacioUniversal.js';
 import {
-  ESPAIS_PLUGINS, IDS_PLUGINS, IMATGES_PLUGINS, PLUGINS, appDelPlugin, clauPortadaDelPlugin, pluginPerId, pluginsDeLEspai,
-  rutaDelPlugin
+  ESPAIS_PLUGINS, IDS_PLUGINS, IMATGES_PLUGINS, PLUGINS, TEXTOS_ESPAIS_PLUGINS, appDelPlugin, clauPortadaDelPlugin, pluginPerId,
+  pluginsDeLEspai, rutaDelPlugin
 } from './registrePlugins.js';
 
-const ORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'genealogia', 'rss', 'tpv'];
+const ORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'tpv', 'rebost', 'salut', 'genealogia', 'rss'];
 /* Onada 10 (decisió M4 del Mestre, 261010) · Els que tenen targeta de plugin
    al Panell, i per tant data i etiquetes. Mapa, Vehicle Compartit i Animalets
    no: la seua targeta del Panell és la de dalt, la de publicació (W4-08). */
-const AMB_TARGETA_DE_PLUGIN = ['gestoria', 'rebost', 'salut', 'genealogia', 'rss', 'tpv'];
+const AMB_TARGETA_DE_PLUGIN = ['gestoria', 'tpv', 'rebost', 'salut', 'genealogia', 'rss'];
 const SENSE_TARGETA_DE_PLUGIN = ['mapa', 'vehicle', 'animalets'];
 /* L'hora del document de l'ordre (prompt 261004_0015), el criteri de les
    targetes de dalt (destinsControl.test.js). Pendent del Mestre: confirmar-la. */
@@ -279,24 +279,52 @@ describe('registre de plugins', () => {
      Mestre, 261004: només les targetes que ja funcionen) · Els dos espais del
      Panell i qui viu en cada un. Un sol valor per plugin: cap targeta en dos
      espais, i la llar mai es barreja amb l'empresa (R3). */
-  test('espais del Panell: «L’empresa» i «La llar», separats, i cada plugin en un com a molt', () => {
-    expect(ESPAIS_PLUGINS.map((e) => [e.id, e.titol])).toEqual([['empresa', 'L’empresa'], ['llar', 'La llar']]);
+  test('espais del Panell: «Economia i Empresa» i «La llar», separats, i cada plugin en un com a molt', () => {
+    expect(ESPAIS_PLUGINS.map((e) => [e.id, e.titol])).toEqual([['empresa', 'Economia i Empresa'], ['llar', 'La llar']]);
     expect(Object.isFrozen(ESPAIS_PLUGINS)).toBe(true);
     for (const espai of ESPAIS_PLUGINS) {
       expect([espai.id, Object.isFrozen(espai), espai.entradeta.trim().length > 0]).toEqual([espai.id, true, true]);
     }
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, p.espai]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'empresa',
-      rebost: 'llar', salut: 'llar', genealogia: 'llar', rss: null, tpv: null
+      tpv: 'empresa', rebost: 'empresa', salut: 'llar', genealogia: 'llar', rss: null
     });
-    expect(pluginsDeLEspai('empresa').map((p) => p.id)).toEqual(['gestoria']);
-    expect(pluginsDeLEspai('llar').map((p) => p.id)).toEqual(['rebost', 'salut', 'genealogia']);
+    expect(pluginsDeLEspai('empresa').map((p) => p.id)).toEqual(['gestoria', 'tpv', 'rebost']);
+    expect(pluginsDeLEspai('llar').map((p) => p.id)).toEqual(['salut', 'genealogia']);
     // Cap id compartit entre els dos espais.
     const empresa = new Set(pluginsDeLEspai('empresa').map((p) => p.id));
     expect(pluginsDeLEspai('llar').filter((p) => empresa.has(p.id))).toEqual([]);
     // Només espais propis.
     for (const res of [null, undefined, '', 'Empresa', 'constructor', '__proto__', 'utilitats']) {
       expect([String(res), pluginsDeLEspai(res)]).toEqual([String(res), []]);
+    }
+  });
+
+  /* R16b (C3-12) · Els espais en les cinc llengües de l'App i en cap altra. El valencià és
+     ESPAIS_PLUGINS mateix; cada llengua porta els dos espais, congelats, amb títol i entradeta
+     propis, i sense cap xifra (R1). */
+  test('TEXTOS_ESPAIS_PLUGINS · ca, es, en, eu i gl; el valencià és el d’ESPAIS_PLUGINS', () => {
+    expect(Object.keys(TEXTOS_ESPAIS_PLUGINS)).toEqual(['ca', 'es', 'en', 'eu', 'gl']);
+    expect(Object.isFrozen(TEXTOS_ESPAIS_PLUGINS)).toBe(true);
+    expect(TEXTOS_ESPAIS_PLUGINS.ca).toEqual({
+      empresa: { titol: 'Economia i Empresa', entradeta: ESPAIS_PLUGINS[0].entradeta },
+      llar: { titol: 'La llar', entradeta: ESPAIS_PLUGINS[1].entradeta }
+    });
+    expect(TEXTOS_ESPAIS_PLUGINS.es.empresa.titol).toBe('Economía y Empresa');
+    expect(TEXTOS_ESPAIS_PLUGINS.es.llar.titol).toBe('El hogar');
+    for (const [llengua, espais] of Object.entries(TEXTOS_ESPAIS_PLUGINS)) {
+      expect([llengua, Object.isFrozen(espais), Object.keys(espais)]).toEqual([llengua, true, ['empresa', 'llar']]);
+      for (const [id, { titol, entradeta }] of Object.entries(espais)) {
+        expect([llengua, id, Object.isFrozen(espais[id]), titol.trim().length > 0, entradeta.trim().length > 0, /\d/.test(`${titol} ${entradeta}`)])
+          .toEqual([llengua, id, true, true, true, false]);
+      }
+    }
+    // Cada llengua diu una cosa pròpia: cap títol ni entradeta copiats del valencià.
+    for (const llengua of ['es', 'en', 'eu', 'gl']) {
+      for (const espai of ESPAIS_PLUGINS) {
+        const textos = TEXTOS_ESPAIS_PLUGINS[llengua][espai.id];
+        expect([llengua, espai.id, textos.titol === espai.titol, textos.entradeta === espai.entradeta]).toEqual([llengua, espai.id, false, false]);
+      }
     }
   });
 
@@ -317,7 +345,8 @@ describe('registre de plugins', () => {
     ];
     expect(textos.filter((text) => /\d/.test(text))).toEqual([]);
     // Sonda: la data sí que porta xifres, i per això no és a la llista de dalt.
-    expect(pluginsDeLEspai('llar').map((p) => /\d/.test(p.data))).toEqual([true, true, true]);
+    expect(pluginsDeLEspai('empresa').map((p) => /\d/.test(p.data))).toEqual([true, true, true]);
+    expect(pluginsDeLEspai('llar').map((p) => /\d/.test(p.data))).toEqual([true, true]);
   });
 
   /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4:

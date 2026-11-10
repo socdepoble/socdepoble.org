@@ -185,20 +185,23 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
      text: ara en són setze, i dènou en total.
      P0-51 / IDEA-182 (Mestre, 261108 02:49; R53) · Anatomia rural ix de les
      targetes del Mur: l'article complet del Pou de Neu és l'única targeta
-     amb eixa portada. Ara en són quinze de text, i díhuit en total. */
+     amb eixa portada. Ara en són quinze de text, i díhuit en total.
+     R16b · «Què dinem?» (/page/receptes, la pàgina de l'Onada R14) hi entra
+     com a cinquena pàgina de patrimoni, de text: ara en són setze de text, i
+     dènou en total. */
   const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
   test('una pàgina del sistema que no és de text (Disseny, Notes, Wiki) no pinta cap cos: la capçalera i «Obri la pàgina»', () => {
-    /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1 (producció), Nodrir la IAIA no és cap targeta:
-       díhuit. Amb la bandera, hi torna (dènou) i es llig com les altres. */
-    expect(SISTEMA).toHaveLength(18);
-    expect(SISTEMA.map(item => item.id)).not.toContain('nodrir-la-iaia');
+    /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1 (producció), La IAIA Sabuda no és cap targeta:
+       dènou. Amb la bandera, hi torna (vint) i es llig com les altres. */
+    expect(SISTEMA).toHaveLength(19);
+    expect(SISTEMA.map(item => item.id)).not.toContain('la-iaia-sabuda');
     vi.stubEnv('VITE_SDP_CURADORIA_CULTURAL', '1');
     let ambCuradoria;
     try { ambCuradoria = targetesDeSistema(PAGE_COPY); } finally { vi.unstubAllEnvs(); }
-    expect(ambCuradoria).toHaveLength(19);
-    expect(ambCuradoria.map(item => item.id)).toContain('nodrir-la-iaia');
-    expect(ambCuradoria.filter(item => item.id !== 'nodrir-la-iaia')).toEqual(SISTEMA);
-    expect(new Set(ambCuradoria.map(item => item.id)).size).toBe(19);
+    expect(ambCuradoria).toHaveLength(20);
+    expect(ambCuradoria.map(item => item.id)).toContain('la-iaia-sabuda');
+    expect(ambCuradoria.filter(item => item.id !== 'la-iaia-sabuda')).toEqual(SISTEMA);
+    expect(new Set(ambCuradoria.map(item => item.id)).size).toBe(20);
     expect(ambCuradoria.map(item => item.id)).not.toContain('anatomia-rural');
     for (const targeta of ambCuradoria) {
       const { container, unmount } = render(<PublicacioDetall item={publicacioComANota(targeta, 'mur')} />);

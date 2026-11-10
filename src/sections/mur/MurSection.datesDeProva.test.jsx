@@ -21,10 +21,13 @@
  * Les quatre pàgines de patrimoni restants porten la data real del copy
  * (06-11-2026). Els tres `ara` fixos són de la setmana del 9 al 15 de
  * novembre: abans del dia 6 eixes pàgines es posarien en el futur.
+ * R16b · «Què dinem?» (/page/receptes, la pàgina de l'Onada R14) n'és la
+ * cinquena, amb la seua data real del copy (09-11-2026, 00:23): el primer
+ * `ara` fix (dilluns a les 03:00) ja hi és posterior.
  *
  * El Mur de veres (MurSection) amb la llavor tal com la servix el mode seed:
  * les importants no es reordenen a la prova; només s'hi intercalen, per la
- * seua data, les quatre pàgines de patrimoni. Es comprova amb diversos `ara`
+ * seua data, les cinc pàgines de patrimoni. Es comprova amb diversos `ara`
  * perquè no depenga del dia de la setmana en què s'executa.
  */
 import React from 'react';
@@ -69,9 +72,9 @@ const MAQUINARIA = Object.freeze([
   ['cervell', 'El Cervell', '2026-09-09T00:00:00+02:00'],
   ['consola', 'Consola Termodinàmica', '2026-09-08T00:00:00+02:00']
 ]);
-/* P0-49 / IDEA-180 (261107) · Les quatre pàgines de patrimoni que no són importants: porten la seua
-   data real (PAGE_COPY). Els empats, per la clau R51 (vegeu més avall). */
-const PATRIMONI_AMB_DATA_REAL = Object.freeze(['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals']);
+/* P0-49 / IDEA-180 (261107) · Les pàgines de patrimoni que no són importants: porten la seua
+   data real (PAGE_COPY). Els empats, per la clau R51 (vegeu més avall). R16b · i Receptes (la pàgina de l'Onada R14). */
+const PATRIMONI_AMB_DATA_REAL = Object.freeze(['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals', 'receptes']);
 const momentDe = (llavor, [coleccio, id]) => {
   const element = llavor[coleccio].find((e) => e.id === id);
   return Date.parse(coleccio === 'pages' ? element.date : element.created_at);
@@ -92,8 +95,11 @@ test.each([
   const llavor = preparaMur(ara);
   render(<MurSection />);
   const importants = IMPORTANTS_DEL_MUR.map((fila) => titolDe(llavor, fila));
-  /* Les importants, en el seu ordre, amb les pàgines de patrimoni de data real intercalades per data:
-     només la setmana del 2 al 8 de novembre de 2026 cauen entre les importants; després, darrere. */
+  /* Les importants, en el seu ordre, amb les pàgines de patrimoni de data real intercalades per data. Les
+     importants porten moments de dilluns de la setmana d'`ara` fins a `ara` (datesDeProvaMur.js): les quatre
+     del 6 de novembre de 2026 només s'hi barregen la setmana del 2 al 8 de novembre, i Receptes (dilluns 9 de
+     novembre, 00:23), eixe dilluns de matinada, abans de les 8, quan les importants es repartixen entre les
+     00:00 i `ara` (el primer `ara` fix, a les 03:00). Amb un `ara` posterior, totes cinc van darrere. */
   const ambData = (fila) => ({ titol: titolDe(llavor, fila), moment: momentDe(llavor, fila) });
   /* R51 (D-R51-2) · Dues pàgines amb el mateix instant s'ordenen per la clau `${type}-${id}`
      ascendent (targetesMur.js · perMomentDescendent): arbres > banc > rutes, no l'ordre d'arribada. */

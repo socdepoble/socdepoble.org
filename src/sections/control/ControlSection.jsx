@@ -9,7 +9,8 @@
  * d'eixa pàgina (CircleDashed): el que toques és el que s'obri.
  *
  * CU (Onada 3, 261003) · Les Utilitats guanyen el Snippet, l'única amb fitxa
- * de detall. La fitxa s'obri amb una consulta sobre la mateixa ruta
+ * de detall (des de R16-W1 viu a «Maquinària i Sistema»: vegeu el paràgraf
+ * R16-W1, al final). La fitxa s'obri amb una consulta sobre la mateixa ruta
  * (/control?fitxa=snippet, o /utilitats?fitxa=snippet): les rutes de Control
  * són exactes i no se n'afig cap (destiSnippet.js).
  * Correcció de la revisió · Com que el camí no canvia, App no recoloca res:
@@ -81,6 +82,10 @@
  * Snippet continua al final, amb la seua fitxa (/control?fitxa=snippet) i la
  * mateixa anatomia. La preferència de DetallEspai ('sdp_utilitats_actives')
  * només amaga una utilitat amb un false explícit: per defecte es veuen totes.
+ * R16-W1 · DEROGADA la secció «Utilitats i Connectors»: es quedava buida (cada
+ * targeta de baix viu en un espai o a «Maquinària i Sistema») i ja no es
+ * pinta. El Snippet, amb la mateixa fitxa i la mateixa anatomia, tanca
+ * «Maquinària i Sistema».
  * W4-08 · Cens decidit pel Mestre (Acta 261004_0206, §4; relleu 02:30 de
  * l'informe de Claude 1951) · Mapa, Vehicle Compartit i Animalets viuen NOMÉS
  * dalt, com a targetes de publicació: cap plugin que ja té targeta dalt
@@ -113,7 +118,9 @@
  *     no en queda res: ni la targeta, ni la llista de les pàgines de la
  *     maquinària que portava destinsControl.js, ni la lectura del copy del
  *     core. «Maquinària i Sistema» conserva la secció, l'h2 i les dues eines
- *     del registre: el Lector RSS i el TPV del Bar. Les preferències ja
+ *     del registre: el Lector RSS i el TPV del Bar (R16-W1 · DEROGAT per al
+ *     TPV del Bar, que passa a «Economia i Empresa»: del registre, la secció
+ *     només porta el Lector RSS). Les preferències ja
  *     desades amb les claus d'aquelles pàgines es queden al storage, sense
  *     efecte: no s'esborra res (profile/aplicacions.js, `panell: null`).
  *   · W4-11 torna a valdre per a totes les targetes de baix: cap targeta
@@ -131,21 +138,39 @@
  *     que no ix de les dades de ningú, i les dues etiquetes. La resta de R1
  *     continua sencera: cap xifra, comptador ni avís que isca de les dades.
  *   · M3 · El Rebost Domèstic i Salut es queden ací, a «La llar»: no entren
- *     al Mur.
+ *     al Mur. R16-W1 · DEROGAT M3 per al Rebost, que passa a «Economia i
+ *     Empresa»; Salut continua a «La llar».
  *   · Les huit targetes de dalt no canvien: la data de la seua pàgina i cap
  *     etiqueta (P6).
  *
  * Onada 2 de la Gestoria (ordre del Mestre, 261004; MAPA_EMPRESA_GESTORIA.txt
  * §2.2; decisió A11: només les targetes que ja funcionen) · Dos espais nous,
- * «L'empresa» i «La llar», entre «Publica al poble» i les Utilitats. Els
+ * «L'empresa» i «La llar», entre «Publica al poble» i les Utilitats (R16-W1:
+ * «L'empresa» es diu «Economia i Empresa», i els dos espais van entre
+ * «Publica al poble» i «Maquinària i Sistema»). Els
  * llig del registre (ESPAIS_PLUGINS i el camp `espai` de cada plugin): cap
  * text ni ruta copiats ací. Cada targeta és la TargetaDUtilitat de sempre
  * (boina de Sóc de Poble cap al projecte, il·lustració, títol, subtítol,
  * entradilla, tota la targeta cap a /plugin/<id> i el peu canònic). Targetes
  * estàtiques: cap xifra ni dada (R1); des de l'Onada 10, amb l'única excepció
  * de la data fixa del registre (vegeu més amunt). Un plugin d'un espai no es
- * repetix a Utilitats ni a Maquinària (W4-08), i cap targeta viu en dos
- * espais (R3).
+ * repetix a «Maquinària i Sistema» (W4-08), i cap targeta viu en dos espais
+ * (R3).
+ *
+ * R16-W1 · L'estructura d'ara, de dalt a baix:
+ *   · «Publica al poble»: les huit targetes de doble acció (DESTINS_CONTROL).
+ *   · «Economia i Empresa» i «La llar», els dos espais del registre
+ *     (ESPAIS_PLUGINS). Quin plugin va a cada espai ho diu el registre (camp
+ *     `espai`), no este fitxer. DEROGAT M3 per al Rebost: el Rebost Domèstic
+ *     passa de «La llar» a «Economia i Empresa», amb la Gestoria i el TPV del
+ *     Bar.
+ *   · «Maquinària i Sistema», una sola graella: La IAIA Sabuda (només amb la
+ *     curadoria cultural encesa, PRODUCCIO-02), el Lector RSS (l'únic del
+ *     registre, IDS_MAQUINARIA) i el Snippet, al final.
+ *   · Els botons de baix: els de les fitxes de Mode rural i de les dades
+ *     obertes, Missatges per a dubtes, Compte i contrasenya i Eixir del poble.
+ *   La secció «Utilitats i Connectors» ja no existix: no en queda cap h2 ni
+ *   cap graella.
  */
 import {
   KeyRound,
@@ -163,10 +188,11 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { llegixUtilitatsActives, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
 import { CLAU_FITXA, DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
+import { DATA_NODRIR_IAIA, ETIQUETES_NODRIR_IAIA, IMATGE_NODRIR_IAIA, PAGINA_NODRIR_IAIA, RUTA_PAGINA_NODRIR_IAIA, TEXTOS_IAIA_SABUDA } from '../text/pageContent.nodrirIaia.js';
 import { posicioDeLaVista, recolocaLaVista } from './vistaDeLaFitxa.js';
 import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
 import { AVISOS_XAT_CORPORATIU } from './xatCorporatiu.js';
-import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
+import { ESPAIS_PLUGINS, PLUGINS, TEXTOS_ESPAIS_PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
 import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
 import { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
 import { RUTA_COMPTE } from '../../config/rutaEntrada.js';
@@ -240,7 +266,7 @@ function TargetaDeDesti({ desti, t }) {
    `abansDObrir` · el Snippet hi recorda on era el Panell (vistaDeLaFitxa.js).
    T6 (261004) · La boina porta al projecte, com dalt.
    Ordre del Mestre (261007) · Comentar, el menú de dues vies, com dalt. */
-function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '', ruta, abansDObrir, data = null, etiquetes }) {
+function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '', ruta, abansDObrir, data = null, etiquetes, dataTestId }) {
   return (
     <UniversalCard
       title={titol}
@@ -255,25 +281,33 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
       onMainClick={abansDObrir}
       hasFooter={true}
       copyright={COPYRIGHT_SDP}
+      dataTestId={dataTestId}
     />
   );
 }
 
 /* Onada 2 de la Gestoria (261004; MAPA §2.2) · Un espai del Panell,
-   «L'empresa» o «La llar»: una secció amb el seu h2, l'entradeta i la graella
-   de sempre, amb les targetes canòniques de les Utilitats. Sense cap targeta
-   visible (la persona les ha llevades totes a DetallEspai), no es pinta: cap
-   capçalera buida.
+   «Economia i Empresa» o «La llar»: una secció amb el seu h2, l'entradeta i la
+   graella de sempre, amb les targetes canòniques del registre. Sense cap
+   targeta visible (la persona les ha llevades totes a DetallEspai), no es
+   pinta: cap capçalera buida.
    Onada 10 (261010; decisions M3 i M4 del Mestre) · El Rebost Domèstic i
-   Salut es queden a «La llar», i totes les targetes dels espais porten la
-   data i les etiquetes del registre. */
-function EspaiDelPanell({ espai, visibles }) {
+   Salut es quedaven a «La llar» (M3), i totes les targetes dels espais porten
+   la data i les etiquetes del registre (M4).
+   R16-W1 · DEROGAT M3 per al Rebost, que passa a «Economia i Empresa»; Salut
+   continua a «La llar». Quin plugin va a cada espai ho diu el registre (camp
+   `espai`).
+   R16b (C3-12) · El títol i l'entradeta, en la llengua de la interfície
+   (TEXTOS_ESPAIS_PLUGINS, el mateix codi d'idioma que TEXTOS_CONTROL); sense
+   textos per a eixa llengua, els del registre (ESPAIS_PLUGINS). */
+function EspaiDelPanell({ espai, idioma, visibles }) {
   const plugins = pluginsDeLEspai(espai.id).filter(visibles);
   if (plugins.length === 0) return null;
+  const textos = TEXTOS_ESPAIS_PLUGINS[idioma]?.[espai.id] ?? espai;
   return (
     <section>
-      <h2>{espai.titol}</h2>
-      <p className="lead">{espai.entradeta}</p>
+      <h2>{textos.titol}</h2>
+      <p className="lead">{textos.entradeta}</p>
       <div className="sdp-card-grid">
         {plugins.map((plugin) => (
           <TargetaDUtilitat
@@ -286,6 +320,7 @@ function EspaiDelPanell({ espai, visibles }) {
             ruta={rutaDelPlugin(plugin.id)}
             data={plugin.data}
             etiquetes={plugin.etiquetes}
+            dataTestId={`control-plugin-${plugin.id}`}
           />
         ))}
       </div>
@@ -313,25 +348,40 @@ function EspaiDelPanell({ espai, visibles }) {
    targeta: es queden al storage, sense efecte. */
 /* L'id del Snippet a APLICACIONS (profile/aplicacions.js), el que hi guarda DetallEspai. */
 const ID_SNIPPET = 'snippet';
-/* W4-08 · Les eines d'administració i de sistema, en l'ordre del registre:
-   la secció «Maquinària i Sistema».
-   Ordre del Mestre (261007) · Bàscula descartada per ara: ja no és del
-   registre ni d'esta secció.
-   Onada 8 (261009) · La Consola, el Cervell i Disseny ja no són del
-   registre: són pàgines del sistema. Del registre hi queden l'RSS i el TPV.
-   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · DEROGAT
-   «la secció les pinta primer»: les tres pàgines viuen només al Mur, i la
-   secció és exactament estes dues eines. */
-const IDS_MAQUINARIA = Object.freeze(['rss', 'tpv']);
+/* R16-W1 · La targeta de La IAIA Sabuda, en les cinc llengües de l'App.
+   R16b · Una sola font, pageContent.nodrirIaia.js: el títol i el subtítol són els de
+   TEXTOS_IAIA_SABUDA, i l'entradeta i el text alternatiu, els de la seua pàgina
+   (PAGINA_NODRIR_IAIA). Ací no se'n copia cap.
+   R16b (tercera ronda) · Les etiquetes, també per llengua (ETIQUETES_NODRIR_IAIA): una Categoria
+   i una Etiqueta sense enllaç, com les altres targetes de baix. Cap altre fitxer llig esta taula:
+   és local. La targeta no té cap preferència per a amagar-la (cap entrada d'APLICACIONS,
+   profile/aplicacions.js, en porta l'id): només la governa la curadoria cultural. */
+const PAGINA_IAIA_SABUDA = PAGINA_NODRIR_IAIA['la-iaia-sabuda'];
+const TEXTOS_CONTROL = Object.freeze(Object.fromEntries(
+  Object.entries(TEXTOS_IAIA_SABUDA).map(([llengua, { titol, subtitol }]) => {
+    const pagina = llengua === 'ca' ? PAGINA_IAIA_SABUDA : PAGINA_IAIA_SABUDA.translations[llengua];
+    return [llengua, Object.freeze({
+      nodrirIaia: Object.freeze({
+        titol, subtitol, resum: pagina.lead, imatgeAlt: pagina.imageAlt, etiquetes: ETIQUETES_NODRIR_IAIA[llengua]
+      })
+    })];
+  })
+));
+/* PRODUCCIO-02 (revisió R15b) · La IAIA Sabuda només té targeta amb la curadoria cultural encesa
+   (VITE_SDP_CURADORIA_CULTURAL=1, la mateixa guarda que el Mur a targetesMur.js): apagada, la seua
+   pàgina no recull res. Es llig en cada pintat perquè vi.stubEnv la governe. */
+const ambCuradoriaCultural = () => import.meta.env.VITE_SDP_CURADORIA_CULTURAL === '1';
+/* W4-08 · Les eines d'administració i de sistema del registre: la secció
+   «Maquinària i Sistema». Onada 10 (261010; decisió del Mestre del 261010) ·
+   La Consola, el Cervell i Disseny hi viuen només al Mur.
+   R16-W1 · El TPV del Bar passa a «Economia i Empresa» (registre, camp
+   `espai`): del registre hi queda el Lector RSS, i el Snippet s'hi afig. */
+const IDS_MAQUINARIA = Object.freeze(['rss']);
 /* W4-08 · Decisió del Mestre: un plugin amb targeta de publicació dalt (Mapa,
    Vehicle Compartit i Animalets) no es repetix a les graelles de baix. */
 const IDS_NOMES_DALT = new Set(DESTINS_CONTROL.map((desti) => desti.id));
 const visible = (amagades) => (plugin) => !amagades.has(plugin.id) && !IDS_NOMES_DALT.has(plugin.id);
-/* Les dues graelles de baix: les utilitats i la maquinària, sense repetits.
-   Onada 2 de la Gestoria (261004) · Sense els plugins que ja viuen en un
-   espai («L'empresa» o «La llar»): W4-08, cap targeta en dos blocs. */
 const SENSE_ESPAI = PLUGINS.filter((plugin) => !plugin.espai);
-const PLUGINS_UTILITATS = SENSE_ESPAI.filter((plugin) => !IDS_MAQUINARIA.includes(plugin.id));
 const PLUGINS_MAQUINARIA = SENSE_ESPAI.filter((plugin) => IDS_MAQUINARIA.includes(plugin.id));
 /* El Snippet no és del registre de plugins: la seua targeta de sempre.
    Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
@@ -408,7 +458,11 @@ export default function ControlSection() {
 function PanellControl({ vistaRef, abansDeLaFitxa }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { t } = useUIActions();
+  /* R16b (tercera ronda) · La llengua de la interfície, de useUIActions: UIProvider hi posa la
+     mateixa `language` que a l'estat (UIContext.jsx), i el Panell ja en llig `t`. */
+  const { t, language } = useUIActions();
+  const idioma = String(language || 'ca').toLowerCase().split('-')[0];
+  const textosNodrir = (TEXTOS_CONTROL[idioma] || TEXTOS_CONTROL.ca).nodrirIaia;
   /* T47 (correcció de la revisió, 260928) · «Eixir del poble» és la mateixa
      eixida que «Tancar sessió»: la de SessionContext, que primer envia el
      pendent i després oblida els esborranys d'este dispositiu. C01 · Si
@@ -490,66 +544,39 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
           ) : null}
         </section>
 
-        {/* Onada 2 de la Gestoria (261004) · «L'empresa» i «La llar», en
-            l'ordre del registre (ESPAIS_PLUGINS): dos espais separats. */}
+        {/* Onada 2 de la Gestoria (261004) i R16-W1 · «Economia i Empresa» i «La llar»,
+            en l'ordre del registre (ESPAIS_PLUGINS): dos espais separats. */}
         {ESPAIS_PLUGINS.map((espai) => (
-          <EspaiDelPanell key={espai.id} espai={espai} visibles={visible(amagades)} />
+          <EspaiDelPanell key={espai.id} espai={espai} idioma={idioma} visibles={visible(amagades)} />
         ))}
 
-        {/* control-06 (revisió del Panell, 261104) · Els h2 de baix, les seues
-            entradetes i els botons d'acció passen per t(), amb el text d'abans
-            de reserva, lletra a lletra: en valencià no canvia res. «L’empresa»
-            i «La llar» venen del registre de plugins (ESPAIS_PLUGINS). */}
-        <section>
-          <h2>{t('section.control.utilitats.titol', 'Utilitats i Connectors (Plugins)')}</h2>
-
-          <p className="lead">
-            {t('section.control.utilitats.lead', "El sistema s'anirà enriquint amb aquest tipus d'utilitats (o plugins) que es poden activar si es necessiten. Són independents del sistema base, cosa que permet endollar funcionalitats a mesura només per als usuaris o clients que les demanen.")}
-          </p>
-
-          <div className="sdp-card-grid">
-            {PLUGINS_UTILITATS.filter(visible(amagades)).map((plugin) => (
-              <TargetaDUtilitat
-                key={plugin.id}
-                titol={plugin.titol}
-                subtitol={plugin.subtitol}
-                entradilla={plugin.entradilla}
-                imatge={plugin.imatge}
-                imatgeAlt={plugin.imatgeAlt}
-                ruta={rutaDelPlugin(plugin.id)}
-                data={plugin.data}
-                etiquetes={plugin.etiquetes}
-              />
-            ))}
-            {amagades.has(ID_SNIPPET) ? null : (
-              <TargetaDUtilitat
-                titol={SNIPPET.titol}
-                subtitol={SNIPPET.subtitol}
-                imatge={SNIPPET.imatge}
-                ruta={rutaDeLaFitxa(pathname)}
-                abansDObrir={abansDeLaFitxa}
-                data={SNIPPET.data}
-                etiquetes={SNIPPET.etiquetes}
-              />
-            )}
-          </div>
-        </section>
-
-        {/* W4-08 · La separació de les Utilitats la dona el full d'estils
-            (.sdp-control-maquinaria, modules.css), sense estil en línia. */}
+        {/* W4-08 i R16-W1 · «Maquinària i Sistema» agrupa en una sola .sdp-card-grid
+            el Lector RSS i el Snippet, i davant, amb la curadoria cultural encesa,
+            «La IAIA Sabuda». */}
         <section className="sdp-control-maquinaria">
           <h2>{t('section.control.maquinaria.titol', 'Maquinària i Sistema')}</h2>
 
-          {/* Onada 11 (261010; prompt 261010_1730, tasca 6, D6) · El lead perd
-              «configuració de disseny»: Disseny ja no té cap targeta ací. */}
+          {/* R16b · L'entradeta diu el que hi ha: el Lector RSS i el Snippet per defecte, i La IAIA
+              Sabuda només amb la curadoria cultural (per això «com»). Cap targeta és un panell
+              d'administració ni demana cap rol: /control no porta guarda (App.jsx). */}
           <p className="lead">
-            {t('section.control.maquinaria.lead', "Panells d'administració i eines internes de la plataforma. Aquestes utilitats normalment s'activen només per a l'equip d'administració.")}
+            {t('section.control.maquinaria.lead', 'Altres eines de la plataforma, com el Lector RSS i el Snippet, l’extensió de Chrome per a desar webs al Bloc.')}
           </p>
 
           <div className="sdp-card-grid">
-            {/* Onada 10 (261010; decisió del Mestre del 261010) · Només les
-                eines del registre: les tres pàgines del sistema que l'Onada 8
-                hi pintava primer viuen ara només al Mur. */}
+            {!ambCuradoriaCultural() ? null : (
+              <TargetaDUtilitat
+                titol={textosNodrir.titol}
+                subtitol={textosNodrir.subtitol}
+                entradilla={textosNodrir.resum}
+                imatge={IMATGE_NODRIR_IAIA}
+                imatgeAlt={textosNodrir.imatgeAlt}
+                ruta={RUTA_PAGINA_NODRIR_IAIA}
+                data={DATA_NODRIR_IAIA}
+                etiquetes={textosNodrir.etiquetes}
+                dataTestId="control-card-nodrir-iaia"
+              />
+            )}
             {PLUGINS_MAQUINARIA.filter(visible(amagades)).map((plugin) => (
               <TargetaDUtilitat
                 key={plugin.id}
@@ -561,8 +588,21 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 ruta={rutaDelPlugin(plugin.id)}
                 data={plugin.data}
                 etiquetes={plugin.etiquetes}
+                dataTestId={`control-plugin-${plugin.id}`}
               />
             ))}
+            {amagades.has(ID_SNIPPET) ? null : (
+              <TargetaDUtilitat
+                titol={SNIPPET.titol}
+                subtitol={SNIPPET.subtitol}
+                imatge={SNIPPET.imatge}
+                ruta={rutaDeLaFitxa(pathname)}
+                abansDObrir={abansDeLaFitxa}
+                data={SNIPPET.data}
+                etiquetes={SNIPPET.etiquetes}
+                dataTestId="control-card-snippet"
+              />
+            )}
           </div>
         </section>
 

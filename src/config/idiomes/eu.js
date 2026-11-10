@@ -1984,10 +1984,8 @@ export default {
   'section.control.habitatge.saberMes': 'Gehiago jakin: Etxebizitza',
   /* control-06 (revisió del Panell, 261104) · Els encapçalaments, les entradilles i
      els dos botons de baix del Panell, abans escrits a mà (ControlSection.jsx). */
-  'section.control.utilitats.titol': 'Utilitateak eta Konektoreak (Pluginak)',
-  'section.control.utilitats.lead': 'Sistema mota honetako utilitateekin (edo pluginekin) aberastuz joango da, eta behar direnean aktiba daitezke. Oinarrizko sistemarekiko independenteak dira; horri esker, neurrira egindako funtzioak eskatzen dituzten erabiltzaile edo bezeroentzat soilik konekta daitezke.',
   'section.control.maquinaria.titol': 'Makineria eta Sistema',
-  'section.control.maquinaria.lead': 'Plataformaren administrazio-panelak eta barne-tresnak. Utilitate hauek administrazio-taldearentzat soilik aktibatu ohi dira.',
+  'section.control.maquinaria.lead': 'Plataformaren beste tresna batzuk, hala nola RSS irakurlea eta Snippet, webguneak Koadernoan gordetzeko Chrome-rako luzapena.',
   'section.control.dubtes': 'Zalantzetarako mezuak',
   'section.control.compte': 'Kontua eta pasahitza',
   'section.control.eixir': 'Irten herritik',
@@ -3757,4 +3755,25 @@ export default {
   'section.notes.publicacio.revisioDesada': "Berrikuspena nabigatzaile honetan gorde da: Hormak eta orriak dagoeneko erakusten dute.",
   'section.notes.publicacio.revisioDesadaServidor': "Berrikuspena zerbitzarian gorde da: Hormak eta orriak denei erakusten diete dagoeneko.",
   'section.notes.publicacio.revisioNomesNavegador': "Zerbitzariak ez du berrikuspena onartu: nabigatzaile honetan bakarrik gorde da.",
+  /* Onada R16b (C5-09) · Els dos patrons nous de l'espècimen del Contracte de Pedra Seca a /disseny
+     (EspecimenContracte.jsx): el quadre blanc editorial i on s'obrin els ajustos de l'espai de treball. */
+  'section.disseny.contracte.quadreBlanc.titol': "Koadro zuri editorialaren eta zutabetako panel faltsuaren legea",
+  'section.disseny.contracte.quadreBlanc.alertaTitol': "Izenburuak eta paragrafoak informazio-koadroen barruan",
+  'section.disseny.contracte.quadreBlanc.alerta': "Informazio-koadro zuri baten barruan, azalpen oro (funtzionamendua, urratsak edo arkitektura) izenburuekin (h3, h4, h5) eta paragrafo edo zerrendekin idazten da, zutabearen zabalera osoan. Azalpen bat ez da bi zutabeko panel gisa mozorrotzen: definizio-zerrenda bat (dl), ezkerrean izenburu luzeak eta eskuinean paragrafo estuak dituena.",
+  'section.disseny.contracte.quadreBlanc.diagnostic': "Koadro zuri editorialak eta zerrenda tekniko laburrak",
+  'section.disseny.contracte.quanUsar': "Noiz erabili:",
+  'section.disseny.contracte.estructura': "Egitura:",
+  'section.disseny.contracte.modals.titol': "Lan-eremuaren ezarpenak: 3. zutabea katalogoetan, elkarrizketa-koadroa gainerakoetan",
+  'section.disseny.contracte.modals.columna3.titol': "Katalogoak: ezarpenak 3. zutabean",
+  'section.disseny.contracte.modals.columna3.text': "CatalegWorkspace-rekin egindako katalogoen lan-eremuaren ezarpenak (Herbarioa, Hazi-bankua, Errezetak, Fediversity, Jakitegia eta TPVaren katalogoa) xehetasunen 3. zutabearen barruan marrazten dira, itzultzeko botoi bat goian eta beste bat behean dutela, eta ez testuingurua estaltzen duen modal flotatzaile batean.",
+  'section.disseny.contracte.modals.dialeg.titol': "Gainerako eremuak: ezarpenak elkarrizketa-koadro batean",
+  'section.disseny.contracte.modals.dialeg.text': "UniversalWorkspace-rekin egindako gainerako lan-eremuek, ezarpenak dituztenean, elkarrizketa-koadro batean irekitzen dituzte oraindik (WorkspaceSettingsDialog). Txateko Ezarpenak orria (FullAjustos) ere elkarrizketa-koadro batean irekitzen da.",
+  'section.disseny.contracte.patro.editorial': "Idazketa editoriala (h4/h5 + p)",
+  'section.disseny.contracte.quanUsar.editorial': "Domeinuko azalpenak, kronika teknikoak, protokoloak eta bloke didaktikoak, 80 karaktere baino gehiagoko paragrafoekin.",
+  'section.disseny.contracte.canonic': "Kanonikoa",
+  'section.disseny.contracte.patro.parella': "Bikote tekniko laburra (dl)",
+  'section.disseny.contracte.quanUsar.parella': "Gako-balio metadatu zorrotzak (bertsioa, ataka, lizentzia, SHA-256 laburra edo identifikatzaileak), 80 karaktere baino gutxiagokoak.",
+  'section.disseny.contracte.patro.falsTauler': "Zutabetako panel faltsua (dl paragrafo luzeekin)",
+  'section.disseny.contracte.quanUsar.falsTauler': "Inoiz ez: ez dl, ez dt, ez dd bi edo hiru zutabetan esaldi luzeak edo azalpenak sartzeko; h4/h5 + p erabiliz idazten da.",
+  'section.disseny.contracte.prohibit': "Debekatua",
 };

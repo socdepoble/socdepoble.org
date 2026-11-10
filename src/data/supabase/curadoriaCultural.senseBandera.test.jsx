@@ -1,5 +1,5 @@
 /* PRODNM-07 (revisió R15b) · Build de producció sense VITE_SDP_CURADORIA_CULTURAL: l'adaptador
-   Supabase real no anuncia 'curadoriaCultural' i /page/nodrir-la-iaia no fa cap petició (cap 404
+   Supabase real no anuncia 'curadoriaCultural' i /page/la-iaia-sabuda no fa cap petició (cap 404
    de PostgREST a la consola mentre la migració 2611091500 no siga aplicada). */
 import { vi } from 'vitest';
 vi.hoisted(() => { vi.stubEnv('VITE_SDP_CURADORIA_CULTURAL', ''); });

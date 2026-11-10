@@ -173,12 +173,15 @@ test('F4 · editar una nota no refà les publicacions: els objectes són els mat
    patrimoni que targetesDeSistema hi afig (PAGINES_PATRIMONI_MUR). Abans,
    catorze.
    P0-51 / IDEA-182 (Mestre, 261108; R53) · Díhuit: Anatomia rural ix del
-   Mur (l'article complet del Pou de Neu és l'única targeta del pou). */
+   Mur (l'article complet del Pou de Neu és l'única targeta del pou).
+   R16b · Dènou: «Què dinem?» (/page/receptes, la pàgina de l'Onada R14)
+   entra com a cinquena pàgina de patrimoni (PAGINES_PATRIMONI_MUR). Abans,
+   díhuit. */
 const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
-const PATRIMONI_AL_MUR = ['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals'];
-/* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, Nodrir la IAIA no és cap targeta del Mur: díhuit. */
+const PATRIMONI_AL_MUR = ['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals', 'receptes'];
+/* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, La IAIA Sabuda no és cap targeta del Mur: dènou. */
 const SISTEMA = [...SYSTEM_PAGES.map((pagina) => pagina.key).filter(esTargetaDelMur), ...PATRIMONI_AL_MUR].map((clau) => `publicacio:mur:${clau}`);
-const PAGINES_DEL_SISTEMA = 18;
+const PAGINES_DEL_SISTEMA = 19;
 const delMur = (items) => publicacions(items).filter((item) => item.categoryIds.includes('f-mur'));
 
 test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les catorze pàgines del sistema a «Mur», darrere de les seues publicacions', () => {
@@ -189,7 +192,7 @@ test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les catorze
     feed: [{ id: 'p1', title: 'Directa', author_org_id: ENTITAT_PILOT_ID }]
   });
   expect(SISTEMA).toHaveLength(PAGINES_DEL_SISTEMA);
-  expect(SISTEMA).not.toContain('publicacio:mur:nodrir-la-iaia');
+  expect(SISTEMA).not.toContain('publicacio:mur:la-iaia-sabuda');
   expect(delMur(items).map((item) => item.id)).toEqual(['publicacio:mur:p1', ...SISTEMA]);
   const xat = items.find((item) => item.id === 'publicacio:mur:xat');
   expect(xat.data).toMatchObject({ seccio: 'mur', ruta: '/page/xat', item: { isSystem: true } });

@@ -109,7 +109,7 @@ describe('accioDeLaPaginaDeText', () => {
   test('la pàgina de la IAIA no és cap pàgina del sistema: ni targeta al Mur ni acció a systemPages.js', () => {
     expect(SYSTEM_PAGES.map((pagina) => pagina.key)).not.toContain('anima');
     expect(SYSTEM_PAGES.filter((pagina) => pagina.key === 'anima')).toEqual([]);
-    expect(SYSTEM_PAGES.find(pagina => pagina.key === 'nodrir-la-iaia')).toMatchObject({ href: '/page/nodrir-la-iaia' });
+    expect(SYSTEM_PAGES.find(pagina => pagina.key === 'la-iaia-sabuda')).toMatchObject({ href: '/page/la-iaia-sabuda' });
     expect(accioDeLaPagina('anima')).toBeNull();
     /* La seua secció és una pàgina de text amb ruta pròpia: la pinta TextRoute.
        Gauntlet 261016_1530 (Bloc 3.6.3; F64) · Actualitzada a posta: el

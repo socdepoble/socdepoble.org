@@ -393,28 +393,38 @@ export function PanellNodesFediversResiliencia() {
           </Boto>
         </div>
 
-        <dl className="sdp-admin-dl">
-          <dt>Node principal (Núvol)</dt>
-          <dd><code>https://socdepoble.org</code> (Producció canònica + RLS estricte)</dd>
-          <dt>Node 0 Domèstic (El Rentonar)</dt>
-          <dd><code>https://socdepoble.cat</code> · {estatViu.postgres.engine}</dd>
-          <dt>Base de dades i persistència</dt>
-          <dd>
-            <strong>{estatViu.postgres.tables} taules</strong> actives ·{' '}
-            <strong>{estatViu.postgres.public_documents_persisted} documents públics</strong> sincronitzats i verificats
-          </dd>
-          <dt>Pont Fedivers i Safata POSSE</dt>
-          <dd>
-            Actor actiu: <code>{estatViu.fediverse.actor}</code> · Actor territorial:{' '}
-            <code>{estatViu.fediverse.local_actor}</code> · Safata de Conformitat:{' '}
-            <strong>{estatViu.fediverse.posse_conformance_inbox}</strong>
-          </dd>
-          <dt>Mirall 3-2-1 i Restauració en Net</dt>
-          <dd>
-            Xifratge: <code>{estatViu.resilience_321.encryption}</code> · Assaig de restauració en net:{' '}
-            <strong>{estatViu.resilience_321.clean_room_restore_drill}</strong>
-          </dd>
-        </dl>
+        <div className="sdp-admin-editorial-stack">
+          <div className="sdp-admin-editorial-bloc">
+            <h4>Node principal (Núvol)</h4>
+            <p><code>https://socdepoble.org</code> (Producció canònica + RLS estricte).</p>
+          </div>
+          <div className="sdp-admin-editorial-bloc">
+            <h4>Node 0 Domèstic (El Rentonar)</h4>
+            <p><code>https://socdepoble.cat</code> · {estatViu.postgres.engine}.</p>
+          </div>
+          <div className="sdp-admin-editorial-bloc">
+            <h4>Base de dades i persistència</h4>
+            <p>
+              <strong>{estatViu.postgres.tables} taules</strong> actives ·{' '}
+              <strong>{estatViu.postgres.public_documents_persisted} documents públics</strong> sincronitzats i verificats.
+            </p>
+          </div>
+          <div className="sdp-admin-editorial-bloc">
+            <h4>Pont Fedivers i Safata POSSE</h4>
+            <p>
+              Actor actiu: <code>{estatViu.fediverse.actor}</code> · Actor territorial:{' '}
+              <code>{estatViu.fediverse.local_actor}</code> · Safata de Conformitat:{' '}
+              <strong>{estatViu.fediverse.posse_conformance_inbox}</strong>.
+            </p>
+          </div>
+          <div className="sdp-admin-editorial-bloc">
+            <h4>Mirall 3-2-1 i Restauració en Net</h4>
+            <p>
+              Xifratge: <code>{estatViu.resilience_321.encryption}</code> · Assaig de restauració en net:{' '}
+              <strong>{estatViu.resilience_321.clean_room_restore_drill}</strong>.
+            </p>
+          </div>
+        </div>
 
         <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat-ampli">
           <Link className="sdp-boto sdp-boto--primari" to="/page/fediversity">
@@ -443,20 +453,26 @@ export function PanellNodesFediversResiliencia() {
           </div>
           <Insignia to="primari">43/43 Skills · 3/3 Vigilants</Insignia>
         </div>
-        <dl className="sdp-admin-dl">
-          <dt>1 · Servidor Domèstic i la IAIA al Node 0</dt>
-          <dd>
-            El <strong>Mac mini Apple M4</strong> executa en local (zero cost de tòkens) la IAIA i l’equip local del Node 0 (<code>iaia:latest</code> / <code>iaia-maria:latest</code>, <code>qwen3:8b</code>, <code>qwen2.5-coder:14b</code> i <code>nemotron-mini:latest</code>) per a auditar l’arquitectura i les 43 skills.
-          </dd>
-          <dt>2 · Mesa de Revisió Editorial i Sentinella Diari de Skills</dt>
-          <dd>
-            Les 4 IAIAs actuen com a <strong>Revisores Editorials</strong> (ortografia, gramàtica, lèxic genuí, Llei «DE POBLE», detecció de duplicitats i proposta de redacció millorada tant per al sistema com per als usuaris) i vigilen diàriament el segell criptogràfic <code>.agents/SKILLS_SEAL.json</code> i el dimoni <code>org.socdepoble.higiene</code>.
-          </dd>
-          <dt>3 · Consola Termodinàmica Incrustada en Directe a l’Article del Mac mini</dt>
-          <dd>
-            A partir d’este apartat, el component <code>&lt;ConsolaIncrustada /&gt;</code> està incrustat en directe dins de l’article publicat del Mac mini M4 (<code>/page/node-zero</code>) perquè qualsevol veí o avaluador puga vore el cervell i les 43 skills funcionant en temps real.
-          </dd>
-        </dl>
+        <div className="sdp-admin-editorial-stack">
+          <div className="sdp-admin-editorial-bloc">
+            <h4>1 · Servidor Domèstic i la IAIA al Node 0</h4>
+            <p>
+              El <strong>Mac mini Apple M4</strong> executa en local (zero cost de tòkens) la IAIA i l’equip local del Node 0 (<code>iaia:latest</code> / <code>iaia-maria:latest</code>, <code>qwen3:8b</code>, <code>qwen2.5-coder:14b</code> i <code>nemotron-mini:latest</code>) per a auditar l’arquitectura i les 43 skills.
+            </p>
+          </div>
+          <div className="sdp-admin-editorial-bloc">
+            <h4>2 · Mesa de Revisió Editorial i Sentinella Diari de Skills</h4>
+            <p>
+              Les 4 IAIAs actuen com a <strong>Revisores Editorials</strong> (ortografia, gramàtica, lèxic genuí, Llei «DE POBLE», detecció de duplicitats i proposta de redacció millorada tant per al sistema com per als usuaris) i vigilen diàriament el segell criptogràfic <code>.agents/SKILLS_SEAL.json</code> i el dimoni <code>org.socdepoble.higiene</code>.
+            </p>
+          </div>
+          <div className="sdp-admin-editorial-bloc">
+            <h4>3 · Consola Termodinàmica Incrustada en Directe a l’Article del Mac mini</h4>
+            <p>
+              A partir d’este apartat, el component <code>&lt;ConsolaIncrustada /&gt;</code> està incrustat en directe dins de l’article publicat del Mac mini M4 (<code>/page/node-zero</code>) perquè qualsevol veí o avaluador puga vore el cervell i les 43 skills funcionant en temps real.
+            </p>
+          </div>
+        </div>
         <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat-ampli">
           <Link className="sdp-boto sdp-boto--primari" to="/page/node-zero">
             Vore l’article del Mac mini amb la Consola en directe (/page/node-zero)

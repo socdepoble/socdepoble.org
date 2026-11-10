@@ -176,10 +176,8 @@ test('control-03 · en entrar directament a una fitxa diferida no es mou res', a
 
 /* Els textos que el Panell pintava escrits a mà, amb la reserva d'abans. */
 const TEXTOS_PANELL = [
-  ['section.control.utilitats.titol', 'Utilitats i Connectors (Plugins)'],
-  ['section.control.utilitats.lead', "El sistema s'anirà enriquint amb aquest tipus d'utilitats (o plugins) que es poden activar si es necessiten. Són independents del sistema base, cosa que permet endollar funcionalitats a mesura només per als usuaris o clients que les demanen."],
   ['section.control.maquinaria.titol', 'Maquinària i Sistema'],
-  ['section.control.maquinaria.lead', "Panells d'administració i eines internes de la plataforma. Aquestes utilitats normalment s'activen només per a l'equip d'administració."],
+  ['section.control.maquinaria.lead', 'Altres eines de la plataforma, com el Lector RSS i el Snippet, l’extensió de Chrome per a desar webs al Bloc.'],
   ['section.control.dubtes', 'Missatges per a dubtes'],
   /* P0-63 / IDEA-194 (261108) · L'accés directe a «El compte» del Perfil. */
   ['section.control.compte', 'Compte i contrasenya'],
@@ -221,10 +219,8 @@ test('control-06 · cada text nou es demana amb la seua clau i la reserva d’ab
   }
   /* Llei del Píxel · En valencià, el text d'abans: els h2, les entradetes i els botons. */
   expect(screen.getByRole('heading', { level: 2, name: TEXTOS_PANELL[0][1] })).toBeTruthy();
-  expect(screen.getByRole('heading', { level: 2, name: TEXTOS_PANELL[2][1] })).toBeTruthy();
   expect(screen.getByText(TEXTOS_PANELL[1][1], { selector: 'p.lead' })).toBeTruthy();
-  expect(screen.getByText(TEXTOS_PANELL[3][1], { selector: 'p.lead' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: TEXTOS_PANELL[2][1] })).toBeTruthy();
+  expect(screen.getByRole('button', { name: TEXTOS_PANELL[3][1] })).toBeTruthy();
   expect(screen.getByRole('button', { name: TEXTOS_PANELL[4][1] })).toBeTruthy();
-  expect(screen.getByRole('button', { name: TEXTOS_PANELL[5][1] })).toBeTruthy();
-  expect(screen.getByRole('button', { name: TEXTOS_PANELL[6][1] })).toBeTruthy();
 });

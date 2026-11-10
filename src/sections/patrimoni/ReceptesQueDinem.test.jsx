@@ -17,6 +17,7 @@ import GL from '../../config/idiomes/gl.js';
 import { OBRA_QUE_DINEM, RECEPTES_QUE_DINEM, RECOMPTES_QUE_DINEM, laminaDeRecepta, liniesIngredients } from '../../data/patrimoni/queDinem.js';
 import { fixaTraductorLliure } from '../../data/traductorDelLloc.js';
 import { PAGINES_PATRIMONI_R14 } from '../text/pageContent.patrimoniR14.js';
+import { PAGE_COPY } from '../text/pageContent.js';
 import { TEXTOS_ALERGENS } from '../../utils/textosAlergens.js';
 import ReceptesQueDinemSection from './ReceptesQueDinemSection.jsx';
 import ItemDetailSection from '../detail/ItemDetailSection.jsx';
@@ -410,6 +411,18 @@ describe('RV-01/RV-02 · la proposta d’al·lèrgens de la fitxa, en les cinc l
       for (const simbol of ['«•»', '«T»', `«${t.desconegut}»`]) expect([llengua, simbol, p.html.includes(simbol)]).toEqual([llengua, simbol, true]);
     }
     expect(pagina.html).toContain('<strong>proposta assistida, pendent de validació humana</strong>');
+  });
+
+  test('R16-AA4 · /page/receptes incorpora la portada real portada_que_dinem_muro.webp i cap pàgina pública de PAGE_COPY repetix imatge de portada', () => {
+    expect(PAGINES_PATRIMONI_R14.receptes.image).toBe('/assets/uploads/patrimoni/portada_que_dinem_muro.webp');
+    expect(PAGINES_PATRIMONI_R14.receptes.imageWidth).toBe(1200);
+    expect(PAGINES_PATRIMONI_R14.receptes.imageHeight).toBe(675);
+    const entrades = Object.entries(PAGE_COPY);
+    for (const [id, entrada] of entrades) {
+      expect(typeof entrada.image === 'string' && entrada.image.trim().length > 0, `PAGE_COPY.${id} sense image`).toBe(true);
+    }
+    const imatges = entrades.map(([, entrada]) => entrada.image);
+    expect(new Set(imatges).size).toBe(imatges.length);
   });
 });
 

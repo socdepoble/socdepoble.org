@@ -65,14 +65,16 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
      targetesDeSistema afig, darrere de SYSTEM_PAGES, les cinc pàgines de
      patrimoni (PAGINES_PATRIMONI_MUR de targetesMur.js), amb la seua ruta.
      P0-51 / IDEA-182 (Mestre, 261108; R53) · Anatomia rural ja no hi és:
-     l'article complet del Pou de Neu és l'única targeta del pou. */
+     l'article complet del Pou de Neu és l'única targeta del pou.
+     R16b · «Què dinem?» (/page/receptes, la pàgina de l'Onada R14) hi entra com a cinquena. */
   const PATRIMONI_AL_MUR = [
     { key: 'herbari', href: '/page/herbari' },
     { key: 'banc-de-llavors', href: '/page/banc-de-llavors' },
     { key: 'rutes-de-poble', href: '/page/rutes-de-poble' },
-    { key: 'arbres-monumentals', href: '/page/arbres-monumentals' }
+    { key: 'arbres-monumentals', href: '/page/arbres-monumentals' },
+    { key: 'receptes', href: '/page/receptes' }
   ];
-  /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, Nodrir la IAIA no és cap targeta del Mur. */
+  /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, La IAIA Sabuda no és cap targeta del Mur. */
   const AL_MUR = [...SYSTEM_PAGES.filter((pagina) => esTargetaDelMur(pagina.key)), ...PATRIMONI_AL_MUR];
 
   /* Onada 8 (261009) · Dotze: la Consola i el Cervell hi entren com a
@@ -87,8 +89,8 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
   test('les catorze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
     expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length - 1 + PATRIMONI_AL_MUR.length);
     expect(SYSTEM_PAGES).toHaveLength(15);
-    expect(AL_MUR).toHaveLength(18);
-    expect(AL_MUR.map(item => item.key)).not.toContain('nodrir-la-iaia');
+    expect(AL_MUR).toHaveLength(19);
+    expect(AL_MUR.map(item => item.key)).not.toContain('la-iaia-sabuda');
     expect(AL_MUR.map(item => item.key)).not.toContain('anatomia-rural');
     for (const alies of [ENTITAT_LLAVOR, ENTITAT_REMOTA]) {
       expect(esAliesDelProjecte(alies)).toBe(true);

@@ -37,15 +37,16 @@ const PAGINES_PATRIMONI_MUR = Object.freeze([
   { key: 'herbari', href: '/page/herbari', isAvis: false },
   { key: 'banc-de-llavors', href: '/page/banc-de-llavors', isAvis: false },
   { key: 'rutes-de-poble', href: '/page/rutes-de-poble', isAvis: false },
-  { key: 'arbres-monumentals', href: '/page/arbres-monumentals', isAvis: false }
+  { key: 'arbres-monumentals', href: '/page/arbres-monumentals', isAvis: false },
+  { key: 'receptes', href: '/page/receptes', isAvis: false }
 ]);
 
-/* PRODUCCIO-02 (revisió R15b) · Nodrir la IAIA només és targeta (del Mur, del Calendari i del Bloc de
+/* PRODUCCIO-02 (revisió R15b) · La IAIA Sabuda només és targeta (del Mur, del Calendari i del Bloc de
    l'entitat, que passen tots per ací) quan el build porta VITE_SDP_CURADORIA_CULTURAL=1, el mateix literal
    que encén la capacitat 'curadoriaCultural' (data/supabase/index.js). Apagada, la pàgina no recull res i la
    seua data de creació (9-11-2026) l'enlairava al capdamunt del Mur. No falta: no avisa. La ruta
-   /page/nodrir-la-iaia i SYSTEM_PAGES no canvien. Es llig en cada crida perquè vi.stubEnv la governe. */
-const PAGINES_AMB_CURADORIA = Object.freeze(['nodrir-la-iaia']);
+   /page/la-iaia-sabuda i SYSTEM_PAGES no canvien. Es llig en cada crida perquè vi.stubEnv la governe. */
+const PAGINES_AMB_CURADORIA = Object.freeze(['la-iaia-sabuda']);
 export function esTargetaDelMur(clau) {
   return !PAGINES_AMB_CURADORIA.includes(clau) || import.meta.env.VITE_SDP_CURADORIA_CULTURAL === '1';
 }

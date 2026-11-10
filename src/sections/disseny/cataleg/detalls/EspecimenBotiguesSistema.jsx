@@ -4,7 +4,7 @@ import { VistaBotiguesSistema } from '../../../botigues/VistaBotiguesSistema.jsx
 /** Fixture explícita de contracte visual; no és una font operativa. */
 export const MOSTRA_BOTIGUES = Object.freeze({
   play: { font: 'Mostra de catàleg; dades de demostració, sense connexió a botigues.', comptador: '2/12', lector: 'Dos de dotze; mostra', web: '14', explicacio: 'Dos participants en Play i catorze usos web són mesures diferents en esta mostra.', optInUrl: null },
-  versions: 'Mostra de versions: configuració d’iOS 1.1.0, build 2; cap publicació acreditada.',
+  versions: 'Mostra de versions: configuració d’iOS 1.1.12, build 2; cap publicació acreditada.',
   canals: [{ id: 'testflight', nom: 'TestFlight', url: null, descripcio: 'Mostra de canal sense enllaç públic.' }],
   flota: { font: 'Dos noms de mostra; no és el cens complet ni salut en viu.', membres: [{ id: 'claude', nom: 'Claude', url: 'https://claude.ai/' }, { id: 'chatgpt', nom: 'ChatGPT Codex', url: 'https://chatgpt.com/' }] },
 });

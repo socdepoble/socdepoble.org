@@ -1982,10 +1982,8 @@ export default {
   'section.control.habitatge.saberMes': 'Saber máis: Vivenda',
   /* control-06 (revisió del Panell, 261104) · Els encapçalaments, les entradilles i
      els dos botons de baix del Panell, abans escrits a mà (ControlSection.jsx). */
-  'section.control.utilitats.titol': 'Utilidades e Conectores (Plugins)',
-  'section.control.utilitats.lead': 'O sistema irase enriquecendo con este tipo de utilidades (ou plugins), que se poden activar se se precisan. Son independentes do sistema base, o que permite conectar funcionalidades á medida só para os usuarios ou clientes que as piden.',
   'section.control.maquinaria.titol': 'Maquinaria e Sistema',
-  'section.control.maquinaria.lead': 'Paneis de administración e ferramentas internas da plataforma. Estas utilidades normalmente só se activan para o equipo de administración.',
+  'section.control.maquinaria.lead': 'Outras ferramentas da plataforma, como o Lector RSS e o Snippet, a extensión de Chrome para gardar webs no Caderno de notas.',
   'section.control.dubtes': 'Mensaxes para dúbidas',
   'section.control.compte': 'Conta e contrasinal',
   'section.control.eixir': 'Saír do pobo',
@@ -3755,4 +3753,25 @@ export default {
   'section.notes.publicacio.revisioDesada': "Revisión gardada neste navegador: o Muro e a páxina xa a amosan.",
   'section.notes.publicacio.revisioDesadaServidor': "Revisión gardada no servidor: o Muro e a páxina xa a amosan a todo o mundo.",
   'section.notes.publicacio.revisioNomesNavegador': "O servidor non aceptou a revisión: queda gardada só neste navegador.",
+  /* Onada R16b (C5-09) · Els dos patrons nous de l'espècimen del Contracte de Pedra Seca a /disseny
+     (EspecimenContracte.jsx): el quadre blanc editorial i on s'obrin els ajustos de l'espai de treball. */
+  'section.disseny.contracte.quadreBlanc.titol': "Lei do cadro branco editorial e do falso taboleiro en columnas",
+  'section.disseny.contracte.quadreBlanc.alertaTitol': "Cabeceiras e parágrafos dentro dos cadros informativos",
+  'section.disseny.contracte.quadreBlanc.alerta': "Dentro dun cadro informativo branco, toda explicación (funcionamento, pasos ou arquitectura) escríbese con cabeceiras (h3, h4, h5) e parágrafos ou listas en todo o ancho da columna. Unha explicación non se disfraza de taboleiro de dúas columnas: unha lista de definicións (dl) con títulos longos á esquerda e parágrafos apertados á dereita.",
+  'section.disseny.contracte.quadreBlanc.diagnostic': "Cadros brancos editoriais e listas técnicas curtas",
+  'section.disseny.contracte.quanUsar': "Cando usalo:",
+  'section.disseny.contracte.estructura': "Estrutura:",
+  'section.disseny.contracte.modals.titol': "Axustes do espazo de traballo: columna 3 nos catálogos, diálogo no resto",
+  'section.disseny.contracte.modals.columna3.titol': "Catálogos: axustes na columna 3",
+  'section.disseny.contracte.modals.columna3.text': "Os axustes do espazo de traballo dos catálogos feitos con CatalegWorkspace (Herbario, Banco de sementes, Receitas, Fediversity, Despensa e catálogo do TPV) píntanse dentro da columna 3 de detalle, cun botón de volta arriba e outro abaixo, e non nun modal flotante que tape o contexto.",
+  'section.disseny.contracte.modals.dialeg.titol': "Resto de espazos: axustes nun diálogo",
+  'section.disseny.contracte.modals.dialeg.text': "Os demais espazos de traballo feitos con UniversalWorkspace, cando teñen axustes, aínda os abren nun diálogo (WorkspaceSettingsDialog). A folla de Axustes do chat (FullAjustos) tamén se abre nun diálogo.",
+  'section.disseny.contracte.patro.editorial': "Redacción editorial (h4/h5 + p)",
+  'section.disseny.contracte.quanUsar.editorial': "Explicacións de dominio, crónicas técnicas, protocolos e bloques didácticos con parágrafos de máis de 80 caracteres.",
+  'section.disseny.contracte.canonic': "Canónico",
+  'section.disseny.contracte.patro.parella': "Parella técnica curta (dl)",
+  'section.disseny.contracte.quanUsar.parella': "Metadatos clave-valor estritos (versión, porto, licenza, SHA-256 curto ou identificadores) de menos de 80 caracteres.",
+  'section.disseny.contracte.patro.falsTauler': "Falso taboleiro en columnas (dl con parágrafos longos)",
+  'section.disseny.contracte.quanUsar.falsTauler': "Nunca: ningún dl, dt nin dd en dúas ou tres columnas para encaixar frases longas ou explicacións; escríbese con h4/h5 + p.",
+  'section.disseny.contracte.prohibit': "Prohibido",
 };

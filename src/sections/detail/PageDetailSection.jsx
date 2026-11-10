@@ -176,7 +176,7 @@ export default function PageDetailSection() {
       return <Suspense fallback={null}>{slug === 'fediversity' ? contingut
         : <ProveidorProjeccionsCataleg>{contingut}</ProveidorProjeccionsCataleg>}</Suspense>;
     }
-    else if (slug === 'nodrir-la-iaia') alFinal = <><Suspense fallback={null}><NodrirLaIaiaSection /></Suspense>{alFinal}</>;
+    else if (slug === 'la-iaia-sabuda') alFinal = <><Suspense fallback={null}><NodrirLaIaiaSection /></Suspense>{alFinal}</>;
     else if (Object.hasOwn(SECCIONS_DE_PATRIMONI, slug)) { const Consulta = SECCIONS_DE_PATRIMONI[slug]; alFinal = <><Suspense fallback={null}><Consulta /></Suspense>{alFinal}</>; }
     else if(['fediversity','node-zero'].includes(slug))alFinal=<>{slug === PAGINA_DEL_WHATSAPP_DE_LA_IAIA ? <Suspense fallback={null}><IaiaWhatsappCard /></Suspense> : null}<Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;
     /* P1-46 (Fita 10; guàrdia nocturna 261030) · La pastilla de versió de

@@ -98,7 +98,7 @@ describe('la primera publicació del Mur', () => {
   });
 
   test('amb les dates de prova del Mur és la més nova de totes les targetes de la llavor', () => {
-    const ara = new Date(2026, 10, 6, 18, 0);
+    const ara = new Date(2026, 10, 10, 18, 0);
     const llavor = llavorAmbDatesDeProva(APP_SEED, ara);
     const pageCopy = Object.fromEntries(llavor.pages.map((pagina) => [pagina.id, pagina]));
     expect(pageCopy['anatomia-rural']).toBeDefined(); // La pàgina directa no és una targeta visible del Mur.

@@ -108,10 +108,10 @@ export const IMPORTANTS_DEL_MUR = Object.freeze([
  * ['pages', 'disseny', '2026-09-14T18:25:00+02:00'].
  */
 // P0-64 · només la demostració local; la creació real es conserva en remot.
-const DEMOSTRACIO_NODRIR = Object.freeze(['pages', 'nodrir-la-iaia', '2026-09-02T10:00:00+02:00']);
-/* PRODUCCIO-02 (revisió R15b) · Nodrir la IAIA només és targeta del Mur amb VITE_SDP_CURADORIA_CULTURAL=1
+const DEMOSTRACIO_NODRIR = Object.freeze(['pages', 'la-iaia-sabuda', '2026-09-02T10:00:00+02:00']);
+/* PRODUCCIO-02 (revisió R15b) · La IAIA Sabuda només és targeta del Mur amb VITE_SDP_CURADORIA_CULTURAL=1
    (targetesMur.js · esTargetaDelMur, el mateix literal): sense, no és cap tècnica del Mur. La seua data de
-   demostració s'aplica igualment a la llavor (llavorAmbDatesDeProva), la de la pàgina /page/nodrir-la-iaia. */
+   demostració s'aplica igualment a la llavor (llavorAmbDatesDeProva), la de la pàgina /page/la-iaia-sabuda. */
 export const TECNIQUES_DEL_MUR = Object.freeze([
   ['pages', 'versions', '2026-09-03T11:50:00+02:00'],
   ...(import.meta.env.VITE_SDP_CURADORIA_CULTURAL === '1' ? [DEMOSTRACIO_NODRIR] : [])

@@ -102,8 +102,11 @@ export function CosDeLaPagina({ html }) {
    al final de la fila de davall de l'H1 (la pastilla de versió de
    /page/descarregues, detail/pastillaDeVersio.js): l'etiqueta o una funció
    que la torna amb el traductor d'ací (t). Com accioPrincipal, només es passa
-   quan n'hi ha: sense, o si la funció torna null, les etiquetes de sempre. */
-export default function TextSection({ page: original, pageKey, accioPrincipal = null, onConnect = null, objecte = null, etiquetaFinal = null, children = null }) {
+   quan n'hi ha: sense, o si la funció torna null, les etiquetes de sempre.
+   R16 · `amagaCos`: amb una fitxa oberta al Workspace (HerbariWorkspaceSection i
+   BancLlavorsWorkspaceSection), el cos de la pàgina (page.html) no es pinta:
+   la fitxa, que arriba com a children, no queda davall del text llarg. */
+export default function TextSection({ page: original, pageKey, accioPrincipal = null, onConnect = null, objecte = null, etiquetaFinal = null, amagaCos = false, children = null }) {
   const { t, language = 'ca' } = useUIActions();
   /* R51 (P0-46 / IDEA-177) · Una pàgina que declara el seu translation_mode es
      pinta segons el pla del contracte (planTraduccioPagina.js); sense, el camí
@@ -180,7 +183,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       {plaR51?.tipus === 'error' ? (
         <Alerta to="avis">{t('section.text.traduccioR51Error', 'Esta pàgina no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}</Alerta>
       ) : null}
-      <CosDeLaPagina html={page.html} />
+      {!amagaCos && <CosDeLaPagina html={page.html} />}
       {pageKey==='fedivers'&&<Suspense fallback={null}><AparadorFediversity language={language}/></Suspense>}
       {pageKey==='node-zero'&&<Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense>}
       {children}

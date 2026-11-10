@@ -292,22 +292,32 @@ export function BancImportacioEditorial() {
             <aside className="sdp-admin-importacio__inspector" aria-label="Inspector comparatiu d'article importat">
               <h4>🔍 Fitxa de Revisió · #{seleccionat.wp_id}</h4>
               <p><strong>{seleccionat.title}</strong></p>
-              <dl className="sdp-admin-dl">
-                <dt>Ruta Sóc de Poble</dt>
-                <dd><Link to={seleccionat.ruta_canonica}><code>{seleccionat.ruta_canonica}</code></Link></dd>
-                <dt>URL Original WordPress</dt>
-                <dd>
-                  <a href={seleccionat.source_url} target="_blank" rel="noopener noreferrer">
-                    {seleccionat.source_url} ↗
-                  </a>
-                </dd>
-                <dt>Categoria Temàtica IA</dt>
-                <dd><Insignia to="primari">{seleccionat.categoria_tematica}</Insignia></dd>
-                <dt>Pobles etiquetats ({seleccionat.pobles_etiquetats.length})</dt>
-                <dd>{seleccionat.pobles_etiquetats.join(', ') || 'Cap poble específic'}</dd>
-                <dt>Etiquetes SKOS ({seleccionat.etiquetes_netes.length})</dt>
-                <dd>{seleccionat.etiquetes_netes.join(', ') || 'Sense etiquetes'}</dd>
-              </dl>
+              <div className="sdp-admin-editorial-stack" data-testid="inspector-editorial-importacio">
+                <div className="sdp-admin-editorial-bloc">
+                  <h5>Ruta Sóc de Poble</h5>
+                  <p><Link to={seleccionat.ruta_canonica}><code>{seleccionat.ruta_canonica}</code></Link></p>
+                </div>
+                <div className="sdp-admin-editorial-bloc">
+                  <h5>URL Original WordPress</h5>
+                  <p>
+                    <a href={seleccionat.source_url} target="_blank" rel="noopener noreferrer">
+                      {seleccionat.source_url} ↗
+                    </a>
+                  </p>
+                </div>
+                <div className="sdp-admin-editorial-bloc">
+                  <h5>Categoria Temàtica IA</h5>
+                  <p><Insignia to="primari">{seleccionat.categoria_tematica}</Insignia></p>
+                </div>
+                <div className="sdp-admin-editorial-bloc">
+                  <h5>Pobles etiquetats ({seleccionat.pobles_etiquetats.length})</h5>
+                  <p>{seleccionat.pobles_etiquetats.join(', ') || 'Cap poble específic'}</p>
+                </div>
+                <div className="sdp-admin-editorial-bloc">
+                  <h5>Etiquetes SKOS ({seleccionat.etiquetes_netes.length})</h5>
+                  <p>{seleccionat.etiquetes_netes.join(', ') || 'Sense etiquetes'}</p>
+                </div>
+              </div>
 
               <div className="sdp-admin-importacio__notes">
                 <label htmlFor="nota-revisio-admin">

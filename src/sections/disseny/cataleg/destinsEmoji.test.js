@@ -248,7 +248,7 @@ describe('destinsDelSistema', () => {
        «Candidatura Europea NLnet · NGI Fediversity», ara l'última de
        SYSTEM_PAGES, darrere de Descàrregues. */
     const destins = destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, [COVER_PAGE_KEYS.wiki, COVER_PAGE_KEYS.disseny, COVER_PAGE_KEYS.consola]);
-    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'nodrir-la-iaia', 'fediversity', 'anima', 'fedivers'];
+    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'la-iaia-sabuda', 'fediversity', 'anima', 'fedivers'];
     expect(destins.map((desti) => desti.id)).toEqual(claus.map((clau) => `sistema:${clau}`));
     expect(destins.map((desti) => desti.titol)).toEqual(claus.map((clau) => PAGE_COPY[clau].title));
     expect(destins.every((desti) => desti.grup === 'sistema' && desti.escriu === 'codi')).toBe(true);

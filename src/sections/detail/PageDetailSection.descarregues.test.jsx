@@ -83,7 +83,7 @@ const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
 /* IDEA-60 (T1, prompt 261102_1532) · L'APK signat al domini propi. */
 const APK = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 /* P0-62 (08-11-2026) · La fitxa de veres de l'App Store (canal obert de canalsDeBotiga.js) i el seu botó. */
-const APP_STORE_DE_VERES = 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844';
+const APP_STORE_DE_VERES = 'https://apps.apple.com/es/app/soc-de-poble/id6826441844';
 const BOTO_APP_STORE = "Disponible a l'App Store";
 /* P0-62 bis (08-11-2026) · La pàgina on Google apunta els verificadors (pas 1 de Google Play, al cos). */
 const VERIFICADORS = 'https://play.google.com/apps/testing/org.socdepoble.app';

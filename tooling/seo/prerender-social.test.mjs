@@ -246,7 +246,7 @@ test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre
     mur: ['/mur/manifest-de-poble','/mur/noves-tecnologies-aplicades-a-la-cultura-rural']
   };
   assert.deepEqual(inventari.toSorted(),Object.values(esperadesPerSuperficie).flat().toSorted(),'identitats exactes de les superfícies prerenderitzades');
-  assert.ok(!rebut.routesWritten.includes('/page/nodrir-la-iaia'),'la safata privada de curadoria no té head públic');
+  assert.ok(!rebut.routesWritten.includes('/page/la-iaia-sabuda'),'la safata privada de curadoria no té head públic');
   for(const ruta of inventari) {
     const entrada=manifest.routes[ruta];
     const d=llig(dist,`${ruta.slice(1)}/index.html`);
