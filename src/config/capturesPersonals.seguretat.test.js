@@ -55,4 +55,20 @@ describe('Captures amb dades personals de tercers fora del repositori (P0 R15)',
     const personals = versionats.stdout.toString().split('\0').filter((cami) => cami && PERSONAL.test(cami));
     expect(personals.filter((cami) => existsSync(cami))).toEqual([]);
   });
+
+  /* Sanejament R15b (privadesa, 261109) · WhatsApp-Clon-01 i -02: 63 captures amb xats, contactes,
+     telèfons i grups privats de terceres persones ixen de l'índex. Només en queden 11, revisades com a
+     aptes o dubtoses (decisió del Mestre); la resta de la carpeta queda ignorada. */
+  test('WhatsApp-Clon: només les 11 captures revisades són a l’índex i la resta de la carpeta s’ignora', (context) => {
+    const gitignore = readFileSync('.gitignore', 'utf8').split('\n');
+    const CLON = ['WhatsApp-Clon-01', 'WhatsApp-Clon-02'].map((nom) => `${DIR}/${nom}`);
+    for (const carpeta of CLON) expect(gitignore, carpeta).toContain(`/${carpeta}/*`);
+    if (!ambGit()) { context.skip(); return; }
+    const versionats = spawnSync('git', ['ls-files', '-z', '--', ...CLON]).stdout.toString().split('\0').filter(Boolean);
+    expect(versionats).toHaveLength(11);
+    for (const cami of versionats) expect(gitignore, cami).toContain(`!/${cami}`);
+    for (const carpeta of CLON) {
+      expect(spawnSync('git', ['check-ignore', '--no-index', '-q', `${carpeta}/Captura de pantalla 2026-12-01 a las 09.00.00.png`]).status, carpeta).toBe(0);
+    }
+  });
 });

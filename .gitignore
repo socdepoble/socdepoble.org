@@ -140,3 +140,22 @@ GoogleService-Info.plist
 
 # R15.2: els originals locals no ixen al build públic.
 /public/assets/uploads/tpv-parroquia/
+
+# Sanejament R15b (privadesa, 261109) · Les captures de WhatsApp-Clon-01 i -02
+# mostren xats, contactes, telèfons i grups privats de terceres persones: 63
+# ixen de l'índex amb `git rm --cached` i es queden al disc del Mestre. Només
+# continuen versionades les 11 revisades com a aptes o dubtoses (decisió del
+# Mestre). Purgar l'historial publicat també és decisió seua.
+/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-01/*
+/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-02/*
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-01/Captura de pantalla 2026-09-28 a las 19.13.56.png
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-01/Captura de pantalla 2026-09-28 a las 19.42.54.png
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-01/WhatsApp Image 2026-09-29 at 12.53.38.jpeg
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-01/WhatsApp Image 2026-09-29 at 12.57.06.jpeg
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-01/WhatsApp Image 2026-09-29 at 12.57.33.jpeg
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-02/Captura de pantalla 2026-09-30 a las 20.47.21.png
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-02/Captura de pantalla 2026-09-30 a las 20.53.10.png
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-02/Captura de pantalla 2026-09-30 a las 20.53.54.png
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-02/Captura de pantalla 2026-09-30 a las 21.01.14.png
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-02/Captura de pantalla 2026-09-30 a las 21.03.22.png
+!/_wiki_de_poble/04_escriptori/01_produccio/WhatsApp-Clon-02/Captura de pantalla 2026-09-30 a las 21.05.33.png
