@@ -42,8 +42,16 @@ export const esCents = (valor) => Number.isSafeInteger(valor);
 export function formatEuros(cents, { simbol = true } = {}) {
   if (!esCents(cents)) return '';
   /* -0 no és cap import: «-0,00 €» confondria. */
-  const euros = (cents === 0 ? 0 : cents) / 100;
-  return (simbol ? AMB_SIMBOL : SENSE_SIMBOL).format(euros);
+  const enter = BigInt(cents);
+  const absolut = enter < 0n ? -enter : enter;
+  const euros = absolut / 100n;
+  const fraccio = String(absolut % 100n).padStart(2, '0');
+  // Dividing a large Number by100 rounds the cents before Intl sees them.
+  // Intl groups the exact integral euros; replace only its fractional part.
+  // Numeric -0 retains the sign for amounts between -99 and -1 cents.
+  const ambSigne = enter < 0n ? euros === 0n ? -0 : -euros : euros;
+  return (simbol ? AMB_SIMBOL : SENSE_SIMBOL).formatToParts(ambSigne)
+    .map(part => part.type === 'fraction' ? fraccio : part.value).join('');
 }
 
 /**

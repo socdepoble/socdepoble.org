@@ -15482,3 +15482,222 @@ details[open] summary.accordion-header svg:last-child {
   white-space: normal;
 }
 }
+
+/* USA-05 (R15b, carril G3) · El commutador Llista ↔ Rajola quadrada del
+   catàleg (CatalegWorkspace) diu quin està actiu amb el fons, no només amb
+   aria-pressed: el patró de .sdp-bloc-icon[aria-pressed="true"]. Pesa més
+   que el fons transparent d'AppGridShell.css, que és a la mateixa capa i
+   s'importa després. */
+@layer components {
+  .sdp-cataleg-workspace .app-grid-col-header .sdp-cataleg-workspace__commutador[aria-pressed="true"] {
+    background: var(--sdp-crom-actiu-fons);
+    color: var(--sdp-crom-actiu-text);
+  }
+}
+
+/* ═══ BLOC catalegWorkspace · abans src/components/universal/workspace/catalegWorkspace.css ═══
+   La closca dels catàlegs (CatalegWorkspace.jsx): la Llista i la Rajola
+   quadrada de la columna 2, la fitxa del detall, els destins del peu de la
+   navegació i el selector de publicació. Arriba al Shadow DOM de l'element
+   incrustat dins del CSS compartit (index.css) que injecten la SPA i el
+   component. Darrere del commutador (USA-05) i dins de `@layer components { }`.
+
+   Fins a R15b el full no tenia capa i manava sobre totes les capes. Ací cada
+   declaració continua guanyant, sense !important: les rivals que casen amb
+   els mateixos elements (.sp-card, .sp-card-body, .sp-card-calendar-badge,
+   .sp-card-title, .sp-card-subtitle, .sp-card-media, .sdp-gestor-llista > li,
+   .sdp-camp__etiqueta, .sdp-admin-dl, .sdp-fitxa-didactica__nutricio-*) són
+   de capes de davall o pesen menys, i les úniques d'igual pes
+   (.sp-card .sp-card-body.has-aside|has-calendar-badge .sp-card-title i
+   .sp-card-subtitle, .sdp-admin-dl dd, .sdp-fitxa-didactica__nutricio-item dd)
+   van abans i declaren el mateix valor. Cap regla de `utilities` ni cap
+   !important no les toca. Comprovat amb getComputedStyle en Chrome, abans i
+   després, en la Llista, la Rajola i la fitxa de l'Herbari, el Banc de
+   llavors, Què dinem? i Fediversity a 1280, 900 i 390 px (R15b).
+   ═══════════════════════════════════════════════════════════════════ */
+@layer components {
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__llista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr));
+    gap: var(--sdp-space-2);
+    align-items: start;
+  }
+  .sdp-cataleg-workspace .sdp-gestor-llista > li { min-width: 0; margin: 0; }
+  .sdp-cataleg-workspace__rajola .sp-card { height: auto; min-width: 0; }
+  .sdp-cataleg-workspace__rajola .sp-card-body { padding: var(--sdp-space-2); }
+  .sdp-cataleg-workspace__rajola .sp-card-calendar-badge {
+    float: none;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    margin: 0 0 var(--sdp-space-2);
+    font-size: var(--sdp-text-h3);
+  }
+  .sdp-cataleg-workspace__rajola .sp-card .sp-card-title { font-size: var(--sdp-text-base); }
+  .sdp-cataleg-workspace__rajola .sp-card .sp-card-subtitle { font-size: var(--sdp-text-small); }
+  /* USA-02 (R15b) · La rajola sencera és quadrada (Q4 de DISSENY_P069), no
+     només el glif. El glif o la làmina cedixen l'alçada; el nom ocupa com a
+     molt dues línies, amb el·lipsi (el nom sencer és l'etiqueta del botó), i
+     la segona línia, una. Cap text queda tallat a mitja línia: tot el que hi
+     ha a la rajola cap dins del quadrat. Pesen més que les regles de la
+     targeta de components.css (el capçal del bloc diu per què). */
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola .sp-card {
+    aspect-ratio: 1;
+    margin: 0;
+  }
+  .sdp-cataleg-workspace__rajola .sp-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    gap: var(--sdp-space-1);
+    min-height: 0;
+  }
+  .sdp-cataleg-workspace__rajola .sp-card-body.has-calendar-badge { flex: 1 1 auto; }
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola .sp-card-calendar-badge {
+    flex: 1 1 0;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: auto;
+    margin: 0;
+    line-height: 1;
+  }
+  .sdp-cataleg-workspace__rajola .sp-card-media-container {
+    flex: 1 1 0;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: auto;
+  }
+  .sdp-cataleg-workspace__rajola .sp-card-media-container > .sp-card-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola .sp-card .sp-card-title {
+    flex: none;
+    margin: 0;
+    padding: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola .sp-card .sp-card-subtitle {
+    flex: none;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* PRIVADESA-01 (R15b) · La targeta d'una referència d'una altra persona
+     (ProjeccionsEnSuperficie al Mur i al Mercat, i la Llista dels catàlegs):
+     la boina només porta el ⋮ de denúncia i bloqueig. Va a la fi, com a una
+     publicació del Mur, i el menú no passa de l'ample de la targeta, que
+     retalla el que en sobreix (content-visibility; .sp-card és contenidor
+     d'ample). Mesurat en Chrome a 1280 px, en clar i en fosc. */
+  .sp-card.sdp-referencia-cataleg .sp-card-header { justify-content: flex-end; }
+  .sp-card.sdp-referencia-cataleg .sdp-menu-moderacio {
+    min-inline-size: 0;
+    max-inline-size: min(var(--sdp-menu-ample-max), calc(100cqi - 2 * var(--sdp-space-4)));
+  }
+  .sdp-cataleg-workspace__llista .sp-card-calendar-badge {
+    width: var(--sdp-space-12);
+    height: var(--sdp-space-12);
+    margin-left: var(--sdp-space-2);
+  }
+  .sdp-cataleg-workspace__destins { padding: var(--sdp-space-2); }
+  /* Contrast (R15b) · L'etiqueta «Pàgina de destinació» va sobre la columna de
+     navegació (--sdp-workspace-nav-fons, el crom fosc en tots dos temes): porta
+     el text del crom, com l'arbre de la columna. --sdp-text-invers girava a fosc
+     en el tema fosc (≈1,7:1); en clar, el valor és el mateix (Llei del Píxel). */
+  .sdp-cataleg-workspace__destins .sdp-camp__etiqueta { color: var(--sdp-crom-text); }
+  .sdp-cataleg-workspace__fitxa { min-width: 0; overflow-wrap: anywhere; }
+  /* Pair wrappers must not become cells in the global two-column dl grid. */
+  .sdp-cataleg-workspace__fitxa dl { display: block; min-width: 0; }
+  .sdp-cataleg-workspace__fitxa dl > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: var(--sdp-space-1) var(--sdp-space-3);
+    margin-block: var(--sdp-space-2);
+    min-width: 0;
+  }
+  .sdp-cataleg-workspace__fitxa dt,
+  .sdp-cataleg-workspace__fitxa dd { min-width: 0; margin-inline: 0; overflow-wrap: anywhere; }
+  .sdp-cataleg-workspace__publicacio {
+    padding: var(--sdp-space-3);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .sdp-cataleg-workspace__publicacio fieldset {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: var(--sdp-space-2);
+    min-width: 0;
+  }
+  .sdp-cataleg-workspace__publicacio label {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-alt-accio);
+    min-width: 0;
+  }
+  .sdp-cataleg-workspace__publicacio input { flex-shrink: 0; }
+  /* Direct dt/dd pairs also occur in recipe credits and Fediversity documents.
+     An intrinsic max-content label must never push the second column outside. */
+  .sdp-cataleg-workspace dl {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  }
+  .sdp-cataleg-workspace dt,
+  .sdp-cataleg-workspace dd {
+    min-width: 0;
+    margin-inline: 0;
+    overflow-wrap: anywhere;
+  }
+  .sdp-cataleg-workspace__fitxa code {
+    display: inline-block;
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  /* A 400px skipped-card placeholder changed the list's real row heights after
+     first paint, causing CLS before the mobile pane animation. These catalogue
+     rows participate in keyboard selection and must have their real geometry. */
+  .sdp-cataleg-workspace .sdp-gestor-llista .sp-card {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
+}
+/* ═══ FI DEL BLOC catalegWorkspace ═══ */
+
+/* ═══ BLOC sessionsDispositius · abans src/sections/profile/admin/sessionsDispositius.css ═══
+   La taula del Directori d'usuaris i dispositius (PanellSessionsDetall.jsx)
+   no desborda el panell i hi parteix els noms i els correus llargs. Ja era
+   dins de `@layer components`, però entrava pel chunk del panell, al final de
+   la capa; ara entra pel full canònic i arriba també al Shadow DOM de
+   l'element incrustat. Cap regla posterior de la capa (taulers.css,
+   AppGridShell.css, PerfilShell.css, apps.css, tipografia-estreta.css) ni de
+   `utilities` no toca estes propietats d'estos elements.
+   ═══════════════════════════════════════════════════════════════════ */
+@layer components {
+  .sdp-admin-sessions {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .sdp-admin-sessions table {
+    table-layout: fixed;
+  }
+  .sdp-admin-sessions th,
+  .sdp-admin-sessions td {
+    overflow-wrap: anywhere;
+  }
+}
+/* ═══ FI DEL BLOC sessionsDispositius ═══ */

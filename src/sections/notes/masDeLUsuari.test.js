@@ -8,7 +8,7 @@ import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
 import { MOCK_MARKET_ITEMS } from '../mercat/marketSeed.js';
 import { CALENDAR_EVENTS } from '../mur/eventsSeed.js';
-import { targetesDeSistema } from '../mur/targetesMur.js';
+import { esTargetaDelMur, targetesDeSistema } from '../mur/targetesMur.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 
 /* T1 · el MAS ensenya només el que ha publicat l'actor. */
@@ -72,7 +72,8 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
     { key: 'rutes-de-poble', href: '/page/rutes-de-poble' },
     { key: 'arbres-monumentals', href: '/page/arbres-monumentals' }
   ];
-  const AL_MUR = [...SYSTEM_PAGES, ...PATRIMONI_AL_MUR];
+  /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, Nodrir la IAIA no és cap targeta del Mur. */
+  const AL_MUR = [...SYSTEM_PAGES.filter((pagina) => esTargetaDelMur(pagina.key)), ...PATRIMONI_AL_MUR];
 
   /* Onada 8 (261009) · Dotze: la Consola i el Cervell hi entren com a
      pàgines del sistema. Abans, deu.
@@ -84,9 +85,10 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
      9c1e6e333 · Les catorze de SYSTEM_PAGES i, darrere, les cinc de
      patrimoni: dènou targetes. */
   test('les catorze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
-    expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length + PATRIMONI_AL_MUR.length);
-    expect(SYSTEM_PAGES).toHaveLength(14);
+    expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length - 1 + PATRIMONI_AL_MUR.length);
+    expect(SYSTEM_PAGES).toHaveLength(15);
     expect(AL_MUR).toHaveLength(18);
+    expect(AL_MUR.map(item => item.key)).not.toContain('nodrir-la-iaia');
     expect(AL_MUR.map(item => item.key)).not.toContain('anatomia-rural');
     for (const alies of [ENTITAT_LLAVOR, ENTITAT_REMOTA]) {
       expect(esAliesDelProjecte(alies)).toBe(true);

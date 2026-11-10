@@ -12,7 +12,7 @@
  * Ordre del Mestre (261021, prompt 261021_0015, tasca 6; pla §7.3) · Cada
  * bloc és un títol H3 i el seu paràgraf: el cos comença en H3.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import PedraSecaEmbed from '../../PedraSecaEmbed';
 import { CONTRACTE_NUCLI } from '../../data/contracte.js';
@@ -63,6 +63,8 @@ async function muntaApp(ruta, cos) {
   try {
     render(<PedraSecaEmbed config={{ routerType: 'browser' }} />);
     await waitFor(() => expect(getSessionState().estat).toBe('fora'));
+    // The shell can be ready while the real lazy route is still compiling.
+    await act(async () => { await vi.dynamicImportSettled(); });
     await cos();
   } finally {
     cleanup();

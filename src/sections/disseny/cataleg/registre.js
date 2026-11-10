@@ -306,3 +306,8 @@ REGISTRE.push({ nom: 'VisorImatges', fitxer: 'PedraSeca/organismes/VisorImatges.
 
 /* IDEA-108 (onada R7) · el botó «Escolta la IAIA». Espècimen: EspecimenBotoVeuIaia (fonaments/boto-veu-iaia). */
 REGISTRE.push({ nom: 'BotoVeuIaia', fitxer: 'PedraSeca/molecules/BotoVeuIaia.jsx', pagina: 'fonaments', estat: 'viu' });
+
+/* Onada R15b (kit R15.2, RV-01 i RV-02) · la revisió dels al·lèrgens candidats de la pàgina de
+   la recepta: proposta assistida, pendent de validació humana. L'ha feta un altre carril i
+   encara no té espècimen a detalls/: «extern» fins que el catàleg la sincronitze; «viu» seria fals. */
+REGISTRE.push({ nom: 'CandidatsAlergens', fitxer: 'PedraSeca/molecules/CandidatsAlergens.jsx', pagina: 'fonaments', estat: 'extern' });

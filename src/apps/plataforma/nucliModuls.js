@@ -29,6 +29,7 @@ import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
 import { Fila, Pila } from '../../components/PedraSeca/composicio/index.jsx';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { Botonera } from '../../components/PedraSeca/molecules/Botonera.jsx';
+import { CandidatsAlergens } from '../../components/PedraSeca/molecules/CandidatsAlergens.jsx';
 import { PillToggle } from '../../components/PedraSeca/molecules/PillToggle.jsx';
 import { Accordion, AccordionItem } from '../../components/PedraSeca/organismes/Accordion.jsx';
 import { AfegitRapid } from '../../components/PedraSeca/organismes/AfegitRapid.jsx';
@@ -56,7 +57,7 @@ import { TeclatNumeric } from '../../components/PedraSeca/organismes/TeclatNumer
 import { UniversalCard } from '../../components/PedraSeca/organismes/UniversalCard.jsx';
 import { UniversalTPV } from '../../components/PedraSeca/organismes/UniversalTPV.jsx';
 /* Nucli 1.2.0 (261016): l'espai de treball, per la seua façana (la font única de la porta). */
-import { DefaultItemCard, UniversalWorkspace } from '../../components/universal/workspace/index.js';
+import { CatalegWorkspace, DefaultItemCard, DetallCataleg, UniversalWorkspace } from '../../components/universal/workspace/index.js';
 import * as plataformaDelNucli from './index.js';
 import { VERSIO_NUCLI } from './contracteNucli.js';
 
@@ -74,11 +75,11 @@ export const NUCLI = Object.freeze({
   plataforma: copiaCongelada(plataformaDelNucli),
   pedraSeca: Object.freeze({
     Accordion, AccordionItem, ActionControl, AfegitRapid, Alerta, AreaText, BarraResum, Boto, Botonera, Camp, CampFitxer, CampText, Carregant,
-    Casella, ControlContrasenya, DateTimeControl, DetallArticle, Dialeg, DialegConfirmacio, ESTATS_ARTICLE, EstatBuit, Esquelet,
+    CandidatsAlergens, Casella, ControlContrasenya, DateTimeControl, DetallArticle, Dialeg, DialegConfirmacio, ESTATS_ARTICLE, EstatBuit, Esquelet,
     Fila, GraellaArticles, GraellaTargetes, GrupCamps, GrupOpcions, Histograma, IconButton, Insignia, Interruptor, LiniaDelTemps,
     LiniesColleccio, LlistaArticles, MarcColumna, NavegacioPeriode, OrdenaCategories, PaginaApp, Pestanyes, Pila, PillToggle,
     Progres, Selector, SelectorCategoria, TEXTOS_ESTAT_LINIA, TargetesColleccions, Taula, TeclatNumeric, UniversalCard,
     UniversalTPV, estatLinia, mouCategoria, nivellHistograma
   }),
-  workspace: Object.freeze({ DefaultItemCard, UniversalWorkspace })
+  workspace: Object.freeze({ CatalegWorkspace, DefaultItemCard, DetallCataleg, UniversalWorkspace })
 });

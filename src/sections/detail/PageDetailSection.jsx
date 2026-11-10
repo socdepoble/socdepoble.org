@@ -8,12 +8,19 @@ import { accioAlFinal, accioDeLaPagina, esPaginaVisible } from '../../config/sys
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
 import TextSection from '../text/TextSection';
+import ProveidorProjeccionsCataleg from '../../app/contexts/ProveidorProjeccionsCataleg.jsx';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { destiDePagina } from '../control/destinsControl.js';
 import { InstalaLaPwa, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
 import { PAGINA_DE_LA_PASTILLA, pastillaDeVersio } from './pastillaDeVersio.js';
-const HerbariLaTorreSection=lazy(()=>import('../patrimoni/HerbariLaTorreSection.jsx'));
+const WORKSPACES_PATRIMONI = {
+  herbari: lazy(() => import('../patrimoni/HerbariWorkspaceSection.jsx')),
+  'banc-de-llavors': lazy(() => import('../patrimoni/BancLlavorsWorkspaceSection.jsx')),
+  receptes: lazy(() => import('../patrimoni/ReceptesWorkspaceSection.jsx')),
+  fediversity: lazy(() => import('../text/FediversityWorkspaceSection.jsx'))
+};
+const NodrirLaIaiaSection = lazy(() => import('../patrimoni/NodrirLaIaiaSection.jsx'));
 const AparadorFediversity=lazy(()=>import('../text/AparadorFediversity.jsx'));
 /* R94 · IDEA-171 (decisió D-R11-4 del Mestre, 261107) · El WhatsApp de la IAIA: la targeta del pont
    Hermes + Node 0 i del mapa honest del saber. Va en un chunk lazy i només a /page/node-zero, la pàgina
@@ -163,7 +170,13 @@ export default function PageDetailSection() {
     if (accioAlFinal(slug)) alFinal = <AccioDeLaPagina clau={slug} lloc="baix" />;
     else if (instalacio) alFinal = <InstalaLaPwa instalacio={instalacio} lloc="baix" />;
     if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><PouDeLaNeuAnatomiaCard /></Suspense>{alFinal}</>;
-    else if(slug==='herbari')alFinal=<><Suspense fallback={null}><HerbariLaTorreSection/></Suspense>{alFinal}</>;
+    else if (Object.hasOwn(WORKSPACES_PATRIMONI, slug)) {
+      const Workspace = WORKSPACES_PATRIMONI[slug];
+      const contingut = <Workspace page={page} accioPrincipal={accioPrincipal}>{alFinal}</Workspace>;
+      return <Suspense fallback={null}>{slug === 'fediversity' ? contingut
+        : <ProveidorProjeccionsCataleg>{contingut}</ProveidorProjeccionsCataleg>}</Suspense>;
+    }
+    else if (slug === 'nodrir-la-iaia') alFinal = <><Suspense fallback={null}><NodrirLaIaiaSection /></Suspense>{alFinal}</>;
     else if (Object.hasOwn(SECCIONS_DE_PATRIMONI, slug)) { const Consulta = SECCIONS_DE_PATRIMONI[slug]; alFinal = <><Suspense fallback={null}><Consulta /></Suspense>{alFinal}</>; }
     else if(['fediversity','node-zero'].includes(slug))alFinal=<>{slug === PAGINA_DEL_WHATSAPP_DE_LA_IAIA ? <Suspense fallback={null}><IaiaWhatsappCard /></Suspense> : null}<Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;
     /* P1-46 (Fita 10; guàrdia nocturna 261030) · La pastilla de versió de

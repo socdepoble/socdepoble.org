@@ -88,7 +88,11 @@ describe('/consola · files de la mateixa alçada i títols sencers', () => {
 
   /* La regla global (la de tota targeta). La previsualització de Connectar
      (.sdp-connectar__previsualitzacio .sp-card .sp-card-title) conserva la
-     seua, d'un altre mòdul i fora de l'ordre: la diu l'informe del torn. */
+     seua, d'un altre mòdul i fora de l'ordre: la diu l'informe del torn.
+     R15b (LLEI_05) · La rajola quadrada del catàleg (USA-02) també: el nom
+     cap en dues línies amb el·lipsi i parteix on calga. La regla ja hi era, en
+     el full sense capa catalegWorkspace.css; ara és el bloc catalegWorkspace
+     del final de modules.css i esta prova la veu. */
   test('el títol i el subtítol de tota targeta parten amb break-word, mai amb anywhere', () => {
     const css = MODULES();
     expect(cosDe(css, '.sp-card-title,\n  .sp-card-subtitle')).toBe('overflow-wrap: break-word;');
@@ -96,7 +100,10 @@ describe('/consola · files de la mateixa alçada i títols sencers', () => {
       .filter(([, , cos]) => /overflow-wrap:\s*anywhere/.test(cos))
       .flatMap(([, sel]) => sel.split(',').map((s) => s.trim()));
     expect(ambAnywhere.filter((s) => /^\.sp-card-(title|subtitle)$/.test(s))).toEqual([]);
-    expect(ambAnywhere.filter((s) => /\.sp-card-(title|subtitle)\b/.test(s))).toEqual(['.sdp-connectar__previsualitzacio .sp-card .sp-card-title']);
+    expect(ambAnywhere.filter((s) => /\.sp-card-(title|subtitle)\b/.test(s))).toEqual([
+      '.sdp-connectar__previsualitzacio .sp-card .sp-card-title',
+      '.sdp-cataleg-workspace .sdp-cataleg-workspace__rajola .sp-card .sp-card-title'
+    ]);
   });
 
   /* Gauntlet 261030 (cicle 4, corrector de la Consola; troballa «vinyetes

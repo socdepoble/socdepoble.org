@@ -56,8 +56,8 @@ const categoryText=(id,language)=>CATEGORIES[id][LANGUAGES.indexOf(language)];
 
 // Literal editorial matrix: one mandatory tag anchor per page. It detects a
 // blanket category or an entry removed from both production tables.
-// Arbitratge R46, Loop 3 (L2-04) · P6 (directriu 261003_2325 del Mestre) i P0-40: de les 31 claus de PAGE_COPY (32 des de R14),
-// 23 es classifiquen (24 amb /page/receptes) i les 8 pàgines d'acció de DESTINS_CONTROL no porten cap etiqueta (ACTION_PAGES).
+// Arbitratge R46 i P6: 33 claus públiques amb Receptes (R14) i Nodrir la IAIA (P0-64).
+// 25 es classifiquen; les 8 pàgines d'acció de DESTINS_CONTROL continuen sense etiquetes.
 const PAGES=[
  ['projecte','tecnologia-lliure','Projecte Sóc de Poble'],
  ['constitucio','comunitat-rural','Associacionisme'],
@@ -82,14 +82,16 @@ const PAGES=[
  ['banc-de-llavors','recursos-locals','Llavors'],
  ['rutes-de-poble','natura-excursions','Rutes'],
  ['arbres-monumentals','natura-excursions','Arbres Monumentals'],
+ // P0-64 · curadoria cultural; mateix vocabulari editorial de Documentació.
+ ['nodrir-la-iaia','patrimoni-cultura','Documentació'],
  // Onada R14 · /page/receptes, el receptari «Què dinem?».
  ['receptes','patrimoni-cultura','Patrimoni']
 ];
 // P6 · les huit pàgines d'acció (publicar i saber-ne més del Panell): cap etiqueta, en cap llengua.
 const ACTION_PAGES=['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge'];
-// Publicació vigent anterior a R41: 14 documents del sistema + 5 de patrimoni.
-// P0-51 / IDEA-182 (Mestre, 261108; R53) · Anatomia rural ix de les targetes del Mur: en queden 4 de patrimoni.
-const PUBLISHED_18=['projecte','wikidepoble','constitucio','roadmap','notes','disseny','consola','cervell','versions','legal','xat','drets-autor','descarregues','fediversity','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals'];
+// Publicació vigent: 15 documents del sistema amb Nodrir la IAIA (P0-64) + 4 de patrimoni.
+// P0-51 / IDEA-182 conserva Anatomia rural fora de les targetes del Mur.
+const PUBLISHED_19=['projecte','wikidepoble','constitucio','roadmap','notes','disseny','consola','cervell','versions','legal','xat','drets-autor','descarregues','nodrir-la-iaia','fediversity','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals'];
 
 function assertClassification(labels,key,category,requiredTag,language){
  expect(Array.isArray(labels)).toBe(true);
@@ -130,13 +132,13 @@ const sentinels=()=>({
 });
 
 describe('R41 independent public-page contract',()=>{
- it('the fixture covers exactly the 32 public keys (24 classified, with R14 receptes, + 8 P6 action pages) and the 6/49 normative vocabularies',()=>{
-  expect(PAGES).toHaveLength(24);expect(ACTION_PAGES).toHaveLength(8);
-  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(32);
+ it('the fixture covers exactly the 33 public keys (25 classified, with R14 receptes and P0-64 Nodrir, + 8 P6 action pages) and the 6/49 normative vocabularies',()=>{
+  expect(PAGES).toHaveLength(25);expect(ACTION_PAGES).toHaveLength(8);
+  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(33);
   expect(Object.keys(PAGE_COPY).sort()).toEqual(keys.sort());
   expect(Object.keys(CATEGORIES)).toHaveLength(6);expect(new Set(TAGS_49).size).toBe(49);
  });
- describe.each(LANGUAGES)('%s literal 24-page matrix',language=>{
+ describe.each(LANGUAGES)('%s literal 25-page matrix',language=>{
   it.each(PAGES)('%s has one System, its editorial mother and canonical tags',(key,category,tag)=>{
    const localized=localitzaPagina(PAGE_COPY[key],language);
    assertClassification(localized.labels,key,category,tag,language);
@@ -162,7 +164,7 @@ describe('R41 independent public-page contract',()=>{
    assertClassification(etiquetesDePaginaPublica('versions',originals,language),'versions','tecnologia-lliure','Documentació',language);
   }
  });
- it('classification preserves bodies, routes, sections, dates and authors in all 32 pages, and is idempotent',()=>{
+ it('classification preserves bodies, routes, sections, dates and authors in all 33 pages, and is idempotent',()=>{
   const copy=Object.fromEntries([...PAGES.map(([key])=>key),...ACTION_PAGES].map(key=>[key,sentinels()]));
   const fields=withoutLabels(structuredClone(copy));
   const actionBefore=structuredClone(Object.fromEntries(ACTION_PAGES.map(key=>[key,copy[key]])));
@@ -216,8 +218,9 @@ describe('R41 independent public-page contract',()=>{
   copy['private-note']={private:true,html:'Secret original',labels:[{text:'Eina',className:'sdp-badge-category'}]};
   const before=structuredClone(copy);
   const cards=targetesDeSistema(copy,{nativa:false,language});
-  expect(cards.map(card=>card.id).sort()).toEqual([...PUBLISHED_18].sort());
-  expect(cards).toHaveLength(18);expect(cards.map(card=>card.id)).not.toContain('anatomia-rural');
+  // PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, Nodrir la IAIA no és cap targeta: en queden 18.
+  expect(cards.map(card=>card.id).sort()).toEqual(PUBLISHED_19.filter(key=>key!=='nodrir-la-iaia').sort());
+  expect(cards).toHaveLength(18);expect(cards.map(card=>card.id)).not.toContain('anatomia-rural');expect(cards.map(card=>card.id)).not.toContain('nodrir-la-iaia');
   for(const card of cards){
    const [,category,tag]=PAGES.find(([key])=>key===card.id);
    assertClassification(card.labels,card.id,category,tag,language);

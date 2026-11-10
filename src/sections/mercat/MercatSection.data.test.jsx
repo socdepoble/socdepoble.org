@@ -17,7 +17,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver.js', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
-vi.mock('../../app/contexts/UIContext', () => ({
+vi.mock('../../app/contexts/UIContext', async original => ({ ...await original(),
   useUIActions: () => ({ t: (_, alternativa) => alternativa }),
   useUIState: () => ({ externalConfig: {} })
 }));

@@ -21,6 +21,7 @@
  * que només s'importa ací, i els passa a ProveidorApp.
  */
 import { Suspense } from 'react';
+import ProveidorProjeccionsCataleg from '../../app/contexts/ProveidorProjeccionsCataleg.jsx';
 import { Navigate, Route, Routes, useLocation } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { RequireAuth } from '../../app/guards/RequireAuth';
@@ -133,5 +134,7 @@ export default function RutaApps() {
       </AvisApp>
     );
   }
-  return <ContenidorApp manifest={manifest} entrada={entrada} />;
+  const contingut = <ContenidorApp manifest={manifest} entrada={entrada} />;
+  return manifest.id === 'bar' || manifest.id === 'nevera'
+    ? <ProveidorProjeccionsCataleg>{contingut}</ProveidorProjeccionsCataleg> : contingut;
 }

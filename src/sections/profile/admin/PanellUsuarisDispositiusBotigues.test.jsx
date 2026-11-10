@@ -128,7 +128,7 @@ test('amb dades: una fila per camí amb 24 h, 7 dies i 14 dies, el total, l’ho
   expect(xifres('app_android')).toEqual(['6', '8', '10']);
   expect(xifres('altres')).toEqual(['0', '0', '1']);
   expect(xifres('total')).toEqual(['17', '28', '37']);
-  expect(screen.getByText(/App iPhone\/iPad \(App Store v1\.0 · id6826441844\)/)).toBeTruthy();
+  expect(within(taula).getByText(/App iPhone\/iPad \(App Store v1\.0 · id6826441844\)/)).toBeTruthy();
   expect(taula.querySelector('time').getAttribute('dateTime')).toBe('2026-11-08T21:40:00.000Z');
   expect(screen.getByTestId('nota-verificadors').textContent).toBe(NOTA_VERIFICADORS);
   expect(document.body.textContent).not.toMatch(/@|[0-9a-f]{8}-[0-9a-f]{4}-/i);
@@ -182,7 +182,7 @@ test('copiar amb porta-retalls: copia el missatge sencer i ho diu', async () => 
   fireEvent.click(screen.getByRole('button', { name: 'Copia el missatge per al grup de WhatsApp' }));
   expect(await screen.findByText('Missatge copiat: enganxa’l al grup de WhatsApp.')).toBeTruthy();
   expect(writeText).toHaveBeenCalledWith(MISSATGE_WHATSAPP_VERIFICADORS);
-  expect(screen.queryByRole('textbox')).toBeNull();
+  expect(within(screen.getByTestId('guia-verificadors-android')).queryByRole('textbox')).toBeNull();
   expect(screen.getByRole('button', { name: 'Copia el missatge per al grup de WhatsApp' }).closest('.sdp-admin-actions-inline')).toBeTruthy();
 });
 

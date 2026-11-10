@@ -59,3 +59,6 @@ export {
   costCopaDeTarifaParroquia, enriqueixCartaParroquia, fiscalVenda, ingredientDeTarifaParroquia,
   itemsCatalegCartaParroquia, mesuraIngredient, tarifesCompraParroquia, validaEsborranyTrasllat
 } from './menjarIBeure.js';
+
+/* Nucli1.5.0: literal hints only; every allergen proposal remains pending human review. */
+export { candidatsVariantParroquia } from '../../data/menjarIBeure/candidatsAlergens.js';

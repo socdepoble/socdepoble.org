@@ -26,13 +26,13 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../app/contexts/UIContext', () => ({
+vi.mock('../../app/contexts/UIContext', async original => ({ ...await original(),
   useUIActions: () => ({ t: mocks.t }),
   useUIState: () => ({ externalConfig: mocks.externalConfig })
 }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
-vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null, generacio: 1 }) }));
+vi.mock('../../app/contexts/SessionContext.jsx', async original => ({ ...await original(), useSession: () => ({ currentUser: null, generacio: 1 }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: 'A', actorKey: 'A' }) }));
 /* L'elecció i l'eixida són les del mòdul neutral: la resolució del mode és la
    real; només es fixa si hi ha elecció i s'evita la recàrrega del document. */

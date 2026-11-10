@@ -15,7 +15,10 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenTaula.jsx, 2026-11-09T03:51:29+01:00,
+ * Darrera posada al dia: registre.js, 2026-11-09T22:21:01+01:00,
+ * Onada R15b (porta Catàleg): CandidatsAlergens, la revisió dels al·lèrgens candidats de la fitxa de recepta
+ * (kit R15.2), registrada com a «extern» fins que tinga espècimen a detalls/.
+ * Versió anterior: EspecimenTaula.jsx, 2026-11-09T03:51:29+01:00,
  * pla 261109: traça editorial de la variant R56 i conservació de les mostres prèvies.
  * Versió anterior: EspecimenTaula.jsx, 2026-11-08T10:39:48+01:00,
  * R56: variant de lectura d’identificadors llargs, abans del consumidor.
@@ -326,4 +329,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-09T03:51:29+01:00';
+export const VERSIO_CATALEG = '2026-11-09T22:21:01+01:00';

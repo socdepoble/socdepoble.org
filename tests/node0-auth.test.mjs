@@ -7,7 +7,8 @@ import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { creaAuthNodeZero, creaCredencialNodeZero, verificaContrasenyaNodeZero, hashSessioNodeZero,
   hashTokenNodeZero, contextSqlNodeZero, NODE0_AUTH_COOKIE, NODE0_AUTH_TENANT, NODE0_SCRYPT } from '../tooling/node0/auth-node0.mjs';
-import { creaPlaMigracions, preparaHidratacio, generaSql } from '../tooling/node0/hidrata-postgres-node0.mjs';
+import { preparaHidratacio, generaSql } from '../tooling/node0/hidrata-postgres-node0.mjs';
+import {creaPlaMigracionsR15A3 as creaPlaMigracions,comprovaLedgerR15A3} from './helpers/plaMigracionsR15A3.js';
 import { sqlText } from '../tooling/node0/postgres-node0.mjs';
 
 const origin = 'https://socdepoble.cat';
@@ -101,6 +102,7 @@ else {
       assert.equal((await query('SELECT current_database() AS name')).rows[0].name, 'socdepoble_node0');
       const hydration = await preparaHidratacio();
       await db.exec(generaSql(creaPlaMigracions(), hydration, { advisoryLock: false }));
+      await comprovaLedgerR15A3(async(sql,args=[]) => (await db.query(sql,args)).rows);
       await db.exec(sql);
       await t.test('installation is idempotent and creates zero people', async () => {
         assert.deepEqual(await counts(), { users: 0, profiles: 0, sessions: 0 });
@@ -128,7 +130,7 @@ else {
         assert.equal((await query("SELECT count(*)::int n FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname='node0_runtime')")).rows[0].n, 0);
       });
       await t.test('explicit current privacy acceptance is required; owner/verified claims are discarded', async () => {
-        for (const metadata of [{}, { accepta_rgpd: 'true', versio_politica: VERSIO_POLITICA_PRIVACITAT }, { accepta_rgpd: true, versio_politica: '2.5' }, { accepta_rgpd: true, versio_politica: '2.4' }, { accepta_rgpd: true, versio_politica: '2.3' }]) {
+        for (const metadata of [{}, { accepta_rgpd: 'true', versio_politica: VERSIO_POLITICA_PRIVACITAT }, { accepta_rgpd: true, versio_politica: '2.6' }, { accepta_rgpd: true, versio_politica: '2.4' }, { accepta_rgpd: true, versio_politica: '2.3' }]) {
           const result = await auth.handle('register', input({ ...signup('invalid@example.test'), metadata }));
           assert.equal(result.status, 422);
         }

@@ -3,7 +3,7 @@
    UniversalPage): un sol H1, el text breu i, davall, la consulta carregada com a chunk lazy. Les xifres del text
    són les de les dades. Les altres pàgines no porten cap d'estes consultes. */
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from '../../app/contexts/RouterContext';
 
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
@@ -23,7 +23,8 @@ import { ESPECIES_ATLES_CATALUNYA, VARIETATS_AVL_MALLORCA, VARIETATS_CATALEG_VAL
 import { RUTES_LA_TORRE } from '../../data/patrimoni/rutesDePoble.js';
 import { ARBRES_MONUMENTALS_LA_TORRE, FONT_ARBRES_MONUMENTALS } from '../../data/patrimoni/arbresMonumentals.js';
 
-afterEach(cleanup);
+beforeEach(() => { vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }); vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 const visita = (ruta) => render(
   <MemoryRouter rutaInicial={ruta}>
@@ -45,8 +46,15 @@ describe('les tres pàgines de patrimoni de l’Onada R9', () => {
     test(`/page/${clau}: un sol H1, el text de PAGE_COPY i la consulta davall`, async () => {
       expect(PAGE_COPY[clau].title).toBe(titol);
       visita(`/page/${clau}`);
+      await screen.findByRole('heading', { level: 1 });
       expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
       expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(titol);
+      if (clau === 'banc-de-llavors') {
+        expect(document.querySelector('.sdp-workspace').closest('.cms-preview')).toBeNull();
+        expect(document.querySelectorAll('#app-grid-list article.sp-card')).toHaveLength(125);
+        expect(document.getElementById('app-grid-main').textContent).toContain('Discrepància');
+        return;
+      }
       const seccio = await screen.findByRole('region', { name: consulta });
       const cos = document.querySelector('.cms-preview');
       expect(cos.compareDocumentPosition(seccio) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -96,8 +104,10 @@ describe('les tres pàgines de patrimoni de l’Onada R9', () => {
   });
 
   test('les altres pàgines no porten cap d’estes consultes', async () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400);
+    vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
     visita('/page/herbari');
-    await screen.findByText('117 / 117 fitxes');
+    await screen.findByRole('button', { name: 'Obri fitxa: Acacia robínia' });
     for (const [, , consulta] of PAGINES) expect(screen.queryByRole('region', { name: consulta })).toBeNull();
   });
 });

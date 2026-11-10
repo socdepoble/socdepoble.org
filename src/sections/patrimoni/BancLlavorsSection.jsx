@@ -17,7 +17,7 @@ import { traductorPatrimoni } from './textosPatrimoni.js';
    ho diu. Sense calendari (AVL, Atles) no hi ha barra; sense perfil, no hi ha bloc de nutrició. */
 const MIDA = 24;
 
-function FitxaDeLaFont({ font, tr }) {
+export function FitxaDeLaFont({ font, tr }) {
   return (
     <>
     <p lang="ca">{font.nota}</p>
@@ -192,11 +192,11 @@ function DetallAtles({ e, tr }) {
   );
 }
 
-function Fitxa({ entrada, totes, onTriaEntrada, font, onTanca, tr }) {
+export function Fitxa({ entrada, totes, onTriaEntrada, font, onTanca, tr, autoFocus = true }) {
   const { dada } = entrada;
   const titol = useRef(null);
-  /* Sense finestra que el porte, el focus va al títol de la fitxa: el lector l'anuncia i la vista hi baixa. */
-  useEffect(() => { titol.current?.focus(); }, []);
+  /* La consulta autònoma anuncia el títol; el Workspace conserva la propietat del focus de les fletxes. */
+  useEffect(() => { if (autoFocus) titol.current?.focus(); }, [autoFocus]);
   const germanes = useMemo(
     () => (font.id === 'cataleg-valencia' ? totes.filter((x) => x.nomCientific === entrada.nomCientific) : []),
     [font.id, totes, entrada.nomCientific]

@@ -28,6 +28,7 @@ import { ColumnaCatalegCompra, ColumnaLaCompra, ColumnaLlistaActiva, ColumnaLlis
 import { AJUSTOS, CASA, CATALEG, COMPRA, ENTRADA_LLISTES, PARAMS_LLISTA, RECEPTES_VISTA, TEMPORADA } from './vistes/constants.js';
 import { ColumnaCalPerACuinar, ColumnaReceptes } from './vistes/Receptes.jsx';
 import { ColumnaDeTemporada, ColumnaLlistaPerTemporada } from './vistes/Temporada.jsx';
+import { RebostWorkspace } from './vistes/RebostWorkspace.jsx';
 
 const opcions = ({ primer, tram, rutaColleccio }) => ({ primer, tram, rutaColleccio });
 const LLISTES = Object.freeze({ Mig: ColumnaLlistes, Detall: ColumnaLlistaActiva, estret: 'mig' });
@@ -38,6 +39,8 @@ const TEMPORADA_DETALL = Object.freeze({ Mig: ColumnaLlistaPerTemporada, Detall:
 
 /* Com fa rutesCatalegColleccio: primer les rutes literals, després les de :llista. */
 export const RUTES = Object.freeze([
+  { path: 'rebost', Unica: RebostWorkspace },
+  { path: 'rebost/:llista', params: PARAMS_LLISTA, Unica: RebostWorkspace },
   { path: ENTRADA_LLISTES, ...LLISTES },
   { path: `${ENTRADA_LLISTES}/:llista`, params: PARAMS_LLISTA, ...LLISTES },
   ...rutesCatalegColleccio({ path: COMPRA.entrada, ...opcions(COMPRA), Esquerra: ColumnaLlistes, Colleccio: ColumnaLaCompra, Cataleg: ColumnaCatalegCompra }),

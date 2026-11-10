@@ -42,6 +42,7 @@ export default {
     { slug: 'taules', titol: { ca: 'Taules', es: 'Mesas' }, icona: 'LayoutGrid', grup: 'servei' },
     { slug: 'emportar', titol: { ca: 'Per emportar', es: 'Para llevar' }, icona: 'Package', grup: 'servei' },
     { slug: 'tiquets', titol: { ca: 'Tiquets del torn', es: 'Tiques del turno' }, icona: 'FileText', grup: 'servei' },
+    { slug: 'cataleg', titol: { ca: 'Catàleg', es: 'Catálogo' }, icona: 'LayoutGrid', grup: 'carta' },
     { slug: 'productes', titol: { ca: 'Productes', es: 'Productos' }, icona: 'Coffee', grup: 'carta' },
     { slug: 'categories', titol: { ca: 'Categories', es: 'Categorías' }, icona: 'LayoutDashboard', grup: 'carta' },
     { slug: 'modificadors', titol: { ca: 'Modificadors', es: 'Modificadores' }, icona: 'ClipboardList', grup: 'carta' },
@@ -52,7 +53,7 @@ export default {
     { slug: 'torns', titol: { ca: 'Historial de torns', es: 'Historial de turnos' }, icona: 'CalendarDays', grup: 'torn' },
     { slug: 'ajustos', titol: { ca: 'Ajustos', es: 'Ajustes' }, icona: 'Settings', grup: 'ajustos' }
   ],
-  entradaPerDefecte: 'caixa',
+  entradaPerDefecte: 'cataleg',
   interruptors: [
     { id: 'taules', titol: { ca: 'Taules', es: 'Mesas' }, actiuPerDefecte: true },
     { id: 'escandalls', titol: { ca: 'Escandalls i ingredients', es: 'Escandallos e ingredientes' }, actiuPerDefecte: true },

@@ -1588,6 +1588,10 @@ description: "Documentació canònica de Sóc de Poble."
   85 migracions amb un pin separat. Els sis pins històrics 76–81 es preserven.
   Prova: `tests/migracio-admin-resum-sessions-dispositius.test.mjs`.
 
+- `migrations/2611091500_sessions_i_curadoria_cultural.sql`
+
+  Proposta no aplicada. Ordre: després de `2610061448` (guarda privada de superadmin amb aal2) i `2611082238` (contracte de resum de sessions preservat). Cap rol de curadoria s’assigna automàticament. Esmena SEG-R15b-01 i SEG-R15b-04 (9-11-2026): directori per persona i camí amb correu emmascarat i auditoria append-only; normes de convivència i quatre ulls a la safata cultural.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1777,6 +1781,7 @@ verificador sense avisos.
 | 83 | `2611080432` | `2611080432_xat_lliurament_i_presencia.sql` | **NO aplicada: proposta R54 en còpia** | Entrega/lectura de persones i presència efímera; exclusió només del bot autoritatiu |
 | 84 | `2611080440` | `2611080440_politica_privacitat_2_6.sql` | **NO aplicada: l’aplica el Mestre** | Text 2.6 append-only; altes aturades fins al gate HTML/hash/versió vigent |
 | 85 | `2611082238` | `2611082238_admin_resum_sessions_dispositius.sql` | **NO aplicada: l'aplica el Mestre** | R13-C7: recomptes de persones amb sessió activa per camí (24 h, 7 i 14 dies), superadmin amb aal2 |
+| 86 | `2611091500` | `2611091500_sessions_i_curadoria_cultural.sql` | **NO aplicada: proposta R15 en còpia; execució PostgreSQL no acreditada** | Directori filtrable per persona i camí, superadmin aal2: correu emmascarat (màscara de la 77), sense identificador de sessió ni UUID de persona, només perfils amb consentiment i sense baixa, una fila d’auditoria append-only per consulta; safata cultural privada, permisos declarats, normes de convivència exigides, rol de curadoria aal2, ningú decidix una aportació pròpia, RLS; aprovació sense ingestió automàtica |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -2881,3 +2886,13 @@ La consulta privada requereix Auth i només envia la pregunta explícita; el fil
 El grup públic legacy de la pàgina IAIA conserva els missatges públics i la cortesia documental local. La resposta persistent del model correspon únicament al grup autoritzat pel binding real, a una pregunta explícita ja confirmada i a un bot amb principal propi no interactiu. El registre/binding exigeixen administració autenticada AAL2 i la publicació es revalida després de la inferència. Esta descripció tècnica no modifica drets, terminis de retenció ni la llista d'encarregats de /legal.
 
 IAIA Node0 usa el login separat `node0_iaia_authenticator` (NOINHERIT, només `node0_iaia_worker`). Abans d’activar grups, l’operador aplica `tooling/node0/privacitat-iaia-postgres-node0.sql` al catàleg complet85; la connexió privada comprova tots els GUC de registre i el rol exacte abans de vincular valors. No s’amplia el login web de dos rols. No executat remotament en esta integració.
+
+### R15 · Sessions i curadoria cultural (2611091500, pendent d’aplicació)
+
+La 2611082238 conserva intacta la RPC agregada `admin_resum_sessions_dispositius()`. La nova `admin_llista_sessions_dispositius(p_cerca,p_cami)` agrupa les sessions amb activitat en els últims 14 dies per persona i camí estimat, i retorna com a màxim 200 files i el total de coincidències; únicament superadmin amb aal2. Filtra per nom o àlies del perfil i per canal; mai pel correu. Només hi entren perfils amb consentiment vigent i sense baixa demanada, com a `admin_llista_usuaris_registrats`. Cada fila porta el nom del perfil, el correu emmascarat amb l’expressió de la 77 (`j***@domini.cat`), el camí, el nombre de sessions i l’última activitat, amb una clau opaca que només val dins de la mateixa consulta. No retorna l’identificador de sessió, l’UUID de la persona, el correu sencer, IP, tokens ni `user_agent`. Cada consulta deixa una fila (actor, filtres, files i total) a `private.admin_lectures_sessions`, sense clau forana a cap persona, amb RLS restrictiva, cap privilegi per a cap rol client i un disparador que rebutja UPDATE, DELETE i TRUNCATE (`SDP-ADMIN-AUDIT-IMMUTABLE`). La purga als 12 mesos és una operació manual de l’operador de base.
+
+`aportacions_culturals` té RLS activa i cap accés directe concedit a `anon` o `authenticated`: les RPC imposen l’autoria amb `auth.uid()`. Qui aporta veu les seues files; la curadoria autoritzada veu la safata. `private.curadors_culturals` només admet assignacions de l’operador de base després de verificar el compte: cap nom, correu o prop de React concedix el rol. Per revisar cal este rol amb aal2, o superadmin amb aal2, i ningú, tampoc el superadmin, pot decidir una aportació pròpia (`SDP-CULTURA-PROPIA`, 42501). La declaració de permisos és obligatòria, enviar exigix haver acceptat la versió vigent de les normes de convivència (disparador `aportacions_culturals_exigix_normes`, `SDP-MOD-428`, com a `section_submissions` i `xat_missatges`) i una aportació nova queda `pendent_revisio`.
+
+Les RPC `estat_curadoria_cultural`, `llista_aportacions_culturals`, `envia_aportacio_cultural` i `revisa_aportacio_cultural` distingixen revisió d’ingestió: `aprovat` no publica res ni incorpora l’aportació a cap servei, i esta migració no connecta cap ingestió. El client només anuncia la capacitat `curadoriaCultural` amb la bandera de build `VITE_SDP_CURADORIA_CULTURAL=1`, que s’ha d’encendre només després d’aplicar esta migració; apagada, /page/nodrir-la-iaia ho diu, no fa cap petició i no recull res. Sense servidor, migració o permís, la interfície mostra l’estat pendent; no fabrica una safata buida ni un èxit. Esta tanda només aporta text/enllaços, sense pujada binària o d’àudio.
+
+La migració no s’ha executat contra cap base de producció. La prova seca `tests/migracions-r15-prevol.test.mjs` l’executa en PostgreSQL WASM (PGlite) amb una fixture sintètica de GoTrue; no acredita Supabase. Requerix revisió i verificació SQL real pel carril integrador. Les proves de transport amb dobles del servidor no acrediten permisos desplegats, assignacions de rol ni ingestió remota.

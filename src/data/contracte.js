@@ -76,6 +76,11 @@ export const SECCIONS_PAGINABLES = Object.freeze({
 });
 
 export const CAPACITATS = Object.freeze({
+  /* P0-59 · Existing section_submissions, separate immutable Mur/notes
+     references. The reader paginates; notes are uid-private under RLS. */
+  projeccionsCataleg: Object.freeze(['loadProjeccionsCataleg']),
+  administracioSessions: Object.freeze(['adminResumSessionsDispositius', 'adminLlistaSessionsDispositius']),
+  curadoriaCultural: Object.freeze(['estatCuradoriaCultural', 'llistaAportacionsCulturals', 'enviaAportacioCultural', 'revisaAportacioCultural']),
   /* R54: authenticated optional inference; request/configuration receipts are not inference. */
   iaia: Object.freeze(['consultaIAIA']),
   /* R54 · Rebuts explícits dels altres i presència autoritzada amb TTL de servidor.

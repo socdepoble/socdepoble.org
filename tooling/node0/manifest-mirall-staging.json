@@ -19,7 +19,7 @@
     },
     {
       "path": "src/config/systemPages.js",
-      "sha256": "530f318538c05ca2145ef76dee0d0c49ba84e10da9bbff5092b5b7e331d63f16"
+      "sha256": "e5fd34a4c7cf92137b30e5d4870fb215d350a8d3ea2786dbdd1e58d4e731c671"
     },
     {
       "path": "src/data/activitypub.js",
@@ -27,7 +27,7 @@
     },
     {
       "path": "src/data/contracte.js",
-      "sha256": "a08ee0ddef16f52bfbfe67ed07ea4aae04e4ae3ff671e3cfe35a031431c9d7a6"
+      "sha256": "f5772bb2c7df82de1b857fcae6f06e3863610bfe582c38a3d6a3d178bf537c42"
     },
     {
       "path": "src/data/dadesObertesLot.js",

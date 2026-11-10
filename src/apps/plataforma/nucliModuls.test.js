@@ -17,7 +17,7 @@ import {
   globalDeLaPorta, nucliSatisfa, portaDeLaFont
 } from './contracteNucli.js';
 import { NUCLI } from './nucliModuls.js';
-import { NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4 } from './__fixtures__/nomsDelNucli.js';
+import { NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const ordenat = (llista) => [...llista].sort();
@@ -63,6 +63,19 @@ describe('l’objecte SocDePoble.nucli', () => {
   test('la plataforma del nucli és l’API pública sencera (plataforma/index.js), ni més ni menys', () => {
     expect(ordenat(Object.keys(NUCLI.plataforma))).toEqual(ordenat(Object.keys(plataforma)));
     for (const nom of Object.keys(plataforma)) expect(NUCLI.plataforma[nom], nom).toBe(plataforma[nom]);
+  });
+
+  test('R15: the real1.5kernel executes pending review through its published functions', () => {
+    for (const [door, names] of Object.entries(NOMS_DEL_NUCLI_1_5)) {
+      for (const name of names) expect(typeof NUCLI[door][name], `${door}.${name}`).toBe('function');
+    }
+    const proposal = NUCLI.plataforma.candidatsVariantParroquia(
+      { handle: 'fixture-product', nom: 'Composició desconeguda' },
+      { handle: 'fixture-product', ref: 'fixture-ref', nom: 'Variant' }
+    );
+    expect(proposal.estat).toBe('pendent_validacio_humana');
+    expect(proposal.alergens).toHaveLength(14);
+    expect(proposal.alergens.every(item => item.ingredient.estat === 'desconegut' && item.traca.estat === 'desconegut')).toBe(true);
   });
 
   test('cap porta dona el backend, la sessió ni la identitat', () => {
@@ -121,6 +134,10 @@ describe('el contracte (contracteNucli.js)', () => {
     ['^1.3', '1.3.0', true],
     ['^1.2', '1.3.0', true],
     ['^1.4', '1.3.0', false],
+    ['^1.4', '1.5.0', true],
+    ['^1.5', '1.4.0', false],
+    ['^1.5', '1.5.0', true],
+    ['^1.6', '1.5.0', false],
     ['^2', '1.0.0', false],
     ['^0', '1.0.0', false],
     ['1', '1.0.0', false],
@@ -137,15 +154,17 @@ describe('el contracte (contracteNucli.js)', () => {
      ho canvia. El que no entra ara és un de '^1.3'.
      Actualitzada a posta (261024 T5): l'1.3.0 afig useServeiNoticies a la porta 'plataforma'; un
      mòdul de '^1.3' ja entra. R14: els serveis de Menjar i Beure i Botonera
-     entren en1.4; el primer rang futur rebutjat és ara '^1.5'. */
-  test('el rang1.4 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
-    expect(VERSIO_NUCLI).toBe('1.4.0');
+     entren en1.4. R15 afig els catàlegs i la revisió pendent en1.5;
+     el primer rang futur rebutjat és ara '^1.6'. */
+  test('el rang1.5 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
+    expect(VERSIO_NUCLI).toBe('1.5.0');
     expect(nucliSatisfa('^1.0')).toBe(true);
     expect(nucliSatisfa('^1.1')).toBe(true);
     expect(nucliSatisfa('^1.2')).toBe(true);
     expect(nucliSatisfa('^1.3')).toBe(true);
     expect(nucliSatisfa('^1.4')).toBe(true);
-    expect(nucliSatisfa('^1.5')).toBe(false);
+    expect(nucliSatisfa('^1.5')).toBe(true);
+    expect(nucliSatisfa('^1.6')).toBe(false);
   });
 
   /* La promesa de cada menor («només s'afig») amb noms, no amb números. Cada
@@ -157,8 +176,9 @@ describe('el contracte (contracteNucli.js)', () => {
      modulDeBuild.test.jsx compila de veritat.
      Actualitzada a posta (261024 T5): i NOMS_DEL_NUCLI_1_3, un nom nou a una porta que ja hi era
      (useServeiNoticies, a la de la plataforma), cap porta nova.
-     R14: NOMS_DEL_NUCLI_1_4 fixa els serveis de domini i Botonera. */
-  test('el nucli1.4 conserva tots els noms publicats i només afig els declarats per versió', () => {
+     R14: NOMS_DEL_NUCLI_1_4 fixa els serveis de domini i Botonera.
+     R15: NOMS_DEL_NUCLI_1_5 fixa els catàlegs i la revisió assistida pendent. */
+  test('el nucli1.5 conserva tots els noms publicats i només afig els declarats per versió', () => {
     for (const clau of Object.keys(NOMS_DEL_NUCLI_1_2)) {
       expect(Object.hasOwn(NOMS_DEL_NUCLI_1_0, clau) || Object.hasOwn(NOMS_DEL_NUCLI_1_1, clau), `${clau}: porta nova`).toBe(false);
     }
@@ -177,6 +197,6 @@ describe('el contracte (contracteNucli.js)', () => {
       const nous = noms.filter((nom) => !abans.includes(nom));
       if (nous.length) afegits[clau] = ordenat(nous);
     }
-    expect(afegits).toEqual(fusiona(NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4));
+    expect(afegits).toEqual(fusiona(NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5));
   });
 });

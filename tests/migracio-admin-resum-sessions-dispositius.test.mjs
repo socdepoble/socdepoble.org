@@ -124,7 +124,8 @@ if (!modulePath || !fs.existsSync(modulePath)) {
   const pla = ordena({ versions, dependencies, restriccions: ordre.restriccions, portes: ordre.portes });
   assert.deepEqual(pla.errors, []);
   const fitxers = pla.ordre.filter((p) => p.tipus === 'migracio').map((p) => inventari.find((f) => f.startsWith(`${p.id}_`)));
-  assert.equal(fitxers.at(-1), FITXER, 'la migració nova és l’última del pla');
+  assert.deepEqual(fitxers.slice(fitxers.indexOf(FITXER) + 1), ['2611091500_sessions_i_curadoria_cultural.sql'],
+    'la migració és al pla i després només hi ve la 2611091500 de R15b, que també s’executa ací');
 
   /* Substituts de la infraestructura de Supabase (els de tests/administracio-multipoble-postgres.test.mjs);
      auth.sessions porta, a més, les columnes de GoTrue que llig la funció, amb els seus tipus. */

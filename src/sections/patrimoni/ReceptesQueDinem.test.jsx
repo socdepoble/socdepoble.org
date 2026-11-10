@@ -2,7 +2,9 @@
    (ReceptaDetailSection, pel comodí d'ItemDetailSection i el seu tros diferit). Es pinta amb les dades literals del
    llibre, els recomptes ixen de les dades, el quadrat de la targeta és un botó que obri la recepta, els quadrats del
    detall filtren amb aria-pressed, un slug que no existix dona el «no trobat» canònic i cap text inventat arriba al
-   DOM (al·lèrgens, escandall, preus, comensals, sinònims ni noms que el llibre no porta). */
+   DOM (escandall, preus, comensals, sinònims ni noms que el llibre no porta). Onada R15b (RV-01, RV-03): l'única cosa
+   que s'hi afig és la proposta assistida d'al·lèrgens, amb l'etiqueta «Proposta assistida · Pendent de validació
+   humana» i mai una absència; la guarda PROHIBIT torna a mirar el DOM sencer, panell inclòs. */
 import { readFileSync } from 'node:fs';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -15,18 +17,19 @@ import GL from '../../config/idiomes/gl.js';
 import { OBRA_QUE_DINEM, RECEPTES_QUE_DINEM, RECOMPTES_QUE_DINEM, laminaDeRecepta, liniesIngredients } from '../../data/patrimoni/queDinem.js';
 import { fixaTraductorLliure } from '../../data/traductorDelLloc.js';
 import { PAGINES_PATRIMONI_R14 } from '../text/pageContent.patrimoniR14.js';
+import { TEXTOS_ALERGENS } from '../../utils/textosAlergens.js';
 import ReceptesQueDinemSection from './ReceptesQueDinemSection.jsx';
 import ItemDetailSection from '../detail/ItemDetailSection.jsx';
 import { filtraReceptes, normalitzaCerca } from './cercaReceptes.js';
 
-const m = vi.hoisted(() => ({ dic: null, seo: [] }));
+const m = vi.hoisted(() => ({ dic: null, seo: [], language: 'ca' }));
 vi.mock('../../app/contexts/UIContext', async (orig) => ({
   ...(await orig()),
-  useUIActions: () => ({ t: (clau, reserva) => (m.dic && Object.hasOwn(m.dic, clau) ? m.dic[clau] : reserva), language: 'ca' })
+  useUIActions: () => ({ t: (clau, reserva) => (m.dic && Object.hasOwn(m.dic, clau) ? m.dic[clau] : reserva), language: m.language })
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: () => {} }) }));
 vi.mock('../../hooks/useSEO.js', () => ({ useSEO: (dades) => { m.seo.push(dades); } }));
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); m.dic = null; m.seo = []; });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); m.dic = null; m.seo = []; m.language = 'ca'; });
 
 const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
 /* El que el kit afegia per damunt del llibre i que no pot arribar ni a les dades ni a la interfície. */
@@ -252,11 +255,12 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
     fireEvent.click(ingredients);
     expect(ingredients.getAttribute('aria-pressed')).toBe('false');
     expect(blocs()).toEqual(['ingredients', 'elaboracio', 'notes', 'video', 'alergens']);
-    // Al·lèrgens: només l'avís honest.
+    // Al·lèrgens: l'avís honest i, davall, la proposta assistida amb l'etiqueta obligatòria (Onada R15b, RV-01/RV-02).
     fireEvent.click(within(grup).getByRole('button', { name: 'Al·lèrgens' }));
     expect(blocs()).toEqual(['alergens']);
-    expect(container.querySelector('section[data-bloc="alergens"]').textContent)
-      .toContain('Al·lèrgens no revisats: consulta la llista d’ingredients; si tens una al·lèrgia, pregunta-ho a qui cuina.');
+    const alergens = container.querySelector('section[data-bloc="alergens"]');
+    expect(alergens.textContent).toContain('Al·lèrgens no revisats: consulta la llista d’ingredients; si tens una al·lèrgia, pregunta-ho a qui cuina.');
+    expect(within(alergens).getByRole('heading', { level: 3, name: 'Proposta assistida · Pendent de validació humana' })).toBeTruthy();
     // Vídeo: només el bloc del vídeo (la façana, sense la làmina); Làmina: només la làmina de capçalera.
     fireEvent.click(within(grup).getByRole('button', { name: 'Vídeo' }));
     expect(blocs()).toEqual(['video']);
@@ -337,6 +341,7 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
     for (const r of [ambVideoILamina, senseVideoNiNotes, senseLamina]) {
       const { container, unmount } = detall(r.slug);
       await screen.findByRole('group', { name: 'Tria què vols vore' });
+      expect(container.querySelector('section[data-estat="pendent_validacio_humana"] h3').textContent).toBe('Proposta assistida · Pendent de validació humana');
       expect(container.textContent).not.toMatch(PROHIBIT);
       unmount();
     }
@@ -350,7 +355,9 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
   });
 
   /* Onada R15 (P1-02, R15-REG-06) · El build públic (sense VITE_SDP_APP_NEVERA=1, fora de DEV) torna a ser el R14:
-     la capa de compra amb Mercadona no hi és ni plegada. Una instància nova de la pàgina, amb l'entorn del build. */
+     la capa de compra amb Mercadona no hi és ni plegada. R15b afig només la proposta assistida d'al·lèrgens, marcada
+     pendent de validació humana, mai absències i sense línia d'escandall: PROHIBIT torna a mirar el DOM sencer.
+     Una instància nova de la pàgina, amb l'entorn del build. */
   test('build públic sense la bandera de la Nevera: cap capa de compra i cap text prohibit', async () => {
     vi.stubEnv('DEV', false);
     vi.stubEnv('VITE_SDP_APP_NEVERA', undefined);
@@ -364,10 +371,45 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
       await screen.findByRole('group', { name: 'Tria què vols vore' });
       expect(screen.queryByRole('button', { name: 'Calcula i prepara la compra' })).toBeNull();
       expect(container.querySelector('[aria-label="Prepara una compra amb esta recepta"]')).toBeNull();
+      const proposta = container.querySelector('section[data-estat="pendent_validacio_humana"]');
+      expect(proposta.querySelector('h3').textContent).toBe('Proposta assistida · Pendent de validació humana');
+      expect(proposta.querySelectorAll('li[data-alergen]')).toHaveLength(14);
       expect(container.textContent).not.toMatch(PROHIBIT);
       expect(container.textContent).not.toMatch(/Mercadona/i);
       unmount();
     }
+  });
+});
+
+/* Onada R15b (RV-01, RV-02) · A la fitxa pública, el panell d'al·lèrgens va en la llengua de la interfície, amb
+   l'etiqueta obligatòria com a títol, i els cacaus (en valencià, el cacauet) surten «•». Cap text prohibit en cap llengua. */
+describe('RV-01/RV-02 · la proposta d’al·lèrgens de la fitxa, en les cinc llengües', () => {
+  test.each(Object.keys(DICCIONARIS))('%s', async (llengua) => {
+    m.dic = DICCIONARIS[llengua];
+    m.language = llengua;
+    const t = TEXTOS_ALERGENS[llengua];
+    const { container } = detall('cacaus-fregits');
+    await screen.findAllByRole('group');
+    const panell = container.querySelector('section[data-estat="pendent_validacio_humana"]');
+    expect(panell.getAttribute('lang')).toBe(llengua);
+    expect(within(panell).getByRole('heading', { level: 3 }).textContent).toBe(t.etiqueta);
+    expect(panell.querySelector('li[data-alergen="cacauets"]').textContent).toContain(`${t.noms.cacauets}: ${t.ingredient}`);
+    expect(panell.querySelector('li[data-alergen="gluten"]').textContent).toBe(`${t.noms.gluten}: ${t.desconegut}`);
+    expect(container.querySelector('section[data-bloc="alergens"]').textContent).toContain(DICCIONARIS[llengua]['patrimoni.receptes.alergens']);
+    expect(container.textContent).not.toMatch(PROHIBIT);
+  });
+
+  test('la còpia de /page/receptes diu el mateix que el panell, en les cinc llengües, i ja no diu que no s’hi afig cap', () => {
+    const pagina = PAGINES_PATRIMONI_R14.receptes;
+    const COPIA = { ca: [pagina, 'ací no se n’afig cap'], es: [pagina.translations.es, 'aquí no se añade ninguno'],
+      en: [pagina.translations.en, 'none are added here'], eu: [pagina.translations.eu, 'ez da bat ere gehitzen'],
+      gl: [pagina.translations.gl, 'aquí non se engade ningún'] };
+    for (const [llengua, [p, vell]] of Object.entries(COPIA)) {
+      const t = TEXTOS_ALERGENS[llengua];
+      expect([llengua, p.html.includes(vell)]).toEqual([llengua, false]);
+      for (const simbol of ['«•»', '«T»', `«${t.desconegut}»`]) expect([llengua, simbol, p.html.includes(simbol)]).toEqual([llengua, simbol, true]);
+    }
+    expect(pagina.html).toContain('<strong>proposta assistida, pendent de validació humana</strong>');
   });
 });
 

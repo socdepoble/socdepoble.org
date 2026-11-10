@@ -253,7 +253,7 @@ describe('registre de plugins', () => {
     }
     // Contraprova: el criteri no deixa passar una ruta que no existix.
     expect(esRutaDeVeres('/gestoria')).toBe(false);
-    expect(esRutaDeVeres('/app/nevera/rebost')).toBe(false);
+    expect(esRutaDeVeres('/app/nevera/rebost-inexistent')).toBe(false);
     expect(esRutaDeVeres('/consola/cervell')).toBe(false);
     // Ni una d'ActorRoutes que només redirigix, ni un tram de més.
     expect(esRutaDeVeres('/skills')).toBe(false);

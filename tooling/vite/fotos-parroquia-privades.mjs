@@ -65,6 +65,7 @@ export default function fotosParroquiaPrivades() {
   let actiu = false;
   let desti = null;
   let manifest = null;
+  let publicPhotos = null;
   return {
     name: 'sdp-fotos-parroquia-privades',
     enforce: 'pre',
@@ -77,6 +78,19 @@ export default function fotosParroquiaPrivades() {
       actiu = !config.env.DEV && valor !== '1';
       desti = real(path.resolve(config.root, MODUL_FOTOS_PARROQUIA));
       manifest = path.resolve(config.root, MANIFEST_FOTOS_PARROQUIA);
+      publicPhotos = config.publicDir ? path.resolve(config.publicDir, 'assets/uploads/tpv-parroquia') : null;
+    },
+    buildStart() {
+      if (!actiu || !publicPhotos || !fs.existsSync(publicPhotos)) return;
+      const pendent = [publicPhotos];
+      while (pendent.length) {
+        const current = pendent.pop();
+        const info = fs.lstatSync(current);
+        if (!info.isDirectory()) {
+          this.error('Fotos originals de La Parròquia en public/assets/uploads/tpv-parroquia/. Retira-les del directori públic abans de compilar; no s’han eliminat els originals locals.');
+        }
+        for (const entrada of fs.readdirSync(current)) pendent.push(path.join(current, entrada));
+      }
     },
     async resolveId(font, importador, opcions) {
       if (!actiu || !font.includes('parroquiaFotos')) return null;

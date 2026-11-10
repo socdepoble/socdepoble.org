@@ -78,8 +78,8 @@ describe('opcions de la factoria', () => {
   test('les capacitats no declarades són exactament les que el contracte té i este node deixa a posta', () => {
     const a = creaAdaptadorLocal();
     const absents = Object.keys(CAPACITATS).filter((cap) => CAPACITATS[cap].every((m) => typeof a[m] !== 'function'));
-    expect(Object.keys(CAPACITATS)).toHaveLength(48);
-    expect(CAPACITATS_NO_DECLARADES).toEqual(['iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+    expect(Object.keys(CAPACITATS)).toHaveLength(51);
+    expect(CAPACITATS_NO_DECLARADES).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
     expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
     const deContracte = CONTRACTE_BACKEND.filter((m) => !absents.some((cap) => CAPACITATS[cap].includes(m)));
     expect(deContracte.filter((m) => typeof a[m] !== 'function')).toEqual([]);
@@ -855,4 +855,14 @@ test('cap fitxer de src fora de src/data/local ni de les proves importa cap mòd
     expect(text, fitxer).not.toMatch(/from\s+['"][^'"]*supabase/);
     expect(text, fitxer).not.toMatch(/\b(?:localStorage|sessionStorage)\s*[.[]/);
   }
+});
+
+test('R15 · sense servidor no s’inventen sessions ni rol de curadoria cultural',async()=>{
+ const a=creaAdaptadorLocal({mode:'local'});
+ try{
+  for(const cap of ['administracioSessions','curadoriaCultural']){
+   expect(CAPACITATS_NO_DECLARADES).toContain(cap);
+   for(const metode of CAPACITATS[cap])expect(a[metode],metode).toBeUndefined();
+  }
+ }finally{await a.destroy();}
 });

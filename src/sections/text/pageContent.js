@@ -1,3 +1,4 @@
+import { PAGINA_NODRIR_IAIA } from './pageContent.nodrirIaia.js';
 import { aplicaDossierR10 } from './pageContent.r10.js';
 import { afigPrimeraTargetaFediversity } from './pageContent.targetaMur.js';
 import { legalContent } from './legalContent.js';
@@ -879,7 +880,8 @@ export const PAGE_COPY = {
   },
   /* Integradora R8 (261106; arbitratge R8, G4 i G6) · «Herbari de La Torre»:
      les 117 fitxes de l'Excel de l'Herbari amb els rètols de La Canaleta
-     (kits R22 + R25), al visor HerbariLaTorreSection (un chunk lazy) que
+     (kits R22 + R25), al catàleg HerbariWorkspaceSection (un chunk lazy; el
+     visor HerbariLaTorreSection d'abans s'esborra a R15b) que
      PageDetailSection posa davall d'este text breu, com a l'anatomia. Abans
      la pàgina només existia per la reserva d'aplicaAparadorR20, que no es
      connecta (G1-01, G1-05). Sense portada pròpia (EXCLOSES_DE_PAGE de
@@ -953,6 +955,7 @@ Object.assign(PAGE_COPY, PAGINES_PATRIMONI_R9);
 /* Onada R14 · /page/receptes, el receptari «Què dinem?» (Muro, El Comtat, 2019): el text breu de la pàgina, en les
    5 llengües, és a pageContent.patrimoniR14.js; la llista de receptes va davall (PageDetailSection, tros diferit). */
 Object.assign(PAGE_COPY, PAGINES_PATRIMONI_R14);
+Object.assign(PAGE_COPY, PAGINA_NODRIR_IAIA);
 
 // AH-22 · suplement editorial localitzat, sense declarar-lo desplegat.
 aplicaDossierR10(PAGE_COPY);

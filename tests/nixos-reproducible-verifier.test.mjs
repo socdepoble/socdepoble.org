@@ -83,6 +83,54 @@ test('Nix: eval-only cannot certify a build',async t=> {
   const root=fixture(t),{runner,calls}=fakeNix();const report=await verificaFlake({root,runner,mode:'evaluation'});
   assert.equal(report.verified,false);assert.equal(report.checks.length,4);assert.ok(calls.every(a=>a[2]!=='build'));
 });
+test('Nix: real default-output semantics require explicitly selecting out and integritat in build AND rebuild',async t=> {
+  const root=fixture(t),base=fakeNix();
+  const runner=async(binary,args)=>{
+    const result=await base.runner(binary,args);
+    if(args[2]==='build'&&args.includes('--json')&&!args.at(-1).endsWith('.web^out,integritat')){
+      const value=JSON.parse(result.stdout);delete value[0].outputs.integritat;return success(value);
+    }
+    return result;
+  };
+  const report=await verificaFlake({root,runner});assert.deepEqual(report.issues,[]);
+  const builds=base.calls.filter(a=>a[2]==='build'&&a.includes('--json'));
+  assert.equal(builds.length,2);assert.equal(builds[1].includes('--rebuild'),true);
+  assert.equal(builds.every(a=>a.at(-1).endsWith('.web^out,integritat')),true);
+  assert.deepEqual(Object.keys(report.checks.find(c=>c.name==='web-rebuild').narHashes).sort(),['integritat','out']);
+  assert.equal(report.verified,false,'A test double cannot certify a native build.');
+});
+test('Nix: an explicit selector never waives a missing integrity output or a path outside the store',async t=> {
+  for(const mutate of [v=>delete v[0].outputs.integritat,v=>v[0].outputs.integritat='/tmp/forged-integrity']){
+    const root=fixture(t),base=fakeNix();
+    const report=await verificaFlake({root,runner:async(binary,args)=>{
+      const result=await base.runner(binary,args);
+      if(args[2]==='build'&&args.includes('--json')){const value=JSON.parse(result.stdout);mutate(value);return success(value);}
+      return result;
+    }});
+    assert.equal(report.verified,false);assert.ok(report.issues.includes('nix_build_output_invalid'));
+    assert.equal(report.checks.some(c=>c.name==='web-rebuild'),false);
+  }
+});
+test('Nix: default KVM targets stay canonical; explicit TCG selects separate full-assertion VM targets',async t=> {
+  for(const vmProfile of ['kvm','tcg']){
+    const root=fixture(t),{runner,calls}=fakeNix(),report=await verificaFlake({root,runner,...(vmProfile==='tcg'?{vmProfile}:{})});
+    assert.deepEqual(report.issues,[]);assert.equal(report.vmProfile,vmProfile);
+    const suffix=vmProfile==='tcg'?'-tcg':'';
+    for(const name of ['module-http','node0-http']){
+      const check=report.checks.find(c=>c.name===name);assert.equal(check.passed,true);assert.equal(check.profile,vmProfile);assert.equal(check.target,name+suffix);
+      assert.ok(calls.some(args=>args[2]==='build'&&args.at(-1).endsWith(`.${name}${suffix}`)));
+    }
+    assert.equal(report.verified,false,'A software or hardware fixture never certifies native execution.');
+    if(vmProfile==='tcg')assert.match(report.virtualizationEvidence,/does not accredit hardware KVM/);
+  }
+});
+test('Nix: unknown VM profiles fail before any native command, including the CLI',async t=> {
+  const root=fixture(t);let calls=0;
+  for(const vmProfile of ['fake-kvm','',null,true])await assert.rejects(verificaFlake({root,vmProfile,runner:async()=>{calls++;}}),/nix_verifier_options/);
+  assert.equal(calls,0);
+  const cli=spawnSync(process.execPath,[path.join(ROOT,'tooling/nixos/verifica-flake-reproduible.mjs'),'--vm-profile=fake-kvm'],{encoding:'utf8'});
+  assert.equal(cli.status,1);assert.match(cli.stderr,/nix_verifier_options/);
+});
 test('Nix: content changing during evaluation invalidates the receipt',async t=> {
   const root=fixture(t),{runner}=fakeNix({alter:(_,args)=>{if(args[2]==='eval')fs.writeFileSync(path.join(root,'src/public.js'),'concurrent edit');}});
   const report=await verificaFlake({root,runner});assert.equal(report.verified,false);assert.ok(report.issues.includes('nix_sources_changed_during_verification'));

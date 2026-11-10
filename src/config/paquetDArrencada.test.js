@@ -40,6 +40,11 @@ describe('trossDArrencada (vite.config.js)', () => {
     ['/x/src/hooks/useScrollDeNavegacio.js', 'navegacio'],
     ['/x/src/app/contexts/historialDeRuta.js', 'navegacio'],
     ['/x/src/app/contexts/politicaRouter.js', 'navegacio'],
+    ['/x/src/natiu/entradaSocial.js', 'entrada-nativa'],
+    ['/x/src/natiu/entrada.jsx', null],
+    ['/x/src/natiu/avisosPushNatius.js', null],
+    ['/x/node_modules/@capgo/capacitor-social-login/dist/esm/index.js', null],
+    ['/x/node_modules/@capacitor/push-notifications/dist/esm/index.js', null],
     ['/x/src/app/contexts/RouterContext.jsx', null],
     ['/x/src/app/contexts/objectesDeContext.js', null],
     ['/x/src/app/App.jsx', null],
@@ -104,6 +109,10 @@ console.log(JSON.stringify({
      React i DOMPurify no depenen de cap paquet de fora del tros 'react'. */
   test('els trossos d’arrencada són fulles: no arrosseguen cap mòdul de fora', () => {
     expect(especificadors(path.join(ARREL, 'src/config/idiomes/ca.js'))).toEqual([]);
+    expect(especificadors(path.join(ARREL, 'src/natiu/entradaSocial.js')).filter(edge => edge.especificador.startsWith('.'))).toEqual([{ especificador: '../config/entradaNativa.js', text: false }, { especificador: '../config/publicCredentials.js', text: false }, { especificador: './resum.js', text: false }]);
+    expect(especificadors(path.join(ARREL, 'src/natiu/resum.js'))).toEqual([{ especificador: '../config/entradaNativa.js', text: false }]);
+    expect(especificadors(path.join(ARREL, 'src/config/entradaNativa.js'))).toEqual([]);
+    expect(especificadors(path.join(ARREL, 'src/config/publicCredentials.js'))).toEqual([]);
     expect(especificadors(path.join(ARREL, 'src/hooks/useScrollDeNavegacio.js'))).toEqual([{ especificador: 'react', text: false }, { especificador: '../app/contexts/historialDeRuta.js', text: false }]);
     expect(especificadors(path.join(ARREL, 'src/app/contexts/historialDeRuta.js'))).toEqual([]);
     expect(especificadors(path.join(ARREL, 'src/app/contexts/politicaRouter.js'))).toEqual([]);

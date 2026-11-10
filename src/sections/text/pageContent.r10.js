@@ -330,6 +330,47 @@ const fitaR13R14 = (language) => {
  return `${section('h3', titol, obertura)}\n      ${apartats.map(([t, c]) => subSection(t, c)).join('\n      ')}\n\n      `;
 };
 
+/* Onada R15b (PRODNM-08) · La fita R15 obri /versions, davant de la crònica R13+R14, en les cinc llengües: R15a (el
+   kit sanejat, amb les funcions experimentals apagades) i R15b (el Workspace de les quatre pàgines públiques de
+   catàleg, amb Llista/Rajola i la fitxa al costat sense finestra; la proposta d'al·lèrgens pendent de validació
+   humana; la taula d'usuaris i dispositius i Nodrir la IAIA, que esperen la migració 2611091500 del Mestre). Les
+   etiquetes Llista/Rajola són les de textosCatalegWorkspace i els símbols, els del panell (textosAlergens). Cap
+   altra plataforma mòbil (regla 2.3.10), l'enllaç és intern i sense target=_blank, i la densitat de negretes és la
+   de la fita anterior (pageContent.versions.test.js). PRODUCCIO-02 bis · La pàgina es diu pel títol de la seua
+   llengua (pageContent.nodrirIaia.js): Nodrir la IAIA, Alimentar a la IAIA, Feed IAIA, IAIA elikatu, Nutrir a IAIA. */
+const MIGRACIO_R15 = '<code>2611091500</code>';
+const FITA_R15 = {
+ ca: ['9 de novembre de 2026 · Onada R15 · El Workspace dels catàlegs i la proposta d’al·lèrgens',
+  'L’<strong>Onada R15</strong> arriba en dos passos. <strong>R15a</strong> va portar el <strong>kit sanejat</strong>, amb les <strong>funcions experimentals</strong> apagades. <strong>R15b</strong> porta el <strong>Workspace</strong> a quatre pàgines públiques i la <strong>proposta d’al·lèrgens</strong> a cada recepta, i deixa dues peces a punt per a quan s’aplique la migració.',
+  ['Novetat · El Workspace dels catàlegs', `L’<strong>Herbari</strong>, el <strong>Banc de llavors</strong>, les ${enllacIntern(ENLLAC_RECEPTES, 'receptes')} i la <strong>candidatura Fediversity</strong> s’obrin en un <strong>Workspace</strong> de columnes: cada catàleg es mira en <strong>Llista</strong> o en <strong>Rajola quadrada</strong>, i la fitxa s’obri al costat, <strong>sense cap finestra</strong> damunt.`],
+  ['Novetat · Al·lèrgens de les receptes', 'Cada recepta mostra una <strong>proposta assistida</strong> dels <strong>14 al·lèrgens</strong>, <strong>pendent de validació humana</strong>: «•» quan un <strong>ingredient del llibre</strong> el delata, «T» quan és possible i «? Sense dada» quan no se’n sap res. <strong>Mai diu</strong> que un al·lergen no hi siga: si tens una al·lèrgia, <strong>pregunta-ho a qui cuina</strong>.'],
+  ['Novetat · Usuaris, dispositius i Nodrir la IAIA', `La <strong>taula d’usuaris i dispositius</strong> de l’Administració i la pàgina <strong>Nodrir la IAIA</strong> ja són al codi, però <strong>esperen la migració</strong> ${MIGRACIO_R15}, que ha d’<strong>aplicar el Mestre</strong>. Fins aleshores, totes dues ho <strong>avisen a la pantalla</strong>.`]],
+ es: ['9 de noviembre de 2026 · Oleada R15 · El Workspace de los catálogos y la propuesta de alérgenos',
+  'La <strong>Oleada R15</strong> llega en dos pasos. <strong>R15a</strong> trajo el <strong>kit saneado</strong>, con las <strong>funciones experimentales</strong> apagadas. <strong>R15b</strong> lleva el <strong>Workspace</strong> a cuatro páginas públicas y la <strong>propuesta de alérgenos</strong> a cada receta, y deja dos piezas listas para cuando se aplique la migración.',
+  ['Novedad · El Workspace de los catálogos', `El <strong>Herbario</strong>, el <strong>Banco de semillas</strong>, las ${enllacIntern(ENLLAC_RECEPTES, 'recetas')} y la <strong>candidatura Fediversity</strong> se abren en un <strong>Workspace</strong> de columnas: cada catálogo se mira en <strong>Lista</strong> o en <strong>Baldosa cuadrada</strong>, y la ficha se abre al lado, <strong>sin ninguna ventana</strong> encima.`],
+  ['Novedad · Alérgenos de las recetas', 'Cada receta muestra una <strong>propuesta asistida</strong> de los <strong>14 alérgenos</strong>, <strong>pendiente de validación humana</strong>: «•» cuando un <strong>ingrediente del libro</strong> lo delata, «T» cuando es posible y «? Sin datos» cuando no se sabe nada. <strong>Nunca dice</strong> que un alérgeno no esté: si tienes una alergia, <strong>pregúntaselo a quien cocina</strong>.'],
+  ['Novedad · Usuarios, dispositivos y Alimentar a la IAIA', `La <strong>tabla de usuarios y dispositivos</strong> de la Administración y la página <strong>Alimentar a la IAIA</strong> ya están en el código, pero <strong>esperan la migración</strong> ${MIGRACIO_R15}, que tiene que <strong>aplicar el Mestre</strong>. Hasta entonces, ambas lo <strong>avisan en pantalla</strong>.`]],
+ en: ['9 November 2026 · Wave R15 · The catalogue Workspace and the allergen proposal',
+  '<strong>Wave R15</strong> comes in two steps. <strong>R15a</strong> brought the <strong>cleaned-up kit</strong>, with the <strong>experimental features</strong> switched off. <strong>R15b</strong> takes the <strong>Workspace</strong> to four public pages and the <strong>allergen proposal</strong> to every recipe, and leaves two pieces ready for when the migration is applied.',
+  ['New · The catalogue Workspace', `The <strong>Herbarium</strong>, the <strong>Seed bank</strong>, the ${enllacIntern(ENLLAC_RECEPTES, 'recipes')} and the <strong>Fediversity application</strong> open in a <strong>Workspace</strong> of columns: each catalogue can be seen as a <strong>List</strong> or as <strong>Square tiles</strong>, and the record opens alongside, <strong>without any window</strong> on top.`],
+  ['New · Recipe allergens', 'Each recipe shows an <strong>assisted proposal</strong> for the <strong>14 allergens</strong>, <strong>pending human validation</strong>: «•» when an <strong>ingredient in the book</strong> gives it away, «T» when it is possible and «? No data» when nothing is known. It <strong>never says</strong> an allergen is not there: if you have an allergy, <strong>ask whoever is cooking</strong>.'],
+  ['New · Users, devices and Feed IAIA', `The <strong>users and devices table</strong> in Administration and the <strong>Feed IAIA</strong> page are already in the code, but they <strong>await the migration</strong> ${MIGRACIO_R15}, which the <strong>Mestre has to apply</strong>. Until then, both of them <strong>say so on screen</strong>.`]],
+ eu: ['2026ko azaroaren 9a · R15 olatua · Katalogoen Workspace-a eta alergenoen proposamena',
+  '<strong>R15 olatua</strong> bi urratsetan dator. <strong>R15a</strong> olatuak <strong>kit garbitua</strong> ekarri zuen, <strong>funtzio esperimentalak</strong> itzalita. <strong>R15b</strong> olatuak <strong>Workspace</strong>-a lau orrialde publikotara eramaten du eta <strong>alergenoen proposamena</strong> errezeta bakoitzera, eta bi pieza prest uzten ditu migrazioa aplikatzen denerako.',
+  ['Berritasuna · Katalogoen Workspace-a', `<strong>Herbarioa</strong>, <strong>Hazi bankua</strong>, ${enllacIntern(ENLLAC_RECEPTES, 'errezetak')} eta <strong>Fediversity hautagaitza</strong> zutabeetako <strong>Workspace</strong> batean irekitzen dira: katalogo bakoitza <strong>Zerrenda</strong> edo <strong>Lauza karratuak</strong> moduan ikus daiteke, eta fitxa alboan irekitzen da, <strong>gainean leihorik gabe</strong>.`],
+  ['Berritasuna · Errezeten alergenoak', 'Errezeta bakoitzak <strong>14 alergenoen</strong> <strong>proposamen lagundua</strong> erakusten du, <strong>giza balioztatzearen zain</strong>: «•» <strong>liburuko osagai</strong> batek salatzen duenean, «T» posible denean eta «? Daturik ez» ezer ez dakigunean. <strong>Ez du inoiz esaten</strong> alergeno bat ez dagoenik: alergiaren bat baduzu, <strong>galdetu sukaldatzen duenari</strong>.'],
+  ['Berritasuna · Erabiltzaileak, gailuak eta IAIA elikatu', `Administrazioko <strong>erabiltzaile eta gailuen taula</strong> eta <strong>IAIA elikatu</strong> orria kodean daude jada, baina ${MIGRACIO_R15} <strong>migrazioaren zain</strong> daude, eta <strong>Mestreak aplikatu</strong> behar du. Ordura arte, biek <strong>pantailan esaten dute</strong>.`]],
+ gl: ['9 de novembro de 2026 · Onda R15 · O Workspace dos catálogos e a proposta de alérxenos',
+  'A <strong>Onda R15</strong> chega en dous pasos. <strong>R15a</strong> trouxo o <strong>kit saneado</strong>, coas <strong>funcións experimentais</strong> apagadas. <strong>R15b</strong> leva o <strong>Workspace</strong> a catro páxinas públicas e a <strong>proposta de alérxenos</strong> a cada receita, e deixa dúas pezas listas para cando se aplique a migración.',
+  ['Novidade · O Workspace dos catálogos', `O <strong>Herbario</strong>, o <strong>Banco de sementes</strong>, as ${enllacIntern(ENLLAC_RECEPTES, 'receitas')} e a <strong>candidatura Fediversity</strong> ábrense nun <strong>Workspace</strong> de columnas: cada catálogo vese en <strong>Lista</strong> ou en <strong>Baldosa cadrada</strong>, e a ficha ábrese ao lado, <strong>sen ningunha xanela</strong> enriba.`],
+  ['Novidade · Alérxenos das receitas', 'Cada receita mostra unha <strong>proposta asistida</strong> dos <strong>14 alérxenos</strong>, <strong>pendente de validación humana</strong>: «•» cando un <strong>ingrediente do libro</strong> o delata, «T» cando é posible e «? Sen datos» cando non se sabe nada. <strong>Nunca di</strong> que un alérxeno non estea: se tes unha alerxia, <strong>pregúntallo a quen cociña</strong>.'],
+  ['Novidade · Usuarios, dispositivos e Nutrir a IAIA', `A <strong>táboa de usuarios e dispositivos</strong> da Administración e a páxina <strong>Nutrir a IAIA</strong> xa están no código, pero <strong>agardan a migración</strong> ${MIGRACIO_R15}, que ten que <strong>aplicar o Mestre</strong>. Ata entón, as dúas <strong>avísano na pantalla</strong>.`]]
+};
+const fitaR15 = (language) => {
+ const [titol, obertura, ...apartats] = FITA_R15[language];
+ return `${section('h3', titol, obertura)}\n      ${apartats.map(([t, c]) => subSection(t, c)).join('\n      ')}\n\n      `;
+};
+
 const ruralPage = (row) => ({ title: row[0], subtitle: row[1], lead: row[2], html: section('h3', row[1])+'\n      '+row.slice(3).map(s => section('h5', ...s)).join('\n      '), labels: [] });
 /* Onada R9 (ordre del Mestre del 261106, 14:06) · El balanç de /fedivers, /page/fediversity i
    /page/node-zero passa al 6 de novembre (producció R1–R8: COMMIT R8 = 70b651636, desplegat a
@@ -341,13 +382,22 @@ const ruralPage = (row) => ({ title: row[0], subtitle: row[1], lead: row[2], htm
    desplegat el 7-11) i nomena el COMMIT R10. La lectura HTTP del 7-11-2026 (09:14, només GET)
    troba «R9 i R10» al fragment pageContent de socdepoble.org (1) i no al de socdepoble.cat (0):
    el pilot no servix el mateix COMMIT, i el balanç ho diu datat. */
-/* New local inventory is separate from historical production receipts. */
+/* New local inventory is separate from historical production receipts.
+   Onada R15b (RV-04) · L'inventari viu del contracte, en un sol lloc: la nota datada (5 llengües) i l'apartat
+   «Fet hui (verificable)» del dossier en valencià (actualitzaDossierAnterior) en lligen les xifres d'ací, i
+   pageContent.fediversity.test.js i pageContent.r10.test.js les contrasten amb src/data/contracte.js, el kit de
+   conformitat i l'adaptador local. Les xifres 46/138/190 són el balanç històric de producció i no es toquen. */
+const INVENTARI_CONTRACTE = Object.freeze({
+  nucli: 32, capacitats: 51, opcionals: 116, total: 148, casos: 210, oferides: 44, casosAbsents: 22,
+  absents: Object.freeze(['administracioSessions', 'curadoriaCultural', 'iaia', 'xatRitme', 'importacioPaquetMunicipal', 'verificacioCorreu', 'recuperacioCorreu'])
+});
+const I = INVENTARI_CONTRACTE;
 const CURRENT_CONTRACT_NOTE = {
-  "ca": "<strong>9 de novembre de 2026</strong> · <strong>Inventari del codi local.</strong> El contracte declara <strong>48 capacitats</strong> i <strong>141 mètodes</strong> amb <strong>195 casos</strong>. El balanç anterior conserva les xifres històriques de <strong>46/138/190</strong>. Este inventari <strong>no acredita activació</strong>, desplegament, interoperabilitat remota ni lliurament a dispositius.",
-  "es": "<strong>9 de noviembre de 2026</strong> · <strong>Inventario del código local.</strong> El contrato declara <strong>48 capacidades</strong> y <strong>141 métodos</strong> con <strong>195 casos</strong>. El balance anterior conserva las cifras históricas de <strong>46/138/190</strong>. Este inventario <strong>no acredita activación</strong>, despliegue, interoperabilidad remota ni entrega a dispositivos.",
-  "en": "<strong>9 November 2026</strong> · <strong>Local code inventory.</strong> The contract declares <strong>48 capabilities</strong> and <strong>141 methods</strong> with <strong>195 cases</strong>. The earlier balance retains its historical figures of <strong>46/138/190</strong>. This inventory <strong>does not establish activation</strong>, deployment, remote interoperability or device delivery.",
-  "eu": "<strong>2026ko azaroaren 9a</strong> · <strong>Tokiko kodeko inbentarioa.</strong> Kontratuak <strong>48 gaitasun</strong> eta <strong>141 metodo</strong> ditu <strong>195 kasurekin</strong>. Aurreko balantzeak <strong>46/138/190</strong> zenbaki historikoak gordetzen ditu. Inbentario honek <strong>ez du aktibazioa</strong>, hedapena, urruneko elkarreragingarritasuna edo gailuetarako entrega frogatzen.",
-  "gl": "<strong>9 de novembro de 2026</strong> · <strong>Inventario do código local.</strong> O contrato declara <strong>48 capacidades</strong> e <strong>141 métodos</strong> con <strong>195 casos</strong>. O balance anterior conserva as cifras históricas de <strong>46/138/190</strong>. Este inventario <strong>non acredita activación</strong>, despregamento, interoperabilidade remota nin entrega a dispositivos."
+  "ca": `<strong>9 de novembre de 2026</strong> · <strong>Inventari del codi local.</strong> El contracte declara <strong>${I.capacitats} capacitats</strong> i <strong>${I.total} mètodes</strong> amb <strong>${I.casos} casos</strong>. El balanç anterior conserva les xifres històriques de <strong>46/138/190</strong>. Este inventari <strong>no acredita activació</strong>, desplegament, interoperabilitat remota ni lliurament a dispositius.`,
+  "es": `<strong>9 de noviembre de 2026</strong> · <strong>Inventario del código local.</strong> El contrato declara <strong>${I.capacitats} capacidades</strong> y <strong>${I.total} métodos</strong> con <strong>${I.casos} casos</strong>. El balance anterior conserva las cifras históricas de <strong>46/138/190</strong>. Este inventario <strong>no acredita activación</strong>, despliegue, interoperabilidad remota ni entrega a dispositivos.`,
+  "en": `<strong>9 November 2026</strong> · <strong>Local code inventory.</strong> The contract declares <strong>${I.capacitats} capabilities</strong> and <strong>${I.total} methods</strong> with <strong>${I.casos} cases</strong>. The earlier balance retains its historical figures of <strong>46/138/190</strong>. This inventory <strong>does not establish activation</strong>, deployment, remote interoperability or device delivery.`,
+  "eu": `<strong>2026ko azaroaren 9a</strong> · <strong>Tokiko kodeko inbentarioa.</strong> Kontratuak <strong>${I.capacitats} gaitasun</strong> eta <strong>${I.total} metodo</strong> ditu <strong>${I.casos} kasurekin</strong>. Aurreko balantzeak <strong>46/138/190</strong> zenbaki historikoak gordetzen ditu. Inbentario honek <strong>ez du aktibazioa</strong>, hedapena, urruneko elkarreragingarritasuna edo gailuetarako entrega frogatzen.`,
+  "gl": `<strong>9 de novembro de 2026</strong> · <strong>Inventario do código local.</strong> O contrato declara <strong>${I.capacitats} capacidades</strong> e <strong>${I.total} métodos</strong> con <strong>${I.casos} casos</strong>. O balance anterior conserva as cifras históricas de <strong>46/138/190</strong>. Este inventario <strong>non acredita activación</strong>, despregamento, interoperabilidade remota nin entrega a dispositivos.`
 };
 const currentContractHtml = language => `<p>${CURRENT_CONTRACT_NOTE[language]}</p>`;
 const statusHtml = (d, language) => '\n      '+[
@@ -391,7 +441,8 @@ export function aplicaDossierR10(copy) {
     // The old register is history in its original language; do not present it as translated.
     // P0-62 · La fita de l'App Store obri la pàgina, en la llengua de la pàgina.
     // Encàrrec R13+R14 · La crònica de les Onades R13 i R14 va davant de la fita de l'App Store.
-    const fita = `${fitaR13R14(language)}${fitaAppStore(language)}`;
+    // Onada R15b (PRODNM-08) · La fita R15 va davant de la crònica R13+R14.
+    const fita = `${fitaR15(language)}${fitaR13R14(language)}${fitaAppStore(language)}`;
     content = language === 'ca' ? { html:`\n      ${fita}${entry}\n      ${originals.versions.html}` } : {
      title: ({es:'Versiones',en:'Versions',eu:'Bertsioak',gl:'Versións'})[language], subtitle:d.version, lead:d.lead,
      html:`\n      ${fita}${entry}<div lang="ca">${originals.versions.html}</div>`, labels:[]
@@ -442,5 +493,13 @@ function actualitzaDossierAnterior(html) {
  .replace(/Migracions SQL preparades, sense aplicar a producció\./g, 'Les dues migracions SQL (2611031700 i 2611032100) ja són a producció: la lectura REST del 6 de novembre en troba les RPC.')
  .replace(/Aplicar i provar al servidor de producció les <strong>RPC multipoble<\/strong> abans de declarar/g, 'Provar al servidor de producció les <strong>RPC multipoble</strong> (la lectura REST del 6 de novembre ja les hi troba) abans de declarar')
  .replace(/ja funciona en proves, però falta activar-lo al servidor central amb doble clau de seguretat\./g, 'ja funciona en proves, i el servidor central ja en té les peces, darrere d’una doble clau de seguretat.')
- .replace(/mentre continua <strong>en evolució<\/strong> cap a un <strong>node independent<\/strong> amb base de dades pròpia darrere del <strong>port neutral<\/strong>/g, 'ja disposa d’<strong>API amb PostgreSQL propi</strong> i continua <strong>en evolució</strong> cap a l’ús independent des de tota la SPA darrere del <strong>port neutral</strong>');
+ .replace(/mentre continua <strong>en evolució<\/strong> cap a un <strong>node independent<\/strong> amb base de dades pròpia darrere del <strong>port neutral<\/strong>/g, 'ja disposa d’<strong>API amb PostgreSQL propi</strong> i continua <strong>en evolució</strong> cap a l’ús independent des de tota la SPA darrere del <strong>port neutral</strong>')
+ /* R15b (RV-04) · «Fet hui (verificable)» deia 48/141/195 mentre la nota datada de la mateixa pàgina deia 51/148/210.
+    Ara l'apartat porta el recompte viu d'INVENTARI_CONTRACTE, datat com la nota; els números vells no es busquen
+    (\d+): si l'original canvia de xifra, la prova del dossier ho veu igual. Cap quantificador imbricat. */
+ .replace(/<strong>\d+ mètodes obligatoris<\/strong> i <strong>\d+ capacitats opcionals declarades<\/strong>, amb \d+ mètodes addicionals: <strong>\d+ mètodes<\/strong> en total a <code>src\/data\/contracte\.js<\/code>/g,
+  `<strong>${I.nucli} mètodes obligatoris</strong> i <strong>${I.capacitats} capacitats opcionals declarades</strong>, amb ${I.opcionals} mètodes addicionals: <strong>${I.total} mètodes</strong> en total a <code>src/data/contracte.js</code> (recompte del codi local del <strong>9 de novembre de 2026</strong>)`)
+ .replace(/El kit neutral disposa de \d+ casos sobre \d+ mètodes, l’adaptador local ofereix \d+ d’estos \d+ grups; [^;]*? continuen absents i els seus \S+ casos s’ometen en local/g,
+  `El kit neutral disposa de ${I.casos} casos sobre ${I.total} mètodes, l’adaptador local ofereix ${I.oferides} d’estos ${I.capacitats} grups; ${I.absents.map((nom) => `<code>${nom}</code>`).join(' i ')} continuen absents i els seus ${I.casosAbsents} casos s’ometen en local`)
+ .replace(/no certifica les \d+ operacions contra un servidor remot/g, `no certifica les ${I.total} operacions contra un servidor remot`);
 }

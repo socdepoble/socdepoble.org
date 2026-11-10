@@ -102,3 +102,25 @@ export { preferenciesConnexions, desaVisibilitatConnexions, connexionsPubliquesD
 
 export {adminActualitzaPublicacioEditorial} from './editorialPublicada.js';
 export { loadSeedRevisions, desaRevisioSeed } from './seedRevisions.js';
+import { capturaConsultaProjeccionsCataleg } from '../projeccionsCataleg.js';
+import { capturaSessio as capturaSessioProjeccions } from '../identitat.js';
+export async function loadProjeccionsCataleg(input = {}, config = {}) {
+  const query = capturaConsultaProjeccionsCataleg(input), capturedConfig = { ...config }, check = capturaSessioProjeccions();
+  const reader = await import('./projeccionsCataleg.js');
+  check();
+  return reader.loadProjeccionsCataleg(query, capturedConfig);
+}
+
+/* PRODNM-07 (revisió R15b) · Les RPC de curadoria cultural són de la migració 2611091500, que la
+   producció encara NO té: cridar-les deixa un 404 de PostgREST a la consola de cada visita a
+   /page/nodrir-la-iaia. L'adaptador només anuncia la capacitat 'curadoriaCultural' si el build
+   ho demana amb VITE_SDP_CURADORIA_CULTURAL=1, que s'encén després d'aplicar la migració.
+   Apagada, les quatre valen undefined: el port la tracta com a absent (teCapacitat fals, cap
+   petició) i la pàgina diu que no recull res. Sempre les quatre juntes: una capacitat parcial
+   tomba la validació del port. */
+import * as curadoriaAmbServidor from './curadoriaCultural.js';
+const ambCuradoria = import.meta.env.VITE_SDP_CURADORIA_CULTURAL === '1';
+export const estatCuradoriaCultural = ambCuradoria ? curadoriaAmbServidor.estatCuradoriaCultural : undefined;
+export const llistaAportacionsCulturals = ambCuradoria ? curadoriaAmbServidor.llistaAportacionsCulturals : undefined;
+export const enviaAportacioCultural = ambCuradoria ? curadoriaAmbServidor.enviaAportacioCultural : undefined;
+export const revisaAportacioCultural = ambCuradoria ? curadoriaAmbServidor.revisaAportacioCultural : undefined;

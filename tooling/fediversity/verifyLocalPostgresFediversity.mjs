@@ -9,10 +9,18 @@ import assert from 'node:assert/strict';
 
 export const EVIDENCE_SCHEMA = 'sdp.fediversity.local-native-postgres.v1';
 export const hash = value => createHash('sha256').update(value).digest('hex');
+// Legacy R56 labs and the single R15.2 clone only. Dot-prefixed cache leaves
+// are legal; path traversal, aliases escaping the allowlist and symlink leaves
+// remain forbidden. Never accept an arbitrary caller-provided filesystem root.
+export function isPrivateLaboratoryPath(value) {
+  return typeof value === 'string' && path.isAbsolute(value)
+    && !value.split('/').some(part => part === '.' || part === '..')
+    && /^\/(?:private\/)?tmp\/sdp_(?:r56_[A-Za-z0-9_-]+|codex_r15_2)(?:\/[A-Za-z0-9_.-]+)*$/.test(value);
+}
 export function privateDirectory(value) {
-  if (typeof value !== 'string' || !path.isAbsolute(value) || !/^\/(?:private\/)?tmp\/sdp_r56_[A-Za-z0-9_/-]+$/.test(value)) throw Error('explicit_private_tmp_required');
+  if (!isPrivateLaboratoryPath(value)) throw Error('explicit_private_tmp_required');
   const real = fs.realpathSync(value);
-  if (!/^\/(?:private\/)?tmp\/sdp_r56_/.test(real) || !fs.lstatSync(value).isDirectory() || fs.lstatSync(value).isSymbolicLink()) throw Error('physical_private_directory_required');
+  if (!isPrivateLaboratoryPath(real) || !fs.lstatSync(value).isDirectory() || fs.lstatSync(value).isSymbolicLink()) throw Error('physical_private_directory_required');
   return value;
 }
 export function libpqEnvironment({work, socket, database, user = 'r56_fixture', port = '5432'}) {
@@ -157,8 +165,11 @@ export async function verifyLocalPostgresFediversity({root,postgresBin,work,onEv
 }
 
 async function main() {
-  const o={};for(let i=2;i<process.argv.length;i+=2){if(!['--root','--toolchain','--out'].includes(process.argv[i])||!process.argv[i+1]||o[process.argv[i]])throw Error('explicit_arguments_required');o[process.argv[i]]=process.argv[i+1];}
-  if(!o['--root']||!o['--toolchain']||!o['--out'])throw Error('explicit_arguments_required');const toolchain=JSON.parse(fs.readFileSync(o['--toolchain'])),work=fs.mkdtempSync('/tmp/sdp_r56_native_proof_');
+  const o={};for(let i=2;i<process.argv.length;i+=2){if(!['--root','--toolchain','--out','--work'].includes(process.argv[i])||!process.argv[i+1]||o[process.argv[i]])throw Error('explicit_arguments_required');o[process.argv[i]]=process.argv[i+1];}
+  if(!o['--root']||!o['--toolchain']||!o['--out'])throw Error('explicit_arguments_required');const toolchain=JSON.parse(fs.readFileSync(o['--toolchain']));
+  let work;
+  if(o['--work'])work=privateDirectory(o['--work']);
+  else{const cache=path.join(privateDirectory(o['--root']),'node_modules/.cache');fs.mkdirSync(cache,{recursive:true,mode:0o700});privateDirectory(cache);work=fs.mkdtempSync(path.join(cache,'sdp-fediversity-native-'));}
   const result=await verifyLocalPostgresFediversity({root:o['--root'],postgresBin:toolchain.postgresBin,work,onEvent:(stage,detail)=>{const fd=fs.openSync(o['--out']+'.events.jsonl','a');try{fs.writeSync(fd,JSON.stringify({at:new Date().toISOString(),stage,...detail})+'\n');fs.fsyncSync(fd);}finally{fs.closeSync(fd);}}});const fd=fs.openSync(o['--out'],'wx');try{fs.writeSync(fd,JSON.stringify(result,null,2)+'\n');fs.fsyncSync(fd);}finally{fs.closeSync(fd);}console.log(JSON.stringify(result));
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{console.error(error);process.exitCode=1;});

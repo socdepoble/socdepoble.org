@@ -52,7 +52,7 @@ test('R34 · un config antic migra alias coneguts sense tocar textos privats ni 
 });
 
 test('R41 · totes les 32 pàgines (31 + /page/receptes d’R14) i els seus labels són canònics en5 idiomes, amb Sistema i sense Mur',()=>{
- expect(Object.keys(PAGE_COPY)).toHaveLength(32);
+ expect(Object.keys(PAGE_COPY)).toHaveLength(33);
  // Arbitratge R46, Loop 3 (L2-04) · P6 (directriu 261003_2325 del Mestre): les 8 pàgines d'acció de DESTINS_CONTROL no porten cap etiqueta.
  const accio=DESTINS_CONTROL.map(d=>d.pagina);expect(accio).toHaveLength(8);
  expect(Object.keys(CLASSIFICACIO_PAGINES_PUBLIQUES).sort()).toEqual(Object.keys(PAGE_COPY).filter(key=>!accio.includes(key)).sort());

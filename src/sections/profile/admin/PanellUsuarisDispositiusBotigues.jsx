@@ -22,6 +22,7 @@ import { Alerta, AreaText, Boto, Camp, Carregant, Insignia } from '../../../comp
 import * as port from '../../../data/backendPort.js';
 import { consultaResumSessionsDispositius } from '../../../data/resumSessionsDispositius.js';
 import { ADRECA_VERIFICADORS_GOOGLE_PLAY, PASSOS_VERIFICADOR_GOOGLE_PLAY, URL_FITXA_APP_STORE } from './assistentBotigues.js';
+import PanellSessionsDetall from './PanellSessionsDetall.jsx';
 import { esAppNativaIos } from './appNativaIos.js';
 import {
   APP_STORE, MISSATGE_WHATSAPP_VERIFICADORS, NOTA_PAS_1_GOOGLE_PLAY, NOTA_RECOMPTES, NOTA_VERIFICADORS, TEXT_BOTO_CONSULTA,
@@ -179,6 +180,7 @@ export default function PanellUsuarisDispositiusBotigues({ consulta = consultaDe
       </header>
 
       <UsuarisIDispositius consulta={consulta} nativaIos={nativaIos} />
+      <PanellSessionsDetall nativaIos={nativaIos} />
 
       <section className="sdp-admin-taxonomia__panel" aria-label="Descàrregues oficials" data-testid="botons-oficials-botigues">
         <h3>📲 Descàrregues oficials</h3>

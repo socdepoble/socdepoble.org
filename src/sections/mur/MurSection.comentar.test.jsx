@@ -18,7 +18,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+vi.mock('../../app/contexts/UIContext', async original => ({ ...await original(), useUIActions: () => ({ t: mocks.t }) }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
 vi.mock('./MurContext', () => ({ useMur: () => mocks.mur }));

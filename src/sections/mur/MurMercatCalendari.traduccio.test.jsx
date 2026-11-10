@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
   t: (_, alternativa) => alternativa, toast: vi.fn(), mur: {}, capacitats: new Set(), gcal: false
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
-vi.mock('../../app/contexts/UIContext', () => ({
+vi.mock('../../app/contexts/UIContext', async original => ({ ...await original(),
   useUIActions: () => ({ t: mocks.t }),
   useUIState: () => ({ externalConfig: {} })
 }));

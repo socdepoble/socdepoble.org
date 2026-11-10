@@ -391,6 +391,36 @@ const fallesRitmeR54 = v => {
   return [];
 };
 
+/* R15 · DTOs privilegiats només en escenaris explícits. */
+const caminsR15 = ['app_ios','web_ios','app_android','web_android','escriptori','altres'];
+const instantR15 = v => typeof v === 'string' && Number.isFinite(Date.parse(v));
+const rebuigPermisR15 = e => e instanceof Error && (e.status === 401 || e.status === 403 || ['42501','sense-permis'].includes(e.code)) ? [] : ['cal un rebuig de permisos, no una dada buida ni un servei absent'];
+const rebuigTipusR15 = e => e instanceof TypeError ? [] : ['cal TypeError abans de cap efecte'];
+const fallesResumR15 = v => {
+  if (!esObjecte(v) || Object.keys(v).sort().join(',') !== 'camins,consultat_a,total' || !instantR15(v.consultat_a) || !Array.isArray(v.camins) || v.camins.length !== 6 || new Set(v.camins.map(f => f?.cami)).size !== 6 || !esObjecte(v.total)) return ['resum de sessions invàlid'];
+  if (v.camins.some(f=>Object.keys(f).sort().join(',') !== 'cami,persones_14d,persones_24h,persones_7d') || Object.keys(v.total).sort().join(',') !== 'persones_14d,persones_24h,persones_7d') return ['resum amb camps de més'];
+  for (const f of [...v.camins,v.total]) if (!['persones_24h','persones_7d','persones_14d'].every(k => esEnter(f[k])) || f.persones_24h > f.persones_7d || f.persones_7d > f.persones_14d) return ['finestres de sessions incoherents'];
+  if (v.camins.some(f => !caminsR15.includes(f.cami))) return ['canal de sessions desconegut'];
+  for (const k of ['persones_24h','persones_7d','persones_14d']) if (v.total[k] < Math.max(...v.camins.map(f=>f[k])) || v.total[k] > v.camins.reduce((n,f)=>n+f[k],0)) return ['total distint de persones incoherent'];
+  return [];
+};
+/* SEG-R15b-01 · Persona i dispositiu, mai sessions identificables: clau opaca, correu amb la
+   màscara de la 77 (j***@domini.cat) o null, i cap identificador de sessió ni de persona. */
+const correuMascaratR15 = v => v === null || (typeof v === 'string' && /^[^@\s]\*\*\*@[^@\s]+$/.test(v));
+const fallesSessionsR15 = v => {
+  if (!esObjecte(v) || Object.keys(v).sort().join(',') !== 'consultatA,files,total' || !instantR15(v.consultatA) || !Array.isArray(v.files) || v.files.length > 200 || !esEnter(v.total) || v.total < v.files.length) return ['directori de sessions invàlid'];
+  const claus = new Set();
+  for (const f of v.files) {
+    if (!esObjecte(f) || Object.keys(f).sort().join(',') !== 'activitat,cami,clau,correuMascarat,nom,sessions' || typeof f.clau !== 'string' || !/^[0-9a-f]{32}$/.test(f.clau) || claus.has(f.clau) || !caminsR15.includes(f.cami) || !instantR15(f.activitat) || typeof f.nom !== 'string' || !correuMascaratR15(f.correuMascarat) || !esEnter(f.sessions) || f.sessions < 1) return ['fila de sessions invàlida, identificable o amb dades de més'];
+    claus.add(f.clau);
+  }
+  return [];
+};
+const fallesEstatCulturalR15 = v => esObjecte(v) && typeof v.autenticat === 'boolean' && typeof v.potCurar === 'boolean' && v.ingestioDisponible === false && (v.autenticat || !v.potCurar) && Object.keys(v).length === 3 ? [] : ['rol cultural invàlid o ingestió no acreditada'];
+const estatsCulturalsR15 = ['pendent_revisio','aprovat','correccio','descartat'];
+const fallesAportacioR15 = v => esObjecte(v) && uuidR54(v.id) && ['titol','autoria','poble','contingut'].every(k => esTextNoBuit(v[k])) && typeof v.nota === 'string' && estatsCulturalsR15.includes(v.estat) && instantR15(v.creatA) && Object.keys(v).length === 8 ? [] : ['aportació cultural invàlida'];
+const fallesSafataR15 = v => Array.isArray(v) && v.length <= 200 && new Set(v.map(f=>f?.id)).size === v.length ? v.flatMap(fallesAportacioR15) : ['safata cultural invàlida'];
+
 export const CASOS = Object.freeze([
   /* Lot 2 PN-01: casos comuns als transports seed i remote. */
   cas({ metode: 'resolveAsset', capacitat: 'mitjans', titol: 'resolveAsset preserva una URL pública sense consultar Storage', arguments: ctx => ['https://example.org/public.webp', ctx.config], comprova: v => v === 'https://example.org/public.webp' ? [] : ['URL pública alterada'] }),
@@ -1253,7 +1283,24 @@ export const CASOS = Object.freeze([
     comprova: v => esObjecte(v) && v.acceptat === true && Object.keys(v).length === 1 ? [] : ['presència no confirmada'] }),
   cas({ metode: 'actualitzaPresenciaXat', capacitat: 'xatRitme', requerix: ['xatRitmeOperatiu', 'filId'], espera: 'rebutja',
     titol: 'R54: presència malformada rebutja abans de qualsevol transport',
-    arguments: ctx => [ctx.filId, null, ctx.config], comprova: e => e instanceof TypeError ? [] : ['cal TypeError per presència invàlida'] })
+    arguments: ctx => [ctx.filId, null, ctx.config], comprova: e => e instanceof TypeError ? [] : ['cal TypeError per presència invàlida'] }),
+  cas({ metode: 'adminResumSessionsDispositius', capacitat: 'administracioSessions', requerix: ['sessionsAdminOperatiu'], titol: 'R15: resum de sessions autoritzat conserva finestres i totals de persones', arguments: ctx => [ctx.config], comprova: fallesResumR15 }),
+  cas({ metode: 'adminResumSessionsDispositius', capacitat: 'administracioSessions', requerix: ['sessionsSensePermis'], espera: 'rebutja', titol: 'R15: resum de sessions sense rol rebutja i no fabrica zeros', arguments: ctx => [ctx.config], comprova: rebuigPermisR15 }),
+  cas({ metode: 'adminLlistaSessionsDispositius', capacitat: 'administracioSessions', requerix: ['sessionsAdminOperatiu'], titol: 'R15: directori autoritzat agrupa persones i dispositius amb el correu emmascarat, sense identificadors de sessió, tokens ni IP', arguments: ctx => [{ cerca: 'conformitat', cami: 'app_ios' },ctx.config], comprova: fallesSessionsR15 }),
+  cas({ metode: 'adminLlistaSessionsDispositius', capacitat: 'administracioSessions', espera: 'rebutja', titol: 'R15: un canal de dispositiu desconegut rebutja abans de xarxa', arguments: ctx => [{ cerca: '', cami: 'canal-inventat' },ctx.config], comprova: rebuigTipusR15 }),
+  cas({ metode: 'estatCuradoriaCultural', capacitat: 'curadoriaCultural', requerix: ['curadoriaOperativa'], titol: 'R15: estat cultural separa rol verificat d’ingestió al Node 0 pendent', arguments: ctx => [ctx.config], comprova: fallesEstatCulturalR15 }),
+  cas({ metode: 'estatCuradoriaCultural', capacitat: 'curadoriaCultural', requerix: ['curadoriaSensePermis'], espera: 'rebutja', titol: 'R15: estat cultural sense sessió no concedix rol', arguments: ctx => [ctx.config], comprova: rebuigPermisR15 }),
+  cas({ metode: 'llistaAportacionsCulturals', capacitat: 'curadoriaCultural', requerix: ['curadoriaOperativa'], titol: 'R15: safata privada cultural conserva autoria i estat de revisió', arguments: ctx => [ctx.config], comprova: fallesSafataR15 }),
+  cas({ metode: 'llistaAportacionsCulturals', capacitat: 'curadoriaCultural', requerix: ['curadoriaSensePermis'], espera: 'rebutja', titol: 'R15: safata cultural sense permís no simula absència d’aportacions', arguments: ctx => [ctx.config], comprova: rebuigPermisR15 }),
+  cas({ metode: 'enviaAportacioCultural', capacitat: 'curadoriaCultural', escriu: true, requerix: ['curadoriaOperativa'], titol: 'R15: aportació amb permisos entra pendent de revisió humana', arguments: ctx => [{ titol: 'Conformitat '+ctx.idMissatge, autoria: 'Informant sintètic', poble: 'Poble de conformitat', contingut: 'Text de prova cultural', permisos: true },ctx.config], comprova: v => [...fallesAportacioR15(v), ...(v?.estat === 'pendent_revisio' ? [] : ['una aportació nova ha de quedar pendent'])], desa: (v,ctx) => { ctx.aportacioCulturalId = v.id; } }),
+  cas({ metode: 'enviaAportacioCultural', capacitat: 'curadoriaCultural', espera: 'rebutja', titol: 'R15: cap cessió de permisos es deduïx d’un formulari incomplet', arguments: ctx => [{ titol: 'Conformitat', autoria: 'Informant', poble: 'Poble', contingut: 'Text', permisos: false },ctx.config], comprova: rebuigTipusR15 }),
+  /* R15b (SEG-R15b-04) · Quatre ulls: la passada usa un sol compte, que acaba d'enviar l'aportació; el servidor ha de
+     rebutjar que eixe mateix compte la revise (SDP-CULTURA-PROPIA, 42501), també si és superadmin. */
+  cas({ metode: 'revisaAportacioCultural', capacitat: 'curadoriaCultural', escriu: true, requerix: ['curadoriaOperativa','aportacioCulturalId'], espera: 'rebutja', titol: 'R15: el mateix compte no pot revisar la seua pròpia aportació (quatre ulls)', arguments: ctx => [{ id: ctx.aportacioCulturalId, estat: 'aprovat', nota: 'Revisió sintètica de conformitat' },ctx.config], comprova: rebuigPermisR15 }),
+  cas({ metode: 'revisaAportacioCultural', capacitat: 'curadoriaCultural', espera: 'rebutja', titol: 'R15: estat ingerit inventat rebutja abans de cap canvi', arguments: ctx => [{ id: ctx.idMissatge, estat: 'aprovat_node0', nota: '' },ctx.config], comprova: rebuigTipusR15 }),
+  cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', espera: 'rebutja', titol: 'P0-59: audiència inventada rebutja abans de lectura', arguments: ctx => [{ audiencia: 'inventada' },ctx.config], comprova: rebuigAmbCodi('projeccio-invalida') }),
+  cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', requerix: ['projeccionsOperatives'], titol: 'P0-59: pàgina de referències públiques té cursor explícit', arguments: ctx => [{ audiencia: 'publica', cursor: null, limit: 100 },ctx.config], comprova: v => esObjecte(v) && Array.isArray(v.items) && v.items.every(teId) && (v.cursor === null || esTextNoBuit(v.cursor)) ? [] : ['pàgina de projeccions invàlida'] }),
+  cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', requerix: ['projeccionsSenseSessio'], espera: 'rebutja', titol: 'P0-59: cap lectura privada sense sessió', arguments: ctx => [{ audiencia: 'privada' },ctx.config], comprova: rebuigAmbCodi('sense-sessio') })
 ]);
 
 /**
@@ -1263,11 +1310,11 @@ export const CASOS = Object.freeze([
 export function contextDeConformitat({ config = {}, escriptures = false, adminMultipobleAutoritzat = false, tenantAdministrat = null, escenaris = {} } = {}) {
   return {
     config, escriptures, adminMultipobleAutoritzat: adminMultipobleAutoritzat === true, tenantAdministrat,
-    ...Object.fromEntries(['compteOperatiu', 'compteModeProva', 'compteSenseSessio', 'publicacioOperativa', 'credencialsDeProva', 'contrasenyaLocal', 'transportXifrat', 'iaiaOperativa', 'xatRitmeOperatiu'].map(k => [k, escenaris[k] === true])),
+    ...Object.fromEntries(['compteOperatiu', 'compteModeProva', 'compteSenseSessio', 'publicacioOperativa', 'credencialsDeProva', 'contrasenyaLocal', 'transportXifrat', 'iaiaOperativa', 'xatRitmeOperatiu', 'sessionsAdminOperatiu', 'sessionsSensePermis', 'curadoriaOperativa', 'curadoriaSensePermis', 'projeccionsOperatives', 'projeccionsSenseSessio'].map(k => [k, escenaris[k] === true])),
     destinatariDirecte: typeof escenaris.destinatariDirecte === 'string' && escenaris.destinatariDirecte.trim() ? escenaris.destinatariDirecte : null,
     idPublicacio: globalThis.crypto.randomUUID(), idXifrat: globalThis.crypto.randomUUID(),
     ownerUserId: null, filId: null, filEscrivible: null, subscripcio: null, subscrit: false, avisos: [],
-    notaId: null, seqEnviat: null, orgPublica: null,
+    notaId: null, seqEnviat: null, orgPublica: null, aportacioCulturalId: null,
     /* Un id per passada: la idempotència es prova amb el MATEIX id dues voltes.
        UUID aleatori i no derivat del rellotge (L3 de tractor-persistencia): dues
        passades contra un servidor compartit no han de compartir id. */

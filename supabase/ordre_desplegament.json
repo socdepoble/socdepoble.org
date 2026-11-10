@@ -32,6 +32,18 @@
       "despres": "2611080432",
       "motiu": "El kit compost exclou el bot dels mínims humans mitjançant el registre privat IAIA.",
       "font": "README R54; bot peers0432"
+    },
+    {
+      "abans": "2610061448",
+      "despres": "2611091500",
+      "motiu": "La nova RPC usa private.es_superadmin amb aal2.",
+      "font": "README R15; capçalera2611091500"
+    },
+    {
+      "abans": "2611082238",
+      "despres": "2611091500",
+      "motiu": "Extensió additiva del contracte de sessions; el resum anterior es conserva.",
+      "font": "README R15; capçalera2611091500"
     }
   ],
   "portes": [

@@ -64,3 +64,10 @@ export const NOMS_DEL_NUCLI_1_4 = congela({
   ],
   pedraSeca: ['Botonera']
 });
+
+/* R15: canonical catalogue workspace and pending allergen review. */
+export const NOMS_DEL_NUCLI_1_5 = congela({
+  plataforma: ['candidatsVariantParroquia'],
+  pedraSeca: ['CandidatsAlergens'],
+  workspace: ['CatalegWorkspace', 'DetallCataleg']
+});

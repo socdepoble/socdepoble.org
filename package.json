@@ -77,7 +77,7 @@
     "build:web": "vite build && node tooling/gates/pressupost-paquet.mjs --dist dist",
     "build:wp": "vite build -c vite.standalone.config.js",
     "build:wp:directori": "SDP_VARIANT=wordpress vite build -c vite.standalone.config.js",
-    "build:natiu": "npm run build:tokens && npm run rag:build && npm run slugs:build && node tooling/wiki/compile-wiki-to-app.mjs && vite build -c vite.natiu.config.js --mode natiu",
+    "build:natiu": "npm run build:tokens && npm run rag:build && npm run slugs:build && node tooling/wiki/compile-wiki-to-app.mjs && vite build -c vite.natiu.config.js --mode natiu && node tooling/gates/pressupost-paquet.mjs --dist dist-natiu",
     "cap:sync": "cap sync",
     "cap:android": "cap open android",
     "cap:ios": "cap open ios",

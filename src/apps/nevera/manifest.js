@@ -16,6 +16,7 @@ export default {
   titol: { ca: 'La Nevera de Casa', es: 'La Nevera de Casa' },
   icona: 'ShoppingCart',
   entrades: [
+    { slug: 'rebost', titol: { ca: 'Rebost', es: 'Despensa' }, icona: 'Boxes' },
     { slug: 'llistes', titol: { ca: 'Llistes', es: 'Listas' }, icona: 'LayoutDashboard' },
     { slug: 'llista', titol: { ca: 'La compra', es: 'La compra' }, icona: 'ClipboardList' },
     { slug: 'cataleg', titol: { ca: 'Catàleg', es: 'Catálogo' }, icona: 'LayoutGrid' },
@@ -25,7 +26,7 @@ export default {
     { slug: 'temporada', titol: { ca: 'Temporada', es: 'Temporada' }, icona: 'CalendarDays' },
     { slug: 'ajustos', titol: { ca: 'Ajustos', es: 'Ajustes' }, icona: 'Settings' }
   ],
-  entradaPerDefecte: 'llista',
+  entradaPerDefecte: 'rebost',
   permisos: { veure: 'public' },
   capacitats: [],
   nivell: 'gratuit',

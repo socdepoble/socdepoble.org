@@ -20,8 +20,20 @@ import {
   versioPublicacionsEsborrades
 } from '../../data/publicacionsEsborrades.js';
 import { revisaLlista, subscriuRevisionsEditorials, versioRevisionsEditorials } from '../../data/revisionsEditorials.js';
+import { portaMarcaProjeccioCataleg } from '../../data/marcaProjeccioCataleg.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
+
+/* PRODNM-01 (R15b) · Una projecció del catàleg (i la seua marca «Publicació
+   retirada») es desa com a fila de la secció 'mur', però només es mostra als
+   destins que la persona ha triat: ProjeccionsEnSuperficie i CatalegWorkspace
+   la llegixen pel seu propi port (useProjeccionsCataleg). Ací es lleva de
+   totes les llistes del Mur, una sola vegada: ni /calendari, ni la Cerca, ni
+   el perfil, ni Brain, ni Notes, ni Pobles, ni el detall /mur/:id. És un
+   filtre de lectura i, per tant, retroactiu. */
+const senseProjeccions = (llista) => (Array.isArray(llista) && llista.some(portaMarcaProjeccioCataleg)
+  ? llista.filter((item) => !portaMarcaProjeccioCataleg(item))
+  : llista);
 
 /* ── Decisió 4 del Mestre (261007) · «Tall de 50 publicacions: CARREGA
    PROGRESSIVA (LOAD MORE). Un límit inicial de 50 és sa, però s'ha
@@ -290,9 +302,9 @@ export function MurProvider({ children, config }) {
     void versioEsborrades;
     void versioRevisions;
     const { mur, events, mercat } = seccions;
-    const feedPosts = revisaLlista(filtraElementsBloquejats(filtraPublicacionsEsborrades(mur.elements, 'mur'), esElementBloquejat), 'mur');
-    const elsEvents = revisaLlista(filtraElementsBloquejats(filtraPublicacionsEsborrades(events.elements, 'events'), esElementBloquejat), 'events');
-    const marketItems = filtraElementsBloquejats(filtraPublicacionsEsborrades(mercat.elements, 'mercat'), esElementBloquejat);
+    const feedPosts = revisaLlista(filtraElementsBloquejats(filtraPublicacionsEsborrades(senseProjeccions(mur.elements), 'mur'), esElementBloquejat), 'mur');
+    const elsEvents = revisaLlista(filtraElementsBloquejats(filtraPublicacionsEsborrades(senseProjeccions(events.elements), 'events'), esElementBloquejat), 'events');
+    const marketItems = filtraElementsBloquejats(filtraPublicacionsEsborrades(senseProjeccions(mercat.elements), 'mercat'), esElementBloquejat);
     return {
       status,
       error,

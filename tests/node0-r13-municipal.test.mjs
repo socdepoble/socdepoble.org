@@ -49,7 +49,8 @@ test('R13 actual SQL catalogue, admin permissions, clean municipal restore and c
       for(const migration of plan.migrations)await db.exec(migration.sql);
       // Native Node0 adds this exact infrastructure grant in backend-node0.sql.
       await db.exec('GRANT SELECT(id) ON public.towns TO authenticated');
-      assert.equal(plan.migrations.length,85);
+      assert.equal(plan.migrations.length,86); // R15 adds2611091500; this full-source suite executes pending2.6 too.
+      assert.equal(plan.migrations.some(m=>m.version==='2611091500'),true);
       archive=await llegeixZipNodeZero({root:ROOT,sha256Esperat:SHA256_ZIP_CANONIC});
       assert.equal(sha(archive),SHA256_ZIP_CANONIC);
       const parsed=await llegeixPaquetOpenData(new Uint8Array(archive),{sha256Esperat:SHA256_ZIP_CANONIC});

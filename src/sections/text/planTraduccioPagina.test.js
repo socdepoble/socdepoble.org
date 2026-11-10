@@ -17,7 +17,7 @@ describe('planTraduccioPagina', () => {
     expect(planTraduccioPagina(Object.create({ translation_mode: 'none' }), 'en')).toBeNull();
     for (const brossa of [null, undefined, 'pàgina', [], 0]) expect(planTraduccioPagina(brossa, 'en')).toBeNull();
     const claus = Object.keys(PAGE_COPY);
-    expect(claus.length).toBe(32);
+    expect(claus.length).toBe(33);
     expect(claus.filter((clau) => planTraduccioPagina(PAGE_COPY[clau], 'en') !== null)).toEqual([]);
   });
 

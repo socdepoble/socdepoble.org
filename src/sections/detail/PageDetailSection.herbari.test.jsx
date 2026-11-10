@@ -1,10 +1,11 @@
 /* Integradora R8 (261106; arbitratge R8, G4 i G6) · /page/herbari amb el
    PAGE_COPY real (no un pageCopy injectat, G6-06) i la maquinària de sempre
    (PageDetailSection → TextSection → UniversalPage): el text breu i, davall,
-   l'herbari (HerbariLaTorreSection), carregat com a chunk lazy. Sense la
+   l'herbari (HerbariWorkspaceSection des de R15b; abans el visor
+   HerbariLaTorreSection, ja esborrat), carregat com a chunk lazy. Sense la
    reserva d'aplicaAparadorR20, que no es connecta (G1-01). */
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from '../../app/contexts/RouterContext';
 
 /* Onada R9 · La llengua de la interfície es pot canviar per prova (ui.language); per defecte, el valencià. */
@@ -23,7 +24,8 @@ import PageDetailSection from './PageDetailSection.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { ESPECIES_HERBARI_LA_TORRE_117 } from '../../data/patrimoni/herbariLaTorre117.js';
 
-afterEach(cleanup);
+beforeEach(() => { vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }); vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 const visita = (ruta) => render(
   <MemoryRouter rutaInicial={ruta}>
@@ -40,13 +42,23 @@ describe('/page/herbari', () => {
     expect(ESPECIES_HERBARI_LA_TORRE_117).toHaveLength(117);
     expect(PAGE_COPY.herbari.subtitle).toContain('117');
     visita('/page/herbari');
+    await screen.findByRole('heading', { level: 1 });
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Herbari de La Torre');
-    const estat = await screen.findByText('117 / 117 fitxes');
-    const seccio = estat.closest('section');
+    await screen.findByRole('button', { name: 'Obri fitxa: Acacia robínia' });
+    const workspace = document.querySelector('.sdp-workspace');
+    expect(workspace).toBeTruthy();
+    expect(workspace.closest('.cms-preview')).toBeNull();
+    expect(document.querySelectorAll('#app-grid-list article.sp-card')).toHaveLength(117);
+    const seccio = document.getElementById('app-grid-main');
     const cos = document.querySelector('.cms-preview');
-    expect(cos.compareDocumentPosition(seccio) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(seccio.querySelectorAll('ol > li').length).toBeGreaterThan(0);
+    expect(seccio.contains(cos)).toBe(true);
+    expect(document.getElementById('app-grid-sidebar')).toBeTruthy();
+    expect(document.getElementById('app-grid-list')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Obri fitxa: Acacia robínia' }));
+    expect(document.getElementById('app-grid-main').textContent).toContain('Black locust');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
   test('el text de la pàgina no promet cap aval de consum', () => {
@@ -62,15 +74,17 @@ describe('/page/herbari', () => {
     try {
       const traduccio = PAGE_COPY.herbari.translations[llengua];
       visita('/page/herbari');
-      expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+      await screen.findByRole('heading', { level: 1 });
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
       const h1 = screen.getByRole('heading', { level: 1 });
       expect([h1.textContent, h1.getAttribute('lang')]).toEqual([traduccio.title, null]);
       const cos = document.querySelector('.cms-preview');
       expect(cos.getAttribute('lang')).toBeNull();
       expect(cos.querySelector('h3').textContent).toBe(new DOMParser().parseFromString(traduccio.html, 'text/html').querySelector('h3').textContent);
       for (const etiqueta of traduccio.labels) expect(screen.getByText(etiqueta.text)).toBeTruthy();
-      const estat = await screen.findByText(new RegExp(`^117 / 117 `));
-      expect(cos.compareDocumentPosition(estat.closest('section')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      await screen.findByRole('button', { name: 'Acacia robínia', exact: true });
+      expect(document.getElementById('app-grid-main').contains(cos)).toBe(true);
+      expect(document.querySelectorAll('#app-grid-list article.sp-card')).toHaveLength(117);
     } finally {
       ui.language = undefined;
     }

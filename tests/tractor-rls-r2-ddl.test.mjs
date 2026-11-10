@@ -243,3 +243,22 @@ test('RENAME COLUMN no retira la taula: CREATE IF NOT EXISTS continua sent un no
   const result=audit({'001_base.sql':protegida,'002_canvi.sql':'alter table public.private_row rename column id to ident;\ncreate table if not exists public.private_row (id int);'});
   assert.equal(result.status,0,result.stdout);
 });
+
+/* R15b · R8 (ADMIN-ORFE) reconeix la revocació qualificada de l'esquema private, `revoke all` i la llista de rols
+   sense espai; una funció administrativa sense revocació a PUBLIC i anon continua en roig. */
+const admin=(esquema,nom)=>`create or replace function ${esquema}.${nom}() returns boolean language sql stable security definer set search_path = '' as $$ select coalesce((select private.es_superadmin()),false) $$;\n`;
+test('R8 accepta la revocació qualificada de private amb revoke all i rols sense espai',()=>{
+  const result=audit(admin('private','pot_curar')+'revoke all on function private.pot_curar() from public,anon,authenticated;\n');
+  assert.equal(result.status,0,result.stdout);
+});
+test('R8 continua acceptant la forma pública de sempre',()=>{
+  const result=audit(admin('public','llista_admin')+'revoke execute on function public.llista_admin() from public, anon;\n');
+  assert.equal(result.status,0,result.stdout);
+});
+test('R8 continua en roig sense revocació, o si la revocació no inclou PUBLIC i anon',()=>{
+  for(const revoca of ['','revoke all on function private.pot_curar() from authenticated;\n','revoke all on function private.pot_curar() from anon;\n']){
+    const result=audit(admin('private','pot_curar')+revoca);
+    assert.equal(result.status,1,result.stdout);
+    assert.match(result.stdout+result.stderr,/R8/);
+  }
+});

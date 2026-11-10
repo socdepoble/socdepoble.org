@@ -134,12 +134,12 @@ describe('l’adaptador local (conversesLocal)', () => {
       setBackendImplementation(a);
       expect(teCapacitat('avisosPush')).toBe(true);
       expect(teCapacitat('silenciXat')).toBe(true);
-      // R54 incorpora dos grups al contracte; el node local no els declara.
+      // R15 i R54 incorporen grups de servidor; el node local no els declara.
       // Les capacitats locals prèvies, push i silenci incloses, es conserven.
-      expect(CAPACITATS_NO_DECLARADES).toEqual(['iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+      expect(CAPACITATS_NO_DECLARADES).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
       const absents = Object.keys(CAPACITATS).filter(cap => CAPACITATS[cap].every(metode => typeof a[metode] !== 'function'));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(Object.keys(CAPACITATS)).toHaveLength(48);
+      expect(Object.keys(CAPACITATS)).toHaveLength(51);
     } finally {
       await a.destroy();
     }

@@ -40,9 +40,19 @@ const PAGINES_PATRIMONI_MUR = Object.freeze([
   { key: 'arbres-monumentals', href: '/page/arbres-monumentals', isAvis: false }
 ]);
 
+/* PRODUCCIO-02 (revisió R15b) · Nodrir la IAIA només és targeta (del Mur, del Calendari i del Bloc de
+   l'entitat, que passen tots per ací) quan el build porta VITE_SDP_CURADORIA_CULTURAL=1, el mateix literal
+   que encén la capacitat 'curadoriaCultural' (data/supabase/index.js). Apagada, la pàgina no recull res i la
+   seua data de creació (9-11-2026) l'enlairava al capdamunt del Mur. No falta: no avisa. La ruta
+   /page/nodrir-la-iaia i SYSTEM_PAGES no canvien. Es llig en cada crida perquè vi.stubEnv la governe. */
+const PAGINES_AMB_CURADORIA = Object.freeze(['nodrir-la-iaia']);
+export function esTargetaDelMur(clau) {
+  return !PAGINES_AMB_CURADORIA.includes(clau) || import.meta.env.VITE_SDP_CURADORIA_CULTURAL === '1';
+}
+
 export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa(), language = 'ca' } = {}) {
   const paginesPatrimoni = PAGINES_PATRIMONI_MUR.filter((item) => Boolean(pageCopy?.[item.key]));
-  return [...SYSTEM_PAGES.filter((item) => esPaginaVisible(item.key, { nativa })), ...paginesPatrimoni].map((item) => {
+  return [...SYSTEM_PAGES.filter((item) => esPaginaVisible(item.key, { nativa }) && esTargetaDelMur(item.key)), ...paginesPatrimoni].map((item) => {
     // Només documents del namespace públic; cap marker d’un post orgànic dona accés.
     if (pageCopy?.[item.key] && !clauDePaginaPublica(pageCopy[item.key], item.key)) return null;
     const data = paginaPerAppNativa(pageCopy?.[item.key], { nativa });

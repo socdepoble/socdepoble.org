@@ -137,6 +137,7 @@ export const loadNotesPage = asseguraMetode('loadNotesPage');
    'paginacioSeccions'). No és nucli: MurContext pregunta abans amb
    teCapacitat i, sense ella, no ofereix el botó. */
 export const loadSeccioPage = asseguraMetode('loadSeccioPage');
+export const loadProjeccionsCataleg = asseguraMetode('loadProjeccionsCataleg');
 export const loadNotes = asseguraMetode('loadNotes');
 export const appendChatMessages = asseguraMetode('appendChatMessages');
 
@@ -383,3 +384,11 @@ export const inclouPersonaEnEntitat = asseguraMetode('inclouPersonaEnEntitat');
 export const solicitaUnirSeAEntitat = asseguraMetode('solicitaUnirSeAEntitat');
 
 export const consultaIAIA = asseguraMetode('consultaIAIA');
+
+/* R15 · Autoritat de sessions i curadoria resolta exclusivament pel servidor. */
+export const adminResumSessionsDispositius = asseguraMetode('adminResumSessionsDispositius');
+export const adminLlistaSessionsDispositius = asseguraMetode('adminLlistaSessionsDispositius');
+export const estatCuradoriaCultural = asseguraMetode('estatCuradoriaCultural');
+export const llistaAportacionsCulturals = asseguraMetode('llistaAportacionsCulturals');
+export const enviaAportacioCultural = asseguraMetode('enviaAportacioCultural');
+export const revisaAportacioCultural = asseguraMetode('revisaAportacioCultural');

@@ -670,9 +670,21 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
 
     const nucli=CONTRACTE_NUCLI.length,capacitats=Object.keys(CAPACITATS).length,total=CONTRACTE_BACKEND.length,opcionals=total-nucli;
     const fet=apartat(0,'Fet hui (verificable)');
+    // R15-A3: the public historical receipt is preserved; the current local
+    // census belongs to its dated note, without claiming service activation.
+    // R15b (RV-04): «Fet hui (verificable)» carries the same live census as the
+    // dated note (one source, INVENTARI_CONTRACTE), checked against the code.
     expect(fet).toContain(nucli+' mètodes obligatoris i '+capacitats+' capacitats opcionals declarades');
     expect(fet).toContain(opcionals+' mètodes addicionals: '+total+' mètodes en total');
+    expect(fet).toContain('recompte del codi local del 9 de novembre de 2026');
+    expect(fet).toContain('no certifica les '+total+' operacions contra un servidor remot');
+    const paginaCompleta=new DOMParser().parseFromString(copy.html,'text/html');
+    const notaActual=[...paginaCompleta.querySelectorAll('p')].find(p=>p.textContent.includes('Inventari del codi local.'))?.textContent;
     const {CASOS,metodesSenseCas}=await import('../../data/conformitat/kit.js');
+    expect(notaActual).toContain('9 de novembre de 2026');
+    expect(notaActual).toContain(capacitats+' capacitats i '+total+' mètodes amb '+CASOS.length+' casos');
+    expect(notaActual).toContain('46/138/190');
+    expect(notaActual).toContain('no acredita activació');
     expect(fet).toContain(CASOS.length+' casos sobre '+new Set(CASOS.map(c=>c.metode)).size+' mètodes');
     expect(metodesSenseCas()).toHaveLength(total-new Set(CASOS.map(c=>c.metode)).size);
     expect(new Set(CASOS.map(c=>c.metode))).toEqual(new Set(CONTRACTE_BACKEND));
@@ -682,18 +694,25 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       const oferides=Object.entries(CAPACITATS).filter(([,metodes])=>metodes.every(nom=>typeof local[nom]==='function')).map(([nom])=>nom);
       const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(absents).toEqual(['iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+      expect(absents).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+      expect(oferides).toHaveLength(44);
+      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(22);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');
-      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(10);
-      expect(fet).toContain('els seus deu casos s’ometen en local');
+      expect(fet).toContain('els seus '+CASOS.filter(c=>absents.includes(c.capacitat)).length+' casos s’ometen en local');
+      // Cap altra xifra viva a la pàgina: només el balanç històric 46/138/190 i el FEDI-04 datat (178/126).
+      const pagina=new DOMParser().parseFromString(copy.html,'text/html').body.textContent.replace(/\s+/g,' ');
+      expect(pagina).not.toMatch(/48 capacitats opcionals|141 mètodes en total|195 casos sobre|43 d’estos 48|els seus deu casos/);
     }finally{await local.destroy();}
 
-    expect(fet).toContain('no certifica les '+total+' operacions contra un servidor remot');
+    expect(notaActual).toContain('no acredita activació');
     const model=llegix('_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md').replaceAll('**','');
     for(const frase of[nucli+' operacions obligatòries',capacitats+' capacitats atòmiques opcionals',opcionals+' mètodes addicionals',total+' mètodes'])expect(model).toContain(frase);
     expect(model).toContain(CASOS.length+' casos sobre '+new Set(CASOS.map(c=>c.metode)).size+' mètodes');
     expect(model).toContain((capacitats-CAPACITATS_NO_DECLARADES.length)+' dels '+capacitats+' grups declarats');
+    expect(model).toContain('els 22 casos');
+    for(const absent of CAPACITATS_NO_DECLARADES)expect(model).toContain('`'+absent+'`');
+    expect(model).toContain('no són '+total+' operacions verificades en un servidor remot');
     expect(model).toContain('no acredita un èxit funcional ni un servei de correu desplegat');
     const {wikiManifest}=await import('../../data/wikiManifest.js');
     const inventari=wikiManifest.items.find(item=>item.id==='api_port_neutral_i_allotjament_model_b');

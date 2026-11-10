@@ -17,12 +17,12 @@ const { manifest } = validaManifestApp(manifestCru);
 describe('manifest', () => {
   test('és un sdp.app.v1 vàlid, premium, de desenvolupament i sense capacitats del backend', () => {
     expect(validaManifestApp(manifestCru)).toMatchObject({ ok: true, errors: [] });
-    expect(manifest).toMatchObject({ id: 'bar', entradaPerDefecte: 'caixa', nivell: 'premium', dret: 'sdp.app.bar', capacitats: [], dadesPersonals: false });
+    expect(manifest).toMatchObject({ id: 'bar', entradaPerDefecte: 'cataleg', nivell: 'premium', dret: 'sdp.app.bar', capacitats: [], dadesPersonals: false });
     expect(manifest.grups.map((g) => g.id)).toEqual(['servei', 'carta', 'torn', 'ajustos']);
     expect(manifest.interruptors.map((i) => [i.id, i.actiuPerDefecte])).toEqual([['taules', true], ['escandalls', true], ['cuina', false]]);
   });
 
-  test('el TPV (261006) és una entrada de servei just després de la Caixa, que continua sent la de per defecte', () => {
+  test('el TPV conserva la seua entrada de servei just després de la Caixa', () => {
     expect(manifest.entrades.slice(0, 2).map((e) => [e.slug, e.icona, e.grup])).toEqual([['caixa', 'Receipt', 'servei'], ['tpv', 'Store', 'servei']]);
     expect(manifest.entrades.find((e) => e.slug === 'tpv').titol).toEqual({ ca: 'TPV', es: 'TPV' });
     expect(manifest.permisos).toEqual({ veure: 'public', escriure: 'sessio' });

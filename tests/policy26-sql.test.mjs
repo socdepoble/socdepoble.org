@@ -16,12 +16,12 @@ const dir = path.join(root, 'supabase/migrations');
 const load = name => fs.readFileSync(path.join(dir, name), 'utf8');
 const scalar = async (db, sql, params = []) => Object.values((await db.query(sql, params)).rows[0])[0];
 const sql = load(latest), html = sql.split('$politica_2_6$')[1];
-test('policy2.6 executes in the full85 R13/R54 composition; silent fallback window is demonstrated, never credited as2.6', async t => {
+test('policy2.6 executes in the full86 R13/R54/R15b composition; silent fallback window is demonstrated, never credited as2.6', async t => {
   const report = verifica({ arrel: root }); assert.deepEqual(report.errors, []);
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.sql'));
-  assert.equal(files.length, 85);
+  assert.equal(files.length, 86);
   const ordered = report.ordre.filter(n => n.tipus === 'migracio').map(n => files.find(f => f.startsWith(n.id + '_')));
-  assert.equal(new Set(ordered).size, 85); const policyIndex = ordered.indexOf(latest); assert.equal(policyIndex, 83); assert.equal(ordered.at(-1), '2611082238_admin_resum_sessions_dispositius.sql');
+  assert.equal(new Set(ordered).size, 86); const policyIndex = ordered.indexOf(latest); assert.equal(policyIndex, 83); assert.deepEqual(ordered.slice(-2), ['2611082238_admin_resum_sessions_dispositius.sql', '2611091500_sessions_i_curadoria_cultural.sql']);
   const db = new PGlite({ extensions: { pgcrypto } });
   const oldFetch = globalThis.fetch; globalThis.fetch = () => { throw new Error('NETWORK_DISABLED'); };
   try {

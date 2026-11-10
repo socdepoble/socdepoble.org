@@ -12,7 +12,7 @@ const SHA = /^[0-9a-f]{64}$/;
 const MAX_MANIFEST = 32 * 1024 * 1024;
 const MAX_ENTRADES = 100000;
 const FITXERS_ARREL = new Set(['.htaccess','_headers','_redirects','apple-touch-icon.png','favicon.ico','favicon.svg','icona-app-192.png','icona-app-512.png','index.html','manifest.webmanifest','rag-index.json','robots.txt','sitemap.xml','slugIndex.json','sw.js']);
-const DIRECTORIS_ARREL = new Set(['.well-known','__iaia','anima','ap','assets','auth','calendari','components','consola','constitucio','descarregues','disseny','events','fedivers','fediversity','federation','fonts','legal','mercat','multimedia','mur','nodeinfo','opendata','page','plugin','poblacio','pobles','projecte','roadmap','versions','wikidepoble']);
+const DIRECTORIS_ARREL = new Set(['.well-known','__iaia','anima','ap','assets','auth','calendari','components','consola','constitucio','descarregues','disseny','events','fedivers','fediversity','federation','fonts','legal','mercat','multimedia','mur','nodeinfo','opendata','page','plugin','poblacio','pobles','projecte','receptes','roadmap','versions','wikidepoble']);
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const ordre = (a,b) => a < b ? -1 : a > b ? 1 : 0;
 const falla = text => { throw new Error(text); };

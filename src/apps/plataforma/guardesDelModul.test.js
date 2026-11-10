@@ -32,7 +32,7 @@ import { NOMS_PER_FITXER_DE_PEDRA_SECA, VERSIO_NUCLI, exposaElNom, portaDeLaFont
 import {
   ADRECES_DE_TOTS, DECLARACIONS_DELS_MODULS, MAGATZEMS, XARXA, declaracioDe, hostsDe, infraccionsDelText
 } from './guardesDelModul.js';
-import { NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4 } from './__fixtures__/nomsDelNucli.js';
+import { NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const PONT = 'src/apps/gestoria/AppGestoria.jsx';
@@ -526,4 +526,18 @@ describe('6 · Onada 7: Pedra Seca i el router a tot l’arbre de les quatre app
       expect(noms.filter((nom) => !usatsPerPorta[clau].has(nom)), clau).toEqual([]);
     }
   });
+});
+
+
+test('R15: each1.5name is imported by a real catalogue app through its versioned kernel door', () => {
+  const used = { plataforma: new Set(), pedraSeca: new Set(), workspace: new Set() };
+  for (const lane of ['src/apps/bar', 'src/apps/nevera']) {
+    for (const file of fitxersDe(lane)) {
+      for (const { especificador, noms } of importacions(llig(file))) {
+        const door = portaDeLaFont(resol(file, especificador) || '');
+        if (door && used[door.clau]) for (const name of noms) used[door.clau].add(name);
+      }
+    }
+  }
+  for (const [door, names] of Object.entries(NOMS_DEL_NUCLI_1_5)) expect(names.filter(name => !used[door].has(name)), door).toEqual([]);
 });

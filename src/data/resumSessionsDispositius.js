@@ -9,13 +9,9 @@
  * només recomptes; ací no es compta res: es valida la forma i es classifica l'error, perquè el panell
  * diga la causa real i no mostre mai una xifra que no vinga del servidor.
  *
- * El camí fins al servidor és el port: l'adaptador de Supabase porta el mètode
- * METODE_RESUM_SESSIONS (src/data/supabase/admin.js), però el contracte (src/data/contracte.js) encara
- * no el declara i backendPort.js no l'exporta: el port només deixa passar els mètodes del contracte.
- * Declarar-lo canvia els recomptes del contracte que publica /page/fediversity (protegida per la
- * Frontissa) i l'entrada del web: és una decisió del Mestre. Fins llavors el panell rep SENSE_PORT i ho diu.
- *
- * Pur: sense React, DOM ni xarxa; el port arriba com a paràmetre. Mai no torna cap identificador.
+ * R15 declara la capacitat opcional administracioSessions al contracte i al port.
+ * El servidor continua sent l'autoritat: migració absent, rol insuficient o
+ * node sense servidor mai es convertixen en recomptes zero.
  */
 
 export const MIGRACIO_RESUM_SESSIONS = '2611082238_admin_resum_sessions_dispositius.sql';
@@ -98,6 +94,7 @@ function cosDelServidor(error) {
 export function codiDErrorResumSessions(error) {
   if (!error || typeof error !== 'object') return CODI_RESUM_SESSIONS.ERROR;
   if (Object.values(CODI_RESUM_SESSIONS).includes(error.code)) return error.code;
+  if (/\[backendPort\].*no està implementat/.test(error.message ?? '')) return CODI_RESUM_SESSIONS.SENSE_PORT;
   if (error.code === 'no-disponible') return CODI_RESUM_SESSIONS.SENSE_SERVIDOR;
   const cos = cosDelServidor(error);
   const codiPg = String(cos?.code ?? error.code ?? error.codi ?? '');

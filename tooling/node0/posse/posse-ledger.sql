@@ -11,6 +11,9 @@ DO $guard$ BEGIN
  -- R13-C7 adds the exact full catalogue81 with the superadmin-only session
  -- counts (2611082238); every earlier profile excludes it, as with SQL80.
  -- R54 adds the exact full85 catalogue with IAIA/push and preservedR13-C7.
+ -- R15 adds culture2611091500 with restrictive RPC-only tables: full86.
+ -- A3 also admits exactly fullR15 minus deferredprivacy2611080440 (85).
+ -- These two85 compositions have different pinned hashes; count is not identity.
  -- A count alone cannot prove a migration identity or its source bytes.
  OR NOT EXISTS(
  SELECT 1 FROM(VALUES
@@ -22,7 +25,9 @@ DO $guard$ BEGIN
 (80,'6d03b86a5f9236a3d1734b4c52e23752c23b42a19009b666e22b40f0ba14d858'),
 (81,'2b805488de510fb5c433c238dcf81b14d1b877920c2c4b221c88005c86ee8187')
 ,
-(85,'c068a25593a05717070adc14f32d9d4c95762d15f3bb3facd7b622c10224ee5b')
+(85,'c068a25593a05717070adc14f32d9d4c95762d15f3bb3facd7b622c10224ee5b'),
+(85,'33070384775ba945ca7a464fda17c9cafb450f954fa96585eba1097cc96f857e'),
+(86,'2dee56621a634f1699b2124a19f35923c82686e18a0b9e2a4fa5c7b762ea2eab')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

@@ -49,7 +49,7 @@ import {
   esActorAmbHistoric, potVeureHistoric, publicacionsDeLaSeccio, SECCIONS_AMB_HISTORIC, teHistoric, textosDeLHistoric,
   titolDeLHistoric, usePaginesDelSistema, usePublicacionsDeLActor, useTargetesDeSistema, useVeuHistoric
 } from './usePublicacionsDeLActor.js';
-import { momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
+import { esTargetaDelMur, momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
 
 const SOC_DE_POBLE = Object.freeze({ tipus: 'entitat', id: ENTITAT_PILOT_ID });
 /* El Foraster de veres: sense sessió, IdentitatContext hi posa la persona
@@ -221,7 +221,8 @@ describe('usePublicacionsDeLActor', () => {
 describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
   const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
   const SENSE_PAGINES = POSTS.filter((post) => !post.isSystem);
-  const CLAUS = [...SYSTEM_PAGES.map((pagina) => pagina.key), 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals'].map((key) => `mur:${key}`);
+  /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, Nodrir la IAIA no és cap targeta del Mur. */
+  const CLAUS = [...SYSTEM_PAGES.map((pagina) => pagina.key).filter(esTargetaDelMur), 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals'].map((key) => `mur:${key}`);
 
   test('sense proveïdor: cap targeta, la mateixa constant congelada entre pintades, i cap espera', () => {
     const { result, rerender } = renderHook(() => usePaginesDelSistema());
@@ -243,8 +244,9 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
   test('amb el contingut core: les14 pàgines i les4 de patrimoni del Mur, memoritzades sobre pageCopy', () => {
     mocks.core = NUCLI;
     const { result, rerender } = renderHook(() => useTargetesDeSistema());
-    expect(SYSTEM_PAGES).toHaveLength(14);
+    expect(SYSTEM_PAGES).toHaveLength(15);
     expect(CLAUS).toHaveLength(18);
+    expect(CLAUS).not.toContain('mur:nodrir-la-iaia');
     expect(result.current).toHaveLength(18);
     expect(result.current.some((targeta) => targeta.id === 'anatomia-rural')).toBe(false);
     expect(PAGE_COPY['anatomia-rural']).toBeDefined(); // El document directe es conserva; la targeta no forma part de la projecció del Mur.

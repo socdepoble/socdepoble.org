@@ -32,6 +32,9 @@
  *   1.4.0 · R14: serveis de catàleg i càlcul de Menjar i Beure, de només
  *           lectura, i Botonera. Les apps no arrosseguen src/data al cos.
  *           Els mòduls nous demanen ^1.4; les portes anteriors es conserven.
+ *   1.5.0 · R15: CatalegWorkspace i DetallCataleg a workspace, CandidatsAlergens
+ *           a Pedra Seca i candidatsVariantParroquia a plataforma. Extensió
+ *           compatible: cap nom publicat es lleva i els mòduls nous demanen ^1.5.
  *
  * MAI hi entren el port del backend, SessionContext ni IdentitatContext
  * (Model B i Llei de l'Enxufabilitat): un mòdul només sap si té dades del
@@ -39,7 +42,7 @@
  */
 
 export const ESQUEMA_MODUL = 'sdp.modul.v1';
-export const VERSIO_NUCLI = '1.4.0';
+export const VERSIO_NUCLI = '1.5.0';
 /* L'expressió global de l'objecte: el build dels mòduls hi penja cada porta. */
 export const GLOBAL_DEL_NUCLI = 'SocDePoble.nucli';
 
@@ -90,6 +93,8 @@ const PEDRA_SECA_V1 = Object.freeze([
   ['molecules/PillToggle.jsx', ['PillToggle']],
   /* Nucli1.4.0: centred navigation/actions shared by food-domain apps. */
   ['molecules/Botonera.jsx', ['Botonera']],
+  /* Nucli1.5.0: assisted review UI; no certified allergen claim. */
+  ['molecules/CandidatsAlergens.jsx', ['CandidatsAlergens']],
   ['organismes/AfegitRapid.jsx', ['AfegitRapid']],
   ['organismes/BarraResum.jsx', ['BarraResum']],
   ['organismes/DetallArticle.jsx', ['DetallArticle']],
@@ -135,7 +140,7 @@ export const PORTES_DEL_NUCLI = congela([
       'useApp', 'useClosaAplicacio', 'useInterruptorsApp', 'useParametresConsulta', 'useRutaApp', 'useServeiNoticies', 'useSessioApp',
       'validaRutes', 'validaTaulaDeClosa',
       'carregaCatalegParroquia', 'carregaFotosParroquia', 'carregaMercadona', 'carregaReceptes', 'comparaOfertaRural',
-      'costCopaDeTarifaParroquia', 'enriqueixCartaParroquia', 'fiscalVenda', 'ingredientDeTarifaParroquia',
+      'candidatsVariantParroquia', 'costCopaDeTarifaParroquia', 'enriqueixCartaParroquia', 'fiscalVenda', 'ingredientDeTarifaParroquia',
       'itemsCatalegCartaParroquia', 'mesuraIngredient', 'tarifesCompraParroquia', 'validaEsborranyTrasllat']
   },
   {
@@ -145,7 +150,8 @@ export const PORTES_DEL_NUCLI = congela([
   },
   /* workspace (1.2.0, Gauntlet nocturn del 261016): l'espai de treball de
      tres columnes del Bloc de notes, perquè una app s'hi munte sense portar-ne
-     una còpia. Una sola font, la façana, i dos noms: un import
+     una còpia. Una sola font, la façana; en1.5 també exposa els catàlegs
+     i la seua pàgina de detall. Un import
      d'UniversalWorkspace.jsx o de NavGlyph.jsx no és de cap porta, i un altre
      nom de la façana (ESPAI_COMU…) la porta no l'exposa; en tots dos casos el
      build del mòdul s'atura (vite.modul.config.js).
@@ -155,7 +161,7 @@ export const PORTES_DEL_NUCLI = congela([
   {
     clau: 'workspace',
     fonts: ['src/components/universal/workspace/index.js'],
-    noms: ['DefaultItemCard', 'UniversalWorkspace']
+    noms: ['CatalegWorkspace', 'DefaultItemCard', 'DetallCataleg', 'UniversalWorkspace']
   }
 ]);
 

@@ -1,3 +1,4 @@
+import ProjeccionsEnSuperficie from '../../components/universal/workspace/ProjeccionsEnSuperficie.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 
@@ -44,7 +45,7 @@ export default function MercatSection() {
     carregaMes = SENSE_CARREGA, hiHaMes = SENSE_MES, carregantMes = SENSE_MES, errorMes = SENSE_ERROR
   } = useMur();
   const { t } = useUIActions();
-  const productes = (sortedMarketItems || []).filter(esProducteVisible);
+  const productes = (sortedMarketItems || []).filter(item => item && !Object.hasOwn(item, 'projeccioCataleg')).filter(esProducteVisible);
   /* Decisió 4 · Els productes de més enllà dels primers 50. hiHaMes ja inclou
      teCapacitat('paginacioSeccions'); si la càrrega falla, l'avís és el de
      sempre i «Torna-ho a provar» torna a demanar la mateixa pàgina. */
@@ -81,6 +82,7 @@ export default function MercatSection() {
         {status === 'ready' && !productes.length ? <p role="status">
           {t('section.mercat.buit', 'Encara no hi ha productes publicats en este poble.')}
         </p> : null}
+        <ProjeccionsEnSuperficie desti="mercat" />
         <div className="sdp-card-grid">
           {/* Esmena 2 (261007_1645) · el descriptor, Connectar i el peu, a
               TargetaDelMercat: el JSX de sempre, píxel a píxel. */}

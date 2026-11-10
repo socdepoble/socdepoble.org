@@ -137,3 +137,6 @@ GoogleService-Info.plist
 # costos, marges i fórmules) només en local, per als builds opt-in i DEV. Al
 # repositori va parroquiaDades.generated.json, la versió sense eixos camps.
 /src/data/menjarIBeure/parroquiaDades.privat.json
+
+# R15.2: els originals locals no ixen al build públic.
+/public/assets/uploads/tpv-parroquia/

@@ -11,6 +11,12 @@ vi.mock('../text/TextSection', () => ({ default: ({ children }) => <article>{chi
 vi.mock('../control/PublicarDeLaPagina.jsx', () => ({ PublicarDeLaPagina: ({ clau }) => <button>Publicar {clau}</button> }));
 vi.mock('./InstalaLaPwa.jsx', () => ({ InstalaLaPwa: () => null, useInstalacioDeLaPagina: () => null }));
 vi.mock('../text/AparadorFediversity.jsx', () => ({ default: () => <section>Aparador Fediversity lazy</section> }));
+vi.mock('../../app/contexts/ProveidorProjeccionsCataleg.jsx', () => ({ default: ({ children }) => <>{children}</> }));
+vi.mock('../text/FediversityWorkspaceSection.jsx', async () => {
+  const { default: TextSection } = await import('../text/TextSection');
+  const { default: Aparador } = await import('../text/AparadorFediversity.jsx');
+  return { default: ({ children, ...props }) => <TextSection {...props}><Aparador />{children}</TextSection> };
+});
 vi.mock('../../components/patrimoni/IaiaWhatsappCard.jsx', () => ({ default: () => <section>El WhatsApp de la IAIA lazy</section> }));
 import PageDetailSection from './PageDetailSection.jsx';
 

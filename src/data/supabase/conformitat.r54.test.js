@@ -69,3 +69,44 @@ test('R54 · DTO malformat, watermark impossible, bot/model impropi o rebuig ali
   expect(await executaCas(positive('consultaIAIA'), { consultaIAIA: async () => ({ ...discovery, source: 'model', inference: true }) }, ctx())).toMatchObject({ estat: 'falla' });
   expect(await executaCas(positive('actualitzaPresenciaXat'), { actualitzaPresenciaXat: async () => ({ acceptat: true, text: 'draft' }) }, ctx())).toMatchObject({ estat: 'falla' });
 });
+
+/* R15 · Les sis operacions noves passen pel codi real de l’adaptador.
+   El doble substituïx només la resposta SQL; no acredita una DB desplegada. */
+import { adminResumSessionsDispositius, adminLlistaSessionsDispositius } from './admin.js';
+import { estatCuradoriaCultural, llistaAportacionsCulturals, enviaAportacioCultural, revisaAportacioCultural } from './curadoriaCultural.js';
+const r15 = CASOS.filter(c => c.titol.startsWith('R15:'));
+const adapterR15 = { adminResumSessionsDispositius, adminLlistaSessionsDispositius, estatCuradoriaCultural, llistaAportacionsCulturals, enviaAportacioCultural, revisaAportacioCultural };
+const cultureR15 = { id: F, titol: 'Conformitat cultural', autoria: 'Informant sintètic', poble: 'Poble de conformitat', contingut: 'Text de prova cultural', nota: '', estat: 'pendent_revisio', creat_a: '2026-11-09T14:00:00Z' };
+const contextR15 = enabled => contextDeConformitat({ config: Object.freeze({ dataMode: 'remote' }), escriptures: true, escenaris: { sessionsAdminOperatiu: enabled, sessionsSensePermis: enabled, curadoriaOperativa: enabled, curadoriaSensePermis: enabled } });
+test('R15 · dotze casos, sis operacions, positives privilegiades i escriptures només amb habilitació explícita', async () => {
+  expect(r15).toHaveLength(12); expect(new Set(r15.map(c=>c.metode)).size).toBe(6); expect(CONTRACTE_NUCLI).toHaveLength(32);
+  for (const c of r15.filter(c=>c.requerix.length)) {
+    const f=vi.fn(); expect(await executaCas(c,{[c.metode]:f},contextR15(false))).toMatchObject({estat:'omés'}); expect(f).not.toHaveBeenCalled();
+  }
+  for (const c of r15.filter(c=>c.escriu)) {
+    const context=contextR15(true);context.escriptures=false;context.aportacioCulturalId=F;
+    const f=vi.fn();expect(await executaCas(c,{[c.metode]:f},context)).toMatchObject({estat:'omés',motiu:'escriptura no demanada'});expect(f).not.toHaveBeenCalled();
+  }
+});
+test('R15 · èxits i rebuigs amb funcions reals; arguments invàlids no arriben a SQL', async () => {
+  const context=contextR15(true), calls=[];
+  for (const c of r15) {
+    io.rpc.mockImplementation(async (nom,params)=>{
+      calls.push([nom,params]);
+      if(c.requerix.some(k=>k.endsWith('SensePermis')))throw Object.assign(new Error('refús SQL'),{status:403});
+      if(nom==='admin_resum_sessions_dispositius')return {consultat_a:'2026-11-09T14:00:00Z',camins:['app_ios','web_ios','app_android','web_android','escriptori','altres'].map(cami=>({cami,persones_24h:0,persones_7d:0,persones_14d:0})),total:{persones_24h:0,persones_7d:0,persones_14d:0}};
+      if(nom==='admin_llista_sessions_dispositius')return {consultat_a:'2026-11-09T14:00:00Z',total:1,files:[{clau:'c'.repeat(32),nom:'Conformitat',correu_mascarat:'s***@example.invalid',cami:'app_ios',sessions:1,activitat:'2026-11-09T14:00:00Z'}]};
+      if(nom==='estat_curadoria_cultural')return {autenticat:true,pot_curar:true,ingestio_disponible:false};
+      if(nom==='llista_aportacions_culturals')return [structuredClone(cultureR15)];
+      if(nom==='revisa_aportacio_cultural')throw Object.assign(new Error('SDP-CULTURA-PROPIA'),{status:403,code:'42501'});
+      return {...cultureR15,estat:'pendent_revisio'};
+    });
+    const abans=calls.length;
+    expect(await executaCas(c,adapterR15,context),c.titol).toMatchObject({estat:'ok',falles:[]});
+    if(c.espera==='rebutja'&&!c.requerix.length)expect(calls.length,c.titol).toBe(abans);
+  }
+  expect(context.aportacioCulturalId).toBe(F);
+  expect(calls.find(([nom])=>nom==='admin_llista_sessions_dispositius')[1]).toEqual({p_cerca:'conformitat',p_cami:'app_ios'});
+  expect(calls.find(([nom])=>nom==='envia_aportacio_cultural')[1]).toMatchObject({p_permisos:true,p_autoria:'Informant sintètic'});
+  expect(calls.find(([nom])=>nom==='revisa_aportacio_cultural')[1]).toEqual({p_id:F,p_estat:'aprovat',p_nota:'Revisió sintètica de conformitat'});
+});

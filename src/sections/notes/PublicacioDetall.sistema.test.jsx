@@ -188,10 +188,20 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
      amb eixa portada. Ara en són quinze de text, i díhuit en total. */
   const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
   test('una pàgina del sistema que no és de text (Disseny, Notes, Wiki) no pinta cap cos: la capçalera i «Obri la pàgina»', () => {
+    /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1 (producció), Nodrir la IAIA no és cap targeta:
+       díhuit. Amb la bandera, hi torna (dènou) i es llig com les altres. */
     expect(SISTEMA).toHaveLength(18);
-    expect(SISTEMA.map(item => item.id)).not.toContain('anatomia-rural');
-    for (const targeta of SISTEMA) {
-      const { container, unmount } = render(<PublicacioDetall item={pagina(targeta.id)} />);
+    expect(SISTEMA.map(item => item.id)).not.toContain('nodrir-la-iaia');
+    vi.stubEnv('VITE_SDP_CURADORIA_CULTURAL', '1');
+    let ambCuradoria;
+    try { ambCuradoria = targetesDeSistema(PAGE_COPY); } finally { vi.unstubAllEnvs(); }
+    expect(ambCuradoria).toHaveLength(19);
+    expect(ambCuradoria.map(item => item.id)).toContain('nodrir-la-iaia');
+    expect(ambCuradoria.filter(item => item.id !== 'nodrir-la-iaia')).toEqual(SISTEMA);
+    expect(new Set(ambCuradoria.map(item => item.id)).size).toBe(19);
+    expect(ambCuradoria.map(item => item.id)).not.toContain('anatomia-rural');
+    for (const targeta of ambCuradoria) {
+      const { container, unmount } = render(<PublicacioDetall item={publicacioComANota(targeta, 'mur')} />);
       const cos = container.querySelector('article.cms-preview');
       if (SENSE_COS.includes(targeta.id)) expect([targeta.id, cos]).toEqual([targeta.id, null]);
       else expect([targeta.id, cos.textContent.trim().length > 0]).toEqual([targeta.id, true]);

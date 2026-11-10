@@ -21,6 +21,7 @@ describe('les apps internes', () => {
     expect(APPS_INTERNES.map((app) => app.id)).toEqual(expect.arrayContaining(['bar', 'salut']));
     for (const app of APPS_INTERNES) expect(typeof app.carrega, app.id).toBe('function');
     expect(APPS_INTERNES.find((app) => app.id === 'salut').dadesPersonals).toBe('salut');
+    expect(APPS_INTERNES.find((app) => app.id === 'bar').entradaPerDefecte).toBe('cataleg');
   });
 
   /* Lot NEVERA (T8) · La Nevera de Casa, darrere de bar i salut, amb la
@@ -30,10 +31,10 @@ describe('les apps internes', () => {
     expect(ids.indexOf('nevera')).toBeGreaterThan(ids.indexOf('salut'));
     expect(ids.indexOf('salut')).toBeGreaterThan(ids.indexOf('bar'));
     const nevera = APPS_INTERNES.find((app) => app.id === 'nevera');
-    expect(nevera).toMatchObject({ origen: 'interna', nivell: 'gratuit', dadesPersonals: false, entradaPerDefecte: 'llista' });
+    expect(nevera).toMatchObject({ origen: 'interna', nivell: 'gratuit', dadesPersonals: false, entradaPerDefecte: 'rebost' });
     expect(typeof nevera.carrega).toBe('function');
     /* Onada 12 (261011; ordres 261011_0130, punt 6) · «receptes», darrere d'«A casa». */
-    expect(nevera.entrades.map((entrada) => entrada.slug)).toEqual(['llistes', 'llista', 'cataleg', 'casa', 'receptes', 'temporada', 'ajustos']);
+    expect(nevera.entrades.map((entrada) => entrada.slug)).toEqual(['rebost', 'llistes', 'llista', 'cataleg', 'casa', 'receptes', 'temporada', 'ajustos']);
     expect(appDeRuta('/app/nevera/llista/casa')?.id).toBe('nevera');
     expect(entradaActiva(nevera, '/app/nevera/casa/cal-comprar')?.slug).toBe('casa');
   });
@@ -199,15 +200,16 @@ describe('creaRegistre', () => {
     expect(registre.registraModul(manifestModulDeProva({ cos: { cami: '/cos.js', integrity: 'sha384-curt' } })).ok).toBe(false);
     expect(registre.registraModul(manifestExternDeProva()).ok).toBe(false);
     const futur = registre.registraModul(manifestModulDeProva({ nucli: '^2' }));
-    expect(futur).toEqual({ ok: false, errors: ['nucli: este nucli és el 1.4.0 i el mòdul demana ^2'], manifest: null });
+    expect(futur).toEqual({ ok: false, errors: ['nucli: este nucli és el 1.5.0 i el mòdul demana ^2'], manifest: null });
     expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.9' })).ok).toBe(false);
     /* Actualitzat a posta (261016): amb el nucli 1.2.0 (porta 'workspace') un mòdul de '^1.2' ja entra; el primer que no, el de '^1.3'.
        Actualitzada a posta (261024 T5): amb l'1.3.0 (useServeiNoticies) un de '^1.3' ja entra.
-       R14: amb els serveis de domini1.4, es rebutja '^1.5' i es manté la compatibilitat1.3. */
-    expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.5' })).ok).toBe(false);
+       R15: amb els catàlegs i la revisió assistida1.5, es rebutja '^1.6' i es mantenen les versions anteriors. */
+    expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.6' })).ok).toBe(false);
     expect(registre.llista()).toEqual([]);
     expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.3' })).ok).toBe(true);
     expect(creaRegistre({ internes: [] }).registraModul(manifestModulDeProva({ nucli: '^1.4' })).ok).toBe(true);
+    expect(creaRegistre({ internes: [] }).registraModul(manifestModulDeProva({ nucli: '^1.5' })).ok).toBe(true);
   });
 
   test('componentDe d’un mòdul: un lazy per id que demana el cos al carregador; retirar-lo l’oblida', () => {

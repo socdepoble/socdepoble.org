@@ -10,7 +10,8 @@ import {creaAdaptadorNodeZeroHttp} from '../src/data/node0/adaptadorNodeZeroHttp
 import {preparaClientPrivatNodeZero} from '../src/data/node0/clientPrivatNodeZero.js';
 import {metodesSenseCas} from '../src/data/conformitat/kit.js';
 import {verificaAmbFormulari} from './fixtures/node0-auth-proof-ui.mjs';
-import {creaPlaMigracions,preparaHidratacio,generaSql} from '../tooling/node0/hidrata-postgres-node0.mjs';
+import {preparaHidratacio,generaSql} from '../tooling/node0/hidrata-postgres-node0.mjs';
+import {creaPlaMigracionsR15A3 as creaPlaMigracions,comprovaLedgerR15A3} from './helpers/plaMigracionsR15A3.js';
 const moduleURL=process.env.SDP_PGLITE_MODULE?pathToFileURL(process.env.SDP_PGLITE_MODULE):null;
 const {PGlite}=moduleURL?await import(moduleURL.href):{}, {pgcrypto}=moduleURL?await import(new URL('./contrib/pgcrypto.js',moduleURL)):{};
 const testSql=(name,run)=>test(name,{skip:moduleURL?false:'Set SDP_PGLITE_MODULE for the actual disposable PostgreSQL proof'},run);
@@ -30,8 +31,8 @@ testSql('R6 email proof owns the final password, one-use credential version, con
  let email='victim-primary@example.invalid',firstToken,secondToken,firstCookie,secondCookie,id;
  try{
   await pg.exec(generaSql(creaPlaMigracions(),await preparaHidratacio(),{advisoryLock:false}));await pg.exec(sql);
-  await t.test('installation is idempotent, all85 migrations real (R54: current2.6 seal, preserved80 historical SQL) and zero people precreated',async()=>{
-   assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n,85);assert.equal((await q('SELECT count(*)::int n FROM auth.users'))[0].n,0);await pg.exec(sql);
+  await t.test('installation is idempotent, exact canonical ledger with only A3 deferred2.6, and zero people precreated',async()=>{
+   await comprovaLedgerR15A3(q);assert.equal((await q('SELECT count(*)::int n FROM auth.users'))[0].n,0);await pg.exec(sql);
    assert.equal((await q("SELECT to_regprocedure('private.node0_auth_verify(text)') IS NULL missing"))[0].missing,true);
   });
   await t.test('pending registration has no attributed canonical consent, no session and a24h deadline',async()=>{

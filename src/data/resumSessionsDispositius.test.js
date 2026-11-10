@@ -95,16 +95,14 @@ test('el port: l’error es classifica sense mutar l’original, una resposta ma
   await expect(consultaResumSessionsDispositius({ [METODE_RESUM_SESSIONS]: () => Promise.reject(avortada) })).rejects.toBe(avortada);
 });
 
-test('decisió pendent del Mestre: el contracte no declara el mètode, el port no l’exporta i el segellat no el deixa passar', async () => {
-  expect(CONTRACTE_BACKEND).not.toContain(METODE_RESUM_SESSIONS);
-  expect(backendPort[METODE_RESUM_SESSIONS]).toBeUndefined();
+test('R15 declara resum i detall com a capacitat opcional completa, sense alterar el nucli', async () => {
+  expect(CONTRACTE_BACKEND).toContain(METODE_RESUM_SESSIONS);
+  expect(backendPort[METODE_RESUM_SESSIONS]).toBeTypeOf('function');
   const metode = vi.fn().mockResolvedValue(resposta());
   const { candidate } = backendPort.validaBackendImplementation({
     ...Object.fromEntries(CONTRACTE_BACKEND.map((nom) => [nom, () => null])),
     [METODE_RESUM_SESSIONS]: metode
   });
-  expect(candidate[METODE_RESUM_SESSIONS]).toBeUndefined();
-  /* El panell passa el port sencer (com RestauradorOpenData): avui, SENSE_PORT i cap crida. */
-  await expect(consultaResumSessionsDispositius(backendPort)).rejects.toMatchObject({ code: CODI_RESUM_SESSIONS.SENSE_PORT });
-  expect(metode).not.toHaveBeenCalled();
+  expect(await candidate[METODE_RESUM_SESSIONS]()).toEqual(resposta());
+  expect(metode).toHaveBeenCalledOnce();
 });

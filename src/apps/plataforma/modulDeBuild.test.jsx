@@ -55,8 +55,9 @@ const NOMES_ASCII = /^[\u0000-~]*$/;
 /* El rang que demana un mòdul compilat contra este nucli. Actualitzat a posta (261016): l'1.2.0,
    que afig la porta 'workspace'; abans, l'1.1.0 de l'Onada 7.
    Actualitzada a posta (261024 T5): l'1.3.0, que afig useServeiNoticies a la porta 'plataforma'.
-   R14: l'1.4.0 afig serveis de Menjar i Beure i Botonera; un host1.3 no els exposa. */
-const RANG = '^1.4';
+   R14: l'1.4.0 afig serveis de Menjar i Beure i Botonera.
+   R15: l'1.5.0 afig el Workspace de catàleg, el detall i la revisió assistida. */
+const RANG = '^1.5';
 
 describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => {
   test.each(['gestoria', 'bar', 'salut', 'nevera', 'lector'])('%s: dada pura, sense carrega, i el manifest de mòdul és vàlid', (id) => {
@@ -74,9 +75,10 @@ describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => 
   });
 
   test('el rang del nucli és el de la versió contra la qual es compila', () => {
-    expect(VERSIO_NUCLI).toBe('1.4.0');
+    expect(VERSIO_NUCLI).toBe('1.5.0');
     expect(rangDelNucli()).toBe(RANG);
     expect(rangDelNucli('1.4.2')).toBe('^1.4');
+    expect(rangDelNucli('1.5.2')).toBe('^1.5');
   });
 
   test('un id que no és d’una app no compila', () => {
@@ -393,7 +395,7 @@ describe('un mòdul compilat de veritat (vite build, write: false)', () => {
 const APPS_DE_LA_FASE_1 = Object.freeze({
   bar: Object.freeze({
     base: 'sdp-bar',
-    nous: { router: ['useRouter'], pedraSeca: ['BarraResum', 'MarcColumna', 'TeclatNumeric', 'UniversalTPV'], workspace: [], plataforma: [] },
+    nous: { router: ['useRouter'], pedraSeca: ['BarraResum', 'CandidatsAlergens', 'MarcColumna', 'TeclatNumeric', 'UniversalTPV'], workspace: ['CatalegWorkspace', 'DetallCataleg'], plataforma: ['candidatsVariantParroquia'] },
     llavor: {
       fitxers: ['src/apps/bar/llavors/laParroquia.js', 'src/apps/bar/llavors/la-parroquia-loyverse.csv'],
       textos: ['Vendido por peso', 'b5-malibu'],
@@ -402,7 +404,7 @@ const APPS_DE_LA_FASE_1 = Object.freeze({
   }),
   nevera: Object.freeze({
     base: 'sdp-nevera',
-    nous: { router: ['useRouter'], pedraSeca: ['MarcColumna', 'NavegacioPeriode', 'OrdenaCategories'], workspace: [], plataforma: [] },
+    nous: { router: ['useRouter'], pedraSeca: ['MarcColumna', 'NavegacioPeriode', 'OrdenaCategories'], workspace: ['CatalegWorkspace', 'DetallCataleg'], plataforma: [] },
     llavor: { fitxers: [], textos: [], viatja: [] }
   }),
   salut: Object.freeze({
@@ -476,7 +478,7 @@ describe.each(Object.keys(APPS_DE_LA_FASE_1))(`Onada 7 · %s compilat com a mòd
   });
 
   /* Actualitzada a posta (261024 T5): també el nom de l'1.3.0 (useServeiNoticies, el Lector). */
-  test('la porta mira de veres: el cos importa noms que l’1.1.0, l’1.2.0 i l’1.3.0 afigen al nucli, i el nucli els exposa', () => {
+  test('la porta mira de veres: el cos importa noms que les versions1.1 a1.5 afigen al nucli, i el nucli els exposa', () => {
     for (const [font, noms] of [
       ['src/app/contexts/RouterContext.jsx', nous.router], ['src/components/PedraSeca/index.js', nous.pedraSeca],
       ['src/components/universal/workspace/index.js', nous.workspace], ['src/apps/plataforma/index.js', nous.plataforma]

@@ -31,7 +31,7 @@ describe('Aparador verificable R20',()=>{
  it('arquitectura: cinc llengües amb els mateixos cinc rols per clau, tres passos i cap text buit',()=>{
   expect(Object.keys(FEDIVERSITY_ARCHITECTURE_TEXTS).sort()).toEqual([...LLENGUES_DE_L_ARQUITECTURA].sort());
   expect(Object.values(FEDIVERSITY_ACTORS)).toEqual(ROLS_DE_LA_FONT);
-  expect(FEDIVERSITY_CONTRACT_COUNTS).toEqual({capacitats:48,metodes:141});
+  expect(FEDIVERSITY_CONTRACT_COUNTS).toEqual({capacitats:51,metodes:148});
   for(const text of Object.values(FEDIVERSITY_ARCHITECTURE_TEXTS)){
    expect(Object.keys(text.actors).sort()).toEqual([...CLAUS_DELS_ROLS].sort());
    expect(text.steps).toHaveLength(3);
@@ -43,7 +43,7 @@ describe('Aparador verificable R20',()=>{
   render(<AparadorFediversity language={language}/>);
   const region=screen.getByRole('region',{name:TITOLS_DE_LA_FONT[language]});
   expect(region.querySelector('h3').textContent).toBe(TITOLS_DE_LA_FONT[language]);
-  expect(region.querySelector('p').textContent).toMatch(/\b48\b/);expect(region.querySelector('p').textContent).toMatch(/\b141\b/);
+  expect(region.querySelector('p').textContent).toMatch(/\b51\b/);expect(region.querySelector('p').textContent).toMatch(/\b148\b/);
   expect(region.textContent).not.toMatch(/\{capacitats\}|\{metodes\}|100\s*%|<\s*15\s*min/);
   // R35-L2-01: jsdom no mesura la graella de :where(dl); la prova fixa que dt i dd en siguen fills directes i alternats.
   const dl=region.querySelector('dl');

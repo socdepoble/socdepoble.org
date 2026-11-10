@@ -120,6 +120,7 @@ export const SYSTEM_PAGES = Object.freeze([
   { key: 'xat', isAvis: false, href: '/page/xat', accio: ANAR_AL_XAT },
   { key: 'drets-autor', isAvis: false, href: '/page/drets-autor' },
   { key: 'descarregues', isAvis: false, href: '/page/descarregues', nomesWeb: true },
+  { key: 'nodrir-la-iaia', isAvis: false, href: '/page/nodrir-la-iaia' },
   { key: 'fediversity', isAvis: false, href: '/page/fediversity' }
 ].map((page) => Object.freeze(page)));
 

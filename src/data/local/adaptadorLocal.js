@@ -64,7 +64,7 @@ export const MODES_ADAPTADOR_LOCAL = Object.freeze(['seed', 'local']);
 /* FEDI-16 + FEDI23 · Les capacitats declarades són completes. La versió mínima local és
    null; l'administració multipoble només opera amb autoritat LOCAL injectada.
    Declarar mètodes no concedix autoritat ni permisos sobre cap servidor. */
-export const CAPACITATS_NO_DECLARADES = Object.freeze(['iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+export const CAPACITATS_NO_DECLARADES = Object.freeze(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
 
 /* Les claus d'abast de qui crida: l'adaptador és amo del seu backend (Model B)
    i mai no parla en nom d'un altre node. La resta (signal, limit, cursors del
@@ -335,7 +335,7 @@ export function creaAdaptadorLocal({
      microtasca de la guarda, com l'adaptador Supabase (capturaSessio síncron a
      sessioDelCompte): un canvi de sessió en el mateix tic de la crida ja no
      entra al mètode. La resta de mètodes és l'opció C (seguiment de P2-08). */
-  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades', ...ADMINISTRATIUS, ...METODES_CONNEXIONS]);
+  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades', 'loadProjeccionsCataleg', ...ADMINISTRATIUS, ...METODES_CONNEXIONS]);
   /* La guarda transversal: un adaptador tancat no respon, i una crida
      síncrona que llança es torna un rebuig. El senyal i el tancament es miren
      en cridar i, de nou, just abans d'entrar al magatzem (la microtasca

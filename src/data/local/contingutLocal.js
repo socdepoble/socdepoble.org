@@ -1,5 +1,6 @@
 import {capturaEdicioEditorial,CLAU_EDITORIAL_DE_SECCIO,marcaFilesEditorials,aplicaCanvisEditorials} from '../editorialPublicada.js';
 import { capturaConsultaRevisionsSeed, capturaRevisioSeed, capturaRespostaRevisioSeed, aplicaRevisionsSeed, errorRevisioSeed, esFontPublicaRevisioSeed, marcaFontRevisioSeed } from '../seedRevisions.js';
+import { capturaConsultaProjeccionsCataleg, capturaCursorProjeccionsCataleg, creaCursorProjeccionsCataleg, projeccioCatalegDe, errorProjeccioCataleg } from '../projeccionsCataleg.js';
 /**
  * contingutLocal.js — El contingut del poble de l'adaptador local (T1 · D01):
  * loadCoreContent, el Mur, la Multimèdia, la pàgina de secció, l'agenda, les
@@ -248,6 +249,19 @@ export function creaContingutLocal(e) {
        la publicació es desa en este node. Upsert per id (mai duplicats); la
        d'una altra persona no es toca. Una entitat només signa si qui publica
        l'administra (la regla de M18 al servidor). 'notes' es desa però no es llista. */
+    async loadProjeccionsCataleg(input = {}) {
+      const query = capturaConsultaProjeccionsCataleg(input);
+      const ownerId = query.audiencia === 'privada' ? e.usuari()?.id?.toLowerCase() : null;
+      if (query.audiencia === 'privada' && !ownerId) throw errorProjeccioCataleg('sense-sessio');
+      const scope = { tenantId: e.configuracio.tenantId.toLowerCase(), ownerId, audiencia: query.audiencia };
+      const cursor = capturaCursorProjeccionsCataleg(query.cursor, scope);
+      const seccio = query.audiencia === 'privada' ? 'notes' : 'mur';
+      const rows = publicacionsDe(seccio).map(row => ({ ...row, sectionId: seccio }))
+        .filter(row => projeccioCatalegDe(row)?.audiencia === query.audiencia && (!ownerId || row.ownerUserId.toLowerCase() === ownerId))
+        .filter(row => !cursor || row.created_at < cursor.instant || (row.created_at === cursor.instant && row.id < cursor.id))
+        .slice(0, query.limit);
+      return { items: rows, cursor: rows.length ? creaCursorProjeccionsCataleg(rows.at(-1), scope) : null };
+    },
     async appendSectionSubmissionNetworkOnly(submission) {
       const ownerUserId = e.usuari()?.id;
       if (!ownerUserId) throw new Error('Cal iniciar sessió per publicar.');

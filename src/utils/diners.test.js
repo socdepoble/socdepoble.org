@@ -54,3 +54,15 @@ describe('parseEuros', () => {
     expect(esCents('150')).toBe(false);
   });
 });
+
+
+test('every cent near both safe integer limits survives formatting and parsing', () => {
+  for (let offset = 0; offset < 200; offset++) {
+    for (const cents of [Number.MAX_SAFE_INTEGER - offset, -Number.MAX_SAFE_INTEGER + offset]) {
+      expect(parseEuros(formatEuros(cents)), String(cents)).toBe(cents);
+      expect(parseEuros(formatEuros(cents, { simbol: false })), String(cents)).toBe(cents);
+    }
+  }
+  expect(pla(formatEuros(Number.MAX_SAFE_INTEGER))).toBe('90.071.992.547.409,91 €');
+  expect(parseEuros('90.071.992.547.409,92')).toBeNull();
+});

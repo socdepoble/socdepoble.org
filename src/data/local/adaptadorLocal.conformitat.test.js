@@ -41,7 +41,7 @@ const casosDelXat = () => CASOS.filter((c) => c.requerix.some((clau) => CLAUS_DE
 function passada(nom, { crea, prepara = () => {}, omissionsAdmeses, ambSessio = false }) {
   describe(`conformitat del port · adaptador local · ${nom}`, () => {
     const adaptador = crea();
-    const ctx = contextDeConformitat({ config: {}, escriptures: true, escenaris: { contrasenyaLocal: true, compteOperatiu: ambSessio, compteSenseSessio: !ambSessio, publicacioOperativa: ambSessio, destinatariDirecte: ambSessio ? '2e3f4051-6b7c-4d8e-9fa0-b1c2d3e4f5a6' : null } });
+    const ctx = contextDeConformitat({ config: {}, escriptures: true, escenaris: { projeccionsOperatives: true, projeccionsSenseSessio: true, contrasenyaLocal: true, compteOperatiu: ambSessio, compteSenseSessio: !ambSessio, publicacioOperativa: ambSessio, destinatariDirecte: ambSessio ? '2e3f4051-6b7c-4d8e-9fa0-b1c2d3e4f5a6' : null } });
     const resultats = new Map();
     const invocats = new Set();
     beforeAll(async () => {
@@ -58,8 +58,8 @@ function passada(nom, { crea, prepara = () => {}, omissionsAdmeses, ambSessio = 
         return presents > 0 && presents < metodes.length;
       });
       expect(parcials).toEqual([]);
-      expect(Object.keys(CAPACITATS)).toHaveLength(48);
-      expect(CAPACITATS_NO_DECLARADES).toEqual(['iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+      expect(Object.keys(CAPACITATS)).toHaveLength(51);
+      expect(CAPACITATS_NO_DECLARADES).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
       expect(noDeclarades(adaptador)).toEqual(CAPACITATS_NO_DECLARADES);
     });
 

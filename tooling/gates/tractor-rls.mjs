@@ -347,7 +347,9 @@ for (const file of files) {
 
     // R8/R9: ADMIN-ORFE
     if (funcName !== 'es_superadmin' && funcBlock.toLowerCase().includes('es_superadmin()')) {
-      const revokeRegex = new RegExp(`revoke execute on function (?:public\\.)?${funcName}(?:\\([^)]*\\))? from public, anon`, 'i');
+      // R15b · També la forma qualificada de l'esquema private, `revoke all` (en una funció, ALL és EXECUTE)
+      // i la llista de rols sense espai: `revoke all on function private.f() from public,anon,authenticated`.
+      const revokeRegex = new RegExp(`revoke (?:execute|all) on function (?:public\\.|private\\.)?${funcName}(?:\\([^)]*\\))? from public,\\s*anon\\b`, 'i');
       if (!revokeRegex.test(content)) {
         falla('R8', file, `Funció administrativa ${funcName} no té REVOKE EXECUTE ON FUNCTION FROM PUBLIC, anon.`);
       }

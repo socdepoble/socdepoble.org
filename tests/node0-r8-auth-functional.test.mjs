@@ -12,7 +12,8 @@ import { sqlText } from '../tooling/node0/postgres-node0.mjs';
 // The same frozen test runs in its isolated candidate tree and after reviewer's
 // integration into tests/. Dependencies always come from that repository.
 const sourceRoot = fs.existsSync(new URL('../tooling/node0/hidrata-postgres-node0.mjs', import.meta.url)) ? new URL('../', import.meta.url) : new URL('../../../', import.meta.url);
-const { creaPlaMigracions, preparaHidratacio, generaSql } = await import(new URL('tooling/node0/hidrata-postgres-node0.mjs', sourceRoot));
+const { preparaHidratacio, generaSql } = await import(new URL('tooling/node0/hidrata-postgres-node0.mjs', sourceRoot));
+const {creaPlaMigracionsR15A3:creaPlaMigracions,comprovaLedgerR15A3}=await import(new URL('tests/helpers/plaMigracionsR15A3.js',sourceRoot));
 
 const headers = { origin: 'https://socdepoble.cat', 'content-type': 'application/json' };
 const consent = { accepta_rgpd: true, versio_politica: VERSIO_POLITICA_PRIVACITAT };
@@ -168,8 +169,8 @@ test('R8 PostgreSQL migration and synthetic owner lifecycle preserve verified se
     assert.equal((await q('SELECT full_name,username FROM public.profiles WHERE id=$1', [id]))[0].full_name, 'Earlier pending display');
     const candidate = fs.readFileSync(new URL('../tooling/node0/auth-node0.sql', import.meta.url), 'utf8');
     await pg.exec(candidate); await pg.exec(candidate);
-    await t.test('migration is idempotent with 85 canonical migrations (R54: current2.6 plus preserved80 historical SQL) and existing pending records', async () => {
-      assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n, 85);
+    await t.test('migration is idempotent with exact A3 deferred2.6 source ledger and existing pending records', async () => {
+      await comprovaLedgerR15A3(q);
       assert.equal((await q('SELECT count(*)::int n FROM auth.users'))[0].n, 1);
       assert.equal((await q('SELECT count(*)::int n FROM public.consentiments WHERE user_id=$1', [id]))[0].n, 0);
       const access = (await q("SELECT has_function_privilege('node0_authenticator','private.node0_auth_challenge_ready(text,text)','EXECUTE') ready,has_function_privilege('node0_authenticator','private.node0_auth_sweep_pending()','EXECUTE') sweep,has_function_privilege('node0_authenticator','private.node0_auth_purge_pending(text)','EXECUTE') purge"))[0];

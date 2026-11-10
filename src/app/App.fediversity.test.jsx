@@ -38,6 +38,8 @@ const ESPERA = { timeout: 8000 };
 /* Backend fals sense sessió ni xarxa, com muntaSenseSessio d'App.descarregues.test.jsx. */
 async function muntaSenseSessio(ruta, cos, { pages = [] } = {}) {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+  // jsdom has no layout; the real workspace needs a measurable host box.
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1440);
   vi.stubGlobal('matchMedia', vi.fn((query) => ({
     matches: false, media: query, onchange: null,
     addListener: vi.fn(), removeListener: vi.fn(),

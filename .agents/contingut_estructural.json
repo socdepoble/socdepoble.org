@@ -62,15 +62,15 @@
       "data": "2026-11-07"
     },
     "fedivers": {
-      "sha256": "f276ca52c52309a731dfebac991f504958b2efe2e9ac7affbe0ec2f97dc1753e",
+      "sha256": "da73fb5b405ae337923242a66621cd77c32e1605b15b7695e3e09479292b49d0",
       "html": 21707,
-      "aprovat_per": "Mestre Javi (ordre del 09-11: aplicar el kit ec865; text revisat per Claude, revocable)",
+      "aprovat_per": "Mestre Javi, ordre explícita R15.2 261109; base R15-A3 revisada per Claude, delta Codex pendent de revisió integradora i revocable",
       "data": "2026-11-09"
     },
     "fediversity": {
-      "sha256": "e099383083381f6fcf56424cabded0b84aab509bb36e1d7b4ed3039056c580db",
-      "html": 62968,
-      "aprovat_per": "Mestre Javi (ordre del 09-11: aplicar el kit ec865; text revisat per Claude, revocable)",
+      "sha256": "f0269c5848fc56aec10310d95682f105be22b89b36d8ce1758938b6f62348f98",
+      "html": 63106,
+      "aprovat_per": "Mestre Javi (ordre del 09-11: absorbir els kits verificats en R15b i desplegar-lo; text revisat per Claude amb verificació adversària per carril, revocable)",
       "data": "2026-11-09"
     },
     "habitatge": {
@@ -92,9 +92,15 @@
       "data": "2026-11-07"
     },
     "node-zero": {
-      "sha256": "554484d5b28f41a59693da264fbc747c75b7fd06cb610b968c89da5f2c125ce3",
+      "sha256": "f61aac812ac0b704ad1dbfa7175b03cdc7b4673b11228ed584462ac5baf1bedb",
       "html": 21595,
-      "aprovat_per": "Mestre Javi (ordre del 09-11: aplicar el kit ec865; text revisat per Claude, revocable)",
+      "aprovat_per": "Mestre Javi, ordre explícita R15.2 261109; base R15-A3 revisada per Claude, delta Codex pendent de revisió integradora i revocable",
+      "data": "2026-11-09"
+    },
+    "nodrir-la-iaia": {
+      "sha256": "88e211e7c09cc5fd670f44a4c60062818d3ebb3c8d1407ce4970d9c7c4fc5ac8",
+      "html": 307,
+      "aprovat_per": "Mestre Javi (ordre del 09-11: absorbir els kits verificats en R15b i desplegar-lo; text revisat per Claude amb verificació adversària per carril, revocable)",
       "data": "2026-11-09"
     },
     "notes": {
@@ -116,9 +122,9 @@
       "data": "2026-11-05"
     },
     "receptes": {
-      "sha256": "abffe7746c43e4975f9453bb9ccd4f5a51bdeadbaee4a85473bd06bec70dc0ec",
-      "html": 640,
-      "aprovat_per": "Mestre Javi",
+      "sha256": "08217823c18c44b3bc0ac95a7256e36eb30ebc425e80b60de82bf11236d361ed",
+      "html": 866,
+      "aprovat_per": "Mestre Javi (ordre del 09-11: absorbir els kits verificats en R15b i desplegar-lo; text revisat per Claude amb verificació adversària per carril, revocable)",
       "data": "2026-11-09"
     },
     "roadmap": {
@@ -140,9 +146,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "5796b1044d2a061fd04037558ab69da905a2ed3ac70cafa64c18aa07c3eb7906",
-      "html": 42956,
-      "aprovat_per": "Mestre Javi",
+      "sha256": "1ea7436b3f77673bd483efc205eda8068607681eca247841622f6963958e9d47",
+      "html": 44721,
+      "aprovat_per": "Mestre Javi (ordre del 09-11: absorbir els kits verificats en R15b i desplegar-lo; text revisat per Claude amb verificació adversària per carril, revocable)",
       "data": "2026-11-09"
     },
     "wikidepoble": {

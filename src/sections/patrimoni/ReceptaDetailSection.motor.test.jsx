@@ -101,6 +101,9 @@ describe('the purchase layer ships only with the Nevera build flag (VITE_SDP_APP
     await screen.findByRole('group', { name: 'Tria què vols vore' });
     expect(screen.queryByRole('button', { name: 'Calcula i prepara la compra' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Prepara una compra amb esta recepta' })).toBeNull();
+    // Onada R15b (RV-03) · La proposta d'al·lèrgens hi és, però sense línia d'escandall: el DOM sencer es torna a mirar.
+    const proposta = container.querySelector('section[data-estat="pendent_validacio_humana"]');
+    expect(proposta.querySelector('h3').textContent).toBe('Proposta assistida · Pendent de validació humana');
     expect(container.textContent).not.toMatch(/Mercadona|Escandall|Calcula i prepara/i);
     expect(m.carrega).not.toHaveBeenCalled();
   });

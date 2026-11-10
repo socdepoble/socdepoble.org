@@ -2,7 +2,7 @@
   description = "Node municipal Fediversity de Sóc de Poble: façana, Node 0 PostgreSQL 17 i contenidor NixOS opt-in";
 
   # Revisió pública immutable observada el 2026-11-03 amb git ls-remote.
-  # Falta generar/verificar flake.lock amb Nix real en CI; no s'inventa narHash.
+  # flake.lock generat amb Nix real; el verificador torna a comprovar el NAR.
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/7dcdd87373d72e7a2173e4db02e20d3d7f495cfd";
 
   outputs = { self, nixpkgs }:
@@ -31,6 +31,9 @@
       mkNodeZeroRuntime = pkgs: pkgs.runCommand "socdepoble-node0-runtime" {} ''
         mkdir -p "$out/share/socdepoble-node0"
         cp -R ${nodeZeroSource}/. "$out/share/socdepoble-node0/"
+        chmod u+w "$out/share/socdepoble-node0/nix/start-node0.mjs"
+        substituteInPlace "$out/share/socdepoble-node0/nix/start-node0.mjs" \
+          --replace-fail '@SDP_NODE0_GETFACL@' '${if pkgs.stdenv.isLinux then lib.getExe' pkgs.acl "getfacl" else "/nonexistent/systemd-getfacl"}'
       '';
       mkMunicipalWeb = pkgs: settings:
         let
@@ -95,6 +98,16 @@
       # La comprovació d'avaluació no reemplaça la VM HTTP de la release.
       checks = lib.genAttrs [ "x86_64-linux" "aarch64-linux" ] (system:
         let
+          # Official pinned NixOS test API: disabling this requirement permits
+          # software emulation. Keep canonical KVM checks intact; extend only
+          # their execution profile, with identical HTTP scripts and nodes.
+          softwareVM = canonical:
+            let emulated = canonical.extend { modules = [ { requiredFeatures.kvm = false; } ]; };
+            in assert canonical.config.requiredFeatures.kvm;
+              assert !emulated.config.requiredFeatures.kvm;
+              assert emulated.config.testScript == canonical.config.testScript;
+              assert builtins.attrNames emulated.nodes == builtins.attrNames canonical.nodes;
+              emulated;
           nodeConfig = settings: nixpkgs.lib.nixosSystem {
             inherit system;
             modules = [ self.nixosModules.default ({ ... }: {
@@ -143,6 +156,8 @@
             pkgs.writeText "socdepoble-container-evaluation" container.config.containers.socdepoble-node0.localAddress;
           # Real Linux VM: schema bootstrap, peer identity, gateway and closed API.
           # This public fixture token is confined to the test VM, not a deployment secret.
+          node0-http-tcg = softwareVM self.checks.${system}.node0-http;
+          module-http-tcg = softwareVM self.checks.${system}.module-http;
           node0-http = pkgs.testers.runNixOSTest {
             name = "socdepoble-node0-postgresql17";
             nodes.node0 = { ... }: {

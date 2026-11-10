@@ -104,12 +104,12 @@ const FLAGS = ['--extra-experimental-features','nix-command flakes'];
 const LOCK_FLAGS = ['--no-update-lock-file','--no-write-lock-file'];
 const DRV_PATH = /^\/nix\/store\/[0-9a-z]{32}-[^/\n]+\.drv$/;
 const OUT_PATH = /^\/nix\/store\/[0-9a-z]{32}-[^/\n]+$/;
-export async function verificaFlake({root = ROOT, mode = 'full', system = 'x86_64-linux', runner = executaNix, nixBinary = 'nix'} = {}) {
-  if (!['inspect','evaluation','full'].includes(mode) || !['x86_64-linux','aarch64-linux'].includes(system)) fail('nix_verifier_options');
+export async function verificaFlake({root = ROOT, mode = 'full', system = 'x86_64-linux', vmProfile = 'kvm', runner = executaNix, nixBinary = 'nix'} = {}) {
+  if (!['inspect','evaluation','full'].includes(mode) || !['x86_64-linux','aarch64-linux'].includes(system) || !['kvm','tcg'].includes(vmProfile)) fail('nix_verifier_options');
   root = path.resolve(root);
   const report = {schema:'socdepoble-nix-reproducibility/1', mode, system, verified:false,
     evidenceKind:runner === executaNix ? 'native-process' : 'test-double', status:'incomplete',
-    inputRevision:INPUT_REVISION, checks:[], issues:[], commands:[]};
+    inputRevision:INPUT_REVISION, vmProfile, virtualizationEvidence:vmProfile==='tcg'?'software-emulated-NixOS-VM; does not accredit hardware KVM':'canonical KVM-required NixOS tests', checks:[], issues:[], commands:[]};
   let before, locked;
   for (const relative of REQUIRED) {
     try {regular(path.join(root,relative));} catch {report.issues.push('nix_required_file_missing:'+relative);}
@@ -148,7 +148,10 @@ export async function verificaFlake({root = ROOT, mode = 'full', system = 'x86_6
       report.checks.push({name,passed:true,drvPath:first});
     }
     if (mode === 'full') {
-      const target = `${ref}#packages.${system}.web`;
+      // nix build selects the default output only unless explicitly requested.
+      // The external integrity anchor is a separate output; request both and
+      // retain the strict two-output validation/hashing below.
+      const target = `${ref}#packages.${system}.web^out,integritat`;
       const first = json(await run(['build','--no-link','--json',...LOCK_FLAGS,target]));
       const rebuilt = json(await run(['build','--no-link','--json','--rebuild',...LOCK_FLAGS,target]));
       const output = value => {
@@ -166,13 +169,14 @@ export async function verificaFlake({root = ROOT, mode = 'full', system = 'x86_6
       }
       report.checks.push({name:'web-rebuild',passed:true,drvPath:a.drvPath,outputs:a.outputs,narHashes:hashes});
       for (const name of ['module-http','node0-http']) {
-        await run(['build','--no-link',...LOCK_FLAGS,`${ref}#checks.${system}.${name}`]);
-        report.checks.push({name,passed:true});
+        const target=vmProfile==='tcg'?name+'-tcg':name;
+        await run(['build','--no-link',...LOCK_FLAGS,`${ref}#checks.${system}.${target}`]);
+        report.checks.push({name,passed:true,profile:vmProfile,target});
       }
     }
     if (inventariFonts(root).sha256 !== before.sha256 || validaLock(root).sha256 !== locked.sha256) fail('nix_sources_changed_during_verification');
     report.verified = mode === 'full' && runner === executaNix;
-    report.status = report.verified ? 'verified' : runner === executaNix ? 'evaluated-build-pending' : 'simulated';
+    report.status = report.verified ? vmProfile==='tcg'?'verified-software-vm':'verified' : runner === executaNix ? 'evaluated-build-pending' : 'simulated';
   } catch(error) {report.issues.push(error.message.startsWith('nix_') ? error.message : 'nix_verification_failed');}
   finally {if (stage) fs.rmSync(stage,{recursive:true,force:true});}
   return report;
@@ -184,6 +188,7 @@ export async function main(argv = process.argv.slice(2)) {
     else if (arg === '--evaluation-only') options.mode = 'evaluation';
     else if (arg.startsWith('--root=')) options.root = path.resolve(arg.slice(7));
     else if (arg.startsWith('--system=')) options.system = arg.slice(9);
+    else if (arg.startsWith('--vm-profile=')) options.vmProfile = arg.slice(13);
     else if (arg.startsWith('--out=')) output = path.resolve(arg.slice(6));
     else fail('nix_verifier_argument');
   }

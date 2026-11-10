@@ -48,6 +48,7 @@ vi.mock('./NotaFitxa.jsx', () => ({ NotaFitxa: () => null }));
 vi.mock('./ConnexioFitxa.jsx', () => ({ ConnexioFitxa: () => null }));
 vi.mock('./PublicacioDetall.jsx', () => ({ PublicacioDetall: () => null, PublicacioFitxa: () => null }));
 import NotesSection from './NotesSection.jsx';
+import { esTargetaDelMur } from '../mur/targetesMur.js';
 
 afterEach(() => {
   cleanup();
@@ -175,7 +176,8 @@ test('F4 · editar una nota no refà les publicacions: els objectes són els mat
    Mur (l'article complet del Pou de Neu és l'única targeta del pou). */
 const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
 const PATRIMONI_AL_MUR = ['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals'];
-const SISTEMA = [...SYSTEM_PAGES.map((pagina) => pagina.key), ...PATRIMONI_AL_MUR].map((clau) => `publicacio:mur:${clau}`);
+/* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, Nodrir la IAIA no és cap targeta del Mur: díhuit. */
+const SISTEMA = [...SYSTEM_PAGES.map((pagina) => pagina.key).filter(esTargetaDelMur), ...PATRIMONI_AL_MUR].map((clau) => `publicacio:mur:${clau}`);
 const PAGINES_DEL_SISTEMA = 18;
 const delMur = (items) => publicacions(items).filter((item) => item.categoryIds.includes('f-mur'));
 
@@ -187,6 +189,7 @@ test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les catorze
     feed: [{ id: 'p1', title: 'Directa', author_org_id: ENTITAT_PILOT_ID }]
   });
   expect(SISTEMA).toHaveLength(PAGINES_DEL_SISTEMA);
+  expect(SISTEMA).not.toContain('publicacio:mur:nodrir-la-iaia');
   expect(delMur(items).map((item) => item.id)).toEqual(['publicacio:mur:p1', ...SISTEMA]);
   const xat = items.find((item) => item.id === 'publicacio:mur:xat');
   expect(xat.data).toMatchObject({ seccio: 'mur', ruta: '/page/xat', item: { isSystem: true } });

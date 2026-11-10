@@ -9,6 +9,8 @@ import { useSEO } from '../../hooks/useSEO.js';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { OBRA_QUE_DINEM, laminaDeRecepta, receptaPerSlug } from '../../data/patrimoni/queDinem.js';
 import CreditsQueDinem from './CreditsQueDinem.jsx';
+import { CandidatsAlergens } from '../../components/PedraSeca/molecules/CandidatsAlergens.jsx';
+import { candidatsReceptaQueDinem } from '../../data/menjarIBeure/candidatsAlergens.js';
 import { etiquetaDApartat, RUTA_DEL_RECEPTARI } from './cercaReceptes.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
 
@@ -28,11 +30,14 @@ import { traductorPatrimoni } from './textosPatrimoni.js';
      repetia el quadrat.
    · Ingredients, elaboració i notes: el text literal del llibre, amb lang="ca"; els títols de bloc que porta el
      llibre (p. ex. «Variant») es conserven. La interfície és a les claus patrimoni.receptes.* dels 5 diccionaris.
-   · Al·lèrgens: el llibre no en diu res i ací no se n'inventa cap; només un avís honest.
+   · Al·lèrgens: el llibre no en diu res. Onada R15b (RV-01, RV-02) · Damunt de l'avís honest, la proposta assistida
+     del lèxic tancat (CandidatsAlergens), amb l'etiqueta «Proposta assistida · Pendent de validació humana» en la
+     llengua de la interfície: «•», «T» o «? Sense dada», mai una absència. Llig els ingredients paraula a paraula, i
+     l'elaboració i les notes només hi afigen indicis. Sense la línia d'escandall: la fitxa pública no en té.
    · Onada R15 (P1-02, R15-REG-06, P2-04) · «Calcula i prepara la compra» (MotorHoritzontalRecepta, amb el catàleg i
      els preus de Mercadona) va amb la Nevera: la mateixa porta de compilació que src/apps/nevera/manifest.js, com a
      literal exacte que Vite plega. Sense VITE_SDP_APP_NEVERA=1, el build públic no porta ni el botó, ni el motor, ni
-     el tros de Mercadona, i la pàgina és la del R14: el llibre i res més. En desenvolupament, sí. */
+     el tros de Mercadona, i la pàgina és la del R14 més la proposta d'al·lèrgens. En desenvolupament, sí. */
 const MotorDeLaRecepta = import.meta.env.DEV || import.meta.env.VITE_SDP_APP_NEVERA === '1'
   ? lazy(() => import('./MotorHoritzontalRecepta.jsx').then((modul) => ({ default: modul.MotorDeReceptaEditorial })))
   : null;
@@ -84,9 +89,13 @@ function BlocsDeText({ blocs, llista }) {
   ));
 }
 
-function PaginaDeRecepta({ recepta }) {
-  const { t } = useUIActions();
+/* PRODUCCIO-03 (revisió R15b) · `onTornaAlReceptari`: dins del Workspace de /page/receptes, la recepta oberta amb un
+   clic no canvia la URL, i l'enllaç sol no la tancava. La tornada que hi passa ReceptesWorkspaceSection buida la
+   selecció; l'enllaç continua anant al receptari (la ?fitxa= se'n va) i obrint-se en una pestanya nova. */
+export function PaginaDeRecepta({ recepta, onTornaAlReceptari }) {
+  const { t, language } = useUIActions();
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
+  const proposta = useMemo(() => candidatsReceptaQueDinem(recepta, receptaPerSlug), [recepta]);
   const [filtre, setFiltre] = useState(null);
   const [calculaCompra, setCalculaCompra] = useState(false);
   const lamina = laminaDeRecepta(recepta);
@@ -111,7 +120,7 @@ function PaginaDeRecepta({ recepta }) {
         <p>
           {tr('patrimoni.receptes.situacio', 'Recepta {n} de «{llibre}», pàgina {pagina}', { n: recepta.numero, llibre: obra.titol, pagina: recepta.pagina })}
           {' · '}
-          <Link to={RUTA_DEL_RECEPTARI}>{tr('patrimoni.receptes.totes', 'Totes les receptes')}</Link>
+          <Link to={RUTA_DEL_RECEPTARI} onClick={onTornaAlReceptari}>{tr('patrimoni.receptes.totes', 'Totes les receptes')}</Link>
         </p>
         {lamina && visible('lamina') && <Lamina lamina={lamina} tr={tr} />}
         <div className="sdp-recepta__quadrats" role="group" aria-label={tr('patrimoni.receptes.filtre', 'Tria què vols vore')} aria-describedby={idAjuda}>
@@ -162,6 +171,7 @@ function PaginaDeRecepta({ recepta }) {
             <Alerta to="avis" viva={false}>
               {tr('patrimoni.receptes.alergens', 'Al·lèrgens no revisats: consulta la llista d’ingredients; si tens una al·lèrgia, pregunta-ho a qui cuina.')}
             </Alerta>
+            <CandidatsAlergens proposta={proposta} llengua={language} escandall={false} />
           </section>
         )}
         {MotorDeLaRecepta && (

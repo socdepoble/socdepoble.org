@@ -813,10 +813,10 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
     return valors[c.metode];
   }
 
-  test('cens exacte del contracte, 32 obligatòries i 109 opcionals; cap nom sense cas', () => {
+  test('cens exacte del contracte, 32 obligatòries i 116 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(48);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(109);
+    expect(Object.keys(CAPACITATS)).toHaveLength(51);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(116);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });
@@ -926,4 +926,45 @@ test('R12 · les capacitats opcionals de carpetes i edició rebutgen abans d’e
  for(const [metode,good] of [['creaCarpetaNotes',async()=>{throw new TypeError('Nom invàlid');}],['adminActualitzaPublicacioEditorial',async()=>{throw Object.assign(new TypeError('Canvis invàlids'),{code:'editorial-invalid'});}]]){
   const c=CASOS.find(v=>v.metode===metode),ctx=contextDeConformitat();expect(c.escriu).toBe(false);expect(await executaCas(c,{[metode]:good},ctx)).toMatchObject({estat:'ok'});expect(await executaCas(c,{[metode]:async()=>({id:'f-inventat'})},ctx)).toMatchObject({estat:'falla'});expect(await executaCas(c,{},ctx)).toMatchObject({estat:'omés'});
  }
+});
+
+describe('R15 · contracte semàntic de sessions i curadoria',()=>{
+ const nous=CASOS.filter(c=>c.titol.startsWith('R15:'));
+ const id='10000000-0000-4000-8000-000000000001',instant='2026-11-09T14:00:00Z';
+ const aportacio={id,titol:'Cultura de prova',autoria:'Informant',poble:'Poble',contingut:'Text',nota:'',estat:'pendent_revisio',creatA:instant};
+ const ctx=()=>Object.assign(contextDeConformitat({escriptures:true,escenaris:{sessionsAdminOperatiu:true,sessionsSensePermis:true,curadoriaOperativa:true,curadoriaSensePermis:true}}),{aportacioCulturalId:id});
+ const valorBo=c=>c.metode==='adminResumSessionsDispositius'?{consultat_a:instant,camins:['app_ios','web_ios','app_android','web_android','escriptori','altres'].map(cami=>({cami,persones_24h:0,persones_7d:0,persones_14d:0})),total:{persones_24h:0,persones_7d:0,persones_14d:0}}:
+ c.metode==='adminLlistaSessionsDispositius'?{consultatA:instant,total:1,files:[{clau:'a'.repeat(32),nom:'Informant',correuMascarat:'s***@example.invalid',cami:'app_ios',sessions:1,activitat:instant}]}:
+ c.metode==='estatCuradoriaCultural'?{autenticat:true,potCurar:true,ingestioDisponible:false}:
+ c.metode==='llistaAportacionsCulturals'?[aportacio]:{...aportacio,estat:c.metode==='revisaAportacioCultural'?'aprovat':'pendent_revisio'};
+ test('cada DTO positiu refuta dades de domini invàlides; un error qualsevol no acredita un rebuig de permisos',async()=>{
+  expect(nous).toHaveLength(12);
+  for(const c of nous){
+   const context=ctx();
+   if(c.espera==='rebutja'){
+    const error=c.requerix.length?Object.assign(new Error('refús'),{status:403}):new TypeError('invàlid');
+    expect(await executaCas(c,{[c.metode]:async()=>{throw error;}},context),c.titol).toMatchObject({estat:'ok'});
+    expect(await executaCas(c,{[c.metode]:async()=>{throw Object.assign(new Error('servei absent'),{code:'no-disponible'});}},context),c.titol).toMatchObject({estat:'falla'});
+    expect(await executaCas(c,{[c.metode]:async()=>[]},context),c.titol).toMatchObject({estat:'falla'});
+   }else{
+    expect(await executaCas(c,{[c.metode]:async()=>structuredClone(valorBo(c))},context),c.titol).toMatchObject({estat:'ok'});
+    let dolent=structuredClone(valorBo(c));
+    if(c.metode==='adminResumSessionsDispositius')dolent.camins[0].persones_24h=1;
+    else if(c.metode==='adminLlistaSessionsDispositius')dolent.files[0].access_token='prohibit';
+    else if(c.metode==='estatCuradoriaCultural')dolent.ingestioDisponible=true;
+    else if(c.metode==='llistaAportacionsCulturals')dolent[0].estat='aprovat_node0';
+    else if(c.metode==='enviaAportacioCultural')dolent.estat='aprovat';
+    else dolent.id='20000000-0000-4000-8000-000000000002';
+    expect(await executaCas(c,{[c.metode]:async()=>dolent},context),c.titol).toMatchObject({estat:'falla'});
+   }
+  }
+ });
+ test('SEG-R15b-01: el directori refuta un correu sencer i qualsevol identificador de sessió o de persona',async()=>{
+  const c=nous.find(v=>v.metode==='adminLlistaSessionsDispositius'&&v.requerix.includes('sessionsAdminOperatiu'));
+  const fila=valorBo(c).files[0];
+  for(const dolenta of [{...fila,correuMascarat:'synthetic@example.invalid'},{...fila,sessioId:id},{...fila,usuariId:id},{...fila,clau:id}]){
+   expect(await executaCas(c,{[c.metode]:async()=>({consultatA:instant,total:1,files:[dolenta]})},ctx()),JSON.stringify(dolenta)).toMatchObject({estat:'falla'});
+  }
+  expect(await executaCas(c,{[c.metode]:async()=>({consultatA:instant,total:1,files:[{...fila,correuMascarat:null}]})},ctx())).toMatchObject({estat:'ok'});
+ });
 });

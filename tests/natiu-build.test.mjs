@@ -12,6 +12,7 @@ import configNatiu, {
   ESQUEMA_GOOGLE_PENDENT,
   FONTS_LOCALS,
   MODE_NATIU,
+  MITJANS_NATIUS_SOTA_DEMANDA,
   ORIGINALS_CITATS_SENSE_RESOLUTOR,
   RECURSOS_NOMES_DEL_HEAD,
   RECURSOS_QUE_L_APP_NO_LLIG,
@@ -23,6 +24,7 @@ import configNatiu, {
   indexNatiuPlugin,
   nomsDeclarats,
   politicaDeMitjansNativa,
+  politicaDeMitjansNativaDelReceptari,
   segellNatiuPlugin,
   transformaIndexNatiu
 } from '../vite.natiu.config.js';
@@ -30,6 +32,8 @@ import { PROPIS_DEL_LLOC, esHostLocal, politicaDeMitjans, recursosDelPlugin } fr
 import { bessonaDe } from '../src/config/politicaDeMitjans.js';
 import { esquemaInvertitDeGoogleIos } from '../src/config/publicCredentials.js';
 import { SEGELL } from '../scripts/botigues/entorn.mjs';
+import { trossDArrencada } from '../tooling/vite/trossos-arrencada.mjs';
+import { mesura } from '../tooling/gates/pressupost-paquet.mjs';
 
 /* El build de l'app nativa (ARQUITECTURA.txt §4.4 i §5, 261003) es prova amb
    FIXTURES, com tests/standalone-build.test.mjs: les peces pures sobre
@@ -91,9 +95,10 @@ function distNatiuVigent(t, arrel = ARREL) {
   const publicDir = path.join(arrel, 'public');
   let viatgen = [];
   if (fs.existsSync(publicDir)) {
-    const substituits = new Set(politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: publicDir }))?.bessones ?? []);
+    const politica = politicaDeMitjansNativaDelReceptari(politicaDeMitjans('autonom', { directori: publicDir }));
+    const substituits = new Set(politica.bessones);
     viatgen = recursosDelPlugin(publicDir)
-      .filter((rel) => !RECURSOS_QUE_L_APP_NO_LLIG.includes(rel) && !RECURSOS_NOMES_DEL_HEAD.includes(rel) && !substituits.has(rel))
+      .filter((rel) => !RECURSOS_QUE_L_APP_NO_LLIG.includes(rel) && !RECURSOS_NOMES_DEL_HEAD.includes(rel) && !substituits.has(rel) && !politica.externs.some((prefix) => rel.startsWith(prefix)))
       .map((rel) => path.join(publicDir, rel));
   }
   const mesNou = mesNouQue(quan, [path.join(arrel, 'vite.natiu.config.js'), ...viatgen]);
@@ -415,6 +420,10 @@ test('la config: dist-natiu buidat, es2022, mode natiu, base /, sense copyPublic
     assert.equal(cfg.build.emptyOutDir, true);
     assert.equal(cfg.build.target, 'es2022');
     assert.equal(cfg.build.copyPublicDir, false);
+    assert.equal(cfg.build.rollupOptions.output.manualChunks, trossDArrencada, 'mateixa funció pura que el web, a la configuració real');
+    for (const [id, expected] of [['/x/node_modules/react/index.js', 'react'], ['/x/src/css/index.css?inline', 'estils'], ['/x/src/config/idiomes/ca.js', 'ca'], ['/x/node_modules/lucide-react/dist/esm/icons/house.mjs', undefined], ['/x/node_modules/react-dom/server.browser.js', undefined], ['/x/src/data/wikiManifest.js', undefined], ['/x/src/natiu/entradaSocial.js', 'entrada-nativa'], ['/x/src/natiu/entrada.jsx', undefined], ['/x/src/natiu/avisosPushNatius.js', undefined], ['/x/node_modules/@capacitor/core/dist/index.js', undefined], ['/x/node_modules/@capacitor/push-notifications/dist/esm/index.js', undefined], ['/x/node_modules/@capgo/capacitor-social-login/dist/esm/index.js', undefined]]) {
+      assert.equal(cfg.build.rollupOptions.output.manualChunks(id), expected, id);
+    }
     assert.ok(!('publicDir' in cfg), 'publicDir no s\'apaga');
     assert.ok(!('lib' in cfg.build), 'és una app, no una llibreria');
     const plugins = cfg.plugins.flat(Infinity).filter(Boolean);
@@ -622,7 +631,7 @@ test('cap url() dels CSS de src/ no cita un original amb bessona que l\'app subs
 test('la config porta la política nativa als dos llocs: el connector de recursos no emet els substituïts i el define la segella', (t) => {
   ambEntornNatiu({ VITE_SUPABASE_URL: ORIGEN, VITE_SUPABASE_ANON_KEY: CLAU }, () => {
     const cfg = configNatiu({ mode: MODE_NATIU, command: 'build' });
-    const esperada = politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: PUBLIC }));
+    const esperada = politicaDeMitjansNativaDelReceptari(politicaDeMitjans('autonom', { directori: PUBLIC }));
     if (!esperada) {
       /* P1-35 · En compilar, el define porta sempre el segell del build
          (import.meta.env.SDP_BUILD): sense bessones, cap altra clau. */
@@ -630,11 +639,11 @@ test('la config porta la política nativa als dos llocs: el connector de recurso
       t.skip('sense bessones a public/ en este arbre');
       return;
     }
-    // El define: la mateixa política, sense origen ni carpetes externes i sense els exclosos.
+    // El define i l’emissor compartixen també el receptari sota demanda.
     const segellada = JSON.parse(cfg.define[CLAU_POLITICA]);
     assert.deepEqual(segellada, esperada);
-    assert.equal(segellada.origen, null);
-    assert.deepEqual(segellada.externs, []);
+    assert.equal(segellada.origen, MITJANS_NATIUS_SOTA_DEMANDA.origen);
+    assert.deepEqual(segellada.externs, MITJANS_NATIUS_SOTA_DEMANDA.externs);
     for (const { original } of ORIGINALS_CITATS_SENSE_RESOLUTOR) assert.ok(!segellada.bessones.includes(original), original);
     /* P1-05 (261021, pla 261021_0015 §13) · Els dos originals pesants que
        l'app citava crus ja se substituïxen: a l'app només hi va la bessona.
@@ -723,7 +732,9 @@ test('vite.natiu.config.js no importa res de Capacitor ni de src/natiu/: es pot 
   // Onada R14 (arreglos) · pageContent.patrimoniR14.js, una altra fulla sense imports: la portada social de /page/receptes (og_image) també és només del <head>.
   // Ordre del Mestre 261109 · R15a (PRIV-01) · fotos-parroquia-privades.mjs: el connector que deixa fora del build les fotos locals de La Parròquia; només importa node:fs, node:path i vite.
   // Sanejament R15 (B2/B3) · banderes-de-capacitat.mjs: el define literal de VITE_SDP_XAT_RITME, VITE_SDP_IAIA_SERVIDOR i VITE_SDP_PUSH_NATIU; només importa node:path i vite.
-  assert.deepEqual(especificadors, ['./scripts/botigues/entorn.mjs', './src/config/imatgeSocial.js', './src/config/publicCredentials.js', './src/sections/text/pageContent.patrimoniR14.js', './tooling/vite/banderes-de-capacitat.mjs', './tooling/vite/fotos-parroquia-privades.mjs', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
+  assert.deepEqual(especificadors, ['./scripts/botigues/entorn.mjs', './src/config/imatgeSocial.js', './src/config/publicCredentials.js', './src/sections/text/pageContent.patrimoniR14.js', './tooling/vite/banderes-de-capacitat.mjs', './tooling/vite/fotos-parroquia-privades.mjs', './tooling/vite/trossos-arrencada.mjs', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
+  const trossos = fs.readFileSync(path.join(ARREL, 'tooling/vite/trossos-arrencada.mjs'), 'utf8');
+  assert.equal([...trossos.matchAll(/\b(?:from|import)\s*['"]([^'"]+)['"]/g)].length, 0, 'la política compartida no importa connectors ni l’entorn del web');
   const connector = fs.readFileSync(path.join(ARREL, 'tooling/vite/fotos-parroquia-privades.mjs'), 'utf8');
   assert.deepEqual([...connector.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1]).sort(), ['node:fs', 'node:path', 'vite'], 'el connector de les fotos continua sent una fulla de Node');
   const banderes = fs.readFileSync(path.join(ARREL, 'tooling/vite/banderes-de-capacitat.mjs'), 'utf8');
@@ -787,6 +798,8 @@ test('distNatiuVigent: els índexs que l’app no llig i els originals substitu�
     escriu('public/assets/foto.jpg', despres);
     escriu(`public/${bessonaDe('assets/foto.jpg')}`, abans);
     for (const nom of RECURSOS_QUE_L_APP_NO_LLIG) escriu(`public/${nom}`, despres);
+    escriu('public/assets/uploads/patrimoni/que-dinem/p015.webp', despres);
+    escriu('public/assets/uploads/patrimoni/que-dinem/llibre-que-dinem.pdf', despres);
     assert.equal(distNatiuVigent(t, arrel), true);
     assert.deepEqual(motius, []);
 
@@ -839,7 +852,7 @@ test('eixida real de dist-natiu/: les bessones en lloc dels originals substituï
   const dir = path.join(ARREL, DIRECTORI_NATIU);
   if (!distNatiuVigent(t)) return;
   if (!fs.existsSync(PUBLIC)) { t.skip('sense public/ en este arbre'); return; }
-  const politica = politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: PUBLIC }));
+  const politica = politicaDeMitjansNativaDelReceptari(politicaDeMitjans('autonom', { directori: PUBLIC }));
   if (!politica) { t.skip('sense bessones a public/ en este arbre'); return; }
   const presents = politica.bessones.filter((original) => fs.existsSync(path.join(dir, original)));
   assert.deepEqual(presents, [], 'cap original substituït viatja a l\'app');
@@ -850,7 +863,7 @@ test('eixida real de dist-natiu/: les bessones en lloc dels originals substituï
   }
   // El define, dins del JS: l'objecte literal amb les mateixes bessones, en el mateix ordre.
   const segellades = fitxersAmb(dir, ['.js']).flatMap((f) =>
-    [...fs.readFileSync(f, 'utf8').matchAll(/\{origen:null,externs:\[\],bessones:(\[[^\]]*\])\}/g)].map((m) => JSON.parse(m[1])));
+    [...fs.readFileSync(f, 'utf8').matchAll(/\{origen:"https:\/\/socdepoble\.org",externs:\["assets\/uploads\/patrimoni\/que-dinem\/"\],bessones:(\[[^\]]*\])\}/g)].map((m) => JSON.parse(m[1])));
   assert.ok(segellades.length > 0, 'cap .js porta la política segellada');
   for (const bessones of segellades) assert.deepEqual(bessones, politica.bessones);
 });
@@ -900,4 +913,48 @@ test('eixida real del web (dist/): cap rastre de Capacitor ni del connector d\'e
   const amb = js.filter((f) => { const codi = fs.readFileSync(f, 'utf8'); return MARQUES_NATIVES.some((m) => codi.includes(m)); })
     .map((f) => path.relative(ARREL, f));
   assert.deepEqual(amb, []);
+});
+
+
+test('P0-69 · native recipe media is remote on demand, unrelated resources stay local', async () => {
+  const { fixaPoliticaDeMitjans, resolRecursPropi } = await import('../src/config/assetResolver.js');
+  const politica = politicaDeMitjansNativaDelReceptari(null);
+  try {
+    fixaPoliticaDeMitjans(politica);
+    for (const name of ['p015.webp', 'future.webp', 'llibre-que-dinem.pdf']) {
+      const relative = `assets/uploads/patrimoni/que-dinem/${name}`;
+      assert.equal(resolRecursPropi('/' + relative), 'https://socdepoble.org/' + relative);
+    }
+    assert.equal(resolRecursPropi('/assets/uploads/patrimoni/que-dinem-extra/example.webp'), '/assets/uploads/patrimoni/que-dinem-extra/example.webp');
+    assert.equal(resolRecursPropi('/assets/system/ui/logo.svg'), '/assets/system/ui/logo.svg');
+  } finally { fixaPoliticaDeMitjans(null); }
+});
+
+test('P0-69 · native emitter omits the entire recipe media folder while web source keeps all plates', () => {
+  ambEntornNatiu({ VITE_SUPABASE_URL: ORIGEN, VITE_SUPABASE_ANON_KEY: CLAU }, () => {
+    const cfg = configNatiu({ mode: MODE_NATIU, command: 'build' });
+    const connector = cfg.plugins.flat(Infinity).find((p) => p?.name === 'sdp-recursos-publics');
+    connector.configResolved({ publicDir: PUBLIC });
+    const emitted = [];
+    connector.generateBundle.call({ emitFile: ({ fileName }) => emitted.push(fileName) });
+    assert.deepEqual(emitted.filter((name) => name.startsWith('assets/uploads/patrimoni/que-dinem/')), []);
+    const web = recursosDelPlugin(PUBLIC).filter((name) => /^assets\/uploads\/patrimoni\/que-dinem\/p\d+\.webp$/.test(name));
+    assert.equal(web.length, 148, 'all literal source plates remain available for the web');
+    assert.ok(emitted.includes('assets/system/ui/xat-bg-map-v2.webp'));
+  });
+});
+
+test('P0-69 · real native output contains no recipe media', (t) => {
+  if (!distNatiuVigent(t)) return;
+  assert.equal(fs.existsSync(path.join(ARREL, DIRECTORI_NATIU, 'assets/uploads/patrimoni/que-dinem')), false);
+});
+
+
+test('R15.2 · real native entry fits250000B gzip9 and every initial chunk is accounted for', (t) => {
+  if (!distNatiuVigent(t)) return;
+  const report = mesura(path.join(ARREL, DIRECTORI_NATIU));
+  assert.equal(report.dinsDelSostre, true, `native entry ${report.entrada.gzip}B exceeds250000B gzip9`);
+  assert.ok(report.precarregues.some(item => /entrada-nativa-/.test(item.recurs)), 'the existing Native bootstrap is statically preloaded, never hidden behind a new lazy import');
+  assert.equal(report.arrencada.gzip, report.entrada.gzip + report.precarregues.reduce((sum, item) => sum + item.gzip, 0), 'report includes all static startup bytes');
+  t.diagnostic(JSON.stringify({ entryGzip9: report.entrada.gzip, staticStartupGzip9: report.arrencada.gzip, files: report.arrencada.fitxers }));
 });

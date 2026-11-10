@@ -5,11 +5,17 @@ vi.mock('../../app/contexts/CoreContentContext',()=>({useCoreContent:()=>({statu
 vi.mock('../text/TextSection',()=>({default:({children})=><article>{children}</article>}));
 vi.mock('../control/PublicarDeLaPagina.jsx',()=>({PublicarDeLaPagina:({clau})=><button>Publicar {clau}</button>}));
 vi.mock('./InstalaLaPwa.jsx',()=>({InstalaLaPwa:()=>null,useInstalacioDeLaPagina:()=>null}));
-vi.mock('../patrimoni/HerbariLaTorreSection.jsx',()=>({default:()=><section>Visor herbari lazy</section>}));
+vi.mock('../patrimoni/HerbariWorkspaceSection.jsx',()=>({default:({children})=><section>Visor herbari lazy<article>{children}</article></section>}));
 vi.mock('../text/AparadorFediversity.jsx',()=>({default:()=><section>Demostrador real Karpathy lazy</section>}));
+vi.mock('../../app/contexts/ProveidorProjeccionsCataleg.jsx',()=>({default:({children})=><>{children}</>}));
+// Dispatch fixture: the full workspace geometry is covered by App.fediversity.
+vi.mock('../text/FediversityWorkspaceSection.jsx',async()=>{
+ const{default:TextSection}=await import('../text/TextSection');const{default:Aparador}=await import('../text/AparadorFediversity.jsx');
+ return{default:({children,...props})=><TextSection {...props}><Aparador/>{children}</TextSection>};
+});
 import PageDetailSection from'./PageDetailSection.jsx';
 afterEach(cleanup);
-test('R22 Herbari dins TextSection i Publicar continua al final',async()=>{
+test('P0-69 Herbari com arrel Workspace i Publicar continua al final',async()=>{
  m.slug='herbari';const{container}=render(<PageDetailSection/>);await screen.findByText('Visor herbari lazy');
  expect(screen.getByRole('button',{name:'Publicar herbari'})).toBeTruthy();expect(container.querySelector('article').lastElementChild.tagName).toBe('BUTTON');
  expect(screen.queryByText('Demostrador real Karpathy lazy')).toBeNull();

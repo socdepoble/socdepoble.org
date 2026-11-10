@@ -4,8 +4,8 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { describe, expect, test, vi } from 'vitest';
-import { clauDeLaTargeta, momentDeLaTargeta, momentEditorial, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { clauDeLaTargeta, esTargetaDelMur, momentDeLaTargeta, momentEditorial, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
 import { acteAEsdeveniment } from './agendaMur.js';
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
 import { resolveAsset } from '../../config/assetResolver.js';
@@ -151,8 +151,48 @@ describe('targetesDeSistema', () => {
   test('una pàgina declarada i absent no es pinta i ho diu a qui la demana', () => {
     const quanFalta = vi.fn();
     expect(targetesDeSistema({}, { quanFalta })).toEqual([]);
-    expect(quanFalta.mock.calls.map(([clau]) => clau)).toEqual(SYSTEM_PAGES.map((p) => p.key));
+    // PRODUCCIO-02 (R15b) · Sense la bandera de curadoria, Nodrir la IAIA no és cap targeta: no falta, i no avisa.
+    expect(quanFalta.mock.calls.map(([clau]) => clau)).toEqual(SYSTEM_PAGES.map((p) => p.key).filter((clau) => clau !== 'nodrir-la-iaia'));
     expect(targetesDeSistema(undefined)).toEqual([]);
+  });
+
+  /* PRODUCCIO-02 (revisió R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1 (producció), /page/nodrir-la-iaia no recull res:
+     la pàgina no és cap targeta del Mur, del Calendari ni del Bloc de l'entitat, encara que la seua data de creació
+     (9-11-2026) siga la més nova. La ruta i SYSTEM_PAGES no canvien. Amb la bandera exacta '1', hi torna. */
+  describe('PRODUCCIO-02 · Nodrir la IAIA, només amb la curadoria encesa', () => {
+    afterEach(() => vi.unstubAllEnvs());
+    const claus = () => targetesDeSistema(PAGE_COPY, { nativa: false }).map((targeta) => targeta.id);
+
+    test.each([[undefined], [''], ['0'], ['true'], [' 1']])('bandera %j: cap targeta de Nodrir, cap avís de falta, i la ruta continua', (valor) => {
+      if (valor !== undefined) vi.stubEnv('VITE_SDP_CURADORIA_CULTURAL', valor);
+      expect(esTargetaDelMur('nodrir-la-iaia')).toBe(false);
+      expect(claus()).not.toContain('nodrir-la-iaia');
+      const quanFalta = vi.fn();
+      targetesDeSistema({}, { quanFalta, nativa: false });
+      expect(quanFalta.mock.calls.flat()).not.toContain('nodrir-la-iaia');
+      expect(SYSTEM_PAGES.find((pagina) => pagina.key === 'nodrir-la-iaia')).toMatchObject({ href: '/page/nodrir-la-iaia' });
+      expect(PAGE_COPY['nodrir-la-iaia'].date).toBe('2026-11-09T14:40:43.030Z');
+      // La resta de pàgines del sistema, totes.
+      for (const { key } of SYSTEM_PAGES.filter((pagina) => pagina.key !== 'nodrir-la-iaia')) expect(esTargetaDelMur(key)).toBe(true);
+    });
+
+    test('bandera «1»: la targeta hi és, amb la seua ruta i la data de creació real', () => {
+      vi.stubEnv('VITE_SDP_CURADORIA_CULTURAL', '1');
+      expect(esTargetaDelMur('nodrir-la-iaia')).toBe(true);
+      const targeta = targetesDeSistema(PAGE_COPY, { nativa: false }).find((element) => element.id === 'nodrir-la-iaia');
+      expect(targeta).toMatchObject({ mainHref: '/page/nodrir-la-iaia', created_at: '2026-11-09T14:40:43.030Z', isSystem: true });
+      const amb = claus();
+      vi.unstubAllEnvs();
+      // Només hi entra Nodrir: la resta, igual i en el mateix ordre.
+      expect(amb.filter((clau) => clau !== 'nodrir-la-iaia')).toEqual(claus());
+      expect(amb).toHaveLength(claus().length + 1);
+    });
+
+    test('el literal és el que Vite plega, com la capacitat de data/supabase/index.js', () => {
+      const font = readFileSync(path.join(process.cwd(), 'src/sections/mur/targetesMur.js'), 'utf8');
+      expect(font).toContain("import.meta.env.VITE_SDP_CURADORIA_CULTURAL === '1'");
+      expect(readFileSync(path.join(process.cwd(), 'src/data/supabase/index.js'), 'utf8')).toContain("import.meta.env.VITE_SDP_CURADORIA_CULTURAL === '1'");
+    });
   });
 
   /* Ordre del Mestre (261027; auditoria Gauntlet R5, G1-01 i G5-01) · Dins de

@@ -1,6 +1,6 @@
 import { getCurrentUser, getResolvedConfig, rpc } from './runtime.js';
 import { personalitzacioDeFiles } from './personalitzacio.js';
-import { versioSessio } from '../identitat.js';
+import { capturaSessio, versioSessio } from '../identitat.js';
 import { capturaAdminUsuaris,validaLlistaAdminUsuaris,validaInvitacioAdmin,validaConnexioAdmin } from '../adminUsuaris.js';
 async function adminUsuarisRpc(nom,entrada,operation,config) {
   const captured=capturaAdminUsuaris(entrada,operation);
@@ -68,4 +68,16 @@ export async function adminLligPersonalitzacio(config = {}) {
   if (!resultat || resultat.tenantId !== tenantId || !Array.isArray(resultat.files)
     || resultat.files.some(r => !['taxonomia','estil'].includes(r?.key))) throw new TypeError('Resposta de personalització d’un altre poble o invàlida.');
   return personalitzacioDeFiles(resultat.files);
+}
+
+export async function adminLlistaSessionsDispositius(entrada = {}, config = {}) {
+  const vigilaSessio = capturaSessio();
+  const { capturaFiltreSessions, validaSessionsDispositius } = await import('../sessionsDispositius.js');
+  vigilaSessio();
+  const { cerca, cami } = capturaFiltreSessions(entrada);
+  if (!getResolvedConfig(config).hasSupabaseConfig) throw Object.assign(new Error('Cal un servidor configurat.'), { code: 'no-disponible' });
+  const valor = await rpc('admin_llista_sessions_dispositius', { p_cerca: cerca, p_cami: cami }, config, { signal: config.signal });
+  vigilaSessio();
+  if (config.signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
+  return validaSessionsDispositius(valor);
 }

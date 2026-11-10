@@ -40,6 +40,7 @@ const PERMESOS_DE_FORA = new Set([
   'src/apps/plataforma/index.js',
   'src/apps/comu/esquelet/index.js',
   'src/components/PedraSeca/index.js',
+  'src/components/universal/workspace/index.js',
   'src/components/layout/AppGridColumn.jsx',
   'src/app/contexts/RouterContext',
   'src/utils/magatzemLocal.js',

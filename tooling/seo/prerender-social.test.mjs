@@ -235,7 +235,18 @@ test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre
   /* COMMIT R6 (d79a0b530) · /plugin/genealogia (Arbre Genealògic, IDEA-100) és el nové plugin.
      P0-60 / IDEA-191 (bcb067a27) · + les quatre pàgines de patrimoni i les dos publicacions de llavor
      del Mur: el head servit de dist/, no sols el manifest. */
-  assert.equal(inventari.length,14+9+1+1+14+2,inventari.join(' '));
+  // R15.2: compare identities per surface, not only a total. /consola/botigues
+  // is an additional public presentation outside IDS_PAGINES; missing it in
+  // the previous arithmetic caused42 actual routes to be compared with41.
+  const esperadesPerSuperficie = {
+    pagines: ['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge','notes','wikidepoble','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals'].map(id=>`/page/${id}`),
+    plugins: ['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv','genealogia'].map(id=>`/plugin/${id}`),
+    consola: ['','/pols','/explorador','/fluxos','/calendari','/inventari','/entrades','/agents','/actors','/salut','/botigues','/govern/requeriments','/govern/balanc','/govern/certificacio','/govern/comunicacio'].map(id=>`/consola${id}`),
+    editorials: ['/disseny','/wikidepoble'],
+    mur: ['/mur/manifest-de-poble','/mur/noves-tecnologies-aplicades-a-la-cultura-rural']
+  };
+  assert.deepEqual(inventari.toSorted(),Object.values(esperadesPerSuperficie).flat().toSorted(),'identitats exactes de les superfícies prerenderitzades');
+  assert.ok(!rebut.routesWritten.includes('/page/nodrir-la-iaia'),'la safata privada de curadoria no té head públic');
   for(const ruta of inventari) {
     const entrada=manifest.routes[ruta];
     const d=llig(dist,`${ruta.slice(1)}/index.html`);

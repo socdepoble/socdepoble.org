@@ -21,7 +21,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../app/contexts/UIContext', () => ({
+vi.mock('../../app/contexts/UIContext', async original => ({ ...await original(),
   useUIActions: () => ({ t: (_, alternativa) => alternativa }),
   useUIState: () => ({ externalConfig: {} })
 }));

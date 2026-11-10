@@ -57,6 +57,18 @@ test('allowlist rebutja arrels desconegudes, secrets, paths ambigus i manifest d
  fs.writeFileSync(path.join(f.dist,cami),'x');assert.throws(()=>creaInventariEstatic(f.dist),/camí|admé|admes|llista/i);fs.unlinkSync(path.join(f.dist,cami));}
  assert.throws(()=>escriuInventariEstatic({...f,manifest:path.join(f.dist,'inventari-dist.json')}));
 });
+test('R14 receptes prerenderitzades entren amb cobertura exacta; arrels semblants i traversal no',t=>{
+ const f=fixture(t),paths=['receptes/index.html','receptes/plat-de-prova-r15/index.html'];
+ for(const p of paths){fs.mkdirSync(path.dirname(path.join(f.dist,p)),{recursive:true});fs.writeFileSync(path.join(f.dist,p),'<!doctype html><title>Fixture R15</title>');}
+ const receipt=escriuInventariEstatic(f),inv=JSON.parse(fs.readFileSync(f.manifest));
+ assert.deepEqual(inv.fitxers.filter(x=>x.cami.startsWith('receptes/')).map(x=>x.cami),paths.slice().sort());
+ assert.equal(verificaInventariEstatic({...f,...receipt}).valid,true);
+ fs.appendFileSync(path.join(f.dist,paths[1]),'ALTERAT');assert.throws(()=>verificaInventariEstatic({...f,...receipt}),/inventari|cobertura|empremtes/i);
+ fs.writeFileSync(path.join(f.dist,paths[1]),'<!doctype html><title>Fixture R15</title>');
+ fs.mkdirSync(path.join(f.dist,'receptes-privades'));assert.throws(()=>creaInventariEstatic(f.dist),/llista admesa/);fs.rmdirSync(path.join(f.dist,'receptes-privades'));
+ const mutant=structuredClone(inv);mutant.fitxers.find(x=>x.cami===paths[1]).cami='receptes/../secret.html';
+ fs.writeFileSync(f.manifest,JSON.stringify(mutant)+'\n');assert.throws(()=>verificaInventariEstatic({...f,sha256Confiat:sha(fs.readFileSync(f.manifest))}),/invàlid/);
+});
 test('symlinks en fitxer, directori, arrel i ancestors de manifest no es travessen',t=>{
  const f=fixture(t),extern=path.join(f.dir,'extern');fs.writeFileSync(extern,'extern');fs.symlinkSync(extern,path.join(f.dist,'assets/link.js'));assert.throws(()=>creaInventariEstatic(f.dist),/enllaç|simbòlic/);fs.unlinkSync(path.join(f.dist,'assets/link.js'));
  fs.symlinkSync(path.join(f.dist,'assets'),path.join(f.dist,'anima'));assert.throws(()=>creaInventariEstatic(f.dist));fs.unlinkSync(path.join(f.dist,'anima'));

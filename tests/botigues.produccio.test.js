@@ -9,7 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import * as e from '../scripts/botigues/entorn.mjs';
 import * as p from '../scripts/botigues/preflight.mjs';
 
@@ -25,7 +25,7 @@ const temporal = (nom = 'sdp-b9-') => {
   temporals.push(dir);
   return dir;
 };
-afterEach(() => { while (temporals.length) fs.rmSync(temporals.pop(), { recursive: true, force: true }); });
+afterEach(() => { vi.unstubAllEnvs(); while (temporals.length) fs.rmSync(temporals.pop(), { recursive: true, force: true }); });
 const escriu = (arrel, rel, text) => {
   fs.mkdirSync(path.dirname(path.join(arrel, rel)), { recursive: true });
   fs.writeFileSync(path.join(arrel, rel), text);
@@ -344,6 +344,9 @@ describe('preflight: el context de producció i la família «Avisos push»', ()
 
   test('un projecte de mostra amb el connector: cada peça que falta és un ✗, i cap valor de google-services.json ix mai', () => {
     const arrel = temporal('sdp-b9-mostra-');
+    // The fixture is intentionally outside a Git project even when TMPDIR
+    // lives inside the sole R15.2 clone. Do not inherit its ancestor's ignore.
+    vi.stubEnv('GIT_CEILING_DIRECTORIES', path.dirname(arrel));
     escriu(arrel, 'package.json', JSON.stringify({ dependencies: { '@capacitor/push-notifications': '8.0.0' } }));
     escriu(arrel, 'capacitor.config.json', JSON.stringify({ appId: 'org.socdepoble.app' }));
     escriu(arrel, 'ios/App/CapApp-SPM/Package.swift', '.product(name: "CapacitorPushNotifications", package: "CapacitorPushNotifications")\n');

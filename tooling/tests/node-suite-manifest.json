@@ -40,6 +40,7 @@
     "tests/enxufe-runtime.test.mjs",
     "tests/enxufe-traduccio.test.mjs",
     "tests/exportacio-federacio-postgres.test.mjs",
+    "tests/fediversity-native-postgres.test.mjs",
     "tests/fediversity-nixos-module.test.mjs",
     "tests/fonts-vigilancia.test.mjs",
     "tests/fortificacio.test.mjs",
@@ -64,6 +65,8 @@
     "tests/migracio-admin-resum-sessions-dispositius.test.mjs",
     "tests/migracio-convergencia-perfil.test.mjs",
     "tests/migracio-xat-de-pagina.test.mjs",
+    "tests/migracions-r15-prevol.test.mjs",
+    "tests/nixos-credentials.test.mjs",
     "tests/nixos-reproducible-verifier.test.mjs",
     "tests/node-suite-policy.test.mjs",
     "tests/node0-age-installer.test.mjs",
@@ -172,6 +175,7 @@
     "tooling/media/sentinella-video-aplec2023.test.mjs",
     "tooling/seo/genera-opendata.test.mjs",
     "tooling/seo/projeccio-publica.test.mjs",
+    "tooling/vite/fotos-parroquia-privades.r15_2.test.mjs",
     "tooling/vite/opendata-publica.test.mjs",
     "tooling/wiki/tests/contract_consistency.test.mjs",
     "tooling/wiki/tests/contradiction_engine.t11.test.mjs"
@@ -461,6 +465,11 @@
       "path": "tests/fatiga-261002.test.mjs",
       "suite": "laboratory",
       "reason": "Assaig de lease del paquet 261002: contrasta les bases congelades del pegat contra el disc viu. El CAS roig no és una regressió del producte instal·lat."
+    },
+    {
+      "path": "tests/fediversity-native-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R56/R15.2: aïllament libpq, fitxers de credencials buits, frontera del laboratori local i rebutjos de traversal/symlink; no acredita servidor natiu per si sol."
     },
     {
       "path": "tests/fediversity-nixos-module.test.mjs",
@@ -763,9 +772,19 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/migracions-r15-prevol.test.mjs",
+      "suite": "primary",
+      "reason": "R15.2: prevol SQL read-only, migracions canòniques en PostgreSQL WASM explícit, aal2, RLS restrictiva, índexs i privadesa append-only; cap BD remota."
+    },
+    {
       "path": "tests/natiu-build.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/nixos-credentials.test.mjs",
+      "suite": "primary",
+      "reason": "R15.2: credencial systemd amb ACL exacta del UID, executable fixat al store i descriptor estable; permisos de grup/altres, symlink i curses rebutjats."
     },
     {
       "path": "tests/nixos-reproducible-verifier.test.mjs",
@@ -1601,6 +1620,11 @@
       "path": "tooling/vite/federacio-iaia.test.mjs",
       "suite": "primary",
       "reason": "P1-23 · connector de federació: WebFinger (RFC 7033, CORS, 400/404, rel), /ap/** amb application/activity+json, inbox 405, NodeInfo i host; emissió del build (origen canònic, SSR, determinisme) i registre a vite.config.js; servidor HTTP local en un port efímer, cap xarxa real."
+    },
+    {
+      "path": "tooling/vite/fotos-parroquia-privades.r15_2.test.mjs",
+      "suite": "primary",
+      "reason": "R15-A3: guarda real del build públic contra fotos privades de Parròquia en publicDir i emissions Rollup; conserva els originals."
     },
     {
       "path": "tooling/vite/instantania-consola.test.mjs",

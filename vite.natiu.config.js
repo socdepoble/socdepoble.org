@@ -14,6 +14,7 @@ import { esHostLocal, politicaDeMitjans, recursosPublicsDelPlugin, segellDeBuild
 import { SEGELL, segellDelArbre } from './scripts/botigues/entorn.mjs';
 import fotosParroquiaPrivades from './tooling/vite/fotos-parroquia-privades.mjs';
 import banderesDeCapacitat from './tooling/vite/banderes-de-capacitat.mjs';
+import { trossDArrencada } from './tooling/vite/trossos-arrencada.mjs';
 
 /**
  * Build de l'app nativa (Fases 1 i 2 de l'empaquetat mòbil, 261003).
@@ -381,6 +382,24 @@ export function politicaDeMitjansNativa(politica, excloses = ORIGINALS_CITATS_SE
   return bessones.length ? Object.freeze({ origen: null, externs: Object.freeze([]), bessones }) : null;
 }
 
+/* P0-69 · El llibre il·lustrat es consulta sota demanda. El mateix contracte
+   que exclou la carpeta del paquet fixa l'origen al resolutor: mai URLs locals
+   de fitxers absents. La resta de mitjans i el text literal continuen locals.
+   Sense xarxa, les làmines i el PDF necessiten connexió; no hi ha precàrrega. */
+export const MITJANS_NATIUS_SOTA_DEMANDA = Object.freeze({
+  origen: 'https://socdepoble.org',
+  externs: Object.freeze(['assets/uploads/patrimoni/que-dinem/'])
+});
+
+export function politicaDeMitjansNativaDelReceptari(politica) {
+  const local = politicaDeMitjansNativa(politica);
+  return Object.freeze({
+    ...MITJANS_NATIUS_SOTA_DEMANDA,
+    bessones: Object.freeze((local?.bessones ?? []).filter((cami) =>
+      !MITJANS_NATIUS_SOTA_DEMANDA.externs.some((prefix) => cami.startsWith(prefix))))
+  });
+}
+
 /** Connector de Vite: aplica transformaIndexNatiu abans que Vite busque l'entrada a l'HTML. */
 export function indexNatiuPlugin({ origenBackend } = {}) {
   cspNativa(origenBackend); // Valida en crear el connector, abans de compilar res.
@@ -450,9 +469,9 @@ export default defineConfig(({ mode, command, isPreview }) => {
   if (errors.length) throw new Error(`[sdp-natiu] Este build natiu no es pot fer:\n- ${errors.join('\n- ')}`);
   validatePublicCredentials(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
   const origenBackend = new URL(env.VITE_SUPABASE_URL).origin;
-  /* Fase C (tasca 2) · La de l'autònom, calculada sobre el public/ que
-     s'emetrà, sense els originals que l'app cita sense resolutor. */
-  const mitjans = politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: path.resolve(__dirname, 'public') }));
+  /* P0-69 · Bessones locals de l'autònom i receptari il·lustrat HTTPS sota
+     demanda: un sol contracte per a l'emissor i el resolutor de recursos. */
+  const mitjans = politicaDeMitjansNativaDelReceptari(politicaDeMitjans('autonom', { directori: path.resolve(__dirname, 'public') }));
 
   return {
     mode: MODE_NATIU,
@@ -480,10 +499,8 @@ export default defineConfig(({ mode, command, isPreview }) => {
       indexNatiuPlugin({ origenBackend }),
       segellNatiuPlugin({ arrel })
     ],
-    /* Fase C (tasca 2) · La política, segellada com a l'autònom
-       (vite.standalone.config.js): assetResolver.js la llig en avaluar-se,
-       abans que cap mòdul resolga cap imatge. Sense política (un public/
-       sense bessones), la clau no hi és i tot resol com al lloc. */
+    /* La política segellada també fixa l'origen del receptari sota demanda.
+       assetResolver.js la llig abans que cap mòdul resolga cap imatge. */
     define: {
       ...(mitjans ? { 'import.meta.env.SDP_POLITICA_DE_MITJANS': JSON.stringify(mitjans) } : {}),
       /* P1-35 · El segell del build (segellDeBuild), només en compilar: la
@@ -501,7 +518,10 @@ export default defineConfig(({ mode, command, isPreview }) => {
       emptyOutDir: true,
       /* public/ el copia recursosPublicsDelPlugin; el copyPublicDir de Vite
          el copiaria sencer, amb la PWA. */
-      copyPublicDir: false
+      copyPublicDir: false,
+      /* Mateixes fulles i preload estàtic que el web; cap codi es lleva
+         de l’arrencada ni es transforma en una importació diferida. */
+      rollupOptions: { output: { manualChunks: trossDArrencada } }
     }
   };
 });

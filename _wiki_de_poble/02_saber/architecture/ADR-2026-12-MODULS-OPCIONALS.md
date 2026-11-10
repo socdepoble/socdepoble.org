@@ -96,7 +96,7 @@ Com tota ruta lazy (`lazyRoute.js`), una fallada es queda fins que es recarrega 
 
 Els estils es pinten com un `<link rel="stylesheet" integrity>` dins del mateix arbre que el cos, perquè arriben també dins d'un Shadow DOM.
 
-### 4 · El nucli (`SocDePoble.nucli`, v1.1.0)
+### 4 · El nucli (`SocDePoble.nucli`, v1.5.0)
 
 Un objecte congelat i versionat amb semver (`src/apps/plataforma/nucliModuls.js`). Les portes i els noms els fixa `src/apps/plataforma/contracteNucli.js`:
 
@@ -113,6 +113,10 @@ Les versions:
 
 - 1.0.0 (Onada 6): la Gestoria i els Tractors.
 - 1.1.0 (Onada 7): `useRouter` i la Pedra Seca de les quatre apps de la recepta. Només s'afig.
+- 1.2.0: porta `workspace` amb `UniversalWorkspace` i `DefaultItemCard`.
+- 1.3.0: `useServeiNoticies` a la plataforma.
+- 1.4.0 (R14): serveis de Menjar i Beure de lectura i càlcul, i `Botonera`.
+- 1.5.0 (R15): `CatalegWorkspace` i `DetallCataleg` a `workspace`, `CandidatsAlergens` a Pedra Seca i `candidatsVariantParroquia` a la plataforma. Els quatre noms existixen en l’objecte real congelat; les apps Bar i Nevera els importen per les portes del nucli. Les propostes d’al·lèrgens continuen pendents de validació humana. És una extensió compatible: es conserven tots els noms anteriors i els builds nous declaren `^1.5`.
 
 `useRouter` torna el **valor del router de la pàgina**: el **camí i la consulta** de l'app, `navigate`, la **base dels href**, si el **router és en memòria** i l'estat de l'entrada. És el que ja donen `useLocation`, `useNavigate` i `Link`, que pinta la base a cada href. **Cap dada del backend**, de la sessió ni de l'amfitrió fora de la ruta. Les peces noves de Pedra Seca pinten o són **funcions pures**; **cap no toca el backend** ni un context de la pàgina.
 

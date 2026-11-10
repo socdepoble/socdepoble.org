@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import {privateDirectory,libpqEnvironment} from '../tooling/fediversity/verifyLocalPostgresFediversity.mjs';
+import {privateDirectory,libpqEnvironment,isPrivateLaboratoryPath} from '../tooling/fediversity/verifyLocalPostgresFediversity.mjs';
 
 function fixture(t) {
   const work=fs.mkdtempSync('/tmp/sdp_r56_unit_'),socket=path.join(work,'socket');fs.mkdirSync(socket,{mode:0o700});t.after(()=>fs.rmSync(work,{recursive:true}));return{work,socket,database:'r56_fixture'};
@@ -31,4 +31,10 @@ test('remote host, URI, traversal, relative path and a symlinked work root are r
 test('SQL identifiers cannot become libpq connection strings or shell options',t=>{
   const f=fixture(t);for(const database of['postgres host=remote.invalid','postgres://remote.invalid/db','--dbname=remote','../postgres'])assert.throws(()=>libpqEnvironment({...f,database}),/invalid_local_connection_identity/);
   assert.throws(()=>libpqEnvironment({...f,user:'user password=secret'}),/invalid_local_connection_identity/);
+});
+test('single-clone laboratory allowlist accepts its cache and refuses sibling, traversal and alias escapes',t=>{
+  for(const name of ['/tmp/sdp_codex_r15_2','/private/tmp/sdp_codex_r15_2/node_modules/.cache/native-work'])assert.equal(isPrivateLaboratoryPath(name),true,name);
+  for(const name of ['/tmp/sdp_codex_r15_2_other','/tmp/sdp_codex_r15_2/../foreign','/tmp/sdp_codex_r15_2/./work','/tmp/sdp_codex_r15_2//work','/Users/operator','/tmp/sdp_r56_good/../../foreign'])assert.equal(isPrivateLaboratoryPath(name),false,name);
+  const f=fixture(t),cache=path.join(f.work,'.cache');fs.mkdirSync(cache);assert.equal(privateDirectory(cache),cache);
+  const escaped=path.join(f.work,'escape');fs.symlinkSync('/Users',escaped);assert.throws(()=>privateDirectory(escaped),/physical_private_directory_required/);
 });

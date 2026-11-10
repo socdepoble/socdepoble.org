@@ -115,3 +115,5 @@ export { CarruselImatges } from './organismes/CarruselImatges.jsx';
 //    modal / Lightbox natiu a pantalla completa sobre fons fosc»; estils a
 //    src/css/components.css, § VISOR D'IMATGES) ──
 export { VisorImatges } from './organismes/VisorImatges.jsx';
+
+export { CandidatsAlergens } from './molecules/CandidatsAlergens.jsx';

@@ -16,6 +16,7 @@ import { dataDElement, momentDElement } from '../../components/universal/editori
 import {
   IMPORTANTS_DEL_MUR, TECNIQUES_DEL_MUR, dillunsDe, llavorAmbDatesDeProva, momentsDEstaSetmana
 } from './datesDeProvaMur.js';
+import { esTargetaDelMur, targetesDeSistema } from './targetesMur.js';
 
 /* Hora local. La setmana de l'ordre (del 28-09 al 04-10-2026) i la del canvi
    d'hora (diumenge 25-10-2026, les 03:00 tornen a ser les 02:00). */
@@ -54,7 +55,8 @@ const diaLocal = (valor) => {
    sistema porta el copy com a data de CREACIÓ (created_at), sense `date`. */
 function targetesDelMur(llavor) {
   const pagines = new Map((llavor.pages || []).map((pagina) => [pagina.id, pagina]));
-  const deSistema = SYSTEM_PAGES.map(({ key }) => key);
+  // PRODUCCIO-02 (R15b) · Les mateixes que el Mur: sense la bandera de curadoria, Nodrir no hi és.
+  const deSistema = SYSTEM_PAGES.map(({ key }) => key).filter(esTargetaDelMur);
   return [
     ...llavor.events.map((item) => ({ clau: `events:${item.id}`, item })),
     ...llavor.feedPosts.map((item) => ({ clau: `feedPosts:${item.id}`, item })),
@@ -166,6 +168,31 @@ describe('la llavor del Mur amb les dates de prova', () => {
     expect(APP_SEED.pages.find(({ id }) => id === 'projecte').date).toBe(PAGE_COPY.projecte.date);
     expect(llavorAmbDatesDeProva(APP_SEED).pages.find(({ id }) => id === 'anatomia-rural').date).toBe(PAGE_COPY['anatomia-rural'].date);
     expect(APP_SEED.marketItems.find(({ id }) => id === 'mac-mini-m4').created_at).toBe('2026-02-15T12:00:00.000Z');
+  });
+
+  test('P0-64 · Nodrir conserva el 9 de novembre; el 2 de setembre és només la data de demostració', () => {
+    expect(PAGE_COPY['nodrir-la-iaia'].date).toBe('2026-11-09T14:40:43.030Z');
+    expect(APP_SEED.pages.find(({ id }) => id === 'nodrir-la-iaia').date).toBe('2026-11-09T14:40:43.030Z');
+    const demo = llavorAmbDatesDeProva(APP_SEED, new Date(2026, 10, 9, 14, 0));
+    expect(demo.pages.find(({ id }) => id === 'nodrir-la-iaia').date).toBe('2026-09-02T10:00:00+02:00');
+    expect(APP_SEED.pages.find(({ id }) => id === 'nodrir-la-iaia').date).toBe('2026-11-09T14:40:43.030Z');
+  });
+
+  /* PRODUCCIO-02 (revisió R15b) · Amb la data real del 9 de novembre, Nodrir seria la targeta de sistema més nova del
+     Mur remot. Sense VITE_SDP_CURADORIA_CULTURAL=1 (producció) no n'és cap: ni en remot (PAGE_COPY) ni en la
+     demostració (llavor amb dates de prova), i no compta entre les tècniques. La data no canvia. */
+  test('PRODUCCIO-02 · sense la bandera de curadoria, Nodrir conserva la data però no és cap targeta del Mur', () => {
+    expect(import.meta.env.VITE_SDP_CURADORIA_CULTURAL ?? '').not.toBe('1');
+    expect(TECNIQUES_DEL_MUR.map(clau)).toEqual(['pages:versions']);
+    const remot = targetesDeSistema(PAGE_COPY, { nativa: false });
+    expect(remot.map(({ id }) => id)).not.toContain('nodrir-la-iaia');
+    // La més nova del sistema en remot ja no és cap pàgina del 9-11 que no recull res.
+    const mesNova = [...remot].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
+    expect(Date.parse(mesNova.created_at)).toBeLessThan(Date.parse(PAGE_COPY['nodrir-la-iaia'].date));
+    const demo = llavorAmbDatesDeProva(APP_SEED, new Date(2026, 10, 9, 14, 0));
+    const pageCopyDemo = Object.fromEntries(demo.pages.map((pagina) => [pagina.id, pagina]));
+    expect(targetesDeSistema(pageCopyDemo, { nativa: false }).map(({ id }) => id)).not.toContain('nodrir-la-iaia');
+    expect(targetesDelMur(demo).map(({ clau: c }) => c)).not.toContain('pages:nodrir-la-iaia');
   });
 
   test('cap data de prova no té la forma d’un dia serialitzat (mitjanit UTC exacta), que es llegiria sense hora', () => {

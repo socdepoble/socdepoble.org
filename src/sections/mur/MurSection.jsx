@@ -1,3 +1,4 @@
+import ProjeccionsEnSuperficie from '../../components/universal/workspace/ProjeccionsEnSuperficie.jsx';
 import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 import { Component, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from '../../app/contexts/RouterContext';
@@ -225,7 +226,7 @@ export default function MurSection() {
       ...(sortedFeedPosts || []),
       ...(sortedMarketItems || []),
       ...systemPages
-    ].filter(Boolean);
+    ].filter(item => item && !Object.hasOwn(item, 'projeccioCataleg'));
 
     /* T51 i R51 · De més nova a més vella per l'instant editorial
        (momentDeLaTargeta: publish_date i, sense, created_at; un acte, el seu
@@ -487,6 +488,7 @@ export default function MurSection() {
               /calendari (CalendariDelMur), amb les seues targetes de davall
               (el dia triat o el període que es veu, amb TargetaDelMur i
               .sdp-card-grid): en esta pestanya, la graella general no es pinta. */}
+          {filterType === 'all' && !dateFilter && !categoryFilter ? <ProjeccionsEnSuperficie desti="mur" /> : null}
           {filterType === 'events' ? <CalendariDelMur actes={actesDelCalendari} /> : (
             <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
               {/* Ordre del Mestre, 261001 · la targeta de cada element és
