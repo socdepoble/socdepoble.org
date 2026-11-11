@@ -39,10 +39,12 @@ import configStandalone, {
   recursosDelPlugin,
   recursosPublicsDelPlugin,
   retiraPropisDelLloc,
+  trossDArrencadaDelPaquet,
   versioDelBuild
 } from '../vite.standalone.config.js';
 import { CONTRACTE_AMFITRIO_V1 } from '../src/config/contracteAmfitrio.js';
 import { MARCA_DEL_CARREGADOR } from '../src/config/carregadorDelPaquet.js';
+import { trossDArrencada } from '../tooling/vite/trossos-arrencada.mjs';
 import { ADAPTADOR, LIMIT_DIRECTORI, SLUG, empaqueta, llegixZip, verificaInventari, verificaPaquet } from '../wordpress-plugin/eines/empaqueta.mjs';
 import { MITJANS_EXTERNS_DEL_DIRECTORI, bessonaDe, bessonesDe, separaRecursos } from '../src/config/politicaDeMitjans.js';
 
@@ -558,12 +560,42 @@ const MIDA_IIFE_DE_LA_DECISIO = 4418786;
    real, no només sobre el dist vell. Es llig d'allí, com pesDelNucli llig les
    constants de vite.standalone.config.js: una sola font, i si algú el mou,
    els dos trinquets es mouen junts. No s'importa: és un fitxer de vitest. */
-const SOSTRE_DE_L_ENTRADA = (() => {
+const constantDePesDelNucli = (nom) => {
   const font = fs.readFileSync(path.join(ARREL, 'src/apps/plataforma/pesDelNucli.test.js'), 'utf8');
-  const trobada = font.match(/^const SOSTRE_DEL_TROS_D_ENTRADA = (\d+);/m);
-  if (!trobada) throw new Error('src/apps/plataforma/pesDelNucli.test.js ja no declara SOSTRE_DEL_TROS_D_ENTRADA');
+  const trobada = font.match(new RegExp(`^const ${nom} = (\\d+);`, 'm'));
+  if (!trobada) throw new Error(`src/apps/plataforma/pesDelNucli.test.js ja no declara ${nom}`);
   return Number(trobada[1]);
-})();
+};
+const SOSTRE_DE_L_ENTRADA = constantDePesDelNucli('SOSTRE_DEL_TROS_D_ENTRADA');
+/* Onada R17 · T2.1 (P0-95) · L'entrada més els trossos que importa de manera
+   estàtica: el que el navegador ha de baixar abans del primer pintat. Que els
+   trossos d'arrencada isquen de l'entrada no fa que el pes s'amague en germans. */
+const SOSTRE_DE_L_ARRENCADA = constantDePesDelNucli('SOSTRE_DE_L_ARRENCADA_ESTATICA');
+/* Els noms que trossDArrencadaDelPaquet dona als trossos: els de trossDArrencada
+   (tooling/vite/trossos-arrencada.mjs) sense «pobles-aplec». */
+const NOMS_D_ARRENCADA = new Set(['react', 'dompurify', 'estils', 'ca', 'navegacio', 'entrada-nativa']);
+
+test('trossDArrencadaDelPaquet: la funció del web i del natiu, sense el grup de dades «pobles-aplec»', () => {
+  const ARR = '/proj';
+  const casos = [
+    [`${ARR}/node_modules/react-dom/client.js`, 'react'],
+    [`${ARR}/node_modules/react-dom/server.js`, undefined],
+    [`${ARR}/node_modules/dompurify/dist/purify.es.mjs`, 'dompurify'],
+    [`${ARR}/src/css/index.css?inline`, 'estils'],
+    [`${ARR}/src/config/idiomes/ca.js`, 'ca'],
+    [`${ARR}/src/config/idiomes/es.js`, undefined],
+    [`${ARR}/src/hooks/useScrollDeNavegacio.js`, 'navegacio'],
+    [`${ARR}/src/sections/pobles/poblesAplecViquipedia.js`, undefined],
+    [`${ARR}/src/sections/mur/articles/aplec2023Content.js`, undefined],
+    [`${ARR}/src/data/taxonomia/vocabulariCanonic.js`, undefined],
+    [`${ARR}/src/app/App.jsx`, undefined]
+  ];
+  for (const [id, nom] of casos) {
+    assert.equal(trossDArrencadaDelPaquet(id), nom, id);
+    if (nom !== undefined) assert.equal(trossDArrencada(id), nom, `${id}: el mateix nom que el web`);
+  }
+  assert.equal(trossDArrencada(`${ARR}/src/sections/mur/articles/aplec2023Content.js`), 'pobles-aplec', 'el web sí que l’agrupa');
+});
 
 /** Tots els nodes d'un AST ESTree (Rollup), sense recursió. */
 function nodesDe(arrel) {
@@ -619,8 +651,10 @@ test('la forma de la config: trossejat per defecte, monolític amb l\'interrupto
     assert.deepEqual(cfg.build.lib.formats, ['es']);
     assert.equal(cfg.build.lib.fileName('es', 'embed'), MODUL_DELS_TROSSOS);
     // En lib, Vite deixaria els trossos a l'arrel de l'outDir i sense elevar importacions.
+    // Onada R17 · T2.1 (P0-95) · Els trossos d'arrencada del web i del natiu, sense el grup «pobles-aplec».
     assert.deepEqual(cfg.build.rollupOptions.output, {
-      entryFileNames: MODUL_DELS_TROSSOS, chunkFileNames: 'trossos/[name]-[hash].js', hoistTransitiveImports: true
+      entryFileNames: MODUL_DELS_TROSSOS, chunkFileNames: 'trossos/[name]-[hash].js', hoistTransitiveImports: true,
+      manualChunks: trossDArrencadaDelPaquet
     });
     // Sense façana: l'entrada és el mòdul que porta el codi (cap anada i tornada més).
     assert.equal(cfg.build.rollupOptions.preserveEntrySignatures, 'allow-extension');
@@ -1200,23 +1234,39 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
   assert.equal(entrada.fileName, modul);
   // Cap façana: el mòdul d'entrada porta embed.jsx i tot el seu graf estàtic.
   assert.ok(entrada.moduleIds.some((id) => id === path.join(ARREL, 'src', 'embed.jsx')), 'embed.jsx és a l\'entrada');
-  assert.deepEqual(entrada.imports, [], 'l\'entrada no espera cap altre tros per a avaluar-se');
+  /* Onada R17 · T2.1 (P0-95, Closca Pura) · Abans: «l'entrada no espera cap
+     altre tros». Ara l'entrada importa de manera estàtica els trossos
+     d'arrencada de trossDArrencada, i només ells: fulles que només
+     s'importen entre elles (cap cicle cap a l'entrada ni cap tros diferit). */
+  const nomDelTros = (fitxer) => /^trossos\/(.+)-[A-Za-z0-9_-]{8}\.js$/.exec(fitxer)?.[1] ?? null;
+  const arrencada = chunks.filter((chunk) => entrada.imports.includes(chunk.fileName));
+  assert.deepEqual(arrencada.map((chunk) => chunk.fileName).sort(), [...entrada.imports].sort(), 'cada import estàtic de l\'entrada és un tros emés');
+  assert.ok(arrencada.some((chunk) => nomDelTros(chunk.fileName) === 'react'), 'React viatja al seu tros d\'arrencada');
+  for (const tros of arrencada) {
+    assert.ok(NOMS_D_ARRENCADA.has(nomDelTros(tros.fileName)), `${tros.fileName}: només els trossos de trossDArrencada a l'arrencada`);
+    assert.ok(!tros.isEntry);
+    assert.ok(tros.imports.every((dep) => entrada.imports.includes(dep)), `${tros.fileName}: cap cicle cap a l'entrada ni cap tros diferit`);
+  }
+  const diferits = chunks.filter((chunk) => !chunk.isEntry && !entrada.imports.includes(chunk.fileName));
+  const deLArrencada = [entrada, ...arrencada];
   /* Fase D (261020, tasca 4.1) · L1 · Diccionaris sota demanda: el valencià
-     viatja a l'entrada; els altres quatre, cadascun al seu tros, sense
-     importacions. Un import estàtic o un import.meta.glob els tornaria a ficar
-     a l'entrada (i18n.idiomes.test.js ho guarda també sobre el text). */
+     viatja a l'arrencada (R17: al tros «ca»); els altres quatre, cadascun al
+     seu tros diferit, sense importacions. Un import estàtic o un
+     import.meta.glob els tornaria a ficar a l'arrencada (i18n.idiomes.test.js
+     ho guarda també sobre el text). */
   const idiomaDe = (id) => /[\\/]src[\\/]config[\\/]idiomes[\\/](ca|es|en|eu|gl)\.js$/.exec(id.split('?')[0])?.[1] ?? null;
-  assert.deepEqual(entrada.moduleIds.map(idiomaDe).filter(Boolean), ['ca'], 'a l\'entrada només hi ha el diccionari valencià');
+  assert.deepEqual(deLArrencada.flatMap((chunk) => chunk.moduleIds).map(idiomaDe).filter(Boolean), ['ca'], 'a l\'arrencada només hi ha el diccionari valencià');
   for (const codi of ['es', 'en', 'eu', 'gl']) {
-    const tros = chunks.find((chunk) => !chunk.isEntry && chunk.facadeModuleId && idiomaDe(chunk.facadeModuleId) === codi);
-    assert.ok(tros, `el diccionari ${codi} té el seu propi tros`);
+    const tros = diferits.find((chunk) => chunk.facadeModuleId && idiomaDe(chunk.facadeModuleId) === codi);
+    assert.ok(tros, `el diccionari ${codi} té el seu propi tros diferit`);
     assert.deepEqual(tros.imports, [], `el tros del diccionari ${codi} no importa res`);
   }
   const css = (chunk) => chunk.moduleIds.some((id) => id.includes(`${path.sep}src${path.sep}css${path.sep}index.css`));
-  assert.ok(css(entrada), 'src/css/index.css?inline és a l\'entrada');
-  assert.ok(!chunks.filter((chunk) => !chunk.isEntry).some(css), 'cap tros mandrós porta el full');
-  assert.match(entrada.code, /\.sdp-iaia-consulta\{overflow:hidden\}/, 'el diàleg IAIA porta els seus estils dins del Shadow DOM');
-  assert.match(entrada.code, /\.sdp-xat-adjunts\{flex:none;/, 'els controls multimèdia porten els seus estils dins del Shadow DOM');
+  assert.ok(arrencada.some(css), 'src/css/index.css?inline viatja a l\'arrencada (tros «estils»)');
+  assert.ok(!diferits.some(css), 'cap tros diferit porta el full');
+  const codiDArrencada = deLArrencada.map((chunk) => chunk.code).join('\n');
+  assert.match(codiDArrencada, /\.sdp-iaia-consulta\{overflow:hidden\}/, 'el diàleg IAIA porta els seus estils dins del Shadow DOM');
+  assert.match(codiDArrencada, /\.sdp-xat-adjunts\{flex:none;/, 'els controls multimèdia porten els seus estils dins del Shadow DOM');
   const deSrc = entrada.moduleIds
     .filter((id) => id.startsWith(path.join(ARREL, 'src') + path.sep))
     .map((id) => path.relative(ARREL, id.split('?')[0]).split(path.sep).join('/'));
@@ -1227,11 +1277,14 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
 
   const midaEntrada = llig(modul).length;
   const midaTotal = trossos.reduce((suma, rel) => suma + llig(rel).length, 0);
+  const midaArrencada = deLArrencada.reduce((suma, chunk) => suma + llig(chunk.fileName).length, 0);
   const referencia = midaMonolitica ?? MIDA_IIFE_DE_LA_DECISIO;
+  t.diagnostic(`DESPRÉS · carregador ${carregador.length} B · entrada ${midaEntrada} B (gzip ${gzip(llig(modul))} B) · arrencada estàtica ${midaArrencada} B en ${deLArrencada.length} fitxers · ${trossos.length} trossos, ${midaTotal} B en total`);
+  for (const tros of arrencada) t.diagnostic(`  arrencada ${tros.fileName}: ${llig(tros.fileName).length} B`);
   assert.ok(midaEntrada < MIDA_IIFE_DE_LA_DECISIO * 0.5, `entrada ${midaEntrada} B: ha de pesar menys del 50 % de ${MIDA_IIFE_DE_LA_DECISIO} B`);
   assert.ok(midaEntrada <= SOSTRE_DE_L_ENTRADA, `entrada ${midaEntrada} B: el trinquet és ${SOSTRE_DE_L_ENTRADA} B`);
+  assert.ok(midaArrencada <= SOSTRE_DE_L_ARRENCADA, `arrencada estàtica ${midaArrencada} B: el trinquet és ${SOSTRE_DE_L_ARRENCADA} B`);
   assert.ok(midaEntrada < referencia, 'l\'entrada pesa menys que el monolític');
-  t.diagnostic(`DESPRÉS · carregador ${carregador.length} B · entrada ${midaEntrada} B (gzip ${gzip(llig(modul))} B) · ${trossos.length} trossos, ${midaTotal} B en total`);
   if (midaMonolitica) t.diagnostic(`ABANS · monolític ${midaMonolitica} B · l'entrada és el ${Math.round((midaEntrada / midaMonolitica) * 1000) / 10} %`);
   const pesants = Object.entries(entrada.modules)
     .sort((a, b) => b[1].renderedLength - a[1].renderedLength)

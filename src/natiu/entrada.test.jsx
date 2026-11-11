@@ -13,7 +13,10 @@ const ENTORN = vi.hoisted(() => {
     VITE_SUPABASE_ANON_KEY: 'sb_publishable_del_paquet',
     // L'app nativa no en fa cas: el mode de dades és sempre 'remote'.
     VITE_DATA_MODE: 'seed',
-    VITE_TENANT_ID: '11111111-1111-4111-8111-111111111111'
+    VITE_TENANT_ID: '11111111-1111-4111-8111-111111111111',
+    /* Onada R17 · Hermètica: un .env.local amb l'emissor del projecte no ha de
+       canviar el valor per defecte que comprova la prova. */
+    VITE_APP_ISSUER: ''
   };
   for (const [variable, valor] of Object.entries(entorn)) vi.stubEnv(variable, valor);
   return entorn;

@@ -138,7 +138,8 @@ test('261016 · amb una baixa en curs, els drets de sèrie es veuen però no es 
 
 test('una contrasenya de menys de 10 caràcters no s’envia', async () => {
   pinta();
-  const camp = within(seccio('Contrasenya')).getByLabelText(/contrasenya/i);
+  // Expectativa actualitzada a propòsit: Onada R17 · AH-R17-11 / P0-88 (l'ull «Mostra la contrasenya» també diu «contrasenya»).
+  const camp = within(seccio('Contrasenya')).getByLabelText('Nou valor per a contrasenya:');
   expect(camp.getAttribute('autocomplete')).toBe('new-password');
   fireEvent.change(camp, { target: { value: 'curta' } });
   await act(async () => { fireEvent.submit(camp.closest('form')); });

@@ -608,6 +608,17 @@ nav.mobile-nav { display: none; }
     box-shadow: none;
     z-index: auto;
   }
+  /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · El calaix CONTROL
+     arriba fins a baix de la pantalla (components.css, .sdp-dialeg--calaix,
+     bottom: 0) i, amb la finestra de vora a vora, els tres botons d'Android
+     tapaven el final de la llista: «Legal i privacitat», l'última entrada de
+     «Sistema». La llista (§ SIDEBAR · SCROLL) acaba damunt de la zona segura
+     de baix, com el peu dels calaixos del Dialeg; sense zona segura, el
+     var(--sdp-space-4) de baix de sempre (modules.css, .app-sidebar-nav),
+     sense moure cap píxel. També val per a la BarraApp de les apps. */
+  :where(.sdp-root.is-compact) .sdp-dialeg-sidebar nav.app-sidebar > .app-sidebar-nav {
+    padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px));
+  }
 
   /* Vel fosc darrere del calaix (bloqueja i tanca en clicar fora) */
   .sdp-root.is-compact.has-sidebar-open::after {

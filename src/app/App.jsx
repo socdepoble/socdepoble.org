@@ -21,7 +21,10 @@ import { getSectionLabels } from '../config/i18n';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
 import { aterratgeDespresDEntrar, esRutaDEntrada, rutaDEntrada } from '../config/rutaEntrada.js';
 import { recullTornadaOAuth } from '../data/backendPort.js';
-import { anunciaEnllacDeRecuperacio, marcaRecuperacioPendent } from '../data/recuperacioPendent.js';
+import {
+  EVENT_ADRECA_DE_RECUPERACIO, EVENT_ENLLAC_DACCES_INSERVIBLE, anunciaEnllacDeRecuperacio, hiHaAdrecaDeRecuperacio,
+  marcaRecuperacioPendent
+} from '../data/recuperacioPendent.js';
 import { useSessioOpcional } from './contexts/SessionContext.jsx';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -513,9 +516,7 @@ function AppShell({ children, mobileNav }) {
     shellMuntat.current = true;
     return () => { shellMuntat.current = false; };
   }, []);
-  useEffect(() => {
-    if (tornadaFeta.current || !modeRemot) return;
-    tornadaFeta.current = true;
+  const atenTornada = useCallback(() => {
     recullTornadaOAuth(externalConfig)
       .then((sessio) => {
         if (!sessio) return;
@@ -545,7 +546,41 @@ function AppShell({ children, mobileNav }) {
         /* R · Un enllaç de recuperació que ja no val: a l'entrada, on se'n pot demanar un altre. */
         if (e?.recuperacio === true) navigate(rutaDEntrada({ mode: 'entrar' }), { replace: true });
       });
-  }, [externalConfig, modeRemot, t, showToast, navigate]);
+  }, [externalConfig, t, showToast, navigate]);
+  useEffect(() => {
+    if (tornadaFeta.current || !modeRemot) return;
+    tornadaFeta.current = true;
+    atenTornada();
+  }, [modeRemot, atenTornada]);
+  /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · L'enllaç del
+     correu que arriba a l'App sense passar per la barra d'adreces (compartit
+     amb l'App): el pont natiu l'oferix (ofereixAdrecaDeRecuperacio) i ací es
+     recull com la tornada de sempre. Si ha arribat abans del primer pintat, ja
+     l'ha recollit l'efecte de dalt. Si la recollida ha fallat sense prendre'l
+     (arrencada sense xarxa), es torna a provar quan torna la connexió: el natiu
+     ja l'ha donat per consumit. */
+  useEffect(() => {
+    if (!modeRemot) return undefined;
+    const enAdreca = () => { if (hiHaAdrecaDeRecuperacio()) atenTornada(); };
+    window.addEventListener(EVENT_ADRECA_DE_RECUPERACIO, enAdreca);
+    window.addEventListener('online', enAdreca);
+    return () => {
+      window.removeEventListener(EVENT_ADRECA_DE_RECUPERACIO, enAdreca);
+      window.removeEventListener('online', enAdreca);
+    };
+  }, [modeRemot, atenTornada]);
+  /* AH-R17-11 · Una credencial d'accés que el pont no ha pogut usar (d'un
+     origen que no és nostre, o sense token): no va al Xat. Es diu clar i es
+     porta a l'entrada, on hi ha «Has oblidat la contrasenya?». */
+  useEffect(() => {
+    const enInservible = () => {
+      if (!shellMuntat.current) return;
+      showToast(t('section.login.enllacDAccesAlXat', 'Això és un enllaç d’accés: no es pot enviar al xat. Obri’l des del correu o demana’n un altre a «Has oblidat la contrasenya?».'), 'error');
+      navigate(rutaDEntrada({ mode: 'entrar' }));
+    };
+    window.addEventListener(EVENT_ENLLAC_DACCES_INSERVIBLE, enInservible);
+    return () => window.removeEventListener(EVENT_ENLLAC_DACCES_INSERVIBLE, enInservible);
+  }, [t, showToast, navigate]);
 
   /* R · correcció de la revisió · Mentre hi ha una recuperació en curs,
      qualsevol ruta torna a /registre, on hi ha la pantalla per a acabar-la (o

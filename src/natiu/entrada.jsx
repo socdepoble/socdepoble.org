@@ -37,6 +37,8 @@ import { lliuraCompartit, registraAlliberadorCompartit, registraTalladorComparti
 import { registraAvisosNatius } from '../config/avisosNatius.js';
 import { AVISOS_PUSH_XAT_ACTIUS, registraAvisosPush } from '../config/avisosPushXat.js';
 import { creaReceptorCompartit } from './compartirNatiu.js';
+import { avisaEnllacDAccesInservible, ofereixAdrecaDeRecuperacio } from '../data/recuperacioPendent.js';
+import { ORIGEN_PUBLIC_PER_DEFECTE, origenPublic } from '../config/origenPublic.js';
 import { creaAvisosNatius } from './avisosNatius.js';
 import { connectaEnrereNatiu } from './enrereNatiu.js';
 import { bloqueigDeVersio } from './versioMinima.js';
@@ -126,7 +128,25 @@ const init = () => {
     catch (e) { console.error('[natiu] Arrere natiu no connectat:', e); }
     /* Un canvi de sessió caduca el lot que encara es llig, i el natiu (el
        tallador) en talla la còpia i les restes (pla 261028_1526, P1-31). */
-    const receptor = creaReceptorCompartit({ sessio: sessioCompartit, registraTallador: registraTalladorCompartit });
+    /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay) · Un enllaç de recuperació
+       compartit amb l'App no va mai al Xat: va a «Definix la contrasenya
+       nova» (recuperacioPendent.js), i el que no es pot usar ho diu i porta a
+       l'entrada. Només d'estos orígens https exactes: el Supabase segellat al
+       build, el domini propi de l'emissor (sempre auth.socdepoble.org, i el de
+       VITE_APP_ISSUER si n'hi ha) i l'origen públic on torna l'enllaç. */
+    const receptor = creaReceptorCompartit({
+      sessio: sessioCompartit,
+      registraTallador: registraTalladorCompartit,
+      recuperacio: ofereixAdrecaDeRecuperacio,
+      credencialInservible: avisaEnllacDAccesInservible,
+      origensAutenticacio: [
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_APP_ISSUER,
+        'https://auth.socdepoble.org',
+        origenPublic(),
+        ORIGEN_PUBLIC_PER_DEFECTE
+      ]
+    });
     if (receptor) {
       // La còpia nativa la tanca el registre: en enviar o descartar (Gauntlet 261026_1615).
       registraAlliberadorCompartit(receptor.allibera);

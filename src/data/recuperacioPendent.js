@@ -61,7 +61,8 @@ let enllacEnMemoria = false;
    perdia. Es pren a l'avaluació del mòdul (abans de pintar res), només en
    memòria i d'un sol ús (prenAdrecaDArribada): la llig l'adaptador, que és
    qui en sap el format. Mai a cap emmagatzematge. */
-let adrecaDArribada = /[#?&]type=recovery/.test(globalThis.location?.href) ? location.href : null;
+const ES_TORNADA_DE_RECUPERACIO = /[#?&]type=recovery/;
+let adrecaDArribada = ES_TORNADA_DE_RECUPERACIO.test(globalThis.location?.href) ? location.href : null;
 
 /** L'adreça d'arribada (o null), una sola vegada: la recull l'adaptador. */
 export function prenAdrecaDArribada() {
@@ -69,6 +70,34 @@ export function prenAdrecaDArribada() {
   adrecaDArribada = null;
   return adreca;
 }
+
+/* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · L'enllaç del correu
+   pot arribar a l'App sense passar per la barra d'adreces: compartit des del
+   navegador («Comparteix l'enllaç → Sóc de Poble»). El pont natiu el valida
+   (tornadaRecuperacio.js, enllacDeRecuperacioEnText) i l'oferix ací com una
+   arribada més: la mateixa memòria d'un sol ús, mai cap emmagatzematge, i
+   l'avís perquè l'App torne a cridar recullTornadaOAuth (App.jsx).
+   L'adaptador el llig com sempre: cap petició fins a «Desa» (R2). Una
+   credencial que no es pot usar no porta res: només l'avís
+   (EVENT_ENLLAC_DACCES_INSERVIBLE), perquè l'App ho diga i porte a l'entrada. */
+export const EVENT_ADRECA_DE_RECUPERACIO = 'sdp:recuperacio-adreca';
+export const EVENT_ENLLAC_DACCES_INSERVIBLE = 'sdp:enllac-dacces-inservible';
+
+/** El pont natiu ha rebut una credencial d'accés que no pot usar. Cap secret viatja amb l'avís. */
+export function avisaEnllacDAccesInservible() {
+  globalThis.window?.dispatchEvent(new CustomEvent(EVENT_ENLLAC_DACCES_INSERVIBLE));
+}
+
+/** El pont natiu oferix un enllaç de recuperació. Torna true si l'ha pres. */
+export function ofereixAdrecaDeRecuperacio(href) {
+  if (typeof href !== 'string' || !ES_TORNADA_DE_RECUPERACIO.test(href)) return false;
+  adrecaDArribada = href;
+  globalThis.window?.dispatchEvent(new CustomEvent(EVENT_ADRECA_DE_RECUPERACIO));
+  return true;
+}
+
+/** Cert si hi ha una adreça d'arribada que l'adaptador encara no ha recollit. */
+export const hiHaAdrecaDeRecuperacio = () => adrecaDArribada !== null;
 
 const avisa = () => globalThis.window?.dispatchEvent(new CustomEvent(EVENT_RECUPERACIO_PENDENT));
 

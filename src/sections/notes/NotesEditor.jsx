@@ -294,7 +294,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   const sandboxInitial = useMemo(() => ({
     ...NOTA_BENVINGUDA, id: ID_COPIA_PROVA, isPublished: false, revision: 0
   }), []);
-  const [sandbox, actualitzaSandbox] = useLocalSandbox(sandboxInitial, config,
+  /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · `revisioSandbox`
+     puja quan, en hidratar, l'esborrany desat guanya a una tecla feta abans
+     sobre la benvinguda (useLocalSandbox · fusionaTeclejat): l'editor es
+     torna a muntar amb el desat. A zero (sempre, fora d'eixe cas) la clau de
+     l'editor és la de sempre. */
+  const [sandbox, actualitzaSandbox, revisioSandbox] = useLocalSandbox(sandboxInitial, config,
     message => showToast(message, 'error'));
   const notaEnEdicio = activeNote || (foraster ? sandbox : null);
   const esSandbox = notaEnEdicio === sandbox;
@@ -976,7 +981,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       {/* T47b · workspaceKey depén de l'entrada de sessió (NotesDataContext): la
           renovació del JWT que fa SdP ja no remunta l'editor mentre s'escriu.
           La reinjecció de l'amfitrió en mode incrustat encara sí (pendent). */}
-      <DocumentEditor key={`${workspaceKey}:${notaEnEdicio?.id || "intro"}`} adapter={notesAdapter} onToast={onToast || showToast} />
+      <DocumentEditor key={`${workspaceKey}:${notaEnEdicio?.id || "intro"}${esSandbox && revisioSandbox ? `:${revisioSandbox}` : ''}`} adapter={notesAdapter} onToast={onToast || showToast} />
       {dialeg === 'carpeta' && notaEnEdicio ? (
         <DialegCarpeta
           key={`carpeta:${notaEnEdicio.id}`}

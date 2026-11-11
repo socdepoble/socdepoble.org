@@ -5,7 +5,7 @@ import { MIDA_AVATAR, esAvisDeLaFoto, fotoDinsDelPressupost } from '../../utils/
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
-import { Alerta, Boto, Camp, DialegConfirmacio, GrupOpcions, Insignia, Selector } from '../../components/PedraSeca';
+import { Alerta, Boto, Camp, ControlContrasenya, DialegConfirmacio, GrupOpcions, Insignia, Selector } from '../../components/PedraSeca';
 import { BotoDretsAutor } from '../../components/universal/CopyrightSelector.jsx';
 import { CopyrightPage } from '../../components/universal/drets/CopyrightPage.jsx';
 import { sincronitzaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
@@ -50,6 +50,14 @@ const MAX_DATA_URL = 150_000;
 
 /* El mateix mínim que el formulari d'alta (onboardingModel). */
 const MINIM_CONTRASENYA = 10;
+
+/* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · El nom fix de
+   l'ull de la contrasenya nova (ControlContrasenya): l'estat el diu
+   aria-pressed, no el nom. És la clau de l'ull del registre i de la
+   recuperació, que ja viu als cinc diccionaris (src/config/idiomes/): este
+   formulari només té un camp de contrasenya, i l'espècimen (EspecimenCamp)
+   reserva un nom distint per a quan n'hi ha dos. Cap traducció duplicada. */
+export const TEXT_ULL_CONTRASENYA = Object.freeze(['section.login.registre.ullContrasenya', 'Mostra la contrasenya']);
 
 /* Els avisos de la pujada d'una imatge (els de sempre). */
 const ERROR_SENSE_PUJADA = 'El servidor no admet pujada d\'imatges.';
@@ -792,16 +800,39 @@ export default function DetallAjust({
               maxLength={254}
               aria-describedby={idAjuda}
             />
+          ) : tipus === 'password' ? (
+            /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · La
+               contrasenya nova porta l'ull de Pedra Seca, el mateix del
+               registre i de la recuperació (ControlContrasenya): l'ull alterna
+               type="password" ↔ type="text", el seu nom és fix i traduït i
+               l'estat va a aria-pressed. En enviar el formulari torna a
+               amagar-se abans que handleSubmit llegisca res. L'etiqueta
+               continua sent la de dalt (htmlFor = id). És l'únic camp de
+               contrasenya d'este formulari: ni confirmació ni contrasenya
+               actual. Sense placeholder, com el registre i la recuperació:
+               l'ull reserva el seu lloc a la dreta del camp (components.css,
+               .sdp-contrasenya > .sdp-control) i, en el detall mòbil del
+               Perfil (amb el rail de 56 px), la caixa de text fa 164 px a
+               320 i 219 a 375: «Introdueix nova contrasenya...» (257 px) no
+               hi cabia. L'etiqueta de dalt ja diu el mateix (EspecimenCamp:
+               «Placeholder com a etiqueta», no). Retirar-lo també canvia el
+               camp buit en escriptori: pendent del vistiplau del Mestre. */
+            <ControlContrasenya
+              id={`ajust-${ajust.id}`}
+              etiquetaUll={tradueix(t, TEXT_ULL_CONTRASENYA)}
+              value={valorTemp}
+              onChange={(e) => setValorTemp(e.target.value)}
+              autoComplete="new-password"
+              minLength={MINIM_CONTRASENYA}
+            />
           ) : (
             <input
-              type={tipus === 'password' ? 'password' : 'text'}
+              type="text"
               id={`ajust-${ajust.id}`}
               className="sdp-control"
               value={valorTemp}
               onChange={(e) => setValorTemp(e.target.value)}
-              placeholder={tipus === 'password' ? 'Introdueix nova contrasenya...' : ''}
-              autoComplete={tipus === 'password' ? 'new-password' : undefined}
-              minLength={tipus === 'password' ? MINIM_CONTRASENYA : undefined}
+              placeholder=""
             />
           )}
 

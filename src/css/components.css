@@ -424,6 +424,16 @@
     justify-content: center;
     text-align: center;
   }
+  /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · Un calaix sense
+     peu (cap accions: el Crom del sistema) acaba en el cos, i el cos també
+     arriba fins a baix de la pantalla (bottom: 0): amb la finestra de vora a
+     vora, els tres botons d'Android en tapaven l'últim botó. Quan és l'últim
+     del marc, el cos acaba damunt de la zona segura de baix, com el peu de
+     dalt i a totes les amplades; sense zona segura, el var(--sdp-space-4) de
+     baix de sempre (.sdp-dialeg__cos), sense moure cap píxel. */
+  .sdp-dialeg--calaix > .sdp-dialeg__marc > .sdp-dialeg__cos:last-child {
+    padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px));
+  }
   .sdp-dialeg--esquerra { left: 0; right: auto; border-inline-start: 0; }
   .sdp-dialeg--dreta { left: auto; right: 0; border-inline-end: 0; }
   /* Calaix de la barra lateral (App.jsx, mode compacte): negre de dalt a baix
@@ -443,6 +453,19 @@
     }
     .sdp-dialeg__peu { flex-direction: column-reverse; padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px)); }
     .sdp-dialeg__peu .sdp-boto { width: 100%; }
+    /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · Un full
+       inferior sense peu acaba en el cos, i l'últim botó del cos («Descarta»
+       d'«Envia a…», DialegCompartir.jsx) quedava davall dels tres botons
+       d'Android. Quan és l'últim del marc, el cos acaba damunt de la zona
+       segura de baix, com el peu de dalt; sense zona segura, el
+       var(--sdp-space-4) de baix de sempre, el de .sdp-dialeg__cos i el del
+       cos del Xat (modules.css, .sdp-xat-dialeg .sdp-dialeg__cos), a qui
+       guanya per especificitat (0,5,0 contra 0,2,0) i no per ordre. La
+       pantalla completa no hi entra: el seu <dialog> ja porta la zona segura
+       al farciment (més avall) i la sumaria dues vegades. */
+    .sdp-dialeg:not(.sdp-dialeg--completa) > .sdp-dialeg__marc > .sdp-dialeg__cos:last-child {
+      padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px));
+    }
   }
 
   /* ── PANTALLA COMPLETA (ordre del Mestre, 261001) ─────────────────── */

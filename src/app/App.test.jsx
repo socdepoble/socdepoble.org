@@ -12,8 +12,9 @@ import {
 } from '../components/universal/MarcaAmfitrio.jsx';
 import { STORAGE_PREFIX } from '../config/storage.js';
 import {
-  CLAU_ENLLAC_OBERT, ESTAT_ENLLAC, anunciaEnllacDeRecuperacio, estatEnllacDeRecuperacio, marcaRecuperacioPendent,
-  oblidaRecuperacioPendent, recuperacioPendentPer
+  CLAU_ENLLAC_OBERT, ESTAT_ENLLAC, EVENT_ADRECA_DE_RECUPERACIO, anunciaEnllacDeRecuperacio, avisaEnllacDAccesInservible,
+  estatEnllacDeRecuperacio, marcaRecuperacioPendent, ofereixAdrecaDeRecuperacio, oblidaRecuperacioPendent, prenAdrecaDArribada,
+  recuperacioPendentPer
 } from '../data/recuperacioPendent.js';
 import { MemoryRouter } from './contexts/RouterContext.jsx';
 import EspecimenShell from '../sections/disseny/cataleg/detalls/EspecimenShell.jsx';
@@ -1021,6 +1022,50 @@ test('R2 · una tornada de recuperació arriba sense sessió: /registre amb la p
     expect(screen.queryByText(/Compte:/)).toBeNull();
     expect(getSessionState().estat).toBe('fora');
     expect(screen.queryByText('Benvingut de nou!')).toBeNull();
+  }, { routerType: 'browser', dataMode: 'remote' },
+  { recullTornadaOAuth: recull, ...ambRecuperacio(() => null) });
+});
+
+/* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · L'enllaç del correu
+   que el pont natiu oferix després d'arrencar (compartit amb l'App o obert per
+   Android): la closca torna a recollir la tornada i porta a la pantalla de la
+   contrasenya nova. Un avís sense cap adreça oferida no crida res. */
+test('AH-R17-11 · l’enllaç de recuperació que oferix el pont natiu porta a «Definix la contrasenya nova»', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  const recull = vi.fn(async () => null);
+  try {
+    await muntaSenseSessio('/mur', async () => {
+      await barres();
+      expect(recull).toHaveBeenCalledTimes(1);
+      await act(async () => { window.dispatchEvent(new CustomEvent(EVENT_ADRECA_DE_RECUPERACIO)); });
+      expect(recull).toHaveBeenCalledTimes(1);
+      // L'adaptador de veres pren l'adreça (prenAdrecaDArribada) i torna `recuperacio: true`.
+      recull.mockImplementationOnce(async () => (prenAdrecaDArribada() ? { recuperacio: true } : null));
+      await act(async () => { ofereixAdrecaDeRecuperacio(`https://socdepoble.org/registre#token_hash=${'a'.repeat(56)}&type=recovery`); });
+      expect(recull).toHaveBeenCalledTimes(2);
+      await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+      expect(estatEnllacDeRecuperacio()).toBe(ESTAT_ENLLAC.PENDENT);
+      expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+      expect(getSessionState().estat).toBe('fora');
+    }, { routerType: 'browser', dataMode: 'remote' },
+    { recullTornadaOAuth: recull, ...ambRecuperacio(() => null) });
+  } finally {
+    prenAdrecaDArribada();
+  }
+});
+
+/* AH-R17-11 · Gauntlet R17 · Una credencial d'accés que el pont natiu no pot
+   usar (d'un origen que no és nostre) no obri el Xat: ho diu i porta a
+   l'entrada, on hi ha «Has oblidat la contrasenya?». */
+test('AH-R17-11 · una credencial d’accés inservible ho diu i porta a l’entrada, sense tornar a recollir res', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  const recull = vi.fn(async () => null);
+  await muntaSenseSessio('/mur', async () => {
+    await barres();
+    await act(async () => { avisaEnllacDAccesInservible(); });
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(await screen.findByText(/enllaç d’accés: no es pot enviar al xat/)).toBeTruthy();
+    expect(recull).toHaveBeenCalledTimes(1);
   }, { routerType: 'browser', dataMode: 'remote' },
   { recullTornadaOAuth: recull, ...ambRecuperacio(() => null) });
 });

@@ -1160,6 +1160,7 @@ export default {
   'section.login.registre.botoEntrar': 'Sartu kontuan',
   'section.login.registre.botoCrear': 'Sortu kontua',
   'section.login.registre.oblidada': 'Pasahitza ahaztu duzu?',
+  'section.login.enllacDAccesAlXat': 'Sarbide-esteka bat da: ezin da txatera bidali. Ireki posta elektronikotik edo eskatu beste bat «Pasahitza ahaztu duzu?» atalean.',
   /* IDEA-133 (Onada R10, B2-03) · El botó d'1 clic de l'avís de compte existent o de credencials. */
   'section.login.registre.recuperaAmbEnllac': 'Google-rekin sartzen zinen edo ez duzu pasahitzik? Jaso esteka bat posta elektronikoan',
   'section.login.recuperacio.enviada': 'Helbide horrekin konturen bat badago, pasahitz berri bat ezartzeko esteka bat jasoko duzu. Begiratu spam karpetan ere.',

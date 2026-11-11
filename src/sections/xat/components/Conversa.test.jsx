@@ -13,7 +13,7 @@ import Conversa from './Conversa.jsx';
 import { BENVINGUDA_IAIA } from '../../../data/identitatsSeed.js';
 import EspecimenXat from '../../disseny/cataleg/detalls/EspecimenXat.jsx';
 import { MS_RESSALT } from '../conversa.js';
-import { buidaEsborranys, llegixEsborrany } from '../esborranys.js';
+import { buidaEsborranys, desaEsborrany, llegixEsborrany } from '../esborranys.js';
 
 const t = (_, alternativa) => alternativa;
 
@@ -463,6 +463,34 @@ describe('esborranys', () => {
     fireEvent.keyDown(camp(), { key: 'Enter' });
     await waitFor(() => expect(segona.props.onSendMessage).toHaveBeenCalledWith(FIL, 'Mig escrit'));
     expect(llegixEsborrany('A:f-1')).toBe('');
+  });
+
+  /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · La guarda
+     isHydrated del xat és de construcció: l'esborrany es llig de manera
+     síncrona en muntar (useState), i el camp ja el porta en el primer pintat,
+     sense cap espera asíncrona. Muntar no escriu res; la primera tecla (un
+     espai) s'afig a l'esborrany, mai el substituïx. Uns espais sols no són
+     «escrivint» (onEscrivint), però tampoc esborren res: es desen. */
+  test('AH-R17-11 · l’esborrany ja és al camp en el primer pintat i un espai s’hi afig, no el trepitja', () => {
+    desaEsborrany('A:f-1', 'Demà passe pel forn');
+    const onEscrivint = vi.fn();
+    pinta({ clauEsborrany: 'A:f-1', onEscrivint });
+    expect(camp().value).toBe('Demà passe pel forn');
+    expect(llegixEsborrany('A:f-1')).toBe('Demà passe pel forn');
+    fireEvent.change(camp(), { target: { value: 'Demà passe pel forn ' } });
+    expect(llegixEsborrany('A:f-1')).toBe('Demà passe pel forn ');
+    expect(onEscrivint).toHaveBeenLastCalledWith(true);
+  });
+
+  test('AH-R17-11 · en una conversa sense esborrany, uns espais sols es desen i no compten com a escrivint', () => {
+    desaEsborrany('A:f-2', 'El d’un altre fil');
+    const onEscrivint = vi.fn();
+    pinta({ clauEsborrany: 'A:f-1', onEscrivint });
+    expect(camp().value).toBe('');
+    fireEvent.change(camp(), { target: { value: '  ' } });
+    expect(llegixEsborrany('A:f-1')).toBe('  ');
+    expect(onEscrivint).toHaveBeenLastCalledWith(false);
+    expect(llegixEsborrany('A:f-2')).toBe('El d’un altre fil');
   });
 
   test('initialText guanya a l’esborrany; sense clau res no es conserva', () => {

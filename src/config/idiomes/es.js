@@ -1148,6 +1148,7 @@ export default {
   'section.login.registre.botoEntrar': 'Entrar en la cuenta',
   'section.login.registre.botoCrear': 'Crear la cuenta',
   'section.login.registre.oblidada': '¿Has olvidado la contraseña?',
+  'section.login.enllacDAccesAlXat': 'Esto es un enlace de acceso: no se puede enviar al chat. Ábrelo desde el correo o pide otro en «¿Has olvidado la contraseña?».',
   /* IDEA-133 (Onada R10, B2-03) · El botó d'1 clic de l'avís de compte existent o de credencials. */
   'section.login.registre.recuperaAmbEnllac': '¿Entrabas con Google o no tienes contraseña? Recibe un enlace en tu correo',
   'section.login.recuperacio.enviada': 'Si hay una cuenta con ese correo, te llegará un enlace para definir una contraseña nueva. Mira también la carpeta de correo no deseado.',

@@ -55,7 +55,15 @@ const FULLS = {
   modules: llig('src/css/modules.css')
 };
 const CLASSES_NOVES = ['sdp-pantalla-completa', 'sdp-dialeg--completa', 'sdp-capa-modal--completa'];
-const esNova = (selector) => CLASSES_NOVES.some((classe) => selector.includes(`.${classe}`));
+/* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · Una classe que
+   només apareix dins de :not() exclou la pantalla completa, no la pinta: el
+   cos final del full inferior (components.css) la deixa fora perquè el
+   farciment del seu <dialog> ja porta la zona segura de baix. El cens mira
+   les classes de fora del :not(). */
+const esNova = (selector) => {
+  const pla = selector.replace(/:not\([^)]*\)/g, '');
+  return CLASSES_NOVES.some((classe) => pla.includes(`.${classe}`));
+};
 const NOVES = Object.entries(FULLS).flatMap(([full, css]) => regles(css)
   .filter((r) => r.selectors.some(esNova))
   .map((r) => ({ full, ...r })));
@@ -81,6 +89,13 @@ test('les regles de la pantalla completa són on toca, i no n’hi ha cap més',
   for (const [full, selector] of ESPERADES) expect(regla(full, selector), `${full}: ${selector}`).toBeTruthy();
   expect(NOVES.map((r) => `${r.full}: ${r.selectors.join(', ')}`).sort())
     .toEqual(ESPERADES.map(([full, selector]) => `${full}: ${selector}`).sort());
+});
+
+test('el cens no compta una exclusió: una classe només dins de :not() no pinta la pantalla completa', () => {
+  expect(esNova('.sdp-dialeg:not(.sdp-dialeg--completa) > .sdp-dialeg__marc > .sdp-dialeg__cos:last-child')).toBe(false);
+  expect(esNova('.sdp-dialeg.sdp-dialeg--completa:not(.sdp-dialeg--calaix)')).toBe(true);
+  expect(esNova(':host .sdp-capa-modal--completa')).toBe(true);
+  expect(esNova('.sdp-pantalla-completa__visor')).toBe(true);
 });
 
 test('totes dins de @layer components', () => {

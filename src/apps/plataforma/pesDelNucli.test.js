@@ -59,6 +59,17 @@ if (!HI_HA_BUILD) console.warn('[pesDelNucli] No hi ha wordpress-plugin/dist: el
    incorpora les dades hidratades dels 22 pobles (poblesAplecViquipedia.js, AH-27/IDEA-86), l'edició editorial i carpetes de notes (R12) i l'Arbre Genealògic. SquareBadge
    té mòdul propi perquè PageFrame no arrossegue UniversalCard (30 KB) a l'entrada. */
 const SOSTRE_DEL_TROS_D_ENTRADA = 1690000;
+/* Onada R17 · T2.1 (P0-95, Closca Pura; prompt 261110_2334) · L'arrencada
+   estàtica: el tros d'entrada més els trossos que importa de manera estàtica
+   (trossDArrencada, vite.standalone.config.js). Des que React, l'estil, el
+   valencià, DOMPurify, la navegació i les dades dels pobles ixen de l'entrada,
+   el sostre de dalt només diu el pes del nucli; este diu el que es baixa abans
+   del primer pintat, i no deixa que el pes s'amague en trossos germans.
+   El valor és el tros d'entrada sencer d'abans d'R17 (build real del 261111,
+   tests/standalone-build.test.mjs, que el llig d'ací): partir l'entrada no pot
+   fer créixer l'arrencada. La mesura amb els trossos va donar 1.733.512 B
+   (entrada 741.904 B). Només pot baixar. */
+const SOSTRE_DE_L_ARRENCADA_ESTATICA = 1737422;
 
 /* Les apps opcionals: el seu codi no ha de ser cap tros del nucli. */
 const CARPETES_DE_LES_APPS = Object.freeze([
@@ -166,13 +177,26 @@ describe.skipIf(!HI_HA_BUILD)(`pressupost de pes del nucli (wordpress-plugin/dis
     expect(midaDe(ENTRADA_DEL_PAQUET)).toBeLessThanOrEqual(LIMIT_DEL_CARREGADOR);
   });
 
+  /* Onada R17 · T2.1 · Els trossos que l'entrada importa de manera estàtica,
+     del manifest de Vite (cap, en un dist d'abans de R17). */
+  const deVite = HI_HA_BUILD && existsSync(path.join(DIST, '.vite/manifest.json'))
+    ? JSON.parse(readFileSync(path.join(DIST, '.vite/manifest.json'), 'utf8')) : {};
+  const registreDEntrada = Object.values(deVite).find((registre) => registre.isEntry && registre.file === RELEASE?.formatDelPaquet?.modul);
+  const deLArrencada = HI_HA_BUILD ? [RELEASE.formatDelPaquet.modul, ...(registreDEntrada?.imports ?? []).map((clau) => deVite[clau]?.file)] : [];
+
+  test(`l’arrencada estàtica (entrada i trossos que importa) no passa del sostre (${SOSTRE_DE_L_ARRENCADA_ESTATICA} B)`, () => {
+    expect(registreDEntrada, 'el manifest de Vite nomena el tros d’entrada').toBeTruthy();
+    expect(deLArrencada.every((cami) => typeof cami === 'string' && Number.isFinite(midaDe(cami))), JSON.stringify(deLArrencada)).toBe(true);
+    expect(deLArrencada.reduce((suma, cami) => suma + midaDe(cami), 0)).toBeLessThanOrEqual(SOSTRE_DE_L_ARRENCADA_ESTATICA);
+  });
+
   /* [DEFECTE] Deute conegut: el CSS de la Gestoria (modules.css) va inlinat
-     dins del tros d'entrada amb tota la cascada (index.css?inline). Quan la
-     fase 2 de l'ADR-2026-12 el traga al full del mòdul, esta prova s'ha de
-     girar: cap `sdp-gestoria` al tros d'entrada. */
-  test('[DEFECTE] el CSS de la Gestoria encara viatja dins del tros d’entrada', () => {
-    const entrada = readFileSync(path.join(DIST, RELEASE.formatDelPaquet.modul), 'utf8');
-    expect(entrada.split('sdp-gestoria').length - 1).toBeGreaterThan(0);
+     amb tota la cascada (index.css?inline) i es baixa a l'arrencada (des de
+     R17, al tros «estils»). Quan la fase 2 de l'ADR-2026-12 el traga al full
+     del mòdul, esta prova s'ha de girar: cap `sdp-gestoria` a l'arrencada. */
+  test('[DEFECTE] el CSS de la Gestoria encara viatja a l’arrencada', () => {
+    const arrencada = deLArrencada.map((cami) => readFileSync(path.join(DIST, cami), 'utf8')).join('\n');
+    expect(arrencada.split('sdp-gestoria').length - 1).toBeGreaterThan(0);
   });
 
   test('els mitjans de la Gestoria respecten el perfil: locals o externs resolts, mai absents sense origen', () => {

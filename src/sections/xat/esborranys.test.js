@@ -27,6 +27,18 @@ test('un text buit i esborraEsborrany l’obliden; buidaEsborranys ho oblida tot
   expect([llegixEsborrany('A:f-1'), llegixEsborrany('A:f-2')]).toEqual(['', '']);
 });
 
+/* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · El xat no té cap
+   hidratació asíncrona que una tecla puga avançar: el magatzem és en memòria
+   i la lectura és síncrona (Conversa la fa en muntar, abans del primer
+   pintat). I un text només d'espais no és «buit»: només '' oblida l'entrada. */
+test('AH-R17-11 · la lectura és síncrona i un text només d’espais es desa tal qual, no esborra', () => {
+  desaEsborrany('A:f-1', 'Demà passe pel forn');
+  expect(llegixEsborrany('A:f-1')).toBe('Demà passe pel forn');
+  desaEsborrany('A:f-2', '   ');
+  expect(llegixEsborrany('A:f-2')).toBe('   ');
+  expect(llegixEsborrany('A:f-1')).toBe('Demà passe pel forn');
+});
+
 test('sense clau no es desa ni es llig res', () => {
   desaEsborrany(null, 'Perdut');
   desaEsborrany('', 'Perdut');

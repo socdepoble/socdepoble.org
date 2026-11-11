@@ -25,8 +25,18 @@
    tall de sessió les avorta totes, i la cua no espera mai un llegix que no
    l'escolta: cada espera corre contra l'avortament. Una lectura avortada o
    passada de termini es compta com a rebutjada i se n'allibera la còpia. El
-   «Descarta» del diàleg no talla res. */
-import { MAX_FITXERS_COMPARTITS, MAX_TEXT_COMPARTIT } from '../config/compartirNatiu.js';
+   «Descarta» del diàleg no talla res.
+   Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · Un text compartit
+   que porta una credencial d'accés (pareixCredencialDAutenticacio) no arriba
+   mai al registre ni a l'avís de la finestra: es buida ABANS, i no compta com
+   a rebutjat (el Xat no s'obri per ell). Si és un enllaç de recuperació d'un
+   origen permés (enllacDeRecuperacioEnText, també dins d'un Safe Links o del
+   redirector de Google), va a `recuperacio`, que entrada.jsx connecta a
+   ofereixAdrecaDeRecuperacio: l'App obri «Definix la contrasenya nova». Si no,
+   `credencialInservible` avisa (avisaEnllacDAccesInservible) i l'App porta a
+   l'entrada amb un avís propi. */
+import { MAX_FITXERS_COMPARTITS, MAX_TEXT_COMPARTIT, pareixCredencialDAutenticacio } from '../config/compartirNatiu.js';
+import { enllacDeRecuperacioEnText } from '../data/tornadaRecuperacio.js';
 
 export const CONNECTOR_COMPARTIR = 'CompartirNatiu';
 export const ESDEVENIMENT_COMPARTIT = 'compartit';
@@ -44,20 +54,36 @@ const nomNet = (valor) => [...textNet(valor, 120)]
   .map((c) => (c === '/' || c === '\\' || c.charCodeAt(0) < 32 ? '_' : c)).join('') || 'captura';
 
 /**
- * @param {{ finestra?: object, llegix?: (url: string, opcions: { signal: AbortSignal }) => Promise<Response>, sessio?: () => (number|undefined), registraTallador?: (fn: Function) => void, terminiMs?: number }} [opcions]
+ * @param {{ finestra?: object, llegix?: (url: string, opcions: { signal: AbortSignal }) => Promise<Response>, sessio?: () => (number|undefined), registraTallador?: (fn: Function) => void, terminiMs?: number, recuperacio?: (href: string) => boolean, origensAutenticacio?: string[] }} [opcions]
  *   `sessio`: l'època de la sessió (sessioCompartit); sense, cap lot no caduca.
  *   `registraTallador`: qui rep tallaSessio (registraTalladorCompartit).
  *   `terminiMs`: el termini de cada lectura (LECTURA_COMPARTIT_MS si no és un número més gran que 0).
+ *   `recuperacio`: qui rep l'enllaç de recuperació validat (ofereixAdrecaDeRecuperacio);
+ *     sense, cap credencial no es consumix ni arriba al Xat.
+ *   `credencialInservible`: avisa d'una credencial que no s'ha pogut consumir (avisaEnllacDAccesInservible).
+ *   `origensAutenticacio`: els orígens https dels quals s'accepta l'enllaç.
  * @returns {{ escolta(lliura: Function): Promise<boolean>, allibera(rutes: string[]): void, tallaSessio(): void, tanca(): void }|null} null fora de l'App
  */
 export function creaReceptorCompartit({
   finestra = globalThis, llegix = (url, opcions) => globalThis.fetch(url, opcions), sessio = () => undefined, registraTallador = null,
-  terminiMs = LECTURA_COMPARTIT_MS
+  terminiMs = LECTURA_COMPARTIT_MS, recuperacio = null, credencialInservible = null, origensAutenticacio = []
 } = {}) {
   const pont = finestra?.Capacitor;
   if (typeof pont?.addListener !== 'function' || typeof pont?.convertFileSrc !== 'function') return null;
   const sessioAra = typeof sessio === 'function' ? sessio : () => undefined;
   const termini = Number.isFinite(terminiMs) && terminiMs > 0 ? terminiMs : LECTURA_COMPARTIT_MS;
+  /* AH-R17-11 · Lliura l'enllaç de recuperació d'un text, o avisa que no es
+     pot usar. Mai llança. */
+  const lliuraEnllacDAcces = (font) => {
+    let pres = false;
+    if (typeof recuperacio === 'function') {
+      const enllac = enllacDeRecuperacioEnText(font, { origens: origensAutenticacio });
+      if (enllac) { try { pres = recuperacio(enllac.href) !== false; } catch { pres = false; } }
+    }
+    if (!pres && typeof credencialInservible === 'function') {
+      try { credencialInservible(); } catch { /* L'avís és de cortesia: el text ja no va al Xat. */ }
+    }
+  };
   /* Una crida al connector que mai llança ni deixa cap rebuig sense amo. */
   const demana = (metode, opcions) => {
     if (typeof pont.nativePromise !== 'function') return;
@@ -147,7 +173,15 @@ export function creaReceptorCompartit({
     allibera(sobrants);
     const assumpte = textNet(dades?.assumpte, MAX_TEXT_COMPARTIT);
     const cos = textNet(dades?.text, MAX_TEXT_COMPARTIT);
-    const text = textNet(assumpte && cos && !cos.startsWith(assumpte) ? `${assumpte}\n\n${cos}` : cos || assumpte, MAX_TEXT_COMPARTIT);
+    let text = textNet(assumpte && cos && !cos.startsWith(assumpte) ? `${assumpte}\n\n${cos}` : cos || assumpte, MAX_TEXT_COMPARTIT);
+    /* AH-R17-11 · Sobre el que ha arribat SENCER (abans de cap retall): una
+       credencial a mitjan text llarg tampoc no passa. El text es buida abans
+       del registre i de l'avís de la finestra. */
+    const cru = [dades?.assumpte, dades?.text].filter((part) => typeof part === 'string').join('\n');
+    if (pareixCredencialDAutenticacio(cru)) {
+      text = '';
+      lliuraEnllacDAcces(cru);
+    }
     // L'hora de l'intent natiu (Android): el registre la compara amb l'últim canvi de sessió.
     const rebutMs = typeof dades?.rebutMs === 'number' && Number.isFinite(dades.rebutMs) ? dades.rebutMs : undefined;
     // El registre no l'ha pres (d'abans d'un canvi de sessió, o buit): la finestra tampoc el veu.

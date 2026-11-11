@@ -1151,6 +1151,7 @@ export default {
   'section.login.registre.botoEntrar': 'Sign in to the account',
   'section.login.registre.botoCrear': 'Create the account',
   'section.login.registre.oblidada': 'Forgot your password?',
+  'section.login.enllacDAccesAlXat': 'This is a sign-in link: it can’t be sent to the chat. Open it from the email or request a new one with “Forgot your password?”.',
   /* IDEA-133 (Onada R10, B2-03) · El botó d'1 clic de l'avís de compte existent o de credencials. */
   'section.login.registre.recuperaAmbEnllac': 'Used Google to sign in, or have no password? Get a link by email',
   'section.login.recuperacio.enviada': 'If there is an account with that email, you will receive a link to set a new password. Check your spam folder too.',

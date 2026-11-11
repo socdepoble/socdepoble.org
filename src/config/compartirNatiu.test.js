@@ -801,10 +801,10 @@ describe('P1-31 · l’entrada nativa connecta el receptor al registre', () => {
     vi.doMock('../css/index.css?inline', () => ({ default: '' }));
     vi.stubEnv('VITE_SUPABASE_URL', 'https://paquet.supabase.test');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'sb_publishable_del_paquet');
-    const oients = [];
+    const oients = new Map();
     const pont = {
       getPlatform: () => 'android',
-      addListener: vi.fn((connector, nom, cb) => { oients.push(cb); return { remove: () => {} }; }),
+      addListener: vi.fn((connector, nom, cb) => { oients.set(nom, cb); return { remove: () => {} }; }),
       convertFileSrc: (r) => `https://localhost/_capacitor_file_${r}`,
       nativePromise: vi.fn(async () => ({}))
     };
@@ -817,7 +817,7 @@ describe('P1-31 · l’entrada nativa connecta el receptor al registre', () => {
     const buida = () => new Promise((fet) => { setTimeout(fet, 0); });
     await buida();
     expect(pont.addListener).toHaveBeenCalledWith('CompartirNatiu', 'compartit', expect.any(Function));
-    oients.at(-1)({ fitxers: [{ ruta: '/data/a.png', mime: 'image/png', mida: 3, nom: 'a.png' }], text: 'd’A' });
+    oients.get('compartit')({ fitxers: [{ ruta: '/data/a.png', mime: 'image/png', mida: 3, nom: 'a.png' }], text: 'd’A' });
     await buida();
     r.canviaSessioCompartit();
     resol({ ok: true, status: 200, blob: async () => new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' }) });
@@ -828,5 +828,57 @@ describe('P1-31 · l’entrada nativa connecta el receptor al registre', () => {
       ['CompartirNatiu', 'tallaSessio', {}],
       ['CompartirNatiu', 'allibera', { rutes: ['/data/a.png'] }]
     ]);
+  });
+
+  /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay) · Gauntlet R17: la connexió de
+     producció, no un vi.fn(). L'entrada nativa de veres porta l'enllaç
+     compartit a recuperacioPendent.js amb els orígens del build, i el que no es
+     pot usar avisa; cap dels tres deixa cap lot al Xat. */
+  test('AH-R17-11 · l’entrada nativa connecta la recuperació: l’enllaç va a la contrasenya nova i l’inservible avisa, sense cap lot', async () => {
+    vi.resetModules();
+    vi.doMock('../host.js', () => ({ configura: vi.fn(), arrenca: vi.fn(async () => ({ fase: 'segellat' })) }));
+    vi.doMock('react-dom/client', () => ({ createRoot: () => ({ render: () => {} }) }));
+    vi.doMock('../PedraSecaEmbed.jsx', () => ({ default: () => null }));
+    vi.doMock('../css/index.css?inline', () => ({ default: '' }));
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://paquet.supabase.test');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'sb_publishable_del_paquet');
+    vi.stubEnv('VITE_APP_ISSUER', '');
+    const oients = new Map();
+    const pont = {
+      getPlatform: () => 'android',
+      addListener: vi.fn((connector, nom, cb) => { oients.set(nom, cb); return { remove: () => {} }; }),
+      convertFileSrc: (r) => `https://localhost/_capacitor_file_${r}`,
+      nativePromise: vi.fn(async () => ({}))
+    };
+    vi.stubGlobal('Capacitor', pont);
+    document.body.replaceChildren(Object.assign(document.createElement('div'), { id: 'root' }));
+    await import('../natiu/entrada.jsx');
+    const r = await import('./compartirNatiu.js');
+    const recuperacio = await import('../data/recuperacioPendent.js');
+    const buida = () => new Promise((fet) => { setTimeout(fet, 0); });
+    await buida();
+    const token = '0123456789abcdef'.repeat(4).slice(0, 56);
+    const inservibles = vi.fn();
+    window.addEventListener(recuperacio.EVENT_ENLLAC_DACCES_INSERVIBLE, inservibles);
+    try {
+      oients.get('compartit')({ fitxers: [], text: `https://socdepoble.org/registre?sdp_auth=recuperacio#token_hash=${token}&type=recovery` });
+      await buida();
+      expect(recuperacio.prenAdrecaDArribada()).toBe(`https://socdepoble.org/registre?sdp_auth=recuperacio#token_hash=${token}&type=recovery`);
+      oients.get('compartit')({ fitxers: [], text: `https://paquet.supabase.test/auth/v1/verify?token=${token}&type=recovery` });
+      await buida();
+      expect(recuperacio.prenAdrecaDArribada()).toBe(`https://paquet.supabase.test/#token_hash=${token}&type=recovery`);
+      oients.get('compartit')({ fitxers: [], text: `https://auth.socdepoble.org/auth/v1/verify?token=${token}&type=recovery` });
+      await buida();
+      expect(recuperacio.prenAdrecaDArribada()).toBe(`https://auth.socdepoble.org/#token_hash=${token}&type=recovery`);
+      expect(inservibles).not.toHaveBeenCalled();
+      oients.get('compartit')({ fitxers: [], text: `https://atacant.example/registre#token_hash=${token}&type=recovery` });
+      await buida();
+      expect(inservibles).toHaveBeenCalledTimes(1);
+      expect(recuperacio.hiHaAdrecaDeRecuperacio()).toBe(false);
+      expect(r.compartitPendent()).toBeNull();
+    } finally {
+      window.removeEventListener(recuperacio.EVENT_ENLLAC_DACCES_INSERVIBLE, inservibles);
+      recuperacio.prenAdrecaDArribada();
+    }
   });
 });

@@ -1169,6 +1169,7 @@ export default {
   'section.login.registre.botoEntrar': 'Entrar al compte',
   'section.login.registre.botoCrear': 'Crear el compte',
   'section.login.registre.oblidada': 'Has oblidat la contrasenya?',
+  'section.login.enllacDAccesAlXat': 'Això és un enllaç d’accés: no es pot enviar al xat. Obri’l des del correu o demana’n un altre a «Has oblidat la contrasenya?».',
   /* IDEA-133 (Onada R10, B2-03) · El botó d'1 clic de l'avís de compte existent o de credencials. */
   'section.login.registre.recuperaAmbEnllac': 'Entraves amb Google o no tens contrasenya? Rep un enllaç al correu',
   'section.login.recuperacio.enviada': 'Si hi ha un compte amb eixe correu, t’arribarà un enllaç per a definir una contrasenya nova. Mira també la carpeta de correu brossa.',

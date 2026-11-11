@@ -14,6 +14,13 @@ import { CONTRACTE_AMFITRIO_V1 } from './src/config/contracteAmfitrio.js';
 import { MITJANS_EXTERNS_DEL_DIRECTORI, bessonesDe, esHostLocal, separaRecursos } from './src/config/politicaDeMitjans.js';
 import fotosParroquiaPrivades from './tooling/vite/fotos-parroquia-privades.mjs';
 import banderesDeCapacitat from './tooling/vite/banderes-de-capacitat.mjs';
+import { trossDArrencada } from './tooling/vite/trossos-arrencada.mjs';
+
+/** Onada R17 · T2.1 (P0-95) · Els trossos d'arrencada del web i del natiu, sense el grup de dades «pobles-aplec» (vegeu la config trossejada). Pura. */
+export function trossDArrencadaDelPaquet(id) {
+  const nom = trossDArrencada(id);
+  return nom === 'pobles-aplec' ? undefined : nom;
+}
 
 /**
  * El que hi ha a public/ i és del SERVIDOR de socdepoble.org, no de l'app.
@@ -755,14 +762,29 @@ export default defineConfig(({ mode, command }) => {
        trossos importen de l'entrada (host.js també s'importa dinàmicament),
        Rollup hi interposava una façana de 30 B: una anada i tornada més abans
        del codi. embed.jsx no exporta res i ningú no en consumix la signatura:
-       'allow-extension' deixa que l'entrada siga el mòdul que porta el codi. */
+       'allow-extension' deixa que l'entrada siga el mòdul que porta el codi.
+       Onada R17 · T2.1 (P0-95, Closca Pura; ordre del Mestre, prompt
+       261110_2334) · Els mateixos trossos d'arrencada que el web i el natiu
+       (tooling/vite/trossos-arrencada.mjs, una sola font): React, l'estil com
+       a text, el valencià, DOMPurify, la navegació i les dades pures dels
+       pobles ixen del tros d'entrada a fulles que l'entrada importa de manera
+       estàtica (el navegador les demana en paral·lel). Cap mòdul canvia de
+       contingut ni d'ordre relatiu: són fulles sense efectes (cap resol
+       imatges, embed.jsx:60-63). Els bytes d'arrencada no baixen: ho guarda el
+       trinquet SOSTRE_DE_L_ARRENCADA_ESTATICA (pesDelNucli.test.js). Mai al
+       monolític: és incompatible amb inlineDynamicImports.
+       Sense el grup «pobles-aplec» (trossDArrencadaDelPaquet): al paquet,
+       manualChunks el feia estàtic sencer i arrossegava a l'arrencada el
+       contingut d'articles que ací és diferit (mesura del 261111: +44.665 B
+       d'arrencada amb el grup; −3.910 B sense). */
     ...(trossejat ? {
       rollupOptions: {
         preserveEntrySignatures: 'allow-extension',
         output: {
           entryFileNames: MODUL_DELS_TROSSOS,
           chunkFileNames: `${CARPETA_DE_TROSSOS}/[name]-[hash].js`,
-          hoistTransitiveImports: true
+          hoistTransitiveImports: true,
+          manualChunks: trossDArrencadaDelPaquet
         }
       }
     } : {}),

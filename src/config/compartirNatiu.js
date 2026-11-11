@@ -25,6 +25,33 @@
 export const MAX_FITXERS_COMPARTITS = 10;
 export const MAX_TEXT_COMPARTIT = 4096;
 
+/* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · «Comparteix
+   l'enllaç → Sóc de Poble» amb l'enllaç de recuperació del correu el portava a
+   «Envia a…» del Xat: el token d'un sol ús anava a parar a una conversa. Un
+   text que porta una credencial d'accés no arriba MAI al Xat. El pont natiu
+   (src/natiu/compartirNatiu.js) la intercepta abans i, si és un enllaç de
+   recuperació nostre, el porta a la pantalla de la contrasenya nova; ací és
+   la defensa en profunditat: el registre és l'última porta abans del Xat i no
+   importa res (src/natiu/frontera.test.js), per això la forma viu ací.
+   Literals alternats amb repeticions fitades i sense niar: lineal, sense
+   ReDoS. També la forma codificada dins d'un redirect_to, fins i tot dues o
+   tres vegades (Safe Links dins del redirector de Google: %253D): per això
+   sense \b davant (el «3» de %23 és un caràcter de paraula) i sense lookbehind
+   (Safari 16.0 no el parla, BASELINE). `type=` només amb un delimitador de
+   consulta o de fragment davant i només els dos tipus que no porten cap altre
+   indici (els de l'alta i el convit ja porten el token o /verify): un
+   `?type=signup` d'una botiga no és cap credencial. */
+const IGUAL = '(?:=|%(?:25){0,3}3D)';
+const PARAMETRE_CREDENCIAL = new RegExp(`(?:token_hash|access_token|refresh_token|provider_token)${IGUAL}`, 'i');
+const ENLLAC_DE_VERIFICACIO = /(?:\/|%(?:25){0,3}2F)auth(?:\/|%(?:25){0,3}2F)v1(?:\/|%(?:25){0,3}2F)verify(?:\?|%(?:25){0,3}3F)/i;
+const TIPUS_ENLLAC_DACCES = new RegExp(`(?:^|[?#&]|%(?:25){0,3}(?:3F|23|26))type${IGUAL}(?:recovery|magiclink)(?![a-z0-9_])`, 'i');
+
+/** Cert si `text` porta una credencial d'accés (token d'un enllaç de correu o de sessió). Pura. */
+export function pareixCredencialDAutenticacio(text) {
+  if (typeof text !== 'string' || text === '') return false;
+  return PARAMETRE_CREDENCIAL.test(text) || ENLLAC_DE_VERIFICACIO.test(text) || TIPUS_ENLLAC_DACCES.test(text);
+}
+
 let pendent = null;
 let comptador = 0;
 /* Puja a cada descart: el que s'havia pres abans ja no pot tornar. */
@@ -94,7 +121,11 @@ export function lliuraCompartit({ fitxers = [], rutes = [], text = '', rebutjats
   }
   const valids = llista.filter(esFitxer);
   const sobrers = Math.max(0, valids.length - MAX_FITXERS_COMPARTITS);
-  const net = textNet(text);
+  const textRebut = textNet(text);
+  /* AH-R17-11 · Una credencial no entra al lot: el text es perd sencer. No
+     compta com a rebutjat: un lot fet només d'això no obri el Xat (el pont ja
+     n'ha avisat amb el seu missatge). */
+  const net = pareixCredencialDAutenticacio(textRebut) ? '' : textRebut;
   const rebuig = Math.max(0, Math.floor(Number(rebutjats) || 0)) + sobrers + (llista.length - valids.length);
   // Els que no hi caben no tornaran mai: fora la seua còpia.
   allibera(valids.slice(MAX_FITXERS_COMPARTITS));

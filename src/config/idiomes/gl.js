@@ -1155,6 +1155,7 @@ export default {
   'section.login.registre.botoEntrar': 'Entrar na conta',
   'section.login.registre.botoCrear': 'Crear a conta',
   'section.login.registre.oblidada': 'Esqueciches o contrasinal?',
+  'section.login.enllacDAccesAlXat': 'Isto é unha ligazón de acceso: non se pode enviar ao chat. Ábrea desde o correo ou pide outra en «Esqueciches o contrasinal?».',
   /* IDEA-133 (Onada R10, B2-03) · El botó d'1 clic de l'avís de compte existent o de credencials. */
   'section.login.registre.recuperaAmbEnllac': 'Entrabas con Google ou non tes contrasinal? Recibe unha ligazón no correo',
   'section.login.recuperacio.enviada': 'Se hai unha conta con ese correo, chegarache unha ligazón para definir un contrasinal novo. Mira tamén o cartafol de correo lixo.',
