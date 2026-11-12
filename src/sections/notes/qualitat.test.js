@@ -86,7 +86,11 @@ const FITXERS = Object.freeze([
   'src/sections/notes/NotesSection.extracteLlavor.test.jsx',
   /* Revisió del Gauntlet 261017 (ID6) · Les publicacions pròpies del Bloc amb
      el mode de dades resolt (modeDeDadesResolt), el mateix de l'editor. */
-  'src/sections/notes/NotesSection.aliesResolt.test.jsx'
+  'src/sections/notes/NotesSection.aliesResolt.test.jsx',
+  /* Onada R20 (Bucle 1 · Cas Damià i CARBON-R20-POBLE-01) · Publicació en línia
+     sense modals flotants i persistència acotada del poble de destinació. */
+  'src/components/universal/PanellVisibilitatEnLinia.jsx',
+  'src/sections/notes/NotesEditor.damiaPublicacioEnLinia.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

@@ -57,7 +57,7 @@ describe('candidats dels corpus literals · 149 receptes i 564 REF', () => {
     const recepta = RECEPTES_QUE_DINEM.find(r => r.ingredients.some(bloc => bloc.linies.some(linia => linia.includes('coco molt'))));
     const proposta = candidatsReceptaQueDinem(recepta);
     const fruits = proposta.alergens.find(alergen => alergen.id === 'fruits-closca');
-    expect(fruits.ingredient.evidencies.some(evidencia => evidencia.text.includes('coco molt'))).toBe(true);
+    expect(fruits.traca.evidencies.some(evidencia => evidencia.text.includes('coco molt'))).toBe(true);
     expect(proposta.fontsRevisades.filter(font => font.tipus === 'nota_literal').map(font => font.text)).toEqual(recepta.notes);
   });
 

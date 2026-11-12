@@ -305,7 +305,8 @@ test('la Consola: les rutes de seoConsola.js, a l’evidència; una imatge bloqu
    (ruta o àlies) o a EXCLOSES_DE_PAGE amb el seu motiu. COMMIT R6 (d79a0b530) ·
    L'Arbre Genealògic (IDEA-100) és el nové plugin del registre: entra a
    l'inventari amb la seua variant social (VARIANTS_SOCIALS). */
-const PLUGINS_DE_L_ORDRE=Object.freeze(['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv','genealogia']);
+/* R21 (COMMIT 1, cadena R18-R20) · L'Avisador entra al registre de plugins com a desé connector. */
+const PLUGINS_DE_L_ORDRE=Object.freeze(['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv','genealogia','avisador']);
 const EXCLOSES_DE_PAGE=Object.freeze({
   notes_shared:'còpia antiga de la fitxa del Bloc de notes (/page/notes), amb el logotip SVG com a imatge: no és cap presentació pròpia',
   'la-iaia-sabuda':'espai de curadoria amb rol verificat i safata privada; no és una presentació pública per a rastrejadors',
@@ -322,7 +323,7 @@ test('cobertura de l’arbre de veres: presentacions inventariades, /disseny, /w
     'src/sections/consola/govern/governConsola.js','src/sections/text/pageContent.js','src/config/navigation.js'].map(importa));
   const inventari=[...PAGINES_INFORMATIVES.map(clau=>`/page/${clau}`),...PLUGINS_DE_L_ORDRE.map(id=>`/plugin/${id}`),'/disseny','/wikidepoble','/consola',
     ...IDS_PAGINES.map(id=>`/consola/${id}`),...IDS_GOVERN.map(id=>`/consola/govern/${id}`)];
-  assert.equal(inventari.length,15+9+3+9+4);
+  assert.equal(inventari.length,15+10+3+9+4);
   /* P0-60 / IDEA-191 · L'article del Pou de Neu i el Manifest de Poble (llavors del Mur) tenen el seu
      head, amb la variant JPEG de la il·lustració, i /page/anatomia-rural n'és l'àlies. */
   const POU='/mur/noves-tecnologies-aplicades-a-la-cultura-rural';
@@ -330,7 +331,8 @@ test('cobertura de l’arbre de veres: presentacions inventariades, /disseny, /w
   assert.equal(manifest.aliases['/page/anatomia-rural'],POU);
   // Onada R14 · /receptes és l'àlies de /page/receptes (App.jsx, una redirecció), amb la portada de l'olleta murera.
   assert.equal(manifest.aliases['/receptes'],'/page/receptes');
-  assert.equal(manifest.routes['/page/receptes'].image.url,`${origin}/assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg`);
+  // P0-115 + P0-117 (ordre del Mestre 261111 05:47) · /page/receptes és la Biblioteca Multipoble: targeta social Ibáñez pròpia.
+  assert.equal(manifest.routes['/page/receptes'].image.url,`${origin}/assets/uploads/patrimoni/receptes-ibanez-social-1200x630.jpg`);
   assert.equal(manifest.routes[POU].type,'article');
   assert.equal(manifest.routes[POU].image.url,`${origin}/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez-social-1200x630.jpg`);
   for(const ruta of inventari) {

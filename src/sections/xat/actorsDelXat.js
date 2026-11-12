@@ -160,8 +160,8 @@ export function anteposaActors(files, { comunitat = false, reservaJavi = null, r
   const javiTrobat = troba((fila) => esFila(fila) && esFilDeJavi(fila.fil));
   const deJavi = ambSubtitol(javiTrobat || reservaJavi, subtitolDeJavi);
   const delPoble = troba((fila) => fila?.delPoble === true);
-  const deLaIAIA = troba((fila) => esFila(fila) && esDirecteDeLaIAIA(fila.fil))
-    || troba((fila) => esFila(fila) && esXatDeLaIAIA(fila.fil))
+  const deLaIAIA = troba((fila) => esFila(fila) && !fila.fil.sessioLocalIAIA && esDirecteDeLaIAIA(fila.fil))
+    || troba((fila) => esFila(fila) && !fila.fil.sessioLocalIAIA && esXatDeLaIAIA(fila.fil))
     || reservaIAIA;
   const actors = [deSocDePoble, deJavi, delPoble, deLaIAIA].filter(Boolean);
   if (!actors.length) return files;

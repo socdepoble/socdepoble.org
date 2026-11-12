@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {pathToFileURL} from 'node:url';
 import path from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
 import {createHash} from 'node:crypto';
 import {creaPlaMigracions,ROOT,SHA256_ZIP_CANONIC} from '../tooling/node0/hidrata-postgres-node0.mjs';
 import {llegeixZipNodeZero} from '../tooling/node0/paquet-opendata-node0.mjs';
@@ -17,6 +18,17 @@ test('R13 bounded administration contract rejects client authority and accessors
   assert.deepEqual(capturaAdminUsuaris(),{limit:25,cursorCreat:null,cursorId:null});
   for(const input of [{limit:0},{offset:-1},{role:'superadmin'},{get limit(){throw Error('getter');}}])assert.throws(()=>capturaAdminUsuaris(input));
   assert.throws(()=>compilaOperacioNodeZero('adminConnectaUsuari',{entrada:{usuariId:VEI,categoria:'amics'},tenantId:B},T));
+});
+// R17.2 · Depén del tipus 'copyright' de tooling/node0/backend-node0.mjs (fora del carril de l'integrador SQL;
+// l'aplica MarIA amb git). Fins llavors, el compilador encara talla a 256 amb el prefix inclòs. R18 · L'omissió
+// es lleva sola quan el tros del kit és a l'arbre: cap skip fix que es puga oblidar.
+const BACKEND_NODE0_R17_2=readFileSync(new URL('../tooling/node0/backend-node0.mjs',import.meta.url),'utf8').includes("type==='copyright'");
+test('R17.2 Node Zero compiles an entire Unicode attribution and rejects excess',{skip:!BACKEND_NODE0_R17_2&&'pendent: tooling/node0/backend-node0.mjs del Kit R17.2 encara no és a l’arbre viu'},()=>{
+  const copyright = `CC BY-SA 4.0 ${'é'.repeat(255)}🌾`;
+  const body = { input: { copyright } };
+  const sql = compilaOperacioNodeZero('createNote', body, T);
+  assert.ok(sql.includes(Buffer.from(copyright).toString('base64')));
+  assert.throws(() => compilaOperacioNodeZero('createNote', { input: { copyright: copyright + 'x' } }, T), /invalid_text/);
 });
 test('R13 new operations require explicit deployment readiness and a cookie',async()=>{
   const db={query(){throw Error('must not query');}};
@@ -49,7 +61,8 @@ test('R13 actual SQL catalogue, admin permissions, clean municipal restore and c
       for(const migration of plan.migrations)await db.exec(migration.sql);
       // Native Node0 adds this exact infrastructure grant in backend-node0.sql.
       await db.exec('GRANT SELECT(id) ON public.towns TO authenticated');
-      assert.equal(plan.migrations.length,86); // R15 adds2611091500; this full-source suite executes pending2.6 too.
+      const files = readdirSync(path.join(ROOT, 'supabase/migrations')).filter(f => /^\d{10}_.+\.sql$/.test(f));
+      assert.deepEqual(plan.migrations.map(m => m.file).sort(), files.sort());
       assert.equal(plan.migrations.some(m=>m.version==='2611091500'),true);
       archive=await llegeixZipNodeZero({root:ROOT,sha256Esperat:SHA256_ZIP_CANONIC});
       assert.equal(sha(archive),SHA256_ZIP_CANONIC);
@@ -61,6 +74,35 @@ test('R13 actual SQL catalogue, admin permissions, clean municipal restore and c
         await as(id,'aal2',"SELECT public.registra_consentiment('rgpd_acepta',null)");
       }
       await db.query("INSERT INTO public.user_platform_roles(user_id,role) VALUES($1,'superadmin') ON CONFLICT(user_id) DO UPDATE SET role='superadmin'",[SA]);
+    });
+    await t.test('R17.2 copyright CHECK counts 256 author characters apart from the rights marker',async()=>{
+      const text = 'é'.repeat(255) + '🌾';
+      const casos = [
+        text, `CC BY-NC-SA 4.0 ${text}`, `CC BY-NC-ND 4.0 · ${text}`,
+        `CC0 1.0 ${text}`, `${text} · CC0 1.0`, `© ${text}`,
+      ];
+      for (const taula of ['notes','profiles','organizations']) {
+        const { rows: [check] } = await db.query(
+          'select pg_get_expr(conbin, conrelid) as expressio from pg_constraint where conrelid = $1::regclass and conname = $2',
+          [`public.${taula}`, `${taula}_copyright_longitud`]
+        );
+        assert.ok(check?.expressio);
+        for (const copyright of casos) {
+          const foraLimit = copyright.replace(text, text + 'x');
+          for (const [valor, admissible] of [[copyright, true], [foraLimit, false]]) {
+            const { rows: [resultat] } = await db.query(
+              `select ${check.expressio} as admissible from (select $1::text as copyright) prova`, [valor]
+            );
+            assert.equal(resultat.admissible, admissible, taula);
+          }
+        }
+        // ltrim només lleva espais ASCII: un NBSP darrere de «©» compta com a autoria (257),
+        // i el client ha de fer el mateix recompte (desglossaDrets sense trimStart Unicode).
+        const { rows: [nbsp] } = await db.query(
+          `select ${check.expressio} as admissible from (select $1::text as copyright) prova`, [`©\xa0${text}`]
+        );
+        assert.equal(nbsp.admissible, false, taula);
+      }
     });
     await t.test('private storage has RLS and no direct grants; public and aal1 cannot import',async()=>{
       for(const table of ['municipi_opendata','municipi_opendata_documents']){

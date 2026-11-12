@@ -44,7 +44,12 @@ test('XatProvider amb el flag real: ready, cap clau de context, cap servei, cap 
   expect(m.clausDelContextXat).not.toHaveBeenCalled();
   expect(m.getBackendImplementation).not.toHaveBeenCalled();
   expect(serveiXifratXat(m.backend)).toBeNull();
-  expect(Object.keys(value).filter((k) => /xifra|e2ee|clau/i.test(k))).toEqual([]);
+  /* R17.2 (Avisador) · L'única entrada del value amb «clau» al nom és la clau
+     d'emmagatzematge de l'Avisador: `avisador:` + persona (backend + joId), la
+     mateixa informació que ja exposa `ambitEstable`, cap material criptogràfic.
+     La llista és tancada: qualsevol altra entrada de xifratge continua en roig. */
+  expect(Object.keys(value).filter((k) => /xifra|e2ee|clau/i.test(k))).toEqual(['avisadorClau']);
+  expect(value.avisadorClau).toBe(`avisador:${JSON.stringify([backendScope(CONFIG), A])}`);
   // P1-12 pas 17 (D-09) · L'oblit en eixir: null, false i un reintent que no toca res
   expect(value.oblitXat).toBeNull();
   expect(value.oblitXatFallit).toBe(false);

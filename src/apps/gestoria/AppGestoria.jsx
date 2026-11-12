@@ -52,10 +52,13 @@
  * plataforma/fronteres.test.js, amb les importacions dinàmiques de VISTES
  * (la closca, Aprendre, des del 261007 la Facturació, des del 261009
  * l'Històric i des del 13-10-2026 la Finestreta) i cap altra.
- * VISTES és null fora de desenvolupament: Vite reemplaça
- * el literal i en trau les importacions del build, també si algú compilara
- * l'app en producció (gestoria/privacitat.test.js ho compila). El codi de la
- * Gestoria el continua vigilant la seua guarda de privacitat.
+ * VISTES segueix el literal d'exclusió del manifest (P0-113, ordre del Mestre,
+ * 261111): la Gestoria és oberta al web propi i les vistes hi entren com a
+ * trossos diferits; amb VITE_SDP_APP_GESTORIA=0 (el paquet de l'amfitrió,
+ * vite.standalone.config.js, i el cos d'un mòdul, vite.modul.config.js) Vite
+ * reemplaça el literal i en trau les importacions del build
+ * (gestoria/privacitat.test.js ho compila). El codi de la Gestoria el
+ * continua vigilant la seua guarda de privacitat.
  *
  * LA PORTA DELS TRACTORS · rutes.js: la consulta que la demana es porta a la
  * Wiki, on viu, sempre a la mateixa ruta fixa.
@@ -66,7 +69,7 @@ import { Carregant, EstatBuit, PaginaApp } from '../../components/PedraSeca/inde
 import { useApp, useSessioApp, lazyRoute } from '../plataforma/index.js';
 import { ENTRADA_APRENDRE, ENTRADA_FACTURACIO, ENTRADA_FULL, ENTRADA_IDENTITAT, desviamentDeLaConsulta } from './rutes.js';
 
-const VISTES = import.meta.env.DEV ? Object.freeze({
+const VISTES = import.meta.env.VITE_SDP_APP_GESTORIA !== '0' ? Object.freeze({
   tauler: lazyRoute(() => import('../../sections/gestoria/tauler/ShellGestoria.jsx')),
   aprendre: lazyRoute(() => import('../../sections/gestoria/aprendre/Aprendre.jsx')),
   facturacio: lazyRoute(() => import('../../sections/gestoria/facturar/Facturacio.jsx')),
@@ -134,8 +137,9 @@ export default function AppGestoria() {
   const { pathname, search } = useLocation();
   const desti = desviamentDeLaConsulta(search);
   if (desti) return <Navigate to={desti} replace />;
+  /* P0-113 · Només en un build que la desendolla (VITE_SDP_APP_GESTORIA=0): el text no promet cap altre lloc. */
   if (!VISTES) {
-    return <EstatBuit titol="La Gestoria no és en este paquet">Només es pot provar al servidor de desenvolupament.</EstatBuit>;
+    return <EstatBuit titol="La Gestoria no és en este paquet">Esta versió de la web no porta la Gestoria.</EstatBuit>;
   }
 
   /* El primer tram després de /app/gestoria: RutaApps ja ha comprovat que és una entrada del manifest. */

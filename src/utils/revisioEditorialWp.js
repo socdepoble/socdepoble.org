@@ -1,15 +1,49 @@
 /**
- * revisioEditorialWp.js — P1-f (Onada R6, Bloc 2) · L'estat de revisió
- * editorial dels articles importats de socdepoble.net, sense el tesaurus.
+ * revisioEditorialWp.js — P1-f (Onada R6, Bloc 2) + P0-111 / R18.2 (Onada R18) ·
+ * L'estat de revisió editorial dels articles importats de socdepoble.net,
+ * sense arrossegar el tesaurus doctoral al Nucli Verge.
  *
- * Només toca el storage (clau `sdp_revisio_editorial_wp_v1`). El detall del Mur
- * (detailSectionMeta.jsx) el necessita per a desar «aprovat» o una nota, i no
- * ha d'arrossegar per això els 450 KB del tesaurus doctoral: este mòdul no
- * importa res. transformadorEditorialWpBlogger.js el reexporta tal com és,
- * amb els mateixos noms, perquè els consumidors de sempre no canvien.
+ * P0-111 + R18.2:
+ *   1. Els 20 ítems verificats del Catàleg d’Arbres Emblemàtics i Monumentals
+ *      de La Torre de les Maçanes (Associació El Rentonar · estudi tècnic de
+ *      Pedro Ferrer Rodríguez: pàgina WP-619 + 19 arbres WP-1751..WP-2014, incloent
+ *      WP-1768 Llorer de Villa María) tenen estat inicial `'aprovat'` cap a la
+ *      sèrie `arbres-monumentals`, mentre els restants continuen `'pendent_admin'`
+ *      fins a revisió humana.
+ *   2. Permet sincronitzar les revisions amb el servidor (Supabase darrere del
+ *      port neutral `backendPort.js`, capacitat opcional `'revisionsEditorialsWp'`)
+ *      i conserva en el mateix registre local les `destinacions` de Workspace.
  */
 
+import { destinacioWorkspaceWp } from '../data/importacio/destinacionsWorkspaceWp.js';
+export { DESTINACIONS_WORKSPACE_WP, destinacioWorkspaceWp } from '../data/importacio/destinacionsWorkspaceWp.js';
+
 export const CLAU_STORAGE_REVISIO_WP = 'sdp_revisio_editorial_wp_v1';
+
+export const ESTATS_REVISIO_WP_VALIDS = Object.freeze([
+  'pendent_admin',
+  'aprovat',
+  'amb_observacions'
+]);
+
+/** Els 20 `wp_id` reals del Catàleg d'Arbres d'El Rentonar (1 portada + 19 arbres). */
+export const WP_IDS_CATALEG_ARBRES_RENTONAR = Object.freeze([
+  619,
+  1786, 1784, 1782, 1780, 1778, 1776, 1774, 1772, 1770, 1768,
+  1766, 1764, 1762, 1760, 1758, 1756, 1754, 1751, 2014
+]);
+
+const CONJUNT_WP_IDS_RENTONAR = new Set(WP_IDS_CATALEG_ARBRES_RENTONAR.map(String));
+
+export function esWpIdCatalegArbresRentonar(wpId) {
+  if (wpId === null || wpId === undefined) return false;
+  return CONJUNT_WP_IDS_RENTONAR.has(String(wpId).trim());
+}
+
+export function estatInicialArticleImportatWp(wpId, estatFont = null) {
+  if (esWpIdCatalegArbresRentonar(wpId)) return 'aprovat';
+  return ESTATS_REVISIO_WP_VALIDS.includes(estatFont) ? estatFont : 'pendent_admin';
+}
 
 export function obteStorageSegur(storage) {
   if (storage !== undefined) return storage;
@@ -22,38 +56,114 @@ export function obteStorageSegur(storage) {
 
 export function llegeixEstatRevisioEditorial(storage) {
   const st = obteStorageSegur(storage);
-  if (!st) return { estats: {}, anotacions: {} };
+  if (!st) return { estats: {}, anotacions: {}, destinacions: {} };
   try {
     const raw = st.getItem(CLAU_STORAGE_REVISIO_WP);
-    if (!raw) return { estats: {}, anotacions: {} };
+    if (!raw) return { estats: {}, anotacions: {}, destinacions: {} };
     const parsed = JSON.parse(raw);
     return {
-      estats: parsed?.estats || {},
-      anotacions: parsed?.anotacions || {},
+      estats: parsed?.estats && typeof parsed.estats === 'object' ? parsed.estats : {},
+      anotacions: parsed?.anotacions && typeof parsed.anotacions === 'object' ? parsed.anotacions : {},
+      destinacions: Object.fromEntries(Object.entries(parsed?.destinacions || {}).filter(([id, valor]) =>
+        /^[1-9][0-9]{0,9}$/.test(id) && destinacioWorkspaceWp(valor, null) !== null)),
     };
   } catch {
-    return { estats: {}, anotacions: {} };
+    return { estats: {}, anotacions: {}, destinacions: {} };
   }
 }
 
 export function desaEstatRevisioEditorial(nouEstat, storage) {
   const st = obteStorageSegur(storage);
-  if (!st) return;
+  if (!st) return false;
   try {
     st.setItem(CLAU_STORAGE_REVISIO_WP, JSON.stringify(nouEstat));
+    return true;
   } catch {
-    /* Ignora quota */
+    return false;
   }
 }
 
 export function desaRevisioArticleImportat(wpId, { estat, nota } = {}, storage) {
+  const clau = String(wpId ?? '').trim();
   const actual = llegeixEstatRevisioEditorial(storage);
   const nouEstat = {
-    estats: { ...actual.estats, ...(estat ? { [wpId]: estat } : {}) },
-    anotacions: { ...actual.anotacions, ...(nota !== undefined ? { [wpId]: nota } : {}) },
+    estats: { ...actual.estats, ...(estat ? { [clau]: estat } : {}) },
+    anotacions: { ...actual.anotacions, ...(nota !== undefined ? { [clau]: nota } : {}) },
+    destinacions: actual.destinacions,
   };
   desaEstatRevisioEditorial(nouEstat, storage);
   return nouEstat;
+}
+
+/** La tria editorial és del navegador; l’ACK de la publicació ve del port. */
+export function desaDestinacioArticleImportat(wpId, destinacio, storage) {
+  const id = typeof wpId === 'number' && Number.isSafeInteger(wpId) ? String(wpId) : wpId;
+  if (typeof id !== 'string' || !/^[1-9][0-9]{0,9}$/.test(id) || destinacioWorkspaceWp(destinacio, null) === null) {
+    throw new TypeError('La destinació de l’article importat no és vàlid.');
+  }
+  const actual = llegeixEstatRevisioEditorial(storage);
+  const nouEstat = { ...actual, destinacions: { ...actual.destinacions, [id]: destinacio } };
+  if (!desaEstatRevisioEditorial(nouEstat, storage)) throw new Error('No s’ha pogut desar la destinació en este navegador.');
+  return nouEstat;
+}
+
+/**
+ * Sincronitza l'estat local amb el port neutral (`revisionsEditorialsWp`) si el
+ * backend actiu ofereix la capacitat. Sense la capacitat o sense sessió d'admin,
+ * conserva intacta la còpia local sense llançar error a la interfície.
+ */
+export async function sincronitzaRevisionsEditorialsWpAmbServidor({ storage, config = {} } = {}) {
+  try {
+    const port = await import('../data/backendPort.js');
+    if (typeof port.teCapacitat !== 'function' || !port.teCapacitat('revisionsEditorialsWp')) {
+      return { sincronitzat: false, estat: llegeixEstatRevisioEditorial(storage) };
+    }
+    const files = await port.llistaRevisionsEditorialsWp(config);
+    if (!Array.isArray(files)) {
+      return { sincronitzat: false, estat: llegeixEstatRevisioEditorial(storage) };
+    }
+    const actual = llegeixEstatRevisioEditorial(storage);
+    const estats = { ...actual.estats };
+    const anotacions = { ...actual.anotacions };
+    for (const fila of files) {
+      const id = String(fila?.wpId ?? '').trim();
+      if (!id) continue;
+      if (ESTATS_REVISIO_WP_VALIDS.includes(fila.estat)) estats[id] = fila.estat;
+      if (typeof fila.nota === 'string') anotacions[id] = fila.nota;
+    }
+    const fusionat = { estats, anotacions, destinacions: actual.destinacions };
+    desaEstatRevisioEditorial(fusionat, storage);
+    return { sincronitzat: true, estat: fusionat, totalRemot: files.length };
+  } catch {
+    return { sincronitzat: false, estat: llegeixEstatRevisioEditorial(storage) };
+  }
+}
+
+export async function desaRevisioArticleImportatAmbServidor(
+  wpId,
+  { estat, nota = '', autoria = null, desti = null } = {},
+  { storage, config = {} } = {}
+) {
+  const local = desaRevisioArticleImportat(wpId, { estat, nota }, storage);
+  try {
+    const port = await import('../data/backendPort.js');
+    if (typeof port.teCapacitat !== 'function' || !port.teCapacitat('revisionsEditorialsWp')) {
+      return { remot: false, estat: local };
+    }
+    const desada = await port.desaRevisioEditorialWp(
+      {
+        wpId: Number(wpId),
+        estat,
+        nota: typeof nota === 'string' ? nota : '',
+        ...(typeof autoria === 'string' && autoria.trim() ? { autoria: autoria.trim() } : {}),
+        ...(typeof desti === 'string' && desti.trim() ? { desti: desti.trim() } : {})
+      },
+      config
+    );
+    return { remot: true, fila: desada, estat: local };
+  } catch {
+    return { remot: false, estat: local };
+  }
 }
 
 /* B3-4 (Onada R6, Bloc 3) · Les insígnies i els casos d'ús editorials són

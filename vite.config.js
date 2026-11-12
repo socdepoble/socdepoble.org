@@ -13,7 +13,6 @@ import banderesDeCapacitat from './tooling/vite/banderes-de-capacitat.mjs';
 import { trossDArrencada } from './tooling/vite/trossos-arrencada.mjs';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -33,21 +32,32 @@ import { validatePublicCredentials } from './src/config/publicCredentials.js';
        node_modules/.vite/<empremta>. El lloc per defecte (node_modules/.vite)
        queda per a qui arranque Vite amb un altre config, i ja no xafa el del
        servidor viu.
-     · Si algun dels dos és un enllaç a una altra arrel (una còpia enllaçada),
-       va a la carpeta temporal del sistema: la còpia no escriu res dins de
-       l'arbre viu.
+     · Si algun dels dos és un enllaç a una altra arrel, va a
+       <arrel real>/.sdp-vite-cache/<empremta>: la còpia no escriu dins del
+       viu. La cache continua davall de l’arrel que té node_modules, perquè
+       un paquet CJS precompilat amb React extern el resol pujant pels pares.
+       En /tmp sense eixe ancestor, el nucli real fallava en carregar lucide.
+     · Ni la base privada ni el directori final poden ser enllaços: una
+       cache preparada fora de l’arrel es rebutja abans que Vite hi escriga.
    Si torna «useRef» nul o «Invalid hook call» en desenvolupament: reiniciar amb
    `npm run dev -- --force` i recarregar la pàgina sencera. */
-export function cacheDirPropi(arrel, tmp = os.tmpdir()) {
+export function cacheDirPropi(arrel) {
   const real = fs.realpathSync(arrel);
   const empremta = createHash('sha256').update(real).digest('hex').slice(0, 12);
-  const propia = ['node_modules', path.join('node_modules', '.vite')].every((rel) => {
-    try { return fs.realpathSync(path.join(real, rel)) === path.join(real, rel); }
-    catch { return true; } // encara no existix: Vite la crearà dins de l'arrel
-  });
-  return propia
-    ? path.join(real, 'node_modules', '.vite', empremta)
-    : path.join(fs.realpathSync(tmp), 'sdp-vite-cache', empremta);
+  const carpetaPropia = (cami) => {
+    const estat = fs.lstatSync(cami, { throwIfNoEntry: false });
+    return !estat || estat.isDirectory() && !estat.isSymbolicLink() && fs.realpathSync(cami) === cami;
+  };
+  const propia = ['node_modules', path.join('node_modules', '.vite')]
+    .every(rel => carpetaPropia(path.join(real, rel)));
+  const base = propia ? path.join(real, 'node_modules', '.vite') : path.join(real, '.sdp-vite-cache');
+  const cau = path.join(base, empremta);
+  if (![base, cau].every(carpetaPropia)) {
+    throw Object.assign(new Error(`La memòria cau de Vite ha de ser una carpeta pròpia sense enllaços: ${cau}`), {
+      code: 'SDP_VITE_CACHE_NO_PRIVADA'
+    });
+  }
+  return cau;
 }
 
 /* P1-35 (decisió 6 del Mestre, 261028) · El build del sistema: la data de
@@ -96,7 +106,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
     const env = loadEnv(mode, process.cwd(), '');
     const isCI = !!process.env.CI;
     const supabaseUrl = env.VITE_SUPABASE_URL || (isCI ? 'https://mock.supabase.co' : undefined);
-    const anonKey = env.VITE_SUPABASE_ANON_KEY || (isCI ? 'mock-anon-key' : undefined);
+    const anonKey = env.VITE_SUPABASE_ANON_KEY || (isCI ? 'sb_publishable_ci_mock' : undefined);
     validatePublicCredentials(supabaseUrl, anonKey);
   }
 
@@ -215,7 +225,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
       }
     },
     server: { deps: { inline: [/react/, /@testing-library/] } },
-    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', '_wiki_de_poble/**', 'tooling/**', 'tests/**/*.test.mjs']
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', '**/.sdp-vite-cache/**', '_wiki_de_poble/**', 'tooling/**', 'tests/**/*.test.mjs']
   },
   build: {
     target: 'es2022',

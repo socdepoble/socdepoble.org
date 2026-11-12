@@ -1,5 +1,10 @@
-import { BookOpen, Coffee, HeartHandshake, Landmark, Receipt, ShoppingCart } from 'lucide-react';
+import { BookOpen, Coffee, HeartHandshake, HeartPulse, Landmark, Receipt, ShoppingCart, Users } from 'lucide-react';
+import { rutaDeApp } from '../../apps/plataforma/manifestApp.js';
+import { rutaDeLaFitxa } from '../control/destiSnippet.js';
 import { metadadesAplicacioDelNode, metadadesDatesDelPerfil } from './datesDelPerfil.js';
+
+/* La ruta del Panell de Control (App.jsx, <Route path="/control">): la fitxa del Snippet hi penja. */
+const RUTA_PANELL = '/control';
 
 /* ═══════════════════════════════════════════════════════════════════
    APLICACIONS DEL PERFIL · configuració pura (sense React)
@@ -59,15 +64,69 @@ import { metadadesAplicacioDelNode, metadadesDatesDelPerfil } from './datesDelPe
    que es tallava a la columna), TPV del Bar i Snippet. La Consola de Mètriques
    i el Cervell, internes, van darrere i només per a superadmin.
 
-   Cap encara no té una ruta connectada des del Perfil: totes són 'pendent'.
-   La fitxa de les que tenen targeta al Panell permet triar si hi apareixen,
-   sense prometre que el servei estiga disponible; la de les dues internes
-   només en diu l'estat.
+   R19 · T3 (ordre del Mestre, 261111; pla 261111_1720: «sincronització
+   d'aplicacions.js perquè totes les eines del Panell de Control funcionen al
+   100%») · Cada utilitat amb destí real en este node és 'connectada', amb la
+   mateixa ruta que «Obrir…» de la seua targeta del Panell
+   (registrePlugins.js, `obrir`): Gestoria /app/gestoria, Rebost
+   /app/nevera/casa, Salut /app/salut, Arbre Genealògic /app/genealogia,
+   L'Avisador /page/avisador, Lector RSS /app/lector i TPV del Bar /app/bar.
+   La governa el MATEIX literal de build que l'app (el `carrega` del seu
+   manifest, import.meta.env.VITE_SDP_APP_<ID> !== '0') o que L'Avisador
+   (App.jsx i registrePlugins.js): un build que la trau (=0; el paquet de
+   l'amfitrió ho fa sempre amb Salut, la Gestoria i l'Arbre,
+   vite.standalone.config.js) la deixa 'pendent' i sense ruta, i la fitxa no
+   enllaça res. En temps d'execució, la ruta /app/<id> passa pels interruptors
+   de la plataforma (RutaApps.jsx): si esta persona o este document no la
+   poden obrir, la pàgina ho explica (AvisApp), mai un 404 mut. La Consola de
+   Mètriques i el Cervell no tenen cap ruta pròpia al Perfil i continuen
+   'pendent'. registrePlugins.test.js comprova que cada ruta connectada la
+   servix App i que és la de la targeta del Panell.
+   Arbitratge del carril Genealogia + Perfil (P1) · Tres correccions:
+     · La Gestoria, Salut i l'Arbre Genealògic, que el paquet de l'amfitrió
+       no porta mai, no tenen fitxa en un build que les trau
+       (nomesSiElBuildLaPorta): una fitxa 'pendent' prometria una connexió
+       que no arribarà. DEROGAT, per a estes tres, «amb =0 la fitxa queda
+       'pendent' i sense ruta».
+     · El Snippet és 'connectada': la seua fitxa del Panell
+       (/control?fitxa=snippet) és la seua secció. DEROGAT «El Snippet … no
+       té cap ruta pròpia al Perfil i continua 'pendent'».
+     · La configuració diu si este build porta la secció; si ARA i ACÍ es pot
+       obrir ho decidix la porta de la plataforma, la mateixa de la pàgina del
+       plugin (useDestiDelPlugin, a DetallEspai.jsx): sense, cap enllaç.
+   DEROGAT «Cap encara no té una ruta connectada des del Perfil: totes són
+   'pendent'.». La fitxa de les que tenen targeta al Panell continua
+   permetent triar si hi apareixen; la de les dues internes només en diu
+   l'estat.
    ═══════════════════════════════════════════════════════════════════ */
+
+/* R19 · T3 · L'estat i la ruta d'una utilitat segons el seu interruptor de
+   build: el literal es queda a cada entrada (Vite el plega i el paquet de
+   l'amfitrió el fixa), i ací només se'n fa la parella { estat, ruta }. Val
+   per a les apps que qui porta la web pot afegir al seu paquet
+   (VITE_SDP_APP_<ID>=1 al monolític, vite.standalone.config.js): fins
+   llavors, la fitxa és 'pendent' i diu que es connectarà, i és cert. */
+const destiDelBuild = (compilada, ruta) => (compilada ? { estat: 'connectada', ruta } : { estat: 'pendent' });
+
+/* R19 · Arbitratge del carril Genealogia + Perfil (P1, tractor-promesa) · La
+   Gestoria, Salut i l'Arbre Genealògic no poden entrar MAI al paquet de
+   l'amfitrió: vite.standalone.config.js hi fixa la variable a '0' «Sempre …
+   Cap variable de l'entorn ho canvia» (DADES_NOMES_AL_DOCUMENT_PROPI). Una
+   fitxa 'pendent' prometria «Quan s'hi connecte, s'obrirà des d'ací mateix»,
+   i no passarà. Com L'Avisador amb =0, la fitxa no hi és; amb el build que
+   la porta, és 'connectada'. Al Panell, la seua targeta fa el mateix
+   (registrePlugins.js, GESTORIA_COMPILADA, SALUT_COMPILADA i
+   GENEALOGIA_COMPILADA). */
+const nomesSiElBuildLaPorta = (compilada, entrada) => (compilada ? [aplicacioDelNode({ ...entrada, estat: 'connectada' })] : []);
 
 export const ESTATS_APLICACIO = Object.freeze({
   pendent: 'Pendent de connectar en este node',
   connectada: 'Connectada en este node',
+  /* R19 · Arbitratge del carril (P1) · Connectada, però ací no es pot obrir:
+     la persona l'ha desactivada, qui porta la web no l'ha encesa o el
+     document no és el de Sóc de Poble. El motiu, el de la plataforma
+     (DetallEspai.jsx). */
+  noDisponible: 'No disponible ací',
 });
 
 /* R55 · Només el catàleg local rep les dates canòniques. El validador de
@@ -75,12 +134,12 @@ export const ESTATS_APLICACIO = Object.freeze({
 const aplicacioDelNode = entrada => Object.freeze({ ...entrada, ...metadadesAplicacioDelNode(entrada.id) });
 
 export const APLICACIONS = Object.freeze([
-  aplicacioDelNode({
+  ...nomesSiElBuildLaPorta(import.meta.env.VITE_SDP_APP_GESTORIA !== '0', {
     id: 'gestoria',
     nom: 'Gestoria de Poble',
     descripcio: 'Comptabilitat i facturació trimestral.',
     icona: Receipt,
-    estat: 'pendent',
+    ruta: rutaDeApp('gestoria'),
     panell: 'gestoria',
   }),
   aplicacioDelNode({
@@ -88,31 +147,49 @@ export const APLICACIONS = Object.freeze([
     nom: 'Rebost Domèstic',
     descripcio: 'La nevera i el rebost de casa.',
     icona: ShoppingCart,
-    estat: 'pendent',
+    ...destiDelBuild(import.meta.env.VITE_SDP_APP_NEVERA !== '0', rutaDeApp('nevera', 'casa')),
     panell: 'rebost',
   }),
-  aplicacioDelNode({
+  ...nomesSiElBuildLaPorta(import.meta.env.VITE_SDP_APP_SALUT !== '0', {
     id: 'salut',
     nom: 'Salut',
     descripcio: 'Un quadern per a cuidar dels nostres.',
     icona: HeartHandshake,
-    estat: 'pendent',
+    ruta: rutaDeApp('salut'),
     panell: 'salut',
   }),
-  aplicacioDelNode({
+  ...nomesSiElBuildLaPorta(import.meta.env.VITE_SDP_APP_GENEALOGIA !== '0', {
     id: 'genealogia',
     nom: 'Arbre Genealògic',
     descripcio: 'La memòria de la família, els malnoms i els masos.',
-    icona: HeartHandshake,
-    estat: 'pendent',
+    /* R19 · Loop 1 · La icona del seu manifest (apps/genealogia/manifest.js,
+       icona: 'Users'). Abans, HeartHandshake, la de Salut. */
+    icona: Users,
+    ruta: rutaDeApp('genealogia'),
     panell: 'genealogia',
   }),
+  /* P0-114 (ordre del Mestre, 261111) · L'Avisador torna a «La llar» del
+     Panell, i la persona el pot llevar del Panell des d'ací, com les altres
+     utilitats (`panell`, l'id del registre de plugins). Governat pel mateix
+     literal de build que el registre i App.jsx: amb VITE_SDP_APP_AVISADOR=0
+     no hi ha fitxa.
+     R19 · T3 (261111) · Amb fitxa, sempre té la seua pàgina (la mateixa
+     guarda munta <Route path="/page/avisador"> a App.jsx): 'connectada'. */
+  ...(import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? [aplicacioDelNode({
+    id: 'avisador',
+    nom: 'L’Avisador',
+    descripcio: 'Batec de Vida: un avís pel Xat a les teues persones de confiança.',
+    icona: HeartPulse,
+    estat: 'connectada',
+    ruta: '/page/avisador',
+    panell: 'avisador',
+  })] : []),
   aplicacioDelNode({
     id: 'lector-rss',
     nom: 'Lector RSS',
     descripcio: 'Les notícies de les entitats del poble, juntes.',
     icona: BookOpen,
-    estat: 'pendent',
+    ...destiDelBuild(import.meta.env.VITE_SDP_APP_LECTOR !== '0', rutaDeApp('lector')),
     panell: 'rss',
   }),
   aplicacioDelNode({
@@ -120,15 +197,21 @@ export const APLICACIONS = Object.freeze([
     nom: 'TPV del Bar',
     descripcio: 'La caixa del bar o del casino.',
     icona: Coffee,
-    estat: 'pendent',
+    ...destiDelBuild(import.meta.env.VITE_SDP_APP_BAR !== '0', rutaDeApp('bar')),
     panell: 'tpv',
   }),
+  /* R19 · Arbitratge del carril (P1) · El Snippet té secció en este node: la
+     seua fitxa del Panell (/control?fitxa=snippet, FitxaSnippet.jsx), la
+     mateixa ruta que obri la seua targeta (ControlSection.jsx,
+     rutaDeLaFitxa). Abans, 'pendent': la fitxa del Perfil deia que no en
+     tenia cap. */
   aplicacioDelNode({
     id: 'snippet',
     nom: 'Snippet',
     descripcio: 'Extensió de Chrome per a desar webs al Bloc.',
     icona: BookOpen,
-    estat: 'pendent',
+    estat: 'connectada',
+    ruta: rutaDeLaFitxa(RUTA_PANELL),
   }),
   aplicacioDelNode({
     id: 'metriques',

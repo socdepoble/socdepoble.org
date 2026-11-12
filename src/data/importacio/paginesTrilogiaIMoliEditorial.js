@@ -1,7 +1,7 @@
 import {sanitizeHtml} from '../../utils/sanitize.js';
 import {reescriuEnllacosHtmlSocDePobleNet} from './mapaEnllacosInternsWp.js';
 import {MITJANS_WP_LOCALS} from './paginesTrilogiaIMoliWp.mitjans.js';
-import {FONT_PAGINES_WP_SHA256} from './paginesTrilogiaIMoliWp.js';
+import {carregaPaginesTrilogiaIMoliWp, FONT_PAGINES_WP_SHA256} from './paginesTrilogiaIMoliWp.js';
 
 const HTTPS = raw=>{
   try{const u=new URL(raw);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port?u:null;}catch{return null;}
@@ -9,7 +9,8 @@ const HTTPS = raw=>{
 const ID=/^[A-Za-z0-9_-]{11}$/;
 // Only the association's own public contact address may survive in a draft; a third party's address is never copied.
 const CORREUS_INSTITUCIONALS=new Set(['socdepoblecom@gmail.com']);
-const CORREU=/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+// Bounded linear pattern without lookbehind (Safari 16.0 BASELINE) to prevent super-linear backtracking on untrusted drafts.
+const CORREU=/(^|[^A-Za-z0-9._%+-])([A-Za-z0-9._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\.){1,8}[A-Za-z]{2,24})(?![A-Za-z0-9_-])/g;
 const localImage=url=>{
   const local=MITJANS_WP_LOCALS[url];
   return local&&/^\/assets\/importacio-wp\/[A-Za-z0-9][A-Za-z0-9._-]*\.(?:webp|avif|png|jpe?g)$/i.test(local.path)&&/^[a-f0-9]{64}$/.test(local.sha256)?local:null;
@@ -80,7 +81,7 @@ export function transformaPaginaTrilogiaIMoliWp(page){
     if(/^mailto:/i.test(href)&&!CORREUS_INSTITUCIONALS.has(decodeURIComponent(href.slice(7).split('?')[0]).toLowerCase()))a.replaceWith(...a.childNodes);
   }
   const holder=doc.createElement('div');holder.append(body);
-  const senseCorreusDeTercers=holder.innerHTML.replace(CORREU,correu=>CORREUS_INSTITUCIONALS.has(correu.toLowerCase())?correu:'correu de contacte');
+  const senseCorreusDeTercers=holder.innerHTML.replace(CORREU,(_m,prefix,correu)=>`${prefix}${CORREUS_INSTITUCIONALS.has(correu.toLowerCase())?correu:'correu de contacte'}`);
   const rewritten=reescriuEnllacosHtmlSocDePobleNet(senseCorreusDeTercers).html;
   const citation=doc.createElement('p');citation.append('Font original: ',link(page.link,'socdepoble.net'),` · WP #${page.id} · Data original: ${page.date} (hora local de WordPress; fus no declarat).`);
   const htmlNet=sanitizeHtml(rewritten+citation.outerHTML,{imatgesPropies:true});
@@ -89,4 +90,17 @@ export function transformaPaginaTrilogiaIMoliWp(page){
     content:htmlNet,htmlNet,estat_revisio:'pendent_admin',esImportatWp:true,quarantena:true,
     num_imatges:images.size,imatgesPendents:Object.freeze([...pending]),videos:Object.freeze([...videos]),
     revisioPrivada:true,publicable:pending.size===0});
+}
+
+/** R18 · La portada demanada reutilitza l’únic registre WP #619 verificat.
+ * Les altres pàgines conserven el seu circuit privat de revisió. */
+export async function carregaPortadaImportadaPublica(wpId, { signal } = {}) {
+  if (wpId !== 619) return null;
+  const pages = await carregaPaginesTrilogiaIMoliWp({ signal });
+  const original = pages.find(page => page.id === wpId);
+  if (!original) return null;
+  const pagina = transformaPaginaTrilogiaIMoliWp(original);
+  if (!pagina.publicable || pagina.imatgesPendents.length) throw new Error('WP_MITJANS_PENDENTS');
+  return Object.freeze({ ...pagina, quarantena: false, revisioPrivada: false,
+    destinacio_workspace: 'arbres-monumentals', estat_revisio: 'portada_canonica' });
 }

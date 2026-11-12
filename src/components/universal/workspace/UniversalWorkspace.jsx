@@ -1299,7 +1299,13 @@ function CategoryColumn({
   // com qualsevol altra carpeta (sense tornar-la a triar), i la deixa
   // desplegada, com fa el nom de les altres. Plegar-la és cosa del chevron.
   // En mitja i en ample, el d'abans.
-  const chooseFolder = (categoryId, key) => {
+  const chooseFolder = (categoryId, key, category) => {
+    // Opcional: el nom de la carpeta torna a seleccionar-la; el chevron continua plegant-la.
+    if (category?.selectOnRepeat === true) {
+      openFolder(key);
+      chooseCategory(categoryId);
+      return;
+    }
     if (state.activeCategoryId === categoryId) {
       if (mestreDetall && mida === 'estret') {
         openFolder(key);
@@ -1566,7 +1572,7 @@ function CategoryBranch({
                 aria-current={activeId === category.id ? 'page' : undefined}
                 aria-expanded={hasChildren ? expanded : undefined}
                 className="sdp-workspace-nav-item"
-                onClick={() => (hasChildren ? chooseFolder(category.id, key) : chooseCategory(category.id))}
+                onClick={() => (hasChildren ? chooseFolder(category.id, key, category) : chooseCategory(category.id))}
               >
                 {/* Emoji o component: el resol NavGlyph (un emoji en text ja no peta). */}
                 <span className="sdp-workspace-nav-item__icon" aria-hidden="true">
@@ -2126,17 +2132,26 @@ function ItemListColumn({
 /* Targeta per defecte: mitjà (imatge · icona · inicial) + títol + subtítol.
    S'exporta (correcció D4 de la revisió de T50): un `renderItem` que només
    canvia algunes fitxes (el Perfil, amb la targeta viva) hi cau per a la
-   resta, sense copiar-ne el DOM. */
-export function DefaultItemCard({ item, active, onSelect, untitled = DEFAULT_LABELS.untitled }) {
+   resta, sense copiar-ne el DOM.
+   P0-115 (R18) · `idElement` (opcional) posa `data-element` al botó, com la
+   UniversalCard: CatalegWorkspace hi torna el focus en tancar una fitxa. Sense
+   eixa prop (Disseny, la Wiki, el Perfil) el DOM és el de sempre.
+   P0-115 (correcció WCAG 3.1.2) · `llenguaContingut` (opcional) posa `lang`
+   al text de la fila (títol i subtítol) quan el contingut és en una llengua
+   diferent de la interfície; qui crida ja decidix si cal (com langSiDiferent
+   de PageFrame). Sense eixa prop el DOM tampoc no canvia. */
+export function DefaultItemCard({ item, active, onSelect, untitled = DEFAULT_LABELS.untitled, idElement = null, llenguaContingut = null, nomAccessible, imageAlt }) {
   return (
     <button
       type="button"
       className="sdp-gestor-fitxa"
+      aria-label={nomAccessible}
       aria-current={active ? 'true' : undefined}
+      data-element={idElement != null ? String(idElement) : undefined}
       onClick={onSelect}
     >
-      <ItemMedia item={item} titleFallback={untitled} />
-      <span className="sdp-gestor-fitxa__text">
+      <ItemMedia item={item} titleFallback={untitled} imageAlt={imageAlt} />
+      <span className="sdp-gestor-fitxa__text" lang={llenguaContingut || undefined}>
         <span className="sdp-gestor-fitxa__titol">{item.title || untitled}</span>
         {item.subtitle ? (
           <span className="sdp-gestor-fitxa__subtitol">{item.subtitle}</span>

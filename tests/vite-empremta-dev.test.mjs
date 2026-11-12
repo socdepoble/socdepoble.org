@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
+import { createRequire } from 'node:module';
 import { loadConfigFromFile } from 'vite';
 
 import configDeVite, * as modulDeVite from '../vite.config.js';
@@ -101,16 +102,94 @@ test('Notes · cap còpia comparteix la memòria cau del viu ni hi escriu dins',
   fs.mkdirSync(path.join(mixta, 'node_modules'), { recursive: true });
   fs.symlinkSync(path.join(viu, 'node_modules', '.vite'), path.join(mixta, 'node_modules', '.vite'));
 
-  const cauViva = cacheDirPropi(viu, tmp);
+  const cauViva = cacheDirPropi(viu);
   assert.match(path.relative(path.join(viu, 'node_modules', '.vite'), cauViva), /^[0-9a-f]{12}$/,
     'la del viu és una subcarpeta amb empremta, mai node_modules/.vite, deps ni vitest');
-  assert.equal(cacheDirPropi(viu, tmp), cauViva, 'estable entre reinicis');
+  assert.equal(cacheDirPropi(viu), cauViva, 'estable entre reinicis');
   for (const copia of [enllacada, mixta]) {
-    const cau = cacheDirPropi(copia, tmp);
+    const cau = cacheDirPropi(copia);
     assert.ok(!cau.startsWith(viu + path.sep), `${path.basename(copia)}: escriu dins de l’arbre viu (${cau})`);
-    assert.equal(path.dirname(cau), path.join(tmp, 'sdp-vite-cache'));
+    assert.equal(path.dirname(cau), path.join(copia, '.sdp-vite-cache'));
   }
-  assert.notEqual(cacheDirPropi(enllacada, tmp), cacheDirPropi(mixta, tmp), 'cada arrel, la seua');
+  assert.notEqual(cacheDirPropi(enllacada), cacheDirPropi(mixta), 'cada arrel, la seua');
+});
+
+test('R20 · els CJS de dos clons resolen el mateix React sense escriure a les dependències compartides', (t) => {
+  const { cacheDirPropi } = modulDeVite;
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-cau-cjs-')));
+  t.after(() => fs.rmSync(tmp, { recursive: true, force: true }));
+  const viu = path.join(tmp, 'viu');
+  const dependencies = path.join(viu, 'node_modules');
+  const requireDeLaProva = createRequire(import.meta.url);
+  const reactReal = fs.realpathSync(path.dirname(requireDeLaProva.resolve('react/package.json')));
+  const entradaReact = requireDeLaProva.resolve('react');
+  const reactAbans = fs.readFileSync(entradaReact);
+  fs.mkdirSync(path.join(dependencies, '.vite'), { recursive: true });
+  fs.symlinkSync(reactReal, path.join(dependencies, 'react'));
+  fs.writeFileSync(path.join(dependencies, '.vite', 'servidor-viu.txt'), 'no tocar');
+  const arbreAbans = fs.readdirSync(dependencies, { recursive: true }).sort();
+  const copies = ['copia-a', 'copia-b', 'copia-mixta'].map(nom => path.join(tmp, nom));
+  for (const copia of copies) {
+    fs.mkdirSync(copia);
+    if (copia.endsWith('mixta')) {
+      fs.mkdirSync(path.join(copia, 'node_modules'));
+      fs.symlinkSync(path.join(dependencies, '.vite'), path.join(copia, 'node_modules', '.vite'));
+      fs.symlinkSync(reactReal, path.join(copia, 'node_modules', 'react'));
+    } else fs.symlinkSync(dependencies, path.join(copia, 'node_modules'));
+    const cau = cacheDirPropi(copia);
+    assert.equal(path.dirname(cau), path.join(copia, '.sdp-vite-cache'));
+    const depsSsr = path.join(cau, 'vitest', 'deps_ssr');
+    fs.mkdirSync(depsSsr, { recursive: true });
+    const paquet = path.join(depsSsr, 'icona.cjs');
+    fs.writeFileSync(paquet, 'module.exports = require("react");');
+    const requireDelPaquet = createRequire(paquet);
+    assert.equal(requireDelPaquet.resolve('react'), entradaReact);
+    assert.equal(requireDelPaquet(paquet), requireDeLaProva('react'), 'la mateixa instància real de React');
+  }
+  assert.equal(new Set(copies.map(copia => cacheDirPropi(copia))).size, copies.length);
+  const alias = path.join(tmp, 'alias-copia-a');
+  fs.symlinkSync(copies[0], alias);
+  assert.equal(cacheDirPropi(alias), cacheDirPropi(copies[0]), 'els àlies de la mateixa arrel real no creen una altra cache');
+  assert.deepEqual(fs.readdirSync(dependencies, { recursive: true }).sort(), arbreAbans);
+  assert.equal(fs.readFileSync(path.join(dependencies, '.vite', 'servidor-viu.txt'), 'utf8'), 'no tocar');
+  assert.deepEqual(fs.readFileSync(entradaReact), reactAbans);
+});
+
+test('R20 · una cache privada enllaçada, també si penja del hash, falla abans d’escriure fora del clon', (t) => {
+  const { cacheDirPropi } = modulDeVite;
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-cau-link-')));
+  t.after(() => fs.rmSync(tmp, { recursive: true, force: true }));
+  const dependencies = path.join(tmp, 'dependencies');
+  const aliena = path.join(tmp, 'aliena');
+  fs.mkdirSync(dependencies);
+  fs.mkdirSync(aliena);
+  fs.writeFileSync(path.join(aliena, 'intacte.txt'), 'no tocar');
+  for (const nivell of ['base', 'hash', 'base-penjant', 'hash-amb-deps-propies']) {
+    const copia = path.join(tmp, nivell);
+    fs.mkdirSync(copia);
+    const depsPropies = nivell === 'hash-amb-deps-propies';
+    if (depsPropies) fs.mkdirSync(path.join(copia, 'node_modules', '.vite'), { recursive: true });
+    else fs.symlinkSync(dependencies, path.join(copia, 'node_modules'));
+    const cau = cacheDirPropi(copia);
+    assert.equal(path.dirname(cau), depsPropies ? path.join(copia, 'node_modules', '.vite') : path.join(copia, '.sdp-vite-cache'));
+    const desti = nivell === 'hash' || depsPropies ? cau : path.dirname(cau);
+    if (nivell === 'hash') fs.mkdirSync(path.dirname(cau));
+    fs.symlinkSync(nivell === 'base-penjant' ? path.join(tmp, 'inexistent') : aliena, desti);
+    assert.throws(() => cacheDirPropi(copia), { code: 'SDP_VITE_CACHE_NO_PRIVADA' });
+  }
+  assert.deepEqual(fs.readdirSync(aliena), ['intacte.txt']);
+  assert.equal(fs.readFileSync(path.join(aliena, 'intacte.txt'), 'utf8'), 'no tocar');
+});
+
+test('R20 · els paquets generats de la cache no entren a Vitest ni a ESLint, i src conserva les regles', async () => {
+  assert.ok(configServe().test.exclude.includes('**/.sdp-vite-cache/**'));
+  const { ESLint } = await import('eslint');
+  const eslint = new ESLint({ cwd: ARREL });
+  for (const rel of ['.sdp-vite-cache/prova/deps_ssr/lucide-react.js', 'copia/.sdp-vite-cache/prova/deps/react.js']) {
+    assert.equal(await eslint.isPathIgnored(path.join(ARREL, rel)), true, rel);
+  }
+  const [font] = await eslint.lintText('const variableSenseUsar = 1;\n', { filePath: path.join(ARREL, 'src/sondaCache.js') });
+  assert.ok(font.messages.some(m => m.ruleId === 'no-unused-vars'), 'la regla de src continua activa');
 });
 
 /* Gauntlet 261029 (c1, vite-hmr-ws-bfcache) · Arrere/Avant entre documents escrivia a la consola

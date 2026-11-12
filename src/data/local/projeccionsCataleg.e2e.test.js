@@ -20,6 +20,29 @@ async function tot(adapter, audiencia) {
   return rows;
 }
 describe('P0-59 · E2E amb segon adaptador real, font intacta', () => {
+  test('R18 · el mateix WP id canvia de destinació amb ACK real del segon adaptador', async () => {
+    const adapter = creaAdaptadorLocal({ mode: 'local', tenantId: TENANT }); entra(adapter);
+    const service = creaServeiProjeccionsCataleg({ abast: { tenantId: TENANT, ownerId: OWNER, backendId: 'sdp-local' },
+      idb: null, navegador: null, Canal: null, subtil: webcrypto.subtle, comprovaSessio: capturaSessio(),
+      publica: sub => adapter.appendSectionSubmissionNetworkOnly(sub) });
+    const font = { font: 'importacio-wp', id: '619', title: 'Catàleg d’arbres', subtitle: 'socdepoble.net · WP #619', lead: '' };
+    await service.prepara();
+    const ids = new Set();
+    for (const desti of ['mur', 'arbres-monumentals', 'herbari', 'receptes', 'pagina']) {
+      await service.desa(font, [desti]); await service.sincronitza();
+      const rows = await tot(adapter, 'publica');
+      expect(rows).toHaveLength(1); ids.add(rows[0].id);
+      expect(rows[0].destinacio_workspace).toBe(desti);
+      expect(rows[0].content || '').toBe('');
+      expect(perDestiCataleg(rows, desti)).toHaveLength(1);
+    }
+    expect(ids.size).toBe(1);
+    await service.desa(font, []); await service.sincronitza();
+    const retirades = await tot(adapter, 'publica');
+    expect(retirades[0].destinacio_workspace).toBeNull();
+    for (const desti of DESTINS_CATALEG) expect(perDestiCataleg(retirades, desti)).toHaveLength(0);
+    service.tanca(); adapter.destroy();
+  });
   test('tria, desa, sincronitza, llig cada superfície, canvia i revoca sense duplicar', async () => {
     const adapter = creaAdaptadorLocal({ mode: 'local', tenantId: TENANT }); entra(adapter);
     const service = creaServeiProjeccionsCataleg({ abast: { tenantId: TENANT, ownerId: OWNER, backendId: 'sdp-local' },

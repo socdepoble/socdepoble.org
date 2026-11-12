@@ -5,7 +5,7 @@
  */
 import { expect, test } from 'vitest';
 import {
-  MAXIM_CAMP_ORIGEN, MAXIM_DESTINS, MAXIM_DRETS, MAXIM_URL, TIPUS_OBJECTE, esConnexio, esExtern, netejaCampOrigen,
+  MAXIM_CAMP_ORIGEN, MAXIM_DESTINS, MAXIM_URL, TIPUS_OBJECTE, esConnexio, esExtern, netejaCampOrigen,
   netejaDrets, normalitzaAbast, normalitzaOrigen, origenPublic, teDretsReservats, urlExterna, validaUrlExterna
 } from './origenNota.js';
 import { netejaText } from '../utils/sanitize.js';
@@ -86,15 +86,27 @@ test('origenPublic: el mateix origen net, però sense abast', () => {
 });
 
 /* ── D4 (ordre del Mestre, 260930) · els drets de l'original, camp opcional de la connexió ── */
-test('D4 · drets: text net, tallat a 256 caràcters de veres, i origenPublic el conserva', () => {
-  expect(MAXIM_DRETS).toBe(256);
+test('D4 · drets: text net i autoria completa de 256 caràcters, també en origenPublic', () => {
   const net = normalitzaOrigen({ ...BASE, drets: '  © Pepa\u0007 Soler  ' });
   expect(net.drets).toBe('© Pepa Soler');
-  const llarg = normalitzaOrigen({ ...BASE, drets: `© ${'🌾'.repeat(400)}` }).drets;
-  expect(Array.from(llarg)).toHaveLength(MAXIM_DRETS);
+  const drets = `CC BY-NC-SA 4.0 ${'🌾'.repeat(256)}`;
+  const llarg = normalitzaOrigen({ ...BASE, drets }).drets;
+  expect(llarg).toBe(drets);
+  // Auditoria R18 (P2) · Massa llarg: es talla l'autoria i es conserva la marca de la llicència.
+  expect(normalitzaOrigen({ ...BASE, drets: drets + 'x' }).drets).toBe(drets);
   expect(/[\uD800-\uDFFF]/u.test(llarg)).toBe(false);
   // L'atribució és pública: viatja al Mur amb l'origen (sense l'abast).
   expect(origenPublic({ ...BASE, drets: '© Pepa', abast: { mode: 'privada' } })).toEqual({ ...BASE, drets: '© Pepa' });
+});
+
+/* Auditoria R18 (P2) · Un original amb drets reservats massa llargs no pot
+   perdre la «©»: sense ella, la connexió es republicaria sense l'avís. */
+test('D4 · drets reservats massa llargs conserven la «©» i l’avís de republicació', () => {
+  const origen = normalitzaOrigen({ ...BASE, drets: '© ' + 'x'.repeat(300) });
+  expect(origen.drets).toBe('© ' + 'x'.repeat(256));
+  expect(teDretsReservats(origen)).toBe(true);
+  expect(netejaDrets('© · ' + 'y'.repeat(300))).toBe('© · ' + 'y'.repeat(256));
+  expect(netejaDrets(`${'z'.repeat(300)} · CC0 1.0`)).toBe(`${'z'.repeat(256)} · CC0 1.0`);
 });
 
 test('D4 · drets: buits, o que no són text, no es desen; un origen sense drets queda igual', () => {

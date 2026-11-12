@@ -914,4 +914,21 @@ describe('la forma i la tornada', () => {
     await munta({ permisos: AMB_SESSIO });
     expect(m.lecturesSessio).toBeGreaterThan(0);
   });
+
+  /* Onada R17 (AH-R17-09) · Fora de les apps, només el portal /app llig la font, i només en pren
+     el booleà esSuperadmin: el panell de verificadors i botigues el veu la sessió que el porta cert.
+     Un rol que ho aparenta (rol cru 'superadmin-sonda', esSuperadmin fals) no el veu. */
+  test('el portal /app pinta el panell de verificadors només amb el booleà esSuperadmin de la sessió', async () => {
+    m.sessio = { ...SESSIO_DINS, esSuperadmin: true };
+    muntaPlataforma('/app', { registre: registreAmb(AMB_SESSIO), entorn: ENTORN_OBERT });
+    expect(await screen.findByRole('heading', { level: 2, name: 'Gestió de verificadors i botigues' })).toBeTruthy();
+    expect(m.lecturesSessio).toBeGreaterThan(0);
+    cleanup();
+    m.sessio = SESSIO_DINS;
+    const { container } = muntaPlataforma('/app', { registre: registreAmb(AMB_SESSIO), entorn: ENTORN_OBERT });
+    await screen.findByRole('heading', { level: 1, name: 'Apps' });
+    expect(container.querySelector('.sdp-app-portal > ul.sdp-app-portal__llista')).not.toBeNull();
+    expect(container.querySelector('section.sdp-app-portal__testers')).toBeNull();
+    expect(container.textContent).not.toContain('socdepoble-testers');
+  });
 });

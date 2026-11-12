@@ -9,8 +9,11 @@
    /gestoria ni /tractors (D3). Ordre del Mestre, 261004 («contaminació
    crítica de rutes/estats entre Gestoria i Wiki»): la frontera s'ha mogut amb
    la Gestoria. Ara només el pont de la seua app (src/apps/gestoria/
-   AppGestoria.jsx), i només en desenvolupament, carrega la Gestoria; el seu
-   únic importador és el manifest de l'app, darrere del literal de DEV; i la
+   AppGestoria.jsx), darrere del mateix literal d'exclusió que el manifest
+   (P0-113, ordre del Mestre, 261111: oberta al web propi, fora del paquet de
+   l'amfitrió i del cos d'un mòdul), carrega la Gestoria; el seu
+   únic importador és el manifest de l'app, darrere del literal de compilació
+   (des de P0-113, 261111, d'exclusió: VITE_SDP_APP_GESTORIA=0); i la
    Wiki ja no la importa (només els Tractors, també només en desenvolupament).
    Cap guarda s'afebleix: es mouen al pont. Els patrons es componen a trossos
    perquè les portes que llegixen src/ no els troben ací. */
@@ -423,9 +426,15 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     expect(coneixGestoria.test(["'/app/", "gestoria/tauler'"].join(''))).toBe(true);
   });
 
-  /* 261007: un lazy() per especificador del pont (ara tres, amb la Facturació). */
-  test('el pont decidix amb import.meta.env.DEV: un lazy() per especificador dins d’una constant nul·la fora de DEV, i cap altra importació dels carrils', () => {
-    const inici = fontPont.indexOf('const VISTES = import.meta.env.DEV ? Object.freeze({');
+  /* 261007: un lazy() per especificador del pont (ara tres, amb la Facturació).
+     P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: el pont decidix amb el MATEIX literal
+     d'exclusió que `carrega` del manifest (abans, import.meta.env.DEV). La intenció es conserva: un
+     lazy() per especificador dins d'una constant que val null quan el build desendolla la Gestoria. */
+  test('el pont decidix amb el literal d’exclusió del manifest: un lazy() per especificador dins d’una constant nul·la amb VITE_SDP_APP_GESTORIA=0, i cap altra importació dels carrils', () => {
+    const porta = "import.meta.env.VITE_SDP_APP_GESTORIA !== '0'";
+    expect(fontManifest).toContain(`carrega: ${porta} ? `);
+    expect(fontPont).not.toMatch(/import\.meta\.env\.DEV/);
+    const inici = fontPont.indexOf(`const VISTES = ${porta} ? Object.freeze({`);
     expect(inici).toBeGreaterThan(-1);
     const fi = fontPont.indexOf('}) : null;', inici);
     expect(fi).toBeGreaterThan(inici);
@@ -440,11 +449,18 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     expect(fontPont).not.toMatch(/sections\/tractors\/|ContenidorGestoria\.jsx'/);
   });
 
-  test('l’únic importador del pont és el manifest de l’app, darrere del literal de DEV, amb entorn de desenvolupament i apagada per defecte', () => {
-    expect(fontManifest).toContain("carrega: import.meta.env.DEV || import.meta.env.VITE_SDP_APP_GESTORIA === '1' ? () => import('./AppGestoria.jsx') : null");
+  /* P0-113 (ordre del Mestre, 261111) · La Gestoria és oberta en producció per defecte: el literal del manifest
+     és d'exclusió (VITE_SDP_APP_GESTORIA=0 la trau del build) i el pont continua sent un sol tros diferit. La
+     guarda de dades financeres (només al document propi) és d'interruptors.js i no canvia. */
+  test('l’únic importador del pont és el manifest de l’app, darrere del literal d’exclusió, en un tros diferit, amb entorn de producció i encesa per defecte', () => {
+    const porta = "import.meta.env.VITE_SDP_APP_GESTORIA !== '0'";
+    expect(fontManifest).toContain(`carrega: ${porta} ? () => import('./AppGestoria.jsx') : null`);
+    expect(fontManifest).toContain(`permisos: ${porta}\n    ? { veure: 'public', titular: 'sessio' }\n    : { veure: 'public' },`);
     expect(fontManifest.split('import(').length - 1).toBe(1);
-    expect(fontManifest).toContain("entorn: 'desenvolupament',");
-    expect(fontManifest).toContain('actiuPerDefecte: false,');
+    expect(fontManifest).not.toMatch(/^import /m);
+    expect(fontManifest).toContain("entorn: 'produccio',");
+    expect(fontManifest).toContain('actiuPerDefecte: true,');
+    expect(fontManifest).toContain("dadesPersonals: 'financeres',");
     const importadors = fitxersDe('src').filter((ruta) => !esProva(ruta)).filter((ruta) => especificadors(readFileSync(path.join(ARREL, ruta), 'utf8'))
       .some((e) => [PONT, PONT.replace(/\.jsx$/, '')].includes(resol(ruta, e))));
     expect(importadors).toEqual([MANIFEST]);
@@ -460,7 +476,8 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
   /* Vite compila un fitxer sol (tota importació, externa) en mode producció
      i en mode desenvolupament: el literal es reemplaça i, en producció, les
      importacions dinàmiques dels carrils desapareixen. */
-  async function compila(entrada, produccio) {
+  /* `definicions`: substitucions de compilació NOMÉS d'esta prova (P0-113: la variable que desendolla). */
+  async function compila(entrada, produccio, definicions = {}) {
     const abans = process.env.NODE_ENV;
     process.env.NODE_ENV = produccio ? 'production' : 'development';
     try {
@@ -469,6 +486,7 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
         logLevel: 'silent',
         root: ARREL,
         mode: produccio ? 'production' : 'development',
+        define: definicions,
         build: {
           write: false,
           minify: false,
@@ -493,18 +511,26 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|PanellTractors|PanellSentinelles|PanellAgents|Aprendre\.jsx/);
   }, 60000);
 
-  /* La closca (ShellGestoria) porta ContenidorGestoria a dins: vetada al
-     paquet de producció, com abans a la Wiki. Encara que algú compilara
-     l'app en producció (VITE_SDP_APP_GESTORIA), el pont no hi porta res. */
-  test('al build de producció del pont no queda cap importació de la Gestoria', async () => {
+  /* La closca (ShellGestoria) porta ContenidorGestoria a dins.
+     P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: la Gestoria és oberta al web propi, i al
+     build de producció el pont hi porta les cinc vistes com a importacions diferides (cap d'estàtica).
+     La intenció de la prova vella (el pont desendollat no porta res de la Gestoria) es conserva amb el
+     flag declaratiu: amb VITE_SDP_APP_GESTORIA=0, el valor del paquet de l'amfitrió i del cos d'un mòdul,
+     no hi queda cap importació ni cap nom de la Gestoria, i el pont només diu que no és en este paquet. */
+  test('al build de producció el pont porta les cinc vistes diferides; amb VITE_SDP_APP_GESTORIA=0 no hi queda cap importació de la Gestoria', async () => {
     // 261007: també la Facturació, que en desenvolupament és la tercera importació.
     // Onada 6, ordre del Mestre (261009): i «Històric i IA», la quarta.
     // Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): i «Identitat i Finestreta», la cinquena.
     const gestoria = /import\(\s*["'][^"']*(?:ShellGestoria|aprendre\/Aprendre|facturar\/Facturacio|historic\/Historic|finestreta\/Finestreta)/g;
+    const estatica = /^\s*import\s[^(]*from\s*["'][^"']*sections\/gestoria/m;
     const desenvolupament = await compila(PONT, false);
     expect(desenvolupament.match(gestoria)).toHaveLength(5);
     const produccio = await compila(PONT, true);
-    expect(produccio.match(gestoria)).toBeNull();
-    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx|Facturacio\.jsx|Historic\.jsx|Finestreta\.jsx|sections\/gestoria/);
+    expect(produccio.match(gestoria)).toHaveLength(5);
+    expect(produccio).not.toMatch(estatica);
+    const desendollada = await compila(PONT, true, { 'import.meta.env.VITE_SDP_APP_GESTORIA': JSON.stringify('0') });
+    expect(desendollada.match(gestoria)).toBeNull();
+    expect(desendollada).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx|Facturacio\.jsx|Historic\.jsx|Finestreta\.jsx|sections\/gestoria/);
+    expect(desendollada).toContain('Esta versió de la web no porta la Gestoria');
   }, 60000);
 });

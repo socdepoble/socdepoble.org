@@ -531,6 +531,13 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   scroll-padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-4));
 }
+/* Onada R20 (Bucle 2 · Auditoria Chromium CDP 280/375px) · Les columnes de les apps
+   obertes del Panell (.sdp-app-contenidor .app-grid-shell > ... > .sdp-marc-columna:
+   Salut amb «Truca al 112», Genealogia, Bar, Nevera, Lector) reserven l'alçada de la
+   barra de navegació inferior mòbil perquè ni el peu ni l'última línia queden tapats. */
+:where(.sdp-root.is-compact) .sdp-app-contenidor .app-grid-shell > .app-grid-content > .app-grid-column > .sdp-marc-columna {
+  padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+}
 /* Llei de la Roda Dentada (ordre del Mestre, 261007) · La configuració de
    l'espai de treball (WorkspaceSettingsDialog): «Amplada de les columnes» i
    «Carpetes a la vista». Les carpetes són una llista d'ajustos a la manera de
@@ -12805,9 +12812,12 @@ details[open] summary.accordion-header svg:last-child {
     min-block-size: var(--sdp-touch);
     margin: 0;
     padding: var(--sdp-space-2);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-targeta);
+    /* Onada R17 · AH-R17-04 · Rajola a 90° sobre el fons de l'app, sense vora
+       visible. La vora de 2px transparent es queda (cap ombra en este bloc): és
+       la que pinta l'estat premut i la que el mode de contrast forçat fa visible. */
+    border: 2px solid transparent;
+    border-radius: 0;
+    background: var(--sdp-fons-app);
     color: var(--sdp-text-cos);
     font: inherit;
     text-align: center;
@@ -12818,11 +12828,11 @@ details[open] summary.accordion-header svg:last-child {
      no es queda enganxada després del toc. Cada guarda queda al lloc de la
      seua regla: l'ordre de la cascada no canvia i l'escriptori, tampoc. */
   @media (hover: hover) and (pointer: fine) {
-    .sdp-rajola:hover { border-color: var(--sdp-vora-forta); }
+    .sdp-rajola:hover { background: var(--sdp-fons-subtil); }
   }
   .sdp-rajola:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-rajola[aria-pressed="true"] { border-color: var(--sdp-accio); background: var(--sdp-accio-subtil); }
-  .sdp-rajola:disabled { cursor: not-allowed; border-color: var(--sdp-vora); background: var(--sdp-fons-subtil); color: var(--sdp-text-desactivat); }
+  .sdp-rajola:disabled { cursor: not-allowed; background: var(--sdp-fons-subtil); color: var(--sdp-text-desactivat); }
 
   .sdp-rajola__media {
     display: grid;
@@ -12831,7 +12841,7 @@ details[open] summary.accordion-header svg:last-child {
     max-inline-size: 100%;
     min-block-size: 0;
     aspect-ratio: 1 / 1;
-    border-radius: var(--sdp-radi-s);
+    border-radius: 0;
     background: var(--sdp-accio-subtil);
     color: var(--sdp-accio-text);
     overflow: hidden;
@@ -13084,7 +13094,13 @@ details[open] summary.accordion-header svg:last-child {
     overscroll-behavior: contain;
   }
   .sdp-marc-columna__cos:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
-  .sdp-marc-columna__peu { flex: none; }
+  .sdp-marc-columna__peu {
+    flex: none;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border-block-start: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
 
   /* ── MARCA D'ARTICLE · inicials i icona de categoria, o la foto ───── */
   .sdp-marca-article {
@@ -15024,6 +15040,10 @@ details[open] summary.accordion-header svg:last-child {
     gap: var(--sdp-space-3);
     position: sticky;
     top: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    background: var(--sdp-fons-targeta);
   }
 
   .sdp-admin-importacio__notes {
@@ -15505,17 +15525,29 @@ details[open] summary.accordion-header svg:last-child {
     width: 96px;
     height: 96px;
     gap: var(--sdp-space-1);
+    border: none;
+    border-radius: 0;
+    background-color: var(--sdp-fons-app);
     cursor: pointer;
   }
 
-  .sdp-recepta__quadrats .sp-card-calendar-badge[aria-pressed="true"] {
-    border-color: var(--sdp-accio);
+  .sdp-recepta__quadrats .sp-card-calendar-badge[aria-pressed="true"],
+  .sdp-recepta__quadrats .sp-card-calendar-badge[aria-selected="true"] {
     background-color: var(--sdp-accio-subtil);
     color: var(--sdp-accio-text);
+    box-shadow: inset 0 0 0 2px var(--sdp-accio);
   }
 
   .sdp-recepta__quadrat-icona {
     font-size: 1.75rem;
+    line-height: 1;
+  }
+
+  /* Onada R17 · L'emoji XL de les pestanyes de la recepta, a 7/16 del costat de
+     la fitxa (42 de 96px). Dues classes: guanya a .sdp-fitxa-emoji-xl (66px) i a
+     .sdp-recepta__quadrat-icona, que són a la mateixa capa components. */
+  .sdp-recepta__quadrats .sdp-fitxa-emoji-xl {
+    font-size: calc(var(--sdp-fitxa-mida) * 7 / 16);
     line-height: 1;
   }
 
@@ -15596,7 +15628,29 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-cataleg-workspace .sdp-cataleg-workspace__llista {
     display: flex;
     flex-direction: column;
-    gap: var(--sdp-space-2);
+    gap: 0;
+  }
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__llista .sp-card {
+    margin: 0;
+    border: 0;
+    border-left: 3px solid transparent;
+    border-bottom: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--sdp-fons-targeta);
+  }
+  /* Onada R17 · La fila triada. Dues regles i no una llista: un navegador de la
+     línia base sense :has() (Chrome 100, Firefox 100) descartaria la llista
+     sencera. Sense element principal, UniversalCard posa aria-current a l'article. */
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__llista .sp-card[aria-current="true"] {
+    background: var(--sdp-accio-subtil);
+    border-left-color: var(--sdp-accio);
+  }
+  /* Amb element principal, aria-current va a la capa de l'enllaç
+     (.sp-card-link-overlay, inset 0): la marca hi va dibuixada per dins, sense
+     fons, que taparia el text. Cap :has() (línia base, tests/lint_logica_usuari). */
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__llista .sp-card-link-overlay[aria-current="true"] {
+    box-shadow: inset 3px 0 0 var(--sdp-accio);
   }
   .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola {
     display: grid;
@@ -15605,7 +15659,22 @@ details[open] summary.accordion-header svg:last-child {
     align-items: start;
   }
   .sdp-cataleg-workspace .sdp-gestor-llista > li { min-width: 0; margin: 0; }
-  .sdp-cataleg-workspace__rajola .sp-card { height: auto; min-width: 0; }
+  .sdp-cataleg-workspace__rajola .sp-card {
+    height: auto;
+    min-width: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--sdp-fons-app);
+  }
+  /* Quatre classes: ha de guanyar a la rajola quadrada de més avall (tres). */
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola .sp-card[aria-current="true"] {
+    background: var(--sdp-accio-subtil);
+    box-shadow: inset 0 0 0 2px var(--sdp-accio);
+  }
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola .sp-card-link-overlay[aria-current="true"] {
+    box-shadow: inset 0 0 0 2px var(--sdp-accio);
+  }
   .sdp-cataleg-workspace__rajola .sp-card-body { padding: var(--sdp-space-2); }
   .sdp-cataleg-workspace__rajola .sp-card-calendar-badge {
     float: none;
@@ -15613,6 +15682,9 @@ details[open] summary.accordion-header svg:last-child {
     height: auto;
     aspect-ratio: 1;
     margin: 0 0 var(--sdp-space-2);
+    border: none;
+    border-radius: 0;
+    background: var(--sdp-fons-app);
     font-size: var(--sdp-text-h3);
   }
   .sdp-cataleg-workspace__rajola .sp-card .sp-card-title { font-size: var(--sdp-text-base); }
@@ -15626,6 +15698,10 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola .sp-card {
     aspect-ratio: 1;
     margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--sdp-fons-app);
   }
   .sdp-cataleg-workspace__rajola .sp-card-body {
     display: flex;
@@ -15641,6 +15717,9 @@ details[open] summary.accordion-header svg:last-child {
     height: auto;
     aspect-ratio: auto;
     margin: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--sdp-fons-app);
     line-height: 1;
   }
   .sdp-cataleg-workspace__rajola .sp-card-media-container {
@@ -15648,6 +15727,7 @@ details[open] summary.accordion-header svg:last-child {
     min-height: 0;
     height: auto;
     aspect-ratio: auto;
+    border-radius: 0;
   }
   .sdp-cataleg-workspace__rajola .sp-card-media-container > .sp-card-media {
     width: 100%;
@@ -15689,7 +15769,22 @@ details[open] summary.accordion-header svg:last-child {
     height: var(--sdp-space-12);
     margin-left: var(--sdp-space-2);
   }
-  .sdp-cataleg-workspace__destins { padding: var(--sdp-space-2); }
+  .sdp-cataleg-workspace__destins {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-3);
+    border-top: 1px solid var(--sdp-crom-vora);
+  }
+  .sdp-cataleg-workspace__destins .sdp-boto {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    border-radius: 0;
+  }
+  .sdp-cataleg-workspace__destins .sdp-camp { margin-bottom: 0; width: 100%; }
+  .sdp-cataleg-workspace__destins select { border-radius: 0; }
   /* Contrast (R15b) · L'etiqueta «Pàgina de destinació» va sobre la columna de
      navegació (--sdp-workspace-nav-fons, el crom fosc en tots dos temes): porta
      el text del crom, com l'arbre de la columna. --sdp-text-invers girava a fosc
@@ -15755,6 +15850,44 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-cataleg-workspace .sdp-gestor-llista .sp-card {
     content-visibility: visible;
     contain-intrinsic-size: none;
+  }
+  .sdp-publicar-mapa-exemple {
+    margin-block: var(--sdp-space-6);
+  }
+  .sdp-mapa-vertical-visor {
+    margin-bottom: var(--sdp-space-6);
+  }
+  .sdp-lamines-node0 {
+    margin-block: var(--sdp-space-5);
+    padding: var(--sdp-space-4);
+    background: var(--sdp-fons-subtil);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+  .sdp-lamines-node0__graella {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: var(--sdp-space-3);
+    margin-block: var(--sdp-space-3);
+  }
+  .sdp-lamines-node0__figura {
+    margin: 0;
+    background: var(--sdp-fons-targeta);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    overflow: hidden;
+  }
+  .sdp-lamines-node0__imatge {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  .sdp-lamines-node0__peu {
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    font-size: var(--sdp-text-small);
+    color: var(--sdp-text-suau);
   }
 }
 /* ═══ FI DEL BLOC catalegWorkspace ═══ */
@@ -15993,3 +16126,254 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 /* ═══ FI DEL BLOC ENQUADRAMENT NO DESTRUCTIU ═══ */
+
+/* ═══ BLOC ONADA R17 · WORKSPACES MULTI-LLIBRE, ARBRES 2020 (CIEF v232), RENTONAR I TESTERS ═══ */
+@layer components {
+  .sdp-workspace-llibres {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .sdp-workspace-llibres__barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-block-end: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-superficie);
+  }
+
+  .sdp-workspace-llibres__tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: 0;
+    background: var(--sdp-fons-app);
+    color: var(--sdp-text-titol);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color var(--sdp-t), border-color var(--sdp-t), color var(--sdp-t);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-workspace-llibres__tab:hover {
+      background: var(--sdp-fons-subtil);
+    }
+  }
+
+  .sdp-workspace-llibres__tab[aria-selected="true"] {
+    background: var(--sdp-accio-control);
+    border-color: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+
+  /* L'emoji de la pestanya, a la mida del de les pestanyes de la recepta
+     (7/16 de la fitxa, 42 de 96px) i no als 66px de .sdp-fitxa-emoji-xl. */
+  .sdp-workspace-llibres__tab .sdp-fitxa-emoji-xl {
+    font-size: calc(var(--sdp-fitxa-mida) * 7 / 16);
+    line-height: 1;
+  }
+
+  .sdp-workspace-llibres__cos {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* ── P0-86 · Fitxa Viva i Longitudinal CIEF v232 dels 19 Arbres Singulars ── */
+  .sdp-arbre-fitxa {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-5);
+    min-width: 0;
+  }
+
+  .sdp-arbre-fitxa__accions,
+  .sdp-arbre-fitxa__pestanyes,
+  .sdp-arbre-revisions__intervals,
+  .sdp-calendari-agricola__filtres,
+  .sdp-calendari-agricola__mesos,
+  .sdp-rentonar-doc__pestanyes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-arbre-cotes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--sdp-space-3);
+    min-width: 0;
+  }
+
+  .sdp-arbre-cota {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    background: var(--sdp-fons-app);
+    min-width: 0;
+  }
+
+  .sdp-arbre-cota__etiqueta {
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-arbre-cota__valor {
+    font-size: var(--sdp-text-h5);
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--sdp-text-titol);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-arbre-comparador {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: var(--sdp-space-4);
+    min-width: 0;
+  }
+
+  .sdp-arbre-comparador__marc {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    background: var(--sdp-fons-targeta);
+    min-width: 0;
+  }
+
+  .sdp-arbre-comparador__imatge {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--sdp-fons-subtil);
+  }
+
+  .sdp-arbre-comparador__peu {
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-arbre-revisions,
+  .sdp-arbre-cief,
+  .sdp-arbre-ordenanca,
+  .sdp-rentonar-doc,
+  .sdp-calendari-agricola {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    background: var(--sdp-fons-targeta);
+    min-width: 0;
+  }
+
+  .sdp-arbre-delta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: var(--sdp-space-3);
+    min-width: 0;
+  }
+
+  .sdp-arbre-delta__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-3);
+    border-inline-start: 3px solid var(--sdp-accio);
+    background: var(--sdp-fons-app);
+    min-width: 0;
+  }
+
+  .sdp-calendari-agricola__llista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    min-width: 0;
+  }
+
+  .sdp-calendari-agricola__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    background: var(--sdp-fons-app);
+    min-width: 0;
+  }
+
+  .sdp-calendari-agricola__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+
+  /* WCAG 1.4.11 · En contrast forçat el fons i les ombres desapareixen: la
+     rajola, la pestanya i el quadrat de la recepta porten una vora del sistema,
+     i el triat, la de Highlight. Vora i no outline: l'outline és de l'anell de
+     focus i no s'ha de trepitjar. */
+  @media (forced-colors: active) {
+    .sdp-rajola,
+    .sdp-workspace-llibres__tab,
+    .sdp-recepta__quadrats .sp-card-calendar-badge {
+      border: 2px solid ButtonText;
+    }
+    .sdp-rajola[aria-pressed="true"],
+    .sdp-graella-articles__element--en-colleccio > .sdp-rajola,
+    .sdp-workspace-llibres__tab[aria-selected="true"],
+    .sdp-recepta__quadrats .sp-card-calendar-badge[aria-pressed="true"],
+    .sdp-recepta__quadrats .sp-card-calendar-badge[aria-selected="true"] {
+      border-color: Highlight;
+    }
+  }
+
+  /* R18 P0-116 · Tres vistes de les mateixes dades (canònica, gran, rajola 2×2);
+     0 px a sang entre columnes i filet interior bidireccional d'alt contrast. */
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__canonica,
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__gran { display: flex; flex-direction: column; gap: 0; }
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+  .sdp-cataleg-workspace .sdp-gestor-fitxa,
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__gran .sp-card,
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__rajola .sp-card {
+    margin: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+  .sdp-cataleg-workspace .sdp-gestor-fitxa__media,
+  .sdp-cataleg-workspace .sp-card-media-container,
+  .sdp-cataleg-workspace .sp-card-calendar-badge { position: relative; }
+  .sdp-cataleg-workspace .sdp-gestor-fitxa[aria-current="true"] .sdp-gestor-fitxa__media::after,
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__actual .sp-card-media-container::after,
+  .sdp-cataleg-workspace .sp-card[aria-current="true"] .sp-card-media-container::after,
+  .sdp-cataleg-workspace .sdp-cataleg-workspace__actual .sp-card-calendar-badge::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    box-shadow: var(--sdp-cataleg-filet);
+  }
+}
+/* ═══ FI DEL BLOC ONADA R17 ═══ */

@@ -67,7 +67,7 @@ test.each([
   const titolDeLaRecepta = () => screen.queryByRole('heading', { level: 1, name: recepta.titol });
   if (!enllacada) {
     expect(titolDeLaRecepta()).toBeNull();
-    fireEvent.click(container.querySelector(`#app-grid-list .sp-card-link-overlay[data-element="${recepta.slug}"]`));
+    fireEvent.click(container.querySelector(`#app-grid-list .sdp-gestor-fitxa[data-element="${recepta.slug}"]`));
     expect(screen.getByTestId('ubicacio').textContent).toBe('/page/receptes');
   }
   await marcs();

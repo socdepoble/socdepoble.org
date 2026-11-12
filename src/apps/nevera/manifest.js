@@ -3,9 +3,12 @@
  *
  * Contracte de la plataforma (src/apps/plataforma/manifestApp.js):
  *   · id 'nevera' (la ruta és /app/nevera, no es declara);
- *   · `carrega` darrere del literal de compilació EXACTE de baix: sense
- *     VITE_SDP_APP_NEVERA=1 al build de producció, Vite trau AppNevera del
- *     paquet; en desenvolupament sempre hi és;
+ *   · P0-113 (ordre del Mestre, 261111): eina gratuïta oberta en producció
+ *     (entorn 'produccio', actiuPerDefecte true) i en proves (Beta oberta);
+ *   · `carrega` darrere del literal de compilació EXACTE de baix: el tros
+ *     diferit d'AppNevera entra al build per defecte, i amb
+ *     VITE_SDP_APP_NEVERA=0 Vite el trau del paquet (l'app continua sent
+ *     desendollable, a més de les capes de l'amfitrió i de la persona);
  *   · el component és l'export per defecte d'AppNevera.jsx.
  * Gratuïta i sense dades personals: les llistes viuen només en este
  * dispositiu (magatzem local) i no hi ha cap crida de xarxa.
@@ -30,8 +33,8 @@ export default {
   permisos: { veure: 'public' },
   capacitats: [],
   nivell: 'gratuit',
-  actiuPerDefecte: false,
-  entorn: 'desenvolupament',
+  actiuPerDefecte: true,
+  entorn: 'produccio',
   dadesPersonals: false,
-  carrega: import.meta.env.DEV || import.meta.env.VITE_SDP_APP_NEVERA === '1' ? () => import('./AppNevera.jsx') : null
+  carrega: import.meta.env.VITE_SDP_APP_NEVERA !== '0' ? () => import('./AppNevera.jsx') : null
 };

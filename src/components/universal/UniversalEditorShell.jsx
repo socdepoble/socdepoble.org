@@ -544,6 +544,8 @@ export function UniversalEditorShell({
      Capçalera → identitat (l'avatar) → Logotip → àmbit → classificació → tancar. */
   posicioEdicioAvancada = 'despres-autoria',
   previsualitzacioTargeta = null,
+  visibilitatEnLinia = null,
+  popupVisibilitat = 'dialog',
   /* P0-58 (IDEA-189) · Opcional, i sense ella el DOM i el comportament de
      sempre (el Perfil i el catàleg només reben l'enganxat pla d'una línia):
      `onEnganxaDocument({ html, text })`, que només rep el títol (com a
@@ -705,6 +707,7 @@ export function UniversalEditorShell({
     onObriVisibilitat,
     etiquetaVisibilitat,
     visibilitatOberta,
+    popupVisibilitat,
     publishDate,
     onPublishDateChange,
     avisDataPublicacio,
@@ -829,7 +832,11 @@ export function UniversalEditorShell({
             /* P1-58 · Amb 'despres-autoria', el desplegable va a la ranura de
                PageFrame (davall de la barra taronja); després de ...rest: és
                de la closca. */
-            {...(desplegableDalt ? { despresAutoria: desplegable } : null)}
+            {...(visibilitatEnLinia || desplegableDalt ? {
+              despresAutoria: visibilitatEnLinia && desplegableDalt
+                ? <>{visibilitatEnLinia}{desplegable}</>
+                : (visibilitatEnLinia || desplegable)
+            } : null)}
             /* T36 · després de ...rest: cap adaptador (Notes, Perfil) ho desfà.
                T7 · Cap avís en línia davall de la barra blava (tampoc d'un
                adaptador): el missatge és el ràpid de cada botó.
@@ -1145,6 +1152,7 @@ function useEditorShell({
   onObriVisibilitat = null,
   etiquetaVisibilitat = '',
   visibilitatOberta = false,
+  popupVisibilitat = 'dialog',
   publishDate = null,
   onPublishDateChange = null,
   avisDataPublicacio = null,
@@ -1400,7 +1408,7 @@ function useEditorShell({
               visibilitat, el mateix que obri PUBLICAR (barres/BotoVisibilitat). */}
           {showStatusToggle && onObriVisibilitat ? (
             <BotoVisibilitat publicat={Boolean(isPublished)} icona={statusIcon} etiqueta={etiquetaVisibilitat}
-              obert={visibilitatOberta} onObri={onObriVisibilitat} />
+              obert={visibilitatOberta} popup={popupVisibilitat} onObri={onObriVisibilitat} />
           ) : null}
           {/* T40 (ordre del Mestre, 260928) · La data clicable obri el calendari.
               La identitat ja no viu ací: és a la barra negra (TopBar).

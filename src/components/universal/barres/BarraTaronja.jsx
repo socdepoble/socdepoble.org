@@ -69,6 +69,8 @@ import { isSafeAsset, rutaDAutorSegura } from '../UniversalUtils';
 import { EmoticonaBarra } from '../EmoticonaBarra.jsx';
 import { emoticonaDeBarra } from '../../../utils/emoji.js';
 import { TEXTOS_BARRA } from './textosBarres.js';
+import { AvatarCompostPublicadors } from './AvatarCompostPublicadors.jsx';
+import { resolPublicadorsRegistrats, resumPoblesPublicadors } from './publicadorsBarraTaronja.js';
 
 /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4) · El que es
    demana al port: només una referència opaca, sense espais i amb l'esquema
@@ -78,6 +80,7 @@ const refDelPort = (src) => (esMitjaOpac(src) ? src.trim().replace(/^sdp-media:/
 
 export function BarraTaronja({
   authorName, authorLocation, authorAvatar, authorHref = null, LinkComponent = 'a',
+  publicadorsRegistrats = null,
   emoticona = '', onObriEmoticona = null,
   barActions = null,
   time, date, dateTime, onDateTime, etiquetaData,
@@ -86,12 +89,21 @@ export function BarraTaronja({
      .bar-actions i darrere del que ja hi havia. Null, el DOM de sempre. */
   accioModeracio = null,
 }) {
+  const publicadors = resolPublicadorsRegistrats(publicadorsRegistrats);
+  const esComposta = Array.isArray(publicadors) && publicadors.length >= 2;
+  const actorUnic = Array.isArray(publicadors) && publicadors.length === 1 ? publicadors[0] : null;
+
+  const nomEfectiu = actorUnic ? actorUnic.name : authorName;
+  const pobleEfectiu = actorUnic ? (actorUnic.town || authorLocation) : authorLocation;
+  const avatarCru = actorUnic ? actorUnic.avatarUrl : authorAvatar;
+  const hrefCru = actorUnic ? actorUnic.href : authorHref;
+
   /* El ganxo es crida sempre, el primer: sense referència opaca rep '' i no fa res. */
-  const avatarDelPort = useResolvedAsset(refDelPort(authorAvatar));
-  const fontAvatar = esMitjaOpac(authorAvatar) ? avatarDelPort : authorAvatar;
+  const avatarDelPort = useResolvedAsset(refDelPort(avatarCru));
+  const fontAvatar = esMitjaOpac(avatarCru) ? avatarDelPort : avatarCru;
   const resolt = typeof fontAvatar === 'string' && fontAvatar && !esMitjaOpac(fontAvatar) ? resolveAsset(fontAvatar) : null;
   const avatar = isSafeAsset(resolt) ? resolt : null;
-  const href = rutaDAutorSegura(authorHref);
+  const href = rutaDAutorSegura(hrefCru);
   const Autor = href ? (LinkComponent === 'a' ? 'a' : LinkComponent) : 'div';
   const propsAutor = href ? (LinkComponent === 'a' ? { href } : { to: href }) : {};
   /* Correcció de l'Onada 6 (QA visual, 375px: «Gent de la Torre» i «La
@@ -106,34 +118,81 @@ export function BarraTaronja({
   const t = useTraductorOpcional();
   const nomRegio = etiqueta === undefined ? tradueix(t, TEXTOS_BARRA.autoria) : etiqueta;
 
+  const EnllacIntern = LinkComponent === 'a' ? 'a' : LinkComponent;
+  const propsEnllac = (desti) => (LinkComponent === 'a' ? { href: desti } : { to: desti });
+  const poblesCompostos = esComposta ? resumPoblesPublicadors(publicadors, authorLocation) : [];
+  const etiquetaGrupCopub = esComposta ? tradueix(t, TEXTOS_BARRA.copublicadors) : '';
+  const etiquetaAvatarPrincipal = esComposta
+    ? tradueix(t, TEXTOS_BARRA.avatarCompost).replace('{nom}', publicadors[0].name)
+    : '';
+
   return (
-    <section className="bar-orange" aria-label={nomRegio} data-centre={centreBuit ? 'buit' : undefined}>
-      <Autor className={href ? 'sp-card-author sp-card-author-link' : 'sp-card-author'} {...propsAutor}>
-        {avatar ? (
-          <img
-            className="sp-card-avatar"
-            src={avatar}
-            alt=""
-            decoding="async"
-            referrerPolicy="no-referrer"
-            width="48"
-            height="48"
-            onError={(e) => {
-              e.currentTarget.classList.add('sp-card-avatar--amagat');
-              e.currentTarget.nextSibling?.classList.remove('sp-card-avatar--amagat');
-            }}
-          />
-        ) : null}
-        <div
-          className={['sp-card-avatar', 'sp-card-avatar--fallback', avatar && 'sp-card-avatar--amagat'].filter(Boolean).join(' ')}
-        >
-          <UserRound size={24} />
+    <section
+      className="bar-orange"
+      aria-label={nomRegio}
+      data-centre={centreBuit ? 'buit' : undefined}
+      data-copublicacio={esComposta ? 'composta' : undefined}
+    >
+      {esComposta ? (
+        <div className="sp-card-author sp-card-author--compost" data-publicadors-count={publicadors.length}>
+          <EnllacIntern
+            className="sdp-avatar-compost-link"
+            aria-label={etiquetaAvatarPrincipal}
+            {...propsEnllac(publicadors[0].href)}
+          >
+            <AvatarCompostPublicadors publicadors={publicadors} />
+          </EnllacIntern>
+          <div className="sp-card-author-info sp-card-author-info--compost">
+            <div className="sdp-copublicadors-llista" role="group" aria-label={etiquetaGrupCopub}>
+              {publicadors.map((actor, index) => (
+                <span key={actor.id || `${actor.href}-${index}`} className="sdp-copublicador-item">
+                  {index > 0 ? (
+                    <span className="sdp-copublicador-sep" aria-hidden="true">·</span>
+                  ) : null}
+                  <EnllacIntern
+                    className="sp-card-author-name sp-card-author-link sdp-copublicador-link"
+                    {...propsEnllac(actor.href)}
+                  >
+                    {actor.name}
+                  </EnllacIntern>
+                </span>
+              ))}
+            </div>
+            {poblesCompostos.length > 0 ? (
+              <div className="sp-card-author-location sdp-copublicadors-pobles">
+                {poblesCompostos.join(' · ')}
+              </div>
+            ) : null}
+          </div>
         </div>
-        <div className="sp-card-author-info">
-          <div className="sp-card-author-name">{authorName}</div>
-          <div className="sp-card-author-location">{authorLocation}</div>
-        </div>
-      </Autor>
+      ) : (
+        <Autor className={href ? 'sp-card-author sp-card-author-link' : 'sp-card-author'} {...propsAutor}>
+          {avatar ? (
+            <img
+              className="sp-card-avatar"
+              src={avatar}
+              alt=""
+              decoding="async"
+              referrerPolicy="no-referrer"
+              width="48"
+              height="48"
+              onError={(e) => {
+                e.currentTarget.classList.add('sp-card-avatar--amagat');
+                e.currentTarget.nextSibling?.classList.remove('sp-card-avatar--amagat');
+              }}
+            />
+          ) : null}
+          <div
+            className={['sp-card-avatar', 'sp-card-avatar--fallback', avatar && 'sp-card-avatar--amagat'].filter(Boolean).join(' ')}
+          >
+            <UserRound size={24} />
+          </div>
+          <div className="sp-card-author-info">
+            <div className="sp-card-author-name">{nomEfectiu}</div>
+            <div className="sp-card-author-location">{pobleEfectiu}</div>
+          </div>
+        </Autor>
+      )}
       <EmoticonaBarra emoticona={emoticona} onObri={onObriEmoticona} />
       <div className="bar-actions">
         {barActions ? barActions : ((time || date || dateTime)

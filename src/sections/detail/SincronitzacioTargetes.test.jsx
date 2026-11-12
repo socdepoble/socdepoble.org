@@ -15,7 +15,10 @@ import StarterKit from '@tiptap/starter-kit';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn(), t: (_, alternativa) => alternativa }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+vi.mock('../../app/contexts/UIContext', () => {
+  const useUIActions = () => ({ t: mocks.t });
+  return { useUIActions, useUIActionsOpcional: useUIActions, useUIStateOpcional: () => null };
+});
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 /* El patró de detailRichText.test.jsx: Link com un <a> que conserva `to`. */
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => mocks.navigate, Link: 'a' }));

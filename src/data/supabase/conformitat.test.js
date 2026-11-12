@@ -403,6 +403,9 @@ function fetchDelServidor(entrada, opcions = {}) {
     '/auth/v1/factors': () => resposta({ code: 422, error_code: 'mfa_totp_enroll_not_enabled', msg: 'MFA enroll is disabled for TOTP' }, { status: 422 }),
     /* Onada 11 · Les RPC del Tauler darrere de private.es_superadmin() (aal2):
        la sessió de conformitat no té el segon factor i PostgREST torna el 42501. */
+    '/rest/v1/rpc/llig_publicadors_registrats': () => resposta({
+      recursTipus: cos.p_tipus, recursId: cos.p_recurs_id, versio: 0, publicadorsRegistrats: []
+    }),
     '/rest/v1/rpc/admin_desa_contingut': () => resposta({ code: '42501', details: null, hint: null, message: 'SDP-ADMIN-003: cal confirmar el segon factor (aal2).' }, { status: 403 }),
     '/rest/v1/rpc/admin_historial_contingut': () => resposta({ code: '42501', details: null, hint: null, message: 'SDP-ADMIN-003: cal confirmar el segon factor (aal2).' }, { status: 403 }),
     '/rest/v1/app_content': () => {
@@ -520,8 +523,12 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
   test('el doble ha vist el que esperava: rutes conegudes, la sessió i el canal tancat', () => {
     expect(estat.rutesDesconegudes).toEqual([]);
     expect([...estat.autoritzacions]).toEqual([`Bearer ${JWT}`]);
-    /* T2 · D04/D10 · Només la lectura de les dades obertes va amb la clau pública, encara que hi haja sessió. */
-    expect(estat.anonimes).toEqual([`GET /rest/v1/app_content?key=in.(feedPosts,events)&tenant_id=eq.${POBLE}`]);
+    /* Les dades obertes ixen amb la clau pública fins i tot amb sessió. La
+       co-publicació admet una consulta pública quan la sessió ja és tancada. */
+    expect(estat.anonimes).toEqual([
+      `GET /rest/v1/app_content?key=in.(feedPosts,events)&tenant_id=eq.${POBLE}`,
+      'POST /rest/v1/rpc/llig_publicadors_registrats?key=null&tenant_id=null'
+    ]);
     expect(estat.canalsTancats).toEqual([`xat:f:${FIL}`]);
     // L'enviament idempotent: un sol missatge nou, amb l'id de la persona.
     expect(estat.missatges.filter((m) => m.id === ctxRemot.idMissatge)).toHaveLength(1);

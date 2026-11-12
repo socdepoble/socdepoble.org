@@ -41,23 +41,65 @@ test('peça C · el poble i el slug van codificats: res no s’escapa de la cons
   ]);
 });
 
-/* Esmena de la revisió adversarial de la peça C · Amb una clau en forma
-   d'UUID, l'id continua sense límit (és únic a tot el servidor), però la
-   meitat del slug sí que es limita al poble: el check de organizations admet
-   un slug amb forma d'UUID en minúscules, i `limit=1` podia tornar l'homònim
-   d'un altre poble. */
-test('peça C · la cerca per id no es limita al poble; la meitat del slug, sí', async () => {
-  const id = '44444444-4d4d-4000-8000-000000000000';
-  await loadPerfilPublic(id, { tenantId: POBLE });
-  expect(rutesDelDirectori()).toEqual([
-    `/rest/v1/organization_directory?select=*&or=(id.eq.${id},and(slug.eq.${id},tenant_id.eq.${POBLE}))&limit=1`
-  ]);
+const ID_PERFIL = '44444444-4d4d-4000-8000-000000000000';
+const ID_SUPLANTADOR = '44444444-4d4d-4000-8000-000000000001';
+const ORG_SLUG_UUID = { id: ID_SUPLANTADOR, name: 'Entitat homònima de prova', slug: ID_PERFIL, kind: 'company' };
+const RUTA_ID = `/rest/v1/organization_directory?select=*&id=eq.${ID_PERFIL}&limit=1`;
+const RUTA_SLUG = `/rest/v1/organization_directory?select=*&slug=eq.${ID_PERFIL}`;
+
+test('un slug amb forma d’UUID té reserva local al poble després de l’ID exacte', async () => {
+  m.request.mockImplementation(async url => url.includes('&slug=') ? [ORG_SLUG_UUID] : []);
+  expect(await loadPerfilPublic(ID_PERFIL, { tenantId: POBLE })).toMatchObject({ id: ID_SUPLANTADOR, tipus: 'entitat' });
+  expect(rutesDelDirectori()).toEqual([RUTA_ID, `${RUTA_SLUG}&tenant_id=eq.${POBLE}&limit=1`]);
 });
 
-test('peça C · clau en forma d’UUID sense poble a la configuració: la cerca doble d’abans', async () => {
-  const id = '44444444-4d4d-4000-8000-000000000000';
-  await loadPerfilPublic(id);
-  expect(rutesDelDirectori()).toEqual([`/rest/v1/organization_directory?select=*&or=(id.eq.${id},slug.eq.${id})&limit=1`]);
+test('amb UUID sense poble, la reserva de slug manté la forma d’abans', async () => {
+  await loadPerfilPublic(ID_PERFIL);
+  expect(rutesDelDirectori()).toEqual([RUTA_ID, `${RUTA_SLUG}&limit=1`]);
+});
+
+test('la fitxa personal exacta té prioritat sobre el slug d’una organització', async () => {
+  m.user = { id: '44444444-4d4d-4000-8000-000000000002' };
+  m.request.mockImplementation(async url => url.includes('&slug=') ? [ORG_SLUG_UUID] : []);
+  m.rpc.mockResolvedValue([{ id: ID_PERFIL, full_name: 'Persona acreditada', is_public: true }]);
+  expect(await loadPerfilPublic(ID_PERFIL, { tenantId: POBLE })).toMatchObject({ id: ID_PERFIL, tipus: 'persona' });
+  expect(rutesDelDirectori()).toEqual([RUTA_ID]);
+});
+
+test('l’organització per UUID exacte té prioritat sobre el slug homònim d’un altre poble', async () => {
+  m.request.mockImplementation(async url => url.includes('&slug=') ? [ORG_SLUG_UUID]
+    : [{ id: ID_PERFIL, name: 'Entitat acreditada', slug: 'altra', kind: 'group' }]);
+  expect(await loadPerfilPublic(ID_PERFIL, { tenantId: POBLE })).toMatchObject({ id: ID_PERFIL, tipus: 'grup' });
+  expect(rutesDelDirectori()).toEqual([RUTA_ID]);
+});
+
+test('un enllaç acreditat de persona sense sessió o amb la visibilitat revocada no resol el slug homònim', async () => {
+  m.request.mockResolvedValue([ORG_SLUG_UUID]);
+  const config = { tenantId: POBLE, tipusIdAcreditat: 'persona' };
+  expect(await loadPerfilPublic(ID_PERFIL, config)).toBeNull();
+  expect(m.request).not.toHaveBeenCalled();
+  expect(m.rpc).not.toHaveBeenCalled();
+  m.user = { id: '44444444-4d4d-4000-8000-000000000002' };
+  m.rpc.mockResolvedValue([{ id: ID_PERFIL, full_name: 'Persona privada', is_public: false }]);
+  expect(await loadPerfilPublic(ID_PERFIL, config)).toBeNull();
+  expect(m.request).not.toHaveBeenCalled();
+  m.rpc.mockResolvedValue([{ id: ID_PERFIL, full_name: 'Persona acreditada', is_public: true }]);
+  expect(await loadPerfilPublic(ID_PERFIL, config)).toMatchObject({ id: ID_PERFIL, tipus: 'persona' });
+});
+
+test('un enllaç acreditat d’organització no canvia a un slug o perfil personal homònim', async () => {
+  m.user = { id: ID_PERFIL };
+  m.request.mockImplementation(async url => url.includes('&slug=') ? [ORG_SLUG_UUID] : []);
+  m.rpc.mockResolvedValue([{ id: ID_PERFIL, full_name: 'Persona homònima', is_public: true }]);
+  expect(await loadPerfilPublic(ID_PERFIL, { tenantId: POBLE, tipusIdAcreditat: 'organitzacio' })).toBeNull();
+  expect(rutesDelDirectori()).toEqual([RUTA_ID]);
+  expect(m.rpc).not.toHaveBeenCalled();
+});
+
+test('un error de la consulta exacta mai activa la reserva de slug', async () => {
+  m.request.mockRejectedValueOnce(Object.assign(new Error('Servidor ocupat'), { status: 503 }));
+  expect(await loadPerfilPublic(ID_PERFIL, { tenantId: POBLE })).toBeNull();
+  expect(rutesDelDirectori()).toEqual([RUTA_ID]);
 });
 
 /* T51 · Cap document sense data: la fitxa pública porta la creació i l'última

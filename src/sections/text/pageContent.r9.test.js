@@ -38,6 +38,7 @@
  *    COMMIT R10 i ja no el COMMIT R1–R8, i el pilot socdepoble.cat va amb la lectura HTTP datada
  *    del 7-11 (el seu fragment de pageContent encara no portava el balanç R9–R10).
  */
+import { ARBRES_MONUMENTALS_2020 } from '../../data/patrimoni/arbresMonumentals2020.js';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -131,7 +132,7 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     for (const clau of PAGINES) {
       const body = doc(pagina(clau, llengua).html).body;
       const titols = [...body.querySelectorAll('h3')].map((h) => h.textContent);
-      const inici = clau === 'fediversity' && llengua !== 'ca' ? 1 : 0; // la fediversity traduïda obri amb el bloc NLnet
+      const inici = clau === 'fediversity' ? 1 : 0; // la fediversity obri amb el bloc NLnet en les 5 llengües
       expect(titols.slice(inici, inici + 3), `${clau} ${llengua}`).toEqual(BALANC[llengua]);
       const produccio = seccio(body, BALANC[llengua][0]);
       const externs = produccio.flatMap((n) => [...n.querySelectorAll('a[href^="https://"]')].map((a) => a.getAttribute('href')));
@@ -179,8 +180,11 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // «gentdelatorre.net acull l'aplicació amb el paquet propi del connector»: el connector servix el seu bundle.
     // La versió que hi ha instal·lada no consta enlloc del disc: el text ho diu («este balanç no l'acredita»).
     expect(llegix('wordpress-plugin/includes/marcatge.php')).toContain('plugins_url( SOCDEPOBLE_ENXUFE_BUNDLE');
-    // «la fitxa de l'Arbre Genealògic»: encara no obri cap app.
-    expect(pluginPerId('genealogia').obrir).toBeNull();
+    // «la fitxa de l'Arbre Genealògic»: la fitxa (la seua pàgina /plugin/genealogia) existix al registre.
+    // R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · Expectativa actualitzada a propòsit: la fitxa ja obri
+    // la seua app (/app/genealogia). El balanç del 7 de novembre parla de la fitxa, que continua; no diu que no
+    // s'obriga. DEROGAT «encara no obri cap app» (obrir null).
+    expect(pluginPerId('genealogia')).toMatchObject({ id: 'genealogia', titol: 'Arbre Genealògic', obrir: '/app/genealogia' });
     // Les dues pàgines de patrimoni que el balanç anomena existixen.
     expect(Object.hasOwn(PAGE_COPY, 'anatomia-rural') && Object.hasOwn(PAGE_COPY, 'herbari')).toBe(true);
   });
@@ -191,10 +195,11 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
       expect(seccio(body, BALANC.ca[1]).map((n) => n.textContent).join(' ')).not.toContain('segellats en còpia aïllada');
     }
     const versions = doc(PAGE_COPY.versions.html).body;
-    // P0-62 (08-11-2026), encàrrec R13+R14 (09-11-2026), R15b (PRODNM-08) i R16b · La fita R16 obri /versions, la fita
-    // R15 és la segona, la crònica de les Onades R13 i R14 la tercera, la fita de l'App Store la quarta i l'entrada del
-    // 5 de novembre, la cinquena, intacta.
-    expect([...versions.querySelectorAll('h3')].slice(0, 5).map((h3) => h3.textContent)).toEqual([
+    // R20 i R19 s'afigen davant de les sis entrades històriques: cap s'esborra ni es reescriu.
+    expect([...versions.querySelectorAll('h3')].slice(0, 8).map((h3) => h3.textContent)).toEqual([
+      '11 de novembre de 2026, nit · Onada R20 · Publicació en línia de Notes cap al Mur, fotografia òptica verificada i poliment responsive del Panell',
+      '11 de novembre de 2026, vesprada · Onada R19 · Co-publicació entre entitats a la barra taronja, traspàs en línia i revisió de les làmines fotobotàniques',
+      '11 de novembre de 2026 · Onades R17 i R18 · Nucli verge, biblioteca multipoble d’arbres, L’Avisador i l’autoria dels catàlegs',
       '10 de novembre de 2026 · Onada R16 · La versió 1.1.12, el Panell de Control en tres espais i La IAIA Sabuda',
       '9 de novembre de 2026 · Onada R15 · El Workspace dels catàlegs i la proposta d’al·lèrgens',
       '9 de novembre de 2026 · Onades R13 i R14 · El receptari «Què dinem?», la targeta d’usuaris i dispositius i el Segon Brain',
@@ -284,7 +289,7 @@ const CONSUM = {
 describe('Onada R9 · /page/herbari en les 5 llengües', () => {
   test('les dades que diu el text: 117 fitxes del terme', () => {
     expect(ESPECIES_HERBARI_LA_TORRE_117).toHaveLength(117);
-    expect(ESPECIES_HERBARI_LA_TORRE_117.every((e) => e.localitzacionsCanaleta.length > 0)).toBe(true);
+    expect(ESPECIES_HERBARI_LA_TORRE_117.every((e) => e.localitzacionsHerbari.length > 0)).toBe(true);
     expect(new Set(ESPECIES_HERBARI_LA_TORRE_117.map((e) => e.font.document))).toEqual(new Set(['Herbari de La Torre de les Maçanes']));
   });
 
@@ -484,8 +489,10 @@ const PROVES = {
   eu: '33.000 proba automatizatu baino gehiagorekin (Vitest, 2026ko azaroaren 6a)',
   gl: 'máis de 33.000 probas automatizadas (Vitest, 6-11-2026)'
 };
-/* La font: l'auditoria interna del Node 0 del 6-11-2026 (Ollama a la xarxa local, quatre models carregats) i l'acta
-   261106_0105 (OpenCode, també amb NVIDIA NIM). Cap font no cita Gemma ni cap adreça 127.0.0.1. */
+/* El balanç datat de R9/R10 es conserva en les proves anteriors. El resum de
+   taller de R19 descriu huit escoles, inclosos deepseek-r1:14b i gemma3:12b;
+   no s'ha de fixar aquell cens antic de quatre models sobre el resum vigent.
+   Els noms no acrediten la validació òptica de totes les làmines. */
 const ONADA = {
   ca: 'cada onada es comprova amb més de 33.000 proves automatitzades',
   es: 'cada oleada se comprueba con más de 33.000 pruebas automatizadas',
@@ -494,11 +501,11 @@ const ONADA = {
   gl: 'cada vaga compróbase con máis de 33.000 probas automatizadas'
 };
 const NO_CONNECTA = {
-  ca: 'el codi de l’aplicació web no s’hi connecta',
-  es: 'el código de la aplicación web no se conecta a él',
+  ca: 'el codi web no s’hi connecta',
+  es: 'el código web no se conecta a él',
   en: 'the web application code does not connect to it',
   eu: 'web aplikazioaren kodea ez da hara konektatzen',
-  gl: 'o código da aplicación web non se conecta a el'
+  gl: 'o código web non se conecta a el'
 };
 const CONSUM_ELECTRIC = {
   ca: 'El consum elèctric del Node 0 encara no s’ha mesurat.',
@@ -519,12 +526,19 @@ const ATLES = {
 describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 diuen el que diu la font', () => {
   test.each(LLENGUES)('%s · els models, el cens de portes, el consum i l’Atles', (llengua) => {
     for (const clau of PAGINES) {
-      const text = doc(pagina(clau, llengua).html).body.textContent;
-      expect(text).not.toMatch(/Gemma|127\.0\.0\.1|11434/);
+      const body = doc(pagina(clau, llengua).html).body;
+      const text = body.textContent;
+      expect(text).not.toMatch(/127\.0\.0\.1|11434/);
       expect(text).not.toMatch(/sense que cap conversa dels veïns isca|sin sacar datos del municipio|without data leaving the room|datuak herritik atera gabe|sen sacar datos do municipio/);
       expect(text).not.toMatch(/dins del sistema i del Node 0|dentro de la aplicación y del Node 0|inside the web app and Node 0|aplikazioaren eta Node 0 zerbitzariaren barruan|dentro da aplicación e do Node 0/);
-      for (const model of ['Ollama', 'Qwen 2.5 Coder 14B', 'Qwen 3 8B', 'Nemotron Mini', 'iaia-maria', 'OpenCode', 'NVIDIA NIM']) expect(text, `${clau} ${llengua} ${model}`).toContain(model);
-      expect(text, `${clau} ${llengua}`).toContain(NO_CONNECTA[llengua]);
+      const capsModels = [...body.querySelectorAll('h4')].filter(h => h.textContent.includes('Ollama'));
+      expect(capsModels, `${clau} ${llengua}: un resum de models de taller`).toHaveLength(1);
+      const resumModels = capsModels[0].nextElementSibling;
+      expect(resumModels?.tagName).toBe('P');
+      for (const model of ['Ollama', 'Qwen 2.5 Coder 14B', 'deepseek-r1:14b', 'gemma3:12b', 'iaia-maria', 'OpenCode', 'Hermes Agent']) {
+        expect(resumModels.textContent, `${clau} ${llengua} ${model}`).toContain(model);
+      }
+      expect(resumModels.textContent, `${clau} ${llengua}`).toContain(NO_CONNECTA[llengua]);
       expect(text).not.toMatch(/\b35 (?:portes|puertas|deterministic|ate|portas)\b|constitucional|constitutional|konstituzional/i);
       expect(text, `${clau} ${llengua}`).toContain(CENS[llengua]);
       expect(text, `${clau} ${llengua}`).toContain(PROVES[llengua]);
@@ -568,7 +582,8 @@ describe('Gauntlet R9 · G1-09 · gallec i anglés de les pàgines de patrimoni'
       expect(textDe(clau, 'gl'), clau).not.toContain('Canaleta');
     }
     expect(textDe('rutes-de-poble', 'gl')).toContain('Os 6 itinerarios de La Torre de les Maçanes');
-    expect(textDe('arbres-monumentals', 'gl')).toContain('As 19 árbores do catálogo de La Torre de les Maçanes');
+    expect(textDe('arbres-monumentals', 'gl')).toContain(`as ${ARBRES_MONUMENTALS_2020.length} árbores e conxuntos arbóreos da inspección de 2007, revisada en 2020`);
+    expect(textDe('arbres-monumentals', 'gl')).toContain('Sóc de Poble, Portal de Pobos Conectados');
     for (const clau of ['banc-de-llavors', 'arbres-monumentals']) {
       expect(textDe(clau, 'gl'), clau).toContain('as plantas do termo');
       expect(textDe(clau, 'gl'), clau).toContain('Herbario de La Torre');

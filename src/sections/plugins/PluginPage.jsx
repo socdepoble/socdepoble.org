@@ -103,6 +103,21 @@
  *   §1.E.4, core-llegibilitat-text §2). Ni codi ni CSS nous: l'HTML viu a
  *   presentacioPlugins.js i l'H3 global de base.css ja és el canònic.
  *
+ * R18 · T2 (P0-101; prompt 261111_0148) · Les etiquetes del bloc de l'H1 són
+ *   etiquetesAmbEstat(plugin, idioma): les dues del registre i, si l'eina és
+ *   en proves (`estat` 'proves'), la insígnia «En proves · Beta oberta» en la
+ *   llengua de la interfície, sense enllaç. Són les mateixes de la seua
+ *   targeta del Panell (ControlSection.jsx). Una eina estable pinta
+ *   exactament el que pintava.
+ *
+ * P0-113 (ordre del Mestre, 261111) · Les cinc eines amb app de la
+ *   plataforma (Gestoria, TPV del Bar, Rebost, Salut i Lector RSS) s'obrin en
+ *   producció i porten la insígnia: la pàgina pinta els seus «Obrir…».
+ *   EinaNoDisponible continua per als casos que encara tanquen una eina en
+ *   producció: la persona l'ha desactivada, l'amfitrió no la declara, el
+ *   build l'ha desendollada (VITE_SDP_APP_<ID>=0) o les dades de salut o
+ *   financeres en un document que no és nostre (amaDelDocument).
+ *
  * L'arquitectura de plugins sencera (injecció, cicle de vida, aïllament) és
  * de la pròxima onada (directriu 261003_2320): ací només hi ha la pàgina.
  */
@@ -124,7 +139,7 @@ import { useSEO } from '../../hooks/useSEO';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { CosDeLaPagina } from '../text/TextSection.jsx';
 import { presentacioDelPlugin } from './presentacioPlugins.js';
-import { appDelPlugin, clauPortadaDelPlugin, pluginPerId } from './registrePlugins.js';
+import { appDelPlugin, clauPortadaDelPlugin, etiquetesAmbEstat, pluginPerId } from './registrePlugins.js';
 import { portaDelPlugin, useDestiDelPlugin } from './useDestiDelPlugin.js';
 
 /* Les etiquetes de la portada plegable, traduïbles (el valencià és la reserva). */
@@ -151,14 +166,16 @@ export const TEXTOS_EINA = Object.freeze({
 /* El camí que li queda a la persona, segons el motiu de la plataforma
    (interruptors.js). Cap instal·lació: hui no n'hi ha cap mecanisme. Sense
    camí, res més que el motiu de l'avís: 'persona-apagada' (el camí és el
-   botó de baix) i les dades de salut o financeres (l'avís ja diu on s'obri). */
+   botó de baix) i les dades de salut o financeres (l'avís ja diu on s'obri).
+   P0-113 (ordre del Mestre, 261111: «TOT el sistema és 100% gratuït i
+   lliure») · Fora el motiu 'sense-dret' (una eina de pagament sense
+   contractar): cap eina es cobra, i la plataforma ja no el dona. */
 const CAMI_DEL_MOTIU = Object.freeze({
   'no-compilada': TEXTOS_EINA.camiPosar,
   'entorn-desenvolupament': TEXTOS_EINA.camiPosar,
   'amfitrio-no-la-declara': TEXTOS_EINA.camiDemanar,
   'apagada-per-defecte': TEXTOS_EINA.camiDemanar,
-  'sense-capacitat': TEXTOS_EINA.camiDemanar,
-  'sense-dret': TEXTOS_EINA.camiDemanar
+  'sense-capacitat': TEXTOS_EINA.camiDemanar
 });
 
 function EinaNoDisponible({ plugin, motiu, onReactivada }) {
@@ -204,7 +221,7 @@ function EinaNoDisponible({ plugin, motiu, onReactivada }) {
 }
 
 function PaginaDelPlugin({ plugin }) {
-  const { t } = useUIActions();
+  const { t, language } = useUIActions();
   const desti = useDestiDelPlugin(plugin);
   const accio = useRef(null);
   const reactivada = useRef(false);
@@ -240,7 +257,7 @@ function PaginaDelPlugin({ plugin }) {
       lead={plugin.entradilla}
       heroImage={plugin.imatge}
       heroAlt={plugin.imatgeAlt}
-      labels={plugin.etiquetes}
+      labels={etiquetesAmbEstat(plugin, language)}
       copyright={COPYRIGHT_SDP}
       /* Onada 10 (M4) · Només amb data: sense, cap prop (el DOM d'abans), i
          la barra no pinta cap pastilla. */

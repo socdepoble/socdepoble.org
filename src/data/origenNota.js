@@ -27,8 +27,7 @@
  *     (el domini, deduït sempre de la url, mai rebut), `titol` i `autorNom`.
  *
  * D4 (ordre del Mestre, 260930) · Una connexió pot recordar els DRETS de
- * l'original (`drets`, opcional, de 256 caràcters com a màxim, com la columna
- * copyright). Només es prenen de l'element original resolt (item.copyright),
+ * l'original (`drets`, opcional, amb el mateix límit que la columna copyright). Només es prenen de l'element original resolt (item.copyright),
  * mai de l'URL: en republicar la connexió, el Mur porta eixos drets i no els
  * de la nota. La columna notes.origen és jsonb: cap migració.
  *
@@ -40,6 +39,7 @@
  * Funció pura, sense React ni xarxa: la usen els dos adaptadors i la
  * interfície. Cap HTML: només text net i curt.
  */
+import { MAXIM_DRETS_DESATS, sanejaDrets } from './dretsAutor.js';
 import { netejaText } from '../utils/sanitize.js';
 
 export const TIPUS_ORIGEN = Object.freeze(['connexio', 'extern']);
@@ -49,7 +49,7 @@ const MAXIM = 300;
 /** Llargària màxima de cada camp de text de l'origen (el títol inclòs), en caràcters de veres. */
 export const MAXIM_CAMP_ORIGEN = MAXIM;
 /** D4 · Llargària màxima dels drets de l'original: la mateixa que la columna copyright. */
-export const MAXIM_DRETS = 256;
+export const MAXIM_DRETS = MAXIM_DRETS_DESATS;
 
 /* Amb la bandera u, un parell ben format és un sol punt de codi (astral): la
    classe només casa els surrogates orfes, que no són text. */
@@ -225,7 +225,7 @@ export function origenPublic(origen) {
 /** D4 · Els drets de l'original, nets i de MAXIM_DRETS caràcters com a màxim; '' si no n'hi ha. */
 export function netejaDrets(valor) {
   if (typeof valor !== 'string') return '';
-  return netejaCampOrigen(valor, MAXIM_DRETS);
+  return sanejaDrets(valor);
 }
 
 /** D4 · L'original porta els drets reservats (comencen per «©»): cal avisar abans de republicar-lo. */

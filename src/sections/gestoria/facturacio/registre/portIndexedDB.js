@@ -26,7 +26,7 @@
  */
 import { copiaCongelada, errorAmbCodi } from '../comu.js';
 import {
-  comprovaAfegit, comprovaEmpremta, comprovaIdEmisor, creaFila, exportaLlibre, instantania, perCadena, validaPort
+  comprovaAfegit, comprovaEmpremta, comprovaIdEmisor, comprovaSolapament, creaFila, exportaLlibre, instantania, perCadena, validaPort
 } from './port.js';
 import { clauFactura } from './validacio.js';
 
@@ -67,8 +67,26 @@ export function creaPortIndexedDB({
   const ambWebLocks = typeof locks?.request === 'function';
   const enFila = creaFila();
   let connexio = null;
+  let tancat = false;
+  const cancelacio = new AbortController();
+  const comprovaObert = () => {
+    if (tancat) throw errorAmbCodi('TANCAT', 'El llibre de factures està tancat.');
+  };
+  const ambBloqueig = async (fn) => {
+    comprovaObert();
+    try {
+      return await (ambWebLocks ? locks.request(`sdp-facturacio:${nom}`, { mode: 'exclusive', signal: cancelacio.signal }, () => {
+        comprovaObert();
+        return fn();
+      }) : fn());
+    } catch (error) {
+      comprovaObert();
+      throw error;
+    }
+  };
 
   const obri = () => {
+    comprovaObert();
     if (!connexio) {
       connexio = new Promise((resol, rebutja) => {
         const peticio = idb.open(nom, VERSIO_BD);
@@ -81,6 +99,11 @@ export function creaPortIndexedDB({
         };
         peticio.onsuccess = () => {
           const bd = peticio.result;
+          if (tancat) {
+            bd.close();
+            rebutja(errorAmbCodi('TANCAT', 'El llibre de factures està tancat.'));
+            return;
+          }
           bd.onversionchange = () => {
             bd.close();
             connexio = null;
@@ -101,6 +124,7 @@ export function creaPortIndexedDB({
      peticions. Resol quan la transacció es completa, no quan acaba una petició. */
   const opera = async (mode, accio) => {
     const bd = await obri();
+    comprovaObert();
     return new Promise((resol, rebutja) => {
       let tx;
       try {
@@ -122,8 +146,9 @@ export function creaPortIndexedDB({
          valor: es pren el de la petició (event.target), com el ConstraintError d'add(). */
       const falla = (event) => rebutja(errorPropi ?? event?.target?.error ?? tx.error ?? new Error('El llibre de factures no ha respost.'));
       tx.oncomplete = () => resol(resultat);
-      tx.onerror = falla;
-      tx.onabort = falla;
+      let errorPeticio = null;
+      tx.onerror = (event) => { errorPeticio ??= event?.target?.error; };
+      tx.onabort = (event) => falla(errorPeticio ? { target: { error: errorPeticio } } : event);
       try {
         accio(tx.objectStore(STORE), torna, avorta);
       } catch (error) {
@@ -153,6 +178,7 @@ export function creaPortIndexedDB({
     coordinacio: ambWebLocks ? 'web-locks' : 'pestanya',
 
     async afegix(registre) {
+      comprovaObert();
       /* La còpia que es verifica és la que es desa, encara que qui crida canvie el seu objecte durant el resum. */
       const propi = instantania(registre);
       comprovaIdEmisor(propi?.idEmisor);
@@ -167,12 +193,12 @@ export function creaPortIndexedDB({
               anulacio.onsuccess = () => {
                 try {
                   comprovaAfegit(propi, { ultim, alta: alta.result?.registre ?? null, anulacio: anulacio.result?.registre ?? null });
+                  store.add(fila);
+                  torna(true);
                 } catch (error) {
                   avorta(error);
                   return;
                 }
-                store.add(fila);
-                torna(true);
               };
             };
           });
@@ -184,6 +210,49 @@ export function creaPortIndexedDB({
         throw error;
       }
       return propi;
+    },
+
+    /** Afig el tram de còpia que falta, sencer i de només afegir. */
+    async restauraRegistres(registres) {
+      comprovaObert();
+      const perEmisor = new Map();
+      for (const propi of registres.map(instantania).sort(perCadena)) {
+        comprovaIdEmisor(propi?.idEmisor);
+        await comprovaEmpremta(propi, subtle);
+        if (!perEmisor.has(propi.idEmisor)) perEmisor.set(propi.idEmisor, []);
+        perEmisor.get(propi.idEmisor).push(propi);
+      }
+      if (perEmisor.size === 0) return { afegits: 0 };
+      const bolca = () => opera('readwrite', (store, torna, avorta) => {
+        const pendents = [];
+        let perLlegir = perEmisor.size;
+        for (const [idEmisor, cadena] of perEmisor) {
+          const peticio = store.index(PER_EMISOR).getAll(idEmisor);
+          peticio.onsuccess = () => {
+            try {
+              const actuals = peticio.result.map((fila) => fila.registre).sort(perCadena);
+              comprovaSolapament(idEmisor, actuals, cadena);
+              const perFactura = new Map(actuals.map((r) => [facturaDe(r.tipusRegistre, r), r]));
+              let ultim = actuals.at(-1) ?? null;
+              for (const registre of cadena.slice(actuals.length)) {
+                comprovaAfegit(registre, {
+                  ultim,
+                  alta: perFactura.get(facturaDe('alta', registre)) ?? null,
+                  anulacio: perFactura.get(facturaDe('anulacio', registre)) ?? null
+                });
+                perFactura.set(facturaDe(registre.tipusRegistre, registre), registre);
+                pendents.push(filaDe(registre));
+                ultim = registre;
+              }
+              if (--perLlegir === 0) {
+                for (const fila of pendents) store.add(fila);
+                torna({ afegits: pendents.length });
+              }
+            } catch (error) { avorta(error); }
+          };
+        }
+      });
+      return enFila(() => ambBloqueig(bolca));
     },
 
     async ultim(idEmisor) {
@@ -200,7 +269,7 @@ export function creaPortIndexedDB({
 
     /* Un sol escriptor entre pestanyes. No es pot niar: dins de fn, afegix() directe. */
     ambEscriptor(fn) {
-      return enFila(() => (ambWebLocks ? locks.request(`sdp-facturacio:${nom}`, { mode: 'exclusive' }, () => fn()) : fn()));
+      return enFila(() => ambBloqueig(fn));
     },
 
     /* Demana que el navegador no esborre el llibre quan li falte espai.
@@ -215,6 +284,8 @@ export function creaPortIndexedDB({
     },
 
     tanca() {
+      tancat = true;
+      cancelacio.abort();
       if (connexio) connexio.then((bd) => bd.close(), () => {});
       connexio = null;
     }

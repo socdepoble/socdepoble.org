@@ -28,9 +28,10 @@ import { createTranslator } from '../../config/i18n';
 
 const estat = vi.hoisted(() => ({ toast: vi.fn(), traductor: null, props: null, pageCopy: {} }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: estat.toast }) }));
-vi.mock('../../app/contexts/UIContext', () => ({
-  useUIActions: () => ({ t: (clau, reserva) => (estat.traductor ? estat.traductor(clau, reserva) : reserva) })
-}));
+vi.mock('../../app/contexts/UIContext', () => {
+  const useUIActions = () => ({ t: (clau, reserva) => (estat.traductor ? estat.traductor(clau, reserva) : reserva) });
+  return { useUIActions, useUIActionsOpcional: useUIActions, useUIStateOpcional: () => null };
+});
 vi.mock('../../app/contexts/CoreContentContext', () => ({
   useCoreContent: () => ({ status: 'ready', pages: [], pageCopy: estat.pageCopy })
 }));

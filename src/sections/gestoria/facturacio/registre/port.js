@@ -35,7 +35,7 @@ import { clauFactura, encadenamentDe, validaRegistre } from './validacio.js';
 
 export const METODES_PORT = Object.freeze(['afegix', 'ultim', 'llig', 'exporta']);
 /* Els únics mètodes que un adaptador pot portar a més dels quatre: cap toca dades. */
-export const METODES_OPCIONALS = Object.freeze(['ambEscriptor', 'demanaPersistencia', 'tanca']);
+export const METODES_OPCIONALS = Object.freeze(['ambEscriptor', 'restauraRegistres', 'demanaPersistencia', 'tanca']);
 /* Noms que un port de només afegir no pot tindre, ni com a funció ni com a cap altra cosa. */
 export const METODES_VETATS = Object.freeze([
   'actualitza', 'edita', 'modifica', 'substituix', 'reemplaca', 'esborra', 'elimina', 'buida', 'buidaTot',
@@ -176,7 +176,14 @@ export function exportaLlibre(registres) {
  * @param {string} text
  * @returns {ReadonlyArray<object>}
  */
+export const MAX_BYTES_COPIA_LLIBRE = 32 * 1024 * 1024;
+const MAX_REGISTRES_COPIA_LLIBRE = 100_000;
+
 export function llibreDesDeJson(text) {
+  if (typeof text !== 'string' || text.length > MAX_BYTES_COPIA_LLIBRE
+    || new TextEncoder().encode(text).byteLength > MAX_BYTES_COPIA_LLIBRE) {
+    throw errorAmbCodi('COPIA_INVALIDA', 'La còpia supera la mida màxima del llibre.');
+  }
   let llibre;
   try {
     llibre = JSON.parse(text);
@@ -185,6 +192,9 @@ export function llibreDesDeJson(text) {
   }
   if (llibre?.esquema !== ESQUEMA_LLIBRE || !Array.isArray(llibre.registres)) {
     throw errorAmbCodi('COPIA_INVALIDA', `La còpia no és un llibre de facturació (${ESQUEMA_LLIBRE}).`);
+  }
+  if (llibre.registres.length > MAX_REGISTRES_COPIA_LLIBRE) {
+    throw errorAmbCodi('COPIA_INVALIDA', 'La còpia porta massa registres.');
   }
   const errors = llibre.registres.flatMap((r, i) => validaRegistre(r).map((e) => `Registre ${i + 1}: ${e}`));
   if (errors.length) throw errorAmbCodi('COPIA_INVALIDA', `La còpia porta registres no vàlids: ${errors.slice(0, 5).join(' ')}`, errors);
@@ -307,6 +317,7 @@ export async function restauraCopia(port, text, { verifica } = {}) {
   const registres = llibreDesDeJson(text);
   const informe = await verifica(registres);
   if (!informe.valida) throw errorAmbCodi('COPIA_INVALIDA', 'La còpia no passa la verificació de la cadena: no es restaura.', informe.incidencies);
+  if (typeof port.restauraRegistres === 'function') return port.restauraRegistres(registres);
   const perEmisor = new Map();
   for (const r of registres) {
     if (!perEmisor.has(r.idEmisor)) perEmisor.set(r.idEmisor, []);

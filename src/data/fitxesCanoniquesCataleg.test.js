@@ -18,6 +18,15 @@ const fila = (font, id, extra = {}) => ({ id: '0f1e2d3c-4b5a-4968-8776-655443322
   projeccioCataleg: { v: 1, font, id, destins: ['mur'], audiencia: 'publica' }, ...extra });
 
 describe('les fonts canòniques', () => {
+  test('R18 · la referència WP mostra metadades canòniques i manté el cos fora de la fila', async () => {
+    const item = fila('importacio-wp', '619', { destinacio_workspace: 'mur' });
+    await carregaFitxesCanoniques('importacio-wp');
+    const canonical = ambTextCanonic(item, 'ca');
+    expect(canonical.title).toBe('Catàleg d’Arbres Emblemàtics i Monumentals de La Torre de les Maçanes');
+    expect(canonical.subtitle).toBe('socdepoble.net · WP #619');
+    expect(canonical.content).toBeUndefined();
+    expect(ambTextCanonic(fila('importacio-wp', '9999999999'), 'ca')).toBeNull();
+  });
   test('mentre la font no s’ha carregat, la referència no es pinta (mai el text de la fila)', () => {
     const item = fila('receptes', RECEPTES_QUE_DINEM[0].slug);
     if (!fitxesCanoniquesCarregades('receptes')) expect(ambTextCanonic(item, 'ca')).toBeNull();

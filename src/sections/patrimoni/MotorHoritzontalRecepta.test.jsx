@@ -3,10 +3,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext.jsx';
 import MotorHoritzontalRecepta from './MotorHoritzontalRecepta.jsx';
 import { ProveidorPlataforma } from '../../apps/plataforma/PlataformaContext.jsx';
-vi.mock('../../app/contexts/UIContext', async orig => ({ ...await orig(), useUIState: () => ({ externalConfig: {} }) }));
+import { CLAU_PREFERENCIES, _reiniciaPreferencies, desaAppApagada } from '../../apps/plataforma/preferenciesApps.js';
+import { delVal } from '../../config/storage.js';
+/* La configuració de l'amfitrió que veu useContextApps (externalConfig.apps): buida per defecte. */
+const amfitrio = vi.hoisted(() => ({ config: {} }));
+vi.mock('../../app/contexts/UIContext', async orig => ({ ...await orig(), useUIState: () => ({ externalConfig: amfitrio.config }) }));
 vi.mock('../../data/menjarIBeure/mercadona.js', () => ({ carregaMercadona: async () => ({ productes: [{ id: 'mer-farina', nom: 'Farina', marca: 'Prova', preuUnitari: 1.5, preuUnitariCentims: 150, unitatPreuUnitari: 'kg' }] }) }));
 vi.mock('../../data/menjarIBeure/horitzontal.js', async () => ({ ...await vi.importActual('../../data/menjarIBeure/horitzontal.js'), carregaConnexionsCulturals: async () => ({ llavors: [], plantes: [] }) }));
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  amfitrio.config = {};
+  delVal(CLAU_PREFERENCIES); _reiniciaPreferencies();
+});
 function Ubicacio() { const { state } = useLocation(); return <div data-testid="draft">{JSON.stringify(state)}</div>; }
 const munta = (ingredients = ['100 g de farina'], entorn) => render(<MemoryRouter rutaInicial="/receptes/prova"><ProveidorPlataforma entorn={entorn}><MotorHoritzontalRecepta recepta={{ id: 'prova', slug: 'prova', ingredients }} /><Ubicacio /></ProveidorPlataforma></MemoryRouter>);
 const confirmaRacions = () => {
@@ -57,8 +65,26 @@ describe('Real Pedra Seca controls and recipe flow', () => {
 });
 
 
-it('production default apps block transfer and Bar CTA while retaining real calculation', async () => {
-  munta(['100 g de farina'], { produccio: true, teDret: () => true, teCapacitat: () => true });
+/* P0-113 (ordre del Mestre, 261111) · La Nevera i el Bar són oberts en producció per defecte: el registre real
+   del document, amb els manifests de veres (entorn 'produccio', actiuPerDefecte true). */
+it('production default apps allow the Rebost transfer and the Bar CTA, with real calculation', async () => {
+  const { container } = munta(['100 g de farina'], { produccio: true, teCapacitat: () => true });
+  await screen.findByRole('option', { name: /Farina · Prova/ }); confirmaRacions();
+  fireEvent.change(screen.getByLabelText('Producte per a 100 g de farina'), { target: { value: 'mer-farina' } });
+  fireEvent.change(screen.getByLabelText('Minva en percentatge de 100 g de farina'), { target: { value: '0' } });
+  expect(screen.getByRole('status').textContent).toContain('Cost total: 0,15 €');
+  expect(screen.getByRole('link', { name: 'Obri els escandalls d’El Bar' }).getAttribute('href')).toBe('/app/bar/escandalls');
+  expect(container.textContent).not.toMatch(/no està disponible/);
+  const compra = screen.getByRole('button', { name: 'Prepara la compra al Rebost' });
+  expect(compra.disabled).toBe(false); fireEvent.click(compra);
+  expect(JSON.parse(screen.getByTestId('draft').textContent).trasllatRecepta).toMatchObject({ racionsBase: 4, racions: 4 });
+});
+
+/* La garantia es conserva: una app apagada (per la persona o per l'amfitrió, les capes reals d'interruptors.js)
+   bloqueja el trasllat i el CTA, i la pàgina ho diu amb el motiu, sense perdre el càlcul. */
+it('production with the apps switched off by the person blocks transfer and Bar CTA and says why', async () => {
+  desaAppApagada('nevera', true); desaAppApagada('bar', true);
+  munta(['100 g de farina'], { produccio: true, teCapacitat: () => true });
   await screen.findByRole('option', { name: /Farina · Prova/ }); confirmaRacions();
   fireEvent.change(screen.getByLabelText('Producte per a 100 g de farina'), { target: { value: 'mer-farina' } });
   fireEvent.change(screen.getByLabelText('Minva en percentatge de 100 g de farina'), { target: { value: '0' } });
@@ -67,11 +93,22 @@ it('production default apps block transfer and Bar CTA while retaining real calc
   expect(compra.disabled).toBe(true); fireEvent.click(compra);
   expect(screen.getByTestId('draft').textContent).toBe('null');
   expect(screen.queryByRole('link', { name: 'Obri els escandalls d’El Bar' })).toBeNull();
-  expect(screen.getByText(/La compra al Rebost no està disponible ací/).textContent).toContain('encara està en proves');
+  expect(screen.getByText(/La compra al Rebost no està disponible ací/).textContent).toContain('L’has desactivada tu');
+});
+
+it('production with a host that does not declare the apps blocks transfer and Bar CTA and says why', async () => {
+  amfitrio.config = { apps: 'lector' };
+  munta(['100 g de farina'], { produccio: true, teCapacitat: () => true });
+  await screen.findByRole('option', { name: /Farina · Prova/ }); confirmaRacions();
+  const compra = screen.getByRole('button', { name: 'Prepara la compra al Rebost' });
+  expect(compra.disabled).toBe(true); fireEvent.click(compra);
+  expect(screen.getByTestId('draft').textContent).toBe('null');
+  expect(screen.queryByRole('link', { name: 'Obri els escandalls d’El Bar' })).toBeNull();
+  expect(screen.getByText(/La compra al Rebost no està disponible ací/).textContent).toContain('Qui porta esta web no l’ha encesa');
 });
 
 it('DEV availability keeps both real destinations usable after explicit serving choices', async () => {
-  munta(['100 g de farina'], { produccio: false, teDret: () => true, teCapacitat: () => true });
+  munta(['100 g de farina'], { produccio: false, teCapacitat: () => true });
   await screen.findByRole('option', { name: /Farina · Prova/ }); confirmaRacions();
   expect(screen.getByRole('link', { name: 'Obri els escandalls d’El Bar' }).getAttribute('href')).toBe('/app/bar/escandalls');
   expect(screen.getByRole('button', { name: 'Prepara la compra al Rebost' }).disabled).toBe(false);

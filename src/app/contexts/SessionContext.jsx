@@ -12,6 +12,7 @@ import {
 } from '../../data/recuperacioPendent.js';
 import { eixDeLaSessio, preparaEixida as preparaEixidaNucli, reprenSessio } from '../../data/autodesament/sessio.js';
 import { enviaNotesDeLUsuari, oblidaNotesDeLUsuari, pendentsNotesDe } from '../../sections/notes/GlobalSaveManager.js';
+import { oblidaTitolsIAIADePersona } from '../../sections/xat/sessionsIAIALocals.js';
 import { entraComAPilot } from '../../data/sessioPilot.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import { oblidaXatEnEixir } from '../../data/xifratXatEixida.js';
@@ -55,7 +56,7 @@ configuraMarcaOblitCarpetesLocals({
    src/sections). Notes ('SdpNotesQueue'): envia amb la sessió encara vàlida,
    oblida només si tancar ha anat bé i diu el que queda per a l'avís (C01). */
 const ABANS_DE_TANCAR = Object.freeze([enviaNotesDeLUsuari]);
-const DESPRES_DE_TANCAR = Object.freeze([oblidaNotesDeLUsuari, oblidaCarpetesLocalsEnEixir]);
+const DESPRES_DE_TANCAR = Object.freeze([oblidaNotesDeLUsuari, oblidaCarpetesLocalsEnEixir, oblidaTitolsIAIADePersona]);
 const PENDENTS_DE = Object.freeze([pendentsNotesDe]);
 
 /* P1-12 pas 17 (disseny §8.5, D-09) · L'oblit del xat xifrat entra a l'eixida

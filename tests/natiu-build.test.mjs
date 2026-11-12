@@ -739,13 +739,18 @@ test('vite.natiu.config.js no importa res de Capacitor ni de src/natiu/: es pot 
   assert.deepEqual([...connector.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1]).sort(), ['node:fs', 'node:path', 'vite'], 'el connector de les fotos continua sent una fulla de Node');
   const banderes = fs.readFileSync(path.join(ARREL, 'tooling/vite/banderes-de-capacitat.mjs'), 'utf8');
   assert.deepEqual([...banderes.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1]).sort(), ['node:path', 'vite'], 'el connector de les banderes continua sent una fulla de Node');
-  const fulla = fs.readFileSync(path.join(ARREL, 'src/sections/text/pageContent.patrimoniR14.js'), 'utf8');
-  assert.ok(!/\bimport\b/.test(fulla.replace(/\/\*[\s\S]*?\*\//g, '')), 'pageContent.patrimoniR14.js continua sent una fulla sense imports');
+  // P0-115 (R18) · pageContent.patrimoniR14.js importa la signatura compartida (COPYRIGHT_SDP) d'una altra fulla pura,
+  // pageContent.dretsPatrimoni.js; eixe és l'únic import admés, i la fulla de drets no n'importa cap.
+  const senseComentaris = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  const importsDe = (rel) => [...senseComentaris(fs.readFileSync(path.join(ARREL, rel), 'utf8')).matchAll(/\bimport\b[^'"]*['"]([^'"]+)['"]/g)].map((m) => m[1]);
+  assert.deepEqual(importsDe('src/sections/text/pageContent.patrimoniR14.js'), ['./pageContent.dretsPatrimoni.js'], 'pageContent.patrimoniR14.js només importa la fulla de drets');
+  assert.deepEqual(importsDe('src/sections/text/pageContent.dretsPatrimoni.js'), [], 'pageContent.dretsPatrimoni.js continua sent una fulla sense imports');
 });
 
+// P0-117 (R18) · La portada social de /page/receptes és ara la de l'enciclopèdia (receptes-ibanez), no la làmina p090.
 test('OG-03 · la portada social de /page/receptes (og_image, fora de VARIANTS_SOCIALS) tampoc no viatja a l’app', () => {
-  assert.ok(RECURSOS_NOMES_DEL_HEAD.includes('assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg'));
-  assert.ok(fs.existsSync(path.join(ARREL, 'public/assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg')));
+  assert.ok(RECURSOS_NOMES_DEL_HEAD.includes('assets/uploads/patrimoni/receptes-ibanez-social-1200x630.jpg'));
+  assert.ok(fs.existsSync(path.join(ARREL, 'public/assets/uploads/patrimoni/receptes-ibanez-social-1200x630.jpg')));
 });
 
 /* BOT-A4 (261025) · El segell es pren en començar el build, de l'arrel de la config, i ix a

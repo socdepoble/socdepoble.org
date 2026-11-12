@@ -8,14 +8,16 @@
  *
  * Contracte de la plataforma (src/apps/plataforma/manifestApp.js):
  *   · id 'gestoria' (la ruta és /app/gestoria, no es declara);
- *   · `carrega` darrere del literal de compilació EXACTE de baix: sense
- *     VITE_SDP_APP_GESTORIA=1 al build de producció, Vite trau AppGestoria del
- *     paquet; en desenvolupament sempre hi és. I encara que algú compilara
- *     l'app en producció, AppGestoria només porta el codi de la Gestoria dins
- *     de DEV (gestoria/privacitat.test.js ho compila);
- *   · entorn 'desenvolupament' i actiuPerDefecte false: fora del servidor de
- *     desenvolupament la plataforma no l'obri mai (interruptors.js, motiu
- *     'entorn-desenvolupament');
+ *   · P0-113 (ordre del Mestre, 261111): eina gratuïta oberta en producció
+ *     (entorn 'produccio', actiuPerDefecte true) i en proves (Beta oberta).
+ *     Les dades financeres i la guarda d'ama del document (només al
+ *     document propi, mai encastada) no canvien;
+ *   · `carrega` darrere del literal de compilació EXACTE de baix: el tros
+ *     diferit d'AppGestoria entra al build per defecte, i amb
+ *     VITE_SDP_APP_GESTORIA=0 Vite el trau del paquet (l'app continua sent
+ *     desendollable, a més de les capes de l'amfitrió i de la persona). El
+ *     pont (AppGestoria.jsx) conserva la seua pròpia guarda de privacitat
+ *     (gestoria/privacitat.test.js);
  *   · el component és l'export per defecte d'AppGestoria.jsx.
  * La barra de l'app és l'única navegació (ordre de MarIA 261012_2145, acatada
  * pel Mestre: fora el rail intern de la closca): els mòduls de la closca i
@@ -64,20 +66,26 @@ export default {
     { slug: 'escaner', titol: { ca: 'Escàner Local', es: 'Escáner Local' }, icona: 'ScanLine', grup: 'arxiu' },
     { slug: 'aprendre', titol: { ca: 'Aprendre', es: 'Aprender' }, icona: 'NotebookPen', grup: 'arxiu' }
   ],
-  entradaPerDefecte: 'tauler',
+  /* P0-113 (ordre del Mestre, 261111) · Oberta en producció, la porta d'entrada
+     no pot ser un carreró: el Tauler demana aprovar el seu tractor, i el panell
+     d'aprovació només existix en desenvolupament (WikiDePobleSection.jsx,
+     EINES_LOCALS). La Facturació no demana cap tractor i funciona sense cap pas
+     previ (presentacioPlugins.test.js ho fixa). El Tauler continua a la barra. */
+  entradaPerDefecte: 'facturacio',
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): el titular de la
      sessió (vegeu la capçalera), declarat exactament quan este manifest pot
      carregar l'app interna: darrere del mateix literal de compilació que
      `carrega`. Compilada com a mòdul (ADR-2026-12, vite.modul.config.js, que
      llig eixe literal com a fals), la Gestoria no el declara: cap mòdul no rep
-     cap dada de la persona (validaManifestApp, origen 'modul'). */
-  permisos: import.meta.env.DEV || import.meta.env.VITE_SDP_APP_GESTORIA === '1'
+     cap dada de la persona (validaManifestApp, origen 'modul'). P0-113
+     (ordre del Mestre, 261111): el literal és ara d'exclusió, com `carrega`. */
+  permisos: import.meta.env.VITE_SDP_APP_GESTORIA !== '0'
     ? { veure: 'public', titular: 'sessio' }
     : { veure: 'public' },
   capacitats: [],
   nivell: 'gratuit',
-  actiuPerDefecte: false,
-  entorn: 'desenvolupament',
+  actiuPerDefecte: true,
+  entorn: 'produccio',
   dadesPersonals: 'financeres',
-  carrega: import.meta.env.DEV || import.meta.env.VITE_SDP_APP_GESTORIA === '1' ? () => import('./AppGestoria.jsx') : null
+  carrega: import.meta.env.VITE_SDP_APP_GESTORIA !== '0' ? () => import('./AppGestoria.jsx') : null
 };

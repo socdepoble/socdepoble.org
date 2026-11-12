@@ -16,6 +16,7 @@ import '../../host.js';
 import XatSection from './XatSection';
 import { XatProvider } from './XatContext.jsx';
 import { buidaEsborranys } from './esborranys.js';
+import { creaIdbFals } from '../../utils/__fixtures__/navegadorFals.js';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -408,4 +409,29 @@ describe('xat-flux-01 · mentre la sessió remota es comprova, cap 404 ni «comu
     render(arbre());
     await waitFor(() => expect(noTrobada()).not.toBeNull());
   });
+});
+
+it('«Nova conversa» amb la IAIA obri un fil privat, el titula i el torna a obrir després de recarregar', async () => {
+  vi.stubGlobal('indexedDB', creaIdbFals().idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const vista = render(arbre());
+  fireEvent.click(await screen.findByRole('button', { name: 'Nova conversa' }));
+  const dialeg = screen.getByRole('dialog', { name: 'Nova conversa' });
+  fireEvent.click(await within(dialeg).findByRole('button', { name: /IAIA MarIA/ }));
+  const ruta = mocks.navigate.mock.calls.at(-1)?.[0];
+  expect(ruta).toMatch(/^\/xat\/iaia-local-[0-9a-f-]+$/u);
+  vesA(ruta);
+  vista.rerender(arbre());
+  const camp = await screen.findByRole('textbox', { name: 'Escriu un missatge' });
+  fireEvent.change(camp, { target: { value: 'Què és el Mercat? Detall efímer.' } });
+  fireEvent.keyDown(camp, { key: 'Enter' });
+  await waitFor(() => expect(screen.getAllByText('el Mercat').length).toBeGreaterThan(0));
+  expect(mocks.port.creaFilDirecte).not.toHaveBeenCalled();
+  expect(mocks.port.enviaMissatge).not.toHaveBeenCalled();
+  vista.unmount();
+
+  render(arbre());
+  await waitFor(() => expect(screen.getAllByText('el Mercat').length).toBeGreaterThan(0));
+  expect(screen.queryByText('Què és el Mercat? Detall efímer.')).toBeNull();
+  expect(mocks.pintades404).toBe(0);
 });

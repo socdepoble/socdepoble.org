@@ -5,7 +5,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/.sdp-paperera/**', '**/.wwebjs_cache/**', '**/.wwebjs_auth/**', '**/.git/**', '**/coverage/**', '**/.obsidian/**']
+    ignores: ['**/node_modules/**', '**/dist/**', '**/.sdp-vite-cache/**', '**/.sdp-paperera/**', '**/.wwebjs_cache/**', '**/.wwebjs_auth/**', '**/.git/**', '**/coverage/**', '**/.obsidian/**']
   },
   js.configs.recommended,
   {

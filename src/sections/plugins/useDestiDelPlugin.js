@@ -11,9 +11,11 @@
  *
  * Una ruta que no és d'una app no passa per cap interruptor d'app: la seua
  * barrera, si en té, és la de la ruta a App.jsx. Però si el registre marca el
- * plugin amb entorn 'desenvolupament' (revisió P7-A: hui, la Gestoria), fora
- * de desenvolupament és 'no-disponible' amb el motiu de la plataforma
- * 'entorn-desenvolupament'. Cap enllaç mort: el que no es pot obrir no fa
+ * plugin amb entorn 'desenvolupament', fora de desenvolupament és
+ * 'no-disponible' amb el motiu de la plataforma 'entorn-desenvolupament'
+ * (revisió P7-A; P0-113, ordre del Mestre, 261111: la Gestoria, l'última que
+ * el portava, s'obri en producció i hui cap plugin el porta; la guarda es
+ * conserva per a un destí futur). Cap enllaç mort: el que no es pot obrir no fa
  * enllaç. La Consola ja no és al registre (Onada 8) ni passa per ací: el seu
  * botó és el de la pàgina (systemPages.js, OBRIR_CONSOLA), i /consola/* és
  * pública en qualsevol entorn (ordre del Mestre 30-10-2026, T2.2).

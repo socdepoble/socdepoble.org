@@ -15,12 +15,20 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: () => {} }) }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, alternativa) => alternativa }) }));
+/* R19 · Arbitratge del carril (P1) · La fitxa d'una utilitat connectada passa per la porta de la plataforma
+   (useDestiDelPlugin), que llig l'estat de la UI (externalConfig: amfitrió i document). */
+const ui = vi.hoisted(() => ({ estat: { externalConfig: {} } }));
+vi.mock('../../app/contexts/UIContext', () => ({
+  useUIActions: () => ({ t: (_clau, alternativa) => alternativa }),
+  useUIState: () => ui.estat
+}));
 
 import { DetallAplicacio } from './DetallEspai.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
 import { STORAGE_PREFIX } from '../../config/storage.js';
 import { CLAU_UTILITATS_ACTIVES, CLAU_UTILITATS_LLEGAT, desaUtilitatActiva } from './utilitatsActives.js';
+import { ProveidorPlataforma } from '../../apps/plataforma/PlataformaContext.jsx';
+import { CLAU_PREFERENCIES, _reiniciaPreferencies } from '../../apps/plataforma/preferenciesApps.js';
 import fontDetall from './DetallEspai.jsx?raw';
 
 const CLAU_PROPIA = STORAGE_PREFIX + CLAU_UTILITATS_ACTIVES;
@@ -164,5 +172,69 @@ describe('DetallAplicacio · l’id del Panell (aplicacions.js, camp `panell`)',
     expect(screen.getByRole('button', { name: OCULTAR })).toBeTruthy();
     act(() => { desaUtilitatActiva('rss', false); });
     expect(screen.getByRole('button', { name: MOSTRAR })).toBeTruthy();
+  });
+});
+
+/* R19 · Arbitratge del carril Genealogia + Perfil (P1) · Abans, el Perfil decidia amb el build: «Connectada en
+   este node» i un «Obrir …» viu encara que la plataforma no la deixara obrir, i l'enllaç acabava en l'avís de
+   RutaApps. Ara la fitxa connectada passa per la porta de la pàgina del plugin (useDestiDelPlugin): només
+   s'enllaça si s'obri, i si no, «No disponible ací» amb el motiu de la plataforma, el mateix text del Panell. */
+describe('DetallAplicacio · la mateixa porta que la pàgina del plugin', () => {
+  const VALIDES = aplicacionsValides(APLICACIONS);
+  const perId = (id) => VALIDES.find((aplicacio) => aplicacio.id === id);
+  const OBERT = Object.freeze({ produccio: true, teCapacitat: () => true, amaDelDocument: true });
+  const pinta = (aplicacio, entorn = OBERT) => render(
+    <ProveidorPlataforma entorn={entorn}>
+      <DetallAplicacio aplicacio={aplicacio} />
+    </ProveidorPlataforma>
+  );
+  /* Els enllaços d'obertura (la barra taronja signa Sóc de Poble amb el seu, que no compta). */
+  const enllacos = () => screen.queryAllByRole('link').filter((enllac) => enllac.textContent.startsWith('Obrir '))
+    .map((enllac) => [enllac.textContent, enllac.getAttribute('href')]);
+  afterEach(() => {
+    ui.estat = { externalConfig: {} };
+    localStorage.removeItem(STORAGE_PREFIX + CLAU_PREFERENCIES);
+    _reiniciaPreferencies();
+  });
+
+  test('si la plataforma la deixa obrir: «Connectada en este node» i un sol «Obrir …», cap a la ruta de la fitxa', () => {
+    /* R19 · Loop 1 · El text, el botó del seu plugin (registrePlugins.js, etiquetaObrir); el Snippet, sense
+       plugin, «Obrir <nom>». Abans, «Obrir <nom>» per a totes («Obrir L’Avisador», «Obrir Arbre Genealògic»). */
+    const OBRIR = {
+      salut: 'Obrir Salut', genealogia: 'Obrir l’Arbre Genealògic', gestoria: 'Obrir la Gestoria',
+      avisador: 'Obrir l’Avisador', snippet: 'Obrir Snippet'
+    };
+    for (const id of ['salut', 'genealogia', 'gestoria', 'avisador', 'snippet']) {
+      const aplicacio = perId(id);
+      const vista = pinta(aplicacio);
+      expect([id, screen.queryByText('Connectada en este node') !== null, screen.queryByText('No disponible ací')]).toEqual([id, true, null]);
+      expect([id, enllacos()]).toEqual([id, [[OBRIR[id], aplicacio.ruta]]]);
+      vista.unmount();
+    }
+  });
+
+  test.each([
+    ['document d’altri', 'genealogia', { ...OBERT, amaDelDocument: false }, null, 'Guarda dades personals delicades: només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web.'],
+    ['amfitrió que no la declara', 'tpv', OBERT, ['nevera'], 'Qui porta esta web no l’ha encesa.'],
+    ['persona que l’ha desactivada', 'salut', OBERT, 'salut', 'L’has desactivada tu. La pots tornar a activar quan vulgues.']
+  ])('%s: «No disponible ací», el motiu de la plataforma i cap «Obrir …»', (_cas, id, entorn, variant, motiu) => {
+    if (Array.isArray(variant)) ui.estat = { externalConfig: { apps: variant } };
+    if (typeof variant === 'string') {
+      localStorage.setItem(STORAGE_PREFIX + CLAU_PREFERENCIES, JSON.stringify({ v: 1, apps: { [variant]: false }, interruptors: {} }));
+      _reiniciaPreferencies();
+    }
+    pinta(perId(id), entorn);
+    expect(screen.queryByText('Connectada en este node')).toBeNull();
+    expect(screen.getByText('No disponible ací')).toBeTruthy();
+    expect(screen.getByText(motiu)).toBeTruthy();
+    expect(enllacos()).toEqual([]);
+    expect(screen.queryByText(/Quan s’hi connecte/)).toBeNull();
+    // La preferència del Panell continua: la fitxa no perd el seu botó.
+    expect(screen.getByRole('button', { name: OCULTAR })).toBeTruthy();
+  });
+
+  test('l’Arbre no diu mai que guarda dades de salut', () => {
+    pinta(perId('genealogia'), { ...OBERT, amaDelDocument: false });
+    expect(document.body.textContent).not.toMatch(/dades de salut/);
   });
 });

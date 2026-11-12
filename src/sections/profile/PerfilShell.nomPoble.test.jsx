@@ -29,6 +29,7 @@ const reglesDAutoria = (css) => (css.match(/[^{}]*\{[^{}]*\}/g) || [])
 
 const FULLS = ['src/css/components.css', 'src/css/modules.css', 'src/sections/profile/PerfilShell.css'];
 const POBLE = 'La Torre de les Maçanes';
+const teTextGenerat = (css) => /(?:^|[;{])\s*content\s*:/i.test(css);
 
 describe('Pla 261018_1605 · Tasca 2 · el poble, net davall del nom a la barra del Perfil', () => {
   test('cap full no porta una regla de l’autoria pròpia del Perfil, ni cap text generat davant del poble', () => {
@@ -36,8 +37,14 @@ describe('Pla 261018_1605 · Tasca 2 · el poble, net davall del nom a la barra 
       const regles = reglesDAutoria(net(full));
       expect(regles.filter((regla) => regla.includes('.perfil-pagina'))).toEqual([]);
       expect(regles.filter((regla) => /::?(before|after)/.test(regla.split('{')[0]))).toEqual([]);
-      expect(regles.join(' ')).not.toContain('content:');
+      expect(teTextGenerat(regles.join(' '))).toBe(false);
     }
+  });
+
+  test('la guarda distingix content de les propietats d’alineació', () => {
+    expect(teTextGenerat('.sp-card-author-info { justify-content: center; align-content: start; }')).toBe(false);
+    expect(teTextGenerat('.sp-card-author-location { content: "· "; }')).toBe(true);
+    expect(teTextGenerat('.sp-card-author-location { color: red; CONTENT: attr(data-poble); }')).toBe(true);
   });
 
   test('les regles de sempre: el nom i el poble en columna, cadascun en una línia amb tota l’amplada', () => {

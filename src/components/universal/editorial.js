@@ -11,7 +11,7 @@
 import { dosDigits, horaDe } from '../../utils/calendari.js';
 
 /** Copyright de les pàgines de sistema. El mateix text que pintava TextSection. */
-export const COPYRIGHT_SDP = 'CC BY-NC-SA 4.0 Sóc de Poble / Fet per la IAIA i Nano Banana';
+export { COPYRIGHT_SDP } from '../../sections/text/pageContent.dretsPatrimoni.js';
 
 /**
  * Onada 5 (ordre del Mestre, 261008) · Copyright d'un poble: l'entradilla i

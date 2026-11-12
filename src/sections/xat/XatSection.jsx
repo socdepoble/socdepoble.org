@@ -128,6 +128,7 @@ import { descartaCompartit, prenTextCompartit, triaDestiCompartit } from '../../
 import { esComunitat } from './components/FilaConversa.jsx';
 import FakeChatOnboarding from './components/FakeChatOnboarding.jsx';
 import IAIAProvider from './IAIAProvider.jsx';
+import IAIALocalProvider from './IAIALocalProvider.jsx';
 import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
 /* Ordre del Mestre (261007) · Les files d'ajuda per defecte i on porten. */
@@ -142,7 +143,7 @@ import { FILA_DE_RESERVA_DE_JAVI, FILA_DE_RESERVA_DE_LA_IAIA, RUTA_SOBRE_DE_SOC_
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 /* Onada 6 · La IAIA apagada (nivell d'IA 0), els errors SDP traduïts i
    «Informa d'un error» per als beta testers. */
-import { senseContacteDeLaIAIA } from './contactesAjuda.js';
+import { esContacteDeLaIAIA, senseContacteDeLaIAIA } from './contactesAjuda.js';
 import { textDErrorDelXat, textDeFalladaDirecte } from './errorsXat.js';
 import useInformaDUnError from './useInformaDUnError.js';
 import BotoInformaDUnError from './components/BotoInformaDUnError.jsx';
@@ -345,7 +346,7 @@ export default function XatSection() {
   if (xat.modeDades === 'remote') {
     return <IAIAProvider language={language} key={xat.ambitEstable ?? 'xat'} t={t}><XatWorkspace origen={origen} /></IAIAProvider>;
   }
-  return <XatWorkspace key={xat.ambitEstable ?? 'xat'} origen={origen} />;
+  return <IAIALocalProvider key={xat.ambitEstable ?? 'xat'} t={t} filPerDefecte={false}><XatWorkspace origen={origen} /></IAIALocalProvider>;
 }
 
 /* §8.5 · Hi ha una conversa demanada si la URL en porta una (/xat/<fil>) o la
@@ -445,6 +446,10 @@ function XatWorkspace({ origen = null }) {
     avisLlista = null,
     /* Onada 6 (tasca 12) · Nivell d'IA 0: la IAIA no apareix. */
     iaiaApagada = false,
+    novaSessioIAIA,
+    oblidaSessioIAIA,
+    sessioIAIAOblidada = mai,
+    esperaSessioIAIA = mai,
     esFilAmagat = mai,
     /* Gauntlet 261016 (Bloc 3.6.2) · On porten les files de la IAIA i de
        Javi depén del mode de dades (useObriXatPerDefecte). */
@@ -689,6 +694,10 @@ function XatWorkspace({ origen = null }) {
     showToast(t('section.xat.iaia.apagada', "La IAIA està apagada (nivell d'IA 0). La pots tornar a encendre a «Realitat»."), 'info');
     navigate('/xat', { replace: true });
   }, [dinsDeLaIAIA, threadId, navigate, showToast, t]);
+
+  useEffect(() => {
+    if (threadId && sessioIAIAOblidada(threadId)) navigate(`/xat${consulta()}`, { replace: true });
+  }, [threadId, sessioIAIAOblidada, navigate, consulta]);
 
   /* Onada 6 (beta testers) · «Informa d'un error», al peu de la llista (també
      davall de l'avís d'una llista que no s'ha pogut carregar): obri el xat de
@@ -1203,7 +1212,7 @@ function XatWorkspace({ origen = null }) {
     return estat === m.estatEnviament ? m : { ...m, estatEnviament: estat };
   }), [missatgesDelContext, activeThread?.llegitPelsAltresFinsSeq, ritme]);
 
-  if (threadId && !trobat && status === 'ready' && llistaFresca && sessioResolta && !reobrint && !dinsDeLaIAIA && !clauDeLaRuta) {
+  if (threadId && !trobat && status === 'ready' && llistaFresca && sessioResolta && !reobrint && !esperaSessioIAIA(threadId) && !dinsDeLaIAIA && !clauDeLaRuta) {
     return <NotFoundPage />;
   }
 
@@ -1227,9 +1236,12 @@ function XatWorkspace({ origen = null }) {
     const desDelDialeg = dialegNou;
     const tanca = () => { tancaDialegNou(); netejaCerca(); };
     setErrorObrir(null);
-    if (membre.fil_id) {
+    const novaAmbIAIA = desDelDialeg && novaSessioIAIA && esContacteDeLaIAIA(membre);
+    const filObert = novaAmbIAIA ? novaSessioIAIA() : membre.fil_id;
+    if (novaAmbIAIA && !filObert) return;
+    if (filObert) {
       tanca();
-      navigate(`/xat/${enc(membre.fil_id)}${consulta()}`);
+      navigate(`/xat/${enc(filObert)}${consulta()}`);
       return;
     }
     setObrintAmb(membre.usuari_id);
@@ -1782,6 +1794,7 @@ function XatWorkspace({ origen = null }) {
         onVes={(ruta) => { tancaDialegNou(); navigate(ruta); }}
         tornar={rutaActual}
         senseIAIA={iaiaApagada}
+        teSessionsIAIA={Boolean(novaSessioIAIA)}
       />
     </aside>
   );
@@ -1799,7 +1812,7 @@ function XatWorkspace({ origen = null }) {
       {activeThread ? (
         <Conversa
           key={`${activeThread.id}\n${revisioEsborrany}`}
-          clauEsborrany={ambitEstable ? `${ambitEstable}::${activeThread.id}` : null}
+          clauEsborrany={ambitEstable && !activeThread.sessioLocalIAIA ? `${ambitEstable}::${activeThread.id}` : null}
           initialText={connectionContext}
           peu={activeThread.filLocalIAIA ? <AvisPrivadesaIAIA t={t} /> : null}
           cortesiaIAIA={modeDades === 'remote' && !senseSessio && !iaiaApagada && !activeThread.filLocalIAIA && esXatDeLaIAIA(activeThread)}
@@ -1816,6 +1829,9 @@ function XatWorkspace({ origen = null }) {
           configAdjunts={externalConfig}
           usuariAdjunts={joId}
           onBack={handleBackToList}
+          onOblidaSessioIAIA={activeThread.sessioLocalIAIA && oblidaSessioIAIA ? async (id) => {
+            if (await oblidaSessioIAIA(id)) navigate(`/xat${consulta()}`, { replace: true });
+          } : null}
           onTornaAOrigen={tornaAOrigen}
           onEnviaAlBloc={enviaAlBloc}
           senseSessio={senseSessio}

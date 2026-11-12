@@ -299,3 +299,78 @@ export function bloqueigDeNota({ foraster = false, modeLocal = false, publicada 
   if (publicada) return { opcio: 'privada', motiu: text(t, T.motiuPublicada) };
   return null;
 }
+
+/* Onada R20 (Bucle 1 · UX Pedra Seca en línia a /notes, cas Damià Llorens) ·
+   Textos inequívocs per al panell en línia (zero modals flotants), preservant
+   intacte textosDeNota per a SelectorVisibilitat i ConnexioDetall. */
+const PARELLS_EN_LINIA = Object.freeze({
+  llegenda: parellVisibilitat('enLinia.llegenda', 'Visibilitat i publicació de la nota'),
+  privadaEtiqueta: parellVisibilitat('enLinia.privada.etiqueta', '🔒 Esborrany privat (només per a tu)'),
+  privadaExplicacio: parellVisibilitat('enLinia.privada.explicacio', 'Es desa automàticament al teu Bloc de notes i ningú més la pot vore.'),
+  publicaEtiqueta: parellVisibilitat('enLinia.publica.etiqueta', '📣 Públic al Mur del poble'),
+  publicaEtiquetaMercat: parellVisibilitat('enLinia.publica.etiquetaMercat', '📣 Públic al Mercat del poble'),
+  publicaEtiquetaConnexio: parellVisibilitat('enLinia.publica.etiquetaConnexio', '📣 Compartit al Mur del poble'),
+  publicaExplicacio: parellVisibilitat('enLinia.publica.explicacio', 'Es publica amb la teua signatura i ix al Mur del poble.'),
+  publicaExplicacioConnexio: parellVisibilitat('enLinia.publica.explicacioConnexio', 'Es compartix al Mur citant-ne l’origen i l’autoria.'),
+  publicaAccioMercat: parellVisibilitat('enLinia.publica.accioMercat', 'Publicar al Mercat'),
+  publicaAccioIgualMercat: parellVisibilitat('enLinia.publica.accioIgualMercat', 'Actualitzar al Mercat'),
+  pobleEtiqueta: parellVisibilitat('enLinia.poble.etiqueta', 'Poble on es publica'),
+  pobleAjuda: parellVisibilitat('enLinia.poble.ajuda', 'Tens més d’un poble vinculat al teu perfil. Tria a quin poble ix esta publicació.'),
+  pobleTria: parellVisibilitat('enLinia.poble.tria', '— Tria el poble de la publicació —'),
+  pobleIndeterminat: parellVisibilitat('enLinia.poble.indeterminat', 'No s’ha pogut verificar en quin poble es va publicar esta nota perquè la publicació queda fora de la finestra carregada. Tria explícitament el poble abans d’actualitzar-la.'),
+  motiuPobleNoDeterminat: parellVisibilitat('motiuPobleNoDeterminat', 'No s’ha pogut verificar en quin poble es va publicar esta nota. Tria explícitament el poble abans d’actualitzar-la al Mur.'),
+  signatura: parellVisibilitat('enLinia.signatura', 'Publicaràs com a {nom}.'),
+  estatPublicat: parellVisibilitat('enLinia.estatPublicat', 'Publicat'),
+  veureAlMur: parellVisibilitat('enLinia.veureAlMur', 'Veure al Mur'),
+  veureAlMercat: parellVisibilitat('enLinia.veureAlMercat', 'Veure al Mercat'),
+  treballant: parellVisibilitat('enLinia.treballant', 'Publicant…'),
+});
+
+export function motiuPobleNoDeterminat(t = null) {
+  return text(t, PARELLS_EN_LINIA.motiuPobleNoDeterminat);
+}
+
+export function signaturaEnLiniaDeNota(nom = '', t = null) {
+  const net = String(nom ?? '').trim();
+  return net ? omple(text(t, PARELLS_EN_LINIA.signatura), { nom: net }) : '';
+}
+
+export function textosEnLiniaDeNota({ connexio = false, extern = false, dretsReservats = false, seccio = 'mur', t = null } = {}) {
+  const esCita = Boolean(connexio || extern);
+  const esMercat = !esCita && seccio === 'mercat';
+  const base = textosAmbDrets(extern ? textosExtern(t) : textosDeNota({ connexio: esCita, t }), dretsReservats, t);
+  const etiquetaPublica = esCita
+    ? text(t, PARELLS_EN_LINIA.publicaEtiquetaConnexio)
+    : esMercat
+      ? text(t, PARELLS_EN_LINIA.publicaEtiquetaMercat)
+      : text(t, PARELLS_EN_LINIA.publicaEtiqueta);
+  const explicacioPublica = esCita
+    ? text(t, PARELLS_EN_LINIA.publicaExplicacioConnexio)
+    : text(t, PARELLS_EN_LINIA.publicaExplicacio);
+  const accioPublica = esMercat ? text(t, PARELLS_EN_LINIA.publicaAccioMercat) : base.publica.accio;
+  const accioIgualPublica = esMercat ? text(t, PARELLS_EN_LINIA.publicaAccioIgualMercat) : base.publica.accioIgual;
+  return Object.freeze({
+    llegenda: text(t, PARELLS_EN_LINIA.llegenda),
+    privada: Object.freeze({
+      etiqueta: text(t, PARELLS_EN_LINIA.privadaEtiqueta),
+      explicacio: text(t, PARELLS_EN_LINIA.privadaExplicacio),
+    }),
+    publica: Object.freeze({
+      etiqueta: etiquetaPublica,
+      explicacio: explicacioPublica,
+      accio: accioPublica,
+      accioIgual: accioIgualPublica,
+    }),
+    poble: Object.freeze({
+      etiqueta: text(t, PARELLS_EN_LINIA.pobleEtiqueta),
+      ajuda: text(t, PARELLS_EN_LINIA.pobleAjuda),
+      tria: text(t, PARELLS_EN_LINIA.pobleTria),
+      indeterminat: text(t, PARELLS_EN_LINIA.pobleIndeterminat),
+    }),
+    irreversible: base.irreversible,
+    avisDrets: dretsReservats ? avisDretsReservats(t) : null,
+    estatPublicat: text(t, PARELLS_EN_LINIA.estatPublicat),
+    veurePublicacio: text(t, esMercat ? PARELLS_EN_LINIA.veureAlMercat : PARELLS_EN_LINIA.veureAlMur),
+    treballant: text(t, PARELLS_EN_LINIA.treballant),
+  });
+}

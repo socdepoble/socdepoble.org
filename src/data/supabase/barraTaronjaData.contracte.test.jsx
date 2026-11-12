@@ -61,7 +61,9 @@ vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast:
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIActions: () => estat.accionsUI,
-  useUIState: () => estat.estatUI
+  useUIActionsOpcional: () => estat.accionsUI,
+  useUIState: () => estat.estatUI,
+  useUIStateOpcional: () => estat.estatUI
 }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => estat.identitat }));

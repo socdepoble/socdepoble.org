@@ -435,7 +435,7 @@ describe('Ajustos › Carta (Onada 3, T2): la llavor de La Parròquia', () => {
   const carrega = async (magatzem, llavor = LA_PARROQUIA) => {
     const { ajust, dialeg } = await obri(magatzem, llavor);
     expect(within(dialeg).getByText('Els canvis fets a la carta d’ara es perdran.')).toBeTruthy();
-    expect(within(dialeg).getByText(/el TPV encara no la pot tornar a carregar/)).toBeTruthy();
+    expect(within(dialeg).getByText(/La podràs restaurar en un navegador sense dades del Bar/)).toBeTruthy();
     fireEvent.click(within(dialeg).getByRole('button', { name: 'Substituïx la carta' }));
     return ajust;
   };
@@ -1003,4 +1003,20 @@ describe('el catàleg encara no està preparat quan només existix la regió', (
       expect(comandes[0].linies.map((linia) => [linia.nomCongelat, linia.quantitat])).toEqual([[nom, 1]]);
     });
   });
+});
+
+test('Ajustos del dispositiu restaura una còpia vàlida després de la confirmació', async () => {
+  const origen = await magatzemDeProva({ ambTorn: true });
+  const desti = await magatzemDeProva({ ambTorn: false });
+  const text = await origen.exportaCopia();
+  munta('/app/bar/ajustos/dispositiu', desti);
+
+  const fitxer = new File([text], 'copia-bar.json', { type: 'application/json' });
+  fitxer.text = async () => text;
+  fireEvent.change(await screen.findByLabelText('Restaura una còpia del Bar'), { target: { files: [fitxer] } });
+  const dialeg = await screen.findByRole('dialog', { name: 'Restaura la còpia del Bar' });
+  expect((await desti.carrega()).tornActual).toBeNull();
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Restaura la còpia' }));
+  expect(await screen.findByText('Còpia restaurada. Conté 1 torn i 0 tiquets.')).toBeTruthy();
+  expect((await desti.carrega()).tornActual.id).toBe('torn-prova');
 });

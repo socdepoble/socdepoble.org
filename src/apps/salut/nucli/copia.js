@@ -17,7 +17,7 @@ import {
 export const ESQUEMA_COPIA = 'sdp.salut.copia.v1';
 export const MODES_IMPORTACIO = Object.freeze(['afegir', 'substituir']);
 /* Una còpia de diversos anys de diari cap de sobra; més és un fitxer equivocat. */
-const MAX_BYTES = 20 * 1024 * 1024;
+export const MAX_BYTES_COPIA = 20 * 1024 * 1024;
 const MAX_REGISTRES = 200000;
 
 /** La còpia de les dades actuals (un objecte llest per a JSON.stringify). */
@@ -57,7 +57,7 @@ function neteja(llista, fn) {
 export function llegixCopia(entrada) {
   let cru = entrada;
   if (typeof entrada === 'string') {
-    if (entrada.length > MAX_BYTES) return { ok: false, error: 'El fitxer és massa gran per a ser una còpia de Salut.' };
+    if (entrada.length > MAX_BYTES_COPIA || new TextEncoder().encode(entrada).byteLength > MAX_BYTES_COPIA) return { ok: false, error: 'El fitxer és massa gran per a ser una còpia de Salut.' };
     try {
       cru = JSON.parse(entrada);
     } catch {
@@ -69,7 +69,12 @@ export function llegixCopia(entrada) {
     return { ok: false, error: typeof cru.schema === 'string' && cru.schema.startsWith('sdp.salut.copia.')
       ? 'Esta còpia és d’una versió que esta app no coneix.' : 'El fitxer no és una còpia de Salut.' };
   }
-  const total = ['jornades', 'periodes', 'apunts', 'valoracions'].reduce((n, clau) => n + (Array.isArray(cru[clau]) ? cru[clau].length : 0), 0);
+  const claus = Object.keys(CLAUS);
+  if (!cru.persona || typeof cru.persona !== 'object' || Array.isArray(cru.persona)
+    || claus.some((clau) => !Array.isArray(cru[clau]))) {
+    return { ok: false, error: 'A la còpia de Salut li falten les dades de la persona o una de les llistes.' };
+  }
+  const total = claus.reduce((n, clau) => n + cru[clau].length, 0);
   if (total > MAX_REGISTRES) return { ok: false, error: 'La còpia té massa registres.' };
   const apunts = neteja(cru.apunts, netejaApunt);
   const jornades = neteja(cru.jornades, netejaJornada);
@@ -94,8 +99,8 @@ const CLAUS = Object.freeze({ apunts: 'id', jornades: 'data', periodes: 'id', va
 export function fusionaCopia(actual, entrant, mode = 'afegir') {
   if (!MODES_IMPORTACIO.includes(mode)) throw new RangeError(`Mode desconegut: ${mode}`);
   if (mode === 'substituir') {
-    const afegits = Object.keys(CLAUS).reduce((n, clau) => n + entrant[clau].length, 0);
-    return { dades: { ...entrant }, informe: { afegits, duplicats: 0, substituits: true } };
+    const { dades, informe } = fusionaCopia({ persona: entrant.persona }, entrant, 'afegir');
+    return { dades, informe: { ...informe, substituits: true } };
   }
   let afegits = 0;
   let duplicats = 0;

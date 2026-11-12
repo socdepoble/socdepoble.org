@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { webcrypto } from 'node:crypto';
 import { creaIdbFals } from '../utils/__fixtures__/navegadorFals.js';
 import { capturaAbastProjeccions, capturaDestinsCataleg, capturaFontCataleg, idPublicacioProjeccio,
-  itemWorkspaceDeProjeccio, payloadProjeccioCataleg, perDestiCataleg, projeccioCatalegDe } from './projeccionsCataleg.js';
+  itemWorkspaceDeProjeccio, payloadProjeccioCataleg, perDestiCataleg, projeccioCatalegDe, rutaDeFitxaCataleg } from './projeccionsCataleg.js';
 import { creaServeiProjeccionsCataleg, filesDeRegistreProjeccio, registreProjeccioPendent } from './projeccionsCatalegServei.js';
 
 const OWNER = '1d2e3f40-5a6b-4c7d-8e9f-a0b1c2d3e4f5', ALTRE = '6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c9d';
@@ -12,6 +12,34 @@ const crea = extra => creaServeiProjeccionsCataleg({ abast: SCOPE, idb: null, na
 const publicador = () => vi.fn(async sub => structuredClone(sub));
 
 describe('P0-59 · contracte de referència i autoritat', () => {
+  test('R18 · cada destinació del WP reutilitza una referència pública amb identitat estable', async () => {
+    const font = { font: 'importacio-wp', id: '619', title: 'Catàleg d’arbres', subtitle: 'socdepoble.net · WP #619', lead: '' };
+    const publica = publicador(), servei = crea({ publica }); await servei.prepara();
+    const ids = new Set();
+    for (const desti of ['mur', 'arbres-monumentals', 'herbari', 'receptes', 'pagina']) {
+      await servei.desa(font, [desti]); await servei.sincronitza();
+      const sub = publica.mock.calls.at(-1)[0];
+      ids.add(sub.id);
+      expect(sub.sectionId).toBe('mur');
+      expect(sub.payload.destinacio_workspace).toBe(desti);
+      expect(sub.payload.content).toBeUndefined();
+      const row = { id: sub.id, ownerUserId: OWNER, sectionId: sub.sectionId, ...sub.payload };
+      expect(perDestiCataleg([row], desti)).toEqual([row]);
+      expect(rutaDeFitxaCataleg(projeccioCatalegDe(row).font)).toBe('/mur/619');
+    }
+    expect(ids.size).toBe(1);
+    expect(rutaDeFitxaCataleg(FONT)).toBe('/page/herbari?fitxa=timus');
+    for (const destins of [['mercat'], ['bar'], ['mur', 'herbari']]) {
+      await expect(servei.desa(font, destins)).rejects.toMatchObject({ codi: 'projeccio-invalida' });
+    }
+    const getter = vi.fn();
+    expect(rutaDeFitxaCataleg(Object.defineProperty({ ...font }, 'id', { get: getter, enumerable: true }))).toBeNull();
+    expect(getter).not.toHaveBeenCalled();
+    expect(rutaDeFitxaCataleg({ ...font, id: '../notes' })).toBeNull();
+    const payload = payloadProjeccioCataleg({ font, destins: ['herbari'], audiencia: 'publica' });
+    expect(projeccioCatalegDe({ id: ALTRE, ownerUserId: OWNER, sectionId: 'mur', ...payload, destinacio_workspace: 'receptes' })).toBeNull();
+    servei.tanca();
+  });
   test('cap camp privat, import, foto ni propietat amb getter arriba al payload', () => {
     expect(capturaFontCataleg(FONT)).toEqual(FONT);
     for (const extra of [{ imageUrl: '/privada.jpg' }, { dades: {} }, { preuCents: 105 }, { ownerId: ALTRE }]) expect(() => capturaFontCataleg({ ...FONT, ...extra })).toThrow();

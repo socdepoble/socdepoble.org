@@ -11,6 +11,7 @@
     "tests/admin-invitacions-r20b.test.mjs",
     "tests/administracio-multipoble-postgres.test.mjs",
     "tests/antigravity-hook.test.mjs",
+    "tests/apps-del-paquet.test.mjs",
     "tests/backend_consolidacio.test.mjs",
     "tests/build-net-dsstore.test.mjs",
     "tests/carpetes-notes-r12.test.mjs",
@@ -21,6 +22,7 @@
     "tests/cognitive-preflight.test.mjs",
     "tests/conformitat-amfitrio.test.mjs",
     "tests/connexions-publiques-postgres.test.mjs",
+    "tests/copublicacio-postgres.test.mjs",
     "tests/copyright-scroll-cascade.test.mjs",
     "tests/corpus-dialectal-ingesta.test.mjs",
     "tests/crdt-rural.test.mjs",
@@ -64,6 +66,7 @@
     "tests/mapa-consola.test.mjs",
     "tests/migracio-admin-resum-sessions-dispositius.test.mjs",
     "tests/migracio-convergencia-perfil.test.mjs",
+    "tests/migracio-cua-purga-storage-ugc.test.mjs",
     "tests/migracio-xat-de-pagina.test.mjs",
     "tests/migracions-r15-prevol.test.mjs",
     "tests/nixos-credentials.test.mjs",
@@ -145,6 +148,7 @@
     "tests/public_exports.test.mjs",
     "tests/render-pdf.test.mjs",
     "tests/restauracio-independent-r20b.test.mjs",
+    "tests/revisions-patrimoni-viu.test.mjs",
     "tests/search-cli-wire.test.mjs",
     "tests/security-chain.test.mjs",
     "tests/seed-revisions-r11.test.mjs",
@@ -205,6 +209,11 @@
       "path": "tests/antigravity-hook.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/apps-del-paquet.test.mjs",
+      "suite": "primary",
+      "reason": "R19/P0-113: contracte portable dels paquets de l’amfitrió, literals d’exclusió i bloqueig de dades de salut o financeres; fixtures sintètiques sense backend."
     },
     {
       "path": "tests/backend_consolidacio.test.mjs",
@@ -325,6 +334,11 @@
       "path": "tests/convertir-a-webp.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del tractor de conversió a WebP quadrat (1200x1200 i 400x400) amb preservació estricta de metadades EXIF (GPS i dataCaptura)."
+    },
+    {
+      "path": "tests/copublicacio-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R20/T1: PostgreSQL natiu local i descartable per defecte, migracions reals, AAL2 literal, lectura Foraster, concurrència entre dos clients i rollback; sense skip ni base remota. embedded-postgres és una devDependency exacta del lockfile."
     },
     {
       "path": "tests/copyright-scroll-cascade.test.mjs",
@@ -720,6 +734,11 @@
       "path": "tests/migracio-convergencia-perfil.test.mjs",
       "suite": "primary",
       "reason": "F1 permanent: paritat CAMPS_PERFIL, permisos de columna i convergència segura de create_organization; SQL local sense dades de sessió."
+    },
+    {
+      "path": "tests/migracio-cua-purga-storage-ugc.test.mjs",
+      "suite": "primary",
+      "reason": "R19/P0-20: migració i gestor permanents de la cua de purga UGC, permisos i propietat; SQL real amb PGlite local explícit. Sense mòdul declara omissió i no certifica eixa cobertura SQL."
     },
     {
       "path": "tests/migracio-grups-sense-mare.test.mjs",
@@ -1260,6 +1279,11 @@
       "path": "tests/restauracio-independent-r20b.test.mjs",
       "suite": "primary",
       "reason": "R20b K3: SQL78 independent sobre catàleg76 real, RLS i cap grant directe d’emmagatzematge, importació idempotent; PGlite explícit."
+    },
+    {
+      "path": "tests/revisions-patrimoni-viu.test.mjs",
+      "suite": "primary",
+      "reason": "R19/P1-75: revisions anuals del patrimoni, versió optimista, autoria, RLS multipoble i AAL2 sobre el catàleg real amb PGlite local explícit; sense mòdul declara omissió, no SQL certificat."
     },
     {
       "path": "tests/run-portes-cens.test.mjs",

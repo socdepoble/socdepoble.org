@@ -6,6 +6,8 @@ import { useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useSessioOpcional } from '../../app/contexts/SessionContext';
 import { useSEO } from '../../hooks/useSEO';
+import { esAppNativa } from '../../config/origenPublic.js';
+import { compatibilitatDispositius, FONT_COMPATIBILITAT_TLS } from '../text/pageContent.dispositius.js';
 import {
   PRESENCE_STALE_MS,
   ambNomSuggerit,
@@ -41,7 +43,8 @@ function nomDePersona(currentUser, agents) {
 }
 
 export default function DevicesSection() {
-  const { externalConfig } = useUIState();
+  const { externalConfig, language = 'ca' } = useUIState();
+  const compatibilitat = compatibilitatDispositius(language);
   const { agents } = useCoreContent();
   const currentUser = useSessioOpcional()?.currentUser || null;
   const tenantId = externalConfig?.tenantId || 'default-tenant';
@@ -290,6 +293,14 @@ export default function DevicesSection() {
           <h2>Descobrix instàncies del portal</h2>
           <p className="lead">Llança una connexió i envia missatges directes des d’esta mateixa pantalla.</p>
         </div>
+
+        {!esAppNativa() && (
+          <section className="note-card" lang={compatibilitat.language}>
+            <h2>{compatibilitat.title}</h2>
+            <p>{compatibilitat.lead}</p>
+            <p><a href={FONT_COMPATIBILITAT_TLS} target="_blank" rel="noopener noreferrer">{compatibilitat.font}</a></p>
+          </section>
+        )}
 
         <div className="sdp-stat-grid">
           {summary.map((item) => (

@@ -113,7 +113,7 @@ const ARREL = path.resolve(import.meta.dirname, '../../..');
 const copy = PAGE_COPY.fediversity;
 // AH-22: les proves del dossier detallat conserven el seu abast.
 // pageContent.r10.test.js contrasta separadament el balanç datat afegit al davant.
-const iniciDossier = copy.html.indexOf('<h3>Què és NGI Fediversity i per què Sóc de Poble hi encaixa</h3>');
+const iniciDossier = copy.html.indexOf('<h3>Què és NGI Fediversity i què proposava Sóc de Poble</h3>');
 if (iniciDossier < 0) throw new Error('Falta el dossier detallat de Fediversity');
 const doc = new DOMParser().parseFromString(copy.html.slice(iniciDossier), 'text/html');
 const text = doc.body.textContent.replace(/\s+/g, ' ');
@@ -174,7 +174,7 @@ const ENDPOINTS_FEDERACIO = () => {
 describe('anatomia (skill sdp-universal-page)', () => {
   test('H1, H2 i data: els literals de l’ordre del Mestre', () => {
     expect(copy.title).toBe('Candidatura Europea NLnet · NGI Fediversity');
-    expect(copy.subtitle).toBe("50.000 € i 1.000 hores d'enginyeria lliure per a la sobirania digital dels pobles rurals (Expedient 2026-08-1a6)");
+    expect(copy.subtitle).toBe('Resolució de la candidatura i continuïtat del projecte · Expedient 2026-08-1a6');
     expect(copy.date).toBe('2026-10-30T00:06:00+01:00');
     expect(copy.lead).not.toMatch(/[<>]/);
   });
@@ -184,8 +184,8 @@ describe('anatomia (skill sdp-universal-page)', () => {
     expect(doc.querySelectorAll('h1, h2')).toHaveLength(0);
     expect([...doc.querySelectorAll('h4')].filter(h => h.textContent === 'FEDI-01–09: tall verificat localment el 3 de novembre de 2026')).toHaveLength(1);
     expect([...doc.querySelectorAll('h3')].map(h => h.textContent)).toEqual([
-      'Què és NGI Fediversity i per què Sóc de Poble hi encaixa',
-      'Agenda viva i estat de les 4 partides: 1.000 hores i 50.000 €',
+      'Què és NGI Fediversity i què proposava Sóc de Poble',
+      'Les quatre partides de la proposta: 1.000 hores i 50.000 €',
       'Verificació en viu per als avaluadors i el veïnat'
     ]);
   });
@@ -227,7 +227,7 @@ describe('anatomia (skill sdp-universal-page)', () => {
       "Total sol·licitat: 1.000 hores · 50.000 € (50 €/hora proposats). La sol·licitud 2026-08-1a6 no va superar la primera selecció; el treball documentat a continuació no implica cap concessió de l’ajuda."
     ]);
     // El total va dins del segon H3, abans de la primera partida.
-    expect(doc.querySelector('blockquote').previousElementSibling.previousElementSibling.textContent).toMatch(/^Agenda viva/);
+    expect(doc.querySelector('blockquote').previousElementSibling.previousElementSibling.textContent).toMatch(/^Les quatre partides de la proposta/);
     expect(partides()).toHaveLength(4);
     for (const [i, h4] of partides().entries()) {
       expect([i, seccio(h4).filter((node) => node.tagName === 'H5').map((h5) => h5.textContent)]).toEqual([i, ['Què diu la candidatura', 'Fet hui (verificable)', 'Pendent']]);
@@ -283,8 +283,9 @@ describe('anatomia (skill sdp-universal-page)', () => {
     const svg=llegix('public/assets/uploads/ngi-fediversity-tag.svg');
     expect(svg).toMatch(/viewBox="0 0 2040 503"/);
     expect(svg).not.toMatch(/<script|\son[a-z]+\s*=|foreignObject|<!ENTITY|<!DOCTYPE|@import|javascript:|href="https?:/i);
-    expect(a.parentElement.nextElementSibling.textContent).toContain('no rep finançament d’esta sol·licitud');
-    expect(a.parentElement.nextElementSibling.textContent).toContain('no va entrar en la primera selecció');
+    expect(a.parentElement.nextElementSibling.textContent).toContain('No s’ha concedit finançament');
+    expect(a.parentElement.nextElementSibling.textContent).toContain('no va superar la primera selecció');
+    expect(a.parentElement.nextElementSibling.textContent).toContain('fora de l’abast dels seus fons actuals');
   });
 });
 
@@ -295,7 +296,7 @@ describe('anatomia (skill sdp-universal-page)', () => {
    Prova d'Or de la lectura diagonal: cap paràgraf pla, i cap negreta dins d'un encapçalament. */
 describe('O6 · lectura diagonal: H4 + paràgraf, i cap paràgraf pla', () => {
   test('les tres raons: un H4 i un paràgraf cadascuna, darrere de «tres raons», sense cap llista', () => {
-    const intro = [...doc.querySelectorAll('p')].find((p) => p.textContent === 'Sóc de Poble hi encaixa per tres raons:');
+    const intro = [...doc.querySelectorAll('p')].find((p) => p.textContent === 'La proposta de Sóc de Poble compartia tres objectius amb la convocatòria:');
     const raons = [];
     for (let node = intro.nextElementSibling; node && node.textContent !== 'Punts d’accés i pilot del Fedivers rural'; node = node.nextElementSibling) raons.push(node);
     expect(raons.map((node) => node.tagName)).toEqual(['H4', 'P', 'H4', 'P', 'H4', 'P']);
@@ -364,6 +365,8 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect(copy.lead).toContain('2026-08-1a6');
     expect(copy.lead).toContain('no va passar la primera selecció');
     expect(copy.lead).toContain('31 d’octubre de 2026');
+    expect(copy.lead).toContain('9 de novembre de 2026');
+    expect(copy.lead).toContain('fora de l’abast dels seus fons actuals');
     expect(copy.lead).toContain('No s’ha concedit finançament');
     expect(text).toContain('50 €/hora proposats');
     expect(text).toContain('no es presenta com una tarifa imposada per NLnet');
@@ -676,12 +679,12 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     // dated note (one source, INVENTARI_CONTRACTE), checked against the code.
     expect(fet).toContain(nucli+' mètodes obligatoris i '+capacitats+' capacitats opcionals declarades');
     expect(fet).toContain(opcionals+' mètodes addicionals: '+total+' mètodes en total');
-    expect(fet).toContain('recompte del codi local del 9 de novembre de 2026');
+    expect(fet).toContain('recompte del codi local de l’11 de novembre de 2026');
     expect(fet).toContain('no certifica les '+total+' operacions contra un servidor remot');
     const paginaCompleta=new DOMParser().parseFromString(copy.html,'text/html');
     const notaActual=[...paginaCompleta.querySelectorAll('p')].find(p=>p.textContent.includes('Inventari del codi local.'))?.textContent;
     const {CASOS,metodesSenseCas}=await import('../../data/conformitat/kit.js');
-    expect(notaActual).toContain('9 de novembre de 2026');
+    expect(notaActual).toContain('11 de novembre de 2026');
     expect(notaActual).toContain(capacitats+' capacitats i '+total+' mètodes amb '+CASOS.length+' casos');
     expect(notaActual).toContain('46/138/190');
     expect(notaActual).toContain('no acredita activació');
@@ -695,7 +698,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
       expect(absents).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
-      expect(oferides).toHaveLength(44);
+      expect(oferides).toHaveLength(47);
       expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(22);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');
@@ -712,7 +715,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect(model).toContain((capacitats-CAPACITATS_NO_DECLARADES.length)+' dels '+capacitats+' grups declarats');
     expect(model).toContain('els 22 casos');
     for(const absent of CAPACITATS_NO_DECLARADES)expect(model).toContain('`'+absent+'`');
-    expect(model).toContain('no són '+total+' operacions verificades en un servidor remot');
+    expect(model).toContain('La verificació de les '+total+' operacions en un servidor remot continua pendent.');
     expect(model).toContain('no acredita un èxit funcional ni un servei de correu desplegat');
     const {wikiManifest}=await import('../../data/wikiManifest.js');
     const inventari=wikiManifest.items.find(item=>item.id==='api_port_neutral_i_allotjament_model_b');

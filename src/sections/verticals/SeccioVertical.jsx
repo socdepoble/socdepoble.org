@@ -17,18 +17,21 @@
  * l'àmbit fixat (/notes?ambit=<ambit>). Model B: cap adaptador; les dades
  * arriben pel proveïdor del Mur.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import { useSEO } from '../../hooks/useSEO';
 import { useMur } from '../mur/MurContext';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { useSearchParams } from '../../app/contexts/RouterContext';
 import { Carregant, Boto } from '../../components/PedraSeca/index.js';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
 import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import { totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
 import { esVisibleALaLlista, perAmbit } from '../../utils/publicacioUniversal.js';
+
+const MapaFotograficLazy = lazy(() => import('../mur/MapaFotografic.jsx'));
 
 /** Els cinc àmbits amb secció vertical pròpia (sections.js: mapa, vehicle, animalets, treball, habitatge). */
 export const AMBITS_VERTICALS = Object.freeze(['mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
@@ -114,10 +117,39 @@ export default function SeccioVertical({ ambit }) {
     carregaMes = SENSE_CARREGA, hiHaMes = SENSE_MES, carregantMes = SENSE_MES, errorMes = SENSE_ERROR
   } = useMur();
   const { t } = useUIActions();
+  const [searchParams] = useSearchParams();
   const textos = Object.hasOwn(TEXTOS_VERTICALS, ambit) ? TEXTOS_VERTICALS[ambit] : null;
   const tr = (parell) => (parell ? t(parell[0], parell[1]) : '');
   /* Només les fitxes d'este àmbit que es poden llistar (mai una 'tancada'). */
   const items = useMemo(() => perAmbit(sortedFeedPosts, ambit).filter(esVisibleALaLlista), [sortedFeedPosts, ambit]);
+
+  const puntEnllacat = useMemo(() => {
+    if (ambit !== 'mapa') return null;
+    const rawLat = searchParams.get('lat');
+    const rawLng = searchParams.get('lng');
+    if (rawLat === null || rawLng === null) return null;
+    const lat = Number(rawLat);
+    const lng = Number(rawLng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    const id = searchParams.get('id') || 'punt-enllacat';
+    const trobat = items.find((it) => String(it.id) === String(id));
+    return {
+      id: String(id),
+      type: 'mapa',
+      ambit: 'mapa',
+      visibility: 'public',
+      title: trobat?.title || t('card.alMapa', 'AL MAPA'),
+      image_url: trobat?.image_url || trobat?.image || '/assets/ui/plugins/mapa_vinyeta.webp',
+      geolocalitzacio: {
+        lat,
+        lng,
+        precisio: 'exacta',
+        precisio_m: 10,
+        origen: 'exif'
+      },
+      dataCaptura: trobat?.dataCaptura || trobat?.publish_date || null
+    };
+  }, [ambit, searchParams, items, t]);
 
   const [cerca, setCerca] = useState(() => ({ ...ESTAT_INICIAL_CERCA, ambit }));
   const cercaViva = cerca.ambit === ambit ? cerca : { ...ESTAT_INICIAL_CERCA, ambit };
@@ -195,6 +227,13 @@ export default function SeccioVertical({ ambit }) {
     <ContentProvider initialConfig={config}>
       {/* Traduir només si totes les fitxes són públiques (visibilitatTraduible.js). */}
       <UniversalPage traduccio={totsPublics(items)} accioPrincipal={<PortaDePagina porta={portaPublicar} />}>
+        {puntEnllacat ? (
+          <div className="sdp-mapa-vertical-visor" data-testid="mapa-vertical-punt-enllacat">
+            <Suspense fallback={<Carregant etiqueta={tr(textos.carregant)} />}>
+              <MapaFotograficLazy items={[puntEnllacat]} />
+            </Suspense>
+          </div>
+        ) : null}
         {status === 'loading' || cercantPrimeraFitxa ? <Carregant etiqueta={tr(textos.carregant)} /> : null}
         {status === 'error'
           ? <EstatErrorDades titol={tr(textos.error)} error={error} onReintenta={refresh} />

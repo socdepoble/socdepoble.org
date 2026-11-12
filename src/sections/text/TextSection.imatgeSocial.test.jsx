@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => ({
   headReal: false, ui: null
 }));
 vi.mock('../../app/contexts/UIContext', () => ({
+  useUIStateOpcional: () => null,
   useUIActions: () => (mocks.ui ||= { t: mocks.t, resolveAsset: (cami) => cami }),
   useUIState: () => ({ externalConfig: { manageDocumentHead: true } })
 }));

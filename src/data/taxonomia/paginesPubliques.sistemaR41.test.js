@@ -85,7 +85,8 @@ const PAGES=[
  // P0-64 · curadoria cultural; mateix vocabulari editorial de Documentació.
  ['la-iaia-sabuda','patrimoni-cultura','Documentació'],
  // Onada R14 · /page/receptes, el receptari «Què dinem?».
- ['receptes','patrimoni-cultura','Patrimoni']
+ ['receptes','patrimoni-cultura','Patrimoni'],
+ ['dispositius','tecnologia-lliure','Documentació']
 ];
 // P6 · les huit pàgines d'acció (publicar i saber-ne més del Panell): cap etiqueta, en cap llengua.
 const ACTION_PAGES=['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge'];
@@ -133,8 +134,8 @@ const sentinels=()=>({
 
 describe('R41 independent public-page contract',()=>{
  it('the fixture covers exactly the 33 public keys (25 classified, with R14 receptes and P0-64 La IAIA Sabuda, + 8 P6 action pages) and the 6/49 normative vocabularies',()=>{
-  expect(PAGES).toHaveLength(25);expect(ACTION_PAGES).toHaveLength(8);
-  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(33);
+  expect(PAGES).toHaveLength(26);expect(ACTION_PAGES).toHaveLength(8);
+  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(34);
   expect(Object.keys(PAGE_COPY).sort()).toEqual(keys.sort());
   expect(Object.keys(CATEGORIES)).toHaveLength(6);expect(new Set(TAGS_49).size).toBe(49);
  });

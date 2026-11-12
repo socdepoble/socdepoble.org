@@ -199,6 +199,15 @@ describe('pipeline extrem a extrem (dos parts, doble de servidor en memòria)', 
     await expect(b.d.urlAdjuntXat(ALTRE)).resolves.toBe(`https://signada.example/${ALTRE}`);
   });
 
+  test('un enviament amb termini no entra a la safata si les claus estan bloquejades', async () => {
+    const c = await creaPart(servidor, C, { ambIdentitat: false });
+    await expect(c.d.enviaMissatge(FIL2, { id: Q1, text: 'avís amb termini' }, { senseSafata: true }))
+      .rejects.toMatchObject({ encuable: true });
+    expect(await c.magatzem.safata(ci(C), actor(C))).toEqual([]);
+    expect(c.impl.enviaXifratXat).not.toHaveBeenCalled();
+    expect(c.impl.enviaMissatge).not.toHaveBeenCalled();
+  });
+
   test('cua F7: amb les claus bloquejades s’encua amb el mateix id; en desbloquejar, drena en ordre, sense perdre res en fallar', async () => {
     const c = await creaPart(servidor, C, { ambIdentitat: false });
     await expect(c.d.enviaMissatge(FIL2, { id: Q1, text: 'primer' })).resolves.toMatchObject({ id: Q1, filId: FIL2, encuat: true, reintentable: true });

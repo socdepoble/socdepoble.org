@@ -10,8 +10,13 @@
  *   · dadesPersonals 'salut': la plataforma només l'obri si l'App és l'ama
  *     del document (sense iframe ni __SDP_EMBEDDED__), la telemetria la compta
  *     com a /app/* i el títol de la pestanya mai porta dates ni noms;
- *   · `carrega` darrere del literal de compilació EXACTE de baix
- *     (VITE_SDP_APP_SALUT): sense la variable, el build de producció no la porta;
+ *   · P0-113 (ordre del Mestre, 261111): eina gratuïta oberta en producció
+ *     (entorn 'produccio', actiuPerDefecte true) i en proves (Beta oberta).
+ *     La guarda d'ama del document i les dades de salut no canvien;
+ *   · `carrega` darrere del literal de compilació EXACTE de baix: el tros
+ *     diferit d'AppSalut entra al build per defecte, i amb
+ *     VITE_SDP_APP_SALUT=0 el build de producció no la porta (l'app continua
+ *     sent desendollable, a més de les capes de l'amfitrió i de la persona);
  *   · el component és l'export per defecte d'AppSalut.jsx.
  * Les entrades són les de la barra lateral (§B.9); el primer tram de cada
  * ruta de rutesSalut.js n'és una. Els interruptors amaguen els apunts que la
@@ -44,13 +49,13 @@ export default {
   permisos: { veure: 'public' },
   capacitats: [],
   nivell: 'gratuit',
-  actiuPerDefecte: false,
-  entorn: 'desenvolupament',
+  actiuPerDefecte: true,
+  entorn: 'produccio',
   dadesPersonals: 'salut',
   interruptors: [
     { id: 'agitacio', titol: { ca: 'Agitació i conducta', es: 'Agitación y conducta' } },
     { id: 'medicacio', titol: { ca: 'Medicació', es: 'Medicación' } },
     { id: 'deposicions', titol: { ca: 'Deposicions', es: 'Deposiciones' } }
   ],
-  carrega: import.meta.env.DEV || import.meta.env.VITE_SDP_APP_SALUT === '1' ? () => import('./AppSalut.jsx') : null
+  carrega: import.meta.env.VITE_SDP_APP_SALUT !== '0' ? () => import('./AppSalut.jsx') : null
 };

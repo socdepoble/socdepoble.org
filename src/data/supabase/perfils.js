@@ -50,6 +50,7 @@ import { MISSATGES_TITULAR, errorDeTitular, titularDelContracte } from '../contr
 /* IDEA-22, punt 2 · En seed i local, els bloquejos de qui mira (com seguiments.js). */
 import { llistaBloquejos } from './moderacio.js';
 import { emojiSol } from '../../utils/emoji.js';
+import { corresponPerfilAcreditat, esTipusIdAcreditat } from '../copublicacio.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MODES_LOCALS = new Set(['seed', 'local']);
@@ -152,70 +153,69 @@ function ambTermini(senyalExtern, ms, feina) {
 
 export async function loadPerfilPublic(idOSlug, config = {}) {
   const clau = String(idOSlug ?? '').trim();
-  if (!clau) return null;
+  const { tipusIdAcreditat } = config;
+  if (!clau || (tipusIdAcreditat !== undefined && (!esTipusIdAcreditat(tipusIdAcreditat) || !UUID.test(clau)))) return null;
   const seed = await local(config);
-  if (seed) return seed.loadPerfilPublic(clau, getCurrentUser());
+  if (seed) {
+    const perfil = seed.loadPerfilPublic(clau, getCurrentUser());
+    return !tipusIdAcreditat || corresponPerfilAcreditat(perfil, clau, tipusIdAcreditat) ? perfil : null;
+  }
 
   const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (!hasSupabaseConfig) return null;
 
   const { terminiMs, ...resta } = config;
   const ms = Number.isFinite(terminiMs) && terminiMs > 0 ? terminiMs : TERMINI_DE_LA_FITXA_MS;
-  return ambTermini(config.signal, ms, (signal) => llegixPerfilRemot(clau, tenantId, { ...resta, signal }));
+  return ambTermini(config.signal, ms, signal => llegixPerfilRemot(clau, tenantId, { ...resta, signal }));
 }
 
-/* Revisió del Gauntlet 261022_0225 (REV-PERF-1) · Una consulta que no ha
-   arribat al servidor (avortada, temps esgotat o sense xarxa: l'estat 0 i
-   CODI_BACKEND_INABASTABLE de runtime.js) no és cap «no trobat»: es propaga,
-   i la fitxa pública pinta l'avís amb «Torna-ho a provar». Una resposta del
-   servidor amb error (404, 403, 503…) continua sent null, com abans. */
+/* Les consultes de directori i de perfil compartixen el pressupost de xarxa
+   de la fitxa. Un error de transport es propaga i activa el reintent. */
 const senseResposta = (error) => error?.name === 'AbortError' || error?.name === 'TimeoutError'
   || error?.status === 0 || error?.codi === CODI_BACKEND_INABASTABLE;
 
+async function organitzacioRemota(filtre, config) {
+  const files = await request(`/rest/v1/organization_directory?select=*&${filtre}&limit=1`, config, { signal: config.signal });
+  return files?.[0] ? perfilDOrganitzacio(files[0]) : null;
+}
+
+async function personaRemota(id, config) {
+  const usuari = getCurrentUser();
+  if (!usuari?.id) return null;
+  if (usuari.id === id) {
+    const files = await request(`/rest/v1/profiles?id=eq.${id}&limit=1`, config, { signal: config.signal });
+    const fila = files?.[0];
+    return fila?.id === id ? perfilDePersona({ ...fila, usuari: fila.username }, usuari) : null;
+  }
+  const files = await rpc('perfil_public', { p_id: id }, config, { signal: config.signal });
+  const fila = Array.isArray(files) ? files[0] : files;
+  return fila?.id === id ? perfilDePersona(fila, usuari) : null;
+}
+
 async function llegixPerfilRemot(clau, tenantId, config) {
-  const esUuid = UUID.test(clau);
-  /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Un slug només és
-     únic dins d'un poble (organizations: unique (tenant_id, slug)): sense el
-     poble, `limit=1` podia tornar l'entitat homònima d'un altre poble. Amb el
-     poble actiu a la configuració resolta, la cerca per slug s'hi limita; sense,
-     la forma d'abans. L'id no es limita: és únic a tot el servidor. Esmena de
-     la revisió adversarial de la peça C · Una clau amb forma d'UUID també pot
-     ser un slug (el check de organizations accepta «a-z0-9» i guions), i la
-     meitat `slug.eq.` de la cerca doble també s'ha de limitar al poble:
-     `or=(id.eq.X,and(slug.eq.X,tenant_id.eq.T))`.
-     Adaptador del proveïdor: el port (backendPort.js) no canvia. */
-  const poble = tenantId ? encodeURIComponent(tenantId) : '';
-  const slug = `slug.eq.${encodeURIComponent(clau)}`;
-  const slugDelPoble = poble ? `and(${slug},tenant_id.eq.${poble})` : slug;
-  const filtre = esUuid
-    ? `or=(id.eq.${encodeURIComponent(clau)},${slugDelPoble})`
-    : `slug=eq.${encodeURIComponent(clau)}${poble ? `&tenant_id=eq.${poble}` : ''}`;
+  const { tipusIdAcreditat } = config;
+  const filtreSlug = `slug=eq.${encodeURIComponent(clau)}${tenantId ? `&tenant_id=eq.${encodeURIComponent(tenantId)}` : ''}`;
   try {
-    const orgs = await request(`/rest/v1/organization_directory?select=*&${filtre}&limit=1`, config, { signal: config.signal });
-    if (orgs?.[0]) return perfilDOrganitzacio(orgs[0]);
+    if (!UUID.test(clau)) return await organitzacioRemota(filtreSlug, config);
+    const id = clau.toLowerCase();
+    if (tipusIdAcreditat === 'persona') {
+      const perfil = await personaRemota(id, config);
+      return corresponPerfilAcreditat(perfil, id, tipusIdAcreditat) ? perfil : null;
+    }
+
+    /* Un UUID real té prioritat. Un slug amb la mateixa forma és vàlid en
+       rutes antigues, però només es consulta després de descartar els IDs. */
+    const organitzacio = await organitzacioRemota(`id=eq.${id}`, config);
+    if (tipusIdAcreditat === 'organitzacio') {
+      return corresponPerfilAcreditat(organitzacio, id, tipusIdAcreditat) ? organitzacio : null;
+    }
+    if (organitzacio?.id === id) return organitzacio;
+    const persona = await personaRemota(id, config);
+    return persona ?? await organitzacioRemota(filtreSlug, config);
   } catch (error) {
     if (senseResposta(error)) throw error;
+    return null;
   }
-  const usuari = getCurrentUser();
-  if (esUuid && usuari?.id === clau) {
-    try {
-      const files = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(clau)}&limit=1`, config, { signal: config.signal });
-      if (files?.[0]) return perfilDePersona({ ...files[0], usuari: files[0].username }, usuari);
-    } catch (error) {
-      if (senseResposta(error)) throw error;
-    }
-  } else if (esUuid && usuari?.id) {
-    /* Ordre del Mestre (261002) · Una altra persona: la RPC decidix què se'n
-       veu. Sense sessió no es pregunta (anon no hi té permís). */
-    try {
-      const files = await rpc('perfil_public', { p_id: clau }, config, { signal: config.signal });
-      const fila = Array.isArray(files) ? files[0] : files;
-      if (fila?.id) return perfilDePersona(fila, usuari);
-    } catch (error) {
-      if (senseResposta(error)) throw error;
-    }
-  }
-  return null;
 }
 
 export async function listMyAgents(config = {}) {

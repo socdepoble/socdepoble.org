@@ -101,7 +101,9 @@ export { preferenciesConnexions, desaVisibilitatConnexions, connexionsPubliquesD
   membresIEntitatsConnectadesDe, inclouPersonaEnEntitat, solicitaUnirSeAEntitat } from './seguiments.js';
 
 export {adminActualitzaPublicacioEditorial} from './editorialPublicada.js';
+export { lligPublicadorsRegistrats, traspassaPublicacio, reverteixTraspasPublicacio } from './copublicacio.js';
 export { loadSeedRevisions, desaRevisioSeed } from './seedRevisions.js';
+export { llistaRevisionsPatrimoni, desaRevisioPatrimoni, esborraRevisioPatrimoni } from './revisionsPatrimoni.js';
 import { capturaConsultaProjeccionsCataleg } from '../projeccionsCataleg.js';
 import { capturaSessio as capturaSessioProjeccions } from '../identitat.js';
 export async function loadProjeccionsCataleg(input = {}, config = {}) {
@@ -124,3 +126,11 @@ export const estatCuradoriaCultural = ambCuradoria ? curadoriaAmbServidor.estatC
 export const llistaAportacionsCulturals = ambCuradoria ? curadoriaAmbServidor.llistaAportacionsCulturals : undefined;
 export const enviaAportacioCultural = ambCuradoria ? curadoriaAmbServidor.enviaAportacioCultural : undefined;
 export const revisaAportacioCultural = ambCuradoria ? curadoriaAmbServidor.revisaAportacioCultural : undefined;
+
+/* P0-111 (Onada R18) · La migració 2611110455_revisions_editorials_wp.sql encara no és aplicada
+   al servidor remot: com en curadoriaCultural, l'adaptador Supabase només anuncia la capacitat
+   quan VITE_SDP_REVISIONS_EDITORIALS_WP=1 s'encén després d'aplicar la migració (evitant 404). */
+import * as revisionsWpAmbServidor from './revisionsEditorialsWp.js';
+const ambRevisionsWp = import.meta.env.VITE_SDP_REVISIONS_EDITORIALS_WP === '1';
+export const llistaRevisionsEditorialsWp = ambRevisionsWp ? revisionsWpAmbServidor.llistaRevisionsEditorialsWp : undefined;
+export const desaRevisioEditorialWp = ambRevisionsWp ? revisionsWpAmbServidor.desaRevisioEditorialWp : undefined;

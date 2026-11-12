@@ -33,6 +33,19 @@
  *     el mateix que abans (destí, estat inert, avís) als dos. La resta de
  *     plugins conserva un sol botó, baix.
  *
+ * R18 · T2 (P0-101; prompt 261111_0148) · Una eina en proves pinta la
+ * insígnia «En proves · Beta oberta» darrere de les dues etiquetes del
+ * registre: la pàgina es compara amb etiquetesAmbEstat, com la targeta.
+ * Correcció de la T2: l'Avisador no entra al registre (la seua vinyeta no és
+ * a public/), i el cens continua com abans.
+ * P0-114 (ordre del Mestre, 261111: «RESTITUÏX IMMEDIATAMENT «L'Avisador ·
+ * Batec de Vida» A «La llar» DE /control») · DEROGADA la correcció de la T2:
+ * L'Avisador torna al registre amb la seua vinyeta (WebP), la seua data (Kit
+ * R17.2), les seues etiquetes, la insígnia i sis blocs de presentació. No és
+ * cap app de la plataforma: el seu interruptor de build no passa pel registre
+ * d'apps (registrePlugins.test.js el prova), i la prova «desendollada del
+ * build» d'ací continua sent només de les eines amb app.
+ *
  * Router en memòria i plataforma de veres (ProveidorPlataforma amb un entorn
  * fixat). Les proves són fora de L2 (tractor-persistencia).
  */
@@ -54,7 +67,7 @@ import { STORAGE_PREFIX } from '../../config/storage.js';
 import { textDelMotiu } from '../../apps/plataforma/PortalApps.jsx';
 import PluginPage, { TEXTOS_EINA } from './PluginPage.jsx';
 import { PRESENTACIO_PLUGINS, presentacioDelPlugin } from './presentacioPlugins.js';
-import { PLUGINS, pluginPerId } from './registrePlugins.js';
+import { PLUGINS, appDelPlugin, etiquetesAmbEstat, pluginPerId } from './registrePlugins.js';
 import { portaDelPlugin } from './useDestiDelPlugin.js';
 
 /* Fusió del kit v3.0.0 (AH-04, ordre del Mestre del 261104) · Mapa i
@@ -73,10 +86,14 @@ vi.mock('./registrePlugins.js', async (importOriginal) => {
   return { ...real, pluginPerId: (id) => (id === 'eina-de-prova' ? prova : real.pluginPerId(id)) };
 });
 
-/* Un node on tot el que és compilat està encés (com el servidor de dev). */
-const ENTORN_OBERT = Object.freeze({ produccio: false, teDret: () => true, teCapacitat: () => true, amaDelDocument: true });
-/* Un build de producció sense cap VITE_SDP_APP_*: les apps en desenvolupament, apagades. */
-const ENTORN_PRODUCCIO = Object.freeze({ produccio: true, teDret: () => false, teCapacitat: () => true, amaDelDocument: true });
+/* Un node on tot el que és compilat està encés (com el servidor de dev).
+   P0-113 (ordre del Mestre, 261111: «TOT el sistema és 100% gratuït») · Fora `teDret`: cap eina
+   necessita cap dret per a obrir-se. */
+const ENTORN_OBERT = Object.freeze({ produccio: false, teCapacitat: () => true, amaDelDocument: true });
+/* Un node de producció, amb l'App ama del document. P0-113 · Les cinc apps s'obrin en producció
+   (manifest sense entorn de desenvolupament i encés per defecte). Abans: «les apps en
+   desenvolupament, apagades». */
+const ENTORN_PRODUCCIO = Object.freeze({ produccio: true, teCapacitat: () => true, amaDelDocument: true });
 
 function Ubicacio() {
   const { pathname } = useLocation();
@@ -88,7 +105,11 @@ function Ubicacio() {
    producció de veres sense cap VITE_SDP_APP_*: Vite hi deixa `carrega` a null
    (el literal de compilació de cada manifest). Vitest corre amb DEV=true i
    el registre del document les porta compilades totes; este registre
-   reprodueix el paquet de producció. */
+   reprodueix el paquet de producció.
+   P0-113 (ordre del Mestre, 261111) · El literal passa a opt-out
+   (VITE_SDP_APP_<ID> !== '0'): un build per defecte ja les porta totes, i
+   este registre reprodueix ara un build que les DESENDOLLA totes
+   (VITE_SDP_APP_<ID>=0). El camí «sense destí» de la pàgina es conserva. */
 const registreDeProduccio = () => creaRegistre({ internes: MANIFESTS_INTERNS.map((m) => ({ ...m, carrega: null })) });
 
 function munta(ruta, opcions = {}) {
@@ -133,7 +154,10 @@ const article = (container) => container.querySelector('article.content-wrapper'
 const MOTIU = Object.freeze({
   entorn: 'Esta eina encara està en proves i no està a punt per a tothom.',
   noCompilada: 'Esta web encara no té esta eina.',
-  personaApagada: 'L’has desactivada tu. La pots tornar a activar quan vulgues.'
+  personaApagada: 'L’has desactivada tu. La pots tornar a activar quan vulgues.',
+  /* R19 · Arbitratge del carril Genealogia + Perfil (P1) · El porten Salut i l'Arbre Genealògic, que no guarda dades
+     de salut: el text diu el que és cert per a totes dues. Abans: «Guarda dades de salut». */
+  documentNoPropi: 'Guarda dades personals delicades: només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web.'
 });
 const CAMI = Object.freeze({
   posar: 'Tu no has d’instal·lar ni baixar res. Esta eina només la pot afegir qui porta esta web, quan estiga a punt. Llavors, ací mateix tindràs el botó per a obrir-la.',
@@ -144,9 +168,12 @@ const NOTA = Object.freeze({
   desactivada: 'Està desactivada per a tu, només en este navegador. Si la tornes a activar, tornarà al teu Panell.',
   apagada: 'L’has desactivada a la llista d’eines, només en este navegador. Si la tornes a activar, la podràs tornar a obrir ací quan esta web la tinga.'
 });
-/* Els motius d'interruptors.js (avaluaApp), tots: cada un té el seu text. */
+/* Els motius d'interruptors.js (avaluaApp), tots: cada un té el seu text.
+   P0-113 (ordre del Mestre, 261111: «elimina definitivament qualsevol nivell o cartell `premium` /
+   «eina de pagament»») · Fora 'sense-dret' (una eina de pagament sense contractar): la
+   plataforma ja no el dona, i la prova de baix vigila que no tinga cap text. */
 const MOTIUS = ['no-compilada', 'entorn-desenvolupament', 'amfitrio-no-la-declara', 'apagada-per-defecte', 'persona-apagada',
-  'sense-capacitat', 'document-no-propi', 'document-no-propi-financeres', 'sense-dret'];
+  'sense-capacitat', 'document-no-propi', 'document-no-propi-financeres'];
 const DESACTIVA = 'Desactiva esta eina';
 const REACTIVA = 'Torna a activar esta eina';
 /* Cap paraula de la troballa F7 en l'estat buit: ni «node», ni «app», ni
@@ -214,7 +241,7 @@ describe('cada plugin té la seua pàgina', () => {
        2, Mòdul B, P0-14) · Les del Mapa, Vehicle, Animalets, el Rebost i Salut
        també són WebP: el seu original .jpg ix de public/ i la bessona, amb les
        mateixes mides, és la portada. Abans: només la del TPV. */
-    const enWebp = ['mapa', 'vehicle', 'animalets', 'rebost', 'salut', 'genealogia', 'tpv'].includes(id);
+    const enWebp = ['mapa', 'vehicle', 'animalets', 'rebost', 'salut', 'genealogia', 'avisador', 'tpv'].includes(id);
     expect(portada.getAttribute('src')).toBe(`/assets/ui/plugins/${id}_vinyeta.${enWebp ? 'webp' : 'jpg'}`);
     expect(portada.getAttribute('alt')).toBe(plugin.imatgeAlt);
     // La portada és plegable i es veu per defecte.
@@ -239,8 +266,9 @@ describe('Onada 10 · la pàgina porta la data i les etiquetes de la targeta', (
   const AMB_DATA = PLUGINS.filter((p) => p.data !== null);
   const SENSE_DATA = PLUGINS.filter((p) => p.data === null);
 
-  test('el cens: sis amb data i etiquetes (Gestoria, TPV, Rebost, Salut, Arbre Genealògic i Lector RSS); tres sense', () => {
-    expect(AMB_DATA.map((p) => p.id)).toEqual(['gestoria', 'tpv', 'rebost', 'salut', 'genealogia', 'rss']);
+  /* P0-114 (ordre del Mestre, 261111) · Set: torna L'Avisador, amb la seua data. */
+  test('el cens: set amb data i etiquetes (Gestoria, TPV, Rebost, Salut, Arbre Genealògic, L’Avisador i Lector RSS); tres sense', () => {
+    expect(AMB_DATA.map((p) => p.id)).toEqual(['gestoria', 'tpv', 'rebost', 'salut', 'genealogia', 'avisador', 'rss']);
     expect(SENSE_DATA.map((p) => p.id)).toEqual(['mapa', 'vehicle', 'animalets']);
     expect(PLUGINS.filter((p) => p.etiquetes.length > 0)).toEqual(AMB_DATA);
   });
@@ -251,7 +279,8 @@ describe('Onada 10 · la pàgina porta la data i les etiquetes de la targeta', (
     expect(pastilles).toHaveLength(1);
     // El mateix lector que la targeta (dataHoraDeBarra): mateixa hora i mateix dia.
     const { time, date } = dataHoraDeBarra({ creat: plugin.data });
-    expect([time, date]).toEqual(['00:15', '04/10/26']);
+    /* P0-114 (261111) · L'Avisador porta la data del Kit R17.2; la resta, la de l'ordre del 261004. */
+    expect([time, date]).toEqual(id === 'avisador' ? ['00:30', '11/11/26'] : ['00:15', '04/10/26']);
     expect([...pastilles[0].querySelectorAll('span')].map((span) => span.textContent)).toEqual([time, date]);
     // Com la de la targeta, la pastilla porta al Calendari.
     fireEvent.click(pastilles[0]);
@@ -262,10 +291,13 @@ describe('Onada 10 · la pàgina porta la data i les etiquetes de la targeta', (
     const { container } = munta(`/plugin/${id}`);
     const llista = container.querySelector('header.page-title ul.page-title-labels');
     expect(container.querySelector('header.page-title h1').nextElementSibling).toBe(llista);
+    /* R18 · T2 (P0-101) · Les d'etiquetesAmbEstat: les dues del registre, sempre primer i en eixe
+       ordre, i, si l'eina és en proves, la insígnia (betaOberta.test.jsx la prova en dues llengües). */
     expect([...llista.children].map((li) => [li.textContent, li.className])).toEqual(
-      plugin.etiquetes.map((etiqueta) => [etiqueta.text, `sp-card-label ${etiqueta.className}`])
+      etiquetesAmbEstat(plugin, 'ca').map((etiqueta) => [etiqueta.text, `sp-card-label ${etiqueta.className}`])
     );
-    expect([...llista.children].map((li) => li.className.split(' ')[1])).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
+    expect([...llista.children].slice(0, 2).map((li) => li.className.split(' ')[1])).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
+    expect(llista.children).toHaveLength(plugin.estat === 'proves' ? 3 : 2);
     expect(llista.querySelector('a, button')).toBeNull();
     // I el copyright continua tancant el bloc blanc.
     expect(container.querySelector('header.page-title').lastElementChild.className).toBe('sp-card-copyright page-title-copyright');
@@ -289,8 +321,9 @@ describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost 
   const AMB_PRESENTACIO_I_DESTI = AMB_PRESENTACIO.filter((p) => p.obrir !== null);
 
   test('el cens: només el Rebost i Salut tenen presentació', () => {
-    expect(AMB_PRESENTACIO.map((p) => p.id)).toEqual(['gestoria', 'rebost', 'salut', 'genealogia', 'rss']);
-    expect(Object.keys(PRESENTACIO_PLUGINS)).toEqual(['rebost', 'salut', 'genealogia', 'gestoria', 'rss']);
+    /* P0-114 (ordre del Mestre, 261111, punt 3) · I L'Avisador, amb els seus sis blocs. */
+    expect(AMB_PRESENTACIO.map((p) => p.id)).toEqual(['gestoria', 'rebost', 'salut', 'genealogia', 'avisador', 'rss']);
+    expect(Object.keys(PRESENTACIO_PLUGINS)).toEqual(['rebost', 'salut', 'genealogia', 'gestoria', 'rss', 'avisador']);
     expect(SENSE_PRESENTACIO.map((p) => p.id)).toEqual(['mapa', 'vehicle', 'animalets', 'tpv']);
   });
 
@@ -349,14 +382,21 @@ describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost 
   /* Gauntlet 261022_0225 (F2) · DEROGAT «si el destí no es pot obrir, tots
      dos són inerts» (M2): sense destí, cap «Obrir…», ni dalt ni baix. L'avís
      en text es diu una sola vegada, entre el cos i l'acció, i baix hi ha
-     l'estat buit: el camí i «Desactiva esta eina». */
-  test.each(AMB_PRESENTACIO_I_DESTI.map((p) => [p.id, p]))('/plugin/%s en producció: cap «Obrir…», un sol avís entre el cos i l’acció, i l’estat buit baix', (id, plugin) => {
-    const { container } = munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO });
+     l'estat buit: el camí i «Desactiva esta eina».
+     P0-113 (ordre del Mestre, 261111) · En producció ja s'obrin (la prova de
+     davall): el camí sense destí es prova amb un build que les desendolla
+     (VITE_SDP_APP_<ID>=0, registreDeProduccio), amb el motiu 'no-compilada'.
+     Abans: ENTORN_PRODUCCIO i el motiu de la capa d'entorn.
+     P0-114 (ordre del Mestre, 261111) · Només les eines amb app de la plataforma: L'Avisador no en
+     té cap, i el seu build sense ell (VITE_SDP_APP_AVISADOR=0) no deixa cap pàgina ni cap targeta
+     (pluginPerId null, la 404; registrePlugins.test.js). */
+  test.each(AMB_PRESENTACIO_I_DESTI.filter((p) => appDelPlugin(p)).map((p) => [p.id, p]))('/plugin/%s desendollada del build: cap «Obrir…», un sol avís entre el cos i l’acció, i l’estat buit baix', (id, plugin) => {
+    const { container } = munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio() });
     expect(screen.queryByRole('link', { name: new RegExp(plugin.etiquetaObrir) })).toBeNull();
     expect(controlsObrir(container, plugin)).toEqual([]);
     expect(accioDeDalt(container)).toBeNull();
     const avis = screen.getByRole('status');
-    expect(avis.textContent).toBe(MOTIU.entorn);
+    expect(avis.textContent).toBe(MOTIU.noCompilada);
     // L'ordre de l'article: entradilla, cos, avís i acció.
     const fills = [...article(container).children];
     expect(fills).toHaveLength(4);
@@ -368,6 +408,17 @@ describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost 
     expect(within(accio(container)).getByRole('button', { name: DESACTIVA })).toBeTruthy();
     expect(within(accio(container)).getByText(NOTA.activa)).toBeTruthy();
     expect(accio(container).querySelector('[aria-disabled="true"]')).toBeNull();
+  });
+
+  /* P0-113 (ordre del Mestre, 261111: «ENCÉN en producció … com a eines gratuïtes obertes») · En
+     un node de producció de veres (build per defecte, l'App ama del document), cada eina amb
+     presentació i destí porta els seus dos «Obrir…», cap avís i cap estat buit. */
+  test.each(AMB_PRESENTACIO_I_DESTI.map((p) => [p.id, p]))('/plugin/%s en producció: s’obri, amb els dos «Obrir…» i cap avís', (id, plugin) => {
+    const { container } = munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO });
+    const { dalt, baix } = elsDosControls(container, 'link', plugin.etiquetaObrir);
+    expect([dalt.getAttribute('href'), baix.getAttribute('href')]).toEqual([plugin.obrir, plugin.obrir]);
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('button', { name: DESACTIVA })).toBeNull();
   });
 
   /* Llei del Píxel: la decisió M2 només nomena el Rebost i Salut. La resta
@@ -501,21 +552,22 @@ describe('el botó Obrir', () => {
     expect(ubicacio()).toBe('/app/gestoria');
   });
 
-  /* Fora de desenvolupament, l'app no s'obri (entorn 'desenvolupament'): la
-     pàgina es manté, diu honestament que està en obres i no navega a res. */
-  test('la Gestoria compilada en producció: explica la limitació d’entorn sense suggerir instal·lar-la', () => {
+  /* Fora de desenvolupament, l'app no s'obria (entorn 'desenvolupament'): la
+     pàgina es mantenia, deia honestament que estava en obres i no navegava.
+     DEROGADA per P0-113 (ordre del Mestre, 261111: «ENCÉN en producció …
+     Gestoria (`/app/gestoria`)») · En producció, amb l'App ama del document,
+     la Gestoria s'obri pel router; cap lloc de la Wiki ni /gestoria. La guarda
+     de les dades financeres en un document d'altri continua (la prova del
+     final del fitxer). */
+  test('P0-113 · la Gestoria en producció obri la seua app pel router, i cap lloc de la Wiki', () => {
     const { container } = munta('/plugin/gestoria', { entorn: ENTORN_PRODUCCIO });
-    expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
-    expect(container.querySelector('a[href*="wikidepoble"], a[href*="gestoria_"], a[href*="/app/gestoria"]')).toBeNull();
-    expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
-    expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
-    expect(screen.getByRole('status').textContent).toBe(MOTIU.entorn);
-    fireEvent.click(screen.getByRole('button', { name: DESACTIVA }));
-    expect(ubicacio()).toBe('/plugin/gestoria');
-    expect(screen.getByRole('status').textContent).toBe(MOTIU.entorn);
-    // La pàgina de la Gestoria continua sent la seua: portada, títol i entradilla.
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Gestoria');
-    expect(container.querySelector('.hero-image img').getAttribute('src')).toBe('/assets/ui/plugins/gestoria_vinyeta.jpg');
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('button', { name: DESACTIVA })).toBeNull();
+    expect(container.querySelector('a[href*="wikidepoble"], a[href*="gestoria_"], a[href="/gestoria"]')).toBeNull();
+    const { baix } = elsDosControls(container, 'link', 'Obrir la Gestoria');
+    expect(baix.getAttribute('href')).toBe('/app/gestoria');
+    fireEvent.click(baix);
+    expect(ubicacio()).toBe('/app/gestoria');
   });
 
   /* Ordre del Mestre (261007) · Bàscula descartada per ara: fora d'esta llista.
@@ -543,9 +595,17 @@ describe('el botó Obrir', () => {
      deia «producció sense VITE_SDP_APP_*», però vitest corre amb DEV=true:
      el Lector hi és compilat i només l'apaga la capa d'entorn (manifest amb
      entorn 'desenvolupament' i produccio: true). Es conserva, amb el nom del
-     que comprova de veres; el build real és la prova de davall. */
-  test('capa d’entorn: el Lector compilat en producció diu per què no es pot obrir, sense ajuda d’instal·lació', () => {
-    munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO });
+     que comprova de veres; el build real és la prova de davall.
+     P0-113 (ordre del Mestre, 261111) · El manifest del Lector ja no és de
+     desenvolupament: la capa d'entorn es prova amb un registre on el Lector
+     ho torna a ser (cap app del registre ho és hui). La capa continua viva a
+     interruptors.js per a una app futura que només funcione en local. */
+  test('capa d’entorn: una app de desenvolupament (el Lector, ací) compilada en producció diu per què no es pot obrir, sense ajuda d’instal·lació', () => {
+    const registre = creaRegistre({
+      internes: MANIFESTS_INTERNS.map((m) => (m.id === 'lector' ? { ...m, entorn: 'desenvolupament', actiuPerDefecte: false } : m))
+    });
+    expect(registre.appPerId('lector')).toMatchObject({ entorn: 'desenvolupament' });
+    munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre });
     expect(screen.queryByRole('link', { name: /Obrir el Lector/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
@@ -562,9 +622,9 @@ describe('el botó Obrir', () => {
      Gauntlet 261022_0225 (F7) · DEROGAT «Com instal·lar esta eina»: no hi
      ha cap manera d'instal·lar-la, i el botó prometia passos que no hi
      havia. Ara el text diu, sense cap botó, qui la pot posar. */
-  test('build de producció sense VITE_SDP_APP_* (carrega null): «Esta web encara no té esta eina.», qui la pot posar, i cap botó d’instal·lar', () => {
+  test('build de producció amb VITE_SDP_APP_LECTOR=0 (carrega null): «Esta web encara no té esta eina.», qui la pot posar, i cap botó d’instal·lar', () => {
     const registre = registreDeProduccio();
-    // El registre simulat és el de producció: el Lector hi és, però sense compilar.
+    // El registre simulat és el d'un build que la desendolla: el Lector hi és, però sense compilar.
     expect(registre.appPerId('lector')).toMatchObject({ id: 'lector', origen: 'interna', carrega: null });
     expect(registre.componentDe('lector')).toBeNull();
     const { container } = munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre });
@@ -584,8 +644,11 @@ describe('el botó Obrir', () => {
      botó dalt i al final, tots dos inerts.
      Gauntlet 261022_0225 (F2) · DEROGAT el compte d'inerts (1 per al TPV, 2
      per al Rebost i Salut): cap de les cinc pinta cap «Obrir…», ni dalt ni
-     baix, i totes oferixen el camí i «Desactiva esta eina». */
-  test('build de producció: cap app de la plataforma fa enllaç ni pinta cap «Obrir…» inert', () => {
+     baix, i totes oferixen el camí i «Desactiva esta eina».
+     P0-113 (ordre del Mestre, 261111) · Un build que les desendolla totes
+     (VITE_SDP_APP_<ID>=0). La Gestoria ja no porta entorn al registre: el
+     motiu és 'no-compilada' per a les cinc. */
+  test('build de producció que les desendolla: cap app de la plataforma fa enllaç ni pinta cap «Obrir…» inert', () => {
     const registre = registreDeProduccio();
     for (const [id, nom] of [['tpv', 'Obrir el Bar'], ['rebost', 'Obrir el Rebost'], ['salut', 'Obrir Salut'], ['gestoria', 'Obrir la Gestoria'], ['rss', 'Obrir el Lector']]) {
       const { container } = munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre });
@@ -594,8 +657,9 @@ describe('el botó Obrir', () => {
       expect([id, controlsObrir(container, pluginPerId(id)).length]).toEqual([id, 0]);
       expect([id, container.querySelectorAll('[aria-disabled="true"]').length]).toEqual([id, 0]);
       expect([id, accioDeDalt(container)]).toEqual([id, null]);
-      // La Gestoria porta entorn 'desenvolupament' al registre: és la primera capa que la tanca (troballa F3).
-      expect([id, screen.getByRole('status').textContent]).toEqual([id, id === 'gestoria' ? MOTIU.entorn : MOTIU.noCompilada]);
+      /* Troballa F3 · La Gestoria portava entorn 'desenvolupament' al registre, la primera capa que
+         la tancava. P0-113 · Ja no en porta: el build és la primera capa per a les cinc. */
+      expect([id, screen.getByRole('status').textContent]).toEqual([id, MOTIU.noCompilada]);
       expect(within(accio(container)).getByText(CAMI.posar)).toBeTruthy();
       expect(within(accio(container)).getByRole('button', { name: DESACTIVA })).toBeTruthy();
       cleanup();
@@ -650,12 +714,29 @@ describe('el botó Obrir', () => {
     expect(controlsObrir(container, pluginPerId('salut'))).toEqual([]);
     expect(accioDeDalt(container)).toBeNull();
     const avis = screen.getByRole('status');
-    expect(avis.textContent).toContain('Guarda dades de salut');
+    expect(avis.textContent).toContain(MOTIU.documentNoPropi);
     expect(accio(container).previousElementSibling.contains(avis)).toBe(true);
     expect(accio(container).querySelectorAll('p')).toHaveLength(1);
     expect(within(accio(container)).getByRole('button', { name: DESACTIVA })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
     expect(ubicacio()).toBe('/plugin/salut');
+  });
+
+  /* R19 · Arbitratge del carril Genealogia + Perfil (P1) · Amb `obrir` encés, /plugin/genealogia arriba al motiu
+     del document propi (el seu manifest declara dadesPersonals 'salut', «l'únic valor que activa la guarda d'ama
+     del document»). L'Arbre no guarda dades de salut: l'avís diu el text de la plataforma, cert per a les dues, i
+     no en nomena cap. També en el paquet de l'amfitrió, que el desendolla (carrega null). */
+  test('l’Arbre Genealògic dins d’una web d’altri: cap «Obrir…», i l’avís no diu que guarda dades de salut', () => {
+    for (const registre of [undefined, registreDeProduccio()]) {
+      const { container, unmount } = munta('/plugin/genealogia', { entorn: { ...ENTORN_OBERT, amaDelDocument: false }, registre });
+      expect(controlsObrir(container, pluginPerId('genealogia'))).toEqual([]);
+      expect(container.querySelector('a[href*="/app/genealogia"]')).toBeNull();
+      const avis = screen.getByRole('status');
+      expect(avis.textContent).toBe(MOTIU.documentNoPropi);
+      expect(avis.textContent).not.toMatch(/salut/);
+      expect(within(accio(container)).getByRole('button', { name: DESACTIVA })).toBeTruthy();
+      unmount();
+    }
   });
 });
 
@@ -733,8 +814,10 @@ describe('textos nous de la UI en les cinc llengües', () => {
     }
   });
 
-  test('textDelMotiu: un motiu que no és de la plataforma no diu res', () => {
-    for (const res of ['', 'constructor', '__proto__', 'toString', null, undefined, 3]) expect([String(res), textDelMotiu(res)]).toEqual([String(res), '']);
+  /* P0-113 (ordre del Mestre, 261111) · 'sense-dret' ja no és cap motiu de la plataforma: cap
+     eina es cobra, i cap text la presenta com a «eina de pagament». */
+  test('textDelMotiu: un motiu que no és de la plataforma no diu res (tampoc el vell «sense-dret»)', () => {
+    for (const res of ['', 'constructor', '__proto__', 'toString', 'sense-dret', null, undefined, 3]) expect([String(res), textDelMotiu(res)]).toEqual([String(res), '']);
   });
 
   test('amb l’amfitrió en castellà, l’estat sense destí parla castellà', () => {
@@ -764,11 +847,13 @@ describe('textos nous de la UI en les cinc llengües', () => {
 
 
 /* Gauntlet 261022_0225 (F2) · Les cinc eines amb app de la plataforma, no
-   només la Gestoria i el Lector: la llista ix de la dada. */
+   només la Gestoria i el Lector: la llista ix de la dada.
+   R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · Sis: l'Arbre Genealògic s'encén amb la seua
+   app (/app/genealogia), i l'estat sense destí, el desactivar i el retorn valen també per a ell. */
 const AMB_APP = PLUGINS.filter((p) => p.obrir?.startsWith('/app/')).map((p) => p.id);
 
 test('el cens de les eines amb app de la plataforma (l’estat sense destí val per a totes)', () => {
-  expect(AMB_APP).toEqual(['gestoria', 'tpv', 'rebost', 'salut', 'rss']);
+  expect(AMB_APP).toEqual(['gestoria', 'tpv', 'rebost', 'salut', 'genealogia', 'rss']);
 });
 
 test.each(AMB_APP)('%s: desactivar la trau del Panell, conserva dades i es pot desfer', (id) => {
@@ -846,7 +931,7 @@ test('reactivar una app apagada que una altra capa encara tanca: el motiu canvia
   const boto = screen.getByRole('button', { name: REACTIVA });
   boto.focus();
   fireEvent.click(boto);
-  expect(screen.getByRole('status').textContent).toContain('Guarda dades de salut');
+  expect(screen.getByRole('status').textContent).toContain(MOTIU.documentNoPropi);
   expect(document.activeElement).toBe(boto);
   expect(boto.textContent).toBe(DESACTIVA);
 });
@@ -860,7 +945,7 @@ test('reactivar quan una altra capa encara la tanca, i obrir-se més tard: el fo
   const tancat = { ...ENTORN_OBERT, amaDelDocument: false };
   const { container, rerender } = munta('/plugin/salut', { entorn: tancat });
   fireEvent.click(screen.getByRole('button', { name: REACTIVA }));
-  expect(screen.getByRole('status').textContent).toContain('Guarda dades de salut');
+  expect(screen.getByRole('status').textContent).toContain(MOTIU.documentNoPropi);
   // La persona se'n va a un altre control de la pàgina.
   const altre = screen.getByRole('button', { name: 'Amaga la portada' });
   altre.focus();

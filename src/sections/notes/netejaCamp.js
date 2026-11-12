@@ -7,6 +7,7 @@
  * escrit: l'entrada de creaNota i el que s'envia en eixir del Bloc passen pel
  * mateix sanejador que la cua de sempre. Mateix codi, ara en un sol lloc.
  */
+import { sanejaDrets } from '../../data/dretsAutor.js';
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../../utils/sanitize.js';
 import { emojiSol } from '../../utils/emoji.js';
 import { dataIsoONull } from '../../utils/calendari.js';
@@ -20,7 +21,7 @@ export function netejaCamp(field, value) {
      nota preparada (notaPreparada.js) i el buidatge d'eixida del Bloc passen
      per ací, i sense esta branca un objecte acabava en «[object Object]». */
   if (field === 'fitxa') return esFitxaDAmbit(value) ? coaccionaAmbit(value) : null;
-  if (field === 'copyright') return netejaText(value).slice(0, 256);
+  if (field === 'copyright') return sanejaDrets(value, { estricte: true });
   /* T40 (ordre del Mestre, 260928) · data de publicació: ISO vàlida o null. */
   if (field === 'publishDate') return dataIsoONull(value);
   /* T23 · emoticona de la nota: un sol emoji (utils/emoji.emojiSol) o cadena

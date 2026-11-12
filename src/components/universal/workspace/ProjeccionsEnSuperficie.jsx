@@ -4,7 +4,7 @@ import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useProjeccionsCataleg } from '../../../hooks/useProjeccionsCataleg.js';
 import { useTextCanonicCataleg } from '../../../hooks/useTextCanonicCataleg.js';
 import { objecteDeProjeccioCataleg } from '../../../data/fitxesCanoniquesCataleg.js';
-import { perDestiCataleg, projeccioCatalegDe, rutaFontCataleg } from '../../../data/projeccionsCataleg.js';
+import { perDestiCataleg, projeccioCatalegDe, rutaDeFitxaCataleg } from '../../../data/projeccionsCataleg.js';
 import { useUIActionsOpcional } from '../../../app/contexts/UIContext.jsx';
 import { useModeracio } from '../../PedraSeca/hooks/moderacioDePoble.js';
 import { filtraElementsBloquejats } from '../../../config/moderacio.js';
@@ -39,12 +39,12 @@ export default function ProjeccionsEnSuperficie({ desti }) {
     {rows.length ? <div className="sdp-card-grid">{rows.map(item => {
       const row = projeccioCatalegDe(item);
       /* PRODNM-02 · Sense l'app de la font en este build, la targeta no porta enlloc. */
-      const ruta = rutaFontCataleg(row.font.font);
+      const ruta = rutaDeFitxaCataleg(row.font);
       const objecte = objecteDeProjeccioCataleg(item, publicacio.ownerId, autoriaReferencia);
       return <UniversalCard key={item.id} title={row.font.title} subtitle={row.font.subtitle}
         body={row.font.lead} headingLevel="h3" hasFooter={false} showShare={false}
         labels={row.pendent ? [t[1]] : []} {...(objecte ? { objecte, ambModeracio: true, className: 'sdp-referencia-cataleg' } : null)}
-        onMainClick={ruta ? () => navega(ruta + '?fitxa=' + encodeURIComponent(row.font.id)) : undefined} />;
+        onMainClick={ruta ? () => navega(ruta) : undefined} />;
     })}</div> : null}
   </section>;
 }

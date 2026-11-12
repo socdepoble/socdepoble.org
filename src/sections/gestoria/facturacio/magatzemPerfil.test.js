@@ -344,3 +344,26 @@ describe('creaEmissio arrenca des del perfil desat', () => {
     expect((await verificaCadena(await port.llig())).valida).toBe(true);
   });
 });
+
+
+describe('tancament del perfil fiscal', () => {
+  test('les versions en cua no reobrin el perfil després de tanca', async () => {
+    const { perfil, nou } = muntatge();
+    const pendents = [perfil.afegixConfig(config(), LLIBRE_BUIT), perfil.afegixConfig(config(), LLIBRE_BUIT)];
+    perfil.tanca();
+    for (const pendent of pendents) await expect(pendent).rejects.toMatchObject({ codi: 'TANCAT' });
+    const altre = nou();
+    expect(await altre.historial('config')).toEqual([]);
+    altre.tanca();
+  });
+
+  test('una connexió tardana no fa cap lectura després de tanca', async () => {
+    const { perfil, idb } = muntatge();
+    const lectura = perfil.llig();
+    await Promise.resolve();
+    perfil.tanca();
+    await expect(lectura).rejects.toMatchObject({ codi: 'TANCAT' });
+    await expect(perfil.llig()).rejects.toMatchObject({ codi: 'TANCAT' });
+    expect(idb.operacions).toEqual([]);
+  });
+});

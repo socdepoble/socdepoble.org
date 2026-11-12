@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Alerta, Boto, Fila } from '../../PedraSeca/index.js';
 import { DESTINS_CATALEG, DESTINS_PRIVATS_CATALEG, destinsOferitsCataleg } from '../../../data/projeccionsCataleg.js';
 import { textosCatalegWorkspace } from './textosCatalegWorkspace.js';
+import { DESTINACIONS_WORKSPACE_WP } from '../../../data/importacio/destinacionsWorkspaceWp.js';
 
 const COPY = {
   ca: ['On es publica?', 'Tria els destins d’esta referència. La fitxa original es conserva.', 'Mur', 'Mercat públic', 'Rebost privat', 'TPV Bar privat', 'Què dinem?', 'Herbari', 'Banc de Llavors', 'Desa els destins', 'Guardant…', 'Confirmació pública', 'Accepte publicar el títol, el subtítol i l’entradilla als destins públics triats.', 'Entra amb el teu compte per a publicar una referència.', 'Pendent de sincronitzar amb el servidor.', 'Destins confirmats pel servidor.', 'No s’ha pogut sincronitzar. La tria continua pendent.', 'No hi ha persistència disponible; mantín esta pàgina oberta fins a confirmar la sincronització.', 'No s’ha pogut desar la tria; revisa-la i torna-ho a provar.', 'Tria modificada; encara no s’ha desat.'],
@@ -14,6 +15,13 @@ const COPY = {
 /* PRODUCCIO-01 (R15b) · Una altra pestanya del Mas té el bloqueig d'escriptura del magatzem (utils/magatzemLocal.js):
    esta és lectora i no pot desar. No és cap tria que calga revisar ni cap intent que calga repetir. */
 const esAltraPestanya = problema => (problema?.codi ?? problema?.code) === 'NOMES_LECTURA';
+const DESTINS_NOUS = Object.freeze({
+  ca: ['Arbres emblemàtics i monumentals', 'Pàgines del fons documental'],
+  es: ['Árboles emblemáticos y monumentales', 'Páginas del fondo documental'],
+  en: ['Emblematic and monumental trees', 'Documentary collection pages'],
+  eu: ['Zuhaitz enblematiko eta monumentalak', 'Dokumentu bildumako orrialdeak'],
+  gl: ['Árbores emblemáticas e monumentais', 'Páxinas do fondo documental']
+});
 
 /** Explicit public consent, no network action on toggling a destination. */
 export default function SelectorDestinsPublicacio({ font, inicials = [], desa, autoritzat, estat, error, persistent = true, language = 'ca' }) {
@@ -28,6 +36,9 @@ export default function SelectorDestinsPublicacio({ font, inicials = [], desa, a
   const [guardant, setGuardant] = useState(false);
   const [fallada, setFallada] = useState(null);
   const id = useId();
+  const importacioWp = font?.font === 'importacio-wp';
+  const nous = DESTINS_NOUS[language] || DESTINS_NOUS.ca;
+  const etiquetaDesti = desti => desti === 'arbres-monumentals' ? nous[0] : desti === 'pagina' ? nous[1] : t[DESTINS_CATALEG.indexOf(desti) + 2];
   const publica = destins.some(desti => !DESTINS_PRIVATS_CATALEG.includes(desti));
   const envia = async () => {
     if (!autoritzat || guardant || (publica && !consentiment)) return;
@@ -47,12 +58,15 @@ export default function SelectorDestinsPublicacio({ font, inicials = [], desa, a
       <legend>{t[0]}</legend>
       {/* PRODNM-02 · Només els destins d'este build: sense l'app del Rebost o del Bar, cap casella
          que es desaria on cap superfície la mostra. L'etiqueta va per l'ordre de DESTINS_CATALEG. */}
-      {destinsOferitsCataleg().map(desti => <label key={desti}>
+      {destinsOferitsCataleg().filter(desti => !importacioWp || DESTINACIONS_WORKSPACE_WP.includes(desti)).map(desti => <label key={desti}>
         <input type="checkbox" checked={destins.includes(desti)} onChange={event => {
           dirty.current = true; setFallada(null);
-          setDestins(actual => event.target.checked ? [...actual, desti] : actual.filter(value => value !== desti));
+          setDestins(actual => {
+            if (!event.target.checked) return actual.filter(value => value !== desti);
+            return importacioWp ? [desti] : [...actual, desti];
+          });
           setConsentiment(false);
-        }} />{t[DESTINS_CATALEG.indexOf(desti) + 2]}
+        }} />{etiquetaDesti(desti)}
       </label>)}
     </fieldset>
     {publica && autoritzat ? <label>

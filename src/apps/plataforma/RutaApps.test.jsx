@@ -150,15 +150,21 @@ describe('apps que no s’obrin', () => {
     expect(carregaDeLaProva).not.toHaveBeenCalled();
   });
 
-  test('premium sense dret: ho diu clar, sense amagar-ho', () => {
-    muntaPlataforma('/app/prova/inici', {
-      registre: registreDeProva({ nivell: 'premium', dret: 'sdp.app.prova' }),
-      entorn: { ...ENTORN_OBERT, teDret: () => false }
-    });
-    expect(screen.getByText('Esta app és premium')).toBeTruthy();
-    // Gauntlet 261022_0225 (F7) · Sense «premium» ni «codi» al motiu: abans «…és un projecte lliure: el premium paga el servei, no el codi.».
-    expect(screen.getByText(/El programa és lliure: el que es paga és el servei\./)).toBeTruthy();
+  /* P0-113 (ordre del Mestre, 261111) · Abans, una app premium sense dret
+     deia «Esta app és premium» i que era una eina de pagament. Ara tot és
+     gratuït i lliure: un manifest premium no entra al registre, i cap entorn
+     que neguen drets no tanca una app gratuïta ni pinta cap text de pagament. */
+  test('cap premium: el manifest no entra i cap app gratuïta parla de pagament', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    muntaPlataforma('/app/prova/inici', { registre: registreDeProva({ nivell: 'premium' }) });
+    expect(screen.getByText('No coneixem esta app')).toBeTruthy();
     expect(carregaDeLaProva).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalled();
+    error.mockRestore();
+    cleanup();
+    muntaPlataforma('/app/prova/inici', { registre: registreDeProva(), entorn: { ...ENTORN_OBERT, teDret: () => false } });
+    expect(await screen.findByText('Vista inici')).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/premium|pagament|es paga/i);
   });
 
   test('salut fora del document propi: un EstatBuit explicatiu i cap càrrega', async () => {
@@ -250,13 +256,14 @@ describe('els interruptors interns d’una app (useInterruptorsApp)', () => {
         carrega: () => Promise.resolve({ default: AppAmbInterruptors }),
         interruptors: [
           { id: 'cuina', titol: { ca: 'Cuina' } },
-          { id: 'escandalls', titol: { ca: 'Escandalls' }, nivell: 'premium', dret: 'sdp.app.prova.escandalls' }
+          { id: 'escandalls', titol: { ca: 'Escandalls' }, nivell: 'gratuit' }
         ]
       })]
     });
-    muntaPlataforma('/app/prova/inici', { registre, entorn: { ...ENTORN_OBERT, teDret: (dret) => dret === 'sdp.app.prova' } });
+    muntaPlataforma('/app/prova/inici', { registre });
     expect(await screen.findByText('Cuina: sí')).toBeTruthy();
-    expect(screen.getByText('Escandalls: unsubscribed')).toBeTruthy();
+    /* P0-113 (ordre del Mestre, 261111) · Cap interruptor es cobra: abans, «Escandalls: unsubscribed». */
+    expect(screen.getByText('Escandalls: available')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Canvia la cuina' }));
     expect(await screen.findByText('Cuina: no')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Canvia la cuina' }));

@@ -21,6 +21,7 @@ import {
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaColleccions } from '../../comu/esquelet/index.js';
 import { esSlug, titolDe, useApp, useInterruptorsApp, useParametresConsulta } from '../../plataforma/index.js';
+import { MAX_BYTES_COPIA_BAR } from '../nucli/copia.js';
 import { taulesEnOrdre } from '../nucli/sala.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { LLAVORS, nomDeLlavor } from '../llavors/index.js';
@@ -52,11 +53,13 @@ export function AjustTriat({ params }) {
 }
 
 function Dispositiu() {
-  const { accions, persistent } = useBar();
+  const { accions, persistent, mode, permis } = useBar();
   const { manifest } = useApp();
   const interruptors = useInterruptorsApp();
   const [estat, setEstat] = useState(null);
   const [avis, setAvis] = useState(null);
+  const [fitxerCopia, setFitxerCopia] = useState(null);
+  const [ocupat, executa] = useUnaVegada();
   useEffect(() => {
     let viu = true;
     accions.estatPersistencia().then((e) => { if (viu) setEstat(e); }).catch(() => {});
@@ -68,11 +71,38 @@ function Dispositiu() {
     setEstat(await accions.estatPersistencia());
   };
   const copia = async () => {
-    const bolcat = await accions.bolca();
-    const ara = new Date().toISOString();
-    const ofert = desaFitxer(nomFitxer('copia-bar', 'dispositiu', ara, 'json'), JSON.stringify({ schema: 'sdp.bar.copia.v1', desadaA: ara, ...bolcat }, null, 2), 'application/json');
-    setAvis(ofert ? 'Còpia preparada: el navegador et deixa triar on desar-la.' : 'Este navegador no deixa desar fitxers des d’ací.');
+    try {
+      const text = await accions.exportaCopia();
+      const ara = new Date().toISOString();
+      const ofert = desaFitxer(nomFitxer('copia-bar', 'dispositiu', ara, 'json'), text, 'application/json');
+      setAvis(ofert ? 'Còpia preparada: el navegador et deixa triar on desar-la.' : 'Este navegador no deixa desar fitxers des d’ací.');
+    } catch {
+      setAvis('No s’ha pogut llegir la còpia del Bar.');
+    }
   };
+  const triaCopia = (event) => {
+    const fitxer = event.target.files?.[0];
+    event.target.value = '';
+    if (!fitxer) return;
+    if (fitxer.size > MAX_BYTES_COPIA_BAR) {
+      setAvis('El fitxer és massa gran per a ser una còpia del Bar.');
+      return;
+    }
+    setFitxerCopia(fitxer);
+  };
+  const restaura = () => executa(async () => {
+    try {
+      const resultat = await accions.restauraCopia(await fitxerCopia.text());
+      if (resultat.ok) {
+        const { torns, tiquets } = resultat.valor;
+        setAvis(`Còpia restaurada. Conté ${torns} ${torns === 1 ? 'torn' : 'torns'} i ${tiquets} ${tiquets === 1 ? 'tiquet' : 'tiquets'}.`);
+      }
+    } catch {
+      setAvis('No s’ha pogut llegir el fitxer.');
+    } finally {
+      setFitxerCopia(null);
+    }
+  });
   return (
     <Columna titol="Dispositiu">
       <AvisBase />
@@ -84,6 +114,14 @@ function Dispositiu() {
       {estat ? <p>{estat.duradora ? 'El navegador ha promés no esborrar-les per falta d’espai.' : 'El navegador encara no ha promés guardar-les.'}</p> : null}
       <Boto icona={HardDrive} onClick={demana}>Demana que no s’esborren</Boto>
       <Boto icona={Download} onClick={copia}>Desa una còpia (JSON)</Boto>
+      <Camp etiqueta="Restaura una còpia del Bar" ajuda="Disponible en un navegador que encara no tinga dades del Bar.">
+        <CampText tipus="file" accept=".json,application/json" onChange={triaCopia}
+          disabled={!permis.potEscriure || mode === 'lectora' || ocupat} />
+      </Camp>
+      <DialegConfirmacio obert={Boolean(fitxerCopia)} carregant={ocupat}
+        titol="Restaura la còpia del Bar" descripcio="La còpia ocuparà el lloc de les dades d’exemple en este navegador."
+        etiquetaConfirma="Restaura la còpia" etiquetaCancela="Cancel·la"
+        onTanca={() => setFitxerCopia(null)} onConfirma={restaura} />
       {manifest.interruptors.filter((i) => interruptors.avalua(i.id).motiu !== 'apagat-per-defecte').map((i) => (
         <Interruptor key={i.id} etiqueta={titolDe(i.titol)} actiu={interruptors.actiu(i.id)} onCanvi={(actiu) => interruptors.apaga(i.id, !actiu)} />
       ))}
@@ -207,7 +245,7 @@ function CartaLlavor() {
         descripcio="Els canvis fets a la carta d’ara es perdran."
         etiquetaConfirma="Substituïx la carta" etiquetaCancela="Cancel·la" onTanca={tanca} onConfirma={confirma}>
         {triada ? <p>{textEstabliment(triada)}</p> : null}
-        <p>Si la vols guardar, desa abans una còpia des d’Ajustos › Dispositiu. La còpia és un fitxer per a tindre-la: el TPV encara no la pot tornar a carregar.</p>
+        <p>Si la vols guardar, desa abans una còpia des d’Ajustos › Dispositiu. La podràs restaurar en un navegador sense dades del Bar.</p>
       </DialegConfirmacio>
     </Columna>
   );

@@ -7,7 +7,7 @@
  *      capçalera del verificador, que cap dada personal ix de la funció, el README i el client.
  *   2. PostgreSQL en memòria (opt-in, com tests/administracio-multipoble-postgres.test.mjs):
  *        SDP_PGLITE_MODULE=/ruta/existent/pglite/dist/index.js node --test tests/migracio-admin-resum-sessions-dispositius.test.mjs
- *      Aplica les 81 migracions reals en l'ordre del verificador sobre una fixture d'auth amb la
+ *      Aplica tot el catàleg de migracions reals en l'ordre del verificador sobre una fixture d'auth amb la
  *      forma de GoTrue (auth.sessions amb user_agent, created_at, updated_at i refreshed_at),
  *      sembra sessions sintètiques i comprova els recomptes, el rebuig del no-superadmin, del
  *      superadmin sense aal2 i d'anon. No busca paquets ni instal·la res; cap base remota.
@@ -124,8 +124,10 @@ if (!modulePath || !fs.existsSync(modulePath)) {
   const pla = ordena({ versions, dependencies, restriccions: ordre.restriccions, portes: ordre.portes });
   assert.deepEqual(pla.errors, []);
   const fitxers = pla.ordre.filter((p) => p.tipus === 'migracio').map((p) => inventari.find((f) => f.startsWith(`${p.id}_`)));
-  assert.deepEqual(fitxers.slice(fitxers.indexOf(FITXER) + 1), ['2611091500_sessions_i_curadoria_cultural.sql'],
-    'la migració és al pla i després només hi ve la 2611091500 de R15b, que també s’executa ací');
+  assert.deepEqual([...fitxers].sort(), inventari);
+  assert.ok(fitxers.indexOf(FITXER) >= 0
+    && fitxers.indexOf('2611091500_sessions_i_curadoria_cultural.sql') > fitxers.indexOf(FITXER),
+  'la migració és al pla abans de la 2611091500 de R15b, que també s’executa ací');
 
   /* Substituts de la infraestructura de Supabase (els de tests/administracio-multipoble-postgres.test.mjs);
      auth.sessions porta, a més, les columnes de GoTrue que llig la funció, amb els seus tipus. */

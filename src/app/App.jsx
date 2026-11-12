@@ -79,12 +79,21 @@ const PageDetailSection = lazyRoute(() => import('../sections/detail/PageDetailS
 const RutaApps = lazyRoute(() => import('../apps/plataforma/RutaApps.jsx'));
 /* P7-A (261004) · la pàgina de cada utilitat del Panell: /plugin/<id> (sections/plugins/). */
 const PluginPage = lazyRoute(() => import('../sections/plugins/PluginPage.jsx'));
-import NotFoundPage from '../pages/NotFoundPage';
+const NotFoundPage = lazyRoute(() => import('../pages/NotFoundPage'));
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
 import { MurProvider } from '../sections/mur/MurContext';
 import { NotesDataProvider } from '../sections/notes/NotesDataContext';
 import { NotesProvider } from '../sections/notes/NotesContext';
-import { XatProvider } from '../sections/xat/XatContext';
+import { XatProvider, useXat } from '../sections/xat/XatContext';
+import { escoltaAvisador, llegixAvisador } from '../services/avisadorPreferencies.js';
+/* P0-114 (ordre del Mestre, 261111) · L'interruptor declaratiu de build de
+   L'Avisador: el mateix literal plegable de registrePlugins.js
+   (AVISADOR_COMPILAT) governa la pàgina, la ruta /page/avisador i el
+   muntatge del vigilant. Per defecte hi és sempre; amb
+   VITE_SDP_APP_AVISADOR=0, Vite plega el literal a fals i cap dels dos trossos
+   diferits entra al paquet. */
+const AvisadorPage = import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? lazyRoute(() => import('../pages/AvisadorPage.jsx')) : null;
+const AvisadorEnSessio = import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? lazyRoute(() => import('../components/salut/AvisadorEnSessio.jsx')) : null;
 import ReceptorCompartit from '../sections/xat/ReceptorCompartit.jsx';
 import { ProveidorModeracio } from './contexts/ModeracioContext.jsx';
 /* Fase D (261020, tasca 2) · Els tres diàlegs de la moderació (denúncia,
@@ -938,6 +947,20 @@ export default function App({ config, targetNode }) {
   );
 }
 
+function AvisadorAjornat({ config, targetNode }) {
+  const { avisadorClau } = useXat();
+  const escolta = useCallback((avisa) => escoltaAvisador(avisadorClau, avisa), [avisadorClau]);
+  const llig = useCallback(() => llegixAvisador(avisadorClau)?.actiu === true, [avisadorClau]);
+  const actiu = useSyncExternalStore(escolta, llig);
+  return actiu ? (
+    <RouteErrorBoundary>
+      <Suspense fallback={null}>
+        <AvisadorEnSessio key={avisadorClau} clau={avisadorClau} config={config} targetNode={targetNode} />
+      </Suspense>
+    </RouteErrorBoundary>
+  ) : null;
+}
+
 function AppContent({ config, targetNode }) {
   // Els Providers ja gestionen l'actorKey internament. No els destruïm forçosament (F01).
   return (
@@ -957,6 +980,8 @@ function AppContent({ config, targetNode }) {
                 {/* 261026 (prompt 261026_1615) · El menú «Compartir» del dispositiu
                     i el toc dels avisos del xat porten al Xat (només a l'App). */}
                 <ReceptorCompartit />
+                {/* P0-114 · El vigilant, només si el build porta L'Avisador. */}
+                {import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? <AvisadorAjornat config={config} targetNode={targetNode} /> : null}
                 <MultimediaProvider config={config}>
                   <AppDataLoader />
                 </MultimediaProvider>
@@ -1126,6 +1151,9 @@ function AppRoutes() {
         <Route path="/control" element={<ControlSection />} />
         <Route path="/utilitats" element={<ControlSection />} />
         <Route path="/connectar" element={<ConnectarSection agents={agents} />} />
+        {/* P0-114 · Amb VITE_SDP_APP_AVISADOR=0, /page/avisador cau a /page/:slug (la 404 de sempre). */}
+        {import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? <Route path="/page/avisador" element={<AvisadorPage />} /> : null}
+        <Route path="/page/:slug/:itemSlug" element={<PageDetailSection />} />
         <Route path="/page/:slug" element={<PageDetailSection />} />
         <Route path="/plugin/:id" element={<PluginPage />} />
         <Route path="/legal" element={<TextRoute pageKey="legal" />} />

@@ -57,6 +57,8 @@ export function useNevera(magatzem) {
 
   useEffect(() => {
     let viu = true;
+    modeRef.current = 'lliure';
+    llegitRef.current = false;
     const posa = (nou) => {
       estatRef.current = nou;
       setEstat(nou);
@@ -80,20 +82,26 @@ export function useNevera(magatzem) {
     };
     carregaRef.current = carrega;
     const posaMode = (nou) => {
+      if (!viu) return;
+      const relleu = modeRef.current === 'lectora' && nou === 'escriptora';
       modeRef.current = nou;
-      if (viu) setMode(nou);
+      setMode(nou);
+      if (relleu) {
+        llegitRef.current = false;
+        setLlegit(false);
+        carrega();
+      }
     };
     const desfes = magatzem.subscriu((avis) => {
       if (avis.tipus === 'canvi' && avis.local === false) carrega();
-      else if (avis.tipus === 'mode') {
-        posaMode(avis.mode);
-        if (avis.mode === 'escriptora') carrega();
-      } else if (avis.tipus === 'persistent' && viu) setPersistent(avis.persistent);
+      else if (avis.tipus === 'mode') posaMode(avis.mode);
+      else if (avis.tipus === 'persistent' && viu) setPersistent(avis.persistent);
     });
     magatzem.obtinBloqueig().then(posaMode, () => {});
     carrega();
     return () => {
       viu = false;
+      canvisRef.current += 1;
       carregaRef.current = () => {};
       desfes();
       magatzem.tanca();
@@ -103,13 +111,21 @@ export function useNevera(magatzem) {
   /** Aplica una operació pura; si canvia res, la pinta i la desa. */
   const aplica = useCallback((operacio) => {
     const actual = estatRef.current;
-    if (!actual || !llegitRef.current || modeRef.current === 'lectora') return false;
+    if (!actual || !llegitRef.current || modeRef.current !== 'escriptora') return false;
     const nou = operacio(actual);
     if (nou === actual) return false;
-    canvisRef.current += 1;
+    const canvi = ++canvisRef.current;
     estatRef.current = nou;
     setEstat(nou);
-    magatzem.desa(nou).then(() => posaError(null, null), (motiu) => posaError(codiDe(motiu), 'desat'));
+    magatzem.desa(nou, actual).then(() => {
+      if (canvi === canvisRef.current) posaError(null, null);
+    }, (motiu) => {
+      if (canvi !== canvisRef.current) return;
+      posaError(codiDe(motiu), 'desat');
+      llegitRef.current = false;
+      setLlegit(false);
+      carregaRef.current();
+    });
     return true;
   }, [magatzem, posaError]);
 
@@ -144,12 +160,19 @@ export function useNevera(magatzem) {
         return resum && { afegits: resum.afegits, conservats: resum.conservats, descartats: resum.descartats };
       },
       /** Substituïx totes les dades per les d'una còpia (ja llegida amb llegixCopia). */
-      importa: (nou) => aplica(() => normalitzaEstat(nou)),
+      importa: (nou, previs) => aplica((actual) => {
+        if (previs && JSON.stringify(normalitzaEstat(actual)) !== JSON.stringify(normalitzaEstat(previs))) {
+          posaError('CONFLICTE', 'desat');
+          return actual;
+        }
+        return normalitzaEstat(nou);
+      }),
+      copia: () => magatzem.llegix(),
       esborraTot: () => aplica(() => estatInicial()),
       /** Torna a llegir el disc (després d'un error de lectura). */
       rellegix: () => carregaRef.current()
     });
-  }, [aplica]);
+  }, [aplica, magatzem, posaError]);
 
   return useMemo(
     () => ({ estat, mode, persistent, error, errorEn, llegit, accions }),

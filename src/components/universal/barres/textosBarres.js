@@ -15,7 +15,10 @@ export const TEXTOS_BARRA = Object.freeze({
   comentar: Object.freeze(['pagina.barra.comentar', 'Comentar']),
   compartir: Object.freeze(['pagina.barra.compartir', 'Compartir']),
   /* El nom de la regió de la barra taronja (<section aria-label>). */
-  autoria: Object.freeze(['pagina.barra.autoria', 'Autoria i data'])
+  autoria: Object.freeze(['pagina.barra.autoria', 'Autoria i data']),
+  /* Onada R19 · Noms accessibles de la co-publicació multi-entitat registrada. */
+  copublicadors: Object.freeze(['pagina.barra.copublicadors', 'Entitats co-publicadores registrades']),
+  avatarCompost: Object.freeze(['pagina.barra.avatarCompost', 'Fitxa principal de co-publicació: {nom}'])
 });
 
 /* El calaix de l'Índex que obri el botó «Índex de secció». */

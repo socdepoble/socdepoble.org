@@ -6,7 +6,13 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { createElement } from 'react';
+import { render } from '@testing-library/react';
 import { PAGE_COPY } from './pageContent.js';
+import { DRETS_QUE_DINEM } from './pageContent.dretsPatrimoni.js';
+import { OBRA_QUE_DINEM } from '../../data/patrimoni/queDinem.js';
+import CreditsQueDinem from '../patrimoni/CreditsQueDinem.jsx';
+import { UIActionsContext } from '../../app/contexts/objectesDeContext.js';
 import { RUTES_SENSE_PAGINA_DE_TEXT, pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText, rutaVigentDePagina } from './paginaDeText.js';
 import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { MAXIM_LEMA } from '../../data/limitsText.js';
@@ -93,6 +99,7 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
     ['/mur', 'Mur de Poble'], ['/mercat', 'Mercat Local'], ['/calendari', 'Calendari i Agenda'],
     ['/mapa', 'Mapa del Territori'], ['/page/treball', 'Treball'], ['/page/habitatge', 'Habitatge'],
     ['/pobles', 'Pobles'], ['/page/node-zero', 'Node 0 · Mac mini M4'], ['https://socdepoble.cat', 'socdepoble.cat'],
+    ['/plugin/genealogia', 'Arbre Genealògic'],
     ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],
     ['https://socdepoble.cat', 'socdepoble.cat'], ['/page/node-zero', 'Node 0 · Mac mini M4'],
     ['/perfil', 'perfil'], ['/mur', 'Mur'], ['/page/fediversity', 'horitzó'], ['/roadmap', 'full de ruta'],
@@ -750,5 +757,51 @@ test('un àlies de pàgina a un article real és viu, però els destins inexiste
   for (const ruta of ['/page/anatomia-rural', article, '/page/projecte', '/projecte']) expect(rutaViva(ruta), ruta).toBe(true);
   for (const ruta of ['/mur/article-inexistent', '/page/article-inexistent', '/page/constructor', '//socdepoble.org/mur', 'https://socdepoble.org/mur']) {
     expect(rutaViva(ruta), ruta).toBe(false);
+  }
+});
+
+/* Onada R20 · La pàgina d'una utilitat del Panell (/plugin/<id>) és viva si l'id és del registre; un id de fora
+   (Bàscula, descartada pel Mestre el 261007) o una ruta amb més segments no ho són. */
+test('/plugin/<id> és una ruta viva només per als plugins del registre', () => {
+  for (const ruta of ['/plugin/genealogia', '/plugin/gestoria', '/plugin/rss']) expect(rutaViva(ruta), ruta).toBe(true);
+  for (const ruta of ['/plugin/bascula', '/plugin/', '/plugin/genealogia/x', '/plugin/Genealogia', '/plugins/genealogia']) {
+    expect(rutaViva(ruta), ruta).toBe(false);
+  }
+});
+
+/* P0-115 + P0-117 (ordre del Mestre, 261111 · Llei d'Autoria de Dos Nivells) · Nivell 1: la pàgina d'entrada
+   d'arbres-monumentals i la de receptes les signa Sóc de Poble (COPYRIGHT_SDP), l'únic compte registrat que publica
+   (Llei de la Barra Taronja). Nivell 2: l'obra conserva l'autoria al seu bloc de crèdits. Els drets del catàleg
+   d'arbres són de les 20 pàgines del llibre (NaturaPatrimoniWorkspaceSection · AUTORIA_LLIBRE_ARBRES).
+   R19 (Carril 0+1) · Esta prova esperava l'atribució de l'Associació al copyright de /page/receptes. El canvi a
+   COPYRIGHT_SDP és intencionat i documentat (pageContent.patrimoniR14.js, comentari P0-115 + P0-117) i
+   AutoriaDosNivellsArbres.test.jsx ja el fixa; per això l'atribució exacta de l'obra es vigila ara on viu: el bloc
+   «L'obra i els seus drets» de CreditsQueDinem, el mateix a /page/receptes/que-dinem i a cada recepta. */
+test.each(['receptes', 'arbres-monumentals'])('la pàgina d’entrada %s la signa Sóc de Poble i respecta el copyright que porte', (pageKey) => {
+  const { page } = paginaDeRuta(`/page/${pageKey}`);
+  expect(propsDePaginaDeText(page, pageKey).copyright).toBe(COPYRIGHT_SDP);
+  expect(propsDePaginaDeText({ ...page, copyright: '© Autoria de la pàgina' }, pageKey).copyright).toBe('© Autoria de la pàgina');
+  expect(propsDePaginaDeText({ ...page, copyright: '' }, pageKey).copyright).toBe(COPYRIGHT_SDP);
+  expect(propsDePaginaDeText({ ...page, copyright: { text: COPYRIGHT_SDP } }, pageKey).copyright).toBe(COPYRIGHT_SDP);
+});
+
+/* L'oracle és escrit a mà: el nom de l'Associació tal com l'imprimix el llibre. La llicència no s'hi fixa: queDinem.js
+   (generat del PDF) només registra «Text i làmines amb permís d’ús», i eixa línia es comprova contra la font. */
+test('els drets del catàleg receptes conserven l’atribució exacta al bloc de crèdits de l’obra', () => {
+  const ASSOCIACIO = 'Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta»';
+  const tr = (_clau, defecte, valors = {}) => defecte.replace(/\{(\w+)\}/g, (_, nom) => String(valors[nom] ?? ''));
+  const { container, unmount } = render(createElement(UIActionsContext.Provider, { value: { language: 'ca' } }, createElement(CreditsQueDinem, { tr })));
+  try {
+    const dt = [...container.querySelectorAll('dt')].find((el) => el.textContent === 'Drets');
+    expect(dt, 'el bloc de crèdits de l’obra ha de tindre la fila «Drets»').toBeTruthy();
+    const [drets, permis] = [dt.nextElementSibling, dt.nextElementSibling?.nextElementSibling];
+    expect(drets.textContent).toBe(DRETS_QUE_DINEM);
+    expect(drets.textContent.endsWith(ASSOCIACIO)).toBe(true);
+    expect(drets.textContent).not.toContain('Sóc de Poble');
+    expect(permis.textContent).toBe(OBRA_QUE_DINEM.permis);
+    expect(OBRA_QUE_DINEM.associacio).toBe(ASSOCIACIO);
+    expect(container.textContent).not.toContain(COPYRIGHT_SDP);
+  } finally {
+    unmount();
   }
 });

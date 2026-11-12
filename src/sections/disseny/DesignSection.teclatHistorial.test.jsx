@@ -15,10 +15,11 @@ import { MemoryRouter, useLocation, useNavigate, useRouter } from '../../app/con
 
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
-vi.mock('../../app/contexts/UIContext', () => ({
-  useUIActions: () => ({ t: (_, alternativa) => alternativa, resolveAsset: (uri) => uri }),
-  useUIState: () => ({ externalConfig: {}, locale: 'ca-ES', language: 'ca' })
-}));
+vi.mock('../../app/contexts/UIContext', () => {
+  const useUIActions = () => ({ t: (_, alternativa) => alternativa, resolveAsset: (uri) => uri });
+  const useUIState = () => ({ externalConfig: {}, locale: 'ca-ES', language: 'ca' });
+  return { useUIActions, useUIState, useUIActionsOpcional: useUIActions, useUIStateOpcional: useUIState };
+});
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ status: 'ready', pageCopy: {} }) }));
 vi.mock('../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => ref,

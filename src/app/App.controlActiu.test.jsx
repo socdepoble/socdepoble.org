@@ -38,7 +38,7 @@ const ESPERA = { timeout: 8000 };
 
 /* Munta l'App a `ruta` i torna l'aria-current del botó CONTROL en el moment que apareix la barra, amb la ruta
    encara la demanada (una redirecció d'una secció diferida que arribara després no la veuria). */
-async function ariaCurrentDeControl(ruta) {
+async function ariaCurrentDeControl(ruta, comprovaPagina) {
   vi.stubGlobal('innerWidth', 1280);
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   vi.stubGlobal('matchMedia', vi.fn((query) => ({
@@ -71,6 +71,7 @@ async function ariaCurrentDeControl(ruta) {
     const control = within(barra).getByRole('button', { name: 'Panell de control' });
     /* Quan apareix la barra, la ruta encara és la demanada. */
     expect(window.location.pathname).toBe(ruta);
+    await comprovaPagina?.();
     return control.getAttribute('aria-current');
   } finally {
     cleanup();
@@ -93,6 +94,14 @@ describe('el botó CONTROL de la barra, a les filles del Panell', () => {
     },
     15000
   );
+
+  test('la ruta directa de l’Avisador carrega la vista diferida sense sessió', async () => {
+    await ariaCurrentDeControl('/page/avisador', async () => {
+      expect(await screen.findByRole('heading', { name: 'L’Avisador' }, ESPERA)).toBeTruthy();
+      expect(screen.getByRole('link', { name: 'Entra amb el teu compte' }).getAttribute('href')).toContain('avisador');
+      expect(screen.queryByRole('combobox')).toBeNull();
+    });
+  }, 15000);
 
   test('a /mapa, una vertical del Mur, CONTROL no porta aria-current', async () => {
     expect(await ariaCurrentDeControl('/mapa')).toBeNull();

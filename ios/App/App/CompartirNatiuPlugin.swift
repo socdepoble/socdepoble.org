@@ -17,6 +17,7 @@ public class CompartirNatiuPlugin: CAPPlugin, CAPBridgedPlugin {
     public let jsName = "CompartirNatiu"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "allibera", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "tallaSessio", returnType: CAPPluginReturnPromise),
     ]
 
     static let grup = "group.org.socdepoble.app"
@@ -68,6 +69,17 @@ public class CompartirNatiuPlugin: CAPPlugin, CAPBridgedPlugin {
                 if (try? FileManager.default.removeItem(at: fitxer)) != nil { esborrats += 1 }
             }
             call.resolve(["esborrats": esborrats])
+        }
+    }
+
+    @objc func tallaSessio(_ call: CAPPluginCall) {
+        cua.async {
+            let fm = FileManager.default
+            try? fm.removeItem(at: Self.carpetaLocal())
+            if let contenidor = fm.containerURL(forSecurityApplicationGroupIdentifier: Self.grup) {
+                try? fm.removeItem(at: contenidor.appendingPathComponent("compartits", isDirectory: true))
+            }
+            call.resolve(["tallat": true])
         }
     }
 

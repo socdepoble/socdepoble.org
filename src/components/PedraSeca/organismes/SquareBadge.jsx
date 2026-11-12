@@ -2,7 +2,43 @@
  * SquareBadge · el quadrat de 128 px (data, preu o contingut propi). Mòdul propi (AH-20, IDEA-77): PageFrame el
  * pinta dalt a la dreta de la capçalera i no pot arrossegar tota la UniversalCard a l'entrada del paquet (trinquet de pes).
  */
+import { useNavigate } from '../../../app/contexts/RouterContext';
+import { useUIActionsOpcional } from '../../../app/contexts/UIContext';
 import { usePastillaCalendari } from '../../universal/barres/pastillaCalendari.js';
+
+const RESERVES_AL_MAPA = Object.freeze({
+  ca: 'AL MAPA',
+  es: 'AL MAPA',
+  en: 'ON MAP',
+  gl: 'NO MAPA',
+  eu: 'MAPAN'
+});
+
+export function formataCoordenadaCurta(lat, lng, idioma = 'ca') {
+  const la = Number(lat);
+  const ln = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(ln)) return '';
+  const ns = la >= 0 ? (idioma === 'eu' ? 'I' : 'N') : (idioma === 'eu' ? 'H' : 'S');
+  const ew = ln >= 0 ? 'E' : (idioma === 'en' ? 'W' : idioma === 'eu' ? 'M' : 'O');
+  return `${Math.abs(la).toFixed(2)}°${ns} · ${Math.abs(ln).toFixed(2)}°${ew}`;
+}
+
+export function rutaAlMapaDeBadge(badge) {
+  if (typeof badge?.href === 'string' && badge.href.trim()) return badge.href.trim();
+  const la = Number(badge?.lat);
+  const ln = Number(badge?.lng);
+  if (!Number.isFinite(la) || !Number.isFinite(ln)) return null;
+  const zoom = Number.isFinite(Number(badge?.zoom)) ? Number(badge.zoom) : 18;
+  const params = new URLSearchParams({
+    lat: la.toFixed(6),
+    lng: ln.toFixed(6),
+    zoom: String(zoom)
+  });
+  if (badge?.id != null && String(badge.id).trim() !== '') {
+    params.set('id', String(badge.id).trim());
+  }
+  return `/mapa?${params.toString()}`;
+}
 
 /**
  * P6 · El tram de lletra d'un preu dins del quadrat de 128 px (data-mida),
@@ -21,10 +57,66 @@ export function midaDelPreu(valor) {
 
 const SEMAFORS_DEL_QUADRAT = new Set(['exit', 'avis', 'error']);
 
+/* Revisió del 261111 (R19) · La guarda de useTraductorOpcional (l.7-9):
+   null fora de l'app (sense UIProvider) o amb una prova que simula UIContext
+   sense useUIActionsOpcional, perquè el mock llança en llegir l'exportació
+   que li falta i això passa dins del try. Aleshores, la reserva: idioma 'ca'
+   i els textos en valencià. La forma `return …` dins del try és la que
+   rules-of-hooks accepta. Cap píxel canvia. */
+function useAccionsUIOpcional() {
+  try {
+    return useUIActionsOpcional() ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function SquareBadge({ badge }) {
-  const isCalendar = badge.dia || badge.mes || badge.any || badge.type === 'calendar';
-  const isPrice = badge.type === 'price';
+  const ui = useAccionsUIOpcional();
+  const idioma = ui?.language || 'ca';
+  let navigate = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    navigate = useNavigate();
+  } catch {
+    navigate = null;
+  }
+
+  const isGeo = badge.type === 'geo' && Number.isFinite(Number(badge.lat)) && Number.isFinite(Number(badge.lng));
+  const isCalendar = !isGeo && (badge.dia || badge.mes || badge.any || badge.type === 'calendar');
+  const isPrice = !isGeo && badge.type === 'price';
   const { onClick: navegaAlCalendari } = usePastillaCalendari({ dateTime: badge?.dateTime });
+
+  if (isGeo) {
+    const coordsCurtes = badge.coordsLabel || formataCoordenadaCurta(badge.lat, badge.lng, idioma);
+    const verb = badge.verb || (ui?.t ? ui.t('card.alMapa', RESERVES_AL_MAPA[idioma] || 'AL MAPA') : (RESERVES_AL_MAPA[idioma] || 'AL MAPA'));
+    const href = rutaAlMapaDeBadge(badge);
+    const nom = badge.nom || badge.title || '';
+    const etiquetaGeo = badge.label || (nom
+      ? (ui?.t
+        ? ui.t('card.alMapaAria', 'Vore al mapa: {nom} ({coords})', { nom, coords: coordsCurtes })
+        : `Vore al mapa: ${nom} (${coordsCurtes})`)
+      : `${verb}: ${coordsCurtes}`);
+    return (
+      <button
+        type="button"
+        className="sp-card-calendar-badge"
+        data-tipus="geo"
+        aria-label={etiquetaGeo}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (badge.onClick) badge.onClick();
+          else if (href && navigate) navigate(href);
+        }}
+      >
+        <span className="sp-card-calendar-badge__geo-pin" aria-hidden="true">📍</span>
+        <span className="sp-card-calendar-badge__geo-verb">{verb}</span>
+        <span className="sp-card-calendar-badge__geo-coords">{coordsCurtes}</span>
+      </button>
+    );
+  }
+
   const etiqueta = badge.label || (isCalendar
     ? [badge.dia, badge.mes, badge.any].filter(Boolean).join(' ')
     : isPrice ? `Preu: ${badge.value}` : 'Insígnia');

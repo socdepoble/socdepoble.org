@@ -2,6 +2,7 @@
 import { Suspense, useCallback, useMemo } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { useUIActionsOpcional } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Carregant } from '../../components/PedraSeca';
 import { LayoutGrid, Component } from 'lucide-react';
@@ -13,6 +14,7 @@ import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
    (cataleg/versio.js), on la veu qui edita el catàleg i l'ha de posar al dia. */
 import { VERSIO_CATALEG } from './cataleg/versio.js';
 import { PAGE_COPY } from '../text/pageContent';
+import { localitzaPagina } from '../text/pageContent.r10.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
 import { CAP_SOCIAL_BASE } from '../../config/imatgeSocial.js';
@@ -63,8 +65,9 @@ const PORTADA_ANTIGA = '/assets/uploads/brain/ibanez_pedra_seca_design_178087346
 const PORTADA_JPG_RETIRADA = '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg';
 const PORTADA_LLEUGERA = '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp';
 const MIDA_PORTADA_LLEUGERA = 1024;
-const copyDeLaPortada = (pageCopy) => {
-  const page = pageCopy?.disseny || PAGE_COPY.disseny;
+const copyDeLaPortada = (pageCopy, language = 'ca') => {
+  const base = pageCopy?.disseny || PAGE_COPY.disseny;
+  const page = localitzaPagina(base, language, 'disseny');
   // Derivat del mateix recurs propi: el core antic conserva text/data/autoria.
   // Una portada diferent conserva la seua URL i metadades, sense inferir mida.
   return [PORTADA_ANTIGA, PORTADA_JPG_RETIRADA, PORTADA_LLEUGERA].includes(page.image)
@@ -77,9 +80,9 @@ const copyDeLaPortada = (pageCopy) => {
    (metadadesDePagina sobre el copy de la portada, la imatge pel selector social:
    la WebP va al <head> per la variant JPEG de 1200x630); el d'un espècimen, el
    seu títol i l'entradeta que pinta. La pàgina no canvia (Llei del Píxel). */
-function seoDelDetall(item, pageCopy) {
+function seoDelDetall(item, pageCopy, language = 'ca') {
   if (!item || item.id === '__intro') {
-    const metadades = metadadesDePagina(copyDeLaPortada(pageCopy), opcionsDeLaImatgeSocial());
+    const metadades = metadadesDePagina(copyDeLaPortada(pageCopy, language), opcionsDeLaImatgeSocial());
     return { title: metadades.title, description: metadades.description, image: metadades.image || resolveAsset(CAP_SOCIAL_BASE.image.url) };
   }
   return {
@@ -90,10 +93,11 @@ function seoDelDetall(item, pageCopy) {
 
 function CatalogDetail({ item }) {
   const { pageCopy } = useCoreContent();
-  const seo = useMemo(() => seoDelDetall(item, pageCopy), [item, pageCopy]);
+  const language = useLlenguaOpcional();
+  const seo = useMemo(() => seoDelDetall(item, pageCopy, language), [item, pageCopy, language]);
   useSEO(seo);
   if (!item || item.id === '__intro') {
-    const page = copyDeLaPortada(pageCopy);
+    const page = copyDeLaPortada(pageCopy, language);
     // T51 · la data real de la portada: la del seu copy (copyDeLaPortada).
     // Sense hora si el copy és un dia sol (editorial.js no n'inventa cap de la
     // mitjanit UTC); amb hora si el core en porta una (les de prova, 261001).
@@ -112,6 +116,7 @@ function CatalogDetail({ item }) {
         showLogos={true}
         labels={page.labels}
         copyright={COPYRIGHT_SDP}
+        llenguaDelContingut={page.contentLanguage || 'ca'}
         {...data}
       >
         {/* SPEC G · les imatges del copy, amb la base de l'amfitrió en pintar-lo. */}
@@ -154,6 +159,14 @@ function CatalogDetail({ item }) {
   );
 }
 
+function useLlenguaOpcional() {
+  try {
+    return useUIActionsOpcional()?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
 export default function DesignSection() {
   const t = useTraductorOpcional();
   const [params, setParams] = useSearchParams();
@@ -161,7 +174,8 @@ export default function DesignSection() {
   const itemId = params.get('item'); // If null, UniversalWorkspace won't auto-select the first item
   /* 261001 · La llista i el detall lligen el mateix copy (copyDeLaPortada). */
   const { pageCopy } = useCoreContent();
-  const portada = copyDeLaPortada(pageCopy);
+  const language = useLlenguaOpcional();
+  const portada = copyDeLaPortada(pageCopy, language);
   const model = useMemo(() => ({
     status: 'ready',
     categories: CATALOG_CATEGORIES,

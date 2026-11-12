@@ -214,8 +214,9 @@ export function creaEmissio({ port, config, llegat, subtle, zona } = {}) {
      * @param {{ instant?: number|Date, opcionsFactura?: { tipusIva?: number[], sectorAmpliat?: boolean } }} [opcions]
      * @returns {Promise<Readonly<object>>} el registre d'alta desat, que porta la factura
      */
-    emet(dades, { instant, opcionsFactura } = {}) {
+    emet(dades, { instant, opcionsFactura, validaVigencia } = {}) {
       return enSeccio(async () => {
+        if (validaVigencia) await validaVigencia();
         if (!dades || typeof dades !== 'object' || Array.isArray(dades)) throw facturaInvalida('cal un objecte amb les dades de la factura.');
         const serie = serieDe(dades);
         const donat = dades.numSerie !== undefined;

@@ -7,7 +7,7 @@
  *   · tasca 12 · amb el nivell d'IA a 0, qui és dins d'un xat de la IAIA (o hi
  *     arriba pel seu descriptor) torna a la llista amb un avís, mai un 404.
  */
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import XatSection from './XatSection';
 import { buidaEsborranys, llegixEsborrany } from './esborranys.js';
@@ -30,6 +30,8 @@ const mocks = vi.hoisted(() => ({
   senseSessio: false,
   iaiaApagada: false,
   amagats: new Set(),
+  oblidades: new Set(),
+  oblidaSessioIAIA: vi.fn(),
   identitats: [],
   avis: null
 }));
@@ -93,6 +95,8 @@ vi.mock('./XatContext', async (importOriginal) => ({
     joNom: 'Javi',
     senseSessio: mocks.senseSessio,
     iaiaApagada: mocks.iaiaApagada,
+    oblidaSessioIAIA: mocks.oblidaSessioIAIA,
+    sessioIAIAOblidada: (id) => mocks.oblidades.has(id),
     esFilAmagat: (id) => mocks.amagats.has(String(id))
   })
 }));
@@ -118,6 +122,8 @@ beforeEach(() => {
   mocks.senseSessio = false;
   mocks.iaiaApagada = false;
   mocks.amagats = new Set();
+  mocks.oblidades = new Set();
+  mocks.oblidaSessioIAIA.mockResolvedValue(true);
   mocks.identitats = [];
   mocks.avis = null;
   buidaEsborranys();
@@ -326,5 +332,31 @@ describe('tasca 12 · amb el nivell d’IA a 0 la IAIA no apareix', () => {
     await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/p-iaia?sobre=pagina%3A%2Fiaia', { replace: true }));
     expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1);
     expect(mocks.showToast).not.toHaveBeenCalledWith(AVIS, 'info');
+  });
+});
+
+
+describe('R20 · oblit individual des de /xat', () => {
+  const id = 'iaia-local-00000000-0000-4000-8000-000000000088';
+  test('la ruta del fil actiu confirma l’oblit i torna a la llista amb replace', async () => {
+    Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value() { this.setAttribute('open', ''); } });
+    Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, value() { this.removeAttribute('open'); } });
+    try {
+      mocks.threadId = id;
+      mocks.threads = [{ ...fil(id, { tipus: 'iaia' }), sessioLocalIAIA: true, filLocalIAIA: true }];
+      render(<XatSection />);
+      fireEvent.click(screen.getByRole('button', { name: 'Opcions de la conversa' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Oblida esta conversa' }));
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Oblida la conversa' })); });
+      expect(mocks.oblidaSessioIAIA).toHaveBeenCalledExactlyOnceWith(id);
+      expect(mocks.navigate).toHaveBeenCalledWith('/xat', { replace: true });
+    } finally { delete HTMLDialogElement.prototype.showModal; delete HTMLDialogElement.prototype.close; }
+  });
+  test('un fil oblidat en una altra pestanya torna a la llista sense quedar en un 404', () => {
+    mocks.threadId = id;
+    mocks.threads = [];
+    mocks.oblidades.add(id);
+    render(<XatSection />);
+    expect(mocks.navigate).toHaveBeenCalledWith('/xat', { replace: true });
   });
 });

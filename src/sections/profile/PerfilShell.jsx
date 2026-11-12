@@ -1,3 +1,4 @@
+import { RequireAuth } from '../../app/guards/RequireAuth.jsx';
 import { Suspense, lazy, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Eye, Lock, SlidersHorizontal, UserRound } from 'lucide-react';
 import { useContent } from '../../components/universal/ContentProvider';
@@ -25,7 +26,7 @@ import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
 import { nodesDelPerfil } from './nodes.js';
 import {
-  ID_ADMINISTRACIO_SISTEMA, PARAM_FITXA_ORGANITZACIO, PARAM_VISTA, TEXTOS_PRIVACITAT_LLISTA, VISTA_COMPTE, itemsDAdministracioSistema, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
+  ID_ADMINISTRACIO_SISTEMA, PARAM_FITXA_ORGANITZACIO, PARAM_VISTA, TEXTOS_PRIVACITAT_LLISTA, VISTA_COMPTE, VISTA_IMPORTACIO, itemsDAdministracioSistema, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
 import {
   PanellAjustosVistesColumnes, PanellCromIntegrat, PanellEmpaquetatsDesplegament, PanellNodesFediversResiliencia,
@@ -381,7 +382,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
   return (
     <div className="sdp-gestor-pagina perfil-pagina">
       <UniversalWorkspace
-        key={vista === VISTA_COMPTE ? 'perfil-compte' : 'perfil'}
+        key={vista === VISTA_IMPORTACIO ? 'perfil-importacio' : vista === VISTA_COMPTE ? 'perfil-compte' : 'perfil'}
         model={model}
         initialSelection={initialSelection}
         /* MD (ordre del Mestre, 261003) · En mòbil, primer PERFIL; amb
@@ -447,7 +448,8 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
   const [params] = useSearchParams();
   const preferidaRuta = params?.get?.(PARAM_FITXA_ORGANITZACIO) || null;
   /* P0-63 (261108) · ?vista=compte, «El compte» de la persona; cap altre valor. */
-  const vista = (params?.get?.(PARAM_VISTA) === VISTA_COMPTE || params?.get?.('apartat') === VISTA_COMPTE) ? VISTA_COMPTE : null;
+  const vista = params?.get?.(PARAM_VISTA) === VISTA_IMPORTACIO ? VISTA_IMPORTACIO
+    : (params?.get?.(PARAM_VISTA) === VISTA_COMPTE || params?.get?.('apartat') === VISTA_COMPTE) ? VISTA_COMPTE : null;
   /* Revisió adversarial (261018) · La clau del Workspace depén de l'actor: si
      una relectura de les pertinences falla (IdentitatContext buida la llista i
      l'actor cau a la persona), es conserva l'organització d'abans i el Perfil
@@ -485,7 +487,7 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
     [aplicacions, superadmin],
   );
 
-  return (
+  const perfil = (
     <PerfilProvider config={config} onCanviOrganitzacions={refresh}>
       <PerfilManagerInner
         config={config}
@@ -498,4 +500,5 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
       />
     </PerfilProvider>
   );
+  return vista === VISTA_IMPORTACIO ? <RequireAuth rol="superadmin">{perfil}</RequireAuth> : perfil;
 }

@@ -2,9 +2,8 @@ import { ESTAT_CANDIDATS_ALERGENS, vesteixCandidatsAlergens } from '../../../uti
 
 /** Review surface only: no edit, validation or publication action. No inferred
  * candidates are passed to IconesAlergens or the certified product list.
- * Onada R15b (RV-01, RV-02) · The mandatory label is the title, in the interface
- * language (ca, es, en, eu, gl); every row is «•», «T» or «? Sense dada», never
- * an absence; partial coverage lists the literal lines the lexicon does not know.
+ * The generic proposal keeps unknown rows. In the reviewed cookbook matrix
+ * «—» means the substance does not appear in the recipe text.
  * The literal book or source text keeps lang="ca". `escandall` shows the costing
  * line only where a costing exists (the Bar); the public recipe page omits it. */
 export function CandidatsAlergens({ proposta, llengua = 'ca', escandall = true }) {
@@ -28,7 +27,7 @@ export function CandidatsAlergens({ proposta, llengua = 'ca', escandall = true }
                 <summary>{v.fontLiteral}</summary>
                 <ul>
                   {fila.evidencies.map((evidencia, i) => (
-                    <li key={`${evidencia.camp}-${i}`}><q lang="ca">{evidencia.text}</q>{' · '}{evidencia.on}</li>
+                    <li key={`${evidencia.camp}-${i}`}><q lang="ca">{evidencia.text}</q>{' · '}{evidencia.on}{evidencia.motiu && <span>{' · '}{evidencia.motiu}</span>}</li>
                   ))}
                 </ul>
               </details>

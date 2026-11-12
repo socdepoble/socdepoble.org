@@ -28,7 +28,8 @@ import SelectorDestinsPublicacio from '../components/universal/workspace/Selecto
 
 const OWNER = '1d2e3f40-5a6b-4c7d-8e9f-a0b1c2d3e4f5', ALTRE = '6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c9d';
 const FONT = { font: 'herbari', id: 'timonet', title: 'Timonet', subtitle: 'Thymus vulgaris', lead: 'Font literal immutable' };
-const LABELS = ['Mur', 'Mercat públic', 'Rebost privat', 'TPV Bar privat', 'Què dinem?', 'Herbari', 'Banc de Llavors'];
+const LABELS = ['Mur', 'Mercat públic', 'Rebost privat', 'TPV Bar privat', 'Què dinem?', 'Herbari', 'Banc de Llavors',
+  'Arbres emblemàtics i monumentals', 'Pàgines del fons documental'];
 function entra(id = OWNER) {
   m.user = id ? { id } : null;
   m.identity = { actorKey: id ? `persona::${id}` : 'anon', actor: { tipus: 'persona', id }, actorId: id, nomesLectura: !id };

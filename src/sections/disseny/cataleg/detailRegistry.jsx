@@ -126,4 +126,6 @@ export const CATALOG_DETAIL_LOADERS = {
   'fonaments/carrusel-imatges': lazyRoute(() => import('./detalls/EspecimenCarruselImatges.jsx')),
   /* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat (al peu de l'editor de Notes). */
   'fonaments/publicacions-actor': lazyRoute(() => import('./detalls/EspecimenPublicacionsDeLActor.jsx')),
+  /* Onada R19 · Co-publicació multi-entitat registrada i traspàs inline d'1 clic. */
+  'formularis/traspas-copublicacio': lazyRoute(() => import('./detalls/EspecimenTraspasCopublicacio.jsx')),
 };

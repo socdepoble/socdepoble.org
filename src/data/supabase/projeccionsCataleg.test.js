@@ -13,6 +13,16 @@ const fila = (audiencia = 'publica') => ({ id: ID, owner_user_id: m.user, sectio
   title: 'Timonet', payload: { title: 'Timonet', projeccioCataleg: { v: 1, font: 'herbari', id: 'timonet', destins: [audiencia === 'publica' ? 'herbari' : 'bar'], audiencia } } });
 beforeEach(() => { vi.clearAllMocks(); m.user = '1d2e3f40-5a6b-4c7d-8e9f-a0b1c2d3e4f5'; m.generation = 0; m.mode = 'remote'; request.mockResolvedValue([]); });
 describe('P0-59 · lector Supabase, RLS existent sense migració', () => {
+  test.each(['mur', 'arbres-monumentals', 'herbari', 'receptes', 'pagina'])('R18 · el lector preserva %s i continua deduint l’autoria de les columnes', async destinacio => {
+    const row = fila();
+    row.payload = { title: 'Catàleg d’arbres', ownerUserId: ID, destinacio_workspace: destinacio,
+      projeccioCataleg: { v: 1, font: 'importacio-wp', id: '619', destins: [destinacio], audiencia: 'publica' } };
+    request.mockResolvedValueOnce([row]);
+    const result = await loadProjeccionsCataleg();
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]).toMatchObject({ ownerUserId: m.user, sectionId: 'mur', destinacio_workspace: destinacio });
+    expect(result.items[0].projeccioCataleg.id).toBe('619');
+  });
   test('privada sempre filtra uid, notes, poble i marcador; cursor de conjunt de claus, sense tall silenciós', async () => {
     request.mockResolvedValueOnce([fila('privada')]);
     const first = await loadProjeccionsCataleg({ audiencia: 'privada', limit: 100 });

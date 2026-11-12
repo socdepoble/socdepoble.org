@@ -28,7 +28,13 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   useLocation: () => ({ pathname: '/el-meu-perfil', search: '', state: null, hash: '' }),
   Link: ({ to, children }) => <a href={to}>{children}</a>,
 }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => ({ externalConfig: {} }) }));
+/* R19 · Arbitratge del carril (P1) · La fitxa connectada passa per la porta de la plataforma (useDestiDelPlugin),
+   que llig l'estat de la UI: l'App és l'ama del document (manageDocumentHead), com a la web pròpia. */
+vi.mock('../../app/contexts/UIContext', () => ({
+  useUI: () => ({ externalConfig: {} }),
+  useUIState: () => ({ externalConfig: { manageDocumentHead: true } }),
+  useUIActions: () => ({ t: (_clau, reserva) => reserva })
+}));
 vi.mock('../../components/universal/ContentProvider', () => ({ useContent: () => null }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../data/backendPort.js', () => ({ teCapacitat: (cap) => m.caps.has(cap) }));
@@ -80,8 +86,9 @@ const detall = (container) => container.querySelector('.sdp-workspace-detail');
 test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i APLICACIONS, sense la maquinària interna', () => {
   const { container } = render(<PerfilShell />);
   /* Onada R6 · Bloc 2 (P1-b) · Expectativa actualitzada a propòsit: sense superadmin no ix «🛡️ Administració del sistema». */
+  /* P0-114 (ordre del Mestre, 261111) · L'Avisador torna, darrere de l'Arbre Genealògic. */
   expect(etiquetesDe(navegacio())).toEqual([
-    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'Lector RSS', 'TPV del Bar', 'Snippet',
+    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'L’Avisador', 'Lector RSS', 'TPV del Bar', 'Snippet',
   ]);
   expect(within(navegacio()).getByRole('button', { name: 'GRUPS I EMPRESES' }).getAttribute('aria-expanded')).toBe('true');
   // En entrar: la persona activa, els seus apartats i la fitxa oberta.
@@ -98,7 +105,7 @@ test('Bloc 3.4 · qui és superadmin hi veu també la Consola de Mètriques i el
   m.sessio = { esSuperadmin: true };
   render(<PerfilShell />);
   expect(etiquetesDe(navegacio())).toEqual([
-    'Javi Llinares', '🛡️ Administració del sistema', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'Lector RSS', 'TPV del Bar', 'Snippet', 'Consola de Mètriques', 'Cervell (Node Graph)',
+    'Javi Llinares', '🛡️ Administració del sistema', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'L’Avisador', 'Lector RSS', 'TPV del Bar', 'Snippet', 'Consola de Mètriques', 'Cervell (Node Graph)',
   ]);
   /* Una sessió que no és superadmin, o un valor que no és un sí, no les mostra. */
   for (const sessio of [{ esSuperadmin: false }, { rol: 'veí' }, {}]) {
@@ -190,12 +197,18 @@ test('cada element de l’esquerra obri els seus apartats i el primer al detall'
   expect(apartats(container)).toEqual(['Sobre esta utilitat']);
   const pagina = detall(container);
   expect(within(pagina).getByRole('heading', { level: 1, name: 'Gestoria de Poble' })).toBeTruthy();
-  expect(within(pagina).getByText('Pendent de connectar en este node')).toBeTruthy();
+  /* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · La Gestoria té destí real en este node:
+     connectada, amb el seu únic enllaç cap a la seua app (la mateixa ruta que la targeta del Panell).
+     Abans: «Pendent de connectar en este node» i cap enllaç. */
+  expect(within(pagina).getByText('Connectada en este node')).toBeTruthy();
   /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Sense preferència
      la utilitat ja és al Panell (la mateixa regla que ControlSection: només
      l'amaga un false explícit), i el botó ho diu. */
   expect(within(pagina).getAllByRole('button').map((b) => b.textContent)).toEqual(['Ocultar del Panell de Control']);
-  expect(within(pagina).queryAllByRole('link')).toEqual([]);
+  /* R19 · Loop 1 · L'enllaç diu el botó del seu plugin (registrePlugins.js, etiquetaObrir). Abans: «Obrir
+     Gestoria de Poble». */
+  expect(within(pagina).queryAllByRole('link').map((enllac) => [enllac.textContent, enllac.getAttribute('href')]))
+    .toEqual([['Obrir la Gestoria', '/app/gestoria']]);
 });
 
 test('sense organitzacions: el grup es veu, explica com crear-ne una i NOVA ORG obri el diàleg', () => {

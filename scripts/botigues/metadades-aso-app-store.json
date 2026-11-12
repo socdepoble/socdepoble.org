@@ -1,0 +1,35 @@
+{
+  "schema": "sdp.botigues.aso-app-store.v1",
+  "ref_normativa": "P0-97 / IDEA-228 · Llei de Marca Intraduïble i Subtítol ASO <= 30 caràcters",
+  "marca_intraduible": "Sóc de Poble",
+  "bundle_id": "org.socdepoble.app",
+  "limit_caracters_subtitol_apple": 30,
+  "regla": "«Sóc de Poble» és SEMPRE un nom propi intraduïble en totes les llengües. El lema oficial «Portal de Pobles Connectats» es conserva en valencià tant en ca com en es-ES, i es traduïx únicament en en-US, gl i eu sense superar mai els 30 caràcters del camp Subtitle d'App Store Connect.",
+  "locales": {
+    "ca": {
+      "name": "Sóc de Poble",
+      "subtitle": "Portal de Pobles Connectats",
+      "subtitleLength": 27
+    },
+    "es-ES": {
+      "name": "Sóc de Poble",
+      "subtitle": "Portal de Pobles Connectats",
+      "subtitleLength": 27
+    },
+    "en-US": {
+      "name": "Sóc de Poble",
+      "subtitle": "Connected Villages Portal",
+      "subtitleLength": 25
+    },
+    "gl": {
+      "name": "Sóc de Poble",
+      "subtitle": "Portal de Pobos Conectados",
+      "subtitleLength": 26
+    },
+    "eu": {
+      "name": "Sóc de Poble",
+      "subtitle": "Herri Konektatuen Ataria",
+      "subtitleLength": 24
+    }
+  }
+}

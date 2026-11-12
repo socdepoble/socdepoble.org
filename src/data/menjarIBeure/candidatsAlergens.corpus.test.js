@@ -8,13 +8,18 @@
    · Instantània lligada a VERSIO_LEXIC: canviar el lèxic obliga a revisar-la. */
 import { describe, expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { RECEPTES_QUE_DINEM, receptaPerSlug } from '../patrimoni/queDinem.js';
 import { ALERGENS } from '../../utils/productes/producteUniversal.js';
-import { analitzaClausula, construixLexic, normalitza, VERSIO_LEXIC } from '../../utils/candidatsAlergens.js';
-import { LLENGUES_ALERGENS, TEXTOS_ALERGENS, vesteixCandidatsAlergens } from '../../utils/textosAlergens.js';
-import { candidatsReceptaQueDinem } from './candidatsAlergens.js';
+import { analitzaClausula, construixLexic, normalitza, proposaCandidatsAlergens, VERSIO_LEXIC } from '../../utils/candidatsAlergens.js';
+import { LLENGUES_ALERGENS, TEXTOS_ALERGENS, TEXTOS_MATRIU_RECEPTARI, vesteixCandidatsAlergens } from '../../utils/textosAlergens.js';
+import { candidatsReceptaQueDinem, resolutorDeReceptes } from './candidatsAlergens.js';
 
-const proposta = (recepta) => candidatsReceptaQueDinem(recepta, receptaPerSlug);
+const matriu = (recepta) => candidatsReceptaQueDinem(recepta, receptaPerSlug);
+const proposta = (recepta) => {
+  const { id, fontsRevisades } = matriu(recepta);
+  return proposaCandidatsAlergens({ id, fonts: fontsRevisades, resolRecepta: resolutorDeReceptes(receptaPerSlug) });
+};
 const PROPOSTES = RECEPTES_QUE_DINEM.map((recepta) => [recepta, proposta(recepta)]);
 const alergen = (p, id) => p.alergens.find((a) => a.id === id);
 
@@ -153,5 +158,158 @@ describe('RV-01 · cap fals negatiu a les 149 receptes', () => {
     expect(() => construixLexic([{ classe: 'S', formes: 'gamba', marques: {} }, { classe: 'A', formes: 'gamba', marques: { crustacis: 'I' } }], []))
       .toThrow(/Conflicte de classe/);
     expect(() => construixLexic([{ classe: 'A', formes: 'gamba', marques: { marisc: 'I' } }], [])).toThrow(TypeError);
+  });
+});
+
+describe('R17 · matriu dels ingredients declarats de «Què dinem?»', () => {
+  test('el literal de les 149 fitxes correspon a la transcripció revisada', () => {
+    const literals = RECEPTES_QUE_DINEM.map((r) => [r.slug, r.pagina, r.ingredients, r.preparacio, r.notes]);
+    const hash = createHash('sha256').update(JSON.stringify(literals)).digest('hex');
+    expect(hash).toBe('51d37fb9db9cc81aa2c8671f45157c728a1c395e3860b4cf022d706ae83059e2');
+  });
+
+  test('149 × 14 amb font literal per a cada marca i només tres estats en les cinc llengües', () => {
+    const totals = { '•': 0, T: 0, '—': 0 };
+    for (const recepta of RECEPTES_QUE_DINEM) {
+      const p = matriu(recepta);
+      expect(p.metode).toBe('matriu_receptari_r17');
+      expect(p.absenciesAcreditades).toBe(false);
+      expect(p.aptePerInformarConsumidor).toBe(false);
+      expect(p.alergens.map((a) => a.id)).toEqual(ALERGENS);
+      const fonts = new Map(p.fontsRevisades.map((f) => [f.camp, f]));
+      for (const a of p.alergens) {
+        const cites = [...a.ingredient.evidencies, ...a.traca.evidencies];
+        expect(cites.length > 0).toBe(a.simbol !== '—');
+        for (const cita of cites) {
+          expect(cita.text).toBe(fonts.get(cita.camp).text);
+          expect(cita.font).toMatchObject({ pagina: recepta.pagina, sha256: p.font.sha256 });
+          if (cita.referencia) expect(cita.referencia.font.pagina).toBe(receptaPerSlug(cita.referencia.slug).pagina);
+        }
+        expect(Object.hasOwn(totals, a.simbol)).toBe(true);
+        totals[a.simbol]++;
+      }
+      for (const llengua of LLENGUES_ALERGENS) {
+        const v = vesteixCandidatsAlergens(p, llengua);
+        expect(v.files.map((f) => f.simbol)).toEqual(p.alergens.map((a) => a.simbol));
+        expect(v.textCobertura).toBe(TEXTOS_MATRIU_RECEPTARI[llengua].completa);
+      }
+    }
+    // Auditoria R18: +11 T per les receptes de les notes (P0) i +9 T perquè la matriu conserve els senyals del lèxic (P1).
+    expect(totals).toEqual({ '•': 161, T: 195, '—': 1730 });
+  });
+
+  test.each([
+    ['caragols-amb-tomaca', 'molluscs', '•'],
+    ['arros-melos-de-peix', 'crustacis', '•'],
+    ['fideua', 'ous', 'T'],
+    ['arros-blanc', 'ous', 'T'],
+    ['coca-de-batre', 'peix', 'T'],
+    ['coca-de-batre', 'gluten', 'T'],
+    ['fabiola-de-coco', 'fruits-closca', 'T'],
+    ['mandonguilles-de-carn', 'fruits-closca', 'T'],
+    ['vi-de-cirer', 'sulfits', 'T'],
+    ['aigua-sal', 'sulfits', 'T'],
+    ['pa-rustic', 'soja', 'T'],
+    ['bescuit-d-ametla', 'gluten', '—'],
+    ['mantegades', 'llet', '—'],
+    ['olla-de-carn', 'peix', '—'],
+    ['carinyitos', 'gluten', '—']
+  ])('%s · %s = %s', (slug, id, simbol) => {
+    expect(alergen(matriu(receptaPerSlug(slug)), id).simbol).toBe(simbol);
+  });
+
+  /* Auditoria R18 (P0) · Una altra recepta copiada a les notes de la fitxa: la fitxa pública la mostra, i el panell
+     no pot dir «—» d'un al·lergen que hi apareix. Es marca T amb el motiu `receptaDeNota`. */
+  test.each([
+    ['pa-rustic', ['llet', 'soja', 'sulfits']],
+    ['amanida-de-tomaca-all-i-tonyina', ['mostassa', 'sulfits']],
+    ['arros-amb-conill', ['fruits-closca', 'gluten', 'sulfits']],
+    ['llucets-passats-per-farina-i-fregits', ['llet']],
+    ['sopa-d-alls', ['api', 'soja', 'sulfits']]
+  ])('recepta de les notes · %s → T amb motiu', (slug, ids) => {
+    const p = matriu(receptaPerSlug(slug));
+    const files = vesteixCandidatsAlergens(p).files;
+    for (const id of ids) {
+      expect([slug, id, alergen(p, id).simbol]).toEqual([slug, id, 'T']);
+      expect(files.find((f) => f.id === id).evidencies.map((e) => e.motiu)).toContain(TEXTOS_MATRIU_RECEPTARI.ca.motius.receptaDeNota);
+    }
+  });
+
+  test('cada motiu de la matriu té text en les cinc llengües', () => {
+    const motius = Object.keys(TEXTOS_MATRIU_RECEPTARI.ca.motius);
+    for (const llengua of LLENGUES_ALERGENS) expect(Object.keys(TEXTOS_MATRIU_RECEPTARI[llengua].motius)).toEqual(motius);
+  });
+
+  /* Auditoria R18 (P1) · RV-01 sobre la superfície que veu el veí: cap senyal «•» o «T» del lèxic queda en «—» a la
+     matriu, llevat de les excepcions declarades ací amb el seu motiu. Una excepció nova o una que ja no cal fan fallar.
+     Cada excepció és un mot que el lèxic llig de manera genèrica i que la mateixa fitxa resol. */
+  const ADOB_DECLARAT = 'L’adob es compon a la mateixa nota (oli, vinagre, all, mostassa, pebre i sal); no és cap barreja comercial.';
+  const LICOR_PROPI = '«Licor» nomena la mateixa beguda de la fitxa, que no porta cap licor de crema, d’ou ni d’ametla.';
+  const EXCLOSOS = {
+    'amanida-de-tomaca-all-i-tonyina:api': ADOB_DECLARAT,
+    'amanida-de-tomaca-all-i-tonyina:sesam': ADOB_DECLARAT,
+    'esclata-sangs-torrats:gluten': '«Fesols tendres» és llegum fresc; el motiu del llegum sec no s’hi aplica.',
+    'blat-picat:api': '«Totes les verdures restants» remet a la llista d’ingredients de la fitxa, que no porta api.',
+    'potatge:api': 'La línia «Verdures: …» és una llista tancada i no porta api (el julivert no és api).',
+    'olla-de-carn:peix': '«Peixet» és un tall de vedella, com diu la mateixa línia.',
+    'cocotets-de-tomaca-o-de-verdura:api': '«La verdura» és el farciment d’espinacs i bledes que declara la fitxa.',
+    'fabiola-de-coco:llet': '«Pastís» nomena la mateixa fabiola; el greix és sagí (mantega de porc).',
+    'bescuit-d-ametla:gluten': '«Bescuit» nomena el mateix bescuit d’ametla, i la llista d’ingredients no porta farina.',
+    'carquinyols-de-bescuit:llet': '«Bescuit» nomena la mateixa pasta de la fitxa, i cap ingredient és lacti.',
+    'pastissos-de-nadal:llet': 'La «mantega» de la nota és mantega de porc (sagí), i «pastissos» nomena el mateix dolç.',
+    'pastissos-de-nadal:fruits-closca': '«Nou» és el numeral («total, nou»), no el fruit.',
+    'cafe-licor:ous': LICOR_PROPI,
+    'cafe-licor:llet': LICOR_PROPI,
+    'cafe-licor:fruits-closca': LICOR_PROPI,
+    'licor-de-salvia:ous': LICOR_PROPI,
+    'licor-de-salvia:llet': LICOR_PROPI,
+    'licor-de-salvia:fruits-closca': LICOR_PROPI
+  };
+  test('la matriu conserva cada senyal • o T del lèxic, llevat de les excepcions declarades', () => {
+    const perdudes = [];
+    for (const recepta of RECEPTES_QUE_DINEM) {
+      const lex = proposta(recepta);
+      const mat = matriu(recepta);
+      for (const id of ALERGENS) {
+        if (['•', 'T'].includes(alergen(lex, id).simbol) && alergen(mat, id).simbol === '—') perdudes.push(`${recepta.slug}:${id}`);
+      }
+    }
+    expect(perdudes.filter((clau) => !Object.hasOwn(EXCLOSOS, clau))).toEqual([]);
+    expect(Object.keys(EXCLOSOS).filter((clau) => !perdudes.includes(clau))).toEqual([]);
+  });
+
+  test('vincula la línia de les pilotes i la del seu ingredient a les dues pàgines reals', () => {
+    const p = matriu(receptaPerSlug('fesols-estofats'));
+    const [cita] = alergen(p, 'ous').ingredient.evidencies;
+    expect(cita.text).toBe('4 pilotes de dacsa (de facedura)');
+    expect(cita.referencia).toMatchObject({ slug: 'olleta-murera', text: '2 ous', font: { pagina: 90 } });
+    expect(vesteixCandidatsAlergens(p).files.find((f) => f.id === 'ous').evidencies.map((e) => e.text)).toEqual([cita.text, cita.referencia.text]);
+  });
+
+  test('un literal alterat o una referència revisada canviada torna al lèxic sense absències', () => {
+    const pa = structuredClone(receptaPerSlug('pa-rustic'));
+    pa.ingredients[0].linies.push('2 ous');
+    const modificada = matriu(pa);
+    expect(modificada.metode).toBe('lexic_tancat_v1');
+    expect(alergen(modificada, 'ous').simbol).toBe('•');
+    expect(alergen(modificada, 'peix').simbol).toBe('?');
+
+    const depend = candidatsReceptaQueDinem(receptaPerSlug('fesols-estofats'), (slug) => {
+      const referida = structuredClone(receptaPerSlug(slug));
+      referida.ingredients[1].linies[1] = '2 nous';
+      return referida;
+    });
+    expect(depend.metode).toBe('lexic_tancat_v1');
+    expect(alergen(depend, 'ous').simbol).toBe('?');
+    expect(alergen(depend, 'fruits-closca').simbol).toBe('•');
+  });
+
+  test('la marca de pinyons remet al producte envasat i els sulfits al llindar pendent', () => {
+    const p = matriu(receptaPerSlug('mandonguilles-de-carn'));
+    const fila = vesteixCandidatsAlergens(p).files.find((f) => f.id === 'fruits-closca');
+    expect(fila.evidencies[0]).toMatchObject({ text: 'Pinyonets', motiu: TEXTOS_MATRIU_RECEPTARI.ca.motius.pinyons });
+    const sulfits = alergen(matriu(receptaPerSlug('vi-de-cirer')), 'sulfits');
+    expect(sulfits.concentracioMgKgOMgL).toBeNull();
+    expect(sulfits.llindarDeclaracio).toContain('>10 mg/kg o >10 mg/l de SO₂');
   });
 });

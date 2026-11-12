@@ -23,10 +23,11 @@ vi.mock('../../app/contexts/RouterContext', () => ({
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
-vi.mock('../../app/contexts/UIContext', () => ({
-  useUIActions: () => ({ t: (_, alternativa) => alternativa, resolveAsset: (uri) => uri }),
-  useUIState: () => ({ externalConfig: {}, locale: 'ca-ES', language: 'ca' })
-}));
+vi.mock('../../app/contexts/UIContext', () => {
+  const useUIActions = () => ({ t: (_, alternativa) => alternativa, resolveAsset: (uri) => uri });
+  const useUIState = () => ({ externalConfig: {}, locale: 'ca-ES', language: 'ca' });
+  return { useUIActions, useUIState, useUIActionsOpcional: useUIActions, useUIStateOpcional: useUIState };
+});
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
 vi.mock('./cataleg/detailRegistry', () => ({ CATALOG_DETAIL_LOADERS: {} }));
 /* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · La portada registra ara el

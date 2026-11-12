@@ -76,6 +76,16 @@ export const SECCIONS_PAGINABLES = Object.freeze({
 });
 
 export const CAPACITATS = Object.freeze({
+  /* R19 · El recurs s'identifica per { recursTipus, recursId }. La lectura
+     torna { recursTipus, recursId, versio, publicadorsRegistrats, publicadorEfectiu }.
+     Els actors provenen del padró vigent i estan ordenats: principal, després
+     copublicadors. El seu enllaç acredita UUID i tipus amb ?registre.
+     Amb llista buida, el publicador efectiu és Sóc de Poble.
+     El traspàs i la reversió exigixen superadmin + aal2, versioEsperada i un
+     operacioId UUID estable per al reintent. Tornen també { operacioId,
+     versioOperacio, repetida }. L'autoria i la llicència originals queden a
+     la font editorial. El node local sols té la lectura de reserva. */
+  copublicacio: Object.freeze(['lligPublicadorsRegistrats', 'traspassaPublicacio', 'reverteixTraspasPublicacio']),
   /* P0-59 · Existing section_submissions, separate immutable Mur/notes
      references. The reader paginates; notes are uid-private under RLS. */
   projeccionsCataleg: Object.freeze(['loadProjeccionsCataleg']),
@@ -91,6 +101,9 @@ export const CAPACITATS = Object.freeze({
   edicioEditorial: Object.freeze(['adminActualitzaPublicacioEditorial']),
   /* P1-75 · Revisions vigents per peça; CAS 0 inicia, autoria autoritativa al servidor. */
   revisionsLlavor: Object.freeze(['loadSeedRevisions', 'desaRevisioSeed']),
+  /* P1-75 · Campanyes públiques d'una peça de patrimoni, en ordre d'any descendent.
+     La versió 0 crea, una versió positiva confirma l'edició o la baixa. L'autoria és interna. */
+  revisionsPatrimoni: Object.freeze(['llistaRevisionsPatrimoni', 'desaRevisioPatrimoni', 'esborraRevisioPatrimoni']),
   sessioExterna: Object.freeze(['adoptaSessioExterna']),
   paginacioNotes: Object.freeze(['loadNotesPage']),
   /* Decisió 4 del Mestre (261007) · «Carregar-ne més» al Mur i al Mercat
@@ -737,7 +750,11 @@ export const CAPACITATS = Object.freeze({
      Els membres públics requerixen pertinença viva i consentiment de persona
      i entitat; cap gestor pot publicar les preferències d'una altra persona. */
   connexionsPubliques: Object.freeze(['preferenciesConnexions', 'desaVisibilitatConnexions', 'connexionsPubliquesDe',
-    'membresIEntitatsConnectadesDe', 'inclouPersonaEnEntitat', 'solicitaUnirSeAEntitat'])
+    'membresIEntitatsConnectadesDe', 'inclouPersonaEnEntitat', 'solicitaUnirSeAEntitat']),
+  /* P0-111 (Onada R18) · Sincronització de l'estat de revisió editorial de les
+     entrades importades de WordPress (estat, nota, autoria, destí) darrere del
+     port neutral perquè la curadoria no quede aïllada al navegador local. */
+  revisionsEditorialsWp: Object.freeze(['llistaRevisionsEditorialsWp', 'desaRevisioEditorialWp'])
 });
 
 /* Pla 261022_1955 (T1) · El sostre de listPublicOrganizations: una sola font per

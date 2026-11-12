@@ -97,7 +97,7 @@ function focusPerdut(node) {
 export default function CapcaleraConversa({
   fil, onTorna, onSeleccionar, seleccio = null, t,
   onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
-  onTornaAOrigen = null, accioXifratge = null, accioSilenci = null, escrivint = 0
+  onTornaAOrigen = null, accioXifratge = null, accioSilenci = null, accioOblit = null, escrivint = 0
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -301,6 +301,11 @@ export default function CapcaleraConversa({
             {typeof accioSilenci?.onTria === 'function' && accioSilenci.etiqueta ? (
               <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(accioSilenci.onTria)}>
                 {accioSilenci.etiqueta}
+              </button>
+            ) : null}
+            {typeof accioOblit?.onTria === 'function' && accioOblit.etiqueta ? (
+              <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(accioOblit.onTria)}>
+                {accioOblit.etiqueta}
               </button>
             ) : null}
             {typeof onDenunciaPersona === 'function' && nomDeLaContrapart ? (

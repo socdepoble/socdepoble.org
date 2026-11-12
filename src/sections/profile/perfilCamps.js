@@ -1,3 +1,4 @@
+import { desglossaDrets, llargariaDe, MAXIM_AUTORIA, MAXIM_DRETS_DESATS, sanejaAutoria } from '../../data/dretsAutor.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { netejaText, sanitizeHtml } from '../../utils/sanitize.js';
 import { ErrorValidacio } from '../../data/autodesament/errors.js';
@@ -41,7 +42,7 @@ export const CAMPS_FITXA = Object.freeze({
    T49 · El lema (l'entradilla) ve de la font única del client (limitsText.js),
    que casa amb el CHECK de 2609281500_lema_entradilla_256.sql. */
 export const LIMITS_TEXT = Object.freeze({
-  copyright: Object.freeze([0, 256]),
+  copyright: Object.freeze([0, MAXIM_AUTORIA]),
   full_name: Object.freeze([1, 120]),
   name: Object.freeze([2, 120]),
   lema: Object.freeze([0, MAXIM_LEMA]),
@@ -201,6 +202,17 @@ export function valorPerDesar(mena, camp, valor) {
         { columna, llargaria, minim: 0, maxim: MAXIM_EMOTICONA });
     }
     return { columna, valor: emoji };
+  }
+
+  if (camp === 'copyright') {
+    const drets = sanejaAutoria(valor);
+    const llargaria = llargariaDe(desglossaDrets(drets).autoria);
+    /* Auditoria R18 (P2) · També el total amb la marca, com el CHECK de 2611110010 (≤ 274). */
+    if (llargaria > MAXIM_AUTORIA || llargariaDe(drets) > MAXIM_DRETS_DESATS) {
+      throw new ErrorValidacio(missatgeDeLlargaria(columna, 0, MAXIM_AUTORIA, llargaria),
+        { columna, llargaria, minim: 0, maxim: MAXIM_AUTORIA });
+    }
+    return { columna, valor: drets };
   }
 
   const pla = textDeCamp(valor);

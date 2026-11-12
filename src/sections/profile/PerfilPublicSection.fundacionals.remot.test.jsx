@@ -47,6 +47,7 @@ vi.mock('../../PedraSecaEmbed.jsx', () => ({ defineCustomElement: vi.fn() }));
 vi.mock('../../data/supabase/index.js', async (importOriginal) => ({ ...await importOriginal() }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => m.identitat }));
 vi.mock('../../app/contexts/RouterContext', () => ({
+  useLocation: () => ({ search: '' }),
   useParams: () => ({ agentId: m.id }),
   useNavigate: () => m.navigate
 }));
@@ -184,7 +185,7 @@ test.each([
   ['un grup «rentonar»', { id: UUID_ALCOI, kind: 'group', slug: 'rentonar', name: 'Rentonar d’Alcoi', town_name: null }],
   ['una empresa «socdepoble»', { id: UUID_ALCOI, kind: 'company', slug: 'socdepoble', name: 'Sóc de Poble d’Alcoi', town_name: null }]
 ])('homònim · %s d’un altre poble, obert pel seu UUID, no rep ni la URL canònica ni el poble del Mestre', async (_cas, fila) => {
-  m.directori = (ruta) => (ruta.includes(`id.eq.${UUID_ALCOI}`) ? [fila] : []);
+  m.directori = (ruta) => (ruta.includes(`id=eq.${UUID_ALCOI}`) ? [fila] : []);
   render(<PerfilPublicSection id={UUID_ALCOI} />);
   await screen.findByRole('heading', { level: 1, name: fila.name });
   const props = darrer(fila.name);

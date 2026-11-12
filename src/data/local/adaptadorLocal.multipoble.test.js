@@ -33,9 +33,9 @@ function autoritatPendent() {
 
 test('el local conserva les capacitats declarades, les set absències explícites i els casos històrics', async () => {
   const a = crea();
-  expect(Object.keys(CAPACITATS)).toHaveLength(51);
+  expect(Object.keys(CAPACITATS)).toHaveLength(54);
   expect(Object.values(CAPACITATS).flat().filter(m => typeof a[m] !== 'function')).toEqual(['adminResumSessionsDispositius','adminLlistaSessionsDispositius','estatCuradoriaCultural','llistaAportacionsCulturals','enviaAportacioCultural','revisaAportacioCultural','consultaIAIA','loadRitmeXat','actualitzaPresenciaXat','importaMunicipiOpenData','confirmaCorreu','reenviaVerificacioCorreu','demanaRestablimentCorreu','restablixContrasenyaAmbCorreu']);
-  expect(CASOS).toHaveLength(210);
+  expect(CASOS).toHaveLength(219);
   for (const plataforma of ['ios', 'android', 'web', '', null, {}]) expect(await a.versioMinimaClient(plataforma, { dataMode: 'remote', supabaseUrl: 'https://fora.invalid' })).toBeNull();
 });
 

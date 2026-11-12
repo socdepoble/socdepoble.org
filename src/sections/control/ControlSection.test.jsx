@@ -24,7 +24,15 @@
    la D6 («cap data per a les eines») i la P6 («cap etiqueta al Panell»):
    decisió M4, targeta canònica amb la data i les etiquetes de la seua font
    (el registre de plugins, o el Snippet). Les huit targetes de dalt
-   conserven les seues assercions. */
+   conserven les seues assercions.
+
+   R18 · T2 (P0-101; prompt 261111_0148) · Una eina en proves pinta la
+   insígnia «En proves · Beta oberta» darrere de les dues etiquetes del
+   registre. La font continua amb exactament dues (`etiquetes`); el DOM es
+   compara amb `pintades`, les d'etiquetesAmbEstat. Correcció de la T2:
+   l'Avisador no entra a «La llar» (la seua vinyeta no és a public/).
+   P0-114 (ordre del Mestre, 261111) · DEROGADA: L'Avisador torna a «La
+   llar», darrere de l'Arbre Genealògic, amb la seua vinyeta. */
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import '../../../tests/helpers/diccionaris.js';
@@ -37,7 +45,7 @@ import { resolvePageSlugPath, RUTA_PERFIL_PROJECTE } from '../../config/navigati
 import { PAGE_COPY } from '../text/pageContent.js';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
-import { IDS_PLUGINS, PLUGINS, rutaDelPlugin } from '../plugins/registrePlugins.js';
+import { IDS_PLUGINS, PLUGINS, etiquetesAmbEstat, rutaDelPlugin } from '../plugins/registrePlugins.js';
 import { DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET as ETIQUETES_SNIPPET } from './destiSnippet.js';
 import { DATA_NODRIR_IAIA, ETIQUETES_NODRIR_IAIA, PAGINA_NODRIR_IAIA, TEXTOS_IAIA_SABUDA } from '../text/pageContent.nodrirIaia.js';
 import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL } from './destinsControl.js';
@@ -223,8 +231,13 @@ test('D3 · cap targeta ni botó del Panell navega a una ruta que no és a la ta
      Onada 10 (261010; decisió M4 del Mestre) · Les sis targetes de plugin
      porten ara la pastilla de la data, que també es prem ací: porta al
      Calendari del seu mes, una ruta d'App, com la de les targetes de dalt.
-     Les tres pàgines de la maquinària, que també en portaven, ja no hi són. */
-}, 30_000);
+     Les tres pàgines de la maquinària, que també en portaven, ja no hi són.
+     P0-114 (ordre del Mestre, 261111) · La targeta de L'Avisador hi afig dos
+     clicables (la targeta i la seua pastilla), dues pintades més; amb l'arbre
+     carregat per altres suites en paral·lel, una execució aïllada va mesurar
+     50,7 s. El límit puja a 60 s pel mateix motiu de dalt: no afluixa cap
+     asserció. */
+}, 60_000);
 
 /* P5 (261003) i W4-08 (261004) substituïxen les targetes d'edició del
    Panell antic: les huit pàgines tenen una porta de lectura accessible.
@@ -346,8 +359,14 @@ const targetesDUtilitats = () => SECCIONS_DUTILITATS.flatMap((nom) => targetesDe
 const ETIQUETES_DEL_SNIPPET = ETIQUETES_SNIPPET.map(({ text, className }) => [text, className]);
 const fontDeLaTargeta = (titol) => {
   const plugin = PLUGINS.find((p) => p.titol === titol);
-  if (plugin) return { data: plugin.data, etiquetes: plugin.etiquetes.map(({ text, className }) => [text, className]) };
-  return titol === 'Snippet' ? { data: DATA_DEL_SNIPPET, etiquetes: ETIQUETES_DEL_SNIPPET } : null;
+  if (plugin) {
+    return {
+      data: plugin.data,
+      etiquetes: plugin.etiquetes.map(({ text, className }) => [text, className]),
+      pintades: etiquetesAmbEstat(plugin, 'ca').map(({ text, className }) => [text, className])
+    };
+  }
+  return titol === 'Snippet' ? { data: DATA_DEL_SNIPPET, etiquetes: ETIQUETES_DEL_SNIPPET, pintades: ETIQUETES_DEL_SNIPPET } : null;
 };
 const pastillaEsperada = (data) => {
   const { time, date } = dataHoraDeBarra({ creat: data });
@@ -407,7 +426,7 @@ test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’o
        exactament eixes dues i en eixe ordre. */
     expect(targeta.className, titol).toBe('sp-card');
     expect(font.etiquetes.map(([, classe]) => classe), titol).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
-    expect(etiquetesDe(targeta), titol).toEqual(etiquetesEsperades(font.etiquetes));
+    expect(etiquetesDe(targeta), titol).toEqual(etiquetesEsperades(font.pintades));
     expect(targeta.querySelectorAll('.sp-card-body > ul.sp-card-labels'), titol).toHaveLength(1);
     expect(targeta.querySelector('.sp-card-portes'), titol).toBeNull();
     expect(targeta.querySelector('.sp-card-accio'), titol).toBeNull();
@@ -597,9 +616,14 @@ test('P7-B · cap text, imatge, data ni etiqueta dels plugins és copiat a Contr
   expect(fontControl).toContain('etiquetes: ETIQUETES_DEL_SNIPPET');
   /* La data del Snippet tampoc s'escriu al Panell: viu a destiSnippet.js. */
   expect(fontControl.includes(DATA_DEL_SNIPPET)).toBe(false);
-  /* I el Panell llig els dos camps del registre, als dos llocs de crida. */
+  /* I el Panell llig els dos camps del registre, als dos llocs de crida.
+     R18 · T2 (P0-101) · Les etiquetes, per etiquetesAmbEstat (les del registre i, en proves, la
+     insígnia): cap lloc no les pinta ja directament. El text de la insígnia tampoc s'escriu ací. */
   expect(fontControl.split('data={plugin.data}').length - 1).toBe(2);
-  expect(fontControl.split('etiquetes={plugin.etiquetes}').length - 1).toBe(2);
+  expect(fontControl.split('etiquetes={etiquetesAmbEstat(plugin, idioma)}').length - 1).toBe(2);
+  expect(fontControl.split('etiquetes={plugin.etiquetes}').length - 1).toBe(0);
+  expect(fontControl.includes("'En proves · Beta oberta'")).toBe(false);
+  expect(fontControl.includes("'sdp-insignia-beta-oberta'")).toBe(false);
 });
 
 /* La preferència de DetallEspai és d'EXCLUSIÓ: una utilitat s'amaga només amb
@@ -1167,10 +1191,12 @@ test('Onada 10 i R16-W1 · «Maquinària i Sistema» és exactament el Lector RS
   for (const nom of ['useCoreContent', 'accioDeLaPagina']) expect(fontControl.includes(nom), nom).toBe(false);
 });
 
-test('Onada 10 · M4 i R16-W1 · les set targetes de baix (3 + 2 + 2) són canòniques: data i hora de la seua font, Categoria i Etiqueta, i cap botó gran ni porta', () => {
+/* P0-114 (ordre del Mestre, 261111: «RESTITUÏX IMMEDIATAMENT «L'Avisador · Batec de Vida» A «La
+   llar» DE /control») · Huit: L'Avisador torna a «La llar» (3 + 3 + 2), amb la seua data (Kit R17.2). */
+test('Onada 10 · M4 i R16-W1 · les huit targetes de baix (3 + 3 + 2) són canòniques: data i hora de la seua font, Categoria i Etiqueta, i cap botó gran ni porta', () => {
   pinta();
   const targetes = targetesDUtilitats();
-  expect(targetes.map(titolDeTargeta)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'Lector RSS', 'Snippet']);
+  expect(targetes.map(titolDeTargeta)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'L’Avisador', 'Lector RSS', 'Snippet']);
   for (const targeta of targetes) {
     const titol = titolDeTargeta(targeta);
     const font = fontDeLaTargeta(titol);
@@ -1182,7 +1208,7 @@ test('Onada 10 · M4 i R16-W1 · les set targetes de baix (3 + 2 + 2) són canò
     expect(pastillaDe(targeta), titol).toEqual(pastillaEsperada(font.data));
     expect(font.etiquetes.map(([, classe]) => classe), titol).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
     expect(targeta.querySelector('ul.sp-card-labels [href]'), titol).toBeNull();
-    expect(etiquetesDe(targeta), titol).toEqual(etiquetesEsperades(font.etiquetes));
+    expect(etiquetesDe(targeta), titol).toEqual(etiquetesEsperades(font.pintades));
     expect(targeta.querySelector('.sp-card-accio'), titol).toBeNull();
     expect(targeta.querySelector('.sp-card-portes'), titol).toBeNull();
     expect(targeta.querySelector('.sp-card-porta'), titol).toBeNull();

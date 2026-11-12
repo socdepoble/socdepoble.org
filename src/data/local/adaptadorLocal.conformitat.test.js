@@ -58,7 +58,7 @@ function passada(nom, { crea, prepara = () => {}, omissionsAdmeses, ambSessio = 
         return presents > 0 && presents < metodes.length;
       });
       expect(parcials).toEqual([]);
-      expect(Object.keys(CAPACITATS)).toHaveLength(51);
+      expect(Object.keys(CAPACITATS)).toHaveLength(54);
       expect(CAPACITATS_NO_DECLARADES).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
       expect(noDeclarades(adaptador)).toEqual(CAPACITATS_NO_DECLARADES);
     });

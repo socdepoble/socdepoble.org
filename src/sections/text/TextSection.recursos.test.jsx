@@ -15,7 +15,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ props: null }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, alternativa) => alternativa }) }));
+vi.mock('../../app/contexts/UIContext', () => ({ useUIStateOpcional: () => null, useUIActions: () => ({ t: (_, alternativa) => alternativa }) }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 /* La pàgina, reduïda al que rep: les props (la capçalera) i el cos pintat. */
 vi.mock('../../components/universal/UniversalPage', () => ({

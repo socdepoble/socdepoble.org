@@ -26,9 +26,9 @@ test.each([768, 1440])('el Workspace a %ipx conserva les fletxes en la llista qu
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(width);
   const { container } = render(<MemoryRouter rutaInicial="/page/banc-de-llavors"><BancLlavorsWorkspaceSection page={{}} /></MemoryRouter>);
   fireEvent.click(screen.getByRole('button', { name: 'Tots els catàlegs', exact: true }));
-  fireEvent.click(screen.getByRole('button', { name: 'Rajola quadrada', exact: true }));
-  fireEvent.click(screen.getByRole('button', { name: 'Llista', exact: true }));
-  const overlays = () => [...container.querySelectorAll('#app-grid-list .sp-card-link-overlay')];
+  fireEvent.click(screen.getByRole('button', { name: 'Quadrícula 2×2', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Canònica', exact: true }));
+  const overlays = () => [...container.querySelectorAll('#app-grid-list .sdp-gestor-fitxa')];
   expect(overlays()).toHaveLength(125);
   act(() => overlays()[0].focus());
   fireEvent.keyDown(overlays()[0], { key: 'ArrowDown' });

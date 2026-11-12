@@ -3,8 +3,10 @@ import { Globe, Lock } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
 import { Accions, Boto } from '../../../../components/PedraSeca/index.js';
 import { SelectorVisibilitat } from '../../../../components/universal/SelectorVisibilitat.jsx';
+import { PanellVisibilitatEnLinia } from '../../../../components/universal/PanellVisibilitatEnLinia.jsx';
 import { bloqueigDeFitxa, textosDeFitxa } from '../../../profile/visibilitatFitxa.js';
-import { bloqueigDeNota, textosDeNota } from '../../../notes/visibilitatNota.js';
+import { bloqueigDeNota, textosDeNota, textosEnLiniaDeNota } from '../../../notes/visibilitatNota.js';
+import { useTraductorOpcional } from '../../../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { Llinatge } from '../Llinatge.jsx';
 
 /* T41 (ordre del Mestre, 260928) · «Qui ho pot vore?». La bola del món de la
@@ -24,8 +26,13 @@ const CASOS = [
 ];
 
 export default function EspecimenSelectorVisibilitat() {
+  const t = useTraductorOpcional();
   const [obert, setObert] = useState(null);
   const [estats, setEstats] = useState(() => Object.fromEntries(CASOS.map((c) => [c.id, c.publica])));
+  const [enLiniaObert, setEnLiniaObert] = useState(true);
+  const [enLiniaPublicada, setEnLiniaPublicada] = useState(false);
+  const [enLiniaPoble, setEnLiniaPoble] = useState('La Torre de les Maçanes');
+  const textosNotaEnLinia = textosEnLiniaDeNota({ t });
   return (
     <>
     <Llinatge id="visibilitat" />
@@ -74,6 +81,32 @@ export default function EspecimenSelectorVisibilitat() {
           </Fragment>
         );
       })}
+      <h4>Publicació en línia al Bloc de Notes (sense modal flotant)</h4>
+      <p>Al Bloc de Notes, prémer publicar o la icona de visibilitat desplega este quadre integrat a la pàgina amb selector multipoble i pas de blau «Publicar» a verd «Publicat».</p>
+      {enLiniaObert ? (
+        <PanellVisibilitatEnLinia
+          notaId="especimen-nota-damia"
+          esPublica={enLiniaPublicada}
+          estatPublicacio={enLiniaPublicada ? 'publicat' : 'pendent'}
+          textos={textosNotaEnLinia}
+          bloqueig={bloqueigDeNota({ publicada: enLiniaPublicada, t })}
+          comNom="Damià Llorens Jordà"
+          poblesDisponibles={['La Torre de les Maçanes', 'Xixona']}
+          poblePublicat={enLiniaPublicada ? enLiniaPoble : null}
+          rutaPublicada={enLiniaPublicada ? '/mur' : null}
+          t={t}
+          onTria={(publica, opcions) => {
+            setEnLiniaPublicada(Boolean(publica));
+            if (opcions?.poble) setEnLiniaPoble(opcions.poble);
+            return true;
+          }}
+        />
+      ) : null}
+      <Accions>
+        <Boto onClick={() => setEnLiniaObert((v) => !v)} icona={enLiniaPublicada ? Globe : Lock} aria-expanded={enLiniaObert}>
+          {enLiniaObert ? 'Plegar panell en línia' : 'Obrir panell en línia'}
+        </Boto>
+      </Accions>
     </Especimen>
     </>
   );

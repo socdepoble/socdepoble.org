@@ -1,0 +1,672 @@
+[
+  {
+    "id": "herbari-005-ametler",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-005-ametler-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "b7b870f9841580b258a007e9b06184fe119ad3dbfcf5e9f7ba4b3c9ee0410945",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-005-ametler",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-005-ametler-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "905b9b7e02c71f51ffa892a90bd49f0fde4ef907dae8ccdb5981301cc56fd36f",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-005-ametler",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-005-ametler-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "733e6ef1f17c992d805401ca29165798278f886f2db6b15da612ae253e93bfb4",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-083-olivera",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-083-olivera-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "eb8c47dd9fdab468b37516c02cbb097a3a75934c6b8648f3a4b470dfa66cb56d",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-083-olivera",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-083-olivera-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "8c2fd22d1cf46b036d8835ee93f1ed05a37db813352b135d26716732ade0fb03",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-083-olivera",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-083-olivera-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "cbfbc57da3a9b391c027997a7afb64f624d91f22bacc5638cbcd81c0c223270f",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-051-garrofer",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-051-garrofer-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "95c794b63b0e7419fa66165d29a6301d802036f942e71cd95be616d6ea2c7d68",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-051-garrofer",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-051-garrofer-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "9c2be2cd26996074f3fa12d36134e0ecb1d99711f443facd50bdb64d9ee7c2bb",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-051-garrofer",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-051-garrofer-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "04aa39bb9a4d045d8506975cc3e2bf52e74f4a9a1fec8392c5a064579ff76ae0",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-030-carrasca",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-030-carrasca-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "8bec2df5d560d536133fa78a6b4491fabe8349a57c74f64eecf0cd2f0799d10e",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-030-carrasca",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-030-carrasca-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "341983eb7003a05b4e324aea393d707b4e571a5139fa0c6edea1102b896bdfe9",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-030-carrasca",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-030-carrasca-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "abcc12ab68f52483b83b8c18d90022a099aebaea6ca09dab965f0711e63e80b4",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-010-arbocer-madronyer",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-010-arbocer-madronyer-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "525c207c347ae811cdf2039e3896df62587072e1ac688f624073fdf548e9cdd2",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-010-arbocer-madronyer",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-010-arbocer-madronyer-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "17e78e40018c79d1b80fcebceed9b603da1b408e72d875e670ff3f49dd0571b5",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-010-arbocer-madronyer",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-010-arbocer-madronyer-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "ea101e9b5abf4cb27fb91d659037da809ac2a246abd76c6d4b7b19f117f78f09",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-048-figuera",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-048-figuera-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "0c3ada8dcf3969cf0c10815692614acfc71464045c12638cde850832773bb9b7",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-048-figuera",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-048-figuera-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "f6d29d72626ccdb0487c9df5a82f80b64528b48f11b684537d9cd46c4b6d86ce",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-048-figuera",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-048-figuera-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "c85ad734cb729d942b4c5deb15e50310250d64d04d1bf76531563dfa6b8cf40e",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-068-magraner",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-068-magraner-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "fa4750ac33e5fde31e3310555a5f0f13db55ff1dace31abd64b3e2bc8c431141",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-068-magraner",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-068-magraner-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "6a728ec51e7e58bd545032d8f2e1d3db7eafcd1333a218ab12133640f0f65c53",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-068-magraner",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-068-magraner-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "140d19c936aa2e05b00caafb6ed3338c22928d57aba64c1d60b3e31ac31db03f",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-066-llorer",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-066-llorer-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "bcd3d5538246bcbf3fe7a6d752f995c7a33b5a1e28cd5e4d08c26fc44bea5763",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-066-llorer",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-066-llorer-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "77e3670bcb4d1b71f3031f4d9ebdfe75f4cec4c84c115f169ffc15a8c1ba9b0c",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-066-llorer",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-066-llorer-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "1656b14f973f539af5eb7c9c573aa858a73fe5790c16960f621a5ffbb1571270",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-102-romer",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-102-romer-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "f4cddc42d71a2b03c7254c0cb034fcef580aadc8e73c196dbcd6f2c73cf0bf00",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-102-romer",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-102-romer-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "5beffb04207346d5d67f9a3e0a0479867d717152946e9837aff8bc431ac27aa4",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-102-romer",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-102-romer-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "60fb608ed48752387f76261a98cd2220f5b86b6aaa9380268e167ca3c94b07e3",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-113-timo",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-113-timo-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "a060b50d7470a65035ba89c6716cd0ebdbf970b0c3a75459263a92a2775e1aaf",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-113-timo",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-113-timo-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "afe661df520c2dae77696940f95e3cc312017c0e9457f8add21245f66b3ba284",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-113-timo",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-113-timo-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "f1aa772fa363ebf1f3e2c2ffcad2d1a9a80695defd6c6e3c070ba9f89ae6dc06",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-046-espigol",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-046-espigol-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "51c99c72124b708e6c9c7a69ee33db1ad36cf2c84be960afa3fd23bf542fd9fd",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-046-espigol",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-046-espigol-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "b9066528626e0995e9a0683e10477a72a7fd9f4bc8d5d6dd3ee9a81ec46fc278",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-046-espigol",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-046-espigol-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "adb797d8da1c84545352e1e8b2f81b69d7584227fe432d10126c5a8ec1225341",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "herbari-004-alfabega",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-004-alfabega-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "bf296846f9baedf8143b6bf1ff8594dbf019f5768a7ae773f23e9b94278c2b91",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-004-alfabega",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-004-alfabega-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "3d84968a05baf4ecc09848cf6689fc011c0b504157caf37ffc3af8218f0f0f63",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "herbari-004-alfabega",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/herbari/herbari-004-alfabega-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "c3b3df10774c0fec055f7d90e6ffc8a0d3e1b38ed47bb99c3597c9c21ad910f6",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "cv-11-tomaca-mutxamel",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-11-tomaca-mutxamel-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "236e409864649c3dfa9e8d3b91b96ac9391123318014dfe2edf30f2d94013e27",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "cv-11-tomaca-mutxamel",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-11-tomaca-mutxamel-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "cbf78034fd2b817ac93416ad169ecefefbcd4185a543c8b9a57e04a4f2124e1a",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-11-tomaca-mutxamel",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-11-tomaca-mutxamel-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "6fccf314d0a8cf32a19c125185ec7e396faade543819886825a29c66bf8d137f",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-15-tomaca-rosada-d-altea",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-15-tomaca-rosada-d-altea-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "f9dde4c41a5520cea2e2f73836e7085a64dbd9e4561386ee3345cc704e8cfe68",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "cv-15-tomaca-rosada-d-altea",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-15-tomaca-rosada-d-altea-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "0fcff144dda0e9f5aac01394ac40f07df658fdcf9d5643df011e8f1badf634b8",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "cv-15-tomaca-rosada-d-altea",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-15-tomaca-rosada-d-altea-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "305320492ee3f0dcde16e59c57baccca09055dada1a3eb5d4240ba207543c7a6",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-13-tomaca-de-pera",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-13-tomaca-de-pera-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "07130604350046f6d31392f09489eaa93b6e81b8ed56d5215404f838c5f790e9",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-13-tomaca-de-pera",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-13-tomaca-de-pera-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "2c07c65dbaa50baaa3153083d9fe4adf724c6e4bd9eb6e5c636d0423451d983c",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-05-alberginia-llistada-de-gandia",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-05-alberginia-llistada-de-gandia-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "6aa25b33e2dc45afec2386d1d71d5429f720786d0ec81aafefc3ef400de7f147",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "cv-05-alberginia-llistada-de-gandia",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-05-alberginia-llistada-de-gandia-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "265429099caa51bbfa125ec839c09f06b8a473f2903821cb287d271289b4a18c",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-04-alberginia-blanca",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-04-alberginia-blanca-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "e4394048504b533d32933d4b217c7c4f4ab136a5fba1af950742efee22081ef5",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "cv-04-alberginia-blanca",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-04-alberginia-blanca-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "0a7feafebe43b3a42abc6dea23fcc8865171c3e4676031aed641a19bcc24f7dd",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "cv-04-alberginia-blanca",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-04-alberginia-blanca-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "ab42a6580c848d538a42b27c92ecfbc5d8f8712401fdd44c96b0add67c7530c5",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-08-pimento-quatre-morros",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-08-pimento-quatre-morros-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "47d8f2e860300c3e5c1ecaba1e1148c861c8408e0ab9e299a33a6cf216cae60d",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-08-pimento-quatre-morros",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-08-pimento-quatre-morros-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "b37611bce7aff5832bcb5744b8196eda70c1f01ac02ef0701aec6bdb725efd52",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-08-pimento-quatre-morros",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-08-pimento-quatre-morros-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "9667932f4284c6bab5000696a230845e8e7d85efe48d63b1b9bf6e5d82c25cdf",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-10-pimento-nyora",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-10-pimento-nyora-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "f3d0867fef92b393f59f2d936162d61c6f49f956656a83060d66444790a2627c",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-10-pimento-nyora",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-10-pimento-nyora-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "34f88683d1e75a9d51bcc92cb439d163f0f345c0c30abfacc24dd6f6ab00d79a",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "cv-10-pimento-nyora",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/cv-10-pimento-nyora-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "b5f8b1cdc7c447c7ba5e334f2be5eeeba0570cb4da30af6f920b02f424c3e9db",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "atles-14-all",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/atles-14-all-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "c4572825fa9fce820a4d9f0677730d0b50ea57879d61c85231f677bab94058a5",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "atles-14-all",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/atles-14-all-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "e5203baac89b611bf422c567d261b224617a6649d05266c763c6915e17c257e7",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "atles-28-cigro",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/atles-28-cigro-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "ec4e24eee0883b50c8b91106da97cda03b3362fb7a6c0bb602b49cef0b00944a",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "atles-28-cigro",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/atles-28-cigro-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "3becd9d2f9212228ce2b0640eab2fafbb92606b0756f0315541893f55f8f30b1",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "atles-42-fava",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/atles-42-fava-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "03322c1413060d53765d28fe6c1fe1533606e5abffc80b46402ad2a1fb36b4bc",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "atles-42-fava",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/atles-42-fava-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "586807163f9c95cf282dfd1f12783be23848a31f95136bf73468c88875bd51e8",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "atles-42-fava",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/atles-42-fava-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "c630222478b6dc901c74781231326c4c3cef7814d3eaf6f54724e50040b63c1a",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "rebutjada"
+  },
+  {
+    "id": "avl-11-alfabeguera-de-fulla-verda",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/avl-11-alfabeguera-de-fulla-verda-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "fe861221f159acc1c9001162dcaf9e6e0a0420e61dbf9043939907b3e173dd82",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "avl-11-alfabeguera-de-fulla-verda",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/avl-11-alfabeguera-de-fulla-verda-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "637c21fed19c3e9eea4eb67c774d0bf0fe2d160fc5a22a31358583a072e64af5",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "avl-11-alfabeguera-de-fulla-verda",
+    "variant": "v3-llavor",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/avl-11-alfabeguera-de-fulla-verda-v3-llavor.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "6cbfdc556c2a0c57b2c77ef4d5c4ed1a5667d9a97bccb14ea99328ad1c0bfa52",
+    "etiqueta": "Estudi carpològic de llavor i fruit",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "avl-11-alfabeguera-de-fulla-morada",
+    "variant": "v1-habit",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/avl-11-alfabeguera-de-fulla-morada-v1-habit.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "de6a845cd4992c4f74e6c3978da7d8af728e477ae586d79d1db868c3ed77f6de",
+    "etiqueta": "Hàbit i port al bancal",
+    "estatVisual": "pendent"
+  },
+  {
+    "id": "avl-11-alfabeguera-de-fulla-morada",
+    "variant": "v2-macro",
+    "src": "/assets/uploads/patrimoni/banc-de-llavors/avl-11-alfabeguera-de-fulla-morada-v2-macro.webp",
+    "width": 768,
+    "height": 576,
+    "sha256": "9702bf4bf96424add16da24f3a54457ef4ab5e2f92967356db105bb83a623876",
+    "etiqueta": "Detall morfològic macro",
+    "estatVisual": "pendent"
+  }
+]

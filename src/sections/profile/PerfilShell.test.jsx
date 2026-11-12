@@ -10,6 +10,7 @@ const m = vi.hoisted(() => ({
 vi.mock('../../app/contexts/SessionContext.jsx', async (importOriginal) => ({
   ...(await importOriginal()),
   useSessioOpcional: () => m.sessio,
+  useSession: () => m.auth,
 }));
 vi.mock('../../components/universal/workspace', () => ({ UniversalWorkspace: (props) => { m.workspace = props; return null; } }));
 vi.mock('./PerfilContext.jsx', () => ({
@@ -36,12 +37,17 @@ vi.mock('./DialegNovaOrganitzacio.jsx', () => ({
 }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ refresh: m.refresh, actor: m.actor, error: m.errorIdentitats ?? null }) }));
 /* T9 · configurable: «Els nodes» llig externalConfig (nomPoble, dataMode) i status. */
-vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => m.ui }));
+/* R19 · Arbitratge del carril (P1) · La fitxa d'una utilitat connectada passa per la porta de la plataforma
+   (useDestiDelPlugin), que llig el mateix estat de la UI, i el motiu es tradueix amb `t`. */
+vi.mock('../../app/contexts/UIContext', () => ({
+  useUI: () => m.ui, useUIState: () => m.ui, useUIActions: () => ({ t: (_clau, reserva) => reserva })
+}));
 vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children }) => <a href={to}>{children}</a>,
+  Navigate: ({ to }) => <output data-testid="entrada">{to}</output>,
   useSearchParams: () => [m.params],
   /* Encàrrec 261018_1220 · PerfilShell llig l'estat de l'historial (espaiIdentitat). */
-  useLocation: () => ({ pathname: '/el-meu-perfil', search: '', state: m.estatHistorial ?? null, hash: '' }),
+  useLocation: () => ({ pathname: '/el-meu-perfil', search: m.params.toString(), state: m.estatHistorial ?? null, hash: '' }),
 }));
 vi.mock('../../components/universal/ContentProvider', () => ({ useContent: () => null }));
 vi.mock('../../components/universal/UniversalPage', () => ({
@@ -76,6 +82,7 @@ const apartatDe = (detall) => detall.props.children[1];
 
 beforeEach(() => {
   m.workspace = null; m.proveidor = null; m.dialeg = null; m.refresh.mockClear(); m.toast.mockClear();
+  m.auth = { currentUser: { id: 'usuari-prova' }, estat: 'autenticat', rol: 'vei' };
   m.estatHistorial = null;
   m.errorIdentitats = null;
   m.caps = new Set();
@@ -106,9 +113,12 @@ test('primera columna: tres grups en ordre, la persona amb el seu nom i Administ
      de Mètriques ni el Cervell (intern: true). Amb superadmin, les cinc de
      sempre (prova de davall). */
   expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
-    /* Encàrrec d'harmonització (261018) · el catàleg complet del Panell, i «Lector RSS». */
+    /* Encàrrec d'harmonització (261018) · el catàleg complet del Panell, i «Lector RSS».
+       P0-114 (ordre del Mestre, 261111) · Expectativa actualitzada a propòsit en R19 · T3: L'Avisador ja
+       és a APLICACIONS darrere de l'Arbre Genealògic (aplicacions.test.js i PerfilShell.espai.test.jsx ho
+       fixen), i esta llista no el comptava. */
     ['app-gestoria', 'Gestoria de Poble'], ['app-rebost', 'Rebost Domèstic'], ['app-salut', 'Salut'],
-    ['app-genealogia', 'Arbre Genealògic'], ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
+    ['app-genealogia', 'Arbre Genealògic'], ['app-avisador', 'L’Avisador'], ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
   ]);
   for (const opcio of grups().flatMap((g) => g.options)) expect(opcio.icon).toBeTruthy();
   expect(grups()[1].options[0].icon).not.toBe(grups()[1].options[1].icon);
@@ -123,7 +133,7 @@ test('Bloc 3.4 · amb superadmin, APLICACIONS porta també la Consola de Mètriq
   render(<PerfilShell />);
   expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
     ['app-gestoria', 'Gestoria de Poble'], ['app-rebost', 'Rebost Domèstic'], ['app-salut', 'Salut'],
-    ['app-genealogia', 'Arbre Genealògic'], ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
+    ['app-genealogia', 'Arbre Genealògic'], ['app-avisador', 'L’Avisador'], ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
     ['app-metriques', 'Consola de Mètriques'], ['app-cervell', 'Cervell (Node Graph)'],
   ]);
   for (const opcio of grups()[2].options) expect(opcio.icon).toBeTruthy();
@@ -227,7 +237,12 @@ test('segona columna: els fills de cada element segons el tipus', () => {
   }
   expect(filsDe('sense-organitzacions')).toEqual([]);
   expect(item('jo-privacitat')).toMatchObject({ title: 'Privacitat i dades' });
-  expect(item('app-gestoria-sobre')).toMatchObject({ title: 'Sobre esta utilitat', subtitle: 'Pendent de connectar en este node' });
+  /* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · La Gestoria té destí real en este node
+     (/app/gestoria): connectada. Abans: «Pendent de connectar en este node».
+     Arbitratge del carril (P1) · El Snippet també: la seua secció és la seua fitxa del Panell
+     (/control?fitxa=snippet). DEROGAT «El Snippet continua pendent». */
+  expect(item('app-gestoria-sobre')).toMatchObject({ title: 'Sobre esta utilitat', subtitle: 'Connectada en este node' });
+  expect(item('app-snippet-sobre')).toMatchObject({ title: 'Sobre esta utilitat', subtitle: 'Connectada en este node' });
   expect(itemsDePerfil([jo])[0]).toMatchObject({ title: 'La fitxa', subtitle: 'Pep', image: 'a.webp', categoryIds: ['jo'] });
 });
 
@@ -357,24 +372,44 @@ test('tercera columna: l’editor per a la fitxa, El compte, i Privacitat i dade
    les tres que hi tenen targeta (Gestoria, Lector RSS i Snippet). La Consola
    de Mètriques i el Cervell (`panell: null`) no pinten cap botó: no hi ha
    res a mostrar ni a ocultar, i un botó que no fa res està vetat. */
-test('una aplicació pendent: estat honest, la preferència del Panell només si hi té targeta, i cap enllaç d’obertura', () => {
+/* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720: «sincronització d'aplicacions.js perquè totes
+   les eines del Panell de Control funcionen al 100%») · Les utilitats amb destí real en este node
+   (aplicacions.js) diuen «Connectada en este node» i porten el seu únic enllaç, «Obrir …», cap a la
+   mateixa ruta que la seua targeta del Panell. El Snippet, la Consola de Mètriques i el Cervell, sense
+   ruta pròpia, continuen pendents i sense cap enllaç. DEROGAT, per a les connectades, «Pendent de
+   connectar en este node» i «cap enllaç d’obertura».
+   Arbitratge del carril (P1) · El Snippet s'enllaça a la seua fitxa del Panell, i cada enllaç passa per la porta
+   de la plataforma: ací, l'App és l'ama del document (manageDocumentHead), com a la web pròpia. Els casos que
+   no la deixen obrir els prova DetallEspai.utilitats.test.jsx. */
+test('cada aplicació: estat honest, l’enllaç d’obertura només si està connectada, i la preferència del Panell només si hi té targeta', () => {
   /* Gauntlet 261016 (Bloc 3.4) · Amb superadmin, per a poder obrir també les dues internes. */
   m.sessio = { esSuperadmin: true };
+  m.ui = { externalConfig: { ...m.ui.externalConfig, manageDocumentHead: true } };
   render(<PerfilShell />);
+  /* R19 · Loop 1 · L'enllaç diu el botó del seu plugin (registrePlugins.js, etiquetaObrir); sense plugin
+     (el Snippet), «Obrir <nom>». Abans, «Obrir <nom>» per a totes: «Obrir L’Avisador», «Obrir Arbre Genealògic». */
   const aplicacions = [
-    ['gestoria', 'Gestoria de Poble', true], ['rebost', 'Rebost Domèstic', true], ['salut', 'Salut', true],
-    ['lector-rss', 'Lector RSS', true], ['tpv', 'TPV del Bar', true], ['snippet', 'Snippet', true],
-    ['metriques', 'Consola de Mètriques', false], ['cervell', 'Cervell (Node Graph)', false],
+    ['gestoria', 'Gestoria de Poble', true, '/app/gestoria', 'Obrir la Gestoria'],
+    ['rebost', 'Rebost Domèstic', true, '/app/nevera/casa', 'Obrir el Rebost'],
+    ['salut', 'Salut', true, '/app/salut', 'Obrir Salut'],
+    ['genealogia', 'Arbre Genealògic', true, '/app/genealogia', 'Obrir l’Arbre Genealògic'],
+    ['avisador', 'L’Avisador', true, '/page/avisador', 'Obrir l’Avisador'],
+    ['lector-rss', 'Lector RSS', true, '/app/lector', 'Obrir el Lector'],
+    ['tpv', 'TPV del Bar', true, '/app/bar', 'Obrir el Bar'],
+    ['snippet', 'Snippet', true, '/control?fitxa=snippet', 'Obrir Snippet'],
+    ['metriques', 'Consola de Mètriques', false, null, null], ['cervell', 'Cervell (Node Graph)', false, null, null],
   ];
-  for (const [id, nom, alPanell] of aplicacions) {
+  for (const [id, nom, alPanell, ruta, obrir] of aplicacions) {
     const vista = render(m.workspace.renderDetail({ item: item(`app-${id}-sobre`) }));
     expect(screen.getByRole('heading', { level: 1, name: nom })).toBeTruthy();
-    expect(screen.getByText('Pendent de connectar en este node')).toBeTruthy();
+    expect([id, screen.queryByText('Connectada en este node') !== null, screen.queryByText('Pendent de connectar en este node') !== null])
+      .toEqual([id, ruta !== null, ruta === null]);
     /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Sense
        preferència la utilitat ja és al Panell: el botó diu «Ocultar». */
     expect([id, screen.queryAllByRole('button').map((b) => b.textContent)])
       .toEqual([id, alPanell ? ['Ocultar del Panell de Control'] : []]);
-    expect(screen.queryAllByRole('link')).toEqual([]);
+    expect([id, screen.queryAllByRole('link').map((enllac) => [enllac.textContent, enllac.getAttribute('href')])])
+      .toEqual([id, ruta === null ? [] : [[obrir, ruta]]]);
     vista.unmount();
   }
 });
@@ -678,4 +713,27 @@ test('R14 P0-63 · un apartat desconegut no selecciona cap panell administratiu'
   render(<PerfilShell />);
   expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo' });
   expect(m.workspace.model.items.some((fila) => fila.id.startsWith('admin-'))).toBe(false);
+});
+
+
+test('P116 · vista=admin-importacio selecciona el banc únicament per a superadmin', () => {
+  m.params = new URLSearchParams('vista=admin-importacio');
+  m.sessio = { esSuperadmin: true };
+  m.auth = { currentUser: { id: 'admin-prova' }, estat: 'autenticat', rol: 'superadmin' };
+  render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'administracio-sistema', itemId: 'admin-importacio' });
+  expect(item('admin-importacio').data.vista).toBe('admin-importacio');
+  expect(m.workspace.renderDetail({ item: item('admin-importacio') })).toBeTruthy();
+});
+
+test('P116 · l’enllaç al banc no dona permisos al compte ordinari ni a qui no ha entrat', () => {
+  m.params = new URLSearchParams('vista=admin-importacio');
+  render(<PerfilShell />);
+  expect(screen.getByRole('alert').textContent).toContain('Accés restringit');
+  expect(m.workspace).toBeNull();
+  cleanup();
+  m.auth = { currentUser: null, estat: 'anonim', rol: null };
+  render(<PerfilShell />);
+  expect(screen.getByTestId('entrada').textContent).toBe('/registre?mode=entrar&tornar=%2Fel-meu-perfil%3Fvista%3Dadmin-importacio');
+  expect(m.workspace).toBeNull();
 });

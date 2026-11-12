@@ -78,6 +78,24 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+/* Onada R20 (deute /app/*) · Cada vista d'una app porta UNA capçalera de primer nivell amb el nom de l'app, dins de
+   header.page-title i només per a lectors (.sdp-sr-only): la navegació per capçaleres troba la pàgina i la pantalla
+   no canvia. La mateixa per a les columnes i per a l'àrea única. */
+describe('Onada R20 · el títol de primer nivell de l’app', () => {
+  test.each([
+    ['columnes', RUTES, '/app/prova/inici/a-7', 'Element a-7'],
+    ['àrea única', [{ path: 'inici', Unica: () => <p>Àrea sola</p> }], '/app/prova/inici', 'Àrea sola']
+  ])('%s: un sol h1 amb el nom de l’app, amagat a la vista', async (_cas, rutes, ruta, text) => {
+    ambAmplada(1400);
+    muntaPlataforma(ruta, { registre: registreAmb(rutes) });
+    expect(await screen.findByText(text)).toBeTruthy();
+    const titols = screen.getAllByRole('heading', { level: 1 });
+    expect(titols.map((h) => h.textContent)).toEqual(['La Prova']);
+    const capcalera = titols[0].parentElement;
+    expect([capcalera.localName, capcalera.className]).toEqual(['header', 'page-title sdp-sr-only']);
+  });
+});
+
 describe('les columnes ixen de la URL', () => {
   test('enllaç profund: una sola taula pinta esquerra, mig i detall', async () => {
     ambAmplada(1400);

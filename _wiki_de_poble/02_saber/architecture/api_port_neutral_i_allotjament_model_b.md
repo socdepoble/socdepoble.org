@@ -6,7 +6,7 @@ description: Inventari verificable del port i requisits d'allotjament Model B
 # API del port neutral i allotjament Model B
 
 **Contrast inicial:** arbre de l'assalt 261101_1246, 2026-11-01. **Recompte actualitzat**
-des de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-09 (R15.2: publicació transversal de referències; recompte executable vigent).
+des de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-11 (R19, co-publicació registrada).
 **Esborrany. Inventari de codi**; **no acredita cap nou desplegament** ni l'aprovació d'una ADR.
 Les **signatures i DTO** són a `src/data/contracte.js` i a les **implementacions**;
 la **llista següent** enumera noms.
@@ -48,13 +48,13 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 51 capacitats atòmiques opcionals (`CAPACITATS`)
+## 54 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**116 mètodes addicionals**; **148 mètodes** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**124 mètodes addicionals** i **156 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
-un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 51 són **grups declarats al contracte**, no 51 serveis implementats o desplegats per cada adaptador.
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 54 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
@@ -66,6 +66,8 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `carpetesNotes` | `creaCarpetaNotes` |
 | `edicioEditorial` | `adminActualitzaPublicacioEditorial` |
 | `revisionsLlavor` | `loadSeedRevisions`, `desaRevisioSeed` |
+| `revisionsPatrimoni` | `llistaRevisionsPatrimoni`, `desaRevisioPatrimoni`, `esborraRevisioPatrimoni` |
+| `revisionsEditorialsWp` | `llistaRevisionsEditorialsWp`, `desaRevisioEditorialWp` |
 | `sessioExterna` | `adoptaSessioExterna` |
 | `paginacioNotes` | `loadNotesPage` |
 | `paginacioSeccions` | `loadSeccioPage` |
@@ -109,6 +111,7 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `restauracioDadesObertes` | `restauraDadesObertes` |
 | `avisosPush` | `desaDispositiuAvisos`, `retiraDispositiuAvisos` |
 | `silenciXat` | `silenciaFil` |
+| `copublicacio` | `lligPublicadorsRegistrats`, `traspassaPublicacio`, `reverteixTraspasPublicacio` |
 
 ## Validació i conformitat
 
@@ -130,11 +133,27 @@ inoperants. No hi ha les API `verificaContracteBackend` o `executaKitDeConformit
 Esta cobertura contractual local **no acredita 120 èxits de servidor remot**,
 ni totes les branques possibles de cada mètode.
 
-### Recompte local vigent (R15.2) i verificació per correu (R6)
+### Recompte local vigent (R19) i verificació per correu (R6)
 
-El recompte actual és de **210 casos sobre 148 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+El recompte actual és de **219 casos sobre 156 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
 
-L’adaptador local oferix **44 dels 51 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`; els **22 casos** d’estos grups s’ometen per **capacitat absent**. Les omissions per dades o autorització dels altres casos continuen sent **explícites**. Les **148 declaracions** del port **no són 148 operacions verificades en un servidor remot**.
+L’adaptador local oferix **47 dels 54 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`. El kit omet **els 22 casos** d’estos grups per **capacitat absent**.
+
+Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 156 operacions en un servidor remot continua pendent.
+
+### Co-publicació registrada (R19)
+
+`lligPublicadorsRegistrats` llig l’ordre, el publicador efectiu i la versió d’un recurs identificat pel seu tipus i id. La versió 0 indica la reserva editorial inicial. El catàleg local conserva la lectura de reserva i denega els traspassos administratius.
+
+`traspassaPublicacio` i `reverteixTraspasPublicacio` requerixen superadministració amb AAL2 en el node remot. La migració `2611111735` valida el padró, la versió i el tipus de recurs.
+
+El client conserva l’UUID de l’operació durant els reintents. La reversió referencia el traspàs registrat i crea una operació pròpia. Els crèdits i la llicència provenen de la font editorial.
+
+### Campanyes de patrimoni viu (R17.2B)
+
+`llistaRevisionsPatrimoni` **llig les campanyes públiques** per tipus i peça, de la més recent a la més antiga. Admet `abansAny` i un `limit` de fins a 100. `desaRevisioPatrimoni` **crea una campanya** amb `versio: 0`. Les edicions i les baixes **requerixen l’`id` i la `versio` llegits**. Hi ha **una campanya per any, peça i poble**. Les mesures són un **mapa acotat** amb claus de text i valors primitius. La migració 2611110110 **manté privada l'autoria** i exigix **sessió i pertinença al poble** per editar, amb permís de curadoria o d’administració i **AAL2 per a edicions sobre autoria aliena**. Superadmin amb AAL2 té abast global.
+
+El mode local **guarda les campanyes en memòria** i **permet editar a l'autor** de la campanya. A l'adaptador Supabase, el **mode `seed`** (el del connector de WordPress) **torna `no-disponible` en desar o esborrar**: **cap desament en memòria es presenta com a èxit**. En mode remot, **una migració absent** torna `no-disponible`, i una sessió que encara no ha acceptat les **normes de convivència** (`SDP-MOD-428`) torna `normes-pendents`.
 
 ### Referències transversals de catàleg (R15.2)
 
@@ -208,7 +227,7 @@ requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
 **no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
 real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
 
-L'adaptador local oferix **44 dels 51 grups declarats**; `CAPACITATS_NO_DECLARADES`
+L'adaptador local oferix **47 dels 54 grups declarats**; `CAPACITATS_NO_DECLARADES`
 conté `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`. `versioMinimaClient` torna honestament `null`, sense transport.
 L'administració multipoble està **denegada per defecte**: requerix el catàleg i
 la política `administracioLocal` injectats en construir la instància. La política

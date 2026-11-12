@@ -1,0 +1,9 @@
+{
+  "profile": "tabular-data-package",
+  "name": "socdepoble-patrimoni-rutes-i-camins",
+  "title": "Rutes, Sendes i Camins Tradicionals",
+  "version": "1.0.0",
+  "skos_concept": "TX.34",
+  "isadg_level": "series",
+  "colleccions": []
+}

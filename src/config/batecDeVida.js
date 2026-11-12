@@ -1,17 +1,4 @@
-/**
- * IDEA-123 + IDEA-124 — Configuració i textos multiidioma (5 llengües) per al
- * Batec de Vida (finestra diürna de 6h + pausa nocturna fins a les 09:00 + 15 min
- * de cortesia, zero GPS en segon pla) i el Protocol d'Emergències Offline / DANA.
- *
- * Reversibilitat d'1 pas: BATEC_DE_VIDA_ACTIU = false per defecte.
- */
-export const BATEC_DE_VIDA_ACTIU = false;
-
-export const INTERVAL_DIA_HORES_DEFECTE = 6;
-export const HORA_DESPERTAR_DEFECTE = '09:00';
-export const HORA_PAUSA_NOCTURNA_DEFECTE = '22:00';
-export const MINUTS_GRACIA_CORTESIA = 15;
-export const CLAU_STORAGE_BATEC = 'sdp_batec_vida_local_v1';
+/** Configuració i textos del Protocol d’Emergències Offline. */
 export const CLAU_STORAGE_EMERGENCIES = 'sdp_protocol_emergencies_offline_v1';
 export const MAX_BACKOFF_MINUTS_BATERIA = 60;
 
@@ -22,134 +9,6 @@ export const MAX_BACKOFF_MINUTS_BATERIA = 60;
  * `nom` i `ubicacio` poden ser un text o un objecte per idioma ({ ca, es, en, eu, gl }).
  * Sense dades, la targeta mostra `sheltersEmpty` (truca al 112).
  */
-
-export const TEXTOS_BATEC_DE_VIDA = Object.freeze({
-  ca: Object.freeze({
-    title: 'Batec de Vida · Tranquil·litat Familiar ({hores}h)',
-    subtitle: 'Avís preventiu amable sense rastreig GPS i amb pausa nocturna automàtica',
-    badgeOff: 'Opt-in desactivat per defecte',
-    badgeOn: 'Batec actiu (finestra diürna {hores}h)',
-    badgePaused: 'Pausat temporalment',
-    scheduleDay: '☀️ Cada {hores} hores de dia',
-    scheduleNight: '🌙 Pausa nocturna fins a les {hora}',
-    graceNotice: '⏱️ Cortesia de 15 minuts en este mòbil abans d’activar l’alerta local de contacte.',
-    privacyGuarantee: '🔒 Zero GPS en segon pla: només es registra l’hora de l’últim batec, en este mòbil.',
-    btnImOk: '💚 Estic bé (Enviar batec ara)',
-    btnConfirmGrace: '💚 Tot bé? Toca ací per confirmar',
-    btnToggleActive: 'Activar Batec de Vida',
-    btnDisableActive: 'Desactivar Batec de Vida',
-    btnPause: 'Pausar amb 1 toc',
-    btnResume: 'Reprendre amb 1 toc',
-    lastBeatLabel: 'Últim batec registrat:',
-    noBeatYet: 'Encara no s’ha emés cap batec hui',
-    trustedContactsLabel: 'Persones de confiança vinculades:',
-    storageErrorNotice: '⚠️ No s’ha pogut guardar el batec en memòria local.',
-    foregroundOnlyNotice: 'ℹ️ Només vigila mentre esta pàgina està oberta en este mòbil: no funciona en segon pla.',
-    noTrustedContactsNotice: '⚠️ No hi ha cap persona de confiança vinculada: si el Batec venç, ningú no rebrà cap avís.',
-    localAlert: '⚠️ Han passat {hores} h sense cap batec. Toca «Estic bé» per a confirmar que estàs bé.',
-    noOneWarned: 'Ningú no ha estat avisat: no hi ha cap persona de confiança vinculada.',
-  }),
-  es: Object.freeze({
-    title: 'Latido de Vida · Tranquilidad Familiar ({hores}h)',
-    subtitle: 'Aviso preventivo amable sin rastreo GPS y con pausa nocturna automática',
-    badgeOff: 'Opt-in desactivado por defecto',
-    badgeOn: 'Latido activo (ventana diurna {hores}h)',
-    badgePaused: 'Pausado temporalmente',
-    scheduleDay: '☀️ Cada {hores} horas de día',
-    scheduleNight: '🌙 Pausa nocturna hasta las {hora}',
-    graceNotice: '⏱️ Cortesía de 15 minutos en este móvil antes de activar la alerta local de contacto.',
-    privacyGuarantee: '🔒 Cero GPS en segundo plano: solo se registra la hora del último latido, en este móvil.',
-    btnImOk: '💚 Estoy bien (Enviar latido ahora)',
-    btnConfirmGrace: '💚 ¿Todo bien? Toca aquí para confirmar',
-    btnToggleActive: 'Activar Latido de Vida',
-    btnDisableActive: 'Desactivar Latido de Vida',
-    btnPause: 'Pausar con 1 toque',
-    btnResume: 'Reanudar con 1 toque',
-    lastBeatLabel: 'Último latido registrado:',
-    noBeatYet: 'Aún no se ha emitido ningún latido hoy',
-    trustedContactsLabel: 'Personas de confianza vinculadas:',
-    storageErrorNotice: '⚠️ No se ha podido guardar el latido en memoria local.',
-    foregroundOnlyNotice: 'ℹ️ Solo vigila mientras esta página está abierta en este móvil: no funciona en segundo plano.',
-    noTrustedContactsNotice: '⚠️ No hay ninguna persona de confianza vinculada: si el Latido vence, nadie recibirá ningún aviso.',
-    localAlert: '⚠️ Han pasado {hores} h sin ningún latido. Toca «Estoy bien» para confirmar que estás bien.',
-    noOneWarned: 'No se ha avisado a nadie: no hay ninguna persona de confianza vinculada.',
-  }),
-  en: Object.freeze({
-    title: 'Heartbeat of Life · Family Peace of Mind ({hores}h)',
-    subtitle: 'Gentle preventive check-in without GPS tracking and with automatic night pause',
-    badgeOff: 'Opt-in disabled by default',
-    badgeOn: 'Heartbeat active ({hores}h daytime window)',
-    badgePaused: 'Temporarily paused',
-    scheduleDay: '☀️ Every {hores} hours during the day',
-    scheduleNight: '🌙 Night pause until {hora}',
-    graceNotice: '⏱️ 15-minute courtesy window on this phone before triggering the local contact alert.',
-    privacyGuarantee: '🔒 Zero background GPS: only the last heartbeat time is recorded, on this phone.',
-    btnImOk: '💚 I am OK (Send heartbeat now)',
-    btnConfirmGrace: '💚 Everything OK? Tap here to confirm',
-    btnToggleActive: 'Enable Heartbeat of Life',
-    btnDisableActive: 'Disable Heartbeat of Life',
-    btnPause: 'One-tap pause',
-    btnResume: 'One-tap resume',
-    lastBeatLabel: 'Last recorded heartbeat:',
-    noBeatYet: 'No heartbeat recorded today yet',
-    trustedContactsLabel: 'Linked trusted contacts:',
-    storageErrorNotice: '⚠️ Could not persist heartbeat in local storage.',
-    foregroundOnlyNotice: 'ℹ️ It only watches while this page is open on this phone: it does not work in the background.',
-    noTrustedContactsNotice: '⚠️ No trusted contact is linked: if the Heartbeat runs out, nobody will be warned.',
-    localAlert: '⚠️ {hores} h have passed without a heartbeat. Tap “I am OK” to confirm you are fine.',
-    noOneWarned: 'Nobody has been warned: no trusted contact is linked.',
-  }),
-  eu: Object.freeze({
-    title: 'Bizi-Taupada · Familiaren Lasaitasuna ({hores}h)',
-    subtitle: 'Abisu prebentibo adeitsua GPS jarraipenik gabe eta gaueko etenaldi automatikoarekin',
-    badgeOff: 'Opt-in lehenetsita itzalita',
-    badgeOn: 'Taupada aktibo (eguneko {hores}h leihoa)',
-    badgePaused: 'Aldi baterako etenda',
-    scheduleDay: '☀️ Egunez {hores} orduz behin',
-    scheduleNight: '🌙 Gaueko etenaldia {hora}ak arte',
-    graceNotice: '⏱️ 15 minutuko kortesia-leihoa mugikor honetan tokiko kontaktu-alerta aktibatu aurretik.',
-    privacyGuarantee: '🔒 Zero GPS bigarren planoan: azken taupadaren ordua bakarrik gordetzen da, mugikor honetan.',
-    btnImOk: '💚 Ondo nago (Bidali taupada orain)',
-    btnConfirmGrace: '💚 Dena ondo? Sakatu hemen baieztatzeko',
-    btnToggleActive: 'Aktibatu Bizi-Taupada',
-    btnDisableActive: 'Desaktibatu Bizi-Taupada',
-    btnPause: 'Eten ukitu batekin',
-    btnResume: 'Berrekin ukitu batekin',
-    lastBeatLabel: 'Erregistratutako azken taupada:',
-    noBeatYet: 'Oraindik ez da taupadarik bidali gaur',
-    trustedContactsLabel: 'Lotutako konfiantzazko pertsonak:',
-    storageErrorNotice: '⚠️ Ezin izan da taupada memoria lokalean gorde.',
-    foregroundOnlyNotice: 'ℹ️ Orri hau mugikor honetan irekita dagoen bitartean bakarrik zaintzen du: ez du bigarren planoan funtzionatzen.',
-    noTrustedContactsNotice: '⚠️ Ez dago konfiantzazko pertsonarik lotuta: Taupadaren epea amaitzen bada, inork ez du abisurik jasoko.',
-    localAlert: '⚠️ {hores} ordu igaro dira taupadarik gabe. Sakatu «Ondo nago» ondo zaudela baieztatzeko.',
-    noOneWarned: 'Ez zaio inori abisatu: ez dago konfiantzazko pertsonarik lotuta.',
-  }),
-  gl: Object.freeze({
-    title: 'Latexar de Vida · Tranquilidade Familiar ({hores}h)',
-    subtitle: 'Aviso preventivo amable sen rastrexo GPS e con pausa nocturna automática',
-    badgeOff: 'Opt-in desactivado por defecto',
-    badgeOn: 'Latexar activo (fiestra diúrna {hores}h)',
-    badgePaused: 'Pausado temporalmente',
-    scheduleDay: '☀️ Cada {hores} horas de día',
-    scheduleNight: '🌙 Pausa nocturna ata as {hora}',
-    graceNotice: '⏱️ Cortesía de 15 minutos neste móbil antes de activar a alerta local de contacto.',
-    privacyGuarantee: '🔒 Cero GPS en segundo plano: só se rexistra a hora do último latexar, neste móbil.',
-    btnImOk: '💚 Estou ben (Enviar latexar agora)',
-    btnConfirmGrace: '💚 Todo ben? Toca aquí para confirmar',
-    btnToggleActive: 'Activar Latexar de Vida',
-    btnDisableActive: 'Desactivar Latexar de Vida',
-    btnPause: 'Pausar cun toque',
-    btnResume: 'Retomar cun toque',
-    lastBeatLabel: 'Último latexar rexistrado:',
-    noBeatYet: 'Aínda non se emitiu ningún latexar hoxe',
-    trustedContactsLabel: 'Persoas de confianza vinculadas:',
-    storageErrorNotice: '⚠️ Non se puido gardar o latexar na memoria local.',
-    foregroundOnlyNotice: 'ℹ️ Só vixía mentres esta páxina está aberta neste móbil: non funciona en segundo plano.',
-    noTrustedContactsNotice: '⚠️ Non hai ningunha persoa de confianza vinculada: se o Latexar vence, ninguén recibirá ningún aviso.',
-    localAlert: '⚠️ Pasaron {hores} h sen ningún latexar. Toca «Estou ben» para confirmar que estás ben.',
-    noOneWarned: 'Non se avisou a ninguén: non hai ningunha persoa de confianza vinculada.',
-  }),
-});
 
 export const TEXTOS_EMERGENCIES_OFFLINE = Object.freeze({
   ca: Object.freeze({
@@ -250,10 +109,6 @@ export function textEnIdioma(valor, idioma = 'ca') {
     return valor[idioma] || valor.ca || '';
   }
   return typeof valor === 'string' ? valor : '';
-}
-
-export function resolTextosBatec(idioma = 'ca') {
-  return TEXTOS_BATEC_DE_VIDA[idioma] || TEXTOS_BATEC_DE_VIDA.ca;
 }
 
 export function resolTextosEmergencies(idioma = 'ca') {

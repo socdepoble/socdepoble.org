@@ -5,7 +5,9 @@
    producció de Salut i de les utilitats de src/utils que importen, i es
    comprova la frontera: ningú de fora importa Salut (ni el xat ni els
    agents), llevat del registre de la plataforma, i el build de producció
-   sense VITE_SDP_APP_SALUT no la porta. La telemetria (que necessita el
+   amb VITE_SDP_APP_SALUT=0 no la porta (P0-113, ordre del Mestre, 261111:
+   abans, sense la variable; ara l'app és oberta i el literal és d'exclusió).
+   La telemetria (que necessita el
    navegador) es prova a AppSalut.test.jsx. Els patrons es componen a trossos
    perquè les portes que llegixen src/ no els troben ací (patró de
    src/sections/gestoria/privacitat.test.js). */
@@ -114,7 +116,7 @@ describe('res ix d’este dispositiu', () => {
     expect(llig(`${SALUT}/vistes/comunes.jsx`)).toContain('const { avalua } = useInterruptorsApp();');
     const escriptures = /\b(?:desaInterruptorApagat|desaAppApagada|setVal)\b/;
     expect(DE_SALUT.filter(([, codi]) => escriptures.test(codi)).map(([ruta]) => ruta)).toEqual([]);
-    expect(llig(`${SALUT}/useSalut.jsx`)).toMatch(/desaMeta\(magatzem, 'apagats'/);
+    expect(llig(`${SALUT}/useSalut.jsx`)).toMatch(/magatzem\.actualitza\('meta', 'apagats'/);
   });
 
   test('cap import del backend ni de les capes que l’usen; fora de Salut, només les peces declarades', () => {
@@ -200,28 +202,44 @@ describe('la frontera', () => {
     expect(eines.filter((ruta) => /sdp-salut/.test(llig(ruta)))).toEqual([]);
   });
 
+  /* Onada R17.2 · L'Avisador en sessió (src/components/salut/, la carpeta del Batec de vida)
+     no és l'app Salut ni en porta les dades: avisa els contactes de confiança, pel Xat i amb
+     consentiment, amb un text fix sobre l'activitat de l'app. És l'única importació d'App.jsx
+     que nomena «salut», i ho ha de seguir sent; la llista no és decorativa: quan l'Avisador isca
+     d'eixa carpeta, ací torna `[]`. L'Avisador no importa ni nomena Salut ni la seua base. */
   test('App.jsx no importa Salut: només entra pel registre i la ruta /app/*', () => {
-    expect(especificadors(llig('src/app/App.jsx')).filter((e) => /salut/i.test(e))).toEqual([]);
+    const AVISADOR = 'src/components/salut/AvisadorEnSessio.jsx';
+    const deSalut = especificadors(llig('src/app/App.jsx')).filter((e) => /salut/i.test(e));
+    expect(deSalut.map((e) => resol('src/app/App.jsx', e))).toEqual([AVISADOR]);
+    const avisador = llig(AVISADOR);
+    expect(especificadors(avisador).filter((e) => /salut/i.test(e) || resol(AVISADOR, e).startsWith(`${SALUT}/`))).toEqual([]);
+    expect(avisador).not.toMatch(/apps\/salut|AppSalut|sdp-salut/);
   });
 
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: Salut és una eina gratuïta oberta
+     en producció (entorn 'produccio', actiuPerDefecte true) i el literal és d'exclusió. Es
+     conserva la intenció: dades de salut (la guarda d'ama del document) i càrrega diferida
+     darrere del literal, desendollable amb VITE_SDP_APP_SALUT=0. */
   test('el manifest: dades de salut (guarda d’ama del document) i càrrega darrere del literal de compilació', () => {
     const manifest = llig(`${SALUT}/manifest.js`);
     expect(manifest).toContain("dadesPersonals: 'salut'");
-    expect(manifest).toContain("entorn: 'desenvolupament'");
-    expect(manifest).toContain('actiuPerDefecte: false');
-    expect(manifest).toContain("carrega: import.meta.env.DEV || import.meta.env.VITE_SDP_APP_SALUT === '1' ? () => import('./AppSalut.jsx') : null");
+    expect(manifest).toContain("entorn: 'produccio'");
+    expect(manifest).toContain('actiuPerDefecte: true');
+    expect(manifest).toContain("carrega: import.meta.env.VITE_SDP_APP_SALUT !== '0' ? () => import('./AppSalut.jsx') : null");
     expect(manifest.split('import(').length - 1).toBe(1);
   });
 });
 
 describe('el build', () => {
   /* Vite compila el manifest sol (tota importació, externa): el literal es
-     reemplaça i, en producció sense VITE_SDP_APP_SALUT, la importació
-     dinàmica d'AppSalut desapareix. */
-  async function compila(produccio) {
+     reemplaça i, en producció amb VITE_SDP_APP_SALUT=0, la importació
+     dinàmica d'AppSalut desapareix. P0-113 (ordre del Mestre, 261111):
+     `salut` és el valor de la variable durant el build (undefined: sense). */
+  async function compila(produccio, salut) {
     const abans = { node: process.env.NODE_ENV, salut: process.env.VITE_SDP_APP_SALUT };
     process.env.NODE_ENV = produccio ? 'production' : 'development';
-    delete process.env.VITE_SDP_APP_SALUT;
+    if (salut === undefined) delete process.env.VITE_SDP_APP_SALUT;
+    else process.env.VITE_SDP_APP_SALUT = salut;
     try {
       const resultat = await build({
         configFile: false,
@@ -239,15 +257,32 @@ describe('el build', () => {
     } finally {
       if (abans.node === undefined) delete process.env.NODE_ENV;
       else process.env.NODE_ENV = abans.node;
-      if (abans.salut !== undefined) process.env.VITE_SDP_APP_SALUT = abans.salut;
+      if (abans.salut === undefined) delete process.env.VITE_SDP_APP_SALUT;
+      else process.env.VITE_SDP_APP_SALUT = abans.salut;
     }
   }
 
-  test('sense VITE_SDP_APP_SALUT, el build de producció no porta cap import( d’AppSalut', async () => {
-    const importacio = /import\(\s*["'][^"']*AppSalut/g;
-    expect((await compila(false)).match(importacio)).toHaveLength(1);
-    const produccio = await compila(true);
-    expect(produccio.match(importacio)).toBeNull();
+  const IMPORTACIO_DIFERIDA = /import\(\s*["'][^"']*AppSalut/g;
+  /* Una importació estàtica d'AppSalut (import … from, import '…' o reexportació): mai. */
+  const IMPORTACIO_ESTATICA = /(?:\bimport\s+[^('"]*?\bfrom\s*|\bimport\s+|\bexport\s+[^'"]*?\bfrom\s*)["'][^"']*AppSalut/;
+
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: abans, «sense VITE_SDP_APP_SALUT».
+     La garantia de desendollar es conserva, ara en forma d'exclusió. */
+  test('amb VITE_SDP_APP_SALUT=0, el build de producció no porta cap import( d’AppSalut', async () => {
+    const produccio = await compila(true, '0');
+    expect(produccio.match(IMPORTACIO_DIFERIDA)).toBeNull();
     expect(produccio).not.toMatch(/AppSalut/);
+    const desenvolupament = await compila(false, '0');
+    expect(desenvolupament.match(IMPORTACIO_DIFERIDA)).toBeNull();
+  }, 60000);
+
+  /* P0-113 (ordre del Mestre, 261111) · La complementària: oberta per defecte, AppSalut només
+     entra com a tros diferit (un sol import() darrere del literal), mai com a importació estàtica. */
+  test('sense VITE_SDP_APP_SALUT, AppSalut entra com a tros diferit i mai com a importació estàtica', async () => {
+    for (const produccio of [true, false]) {
+      const codi = await compila(produccio, undefined);
+      expect(codi.match(IMPORTACIO_DIFERIDA), produccio ? 'producció' : 'desenvolupament').toHaveLength(1);
+      expect(codi, produccio ? 'producció' : 'desenvolupament').not.toMatch(IMPORTACIO_ESTATICA);
+    }
   }, 60000);
 });

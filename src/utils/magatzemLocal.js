@@ -212,11 +212,16 @@ export function creaMagatzemIdb({
 
   /* Una transacció sobre `noms`. `accio(tx, torna, avorta)` programa les
      peticions; `enMemoria()` fa el mateix sobre la memòria quan no hi ha IndexedDB. */
-  async function opera(noms, tipus, accio, enMemoria) {
+  async function opera(noms, tipus, accio, enMemoria, comprova = () => {}) {
+    comprova();
     if (!disponible) return enMemoria();
     const db = await obriOPassaAMemoria();
-    if (!db) return enMemoria();
+    if (!db) {
+      comprova();
+      return enMemoria();
+    }
     try {
+      comprova();
       return await new Promise((resolve, reject) => {
         let tx;
         try {
@@ -233,8 +238,9 @@ export function creaMagatzemIdb({
           try { tx.abort(); } catch { /* ja acabada */ }
         };
         tx.oncomplete = () => resolve(resultat);
-        tx.onerror = () => reject(errorPropi || tx.error || new Error('La base local no s’ha pogut actualitzar.'));
-        tx.onabort = tx.onerror;
+        let errorPeticio = null;
+        tx.onerror = (event) => { errorPeticio ??= event?.target?.error; };
+        tx.onabort = () => reject(errorPropi || errorPeticio || tx.error || new Error('La base local no s’ha pogut actualitzar.'));
         try {
           accio(tx, torna, avorta);
         } catch (error) {
@@ -301,6 +307,15 @@ export function creaMagatzemIdb({
     }
   }
 
+  function enFilaEscriptura(noms, accio, enMemoria) {
+    const vigent = generacio;
+    const comprova = () => {
+      if (vigent !== generacio) throw errorAmbCodi('TANCAT', 'La pestanya ja ha tancat el magatzem.');
+      exigeixEscriptura();
+    };
+    return enFila(() => opera(noms, 'readwrite', accio, enMemoria, comprova));
+  }
+
   /* ── API ────────────────────────────────────────────────────────────── */
 
   const llegix = (store, accio, enMemoria) => {
@@ -363,9 +378,9 @@ export function creaMagatzemIdb({
       exigeixEscriptura();
       const net = registreNet(store, registre);
       const { clau } = definicio(store);
-      await enFila(() => opera(store, 'readwrite', (tx) => { tx.objectStore(store).put(net); }, () => {
+      await enFilaEscriptura(store, (tx) => { tx.objectStore(store).put(net); }, () => {
         memoria.get(store).set(net[clau], net);
-      }));
+      });
       avisaCanvi(store);
       return copia(net);
     },
@@ -376,12 +391,12 @@ export function creaMagatzemIdb({
       if (!Array.isArray(registres)) throw new TypeError('desaTots espera una llista de registres.');
       const nets = registres.map((registre) => registreNet(store, registre));
       const { clau } = definicio(store);
-      await enFila(() => opera(store, 'readwrite', (tx) => {
+      await enFilaEscriptura(store, (tx) => {
         const magatzem = tx.objectStore(store);
         for (const net of nets) magatzem.put(net);
       }, () => {
         for (const net of nets) memoria.get(store).set(net[clau], net);
-      }));
+      });
       avisaCanvi(store);
       return nets.map(copia);
     },
@@ -403,7 +418,7 @@ export function creaMagatzemIdb({
         if (net[camp] !== clau) throw new TypeError(`actualitza no pot canviar la clau «${camp}».`);
         return { canvi: true, registre: net };
       };
-      const resultat = await enFila(() => opera(store, 'readwrite', (tx, torna, avorta) => {
+      const resultat = await enFilaEscriptura(store, (tx, torna, avorta) => {
         const magatzem = tx.objectStore(store);
         const peticio = magatzem.get(clau);
         peticio.onsuccess = () => {
@@ -419,18 +434,95 @@ export function creaMagatzemIdb({
         const r = prepara(memoria.get(store).get(clau));
         if (r.canvi) memoria.get(store).set(clau, r.registre);
         return r;
-      }));
+      });
       if (resultat.canvi) avisaCanvi(store);
       return copia(resultat.registre);
+    },
+
+    /**
+     * Actualitza només els registres indicats en una transacció compartida.
+     * Cada parella [store, clau] apareix una vegada. Una referència amb
+     * clau null llig tot el store; amb un tercer element índex, llig les
+     * coincidències. Estes dues referències són de només lectura.
+     * La funció rep els valors en ordre i torna undefined per a conservar,
+     * null per a esborrar o el registre nou (sense canviar-ne la clau).
+     */
+    async actualitzaRegistres(referencies, fn) {
+      exigeixEscriptura();
+      if (typeof fn !== 'function' || !Array.isArray(referencies) || referencies.length === 0) {
+        throw new TypeError('Calen els registres i una funció síncrona per a actualitzar-los.');
+      }
+      const noms = new Map();
+      const entrades = referencies.map(([store, clau, index]) => {
+        const def = definicio(store);
+        if (!noms.has(store)) noms.set(store, new Set());
+        const identitat = JSON.stringify([clau, index]);
+        const valida = index === undefined ? clau === null || clauValida(clau)
+          : def.indexs.includes(index) && valorIndexValid(clau);
+        if (!valida || noms.get(store).has(identitat)) throw new TypeError('Clau no vàlida o duplicada.');
+        noms.get(store).add(identitat);
+        return { store, clau, camp: def.clau, index, multiple: clau === null || index !== undefined };
+      });
+      const prepara = (actuals) => {
+        const canvis = fn(copia(actuals));
+        if (!Array.isArray(canvis) || canvis.length !== entrades.length) throw new TypeError('Cal un resultat per registre.');
+        return Array.from(canvis, (nou, i) => {
+          if (nou === undefined) return nou;
+          const { store, clau, camp, multiple } = entrades[i];
+          if (multiple) throw new TypeError('Una consulta de diversos registres només pot llegir.');
+          if (nou === null) return nou;
+          const net = registreNet(store, nou);
+          if (net[camp] !== clau) throw new TypeError(`No es pot canviar la clau «${camp}».`);
+          return net;
+        });
+      };
+      const desats = await enFilaEscriptura([...noms.keys()], (tx, torna, avorta) => {
+        const actuals = Array(entrades.length);
+        let pendents = entrades.length;
+        entrades.forEach(({ store, clau, index }, i) => {
+          const origen = tx.objectStore(store);
+          const peticio = index !== undefined ? origen.index(index).getAll(clau) : clau === null ? origen.getAll() : origen.get(clau);
+          peticio.onsuccess = () => {
+            actuals[i] = peticio.result;
+            if (--pendents !== 0) return;
+            try {
+              const canvis = prepara(actuals);
+              canvis.forEach((nou, j) => {
+                if (nou === undefined) return;
+                const { store: nomStore, clau: clauRegistre } = entrades[j];
+                const desti = tx.objectStore(nomStore);
+                if (nou === null) desti.delete(clauRegistre);
+                else desti.put(nou);
+              });
+              torna(canvis);
+            } catch (error) { avorta(error); }
+          };
+        });
+      }, () => {
+        const canvis = prepara(entrades.map(({ store, clau, index, multiple }) => multiple
+          ? deMemoria(store, (registre) => index === undefined || registre[index] === clau)
+          : memoria.get(store).get(clau)));
+        canvis.forEach((nou, i) => {
+          if (nou === undefined) return;
+          const { store, clau } = entrades[i];
+          if (nou === null) memoria.get(store).delete(clau);
+          else memoria.get(store).set(clau, nou);
+        });
+        return canvis;
+      });
+      const canviats = new Set();
+      desats.forEach((nou, i) => { if (nou !== undefined) canviats.add(entrades[i].store); });
+      for (const store of canviats) avisaCanvi(store);
+      return copia(desats);
     },
 
     /** Esborra un registre per la clau. */
     async esborra(store, clau) {
       exigeixEscriptura();
       definicio(store);
-      await enFila(() => opera(store, 'readwrite', (tx) => { tx.objectStore(store).delete(clau); }, () => {
+      await enFilaEscriptura(store, (tx) => { tx.objectStore(store).delete(clau); }, () => {
         memoria.get(store).delete(clau);
-      }));
+      });
       avisaCanvi(store);
     },
 
@@ -438,20 +530,20 @@ export function creaMagatzemIdb({
     async buida(store) {
       exigeixEscriptura();
       definicio(store);
-      await enFila(() => opera(store, 'readwrite', (tx) => { tx.objectStore(store).clear(); }, () => {
+      await enFilaEscriptura(store, (tx) => { tx.objectStore(store).clear(); }, () => {
         memoria.get(store).clear();
-      }));
+      });
       avisaCanvi(store);
     },
 
     /** Buida TOTS els stores en una sola transacció («Esborra-ho tot»). */
     async buidaTot() {
       exigeixEscriptura();
-      await enFila(() => opera(NOMS, 'readwrite', (tx) => {
+      await enFilaEscriptura(NOMS, (tx) => {
         for (const store of NOMS) tx.objectStore(store).clear();
       }, () => {
         for (const store of NOMS) memoria.get(store).clear();
-      }));
+      });
       for (const store of NOMS) avisaCanvi(store);
     },
 
@@ -467,6 +559,78 @@ export function creaMagatzemIdb({
           };
         }
       }, () => Object.fromEntries(NOMS.map((store) => [store, deMemoria(store)]))));
+    },
+
+    /**
+     * Llig i substituïx el bolcat complet o els stores indicats en una transacció.
+     * `fn` és síncrona: totes les llistes es validen abans de cap escriptura.
+     * Una excepció o un abort conserva tots els stores anteriors.
+     */
+    async actualitzaBolcat(fn, stores = NOMS) {
+      exigeixEscriptura();
+      if (typeof fn !== 'function') throw new TypeError('actualitzaBolcat necessita una funció síncrona.');
+      if (!Array.isArray(stores) || stores.length === 0 || new Set(stores).size !== stores.length) {
+        throw new TypeError('Cal una llista de stores sense repetits.');
+      }
+      const noms = [...stores];
+      noms.forEach(definicio);
+      const prepara = (actual) => {
+        const nou = fn(copia(actual));
+        if (nou === undefined) return { canvi: false, bolcat: actual };
+        if (!nou || ![Object.prototype, null].includes(Object.getPrototypeOf(nou))
+          || Reflect.ownKeys(nou).length !== noms.length) throw new TypeError('Cal un bolcat complet dels stores coneguts.');
+        const net = {};
+        for (const store of noms) {
+          const descriptor = Object.getOwnPropertyDescriptor(nou, store);
+          if (!descriptor || !Object.hasOwn(descriptor, 'value') || !Array.isArray(descriptor.value)) {
+            throw new TypeError('Cada store del bolcat ha de ser una llista.');
+          }
+          const { clau } = definicio(store);
+          const claus = new Set();
+          net[store] = descriptor.value.map((registre) => {
+            const valor = registreNet(store, registre);
+            if (claus.has(valor[clau])) throw new TypeError('Clau duplicada en el bolcat.');
+            claus.add(valor[clau]);
+            return valor;
+          });
+        }
+        return { canvi: true, bolcat: net };
+      };
+      const resultat = await enFilaEscriptura(noms, (tx, torna, avorta) => {
+        const actual = {};
+        let pendents = noms.length;
+        for (const store of noms) {
+          const peticio = tx.objectStore(store).getAll();
+          peticio.onsuccess = () => {
+            actual[store] = peticio.result;
+            if (--pendents !== 0) return;
+            // Sense await ni microtasca entre l'última lectura i els put:
+            // la transacció continua activa també en Safari.
+            try {
+              const r = prepara(actual);
+              if (r.canvi) {
+                for (const nomStore of noms) {
+                  const desti = tx.objectStore(nomStore);
+                  desti.clear();
+                  for (const registre of r.bolcat[nomStore]) desti.put(registre);
+                }
+              }
+              torna(r);
+            } catch (error) { avorta(error); }
+          };
+        }
+      }, () => {
+        const r = prepara(Object.fromEntries(noms.map((store) => [store, deMemoria(store)])));
+        if (r.canvi) {
+          for (const store of noms) {
+            const { clau } = definicio(store);
+            memoria.set(store, new Map(r.bolcat[store].map((registre) => [registre[clau], registre])));
+          }
+        }
+        return r;
+      });
+      if (resultat.canvi) for (const store of noms) avisaCanvi(store);
+      return copia(resultat.bolcat);
     },
 
     /**

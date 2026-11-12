@@ -72,6 +72,14 @@ export default function EspecimenUniversalWorkspace() {
           </tbody>
         </table>
         </div>
+        <h3>Les tres vistes dels catàlegs</h3>
+        <p>CatalegWorkspace compartix la selecció, les dades i el detall en les tres vistes. La preferència es desa per catàleg. La vista Canònica és la inicial. Les preferències de rajoles anteriors es conserven i una preferència antiga de llista es migra a Gran.</p>
+        <ul>
+          <li>La vista <strong>Canònica</strong> usa DefaultItemCard, la mateixa fila compacta de Disseny i la Wiki.</li>
+          <li>La vista <strong>Gran</strong> usa UniversalCard en una columna, amb el resum.</li>
+          <li>La vista <strong>Quadrícula 2×2</strong> usa UniversalCard quadrada en dues columnes.</li>
+        </ul>
+        <p>Una carpeta de catàleg pot declarar expandOnSelect i selectOnRepeat. El nom obri la portada i el chevron la plega. La imatge arriba a la vora del frame. En tema clar, la selecció té un filet interior negre amb un contrafilet blanc. En tema fosc s’inverteixen. El focus de teclat conserva el seu contorn visible.</p>
       </Especimen>
     </>
   );

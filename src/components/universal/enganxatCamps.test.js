@@ -266,13 +266,32 @@ describe('Baseline (Safari 16 / Chrome 100 / Firefox 100) i porta innerHTML', ()
     expect(font).not.toMatch(/new RegExp\(/);
   });
 
-  test('ReDoS: 50.000 caràcters patològics en menys de 50 ms', () => {
+  /* R19 · El llindar fix de 50 ms queia amb la suite sencera en paral·lel (càrrega de CPU, no ReDoS).
+     Ara es mesura el creixement: el millor de 3 passades a 12.500 i a 50.000 caràcters (×4). Lineal
+     dona ×4; un ReDoS quadràtic dona ×16 i, a 50.000 caràcters (~1,25·10⁹ passos), segons. La prova
+     cau només si la mida gran passa de 250 ms I creix més de ×10: les dues alhora són el cas quadràtic. */
+  const MIDES = [12500, 50000];
+  const LLINDAR_ABSOLUT_MS = 250;
+  const RAO_MAXIMA = 10;
+  const creixementLineal = (xicotet, gran) => gran < LLINDAR_ABSOLUT_MS || gran < RAO_MAXIMA * Math.max(xicotet, 0.05);
+  const millorDe3 = (entrada) => Math.min(...[0, 1, 2].map(() => {
+    const inici = performance.now();
+    unaLinia(textPlaDelPortaretalls({ text: entrada }));
+    normalitzaText(entrada);
+    return performance.now() - inici;
+  }));
+
+  test('el criteri distingix el creixement lineal del quadràtic', () => {
+    expect(creixementLineal(3, 12)).toBe(true);
+    expect(creixementLineal(80, 320)).toBe(true);
+    expect(creixementLineal(90, 1440)).toBe(false);
+    expect(creixementLineal(0, 4000)).toBe(false);
+  });
+
+  test('ReDoS: 50.000 caràcters patològics creixen de manera lineal', () => {
     for (const tros of ['\n', ' ', '\t', '<', '<p>', '\u2028', '\u202E', '&nbsp;']) {
-      const entrada = tros.repeat(50000);
-      const inici = performance.now();
-      unaLinia(textPlaDelPortaretalls({ text: entrada }));
-      normalitzaText(entrada);
-      expect(performance.now() - inici, JSON.stringify(tros)).toBeLessThan(50);
+      const [xicotet, gran] = MIDES.map((mida) => millorDe3(tros.repeat(mida)));
+      expect(creixementLineal(xicotet, gran), `${JSON.stringify(tros)}: ${xicotet.toFixed(2)} ms → ${gran.toFixed(2)} ms`).toBe(true);
     }
   });
 });

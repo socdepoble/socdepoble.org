@@ -57,6 +57,7 @@ import { textError } from './textos.js';
 const ContextBar = createContext(null);
 
 const araReal = () => new Date().toISOString();
+const AMB_TORN = Object.freeze({ ambTorn: true });
 
 /** El número següent del torn: «Nota 0001», «Nota 0002»… (vendes i devolucions). */
 const seguentNumero = (tiquets) => tiquets.reduce((maxim, t) => Math.max(maxim, t.numero || 0), 0) + 1;
@@ -69,6 +70,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
   const [avis, setAvis] = useState(null);
   const ref = useRef(null);
   const cua = useRef(Promise.resolve());
+  const generacio = useRef(0);
   const sessio = useSessioApp();
   const { potEscriure, motiu, enLinia, modeProves, rutaEntrada } = sessio;
   const permis = useMemo(() => Object.freeze({ potEscriure, motiu, enLinia, modeProves, rutaEntrada }),
@@ -87,14 +89,24 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
   useEffect(() => {
     let viu = true;
     const llegixBase = () => setBase({ persistent: magatzem.base.persistent, mode: magatzem.base.mode });
-    const recarrega = () => magatzem.carrega().then((d) => { if (viu) posa(d); }).catch(() => {});
-    /* Una sola lectura en arrancar (la de baix). L'avís de mode NO rellig: magatzemLocal l'emet en
-       cada arrancada normal (de 'lliure' a 'escriptora') i en faria dues de concurrents. */
+    let modeAnterior = magatzem.base.mode;
+    const recarrega = () => {
+      const pas = cua.current.then(async () => {
+        if (!viu) return;
+        const d = await magatzem.carrega();
+        if (viu) posa(d);
+      });
+      cua.current = pas.catch(() => {});
+    };
     const desfes = magatzem.base.subscriu((esdeveniment) => {
       if (!viu) return;
-      if (esdeveniment.tipus === 'mode' || esdeveniment.tipus === 'persistent') llegixBase();
-      /* Una altra pestanya ha escrit: esta (lectora) torna a llegir. */
-      if (esdeveniment.tipus === 'canvi' && !esdeveniment.local) recarrega();
+      if (esdeveniment.tipus === 'mode') {
+        const relleu = modeAnterior === 'lectora' && esdeveniment.mode === 'escriptora';
+        modeAnterior = esdeveniment.mode;
+        llegixBase();
+        if (relleu) recarrega();
+      } else if (esdeveniment.tipus === 'persistent') llegixBase();
+      else if (esdeveniment.tipus === 'canvi' && !esdeveniment.local) recarrega();
     });
     (async () => {
       await magatzem.base.obtinBloqueig();
@@ -107,6 +119,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
     });
     return () => {
       viu = false;
+      generacio.current += 1;
       desfes();
       magatzem.base.tanca();
     };
@@ -114,29 +127,41 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
 
   /* Una operació a la cua: fn(estat, ctx) torna { estat?, valor }. */
   const opera = useCallback((fn) => {
+    const vigent = generacio.current;
     const pas = cua.current.then(async () => {
+      if (vigent !== generacio.current) throw errorBar('TANCAT', 'El Bar ja s’ha tancat.');
       const actual = ref.current;
       if (!actual) throw errorBar('CARREGANT', 'Encara s’està carregant.');
       const ara = rellotge();
       const id = (prefix) => nouId(prefix, ara, atzar);
-      const resultat = await fn(actual, { ara, id });
-      if (resultat?.estat) posa({ ...ref.current, ...resultat.estat });
+      let resultat;
+      try {
+        resultat = await fn(actual, { ara, id });
+      } catch (error) {
+        if (['CONFLICTE', 'JA_TANCAT', 'TORN_TANCAT', 'TORN_OBERT'].includes(error?.codi)) {
+          const fresques = await magatzem.carrega().catch(() => null);
+          if (fresques && vigent === generacio.current) posa(fresques);
+        }
+        throw error;
+      }
+      if (resultat?.estat && vigent === generacio.current) posa({ ...ref.current, ...resultat.estat });
       return resultat?.valor;
     });
     cua.current = pas.catch(() => undefined);
     return pas.then((valor) => {
-      setAvis(null);
+      if (vigent === generacio.current) setAvis(null);
       return { ok: true, valor };
     }, (error) => {
-      setAvis(textError(error));
+      if (vigent === generacio.current) setAvis(textError(error));
       return { ok: false, error };
     });
-  }, [posa, rellotge, atzar]);
+  }, [posa, rellotge, atzar, magatzem]);
 
   const accions = useMemo(() => {
     /* Una operació d'ESCRIPTURA: la guarda del permís (vegeu la capçalera) i després la de sempre. */
     const escriu = (fn) => opera((d, ctx) => {
       if (!potEscriureAra.current) throw errorBar('SENSE_PERMIS', 'Entra per a vendre.');
+      if (magatzem.base.mode !== 'escriptora') throw errorBar('NOMES_LECTURA', 'Esta pestanya només pot llegir.');
       return fn(d, ctx);
     });
     const exigeixVenda = (d) => {
@@ -156,47 +181,27 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       exigeixVenda(d);
       const nova = fn(comandaDe(d, comandaId), ctx, d);
       if (nova === comandaDe(d, comandaId)) return { valor: nova };
-      const desada = await magatzem.desaComanda(nova);
+      const desada = await magatzem.desaComanda(nova, AMB_TORN);
       return { estat: ambComanda(d, desada), valor: desada };
     });
 
     const novaComandaA = async (d, ctx, origen) => {
       const comanda = creaComanda({ id: ctx.id('c'), tornId: d.tornActual.id, origen, ara: ctx.ara, per: d.tornActual.obertPer });
-      return magatzem.desaComanda(comanda);
+      return magatzem.desaComanda(comanda, AMB_TORN);
     };
 
-    /*
-     * Les dues escriptures d'un moviment ja validat (mou, divideix): primer el destí, després
-     * l'origen (que es retalla o, si queda buit, es descarta, i llavors el destí n'hereta
-     * l'historial). L'ordre fa que un tall duplique i no perda.
-     * Si la segona escriptura falla, RES no ho arregla sol (decisió del 261011: «detecta i
-     * avisa»): les línies queden a les dues comandes. La memòria es posa igual que el disc (es
-     * rellig; si no es pot, s'hi posa el destí que sí que s'ha escrit, amb el seu `rev`), la
-     * detecció ho pinta (migsMoviments) i l'error diu exactament això (MIG_MOVIMENT): no
-     * «torna-ho a provar», que faria moure-ho una altra vegada.
-     */
     const traspassa = async (d, ctx, origenNou, destiNou, origenAbans) => {
-      const buit = esDescartable(origenNou);
-      const desatDesti = await magatzem.desaComanda(buit ? heretaHistorial(destiNou, origenAbans, { ara: ctx.ara }) : destiNou);
-      const ambDesti = { ...d, ...ambComanda(d, desatDesti) };
-      try {
-        if (buit) {
-          await magatzem.descartaComanda(origenNou);
-          return { estat: { comandes: ambDesti.comandes.filter((c) => c.id !== origenNou.id) }, valor: desatDesti };
-        }
-        const desatOrigen = await magatzem.desaComanda(origenNou);
-        return { estat: ambComanda(ambDesti, desatOrigen), valor: desatDesti };
-      } catch {
-        const fresques = await magatzem.carrega().catch(() => null);
-        posa(fresques || { ...ref.current, ...ambComanda(ref.current, desatDesti) });
-        throw errorBar('MIG_MOVIMENT', 'El moviment s’ha quedat a mitges.');
-      }
+      const destiAmbHistorial = esDescartable(origenNou) ? heretaHistorial(destiNou, origenAbans, { ara: ctx.ara }) : destiNou;
+      const { origen, desti } = await magatzem.traspassaComandes(origenNou, destiAmbHistorial);
+      const ambDesti = { ...d, ...ambComanda(d, desti) };
+      const estat = origen ? ambComanda(ambDesti, origen) : { comandes: ambDesti.comandes.filter((c) => c.id !== origenNou.id) };
+      return { estat, valor: desti };
     };
 
     /* Tanca i desa el tiquet; el torn en guarda la llista. */
     const tancaDesada = async (d, ctx, comanda) => {
       const tiquet = tanca(comanda, { numero: seguentNumero(d.tiquets), ara: ctx.ara });
-      await magatzem.tancaComanda(tiquet);
+      await magatzem.tancaComanda(tiquet, AMB_TORN);
       return { estat: { comandes: d.comandes.filter((c) => c.id !== comanda.id), tiquets: [...d.tiquets, tiquet] }, valor: { tiquet } };
     };
 
@@ -205,11 +210,8 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       obriTorn: ({ per, fonsInicialCents }) => escriu(async (d, ctx) => {
         if (d.tornActual) throw errorBar('TORN_OBERT', 'Ja hi ha un torn obert.');
         const torn = obriTorn({ id: ctx.id('t'), per, fonsInicialCents, ara: ctx.ara, traspasAnterior: d.traspas });
-        await magatzem.desaTorn(torn);
-        await magatzem.desaMeta('tornActual', torn.id);
-        await magatzem.desaMeta('tancament', null);
-        const comandes = [];
-        for (const comanda of d.comandes) comandes.push(await magatzem.desaComanda(adoptaComanda(comanda, torn.id, { ara: ctx.ara })));
+        const previstes = d.comandes.map((comanda) => adoptaComanda(comanda, torn.id, { ara: ctx.ara }));
+        const comandes = await magatzem.obriTorn(torn, previstes, d.traspas);
         return { estat: { tornActual: torn, torns: [torn, ...d.torns], comandes, tiquets: [], tancament: null }, valor: torn };
       }),
 
@@ -246,7 +248,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         const nova = afegeixProducte(comanda, {
           ...(costCents === null ? {} : { costCents }), ...article, ivaPerDefecte: d.establiment.ivaPerDefecte
         }, { ara: ctx.ara, idLinia: ctx.id('l') });
-        const desada = await magatzem.desaComanda(nova);
+        const desada = await magatzem.desaComanda(nova, AMB_TORN);
         return { estat: ambComanda(estat, desada), valor: desada };
       }),
 
@@ -266,7 +268,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         exigeixVenda(d);
         const nova = afegeixPagament(comandaDe(d, comandaId), pagament, { id: ctx.id('p'), ara: ctx.ara });
         if (totals(nova).pendentCents === 0) return tancaDesada(d, ctx, nova);
-        const desada = await magatzem.desaComanda(nova);
+        const desada = await magatzem.desaComanda(nova, AMB_TORN);
         return { estat: ambComanda(d, desada), valor: { comanda: desada } };
       }),
 
@@ -292,10 +294,8 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
        *   T1 · Tot es valida ABANS d'escriure res. La comanda de destí nova es fa en memòria
        *        (abans s'escrivia buida i, si mouLinies refusava —un pagament parcial, PAGAT_SUPERA—,
        *        quedava una comanda fantasma al disc) i s'escriu una sola vegada, ja amb les línies.
-       *   T2 · Dues comandes, dues transaccions (traspassa): primer el destí i després l'origen,
-       *        amb la marca del moviment (`op`) a les dues bandes. Si la segona falla, res no
-       *        ho arregla sol: la memòria es posa igual que el disc (mai amb el `rev` vell del
-       *        destí), la detecció avisa (migsMoviments) i l'error és MIG_MOVIMENT.
+       *   T2 · El magatzem comprova ambdues revisions i aplica el moviment en una transacció.
+       *        La marca `op` permet identificar els moviments al llarg de l'historial.
        *   T7 · Si l'origen es buida i es descarta, el destí n'hereta l'historial.
        *   BAR-R9 (Onada 12) · Es descarta l'origen JA BUIT, no el d'abans.
        */
@@ -330,7 +330,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
           motiu, metode, id: ctx.id('k'), ara: ctx.ara, numero: seguentNumero(d.tiquets), tornId: d.tornActual.id,
           per: d.tornActual.obertPer, devolucionsPrevies: d.tiquets.filter((t) => t.tipus === 'devolucio')
         });
-        await magatzem.desaDevolucio(devolucio);
+        await magatzem.desaDevolucio(devolucio, AMB_TORN);
         return { estat: { tiquets: [...d.tiquets, devolucio] }, valor: devolucio };
       }),
 
@@ -338,7 +338,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       moviment: (moviment) => escriu(async (d, ctx) => {
         if (!d.tornActual) throw errorBar('SENSE_TORN', 'No hi ha cap torn obert.');
         const torn = afegeixMoviment(d.tornActual, moviment, { id: ctx.id('m'), ara: ctx.ara });
-        await magatzem.desaTorn(torn);
+        await magatzem.desaTorn(torn, d.tornActual);
         return { estat: { tornActual: torn, torns: d.torns.map((t) => (t.id === torn.id ? torn : t)) }, valor: torn };
       }),
 
@@ -362,7 +362,6 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         if (!d.tornActual) throw errorBar('SENSE_TORN', 'No hi ha cap torn obert.');
         const esborrany = { perDenominacio: {}, avisos: [], fonsDeixatCents: 0, ...d.tancament };
         const buides = d.comandes.filter(esDescartable);
-        for (const comanda of buides) await magatzem.descartaComanda(comanda);
         const obertes = d.comandes.filter((c) => !esDescartable(c));
         const resum = resumTorn(d.tornActual, d.tiquets, obertes, { categories: d.carta.categories });
         const comptat = arqueig(esborrany.perDenominacio, d.establiment.denominacions);
@@ -372,10 +371,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
           per: d.tornActual.obertPer, ara: ctx.ara
         });
         const tancat = tancaTorn(d.tornActual, { arqueig: { perDenominacio: esborrany.perDenominacio }, resum, traspas, obertes, per: d.tornActual.obertPer, ara: ctx.ara });
-        await magatzem.desaTorn(tancat);
-        await magatzem.desaMeta('traspas', traspas);
-        await magatzem.desaMeta('tornActual', null);
-        await magatzem.desaMeta('tancament', null);
+        await magatzem.tancaTorn(tancat, d, buides);
         return {
           estat: { tornActual: null, torns: d.torns.map((t) => (t.id === tancat.id ? tancat : t)), comandes: obertes, tiquets: [], traspas, tancament: null },
           valor: tancat
@@ -398,9 +394,8 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         if (d.tornActual || d.comandes.length > 0) throw errorBar('OCUPAT', 'Cal tancar el torn i les comandes obertes abans de canviar la carta.');
         const llavor = await obteLlavor(id);
         const { nom, slug } = llavor.establiment || {};
-        const carta = await magatzem.desaCarta(llavor.carta);
         const establiment = { ...d.establiment, ...(nom ? { nom } : {}), ...(slug ? { slug } : {}), llavor: id };
-        await magatzem.desaMeta('establiment', establiment);
+        const carta = await magatzem.desaLlavor(llavor.carta, establiment, d);
         return { estat: { carta, establiment }, valor: { resum: llavor.resum, avisos: llavor.avisos } };
       }),
       desaEstabliment: (establiment) => escriu(async () => {
@@ -413,9 +408,14 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       demanaPersistencia: () => magatzem.base.demanaPersistencia(),
       estatPersistencia: () => magatzem.base.estatPersistencia(),
       bolca: () => magatzem.bolca(),
+      exportaCopia: () => magatzem.exportaCopia(),
+      restauraCopia: (text) => escriu(async () => {
+        const valor = await magatzem.restauraCopia(text);
+        return { estat: await magatzem.carrega(), valor };
+      }),
       oblidaAvis: () => setAvis(null)
     };
-  }, [opera, magatzem, posa]);
+  }, [opera, magatzem]);
 
   /* Correcció del refutador (261011, T2; «detecta i avisa») · Els moviments a mitges, calculats
      de l'estat d'ARA (comandes obertes i tiquets del torn), no només en carregar: l'avís no depén

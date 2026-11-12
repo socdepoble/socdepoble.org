@@ -4,7 +4,7 @@
    (només les notes), per què no la resta, i la cerca. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { BrainCircuit, FileText, Folder, Inbox, Network, Newspaper, NotebookPen, Route, ShieldCheck } from 'lucide-react';
+import { BrainCircuit, FileText, Folder, Inbox, Network, Newspaper, NotebookPen, Route, ShieldCheck, Wifi } from 'lucide-react';
 import { describe, expect, test, vi } from 'vitest';
 import { GLIF_CARPETA, GLIF_DOCUMENT } from '../../../components/universal/workspace/NavGlyph.jsx';
 import { SECTIONS } from '../../../config/sections.js';
@@ -248,7 +248,7 @@ describe('destinsDelSistema', () => {
        «Candidatura Europea NLnet · NGI Fediversity», ara l'última de
        SYSTEM_PAGES, darrere de Descàrregues. */
     const destins = destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, [COVER_PAGE_KEYS.wiki, COVER_PAGE_KEYS.disseny, COVER_PAGE_KEYS.consola]);
-    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'la-iaia-sabuda', 'fediversity', 'anima', 'fedivers'];
+    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'la-iaia-sabuda', 'fediversity', 'dispositius', 'anima', 'fedivers'];
     expect(destins.map((desti) => desti.id)).toEqual(claus.map((clau) => `sistema:${clau}`));
     expect(destins.map((desti) => desti.titol)).toEqual(claus.map((clau) => PAGE_COPY[clau].title));
     expect(destins.every((desti) => desti.grup === 'sistema' && desti.escriu === 'codi')).toBe(true);
@@ -265,7 +265,9 @@ describe('destinsDelSistema', () => {
       /* 261026_2126 · /page/descarregues tampoc no en té: el document. */
       'sistema:descarregues': GLIF_DOCUMENT,
       /* 30-10-2026 · /page/fediversity tampoc no en té: el document. */
-      'sistema:fediversity': GLIF_DOCUMENT
+      'sistema:fediversity': GLIF_DOCUMENT,
+      /* R17.2B · La nota TLS de Dispositius usa la icona de la seua entrada de navegació. */
+      'sistema:dispositius': Wifi
     });
     /* Sense exclusions, les portades de la Wiki i de Disseny també hi són. */
     expect(Object.keys(glifs)).toEqual(expect.arrayContaining(['sistema:wikidepoble', 'sistema:disseny']));

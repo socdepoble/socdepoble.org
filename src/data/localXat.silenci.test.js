@@ -139,7 +139,7 @@ describe('l’adaptador local (conversesLocal)', () => {
       expect(CAPACITATS_NO_DECLARADES).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
       const absents = Object.keys(CAPACITATS).filter(cap => CAPACITATS[cap].every(metode => typeof a[metode] !== 'function'));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(Object.keys(CAPACITATS)).toHaveLength(51);
+      expect(Object.keys(CAPACITATS)).toHaveLength(54);
     } finally {
       await a.destroy();
     }

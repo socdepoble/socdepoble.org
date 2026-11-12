@@ -27,3 +27,11 @@ Data,IA,Model,Limit,Mètrica,Valor(%),Sessió/Activitat,Cost(USD)
 2026-10-13 17:35,Claude,Opus 5.5,Semanal,Consumit,19,"Gestoria JARVIS - Implementacio i Verificacio",350.20
 2026-10-13 17:35,Claude,Opus 5.5,Sessio,Consumit,48,"Gestoria JARVIS - Implementacio i Verificacio",350.20
 2026-10-13 17:35,Codex,ChatGPT Pro 100,Semanal,Restant,78,"Auditoria Gestoria JARVIS",0.0
+2026-11-10 22:30,Gemini,Gemini 4 Carbon High (Google AI Ultra),Semanal,Restant,53,"Baseline t0 prova Carbon High (refresc en 3d 1h · Overages OFF)",0.0
+2026-11-10 22:30,Gemini,Gemini 4 Carbon High (Google AI Ultra),5-Hores,Restant,98,"Baseline t0 prova Carbon High (refresc en 2h 28m)",0.0
+2026-11-10 22:30,Claude+GPT (Antigravity),Pool Antigravity Google AI Ultra,Semanal,Restant,100,"Reserva intacta dins Antigravity a l'inici R17",0.0
+2026-11-10 22:30,Claude+GPT (Antigravity),Pool Antigravity Google AI Ultra,5-Hores,Restant,100,"Reserva intacta 5h dins Antigravity a l'inici R17",0.0
+2026-11-10 22:33,Claude,Opus 5.5 Extra Ultracode (Plan Ultra),Semanal,Consumit,52,"Baseline t0 R17 (48% restant · refresc dg 01:00 · 1 reset Fable + 1 reset setmanal gratis)",0.0
+2026-11-10 22:33,Codex,ChatGPT Pro 200,Semanal,Restant,40,"Baseline t0 R17 (refresc en 4d 3h + 749 credits saldo)",0.0
+2026-11-11 00:40,Gemini,Gemini 4 Carbon High (Google AI Ultra),Sessio_Gauntlet_R17.3,Observat_Fisic,pendent_ui,"Kit R17.3 complet (90m · 996 steps · 737 tools · 8.28MB transcript · base t0 53% sem / 98% 5h · Overages OFF)",0.0
+2026-11-11 01:45,Gemini,Gemini 4 Carbon High (Google AI Ultra),Sessio_Gauntlet_R18.3,Observat_Fisic,pendent_ui,"Kit R18.3 + Gauntlet R17.2/R17.2B/P0-108 complet (~396 steps · ~1.72MB tram R18.3; total sessio 1392 steps · 10.0MB transcript · Overages OFF)",0.0

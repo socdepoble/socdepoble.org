@@ -43,10 +43,11 @@ test('copyright accepts free text, limits it to 256 and saves only on confirmati
   const ui = within(container);
   fireEvent.click(ui.getByRole('radio', { name: /Text lliure personalitzat/ }));
   fireEvent.change(ui.getByRole('textbox'), { target: { value: 'a'.repeat(300) } });
-  expect(ui.getByRole('textbox').value).toHaveLength(246);
-  expect(ui.getByRole('button', { name: 'Desar autoria' }).disabled).toBe(true);
+  expect(ui.getByRole('textbox').value).toHaveLength(300);
   fireEvent.click(ui.getByRole('checkbox'));
+  expect(ui.getByRole('button', { name: 'Desar autoria' }).disabled).toBe(true);
+  fireEvent.change(ui.getByRole('textbox'), { target: { value: 'a'.repeat(256) } });
   expect(save).not.toHaveBeenCalled();
   fireEvent.click(ui.getByRole('button', { name: 'Desar autoria' }));
-  expect(save).toHaveBeenCalledWith('a'.repeat(246) + ' · CC0 1.0');
+  expect(save).toHaveBeenCalledWith('a'.repeat(256) + ' · CC0 1.0');
 });

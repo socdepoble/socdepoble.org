@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LayoutGrid, List } from 'lucide-react';
+import { LayoutGrid, List, Rows3 } from 'lucide-react';
 import { UniversalCard, Boto, Camp, Selector } from '../PedraSeca/index.js';
-import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
-import { UniversalWorkspace } from './workspace/UniversalWorkspace.jsx';
+import { Link, useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
+import NotFoundPage from '../../pages/NotFoundPage.jsx';
+import { DefaultItemCard, UniversalWorkspace } from './workspace/UniversalWorkspace.jsx';
 import { useAppGrid } from '../layout/AppGridShell.jsx';
 import { useUIActionsOpcional } from '../../app/contexts/UIContext';
 import { textosCatalegWorkspace } from './workspace/textosCatalegWorkspace.js';
 import { useProjeccionsCatalegContext } from './workspace/ProjeccionsCatalegContext.js';
-import { capturaFontCataleg, itemWorkspaceDeProjeccio, perDestiCataleg, projeccioCatalegDe, rutaFontCataleg } from '../../data/projeccionsCataleg.js';
+import { capturaFontCataleg, itemWorkspaceDeProjeccio, perDestiCataleg, projeccioCatalegDe, rutaDeFitxaCataleg, rutaFontCataleg } from '../../data/projeccionsCataleg.js';
 import SelectorDestinsPublicacio from './workspace/SelectorDestinsPublicacio.jsx';
 import { fusionaModelProjeccionsCataleg } from '../../data/modelProjeccionsCataleg.js';
 import DetallCataleg from './workspace/DetallCataleg.jsx';
-import { Link } from '../../app/contexts/RouterContext';
 import { desaVista, vistaDesada } from './workspace/vistaCataleg.js';
 import { useModeracio } from '../PedraSeca/hooks/moderacioDePoble.js';
 import { BotoModeracio } from '../PedraSeca/organismes/Moderacio.jsx';
@@ -79,17 +79,61 @@ function elementDeLaLlista(arrel, id) {
     && node.matches('button, a[href]')) ?? null;
 }
 
+function resolSeleccioDeSlug(itemSlug, categories, items) {
+  if (!itemSlug) return null;
+  const cat = categories.find(c => (c.expandOnSelect || c.slugRuta) && (c.slugRuta || c.id) === itemSlug);
+  if (cat) return { trobat: true, categoryId: cat.id, itemId: null };
+  const exemplars = items.filter(it => !it.portadaLlibre);
+  const directe = exemplars.find(it => (it.slugRuta || String(it.id)) === itemSlug || String(it.id) === itemSlug);
+  const perArbre = !directe ? exemplars.filter(it => it.arbre?.id === itemSlug) : [];
+  const item = directe || (perArbre.length === 1 ? perArbre[0] : null);
+  if (!item) return { trobat: false, categoryId: '__all__', itemId: null };
+  const catLlibre = item.llibre?.id
+    ?? categories.find(c => c.expandOnSelect && item.categoryIds?.includes(c.id))?.id
+    ?? '__all__';
+  return { trobat: true, categoryId: catLlibre, itemId: item.id };
+}
+
 /** One catalogue shell; the domain retains its data, actions and inline page. */
-export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta, privateItems = false, font = null, destiPublicacio = null, permetreEdicioDestins = false }) {
+export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta, privateItems = false, font = null, destiPublicacio = null, permetreEdicioDestins = false, navegacioLlibres = null, inclouDescendents = false, afegirCataleg = false, itemSlug = null, sincronitzaRuta = false }) {
   const ui = useUIActionsOpcional();
   const textos = textosCatalegWorkspace(ui?.language);
   /* USA-05 · La vista persistix per superfície (vistaCataleg.js). */
   const [vista, setVistaViva] = useState(() => vistaDesada(id));
   const setVista = useCallback(nova => { setVistaViva(nova); desaVista(id, nova); }, [id]);
   const [desti, setDesti] = useState(ruta);
-  const [searchParams] = useSearchParams();
-  const fitxaEnllacada = searchParams.get('fitxa');
-  const [selection, setSelection] = useState({ categoryId: '__all__', itemId: fitxaEnllacada });
+  const location = useLocation();
+  const navega = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const publicacio = useProjeccionsCatalegContext();
+  /* PRIVADESA-01 (R15b) · Com el Mur moderat: sense el que has bloquejat (filtraElementsBloquejats, abans de
+     passar a element del workspace, que ja no porta qui signa), amb el text canònic de l'Herbari, el Banc de
+     llavors i Què dinem? (mai el de la fila) i amb la via de denúncia i bloqueig a cada referència d'altri. */
+  const moderacio = useModeracio();
+  const esBloquejat = moderacio?.esElementBloquejat ?? null;
+  const files = useMemo(() => filtraElementsBloquejats(perDestiCataleg(publicacio.projeccions, destiPublicacio,
+    { ownerId: publicacio.ownerId, privat: privateItems }), esBloquejat),
+    [publicacio.projeccions, publicacio.ownerId, destiPublicacio, privateItems, esBloquejat]);
+  const canoniques = useTextCanonicCataleg(files, ui?.language);
+  const visibles = useMemo(() => canoniques.map(fila => {
+    const item = itemWorkspaceDeProjeccio(fila);
+    return item && { ...item, objecte: objecteDeProjeccioCataleg(fila, publicacio.ownerId, textos.autoriaReferencia) };
+  }).filter(item => item && !model.items.some(original => (
+    item.projeccio.font.font === font && String(original.id) === item.projeccio.font.id
+  ) || (original.fontImportada?.font === item.projeccio.font.font
+    && original.fontImportada.id === item.projeccio.font.id))),
+    [canoniques, publicacio.ownerId, textos.autoriaReferencia, font, model.items]);
+  const modelAmbProjeccions = useMemo(() => fusionaModelProjeccionsCataleg(model, visibles, textos.publishedLabel), [model, visibles, textos.publishedLabel]);
+
+  const resolucioSlug = useMemo(
+    () => resolSeleccioDeSlug(itemSlug, modelAmbProjeccions.categories, modelAmbProjeccions.items),
+    [itemSlug, modelAmbProjeccions.categories, modelAmbProjeccions.items]
+  );
+  const fitxaQuery = navegacioLlibres && Object.hasOwn(navegacioLlibres, 'fitxaInicial')
+    ? navegacioLlibres.fitxaInicial : searchParams.get('fitxa');
+  const fitxaEnllacada = resolucioSlug ? resolucioSlug.itemId : fitxaQuery;
+  const categoriaInicial = resolucioSlug ? resolucioSlug.categoryId : (navegacioLlibres?.categoriaInicial ?? '__all__');
+  const [selection, setSelection] = useState({ categoryId: categoriaInicial, itemId: fitxaEnllacada });
   /* USA-01, USA-03 · Què ha de fer el detall després del pintat següent:
      obrir una fitxa (desplaçar-la a la vista i, si l'origen és un gest o un
      enllaç profund, enfocar-ne el títol) o tancar-la (tornar el focus a
@@ -102,10 +146,47 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
     serial.current += 1;
     setPeticio({ tipus, id: String(itemId), focus, n: serial.current });
   }, []);
+  const categoriesRef = useRef(modelAmbProjeccions.categories);
+  categoriesRef.current = modelAmbProjeccions.categories;
+  const resolucioSlugRef = useRef(resolucioSlug);
+  resolucioSlugRef.current = resolucioSlug;
   useEffect(() => {
-    setSelection({ categoryId: '__all__', itemId: fitxaEnllacada });
+    setSelection(current => {
+      const catActual = categoriesRef.current.find(c => c.id === current.categoryId);
+      const mantindreSub = fitxaEnllacada == null
+        && catActual?.parentId != null
+        && catActual.parentId === categoriaInicial;
+      const nextCategoryId = mantindreSub ? current.categoryId : categoriaInicial;
+      if (current.categoryId === nextCategoryId && current.itemId === fitxaEnllacada) return current;
+      return { categoryId: nextCategoryId, itemId: fitxaEnllacada };
+    });
+    const res = resolucioSlugRef.current;
     if (fitxaEnllacada) demana('obri', fitxaEnllacada, true);
-  }, [fitxaEnllacada, demana]);
+    else if (res?.trobat && res.categoryId !== '__all__') demana('portada', res.categoryId, false);
+  }, [fitxaEnllacada, categoriaInicial, itemSlug, demana]);
+
+  const sincronitzaUrl = useCallback((nextCategoryId, nextItemId) => {
+    if (!sincronitzaRuta || !ruta) return;
+    let cami = ruta;
+    if (nextItemId != null) {
+      const trobat = modelAmbProjeccions.items.find(x => String(x.id) === String(nextItemId));
+      const segment = trobat?.slugRuta || String(nextItemId);
+      cami = `${ruta}/${encodeURIComponent(segment)}`;
+    } else if (nextCategoryId && nextCategoryId !== '__all__') {
+      const cat = modelAmbProjeccions.categories.find(c => c.id === nextCategoryId);
+      const llibreCat = cat?.expandOnSelect ? cat
+        : cat?.parentId ? modelAmbProjeccions.categories.find(c => c.id === cat.parentId && c.expandOnSelect) : null;
+      if (llibreCat) cami = `${ruta}/${encodeURIComponent(llibreCat.slugRuta || llibreCat.id)}`;
+    }
+    const neta = new URLSearchParams(searchParams);
+    neta.delete('fitxa');
+    neta.delete('llibre');
+    const qs = neta.toString();
+    const destiComplet = qs ? `${cami}?${qs}` : cami;
+    const actualComplet = `${location?.pathname || ''}${location?.search || ''}`;
+    if (destiComplet !== actualComplet) navega(destiComplet);
+  }, [sincronitzaRuta, ruta, modelAmbProjeccions.items, modelAmbProjeccions.categories, searchParams, location?.pathname, location?.search, navega]);
+
   const teclaDeRecorregut = useRef(false);
   useEffect(() => {
     const doc = globalThis.document;
@@ -122,60 +203,73 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
   }, []);
   const canviaSeleccio = useCallback((next, detall) => {
     setSelection(next);
-    if (next?.itemId == null) return;
+    if (sincronitzaRuta && ruta) {
+      sincronitzaUrl(next?.categoryId ?? '__all__', next?.itemId ?? null);
+    } else if (navegacioLlibres && next?.categoryId === '__all__' && (searchParams.has('llibre') || searchParams.has('fitxa'))) {
+      setSearchParams({ llibre: null, fitxa: null });
+    }
+    if (next?.itemId == null) {
+      if ((navegacioLlibres || modelAmbProjeccions.categories.some(c => c.expandOnSelect)) && (next?.categoryId === '__all__'
+        || modelAmbProjeccions.categories.some(category => category.id === next?.categoryId && category.expandOnSelect))) {
+        demana('portada', next.categoryId, true);
+      }
+      return;
+    }
     const deRecorregut = detall?.reason === 'teclat' || teclaDeRecorregut.current;
     demana('obri', next.itemId, !deRecorregut);
-  }, [demana]);
-  const navega = useNavigate();
-  const publicacio = useProjeccionsCatalegContext();
-  /* PRIVADESA-01 (R15b) · Com el Mur moderat: sense el que has bloquejat (filtraElementsBloquejats, abans de
-     passar a element del workspace, que ja no porta qui signa), amb el text canònic de l'Herbari, el Banc de
-     llavors i Què dinem? (mai el de la fila) i amb la via de denúncia i bloqueig a cada referència d'altri. */
-  const moderacio = useModeracio();
-  const esBloquejat = moderacio?.esElementBloquejat ?? null;
-  const files = useMemo(() => filtraElementsBloquejats(perDestiCataleg(publicacio.projeccions, destiPublicacio,
-    { ownerId: publicacio.ownerId, privat: privateItems }), esBloquejat),
-    [publicacio.projeccions, publicacio.ownerId, destiPublicacio, privateItems, esBloquejat]);
-  const canoniques = useTextCanonicCataleg(files, ui?.language);
-  const visibles = useMemo(() => canoniques.map(fila => {
-    const item = itemWorkspaceDeProjeccio(fila);
-    return item && { ...item, objecte: objecteDeProjeccioCataleg(fila, publicacio.ownerId, textos.autoriaReferencia) };
-  }).filter(item => item && !(item.projeccio.font.font === font
-      && model.items.some(original => String(original.id) === item.projeccio.font.id))),
-    [canoniques, publicacio.ownerId, textos.autoriaReferencia, font, model.items]);
-  const modelAmbProjeccions = useMemo(() => fusionaModelProjeccionsCataleg(model, visibles, textos.publishedLabel), [model, visibles, textos.publishedLabel]);
+  }, [demana, navegacioLlibres, searchParams, setSearchParams, modelAmbProjeccions.categories, sincronitzaRuta, ruta, sincronitzaUrl]);
+  // En una llibreria es retiren les files artificials de portada: la portada s'obri des de la carpeta del llibre a la Columna 1.
+  const esLlibreria = Boolean(navegacioLlibres);
+  const modelVisible = useMemo(() => esLlibreria
+    ? { ...modelAmbProjeccions, items: modelAmbProjeccions.items.filter(item => !item.portadaLlibre) } : modelAmbProjeccions,
+  [esLlibreria, modelAmbProjeccions]);
+  const tornaAInici = () => {
+    setSelection({ categoryId: '__all__', itemId: null });
+    if (sincronitzaRuta && ruta) {
+      sincronitzaUrl('__all__', null);
+    } else if (navegacioLlibres && (searchParams.has('llibre') || searchParams.has('fitxa'))) {
+      setSearchParams({ llibre: null, fitxa: null });
+    }
+  };
+  if (resolucioSlug && !resolucioSlug.trobat) return <NotFoundPage />;
   const gestor = <GestorDeLaFitxa peticio={peticio} atesa={atesa} />;
-  return <UniversalWorkspace idEspai={id} model={modelAmbProjeccions} labels={{ count: textos.count, ...labels }} tagFilter={false}
-    selection={selection} onSelectionChange={canviaSeleccio}
-    collapsibleNavigation={false} mestreDetall={{ clau: id, element: fitxaEnllacada }}
+  return <UniversalWorkspace idEspai={id} model={modelVisible} labels={{ count: textos.count, ...labels }} tagFilter={false}
+    selection={selection} onSelectionChange={canviaSeleccio} inclouDescendents={inclouDescendents}
+    collapsibleNavigation={false} mestreDetall={{ clau: id, element: navegacioLlibres?.portadaInicial || fitxaEnllacada }}
     ajustosEnDetall={true}
     titolTornadaAjustos={labels?.items || null}
     className="sdp-cataleg-workspace"
-    listClassName={`sdp-cataleg-workspace__${vista}`}
+    listClassName={`sdp-cataleg-workspace__${vista}${vista === 'gran' ? ' sdp-cataleg-workspace__llista' : ''}`}
     accionsLlista={[
-      { id: 'llista', etiqueta: textos.llista, pressed: vista === 'llista', icona: List, onAcciona: () => setVista('llista'), className: 'sdp-cataleg-workspace__commutador' },
+      { id: 'canonica', etiqueta: textos.canonica, pressed: vista === 'canonica', icona: List, onAcciona: () => setVista('canonica'), className: 'sdp-cataleg-workspace__commutador' },
+      { id: 'gran', etiqueta: textos.gran, pressed: vista === 'gran', icona: Rows3, onAcciona: () => setVista('gran'), className: 'sdp-cataleg-workspace__commutador' },
       { id: 'rajola', etiqueta: textos.rajola, pressed: vista === 'rajola', icona: LayoutGrid, onAcciona: () => setVista('rajola'), className: 'sdp-cataleg-workspace__commutador' }
     ]}
-    peuNavegacio={<DestinsCataleg textos={textos} desti={desti} setDesti={setDesti} navega={navega}
-      onHome={() => setSelection({ categoryId: '__all__', itemId: null })} />}
-    renderItem={({ item, active, onSelect }) => { const moderable = vista === 'llista' && Boolean(item.objecte); return <UniversalCard
-      variant={vista === 'llista' ? 'pla' : 'default'} headingLevel="h3"
-      title={item.title} subtitle={item.subtitle} body={vista === 'llista' ? item.lead : undefined}
+    peuNavegacio={afegirCataleg ? <Boto onClick={() => navega('/el-meu-perfil?vista=admin-importacio')}>{textos.afegirCataleg}</Boto> : <DestinsCataleg textos={textos} desti={desti} setDesti={setDesti} navega={navega}
+      onHome={tornaAInici} />}
+    renderItem={({ item, active, onSelect }) => {
+      if (vista === 'canonica') return <DefaultItemCard item={{ ...item, image: item.imageUrl || item.image, icon: item.glyph || item.icon }}
+        active={active} onSelect={onSelect} idElement={item.id} nomAccessible={item.title} imageAlt={item.imageAlt} />;
+      const moderable = vista === 'gran' && Boolean(item.objecte);
+      return <UniversalCard
+      variant={vista === 'gran' ? 'pla' : 'default'} headingLevel="h3"
+      title={item.title} subtitle={item.subtitle} body={vista === 'gran' ? item.lead : undefined}
       imageUrl={item.imageUrl} imageAlt={item.imageAlt || ''}
       llenguaContingut={item.lang || 'ca'} imatgePrivada={privateItems}
       squareBadge={!item.imageUrl ? { type: 'custom', label: `${textos.fitxa}: ${item.title}`, content: <span aria-hidden="true">{item.glyph || '📖'}</span>, onClick: onSelect } : null}
       labels={item.labels || []} actual={active} idElement={item.id}
+      className={[moderable && 'sdp-referencia-cataleg', active && 'sdp-cataleg-workspace__actual'].filter(Boolean).join(' ')}
       onMainClick={onSelect} showShare={!privateItems} hasFooter={false}
-      {...(moderable ? { objecte: item.objecte, ambModeracio: true, className: 'sdp-referencia-cataleg' } : null)}
+      {...(moderable ? { objecte: item.objecte, ambModeracio: true } : null)}
     />; }}
     renderDetail={props => {
       if (props.item?.projeccio) {
         const referencia = props.item.projeccio;
-        const rutaOriginal = rutaFontCataleg(referencia.font.font);
+        const rutaOriginal = rutaDeFitxaCataleg(referencia.font);
         return <><DetallCataleg title={props.item.title} subtitle={props.item.subtitle} lead={props.item.lead}
           showConnect={false} showComment={false} showShare={!privateItems} barActions={botoModeracioDe(moderacio, props.item.objecte, props.item.title)}>
           <p>{referencia.pendent ? textos.pendingReference : textos.publishedReference}</p>
-          {rutaOriginal ? <p><Link to={rutaOriginal + '?fitxa=' + encodeURIComponent(referencia.font.id)}>{textos.openOriginal}</Link></p> : null}
+          {rutaOriginal ? <p><Link to={rutaOriginal}>{textos.openOriginal}</Link></p> : null}
         </DetallCataleg>{gestor}</>;
       }
       const item = props.item;
@@ -186,8 +280,23 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
       /* SEG-R15b-05 · Una fitxa privada (Rebost, Bar) no naix amb cap destí públic triat. */
       const inicials = files.length ? [...new Set(files.flatMap(row => row.destins))] : privateItems ? [] : ['mur'];
       return <>{renderDetail({ ...props,
-        onTriaItem: itemId => { setSelection(current => ({ ...current, itemId })); if (itemId != null) demana('obri', itemId, true); },
-        onClose: () => { const obert = selection.itemId; setSelection(current => ({ ...current, itemId: null })); if (obert != null) demana('tanca', obert, true); } })}
+        onTriaItem: itemId => {
+          setSelection(current => {
+            const next = { ...current, itemId };
+            if (sincronitzaRuta && ruta) sincronitzaUrl(next.categoryId, itemId);
+            return next;
+          });
+          if (itemId != null) demana('obri', itemId, true);
+        },
+        onClose: () => {
+          const obert = selection.itemId;
+          setSelection(current => {
+            const next = { ...current, itemId: null };
+            if (sincronitzaRuta && ruta) sincronitzaUrl(next.categoryId, null);
+            return next;
+          });
+          if (obert != null) demana('tanca', obert, true);
+        } })}
         {/* PRODNM-06, USA-13 · La lectura pública és la mateixa per a qui administra i per a qualsevol visitant:
             no es mostra «On es publica?». Només amb permetreEdicioDestins, que cap cridador de producció no passa
             (C6-10). La funció desapareix de la interfície; no s'ha traslladat a l'Edició avançada del Bloc. */}
@@ -207,7 +316,7 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
    d'«estret» ja haja deixat de ser inert. */
 function GestorDeLaFitxa({ peticio, atesa }) {
   const ancora = useRef(null);
-  const { mida, obriPanell } = useAppGrid();
+  const { mida, obriPanell, tancaPanells } = useAppGrid();
   useEffect(() => {
     if (!peticio || atesa.current === peticio.n) return undefined;
     const marcs = [], neteges = [];
@@ -220,19 +329,24 @@ function GestorDeLaFitxa({ peticio, atesa }) {
       const arrel = detall();
       if (!arrel?.isConnected) return;
       atesa.current = peticio.n;
-      /* La fitxa de l'element és l'última del detall (Herbari, Banc i
-         Fediversity la pinten darrere del cos de la pàgina). Sense, el detall
-         sencer és la fitxa (una recepta): es torna al principi. */
+      arrel.closest('[data-sdp-barres]')?.removeAttribute('data-sdp-barres');
+      arrel.querySelectorAll('[data-sdp-barres]').forEach(n => n.removeAttribute('data-sdp-barres'));
+      /* La fitxa de l'element és l'última del detall quan compartix vista amb el
+         cos de la pàgina pare (ex. Fediversity). Quan la fitxa o la portada del
+         llibre és la seua pròpia UniversalPage (sense cos .cms-preview pare), es
+         torna a dalt de tot (top: 0) perquè la BarraBlava i la capçalera es vegen senceres. */
       const fitxes = arrel.querySelectorAll('.sdp-cataleg-workspace__fitxa');
       const fitxa = fitxes.length ? fitxes[fitxes.length - 1] : null;
+      const teCosPare = Boolean(arrel.querySelector('article.cms-preview'));
+      const fitxaDinsDeCos = Boolean(fitxa && teCosPare);
       const titol = (fitxa ?? arrel).querySelector('h1, h2, h3, h4, h5, h6');
       const behavior = movimentReduit() ? 'auto' : 'smooth';
       const distancia = () => fitxa.getBoundingClientRect().top - arrel.getBoundingClientRect().top - capcalEnganxat(arrel, fitxa);
-      desplaca(arrel, fitxa ? arrel.scrollTop + distancia() : 0, behavior);
+      desplaca(arrel, fitxaDinsDeCos ? arrel.scrollTop + distancia() : 0, behavior);
       /* En compacte les barres s'amaguen en baixar (useBarresAmbScroll) i
          deixen un forat damunt de la fitxa: una sola correcció en acabar el
          desplaçament, si la persona no s'ha mogut d'allí. */
-      if (fitxa) {
+      if (fitxaDinsDeCos) {
         const corregix = () => {
           arrel.removeEventListener('scrollend', corregix);
           clearTimeout(rellotge);
@@ -270,12 +384,13 @@ function GestorDeLaFitxa({ peticio, atesa }) {
          mai el body. */
       arrel.focus?.({ preventScroll: true });
     };
+    if (peticio.tipus === 'portada' && mida === 'estret') tancaPanells();
     enDosMarcs(peticio.tipus === 'tanca' ? tanca : obri);
     return () => {
       for (const marc of marcs) if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(marc);
       for (const neteja of neteges) neteja();
     };
-  }, [peticio, atesa, mida, obriPanell]);
+  }, [peticio, atesa, mida, obriPanell, tancaPanells]);
   return <span ref={ancora} hidden data-ancora-cataleg="" />;
 }
 

@@ -1,7 +1,8 @@
+import { sanejaDrets } from '../../data/dretsAutor.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { backendScope } from '../../config/backendConfig.js';
 import { getDraftsForScope, mutateDraft } from './GlobalSaveManager.js';
-import { sanitizeHtml, netejaText } from '../../utils/sanitize.js';
+import { sanitizeHtml } from '../../utils/sanitize.js';
 
 /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · LA GUARDA
    D'HIDRATACIÓ (isHydrated).
@@ -88,7 +89,7 @@ export function useLocalSandbox(initial, config, onError) {
   }, [key, initial]);
   const update = useCallback((id, field, value) => {
     const clean = ['title', 'subtitle', 'lead', 'content'].includes(field) ? sanitizeHtml(value)
-      : field === 'copyright' ? netejaText(value).slice(0, 256) : value;
+      : field === 'copyright' ? sanejaDrets(value, { estricte: true }) : value;
     dirty.current.set(key, { ...dirty.current.get(key), [field]: clean });
     setState(previous => (previous.key === key
       ? { ...previous, note: { ...previous.note, [field]: clean } }

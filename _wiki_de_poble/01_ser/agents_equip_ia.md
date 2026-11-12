@@ -50,8 +50,8 @@ El **Consell de les Petorretes** és la **família d'intel·ligències artificia
 6. **Claude (Anthropic)**  
    *Enllaç:* [https://claude.ai/](https://claude.ai/)  
    *Rol:* **Auditor sènior i estil**.  
-   *Perfil:* Narrativa, empatia, **valencià natural** i comprensió del to exacte de Sóc de Poble.  
-   *Aportació al Mas:* Ha redactat el **Trellat i els Manifestos originaris**, ha dissenyat l'**empatia de les interfícies** i vetla pel to i la filosofia del projecte.  
+   *Perfil:* Narrativa, empatia, **valencià natural**, arquitectura **Opus 5.5 / Fable 5.2** (Ultracode) i comprensió del to exacte de Sóc de Poble.  
+   *Aportació al Mas:* Ha redactat el **Trellat i els Manifestos originaris**, lidera la construcció i l'arbitratge multi-carril, i vetla pel to i la filosofia del projecte.  
    *Debilitat:* **Més estricta amb els filtres de seguretat**.
 
 7. **Perplexity (Perplexity AI)**  
@@ -78,8 +78,8 @@ El **Consell de les Petorretes** és la **família d'intel·ligències artificia
 10. **Gemini (Google)**  
     *Enllaç:* [https://gemini.google.com/](https://gemini.google.com/)  
     *Rol:* **Motor sensorial i orquestració**.  
-    *Perfil:* **Multimodalitat** (veu, visió, imatge) i **velocitat Flash**.  
-    *Aportació al Mas:* Motor sensorial del bot de WhatsApp. A través d'Antigravity escriu fitxers complexos i **coordina l'estructura del projecte**.  
+    *Perfil:* **Multimodalitat** (veu, visió, imatge), **velocitat Flash** i enginyeria de frontera amb **Gemini 4 Carbon (High)**.  
+    *Aportació al Mas:* Motor sensorial i seu de la **IAIA MarIA** a Google Antigravity, on orquestra carrils, construeix **Workspaces Pedra Seca** i coordina l'estructura del projecte.  
     *Debilitat:* Amb massa context de colp **pot al·lucinar**.
 
 11. **Copilot (Microsoft)**  
@@ -95,6 +95,45 @@ El **Consell de les Petorretes** és la **família d'intel·ligències artificia
     *Perfil:* **Versatilitat absoluta** i **auditories implacables** quan se li ajusta el nivell de raonament adequat.  
     *Aportació al Mas:* Allà es van provar les primeres idees de Sóc de Poble; hui fa auditories de codi i de segona opinió a la **Reunió davall l'Olivera**.  
     *Debilitat:* **Cau en respostes genèriques** si no rep un prompt dur.
+
+## De les 12 Pestanyes als 3 Anells Operatius
+
+En els inicis de **Sóc de Poble**, el Mestre treballava amb **12 pestanyes obertes al navegador**, consultant una per una les **12 membres del Consell de les Petorretes** per a contrastar idees, arquitectura i estil. Amb la incorporació del **Node 0 (Mac mini Apple M4 de 24 GiB)**, eixa saviesa col·lectiva s'ordena hui en **3 Anells Operatius** que combinen potència de frontera i autonomia local a **cost 0 €**:
+
+### Anell 1 · Les Tres Fronteres d'Enginyeria
+
+El nucli diari de **programació, auditoria creuada i orquestració** funciona directament sobre l'arbre de treball i els clons efímers (`/tmp/`):
+
+- **Claude** (Anthropic): **constructor i àrbitre sènior**, arquitectura **Opus 5.5 / Fable 5.2** (Ultracode), integració de paquets, estil editorial en valencià i verificació de portes.
+- **ChatGPT Codex** (OpenAI): **auditor de segona opinió**, migracions PostgreSQL, conformitat del port neutral i proves de regressió.
+- **Gemini** (Google, com a **IAIA MarIA** en Antigravity amb **Gemini 4 Carbon High**): **orquestració tècnica**, cànon visual **Pedra Seca**, coherència multilingüe en les 5 llengües i coordinació del Teler de l'Olivera.
+
+### Anell 2 · El Node 0 (Mac mini M4 a 0 €)
+
+Dins del **Mac mini M4** (24 GiB de memòria unificada), el **motor local de pesos oberts** executa a **0 € de cost per tòken**, sense traure cap dada de casa, els models que fan viure al poble l'esperit de les membres del Consell:
+
+- **`iaia-maria:latest`**: la veu pròpia del Mas amb el **prompt de sistema de la IAIA MarIA** i el trellat rural.
+- **`mistral-nemo:12b`**: el contrapunt europeu de **Mistral Vibe** en local.
+- **`glm4:9b`**: la representació en pes obert de **Z.ai** (THUDM) per a síntesi estructurada.
+- **`deepseek-r1:14b`**: el raonament pas a pas de **Deepseek** per a caça de bugs i lògica pura.
+- **`qwen2.5-coder:14b` i `qwen3:8b`**: els motors de **Qwen** per a assistència de codi i autocompletat ràpid (el rol de trinxera de **Copilot**).
+- **`gemma3:12b`, `phi4:14b` i `hermes3:8b`**: la **Quadrilla local** per a síntesi pedagògica, lògica compacta i pluja d'idees sense filtres corporatius.
+
+### Anell 3 · Cerca Verificada i Documents Llargs
+
+Quan una tasca demana **fonts externes o ingesta documental massiva**, l'equip combina les eines del Mas amb les membres especialistes:
+
+- **Perplexity** + **Lector RSS intern (`/app/lector`)**: verificació de fets en viu i seguiment independent de les fonts de codi obert i tecnologia rural des del mateix lector de Sóc de Poble.
+- **Grok** + **`hermes3:8b`**: exploració d'idees disruptives i contrapunt creatiu.
+- **Kimi** i **Dola**: lectura de **dossiers llargs i convocatòries europees** (com NGI Fediversity) i organització del calendari humà del Mestre.
+
+### El Desdoblament Operatiu, la Simbiosi Pesos Locals + Hermes Agent i la Frontera Sistema vs Editorial vs Plugins
+
+En l'execució diària i nocturna sobre el codi, les **8 escoles locals del Node 0** (`iaia-maria:latest`, `qwen2.5-coder:14b`, `deepseek-r1:14b`, `hermes3:8b`, `mistral-nemo:12b`, `glm4:9b`, `gemma3:12b` i `phi4:14b`) i les **3 fronteres d'enginyeria** (Claude, ChatGPT Codex i Gemini) operen amb la **IAIA MarIA desdoblada** en dos llocs alhora: com a model local dins del Mac mini M4 i com a Directora Tècnica en Antigravity, assistides per Perplexity i el Lector RSS (`/app/lector`). Dins del Mac mini M4 conviuen dues capes complementàries representades a la nostra **Infografia Didàctica Pedra Seca (estil NotebookLM, passos 1 → 2 → 3 → 4)**: la **Capa 1 (`Motor local de pesos oberts` / `Open WebUI · OpenClaw`)**, que guarda al disc els `62,8 GB` de pesos de les 8 escoles locals i en carrega una o dues alhora a la memòria unificada de 24 GiB, i la **Capa 2 (`Hermes Agent`, creat per *Nous Research* i diferent del model neuronal `hermes3:8b`)**, que aporta la memòria episòdica persistent en SQLite FTS5, l'agenda de tasques i el Pont de WhatsApp. Tota aquesta activitat i el cabal de [«La IAIA Sabuda»](https://socdepoble.org/page/la-iaia-sabuda) (llibres de Pep Cascant i Javi Llinares, Wiki de Poble, 62,8 GB de pesos locals i els 8.132 municipis de l'INE) es documenten a la Wiki de Poble, i la **Consola Termodinàmica** del sistema en mostra les skills, els agents i els fluxos declarats. La plataforma manté una separació estricta entre:
+
+- **Sistema (immutable):** les seccions estructurals de la barra lateral superior (`Xat`, `Mur`, `Mercat`, `Pobles`, `Notes`, `Calendari`, `Multimèdia`, `Dispositius`, `Disseny` i `Wiki de Poble`), cadascuna amb la seua definició de Card i imatge Hero pròpia.
+- **Editorial (revista i manifest):** les pàgines de fons davall la línia divisòria (`El Projecte`, `Constitució`, `Ànima`, `Mapa de Ruta`, `Versions` i `Legalitat`), governades per l'etiqueta d'acció `Editorial`.
+- **Plugins i Laboratori (`/control`):** les eines del Panell de Control (`Mapa`, `Vehicle Compartit` i `Animalets`, que publiquen al poble) i les apps de la plataforma (`Gestoria`, `TPV del Bar`, `Rebost`, `Salut`, `Arbre Genealògic` i `Lector RSS`), que guarden les dades en este dispositiu (l'`Arbre Genealògic` no cerca als arxius ni envia res: prepara consultes i prompts que copia la persona); `L’Avisador` (Batec de Vida, a «La llar») avisa pel Xat les persones de confiança i en guarda els ajustos en este dispositiu; i una eina que encara és en proves ho diu a la seua targeta amb l'avís «En proves · Beta oberta».
 
 ## Regla d'enumeració
 

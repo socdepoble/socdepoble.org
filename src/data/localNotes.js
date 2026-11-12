@@ -1,3 +1,4 @@
+import { sanejaDrets } from './dretsAutor.js';
 import { APP_SEED, NOTE_FOLDERS_SEED, getDefaultUserId } from './appSeed.js';
 import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js';
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../utils/sanitize.js';
@@ -69,7 +70,7 @@ function clean(input) {
     result[field] = input[field].map(value => netejaText(value)).filter(Boolean);
   }
   if (input.folderId !== undefined) result.folderId = netejaText(input.folderId);
-  if (input.copyright !== undefined) result.copyright = netejaText(input.copyright).slice(0, 256);
+  if (input.copyright !== undefined) result.copyright = sanejaDrets(input.copyright, { estricte: true });
   /* T23 · emoticona de la nota: un sol emoji, o buit per a llevar-la. */
   if (input.icon !== undefined) result.icon = emojiSol(input.icon) || '';
   /* T40 (ordre del Mestre, 260928) · data de publicació: ISO vàlida o null. */

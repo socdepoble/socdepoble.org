@@ -16,6 +16,7 @@
  * (que també diu alguna cosa de la persona) són ací, i «Esborra-ho tot» ho oblida.
  * Res d'això ix del dispositiu: cap xarxa, cap sincronització.
  */
+import { fusionaCopia } from './nucli/copia.js';
 import { creaMagatzemIdb } from '../../utils/magatzemLocal.js';
 import { INTERRUPTOR_DE_TIPUS, netejaApunt, netejaJornada, netejaPeriode, netejaValoracio, validaPersona } from './nucli/diccionari.js';
 
@@ -82,8 +83,7 @@ export function creaMagatzemSalut({ idb, navegador, Canal } = {}) {
 }
 
 /** Tot el que hi ha, en una sola lectura: { persona, avis, descartades, ultimaCopia, apagats, apunts, jornades, periodes, valoracions }. */
-export async function carregaTot(magatzem) {
-  const bolcat = await magatzem.bolca();
+function dadesDelBolcat(bolcat) {
   const meta = new Map((bolcat.meta || []).map((registre) => [registre.clau, registre.valor]));
   return {
     persona: validaPersona(meta.get('persona') || {}).persona,
@@ -96,6 +96,29 @@ export async function carregaTot(magatzem) {
     periodes: bolcat.periodes || [],
     valoracions: bolcat.valoracions || []
   };
+}
+
+export async function carregaTot(magatzem) {
+  return dadesDelBolcat(await magatzem.bolca());
+}
+
+/** Calcula la fusió sobre les dades del disc i la desa sencera o no la desa. */
+export async function importaCopia(magatzem, entrant, mode) {
+  const copia = structuredClone(entrant);
+  let informe;
+  await magatzem.actualitzaBolcat((actual) => {
+    const { dades, informe: resultat } = fusionaCopia(dadesDelBolcat(actual), copia, mode);
+    informe = resultat;
+    if (!informe.substituits && informe.afegits === 0) return undefined;
+    return {
+      apunts: dades.apunts, jornades: dades.jornades,
+      periodes: dades.periodes, valoracions: dades.valoracions,
+      meta: informe.substituits
+        ? [...actual.meta.filter((r) => r.clau !== 'persona'), { clau: 'persona', valor: dades.persona }]
+        : actual.meta
+    };
+  });
+  return informe;
 }
 
 /** Desa un valor de meta. */

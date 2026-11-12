@@ -13,10 +13,10 @@
  */
 import { ALERGENS, NOMS_ALERGENS } from './productes/producteUniversal.js';
 import { ENTRADES, FRASES_BUIDES_PROSA, FRASES_MESURA, OBERTS, REFERENCIA_NO_RESOLTA, REFERENCIES, VERSIO_LEXIC } from './lexicAlergens.js';
-import { AVIS_CANDIDATS_ALERGENS, ESTAT_CANDIDATS_ALERGENS, estatResumAlergen } from './textosAlergens.js';
+import { AVIS_CANDIDATS_ALERGENS, ESTAT_CANDIDATS_ALERGENS, TEXTOS_MATRIU_RECEPTARI, SIMBOLS_ALERGENS, estatResumAlergen } from './textosAlergens.js';
 
 export { AVIS_CANDIDATS_ALERGENS, ESTAT_CANDIDATS_ALERGENS, VERSIO_LEXIC };
-export const FONT_ALERGENS_UE = 'https://food.ec.europa.eu/food-safety/campaign-2026/allergies_en';
+export const FONT_ALERGENS_UE = 'https://eur-lex.europa.eu/eli/reg/2011/1169';
 export const TIPUS_FONT_ALERGENS = Object.freeze(['ingredient_literal', 'elaboracio_literal', 'nota_literal', 'nom_comercial']);
 
 const MAX_PARAULES = 6;
@@ -187,10 +187,48 @@ export function proposaCandidatsAlergens({ id, fonts = [], resolRecepta = null }
         indicis, requereixFitxaProveidor: true,
         ...(alergenId === 'sulfits' ? { concentracioMgKgOMgL: null, llindarDeclaracio: '>10 mg/kg o >10 mg/l de SO₂; pendent de mesura o fitxa' } : {}) };
       const proposta = estatResumAlergen(alergen);
-      return { ...alergen, proposta, simbol: proposta === 'ingredient' ? '•' : proposta === 'traca' ? 'T' : '?' };
+      return { ...alergen, proposta, simbol: SIMBOLS_ALERGENS[proposta] };
     }),
     fontsRevisades: fonts.map(font => ({ ...font })),
     comprovacionsPendents: ['Composició completa i alternatives de cada ingredient', 'Fitxes i etiquetes de proveïdors',
       'Traça i contaminació creuada de cada procés, equip i servei', 'Revisió humana dels 14 grups abans de publicar']
+  };
+}
+
+/** Resol només una fitxa editorial lligada a un literal revisat. La falta de marca
+ * descriu el text de la fitxa, sense acreditar absència en el menjar preparat. */
+export function resolMatriuAlergens({ id, fonts, marques }) {
+  validaFonts(id, fonts);
+  const perCamp = new Map(fonts.map((font) => [font.camp, font]));
+  const perId = new Map(ALERGENS.map((alergenId) => [alergenId, { ingredient: [], traca: [] }]));
+  for (const { camp, tipus, ids, motiu, referencia } of marques) {
+    const font = perCamp.get(camp);
+    if (!font || (tipus !== 'ingredient' && tipus !== 'traca')) throw new TypeError('Marca editorial sense font literal.');
+    for (const alergenId of ids) {
+      const grup = perId.get(alergenId);
+      if (!grup) throw new TypeError(`Al·lergen desconegut ${alergenId}`);
+      grup[tipus].push({ id: alergenId, tipus, text: font.text, camp, naturalesa: font.tipus, font: font.font,
+        ...(motiu ? { motiu } : {}), ...(referencia ? { referencia } : {}) });
+    }
+  }
+  const text = TEXTOS_MATRIU_RECEPTARI.ca;
+  return {
+    id, estat: ESTAT_CANDIDATS_ALERGENS, metode: 'matriu_receptari_r17',
+    aptePerInformarConsumidor: false, absenciesAcreditades: false, revisioCompleta: false,
+    fontNormativa: FONT_ALERGENS_UE, avis: `${text.llegenda} ${text.completa}`,
+    cobertura: 'completa', liniesPendents: [], desconeguts: [],
+    alergens: ALERGENS.map((alergenId) => {
+      const { ingredient, traca } = perId.get(alergenId);
+      const proposta = ingredient.length ? 'ingredient' : traca.length ? 'traca' : 'no-declarat';
+      const grup = (evidencies, simbol) => ({ estat: evidencies.length ? 'candidat' : 'desconegut',
+        simbol: evidencies.length ? simbol : null, evidencies });
+      return { id: alergenId, nom: NOMS_ALERGENS[alergenId], estat: ESTAT_CANDIDATS_ALERGENS,
+        ingredient: grup(ingredient, '•'), traca: grup(traca, 'T'), indicis: [],
+        proposta, simbol: SIMBOLS_ALERGENS[proposta], requereixFitxaProveidor: true,
+        ...(alergenId === 'sulfits' ? { concentracioMgKgOMgL: null, llindarDeclaracio: '>10 mg/kg o >10 mg/l de SO₂; pendent de mesura o fitxa' } : {}) };
+    }),
+    fontsRevisades: fonts.map((font) => ({ ...font })),
+    comprovacionsPendents: ['Etiquetes de productes i possibles traces', 'Contacte creuat durant la preparació',
+      'Concentració de sulfits en el plat acabat']
   };
 }

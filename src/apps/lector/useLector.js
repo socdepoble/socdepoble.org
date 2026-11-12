@@ -36,14 +36,17 @@ export function useLector(magatzem) {
   const llegitRef = useRef(false);
   /* Puja amb cada canvi local: una lectura començada abans no el xafa. */
   const canvisRef = useRef(0);
+  const carregaRef = useRef(() => {});
 
   useEffect(() => {
     let viu = true;
+    modeRef.current = 'lliure';
+    llegitRef.current = false;
     const posa = (nou) => {
       estatRef.current = nou;
       setEstat(nou);
     };
-    const carrega = () => {
+    const carrega = ({ conservaError = false } = {}) => {
       const abans = canvisRef.current;
       magatzem.llegix().then((delDisc) => {
         if (!viu || canvisRef.current !== abans) return;
@@ -51,7 +54,7 @@ export function useLector(magatzem) {
         llegitRef.current = true;
         setLlegit(true);
         setPersistent(magatzem.persistent);
-        setError(null);
+        if (!conservaError) setError(null);
       }, (motiu) => {
         if (!viu) return;
         setError(codiDe(motiu));
@@ -59,21 +62,29 @@ export function useLector(magatzem) {
         if (!estatRef.current) posa(estatInicial());
       });
     };
+    carregaRef.current = carrega;
     const posaMode = (nou) => {
+      if (!viu) return;
+      const relleu = modeRef.current === 'lectora' && nou === 'escriptora';
       modeRef.current = nou;
-      if (viu) setMode(nou);
+      setMode(nou);
+      if (relleu) {
+        llegitRef.current = false;
+        setLlegit(false);
+        carrega();
+      }
     };
     const desfes = magatzem.subscriu((avis) => {
       if (avis.tipus === 'canvi' && avis.local === false) carrega();
-      else if (avis.tipus === 'mode') {
-        posaMode(avis.mode);
-        if (avis.mode === 'escriptora') carrega();
-      } else if (avis.tipus === 'persistent' && viu) setPersistent(avis.persistent);
+      else if (avis.tipus === 'mode') posaMode(avis.mode);
+      else if (avis.tipus === 'persistent' && viu) setPersistent(avis.persistent);
     });
     magatzem.obtinBloqueig().then(posaMode, () => {});
     carrega();
     return () => {
       viu = false;
+      canvisRef.current += 1;
+      carregaRef.current = () => {};
       desfes();
       magatzem.tanca();
     };
@@ -82,13 +93,21 @@ export function useLector(magatzem) {
   /** Aplica una operació pura; si canvia res, la pinta i la desa. */
   const aplica = useCallback((operacio) => {
     const actual = estatRef.current;
-    if (!actual || !llegitRef.current || modeRef.current === 'lectora') return false;
+    if (!actual || !llegitRef.current || modeRef.current !== 'escriptora') return false;
     const nou = operacio(actual);
     if (nou === actual) return false;
-    canvisRef.current += 1;
+    const canvi = ++canvisRef.current;
     estatRef.current = nou;
     setEstat(nou);
-    magatzem.desa(nou).then(() => setError(null), (motiu) => setError(codiDe(motiu)));
+    magatzem.desa(nou, actual).then(() => {
+      if (canvi === canvisRef.current) setError(null);
+    }, (motiu) => {
+      if (canvi !== canvisRef.current) return;
+      setError(codiDe(motiu));
+      llegitRef.current = false;
+      setLlegit(false);
+      carregaRef.current({ conservaError: true });
+    });
     return true;
   }, [magatzem]);
 
@@ -99,9 +118,15 @@ export function useLector(magatzem) {
       marcaLlegits: fes(marcaLlegits),
       marcaNoLlegit: fes(marcaNoLlegit),
       commutaDespres: fes(commutaDespres),
-      commutaSeguiment: fes(commutaSeguiment)
+      commutaSeguiment: fes(commutaSeguiment),
+      exportaCopia: () => magatzem.exportaCopia(),
+      async importaCopia(text) {
+        const { personals } = await magatzem.importaCopia(text);
+        carregaRef.current();
+        return personals.fonts.length;
+      }
     });
-  }, [aplica]);
+  }, [aplica, magatzem]);
 
   return useMemo(
     () => ({ estat, mode, persistent, error, llegit, accions }),

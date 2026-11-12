@@ -199,6 +199,11 @@ export const CENS_IMATGES = Object.freeze([
   ...VINYETES.map(([fitxer, titol, extensio = 'jpg']) => e(`/assets/ui/plugins/${fitxer}_vinyeta.${extensio}`, titol, 'contingut', 'ia')),
   e('/assets/ui/plugins/tpv_vinyeta.webp', 'Vinyeta del Bar', 'contingut', 'ia'),
   e('/assets/ui/plugins/genealogia_vinyeta.webp', 'Vinyeta de l’Arbre Genealògic', 'contingut', 'ia'),
+  /* P0-114 (ordre del Mestre, 261111) · La vinyeta de L'Avisador. Procedència: Kit R17.3 de Gemini
+     Carbon, il·lustració generada amb IA, copiada a public/ per MarIA el 11-11-2026. Llicència: no
+     declarada al kit (el cens no en porta camp; els drets els decidix l'Arxiu pel seu `origen`). La
+     seua variant social (avisador_vinyeta-social-1200x630.jpg) entra pel mapa de VARIANTS_SOCIALS. */
+  e('/assets/ui/plugins/avisador_vinyeta.webp', 'Vinyeta de L’Avisador', 'contingut', 'ia'),
 
   e('/assets/uploads/ajuntament/la-torre-de-les-macanes/avatar/IMG_20200904_143451.jpg', 'Ajuntament de la Torre de les Maçanes', 'entitat', 'foto', 'la-torre-de-les-macanes'),
   e('/assets/uploads/ajuntament/la-torre-de-les-macanes/post/collita-poma-local.webp', 'Collita de poma local', 'entitat', 'ia'),
@@ -273,6 +278,7 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/patrimoni/banc-de-llavors-ibanez.webp', 'Banc de llavors tradicional', 'contingut', 'ia', 'la-torre-de-les-macanes'),
   e('/assets/uploads/patrimoni/herbari-la-torre-ibanez.webp', 'Herbari de La Torre: les 117 plantes del terme', 'contingut', 'ia', 'la-torre-de-les-macanes'),
   e('/assets/uploads/patrimoni/rutes-de-poble-ibanez.webp', 'Rutes de Poble i camins de ferradura', 'contingut', 'ia', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/receptes-ibanez.webp', 'Receptes de la cuina tradicional de les nostres comarques', 'contingut', 'ia', 'muro-d-alcoi'),
 
   /* P0-52 / IDEA-183 (ordres del Mestre del 08-11-2026; R53) · Les imatges de
      l'article del Pou de Neu del Rentonar, al terme de La Torre de les Maçanes:
@@ -414,7 +420,32 @@ export const EXCLOSES = Object.freeze({
     .flatMap(([de, a]) => Array.from({ length: a - de + 1 }, (_, i) => `/assets/uploads/patrimoni/que-dinem/p${String(de + i).padStart(3, '0')}.webp`))
     .map((src) => [src, 'làmina del llibre «Què dinem?» (receptari amb permís d’ús): no és cap foto de l’Arxiu'])),
   '/assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg': 'targeta social (OpenGraph) de /page/receptes: només per al <head>',
-  '/assets/uploads/patrimoni/portada_que_dinem_muro.webp': 'portada del llibre «Què dinem?» (receptari amb permís d’ús): no és cap foto de l’Arxiu'
+  '/assets/uploads/patrimoni/portada_que_dinem_muro.webp': 'portada del llibre «Què dinem?» (receptari amb permís d’ús): no és cap foto de l’Arxiu',
+  /* P0-108 + P0-111 · Catàleg d’Arbres Emblemàtics i Monumentals de La Torre de les Maçanes
+     (Associació El Rentonar · estudi tècnic de Pedro Ferrer Rodríguez, 2007–2020): fotografies
+     documentals del llibre catalogat a /page/arbres-monumentals amb permís d’ús, tractades com
+     «Què dinem?» fora de la galeria general de l’Arxiu. */
+  ...Object.fromEntries([
+    'arbre-01-albers-blancs-del-pont-2007.webp', 'arbre-01-albers-blancs-del-pont-2020.webp', 'arbre-01-albers-blancs-del-pont-detall-2007.webp',
+    'arbre-02-alborc-del-xipreret-2007.webp', 'arbre-02-alborc-del-xipreret-detall-2007.webp',
+    'arbre-03-carrasca-de-la-foia-blanca-2007.webp', 'arbre-03-carrasca-de-la-foia-blanca-detall-2007.webp',
+    'arbre-04-carrasca-de-la-zurca-2007.webp', 'arbre-04-carrasca-de-la-zurca-detall-2007.webp',
+    'arbre-05-carrasca-de-nofre-2007.webp', 'arbre-05-carrasca-de-nofre-detall-2007.webp',
+    'arbre-06-carrasca-del-buitre-2007.webp', 'arbre-06-carrasca-del-buitre-detall-2007.webp',
+    'arbre-07-carrasca-del-moral-2007.webp', 'arbre-07-carrasca-del-moral-detall-2007.webp',
+    'arbre-08-fleixos-del-barranc-d-horta-2007.webp', 'arbre-08-fleixos-del-barranc-d-horta-detall-2007.webp',
+    'arbre-09-ginebre-de-mitja-orella-2007.webp', 'arbre-09-ginebre-de-mitja-orella-detall-2007.webp',
+    'arbre-10-llorer-de-villa-maria-2007.webp', 'arbre-10-llorer-de-villa-maria-detall-2007.webp',
+    'arbre-11-oms-de-la-placa-de-l-esglesia-2007.webp', 'arbre-11-oms-de-la-placa-de-l-esglesia-2020.webp', 'arbre-11-oms-de-la-placa-de-l-esglesia-detall-2007.webp',
+    'arbre-12-pi-de-la-foia-boix-2007.webp', 'arbre-12-pi-de-la-foia-boix-detall-2007.webp',
+    'arbre-13-pi-del-mas-de-pipa-2007.webp', 'arbre-13-pi-del-mas-de-pipa-detall-2007.webp',
+    'arbre-14-pi-del-pla-verd-2007.webp', 'arbre-14-pi-del-pla-verd-2020.webp', 'arbre-14-pi-del-pla-verd-detall-2007.webp',
+    'arbre-15-pi-dels-arrendaors-2007.webp', 'arbre-15-pi-dels-arrendaors-detall-2007.webp',
+    'arbre-16-roures-de-nofre-2007.webp', 'arbre-16-roures-de-nofre-detall-2007.webp',
+    'arbre-17-xiprer-de-la-foia-2007.webp', 'arbre-17-xiprer-de-la-foia-2020.webp', 'arbre-17-xiprer-de-la-foia-detall-2007.webp',
+    'arbre-18-xiprers-del-calvari-2007.webp', 'arbre-18-xiprers-del-calvari-2020.webp', 'arbre-18-xiprers-del-calvari-detall-2007.webp',
+    'arbre-19-xiprers-del-cementeri-2007.webp', 'arbre-19-xiprers-del-cementeri-2020.webp', 'arbre-19-xiprers-del-cementeri-detall-2007.webp'
+  ].map((nom) => [`/assets/uploads/patrimoni/arbres-2020/${nom}`, 'fotografia documental del Catàleg d’Arbres 2020 (Associació El Rentonar · Pedro Ferrer Rodríguez, amb permís d’ús): sèrie de /page/arbres-monumentals']))
 });
 
 /* El camí de l'original que nomena el motiu d'una còpia: «còpia de /assets/…»

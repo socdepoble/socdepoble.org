@@ -9,8 +9,9 @@ import { RouteSEO } from '../../../hooks/RouteSEO.jsx';
 import { ProveidorPlataforma } from '../PlataformaContext.jsx';
 import RutaApps from '../RutaApps.jsx';
 
-/* Un node de producció on tot està encés: cada prova en retoca una capa. */
-export const ENTORN_OBERT = Object.freeze({ produccio: true, teDret: () => true, teCapacitat: () => true, amaDelDocument: true });
+/* Un node de producció on tot està encés: cada prova en retoca una capa.
+   P0-113 (ordre del Mestre, 261111) · Sense cap dret: tot és gratuït. */
+export const ENTORN_OBERT = Object.freeze({ produccio: true, teCapacitat: () => true, amaDelDocument: true });
 
 export function preparaNavegador() {
   vi.stubGlobal('matchMedia', vi.fn((query) => ({

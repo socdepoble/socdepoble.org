@@ -43,9 +43,22 @@ export function creaMagatzemNevera(opcions = {}) {
       const registre = await base.obte(STORE, CLAU_ESTAT);
       return registre ? normalitzaEstat(registre) : estatInicial();
     },
-    /** Desa l'estat sencer; torna l'estat net tal com ha quedat al disc. */
-    async desa(estat) {
-      const desat = await base.desa(STORE, { ...estat, id: CLAU_ESTAT });
+    /**
+     * Si hi ha una instantània de partida, la compara dins de la transacció.
+     * Protegix contra escriptures de pestanyes sense Web Locks.
+     */
+    async desa(estat, esperat) {
+      const registre = { ...normalitzaEstat(estat), id: CLAU_ESTAT };
+      const instantania = esperat === undefined ? null : JSON.stringify(normalitzaEstat(esperat));
+      const desat = instantania === null
+        ? await base.desa(STORE, registre)
+        : await base.actualitza(STORE, CLAU_ESTAT, (actual) => {
+          const delDisc = actual ? normalitzaEstat(actual) : estatInicial();
+          if (JSON.stringify(delDisc) !== instantania) {
+            throw Object.assign(new Error('Les dades han canviat en una altra pestanya.'), { codi: 'CONFLICTE' });
+          }
+          return registre;
+        });
       return normalitzaEstat(desat);
     },
     obtinBloqueig: () => base.obtinBloqueig(),

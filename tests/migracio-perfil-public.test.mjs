@@ -170,7 +170,8 @@ function columnesDeLaVigent() {
 }
 
 test('el client la crida amb p_id i llig columnes que la RPC vigent torna', () => {
-  assert.match(CLIENT, /rpc\('perfil_public', \{ p_id: clau \}/);
+  /* R21 · Des de Codex R19 R2 la crida viu a personaRemota(id, config), amb el paràmetre anomenat `id`. */
+  assert.match(CLIENT, /rpc\('perfil_public', \{ p_id: (?:clau|id) \}/);
   const llegides = new Set([...CLIENT.slice(CLIENT.indexOf('export function perfilDePersona'))
     .slice(0, 1200).matchAll(/fila\.(\w+)/g)].map((m) => m[1]));
   const tornades = new Set(columnesDeLaVigent());

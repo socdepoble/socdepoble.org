@@ -146,8 +146,10 @@ describe('useDestinacioEnllac', () => {
     const carrega = vi.fn(() => Promise.resolve({ destinacioEnllac: destinacioDeProva() }));
     const lector = { ...manifestLector, carrega };
     expect(munta('lector', []).current).toEqual(SENSE);
-    /* En producció, una app de desenvolupament està apagada (interruptors.js). */
-    expect(munta('lector', [lector], ENTORN_OBERT).current).toEqual(SENSE);
+    /* En producció, una app de desenvolupament està apagada (interruptors.js).
+       P0-113 (ordre del Mestre, 261111) · El Lector real ja és obert en
+       producció: la prova en fixa l'entorn de desenvolupament a posta. */
+    expect(munta('lector', [{ ...lector, entorn: 'desenvolupament' }], ENTORN_OBERT).current).toEqual(SENSE);
     /* L'amfitrió declara les seues apps i esta no hi és. */
     expect(munta('lector', [lector], DESENVOLUPAMENT, { apps: 'bar' }).current).toEqual(SENSE);
     expect(munta('lector', [{ ...lector, carrega: null }]).current).toEqual(SENSE);
@@ -158,7 +160,8 @@ describe('useDestinacioEnllac', () => {
   test('esDestinacioPossible: només amb estat «available»', () => {
     const lector = manifest();
     expect(esDestinacioPossible({ manifest: lector, estat: 'available' })).toBe(true);
-    for (const estat of ['disabled', 'unavailable', 'unsubscribed']) expect(esDestinacioPossible({ manifest: lector, estat })).toBe(false);
+    /* P0-113 (ordre del Mestre, 261111) · Ja no hi ha cap estat de pagament; un estat desconegut tampoc no és destinació. */
+    for (const estat of ['disabled', 'unavailable', 'desconegut']) expect(esDestinacioPossible({ manifest: lector, estat })).toBe(false);
     expect(esDestinacioPossible(null)).toBe(false);
   });
 });

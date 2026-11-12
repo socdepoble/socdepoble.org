@@ -21,11 +21,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Artesanal"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -59,11 +59,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -96,11 +96,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -135,11 +135,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA",
+    "zonesHerbari": [
       "PLANTES ERA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -174,12 +174,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS · ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS · ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS",
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -218,11 +218,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA",
+    "zonesHerbari": [
       "PLANTES ERA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -258,11 +258,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -298,11 +298,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Medicinal"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES DAVANT CASA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES DAVANT CASA",
+    "zonesHerbari": [
       "ARBRES DAVANT CASA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES DAVANT CASA",
         "liniaTitol": 314,
@@ -337,11 +337,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -377,13 +377,13 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA · BANCAL DE FRUITALS · PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA · BANCAL DE FRUITALS · PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA",
       "BANCAL DE FRUITALS",
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -428,11 +428,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES DAVANT CASA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES DAVANT CASA",
+    "zonesHerbari": [
       "ARBRES DAVANT CASA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES DAVANT CASA",
         "liniaTitol": 314,
@@ -465,11 +465,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -502,11 +502,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -539,11 +539,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -576,11 +576,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -614,11 +614,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Artesanal"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -652,11 +652,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES DAVANT CASA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES DAVANT CASA",
+    "zonesHerbari": [
       "ARBRES DAVANT CASA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES DAVANT CASA",
         "liniaTitol": 314,
@@ -689,11 +689,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -726,11 +726,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
         "liniaTitol": 523,
@@ -763,11 +763,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -807,11 +807,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Tòxic"
     ],
     "esToxica": true,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -846,11 +846,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -883,11 +883,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
         "liniaTitol": 523,
@@ -920,11 +920,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -958,11 +958,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 2 (MIG)",
         "liniaTitol": 732,
@@ -997,11 +997,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 2 (MIG)",
         "liniaTitol": 732,
@@ -1035,11 +1035,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE ABELLES I BANCAL SUPERIOR",
         "liniaTitol": 991,
@@ -1074,11 +1074,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 2 (MIG)",
         "liniaTitol": 732,
@@ -1113,11 +1113,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -1151,13 +1151,13 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA · ARBRES I PLANTES ZONA ALMASSERA I DARRERE · PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA · ARBRES I PLANTES ZONA ALMASSERA I DARRERE · PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA",
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -1203,11 +1203,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE ABELLES I BANCAL SUPERIOR",
         "liniaTitol": 991,
@@ -1242,11 +1242,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES DAVANT CASA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES DAVANT CASA",
+    "zonesHerbari": [
       "ARBRES DAVANT CASA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES DAVANT CASA",
         "liniaTitol": 314,
@@ -1281,11 +1281,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA",
+    "zonesHerbari": [
       "PLANTES ERA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -1320,12 +1320,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES DAVANT CASA · PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES DAVANT CASA · PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "ARBRES DAVANT CASA",
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES DAVANT CASA",
         "liniaTitol": 314,
@@ -1363,11 +1363,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE ABELLES I BANCAL SUPERIOR",
         "liniaTitol": 991,
@@ -1400,11 +1400,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 1 (BAIX)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 1 (BAIX)",
+    "zonesHerbari": [
       "PARTERRE 1 (BAIX)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 1 (BAIX)",
         "liniaTitol": 628,
@@ -1437,11 +1437,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE ABELLES I BANCAL SUPERIOR",
         "liniaTitol": 991,
@@ -1474,11 +1474,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -1511,11 +1511,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -1548,12 +1548,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA · PARTERRE 4 (FONT D’HERBES)",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA · PARTERRE 4 (FONT D’HERBES)",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA",
       "PARTERRE 4 (FONT D’HERBES)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -1591,12 +1591,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 1 (BAIX) · PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 1 (BAIX) · PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 1 (BAIX)",
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 1 (BAIX)",
         "liniaTitol": 628,
@@ -1634,11 +1634,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 1 (BAIX)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 1 (BAIX)",
+    "zonesHerbari": [
       "PARTERRE 1 (BAIX)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 1 (BAIX)",
         "liniaTitol": 628,
@@ -1672,11 +1672,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -1711,11 +1711,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA",
+    "zonesHerbari": [
       "PLANTES ERA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -1749,11 +1749,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA",
+    "zonesHerbari": [
       "PLANTES ERA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -1787,13 +1787,13 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA · PARTERRE 1 (BAIX) · PARTERRE 4 (FONT D’HERBES)",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA · PARTERRE 1 (BAIX) · PARTERRE 4 (FONT D’HERBES)",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA",
       "PARTERRE 1 (BAIX)",
       "PARTERRE 4 (FONT D’HERBES)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -1838,11 +1838,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 1 (BAIX)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 1 (BAIX)",
+    "zonesHerbari": [
       "PARTERRE 1 (BAIX)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 1 (BAIX)",
         "liniaTitol": 628,
@@ -1876,11 +1876,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -1919,11 +1919,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Artesanal"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -1957,11 +1957,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 1 (BAIX)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 1 (BAIX)",
+    "zonesHerbari": [
       "PARTERRE 1 (BAIX)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 1 (BAIX)",
         "liniaTitol": 628,
@@ -1995,11 +1995,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -2034,11 +2034,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -2075,12 +2075,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA · PARTERRE 1 (BAIX)",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA · PARTERRE 1 (BAIX)",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA",
       "PARTERRE 1 (BAIX)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -2122,11 +2122,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -2162,11 +2162,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Tòxic"
     ],
     "esToxica": true,
-    "zonaCanaleta": "PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE ABELLES I BANCAL SUPERIOR",
         "liniaTitol": 991,
@@ -2203,11 +2203,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -2244,11 +2244,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -2283,11 +2283,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -2322,11 +2322,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA",
+    "zonesHerbari": [
       "PLANTES ERA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -2363,11 +2363,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA",
+    "zonesHerbari": [
       "PLANTES ERA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -2403,11 +2403,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 1 (BAIX)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 1 (BAIX)",
+    "zonesHerbari": [
       "PARTERRE 1 (BAIX)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 1 (BAIX)",
         "liniaTitol": 628,
@@ -2441,11 +2441,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -2479,11 +2479,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -2519,11 +2519,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Artesanal"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -2559,12 +2559,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA · ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA · ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA",
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -2604,11 +2604,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -2642,11 +2642,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 1 (BAIX)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 1 (BAIX)",
+    "zonesHerbari": [
       "PARTERRE 1 (BAIX)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 1 (BAIX)",
         "liniaTitol": 628,
@@ -2680,11 +2680,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -2719,11 +2719,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 4 (FONT D’HERBES)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 4 (FONT D’HERBES)",
+    "zonesHerbari": [
       "PARTERRE 4 (FONT D’HERBES)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 4 (FONT D’HERBES)",
         "liniaTitol": 939,
@@ -2758,12 +2758,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Medicinal"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA · PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA · PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA",
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -2802,11 +2802,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE ABELLES I BANCAL SUPERIOR",
         "liniaTitol": 991,
@@ -2840,11 +2840,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 2 (MIG)",
         "liniaTitol": 732,
@@ -2880,11 +2880,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA",
+    "zonesHerbari": [
       "PLANTES ERA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -2920,11 +2920,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -2959,11 +2959,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -2999,12 +2999,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA · ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA · ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA",
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -3044,11 +3044,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -3081,11 +3081,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -3118,11 +3118,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -3155,11 +3155,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -3192,12 +3192,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Medicinal"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA) · PARTERRE 4 (FONT D’HERBES)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA) · PARTERRE 4 (FONT D’HERBES)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)",
       "PARTERRE 4 (FONT D’HERBES)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -3235,11 +3235,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
         "liniaTitol": 523,
@@ -3273,11 +3273,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
         "liniaTitol": 523,
@@ -3311,11 +3311,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
         "liniaTitol": 523,
@@ -3350,12 +3350,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA · PARTERRE 4 (FONT D’HERBES)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA · PARTERRE 4 (FONT D’HERBES)",
+    "zonesHerbari": [
       "PLANTES ERA",
       "PARTERRE 4 (FONT D’HERBES)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -3395,11 +3395,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
         "liniaTitol": 523,
@@ -3432,11 +3432,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -3471,12 +3471,12 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA · PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA · PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PLANTES ERA",
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -3516,11 +3516,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -3553,11 +3553,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES DAVANT CASA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES DAVANT CASA",
+    "zonesHerbari": [
       "ARBRES DAVANT CASA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES DAVANT CASA",
         "liniaTitol": 314,
@@ -3591,11 +3591,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 2 (MIG)",
         "liniaTitol": 732,
@@ -3629,11 +3629,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE ABELLES I BANCAL SUPERIOR",
         "liniaTitol": 991,
@@ -3667,11 +3667,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -3705,11 +3705,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -3743,11 +3743,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -3781,11 +3781,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -3818,11 +3818,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -3856,11 +3856,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 3 (FRUITES DE LA SERRA)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 3 (FRUITES DE LA SERRA)",
+    "zonesHerbari": [
       "PARTERRE 3 (FRUITES DE LA SERRA)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 3 (FRUITES DE LA SERRA)",
         "liniaTitol": 835,
@@ -3894,11 +3894,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -3932,11 +3932,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -3971,11 +3971,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 2 (MIG)",
         "liniaTitol": 732,
@@ -4011,11 +4011,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 2 (MIG)",
         "liniaTitol": 732,
@@ -4052,8 +4052,8 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA · PLANTES ERA · PARTERRE 1 (BAIX) · PARTERRE 2 (MIG) · PARTERRE 4 (FONT D’HERBES) · PARTERRE ABELLES I BANCAL SUPERIOR",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA · PLANTES ERA · PARTERRE 1 (BAIX) · PARTERRE 2 (MIG) · PARTERRE 4 (FONT D’HERBES) · PARTERRE ABELLES I BANCAL SUPERIOR",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA",
       "PLANTES ERA",
       "PARTERRE 1 (BAIX)",
@@ -4061,7 +4061,7 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "PARTERRE 4 (FONT D’HERBES)",
       "PARTERRE ABELLES I BANCAL SUPERIOR"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -4122,11 +4122,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
         "liniaTitol": 523,
@@ -4160,11 +4160,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -4199,11 +4199,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA",
+    "zonesHerbari": [
       "PLANTES ERA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -4239,13 +4239,13 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA · PARTERRE 1 (BAIX) · PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA · PARTERRE 1 (BAIX) · PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PLANTES ERA",
       "PARTERRE 1 (BAIX)",
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -4289,11 +4289,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aromàtica"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 2 (MIG)",
         "liniaTitol": 732,
@@ -4326,11 +4326,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA ALMASSERA I DARRERE"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA ALMASSERA I DARRERE",
         "liniaTitol": 523,
@@ -4363,11 +4363,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "BANCAL DE FRUITALS",
-    "zonesCanaleta": [
+    "zonaHerbari": "BANCAL DE FRUITALS",
+    "zonesHerbari": [
       "BANCAL DE FRUITALS"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "BANCAL DE FRUITALS",
         "liniaTitol": 367,
@@ -4403,11 +4403,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Tòxic"
     ],
     "esToxica": true,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -4444,11 +4444,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Medicinal"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -4484,13 +4484,13 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PLANTES ERA · PARTERRE 2 (MIG) · PARTERRE 4 (FONT D’HERBES)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PLANTES ERA · PARTERRE 2 (MIG) · PARTERRE 4 (FONT D’HERBES)",
+    "zonesHerbari": [
       "PLANTES ERA",
       "PARTERRE 2 (MIG)",
       "PARTERRE 4 (FONT D’HERBES)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PLANTES ERA",
         "liniaTitol": 210,
@@ -4537,11 +4537,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 2 (MIG)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 2 (MIG)",
+    "zonesHerbari": [
       "PARTERRE 2 (MIG)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 2 (MIG)",
         "liniaTitol": 732,
@@ -4578,11 +4578,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Aliment"
     ],
     "esToxica": null,
-    "zonaCanaleta": "PARTERRE 4 (FONT D’HERBES)",
-    "zonesCanaleta": [
+    "zonaHerbari": "PARTERRE 4 (FONT D’HERBES)",
+    "zonesHerbari": [
       "PARTERRE 4 (FONT D’HERBES)"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "PARTERRE 4 (FONT D’HERBES)",
         "liniaTitol": 939,
@@ -4617,11 +4617,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Ornamental"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -4655,11 +4655,11 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "Medicinal"
     ],
     "esToxica": null,
-    "zonaCanaleta": "ARBRES I PLANTES ZONA BASSA",
-    "zonesCanaleta": [
+    "zonaHerbari": "ARBRES I PLANTES ZONA BASSA",
+    "zonesHerbari": [
       "ARBRES I PLANTES ZONA BASSA"
     ],
-    "localitzacionsCanaleta": [
+    "localitzacionsHerbari": [
       {
         "zona": "ARBRES I PLANTES ZONA BASSA",
         "liniaTitol": 1,
@@ -4681,7 +4681,7 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
       "taxonomiaRevisada": false
     }
   }
-].map(f=>Object.freeze({...f,zonesCanaleta:Object.freeze(f.zonesCanaleta),localitzacionsCanaleta:Object.freeze(f.localitzacionsCanaleta.map(x=>Object.freeze(x))),fontZones:FONT_ZONES_HERBARI,usos:Object.freeze(f.usos),usosTranscrits:Object.freeze(f.usosTranscrits),usosNoContrastats:Object.freeze(f.usosNoContrastats),font:Object.freeze(f.font)})));
+].map(f=>Object.freeze({...f,zonesHerbari:Object.freeze(f.zonesHerbari),localitzacionsHerbari:Object.freeze(f.localitzacionsHerbari.map(x=>Object.freeze(x))),fontZones:FONT_ZONES_HERBARI,usos:Object.freeze(f.usos),usosTranscrits:Object.freeze(f.usosTranscrits),usosNoContrastats:Object.freeze(f.usosNoContrastats),font:Object.freeze(f.font)})));
 
 const normalitzaCercaHerbari = value => String(value || '')
   .normalize('NFKD')
@@ -4700,7 +4700,7 @@ export function filtraEspeciesHerbari({
     if (nomesToxiques && !esp.esToxica) return false;
     if (usActiu && usActiu !== 'Tots' && !esp.usos.includes(usActiu)) return false;
     if (!q) return true;
-    const camp = normalitzaCercaHerbari(`${esp.nomValencia} ${esp.nomCastella} ${esp.nomAngles} ${esp.nomCientific} ${esp.zonaCanaleta}`);
+    const camp = normalitzaCercaHerbari(`${esp.nomValencia} ${esp.nomCastella} ${esp.nomAngles} ${esp.nomCientific} ${esp.zonaHerbari}`);
     return camp.includes(q);
   });
 }

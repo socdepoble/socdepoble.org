@@ -21,6 +21,7 @@ const ARREL = process.cwd();
 const NOM = '2610241440_baixa_completa_ugc_i_fitxers.sql';
 const ANTERIOR = '2609282100_xat_de_pagina.sql';
 const F1 = '2609261500_identitat_perfil_f1.sql';
+const CUA_UGC = '2611110100_cua_purga_storage_ugc.sql';
 const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const llig = (fitxer) => readFileSync(path.join(MIGRACIONS, fitxer), 'utf8');
 const SQL = llig(NOM);
@@ -279,9 +280,9 @@ test('private.purga_baixes_vencudes és la de 2609261500 LITERAL amb l’ordre n
   const nova = normalitza(sentenciaPurga(SQL, 'purga_baixes_vencudes'));
   expect(vella.split(ORDRE_VELL).length - 1).toBe(1);
   expect(nova).toBe(vella.replace(ORDRE_VELL, ORDRE_NOU));
-  /* Només F1 i esta la definixen: cap versió intermèdia es desfà. */
+  /* R17.2B manté l'ordre i adapta el lot a la fase de purga del worker. */
   const definidores = migracions().filter((f) => /create\s+or\s+replace\s+function\s+private\.purga_baixes_vencudes\b/i.test(llig(f)));
-  expect(definidores).toEqual([F1, NOM]);
+  expect(definidores).toEqual([F1, NOM, CUA_UGC]);
   /* Mateixa capçalera i mateix revoke que F1; el lot es fa amb el mateix pany. */
   const f = funcio('private', 'purga_baixes_vencudes');
   expect(f.params).toBe('p_limit integer default 100');

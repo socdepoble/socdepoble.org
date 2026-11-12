@@ -1,6 +1,7 @@
 import { useUIActions } from '../../app/contexts/UIContext';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import { esAppNativa } from '../../config/origenPublic.js';
+import { DRETS_QUE_DINEM } from '../text/pageContent.dretsPatrimoni.js';
 import { OBRA_QUE_DINEM } from '../../data/patrimoni/queDinem.js';
 
 /* Onada R14 · Els crèdits del receptari «Què dinem?» i l'enllaç al PDF sencer, els mateixos a /page/receptes i a
@@ -37,6 +38,7 @@ export default function CreditsQueDinem({ tr, nivell = 'h3' }) {
         <dt>{tr('patrimoni.receptes.isbn', 'ISBN, tal com està imprés')}</dt>
         <dd>{obra.isbnImpres}</dd>
         <dt>{tr('patrimoni.receptes.drets', 'Drets')}</dt>
+        <dd lang="ca">{DRETS_QUE_DINEM}</dd>
         <dd>{tr('patrimoni.receptes.permis', 'Text i làmines amb permís d’ús.')}</dd>
         <dt>{tr('patrimoni.receptes.videos', 'Vídeos de les receptes')}</dt>
         <dd>{tr('patrimoni.receptes.canal', 'Del canal «{canal}», a YouTube', { canal: obra.canalVideos })}</dd>

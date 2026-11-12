@@ -1,6 +1,6 @@
-/* Onada R9 (carril C5; IDEA-112, IDEA-113 i IDEA-115) · Les tres consultes de patrimoni: es pinten amb les dades
-   literals, no fan cap petició, no porten cap formulari que simule un registre (G9-05) i tenen totes les claus
-   als 5 diccionaris. */
+/* Onada R9 (carril C5; IDEA-112, IDEA-113 i IDEA-115) · Les consultes de llavors i rutes conserven les dades
+   literals i les claus als 5 diccionaris. La font històrica d'arbres es contrasta amb el mateix corpus que
+   alimenta la portada del llibre R18; el seu recorregut viu es prova a NaturaPatrimoniWorkspaceSection.r18.test.jsx. */
 import { readFileSync } from 'node:fs';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -11,10 +11,10 @@ import EU from '../../config/idiomes/eu.js';
 import GL from '../../config/idiomes/gl.js';
 import BancLlavorsSection from './BancLlavorsSection.jsx';
 import RutesDePobleSection from './RutesDePobleSection.jsx';
-import ArbresMonumentalsSection from './ArbresMonumentalsSection.jsx';
 import { ESPECIES_ATLES_CATALUNYA, FONTS_BANC_LLAVORS, VARIETATS_CATALEG_VALENCIA } from '../../data/patrimoni/bancLlavors.js';
 import { PLANTILLA_RUTES_DE_POBLE, RUTES_LA_TORRE } from '../../data/patrimoni/rutesDePoble.js';
 import { ARBRES_MONUMENTALS_LA_TORRE, FONT_ARBRES_MONUMENTALS } from '../../data/patrimoni/arbresMonumentals.js';
+import { LLIBRES_ARBRES_MONUMENTALS } from '../../data/patrimoni/llibresArbresMonumentals.js';
 
 const m = vi.hoisted(() => ({ dic: null }));
 vi.mock('../../app/contexts/UIContext', async (orig) => ({
@@ -23,7 +23,7 @@ vi.mock('../../app/contexts/UIContext', async (orig) => ({
 }));
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); m.dic = null; });
 
-const FITXERS = ['BancLlavorsSection.jsx', 'RutesDePobleSection.jsx', 'ArbresMonumentalsSection.jsx', 'EmpremtaFont.jsx'];
+const FITXERS = ['BancLlavorsSection.jsx', 'RutesDePobleSection.jsx', 'EmpremtaFont.jsx'];
 const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
 
 describe('/page/banc-de-llavors · BancLlavorsSection', () => {
@@ -228,37 +228,39 @@ describe('/page/rutes-de-poble · RutesDePobleSection', () => {
   });
 });
 
-describe('/page/arbres-monumentals · ArbresMonumentalsSection', () => {
-  test('els 19 noms enllacen la seua fitxa original; els dos monumentals, marcats; cap imatge', () => {
-    const { container } = render(<ArbresMonumentalsSection />);
-    const items = container.querySelectorAll('ol > li');
-    expect(items).toHaveLength(19);
-    ARBRES_MONUMENTALS_LA_TORRE.forEach((arbre, i) => {
-      const a = items[i].querySelector('a');
-      expect(a.textContent).toBe(arbre.nom);
-      expect(a.getAttribute('href')).toBe(arbre.enllac);
-      expect(a.getAttribute('rel')).toBe('noopener noreferrer');
-      expect(items[i].textContent.includes('Monumental')).toBe(arbre.monumental);
-    });
-    expect(container.querySelector('img, picture, video, iframe')).toBeNull();
-    expect(screen.getByRole('link', { name: 'La pàgina original del catàleg a socdepoble.net' }).getAttribute('href')).toBe(FONT_ARBRES_MONUMENTALS.enllac);
-    expect(container.textContent).toContain('Publicada el 10/04/2017');
-    expect(container.textContent).toContain('en vigor des de l’any 2005');
-    expect(container.textContent).not.toMatch(/\b(?:edat|perímetre|alçària)\b/i);
+describe('/page/arbres-monumentals · font documental reutilitzada pel llibre R18', () => {
+  const corpus = JSON.parse(readFileSync(`${process.cwd()}/src/data/importacio/paginesTrilogiaIMoliWp.corpus.json`, 'utf8'));
+  const pagina = corpus.find(item => item.id === FONT_ARBRES_MONUMENTALS.wpId);
+  const cos = () => new DOMParser().parseFromString(pagina.contentHtml, 'text/html').body;
+
+  test('els 19 noms i les dues marques monumentals conserven els enllaços literals de WordPress', () => {
+    expect(pagina).toMatchObject({ id: FONT_ARBRES_MONUMENTALS.wpId, slug: FONT_ARBRES_MONUMENTALS.slug,
+      title: FONT_ARBRES_MONUMENTALS.titol, date: FONT_ARBRES_MONUMENTALS.data, link: FONT_ARBRES_MONUMENTALS.enllac });
+    expect(LLIBRES_ARBRES_MONUMENTALS[0].portada).toEqual({ wpId: pagina.id, slug: pagina.slug });
+    expect(ARBRES_MONUMENTALS_LA_TORRE).toHaveLength(19);
+    const anchors = [...cos().querySelectorAll('li a[href]')];
+    for (const arbre of ARBRES_MONUMENTALS_LA_TORRE) {
+      const anchor = anchors.find(item => item.getAttribute('href') === arbre.enllac);
+      expect(anchor, arbre.nom).toBeTruthy();
+      expect(anchor.textContent).toBe(arbre.nom);
+      expect(anchor.closest('li').textContent.includes('(Monumental)')).toBe(arbre.monumental);
+      expect(Object.keys(arbre).sort()).toEqual(['enllac', 'id', 'liniaText', 'monumental', 'nom', 'ordre']);
+    }
   });
 
-  test('les cites van en l’ordre de la font i en blocs separats: 2017 no es llig com l’autoria (R9V-C5-02)', () => {
-    const { container } = render(<ArbresMonumentalsSection />);
-    const p = FONT_ARBRES_MONUMENTALS.paragrafs;
-    const cites = [...container.querySelectorAll('blockquote')].map((b) => [...b.querySelectorAll('p')].map((x) => x.textContent));
-    expect(cites).toEqual([[p.deuAnys, '[…]', p.senseBioleg], [p.autoria, p.ordenanca]]);
+  test('la data de 2017, l’autoria i la consideració de protecció mantenen l’ordre de la font (R9V-C5-02)', () => {
+    const normalitza = text => text.replace(/\s+/g, ' ').trim();
+    const text = normalitza(cos().textContent);
+    let anterior = -1;
+    for (const clau of ['actualitzacio', 'deuAnys', 'senseBioleg', 'autoria', 'ordenanca']) {
+      const index = text.indexOf(normalitza(FONT_ARBRES_MONUMENTALS.paragrafs[clau]));
+      expect(index, clau).toBeGreaterThan(anterior);
+      anterior = index;
+    }
     const c = FONT_ARBRES_MONUMENTALS.cites;
     expect([c.actualitzacio, c.deuAnys, c.senseBioleg, c.autoria, c.ordenanca]).toEqual([1, 3, 7, 23, 25]);
-    // Cada bloc té el seu encapçalament: el literal de la font i el de la interfície.
-    const [primer, segon] = container.querySelectorAll('blockquote');
-    expect(primer.previousElementSibling.textContent).toBe(p.actualitzacio);
-    expect(segon.previousElementSibling.textContent).toBe('Qui l’ha fet i quina protecció hi cita');
-    expect(primer.getAttribute('cite')).toBe(FONT_ARBRES_MONUMENTALS.enllac);
+    expect(FONT_ARBRES_MONUMENTALS.paragrafs.ordenanca).toContain('Considerem');
+    expect(FONT_ARBRES_MONUMENTALS.paragrafs.ordenanca).toContain('en vigor des de l’any 2005');
   });
 });
 
@@ -271,9 +273,6 @@ describe('Gauntlet R9 · G1-07 i G1-08', () => {
       expect(dic['patrimoni.arbres.qui'], llengua).toBe(esperat[llengua]);
       expect(dic['patrimoni.arbres.qui'], llengua).not.toMatch(/protegix|protege\b|protects|babesten|protexe/);
     }
-    m.dic = EN;
-    const { container } = render(<ArbresMonumentalsSection />);
-    expect(container.querySelectorAll('blockquote')[1].previousElementSibling.textContent).toBe('Who made it and which protection it cites');
   });
 
   test('rutes: la nota de vigència va davall del resum, una sola vegada, amb l’editor i l’any de la font', () => {

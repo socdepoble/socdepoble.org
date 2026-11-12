@@ -247,15 +247,32 @@ test.each(APPS_PER_MODE)('sense sessió, /app/%s es munta sencera en mode %s i n
   }, { dataMode: mode });
 }, 15000);
 
-test.each(MODES)('sense sessió, en mode %s, la Gestoria de veres: el Tauler, la boina sense titular i cap crida de més', async (mode) => {
+/* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: oberta en producció, la Gestoria entra
+   per la Facturació (entradaPerDefecte), que no demana cap tractor. Abans entrava al Tauler, que
+   demana aprovar el seu tractor en un panell que només existix en desenvolupament. Es conserva la
+   intenció: la Gestoria de veres, sense sessió, la boina sense titular i cap crida de més. El
+   Tauler continua a la barra, i la seua porta («Cal aprovar el tractor») no canvia: tocar-la
+   tornaria l'aprovació a «pendent» (decisió pendent del Mestre). */
+const HI_HA_PORTA_DELS_TRACTORS = /Cal aprovar el tractor|panell de Tractors/;
+const titolDeLApp = (id, titol) => waitFor(() => expect(contenidor(id)?.querySelector('h1')?.textContent).toBe(titol), { timeout: 8000 });
+/* P0-113 · La porta del Tauler espera l'empremta dels tractors (registreTractors.js, crypto.subtle sobre
+   totes les fonts) i les aprovacions d'IndexedDB: «Llegint les aprovacions dels tractors…» dura més d'un
+   segon amb la màquina carregada. El mateix límit que h1DeLApp (P1-26); l'asserció no canvia. */
+const portaDelTractor = () => screen.findByText('Cal aprovar el tractor', {}, { timeout: 8000 });
+test.each(MODES)('sense sessió, en mode %s, la Gestoria de veres entra per la Facturació, sense cap porta dels Tractors; la boina sense titular, cap crida de més i el Tauler a la barra', async (mode) => {
   await munta('/app/gestoria', async ({ crides, xarxa }) => {
-    expect((await h1DeLApp('gestoria')).textContent).toBe('Tauler Central');
-    expect(window.location.pathname).toBe('/app/gestoria/tauler');
-    expect(await screen.findByText('Cal aprovar el tractor')).toBeTruthy();
+    expect((await h1DeLApp('gestoria')).textContent).toBe('Facturació');
+    expect(window.location.pathname).toBe('/app/gestoria/facturacio');
+    expect(contenidor('gestoria').textContent).not.toMatch(HI_HA_PORTA_DELS_TRACTORS);
     expect(within(contenidor('gestoria')).getAllByText('Titular sense configurar').length).toBeGreaterThan(0);
     /* La barra de l'app relleva la de Sóc de Poble: les deu entrades, cap «Entrar» dins de l'app. */
     const barra = screen.getByRole('navigation', { name: 'Navegació principal' });
     expect(within(barra).getByRole('link', { name: 'Aprendre' }).getAttribute('href')).toBe('/app/gestoria/aprendre');
+    expect(within(barra).getByRole('link', { name: 'Tauler d’Inici' }).getAttribute('href')).toBe('/app/gestoria/tauler');
+    fireEvent.click(within(barra).getByRole('link', { name: 'Tauler d’Inici' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/app/gestoria/tauler'));
+    await titolDeLApp('gestoria', 'Tauler Central');
+    expect(await portaDelTractor()).toBeTruthy();
     fireEvent.click(within(barra).getByRole('link', { name: 'Full trimestral' }));
     await waitFor(() => expect(window.location.pathname).toBe('/app/gestoria/full'));
     expect((await h1DeLApp('gestoria')).textContent).toBe('Full trimestral');
@@ -273,7 +290,7 @@ test.each(MODES)('sense sessió, en mode %s i amb el servidor caigut, la Gestori
   const caigut = async () => { throw new TypeError('Failed to fetch'); };
   await munta('/app/gestoria/tauler', async ({ crides, xarxa }) => {
     expect((await h1DeLApp('gestoria')).textContent).toBe('Tauler Central');
-    expect(await screen.findByText('Cal aprovar el tractor')).toBeTruthy();
+    expect(await portaDelTractor()).toBeTruthy();
     await esperaElConjunt(crides, mode);
     senseCapBarrera();
     expect(window.location.pathname).toBe('/app/gestoria/tauler');
@@ -394,7 +411,7 @@ test('amb sessió, la boina de la Gestoria porta la persona de la sessió; sense
   /* Els id de useId (`:r3:`) depenen de l'ordre de muntatge de tot l'arbre, no de l'app. */
   const pintura = async () => {
     await h1DeLApp('gestoria');
-    await screen.findByText('Cal aprovar el tractor');
+    await portaDelTractor();
     const arrel = contenidor('gestoria');
     const accions = arrel.querySelector('section.bar-orange .bar-actions');
     const rellotgeViu = accions?.lastElementChild ?? null;
@@ -466,6 +483,25 @@ test('sense sessió i en un build (DEV false), /consola es pinta i no porta a /r
     vi.stubEnv('DEV', dev);
   }
 }, 10000);
+
+/* P0-113 (ordre del Mestre, 261111) · En un build (DEV false) no hi ha panell d'aprovació dels
+   Tractors (WikiDePobleSection.jsx, EINES_LOCALS): l'entrada per defecte de /app/gestoria no pot
+   pintar cap porta cap a eixa ruta. El DEV de veres es restablix a mà, com a la prova de /consola. */
+test('sense sessió i en un build (DEV false), /app/gestoria entra per la Facturació i no pinta cap porta cap al panell dels Tractors', async () => {
+  const dev = import.meta.env.DEV;
+  vi.stubEnv('DEV', false);
+  try {
+    await munta('/app/gestoria', async () => {
+      expect((await h1DeLApp('gestoria')).textContent).toBe('Facturació');
+      expect(window.location.pathname).toBe('/app/gestoria/facturacio');
+      expect(contenidor('gestoria').textContent).not.toMatch(HI_HA_PORTA_DELS_TRACTORS);
+      expect(contenidor('gestoria').querySelector('a[href*="tractors"]')).toBeNull();
+      senseCapBarrera();
+    });
+  } finally {
+    vi.stubEnv('DEV', dev);
+  }
+}, 15000);
 
 /* D5 · No n'hi ha prou amb l'aria-current de la barra (controlActiu, a
    App.jsx, amb esFillaDelPanell; les altres filles del Panell, a

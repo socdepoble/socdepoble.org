@@ -31,6 +31,18 @@ async function avisos(fitxers, t) {
   return (await sopes(fitxers, t)).map((f) => f.file).sort();
 }
 
+test('les referències WP conserven el control dels colors CSS i JSX', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-design-wp-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, 'Referencia.jsx'), 'export const A = () => <p>WP #619</p>;');
+  fs.writeFileSync(path.join(root, 'color.css'), '.arbre { color: #619; }');
+  fs.writeFileSync(path.join(root, 'Color.jsx'), 'export const A = () => <p style={{color:"#619"}}>Arbre</p>;');
+  const { data } = await run({ root, vocab: new Set() });
+  const colors = data.findings.filter(f => f.rule === 'raw-color');
+  assert.deepEqual(colors.map(f => path.basename(f.file)).sort(), ['Color.jsx', 'color.css']);
+  assert.ok(colors.every(f => f.token === '#619'));
+});
+
 /* ── Lectura de l'AST per al registre d'embolcalls ── */
 const SALTA = new Set(['loc', 'start', 'end', 'extra', 'leadingComments', 'trailingComments', 'innerComments']);
 const FUNCIO = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'ObjectMethod', 'ClassMethod']);

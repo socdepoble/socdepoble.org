@@ -9,6 +9,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ props: null }));
 vi.mock('../../app/contexts/UIContext', () => ({
+  useUIStateOpcional: () => null,
   useUIActions: () => ({ t: (_, alternativa) => alternativa, resolveAsset: (cami) => cami }),
   useUIState: () => ({ externalConfig: {} })
 }));

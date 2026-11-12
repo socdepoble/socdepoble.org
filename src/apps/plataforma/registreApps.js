@@ -23,16 +23,20 @@ import manifestSalut from '../salut/manifest.js';
 import manifestNevera from '../nevera/manifest.js';
 import manifestLector from '../lector/manifest.js';
 /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
-   Gestoria i Wiki»): la Gestoria ix de la Wiki i és una app més, només en
-   desenvolupament (el seu manifest). */
+   Gestoria i Wiki»): la Gestoria ix de la Wiki i és una app més. P0-113
+   (ordre del Mestre, 261111): oberta en producció com la resta, sempre al
+   document propi (dades financeres). */
 import manifestGestoria from '../gestoria/manifest.js';
+/* P0-114 (ordre del Mestre, 261111): l'Arbre Genealògic, privat al dispositiu i
+   sempre al document propi (dades familiars, guarda 'salut'). */
+import manifestGenealogia from '../genealogia/manifest.js';
 import { carregadorDelDocument } from './carregaModul.js';
 import { VERSIO_NUCLI, nucliSatisfa } from './contracteNucli.js';
 import { esIdApp, validaManifestApp } from './manifestApp.js';
 import { tramsSegurs } from './rutesAplicacio.js';
 
 /** Les apps internes, en l'ordre del portal. */
-export const MANIFESTS_INTERNS = Object.freeze([manifestBar, manifestSalut, manifestNevera, manifestLector, manifestGestoria]);
+export const MANIFESTS_INTERNS = Object.freeze([manifestBar, manifestSalut, manifestNevera, manifestLector, manifestGestoria, manifestGenealogia]);
 
 /* Els ids de les apps amb dades sensibles, i les dades que hi van lligades.
    La guarda de document propi (interruptors.js) depén del dadesPersonals
@@ -40,7 +44,7 @@ export const MANIFESTS_INTERNS = Object.freeze([manifestBar, manifestSalut, mani
    el registra: amb un d'estos ids l'ha de declarar igual, mai més fluix. La
    reserva es conserva encara que l'app isca de les internes (fase 2 de
    l'ADR-2026-12). */
-export const DADES_RESERVADES = Object.freeze({ gestoria: 'financeres', salut: 'salut' });
+export const DADES_RESERVADES = Object.freeze({ gestoria: 'financeres', salut: 'salut', genealogia: 'salut' });
 
 function validaInternes(manifests) {
   const valides = [];

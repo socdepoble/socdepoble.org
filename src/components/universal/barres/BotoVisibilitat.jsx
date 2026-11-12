@@ -14,9 +14,9 @@
  */
 import { Globe, Lock } from 'lucide-react';
 
-export function BotoVisibilitat({ publicat = false, icona = null, etiqueta = '', obert = false, onObri }) {
+export function BotoVisibilitat({ publicat = false, icona = null, etiqueta = '', obert = false, popup = 'dialog', onObri }) {
   return (
-    <button type="button" className="btn-icon-orange" aria-haspopup="dialog" aria-expanded={obert}
+    <button type="button" className="btn-icon-orange" aria-haspopup={popup || undefined} aria-expanded={popup ? obert : undefined}
       aria-label={etiqueta} title={etiqueta} onClick={onObri}>
       {icona ? icona : (publicat
         ? <Globe size={16} aria-hidden="true" focusable="false" />

@@ -175,9 +175,11 @@ describe('Baseline 2022 (Safari 16.0, Chrome 100, Firefox 100)', () => {
 });
 
 describe('el manifest i el registre', () => {
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: el literal és d'exclusió. El tros
+     diferit entra al build per defecte i VITE_SDP_APP_NEVERA=0 el trau (desendollable). */
   test('la càrrega va darrere del literal de compilació EXACTE, amb una sola importació dinàmica', () => {
     const manifest = llig(`${APP}/manifest.js`);
-    expect(manifest).toContain("import.meta.env.DEV || import.meta.env.VITE_SDP_APP_NEVERA === '1' ? () => import('./AppNevera.jsx') : null");
+    expect(manifest).toContain("carrega: import.meta.env.VITE_SDP_APP_NEVERA !== '0' ? () => import('./AppNevera.jsx') : null");
     expect(manifest.split('import(').length - 1).toBe(1);
   });
 

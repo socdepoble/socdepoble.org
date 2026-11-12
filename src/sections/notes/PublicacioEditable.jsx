@@ -79,7 +79,7 @@ export function PublicacioEditable({ item }) {
     setEstat((previ) => (previ.clau === nova.id ? { ...previ, nota: nova } : previ));
   }, []);
 
-  const publica = useCallback(async (doc) => {
+  const publica = useCallback(async (doc, opcions) => {
     /* El document visible (també els canvis que encara no han passat pel canal). */
     const actual = doc && String(doc.id) === viva.current.id ? { ...viva.current, ...doc } : viva.current;
     // D-7 · Amb la reserva de només lectura, res (publishNote rebutja igual).
@@ -115,7 +115,9 @@ export function PublicacioEditable({ item }) {
         rebutjadaPelServidor(resultat) ? 'info' : 'success');
       return true;
     }
-    if (MODES_LOCALS.has(base?.config?.dataMode)) return base.publishNote(actual);
+    if (MODES_LOCALS.has(base?.config?.dataMode)) {
+      return opcions?.poble ? base.publishNote(actual, opcions) : base.publishNote(actual);
+    }
     if (!esFilaActualitzable(item)) {
       const motiu = motiuNoActualitzable(item, base?.t);
       showToast(motiu, 'info');
@@ -141,15 +143,16 @@ export function PublicacioEditable({ item }) {
     const { id, revision } = adoptada.current;
     /* La publicació virtual ja ix del Bloc: la selecció passa a la nota. */
     setParams(escriuSeleccio(params, { item: id }, CLAUS_BLOC), { replace: true });
-    return base.publishNote({ ...actual, id, revision, publishedSubmissionId: actual.publishedSubmissionId, isPublished: true });
+    const payloadNota = { ...actual, id, revision, publishedSubmissionId: actual.publishedSubmissionId, isPublished: true };
+    return opcions?.poble ? base.publishNote(payloadNota, opcions) : base.publishNote(payloadNota);
   }, [actor, base, esSuperadmin, inicial, item, params, setParams, showToast]);
 
   /* Revisió final R16a (carril FA) · Només una publicació que acaba bé (cap
      error ni `false`) diu que el Mur té la nota enviada. Si mentrestant s'ha
      tornat a editar, la nota ja és una altra i el botó continua «pendent». */
-  const publicaIMarca = useCallback(async (doc) => {
+  const publicaIMarca = useCallback(async (doc, opcions) => {
     const enviada = viva.current;
-    const resultat = await publica(doc);
+    const resultat = opcions?.poble ? await publica(doc, opcions) : await publica(doc);
     if (resultat) setEstat((previ) => (previ.clau === enviada.id ? { ...previ, alMur: enviada } : previ));
     return resultat;
   }, [publica]);

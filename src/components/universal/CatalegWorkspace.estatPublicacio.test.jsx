@@ -3,7 +3,9 @@ import { cleanup, render, screen } from '@testing-library/react';
 const m = vi.hoisted(() => ({ rows: [], error: null, ownerId: '1d2e3f40-5a6b-4c7d-8e9f-a0b1c2d3e4f5', item: { id: 'timonet', title: 'Timonet', subtitle: '', lead: '' } }));
 vi.mock('./workspace/ProjeccionsCatalegContext.js', () => ({ useProjeccionsCatalegContext: () => ({ projeccions: m.rows, error: m.error, ownerId: m.ownerId, persistent: true, autoritzat: true, desa: vi.fn() }) }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActionsOpcional: () => ({ language: 'ca' }) }));
-vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => () => {}, useSearchParams: () => [new URLSearchParams()], Link: ({ children }) => <a>{children}</a> }));
+/* R19 · Des de R18 CatalegWorkspace.jsx:105 llig useLocation() per a sincronitzaRuta (l'URL de la fitxa
+   oberta); el doble del router l'ha de portar. Ací sincronitzaRuta és false i la ruta no s'usa. */
+vi.mock('../../app/contexts/RouterContext', () => ({ useLocation: () => ({ pathname: '/', search: '' }), useNavigate: () => () => {}, useSearchParams: () => [new URLSearchParams()], Link: ({ children }) => <a>{children}</a> }));
 vi.mock('../layout/AppGridShell.jsx', () => ({ useAppGrid: () => ({ tancaPanells() {} }) }));
 vi.mock('./workspace/UniversalWorkspace.jsx', () => ({ UniversalWorkspace: ({ renderDetail }) => renderDetail({ item: m.item }) }));
 vi.mock('../PedraSeca/index.js', () => ({ UniversalCard: () => null, Boto: ({ children, ...props }) => <button {...props}>{children}</button>,

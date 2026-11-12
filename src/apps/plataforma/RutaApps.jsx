@@ -7,14 +7,16 @@
  *   /app/<id>                  · canonització amb replace a /app/<id>/<entradaPerDefecte>;
  *   /app/<id>/<entrada>/…      · l'app, dins de <Route path="<id>/*">: les seues
  *                                <Routes> són relatives a /app/<id>;
- *   una ruta no segura, una app desconeguda, apagada o sense dret, o una
- *   entrada que no existix · un EstatBuit que ho explica (mai un 404 mut);
+ *   una ruta no segura, una app desconeguda, apagada o que no es pot obrir
+ *   ací, o una entrada que no existix · un EstatBuit que ho explica (mai un
+ *   404 mut);
  *   l'entrada que una app interna ha retirat (ENTRADES_RETIRADES) · replace
  *                                a la que la substituïx (261024: /app/lector/fonts).
  * El títol de la pestanya és el de l'app i mai s'indexa (useSEO, index: false).
  * La sessió de l'arrel entra a l'app per ContenidorApp: passa la font
  * (useFontSessio, fontSessio.js) a ProveidorApp, i el pont (sessioApp.js) la
- * crida si l'app el demana. L'API pública de les apps (index.js) no importa
+ * crida si l'app el demana. Al portal /app, PortalDeLaRuta en pren només el
+ * booleà esSuperadmin (Onada R17). L'API pública de les apps (index.js) no importa
  * mai SessionContext ni IdentitatContext (el perquè, a fontSessio.js).
  * T5 (P1-07, 261024) · Els serveis neutrals de l'app (el de notícies, per al
  * Lector) entren pel mateix camí: ContenidorApp els pren de fontServeis.js,
@@ -51,10 +53,10 @@ function entradaQueLaSubstituix(manifest, slug) {
   return nova && manifest.entrades.some((entrada) => entrada.slug === nova) ? nova : null;
 }
 
+/* P0-113 (ordre del Mestre, 261111) · Tot és gratuït i lliure: cap títol de pagament. */
 const TITOL_ESTAT = Object.freeze({
   disabled: 'Esta app no està activada',
-  unavailable: 'Esta app no es pot obrir ací',
-  unsubscribed: 'Esta app és premium'
+  unavailable: 'Esta app no es pot obrir ací'
 });
 
 function GuardaPermis({ permis, children }) {
@@ -99,6 +101,15 @@ function ContenidorApp({ manifest, entrada }) {
   );
 }
 
+/* Onada R17 (AH-R17-09) · El portal /app, i només ell, llig la font de la sessió: en
+   pren el booleà esSuperadmin (mai el rol cru) per a pintar l'accés als verificadors i
+   a les botigues. RutaApps no la crida: una app que no demana el pont no toca la sessió
+   (sessioApp.test.jsx, «només llig la sessió l’app que crida el pont»). */
+function PortalDeLaRuta() {
+  const { esSuperadmin } = useFontSessio();
+  return <PortalApps esSuperadmin={esSuperadmin} />;
+}
+
 export default function RutaApps() {
   const { pathname } = useLocation();
   const { dins, id, trams } = analitzaRuta(pathname);
@@ -111,7 +122,7 @@ export default function RutaApps() {
   if (trams === null) {
     return <AvisApp titol="Esta adreça no és vàlida">Les adreces de les apps només porten minúscules, xifres i guions.</AvisApp>;
   }
-  if (!id) return <PortalApps />;
+  if (!id) return <PortalDeLaRuta />;
   if (!app) return <AvisApp titol="No coneixem esta app">Este node no té cap app amb este nom.</AvisApp>;
 
   const { manifest, estat, motiu } = app;

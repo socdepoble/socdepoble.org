@@ -1,24 +1,43 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
-import { Camp } from '../../../components/PedraSeca/organismes/formulari.jsx';
+import { Camp, CampText, Selector } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { Link } from '../../../app/contexts/RouterContext.jsx';
+import { useSessioOpcional } from '../../../app/contexts/SessionContext.jsx';
+import { useProjeccionsCataleg } from '../../../hooks/useProjeccionsCataleg.js';
+import { esPaginaTrilogiaIMoliWp } from '../../../data/importacio/paginesTrilogiaIMoliWp.js';
+import { rutaWorkspaceWp } from '../../../data/importacio/destinacionsWorkspaceWp.js';
 import {
   CASOS_US_EDITORIALS,
-  desaRevisioArticleImportat,
+  desaRevisioArticleImportatAmbServidor,
+  desaDestinacioArticleImportat,
+  fontReferenciaArticleImportat,
+  LIMIT_BYTES_IMPORTACIO_EDITORIAL,
   estadistiquesRevisioImportacio,
   lligArticlesImportatsAmbRevisio,
   parsejaBloggerAtomXml,
-  parsejaWordPressWxrXml
+  parsejaWordPressWxrXml,
+  sincronitzaRevisionsEditorialsWpAmbServidor
 } from '../../../utils/transformadorEditorialWpBlogger.js';
 
 const ETIQUETA_ESTAT = Object.freeze({
   pendent_admin: { label: '⏳ Pendent de revisió', to: 'avis' },
-  aprovat: { label: '✅ Aprovat per al Mur', to: 'exit' },
+  aprovat: { label: '✅ Revisió aprovada', to: 'exit' },
   amb_observacions: { label: '📝 Amb observacions', to: 'primari' }
 });
 
+const DESTINACIONS = Object.freeze([
+  { valor: 'mur', etiqueta: 'Mur' },
+  { valor: 'arbres-monumentals', etiqueta: 'Workspace d’Arbres' },
+  { valor: 'herbari', etiqueta: 'Herbari' },
+  { valor: 'receptes', etiqueta: 'Receptes' },
+  { valor: 'pagina', etiqueta: 'Pàgina' }
+]);
+
 export function BancImportacioEditorial() {
+  const sessio = useSessioOpcional();
+  const potPublicar = Boolean(sessio?.currentUser?.id && sessio?.estat === 'dins');
+  const publicacio = useProjeccionsCataleg({ enabled: potPublicar });
   const [versio, setVersio] = useState(0);
   const [cerca, setCerca] = useState('');
   const [filtreEstat, setFiltreEstat] = useState('tots');
@@ -27,11 +46,28 @@ export function BancImportacioEditorial() {
   const [articleSeleccionatId, setArticleSeleccionatId] = useState(null);
   const [notaEdicio, setNotaEdicio] = useState('');
   const [resultatXml, setResultatXml] = useState(null);
+  const [errorXml, setErrorXml] = useState('');
+  const [confirmacioPublica, setConfirmacioPublica] = useState(false);
+  const [publicant, setPublicant] = useState(false);
+  const [missatgeDestinacio, setMissatgeDestinacio] = useState('');
+  const seleccioViva = useRef(null);
+  const lecturaXml = useRef(0);
+  useEffect(() => () => { seleccioViva.current = null; lecturaXml.current += 1; }, []);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const articles = useMemo(() => lligArticlesImportatsAmbRevisio(), [versio]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stats = useMemo(() => estadistiquesRevisioImportacio(), [versio]);
+
+  useEffect(() => {
+    let viu = true;
+    sincronitzaRevisionsEditorialsWpAmbServidor().then((res) => {
+      if (viu && res?.sincronitzat) setVersio((v) => v + 1);
+    });
+    return () => {
+      viu = false;
+    };
+  }, []);
 
   const articlesFiltrats = useMemo(() => {
     const q = cerca.trim().toLowerCase();
@@ -58,11 +94,15 @@ export function BancImportacioEditorial() {
     () => articles.find((a) => a.wp_id === articleSeleccionatId) || visibles[0] || null,
     [articles, articleSeleccionatId, visibles]
   );
+  seleccioViva.current = seleccionat ? `${seleccionat.wp_id}:${seleccionat.destinacio_workspace}` : null;
 
   const canviaEstatArticle = (wpId, estat, nota = undefined) => {
-    desaRevisioArticleImportat(wpId, {
+    const item = articles.find((a) => a.wp_id === wpId);
+    void desaRevisioArticleImportatAmbServidor(wpId, {
       estat,
-      ...(nota !== undefined ? { nota } : {})
+      ...(nota !== undefined ? { nota } : {}),
+      autoria: item?.author || undefined,
+      desti: item?.destinacio_workspace || item?.verticalProposada || undefined
     });
     setVersio((v) => v + 1);
   };
@@ -70,19 +110,51 @@ export function BancImportacioEditorial() {
   const seleccionaArticle = (art) => {
     setArticleSeleccionatId(art.wp_id);
     setNotaEdicio(art.nota_revisio || '');
+    setConfirmacioPublica(false);
+    setMissatgeDestinacio('');
+  };
+
+  const canviaDestinacio = (destinacio) => {
+    setConfirmacioPublica(false);
+    try {
+      desaDestinacioArticleImportat(seleccionat.wp_id, destinacio);
+      setVersio(v => v + 1);
+      setMissatgeDestinacio('Destinació desada en este navegador.');
+    } catch (error) { setMissatgeDestinacio(error.message); }
+  };
+
+  const publicaReferencia = async () => {
+    if (!potPublicar || !publicacio.autoritzat || !confirmacioPublica || publicant || !seleccionat) return;
+    const clau = seleccioViva.current;
+    setPublicant(true);
+    setMissatgeDestinacio('');
+    try {
+      await publicacio.desa(fontReferenciaArticleImportat(seleccionat), [seleccionat.destinacio_workspace]);
+      if (seleccioViva.current === clau) setMissatgeDestinacio('Referència confirmada pel servidor en la destinació triada.');
+    } catch (error) {
+      if (seleccioViva.current === clau) setMissatgeDestinacio(error?.desatLocal === true
+        ? 'Referència desada en la cua local, pendent de confirmació del servidor.'
+        : 'No s’ha pogut desar la referència. Revisa la connexió i torna-ho a provar.');
+    } finally { if (seleccioViva.current !== null) setPublicant(false); }
   };
 
   const gestionaFitxerXml = async (event) => {
     const file = event.target?.files?.[0];
     if (!file) return;
-    const text = await file.text();
-    const esWxr = text.includes('<wp:post_id>') || text.includes('wordpress.org/export/');
-    const items = esWxr ? parsejaWordPressWxrXml(text) : parsejaBloggerAtomXml(text);
-    setResultatXml({
-      nom: file.name,
-      format: esWxr ? 'WordPress WXR (.xml)' : 'Blogger Atom (.xml)',
-      total: items.length
-    });
+    const lectura = ++lecturaXml.current;
+    setResultatXml(null); setErrorXml('');
+    if (file.size > LIMIT_BYTES_IMPORTACIO_EDITORIAL) {
+      setErrorXml('El fitxer supera el límit de 8 MiB.'); return;
+    }
+    try {
+      const text = await file.text();
+      if (lectura !== lecturaXml.current) return;
+      const esWxr = text.includes('<wp:post_id>') || text.includes('wordpress.org/export/');
+      const items = esWxr ? parsejaWordPressWxrXml(text) : parsejaBloggerAtomXml(text);
+      setResultatXml({ nom: file.name, format: esWxr ? 'WordPress WXR (.xml)' : 'Blogger Atom (.xml)', total: items.length });
+    } catch (error) {
+      if (lectura === lecturaXml.current) setErrorXml(error.message || 'No s’ha pogut llegir el fitxer.');
+    }
   };
 
   return (
@@ -126,8 +198,8 @@ export function BancImportacioEditorial() {
           <div>
             <h3>📂 Ingesta d’arxius d’exportació (WP REST API · WordPress WXR .xml · Blogger Atom .xml)</h3>
             <p className="sdp-muted">
-              A més del catàleg complet de <code>socdepoble.net</code> ja carregat, pots importar qualsevol arxiu{' '}
-              <code>.xml</code> d’exportació de WordPress o dels blogs històrics de Blogger.
+              A més del catàleg de <code>socdepoble.net</code>, pots previsualitzar un fitxer{' '}
+              <code>.xml</code> d’exportació de WordPress o Blogger de fins a 8 MiB.
             </p>
           </div>
           <div>
@@ -145,23 +217,17 @@ export function BancImportacioEditorial() {
         {resultatXml && (
           <p role="status" className="sdp-admin-status-ok">
             ✅ Arxiu <strong>{resultatXml.nom}</strong> processat amb èxit ({resultatXml.format}):{' '}
-            <strong>{resultatXml.total}</strong> entrades transformades a Pedra Seca.
+            <strong>{resultatXml.total}</strong> entrades transformades per a la previsualització.
           </p>
         )}
+        {errorXml && <p role="alert">{errorXml}</p>}
       </section>
 
       <section className="sdp-admin-taxonomia__panel" aria-label="Filtres del banc d'importació">
         <div className="sdp-admin-taxonomia__toolbar">
-          <Camp
-            id="cerca-importacio-wp"
-            etiqueta="Cerca per títol, slug, ID de WordPress, poble o etiqueta"
-            value={cerca}
-            onChange={(e) => {
-              setCerca(e.target.value);
-              setPagina(1);
-            }}
-            placeholder="Ex: aplec, manifest, pedra en sec, benillup, 16893..."
-          />
+          <Camp etiqueta="Cerca per títol, slug, ID de WordPress, poble o etiqueta">
+            <CampText value={cerca} onChange={(e) => { setCerca(e.target.value); setPagina(1); }} />
+          </Camp>
           <div className="sdp-admin-taxonomia__selects">
             <label>
               <span>Estat de revisió</span>
@@ -293,6 +359,29 @@ export function BancImportacioEditorial() {
               <h4>🔍 Fitxa de Revisió · #{seleccionat.wp_id}</h4>
               <p><strong>{seleccionat.title}</strong></p>
               <div className="sdp-admin-editorial-stack" data-testid="inspector-editorial-importacio">
+                <div className="sdp-admin-editorial-bloc">
+                  <h5>Autoria i Custòdia</h5>
+                  <p>
+                    <strong>{seleccionat.author}</strong>
+                    {seleccionat.estudi_tecnic ? ` · ${seleccionat.estudi_tecnic}` : ''}
+                  </p>
+                </div>
+                <div className="sdp-admin-editorial-bloc">
+                  <Camp etiqueta="Destinació de publicació" ajuda="La referència conserva el WP id i el contingut original del corpus.">
+                    <Selector opcions={DESTINACIONS} value={seleccionat.destinacio_workspace}
+                      disabled={publicant} onChange={e => canviaDestinacio(e.target.value)} />
+                  </Camp>
+                  <p><Link to={rutaWorkspaceWp(seleccionat.destinacio_workspace)}>Obri la destinació</Link></p>
+                  <p>La tria i la revisió editorial es guarden en este navegador. Publica la referència per a sincronitzar-la amb el poble.</p>
+                  <label><input type="checkbox" checked={confirmacioPublica} disabled={publicant || !potPublicar || !publicacio.autoritzat}
+                    onChange={e => setConfirmacioPublica(e.target.checked)} /> Accepte publicar el títol, la data i la referència al registre original.</label>
+                  <Boto disabled={publicant || !potPublicar || !publicacio.autoritzat || !confirmacioPublica} onClick={publicaReferencia}>
+                    {publicant ? 'Publicant la referència…' : 'Publica la referència'}
+                  </Boto>
+                  {!potPublicar && <p>Entra amb el teu compte per a publicar una referència.</p>}
+                  {missatgeDestinacio && <p role="status">{missatgeDestinacio}</p>}
+                  {esPaginaTrilogiaIMoliWp(seleccionat.wp_id) && <p><Link to={`/notes?importacioWp=${encodeURIComponent(seleccionat.slug)}`}>Revisa i publica el cos complet al Bloc de notes</Link></p>}
+                </div>
                 <div className="sdp-admin-editorial-bloc">
                   <h5>Ruta Sóc de Poble</h5>
                   <p><Link to={seleccionat.ruta_canonica}><code>{seleccionat.ruta_canonica}</code></Link></p>

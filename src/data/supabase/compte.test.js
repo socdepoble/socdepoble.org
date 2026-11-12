@@ -98,6 +98,13 @@ test('estatBaixa normalitza a camelCase, en objecte o en array', async () => {
   m.rpc.mockResolvedValueOnce([fila]); expect(await estatBaixa()).toEqual(esperat);
   expect(m.rpc.mock.calls[0][0]).toBe('estat_baixa');
 });
+test('estatBaixa reflectix l’inici de la purga física sense exposar rutes ni identitats', async () => {
+  const inici = '2026-11-11T01:00:00Z';
+  m.rpc.mockResolvedValueOnce({ demanada: true, demanada_al: '2026-10-12T01:00:00Z',
+    purga_prevista_al: inici, purga_iniciada_al: inici, nom: 'test/ruta-privada.webp' });
+  expect(await estatBaixa()).toEqual({ demanada: true, demanadaAl: '2026-10-12T01:00:00Z',
+    purgaPrevistaAl: inici, purgaIniciadaAl: inici });
+});
 test('estatBaixa sense baixa torna l’estat buit sencer', async () => {
   m.rpc.mockResolvedValueOnce({ demanada: false, demanada_al: null, purga_prevista_al: null });
   expect(await estatBaixa()).toEqual({ demanada: false, demanadaAl: null, purgaPrevistaAl: null });

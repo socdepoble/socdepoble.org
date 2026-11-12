@@ -93,11 +93,13 @@ const desplaca = (element, y) => act(() => {
 const recorre = (element, posicions) => posicions.forEach((y) => desplaca(element, y));
 const BAIXA = [40, 80, 120, 200, 600, 1200];
 /* La pàgina de /legal (ruta lazy) ja hi és, amb la blava i la taronja que el
-   full mouria: el que es prova és la pàgina de veres, no un visor buit. */
+   full mouria: el que es prova és la pàgina de veres, no un visor buit.
+   La primera importació diferida pot superar el segon de waitFor per defecte.
+   Esperem les dues barres reals abans de comprovar cap gest de scroll. */
 const ambLaPagina = (visor) => waitFor(() => {
   expect(visor.querySelector('.sdp-universal-page-container > header.bar-blue')).not.toBeNull();
   expect(visor.querySelector('.sdp-universal-page-container > section.bar-orange')).not.toBeNull();
-});
+}, { timeout: 5000 });
 
 test('escriptori (1440): el scroll del visor no posa cap atribut ni pinta cap botó (Llei del Píxel)', async () => {
   await munta(1440, async ({ arrel, visor }) => {

@@ -21,7 +21,8 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: () => {} }) }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+/* R19 · Arbitratge del carril (P1) · La fitxa connectada passa per la porta de la plataforma, que llig l'estat de la UI. */
+vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }), useUIState: () => ({ externalConfig: {} }) }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: { id: 'U' } }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => mocks.identitat }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => mocks.mur }));

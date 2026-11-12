@@ -20,6 +20,8 @@ export const CREACIO_ADMINISTRACIO_DEL_PERFIL = Object.freeze({
 const IDS_ADMINISTRACIO = new Set(CREACIO_ADMINISTRACIO_DEL_PERFIL.ids);
 const PLUGIN_DE_L_APLICACIO = Object.freeze({
   gestoria: 'gestoria', rebost: 'rebost', salut: 'salut', genealogia: 'genealogia',
+  /* P0-114 (ordre del Mestre, 261111) · La fitxa de L'Avisador llig la data del seu plugin (Kit R17.2). */
+  avisador: 'avisador',
   'lector-rss': 'rss', tpv: 'tpv',
 });
 

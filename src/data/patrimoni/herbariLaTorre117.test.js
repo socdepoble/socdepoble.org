@@ -36,15 +36,15 @@ describe('R25: parterres derivats dels rètols originals i cerca del punt volat'
   expect(sha).toBe('de1abe6491009c730845fdf5c8dcac01e1d25e0bb8c340c5593a1c0bf0c9985c');expect(lines.filter(heading)).toHaveLength(11);
   const plata=fitxes.find(row=>row.nomValencia==='Ciprer de plata');
   const sourcePlata=captions.find(caption=>normal(caption.text)===normal(plata.nomCientific));
-  expect(sourcePlata.zona).toBe('PARTERRE 1 (BAIX)');expect(plata.zonaCanaleta).toContain(sourcePlata.zona);
+  expect(sourcePlata.zona).toBe('PARTERRE 1 (BAIX)');expect(plata.zonaHerbari).toContain(sourcePlata.zona);
   for(const row of fitxes){
    const matches=captions.filter(caption=>normal(caption.text)===normal(row.nomCientific));expect(matches.length,row.id).toBeGreaterThan(0);
-   const zones=[...new Set(matches.map(caption=>caption.zona))];expect(row.zonesCanaleta,row.id).toEqual(zones);expect(row.zonaCanaleta,row.id).toBe(zones.join(' · '));
-   expect(row.localitzacionsCanaleta,row.id).toEqual(matches.map(caption=>({zona:caption.zona,liniaTitol:caption.liniaTitol,liniaCientific:caption.line})));
+   const zones=[...new Set(matches.map(caption=>caption.zona))];expect(row.zonesHerbari,row.id).toEqual(zones);expect(row.zonaHerbari,row.id).toBe(zones.join(' · '));
+   expect(row.localitzacionsHerbari,row.id).toEqual(matches.map(caption=>({zona:caption.zona,liniaTitol:caption.liniaTitol,liniaCientific:caption.line})));
    expect(row.fontZones.sha256).toBe(sha);expect(row.fontZones.document).toBe('cartells_la_canaleta.txt');expect(row.fontZones.pagina).toBeNull();
-   expect(Object.isFrozen(row.zonesCanaleta)).toBe(true);expect(Object.isFrozen(row.localitzacionsCanaleta)).toBe(true);expect(row.localitzacionsCanaleta.every(Object.isFrozen)).toBe(true);
+   expect(Object.isFrozen(row.zonesHerbari)).toBe(true);expect(Object.isFrozen(row.localitzacionsHerbari)).toBe(true);expect(row.localitzacionsHerbari.every(Object.isFrozen)).toBe(true);
   }
-  const activeZones=new Set(fitxes.flatMap(row=>row.zonesCanaleta));for(const section of ['PARTERRE 1 (BAIX)','PARTERRE 2 (MIG)','PARTERRE 3 (FRUITES DE LA SERRA)','PARTERRE 4 (FONT D’HERBES)'])expect(activeZones.has(section)).toBe(true);
+  const activeZones=new Set(fitxes.flatMap(row=>row.zonesHerbari));for(const section of ['PARTERRE 1 (BAIX)','PARTERRE 2 (MIG)','PARTERRE 3 (FRUITES DE LA SERRA)','PARTERRE 4 (FONT D’HERBES)'])expect(activeZones.has(section)).toBe(true);
  });
  it('la cerca equival sense punt volat, amb punt volat o amb punt simple, sense alterar els noms',()=>{
   for(const [source,plain,dotted]of [['Til·lera','tillera','til.lera'],['Lil·lera','lillera','lil.lera']]){

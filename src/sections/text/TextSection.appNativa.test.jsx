@@ -14,7 +14,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ props: null, seo: vi.fn(), navigate: vi.fn(), toast: vi.fn(), t: (_, alternativa) => alternativa }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+vi.mock('../../app/contexts/UIContext', () => ({ useUIStateOpcional: () => null, useUIActions: () => ({ t: mocks.t }) }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: (...args) => mocks.seo(...args) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => mocks.navigate, Link: 'a' }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));

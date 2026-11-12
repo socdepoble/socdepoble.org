@@ -85,11 +85,12 @@ export function registraAlta(port, factura, { instant, zona, subtle } = {}) {
  *   instant?: number|Date, zona?: string, subtle?: SubtleCrypto }} p
  * @returns {Promise<Readonly<object>>}
  */
-export function registraAnulacio(port, { idEmisor, numSerie, dataExpedicio, motiu, instant, zona, subtle } = {}) {
+export function registraAnulacio(port, { idEmisor, numSerie, dataExpedicio, motiu, instant, zona, subtle, validaVigencia } = {}) {
   const clau = clauFactura({ idEmisor, numSerie, dataExpedicio });
   return afegixALaCadena(port, {
     idEmisor,
     construeix: async (anterior) => {
+      if (validaVigencia) await validaVigencia();
       const alta = (await port.llig({ idEmisor })).find((r) => r.tipusRegistre === 'alta' && clauFactura(r) === clau);
       if (!alta) throw errorAmbCodi('FACTURA_INEXISTENT', `La factura ${numSerie} del ${dataExpedicio} no és al llibre: no es pot anul·lar.`);
       return creaRegistreAnulacio({ alta, anterior, motiu, instant, zona, subtle });

@@ -1,3 +1,4 @@
+import {desglossaDrets,llargariaDe,MAXIM_AUTORIA,MAXIM_DRETS_DESATS,sanejaAutoria} from '../../src/data/dretsAutor.js';
 import {capturaEdicioEditorial} from '../../src/data/editorialPublicada.js';
 import {capturaAdminUsuaris} from '../../src/data/adminUsuaris.js';
 import {validaLotDadesObertes} from '../../src/data/dadesObertesLot.js';
@@ -29,6 +30,11 @@ const fields=(input,mapping)=>{
     if(!Object.hasOwn(mapping,key))fail('unsupported_field');const spec=mapping[key];
     const [column,type,max]=spec;let value=input[key];
     if(type==='text')value=sqlText(text(value,max));
+    else if(type==='copyright'){
+      value=sanejaAutoria(text(value,MAXIM_DRETS_DESATS*2));
+      if(llargariaDe(value)>MAXIM_DRETS_DESATS||llargariaDe(desglossaDrets(value).autoria)>MAXIM_AUTORIA)fail('invalid_text');
+      value=sqlText(value);
+    }
     else if(type==='bool'){if(typeof value!=='boolean')fail('invalid_boolean');value=`${sqlText(value?'true':'false')}::boolean`;}
     else if(type==='uuid')value=maybeUuid(value);
     else if(type==='list'){if(!Array.isArray(value)||value.length>100)value=fail('invalid_list');value=sqlJson(value.map(v=>text(v,200)));}
@@ -39,9 +45,9 @@ const fields=(input,mapping)=>{
   }
   if(!values.length)fail('empty_fields');return values;
 };
-const NOTE={folderId:['folder_id','text',120],title:['title','text',1000],subtitle:['subtitle','text',2000],lead:['lead','text',5000],content:['content','text',512000],copyright:['copyright','text',256],categories:['categories','list'],tags:['tags','list'],heroImage:['hero_image','url'],logoImage:['logo_image','url'],logoImageDark:['logo_image_dark','url'],isPublished:['is_published','bool'],publishedSubmissionId:['published_submission_id','uuid']};
-const PROFILE={full_name:['full_name','text',120],avatar_url:['avatar_url','url'],visibility:['visibility','text',20],town_name:['town_name','text',300],bio:['bio','text',500],is_public:['is_public','bool'],lema:['lema','text',256],presentacio_html:['presentacio_html','text',20000],hero_url:['hero_url','url'],copyright:['copyright','text',256],icon:['icon','text',64]};
-const ORGANIZATION={name:['name','text',120],slug:['slug','text',120],description:['description','text',500],kind:['kind','text',60],parentOrganizationId:['parent_organization_id','uuid'],lema:['lema','text',256],logo_url:['logo_url','url'],visibility:['visibility','text',20],presentacio_html:['presentacio_html','text',20000],hero_url:['hero_url','url'],copyright:['copyright','text',256],town_name:['town_name','text',300]};
+const NOTE={folderId:['folder_id','text',120],title:['title','text',1000],subtitle:['subtitle','text',2000],lead:['lead','text',5000],content:['content','text',512000],copyright:['copyright','copyright'],categories:['categories','list'],tags:['tags','list'],heroImage:['hero_image','url'],logoImage:['logo_image','url'],logoImageDark:['logo_image_dark','url'],isPublished:['is_published','bool'],publishedSubmissionId:['published_submission_id','uuid']};
+const PROFILE={full_name:['full_name','text',120],avatar_url:['avatar_url','url'],visibility:['visibility','text',20],town_name:['town_name','text',300],bio:['bio','text',500],is_public:['is_public','bool'],lema:['lema','text',256],presentacio_html:['presentacio_html','text',20000],hero_url:['hero_url','url'],copyright:['copyright','copyright'],icon:['icon','text',64]};
+const ORGANIZATION={name:['name','text',120],slug:['slug','text',120],description:['description','text',500],kind:['kind','text',60],parentOrganizationId:['parent_organization_id','uuid'],lema:['lema','text',256],logo_url:['logo_url','url'],visibility:['visibility','text',20],presentacio_html:['presentacio_html','text',20000],hero_url:['hero_url','url'],copyright:['copyright','copyright'],town_name:['town_name','text',300]};
 const NOTE_COLUMNS='id,folder_id,title,subtitle,lead,content,copyright,categories,tags,hero_image,logo_image,logo_image_dark,is_published,published_submission_id,revision,status,trashed_at,fitxa,origen,created_at,updated_at';
 const ORG_COLUMNS='id,tenant_id,slug,name,kind,parent_organization_id,lema,description,visibility,created_at,updated_at,logo_url,hero_url,presentacio_html,copyright,town_name';
 const orgJson=alias=>`jsonb_build_object(${ORG_COLUMNS.split(',').map(key=>`${sqlText(key)},${alias}.${key}`).join(',')})`;

@@ -171,6 +171,28 @@
   .sdp-insignia--exit  { background: var(--sdp-exit-fons);  color: var(--sdp-exit-text); }
   .sdp-insignia--avis  { background: var(--sdp-avis-fons);  color: var(--sdp-avis-text); }
   .sdp-insignia--error { background: var(--sdp-error-fons); color: var(--sdp-error-text); }
+  /* Onada R18 (Kit R18.3, P0-101) · Insígnia «En proves · Beta oberta» de les eines amb
+     estat 'proves' del registre de connectors (hui no en porta cap). Cantonades rectes de
+     Pedra Seca i text que embolcalla sense truncar. Dins d'una targeta (.sp-card-labels),
+     la forma la fixa la regla de més avall, darrere de `.sp-card-labels .sp-card-label`. */
+  .sdp-insignia-beta-oberta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 1px solid currentColor;
+    border-radius: 0;
+    background: var(--sdp-avis-fons);
+    color: var(--sdp-avis-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-inline-size: 100%;
+  }
 
   /* ── ALERTA EN LÍNIA (estén el canon sdp-alerta--* de @layer sdp) ── */
   .sdp-alerta {
@@ -275,10 +297,10 @@
     pointer-events: none;
   }
 
-  .sdp-grup { margin: 0 0 var(--sdp-space-5); padding: var(--sdp-space-4); border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-m); }
+  .sdp-grup { min-inline-size: 0; margin: 0 0 var(--sdp-space-5); padding: var(--sdp-space-4); border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-m); }
   .sdp-grup--error { border-color: var(--sdp-error); }
-  .sdp-grup__llegenda { padding: 0 var(--sdp-space-2); }
-  .sdp-grup__cos { display: grid; gap: 0 var(--sdp-space-4); grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+  .sdp-grup__llegenda { max-inline-size: 100%; padding: 0 var(--sdp-space-2); overflow-wrap: anywhere; }
+  .sdp-grup__cos { display: grid; gap: 0 var(--sdp-space-4); grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); }
 
   .sdp-casella { display: flex; align-items: flex-start; gap: var(--sdp-space-3); min-height: var(--sdp-touch-min); padding-block: var(--sdp-space-2); }
   .sdp-casella__control { flex: none; width: var(--sdp-space-6); height: var(--sdp-space-6); margin: 0; accent-color: var(--sdp-accio); cursor: pointer; }
@@ -1010,6 +1032,22 @@
   font-weight: 800;
   letter-spacing: 0.05em;
   white-space: nowrap;
+}
+
+/* Onada R18 (arbitratge del Kit R18.3) · UniversalCard pinta la insígnia de les eines en
+   proves com a <li class="sp-card-label sdp-insignia-beta-oberta"> dins de .sp-card-labels.
+   La regla de dalt (0,2,0) guanyaria a .sdp-insignia-beta-oberta (0,1,0) i hi tornaria
+   l'alçària fixa, la píndola i el nowrap: esta, darrere i amb més pes, deixa la cantonada
+   recta i l'embolcall. Només toca esta etiqueta: les altres no canvien (Llei del Píxel). */
+.sp-card-labels .sp-card-label.sdp-insignia-beta-oberta,
+.sp-card-label.sdp-insignia-beta-oberta {
+  height: auto;
+  min-height: var(--sdp-space-6);
+  border-radius: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  max-inline-size: 100%;
 }
 
 /* D-C (ordre del Mestre del 261004, prompt 261004_0515) · L'etiqueta que es
@@ -1814,6 +1852,50 @@ time.sp-card-calendar-badge:active {
   transform: scale(var(--sdp-escala-premut));
 }
 
+/* P0-107 · SquareBadge Opció 1 (geolocalització): quadrat 128×128 px verd de
+   marca (--sdp-verd, hex 0e662e) amb text blanc (--sdp-sobre-accio, #ffffff:
+   7,10:1 AAA en tots els modes; hover --sdp-verd-hover: 10,38:1 AAA), 3 pisos
+   (📍 + AL MAPA + coordenada curta) i navegació directa a /mapa. */
+.sp-card-calendar-badge[data-tipus="geo"] {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  background-color: var(--sdp-verd);
+  color: var(--sdp-sobre-accio);
+  padding: var(--sdp-space-2);
+}
+.sp-card-calendar-badge__geo-pin {
+  font-size: 2rem;
+  line-height: 1;
+}
+.sp-card-calendar-badge__geo-verb {
+  font-size: var(--sdp-text-meta);
+  font-weight: 800;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: var(--sdp-space-1);
+  text-align: center;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--sdp-sobre-accio);
+}
+.sp-card-calendar-badge__geo-coords {
+  font-stretch: var(--sdp-font-amplada-estreta);
+  font-size: var(--sdp-text-meta);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-top: var(--sdp-space-1);
+  text-align: center;
+  max-width: 100%;
+  color: var(--sdp-sobre-accio);
+}
+@media (hover: hover) and (pointer: fine) {
+  button.sp-card-calendar-badge[data-tipus="geo"]:hover {
+    background-color: var(--sdp-verd-hover);
+  }
+}
+
 /* Ordre del Mestre (261007) · L'emoji XL d'una part sense foto (Vehicle,
    Animalets, Consola, Mapa, Gestoria), en lloc de la icona lineal: 5,5rem
    (88px) amb línia 1, dins dels 124px interiors del quadrat. És decoratiu
@@ -2286,6 +2368,219 @@ section.bar-orange[data-centre="buit"] > .sp-card-author { justify-self: start; 
    tema fosc heretava l'anell general, ≈1,26:1 damunt del taronja (WCAG 2.4.7
    i 1.4.11). El mateix anell que la resta de la barra: el color del text. */
 section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: var(--sdp-sobre-accent); }
+/* ── Onada R19 · BarraTaronja Multi-Entitat Registrada i Traspàs Inline ── */
+section.bar-orange[data-copublicacio="composta"] {
+  container-type: inline-size;
+  container-name: barra-taronja;
+}
+.sp-card-author--compost {
+  display: flex;
+  align-items: center;
+  gap: var(--sdp-space-2);
+  min-width: 0;
+}
+.sdp-avatar-compost-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: var(--sdp-touch);
+  min-height: var(--sdp-touch);
+  color: var(--sdp-sobre-accent);
+  text-decoration: none;
+}
+.sdp-avatar-compost-link:focus-visible {
+  outline: var(--sdp-focus-gruix) solid var(--sdp-sobre-accent);
+  outline-offset: var(--sdp-focus-separacio);
+}
+.sdp-avatar-compost {
+  width: var(--sdp-touch);
+  height: var(--sdp-touch);
+  border-radius: 0;
+  padding: 0;
+  overflow: hidden;
+  display: grid;
+  gap: var(--sdp-space-1);
+  background-color: var(--sdp-fons-targeta);
+  border: 2px solid var(--sdp-sobre-accent);
+  box-sizing: border-box;
+}
+.sdp-avatar-compost--2 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+.sdp-avatar-compost--3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.sdp-avatar-compost--3 > .sdp-avatar-compost__cella[data-cella="1"] {
+  grid-row: 1 / span 2;
+}
+.sdp-avatar-compost--4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.sdp-avatar-compost__cella {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: var(--sdp-fons-invers);
+  color: var(--sdp-text-invers);
+}
+.sdp-avatar-compost__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 0;
+}
+.sdp-avatar-compost__inicial,
+.sdp-avatar-compost__cella--mes,
+.sdp-avatar-compost__mes {
+  font-family: var(--sdp-font);
+  font-stretch: var(--sdp-font-amplada-estreta);
+  font-size: var(--sdp-ui-sm);
+  font-weight: var(--sdp-pes-extra);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--sdp-text-invers);
+}
+.sp-card-author-info--compost {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.sdp-copublicadors-llista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sdp-space-1);
+  row-gap: 0;
+  min-width: 0;
+}
+.sdp-copublicador-item {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+.sdp-copublicador-sep {
+  color: var(--sdp-sobre-accent);
+  font-weight: var(--sdp-pes-negreta);
+  padding-inline: var(--sdp-space-1);
+  flex-shrink: 0;
+}
+.sdp-copublicador-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sdp-touch);
+  padding-inline: 0;
+  color: var(--sdp-sobre-accent);
+  font-weight: var(--sdp-pes-negreta);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sdp-copublicador-link:focus-visible {
+  outline: var(--sdp-focus-gruix) solid var(--sdp-sobre-accent);
+  outline-offset: var(--sdp-focus-separacio);
+}
+.sdp-copublicadors-pobles {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@container barra-taronja (max-width: 280px) {
+  .sdp-copublicadors-pobles {
+    display: none;
+  }
+  .sdp-copublicador-link {
+    font-family: var(--sdp-font);
+    font-stretch: var(--sdp-font-amplada-estreta);
+    font-size: var(--sdp-ui-sm);
+  }
+}
+@container barra-taronja (min-width: 281px) and (max-width: 380px) {
+  .sdp-copublicador-link {
+    font-family: var(--sdp-font);
+    font-stretch: var(--sdp-font-amplada-estreta);
+  }
+}
+@container barra-taronja (min-width: 520px) {
+  .sp-card-author--compost {
+    gap: var(--sdp-space-3);
+  }
+}
+@container barra-taronja (min-width: 960px) {
+  .sdp-copublicadors-llista {
+    flex-wrap: nowrap;
+  }
+}
+
+.sdp-traspas-inline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-4);
+  padding: var(--sdp-space-6);
+  margin-block: var(--sdp-space-4);
+  background-color: var(--sdp-fons-targeta);
+  border: 1px solid var(--sdp-vora);
+  border-radius: var(--sdp-radi-m);
+  color: var(--sdp-text-cos);
+}
+.sdp-traspas-inline__cap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-1);
+}
+.sdp-traspas-inline__titol {
+  margin: 0;
+  color: var(--sdp-text-titol);
+  font-size: var(--sdp-text-h6);
+  font-weight: var(--sdp-pes-negreta);
+}
+.sdp-traspas-inline__resum {
+  margin: 0;
+  color: var(--sdp-text-cos);
+  line-height: var(--sdp-leading-cos);
+}
+.sdp-traspas-inline__camps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-4);
+}
+.sdp-traspas-inline__previsualitzacio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-2);
+}
+.sdp-traspas-inline__subtitol {
+  margin: 0;
+  color: var(--sdp-text-titol);
+  font-size: var(--sdp-text-small);
+  font-weight: var(--sdp-pes-negreta);
+}
+.sdp-traspas-inline__accions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sdp-space-3);
+  padding-top: var(--sdp-space-1);
+}
 /* T51 · La caputxa de la targeta (CardHeader) només porta espai central quan
    hi ha una emoticona triada (lectura: mai la ploma). Sense, el flex de
    sempre (Llei del Píxel); amb, la mateixa graella que la barra. */
@@ -3212,8 +3507,212 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .sdp-universal-page-container > .sdp-pagina-despres-autoria > .sdp-edicio-avancada {
     margin-block: 0;
   }
+  .sdp-universal-page-container > .sdp-pagina-despres-autoria > .sdp-visibilitat-linia + .sdp-edicio-avancada {
+    margin-block-start: var(--sdp-space-4);
+  }
   .sdp-universal-page-container > .sdp-pagina-despres-autoria + header.page-title {
     padding-block-start: var(--sdp-space-5);
+  }
+
+  /* Onada R20 (Bucle 1 · Cas Damià Llorens) · Panell Pedra Seca en línia a
+     /notes per controlar si la nota és esborrany privat o pública al Mur, amb
+     selector multi-poble, zero modals flotants i estats Blau Publicar / Verd Publicat. */
+  .sdp-visibilitat-linia {
+    container-type: inline-size;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-inline-start: var(--sdp-space-1) solid var(--sdp-accio);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    scroll-margin-block-start: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
+  }
+  .sdp-visibilitat-linia:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-space-1);
+  }
+  .sdp-visibilitat-linia__cap {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+  .sdp-visibilitat-linia__ploma {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-space-10);
+    block-size: var(--sdp-space-10);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-visibilitat-linia__titular {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+  }
+  .sdp-visibilitat-linia__titol {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  @container (max-width: 16.25rem) {
+    .sdp-visibilitat-linia {
+      padding: var(--sdp-space-3);
+    }
+    .sdp-visibilitat-linia__cap {
+      flex-wrap: wrap;
+    }
+  }
+  .sdp-visibilitat-linia__signatura {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-visibilitat-linia__motiu {
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-visibilitat-linia__grup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-inline-size: 0;
+  }
+  @container (min-width: 34rem) {
+    .sdp-visibilitat-linia__grup {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .sdp-visibilitat-linia__opcio {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sdp-space-3);
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    cursor: pointer;
+    min-inline-size: 0;
+  }
+  .sdp-visibilitat-linia__opcio--activa {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-visibilitat-linia__opcio--bloquejada {
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-desactivat);
+    cursor: not-allowed;
+  }
+  .sdp-visibilitat-linia__opcio--bloquejada .sdp-visibilitat-linia__opcio-titol,
+  .sdp-visibilitat-linia__opcio--bloquejada .sdp-visibilitat-linia__opcio-ajuda {
+    color: var(--sdp-text-desactivat);
+  }
+  .sdp-visibilitat-linia__opcio > input[type="radio"] {
+    flex: none;
+    inline-size: var(--sdp-space-5);
+    block-size: var(--sdp-space-5);
+    margin: var(--sdp-space-1) 0 0;
+    accent-color: var(--sdp-accio-control);
+  }
+  .sdp-visibilitat-linia__opcio:focus-within {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-visibilitat-linia__opcio-cos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+  }
+  .sdp-visibilitat-linia__opcio-titol {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  .sdp-visibilitat-linia__opcio-ajuda {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+  .sdp-visibilitat-linia__poble {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+  }
+  .sdp-visibilitat-linia__select {
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-family: inherit;
+    font-size: var(--sdp-text-base);
+    font-weight: 600;
+  }
+  .sdp-visibilitat-linia__select:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-visibilitat-linia__avis {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-visibilitat-linia__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+    padding-block-start: var(--sdp-space-1);
+  }
+  .sdp-visibilitat-linia__boto,
+  .sdp-visibilitat-linia__enllac {
+    min-block-size: var(--sdp-touch);
+    padding-inline: var(--sdp-space-5);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    font-weight: 700;
+    text-align: center;
+  }
+  .sdp-visibilitat-linia__boto--publicar {
+    background: var(--sdp-accio-control);
+    border-color: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-visibilitat-linia__boto--publicar:hover:not(:disabled) {
+      background: var(--sdp-accio-control-hover);
+      border-color: var(--sdp-accio-control-hover);
+    }
+  }
+  .sdp-visibilitat-linia__boto--publicat {
+    background: var(--sdp-exit);
+    border-color: var(--sdp-exit);
+    color: var(--sdp-sobre-color);
+    cursor: default;
   }
   .sdp-edicio-avancada__resum {
     display: flex;

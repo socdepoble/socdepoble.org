@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => mocks.identitat }));
 vi.mock('../../app/contexts/RouterContext', () => ({
+  useLocation: () => ({ search: '' }),
   useParams: () => ({ agentId: mocks.id }),
   useNavigate: () => mocks.navigate
 }));

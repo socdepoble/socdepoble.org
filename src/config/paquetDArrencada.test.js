@@ -211,7 +211,7 @@ const DIFERITS = [
   /* Onada R14 · El receptari «Què dinem?»: les dades (149 receptes, ~205 KB), les dues seccions i els seus textos
      en 5 llengües només es baixen a /page/receptes i a /receptes/:slug (les claus de la interfície són al
      diccionari valencià, que és un tros d'arrencada propi i no compta en l'entrada). */
-  'src/data/patrimoni/queDinem.js',
+  'src/data/patrimoni/queDinem.js', 'src/data/menjarIBeure/alergensQueDinem.js',
   'src/sections/patrimoni/ReceptesQueDinemSection.jsx', 'src/sections/patrimoni/ReceptaDetailSection.jsx',
   'src/sections/patrimoni/cercaReceptes.js', 'src/sections/patrimoni/CreditsQueDinem.jsx', 'src/sections/text/pageContent.patrimoniR14.js'
 ];

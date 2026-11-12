@@ -8,7 +8,8 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children),
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: () => {} }) }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_key, fallback) => fallback }) }));
+/* R19 · Arbitratge del carril (P1) · La fitxa connectada passa per la porta de la plataforma, que llig l'estat de la UI. */
+vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_key, fallback) => fallback }), useUIState: () => ({ externalConfig: {} }) }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: { id: 'U' } }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: { tipus: 'persona', id: 'U', nom: 'Pep' } }) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ status: 'ready', feedPosts: [], events: [], marketItems: [] }) }));
@@ -27,6 +28,8 @@ const datesApps = [
   ['rebost', ['00:15', '04/10/26'], '2026-10'],
   ['salut', ['00:15', '04/10/26'], '2026-10'],
   ['genealogia', ['00:15', '04/10/26'], '2026-10'],
+  /* P0-114 (ordre del Mestre, 261111) · L'Avisador, amb la data del seu plugin (Kit R17.2). */
+  ['avisador', ['00:30', '11/11/26'], '2026-11'],
   ['lector-rss', ['00:15', '04/10/26'], '2026-10'],
   ['tpv', ['00:15', '04/10/26'], '2026-10'],
   ['snippet', ['03/10/26'], '2026-10'],

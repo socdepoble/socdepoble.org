@@ -40,7 +40,49 @@ const autoriaDeLaPersona = (persona) => ({
 });
 
 import { useState, useEffect } from 'react';
+import { useUIActions } from '../../app/contexts/UIContext';
+import { textDelMotiu } from '../../apps/plataforma/PortalApps.jsx';
+import { useDestiDelPlugin } from '../plugins/useDestiDelPlugin.js';
+import { pluginPerId } from '../plugins/registrePlugins.js';
 import { desaUtilitatActiva, estaAlPanell, subscriuUtilitatsActives } from './utilitatsActives.js';
+
+/* R19 · Arbitratge del carril Genealogia + Perfil (P1) · Una utilitat que este
+   build porta ('connectada', aplicacions.js) passa, ARA i ACÍ, per la mateixa
+   porta que la pàgina del seu plugin: useDestiDelPlugin, amb els interruptors
+   de la plataforma (build, entorn, amfitrió, persona i document propi).
+   Només si s'obri pinta «Connectada en este node» i el seu «Obrir …». Si no,
+   «No disponible ací» i el motiu amb el text de la plataforma (textDelMotiu),
+   el mateix de /plugin/<id>, del portal /app i de RutaApps: cap enllaç que
+   acabe en un avís, i cap promesa de connexió que no arribarà. Abans, només
+   el build: el Perfil deia «Connectada» i enllaçava una app que la persona
+   havia desactivada o que l'amfitrió no havia encesa. La ruta és la de la
+   fitxa (la de la targeta del Panell): una ruta que no és d'una app
+   (/page/avisador, /control?fitxa=snippet) s'obri sempre. */
+/* R19 · Loop 1 · El text de l'enllaç és el botó del seu plugin (registrePlugins.js,
+   etiquetaObrir: «Obrir l’Avisador», «Obrir l’Arbre Genealògic»), el mateix de
+   /plugin/<id>. Una utilitat sense plugin (el Snippet o la d'un node federat)
+   conserva «Obrir <nom>». */
+function EstatDeLaConnectada({ aplicacio }) {
+  const { t } = useUIActions();
+  const desti = useDestiDelPlugin({ obrir: aplicacio.ruta });
+  if (desti.ruta) {
+    return (
+      <>
+        <p className="perfil-ajust__valor">{ESTATS_APLICACIO.connectada}</p>
+        <p className="perfil-compte__text">
+          <Link to={desti.ruta}>{pluginPerId(aplicacio.panell)?.etiquetaObrir || `Obrir ${aplicacio.nom}`}</Link>
+        </p>
+      </>
+    );
+  }
+  const motiu = textDelMotiu(desti.motiu, t);
+  return (
+    <>
+      <p className="perfil-ajust__valor">{ESTATS_APLICACIO.noDisponible}</p>
+      {motiu ? <p className="perfil-compte__text">{motiu}</p> : null}
+    </>
+  );
+}
 
 /* T51 / P0-54 · La configuració local reutilitza les dates canòniques de
    plugins, Snippet i PAGE_COPY. Les fitxes federades aporten les seues;
@@ -81,7 +123,6 @@ export function DetallAplicacio({ aplicacio }) {
 
   if (!aplicacio) return null;
   const connectada = aplicacio.estat === 'connectada' && Boolean(aplicacio.ruta);
-  const estat = connectada ? ESTATS_APLICACIO.connectada : ESTATS_APLICACIO.pendent;
 
   return (
     <UniversalPage
@@ -95,15 +136,13 @@ export function DetallAplicacio({ aplicacio }) {
     >
       <div className="perfil-compte">
         <Bloc titol="Estat">
-          <p className="perfil-ajust__valor">{estat}</p>
-          {connectada ? (
-            <p className="perfil-compte__text">
-              <Link to={aplicacio.ruta}>{`Obrir ${aplicacio.nom}`}</Link>
-            </p>
-          ) : (
-            <p className="perfil-compte__text">
-              Esta utilitat encara no té secció en este node. Quan s’hi connecte, s’obrirà des d’ací mateix.
-            </p>
+          {connectada ? <EstatDeLaConnectada aplicacio={aplicacio} /> : (
+            <>
+              <p className="perfil-ajust__valor">{ESTATS_APLICACIO.pendent}</p>
+              <p className="perfil-compte__text">
+                Esta utilitat encara no té secció en este node. Quan s’hi connecte, s’obrirà des d’ací mateix.
+              </p>
+            </>
           )}
         </Bloc>
 

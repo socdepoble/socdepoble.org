@@ -35,8 +35,9 @@ describe('Canonical editorial detail with an explicit calculation layer', () => 
     expect(screen.queryByRole('region', { name: 'Escandall i connexions de la recepta' })).toBeNull();
     expect(m.carrega).not.toHaveBeenCalled(); expect(m.cultura).not.toHaveBeenCalled();
     expect(guarda).not.toHaveBeenCalled(); expect(xarxa).not.toHaveBeenCalled();
-    // Onada R15 (P3-4) · Sense commutador: la làmina és la capçalera des del principi i el vídeo, un bloc amb façana.
-    expect(container.querySelector('.sdp-recepta__lamina img').getAttribute('src')).toBe(r.lamina);
+    // Onada R17 (AH-R17-05) · La làmina és el heroImage d'UniversalPage (sense duplicat inline) i el vídeo, un bloc amb façana.
+    expect(container.querySelector('.hero-image img').getAttribute('src')).toBe(r.lamina);
+    expect(container.querySelector('.sdp-recepta__lamina')).toBeNull();
     expect(container.querySelector('iframe')).toBeNull();
     expect(r.lamina).toMatch(/^\/assets\/uploads\//);
     expect(JSON.parse(screen.getByTestId('ubicacio').textContent)).toMatchObject({ pathname: '/receptes/pa-rustic', state: null });
@@ -75,10 +76,12 @@ describe('Canonical editorial detail with an explicit calculation layer', () => 
 });
 
 /* Onada R15 (P1-02, R15-REG-06, P2-04) · La capa de compra va amb la Nevera: la mateixa porta de compilació que
-   src/apps/nevera/manifest.js. Cada cas avalua una instància nova de la pàgina (consulta pròpia a l'especificador)
-   amb l'entorn del build que simula; React, el router i els mocks són els mateixos. */
-describe('the purchase layer ships only with the Nevera build flag (VITE_SDP_APP_NEVERA)', () => {
-  const PORTA = "import.meta.env.DEV || import.meta.env.VITE_SDP_APP_NEVERA === '1'";
+   src/apps/nevera/manifest.js. P0-113 (ordre del Mestre, 261111): la Nevera és oberta per defecte i la porta és
+   d'exclusió; amb VITE_SDP_APP_NEVERA=0 la capa no arriba ni al build ni a la pàgina. Cada cas avalua una
+   instància nova de la pàgina (consulta pròpia a l'especificador) amb l'entorn del build que simula; React, el
+   router i els mocks són els mateixos. */
+describe('the purchase layer ships with the Nevera and leaves with it (VITE_SDP_APP_NEVERA=0)', () => {
+  const PORTA = "import.meta.env.VITE_SDP_APP_NEVERA !== '0'";
   const paginaAmb = async (entorn, consulta) => {
     for (const [nom, valor] of Object.entries(entorn)) vi.stubEnv(nom, valor);
     const { default: Pagina } = await import(/* @vite-ignore */ `./ReceptaDetailSection.jsx?${consulta}`);
@@ -96,9 +99,22 @@ describe('the purchase layer ships only with the Nevera build flag (VITE_SDP_APP
     expect(readFileSync('src/apps/nevera/manifest.js', 'utf8')).toContain(`carrega: ${PORTA} ? () => import('./AppNevera.jsx') : null`);
   });
 
-  it('public build without the flag: the recipe page is R14 again, with no button, no motor and no catalogue', async () => {
-    const { container } = await paginaAmb({ DEV: false, VITE_SDP_APP_NEVERA: undefined }, 'publica');
-    await screen.findByRole('group', { name: 'Tria què vols vore' });
+  it('public build by default (no flag, outside DEV): the motor is there, behind the button, as a deferred chunk', async () => {
+    const { container } = await paginaAmb({ DEV: false, VITE_SDP_APP_NEVERA: undefined }, 'publica-per-defecte');
+    await screen.findByRole('tablist', { name: 'Tria què vols vore' });
+    // Res no es carrega fins que la persona ho demana: ni el motor ni el catàleg.
+    expect(screen.queryByRole('region', { name: 'Escandall i connexions de la recepta' })).toBeNull();
+    expect(m.carrega).not.toHaveBeenCalled();
+    expect(container.textContent).not.toMatch(/no està disponible/i);
+    fireEvent.click(screen.getByRole('button', { name: 'Calcula i prepara la compra' }));
+    const motor = within(await screen.findByRole('region', { name: 'Escandall i connexions de la recepta' }));
+    await within(motor.getByLabelText('Producte per a 1 kg de farina de força')).findByRole('option', { name: /Farina · Fixture/ });
+    expect(m.carrega).toHaveBeenCalledTimes(1);
+  });
+
+  it('with VITE_SDP_APP_NEVERA=0 the recipe page is R14 again, with no button, no motor and no catalogue', async () => {
+    const { container } = await paginaAmb({ DEV: false, VITE_SDP_APP_NEVERA: '0' }, 'nevera-desendollada');
+    await screen.findByRole('tablist', { name: 'Tria què vols vore' });
     expect(screen.queryByRole('button', { name: 'Calcula i prepara la compra' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Prepara una compra amb esta recepta' })).toBeNull();
     // Onada R15b (RV-03) · La proposta d'al·lèrgens hi és, però sense línia d'escandall: el DOM sencer es torna a mirar.
@@ -108,7 +124,7 @@ describe('the purchase layer ships only with the Nevera build flag (VITE_SDP_APP
     expect(m.carrega).not.toHaveBeenCalled();
   });
 
-  it('with VITE_SDP_APP_NEVERA=1 the motor works as in the kit', async () => {
+  it('with VITE_SDP_APP_NEVERA=1 (the old opt-in value) the motor still works as in the kit', async () => {
     await paginaAmb({ DEV: false, VITE_SDP_APP_NEVERA: '1' }, 'nevera');
     fireEvent.click(screen.getByRole('button', { name: 'Calcula i prepara la compra' }));
     const motor = within(await screen.findByRole('region', { name: 'Escandall i connexions de la recepta' }));

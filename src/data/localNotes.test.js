@@ -49,6 +49,17 @@ test('a new adapter restores notes and copyright without a server or session', a
     expect(fetch).not.toHaveBeenCalled();
   } finally { fetch.mockRestore(); }
 });
+test('guarda l’autoria de 256 caràcters sense tallar-la en crear o actualitzar una nota', async () => {
+  const adapter = createLocalNotesAdapter(memoryDisk());
+  const copyright = `CC BY-NC-SA 4.0 ${'é'.repeat(255)}😀`;
+  const note = await adapter.create({ title: 'Autoria', copyright }, config);
+  expect(note.copyright).toBe(copyright);
+  const reservats = `© ${'é'.repeat(255)}😀`;
+  expect((await adapter.update(note.id, { copyright: reservats }, 0, config)).copyright).toBe(reservats);
+  await expect(adapter.update(note.id, { copyright: reservats + 'x' }, 1, config)).rejects.toThrow(/256/);
+  expect((await adapter.load(getDefaultUserId(), config)).notes[0].copyright).toBe(reservats);
+});
+
 test('a stale revision cannot overwrite another tab and tenants do not share notes', async () => {
   const adapter = createLocalNotesAdapter(memoryDisk());
   const note = await adapter.create({ title: 'Original' }, config);

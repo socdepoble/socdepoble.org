@@ -20,7 +20,7 @@ const CLASSE_EMOJI_XL = `${CLASSE_INICIAL} sdp-fitxa-emoji-xl`;
    (#sdp-crop=, que el port conserva) ensenya el que ensenyava el retall
    d'abans en el seu quadrat (useEnquadramentDeImatge, la caixa mesurada).
    Sense fragment, l'<img> de sempre. */
-function ResolvedImage({ src, fallback }) {
+function ResolvedImage({ src, fallback, imageAlt = '' }) {
   const [failed, setFailed] = useState(false);
   const pintor = useEnquadramentDeImatge(src, { caixa: 'mesura' });
 
@@ -31,7 +31,7 @@ function ResolvedImage({ src, fallback }) {
       ref={pintor.ref}
       className={ambClassesDelMarc('sdp-gestor-fitxa__imatge', pintor.className)}
       src={pintor.src}
-      alt=""
+      alt={imageAlt}
       loading="lazy"
       onLoad={pintor.onLoad}
       onError={() => setFailed(true)}
@@ -53,7 +53,8 @@ export function ItemMedia({
   titleFallback,
   categoryGlyph = null,
   className = '',
-  assetScopeKey = ''
+  assetScopeKey = '',
+  imageAlt = ''
 }) {
   const assetRef = typeof item?.image === 'string'
     ? item.image.trim()
@@ -90,13 +91,14 @@ export function ItemMedia({
   return (
     <span
       className={`sdp-gestor-fitxa__media ${className}`.trim()}
-      aria-hidden="true"
+      aria-hidden={imageAlt ? undefined : 'true'}
       data-asset-status={status}
     >
       {status === 'ready' && url ? (
         <ResolvedImage
           key={JSON.stringify([assetScopeKey, assetRef, url])}
           src={url}
+          imageAlt={imageAlt}
           fallback={fallback}
         />
       ) : fallback}

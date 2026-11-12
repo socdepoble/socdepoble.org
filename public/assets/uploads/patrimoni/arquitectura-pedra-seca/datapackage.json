@@ -1,0 +1,9 @@
+{
+  "profile": "tabular-data-package",
+  "name": "socdepoble-patrimoni-arquitectura-pedra-seca",
+  "title": "Arquitectura de Pedra Seca i Patrimoni Hidràulic",
+  "version": "1.0.0",
+  "skos_concept": "TX.41",
+  "isadg_level": "series",
+  "colleccions": []
+}

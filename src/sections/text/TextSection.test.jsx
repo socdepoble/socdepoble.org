@@ -11,7 +11,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ props: null, seo: vi.fn(), t: (_, alternativa) => alternativa }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+vi.mock('../../app/contexts/UIContext', () => ({ useUIStateOpcional: () => null, useUIActions: () => ({ t: mocks.t }) }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: (...args) => mocks.seo(...args) }));
 /* La pàgina, reduïda al que rep: les props sense els fills, i els fills pintats. */
 vi.mock('../../components/universal/UniversalPage', () => ({

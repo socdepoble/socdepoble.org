@@ -12,7 +12,7 @@
 import { projeccioCatalegDe } from './projeccionsCataleg.js';
 import { objecteDe } from '../config/navigation.js';
 
-export const FONTS_CANONIQUES_CATALEG = Object.freeze(['herbari', 'llavors', 'receptes']);
+export const FONTS_CANONIQUES_CATALEG = Object.freeze(['herbari', 'llavors', 'receptes', 'importacio-wp']);
 
 const fitxa = (title, subtitle, lead) => Object.freeze({ title: String(title), subtitle: subtitle ? String(subtitle) : '', lead: lead ? String(lead) : '' });
 /* El primer id guanya, com a la llista del catàleg. */
@@ -23,6 +23,11 @@ const perId = (parells) => {
 };
 
 const CARREGADORS = Object.freeze({
+  'importacio-wp': async () => {
+    const { ARTICLES_SIMULADOR_IA_425 } = await import('./taxonomia/tesaurusDoctoralSocDePoble.js');
+    return perId(ARTICLES_SIMULADOR_IA_425.map(article => [String(article.id),
+      fitxa(article.title, `socdepoble.net · WP #${article.id}`, article.date || '')]));
+  },
   herbari: async (llengua) => {
     const [{ modelHerbariWorkspace }, { textosHerbari }] = await Promise.all([
       import('../sections/patrimoni/modelHerbariWorkspace.js'), import('../sections/patrimoni/textosHerbari.js')]);

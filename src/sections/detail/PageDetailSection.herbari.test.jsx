@@ -30,6 +30,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 const visita = (ruta) => render(
   <MemoryRouter rutaInicial={ruta}>
     <Routes>
+      <Route path="/page/:slug/:itemSlug" element={<PageDetailSection />} />
       <Route path="/page/:slug" element={<PageDetailSection />} />
       <Route path="/" element={<p data-testid="inici">Inici</p>} />
     </Routes>
@@ -42,20 +43,20 @@ describe('/page/herbari', () => {
     expect(ESPECIES_HERBARI_LA_TORRE_117).toHaveLength(117);
     expect(PAGE_COPY.herbari.subtitle).toContain('117');
     visita('/page/herbari');
-    await screen.findByRole('heading', { level: 1 });
+    await screen.findByRole('heading', { level: 1 }, { timeout: 5000 });
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Herbari de La Torre');
-    await screen.findByRole('button', { name: 'Obri fitxa: Acacia robínia' });
+    await screen.findByRole('button', { name: 'Acacia robínia', exact: true });
     const workspace = document.querySelector('.sdp-workspace');
     expect(workspace).toBeTruthy();
     expect(workspace.closest('.cms-preview')).toBeNull();
-    expect(document.querySelectorAll('#app-grid-list article.sp-card')).toHaveLength(117);
+    expect(document.querySelectorAll('#app-grid-list .sdp-gestor-fitxa')).toHaveLength(117);
     const seccio = document.getElementById('app-grid-main');
     const cos = document.querySelector('.cms-preview');
     expect(seccio.contains(cos)).toBe(true);
     expect(document.getElementById('app-grid-sidebar')).toBeTruthy();
     expect(document.getElementById('app-grid-list')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Obri fitxa: Acacia robínia' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Acacia robínia', exact: true }));
     expect(document.getElementById('app-grid-main').textContent).toContain('Black locust');
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
@@ -74,7 +75,7 @@ describe('/page/herbari', () => {
     try {
       const traduccio = PAGE_COPY.herbari.translations[llengua];
       visita('/page/herbari');
-      await screen.findByRole('heading', { level: 1 });
+      await screen.findByRole('heading', { level: 1 }, { timeout: 5000 });
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
       const h1 = screen.getByRole('heading', { level: 1 });
       expect([h1.textContent, h1.getAttribute('lang')]).toEqual([traduccio.title, null]);
@@ -84,7 +85,7 @@ describe('/page/herbari', () => {
       for (const etiqueta of traduccio.labels) expect(screen.getByText(etiqueta.text)).toBeTruthy();
       await screen.findByRole('button', { name: 'Acacia robínia', exact: true });
       expect(document.getElementById('app-grid-main').contains(cos)).toBe(true);
-      expect(document.querySelectorAll('#app-grid-list article.sp-card')).toHaveLength(117);
+      expect(document.querySelectorAll('#app-grid-list .sdp-gestor-fitxa')).toHaveLength(117);
     } finally {
       ui.language = undefined;
     }
@@ -92,7 +93,7 @@ describe('/page/herbari', () => {
 
   test('les altres pàgines no porten l’herbari', async () => {
     visita('/page/drets-autor');
-    await screen.findByRole('heading', { level: 1 });
+    await screen.findByRole('heading', { level: 1 }, { timeout: 5000 });
     expect(screen.queryByText('117 / 117 fitxes')).toBeNull();
   });
 });

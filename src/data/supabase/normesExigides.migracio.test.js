@@ -232,7 +232,8 @@ test('el PATCH directe: les columnes de la porta són tot el contingut de sectio
   expect(SENSE_ESPAIS(f.cos)).not.toContain('private.ha_acceptat_normes(');
 
   /* Les escriptures SECURITY DEFINER vigents de section_submissions (demana_baixa
-     i cancela_baixa, 2609291200) passen per la propietària: no les para la porta. */
+     i cancela_baixa, 2609291200, quan naix la porta) passen per la propietària:
+     no les para la porta. */
   for (const nom of ['demana_baixa', 'cancela_baixa']) {
     const fitxer = ORDRE.slice(0, ORDRE.indexOf(NOM)).filter((x) => new RegExp(`create\\s+or\\s+replace\\s+function\\s+public\\.${nom}\\s*\\(`, 'i').test(llig(x))).at(-1);
     expect(fitxer, nom).toBe('2609291200_baixa_icon_copyright.sql');
@@ -240,9 +241,31 @@ test('el PATCH directe: les columnes de la porta són tot el contingut de sectio
     expect(vigent.capcalera, nom).toContain('security definer');
     expect(SENSE_ESPAIS(vigent.cos), nom).toMatch(/update public\.section_submissions s set payload = /);
   }
-  /* Cap migració posterior les redefinix sense SECURITY DEFINER (si ho fa, cal revisar la porta). */
-  for (const fitxer of ORDRE.slice(ORDRE.indexOf(NOM) + 1)) {
-    expect(/function\s+public\.(demana_baixa|cancela_baixa)\s*\(/i.test(senseComentaris(llig(fitxer))), fitxer).toBe(false);
+  /* Actualitzada a posta (261111, R17.2B · P0-20): cada migració posterior que
+     nomena demana_baixa o cancela_baixa (redefinició, permís o alter) és a este
+     inventari perquè algú n'ha revisat la porta; una de nova fa fallar la prova
+     fins que es revise. 2611110100 redefinix cancela_baixa per a tancar la
+     finestra de cancel·lació quan comença la purga (SDP-BAIXA-041) i conserva
+     SECURITY DEFINER, el search_path buit i el mateix UPDATE del payload: el
+     current_user continua sent la propietària i la porta la deixa passar. */
+  const REVISADES = {
+    demana_baixa: [],
+    cancela_baixa: ['2611110100_cua_purga_storage_ugc.sql']
+  };
+  for (const [nom, revisades] of Object.entries(REVISADES)) {
+    const posteriors = ORDRE.slice(ORDRE.indexOf(NOM) + 1)
+      .filter((fitxer) => new RegExp(`function\\s+public\\.${nom}\\s*\\(`, 'i').test(senseComentaris(llig(fitxer))));
+    expect(posteriors, `${nom}: migracions posteriors sense revisar contra la porta`).toEqual(revisades);
+    for (const fitxer of posteriors) {
+      const codi = senseComentaris(llig(fitxer));
+      expect(codi, `${fitxer} · ${nom}`).not.toMatch(new RegExp(`alter\\s+function\\s+public\\.${nom}\\s*\\(`, 'i'));
+      const redefinides = funcions(codi).filter((x) => x.esquema === 'public' && x.nom === nom);
+      expect(redefinides, `${fitxer} · ${nom}`).toHaveLength(1);
+      const [redefinida] = redefinides;
+      expect(redefinida.capcalera, `${fitxer} · ${nom}`).toContain('security definer');
+      expect(redefinida.capcalera, `${fitxer} · ${nom}`).toContain("set search_path = ''");
+      expect(SENSE_ESPAIS(redefinida.cos), `${fitxer} · ${nom}`).toMatch(/update public\.section_submissions s set payload = /);
+    }
   }
 });
 

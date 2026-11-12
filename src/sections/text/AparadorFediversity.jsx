@@ -1,7 +1,7 @@
 import {Fragment,useEffect,useRef,useState} from 'react';
 import {useUIActionsOpcional} from '../../app/contexts/UIContext.jsx';
 import ProtocolEmergenciesOfflineCard from '../../components/emergencies/ProtocolEmergenciesOfflineCard.jsx';
-import BatecDeVidaCard from '../../components/salut/BatecDeVidaCard.jsx';
+import { Link } from '../../app/contexts/RouterContext.jsx';
 import {APARADOR_R20_TEXTS} from './pageContent.fediversityR20.js';
 import {PAGE_COPY} from './pageContent.js';
 import {localitzaPagina} from './pageContent.r10.js';
@@ -55,5 +55,5 @@ export default function AparadorFediversity({language:idioma,carrega=loadCompile
   <div className="sdp-alerta__accions"><button className="sdp-boto sdp-boto--primari" type="button" onClick={compile} disabled={state==='working'}>{state==='working'?t.working:t.compile}</button><button className="sdp-boto sdp-boto--secundari" type="button" onClick={()=>change('')}>{t.clear}</button></div>
   {['failed','empty'].includes(state)?<p role="status">{t[state]}</p>:null}
   {result?<div aria-live="polite"><h4>{t.result}</h4><p>SHA-256: <code>{result.sha256}</code></p><pre>{result.markdown}</pre></div>:null}
- </section><BatecDeVidaCard idioma={language} /><ProtocolEmergenciesOfflineCard idioma={language} /></>;
+ </section><p data-sdp-batec-vida="true"><Link to="/page/avisador">L’Avisador · Batec de Vida</Link></p><ProtocolEmergenciesOfflineCard idioma={language} /></>;
 }

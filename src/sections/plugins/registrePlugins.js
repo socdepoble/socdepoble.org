@@ -30,7 +30,8 @@
  * fa servir l'espècimen del Panell del catàleg (EspecimenPanell.jsx).
  *
  * Cada plugin: { id, titol, subtitol, entradilla, imatge, imatgeAlt, obrir,
- * entorn, espai, etiquetaObrir, data, etiquetes }.
+ * entorn, espai, etiquetaObrir, data, etiquetes, estat } (`estat`, R18 · T2
+ * (P0-101): vegeu més avall).
  *   · espai  · Onada 2 de la Gestoria (261004) · l'espai del Panell on viu
  *     la targeta, «Economia i Empresa» (abans «L'empresa»; R16-W1) o «La
  *     llar» (ESPAIS_PLUGINS), o null.
@@ -49,8 +50,8 @@
  *                   className }; buida si el plugin no en porta. Sense
  *                   `href` (D3 del Panell: cap enllaç que no siga el perfil,
  *                   els drets o /plugin/<id>) i sense cap xifra.
- *     Les porten els sis que tenen targeta de plugin al Panell: gestoria,
- *     rebost, salut, genealogia, rss i tpv. Mapa, Vehicle Compartit i Animalets NO: la
+ *     Les porten els set que tenen targeta de plugin al Panell: gestoria,
+ *     rebost, salut, genealogia, avisador, rss i tpv. Mapa, Vehicle Compartit i Animalets NO: la
  *     seua targeta del Panell és la de dalt, la de publicació (W4-08), que
  *     llig la data de PAGE_COPY; ací es queden amb null i la llista buida, i
  *     la seua pàgina no canvia ni un píxel.
@@ -91,24 +92,34 @@
  *             rebost)». El rebost domèstic és eixa entrada.
  *   salut   → /app/salut · apps/salut/manifest.js:22. RutaApps la canonitza a
  *             l'entrada per defecte ('diari', :43).
+ *   genealogia → /app/genealogia · R19 · T3 (ordre del Mestre, 261111; pla
+ *             261111_1720) · apps/genealogia/manifest.js (id 'genealogia',
+ *             entrada per defecte 'entrevista'), registrat a
+ *             plataforma/registreApps.js (MANIFESTS_INTERNS). RutaApps la
+ *             canonitza a /app/genealogia/entrevista. Com Salut, porta
+ *             dadesPersonals 'salut': només s'obri al document propi
+ *             (amaDelDocument), i el paquet de l'amfitrió la fixa a '0'
+ *             (vite.standalone.config.js, definicionsDeLesApps). Ho decidix la
+ *             plataforma, a useDestiDelPlugin.js, com per a la resta d'apps.
  *   consola, cervell i disseny · Onada 8 (261009) · ja no són del registre
  *             (vegeu més amunt). Les seues rutes viuen a SYSTEM_PAGES.
  *   rss     → /app/lector · apps/lector/manifest.js:17 (Notícies del Poble).
- *             Peça C (261007) · El manifest del Lector porta entorn
- *             'desenvolupament' (:29): fora de DEV la plataforma l'apaga
- *             encara que el build el compile (VITE_SDP_APP_LECTOR=1), i sense
- *             el literal no és al paquet ('no-compilada'). Este plugin no
- *             porta `entorn`: el decidix l'app.
+ *             Este plugin no porta `entorn`: el decidix l'app. P0-113 (ordre
+ *             del Mestre, 261111) · El manifest del Lector s'obri en
+ *             producció; només un build amb VITE_SDP_APP_LECTOR=0 el trau del
+ *             paquet ('no-compilada').
  *   tpv     → /app/bar · apps/bar/manifest.js:16 (El Bar, TPV d'hostaleria).
  *   gestoria → /app/gestoria · apps/gestoria/manifest.js (id 'gestoria',
  *             entrades 'tauler' i 'aprendre'). Ordre del Mestre, 261004
  *             («contaminació crítica de rutes/estats entre Gestoria i Wiki»):
  *             la Gestoria ja no viu dins de la Wiki (la decisió D3 deixava
- *             «/app/gestoria, més avant; /gestoria, mai»). L'app porta entorn
- *             'desenvolupament' i el plugin també: fora de DEV,
- *             useDestiDelPlugin deixa el botó inert («(no disponible ací)»)
- *             i la pàgina diu que està en obres. Cap consulta ni dada a la
- *             ruta (MAPA §2.2, R4).
+ *             «/app/gestoria, més avant; /gestoria, mai»). Cap consulta ni
+ *             dada a la ruta (MAPA §2.2, R4).
+ *             DEROGAT per P0-113 (ordre del Mestre, 261111: «ENCÉN en
+ *             producció … Gestoria (`/app/gestoria`)») «el plugin també porta
+ *             entorn 'desenvolupament'»: ja no en porta cap, i qui decidix si
+ *             s'obri és la plataforma, com per a la resta d'apps. La guarda
+ *             amaDelDocument (dades financeres) continua sencera.
  *   mapa → /mapa, animalets → /animalets · Fusió del kit v3.0.0 de Gemini
  *             (AH-04, ordre del Mestre del 261104: «Calendari, Mapa i
  *             Animalets encara ixen desactivats amb la icona d'obres») · El
@@ -123,6 +134,64 @@
  *             la plataforma: cap interruptor, s'obri en qualsevol entorn.
  *             Abans: null («en obres»), que IDEA-61 va deixar obsolet.
  *
+ * R18 · T2 (P0-101; prompt 261111_0148, encàrrec T2) · `estat` i la insígnia
+ * «En proves · Beta oberta». Un camp declaratiu més: 'proves' per a una eina
+ * que es pot obrir i encara és experimental (les seues dades viuen només al
+ * dispositiu o la funció és parcial), o null. No és cap etiqueta del
+ * registre: `etiquetes` continua portant EXACTAMENT la Categoria i
+ * l'Etiqueta. La tercera píndola la posa etiquetesAmbEstat(plugin, idioma),
+ * més avall, que lligen la targeta del Panell (ControlSection.jsx) i la
+ * pàgina (PluginPage.jsx): targeta i pàgina diuen el mateix.
+ * Tractor-promesa · La insígnia diu «oberta»: només la pot portar una eina
+ * que la persona pot obrir ara en producció.
+ *   · P0-113 (ordre del Mestre, 261111: «ENCÉN en producció TPV del Bar,
+ *     Rebost Domèstic, Salut, Lector RSS i Gestoria com a eines gratuïtes
+ *     obertes … i insígnia «En proves · Beta oberta» (`estat: 'proves'` a
+ *     `registrePlugins.js`)») · Les cinc eines d'una app de la plataforma
+ *     (Gestoria, TPV del Bar, Rebost, Salut i Lector RSS) porten `estat`
+ *     'proves': el seu manifest les obri en producció i ve encés per defecte,
+ *     i les cinc guarden les dades en este dispositiu (Gestoria: «Dades
+ *     financeres que no ixen d'este ordinador»; Bar: «IndexedDB del
+ *     dispositiu, sense sincronitzar»; Nevera: «les llistes viuen només en
+ *     este dispositiu»; Salut: AVIS_SALUT, «Es queden en este dispositiu»;
+ *     Lector: «el que la persona llig, desa o seguix viu només en este
+ *     dispositiu»; capçaleres dels manifests). registrePlugins.test.js fixa
+ *     la implicació: app oberta en producció amb dades al dispositiu ⇒
+ *     'proves'; app tancada ⇒ null. Abans (T2): cap, perquè les cinc eren de
+ *     desenvolupament.
+ *   · R19 · T3 (ordre del Mestre, 261111; pla 261111_1720: «encesa de
+ *     /app/genealogia a registrePlugins.js») · L'Arbre Genealògic s'encén
+ *     com les cinc de P0-113: `obrir` rutaDeApp('genealogia') i `estat`
+ *     'proves'. El seu manifest l'obri en producció (entorn 'produccio',
+ *     actiuPerDefecte true, `carrega` darrere del literal
+ *     VITE_SDP_APP_GENEALOGIA !== '0') i les dades viuen en este dispositiu
+ *     (textos.js, «Les dades es queden en este dispositiu, en este
+ *     navegador.»; AppGenealogia.jsx: «Cap backend, cap xarxa»). DEROGAT
+ *     «L'Arbre Genealògic no té destí (obrir null): el text diu que està en
+ *     obres i parla en futur del que farà, i no porta cap insígnia.»: hui
+ *     cap plugin del registre es queda sense destí.
+ *     Arbitratge del carril (P1) · Un build que no porta l'app no pot dur la
+ *     insígnia: amb VITE_SDP_APP_<ID>=0, la Gestoria, Salut i l'Arbre
+ *     Genealògic perden `estat` i `espai` (GESTORIA_COMPILADA, SALUT_COMPILADA
+ *     i GENEALOGIA_COMPILADA, més avall). El paquet de l'amfitrió ho fa sempre
+ *     amb les tres.
+ *   · P0-114 (ordre del Mestre, 261111: «RESTITUÏX IMMEDIATAMENT «L'Avisador
+ *     · Batec de Vida» A «La llar» DE /control») · L'Avisador torna al
+ *     registre, a «La llar» (Salut, Arbre Genealògic, L'Avisador), amb
+ *     `estat` 'proves': s'obri en producció (/page/avisador, la seua pàgina a
+ *     App.jsx) i els seus ajustos viuen en este dispositiu
+ *     (avisadorPreferencies.js, storage local). Les tres condicions de la
+ *     correcció de la T2 ja es complixen: la vinyeta és a public/
+ *     (avisador_vinyeta.webp, Kit R17.3, copiada per MarIA), la seua variant
+ *     social també (imatgeSocial.js, VARIANTS_SOCIALS) i l'interruptor
+ *     declaratiu de build AVISADOR_COMPILAT (més avall) el desendolla del
+ *     tot. No és cap app de la plataforma (appDelPlugin null): la seua
+ *     insígnia no ix de cap manifest. DEROGAT «L'Avisador (/page/avisador) NO
+ *     és del registre (correcció de la T2) … Torna quan hi siguen les tres
+ *     coses.».
+ * El Mestre va llevar la píndola «EN OBRES» de les targetes (P6, directriu
+ * 261003_2325; ControlSection.test.jsx): `estat` no en torna cap.
+ *
  * Pur: sense React ni xarxa. Les rutes d'app es fan amb rutaDeApp (la mateixa
  * de la plataforma), que ja és al paquet principal (PlataformaContext).
  * Onada 8 (261009) · La ruta literal de la Consola se n'ha anat amb el seu
@@ -136,15 +205,21 @@ import { rutaDeApp } from '../../apps/plataforma/manifestApp.js';
 export const IMATGES_PLUGINS = '/assets/ui/plugins';
 /** El prefix de la ruta de les pàgines: /plugin/<id>. */
 export const RUTA_PLUGINS = '/plugin';
+/** R18 · T2 (P0-101) · L'únic valor d'`estat`: una eina que es pot obrir i encara és en proves. */
+export const ESTAT_PROVES = 'proves';
+/** R18 · T2 (P0-101) · La classe de la insígnia (la CSS és del Kit R18.3, components.css). */
+export const CLASSE_BETA_OBERTA = 'sdp-insignia-beta-oberta';
 
 /* entorn · 'desenvolupament' si el destí només funciona al servidor local de
    desenvolupament (com el camp `entorn` dels manifests d'app); null si no.
    Fora de dev, useDestiDelPlugin deixa el botó inert: cap enllaç que porte
-   a «Entrar» o a una eina sense dades. Hui només el porta la Gestoria: la
-   Consola i el Cervell, que el portaven per /__iaia/* (en viu, només el
-   servix `vite serve`, tooling/vite/consola-iaia.mjs; des del 31-10-2026 el
-   build web en publica la instantània sanejada), ja no són del registre
-   (Onada 8).
+   a «Entrar» o a una eina sense dades. La Consola i el Cervell, que el
+   portaven per /__iaia/* (en viu, només el servix `vite serve`,
+   tooling/vite/consola-iaia.mjs; des del 31-10-2026 el build web en publica
+   la instantània sanejada), ja no són del registre (Onada 8). P0-113 (ordre
+   del Mestre, 261111) · La Gestoria, l'última que el portava, s'obri en
+   producció: hui cap plugin el porta, i el camp es conserva per a un destí
+   futur que només funcione en desenvolupament.
    espai · l'espai del Panell de Control on viu la targeta ('empresa' o
    'llar', ESPAIS_PLUGINS), o null si no viu en cap espai. R16-W1 · La graella
    d'Utilitats ja no es pinta: amb null, la targeta de baix només es pinta si
@@ -157,10 +232,12 @@ export const RUTA_PLUGINS = '/plugin';
    entrar al registre per ací.
    extensioImatge · Gauntlet 261016 (Bloc 1, Llei del Quadrat) · opcional:
    l'extensió de la il·lustració, 'jpg' si no ve (la imatge de sempre). Només
-   decidix la ruta de `imatge`: no és cap camp nou del plugin. */
+   decidix la ruta de `imatge`: no és cap camp nou del plugin.
+   estat · R18 · T2 (P0-101) · opcional: 'proves' (ESTAT_PROVES) o null.
+   Qualsevol altre valor queda en null: cap insígnia que no diga la taula. */
 const plugin = ({
   id, titol, subtitol, entradilla, imatgeAlt, obrir = null, entorn = null, espai = null, etiquetaObrir,
-  data = null, etiquetes = [], extensioImatge = 'jpg'
+  data = null, etiquetes = [], estat = null, extensioImatge = 'jpg'
 }) => Object.freeze({
   id,
   titol,
@@ -173,7 +250,8 @@ const plugin = ({
   espai,
   etiquetaObrir,
   data,
-  etiquetes: Object.freeze(etiquetes.map(({ text, className }) => Object.freeze({ text, className })))
+  etiquetes: Object.freeze(etiquetes.map(({ text, className }) => Object.freeze({ text, className }))),
+  estat: estat === ESTAT_PROVES ? ESTAT_PROVES : null
 });
 
 /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
@@ -203,6 +281,39 @@ const plugin = ({
    commit (coincidir en el dia no és evidència).
    Pendent del Mestre: confirmar-la o canviar-la per la del commit. */
 const DATA_DE_L_ORDRE = '2026-10-04T00:15:00+02:00';
+
+/* P0-114 (ordre del Mestre, 261111) · La data de L'Avisador no és la de
+   l'ordre del 261004: no hi era. És la del Kit R17.2, que el va portar
+   (encàrrec P0-114: «data honesta del Kit R17.2»). Cap data inventada. */
+const DATA_DEL_KIT_R17_2 = '2026-11-11T00:30:52+01:00';
+
+/* P0-114 (ordre del Mestre, 261111: «afegeix l'interruptor declaratiu
+   necessari … perquè no desaparega mai del Panell de Control») ·
+   L'interruptor de build de L'Avisador, amb el mateix literal d'exclusió que
+   les apps de P0-113 (import.meta.env.VITE_SDP_APP_<ID> !== '0'): per
+   defecte hi és SEMPRE; només un build amb VITE_SDP_APP_AVISADOR=0 el trau.
+   El mateix literal governa, a App.jsx, la ruta /page/avisador i el
+   muntatge del vigilant (AvisadorAjornat), i a profile/aplicacions.js la
+   seua fitxa del Perfil. Ací decidix el destí (`obrir`), l'espai del Panell
+   (`espai`) i la pàgina /plugin/avisador (pluginPerId): amb =0, cap targeta,
+   cap pàgina (la 404 de sempre) i cap «Obrir». L'entrada continua a la taula
+   PLUGINS perquè el productor del manifest social (build-social-manifest.mjs)
+   la llig sense executar-la i no admet cap element que no siga un plugin({…})
+   literal. registrePlugins.test.js fixa el literal i el comportament. */
+const AVISADOR_COMPILAT = import.meta.env.VITE_SDP_APP_AVISADOR !== '0';
+
+/* R19 · Arbitratge del carril Genealogia + Perfil (P1, tractor-promesa) · Els interruptors de build de les tres
+   apps que el paquet de l'amfitrió no porta MAI: la Gestoria (dades financeres), Salut i l'Arbre Genealògic
+   (dadesPersonals 'salut'). vite.standalone.config.js (definicionsDeLesApps, DADES_NOMES_AL_DOCUMENT_PROPI) hi
+   fixa la variable a '0' «Sempre … Cap variable de l'entorn ho canvia». És el mateix literal que el `carrega` del
+   seu manifest. Amb =0 la persona no la pot obrir en eixe paquet, i la insígnia «En proves · Beta oberta» diria
+   el contrari: la targeta ix del Panell (`espai` null, com L'Avisador) i no porta cap insígnia (`estat` null).
+   `obrir` es queda: /plugin/<id> continua dient, amb el motiu de la plataforma, per què ací no s'obri
+   (useDestiDelPlugin). El Perfil fa el mateix amb la seua fitxa (profile/aplicacions.js). registrePlugins.test.js
+   fixa els literals i el comportament amb vi.stubEnv. */
+const GESTORIA_COMPILADA = import.meta.env.VITE_SDP_APP_GESTORIA !== '0';
+const SALUT_COMPILADA = import.meta.env.VITE_SDP_APP_SALUT !== '0';
+const GENEALOGIA_COMPILADA = import.meta.env.VITE_SDP_APP_GENEALOGIA !== '0';
 
 /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
    LES ETIQUETES de la targeta canònica: una Categoria (sdp-badge-category) i
@@ -298,6 +409,46 @@ export const TEXTOS_ESPAIS_PLUGINS = Object.freeze({
   })
 });
 
+/* R18 · T2 (P0-101; prompt 261111_0148) · El text de la insígnia de les eines
+   en proves, en les cinc llengües de l'App (ca, es, en, gl i eu), amb el
+   mateix patró que TEXTOS_ESPAIS_PLUGINS: el codi d'idioma curt i, sense
+   textos per a eixa llengua, el valencià. Diu que l'eina és en proves i
+   oberta a qui la vulga provar; no promet cap còpia al servidor ni cap
+   sincronització (tractor-promesa). */
+export const TEXTOS_BETA_OBERTA = Object.freeze({
+  ca: 'En proves · Beta oberta',
+  es: 'En pruebas · Beta abierta',
+  en: 'In testing · Open beta',
+  gl: 'En probas · Beta aberta',
+  eu: 'Probetan · Beta irekia'
+});
+
+/* Una insígnia congelada per llengua, sense `href` (D3 del Panell), feta una
+   sola vegada: la mateixa referència a cada pintat. */
+const INSIGNIES_BETA_OBERTA = Object.freeze(Object.fromEntries(
+  Object.entries(TEXTOS_BETA_OBERTA).map(([llengua, text]) => [llengua, Object.freeze({ text, className: CLASSE_BETA_OBERTA })])
+));
+
+/* El codi curt d'una llengua de la interfície ('es-ES' → 'es'); sense textos per a ella, 'ca'. */
+const llenguaDeLaInsignia = (idioma) => {
+  const codi = String(idioma || 'ca').toLowerCase().split('-')[0];
+  return Object.hasOwn(INSIGNIES_BETA_OBERTA, codi) ? codi : 'ca';
+};
+
+/**
+ * R18 · T2 (P0-101) · Les etiquetes que pinten la targeta del Panell i la
+ * pàgina del plugin: les dues del registre (Categoria i Etiqueta) i, si el
+ * plugin és en proves (`estat` 'proves'), una tercera, la insígnia «En proves
+ * · Beta oberta» en la llengua `idioma`, sense enllaç. Un plugin estable torna
+ * la seua llista del registre tal qual (la mateixa referència: ni un píxel
+ * canvia).
+ */
+export function etiquetesAmbEstat(plugin, idioma) {
+  const etiquetes = Array.isArray(plugin?.etiquetes) ? plugin.etiquetes : [];
+  if (plugin?.estat !== ESTAT_PROVES) return etiquetes;
+  return Object.freeze([...etiquetes, INSIGNIES_BETA_OBERTA[llenguaDeLaInsignia(idioma)]]);
+}
+
 /* L'ordre és el del Mestre (prompt 261004_0015, T2): el de la graella, el del
    DOM i el del focus. */
 export const PLUGINS = Object.freeze([
@@ -358,26 +509,33 @@ export const PLUGINS = Object.freeze([
     id: 'gestoria',
     titol: 'Gestoria',
     subtitol: 'Factures i papers del trimestre',
-    entradilla: 'El full de factures del trimestre per a la gestoria i un repàs dels seus conceptes. Encara està en obres: de moment només s’obri en desenvolupament, com a app pròpia. No envia res: enviar-ho a la gestoria ho fas tu.',
+    /* P0-113 (ordre del Mestre, 261111) · S'obri en producció, gratuïta i en
+       proves: fora `entorn: 'desenvolupament'`, i l'entradilla ja no diu
+       que està en obres ni que només s'obri en desenvolupament. Abans: «…
+       Encara està en obres: de moment només s’obri en desenvolupament, com a
+       app pròpia. …» */
+    entradilla: 'El full de factures del trimestre per a la gestoria i un repàs dels seus conceptes. Encara està en proves, i les dades es guarden en este dispositiu. No envia res: enviar-ho a la gestoria ho fas tu.',
     imatgeAlt: 'Un llaurador i una gestora segellen papers en una taula al carrer, entre fulls que volen',
     obrir: rutaDeApp('gestoria'),
-    entorn: 'desenvolupament',
-    espai: 'empresa',
+    espai: GESTORIA_COMPILADA ? 'empresa' : null,
     etiquetaObrir: 'Obrir la Gestoria',
     data: DATA_DE_L_ORDRE,
-    etiquetes: classificacio('Factures')
+    etiquetes: classificacio('Factures'),
+    estat: GESTORIA_COMPILADA ? ESTAT_PROVES : null
   }),
   plugin({
     id: 'tpv',
     titol: 'TPV del Bar',
     subtitol: 'La caixa del bar o del casino',
-    entradilla: 'Comandes, taules, tiquets i tancament del torn. Les dades es guarden en este dispositiu.',
+    /* P0-113 (ordre del Mestre, 261111) · En proves i oberta: ho diu, breu. */
+    entradilla: 'Comandes, taules, tiquets i tancament del torn. Encara està en proves, i les dades es guarden en este dispositiu.',
     imatgeAlt: 'El cambrer apunta comandes a la barra del Bar Casino, ple de veïns, entrepans i embotits penjats',
     obrir: rutaDeApp('bar'),
     espai: 'empresa',
     etiquetaObrir: 'Obrir el Bar',
     data: DATA_DE_L_ORDRE,
     etiquetes: classificacio('Hostaleria'),
+    estat: ESTAT_PROVES,
     /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La vinyeta nova, el
        mateix cambrer: 1.200 × 1.200 en WebP de menys de 80 KB. El .jpg
        d'abans es conserva al disc (cap esborrat). */
@@ -387,13 +545,15 @@ export const PLUGINS = Object.freeze([
     id: 'rebost',
     titol: 'Rebost Domèstic',
     subtitol: 'La nevera i el rebost de casa',
-    entradilla: 'Apunta el que tens a casa i el que cal comprar, dins de La Nevera de Casa. Les llistes es guarden només en este dispositiu.',
+    /* P0-113 (ordre del Mestre, 261111) · En proves i oberta: ho diu, breu. */
+    entradilla: 'Apunta el que tens a casa i el que cal comprar, dins de La Nevera de Casa. Encara està en proves, i les llistes es guarden només en este dispositiu.',
     imatgeAlt: 'Dues iaies etiqueten pots de conserva en un rebost ple de botifarres, tomaques i olives',
     obrir: rutaDeApp('nevera', 'casa'),
     espai: 'empresa',
     etiquetaObrir: 'Obrir el Rebost',
     data: DATA_DE_L_ORDRE,
     etiquetes: classificacio('Compra'),
+    estat: ESTAT_PROVES,
     /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
     extensioImatge: 'webp'
   }),
@@ -401,13 +561,17 @@ export const PLUGINS = Object.freeze([
     id: 'salut',
     titol: 'Salut',
     subtitol: 'Un quadern per a cuidar dels nostres',
-    entradilla: 'Apunta com beu, dorm i està la persona que cuides, i ensenya-ho al metge en un full clar. No diagnostica ni envia res.',
+    /* P0-113 (ordre del Mestre, 261111) · En proves i oberta: ho diu, breu,
+       amb les paraules de l'avís de l'app (AVIS_SALUT: «Es queden en este
+       dispositiu»). Abans no deia on es queden les dades. */
+    entradilla: 'Apunta com beu, dorm i està la persona que cuides, i ensenya-ho al metge en un full clar. Encara està en proves, i les dades es queden en este dispositiu. No diagnostica ni envia res.',
     imatgeAlt: 'Un metge pren la tensió a un iaio assegut en una cadira de bova, al carrer, entre gats i gossos',
     obrir: rutaDeApp('salut'),
-    espai: 'llar',
+    espai: SALUT_COMPILADA ? 'llar' : null,
     etiquetaObrir: 'Obrir Salut',
     data: DATA_DE_L_ORDRE,
     etiquetes: classificacio('Cures'),
+    estat: SALUT_COMPILADA ? ESTAT_PROVES : null,
     /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
     extensioImatge: 'webp'
   }),
@@ -415,13 +579,52 @@ export const PLUGINS = Object.freeze([
     id: 'genealogia',
     titol: 'Arbre Genealògic',
     subtitol: 'La memòria de la família, els malnoms i els masos',
-    entradilla: 'Guarda els noms, els malnoms i els masos dels teus majors amb una conversa guiada pas a pas. No inventa res i les dades es queden en este dispositiu.',
+    /* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · L'app existix i
+       s'obri en producció: l'entradilla torna al present i diu només el que fa
+       el codi. Cada frase, contra src/apps/genealogia: l'entrevista d'una
+       sola pregunta per torn que comença pel malnom de la casa i pel mas o el
+       poble (nucli/passosEntrevista.js; textos.js, 'entrevista.regla'),
+       l'arbre amb la numeració Sosa (vistes/Arbre.jsx), l'exportació GEDCOM
+       (gedcom/escriuGedcom.js; manifest, entrada 'intercanvi'), les dades en
+       este dispositiu (textos.js, 'avis.on') i que no cerca als arxius ni
+       envia res (textos.js, 'avis.noFa' i 'exporta.preparaNoPublica';
+       AppGenealogia.jsx). Sense cap xifra (R1) i com a molt
+       LIMIT_DESCRIPCIO caràcters: és també la descripció del <head>.
+       DEROGAT (R18 · T2, P0-101) «Encara està en obres. Quan estiga a punt,
+       guardarà els noms, els malnoms i els masos dels teus majors amb una
+       conversa guiada pas a pas, sense inventar res i amb les dades en este
+       dispositiu.»: deia en futur el que ara fa l'app. */
+    entradilla: 'Recull la memòria de la família amb una entrevista d’una pregunta cada vegada, des del malnom de la casa i el mas, i ordena-la en un arbre que pots exportar en GEDCOM. Encara està en proves, i les dades es queden en este dispositiu. No cerca als arxius ni envia res.',
     imatgeAlt: 'Una iaia i un iaio conten els malnoms de la família davant d’una olivera plena de retrats antics mentre els nets prenen nota',
-    obrir: null,
-    espai: 'llar',
+    obrir: rutaDeApp('genealogia'),
+    espai: GENEALOGIA_COMPILADA ? 'llar' : null,
     etiquetaObrir: 'Obrir l’Arbre Genealògic',
     data: DATA_DE_L_ORDRE,
     etiquetes: classificacio('Família'),
+    estat: GENEALOGIA_COMPILADA ? ESTAT_PROVES : null,
+    extensioImatge: 'webp'
+  }),
+  /* P0-114 (ordre del Mestre, 261111) · L'Avisador · Batec de Vida, a «La
+     llar», darrere de l'Arbre Genealògic. L'entradilla diu el que fa i el que
+     no (textosAvisador.js, `intro` i `limitacions`; services/avisador.js): fins
+     a tres persones amb conversa privada al Xat, les hores sense activitat, la
+     condició de la sessió oberta i que no substituïx la teleassistència. Sense
+     cap xifra (R1): «el telèfon d'emergències» en lloc del número. La vinyeta
+     és la de MarIA (Kit R17.3): un iaio dormita a la butaca amb el gat, la
+     iaia mira el mòbil amb el cor encés i la neta entra amb la compra. */
+  plugin({
+    id: 'avisador',
+    titol: 'L’Avisador',
+    subtitol: 'Batec de Vida',
+    /* Com a molt LIMIT_DESCRIPCIO (config/metadadesSocials.js) caràcters: és també la descripció del <head>. */
+    entradilla: 'Avisa pel Xat fins a tres persones de confiança quan passen les hores triades sense activitat. Només amb la sessió oberta, Sóc de Poble en marxa i el Xat disponible. Encara està en proves, i els ajustos es guarden en este dispositiu. No substituïx el telèfon d’emergències ni la teleassistència.',
+    imatgeAlt: 'Un iaio dormita a la butaca amb el gat a la falda mentre la iaia mira un mòbil amb un cor encés i la neta entra per la porta amb la compra',
+    obrir: AVISADOR_COMPILAT ? '/page/avisador' : null,
+    espai: AVISADOR_COMPILAT ? 'llar' : null,
+    etiquetaObrir: 'Obrir l’Avisador',
+    data: DATA_DEL_KIT_R17_2,
+    etiquetes: classificacio('Cures'),
+    estat: ESTAT_PROVES,
     extensioImatge: 'webp'
   }),
   /* Onada 8 (261009) · La Consola, el Cervell i el Panell de Disseny ja no
@@ -430,12 +633,14 @@ export const PLUGINS = Object.freeze([
     id: 'rss',
     titol: 'Lector RSS',
     subtitol: 'Les notícies de les entitats del poble, juntes',
-    entradilla: 'Seguix les fonts que t’interessen i llig-les en un sol lloc, dins de Notícies del Poble. El que llegeixes i el que deses es queda en este dispositiu.',
+    /* P0-113 (ordre del Mestre, 261111) · En proves i oberta: ho diu, breu. */
+    entradilla: 'Seguix les fonts que t’interessen i llig-les en un sol lloc, dins de Notícies del Poble. Encara està en proves, i el que llegeixes i el que deses es queda en este dispositiu.',
     imatgeAlt: 'El carter crida les notícies amb un corn, dalt d’una caixa, a la plaça plena de veïns',
     obrir: rutaDeApp('lector'),
     etiquetaObrir: 'Obrir el Lector',
     data: DATA_DE_L_ORDRE,
-    etiquetes: classificacio('Notícies')
+    etiquetes: classificacio('Notícies'),
+    estat: ESTAT_PROVES
   })
   /* Ordre del Mestre (261007) · Bàscula descartada per ara: ja no és cap
      plugin. Viu només com a llavor del Full de ruta (vegeu la capçalera). */
@@ -444,9 +649,13 @@ export const PLUGINS = Object.freeze([
 /** Els ids, en l'ordre de la taula. */
 export const IDS_PLUGINS = Object.freeze(PLUGINS.map((p) => p.id));
 
-/** El plugin d'un id (només ids propis de la taula), o null. */
+/** El plugin d'un id (només ids propis de la taula), o null.
+    P0-114 (ordre del Mestre, 261111) · Amb VITE_SDP_APP_AVISADOR=0
+    (AVISADOR_COMPILAT fals), L'Avisador no té pàgina: /plugin/avisador és
+    la 404 de sempre, com la de qualsevol id que no és del registre. */
 export function pluginPerId(id) {
   if (typeof id !== 'string' || !id) return null;
+  if (id === 'avisador' && !AVISADOR_COMPILAT) return null;
   return PLUGINS.find((p) => p.id === id) || null;
 }
 

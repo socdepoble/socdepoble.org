@@ -128,9 +128,20 @@ describe('P0-66 · catàleg complet Mercadona a la seua llista', () => {
 
 describe('P0-65 · recepció explícita del llibre «Què dinem?»', () => {
   test('obrir la URL no afig res; confirma racions i cada ingredient conserva nom i quantitat', async () => {
+    const plataforma = await import('../plataforma/index.js');
+    const carregaReal = plataforma.carregaReceptes;
+    let alliberaCarrega;
+    const pendent = new Promise(resolve => { alliberaCarrega = resolve; });
+    const receptari = pendent.then(() => carregaReal());
+    const carrega = vi.spyOn(plataforma, 'carregaReceptes').mockReturnValue(receptari);
     const entorn = prepara();
     await entorn.magatzem.desa(estatInicial());
     munta('/app/nevera/llista/casa?recepta=pa-rustic&racions=8', entorn);
+    // La càrrega lazy del receptari real no competix amb el límit de la consulta de rols.
+    await screen.findByText('Obrint la recepta');
+    expect(carrega).toHaveBeenCalled();
+    expect(liniesDesades(entorn.idb)).toEqual([]);
+    await act(async () => { alliberaCarrega(); await receptari; });
     await screen.findByRole('group', { name: 'Ingredients de «Pa rústic»' });
     expect(liniesDesades(entorn.idb)).toEqual([]);
     expect(screen.getByRole('textbox', { name: 'Racions de la recepta original' }).value).toBe('');
@@ -600,7 +611,7 @@ describe('Llistes, Catàleg i Ajustos', () => {
     expect(desat(entorn.idb).llistes[0].ordre.slice(0, 2)).toEqual(['pa-pastissos', 'fruita-verdura']);
 
     fireEvent.click(screen.getByRole('button', { name: 'Descarrega una còpia' }));
-    expect(entorn.descarrega).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(entorn.descarrega).toHaveBeenCalledTimes(1));
     const [{ nom: fitxer, tipus, dades }] = entorn.descarrega.mock.calls[0];
     expect(fitxer).toMatch(/^nevera-de-casa-\d{4}-\d{2}-\d{2}\.json$/);
     expect(tipus).toBe('application/json');
@@ -841,7 +852,8 @@ describe('correccions de la revisió (NEV-R1…R9)', () => {
     } finally {
       vi.useRealTimers();
     }
-    expect(entorn.descarrega.mock.calls.map(([{ nom }]) => nom)).toEqual(['nevera-de-casa-2026-10-03.json', 'nevera-de-casa-2026-10-03.json']);
+    await waitFor(() => expect(entorn.descarrega.mock.calls.map(([{ nom }]) => nom))
+      .toEqual(['nevera-de-casa-2026-10-03.json', 'nevera-de-casa-2026-10-03.json']));
   });
 
   test('NEV-R9: el separador de la columna del mig du el nom de la columna de cada entrada', async () => {

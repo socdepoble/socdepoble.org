@@ -14,6 +14,7 @@ const PAGE_ROUTE_MAP = {
   projecte: '/projecte',
   skills: '/skills',
   disseny: '/disseny',
+  dispositius: '/dispositius',
   constitucio: '/constitucio',
   ruta: '/roadmap',
   roadmap: '/roadmap',

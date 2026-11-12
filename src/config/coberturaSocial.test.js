@@ -38,8 +38,11 @@ describe('client i prerender: el mateix head a cada ruta nova del manifest socia
   test('els plugins del manifest són exactament els del registre', () => {
     expect(Object.keys(manifest.routes).filter((ruta) => ruta.startsWith('/plugin/')).sort())
       .toEqual(PLUGINS.map((plugin) => rutaDelPlugin(plugin.id)).sort());
-    /* COMMIT R6 (d79a0b530) · L'Arbre Genealògic (IDEA-100) és el nové plugin. */
-    expect(PLUGINS).toHaveLength(9);
+    /* COMMIT R6 (d79a0b530) · L'Arbre Genealògic (IDEA-100) és el nové plugin.
+       P0-114 (ordre del Mestre, 261111) · L'Avisador, el desé: /plugin/avisador també és al manifest
+       social, amb la seua variant (avisador_vinyeta-social-1200x630.jpg). */
+    expect(PLUGINS).toHaveLength(10);
+    expect(Object.keys(manifest.routes)).toContain('/plugin/avisador');
   });
 
   test.each(PLUGINS.map((plugin) => [rutaDelPlugin(plugin.id), plugin]))('%s · PluginPage (metadadesDePlugin)', (ruta, plugin) => {

@@ -77,6 +77,7 @@ const TITOLS_ERROR = Object.freeze({
   FACTURA_INEXISTENT: 'Eixa factura no és al llibre',
   CADENA_AMB_INCIDENCIES: 'El llibre té incidències',
   PERFIL_FIXAT: 'Ja hi ha factures emeses',
+  PERFIL_CANVIAT: 'El perfil ha canviat en una altra pestanya',
   MARCA_ENRERE: 'Esta còpia no arriba on arribava l’anterior',
   DUPLICAT: 'Ja estava fet',
   COPIA_INVALIDA: 'La còpia no és bona',
@@ -146,6 +147,8 @@ const avisExit = (zona, titol, text, to = 'exit') => ({ zona, to, titol, text, d
 /* Emetre o anul·lar sobre un llibre amb incidències greus (troballa F3, 261007). */
 const cadenaAmbIncidencies = () => errorAmbCodi('CADENA_AMB_INCIDENCIES',
   'Mentre la cadena tinga incidències (pas 4), no es pot emetre ni anul·lar cap factura. Si tens una còpia bona del llibre, restaura-la al pas 5.');
+const ambEscriptorDelLlibre = (port, fn) => typeof port.ambEscriptor === 'function' ? port.ambEscriptor(fn) : fn();
+
 /* «un registre», «3 registres». */
 const quantsRegistres = (n) => (n === 1 ? 'un registre' : `${n} registres`);
 
@@ -176,12 +179,14 @@ export function useFacturacio({
   const [mostrada, setMostrada] = useState(null);
   const tornaFocus = useRef(null);
   const viu = useRef(true);
+  const rondaLectura = useRef(0);
 
   /* Llegir el perfil i el llibre, i verificar la cadena sencera amb la marca de l'última còpia. */
   const recarrega = useCallback(async () => {
+    const ronda = ++rondaLectura.current;
     const [llegit, tots] = await Promise.all([perfil.llig(), port.llig()]);
     const informe = await verificaCadena(tots, { subtle, ultimsConeguts: ultimsConegutsDe(llegit.copia) });
-    if (viu.current) setDades({ fase: 'llest', error: null, perfil: llegit, tots, informe, verificatA: ara.current() });
+    if (viu.current && ronda === rondaLectura.current) setDades({ fase: 'llest', error: null, perfil: llegit, tots, informe, verificatA: ara.current() });
   }, [perfil, port, subtle]);
 
   useEffect(() => {
@@ -192,6 +197,7 @@ export function useFacturacio({
     });
     return () => {
       viu.current = false;
+      rondaLectura.current += 1;
     };
   }, [recursos, recarrega]);
 
@@ -284,7 +290,8 @@ export function useFacturacio({
      el magatzem hi mira si ja s'ha emés amb el NIF vigent (PERFIL_FIXAT). */
   const desaConfig = useCallback(async (nova) => {
     const r = await executa('perfil', 'perfil', async () => {
-      const versio = await perfil.afegixConfig(nova, { registres: await port.llig() });
+      const versio = await ambEscriptorDelLlibre(port,
+        async () => perfil.afegixConfig(nova, { registres: await port.llig() }));
       await recarrega();
       return versio;
     });
@@ -294,7 +301,8 @@ export function useFacturacio({
 
   const desaLlegat = useCallback(async (nou) => {
     const r = await executa('llegat', 'llegat', async () => {
-      const versio = await perfil.afegixLlegat(nou, { registres: await port.llig() });
+      const versio = await ambEscriptorDelLlibre(port,
+        async () => perfil.afegixLlegat(nou, { registres: await port.llig() }));
       await recarrega();
       return versio;
     });
@@ -312,17 +320,32 @@ export function useFacturacio({
     }
   }, [emissio]);
 
+  /* Es crida dins de la mateixa secció d'escriptor que l'emissió. */
+  const validaVigencia = useCallback(async () => {
+    const vigent = await perfil.llig();
+    if (vigent.config?.versio !== dades.perfil.config?.versio || vigent.llegat?.versio !== dades.perfil.llegat?.versio) {
+      await recarrega();
+      throw errorAmbCodi('PERFIL_CANVIAT', 'Revisa les dades de l’empresa i el número de factura abans de continuar.');
+    }
+    const actual = await port.llig();
+    const informe = await verificaCadena(actual, { subtle, ultimsConeguts: ultimsConegutsDe(vigent.copia) });
+    if (!informe.valida) {
+      await recarrega();
+      throw cadenaAmbIncidencies();
+    }
+  }, [perfil, port, subtle, dades.perfil, recarrega]);
+
   const emet = useCallback(async (dadesFactura) => {
     const r = await executa('emetent', 'factura', async () => {
       if (!emissio.cas) throw emissio.error ?? errorAmbCodi('SENSE_PERFIL', 'Primer cal desar les dades de l’empresa i les factures d’abans.');
       if (informeActual.current?.valida !== true) throw cadenaAmbIncidencies();
-      const alta = await emissio.cas.emet(dadesFactura, { instant: ara.current() });
+      const alta = await emissio.cas.emet(dadesFactura, { instant: ara.current(), validaVigencia });
       await recarrega();
       return alta;
     });
     if (r.ok) exit('factura', `Factura ${r.resultat.numSerie} emesa`, `Total: ${euros(r.resultat.importTotal)}. Ja és al llibre, encadenada a l’anterior.`);
     return r;
-  }, [executa, exit, emissio, recarrega]);
+  }, [executa, exit, emissio, recarrega, validaVigencia]);
 
   /* PODER 1 (Prompt 261014_1605, G1): la factura acabada d'emetre, en paper. L'alta que torna emet() és el
      registre del llibre que pinta ImpressioFactura. La crida el formulari després de tancar el seu diàleg:
@@ -336,14 +359,14 @@ export function useFacturacio({
       if (informeActual.current?.valida !== true) throw cadenaAmbIncidencies();
       const anulacio = await registraAnulacio(port, {
         idEmisor: registre.idEmisor, numSerie: registre.numSerie, dataExpedicio: registre.dataExpedicio,
-        ...(typeof motiu === 'string' && motiu.trim() ? { motiu: motiu.trim() } : {}), instant: ara.current(), subtle
+        ...(typeof motiu === 'string' && motiu.trim() ? { motiu: motiu.trim() } : {}), instant: ara.current(), subtle, validaVigencia
       });
       await recarrega();
       return anulacio;
     });
     if (r.ok) exit('llibre', `Factura ${registre.numSerie} anul·lada`, 'L’anul·lació és un registre nou del llibre: la factura i el seu número es conserven.');
     return r;
-  }, [executa, exit, port, subtle, recarrega]);
+  }, [executa, exit, port, subtle, recarrega, validaVigencia]);
 
   const verifica = useCallback(() => executa('verificant', 'llibre', recarrega), [executa, recarrega]);
 

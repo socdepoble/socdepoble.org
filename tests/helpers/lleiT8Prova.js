@@ -45,6 +45,7 @@ import { SECTIONS } from '../../src/config/sections.js';
 import { pageKeyDeRuta } from '../../src/sections/text/paginaDeText.js';
 import { IDS_PAGINES, paginaConsola } from '../../src/sections/consola/consolaPagines.js';
 import { clauDeRutaInterna } from '../../src/components/universal/richText/extensions/targetes/formaDelGrup.js';
+import { pluginPerId } from '../../src/sections/plugins/registrePlugins.js';
 
 export const ETIQUETES_T8 = new Set(['h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'blockquote', 'a', 'img']);
 const ATRIBUTS_T8 = { a: ['href', 'target', 'rel'], img: ['src', 'alt', 'width', 'height', 'loading', 'decoding'] };
@@ -62,8 +63,14 @@ const DETALLS_VIUS = new Set([
   ['mur', APP_SEED.feedPosts], ['mercat', APP_SEED.marketItems],
   ['events', APP_SEED.events], ['pobles', APP_SEED.towns]
 ].flatMap(([seccio, items]) => items.map(({ id }) => getSectionItemPath(seccio, id))));
+/* Onada R20 · /plugin/<id> és la pàgina d'una utilitat del Panell (App.jsx, <Route path="/plugin/:id">): és viva
+   quan PluginPage la pinta, és a dir, quan pluginPerId(id) la troba al registre. Un id que no és del registre
+   (o L'Avisador fora del build) és la 404 de sempre i continua sent una infracció. */
+const PLUGIN_DE_RUTA = /^\/plugin\/([a-z0-9-]+)$/;
 export function rutaViva(href, visitades = new Set()) {
   if (RUTES_VIVES.has(href) || DETALLS_VIUS.has(href)) return true;
+  const plugin = typeof href === 'string' ? PLUGIN_DE_RUTA.exec(href) : null;
+  if (plugin) return pluginPerId(plugin[1]) !== null;
   if (typeof href !== 'string' || !/^\/page\/[a-z0-9-]+$/.test(href) || visitades.has(href)) return false;
   const slug = href.slice(6), canonica = resolvePageSlugPath(slug);
   if (canonica) return rutaViva(canonica, new Set([...visitades, href]));

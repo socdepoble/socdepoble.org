@@ -16,9 +16,10 @@ test('P1-75: canonical SQL, author binding, current public revision and per-piec
       await pg.exec(`SET LOCAL ROLE ${role}`); const result = await pg.query(query, params); await pg.exec('COMMIT'); return result.rows;
     } catch (error) { await pg.exec('ROLLBACK;RESET ROLE'); throw error; }
   }
+  const pla = creaPlaMigracions();
   const save = (actor, id, camps, version, options = {}) => as(actor, 'SELECT public.desa_revisio_seed($1,$2,$3,$4,$5,$6) AS revision', [tenant, 'mur', id, camps, version, options.fontVersio || 1], options).then(rows => rows[0].revision);
   try {
-    await pg.exec(generaSql(creaPlaMigracions(), await preparaHidratacio(), { advisoryLock: false }));
+    await pg.exec(generaSql(pla, await preparaHidratacio(), { advisoryLock: false }));
     // GoTrue fields absent from the minimal Node0 compatibility fixture;
     // preserve the actual canonical Supabase export schema in this test.
     await pg.exec('ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now(); ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS last_sign_in_at timestamptz');
@@ -122,7 +123,10 @@ test('P1-75: canonical SQL, author binding, current public revision and per-piec
       await assert.rejects(save(owner, 'owned', { title: 'Duplicate authority' }, 0), e => e.code === 'P0002');
       await pg.query("UPDATE public.app_content SET payload=$2 WHERE tenant_id=$1 AND key='feedPosts'", [tenant, sources.filter(row => row.id !== 'owned')]);
       assert.equal((await as(null, "SELECT seed_id FROM public.seed_revisions WHERE seed_id='owned'", [], { role: 'anon' })).length, 0);
-      assert.equal((await pg.query('SELECT count(*)::int AS n FROM node0.schema_migrations')).rows[0].n, 81); // R13-C7: + 2611082238 (recomptes de sessions)
+      const ledger = (await pg.query('SELECT version, file FROM node0.schema_migrations ORDER BY version')).rows;
+      assert.deepEqual(ledger, pla.migrations.map(({ version, file }) => ({ version, file }))
+        .sort((a, b) => a.version.localeCompare(b.version)));
+      assert.ok(ledger.some(m => m.file === '2611070600_seed_revisions.sql'));
     });
     await t.test('nested withdrawal hides an accepted revision under RLS without relying on a source version change', async () => {
       const source = (await pg.query("SELECT payload FROM public.app_content WHERE tenant_id=$1 AND key='feedPosts'", [tenant])).rows[0].payload;

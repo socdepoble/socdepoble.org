@@ -104,7 +104,8 @@ describe('Pedra Seca · JSX', () => {
       const h1s = codi.split(h1).length - 1;
       if (h1s) {
         expect(h1s, fitxer).toBe(1);
-        expect(codi, fitxer).toMatch(/<header className="page-title">\s*<h1[\s>]/);
+        /* Onada R20 · ClosaAplicacio porta el títol de l'app en un header.page-title només per a lectors. */
+        expect(codi, fitxer).toMatch(/<header className="page-title(?: sdp-sr-only)?">\s*<h1[\s>]/);
       }
       for (const [, text] of codi.matchAll(/<h[12][^>]*>([^<{]*)<\/h[12]>/g)) {
         expect(text.trim().endsWith('.'), `${fitxer}: «${text}»`).toBe(false);
@@ -243,7 +244,11 @@ describe('higiene i fronteres del codi', () => {
     expect(llig('src/apps/plataforma/index.js')).toMatch(/export \{ ClosaAplicacio, useClosaAplicacio, validaTaulaDeClosa \} from '\.\/ClosaAplicacio\.jsx';/);
   });
 
-  test('cada app interna carrega darrere del literal de compilació, perquè Vite la tregui del build', () => {
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: el literal passa d'inclusió
+     («DEV || VITE_SDP_APP_<ID> === '1'») a exclusió («VITE_SDP_APP_<ID> !== '0'»). Es conserva la
+     intenció: el codi de l'app només entra per un import() diferit darrere del literal, i amb
+     VITE_SDP_APP_<ID>=0 Vite la trau del build (cada app continua sent desendollable). */
+  test('cada app interna carrega darrere del literal de compilació, perquè Vite la puga traure del build', () => {
     /* Directoris de src/apps que no són apps: la plataforma i l'esquelet comú
        (src/apps/comu, ordre del Mestre T4/T8), que no té manifest ni es registra. */
     const noApps = new Set(['plataforma', 'comu']);
@@ -253,8 +258,9 @@ describe('higiene i fronteres del codi', () => {
     expect(llig('src/apps/plataforma/registreApps.js')).not.toContain("from '../comu/");
     for (const id of apps) {
       const manifest = llig(`src/apps/${id}/manifest.js`);
-      const literal = `import.meta.env.DEV || import.meta.env.VITE_SDP_APP_${id.toUpperCase().replace(/-/g, '_')} === '1' ? () => import('./`;
+      const literal = `carrega: import.meta.env.VITE_SDP_APP_${id.toUpperCase().replace(/-/g, '_')} !== '0' ? () => import('./`;
       expect(manifest, `${id}: literal de compilació`).toContain(literal);
+      expect(manifest, `${id}: cap literal d'inclusió vell`).not.toMatch(/import\.meta\.env\.DEV\b|=== '1'/);
       expect(manifest.split('import(').length - 1, `${id}: una sola importació dinàmica`).toBe(1);
       expect(llig('src/apps/plataforma/registreApps.js'), `${id}: registrada`).toContain(`from '../${id}/manifest.js'`);
     }

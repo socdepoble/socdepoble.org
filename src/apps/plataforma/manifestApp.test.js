@@ -6,7 +6,7 @@ import {
 } from './__fixtures__/manifests.js';
 import { ICONES_APP, iconaDe } from './iconesApp.js';
 import {
-  NOMS_ICONES, ORIGENS_APP, PATRO_INTEGRITAT, PERMISOS_TITULAR, PREFIXOS_ELEMENT, esCamiDeRecurs, esElementPermes, rutaDeApp, titolDe,
+  NIVELLS, NOMS_ICONES, ORIGENS_APP, PATRO_INTEGRITAT, PERMISOS_TITULAR, PREFIXOS_ELEMENT, esCamiDeRecurs, esElementPermes, rutaDeApp, titolDe,
   validaManifestApp
 } from './manifestApp.js';
 
@@ -40,12 +40,13 @@ describe('validaManifestApp · el manifest bo', () => {
       ],
       interruptors: [
         { id: 'cuina', titol: { ca: 'Cuina' } },
-        { id: 'escandalls', titol: { ca: 'Escandalls' }, nivell: 'premium', dret: 'sdp.app.prova.escandalls', actiuPerDefecte: true }
+        { id: 'escandalls', titol: { ca: 'Escandalls' }, nivell: 'gratuit', actiuPerDefecte: true }
       ]
     }));
     expect(errors).toEqual([]);
     expect(ok).toBe(true);
     expect(manifest.interruptors[0]).toEqual({ id: 'cuina', titol: { ca: 'Cuina' }, nivell: 'gratuit', actiuPerDefecte: true });
+    expect(manifest.interruptors[1]).toEqual({ id: 'escandalls', titol: { ca: 'Escandalls' }, nivell: 'gratuit', actiuPerDefecte: true });
     expect(manifest.entrades[1]).toMatchObject({ grup: 'gestio', permis: 'sessio' });
   });
 });
@@ -72,20 +73,35 @@ describe('validaManifestApp · el que no passa', () => {
     ['permís desconegut', { permisos: { veure: 'tothom' } }, 'permisos.veure'],
     ['capacitat inventada', { capacitats: ['teletransport'] }, 'no és cap capacitat del contracte'],
     ['nivell desconegut', { nivell: 'gold' }, 'nivell'],
-    ['premium sense dret', { nivell: 'premium' }, 'necessita un dret'],
-    ['dret mal format', { nivell: 'premium', dret: 'bar' }, 'dret'],
+    /* P0-113 (ordre del Mestre, 261111) · Tot és gratuït i lliure: el premium es
+       rebutja amb un error clar, i el `dret`, que només servia per a cobrar, és
+       una clau desconeguda. */
+    ['premium', { nivell: 'premium' }, "nivell: només 'gratuit'; cap eina es cobra (P0-113)"],
+    ['premium amb dret', { nivell: 'premium', dret: 'sdp.app.prova' }, 'cap eina es cobra'],
+    ['dret en una app gratuïta', { dret: 'sdp.app.prova' }, 'clau desconeguda «dret»'],
     ['actiuPerDefecte no booleà', { actiuPerDefecte: 'si' }, 'actiuPerDefecte'],
     ['entorn desconegut', { entorn: 'staging' }, 'entorn'],
     ['dades personals desconegudes', { dadesPersonals: 'bancaries' }, 'dadesPersonals'],
     ['carrega que no és funció', { carrega: '../bar/AppBar.jsx' }, 'carrega'],
     ['clau desconeguda', { html: '<p>hola</p>' }, 'clau desconeguda «html»'],
     ['ruta declarada', { ruta: '/bar' }, 'clau desconeguda «ruta»'],
-    ['interruptor premium sense dret', { interruptors: [{ id: 'cuina', titol: { ca: 'Cuina' }, nivell: 'premium' }] }, 'interruptor premium']
+    ['interruptor premium', { interruptors: [{ id: 'cuina', titol: { ca: 'Cuina' }, nivell: 'premium' }] }, "interruptors[0]: nivell: només 'gratuit'"],
+    ['interruptor amb dret', { interruptors: [{ id: 'cuina', titol: { ca: 'Cuina' }, dret: 'sdp.app.prova.cuina' }] }, 'interruptors[0]: clau desconeguda «dret»']
   ])('%s', (_nom, canvis, missatge) => {
     const { ok, manifest } = validaManifestApp(manifestDeProva(canvis));
     expect(ok).toBe(false);
     expect(manifest).toBeNull();
     expect(errorsDe(manifestDeProva(canvis))).toContain(missatge);
+  });
+
+  test('P0-113 · l’únic nivell és gratuït, també en una externa i en un mòdul', () => {
+    expect(NIVELLS).toEqual(['gratuit']);
+    expect(Object.isFrozen(NIVELLS)).toBe(true);
+    expect(validaManifestApp(manifestExternDeProva({ nivell: 'premium' }), { origen: 'externa' }).ok).toBe(false);
+    expect(validaManifestApp(manifestModulDeProva({ nivell: 'premium' }), { origen: 'modul' }).ok).toBe(false);
+    const { manifest } = validaManifestApp(manifestDeProva());
+    expect(manifest.nivell).toBe('gratuit');
+    expect('dret' in manifest).toBe(false);
   });
 
   test('ni null ni una llista són un manifest', () => {

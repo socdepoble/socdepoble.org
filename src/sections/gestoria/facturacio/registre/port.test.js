@@ -83,7 +83,7 @@ describe('el contracte', () => {
     // Una dada amb clau Symbol que no és funció no és cap mètode: hi cap.
     const ambMarca = { ...bo, [Symbol('marca')]: 'prova' };
     expect(validaPort(ambMarca)).toBe(ambMarca);
-    expect(METODES_OPCIONALS).toEqual(['ambEscriptor', 'demanaPersistencia', 'tanca']);
+    expect(METODES_OPCIONALS).toEqual(['ambEscriptor', 'restauraRegistres', 'demanaPersistencia', 'tanca']);
     const ambOpcionals = { ...bo, ambEscriptor() {}, demanaPersistencia() {}, tanca() {}, tipus: 'prova', persistent: true };
     expect(validaPort(ambOpcionals)).toBe(ambOpcionals);
     expect(() => validaPort({ ...bo, tanca: 1 })).toThrow(/tanca, si hi és, ha de ser una funció/);

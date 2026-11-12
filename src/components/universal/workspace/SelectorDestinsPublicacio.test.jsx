@@ -52,6 +52,34 @@ test('a changed unsaved destination is never labelled as confirmed by a previous
  expect(screen.getByRole('status').textContent).toMatch(/encara no s’ha desat/);
 });
 
+test('R18 · una referència WP tria una de les cinc destinacions i conserva la revocació', async () => {
+  const desa = vi.fn().mockResolvedValue(undefined);
+  const wp = { font: 'importacio-wp', id: '619', title: 'Catàleg d’arbres' };
+  render(<SelectorDestinsPublicacio font={wp} desa={desa} autoritzat />);
+  expect(screen.queryByRole('checkbox', { name: 'Mercat públic' })).toBeNull();
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Herbari' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Arbres emblemàtics i monumentals' }));
+  expect(screen.getByRole('checkbox', { name: 'Herbari' }).checked).toBe(false);
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Confirmació pública' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Desa els destins' }));
+  await waitFor(() => expect(desa).toHaveBeenLastCalledWith(wp, ['arbres-monumentals']));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Arbres emblemàtics i monumentals' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Desa els destins' }));
+  await waitFor(() => expect(desa).toHaveBeenLastCalledWith(wp, []));
+});
+
+test.each([
+  ['ca', 'Arbres emblemàtics i monumentals', 'Pàgines del fons documental'],
+  ['es', 'Árboles emblemáticos y monumentales', 'Páginas del fondo documental'],
+  ['en', 'Emblematic and monumental trees', 'Documentary collection pages'],
+  ['eu', 'Zuhaitz enblematiko eta monumentalak', 'Dokumentu bildumako orrialdeak'],
+  ['gl', 'Árbores emblemáticas e monumentais', 'Páxinas do fondo documental']
+])('R18 · les noves destinacions tenen etiqueta en %s', (language, arbres, pagina) => {
+  render(<SelectorDestinsPublicacio font={font} desa={vi.fn()} autoritzat language={language} />);
+  expect(screen.getByRole('checkbox', { name: arbres })).toBeTruthy();
+  expect(screen.getByRole('checkbox', { name: pagina })).toBeTruthy();
+});
+
 /* PRODUCCIO-01 (R15b) · Una altra pestanya del Mas té el magatzem: el desament no es fa (NOMES_LECTURA de
    utils/magatzemLocal.js) i el selector diu per què i què cal fer, en les cinc llengües; mai «revisa-la». */
 test.each([

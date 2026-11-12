@@ -20,6 +20,7 @@ const m = vi.hoisted(() => ({
 }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 vi.mock('../../app/contexts/RouterContext', () => ({
+  useLocation: () => ({ search: '' }),
   useParams: () => ({ agentId: m.id }),
   useNavigate: () => m.navigate
 }));

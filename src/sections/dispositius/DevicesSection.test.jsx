@@ -16,7 +16,7 @@ import { loadDeviceChats } from './devicesRuntime.js';
 import DevicesSection from './DevicesSection';
 
 const mocks = vi.hoisted(() => ({
-  ui: { externalConfig: { tenantId: 't-prova' } },
+  ui: { externalConfig: { tenantId: 't-prova' }, language: 'ca' },
   core: { agents: [], ownerUserId: null },
   sessio: null
 }));
@@ -52,12 +52,36 @@ beforeEach(() => {
   vi.stubGlobal('BroadcastChannel', CanalFals);
   mocks.core = { agents: [AGENT], ownerUserId: 'a1b2c3d4-0000-4000-8000-000000000001' };
   mocks.sessio = null;
+  mocks.ui.language = 'ca';
 });
 
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
   vi.unstubAllGlobals();
+});
+
+test.each([
+  ['ca', 'Compatibilitat de connexió', 'poden quedar afectats'],
+  ['es', 'Compatibilidad de conexión', 'pueden verse afectados'],
+  ['en', 'Connection compatibility', 'may be affected'],
+  ['gl', 'Compatibilidade de conexión', 'poden verse afectados'],
+  ['eu', 'Konexioaren bateragarritasuna', 'eragin diezaieke']
+])('%s: la ruta mostra l’avís de connexió amb font oficial i la seua llengua', (idioma, titol, condicio) => {
+  mocks.ui.language = idioma;
+  const { getByRole } = render(<DevicesSection />);
+  const avis = getByRole('heading', { name: titol }).closest('section');
+  expect(avis.lang).toBe(idioma);
+  for (const terme of [condicio, 'TLS 1.2 CBC', 'TLS 1.3', 'HTTPS', 'Android 4.4', 'iOS 9', '2026']) {
+    expect(avis.textContent).toContain(terme);
+  }
+  expect(within(avis).getByRole('link').getAttribute('href')).toBe('https://supabase.com/docs/guides/security/tls#removal-of-cbc-mode-ciphers');
+});
+
+test('la nota per a navegadors antics es reserva a la web', () => {
+  vi.stubGlobal('Capacitor', { isNativePlatform: () => true });
+  const { queryByRole } = render(<DevicesSection />);
+  expect(queryByRole('heading', { name: 'Compatibilitat de connexió' })).toBeNull();
 });
 
 test('foraster: el nom suggerit és genèric, sense cap nom de persona', () => {

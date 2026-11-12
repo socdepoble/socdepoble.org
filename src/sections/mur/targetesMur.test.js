@@ -139,11 +139,14 @@ describe('P0-51 · invariant antiduplicats del Mur i del Calendari', () => {
 
 
 describe('targetesDeSistema', () => {
-  /* R16b · «Què dinem?» entra al Mur com a pàgina de patrimoni, amb la portada del llibre (pageContent.patrimoniR14.js). */
-  test('la targeta de «Què dinem?» porta a /page/receptes i du la portada del llibre', () => {
+  /* R16b · «Què dinem?» entra al Mur com a pàgina de patrimoni, amb la portada de la pàgina (pageContent.patrimoniR14.js).
+     R16-AA4 + P0-117 · /page/receptes és ara l'enciclopèdia de receptaris i porta la seua portada pròpia
+     (receptes-ibanez.webp, fixada a ReceptesQueDinem.test.jsx); la targeta del Mur seguix la de la pàgina. */
+  test('la targeta de «Què dinem?» porta a /page/receptes i du la portada de la pàgina', () => {
     const targeta = targetesDeSistema(PAGE_COPY, { nativa: false }).find((t) => t.id === 'receptes');
     expect(targeta?.mainHref).toBe('/page/receptes');
-    expect(targeta?.image).toBe('/assets/uploads/patrimoni/portada_que_dinem_muro.webp');
+    expect(targeta?.image).toBe(PAGE_COPY.receptes.image);
+    expect(targeta?.image).toBe('/assets/uploads/patrimoni/receptes-ibanez.webp');
   });
 
   test('cada pàgina del copy és una targeta del sistema amb la data de CREACIÓ, mai com a dia d’acte', () => {

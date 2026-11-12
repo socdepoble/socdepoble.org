@@ -48,6 +48,7 @@ import { APP_SEED } from '../appSeed.js';
 import { capturaSessio, getDefaultUserId, usuariDeSessio } from '../identitat.js';
 import { llavorAmbDatesDeProva } from '../../sections/mur/datesDeProvaMur.js';
 import { creaContingutLocal, capturaPayloadPersonalitzacioLocal } from './contingutLocal.js';
+import { CAPTURA_COPUBLICACIO, errorCopublicacio, publicacioPerDefecte } from '../copublicacio.js';
 import { creaNotesLocal } from './notesLocal.js';
 import { creaConversesLocal } from './conversesLocal.js';
 import { creaComunitatLocal } from './comunitatLocal.js';
@@ -55,9 +56,20 @@ import { creaCompteLocal } from './compteLocal.js';
 import { creaAdminUsuarisLocal } from './adminUsuarisLocal.js';
 import { capturaAdminUsuaris } from '../adminUsuaris.js';
 import { capturaConsultaRevisionsSeed, capturaRevisioSeed } from '../seedRevisions.js';
+import { capturaBaixaRevisioPatrimoni, capturaConsultaRevisionsPatrimoni, capturaEdicioRevisioPatrimoni } from '../revisionsPatrimoni.js';
+import { creaRevisionsPatrimoniLocal } from '../revisionsPatrimoniMemoria.js';
+import { creaRevisionsEditorialsWpLocal } from '../revisionsEditorialsWpMemoria.js';
 import { creaMitjansLocal } from './mitjansLocal.js';
 import { creaDadesObertesLocal } from './dadesObertesLocal.js';
 import { estatBuitDeDadesObertes } from '../dadesObertesLot.js';
+
+/* El node sense padró autoritatiu publica amb la identitat oficial de reserva.
+   El client local no autentica ni acredita un segon factor. */
+const copublicacioLocal = Object.freeze({
+  lligPublicadorsRegistrats: publicacioPerDefecte,
+  traspassaPublicacio: () => { throw errorCopublicacio('no-disponible'); },
+  reverteixTraspasPublicacio: () => { throw errorCopublicacio('no-disponible'); }
+});
 
 export const BACKEND_ID_LOCAL = 'sdp-local';
 export const MODES_ADAPTADOR_LOCAL = Object.freeze(['seed', 'local']);
@@ -154,6 +166,11 @@ function capturaArgumentsAdmin(nom, args) {
 }
 
 const METODES_CONNEXIONS = new Set(['preferenciesConnexions', 'desaVisibilitatConnexions', 'connexionsPubliquesDe', 'membresIEntitatsConnectadesDe', 'inclouPersonaEnEntitat', 'solicitaUnirSeAEntitat']);
+const CAPTURA_REVISIONS_PATRIMONI = Object.freeze({
+  llistaRevisionsPatrimoni: capturaConsultaRevisionsPatrimoni,
+  desaRevisioPatrimoni: capturaEdicioRevisioPatrimoni,
+  esborraRevisioPatrimoni: capturaBaixaRevisioPatrimoni
+});
 function capturaArgumentsConnexions(nom, args) {
   const validador = nom === 'desaVisibilitatConnexions' ? visibilitatConnexionsDelContracte
     : nom === 'inclouPersonaEnEntitat' ? inclusioPersonaDelContracte
@@ -318,7 +335,7 @@ export function creaAdaptadorLocal({
 
   const metodes = {};
   for (const part of [creaCompteLocal(e), creaAdminUsuarisLocal(e), creaContingutLocal(e), creaNotesLocal(e), creaConversesLocal(e),
-    creaComunitatLocal(e), creaMitjansLocal(e), creaDadesObertesLocal(e)]) {
+    creaComunitatLocal(e), creaMitjansLocal(e), creaDadesObertesLocal(e), copublicacioLocal, creaRevisionsPatrimoniLocal(usuari, nouId), creaRevisionsEditorialsWpLocal(usuari, ara)]) {
     for (const [nom, fn] of Object.entries(part)) {
       if (Object.hasOwn(metodes, nom)) throw new Error(`[adaptadorLocal] ${nom} ve de dos mòduls.`);
       if (typeof fn !== 'function') throw new TypeError(`[adaptadorLocal] ${nom} ha de ser una funció.`);
@@ -335,7 +352,7 @@ export function creaAdaptadorLocal({
      microtasca de la guarda, com l'adaptador Supabase (capturaSessio síncron a
      sessioDelCompte): un canvi de sessió en el mateix tic de la crida ja no
      entra al mètode. La resta de mètodes és l'opció C (seguiment de P2-08). */
-  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades', 'loadProjeccionsCataleg', ...ADMINISTRATIUS, ...METODES_CONNEXIONS]);
+  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades', 'loadProjeccionsCataleg', ...ADMINISTRATIUS, ...METODES_CONNEXIONS, ...Object.keys(CAPTURA_REVISIONS_PATRIMONI), ...Object.keys(CAPTURA_COPUBLICACIO)]);
   /* La guarda transversal: un adaptador tancat no respon, i una crida
      síncrona que llança es torna un rebuig. El senyal i el tancament es miren
      en cridar i, de nou, just abans d'entrar al magatzem (la microtasca
@@ -350,7 +367,13 @@ export function creaAdaptadorLocal({
     try {
       if (tancat) throw errorTancat();
       abastCrida = AMB_ABAST_EN_CRIDAR.has(nom) ? abast() : null;
-      args = ADMINISTRATIUS.has(nom) ? capturaArgumentsAdmin(nom, entrades) : METODES_CONNEXIONS.has(nom) ? capturaArgumentsConnexions(nom, entrades) : entrades;
+      if (Object.hasOwn(CAPTURA_REVISIONS_PATRIMONI, nom)) {
+        args = [CAPTURA_REVISIONS_PATRIMONI[nom](entrades[0]), entrades[1]];
+      } else if (Object.hasOwn(CAPTURA_COPUBLICACIO, nom)) {
+        args = [CAPTURA_COPUBLICACIO[nom](entrades[0]), entrades[1]];
+      } else {
+        args = ADMINISTRATIUS.has(nom) ? capturaArgumentsAdmin(nom, entrades) : METODES_CONNEXIONS.has(nom) ? capturaArgumentsConnexions(nom, entrades) : entrades;
+      }
     } catch (error) { return Promise.reject(error); }
     const estaAvortat = () => ADMINISTRATIUS.has(nom)
       ? senyalAvortat(args[nom === 'adminLlistaPobles' || nom === 'adminLligPersonalitzacio' ? 0 : 1])

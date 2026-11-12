@@ -6,14 +6,14 @@
  *              i l'enllaç a importar un full de càlcul (/copia/full, ImportarFull.jsx)
  *   /avis      l'avís: s'ha d'acceptar la primera vegada i sempre es pot rellegir
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Download, Upload } from 'lucide-react';
 import { useLocation } from '../../../app/contexts/RouterContext';
 import {
   Alerta, Boto, Camp, CampText, DialegConfirmacio, GrupCamps, GrupOpcions, Interruptor, LlistaArticles, Pila
 } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
-import { MODES_IMPORTACIO, llegixCopia, nomCopia } from '../nucli/copia.js';
+import { MAX_BYTES_COPIA, MODES_IMPORTACIO, llegixCopia, nomCopia } from '../nucli/copia.js';
 import { CAMPS_PERSONA, llegixDecimes, validaPersona } from '../nucli/diccionari.js';
 import { dataCurta, dataLocalDe } from '../nucli/hores.js';
 import { AVIS_SALUT, textError } from '../textos.js';
@@ -116,6 +116,9 @@ export function CopiaIEsborrat() {
   const [missatge, setMissatge] = useState(null);
   const [llegida, setLlegida] = useState(null);
   const [mode, setMode] = useState('afegir');
+  const [confirmaImportacio, setConfirmaImportacio] = useState(false);
+  const [important, setImportant] = useState(false);
+  const rondaCopia = useRef(0);
   const [esborrant, setEsborrant] = useState(false);
   const [confirmacio, setConfirmacio] = useState('');
   const { estatPersistencia } = salut;
@@ -145,13 +148,28 @@ export function CopiaIEsborrat() {
   };
   const tria = async (event) => {
     const [fitxer] = event.target.files || [];
+    event.target.value = '';
     if (!fitxer) return;
-    const resultat = llegixCopia(await fitxer.text());
-    setLlegida(resultat.ok ? resultat : null);
-    if (!resultat.ok) informa('error', resultat.error);
-    else informa('info', `La còpia porta ${resultat.dades.apunts.length} apunts${resultat.descartats ? ` (i ${resultat.descartats} registres no vàlids que no entraran)` : ''}.`);
+    const ronda = ++rondaCopia.current;
+    setLlegida(null);
+    setConfirmaImportacio(false);
+    if (fitxer.size > MAX_BYTES_COPIA) {
+      informa('error', 'El fitxer és massa gran per a ser una còpia de Salut.');
+      return;
+    }
+    try {
+      const resultat = llegixCopia(await fitxer.text());
+      if (ronda !== rondaCopia.current) return;
+      setLlegida(resultat.ok ? resultat : null);
+      if (!resultat.ok) informa('error', resultat.error);
+      else informa('info', `La còpia porta ${resultat.dades.apunts.length} apunts${resultat.descartats ? ` (i ${resultat.descartats} registres no vàlids que no entraran)` : ''}.`);
+    } catch {
+      if (ronda === rondaCopia.current) informa('error', 'No s’ha pogut llegir el fitxer de còpia.');
+    }
   };
   const importa = async () => {
+    if (!llegida || important || salut.nomesLectura) return;
+    setImportant(true);
     try {
       const informe = await salut.importa(llegida.dades, mode);
       setLlegida(null);
@@ -159,6 +177,9 @@ export function CopiaIEsborrat() {
         : `Fet: ${informe.afegits} registres nous; ${informe.duplicats} ja hi eren.`);
     } catch (error) {
       informa('error', textError(error));
+    } finally {
+      setImportant(false);
+      setConfirmaImportacio(false);
     }
   };
   const alias = salut.persona.alias || 'el pare';
@@ -194,7 +215,7 @@ export function CopiaIEsborrat() {
         </Pila>
         <GrupCamps llegenda="Importar una còpia">
           <Camp etiqueta="Fitxer de còpia (.json)">
-            <CampText tipus="file" accept="application/json,.json" onChange={tria} disabled={salut.nomesLectura} />
+            <CampText tipus="file" accept="application/json,.json" onChange={tria} disabled={salut.nomesLectura || important} />
           </Camp>
           {llegida ? (
             <>
@@ -202,7 +223,10 @@ export function CopiaIEsborrat() {
                 { valor: MODES_IMPORTACIO[0], etiqueta: 'Afegir el que no hi ha', ajuda: 'El que ja hi ha es queda; no es duplica res.' },
                 { valor: MODES_IMPORTACIO[1], etiqueta: 'Substituir-ho tot', ajuda: 'El que hi ha ara s’esborra i es posa el de la còpia.' }
               ]} />
-              <Boto varietat="primari" icona={Upload} onClick={importa}>Importa</Boto>
+              <Boto varietat="primari" icona={Upload} carregant={important} disabled={salut.nomesLectura || (mode === 'substituir' && llegida.descartats > 0)}
+                onClick={() => mode === 'substituir' ? setConfirmaImportacio(true) : importa()}>Importa</Boto>
+              {mode === 'substituir' && llegida.descartats > 0
+                ? <p>Per a substituir-ho tot, la còpia ha de contindre registres vàlids.</p> : null}
             </>
           ) : null}
         </GrupCamps>
@@ -213,6 +237,10 @@ export function CopiaIEsborrat() {
           <Boto varietat="perill" disabled={salut.nomesLectura} onClick={() => setEsborrant(true)}>Esborra-ho tot</Boto>
         </Pila>
       </Pila>
+      <DialegConfirmacio obert={confirmaImportacio} destructiu carregant={important} titol="Substituir el diari per la còpia"
+        descripcio="Es reemplaçaran els apunts, les jornades, els períodes, les valoracions i les dades de la persona."
+        etiquetaConfirma="Substituïx el diari" etiquetaCancela="Cancel·la"
+        onTanca={() => setConfirmaImportacio(false)} onConfirma={importa} />
       <DialegConfirmacio obert={esborrant} destructiu titol="Esborrar-ho tot" etiquetaConfirma="Esborra-ho tot" etiquetaCancela="No esborres res"
         descripcio="S’esborraran tots els apunts, els dies, els períodes i els ajustos d’este dispositiu."
         onTanca={() => { setConfirmacio(''); setEsborrant(false); }} onConfirma={esborra}>

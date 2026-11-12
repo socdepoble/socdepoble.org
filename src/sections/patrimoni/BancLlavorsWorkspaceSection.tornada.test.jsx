@@ -33,7 +33,7 @@ test('Tancar torna el focus a l’element de la llista i una germana el porta al
   expect(primera && germana).toBeTruthy();
   const { container } = render(<MemoryRouter rutaInicial="/page/banc-de-llavors"><BancLlavorsWorkspaceSection page={{}} /></MemoryRouter>);
   fireEvent.click(screen.getByRole('button', { name: 'Tots els catàlegs', exact: true }));
-  const element = id => container.querySelector(`#app-grid-list .sp-card-link-overlay[data-element="${id}"]`);
+  const element = id => container.querySelector(`#app-grid-list [data-element="${id}"]`);
   const titol = () => container.querySelector('.sdp-fitxa-didactica__titol');
   fireEvent.click(element(primera.id));
   await marcs();
@@ -59,7 +59,7 @@ test('el cos de la pàgina es pinta sense fitxa, desapareix amb una fitxa oberta
   const { container } = render(<MemoryRouter rutaInicial="/page/banc-de-llavors"><BancLlavorsWorkspaceSection page={{ html: '<p>COS</p>' }} /></MemoryRouter>);
   const detall = () => container.querySelector('#app-grid-main');
   const cos = () => within(detall()).queryByText('COS');
-  const element = id => container.querySelector(`#app-grid-list .sp-card-link-overlay[data-element="${id}"]`);
+  const element = id => container.querySelector(`#app-grid-list [data-element="${id}"]`);
   const titol = () => container.querySelector('.sdp-fitxa-didactica__titol');
   expect(cos()).toBeTruthy();
   expect(cos().closest('article.cms-preview')).toBeTruthy();

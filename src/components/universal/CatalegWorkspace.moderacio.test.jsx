@@ -9,7 +9,7 @@ import { ModeracioContext } from '../PedraSeca/hooks/moderacioDePoble.js';
 import { clauDeBloqueig, elementBloquejat, objectiuDeTargeta } from '../../config/moderacio.js';
 import { carregaFitxesCanoniques } from '../../data/fitxesCanoniquesCataleg.js';
 import { delVal } from '../../config/storage.js';
-import { CLAU_VISTA_CATALEG } from './workspace/vistaCataleg.js';
+import { CLAU_VISTA_CATALEG, desaVista } from './workspace/vistaCataleg.js';
 import { FONTS_BANC_LLAVORS, entradesDelCataleg } from '../../data/patrimoni/bancLlavors.js';
 import { RECEPTES_QUE_DINEM } from '../../data/patrimoni/queDinem.js';
 
@@ -29,10 +29,13 @@ const context = { disponible: true, potBloquejar: true,
   objectiuDeTargeta: (objecte) => objectiuDeTargeta(objecte, { esDeQuiMira: id => id === JO }), demanaDenuncia: vi.fn(), demanaBloqueig: vi.fn() };
 const model = { status: 'ready', canAutoSelect: () => false, categories: [{ id: 'a', label: 'Carpeta A' }],
   items: [{ id: 'romer', title: 'Romer', categoryIds: ['a'], glyph: '🌿' }] };
-const pinta = () => render(<MemoryRouter rutaInicial="/page/herbari"><ModeracioContext.Provider value={context}>
+const pinta = (vista = 'gran') => {
+  if (vista === 'gran') desaVista('prova-moderacio', 'gran');
+  return render(<MemoryRouter rutaInicial="/page/herbari"><ModeracioContext.Provider value={context}>
   <CatalegWorkspace id="prova-moderacio" font="herbari" destiPublicacio="herbari" ruta="/page/herbari" model={model}
     renderDetail={() => <header className="page-title"><h1>Introducció</h1></header>} />
 </ModeracioContext.Provider></MemoryRouter>);
+};
 const titols = () => screen.queryAllByRole('heading', { level: 3 }).map(node => node.textContent);
 
 beforeEach(async () => {
@@ -66,7 +69,7 @@ test('a la Rajola, la targeta no porta el ⋮ (el menú no hi cap); el detall de
   const font = FONTS_BANC_LLAVORS[0], [primera, segona] = entradesDelCataleg(font.id);
   m.rows = [fila(VEINA, 'llavors', primera.id, 'x'), fila(JO, 'llavors', segona.id, 'y')];
   pinta();
-  fireEvent.click(screen.getByRole('button', { name: 'Rajola quadrada', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Quadrícula 2×2', exact: true }));
   await screen.findByRole('heading', { level: 3, name: primera.nom });
   expect(screen.queryAllByRole('button', { name: /^Més opcions/ })).toHaveLength(0);
   fireEvent.click(screen.getByRole('button', { name: `Obri fitxa: ${primera.nom}` }));
@@ -75,4 +78,14 @@ test('a la Rajola, la targeta no porta el ⋮ (el menú no hi cap); el detall de
   fireEvent.click(screen.getByRole('button', { name: `Obri fitxa: ${segona.nom}` }));
   await screen.findByRole('heading', { level: 1, name: segona.nom });
   expect(screen.queryAllByRole('button', { name: /^Més opcions/ })).toHaveLength(0);
+});
+
+
+test('Canònica conserva la denúncia en el detall de la referència sense posar un menú dins de la fila compacta', async () => {
+  const font = FONTS_BANC_LLAVORS[0], [primera] = entradesDelCataleg(font.id);
+  m.rows = [fila(VEINA, 'llavors', primera.id, 'text alié')];
+  const { container } = pinta('canonica');
+  fireEvent.click(await screen.findByRole('button', { name: primera.nom, exact: true }));
+  expect(await screen.findByRole('button', { name: `Més opcions: ${primera.nom}` })).toBeTruthy();
+  expect(container.querySelector('#app-grid-list .sdp-moderacio')).toBeNull();
 });

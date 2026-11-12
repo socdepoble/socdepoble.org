@@ -39,10 +39,10 @@ describe('AH-22 · rural content and dated production balance in five languages'
  });
  test.each(languages)('%s keeps contract counts aligned with code without announcing activation', language => {
   const text=doc(localitzaPagina(PAGE_COPY.fediversity,language).html).body.textContent;
-  const phrases={ca:'51 capacitats i 148 mètodes amb 210 casos',es:'51 capacidades y 148 métodos con 210',en:'51 capabilities and 148 methods with 210',eu:'51 gaitasun eta 148 metodo ditu 210',gl:'51 capacidades e 148 métodos con 210'};
-  expect(Object.keys(CAPACITATS)).toHaveLength(51);
-  expect(CONTRACTE_BACKEND).toHaveLength(148);
-  expect(CASOS).toHaveLength(210);
+  const phrases={ca:'54 capacitats i 156 mètodes amb 219 casos',es:'54 capacidades y 156 métodos con 219',en:'54 capabilities and 156 methods with 219',eu:'54 gaitasun eta 156 metodo ditu 219',gl:'54 capacidades e 156 métodos con 219'};
+  expect(Object.keys(CAPACITATS)).toHaveLength(54);
+  expect(CONTRACTE_BACKEND).toHaveLength(156);
+  expect(CASOS).toHaveLength(219);
   expect(text).toContain(phrases[language]);
   const notes=[...doc(localitzaPagina(PAGE_COPY.fediversity,language).html).querySelectorAll('p')].filter(p=>p.textContent.includes(phrases[language])&&p.textContent.includes('46/138/190'));
   expect(notes).toHaveLength(1);const note=notes[0];
@@ -54,6 +54,19 @@ describe('AH-22 · rural content and dated production balance in five languages'
   const local={ca:'codi local',es:'código local',en:'local code',eu:'tokiko kodeko',gl:'código local'};
   expect(text).toContain(local[language]);
   expect(text).toContain('R-5');expect(text).toContain('Nix');
+ });
+ test.each([
+  ['ca', '9 de novembre de 2026', 'fora de l’abast dels seus fons actuals', 'No s’ha concedit finançament', 'dades obertes municipals', 'desenvolupament rural'],
+  ['es', '9 de noviembre de 2026', 'fuera del alcance de sus fondos actuales', 'No se ha concedido financiación', 'datos abiertos municipales', 'desarrollo rural'],
+  ['en', '9 November 2026', 'outside the scope of its current funds', 'No funding was awarded', 'municipal open data', 'rural development'],
+  ['eu', '2026ko azaroaren 9an', 'egungo funtsen esparrutik kanpo', 'Ez da finantzaketarik eman', 'udaleko datu irekiak', 'Landa-garapenerako'],
+  ['gl', '9 de novembro de 2026', 'fóra do alcance dos seus fondos actuais', 'Non se concedeu financiamento', 'datos abertos municipais', 'desenvolvemento rural']
+ ])('%s comunica el tancament d’NLnet i la continuïtat del projecte', (language, date, scope, funding, openData, rural) => {
+  const page = localitzaPagina(PAGE_COPY.fediversity, language);
+  for (const terme of ['2026-08-1a6', date, scope, funding]) expect(page.lead).toContain(terme);
+  const cos = doc(page.html).body.textContent;
+  for (const terme of ['AGPL-3.0', 'backendPort.js', openData, 'Web Component', 'Node 0', rural]) expect(cos).toContain(terme);
+  expect(cos).not.toMatch(/no consta cap comunicació posterior|no acredita la reapertura|does not establish that the application reopened/i);
  });
  test.each(languages)('%s documents examples without inventing homes or jobs', language => {
   const homes=doc(localitzaPagina(PAGE_COPY.habitatge,language).html);

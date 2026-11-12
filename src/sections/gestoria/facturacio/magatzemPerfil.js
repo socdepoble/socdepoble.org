@@ -232,8 +232,13 @@ export function creaMagatzemPerfil({ nom = NOM_BD_PERFIL, idb = globalThis.index
   }
   const enFila = creaFila();
   let connexio = null;
+  let tancat = false;
+  const comprovaObert = () => {
+    if (tancat) throw errorAmbCodi('TANCAT', 'El perfil fiscal està tancat.');
+  };
 
   const obri = () => {
+    comprovaObert();
     if (!connexio) {
       connexio = new Promise((resol, rebutja) => {
         const peticio = idb.open(nom, VERSIO_BD_PERFIL);
@@ -243,6 +248,11 @@ export function creaMagatzemPerfil({ nom = NOM_BD_PERFIL, idb = globalThis.index
         };
         peticio.onsuccess = () => {
           const bd = peticio.result;
+          if (tancat) {
+            bd.close();
+            rebutja(errorAmbCodi('TANCAT', 'El perfil fiscal està tancat.'));
+            return;
+          }
           bd.onversionchange = () => {
             bd.close();
             connexio = null;
@@ -262,6 +272,7 @@ export function creaMagatzemPerfil({ nom = NOM_BD_PERFIL, idb = globalThis.index
   /* Una transacció sobre el store; resol quan es completa, no quan acaba una petició. */
   const opera = async (mode, accio) => {
     const bd = await obri();
+    comprovaObert();
     return new Promise((resol, rebutja) => {
       let tx;
       try {
@@ -308,15 +319,15 @@ export function creaMagatzemPerfil({ nom = NOM_BD_PERFIL, idb = globalThis.index
         const perTipus = vigents(peticio.result ?? []);
         try {
           comprova?.(Object.fromEntries(TIPUS_PERFIL.map((t) => [t, perTipus[t]?.dades ?? null])));
+          const anterior = perTipus[tipus];
+          const versio = anterior ? anterior.versio + 1 : 1;
+          const nova = { clau: clauDe(tipus, versio), tipus, versio, instant, dades };
+          store.add(nova);
+          torna(nova);
         } catch (error) {
           avorta(error);
           return;
         }
-        const anterior = perTipus[tipus];
-        const versio = anterior ? anterior.versio + 1 : 1;
-        const nova = { clau: clauDe(tipus, versio), tipus, versio, instant, dades };
-        store.add(nova);
-        torna(nova);
       };
     });
     return versioDe(fila);
@@ -394,6 +405,7 @@ export function creaMagatzemPerfil({ nom = NOM_BD_PERFIL, idb = globalThis.index
     },
 
     tanca() {
+      tancat = true;
       if (connexio) connexio.then((bd) => bd.close(), () => {});
       connexio = null;
     }

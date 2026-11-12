@@ -19,6 +19,7 @@ import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { Camp, CampText } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { dataHoraAmbHus } from '../facturacio/registre/empremta.js';
+import { MAX_BYTES_COPIA_LLIBRE } from '../facturacio/registre/port.js';
 import { ACCEPTA_COPIA, registresSenseCopia } from './nucli/copia.js';
 import { dataCurta } from './nucli/formulari.js';
 import { AvisDeZona, llegixText } from './peces.jsx';
@@ -40,10 +41,11 @@ export function CopiaLlibre({ f }) {
 
   async function restaura(event) {
     const fitxer = event.target.files?.[0];
+    event.target.value = '';
     if (!fitxer) return;
     let text;
     try {
-      text = await llegixText(fitxer);
+      text = fitxer.size > MAX_BYTES_COPIA_LLIBRE ? null : await llegixText(fitxer);
     } catch {
       text = '';
     }

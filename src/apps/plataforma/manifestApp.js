@@ -54,7 +54,10 @@ export const PERMISOS_ESCRIURE = Object.freeze(['sessio', 'superadmin']);
    d'un amfitrió (externa) ni compilat a banda (modul) no rep cap dada de la
    persona. Sense, el titular és sempre null. */
 export const PERMISOS_TITULAR = Object.freeze(['sessio']);
-export const NIVELLS = Object.freeze(['gratuit', 'premium']);
+/* P0-113 (ordre del Mestre, 261111) · Tot el sistema és 100% gratuït i lliure:
+   cap app ni cap interruptor es cobra. L'únic nivell és 'gratuit', i el camp
+   `dret`, que només servia per a cobrar, ja no existix (clau desconeguda). */
+export const NIVELLS = Object.freeze(['gratuit']);
 export const ENTORNS = Object.freeze(['produccio', 'desenvolupament']);
 export const DADES_PERSONALS = Object.freeze([false, 'salut', 'financeres']);
 
@@ -62,7 +65,6 @@ export const DADES_PERSONALS = Object.freeze([false, 'salut', 'financeres']);
 export const PATRO_ID_APP = /^[a-z][a-z0-9-]{1,30}$/;
 /* Slug d'entrada, de grup i d'interruptor: minúscules, xifres i guions solts. */
 export const PATRO_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const PATRO_DRET = /^sdp\.app\.[a-z0-9-]+(?:\.[a-z0-9-]+)*$/;
 const PATRO_ELEMENT = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/;
 /* Cap HTML ni caràcter de control dins d'un text: es pinta sempre com a text,
    però un manifest que en porta no és de fiar. */
@@ -73,7 +75,7 @@ const MAX_ENTRADES = 20;
 const MAX_INTERRUPTORS = 20;
 
 const CLAUS_COMUNES = ['schema', 'id', 'titol', 'icona', 'entrades', 'grups', 'entradaPerDefecte', 'permisos',
-  'capacitats', 'nivell', 'dret', 'actiuPerDefecte', 'entorn', 'dadesPersonals', 'interruptors'];
+  'capacitats', 'nivell', 'actiuPerDefecte', 'entorn', 'dadesPersonals', 'interruptors'];
 const CLAUS_INTERNA = new Set([...CLAUS_COMUNES, 'carrega']);
 const CLAUS_EXTERNA = new Set([...CLAUS_COMUNES, 'element']);
 const CLAUS_MODUL = new Set([...CLAUS_COMUNES, 'cos', 'estils', 'nucli']);
@@ -86,7 +88,9 @@ const MAX_CAMI = 2048;
 const PATRO_CAMI_PROHIBIT = /[\s\\"'<>`\u0000-\u001F\u007F-\u009F]/;
 const CLAUS_ENTRADA = new Set(['slug', 'titol', 'icona', 'grup', 'permis']);
 const CLAUS_GRUP = new Set(['id', 'titol']);
-const CLAUS_INTERRUPTOR = new Set(['id', 'titol', 'nivell', 'dret', 'actiuPerDefecte']);
+const CLAUS_INTERRUPTOR = new Set(['id', 'titol', 'nivell', 'actiuPerDefecte']);
+/* P0-113 (ordre del Mestre, 261111) · L'error clar d'un nivell de pagament. */
+const ERROR_NIVELL = "nivell: només 'gratuit'; cap eina es cobra (P0-113)";
 const CLAUS_PERMISOS = new Set(['veure', 'escriure', 'titular']);
 
 const esObjecte = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
@@ -184,17 +188,13 @@ function validaInterruptors(interruptors, errors) {
     else if (vistos.has(interruptor.id)) errors.push(`${on}: id repetit «${interruptor.id}»`);
     vistos.add(interruptor.id);
     const nivell = interruptor.nivell ?? 'gratuit';
-    if (!NIVELLS.includes(nivell)) errors.push(`${on}: nivell desconegut`);
-    if (nivell === 'premium' && !(typeof interruptor.dret === 'string' && PATRO_DRET.test(interruptor.dret))) {
-      errors.push(`${on}: un interruptor premium necessita un dret sdp.app.<…>`);
-    }
+    if (!NIVELLS.includes(nivell)) errors.push(`${on}: ${ERROR_NIVELL}`);
     const actiuPerDefecte = interruptor.actiuPerDefecte ?? true;
     if (typeof actiuPerDefecte !== 'boolean') errors.push(`${on}: actiuPerDefecte ha de ser booleà`);
     return Object.freeze({
       id: interruptor.id,
       titol: validaTitol(interruptor.titol, on, errors),
       nivell,
-      ...(interruptor.dret !== undefined ? { dret: interruptor.dret } : {}),
       actiuPerDefecte
     });
   }).filter(Boolean));
@@ -279,9 +279,7 @@ export function validaManifestApp(m, { origen = 'interna' } = {}) {
   }
   const permisos = validaPermisos(m.permisos, externa ? 'externa' : modul ? 'modul' : 'interna', errors);
   const capacitats = validaCapacitats(m.capacitats, errors);
-  if (!NIVELLS.includes(m.nivell)) errors.push('nivell: gratuit | premium');
-  if (m.nivell === 'premium' && !(typeof m.dret === 'string' && PATRO_DRET.test(m.dret))) errors.push('dret: una app premium necessita un dret sdp.app.<id>');
-  if (m.dret !== undefined && !(typeof m.dret === 'string' && PATRO_DRET.test(m.dret))) errors.push('dret: forma sdp.app.<…>');
+  if (!NIVELLS.includes(m.nivell)) errors.push(ERROR_NIVELL);
   if (typeof m.actiuPerDefecte !== 'boolean') errors.push('actiuPerDefecte: ha de ser booleà');
   if (!ENTORNS.includes(m.entorn)) errors.push('entorn: produccio | desenvolupament');
   if (!DADES_PERSONALS.includes(m.dadesPersonals)) errors.push("dadesPersonals: false | 'salut' | 'financeres'");
@@ -315,7 +313,6 @@ export function validaManifestApp(m, { origen = 'interna' } = {}) {
       permisos,
       capacitats,
       nivell: m.nivell,
-      ...(m.dret !== undefined ? { dret: m.dret } : {}),
       actiuPerDefecte: m.actiuPerDefecte,
       entorn: m.entorn,
       dadesPersonals: m.dadesPersonals,

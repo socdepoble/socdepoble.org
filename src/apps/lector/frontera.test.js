@@ -65,8 +65,8 @@ describe('el que pot importar', () => {
     /* SN (261003) · personals.js: les fonts que afig la persona, pendents del connector.
        Actualitzada a posta (B6, IDEA-30; marató 261101_2143) · germanes.js: les notícies germanes. */
     expect(NUCLI.map((f) => f.replace(`${APP}/nucli/`, ''))).toEqual([
-      'analitzador.js', 'dates.js', 'entitats.js', 'estat.js', 'germanes.js', 'html.js', 'ids.js', 'index.js', 'model.js',
-      'noticies.js', 'personals.js', 'urls.js', 'xml.js'
+      'analitzador.js', 'copia.js', 'dates.js', 'entitats.js', 'estat.js', 'germanes.js', 'html.js', 'ids.js', 'index.js', 'model.js',
+      'noticies.js', 'opml.js', 'personals.js', 'urls.js', 'xml.js'
     ]);
     expect(LLAVOR_XML).toHaveLength(5);
   });

@@ -88,7 +88,10 @@ const URL_PROVA = 'https://www.exemple.org/article';
 const DESA = `/notes?mode=desa&url=${encodeURIComponent(URL_PROVA)}&titol=Un+article`;
 const LECTOR = `${DESA}&desti=lector`;
 const ARA = Date.UTC(2026, 9, 3, 10, 30);
-/* Un node en desenvolupament: el Lector hi és encés. En producció, apagat (entorn). */
+/* Un node en desenvolupament: el Lector hi és encés.
+   P0-113 (ordre del Mestre, 261111) · El Lector és ara una eina oberta també en producció (manifest: entorn
+   'produccio'): «sense Lector disponible» ja no és l'entorn, és un paquet que no el porta (VITE_SDP_APP_LECTOR=0,
+   carrega: null), el cas del paquet de l'amfitrió. Vegeu lectorDeProva({ foraDelPaquet: true }). */
 const DESENVOLUPAMENT = Object.freeze({ ...ENTORN_OBERT, produccio: false });
 
 /* Els magatzems oberts, per a tancar-los després de cada prova. */
@@ -102,7 +105,7 @@ const oberts = [];
    no deixa obrir IndexedDB (navegació privada). `discLent`: l'app no acaba
    de llegir el seu magatzem fins que la prova crida `obriDisc()` (una màquina
    carregada: «Obrint el lector…» dura el que la prova vol). */
-function lectorDeProva({ ambDestinacio = true, fallaCarrega = false, senseDisc = false, discLent = false } = {}) {
+function lectorDeProva({ ambDestinacio = true, fallaCarrega = false, senseDisc = false, discLent = false, foraDelPaquet = false } = {}) {
   const idb = creaIdbFals();
   const locks = creaLocksFals();
   const canal = creaCanalFals();
@@ -125,7 +128,7 @@ function lectorDeProva({ ambDestinacio = true, fallaCarrega = false, senseDisc =
   }
   const modul = { default: App, destinacioEnllac: ambDestinacio ? destinacioDe(api) : null };
   const carrega = vi.fn(() => (fallaCarrega ? Promise.reject(new Error('El paquet no ha arribat.')) : Promise.resolve(modul)));
-  const registre = creaRegistre({ internes: [{ ...manifestLector, carrega }] });
+  const registre = creaRegistre({ internes: [{ ...manifestLector, carrega: foraDelPaquet ? null : carrega }] });
   return { api, registre, carrega, obriDisc };
 }
 
@@ -248,8 +251,8 @@ describe('la tria es pinta', () => {
     expect((await nomFont()).value).toBe('exemple.org');
   });
 
-  test('sense Lector disponible (producció: l’app és de desenvolupament), cap tria ni cap càrrega; un ?desti=lector és el Bloc', () => {
-    const { carrega } = munta(LECTOR, { entorn: ENTORN_OBERT });
+  test('sense Lector disponible (producció amb un paquet que no el porta), cap tria ni cap càrrega; un ?desti=lector és el Bloc', () => {
+    const { carrega } = munta(LECTOR, { entorn: ENTORN_OBERT, lector: lectorDeProva({ foraDelPaquet: true }) });
     expect(senseTria()).toBeNull();
     expect(screen.queryByRole('heading', { level: 3, name: 'Destinació' })).toBeNull();
     expect(screen.getByRole('heading', { level: 1, name: 'Desar al Bloc' })).toBeTruthy();
@@ -450,8 +453,8 @@ describe('el bookmarklet amb la destinació', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Desar al Bloc' })).toBeTruthy();
   });
 
-  test('amb «lector» i el Lector no disponible (producció): el Bloc, sense cap tria ni càrrega', () => {
-    const { carrega } = munta(rutaDelBookmarklet({ desti: 'lector' }), { entorn: ENTORN_OBERT });
+  test('amb «lector» i el Lector no disponible (producció amb un paquet que no el porta): el Bloc, sense cap tria ni càrrega', () => {
+    const { carrega } = munta(rutaDelBookmarklet({ desti: 'lector' }), { entorn: ENTORN_OBERT, lector: lectorDeProva({ foraDelPaquet: true }) });
     expect(senseTria()).toBeNull();
     expect(screen.getByRole('heading', { level: 1, name: 'Desar al Bloc' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Desar a «Safata d’Entrada»' })).toBeTruthy();

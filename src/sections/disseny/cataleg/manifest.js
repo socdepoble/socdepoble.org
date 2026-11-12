@@ -48,7 +48,9 @@ export const ICONES_ESPECIMENS = Object.freeze({
     'formulari-complex': '📋', calendari: '📅', 'drets-autor': '©️', classificacio: '🔖',
     rajola: '🀄', 'teclat-numeric': '🔢', 'afegit-rapid': '➕',
     /* O4-CLAUDE-1 (captura 261102_2121) · «On es publica?» en línia. */
-    ambit: '📍'
+    ambit: '📍',
+    /* Onada R19 · Co-publicació multi-entitat registrada i traspàs inline d'1 clic. */
+    'traspas-copublicacio': '🤝'
   }),
   navegacio: Object.freeze({
     pestanyes: '📑', molla: '🍞', paginacio: '⏭️', acordio: '🪗', 'nav-mobil': '📲',
@@ -467,7 +469,10 @@ CATALOG_ITEMS.push(
 CATALOG_ITEMS.push(
   especimen('fonaments', 'publicacions-actor', 'Publicacions de l’actor', 'PublicacionsDeLActor · TargetaDelMercat · la ranura peuDePagina', ['organisme', 'targeta', 'historic'],
     'El que la persona, o l’entitat amb què actua, ja té publicat en una secció (Mur, Mercat o Esdeveniments), amb la targeta de sempre de cada secció dins de la graella. Al Bloc de Notes va davall d’una publicació oberta, dins del mateix scroll i fora de l’Índex; l’editor ja no en porta.',
-    'historic ja publicat actor avatar identitat entitat socdepoble samarreta aplec mur mercat esdeveniments notes peu pagina ranura graella targeta')
+    'historic ja publicat actor avatar identitat entitat socdepoble samarreta aplec mur mercat esdeveniments notes peu pagina ranura graella targeta'),
+  especimen('formularis', 'traspas-copublicacio', 'Traspàs i co-publicació', 'Co-publicació registrada i traspàs en línia d’1 clic', ['organisme', 'autoria', 'copublicacio'],
+    'La BarraTaronja amb avatar compost quadrangular d’estil grup de xat quan dos o més comptes registrats co-publiquen un recurs, la guarda contra actors no registrats i el panell inline d’1 clic per a superadmin.',
+    'barra taronja copublicacio traspas autoria avatar compost mosaic entitats registrades superadmin inline PanellTraspasPublicacioInline AvatarCompostPublicadors')
 );
 
 /* T52 (ordre del Mestre, 260928: «que quede clar quin és l'element universal
@@ -522,6 +527,9 @@ export const ARBRE_UNIVERSAL = Object.freeze([
   { id: 'emoticona-barra', nom: 'EmoticonaBarra', fitxer: 'src/components/universal/EmoticonaBarra.jsx', pare: 'barres', item: 'fonaments-emoticona-barra',
     rol: 'L’espai central de la barra taronja: en edició, el botó d’emoticona (la ploma blanca mentre no n’hi ha cap); en lectura, l’emoticona triada o res.',
     consumidors: ['UniversalCard (la caputxa, només amb emoticona triada)'] },
+  { id: 'traspas-copublicacio', nom: 'PanellTraspasPublicacioInline i AvatarCompostPublicadors', fitxer: 'src/sections/admin/PanellTraspasPublicacioInline.jsx', pare: 'barres', item: 'formularis-traspas-copublicacio',
+    muntadaPer: 'PageDetailSection',
+    rol: 'Co-publicació multi-entitat registrada a la BarraTaronja i panell inline d’1 clic per a superadmin.', usa: ['boto'] },
   { id: 'card', nom: 'UniversalCard', fitxer: 'src/components/PedraSeca/organismes/UniversalCard.jsx', pare: 'page', relacio: 'versio', item: 'fonaments-universalcard',
     rol: 'Capçalera ≈ barra taronja, mitjà 1:1, cos i peu ≈ barra blava sense navegació. No importa PageFrame ni les barres: fa servir els mateixos àtoms.',
     consumidors: [

@@ -116,3 +116,13 @@ describe('diverses pestanyes', () => {
     await expect(b.desa(estatInicial())).resolves.toEqual(estatInicial());
   });
 });
+
+test('una instantània vella no xafa la compra desada per una altra pestanya', async () => {
+  const { pestanya } = navegador();
+  const a = pestanya();
+  const b = pestanya();
+  const [abansA, abansB] = await Promise.all([a.llegix(), b.llegix()]);
+  await a.desa(afig(abansA, 'casa', 'pa'), abansA);
+  await expect(b.desa(afig(abansB, 'casa', 'llet'), abansB)).rejects.toMatchObject({ codi: 'CONFLICTE' });
+  expect((await b.llegix()).llistes[0].linies.map(({ articleId }) => articleId)).toEqual(['pa']);
+});

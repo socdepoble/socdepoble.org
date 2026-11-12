@@ -1,0 +1,9 @@
+{
+  "profile": "tabular-data-package",
+  "name": "socdepoble-patrimoni-memoria-oral",
+  "title": "Memòria Oral, Oficis i Cançoner",
+  "version": "1.0.0",
+  "skos_concept": "TX.43",
+  "isadg_level": "series",
+  "colleccions": []
+}

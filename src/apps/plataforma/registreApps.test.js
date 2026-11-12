@@ -6,6 +6,7 @@ import {
   registraAppExterna, retiraAppExterna, subscriu
 } from './registreApps.js';
 import { validaManifestApp } from './manifestApp.js';
+import { avaluaApp } from './interruptors.js';
 
 afterEach(() => { vi.restoreAllMocks(); });
 
@@ -40,14 +41,15 @@ describe('les apps internes', () => {
   });
 
   /* Onada 3 (RSS) · Notícies del Poble, darrere de la Nevera, amb la seua
-     porta de compilació (VITE_SDP_APP_LECTOR), sense dades personals i només
-     en desenvolupament fins que l'amfitrió en proveïsca les notícies. */
-  test('lector hi és, darrere de nevera, gratuïta, sense dades personals, en desenvolupament i amb les seues entrades', () => {
+     porta de compilació (VITE_SDP_APP_LECTOR) i sense dades personals.
+     P0-113 (ordre del Mestre, 261111) · Abans, només en desenvolupament; ara
+     és una eina gratuïta oberta en producció i encesa per defecte. */
+  test('lector hi és, darrere de nevera, gratuïta, sense dades personals, oberta en producció i amb les seues entrades', () => {
     const ids = APPS_INTERNES.map((app) => app.id);
     expect(ids.indexOf('lector')).toBeGreaterThan(ids.indexOf('nevera'));
     const lector = APPS_INTERNES.find((app) => app.id === 'lector');
     expect(lector).toMatchObject({
-      origen: 'interna', nivell: 'gratuit', dadesPersonals: false, entorn: 'desenvolupament', capacitats: [], entradaPerDefecte: 'noticies'
+      origen: 'interna', nivell: 'gratuit', dadesPersonals: false, entorn: 'produccio', actiuPerDefecte: true, capacitats: [], entradaPerDefecte: 'noticies'
     });
     expect(typeof lector.carrega).toBe('function');
     /* Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, la gestió de fonts ja no
@@ -57,6 +59,29 @@ describe('les apps internes', () => {
     expect(appDeRuta('/app/lector/noticies/hui')?.id).toBe('lector');
     expect(entradaActiva(lector, '/app/lector/noticies/hui/veu-placa')?.slug).toBe('noticies');
     expect(entradaActiva(lector, '/app/lector/fonts/colleccio')).toBeNull();
+  });
+
+  /* P0-113 (ordre del Mestre, 261111) · El TPV del Bar, el Rebost (nevera),
+     Salut, el Lector i la Gestoria, encesos en producció com a eines gratuïtes
+     obertes: entorn 'produccio' (ENTORNS no admet null, i 'produccio' és el
+     valor canònic d'«obert en producció»), actiuPerDefecte i compilats.
+     Salut i la Gestoria conserven les dades personals i, amb elles, la guarda
+     de document propi: mai dins d'una altra web. */
+  test('P0-113 · les cinc apps internes, gratuïtes i obertes en producció; Salut i la Gestoria, només al document propi', () => {
+    const produccio = { produccio: true, teCapacitat: () => true };
+    for (const app of APPS_INTERNES) {
+      expect(app, app.id).toMatchObject({ nivell: 'gratuit', entorn: 'produccio', actiuPerDefecte: true });
+      expect(typeof app.carrega, app.id).toBe('function');
+      expect(avaluaApp(app, { ...produccio, amaDelDocument: true }), app.id).toEqual({ estat: 'available', motiu: null });
+    }
+    expect(APPS_INTERNES.find((app) => app.id === 'salut').dadesPersonals).toBe('salut');
+    expect(APPS_INTERNES.find((app) => app.id === 'gestoria').dadesPersonals).toBe('financeres');
+    expect(avaluaApp(APPS_INTERNES.find((app) => app.id === 'salut'), { ...produccio, amaDelDocument: false }).motiu).toBe('document-no-propi');
+    expect(avaluaApp(APPS_INTERNES.find((app) => app.id === 'gestoria'), { ...produccio, amaDelDocument: false }).motiu)
+      .toBe('document-no-propi-financeres');
+    for (const id of ['bar', 'nevera', 'lector']) {
+      expect(APPS_INTERNES.find((app) => app.id === id).dadesPersonals, id).toBe(false);
+    }
   });
 
   test('el registre del document les llista en ordre', () => {

@@ -26,9 +26,11 @@ import PluginPage from './PluginPage.jsx';
 import { pluginPerId } from './registrePlugins.js';
 
 /* Un node on tot el que és compilat està encés (com el servidor de dev). */
-const ENTORN_OBERT = Object.freeze({ produccio: false, teDret: () => true, teCapacitat: () => true, amaDelDocument: true });
-/* Un build de producció sense cap VITE_SDP_APP_*: les apps en desenvolupament, apagades. */
-const ENTORN_PRODUCCIO = Object.freeze({ produccio: true, teDret: () => false, teCapacitat: () => true, amaDelDocument: true });
+/* P0-113 (ordre del Mestre, 261111: «TOT el sistema és 100% gratuït») · Fora `teDret`: cap eina
+   necessita cap dret. */
+const ENTORN_OBERT = Object.freeze({ produccio: false, teCapacitat: () => true, amaDelDocument: true });
+/* Un node de producció. Vehicle no és cap app de la plataforma: cap interruptor el tanca. */
+const ENTORN_PRODUCCIO = Object.freeze({ produccio: true, teCapacitat: () => true, amaDelDocument: true });
 
 function Ubicacio() {
   const { pathname } = useLocation();

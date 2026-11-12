@@ -1,5 +1,7 @@
 node_modules
 dist
+# Cache privada dels clons amb dependències enllaçades; es reconstruïx sola.
+/.sdp-vite-cache/
 # Carpeta antiga de paquets (buida). wordpress-plugin/eines/empaqueta.mjs escriu a wordpress-plugin/builds/
 # (destinació única, skill core-empaquetat-wp), i els *.zip queden fora per la regla de més avall.
 /release/

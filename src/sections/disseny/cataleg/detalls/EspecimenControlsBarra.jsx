@@ -74,6 +74,7 @@ export default function EspecimenControlsBarra() {
         ['MenuComentar.ambPublic / mostra', 'boolean / boolean', 'false / false', 'Sense ambPublic, la fila «En públic» porta aria-disabled i diu «Ací encara no hi ha cap xat públic.». Amb mostra, el catàleg el pinta obert i quiet: no furta el focus, no escolta la pàgina i no tria (el mateix contracte que MenuTraduir).'],
         ['BarraBlava.menuTraduir', '{ obert, opcions, actual, onTria, onTanca } | null', 'null', 'Traductor de Poble (260930): el posa useAccions quan l’amfitrió oferix el servei (externalConfig.traductorUrl). Traduir diu que obri un menú (aria-haspopup, aria-expanded) i, obert, MenuTraduir es pinta just després del botó. Sense servei, el clic avisa «La traducció automàtica no està disponible en este servidor.» i no hi ha menú.'],
         ['BarraTaronja.author*', 'string', '—', 'Nom, poble, avatar (es resol i es valida ací) i ruta del perfil (T4).'],
+        ['BarraTaronja.publicadorsRegistrats', 'Array<ActorRegistrat> | null', 'null', 'Onada R19 · Quan dos o més comptes registrats al padró co-publiquen el recurs, pinta el mosaic quadrangular Pedra Seca (AvatarCompostPublicadors) i enllaça cada co-publicador al seu perfil (>= 48px, --sdp-touch). Qualsevol cadena o actor no registrat es rebutja.'],
         ['BarraTaronja.emoticona / onObriEmoticona', 'string / fn', "'' / null", 'L’espai central (EmoticonaBarra). Amb onObriEmoticona, botó que obri el diàleg (la ploma blanca sense emoticona); sense, lectura: l’emoticona triada o la cel·la buida.'],
         ['BarraTaronja.barActions', 'node', 'null', 'Les accions de la dreta; mana sobre la pastilla per defecte (time · date · dateTime · onDateTime).'],
         ['BarraTaronja.accioModeracio', 'node', 'null', 'Fase D (261020, tasca 2; pla 261020_1300) · El ⋮ «Més opcions» (BotoModeracio), dins de .bar-actions i darrere de la pastilla. El posa PageFrame amb ambModeracio (el detall d’una publicació, un producte o un acte, i la fitxa pública d’un perfil aliè) quan l’app té la moderació. Null, el DOM de sempre.'],
@@ -152,6 +153,35 @@ export default function EspecimenControlsBarra() {
       <div className="sdp-especimen__barres">
         <BarraTaronja {...AUTORIA} emoticona="🍅" etiqueta="Autoria i data (espècimen, lectura)"
           {...DATA_LECTURA} onDateTime={alCalendari.onClick} etiquetaData={alCalendari.etiqueta} />
+      </div>
+
+      <h4>Barra taronja en co-publicació multi-entitat registrada</h4>
+      <p>Quan dos o més comptes registrats signen conjuntament una pàgina o un catàleg, l’avatar es compon com un mosaic quadrangular ortogonal i cada co-publicador conserva el seu enllaç tàctil individual cap a la fitxa.</p>
+      <div className="sdp-especimen__barres sdp-especimen__barres--contenidor">
+        <BarraTaronja
+          publicadorsRegistrats={[
+            {
+              actor_id: 'a240e870-4aef-4d92-b138-e8b4e2f2123a',
+              slug_ruta: '/socdepoble',
+              nom: 'Sóc de Poble',
+              avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
+              poble_nom: 'La Torre de les Maçanes',
+              rol_publicacio: 'principal'
+            },
+            {
+              actor_id: 'b2c87505-53b1-4108-902f-2313e77b9968',
+              slug_ruta: '/rentonar',
+              nom: 'Rentonar',
+              avatar_url: '',
+              poble_nom: 'La Torre de les Maçanes',
+              rol_publicacio: 'copublicador'
+            }
+          ]}
+          etiqueta="Co-publicació registrada (espècimen, lectura)"
+          {...DATA_LECTURA}
+          onDateTime={alCalendari.onClick}
+          etiquetaData={alCalendari.etiqueta}
+        />
       </div>
 
       <h4>Barra taronja en edició</h4>

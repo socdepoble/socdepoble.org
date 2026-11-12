@@ -434,7 +434,8 @@ const EXCEPCIONS_ORFE = {
      es retiren les tres excepcions. */
   'src/components/patrimoni/VisorAnatomiaRural3D.jsx': 'visor general d’Anatomia Rural (IDEA-109): despenjat de /page/anatomia-rural fins que la resta d’artefactes tinga documentació; el cobrix VisorAnatomiaRural3D.test.jsx · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
   'src/components/patrimoni/anatomiaRuralGeometria.js': 'geometria del visor general d’Anatomia Rural: només la importa VisorAnatomiaRural3D.jsx, despenjat · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
-  'src/data/patrimoni/anatomiaRural.js': 'dades del visor general d’Anatomia Rural: només les importa VisorAnatomiaRural3D.jsx, despenjat (i les proves del Pou i de l’article del Mur) · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)'
+  'src/data/patrimoni/anatomiaRural.js': 'dades del visor general d’Anatomia Rural: només les importa VisorAnatomiaRural3D.jsx, despenjat (i les proves del Pou i de l’article del Mur) · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
+  'src/data/revisionsEditorialsWpMemoria.js': 'adaptador en memòria del kit de conformitat per a les revisions editorials de WordPress (P0-111, R18)'
 };
 /* Decisió del Mestre (30-10-2026) · Una fixture (dins de __fixtures__/) que una
    prova importa és part de la prova, amb el criteri de la línia de les proves.

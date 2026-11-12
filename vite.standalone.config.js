@@ -22,6 +22,67 @@ export function trossDArrencadaDelPaquet(id) {
   return nom === 'pobles-aplec' ? undefined : nom;
 }
 
+/* ─────────── Les apps al paquet de l'amfitrió (P0-113, ordre del Mestre, 261111) ───────────
+   Les apps internes són obertes per defecte: el literal de `carrega` és
+   d'exclusió (import.meta.env.VITE_SDP_APP_<ID> !== '0'), i el web propi
+   (vite.config.js) i l'app nativa en porten el tros diferit. Este paquet, en
+   canvi, viu dins de la web d'un altre (WordPress, Sollutia), i ací el build
+   fixa la variable a '0', el mateix flag declaratiu de desendollar:
+     · Sempre, per a les apps amb dades de salut o financeres
+       (NOMES_AL_DOCUMENT_PROPI, interruptors.js). La guarda d'ama del document
+       es fia de manageDocumentHead, una clau que l'amfitrió pot declarar ell
+       mateix: amb el codi dins, una web d'altri sense iframe que cedira la
+       capçalera obriria la base de salut o de finances al seu origen, on la
+       llegixen tots els seus connectors. Cap variable de l'entorn ho canvia.
+     · En el paquet monolític (IIFE, la variant del directori de WordPress),
+       per a totes: no hi ha trossos diferits (inlineDynamicImports) i el codi
+       de l'app viatjaria dins del fitxer únic que es baixa cada visitant. S'hi
+       pot portar una app a posta amb VITE_SDP_APP_<ID>=1.
+   Al paquet trossejat, la resta d'apps entren com a trossos diferits, i
+   VITE_SDP_APP_<ID>=0 les trau igual que al web. */
+export const DADES_NOMES_AL_DOCUMENT_PROPI = Object.freeze(['salut', 'financeres']);
+
+/** La variable de compilació d'una app (el literal de `carrega` del seu manifest). Pura. */
+export function variableDeLApp(id) {
+  return `VITE_SDP_APP_${String(id).toUpperCase().replace(/-/g, '_')}`;
+}
+
+/**
+ * Les apps internes de src/apps/<id>/manifest.js que porten el literal de
+ * compilació, amb les seues dades personals. Llig el text: el manifest és
+ * dada pura (manifestApp.js) i no s'avalua ací.
+ * @returns {{ id: string, variable: string, dadesPersonals: string|null }[]}
+ */
+export function appsInternesDelPaquet(arrel = __dirname) {
+  const carpeta = path.join(arrel, 'src/apps');
+  return fs.readdirSync(carpeta, { withFileTypes: true })
+    .filter((entrada) => entrada.isDirectory() && fs.existsSync(path.join(carpeta, entrada.name, 'manifest.js')))
+    .map((entrada) => {
+      const codi = fs.readFileSync(path.join(carpeta, entrada.name, 'manifest.js'), 'utf8');
+      const variable = variableDeLApp(entrada.name);
+      if (!codi.includes(`import.meta.env.${variable}`)) return null;
+      return { id: entrada.name, variable, dadesPersonals: codi.match(/^\s*dadesPersonals: '([a-z]+)',?$/m)?.[1] ?? null };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/**
+ * Les claus de `define` que fixen la variable de cada app al paquet de
+ * l'amfitrió (vegeu el bloc de dalt). Pura.
+ * @param {{ variable: string, dadesPersonals: string|null }[]} apps
+ * @param {{ env?: object, trossejat: boolean }} opcions
+ * @returns {Record<string, string>}
+ */
+export function definicionsDeLesApps(apps, { env = {}, trossejat }) {
+  const definicions = {};
+  for (const { variable, dadesPersonals } of apps) {
+    if (DADES_NOMES_AL_DOCUMENT_PROPI.includes(dadesPersonals)) definicions[`import.meta.env.${variable}`] = JSON.stringify('0');
+    else if (!trossejat) definicions[`import.meta.env.${variable}`] = JSON.stringify(env[variable] === '1' ? '1' : '0');
+  }
+  return definicions;
+}
+
 /**
  * El que hi ha a public/ i és del SERVIDOR de socdepoble.org, no de l'app.
  *
@@ -99,14 +160,14 @@ function esDins(arrel, abs) {
 /**
  * Amb emptyOutDir:false, el que builds anteriors copiaren de public/ abans
  * de PROPIS_DEL_LLOC continua a l'outDir i viatja amb el plugin: deixar de
- * copiar-ho no ho lleva. Esborra EXACTAMENT el que descriuen les exclusions
+ * copiar-ho no ho lleva. Esborra el que descriuen les exclusions
  * (robots.txt, sitemap.xml i auth/ de l'arrel; qualsevol ocult a qualsevol
  * fondària) llevat de DIRECTORI_DE_VITE a l'arrel, que no es toca ni es
  * recorre. Mai segueix enllaços simbòlics: un enllaç propi es lleva com a
- * enllaç i cap altre es recorre. Torna els camins relatius (POSIX, ordenats)
- * que ha esborrat.
+ * enllaç i cap altre es recorre. També retira fitxers en quarantena amb un
+ * camí POSIX exacte. Torna els camins esborrats, en ordre POSIX.
  */
-export function retiraPropisDelLloc(directori) {
+export function retiraPropisDelLloc(directori, retirats = new Set()) {
   const esborrats = [];
   if (!directori) return esborrats;
   const arrel = path.resolve(directori);
@@ -126,6 +187,9 @@ export function retiraPropisDelLloc(directori) {
         (!rel && PROPIS_DEL_LLOC.arrel.includes(nom));
       if (propi) {
         fs.rmSync(fill, { recursive: true, force: true });
+        esborrats.push(relFill);
+      } else if (retirats.has(relFill) && !entrada.isDirectory()) {
+        fs.unlinkSync(fill);
         esborrats.push(relFill);
       } else if (entrada.isDirectory()) {
         // Dirent no segueix enllaços: un enllaç a directori no és isDirectory().
@@ -225,11 +289,12 @@ export function politicaDeMitjans(variant = 'autonom', { env = {}, directori, re
  *
  * Fase D (261020, L10) · `exclosos`: camins POSIX exactes, relatius a public/
  * (tal com els torna recursosDelPlugin), que ESTE paquet no emet a més dels de
- * PROPIS_DEL_LLOC. Per defecte, cap. writeBundle continua retirant només els
- * propis del lloc.
+ * PROPIS_DEL_LLOC. Per defecte, cap. `quarantena` indica preimatges de public/
+ * que s’han de retirar també d’un outDir reutilitzat si no s’emeten al build.
  */
-export function recursosPublicsDelPlugin({ directori, politica = null, exclosos = [] } = {}) {
+export function recursosPublicsDelPlugin({ directori, politica = null, exclosos = [], quarantena = [] } = {}) {
   const fora = new Set(exclosos);
+  let retirats = new Set(quarantena);
   let arrel = directori;
   let arrelProjecte;
   let outDir;
@@ -244,21 +309,24 @@ export function recursosPublicsDelPlugin({ directori, politica = null, exclosos 
       if (config.logger) registre = config.logger;
     },
     generateBundle() {
+      retirats = new Set(quarantena);
       for (const fileName of separaRecursos(recursosDelPlugin(arrel), politica).viatgen) {
         if (fora.has(fileName)) continue;
         this.emitFile({ type: 'asset', fileName, source: fs.readFileSync(path.join(arrel, fileName)) });
+        retirats.delete(fileName);
       }
     },
     writeBundle(opcions) {
       const eixida = opcions?.dir ? path.resolve(opcions.dir) : outDir;
       if (!eixida) return;
-      if (!arrelProjecte || !esDins(arrelProjecte, eixida)) {
+      if (!arrelProjecte || !esDins(arrelProjecte, eixida) ||
+          (fs.existsSync(eixida) && !esDins(fs.realpathSync(arrelProjecte), fs.realpathSync(eixida)))) {
         registre.warn(`[sdp-recursos-publics] ${eixida} no és dins de l'arrel del projecte: no se'n retira res.`);
         return;
       }
-      const esborrats = retiraPropisDelLloc(eixida);
+      const esborrats = retiraPropisDelLloc(eixida, retirats);
       if (esborrats.length) {
-        registre.info(`[sdp-recursos-publics] Retirats de ${path.relative(arrelProjecte, eixida)} (propis del lloc, de builds anteriors): ${esborrats.join(', ')}`);
+        registre.info(`[sdp-recursos-publics] Retirats de ${path.relative(arrelProjecte, eixida)} (builds anteriors): ${esborrats.join(', ')}`);
       }
     }
   };
@@ -578,7 +646,8 @@ export function espaisDelPaquetPlugin() {
       async handler(code, chunk, opcions) {
         if (opcions.format !== 'es') return null;
         const { code: compacte } = await transformWithEsbuild(code, chunk.fileName, {
-          loader: 'js', format: 'esm', minifyWhitespace: true, charset: 'utf8', legalComments: 'none', sourcemap: false
+          loader: 'js', format: 'esm', target: 'es2022', minifyWhitespace: true,
+          minifySyntax: true, charset: 'utf8', legalComments: 'none', sourcemap: false
         });
         return compacte;
       }
@@ -666,7 +735,13 @@ export default defineConfig(({ mode, command }) => {
     /* Sanejament R15 (B2/B3) · Ritme del xat, IAIA amb servidor i push natiu, només amb
        la seua bandera literal (tooling/vite/banderes-de-capacitat.mjs). */
     banderesDeCapacitat(),
-    recursosPublicsDelPlugin({ politica: mitjans }),
+    recursosPublicsDelPlugin({
+      politica: mitjans,
+      quarantena: command === 'build'
+        ? JSON.parse(fs.readFileSync(path.resolve(__dirname, 'tooling/patrimoni/lamines-sintetiques-r19.json'), 'utf8'))
+          .map(({ src }) => src.slice(1))
+        : []
+    }),
     manifestDeReleasePlugin({ versio, node, generat, variant, format, mitjans }),
     ...(perWordPress ? [senseReactIncrustat()] : []),
     ...(trossejat ? [carregadorDelPaquetPlugin(), espaisDelPaquetPlugin()] : []),
@@ -730,7 +805,11 @@ export default defineConfig(({ mode, command }) => {
        sense bessones), la clau no hi és. */
     ...(mitjans ? { 'import.meta.env.SDP_POLITICA_DE_MITJANS': JSON.stringify(mitjans) } : {}),
     /* P1-35 · El segell del build, només en compilar (segellDeBuild). */
-    ...(command === 'build' ? { 'import.meta.env.SDP_BUILD': JSON.stringify(segellDeBuild(env)) } : {})
+    ...(command === 'build' ? { 'import.meta.env.SDP_BUILD': JSON.stringify(segellDeBuild(env)) } : {}),
+    /* P0-113 (ordre del Mestre, 261111) · Les apps al paquet de l'amfitrió:
+       Salut i la Gestoria (i tota app amb dades de salut o financeres), mai;
+       al monolític, cap sense VITE_SDP_APP_<ID>=1 (definicionsDeLesApps). */
+    ...definicionsDeLesApps(appsInternesDelPaquet(__dirname), { env, trossejat })
   },
   resolve: {
     alias: {

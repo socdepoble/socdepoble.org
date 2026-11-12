@@ -2,7 +2,7 @@ import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import { CopyrightPage, avisHerencia } from './CopyrightPage.jsx';
-import { LLICENCIA_PER_DEFECTE, LLICENCIES, MAXIM_COPYRIGHT } from './llicencies.js';
+import { LLICENCIA_PER_DEFECTE, LLICENCIES, MAXIM_AUTORIA } from './llicencies.js';
 
 /* T39 (ordre del Mestre, 260928) · «Drets d'autor» a pantalla completa. */
 afterEach(cleanup);
@@ -89,13 +89,13 @@ test('261016 · a «El compte», CC0 parla de les notes noves i continua demanan
   }
 });
 
-test('el text lliure buit no es pot desar; el comptador suma la marca', () => {
+test('el text lliure buit no es pot desar; el comptador mostra l’autoria', () => {
   const { ui, onDesa } = pinta();
   fireEvent.click(ui.getByRole('radio', { name: /Text lliure personalitzat/ }));
   fireEvent.click(ui.getByRole('checkbox'));
   expect(desar(ui).disabled).toBe(true);
   fireEvent.change(ui.getByRole('textbox'), { target: { value: 'Fotos del Mas' } });
-  expect(ui.getByText('23 / 256')).toBeTruthy();
+  expect(ui.getByText('13 / 256')).toBeTruthy();
   fireEvent.click(desar(ui));
   expect(onDesa).toHaveBeenCalledWith('Fotos del Mas · CC0 1.0');
 });
@@ -149,102 +149,49 @@ test('D15 · la CC de sèrie és la primera opció i «Copyright (C)» l’últi
 test('D15 · sense valor, es preselecciona la Creative Commons de sèrie', () => {
   const { ui } = pinta({ valor: '' });
   expect(ui.getByRole('radio', { name: /^CC BY-NC-SA 4\.0/ }).checked).toBe(true);
-  expect(ui.queryByRole('textbox')).toBeNull();
+  expect(ui.getByRole('textbox', { name: 'Autoria (opcional)' }).value).toBe('');
 });
 
-test('D15 · «Copyright (C)» porta un camp de text de 256 amb comptador i desa el text amb «©»', () => {
-  const { container, ui, onDesa } = pinta({ valor: 'CC BY 4.0' });
+test('Copyright (C) compta el nom i desa la marca a banda', () => {
+  const { ui, onDesa } = pinta({ valor: 'CC BY 4.0' });
   fireEvent.click(ui.getByRole('radio', { name: /Copyright \(C\)/ }));
   const camp = ui.getByRole('textbox');
-  expect(camp.maxLength).toBe(MAXIM_COPYRIGHT);
-  expect(container.querySelector('.sdp-drets__comptador').textContent).toBe('5 / 256');
+  expect(ui.getByText('3 / 256')).toBeTruthy();
   fireEvent.change(camp, { target: { value: 'Pepa Soler i fills' } });
-  // El comptador conta el total que es desarà: «© » s'hi afig sol.
-  expect(ui.getByText('20 / 256')).toBeTruthy();
+  expect(ui.getByText('18 / 256')).toBeTruthy();
   fireEvent.click(desar(ui));
   expect(onDesa).toHaveBeenLastCalledWith('© Pepa Soler i fills');
 });
 
-test('D15 · «Copyright (C)» no passa mai de 256 caràcters en total', () => {
-  const { ui, onDesa } = pinta({ valor: 'CC BY 4.0' });
-  fireEvent.click(ui.getByRole('radio', { name: /Copyright \(C\)/ }));
-  fireEvent.change(ui.getByRole('textbox'), { target: { value: 'x'.repeat(300) } });
-  // F4 (revisió adversarial T1–T4, 260930) · Abans esta línia esperava 256 al
-  // camp, i es desaven només «© » + 254: fixava el tall silenciós. Ara el camp
-  // es queda en 254 (sense «©», la marca n'ocupa 2) i el desat és exactament
-  // «© » + el que es veu. L'aserció és més forta, no més fluixa.
-  expect(ui.getByRole('textbox').value).toHaveLength(254);
-  expect(ui.getByText('256 / 256')).toBeTruthy();
-  fireEvent.click(desar(ui));
-  const [desat] = onDesa.mock.lastCall;
-  expect(desat).toHaveLength(256);
-  expect(desat.startsWith('©')).toBe(true);
-  expect(desat).toBe(`© ${ui.getByRole('textbox').value}`);
-});
+test.each(LLICENCIES.map(({ id, nom, codi }) => [id, codi ?? nom]))(
+  '%s conserva un nom de 256 caràcters i demana corregir 257 sense tallar-lo',
+  (id, opcio) => {
+    const { ui, onDesa } = pinta({ valor: 'CC BY 4.0' });
+    const radio = ui.getAllByRole('radio').find((camp) => camp.labels[0].textContent.includes(opcio));
+    fireEvent.click(radio);
+    const camp = ui.getByRole('textbox');
+    const text = 'à'.repeat(MAXIM_AUTORIA - 1) + '😀';
+    const llarg = text + 'í';
+    if (id === 'cc0' || id === 'lliure') fireEvent.click(ui.getByRole('checkbox'));
+    fireEvent.change(camp, { target: { value: llarg } });
+    expect(camp.value).toBe(llarg);
+    expect(camp.getAttribute('aria-invalid')).toBe('true');
+    expect(desar(ui).disabled).toBe(true);
+    fireEvent.click(desar(ui));
+    expect(onDesa).not.toHaveBeenCalled();
+    fireEvent.change(camp, { target: { value: text } });
+    expect(ui.getByText('256 / 256')).toBeTruthy();
+    fireEvent.click(desar(ui));
+    expect(onDesa.mock.lastCall[0]).toContain(text);
+  }
+);
 
-/* F4 (revisió adversarial T1–T4, 260930) · El camp mai mostra més del que es
-   desa, i es conta i es talla per punts de codi (el CHECK és char_length). */
-const SURROGATE_ORFE = /[\uD800-\uDFFF]/u;
-
-test('F4 · 256 caràcters sense «©»: el camp no admet més del que es desa', () => {
-  const { ui, onDesa } = pinta({ valor: 'CC BY 4.0' });
-  fireEvent.click(ui.getByRole('radio', { name: /Copyright \(C\)/ }));
-  const camp = ui.getByRole('textbox');
-  fireEvent.change(camp, { target: { value: 'x'.repeat(256) } });
-  expect(camp.maxLength).toBe(MAXIM_COPYRIGHT - 2);
-  expect(camp.value).toBe('x'.repeat(254));
-  expect(ui.getByText('256 / 256')).toBeTruthy();
-  fireEvent.click(desar(ui));
-  expect(onDesa).toHaveBeenLastCalledWith(`© ${'x'.repeat(254)}`);
-  // Amb la «©» al davant, el camp torna a admetre 256.
-  fireEvent.change(camp, { target: { value: `© ${'x'.repeat(300)}` } });
-  expect(camp.maxLength).toBe(MAXIM_COPYRIGHT);
-  expect(camp.value).toBe(`© ${'x'.repeat(254)}`);
-  fireEvent.click(desar(ui));
-  expect(onDesa).toHaveBeenLastCalledWith(camp.value);
-});
-
-test('F4 · llevar la «©» d’un text ple el talla al camp mateix; l’espai del davant no ocupa lloc', () => {
-  let vista = pinta({ valor: `©${'y'.repeat(255)}` });
-  let camp = vista.ui.getByRole('textbox');
-  expect(camp.maxLength).toBe(MAXIM_COPYRIGHT);
-  fireEvent.change(camp, { target: { value: 'y'.repeat(255) } });
-  expect(camp.maxLength).toBe(MAXIM_COPYRIGHT - 2);
-  expect(camp.value).toBe('y'.repeat(254));
-  fireEvent.click(desar(vista.ui));
-  expect(vista.onDesa).toHaveBeenLastCalledWith(`© ${'y'.repeat(254)}`);
-  cleanup();
-  // «© yyy…» sense la «©» deixa « yyy…»: l'espai no es desa i no resta cap lletra.
-  vista = pinta({ valor: `© ${'y'.repeat(254)}` });
-  camp = vista.ui.getByRole('textbox');
-  fireEvent.change(camp, { target: { value: ` ${'y'.repeat(254)}` } });
-  expect(camp.value).toBe(` ${'y'.repeat(254)}`);
-  expect(vista.ui.getByText('256 / 256')).toBeTruthy();
-  fireEvent.click(desar(vista.ui));
-  expect(vista.onDesa).toHaveBeenLastCalledWith(`© ${'y'.repeat(254)}`);
-});
-
-test('F4 · un emoji a la frontera del camp no queda partit (ni al camp ni al desat)', () => {
-  const { ui, onDesa } = pinta({ valor: 'CC BY 4.0' });
-  fireEvent.click(ui.getByRole('radio', { name: /Copyright \(C\)/ }));
-  const camp = ui.getByRole('textbox');
-  fireEvent.change(camp, { target: { value: `${'a'.repeat(253)}😀😀` } });
-  expect(camp.value).toBe(`${'a'.repeat(253)}😀`);
-  expect(camp.value).not.toMatch(SURROGATE_ORFE);
-  // 253 + 1 emoji + «© » = 256 caràcters de veres.
-  expect(ui.getByText('256 / 256')).toBeTruthy();
-  fireEvent.click(desar(ui));
-  const [desat] = onDesa.mock.lastCall;
-  expect(desat).toBe(`© ${'a'.repeat(253)}😀`);
-  expect(desat).not.toMatch(SURROGATE_ORFE);
-});
-
-test('F4 · un esborrany de «Copyright (C)» massa llarg es recupera tallat al que es desarà', () => {
-  const { ui, onDesa } = pinta({ valor: 'CC BY 4.0', esborrany: { valor: 'CC BY 4.0', tria: 'reservats', text: 'x'.repeat(256) } });
-  expect(ui.getByRole('radio', { name: /Copyright \(C\)/ }).checked).toBe(true);
-  expect(ui.getByRole('textbox').value).toBe('x'.repeat(254));
-  fireEvent.click(desar(ui));
-  expect(onDesa).toHaveBeenLastCalledWith(`© ${'x'.repeat(254)}`);
+test('un esborrany massa llarg es recupera sencer per poder corregir-lo', () => {
+  const text = 'x'.repeat(257);
+  const { ui } = pinta({ valor: 'CC BY 4.0', esborrany: { valor: 'CC BY 4.0', tria: 'cc-by-sa', text } });
+  expect(ui.getByRole('radio', { name: /^CC BY-SA 4\.0/ }).checked).toBe(true);
+  expect(ui.getByRole('textbox').value).toBe(text);
+  expect(desar(ui).disabled).toBe(true);
 });
 
 test('D15 · «Copyright (C)» amb el text buit (o només «©») no es pot desar', () => {

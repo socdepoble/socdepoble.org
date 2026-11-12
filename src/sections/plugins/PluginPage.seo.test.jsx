@@ -18,7 +18,8 @@ import { ProveidorPlataforma } from '../../apps/plataforma/PlataformaContext.jsx
 import PluginPage from './PluginPage.jsx';
 import { PLUGINS, pluginPerId } from './registrePlugins.js';
 
-const ENTORN_OBERT = Object.freeze({ produccio: false, teDret: () => true, teCapacitat: () => true, amaDelDocument: true });
+/* P0-113 (ordre del Mestre, 261111) · Fora `teDret`: cap eina necessita cap dret. */
+const ENTORN_OBERT = Object.freeze({ produccio: false, teCapacitat: () => true, amaDelDocument: true });
 
 function munta(ruta) {
   vi.stubGlobal('matchMedia', vi.fn((query) => ({

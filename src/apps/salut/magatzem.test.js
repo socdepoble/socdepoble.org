@@ -4,7 +4,9 @@
    només amb claus conegudes; i, sense IndexedDB, memòria amb persistent: false. */
 import { describe, expect, test } from 'vitest';
 import { creaIdbFals } from '../../utils/__fixtures__/navegadorFals.js';
-import { CLAUS_META, IDS_INTERRUPTORS, NOM_BASE, carregaTot, creaMagatzemSalut, desaMeta } from './magatzem.js';
+import { CLAUS_META, IDS_INTERRUPTORS, NOM_BASE, carregaTot, creaMagatzemSalut, desaMeta, importaCopia } from './magatzem.js';
+
+import { creaCopia, llegixCopia } from './nucli/copia.js';
 
 const ID = '00000000-0000-4000-8000-000000000001';
 const MICCIO = { id: ID, tipus: 'miccio', moment: '2026-10-05T08:00', ofsetMin: 120, jornada: '2026-10-05', volumMl: 250, mesura: 'mesurat', lloc: 'vater' };
@@ -90,4 +92,21 @@ describe('sense IndexedDB', () => {
     expect((await carregaTot(magatzem)).apunts).toEqual([MICCIO]);
     magatzem.tanca();
   });
+});
+
+test('substituir amb una còpia vàlida preserva l’avís i una errada de validació conserva tot el diari', async () => {
+  const { idb } = creaIdbFals();
+  const origen = crea(idb);
+  const desti = crea(creaIdbFals().idb);
+  await origen.desa('apunts', MICCIO);
+  await desaMeta(origen, 'persona', { alias: 'Persona de prova' });
+  const text = JSON.stringify(creaCopia(await carregaTot(origen)));
+  await desaMeta(desti, 'avis', { acceptatA: '2026-10-05T08:00:00.000Z', versio: 1 });
+
+  const { dades } = llegixCopia(text);
+  expect(await importaCopia(desti, dades, 'substituir')).toEqual({ afegits: 1, duplicats: 0, substituits: true });
+  const abans = await carregaTot(desti);
+  expect(abans).toMatchObject({ apunts: [MICCIO], persona: { alias: 'Persona de prova' }, avis: { versio: 1 } });
+  await expect(importaCopia(desti, { ...dades, jornades: [{ data: 'ahir' }] }, 'substituir')).rejects.toThrow(TypeError);
+  expect(await carregaTot(desti)).toEqual(abans);
 });

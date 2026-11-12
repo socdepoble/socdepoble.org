@@ -170,6 +170,8 @@ const RE_POLITICA = /^\s*create\s+policy\s+(?:if\s+not\s+exists\s+)?(?:"([^"]+)"
 // Taula gestionada pel servei, verificada al catàleg abans d'aplicar la política.
 // No s'exempta l'esquema: qualsevol altra realtime.* continua requerint DDL.
 const TAULES_DEL_SERVEI = new Set(['realtime.messages']);
+// Taula d'autenticació gestionada per GoTrue on només s'admeten disparadors interns (mai CREATE POLICY des de migracions).
+const TAULES_TRIGGER_DEL_SERVEI = new Set(['auth.users']);
 const RE_USING_TRUE = /\busing\s*\(\s*true\s*\)/i;
 const RE_CHECK_TRUE = /\bwith\s+check\s*\(\s*true\s*\)/i;
 
@@ -233,7 +235,9 @@ for (const file of files) {
   while ((match = createTriggerRegex.exec(content)) !== null) {
     const schema = match[1] || 'public';
     const table = match[2];
-    if (schema !== 'storage' && !TAULES_DEL_SERVEI.has(`${schema}.${table}`) && !tables.has(table)) {
+    const taula = `${schema}.${table}`;
+    // GoTrue crea auth.users. L'excepció només reconeix la taula per a triggers.
+    if (schema !== 'storage' && !TAULES_TRIGGER_DEL_SERVEI.has(taula) && !TAULES_DEL_SERVEI.has(taula) && !tables.has(table)) {
       falla('R1', file, `create trigger sobre taula inexistent: ${schema}.${table}`);
     }
   }

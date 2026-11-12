@@ -22,6 +22,7 @@
  * Res d'això ix del dispositiu: cap crida de xarxa.
  */
 import { creaMagatzemIdb } from '../../utils/magatzemLocal.js';
+import { ESQUEMA_COPIA_LECTOR, fusionaCopiaLector, llegixCopiaLector } from './nucli/copia.js';
 import { estatInicial, normalitzaEstat, normalitzaPersonals } from './nucli/index.js';
 
 export const NOM_BASE = 'sdp-lector';
@@ -59,10 +60,43 @@ export function creaMagatzemLector(opcions = {}) {
       const registre = await base.obte(STORE, CLAU_ESTAT);
       return registre ? normalitzaEstat(registre) : estatInicial();
     },
-    /** Desa l'estat sencer; torna l'estat net tal com ha quedat al disc. */
-    async desa(estat) {
-      const desat = await base.desa(STORE, { ...estat, id: CLAU_ESTAT });
+    /**
+     * Si hi ha una instantània de partida, la compara dins de la transacció.
+     * Protegix contra escriptures de pestanyes sense Web Locks.
+     */
+    async desa(estat, esperat) {
+      const registre = { ...normalitzaEstat(estat), id: CLAU_ESTAT };
+      const instantania = esperat === undefined ? null : JSON.stringify(normalitzaEstat(esperat));
+      const desat = instantania === null
+        ? await base.desa(STORE, registre)
+        : await base.actualitza(STORE, CLAU_ESTAT, (actual) => {
+          const delDisc = actual ? normalitzaEstat(actual) : estatInicial();
+          if (JSON.stringify(delDisc) !== instantania) {
+            throw Object.assign(new Error('Les dades han canviat en una altra pestanya.'), { codi: 'CONFLICTE' });
+          }
+          return registre;
+        });
       return normalitzaEstat(desat);
+    },
+    async exportaCopia() {
+      const { [STORE]: registres } = await base.bolca();
+      const estat = normalitzaEstat(registres.find(({ id }) => id === CLAU_ESTAT));
+      const personals = normalitzaPersonals(registres.find(({ id }) => id === CLAU_PERSONALS));
+      return JSON.stringify({ schema: ESQUEMA_COPIA_LECTOR, estat, personals }, null, 2);
+    },
+    async importaCopia(text) {
+      const entrant = llegixCopiaLector(text);
+      if (!await base.prepara()) {
+        throw Object.assign(new Error('El navegador no deixa guardar les dades del Lector.'), { codi: 'NO_PERSISTENT' });
+      }
+      const [estat, personals] = await base.actualitzaRegistres([
+        [STORE, CLAU_ESTAT], [STORE, CLAU_PERSONALS]
+      ], ([estatActual, personalsActuals]) => {
+        const actual = { estat: normalitzaEstat(estatActual), personals: normalitzaPersonals(personalsActuals) };
+        const nou = fusionaCopiaLector(actual, entrant);
+        return [{ ...nou.estat, id: CLAU_ESTAT }, { ...nou.personals, id: CLAU_PERSONALS }];
+      });
+      return { estat: normalitzaEstat(estat), personals: normalitzaPersonals(personals) };
     },
     /** Les fonts personals desades (el registre net; buit el primer dia). */
     async llegixPersonals() {

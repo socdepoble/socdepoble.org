@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alerta, Boto, Camp, CampText, Selector } from '../../components/PedraSeca/index.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { FONTS_BANC_LLAVORS, entradesDelCataleg, filtraEntrades } from '../../data/patrimoni/bancLlavors.js';
+import LaminesBotaniquesNode0 from './LaminesBotaniquesNode0.jsx';
+import { useLaminesBotaniquesNode0 } from './useLaminesBotaniquesNode0.js';
 import EmpremtaFont from './EmpremtaFont.jsx';
 import { FASES_CALENDARI, ambComa, barra12MesosDe, fasesAmbMesos, nutricioDe } from './fitxaDidactica.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
@@ -194,6 +196,8 @@ function DetallAtles({ e, tr }) {
 
 export function Fitxa({ entrada, totes, onTriaEntrada, font, onTanca, tr, autoFocus = true }) {
   const { dada } = entrada;
+  const cataleg = useLaminesBotaniquesNode0();
+  const lamina = cataleg?.obteLaminaBotanicaNode0(entrada.id);
   const titol = useRef(null);
   /* La consulta autònoma anuncia el títol; el Workspace conserva la propietat del focus de les fletxes. */
   useEffect(() => { if (autoFocus) titol.current?.focus(); }, [autoFocus]);
@@ -210,6 +214,7 @@ export function Fitxa({ entrada, totes, onTriaEntrada, font, onTanca, tr, autoFo
       {font.id === 'cataleg-valencia' && <DetallValencia v={dada} germanes={germanes} onTriaGermana={onTriaEntrada} tr={tr} />}
       {font.id === 'avl-mallorca' && <DetallAvl v={dada} tr={tr} />}
       {font.id === 'atles-catalunya' && <DetallAtles e={dada} tr={tr} />}
+      <LaminesBotaniquesNode0 lamina={lamina} nom={entrada.nom} binomi={lamina?.binomiNet} titolElement="h4" />
       <p>{tr('patrimoni.font.literal', 'Transcripció literal: es conserven les paraules i les xifres de la font, també les errates.')}</p>
       <h4>{tr('patrimoni.font.titol', 'La font')}</h4>
       <p><span lang="ca">{font.autoria} · {font.titol}</span> · {tr('patrimoni.font.pagina', 'Pàgina {n} del PDF', { n: entrada.pagina })}</p>

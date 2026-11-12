@@ -1,0 +1,9 @@
+{
+  "profile": "tabular-data-package",
+  "name": "socdepoble-patrimoni-gastronomia",
+  "title": "Gastronomia i Receptari Tradicional",
+  "version": "1.0.0",
+  "skos_concept": "TX.44",
+  "isadg_level": "series",
+  "colleccions": []
+}

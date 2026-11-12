@@ -2,6 +2,7 @@ import { lazy, Suspense, useId, useMemo, useState } from 'react';
 import { Link, useParams } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { usePublicadorsBarraRecurs } from '../../hooks/usePublicadorsBarraRecurs.js';
 import { VideoEditorial } from '../../components/universal/VideoEditorial.jsx';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
@@ -9,44 +10,38 @@ import { useSEO } from '../../hooks/useSEO.js';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { OBRA_QUE_DINEM, laminaDeRecepta, receptaPerSlug } from '../../data/patrimoni/queDinem.js';
 import CreditsQueDinem from './CreditsQueDinem.jsx';
+import { DRETS_QUE_DINEM } from '../text/pageContent.dretsPatrimoni.js';
 import { CandidatsAlergens } from '../../components/PedraSeca/molecules/CandidatsAlergens.jsx';
 import { candidatsReceptaQueDinem } from '../../data/menjarIBeure/candidatsAlergens.js';
 import { etiquetaDApartat, RUTA_DEL_RECEPTARI } from './cercaReceptes.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
 
-/* Onada R14 · /receptes/:slug: la pàgina pròpia d'una recepta del llibre «Què dinem?» (ItemDetailSection la carrega
-   en un tros diferit quan sectionId és 'receptes'). La recepta es busca pel slug exacte (receptaPerSlug): un slug que
-   no existix dona el «no trobat» canònic (NotFoundPage, amb noindex), mai una altra recepta.
-   · Capçalera: la làmina del llibre, si en té (148 de les 149). És la candidata a LCP de la pàgina: porta l'ample i
-     l'alt de la WebP (LAMINES_QUE_DINEM, la pàgina no salta en carregar-la), loading="eager" i
-     fetchpriority="high". El text alternatiu diu la pàgina on és impresa la làmina, que no sempre és la primera de
-     la recepta (la 79 → p. 89, la 115 → p. 127).
-   · Una fila de quadrats-botó (la pell del quadrat de les targetes, .sp-card-calendar-badge) amb aria-pressed:
-     prémer-ne un mostra només eixe bloc; tornar-lo a prémer ho mostra tot. Els blocs que la recepta no té
-     (notes, vídeo, làmina) no tenen quadrat.
-   · Onada R15 (P3-4) · Un sol botó «Vídeo»: el quadrat. El vídeo és un bloc com els altres, davall de les notes,
-     i hi va la façana de VideoEditorial (youtube-nocookie): res de YouTube no es carrega fins que el veí prem
-     «Veure el vídeo». Abans hi havia, a més, un commutador «Vídeo / Làmina del llibre» a la capçalera, que
-     repetia el quadrat.
-   · Ingredients, elaboració i notes: el text literal del llibre, amb lang="ca"; els títols de bloc que porta el
-     llibre (p. ex. «Variant») es conserven. La interfície és a les claus patrimoni.receptes.* dels 5 diccionaris.
-   · Al·lèrgens: el llibre no en diu res. Onada R15b (RV-01, RV-02) · Damunt de l'avís honest, la proposta assistida
-     del lèxic tancat (CandidatsAlergens), amb l'etiqueta «Proposta assistida · Pendent de validació humana» en la
-     llengua de la interfície: «•», «T» o «? Sense dada», mai una absència. Llig els ingredients paraula a paraula, i
-     l'elaboració i les notes només hi afigen indicis. Sense la línia d'escandall: la fitxa pública no en té.
-   · Onada R15 (P1-02, R15-REG-06, P2-04) · «Calcula i prepara la compra» (MotorHoritzontalRecepta, amb el catàleg i
-     els preus de Mercadona) va amb la Nevera: la mateixa porta de compilació que src/apps/nevera/manifest.js, com a
-     literal exacte que Vite plega. Sense VITE_SDP_APP_NEVERA=1, el build públic no porta ni el botó, ni el motor, ni
-     el tros de Mercadona, i la pàgina és la del R14 més la proposta d'al·lèrgens. En desenvolupament, sí. */
-const MotorDeLaRecepta = import.meta.env.DEV || import.meta.env.VITE_SDP_APP_NEVERA === '1'
+/* Onada R14 + Onada R17 (AH-R17-05, AH-R17-06) · /receptes/:slug: la pàgina pròpia d'una recepta del llibre
+   «Què dinem?» (ItemDetailSection la carrega en un tros diferit quan sectionId és 'receptes').
+   · Hero (UniversalPage): fotografia real del plat quan en tinga (recepta.foto), làmina il·lustrada de la recepta
+     (148 de les 149, amb ample/alt de LAMINES_QUE_DINEM i fetchpriority="high") o fallback canònic a la vinyeta
+     de portada de «Què dinem?» (/assets/uploads/patrimoni/portada_que_dinem_muro.webp), sense duplicar cap <Lamina>
+     dins del cos i amb l'atribució CC BY-NC-SA 4.0 de l'Associació «Fins rebentar com Sangonereta».
+   · Pestanyes Pedra Seca (role="tablist" / role="tab", aria-selected, icona amb .sdp-fitxa-emoji-xl): prémer una
+     pestanya mostra només eixe bloc; tornar-la a prémer ho mostra tot.
+   · Al·lèrgens: proposta assistida de candidatsAlergens.js amb avís honest de validació humana pendent.
+   · MotorHoritzontalRecepta: carregat exclusivament en un tros diferit darrere del literal plegable de
+     VITE_SDP_APP_NEVERA, el mateix que src/apps/nevera/manifest.js. P0-113 (ordre del Mestre, 261111): la Nevera
+     és oberta per defecte, i el motor entra al build per defecte; amb VITE_SDP_APP_NEVERA=0 Vite el trau. */
+/* Les mides de la portada són les que registra pageContent.patrimoniR14.js per a PORTADA_IMAGE (1200×675). */
+const PORTADA_FALLBACK_QUE_DINEM = '/assets/uploads/patrimoni/portada_que_dinem_muro.webp';
+/* Onada R20 (DRETS_QUE_DINEM) · La font només acredita «permís d’ús»: el copyright de la pàgina és el de l'obra, el mateix dels crèdits. */
+export const COPYRIGHT_QUE_DINEM = DRETS_QUE_DINEM;
+
+const MotorDeLaRecepta = import.meta.env.VITE_SDP_APP_NEVERA !== '0'
   ? lazy(() => import('./MotorHoritzontalRecepta.jsx').then((modul) => ({ default: modul.MotorDeReceptaEditorial })))
   : null;
+
 const BLOCS = [
   { id: 'ingredients', icona: '🧺', te: () => true },
   { id: 'elaboracio', icona: '🥘', te: () => true },
   { id: 'notes', icona: '📝', te: (r) => r.notes.length > 0 },
   { id: 'video', icona: '▶️', te: (r) => Boolean(r.youtubeId) },
-  { id: 'lamina', icona: '🖼️', te: (r) => Boolean(r.lamina) },
   { id: 'alergens', icona: '⚠️', te: () => true }
 ];
 
@@ -60,22 +55,29 @@ const nomsDeBloc = (tr) => ({
   alergens: tr('patrimoni.receptes.bloc.alergens', 'Al·lèrgens')
 });
 
-/* La làmina de capçalera: les mides reserven el lloc i, com que és la imatge gran de dalt, es demana de seguida. */
-function Lamina({ lamina, tr }) {
-  return (
-    <div className="sdp-recepta__capcalera">
-      <figure className="sdp-recepta__lamina">
-        <img
-          src={resolRecursPropi(lamina.src)}
-          alt={tr('patrimoni.receptes.altLamina', 'Làmina de la pàgina {n} del llibre', { n: lamina.pagina })}
-          width={lamina.ample}
-          height={lamina.alt}
-          loading="eager"
-          fetchpriority="high"
-        />
-      </figure>
-    </div>
-  );
+function heroDeRecepta(recepta, lamina, tr, obra) {
+  if (typeof recepta?.foto === 'string' && recepta.foto.trim()) {
+    return {
+      src: resolRecursPropi(recepta.foto.trim()),
+      alt: recepta.fotoAlt || recepta.titol,
+      ample: recepta.fotoWidth,
+      altPx: recepta.fotoHeight
+    };
+  }
+  if (lamina) {
+    return {
+      src: resolRecursPropi(lamina.src),
+      alt: tr('patrimoni.receptes.altLamina', 'Làmina de la pàgina {n} del llibre', { n: lamina.pagina }),
+      ample: lamina.ample,
+      altPx: lamina.alt
+    };
+  }
+  return {
+    src: resolRecursPropi(PORTADA_FALLBACK_QUE_DINEM),
+    alt: obra.titol,
+    ample: 1200,
+    altPx: 675
+  };
 }
 
 function BlocsDeText({ blocs, llista }) {
@@ -101,19 +103,39 @@ export function PaginaDeRecepta({ recepta, onTornaAlReceptari }) {
   const lamina = laminaDeRecepta(recepta);
   const idAjuda = useId();
   const obra = OBRA_QUE_DINEM;
+  const hero = heroDeRecepta(recepta, lamina, tr, obra);
   useSEO({
     title: `${recepta.titol} · ${obra.titol}`,
     description: tr('patrimoni.receptes.seo', 'Recepta {n} del llibre «{llibre}» ({lloc}, {any}): ingredients i elaboració amb el text del llibre.',
       { n: recepta.numero, llibre: obra.titol, lloc: obra.lloc, any: obra.any }),
     index: true
   });
+  const { publicadorsRegistrats: publicadorsRecepta } = usePublicadorsBarraRecurs({
+    recursTipus: 'recepta',
+    recursId: recepta.slug || String(recepta.numero || '')
+  });
+  const { publicadorsRegistrats: publicadorsLlibre } = usePublicadorsBarraRecurs({
+    recursTipus: 'llibre_cataleg',
+    recursId: 'que-dinem'
+  });
+  const publicadorsRegistrats = publicadorsRecepta ?? publicadorsLlibre;
   const noms = nomsDeBloc(tr);
   const blocs = BLOCS.filter((b) => b.te(recepta));
   const visible = (id) => filtre === null || filtre === id;
   return (
     <UniversalPage
+      chrome="full"
       title={recepta.titol}
       llenguaDelContingut="ca"
+      heroImage={hero.src}
+      heroAlt={hero.alt}
+      heroWidth={hero.ample}
+      heroHeight={hero.altPx}
+      heroFetchPriority="high"
+      showLogos={true}
+      topBarData={{ showPin: false, ...(publicadorsRegistrats ? { publicadorsRegistrats } : {}) }}
+      onBack={onTornaAlReceptari}
+      copyright={COPYRIGHT_QUE_DINEM}
       labels={[{ text: etiquetaDApartat(tr, recepta.apartat), className: 'sdp-badge-category' }]}
     >
       <div className="sdp-recepta">
@@ -122,18 +144,18 @@ export function PaginaDeRecepta({ recepta, onTornaAlReceptari }) {
           {' · '}
           <Link to={RUTA_DEL_RECEPTARI} onClick={onTornaAlReceptari}>{tr('patrimoni.receptes.totes', 'Totes les receptes')}</Link>
         </p>
-        {lamina && visible('lamina') && <Lamina lamina={lamina} tr={tr} />}
-        <div className="sdp-recepta__quadrats" role="group" aria-label={tr('patrimoni.receptes.filtre', 'Tria què vols vore')} aria-describedby={idAjuda}>
+        <div className="sdp-recepta__quadrats" role="tablist" aria-label={tr('patrimoni.receptes.filtre', 'Tria què vols vore')} aria-describedby={idAjuda}>
           {blocs.map((b) => (
             <button
               key={b.id}
               type="button"
+              role="tab"
               className="sp-card-calendar-badge"
-              aria-pressed={filtre === b.id}
+              aria-selected={filtre === b.id}
               data-bloc={b.id}
               onClick={() => setFiltre((actual) => (actual === b.id ? null : b.id))}
             >
-              <span className="sdp-recepta__quadrat-icona" aria-hidden="true">{b.icona}</span>
+              <span className="sdp-recepta__quadrat-icona sdp-fitxa-emoji-xl" aria-hidden="true">{b.icona}</span>
               <span className="sdp-recepta__quadrat-text">{noms[b.id]}</span>
             </button>
           ))}

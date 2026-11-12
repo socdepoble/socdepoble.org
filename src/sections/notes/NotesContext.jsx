@@ -13,13 +13,13 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import { promoteToPublic, teCapacitat } from '../../data/backendPort.js';
 import { dataIsoONull } from '../../utils/calendari.js';
 import { estatPerAlEditor } from './useEstatDesamentNota.js';
-import { ErrorPublicacio, esRebuigDeSeccio, motiuDesatPendent, motiuModeLocal, motiuSeccioPublicada } from './visibilitatNota.js';
+import { ErrorPublicacio, esRebuigDeSeccio, motiuDesatPendent, motiuModeLocal, motiuPobleNoDeterminat, motiuSeccioPublicada } from './visibilitatNota.js';
 import { motiuSignaturaDAltri } from './signaturaDAltri.js';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
 import { ErrorIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { ID_NOTA_BENVINGUDA, actorAmbPobleDeLEntitat, autoriaDeLActor, modeDeDadesResolt } from './autoriaNota.js';
-import { poblePrincipal, slugDelPoble } from '../pobles/nomsDelPoble.js';
+import { llistaDePobles, poblePrincipal, slugDelPoble } from '../pobles/nomsDelPoble.js';
 import { pobleDeConfig } from '../xat/pobleAmfitrio.js';
 import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
 import { cosDeConnexioEditadaPerAlMur } from './connexions.js';
@@ -29,7 +29,7 @@ import { CODI_ENTRADA, esRebuigDeNormes } from '../../data/errorsBackend.js';
    preparada (notaPreparada.js) en crear-se hi passa pel mateix. */
 import { netejaCamp } from './netejaCamp.js';
 import { esLlavorDeNota } from './llavorNota.js';
-import { setVal } from '../../config/storage.js';
+import { getVal, setVal } from '../../config/storage.js';
 /* IDEA-61 (T0, prompt 261102_1532) · El contracte pur del Flux Universal de
    Publicació: la fitxa d'àmbit d'una nota es projecta al payload amb ell. */
 import { ESTATS, canviaEstat, coaccionaAmbit, esFitxaDAmbit, projeccioPayload, seccioDAmbit } from '../../utils/publicacioUniversal.js';
@@ -85,6 +85,59 @@ const TEMPS_NOTA_RESOLTA_MS = 4000;
 function recordaRetiradaDeLaN1(note, config, scopeKey) {
   if (String(note?.id) !== ID_NOTA_BENVINGUDA || modeDeDadesResolt(config) !== 'seed') return false;
   return typeof scopeKey === 'string' && scopeKey !== '' && setVal(`notes.tutorialRetirada.${scopeKey}`, true);
+}
+
+/* Onada R20 (revisió creuada P1 · poble de destinació fora de la finestra del Mur) ·
+   Marcador persistent acotat (mateix contracte que modesTraduccioLocals.js: una sola
+   clau versionada amb sostre LRU de 200 entrades a config/storage.js) perquè reobrir
+   una nota quan la fila ja no és entre les 50 primeres de feedPosts conserve el poble
+   publicat sense mutar l'esquema de la taula notes al servidor ni fer créixer el magatzem. */
+const CLAU_DESTINS_PUBLICATS = 'notes.destinsPublicats.v1';
+const VERSIO_DESTINS = 1;
+const MAXIM_DE_DESTINS = 200;
+
+function clauEntradaDesti(scopeKey, submissionId) {
+  const ambit = typeof scopeKey === 'string' ? scopeKey.trim() : '';
+  const id = submissionId == null ? '' : String(submissionId).trim();
+  return ambit && id ? `${ambit}:${id}` : '';
+}
+
+function magatzemDestinsPublicats() {
+  const desat = getVal(CLAU_DESTINS_PUBLICATS, null);
+  return desat && typeof desat === 'object' && !Array.isArray(desat)
+    && desat.v === VERSIO_DESTINS
+    && desat.destins && typeof desat.destins === 'object' && !Array.isArray(desat.destins)
+    ? desat.destins
+    : {};
+}
+
+function llegixDestiPublicat(scopeKey, submissionId) {
+  const clau = clauEntradaDesti(scopeKey, submissionId);
+  if (!clau) return null;
+  const destins = magatzemDestinsPublicats();
+  const guardat = Object.hasOwn(destins, clau) ? destins[clau] : null;
+  if (!guardat || typeof guardat !== 'object' || Array.isArray(guardat)) return null;
+  const pobleId = typeof guardat.pobleId === 'string' ? guardat.pobleId.trim() : '';
+  if (!pobleId) return null;
+  const authorLocation = typeof guardat.authorLocation === 'string' ? guardat.authorLocation.trim() : '';
+  return { pobleId, authorLocation };
+}
+
+function desaDestiPublicat(scopeKey, submissionId, { pobleId = '', authorLocation = '' } = {}) {
+  const clau = clauEntradaDesti(scopeKey, submissionId);
+  const idNet = typeof pobleId === 'string' ? pobleId.trim() : '';
+  if (!clau || !idNet) return false;
+  const locNeta = typeof authorLocation === 'string' ? authorLocation.trim() : '';
+  const previ = llegixDestiPublicat(scopeKey, submissionId);
+  if (previ && previ.pobleId === idNet && previ.authorLocation === locNeta) return false;
+  const destins = { ...magatzemDestinsPublicats() };
+  delete destins[clau];
+  destins[clau] = { pobleId: idNet, authorLocation: locNeta };
+  const claus = Object.keys(destins);
+  for (const vella of claus.slice(0, Math.max(0, claus.length - MAXIM_DE_DESTINS))) {
+    delete destins[vella];
+  }
+  return Boolean(setVal(CLAU_DESTINS_PUBLICATS, { v: VERSIO_DESTINS, destins }));
 }
 
 export function etiquetesDeNota(note, _noteFolders, accions = {}) {
@@ -153,6 +206,15 @@ export function NotesProvider({ children }) {
 
   // IndexedDB owns persistence; React only holds the immediate editing overlay.
   const [localNoteOverrides, setLocalNoteOverrides] = useState({});
+  const [versioDestinsPublicats, setVersioDestinsPublicats] = useState(0);
+  const destiPublicatDeNota = useCallback((submissionId) => (
+    llegixDestiPublicat(scopeKey, submissionId)
+  ), [scopeKey]);
+  const desaDestiPublicatNota = useCallback((submissionId, dades) => {
+    const canviat = desaDestiPublicat(scopeKey, submissionId, dades);
+    if (canviat) setVersioDestinsPublicats((v) => v + 1);
+    return canviat;
+  }, [scopeKey]);
   const operationRef = useRef(null);
   const operation = useMemo(() => ({ workspaceKey, scopeKey }), [workspaceKey, scopeKey]);
   useLayoutEffect(() => {
@@ -325,7 +387,7 @@ export function NotesProvider({ children }) {
      (SDP-MOD-428) rebutja amb l'error original i sense toast.
      T71b · Una nota amb origen (connexió o contingut de fora) mai es publica
      com a pròpia: es compartix encara que la crida no ho demane. */
-  const publishNote = useCallback((activeNote, { mode = 'publicar' } = {}) => {
+  const publishNote = useCallback((activeNote, { mode = 'publicar', poble = null } = {}) => {
     // D-7 · Ni publicar ni pujar cap imatge pública amb la reserva de només lectura.
     if (nomesLectura) return Promise.reject(new ErrorIdentitatDeLectura());
     const compartir = mode === 'compartir' || esConnexio(activeNote) || esExtern(activeNote);
@@ -498,8 +560,11 @@ export function NotesProvider({ children }) {
          (pressupost): el Bloc ja el porta carregat (NotesEditor l'importa).
          Si no baixa, publicar falla pel catch de sempre (ERROR_PUBLICAR):
          mai un payload que perda el mode o les traduccions revisades. */
+      const elementPublicat = activeNote.publishedSubmissionId != null
+        ? publicacioCarregada(activeNote.publishedSubmissionId)?.element
+        : null;
       const traduccio = compartir ? {} : (await import('../../components/universal/traduccio/modesTraduccioLocals.js'))
-        .traduccioDelPayload(activeNote, activeNote.publishedSubmissionId != null ? publicacioCarregada(activeNote.publishedSubmissionId)?.element : null);
+        .traduccioDelPayload(activeNote, elementPublicat);
       assertCurrent();
 
       const dataTriada = dataIsoONull(activeNote.publishDate);
@@ -510,9 +575,39 @@ export function NotesProvider({ children }) {
          pot tindre diversos pobles ('A · B', el primer el principal): la clau
          és la del PRINCIPAL (poblePrincipal), perquè 'A · B' fet slug no és
          cap poble i la nota no eixiria a cap pestanya «Gent de …». El lloc
-         escrit (author_location) es queda com el diu qui signa. */
-      const llocDePublicacio = String(autoria?.poble || externalConfig?.appLocation || '').trim();
-      const pobleDePublicacio = slugDelPoble(poblePrincipal(llocDePublicacio)) || pobleDeConfig(externalConfig)?.id || null;
+         escrit (author_location) es queda com el diu qui signa, excepte si
+         tria explícitament publicar en un dels seus pobles vinculats, i en
+         actualitzar sense canviar de poble conserva el ja publicat. */
+      const submissionId = activeNote.publishedSubmissionId || activeNote.id;
+      const destiRecordat = submissionId ? llegixDestiPublicat(scopeKey, submissionId) : null;
+      const pobleIdDeLaNota = typeof activeNote.publishedPobleId === 'string' && activeNote.publishedPobleId.trim()
+        ? activeNote.publishedPobleId.trim()
+        : (typeof activeNote.poble_id === 'string' && activeNote.poble_id.trim() ? activeNote.poble_id.trim() : '');
+      const idPobleJaPublicat = elementPublicat?.poble_id || pobleIdDeLaNota || destiRecordat?.pobleId || '';
+      const llocJaPublicat = String(
+        elementPublicat?.author_location || activeNote.publishedLocation || destiRecordat?.authorLocation || '',
+      ).trim();
+
+      const poblesVinculats = llistaDePobles(autoria?.poble);
+      const pobleTriat = typeof poble === 'string' && poblesVinculats.includes(poble.trim())
+        ? poble.trim()
+        : null;
+      if (Boolean(activeNote.isPublished) && poblesVinculats.length > 1 && !pobleTriat && !idPobleJaPublicat) {
+        const motiu = motiuPobleNoDeterminat(t);
+        showToast(motiu, 'info');
+        throw new ErrorPublicacio(motiu);
+      }
+      const llocPerDefecte = String(autoria?.poble || externalConfig?.appLocation || '').trim();
+      const pobleJaPublicat = !pobleTriat && idPobleJaPublicat
+        ? poblesVinculats.find((candidat) => slugDelPoble(candidat) === idPobleJaPublicat) || null
+        : null;
+      const llocDePublicacio = pobleTriat
+        || (idPobleJaPublicat ? (llocJaPublicat || pobleJaPublicat || '') : llocPerDefecte);
+      const pobleDePublicacio = slugDelPoble(pobleTriat || pobleJaPublicat)
+        || (!pobleTriat && idPobleJaPublicat ? idPobleJaPublicat : '')
+        || slugDelPoble(poblePrincipal(llocDePublicacio))
+        || pobleDeConfig(externalConfig)?.id
+        || null;
       /* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit de la nota: el
          payload de sempre es projecta amb el contracte (ambit, estat i dades
          nets, el type de l'àmbit i, per al mercat, price i tag) i la fila va
@@ -592,9 +687,11 @@ export function NotesProvider({ children }) {
     assertCurrent();
     // The note UUID is also the stable submission UUID. Retrying an uncertain
     // POST upserts the same row; linking can then be retried without duplicates.
-    const submissionId = activeNote.publishedSubmissionId || activeNote.id;
     await sendSectionSubmission({ id: submissionId, sectionId: seccio, payload });
     assertCurrent();
+    if (pobleDePublicacio) {
+      desaDestiPublicatNota(submissionId, { pobleId: pobleDePublicacio, authorLocation: llocDePublicacio });
+    }
     const changes = { isPublished: true, publishedSubmissionId: submissionId };
     const expectedRevision = bgSaveManager.getExpectedRevision(scopeKey, activeNote.id, activeNote.revision);
     const saved = await updateNoteContext(activeNote.id, changes, expectedRevision);
@@ -625,6 +722,7 @@ export function NotesProvider({ children }) {
       showToast(motiu, 'info');
       throw new ErrorPublicacio(motiu);
     }
+    if (error instanceof ErrorPublicacio) throw error;
     if (operationRef.current === operation) {
       /* T2 · En mode de proves el port rebutja sense xarxa (code 'mode-local'):
          dir «pendent de confirmar» faria creure que s'ha enviat. */
@@ -649,9 +747,12 @@ export function NotesProvider({ children }) {
     }).finally(() => publishing.current.delete(key));
     publishing.current.set(key, result);
     return result;
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t, rebuigDePublicacio, publicacioCarregada]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t, rebuigDePublicacio, publicacioCarregada, desaDestiPublicatNota]);
 
-  const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
+  const compartirNota = useCallback(
+    (note, opcions) => publishNote(note, { mode: 'compartir', ...(opcions?.poble ? { poble: opcions.poble } : null) }),
+    [publishNote]
+  );
 
   /* Revisió final R16a (carril FA) · Si el Mur té la versió d'esta nota que
      el servidor ha confirmat: true, false o null (no se sap). Una nota
@@ -852,6 +953,9 @@ export function NotesProvider({ children }) {
     compartirNota,
     /* Revisió final R16a (carril FA) · si el Mur té la versió de la nota. */
     versioAlMur,
+    destiPublicatDeNota,
+    desaDestiPublicatNota,
+    versioDestinsPublicats,
     /* IDEA-61 · el canvi d'estat d'una fitxa d'àmbit (Disponible / Reservat / Complet / Tancat). */
     canviaEstatPublicacio,
     creaNota,
@@ -879,7 +983,8 @@ export function NotesProvider({ children }) {
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField,
     publishNote, compartirNota, canviaEstatPublicacio, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, currentUser, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
-    mouNota, esborraNota, potEsborrar, t, nomesLectura, rebuigDePublicacio, versioAlMur
+    mouNota, esborraNota, potEsborrar, t, nomesLectura, rebuigDePublicacio, versioAlMur,
+    destiPublicatDeNota, desaDestiPublicatNota, versioDestinsPublicats
   ]);
 
   return (

@@ -19,7 +19,7 @@ import { BlocAmbit } from '../../components/universal/ambits/BlocAmbit.jsx';
 import { useCanalAmbit } from '../../components/universal/ambits/canalAmbit.js';
 import { ambitPerCanviDeCarpeta, carpetaDeLAmbit } from '../../components/universal/ambits/carpetaAmbit.js';
 import { CARPETA_PER_SECCIO } from './masDeLUsuari.js';
-import { ESTAT_PER_DEFECTE, coaccionaAmbit, esFitxaDAmbit, etiquetaDAmbit, validaFitxa } from '../../utils/publicacioUniversal.js';
+import { ESTAT_PER_DEFECTE, coaccionaAmbit, esFitxaDAmbit, etiquetaDAmbit, seccioDAmbit, validaFitxa } from '../../utils/publicacioUniversal.js';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
 import { carregaCatalegEmojis, useCanalEmojis } from './canalEmojis.js';
 import {
@@ -27,8 +27,9 @@ import {
 } from '../../components/universal/classificacio/model.js';
 import { esConnexio, esExtern, netejaDrets, teDretsReservats } from '../../data/origenNota.js';
 import {
-  TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textosAmbDrets, textosDeNota, textosExtern
+  TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textosAmbDrets, textosDeNota, textosEnLiniaDeNota, textosExtern
 } from './visibilitatNota.js';
+import { llistaDePobles, slugDelPoble } from '../pobles/nomsDelPoble.js';
 import { nomDeCarpeta } from './carpetes.js';
 import { carpetesCreades, creaCarpetaCreada, useCarpetesCreades } from '../../components/universal/classificacio/carpetesCreades.js';
 import { Alerta, Insignia } from '../../components/PedraSeca';
@@ -48,7 +49,7 @@ import { useMur } from '../mur/MurContext';
 import { esAppNativa } from '../../config/origenPublic.js';
 import { esPaginaVisible } from '../../config/systemPages.js';
 import { cercaEntrades, deActe, dePagina, dePoble, deProducte, dePublicacio, textPla } from '../search/indexCerca.js';
-import { rutaDePerfilDAutor } from '../../config/navigation.js';
+import { getSectionItemPath, rutaDePerfilDAutor } from '../../config/navigation.js';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../config/moderacio.js';
@@ -192,7 +193,8 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   const {
     saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
     notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey,
-    nomesLectura = false, motiuModeTraduccio = null, modeTraduccioNomesLocal = false, versioAlMur = null
+    nomesLectura = false, motiuModeTraduccio = null, modeTraduccioNomesLocal = false, versioAlMur = null,
+    destiPublicatDeNota = null, desaDestiPublicatNota = null
   } = useNotes();
   // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
   const { actorId, actor, memberships } = useIdentitatOReserva();
@@ -694,6 +696,76 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   }, [notaEnEdicio, citaOrigen, senseSessio, esSandbox, nomesLectura, motiuModeTraduccio, idiomaRevisor, modePublicat, modeTraduccioNomesLocal]);
   const ranuraRevisio = useMemo(() => (revisorEditorial || blocTraduccio ? <>{revisorEditorial}{blocTraduccio}</> : null), [revisorEditorial, blocTraduccio]);
 
+  /* Onada R20 (Bucle 1) · Secció i poble publicats com a primitius estables fora
+     de notesAdapter perquè nous arrays buits de useMur() no refacen l'adaptador. */
+  const idPublicatNota = notaEnEdicio?.isPublished
+    ? String(notaEnEdicio.publishedSubmissionId || notaEnEdicio.id || '')
+    : '';
+  const filesMurNota = Array.isArray(mur?.feedPosts) ? mur.feedPosts : CAP;
+  const filesMercatNota = Array.isArray(mur?.marketItems) ? mur.marketItems : CAP;
+  const filaMurNota = idPublicatNota ? filesMurNota.find((element) => String(element?.id) === idPublicatNota) : null;
+  const filaMercatNota = !filaMurNota && idPublicatNota ? filesMercatNota.find((element) => String(element?.id) === idPublicatNota) : null;
+  const filaPublicadaNota = filaMurNota || filaMercatNota || null;
+  const seccioNota = filaMercatNota
+    ? 'mercat'
+    : (filaMurNota ? 'mur' : seccioDAmbit(citaOrigen ? null : fitxaDAmbit?.ambit));
+  const pobleIdCarregat = typeof filaPublicadaNota?.poble_id === 'string' ? filaPublicadaNota.poble_id.trim() : '';
+  const llocCarregat = typeof filaPublicadaNota?.author_location === 'string' ? filaPublicadaNota.author_location.trim() : '';
+  const pobleIdNota = typeof notaEnEdicio?.publishedPobleId === 'string' && notaEnEdicio.publishedPobleId.trim()
+    ? notaEnEdicio.publishedPobleId.trim()
+    : (typeof notaEnEdicio?.poble_id === 'string' && notaEnEdicio.poble_id.trim() ? notaEnEdicio.poble_id.trim() : '');
+  const destiRecordatNota = idPublicatNota && typeof destiPublicatDeNota === 'function'
+    ? destiPublicatDeNota(idPublicatNota)
+    : null;
+  const [poblePaginat, setPoblePaginat] = useState(null);
+  const pobleIdPaginat = poblePaginat?.id === idPublicatNota ? poblePaginat.pobleId : '';
+  const llocPaginat = poblePaginat?.id === idPublicatNota ? String(poblePaginat.authorLocation || '').trim() : '';
+  const pobleIdPublicat = pobleIdCarregat || pobleIdNota || destiRecordatNota?.pobleId || pobleIdPaginat || '';
+  const llocPublicatConegut = llocCarregat
+    || (typeof notaEnEdicio?.publishedLocation === 'string' ? notaEnEdicio.publishedLocation.trim() : '')
+    || String(destiRecordatNota?.authorLocation || '').trim()
+    || llocPaginat;
+
+  useEffect(() => {
+    if (!idPublicatNota || !pobleIdCarregat || typeof desaDestiPublicatNota !== 'function') return;
+    desaDestiPublicatNota(idPublicatNota, { pobleId: pobleIdCarregat, authorLocation: llocCarregat });
+  }, [idPublicatNota, pobleIdCarregat, llocCarregat, desaDestiPublicatNota]);
+
+  const teMultiPoble = llistaDePobles(autoria?.poble).length > 1;
+  useEffect(() => {
+    if (!idPublicatNota || !teMultiPoble || pobleIdPublicat) return undefined;
+    let potPaginar = false;
+    try { potPaginar = teCapacitat('paginacioSeccions') === true; } catch { potPaginar = false; }
+    if (!potPaginar) return undefined;
+    const ctrl = new AbortController();
+    (async () => {
+      try {
+        const port = await import('../../data/backendPort.js');
+        if (typeof port.loadSeccioPage !== 'function') return;
+        let cursor = null;
+        for (let pas = 0; pas < 4 && !ctrl.signal.aborted; pas += 1) {
+          const pagina = await port.loadSeccioPage({ seccio: seccioNota, cursor, limit: 50, signal: ctrl.signal }, config);
+          const trobada = (Array.isArray(pagina?.elements) ? pagina.elements : []).find((el) => String(el?.id) === idPublicatNota);
+          if (trobada && typeof trobada.poble_id === 'string' && trobada.poble_id.trim()) {
+            const resolt = trobada.poble_id.trim();
+            const llocResolt = typeof trobada.author_location === 'string' ? trobada.author_location : '';
+            desaDestiPublicatNota?.(idPublicatNota, {
+              pobleId: resolt,
+              authorLocation: llocResolt,
+            });
+            if (!ctrl.signal.aborted) setPoblePaginat({ id: idPublicatNota, pobleId: resolt, authorLocation: llocResolt });
+            return;
+          }
+          if (pagina?.complete || !pagina?.nextCursor) return;
+          cursor = pagina.nextCursor;
+        }
+      } catch {
+        /* Si la xarxa o el servidor no poden paginar, la frontera en línia demana tria explícita. */
+      }
+    })();
+    return () => ctrl.abort();
+  }, [idPublicatNota, teMultiPoble, pobleIdPublicat, seccioNota, config, desaDestiPublicatNota]);
+
   const notesAdapter = useMemo(() => {
     /* T41 (ordre del Mestre, 260928) · PUBLICAR (i la bola del món) obrin el
        selector de visibilitat: publicar o compartir al Mur només en confirmar.
@@ -712,9 +784,21 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       /* P1-22 · els motius en la llengua de l'app. */
       t,
     });
+    const poblesDisponibles = llistaDePobles(autoria?.poble);
+    const poblePublicat = pobleIdPublicat
+      ? (poblesDisponibles.find((poble) => slugDelPoble(poble) === pobleIdPublicat)
+        || llistaDePobles(llocPublicatConegut)[0]
+        || pobleIdPublicat)
+      : null;
+    const rutaPublicada = idPublicatNota ? getSectionItemPath(seccioNota, idPublicatNota) : null;
     const visibilitat = {
+      enLinia: true,
       /* D4 · amb els drets reservats de l'original, el selector ho avisa. */
       textos: textosAmbDrets(extern ? textosExtern(t) : textosDeNota({ connexio, t }), dretsReservats, t),
+      textosEnLinia: textosEnLiniaDeNota({ connexio, extern, dretsReservats, seccio: seccioNota, t }),
+      poblesDisponibles,
+      poblePublicat,
+      rutaPublicada,
       bloqueig,
       /* La identitat que signa la publicació (MurContext signa amb el mateix
          actor), amb el nom que publishNote hi posarà: mai un correu. */
@@ -726,7 +810,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          ErrorPublicacio porta el motiu de veres (desat en conflicte, sense
          servidor…), que no es tapa amb «torna-ho a provar». La traducció és
          la de visibilitatNota.js (publicaAmbMotiu), la mateixa del lector. */
-      onTria: async (publica, doc) => {
+      onTria: async (publica, doc, opcions) => {
         if (!publica || bloqueig?.opcio === 'publica') return true;
         /* IDEA-61 (T0, prompt 261102_1532) · Una fitxa d'àmbit vertical
            incompleta no ix al Mur: el motiu, en línia, al selector
@@ -757,7 +841,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
            R51V-02 · Publicar s'emporta el mode de traducció d'este dispositiu
            (ambModeTraduccio): publishNote el posa al payload. Compartir (obra
            d'altri), mai. */
-        return publicaAmbMotiu(() => (citaOrigen && compartirNota ? compartirNota(doc) : publishNote(ambModeTraduccio(doc))), {
+        const opcionsPoble = opcions?.poble ? { poble: opcions.poble } : undefined;
+        return publicaAmbMotiu(() => (
+          citaOrigen && compartirNota
+            ? (opcionsPoble ? compartirNota(doc, opcionsPoble) : compartirNota(doc))
+            : (opcionsPoble ? publishNote(ambModeTraduccio(doc), opcionsPoble) : publishNote(ambModeTraduccio(doc)))
+        ), {
           tornaAPreguntar: asseguraNormes ? () => asseguraNormes({ rebutjades: true }) : null,
           /* P1-22 · amb `t`, el motiu de les normes i el de la xarxa ixen traduïts. */
           t
@@ -928,7 +1017,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio, idPublicatNota, seccioNota, pobleIdPublicat, llocPublicatConegut]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

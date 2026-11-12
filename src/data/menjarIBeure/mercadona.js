@@ -7,8 +7,9 @@ let pendent;
 /* Onada R15 (P1-02) · El catàleg de Mercadona viatja amb la Nevera: la mateixa porta de compilació que
    src/apps/nevera/manifest.js, com a literal exacte. El nucli exposa esta funció a tots els mòduls
    (nucliModuls.js copia la plataforma sencera), i un import() sense porta emetria el tros
-   mercadona.generated a qualsevol build públic. Sense VITE_SDP_APP_NEVERA=1, no hi és. */
-const importaCataleg = import.meta.env.DEV || import.meta.env.VITE_SDP_APP_NEVERA === '1'
+   mercadona.generated a qualsevol build públic. P0-113 (ordre del Mestre, 261111): la Nevera és oberta per
+   defecte i el catàleg hi entra com a tros diferit; amb VITE_SDP_APP_NEVERA=0, no hi és. */
+const importaCataleg = import.meta.env.VITE_SDP_APP_NEVERA !== '0'
   ? () => import('./mercadona.generated.js')
   : null;
 

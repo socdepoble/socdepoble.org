@@ -332,8 +332,14 @@ export const retiraFactor = asseguraMetode('retiraFactor');
 export const adminDesaPersonalitzacio = asseguraMetode('adminDesaPersonalitzacio');
 export const adminHistorialPersonalitzacio = asseguraMetode('adminHistorialPersonalitzacio');
 export const adminActualitzaPublicacioEditorial = asseguraMetode('adminActualitzaPublicacioEditorial');
+export const lligPublicadorsRegistrats = asseguraMetode('lligPublicadorsRegistrats');
+export const traspassaPublicacio = asseguraMetode('traspassaPublicacio');
+export const reverteixTraspasPublicacio = asseguraMetode('reverteixTraspasPublicacio');
 export const loadSeedRevisions = asseguraMetode('loadSeedRevisions');
 export const desaRevisioSeed = asseguraMetode('desaRevisioSeed');
+export const llistaRevisionsPatrimoni = asseguraMetode('llistaRevisionsPatrimoni');
+export const desaRevisioPatrimoni = asseguraMetode('desaRevisioPatrimoni');
+export const esborraRevisioPatrimoni = asseguraMetode('esborraRevisioPatrimoni');
 export const adminLlistaPobles = asseguraMetode('adminLlistaPobles');
 export const adminLligPersonalitzacio = asseguraMetode('adminLligPersonalitzacio');
 
@@ -392,3 +398,7 @@ export const estatCuradoriaCultural = asseguraMetode('estatCuradoriaCultural');
 export const llistaAportacionsCulturals = asseguraMetode('llistaAportacionsCulturals');
 export const enviaAportacioCultural = asseguraMetode('enviaAportacioCultural');
 export const revisaAportacioCultural = asseguraMetode('revisaAportacioCultural');
+
+/* P0-111 (Onada R18) · Revisions editorials WordPress sincronitzades darrere del port neutral. */
+export const llistaRevisionsEditorialsWp = asseguraMetode('llistaRevisionsEditorialsWp');
+export const desaRevisioEditorialWp = asseguraMetode('desaRevisioEditorialWp');

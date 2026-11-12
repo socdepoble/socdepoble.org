@@ -4,7 +4,7 @@
    detall filtren amb aria-pressed, un slug que no existix dona el «no trobat» canònic i cap text inventat arriba al
    DOM (escandall, preus, comensals, sinònims ni noms que el llibre no porta). Onada R15b (RV-01, RV-03): l'única cosa
    que s'hi afig és la proposta assistida d'al·lèrgens, amb l'etiqueta «Proposta assistida · Pendent de validació
-   humana» i mai una absència; la guarda PROHIBIT torna a mirar el DOM sencer, panell inclòs. */
+   humana» i absència limitada al text; la guarda PROHIBIT torna a mirar el DOM sencer, panell inclòs. */
 import { readFileSync } from 'node:fs';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -18,7 +18,9 @@ import { OBRA_QUE_DINEM, RECEPTES_QUE_DINEM, RECOMPTES_QUE_DINEM, laminaDeRecept
 import { fixaTraductorLliure } from '../../data/traductorDelLloc.js';
 import { PAGINES_PATRIMONI_R14 } from '../text/pageContent.patrimoniR14.js';
 import { PAGE_COPY } from '../text/pageContent.js';
-import { TEXTOS_ALERGENS } from '../../utils/textosAlergens.js';
+import { DRETS_QUE_DINEM } from '../text/pageContent.dretsPatrimoni.js';
+import { SECTIONS } from '../../config/sections.js';
+import { TEXTOS_ALERGENS, TEXTOS_MATRIU_RECEPTARI } from '../../utils/textosAlergens.js';
 import ReceptesQueDinemSection from './ReceptesQueDinemSection.jsx';
 import ItemDetailSection from '../detail/ItemDetailSection.jsx';
 import { filtraReceptes, normalitzaCerca } from './cercaReceptes.js';
@@ -34,6 +36,8 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); m.dic = 
 
 const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
 /* El que el kit afegia per damunt del llibre i que no pot arribar ni a les dades ni a la interfície. */
+/* P1-ALERGENS-02 (Onada R20) · La frase falsa de R19 en les cinc llengües. */
+const FALSA_ABSENCIA = /mai diu que no n|nunca dice que no|never says that there|ez du inoiz esaten|nunca di que non/i;
 const PROHIBIT = /cap dels 14|\btraces\b|escandall|\bKM ?0\b|\bPVP\b|La Parr[òo]quia|Cooperativa|comensals|escalador|NanoBanana|pebrass|Segellat|Cascant|\bPep\b|mas[i]a|lliure de|sense gluten/i;
 
 function Ubicacio() {
@@ -211,22 +215,26 @@ describe('/page/receptes · ReceptesQueDinemSection', () => {
 });
 
 describe('/receptes/:slug · ReceptaDetailSection', () => {
-  test('capçalera amb la làmina com a hero, el vídeo en el seu bloc amb la façana i text literal amb lang="ca"', async () => {
+  test('capçalera amb heroImage en UniversalPage, drets de l’Associació sense cap CC inventada, vídeo amb façana i text literal amb lang="ca"', async () => {
     const r = ambVideoILamina;
     const { container } = detall(r.slug);
     const h1 = await screen.findByRole('heading', { level: 1, name: r.titol });
     expect(h1).toBeTruthy();
     expect(m.seo.at(-1)).toMatchObject({ title: `${r.titol} · ${OBRA_QUE_DINEM.titol}`, index: true });
-    // Onada R15 (P3-4 i LCP) · La làmina és la capçalera: candidata a LCP, amb les mides de la WebP i demanada de seguida.
-    const img = container.querySelector('.sdp-recepta__capcalera img');
+    // Onada R17 (AH-R17-05) · La làmina (o foto del plat) passa a heroImage d'UniversalPage sense duplicat inline.
+    const img = container.querySelector('.hero-image img');
     const lamina = laminaDeRecepta(r);
     expect(img.getAttribute('src')).toBe(r.lamina);
     expect([img.getAttribute('width'), img.getAttribute('height')]).toEqual([String(lamina.ample), String(lamina.alt)]);
-    expect(img.getAttribute('loading')).toBe('eager');
     expect(img.getAttribute('fetchpriority')).toBe('high');
+    expect(container.querySelector('.sdp-recepta__capcalera')).toBeNull();
+    expect(container.querySelector('.sdp-recepta__lamina')).toBeNull();
+    /* Onada R20 (DRETS_QUE_DINEM) · La font només acredita «permís d’ús»: els drets són de l'Associació (©), i cap
+       llicència Creative Commons inventada no torna a signar l'obra, ni als crèdits ni al copyright de la pàgina. */
+    expect(container.textContent).toContain(DRETS_QUE_DINEM);
+    expect(container.textContent).not.toMatch(/CC BY[^·]*Associació Gastronòmica/);
     // El vídeo, en el seu bloc: la façana de VideoEditorial i cap iframe abans del clic. Cap commutador.
     expect(container.querySelector('section[data-bloc="video"] .video-editorial__facana')).toBeTruthy();
-    expect(container.querySelector('.sdp-recepta__capcalera .video-editorial__facana')).toBeNull();
     expect(container.querySelector('iframe')).toBeNull();
     expect(screen.queryByRole('group', { name: 'Què vols vore a dalt?' })).toBeNull();
     // Text literal del llibre, en blocs amb lang="ca".
@@ -239,49 +247,47 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
     expect(screen.getByRole('link', { name: 'Descarrega el llibre sencer (PDF, 7,6 MB)' }).getAttribute('href')).toBe(OBRA_QUE_DINEM.pdf);
   });
 
-  test('els quadrats-botó filtren amb aria-pressed: un sol bloc, i tornar-lo a prémer ho mostra tot', async () => {
+  test('les pestanyes Pedra Seca filtren amb role="tablist"/role="tab", aria-selected i .sdp-fitxa-emoji-xl', async () => {
     const r = ambVideoILamina;
     const { container } = detall(r.slug);
-    const grup = await screen.findByRole('group', { name: 'Tria què vols vore' });
-    const quadrats = within(grup).getAllByRole('button');
-    expect(quadrats.map((b) => b.textContent)).toEqual(['🧺Ingredients', '🥘Elaboració', '📝Notes', '▶️Vídeo', '🖼️Làmina', '⚠️Al·lèrgens']);
-    expect(quadrats.every((b) => b.getAttribute('aria-pressed') === 'false' && b.className.includes('sp-card-calendar-badge'))).toBe(true);
+    const grup = await screen.findByRole('tablist', { name: 'Tria què vols vore' });
+    const quadrats = within(grup).getAllByRole('tab');
+    expect(quadrats.map((b) => b.textContent)).toEqual(['🧺Ingredients', '🥘Elaboració', '📝Notes', '▶️Vídeo', '⚠️Al·lèrgens']);
+    expect(quadrats.every((b) => (
+      b.getAttribute('aria-selected') === 'false' &&
+      b.className.includes('sp-card-calendar-badge') &&
+      Boolean(b.querySelector('.sdp-fitxa-emoji-xl'))
+    ))).toBe(true);
     const blocs = () => [...container.querySelectorAll('section[data-bloc]')].map((s) => s.dataset.bloc);
     expect(blocs()).toEqual(['ingredients', 'elaboracio', 'notes', 'video', 'alergens']);
-    const ingredients = within(grup).getByRole('button', { name: 'Ingredients' });
+    const ingredients = within(grup).getByRole('tab', { name: 'Ingredients' });
     fireEvent.click(ingredients);
-    expect(ingredients.getAttribute('aria-pressed')).toBe('true');
+    expect(ingredients.getAttribute('aria-selected')).toBe('true');
     expect(blocs()).toEqual(['ingredients']);
-    expect(container.querySelector('.sdp-recepta__capcalera')).toBeNull();
     fireEvent.click(ingredients);
-    expect(ingredients.getAttribute('aria-pressed')).toBe('false');
+    expect(ingredients.getAttribute('aria-selected')).toBe('false');
     expect(blocs()).toEqual(['ingredients', 'elaboracio', 'notes', 'video', 'alergens']);
     // Al·lèrgens: l'avís honest i, davall, la proposta assistida amb l'etiqueta obligatòria (Onada R15b, RV-01/RV-02).
-    fireEvent.click(within(grup).getByRole('button', { name: 'Al·lèrgens' }));
+    fireEvent.click(within(grup).getByRole('tab', { name: 'Al·lèrgens' }));
     expect(blocs()).toEqual(['alergens']);
     const alergens = container.querySelector('section[data-bloc="alergens"]');
     expect(alergens.textContent).toContain('Al·lèrgens no revisats: consulta la llista d’ingredients; si tens una al·lèrgia, pregunta-ho a qui cuina.');
     expect(within(alergens).getByRole('heading', { level: 3, name: 'Proposta assistida · Pendent de validació humana' })).toBeTruthy();
-    // Vídeo: només el bloc del vídeo (la façana, sense la làmina); Làmina: només la làmina de capçalera.
-    fireEvent.click(within(grup).getByRole('button', { name: 'Vídeo' }));
+    // Vídeo: només el bloc del vídeo (la façana); el heroImage d'UniversalPage roman dalt.
+    fireEvent.click(within(grup).getByRole('tab', { name: 'Vídeo' }));
     expect(blocs()).toEqual(['video']);
     expect(container.querySelector('section[data-bloc="video"] .video-editorial__facana')).toBeTruthy();
-    expect(container.querySelector('.sdp-recepta__capcalera')).toBeNull();
+    expect(container.querySelector('.hero-image img')).toBeTruthy();
     expect(container.querySelector('iframe')).toBeNull();
-    fireEvent.click(within(grup).getByRole('button', { name: 'Làmina' }));
-    expect(blocs()).toEqual([]);
-    expect(container.querySelector('.sdp-recepta__capcalera img')).toBeTruthy();
-    expect(within(grup).getAllByRole('button').filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.textContent)).toEqual(['🖼️Làmina']);
   });
 
-  /* Onada R15 (P3-4) · Abans hi havia dos botons «Vídeo»: el quadrat i el del commutador de la capçalera. Ara n'hi ha un,
-     el quadrat; i el vídeo només es carrega (iframe de youtube-nocookie) quan el veí prem «Veure el vídeo» a la façana. */
-  test('un sol botó «Vídeo», i el vídeo només es carrega quan el veí ho demana', async () => {
+  /* Onada R15 (P3-4) · Un sol control «Vídeo»: la pestanya; i el vídeo només es carrega (iframe de youtube-nocookie) quan el veí prem «Veure el vídeo» a la façana. */
+  test('una sola pestanya «Vídeo», i el vídeo només es carrega quan el veí ho demana', async () => {
     const r = ambVideoILamina;
     const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
     const { container } = detall(r.slug);
-    await screen.findByRole('group', { name: 'Tria què vols vore' });
-    expect(screen.getAllByRole('button', { name: /^Vídeo$/ })).toHaveLength(1);
+    await screen.findByRole('tablist', { name: 'Tria què vols vore' });
+    expect(screen.getAllByRole('tab', { name: /^Vídeo$/ })).toHaveLength(1);
     expect(screen.queryByRole('button', { name: /Làmina del llibre/ })).toBeNull();
     expect(container.querySelector('iframe')).toBeNull();
     const facana = container.querySelector('section[data-bloc="video"]');
@@ -299,8 +305,8 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
     expect(r.pagina).not.toBe(pagina);
     expect(laminaDeRecepta(r).pagina).toBe(pagina);
     const { container, unmount } = detall(r.slug);
-    await screen.findByRole('group', { name: 'Tria què vols vore' });
-    expect(container.querySelector('.sdp-recepta__capcalera img').getAttribute('alt')).toBe(`Làmina de la pàgina ${pagina} del llibre`);
+    await screen.findByRole('tablist', { name: 'Tria què vols vore' });
+    expect(container.querySelector('.hero-image img').getAttribute('alt')).toBe(`Làmina de la pàgina ${pagina} del llibre`);
     unmount();
     const vista = llista();
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: r.titol } });
@@ -308,22 +314,21 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
     expect(targeta.querySelector('img').getAttribute('alt')).toBe(`Làmina de la pàgina ${pagina} del llibre`);
   });
 
-  test('sense vídeo ni notes: la làmina com a hero, cap commutador i cap quadrat de vídeo ni de notes', async () => {
+  test('sense vídeo ni notes: la làmina com a heroImage, cap commutador i cap pestanya de vídeo ni de notes', async () => {
     const r = senseVideoNiNotes;
     const { container } = detall(r.slug);
-    const grup = await screen.findByRole('group', { name: 'Tria què vols vore' });
-    expect(within(grup).getAllByRole('button').map((b) => b.dataset.bloc)).toEqual(['ingredients', 'elaboracio', 'lamina', 'alergens']);
-    expect(container.querySelector('.sdp-recepta__capcalera img').getAttribute('src')).toBe(r.lamina);
+    const grup = await screen.findByRole('tablist', { name: 'Tria què vols vore' });
+    expect(within(grup).getAllByRole('tab').map((b) => b.dataset.bloc)).toEqual(['ingredients', 'elaboracio', 'alergens']);
+    expect(container.querySelector('.hero-image img').getAttribute('src')).toBe(r.lamina);
     expect(container.querySelector('section[data-bloc="video"]')).toBeNull();
     expect(container.querySelector('.video-editorial__facana')).toBeNull();
   });
 
-  test('una recepta sense làmina no en pinta cap ni té el quadrat', async () => {
+  test('una recepta sense làmina pròpia fa fallback canònic a la vinyeta de portada de Què dinem? en heroImage', async () => {
     const { container } = detall(senseLamina.slug);
-    const grup = await screen.findByRole('group', { name: 'Tria què vols vore' });
-    expect(within(grup).getAllByRole('button').map((b) => b.dataset.bloc)).not.toContain('lamina');
-    expect(container.querySelector('.sdp-recepta__capcalera img')).toBeNull();
-    // La 126 té vídeo: la façana va en el seu bloc, sense cap capçalera ni iframe.
+    const grup = await screen.findByRole('tablist', { name: 'Tria què vols vore' });
+    expect(within(grup).getAllByRole('tab').map((b) => b.dataset.bloc)).not.toContain('lamina');
+    expect(container.querySelector('.hero-image img').getAttribute('src')).toBe('/assets/uploads/patrimoni/portada_que_dinem_muro.webp');
     expect(senseLamina.youtubeId).toBeTruthy();
     expect(container.querySelector('.sdp-recepta__capcalera')).toBeNull();
     expect(container.querySelector('section[data-bloc="video"] .video-editorial__facana')).toBeTruthy();
@@ -338,10 +343,23 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
     for (const r of RECEPTES_QUE_DINEM.slice(0, 5)) expect(container.textContent).not.toContain(r.titol);
   });
 
+  test('quan una recepta disposa de fotografia real del plat (foto), heroImage prioritza la foto sobre la làmina', async () => {
+    const { PaginaDeRecepta } = await import('./ReceptaDetailSection.jsx');
+    const rAmbFoto = { ...ambVideoILamina, foto: '/assets/uploads/patrimoni/olleta-plat-real.webp', fotoAlt: 'Plat real d’olleta' };
+    const { container } = render(
+      <MemoryRouter rutaInicial={`/receptes/${rAmbFoto.slug}`}>
+        <PaginaDeRecepta recepta={rAmbFoto} />
+      </MemoryRouter>
+    );
+    const img = container.querySelector('.hero-image img');
+    expect(img.getAttribute('src')).toBe('/assets/uploads/patrimoni/olleta-plat-real.webp');
+    expect(img.getAttribute('alt')).toBe('Plat real d’olleta');
+  });
+
   test('cap text prohibit al DOM de cap recepta ni a les dades, el copy o les claus', async () => {
     for (const r of [ambVideoILamina, senseVideoNiNotes, senseLamina]) {
       const { container, unmount } = detall(r.slug);
-      await screen.findByRole('group', { name: 'Tria què vols vore' });
+      await screen.findByRole('tablist', { name: 'Tria què vols vore' });
       expect(container.querySelector('section[data-estat="pendent_validacio_humana"] h3').textContent).toBe('Proposta assistida · Pendent de validació humana');
       expect(container.textContent).not.toMatch(PROHIBIT);
       unmount();
@@ -357,11 +375,11 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
 
   /* Onada R15 (P1-02, R15-REG-06) · El build públic (sense VITE_SDP_APP_NEVERA=1, fora de DEV) torna a ser el R14:
      la capa de compra amb Mercadona no hi és ni plegada. R15b afig només la proposta assistida d'al·lèrgens, marcada
-     pendent de validació humana, mai absències i sense línia d'escandall: PROHIBIT torna a mirar el DOM sencer.
+     pendent de validació humana i sense línia d'escandall: PROHIBIT torna a mirar el DOM sencer.
      Una instància nova de la pàgina, amb l'entorn del build. */
-  test('build públic sense la bandera de la Nevera: cap capa de compra i cap text prohibit', async () => {
+  test('build públic amb la bandera de la Nevera apagada: cap capa de compra i cap text prohibit', async () => {
     vi.stubEnv('DEV', false);
-    vi.stubEnv('VITE_SDP_APP_NEVERA', undefined);
+    vi.stubEnv('VITE_SDP_APP_NEVERA', '0');
     const { default: Pagina } = await import(/* @vite-ignore */ './ReceptaDetailSection.jsx?publica-r14');
     for (const r of [ambVideoILamina, senseVideoNiNotes, senseLamina]) {
       const { container, unmount } = render(
@@ -369,7 +387,7 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
           <Routes><Route path="/receptes/:itemId" element={<Pagina />} /></Routes>
         </MemoryRouter>
       );
-      await screen.findByRole('group', { name: 'Tria què vols vore' });
+      await screen.findByRole('tablist', { name: 'Tria què vols vore' });
       expect(screen.queryByRole('button', { name: 'Calcula i prepara la compra' })).toBeNull();
       expect(container.querySelector('[aria-label="Prepara una compra amb esta recepta"]')).toBeNull();
       const proposta = container.querySelector('section[data-estat="pendent_validacio_humana"]');
@@ -389,35 +407,69 @@ describe('RV-01/RV-02 · la proposta d’al·lèrgens de la fitxa, en les cinc l
     m.dic = DICCIONARIS[llengua];
     m.language = llengua;
     const t = TEXTOS_ALERGENS[llengua];
+    const matriu = TEXTOS_MATRIU_RECEPTARI[llengua];
     const { container } = detall('cacaus-fregits');
-    await screen.findAllByRole('group');
+    await screen.findByRole('tablist', { name: DICCIONARIS[llengua]['patrimoni.receptes.filtre'] });
     const panell = container.querySelector('section[data-estat="pendent_validacio_humana"]');
     expect(panell.getAttribute('lang')).toBe(llengua);
     expect(within(panell).getByRole('heading', { level: 3 }).textContent).toBe(t.etiqueta);
-    expect(panell.querySelector('li[data-alergen="cacauets"]').textContent).toContain(`${t.noms.cacauets}: ${t.ingredient}`);
-    expect(panell.querySelector('li[data-alergen="gluten"]').textContent).toBe(`${t.noms.gluten}: ${t.desconegut}`);
+    expect(panell.querySelector('li[data-alergen="cacauets"]').textContent).toContain(`${t.noms.cacauets}: ${matriu.ingredient}`);
+    expect(panell.querySelector('li[data-alergen="gluten"]').textContent).toBe(`${t.noms.gluten}: ${matriu['no-declarat']}`);
+    expect(panell.textContent).toContain(matriu.completa);
+    expect(panell.querySelector('[data-simbol="?"]')).toBeNull();
     expect(container.querySelector('section[data-bloc="alergens"]').textContent).toContain(DICCIONARIS[llengua]['patrimoni.receptes.alergens']);
     expect(container.textContent).not.toMatch(PROHIBIT);
   });
 
-  test('la còpia de /page/receptes diu el mateix que el panell, en les cinc llengües, i ja no diu que no s’hi afig cap', () => {
+  test('la còpia del receptari informa dels 14 grups i remet a les etiquetes en les cinc llengües', () => {
     const pagina = PAGINES_PATRIMONI_R14.receptes;
-    const COPIA = { ca: [pagina, 'ací no se n’afig cap'], es: [pagina.translations.es, 'aquí no se añade ninguno'],
-      en: [pagina.translations.en, 'none are added here'], eu: [pagina.translations.eu, 'ez da bat ere gehitzen'],
-      gl: [pagina.translations.gl, 'aquí non se engade ningún'] };
-    for (const [llengua, [p, vell]] of Object.entries(COPIA)) {
-      const t = TEXTOS_ALERGENS[llengua];
-      expect([llengua, p.html.includes(vell)]).toEqual([llengua, false]);
-      for (const simbol of ['«•»', '«T»', `«${t.desconegut}»`]) expect([llengua, simbol, p.html.includes(simbol)]).toEqual([llengua, simbol, true]);
+    const copies = { ca: pagina, ...pagina.translations };
+    const etiquetes = { ca: 'l’etiqueta dels productes', es: 'las etiquetas de los productos', en: 'product labels',
+      eu: 'produktuen etiketak', gl: 'as etiquetas dos produtos' };
+    for (const [llengua, copy] of Object.entries(copies)) {
+      expect(copy.html).toMatch(/<strong>14 .+?<\/strong>/);
+      expect(copy.html).toContain(etiquetes[llengua]);
+      expect(copy.html).not.toContain(TEXTOS_ALERGENS[llengua].desconegut);
     }
-    expect(pagina.html).toContain('<strong>proposta assistida, pendent de validació humana</strong>');
   });
 
-  test('R16-AA4 · /page/receptes incorpora la portada real portada_que_dinem_muro.webp i cap pàgina pública de PAGE_COPY repetix imatge de portada', () => {
-    expect(PAGINES_PATRIMONI_R14.receptes.image).toBe('/assets/uploads/patrimoni/portada_que_dinem_muro.webp');
+  /* Onada R19 (seguretat alimentària, R15b RV-03) · El paràgraf d'al·lèrgens de /page/receptes no presenta la proposta
+     com un fet: el llibre no en parla i la proposta és assistida i pendent de validació humana. Les formes són les del
+     panell de la fitxa (TEXTOS_ALERGENS: etiqueta i frase de l'absència) en cada llengua.
+     Onada R20 (P1-ALERGENS-02) · La fitxa sí que pinta «— No en porta segons el text» (1.730 files de 2.086): el
+     paràgraf cita eixa fila amb l'etiqueta exacta de la matriu (TEXTOS_MATRIU_RECEPTARI) i diu que descriu el text del
+     llibre, no el plat. Cap llengua torna a afirmar que la proposta «mai diu que no n'hi haja». */
+  test('R19 · el paràgraf d’al·lèrgens diu proposta assistida pendent de validació humana i no ho dona per fet, en les cinc llengües', () => {
+    const pagina = PAGINES_PATRIMONI_R14.receptes;
+    const copies = { ca: pagina, ...pagina.translations };
+    const FRASES = {
+      ca: { llibre: 'no parla d’al·lèrgens', absencia: 'només una persona pot declarar que un al·lergen no hi és', fet: /mostra els 14 grups/ },
+      es: { llibre: 'no habla de alérgenos', absencia: 'solo una persona puede declarar que un alérgeno no está', fet: /muestra los 14 grupos/ },
+      en: { llibre: 'does not mention allergens', absencia: 'only a person can declare that an allergen is not there', fet: /shows the 14 allergen groups/ },
+      eu: { llibre: 'ez du alergenoei buruz hitz egiten', absencia: 'pertsona batek bakarrik adieraz dezake alergeno bat ez dagoela', fet: /14 alergeno-taldeak erakusten/ },
+      gl: { llibre: 'non fala de alérxenos', absencia: 'só unha persoa pode declarar que un alérxeno non está', fet: /mostra os 14 grupos/ }
+    };
+    expect(Object.keys(copies).sort()).toEqual(Object.keys(FRASES).sort());
+    for (const [llengua, copy] of Object.entries(copies)) {
+      const paragraf = (copy.html.match(/<p>[^]*?<\/p>/g) ?? []).find((p) => p.includes('<strong>14 ')) ?? '';
+      const text = paragraf.replace(/<[^>]+>/g, '').toLowerCase();
+      const { llibre, absencia, fet } = FRASES[llengua];
+      const [proposta, validacio] = TEXTOS_ALERGENS[llengua].etiqueta.toLowerCase().split(' · ');
+      expect([llengua, TEXTOS_ALERGENS[llengua].completa.toLowerCase().includes(absencia)]).toEqual([llengua, true]);
+      expect([llengua, text.includes(proposta), text.includes(validacio), text.includes(llibre), text.includes(absencia), fet.test(text)])
+        .toEqual([llengua, true, true, true, true, false]);
+      const fila = TEXTOS_MATRIU_RECEPTARI[llengua]['no-declarat'].toLowerCase();
+      expect([llengua, text.includes(fila), FALSA_ABSENCIA.test(text)]).toEqual([llengua, true, false]);
+    }
+  });
+
+  test('R16-AA4 + P0-117 · /page/receptes incorpora la portada pròpia receptes-ibanez.webp i cap pàgina pública de PAGE_COPY repetix imatge de portada', () => {
+    expect(PAGINES_PATRIMONI_R14.receptes.title).toBe('Receptes');
+    expect(PAGINES_PATRIMONI_R14.receptes.image).toBe('/assets/uploads/patrimoni/receptes-ibanez.webp');
     expect(PAGINES_PATRIMONI_R14.receptes.imageWidth).toBe(1200);
-    expect(PAGINES_PATRIMONI_R14.receptes.imageHeight).toBe(675);
-    const entrades = Object.entries(PAGE_COPY);
+    expect(PAGINES_PATRIMONI_R14.receptes.imageHeight).toBe(896);
+    const infraestructura = new Set(SECTIONS.filter(seccio => seccio.kind === 'infra').map(seccio => seccio.pageKey));
+    const entrades = Object.entries(PAGE_COPY).filter(([id]) => !infraestructura.has(id));
     for (const [id, entrada] of entrades) {
       expect(typeof entrada.image === 'string' && entrada.image.trim().length > 0, `PAGE_COPY.${id} sense image`).toBe(true);
     }

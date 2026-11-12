@@ -6,6 +6,7 @@ import { creaServeiAmbitXat } from '../../data/xifratXat.js';
 import { registraServeiXifratXat } from '../../data/xifratXatServei.js';
 import { clauIdentitat } from '../../data/xifratXatMagatzem.js';
 import { _reiniciaOblitXat, oblidaXatEnEixir } from '../../data/xifratXatEixida.js';
+import { backendScope } from '../../config/backendConfig.js';
 
 const m=vi.hoisted(()=>({session:{},actorKey:'',backend:null,loadFils:vi.fn(),loadMissatges:vi.fn(),enviaMissatge:vi.fn(),marcaLlegit:vi.fn(),creaFilDirecte:vi.fn(),carregaMembres:vi.fn(),subscribeToXat:vi.fn(),unsubscribeFromXat:vi.fn(),obriFilDePagina:vi.fn(),teCapacitat:vi.fn(),showToast:vi.fn()}));
 vi.mock('../../app/contexts/SessionContext',()=>({useSession:()=>m.session}));
@@ -80,11 +81,14 @@ const CI_A=()=>clauIdentitat({backendId:'supabase',endpoint:CONFIG.supabaseUrl,j
 test('OBLIT_FALLIT en eixir: value l’exposa, l’avís apareix i el reintent usa la mateixa CI; en reeixir, «fet» i tancat',async()=>{
  const oblida=ambOblitFals([FALLIT,OBLIDAT]);const v=await muntat();
  expect(value.oblitXat).toBeNull();expect(value.oblitXatFallit).toBe(false);expect(document.querySelector('dialog')).toBeNull();
+ /* R17.2 (Avisador) · Amb la bandera encesa, la clau de l'Avisador és la mateixa que amb la bandera apagada (backend + joId) i no conté la CI del servei. */
+ expect(value.avisadorClau).toBe(`avisador:${JSON.stringify([backendScope(CONFIG),A])}`);expect(value.avisadorClau).not.toContain(CI_A());
  m.session={currentUser:null,generacio:2,estat:'fora'};v.rerender(arbre());expect(servei.estatAmbit().clauIdentitat).toBeNull();
  await act(async()=>{await oblidaXatEnEixir({config:CONFIG,usuariId:A});});
  expect(oblida).toHaveBeenCalledTimes(1);expect(oblida.mock.calls[0][0]).toMatchObject({clauIdentitat:CI_A(),mantenSessio:false});
  expect(value.oblitXatFallit).toBe(true);expect(value.oblitXat).toMatchObject({estat:'OBLIT_FALLIT',pendents:['indexeddb']});
- expect(Object.keys(value).filter(k=>/xifra|e2ee|clau/i.test(k))).toEqual([]);
+ /* Llista tancada: només la clau d'emmagatzematge de l'Avisador, i buida en eixir. */
+ expect(Object.keys(value).filter(k=>/xifra|e2ee|clau/i.test(k))).toEqual(['avisadorClau']);expect(value.avisadorClau).toBeNull();
  const finestra=screen.getByRole('dialog',{name:'No s’han pogut esborrar les claus del xat'});expect(finestra.hasAttribute('open')).toBe(true);
  await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'Torna-ho a provar'}));});
  await waitFor(()=>expect(value.oblitXatFallit).toBe(false));

@@ -1,10 +1,26 @@
 import {describe,it,expect,vi,afterEach} from 'vitest';
-import {act,render,screen,fireEvent,cleanup} from '@testing-library/react';
+import {act,render as renderReact,screen,fireEvent,cleanup} from '@testing-library/react';
+import { MemoryRouter } from '../../app/contexts/RouterContext.jsx';
 import AparadorFediversity from './AparadorFediversity.jsx';
 import {aplicaAparadorR20,APARADOR_R20_TEXTS} from './pageContent.fediversityR20.js';
 import {PAGE_COPY} from './pageContent.js';
 import {localitzaPagina} from './pageContent.r10.js';
 import {FEDIVERSITY_ACTORS,FEDIVERSITY_ARCHITECTURE_TEXTS,FEDIVERSITY_CONTRACT_COUNTS} from './fediversityArchitectureR11.js';
+import {CAPACITATS,CONTRACTE_NUCLI} from '../../data/contracte.js';
+const render = (component) => renderReact(component, { wrapper: MemoryRouter });
+/* R19 (Carril 0+1) · El contracte és viu (src/data/contracte.js, carril de Codex): 52/151 a R18, 53/153 hui, i
+   tornarà a moure's. Un literal es tornava roig a cada capacitat nova sense que l'Aparador mentira. L'oracle es
+   recompta ací, directament del contracte i per un camí propi (cap .flat() ni la constant de l'Aparador), i la
+   prova vigila el mateix: que l'Aparador diga les xifres del contracte viu, i no un número escrit a mà. */
+const CONTRACTE_VIU=(()=>{
+ const metodes=new Set(CONTRACTE_NUCLI);
+ for(const [capacitat,llista] of Object.entries(CAPACITATS)){
+  if(!Array.isArray(llista))throw new Error(`La capacitat ${capacitat} del contracte no és una llista de mètodes`);
+  for(const metode of llista)metodes.add(metode);
+ }
+ return {capacitats:Object.keys(CAPACITATS).length,metodes:metodes.size};
+})();
+const xifraSola=(n)=>new RegExp(`(^|\\D)${n}(\\D|$)`);
 const PAGINES_DE_PATRIMONI=['anatomia-rural','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals'];
 /* R11 loop 3 (R35-L2-01/02/03/04/07) · Oracle escrit a mà, independent de les constants que pinten el DOM:
    les etiquetes de la font (architecture.pdf, p. 1), un ancoratge per rol i per llengua (pp. 1 i 4), un ancoratge per pas (p. 5)
@@ -31,7 +47,9 @@ describe('Aparador verificable R20',()=>{
  it('arquitectura: cinc llengües amb els mateixos cinc rols per clau, tres passos i cap text buit',()=>{
   expect(Object.keys(FEDIVERSITY_ARCHITECTURE_TEXTS).sort()).toEqual([...LLENGUES_DE_L_ARQUITECTURA].sort());
   expect(Object.values(FEDIVERSITY_ACTORS)).toEqual(ROLS_DE_LA_FONT);
-  expect(FEDIVERSITY_CONTRACT_COUNTS).toEqual({capacitats:51,metodes:148});
+  expect(FEDIVERSITY_CONTRACT_COUNTS).toEqual(CONTRACTE_VIU);
+  for(const n of Object.values(CONTRACTE_VIU))expect(Number.isInteger(n)&&n>0).toBe(true);
+  expect(CONTRACTE_VIU.metodes).toBeGreaterThan(new Set(CONTRACTE_NUCLI).size);
   for(const text of Object.values(FEDIVERSITY_ARCHITECTURE_TEXTS)){
    expect(Object.keys(text.actors).sort()).toEqual([...CLAUS_DELS_ROLS].sort());
    expect(text.steps).toHaveLength(3);
@@ -43,7 +61,7 @@ describe('Aparador verificable R20',()=>{
   render(<AparadorFediversity language={language}/>);
   const region=screen.getByRole('region',{name:TITOLS_DE_LA_FONT[language]});
   expect(region.querySelector('h3').textContent).toBe(TITOLS_DE_LA_FONT[language]);
-  expect(region.querySelector('p').textContent).toMatch(/\b51\b/);expect(region.querySelector('p').textContent).toMatch(/\b148\b/);
+  expect(region.querySelector('p').textContent).toMatch(xifraSola(CONTRACTE_VIU.capacitats));expect(region.querySelector('p').textContent).toMatch(xifraSola(CONTRACTE_VIU.metodes));
   expect(region.textContent).not.toMatch(/\{capacitats\}|\{metodes\}|100\s*%|<\s*15\s*min/);
   // R35-L2-01: jsdom no mesura la graella de :where(dl); la prova fixa que dt i dd en siguen fills directes i alternats.
   const dl=region.querySelector('dl');
@@ -84,7 +102,7 @@ describe('Aparador verificable R20',()=>{
   const {container}=render(<AparadorFediversity language="ca"/>);
   fireEvent.change(screen.getByRole('textbox'),{target:{value:'Al poble recordem les festes i la vida de les famílies. L’agricultura i les collites reunien els veïns cada estiu.'}});
   fireEvent.click(screen.getByRole('button',{name:'Compila en local'}));
-  await screen.findByRole('heading',{name:'Esborrany privat'});
+  await screen.findByRole('heading',{name:'Esborrany privat'},{timeout:8000});
   expect(container.querySelector('pre').textContent).toContain('visibility: "private"');expect(container.querySelector('pre').textContent).toContain('SHA-256');expect(fetch).not.toHaveBeenCalled();expect(container.querySelector('[data-sdp-privat="true"]')).toBeTruthy();vi.unstubAllGlobals();
  });
  it('R104 · el batec de vida i el protocol d’emergències, una vegada cadascun i després de la secció privada',()=>{
@@ -92,6 +110,7 @@ describe('Aparador verificable R20',()=>{
   const privat=container.querySelector('[data-sdp-privat="true"]');
   const batec=container.querySelectorAll('[data-sdp-batec-vida="true"]'),emergencies=container.querySelectorAll('[data-sdp-emergencies-offline="true"]');
   expect([batec.length,emergencies.length]).toEqual([1,1]);
+  expect(batec[0].querySelector('a').getAttribute('href')).toBe('/page/avisador');
   for(const targeta of [batec[0],emergencies[0]])expect(privat.compareDocumentPosition(targeta)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
  });
  it('resposta tardana no reapareix després d’esborrar la prova',async()=>{

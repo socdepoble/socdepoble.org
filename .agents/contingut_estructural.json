@@ -8,16 +8,16 @@
       "data": "2026-11-07"
     },
     "anima": {
-      "sha256": "0d1d152aec7820f9810ac62a7b2f1e65bc488d2ef8d1f4bdec19bba7e2c9f873",
-      "html": 12046,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "b9fe30f514828298cc8702a76c240a3d697a92dd89259a52ccc1096a36d2277f",
+      "html": 12641,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "data": "2026-11-12"
     },
     "arbres-monumentals": {
-      "sha256": "d122af0655d0a71217bac280ae880b9ec902e27d3ef4bec2310c6da9395986ed",
-      "html": 636,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "de3ed82953ef4fb08c0defc35118a23f702ee172789166725628b435fc86c914",
+      "html": 2589,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "data": "2026-11-12"
     },
     "banc-de-llavors": {
       "sha256": "1f0de487fd99ee8dfd8532c64c56cca2e9d52c5d9ead14aca2af72ae3823a32e",
@@ -49,11 +49,17 @@
       "aprovat_per": "Mestre Javi (ordre del 10-11: «Fes R16b», arbitrar la feina posterior a R16a perquè producció torne a eixir d'un commit; text revisat per Claude amb verificació adversària per carril, revocable)",
       "data": "2026-11-10"
     },
+    "dispositius": {
+      "sha256": "e2b40b5ae8e2fe0f9abbe4afef41830faf81c1ff43deec7db9dab00494a14d2a",
+      "html": 607,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "data": "2026-11-12"
+    },
     "disseny": {
-      "sha256": "da7b7421eb914af150d8eb92311ba494020e2423a0dd77c3af901b0868dd57f6",
-      "html": 2319,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "f7abaf1ffe098bdc27310ec210afd559db1084962ee94214c18791c746e651a8",
+      "html": 4148,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "data": "2026-11-12"
     },
     "drets-autor": {
       "sha256": "8b8413172e4c133ae0f60c1577b3c0189a9cf39725f9558f9ca3170c5fd4af37",
@@ -62,16 +68,16 @@
       "data": "2026-11-07"
     },
     "fedivers": {
-      "sha256": "da73fb5b405ae337923242a66621cd77c32e1605b15b7695e3e09479292b49d0",
-      "html": 21707,
-      "aprovat_per": "Mestre Javi, ordre explícita R15.2 261109; base R15-A3 revisada per Claude, delta Codex pendent de revisió integradora i revocable",
-      "data": "2026-11-09"
+      "sha256": "aeb580709e0ce1edf174343744e2a9d10977c3f58d36be81fb375b4d25474088",
+      "html": 21944,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "data": "2026-11-12"
     },
     "fediversity": {
-      "sha256": "f0269c5848fc56aec10310d95682f105be22b89b36d8ce1758938b6f62348f98",
-      "html": 63106,
-      "aprovat_per": "Mestre Javi (ordre del 09-11: absorbir els kits verificats en R15b i desplegar-lo; text revisat per Claude amb verificació adversària per carril, revocable)",
-      "data": "2026-11-09"
+      "sha256": "a0b112a23904e484e6780807fcca6237975bd8791bb1290583671a25c10cd99e",
+      "html": 63691,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "data": "2026-11-12"
     },
     "habitatge": {
       "sha256": "77c25f12150cc07c8bb56b6ebd1f3b5a2d057ac6ec3f02997f47654ce0b94da2",
@@ -98,10 +104,10 @@
       "data": "2026-11-07"
     },
     "node-zero": {
-      "sha256": "f61aac812ac0b704ad1dbfa7175b03cdc7b4673b11228ed584462ac5baf1bedb",
-      "html": 21595,
-      "aprovat_per": "Mestre Javi, ordre explícita R15.2 261109; base R15-A3 revisada per Claude, delta Codex pendent de revisió integradora i revocable",
-      "data": "2026-11-09"
+      "sha256": "feab9f0a82b3de373032a7c95c19a0c869306cc3398d243e6768c7757dee12b3",
+      "html": 22572,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "data": "2026-11-12"
     },
     "notes": {
       "sha256": "336230c5e5b9c3ce193ba63d75cd66d2d51261e3efad78d6f294af702697f42d",
@@ -122,10 +128,10 @@
       "data": "2026-11-05"
     },
     "receptes": {
-      "sha256": "3b0b9f75243fb1cdcf705b3e57d97b2ad661f320fb1a6a1c5c9f3f04f6eb8b04",
-      "html": 866,
-      "aprovat_per": "Mestre Javi (ordre del 10-11: «Fes R16b», arbitrar la feina posterior a R16a perquè producció torne a eixir d'un commit; text revisat per Claude amb verificació adversària per carril, revocable)",
-      "data": "2026-11-10"
+      "sha256": "2acee564513d0f22332ac828b60602e85c20845550ae0c02c16d890ebe8b01b7",
+      "html": 2066,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "data": "2026-11-12"
     },
     "roadmap": {
       "sha256": "ad6c52700476ea5352ac533f441566557c5b4c72449ce58c70c6b13e5382831d",
@@ -146,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "821285331882de7e334f295173a91e231a6790181325431e25503e6cdc404f5f",
-      "html": 46247,
-      "aprovat_per": "Mestre Javi (ordre del 10-11: «Fes R16b», arbitrar la feina posterior a R16a perquè producció torne a eixir d'un commit; text revisat per Claude amb verificació adversària per carril, revocable)",
-      "data": "2026-11-10"
+      "sha256": "cbd13dc40baf5e3e00356f0eb309b42385f37e87b39600a493fc8e2abb1fbeac",
+      "html": 54338,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "data": "2026-11-12"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

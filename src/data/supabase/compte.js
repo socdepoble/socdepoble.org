@@ -123,7 +123,11 @@ export async function estatBaixa(config = {}) {
   const demanadaAl = textONull(r.demanada_al);
   const demanada = typeof r.demanada === 'boolean' ? r.demanada : demanadaAl !== null;
   if (!demanada) return { ...SENSE_BAIXA };
-  return { demanada: true, demanadaAl, purgaPrevistaAl: textONull(r.purga_prevista_al) };
+  const resultat = { demanada: true, demanadaAl, purgaPrevistaAl: textONull(r.purga_prevista_al) };
+  // R17.2B. Quan la purga física comença, el servidor deixa de permetre
+  // cancel·lar. En un node anterior, el camp encara no està disponible.
+  if (Object.hasOwn(r, 'purga_iniciada_al')) resultat.purgaIniciadaAl = textONull(r.purga_iniciada_al);
+  return resultat;
 }
 
 /**

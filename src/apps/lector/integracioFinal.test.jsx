@@ -290,7 +290,7 @@ describe('B0 · les notícies són l’espai de treball; la gestió de fonts, se
     const dialeg = await screen.findByRole('dialog', { name: 'Gestiona les fonts' });
     expect(dialeg.querySelectorAll('.sp-card, .sp-card-header, .sdp-card-llista, .sdp-card-grid, img')).toHaveLength(0);
     expect(within(dialeg).getAllByRole('group').map((grup) => grup.querySelector('legend')?.textContent))
-      .toEqual(['Ajuntament i serveis', 'Cultura i festes', 'Camp i temps', 'Esports', 'Afig una font']);
+      .toEqual(['Ajuntament i serveis', 'Cultura i festes', 'Camp i temps', 'Esports', 'Afig una font', 'Còpia del Lector']);
     expect(within(within(dialeg).getByRole('group', { name: 'Camp i temps' })).getByRole('switch', { name: 'Cooperativa de l’Horta Vella' })).toBeTruthy();
   });
 });

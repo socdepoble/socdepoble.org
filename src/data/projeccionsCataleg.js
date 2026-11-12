@@ -2,18 +2,22 @@
  * A reference contains display text only: no private recipe, stock, price,
  * photo or source mutation. Authority comes from mapped row columns/RLS.
  */
-export const DESTINS_CATALEG = Object.freeze(['mur', 'mercat', 'rebost', 'bar', 'receptes', 'herbari', 'llavors']);
-export const FONTS_CATALEG = Object.freeze(['herbari', 'llavors', 'receptes', 'nevera', 'bar']);
+import { DESTINACIONS_WORKSPACE_WP } from './importacio/destinacionsWorkspaceWp.js';
+
+export const DESTINS_CATALEG = Object.freeze(['mur', 'mercat', 'rebost', 'bar', 'receptes', 'herbari', 'llavors', 'arbres-monumentals', 'pagina']);
+export const FONTS_CATALEG = Object.freeze(['herbari', 'llavors', 'receptes', 'nevera', 'bar', 'importacio-wp']);
 export const DESTINS_PRIVATS_CATALEG = Object.freeze(['rebost', 'bar']);
 /* PRODNM-02 (R15b) · El Rebost i el Bar viuen dins d'apps amb porta de build.
    La seua ruta existix només amb el mateix literal que el manifest de l'app
-   (nevera/manifest.js, bar/manifest.js): sense VITE_SDP_APP_NEVERA ni
-   VITE_SDP_APP_BAR, el build de producció plega la branca i el dist no porta
-   ni la ruta ni el destí. Es llig en cada crida perquè les proves puguen
-   canviar l'entorn (vi.stubEnv). */
+   (nevera/manifest.js, bar/manifest.js). P0-113 (ordre del Mestre, 261111):
+   les dos apps són obertes per defecte i la ruta i el destí hi són; amb
+   VITE_SDP_APP_NEVERA=0 o VITE_SDP_APP_BAR=0, el build plega la branca i el
+   dist no porta ni la ruta ni el destí d'eixa app. Es llig en cada crida
+   perquè les proves puguen canviar l'entorn (vi.stubEnv). */
 const rutesDelBuild = () => ({ herbari: '/page/herbari', llavors: '/page/banc-de-llavors', receptes: '/page/receptes',
-  ...(import.meta.env.DEV || import.meta.env.VITE_SDP_APP_NEVERA === '1' ? { nevera: '/app/nevera/rebost' } : {}),
-  ...(import.meta.env.DEV || import.meta.env.VITE_SDP_APP_BAR === '1' ? { bar: '/app/bar/cataleg' } : {}) });
+  'arbres-monumentals': '/page/arbres-monumentals', pagina: '/page/importacions-editorials', 'importacio-wp': '/mur',
+  ...(import.meta.env.VITE_SDP_APP_NEVERA !== '0' ? { nevera: '/app/nevera/rebost' } : {}),
+  ...(import.meta.env.VITE_SDP_APP_BAR !== '0' ? { bar: '/app/bar/cataleg' } : {}) });
 /* El destí privat de cada app: sense l'app al build, el selector no l'oferix. */
 const APP_DEL_DESTI = Object.freeze({ rebost: 'nevera', bar: 'bar' });
 const ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/;
@@ -44,7 +48,8 @@ function text(value, maxim, obligatori = false) {
 }
 export function capturaFontCataleg(input) {
   const { font, id, title, subtitle, lead } = camps(input, ['font', 'id', 'title', 'subtitle', 'lead']);
-  if (!FONTS_CATALEG.includes(font) || typeof id !== 'string' || !ID.test(id)) invalid();
+  if (!FONTS_CATALEG.includes(font) || typeof id !== 'string' || !ID.test(id)
+    || font === 'importacio-wp' && !/^[1-9][0-9]{0,9}$/.test(id)) invalid();
   return { font, id, title: text(title, 300, true), subtitle: text(subtitle, 500), lead: text(lead, 2000) };
 }
 export function capturaDestinsCataleg(input) {
@@ -57,6 +62,12 @@ export function capturaDestinsCataleg(input) {
   if (new Set(valors).size !== valors.length) invalid();
   return DESTINS_CATALEG.filter(desti => valors.includes(desti));
 }
+
+export function capturaDestinsDeFontCataleg(font, input) {
+  const destins = capturaDestinsCataleg(input);
+  if (font.font === 'importacio-wp' && (destins.length > 1 || destins.some(desti => !DESTINACIONS_WORKSPACE_WP.includes(desti)))) invalid();
+  return destins;
+}
 export function capturaAbastProjeccions(input) {
   const { tenantId, ownerId, backendId } = camps(input, ['tenantId', 'ownerId', 'backendId']);
   if (typeof tenantId !== 'string' || !UUID.test(tenantId) || typeof ownerId !== 'string' || !UUID.test(ownerId) || typeof backendId !== 'string' || !backendId || backendId.length > 1000 || backendId.includes('\0')) invalid();
@@ -65,6 +76,15 @@ export function capturaAbastProjeccions(input) {
 export const clauFontCataleg = font => { const net = capturaFontCataleg(font); return JSON.stringify([net.font, net.id]); };
 /** La ruta de la font, o null si la seua app no és en este build. */
 export const rutaFontCataleg = font => { const rutes = rutesDelBuild(); return typeof font === 'string' && Object.hasOwn(rutes, font) ? rutes[font] : null; };
+/** La referència navega pel registre canònic. Les importacions usen el WP id estable. */
+export function rutaDeFitxaCataleg(input) {
+  try {
+    const font = capturaFontCataleg(input);
+    if (font.font === 'importacio-wp') return `/mur/${font.id}`;
+    const ruta = rutaFontCataleg(font.font);
+    return ruta ? `${ruta}?fitxa=${encodeURIComponent(font.id)}` : null;
+  } catch { return null; }
+}
 /** PRODNM-02 · Els destins que es poden triar en este build, en l'ordre de
  * DESTINS_CATALEG. La validació de les files continua amb la llista sencera. */
 export const destinsOferitsCataleg = () => DESTINS_CATALEG.filter(desti => !Object.hasOwn(APP_DEL_DESTI, desti) || rutaFontCataleg(APP_DEL_DESTI[desti]) !== null);
@@ -74,9 +94,10 @@ export function destinsPerAudiencia(destins, audiencia) {
   return capturaDestinsCataleg(destins).filter(desti => DESTINS_PRIVATS_CATALEG.includes(desti) === (audiencia === 'privada'));
 }
 export function payloadProjeccioCataleg({ font, destins, audiencia }) {
-  const net = capturaFontCataleg(font), seleccionats = capturaDestinsCataleg(destins);
+  const net = capturaFontCataleg(font), seleccionats = capturaDestinsDeFontCataleg(net, destins);
   if (destinsPerAudiencia(seleccionats, audiencia).length !== seleccionats.length) invalid();
   return { type: 'feed', title: net.title, subtitle: net.subtitle, entradilla: net.lead, description: net.lead,
+    ...(net.font === 'importacio-wp' ? { destinacio_workspace: seleccionats[0] ?? null } : {}),
     projeccioCataleg: { v: 1, font: net.font, id: net.id, destins: seleccionats, audiencia } };
 }
 /** Only mapped rows: ownerUserId is supplied from authoritative row columns.
@@ -87,7 +108,9 @@ export function projeccioCatalegDe(item) {
     const marker = camps(item.projeccioCataleg, ['v', 'font', 'id', 'destins', 'audiencia']);
     if (marker.v !== 1 || !['publica', 'privada'].includes(marker.audiencia)) return null;
     const font = capturaFontCataleg({ font: marker.font, id: marker.id, title: item.title, subtitle: item.subtitle ?? '', lead: item.entradilla ?? item.description ?? '' });
-    const destins = capturaDestinsCataleg(marker.destins);
+    const destins = capturaDestinsDeFontCataleg(font, marker.destins);
+    if (font.font === 'importacio-wp' && Object.hasOwn(item, 'destinacio_workspace')
+      && item.destinacio_workspace !== (destins[0] ?? null)) return null;
     if (destinsPerAudiencia(destins, marker.audiencia).length !== destins.length) return null;
     if (item.sectionId !== (marker.audiencia === 'privada' ? 'notes' : 'mur')) return null;
     return { id: item.id, ownerId: item.ownerUserId.toLowerCase(), font, destins, audiencia: marker.audiencia,

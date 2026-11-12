@@ -48,13 +48,12 @@
  * com si foren del poble. Ara cal el literal explícit, i sense ell el Lector
  * de desenvolupament és el de producció: l'estat buit de davall. La llavor
  * continua sent la dada sintètica de les proves (__fixtures__/muntaLector.jsx).
- * Peça C (ordre del Mestre, 261007, prompt 261007_1628) · Correcció d'esta
- * capçalera: VITE_SDP_APP_LECTOR=1 només la compila al paquet de producció
- * (`carrega`, manifest.js); no l'obri. El manifest porta entorn
- * 'desenvolupament' i la plataforma l'apaga fora de desenvolupament
- * (interruptors.js, motiu 'entorn-desenvolupament'). Obrir-la en producció
- * demana, a més del literal, canviar eixe entorn i un port de notícies: hui
- * cap dels dos no hi és.
+ * Peça C (ordre del Mestre, 261007, prompt 261007_1628), posada al dia per
+ * P0-113 (ordre del Mestre, 261111) · L'app és oberta en producció: el
+ * manifest porta entorn 'produccio' i actiuPerDefecte, i el literal de
+ * `carrega` és d'exclusió (amb VITE_SDP_APP_LECTOR=0 el build no la porta).
+ * Les notícies hi arriben pel servei del backend (T5, de baix); sense servei,
+ * l'estat buit de sempre.
  *
  * Un enllaç a /noticies?article=<id> es canonitza (replace) a
  * /noticies/hui?article=<id>, la llista de «Hui» de l'enllaç compartit. I

@@ -1,19 +1,14 @@
 import { expect, test } from 'vitest';
 import {
-  AUTOR_PER_DEFECTE, LLICENCIA_PER_DEFECTE, LLICENCIES, MARCA_CC0, MAXIM_COPYRIGHT, MAXIM_TEXT_LLIURE,
-  copyrightBuit, copyrightDe, llargariaDe, llicenciaDe, maximTextCopyright, requereixCC0, reservatsDe,
-  tallaTextCopyright, triaDe, valorDe,
+  AUTOR_PER_DEFECTE, LLICENCIA_PER_DEFECTE, LLICENCIES, MARCA_CC0, MAXIM_AUTORIA,
+  llicenciaDe, requereixCC0, reservatsDe, triaDe, valorDe,
 } from './llicencies.js';
-import { LIMITS_TEXT } from '../../../sections/profile/perfilCamps.js';
+import { sanejaDrets } from '../../../data/dretsAutor.js';
+import { LIMITS_TEXT, valorPerDesar } from '../../../sections/profile/perfilCamps.js';
 
-/* T39 (ordre del Mestre, 260928) · el catàleg didàctic dels drets d'autor. */
-
-test('el límit és el del CHECK de la columna: 246 de text + 10 de marca = 256', () => {
-  expect(MARCA_CC0).toBe(' · CC0 1.0');
-  expect(MARCA_CC0.length).toBe(10);
-  expect(MAXIM_TEXT_LLIURE).toBe(246);
-  expect(MAXIM_TEXT_LLIURE + MARCA_CC0.length).toBe(MAXIM_COPYRIGHT);
-  expect(MAXIM_COPYRIGHT).toBe(LIMITS_TEXT.copyright[1]);
+test('el límit d’autoria al perfil és de 256 punts de codi', () => {
+  expect(MAXIM_AUTORIA).toBe(256);
+  expect(MAXIM_AUTORIA).toBe(LIMITS_TEXT.copyright[1]);
 });
 
 test('els codis que es desen són els de sempre (les set Creative Commons del selector vell)', () => {
@@ -40,11 +35,11 @@ test('triaDe i valorDe fan anada i tornada per a totes les llicències amb codi'
   }
 });
 
-test('text lliure: la marca CC0 s’afig en desar i es lleva en llegir; el text es talla a 246', () => {
+test('el text lliure conserva 256 caràcters més la marca CC0', () => {
+  const text = 'é'.repeat(255) + '😀';
   expect(triaDe('Fotos de la Iaia · CC0 1.0', 'Pep')).toEqual({ id: 'lliure', text: 'Fotos de la Iaia' });
-  expect(valorDe('lliure', { text: 'Fotos de la Iaia' })).toBe('Fotos de la Iaia · CC0 1.0');
-  expect(valorDe('lliure', { text: 'a'.repeat(300) })).toBe(`${'a'.repeat(246)} · CC0 1.0`);
-  expect(valorDe('lliure', { text: 'a'.repeat(300) })).toHaveLength(256);
+  expect(valorDe('lliure', { text })).toBe(`${text}${MARCA_CC0}`);
+  expect(valorDe('lliure', { text: text + 'x' })).toBe('');
 });
 
 /* D15 (ordre del Mestre, 260930) · «Tots els drets reservats» passa a dir-se
@@ -103,73 +98,56 @@ test('D15 · qualsevol valor que comença per «©» és «Copyright (C)» amb e
   expect(triaDe('© Pepa · CC0 1.0').id).toBe('lliure');
 });
 
-test('D15 · el valor de «Copyright (C)» comença per «©» i no passa de 256 en total', () => {
-  const llarg = valorDe('reservats', { text: 'x'.repeat(300) });
-  expect(llarg).toHaveLength(MAXIM_COPYRIGHT);
-  expect(llarg.startsWith('©')).toBe(true);
-  expect(llarg).toBe(`© ${'x'.repeat(254)}`);
-  expect(valorDe('reservats', { text: `© ${'y'.repeat(300)}` })).toHaveLength(256);
-  expect(valorDe('reservats', { text: 'Pepa Soler' })).toBe('© Pepa Soler');
-  expect(valorDe('reservats', { text: '  © Pepa Soler  ' })).toBe('© Pepa Soler');
-  expect(copyrightDe('Pepa')).toBe('© Pepa');
-  expect(copyrightDe('   ')).toBe('');
-});
-
-/* F4 (revisió adversarial T1–T4, 260930) · El valor es talla per punts de codi,
-   com el CHECK char_length de la columna i com netejaCampOrigen: un emoji és un
-   caràcter i mai queda partit en un surrogate orfe. */
-const SURROGATE_ORFE = /[\uD800-\uDFFF]/u;
-const EMOJI = '😀';
-
-test('F4 · copyrightDe talla per punts de codi: l’emoji de la frontera no queda partit', () => {
-  // 253 lletres + 😀 + «© » = 256 caràcters de veres (257 unitats UTF-16): hi cap sencer.
-  const text = `${'a'.repeat(253)}${EMOJI}`;
-  const desat = copyrightDe(text);
-  expect(desat).toBe(`© ${text}`);
-  expect(llargariaDe(desat)).toBe(MAXIM_COPYRIGHT);
-  expect(desat).not.toMatch(SURROGATE_ORFE);
-  // Un caràcter més: l'emoji ix sencer, no la meitat.
-  expect(copyrightDe(`${'a'.repeat(254)}${EMOJI}`)).toBe(`© ${'a'.repeat(254)}`);
-  // El text de sèrie «© autor» també.
-  expect(reservatsDe(text)).toBe(`© ${text}`);
-  expect(reservatsDe(text)).not.toMatch(SURROGATE_ORFE);
-  expect(llargariaDe(EMOJI)).toBe(1);
-});
-
-test('F4 · el camp de «Copyright (C)» admet 254 caràcters sense «©» i 256 amb «©»: el que hi queda és el que es desa', () => {
-  expect(maximTextCopyright('Pepa')).toBe(MAXIM_COPYRIGHT - 2);
-  expect(maximTextCopyright('')).toBe(MAXIM_COPYRIGHT - 2);
-  expect(maximTextCopyright('© Pepa')).toBe(MAXIM_COPYRIGHT);
-  // Els espais del davant no es desen (copyrightDe els lleva): no ocupen lloc.
-  expect(maximTextCopyright('  ©Pepa')).toBe(MAXIM_COPYRIGHT + 2);
-  expect(maximTextCopyright(' Pepa')).toBe(MAXIM_COPYRIGHT - 1);
-
-  const sense = tallaTextCopyright('x'.repeat(256));
-  expect(sense).toBe('x'.repeat(254));
-  expect(copyrightDe(sense)).toBe(`© ${sense}`);
-  const amb = tallaTextCopyright(`© ${'x'.repeat(300)}`);
-  expect(amb).toBe(`© ${'x'.repeat(254)}`);
-  expect(copyrightDe(amb)).toBe(amb);
-  // Emoji a la frontera del camp: sencer o fora, mai partit.
-  expect(tallaTextCopyright(`${'a'.repeat(253)}${EMOJI}`)).toBe(`${'a'.repeat(253)}${EMOJI}`);
-  expect(tallaTextCopyright(`${'a'.repeat(254)}${EMOJI}`)).toBe('a'.repeat(254));
-  // Per a qualsevol text tallat, copyrightDe no en perd res (només els espais dels extrems).
-  for (const t of ['x'.repeat(400), `© ${'y'.repeat(400)}`, `  ${'z'.repeat(400)}`, `${EMOJI.repeat(300)}`, `©${EMOJI.repeat(300)}`]) {
-    const net = tallaTextCopyright(t).trim();
-    expect(copyrightDe(tallaTextCopyright(t)), Array.from(t).slice(0, 4).join('')).toBe(net.startsWith('©') ? net : `© ${net}`);
-    expect(tallaTextCopyright(tallaTextCopyright(t))).toBe(tallaTextCopyright(t));
+test('cada llicència desa i torna a llegir una autoria de 256 caràcters', () => {
+  const text = 'é'.repeat(255) + '😀';
+  for (const { id } of LLICENCIES) {
+    const valor = valorDe(id, { text });
+    expect(valor, id).toContain(text);
+    expect(sanejaDrets(valor)).toBe(valor);
+    expect(valorPerDesar('organitzacio', 'copyright', valor)).toEqual({ columna: 'copyright', valor });
+    expect(triaDe(valor)).toEqual({ id, text: id === 'reservats' ? `© ${text}` : text });
+    expect(valorDe(id, { text: text + 'x' }), id).toBe('');
   }
 });
 
-test('D15 · un «Copyright (C)» sense ningú darrere de la «©» és buit', () => {
-  for (const buit of ['', '   ', '©', '©  ', ' © ']) expect(copyrightBuit(buit), JSON.stringify(buit)).toBe(true);
-  for (const ple of ['© Pepa', 'Pepa', '©Pepa']) expect(copyrightBuit(ple), ple).toBe(false);
+test('l’autoria manté els noms sencers i les marques literals sense canviar la llicència', () => {
+  const lliureAntic = 'CC BY 4.0 crèdits del llibre · CC0 1.0';
+  expect(triaDe(lliureAntic)).toEqual({ id: 'lliure', text: 'CC BY 4.0 crèdits del llibre' });
+  const text = 'Pepa Soler i fills · CC0 1.0';
+  for (const id of ['cc-by', 'reservats']) {
+    const valor = valorDe(id, { text });
+    expect(triaDe(valor).id).toBe(id);
+    expect(valorDe(id, { text: triaDe(valor).text })).toBe(valor);
+  }
+  expect(valorDe('reservats', { text: '  © Pepa Soler  ' })).toBe('© Pepa Soler');
+  expect(valorDe('reservats', { text: '© ' })).toBe('');
 });
 
-test('CC0 i el text lliure demanen l’acceptació; la resta, no', () => {
-  expect(requereixCC0('cc0')).toBe(true);
-  expect(requereixCC0('lliure')).toBe(true);
-  expect(requereixCC0('cc-by')).toBe(false);
-  expect(requereixCC0('reservats')).toBe(false);
-  expect(requereixCC0('actual')).toBe(false);
+test('el sanejament és de text pla i elimina controls sense coaccionar objectes', () => {
+  expect(valorDe('cc-by', { text: '  Pepa\u0007 & Mei\u{202E}\nSoler i fills  ' })).toBe('CC BY 4.0 Pepa & Mei Soler i fills');
+  expect(valorDe('cc-by', { text: { toString() { throw new Error('no'); } } })).toBe('CC BY 4.0');
+  expect(valorPerDesar('organitzacio', 'copyright', 'CC BY 4.0 Pepa <P> & fills').valor).toBe('CC BY 4.0 Pepa <P> & fills');
+  expect(() => sanejaDrets(`CC BY 4.0 ${'x'.repeat(257)}`, { estricte: true })).toThrow(/256/);
+});
+
+/* Auditoria R18 (P2) · Després de «©» només es lleva l'espai ASCII, com el
+   ltrim() del CHECK de 2611110010: un NBSP o un U+3000 compten com a autoria. */
+test('després de «©», l’NBSP i l’espai ideogràfic compten com el CHECK', () => {
+  for (const espai of ['\u{A0}', '\u{3000}']) {
+    const cap = `©${espai}${'x'.repeat(MAXIM_AUTORIA - 1)}`;
+    expect(valorDe('reservats', { text: cap }), JSON.stringify(espai)).toBe(cap);
+    expect(sanejaDrets(cap, { estricte: true })).toBe(cap);
+    const llarg = `©${espai}${'x'.repeat(MAXIM_AUTORIA)}`;
+    expect(valorDe('reservats', { text: llarg }), JSON.stringify(espai)).toBe('');
+    expect(() => sanejaDrets(llarg, { estricte: true })).toThrow(/256/);
+    expect(() => valorPerDesar('organitzacio', 'copyright', llarg)).toThrow();
+  }
+  // L'espai ASCII sí que es lleva: «© » + 256 cap.
+  expect(sanejaDrets(`© ${'x'.repeat(MAXIM_AUTORIA)}`, { estricte: true })).toBe(`© ${'x'.repeat(MAXIM_AUTORIA)}`);
+  // Auditoria R18 (P2) · El perfil també valida el total amb la marca (≤ 274), com el CHECK.
+  expect(() => valorPerDesar('organitzacio', 'copyright', `©${' '.repeat(30)}${'x'.repeat(MAXIM_AUTORIA)}`)).toThrow();
+});
+
+test('CC0 i el text lliure requerixen acceptació; les altres opcions, no', () => {
+  expect(LLICENCIES.filter(({ id }) => requereixCC0(id)).map(({ id }) => id)).toEqual(['cc0', 'lliure']);
 });

@@ -43,6 +43,8 @@ import { cuaDesament } from '../../data/autodesament/cua.js';
 import { bgSaveManager } from '../../sections/notes/GlobalSaveManager.js';
 import { _reiniciaOblitXat, estatOblitXat, oblidaXatEnEixir } from '../../data/xifratXatEixida.js';
 import { registraServeiXifratXat } from '../../data/xifratXatServei.js';
+import { creaIdbFals } from '../../utils/__fixtures__/navegadorFals.js';
+import { creaRegistreSessionsIAIA } from '../../sections/xat/sessionsIAIALocals.js';
 import { clauIdentitat } from '../../data/xifratXatMagatzem.js';
 
 const U = 'aaaaaaaa-1111-4111-8111-111111111111';
@@ -187,5 +189,51 @@ describe('bandera encesa', () => {
       expect('setItem' in capa).toBe(false);
     }
     expect(estatOblitXat()).toMatchObject({ estat: 'OBLIT_FALLIT', pendents: ['indexeddb'], persones: 1, recuperat: false });
+  });
+});
+
+
+describe('títols IAIA locals en eixir de sessió', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.stubGlobal('BroadcastChannel', null);
+    // El fals amb keyPath és per als títols; Notes usa claus fora del registre.
+    vi.spyOn(bgSaveManager, 'oblidaUsuari').mockResolvedValue([]);
+    vi.spyOn(bgSaveManager, 'enviaPendentsDe').mockResolvedValue(undefined);
+  });
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+  const id = 'iaia-local-00000000-0000-4000-8000-000000000099';
+  const ambit = JSON.stringify(['backend', 'U', 'persona::U']);
+  const altre = JSON.stringify(['backend', 'V', 'persona::V']);
+
+  test('purga els títols de qui ix també amb E2EE apagada i manté els d’una altra persona', async () => {
+    const fals = creaIdbFals();
+    vi.stubGlobal('indexedDB', fals.idb);
+    const registre = creaRegistreSessionsIAIA();
+    try {
+      await registre.llig(ambit);
+      await registre.desaPrimerTitol(ambit, id, 'Mercat');
+      await registre.desaPrimerTitol(altre, id, 'Biblioteca');
+      const sonda = ambSonda();
+      await act(async () => { await sonda.sessio.logout(); });
+      expect(await registre.llig(ambit)).toEqual([]);
+      expect(await registre.llig(altre)).toEqual([{ id, titol: 'Biblioteca' }]);
+      expect(fals.files('xat-iaia-titols', 'titols').map(fila => fila.ambit)).toEqual([altre]);
+    } finally { registre.tanca(); }
+  });
+
+  test('un logout rebutjat i una renovació de pestanya conserven els títols', async () => {
+    vi.stubGlobal('indexedDB', creaIdbFals().idb);
+    const registre = creaRegistreSessionsIAIA();
+    try {
+      await registre.llig(ambit);
+      await registre.desaPrimerTitol(ambit, id, 'Mercat');
+      const sonda = ambSonda();
+      m.logout.mockRejectedValueOnce(new Error('Sense xarxa'));
+      await act(async () => { await expect(sonda.sessio.logout()).rejects.toThrow('Sense xarxa'); });
+      expect(await registre.llig(ambit)).toEqual([{ id, titol: 'Mercat' }]);
+      await act(async () => { await sonda.sessio.logout(undefined, { abast: 'pestanya' }); });
+      expect(await registre.llig(ambit)).toEqual([{ id, titol: 'Mercat' }]);
+    } finally { registre.tanca(); }
   });
 });

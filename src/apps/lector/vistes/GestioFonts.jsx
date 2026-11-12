@@ -27,6 +27,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Alerta, Boto, Camp, CampText, Carregant, Dialeg, EstatBuit, GrupCamps, Interruptor, LiniesColleccio, Selector
 } from '../../../components/PedraSeca/index.js';
+import { MAX_BYTES_COPIA_LECTOR } from '../nucli/copia.js';
 import { llocDe, seguix } from '../nucli/index.js';
 import { useVistaLector } from './context.js';
 import { textDelMotiu } from './FontsSenseResposta.jsx';
@@ -217,6 +218,53 @@ function AfigFont({ formulari }) {
   );
 }
 
+function CopiaDelLector() {
+  const { lector } = useVistaLector();
+  const [avis, setAvis] = useState(null);
+  const [important, setImportant] = useState(false);
+  const copia = async () => {
+    try {
+      const text = await lector.accions.exportaCopia();
+      const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      const enllac = document.createElement('a');
+      enllac.href = url;
+      enllac.download = 'copia-lector.json';
+      enllac.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setAvis({ to: 'error', text: 'No s’ha pogut descarregar la còpia del Lector.' });
+    }
+  };
+  const importa = async (event) => {
+    const fitxer = event.target.files?.[0];
+    event.target.value = '';
+    if (!fitxer || important) return;
+    if (fitxer.size > MAX_BYTES_COPIA_LECTOR) {
+      setAvis({ to: 'error', text: 'El fitxer és massa gran per a ser una còpia del Lector.' });
+      return;
+    }
+    setImportant(true);
+    try {
+      const total = await lector.accions.importaCopia(await fitxer.text());
+      setAvis({ to: 'exit', text: `Còpia importada. Ara tens ${total} fonts personals.` });
+    } catch (error) {
+      setAvis({ to: 'error', text: error?.codi ? error.message : 'No s’ha pogut importar la còpia del Lector.' });
+    } finally {
+      setImportant(false);
+    }
+  };
+  return (
+    <GrupCamps llegenda="Còpia del Lector">
+      <Boto onClick={copia}>Descarrega una còpia</Boto>
+      <Camp etiqueta="Importa una còpia" ajuda="Afig les fonts personals, les lectures i les notícies desades al Lector actual.">
+        <CampText tipus="file" accept=".json,.opml,.xml,application/json,text/xml,application/xml,text/x-opml" onChange={importa}
+          disabled={lector.mode !== 'escriptora' || !lector.persistent || important} />
+      </Camp>
+      {avis ? <Alerta to={avis.to}>{avis.text}</Alerta> : null}
+    </GrupCamps>
+  );
+}
+
 /* El cos del diàleg: el catàleg per carpetes, les teues i «Afig una font». */
 function CosDeLaGestio({ fonts }) {
   const { lector, noticies, delServei } = useVistaLector();
@@ -247,6 +295,7 @@ function CosDeLaGestio({ fonts }) {
       ))}
       <FontsPersonals fonts={fonts} reserva={reserva} />
       <AfigFont formulari={formulari} />
+      <CopiaDelLector />
     </>
   );
 }

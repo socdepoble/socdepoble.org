@@ -163,3 +163,40 @@
   gap: var(--sdp-space-4);
   grid-column: 1 / -1;
 }
+
+/* Onada R17 · AH-R17-09 · Accés directe per a superadmin al portal /app */
+.sdp-app-portal__testers {
+  display: grid;
+  gap: var(--sdp-space-2);
+  box-sizing: border-box;
+  max-width: 68ch;
+  width: 100%;
+  margin: 0 auto var(--sdp-space-4);
+  padding: var(--sdp-space-4);
+  border: 1px solid var(--sdp-vora);
+  border-radius: 0;
+  background: var(--sdp-fons-targeta);
+  color: var(--sdp-text-cos);
+}
+
+.sdp-app-portal__testers-titol {
+  margin: 0;
+  text-align: start;
+  color: var(--sdp-text-titol);
+  font-size: var(--sdp-text-h4);
+  line-height: 1.2;
+}
+
+.sdp-app-portal__testers-text {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--sdp-text-suau);
+  line-height: 1.6;
+}
+
+.sdp-app-portal__testers-accions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sdp-space-2);
+}

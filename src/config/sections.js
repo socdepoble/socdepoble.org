@@ -56,7 +56,7 @@ export const SECTIONS = [
   { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup', ...Object.values(RUTES_CANONIQUES), RUTA_FITXA_IAIA] },
   { id: 'calendari', path: '/calendari', label: 'Calendari', shortLabel: 'Calendari', icon: CalendarDays, kind: 'agenda' },
   { id: 'multimedia', path: '/multimedia', label: 'Multimèdia', shortLabel: 'Media', icon: GalleryVerticalEnd, kind: 'multimedia' },
-  { id: 'dispositius', path: '/dispositius', label: 'Dispositius', shortLabel: 'P2P', icon: Wifi, kind: 'infra' },
+  { id: 'dispositius', path: '/dispositius', label: 'Dispositius', shortLabel: 'P2P', icon: Wifi, kind: 'infra', pageKey: 'dispositius' },
   { id: 'disseny', path: '/disseny', label: 'Disseny', shortLabel: 'Disseny', icon: Palette, kind: 'text', pageKey: 'disseny' },
   { id: 'wikidepoble', path: '/wikidepoble', label: 'Wiki de Poble', shortLabel: 'Wiki', icon: Waves, kind: 'workspace' },
   { id: 'notes', path: '/notes', label: 'Notes', shortLabel: 'Notes', icon: NotebookPen, kind: 'notes' },

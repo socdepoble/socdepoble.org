@@ -74,6 +74,7 @@ export const IDS_APARTATS = Object.freeze(APARTATS_GUIA.map((apartat) => apartat
 export function textError(error) {
   switch (error?.codi) {
     case 'NOMES_LECTURA': return 'Una altra pestanya està apuntant: ací només pots mirar.';
+    case 'CONFLICTE': return 'L’apunt ha canviat en una altra pestanya. Torna a obrir-lo abans de desar-lo.';
     case 'VERSIO_ANTIGA':
     case 'NO_DISPONIBLE': return 'Recarrega la pàgina per a continuar: les dades d’este dispositiu han canviat.';
     case 'BLOQUEJAT': return 'Tanca les altres pestanyes de Salut per a continuar.';

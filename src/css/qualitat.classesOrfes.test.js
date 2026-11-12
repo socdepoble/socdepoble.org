@@ -11,7 +11,7 @@
      · Compta també l'ús dinàmic BEM: `sdp-insignia--${to}` o
        `sdp-x__${nom}` fan vives totes les classes amb eixe prefix fins al
        '--' o al '__' (també 'sdp-x__' + nom).
-     · Exclusions del recorregut: node_modules, .git, dist, wordpress-plugin/
+     · Exclusions del recorregut: laboratoris ocults .rN/.sdp-*, node_modules, .git, dist, wordpress-plugin/
        dist, _wiki_de_poble/90_arxiu_historic (AGENTS §5), var, .sdp-* i
        este mateix fitxer (la instantània de baix nomena les òrfenes).
    La prova passa sempre, llevat d'una asserció: la llista d'òrfenes no pot
@@ -41,7 +41,7 @@ function recorre(dir, eixida = []) {
   for (const nom of readdirSync(dir)) {
     const ple = path.join(dir, nom);
     const rel = path.relative(ARREL, ple).split(path.sep).join('/');
-    if (DIRS_EXCLOSOS.has(nom) || nom.startsWith('.sdp-') || RUTES_EXCLOSES.has(rel)) continue;
+    if (DIRS_EXCLOSOS.has(nom) || nom.startsWith('.sdp-') || /^\.r\d+$/.test(nom) || RUTES_EXCLOSES.has(rel)) continue;
     const info = lstatSync(ple);
     if (info.isSymbolicLink()) continue;
     if (info.isDirectory()) recorre(ple, eixida);

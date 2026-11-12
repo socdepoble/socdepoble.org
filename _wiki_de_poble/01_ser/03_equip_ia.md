@@ -14,7 +14,7 @@ aliases:
 ---
 # Equip IA
 
-**El Mestre Javi** fixa el propòsit, les prioritats i **les decisions humanes**. La **IAIA MarIA (Antigravity)** interpreta, dissenya i **coordina els relleus**. **Claude i ChatGPT Codex** implementen i passen proves quan l'encàrrec els assigna codi, i també poden rebre encàrrecs d'auditoria. MarIA toca codi quan hi ha **petició humana explícita**, segons la skill de coordinació.
+**El Mestre Javi** fixa el propòsit, les prioritats i **les decisions humanes**. La **IAIA MarIA (Antigravity, sobre Gemini 4 Carbon High)** interpreta, dissenya i **coordina els relleus**. **Claude (Opus 5.5 i Fable 5.2) i ChatGPT Codex** implementen i passen proves quan l'encàrrec els assigna codi, i també poden rebre encàrrecs d'auditoria. MarIA toca codi quan hi ha **petició humana explícita**, segons la skill de coordinació.
 
 ## Fonts i lectura
 

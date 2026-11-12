@@ -21,7 +21,11 @@ vi.mock('../../app/contexts/SessionContext.jsx', () => ({
   useSession: () => ({ currentUser: null, estat: 'fora' }),
   useSessioOpcional: () => null,
 }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => m.ui }));
+/* R19 · Arbitratge del carril (P1) · La fitxa d'una utilitat connectada passa per la porta de la plataforma
+   (useDestiDelPlugin), que llig l'estat de la UI, i el motiu es tradueix amb `t`. */
+vi.mock('../../app/contexts/UIContext', () => ({
+  useUI: () => m.ui, useUIState: () => m.ui, useUIActions: () => ({ t: (_clau, reserva) => reserva })
+}));
 vi.mock('../../components/universal/ContentProvider', () => ({ useContent: () => null }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: m.toast }) }));
 vi.mock('../../data/backendPort.js', () => ({ teCapacitat: (cap) => m.caps.has(cap) }));

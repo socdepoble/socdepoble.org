@@ -1,0 +1,9 @@
+{
+  "profile": "tabular-data-package",
+  "name": "socdepoble-patrimoni-herbari",
+  "title": "Herbari Etnobotànic i Flora Útil",
+  "version": "1.0.0",
+  "skos_concept": "TX.32",
+  "isadg_level": "series",
+  "colleccions": []
+}

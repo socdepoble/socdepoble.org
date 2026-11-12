@@ -27,6 +27,7 @@ const m = vi.hoisted(() => ({
 vi.mock('../xat/XatContext', () => ({ useXat: () => m.xat }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => m.identitat }));
 vi.mock('../../app/contexts/RouterContext', () => ({
+  useLocation: () => ({ search: '' }),
   useParams: () => ({ agentId: m.id }),
   useNavigate: () => m.navigate
 }));

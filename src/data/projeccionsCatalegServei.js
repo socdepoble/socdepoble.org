@@ -1,11 +1,11 @@
 import { creaMagatzemIdb } from '../utils/magatzemLocal.js';
-import { capturaAbastProjeccions, capturaDestinsCataleg, capturaFontCataleg, clauFontCataleg, destinsPerAudiencia,
+import { capturaAbastProjeccions, capturaDestinsDeFontCataleg, capturaFontCataleg, clauFontCataleg, destinsPerAudiencia,
   errorProjeccioCataleg, idPublicacioProjeccio, payloadProjeccioCataleg } from './projeccionsCataleg.js';
 
 const AUDIENCIES = ['privada', 'publica'];
 const enter = value => Number.isSafeInteger(value) && value >= 0;
 function registreNet(input) {
-  const font = capturaFontCataleg(input.font), destins = capturaDestinsCataleg(input.destins);
+  const font = capturaFontCataleg(input.font), destins = capturaDestinsDeFontCataleg(font, input.destins);
   if (input.clau !== clauFontCataleg(font) || !enter(input.seq) || input.seq < 1 || input.seq >= Number.MAX_SAFE_INTEGER
     || !AUDIENCIES.every(a => enter(input.confirmacions?.[a]) && input.confirmacions[a] <= input.seq)
     || !AUDIENCIES.every(a => /^[0-9a-f-]{36}$/.test(input.ids?.[a])) || typeof input.publicaIntentada !== 'boolean') throw errorProjeccioCataleg('registre-invalid');
@@ -42,7 +42,7 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
   async function prepara() { comprova(); await base.prepara(); comprova(); if (!lectora) { await base.obtinBloqueig(); comprova(); } }
   async function llista() { comprova(); const rows = await base.totes('projeccions'); comprova(); return rows.map(registreNet); }
   async function desa(fontInput, destinsInput) {
-    escriu(); const font = capturaFontCataleg(fontInput), destins = capturaDestinsCataleg(destinsInput), clau = clauFontCataleg(font);
+    escriu(); const font = capturaFontCataleg(fontInput), destins = capturaDestinsDeFontCataleg(font, destinsInput), clau = clauFontCataleg(font);
     const ids = Object.fromEntries(await Promise.all(AUDIENCIES.map(async a => [a, await idPublicacioProjeccio(scope, font, a, subtil)])));
     comprova();
     const saved = await base.actualitza('projeccions', clau, old => {

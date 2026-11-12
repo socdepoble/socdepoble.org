@@ -226,11 +226,13 @@ test('PUBLICAR amb un valor fora de rang al bloc (Habitacions «60») s’atura 
   fireEvent.change(within(ranura).getByLabelText('Habitacions'), { target: { value: '60' } });
   // La fitxa desada és neta i, per si sola, passaria validaFitxa.
   expect(mocks.setLocal).toHaveBeenLastCalledWith('p', 'fitxa', { ambit: 'habitatge', estat: 'disponible', dades: { modalitat: 'lloguer', preu: '450 €/mes' } });
-  fireEvent.click(screen.getByRole('button', { name: /publicar/i }));
-  const selector = screen.getByRole('dialog', { name: 'Qui pot vore esta nota?' });
-  act(() => { fireEvent.click(within(selector).getByRole('radio', { name: /Publicada al Mur/ })); });
-  await act(async () => { fireEvent.click(within(selector).getByRole('button', { name: 'Publicar al Mur' })); });
-  expect(within(selector).getByRole('alert').textContent).toBe('La fitxa de «Habitatge» no està completa.');
+  fireEvent.click(screen.getByRole('button', { name: 'Publicar' }));
+  // Onada R20 (Bucle 1 · zero modals flotants a /notes): l'acció enfoca i preselecciona el panell en línia.
+  expect(screen.queryByRole('dialog')).toBeNull();
+  const panell = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
+  expect(within(panell).getByRole('radio', { name: /Públic al Mur del poble/ }).checked).toBe(true);
+  await act(async () => { fireEvent.click(within(panell).getByRole('button', { name: 'Publicar al Mur' })); });
+  expect(within(panell).getByRole('alert').textContent).toBe('La fitxa de «Habitatge» no està completa.');
   // Corregit el valor, la guarda ja no la para per la fitxa.
   fireEvent.change(within(ranura).getByLabelText('Habitacions'), { target: { value: '3' } });
   expect(mocks.setLocal).toHaveBeenLastCalledWith('p', 'fitxa', { ambit: 'habitatge', estat: 'disponible', dades: { modalitat: 'lloguer', preu: '450 €/mes', habitacions: 3 } });

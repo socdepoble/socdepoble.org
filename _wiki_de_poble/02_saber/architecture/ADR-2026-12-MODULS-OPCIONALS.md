@@ -205,7 +205,7 @@ No es pot fer sense cap canvi visible ni risc per a les preferències: queda com
 
 - Una app pot viure fora del paquet i connectar-se o desconnectar-se sense recompilar el nucli: l'amfitrió encua o no el seu `modul.js`. Desconnectar-la és no encuar-lo; dins de la pàgina, `retiraAppExterna(id)` la lleva del registre i n'oblida el cos.
 - `SocDePoble.nucli` és un contracte públic nou: cada canvi a `plataforma/index.js` o a la Pedra Seca del contracte s'ha de pensar en semver. `nucliModuls.test.js` posa en roig qualsevol desajust entre l'objecte i la llista.
-- Un mòdul hereta les capes de sempre: entorn, amfitrió (`apps`), persona, capacitats del backend, dret premium i, ara, document propi per a salut i finances.
+- Un mòdul hereta les capes de sempre: entorn, amfitrió (`apps`), persona, capacitats del backend i, ara, document propi per a salut i finances (P0-113, ordre del Mestre, 261111: cap capa de pagament). El paquet de l'amfitrió fixa `VITE_SDP_APP_<ID>` a `'0'` per a les apps de salut i finances (`vite.standalone.config.js`, `definicionsDeLesApps`), i el cos d'un mòdul ho fixa per a la seua app (`vite.modul.config.js`).
 - Pedra Seca no es mira per dins: `PaginaApp` arriba al port del backend per `PageFrame` i `useResolvedAsset`, que resol les imatges, igual que per a les apps internes. El mòdul no en rep cap mànec.
 - La directiva de Sollutia no canvia: `src/data/adaptadors/sollutia/` no es toca, el port del backend tampoc, i el kit de conformitat i la bateria d'amfitrió passen.
 

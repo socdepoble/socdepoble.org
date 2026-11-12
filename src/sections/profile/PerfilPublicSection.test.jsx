@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 /* Els objectes i funcions dels mocks són estables (hoisted): un valor nou a
    cada render entraria als deps de l'efecte de càrrega i faria un bucle. */
 const mocks = vi.hoisted(() => ({
-  id: 'iaia', navigate: vi.fn(), load: vi.fn(), capacitat: true, seo: vi.fn(), toast: vi.fn(),
+  id: 'iaia', search: '', navigate: vi.fn(), load: vi.fn(), capacitat: true, seo: vi.fn(), toast: vi.fn(),
   config: {}, t: (_, alternativa) => alternativa, resolveAsset: (v) => v, agents: [],
   /* T43 · la identitat de qui mira (pertinences i actor). */
   identitat: { memberships: [], actor: null, setActor: vi.fn() },
@@ -18,7 +18,7 @@ vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => 
 vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ agentId: mocks.id }),
   useNavigate: () => mocks.navigate,
-  useLocation: () => ({ pathname: `/perfil/${mocks.id}` }),
+  useLocation: () => ({ pathname: `/perfil/${mocks.id}`, search: mocks.search }),
   useRouter: () => ({ navigate: mocks.navigate, currentPath: `/perfil/${mocks.id}`, basename: '' }),
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
@@ -47,7 +47,7 @@ const ENTITAT = { ...IAIA, tipus: 'entitat', id: 'socdepoble', nom: 'Sóc de Pob
 
 afterEach(cleanup);
 beforeEach(() => {
-  vi.clearAllMocks(); mocks.config = {}; mocks.id = 'iaia'; mocks.capacitat = true; mocks.load.mockResolvedValue(IAIA);
+  vi.clearAllMocks(); mocks.config = {}; mocks.id = 'iaia'; mocks.search = ''; mocks.capacitat = true; mocks.load.mockResolvedValue(IAIA);
   mocks.identitat = { memberships: [], actor: null, setActor: vi.fn(() => true) };
   mocks.xat = { senseSessio: false };
   /* Els ids remots del projecte són d'abast de mòdul: cap prova en deixa per a la següent. */
@@ -848,4 +848,19 @@ test('Ronda 31 · R21-ARCH-02: la fitxa pública emet enllaç verificat rel="me"
   const enllacVei = await screen.findByRole('link', { name: '@maria_la_torre@mastodont.cat' });
   expect(enllacVei.getAttribute('href')).toBe('https://mastodont.cat/@maria_la_torre');
   expect(enllacVei.getAttribute('rel')).toBe('me noopener noreferrer');
+});
+
+test('una ruta acreditada deixa de mostrar el slug homònim abans de revalidar l’UUID i el tipus', async () => {
+  const id = '55000000-0000-4000-8000-000000000001';
+  mocks.id = id;
+  mocks.load.mockResolvedValue({ ...ENTITAT, id: '55000000-0000-4000-8000-000000000002',
+    slug: id, nom: 'Entitat homònima de prova', propietari: false });
+  const vista = render(<PerfilPublicSection agents={[]} />);
+  expect(await screen.findByRole('heading', { level: 1, name: 'Entitat homònima de prova' })).toBeTruthy();
+
+  mocks.search = 'registre=persona';
+  vista.rerender(<PerfilPublicSection agents={[]} />);
+  expect(screen.queryByRole('heading', { level: 1, name: 'Entitat homònima de prova' })).toBeNull();
+  expect(await screen.findByRole('heading', { level: 1, name: 'Perfil no trobat' })).toBeTruthy();
+  expect(mocks.load).toHaveBeenLastCalledWith(id, { signal: expect.any(AbortSignal), tipusIdAcreditat: 'persona' });
 });

@@ -3,8 +3,14 @@
  *
  * Contracte de la plataforma (src/apps/plataforma/manifestApp.js):
  *   · id 'bar': la ruta és /app/bar i no es declara;
- *   · `carrega` darrere del literal de compilació EXACTE de baix: sense
- *     VITE_SDP_APP_BAR=1 al build de producció, Vite trau AppBar del paquet;
+ *   · P0-113 (ordre del Mestre, 261111): tot el sistema és gratuït i lliure.
+ *     El Bar és una eina gratuïta oberta en producció (entorn 'produccio',
+ *     actiuPerDefecte true), en proves (Beta oberta), sense cap nivell de
+ *     pagament ni dret;
+ *   · `carrega` darrere del literal de compilació EXACTE de baix: el tros
+ *     diferit d'AppBar entra al build per defecte, i amb VITE_SDP_APP_BAR=0
+ *     Vite el trau del paquet (l'app continua sent desendollable, a més de
+ *     les capes de l'amfitrió i de la persona);
  *   · el component és l'export per defecte d'AppBar.jsx;
  *   · les entrades són la barra lateral de l'app (disseny del Bar §A.8) i
  *     el primer tram de cada ruta interna (rutesBar.js). «TPV» (ordre del
@@ -61,10 +67,9 @@ export default {
   ],
   permisos: { veure: 'public', escriure: 'sessio' },
   capacitats: [],
-  nivell: 'premium',
-  dret: 'sdp.app.bar',
-  actiuPerDefecte: false,
-  entorn: 'desenvolupament',
+  nivell: 'gratuit',
+  actiuPerDefecte: true,
+  entorn: 'produccio',
   dadesPersonals: false,
-  carrega: import.meta.env.DEV || import.meta.env.VITE_SDP_APP_BAR === '1' ? () => import('./AppBar.jsx') : null
+  carrega: import.meta.env.VITE_SDP_APP_BAR !== '0' ? () => import('./AppBar.jsx') : null
 };

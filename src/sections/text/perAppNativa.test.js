@@ -244,11 +244,28 @@ describe('el contingut real de PAGE_COPY', () => {
     expect(legal).toContain("a l'iPhone, a <strong>Configuració › el teu nom › Inici de sessió amb Apple</strong>");
   });
 
-  test('cap altra pàgina no canvia (Descàrregues, que no s’obri dins de l’app, i Versions a banda)', () => {
+  test('cap altra pàgina no canvia (Descàrregues, Versions i la compatibilitat de dispositius adaptades a banda)', () => {
     for (const [clau, pagina] of Object.entries(PAGE_COPY)) {
-      if (['roadmap', 'legal', 'descarregues', 'versions'].includes(clau)) continue;
+      if (['roadmap', 'legal', 'descarregues', 'versions', 'dispositius'].includes(clau)) continue;
       expect(paginaPerAppNativa(pagina, { nativa: true }), clau).toBe(pagina);
     }
+  });
+
+  test('R17.2B · Dispositius adapta només el text alié i conserva l’avís TLS, la font i les metadades', () => {
+    const original = PAGE_COPY.dispositius;
+    const abans = JSON.stringify(original);
+    expect(paginaPerAppNativa(original, { nativa: false })).toBe(original);
+    expect(original.lead).toContain('Android 4.4, iOS 9');
+    const pagina = paginaPerAppNativa(original, { nativa: true });
+    expect(pagina).not.toBe(original);
+    expect(pagina.lead).toBe('Supabase ha anunciat la retirada de quatre xifrats antics TLS 1.2 CBC de les API HTTP dels projectes, a partir del 10 de novembre de 2026 com a molt prompte. Si el navegador no admet TLS 1.3 ni cap dels xifrats TLS 1.2 que es mantenen, no podrà establir una connexió HTTPS amb estes API encara que tinga cobertura.');
+    expect(pagina.html).toBe('<p><a href="https://supabase.com/docs/guides/security/tls#removal-of-cbc-mode-ciphers" target="_blank" rel="noopener noreferrer">Avís de compatibilitat de Supabase</a></p>');
+    expect(lectures(pagina.html)).not.toMatch(PROHIBIDES);
+    expect(pagina.lead).not.toMatch(PROHIBIDES);
+    expect({ ...pagina, lead: undefined, html: undefined }).toEqual({ ...original, lead: undefined, html: undefined });
+    expect(pagina.labels).toBe(original.labels);
+    expect(pagina.translations).toBe(original.translations);
+    expect(JSON.stringify(original)).toBe(abans);
   });
 
   /* O6-CLAUDE-1 (ordre del Mestre, Onada 6, 261103) · L'entrada v1.1.0 de /versions conta la

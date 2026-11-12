@@ -381,3 +381,57 @@ describe('la persistència que es pot demanar al navegador', () => {
     expect(await creaPortIndexedDB({ idb: creaIdbFals(), locks: null, emmagatzematge: null }).demanaPersistencia()).toBeNull();
   });
 });
+
+test('dues pestanyes restauren la mateixa còpia sense repetir factures ni deixar trams a mitges', async () => {
+  const idb = creaIdbFals();
+  const a = creaPortIndexedDB({ idb, locks: null });
+  const b = creaPortIndexedDB({ idb, locks: null });
+  const memoria = creaPortMemoria();
+  for (const numero of [1, 2, 3]) await registraAlta(memoria, factura(numero), { instant: MIGDIA + numero * 1000 });
+  const text = await memoria.exporta();
+  const resultats = await Promise.all([a, b].map((port) => restauraCopia(port, text, { verifica: verificaCadena })));
+  expect(resultats.map(({ afegits }) => afegits).sort()).toEqual([0, 3]);
+  expect(await a.exporta()).toBe(text);
+  expect(await b.exporta()).toBe(text);
+});
+
+
+describe('tancament i operacions ajornades', () => {
+  test('una concessió tardana del bloqueig no executa ni escriu després de tanca', async () => {
+    const idb = creaIdbFals();
+    let concedix;
+    let cancelada = false;
+    const locks = { request: (_nom, opcions, fn) => new Promise((resolve, reject) => {
+      opcions.signal?.addEventListener('abort', () => {
+        cancelada = true;
+        reject(Object.assign(new Error('Cancel·lat'), { name: 'AbortError' }));
+      }, { once: true });
+      concedix = () => Promise.resolve().then(() => fn({})).then(resolve, reject);
+    }) };
+    const port = creaPortIndexedDB({ idb, locks });
+    let executades = 0;
+    const resultat = port.ambEscriptor(async () => {
+      executades += 1;
+      await registraAlta(port, factura(1), { instant: MIGDIA });
+    }).then(valor => ({ valor }), error => ({ error }));
+    await Promise.resolve();
+    port.tanca();
+    await concedix();
+    expect((await resultat).error).toMatchObject({ codi: 'TANCAT' });
+    expect(cancelada).toBe(true);
+    expect(executades).toBe(0);
+    const altre = creaPortIndexedDB({ idb, locks: null });
+    expect(await altre.llig()).toEqual([]);
+    altre.tanca();
+  });
+
+  test('una connexió concedida després de tanca es rebutja i no executa transaccions', async () => {
+    const idb = creaIdbFals();
+    const port = creaPortIndexedDB({ idb, locks: null });
+    const lectura = port.llig();
+    port.tanca();
+    await expect(lectura).rejects.toMatchObject({ codi: 'TANCAT' });
+    await expect(port.llig()).rejects.toMatchObject({ codi: 'TANCAT' });
+    expect(idb.operacions).toEqual([]);
+  });
+});

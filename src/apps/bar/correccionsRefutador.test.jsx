@@ -142,7 +142,7 @@ describe('T1 · «Mou» valida abans d’escriure res', () => {
   test('sense pagaments, el destí nou s’escriu una sola vegada, ja amb les línies (rev 1)', async () => {
     const magatzem = await magatzemDeProva();
     await magatzem.desaComanda(amb(nova('c-o'), 'olives', 1, 'l-1'));
-    const desa = vi.spyOn(magatzem, 'desaComanda');
+    const desa = vi.spyOn(magatzem, 'traspassaComandes');
     const sonda = await sondaDe(magatzem);
     const r = await fes(() => sonda.bar.accions.mou('c-o', { origen: { tipus: 'taula', taulaId: 't1' } }, [{ liniaId: 'l-1' }]));
     expect(r.ok).toBe(true);
@@ -152,9 +152,8 @@ describe('T1 · «Mou» valida abans d’escriure res', () => {
   });
 });
 
-/* Decisió del 261011: «detecta i avisa». Res no acaba el moviment sol: el duplicat es queda al
-   disc, la memòria diu el mateix que el disc, i la pantalla ho avisa fins que algú ho arregla. */
-describe('T2 · si la segona escriptura falla, el moviment es queda a mitges, a la vista i sense tocar res més', () => {
+/* Les versions antigues podien deixar moviments a mitges. El Bar encara els detecta. */
+describe('T2 · moviments nous atòmics i avisos dels moviments antics', () => {
   const TALL = () => Object.assign(new Error('tall'), { codi: 'NO_DISPONIBLE' });
   const resumDeMigs = (migs) => migs.map((m) => [m.motiu, m.origenId, m.destiId, m.linies.map((l) => `${l.quantitat} × ${l.nom}`)]);
   const perIdIRev = (comandes) => comandes.map((c) => [c.id, c.rev, resumDeLinies(c)]).sort((a, b) => (a[0] < b[0] ? -1 : 1));
@@ -170,81 +169,29 @@ describe('T2 · si la segona escriptura falla, el moviment es queda a mitges, a 
     expect(sonda.bar.migsMoviments).toEqual([]);
   });
 
-  test('«Mou» (fusió): falla el descart de l’origen → MIG_MOVIMENT (no «torna-ho a provar»); el duplicat es queda al disc, la memòria diu el mateix (cap rev vell) i l’avís no se’n va amb una operació bona, sinó quan s’arregla', async () => {
+  test('un conflicte a l’origen de «Mou» conserva el destí i recarrega la caixa', async () => {
     const magatzem = await magatzemDeProva();
-    await magatzem.desaComanda(amb(nova('c-o'), 'olives', 1, 'l-1'));
-    await magatzem.desaComanda(amb(nova('c-d', { tipus: 'taula', taulaId: 't2' }), 'cafe-sol', 1, 'l-2'));
-    const descarta = vi.spyOn(magatzem, 'descartaComanda').mockRejectedValueOnce(TALL());
+    const origen = await magatzem.desaComanda(amb(nova('c-o'), 'olives', 1, 'l-1'));
+    const desti = await magatzem.desaComanda(amb(nova('c-d', { tipus: 'taula', taulaId: 't2' }), 'cafe-sol', 1, 'l-2'));
     const sonda = await sondaDe(magatzem);
+    const actual = await magatzem.desaComanda(amb(origen, 'tallat', 1, 'l-3'));
     const r = await fes(() => sonda.bar.accions.mou('c-o', { comandaId: 'c-d' }, [{ liniaId: 'l-1' }]));
-    expect(descarta).toHaveBeenCalledTimes(1);
-    expect([r.ok, r.error?.codi]).toEqual([false, 'MIG_MOVIMENT']);
-    expect(sonda.bar.avis).toBe('El moviment s’ha quedat a mitges: les línies són ara a les DUES comandes. No el repetisques: mira l’avís de davall i lleva-les de la comanda on sobren abans de cobrar.');
-    /* Res no l'ha acabat: les olives són a les dues comandes, al disc i a la memòria. */
-    const alDisc = await comandesDe(magatzem);
-    expect(perIdIRev(alDisc)).toEqual([['c-d', 2, [['Cafè sol', 1], ['Olives', 1]]], ['c-o', 1, [['Olives', 1]]]]);
-    expect(perIdIRev(sonda.bar.comandes)).toEqual(perIdIRev(alDisc));
-    expect(resumDeMigs(sonda.bar.migsMoviments)).toEqual([['A_MITGES', 'c-o', 'c-d', ['1 × Olives']]]);
-    /* S'hi pot continuar venent (el rev del destí és el del disc), i l'avís continua. */
-    const despres = await fes(() => sonda.bar.accions.afegeix({ comandaId: 'c-d' }, { producte: P('tallat') }));
-    expect(despres.ok).toBe(true);
-    expect(sonda.bar.avis).toBeNull();
-    expect(resumDeMigs(sonda.bar.migsMoviments)).toEqual([['A_MITGES', 'c-o', 'c-d', ['1 × Olives']]]);
-    /* La persona lleva les olives de la comanda on sobren: l'avís se'n va sol. */
-    const arreglat = await fes(() => sonda.bar.accions.canviaQuantitat('c-o', 'l-1', 0));
-    expect(arreglat.ok).toBe(true);
-    expect(sonda.bar.migsMoviments).toEqual([]);
+    expect([r.ok, r.error?.codi]).toEqual([false, 'CONFLICTE']);
+    expect(perIdIRev(await comandesDe(magatzem))).toEqual(perIdIRev([actual, desti]));
+    expect(perIdIRev(sonda.bar.comandes)).toEqual(perIdIRev([actual, desti]));
+    expect(resumDeMigs(sonda.bar.migsMoviments)).toEqual([]);
   });
 
-  test('si a més la relectura falla, la memòria es queda amb el destí que SÍ que s’ha escrit (el seu rev) i l’origen d’abans: igual que el disc', async () => {
+  test('si la transacció de «Dividix» falla, la mare continua al disc sense cap filla', async () => {
     const magatzem = await magatzemDeProva();
-    await magatzem.desaComanda(amb(nova('c-o'), 'olives', 1, 'l-1'));
-    await magatzem.desaComanda(amb(nova('c-d', { tipus: 'taula', taulaId: 't2' }), 'cafe-sol', 1, 'l-2'));
+    const origen = await magatzem.desaComanda(amb(amb(nova('c-o'), 'olives', 1, 'l-1'), 'cafe-sol', 1, 'l-2'));
     const sonda = await sondaDe(magatzem);
-    vi.spyOn(magatzem, 'descartaComanda').mockRejectedValueOnce(TALL());
-    vi.spyOn(magatzem, 'carrega').mockRejectedValueOnce(TALL());
-    const r = await fes(() => sonda.bar.accions.mou('c-o', { comandaId: 'c-d' }, [{ liniaId: 'l-1' }]));
-    expect(r.error?.codi).toBe('MIG_MOVIMENT');
-    expect(perIdIRev(sonda.bar.comandes)).toEqual(perIdIRev(await comandesDe(magatzem)));
-    expect(resumDeMigs(sonda.bar.migsMoviments)).toEqual([['A_MITGES', 'c-o', 'c-d', ['1 × Olives']]]);
-    expect((await fes(() => sonda.bar.accions.afegeix({ comandaId: 'c-d' }, { producte: P('tallat') }))).ok).toBe(true);
-  });
-
-  test('«Mou» parcial: falla desar l’origen → l’origen es queda sencer al disc (ningú el retalla) i s’avisa de les unitats que hi sobren', async () => {
-    const magatzem = await magatzemDeProva();
-    const origen = await magatzem.desaComanda(amb(nova('c-o'), 'olives', 3, 'l-1'));
-    const sonda = await sondaDe(magatzem);
-    const real = magatzem.desaComanda.bind(magatzem);
-    let crides = 0;
-    vi.spyOn(magatzem, 'desaComanda').mockImplementation((comanda) => {
-      crides += 1;
-      return crides === 2 ? Promise.reject(Object.assign(new Error('tall'), { codi: 'NO_DISPONIBLE' })) : real(comanda);
-    });
-    const r = await fes(() => sonda.bar.accions.mou('c-o', { origen: { tipus: 'taula', taulaId: 't1' } }, [{ liniaId: 'l-1', quantitat: 2 }]));
-    expect([r.ok, r.error?.codi]).toEqual([false, 'MIG_MOVIMENT']);
-    const comandes = await comandesDe(magatzem);
-    expect(comandes.find((c) => c.id === 'c-o')).toEqual(origen);
-    expect(comandes.map((c) => resumDeLinies(c)).sort()).toEqual([[['Olives', 2]], [['Olives', 3]]]);
-    expect(perIdIRev(sonda.bar.comandes)).toEqual(perIdIRev(comandes));
-    expect(resumDeMigs(sonda.bar.migsMoviments).map(([motiu, origenId, , linies]) => [motiu, origenId, linies])).toEqual([['A_MITGES', 'c-o', ['2 × Olives']]]);
-  });
-
-  test('«Dividix»: falla desar la mare → la mare es queda sencera al disc i s’avisa', async () => {
-    const magatzem = await magatzemDeProva();
-    await magatzem.desaComanda(amb(amb(nova('c-o'), 'olives', 1, 'l-1'), 'cafe-sol', 1, 'l-2'));
-    const sonda = await sondaDe(magatzem);
-    const real = magatzem.desaComanda.bind(magatzem);
-    let crides = 0;
-    vi.spyOn(magatzem, 'desaComanda').mockImplementation((comanda) => {
-      crides += 1;
-      return crides === 2 ? Promise.reject(Object.assign(new Error('tall'), { codi: 'NO_DISPONIBLE' })) : real(comanda);
-    });
+    vi.spyOn(magatzem, 'traspassaComandes').mockRejectedValueOnce(TALL());
     const r = await fes(() => sonda.bar.accions.divideix('c-o', [{ liniaId: 'l-1', quantitat: 1 }]));
-    expect([r.ok, r.error?.codi]).toEqual([false, 'MIG_MOVIMENT']);
-    const perId = Object.fromEntries((await comandesDe(magatzem)).map((c) => [c.id, resumDeLinies(c)]));
-    expect(perId['c-o']).toEqual([['Olives', 1], ['Cafè sol', 1]]);
-    expect(Object.values(perId).sort()).toEqual([[['Olives', 1]], [['Olives', 1], ['Cafè sol', 1]]]);
-    expect(resumDeMigs(sonda.bar.migsMoviments).map(([motiu, origenId, , linies]) => [motiu, origenId, linies])).toEqual([['A_MITGES', 'c-o', ['1 × Olives']]]);
+    expect([r.ok, r.error?.codi]).toEqual([false, 'NO_DISPONIBLE']);
+    expect(await comandesDe(magatzem)).toEqual([origen]);
+    expect(perIdIRev(sonda.bar.comandes)).toEqual(perIdIRev([origen]));
+    expect(resumDeMigs(sonda.bar.migsMoviments)).toEqual([]);
   });
 
   /* E · L'avís servix a una persona: quines línies, a quines comandes i què fer. */
@@ -280,28 +227,24 @@ describe('T2 · si la segona escriptura falla, el moviment es queda a mitges, a 
     expect(await screen.findByText('La línia 1 × Olives: ja s’han cobrat a «Nota 0001» i encara són a «Taula 1». Revisa-la abans de cobrar: estes línies poden estar dues vegades. Si sobren, lleva-les de «Taula 1».')).toBeTruthy();
   });
 
-  /* F · Un segon toc a «Separa i cobra» no en separa una unitat més. */
-  test('F · «Dividix» a mitges: la pantalla diu que no es repetisca i la selecció es buida', async () => {
+  test('F · després d’un error de «Separa i cobra», el reintent crea una sola filla', async () => {
     const magatzem = await magatzemDeProva();
     await magatzem.desaComanda(amb(amb(nova('c-o'), 'olives', 2, 'l-1'), 'cafe-sol', 1, 'l-2'));
     munta('/app/bar/caixa/c-o/dividir', magatzem);
     const detall = () => within(document.getElementById('app-grid-main'));
-    /* «Separa i cobra» només és a la columna de dividir: quan hi és, la columna ja està pintada. */
     await screen.findByRole('button', { name: 'Separa i cobra' });
     fireEvent.click(detall().getByRole('button', { name: 'Suma una unitat: Olives' }));
-    const real = magatzem.desaComanda.bind(magatzem);
-    let crides = 0;
-    vi.spyOn(magatzem, 'desaComanda').mockImplementation((comanda) => {
-      crides += 1;
-      return crides === 2 ? Promise.reject(TALL()) : real(comanda);
-    });
+    const desa = vi.spyOn(magatzem, 'traspassaComandes').mockRejectedValueOnce(TALL());
     const separa = detall().getByRole('button', { name: 'Separa i cobra' });
     expect(separa.disabled).toBe(false);
     fireEvent.click(separa);
-    expect(await detall().findByText(/^El moviment s’ha quedat a mitges: les línies són ara a les DUES comandes\. No el repetisques/)).toBeTruthy();
-    await waitFor(() => expect(detall().getByRole('button', { name: 'Separa i cobra' }).disabled).toBe(true));
-    expect(crides).toBe(2);
-    expect((await comandesDe(magatzem)).map((c) => resumDeLinies(c)).sort()).toEqual([[['Olives', 1]], [['Olives', 2], ['Cafè sol', 1]]]);
+    expect(await detall().findByText('Les dades del dispositiu han deixat de respondre: recarrega la pàgina abans de continuar.')).toBeTruthy();
+    expect((await comandesDe(magatzem)).map(resumDeLinies)).toEqual([[['Olives', 2], ['Cafè sol', 1]]]);
+    await waitFor(() => expect(separa.disabled).toBe(false));
+    fireEvent.click(separa);
+    await waitFor(async () => expect((await comandesDe(magatzem)).map(resumDeLinies).sort())
+      .toEqual([[['Olives', 1]], [['Olives', 1], ['Cafè sol', 1]]]));
+    expect(desa).toHaveBeenCalledTimes(2);
   });
 });
 

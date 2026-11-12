@@ -130,6 +130,18 @@ describe('Pedra Seca · pecesApps.css', () => {
     expect(FULL_NET.trim().startsWith('@layer components {')).toBe(true);
   });
 
+  test('la rajola seleccionada conserva un contorn de focus independent', () => {
+    /* AH-R17-04 (mecanisme viu, modules.css: «Vora i no outline») · El premut es pinta amb la vora de 2px que reserva
+       .sdp-rajola; l'outline és només de l'anell de focus. Onada R20 · Esta prova fixava la variant outline d'un kit
+       Codex R18 que no va arribar al CSS viu: la invariant (focus independent de la selecció) és la mateixa. */
+    expect(FULL_NET).toMatch(/\.sdp-rajola\s*\{[^}]*border:\s*2px solid transparent;/);
+    expect(FULL_NET).toMatch(/\.sdp-rajola\[aria-pressed="true"\]\s*\{\s*border-color:\s*var\(--sdp-accio\);\s*background:[^}]+;\s*\}/);
+    const CANONIC_NET = senseComentaris(CSS_CANONIC);
+    expect(CANONIC_NET).not.toMatch(/\.sdp-rajola\[aria-pressed="true"\][^{]*\{[^}]*outline/);
+    expect(CANONIC_NET).not.toMatch(/--en-colleccio\s*>\s*\.sdp-rajola[^{]*\{[^}]*outline/);
+    expect(FULL_NET).toMatch(/\.sdp-rajola:focus-visible\s*\{[^}]*outline:[^}]*outline-offset:/);
+  });
+
   test('marges, coixins i separacions: 0, auto o l’escala --sdp-space-N (múltiples de 0.25rem)', () => {
     const dolents = [];
     for (const m of FULL_NET.matchAll(/(?:^|[;{\s])((?:margin|padding|gap|row-gap|column-gap)[\w-]*)\s*:\s*([^;}]+)/g)) {

@@ -16,8 +16,7 @@ const TEXTOS = Object.freeze({
   OBERTA_AMB_PAGAMENTS: 'Hi ha comandes obertes amb pagaments: acaba de cobrar-les abans de tancar el torn.',
   NO_OBERTA: 'Esta comanda ja no està oberta.',
   NO_TROBADA: 'No l’hem trobada: potser ja s’ha tancat.',
-  CONFLICTE: 'Esta comanda ha canviat en una altra banda: torna a provar-ho.',
-  MIG_MOVIMENT: 'El moviment s’ha quedat a mitges: les línies són ara a les DUES comandes. No el repetisques: mira l’avís de davall i lleva-les de la comanda on sobren abans de cobrar.',
+  CONFLICTE: 'Les dades del Bar han canviat. Revisa la caixa abans de tornar a provar-ho.',
   JA_TANCAT: 'Este tiquet ja està tancat i no es pot reescriure.',
   SENSE_MOTIU: 'Cal dir el motiu.',
   MARXADA: 'Esta línia ja ha marxat: per a llevar-ne, cal anul·lar-la amb motiu.',
@@ -37,7 +36,9 @@ const TEXTOS = Object.freeze({
   NO_DISPONIBLE: 'Les dades del dispositiu han deixat de respondre: recarrega la pàgina abans de continuar.',
   CARREGANT: 'Encara s’està carregant.',
   OCUPAT: 'Tanca el torn i les comandes obertes abans de canviar la carta.',
-  LLAVOR: 'Esta carta no existix.'
+  LLAVOR: 'Esta carta no existix.',
+  COPIA_INVALIDA: 'El fitxer no és una còpia vàlida del Bar.',
+  DISPOSITIU_OCUPAT: 'Per a restaurar la còpia cal un navegador que encara no tinga dades del Bar.'
 });
 
 /**

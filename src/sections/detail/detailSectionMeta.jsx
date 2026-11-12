@@ -14,6 +14,7 @@ import { portadaDeLaPublicacio } from '../../data/mapejadorSeccions.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 import { esFontImatgePropia, fontVideoPropia, sanitizeHtml } from '../../utils/sanitize.js';
+import { isSafeUrl } from '../../components/universal/UniversalUtils.js';
 import { MARCA_GRUP } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 /* Esmena 3 del pla 261007_1645 · Pel camí directe, mai per la façana de
    PedraSeca: este mòdul el llegixen elementDeSeccio.js, el diàleg Connectar i
@@ -57,7 +58,7 @@ import { variacioActiva, variacionsDelProducte } from '../mercat/variacionsDePro
 import {
   CAMPS, TO_PER_ESTAT, ambitDe, esFitxaDAmbit, etiquetaDAmbit, etiquetaDEstat, etiquetaDOpcio, etiquetaDeCamp, normalitzaDades, normalitzaEstat, perAmbit
 } from '../../utils/publicacioUniversal.js';
-import { desaRevisioArticleImportat, llegeixEstatRevisioEditorial } from '../../utils/revisioEditorialWp.js'; /* P1-f (R6 · Bloc 2) · sense el tesaurus */
+import { desaRevisioArticleImportat, desaRevisioArticleImportatAmbServidor, llegeixEstatRevisioEditorial } from '../../utils/revisioEditorialWp.js'; /* P1-f (R6 · Bloc 2) · sense el tesaurus */
 
 const PublicacionsDelPoble = lazyRoute(() => import('../pobles/PublicacionsDelPoble.jsx'));
 /* P1-11 (pla 261024_2230, T5B-01) · El panell «Empreses i entitats», també en
@@ -799,8 +800,19 @@ function VistaCompletaArticleImportatWp({ item, t }) {
 
   const canviaEstat = (nouEstat, nota) => {
     desaRevisioArticleImportat(item.wp_id, { estat: nouEstat, ...(nota !== undefined ? { nota } : {}) });
+    void desaRevisioArticleImportatAmbServidor(item.wp_id, {
+      estat: nouEstat,
+      nota: nota ?? '',
+      autoria: item.author || null,
+      desti: item.vertical_proposada || null
+    });
     setEstatLocal(nouEstat);
   };
+  const urlExternaSegura = typeof item.source_url === 'string'
+    && /^https?:\/\//i.test(item.source_url.trim())
+    && isSafeUrl(item.source_url.trim())
+    ? item.source_url.trim()
+    : null;
 
   return (
     <article className="sdp-admin-taxonomia" aria-label="Previsualització i revisió de pàgina importada">
@@ -816,6 +828,11 @@ function VistaCompletaArticleImportatWp({ item, t }) {
           <code>socdepoble.net</code>. Pots verificar la classificació biblioteconòmica i territorial, consultar l’original o aprovar-la directament des d’ací.
         </p>
         <dl>
+          <dt>Autoria i custòdia documental</dt>
+          <dd>
+            <strong>{item.author || 'Sóc de Poble'}</strong>
+            {item.estudi_tecnic ? ` · Estudi tècnic: ${item.estudi_tecnic}` : ''}
+          </dd>
           <dt>Ruta canònica en Sóc de Poble</dt>
           <dd><code>{item.ruta_canonica}</code></dd>
           <dt>Data de publicació original</dt>
@@ -844,9 +861,11 @@ function VistaCompletaArticleImportatWp({ item, t }) {
           <Link className="sdp-boto sdp-boto--secundari" to={RUTA_BANCADA_IMPORTACIO}>
             {t('section.detail.mur.revisioWp.tornaBancada', '← Tornar a Importació i Revisió Editorial')}
           </Link>
-          <a className="sdp-boto sdp-boto--fantasma" href={item.source_url} target="_blank" rel="noopener noreferrer">
-            🌐 Obrir original a socdepoble.net ↗
-          </a>
+          {urlExternaSegura ? (
+            <a className="sdp-boto sdp-boto--fantasma" href={urlExternaSegura} target="_blank" rel="noopener noreferrer">
+              🌐 Obrir original a socdepoble.net ↗
+            </a>
+          ) : null}
         </div>
       </section>
     </article>

@@ -31,3 +31,14 @@ test('R3 continua rebutjant lectura o escriptura indiscriminada en Realtime', ()
     assert.match(result.stdout, /R3.*messages/);
   }
 });
+
+test('R1 reconeix auth.users com a destí de triggers de GoTrue', () => {
+  const trigger = (table) => `create trigger baixa before delete on ${table} execute function private.baixa();`;
+  const valid = check(trigger('auth.users'));
+  assert.equal(valid.status, 0, valid.stdout);
+  for (const table of ['auth.inventada', 'public.users']) {
+    const unknown = check(trigger(table));
+    assert.equal(unknown.status, 1, unknown.stdout);
+    assert.ok(unknown.stdout.includes(`create trigger sobre taula inexistent: ${table}`), unknown.stdout);
+  }
+});

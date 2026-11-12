@@ -291,6 +291,9 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
   '/assets/ui/plugins/rebost_vinyeta.webp',
   '/assets/ui/plugins/salut_vinyeta.webp',
   '/assets/ui/plugins/genealogia_vinyeta.webp',
+  /* P0-114 (ordre del Mestre, 261111) · La vinyeta de L'Avisador (Kit R17.3, una WebP: WhatsApp no
+     en pinta) i la seua variant, que MarIA ha copiat al costat: avisador_vinyeta-social-1200x630.jpg. */
+  '/assets/ui/plugins/avisador_vinyeta.webp',
   '/assets/ui/plugins/rss_vinyeta.jpg',
   '/assets/ui/plugins/tpv_vinyeta.webp',
   '/assets/ui/plugins/bascula_vinyeta.jpg',
@@ -312,6 +315,7 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
   '/assets/uploads/patrimoni/banc-de-llavors-ibanez.webp',
   '/assets/uploads/patrimoni/rutes-de-poble-ibanez.webp',
   '/assets/uploads/patrimoni/arbres-monumentals-ibanez.webp',
+  '/assets/uploads/patrimoni/receptes-ibanez.webp',
   /* P0-60 · El logotip circular del Manifest de Poble (1024x891 WebP), portada de la seua
      publicació de llavor del Mur. Variant «contenida», no de cobertura: el segell sencer a
      600 px d'alt, centrat sobre blanc (el seu fons) en 1200x630; JPEG baseline, sense APP1. */

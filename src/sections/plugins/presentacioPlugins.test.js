@@ -35,7 +35,9 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { PRESENTACIO_PLUGINS, presentacioDelPlugin } from './presentacioPlugins.js';
 import { IDS_PLUGINS, pluginPerId } from './registrePlugins.js';
 
-const AMB_PRESENTACIO = ['rebost', 'salut', 'genealogia', 'gestoria', 'rss'];
+/* P0-114 (ordre del Mestre, 261111, punt 3: «presentar també les sis seccions didàctiques <h3> +
+   <p> a presentacioPlugins.js per a genealogia i avisador») · L'Avisador també en porta sis. */
+const AMB_PRESENTACIO = ['rebost', 'salut', 'genealogia', 'gestoria', 'rss', 'avisador'];
 const font = (ruta) => readFileSync(path.join(process.cwd(), ruta), 'utf8');
 /* Els elements d'una presentació: un per línia, cada <h3> davant del seu <p>. */
 const linies = (html) => html.split('\n');
@@ -48,7 +50,7 @@ const titols = (html) => linies(html).filter((linia) => linia.startsWith('<h3>')
 const marques = (html) => [...html.matchAll(/<\/?([a-zA-Z][a-zA-Z0-9]*)/g)].map(([, nom]) => nom.toLowerCase());
 
 describe('presentació dels plugins', () => {
-  test('les quatre eines amb presentació són del registre', () => {
+  test('les eines amb presentació són del registre', () => {
     expect(Object.isFrozen(PRESENTACIO_PLUGINS)).toBe(true);
     expect(Object.keys(PRESENTACIO_PLUGINS)).toEqual(AMB_PRESENTACIO);
     for (const id of AMB_PRESENTACIO) {
@@ -113,18 +115,38 @@ describe('presentació dels plugins', () => {
     const plugin = pluginPerId(id);
     expect(text).toContain(plugin.titol);
     expect(text).toContain(`«${plugin.etiquetaObrir}»`);
-    // I diu, honestament, que encara està en proves.
-    expect(text).toContain('en proves');
+    /* I diu, honestament, com està: en proves si té destí. R18 · T2 (P0-101)
+       · Una eina sense destí (obrir null: hui cap; DEROGAT per R19 · T3
+       «hui, l'Arbre Genealògic») no està en proves, està en obres, i el text
+       ho diu. Abans: 'en proves' per a totes. */
+    expect(text).toContain(plugin.obrir === null ? 'en obres' : 'en proves');
     /* Gauntlet 261022_0225 (F2) · DEROGAT «el botó pot no fer res»: sense
        destí no hi ha cap botó inert, i el text no ho pot prometre. */
     expect(text).not.toMatch(/no fa res/);
-    if (['rebost', 'salut', 'genealogia'].includes(id)) expect(text).toMatch(/en lloc del botó (?:«[^»]+» )?la pàgina et diu per què i què pots fer/);
-    /* La Gestoria i el Lector: un últim bloc neutre, cert en qualsevol estat
-       (també si l'ha desactivada la persona, i el botó de baix és «Torna a
-       activar»): ni «la web no la pot obrir» ni «com desactivar-la». */
+    /* P0-113 (ordre del Mestre, 261111: «ENCÉN en producció» les eines amb app «com a eines
+       gratuïtes obertes») · Les quatre amb destí s'obrin en producció: el text diu que estan en
+       proves i que el botó hi porta, i cap ja no parla de no poder-les obrir. DEROGAT «en lloc
+       del botó la pàgina et diu per què i què pots fer» (el Rebost i Salut) i «Si ací baix no
+       tens el botó, davall et diem per què» (la Gestoria i el Lector). */
+    /* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · L'Arbre Genealògic torna amb el Rebost i
+       Salut: s'obri en producció i, com Salut (dades de salut), només a la pàgina pròpia. DEROGADA la
+       branca «Encara està en obres: el botó «Obrir l’Arbre Genealògic» encara no s’obri, i la pàgina
+       et diu per què.» (R18 · T2, P0-101). */
+    if (['rebost', 'salut', 'genealogia'].includes(id)) {
+      expect(text).toMatch(new RegExp(`Encara està en proves: (?:a la pàgina pròpia, )?el botó «${plugin.etiquetaObrir}» t’hi porta\\.`));
+    }
+    /* P0-114 (ordre del Mestre, 261111) · L'Avisador s'obri en producció (la seua pàgina): el text
+       diu, com el Rebost, que està en proves i que el botó hi porta. */
+    else if (id === 'avisador') expect(text).toMatch(/Encara està en proves: el botó «Obrir l’Avisador» t’hi porta\./);
+    /* La Gestoria i el Lector: un últim bloc neutre, cert en qualsevol estat (també si l'ha
+       desactivada la persona): gratuïts, en proves, i desactivar no esborra res. */
     else {
-      expect(text).toMatch(/Si ací baix no tens el botó, davall et diem per què i què pots fer\. Desactivar-(la|lo) o tornar-\1 a activar no esborra/);
+      expect(text).toMatch(/(?:La Gestoria|El lector) és gratuït(?:a)? i encara està en proves\. Desactivar-(la|lo) o tornar-\1 a activar no esborra/);
       expect(text).not.toMatch(/esta web encara no (?:la|el) pot obrir|com desactivar-/);
+    }
+    // Cap text diu que l'eina no es pot obrir ací, ni que no està a punt per a tothom.
+    if (plugin.obrir !== null) {
+      expect(text).not.toMatch(/en lloc del botó|no tens el botó|encara no (?:la|el) pots obrir|a punt per a tothom/i);
     }
   });
 
@@ -134,6 +156,9 @@ describe('presentació dels plugins', () => {
   test.each(AMB_PRESENTACIO)('%s: paraules del poble, en present', (id) => {
     const text = senseMarques(presentacioDelPlugin(id));
     expect(text).not.toMatch(/\bnode\b|\bapps?\b|amfitri|premium|desenvolupament|paquet|descàrrega independent|versió compatible|acredit|notícies de mostra|sincronitza|Quan (?:l’eina )?estiga disponible/i);
+    /* P0-113 (ordre del Mestre, 261111: «Res dins de l'app ha de donar a entendre que es
+       cobrarà per cap eina») · Cap paraula de pagament, de subscripció ni de contracte. */
+    expect(text).not.toMatch(/pagament|\bpag(?:ar|a|ues)\b|subscripci|contracta|de pago|tarifa|\bquota\b/i);
   });
 });
 
@@ -174,12 +199,114 @@ describe('els literals citats són els de l’app', () => {
     rss: [
       ['Gestiona les fonts', 'src/apps/lector/vistes/GestioFonts.jsx', 'titol="Gestiona les fonts"'],
       ['Notícies', 'src/apps/lector/manifest.js', "ca: 'Notícies'"]
+    ],
+    /* P0-114 (ordre del Mestre, 261111) · El botó del formulari de la pàgina de L'Avisador. */
+    avisador: [
+      ['Activa l’Avisador', 'src/pages/textosAvisador.js', "activa: text('activa', 'Activa l’Avisador')"]
+    ],
+    /* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · Les entrades de l'Arbre Genealògic que el
+       text cita (manifest.js), el títol de l'exportació, la persona protegida i el botó de l'avís
+       (textos.js): si l'app en canvia una, esta prova cau i el text es canvia amb ella. */
+    genealogia: [
+      ['Entrevista', 'src/apps/genealogia/manifest.js', "ca: 'Entrevista'"],
+      ['Persones', 'src/apps/genealogia/manifest.js', "ca: 'Persones'"],
+      ['Germans, padrins i testimonis', 'src/apps/genealogia/manifest.js', "ca: 'Germans, padrins i testimonis'"],
+      ['Arxius públics', 'src/apps/genealogia/manifest.js', "ca: 'Arxius públics'"],
+      ['Prompts per a copiar', 'src/apps/genealogia/manifest.js', "ca: 'Prompts per a copiar'"],
+      ['GEDCOM i còpia', 'src/apps/genealogia/manifest.js', "ca: 'GEDCOM i còpia'"],
+      ['Prepara, no publica', 'src/apps/genealogia/textos.js', "'exporta.preparaNoPublica.titol': 'Prepara, no publica'"],
+      ['Persona viva', 'src/apps/genealogia/textos.js', "'persona.viva': 'Persona viva'"],
+      ['Entesos', 'src/apps/genealogia/textos.js', "'boto.entesos': 'Entesos'"]
     ]
   };
 
-  test('rss: «encara no hi ha cap font connectada» és el que diu l’estat buit de l’app', () => {
-    expect(senseMarques(presentacioDelPlugin('rss'))).toContain('de moment no hi ha cap font connectada');
+  /* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · Tractor-promesa: l'Arbre Genealògic diu en
+     present només el que fa l'app. Una sola pregunta per torn, de la casa i el mas als besavis
+     (passosEntrevista.js); els quatre estats i «mai no ajunta ningú pel cognom»; no cerca als arxius ni
+     parla amb cap IA; les dades al dispositiu i la còpia; només a la pàgina pròpia (dades de salut,
+     com Salut) i l'avís que s'accepta abans d'entrar. Cap promesa de dictat ni d'arbre per a imprimir:
+     l'app no en porta. */
+  test('genealogia: cada afirmació té el seu text o el seu codi a l’app', () => {
+    const text = senseMarques(presentacioDelPlugin('genealogia'));
+    const textos = font('src/apps/genealogia/textos.js');
+    const passos = font('src/apps/genealogia/nucli/passosEntrevista.js');
+    const manifest = font('src/apps/genealogia/manifest.js');
+    expect(text).toContain('una sola pregunta cada vegada');
+    expect(textos).toContain("'entrevista.regla': 'Una sola pregunta cada vegada.");
+    expect(passos).toContain('cada pas\n * és UNA sola pregunta');
+    for (const id of ['casa', 'lloc', 'g4-jo', 'g4-germa', 'g3-pare', 'g3-mare', 'g2-pare-pare', 'g1-besavi']) {
+      expect([id, passos.includes(`id: '${id}'`)]).toEqual([id, true]);
+    }
+    expect(text).toContain('els quatre iaios');
+    expect(passos).toContain("export const PASSOS_G2 = Object.freeze(['g2-pare-pare', 'g2-mare-pare', 'g2-pare-mare', 'g2-mare-mare']);");
+    expect(textos).toContain('[CONFIRMAT] vol dir que hi ha un document; [APROXIMAT], que ho diu la memòria; [FALTA CONFIRMAR], que encara no hi ha prova; [CONTRADICCIÓ], que les dates no lliguen.');
+    for (const estat of ['[CONFIRMAT]', '[APROXIMAT]', '[FALTA CONFIRMAR]', '[CONTRADICCIÓ]']) expect([estat, text.includes(estat)]).toEqual([estat, true]);
+    expect(text).toContain('mai no ajunta ningú pel cognom');
+    expect(textos).toContain('L’app mai no ajunta ningú pel cognom.');
+    expect(text).toContain('No cerca als arxius ni parla amb cap intel·ligència artificial');
+    expect(textos).toContain("'avis.noFa': 'L’app no cerca als arxius ni parla amb cap IA");
+    expect(text).toContain('Les dades es queden en este dispositiu, dins d’este navegador, i no s’envien enlloc');
+    expect(textos).toContain("'avis.on': 'Les dades es queden en este dispositiu, en este navegador. No hi ha cap compte ni cap servidor.");
+    expect(textos).toContain("'panell.copia.text': 'Fes una còpia de tant en tant");
+    expect(text).toContain('el fitxer no es puja enlloc, i tu decidixes on el guardes i amb qui el compartixes');
+    expect(textos).toContain('No el puja enlloc: tu decidixes on el guardes i amb qui el compartixes.');
+    // Només a la pàgina pròpia, com Salut: les dades personals de salut obrin la guarda d'ama del document.
+    expect(text).toContain('només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web');
+    expect(manifest).toContain("dadesPersonals: 'salut',");
+    expect(font('src/apps/genealogia/AppGenealogia.jsx')).toContain("if (!genealogia.avisAcceptat && pathname !== ruta('avis')) return <Navigate to={ruta('avis')} replace />;");
+    // Cap promesa del que l'app no fa: ni dictat de veu, ni impressió, ni futur.
+    expect(text).not.toMatch(/veu alta|dictat|imprimir|serà |podràs|tindràs|en obres/i);
+  });
+
+  /* P0-114 (ordre del Mestre, 261111) · Veritat nua: el que diu el text de L'Avisador ix del seu
+     servei i de la seua pàgina. Les hores (HORES_AVISADOR), d'una a tres persones (estatAvisador), el
+     descans de com a molt dotze hores (MAXIM_DESCANS_MINUTS), la condició de la sessió oberta i el
+     112 (textosAvisador.js, `limitacions`). Cap promesa de servidor ni de sincronització. */
+  test('avisador: les hores, les persones, el descans i les condicions són els del servei i de la pàgina', () => {
+    const text = senseMarques(presentacioDelPlugin('avisador'));
+    const servei = font('src/services/avisador.js');
+    const pagina = font('src/pages/textosAvisador.js');
+    expect(servei).toContain('export const HORES_AVISADOR = Object.freeze([4, 8, 12, 24]);');
+    expect(text).toContain('quatre, huit, dotze o vint-i-quatre');
+    expect(servei).toContain('persones.length < 1 || persones.length > 3');
+    expect(text).toContain('d’una a tres persones');
+    expect(servei).toContain('export const MAXIM_DESCANS_MINUTS = 720;');
+    expect(pagina).toContain('El descans nocturn pot durar com a màxim 12 hores.');
+    expect(text).toContain('el descans pot durar com a molt dotze hores');
+    expect(pagina).toContain('Funciona amb la sessió personal oberta, mentre l’app pot executar-se i té connexió al Xat.');
+    expect(text).toContain('Només funciona amb la sessió personal oberta, mentre Sóc de Poble pot executar-se i té connexió al Xat.');
+    expect(pagina).toContain('Per a una emergència, telefona al 112.');
+    expect(text).toContain('Per a una emergència, telefona al 112.');
+    expect(pagina).toContain('Els ajustos es guarden en este dispositiu.');
+    expect(text).toContain('Els ajustos es guarden en este dispositiu');
+    expect(text).not.toMatch(/sincron|n[úu]vol|servidor|còpia|garanti|sempre arriba/i);
+  });
+
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: el Lector és obert en producció i, amb
+     el servei de notícies del backend (plataforma/fontServeis.js), hi arriben les fonts de coneixement
+     obert. El text ja no diu que no arriba cap notícia: diu quan apareix l'estat buit, amb les paraules
+     de l'app. La intenció es conserva (el text i l'estat buit diuen el mateix). I diu que l'adreça d'una
+     font personal la rep el servei (fontRemota.js, feedPersonal). */
+  test('rss: «encara no hi ha cap font connectada» és el que diu l’estat buit de l’app, i només quan no hi ha servei', () => {
+    const text = senseMarques(presentacioDelPlugin('rss'));
+    expect(text).toContain('el lector et diu que encara no hi ha cap font connectada');
+    expect(text).toContain('Si esta web no té el servei de notícies');
+    expect(text).not.toMatch(/no arriba cap notícia|ixen buides|Quan funcione/);
     expect(font('src/apps/lector/AppLector.jsx')).toContain('Encara no hi ha cap font connectada');
+    expect(text).toContain('el servei de notícies de Sóc de Poble en rep l’adreça');
+    expect(font('src/apps/lector/fontRemota.js')).toContain('feedPersonal(url');
+  });
+
+  /* P0-113 · La Gestoria oberta en producció: el Tauler, la Finestreta, l'Històric i l'Escàner demanen
+     l'aprovació d'un tractor, i el panell d'aprovació només existix en desenvolupament
+     (WikiDePobleSection.jsx, EINES_LOCALS). El text no envia la persona a una vista bloquejada: comença
+     per la Facturació, que no passa per cap tractor. */
+  test('gestoria: comença per la Facturació, que no demana cap tractor, i diu que la resta encara demana una aprovació', () => {
+    const text = senseMarques(presentacioDelPlugin('gestoria'));
+    expect(text).toContain('Comença per «Facturació»: és la part que ja funciona sense cap pas previ.');
+    expect(text).toContain('encara demanen una aprovació que hui no es pot fer des d’esta web');
+    expect(font('src/sections/gestoria/facturar/Facturacio.jsx')).not.toMatch(/useTractors|Cal aprovar el tractor/);
+    expect(font('src/sections/wiki-de-poble/WikiDePobleSection.jsx')).toContain('const EINES_LOCALS = import.meta.env.DEV ? {');
   });
 
   test.each(Object.entries(CITES).flatMap(([id, cites]) => cites.map((cita) => [id, ...cita])))(
@@ -197,11 +324,15 @@ describe('els literals citats són els de l’app', () => {
     expect(ajustos).toContain('etiqueta="Recupera una còpia"');
   });
 
+  /* P0-113 (ordre del Mestre, 261111) · La Nevera s'obri en producció (encesa per defecte i
+     sense entorn de desenvolupament): el text la diu gratuïta i en proves, i ja no tancada.
+     Abans: el manifest portava entorn 'desenvolupament'. */
   test('rebost: gratuïta, sense dades personals i en proves, com diu el manifest de la Nevera', () => {
     const manifest = font('src/apps/nevera/manifest.js');
     expect(manifest).toContain("nivell: 'gratuit'");
     expect(manifest).toContain('dadesPersonals: false');
-    expect(manifest).toContain("entorn: 'desenvolupament'");
+    expect(manifest).toContain('actiuPerDefecte: true');
+    expect(manifest).not.toContain("entorn: 'desenvolupament'");
     const text = senseMarques(presentacioDelPlugin('rebost'));
     expect(text).toContain('És gratuïta, no demana cap dada personal');
     expect(text).toContain('l’eina no fa cap crida a internet');

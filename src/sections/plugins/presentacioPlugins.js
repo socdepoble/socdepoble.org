@@ -36,10 +36,11 @@
  * com està l'eina ARA, en present, i són certs es puga obrir o no, i també
  * si l'ha desactivada la persona (l'últim bloc és neutre: no dona per fet
  * que la web no la pot obrir ni que el botó de baix és «Desactiva»). Sense
- * destí ja no hi ha cap botó inert (PluginPage.jsx, F2): el Rebost i Salut
- * diuen «en lloc del botó, la pàgina et diu per què i què pots fer».
+ * destí ja no hi ha cap botó inert (PluginPage.jsx, F2). (DEROGAT per P0-113,
+ * vegeu més avall: el Rebost i Salut deien «en lloc del botó, la pàgina et
+ * diu per què i què pots fer».)
  *
- *   PRESENTACIO_PLUGINS       { rebost, salut, gestoria, rss }: una cadena HTML per plugin,
+ *   PRESENTACIO_PLUGINS       { rebost, salut, genealogia, gestoria, rss, avisador }: una cadena HTML per plugin,
  *                             només amb <h3>, <p> i <strong>: sis blocs, un
  *                             <h3> i el seu <p>, un element per línia. Cap
  *                             H1 ni H2: són el títol i el subtítol del
@@ -85,10 +86,19 @@
  *
  * Cap consell mèdic i cap promesa: el text de Salut diu el mateix que l'avís
  * de l'app (apps/salut/textos.js) i, com ell, és un ESBORRANY que ha de
- * revisar el Mestre i, idealment, algú de salut. Les dues eines porten
- * entorn 'desenvolupament': el text diu que estan en proves. DEROGAT (Gauntlet
- * 261022_0225, F2) «i que el botó pot ser inert»: sense destí no n'hi ha cap,
- * i el text diu que la pàgina explica per què i què pots fer.
+ * revisar el Mestre i, idealment, algú de salut. El text diu que les eines
+ * estan en proves. DEROGAT (Gauntlet 261022_0225, F2) «i que el botó pot ser
+ * inert»: sense destí no n'hi ha cap.
+ *
+ * P0-113 (ordre del Mestre, 261111: «ENCÉN en producció» el Rebost, Salut,
+ * la Gestoria i el Lector RSS «com a eines gratuïtes obertes») · Les quatre
+ * s'obrin en producció, i l'últim bloc ja no parla de no poder-les obrir:
+ * DEROGAT «en lloc del botó, la pàgina et diu per què i què pots fer» (el
+ * Rebost i Salut) i «Si ací baix no tens el botó, davall et diem per què»
+ * (la Gestoria i el Lector, el bloc «Si encara no la/el pots obrir»). Ara
+ * diuen, breu, que estan en proves, que el botó hi porta i, la Gestoria i el
+ * Lector, que són gratuïts; cap parla de pagar. Salut conserva que només
+ * s'obri a la pàgina pròpia (amaDelDocument). Esborrany pendent del Mestre.
  *
  * Pur: sense React ni xarxa.
  */
@@ -105,7 +115,7 @@ const REBOST = [
   '<h3>On es queden les dades</h3>',
   '<p><strong>Tot es guarda en este dispositiu</strong>, dins d’este navegador, i <strong>no ix mai d’ací</strong>: l’eina no fa <strong>cap crida a internet</strong>. Per això mateix, el que apuntes <strong>no apareix a soles</strong> en un altre mòbil de casa. Per a passar-ho a un altre lloc o per a no perdre-ho, a <strong>Ajustos</strong> pots <strong>descarregar una còpia</strong> i recuperar-la quan vulgues; <strong>recuperar-la substituïx</strong> el que hi haja en eixe moment.</p>',
   '<h3>Què no fa</h3>',
-  '<p>I el que <strong>no fa</strong>: no porta <strong>preus</strong>, al Rebost no hi ha <strong>quantitats</strong> ni <strong>dates de caducitat</strong>, i <strong>no compra res per tu</strong>. Només recorda el que tu li dius. Encara està <strong>en proves</strong>: si ací es pot obrir, el botó <strong>«Obrir el Rebost»</strong> t’hi porta; si no, en lloc del botó la pàgina et diu <strong>per què</strong> i què pots fer.</p>'
+  '<p>I el que <strong>no fa</strong>: no porta <strong>preus</strong>, al Rebost no hi ha <strong>quantitats</strong> ni <strong>dates de caducitat</strong>, i <strong>no compra res per tu</strong>. Només recorda el que tu li dius. Encara està <strong>en proves</strong>: el botó <strong>«Obrir el Rebost»</strong> t’hi porta.</p>'
 ];
 
 const SALUT = [
@@ -120,22 +130,22 @@ const SALUT = [
   '<h3>On es queden les dades</h3>',
   '<p>Les dades <strong>es queden en este dispositiu</strong>, dins d’este navegador. <strong>No s’envien</strong> a Sóc de Poble, ni a cap servidor, ni a cap intel·ligència artificial. Això té una altra cara: si <strong>s’esborren les dades</strong> del navegador o <strong>canvies de dispositiu</strong>, <strong>es perden</strong>, i per això el quadern et recorda que faces <strong>còpies de seguretat</strong>. I qui òbriga este navegador en este dispositiu <strong>ho pot vore tot</strong>.</p>',
   '<h3>Què ix d’ací i on s’obri</h3>',
-  '<p>D’ací només ixen <strong>dos fitxers</strong>, i sempre <strong>per la teua mà</strong>: la còpia de seguretat, que ho porta tot, i el full per al metge, que descarregues o compartixes tu. Al full, <strong>el nom</strong> de la persona <strong>no hi va</strong> si no l’escrius en eixe moment. Per la mena de dades que guarda, el quadern només s’obri a la <strong>pàgina pròpia</strong> de Sóc de Poble, mai dins d’una altra web, i la primera vegada et demana que lliges l’avís i digues <strong>«Ho he entés»</strong>. Encara està <strong>en proves</strong>: si ací no es pot obrir, en lloc del botó <strong>«Obrir Salut»</strong> la pàgina et diu per què i què pots fer.</p>'
+  '<p>D’ací només ixen <strong>dos fitxers</strong>, i sempre <strong>per la teua mà</strong>: la còpia de seguretat, que ho porta tot, i el full per al metge, que descarregues o compartixes tu. Al full, <strong>el nom</strong> de la persona <strong>no hi va</strong> si no l’escrius en eixe moment. Per la mena de dades que guarda, el quadern només s’obri a la <strong>pàgina pròpia</strong> de Sóc de Poble, mai dins d’una altra web, i la primera vegada et demana que lliges l’avís i digues <strong>«Ho he entés»</strong>. Encara està <strong>en proves</strong>: a la pàgina pròpia, el botó <strong>«Obrir Salut»</strong> t’hi porta.</p>'
 ];
 
 const GESTORIA = [
   '<h3>Per a què et servix</h3>',
   '<p>La <strong>Gestoria</strong> és un quadern per a <strong>ordenar els papers</strong> de la teua activitat: <strong>factures</strong>, <strong>contactes</strong> i <strong>comptes del trimestre</strong>. Així els <strong>tens a mà</strong> quan parles amb qui et porta la gestió.</p>',
   '<h3>Per on comences</h3>',
-  '<p>Si ací baix tens el botó <strong>«Obrir la Gestoria»</strong>, prem-lo. Comença per <strong>«Identitat i Finestreta»</strong>, amb el <strong>teu nom</strong> i el del <strong>teu negoci</strong>, i després entra a <strong>«Facturació»</strong>. <strong>Revisa cada dada</strong> abans de donar-la per bona.</p>',
+  '<p>Si ací baix tens el botó <strong>«Obrir la Gestoria»</strong>, prem-lo. Comença per <strong>«Facturació»</strong>: és la part que <strong>ja funciona</strong> sense cap pas previ. El Tauler i <strong>«Identitat i Finestreta»</strong> encara demanen <strong>una aprovació</strong> que hui no es pot fer des d’esta web. <strong>Revisa cada dada</strong> abans de donar-la per bona.</p>',
   '<h3>Un exemple del poble</h3>',
   '<p>Si <strong>vens oli</strong> o portes un <strong>taller</strong>, pots <strong>ordenar les factures</strong> de la faena i preparar el <strong>full trimestral</strong>. El que <strong>no has apuntat</strong> no apareix en els <strong>comptes</strong>.</p>',
   '<h3>Els papers continuen sent teus</h3>',
   '<p>Les <strong>dades financeres</strong> es guarden en <strong>este dispositiu</strong>. <strong>No apareixen a soles</strong> en un <strong>altre ordinador</strong>. Conserva els <strong>justificants originals</strong> i les còpies que necessites.</p>',
   '<h3>Què has de fer tu</h3>',
   '<p>L’eina <strong>no presenta impostos ni envia documents</strong> per tu. <strong>Tu revises</strong> els papers i <strong>decidixes</strong> què compartixes amb la teua gestora o gestor.</p>',
-  '<h3>Si encara no la pots obrir</h3>',
-  '<p>Encara està <strong>en proves</strong>. Si ací baix <strong>no tens el botó</strong>, davall et diem <strong>per què</strong> i <strong>què pots fer</strong>. <strong>Desactivar-la</strong> o tornar-la a activar <strong>no esborra</strong> els teus papers.</p>'
+  '<h3>Gratuïta i en proves</h3>',
+  '<p>La Gestoria és <strong>gratuïta</strong> i encara està <strong>en proves</strong>. <strong>Desactivar-la</strong> o tornar-la a activar <strong>no esborra</strong> els teus papers.</p>'
 ];
 
 const RSS = [
@@ -144,28 +154,79 @@ const RSS = [
   '<h3>Com es fa servir</h3>',
   '<p>Si ací baix tens el botó <strong>«Obrir el Lector»</strong>, prem-lo. A la <strong>columna de les carpetes</strong>, <strong>«Gestiona les fonts»</strong> et deixa <strong>triar les webs</strong> que t’interessen i <strong>afegir-ne de teues</strong>, i a <strong>«Notícies»</strong> llegiràs el que publiquen.</p>',
   '<h3>Com està ara</h3>',
-  '<p>El lector encara està <strong>en proves</strong>: de moment no hi ha <strong>cap font connectada</strong> i <strong>no arriba cap notícia</strong>, així que les dues pestanyes <strong>ixen buides</strong>. Quan les <strong>webs del poble</strong> estiguen connectades, les notícies <strong>arribaran ací soles</strong>.</p>',
+  '<p>El lector encara està <strong>en proves</strong>. <strong>De sèrie</strong> porta <strong>webs de coneixement obert</strong>, i les <strong>webs del poble</strong> encara no hi estan connectades. Si esta web <strong>no té el servei</strong> de notícies, el lector et diu que encara <strong>no hi ha cap font connectada</strong>.</p>',
   '<h3>Un exemple de cada dia</h3>',
-  '<p><strong>Quan funcione</strong>, podràs <strong>seguir els avisos</strong> de les entitats que t’interessen i <strong>obrir cada notícia</strong> per a llegir-la. Cada notícia diu de <strong>quina web</strong> ve: el lector <strong>te la porta</strong>, però <strong>no l’ha escrita</strong>.</p>',
+  '<p><strong>Quan el poble hi siga</strong>, podràs <strong>seguir els avisos</strong> de les entitats que t’interessen i <strong>obrir cada notícia</strong> per a llegir-la. Cada notícia diu de <strong>quina web</strong> ve: el lector <strong>te la porta</strong>, però <strong>no l’ha escrita</strong>.</p>',
   '<h3>El que recorda el lector</h3>',
-  '<p>El que <strong>lliges</strong>, el que <strong>deses</strong> i les <strong>fonts</strong> que seguixes es queden en <strong>este navegador</strong>. Si <strong>canvies de mòbil</strong> o d’ordinador, <strong>no ho trobaràs</strong>.</p>',
-  '<h3>Si encara no el pots obrir</h3>',
-  '<p>Si ací baix <strong>no tens el botó</strong>, davall et diem <strong>per què</strong> i què <strong>pots fer</strong>. <strong>Desactivar-lo</strong> o tornar-lo a activar <strong>no esborra</strong> res.</p>'
+  '<p>El que <strong>lliges</strong>, el que <strong>deses</strong> i les <strong>fonts</strong> que seguixes es queden en <strong>este navegador</strong>. Si <strong>canvies de mòbil</strong> o d’ordinador, <strong>no ho trobaràs</strong>. Per a llegir una font que afegixes tu, el servei de notícies de Sóc de Poble <strong>en rep l’adreça</strong>.</p>',
+  '<h3>Gratuït i en proves</h3>',
+  '<p>El lector és <strong>gratuït</strong> i encara està <strong>en proves</strong>. <strong>Desactivar-lo</strong> o tornar-lo a activar <strong>no esborra</strong> res.</p>'
 ];
 
+/* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720: «encesa de
+   /app/genealogia a registrePlugins.js») · L'Arbre Genealògic ja és una app
+   que s'obri en producció (apps/genealogia), i la presentació torna al
+   present amb el que fa de veres. Cada bloc, contra el codi de l'app:
+     1 · les fitxes (nom, cognoms, malnom, casa, lloc i ofici; dates exactes,
+         aproximades o estimades): textos.js, 'camp.*' i 'precisio.*';
+     2 · l'entrevista d'una sola pregunta per torn, de la casa i el mas als
+         besavis (nucli/passosEntrevista.js), i la fitxa a «Persones»;
+     3 · els quatre estats i «Cognom ≠ Parentiu» (textos.js, 'avis.estats' i
+         'entrevista.cognom');
+     4 · «Germans, padrins i testimonis», «Arxius públics» i «Prompts per a
+         copiar» (manifest.js; textos.js, 'fan.explica',
+         'arxiu.consultes.explica', 'prompts.explica' i 'avis.noFa');
+     5 · les dades al dispositiu, la còpia i les persones vives (textos.js,
+         'avis.on', 'panell.copia.text' i 'avis.vius');
+     6 · «GEDCOM i còpia» i «Prepara, no publica» (textos.js,
+         'exporta.preparaNoPublica'), la pàgina pròpia (dadesPersonals 'salut',
+         amaDelDocument, com Salut) i «Entesos» (vistes/Intercanvi.jsx,
+         PortaAvis d'AppGenealogia.jsx).
+   Cap promesa de dictat de veu ni d'arbre per a imprimir: l'app no en porta.
+   presentacioPlugins.test.js en vigila els literals citats.
+   DEROGAT (R18 · T2, P0-101) el text en futur i «Encara està en obres: el
+   botó «Obrir l’Arbre Genealògic» encara no s’obri, i la pàgina et diu per
+   què.»: hui el botó hi porta. Esborrany pendent del Mestre. */
 const GENEALOGIA = [
   '<h3>Què és l’Arbre Genealògic</h3>',
-  '<p>L’<strong>Arbre Genealògic</strong> guarda la <strong>memòria de la família</strong> sense perdre els <strong>malnoms de la casa</strong>, els <strong>oficis antics</strong> ni el nom dels <strong>masos i caserius</strong>. Pots dibuixar cada branca pas a pas, o muntar-la parlant amb una <strong>entrevista oral guiada</strong> pensada per a <strong>escoltar els majors</strong>.</p>',
-  '<h3>Com funciona l’entrevista oral guiada</h3>',
-  '<p>Comences per tu o pels <strong>avis i besavis</strong> que vulgues recordar, dient en <strong>veu alta</strong> o escrivint el <strong>nom, el malnom i el poble</strong>. L’assistent et fa <strong>tres o quatre preguntes</strong> curtes cada vegada sobre <strong>pares, germans i casaments</strong> per a <strong>estirar del fil</strong> sense atabalar.</p>',
-  '<h3>Els malnoms de la casa i els masos</h3>',
-  '<p>Al poble una persona es coneix pel <strong>malnom de la nissaga</strong> i per la <strong>casa o el mas</strong> on vivia. Per això cada fitxa separa els <strong>cognoms del registre</strong> del <strong>malnom popular</strong> i del <strong>lloc de vida</strong>, connectant les famílies que van habitar <strong>la mateixa teulada</strong>.</p>',
-  '<h3>Com es tracten els dubtes sense inventar res</h3>',
-  '<p>La <strong>memòria oral</strong> té <strong>buits i dates aproximades</strong> que ningú no ha de falsejar. L’assistent <strong>no inventa cap dada</strong> ni ompli pel seu compte el que no saps: diferencia el que és <strong>segur, aproximat o dubtós</strong> i deixa anotades les <strong>preguntes pendents</strong> per al <strong>pròxim dinar familiar</strong>.</p>',
-  '<h3>Què obtens al final de cada conversa</h3>',
-  '<p>Servix per a <strong>qualsevol casa</strong> que vulga <strong>salvar la història oral</strong> dels seus majors abans que es perda i deixar-la <strong>clara per als nets</strong>. En acabar cada conversa tens una <strong>fitxa ordenada de la branca</strong>, el <strong>mapa de parentius</strong> i una <strong>llista de buits</strong> per continuar investigant.</p>',
-  '<h3>On es queden les dades i què ix d’ací</h3>',
-  '<p>Tot es guarda <strong>en este dispositiu</strong> i <strong>no s’envia enlloc</strong> sense el teu permís, i quan vulgues pots traure un <strong>fitxer GEDCOM</strong> o un <strong>arbre per a imprimir</strong>. Encara està <strong>en proves</strong>: si ací no es pot obrir, en lloc del botó <strong>«Obrir l’Arbre Genealògic»</strong> la pàgina et diu <strong>per què</strong> i què pots fer.</p>'
+  '<p>L’<strong>Arbre Genealògic</strong> és un quadern per a <strong>recollir la memòria de la família</strong> i ordenar-la en un <strong>arbre</strong>. Guarda els <strong>noms i els cognoms</strong>, el <strong>malnom de la casa</strong>, el <strong>mas o el poble</strong> i l’ofici de cada persona, amb dates <strong>exactes o aproximades</strong>, perquè els nets sàpien d’on venen.</p>',
+  '<h3>Una pregunta cada vegada</h3>',
+  '<p>Primer <strong>crees un arbre</strong> i, a l’<strong>«Entrevista»</strong>, respons <strong>una sola pregunta</strong> cada vegada: el <strong>malnom de la casa</strong>, el mas o el poble, tu i els teus germans, els pares, els <strong>quatre iaios</strong> i els besavis que recordes. El que no és obligatori, <strong>ho pots saltar</strong>, i a <strong>«Persones»</strong> completes cada fitxa quan vulgues.</p>',
+  '<h3>Què és segur i què és memòria</h3>',
+  '<p>Cada fitxa i cada vincle diu <strong>com ho saps</strong>: <strong>[CONFIRMAT]</strong> si hi ha un document, <strong>[APROXIMAT]</strong> si ho diu la memòria de la família, <strong>[FALTA CONFIRMAR]</strong> si encara no hi ha prova i <strong>[CONTRADICCIÓ]</strong> si les dates no lliguen. L’eina <strong>no inventa cap dada</strong>, i compartir cognom no vol dir ser família: <strong>mai no ajunta ningú</strong> pel cognom.</p>',
+  '<h3>Germans, padrins i arxius</h3>',
+  '<p>A <strong>«Germans, padrins i testimonis»</strong> veus la <strong>gent del voltant</strong> de cada persona: els padrins i els testimonis solen ser família o veïns de la casa. A <strong>«Arxius públics»</strong> trobes on buscar i les <strong>consultes per a copiar</strong> al cercador de cada arxiu, i a <strong>«Prompts per a copiar»</strong>, un text per al teu assistent. <strong>No cerca als arxius</strong> ni parla amb cap intel·ligència artificial: <strong>ho copies tu</strong>.</p>',
+  '<h3>On es queden les dades</h3>',
+  '<p>Les dades <strong>es queden en este dispositiu</strong>, dins d’este navegador, i <strong>no s’envien enlloc</strong>: no cal cap compte. Si el navegador les esborra, <strong>es perden</strong>, i per això l’eina et recorda que <strong>faces una còpia</strong> de tant en tant. Les <strong>persones que poden estar vives</strong> ixen com <strong>«Persona viva»</strong> a les consultes, als prompts i als fitxers, si no marques la casella amb el seu consentiment.</p>',
+  '<h3>Els fitxers i on s’obri</h3>',
+  '<p>A <strong>«GEDCOM i còpia»</strong> pots <strong>exportar l’arbre en GEDCOM</strong>, el format dels programes de genealogia, o en una còpia per a tornar-la a carregar ací, i també importar-ne un. <strong>«Prepara, no publica»</strong>: el fitxer no es puja enlloc, i tu decidixes on el guardes i amb qui el compartixes. Per la mena de dades que guarda, l’Arbre Genealògic només s’obri a la <strong>pàgina pròpia</strong> de Sóc de Poble, mai dins d’una altra web, i la primera vegada et demana que lliges l’avís i digues <strong>«Entesos»</strong>. Encara està <strong>en proves</strong>: a la pàgina pròpia, el botó <strong>«Obrir l’Arbre Genealògic»</strong> t’hi porta.</p>'
+];
+
+/* P0-114 (ordre del Mestre, 261111, punt 3: «presentar també les sis
+   seccions didàctiques <h3> + <p> a presentacioPlugins.js per a … avisador»)
+   · Veritat nua, amb les paraules de la seua pàgina (pages/textosAvisador.js,
+   `intro`, `limitacions`, `descansMaxim` i `activa`) i del seu servei
+   (services/avisador.js: HORES_AVISADOR, de quatre a vint-i-quatre hores;
+   d'una a tres persones amb conversa privada; el descans de com a molt dotze
+   hores; components/salut/AvisadorEnSessio.jsx: uns minuts de gràcia en
+   tornar). Cap promesa de servidor ni de sincronització: els ajustos viuen en
+   este dispositiu (avisadorPreferencies.js) i l'únic que ix és el missatge del
+   Xat a les persones triades. «App» no, que no és paraula del poble
+   (presentacioPlugins.test.js): «Sóc de Poble». Esborrany pendent del
+   Mestre. */
+const AVISADOR = [
+  '<h3>Què és l’Avisador</h3>',
+  '<p><strong>L’Avisador</strong> és un <strong>avís veïnal</strong> per a qui viu a soles o vol que algú <strong>estiga pendent</strong>. Si passen les hores que has triat <strong>sense activitat</strong> a Sóc de Poble, envia pel <strong>Xat</strong> un missatge a les teues <strong>persones de confiança</strong> perquè es posen en contacte amb tu.</p>',
+  '<h3>Com es posa en marxa</h3>',
+  '<p>A la pàgina de l’Avisador tries <strong>quantes hores</strong> poden passar <strong>sense activitat</strong>: quatre, huit, dotze o vint-i-quatre. Després tries <strong>d’una a tres persones</strong> amb qui ja tens una <strong>conversa privada</strong> al <strong>Xat</strong>, lliges <strong>les condicions</strong> i prems <strong>«Activa l’Avisador»</strong>.</p>',
+  '<h3>El descans de la nit</h3>',
+  '<p>Per a no avisar <strong>mentre dorms</strong>, marques <strong>l’inici i la fi</strong> del <strong>descans nocturn</strong>. Durant eixe temps el comptador <strong>es pausa</strong>, i el descans pot durar com a molt <strong>dotze hores</strong>.</p>',
+  '<h3>Quan funciona i quan no</h3>',
+  '<p>Només funciona amb la <strong>sessió personal oberta</strong>, mentre Sóc de Poble <strong>pot executar-se</strong> i té <strong>connexió al Xat</strong>. Si Sóc de Poble està <strong>tancat o suspés</strong>, si el dispositiu està <strong>apagat</strong> o si el Xat <strong>no està disponible</strong>, l’avís <strong>pot no arribar</strong>. En tornar a obrir-lo, espera <strong>uns minuts</strong> abans d’avisar.</p>',
+  '<h3>On es queden els ajustos</h3>',
+  '<p>Els <strong>ajustos</strong> es guarden <strong>en este dispositiu</strong>, dins d’este <strong>navegador</strong>, i <strong>no passen a soles</strong> a un altre mòbil. El <strong>missatge d’avís</strong> viatja pel <strong>Xat de Sóc de Poble</strong>, com qualsevol altre missatge, i només el reben <strong>les persones que tries</strong>.</p>',
+  '<h3>Què no fa</h3>',
+  '<p>L’Avisador <strong>no és teleassistència</strong> ni un <strong>servei d’emergències</strong>: no truca a ningú i <strong>no sap on estàs</strong>. Per a una emergència, <strong>telefona al 112</strong>. Encara està <strong>en proves</strong>: el botó <strong>«Obrir l’Avisador»</strong> t’hi porta.</p>'
 ];
 
 /** Sis blocs didàctics per eina, sense duplicar els títols de la pàgina. */
@@ -174,7 +235,8 @@ export const PRESENTACIO_PLUGINS = Object.freeze({
   salut: SALUT.join('\n'),
   genealogia: GENEALOGIA.join('\n'),
   gestoria: GESTORIA.join('\n'),
-  rss: RSS.join('\n')
+  rss: RSS.join('\n'),
+  avisador: AVISADOR.join('\n')
 });
 
 /** L'HTML de la presentació d'un plugin (només claus pròpies), o null. */

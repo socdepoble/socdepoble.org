@@ -240,7 +240,8 @@ test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre
   // the previous arithmetic caused42 actual routes to be compared with41.
   const esperadesPerSuperficie = {
     pagines: ['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge','notes','wikidepoble','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals'].map(id=>`/page/${id}`),
-    plugins: ['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv','genealogia'].map(id=>`/plugin/${id}`),
+    /* R21 (COMMIT 1, cadena R18-R20) · L'Avisador entra al registre de plugins (/plugin/avisador). */
+    plugins: ['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv','genealogia','avisador'].map(id=>`/plugin/${id}`),
     consola: ['','/pols','/explorador','/fluxos','/calendari','/inventari','/entrades','/agents','/actors','/salut','/botigues','/govern/requeriments','/govern/balanc','/govern/certificacio','/govern/comunicacio'].map(id=>`/consola${id}`),
     editorials: ['/disseny','/wikidepoble'],
     mur: ['/mur/manifest-de-poble','/mur/noves-tecnologies-aplicades-a-la-cultura-rural']

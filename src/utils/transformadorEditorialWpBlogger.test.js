@@ -7,6 +7,9 @@ import {
   lligArticlesImportatsAmbRevisio,
   desaRevisioArticleImportat,
   estadistiquesRevisioImportacio,
+  desaDestinacioArticleImportat,
+  fontReferenciaArticleImportat,
+  LIMIT_BYTES_IMPORTACIO_EDITORIAL,
 } from './transformadorEditorialWpBlogger.js';
 
 describe('transformadorEditorialWpBlogger (AH-28 / IDEA-88)', () => {
@@ -111,7 +114,75 @@ describe('transformadorEditorialWpBlogger (AH-28 / IDEA-88)', () => {
 
     const stats = estadistiquesRevisioImportacio();
     expect(stats.total).toBe(425);
-    expect(stats.aprovats).toBe(1);
-    expect(stats.pendents).toBe(424);
+    expect(stats.aprovats).toBe(21);
+    expect(stats.pendents).toBe(404);
+  });
+
+  test('la destinació es desa en el mateix registre i les revisions de sempre la conserven', () => {
+    const article = lligArticlesImportatsAmbRevisio().find(a => a.wp_id === 619);
+    expect(article.destinacio_workspace).toBe('arbres-monumentals');
+    for (const destinacio of ['mur', 'arbres-monumentals', 'herbari', 'receptes', 'pagina']) {
+      desaDestinacioArticleImportat(619, destinacio);
+      desaRevisioArticleImportat(619, { estat: 'amb_observacions', nota: 'Revisió del mateix original' });
+      const revisat = lligArticlesImportatsAmbRevisio().find(a => a.wp_id === 619);
+      expect(revisat).toMatchObject({ wp_id: 619, destinacio_workspace: destinacio,
+        estat_revisio: 'amb_observacions', nota_revisio: 'Revisió del mateix original' });
+      expect(fontReferenciaArticleImportat(revisat)).toEqual({ font: 'importacio-wp', id: '619',
+        title: article.title, subtitle: 'socdepoble.net · WP #619', lead: article.date });
+    }
+  });
+
+  test('les destinacions importades només admeten les cinc claus primitives', () => {
+    for (const destinacio of [null, {}, [], 'constructor', 'notes', 'https://extern.test']) {
+      expect(() => desaDestinacioArticleImportat(619, destinacio)).toThrow(TypeError);
+    }
+    expect(() => desaDestinacioArticleImportat('__proto__', 'mur')).toThrow(TypeError);
+    const bloquejat = { getItem: () => null, setItem: () => { throw new Error('quota'); } };
+    expect(() => desaDestinacioArticleImportat(619, 'herbari', bloquejat)).toThrow('No s’ha pogut desar');
+    const contaminat = { getItem: () => JSON.stringify({ destinacions: { 619: 'constructor', 620: {}, 621: 'receptes' } }) };
+    expect(lligArticlesImportatsAmbRevisio(contaminat).find(a => a.wp_id === 619).destinacio_workspace).toBe('arbres-monumentals');
+  });
+
+  test('el transformador conserva la destinació vàlida i usa els valors inicials del format', () => {
+    expect(transformaPostWpRestApi({ id: 7, type: 'page', title: 'Una pàgina' }).destinacio_workspace).toBe('pagina');
+    expect(transformaPostWpRestApi({ id: 7, title: 'Un article', destinacio_workspace: 'herbari' }).destinacio_workspace).toBe('herbari');
+    expect(transformaPostWpRestApi({ id: 7, title: 'Un article', destinacio_workspace: {} }).destinacio_workspace).toBe('mur');
+    const wxr = '<rss><channel><item><title>Arbre</title><wp:post_type>page</wp:post_type></item></channel></rss>';
+    expect(parsejaWordPressWxrXml(wxr)[0].destinacio_workspace).toBe('pagina');
+    expect(parsejaWordPressWxrXml(wxr, { destinacio_workspace: 'arbres-monumentals' })[0].destinacio_workspace).toBe('arbres-monumentals');
+    const atom = '<feed><entry><title>Arbre</title><content>Text</content></entry></feed>';
+    expect(parsejaBloggerAtomXml(atom, { destinacio_workspace: 'receptes' })[0].destinacio_workspace).toBe('receptes');
+  });
+
+  test('els parsers limiten bytes UTF-8 abans de buscar etiquetes i recorren obertures sense tancar', () => {
+    const massaBytes = 'é'.repeat(LIMIT_BYTES_IMPORTACIO_EDITORIAL / 2 + 1);
+    for (const parseja of [parsejaWordPressWxrXml, parsejaBloggerAtomXml]) {
+      expect(() => parseja(massaBytes)).toThrow('8 MiB');
+    }
+    expect(parsejaWordPressWxrXml('<item>'.repeat(50000))).toEqual([]);
+    expect(parsejaBloggerAtomXml('<entry>'.repeat(50000))).toEqual([]);
+    expect(transformaHtmlEditorialPedraSeca('<img '.repeat(50000)).totalImatges).toBe(0);
+    expect(transformaHtmlEditorialPedraSeca('<iframe src="https://segur.test">'.repeat(10000)).totalImatges).toBe(0);
+  });
+
+  test('els atributs XML conserven cites i categories quan canvia l’ordre o hi ha > entre cometes', () => {
+    const wxr = '<rss><item><title><![CDATA[Arbre & poble]]></title><wp:post_name>arbre</wp:post_name>'
+      + '<category nicename="poble" domain="category"><![CDATA[La Torre]]></category>'
+      + '<content:encoded><![CDATA[<p>Text amb <img alt="a > b" src="https://socdepoble.net/a.jpg"></p>]]></content:encoded></item></rss>';
+    const [article] = parsejaWordPressWxrXml(wxr);
+    expect(article.title).toBe('Arbre & poble');
+    expect(article.poblesDetectats).toEqual(['La Torre']);
+    expect(article.htmlNet).toContain('alt="a > b"');
+    const atom = '<feed><entry data-prova="a > b"><title>Prova</title><link href="https://poble.blogspot.com/prova.html" rel="alternate"/>'
+      + '<category term="Patrimoni"/><content>&lt;p&gt;Text&lt;/p&gt;</content></entry></feed>';
+    expect(parsejaBloggerAtomXml(atom)[0]).toMatchObject({ slug: 'prova', etiquetes: ['Patrimoni'], htmlNet: '<p>Text</p>' });
+  });
+
+  test('els índexs Unicode i els tancaments literals dins de CDATA no tallen el document', () => {
+    const xml = '<rss>İrem<item><title><![CDATA[İrem i l’arbre]]></title><wp:post_name>arbre</wp:post_name>'
+      + '<content:encoded><![CDATA[<p>Exemple literal: &lt;/item&gt; i </content:encoded>.</p>]]></content:encoded></item></rss>';
+    const [article] = parsejaWordPressWxrXml(xml);
+    expect(article.title).toBe('İrem i l’arbre');
+    expect(article.htmlNet).toContain('Exemple literal: &lt;/item&gt; i </content:encoded>.');
   });
 });

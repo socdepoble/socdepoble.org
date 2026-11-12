@@ -35,7 +35,7 @@ import { Avatar } from '../../../components/PedraSeca/index.js';
 import { rutaDEntrada } from '../../../config/rutaEntrada.js';
 import { fitxes as fitxesDeConsulta, plega } from '../../search/indexCerca.js';
 import FilaPersona from './FilaPersona.jsx';
-import { contactesDAjuda, senseContacteDeLaIAIA } from '../contactesAjuda.js';
+import { contactesDAjuda, esContacteDeLaIAIA, senseContacteDeLaIAIA } from '../contactesAjuda.js';
 
 const CAP = Object.freeze([]);
 const idDe = (membre) => String(membre?.usuari_id ?? membre?.usuariId ?? '');
@@ -84,7 +84,7 @@ export default function DialegNovaConversa(props) {
 function Contingut({
   t, cercaMembres, contactesFrequents = CAP, joId = null, joNom = null, filPersonal = null,
   onTriaMembre, obrintAmb = null, onObriFil, onVes, campRef, errorObrir = null, senseSessio = false, tornar,
-  senseIAIA = false
+  senseIAIA = false, teSessionsIAIA = false
 }) {
   const [terme, setTerme] = useState('');
   const [perId, setPerId] = useState(() => new Map());
@@ -143,8 +143,13 @@ function Contingut({
      entre els contactes d'ajuda ni en el padró que es cerca. */
   const seccions = useMemo(() => {
     const padro = senseIAIA ? senseContacteDeLaIAIA([...perId.values()]) : [...perId.values()];
-    const candidates = cercant ? padro : contactesDAjuda(padro, { senseIAIA });
-    const persones = candidates
+    const ajudes = contactesDAjuda(padro, { senseIAIA });
+    const candidates = cercant ? padro : ajudes;
+    const iaia = teSessionsIAIA && ajudes.find(esContacteDeLaIAIA);
+    const disponibles = iaia
+      ? [...senseContacteDeLaIAIA(candidates), { ...iaia, noDisponible: false, fil_id: null }]
+      : candidates;
+    const persones = disponibles
       .filter((m) => idDe(m) !== jo && typeof m.nom === 'string' && m.nom.trim() && casa(m.nom, llistaFitxes))
       .sort((a, b) => a.nom.localeCompare(b.nom, 'ca'));
     const perLletra = new Map();
@@ -154,7 +159,7 @@ function Contingut({
       perLletra.get(lletra).push(membre);
     }
     return [...perLletra.entries()];
-  }, [perId, jo, llistaFitxes, cercant, senseIAIA]);
+  }, [perId, jo, llistaFitxes, cercant, senseIAIA, teSessionsIAIA]);
 
   const nomJo = joNom || t('section.xat.nou.jo', 'Jo');
   const etiquetaTu = t('section.xat.nou.tu', '{nom} (Tu)').replace('{nom}', nomJo);

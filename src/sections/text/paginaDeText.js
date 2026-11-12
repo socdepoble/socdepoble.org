@@ -66,7 +66,7 @@ export function propsDePaginaDeText(page, pageKey, t) {
       { text: String(pageKey).toUpperCase(), className: 'sdp-badge-system' },
       { text: t?.('section.text.page', 'Pàgina') || 'Pàgina', className: 'sdp-badge-category' }
     ],
-    copyright: COPYRIGHT_SDP,
+    copyright: (typeof page.copyright === 'string' && page.copyright) || COPYRIGHT_SDP,
     /* T51 · la data real de la pàgina (editorial.js, regla del Mestre): la
        del seu copy (PAGE_COPY, o la pàgina del contingut core). */
     ...dataHoraDeBarra({ creat: page.date })

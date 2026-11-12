@@ -9,9 +9,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { delVal } from '../../config/storage.js';
 import { muntaPlataforma } from './__fixtures__/munta.jsx';
-import { manifestDeProva } from './__fixtures__/manifests.js';
+import { manifestDeProva, manifestExternDeProva } from './__fixtures__/manifests.js';
 import { CLAU_PREFERENCIES, _reiniciaPreferencies } from './preferenciesApps.js';
+import { ESTATS_APP } from './interruptors.js';
+import { ETIQUETA_ESTAT, PortalApps, appsEnProves, textBetaOberta, textDelMotiu } from './PortalApps.jsx';
 import { creaRegistre } from './registreApps.js';
+import {
+  CLASSE_BETA_OBERTA, ESTAT_PROVES, PLUGINS, TEXTOS_BETA_OBERTA, appDelPlugin
+} from '../../sections/plugins/registrePlugins.js';
 /* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil, ja no a /projecte. */
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
@@ -82,5 +87,115 @@ describe('el portal /app és una Pàgina Universal de sistema', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tornar arrere' }));
     expect(enrere).toHaveBeenCalledTimes(1);
     enrere.mockRestore();
+  });
+
+  test('AH-R17-09 · per a superadmin mostra l’accés directe al grup de verificadors i les botigues oficials', () => {
+    const { container } = muntaPlataforma('/app', {
+      registre: registre(),
+      fills: <PortalApps esSuperadmin />
+    });
+    const panell = container.querySelector('section.sdp-app-portal__testers');
+    expect(panell).not.toBeNull();
+    expect(within(panell).getByRole('heading', { level: 2, name: 'Gestió de verificadors i botigues' })).toBeTruthy();
+    expect(within(panell).getByRole('link', { name: /socdepoble-testers/i }).getAttribute('href'))
+      .toBe('https://groups.google.com/g/socdepoble-testers');
+    expect(within(panell).getByRole('link', { name: /Proves a Google Play/i }).getAttribute('href'))
+      .toBe('https://play.google.com/apps/testing/org.socdepoble.app');
+    expect(within(panell).getByRole('link', { name: /App Store/i }).getAttribute('href'))
+      .toBe('https://apps.apple.com/es/app/soc-de-poble/id6826441844');
+    expect(within(panell).getByRole('link', { name: /Tauler de botigues/i }).getAttribute('href'))
+      .toBe('/admin');
+    /* El panell va davant de la llista de les apps, dins del portal. */
+    const llista = container.querySelector('.sdp-app-portal > ul.sdp-app-portal__llista');
+    expect(panell.compareDocumentPosition(llista) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  /* Arbitratge R18 (P1) · L'accés és exclusiu de la superadministració: un
+     visitant, o qualsevol sessió sense el booleà, no veu ni el panell ni el grup. */
+  test('AH-R17-09 · sense superadmin no hi ha panell de verificadors', () => {
+    const { container } = muntaPlataforma('/app', { registre: registre(), fills: <PortalApps /> });
+    expect(container.querySelector('section.sdp-app-portal__testers')).toBeNull();
+    expect(container.textContent).not.toContain('socdepoble-testers');
+    expect(container.querySelector('a[href="/admin"]')).toBeNull();
+  });
+
+  test('AH-R17-09 · la ruta /app sense sessió (RutaApps) tampoc no el pinta', () => {
+    const { container } = muntaPlataforma('/app', { registre: registre() });
+    expect(container.querySelector('.sdp-app-portal > ul.sdp-app-portal__llista')).not.toBeNull();
+    expect(container.querySelector('section.sdp-app-portal__testers')).toBeNull();
+    expect(container.textContent).not.toContain('socdepoble-testers');
+  });
+});
+
+/* P0-113 (ordre del Mestre, 261111) · Tot el sistema és 100% gratuït i lliure:
+   el portal no té cap estat, cap motiu ni cap cartell de pagament. */
+describe('P0-113 · cap cartell de pagament al portal', () => {
+  test('una etiqueta per a cada estat de la plataforma, i cap de pagament', () => {
+    expect(Object.keys(ETIQUETA_ESTAT).sort()).toEqual([...ESTATS_APP].sort());
+    expect(Object.values(ETIQUETA_ESTAT).join(' ')).not.toMatch(/premium/i);
+    expect(textDelMotiu('sense-dret')).toBe('');
+  });
+
+  test('el portal no diu enlloc «Premium», «pagament» ni «es paga»', () => {
+    const { container } = muntaPlataforma('/app', {
+      registre: creaRegistre({ internes: [manifestDeProva({ carrega }), manifestDeProva({ id: 'tancada', titol: { ca: 'Tancada' }, actiuPerDefecte: false })] })
+    });
+    expect(container.querySelectorAll('.sdp-app-fitxa')).toHaveLength(2);
+    expect(container.textContent).not.toMatch(/premium|pagament|es paga/i);
+  });
+});
+
+/* P0-113 (ordre del Mestre, 261111) i R18 · T2 (P0-101) · La insígnia «En proves ·
+   Beta oberta» del Panell, també a les fitxes del portal: només per a les apps on
+   porta un plugin que el registre marca en proves. El registre és l'única font. */
+describe('P0-113 · la insígnia «En proves · Beta oberta» al portal', () => {
+  test('appsEnProves: els ids d’app dels plugins en proves, i res més', () => {
+    const plugins = [
+      { id: 'a', obrir: '/app/bar', estat: ESTAT_PROVES },
+      { id: 'b', obrir: '/app/nevera/casa', estat: ESTAT_PROVES },
+      { id: 'c', obrir: '/app/salut', estat: null },
+      { id: 'd', obrir: '/mapa', estat: ESTAT_PROVES },
+      { id: 'e', obrir: null, estat: ESTAT_PROVES },
+      { id: 'f', obrir: '/app/bar', estat: ESTAT_PROVES }
+    ];
+    expect(appsEnProves(plugins)).toEqual(['bar', 'nevera']);
+    expect(Object.isFrozen(appsEnProves(plugins))).toBe(true);
+    expect(appsEnProves()).toEqual([...new Set(PLUGINS.filter((p) => p.estat === ESTAT_PROVES).map(appDelPlugin).filter(Boolean))]);
+  });
+
+  test('textBetaOberta: la llengua curta de la interfície i, si no, el valencià', () => {
+    expect(textBetaOberta('es-ES')).toBe(TEXTOS_BETA_OBERTA.es);
+    expect(textBetaOberta('eu')).toBe(TEXTOS_BETA_OBERTA.eu);
+    expect(textBetaOberta('fr')).toBe(TEXTOS_BETA_OBERTA.ca);
+    expect(textBetaOberta(undefined)).toBe('En proves · Beta oberta');
+    /* PortalApps.jsx pinta la classe com a literal (qualitat.test.js no admet className={variable}): ha de ser la del registre. */
+    expect(CLASSE_BETA_OBERTA).toBe('sdp-insignia-beta-oberta');
+  });
+
+  test('una fitxa porta la insígnia si i només si el registre de plugins marca la seua app en proves', () => {
+    const ids = ['bar', 'nevera', 'salut', 'lector', 'gestoria'];
+    const { container } = muntaPlataforma('/app', {
+      registre: creaRegistre({ internes: ids.map((id) => manifestDeProva({ id, titol: { ca: `App ${id}` }, carrega })) })
+    });
+    const enProves = appsEnProves();
+    for (const id of ids) {
+      const insignia = container.querySelector(`li.sdp-app-fitxa[data-sdp-app="${id}"] .sdp-app-fitxa__estat > span.${CLASSE_BETA_OBERTA}`);
+      if (enProves.includes(id)) {
+        expect(insignia, id).not.toBeNull();
+        expect(insignia.textContent, id).toBe('En proves · Beta oberta');
+        expect(insignia.hasAttribute('href'), id).toBe(false);
+      } else {
+        expect(insignia, id).toBeNull();
+      }
+    }
+    expect(carrega).not.toHaveBeenCalled();
+  });
+
+  test('una app de l’amfitrió amb el mateix nom no és cap eina del registre: sense insígnia', () => {
+    const registreBuit = creaRegistre({ internes: [] });
+    expect(registreBuit.registraAppExterna(manifestExternDeProva({ id: 'bar', element: 'sollutia-bar' })).ok).toBe(true);
+    const { container } = muntaPlataforma('/app', { registre: registreBuit });
+    expect(container.querySelector('li.sdp-app-fitxa[data-sdp-app="bar"]')).not.toBeNull();
+    expect(container.querySelector(`.${CLASSE_BETA_OBERTA}`)).toBeNull();
   });
 });

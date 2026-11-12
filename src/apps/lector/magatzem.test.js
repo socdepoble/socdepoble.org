@@ -140,3 +140,81 @@ describe('les fonts personals, en un registre a banda', () => {
     await expect(b.actualitzaPersonals((registre) => ({ ...registre, fonts: [] }))).rejects.toMatchObject({ codi: 'NOMES_LECTURA' });
   });
 });
+
+test('una còpia del producte conserva les fonts i lectures locals i és repetible', async () => {
+  const origen = navegador().pestanya();
+  const desti = navegador().pestanya();
+  const font = validaFontPersonal({ url: 'https://example.org/feed', nom: 'Font de prova' }).font;
+  const antiga = await desti.llegix();
+  await origen.actualitzaPersonals((actual) => afigPersonal(actual, font).registre);
+  await origen.desa(marcaLlegit(estatInicial(), 'veu-1'));
+  const text = await origen.exportaCopia();
+
+  await desti.desa(marcaLlegit(antiga, 'veu-2'), antiga);
+  await expect(desti.desa(marcaLlegit(antiga, 'veu-3'), antiga)).rejects.toMatchObject({ codi: 'CONFLICTE' });
+  await desti.importaCopia(text);
+  await desti.importaCopia(text);
+  expect((await desti.llegix()).llegits).toEqual(['veu-2', 'veu-1']);
+  expect((await desti.llegixPersonals()).fonts).toEqual([font]);
+
+  const incompleta = JSON.stringify({ ...JSON.parse(text), personals: { fonts: [{ url: 'javascript:alert(1)', nom: 'X' }] } });
+  const abans = await desti.exportaCopia();
+  await expect(desti.importaCopia(incompleta)).rejects.toMatchObject({ codi: 'COPIA_INVALIDA' });
+  expect(await desti.exportaCopia()).toBe(abans);
+});
+
+test('l’OPML importa les subscripcions, és repetible i conserva lectures i notícies desades', async () => {
+  const m = navegador().pestanya();
+  const estat = commutaDespres(marcaLlegit(estatInicial(), 'veu-2'), resum);
+  await m.desa(estat);
+  const xml = '<?xml version="1.0"?><opml version="2.0"><head><title>Fonts de prova</title></head><body>'
+    + '<outline text="Carpeta"><outline text="Font nova" type="rss" xmlUrl="https://example.org/rss?a=1&amp;b=2"/></outline>'
+    + '</body></opml>';
+  for (const correcte of [
+    xml, xml.replace('version="1.0"', 'version="1.0" encoding="UTF-8" standalone="yes"'),
+    xml.replace('text="Font nova"', 'text="Font nova" xmlns:ex="urn:prova" ex:color="verd"')
+  ]) await m.importaCopia(correcte);
+  expect(await m.llegix()).toEqual(estat);
+  expect((await m.llegixPersonals()).fonts).toEqual([
+    validaFontPersonal({ nom: 'Font nova', url: 'https://example.org/rss?a=1&b=2' }).font
+  ]);
+});
+
+test('un OPML truncat, malformat, amb DTD, duplicats o adreces invàlides no canvia cap registre', async () => {
+  const m = navegador().pestanya();
+  await m.desa(marcaLlegit(estatInicial(), 'veu-2'));
+  const outline = '<outline text="Font nova" type="rss" xmlUrl="https://example.org/rss"/>';
+  const opml = (contingut) => `<opml version="2.0"><body>${contingut}</body></opml>`;
+  const correcte = opml(outline);
+  const abans = await m.exportaCopia();
+  const corruptes = [
+    correcte.slice(0, -1), correcte.slice(0, correcte.indexOf('xmlUrl') + 12),
+    opml(`${outline}${outline}`), opml(outline.replace('https://example.org/rss', 'javascript:alert(1)')),
+    opml(outline.replace('https://example.org/rss', ['https://usuari:secret', 'example.org/rss'].join('@'))),
+    opml(outline.replace('text="Font nova"', 'text=Font')),
+    opml(outline.replace('text="Font nova"', 'text="Font nova" text="Altra"')),
+    opml(outline.replace('text="Font nova"', 'text="Font &inexistent;"')),
+    opml(outline.replace('text="Font nova"', 'text="Font &#0;"')),
+    opml(outline.replace('type="rss" ', 'type="rss"')),
+    opml(outline.replace('text="Font nova"', 'text="Font <nova"')),
+    `<!DOCTYPE opml [<!ENTITY prova "font">]>${correcte}`,
+    `${correcte}${correcte}`, `${correcte}<!--`, correcte.replace('</body>', '</altre>'),
+    opml(`${outline}<!-- x--y -->`), opml(`${outline}<!-- x--->`), opml(`${outline}]]>`),
+    opml(outline.replace('Font nova', `Font ${String.fromCharCode(0xD800)}`)),
+    correcte.replace('<body>', '<x:body>').replace('</body>', '</x:body>'),
+    opml(outline.replace('outline ', 'x:y:outline ')),
+    opml(outline.replace('outline ', 'outline x:extra="valor" ')),
+    correcte.replace('<opml ', `<opml${String.fromCharCode(0xA0)}`),
+    `${String.fromCharCode(0xA0)}${correcte}`,
+    `<?xml nonsense?>${correcte}`, `${correcte}<?xml version="1.0"?>`,
+    `<?xml version="1.0"?><?xml version="1.0"?>${correcte}`,
+    opml(`${outline}<!-- ${String.fromCharCode(1)} -->`),
+    opml(outline.replace('outline ', 'outline xmlns:xml="urn:incorrecte" ')),
+    opml(outline.replace('outline ', 'outline xmlns:a="urn:prova" xmlns:b="urn:prova" a:x="1" b:x="2" ')),
+    opml(Array.from({ length: 101 }, (_, i) => outline.replace('example.org/rss', `example.org/${i}`)).join(''))
+  ];
+  for (const xml of corruptes) {
+    await expect(m.importaCopia(xml)).rejects.toMatchObject({ codi: 'COPIA_INVALIDA' });
+    expect(await m.exportaCopia()).toBe(abans);
+  }
+});

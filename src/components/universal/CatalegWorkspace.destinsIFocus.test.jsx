@@ -39,11 +39,11 @@ function mount({ ruta = '/page/herbari', rutaInicial = ruta, ...props } = {}) {
 /* El doble requestAnimationFrame del gestor de la fitxa. */
 const marcs = () => act(() => new Promise(resolve => setTimeout(resolve, 80)));
 const titolDeLaFitxa = container => container.querySelector('.sdp-cataleg-workspace__fitxa h3');
-const overlay = (container, id) => container.querySelector(`#app-grid-list .sp-card-link-overlay[data-element="${id}"]`);
+const overlay = (container, id) => container.querySelector(`#app-grid-list [data-element="${id}"]`);
 const opcions = (etiqueta = 'Pàgina de destinació') => [...screen.getByLabelText(etiqueta).querySelectorAll('option')].map(o => [o.value, o.textContent]);
 
 test('producció sense apps: cap destí al Rebost ni al Bar, ni el nom del negoci', () => {
-  vi.stubEnv('DEV', false); vi.stubEnv('VITE_SDP_APP_NEVERA', ''); vi.stubEnv('VITE_SDP_APP_BAR', '');
+  vi.stubEnv('DEV', false); vi.stubEnv('VITE_SDP_APP_NEVERA', '0'); vi.stubEnv('VITE_SDP_APP_BAR', '0');
   mount({ font: 'herbari', destiPublicacio: 'herbari', permetreEdicioDestins: true, rutaInicial: '/page/herbari?fitxa=planta-1' });
   expect(opcions()).toEqual([['/page/herbari', 'Herbari'], ['/page/banc-de-llavors', 'Banc de llavors'], ['/page/receptes', 'Receptes']]);
   expect(screen.queryByRole('checkbox', { name: 'Rebost privat' })).toBeNull();
@@ -93,14 +93,14 @@ test('una fitxa privada no naix amb cap destí públic triat', () => {
 
 test('la vista triada persistix per superfície després de tornar a muntar', () => {
   const primer = mount();
-  fireEvent.click(screen.getByRole('button', { name: 'Rajola quadrada', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Quadrícula 2×2', exact: true }));
   primer.unmount();
   mount();
-  expect(screen.getByRole('button', { name: 'Rajola quadrada', exact: true }).getAttribute('aria-pressed')).toBe('true');
-  expect(screen.getByRole('button', { name: 'Llista', exact: true }).getAttribute('aria-pressed')).toBe('false');
+  expect(screen.getByRole('button', { name: 'Quadrícula 2×2', exact: true }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getByRole('button', { name: 'Canònica', exact: true }).getAttribute('aria-pressed')).toBe('false');
   cleanup();
   render(<MemoryRouter rutaInicial="/page/herbari"><CatalegWorkspace id="una-altra-superficie" ruta="/page/herbari" model={model} renderDetail={detall} /></MemoryRouter>);
-  expect(screen.getByRole('button', { name: 'Llista', exact: true }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getByRole('button', { name: 'Canònica', exact: true }).getAttribute('aria-pressed')).toBe('true');
 });
 
 test('triar una fitxa hi porta el focus; Tancar el torna a l’element de la llista', async () => {

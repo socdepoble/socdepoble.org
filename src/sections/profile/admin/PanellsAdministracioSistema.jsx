@@ -593,6 +593,9 @@ function AssistentBotigues() {
                 {canalActiu.verificadors.passos.map((pas) => <li key={pas}>{pas}</li>)}
               </ol>
               <div className="sdp-admin-actions-inline">
+                <a className="sdp-boto sdp-boto--primari" href="https://groups.google.com/g/socdepoble-testers" target="_blank" rel="noopener noreferrer">
+                  Obrir el grup de Google Groups (socdepoble-testers)
+                </a>
                 <a className="sdp-boto sdp-boto--secundari" href={canalActiu.verificadors.adreca} target="_blank" rel="noopener noreferrer">
                   Obrir la pàgina dels verificadors (pas 1)
                 </a>
@@ -605,6 +608,7 @@ function AssistentBotigues() {
           </ul>
           <div className="sdp-admin-actions-inline">
             <Link className="sdp-boto sdp-boto--primari" to="/descarregues">Obrir la guia pública (/descarregues)</Link>
+            <Link className="sdp-boto sdp-boto--secundari" to="/app">Obrir el portal d’apps (/app)</Link>
             <Link className="sdp-boto sdp-boto--secundari" to="/xat">Obrir el xat (/xat)</Link>
           </div>
         </div>

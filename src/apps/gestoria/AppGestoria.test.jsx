@@ -6,7 +6,9 @@
    que s'obri sola, sense la Wiki al voltant; que els nou mòduls i Aprendre
    s'hi arriben des de l'única barra de l'app, sense rail intern; que la closca
    conserva la memòria entre mòduls; que la porta dels Tractors porta a la Wiki, sempre a la
-   mateixa ruta fixa; i que fora de desenvolupament no s’obri ni carregue res.
+   mateixa ruta fixa; i que fora de desenvolupament s’obri (P0-113, ordre del
+   Mestre, 261111: eina gratuïta oberta en producció), mentre que un manifest
+   tancat a desenvolupament no s’obri ni carregue res.
    Ordre del Mestre, 261007 («tindre la facturació operativa inclús sense
    xarxa»): la Facturació ja no és un mòdul «en obres» de la closca, sinó la
    tercera vista del pont, dins de la seua PaginaApp com Aprendre. Per això les
@@ -177,12 +179,17 @@ afterEach(() => {
 });
 
 describe('el manifest', () => {
-  test('vàlid, només en desenvolupament, apagat per defecte, amb dades financeres, el titular de la sessió i les dotze entrades; registrat a la plataforma', () => {
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: la Gestoria és una eina gratuïta
+     oberta en producció (entorn 'produccio', actiuPerDefecte true). Es conserven les dades
+     financeres, el titular de la sessió i la resta del contracte. */
+  /* P0-113 (ordre del Mestre, 261111) · L'entrada per defecte és la Facturació, que no demana cap
+     tractor: oberta en producció, la porta no pot ser el Tauler, que demana una aprovació sense panell. */
+  test('vàlid, obert en producció, encés per defecte, amb dades financeres, el titular de la sessió i les dotze entrades; registrat a la plataforma', () => {
     const { errors, manifest } = validaManifestApp(manifestGestoria);
     expect(errors).toEqual([]);
     expect(manifest).toMatchObject({
-      id: 'gestoria', origen: 'interna', entorn: 'desenvolupament', actiuPerDefecte: false, dadesPersonals: 'financeres',
-      capacitats: [], nivell: 'gratuit', entradaPerDefecte: 'tauler'
+      id: 'gestoria', origen: 'interna', entorn: 'produccio', actiuPerDefecte: true, dadesPersonals: 'financeres',
+      capacitats: [], nivell: 'gratuit', entradaPerDefecte: ENTRADA_FACTURACIO
     });
     /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): la Gestoria declara el titular de la sessió, i res més. */
     expect(manifest.permisos).toEqual({ veure: 'public', titular: 'sessio' });
@@ -224,16 +231,19 @@ describe('el manifest', () => {
 });
 
 describe('en desenvolupament, una app pròpia', () => {
-  test('/app/gestoria va al Tauler i munta la closca sola: un H1, cap Wiki al voltant', async () => {
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: /app/gestoria entra per la Facturació
+     (entradaPerDefecte), que no demana cap tractor. Abans entrava al Tauler. Es conserva la intenció:
+     l'app es munta sola, amb un H1 i cap Wiki al voltant; el Tauler continua a un clic, a la barra. */
+  test('/app/gestoria va a la Facturació, sola: un H1, cap Wiki al voltant ni cap porta dels Tractors', async () => {
     const { container } = muntaPlataforma('/app/gestoria', { registre: registre(), entorn: ENTORN_DEV });
-    expect(await screen.findByText('Doble de la closca')).toBeTruthy();
-    expect(ubicacio()).toBe('/app/gestoria/tauler');
+    expect(await screen.findByText('Doble de la Facturació')).toBeTruthy();
+    expect(ubicacio()).toBe(`/app/gestoria/${ENTRADA_FACTURACIO}`);
     const app = container.querySelector('[data-sdp-app="gestoria"]');
-    expect(app.querySelector('.sdp-gestoria-closca')).not.toBeNull();
+    expect(app.querySelector('.sdp-gestoria-closca')).toBeNull();
     expect(container.querySelectorAll('h1')).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Tauler Central');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Facturació');
     expect(container.querySelector('.sdp-wiki-workspace')).toBeNull();
-    expect(container.textContent).not.toMatch(/WIKI DE POBLE|Eina local|DOCUMENTS/);
+    expect(container.textContent).not.toMatch(/WIKI DE POBLE|Eina local|DOCUMENTS|Tractors|Cal aprovar/);
   });
 
   test('/app/gestoria/aprendre: Aprendre dins de la seua pàgina, amb un sol H1 i sense la closca', async () => {
@@ -475,10 +485,30 @@ describe('la porta dels Tractors', () => {
   });
 });
 
+/* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: la Gestoria és una eina gratuïta oberta
+   en producció, i la plataforma l'obri fora de desenvolupament. Es conserva la intenció de la prova
+   vella: la guarda de la plataforma continua funcionant, i un manifest tancat a desenvolupament
+   (la Gestoria abans de l'ordre) no s'obri ni carrega res. */
 describe('fora de desenvolupament', () => {
-  test('la plataforma no l’obri: diu per què i no carrega res de la Gestoria', () => {
+  /* P0-113 · I hi pinta una vista de veres: la Facturació, l'entrada per defecte, que no demana
+     cap tractor (en producció no hi ha panell d'aprovació). Amb VISTES nul·la ja no passaria. */
+  test('oberta en producció: la plataforma l’obri, en carrega el tros diferit i entra per la Facturació', async () => {
     const carrega = vi.fn(manifestGestoria.carrega);
-    muntaPlataforma('/app/gestoria', { registre: registre({ ...manifestGestoria, carrega }), entorn: ENTORN_OBERT });
+    const { container } = muntaPlataforma('/app/gestoria', { registre: registre({ ...manifestGestoria, carrega }), entorn: ENTORN_OBERT });
+    expect(screen.queryByText('Esta app no està activada')).toBeNull();
+    await waitFor(() => expect(carrega).toHaveBeenCalled());
+    expect(await screen.findByText('Doble de la Facturació')).toBeTruthy();
+    expect(ubicacio()).toBe(`/app/gestoria/${ENTRADA_FACTURACIO}`);
+    expect(screen.queryByText('Esta app no està activada')).toBeNull();
+    expect(screen.queryByText('Doble de la closca')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Obri el panell de Tractors' })).toBeNull();
+    expect(container.textContent).not.toMatch(/Cal aprovar el tractor/);
+  });
+
+  test('tancada a desenvolupament, la plataforma no l’obri: diu per què i no carrega res de la Gestoria', () => {
+    const carrega = vi.fn(manifestGestoria.carrega);
+    const tancada = { ...manifestGestoria, entorn: 'desenvolupament', actiuPerDefecte: false, carrega };
+    muntaPlataforma('/app/gestoria', { registre: registre(tancada), entorn: ENTORN_OBERT });
     expect(screen.getByText('Esta app no està activada')).toBeTruthy();
     // Gauntlet 261022_0225 (F7) · El motiu de la plataforma, sense «desenvolupament».
     expect(screen.getByText('Esta eina encara està en proves i no està a punt per a tothom.')).toBeTruthy();

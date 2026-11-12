@@ -40,16 +40,15 @@
  * única està pendent del Mestre.
  */
 import { getVal, setVal, delVal } from '../../../config/storage.js';
-import { netejaText } from '../../../utils/sanitize.js';
-import { MAXIM_COPYRIGHT } from './llicencies.js';
+import { sanejaDrets } from '../../../data/dretsAutor.js';
 
 const CLAU = 'llicencia-per-defecte';
 const clauDe = (id) => `${CLAU}:${id}`;
 const idValid = (id) => (typeof id === 'string' && id.trim() !== '') || (typeof id === 'number' && Number.isFinite(id));
 
-/** Text net i tallat al CHECK de la columna (256); qualsevol altra cosa → ''. */
+/** Text net amb l'autoria dins del límit. */
 export function netejaLlicencia(valor) {
-  return typeof valor === 'string' ? netejaText(valor, MAXIM_COPYRIGHT) : '';
+  return sanejaDrets(valor);
 }
 
 /** La preferència d'esta identitat en este dispositiu, o null. Es neteja també en llegir. */

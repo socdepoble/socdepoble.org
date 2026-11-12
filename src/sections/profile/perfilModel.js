@@ -67,6 +67,7 @@ export { PARAM_FITXA_ORGANITZACIO, rutaFitxaOrganitzacio } from '../../config/na
    l'accés «Compte i contrasenya» de /control). Cap altre valor no fa res. */
 export const PARAM_VISTA = 'vista';
 export const VISTA_COMPTE = 'compte';
+export const VISTA_IMPORTACIO = 'admin-importacio';
 
 /**
  * La primera categoria del Perfil: l'organització demanada per la ruta o,
@@ -80,6 +81,7 @@ export const VISTA_COMPTE = 'compte';
  * contrasenya és del compte de la persona, no d'una organització.
  */
 export function seleccioInicialDePerfil(identitats, preferides = [], { superadmin = false, vista = null, apartat = null } = {}) {
+  if (superadmin === true && vista === VISTA_IMPORTACIO) return { categoryId: ID_ADMINISTRACIO_SISTEMA, itemId: VISTA_IMPORTACIO };
   const persona = (vista === VISTA_COMPTE || apartat === VISTA_COMPTE) ? identitats.find(esPersona) : null;
   if (persona) return { categoryId: String(persona.id), itemId: `${persona.id}-compte` };
   const seleccionables = identitats.filter((identitat) => !esPersona(identitat));

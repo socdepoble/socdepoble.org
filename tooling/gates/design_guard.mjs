@@ -212,7 +212,9 @@ function scanDesign(text, file, vocab = null) {
   const findings = [];
   const TEMA = liniesDeTema(text);
 
-  for (const m of designColorSource(text, file).matchAll(RAW_HEX)) {
+  // Identificadors numèrics de registre de WordPress en text editorial.
+  const colorSource = designColorSource(text, file).replace(/\bWP\s+#\d+\b/g, referencia => ' '.repeat(referencia.length));
+  for (const m of colorSource.matchAll(RAW_HEX)) {
     if (TEMA.has(lineOf(text, m.index))) continue;
     if (!ALLOWED_HEX.has(m[0].toLowerCase()) && !text.slice(Math.max(0, m.index - 40), m.index).includes('ALLOW_RAW_COLOR')) {
       findings.push({

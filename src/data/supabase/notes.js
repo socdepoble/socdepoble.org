@@ -1,3 +1,4 @@
+import { sanejaDrets } from '../dretsAutor.js';
 import { getDefaultUserId, NOTE_FOLDERS_SEED } from '../appSeed.js';
 import { normalitzaOrigen } from '../origenNota.js';
 import { ErrorSupabase, generateUUID, getCurrentUser, getResolvedConfig, request } from './runtime.js';
@@ -236,7 +237,7 @@ export async function createNote(input, config = {}) {
   const body = { id: input.id || generateUUID(), tenant_id: tenantId, owner_user_id: user.id,
     folder_id: input.folderId || 'f-notes', title: input.title || '', content: input.content || '',
     categories: input.categories || [], tags: input.tags || [],
-    ...(input.copyright !== undefined ? { copyright: String(input.copyright).slice(0, 256) } : {}),
+    ...(input.copyright !== undefined ? { copyright: sanejaDrets(input.copyright, { estricte: true }) } : {}),
     /* T5 · només si ve: sense la columna al servidor, una nota normal no en pateix. */
     ...(normalitzaOrigen(input.origen) ? { origen: normalitzaOrigen(input.origen) } : {}),
     /* T47b · l'emoticona, com a localNotes: un sol emoji o buida. */
@@ -264,7 +265,7 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
   requireUuid(id, 'Nota');
   if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('ATURADOR CRÍTIC: expectedRevision és obligatori.');
   const payload = { folder_id: updates.folderId, title: updates.title, subtitle: updates.subtitle,
-    lead: updates.lead, content: updates.content, copyright: updates.copyright === undefined ? undefined : String(updates.copyright).slice(0, 256), categories: updates.categories, tags: updates.tags,
+    lead: updates.lead, content: updates.content, copyright: updates.copyright === undefined ? undefined : sanejaDrets(updates.copyright, { estricte: true }), categories: updates.categories, tags: updates.tags,
     hero_image: updates.heroImage, logo_image: updates.logoImage, logo_image_dark: updates.logoImageDark, is_published: updates.isPublished,
     published_submission_id: updates.publishedSubmissionId,
     origen: updates.origen === undefined ? undefined : normalitzaOrigen(updates.origen),

@@ -138,11 +138,16 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
   }
 
   const { ruta, params } = coincidencia;
+  /* Onada R20 (deute /app/*) · El títol de la pàgina és el nom de l'app: una capçalera de primer nivell real per a
+     qui navega per capçaleres, dins de la canònica header.page-title i només per a lectors (.sdp-sr-only,
+     base.css), perquè la pantalla no canvia ni un píxel (Llei del Píxel). Abans cap vista de /app/* en portava. */
+  const capcalera = <header className="page-title sdp-sr-only"><h1>{titol}</h1></header>;
   /* Àrea única: cap AppGridShell, una regió amb el nom de l'app. */
   if (esRutaUnica(ruta)) {
     const { Unica } = ruta;
     return (
       <IdiomaClosa.Provider value={llenguaDelText || 'ca'}>
+        {capcalera}
         <div className="sdp-app-unica" role="region" aria-label={titol}>
           <Unica params={params} />
         </div>
@@ -152,6 +157,7 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
   const { Esquerra, Mig, Detall } = ruta;
   return (
     <IdiomaClosa.Provider value={llenguaDelText || 'ca'}>
+      {capcalera}
       <AppGridShell
         aria-label={titol}
         leftTitle={titols.esquerra || 'Navegació'}

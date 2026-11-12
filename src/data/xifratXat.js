@@ -712,7 +712,8 @@ export function ambXifratXat(impl, entorn = {}) {
             try {
               paquet = await motor.prepara({ fil, tipusFil: classificacio.tipusFil, cos, config, exigix });
             } catch (error) {
-              if (error?.encuable === true) return motor.encua({ fil, cos, exigix });
+              // Els enviaments amb termini es revaliden al seu origen, no en la safata.
+              if (error?.encuable === true && config.senseSafata !== true) return motor.encua({ fil, cos, exigix });
               throw error;
             }
             let resultat;

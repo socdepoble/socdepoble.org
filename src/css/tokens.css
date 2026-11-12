@@ -118,9 +118,13 @@
      llindar és 1. La icona i la pantalla d'inici natives (PNG) van al mateix
      0e662e des del 261029 (D-C2, pla 261029_1305; projecteIos.test.js). */
   --sdp-verd: #0e662e; /* 7,10:1 sobre blanc · AAA */
+  --sdp-verd-hover: #0a4d22; /* 10,01:1 sobre blanc · AAA · hover de SquareBadge geo */
 
   /* ═══ CAPA 2 · SEMÀNTICS · TEMA CLAR ═══════════════════════════
      Cada línia porta el contrast mesurat i el nivell que compleix.  */
+
+  /* R18 P0-116 · Selecció interior sobre fotografia, amb contrafilet al 92%. */
+  --sdp-cataleg-filet: inset 0 0 0 3px var(--sdp-negre-pur), inset 0 0 0 4px color-mix(in srgb, var(--sdp-blanc-pur) 92%, transparent);
 
   /* Fons */
   --sdp-fons-app:        var(--sdp-pedra-150);
@@ -685,6 +689,7 @@
 :root[data-theme="dark"], :host([data-theme="dark"]),
 :root[data-theme="dark"] .sdp-root, :host([data-theme="dark"]) .sdp-root {
   color-scheme: dark;
+  --sdp-cataleg-filet: inset 0 0 0 3px var(--sdp-blanc-pur), inset 0 0 0 4px color-mix(in srgb, var(--sdp-negre-pur) 92%, transparent);
 
   --sdp-fons-app:        var(--sdp-pedra-900);
   --sdp-fons-targeta:    var(--sdp-pedra-850);

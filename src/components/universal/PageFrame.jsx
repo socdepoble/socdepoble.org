@@ -729,6 +729,11 @@ export function PageFrame({
      píndoles disabled i aria-busy mentre la imatge puja. Sense, el DOM de
      sempre. */
   avatarAutor = null,
+  /* P0-110 / IDEA-241 · `abansIntro`: contingut visual opcional (com el visor
+     interactiu del Mapa Fotogràfic a /page/publicar_mapa) que va al començament
+     del contenidor de l'article, just entre el bloc blanc de l'H1 i l'H2
+     taronja (.page-intro). Sense la prop, null i el DOM de sempre. */
+  abansIntro = null,
   /* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «Esta lògica de
      llistar elements de la categoria per a l'avatar actiu ha d'estar
      disponible per tot el sistema») · `peuDePagina`: el que va al peu de la
@@ -1125,6 +1130,9 @@ export function PageFrame({
           authorAvatar={barAuthorAvatar}
           authorHref={barAuthorHref}
           LinkComponent={LinkComponent}
+          {...(Array.isArray(topBarData?.publicadorsRegistrats)
+            ? { publicadorsRegistrats: topBarData.publicadorsRegistrats }
+            : null)}
           emoticona={topBarData?.emoticona}
           onObriEmoticona={topBarData?.onObriEmoticona ?? null}
           barActions={topBarData?.barActions}
@@ -1248,6 +1256,7 @@ export function PageFrame({
           interfície, traduïda) hereten el de la interfície. El proveïdor no
           pinta cap node i sempre és ací: el cos que s'escriu no es remunta. */}
       <article className="content-wrapper" ref={containerRef} hidden={traduida ? true : undefined}>
+        {abansIntro}
         {(subtitol || lead) && (
           <div className="page-intro" lang={langDelContingut}>
             {subtitol && <h2>{subtitol}</h2>}
@@ -1264,6 +1273,7 @@ export function PageFrame({
           {/* Cicle 4 (traduccio-llista-niuada-hereta-lang-ca) · La llengua de
               la traducció, per als elements traduïts que pengen d'un bloc que
               ha tornat en l'original. */}
+          {abansIntro}
           {filaInsignia}
           <CosTraduit blocs={traduida.blocs} llengua={traduida.lang} />
         </article>

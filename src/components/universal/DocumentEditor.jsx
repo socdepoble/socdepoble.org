@@ -7,6 +7,7 @@ import { teCanvisSenseConfirmar } from './EstatDesament.jsx';
 import { normalitzaText, unaLinia } from './enganxatCamps.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { SelectorVisibilitat, TEXTOS_VISIBILITAT } from './SelectorVisibilitat.jsx';
+import { PanellVisibilitatEnLinia } from './PanellVisibilitatEnLinia.jsx';
 import BotoDretsAutor from './CopyrightSelector.jsx';
 import { CopyrightPage } from './drets/CopyrightPage.jsx';
 import DocumentPrintPreview from './DocumentPrintPreview.jsx';
@@ -631,18 +632,31 @@ export function DocumentEditor({ adapter, onToast }) {
      document que l'ha obert, no un booleà: al Perfil DocumentEditor no porta
      key per identitat, i un canvi d'identitat el tanca sol en lloc d'aplicar
      la tria a una altra fitxa. Tots els hooks van abans del retorn primerenc. */
+  const visibilitatEnLinia = Boolean(visibilitat?.enLinia);
   const [visibilitatDe, setVisibilitatDe] = useState(null);
+  const [peticioVisibilitat, setPeticioVisibilitat] = useState(null);
   /* Un altre document: el selector s'oblida (tornar a A no el reobri). */
   if (visibilitatDe != null && visibilitatDe !== document?.id) setVisibilitatDe(null);
+  if (peticioVisibilitat != null && peticioVisibilitat.nota !== document?.id) setPeticioVisibilitat(null);
   const obreVisibilitat = useCallback(() => {
-    if (document) setVisibilitatDe(document.id);
-  }, [document]);
+    if (!document) return;
+    if (visibilitatEnLinia) {
+      setPeticioVisibilitat({ nota: document.id });
+      return;
+    }
+    setVisibilitatDe(document.id);
+  }, [document, visibilitatEnLinia]);
   const tancaVisibilitat = useCallback(() => setVisibilitatDe(null), []);
+  const peticioVisibilitatAtesa = useCallback((atesa) => {
+    setPeticioVisibilitat((actual) => (actual === atesa ? null : actual));
+  }, []);
   /* Confirmar: el consumidor decidix (visibilitat.onTria). Sense adaptador de
      visibilitat, «pública» crida el `publish` de sempre i «privada» no fa res. */
-  const triaVisibilitat = useCallback((publicaTriada) => {
+  const triaVisibilitat = useCallback((publicaTriada, opcions) => {
     if (!document) return true;
-    if (visibilitat?.onTria) return visibilitat.onTria(publicaTriada, document);
+    if (visibilitat?.onTria) {
+      return opcions !== undefined ? visibilitat.onTria(publicaTriada, document, opcions) : visibilitat.onTria(publicaTriada, document);
+    }
     return publicaTriada && publish ? publish(document) : true;
   }, [document, visibilitat, publish]);
 
@@ -1153,17 +1167,17 @@ export function DocumentEditor({ adapter, onToast }) {
      publicar-la), l'adaptador diu si la té (publicacioAlDia): false és
      'pendent' i null (no se sap) torna la pastilla de sempre, mai el verd.
      Sense la clau (el Perfil), el desat ja és la publicació, com abans. */
-  const estatPublicacio = publishLabel
-    ? null
-    : (!esPublica || teCanvisSenseConfirmar(rest.estatDesament) || publicacioAlDia === false ? 'pendent'
-      : (publicacioAlDia === null ? null : 'publicat'));
+  const estatPublicacioEnLinia = (!esPublica || teCanvisSenseConfirmar(rest.estatDesament) || publicacioAlDia === false)
+    ? 'pendent'
+    : (publicacioAlDia === null ? null : 'publicat');
+  const estatPublicacio = publishLabel ? null : estatPublicacioEnLinia;
 
   const topBar = (
     <UniversalRichTextToolbar
       state={state}
       exec={exec}
       onPublish={obreVisibilitat}
-      publishPopup="dialog"
+      publishPopup={visibilitatEnLinia ? null : 'dialog'}
       publishLabel={publishLabel}
       publishState={estatPublicacio}
       onDelete={deleteDocument ? esborra : undefined}
@@ -1176,6 +1190,24 @@ export function DocumentEditor({ adapter, onToast }) {
       t={t}
     />
   );
+
+  const blocVisibilitatEnLinia = visibilitatEnLinia ? (
+    <PanellVisibilitatEnLinia
+      notaId={String(document.id ?? '')}
+      esPublica={esPublica}
+      estatPublicacio={estatPublicacioEnLinia}
+      onTria={triaVisibilitat}
+      textos={visibilitat.textosEnLinia || undefined}
+      bloqueig={bloqueigVisibilitat}
+      comNom={visibilitat?.comNom || null}
+      poblesDisponibles={visibilitat?.poblesDisponibles}
+      poblePublicat={visibilitat?.poblePublicat ?? null}
+      rutaPublicada={visibilitat?.rutaPublicada ?? null}
+      peticioEnfocament={peticioVisibilitat?.nota === document.id ? peticioVisibilitat : null}
+      onPeticioAtesa={peticioVisibilitatAtesa}
+      t={t}
+    />
+  ) : null;
 
   const copyrightValue = document.copyright || '© Sóc de Poble';
 
@@ -1247,6 +1279,7 @@ export function DocumentEditor({ adapter, onToast }) {
       onObriVisibilitat={obreVisibilitat}
       etiquetaVisibilitat={etiquetaVisibilitat}
       visibilitatOberta={visibilitatOberta}
+      {...(visibilitatEnLinia ? { visibilitatEnLinia: blocVisibilitatEnLinia, popupVisibilitat: null } : null)}
       publishDate={ambDataPublicacio ? (document.publishDate ?? null) : null}
       onPublishDateChange={ambDataPublicacio ? triaDataPublicacio : null}
       avisDataPublicacio={ambDataPublicacio ? avisDataPublicacio : null}
@@ -1298,15 +1331,17 @@ export function DocumentEditor({ adapter, onToast }) {
       {/* T41 · Una sola instància, germana de la closca: l'obrin la bola del
           món (barra taronja) i PUBLICAR (barra d'eines), també en mòbil, on
           T38 amaga la taronja. */}
-      <SelectorVisibilitat
-        obert={visibilitatOberta}
-        onTanca={tancaVisibilitat}
-        esPublica={esPublica}
-        onTria={triaVisibilitat}
-        textos={textosVisibilitat}
-        bloqueig={bloqueigVisibilitat}
-        comNom={visibilitat?.comNom || null}
-      />
+      {visibilitatEnLinia ? null : (
+        <SelectorVisibilitat
+          obert={visibilitatOberta}
+          onTanca={tancaVisibilitat}
+          esPublica={esPublica}
+          onTria={triaVisibilitat}
+          textos={textosVisibilitat}
+          bloqueig={bloqueigVisibilitat}
+          comNom={visibilitat?.comNom || null}
+        />
+      )}
       {/* T3.2 (marató 261101) · La fitxa de memòria oral de «Proposa Card»,
           germana de la closca i només des del primer clic: sense la clau, o
           abans de cap clic, el DOM de sempre. */}

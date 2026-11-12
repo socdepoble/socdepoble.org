@@ -171,6 +171,20 @@
  *     obertes, Missatges per a dubtes, Compte i contrasenya i Eixir del poble.
  *   La secció «Utilitats i Connectors» ja no existix: no en queda cap h2 ni
  *   cap graella.
+ *
+ * R18 · T2 (P0-101; prompt 261111_0148) · Les targetes del registre (els dos
+ * espais i «Maquinària i Sistema») pinten etiquetesAmbEstat(plugin, idioma):
+ * la Categoria i l'Etiqueta del registre i, si l'eina és en proves, la
+ * insígnia «En proves · Beta oberta» en la llengua de la interfície, la
+ * mateixa que la pàgina del plugin (PluginPage.jsx). Una eina estable pinta
+ * exactament el que pintava. DEROGAT per P0-113 (ordre del Mestre, 261111)
+ * «Hui cap eina del registre és en proves»: la Gestoria, el TPV del Bar i el
+ * Rebost («Economia i Empresa»), Salut («La llar») i el Lector RSS
+ * («Maquinària i Sistema») s'obrin en producció i porten la insígnia;
+ * l'Arbre Genealògic, en obres, no (betaOberta.test.jsx). Cap canvi de codi
+ * ací: el Panell ja llig `estat` per etiquetesAmbEstat.
+ * DEROGAT per R19 · T3 (pla 261111_1720): l'Arbre Genealògic també s'obri i
+ * porta la insígnia a la web pròpia.
  */
 import {
   KeyRound,
@@ -192,7 +206,7 @@ import { DATA_NODRIR_IAIA, ETIQUETES_NODRIR_IAIA, IMATGE_NODRIR_IAIA, PAGINA_NOD
 import { posicioDeLaVista, recolocaLaVista } from './vistaDeLaFitxa.js';
 import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
 import { AVISOS_XAT_CORPORATIU } from './xatCorporatiu.js';
-import { ESPAIS_PLUGINS, PLUGINS, TEXTOS_ESPAIS_PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
+import { ESPAIS_PLUGINS, PLUGINS, TEXTOS_ESPAIS_PLUGINS, etiquetesAmbEstat, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
 import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
 import { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
 import { RUTA_COMPTE } from '../../config/rutaEntrada.js';
@@ -319,7 +333,7 @@ function EspaiDelPanell({ espai, idioma, visibles }) {
             imatgeAlt={plugin.imatgeAlt}
             ruta={rutaDelPlugin(plugin.id)}
             data={plugin.data}
-            etiquetes={plugin.etiquetes}
+            etiquetes={etiquetesAmbEstat(plugin, idioma)}
             dataTestId={`control-plugin-${plugin.id}`}
           />
         ))}
@@ -587,7 +601,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 imatgeAlt={plugin.imatgeAlt}
                 ruta={rutaDelPlugin(plugin.id)}
                 data={plugin.data}
-                etiquetes={plugin.etiquetes}
+                etiquetes={etiquetesAmbEstat(plugin, idioma)}
                 dataTestId={`control-plugin-${plugin.id}`}
               />
             ))}

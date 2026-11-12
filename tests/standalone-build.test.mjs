@@ -265,6 +265,30 @@ test('sense opcions.dir, writeBundle usa l\'outDir de la config resolta', () => 
   } finally { fs.rmSync(projecte, { recursive: true, force: true }); }
 });
 
+test('la quarantena retira làmines antigues del paquet reutilitzat i conserva les substitucions', () => {
+  const { projecte, outDir } = outDirDeMostra();
+  const publicDir = path.join(projecte, 'public');
+  const antiga = 'assets/uploads/patrimoni/herbari/antiga-v2-macro.webp';
+  const substituida = 'assets/uploads/patrimoni/herbari/substituida-v2-macro.webp';
+  const desa = (arrel, fitxer, contingut) => {
+    const desti = path.join(arrel, fitxer);
+    fs.mkdirSync(path.dirname(desti), { recursive: true });
+    fs.writeFileSync(desti, contingut);
+  };
+  try {
+    desa(outDir, antiga, 'recreació antiga');
+    desa(outDir, substituida, 'recreació antiga');
+    desa(publicDir, substituida, 'fotografia revisada');
+    const plugin = recursosPublicsDelPlugin({ quarantena: [antiga, substituida] });
+    plugin.configResolved({ publicDir, root: projecte, build: { outDir }, logger: registreDeMostra() });
+    plugin.generateBundle.call({ emitFile: ({ fileName, source }) => desa(outDir, fileName, source) });
+    plugin.writeBundle({ dir: outDir });
+    assert.equal(fs.existsSync(path.join(outDir, antiga)), false);
+    assert.equal(fs.readFileSync(path.join(outDir, substituida), 'utf8'), 'fotografia revisada');
+    assert.ok(fs.existsSync(path.join(outDir, DIRECTORI_DE_VITE, 'manifest.json')));
+  } finally { fs.rmSync(projecte, { recursive: true, force: true }); }
+});
+
 test('retiraPropisDelLloc torna el que ha esborrat, ordenat, i mai segueix enllaços simbòlics', () => {
   const { projecte, outDir } = outDirDeMostra();
   const fora = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-fora-'));
@@ -771,7 +795,7 @@ test('codiDelCarregador: script clàssic menut, ASCII, sense import/export de ni
   }
 });
 
-test('sdp-espais: només lleva espais dels trossos ESM; cadenes, accents i marcadors de hash intactes', async () => {
+test('sdp-espais compacta ESM i conserva cadenes, accents i marcadors de hash', async () => {
   const plugin = espaisDelPaquetPlugin();
   assert.equal(plugin.name, 'sdp-espais');
   assert.equal(plugin.apply, 'build');
@@ -783,6 +807,27 @@ test('sdp-espais: només lleva espais dels trossos ESM; cadenes, accents i marca
   const tipus = nodesDe(parseAst(compacte)).map((n) => n.type);
   assert.ok(tipus.includes('ImportDeclaration') && tipus.includes('ImportExpression') && tipus.includes('ExportNamedDeclaration'), 'continua sent un mòdul ESM');
   assert.equal(await plugin.renderChunk.handler(codi, { fileName: 'x.js' }, { format: 'iife' }), null, 'l\'IIFE no es toca');
+});
+
+test('sdp-espais conserva els valors exportats i les crides després de simplificar sintaxi', async () => {
+  const plugin = espaisDelPaquetPlugin();
+  const codi = `
+    export const fitxes = [{ nom: 'Àlber blanc', valor: 0 }, { nom: 'Carrasca', valor: null }];
+    export const marca = '!~{003}~';
+    export function nomVisible(fitxa) {
+      if (fitxa === null) return 'Pendent';
+      else return fitxa.nom;
+    }
+  `;
+  const compacte = await plugin.renderChunk.handler(codi, { fileName: 'trossos/valors.js' }, { format: 'es' });
+  const original = await import('data:text/javascript;base64,' + Buffer.from(codi).toString('base64'));
+  const resultat = await import('data:text/javascript;base64,' + Buffer.from(compacte).toString('base64'));
+  assert.deepEqual(resultat.fitxes, original.fitxes);
+  assert.equal(resultat.marca, original.marca);
+  for (const fitxa of [null, ...original.fitxes]) {
+    assert.equal(resultat.nomVisible(fitxa), original.nomVisible(fitxa));
+  }
+  assert.ok(!nodesDe(parseAst(compacte)).some((node) => node.type === 'IfStatement'));
 });
 
 /** Executa el carregador emés dins d'una pàgina JSDOM, amb import() substituït. */

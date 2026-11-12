@@ -1,19 +1,117 @@
-import { expect, test } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { expect, test, vi } from 'vitest';
 import { ALIES_DEL_PANELL, APLICACIONS, ESTATS_APLICACIO, aplicacionsValides } from './aplicacions.js';
+import fontAplicacions from './aplicacions.js?raw';
 import { IDS_PLUGINS } from '../plugins/registrePlugins.js';
 
-/* Encàrrec d'harmonització (261018) · El catàleg complet del Panell: sis públiques i dues internes. */
-test('les utilitats de sèrie: les huit utilitats declarades, pendents i amb icona', () => {
-  expect(APLICACIONS.map((a) => a.id)).toEqual(['gestoria', 'rebost', 'salut', 'genealogia', 'lector-rss', 'tpv', 'snippet', 'metriques', 'cervell']);
+/* Encàrrec d'harmonització (261018) · El catàleg complet del Panell: sis públiques i dues internes.
+   P0-114 (ordre del Mestre, 261111) · I L'Avisador, darrere de l'Arbre Genealògic, com al Panell.
+   R19 · T3 (ordre del Mestre, 261111; pla 261111_1720: «sincronització d'aplicacions.js perquè totes
+   les eines del Panell de Control funcionen al 100%») · Les set amb destí real en este node són
+   'connectades', amb la ruta de la seua targeta del Panell; el Snippet, les Mètriques i el Cervell,
+   sense ruta pròpia, continuen 'pendent'. DEROGAT «totes pendents i sense `ruta`».
+   Arbitratge del carril Genealogia + Perfil (P1) · El Snippet també és 'connectada': la seua secció és la seua
+   fitxa del Panell (/control?fitxa=snippet). Només les Mètriques i el Cervell continuen 'pendent'. */
+const CONNECTADES = Object.freeze({
+  gestoria: '/app/gestoria', rebost: '/app/nevera/casa', salut: '/app/salut', genealogia: '/app/genealogia',
+  avisador: '/page/avisador', 'lector-rss': '/app/lector', tpv: '/app/bar', snippet: '/control?fitxa=snippet'
+});
+test('les utilitats de sèrie: les declarades, amb icona; connectades les que tenen destí real i pendents la resta', () => {
+  expect(APLICACIONS.map((a) => a.id)).toEqual(['gestoria', 'rebost', 'salut', 'genealogia', 'avisador', 'lector-rss', 'tpv', 'snippet', 'metriques', 'cervell']);
   for (const aplicacio of APLICACIONS) {
-    expect(aplicacio.estat).toBe('pendent');
     expect(aplicacio.icona).toBeTruthy();
     expect(aplicacio.descripcio).toMatch(/\S/);
-    expect(aplicacio).not.toHaveProperty('ruta');
+    if (Object.hasOwn(CONNECTADES, aplicacio.id)) {
+      expect([aplicacio.id, aplicacio.estat, aplicacio.ruta]).toEqual([aplicacio.id, 'connectada', CONNECTADES[aplicacio.id]]);
+    } else {
+      expect([aplicacio.id, aplicacio.estat, Object.hasOwn(aplicacio, 'ruta')]).toEqual([aplicacio.id, 'pendent', false]);
+    }
   }
-  // La configuració de sèrie ja és vàlida: passar-la pel filtre no la canvia.
-  expect(aplicacionsValides(APLICACIONS).map((a) => a.id)).toEqual(['gestoria', 'rebost', 'salut', 'genealogia', 'lector-rss', 'tpv', 'snippet', 'metriques', 'cervell']);
+  // La configuració de sèrie ja és vàlida: passar-la pel filtre no la canvia (ni l'estat ni la ruta).
+  const valides = aplicacionsValides(APLICACIONS);
+  expect(valides.map((a) => a.id)).toEqual(['gestoria', 'rebost', 'salut', 'genealogia', 'avisador', 'lector-rss', 'tpv', 'snippet', 'metriques', 'cervell']);
+  expect(Object.fromEntries(valides.map((a) => [a.id, [a.estat, a.ruta]]))).toEqual({
+    ...Object.fromEntries(Object.entries(CONNECTADES).map(([id, ruta]) => [id, ['connectada', ruta]])),
+    metriques: ['pendent', null], cervell: ['pendent', null]
+  });
   expect(Object.isFrozen(APLICACIONS)).toBe(true);
+});
+
+/* R19 · T3 · Cada utilitat amb app la governa el MATEIX literal de build que el `carrega` del seu
+   manifest. Qualsevol valor que no siga '0', connectada.
+   Arbitratge del carril Genealogia + Perfil (P1, tractor-promesa) · Amb =0, dos camins:
+     · el Rebost, el Lector i el TPV, que qui porta la web pot afegir al seu paquet (VITE_SDP_APP_<ID>=1 al
+       monolític, vite.standalone.config.js), queden 'pendent' i sense ruta (destiDelBuild);
+     · la Gestoria, Salut i l'Arbre, que el paquet de l'amfitrió no porta MAI («Cap variable de l'entorn ho
+       canvia»), no tenen fitxa (nomesSiElBuildLaPorta): una fitxa 'pendent' prometria «Quan s'hi connecte»
+       en va. DEROGAT, per a estes tres, «la seua fitxa és pendent i sense ruta». */
+const INTERRUPTORS = Object.freeze([
+  ['gestoria', 'GESTORIA', 'gestoria'], ['rebost', 'NEVERA', 'nevera'], ['salut', 'SALUT', 'salut'],
+  ['genealogia', 'GENEALOGIA', 'genealogia'], ['lector-rss', 'LECTOR', 'lector'], ['tpv', 'BAR', 'bar']
+]);
+const NOMES_A_LA_WEB_PROPIA = Object.freeze(['gestoria', 'salut', 'genealogia']);
+test('R19 · T3 · cada utilitat amb app porta el literal de build del seu manifest', () => {
+  for (const [id, variable, app] of INTERRUPTORS) {
+    const literal = `import.meta.env.VITE_SDP_APP_${variable} !== '0'`;
+    const forma = NOMES_A_LA_WEB_PROPIA.includes(id) ? `...nomesSiElBuildLaPorta(${literal}, {` : `...destiDelBuild(${literal}, rutaDeApp(`;
+    expect([id, fontAplicacions.includes(forma)]).toEqual([id, true]);
+    expect([id, fontAplicacions.split(literal).length - 1]).toEqual([id, 1]);
+    expect([id, readFileSync(path.join(process.cwd(), `src/apps/${app}/manifest.js`), 'utf8').includes(`carrega: ${literal} ? () => import(`)])
+      .toEqual([id, true]);
+  }
+  // Cap estat escrit a mà per a una utilitat amb app: només L'Avisador i el Snippet porten la seua ruta literal.
+  expect(fontAplicacions.match(/^\s*estat: 'connectada',$/gm)).toHaveLength(2);
+});
+
+test('R19 · T3 · amb l’app desendollada del build (=0): pendent i sense ruta, o sense fitxa si el paquet de l’amfitrió no la porta mai; la resta no canvia', async () => {
+  try {
+    for (const [id, variable] of INTERRUPTORS) {
+      vi.stubEnv(`VITE_SDP_APP_${variable}`, '0');
+      vi.resetModules();
+      const { APLICACIONS: apagades, aplicacionsValides: valida } = await import('./aplicacions.js');
+      const perId = Object.fromEntries(valida(apagades).map((a) => [a.id, a]));
+      if (NOMES_A_LA_WEB_PROPIA.includes(id)) {
+        expect([id, Object.hasOwn(perId, id), apagades.length]).toEqual([id, false, APLICACIONS.length - 1]);
+      } else {
+        expect([id, perId[id].estat, perId[id].ruta]).toEqual([id, 'pendent', null]);
+      }
+      // Les altres apps continuen connectades: cada interruptor només trau la seua.
+      for (const [altra] of INTERRUPTORS.filter(([candidat]) => candidat !== id)) {
+        expect([id, altra, perId[altra].estat]).toEqual([id, altra, 'connectada']);
+      }
+      vi.unstubAllEnvs();
+    }
+    // Qualsevol altre valor deixa la fitxa connectada.
+    for (const valor of ['1', '', 'no']) {
+      vi.stubEnv('VITE_SDP_APP_GENEALOGIA', valor);
+      vi.resetModules();
+      const { APLICACIONS: enceses } = await import('./aplicacions.js');
+      expect([valor, enceses.find((a) => a.id === 'genealogia').estat]).toEqual([valor, 'connectada']);
+    }
+  } finally {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  }
+});
+
+/* P0-114 (ordre del Mestre, 261111) · La fitxa de L'Avisador al Perfil la governa el mateix literal
+   de build que el registre i App.jsx: per defecte hi és (i la persona el pot llevar del Panell, amb
+   `panell: 'avisador'`); amb VITE_SDP_APP_AVISADOR=0, no.
+   R19 · T3 (261111) · Amb fitxa, connectada a la seua pàgina (/page/avisador). Abans: 'pendent'. */
+test('P0-114 · L’Avisador al Perfil: el mateix literal de build, la seua targeta del Panell i fora amb =0', async () => {
+  expect(fontAplicacions).toContain("...(import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? [aplicacioDelNode({");
+  expect(APLICACIONS.find((a) => a.id === 'avisador')).toMatchObject({ nom: 'L’Avisador', estat: 'connectada', ruta: '/page/avisador', panell: 'avisador' });
+  try {
+    vi.stubEnv('VITE_SDP_APP_AVISADOR', '0');
+    vi.resetModules();
+    const apagat = await import('./aplicacions.js');
+    expect(apagat.APLICACIONS.map((a) => a.id)).not.toContain('avisador');
+    expect(apagat.APLICACIONS).toHaveLength(APLICACIONS.length - 1);
+  } finally {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  }
 });
 
 test('el filtre descarta ids invàlids, noms buits i repetits; guanya la primera', () => {
@@ -47,7 +145,7 @@ test('peça C · Onada 10 · cada aplicació del Perfil apunta a una targeta del
     expect(delPanell.has(aplicacio.panell), `${aplicacio.id} → ${aplicacio.panell}`).toBe(true);
   }
   expect(valides.map((a) => [a.id, a.panell])).toEqual([
-    ['gestoria', 'gestoria'], ['rebost', 'rebost'], ['salut', 'salut'], ['genealogia', 'genealogia'], ['lector-rss', 'rss'], ['tpv', 'tpv'], ['snippet', 'snippet'],
+    ['gestoria', 'gestoria'], ['rebost', 'rebost'], ['salut', 'salut'], ['genealogia', 'genealogia'], ['avisador', 'avisador'], ['lector-rss', 'rss'], ['tpv', 'tpv'], ['snippet', 'snippet'],
     ['metriques', null], ['cervell', null],
   ]);
   /* Cap utilitat apunta ja a la clau d'una de les tres pàgines que han eixit del Panell. */

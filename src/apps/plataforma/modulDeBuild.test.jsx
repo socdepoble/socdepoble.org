@@ -38,7 +38,7 @@ import { build } from 'vite';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import {
   FITXER_FITXA, FITXER_REGISTRE, codiDelRegistre, configDelModul, infraccionsDelCos, llegixManifestDelModul,
-  manifestDelModul, nomesAscii, rangDelNucli
+  manifestDelModul, nomesAscii, rangDelNucli, variableDeLApp
 } from '../../../vite.modul.config.js';
 import { MemoryRouter } from '../../app/contexts/RouterContext.jsx';
 import { INTEGRITAT_DE_PROVA } from './__fixtures__/manifests.js';
@@ -69,9 +69,12 @@ describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => 
     expect(validaManifestApp(manifest, { origen: 'modul' }).ok).toBe(true);
   });
 
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: la Gestoria és oberta en producció
+     (entorn 'produccio'). Es conserven les dades financeres i, com a mòdul, cap titular de la sessió. */
   test('la Gestoria com a mòdul conserva les dades financeres (i la guarda de document propi)', () => {
     const { dades } = llegixManifestDelModul({ id: 'gestoria', carpeta: path.join(ARREL, 'src/apps/gestoria') });
-    expect(dades).toMatchObject({ dadesPersonals: 'financeres', entorn: 'desenvolupament', capacitats: [] });
+    expect(dades).toMatchObject({ dadesPersonals: 'financeres', entorn: 'produccio', capacitats: [] });
+    expect(dades.permisos).toEqual({ veure: 'public' });
   });
 
   test('el rang del nucli és el de la versió contra la qual es compila', () => {
@@ -208,12 +211,22 @@ async function compilaEnMemoria({ id, carpeta, definicions = {} }) {
 
 const cosDe = (fitxers) => Object.keys(fitxers).find((nom) => /^cos-[A-Za-z0-9_-]+\.js$/.test(nom));
 
-/* La Gestoria de veritat, amb el seu doble pany: en producció, AppGestoria
+/* La Gestoria de veritat, amb el seu doble pany: com a mòdul, AppGestoria
    no porta cap vista (VISTES val null) i el cos només diu que no és en este
-   paquet. Les guardes passen i res de src/sections/gestoria hi viatja. Quan
-   el Mestre llevi el pany (fase 2 de l'ADR), esta prova ha de canviar amb la
-   decisió. */
-describe('la Gestoria compilada com a mòdul (amb el doble pany DEV)', () => {
+   paquet. Les guardes passen i res de src/sections/gestoria hi viatja.
+   P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: el pany ja no és
+   DEV, sinó el literal d'exclusió VITE_SDP_APP_GESTORIA, que configDelModul
+   fixa a '0' (un mòdul es pot servir des d'una web d'altri). La intenció es
+   conserva sencera. */
+describe('la Gestoria compilada com a mòdul (amb el doble pany: VITE_SDP_APP_GESTORIA a 0)', () => {
+  test('configDelModul fixa la variable de l’app a 0 dins del cos, i la del manifest també', () => {
+    expect(variableDeLApp('gestoria')).toBe('VITE_SDP_APP_GESTORIA');
+    expect(variableDeLApp('modul-de-prova')).toBe('VITE_SDP_APP_MODUL_DE_PROVA');
+    const config = configDelModul({ id: 'gestoria', arrel: ARREL, carpeta: path.join(ARREL, 'src/apps/gestoria') });
+    expect(config.define['import.meta.env.VITE_SDP_APP_GESTORIA']).toBe(JSON.stringify('0'));
+    expect(config.envPrefix).toBe('SDP_MODUL_PUBLIC_');
+  });
+
   let fitxers = {};
   beforeAll(async () => {
     ({ fitxers } = await compilaEnMemoria({ id: 'gestoria', carpeta: path.join(ARREL, 'src/apps/gestoria') }));
@@ -238,17 +251,19 @@ describe('la Gestoria compilada com a mòdul (amb el doble pany DEV)', () => {
 
 /* La Gestoria SENCERA (Onada 6, correcció de la revisió): les quatre vistes
    del pont (el Tauler, Aprendre, la Facturació i l'Històric), amb els
-   Tractors que porten. El literal de DEV es força a cert només en este build
-   en memòria: és la prova que la recepta i les guardes valen per a la
-   Gestoria de veritat el dia que el Mestre lleve el pany (fase 2 de l'ADR),
-   no cap canvi del producte. Les marques són els noms de les bases
-   d'IndexedDB de cada vista: contractes de dades, estables. */
-describe('la Gestoria sencera compilada com a mòdul (DEV forçat només en esta prova)', () => {
+   Tractors que porten. El literal de la Gestoria es força a '1' només en este
+   build en memòria (P0-113, ordre del Mestre, 261111: abans era DEV a cert;
+   ara és la variable d'exclusió, amb DEV fals com en producció): és la prova
+   que la recepta i les guardes valen per a la Gestoria de veritat el dia que
+   el Mestre la vulga com a mòdul (fase 2 de l'ADR), no cap canvi del
+   producte. Les marques són els noms de les bases d'IndexedDB de cada vista:
+   contractes de dades, estables. */
+describe('la Gestoria sencera compilada com a mòdul (variable forçada a 1 només en esta prova)', () => {
   const BASES_DE_LA_GESTORIA = Object.freeze(['sdp-facturacio', 'sdp-gestoria-perfil', 'sdp-gestoria-cofre', 'sdp-aprendre']);
   let fitxers = {};
   beforeAll(async () => {
     ({ fitxers } = await compilaEnMemoria({
-      id: 'gestoria', carpeta: path.join(ARREL, 'src/apps/gestoria'), definicions: { 'import.meta.env.DEV': 'true' }
+      id: 'gestoria', carpeta: path.join(ARREL, 'src/apps/gestoria'), definicions: { 'import.meta.env.VITE_SDP_APP_GESTORIA': JSON.stringify('1') }
     }));
   }, 180000);
 

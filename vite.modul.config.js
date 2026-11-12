@@ -35,10 +35,13 @@
  * un magatzem del navegador que el mòdul no declara; i una URL de fora que no
  * siga una dada declarada pel mòdul (src/apps/plataforma/guardesDelModul.js).
  *
- * La Gestoria, a més, guarda el seu doble pany: AppGestoria només porta les
- * vistes en desenvolupament (privacitat.test.js). Mentre el Mestre no el
- * llevi (fase 2 de l'ADR), el cos de la Gestoria compilat ací només pinta
- * «La Gestoria no és en este paquet».
+ * La Gestoria, a més, guarda el seu doble pany: AppGestoria porta les vistes
+ * darrere del mateix literal d'exclusió que el manifest
+ * (VITE_SDP_APP_GESTORIA !== '0'), i ací la variable de l'app val sempre '0'
+ * (define de configDelModul). P0-113 (ordre del Mestre, 261111): l'app és
+ * oberta al web propi, però un mòdul és, per definició, fora del paquet del
+ * nucli i es pot servir des d'una web d'altri; el cos de la Gestoria compilat
+ * ací només pinta «La Gestoria no és en este paquet».
  */
 import { defineConfig, loadEnv } from 'vite';
 import { createHash } from 'crypto';
@@ -72,12 +75,25 @@ export function rangDelNucli(versio = VERSIO_NUCLI) {
   return `^${major}.${menor}`;
 }
 
+/** La variable de compilació d'una app: VITE_SDP_APP_<ID> (manifestApp.js, el literal de `carrega`). */
+export function variableDeLApp(id) {
+  return `VITE_SDP_APP_${String(id).toUpperCase().replace(/-/g, '_')}`;
+}
+
+/* P0-113 (ordre del Mestre, 261111) · El valor de la variable de l'app dins
+   d'un mòdul: '0', el flag declaratiu de desendollar. Val per al literal
+   d'exclusió (`!== '0'` dona false) i per a l'antic d'inclusió (`=== '1'`,
+   que encara porten les fixtures): en tots dos, `carrega` val null. */
+const FORA_DEL_PAQUET = '0';
+
 /**
  * Les dades del manifest d'una app (src/apps/<id>/manifest.js) sense
  * executar Vite: el fitxer és DADA PURA (manifestApp.js), amb el literal de
- * compilació de `carrega` com a única expressió. Es reemplaça el literal per
- * false, s'avalua en una caixa buida i se'n lleva `carrega`. També torna el
- * component que carregava (el `import('./AppX.jsx')` del literal).
+ * compilació de `carrega` com a única expressió. Es reemplaça DEV per false i
+ * VITE_SDP_APP_<ID> per '0' (un mòdul és, per definició, fora del paquet del
+ * nucli: P0-113, ordre del Mestre, 261111, literal d'exclusió), s'avalua en
+ * una caixa buida i se'n lleva `carrega`. També torna el component que
+ * carregava (el `import('./AppX.jsx')` del literal).
  * @returns {{ dades: object, component: string }}
  */
 export function llegixManifestDelModul({ id, carpeta }) {
@@ -88,10 +104,10 @@ export function llegixManifestDelModul({ id, carpeta }) {
   if (/^\s*(?:import|export\s+(?!default\b))/m.test(codi)) {
     throw new Error(`[sdp-modul] ${posix(fitxer)}: el manifest d'un mòdul ha de ser dada pura, sense imports ni altres exports.`);
   }
-  const variable = `VITE_SDP_APP_${id.toUpperCase().replace(/-/g, '_')}`;
+  const variable = variableDeLApp(id);
   const cos = codi
     .replace(/import\.meta\.env\.DEV/g, 'false')
-    .replace(new RegExp(`import\\.meta\\.env\\.${variable}`, 'g'), 'undefined')
+    .replace(new RegExp(`import\\.meta\\.env\\.${variable}`, 'g'), JSON.stringify(FORA_DEL_PAQUET))
     .replace(/^\s*export\s+default\s+/m, 'return ');
   if (cos.includes('import.meta')) throw new Error(`[sdp-modul] ${posix(fitxer)}: import.meta fora del literal de compilació.`);
   const avaluat = new vm.Script(`(function () {\n${cos}\n})()`, { filename: fitxer }).runInNewContext({});
@@ -280,7 +296,13 @@ export function configDelModul({
     /* Cap VITE_* del projecte entra al cos: cap variable porta este prefix. */
     envPrefix: 'SDP_MODUL_PUBLIC_',
     plugins: [...plugins, pluginDelModul({ id, arrel, carpeta, dades, component, versio, generat })],
-    define: { 'process.env.NODE_ENV': JSON.stringify('production') },
+    /* P0-113 · La variable de l'app, fixada a '0' també dins del cos: sense
+       envPrefix no hi arribaria, i `undefined !== '0'` hi portaria el que el
+       literal d'exclusió guarda (les vistes de la Gestoria). */
+    define: {
+      'process.env.NODE_ENV': JSON.stringify('production'),
+      [`import.meta.env.${variableDeLApp(id)}`]: JSON.stringify(FORA_DEL_PAQUET)
+    },
     resolve: { alias: { '@': path.join(arrel, 'src') } },
     build: {
       target: 'es2022',

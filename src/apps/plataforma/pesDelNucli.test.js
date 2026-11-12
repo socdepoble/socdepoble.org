@@ -3,10 +3,13 @@
    261009, ADR-2026-12). Un trinquet sobre el paquet de WordPress que ja
    s'ha construït (wordpress-plugin/dist, fora de git): llig l'inventari, el
    manifest de release i el text dels trossos; no compila res.
-     · Cap tros de trossos/ porta el nom d'un mòdul de la Gestoria, del Bar,
-       de Salut, de la Nevera o del Lector.
+     · Cap tros de trossos/ porta el nom d'un mòdul de la Gestoria o de Salut,
+       i l'arrencada (l'entrada i els trossos que importa) el de cap app
+       opcional. P0-113 (ordre del Mestre, 261111): el Bar, la Nevera i el
+       Lector són oberts i hi poden ser com a trossos diferits.
      · Cap tros (tampoc el d'entrada, on Rollup podria haver-lo inlinat) porta
-       el codi d'una d'estes apps: les marques són els noms de les seues bases
+       el codi de Salut o de la Gestoria, i l'arrencada el de cap d'estes
+       apps: les marques són els noms de les seues bases
        d'IndexedDB, contractes de dades que no canvien i que el minificador
        no toca. Una prova sense build comprova que les marques són de veres
        (cada una és al codi de la seua app i enlloc més del nucli).
@@ -152,23 +155,35 @@ describe.skipIf(!HI_HA_BUILD)(`pressupost de pes del nucli (wordpress-plugin/dis
     expect(RELEASE.inventari.fitxers).toBe(inventari.length);
   });
 
-  test('cap tros de trossos/ porta el nom d’un mòdul de la Gestoria, del Bar, de Salut, de la Nevera o del Lector', () => {
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzades a posta. El Bar, la Nevera i el Lector són oberts
+     per defecte i, al paquet trossejat, entren com a trossos DIFERITS (vite.standalone.config.js,
+     definicionsDeLesApps): poden ser a trossos/, però mai a l'arrencada (l'entrada i els trossos que
+     importa de manera estàtica). Salut i la Gestoria (dades de salut i financeres) no entren mai al paquet
+     de l'amfitrió: ni el nom ni el codi, en cap tros. La intenció de les proves velles es conserva: el
+     nucli verge no porta cap app, i les dades personals no viatgen a una web d'altri. */
+  const NOMS_DE_SALUT_I_GESTORIA = Object.freeze(['AppGestoria', 'ShellGestoria', 'Facturacio', 'Aprendre', 'AppSalut']);
+  const MARQUES_DE_SALUT_I_GESTORIA = Object.freeze([...MARQUES_DE_LES_APPS['src/apps/salut'], ...MARQUES_DE_LES_APPS['src/sections/gestoria']]);
+
+  test('cap tros porta el nom d’un mòdul de la Gestoria o de Salut, i l’arrencada cap d’una app opcional', () => {
     const propis = nomsPropisDeLesApps();
     /* La porta mira de veres: els components d'entrada de cada app hi són. */
-    for (const nom of ['AppGestoria', 'ShellGestoria', 'Facturacio', 'Aprendre', 'AppBar', 'AppSalut', 'AppNevera', 'AppLector']) {
+    for (const nom of [...NOMS_DE_SALUT_I_GESTORIA, 'AppBar', 'AppNevera', 'AppLector']) {
       expect(propis.has(nom), nom).toBe(true);
     }
     const delsTrossos = trossos.map((cami) => [cami, cami.match(PATRO_TROS)[1]]);
-    expect(delsTrossos.filter(([, nom]) => propis.has(nom) || /gestoria/i.test(nom)).map(([cami]) => cami)).toEqual([]);
+    expect(delsTrossos.filter(([, nom]) => NOMS_DE_SALUT_I_GESTORIA.includes(nom) || /gestoria/i.test(nom)).map(([cami]) => cami)).toEqual([]);
+    const arrencada = new Set(deLArrencada);
+    expect(delsTrossos.filter(([cami, nom]) => arrencada.has(cami) && propis.has(nom)).map(([cami]) => cami)).toEqual([]);
   });
 
-  test('cap tros, tampoc el d’entrada, porta el codi d’una app opcional (les marques)', () => {
+  test('cap tros, tampoc el d’entrada, porta el codi de Salut o de la Gestoria; l’arrencada, el de cap app opcional (les marques)', () => {
     const camins = [...new Set([RELEASE.formatDelPaquet.modul, ...trossos])].filter((cami) => !esTextDeLaWiki(cami));
-    const amb = camins.flatMap((cami) => {
+    const ambMarques = (llista, marques) => llista.flatMap((cami) => {
       const text = readFileSync(path.join(DIST, cami), 'utf8');
-      return TOTES_LES_MARQUES.filter((marca) => comACadena(marca).test(text)).map((marca) => `${cami}: ${marca}`);
+      return marques.filter((marca) => comACadena(marca).test(text)).map((marca) => `${cami}: ${marca}`);
     });
-    expect(amb).toEqual([]);
+    expect(ambMarques(camins, MARQUES_DE_SALUT_I_GESTORIA)).toEqual([]);
+    expect(ambMarques(deLArrencada.filter((cami) => typeof cami === 'string' && !esTextDeLaWiki(cami)), TOTES_LES_MARQUES)).toEqual([]);
     expect(camins.length).toBeGreaterThan(50);
   });
 

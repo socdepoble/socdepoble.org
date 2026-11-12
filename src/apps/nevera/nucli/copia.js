@@ -11,8 +11,8 @@
 import { normalitzaEstat } from './nevera.js';
 
 export const ESQUEMA_COPIA = 'sdp.nevera.copia.v1';
-/** Un milió de caràcters: una llista de la compra real no hi arriba ni de lluny. */
-export const MAX_COPIA = 1000000;
+/** Vuit MiB: admet les 30 llistes amb 300 línies i text UTF-8 dins dels límits del nucli. */
+export const MAX_COPIA = 8 * 1024 * 1024;
 
 const esObjecte = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 
@@ -38,7 +38,7 @@ export function serialitzaCopia(estat, opcions) {
  */
 export function llegixCopia(text) {
   if (typeof text !== 'string' || text.trim() === '') return { ok: false, error: 'El fitxer és buit.' };
-  if (text.length > MAX_COPIA) return { ok: false, error: 'El fitxer és massa gran per a ser una còpia de la nevera.' };
+  if (text.length > MAX_COPIA || new TextEncoder().encode(text).byteLength > MAX_COPIA) return { ok: false, error: 'El fitxer és massa gran per a ser una còpia de la nevera.' };
   let cru;
   try {
     cru = JSON.parse(text);
@@ -47,6 +47,11 @@ export function llegixCopia(text) {
   }
   if (!esObjecte(cru) || cru.esquema !== ESQUEMA_COPIA || !esObjecte(cru.dades)) {
     return { ok: false, error: `No és una còpia de La Nevera de Casa (${ESQUEMA_COPIA}).` };
+  }
+  const { seq, llistes, propis, casa } = cru.dades;
+  if (!Array.isArray(llistes) || (seq !== undefined && (!Number.isSafeInteger(seq) || seq < 0))
+    || (propis !== undefined && !Array.isArray(propis)) || (casa !== undefined && !Array.isArray(casa))) {
+    return { ok: false, error: 'A la còpia li falten les llistes de la Nevera.' };
   }
   const estat = normalitzaEstat(cru.dades);
   const articles = estat.llistes.reduce((suma, llista) => suma + llista.linies.length, 0);

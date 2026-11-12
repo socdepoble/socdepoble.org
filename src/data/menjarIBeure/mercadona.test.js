@@ -91,17 +91,30 @@ describe('referències d’imatge estrictes, sense llegir recursos locals o d’
   });
 });
 
-/* Onada R15 (P1-02) · El catàleg viatja amb la Nevera: sense VITE_SDP_APP_NEVERA=1, fora de DEV, el carregador no
-   té destí i el build públic no emet el tros mercadona.generated. Una instància nova del mòdul per cas. */
-describe('catàleg Mercadona: només amb la bandera de la Nevera', () => {
+/* Onada R15 (P1-02) + P0-113 (ordre del Mestre, 261111) · El catàleg viatja amb la Nevera, que és oberta per
+   defecte: sense cap bandera, fora de DEV, el carregador porta el tros diferit mercadona.generated. Amb
+   VITE_SDP_APP_NEVERA=0 el carregador no té destí i el build no emet el tros. Una instància nova del mòdul per cas. */
+describe('catàleg Mercadona: va i ix amb la Nevera (VITE_SDP_APP_NEVERA=0)', () => {
   afterEach(() => vi.unstubAllEnvs());
-  test('sense la bandera, fora de DEV, el carregador rebutja i no carrega cap fila', async () => {
+  test('el literal exacte i plegable del manifest de la Nevera, amb el catàleg en un tros diferit', () => {
+    const porta = "import.meta.env.VITE_SDP_APP_NEVERA !== '0'";
+    expect(readFileSync('src/data/menjarIBeure/mercadona.js', 'utf8')).toContain(`const importaCataleg = ${porta}\n  ? () => import('./mercadona.generated.js')\n  : null;`);
+    expect(readFileSync('src/apps/nevera/manifest.js', 'utf8')).toContain(`carrega: ${porta} ? () => import('./AppNevera.jsx') : null`);
+    expect(readFileSync('src/data/menjarIBeure/mercadona.js', 'utf8')).not.toMatch(/^import .*mercadona\.generated/m);
+  });
+  test('per defecte (sense la bandera, fora de DEV), carrega les 592 files', async () => {
     vi.stubEnv('DEV', false);
     vi.stubEnv('VITE_SDP_APP_NEVERA', undefined);
-    const { carregaMercadona: carrega } = await import(/* @vite-ignore */ './mercadona.js?publica');
+    const { carregaMercadona: carrega } = await import(/* @vite-ignore */ './mercadona.js?publica-per-defecte');
+    expect((await carrega()).productes).toHaveLength(592);
+  });
+  test('amb VITE_SDP_APP_NEVERA=0, el carregador rebutja i no carrega cap fila', async () => {
+    vi.stubEnv('DEV', false);
+    vi.stubEnv('VITE_SDP_APP_NEVERA', '0');
+    const { carregaMercadona: carrega } = await import(/* @vite-ignore */ './mercadona.js?nevera-desendollada');
     await expect(carrega()).rejects.toThrow('El catàleg de Mercadona no està inclòs en este build.');
   });
-  test('amb VITE_SDP_APP_NEVERA=1, fora de DEV, carrega les 592 files', async () => {
+  test('amb VITE_SDP_APP_NEVERA=1 (el valor antic d’inclusió), fora de DEV, carrega les 592 files', async () => {
     vi.stubEnv('DEV', false);
     vi.stubEnv('VITE_SDP_APP_NEVERA', '1');
     const { carregaMercadona: carrega } = await import(/* @vite-ignore */ './mercadona.js?nevera');

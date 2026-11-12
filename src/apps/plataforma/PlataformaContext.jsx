@@ -27,7 +27,7 @@ import { teCapacitat } from '../../data/backendPort.js';
 import { registre as registreDelDocument, analitzaRuta } from './registreApps.js';
 import { avaluaApp, esAmaDelDocument, personaPotApagar, sanejaAppsDeclarades } from './interruptors.js';
 import { desaAppApagada } from './preferenciesApps.js';
-import { EntornContext, produccioDe, teDretDe, usePreferenciesApps } from './ContextApp.jsx';
+import { EntornContext, produccioDe, usePreferenciesApps } from './ContextApp.jsx';
 
 export {
   ProveidorApp, useApp, useInterruptorsApp, usePreferenciesApps, useSessioDeLEntorn, useSessioDeLaRuta
@@ -35,11 +35,11 @@ export {
 
 /**
  * `registre`: un registre de creaRegistre (per defecte, el del document).
- * `entorn`: substitucions per a proves ({ produccio, teDret, teCapacitat, amaDelDocument, sessio, serveis }).
+ * `entorn`: substitucions per a proves ({ produccio, teCapacitat, amaDelDocument, sessio, serveis }).
  *   `sessio`: { estat, esSuperadmin?, marca?, titular?, enLinia?, modeProves?, recuperable? }.
  *   Si hi és (un objecte), useSessioApp (sessioApp.js) la pren en lloc de la
  *   instantània de la ruta (fontSessio.js, que llig SessionContext i
- *   IdentitatContext), igual que teDret substituïx el dret real. enLinia,
+ *   IdentitatContext), igual que teCapacitat substituïx el port real. enLinia,
  *   modeProves i recuperable, si són booleans, fixen també el navegador, el
  *   mode de dades i la sessió desada en el dispositiu. `titular` ({ nom,
  *   avatar, poble }; ordre del Mestre, 13-10-2026, pla 261013_1405, front B)
@@ -64,10 +64,10 @@ export function useRegistre() {
 }
 
 /**
- * El context dels interruptors (interruptors.js). En desenvolupament
- * (import.meta.env.DEV) tot dret premium es presenta concedit, per a poder
- * provar-ho; en producció cap, fins que la capa de poble (servidor) el servisca
- * (produccioDe i teDretDe, el criteri que comparteix amb useInterruptorsApp).
+ * El context dels interruptors (interruptors.js): la producció (produccioDe,
+ * el criteri que comparteix amb useInterruptorsApp), l'amfitrió, les
+ * preferències, les capacitats del backend i el document. P0-113 (ordre del
+ * Mestre, 261111): tot és gratuït, i el context ja no porta cap dret.
  */
 export function useContextApps() {
   const { externalConfig } = useUIState();
@@ -75,19 +75,15 @@ export function useContextApps() {
   const preferencies = usePreferenciesApps();
   const appsAmfitrio = externalConfig?.apps;
   const manageDocumentHead = externalConfig?.manageDocumentHead;
-  return useMemo(() => {
-    const produccio = produccioDe(entorn);
-    return Object.freeze({
-      produccio,
-      declaradesPerAmfitrio: sanejaAppsDeclarades(appsAmfitrio),
-      preferencies,
-      teCapacitat: entorn?.teCapacitat || teCapacitat,
-      teDret: teDretDe(entorn, produccio),
-      amaDelDocument: typeof entorn?.amaDelDocument === 'boolean'
-        ? entorn.amaDelDocument
-        : esAmaDelDocument({ manageDocumentHead })
-    });
-  }, [entorn, preferencies, appsAmfitrio, manageDocumentHead]);
+  return useMemo(() => Object.freeze({
+    produccio: produccioDe(entorn),
+    declaradesPerAmfitrio: sanejaAppsDeclarades(appsAmfitrio),
+    preferencies,
+    teCapacitat: entorn?.teCapacitat || teCapacitat,
+    amaDelDocument: typeof entorn?.amaDelDocument === 'boolean'
+      ? entorn.amaDelDocument
+      : esAmaDelDocument({ manageDocumentHead })
+  }), [entorn, preferencies, appsAmfitrio, manageDocumentHead]);
 }
 
 export function useApps() {

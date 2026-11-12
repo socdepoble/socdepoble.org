@@ -23,14 +23,15 @@
  *     d'identitat) i, si no és l'actor actiu, «Actua com a {Org}». El correu
  *     de l'organització només ix si l'ha fet públic, amb un mailto validat.
  */
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Bot, Contact, MessageCircle, PencilLine, UserCheck } from 'lucide-react';
-import { useNavigate, useParams } from '../../app/contexts/RouterContext';
+import { useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 /* Gauntlet 261025_0545 (CUR-01) · Qui mira: la persona i l'entrada de la
    sessió, la mateixa parella que la clau del PerfilProvider (PerfilContext.jsx). */
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { entradaSessio } from '../../data/identitat.js';
+import { PARAM_REGISTRE_PUBLICADOR, corresponPerfilAcreditat, esTipusIdAcreditat } from '../../data/copublicacio.js';
 import { esRolQueMana } from '../../components/universal/identitat/rols.js';
 import { omple } from '../../config/moderacio.js';
 import { enllacMailto } from './contacteOrganitzacio.js';
@@ -57,7 +58,7 @@ import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargete
    seua font única a la capa de dades (abans, la còpia del directori): un
    personatge ANIMAL és una IA. */
 import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
-import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { backendScope, normalizeBackendConfig } from '../../config/backendConfig.js';
 import { esAppNativa, origenPublic } from '../../config/origenPublic.js';
 /* T43 (ordre del Mestre, 260928) · Connectar una fitxa pública porta el seu
    descriptor i, per a una entitat o un grup, `organitzacio=ID`. La funció viu
@@ -70,7 +71,7 @@ import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 import {
-  ENTITAT_PILOT_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, entitatSeed, esComptePersonaPilot,
+  ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, entitatSeed, esComptePersonaPilot,
   esIAIA, fundacionalDeLaClau
 } from '../../data/identitatsSeed.js';
 /* Onada 11 (261010; refutació del front C, D12) · El destí del xat de la IAIA
@@ -86,6 +87,15 @@ import { ConnexionsPubliques, VisibilitatConnexions } from './ConnexionsPublique
 /* P1-11 (pla 261024_2230, T5B-02) · L'aparador de la fitxa (Mur, Mercat i Agenda). */
 import { PublicacionsDeLaFitxa, textosDeLAparador, useHiHaMur } from './PublicacionsDeLaFitxa.jsx';
 import { teAparador } from './usePublicacionsDeLaFitxa.js';
+
+/* Onada R17 (AH-R17-10) · El dossier històric, estatutari i el model d'acta
+   d'El Rentonar, en un tros diferit: les seues dades (data/patrimoni/actaRentonar.js)
+   només es baixen a la fitxa de Rentonar. Per això l'atribució de la fitxa és
+   una còpia ací i no una importació, que s'emportaria les dades al tros del
+   perfil: DocumentacioHistoricaRentonar.test.jsx comprova que és idèntica a
+   ATRIBUCIO_RENTONAR, la font. */
+const DocumentacioHistoricaRentonar = lazy(() => import('./DocumentacioHistoricaRentonar.jsx'));
+export const ATRIBUCIO_PERFIL_RENTONAR = 'CC BY-NC-SA 4.0 Pedro Ferrer Rodriguez · El Rentonar. Natura i Patrimoni.';
 
 /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
    · Només una entitat, un grup o una IA porten la píndola del seu tipus. Una
@@ -246,13 +256,15 @@ function urlCanonica(ruta) {
  * la cancel·lació, els terminis, la reserva local, el reintent i la clau de
  * qui mira (CUR-01). Torna { perfil, carregant, senseResposta, reintenta }.
  */
-export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
+export function usePerfilPublic(agentId, { agents = AGENTS_BUITS, tipusIdAcreditat } = {}) {
   const { externalConfig } = useUIState();
   /* Gauntlet 261025_0545 (CUR-01) · L'estat porta la clau de qui mira. Si la
      sessió s'acaba (eixida en una altra pestanya, renovació fallida, expulsió
      de l'amfitrió) o passa d'A a B sense que la ruta canvie, la fitxa d'A no
      es queda a la pantalla: es buida en el mateix pintat i es torna a llegir. */
   const visor = clauDelVisor(useSessioOpcional());
+  const clau = String(agentId || '');
+  const clauEstat = JSON.stringify([backendScope(externalConfig ?? {}), clau, tipusIdAcreditat]);
   const [estat, setEstat] = useState({ id: null, visor: null, status: 'loading', perfil: null });
   /* Gauntlet 261022_0225 (Tasca 1) · «Torna-ho a provar» de l'avís: cada clic
      torna a llançar la càrrega (REV-PERF-2: amb la clau, per al seu termini). */
@@ -275,31 +287,30 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
 
   useEffect(() => {
     let viu = true;
-    const clau = String(agentId || '');
     /* Gauntlet 261022_0225 (Tasca 1) · La càrrega es pot cancel·lar: en
        desmuntar o en canviar de clau, l'espera del host i la consulta
        s'avorten, i el termini es lleva. */
     const controlador = new AbortController();
     /* T9-1 · La mateixa clau ja pintada es revalida sense buidar la pantalla.
        CUR-01 · La mateixa clau i el mateix visor: la d'un altre es buida. */
-    const jaPintada = (previ) => previ.id === clau && previ.visor === visor && previ.status === 'ready';
-    setEstat((previ) => (jaPintada(previ) ? previ : { id: clau, visor, status: 'loading', perfil: null }));
+    const jaPintada = (previ) => previ.id === clauEstat && previ.visor === visor && previ.status === 'ready';
+    setEstat((previ) => (jaPintada(previ) ? previ : { id: clauEstat, visor, status: 'loading', perfil: null }));
     /* Gauntlet 261022_0225 (Tasca 1) · Si en TERMINI_DEL_PERFIL_MS el host i
        la consulta no han acabat, la càrrega s'avorta (un host que ignore el
        senyal ja no encetarà cap consulta) i es pinta la reserva local o
        l'avís amb «Torna-ho a provar». Mai «Carregant el perfil…» per sempre. */
     let vencut = false;
-    const reintent = intent.clau === clau;
+    const reintent = intent.clau === clauEstat;
     const terminiMs = reintent ? TERMINI_DEL_REINTENT_MS : TERMINI_DEL_PERFIL_MS;
     const termini = setTimeout(() => {
       if (!viu) return;
       vencut = true;
       controlador.abort();
-      const reserva = perfilDeReservaLocal(clau);
+      const reserva = tipusIdAcreditat ? null : perfilDeReservaLocal(clau);
       if (reserva && clau === ENTITAT_PILOT_SLUG) registraEntitatDelProjecte(reserva);
       setEstat((previ) => {
         if (jaPintada(previ)) return previ;
-        return reserva ? { id: clau, visor, status: 'ready', perfil: reserva } : { id: clau, visor, status: 'senseResposta', perfil: null };
+        return reserva ? { id: clauEstat, visor, status: 'ready', perfil: reserva } : { id: clauEstat, visor, status: 'senseResposta', perfil: null };
       });
     }, terminiMs);
     (async () => {
@@ -313,7 +324,9 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
         if (!viu || vencut) return;
         if (teCapacitat('directori')) {
           /* REV-PERF-2 · La primera, el pressupost de l'adaptador (els mateixos 3 s). */
-          perfil = await loadPerfilPublic(clau, { ...(externalConfig || {}), signal: controlador.signal, ...(reintent ? { terminiMs } : {}) });
+          perfil = await loadPerfilPublic(clau, { ...(externalConfig || {}), signal: controlador.signal,
+            ...(tipusIdAcreditat ? { tipusIdAcreditat } : {}), ...(reintent ? { terminiMs } : {}) });
+          if (tipusIdAcreditat && !corresponPerfilAcreditat(perfil, clau, tipusIdAcreditat)) perfil = null;
         }
       } catch (error) {
         if (!viu || vencut) return;
@@ -325,7 +338,7 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
       // paquet, D12, i de les tres identitats del Mestre, més avall). El
       // catàleg només suplix un node demostratiu que no implementa el port de
       // directori.
-      if (!teCapacitat('directori') && normalizeBackendConfig(externalConfig).dataMode !== 'remote') {
+      if (!tipusIdAcreditat && !teCapacitat('directori') && normalizeBackendConfig(externalConfig).dataMode !== 'remote') {
         perfil = perfilDelCataleg(agentsDelCataleg.find((agent) => String(agent.id) === clau));
       }
       /* Onada 11 (261010; prompt 261010_1730, tasca 6, D12) · Una IA del
@@ -339,7 +352,7 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
          paquet suplix una d'inexistent al servidor (fora de les tres del
          Mestre, davall). Amb la capacitat de directori en llavor i en local el
          port ja la torna, i ací no es passa. */
-      if (!perfil) perfil = perfilDeLaIADelPaquet(agentIASeed(clau));
+      if (!tipusIdAcreditat && !perfil) perfil = perfilDeLaIADelPaquet(agentIASeed(clau));
       /* Revisió adversarial del Gauntlet 261016 (encàrrec C; pla aprovat,
          Onada 1 punt 5, «Paritat total entre local i producció»; prompt, Bloc
          3.5.1, les rutes canòniques dels beta-testers) · EXCEPCIÓ A D12,
@@ -356,7 +369,7 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
          la persona només la pot resoldre una PERSONA: una organització que
          haja pres el slug «javillinares» (o '0001', 'javi'…) no es queda la
          fitxa del Mestre. Per a tota altra persona o entitat, D12 es manté. */
-      const delPaquet = perfilFundacionalDelPaquet(clau);
+      const delPaquet = tipusIdAcreditat ? null : perfilFundacionalDelPaquet(clau);
       if (delPaquet && (!perfil || (delPaquet.tipus === 'persona' && perfil.tipus !== 'persona'))) perfil = delPaquet;
       clearTimeout(termini);
       /* Gauntlet 261022_0225 (Tasca 1) · Una fallada (el host que no
@@ -364,7 +377,7 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
          reserva, l'avís amb «Torna-ho a provar». Una fitxa ja pintada de la
          mateixa clau es queda. */
       if (!perfil && fallada) {
-        setEstat((previ) => (jaPintada(previ) ? previ : { id: clau, visor, status: 'senseResposta', perfil: null }));
+        setEstat((previ) => (jaPintada(previ) ? previ : { id: clauEstat, visor, status: 'senseResposta', perfil: null }));
         return;
       }
       /* Revisió dels verificadors (front «logo», 261004) · En remot, l'id de
@@ -385,7 +398,7 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
          com el projecte i se'n duia la marca i la identitat oficial. Per id,
          el projecte el registra la resolució de l'app. */
       if (clau === ENTITAT_PILOT_SLUG) registraEntitatDelProjecte(perfil);
-      setEstat({ id: clau, visor, status: 'ready', perfil });
+      setEstat({ id: clauEstat, visor, status: 'ready', perfil });
     })();
     /* CUR-01 · Un canvi de visor torna a llegir: la neteja d'ací avorta la
        consulta de l'altra identitat i `viu` en descarta la resposta tardana. */
@@ -394,18 +407,18 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
       clearTimeout(termini);
       controlador.abort();
     };
-  }, [agentId, agentsDelCataleg, externalConfig, intent, visor]);
+  }, [clau, clauEstat, tipusIdAcreditat, agentsDelCataleg, externalConfig, intent, visor]);
 
   /* Gauntlet 261025_0545 (CUR-01) · La purga en el mateix pintat (com
      useScopedResource): una fitxa d'un altre visor no es pinta ni un moment,
      mentre l'efecte la torna a llegir. */
-  const delVisor = estat.visor === visor;
+  const delVisor = estat.visor === visor && estat.id === clauEstat;
   const perfil = delVisor && estat.status === 'ready' ? estat.perfil : null;
   const carregant = !delVisor || estat.status === 'loading';
   const senseResposta = delVisor && estat.status === 'senseResposta';
   /* Gauntlet 261022_0225 (Tasca 1) · «Torna-ho a provar» de l'avís
      (REV-PERF-2: amb la clau, per al seu termini). */
-  const reintenta = () => setIntent((previ) => ({ clau: String(agentId || ''), n: previ.n + 1 }));
+  const reintenta = () => setIntent((previ) => ({ clau: clauEstat, n: previ.n + 1 }));
   return { perfil, carregant, senseResposta, reintenta };
 }
 
@@ -423,7 +436,10 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
   const { t } = useUIActions();
   const { externalConfig } = useUIState();
   const navigate = useNavigate();
-  const { perfil, carregant, senseResposta, reintenta } = usePerfilPublic(agentId, { agents });
+  const { search } = useLocation();
+  const registre = new URLSearchParams(search).get(PARAM_REGISTRE_PUBLICADOR);
+  const tipusIdAcreditat = esTipusIdAcreditat(registre) ? registre : undefined;
+  const { perfil, carregant, senseResposta, reintenta } = usePerfilPublic(agentId, { agents, tipusIdAcreditat });
 
   /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre) · La fitxa d'una de les
      tres identitats del Mestre declara la seua URL canònica neta, s'obriga
@@ -649,6 +665,11 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
   /* T43 · La pertinença de qui mira (per id o per slug). En remot, el
      directori no diu `propietari` per a una organització: la pertinença sí. */
   const esOrganitzacio = perfil.tipus === 'entitat' || perfil.tipus === 'grup';
+  /* Onada R17 (AH-R17-10; arbitratge R18) · La fitxa de Rentonar, reconeguda com
+     la resta de les tres identitats del Mestre (clauFundacional: l'id o un àlies
+     que declara la llavor, o un id remot declarat; mai el slug que torna el
+     servidor ni el nom). Un grup «rentonar» d'un altre poble no la rep. */
+  const esRentonar = esOrganitzacio && clauFundacional(perfil) === ENTITAT_RENTONAR_SLUG;
   const membership = esOrganitzacio
     ? memberships.find((m) => String(m.id) === String(perfil.id) || (perfil.slug && m.slug === perfil.slug)) || null
     : null;
@@ -782,7 +803,7 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
       logoEntitat={logoDeLaFitxa}
       avatarAutor={avatarDeLaFitxa}
       labels={etiquetes}
-      copyright={esPersona ? undefined : (perfil.copyright || `© ${perfil.nom}`)}
+      copyright={esPersona ? undefined : (perfil.copyright || (esRentonar ? ATRIBUCIO_PERFIL_RENTONAR : `© ${perfil.nom}`))}
       /* T51 · la data real de la fitxa: `creat` i `modificat` del PerfilPublic
          (created_at i updated_at de la fila, que supabase/perfils.js i
          localPerfils.js ja passen). Sense ells no hi ha pastilla: mai la d'ara. */
@@ -896,6 +917,13 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
         <ProveidorSincronitzacioTargetes>
           <PresentacioDeLaFitxa html={esLaIAIA ? presentacioAmbLaTargetaDeLAnima(perfil.presentacioHtml) : perfil.presentacioHtml} />
         </ProveidorSincronitzacioTargetes>
+      ) : null}
+      {/* Onada R17 (AH-R17-10) · A la fitxa de Rentonar, davall de la presentació,
+          el seu arxiu històric, estatutari i el model d'acta (tros diferit). */}
+      {esRentonar ? (
+        <Suspense fallback={null}>
+          <DocumentacioHistoricaRentonar />
+        </Suspense>
       ) : null}
       {/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · Al peu de la
           presentació de la IAIA, el Selector de Realitat dels 4 nivells: fora

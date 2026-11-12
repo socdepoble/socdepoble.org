@@ -20,7 +20,10 @@ export function VistaBotiguesSistema({ model, onCopia, copiant = false, avis = n
         <>
           <p>L’enllaç de proves correspon a l’identificador de l’app. L’accés al programa i l’estat del grup no es poden comprovar des d’esta pàgina.</p>
           <div className="sdp-alerta__accions">
+            {/* Arbitratge R18 (AH-R17-09) · Sense l'enllaç al grup de verificadors: esta vista es pinta a
+                /consola/*, de lectura pública. El grup només és al perfil d'administració i al portal /app. */}
             <a className="sdp-boto sdp-boto--secundari" href={model.play.optInUrl} target="_blank" rel="noopener noreferrer">Obri les proves de Google Play</a>
+            <Link className="sdp-boto sdp-boto--secundari" to="/app">Portal d’apps (/app)</Link>
             <Boto varietat="secundari" onClick={onCopia} disabled={typeof onCopia !== 'function' || copiant}>{copiant ? 'Copiant…' : 'Copia l’enllaç de proves'}</Boto>
           </div>
         </>

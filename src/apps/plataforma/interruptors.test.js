@@ -7,7 +7,7 @@ import {
   ESTATS_APP, avaluaApp, avaluaInterruptor, esAmaDelDocument, estatApp, personaPotApagar, sanejaAppsDeclarades
 } from './interruptors.js';
 import { validaManifestApp } from './manifestApp.js';
-import { APPS_INTERNES } from './registreApps.js';
+import { APPS_INTERNES, MANIFESTS_INTERNS } from './registreApps.js';
 import {
   CLAU_PREFERENCIES, _reiniciaPreferencies, desaAppApagada, desaInterruptorApagat, llegeixPreferencies,
   normalitzaPreferencies, subscriuPreferencies
@@ -16,16 +16,35 @@ import {
 const app = (canvis, origen) => validaManifestApp(manifestDeProva(canvis), { origen }).manifest;
 const SEMPRE = () => true;
 /* Un node de producció on tot està encés i la persona no ha tocat res. */
-const PRODUCCIO = Object.freeze({ produccio: true, teCapacitat: SEMPRE, teDret: SEMPRE, amaDelDocument: true });
+const PRODUCCIO = Object.freeze({ produccio: true, teCapacitat: SEMPRE, amaDelDocument: true });
 
 describe('estatApp · les capes', () => {
-  test('els quatre estats, i res més', () => {
-    expect(ESTATS_APP).toEqual(['disabled', 'unavailable', 'unsubscribed', 'available']);
+  /* P0-113 (ordre del Mestre, 261111) · Tot és gratuït i lliure: cap estat de pagament. */
+  test('els tres estats, i res més', () => {
+    expect(ESTATS_APP).toEqual(['disabled', 'unavailable', 'available']);
     expect(estatApp(app(), PRODUCCIO)).toBe('available');
   });
 
   test('build: una interna amb carrega null no és al paquet', () => {
     expect(avaluaApp(app({ carrega: null }), PRODUCCIO)).toEqual({ estat: 'disabled', motiu: 'no-compilada' });
+  });
+
+  /* P0-113 (ordre del Mestre, 261111) · El paquet de l'amfitrió fixa a '0' Salut
+     i la Gestoria: a la web d'un altre, la persona llig la veritat (document
+     propi) i no «qui porta esta web la pot afegir», que no passarà mai. Al
+     document propi, un build que les desendolla continua dient 'no-compilada'. */
+  test('salut i financeres sense compilar fora del document propi: el motiu de document propi, abans del build', () => {
+    for (const [dadesPersonals, motiu] of [['salut', 'document-no-propi'], ['financeres', 'document-no-propi-financeres']]) {
+      const sensePaquet = app({ carrega: null, dadesPersonals });
+      expect(avaluaApp(sensePaquet, { ...PRODUCCIO, amaDelDocument: false }), dadesPersonals).toEqual({ estat: 'unavailable', motiu });
+      expect(avaluaApp(sensePaquet, { ...PRODUCCIO, amaDelDocument: undefined }).motiu, dadesPersonals).toBe(motiu);
+      expect(avaluaApp(sensePaquet, { ...PRODUCCIO, amaDelDocument: false, declaradesPerAmfitrio: [] }).motiu, dadesPersonals).toBe(motiu);
+      expect(avaluaApp(sensePaquet, PRODUCCIO), dadesPersonals).toEqual({ estat: 'disabled', motiu: 'no-compilada' });
+      /* La garantia del build no canvia: la persona no hi té cap interruptor. */
+      expect(personaPotApagar(sensePaquet, { ...PRODUCCIO, amaDelDocument: false }), dadesPersonals).toBe(false);
+    }
+    /* Sense dades personals, la capa de build continua sent la primera. */
+    expect(avaluaApp(app({ carrega: null, dadesPersonals: false }), { ...PRODUCCIO, amaDelDocument: false }).motiu).toBe('no-compilada');
   });
 
   test('una externa no necessita carrega', () => {
@@ -61,9 +80,6 @@ describe('estatApp · les capes', () => {
     /* Un «true» de la persona no encén una app apagada per defecte… */
     const vol = { apps: { prova: true }, interruptors: {} };
     expect(estatApp(app({ actiuPerDefecte: false }), { ...PRODUCCIO, preferencies: vol })).toBe('disabled');
-    /* …ni un premium sense dret. */
-    expect(estatApp(app({ nivell: 'premium', dret: 'sdp.app.prova' }), { ...PRODUCCIO, teDret: () => false, preferencies: vol }))
-      .toBe('unsubscribed');
   });
 
   test('capacitats del backend: sense elles, unavailable', () => {
@@ -119,11 +135,30 @@ describe('estatApp · les capes', () => {
       .toBe('entorn-desenvolupament');
   });
 
-  test('premium: sense dret, unsubscribed i ho diu', () => {
-    const premium = app({ nivell: 'premium', dret: 'sdp.app.prova' });
-    expect(avaluaApp(premium, { ...PRODUCCIO, teDret: () => false })).toEqual({ estat: 'unsubscribed', motiu: 'sense-dret' });
-    expect(estatApp(premium, { ...PRODUCCIO, teDret: (dret) => dret === 'sdp.app.prova' })).toBe('available');
-    expect(estatApp(premium, { ...PRODUCCIO, teDret: undefined })).toBe('unsubscribed');
+  /* P0-113 (ordre del Mestre, 261111) · Abans, una app premium sense dret quedava
+     'unsubscribed' amb el motiu 'sense-dret'. Ara el premium no existix: el
+     validador el rebutja, i cap context, ni un `teDret` que ho negue tot, no
+     tanca una app gratuïta. */
+  test('cap premium: el validador el rebutja i cap dret tanca una app', () => {
+    const { ok, manifest } = validaManifestApp(manifestDeProva({ nivell: 'premium' }));
+    expect(ok).toBe(false);
+    expect(manifest).toBeNull();
+    expect(avaluaApp(app(), { ...PRODUCCIO, teDret: () => false })).toEqual({ estat: 'available', motiu: null });
+    expect(avaluaApp(app(), { ...PRODUCCIO, teDret: undefined })).toEqual({ estat: 'available', motiu: null });
+  });
+
+  /* P0-113 · Les cinc apps internes que l'ordre encén són gratuïtes i lliures: cap porta nivell ni dret de pagament.
+     P0-114 i R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · Expectativa actualitzada a propòsit: l'Arbre
+     Genealògic és la sisena interna (registreApps.js, MANIFESTS_INTERNS) i el Panell ja l'obri; també gratuïta. */
+  test('les apps internes són totes gratuïtes', () => {
+    expect(MANIFESTS_INTERNS.map((cru) => cru.id)).toEqual(['bar', 'salut', 'nevera', 'lector', 'gestoria', 'genealogia']);
+    for (const cru of MANIFESTS_INTERNS) {
+      expect(cru.nivell, cru.id).toBe('gratuit');
+      expect('dret' in cru, cru.id).toBe(false);
+      for (const interruptor of cru.interruptors || []) expect(interruptor.nivell ?? 'gratuit', `${cru.id}/${interruptor.id}`).toBe('gratuit');
+      expect(validaManifestApp(cru).errors, cru.id).toEqual([]);
+    }
+    expect(APPS_INTERNES).toHaveLength(MANIFESTS_INTERNS.length);
   });
 
   test('personaPotApagar: només quan la resta de capes l’encenen', () => {
@@ -139,17 +174,17 @@ describe('interruptors interns d’una app', () => {
     interruptors: [
       { id: 'cuina', titol: { ca: 'Cuina' } },
       { id: 'reserves', titol: { ca: 'Reserves' }, actiuPerDefecte: false },
-      { id: 'escandalls', titol: { ca: 'Escandalls' }, nivell: 'premium', dret: 'sdp.app.prova.escandalls' }
+      { id: 'escandalls', titol: { ca: 'Escandalls' }, nivell: 'gratuit' }
     ]
   });
 
-  test('encés per defecte, apagat per defecte, desconegut i premium', () => {
+  test('encés per defecte, apagat per defecte, desconegut i gratuït', () => {
     expect(avaluaInterruptor(ambInterruptors, 'cuina', PRODUCCIO)).toEqual({ estat: 'available', motiu: null, actiu: true });
     expect(avaluaInterruptor(ambInterruptors, 'reserves', PRODUCCIO)).toMatchObject({ actiu: false, motiu: 'apagat-per-defecte' });
     expect(avaluaInterruptor(ambInterruptors, 'fantasma', PRODUCCIO)).toMatchObject({ actiu: false, motiu: 'desconegut' });
+    /* P0-113 (ordre del Mestre, 261111) · Cap interruptor es cobra: cap dret el tanca. */
     expect(avaluaInterruptor(ambInterruptors, 'escandalls', { ...PRODUCCIO, teDret: () => false }))
-      .toEqual({ estat: 'unsubscribed', motiu: 'sense-dret', actiu: false });
-    expect(avaluaInterruptor(ambInterruptors, 'escandalls', PRODUCCIO).actiu).toBe(true);
+      .toEqual({ estat: 'available', motiu: null, actiu: true });
   });
 
   test('la persona l’apaga, i un «true» seu no l’encén', () => {

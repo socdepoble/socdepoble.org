@@ -53,6 +53,21 @@ export function nsNet(uri) {
 
 const INICI_NOM = /[A-Za-z_:]/;
 const FI_NOM = /[\s/>=]/;
+const QNAME = /^[A-Za-z_][A-Za-z0-9_.-]*(?::[A-Za-z_][A-Za-z0-9_.-]*)?$/;
+const CARACTERS_NO_XML = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFE\uFFFF]/u;
+const URI_XML = ['http', NS.xml].join('://');
+const URI_XMLNS = ['http', 'www.w3.org/2000/xmlns/'].join('://');
+
+function entitatsXmlValides(text) {
+  if (CARACTERS_NO_XML.test(text)
+    || /&(?!(?:amp|lt|gt|quot|apos|#\d{1,7}|#x[\da-fA-F]{1,6});)/u.test(text)) return false;
+  for (const referencia of text.matchAll(/&#(?:x([\da-fA-F]{1,6})|(\d{1,7}));/gu)) {
+    const punt = referencia[1] ? parseInt(referencia[1], 16) : Number(referencia[2]);
+    if (![9, 10, 13].includes(punt) && !(punt >= 32 && punt <= 0xD7FF)
+      && !(punt >= 0xE000 && punt <= 0xFFFD) && !(punt >= 0x10000 && punt <= 0x10FFFF)) return false;
+  }
+  return true;
+}
 
 /** El nom d'una etiqueta o d'un atribut a partir de `i` (també per a html.js). */
 export function llegixNom(text, i) {
@@ -85,46 +100,55 @@ function fiDeDeclaracio(text, i) {
  * fa servir html.js, amb `normalitza` false: HTML no canvia els salts dels
  * valors per espais (XML sí).
  */
-export function llegixAtributs(text, i, { normalitza = true } = {}) {
+export function llegixAtributs(text, i, { normalitza = true, errors } = {}) {
   const atributs = new Map();
+  const esEspai = (caracter) => errors ? /^[ \t\r\n]$/.test(caracter) : /\s/.test(caracter);
   let j = i;
   while (j < text.length) {
-    while (j < text.length && /\s/.test(text[j])) j += 1;
+    while (j < text.length && esEspai(text[j])) j += 1;
     if (j >= text.length) break;
     if (text[j] === '>') return { atributs, fi: j + 1, buida: false };
     if (text[j] === '/' && text[j + 1] === '>') return { atributs, fi: j + 2, buida: true };
-    if (text[j] === '/' || text[j] === '=') { j += 1; continue; }
+    if (text[j] === '/' || text[j] === '=') { errors?.push('atribut no vàlid'); j += 1; continue; }
     const nom = llegixNom(text, j);
+    if (!nom) { errors?.push('espai XML no vàlid'); j += 1; continue; }
+    if (!QNAME.test(nom)) errors?.push('nom d’atribut no vàlid');
     j += nom.length;
-    while (j < text.length && /\s/.test(text[j])) j += 1;
+    while (j < text.length && esEspai(text[j])) j += 1;
     let valor = '';
     if (text[j] === '=') {
       j += 1;
-      while (j < text.length && /\s/.test(text[j])) j += 1;
+      while (j < text.length && esEspai(text[j])) j += 1;
       const cometa = text[j];
       if (cometa === '"' || cometa === '\'') {
         const fi = text.indexOf(cometa, j + 1);
+        if (fi === -1) errors?.push('atribut sense tancar');
         valor = text.slice(j + 1, fi === -1 ? text.length : fi);
         j = fi === -1 ? text.length : fi + 1;
+        if (j < text.length && !(esEspai(text[j]) || text[j] === '/' || text[j] === '>')) errors?.push('falta espai entre atributs');
       } else {
+        errors?.push('valor d’atribut sense cometes');
         let fi = j;
         while (fi < text.length && !/[\s>]/.test(text[fi])) fi += 1;
         valor = text.slice(j, fi);
         j = fi;
       }
-    }
+    } else errors?.push('atribut sense valor');
+    if (errors && (valor.includes('<') || !entitatsXmlValides(valor))) errors.push('valor XML no vàlid');
+    if (atributs.has(nom)) errors?.push('atribut repetit');
     if (nom && !atributs.has(nom)) atributs.set(nom, normalitza ? descodifica(valor).replace(/[\t\n\r]/g, ' ') : descodifica(valor));
   }
+  errors?.push('etiqueta sense tancar');
   return { atributs, fi: text.length, buida: false };
 }
 
 /* L'àmbit d'espais de noms d'un element: el del pare i les seues xmlns. */
-function ambitDe(pare, atributs) {
+function ambitDe(pare, atributs, estricte = false) {
   let ambit = pare;
   for (const [nom, valor] of atributs) {
     if (nom !== 'xmlns' && !nom.startsWith('xmlns:')) continue;
     if (ambit === pare) ambit = new Map(pare);
-    ambit.set(nom === 'xmlns' ? '' : nom.slice(6), nsNet(valor));
+    ambit.set(nom === 'xmlns' ? '' : nom.slice(6), estricte ? valor : nsNet(valor));
   }
   return ambit;
 }
@@ -136,46 +160,94 @@ function nsDelNom(nom, ambit) {
   return prefix && Object.hasOwn(CONVENCIONALS, prefix) ? CONVENCIONALS[prefix] : '';
 }
 
+/* El mode estricte no recupera prefixos ni confon dos atributs del mateix espai. */
+function validaEspais(nom, atributs, ambit, errors) {
+  const prefixDe = (clau) => clau.includes(':') ? clau.slice(0, clau.indexOf(':')) : '';
+  const prefix = prefixDe(nom);
+  if (!QNAME.test(nom) || prefix === 'xmlns' || (prefix && !ambit.get(prefix))) errors.push('prefix d’element no vàlid');
+  const expandits = new Map();
+  for (const [clau, valor] of atributs) {
+    if (clau === 'xmlns' || clau.startsWith('xmlns:')) {
+      const declarat = clau === 'xmlns' ? '' : clau.slice(6);
+      if (declarat === 'xmlns' || valor === URI_XMLNS
+        || (declarat === 'xml' ? valor !== URI_XML : valor === URI_XML)
+        || (declarat && !valor)) errors.push('declaració d’espai no vàlida');
+      continue;
+    }
+    const prefixAtribut = prefixDe(clau);
+    if (!QNAME.test(clau) || (prefixAtribut && !ambit.get(prefixAtribut))) errors.push('prefix d’atribut no vàlid');
+    const espai = prefixAtribut ? ambit.get(prefixAtribut) : '';
+    const local = prefixAtribut ? clau.slice(prefixAtribut.length + 1) : clau;
+    if (!expandits.has(espai)) expandits.set(espai, new Set());
+    if (expandits.get(espai).has(local)) errors.push('atribut expandit repetit');
+    expandits.get(espai).add(local);
+  }
+}
+
+function validaInstruccio(text, inici, errors) {
+  const nom = llegixNom(text, 0);
+  const resta = text.slice(nom.length);
+  if (!QNAME.test(nom) || (resta && !/^[ \t\r\n]/.test(resta))) errors.push('instrucció no vàlida');
+  if (nom.toLowerCase() !== 'xml') return;
+  if (nom !== 'xml' || inici !== 0 || text.includes('&')) errors.push('declaració XML no vàlida');
+  const { atributs } = llegixAtributs(`${text}>`, nom.length, { errors });
+  const claus = [...atributs.keys()].join(',');
+  if (!['version', 'version,encoding', 'version,standalone', 'version,encoding,standalone'].includes(claus)
+    || atributs.get('version') !== '1.0'
+    || (atributs.has('encoding') && !/^[A-Za-z][A-Za-z0-9._-]*$/.test(atributs.get('encoding')))
+    || (atributs.has('standalone') && !['yes', 'no'].includes(atributs.get('standalone')))) errors.push('declaració XML no vàlida');
+}
+
 /**
  * Llig un document XML. Mai no llança: un text que no és XML torna
  * { arrel: null, errors: [...] }.
  * @returns {{ arrel: object|null, errors: string[] }}
  */
-export function llegixXml(text) {
+export function llegixXml(text, { estricte = false } = {}) {
   const errors = [];
   if (typeof text !== 'string') return { arrel: null, errors: ['no és text'] };
   if (text.length > LIMITS_XML.caracters) return { arrel: null, errors: ['el feed és massa gran'] };
   const font = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+  if (estricte && CARACTERS_NO_XML.test(font)) return { arrel: null, errors: ['caràcter XML no vàlid'] };
   const docXml = { nom: '#doc', local: '#doc', ns: '', atributs: new Map(), fills: [] };
-  const pila = [{ node: docXml, ambit: new Map([['xml', NS.xml]]) }];
+  const pila = [{ node: docXml, ambit: new Map([['xml', estricte ? URI_XML : NS.xml]]) }];
   let nodes = 0;
   let saltats = 0;
   let i = 0;
 
-  const afigText = (valor) => {
-    if (valor) pila[pila.length - 1].node.fills.push(valor);
+  const afigText = (valor, cdata = false) => {
+    if (estricte && (!entitatsXmlValides(cdata ? valor.replace(/&/g, '') : valor) || (!cdata && valor.includes(']]>')))) errors.push('text XML no vàlid');
+    if (valor) pila[pila.length - 1].node.fills.push(cdata ? valor : descodifica(valor));
   };
 
   while (i < font.length) {
     const lt = font.indexOf('<', i);
-    if (lt === -1) { afigText(descodifica(font.slice(i))); break; }
-    if (lt > i) afigText(descodifica(font.slice(i, lt)));
+    if (lt === -1) { afigText(font.slice(i)); break; }
+    if (lt > i) afigText(font.slice(i, lt));
     i = lt;
     if (font.startsWith('<!--', i)) {
       const fi = font.indexOf('-->', i + 4);
+      if (estricte && (fi === -1 || font.slice(i + 4, fi).includes('--') || font.slice(i + 4, fi).endsWith('-'))) errors.push('comentari no vàlid');
       i = fi === -1 ? font.length : fi + 3;
     } else if (font.startsWith('<![CDATA[', i)) {
       const fi = font.indexOf(']]>', i + 9);
-      afigText(font.slice(i + 9, fi === -1 ? font.length : fi));
+      if (estricte && (fi === -1 || pila.length === 1)) errors.push('CDATA no vàlid');
+      afigText(font.slice(i + 9, fi === -1 ? font.length : fi), true);
       i = fi === -1 ? font.length : fi + 3;
     } else if (font.startsWith('<?', i)) {
       const fi = font.indexOf('?>', i + 2);
+      if (estricte) {
+        if (fi === -1) errors.push('instrucció sense tancar');
+        else validaInstruccio(font.slice(i + 2, fi), i, errors);
+      }
       i = fi === -1 ? font.length : fi + 2;
     } else if (font.startsWith('<!', i)) {
+      if (estricte) errors.push('declaració no admesa');
       i = fiDeDeclaracio(font, i);
     } else if (font[i + 1] === '/') {
       const nom = llegixNom(font, i + 2);
       const fi = font.indexOf('>', i + 2);
+      if (estricte && (fi === -1 || !/^[ \t\r\n]*$/.test(font.slice(i + 2 + nom.length, fi)))) errors.push('tancament no vàlid');
       i = fi === -1 ? font.length : fi + 1;
       let k = pila.length - 1;
       while (k > 0 && pila[k].node.nom !== nom) k -= 1;
@@ -189,9 +261,11 @@ export function llegixXml(text) {
       }
     } else if (INICI_NOM.test(font[i + 1] || '')) {
       const nom = llegixNom(font, i + 1);
-      const { atributs, fi, buida } = llegixAtributs(font, i + 1 + nom.length);
+      if (estricte && !QNAME.test(nom)) errors.push('nom d’element no vàlid');
+      const { atributs, fi, buida } = llegixAtributs(font, i + 1 + nom.length, { errors: estricte ? errors : undefined });
       i = fi;
       if (pila.length > LIMITS_XML.profunditat) {
+        if (estricte) errors.push('massa profunditat');
         /* Massa fondo: l'element no es crea i el seu text va al pare. */
         if (!buida) saltats += 1;
         continue;
@@ -199,18 +273,22 @@ export function llegixXml(text) {
       nodes += 1;
       if (nodes > LIMITS_XML.nodes) { errors.push('massa elements: la resta no es llig'); break; }
       const pare = pila[pila.length - 1];
-      const ambit = ambitDe(pare.ambit, atributs);
+      const ambit = ambitDe(pare.ambit, atributs, estricte);
+      if (estricte) validaEspais(nom, atributs, ambit, errors);
       const dos = nom.indexOf(':');
-      const node = { nom, local: dos > 0 ? nom.slice(dos + 1) : nom, ns: nsDelNom(nom, ambit), atributs, fills: [] };
+      const node = { nom, local: dos > 0 ? nom.slice(dos + 1) : nom, ns: estricte ? nsNet(nsDelNom(nom, ambit)) : nsDelNom(nom, ambit), atributs, fills: [] };
       pare.node.fills.push(node);
       if (!buida) pila.push({ node, ambit });
     } else {
+      if (estricte) errors.push('obertura no vàlida');
       afigText('<');
       i += 1;
     }
   }
   if (pila.length > 1) errors.push('etiquetes sense tancar al final');
   const arrel = docXml.fills.find((fill) => typeof fill !== 'string') || null;
+  if (estricte && (docXml.fills.filter((fill) => typeof fill !== 'string').length !== 1
+    || docXml.fills.some((fill) => typeof fill === 'string' && /[^ \t\r\n]/.test(fill)))) errors.push('arrel no vàlida');
   if (!arrel) errors.push('cap element arrel');
   return { arrel, errors };
 }

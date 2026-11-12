@@ -300,9 +300,9 @@ describe('preflight: el context de producció i la família «Avisos push»', ()
     }
   });
 
-  test.skipIf(SENSE_NATIUS)('avisos de producció de l’arbre real: Google de reserva i iPad a iOS, la prova tancada a Android; cap ✗', () => {
+  test.skipIf(SENSE_NATIUS)('avisos de producció de l’arbre real: Google iOS configurat i iPad a iOS, la prova tancada a Android; cap ✗', () => {
     const ios = p.avisosDeProduccio(ARREL, ['ios']).join('\n');
-    expect(ios).toMatch(/com\.googleusercontent\.apps\.pendent/);
+    expect(ios).not.toMatch(/com\.googleusercontent\.apps\.pendent/);
     expect(ios).toMatch(/TARGETED_DEVICE_FAMILY porta l'iPad/);
     expect(ios).not.toMatch(/ITSAppUsesNonExemptEncryption/);
     const android = p.avisosDeProduccio(ARREL, ['android']).join('\n');
@@ -310,15 +310,16 @@ describe('preflight: el context de producció i la família «Avisos push»', ()
     expect(android).not.toMatch(/targetSdkVersion/);
   });
 
-  test('avisos de producció d’un projecte de mostra: sense ITSAppUsesNonExemptEncryption i amb un targetSdk vell', () => {
+  test('avisos de producció d’un projecte de mostra: esquema Google de reserva, sense ITSAppUsesNonExemptEncryption i amb un targetSdk vell', () => {
     const arrel = temporal('sdp-b9-mostra-');
-    escriu(arrel, 'ios/App/App/Info.plist', '<plist><dict><!-- <key>ITSAppUsesNonExemptEncryption</key><false/> --></dict></plist>');
+    escriu(arrel, 'ios/App/App/Info.plist', '<plist><dict><string>com.googleusercontent.apps.pendent</string><!-- <key>ITSAppUsesNonExemptEncryption</key><false/> --></dict></plist>');
     escriu(arrel, 'ios/App/App.xcodeproj/project.pbxproj', 'TARGETED_DEVICE_FAMILY = 1;\n');
     escriu(arrel, 'android/variables.gradle', 'ext {\n    targetSdkVersion = 34\n}\n');
     escriu(arrel, 'android/app/build.gradle', 'android { defaultConfig { targetSdkVersion rootProject.ext.targetSdkVersion } }');
     const ios = p.avisosDeProduccio(arrel, ['ios']).join('\n');
+    expect(ios).toMatch(/com\.googleusercontent\.apps\.pendent/);
     expect(ios).toMatch(/no diu ITSAppUsesNonExemptEncryption = false/);
-    expect(ios).not.toMatch(/iPad|googleusercontent/);
+    expect(ios).not.toMatch(/iPad/);
     expect(p.avisosDeProduccio(arrel, ['android']).join('\n')).toMatch(/targetSdkVersion 34 és més baix que 36/);
     /* ARB-N05-02 (A7) · Just al llindar no hi ha avís. */
     escriu(arrel, 'android/variables.gradle', `ext {\n    targetSdkVersion = ${p.TARGET_SDK_PLAY_MINIM}\n}\n`);

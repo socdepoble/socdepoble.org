@@ -11,8 +11,8 @@
  *   const salut = useSalut();
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { carregaTot, creaMagatzemSalut, desaMeta } from './magatzem.js';
-import { creaCopia, fusionaCopia } from './nucli/copia.js';
+import { carregaTot, creaMagatzemSalut, desaMeta, importaCopia } from './magatzem.js';
+import { creaCopia } from './nucli/copia.js';
 import { validaApunt } from './nucli/diccionari.js';
 import { alcadesPerData, assignaJornades, dataDe, jornadaDe, momentLocal, ofsetLocal } from './nucli/hores.js';
 import { VERSIO_AVIS } from './textos.js';
@@ -20,7 +20,6 @@ import { VERSIO_AVIS } from './textos.js';
 const SalutContext = createContext(null);
 const RELLOTGE = () => new Date();
 const NOU_ID = () => globalThis.crypto.randomUUID();
-const STORES_DADES = Object.freeze(['apunts', 'jornades', 'periodes', 'valoracions']);
 
 /** La jornada del moment `moment` amb les alçades apuntades i l'hora habitual. */
 export function jornadaDelMoment(moment, apunts, persona) {
@@ -70,10 +69,11 @@ export function ProveidorSalut({ magatzem: propi, rellotge = RELLOTGE, nouId = N
 
   /* Cada escriptura torna a llegir-ho tot: la font de veritat és el magatzem. */
   const escriu = useCallback(async (fn) => {
+    if (magatzem.mode !== 'escriptora') throw Object.assign(new Error('El magatzem encara no permet escriure.'), { codi: 'NOMES_LECTURA' });
     const resultat = await fn();
     await recarrega();
     return resultat;
-  }, [recarrega]);
+  }, [magatzem, recarrega]);
 
   const operacions = useMemo(() => ({
     /** Valida i desa un apunt (nou o editat). Torna { ok, errors, avisos, apunt }. */
@@ -86,41 +86,46 @@ export function ProveidorSalut({ magatzem: propi, rellotge = RELLOTGE, nouId = N
       if (!validacio.ok) return validacio;
       const altres = (dades?.apunts || []).filter((apunt) => apunt.id !== amb.id);
       const [ambJornada] = assignaJornades([validacio.apunt, ...altres], dades?.persona || {});
-      await escriu(() => magatzem.desa('apunts', ambJornada));
+      await escriu(() => magatzem.actualitza('apunts', amb.id, (actual) => {
+        if (nou ? actual : !actual || (cru.modificat && cru.modificat !== actual.modificat)) {
+          throw Object.assign(new Error('L’apunt ha canviat en una altra pestanya.'), { codi: 'CONFLICTE' });
+        }
+        return ambJornada;
+      }));
       return { ...validacio, apunt: ambJornada, nou };
     },
     esborraApunt: (id) => escriu(() => magatzem.esborra('apunts', id)),
-    marcaJornada: (data, canvis) => escriu(() => magatzem.desa('jornades', { ...(jornades.get(data) || {}), ...canvis, data })),
+    marcaJornada: (data, canvis) => escriu(() => magatzem.actualitza('jornades', data,
+      (actual) => ({ ...actual, ...canvis, data }))),
     creaPeriode: ({ inici, dies = 3 }) => escriu(async () => {
-      for (const periode of dades?.periodes || []) {
-        if (periode.estat === 'en-curs') await magatzem.desa('periodes', { ...periode, estat: 'acabat' });
-      }
-      return magatzem.desa('periodes', { id: nouId(), inici, dies, estat: 'en-curs' });
+      const nou = { id: nouId(), inici, dies, estat: 'en-curs' };
+      await magatzem.actualitzaBolcat(({ periodes }) => ({
+        periodes: [...periodes.map((p) => p.estat === 'en-curs' ? { ...p, estat: 'acabat' } : p), nou]
+      }), ['periodes']);
+      return nou;
     }),
-    acabaPeriode: (id) => escriu(() => {
-      const periode = (dades?.periodes || []).find((p) => p.id === id);
-      return periode ? magatzem.desa('periodes', { ...periode, estat: 'acabat' }) : null;
-    }),
+    acabaPeriode: (id) => escriu(() => magatzem.actualitza('periodes', id, (p) => p ? { ...p, estat: 'acabat' } : undefined)),
     desaValoracio: (valoracio) => escriu(() => magatzem.desa('valoracions', { ...valoracio, id: valoracio.id || nouId() })),
     acceptaAvis: () => escriu(() => desaMeta(magatzem, 'avis', { acceptatA: rellotge().toISOString(), versio: VERSIO_AVIS })),
     desaPersona: (nova) => escriu(() => desaMeta(magatzem, 'persona', nova)),
-    descartaAlerta: (clau) => escriu(() => desaMeta(magatzem, 'descartades', [...(dades?.descartades || []), clau])),
+    descartaAlerta: (clau) => escriu(() => magatzem.actualitza('meta', 'descartades',
+      (actual) => ({ clau: 'descartades', valor: [...(actual?.valor || []), clau] }))),
     /**
      * Apaga (true) o torna a encendre (false) un apartat de Salut. Va a la
      * base de Salut, no a les preferències de la plataforma (config/storage.js):
      * el que la família no apunta també diu alguna cosa de la persona.
      */
-    apagaInterruptor: (id, apagat) => escriu(() => {
-      const altres = (dades?.apagats || []).filter((actual) => actual !== id);
-      return desaMeta(magatzem, 'apagats', apagat ? [...altres, id] : altres);
-    }),
+    apagaInterruptor: (id, apagat) => escriu(() => magatzem.actualitza('meta', 'apagats', (actual) => {
+      const altres = (actual?.valor || []).filter((clau) => clau !== id);
+      return { clau: 'apagats', valor: apagat ? [...altres, id] : altres };
+    })),
     /**
      * La còpia de tot, en text JSON; anota quan s'ha fet. Fer la còpia només
      * llig: si la marca no es pot desar (una pestanya que només mira,
      * NOMES_LECTURA), la còpia es torna igual i el recordatori continua.
      */
     async copia() {
-      const text = JSON.stringify(creaCopia(dades || {}, { ara: rellotge() }), null, 2);
+      const text = JSON.stringify(creaCopia(await carregaTot(magatzem), { ara: rellotge() }), null, 2);
       try {
         await escriu(() => desaMeta(magatzem, 'ultimaCopia', rellotge().toISOString()));
       } catch {
@@ -129,26 +134,11 @@ export function ProveidorSalut({ magatzem: propi, rellotge = RELLOTGE, nouId = N
       return text;
     },
     /** Importa dades ja llegides (copia.js · llegixCopia). Torna l'informe. */
-    async importa(entrant, modeImportacio) {
-      const { dades: resultat, informe } = fusionaCopia(dades, entrant, modeImportacio);
-      await escriu(async () => {
-        /* Substituir buida les dades, però no l'avís acceptat ni la resta de la meta. */
-        if (informe.substituits) {
-          for (const store of STORES_DADES) await magatzem.buida(store);
-          await desaMeta(magatzem, 'persona', resultat.persona);
-        }
-        for (const store of STORES_DADES) {
-          const existents = new Set(informe.substituits ? [] : (dades?.[store] || []).map((r) => r.id ?? r.data));
-          const nous = resultat[store].filter((r) => !existents.has(r.id ?? r.data));
-          if (nous.length) await magatzem.desaTots(store, nous);
-        }
-      });
-      return informe;
-    },
+    importa: (entrant, modeImportacio) => escriu(() => importaCopia(magatzem, entrant, modeImportacio)),
     esborraTot: () => escriu(() => magatzem.buidaTot()),
     demanaPersistencia: () => magatzem.demanaPersistencia(),
     estatPersistencia: () => magatzem.estatPersistencia()
-  }), [dades, jornades, magatzem, nouId, rellotge, escriu]);
+  }), [dades, magatzem, nouId, rellotge, escriu]);
 
   const valor = useMemo(() => {
     const moment = ara();

@@ -88,6 +88,33 @@ describe('amb IndexedDB', () => {
     expect(await magatzem.totes('tiquets')).toEqual([]);
   });
 
+  test.each([true, false])('el bolcat complet valida tots els stores abans de modificar res (IDB=%s)', async idb => {
+    const magatzem = crea({ idb: idb ? creaIdbFals().idb : null });
+    await magatzem.desa('tiquets', tiquet('t-1'));
+    await magatzem.desa('meta', { clau: 'actiu', valor: 't-1' });
+    const abans = await magatzem.bolca();
+    await expect(magatzem.actualitzaBolcat(() => ({
+      tiquets: [tiquet('t-2')], meta: [{ valor: 'sense-clau' }]
+    }))).rejects.toThrow(TypeError);
+    expect(await magatzem.bolca()).toEqual(abans);
+    await expect(magatzem.actualitzaBolcat(async actual => actual)).rejects.toThrow(TypeError);
+    expect(await magatzem.bolca()).toEqual(abans);
+    const nou = await magatzem.actualitzaBolcat(actual => ({
+      ...actual, tiquets: [tiquet('t-2')], meta: [{ clau: 'actiu', valor: 't-2' }]
+    }));
+    expect(await magatzem.bolca()).toEqual(nou);
+    expect(nou.meta).toEqual([{ clau: 'actiu', valor: 't-2' }]);
+  });
+
+  test('el bolcat rebutja stores aliens i claus duplicades, sense efectes parcials', async () => {
+    const magatzem = crea({ idb: null });
+    const abans = await magatzem.bolca();
+    await expect(magatzem.actualitzaBolcat(() => ({ tiquets: [], altre: [] }))).rejects.toThrow(TypeError);
+    await expect(magatzem.actualitzaBolcat(() => ({ tiquets: [tiquet('t-1'), tiquet('t-1')], meta: [] })))
+      .rejects.toThrow(/duplicada/);
+    expect(await magatzem.bolca()).toEqual(abans);
+  });
+
   test('actualitza llig i escriu en la mateixa transacció; un conflicte de rev avorta sense escriure', async () => {
     const magatzem = crea({ idb: creaIdbFals().idb });
     await magatzem.desa('tiquets', tiquet('t-1', { rev: 1 }));

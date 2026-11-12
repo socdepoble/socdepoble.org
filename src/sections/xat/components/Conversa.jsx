@@ -74,6 +74,7 @@ import { avisDelBloqueig, nomDelMembre, useCanvisDeClau } from '../useCanvisDeCl
 /* B8C-5 (marató 261101_2143) · Silenciar la conversa: sense bandera (D-B8C-10). */
 import { useSilenciDelFil } from '../useSilenciDelFil.js';
 import DialegSilenci from './DialegSilenci.jsx';
+import { DialegConfirmacio } from '../../../components/PedraSeca/organismes/Dialeg.jsx';
 
 /* P1-12 pas 17 (pla 261101_1246, T7 · S5) · L'estat del xifratge d'esta conversa i el
    diàleg del número de seguretat, darrere de la bandera compilada. Apagada, Rollup
@@ -324,7 +325,7 @@ export default function Conversa({
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
   entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false,
   carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false, respostaLocalIAIA = respostaDeLaIAIA,
-  senseSessio = false, escrivint = 0, onEscrivint = null
+  senseSessio = false, escrivint = 0, onEscrivint = null, onOblidaSessioIAIA = null
 }) {
   /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
      guarda la de l'últim render confirmat. */
@@ -346,6 +347,18 @@ export default function Conversa({
   const [panellXifratge, setPanellXifratge] = useState(null);
   /* B8C-5 · L'entrada del silenci al menú «⋯» i el seu diàleg (null fora del proveïdor). */
   const silenci = useSilenciDelFil(fil, t, locale);
+  const [oblitObert, setOblitObert] = useState(null);
+  const [oblidant, setOblidant] = useState(false);
+  const [errorOblit, setErrorOblit] = useState(false);
+  const potOblidar = fil?.sessioLocalIAIA && typeof onOblidaSessioIAIA === 'function';
+  const confirmaOblit = async () => {
+    if (oblidant || !potOblidar) return;
+    setOblidant(true);
+    setErrorOblit(false);
+    try { await onOblidaSessioIAIA(fil.id); setOblitObert(false); }
+    catch { setErrorOblit(true); }
+    finally { setOblidant(false); }
+  };
   /* Els nous d'altres que ha d'anunciar la regió en viu (#11): AnunciDeNous. */
   const anunciRef = useRef(null);
   /* En estret (mòbil), enfocar el camp obriria el teclat (#6). */
@@ -1240,8 +1253,27 @@ export default function Conversa({
         {...accionsDeLaContrapart}
         accioXifratge={accioXifratge}
         accioSilenci={silenci.accio}
+        accioOblit={potOblidar ? {
+          etiqueta: t('section.xat.iaia.oblit.accio', 'Oblida esta conversa'),
+          onTria: () => { setErrorOblit(false); setOblitObert(true); }
+        } : null}
       />
       <DialegSilenci {...silenci.dialeg} t={t} />
+      {potOblidar && oblitObert !== null ? (
+        <DialegConfirmacio
+          obert={oblitObert}
+          onTanca={() => { if (!oblidant) setOblitObert(false); }}
+          onConfirma={confirmaOblit}
+          carregant={oblidant}
+          destructiu
+          titol={t('section.xat.iaia.oblit.accio', 'Oblida esta conversa')}
+          descripcio={t('section.xat.iaia.oblit.text', 'S’esborraran el títol guardat i els missatges temporals d’esta conversa en este dispositiu.')}
+          etiquetaConfirma={t('section.xat.iaia.oblit.confirma', 'Oblida la conversa')}
+          etiquetaCancela={t('common.cancela', 'Cancel·lar')}
+        >
+          {errorOblit ? <p role="alert">{t('section.xat.iaia.oblit.error', 'No s’ha pogut oblidar la conversa. Torna-ho a provar.')}</p> : null}
+        </DialegConfirmacio>
+      ) : null}
       {E2EE_ACTIU_PER_DEFECTE && PanellSeguretatXat && panellXifratge !== null ? (
         <Suspense fallback={null}>
           <PanellSeguretatXat

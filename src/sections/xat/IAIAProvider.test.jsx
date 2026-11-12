@@ -2,6 +2,7 @@ import {act,cleanup,renderHook,waitFor} from '@testing-library/react';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {XatContext,useXat} from './XatContext.jsx';
 import IAIAProvider from './IAIAProvider.jsx';
+import {creaIdbFals} from '../../utils/__fixtures__/navegadorFals.js';
 import {ID_FIL_LOCAL_IAIA} from './useObriXatPerDefecte.js';
 const mock=vi.hoisted(()=>({request:vi.fn(),cap:true,local:vi.fn(()=> 'Ajuda local')}));
 vi.mock('../../data/backendPort.js',async original=>({...await original(),consultaIAIA:(...args)=>mock.request(...args),teCapacitat:()=>mock.cap}));
@@ -28,3 +29,21 @@ it('R15-REG-05 discover available:false never sends the private question; the lo
 it('R15-REG-05 a failed discover never sends the private question',async()=>{mock.request.mockImplementation(async i=>{if(i.mode==='discover')throw Object.assign(new Error('404'),{code:'IAIA_UNAVAILABLE'});return {source:'model',inference:true,requestId:i.requestId,text:'NO'};});const h=setup();await waitFor(()=>expect(mock.request).toHaveBeenCalledTimes(1));await act(async()=>{await h.result.current.sendChatMessage(direct(h.result),'Pregunta privada');});await waitFor(()=>expect(messages(h.result).at(-1).text).toBe('Ajuda local'));expect(directes()).toEqual([]);});
 it('R15-REG-05 a question asked while discover is still pending stays local',async()=>{let allibera;mock.request.mockImplementation(i=>i.mode==='discover'?new Promise(r=>{allibera=r;}):Promise.resolve({source:'model',inference:true,requestId:i.requestId,text:'NO'}));const h=setup();await waitFor(()=>expect(allibera).toBeTypeOf('function'));await act(async()=>{await h.result.current.sendChatMessage(direct(h.result),'Pregunta privada');});await waitFor(()=>expect(messages(h.result).at(-1).text).toBe('Ajuda local'));expect(directes()).toEqual([]);await act(async()=>allibera({available:true,group:null}));expect(directes()).toEqual([]);});
 it('R15-REG-05 available must be exactly true (truthy values do not count)',async()=>{for(const available of [1,'true',{}]){cleanup();mock.request.mockReset();mock.local.mockClear();mock.request.mockImplementation(async i=>i.mode==='discover'?{available,group:null}:{source:'model',inference:true,requestId:i.requestId,text:'NO'});const h=setup();await waitFor(()=>expect(mock.request).toHaveBeenCalledTimes(1));await act(async()=>{await h.result.current.sendChatMessage(direct(h.result),'Pregunta');});await waitFor(()=>expect(messages(h.result).at(-1).text).toBe('Ajuda local'));expect(directes()).toEqual([]);}});
+
+it('R20 el camí remot de /xat hereta l’oblit individual i avorta la inferència directa pendent',async()=>{
+  vi.stubGlobal('indexedDB',creaIdbFals().idb);vi.stubGlobal('BroadcastChannel',null);
+  const pendent=Promise.withResolvers();let signal;
+  mock.request.mockImplementation((i,opts)=>i.mode==='discover'?Promise.resolve({available:true,group:null}):(signal=opts.signal,pendent.promise));
+  try{
+    const h=setup();await waitFor(()=>expect(mock.request).toHaveBeenCalledTimes(1));
+    let id;act(()=>{id=h.result.current.novaSessioIAIA();});
+    const fil=h.result.current.chatThreads.find(f=>f.id===id);
+    await act(async()=>{await h.result.current.sendChatMessage(fil,'Mercat');});
+    await waitFor(()=>expect(signal).toBeTruthy());
+    await act(async()=>{await h.result.current.oblidaSessioIAIA(id);});
+    expect(signal.aborted).toBe(true);
+    await act(async()=>{pendent.resolve({source:'model',inference:true,text:'Resposta tardana'});});
+    expect(h.result.current.chatThreads.some(f=>f.id===id)).toBe(false);
+    expect(h.result.current.getThreadMessages(id)).toEqual([]);
+  }finally{pendent.resolve({});cleanup();vi.unstubAllGlobals();}
+});

@@ -42,7 +42,7 @@ describe('R55 · dates documentades del perfil', () => {
   });
 
   test.each([
-    ['gestoria','gestoria'],['rebost','rebost'],['salut','salut'],['genealogia','genealogia'],['lector-rss','rss'],['tpv','tpv'],
+    ['gestoria','gestoria'],['rebost','rebost'],['salut','salut'],['genealogia','genealogia'],['avisador','avisador'],['lector-rss','rss'],['tpv','tpv'],
   ])('la fitxa local %s reutilitza exactament pluginPerId(%s).data', (id,pluginId) => {
     expect(metadadesAplicacioDelNode(id)).toEqual({creat:pluginPerId(pluginId).data});
     expect(APLICACIONS.find(x=>x.id===id).creat).toBe(pluginPerId(pluginId).data);
@@ -55,11 +55,16 @@ describe('R55 · dates documentades del perfil', () => {
     expect(metadadesAplicacioDelNode('cervell')).toEqual({creat:PAGE_COPY.cervell.date});
   });
 
-  test('la validació conserva les dates de nou apps i les preferències/rols existents', () => {
+  /* P0-114 (ordre del Mestre, 261111) · Deu: L'Avisador torna al Perfil. */
+  test('la validació conserva les dates de deu apps i les preferències/rols existents', () => {
     const apps=aplicacionsValides(APLICACIONS);
-    expect(apps).toHaveLength(9);
+    expect(apps).toHaveLength(10);
     expect(apps.map(x=>x.creat)).toEqual(APLICACIONS.map(x=>x.creat));
-    for(const app of apps){expect(app.estat).toBe('pendent');expect(app.ruta).toBeNull();expect(Object.isFrozen(app)).toBe(true);}
+    /* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · Les set amb destí real són connectades amb
+       la seua ruta (aplicacions.test.js en fixa els valors); la validació no les canvia. Abans: totes pendents. */
+    for(const app of apps){const declarada=APLICACIONS.find(x=>x.id===app.id);expect([app.id,app.estat,app.ruta]).toEqual([app.id,declarada.estat,declarada.ruta??null]);expect(Object.isFrozen(app)).toBe(true);}
+    /* Arbitratge R19 del carril (P1) · El Snippet és connectat a la seua fitxa del Panell (/control?fitxa=snippet). */
+    expect(apps.filter(x=>x.estat==='pendent').map(x=>x.id)).toEqual(['metriques','cervell']);
     expect(apps.filter(x=>x.intern).map(({id,panell})=>({id,panell}))).toEqual([{id:'metriques',panell:null},{id:'cervell',panell:null}]);
   });
 

@@ -31,7 +31,7 @@
  *   useSessioDeLaRuta()   · DINS d'una app, només per al pont de sessió: la
  *                           instantània de la font que porta ProveidorApp, o null
  *   usePreferenciesApps() · les preferències de la persona (preferenciesApps.js)
- *   EntornContext, produccioDe(entorn), teDretDe(entorn, produccio)
+ *   EntornContext, produccioDe(entorn)
  *                         · el criteri únic de l'entorn, també per a useContextApps
  */
 import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from 'react';
@@ -46,23 +46,12 @@ const FontSessioContext = createContext(null);
 /** T5 (261024) · Els serveis que la plataforma dona a l'app ({ noticies }), o null. */
 export const ServeisAppContext = createContext(null);
 
-const SEMPRE = () => true;
-const MAI = () => false;
 /* Sense font de la sessió (una prova que munta ProveidorApp sola): cap sessió. */
 const capFont = () => null;
 
 /** Producció: la de l'entorn si és un booleà; si no, la del build (!import.meta.env.DEV). */
 export function produccioDe(entorn) {
   return typeof entorn?.produccio === 'boolean' ? entorn.produccio : !import.meta.env.DEV;
-}
-
-/**
- * El dret premium: el de l'entorn si en porta; si no, en desenvolupament tot
- * es presenta concedit, per a poder provar-ho, i en producció cap, fins que
- * la capa de poble (servidor) el servisca.
- */
-export function teDretDe(entorn, produccio) {
-  return entorn?.teDret || (produccio ? MAI : SEMPRE);
 }
 
 export function usePreferenciesApps() {
@@ -126,17 +115,15 @@ export function useSessioDeLaRuta() {
 
 /**
  * Dins d'una app: els seus interruptors interns (manifest.interruptors).
- * avaluaInterruptor només mira la producció, les preferències i el dret: el
- * mateix criteri que useContextApps (produccioDe, teDretDe), sense el port.
+ * avaluaInterruptor només mira la producció i les preferències: el mateix
+ * criteri que useContextApps (produccioDe), sense el port. P0-113 (ordre del
+ * Mestre, 261111): cap interruptor es cobra, i ja no hi ha cap dret a mirar.
  */
 export function useInterruptorsApp() {
   const { manifest } = useApp();
   const entorn = useContext(EntornContext);
   const preferencies = usePreferenciesApps();
-  const ctx = useMemo(() => {
-    const produccio = produccioDe(entorn);
-    return Object.freeze({ produccio, preferencies, teDret: teDretDe(entorn, produccio) });
-  }, [entorn, preferencies]);
+  const ctx = useMemo(() => Object.freeze({ produccio: produccioDe(entorn), preferencies }), [entorn, preferencies]);
   const avalua = useCallback((id) => avaluaInterruptor(manifest, id, ctx), [manifest, ctx]);
   const actiu = useCallback((id) => avaluaInterruptor(manifest, id, ctx).actiu, [manifest, ctx]);
   const apaga = useCallback((id, apagat) => { desaInterruptorApagat(manifest.id, id, apagat); }, [manifest]);

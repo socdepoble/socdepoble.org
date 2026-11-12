@@ -1,4 +1,6 @@
+import { CopublicacioDePaginaContext } from '../detail/CopublicacioDePaginaContext.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { usePublicadorsBarraRecurs } from '../../hooks/usePublicadorsBarraRecurs.js';
 import { MARCA_GRUP, segmentsAmbTargetes } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { CosAmbTargetes } from '../../components/universal/richText/extensions/targetes/CosAmbTargetes.jsx';
 import { useLlenguaDelContingut } from '../../components/universal/traduccio/llenguaDelContingut.js';
@@ -8,7 +10,7 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { propsDePaginaDeText } from './paginaDeText.js';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
 
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useContext, useMemo } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { localitzaPagina } from './pageContent.r10.js';
 import { planTraduccioPagina } from './planTraduccioPagina.js';
@@ -106,8 +108,14 @@ export function CosDeLaPagina({ html }) {
    R16 · `amagaCos`: amb una fitxa oberta al Workspace (HerbariWorkspaceSection i
    BancLlavorsWorkspaceSection), el cos de la pàgina (page.html) no es pinta:
    la fitxa, que arriba com a children, no queda davall del text llarg. */
-export default function TextSection({ page: original, pageKey, accioPrincipal = null, onConnect = null, objecte = null, etiquetaFinal = null, amagaCos = false, children = null }) {
+export default function TextSection({ page: original, pageKey, accioPrincipal = null, abansIntro = null, onConnect = null, objecte = null, etiquetaFinal = null, amagaCos = false, publicadorsRegistrats = null, children = null }) {
   const { t, language = 'ca' } = useUIActions();
+  const copublicacio = useContext(CopublicacioDePaginaContext);
+  const esPaginaDelContext = copublicacio?.pageKey === pageKey && copublicacio !== null;
+  const { publicadorsRegistrats: publicadorsDelPort } = usePublicadorsBarraRecurs(
+    esPaginaDelContext ? undefined : { recursTipus: 'pagina', recursId: pageKey || '' }
+  );
+  const publicadorsEfectius = esPaginaDelContext ? copublicacio.publicadorsRegistrats : publicadorsRegistrats ?? publicadorsDelPort;
   /* R51 (P0-46 / IDEA-177) · Una pàgina que declara el seu translation_mode es
      pinta segons el pla del contracte (planTraduccioPagina.js); sense, el camí
      de sempre (localitzaPagina), byte a byte. */
@@ -168,7 +176,10 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       labels={etiquetaExtra ? [...etiquetes, etiquetaExtra] : etiquetes}
       showLogos={true}
       chrome={page.chrome || 'full'}
-      topBarData={{ showPin: false }}
+      topBarData={{
+        showPin: false,
+        ...(publicadorsEfectius ? { publicadorsRegistrats: publicadorsEfectius } : null)
+      }}
       /* Gauntlet 261030 (Fase 3, TC3.3) · PAGE_COPY és sempre en valencià:
          amb la interfície en una altra llengua, l'H1, l'entradilla, l'alt de
          la portada i el cos en porten el lang (PageFrame ·
@@ -176,6 +187,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
          no (cicle 3). */
       llenguaDelContingut={contentLanguage}
       {...(accioPrincipal ? { accioPrincipal } : null)}
+      {...(abansIntro ? { abansIntro } : null)}
       {...(onConnect ? { onConnect } : null)}
       {...(objecte ? { objecte } : null)}
       {...(plaR51 && !plaR51.traduccio ? { traduccio: false } : null)}

@@ -14,7 +14,10 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 /* L'arnés de TextSection.targetes.test.jsx: la pàgina reduïda als seus fills. */
 const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn(), t: (_, alternativa) => alternativa }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+vi.mock('../../app/contexts/UIContext', () => {
+  const useUIActions = () => ({ t: mocks.t });
+  return { useUIActions, useUIActionsOpcional: useUIActions, useUIStateOpcional: () => null };
+});
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => mocks.navigate, Link: 'a' }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));

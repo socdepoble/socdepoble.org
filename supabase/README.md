@@ -1592,6 +1592,47 @@ description: "Documentació canònica de Sóc de Poble."
 
   Proposta no aplicada. Ordre: després de `2610061448` (guarda privada de superadmin amb aal2) i `2611082238` (contracte de resum de sessions preservat). Cap rol de curadoria s’assigna automàticament. Esmena SEG-R15b-01 i SEG-R15b-04 (9-11-2026): directori per persona i camí amb correu emmascarat i auditoria append-only; normes de convivència i quatre ulls a la safata cultural.
 
+- `migrations/2611110010_autoria_256_caracters.sql`
+
+  Proposta R17.2 pendent d’aplicació. Requerix `2609262232`. Substituïx
+  les tres restriccions de longitud de `copyright`: el text d’autoria té un
+  màxim de 256 punts de codi i la marca de llicència es compta a banda.
+  Conserva les files existents i els permisos de Notes, Perfil i organitzacions.
+  El client que admet autories de 256 s’ha de publicar després de la migració.
+
+  Després (lectura): les tres restriccions han de comptar l’autoria a
+  banda de la marca de drets.
+
+  ```sql
+  select conname, pg_get_constraintdef(oid)
+  from pg_catalog.pg_constraint
+  where conname in ('notes_copyright_longitud', 'profiles_copyright_longitud', 'organizations_copyright_longitud');
+  ```
+
+- `migrations/2611110100_cua_purga_storage_ugc.sql`
+
+  P0-20. Registre i cua de purga d'objectes UGC en la baixa definitiva, amb comprovació de propietat i versió. Pendent d’aplicació.
+
+- `migrations/2611110110_revisions_patrimoni_viu.sql`
+
+  P1-75. Campanyes anuals de llavors, arbres i receptes per poble. Lectura pública de les columnes de la campanya amb autoria interna. L’autor amb pertinença al poble pot editar i retirar la seua campanya. Curadoria i administració municipal requerixen AAL2 i pertinença al poble. Superadmin amb AAL2 té abast global. Pendent d’aplicació. Proves a `tests/revisions-patrimoni-viu.test.mjs`.
+
+- `migrations/2611110455_revisions_editorials_wp.sql`
+
+  P0-111. Taula `public.revisions_editorials_wp` amb RLS i funcions RPC `llista_revisions_editorials_wp()` i `desa_revisio_editorial_wp(...)` reservades a `superadmin` amb `AAL2`, per sincronitzar entre navegadors l’estat de revisió editorial (`pendent_admin`, `aprovat`, `amb_observacions`), nota, autoria i destí de les entrades importades de WordPress darrere del port neutral (`revisionsEditorialsWp`), amb llavor inicial per als 20 ítems del Catàleg d’Arbres d’`Associació El Rentonar`. Pendent d’aplicació.
+
+- `migrations/2611111735_copublicacio_registrada.sql`
+
+  R19. Assigna publicadors a una peça amb versió optimista, identificador de reintent i historial de traspàs i reversió. La font, els crèdits i la llicència queden en la seua taula original. La lectura verifica el padró vigent i conserva l'accés del Mur i dels perfils personals. Les escriptures requerixen superadmin amb AAL2 i compte actiu. Els ajustos privats opcionals `copublicacio_actor_socdepoble` i `copublicacio_actor_rentonar` vinculen els UUIDs de les organitzacions públiques quan el node usa uns altres identificadors fundacionals. Pendent d'aplicació. R20: `npm run test:sql` executa PostgreSQL natiu descartable per defecte, sense `skip` ni servidor remot; requerix les dependències de desenvolupament del lockfile. Preferix els binaris locals i, si no n'hi ha, usa `embedded-postgres`. Dos clients independents proven conflicte, reintent idempotent i rollback amb espera de pany observada. Les fixtures d'Auth no acrediten JWT signat, TOTP, GoTrue ni PostgREST.
+
+- `migrations/2611112005_mur_lectura_publica_foraster.sql`
+
+  P0 Mur Foraster (11-11-2026). Substituïx la política «public read section_submissions» de 2609080000, l'única definició anterior: `anon` i `authenticated` lligen les seccions `mur`, `mercat`, `events` i `multimedia` d'un poble que existix a `public.towns`, i les files de `notes` només les llig la persona propietària que és membre del poble. Concedix lectura per columnes a `anon` i `authenticated`, també d'`owner_user_id` i `author_org_id`: l'UUID de l'autoria d'una publicació pública es pot llegir sense sessió. Sense `using (true)` ni cap permís d'escriptura per a `anon`. Aplicada segons l'ESTAT de l'11-11-2026 a les 21:21 (Mestre i MarIA), sense lectura REST registrada; `tractor-rls.mjs` (0 infraccions) és una comprovació estàtica del fitxer, no una evidència remota. Avís: la política no mira l'estat de publicació, i el Kit Codex R20 v1 hi reproduïx en local la lectura d'esborranys (`status: draft` o `payload.isPublished: false`) i en proposa la correcció additiva `2611112149_mur_estat_public_i_padro.sql`. S'ha aplicat a mà per davant de migracions pendents més antigues, i `supabase db push` les podria refusar sense `--include-all`. Si es torna a aplicar sencera la 2609080000, esta política es revertix.
+
+- `migrations/2611112149_mur_estat_public_i_padro.sql`
+
+  R20. Depén de 2611111735 i 2611112005. Predicat compartit entre la política SELECT i la resolució del padró de publicadors: esborranys, privats, marques contradictòries i metadades malformades no es projecten. Conserva els registres antics sense marques i les notes privades del propietari. Provada dues vegades sobre el mateix clúster amb `npm run test:sql`, incloent notes reals i frontera de 64 capes. **NO aplicada: candidata local pendent d'arbitratge i aplicació pel Mestre.**
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1782,6 +1823,13 @@ verificador sense avisos.
 | 84 | `2611080440` | `2611080440_politica_privacitat_2_6.sql` | **NO aplicada: l’aplica el Mestre** | Text 2.6 append-only; altes aturades fins al gate HTML/hash/versió vigent |
 | 85 | `2611082238` | `2611082238_admin_resum_sessions_dispositius.sql` | **NO aplicada: l'aplica el Mestre** | R13-C7: recomptes de persones amb sessió activa per camí (24 h, 7 i 14 dies), superadmin amb aal2 |
 | 86 | `2611091500` | `2611091500_sessions_i_curadoria_cultural.sql` | **NO aplicada: proposta R15 en còpia; execució PostgreSQL no acreditada** | Directori filtrable per persona i camí, superadmin aal2: correu emmascarat (màscara de la 77), sense identificador de sessió ni UUID de persona, només perfils amb consentiment i sense baixa, una fila d’auditoria append-only per consulta; safata cultural privada, permisos declarats, normes de convivència exigides, rol de curadoria aal2, ningú decidix una aportació pròpia, RLS; aprovació sense ingestió automàtica |
+| 87 | `2611110010` | `2611110010_autoria_256_caracters.sql` | **NO aplicada: proposta R17.2** | Autoria de fins a 256 caràcters més la marca de drets a Notes, Perfil i organitzacions |
+| 88 | `2611110100` | `2611110100_cua_purga_storage_ugc.sql` | **NO aplicada: l'aplica el Mestre** | P0-20: registre i cua de purga d’objectes UGC amb comprovació de propietat i versió |
+| 89 | `2611110110` | `2611110110_revisions_patrimoni_viu.sql` | **NO aplicada: l'aplica el Mestre** | P1-75: campanyes anuals, mesures primitives, lectura pública amb autoria interna, escriptura autoritzada i control de versió |
+| 90 | `2611110455` | `2611110455_revisions_editorials_wp.sql` | **NO aplicada: l'aplica el Mestre** | P0-111: sincronització de revisions editorials WordPress (`superadmin` + `aal2`), autoria `Associació El Rentonar` als 20 ítems del catàleg d’arbres |
+| 91 | `2611111735` | `2611111735_copublicacio_registrada.sql` | **NO aplicada: l'aplica el Mestre** | R19: publicadors registrats, traspàs, reversió i historial privat amb CAS i AAL2. |
+| 92 | `2611112005` | `2611112005_mur_lectura_publica_foraster.sql` | Aplicada segons l'ESTAT de l'11-11-2026 a les 21:21 (Mestre i MarIA; sense lectura REST) | P0 Mur Foraster: lectura pública de `mur`, `mercat`, `events` i `multimedia`; `notes` privades; UUID d'autoria llegible per a `anon`; esborranys exposats segons Codex R20, correcció additiva 2611112149 |
+| 93 | `2611112149` | `2611112149_mur_estat_public_i_padro.sql` | **NO aplicada: candidata R20, l'aplica el Mestre** | Frontera pública coherent entre SELECT i padró; marques privades o d'esborrany dominen, assaig natiu sense omissions |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -2320,6 +2368,61 @@ Regla: mai esborreu un usuari d'Apple des del tauler (Authentication → Users
 Una baixa passa sempre per `demana_baixa` i la purga.
 
 ## Funció `purga-fitxers` (cua de fitxers de la baixa)
+
+**R17.2B · P0-20.** `2611110100_cua_purga_storage_ugc.sql` afig una cua RLS
+reservada al servidor. La baixa vencida encua els objectes dels tres buckets
+d'usuari pel propietari acreditat de Storage i conserva la identitat de l'objecte
+i la versió. El compte es manté en quarantena fins que el worker confirma
+una resposta de l'API de Storage i l'absència de les metadades, i el lot de
+baixes torna a processar-lo.
+La cancel·lació és possible fins a l'inici d'esta fase. `estat_baixa()` retorna
+l'instant d'inici al mateix usuari. En un node amb una FK antiga que impedeix
+eliminar Auth, els fitxers que encara utilitza una entitat o una publicació
+poden requerir una reassignació de propietat supervisada. El worker només
+accepta buckets existents sense versionat. Una resposta posterior a un
+timeout pot acreditar que el nom ja no hi és. La neteja diferida dels bytes
+en eixe cas depén de Storage. La revalidació de referències protegix les
+que són visibles en la transacció d'esborrat de Storage.
+
+La funció actual continua consumint les mateixes tres RPC i la cua privada
+del Xat. Abans de migrar, deixa acabar les invocacions anteriors del worker
+i comprova que el rol de migració pot crear els triggers en `auth.users`
+i `storage.objects`. Si `storage.buckets` té la columna `versioning_status`,
+comprova que els tres buckets figuren com a `DISABLED`. Els registres antics de mitjans sols es traslladen si
+Storage acredita l'objecte i la propietat, i el compte ja no existix. La
+resta queda al registre privat per a revisió. El comptatge de la cua
+nova es consulta amb un rol operador, amb les rutes fora de l'eixida.
+
+```sql
+select bucket_id, referenciat, (ultim_error is not null) as amb_error, count(*)
+from public.cua_purga_storage_ugc group by 1, 2, 3;
+```
+
+Abans de migrar, comprova també amb el rol de migració que pot bloquejar
+`auth.users`: la guarda de Storage hi fa un `for key share` i, sense eixe
+privilegi, totes les pujades dels tres buckets fallarien. La migració s'atura
+amb `SDP-PURGA-010` si el privilegi falta.
+
+```sql
+select has_table_privilege('auth.users', 'UPDATE');
+```
+
+Una fila de la cua que esgota `purga_fitxers_max_intents` o que cau en un
+bucket amb versionat ja no es reclama, i la baixa no pot avançar. La baixa
+ho anota a `private.baixes.ultim_error` amb `SDP-BAIXA-043` perquè l'operador
+ho revise:
+
+```sql
+select user_id, ultim_error from private.baixes where ultim_error like 'SDP-BAIXA-043%';
+```
+
+Quan la baixa acaba, les files `referenciat` del compte suprimit s'esborren
+de la cua. Els objectes compartits que es conserven continuen a Storage amb
+l'`owner_id` del compte suprimit: si l'entitat o la publicació deixa de
+citar-los més avant, no tenen cap camí automàtic de purga i cal una revisió
+periòdica de l'operador.
+
+Prova local: `SDP_PGLITE_MODULE=/ruta/local/pglite/dist/index.js node --test tests/migracio-cua-purga-storage-ugc.test.mjs`.
 
 T8 (261024; P0-20; auditoria Codex 261024_1315 C-06). Buida
 `private.purga_storage_pendent`, la cua que omplin la purga d'una baixa i la

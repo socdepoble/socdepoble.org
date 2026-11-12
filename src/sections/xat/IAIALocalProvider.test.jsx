@@ -8,8 +8,10 @@ import { respostaDeLaIAIA } from '../../data/iaiaLocal.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 import { AJUDA_PER_CLAU } from '../../data/xatsPerDefecte.js';
 import { contactesDAjuda } from './contactesAjuda.js';
+import { creaCanalFals, creaIdbFals } from '../../utils/__fixtures__/navegadorFals.js';
+import * as sessionsIAIA from './sessionsIAIALocals.js';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const base = () => ({
   modeDades: 'remote', joId: 'usuari-a', ambitEstable: 'poble:usuari-a', senseSessio: false,
   chatThreads: [{ id: 'public-iaia', tipus: 'grup', subjecte: { tipus: 'pagina', id: '/iaia' } }, { id: 'javi', tipus: 'directe' }],
@@ -145,4 +147,226 @@ describe('xat-flux-05 · la IAIA local és al padró de «Nova conversa»', () =
     const { result } = setup({ ...base(), cercaMembres: vi.fn(async () => { throw error; }) });
     await act(async () => { await expect(result.current.cercaMembres(null)).rejects.toBe(error); });
   });
+});
+
+it('obri sessions privades distintes i conserva només els títols en reobrir el Xat', async () => {
+  vi.stubGlobal('indexedDB', creaIdbFals().idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const original = base();
+  const { result, unmount } = setup(original, () => 'Resposta efímera');
+  let primer;
+  act(() => { primer = result.current.novaSessioIAIA(); });
+  expect(result.current.novaSessioIAIA()).toBe(primer);
+  const filDe = (id) => result.current.chatThreads.find((f) => f.id === id);
+  await act(async () => {
+    await result.current.sendChatMessage(filDe(primer), 'Què és el Mercat? Text complet.');
+    await result.current.sendChatMessage(filDe(primer), 'Ara la Biblioteca');
+  });
+  let segon;
+  act(() => { segon = result.current.novaSessioIAIA(); });
+  expect(segon).not.toBe(primer);
+  await act(async () => {
+    await result.current.sendChatMessage(filDe(segon), 'Camins de muntanya');
+    expect(await result.current.sendChatMessage({ id: 'iaia-local-desconegut' }, 'Inexistent')).toEqual([]);
+  });
+  await waitFor(() => expect(filDe(primer)?.title).toBe('el Mercat'));
+  expect(filDe(segon).title).toBe('Camins de muntanya');
+  expect(result.current.getThreadMessages(segon).map(({ text }) => text)).toEqual([BENVINGUDA_IAIA, 'Camins de muntanya', 'Resposta efímera']);
+  expect(original.sendChatMessage).not.toHaveBeenCalled();
+  unmount();
+
+  const restaurat = setup(original).result;
+  await waitFor(() => expect(restaurat.current.chatThreads.find((f) => f.id === primer)?.title).toBe('el Mercat'));
+  expect(restaurat.current.chatThreads.find((f) => f.id === segon)?.title).toBe('Camins de muntanya');
+  expect(restaurat.current.getThreadMessages(primer).map(({ text }) => text)).toEqual([BENVINGUDA_IAIA]);
+  const altre = setup({ ...original, joId: 'usuari-b', ambitEstable: 'poble:usuari-b' }).result;
+  await waitFor(() => expect(altre.current.esperaSessioIAIA(primer)).toBe(false));
+  expect(altre.current.chatThreads.some((f) => f.id === primer || f.id === segon)).toBe(false);
+});
+
+it('espera el títol abans de mostrar el primer missatge i els enviaments que el seguixen', async () => {
+  vi.stubGlobal('indexedDB', creaIdbFals().idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const registre = sessionsIAIA.creaRegistreSessionsIAIA();
+  const { promise, resolve } = Promise.withResolvers();
+  const desaPrimerTitol = vi.fn(async (...args) => {
+    await promise;
+    return registre.desaPrimerTitol(...args);
+  });
+  const fabrica = vi.spyOn(sessionsIAIA, 'creaRegistreSessionsIAIA').mockReturnValue({ ...registre, desaPrimerTitol });
+  const resposta = vi.fn(() => 'Resposta efímera');
+  try {
+    const { result } = setup(base(), resposta);
+    let id;
+    act(() => { id = result.current.novaSessioIAIA(); });
+    const filNou = result.current.chatThreads.find((fil) => fil.id === id);
+    let primer, segon;
+    await act(async () => {
+      primer = result.current.sendChatMessage(filNou, 'Què és el Mercat?');
+      segon = result.current.sendChatMessage(filNou, 'Ara la Biblioteca');
+    });
+    await waitFor(() => expect(desaPrimerTitol).toHaveBeenCalledOnce());
+    expect(resposta).not.toHaveBeenCalled();
+    expect(result.current.chatThreads.find((fil) => fil.id === id)?.title).not.toBe('el Mercat');
+    expect(result.current.getThreadMessages(id).map(({ text }) => text)).toEqual([BENVINGUDA_IAIA]);
+    await act(async () => { resolve(); await Promise.all([primer, segon]); });
+    expect(result.current.getThreadMessages(id).filter(({ sender }) => sender === 'me').map(({ text }) => text))
+      .toEqual(['Què és el Mercat?', 'Ara la Biblioteca']);
+    expect(await registre.llig('poble:usuari-a')).toEqual([{ id, titol: 'el Mercat' }]);
+  } finally {
+    resolve();
+    fabrica.mockRestore();
+  }
+});
+
+
+it('oblida un fil actiu amb resposta pendent, conserva els altres i no el restaura en una segona pestanya', async () => {
+  const fals = creaIdbFals(), canals = creaCanalFals();
+  vi.stubGlobal('indexedDB', fals.idb);
+  vi.stubGlobal('BroadcastChannel', canals.Canal);
+  const pendent = Promise.withResolvers();
+  let senyal;
+  const a = setup(base(), (text, { signal }) => { if (text.startsWith('Mercat')) { senyal = signal; return pendent.promise; } return 'Biblioteca oberta'; });
+  let id;
+  act(() => { id = a.result.current.novaSessioIAIA(); });
+  const filA = a.result.current.chatThreads.find(f => f.id === id);
+  await act(async () => { await a.result.current.sendChatMessage(filA, 'Mercat. Cos que no ha de persistir.'); });
+  let altre;
+  act(() => { altre = a.result.current.novaSessioIAIA(); });
+  await act(async () => { await a.result.current.sendChatMessage(a.result.current.chatThreads.find(f => f.id === altre), 'Biblioteca'); });
+  const b = setup(base());
+  await waitFor(() => expect(b.result.current.chatThreads.some(f => f.id === id)).toBe(true));
+  await act(async () => { expect(await b.result.current.oblidaSessioIAIA(id)).toBe(true); });
+  await waitFor(() => expect(a.result.current.sessioIAIAOblidada(id)).toBe(true));
+  expect(senyal.aborted).toBe(true);
+  await act(async () => { pendent.resolve('Resposta que arriba massa tard'); });
+  expect(a.result.current.getThreadMessages(id)).toEqual([]);
+  await act(async () => { expect(await a.result.current.sendChatMessage(filA, 'Una altra pregunta tardana')).toEqual([]); });
+  expect(a.result.current.chatThreads.some(f => f.id === id)).toBe(false);
+  expect(a.result.current.getThreadMessages(altre).at(-1).text).toBe('Biblioteca oberta');
+  expect(b.result.current.chatThreads.find(f => f.id === altre)?.title).toBe('Biblioteca');
+  expect(JSON.stringify(fals.files('xat-iaia-titols', 'titols'))).not.toMatch(/Mercat|Cos que|Resposta que/);
+  a.unmount(); b.unmount();
+  const c = setup(base());
+  await waitFor(() => expect(c.result.current.esperaSessioIAIA(id)).toBe(false));
+  expect(c.result.current.chatThreads.some(f => f.id === id)).toBe(false);
+  expect(c.result.current.getThreadMessages(ID_FIL_LOCAL_IAIA)).toHaveLength(1);
+});
+
+it('oblida també l’esborrany mentre el primer títol està esperant i no publica la pregunta tardana', async () => {
+  vi.stubGlobal('indexedDB', creaIdbFals().idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const registre = sessionsIAIA.creaRegistreSessionsIAIA();
+  const pendent = Promise.withResolvers();
+  const desa = vi.fn(async (...args) => { await pendent.promise; return registre.desaPrimerTitol(...args); });
+  const fabrica = vi.spyOn(sessionsIAIA, 'creaRegistreSessionsIAIA').mockReturnValue({ ...registre, desaPrimerTitol: desa });
+  const resposta = vi.fn(() => 'Resposta');
+  try {
+    const { result } = setup(base(), resposta);
+    let id;
+    act(() => { id = result.current.novaSessioIAIA(); });
+    const filNou = result.current.chatThreads.find(f => f.id === id);
+    let enviant;
+    await act(async () => { enviant = result.current.sendChatMessage(filNou, 'Tema privat'); });
+    await waitFor(() => expect(desa).toHaveBeenCalledOnce());
+    await act(async () => { await result.current.oblidaSessioIAIA(id); });
+    await act(async () => { pendent.resolve(); expect(await enviant).toEqual([]); });
+    expect(result.current.chatThreads.some(f => f.id === id)).toBe(false);
+    expect(result.current.getThreadMessages(id)).toEqual([]);
+    expect(resposta).not.toHaveBeenCalled();
+    expect(await registre.llig('poble:usuari-a')).toEqual([]);
+    let nou;
+    act(() => { nou = result.current.novaSessioIAIA(); });
+    expect(nou).not.toBe(id);
+  } finally { pendent.resolve(); fabrica.mockRestore(); }
+});
+
+it('una quota fallida conserva el títol, propaga l’error i admet el reintent', async () => {
+  vi.stubGlobal('indexedDB', creaIdbFals().idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const registre = sessionsIAIA.creaRegistreSessionsIAIA();
+  const quota = Object.assign(new Error('Quota plena'), { name: 'QuotaExceededError' });
+  const oblida = vi.fn().mockRejectedValueOnce(quota).mockImplementation((...args) => registre.oblidaSessio(...args));
+  const fabrica = vi.spyOn(sessionsIAIA, 'creaRegistreSessionsIAIA').mockReturnValue({ ...registre, oblidaSessio: oblida });
+  try {
+    const { result } = setup();
+    let id;
+    act(() => { id = result.current.novaSessioIAIA(); });
+    await act(async () => { await result.current.sendChatMessage(result.current.chatThreads.find(f => f.id === id), 'Biblioteca'); });
+    await act(async () => { await expect(result.current.oblidaSessioIAIA(id)).rejects.toBe(quota); });
+    expect(result.current.chatThreads.find(f => f.id === id)?.title).toBe('Biblioteca');
+    expect(result.current.sessioIAIAOblidada(id)).toBe(false);
+    await act(async () => { expect(await result.current.oblidaSessioIAIA(id)).toBe(true); });
+    expect(result.current.chatThreads.some(f => f.id === id)).toBe(false);
+  } finally { fabrica.mockRestore(); }
+});
+
+it('el proveïdor es buida en canviar persona o backend sense necessitar un key extern', async () => {
+  vi.stubGlobal('indexedDB', creaIdbFals().idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const original = { ...base(), ambitEstable: JSON.stringify(['backend-a', 'usuari-a', 'actor-a']) };
+  const pendent = Promise.withResolvers();
+  const { result, rerender } = setup(original, () => pendent.promise);
+  let id;
+  act(() => { id = result.current.novaSessioIAIA(); });
+  await act(async () => { await result.current.sendChatMessage(result.current.chatThreads.find(f => f.id === id), 'Pregunta efímera'); });
+  const enviaAntic = result.current.sendChatMessage;
+  original.ambitEstable = JSON.stringify(['backend-b', 'usuari-a', 'actor-a']);
+  rerender();
+  await act(async () => { pendent.resolve('Resposta antiga'); });
+  expect(result.current.chatThreads.some(f => f.id === id)).toBe(false);
+  expect(result.current.getThreadMessages(id)).toEqual([]);
+  await act(async () => { expect(await enviaAntic({ id }, 'Una pregunta antiga')).toEqual([]); });
+  original.joId = 'usuari-b'; original.ambitEstable = JSON.stringify(['backend-b', 'usuari-b', 'actor-a']);
+  rerender();
+  expect(result.current.getThreadMessages(ID_FIL_LOCAL_IAIA).map(m => m.text)).toEqual([BENVINGUDA_IAIA]);
+});
+
+
+it('eixir de la persona buida també els fils en memòria d’una altra pestanya i invalida una resposta tardana', async () => {
+  const fals = creaIdbFals(), canals = creaCanalFals();
+  vi.stubGlobal('indexedDB', fals.idb);
+  vi.stubGlobal('BroadcastChannel', canals.Canal);
+  const original = { ...base(), ambitEstable: JSON.stringify(['backend-a', 'usuari-a', 'actor-a']) };
+  const pendent = Promise.withResolvers();
+  let senyal;
+  const { result } = setup(original, (_, { signal }) => { senyal = signal; return pendent.promise; });
+  let id;
+  act(() => { id = result.current.novaSessioIAIA(); });
+  await act(async () => { await result.current.sendChatMessage(result.current.chatThreads.find(f => f.id === id), 'Tema privat'); });
+  const registre = sessionsIAIA.creaRegistreSessionsIAIA();
+  try {
+    await act(async () => { await registre.oblidaPersona('usuari-a'); });
+    await waitFor(() => expect(result.current.chatThreads.some(f => f.id === id)).toBe(false));
+    expect(senyal.aborted).toBe(true);
+    await act(async () => { pendent.resolve('Resposta antiga'); });
+    expect(result.current.getThreadMessages(id)).toEqual([]);
+    expect(JSON.stringify(fals.files('xat-iaia-titols', 'titols'))).not.toContain('Tema privat');
+  } finally { pendent.resolve(); registre.tanca(); }
+});
+
+
+it('una lectura que acaba tard no restaura el títol que una notificació més nova ja ha oblidat', async () => {
+  vi.stubGlobal('indexedDB', creaIdbFals().idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const registre = sessionsIAIA.creaRegistreSessionsIAIA();
+  const id = 'iaia-local-00000000-0000-4000-8000-000000000066';
+  await registre.desaPrimerTitol('poble:usuari-a', id, 'Mercat');
+  const pendent = Promise.withResolvers();
+  let primera = true, estatAntic;
+  const lligEstat = vi.fn(async (...args) => {
+    const estat = await registre.lligEstat(...args);
+    if (primera) { primera = false; estatAntic = estat; return pendent.promise; }
+    return estat;
+  });
+  const fabrica = vi.spyOn(sessionsIAIA, 'creaRegistreSessionsIAIA').mockReturnValue({ ...registre, lligEstat });
+  try {
+    const { result } = setup();
+    await waitFor(() => expect(estatAntic?.sessions).toEqual([{ id, titol: 'Mercat' }]));
+    await act(async () => { await registre.oblidaSessio('poble:usuari-a', id); });
+    await waitFor(() => expect(result.current.sessioIAIAOblidada(id)).toBe(true));
+    await act(async () => { pendent.resolve(estatAntic); });
+    expect(result.current.chatThreads.some(f => f.id === id)).toBe(false);
+    expect(result.current.getThreadMessages(id)).toEqual([]);
+  } finally { pendent.resolve(estatAntic); fabrica.mockRestore(); }
 });

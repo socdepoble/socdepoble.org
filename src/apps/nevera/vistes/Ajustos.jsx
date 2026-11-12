@@ -9,13 +9,13 @@
  *                         recuperar, sdp.nevera.copia.v1) i començar de nou
  * En pantalla estreta es veu una sola: /ajustos/<id> ↔ /ajustos/<id>/dades (push).
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ArrowLeft, Database, Download, RotateCcw, Trash2 } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Boto, Camp, CampText, GrupCamps, MarcColumna, OrdenaCategories } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
-import { LIMITS, llegixCopia, serialitzaCopia } from '../nucli/index.js';
+import { LIMITS, MAX_COPIA, llegixCopia, serialitzaCopia } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { AJUSTOS } from './constants.js';
 import { useVistaNevera } from './context.js';
@@ -97,22 +97,38 @@ export function ColumnaDades({ params }) {
   const { estat, accions, llistaVigent, ruta, demanaConfirmacio, descarrega } = useVistaNevera();
   const navigate = useNavigate();
   const [errorCopia, setErrorCopia] = useState(null);
+  const rondaCopia = useRef(0);
   const llista = llistaVigent(params);
   const startActions = useAccioEstreta({
     id: 'torna', icona: ArrowLeft, etiqueta: 'Torna als ajustos', onAcciona: () => navigate(ruta(AJUSTOS.entrada, llista.id))
   });
 
-  const exporta = () => descarrega({
-    nom: `nevera-de-casa-${avui()}.json`,
-    tipus: 'application/json',
-    dades: serialitzaCopia(estat, { creada: new Date().toISOString() })
-  });
+  const exporta = async () => {
+    const nom = `nevera-de-casa-${avui()}.json`;
+    const creada = new Date().toISOString();
+    try {
+      const desat = await accions.copia();
+      descarrega({
+        nom,
+        tipus: 'application/json',
+        dades: serialitzaCopia(desat, { creada })
+      });
+    } catch {
+      setErrorCopia('No s’han pogut llegir les dades desades.');
+    }
+  };
 
   const recupera = (event) => {
     const fitxer = event.target.files?.[0];
     event.target.value = '';
     if (!fitxer) return;
+    const ronda = ++rondaCopia.current;
+    if (fitxer.size > 4 * MAX_COPIA) {
+      setErrorCopia('El fitxer és massa gran per a ser una còpia de la nevera.');
+      return;
+    }
     fitxer.text().then((text) => {
+      if (ronda !== rondaCopia.current) return;
       const resultat = llegixCopia(text);
       if (!resultat.ok) {
         setErrorCopia(resultat.error);
@@ -124,9 +140,11 @@ export function ColumnaDades({ params }) {
         titol: 'Vols recuperar esta còpia?',
         descripcio: `Porta ${llistes} ${llistes === 1 ? 'llista' : 'llistes'} i ${articles} ${articles === 1 ? 'article' : 'articles'} per comprar. Substituirà tot el que hi ha ara en este dispositiu.`,
         etiquetaConfirma: 'Recupera la còpia',
-        accio: () => accions.importa(resultat.estat)
+        accio: () => accions.importa(resultat.estat, estat)
       });
-    }, () => setErrorCopia('No s’ha pogut llegir el fitxer.'));
+    }, () => {
+      if (ronda === rondaCopia.current) setErrorCopia('No s’ha pogut llegir el fitxer.');
+    });
   };
 
   return (

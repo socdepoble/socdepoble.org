@@ -50,6 +50,17 @@ Les dos SQL són propostes de laboratori independents sobre el catàleg de 76. L
 
 `2611060010_restauracio_municipal_opendata.sql` separa les dades públiques importades dels perfils, Notes i pertinences del servidor. El paquet ZIP 1.2.0 es revalida al servidor amb SHA-256 i regeneració canònica; la RPC comprova el tenant, els camps públics, els identificadors globals i els conflictes. La importació fa upsert: no esborra registres absents del paquet. `tests/restauracio-independent-r20b.test.mjs` verifica la 78 sola sobre les 76; `tests/admin-invitacions-r20b.test.mjs` verifica la 77 sola sobre les 76 i la regressió K3-02 dels xats privats. Usen el catàleg i el llibre de migracions reals de PostgreSQL 17 (WASM), sense substituir les guardes. `tests/node0-r13-municipal.test.mjs` conserva les proves integrades de les 78, inclosa la denegació de metadades OKF privades niades i el rollback. `tooling/node0/verifica-restauracio-municipal-321.mjs` restaura tres còpies locals en tres bases netes i declara explícitament que dos mitjans físics i una còpia externa no estan acreditats. No és una prova de desplegament natiu ni de MFA del Node0.
 
+## R20 · Porta nativa de co-publicació i Mur
+
+`2611111735_copublicacio_registrada.sql` i `2611112005_mur_lectura_publica_foraster.sql` són les dependències de `2611112149_mur_estat_public_i_padro.sql`. La correcció és additiva: un únic predicat de metadades governa la lectura pública i la resolució del recurs de l'RPC. Les marques privades, d'esborrany o contradictòries dominen en `attributes`/`payload`, amb límit de 64 capes. Les notes privades reals es mantenen reservades al propietari membre.
+
+```sh
+npm ci
+npm run test:sql
+```
+
+Este assaig usa PostgreSQL natiu amb un clúster efímer i dos clients simultanis, sense omissió silenciosa. Preferix `initdb`/`postgres` locals o `SDP_POSTGRES_BIN`; el devDependency fixat `embedded-postgres` aporta els binaris de reserva. Socket Unix curt i dades es retiren en acabar. Provat en macOS arm64, amb AAL2 literal, anti-autoaprovació, RLS, concurrència, rollback i reaplicació DDL. Claims i serveis Auth són fixtures: no és una prova de JWT, TOTP, GoTrue, PostgREST ni desplegament. La 2005 consta aplicada segons l'encàrrec del Mestre; la 1735 i la 2149 continuen pendents d'aplicació remota en este registre.
+
 ## Vincles
 
 - [[00_index]]

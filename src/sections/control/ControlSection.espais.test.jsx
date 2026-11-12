@@ -22,10 +22,22 @@
    l'Arbre Genealògic. Ho diu el registre (camp `espai`), i la secció
    «Utilitats i Connectors (Plugins)», que es quedava buida, ja no es pinta.
 
+   R18 · T2 (P0-101; prompt 261111_0148) · Les targetes pinten
+   etiquetesAmbEstat: les dues del registre i, si l'eina és en proves, la
+   insígnia «En proves · Beta oberta». Les proves comparen el DOM amb
+   etiquetesAmbEstat i el registre continua amb dues. Correcció de la T2:
+   l'Avisador no entra a «La llar» (la seua vinyeta no és a public/), i
+   l'entradeta torna a ser la d'abans.
+   P0-114 (ordre del Mestre, 261111) · DEROGADA «l'Avisador no entra a «La
+   llar»»: hi torna, darrere de l'Arbre Genealògic, amb la seua vinyeta. Les
+   entradetes dels espais no canvien (Llei del Píxel).
+
    Router propi en memòria i les targetes de veres (UniversalCard); se
    substituïxen la UniversalPage, l'eixida segura, el toast i l'i18n, com a
-   ControlSection.test.jsx. En producció, la Gestoria no navega: ho prova
-   PluginPage.test.jsx (la pàgina on porta la targeta). */
+   ControlSection.test.jsx. La targeta mai navega a l'app: porta a la seua
+   pàgina, i on porta la pàgina ho prova PluginPage.test.jsx. P0-113 (ordre
+   del Mestre, 261111) · En producció la Gestoria ja s'obri des de la seua
+   pàgina; abans: «En producció, la Gestoria no navega». */
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
@@ -34,7 +46,10 @@ import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { STORAGE_PREFIX } from '../../config/storage.js';
 import { CLAU_UTILITATS_ACTIVES, desaUtilitatActiva } from '../profile/utilitatsActives.js';
-import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
+import { ESPAIS_PLUGINS, PLUGINS, etiquetesAmbEstat, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
+/* Les targetes de «La llar», en l'ordre del registre. P0-114 (ordre del Mestre, 261111:
+   «RESTITUÏX IMMEDIATAMENT «L'Avisador · Batec de Vida» A «La llar» DE /control») · I L'Avisador. */
+const DE_LA_LLAR = ['Salut', 'Arbre Genealògic', 'L’Avisador'];
 import { AUTORIA_SOCDEPOBLE } from './destinsControl.js';
 import fontApp from '../../app/App.jsx?raw';
 
@@ -146,7 +161,7 @@ test.each(['es', 'es-ES'])('cinc llengües · amb la interfície en %s, els espa
   expect(empresa.querySelector('p.lead').textContent).toBe('Las herramientas de la actividad: la gestoría, el TPV del bar y la despensa doméstica. El Panel no muestra ninguna cifra de tus datos; los datos solo se ven dentro de cada herramienta.');
   expect(llar.querySelector('p.lead').textContent).toBe('Las herramientas de casa: el cuaderno de salud y la memoria de la familia. Viven separadas de las de la empresa, y el Panel no muestra ningún dato tuyo.');
   expect(targetesDe(empresa).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
-  expect(targetesDe(llar).map(titolDe)).toEqual(['Salut', 'Arbre Genealògic']);
+  expect(targetesDe(llar).map(titolDe)).toEqual(DE_LA_LLAR);
   /* En el mateix lloc: entre «Publica al poble» i «Maquinària i Sistema». */
   const maquinaria = seccioDe('Maquinària i Sistema');
   expect(empresa.compareDocumentPosition(llar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -156,7 +171,7 @@ test.each(['es', 'es-ES'])('cinc llengües · amb la interfície en %s, els espa
 test('R3 · separats: «Economia i Empresa» porta Gestoria, TPV del Bar i Rebost Domèstic, i «La llar» Salut i l’Arbre Genealògic; cap targeta en dos llocs', () => {
   pinta();
   expect(targetesDe(seccioDe('Economia i Empresa')).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Salut', 'Arbre Genealògic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(DE_LA_LLAR);
   expect(ESPAIS_PLUGINS.map((espai) => targetesDe(seccioDe(espai.titol)).map(titolDe)))
     .toEqual(ESPAIS_PLUGINS.map((espai) => pluginsDeLEspai(espai.id).map((plugin) => plugin.titol)));
   /* Cada targeta d'un espai es pinta UNA vegada en tot el Panell: ni a l'altre
@@ -193,9 +208,11 @@ test('regla d’or 1 · cada targeta: boina de Sóc de Poble cap al seu perfil, 
     expect(targeta.className, titol).toBe('sp-card');
     expect([...targeta.children].map((fill) => fill.className), titol)
       .toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-media-container', 'sp-card-body', 'sp-card-footer']);
+    /* R18 · T2 (P0-101) · El registre continua amb exactament dues; la targeta
+       pinta les de etiquetesAmbEstat: les dues i, si l'eina és en proves, la insígnia. */
     expect(plugin.etiquetes.map((etiqueta) => etiqueta.className), titol).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
     expect([...targeta.querySelectorAll('.sp-card-body > ul.sp-card-labels > li')].map((li) => [li.textContent, li.className]), titol)
-      .toEqual(plugin.etiquetes.map((etiqueta) => [etiqueta.text, `sp-card-label ${etiqueta.className}`]));
+      .toEqual(etiquetesAmbEstat(plugin, 'ca').map((etiqueta) => [etiqueta.text, `sp-card-label ${etiqueta.className}`]));
     expect(targeta.querySelectorAll('ul.sp-card-labels'), titol).toHaveLength(1);
     expect(targeta.querySelector('ul.sp-card-labels [href]'), titol).toBeNull();
     expect(targeta.querySelector('.sp-card-accio'), titol).toBeNull();
@@ -344,12 +361,17 @@ test('la preferència amaga una targeta d’un espai; un espai buit no es pinta 
   pinta();
   expect(seccioDe('Economia i Empresa')).toBeNull();
   expect(screen.queryByText('Gestoria', { selector: '.sp-card-title' })).toBeNull();
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Salut', 'Arbre Genealògic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(DE_LA_LLAR);
   cleanup();
   localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ salut: false }));
   pinta();
   expect(targetesDe(seccioDe('Economia i Empresa')).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Arbre Genealògic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Arbre Genealògic', 'L’Avisador']);
+  cleanup();
+  /* P0-114 (ordre del Mestre, 261111) · L'Avisador també es pot llevar del Panell, com les altres. */
+  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ avisador: false }));
+  pinta();
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Salut', 'Arbre Genealògic']);
 });
 
 /* Higiene d'amfitrió (ordre del Mestre, 261004) · Quan DetallEspai lleva una
@@ -379,5 +401,5 @@ test('la clau amb prefix mana sobre la de llegat, i la de llegat val si no n’h
   localStorage.setItem(CLAU_PROPIA, JSON.stringify({ gestoria: true, salut: false }));
   pinta();
   expect(targetesDe(seccioDe('Economia i Empresa')).map(titolDe)).toEqual(['Gestoria', 'TPV del Bar', 'Rebost Domèstic']);
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Arbre Genealògic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Arbre Genealògic', 'L’Avisador']);
 });

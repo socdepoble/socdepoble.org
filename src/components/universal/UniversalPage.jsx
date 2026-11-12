@@ -251,6 +251,7 @@ export function UniversalPage(props) {
          barra taronja (despresAutoria) és una prop explícita de la pàgina;
          la config del ContentProvider no hi pot injectar res. */
       despresAutoria={props.despresAutoria ?? null}
+      abansIntro={props.abansIntro ?? null}
       onConnect={handleConnect}
       showConnect={senseConnectar ? false : (props.showConnect ?? config.showConnect)}
       onBack={handleBack}

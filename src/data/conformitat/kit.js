@@ -1263,10 +1263,30 @@ export const CASOS = Object.freeze([
   ].map(([metode,capacitat,args])=>cas({metode,capacitat,espera:'rebutja',titol:metode+': entrada malformada no inicia prova ni recuperació',arguments:args,
     comprova:rebuigAmbCodi('SDP-CORREU-001')})),
   cas({metode:'creaCarpetaNotes',capacitat:'carpetesNotes',espera:'rebutja',titol:'R12: nom de carpeta buit rebutja abans de persistir',arguments:ctx=>[{nom:'  '},ctx.config],comprova:error=>error?.name==='TypeError'?[]:['ha de rebutjar el nom invàlid amb TypeError']}),
+  cas({
+    metode: 'lligPublicadorsRegistrats', capacitat: 'copublicacio',
+    titol: 'R19: un recurs sense publicadors registrats resol la identitat oficial',
+    arguments: ctx => [{ recursTipus: 'pagina', recursId: 'conformitat-sense-recurs' }, ctx.config],
+    comprova: valor => valor?.recursTipus === 'pagina' && valor.recursId === 'conformitat-sense-recurs'
+      && valor.versio === 0 && Array.isArray(valor.publicadorsRegistrats) && valor.publicadorsRegistrats.length === 0
+      && valor.publicadorEfectiu?.actor_id === 'socdepoble' && valor.publicadorEfectiu?.rol_publicacio === 'principal'
+      ? [] : ['falta el publicador oficial de reserva o el recurs de la consulta']
+  }),
+  ...CAPACITATS.copublicacio.map(metode => cas({
+    metode, capacitat: 'copublicacio', espera: 'rebutja',
+    titol: `R19: ${metode} rebutja l’entrada invàlida abans de consultar o escriure`,
+    arguments: ctx => [{}, ctx.config],
+    comprova: rebuigAmbCodi('publicacio-invalida')
+  })),
   cas({metode:'adminActualitzaPublicacioEditorial',capacitat:'edicioEditorial',espera:'rebutja',titol:'R12: entrada editorial malformada rebutja abans de qualsevol efecte',arguments:ctx=>[{},ctx.config],comprova:rebuigAmbCodi('editorial-invalid')}),
   ...['adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari'].map(metode=>cas({metode,capacitat:'administracioUsuaris',espera:'rebutja',titol:`R13: ${metode} rebutja arguments invàlids abans de qualsevol efecte`,arguments:ctx=>[{limit:0},ctx.config],comprova:error=>error?.name==='TypeError'?[]:['cal TypeError abans d’operar']})),
   cas({metode:'importaMunicipiOpenData',capacitat:'importacioPaquetMunicipal',espera:'rebutja',titol:'R13: un paquet municipal sense bytes ni SHA no s’importa',arguments:ctx=>[null,'',ctx.config],comprova:error=>error instanceof Error?[]:['cal rebutjar el paquet invàlid']}),
   ...['loadSeedRevisions', 'desaRevisioSeed'].map(metode => cas({ metode, capacitat: 'revisionsLlavor', espera: 'rebutja', titol: `P1-75: ${metode} rebutja dades malformades abans de qualsevol efecte`, arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('seed-invalid') })),
+  ...CAPACITATS.revisionsPatrimoni.map(metode => cas({
+    metode, capacitat: 'revisionsPatrimoni', espera: 'rebutja',
+    titol: `P1-75: ${metode} rebutja una campanya malformada abans de qualsevol efecte`,
+    arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('revisio-patrimoni-invalida')
+  })),
   // R54: optional server operations require an explicitly configured fixture.
   cas({ metode: 'consultaIAIA', capacitat: 'iaia', requerix: ['iaiaOperativa'],
     titol: 'R54: descoberta IAIA retorna configuració sense pregunta ni inferència',
@@ -1300,7 +1320,9 @@ export const CASOS = Object.freeze([
   cas({ metode: 'revisaAportacioCultural', capacitat: 'curadoriaCultural', espera: 'rebutja', titol: 'R15: estat ingerit inventat rebutja abans de cap canvi', arguments: ctx => [{ id: ctx.idMissatge, estat: 'aprovat_node0', nota: '' },ctx.config], comprova: rebuigTipusR15 }),
   cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', espera: 'rebutja', titol: 'P0-59: audiència inventada rebutja abans de lectura', arguments: ctx => [{ audiencia: 'inventada' },ctx.config], comprova: rebuigAmbCodi('projeccio-invalida') }),
   cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', requerix: ['projeccionsOperatives'], titol: 'P0-59: pàgina de referències públiques té cursor explícit', arguments: ctx => [{ audiencia: 'publica', cursor: null, limit: 100 },ctx.config], comprova: v => esObjecte(v) && Array.isArray(v.items) && v.items.every(teId) && (v.cursor === null || esTextNoBuit(v.cursor)) ? [] : ['pàgina de projeccions invàlida'] }),
-  cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', requerix: ['projeccionsSenseSessio'], espera: 'rebutja', titol: 'P0-59: cap lectura privada sense sessió', arguments: ctx => [{ audiencia: 'privada' },ctx.config], comprova: rebuigAmbCodi('sense-sessio') })
+  cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', requerix: ['projeccionsSenseSessio'], espera: 'rebutja', titol: 'P0-59: cap lectura privada sense sessió', arguments: ctx => [{ audiencia: 'privada' },ctx.config], comprova: rebuigAmbCodi('sense-sessio') }),
+  cas({ metode: 'llistaRevisionsEditorialsWp', capacitat: 'revisionsEditorialsWp', requerix: ['compteSenseSessio'], espera: 'rebutja', titol: 'P0-111: llistaRevisionsEditorialsWp sense sessió rebutja abans de mostrar revisions', arguments: ctx => [ctx.config], comprova: rebuigPermisR15 }),
+  cas({ metode: 'desaRevisioEditorialWp', capacitat: 'revisionsEditorialsWp', espera: 'rebutja', titol: 'P0-111: desaRevisioEditorialWp amb entrada malformada rebutja abans de persistir', arguments: ctx => [{ wpId: 0, estat: 'inventat' },ctx.config], comprova: rebuigTipusR15 })
 ]);
 
 /**

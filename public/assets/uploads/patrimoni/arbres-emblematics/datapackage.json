@@ -1,0 +1,11 @@
+{
+  "profile": "tabular-data-package",
+  "name": "socdepoble-patrimoni-arbres-emblematics",
+  "title": "Arbres Emblemàtics i Monumentals",
+  "version": "1.0.0",
+  "skos_concept": "TX.31",
+  "isadg_level": "series",
+  "colleccions": [
+    "la-torre-de-les-macanes"
+  ]
+}

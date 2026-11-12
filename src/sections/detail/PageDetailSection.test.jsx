@@ -68,7 +68,13 @@ test('T8 · una pàgina amb destí passa el botó Publicar dalt (accioPrincipal)
     visita(desti.pagina);
     const { accioPrincipal, children } = m.props;
     expect([desti.pagina, accioPrincipal.type, accioPrincipal.props]).toEqual([desti.pagina, PublicarDeLaPagina, { clau: desti.pagina, lloc: 'dalt' }]);
-    expect([desti.pagina, children.type, children.props]).toEqual([desti.pagina, PublicarDeLaPagina, { clau: desti.pagina }]);
+    /* R19 · Claude: des de R18, 'publicar_mapa' porta davant l'exemple
+       (PublicarMapaShowcase, dins de Suspense) i els children són un
+       Fragment. La invariant no canvia: el botó Publicar es conserva baix. */
+    const baix = Array.isArray(children?.props?.children)
+      ? children.props.children.find((fill) => fill?.type === PublicarDeLaPagina)
+      : children;
+    expect([desti.pagina, baix?.type, baix?.props]).toEqual([desti.pagina, PublicarDeLaPagina, { clau: desti.pagina }]);
     cleanup();
   }
 });

@@ -125,11 +125,17 @@ export function creaActivacioXat({ impl, entorn, magatzem, capturaContext, llegi
   for (const nom of ['enviaMissatge', 'publicaAdjuntXat']) if (typeof decorat[nom] === 'function') {
     backend[nom] = async (fil, cos, opcions = {}) => {
       exigix();
+      opcions.signal?.throwIfAborted();
       const id = typeof fil === 'string' ? fil : fil?.id;
       const filObj = fil && typeof fil === 'object' ? fil : (await impl.loadFils(config)).find((f) => f.id === id); exigix();
       if (!filObj || ambitDelFil(filObj).xifrat) await exigixOptin(id);
       fixa();
-      const resultat = await decorat[nom](fil, cos, { ...config, ...(opcions.signal ? { signal: opcions.signal } : {}) }); exigix();
+      opcions.signal?.throwIfAborted();
+      const resultat = await decorat[nom](fil, cos, {
+        ...config,
+        ...(opcions.signal ? { signal: opcions.signal } : {}),
+        ...(nom === 'enviaMissatge' && opcions.senseSafata === true ? { senseSafata: true } : {})
+      }); exigix();
       return resultat;
     };
   }

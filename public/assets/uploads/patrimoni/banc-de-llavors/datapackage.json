@@ -1,0 +1,9 @@
+{
+  "profile": "tabular-data-package",
+  "name": "socdepoble-patrimoni-banc-de-llavors",
+  "title": "Banc de Llavors i Varietats Locals",
+  "version": "1.0.0",
+  "skos_concept": "TX.33",
+  "isadg_level": "series",
+  "colleccions": []
+}

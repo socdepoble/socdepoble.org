@@ -83,8 +83,9 @@ describe('comandes: concurrència optimista', () => {
     const { m } = magatzemFals();
     await expect(m.descartaComanda(comanda())).rejects.toMatchObject({ codi: 'NO_DESCARTABLE' });
     const buida = creaComanda({ id: 'c-buida', tornId: 'torn-1', origen: { tipus: 'barra' }, ara: ARA });
-    await m.desaComanda(buida);
-    await m.descartaComanda(buida);
+    const desada = await m.desaComanda(buida);
+    await expect(m.descartaComanda(buida)).rejects.toMatchObject({ codi: 'CONFLICTE' });
+    await m.descartaComanda(desada);
     expect(await m.base.obte('comandes', 'c-buida')).toBeUndefined();
   });
 });
@@ -145,4 +146,51 @@ describe('sense IndexedDB', () => {
     await m.carrega();
     expect(m.base.persistent).toBe(false);
   });
+});
+
+test('la còpia restaura els tiquets de venda i devolució en un dispositiu nou sense reescriure llibres', async () => {
+  const { m: origen } = magatzemFals();
+  await origen.carrega();
+  const torn = obriTorn({ id: 'torn-1', per: 'Prova', fonsInicialCents: 0, ara: ARA });
+  await origen.obriTorn(torn, [], null);
+  const desada = await origen.desaComanda(comanda());
+  const pagada = afegeixPagament(desada, { metode: 'efectiu', importCents: 130, lliuratCents: 200 }, { id: 'p-1', ara: ARA });
+  const tiquet = tanca(pagada, { numero: 1, ara: ARA });
+  await origen.tancaComanda(tiquet, { ambTorn: true });
+  await expect(origen.desaComanda(comanda())).rejects.toMatchObject({ codi: 'JA_TANCAT' });
+  const dev = creaDevolucio(tiquet, [{ liniaId: 'l-1', quantitat: 1 }], {
+    motiu: 'Prova', metode: 'efectiu', id: 'k-1', ara: ARA, numero: 2, tornId: torn.id
+  });
+  await origen.desaDevolucio(dev);
+  const dataCopia = new Date(ARA);
+  const text = await origen.exportaCopia(dataCopia);
+
+  const { m: desti } = magatzemFals();
+  await desti.carrega();
+  const buit = await desti.exportaCopia(dataCopia);
+  const corruptors = [
+    (copia) => { copia.tiquets[0].totals.totalCents += 1; },
+    (copia) => { copia.tiquets[0].totals.perIva[0].quotaCents += 1; },
+    (copia) => { copia.tiquets[1].totals.totalCents = 0; },
+    (copia) => { copia.tiquets[0].pagaments[0].importCents += 1; },
+    (copia) => { copia.tiquets[1].pagaments[0].importCents = 1; },
+    (copia) => { copia.tiquets[0].pagaments[0].metode = 'inventat'; },
+    (copia) => { copia.tiquets[0].pagaments[0].canviCents = 99999; },
+    (copia) => { copia.tiquets[0].pagaments[0].lliuratCents = 129; },
+    (copia) => { copia.tiquets[0].pagaments[0].lliuratCents = 200.5; },
+    (copia) => { delete copia.tiquets[0].pagaments[0].canviCents; },
+    (copia) => { copia.tiquets[0].pagaments[0].metode = 'targeta'; },
+    (copia) => { copia.tiquets[1].pagaments[0].canviCents = 1; },
+    (copia) => { copia.tiquets[0].pagaments[0].part = 0; }
+  ];
+  for (const corromp of corruptors) {
+    const copia = JSON.parse(text);
+    corromp(copia);
+    await expect(desti.restauraCopia(JSON.stringify(copia))).rejects.toMatchObject({ codi: 'COPIA_INVALIDA' });
+    expect(await desti.exportaCopia(dataCopia)).toBe(buit);
+  }
+  await expect(desti.restauraCopia(text)).resolves.toEqual({ torns: 1, tiquets: 2 });
+  expect(await desti.exportaCopia(dataCopia)).toBe(text);
+  await expect(desti.restauraCopia(text)).rejects.toMatchObject({ codi: 'DISPOSITIU_OCUPAT' });
+  expect(await desti.exportaCopia(dataCopia)).toBe(text);
 });

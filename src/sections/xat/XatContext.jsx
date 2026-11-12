@@ -2313,6 +2313,8 @@ export function XatProvider({ children, config }) {
        escriure amb la veu d'una entitat no ha d'aparéixer, llest per a
        enviar, quan la mateixa persona torna a parlar com a ella mateixa. */
     ambitEstable,
+    avisadorClau: visible && usuari?.id === joId && !actuaComEntitat && estatSessio === 'dins'
+      ? `avisador:${clauPersona}` : null,
     /* Qui és «jo» al xat (la cerca no el troba a ell mateix; el diàleg «Nova
        conversa» el pinta amb «(Tu)»). Null sense sessió en remot. */
     joId: visible ? joId : null,
@@ -2374,7 +2376,7 @@ export function XatProvider({ children, config }) {
     /* B8C-5 · Si el fil es pot silenciar i el silenci (8h, 1setmana, sempre o cap). */
     potSilenciarFil,
     silenciaFil
-  }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
+  }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, usuari?.id, actuaComEntitat, clauPersona, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, filCarregat, avisFil, recarregaFil, tipusAvisFil, llegintFil,
     enviaAmbNormes, sendChatMedia, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,

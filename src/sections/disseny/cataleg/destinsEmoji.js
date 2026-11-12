@@ -198,8 +198,8 @@ export function destinsDelDisseny(categories, items, portada) {
 /**
  * Les pàgines de Sóc de Poble que viuen al PAGE_COPY: primer les del sistema
  * (SYSTEM_PAGES, les que el Mur barreja) i, darrere, les pàgines de text de
- * la navegació que no hi són (SECTIONS amb pageKey: L'Ànima de la IAIA, Nodes
- * i Fedivers). `copyDe(clau)` torna el copy de la pàgina (el carregat primer i
+ * la navegació que no hi són (SECTIONS amb pageKey: Dispositius, des d'R17.2B,
+ * L'Ànima de la IAIA i Nodes i Fedivers). `copyDe(clau)` torna el copy de la pàgina (el carregat primer i
  * PAGE_COPY de reserva); una clau sense copy no es pinta, com al Mur
  * (targetesDeSistema). Les pàgines que ja són a un altre grup
  * (`jaLlistades`: les portades de la Wiki i de Disseny i, des de l'Onada 8,

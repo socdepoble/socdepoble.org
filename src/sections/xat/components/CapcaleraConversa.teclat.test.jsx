@@ -73,3 +73,17 @@ test('tocar una altra opció amb el focus a la primera la tria (no es tanca aban
   expect(onBloqueja).toHaveBeenCalledWith(opcions());
   expect(menu()).toBeNull();
 });
+
+
+test('l’oblit individual entra al menú accessible i retorna el focus a l’obridor', () => {
+  const onTria = vi.fn();
+  render(<MemoryRouter><CapcaleraConversa fil={{ id: 'iaia', tipus: 'iaia', name: 'Mercat' }} t={t}
+    accioOblit={{ etiqueta: 'Oblida esta conversa', onTria }} /></MemoryRouter>);
+  fireEvent.click(opcions());
+  tecla('End');
+  expect(document.activeElement).toBe(fila('Oblida esta conversa'));
+  fireEvent.click(document.activeElement);
+  expect(onTria).toHaveBeenCalledWith(opcions());
+  expect(menu()).toBeNull();
+  expect(document.activeElement).toBe(opcions());
+});

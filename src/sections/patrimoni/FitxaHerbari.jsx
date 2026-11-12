@@ -1,6 +1,8 @@
 import {useEffect,useId,useRef,useState} from 'react';
 import {Alerta,Boto} from '../../components/PedraSeca/index.js';
 import {USOS_HERBARI_CANONICS,construeixLocucioEspecieHerbari} from '../../data/patrimoni/herbariLaTorre117.js';
+import LaminesBotaniquesNode0 from './LaminesBotaniquesNode0.jsx';
+import { useLaminesBotaniquesNode0 } from './useLaminesBotaniquesNode0.js';
 const CLAUS_USOS=['tots','aliment','aromatica','medicinal','ornamental','artesanal','toxic'];
 
 function Locucio({especie,locutor,textos}){
@@ -25,10 +27,13 @@ function Locucio({especie,locutor,textos}){
 }
 
 export default function FitxaHerbari({especie,textos,locutor}){
- const camps=[['valencia',especie.nomValencia,'ca'],['castella',especie.nomCastella,'es'],['angles',especie.nomAngles,'en'],['cientific',especie.nomCientific,'la'],['zona',especie.zonaCanaleta,'ca']];
+ const camps=[['valencia',especie.nomValencia,'ca'],['castella',especie.nomCastella,'es'],['angles',especie.nomAngles,'en'],['cientific',especie.nomCientific,'la'],['zona',especie.zonaHerbari,'ca']];
+ const cataleg = useLaminesBotaniquesNode0();
+ const lamina = cataleg?.obteLaminaBotanicaNode0(especie.id);
  return <>
   <p>{textos.documental}</p>
   <dl>{camps.map(([key,valor,lang])=><div key={key}><dt>{textos[key]}</dt><dd lang={lang}>{valor}</dd></div>)}</dl>
+  <LaminesBotaniquesNode0 lamina={lamina} nom={especie.nomValencia} binomi={lamina?.binomiNet} />
   <h3>{textos.usos}</h3><ul>{especie.usos.map(us=><li key={us}>{textos[CLAUS_USOS[USOS_HERBARI_CANONICS.indexOf(us)]]??us}</li>)}</ul>
   <Alerta to={especie.esToxica===true?'avis':'info'} viva={false}>{especie.esToxica===true?textos.toxicitatAdvertida:textos.toxicitatDesconeguda}</Alerta>
   <h3>{textos.font}</h3><p>{especie.font.document} · {textos.pagina} {especie.font.pagina}</p>

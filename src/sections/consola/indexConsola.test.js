@@ -345,8 +345,9 @@ describe('les 18 il·lustracions de les ordres', () => {
   /* Les vinyetes de la carpeta que no són de les 18 de les ordres: la portada
      còmic de /fedivers (ESTAT 261014_1505; src/sections/text/pageContent.js),
      la de l'Arbre Genealògic (IDEA-100, COMMIT R6 d79a0b530) i la de La IAIA
-     Sabuda (R16-W1; IMATGE_NODRIR_IAIA de pageContent.nodrirIaia.js). */
-  const ALTRES_VINYETES = ['fedivers', 'genealogia', 'nodrir_la_iaia'];
+     Sabuda (R16-W1; IMATGE_NODRIR_IAIA de pageContent.nodrirIaia.js) i
+     l'Avisador (R17), nascut només en WebP. */
+  const ALTRES_VINYETES = ['avisador', 'fedivers', 'genealogia', 'nodrir_la_iaia'];
   /* La nano card del Mercat només viu com a bessona .webp: l'original .jpg es
      va retirar a 1d45fb1a, i censImatges, legacyMedia, pageContent i la prova
      del Panell de Control ja la nomenen així. */
@@ -360,7 +361,7 @@ describe('les 18 il·lustracions de les ordres', () => {
      esborrat, registrePlugins.test.js) i la Gestoria també (la cita una ADR
      viva de la Wiki). La de l'Arbre Genealògic (d79a0b530) i la de La IAIA
      Sabuda (R16-W1) ja van nàixer només en WebP. */
-  const VINYETES_NOMES_WEBP = new Set(['animalets', 'fedivers', 'genealogia', 'habitatge', 'mapa', 'nodrir_la_iaia', 'rebost', 'salut', 'treball', 'vehicle']);
+  const VINYETES_NOMES_WEBP = new Set(['avisador', 'animalets', 'fedivers', 'genealogia', 'habitatge', 'mapa', 'nodrir_la_iaia', 'rebost', 'salut', 'treball', 'vehicle']);
   const extensioDeVinyeta = (id) => (VINYETES_NOMES_WEBP.has(id) ? 'webp' : 'jpg');
 
   test('les 14 vinyetes i les 4 nano cards són a public/, amb pes', () => {

@@ -2,7 +2,7 @@ import { webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { carregaPaginesTrilogiaIMoliWp, CORPUS_PAGINES_WP_SHA256, creaCarregadorPaginesWp, INDEX_PAGINES_TRILOGIA_WP } from './paginesTrilogiaIMoliWp.js';
-import { transformaPaginaTrilogiaIMoliWp } from './paginesTrilogiaIMoliEditorial.js';
+import { carregaPortadaImportadaPublica, transformaPaginaTrilogiaIMoliWp } from './paginesTrilogiaIMoliEditorial.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { MITJANS_WP_LOCALS } from './paginesTrilogiaIMoliWp.mitjans.js';
 import { carregaPaginaImportadaPerRevisio, trobaArticleImportatComAPublicacio } from '../../utils/transformadorEditorialWpBlogger.js';
@@ -98,5 +98,26 @@ describe('IDEA-111 · corpus WP complet diferit i verificat', () => {
     expect(source).toContain("import('./paginesTrilogiaIMoliWp.corpus.json')");
     expect(source).not.toMatch(/import\s+[^;]*from\s+['"][^'"]*corpus\.json/);
     expect(source).not.toContain('contentHtml:');
+  });
+
+  test('R18 · la portada pública d’arbres reutilitza exactament el WP #619 amb les imatges verificades', async () => {
+    const original = (await carregaPaginesTrilogiaIMoliWp()).find(p => p.id === 619);
+    const privada = transformaPaginaTrilogiaIMoliWp(original);
+    const portada = await carregaPortadaImportadaPublica(619);
+    expect(portada).toMatchObject({ wp_id: 619, source_url: original.link, source_sha256: privada.source_sha256,
+      content: privada.content, htmlNet: privada.htmlNet, quarantena: false, revisioPrivada: false,
+      destinacio_workspace: 'arbres-monumentals', estat_revisio: 'portada_canonica' });
+    expect(portada.imatgesPendents).toEqual([]);
+    expect(Object.isFrozen(portada)).toBe(true);
+    expect(portada.content).toContain('Font original:');
+    for (const id of [2002, 16839, '619', null, {}, '__proto__']) expect(await carregaPortadaImportadaPublica(id)).toBeNull();
+    // La lectura pública concreta no canvia la quarantena dels lectors de revisió ni del Mur.
+    expect((await carregaPaginaImportadaPerRevisio(619)).quarantena).toBe(true);
+    expect(trobaArticleImportatComAPublicacio(619).content).not.toContain('Font original:');
+  });
+
+  test('R18 · cancel·lar la portada concreta conserva la semàntica del carregador', async () => {
+    const controller = new AbortController(); controller.abort();
+    await expect(carregaPortadaImportadaPublica(619, { signal: controller.signal })).rejects.toMatchObject({ code: 'WP_CANCELLED' });
   });
 });

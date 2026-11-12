@@ -15,9 +15,16 @@ import { TpvBar } from './vistes/Tpv.jsx';
 const { manifest } = validaManifestApp(manifestCru);
 
 describe('manifest', () => {
-  test('és un sdp.app.v1 vàlid, premium, de desenvolupament i sense capacitats del backend', () => {
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: tot el sistema és gratuït i lliure.
+     El Bar ja no és premium ni porta cap dret: és una eina gratuïta oberta en producció. Es
+     conserva la intenció: vàlid i sense capacitats del backend ni dades personals. */
+  test('és un sdp.app.v1 vàlid, gratuït, obert en producció i sense capacitats del backend', () => {
     expect(validaManifestApp(manifestCru)).toMatchObject({ ok: true, errors: [] });
-    expect(manifest).toMatchObject({ id: 'bar', entradaPerDefecte: 'cataleg', nivell: 'premium', dret: 'sdp.app.bar', capacitats: [], dadesPersonals: false });
+    expect(manifest).toMatchObject({
+      id: 'bar', entradaPerDefecte: 'cataleg', nivell: 'gratuit', entorn: 'produccio', actiuPerDefecte: true, capacitats: [], dadesPersonals: false
+    });
+    expect('dret' in manifestCru).toBe(false);
+    expect('dret' in manifest).toBe(false);
     expect(manifest.grups.map((g) => g.id)).toEqual(['servei', 'carta', 'torn', 'ajustos']);
     expect(manifest.interruptors.map((i) => [i.id, i.actiuPerDefecte])).toEqual([['taules', true], ['escandalls', true], ['cuina', false]]);
   });

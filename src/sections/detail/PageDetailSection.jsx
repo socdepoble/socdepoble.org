@@ -1,7 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Navigate, useParams } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { useUIActions, useUIActionsOpcional } from '../../app/contexts/UIContext';
+import { Boto } from '../../components/PedraSeca/index.js';
 import { resolvePageSlugPath } from '../../config/navigation';
 import { esAppNativa } from '../../config/origenPublic.js';
 import { accioAlFinal, accioDeLaPagina, esPaginaVisible } from '../../config/systemPages.js';
@@ -10,18 +12,73 @@ import { PAGE_COPY } from '../text/pageContent.js';
 import TextSection from '../text/TextSection';
 import ProveidorProjeccionsCataleg from '../../app/contexts/ProveidorProjeccionsCataleg.jsx';
 import NotFoundPage from '../../pages/NotFoundPage';
+import { CLAU_PAGINES_IMPORTADES } from '../../data/importacio/destinacionsWorkspaceWp.js';
 import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { destiDePagina } from '../control/destinsControl.js';
 import { InstalaLaPwa, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
 import { PAGINA_DE_LA_PASTILLA, pastillaDeVersio } from './pastillaDeVersio.js';
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+import { usePublicadorsBarraRecurs } from '../../hooks/usePublicadorsBarraRecurs.js';
+import { CopublicacioDePaginaContext } from './CopublicacioDePaginaContext.js';
+
+const PAGINA_PUBLICAR_MAPA = 'publicar_mapa';
+const PublicarMapaMapaShowcase = lazyRoute(() => import('./PublicarMapaShowcase.jsx').then((m) => ({ default: m.PublicarMapaMapaShowcase })));
+const PublicarMapaExempleShowcase = lazyRoute(() => import('./PublicarMapaShowcase.jsx').then((m) => ({ default: m.PublicarMapaExempleShowcase })));
 const WORKSPACES_PATRIMONI = {
   herbari: lazy(() => import('../patrimoni/HerbariWorkspaceSection.jsx')),
   'banc-de-llavors': lazy(() => import('../patrimoni/BancLlavorsWorkspaceSection.jsx')),
+  'arbres-monumentals': lazy(() => import('../patrimoni/NaturaPatrimoniWorkspaceSection.jsx')),
   receptes: lazy(() => import('../patrimoni/ReceptesWorkspaceSection.jsx')),
   fediversity: lazy(() => import('../text/FediversityWorkspaceSection.jsx'))
 };
 const NodrirLaIaiaSection = lazy(() => import('../patrimoni/NodrirLaIaiaSection.jsx'));
+const PaginesImportadesSection = lazy(() => import('../text/PaginesImportadesSection.jsx'));
 const AparadorFediversity=lazy(()=>import('../text/AparadorFediversity.jsx'));
+const PanellTraspasPublicacioInline = lazy(() => import('../admin/PanellTraspasPublicacioInline.jsx'));
+
+function ControlCopublicacioDeCataleg({ recursId, enActualitzar }) {
+  const sessio = useSessioOpcional();
+  const [obert, setObert] = useState(false);
+  if (!sessio?.esSuperadmin || sessio.nivell !== 'aal2') return null;
+  return (
+    <>
+      <div className="sdp-traspas-inline__accions" lang="ca">
+        <Boto
+          varietat="secundari"
+          aria-expanded={obert}
+          onClick={() => setObert((actual) => !actual)}
+        >
+          {obert ? 'Tancar traspàs i co-publicació' : 'Configurar traspàs i co-publicació'}
+        </Boto>
+      </div>
+      {obert ? (
+        <Suspense fallback={null}>
+          <PanellTraspasPublicacioInline
+            recursTipusInicial="pagina"
+            recursIdInicial={recursId}
+            onRespostaAutoritativa={enActualitzar}
+          />
+        </Suspense>
+      ) : null}
+    </>
+  );
+}
+function PaginaPatrimoniCopublicable({ Workspace, slug, itemSlug, page, accioPrincipal, children }) {
+  const publicacio = usePublicadorsBarraRecurs(itemSlug ? undefined : { recursTipus: 'pagina', recursId: slug });
+  function actualitzaBarra(resposta) {
+    if (resposta.recursTipus === 'pagina' && resposta.recursId === slug) publicacio.recarrega();
+  }
+  const context = itemSlug ? null : { pageKey: slug, publicadorsRegistrats: publicacio.publicadorsRegistrats };
+  return (
+    <CopublicacioDePaginaContext.Provider value={context}>
+      <Workspace page={page} itemSlug={itemSlug || null} accioPrincipal={accioPrincipal} sincronitzaRuta>
+        {!itemSlug ? <ControlCopublicacioDeCataleg recursId={slug} enActualitzar={actualitzaBarra} /> : null}
+        {children}
+      </Workspace>
+    </CopublicacioDePaginaContext.Provider>
+  );
+}
+
 /* R94 · IDEA-171 (decisió D-R11-4 del Mestre, 261107) · El WhatsApp de la IAIA: la targeta del pont
    Hermes + Node 0 i del mapa honest del saber. Va en un chunk lazy i només a /page/node-zero, la pàgina
    del Node 0, davant de l'aparador de Fediversity. El text de PAGE_COPY no canvia. */
@@ -34,7 +91,6 @@ const IaiaWhatsappCard = lazy(() => import('../../components/patrimoni/IaiaWhats
 const SECCIONS_DE_PATRIMONI = {
   'banc-de-llavors': lazy(() => import('../patrimoni/BancLlavorsSection.jsx')),
   'rutes-de-poble': lazy(() => import('../patrimoni/RutesDePobleSection.jsx')),
-  'arbres-monumentals': lazy(() => import('../patrimoni/ArbresMonumentalsSection.jsx')),
   receptes: lazy(() => import('../patrimoni/ReceptesQueDinemSection.jsx'))
 };
 
@@ -147,14 +203,18 @@ function AccioDeLaPagina({ clau, lloc = 'dalt' }) {
  * pròpia o quan no hi ha res honest que oferir. Amb null, el DOM de sempre.
  */
 export default function PageDetailSection() {
-  const { slug = '' } = useParams();
+  const { slug = '', itemSlug = '' } = useParams();
   const { pages = [], pageCopy = {}, status } = useCoreContent();
   const instalacio = useInstalacioDeLaPagina(slug);
 
   const canonica = resolvePageSlugPath(slug);
-  if (canonica) return <Navigate to={canonica} replace />;
+  if (canonica) return itemSlug ? <NotFoundPage /> : <Navigate to={canonica} replace />;
   // Ordre del Mestre (261027) · Una pàgina només web no s'obri dins de l'app nativa.
   if (!esPaginaVisible(slug, { nativa: esAppNativa() })) return <Navigate to="/" replace />;
+  if (itemSlug && (!Object.hasOwn(WORKSPACES_PATRIMONI, slug) || slug === 'fediversity')) {
+    return <NotFoundPage />;
+  }
+  if (slug === CLAU_PAGINES_IMPORTADES) return <Suspense fallback={null}><PaginesImportadesSection /></Suspense>;
 
   // El slug ve de la URL: només claus pròpies («constructor» no és cap pàgina).
   const propia = (taula) => (Object.hasOwn(taula, slug) ? taula[slug] : null);
@@ -172,20 +232,45 @@ export default function PageDetailSection() {
     if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><PouDeLaNeuAnatomiaCard /></Suspense>{alFinal}</>;
     else if (Object.hasOwn(WORKSPACES_PATRIMONI, slug)) {
       const Workspace = WORKSPACES_PATRIMONI[slug];
-      const contingut = <Workspace page={page} accioPrincipal={accioPrincipal}>{alFinal}</Workspace>;
+      const contingut = slug !== 'fediversity' ? (
+        <PaginaPatrimoniCopublicable key={slug} Workspace={Workspace} slug={slug} itemSlug={itemSlug} page={page} accioPrincipal={accioPrincipal}>
+          {alFinal}
+        </PaginaPatrimoniCopublicable>
+      ) : (
+        <Workspace page={page} itemSlug={itemSlug || null} sincronitzaRuta={slug !== 'fediversity'} accioPrincipal={accioPrincipal}>
+          {alFinal}
+        </Workspace>
+      );
       return <Suspense fallback={null}>{slug === 'fediversity' ? contingut
         : <ProveidorProjeccionsCataleg>{contingut}</ProveidorProjeccionsCataleg>}</Suspense>;
     }
     else if (slug === 'la-iaia-sabuda') alFinal = <><Suspense fallback={null}><NodrirLaIaiaSection /></Suspense>{alFinal}</>;
     else if (Object.hasOwn(SECCIONS_DE_PATRIMONI, slug)) { const Consulta = SECCIONS_DE_PATRIMONI[slug]; alFinal = <><Suspense fallback={null}><Consulta /></Suspense>{alFinal}</>; }
+    else if (slug === PAGINA_PUBLICAR_MAPA) {
+      alFinal = (
+        <>
+          <Suspense fallback={null}><PublicarMapaExempleShowcase /></Suspense>
+          {alFinal}
+        </>
+      );
+    }
     else if(['fediversity','node-zero'].includes(slug))alFinal=<>{slug === PAGINA_DEL_WHATSAPP_DE_LA_IAIA ? <Suspense fallback={null}><IaiaWhatsappCard /></Suspense> : null}<Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;
+    const abansIntro = slug === PAGINA_PUBLICAR_MAPA
+      ? <Suspense fallback={null}><PublicarMapaMapaShowcase /></Suspense>
+      : null;
     /* P1-46 (Fita 10; guàrdia nocturna 261030) · La pastilla de versió de
        Descàrregues, l'última de la fila d'etiquetes, cap a /versions. Es
        passa com a funció del traductor: TextSection és qui té el `t`. A
        qualsevol altra pàgina, cap prop: les etiquetes de sempre. */
     const pastilla = slug === PAGINA_DE_LA_PASTILLA ? (t) => pastillaDeVersio(slug, t) : null;
     return (
-      <TextSection page={page} pageKey={slug} accioPrincipal={accioPrincipal} {...(pastilla ? { etiquetaFinal: pastilla } : null)}>
+      <TextSection
+        page={page}
+        pageKey={slug}
+        accioPrincipal={accioPrincipal}
+        {...(abansIntro ? { abansIntro } : null)}
+        {...(pastilla ? { etiquetaFinal: pastilla } : null)}
+      >
         {alFinal}
       </TextSection>
     );

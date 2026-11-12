@@ -12,6 +12,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { _reiniciaTelemetria, darrersEnviaments, declaraEncastada, registraVisita } from '../../data/telemetria.js';
+import { DOMINIS_OFICIALS } from '../genealogia/arxius/cataleg.js';
 
 const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
@@ -117,9 +118,11 @@ const EXCEPCIONS_EMMAGATZEMATGE = new Map();
    Gestoria ix de la Wiki i viu a la seua app, /app/gestoria. El seu codi es
    queda a src/sections/gestoria, on el vigila la seua guarda
    (gestoria/privacitat.test.js: cap xarxa ni backend, l'emmagatzematge només
-   als magatzems declarats, i només en desenvolupament). Este és l'ÚNIC
+   als magatzems declarats). Este és l'ÚNIC
    fitxer de src/apps que hi entra, amb ELS especificadors d'esta llista i cap
-   altre, tots per import() dins de la constant de DEV. Cap altre fitxer de
+   altre, tots per import() dins de la constant VISTES, darrere del mateix
+   literal d'exclusió que `carrega` del manifest (P0-113, ordre del Mestre,
+   261111; abans, la constant de DEV). Cap altre fitxer de
    src/apps, tampoc de la mateixa app, s'hi acull; i els Tractors, mai. No
    afebleix cap regla general: només eixos parells (fitxer, especificador)
    passen, i la resta de comprovacions (xarxa, URL, emmagatzematge, backend)
@@ -140,8 +143,43 @@ const PONTS_GESTORIA = new Map([
 ]);
 const esPont = (ruta, especificador, ponts = PONTS_GESTORIA) => Boolean(ponts.get(ruta)?.especificadors.includes(especificador));
 
+/* LES ADRECES OFICIALS DE L'ARBRE GENEALÒGIC · ruta → { dominis, motiu }.
+   P0-114 (ordre del Mestre, 261111): l'app guia la persona fins als arxius
+   públics, i el seu catàleg porta la portada de cada organisme. Són enllaços
+   que obri la persona (rel="noopener noreferrer"), no xarxa de l'app: l'app
+   no hi fa cap petició (la regla de XARXA s'hi aplica igual). L'excepció
+   és d'UN fitxer i d'una llista TANCADA de dominis, escrita ací i no presa
+   de l'app: si el catàleg n'afig un, esta porta es posa en roig fins que algú
+   l'escriga també ací. Només https, sense port ni credencials. Cap altre
+   fitxer, tampoc de la mateixa app, i cap altre domini, s'hi acull. */
+const DOMINIS_OFICIALS_GENEALOGIA = Object.freeze([
+  'pares.cultura.gob.es',
+  'censoarchivos.mcu.es',
+  'prensahistorica.mcu.es',
+  'bvpb.mcu.es',
+  'www.familysearch.org',
+  'sede.mjusticia.gob.es',
+  'www.ine.es'
+]);
+const EXCEPCIONS_URL = new Map([
+  ['src/apps/genealogia/arxius/cataleg.js', Object.freeze({
+    dominis: DOMINIS_OFICIALS_GENEALOGIA,
+    motiu: 'P0-114, ordre del Mestre (261111): el catàleg d’arxius públics de l’Arbre Genealògic porta la portada oficial de cada organisme; són enllaços que obri la persona, no xarxa de l’app.'
+  })]
+]);
+/* Cada adreça amb protocol d'un codi: [esquema, host (amb port o credencials, si en porta)]. */
+const ADRECA = new RegExp(['(https?)', ':\\/\\/([^\\/\\s\'"`)?#]*)'].join(''), 'g');
+/* 'URL externa' si el codi porta una adreça que no cobrix l'excepció del seu fitxer. */
+function urlsExternes(ruta, codi, excepcionsUrl) {
+  if (!URL_EXTERNA[0].test(codi)) return [];
+  const excepcio = excepcionsUrl.get(ruta);
+  if (!excepcio) return [URL_EXTERNA[1]];
+  const fora = [...codi.matchAll(ADRECA)].some(([, esquema, host]) => esquema !== 'https' || !excepcio.dominis.includes(host));
+  return fora ? [URL_EXTERNA[1]] : [];
+}
+
 /* Les infraccions d'un fitxer de producció d'una app, com a «ruta: què». */
-function infraccionsDe(ruta, codi, excepcions = EXCEPCIONS_EMMAGATZEMATGE, ponts = PONTS_GESTORIA) {
+function infraccionsDe(ruta, codi, excepcions = EXCEPCIONS_EMMAGATZEMATGE, ponts = PONTS_GESTORIA, excepcionsUrl = EXCEPCIONS_URL) {
   const propia = (ruta.match(APP_DE) || [''])[0];
   const potMotor = MAGATZEM.test(ruta) || excepcions.has(ruta);
   const trobades = [];
@@ -155,7 +193,8 @@ function infraccionsDe(ruta, codi, excepcions = EXCEPCIONS_EMMAGATZEMATGE, ponts
       trobades.push(`import ${especificador} fora de la llista blanca`);
     }
   }
-  trobades.push(...[...XARXA, URL_EXTERNA].filter(([patro]) => patro.test(codi)).map(([, que]) => que));
+  trobades.push(...XARXA.filter(([patro]) => patro.test(codi)).map(([, que]) => que));
+  trobades.push(...urlsExternes(ruta, codi, excepcionsUrl));
   trobades.push(...EMMAGATZEMATGE.filter(([patro]) => patro.test(codi)).map(([, que]) => `${que} directe`));
   return trobades.map((que) => `${ruta}: ${que}`);
 }
@@ -333,7 +372,11 @@ describe('cerca global i traducció', () => {
     expect(trobats).toEqual([]);
   });
 
-  test('el pont de la Gestoria és just: existix, porta exactament els seus especificadors, dinàmics i dins de DEV, i cap dels Tractors', () => {
+  /* P0-113 (ordre del Mestre, 261111) · Actualitzada a posta: la constant de les vistes ja no és de DEV,
+     sinó del literal d'exclusió de `carrega` del manifest de la mateixa app. Es comprova que són el MATEIX
+     literal: si un dels dos canviara sol, la pàgina podria prometre una app que, en obrir-se, no porta res
+     (vitest corre amb DEV cert i cap prova de muntatge ho veuria). */
+  test('el pont de la Gestoria és just: existix, porta exactament els seus especificadors, dinàmics i darrere del literal de `carrega`, i cap dels Tractors', () => {
     expect([...PONTS_GESTORIA.keys()]).toEqual(['src/apps/gestoria/AppGestoria.jsx']);
     for (const [ruta, { especificadors: llista, motiu }] of PONTS_GESTORIA) {
       expect(APPS, ruta).toContain(ruta);
@@ -341,8 +384,12 @@ describe('cerca global i traducció', () => {
       expect(llista.every((e) => /^\.\.\/\.\.\/sections\/gestoria\//.test(e)), ruta).toBe(true);
       const codi = llig(ruta);
       const delsCarrils = (text) => especificadors(text).filter((e) => /sections\/(?:gestoria|tractors)\//.test(e));
-      /* Tots dins de la constant de DEV, per import(), i fora d'ella cap. */
-      const inici = codi.indexOf('const VISTES = import.meta.env.DEV ? Object.freeze({');
+      const manifest = llig(ruta.replace(/[^/]+$/, 'manifest.js'));
+      const literal = manifest.match(/carrega: (import\.meta\.env\.VITE_SDP_APP_[A-Z_]+ !== '0') \? \(\) => import\(/)?.[1];
+      expect(literal, `${ruta}: el literal de carrega del manifest`).toBeTruthy();
+      expect(codi, ruta).not.toMatch(/import\.meta\.env\.DEV/);
+      /* Tots dins de la constant del literal, per import(), i fora d'ella cap. */
+      const inici = codi.indexOf(`const VISTES = ${literal} ? Object.freeze({`);
       const fi = codi.indexOf('}) : null;', inici);
       expect(inici, ruta).toBeGreaterThan(-1);
       expect(fi, ruta).toBeGreaterThan(inici);
@@ -463,6 +510,41 @@ describe('la regla transversal detecta (casos sintètics en memòria)', () => {
   test('una importació remota amb protocol: l’import i la URL', () => {
     expect(infraccionsDe(VISTA, t("const m = await import('https:", "//exemple.org/modul.js');")))
       .toEqual([t(`${VISTA}: import https:`, '//exemple.org/modul.js'), `${VISTA}: URL externa`]);
+  });
+
+  test('l’excepció d’adreces oficials: només eixe fitxer, només els dominis de la llista tancada i només https', () => {
+    const CATALEG = 'src/apps/genealogia/arxius/cataleg.js';
+    const oficial = t("const url = 'https:", "//pares.cultura.gob.es/';");
+    expect(infraccionsDe(CATALEG, oficial)).toEqual([]);
+    expect(infraccionsDe(CATALEG, t("const url = 'https:", "//www.familysearch.org/search/catalog';"))).toEqual([]);
+    /* El mateix domini en un altre fitxer, encara que siga de la mateixa app. */
+    expect(infraccionsDe('src/apps/genealogia/arxius/prompts.js', oficial)).toEqual(['src/apps/genealogia/arxius/prompts.js: URL externa']);
+    expect(infraccionsDe(VISTA, oficial)).toEqual([`${VISTA}: URL externa`]);
+    /* Al fitxer de l'excepció: un domini de fora, http, un port, credencials o un subdomini no passen. */
+    for (const adreca of [
+      t("'https:", "//exemple.org/api'"),
+      t("'http:", "//pares.cultura.gob.es/'"),
+      t("'https:", "//pares.cultura.gob.es:8443/'"),
+      t("'https:", "//u:p@pares.cultura.gob.es/'"),
+      t("'https:", "//pares.cultura.gob.es.exemple.org/'")
+    ]) {
+      expect(infraccionsDe(CATALEG, `${oficial}\nconst altra = ${adreca};`), adreca).toEqual([`${CATALEG}: URL externa`]);
+    }
+    /* L'excepció no afluixa cap altra regla al mateix fitxer. */
+    expect(infraccionsDe(CATALEG, `${oficial}\n${t('await fet', 'ch(url);')}`)).toEqual([`${CATALEG}: fetch`]);
+    /* Sense l'excepció, el mateix codi és una infracció. */
+    expect(infraccionsDe(CATALEG, oficial, undefined, undefined, new Map())).toEqual([`${CATALEG}: URL externa`]);
+  });
+
+  test('l’excepció d’adreces oficials és la del disc: el fitxer existix, el motiu hi és i la llista és la de l’app', () => {
+    const rutes = CENS.flatMap(({ fitxers }) => fitxers.map(([ruta]) => ruta));
+    for (const [ruta, { dominis, motiu }] of EXCEPCIONS_URL) {
+      expect(rutes, motiu).toContain(ruta);
+      expect(motiu.length).toBeGreaterThan(20);
+      expect(Object.isFrozen(dominis)).toBe(true);
+    }
+    expect([...EXCEPCIONS_URL.keys()]).toEqual(['src/apps/genealogia/arxius/cataleg.js']);
+    expect([...DOMINIS_OFICIALS_GENEALOGIA].sort()).toEqual([...DOMINIS_OFICIALS].sort());
   });
 
   test('totes les infraccions d’un mateix fitxer, no només la primera', () => {

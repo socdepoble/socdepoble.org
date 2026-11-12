@@ -585,13 +585,20 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
      cada arrencada: el que s'havia compartit i no s'havia enviat es perdia en
      tancar l'App. Ara les còpies només se'n van quan el web les allibera, i la
      primera passada (a la cua serial) les torna a lliurar. Les passades de
-     primer pla no, o cada retorn a l'App repetiria el lot. */
+     primer pla no, o cada retorn a l'App repetiria el lot.
+     P1-31 (pla 261028_1526; tallaSessio, kit Carbon R18) · L'única excepció és
+     el tall de sessió que demana el web: la carpeta sencera se'n va perquè les
+     còpies d'una persona no tornen a la següent (prova pròpia, ací baix). */
   test('CompartirNatiuPlugin.swift: load() ja no esborra la carpeta local i la primera passada porta les restes (ambRestes: true); les altres, no', () => {
     const receptor = senseComentarisSwift(llig(APP, 'CompartirNatiuPlugin.swift'));
     const carrega = cosDe(receptor, 'override public func load()');
     expect(carrega).not.toBe('');
     expect(carrega).not.toMatch(/\bremoveItem\(/);
-    expect(receptor).not.toMatch(/\bremoveItem\(at:\s*(?:Self\.)?carpetaLocal\(\)\s*\)/);
+    /* Onada R20 · Una sola purga literal de la carpeta local en tot el receptor, i és la de tallaSessio. */
+    const purgaLocal = /\bremoveItem\(at:\s*(?:Self\.)?carpetaLocal\(\)\s*\)/g;
+    expect(receptor.match(purgaLocal) ?? []).toHaveLength(1);
+    expect(cosDe(receptor, '@objc func tallaSessio(').match(purgaLocal) ?? []).toHaveLength(1);
+    expect(receptor).not.toMatch(/\bremoveItem\(atPath:/);
     expect(carrega).toMatch(/\bcua\.async \{ \[weak self\] in self\?\.recull\(intent: 0, ambRestes: true\) \}/);
     expect(receptor.match(/\bambRestes: true\b/g)).toHaveLength(1);
     expect(receptor).toMatch(/private func recull\(intent: Int, ambRestes: Bool = false\)/);
@@ -606,6 +613,24 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
     expect(restes).toBeLessThan(recull.indexOf('guard let contenidor'));
     expect(restes).toBeLessThan(recull.search(/\bfor lot in /));
     expect(recull).toMatch(/\blet ara = Int64\(Date\(\)\.timeIntervalSince1970 \* 1000\)/);
+  });
+
+  /* P1-31 (pla 261028_1526) · Paritat amb Android (projecteAndroid.test.js, «tallaSessio…»): el web talla
+     la sessió (src/natiu/compartirNatiu.js, demana('tallaSessio')) i el natiu buida Caches/compartits i els
+     lots de l'App Group, a la cua serial, darrere de qualsevol recull en curs. Cap camí natiu no el crida:
+     només el JS, pel connector. Onada R20 · Abans no en tenia cap prova. */
+  test('CompartirNatiuPlugin.swift: tallaSessio, registrat i a la cua serial, és l’única purga sencera de la carpeta local', () => {
+    const receptor = senseComentarisSwift(llig(APP, 'CompartirNatiuPlugin.swift'));
+    expect(receptor).toMatch(/CAPPluginMethod\(name: "tallaSessio", returnType: CAPPluginReturnPromise\)/);
+    const talla = cosDe(receptor, '@objc func tallaSessio(');
+    expect(talla, 'falta tallaSessio').not.toBe('');
+    expect(talla).toMatch(/^\s*cua\.async \{/);
+    expect(talla).toMatch(/\bremoveItem\(at:\s*Self\.carpetaLocal\(\)\s*\)/);
+    expect(talla).toMatch(/containerURL\(forSecurityApplicationGroupIdentifier: Self\.grup\)/);
+    expect(talla).toMatch(/appendingPathComponent\("compartits", isDirectory: true\)/);
+    expect(talla).toMatch(/call\.resolve\(/);
+    // Només la declaració: cap crida nativa (self.tallaSessio, tallaSessio(call)…).
+    expect(receptor.match(/\btallaSessio\(/g) ?? []).toHaveLength(1);
   });
 
   /* Gauntlet 261026_1615 (Codex C1615-03) · Les restes no es guarden per sempre:

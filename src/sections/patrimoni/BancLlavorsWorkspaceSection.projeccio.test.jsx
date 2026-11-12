@@ -1,7 +1,10 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ selected: null, visible: null }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ language: 'ca', t: (_key, value) => value }) }));
+vi.mock('../../app/contexts/UIContext', () => ({
+  useUIActions: () => ({ language: 'ca', t: (_key, value) => value }),
+  useUIStateOpcional: () => null
+}));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => null }));
 vi.mock('../../config/backendConfig.js', () => ({ normalizeBackendConfig: () => ({ dataMode: 'seed' }) }));
 vi.mock('../../components/universal/CatalegWorkspace.jsx', async () => {
