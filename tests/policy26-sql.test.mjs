@@ -42,7 +42,7 @@ test('policy2.6 executes in the full migration catalogue; silent fallback window
     await t.test('migration84 stores exactly served2.6, is repeatable and preserves every historical policy row', async () => {
       const row = (await db.query("select versio,url,text_sha256,text_complet from public.politiques_privacitat where versio='2.6'")).rows[0];
       assert.deepEqual(row, { versio: '2.6', url: '/legal', text_sha256: sha(html), text_complet: html });
-      assert.equal(row.text_sha256, 'ae73f12713ba2d7e86cc3610ae828cb231edb89a98749c27df9fddb177be5ab0');
+      assert.equal(row.text_sha256, '7db70d0101ef51d095ed94110ed560bbd010f62d7d1b8ccf6b0d3f6cc9901d4e');
       assert.equal(await scalar(db,'select private.versio_vigent()'),'2.6');
       const after = (await db.query("select versio,vigent_des_de,url,text_sha256,text_complet from public.politiques_privacitat where versio <> '2.6' order by versio")).rows;
       assert.deepEqual(after, before); await db.exec(sql); assert.equal(Number(await scalar(db,"select count(*) from public.politiques_privacitat where versio='2.6'")), 1);

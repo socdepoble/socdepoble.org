@@ -3,7 +3,7 @@
 -- un agent. Cap SQL remot en el kit de verificació.
 -- ABANS (lectura): comprovar versions, text i empremtes de public.politiques_privacitat.
 -- DESPRÉS (lectura):
--- select text_sha256 = 'ae73f12713ba2d7e86cc3610ae828cb231edb89a98749c27df9fddb177be5ab0' as segellada_2_6 from public.politiques_privacitat where versio = '2.6';
+-- select text_sha256 = '7db70d0101ef51d095ed94110ed560bbd010f62d7d1b8ccf6b0d3f6cc9901d4e' as segellada_2_6 from public.politiques_privacitat where versio = '2.6';
 -- ORDRE: aturar les altes, construir/desplegar el text exacte /legal 2.6,
 -- comprovar l'HTML servit i aplicar esta migració; només reobrir altes quan
 -- tooling/privacy/verifica-politica-publicada.mjs done valid:true amb evidència
@@ -22,7 +22,7 @@ values (
   '2.6',
   timestamptz '2026-11-08 00:00:00+01',
   '/legal',
-  'ae73f12713ba2d7e86cc3610ae828cb231edb89a98749c27df9fddb177be5ab0',
+  '7db70d0101ef51d095ed94110ed560bbd010f62d7d1b8ccf6b0d3f6cc9901d4e',
 $politica_2_6$
     <p><em><strong>Versió 2.6</strong> · <strong>En vigor</strong> des del <strong>8 de novembre de 2026</strong>. <strong>Substitueix</strong> <strong>qualsevol versió anterior</strong> <strong>d'aquest text</strong>.</em></p>
 
@@ -86,7 +86,7 @@ $politica_2_6$
     <div data-sdp-targetes="" class="sdp-targetes" data-forma="sola" data-alineacio="dreta"><div data-sdp-targeta="pagina:drets-autor" class="sdp-targeta" data-ruta="/page/drets-autor" data-titol="Drets d'autor" data-subtitol="Totes les llicències, explicades amb paraules de poble" data-entradilla="Per què el que publiques naix amb CC BY-NC-SA 4.0, què vol dir cada llicència i quan convé triar-ne una altra." data-autor="Sóc de Poble" data-autor-ruta="/projecte"><a href="/page/drets-autor" rel="noopener noreferrer nofollow">Drets d'autor</a></div></div>
     <p>La infraestructura tecnològica de Sóc de Poble abraça la cultura del codi obert. En canvi, el disseny original, el concepte estètic <strong>"Pedra Seca"</strong>, els logotips, les il·lustracions i els textos generats sota la marca Sóc de Poble estan protegits per drets de propietat intel·lectual i industrial.</p>
     <p><strong>Queda prohibida</strong> la <strong>reproducció total o parcial</strong> del <strong>sistema de disseny visual</strong> i dels <strong>elements d'interfície</strong> amb <strong>finalitats comercials alienes al projecte</strong> <strong>sense consentiment exprés</strong> de <strong>Fco. Javier Llinares García</strong>.</p>
-    <p><strong>El contingut que publiques tu</strong> <strong>continua sent teu</strong>. <strong>En publicar-lo dins de l'aplicació</strong>, ens dones <strong>permís per a mostrar-lo</strong> <strong>als altres membres del teu poble</strong> <strong>segons la visibilitat que hages triat</strong>, i <strong>només per a això</strong>.</p>
+    <p><strong>El contingut que publiques tu</strong> <strong>continua sent teu</strong>. <strong>En publicar-lo dins de l'aplicació</strong>, ens dones <strong>permís per a mostrar-lo</strong> <strong>als altres membres del teu poble</strong> <strong>segons la visibilitat que hages triat</strong> i, <strong>si el publiques al Mur o al Mercat</strong>, <strong>a qualsevol persona</strong>, <strong>també sense compte</strong> (apartat 13), i <strong>només per a això</strong>.</p>
 
     <h4>5. Exempció de responsabilitat: el Mercat entre veïns</h4>
     <p>El Mercat de Sóc de Poble és un <strong>tauler d'anuncis</strong>. L'aplicació <strong>no actua com a intermediària comercial, no rep comissions, no tramita pagaments i no participa en cap transacció</strong> entre usuaris.</p>
@@ -165,7 +165,7 @@ $politica_2_6$
       <li>El teu <strong>nom o pseudònim</strong> i la teua <strong>imatge de perfil</strong> són visibles per a la resta de membres verificats del teu poble.</li>
       <li>El teu <strong>identificador</strong> (el nom amb una @ davant que es fa amb el teu nom i que pots canviar al teu perfil) <strong>només el veuen les altres persones si el teu perfil és públic</strong>. Mentre la baixa està en curs no es mostra enlloc, i el guardem perquè ningú no te'l prenga fins que s'esborra el compte.</li>
       <li>Si <strong>seguixes</strong> una persona, ella veu el teu nom i des de quan la seguixes. Si seguixes una entitat, les persones que l'administren veuen el teu nom i des de quan la seguixes, siga quin siga el teu poble.</li>
-      <li>El que publiques al <strong>Mur</strong> o al <strong>Mercat</strong> és visible segons la visibilitat que hages triat en publicar-ho.</li>
+      <li>El que publiques al <strong>Mur</strong> o al <strong>Mercat</strong> és visible segons la visibilitat que hages triat en publicar-ho. <strong>El Mur i el Mercat del poble són públics</strong>: <strong>qualsevol persona</strong>, <strong>també sense compte</strong>, pot llegir el que hi publiques.</li>
       <li>Els <strong>missatges de xat</strong> els veuen les persones del fil.</li>
       <li>Les teues <strong>notes</strong> són privades fins que decidisques publicar-les.</li>
       <li>La <strong>ubicació, la data i les dades de la càmera</strong> que conserves en una foto les pot veure qui veu la publicació o la fitxa on és, i també qualsevol persona que arribe a l'enllaç del fitxer de la foto, encara que la publicació o la fitxa no siguen públiques; la foto d'una publicació pot eixir al mapa fotogràfic del Mur.</li>
@@ -303,7 +303,7 @@ begin
     select 1 from public.politiques_privacitat
     where versio = '2.6'
       and url = '/legal'
-      and text_sha256 = 'ae73f12713ba2d7e86cc3610ae828cb231edb89a98749c27df9fddb177be5ab0'
+      and text_sha256 = '7db70d0101ef51d095ed94110ed560bbd010f62d7d1b8ccf6b0d3f6cc9901d4e'
       and text_complet is not null
       and vigent_des_de = timestamptz '2026-11-08 00:00:00+01'
   ) then

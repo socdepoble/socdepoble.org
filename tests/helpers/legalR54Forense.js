@@ -18,9 +18,25 @@ export const CANVIS_PUSH_R54 = Object.freeze([
     "    <p><strong>Si encens els avisos push del xat</strong> (apartat 8), <strong>la subscripció</strong> no la guardem nosaltres en cap d'aquests llocs: la crea i la <strong>guarda el teu navegador</strong> amb el seu servei de push, a petició teua, i <strong>la desfem</strong> quan els apagues o tanques la sessió. A l'aplicació mòbil conservem només la marca d'opt-in del compte per a recuperar la teua tria en reobrir-la; mai el testimoni del dispositiu ni el contingut de les converses.</p>"
   ]
 ]);
+/* D1 Opció A (decisió del Mestre, 261112) · El Mur i el Mercat del poble són
+   públics: la 2.6 ho diu a l'apartat 4 (el permís per a mostrar el que hi
+   publiques a qualsevol persona, també sense compte) i a l'apartat 13 (qui
+   ho pot llegir). No hi diu què no ix a la versió pública: eixes garanties
+   depenen del kit SQL de Codex (revocació de la fila crua a anon i RPC
+   public.llig_mur_public). Llista blanca ampliada en R21: l'aprova el Mestre. */
+export const CANVIS_MUR_PUBLIC_R21 = Object.freeze([
+  [
+    "    <p><strong>El contingut que publiques tu</strong> <strong>continua sent teu</strong>. <strong>En publicar-lo dins de l'aplicació</strong>, ens dones <strong>permís per a mostrar-lo</strong> <strong>als altres membres del teu poble</strong> <strong>segons la visibilitat que hages triat</strong>, i <strong>només per a això</strong>.</p>",
+    "    <p><strong>El contingut que publiques tu</strong> <strong>continua sent teu</strong>. <strong>En publicar-lo dins de l'aplicació</strong>, ens dones <strong>permís per a mostrar-lo</strong> <strong>als altres membres del teu poble</strong> <strong>segons la visibilitat que hages triat</strong> i, <strong>si el publiques al Mur o al Mercat</strong>, <strong>a qualsevol persona</strong>, <strong>també sense compte</strong> (apartat 13), i <strong>només per a això</strong>.</p>"
+  ],
+  [
+    "      <li>El que publiques al <strong>Mur</strong> o al <strong>Mercat</strong> és visible segons la visibilitat que hages triat en publicar-ho.</li>",
+    "      <li>El que publiques al <strong>Mur</strong> o al <strong>Mercat</strong> és visible segons la visibilitat que hages triat en publicar-ho. <strong>El Mur i el Mercat del poble són públics</strong>: <strong>qualsevol persona</strong>, <strong>també sense compte</strong>, pot llegir el que hi publiques.</li>"
+  ]
+]);
 export function legal26A25(html) {
   let text = html;
-  for (const [before, after] of [...CANVIS_IAIA_R54, ...CANVIS_PUSH_R54].reverse()) {
+  for (const [before, after] of [...CANVIS_IAIA_R54, ...CANVIS_PUSH_R54, ...CANVIS_MUR_PUBLIC_R21].reverse()) {
     if (text.split(after).length !== 2) throw new Error('R54 forensic inverse requires one exact authorized paragraph');
     text = text.replace(after, before);
   }

@@ -151,7 +151,7 @@ select jsonb_build_object(
       and vigent_des_de=timestamptz '2026-11-06 00:00:00+01'
       and encode(sha256(convert_to(text_complet,'UTF8')),'hex')=text_sha256)
     and not exists(select 1 from public.politiques_privacitat where versio='2.6' and (
-      url is distinct from '/legal' or text_sha256 is distinct from 'ae73f12713ba2d7e86cc3610ae828cb231edb89a98749c27df9fddb177be5ab0'
+      url is distinct from '/legal' or text_sha256 is distinct from '7db70d0101ef51d095ed94110ed560bbd010f62d7d1b8ccf6b0d3f6cc9901d4e'
       or text_complet is null or encode(sha256(convert_to(text_complet,'UTF8')),'hex') is distinct from text_sha256
       or vigent_des_de is distinct from timestamptz '2026-11-08 00:00:00+01')),
   'migration2611080440',case when exists(select 1 from public.politiques_privacitat where versio='2.6') then 'present' else 'pending' end,

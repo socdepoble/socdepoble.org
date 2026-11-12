@@ -3,7 +3,8 @@
    Sanejament R15 (B1, P0-01/PRIV-04/R15-REG-01): mentre no s'aplique, el client continua
    mostrant, servint i enviant la 2.5. El text 2.6 viu NOMÉS dins de la migració: esta prova
    el segella pel seu hash i comprova que és exactament la 2.5 servida més els paràgrafs R54
-   autoritzats (inversa forense), de manera que el dia que es publique no hi entre res més. */
+   autoritzats i els dos de D1 Opció A (261112: el Mur i el Mercat són públics, apartats 4 i
+   13) (inversa forense), de manera que el dia que es publique no hi entre res més. */
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdtempSync, symlinkSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -15,18 +16,19 @@ import { PAGE_COPY } from '../../sections/text/pageContent.js';
 import { legalContent } from '../../sections/text/legalContent.js';
 import { VERSIO_POLITICA_PRIVACITAT, consentimentMostrat } from '../../config/politicaPrivacitat.js';
 import { legal26A25 } from '../../../tests/helpers/legalR54Forense.js';
+import { murPublicDelCataleg } from '../../../tests/helpers/murPublicCataleg.js';
 import { verificaPoliticaPublicada } from '../../../tooling/privacy/verifica-politica-publicada.mjs';
 const sha = s => createHash('sha256').update(s).digest('hex');
 const read = name => readFileSync(new URL('../../../' + name, import.meta.url), 'utf8');
 const SQL = read('supabase/migrations/2611080440_politica_privacitat_2_6.sql');
-const HASH = 'ae73f12713ba2d7e86cc3610ae828cb231edb89a98749c27df9fddb177be5ab0';
+const HASH = '7db70d0101ef51d095ed94110ed560bbd010f62d7d1b8ccf6b0d3f6cc9901d4e';
 const SHA_25 = 'ea13f0c4ca8f69ebf8c29035d6f7804d401d48dbdc6e3b5d5fb2b1b975fc1fc7';
 /* La proposta 2.6: només a la migració. El que servix /legal (el paquet) és SERVIT. */
 const HTML = SQL.split('$politica_2_6$')[1], SERVIT = PAGE_COPY.legal.html;
 const NET = s => s.replace(/\s+/g, ' ').trim();
 function problems(sql) {
   const parts = sql.split('$politica_2_6$'), errors = [];
-  if (parts.length !== 3 || sha(parts[1]) !== HASH || parts[1].length !== 61194) errors.push('text');
+  if (parts.length !== 3 || sha(parts[1]) !== HASH || parts[1].length !== 61501) errors.push('text');
   if (!sql.includes(`  '${HASH}',\n`)) errors.push('hash');
   if (!sql.includes("  '2.6',\n  timestamptz '2026-11-08 00:00:00+01',\n  '/legal',")) errors.push('row');
   if (!sql.includes(`select text_sha256 = '${HASH}' as segellada_2_6`)) errors.push('postcheck');
@@ -57,10 +59,20 @@ describe('R54 proposed policy2.6 (0440 NOT applied), append-only; /legal keeps s
     expect(sha(JSON.stringify(PAGE_COPY.legal))).toBe('0a08fd743c2b4139e322cdd457e489f5dab6003bfe53d93a5d424cb457495b94');
     expect(SERVIT).not.toMatch(/Versió 2\.6/);
     expect(SERVIT.replace(/<\/?strong>/g, '')).toContain('Versió 2.5 · En vigor des del 6 de novembre de 2026.');
-    expect(HTML).toHaveLength(61194); expect(sha(HTML)).toBe(HASH);
+    expect(HTML).toHaveLength(61501); expect(sha(HTML)).toBe(HASH);
     expect(problems(SQL)).toEqual([]);
     expect(HTML.replace(/<\/?strong>/g, '')).toContain('Versió 2.6 · En vigor des del 8 de novembre de 2026.');
     expect(legal26A25(HTML)).toBe(SERVIT);
+  });
+  /* D1 Opció A (261112) · La 2.6 diu que el Mur i el Mercat són públics; el que no ix mai a
+     la versió pública només ho pot prometre quan el catàleg de migracions ja revoque a anon
+     la fila crua i cree public.llig_mur_public (kit SQL de Codex). */
+  test('D1 Opció A · the2.6 says the Wall and the Market are public and promises no filtered public version before the SQL catalogue has one', () => {
+    const net = HTML.replace(/<\/?strong>/g, '');
+    expect(net).toContain('El Mur i el Mercat del poble són públics: qualsevol persona, també sense compte, pot llegir el que hi publiques.');
+    expect(net).toContain('si el publiques al Mur o al Mercat, a qualsevol persona, també sense compte (apartat 13)');
+    const estat = { filtrat: murPublicDelCataleg().filtrat, promet: /versió pública|no hi ix mai/.test(net) };
+    expect(estat).not.toEqual({ filtrat: false, promet: true });
   });
   test('signup records the version actually displayed (2.5) and never an unapplied or inferred version', () => {
     expect(VERSIO_POLITICA_PRIVACITAT).toBe('2.5');

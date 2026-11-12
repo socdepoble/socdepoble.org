@@ -11,7 +11,7 @@ export function creaPlaMigracionsR15A3() {
   const deferred=source.migrations.filter(m=>m.version==='2611080440');
   assert.equal(deferred.length,1,'The exact deferred2.6 source must remain in the catalogue');
   assert.equal(deferred[0].file,'2611080440_politica_privacitat_2_6.sql');
-  assert.ok(deferred[0].sql.includes('ae73f12713ba2d7e86cc3610ae828cb231edb89a98749c27df9fddb177be5ab0'));
+  assert.ok(deferred[0].sql.includes('7db70d0101ef51d095ed94110ed560bbd010f62d7d1b8ccf6b0d3f6cc9901d4e'));
   const migrations=source.migrations.filter(m=>m.version!=='2611080440');
   assert.equal(migrations.length+1,source.migrations.length);
   return {...source,migrations,deferred,sourceMigrations:source.migrations};
