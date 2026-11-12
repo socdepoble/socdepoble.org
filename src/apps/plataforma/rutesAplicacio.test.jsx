@@ -131,8 +131,13 @@ describe('validaRutes amb columnes: l’àrea única', () => {
   const Llista = () => null;
   const Detall = () => null;
 
-  test('Unica sola, memo o lazy, i barrejada amb rutes de columnes', () => {
+  test('Unica sola, memo, lazy o amb titolPropi booleà, i barrejada amb rutes de columnes', () => {
     expect(validaRutes([{ path: 'tpv', Unica: Area }], { columnes: true })).toEqual({ ok: true, errors: [] });
+    expect(validaRutes([{ path: 'cataleg', Unica: Area, titolPropi: true }], { columnes: true })).toEqual({ ok: true, errors: [] });
+    expect(validaRutes([{ path: 'cataleg', Unica: Area, titolPropi: 'si' }], { columnes: true })).toEqual({
+      ok: false,
+      errors: ['rutes[0]: titolPropi ha de ser booleà']
+    });
     expect(validaRutes([{ path: 'tpv', Unica: memo(Area) }], { columnes: true }).ok).toBe(true);
     expect(validaRutes([{ path: 'tpv', Unica: lazy(() => Promise.resolve({ default: Area })) }], { columnes: true }).ok).toBe(true);
     expect(validaRutes([

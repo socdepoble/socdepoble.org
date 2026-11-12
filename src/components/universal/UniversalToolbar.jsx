@@ -127,8 +127,11 @@ function esDUnaCapaModal(event, contenidor) {
    per això sempre corre abans. Un Escape que algú ja ha atés no és seu. */
 function useTancaFora(obert, contenidorRef, tanca, enEscape) {
   /* P0-24b (T2b, prompt 261102_1532) · Obertes, les opcions són a la pila de
-     l'Arrere d'Android amb el camí del seu Escape (enEscape). */
-  useCapaEnrere(obert, enEscape);
+     l'Arrere d'Android amb el camí del seu Escape (enEscape).
+     P0-24b (Onada R21) · Amb una capa damunt a la pila (la pàgina d'Emojis,
+     oberta amb el teclat sense plegar-les), l'Escape és d'ella: abans les
+     opcions es plegaven i la pàgina també es tancava, amb un sol Escape. */
+  const teCapaDamunt = useCapaEnrere(obert, enEscape);
   useEffect(() => {
     if (!obert || !contenidorRef.current) return undefined;
     const root = contenidorRef.current.getRootNode();
@@ -140,7 +143,7 @@ function useTancaFora(obert, contenidorRef, tanca, enEscape) {
       tanca();
     };
     const escape = (event) => {
-      if (event.key !== 'Escape' || event.defaultPrevented || esDUnaCapaModal(event, contenidorRef.current)) return;
+      if (event.key !== 'Escape' || event.defaultPrevented || teCapaDamunt() || esDUnaCapaModal(event, contenidorRef.current)) return;
       event.preventDefault();
       enEscape();
     };
@@ -153,7 +156,7 @@ function useTancaFora(obert, contenidorRef, tanca, enEscape) {
       window.removeEventListener('pointerdown', outsideWindow);
       window.removeEventListener('keydown', escape);
     };
-  }, [obert, contenidorRef, tanca, enEscape]);
+  }, [obert, contenidorRef, tanca, enEscape, teCapaDamunt]);
 }
 
 /* Gauntlet 261101 · X-C-notes (C-01) · Les files del desplegable que el
@@ -313,6 +316,15 @@ export default function UniversalToolbar({
   onProposaCard = null,
   proposaCardDisabled = false,
   proposaCardDesfer = false,
+  /* AH-02 (Onada R21; Gauntlet R21, ui_fase2-01) · Els motius del document en
+     repòs (DocumentEditor), i sense ells el DOM de sempre:
+     · `proposaCardMotiu`: amb el botó apagat, per què ho està; va al `title`
+       (el nom accessible continua sent l'aria-label, i el title en passa a
+       ser la descripció i el rètol emergent);
+     · `motiuEnLectura`: per què les eines de format són apagades; un text
+       amagat (`hidden`, cap píxel) que descriu la barra (aria-describedby). */
+  proposaCardMotiu = null,
+  motiuEnLectura = null,
   formatState = {},
   formatActions = {},
   t = (key, fallback) => fallback
@@ -329,6 +341,8 @@ export default function UniversalToolbar({
   const [dialegEnllac, setDialegEnllac] = useState(null);
   const formatId = useId();
   const segonaId = useId();
+  const motiuId = useId();
+  const textMotiuEnLectura = typeof motiuEnLectura === 'string' && motiuEnLectura.trim() ? motiuEnLectura : null;
   const toggleRef = useRef(null);
   const filaRef = useRef(null);
   const grupRef = useRef(null);
@@ -413,8 +427,10 @@ export default function UniversalToolbar({
     ? t('section.notes.proposaCardDesfer', 'Desfés la proposta')
     : t('section.notes.proposaCard', 'Proposa Card');
   const glifProposaCard = proposaCardDesfer ? <Undo2 {...iconProps} /> : <span aria-hidden="true">🎴</span>;
+  /* AH-02 · El motiu només acompanya el botó apagat. */
+  const motiuProposaCard = proposaCardDisabled && typeof proposaCardMotiu === 'string' && proposaCardMotiu.trim() ? proposaCardMotiu : null;
   const botoProposaCard = typeof onProposaCard !== 'function' ? null : (
-    <button type="button" className="sdp-bloc-icon" aria-label={etiquetaProposaCard} title={etiquetaProposaCard}
+    <button type="button" className="sdp-bloc-icon" aria-label={etiquetaProposaCard} title={motiuProposaCard || etiquetaProposaCard}
       disabled={proposaCardDisabled} onClick={onProposaCard}>{glifProposaCard}</button>
   );
 
@@ -521,6 +537,7 @@ export default function UniversalToolbar({
       data-compact={compact}
       role="group"
       aria-label={t('section.notes.eines', "Eines de l'editor")}
+      aria-describedby={textMotiuEnLectura ? motiuId : undefined}
     >
       <div ref={filaRef} className="sdp-editor-tools__formats">
         <button
@@ -573,6 +590,8 @@ export default function UniversalToolbar({
         <DialegEnllacImatge key={dialegEnllac.clau} obert={dialegEnllac.obert} hrefInicial={dialegEnllac.href}
           onDesa={desaEnllacImatge} onTanca={tancaEnllacImatge} t={t} />
       ) : null}
+      {/* AH-02 · L'últim fill i amagat: no compta en cap mesura ni pinta res. */}
+      {textMotiuEnLectura ? <span id={motiuId} hidden>{textMotiuEnLectura}</span> : null}
     </div>
   );
 }

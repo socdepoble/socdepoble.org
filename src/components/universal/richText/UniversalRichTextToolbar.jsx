@@ -25,6 +25,10 @@ export function UniversalRichTextToolbar({
   onProposaCard,
   proposaCardDisabled,
   proposaCardDesfer,
+  /* AH-02 (Onada R21) · Els motius del repòs, de pas cap a UniversalToolbar
+     (sense: cap atribut nou). */
+  proposaCardMotiu,
+  motiuEnLectura,
 
   t = (key, def) => def
 }) {
@@ -52,6 +56,8 @@ export function UniversalRichTextToolbar({
       onProposaCard={onProposaCard}
       proposaCardDisabled={proposaCardDisabled}
       proposaCardDesfer={proposaCardDesfer}
+      proposaCardMotiu={proposaCardMotiu}
+      motiuEnLectura={motiuEnLectura}
       formatState={formatState}
       formatActions={formatActions}
       t={t}

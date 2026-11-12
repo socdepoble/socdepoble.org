@@ -2,7 +2,8 @@
 /* P0-24 (G2120-07, marató 261101_2143) · La pila de capes de l'Arrere d'Android. */
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  ABSORCIO_ENRERE_MS, _reiniciaPilaEnrere, capesEnrereObertes, escoltaCapesEnrere, obriCapaEnrere, tancaCapaSuperior
+  ABSORCIO_ENRERE_MS, _reiniciaPilaEnrere, capesEnrereObertes, escoltaCapesEnrere, obriCapaEnrere, tancaCapaSuperior,
+  teCapaEnrereDamunt
 } from './pilaEnrere.js';
 
 afterEach(() => { _reiniciaPilaEnrere(); vi.restoreAllMocks(); });
@@ -98,5 +99,51 @@ describe('pilaEnrere', () => {
     expect(capesEnrereObertes()).toBe(0);
     expect(() => escoltaCapesEnrere(undefined)()).not.toThrow();
     expect(tancaCapaSuperior(1000)).toBe(false);
+  });
+
+  test('P0-24b (R21) · teCapaEnrereDamunt: cert només per a una capa apuntada amb una altra damunt', () => {
+    const a = () => {};
+    const b = () => {};
+    const llevaA = obriCapaEnrere(a);
+    expect(teCapaEnrereDamunt(a)).toBe(false);
+    const llevaB = obriCapaEnrere(b);
+    expect(teCapaEnrereDamunt(a)).toBe(true);
+    expect(teCapaEnrereDamunt(b)).toBe(false);
+    // Una funció que no és a la pila (o cap) no té res damunt: el seu Escape, com sempre.
+    expect(teCapaEnrereDamunt(() => {})).toBe(false);
+    expect(teCapaEnrereDamunt(null)).toBe(false);
+    llevaB();
+    expect(teCapaEnrereDamunt(a)).toBe(false);
+    llevaA();
+    expect(teCapaEnrereDamunt(a)).toBe(false);
+  });
+
+  test('P0-24b (R21, verificació adversària) · teCapaEnrereDamunt només compta les capes del mateix àmbit', () => {
+    const instanciaA = {};
+    const instanciaB = {};
+    const menuA = () => {};
+    const menuB = () => {};
+    const dialegA = () => {};
+    obriCapaEnrere(menuA, instanciaA);
+    obriCapaEnrere(menuB, instanciaB);
+    // La capa de l'altra instància és més amunt a la pila, però el seu Escape no arriba mai ací.
+    expect(teCapaEnrereDamunt(menuA)).toBe(false);
+    obriCapaEnrere(dialegA, instanciaA);
+    expect(teCapaEnrereDamunt(menuA)).toBe(true);
+    expect(teCapaEnrereDamunt(menuB)).toBe(false);
+    // Sense àmbit (la SPA), totes les capes són de la mateixa: el LIFO de sempre.
+    const sota = () => {};
+    const dalt = () => {};
+    _reiniciaPilaEnrere();
+    obriCapaEnrere(sota);
+    obriCapaEnrere(dalt, undefined);
+    expect(teCapaEnrereDamunt(sota)).toBe(true);
+    // L'Arrere natiu (una sola instància) no mira l'àmbit: tanca la de dalt.
+    const tancades = [];
+    _reiniciaPilaEnrere();
+    obriCapaEnrere(() => tancades.push('A'), instanciaA);
+    obriCapaEnrere(() => tancades.push('B'), instanciaB);
+    expect(tancaCapaSuperior(1000)).toBe(true);
+    expect(tancades).toEqual(['B']);
   });
 });

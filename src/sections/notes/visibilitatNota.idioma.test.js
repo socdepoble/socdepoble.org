@@ -58,8 +58,8 @@ vi.mock('../../components/universal/SelectorVisibilitat.jsx', () => ({ SelectorV
 vi.mock('../../components/universal/classificacio/DialegCarpeta.jsx', async (importOriginal) => ({ ...(await importOriginal()), DialegCarpeta: (props) => { mocks.carpeta = props; return null; } }));
 
 import {
-  AVIS_DRETS_RESERVATS, ErrorPublicacio, MOTIU_NORMES, avisDretsReservats, bloqueigDeNota, motiuDesatPendent, motiuModeLocal,
-  motiuSignaturaAliena, publicaAmbMotiu, textosAmbDrets, textosDeNota, textosExtern
+  AVIS_DRETS_RESERVATS, ErrorPublicacio, MOTIU_NORMES, MUR_PUBLIC_FILTRAT, avisDretsReservats, bloqueigDeNota, motiuDesatPendent,
+  motiuModeLocal, motiuSignaturaAliena, publicaAmbMotiu, textosAmbDrets, textosDeNota, textosExtern
 } from './visibilitatNota.js';
 import { ConnexioDetall } from './ConnexioDetall.jsx';
 import NotesEditor from './NotesEditor.jsx';
@@ -76,6 +76,13 @@ const EN_XARXA = 'Could not publish to the Wall.';
 const EN_LOCAL = 'Note saved on this device. Connect a backend to publish to the Wall.';
 const EN_LOCAL_CONNEXIO = 'Connection saved on this device. Connect a backend to share it to the Wall.';
 const EN_PUBLICADA = 'Removing a note from the Wall has no data contract with the server yet: you can update it, but not make it private again.';
+/* D1 Opció A (261112) · Darrere de publicar o compartir, qui ho pot llegir; amb MUR_PUBLIC_FILTRAT, la versió pública. */
+const EN_DARRERE = MUR_PUBLIC_FILTRAT
+  ? 'Anyone, even without an account, can read its public version: the title and the text, the town and the date. Your internal identifier, your private contact details and the exact location of the photos never appear in it.'
+  : 'Anyone can read it, even without an account.';
+const EU_DARRERE = MUR_PUBLIC_FILTRAT
+  ? 'Edonork irakur dezake bertsio publikoa, konturik gabe ere: izenburua eta testua, herria eta data. Ez dira inoiz agertzen zure barne-identifikatzailea, zure harremanetarako datu pribatuak ezta argazkien kokapen zehatza ere.'
+  : 'Edonork irakur dezake, konturik gabe ere.';
 
 describe('textosDeNota · «Qui pot vore esta nota?»', () => {
   test('en anglés, la nota sencera amb la mateixa forma', () => {
@@ -85,7 +92,8 @@ describe('textosDeNota · «Qui pot vore esta nota?»', () => {
       llegenda: 'Note visibility',
       publica: {
         etiqueta: 'Published on the Wall',
-        explicacio: 'It appears on the town’s Wall: it is read by the town’s registered people, not by the whole Internet.',
+        /* D1 Opció A (261112) · on ix i, darrere, qui ho pot llegir. */
+        explicacio: `It appears on the town’s Wall. ${EN_DARRERE}`,
         accio: 'Publish to the Wall',
         accioIgual: 'Update on the Wall',
       },
@@ -108,7 +116,7 @@ describe('textosDeNota · «Qui pot vore esta nota?»', () => {
       llegenda: 'Edukiaren ikusgarritasuna',
       publica: {
         etiqueta: 'Zure Horman partekatua',
-        explicacio: 'Zure Horman agertzen da, jatorria aipatuz: herrian erregistratutako jendeak irakurtzen du, ez Internetek.',
+        explicacio: `Zure Horman agertzen da, jatorria aipatuz. ${EU_DARRERE}`,
         accio: EU('section.notes.connexio.mur.comparteix'),
         accioIgual: EU('section.notes.connexio.mur.actualitza'),
       },

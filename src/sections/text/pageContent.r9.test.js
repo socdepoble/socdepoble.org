@@ -48,6 +48,7 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import { pluginPerId } from '../plugins/registrePlugins.js';
 import { ESPECIES_HERBARI_LA_TORRE_117 } from '../../data/patrimoni/herbariLaTorre117.js';
+import { LAMINES_BOTANIQUES_NODE0, obteLaminaBotanicaNode0 } from '../../data/patrimoni/laminesBotaniquesNode0.js';
 import { textosHerbari } from '../patrimoni/textosHerbari.js';
 import { MOTORS_TRADUCCIO } from '../../data/traductorLliure.js';
 import { contingutNoTraduible } from '../../data/traductor.js';
@@ -197,7 +198,7 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     const versions = doc(PAGE_COPY.versions.html).body;
     // R20 i R19 s'afigen davant de les sis entrades històriques: cap s'esborra ni es reescriu.
     expect([...versions.querySelectorAll('h3')].slice(0, 8).map((h3) => h3.textContent)).toEqual([
-      '11 de novembre de 2026, nit · Onada R20 · Publicació en línia de Notes cap al Mur, fotografia òptica verificada i poliment responsive del Panell',
+      '11 de novembre de 2026, nit · Onada R20 · Publicació en línia de Notes cap al Mur, filtre de verificació de les imatges botàniques i poliment responsive del Panell',
       '11 de novembre de 2026, vesprada · Onada R19 · Co-publicació entre entitats a la barra taronja, traspàs en línia i revisió de les làmines fotobotàniques',
       '11 de novembre de 2026 · Onades R17 i R18 · Nucli verge, biblioteca multipoble d’arbres, L’Avisador i l’autoria dels catàlegs',
       '10 de novembre de 2026 · Onada R16 · La versió 1.1.12, el Panell de Control en tres espais i La IAIA Sabuda',
@@ -568,6 +569,32 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
       .filter((f) => /\.(?:js|jsx|mjs)$/.test(f) && !f.includes('.test.') && f !== 'sections/text/pageContent.r10.js');
     // El port 11434 com a nombre sencer: no el confon amb les xifres d'una dada generada (68.711434826 a pouNeuOrderKeys.js).
     expect(fonts.filter((f) => /\bollama\b|(?<![\d.])11434(?!\d)/i.test(readFileSync(path.join(ARREL, 'src', f), 'utf8')))).toEqual([]);
+  });
+});
+
+/* Gauntlet R21 (regressio_commit1-01) · El resum del Node 0 (aiNode0) de /fedivers, /page/fediversity i /page/node-zero
+   deia que el patrimoni usava «només fotografia òptica verificada de Wikimedia Commons amb atribució TASL i SHA-256»,
+   i cap làmina de l'Herbari ni del Banc de Llavors té cap variant que passe potMostrarVariantBotanica. La frase es lliga
+   al recompte real: mentre no n'hi haja cap, el resum diu que les fitxes no en mostren; quan n'hi haja, la prova cau i
+   el text s'ha de tornar a escriure en les cinc llengües. */
+const SENSE_IMATGES = {
+  ca: 'no mostren cap imatge',
+  es: 'no muestran ninguna imagen',
+  en: 'show no images',
+  eu: 'ez dute irudirik erakusten',
+  gl: 'non amosan ningunha imaxe'
+};
+const VENDA_FOTOGRAFIA = /fotografia òptica|fotografía óptica|optical photography|argazkilaritza optiko/i;
+describe('Gauntlet R21 · el resum del Node 0 no ven fotografies que les fitxes botàniques no tenen', () => {
+  const actives = Object.keys(LAMINES_BOTANIQUES_NODE0)
+    .reduce((n, id) => n + obteLaminaBotanicaNode0(id).variants.length, 0);
+  test.each(LLENGUES)('%s · el resum diu el recompte real de variants verificades', (llengua) => {
+    for (const clau of PAGINES) {
+      const body = doc(pagina(clau, llengua).html).body;
+      const resum = [...body.querySelectorAll('h4')].find((h) => h.textContent.includes('Ollama')).nextElementSibling;
+      expect([clau, llengua, resum.textContent.includes(SENSE_IMATGES[llengua])]).toEqual([clau, llengua, actives === 0]);
+      expect([clau, llengua, VENDA_FOTOGRAFIA.test(body.textContent)]).toEqual([clau, llengua, false]);
+    }
   });
 });
 

@@ -49,7 +49,7 @@ const P_TAULA = Object.freeze({ taula: esSlug });
 const P_COMANDA = Object.freeze({ comanda: esIdComanda });
 
 export const RUTES_BAR = Object.freeze([
-  { path: 'cataleg', Unica: CatalegBarWorkspace },
+  { path: 'cataleg', Unica: CatalegBarWorkspace, titolPropi: true },
   /* La caixa: /caixa (la barra) i /caixa/<comanda>, amb el panell /colleccio. */
   ...rutesCatalegColleccio({ path: 'caixa', ...CAIXA, rutaColleccio: RUTA_COMANDA }),
   ...cobraIDividix('caixa'),

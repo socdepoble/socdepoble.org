@@ -958,6 +958,54 @@ nav.mobile-nav { display: none; }
 
 }
 
+/* R21 (P0-76 / P0-77) · Sostre ultra-estret (≤ 359 px, p. ex. 280 px):
+   les cinc dianes de la dreta baixen al mínim tàctil de la casa
+   (--sdp-touch-min, 44 px: 5 × 44 = 220 px) i el coixí lateral de la barra
+   negra baixa a 4 px (--sdp-space-1): el botó del logotip (Obrir menú)
+   conserva com a mínim 44 px d'ample (52 px a 280 px) sense cap desbordament. */
+@container sdp-arrel (max-width: 359px) {
+  header.bar-black { padding-inline: var(--sdp-space-1); }
+  .mobile-logo-wrapper {
+    min-width: var(--sdp-touch-min);
+    padding-left: var(--sdp-space-1) !important;
+  }
+  header.bar-black .right-icons .icon {
+    flex-basis: var(--sdp-touch-min);
+    width: var(--sdp-touch-min);
+    height: var(--sdp-touch-min);
+    min-width: var(--sdp-touch-min);
+    min-height: var(--sdp-touch-min);
+  }
+  header.bar-black .right-icons img.icon {
+    width: var(--sdp-touch-min);
+    height: var(--sdp-touch-min);
+    min-width: var(--sdp-touch-min);
+    min-height: var(--sdp-touch-min);
+  }
+}
+@supports not (container-type: inline-size) {
+  @media (max-width: 359px) {
+    header.bar-black { padding-inline: var(--sdp-space-1); }
+    .mobile-logo-wrapper {
+      min-width: var(--sdp-touch-min);
+      padding-left: var(--sdp-space-1) !important;
+    }
+    header.bar-black .right-icons .icon {
+      flex-basis: var(--sdp-touch-min);
+      width: var(--sdp-touch-min);
+      height: var(--sdp-touch-min);
+      min-width: var(--sdp-touch-min);
+      min-height: var(--sdp-touch-min);
+    }
+    header.bar-black .right-icons img.icon {
+      width: var(--sdp-touch-min);
+      height: var(--sdp-touch-min);
+      min-width: var(--sdp-touch-min);
+      min-height: var(--sdp-touch-min);
+    }
+  }
+}
+
 /* Utilitat responsive documentada al sistema */
 @container sdp-arrel (max-width: 720px) {
   .sdp-ocult-mobil { display: none !important; } }

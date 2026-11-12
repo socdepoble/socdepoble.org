@@ -77,7 +77,7 @@ describe('AH-R17-13 / AH-R17-15 / P0-95 · Workspaces Multi-Llibre Lazy', () => 
     fireEvent.click(within(llista).getByRole('button', { name: '#15 · Pi dels Arrendaors' }));
     expect(await within(detall).findByRole('heading', { level: 1, name: /#15 · Pi dels Arrendaors/i })).toBeTruthy();
     expect(within(detall).getByText(/Esmena cartogràfica verificada/i)).toBeTruthy();
-    expect(within(detall).getByText(/Pedro Ferrer Rodríguez · Associació El Rentonar/)).toBeTruthy();
+    expect(within(detall).getByText(/Pedro Ferrer Rodriguez · Associació El Rentonar/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Torna a la portada del llibre' }));
     await within(detall).findByText(/WP #619/);

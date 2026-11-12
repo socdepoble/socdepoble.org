@@ -23,7 +23,7 @@ describe('fitesArquitectura261104 — Actualització Editorial Integral del 04-1
     expect(METADADES_INSTITUCIONALS_261104.webfingerCanonic).toBe('acct:socdepoble@socdepoble.org');
     expect(METADADES_INSTITUCIONALS_261104.replicaPosseMastodon).toBe('@depoble@mastodont.cat');
     expect(METADADES_INSTITUCIONALS_261104.carpetaArrelMirallWorkspace).toBe(
-      'Sóc de Poble · Mirall Sobirà Node 0/',
+      'Sóc de Poble · Mirall Comunitari Node 0/',
     );
     expect(METADADES_INSTITUCIONALS_261104.exclouMercatComercialPosse).toBe(true);
   });
@@ -38,7 +38,7 @@ describe('fitesArquitectura261104 — Actualització Editorial Integral del 04-1
     const mdNode0Ca = renderitzaCronicaMarkdownPedraSeca('node0-resiliencia-321', 'ca');
     expect(mdNode0Ca).toContain('# Node 0 al Mac mini M4 i Arquitectura de Resiliència Rural 3-2-1');
     expect(mdNode0Ca).toContain('socdepoble@socdepoble.org');
-    expect(mdNode0Ca).toContain('Sóc de Poble · Mirall Sobirà Node 0/');
+    expect(mdNode0Ca).toContain('Sóc de Poble · Mirall Comunitari Node 0/');
     expect(mdNode0Ca).toContain('PostgreSQL 17.11');
 
     const mdPosseCa = renderitzaCronicaMarkdownPedraSeca('posse-mastodon-simetria', 'ca');

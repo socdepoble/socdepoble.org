@@ -31,6 +31,11 @@
  *    fa el mateix camí que l'Escape: tanca el menú i torna el focus al botó.
  *    El menú viu mentre el hook viu (qui el munta ho fa en obrir-lo); amb
  *    `mostra` no s'apunta cap capa.
+ *  · P0-24b (Onada R21) · L'escolta de l'Escape és a l'arrel i el
+ *    stopPropagation no para les altres escoltes de la mateixa arrel: amb dos
+ *    menús oberts (el segon obert amb el teclat), un Escape els tancava tots
+ *    dos, i amb un diàleg damunt tancava el menú de sota. Ara només el fa seu
+ *    el menú de dalt de la pila (useCapaEnrere) i si ningú no l'ha consumit.
  */
 import { useEffect, useRef } from 'react';
 import { useCapaEnrere } from './useCapaEnrere.js';
@@ -45,7 +50,7 @@ export function useMenuEmergent({ files, onTria, onTanca, botoRef = null, mostra
   useEffect(() => { tancaRef.current = onTanca; }, [onTanca]);
   useEffect(() => () => clearTimeout(tabRef.current), []);
   /* P0-24b (T2, prompt 261102_1532) · L'Arrere, el camí de l'Escape (tancaEsc). */
-  useCapaEnrere(!mostra, () => { tancaRef.current?.(); botoRef?.current?.focus(); });
+  const teCapaDamunt = useCapaEnrere(!mostra, () => { tancaRef.current?.(); botoRef?.current?.focus(); });
 
   useEffect(() => {
     if (mostra) return undefined;
@@ -57,7 +62,7 @@ export function useMenuEmergent({ files, onTria, onTanca, botoRef = null, mostra
       tancaRef.current?.();
     };
     const tancaEsc = (event) => {
-      if (event.key !== 'Escape') return;
+      if (event.key !== 'Escape' || event.defaultPrevented || teCapaDamunt()) return;
       event.preventDefault();
       event.stopPropagation();
       tancaRef.current?.();
@@ -69,7 +74,7 @@ export function useMenuEmergent({ files, onTria, onTanca, botoRef = null, mostra
       arrel.removeEventListener('pointerdown', tancaFora);
       arrel.removeEventListener('keydown', tancaEsc);
     };
-  }, [mostra, botoRef, files]);
+  }, [mostra, botoRef, files, teCapaDamunt]);
 
   const tria = (valor) => {
     if (mostra) return;

@@ -11,13 +11,17 @@ export function Dropdown({ trigger, children, className = '', right = false, min
   const menuRef = useRef(null);
   usePropietatsCss(menuRef, { '--sdp-desplegable-ample': isOpen ? minWidth : null });
   /* P0-24b (T2, prompt 261102_1532) · L'Arrere d'Android el tanca, com l'Escape de handleKeyDown. */
-  useCapaEnrere(isOpen, () => setIsOpen(false));
+  /* P0-24b (Onada R21) · L'Escape que el tanca queda consumit (preventDefault):
+     abans continuava fins al diàleg o la pàgina de sota, que es tancaven també.
+     Amb una capa damunt a la pila, l'Escape és d'ella. */
+  const teCapaDamunt = useCapaEnrere(isOpen, () => setIsOpen(false));
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       setIsOpen(!isOpen);
-    } else if (e.key === 'Escape' && isOpen) {
+    } else if (e.key === 'Escape' && isOpen && !e.defaultPrevented && !teCapaDamunt()) {
+      e.preventDefault();
       setIsOpen(false);
     }
   };

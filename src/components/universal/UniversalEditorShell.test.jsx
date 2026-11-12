@@ -196,6 +196,145 @@ test('A3 · un camp buidat queda realment buit en perdre el focus (placeholder s
   expect(camp.childNodes).toHaveLength(0);
 });
 
+/* AH-02 (Onada R21) · Seleccionar o copiar no és editar: entrar al camp i
+   eixir-ne sense escriure no avisa el pare (cap desat del mateix text).
+   Escriure, enganxar o un blur sense focus previ avisen com sempre. */
+test('AH-02 · entrar i eixir sense escriure no crida onBlur; escriure (encara que es desfaça) sí', () => {
+  const onChange = vi.fn();
+  const onBlur = vi.fn();
+  const { container } = render(<EditableField html="Títol" onChange={onChange} onBlur={onBlur} className="camp" />);
+  const camp = container.querySelector('.camp');
+  fireEvent.focus(camp);
+  document.getSelection().selectAllChildren(camp);
+  expect(fireEvent.copy(camp)).toBe(true);
+  fireEvent.blur(camp);
+  expect(onBlur).not.toHaveBeenCalled();
+  expect(onChange).not.toHaveBeenCalled();
+  expect(camp.textContent).toBe('Títol');
+
+  fireEvent.focus(camp);
+  tecleja(camp, 'Títols');
+  tecleja(camp, 'Títol');
+  fireEvent.blur(camp);
+  expect(onBlur).toHaveBeenCalledTimes(1);
+  expect(onBlur).toHaveBeenLastCalledWith('Títol');
+
+  // La volta següent torna a començar: entrar i eixir, res.
+  fireEvent.focus(camp);
+  fireEvent.blur(camp);
+  expect(onBlur).toHaveBeenCalledTimes(1);
+});
+
+test('AH-02 · enganxar és editar, i un blur sense focus previ avisa com sempre', () => {
+  const onBlur = vi.fn();
+  const { container } = render(<EditableField html="" onBlur={onBlur} className="camp" />);
+  const camp = container.querySelector('.camp');
+  fireEvent.focus(camp);
+  fireEvent.paste(camp, { clipboardData: { getData: () => '' } });
+  fireEvent.blur(camp);
+  expect(onBlur).toHaveBeenLastCalledWith('');
+
+  onBlur.mockClear();
+  fireEvent.blur(camp);
+  expect(onBlur).toHaveBeenLastCalledWith('');
+});
+
+/* AH-02 (Onada R21; pla 261112_1430: «títol/cos seleccionables en repòs +
+   clic Editar») · El camp en repòs és text: el mateix <span> i la mateixa
+   classe, sense contenteditable, placeholder ni oients; en passar a
+   l'edició, el node de text no es torna a pintar. */
+test('AH-02 · EditableField en repòs: text sense contenteditable ni placeholder; en edició, el mateix node', () => {
+  const onChange = vi.fn();
+  const { container, rerender } = render(
+    <EditableField html="Festa" placeholder="Títol" onChange={onChange} className="camp" editable={false} />
+  );
+  const camp = container.querySelector('.camp');
+  expect(camp.tagName).toBe('SPAN');
+  expect(camp.textContent).toBe('Festa');
+  expect(camp.hasAttribute('contenteditable')).toBe(false);
+  expect(camp.hasAttribute('data-placeholder')).toBe(false);
+  const text = camp.firstChild;
+  fireEvent.input(camp);
+  expect(onChange).not.toHaveBeenCalled();
+
+  rerender(<EditableField html="Festa" placeholder="Títol" onChange={onChange} className="camp" />);
+  expect(container.querySelector('.camp')).toBe(camp);
+  expect(camp.firstChild).toBe(text);
+  expect(camp.getAttribute('contenteditable')).toBe('true');
+  expect(camp.getAttribute('data-placeholder')).toBe('Títol');
+  tecleja(camp, 'Festa major');
+  expect(onChange).toHaveBeenLastCalledWith('Festa major');
+});
+
+test('AH-02 · sense enRepos (o sense onEdita), la closca de sempre: camps editables i cap «Editar»', () => {
+  const sense = closca({});
+  expect(sense.container.querySelector('.editor-title-input').getAttribute('contenteditable')).toBe('true');
+  expect(sense.queryByRole('button', { name: 'Editar' })).toBeNull();
+  expect(sense.container.querySelector('.sdp-pagina-despres-autoria')).toBeNull();
+  cleanup();
+  // enRepos sense qui el desfaça no deixa ningú tancat en lectura.
+  const senseSortida = closca({ enRepos: true });
+  expect(senseSortida.container.querySelector('.editor-title-input').getAttribute('contenteditable')).toBe('true');
+  expect(senseSortida.queryByRole('button', { name: 'Editar' })).toBeNull();
+});
+
+test('AH-02 · en repòs, els tres camps són text i «Editar» (damunt de l’H1) avisa el pare i enfoca el títol', () => {
+  const Pare = () => {
+    const [repos, setRepos] = useState(true);
+    return (
+      <UniversalEditorShell id="d1" titleHtml="Títol" subtitleHtml="Subtítol" leadHtml="Entradilla"
+        enRepos={repos} onEdita={() => setRepos(false)}>
+        <div data-testid="cos" />
+      </UniversalEditorShell>
+    );
+  };
+  const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+  const { container, getByRole, queryByRole } = render(<Pare />);
+  const titol = container.querySelector('.editor-title-input');
+  for (const selector of ['.editor-title-input', '.editor-subtitle-input', '.editor-lead-input']) {
+    expect(container.querySelector(selector).hasAttribute('contenteditable')).toBe(false);
+  }
+  const boto = getByRole('button', { name: 'Editar' });
+  expect(boto.closest('.sdp-pagina-despres-autoria > .sdp-accions')).not.toBeNull();
+  expect(boto.compareDocumentPosition(titol) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  // Un clic al text no canvia res.
+  fireEvent.click(titol);
+  expect(titol.hasAttribute('contenteditable')).toBe(false);
+
+  fireEvent.click(boto);
+  expect(queryByRole('button', { name: 'Editar' })).toBeNull();
+  for (const selector of ['.editor-title-input', '.editor-subtitle-input', '.editor-lead-input']) {
+    expect(container.querySelector(selector).getAttribute('contenteditable')).toBe('true');
+  }
+  expect(container.querySelector('.editor-title-input')).toBe(titol);
+  expect(focus.mock.contexts).toContain(titol);
+  focus.mockRestore();
+});
+
+test('AH-02 · en eixir del repòs, el panell i l’«Edició avançada» de la ranura no es remunten', () => {
+  const Pare = () => {
+    const [repos, setRepos] = useState(true);
+    return (
+      <UniversalEditorShell id="d1" titleHtml="Títol" subtitleHtml="" leadHtml="" edicioAvancada
+        visibilitatEnLinia={<section data-testid="panell" />} enRepos={repos} onEdita={() => setRepos(false)}>
+        <div data-testid="cos" />
+      </UniversalEditorShell>
+    );
+  };
+  const { container, getByRole, getByTestId } = render(<Pare />);
+  const panell = getByTestId('panell');
+  const desplegable = container.querySelector('details.sdp-edicio-avancada');
+  desplegable.open = true;
+  expect([...container.querySelector('.sdp-pagina-despres-autoria').children].map((el) => el.className || el.dataset.testid))
+    .toEqual(['panell', 'sdp-edicio-avancada', 'sdp-accions']);
+  fireEvent.click(getByRole('button', { name: 'Editar' }));
+  expect(getByTestId('panell')).toBe(panell);
+  expect(container.querySelector('details.sdp-edicio-avancada')).toBe(desplegable);
+  expect(desplegable.open).toBe(true);
+  expect([...container.querySelector('.sdp-pagina-despres-autoria').children].map((el) => el.className || el.dataset.testid))
+    .toEqual(['panell', 'sdp-edicio-avancada']);
+});
+
 /* ── T40–T41 (ordre del Mestre, 260928) · la barra taronja ─────────────── */
 test('T40 · sense onPublishDateChange la data és el <time> de sempre; amb, un botó que obri el calendari', () => ambAra(() => {
   const sense = closca({ formattedTime: '10:00', formattedDate: '01/01/26' });

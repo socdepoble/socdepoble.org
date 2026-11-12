@@ -99,3 +99,47 @@ test('les etiquetes passen per t (claus section.notes.proposaCard i section.note
   rerender(<UniversalToolbar onProposaCard={() => {}} proposaCardDesfer t={t} />);
   expect(within(container).getByRole('button', { name: '[section.notes.proposaCardDesfer]' })).toBeTruthy();
 });
+
+/* AH-02 (Onada R21; Gauntlet R21, ui_fase2-01) · El document en repòs: el botó
+   apagat diu per què (proposaCardMotiu, al title: el nom continua sent
+   l'aria-label i el title en passa a ser la descripció), i la barra descriu el
+   repòs de les eines de format (motiuEnLectura, un text amagat). Sense les
+   props, el DOM de sempre. */
+const MOTIU = 'Prem «Editar» per a proposar la Card.';
+const MOTIU_EINES = 'En lectura: prem «Editar» per a escriure i donar format al text.';
+for (const [mode, px] of [['ampla', 900], ['compacta', 320]]) {
+  test(`${mode}: apagat en repòs, el motiu és la descripció accessible i el rètol del botó; el nom no canvia`, () => {
+    amplada(px);
+    const proposa = vi.fn();
+    const { container } = render(<UniversalToolbar onProposaCard={proposa} proposaCardDisabled proposaCardMotiu={MOTIU} />);
+    obriFormat(container, mode);
+    const boto = within(container).getByRole('button', { name: 'Proposa Card', description: MOTIU });
+    expect(boto.disabled).toBe(true);
+    expect(boto.getAttribute('aria-label')).toBe('Proposa Card');
+    expect(boto.getAttribute('title')).toBe(MOTIU);
+    fireEvent.click(boto);
+    expect(proposa).not.toHaveBeenCalled();
+  });
+}
+
+test('el motiu només acompanya el botó apagat: encés, el title de sempre', () => {
+  amplada(900);
+  const { container } = render(<UniversalToolbar onProposaCard={() => {}} proposaCardMotiu={MOTIU} />);
+  const boto = within(container).getByRole('button', { name: 'Proposa Card' });
+  expect(boto.disabled).toBe(false);
+  expect(boto.getAttribute('title')).toBe('Proposa Card');
+});
+
+test('motiuEnLectura descriu la barra amb un text amagat (cap píxel); sense, cap atribut ni node nou', () => {
+  amplada(900);
+  const { container, rerender } = render(<UniversalToolbar onPublish={() => {}} motiuEnLectura={MOTIU_EINES} />);
+  const barra = within(container).getByRole('group', { name: "Eines de l'editor", description: MOTIU_EINES });
+  const motiu = container.querySelector(`[id="${barra.getAttribute('aria-describedby')}"]`);
+  expect(motiu.hidden).toBe(true);
+  expect(motiu.textContent).toBe(MOTIU_EINES);
+  expect(motiu.parentElement).toBe(barra);
+  rerender(<UniversalToolbar onPublish={() => {}} />);
+  expect(barra.hasAttribute('aria-describedby')).toBe(false);
+  expect(barra.querySelector(':scope > span[hidden]')).toBeNull();
+  expect(barra.textContent).not.toContain(MOTIU_EINES);
+});

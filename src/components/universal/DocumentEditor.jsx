@@ -22,6 +22,9 @@ import {
   UniversalRichTextToolbar,
   UniversalRichTextContent,
 } from './richText';
+/* AH-02 (Onada R21) · La barra apagada del repòs, pel seu camí: les proves
+   que substituïxen './richText' amb fàbriques tancades no la porten. */
+import { ESTAT_BUIT, EXEC_BUIT } from './richText/toolbarContract.js';
 import { extensionsRiques } from './richText/extensions';
 /* P0-58 · El text pla amb Markdown, o un paràgraf per línia, per al
    repartiment d'un document enganxat. Pel seu camí: les proves que
@@ -235,6 +238,20 @@ function campsQueTornen(actual, de, a) {
  *                            // PerfilShell) i a «Les vistes» (DetallVistes). Una
  *                            // clau vella que encara arribe passa per ...rest i
  *                            // PageFrame no la llig: el DOM de sempre.
+ *   obriEnRepos: Boolean     // Opcional (AH-02, Onada R21; pla 261112_1430:
+ *                            // «títol/cos seleccionables en repòs + clic
+ *                            // Editar»; false). Es llig la primera vegada que
+ *                            // l'editor veu cada document (id): amb true, el
+ *                            // document s'obri en repòs (el títol, el subtítol,
+ *                            // l'entradilla i el cos es lligen, se seleccionen
+ *                            // i es copien, però no s'hi escriu; les eines de
+ *                            // format i «Proposa Card», apagades amb el seu
+ *                            // motiu; els camps buits no es pinten, i el
+ *                            // títol buit diu la reserva de l'H1) fins que la
+ *                            // persona prem «Editar». Un canvi de la clau amb el mateix
+ *                            // document no el torna al repòs: qui escriu no
+ *                            // perd l'edició. Sense la clau, l'edició de
+ *                            // sempre. No passa per ...rest.
  *   targetes: { cerca(consulta) } // Opcional (T7, 261004). Targetes incrustades al
  *                            // cos: l'ordre «/» «Targeta» obri el selector, que
  *                            // busca amb cerca() (entrades d'indexCerca: Model B).
@@ -486,8 +503,24 @@ export function DocumentEditor({ adapter, onToast }) {
        ({ blocs, etiqueta, resum }, constant; null: cap, com sempre). Una
        decoració: no es desa, no es publica ni arriba a la targeta. */
     guiaCos = null,
+    /* AH-02 (Onada R21) · el document s'obri en repòs (false: l'edició de sempre). */
+    obriEnRepos = false,
     ...rest
   } = adapter;
+
+  /* AH-02 (Onada R21; pla 261112_1430: «títol/cos seleccionables en repòs +
+     clic Editar») · El repòs es decidix UNA vegada per document: la primera
+     vegada que l'editor en veu l'id (també quan el document canvia sense
+     remuntar). Després, només «Editar» el canvia. Així la «Nota sense títol»
+     que es crea amb la primera tecla (mateix id, P4), o una nota buida que
+     s'omple mentre s'hi escriu, no tornen mai al repòs a mitja frase. */
+  const idDelDocument = document?.id ?? null;
+  const [repos, setRepos] = useState(() => ({ id: idDelDocument, actiu: obriEnRepos === true }));
+  if (repos.id !== idDelDocument) setRepos({ id: idDelDocument, actiu: obriEnRepos === true });
+  const enRepos = repos.actiu && repos.id === idDelDocument;
+  const editaDesDelRepos = useCallback(() => {
+    setRepos((abans) => (abans.actiu ? { ...abans, actiu: false } : abans));
+  }, []);
 
   const ambTargetes = Boolean(targetes);
   /* Bloc 3.8 · Per una ref, com onToast: l'extensió es fixa en crear l'editor. */
@@ -609,6 +642,10 @@ export function DocumentEditor({ adapter, onToast }) {
     onSave: handleSave,
     debounceMs: 800,
     seedContent,
+    /* AH-02 · En repòs, el cos en lectura: es selecciona i es copia, sense
+       cursor ni guia del cos buit (guiaCos i placeholderCos només es pinten
+       amb l'editor editable). */
+    editable: !enRepos,
   });
 
   const { state, exec } = useTipTapToolbarAdapter(editor);
@@ -1174,18 +1211,27 @@ export function DocumentEditor({ adapter, onToast }) {
 
   const topBar = (
     <UniversalRichTextToolbar
-      state={state}
-      exec={exec}
+      /* AH-02 · En repòs, les eines de format apagades (cap ordre al cos en
+         lectura), i el motiu, per al lector de pantalla, a la descripció de
+         la barra. Publicar i Borrar continuen com sempre: no escriuen al cos. */
+      state={enRepos ? ESTAT_BUIT : state}
+      exec={enRepos ? EXEC_BUIT : exec}
+      {...(enRepos ? { motiuEnLectura: t('editor.eines.enRepos', 'En lectura: prem «Editar» per a escriure i donar format al text.') } : null)}
       onPublish={obreVisibilitat}
       publishPopup={visibilitatEnLinia ? null : 'dialog'}
       publishLabel={publishLabel}
       publishState={estatPublicacio}
       onDelete={deleteDocument ? esborra : undefined}
-      /* IDEA-41 · Sense motor, cap clau nova: la barra de sempre. */
+      /* IDEA-41 · Sense motor, cap clau nova: la barra de sempre.
+         AH-02 (Gauntlet R21, ui_fase2-01) · «Proposa Card» escriu al cos i als
+         camps: en repòs no pot fer res (proposaOdesfes torna sense el cos
+         editable). Cap botó fantasma: apagat, amb el motiu com a descripció.
+         No obri l'edició pel seu compte: només «Editar» trau del repòs. */
       {...(ambProposta ? {
         onProposaCard: proposaOdesfes,
-        proposaCardDisabled: !propostaDesfeible && !hiHaProposta && !hiHaRelat,
-        proposaCardDesfer: propostaDesfeible
+        proposaCardDisabled: enRepos || (!propostaDesfeible && !hiHaProposta && !hiHaRelat),
+        proposaCardDesfer: !enRepos && propostaDesfeible,
+        ...(enRepos ? { proposaCardMotiu: t('editor.proposaCard.enRepos', 'Prem «Editar» per a proposar la Card.') } : null)
       } : null)}
       t={t}
     />
@@ -1298,6 +1344,9 @@ export function DocumentEditor({ adapter, onToast }) {
          copyright continua sent l'enllaç de lectura. Amb ambDrets={false}
          (261015), cap línia de copyright. */
       onCanviaCopyright={potTriarDrets ? obreDrets : undefined}
+      /* AH-02 · Després de ...rest: cap adaptador ho desfà. Fora del repòs,
+         cap prop nova a la closca. */
+      {...(enRepos ? { enRepos: true, onEdita: editaDesDelRepos } : null)}
     >
       {/* T7 · Els NodeViews de les targetes es munten com a portals dins del
           cos i llegixen este context (avisa i t). Sense targetes, el cos de sempre. */}

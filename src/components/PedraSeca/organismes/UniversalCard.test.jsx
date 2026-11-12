@@ -604,7 +604,7 @@ describe('FEDI-11 · traducció instantània al peu de la targeta amb MenuTradui
     expect(troba('[role="menu"]')).toBeNull();
     expect(espiaMotor).not.toHaveBeenCalled();
     expect(mocks.navigate).not.toHaveBeenCalled();
-    expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.');
+    expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no s’envia al servei de traducció.');
 
     /* 2) Targeta d'app local (La Nevera: idElement i telemetria.comptar=false) */
     cleanup();
@@ -623,7 +623,7 @@ describe('FEDI-11 · traducció instantània al peu de la targeta amb MenuTradui
     expect(troba('[role="menu"]')).toBeNull();
     expect(espiaMotor).not.toHaveBeenCalled();
     expect(mocks.navigate).not.toHaveBeenCalled();
-    expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.');
+    expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no s’envia al servei de traducció.');
   });
 
   test('F11-04 · traduïx també quan body és un paràgraf JSX i no posa lang als camps que han quedat en l’original', async () => {

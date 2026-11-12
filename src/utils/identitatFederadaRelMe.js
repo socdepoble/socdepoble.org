@@ -26,7 +26,7 @@ export const DESCRIPTOR_IDENTITAT_INSTITUCIONAL_SOCDEPOBLE = Object.freeze({
   correuInstitucional: COMPTE_INSTITUCIONAL_CANONIC,
   remitentTransaccionalNode0: COMPTE_INSTITUCIONAL_CANONIC,
   propietariMirallWorkspace20TB: COMPTE_INSTITUCIONAL_CANONIC,
-  carpetaArrelMirallWorkspace: 'Sóc de Poble · Mirall Sobirà Node 0/',
+  carpetaArrelMirallWorkspace: 'Sóc de Poble · Mirall Comunitari Node 0/',
   webfingerSubject: WEBFINGER_INSTITUCIONAL_CANONIC,
   node0ActorAcct: 'socdepoble@socdepoble.cat',
   replicaPosseMastodon: '@depoble@mastodont.cat',

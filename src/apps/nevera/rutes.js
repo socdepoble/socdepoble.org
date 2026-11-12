@@ -39,8 +39,8 @@ const TEMPORADA_DETALL = Object.freeze({ Mig: ColumnaLlistaPerTemporada, Detall:
 
 /* Com fa rutesCatalegColleccio: primer les rutes literals, després les de :llista. */
 export const RUTES = Object.freeze([
-  { path: 'rebost', Unica: RebostWorkspace },
-  { path: 'rebost/:llista', params: PARAMS_LLISTA, Unica: RebostWorkspace },
+  { path: 'rebost', Unica: RebostWorkspace, titolPropi: true },
+  { path: 'rebost/:llista', params: PARAMS_LLISTA, Unica: RebostWorkspace, titolPropi: true },
   { path: ENTRADA_LLISTES, ...LLISTES },
   { path: `${ENTRADA_LLISTES}/:llista`, params: PARAMS_LLISTA, ...LLISTES },
   ...rutesCatalegColleccio({ path: COMPRA.entrada, ...opcions(COMPRA), Esquerra: ColumnaLlistes, Colleccio: ColumnaLaCompra, Cataleg: ColumnaCatalegCompra }),

@@ -68,15 +68,15 @@
       "data": "2026-11-07"
     },
     "fedivers": {
-      "sha256": "aeb580709e0ce1edf174343744e2a9d10977c3f58d36be81fb375b4d25474088",
-      "html": 21944,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "sha256": "da1fa3a806e904b18f50174d08ab6191e5d018c4558aed89806d2dd39dcd5b8b",
+      "html": 21947,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59 i prompt R21: correcció de veracitat del Gauntlet regressio_commit1-01 sobre FITA_R20 i aiNode0; integrat per Claude R21, revocable)",
       "data": "2026-11-12"
     },
     "fediversity": {
-      "sha256": "a0b112a23904e484e6780807fcca6237975bd8791bb1290583671a25c10cd99e",
-      "html": 63691,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "sha256": "6fc45b6a885c32e9e3bfb27a2ffdf5b9d630b904de018fd3292005b91eb40c5f",
+      "html": 63694,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59 i prompt R21: correcció de veracitat del Gauntlet regressio_commit1-01 sobre FITA_R20 i aiNode0; integrat per Claude R21, revocable)",
       "data": "2026-11-12"
     },
     "habitatge": {
@@ -104,9 +104,9 @@
       "data": "2026-11-07"
     },
     "node-zero": {
-      "sha256": "feab9f0a82b3de373032a7c95c19a0c869306cc3398d243e6768c7757dee12b3",
-      "html": 22572,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "sha256": "9f4cc249a51e148c5a4fbf2e695d7f7ff03eac0a13dacc26a03b711a7bf0b664",
+      "html": 22575,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59 i prompt R21: correcció de veracitat del Gauntlet regressio_commit1-01 sobre FITA_R20 i aiNode0; integrat per Claude R21, revocable)",
       "data": "2026-11-12"
     },
     "notes": {
@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "cbd13dc40baf5e3e00356f0eb309b42385f37e87b39600a493fc8e2abb1fbeac",
-      "html": 54338,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
+      "sha256": "1e1af75b6411f6b749db95d81c27ce6cdfbd55d60493179c2773c68f2471d612",
+      "html": 54538,
+      "aprovat_per": "Mestre Javi (D3 261112 13:59 i prompt R21: correcció de veracitat del Gauntlet regressio_commit1-01 sobre FITA_R20 i aiNode0; integrat per Claude R21, revocable)",
       "data": "2026-11-12"
     },
     "wikidepoble": {

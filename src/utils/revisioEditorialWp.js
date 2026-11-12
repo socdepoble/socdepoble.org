@@ -6,7 +6,7 @@
  * P0-111 + R18.2:
  *   1. Els 20 ítems verificats del Catàleg d’Arbres Emblemàtics i Monumentals
  *      de La Torre de les Maçanes (Associació El Rentonar · estudi tècnic de
- *      Pedro Ferrer Rodríguez: pàgina WP-619 + 19 arbres WP-1751..WP-2014, incloent
+ *      Pedro Ferrer Rodriguez: pàgina WP-619 + 19 arbres WP-1751..WP-2014, incloent
  *      WP-1768 Llorer de Villa María) tenen estat inicial `'aprovat'` cap a la
  *      sèrie `arbres-monumentals`, mentre els restants continuen `'pendent_admin'`
  *      fins a revisió humana.

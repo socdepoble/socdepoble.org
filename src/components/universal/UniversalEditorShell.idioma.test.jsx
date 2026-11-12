@@ -96,12 +96,14 @@ afterEach(() => {
 
 describe('les reserves són el valencià del diccionari', () => {
   /* AH-03 i AH-08.1 (ordre del Mestre, 261104) · El parell 40 és el del botó
-     gran «Tancar l’edició avançada» (editor.closca.tancaEdicioAvancada). */
-  test('els 40 parells de TEXTOS_CLOSCA: clau editor.closca.*, reserva = ca i traducció pròpia en anglés', () => {
+     gran «Tancar l’edició avançada» (editor.closca.tancaEdicioAvancada).
+     AH-02 (Onada R21) · El 41, el botó «Editar» del document en repòs. */
+  test('els 41 parells de TEXTOS_CLOSCA: clau editor.closca.*, reserva = ca i traducció pròpia en anglés', () => {
     const parells = Object.values(TEXTOS_CLOSCA);
-    expect(parells).toHaveLength(40);
-    expect(new Set(parells.map(([clau]) => clau)).size).toBe(40);
+    expect(parells).toHaveLength(41);
+    expect(new Set(parells.map(([clau]) => clau)).size).toBe(41);
     expect(TEXTOS_CLOSCA.tancaEdicioAvancada).toEqual(['editor.closca.tancaEdicioAvancada', 'Tancar l’edició avançada']);
+    expect(TEXTOS_CLOSCA.editaText).toEqual(['editor.closca.edita.text', 'Editar']);
     for (const [clau, reserva] of parells) {
       expect(clau).toMatch(/^editor\.closca\.[\w.]+$/);
       expect([clau, CA[clau]]).toEqual([clau, reserva]);

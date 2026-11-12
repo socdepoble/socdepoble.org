@@ -31,19 +31,22 @@ export function PaginaEmojis({
 
   /* P0-24b (T2, prompt 261102_1532) · La pàgina es munta només oberta: mentre
      viu és a la pila de l'Arrere d'Android, amb el camí de l'Escape (onTornar). */
-  useCapaEnrere(true, () => onTornar?.());
+  const teCapaDamunt = useCapaEnrere(true, () => onTornar?.());
 
-  /* Escolta la tecla Escape per tornar a la vista anterior */
+  /* Escolta la tecla Escape per tornar a la vista anterior.
+     P0-24b (Onada R21) · L'escolta és a la finestra: un Escape que una capa de
+     damunt ja ha consumit (un desplegable, les opcions de la barra) o que és
+     d'una capa de damunt (un diàleg, que el rep després del keydown) no és
+     seu. Abans tancava la pàgina sota el diàleg, o les dues capes alhora. */
   useEffect(() => {
     const escoltaTecles = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onTornar?.();
-      }
+      if (e.key !== 'Escape' || e.defaultPrevented || teCapaDamunt()) return;
+      e.preventDefault();
+      onTornar?.();
     };
     window.addEventListener('keydown', escoltaTecles);
     return () => window.removeEventListener('keydown', escoltaTecles);
-  }, [onTornar]);
+  }, [onTornar, teCapaDamunt]);
 
   const descripcioCalculada = descripcio ?? (
     modePerfil

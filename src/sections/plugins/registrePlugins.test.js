@@ -358,7 +358,7 @@ describe('registre de plugins', () => {
     expect(pluginPerId('vehicle').entradilla).toContain('Un trajecte publicat diu a tothom el teu horari i el teu camí; les despeses les acordeu entre vosaltres, fora de l’app.');
     // Els avisos de privacitat del Mapa i d'Animalets tampoc se'n van amb l'«en obres».
     expect(pluginPerId('mapa').entradilla).toContain('Un punt publicat al mapa serà públic i el podrà localitzar qualsevol, també des d’altres pobles.');
-    expect(pluginPerId('animalets').entradilla).toContain('El contacte que poses en una fitxa el veurà la gent registrada del poble en obrir-la; no ix a la targeta ni a la cerca.');
+    expect(pluginPerId('animalets').entradilla).toContain('El contacte que poses en una fitxa el veurà qualsevol persona, també sense compte, en obrir-la; no ix a la targeta ni a la cerca.');
     // I l'avís d'Animalets diu el que fa el contracte: el contacte és privat (fora de la targeta i de la cerca).
     expect(CAMPS.animalets.filter((campDef) => campDef.privat).map((campDef) => campDef.id)).toEqual(['contacte']);
   });

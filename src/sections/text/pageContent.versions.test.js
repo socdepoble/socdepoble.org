@@ -39,6 +39,7 @@ import { TEXTOS_ALERGENS } from '../../utils/textosAlergens.js';
 import { RUTA_PAGINA_NODRIR_IAIA, TEXTOS_IAIA_SABUDA } from './pageContent.nodrirIaia.js';
 import { resolvePageSlugPath } from '../../config/navigation.js';
 import { ARBRES_MONUMENTALS_2020 } from '../../data/patrimoni/arbresMonumentals2020.js';
+import { LAMINES_BOTANIQUES_NODE0, obteLaminaBotanicaNode0 } from '../../data/patrimoni/laminesBotaniquesNode0.js';
 import { ESTAT_PROVES, PLUGINS, TEXTOS_BETA_OBERTA } from '../plugins/registrePlugins.js';
 // T8 · D-12: la capçalera es contrasta amb package.json i amb la capçalera del connector.
 import { readFileSync, readdirSync } from 'node:fs';
@@ -118,7 +119,7 @@ const fitaR19 = blocDe(TITOL_FITA_R19);
 const INICIS_R19 = { ca: '11 de novembre de 2026, vesprada · Onada R19', es: '11 de noviembre de 2026, tarde · Oleada R19', en: '11 November 2026, afternoon · Wave R19',
   eu: '2026ko azaroaren 11, arratsaldea · R19 olatua', gl: '11 de novembro de 2026, tarde · Onda R19' };
 /* Onada R20 · La crònica de l'Onada R20 obri /versions, davant de la fita R19. */
-const TITOL_FITA_R20 = '11 de novembre de 2026, nit · Onada R20 · Publicació en línia de Notes cap al Mur, fotografia òptica verificada i poliment responsive del Panell';
+const TITOL_FITA_R20 = '11 de novembre de 2026, nit · Onada R20 · Publicació en línia de Notes cap al Mur, filtre de verificació de les imatges botàniques i poliment responsive del Panell';
 const fitaR20 = blocDe(TITOL_FITA_R20);
 const INICIS_R20 = { ca: '11 de novembre de 2026, nit · Onada R20', es: '11 de noviembre de 2026, noche · Oleada R20', en: '11 November 2026, night · Wave R20',
   eu: '2026ko azaroaren 11, gaua · R20 olatua', gl: '11 de novembro de 2026, noite · Onda R20' };
@@ -132,6 +133,17 @@ const VERITAT_R19 = {
   eu: ['67 irudiak', 'birsortze sintetikoak', 'berrogeialdi itzulgarri', 'zuzendutako 24 azterketa morfologiko', '0 B'],
   gl: ['67 imaxes', 'recreacións sintéticas', 'corentena reversible', '24 estudos morfolóxicos corrixidos', '0 B']
 };
+/* Gauntlet R21 (regressio_commit1-01) · La crònica R20 deia que l'Herbari i el Banc de Llavors incorporaven «exclusivament
+   fotografia òptica real de Wikimedia Commons» amb SHA-256 verificada, i cap làmina té cap variant que passe
+   potMostrarVariantBotanica. L'apartat es lliga al recompte real: mentre no n'hi haja cap, diu que les fitxes no en
+   mostren; quan n'hi haja, la prova cau i el text s'ha de tornar a escriure en les cinc llengües. */
+const VARIANTS_BOTANIQUES_ACTIVES = Object.keys(LAMINES_BOTANIQUES_NODE0)
+  .reduce((n, id) => n + obteLaminaBotanicaNode0(id).variants.length, 0);
+const SENSE_IMATGES_R20 = {
+  ca: 'no mostren cap imatge', es: 'no muestran ninguna imagen', en: 'show no images',
+  eu: 'ez dute irudirik erakusten', gl: 'non amosan ningunha imaxe'
+};
+const VENDA_FOTOGRAFIA_R20 = /fotografia òptica|fotografía óptica|optical photography|argazkilaritza optiko|exclusivament|exclusively/i;
 const VENDA_R19 = /noves fotografies|nuevas fotografías|new photographs|argazki berriak|novas fotografías|ampliació verificada|ampliación verificada|verified expansion|hedapen egiaztatua/i;
 test('R20 · la crònica R19 explica la quarantena de les làmines generades en les cinc llengües', () => {
   for (const [llengua, frases] of Object.entries(VERITAT_R19)) {
@@ -1277,9 +1289,8 @@ describe('R20 · /versions s’obri amb la crònica de l’Onada R20 en les cinc
       expect([llengua, /Google|Apple|App Store|iPhone|iPad|TestFlight/.test(pla)]).toEqual([llengua, false]);
       expect([llengua, /\bdesplegad[ae]s?\b|en producció|aviat|pròximament|properament|IDEA-\d|P\d-\d|torn_|mas[i]a|sobir/i.test(pla)]).toEqual([llengua, false]);
       expect([llengua, pla.includes('Sóc de Poble')]).toEqual([llengua, true]);
-      expect([llengua, pla.includes('Wikimedia Commons')]).toEqual([llengua, true]);
-      expect([llengua, pla.includes('TASL')]).toEqual([llengua, true]);
-      expect([llengua, pla.includes('SHA-256')]).toEqual([llengua, true]);
+      expect([llengua, pla.includes(SENSE_IMATGES_R20[llengua])]).toEqual([llengua, VARIANTS_BOTANIQUES_ACTIVES === 0]);
+      expect([llengua, VENDA_FOTOGRAFIA_R20.test(pla)]).toEqual([llengua, false]);
       const segmentador = new Intl.Segmenter(llengua, { granularity: 'word' });
       const paragrafsDelBloc = [...bloc.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
       expect([llengua, paragrafsDelBloc.length]).toEqual([llengua, 4]);

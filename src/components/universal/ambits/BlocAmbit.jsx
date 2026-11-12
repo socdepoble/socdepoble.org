@@ -72,10 +72,13 @@ function textDError(codi, nomDelCamp, t) {
 
 /* idea61-05 (Gauntlet T7a, 261104) · Un camp `privat` del contracte (el
    contacte de Treball i, des d'AH-04, el d'Animalets) no ix a la targeta ni a
-   la cerca, però la fitxa del detall el mostra a la gent registrada del poble:
-   el camp ho diu, perquè la previsualització l'amaga a posta. Cap altre camp
-   porta ajuda. */
-const TEXT_CAMP_VISIBLE = Object.freeze(['editor.ambit.contacteVisible', 'Ho veurà la gent registrada del poble en obrir la fitxa; no ix a la targeta ni a la cerca.']);
+   la cerca, però la fitxa del detall el mostra a qui pot llegir la fila: el
+   camp ho diu, perquè la previsualització l'amaga a posta. Cap altre camp
+   porta ajuda. honestedat_textos-05 (R21) · Amb la política 2611112005, anon
+   llig el payload del Mur i del Mercat: el veu qualsevol persona, també sense
+   compte, i no només la gent registrada del poble com deia abans
+   (config/i18n.murPublic.test.js ho lliga a MUR_PUBLIC_FILTRAT). */
+const TEXT_CAMP_VISIBLE = Object.freeze(['editor.ambit.contacteVisible', 'Ho veurà qualsevol persona, també sense compte, en obrir la fitxa; no ix a la targeta ni a la cerca.']);
 
 /* El tipus de l'<input> per a cada tipus del contracte. */
 const TIPUS_INPUT = Object.freeze({ text: 'text', preu: 'text', data: 'date', hora: 'time' });

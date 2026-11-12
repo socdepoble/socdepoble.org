@@ -1,4 +1,4 @@
-import { Image as ImageIcon, Crop, SlidersHorizontal, ChevronUp } from 'lucide-react';
+import { Image as ImageIcon, Crop, SlidersHorizontal, ChevronUp, SquarePen } from 'lucide-react';
 import { DateTimeControl, Alerta, Boto, SelectorDataHora } from '../PedraSeca/index.js';
 import { BotoVisibilitat } from './barres/BotoVisibilitat.jsx';
 import { ETIQUETA_RESERVA_ARA, dataHoraEdicio } from './barres/dataHoraBarra.js';
@@ -60,6 +60,8 @@ export const TEXTOS_CLOSCA = Object.freeze({
   editaCapcalera: parellCloscaEditor('edita.capcalera', 'Editar capçalera'),
   editaLogotip: parellCloscaEditor('edita.logotip', 'Editar logotip'),
   editaLogotipFosc: parellCloscaEditor('edita.logotipFosc', 'Editar logotip de mode nit'),
+  /* AH-02 (Onada R21) · El botó del document en repòs que l'obri a l'edició. */
+  editaText: parellCloscaEditor('edita.text', 'Editar'),
   ajudaLogotipFosc: parellCloscaEditor('ajuda.logotipFosc', 'Variant per al fons fosc. Sense esta imatge, es mostra el logotip de mode dia.'),
   altLogotipFosc: parellCloscaEditor('alt.logotipFosc', 'Logotip de mode nit'),
   llevaLogotipFosc: parellCloscaEditor('lleva.logotipFosc', 'Esborrar logotip de mode nit'),
@@ -251,7 +253,7 @@ const delPortaretalls = (dades) => ({
   text: dades.getData('text/plain') || '',
 });
 
-export function EditableField({ html, placeholder, onChange, onBlur, className, onEnganxaBloc = null }) {
+export function EditableField({ html, placeholder, onChange, onBlur, className, onEnganxaBloc = null, editable = true, reserva = null }) {
   /* A2 · Mentre el camp té el focus, el DOM és de qui escriu. Si el valor que
      torna del pare es reinjectara a cada tecla, React reescriuria el contingut,
      el cursor tornaria a l'inici i «Hola» eixiria «aloH». El camp pinta un
@@ -262,13 +264,43 @@ export function EditableField({ html, placeholder, onChange, onBlur, className, 
   /* P0-58 · Un arrossegament que naix dins del mateix camp (moure una
      paraula) és del navegador: el drop no el toca. */
   const arrossegantDins = useRef(false);
+  /* AH-02 (Onada R21) · Seleccionar o copiar no és editar. Es guarda el valor
+     amb què s'entra al camp; si en eixir és el mateix i no s'hi ha escrit res
+     (cap input, enganxat ni text deixat anar), el pare no rep l'onBlur i el
+     mateix text no es torna a desar (abans pujava la revisió i una nota
+     publicada passava a «pendent»). Enganxar o deixar anar és editar, encara
+     que no hi entre res. Un blur sense focus previ avisa com sempre. */
+  const entrada = useRef(null);
   if (!enfocat && mostrat !== html) setMostrat(html);
   if (html === null) return null;
+  /* AH-02 (Onada R21; pla 261112_1430: «títol/cos seleccionables en repòs +
+     clic Editar») · En repòs (`editable` fals) el camp és text del document:
+     es llig, se selecciona i es copia, i tocar-lo no hi posa cap cursor ni
+     obri el teclat. Sense placeholder: és una crida a escriure, i en repòs no
+     s'hi escriu (com la ploma en lectura, identitat_visual). El mateix <span>
+     amb la mateixa classe: en passar a l'edició, React només hi afig els
+     atributs i els oients, i el text no es torna a pintar.
+     Gauntlet R21 (ui_fase2-02) · Un camp buit en repòs (també amb les restes
+     d'un contenteditable: <br>, espais) pinta la `reserva` com a text (l'H1
+     d'una nota sense títol: «Nota sense títol», no un encapçalament buit per
+     al lector de pantalla). En passar a l'edició, el camp torna buit i el
+     placeholder de sempre. Sense reserva, com abans. */
+  if (!editable) {
+    return <span className={className} dangerouslySetInnerHTML={{ __html: sanitizeHtml(valorDelCamp(html || '') || (typeof reserva === 'string' ? reserva : '')) }} />;
+  }
+  const marcaEscrit = () => {
+    if (entrada.current) entrada.current.escrit = true;
+  };
+  const canvia = (valor) => {
+    marcaEscrit();
+    onChange?.(valor);
+  };
   /* P0-58 · Enganxar: text pla d'una línia, sense cap etiqueta ni imatge.
      Amb `onEnganxaBloc` (només el títol d'una nota, DocumentEditor) i el camp
      buit, el document enganxat es pot repartir: el pare torna { titol } (el
      que va al camp; '' si no hi va res) o null (l'enganxat d'una línia). */
   const enganxa = (e) => {
+    marcaEscrit();
     const dades = e.clipboardData;
     if (!dades) return;
     e.preventDefault();
@@ -282,37 +314,44 @@ export function EditableField({ html, placeholder, onChange, onBlur, className, 
         repartit = null;
       }
       if (repartit) {
-        inserixAlCamp(camp, unaLinia(normalitzaText(repartit.titol)), onChange);
+        inserixAlCamp(camp, unaLinia(normalitzaText(repartit.titol)), canvia);
         return;
       }
     }
-    inserixAlCamp(camp, unaLinia(textPlaDelPortaretalls(porta)), onChange);
+    inserixAlCamp(camp, unaLinia(textPlaDelPortaretalls(porta)), canvia);
   };
   const deixaAnar = (e) => {
     if (arrossegantDins.current) return;
+    marcaEscrit();
     const dades = e.dataTransfer;
     if (!dades) return;
     e.preventDefault();
-    inserixAlCamp(e.currentTarget, unaLinia(textPlaDelPortaretalls(delPortaretalls(dades))), onChange, { x: e.clientX, y: e.clientY });
+    inserixAlCamp(e.currentTarget, unaLinia(textPlaDelPortaretalls(delPortaretalls(dades))), canvia, { x: e.clientX, y: e.clientY });
   };
   return (
     <span
       className={className}
       contentEditable
       suppressContentEditableWarning
-      onFocus={() => setEnfocat(true)}
+      onFocus={(e) => {
+        entrada.current = { valor: valorDelCamp(e.currentTarget.innerHTML), escrit: false };
+        setEnfocat(true);
+      }}
       onPaste={enganxa}
       onDrop={deixaAnar}
       onDragStart={() => { arrossegantDins.current = true; }}
       onDragEnd={() => { arrossegantDins.current = false; }}
-      onInput={(e) => onChange?.(valorDelCamp(e.currentTarget.innerHTML))}
+      onInput={(e) => canvia(valorDelCamp(e.currentTarget.innerHTML))}
       onBlur={(e) => {
         const valor = valorDelCamp(e.currentTarget.innerHTML);
+        // AH-02 · Entrar i eixir sense escriure ni canviar res: només s'ha llegit.
+        const intacte = Boolean(entrada.current) && !entrada.current.escrit && entrada.current.valor === valor;
+        entrada.current = null;
         // Buit de veres (sense el <br> que deixa el navegador): així el
         // placeholder ix amb :empty, sense dependre de :has().
         if (!valor) e.currentTarget.replaceChildren();
         setEnfocat(false);
-        onBlur?.(valor);
+        if (!intacte) onBlur?.(valor);
       }}
       data-placeholder={placeholder}
       dangerouslySetInnerHTML={{ __html: sanitizeHtml(mostrat || '') }}
@@ -554,6 +593,17 @@ export function UniversalEditorShell({
      el reparteix entre el títol, el subtítol, l'entradilla i el cos. Es
      desestructura ací perquè no passe per ...rest a la UniversalPage. */
   onEnganxaDocument = null,
+  /* AH-02 (Onada R21; pla 261112_1430: «títol/cos seleccionables en repòs +
+     clic Editar») · Opcionals, i sense elles el DOM de sempre (el Perfil i el
+     catàleg no en passen cap). Amb `enRepos` i `onEdita` alhora, el títol, el
+     subtítol i l'entradilla es pinten com a text del document (EditableField
+     amb `editable` fals: es seleccionen i es copien, però un clic o un toc no
+     hi posa cap cursor), i a la ranura despresAutoria, damunt de l'H1, ix el
+     botó «Editar» (el bloc d'accions canònic, .sdp-accions). El clic avisa el
+     pare (`onEdita`), que torna la closca a l'edició, i porta el focus al
+     títol. El cos (TipTap) el posa en lectura el pare (DocumentEditor). */
+  enRepos = false,
+  onEdita = null,
   classificacio,
   copyright,
   onCanviaCopyright,
@@ -630,6 +680,17 @@ export function UniversalEditorShell({
   const executaAccioDeCamp = useCallback((camp, accio) => {
     accio.onClick?.();
     if (DESTINS_FOCUS[camp]) setCampAEnfocar(camp);
+  }, []);
+
+  /* AH-02 · «Editar»: el pare torna la closca a l'edició i, en el mateix
+     pintat (React agrupa els dos estats del clic), el focus va al títol, que
+     ja és editable quan l'efecte de campAEnfocar l'enfoca. */
+  const repos = enRepos === true && typeof onEdita === 'function';
+  const onEditaRef = useRef(onEdita);
+  onEditaRef.current = onEdita;
+  const editaDesDelRepos = useCallback(() => {
+    onEditaRef.current?.();
+    setCampAEnfocar('title');
   }, []);
 
   /* O4-CLAUDE-1 · Anar al bloc «On es publica?» (l'entrada ?ambit= del Bloc o
@@ -757,6 +818,13 @@ export function UniversalEditorShell({
     ...(onCanviaCopyright !== undefined ? { onCanviaCopyright } : null),
   };
   const desplegableDalt = edicioAvancada && posicioEdicioAvancada !== 'cos';
+  const botoEditar = repos ? (
+    <div className="sdp-accions">
+      <Boto varietat="secundari" icona={SquarePen} onClick={editaDesDelRepos}>
+        {tradueix(t, TEXTOS_CLOSCA.editaText)}
+      </Boto>
+    </div>
+  ) : null;
   const desplegableRef = useRef(null);
   const resumDesplegableRef = useRef(null);
   const etiquetaEdicioAvancada = tradueix(t, TEXTOS_CLOSCA.edicioAvancada);
@@ -832,10 +900,15 @@ export function UniversalEditorShell({
             /* P1-58 · Amb 'despres-autoria', el desplegable va a la ranura de
                PageFrame (davall de la barra taronja); després de ...rest: és
                de la closca. */
-            {...(visibilitatEnLinia || desplegableDalt ? {
-              despresAutoria: visibilitatEnLinia && desplegableDalt
-                ? <>{visibilitatEnLinia}{desplegable}</>
-                : (visibilitatEnLinia || desplegable)
+            /* AH-02 · En repòs, «Editar» va l'últim de la ranura, just damunt
+               de l'H1. Amb el panell i el desplegable, les dues primeres
+               posicions no canvien en eixir del repòs: no es remunten. */
+            {...(visibilitatEnLinia || desplegableDalt || botoEditar ? {
+              despresAutoria: botoEditar
+                ? <>{visibilitatEnLinia}{desplegableDalt ? desplegable : null}{botoEditar}</>
+                : (visibilitatEnLinia && desplegableDalt
+                  ? <>{visibilitatEnLinia}{desplegable}</>
+                  : (visibilitatEnLinia || desplegable))
             } : null)}
             /* T36 · després de ...rest: cap adaptador (Notes, Perfil) ho desfà.
                T7 · Cap avís en línia davall de la barra blava (tampoc d'un
@@ -869,6 +942,13 @@ export function UniversalEditorShell({
               emoticona,
               onObriEmoticona
             }}
+            /* Gauntlet R21 (ui_fase2-02) · En repòs es pinta la lectura: un
+               títol buit diu el text de reserva de l'H1 (el placeholder de
+               l'edició, «Nota sense títol» al Bloc) com a text, i un subtítol
+               o una entradilla buits no es pinten (null: ni <h2> ni
+               <p class="lead"> buits, ni el marge de .page-intro), com la
+               lectura publicada. L'article de PageFrame conserva la posició de
+               cada fill: en eixir del repòs, el cos (TipTap) no es remunta. */
             title={
               <EditableField
                 key={`${id}-title`}
@@ -877,10 +957,12 @@ export function UniversalEditorShell({
                 placeholder={placeholderTitol || TEXTOS_LLAVOR.titol}
                 onChange={(val) => handleFieldChange('title', val)}
                 onBlur={(val) => handleFieldBlur('title', val)}
+                editable={!repos}
+                {...(repos ? { reserva: placeholderTitol || TEXTOS_LLAVOR.titol } : null)}
                 {...(typeof onEnganxaDocument === 'function' ? { onEnganxaBloc: onEnganxaDocument } : null)}
               />
             }
-            subtitle={
+            subtitle={repos && !valorDelCamp(subtitleHtml ?? '') ? null : (
               <EditableField
                 key={`${id}-subtitle`}
                 className="editor-subtitle-input"
@@ -888,9 +970,10 @@ export function UniversalEditorShell({
                 placeholder={TEXTOS_LLAVOR.subtitol}
                 onChange={(val) => handleFieldChange('subtitle', val)}
                 onBlur={(val) => handleFieldBlur('subtitle', val)}
+                editable={!repos}
               />
-            }
-            lead={
+            )}
+            lead={repos && !valorDelCamp(leadHtml ?? '') ? null : (
               <EditableField
                 key={`${id}-lead`}
                 className="editor-lead-input"
@@ -898,8 +981,9 @@ export function UniversalEditorShell({
                 placeholder={TEXTOS_LLAVOR.entradilla}
                 onChange={(val) => handleFieldChange('lead', val)}
                 onBlur={(val) => handleFieldBlur('lead', val)}
+                editable={!repos}
               />
-            }
+            )}
             /* Correcció de la revisió (261016; ordre del Mestre del Bloc 3.9.3:
                el que es configura a l'«Edició avançada», «per exemple […]
                assigna categories», «s'ubica al seu lloc visible real») · Les

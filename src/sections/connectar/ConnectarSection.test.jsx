@@ -380,7 +380,9 @@ test('T43 · tot el poble (remot amb sessió): connecta, no publica sol i diu qu
   /* T54 · el pas al Mur es fa al lector del MAS, amb el botó «Compartir al Mur»
      de la tira (ConnexioDetall). L'avís el nomena sencer: el «Compartir» a
      seques és el de la barra blava, que només envia l'enllaç de l'original. */
-  const avis = screen.getByText(/El Mur el llig la gent registrada del poble, no Internet/, { selector: '.sdp-alerta__text' });
+  /* D1 Opció A (decisió del Mestre, 261112) · el Mur el pot llegir qualsevol persona, també sense compte. */
+  const avis = screen.getByText(/El Mur el pot llegir qualsevol persona, també sense compte/, { selector: '.sdp-alerta__text' });
+  expect(avis.textContent).not.toMatch(/registrada|Internet/);
   expect(avis.textContent).toContain('prem «Compartir al Mur»');
   expect(avis.textContent).not.toContain('prem «Compartir»');
   /* Actualitzada a posta (261024 correccions): «a les teues notes», sense «MAS» (Gemini G2-02). */

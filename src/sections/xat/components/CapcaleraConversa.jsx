@@ -120,10 +120,17 @@ export default function CapcaleraConversa({
   }, []);
   const menuVisible = menuObert && !seleccio;
   useEffect(() => { if (seleccio && menuObert) setMenuObert(false); }, [seleccio, menuObert]);
+  /* P0-24b (T2c, prompt 261102_1532) · Mentre el menú és obert, és a la pila de
+     l'Arrere d'Android (config/pilaEnrere.js) amb el camí de l'Escape (ARB-T2B-04:
+     damunt de la selecció o de la resposta, l'Arrere el tanca a ell primer). */
+  const teCapaDamunt = useCapaEnrere(menuVisible, tancaMenu);
 
   /* El menú es tanca en clicar fora o amb Escape, sense tocar el cos del document.
      L'Escape que el tanca queda consumit (preventDefault): la selecció de
-     xats de la llista, que també l'escolta, no l'ha de rebre dos vegades. */
+     xats de la llista, que també l'escolta, no l'ha de rebre dos vegades.
+     P0-24b (Onada R21) · L'escolta és a l'arrel: un Escape ja consumit o amb
+     una capa damunt a la pila (un altre menú obert amb el teclat) no és seu;
+     abans un sol Escape tancava els dos menús. */
   useEffect(() => {
     if (!menuVisible) return undefined;
     const node = menuRef.current;
@@ -133,7 +140,7 @@ export default function CapcaleraConversa({
     const arrel = node?.getRootNode?.() || document;
     const tancaFora = (e) => { if (node && !node.contains(e.target)) setMenuObert(false); };
     const tancaEsc = (e) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape' || e.defaultPrevented || teCapaDamunt()) return;
       e.preventDefault();
       tancaMenu();
     };
@@ -143,11 +150,7 @@ export default function CapcaleraConversa({
       arrel.removeEventListener('pointerdown', tancaFora);
       arrel.removeEventListener('keydown', tancaEsc);
     };
-  }, [menuVisible, tancaMenu]);
-  /* P0-24b (T2c, prompt 261102_1532) · Mentre el menú és obert, és a la pila de
-     l'Arrere d'Android (config/pilaEnrere.js) amb el camí de l'Escape (ARB-T2B-04:
-     damunt de la selecció o de la resposta, l'Arrere el tanca a ell primer). */
-  useCapaEnrere(menuVisible, tancaMenu);
+  }, [menuVisible, tancaMenu, teCapaDamunt]);
   /* xat-ux-a11y-04 (T7a, 261104) · Les fletxes, Inici i Fi es mouen per les
      opcions; Tab tanca el menú i seguix des del «⋯», sense consumir-lo.
      L'Escape és de l'escolta de l'arrel, com fins ara. */

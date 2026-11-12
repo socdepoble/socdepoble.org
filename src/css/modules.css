@@ -4708,6 +4708,52 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-compositor__negreta:disabled { opacity: 0.5; cursor: default; }
   .sdp-xat-compositor__negreta:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  /* R21 (P0-36 / IDEA-154) · En arrel ultra-estreta (≤ 359 px, p. ex. 280 px),
+     les 4 dianes baixen al mínim tàctil de la casa (--sdp-touch-min, 44 px) i
+     el coixí exterior i la separació baixen a 4 px (--sdp-space-1): el camp
+     guanya 48 px d'amplària interior (de 30 px a 78 px) i el placeholder curt
+     («Escriu…» / «Escribe…») cap en una sola línia sense retallar-se ni
+     desbordar. Xarxa @supports not per al Baseline 2022 (Chrome/Firefox 100). */
+  @container sdp-arrel (max-width: 359px) {
+    .sdp-xat-compositor:not(.sdp-xat-compositor--avis) {
+      gap: var(--sdp-space-1);
+      padding-inline: var(--sdp-space-1);
+    }
+    .sdp-xat-compositor .sdp-xat-compositor__camp::after,
+    .sdp-xat-compositor .sdp-xat-compositor__textarea {
+      min-height: var(--sdp-touch-min);
+    }
+    .sdp-xat-compositor > .sdp-xat-compositor__adjunta,
+    .sdp-xat-compositor > .sdp-xat-compositor__envia,
+    .sdp-xat-compositor .sdp-xat-compositor__emojis,
+    .sdp-xat-compositor .sdp-xat-compositor__negreta {
+      width: var(--sdp-touch-min);
+      height: var(--sdp-touch-min);
+      min-width: var(--sdp-touch-min);
+      min-height: var(--sdp-touch-min);
+    }
+  }
+  @supports not (container-type: inline-size) {
+    @media (max-width: 359px) {
+      .sdp-xat-compositor:not(.sdp-xat-compositor--avis) {
+        gap: var(--sdp-space-1);
+        padding-inline: var(--sdp-space-1);
+      }
+      .sdp-xat-compositor .sdp-xat-compositor__camp::after,
+      .sdp-xat-compositor .sdp-xat-compositor__textarea {
+        min-height: var(--sdp-touch-min);
+      }
+      .sdp-xat-compositor > .sdp-xat-compositor__adjunta,
+      .sdp-xat-compositor > .sdp-xat-compositor__envia,
+      .sdp-xat-compositor .sdp-xat-compositor__emojis,
+      .sdp-xat-compositor .sdp-xat-compositor__negreta {
+        width: var(--sdp-touch-min);
+        height: var(--sdp-touch-min);
+        min-width: var(--sdp-touch-min);
+        min-height: var(--sdp-touch-min);
+      }
+    }
+  }
   /* La safata dels adjunts (bloc AdjuntXat, al final d'este full) només ocupa lloc mentre té feina:
      buida (sense --activa) col·lapsa a 0, sense coixí ni filet. Activa, la
      previsualització (o el rellotge) i Cancel·la van en una fila. */
@@ -9541,22 +9587,39 @@ details[open] summary.accordion-header svg:last-child {
     padding-block-end: var(--sdp-space-8);
   }
   .sdp-cerca__formulari { margin: 0; }
+  /* R21 (P0-48 / IDEA-179) · En escriptori, la fila de píndoles de filtre s'alinea
+     centrada dins la columna de lectura de 68ch (Pedra Seca). En arrel compacta
+     (≤ 720 px), passa a una sola fila desplaçable des de l'inici (flex-start)
+     perquè la primera píndola mai quede retallada. */
   .sdp-cerca__filtres {
-    justify-content: flex-start;
+    justify-content: center;
     margin: 0;
     border-radius: var(--sdp-radi-g);
   }
   .sdp-cerca__filtres .sdp-pindola__opcio { padding-inline: var(--sdp-space-3); }
   /* En mòbil, una sola fila que es desplaça dins de la píndola: les onze
      opcions no ocupen mitja pantalla i cap canvia de lloc. */
-  @media (max-width: 720px) {
+  @container sdp-arrel (max-width: 720px) {
     .sdp-cerca__filtres {
+      justify-content: flex-start;
       flex-wrap: nowrap;
       overflow-x: auto;
       overscroll-behavior-inline: contain;
       border-radius: var(--sdp-radi-boto);
     }
     .sdp-cerca__filtres .sdp-pindola__opcio { flex: none; }
+  }
+  @supports not (container-type: inline-size) {
+    @media (max-width: 720px) {
+      .sdp-cerca__filtres {
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        border-radius: var(--sdp-radi-boto);
+      }
+      .sdp-cerca__filtres .sdp-pindola__opcio { flex: none; }
+    }
   }
   .sdp-cerca__recompte { font-weight: 400; }
   .sdp-cerca__estat {
@@ -11101,7 +11164,6 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-fons-targeta);
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-g);
-    box-shadow: var(--sdp-ombra-1);
     text-align: start;
   }
 }
@@ -15777,11 +15839,11 @@ details[open] summary.accordion-header svg:last-child {
     padding: var(--sdp-space-3);
     border-top: 1px solid var(--sdp-crom-vora);
   }
+  /* R21 · T6 (lint_logica_usuari): un botó d'acció conserva el radi de .sdp-boto; el rectangle pur és de la navegació. */
   .sdp-cataleg-workspace__destins .sdp-boto {
     width: 100%;
     justify-content: center;
     text-align: center;
-    border-radius: 0;
   }
   .sdp-cataleg-workspace__destins .sdp-camp { margin-bottom: 0; width: 100%; }
   .sdp-cataleg-workspace__destins select { border-radius: 0; }
@@ -15925,6 +15987,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-subnav-pobles-gent__llista {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: var(--sdp-space-2);
     list-style: none;
     margin: 0;
@@ -15957,12 +16020,14 @@ details[open] summary.accordion-header svg:last-child {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: var(--sdp-space-3);
   }
 
   .sdp-directori-filtres__botons {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: var(--sdp-space-2);
   }
 

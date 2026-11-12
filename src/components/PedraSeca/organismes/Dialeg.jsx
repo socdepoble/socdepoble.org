@@ -113,16 +113,25 @@ function ContingutDialeg({
     if (local && obert) retorn.current = arrelModal.getRootNode().activeElement;
   }, [obert, local, arrelModal]);
 
+  /* P0-24 (G2120-07, marató 261101_2143) · L'Arrere d'Android tanca el diàleg
+     de dalt pel mateix camí que l'Escape (config/pilaEnrere.js). Fora de l'App
+     ningú no pregunta la pila.
+     P0-24b (Onada R21, verificació adversària) · En l'encastat, l'Escape de
+     modalLocal també la pregunta (teCapaDamunt): amb un menú obert dins del
+     diàleg, el primer Escape és del menú, com l'Arrere. A la SPA ja ho era: el
+     menú consumix el keydown i el <dialog> no rep cap «cancel». */
+  const teCapaDamunt = useCapaEnrere(obert, () => tancaRef.current?.('esc'));
+
   useLayoutEffect(() => {
     // Obrir abans dels efectes dels consumidors: el cercador de Nova
     // conversa ha de poder rebre focus quan el seu efecte s'execute.
     if (local && obert && ref.current) {
-      const tancaLocal = obriModalLocal(ref.current, (...args) => tancaRef.current?.(...args), retorn.current);
+      const tancaLocal = obriModalLocal(ref.current, (...args) => tancaRef.current?.(...args), retorn.current, teCapaDamunt);
       alObrirRef.current?.();
       avaluaBarraRef.current();
       return tancaLocal;
     }
-  }, [obert, local]);
+  }, [obert, local, teCapaDamunt]);
 
   useEffect(() => {
     const d = ref.current;
@@ -184,11 +193,6 @@ function ContingutDialeg({
       d.removeEventListener('close', onClose);
     };
   }, [local]);
-
-  /* P0-24 (G2120-07, marató 261101_2143) · L'Arrere d'Android tanca el diàleg
-     de dalt pel mateix camí que l'Escape (config/pilaEnrere.js). Fora de l'App
-     ningú no pregunta la pila. */
-  useCapaEnrere(obert, () => tancaRef.current?.('esc'));
 
   const onClickVel = (e) => {
     if (tancaEnVel && e.target === ref.current) onTanca?.('vel');

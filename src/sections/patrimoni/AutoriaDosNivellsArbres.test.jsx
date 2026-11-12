@@ -7,6 +7,8 @@
      Cultural «Fins rebentar com Sangonereta» (COPYRIGHT_QUE_DINEM), mai dins del TextSection de Sóc de Poble i amb URL pròpia
      /page/:slug/:itemSlug + BarraBlava visible per a compartir-les i SEO dinàmic. */
 import { webcrypto } from 'node:crypto';
+import { readdirSync, readFileSync } from 'node:fs';
+import { resolve, sep } from 'node:path';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -92,6 +94,20 @@ describe('P0-115 + P0-117 · Llei d’Autoria de Dos Nivells i URLs compartibles
     expect(DRETS_CATALEG_ARBRES).toContain('Pedro Ferrer Rodriguez');
     expect(DRETS_CATALEG_ARBRES).toContain('El Rentonar');
     expect(COPYRIGHT_SDP).not.toMatch(/Rentonar|Pedro Ferrer|Sangonereta/);
+  });
+
+  /* D3 del Mestre (acta 261112_1400) · Gauntlet R21 (regressio_commit1-04) · L'autor de l'estudi tècnic del catàleg
+     s'escriu «Rodriguez», com a la pàgina 619 de WordPress i a actaRentonar.js. Cap fitxer de producció de src no pot
+     escriure «Ferrer Rodríguez», fora de les dues fonts de src/data que encara no han rebut D3: quan s'hi aplique, la
+     llista s'ha de buidar i la prova ho exigix. */
+  const GRAFIA_PENDENT_A_DADES = ['data/importacio/catalegArbresRentonarWp.js', 'data/patrimoni/revisionsArbresCief.js'];
+  test('D3 · cap fitxer de producció escriu «Ferrer Rodríguez» fora de les fonts de dades pendents', () => {
+    const arrel = resolve('src');
+    const ambAccent = readdirSync(arrel, { recursive: true })
+      .map((f) => String(f).split(sep).join('/'))
+      .filter((f) => /\.(?:js|jsx|mjs)$/.test(f) && !f.includes('.test.'))
+      .filter((f) => readFileSync(resolve(arrel, f), 'utf8').includes('Ferrer Rodríguez'));
+    expect(ambAccent.sort()).toEqual(GRAFIA_PENDENT_A_DADES);
   });
 
   test('nivell 1 · el text d’entrada d’arbres presenta l’acollida multipoble en 5 llengües sense prometre cap formulari', () => {

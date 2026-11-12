@@ -57,7 +57,7 @@ describe('en anglés', () => {
     const { container } = render(<PageFrame chrome="full" title="Notícia" traduccio={false}><p>Text.</p></PageFrame>);
     /* T7 · P1-22 (261101) · El botó també es diu en anglés. */
     fireEvent.click(container.querySelector('header.bar-blue button[aria-label="Translate"]'));
-    expect(mocks.toast).toHaveBeenCalledWith('This page is not translated: what it shows never leaves this device.');
+    expect(mocks.toast).toHaveBeenCalledWith('This page is not translated: what it shows is not sent to the translation service.');
   });
 });
 

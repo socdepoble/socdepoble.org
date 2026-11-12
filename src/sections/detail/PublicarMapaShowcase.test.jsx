@@ -89,7 +89,9 @@ describe('P0-110 · /page/publicar_mapa amb MapaFotografic lazyRoute, UniversalC
     // La UniversalCard d'exemple porta l'autoria Associació El Rentonar (mai Sóc de Poble com autora del catàleg) i SquareBadge geo
     const exemple = await screen.findByRole('region', { name: /Exemple real de fitxa publicada al Mapa del poble/i });
     expect(exemple.textContent).toContain('Associació El Rentonar');
-    expect(exemple.textContent).toContain('Pedro Ferrer Rodríguez');
+    // D3 del Mestre (acta 261112_1400) · La grafia de la font primària WP 619, la mateixa al subtítol i als drets.
+    expect(exemple.textContent).toContain('Pedro Ferrer Rodriguez');
+    expect(exemple.textContent).not.toContain('Rodríguez');
 
     const botoGeo = screen.getByRole('button', { name: /Vore al mapa:.*Llorer de Villa María/i });
     fireEvent.click(botoGeo);

@@ -68,7 +68,7 @@ describe('Ronda 21 · identitatFederadaRelMe (Fase B Estudi Doctoral Mastodon + 
       'socdepoble@socdepoble.org'
     );
     expect(DESCRIPTOR_IDENTITAT_INSTITUCIONAL_SOCDEPOBLE.carpetaArrelMirallWorkspace).toBe(
-      'Sóc de Poble · Mirall Sobirà Node 0/'
+      'Sóc de Poble · Mirall Comunitari Node 0/'
     );
     expect(pontOficial.requereixConformitatHumana).toBe(true);
     expect(pontOficial.excloureMercatComercial).toBe(true);

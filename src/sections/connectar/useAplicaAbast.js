@@ -36,7 +36,7 @@ import { aplicatDe, passosDAplicacio } from './abastConnexio.js';
 
 /* P1-22 · Parells [clau, reserva]; la reserva és el text d'abans, lletra per lletra. */
 const DETALLS = Object.freeze({
-  murPendent: Object.freeze(['section.connectar.resum.murPendent', 'Obri la connexió a les teues notes i prem «Compartir al Mur»: la veurà la gent registrada del poble, no Internet.']),
+  murPendent: Object.freeze(['section.connectar.resum.murPendent', 'Obri la connexió a les teues notes i prem «Compartir al Mur»: al Mur la podrà llegir qualsevol persona, també sense compte.']),
   senseConversa: Object.freeze(['section.connectar.resum.senseConversa', 'No s’ha pogut obrir la conversa.']),
   enviat: Object.freeze(['section.connectar.resum.enviat', 'Enviat per xat.']),
   noEnviat: Object.freeze(['section.connectar.resum.noEnviat', 'No s’ha enviat. El trobaràs al xat per a tornar-ho a provar.']),

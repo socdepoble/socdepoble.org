@@ -18,7 +18,7 @@ const CASOS = [
     { clau: 'g1', nom: 'Comissió de Festes', estat: 'fet', detall: 'Enviat per xat.' },
     { clau: 'g2', nom: 'La Torre', estat: 'error', detall: 'No s’ha enviat. El trobaràs al xat per a tornar-ho a provar.' }]],
   ['Tot el poble: falta un pas', [MAS,
-    { clau: 'mur', nom: 'El teu mur', estat: 'pendent', detall: 'Obri la connexió a les teues notes i prem «Compartir al Mur»: la veurà la gent registrada del poble, no Internet.' }]]
+    { clau: 'mur', nom: 'El teu mur', estat: 'pendent', detall: 'Obri la connexió a les teues notes i prem «Compartir al Mur»: al Mur la podrà llegir qualsevol persona, també sense compte.' }]]
 ];
 const GRUPS = [{ id: 'g1', nom: 'Comissió de Festes' }];
 
@@ -27,7 +27,7 @@ export default function EspecimenResumConnexio() {
     <>
     <Llinatge id="resum-connexio" />
     <Especimen id="resum-connexio" nom="ResumConnexio · qui ho pot vore i què s’ha fet" fitxer="src/sections/connectar/ResumConnexio.jsx"
-      descripcio="Connectar crea sempre una nota privada a les notes de la persona, a la Safata d’Entrada si no se’n tria una altra carpeta. «Qui ho pot vore?» és una tria honesta: Privada, Persones concretes i Grups de xat (l’enllaç s’envia per xat: és un missatge, no un permís) i Tot el poble (no ix sola: es compartix al Mur des de la connexió, a les notes, amb «Compartir al Mur»; la llig la gent registrada del poble, no Internet). Després de connectar, el resum diu fila per fila què s’ha fet."
+      descripcio="Connectar crea sempre una nota privada a les notes de la persona, a la Safata d’Entrada si no se’n tria una altra carpeta. «Qui ho pot vore?» és una tria honesta: Privada, Persones concretes i Grups de xat (l’enllaç s’envia per xat: és un missatge, no un permís) i Tot el poble (no ix sola: es compartix al Mur des de la connexió, a les notes, amb «Compartir al Mur»; al Mur la pot llegir qualsevol persona, també sense compte). Després de connectar, el resum diu fila per fila què s’ha fet."
       contracte={[
         ['resultats', "[{ clau, nom, estat: 'fet' | 'error' | 'pendent', detall? }]", '[]', 'Una fila per destinatari. La primera sol ser «Les teues notes».'],
         ['titol', 'string', 'segons el pitjor estat', "Si no ve: «Connectat», «Connectat, però no tot s’ha enviat» o «Connectat: et falta un pas»."],
@@ -35,7 +35,7 @@ export default function EspecimenResumConnexio() {
         ['opcionsDAbast({ dataMode, teSessio, grups })', 'funció pura', '—', 'Les quatre opcions de GrupOpcions amb el motiu de les desactivades.'],
       ]}
       a11y={['L’Alerta és role="status": s’anuncia sense interrompre.', 'L’estat de cada fila es llig en text («Fet», «No enviat», «Pendent»); la icona és decorativa (aria-hidden).', 'Una opció desactivada diu per què en el seu detall, que forma part de la descripció del ràdio.']}
-      fes={['Dir què és un enviament (un missatge de xat) i què no és (un permís sobre la nota).', 'Dir qui veu el Mur: la gent registrada del poble, no Internet.', 'Enviar en sèrie i donar un resultat per destinatari.']}
+      fes={['Dir què és un enviament (un missatge de xat) i què no és (un permís sobre la nota).', 'Dir qui pot llegir el Mur: qualsevol persona, també sense compte.', 'Enviar en sèrie i donar un resultat per destinatari.']}
       noFacis={['Prometre «Pública per a tothom» sense servidor que ho aplique.', 'Filtrar la visibilitat al client amb un camp del payload: qualsevol membre del poble el podria llegir.', 'Enviar a més de 20 persones o 10 grups d’un colp.']}>
 
       <h4>Qui ho pot vore? (remot, amb sessió)</h4>

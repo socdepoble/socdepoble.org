@@ -140,8 +140,10 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
   const { ruta, params } = coincidencia;
   /* Onada R20 (deute /app/*) · El títol de la pàgina és el nom de l'app: una capçalera de primer nivell real per a
      qui navega per capçaleres, dins de la canònica header.page-title i només per a lectors (.sdp-sr-only,
-     base.css), perquè la pantalla no canvia ni un píxel (Llei del Píxel). Abans cap vista de /app/* en portava. */
-  const capcalera = <header className="page-title sdp-sr-only"><h1>{titol}</h1></header>;
+     base.css), perquè la pantalla no canvia ni un píxel (Llei del Píxel). Abans cap vista de /app/* en portava.
+     Onada R21 (P0-76 / P0-77) · Si una àrea única ja pinta el seu propi header.page-title > h1 (CatalegWorkspace
+     amb DetallCataleg/PaginaApp), `titolPropi: true` evita emetre un segon h1 duplicat. */
+  const capcalera = ruta.titolPropi ? null : <header className="page-title sdp-sr-only"><h1>{titol}</h1></header>;
   /* Àrea única: cap AppGridShell, una regió amb el nom de l'app. */
   if (esRutaUnica(ruta)) {
     const { Unica } = ruta;

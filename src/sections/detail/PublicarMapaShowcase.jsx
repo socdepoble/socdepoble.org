@@ -21,11 +21,13 @@ import { obteSeriePatrimoni } from '../../data/patrimoni/seriesPatrimoni.js';
 import {
   AUTORIA_RENTONAR,
   AVATAR_RENTONAR,
-  COPYRIGHT_RENTONAR_ARBRES,
   ITEMS_CATALEG_ARBRES_RENTONAR_WP,
   MAPA_ARBRES_RENTONAR_PER_ARBRE_ID,
   RUTA_PERFIL_RENTONAR
 } from '../../data/importacio/catalegArbresRentonarWp.js';
+/* D3 del Mestre (acta 261112_1400) · Grafia «Rodriguez» (font primària WP 619): el subtítol i els drets de la targeta
+   d'exemple venen de la mateixa fulla que els drets de les 20 pàgines del llibre (DRETS_CATALEG_ARBRES). */
+import { AUTOR_ESTUDI_ARBRES, DRETS_CATALEG_ARBRES } from '../text/pageContent.dretsPatrimoni.js';
 
 const TEXTOS_EXEMPLE_5_LLENGUES = Object.freeze({
   ca: Object.freeze({
@@ -33,7 +35,7 @@ const TEXTOS_EXEMPLE_5_LLENGUES = Object.freeze({
     titolBloc: 'Exemple real de fitxa publicada al Mapa del poble',
     explicacio: 'Quan publiques un punt d’interés, una font, un camí o un arbre singular des del Bloc de Notes amb l’àmbit Mapa, la targeta mostra automàticament el quadrat verd d’ubicació (128×128 px) per obrir-lo amb un sol toc al Mapa del territori.',
     cardTitle: 'Llorer de Villa María · Laurus nobilis',
-    cardSubtitle: 'Arbre Emblemàtic d’Interés Local · Estudi tècnic: Pedro Ferrer Rodríguez',
+    cardSubtitle: `Arbre Emblemàtic d’Interés Local · Estudi tècnic: ${AUTOR_ESTUDI_ARBRES}`,
     cardBody: 'Exemplar monumental de llorer als jardins històrics de Villa María (La Torre de les Maçanes), protegit pel Ple municipal del 7 de setembre de 2007 a proposta de l’Associació El Rentonar.',
     etiqueta1: 'Mapa del territori',
     etiqueta2: 'Arbres emblemàtics'
@@ -43,7 +45,7 @@ const TEXTOS_EXEMPLE_5_LLENGUES = Object.freeze({
     titolBloc: 'Ejemplo real de ficha publicada en el Mapa del pueblo',
     explicacio: 'Cuando publicas un punto de interés, una fuente, un camino o un árbol singular desde el Bloc de Notas con el ámbito Mapa, la tarjeta muestra automáticamente el cuadrado verde de ubicación (128×128 px) para abrirlo con un solo toque en el Mapa del territorio.',
     cardTitle: 'Laurel de Villa María · Laurus nobilis',
-    cardSubtitle: 'Árbol Emblemático de Interés Local · Estudio técnico: Pedro Ferrer Rodríguez',
+    cardSubtitle: `Árbol Emblemático de Interés Local · Estudio técnico: ${AUTOR_ESTUDI_ARBRES}`,
     cardBody: 'Ejemplar monumental de laurel en los jardines históricos de Villa María (La Torre de les Maçanes), protegido por el Pleno municipal del 7 de septiembre de 2007 a propuesta de la Associació El Rentonar.',
     etiqueta1: 'Mapa del territorio',
     etiqueta2: 'Árboles emblemáticos'
@@ -53,7 +55,7 @@ const TEXTOS_EXEMPLE_5_LLENGUES = Object.freeze({
     titolBloc: 'Live example of a card published on the Village Map',
     explicacio: 'When you publish a landmark, spring, trail or heritage tree from the Notebook under the Map scope, the card automatically displays the 128×128 px green location badge so neighbours can jump straight to its exact spot on the territory map.',
     cardTitle: 'Villa María Bay Laurel · Laurus nobilis',
-    cardSubtitle: 'Local Heritage Tree · Technical study: Pedro Ferrer Rodríguez',
+    cardSubtitle: `Local Heritage Tree · Technical study: ${AUTOR_ESTUDI_ARBRES}`,
     cardBody: 'Monumental bay laurel standing in the historic Villa María gardens (La Torre de les Maçanes), protected by the Municipal Council on 7 September 2007 at the proposal of Associació El Rentonar.',
     etiqueta1: 'Territory map',
     etiqueta2: 'Heritage trees'
@@ -63,7 +65,7 @@ const TEXTOS_EXEMPLE_5_LLENGUES = Object.freeze({
     titolBloc: 'Exemplo real de ficha publicada no Mapa da vila',
     explicacio: 'Cando publicas un punto de interese, unha fonte, un camiño ou unha árbore senlleira dende o Bloc de Notas co ámbito Mapa, a tarxeta amosa automaticamente o cadrado verde de localización (128×128 px) para abrilo cun só toque no Mapa do territorio.',
     cardTitle: 'Loureiro de Villa María · Laurus nobilis',
-    cardSubtitle: 'Árbore Emblemática de Interese Local · Estudo técnico: Pedro Ferrer Rodríguez',
+    cardSubtitle: `Árbore Emblemática de Interese Local · Estudo técnico: ${AUTOR_ESTUDI_ARBRES}`,
     cardBody: 'Exemplar monumental de loureiro nos xardíns históricos de Villa María (La Torre de les Maçanes), protexido polo Pleno municipal do 7 de setembro de 2007 por proposta da Associació El Rentonar.',
     etiqueta1: 'Mapa do territorio',
     etiqueta2: 'Árbores senlleiras'
@@ -73,7 +75,7 @@ const TEXTOS_EXEMPLE_5_LLENGUES = Object.freeze({
     titolBloc: 'Herriko Mapan argitaratutako fitxa baten adibide erreala',
     explicacio: 'Ohar-bloketik Mapa esparruarekin interesgune bat, iturri bat, bide bat edo zuhaitz berezi bat argitaratzen duzunean, txartelak automatikoki erakusten du kokapen-lauki berdea (128×128 px) lurraldeko mapan ukitu bakarrarekin irekitzeko.',
     cardTitle: 'Villa Maríako Erramua · Laurus nobilis',
-    cardSubtitle: 'Tokiko Intereseko Zuhaitz Enblematikoa · Azterlan teknikoa: Pedro Ferrer Rodríguez',
+    cardSubtitle: `Tokiko Intereseko Zuhaitz Enblematikoa · Azterlan teknikoa: ${AUTOR_ESTUDI_ARBRES}`,
     cardBody: 'Villa Maríako lorategi historikoetako erramu monumentala (La Torre de les Maçanes), Udalbatzak 2007ko irailaren 7an babestua Associació El Rentonar elkartearen proposamenez.',
     etiqueta1: 'Lurraldeko mapa',
     etiqueta2: 'Zuhaitz bereziak'
@@ -153,7 +155,7 @@ export function PublicarMapaExempleShowcase() {
           subtitle={textos.cardSubtitle}
           body={textos.cardBody}
           mainHref="/page/arbres-monumentals?item=arbre-10-llorer-de-villa-maria"
-          copyright={COPYRIGHT_RENTONAR_ARBRES}
+          copyright={DRETS_CATALEG_ARBRES}
           labels={[
             { text: textos.etiqueta1, href: '/mapa' },
             { text: textos.etiqueta2, href: serieArbres?.rutaApp || '/page/arbres-monumentals' }

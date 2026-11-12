@@ -7,9 +7,9 @@ import { paramsDeLaNota } from '../notes/modeDesa.js';
 import FitxaDadesDoctoralsArbre from './FitxaDadesDoctoralsArbre.jsx';
 import {
   AUTORIA_RENTONAR,
-  ESTUDI_TECNIC_RENTONAR,
   obteCoordenadesArbreSingular
 } from '../../data/importacio/catalegArbresRentonarWp.js';
+import { AUTOR_ESTUDI_ARBRES } from '../text/pageContent.dretsPatrimoni.js';
 import {
   FONT_XYLELLA_CIPRERET_2024,
   LLICENCIA_CATALEG_ARBRES,
@@ -157,7 +157,7 @@ function FitxaArbreArxiuLaTorre({
           </p>
           <p className="sdp-muted">
             Autoria i custòdia: <strong>{AUTORIA_RENTONAR}</strong> · Estudi tècnic i catalogació base:{' '}
-            <strong>{ESTUDI_TECNIC_RENTONAR}</strong>
+            <strong>{AUTOR_ESTUDI_ARBRES}</strong>
           </p>
         </div>
         <div className="sdp-arbre-fitxa__accions">
@@ -275,7 +275,7 @@ function FitxaArbreArxiuLaTorre({
                 loading="lazy"
               />
               <figcaption className="sdp-arbre-comparador__peu">
-                <strong> maig 2007 · Catalogació base:</strong> {arbre.nom} (Pedro Ferrer Rodríguez · Associació El Rentonar).
+                <strong> maig 2007 · Catalogació base:</strong> {arbre.nom} ({AUTOR_ESTUDI_ARBRES} · Associació El Rentonar).
               </figcaption>
             </figure>
 

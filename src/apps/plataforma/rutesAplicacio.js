@@ -100,6 +100,9 @@ function errorsDeColumnes(ruta, on) {
   const errors = [];
   if (esRutaUnica(ruta)) {
     if (!esComponent(ruta.Unica)) errors.push(`${on}: Unica no és cap component`);
+    if (ruta.titolPropi !== undefined && typeof ruta.titolPropi !== 'boolean') {
+      errors.push(`${on}: titolPropi ha de ser booleà`);
+    }
     const sobrants = CLAUS_DE_COLUMNES.filter((clau) => ruta[clau] !== undefined);
     if (sobrants.length) {
       errors.push(`${on}: amb Unica no hi pot haver Mig, Detall, Esquerra ni estret (porta ${sobrants.join(', ')})`);

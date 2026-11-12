@@ -148,7 +148,10 @@ export function useUniversalRichText({
   /* FASE 4. Extensions que injecta el host. L'editor base no engreixa
      si ningú les demana. */
   extensions = [],
-  seedContent = null
+  seedContent = null,
+  /* AH-02 (Onada R21) · Fals: el cos en lectura (DocumentEditor · obriEnRepos).
+     Per defecte, editable com sempre. */
+  editable = true
 }) {
   const timeoutRef = useRef(null);
   const pendingSaveRef = useRef({ id: null, content: null });
@@ -219,6 +222,9 @@ export function useUniversalRichText({
   const editor = useEditor({
     extensions: totesLesExtensions,
     content: content,
+    /* AH-02 · L'editor naix ja en lectura si el document s'obri en repòs:
+       cap fotograma editable abans de l'efecte de davall. */
+    editable,
     /* Correcció de la revisió (261016) · Cada editor nou (també quan es
        refà) apunta a la ref de les llavors: buidaLlavorVerge les hi troba. */
     onBeforeCreate: ({ editor }) => {
@@ -304,6 +310,15 @@ export function useUniversalRichText({
       console.warn('[Editor] No s’ha pogut sincronitzar el cos:', err);
     }
   }, [content, editor, id]);
+
+  /* AH-02 (Onada R21) · Repòs ⇄ edició sense refer l'editor (useEditor
+     conserva l'editabilitat viva en refrescar les opcions). Sense emetre
+     l'actualització: canviar de mode no és cap canvi del cos i no ha de
+     programar cap desat (setEditable l'emet per defecte). */
+  useEffect(() => {
+    if (!editor || editor.isDestroyed || editor.isEditable === editable) return;
+    editor.setEditable(editable, false);
+  }, [editor, editable]);
 
   // Global exit hooks (pagehide, visibilitychange)
   useEffect(() => {

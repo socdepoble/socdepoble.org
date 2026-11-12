@@ -24,7 +24,7 @@
  *   · T43 (ordre del Mestre, 260928) · «Qui ho pot vore?» és una tria honesta
  *     (abastConnexio.js): Privada, Persones concretes i Grups (enviaments per
  *     xat, que no són permisos) i Tot el poble (compartir-la al Mur des del
- *     lector del MAS, T54: la gent registrada del poble, no Internet). La
+ *     lector del MAS, T54; D1 Opció A, 261112: qualsevol persona). La
  *     tria es desa a origen.abast i el resultat es mostra per destinatari
  *     (ResumConnexio).
  *   · T43 · D6: la connexió és sempre personal, encara que s'actue com a
@@ -999,7 +999,7 @@ function ConnectarElementIntern() {
               quin és el pas. */}
           {mode === 'poble' ? (
             <Alerta to="info" titol={t('section.connectar.poble.titol', 'Compartir al Mur, un pas més')}>
-              {t('section.connectar.poble.text', 'La tria queda amb la connexió, però el Mur no la rep sola: obri-la a les teues notes i prem «Compartir al Mur». El Mur el llig la gent registrada del poble, no Internet.')}
+              {t('section.connectar.poble.text', 'La tria queda amb la connexió, però el Mur no la rep sola: obri-la a les teues notes i prem «Compartir al Mur». El Mur el pot llegir qualsevol persona, també sense compte.')}
             </Alerta>
           ) : null}
         </section>

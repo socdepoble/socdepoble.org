@@ -28,7 +28,7 @@ test.each([
   expect(perValor(opcions).privada.desactivada).toBeFalsy();
 });
 
-test('els textos no prometen cap permís: Privada, missatges de xat i «no Internet»', () => {
+test('els textos no prometen cap permís: Privada, missatges de xat i el Mur, que el pot llegir qualsevol persona (D1 Opció A)', () => {
   const opcions = perValor(opcionsDAbast({ dataMode: 'remote', teSessio: true, grups: GRUPS }));
   /* D1 (ordre del Mestre, 260930) · el verb és connectar: «Es guarda» passa a «Queda». */
   /* Actualitzada a posta (261024 correccions): directiva del Mestre 15:05 (Gemini G2-02), cap «MAS» a la interfície. */
@@ -41,7 +41,9 @@ test('els textos no prometen cap permís: Privada, missatges de xat i «no Inter
     }
   }
   expect(opcions.grups.ajuda).toContain('És un missatge, no un permís');
-  expect(opcions.poble.ajuda).toContain('la gent registrada del poble, no Internet');
+  /* D1 Opció A (decisió del Mestre, 261112) · el Mur el pot llegir qualsevol persona, també sense compte. */
+  expect(opcions.poble.ajuda).toContain('Al Mur la pot llegir qualsevol persona, també sense compte.');
+  expect(opcions.poble.ajuda).not.toMatch(/registrada|Internet/);
   const seed = perValor(opcionsDAbast({ dataMode: 'seed', teSessio: true, grups: GRUPS }));
   expect(seed.poble.detall).toBe('Sense servidor no es pot compartir al Mur.');
   expect(seed.privada.detall).toContain('només en este dispositiu');

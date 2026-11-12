@@ -294,3 +294,28 @@ describe('una app externa (custom element)', () => {
     expect(window.history.length).toBe(llarg + 1);
   });
 });
+
+describe('Onada R21 · títol de primer nivell del Lector', () => {
+  test('sense ?article=, RutaApps emet un sol h1 sr-only; amb ?article=, el deixa a PaginaApp', async () => {
+    const registre = creaRegistre({
+      internes: [manifestDeProva({
+        id: 'lector',
+        titol: { ca: 'Lector de notícies', es: 'Lector de noticias' },
+        icona: 'BookOpen',
+        entradaPerDefecte: 'noticies',
+        entrades: [{ slug: 'noticies', titol: { ca: 'Notícies', es: 'Noticias' }, icona: 'Inbox' }],
+        carrega: () => Promise.resolve({ default: () => <p>Espai del lector</p> })
+      })]
+    });
+    muntaPlataforma('/app/lector/noticies', { registre });
+    expect(await screen.findByText('Espai del lector')).toBeTruthy();
+    const titols = screen.getAllByRole('heading', { level: 1 });
+    expect(titols.map((h) => h.textContent)).toEqual(['Lector de notícies']);
+    expect(titols[0].parentElement.className).toBe('page-title sdp-sr-only');
+
+    cleanup();
+    muntaPlataforma('/app/lector/noticies?article=art-1', { registre });
+    expect(await screen.findByText('Espai del lector')).toBeTruthy();
+    expect(screen.queryAllByRole('heading', { level: 1 })).toEqual([]);
+  });
+});

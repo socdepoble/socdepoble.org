@@ -201,11 +201,14 @@ export const GuiaCos = Extension.create({
         },
         props: {
           /* El cos és un camp de text de diverses línies amb nom; mentre es
-             veu la guia, el seu aria-placeholder la resumix (la guia és muda). */
+             veu la guia, el seu aria-placeholder la resumix (la guia és muda).
+             AH-02 (Onada R21) · En lectura (el repòs del Bloc), el camp ho
+             diu: aria-readonly, com el contenteditable="false" del motor. */
           attributes: (state) => ({
             role: 'textbox',
             'aria-multiline': 'true',
             ...(etiqueta ? { 'aria-label': etiqueta } : {}),
+            ...(editor && !editor.isEditable ? { 'aria-readonly': 'true' } : {}),
             ...(resum && visible(state) ? { 'aria-placeholder': resum } : {})
           }),
           decorations(state) {

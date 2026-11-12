@@ -28,8 +28,9 @@
  * `contacte` (treball) és privat: mai entra a textCercable ni a resumDeFitxa.
  * idea61-05 (Gauntlet T7a, 261104) · `privat` vol dir fora de l'índex de cerca
  * i del resum de la targeta, NO secret: la fitxa de lectura del detall el
- * mostra a qui pot llegir la fila (la gent del poble, RLS is_town_member),
- * perquè la fitxa és per a contactar, i el formulari (BlocAmbit) ho avisa.
+ * mostra a qui pot llegir la fila (amb la política 2611112005, qualsevol
+ * persona, també sense compte), perquè la fitxa és per a contactar, i el
+ * formulari (BlocAmbit) ho avisa.
  *
  * JS PUR: cap React, cap xarxa, cap rellotge. L'única importació és
  * netejaText (utils/sanitize.js). Cap funció llança: tornen valors.

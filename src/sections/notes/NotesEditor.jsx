@@ -35,7 +35,7 @@ import { carpetesCreades, creaCarpetaCreada, useCarpetesCreades } from '../../co
 import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, modeDeDadesResolt, signaturaDeNota } from './autoriaNota.js';
-import { TITOL_NOTA_PREPARADA, useNotaPreparadaDelBloc } from './notaPreparada.js';
+import { TITOL_NOTA_PREPARADA, teContingut, useNotaPreparadaDelBloc } from './notaPreparada.js';
 import { GUIA_NOTA, LLAVORS_NOTA } from './llavorNota.js';
 import { NOTA_TUTORIAL } from './notaTutorial.js';
 import { proposaCard } from './proposaCard.js';
@@ -877,6 +877,19 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       labels: notaEnEdicio ? etiquetesDeNota(notaEnEdicio, noteFolders, SENSE_PARAMS) : [],
       emptyPlaceholder: t('section.notes.open', 'Obre un solc'),
       emptyDocument,
+      /* AH-02 (Onada R21; pla 261112_1430: «títol/cos seleccionables en
+         repòs + clic Editar») · Una nota de la persona que ja porta text
+         s'obri en repòs: es llig, se selecciona i es copia, i s'escriu
+         després de prémer «Editar» (DocumentEditor · obriEnRepos, decidit
+         una vegada per nota). La còpia de prova del Foraster (pla 260924_1710
+         §3.4: «la primera tecla ja edita») i la «Nota sense títol» preparada
+         (P4: es crea amb la primera tecla) s'obrin en edició, com una nota
+         sense text: no hi ha res a llegir. La plantilla vella del cos
+         (LLAVORS_NOTA) no compta com a text. */
+      obriEnRepos: Boolean(notaEnEdicio) && !esSandbox && !esPreparada && teContingut({
+        title: notaEnEdicio.title, subtitle: notaEnEdicio.subtitle,
+        lead: notaEnEdicio.lead, content: notaEnEdicio.content
+      }, LLAVORS_NOTA),
       /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre) · El placeholder de l'H1
          és exactament el títol de la targeta: «Nota sense títol». */
       placeholderTitol: TITOL_NOTA_PREPARADA,

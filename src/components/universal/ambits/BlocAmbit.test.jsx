@@ -360,12 +360,13 @@ test('el tercer argument d’onCanvia diu si les dades locals són vàlides: «6
 
 /* idea61-05 (Gauntlet T7a, 261104) · El camp «Com contactar» de Treball va
    marcat `privat` al contracte, que només vol dir fora de la targeta i de la
-   cerca: la fitxa de lectura del detall el mostra a la gent registrada del
-   poble (la fitxa és per a contactar). La previsualització l'amaga a posta, i
+   cerca: la fitxa de lectura del detall el mostra a qui pot llegir la fila,
+   hui qualsevol persona, també sense compte (política 2611112005; la fitxa
+   és per a contactar). La previsualització l'amaga a posta, i
    el formulari no ho deia: ara el camp porta una ajuda lligada per
    aria-describedby (amb l'error, si n'hi ha). Cap altre camp en porta. */
 test('idea61-05 · «Com contactar» diu qui el veurà (ajuda lligada al control, també amb l’error); cap altre camp porta ajuda', () => {
-  const AJUDA_CONTACTE = 'Ho veurà la gent registrada del poble en obrir la fitxa; no ix a la targeta ni a la cerca.';
+  const AJUDA_CONTACTE = 'Ho veurà qualsevol persona, també sense compte, en obrir la fitxa; no ix a la targeta ni a la cerca.';
   const crides = new Map();
   const traductor = (clau, reserva) => { crides.set(clau, reserva); return reserva; };
   const onCanvia = vi.fn();

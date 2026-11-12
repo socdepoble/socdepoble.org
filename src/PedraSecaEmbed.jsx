@@ -108,6 +108,7 @@ import { IdentitatProvider } from './app/contexts/IdentitatContext.jsx';
 import styles from './css/index.css?inline';
 import { PREFERENCIES_TEMA, aplicaContrast, readContrastPreference, readThemePreference, resolveContrast, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
+import { AmbitCapesEnrere } from './components/PedraSeca/hooks/useCapaEnrere.js';
 import { normalizeBackendConfig } from './config/backendConfig.js';
 import { getRuntimePolicy } from './config/runtimePolicy.js';
 import { normalitzaBase, triaRouter } from './app/contexts/politicaRouter.js';
@@ -378,14 +379,20 @@ export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, lang
     };
   }, [config, themeMode, language]);
 
+  /* P0-24b (Onada R21) · Cada instància és el seu àmbit de capes: dos
+     <soc-de-poble> en una pàgina comparteixen la pila de l'Arrere, i l'Escape
+     d'una no ha de mirar les capes obertes de l'altra (useCapaEnrere). Sense
+     element (la SPA de main.jsx), null: l'única instància. */
   const app = (
-    <UIProvider externalConfig={uiConfig}>
-      <SessionProvider config={config}>
-        <IdentitatProvider config={config}>
-          <App config={config} targetNode={targetNode} />
-        </IdentitatProvider>
-      </SessionProvider>
-    </UIProvider>
+    <AmbitCapesEnrere.Provider value={targetNode ?? null}>
+      <UIProvider externalConfig={uiConfig}>
+        <SessionProvider config={config}>
+          <IdentitatProvider config={config}>
+            <App config={config} targetNode={targetNode} />
+          </IdentitatProvider>
+        </SessionProvider>
+      </UIProvider>
+    </AmbitCapesEnrere.Provider>
   );
 
   return (

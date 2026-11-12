@@ -46,7 +46,10 @@ describe('layout.css', () => {
     const talls = [...css.matchAll(/max-width: (\d+)px\)/g)].map(([, n]) => Number(n));
     /* T4 (261004): les sis accions de la barra necessiten llevar el gap a
        400px. És un ajust de la barra, no un nou tall de les columnes. */
-    expect([...new Set(talls)].sort((a, b) => a - b)).toEqual([400, 480, estret]);
+    /* R21 (Carbon, P0-76/P0-77): a 359 px la barra negra ajusta dianes i coixí (sostre ultra-estret).
+       També és un ajust de la barra, no un tall de columnes: un sol bloc @container i el seu @media de reserva. */
+    expect([...new Set(talls)].sort((a, b) => a - b)).toEqual([359, 400, 480, estret]);
+    expect(vegades(css, 'max-width: 359px)')).toBe(2);
     const barra = ':where(.sdp-root.is-compact) nav.mobile-nav { gap: 0; padding-inline: 0; justify-content: space-evenly; }';
     expect(css).toContain(`@container sdp-arrel (max-width: 400px) { ${barra} }`);
     expect(css).toContain(`@supports not (container-type: inline-size) { @media (max-width: 400px) { ${barra} } }`);

@@ -39,7 +39,14 @@ function restaura(node, atribut, valor) {
   else node.setAttribute(atribut, valor);
 }
 
-export function obriModalLocal(dialeg, onTanca, retorn) {
+/* P0-24b (Onada R21, verificació adversària) · `teCapaDamunt` és el de
+   useCapaEnrere del Dialeg: cert si damunt d'ell hi ha una altra capa a la pila
+   de l'Arrere (un menú emergent obert dins del diàleg). Esta escolta és a
+   .sdp-root, més a prop del focus que la dels menús (a l'arrel ombra): sense
+   preguntar la pila, el primer Escape tancava el diàleg de sota i deixava el
+   menú de dalt obert dins de la capa amagada. Ara l'Escape és de la capa de
+   dalt, com l'Arrere. La pila pròpia d'ací continua manant el Tab i el focus. */
+export function obriModalLocal(dialeg, onTanca, retorn, teCapaDamunt) {
   const capa = dialeg.parentElement;
   const arrel = capa.parentElement;
   const shadow = dialeg.getRootNode();
@@ -78,6 +85,7 @@ export function obriModalLocal(dialeg, onTanca, retorn) {
   const alTeclat = e => {
     if (superior() !== entrada || e.defaultPrevented) return;
     if (e.key === 'Escape') {
+      if (teCapaDamunt?.()) return;
       e.preventDefault();
       onTanca('esc');
     } else if (e.key === 'Tab') {

@@ -213,7 +213,7 @@ function useToastOpcional() {
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
 const PARELL_SENSE_TRADUCCIO = Object.freeze([
   'pagina.senseTraduccio',
-  'Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.'
+  'Esta pàgina no es traduïx: el que mostra no s’envia al servei de traducció.'
 ]);
 
 /* Ordre del Mestre, 261004 · `imatgePrivada`: el filtre de les peces de les

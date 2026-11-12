@@ -77,7 +77,9 @@ test('tot el poble: un pas pendent, cap enviament ni registre automàtic', async
   const { resultats } = await aplica({ nota: NOTA, origen: ORIGEN, abast: { mode: 'poble' }, missatge: 'x' });
   expect(resultats).toHaveLength(1);
   expect(resultats[0]).toMatchObject({ tipus: 'mur', estat: 'pendent' });
-  expect(resultats[0].detall).toContain('no Internet');
+  /* D1 Opció A (decisió del Mestre, 261112) · el Mur el pot llegir qualsevol persona, també sense compte. */
+  expect(resultats[0].detall).toContain('al Mur la podrà llegir qualsevol persona, també sense compte');
+  expect(resultats[0].detall).not.toMatch(/registrada|Internet/);
   expect(mocks.send).not.toHaveBeenCalled();
   expect(mocks.update).not.toHaveBeenCalled();
 });

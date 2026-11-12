@@ -24,6 +24,25 @@
  * constants exportades de sempre conserven el nom i el valor, nascudes del
  * parell. Les frases amb buits s'omplin amb omple() (config/moderacio.js),
  * mai cosint trossos.
+ *
+ * D1 Opció A (decisió del Mestre, 261112) · El Mur del poble el pot llegir
+ * qualsevol persona, també sense compte: la política de lectura de
+ * section_submissions l'obri a anon des de 2611112005. Cap text no limita ja
+ * els lectors del Mur a qui té compte: darrere de cada explicació de publicar
+ * o compartir s'afig qui ho pot llegir (ambLecturaPublica). Hui anon llig la
+ * fila crua (owner_user_id i el payload, amb el contacte i la geolocalització
+ * de les fotos), i per això el text no diu què hi ix ni què no. Quan el carril
+ * SQL de Codex revoque eixe SELECT cru i servisca una versió pública filtrada
+ * (la RPC public.llig_mur_public: títol i text pla, poble i data),
+ * MUR_PUBLIC_FILTRAT es posarà a true en el mateix commit i el text dirà també
+ * què no hi ix mai («versioPublica»). La prova d'acoblament
+ * (config/i18n.murPublic.test.js) ho lliga al catàleg de migracions: falla si
+ * la bandera és true sense la revocació i la RPC. Mentre no es publica, la
+ * nota és privada: amb sessió, a la taula privada del servidor (només la
+ * propietària, RLS de public.notes); en mode local o a la còpia de prova, en
+ * este dispositiu. Els textos de «privada» no diuen on es desa, perquè han
+ * de ser certs en tots dos modes (el motiu del mode local ja ho diu).
+ * Retirar-la del Mur encara no té contracte (motiuPublicada).
  */
 import { esRebuigDeNormes } from '../../data/errorsBackend.js';
 import { omple } from '../../config/moderacio.js';
@@ -66,6 +85,13 @@ export const TEXTOS_VISIBILITAT_NOTA = Object.freeze({
   /* T71b · Un contingut de fora (NotesEditor): els textos de compartir, però
      és una còpia de la persona, que l'edita: no es diu que siga d'altri. */
   externDescripcio: parellVisibilitat('extern.descripcio', 'Este contingut de fora és una còpia teua: el pots editar, i compartir-lo el porta al teu Mur citant-ne l’origen.'),
+  /* D1 Opció A (261112) · Qui pot llegir el que ix al Mur. És cert hui, amb
+     la fila crua oberta a anon, i ho continuarà sent amb la versió filtrada. */
+  lecturaPublica: parellVisibilitat('lecturaPublica', 'Qualsevol persona, també sense compte, ho pot llegir.'),
+  /* D1 Opció A (261112) · Només amb MUR_PUBLIC_FILTRAT: què en llig qualsevol
+     persona i què no hi ix mai. No promet res de les fotos: només que no
+     n'ix la ubicació exacta. */
+  versioPublica: parellVisibilitat('versioPublica', 'Qualsevol persona, també sense compte, en pot llegir la versió pública: el títol i el text, el poble i la data. Mai hi ix el teu identificador intern, el teu contacte privat ni la ubicació exacta de les fotos.'),
 });
 const T = TEXTOS_VISIBILITAT_NOTA;
 
@@ -193,9 +219,9 @@ const PARELLS_NOTA = Object.freeze({
   llegenda: parellVisibilitat('nota.llegenda', 'Visibilitat de la nota'),
   publica: Object.freeze({
     etiqueta: parellVisibilitat('nota.publica.etiqueta', 'Publicada al Mur'),
-    /* La RLS de lectura de section_submissions exigix ser del poble
-       (is_town_member): el Mur no és Internet. El mateix que diu Connectar. */
-    explicacio: parellVisibilitat('nota.publica.explicacio', 'Ix al Mur del poble: la llig la gent registrada del poble, no Internet.'),
+    /* D1 Opció A (261112) · On ix; qui ho pot llegir ho afig
+       ambLecturaPublica, el mateix per a la nota i per a la connexió. */
+    explicacio: parellVisibilitat('nota.publica.explicacio', 'Ix al Mur del poble.'),
     accio: parellVisibilitat('nota.publica.accio', 'Publicar al Mur'),
     accioIgual: parellVisibilitat('nota.publica.accioIgual', 'Actualitzar al Mur'),
   }),
@@ -222,7 +248,7 @@ const PARELLS_CONNEXIO = Object.freeze({
     /* Poliment W3C · cosDeConnexioPerAlMur (connexions.js) sempre cita d'on
        ve i l'element, però l'autor només si l'origen el porta: una pàgina
        connectada no en té cap (objecteDePagina). */
-    explicacio: parellVisibilitat('connexio.publica.explicacio', 'Ix al teu Mur citant-ne l’origen: el llig la gent registrada del poble, no Internet.'),
+    explicacio: parellVisibilitat('connexio.publica.explicacio', 'Ix al teu Mur citant-ne l’origen.'),
     /* Les mateixes claus que el botó de la tira del lector (ConnexioDetall.jsx). */
     accio: Object.freeze(['section.notes.connexio.mur.comparteix', 'Compartir al Mur']),
     accioIgual: Object.freeze(['section.notes.connexio.mur.actualitza', 'Actualitzar al Mur']),
@@ -239,13 +265,30 @@ const PARELLS_CONNEXIO = Object.freeze({
 
 const grupDe = (parells, t) => Object.freeze(Object.fromEntries(Object.entries(parells).map(([camp, parell]) => [camp, text(t, parell)])));
 
+/* D1 Opció A (261112) · Si el servidor ja servix el Mur al públic com una
+   versió filtrada (kit SQL R21 de Codex: revoca el SELECT cru d'anon sobre
+   section_submissions i crea public.llig_mur_public). Mentre siga false, cap
+   text no promet què hi ix i què no, perquè hui anon llig la fila crua. La
+   prova d'acoblament (config/i18n.murPublic.test.js) falla si és true i el
+   catàleg de migracions no fa eixes dues coses. */
+export const MUR_PUBLIC_FILTRAT = false;
+
+/** D1 Opció A (261112) · Qui pot llegir el que ix al Mur i, només amb la
+ * versió pública filtrada al servidor (`filtrat`), què en llig i què no hi ix mai. */
+export function textLecturaPublica(t = null, filtrat = MUR_PUBLIC_FILTRAT) {
+  return text(t, filtrat ? T.versioPublica : T.lecturaPublica);
+}
+
+/** D1 Opció A (261112) · L'explicació de publicar o compartir, i darrere, en la mateixa llengua, qui ho pot llegir. */
+const ambLecturaPublica = (explicacio, t) => `${explicacio} ${textLecturaPublica(t)}`;
+
 /** L'objecte que pinta el selector: la mateixa forma de sempre, en la llengua de `t`. */
 function textosDe(parells, t) {
   return Object.freeze({
     titol: text(t, parells.titol),
     descripcio: text(t, parells.descripcio),
     llegenda: text(t, parells.llegenda),
-    publica: grupDe(parells.publica, t),
+    publica: Object.freeze({ ...grupDe(parells.publica, t), explicacio: ambLecturaPublica(text(t, parells.publica.explicacio), t) }),
     privada: grupDe(parells.privada, t),
     reversible: null,
     irreversible: text(t, parells.irreversible),
@@ -311,6 +354,10 @@ const PARELLS_EN_LINIA = Object.freeze({
   publicaEtiquetaMercat: parellVisibilitat('enLinia.publica.etiquetaMercat', '📣 Públic al Mercat del poble'),
   publicaEtiquetaConnexio: parellVisibilitat('enLinia.publica.etiquetaConnexio', '📣 Compartit al Mur del poble'),
   publicaExplicacio: parellVisibilitat('enLinia.publica.explicacio', 'Es publica amb la teua signatura i ix al Mur del poble.'),
+  /* honestedat_textos-10 (R21) · Una publicació del Mercat ix al Mercat, no al
+     Mur: l'explicació i l'avís de no poder-la retirar ho diuen. */
+  publicaExplicacioMercat: parellVisibilitat('enLinia.publica.explicacioMercat', 'Es publica amb la teua signatura i ix al Mercat del poble.'),
+  irreversibleMercat: parellVisibilitat('enLinia.irreversibleMercat', 'Una vegada al Mercat, encara no es pot retirar: la podràs actualitzar, però no tornar a fer privada.'),
   publicaExplicacioConnexio: parellVisibilitat('enLinia.publica.explicacioConnexio', 'Es compartix al Mur citant-ne l’origen i l’autoria.'),
   publicaAccioMercat: parellVisibilitat('enLinia.publica.accioMercat', 'Publicar al Mercat'),
   publicaAccioIgualMercat: parellVisibilitat('enLinia.publica.accioIgualMercat', 'Actualitzar al Mercat'),
@@ -344,9 +391,10 @@ export function textosEnLiniaDeNota({ connexio = false, extern = false, dretsRes
     : esMercat
       ? text(t, PARELLS_EN_LINIA.publicaEtiquetaMercat)
       : text(t, PARELLS_EN_LINIA.publicaEtiqueta);
-  const explicacioPublica = esCita
+  /* D1 Opció A (261112) · El panell de /notes diu també qui ho pot llegir. */
+  const explicacioPublica = ambLecturaPublica(esCita
     ? text(t, PARELLS_EN_LINIA.publicaExplicacioConnexio)
-    : text(t, PARELLS_EN_LINIA.publicaExplicacio);
+    : text(t, esMercat ? PARELLS_EN_LINIA.publicaExplicacioMercat : PARELLS_EN_LINIA.publicaExplicacio), t);
   const accioPublica = esMercat ? text(t, PARELLS_EN_LINIA.publicaAccioMercat) : base.publica.accio;
   const accioIgualPublica = esMercat ? text(t, PARELLS_EN_LINIA.publicaAccioIgualMercat) : base.publica.accioIgual;
   return Object.freeze({
@@ -367,7 +415,7 @@ export function textosEnLiniaDeNota({ connexio = false, extern = false, dretsRes
       tria: text(t, PARELLS_EN_LINIA.pobleTria),
       indeterminat: text(t, PARELLS_EN_LINIA.pobleIndeterminat),
     }),
-    irreversible: base.irreversible,
+    irreversible: esMercat ? text(t, PARELLS_EN_LINIA.irreversibleMercat) : base.irreversible,
     avisDrets: dretsReservats ? avisDretsReservats(t) : null,
     estatPublicat: text(t, PARELLS_EN_LINIA.estatPublicat),
     veurePublicacio: text(t, esMercat ? PARELLS_EN_LINIA.veureAlMercat : PARELLS_EN_LINIA.veureAlMur),

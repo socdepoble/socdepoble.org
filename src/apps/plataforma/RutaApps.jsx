@@ -66,10 +66,18 @@ function GuardaPermis({ permis, children }) {
 
 function ContenidorApp({ manifest, entrada }) {
   const registre = useRegistre();
+  const { search } = useLocation();
   /* Fase D (261020, tasca 4.1) · L1 · Els títols seguixen la llengua del text, no la demanada. */
   const { language, llenguaDelText = language } = useUIState();
-  useSEO({ title: titolDe(manifest.titol, llenguaDelText), index: false });
+  const titol = titolDe(manifest.titol, llenguaDelText);
+  useSEO({ title: titol, index: false });
   const serveis = useFontServeis(manifest);
+  /* Onada R21 (P0-76 / P0-77) · El Lector es munta sobre UniversalWorkspace sense ClosaAplicacio:
+     mentre no hi ha cap notícia oberta (?article=… pinta la seua PaginaApp amb h1 propi), la
+     plataforma li dóna el títol de primer nivell canònic per a lectors de pantalla. */
+  const capcaleraLector = manifest.id === 'lector' && !new URLSearchParams(search).has('article')
+    ? <header className="page-title sdp-sr-only"><h1>{titol}</h1></header>
+    : null;
   /* Una interna o un mòdul (sdp.modul.v1): el component lazy del registre. */
   const Component = manifest.origen === 'externa' ? null : registre.componentDe(manifest.id);
   let contingut = null;
@@ -94,7 +102,10 @@ function ContenidorApp({ manifest, entrada }) {
     <ProveidorApp manifest={manifest} fontSessio={useFontSessio} serveis={serveis}>
       <div className="sdp-app-contenidor" data-sdp-app={manifest.id} translate={manifest.dadesPersonals ? 'no' : undefined}>
         <GuardaPermis permis={manifest.permisos.veure}>
-          <GuardaPermis permis={entrada.permis}>{contingut}</GuardaPermis>
+          <GuardaPermis permis={entrada.permis}>
+            {capcaleraLector}
+            {contingut}
+          </GuardaPermis>
         </GuardaPermis>
       </div>
     </ProveidorApp>

@@ -34,11 +34,12 @@ const oblidaPeticions = () => { for (const capa of pila) capa.demanadaA = null; 
 /**
  * Apunta una capa oberta. Torna qui la lleva (idempotent).
  * @param {() => void} tanca el mateix camí que l'Escape de la capa
+ * @param {unknown} [ambit] la instància de l'App on viu la capa (null: l'única)
  * @returns {() => void}
  */
-export function obriCapaEnrere(tanca) {
+export function obriCapaEnrere(tanca, ambit = null) {
   if (typeof tanca !== 'function') return () => {};
-  const capa = { tanca, demanadaA: null };
+  const capa = { tanca, ambit: ambit ?? null, demanadaA: null };
   pila = [...pila, capa];
   oblidaPeticions();
   avisa();
@@ -67,6 +68,26 @@ export function tancaCapaSuperior(ara = Date.now()) {
 }
 
 export const capesEnrereObertes = () => pila.length;
+
+/**
+ * P0-24b (Onada R21) · Si damunt de la capa apuntada amb `tanca` n'hi ha una
+ * altra. L'Escape seguix el mateix ordre que l'Arrere: una capa que l'escolta
+ * a tot el document (o a la finestra) només el fa seu quan és la de dalt; si
+ * no, el deixa a la de damunt. Una capa que no és a la pila no en té cap
+ * damunt, i el seu Escape fa com sempre.
+ * Només compten les capes del mateix àmbit: dos <soc-de-poble> vius en una
+ * pàgina comparteixen esta pila, però l'Escape d'una arrel ombra no arriba
+ * mai a l'altra. Una capa oberta en l'altra instància no ha de deixar mort
+ * l'Escape d'esta (verificació adversària R21).
+ * @param {() => void} tanca la mateixa funció que es va passar a obriCapaEnrere
+ * @returns {boolean}
+ */
+export function teCapaEnrereDamunt(tanca) {
+  const posicio = pila.findIndex((capa) => capa.tanca === tanca);
+  if (posicio === -1) return false;
+  const { ambit } = pila[posicio];
+  return pila.slice(posicio + 1).some((capa) => capa.ambit === ambit);
+}
 
 /**
  * Escolta els canvis de la pila: fn(nombreDeCapes). Torna qui deixa d'escoltar.

@@ -422,7 +422,7 @@ export const EXCLOSES = Object.freeze({
   '/assets/uploads/patrimoni/que-dinem/p090-social-1200x630.jpg': 'targeta social (OpenGraph) de /page/receptes: només per al <head>',
   '/assets/uploads/patrimoni/portada_que_dinem_muro.webp': 'portada del llibre «Què dinem?» (receptari amb permís d’ús): no és cap foto de l’Arxiu',
   /* P0-108 + P0-111 · Catàleg d’Arbres Emblemàtics i Monumentals de La Torre de les Maçanes
-     (Associació El Rentonar · estudi tècnic de Pedro Ferrer Rodríguez, 2007–2020): fotografies
+     (Associació El Rentonar · estudi tècnic de Pedro Ferrer Rodriguez, 2007–2020): fotografies
      documentals del llibre catalogat a /page/arbres-monumentals amb permís d’ús, tractades com
      «Què dinem?» fora de la galeria general de l’Arxiu. */
   ...Object.fromEntries([
@@ -445,7 +445,7 @@ export const EXCLOSES = Object.freeze({
     'arbre-17-xiprer-de-la-foia-2007.webp', 'arbre-17-xiprer-de-la-foia-2020.webp', 'arbre-17-xiprer-de-la-foia-detall-2007.webp',
     'arbre-18-xiprers-del-calvari-2007.webp', 'arbre-18-xiprers-del-calvari-2020.webp', 'arbre-18-xiprers-del-calvari-detall-2007.webp',
     'arbre-19-xiprers-del-cementeri-2007.webp', 'arbre-19-xiprers-del-cementeri-2020.webp', 'arbre-19-xiprers-del-cementeri-detall-2007.webp'
-  ].map((nom) => [`/assets/uploads/patrimoni/arbres-2020/${nom}`, 'fotografia documental del Catàleg d’Arbres 2020 (Associació El Rentonar · Pedro Ferrer Rodríguez, amb permís d’ús): sèrie de /page/arbres-monumentals']))
+  ].map((nom) => [`/assets/uploads/patrimoni/arbres-2020/${nom}`, 'fotografia documental del Catàleg d’Arbres 2020 (Associació El Rentonar · Pedro Ferrer Rodriguez, amb permís d’ús): sèrie de /page/arbres-monumentals']))
 });
 
 /* El camí de l'original que nomena el motiu d'una còpia: «còpia de /assets/…»

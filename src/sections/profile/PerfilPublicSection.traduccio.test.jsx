@@ -83,7 +83,7 @@ test('la fitxa pròpia amb el veïnat connectat: Traduir avisa i no envia cap no
   const boto = traduir(container);
   expect(boto.hasAttribute('aria-haspopup')).toBe(false);
   await act(async () => { fireEvent.click(boto); });
-  expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.');
+  expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no s’envia al servei de traducció.');
   expect(screen.queryByRole('menu')).toBeNull();
   expect(fetch).not.toHaveBeenCalled();
 });
@@ -125,7 +125,7 @@ test('TC3.2 · fitxa d’una entitat només per als membres (publicat fals) o se
     const boto = traduir(container);
     expect(boto.hasAttribute('aria-haspopup')).toBe(false);
     await act(async () => { fireEvent.click(boto); });
-    expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.');
+    expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no s’envia al servei de traducció.');
     expect(screen.queryByRole('menu')).toBeNull();
     unmount();
   }

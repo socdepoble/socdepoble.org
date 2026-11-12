@@ -1,11 +1,13 @@
 /* Poliment T41 · Els textos del selector de visibilitat no prometen més del
-   que fa el servidor: la RLS de lectura de section_submissions exigix ser del
-   poble (private.is_town_member), el Mur no és Internet. */
+   que fa el servidor. D1 Opció A (decisió del Mestre, 261112) · El Mur del
+   poble el pot llegir qualsevol persona, també sense compte: els textos ho
+   diuen. El que no hi ix mai només ho diuen amb MUR_PUBLIC_FILTRAT, quan el
+   servidor ja servisca la versió pública filtrada (config/i18n.murPublic.test.js). */
 import { expect, test, vi } from 'vitest';
 import {
   AVIS_DRETS_RESERVATS, ERROR_PUBLICAR, ErrorPublicacio, MOTIU_FORASTER, MOTIU_LOCAL, MOTIU_NORMES, MOTIU_PREPARADA,
-  MOTIU_PREPARADA_CREANT, MOTIU_PREPARADA_FALLIDA, SIGNANT_DESCONEGUT, bloqueigDeNota, motiuSignaturaAliena, publicaAmbMotiu,
-  textosAmbDrets, textosDeNota
+  MOTIU_PREPARADA_CREANT, MOTIU_PREPARADA_FALLIDA, MOTIU_PUBLICADA, MUR_PUBLIC_FILTRAT, SIGNANT_DESCONEGUT, TEXTOS_VISIBILITAT_NOTA,
+  bloqueigDeNota, motiuSignaturaAliena, publicaAmbMotiu, textLecturaPublica, textosAmbDrets, textosDeNota, textosEnLiniaDeNota, textosExtern
 } from './visibilitatNota.js';
 import { cosDeConnexioPerAlMur } from './connexions.js';
 import { objecteDePagina } from '../../config/objecteConnectable.js';
@@ -21,10 +23,84 @@ test('Grup E · el motiu de no actualitzar una publicació que signa una altra i
   }
 });
 
-test.each([false, true])('publicar o compartir al Mur diu qui ho llig: la gent registrada del poble (connexió=%s)', (connexio) => {
+const LECTURA_PUBLICA = 'Qualsevol persona, també sense compte, ho pot llegir.';
+const VERSIO_PUBLICA = 'Qualsevol persona, també sense compte, en pot llegir la versió pública: el títol i el text, el poble i la data. Mai hi ix el teu identificador intern, el teu contacte privat ni la ubicació exacta de les fotos.';
+/* El que s'afig darrere de cada explicació de publicar o compartir. */
+const DARRERE = MUR_PUBLIC_FILTRAT ? VERSIO_PUBLICA : LECTURA_PUBLICA;
+/* Les afirmacions d'abans, falses amb la lectura pública del Mur. */
+const AFIRMACIO_FALSA = /registrada|Internet/i;
+const tots = (objecte) => Object.values(objecte || {}).flatMap((valor) => (typeof valor === 'string' ? [valor] : (valor && typeof valor === 'object' ? tots(valor) : [])));
+
+/* D1 Opció A (261112) · Publicar o compartir al Mur: qualsevol persona,
+   també sense compte, ho pot llegir. Res de «la gent registrada» ni de «no
+   Internet». Les garanties de la versió pública (títol i text, poble i data;
+   mai l'identificador intern, el contacte privat ni la ubicació exacta de les
+   fotos) només s'hi afigen amb MUR_PUBLIC_FILTRAT. */
+test.each([false, true])('D1 Opció A · publicar o compartir al Mur diu que qualsevol persona ho pot llegir (connexió=%s)', (connexio) => {
   const { publica } = textosDeNota({ connexio });
-  expect(publica.explicacio).toContain('la gent registrada del poble, no Internet');
-  expect(publica.explicacio).not.toMatch(/qualsevol persona/);
+  expect(TEXTOS_VISIBILITAT_NOTA.lecturaPublica).toEqual(['section.notes.visibilitat.lecturaPublica', LECTURA_PUBLICA]);
+  expect(TEXTOS_VISIBILITAT_NOTA.versioPublica).toEqual(['section.notes.visibilitat.versioPublica', VERSIO_PUBLICA]);
+  expect(publica.explicacio).toBe(`${connexio ? 'Ix al teu Mur citant-ne l’origen.' : 'Ix al Mur del poble.'} ${DARRERE}`);
+  expect(publica.explicacio).not.toMatch(AFIRMACIO_FALSA);
+});
+
+test('D1 Opció A · sense la versió filtrada al servidor, el text no diu què no hi ix; amb ella, sí', () => {
+  expect(textLecturaPublica()).toBe(DARRERE);
+  expect(textLecturaPublica(null, false)).toBe(LECTURA_PUBLICA);
+  expect(textLecturaPublica(null, true)).toBe(VERSIO_PUBLICA);
+  const t = vi.fn((clau, reserva) => `[${clau}] ${reserva}`);
+  expect(textLecturaPublica(t, false)).toBe(`[section.notes.visibilitat.lecturaPublica] ${LECTURA_PUBLICA}`);
+  expect(textLecturaPublica(t, true)).toBe(`[section.notes.visibilitat.versioPublica] ${VERSIO_PUBLICA}`);
+  if (!MUR_PUBLIC_FILTRAT) {
+    const tot = [textosDeNota(), textosDeNota({ connexio: true }), textosExtern(), textosEnLiniaDeNota(), textosEnLiniaDeNota({ seccio: 'mercat' }), textosEnLiniaDeNota({ connexio: true })].flatMap(tots);
+    for (const text of tot) expect(text, text).not.toMatch(/versió pública|identificador intern|contacte privat|ubicació exacta/);
+  }
+});
+
+test('D1 Opció A · el panell en línia de /notes diu el mateix en els quatre casos (nota, Mercat, connexió i contingut de fora)', () => {
+  const casos = [{}, { seccio: 'mercat' }, { connexio: true }, { extern: true }, { connexio: true, dretsReservats: true }];
+  for (const cas of casos) {
+    const textos = textosEnLiniaDeNota(cas);
+    expect(textos.publica.explicacio.endsWith(` ${DARRERE}`), JSON.stringify(cas)).toBe(true);
+    for (const text of tots(textos)) expect(text, text).not.toMatch(AFIRMACIO_FALSA);
+  }
+  expect(textosEnLiniaDeNota().publica.explicacio).toBe(`Es publica amb la teua signatura i ix al Mur del poble. ${DARRERE}`);
+  expect(textosEnLiniaDeNota({ connexio: true }).publica.explicacio).toBe(`Es compartix al Mur citant-ne l’origen i l’autoria. ${DARRERE}`);
+});
+
+/* honestedat_textos-10 (R21) · Una publicació del Mercat ix al Mercat: el
+   panell no diu «ix al Mur» ni «Una vegada al Mur». Una cita (connexió o
+   contingut de fora) sempre va al Mur, també des del Mercat. */
+test('R21 · el panell en línia del Mercat diu Mercat a l’explicació i a l’avís de no poder-la retirar', () => {
+  const mercat = textosEnLiniaDeNota({ seccio: 'mercat' });
+  expect(mercat.publica.explicacio).toBe(`Es publica amb la teua signatura i ix al Mercat del poble. ${DARRERE}`);
+  expect(mercat.irreversible).toBe('Una vegada al Mercat, encara no es pot retirar: la podràs actualitzar, però no tornar a fer privada.');
+  expect(tots(mercat).filter((text) => /\bMur\b/.test(text))).toEqual([]);
+  expect(textosEnLiniaDeNota().irreversible).toBe(textosDeNota().irreversible);
+  expect(textosEnLiniaDeNota({ seccio: 'mercat', connexio: true }).publica.explicacio).toBe(textosEnLiniaDeNota({ connexio: true }).publica.explicacio);
+  expect(textosEnLiniaDeNota({ seccio: 'mercat', connexio: true }).irreversible).toBe(textosDeNota({ connexio: true }).irreversible);
+  const t = vi.fn((clau, reserva) => `[${clau}] ${reserva}`);
+  const traduit = textosEnLiniaDeNota({ seccio: 'mercat', t });
+  expect(traduit.publica.explicacio.startsWith('[section.notes.visibilitat.enLinia.publica.explicacioMercat] ')).toBe(true);
+  expect(traduit.irreversible).toBe('[section.notes.visibilitat.enLinia.irreversibleMercat] Una vegada al Mercat, encara no es pot retirar: la podràs actualitzar, però no tornar a fer privada.');
+});
+
+/* D1 Opció A · (1) Mentre no es publica, la nota és privada i només la veu la
+   propietària: amb sessió, a public.notes (RLS de propietària); en mode local o
+   a la còpia de prova, en este dispositiu. Els textos de «privada» han de ser
+   certs en tots dos modes: no diuen ni «servidor» ni «dispositiu». (4) Retirar
+   del Mur encara no té contracte en esta còpia: cap text no promet que
+   esborrar o retirar la lleve del Mur, i els avisos de sempre ho diuen. */
+test('D1 Opció A · la privada és certa en tots dos modes i ningú no promet retirar del Mur', () => {
+  for (const privada of [textosDeNota().privada, textosDeNota({ connexio: true }).privada, textosEnLiniaDeNota().privada]) {
+    for (const text of tots(privada)) expect(text, text).not.toMatch(/servidor|dispositiu|Internet|registrada/i);
+  }
+  expect(textosEnLiniaDeNota().privada.explicacio).toBe('Es desa automàticament al teu Bloc de notes i ningú més la pot vore.');
+  const tot = [textosDeNota(), textosDeNota({ connexio: true }), textosExtern(), textosEnLiniaDeNota(), textosEnLiniaDeNota({ connexio: true })].flatMap(tots);
+  for (const text of tot) expect(text, text).not.toMatch(/(?:esborrar|retirar)-(?:la|lo)[^.]*(?:lleva|retira) del Mur/i);
+  expect(textosDeNota().irreversible).toContain('encara no es pot retirar');
+  expect(bloqueigDeNota({ publicada: true })).toEqual({ opcio: 'privada', motiu: MOTIU_PUBLICADA });
+  expect(MOTIU_PUBLICADA).toContain('encara no té contracte de dades amb el servidor');
 });
 
 /* D2 · T54 · el selector d'una connexió només es veu al lector del MAS, que la

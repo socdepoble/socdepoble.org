@@ -26,7 +26,7 @@ export const METADADES_INSTITUCIONALS_261104 = Object.freeze({
   node0Domini: 'https://socdepoble.cat',
   node0ActorAcct: 'socdepoble@socdepoble.cat',
   replicaPosseMastodon: '@depoble@mastodont.cat',
-  carpetaArrelMirallWorkspace: 'Sóc de Poble · Mirall Sobirà Node 0/',
+  carpetaArrelMirallWorkspace: 'Sóc de Poble · Mirall Comunitari Node 0/',
   entitatsEditorialsVinculades: Object.freeze(['socdepoble', 'elrentonar', 'coordinadora']),
   exclouMercatComercialPosse: true,
 });
@@ -211,7 +211,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Tres capes de protecció per a la sobirania de dades del poble',
             paragrafs: Object.freeze([
               'La **Capa 1** és el **Node 0 al Mac mini M4** (`socdepoble.cat`) amb **PostgreSQL 17.11** i recuperació automàtica d\'arrancada; la **Capa 2** és la còpia contínua en disc físic local mitjançant **Time Machine**.',
-              'La **Capa 3** és el **Mirall Navegable als 20 TB de Google Workspace Drive** sota el compte institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), que combina buidats atòmics de base de dades amb carpetes d\'articles i patrimoni llegibles per qualsevol persona.',
+              'La **Capa 3** és el **Mirall Navegable als 20 TB de Google Workspace Drive** sota el compte institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Comunitari Node 0/`), que combina buidats atòmics de base de dades amb carpetes d\'articles i patrimoni llegibles per qualsevol persona.',
             ]),
           }),
           Object.freeze({
@@ -233,7 +233,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Tres capas de protección para la soberanía de datos del pueblo',
             paragrafs: Object.freeze([
               'La **Capa 1** es el **Nodo 0 en el Mac mini M4** (`socdepoble.cat`) con **PostgreSQL 17.11** y recuperación automática de arranque; la **Capa 2** es la copia continua en disco físico local mediante **Time Machine**.',
-              'La **Capa 3** es el **Espejo Navegable en los 20 TB de Google Workspace Drive** bajo la cuenta institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), que combina volcados atómicos de base de datos con carpetas de artículos y patrimonio legibles por cualquier persona.',
+              'La **Capa 3** es el **Espejo Navegable en los 20 TB de Google Workspace Drive** bajo la cuenta institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Comunitari Node 0/`), que combina volcados atómicos de base de datos con carpetas de artículos y patrimonio legibles por cualquier persona.',
             ]),
           }),
           Object.freeze({
@@ -255,7 +255,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Three layers of protection for village data sovereignty',
             paragrafs: Object.freeze([
               '**Layer 1** is **Node 0 on the Mac mini M4** (`socdepoble.cat`) running **PostgreSQL 17.11** with automatic boot recovery; **Layer 2** is the continuous local physical disk backup via **Time Machine**.',
-              '**Layer 3** is the **Browsable Mirror on 20 TB of Google Workspace Drive** under the institutional account **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), combining atomic database snapshots with human-readable article and heritage folders.',
+              '**Layer 3** is the **Browsable Mirror on 20 TB of Google Workspace Drive** under the institutional account **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Comunitari Node 0/`), combining atomic database snapshots with human-readable article and heritage folders.',
             ]),
           }),
           Object.freeze({
@@ -277,7 +277,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Hiru babes-geruza herriko datuen burujabetzarako',
             paragrafs: Object.freeze([
               '**1. Geruza** **Mac mini M4ko 0 Nodoa** da (`socdepoble.cat`), **PostgreSQL 17.11** eta abio automatikoarekin; **2. Geruza** disko fisiko lokaleko etengabeko kopia da **Time Machine** bidez.',
-              '**3. Geruza** **Google Workspace Driveko 20 TB-etan dagoen Ispilu Nabigagarria** da, **`socdepoble@socdepoble.org`** kontu instituzionalaren pean (`Sóc de Poble · Mirall Sobirà Node 0/`), datu-basearen kopia atomikoak eta edonork irakurtzeko moduko artikulu-karpetak uztartuz.',
+              '**3. Geruza** **Google Workspace Driveko 20 TB-etan dagoen Ispilu Nabigagarria** da, **`socdepoble@socdepoble.org`** kontu instituzionalaren pean (`Sóc de Poble · Mirall Comunitari Node 0/`), datu-basearen kopia atomikoak eta edonork irakurtzeko moduko artikulu-karpetak uztartuz.',
             ]),
           }),
           Object.freeze({
@@ -299,7 +299,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Tres capas de protección para a soberanía de datos da aldea',
             paragrafs: Object.freeze([
               'A **Capa 1** é o **Nodo 0 no Mac mini M4** (`socdepoble.cat`) con **PostgreSQL 17.11** e recuperación automática de arranque; a **Capa 2** é a copia continua en disco físico local mediante **Time Machine**.',
-              'A **Capa 3** é o **Espello Navegable nos 20 TB de Google Workspace Drive** baixo a conta institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), que combina copias atómicas de base de datos con carpetas de artigos e patrimonio lexibles por calquera persoa.',
+              'A **Capa 3** é o **Espello Navegable nos 20 TB de Google Workspace Drive** baixo a conta institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Comunitari Node 0/`), que combina copias atómicas de base de datos con carpetas de artigos e patrimonio lexibles por calquera persoa.',
             ]),
           }),
           Object.freeze({

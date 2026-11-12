@@ -497,8 +497,10 @@ export const PLUGINS = Object.freeze([
        el formulari ja ho diu amb les mateixes paraules (idea61-05,
        editor.ambit.contacteVisible). Abans: «Eina en obres: encara no es pot
        publicar cap avís. El telèfon o el contacte que poses en un avís el
-       veurà tothom.» */
-    entradilla: 'Adopció, animals perduts, trobats i cura comunitària al poble. El contacte que poses en una fitxa el veurà la gent registrada del poble en obrir-la; no ix a la targeta ni a la cerca.',
+       veurà tothom.» honestedat_textos-05 (R21) · Amb la política 2611112005
+       el veu qualsevol persona, també sense compte, no només la gent
+       registrada del poble. */
+    entradilla: 'Adopció, animals perduts, trobats i cura comunitària al poble. El contacte que poses en una fitxa el veurà qualsevol persona, també sense compte, en obrir-la; no ix a la targeta ni a la cerca.',
     imatgeAlt: 'Una iaia baixa un gatet d’una olivera amb l’ajuda d’un veí, entre gossos, gallines i un ase',
     obrir: '/animalets',
     etiquetaObrir: 'Obrir Animalets',

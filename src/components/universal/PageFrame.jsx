@@ -28,9 +28,13 @@ import { omple } from '../../config/moderacio.js';
    envia res al servei de traducció, com les eines locals de la Wiki
    (AVIS_EINA_LOCAL_SENSE_TRADUCCIO de WikiDePobleSection).
    Gauntlet 261029 (cicle 1, i18n) · L'avís, en la llengua de la interfície
-   (parell [clau, reserva]); la reserva valenciana és la constant exportada. */
+   (parell [clau, reserva]); la reserva valenciana és la constant exportada.
+   honestedat_textos-13 (R21) · Abans deia que el que mostra «no ix d'este
+   dispositiu», fals per al Mur i el Mercat públics (el contingut ve del
+   servidor i el llig qualsevol persona). Ara diu només el que fa el botó en
+   totes les pàgines que el porten: no envia res al servei de traducció. */
 const pPagina = (nom, reserva) => Object.freeze([`pagina.${nom}`, reserva]);
-const PARELL_SENSE_TRADUCCIO = pPagina('senseTraduccio', 'Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.');
+const PARELL_SENSE_TRADUCCIO = pPagina('senseTraduccio', 'Esta pàgina no es traduïx: el que mostra no s’envia al servei de traducció.');
 export const AVIS_PAGINA_SENSE_TRADUCCIO = PARELL_SENSE_TRADUCCIO[1];
 const PARELL_CANVIA_DRETS_SUFIX = pPagina('canviaDretsSufix', "canviar els drets d'autor");
 const PARELL_CANVIA_DRETS_AMB_VALOR = pPagina('canviaDretsAmbValor', "{drets}: canviar els drets d'autor");

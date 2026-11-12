@@ -33,7 +33,7 @@
  * Només exporta components (Fast Refresh): DetallEspaiMultimedia tria la
  * pàgina a partir de la selecció efectiva que li passa MultimediaSection.
  */
-import { useCallback, useId } from 'react';
+import { useCallback, useId, useState } from 'react';
 import { CalendarDays, Images, Maximize2, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
@@ -80,17 +80,25 @@ const nomDeRuta = (ruta) => ruta.slice(ruta.lastIndexOf('/') + 1);
    (revisió adversarial del 261016): el botó és un embolcall transparent i la
    cel·la (.photo-grid__item, la caixa quadrada que creix fins a contindre la
    foto) va a dins; un <button> amb la classe de la cel·la no creixia
-   (modules.css, LES CEL·LES DE L'ARXIU VISUAL). */
+   (modules.css, LES CEL·LES DE L'ARXIU VISUAL).
+   P1-71 (Onada R21) · Cap botó fantasma: una foto que no carrega ja no
+   s'amaga amb un estil en línia (deixava un quadrat buit i un botó sense nom
+   accessible, perquè una imatge amb display:none no dona nom); la cel·la
+   passa al quadre de «Sense imatge», amb el nom per al lector. I una foto
+   sense títol ni etiqueta es diu «Imatge sense títol», mai res. */
 export function Cella({ item, onObri, t }) {
+  const [srcFallit, setSrcFallit] = useState(null);
+  const nom = textNet(item.title) || textNet(item.tag);
+  const ambImatge = Boolean(item.src) && item.src !== srcFallit;
   return (
     <button type="button" className="photo-grid__boto" onClick={() => onObri(item)}>
       <span className="photo-grid__item">
         {/* T5 · El src es resol en pintar-lo: incrustat, un '/assets/…' penja del paquet. Sense base, el de sempre. */}
-        {item.src ? (
-          <img src={resolRecursPropi(item.src)} alt={item.title || item.tag} loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
+        {ambImatge ? (
+          <img src={resolRecursPropi(item.src)} alt={nom || tradueix(t, E.senseTitol)} loading="lazy" onError={() => setSrcFallit(item.src)} />
         ) : (
           <div className="media-frame__buit">
-            <span className="sdp-sr-only">{item.title || tradueix(t, E.senseImatge)}</span>
+            <span className="sdp-sr-only">{nom || tradueix(t, E.senseImatge)}</span>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
           </div>
         )}

@@ -10,8 +10,10 @@
  * servidor no aplique:
  *   · Privada: exacta (RLS de propietari en remot, IndexedDB en local).
  *   · Persones i Grups: són MISSATGES de xat; no es desfan canviant la nota.
- *   · Tot el poble: el Mur el llig la gent registrada del poble (RLS
- *     is_town_member), no Internet. Sense servidor no hi ha Mur.
+ *   · Tot el poble: D1 Opció A (decisió del Mestre, 261112) · el Mur el
+ *     pot llegir qualsevol persona, també sense compte (la política de
+ *     lectura l'obri a anon des de 2611112005; la versió pública filtrada
+ *     arriba amb el carril SQL de Codex). Sense servidor no hi ha Mur.
  * No s'escriu mai la tria dins de section_submissions.payload per a filtrar-la
  * al client: qualsevol membre del poble la podria llegir per REST. Quan una
  * connexió es compartix al Mur, el seu origen hi viatja sense `abast`:
@@ -174,7 +176,7 @@ export function opcionsDAbast({ dataMode = 'remote', teSessio = false, grups = [
     {
       valor: 'poble',
       etiqueta: tr(['section.connectar.abast.poble', 'Tot el poble']),
-      ajuda: tr(['section.connectar.abast.pobleAjuda', 'No ix sola: obri la connexió a les teues notes i prem «Compartir al Mur». La veurà la gent registrada del poble, no Internet.']),
+      ajuda: tr(['section.connectar.abast.pobleAjuda', 'No ix sola: obri la connexió a les teues notes i prem «Compartir al Mur». Al Mur la pot llegir qualsevol persona, també sense compte.']),
       desactivada: !remot || !teSessio,
       detall: !remot ? tr(['section.connectar.abast.pobleLocal', 'Sense servidor no es pot compartir al Mur.'])
         : (!teSessio ? tr(['section.connectar.abast.pobleSenseCompte', 'Entra amb el teu compte per a compartir-la al Mur.']) : undefined)

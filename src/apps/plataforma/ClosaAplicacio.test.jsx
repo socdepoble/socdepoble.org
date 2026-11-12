@@ -84,12 +84,22 @@ afterEach(() => {
 describe('Onada R20 · el títol de primer nivell de l’app', () => {
   test.each([
     ['columnes', RUTES, '/app/prova/inici/a-7', 'Element a-7'],
-    ['àrea única', [{ path: 'inici', Unica: () => <p>Àrea sola</p> }], '/app/prova/inici', 'Àrea sola']
-  ])('%s: un sol h1 amb el nom de l’app, amagat a la vista', async (_cas, rutes, ruta, text) => {
+    ['àrea única', [{ path: 'inici', Unica: () => <p>Àrea sola</p> }], '/app/prova/inici', 'Àrea sola'],
+    ['àrea única amb titolPropi', [{
+      path: 'inici',
+      Unica: () => <header className="page-title"><h1>Títol propi</h1></header>,
+      titolPropi: true
+    }], '/app/prova/inici', 'Títol propi']
+  ])('%s: un sol h1 accessible per pàgina', async (cas, rutes, ruta, text) => {
     ambAmplada(1400);
     muntaPlataforma(ruta, { registre: registreAmb(rutes) });
     expect(await screen.findByText(text)).toBeTruthy();
     const titols = screen.getAllByRole('heading', { level: 1 });
+    if (cas === 'àrea única amb titolPropi') {
+      expect(titols.map((h) => h.textContent)).toEqual(['Títol propi']);
+      expect([titols[0].parentElement.localName, titols[0].parentElement.className]).toEqual(['header', 'page-title']);
+      return;
+    }
     expect(titols.map((h) => h.textContent)).toEqual(['La Prova']);
     const capcalera = titols[0].parentElement;
     expect([capcalera.localName, capcalera.className]).toEqual(['header', 'page-title sdp-sr-only']);

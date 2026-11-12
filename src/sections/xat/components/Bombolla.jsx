@@ -245,11 +245,17 @@ function Bombolla({
     setMenuObert(false);
     botoRef.current?.focus();
   }, []);
+  /* P0-24b (T2c, prompt 261102_1532) · Mentre el menú és obert, és a la pila de
+     l'Arrere d'Android (config/pilaEnrere.js) amb el camí de l'Escape (ARB-T2B-04:
+     damunt de la resposta o de la selecció, l'Arrere el tanca a ell primer). */
+  const teCapaDamunt = useCapaEnrere(menuVisible, tancaMenu);
 
   /* El patró de MenuLlista, retirat el 261026 (revisió adversarial 260930, #7 i #8): en obrir,
      el focus entra a la primera opció; Escape tanca, queda consumit (un sol
      Escape tanca UNA cosa: la selecció de xats l'escolta a window) i torna
-     el focus al «⋯». */
+     el focus al «⋯».
+     P0-24b (Onada R21) · L'escolta és a l'arrel: un Escape ja consumit o amb
+     una capa damunt a la pila (un altre menú obert amb el teclat) no és seu. */
   useEffect(() => {
     if (!menuVisible) return undefined;
     const node = menuRef.current;
@@ -257,7 +263,7 @@ function Bombolla({
     const arrel = node?.getRootNode?.() || document;
     const tancaFora = (e) => { if (node && !node.contains(e.target)) setMenuObert(false); };
     const tancaEsc = (e) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape' || e.defaultPrevented || teCapaDamunt()) return;
       e.preventDefault();
       tancaMenu();
     };
@@ -267,11 +273,7 @@ function Bombolla({
       arrel.removeEventListener('pointerdown', tancaFora);
       arrel.removeEventListener('keydown', tancaEsc);
     };
-  }, [menuVisible, tancaMenu]);
-  /* P0-24b (T2c, prompt 261102_1532) · Mentre el menú és obert, és a la pila de
-     l'Arrere d'Android (config/pilaEnrere.js) amb el camí de l'Escape (ARB-T2B-04:
-     damunt de la resposta o de la selecció, l'Arrere el tanca a ell primer). */
-  useCapaEnrere(menuVisible, tancaMenu);
+  }, [menuVisible, tancaMenu, teCapaDamunt]);
   /* xat-ux-a11y-04 (T7a, 261104) · El menú diu role="menu": les fletxes, Inici
      i Fi es mouen per les opcions (mouFocusDelMenu, el teclat del menú del +) i
      Tab tanca el menú i seguix des del «⋯», sense consumir-lo. L'Escape és de
