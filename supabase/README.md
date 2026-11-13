@@ -42,6 +42,10 @@ description: "Documentació canònica de Sóc de Poble."
   aplicar, ho dirà
   `select has_function_privilege('authenticated', 'public.admin_list_users()', 'EXECUTE');`
   (lectura), i caldrà tornar a passar-hi la revocació de la 2609200300.
+  T2 del 13-11-2026 (Pas 0, empremtes): producció ja no té
+  `admin_list_users()` sense arguments, només la paginada de 2609150000; la
+  retira formalment `20261113112500` (R22.0). Des d'aleshores, eixa consulta
+  dona 42883: useu `select to_regprocedure('public.admin_list_users()') is null;`.
 
 - `migrations/2609130500_bucket_mitjans.sql`
   Creació del bucket `mitjans` per a àudios i avatars.
@@ -1647,7 +1651,7 @@ description: "Documentació canònica de Sóc de Poble."
 
 - `migrations/2611121830_frontera_contingut_editorial_i_notes_privades.sql`
 
-  R21.6. Requerix les taules `app_content`/`notes`, `private.is_town_member` i l'autoritat real AAL2 de 2610061448; reafirma el contracte de nou claus de 2610101900 i les guardes restrictives contra polítiques permissives obsoletes. Notes privades només per propietari membre, sense privilegis PUBLIC/anon. No reescriu payloads, versions ni dates. Transaccional i idempotent; estat remot no acreditat. Prova PostgreSQL 18.6: `tests/contingut-frontera-r21-6-postgres.test.mjs`.
+  R21.6. Requerix les taules `app_content`/`notes` i `private.is_town_member`. Usa la guarda vigent de `private.es_superadmin()`: no requerix 2610061448 (assajat al T2 del 13-11-2026); quan 2610061448 estiga aplicada, l'excepció de superadmin exigirà també AAL2. Reafirma el contracte de nou claus de 2610101900 i les guardes restrictives contra polítiques permissives obsoletes. Notes privades només per propietari membre, sense privilegis PUBLIC/anon. No reescriu payloads, versions ni dates. Transaccional i idempotent; estat remot no acreditat. Prova PostgreSQL 18.6: `tests/contingut-frontera-r21-6-postgres.test.mjs`.
 
 - `migrations/2611121850_mur_text_dates_i_contactes.sql`
 
@@ -1655,7 +1659,7 @@ description: "Documentació canònica de Sóc de Poble."
 
 - `migrations/2611122200_mur_membres_i_actes_v2.sql`
 
-  R21.1 v2. Després de 2611121430, 2611121630, 2611121830 i 2611121850. Separa lectura anònima mínima i lectura rica de membres; actes de Notes amb UUID i rebut d’operació transaccional, retirada durable, denúncia i bloqueig per UUID, tombstones mínims i Storage amb llistat propi. Qui no llig l’autoria d’un poble (Foraster autenticat o compte en baixa) bloqueja i denuncia sense rebre-la en cap fila pròpia: bloqueig opac `publicacio` a `public.bloquejos` i autoria en taules privades; si després entra al padró del poble d’una publicació bloquejada, el bloqueig hi continua valent (Gauntlet R22, ronda 3). Una retirada encua les còpies públiques, `sdp-net-v1` i les UUID de la promoció anterior (`<poble>/<uid>/notes/`), mai l’avatar ni l’original d’una nota d’abans del 19-09, i una còpia citada per un perfil, per una altra publicació o per una nota pròpia es conserva; tornar a publicar la mateixa còpia ja no topa amb `SDP-PURGA-004`. Canviar de secció un acte propi respon `SDP-SEC-002`; el redactor de text és lineal. Les dues lectures admeten `p_nomes_projeccions` (per defecte false): el servidor torna només les files amb marca de catàleg pública vàlida, abans del LIMIT, també a la branca pública de `llig_mur_membres`; les signatures de cinc i sis arguments es retiren. Una publicació nova del Mur, el Mercat, l'Agenda o Multimèdia no passa de 1.000 caràcters de títol, 20.000 de resum ni 100.000 de cos (`SDP-MUR-MIDA`, 22001); una fila antiga més llarga es pot moderar i editar sense créixer. Estat remot no acreditat. **Cal aplicar-la abans de publicar el client** v1.2.0 build 5, amb tota la cadena del Mur R21 (Nota d'auditoria §16, porta `client-v1-2-0-build-5-mur-r21`). Prova PostgreSQL 18.6: `tests/mur-membres-actes-v2-postgres.test.mjs`.
+  R21.1 v2. Després de 2611121430, 2611121630, 2611121830 i 2611121850; requerix 2611110100 (cua de purga, `SDP-MUR-DEPENDENCY`) i la signatura `pot_signar_com_organitzacio(uuid, uuid)` de 2611011500 (la línia 960 la crida amb el poble de la nota des de la correcció del T2 del 13-11-2026; abans cridava la d'un argument, que 2611011500 esborra). Separa lectura anònima mínima i lectura rica de membres; actes de Notes amb UUID i rebut d’operació transaccional, retirada durable, denúncia i bloqueig per UUID, tombstones mínims i Storage amb llistat propi. Qui no llig l’autoria d’un poble (Foraster autenticat o compte en baixa) bloqueja i denuncia sense rebre-la en cap fila pròpia: bloqueig opac `publicacio` a `public.bloquejos` i autoria en taules privades; si després entra al padró del poble d’una publicació bloquejada, el bloqueig hi continua valent (Gauntlet R22, ronda 3). Una retirada encua les còpies públiques, `sdp-net-v1` i les UUID de la promoció anterior (`<poble>/<uid>/notes/`), mai l’avatar ni l’original d’una nota d’abans del 19-09, i una còpia citada per un perfil, per una altra publicació o per una nota pròpia es conserva; tornar a publicar la mateixa còpia ja no topa amb `SDP-PURGA-004`. Canviar de secció un acte propi respon `SDP-SEC-002`; el redactor de text és lineal. Les dues lectures admeten `p_nomes_projeccions` (per defecte false): el servidor torna només les files amb marca de catàleg pública vàlida, abans del LIMIT, també a la branca pública de `llig_mur_membres`; les signatures de cinc i sis arguments es retiren. Una publicació nova del Mur, el Mercat, l'Agenda o Multimèdia no passa de 1.000 caràcters de títol, 20.000 de resum ni 100.000 de cos (`SDP-MUR-MIDA`, 22001); una fila antiga més llarga es pot moderar i editar sense créixer. Estat remot no acreditat. **Cal aplicar-la abans de publicar el client** v1.2.0 build 5, amb tota la cadena del Mur R21 (Nota d'auditoria §16, porta `client-v1-2-0-build-5-mur-r21`). Prova PostgreSQL 18.6: `tests/mur-membres-actes-v2-postgres.test.mjs`.
 
 - `migrations/20261113003000_r21_9b_canal_beta_testers_i_sync_aparadors.sql`
 
@@ -1664,6 +1668,10 @@ description: "Documentació canònica de Sóc de Poble."
 - `migrations/20261113060000_r22_1_hero_video_url.sql`
 
   R22.1 (Gauntlet r221-dades-03, r221-dades-06 i r221-ui-04). Després de 20261113003000 i de 2609261500, 2610081401, 2610160250, 2610281730 i 2610282100. Crea `hero_video_url` a `profiles` i a `organizations` amb un CHECK per taula (buit, o com a molt 2.048 caràcters: el bucket públic `sdp-media://mitjans/`, un `https://` amb camí o un camí propi, sempre `.mp4` o `.webm`; mai `mitjans_privats`), l'UPDATE de la columna per a `authenticated` i el SELECT de la columna d'`organizations` per a `anon` i `authenticated`, i la torna a llegir: `organization_directory`, `list_my_organizations` i `perfil_public` (només a la fitxa sencera) la porten al final. Additiva i idempotent; cap dada, política ni permís retirat. **NO aplicada: l'aplica el Mestre.** El client no la requerix: sense ella, la fila no porta la columna, el panell del vídeo no s'oferix i el directori la lleva del select (42703). Cap contingut real d'una entitat no l'escriu el client; el posa un SQL revisat pel Mestre. Prova PostgreSQL 18.6: `tests/r22-1-hero-video-url-postgres.test.mjs`.
+
+- `migrations/20261113112500_r22_0_reconciliacio_deriva_ritme_xat_i_mitjans_privats.sql`
+
+  R22.0 (T2 del 13-11-2026; decisió del Mestre: remeis R1, R2 i R3). Reconcilia la deriva que el Pas 0 del T2 va trobar a producció. Torna la lectura de `mitjans_privats` a «només els propis» i les cinc polítiques restrictives «sdp mitjans …» de 2609200300; restaura `trg_rate_limit_xat` de 2609080200 (15 missatges cada 5 s per persona); retira `public.admin_list_users()` sense arguments, que la versió paginada de 2609150000 substituïx. Còpia literal de les línies que cita la capçalera, sense cap objecte nou. Independent de la cadena del Mur R21. Transaccional i repetible. Efectes: el límit de ritme compta també la IAIA i les insercions en lot del servidor; qui ix del poble deixa de llegir i d'esborrar els seus fitxers privats; un mitjà privat dins d'un payload del Mur només el resol l'autora. La sonda del Pas 0 en té la columna `te_reconciliacio_deriva_20261113112500`. NO aplicada: aprovada pel Mestre el 13-11-2026 per a la sessió del T2. Prova PostgreSQL 18.6: `tests/r22-0-reconciliacio-deriva-postgres.test.mjs`.
 
 - `seed.sql`
   Contingut inicial del portal.
@@ -1717,7 +1725,12 @@ SELECT
   coalesce(position('SDP-FED-ESQUEMA-NO-ADMES' in pg_get_functiondef(to_regprocedure('public.exporta_les_meues_dades()'))) > 0, false) AS te_filtre_rgpd_2610311900,
   coalesce((SELECT p.prosecdef FROM pg_proc p WHERE p.oid = to_regprocedure('private.xat_lot3_b64(text,integer)')), false) AS te_esmena_2610312000,
   to_regprocedure('public.pot_signar_com_organitzacio(uuid,uuid)') IS NOT NULL AS te_autoria_poble_2611011500,
-  coalesce(position('private.exporta_federacio_v1' in pg_get_functiondef(to_regprocedure('public.exporta_les_meues_dades()'))) > 0, false) AS te_contracte_federacio_2611011800;
+  coalesce(position('private.exporta_federacio_v1' in pg_get_functiondef(to_regprocedure('public.exporta_les_meues_dades()'))) > 0, false) AS te_contracte_federacio_2611011800,
+  -- R22.0: disparador de ritme, cinc polítiques «sdp mitjans …», lectura privada només dels propis i sense admin_list_users() sense arguments.
+  (exists (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = to_regclass('public.xat_missatges') AND t.tgname = 'trg_rate_limit_xat' AND NOT t.tgisinternal)
+    AND (SELECT count(*) FROM pg_policies p WHERE p.schemaname = 'storage' AND p.tablename = 'objects' AND p.policyname LIKE 'sdp mitjans%') = 5
+    AND coalesce((SELECT position('es_ruta_mitjans_propia' in p.qual) > 0 FROM pg_policies p WHERE p.schemaname = 'storage' AND p.tablename = 'objects' AND p.policyname = 'mitjans_privats llegir propis o tenant'), false)
+    AND to_regprocedure('public.admin_list_users()') IS NULL) AS te_reconciliacio_deriva_20261113112500;
 ```
 
 ### Verificador estàtic i pla de només lectura (`P0-05` · `P0-21`)
@@ -1764,7 +1777,7 @@ verificador sense avisos.
   13. Primer tornar a construir i desplegar web/connector amb `/legal` 2.4 i verificar-ne l'empremta; després `2611030330` (Onada 6; conserva la 2.3, demana nou consentiment; cap agent no l'aplica).
   14. Primer tornar a construir i desplegar web/connector amb `/legal` 2.5 i verificar-ne l'empremta; després `2611061520` (Onada R9, avisos push del xat; conserva la 2.3 i la 2.4, demana nou consentiment; cap agent no l'aplica). Al Node 0 amb POSSE (`SDP_NODE0_POSSE=1`), no es torna a hidratar fins que `tooling/node0/posse/posse-ledger.sql` no porte els llibres 77 i 79 amb esta migració exacta (R9V-C3-01): si el text de la 2.5 canvia, els pins s'han de tornar a calcular.
   15. Per a R54 2.6, aturar totes les altes; construir/desplegar `/legal` 2.6 i verificar-ne l’HTML i l’empremta; després `2611080440`. Reobrir només després del gate `altes-politica-2-6` amb la fila vigent real, mai durant el fallback silenciós de Supabase. No aplicada ni comprovada remotament.
-  16. Mur R21 (Gauntlet R22, dades-01 i honestedat-03): `2611111735` → `2611112149` → `2611121430` → `2611121850` → `2611122200` → `20261113003000`, sencera i en este ordre, abans de publicar el client v1.2.0 build 5 (web, zip del connector WordPress 1.1.14, Android versionCode 5 i iOS build 5). És la porta `client-v1-2-0-build-5-mur-r21` d’`ordre_desplegament.json`; cap zip ni pujada a les botigues abans. No aplicada ni comprovada remotament.
+  16. Mur R21 (Gauntlet R22, dades-01 i honestedat-03; T2 del 13-11-2026): `2611110100` → `2611111735` → `2611112149` → `2611121430` → `2611121850` → `2611122200` → `20261113003000`, sencera i en este ordre, abans de publicar el client v1.2.0 build 5 (web, zip del connector WordPress 1.1.14, Android versionCode 5 i iOS build 5). És la porta `client-v1-2-0-build-5-mur-r21` d’`ordre_desplegament.json` (`2611122200` avorta amb `SDP-MUR-DEPENDENCY` sense la cua de purga de `2611110100`, que té condicions prèvies pròpies a la seua vinyeta); cap zip ni pujada a les botigues abans. No aplicada ni comprovada remotament.
 
 ### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + marató 2611012257 i 2611020106 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
@@ -1772,11 +1785,11 @@ verificador sense avisos.
 | :---: | :--- | :--- | :--- | :--- |
 | 01 | `2609080000` | `2609080000_initial_schema.sql` | Estat remot no acreditat; comprovar abans d’aplicar | initial schema |
 | 02 | `2609080100` | `2609080100_xat_v2.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat v2 |
-| 03 | `2609080200` | `2609080200_xat_v2_correccions.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat v2 correccions |
+| 03 | `2609080200` | `2609080200_xat_v2_correccions.sql` | Estat remot no acreditat; comprovar abans d’aplicar. T2 del 13-11-2026: parcial (sense `trg_rate_limit_xat`); no la torneu a aplicar, el remei és `20261113112500` | xat v2 correccions |
 | 04 | `2609080300` | `2609080300_xat_v2_membres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat v2 membres |
 | 05 | `2609110600` | `2609110600_perfil_avatar_i_permisos.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil avatar i permisos |
 | 06 | `2609121500` | `2609121500_correccio_privacitat_perfils.sql` | Estat remot no acreditat; comprovar abans d’aplicar | correccio privacitat perfils |
-| 07 | `2609121600` | `2609121600_admin_panel.sql` | Estat remot no acreditat sencer (lectura REST del 6-11: `admin_list_users()` existix, 401 42501; `admin_list_organizations()` donava 404 PGRST202 a les 22:08 CET i respon 401 42501 a les 23:22 i a les 23:53, sense cap migració nova al repositori); no la torneu a aplicar sencera | admin panel |
+| 07 | `2609121600` | `2609121600_admin_panel.sql` | Estat remot no acreditat sencer (lectura REST del 6-11: `admin_list_users()` existix, 401 42501; `admin_list_organizations()` donava 404 PGRST202 a les 22:08 CET i respon 401 42501 a les 23:22 i a les 23:53, sense cap migració nova al repositori); no la torneu a aplicar sencera. T2 del 13-11-2026: sense `admin_list_users()` sense arguments, que retira `20261113112500` | admin panel |
 | 08 | `2609130500` | `2609130500_bucket_mitjans.sql` | Estat remot no acreditat; comprovar abans d’aplicar | bucket mitjans |
 | 09 | `2609140000` | `2609140000_schema_notes.sql` | Estat remot no acreditat; comprovar abans d’aplicar | schema notes |
 | 10 | `2609140100` | `2609140100_auditoria_rls_fixes.sql` | Estat remot no acreditat; comprovar abans d’aplicar | auditoria rls fixes |
@@ -1784,7 +1797,7 @@ verificador sense avisos.
 | 12 | `2609160600` | `2609160600_politiques_superadmin_organitzacions.sql` | Estat remot no acreditat; comprovar abans d’aplicar | politiques superadmin organitzacions |
 | 13 | `2609162300` | `2609162300_correccions_mur_i_xat.sql` | Estat remot no acreditat; comprovar abans d’aplicar | correccions mur i xat |
 | 14 | `2609191650` | `2609191650_bucket_mitjans_privats.sql` | Estat remot no acreditat; comprovar abans d’aplicar | bucket mitjans privats |
-| 15 | `2609200300` | `2609200300_blindatge_storage_i_contingut.sql` | Estat remot no acreditat; comprovar abans d’aplicar | blindatge storage i contingut |
+| 15 | `2609200300` | `2609200300_blindatge_storage_i_contingut.sql` | Estat remot no acreditat; comprovar abans d’aplicar. T2 del 13-11-2026: parcial (sense les polítiques «sdp mitjans …»); no la torneu a aplicar, el remei és `20261113112500` | blindatge storage i contingut |
 | 16 | `2609200600` | `2609200600_xat_limit_correccio.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat limit correccio |
 | 17 | `2609211820` | `2609211820_fix_security_definer.sql` | Estat remot no acreditat; comprovar abans d’aplicar | fix security definer |
 | 18 | `2609261200` | `2609261200_publicacions_autoria.sql` | Estat remot no acreditat; comprovar abans d’aplicar | publicacions autoria |
@@ -1866,11 +1879,12 @@ verificador sense avisos.
 | 94 | `2611121430` | `2611121430_mur_foraster_projeccio_publica_opcio_a.sql` | **NO aplicada: candidata R21** | Opció A: projecció pública mínima, revocació CAS durable, moderació AAL2 i padró coherent; PostgreSQL 18.6 local |
 | 95 | `2611121630` | `2611121630_xat_propi.sql` | Estat remot no acreditat; candidata R21.4 | Fil propi únic, RLS privada, lectura automàtica i zero auto-push |
 | 96 | `2611121700` | `2611121700_purga_agents_app_content_i_hidratacio_canonica.sql` | Estat remot no acreditat; candidata R21.5 | Purga per identitat i hidratació canònica, dades legítimes preservades |
-| 97 | `2611121830` | `2611121830_frontera_contingut_editorial_i_notes_privades.sql` | Estat remot no acreditat; candidata R21.6 | Frontera pública de nou claus i Notes privades, autoritat AAL2 real |
+| 97 | `2611121830` | `2611121830_frontera_contingut_editorial_i_notes_privades.sql` | Estat remot no acreditat; candidata R21.6 | Frontera pública de nou claus i Notes privades, amb la guarda vigent de superadmin (AAL2 quan s'aplique 2610061448) |
 | 98 | `2611121850` | `2611121850_mur_text_dates_i_contactes.sql` | Estat remot no acreditat; candidata R21.6 | Dates vàlides i rangs del Mur sense regressió de redacció de contactes |
 | 99 | `2611122200` | `2611122200_mur_membres_i_actes_v2.sql` | Estat remot no acreditat; candidata R21.1 v2 | Lectura anònima i de membres, actes atòmics, denúncia i bloqueig per UUID |
 | 100 | `20261113003000` | `20261113003000_r21_9b_canal_beta_testers_i_sync_aparadors.sql` | Estat remot no acreditat; candidata R21.9b | Beta canònic, PNG amb reserva, registre privat de sincronització consentida i CAS |
 | 101 | `20261113060000` | `20261113060000_r22_1_hero_video_url.sql` | **NO aplicada: candidata R22.1, l'aplica el Mestre** | `hero_video_url` amb CHECK i permisos de columna a `profiles` i `organizations`; la vista, `list_my_organizations` i `perfil_public` la tornen |
+| 102 | `20261113112500` | `20261113112500_r22_0_reconciliacio_deriva_ritme_xat_i_mitjans_privats.sql` | **NO aplicada: R22.0, aprovada pel Mestre el 13-11-2026 per a la sessió del T2** | Frontera de `mitjans_privats`, límit de ritme del xat i retirada d'`admin_list_users()` sense arguments |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

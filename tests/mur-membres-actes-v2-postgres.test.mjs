@@ -44,6 +44,8 @@ const EXTRA = [
  '2610061448_superadmin_aal2.sql',
  '2610081401_organitzacions_poble.sql',
  '2610241440_baixa_completa_ugc_i_fitxers.sql',
+ // Producció té 2611011500 (sonda te_autoria_poble): només hi ha pot_signar_com_organitzacio(uuid,uuid).
+ '2611011500_autoria_ajuntament_mateix_poble.sql',
  '2611110100_cua_purga_storage_ugc.sql',
  '2611111735_copublicacio_registrada.sql',
  '2611112005_mur_lectura_publica_foraster.sql',
@@ -625,6 +627,19 @@ test('R21.1 v2 · PostgreSQL 18.6 real: membres, actes, moderació i privadesa',
    await note(db,7343,{owner:OTHER});
    await assert.rejects(actor(db,OTHER,c=>c.query("select public.publica_nota_al_mur($1,$2,'mur',$3,1,$4)",[id(7343),id(7344),payload,id(7345)])),error('42501'));
   });
+  /* T2 del 13-11-2026 (Gauntlet OM-01) · El segon argument de pot_signar_com_organitzacio és el poble de la nota:
+     un ajuntament signa al seu poble i no al d'un altre (2611011500). Mata el mutant (v_org, null). */
+  await t.test('autoria d’ajuntament: només el del poble de la nota (2611011500)',async()=>{
+   // Els ajuntaments es reclamen, no es creen per RPC: la fixture els insereix i trg_organization_add_owner fa propietària la persona de created_by.
+   await db.query("insert into public.organizations(id,tenant_id,slug,name,kind,created_by) values($1,$2,'ajuntament-r22-0','Ajuntament de prova','city_hall',$5),($3,$4,'ajuntament-r22-0-altre','Ajuntament d’un altre poble','city_hall',$5)",[id(7520),TOWN,id(7521),TOWN2,OWNER]);
+   assert.equal((await db.query("select count(*)::int as n from public.organization_memberships where user_id=$1 and role='owner' and organization_id in ($2,$3)",[OWNER,id(7520),id(7521)])).rows[0].n,2);
+   await note(db,7522);
+   const propi={title:'Avís municipal',description:'Resum municipal',author_org_id:id(7520),payload:{content:'Cos municipal',status:'published',visibility:'public'}};
+   const ack=result(await actor(db,OWNER,c=>c.query("select public.publica_nota_al_mur($1,$2,'mur',$3,1,$4) as result",[id(7522),id(7523),propi,id(7524)])));
+   assert.equal(ack.publicacio.author_org_id,id(7520));assert.equal(ack.publicacio.tenant_id,TOWN);
+   await note(db,7525);
+   await assert.rejects(actor(db,OWNER,c=>c.query("select public.publica_nota_al_mur($1,$2,'mur',$3,1,$4)",[id(7525),id(7526),{...propi,author_org_id:id(7521)},id(7527)])),error('42501'));
+  });
   await t.test('Storage autenticat només llista propis; worker reclama exactament la còpia sense referències',async()=>{
    assert.equal((await actor(db,OTHER,c=>c.query("select * from storage.objects where bucket_id='mitjans'"))).rows.length,0);
    assert.equal((await actor(db,OUTSIDER,c=>c.query("select * from storage.objects where bucket_id='mitjans'"))).rows.length,0);
@@ -904,7 +919,7 @@ test('R21.1 v2 · PostgreSQL 18.6 real: membres, actes, moderació i privadesa',
    només es publica amb tota la cadena del Mur R21 aplicada. Ho diuen la porta d'ordre_desplegament.json, la
    restricció que l'ordre alfabètic cru no expressa i el README, amb fletxes que el verificador comprova. */
 test('dades-01 · la cadena del Mur R21 va abans del client v1.2.0 build 5 (porta, restricció i README)',()=>{
- const CADENA=['2611111735','2611112149','2611121430','2611121850','2611122200','20261113003000'],PORTA='client-v1-2-0-build-5-mur-r21';
+ const CADENA=['2611110100','2611111735','2611112149','2611121430','2611121850','2611122200','20261113003000'],PORTA='client-v1-2-0-build-5-mur-r21';
  const versions=readdirSync(new URL('../supabase/migrations/',import.meta.url)).filter(f=>/^(\d{10}|\d{14})_[a-z0-9_]+\.sql$/.test(f)).map(f=>f.split('_')[0]);
  const ordre=llegixOrdre(read('supabase/ordre_desplegament.json'),new Set(versions));
  const porta=ordre.portes.find(p=>p.id===PORTA);

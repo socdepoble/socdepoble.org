@@ -46,9 +46,13 @@ test('R22.1 · hero_video_url: CHECK, permisos, lectura i idempotència sobre Po
   try {
     assert.equal((await db.query("select current_setting('server_version_num') as n")).rows[0].n, '180006');
     const plan = creaPlaMigracions();
-    assert.equal(plan.migrations.at(-1).file, MIGRATION, 'el pla del verificador la posa darrere de tot el catàleg, també de 20261113003000');
+    /* R22.0 · La reconciliació 20261113112500 va darrere; R22.1 continua darrere de tot el catàleg de
+       deu dígits i de 20261113003000, i només la seguixen versions de catorze dígits posteriors. */
+    const posicio = plan.migrations.findIndex(m => m.file === MIGRATION);
+    assert.ok(posicio > plan.migrations.findIndex(m => m.file.startsWith('20261113003000_')), 'el pla del verificador la posa darrere de 20261113003000');
+    assert.ok(plan.migrations.slice(posicio + 1).every(m => /^\d{14}_/.test(m.file) && m.file > MIGRATION), 'darrere de tot el catàleg de deu dígits');
     await db.query(plan.bootstrap);
-    for (const migration of plan.migrations.filter(m => m.file !== MIGRATION)) {
+    for (const migration of plan.migrations.slice(0, posicio)) {
       await db.query('begin');
       try { await db.query(migration.body); await db.query('commit'); }
       catch (e) { await db.query('rollback'); throw new Error(`baseline ${migration.file}: ${e.message}`, { cause: e }); }

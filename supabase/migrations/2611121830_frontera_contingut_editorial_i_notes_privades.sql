@@ -1,7 +1,7 @@
 -- R21.6 · Reassert the existing public-content boundary, without replacing data.
 -- Observed production GET exposed app_content keys notes/noteFolders, while
 -- 2609200300 and 2610101900 explicitly exclude them from the public catalogue.
--- Requires 2609140000 and 2610061448 (the real AAL2 es_superadmin helper).
+-- Requires 2609140000. Uses the current private.es_superadmin() guard (AAL2 once 2610061448 is applied; tested without it in T2, 13-11-2026).
 -- No remote application has been performed by this source migration.
 begin;
 set local lock_timeout = '5s';

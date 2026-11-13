@@ -1,15 +1,17 @@
 -- R21.1 v2 · Mur de poble: dues lectures i actes de publicació independents.
 -- Additiva sobre R21.1 + R21.6. Cap crida externa ni escriptura remota.
+-- Requerix 2611110100 (cua de purga) i 2611011500 (pot_signar_com_organitzacio amb el poble, línia 960; correcció del T2 del 13-11-2026).
 begin;
 set local lock_timeout = '5s';
 set local statement_timeout = '60s';
 do $$ begin
  if to_regclass('public.bloquejos') is null or to_regclass('private.baixes') is null
   or to_regclass('public.cua_purga_storage_ugc') is null or to_regclass('storage.objects') is null
+  or to_regprocedure('public.pot_signar_com_organitzacio(uuid,uuid)') is null
   or not exists(select 1 from information_schema.columns where table_schema='public' and table_name='notes' and column_name='status')
   or (select count(*) from information_schema.columns where table_schema='public' and table_name='profiles'
       and column_name in ('avatar_url','hero_url','presentacio_html'))<>3 then
-  raise exception using errcode='55000',message='SDP-MUR-DEPENDENCY: aplica abans moderació, cicle Notes, perfil F1 i cua Storage canònics.';
+  raise exception using errcode='55000',message='SDP-MUR-DEPENDENCY: aplica abans moderació, cicle Notes, perfil F1, cua Storage i autoria per poble (2611011500) canònics.';
  end if;
 end $$;
 
@@ -957,7 +959,7 @@ begin
  v_payload:=(v_payload-array['owner_user_id','ownerUserId','author_org_id','authorOrgId','author_id','author_user_id',
   'author_agent_id','authorAgentId','isSystem','isAvis','is_pinned','pinned_position','autor']::text[])
   ||jsonb_build_object('id',p_act_id,'ownerUserId',auth.uid(),'author_org_id',v_org,'authorOrgId',v_org,'sectionId',p_section_id);
- if not public.pot_signar_com_organitzacio(v_org) or not private.mur_public_eligible(v_payload) then
+ if not public.pot_signar_com_organitzacio(v_org, n.tenant_id) or not private.mur_public_eligible(v_payload) then
   raise exception using errcode='42501',message='SDP-MUR-PUBLICACIO: no es pot publicar este contingut.';
  end if;
  perform pg_advisory_xact_lock(hashtextextended('sdp:mur:'||p_act_id::text,0));

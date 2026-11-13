@@ -215,8 +215,9 @@
     {
       "id": "client-v1-2-0-build-5-mur-r21",
       "tipus": "client",
-      "descripcio": "Publicar el client v1.2.0 build 5 (web, zip del connector WordPress 1.1.14, Android versionCode 5 i iOS build 5) només amb tota la cadena del Mur R21 ja aplicada al servidor: 2611111735 → 2611112149 → 2611121430 → 2611121850 → 2611122200 → 20261113003000. Este client llig el Mur, el Mercat, l'Agenda i Multimèdia amb llig_mur_public i llig_mur_membres (també amb p_nomes_projeccions) i publica des de Notes amb publica_nota_al_mur. Cap zip ni pujada a les botigues abans.",
+      "descripcio": "Publicar el client v1.2.0 build 5 (web, zip del connector WordPress 1.1.14, Android versionCode 5 i iOS build 5) només amb tota la cadena del Mur R21 ja aplicada al servidor: 2611110100 → 2611111735 → 2611112149 → 2611121430 → 2611121850 → 2611122200 → 20261113003000. Este client llig el Mur, el Mercat, l'Agenda i Multimèdia amb llig_mur_public i llig_mur_membres (també amb p_nomes_projeccions) i publica des de Notes amb publica_nota_al_mur; 2611122200 exigix la cua de purga de 2611110100 (SDP-MUR-DEPENDENCY). Cap zip ni pujada a les botigues abans.",
       "despres": [
+        "2611110100",
         "2611111735",
         "2611112149",
         "2611121430",
@@ -225,7 +226,7 @@
         "20261113003000"
       ],
       "abans": [],
-      "font": "README Nota d'auditoria §16 i vinyetes de 2611121430 i 2611122200; Gauntlet R22 dades-01, dades-05 i honestedat-03"
+      "font": "README Nota d'auditoria §16 i vinyetes de 2611121430 i 2611122200; Gauntlet R22 dades-01, dades-05 i honestedat-03; T2 del 13-11-2026 (2611110100, requisit dur de 2611122200:6-14)"
     }
   ],
   "fantasmes": [
