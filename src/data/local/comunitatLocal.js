@@ -15,7 +15,7 @@
  * l'organització o l'agent (en remot, la RLS). Totes les eixides són còpies.
  */
 import {
-  CODI_MODERACIO, LIMIT_DIRECTORI_ENTITATS, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, comDelContracte,
+  CODI_MODERACIO, LIMIT_DIRECTORI_ENTITATS, TIPUS_BLOQUEIG_PUBLICACIO, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, comDelContracte,
   denunciaDelContracte, destinatariaDeTransferencia, errorDeMembre, errorDeModeracio, errorDeTitular, membreDOrganitzacio,
   errorDeConnexions, subjecteConnexionsDelContracte, seguitDelContracte, titularDelContracte
 } from '../contracte.js';
@@ -23,6 +23,8 @@ import { CODI_ENTRADA, ambCodi } from '../errorsBackend.js';
 import { normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
 import { esPobleImpossible, pobleDelFiltre } from '../pobleOrganitzacio.js';
 import { entitatsDeLEstat } from '../dadesObertesLot.js';
+/* L'UUID públic d'una publicació (desbloquejaAutor amb tipus 'publicacio'). */
+const RE_UUID_PUBLICACIO = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /* Els camps del port cap a les columnes d'organizations (organizations.js · updateOrganization). */
 const CAMPS_ORGANITZACIO = Object.freeze({
@@ -265,7 +267,14 @@ export function creaComunitatLocal(e) {
       return e.copia(bloqueig);
     },
 
+    /* Gauntlet R22 (sql-01) · El contracte accepta { tipus: 'publicacio', id: UUID }
+       (el bloqueig opac de 2611122200). Este magatzem no en fa cap: un UUID vàlid
+       no desbloqueja res ({ desbloquejat: false }); un altre id, OBJECTIU_INVALID. */
     async desbloquejaAutor(dades = {}) {
+      if (dades?.tipus === TIPUS_BLOQUEIG_PUBLICACIO) {
+        if (!RE_UUID_PUBLICACIO.test(String(dades.id ?? '').trim())) throw errorDeModeracio(CODI_MODERACIO.OBJECTIU_INVALID);
+        return { desbloquejat: false };
+      }
       const autor = autorDelContracte(dades, { ambNom: false });
       return { desbloquejat: Boolean(moderacio.bloquejos.get(String(e.qui()))?.delete(clauDeBloqueig(autor))) };
     },

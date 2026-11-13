@@ -74,6 +74,8 @@ function Prova({ inicial = '', onEnvia = () => {}, ...props }) {
 
 const camp = () => screen.getByRole('textbox', { name: 'Escriu un missatge' });
 const mes = () => screen.getByRole('button', { name: 'Adjunta' });
+/* Gauntlet R22 (xat-02) · Sense adjunts, el + es diu «Més opcions»: no promet adjuntar. */
+const mesSenseAdjunts = () => screen.getByRole('button', { name: 'Més opcions' });
 const redo = () => document.querySelector('.sdp-xat-compositor__envia');
 const noms = (botons) => botons.map((b) => b.getAttribute('aria-label') || b.textContent);
 /* El rellotge del doble toc (Date.now), a mà: `passa(ms)` l'avança. */
@@ -83,20 +85,21 @@ const rellotge = () => {
   return { passa: (ms) => { ara += ms; } };
 };
 
-describe('sense adjunts, el compositor de sempre', () => {
-  test('(a) ni + ni micròfon: la carona i Envia (submit, desactivat amb el camp buit)', () => {
+describe('sense adjunts, el compositor net amb negreta dins del + (R21.8)', () => {
+  test('(a) sense adjunts ni micròfon: el + (només Escriure en negreta), la carona i Envia (submit, desactivat amb el camp buit)', () => {
     render(<Prova />);
-    expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Grava àudio' })).toBeNull();
-    expect(noms(within(camp().closest('form')).getAllByRole('button'))).toEqual(['Emoticones', 'Negreta', 'Envia']);
+    expect(screen.queryByRole('button', { name: 'Negreta' })).toBeNull();
+    expect(noms(within(camp().closest('form')).getAllByRole('button'))).toEqual(['Més opcions', 'Emoticones', 'Envia']);
     expect(redo().type).toBe('submit');
     expect(redo().disabled).toBe(true);
     expect(redo().hasAttribute('data-accio')).toBe(false);
-    // La carona viu dins del camp, abans del textarea.
+    // La carona viu dins del camp, abans del textarea; cap botó [N] dins del camp.
     expect(screen.getByRole('button', { name: 'Emoticones' }).parentElement).toBe(camp().parentElement);
-    expect(camp().parentElement.className).toBe('sdp-xat-compositor__camp sdp-xat-compositor__camp--carona sdp-xat-compositor__camp--negreta');
-    // IDEA-53 · [N] també viu dins del camp, darrere del textarea.
-    expect(screen.getByRole('button', { name: 'Negreta' }).parentElement).toBe(camp().parentElement);
+    expect(camp().parentElement.className).toBe('sdp-xat-compositor__camp sdp-xat-compositor__camp--carona');
+    fireEvent.click(mesSenseAdjunts());
+    expect(screen.getByRole('menu', { name: 'Opcions d’escriptura' })).toBeTruthy();
+    expect(noms(screen.getAllByRole('menuitem'))).toEqual(['Escriure en negreta']);
   });
 });
 
@@ -271,7 +274,7 @@ describe('el doble toc al botó redó', () => {
 });
 
 describe('el + i el seu menú', () => {
-  test('(e) menu button: aria-haspopup, aria-expanded i aria-controls; el focus a la primera opció; només «Fotos i vídeos» i la quota al peu', () => {
+  test('(e) menu button: aria-haspopup, aria-expanded i aria-controls; el focus a la primera opció; «Fotos i vídeos» + «Escriure en negreta» i la quota al peu', () => {
     render(<Prova adjunts={fesAdjunts()} />);
     expect(mes().getAttribute('aria-haspopup')).toBe('menu');
     expect(mes().getAttribute('aria-expanded')).toBe('false');
@@ -283,7 +286,7 @@ describe('el + i el seu menú', () => {
     expect(mes().getAttribute('aria-controls')).toBe(ID_MENU_ADJUNTS);
     expect(menu.id).toBe(ID_MENU_ADJUNTS);
     const opcions = within(menu).getAllByRole('menuitem');
-    expect(noms(opcions)).toEqual(['Fotos i vídeos']);
+    expect(noms(opcions)).toEqual(['Fotos i vídeos', 'Escriure en negreta']);
     expect(document.activeElement).toBe(opcions[0]);
     expect(document.getElementById(menu.getAttribute('aria-describedby')).textContent).toBe('0,0 de 20 MB del xat');
     // Cap botó mort (decisió del Mestre, 261028).
@@ -299,17 +302,19 @@ describe('el + i el seu menú', () => {
     ];
     render(<Prova adjunts={fesAdjunts({ opcions })} />);
     fireEvent.click(mes());
-    const [fotos, camera] = screen.getAllByRole('menuitem');
+    const [fotos, camera, negreta] = screen.getAllByRole('menuitem');
     fireEvent.keyDown(fotos, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(camera);
     fireEvent.keyDown(camera, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(negreta);
+    fireEvent.keyDown(negreta, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(fotos);
     fireEvent.keyDown(fotos, { key: 'ArrowUp' });
-    expect(document.activeElement).toBe(camera);
-    fireEvent.keyDown(camera, { key: 'Home' });
+    expect(document.activeElement).toBe(negreta);
+    fireEvent.keyDown(negreta, { key: 'Home' });
     expect(document.activeElement).toBe(fotos);
     fireEvent.keyDown(fotos, { key: 'End' });
-    expect(document.activeElement).toBe(camera);
+    expect(document.activeElement).toBe(negreta);
     fireEvent.keyDown(camera, { key: 'Tab' });
     expect(screen.queryByRole('menu')).toBeNull();
     expect(document.activeElement).toBe(mes());
@@ -365,7 +370,7 @@ describe('el + i el seu menú', () => {
   test('(h) clicar fora el tanca sense moure el focus; clicar el + el torna a tancar', () => {
     render(<Prova adjunts={fesAdjunts()} />);
     fireEvent.click(mes());
-    fireEvent.pointerDown(screen.getByRole('menuitem'));
+    fireEvent.pointerDown(screen.getByRole('menuitem', { name: 'Fotos i vídeos' }));
     expect(screen.getByRole('menu')).toBeTruthy();
     fireEvent.pointerDown(camp());
     expect(screen.queryByRole('menu')).toBeNull();
@@ -385,7 +390,7 @@ describe('el + i el seu menú', () => {
     const onEnvia = vi.fn();
     render(<Prova inicial="Bon dia" onEnvia={onEnvia} adjunts={fesAdjunts()} />);
     fireEvent.click(mes());
-    expect(document.activeElement).toBe(screen.getByRole('menuitem'));
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Fotos i vídeos' }));
     await act(async () => { fireEvent.pointerDown(redo()); });
     expect(screen.queryByRole('menu')).toBeNull();
     expect(fireEvent.mouseDown(redo())).toBe(false);
@@ -413,7 +418,7 @@ describe('el + i el seu menú', () => {
     render(<Prova adjunts={fesAdjunts()} />, { container: arrel });
     const dins = within(arrel);
     fireEvent.click(dins.getByRole('button', { name: 'Adjunta' }));
-    expect(shadow.activeElement).toBe(dins.getByRole('menuitem'));
+    expect(shadow.activeElement).toBe(dins.getByRole('menuitem', { name: 'Fotos i vídeos' }));
     fireEvent.pointerDown(dins.getByRole('textbox'));
     expect(dins.queryByRole('menu')).toBeNull();
     fireEvent.click(dins.getByRole('button', { name: 'Adjunta' }));
@@ -550,13 +555,13 @@ function Barra(props) {
 const serveiAmbQuota = () => ({ teCapacitat: () => true, quotaXat: vi.fn().mockResolvedValue({ usats: 0, limit: 20_000_000 }) });
 
 describe('el menú de ControlsAdjunt', () => {
-  test('a l’escriptori, només «Fotos i vídeos»; sense micròfon, l’avís viu al peu del menú i enlloc més', async () => {
+  test('a l’escriptori, «Fotos i vídeos» + «Escriure en negreta»; sense micròfon, l’avís viu al peu del menú i enlloc més', async () => {
     const clics = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
     render(<Barra usuariId="menu-escriptori" servei={serveiAmbQuota()} />);
-    await screen.findByRole('button', { name: 'Adjunta' });
+    await waitFor(() => expect(document.querySelector('.sdp-xat-adjunts')).toBeTruthy());
     expect(screen.queryByText('Este navegador no permet gravar àudio.')).toBeNull();
     fireEvent.click(mes());
-    expect(noms(screen.getAllByRole('menuitem'))).toEqual(['Fotos i vídeos']);
+    expect(noms(screen.getAllByRole('menuitem'))).toEqual(['Fotos i vídeos', 'Escriure en negreta']);
     expect([...document.getElementById('xat-message-adjunts-peu').children].map((p) => p.textContent))
       .toEqual(['0,0 de 20 MB del xat', 'Este navegador no permet gravar àudio.']);
     fireEvent.click(screen.getByRole('menuitem', { name: 'Fotos i vídeos' }));
@@ -571,8 +576,9 @@ describe('el menú de ControlsAdjunt', () => {
     m.preparaAdjunt.mockResolvedValue({ id: 'foto', tipus: 'imatge', fitxer: new Blob(['f'], { type: 'image/webp' }) });
     vi.stubGlobal('URL', { createObjectURL: vi.fn().mockReturnValue('blob:camera'), revokeObjectURL: vi.fn() });
     render(<Barra usuariId="menu-tactil" servei={serveiAmbQuota()} />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Adjunta' }));
-    expect(noms(screen.getAllByRole('menuitem'))).toEqual(['Fotos i vídeos', 'Càmera']);
+    await waitFor(() => expect(document.querySelector('.sdp-xat-adjunts')).toBeTruthy());
+    fireEvent.click(mes());
+    expect(noms(screen.getAllByRole('menuitem'))).toEqual(['Fotos i vídeos', 'Càmera', 'Escriure en negreta']);
     fireEvent.click(screen.getByRole('menuitem', { name: 'Càmera' }));
     const camera = screen.getByLabelText('Fes una foto amb la càmera');
     expect(clics.mock.contexts).toEqual([camera]);
@@ -591,7 +597,7 @@ describe('el menú de ControlsAdjunt', () => {
     m.preparaAdjunt.mockReturnValueOnce(preparant.promise);
     vi.stubGlobal('URL', { createObjectURL: vi.fn().mockReturnValue('blob:foto'), revokeObjectURL: vi.fn() });
     const vista = render(<Barra usuariId="safata" servei={serveiAmbQuota()} />);
-    await screen.findByRole('button', { name: 'Adjunta' });
+    await waitFor(() => expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeTruthy());
     const safata = vista.container.querySelector('.sdp-xat-adjunts');
     expect(safata.className).toBe('sdp-xat-adjunts');
     expect(safata.hasAttribute('role')).toBe(false);
@@ -614,7 +620,7 @@ describe('el menú de ControlsAdjunt', () => {
   test('un error de preparació, sense res més a fer, encara activa la safata: el grup amb l’alerta', async () => {
     m.preparaAdjunt.mockRejectedValueOnce(new Error('No hem pogut preparar el fitxer.'));
     const vista = render(<Barra usuariId="safata-error" servei={serveiAmbQuota()} />);
-    await screen.findByRole('button', { name: 'Adjunta' });
+    await waitFor(() => expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeTruthy());
     fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['f'], { type: 'image/jpeg' })] } });
     expect(await screen.findByRole('alert')).toBeTruthy();
     const safata = vista.container.querySelector('.sdp-xat-adjunts');
@@ -655,9 +661,9 @@ describe('el menú de ControlsAdjunt', () => {
   });
 });
 
-/* (k) A nivell de Conversa: el + i el micròfon només per a qui pot enviar
-   fitxers en esta conversa (onSendMedia el dona XatSection només en remot,
-   amb sessió i fora de la IAIA). */
+/* (k) A nivell de Conversa: els adjunts i el micròfon només per a qui pot enviar
+   fitxers en esta conversa; el + sempre hi és en un fil escrivible perquè porta
+   «Escriure en negreta» (R21.8). */
 const FIL = { id: 'f-barra', tipus: 'grup', name: 'Comissió', potEscriure: true, llegitFinsSeq: 0 };
 const moderacio = (bloquejada) => ({
   disponible: true,
@@ -685,24 +691,28 @@ const pintaConversa = (extra = {}) => render(
 describe('(k) Conversa: cap adjunt per a qui no en pot enviar', () => {
   beforeEach(() => { m.quotaXat.mockResolvedValue({ usats: 0, limit: 20_000_000, pendents: [] }); });
 
-  test('amb onSendMedia i la quota, el + hi és', async () => {
-    pintaConversa();
-    expect(await screen.findByRole('button', { name: 'Adjunta' })).toBeTruthy();
+  test('amb onSendMedia i la quota, el + hi és i oferix adjunts + negreta', async () => {
+    const vista = pintaConversa();
+    await waitFor(() => expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeTruthy());
+    fireEvent.click(mes());
+    expect(noms(screen.getAllByRole('menuitem'))).toEqual(['Fotos i vídeos', 'Escriure en negreta']);
   });
 
   test.each([
     ['sense onSendMedia (convidat, llavor, IAIA)', { onSendMedia: null }],
     ['fora de la conversa (participant false)', { fil: { ...FIL, participant: false } }],
     ['amb la contrapart bloquejada', { fil: { ...FIL, id: 'd-pep', tipus: 'directe', name: 'Pep' }, moderacio: moderacio(true) }]
-  ])('%s: ni +, ni micròfon, ni safata, i la quota no es llig', async (_cas, extra) => {
+  ])('%s: ni micròfon, ni safata d’adjunts, la quota no es llig, i el + només mostra Escriure en negreta', async (_cas, extra) => {
     vi.stubGlobal('navigator', { ...globalThis.navigator, mediaDevices: { getUserMedia: vi.fn() } });
     const vista = pintaConversa(extra);
     const campDeLaConversa = screen.getByRole('textbox', { name: 'Escriu un missatge' });
     await act(async () => {});
     expect(m.quotaXat).not.toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Grava àudio' })).toBeNull();
     expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
+    fireEvent.click(mesSenseAdjunts());
+    expect(noms(screen.getAllByRole('menuitem'))).toEqual(['Escriure en negreta']);
     expect(screen.getByRole('textbox', { name: 'Escriu un missatge' })).toBe(campDeLaConversa);
   });
 
@@ -735,12 +745,13 @@ function valor(selector, propietat) {
 }
 
 describe('la geometria de la barra única', () => {
-  test('el +, la carona, [N] i el botó redó són dianes de 48px (--sdp-touch) amb el radi de botó', () => {
-    for (const selector of ['.sdp-xat-compositor__adjunta', '.sdp-xat-compositor__emojis', '.sdp-xat-compositor__negreta', '.sdp-xat-compositor__envia']) {
+  test('el +, la carona i el botó redó són dianes de 48px (--sdp-touch) amb el radi de botó; [N] s’ha retirat (R21.8)', () => {
+    for (const selector of ['.sdp-xat-compositor__adjunta', '.sdp-xat-compositor__emojis', '.sdp-xat-compositor__envia']) {
       expect(valor(selector, 'width'), selector).toBe('var(--sdp-touch)');
       expect(valor(selector, 'height'), selector).toBe('var(--sdp-touch)');
       expect(valor(selector, 'border-radius'), selector).toBe('var(--sdp-radi-boto)');
     }
+    expect(valor('.sdp-xat-compositor__negreta', 'width')).toBeNull();
     expect(valor('.sdp-xat-menu__item', 'min-height')).toBe('var(--sdp-touch)');
   });
 
@@ -750,9 +761,6 @@ describe('la geometria de la barra única', () => {
     expect(valor('.sdp-xat-compositor__camp--carona > .sdp-xat-compositor__textarea', 'grid-area')).toBe('1 / 2 / 2 / 3');
     expect(valor('.sdp-xat-compositor__camp', 'grid-template-columns')).toBeNull();
     expect(valor('.sdp-xat-compositor__camp', 'display')).toBe('grid');
-    /* El coixí curt, a l'esquerra en físic (la carona hi és sempre): amb
-       dir="auto" i text en àrab o en hebreu, l'inici lògic seria la dreta. El
-       mirall porta el mateix: l'alçada continua bé. */
     for (const selector of ['.sdp-xat-compositor__camp--carona::after', '.sdp-xat-compositor__camp--carona > .sdp-xat-compositor__textarea']) {
       expect(valor(selector, 'padding-left'), selector).toBe('var(--sdp-space-1)');
       expect(valor(selector, 'padding-inline-start'), selector).toBeNull();
@@ -760,16 +768,10 @@ describe('la geometria de la barra única', () => {
     expect(existsSync(resolve('src/sections/xat/components/ConsultaIAIA.jsx'))).toBe(false);
   });
 
-  test('IDEA-53 · [N] a la tercera columna, només amb els dos modificadors; el mirall i el textarea, amb el mateix coixí', () => {
-    expect(valor('.sdp-xat-compositor__camp--carona.sdp-xat-compositor__camp--negreta', 'grid-template-columns')).toBe('auto minmax(0, 1fr) auto');
-    expect(valor('.sdp-xat-compositor__camp--negreta > .sdp-xat-compositor__negreta', 'grid-area')).toBe('1 / 3 / 2 / 4');
-    for (const selector of ['.sdp-xat-compositor__camp--negreta::after', '.sdp-xat-compositor__camp--negreta > .sdp-xat-compositor__textarea']) {
-      expect(valor(selector, 'padding-right'), selector).toBe('var(--sdp-space-1)');
-    }
-    /* L'àrea tàctil mai per davall del mínim de la casa. */
-    expect(valor('.sdp-xat-compositor__negreta', 'min-width')).toBe('var(--sdp-touch-min)');
-    expect(valor('.sdp-xat-compositor__negreta', 'min-height')).toBe('var(--sdp-touch-min)');
-    /* La negreta de la bombolla: l'extra de la casa, no el «bolder» del navegador. */
+  test('R21.8 · el placeholder es manté en 1 sola línia (:placeholder-shown nowrap) i la negreta de la bombolla conserva el pes extra', () => {
+    expect(valor('.sdp-xat-compositor__textarea:placeholder-shown', 'white-space')).toBe('nowrap');
+    expect(valor('.sdp-xat-compositor__textarea:placeholder-shown', 'overflow')).toBe('hidden');
+    expect(valor('.sdp-xat-compositor__textarea:placeholder-shown', 'text-overflow')).toBe('ellipsis');
     expect(valor('.sdp-xat-bombolla__text strong', 'font-weight')).toBe('var(--sdp-pes-extra)');
   });
 

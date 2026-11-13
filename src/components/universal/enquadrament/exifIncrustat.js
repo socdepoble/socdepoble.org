@@ -621,6 +621,127 @@ export function preparaTiff(entrada) {
   return analisi?.estat === ESTAT_EXIF.PUBLICABLE ? analisi.tiff : null;
 }
 
+/* ─── La còpia pública: només el que diu la casella ───────────────────── */
+
+/* Gauntlet R22 (ronda 3, privadesa) · La còpia PÚBLICA d'una foto de Notes
+   (storage.js · ambExifTriat) no porta el bloc de preparaTiff, que conserva
+   l'IFD0, l'Exif IFD amb el MakerNote, Interop i els SubIFD amb TOTS els
+   valors: una descripció, el programari, l'autoria, els drets, un comentari,
+   els números de sèrie o el nom de qui té la càmera hi anaven també. Porta un
+   bloc NOU amb només les etiquetes de la casella que la persona ha marcat:
+     · «Conserva la ubicació i la data de la foto» (el bloc porta ubicació o
+       data, teUbicacioOData): del GPS IFD, la versió, la latitud, la longitud
+       i l'altitud amb les seues referències (0 a 6), tal com les ha deixades
+       la precisió triada (ajustaPrecisioGps); i les dates, DateTime de l'IFD0
+       i DateTimeOriginal, DateTimeDigitized i les seues zones (OffsetTime*)
+       de l'Exif IFD. Cap dada de la càmera: amb exifTriat (les Notes), l'avís
+       de la casella només diu la ubicació o la data (DialegEnquadrament ·
+       ajudaConservaExif; ronda 4);
+     · «Conserva les dades de la càmera de la foto» (sense ubicació ni data):
+       la marca i el model, Make i Model de l'IFD0 i LensMake i LensModel de
+       l'Exif IFD. Mai els números de sèrie ni el nom de cap persona: amb
+       exifTriat, l'avís només nomena la marca i el model i, si la foto no en
+       porta, diu que les dades de la càmera no es publicaran.
+   Els valors es copien byte a byte, amb el mateix ordre de bytes; cada
+   directori va en ordre de tag i sense «següent». El bloc nou es torna a
+   passar per analitzaTiff. Sense cap etiqueta triada, o si el bloc no es pot
+   conservar, null (la còpia ix neta). Mai llança. */
+const TRIA_UBICACIO_I_DATA = Object.freeze({
+  ifd0: new Set([0x0132]),
+  exif: new Set([0x9003, 0x9004, 0x9010, 0x9011, 0x9012]),
+  gps: new Set([0, 1, 2, 3, 4, 5, 6]),
+});
+const TRIA_CAMERA = Object.freeze({
+  ifd0: new Set([0x010f, 0x0110]),
+  exif: new Set([0xa433, 0xa434]),
+  gps: new Set(),
+});
+
+/**
+ * El bloc TIFF de la còpia pública: només les etiquetes de la tria (vegeu
+ * dalt), en un bloc nou; o null si no en queda cap o no es pot conservar.
+ */
+export function preparaTiffTriat(entrada) {
+  try {
+    const analisi = analitzaTiff(entrada);
+    if (analisi?.estat !== ESTAT_EXIF.PUBLICABLE || !analisi.tiff) return null;
+    const tria = teUbicacioOData(analisi) ? TRIA_UBICACIO_I_DATA : TRIA_CAMERA;
+    const t = analisi.tiff;
+    const v = new DataView(t.buffer, t.byteOffset, t.byteLength);
+    const le = v.getUint16(0) === 0x4949;
+    /* Les entrades d'un directori que analitzaTiff ja ha validat (tipus
+       coneguts, valors dins del bloc) amb un tag de `tags`, amb el valor copiat. */
+    const triades = (offset, tags) => {
+      if (!tags.size || !Number.isInteger(offset) || offset < 8 || offset + 2 > t.length) return [];
+      const nombre = v.getUint16(offset, le);
+      if (nombre > MAX_ENTRADES_IFD || offset + 2 + nombre * 12 + 4 > t.length) return [];
+      const entrades = [];
+      for (let i = 0; i < nombre; i += 1) {
+        const p = offset + 2 + i * 12;
+        const tag = v.getUint16(p, le);
+        if (!tags.has(tag)) continue;
+        const tipus = v.getUint16(p + 2, le);
+        const quantitat = v.getUint32(p + 4, le);
+        const bytes = MIDA_TIPUS[tipus] * quantitat;
+        const pos = bytes <= 4 ? p + 8 : v.getUint32(p + 8, le);
+        if (!Number.isFinite(bytes) || pos + bytes > t.length) return [];
+        entrades.push({ tag, tipus, quantitat, valor: t.slice(pos, pos + bytes) });
+      }
+      return entrades.sort((a, b) => a.tag - b.tag);
+    };
+    const offsetIfd0 = v.getUint32(4, le);
+    const punter = (tag) => triades(offsetIfd0, new Set([tag]))
+      .filter((e) => e.quantitat === 1 && (e.tipus === TIPUS_LONG || e.tipus === TIPUS_IFD))
+      .map((e) => new DataView(e.valor.buffer).getUint32(0, le))[0] ?? 0;
+    const delIfd0 = triades(offsetIfd0, tria.ifd0);
+    const delExif = triades(punter(TAG_EXIF_IFD), tria.exif);
+    const delGps = triades(punter(TAG_GPS_IFD), tria.gps);
+    // Un GPS IFD que només porta la versió no diu cap lloc.
+    const subs = [[TAG_EXIF_IFD, delExif], [TAG_GPS_IFD, delGps.some((e) => e.tag !== TAG_GPS_VERSIO) ? delGps : []]]
+      .filter(([, entrades]) => entrades.length)
+      .map(([tag, entrades]) => ({ tag, entrades }));
+    if (!delIfd0.length && !subs.length) return null;
+    const punters = subs.map((dir) => ({ tag: dir.tag, tipus: TIPUS_LONG, quantitat: 1, valor: new Uint8Array(4), dir }));
+    const dirs = [{ entrades: [...delIfd0, ...punters].sort((a, b) => a.tag - b.tag) }, ...subs];
+    // On va cada directori i cada valor de més de 4 bytes (en posicions parells).
+    let cursor = 8;
+    for (const dir of dirs) {
+      dir.offset = cursor;
+      cursor += 2 + dir.entrades.length * 12 + 4;
+      for (const e of dir.entrades) {
+        if (e.valor.length > 4) {
+          e.offset = cursor;
+          cursor += e.valor.length + (e.valor.length & 1);
+        }
+      }
+    }
+    if (cursor > MAX_BYTES_TIFF) return null;
+    const r = new Uint8Array(cursor);
+    const w = new DataView(r.buffer);
+    r.set(t.subarray(0, 4), 0); // II o MM, i el 42
+    w.setUint32(4, 8, le);
+    for (const dir of dirs) {
+      w.setUint16(dir.offset, dir.entrades.length, le);
+      dir.entrades.forEach((e, k) => {
+        const q = dir.offset + 2 + k * 12;
+        w.setUint16(q, e.tag, le);
+        w.setUint16(q + 2, e.tipus, le);
+        w.setUint32(q + 4, e.quantitat, le);
+        if (e.dir) w.setUint32(q + 8, e.dir.offset, le);
+        else if (e.valor.length > 4) {
+          w.setUint32(q + 8, e.offset, le);
+          r.set(e.valor, e.offset);
+        } else r.set(e.valor, q + 8);
+      });
+      w.setUint32(dir.offset + 2 + dir.entrades.length * 12, 0, le);
+    }
+    const comprovat = analitzaTiff(r);
+    return comprovat?.estat === ESTAT_EXIF.PUBLICABLE ? comprovat.tiff : null;
+  } catch {
+    return null;
+  }
+}
+
 /* ─── La precisió de la ubicació (P1-64, pla 261028_1526 §3.1.1) ──────── */
 
 /* P1-64 (Mestre 261028, decisió 8) · La persona que conserva la ubicació d'una

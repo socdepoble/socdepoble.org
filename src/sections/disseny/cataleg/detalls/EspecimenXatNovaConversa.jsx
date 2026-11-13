@@ -37,7 +37,7 @@ export const ESTATS_NOVA_CONVERSA = Object.freeze([
   { id: 'confirmar', etiqueta: 'Per confirmar', pista: 'El servidor encara no ha dit si obri el xat propi: la fila «(Tu)» no va dalt. Busca «Javi» i prem-la: el servidor de mostra respon que no i ix l’avís honest.' },
   { id: 'personal', etiqueta: 'Avís personal', pista: 'El servidor ja ha dit que no obri el xat propi: busca «Javi» i prem la teua fila, «Javi Llinares (Tu)». L’avís honest, sense cap petició.' },
   { id: 'error', etiqueta: 'Error en obrir', pista: 'L’error de la conversa que no s’ha pogut obrir, dins del diàleg.' },
-  { id: 'carregant', etiqueta: 'Carregant', pista: 'El servidor encara no ha respost: «Carregant la gent del poble…».' }
+  { id: 'carregant', etiqueta: 'Carregant', pista: 'El servidor encara no ha respost: «Carregant la gent del teu poble…».' }
 ]);
 
 /* El que el backend de mostra acredita del xat propi en cada estat. */
@@ -75,7 +75,7 @@ export default function EspecimenXatNovaConversa() {
       a11y={[
         'El focus entra al cercador en obrir-lo i torna al «+» en tancar-lo.',
         'Escape amb text esborra el terme; buit, tanca el diàleg.',
-        'Mentre el servidor no ha respost, «Carregant la gent del poble…» (role="status"), mai «Cap contacte».'
+        'Mentre el servidor no ha respost, «Carregant la gent del teu poble…» (role="status"), mai «Cap contacte».'
       ]}
       fes={['Dir d’on naixen els grups i les comunitats en lloc d’oferir un formulari que no crea res.']}
       noFacis={['Un toast per a l’error: quedaria davall del <dialog> modal.', 'Prometre el xat personal quan el backend no l’obri: ni fila fixa dalt ni un clic que acabe en un error mut.']}>

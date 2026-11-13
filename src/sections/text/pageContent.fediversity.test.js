@@ -679,12 +679,12 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     // dated note (one source, INVENTARI_CONTRACTE), checked against the code.
     expect(fet).toContain(nucli+' mètodes obligatoris i '+capacitats+' capacitats opcionals declarades');
     expect(fet).toContain(opcionals+' mètodes addicionals: '+total+' mètodes en total');
-    expect(fet).toContain('recompte del codi local del 12 de novembre de 2026');
+    expect(fet).toContain('recompte del codi local del 13 de novembre de 2026');
     expect(fet).toContain('no certifica les '+total+' operacions contra un servidor remot');
     const paginaCompleta=new DOMParser().parseFromString(copy.html,'text/html');
     const notaActual=[...paginaCompleta.querySelectorAll('p')].find(p=>p.textContent.includes('Inventari del codi local.'))?.textContent;
     const {CASOS,metodesSenseCas}=await import('../../data/conformitat/kit.js');
-    expect(notaActual).toContain('12 de novembre de 2026');
+    expect(notaActual).toContain('13 de novembre de 2026');
     expect(notaActual).toContain(capacitats+' capacitats i '+total+' mètodes amb '+CASOS.length+' casos');
     expect(notaActual).toContain('46/138/190');
     expect(notaActual).toContain('no acredita activació');
@@ -697,9 +697,9 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       const oferides=Object.entries(CAPACITATS).filter(([,metodes])=>metodes.every(nom=>typeof local[nom]==='function')).map(([nom])=>nom);
       const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(absents).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+      expect(absents).toEqual(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
       expect(oferides).toHaveLength(47);
-      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(22);
+      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(25);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');
       expect(fet).toContain('els seus '+CASOS.filter(c=>absents.includes(c.capacitat)).length+' casos s’ometen en local');

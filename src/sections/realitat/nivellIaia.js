@@ -4,7 +4,8 @@
  *
  * T30.2 (ordre del Mestre, 260927 nit): la IAIA de la barra negra respira
  * quan la IA està activa. «Activa» és, ací, a partir del nivell 2
- * (Interactiva i Connexió Total); Apagada (0) i Passiva (1) són inactivitat.
+ * (Interactiva i Activa, que encara no té cap funció pròpia: R21.5 va retirar
+ * la «Connexió total»); Apagada (0) i Passiva (1) són inactivitat.
  * Qui canvie el nivell ho anuncia amb l'esdeveniment EVENT_NIVELL_IAIA a
  * `window`, perquè la barra negra (que no torna a muntar-se en navegar)
  * s'assabente sense cap context nou. Sense React ni backend.

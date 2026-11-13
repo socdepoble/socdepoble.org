@@ -6,15 +6,10 @@
  * el compartir.
  */
 import { describe, expect, test } from 'vitest';
-import { cosDeConnexioEditadaPerAlMur, cosDeConnexioPerAlMur } from './connexions.js';
+import { cosDeConnexioEditadaPerAlMur } from './connexions.js';
 
 const ORIGEN = { tipus: 'connexio', sectionId: 'mercat', itemId: 'x', titol: 'X', autorNom: 'Na Pepa', ruta: '/mercat/x' };
 const ENLLAC = '<a href="/mercat/x">';
-
-/* La decisió d'abans, només com a oracle de la prova. Els textos de la prova
-   no porten cap '&', i les entitats no hi fan res. */
-const nomenaLAutorDAbans = (html) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-  .toLocaleLowerCase('ca').includes('na pepa');
 
 /* Un generador determinista (LCG): la mateixa sèrie en cada execució. */
 function generador(llavor) {
@@ -36,11 +31,11 @@ function textsAleatoris(trossos, quantitat, llargariaMaxima, llavor) {
 }
 
 describe('cosDeConnexioEditadaPerAlMur', () => {
-  test('decidix el mateix que amb l’expressió d’abans en milers de cossos aleatoris', () => {
+  test('conserva milers de cossos escrits sense forçar-hi cap nom privat', () => {
     const trossos = ['<', '>', 'Na', 'na', ' ', '\n', 'Pepa', 'PEPA', '<b>', '</b>', 'Na Pepa', 'x', '"', '<i'];
     for (const resta of textsAleatoris(trossos, 4000, 16, 20261019)) {
       const html = `${ENLLAC}${resta}`;
-      const esperat = nomenaLAutorDAbans(html) ? html : `${html}${cosDeConnexioPerAlMur(ORIGEN)}`;
+      const esperat = html;
       expect(cosDeConnexioEditadaPerAlMur(html, ORIGEN)).toBe(esperat);
     }
   });
@@ -48,7 +43,7 @@ describe('cosDeConnexioEditadaPerAlMur', () => {
   test('un cos de molts < i cap > es resol en temps lineal', () => {
     const html = `${ENLLAC}${'<'.repeat(160000)}`;
     const inici = performance.now();
-    expect(cosDeConnexioEditadaPerAlMur(html, ORIGEN)).toBe(`${html}${cosDeConnexioPerAlMur(ORIGEN)}`);
+    expect(cosDeConnexioEditadaPerAlMur(html, ORIGEN)).toBe(html);
     expect(performance.now() - inici).toBeLessThan(1000);
   });
 });

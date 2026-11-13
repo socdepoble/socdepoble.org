@@ -69,21 +69,21 @@ test('C2-04 · les10 arestes antigues Excursions resolen a Rutes i no hi ha dest
  expect(FACETA_4_ETIQUETES_SKOS.flatMap(row=>(row.relatedTerms||[]).filter(term=>!names.has(term)).map(term=>({id:row.id,term})))).toEqual([]);
 });
 
-test.each([[mur,'Publicació','7f0c'],[mercat,'Producte','mel']])('C2-05 · el detall orgànic conserva la classificació estructural de la secció (%s)',(section,label,id)=>{
+test.each([[mur,'Publicació','7f0c'],[mercat,'Mercat','mel']])('C2-05 · el detall orgànic conserva la classificació estructural de la secció (%s)',(section,label,id)=>{
  const item=Object.freeze({id,title:'Original',content:'<p>Cos privat intacte</p>',labels:Object.freeze([{text:'Categoria inventada',className:'sdp-badge-category'},{text:'Etiqueta inventada',className:'sdp-badge-tag'}])});
- expect(paginaDElement(section,item).labels).toEqual([{text:label,className:'sdp-badge-system'},{text:id,className:'sdp-badge-category'}]);
+ expect(paginaDElement(section,item).labels).toEqual([{text:label,className:'sdp-badge-system'}]);
  expect(item.labels[0].text).toBe('Categoria inventada');
  expect(item.content).toBe('<p>Cos privat intacte</p>');
 });
 
 test.each(['inventada','constructor','toString','__proto__',''])('C2-05 · un id de mare desconegut no dona pas a etiquetes pròpies (%s)',id=>{
  const item={id:'organic',title:'Original',categoria_tematica_id:id,labels:[{text:'Inventada',className:'sdp-badge-tag'}]};
- expect(paginaDElement(mur,item).labels.map(label=>label.text)).toEqual(['Publicació','organic']);
+ expect(paginaDElement(mur,item).labels.map(label=>label.text)).toEqual(['Publicació']);
 });
 
 test('C2-05 · una mare heretada del prototip no és una classificació declarada de l’element',()=>{
  const item=Object.assign(Object.create({categoria_tematica_id:'defensa-territori'}),{id:'organic',title:'Original',labels:[{text:'Inventada',className:'sdp-badge-tag'}]});
- expect(paginaDElement(mur,item).labels.map(label=>label.text)).toEqual(['Publicació','organic']);
+ expect(paginaDElement(mur,item).labels.map(label=>label.text)).toEqual(['Publicació']);
 });
 
 test.each(['defensa-territori','recursos-locals','natura-excursions','patrimoni-cultura','comunitat-rural','tecnologia-lliure'])('C2-05 · una de les6 mares declarades conserva la classificació editorial (%s)',id=>{

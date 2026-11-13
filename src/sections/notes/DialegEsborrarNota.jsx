@@ -15,13 +15,33 @@
  *
  * La vista per a recuperar notes de la paperera i de l'arxiu encara no
  * existix: els textos no prometen cap botó de recuperar.
+ *
+ * F03-UI (Onada R21) · `retiraDelMur`: el port té la capacitat
+ * 'revocacioPublicacions' i la nota és publicada. Aleshores és cert (trigger
+ * mur_retira_des_de_nota de 2611121430) que la paperera i l'esborrat la
+ * retiren del Mur en la mateixa transacció, i que l'arxiu no; el diàleg ho
+ * diu. `seccio` ('mur' o 'mercat') diu d'on. Sense, el text de sempre. Els
+ * textos nous van en les cinc llengües (useTraductorOpcional); la resta del
+ * diàleg continua en valencià, com abans.
  */
 import { useState } from 'react';
 import { Dialeg, Boto } from '../../components/PedraSeca';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { TITOL_NOTA_PREPARADA } from './notaPreparada.js';
 
-export function DialegEsborrarNota({ obert, nota, onTanca, onTria, ocupat = false }) {
+export const TEXTOS_ESBORRAR_PUBLICADA = Object.freeze({
+  publicada: Object.freeze(['section.notes.esborrar.publicada', 'Esta nota està publicada: arxivar-la, guardar-la a la paperera o borrar-la definitivament també la retira del Mur públic per a tothom. Recuperar la nota no recupera la publicació: si la tornes a publicar, tindrà un enllaç nou.']),
+  publicadaMercat: Object.freeze(['section.notes.esborrar.publicadaMercat', 'Esta nota està publicada: arxivar-la, guardar-la a la paperera o borrar-la definitivament també la retira del Mercat per a tothom. Recuperar la nota no recupera la publicació: si la tornes a publicar, tindrà un enllaç nou.']),
+  definitiu: Object.freeze(['section.notes.esborrar.definitiuRetira', 'També es retira del Mur públic per a tothom.']),
+  definitiuMercat: Object.freeze(['section.notes.esborrar.definitiuRetiraMercat', 'També es retira del Mercat per a tothom.']),
+});
+const E = TEXTOS_ESBORRAR_PUBLICADA;
+
+export function DialegEsborrarNota({ obert, nota, onTanca, onTria, ocupat = false, retiraDelMur = false, seccio = 'mur' }) {
+  const t = useTraductorOpcional();
+  const mercat = seccio === 'mercat';
+  const retira = Boolean(retiraDelMur && nota?.isPublished);
   const [segonPas, setSegonPas] = useState(false);
   // «Enrere» desmunta el botó que tenia el focus: sense açò cauria al body,
   // fora del diàleg. En tornar, el focus va a «Borrar definitivament».
@@ -54,7 +74,9 @@ export function DialegEsborrarNota({ obert, nota, onTanca, onTria, ocupat = fals
             <Boto key="per-sempre" varietat="perill" onClick={() => tria('definitiu')} carregant={ocupat}>Borrar per sempre</Boto>
           </>
         )}>
-        {nota?.isPublished ? <p>La publicació al Mur es queda on és.</p> : null}
+        {retira
+          ? <p>{tradueix(t, mercat ? E.definitiuMercat : E.definitiu)}</p>
+          : (nota?.isPublished ? <p>La publicació al Mur es queda on és.</p> : null)}
       </Dialeg>
     );
   }
@@ -75,6 +97,7 @@ export function DialegEsborrarNota({ obert, nota, onTanca, onTria, ocupat = fals
       <p><strong>Guardar durant 30 dies.</strong> Ix del bloc i es guarda a la paperera 30 dies; després s’esborra per sempre.</p>
       <p><strong>Arxivar.</strong> Ix del bloc i es guarda a l’arxiu, sense data de caducitat.</p>
       <p><strong>Borrar definitivament.</strong> S’esborra ara i no es podrà recuperar.</p>
+      {retira ? <p>{tradueix(t, mercat ? E.publicadaMercat : E.publicada)}</p> : null}
     </Dialeg>
   );
 }

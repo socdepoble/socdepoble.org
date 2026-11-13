@@ -58,6 +58,7 @@ const BUIT = {
   notesComplete: false,
   resolveNote: unavailable,
   updateNote: unavailable,
+  confirmaPublicacioNota: unavailable,
   creaNota: unavailable,
   mouNota: unavailable,
   esborraNota: unavailable,
@@ -496,7 +497,11 @@ export function NotesDataProvider({ children, config }) {
 
     // El Workspace espera que l'adaptador transforme aquesta nota
     // i la incorpore a `items`; no selecciona el primer element mentrestant.
-    return { status: 'found' };
+    /* Gauntlet R22 (ronda 3, notes-03) · I la fila tal com l'ha tornada el
+       servidor en ESTA resposta (sense l'esborrany): qui ha de decidir per
+       l'estat del servidor (NotesContext · conclouRetiradesSenseCua) no el
+       llig d'una llista que pot conservar una fila més nova o més vella. */
+    return { status: 'found', note: remoteNote };
   }, [config, scopeKey, token, nomesLectura]);
 
   const updateNote = useCallback(async (id, updates, revision) => {
@@ -553,6 +558,29 @@ export function NotesDataProvider({ children, config }) {
       throw error;
     }
   }, [config, token, refresh, nomesLectura]);
+
+  // El rebut ve del COMMIT atòmic, sense segona escriptura. Un salt de
+  // revisió recupera el document actual per conservar el contracte D01.
+  const confirmaPublicacioNota = useCallback(async (id, receipt) => {
+    if (nomesLectura) throw new ErrorIdentitatDeLectura();
+    const operation = operationRef.current;
+    if (!operation || operation.token !== token) throw abortError();
+    if (!Number.isSafeInteger(receipt?.revision) || receipt.revision < 0) throw new TypeError('Rebut de publicació invàlid.');
+    const changes = { revision: receipt.revision, isPublished: Boolean(receipt.isPublished), publishedSubmissionId: receipt.publishedSubmissionId ?? null };
+    if (Number.isSafeInteger(receipt.publicadaRevision) && receipt.publicadaRevision < receipt.revision) {
+      // La peça publicada és antiga: resoldre el document actual conserva la
+      // decisió D01 si hi ha drafts damunt d’una edició aliena.
+      await resolveNote(id);
+      if (operationRef.current !== operation) throw abortError();
+      return changes;
+    }
+    setData(previous => {
+      if (operationRef.current !== operation || previous.token !== token || !previous.payload) return previous;
+      return { ...previous, payload: { ...previous.payload, notes: previous.payload.notes.map(note =>
+        String(note.id) === String(id) && note.revision <= changes.revision ? { ...note, ...changes } : note) } };
+    });
+    return changes;
+  }, [token, nomesLectura, resolveNote]);
 
   useLayoutEffect(() => {
     updateNoteRef.current = updateNote;
@@ -651,12 +679,12 @@ export function NotesDataProvider({ children, config }) {
   }, [token, refresh, nomesLectura]);
 
   const mouNota = useCallback(
-    (id, estat, revision) => retiraNota(id, () => apiMouNota(id, estat, revision, config)),
+    (id, estat, revision, publicacioId) => retiraNota(id, () => apiMouNota(id, estat, revision, publicacioId ? { ...config, revocaPublicacioId: publicacioId } : config)),
     [retiraNota, config]
   );
 
   const esborraNota = useCallback(
-    (id, revision) => retiraNota(id, () => apiEsborraNota(id, revision, config)),
+    (id, revision, publicacioId) => retiraNota(id, () => apiEsborraNota(id, revision, publicacioId ? { ...config, revocaPublicacioId: publicacioId } : config)),
     [retiraNota, config]
   );
 
@@ -684,6 +712,7 @@ export function NotesDataProvider({ children, config }) {
       activate,
       resolveNote,
       updateNote,
+      confirmaPublicacioNota,
       creaNota,
       mouNota,
       esborraNota,
@@ -691,7 +720,7 @@ export function NotesDataProvider({ children, config }) {
     };
   }, [
     data, token, scopeKey, workspaceKey, config, currentUser, nomesLectura,
-    resolveNote, updateNote, creaNota, mouNota, esborraNota, refresh, activate
+    resolveNote, updateNote, confirmaPublicacioNota, creaNota, mouNota, esborraNota, refresh, activate
   ]);
 
   return (

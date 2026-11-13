@@ -1633,6 +1633,10 @@ description: "Documentació canònica de Sóc de Poble."
 
   R20. Depén de 2611111735 i 2611112005. Predicat compartit entre la política SELECT i la resolució del padró de publicadors: esborranys, privats, marques contradictòries i metadades malformades no es projecten. Conserva els registres antics sense marques i les notes privades del propietari. Provada dues vegades sobre el mateix clúster amb `npm run test:sql`, incloent notes reals i frontera de 64 capes. **NO aplicada: candidata local pendent d'arbitratge i aplicació pel Mestre.**
 
+- `migrations/2611121430_mur_foraster_projeccio_publica_opcio_a.sql`
+
+  R21 D1 Opció A i F03. Depén de 2611111735, 2611112005 i 2611112149. Revoca SELECT cru anon (també concessions de columna), restringix la lectura autenticada al propietari i oferix RPC pública escalar amb catàleg validat, sense identitat interna, contacte, HTML o mitjans sense neteja EXIF acreditada. Estats public/visible/no esborrat, padró coherent, moderació protegida amb rol actiu+AAL2, esborrat/retirada de notes transaccional i tombstones contra resurreccions. Cua offline d'intencions CAS, ACK durable i replay concurrent; no equival a esborrat local ni ACK remot fins a confirmació. **NO aplicada: candidata local R21, integració i aplicació remota separades.** Proves PostgreSQL 18.6 natives sense omissions. **Cal aplicar-la abans de publicar el client** v1.2.0 build 5, amb tota la cadena del Mur R21 (Nota d'auditoria §16, porta `client-v1-2-0-build-5-mur-r21`).
+
 - `migrations/2611121630_xat_propi.sql`
 
   R21.4. Fil propi privat, únic per propietari i poble, lectura automàtica i cap destinatari push propi. Requerix el xat E2EE vigent de 2610311800 i la cadena 2611020417 → 2611080431; assajat amb 2611080432. No requerix la migració IAIA 2611080430. Idempotent; estat remot no acreditat. Prova PostgreSQL 18.6: `tests/xat-propi-r21-4-postgres.test.mjs`.
@@ -1645,6 +1649,18 @@ description: "Documentació canònica de Sóc de Poble."
 
   R21.6. Requerix les taules `app_content`/`notes`, `private.is_town_member` i l'autoritat real AAL2 de 2610061448; reafirma el contracte de nou claus de 2610101900 i les guardes restrictives contra polítiques permissives obsoletes. Notes privades només per propietari membre, sense privilegis PUBLIC/anon. No reescriu payloads, versions ni dates. Transaccional i idempotent; estat remot no acreditat. Prova PostgreSQL 18.6: `tests/contingut-frontera-r21-6-postgres.test.mjs`.
 
+- `migrations/2611121850_mur_text_dates_i_contactes.sql`
+
+  R21.6. Després de la definició més recent del netejador privat de 2611121430 i després de 2611121830 en la integració d'esta onada. Preserva dates gregorianes ISO vàlides i rangs `AAAA-AAAA`, sense obrir telèfons curts separats, llargs/internacionals, contactes ni recursos privats. Funcions sense EXECUTE client, transaccional i idempotent; estat remot no acreditat. Assaig PostgreSQL 18.6: `tests/copublicacio-foraster-opcio-a.test.mjs`. La seqüència i els límits detallats són a `migrations/README.md`.
+
+- `migrations/2611122200_mur_membres_i_actes_v2.sql`
+
+  R21.1 v2. Després de 2611121430, 2611121630, 2611121830 i 2611121850. Separa lectura anònima mínima i lectura rica de membres; actes de Notes amb UUID i rebut d’operació transaccional, retirada durable, denúncia i bloqueig per UUID, tombstones mínims i Storage amb llistat propi. Qui no llig l’autoria d’un poble (Foraster autenticat o compte en baixa) bloqueja i denuncia sense rebre-la en cap fila pròpia: bloqueig opac `publicacio` a `public.bloquejos` i autoria en taules privades; si després entra al padró del poble d’una publicació bloquejada, el bloqueig hi continua valent (Gauntlet R22, ronda 3). Una retirada encua les còpies públiques, `sdp-net-v1` i les UUID de la promoció anterior (`<poble>/<uid>/notes/`), mai l’avatar ni l’original d’una nota d’abans del 19-09, i una còpia citada per un perfil, per una altra publicació o per una nota pròpia es conserva; tornar a publicar la mateixa còpia ja no topa amb `SDP-PURGA-004`. Canviar de secció un acte propi respon `SDP-SEC-002`; el redactor de text és lineal. Les dues lectures admeten `p_nomes_projeccions` (per defecte false): el servidor torna només les files amb marca de catàleg pública vàlida, abans del LIMIT, també a la branca pública de `llig_mur_membres`; les signatures de cinc i sis arguments es retiren. Una publicació nova del Mur, el Mercat, l'Agenda o Multimèdia no passa de 1.000 caràcters de títol, 20.000 de resum ni 100.000 de cos (`SDP-MUR-MIDA`, 22001); una fila antiga més llarga es pot moderar i editar sense créixer. Estat remot no acreditat. **Cal aplicar-la abans de publicar el client** v1.2.0 build 5, amb tota la cadena del Mur R21 (Nota d'auditoria §16, porta `client-v1-2-0-build-5-mur-r21`). Prova PostgreSQL 18.6: `tests/mur-membres-actes-v2-postgres.test.mjs`.
+
+- `migrations/20261113003000_r21_9b_canal_beta_testers_i_sync_aparadors.sql`
+
+  R21.9b. Aplicar després del catàleg històric complet, incloses 2611111735, 2611121630 i 2611122200, abans del client R21.9b. Beta amb clau canònica, pertinença vigent i reconciliació idempotent sense reactivar eixides; General conserva el seu UUID. Una reconciliació incoherent (rotació del principal, `SDP-XAT-018`) o amb el pany per poble ocupat (`55P03`) es descarta amb avís al registre, amb el SQLSTATE real, sense fer caure la safata; qualsevol altre error es propaga amb el seu SQLSTATE, i un membre ja reconciliat llista sense el pany per poble. PNG afegit al contracte d’adjunts amb els límits vigents i E2EE intacte. Registre de sincronització privat, consentiment i CAS només per al servei; no publica fitxes ni activa cron. Estat remot no acreditat. Prova PostgreSQL 18.6: `tests/r21-9b-beta-postgres.test.mjs`.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1652,7 +1668,7 @@ description: "Documentació canònica de Sóc de Poble."
 
 1. Crear el projecte en Supabase.
 2. Obrir el SQL Editor.
-3. Executar els fitxers SQL del directori `migrations/` en ordre alfabètic. En un node ja en marxa, l'ordre és el del pla del verificador: l'alfabètic tret de les inversions declarades a `ordre_desplegament.json` (ara, 2610312000 just després de 2610311800).
+3. Executar el pla del verificador, tant en una base nova com en un node existent. Les versions històriques de deu dígits es comparen per data com `20AAMMDDhhmm00`; les de catorze conserven `AAAAMMDDhhmmss`. Els noms i els identificadors originals del llibre no canvien. No usar ordre alfabètic cru ni `supabase db push` sobre el catàleg mixt sense verificar-ne abans el pla. Conservar les restriccions de `ordre_desplegament.json` (2610312000 just després de 2610311800 i abans de 2610311900); aplicar `2611122200` abans de `20261113003000`, i tota la cadena del Mur R21 abans de publicar el client v1.2.0 build 5 (Nota d'auditoria §16).
 4. Crear el poble corresponent a `VITE_TENANT_ID` i configurar el node. `seed.sql` és opcional per a demostracions; l’entrada real no requerix dades seed.
 5. Configurar el `.env` local amb `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` i `VITE_TENANT_ID`. No usar mai `service_role` en el client.
 
@@ -1744,6 +1760,7 @@ verificador sense avisos.
   13. Primer tornar a construir i desplegar web/connector amb `/legal` 2.4 i verificar-ne l'empremta; després `2611030330` (Onada 6; conserva la 2.3, demana nou consentiment; cap agent no l'aplica).
   14. Primer tornar a construir i desplegar web/connector amb `/legal` 2.5 i verificar-ne l'empremta; després `2611061520` (Onada R9, avisos push del xat; conserva la 2.3 i la 2.4, demana nou consentiment; cap agent no l'aplica). Al Node 0 amb POSSE (`SDP_NODE0_POSSE=1`), no es torna a hidratar fins que `tooling/node0/posse/posse-ledger.sql` no porte els llibres 77 i 79 amb esta migració exacta (R9V-C3-01): si el text de la 2.5 canvia, els pins s'han de tornar a calcular.
   15. Per a R54 2.6, aturar totes les altes; construir/desplegar `/legal` 2.6 i verificar-ne l’HTML i l’empremta; després `2611080440`. Reobrir només després del gate `altes-politica-2-6` amb la fila vigent real, mai durant el fallback silenciós de Supabase. No aplicada ni comprovada remotament.
+  16. Mur R21 (Gauntlet R22, dades-01 i honestedat-03): `2611111735` → `2611112149` → `2611121430` → `2611121850` → `2611122200` → `20261113003000`, sencera i en este ordre, abans de publicar el client v1.2.0 build 5 (web, zip del connector WordPress 1.1.14, Android versionCode 5 i iOS build 5). És la porta `client-v1-2-0-build-5-mur-r21` d’`ordre_desplegament.json`; cap zip ni pujada a les botigues abans. No aplicada ni comprovada remotament.
 
 ### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + marató 2611012257 i 2611020106 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
@@ -1842,9 +1859,13 @@ verificador sense avisos.
 | 91 | `2611111735` | `2611111735_copublicacio_registrada.sql` | **NO aplicada: l'aplica el Mestre** | R19: publicadors registrats, traspàs, reversió i historial privat amb CAS i AAL2. |
 | 92 | `2611112005` | `2611112005_mur_lectura_publica_foraster.sql` | Aplicada segons l'ESTAT de l'11-11-2026 a les 21:21 (Mestre i MarIA; sense lectura REST) | P0 Mur Foraster: lectura pública de `mur`, `mercat`, `events` i `multimedia`; `notes` privades; UUID d'autoria llegible per a `anon`; esborranys exposats segons Codex R20, correcció additiva 2611112149 |
 | 93 | `2611112149` | `2611112149_mur_estat_public_i_padro.sql` | **NO aplicada: candidata R20, l'aplica el Mestre** | Frontera pública coherent entre SELECT i padró; marques privades o d'esborrany dominen, assaig natiu sense omissions |
-| 94 | `2611121630` | `2611121630_xat_propi.sql` | Estat remot no acreditat; candidata R21.4 | Fil propi únic, RLS privada, lectura automàtica i zero auto-push |
-| 95 | `2611121700` | `2611121700_purga_agents_app_content_i_hidratacio_canonica.sql` | Estat remot no acreditat; candidata R21.5 | Purga per identitat i hidratació canònica, dades legítimes preservades |
-| 96 | `2611121830` | `2611121830_frontera_contingut_editorial_i_notes_privades.sql` | Estat remot no acreditat; candidata R21.6 | Frontera pública de nou claus i Notes privades, autoritat AAL2 real |
+| 94 | `2611121430` | `2611121430_mur_foraster_projeccio_publica_opcio_a.sql` | **NO aplicada: candidata R21** | Opció A: projecció pública mínima, revocació CAS durable, moderació AAL2 i padró coherent; PostgreSQL 18.6 local |
+| 95 | `2611121630` | `2611121630_xat_propi.sql` | Estat remot no acreditat; candidata R21.4 | Fil propi únic, RLS privada, lectura automàtica i zero auto-push |
+| 96 | `2611121700` | `2611121700_purga_agents_app_content_i_hidratacio_canonica.sql` | Estat remot no acreditat; candidata R21.5 | Purga per identitat i hidratació canònica, dades legítimes preservades |
+| 97 | `2611121830` | `2611121830_frontera_contingut_editorial_i_notes_privades.sql` | Estat remot no acreditat; candidata R21.6 | Frontera pública de nou claus i Notes privades, autoritat AAL2 real |
+| 98 | `2611121850` | `2611121850_mur_text_dates_i_contactes.sql` | Estat remot no acreditat; candidata R21.6 | Dates vàlides i rangs del Mur sense regressió de redacció de contactes |
+| 99 | `2611122200` | `2611122200_mur_membres_i_actes_v2.sql` | Estat remot no acreditat; candidata R21.1 v2 | Lectura anònima i de membres, actes atòmics, denúncia i bloqueig per UUID |
+| 100 | `20261113003000` | `20261113003000_r21_9b_canal_beta_testers_i_sync_aparadors.sql` | Estat remot no acreditat; candidata R21.9b | Beta canònic, PNG amb reserva, registre privat de sincronització consentida i CAS |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

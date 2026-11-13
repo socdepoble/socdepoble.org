@@ -234,7 +234,7 @@ function etiquetesDelDetall(section, item) {
     && Object.hasOwn(CATEGORIES_CANONIQUES_BASE, item.categoria_tematica_id);
   const ambPropies = Array.isArray(item.labels) && item.labels.length > 0
     && (section?.listPath === RUTA_CALENDARI || mareCanonica);
-  if (!ambPropies) return [deLaSeccio, { text: item.id, className: 'sdp-badge-category' }];
+  if (!ambPropies) return [deLaSeccio];
   return [
     deLaSeccio,
     ...item.labels

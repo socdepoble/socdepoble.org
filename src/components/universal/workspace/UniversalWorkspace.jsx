@@ -1773,6 +1773,8 @@ function ItemListColumn({
      tria de fora arriba amb el focus en la fitxa d'una altra fila, el focus
      va a la fitxa activa: la fletxa següent continua des de la tria. */
   const triaDeTeclat = useRef(null);
+  const triaDeClic = useRef(null);
+  const ultimaTriaVisible = useRef(null);
   const recorregutObert = useRef(false);
   const triaVista = useRef(null);
   useLayoutEffect(() => {
@@ -1794,6 +1796,42 @@ function ItemListColumn({
     const fitxa = index < 0 || index === ambFocus ? null : fitxaPrincipal(files[index] ?? null);
     if (fitxa) enfoca(fitxa);
   });
+
+  /* Onada R21.10 (T1 · P0-WORKSPACE-SUBCARPETA-I-CARD-ACTIVA) · Quan la selecció
+     arriba en fred per URL o per navegació externa (mai quan la persona acaba de
+     punxar una fitxa que ja té davant dels ulls), desplacem la Columna 2 amb
+     scrollIntoView({ block: 'nearest' }) NOMÉS si la fila activa cau fora de la
+     caixa visible del cos amb scroll (.sdp-workspace-column__body). */
+  useEffect(() => {
+    if (status === 'loading' || state.activeItemId == null || !sortedItems.length) return;
+    const clau = `${state.activeCategoryId}\u0000${state.activeItemId}`;
+    if (ultimaTriaVisible.current === clau) return;
+    ultimaTriaVisible.current = clau;
+    if (triaDeClic.current === state.activeItemId) {
+      triaDeClic.current = null;
+      return;
+    }
+    triaDeClic.current = null;
+    const llista = llistaRef.current;
+    if (!llista) return;
+    const index = sortedItems.findIndex((item) => String(item.id) === state.activeItemId);
+    if (index < 0) return;
+    const fila = llista.children?.[index] ?? null;
+    if (!fila || typeof fila.scrollIntoView !== 'function') return;
+    const contenidor = llista.closest('.sdp-workspace-column__body');
+    const rectCont = contenidor?.getBoundingClientRect?.();
+    const rectFila = fila.getBoundingClientRect?.();
+    const teCaixa = Boolean(rectCont && rectFila && rectCont.height > 0 && rectFila.height > 0);
+    const foraDeVista = teCaixa
+      ? (rectFila.top < rectCont.top || rectFila.bottom > rectCont.bottom)
+      : Boolean(contenidor && contenidor.clientHeight > 0
+        && (fila.offsetTop < contenidor.scrollTop
+          || (fila.offsetTop + fila.offsetHeight) > (contenidor.scrollTop + contenidor.clientHeight)));
+    if (!foraDeVista) return;
+    /* Sense behavior: mana el scroll-behavior del CSS, que ja respecta prefers-reduced-motion (una sola
+       font de mides i preferències: cap consulta de mitjans al JavaScript; notes/qualitat.test.js). */
+    fila.scrollIntoView({ block: 'nearest' });
+  }, [state.activeCategoryId, state.activeItemId, status, sortedItems]);
 
   const createAndSelect = async () => {
     if (!onCreate || creating) return;
@@ -1824,6 +1862,7 @@ function ItemListColumn({
   const chooseItem = (itemId) => {
     /* El clic i l'Enter tanquen el recorregut de fletxes, també sobre la fitxa que ja és activa,
        i el panell d'ajustos de la columna 3 (onTriaExplicita, de WorkspaceFrame). */
+    triaDeClic.current = itemId != null ? String(itemId) : null;
     recorregutObert.current = false;
     onTriaExplicita?.();
     selectItem(itemId);
@@ -2094,7 +2133,8 @@ function ItemListColumn({
         </div>
       ) : null}
 
-      <div className="sdp-workspace-column__body">
+      {/* Gauntlet R22 (ronda 4) · El modificador --llista dona el scroll suau només a la Columna 2 (modules.css). */}
+      <div className="sdp-workspace-column__body sdp-workspace-column__body--llista">
         {status === 'loading' || (status === 'revalidating' && !filteredItems.length) ? (
           <p className="sdp-workspace-state" role="status" aria-live="polite">{labels.loading}</p>
         ) : status === 'error' ? (

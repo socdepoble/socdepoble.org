@@ -567,7 +567,7 @@ describe('el worker en marxa', () => {
     const { respost, resposta: r } = await demana(worker, req);
     expect(respost).toBe(true);
     expect(r).toBe(servidor);
-    expect(worker.fetch).toHaveBeenCalledWith(req);
+    expect(worker.fetch).toHaveBeenCalledWith(req, { cache: 'no-store' });
     expect(caches.open).not.toHaveBeenCalled();
   });
 
@@ -1657,5 +1657,34 @@ describe('avisos push cecs (261030)', () => {
     expect(CODI).toContain("self.addEventListener('push'");
     expect(CODI).toContain("self.addEventListener('notificationclick'");
     expect(CODI).not.toMatch(/['"]pushsubscriptionchange['"]/);
+  });
+});
+
+describe('R21.9b · cache de desplegament', () => {
+  test('un HTML antic ja enverinat sota un hash JS es lleva abans de servir el recurs', async () => {
+    const { caches, memories } = memoriesFalses();
+    const net = jsDeLaXarxa();
+    const worker = carregaWorker({ caches, fetch: vi.fn(async () => net) });
+    memories.set(worker.api.MEMORIA_RECURSOS, new Map([[ORIGEN + JS, {
+      clau: clauDesada(JS, 20), resposta: htmlDeLaClosca()
+    }]]));
+    expect((await demana(worker, peticio(JS))).resposta).toBe(net);
+    expect(worker.fetch).toHaveBeenCalledTimes(1);
+    expect(memories.get(worker.api.MEMORIA_RECURSOS).get(ORIGEN + JS).resposta.headers.get('content-type')).toBe('text/javascript');
+  });
+
+  test('un nom de MIME que només conté javascript no és JavaScript', () => {
+    const { api } = carregaWorker();
+    expect(api.esRespostaGuardable({ status: 200, tipus: 'basic', cami: JS,
+      contentType: 'application/not-javascript', cacheControl: '' })).toBe(false);
+    expect(api.esRespostaGuardable({ status: 200, tipus: 'basic', cami: JS,
+      contentType: 'application/javascript; charset=utf-8', cacheControl: '' })).toBe(true);
+  });
+
+  test('navegar sense precàrrega demana HTML sense reutilitzar HTTP cache antic', async () => {
+    const worker = carregaWorker({ fetch: vi.fn(async () => htmlDeLaClosca()) });
+    const req = peticio('/xat', { mode: 'navigate' });
+    await demana(worker, req);
+    expect(worker.fetch).toHaveBeenCalledWith(req, { cache: 'no-store' });
   });
 });

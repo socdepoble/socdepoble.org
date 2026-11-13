@@ -200,22 +200,43 @@ function plana(text) {
 
 /* ───────────────────────── 2. Noms de fitxer i noms qualificats ───────────────────────── */
 
-const RE_NOM_FITXER = /^(\d{10})_[a-z0-9]+(?:_[a-z0-9]+)*\.sql$/;
+const RE_NOM_FITXER = /^(\d{10}|\d{14})_[a-z0-9]+(?:_[a-z0-9]+)*\.sql$/;
+const RE_VERSIO = /^(?:\d{10}|\d{14})$/;
 
-/** Nom «aammddhhmm_nom.sql» amb data real: { versio, errors, avisos }. */
+/** Keep the ledger ID untouched; compare both timestamp conventions on one clock. */
+export function clauOrdreVersio(versio) {
+  if (typeof versio !== 'string' || !RE_VERSIO.test(versio)) throw new TypeError('versio_migracio_invalida');
+  return versio.length === 10 ? `20${versio}00` : versio;
+}
+
+export function comparaVersions(a, b) {
+  const ka = clauOrdreVersio(a), kb = clauOrdreVersio(b);
+  return ka < kb ? -1 : ka > kb ? 1 : 0;
+}
+
+export function versioDeFitxer(fitxer) {
+  return /^(\d{10}|\d{14})_/.exec(fitxer)?.[1] ?? null;
+}
+
+/** Legacy aammddhhmm or Supabase YYYYMMDDhhmmss, with real calendar fields. */
 export function validaNom(fitxer, ara = new Date()) {
   const errors = [];
   const avisos = [];
   const m = RE_NOM_FITXER.exec(fitxer);
-  const versio = m ? m[1] : (/^(\d{10})_/.exec(fitxer)?.[1] ?? null);
-  if (!m) errors.push({ codi: 'E-NOM', missatge: `nom fora de la convenció aammddhhmm_nom_en_minuscules.sql: ${fitxer}` });
+  const versio = m ? m[1] : versioDeFitxer(fitxer);
+  if (!m) errors.push({ codi: 'E-NOM', missatge: `nom fora de la convenció aammddhhmm_nom.sql o YYYYMMDDhhmmss_nom.sql en minúscules: ${fitxer}` });
   if (versio) {
-    const [aa, mm, dd, hh, mi] = [0, 2, 4, 6, 8].map((k) => Number(versio.slice(k, k + 2)));
-    const any = 2000 + aa;
+    const clau = clauOrdreVersio(versio);
+    const any = Number(clau.slice(0, 4));
+    const [mm, dd, hh, mi, ss] = [4, 6, 8, 10, 12].map((k) => Number(clau.slice(k, k + 2)));
     const traspas = any % 4 === 0 && (any % 100 !== 0 || any % 400 === 0);
     const dies = [31, traspas ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    if (mm < 1 || mm > 12 || dd < 1 || dd > dies[mm - 1] || hh > 23 || mi > 59) errors.push({ codi: 'E-DATA', missatge: `la versió ${versio} no és una data aammddhhmm real` });
-    else if (Date.UTC(any, mm - 1, dd, hh, mi) > ara.getTime() + 86400000) avisos.push({ codi: 'A-VERSIO-FUTURA', missatge: `la versió ${versio} és posterior a demà` });
+    if (any < 1 || mm < 1 || mm > 12 || dd < 1 || dd > dies[mm - 1] || hh > 23 || mi > 59 || ss > 59) errors.push({ codi: 'E-DATA', missatge: `la versió ${versio} no és una data real` });
+    else {
+      const data = new Date(0);
+      data.setUTCFullYear(any, mm - 1, dd); data.setUTCHours(hh, mi, ss, 0);
+      if (data.getTime() > ara.getTime() + 86400000) avisos.push({ codi: 'A-VERSIO-FUTURA', missatge: `la versió ${versio} és posterior a demà` });
+    }
   }
   return { versio, errors, avisos };
 }
@@ -369,7 +390,7 @@ export function dependenciesDeclarades(cap, versio) {
     if (!m) continue;
     let frase = cap[k].text.slice(m.index);
     for (let j = k + 1; j < cap.length && j < k + 6 && !/\.\s*$/.test(frase.trim()); j++) frase += ` ${cap[j].text}`;
-    for (const v of frase.matchAll(/\b(\d{10})\b|\b(\d{6})_(\d{4})\b/g)) {
+    for (const v of frase.matchAll(/\b(\d{14}|\d{10})(?!\d)|\b(\d{6})_(\d{4})(?!\d)/g)) {
       const ver = v[1] ?? `${v[2]}${v[3]}`;
       if (ver !== versio && !vistes.has(ver)) vistes.set(ver, { versio: ver, linia: cap[k].n, frase: frase.trim().slice(0, 160) });
     }
@@ -847,12 +868,12 @@ export function llegixReadme(text) {
       continue;
     }
     if (l.trim() === '```sql') { blocSql = { linia: k + 2, sql: '' }; continue; }
-    const t = /^\| (\d+) \| `(\d{10})` \| `([^`]+\.sql)` \| ([^|]+) \| ([^|]+) \|$/.exec(l);
+    const t = /^\| (\d+) \| `(\d{10}|\d{14})` \| `([^`]+\.sql)` \| ([^|]+) \| ([^|]+) \|$/.exec(l);
     if (t) taula.push({ ordre: Number(t[1]), versio: t[2], fitxer: t[3], estat: t[4].trim(), linia: k + 1 });
   }
   for (const b of blocsSql) {
     for (const a of b.sql.matchAll(/\bAS\s+(te_[a-z0-9_]+)/gi)) {
-      const v = /_(\d{10})$/.exec(a[1]);
+      const v = /_(\d{10}|\d{14})$/.exec(a[1]);
       if (v) sondaVersions.set(v[1], { alias: a[1], linia: b.linia });
     }
   }
@@ -863,8 +884,8 @@ export function llegixReadme(text) {
     let anterior = null;
     for (let k = iniNota + 1; k < fiNota; k++) {
       const l = linies[k];
-      for (const p of l.matchAll(/`(\d{10})(?:_[a-z0-9_]+\.sql)?`\s*→\s*(?=`(\d{10})(?:_[a-z0-9_]+\.sql)?`)/g)) cadenes.push({ abans: p[1], despres: p[2], linia: k + 1, origen: 'fletxa' });
-      const item = /^\s*(\d+)\.\s+(`(\d{10})_[a-z0-9_]+\.sql`)?/.exec(l);
+      for (const p of l.matchAll(/`(\d{10}|\d{14})(?:_[a-z0-9_]+\.sql)?`\s*→\s*(?=`(\d{10}|\d{14})(?:_[a-z0-9_]+\.sql)?`)/g)) cadenes.push({ abans: p[1], despres: p[2], linia: k + 1, origen: 'fletxa' });
+      const item = /^\s*(\d+)\.\s+(`(\d{10}|\d{14})_[a-z0-9_]+\.sql`)?/.exec(l);
       if (item) {
         const n = Number(item[1]);
         if (anterior && anterior.n === n - 1 && anterior.versio && item[3]) cadenes.push({ abans: anterior.versio, despres: item[3], linia: k + 1, origen: 'items' });
@@ -885,7 +906,6 @@ function estatDeclarat(estat) {
 
 /* ───────────────────────── 9. JSON d'ordre ───────────────────────── */
 
-const RE_VERSIO = /^\d{10}$/;
 const CLAUS_ORDRE = { arrel: ['esquema', 'nota', 'restriccions', 'portes', 'fantasmes', 'reaplicacio'], restriccio: ['abans', 'despres', 'just', 'motiu', 'font'], porta: ['id', 'tipus', 'descripcio', 'despres', 'abans', 'comprovacio', 'font'], comprovacio: ['fitxer', 'constant', 'valor'], fantasma: ['versio', 'motiu'], reaplicacio: ['si', 'llavors', 'font'] };
 
 function clausAdmeses(obj, admeses, on) {
@@ -965,9 +985,9 @@ export function ordena({ versions, dependencies = new Map(), restriccions = [], 
   const errors = [];
   const nodes = new Map();
   const afig = (id, clau) => nodes.set(id, { id, clau, entra: new Set(), surt: new Set() });
-  for (const v of versions) afig(`m:${v}`, [v, 1, v]);
+  for (const v of versions) afig(`m:${v}`, [clauOrdreVersio(v), 1, v]);
   for (const p of portes) {
-    const clau = p.abans.length ? [[...p.abans].sort()[0], 0, p.id] : p.despres.length ? [[...p.despres].sort().pop(), 2, p.id] : ['9999999999', 3, p.id];
+    const clau = p.abans.length ? [clauOrdreVersio([...p.abans].sort(comparaVersions)[0]), 0, p.id] : p.despres.length ? [clauOrdreVersio([...p.despres].sort(comparaVersions).pop()), 2, p.id] : ['99999999999999', 3, p.id];
     afig(`p:${p.id}`, clau);
   }
   const aresta = (a, b) => { if (!nodes.has(a) || !nodes.has(b) || a === b) return; nodes.get(a).surt.add(b); nodes.get(b).entra.add(a); };
@@ -1007,6 +1027,8 @@ export function ordena({ versions, dependencies = new Map(), restriccions = [], 
   const ordreObj = ordre.map((id) => ({ tipus: id.startsWith('m:') ? 'migracio' : 'porta', id: id.slice(2) }));
   const migs = ordreObj.filter((x) => x.tipus === 'migracio').map((x) => x.id);
   const inversions = [];
+  // Report filename/CLI order separately: mixed timestamps sort differently
+  // lexically even when our chronological plan has no dependency inversion.
   for (let i = 0; i < migs.length; i++) for (let j = i + 1; j < migs.length; j++) if (migs[i] > migs[j]) inversions.push({ abans: migs[i], despres: migs[j] });
   return { ordre: ordreObj, inversions, errors };
 }
@@ -1065,7 +1087,7 @@ export function llegixAplicades(text) {
       if (m) versions.push(m[1]);
     }
   }
-  versions = [...new Set(versions)].sort();
+  versions = [...new Set(versions)].sort(comparaVersions);
   return { versions, format, buit: versions.length === 0 };
 }
 
@@ -1089,7 +1111,7 @@ export function llegixEmpremtes(text) {
     for (const o of Array.isArray(dades) ? dades : [dades]) {
       if (!o || typeof o !== 'object') throw new Error('--empremtes: cada fila ha de ser un objecte');
       if ('versio' in o) filaEmpremta(o);
-      for (const [k, v] of Object.entries(o)) if (/^te_[a-z0-9_]+_\d{10}$/.test(k)) sonda.set(k, bool(v));
+      for (const [k, v] of Object.entries(o)) if (/^te_[a-z0-9_]+_(?:\d{10}|\d{14})$/.test(k)) sonda.set(k, bool(v));
     }
     return { perVersio, sonda };
   }
@@ -1101,7 +1123,7 @@ export function llegixEmpremtes(text) {
     const ia = capcalera.indexOf('absents');
     for (const f of files) filaEmpremta({ versio: f[iv], esperats: f[ie], presents: f[ip], absents: ia >= 0 ? f[ia] : '' });
   }
-  capcalera.forEach((c, k) => { if (/^te_[a-z0-9_]+_\d{10}$/.test(c) && files[0]) sonda.set(c, bool(files[0][k])); });
+  capcalera.forEach((c, k) => { if (/^te_[a-z0-9_]+_(?:\d{10}|\d{14})$/.test(c) && files[0]) sonda.set(c, bool(files[0][k])); });
   if (iv < 0 && !sonda.size) throw new Error('--empremtes: cal la columna versio o columnes te_*_<versió>');
   return { perVersio, sonda };
 }
@@ -1179,7 +1201,7 @@ export function consultaEmpremtes(analisis) {
   }
   if (!ordenades.size) return { sql: null, perVersio: ordenades };
   const files = [];
-  for (const [v, llista] of [...ordenades].sort((a, b) => (a[0] < b[0] ? -1 : 1))) for (const o of llista) files.push(`  (${lit(v)}, ${lit(o.objecte)}, ${o.expr})`);
+  for (const [v, llista] of [...ordenades].sort((a, b) => comparaVersions(a[0], b[0]))) for (const o of llista) files.push(`  (${lit(v)}, ${lit(o.objecte)}, ${o.expr})`);
   const sql = ['select e.versio, count(*) as esperats, count(*) filter (where e.present) as presents,',
     "       coalesce(string_agg(e.objecte, ' · ') filter (where not e.present), '') as absents",
     'from (values', files.join(',\n'), ') as e(versio, objecte, present)', 'group by e.versio order by e.versio;'].join('\n');
@@ -1215,7 +1237,10 @@ export function verifica(opcions = {}) {
   try { entrades = fs.readdirSync(dir, { withFileTypes: true }); } catch { err('E-SENSE-MIGRACIONS', DIR_MIGRACIONS, null, 'no es pot llegir la carpeta de migracions'); }
   const migracions = [];
   const perVersio = new Map();
-  for (const e of entrades.filter((x) => x.name.endsWith('.sql')).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+  for (const e of entrades.filter((x) => x.name.endsWith('.sql')).sort((a, b) => {
+    const va = versioDeFitxer(a.name), vb = versioDeFitxer(b.name);
+    return (va && vb ? comparaVersions(va, vb) : 0) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+  })) {
     const f = e.name;
     const nom = validaNom(f, ara);
     for (const x of nom.errors) err(x.codi, fitxerDe(f), null, x.missatge);
@@ -1233,7 +1258,7 @@ export function verifica(opcions = {}) {
     perVersio.set(nom.versio, m);
   }
   const versions = new Set(perVersio.keys());
-  const versionsOrdenades = [...versions].sort();
+  const versionsOrdenades = [...versions].sort(comparaVersions);
 
   // 13.2 JSON d'ordre
   let ordreJson = { restriccions: [], portes: [], fantasmes: [], reaplicacio: [] };
@@ -1258,7 +1283,7 @@ export function verifica(opcions = {}) {
     for (const d of dependenciesDeclarades(m.capcalera, m.versio)) {
       if (fantasmes.has(d.versio)) { err('E-DEP-FANTASMA', f, d.linia, `depén de ${d.versio}, que no existix: ${fantasmes.get(d.versio)}`); continue; }
       if (!versions.has(d.versio)) { err('E-DEP-INEXISTENT', f, d.linia, `depén de ${d.versio}, sense fitxer a supabase/migrations`); continue; }
-      if (d.versio > m.versio && !ordreJson.restriccions.some((r) => r.abans === d.versio && r.despres === m.versio)) { err('E-DEP-CAP-AVANT', f, d.linia, `depén de ${d.versio}, posterior a la seua versió`); continue; }
+      if (comparaVersions(d.versio, m.versio) > 0 && !ordreJson.restriccions.some((r) => r.abans === d.versio && r.despres === m.versio)) { err('E-DEP-CAP-AVANT', f, d.linia, `depén de ${d.versio}, posterior a la seua versió`); continue; }
       m.depsDeclarades.push(d);
     }
   }
@@ -1294,7 +1319,7 @@ export function verifica(opcions = {}) {
   });
 
   // 13.5 Ordre
-  const dependencies = new Map(migracions.map((m) => [m.versio, m.depsDeclarades.filter((d) => d.versio < m.versio).map((d) => d.versio)]));
+  const dependencies = new Map(migracions.map((m) => [m.versio, m.depsDeclarades.filter((d) => comparaVersions(d.versio, m.versio) < 0).map((d) => d.versio)]));
   const ord = ordena({ versions: versionsOrdenades, dependencies, restriccions: ordreJson.restriccions, portes: ordreJson.portes });
   for (const e of ord.errors) err(e.codi, FITXER_ORDRE, null, e.missatge);
   const pos = new Map(ord.ordre.map((x, i) => [`${x.tipus === 'migracio' ? 'm' : 'p'}:${x.id}`, i]));
@@ -1314,7 +1339,7 @@ export function verifica(opcions = {}) {
     for (const u of m.objectes.usa) {
       const p = proveidor.get(u.nom);
       if (!p || p === m.versio) continue;
-      if (p < m.versio) { if (!m.depsInferides.has(p)) m.depsInferides.set(p, { versio: p, linia: u.linia, objecte: u.nom }); continue; }
+      if (comparaVersions(p, m.versio) < 0) { if (!m.depsInferides.has(p)) m.depsInferides.set(p, { versio: p, linia: u.linia, objecte: u.nom }); continue; }
       const clau = `${u.nom}@${u.linia}`;
       if (vistos.has(clau)) continue;
       vistos.add(clau);

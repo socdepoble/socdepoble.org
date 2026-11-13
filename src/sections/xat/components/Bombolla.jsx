@@ -87,35 +87,45 @@ import { rutaCanonicaDePerfil, rutaDePerfil } from '../../../config/navigation.j
 import { esIAIA } from '../../../data/identitatsSeed.js';
 import TargetaLlistaComu from './TargetaLlistaComu.jsx';
 import AdjuntXat from './AdjuntXat.jsx';
+import CaraXat from './CaraXat.jsx';
+import { toDeLlavor } from '../../../components/PedraSeca/atoms/Avatar.jsx';
 import { mouFocusDelMenu } from './Compositor.jsx';
 import { llistaDeMissatge } from '../llistaComu.js';
+import { llavorDAutor } from '../conversa.js';
 import { RUTA_ENTRADA } from '../../../config/rutaEntrada.js';
 
-/**
- * Lògica d'Usuari (T3, T4): el nom de qui escriu es pinta als grups i, fora
- * d'ells, quan qui escriu és la IAIA o una entitat; i enllaça al seu perfil
- * públic quan se sap qui és. Una entitat signa amb el seu nom, no amb el de
- * la persona que ha teclejat.
- * Gauntlet 261016_1530 (Bloc 3.6.3; relleu F65; ordre del Mestre: /iaia «és
- * on s'ha d'accedir des del xat») · Quan qui signa és la IAIA MarIA (per id i
- * amb el tipus d'IA, mai pel nom), el seu nom porta a la seua fitxa neta,
- * /iaia (rutaCanonicaDePerfil), com la capçalera. La resta, el perfil de
- * sempre: cap altre enllaç canvia.
- */
-function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
+const CLASSES_COLOR_AUTOR = Object.freeze([
+  'sdp-xat-bombolla__autor--to-1',
+  'sdp-xat-bombolla__autor--to-2',
+  'sdp-xat-bombolla__autor--to-3',
+  'sdp-xat-bombolla__autor--to-4',
+  'sdp-xat-bombolla__autor--to-5',
+  'sdp-xat-bombolla__autor--to-6'
+]);
+
+function dadesAutorDeMissatge(missatge, triable, t) {
   const esIA = Boolean(missatge.is_ai);
   const esEntitat = Boolean(missatge.comEntitat);
-  if (!esGrup && !esIA && !esEntitat) return null;
   const nom = missatge.author || missatge.author_name || t('section.xat.vei', 'Veí');
   const text = esIA ? `${nom} · ${t('section.xat.ia.etiqueta', 'IA')}` : nom;
   const tipus = esIA ? 'ia' : esEntitat ? 'entitat' : 'persona';
   const fitxaDeLaIA = esIA ? rutaCanonicaDePerfil({ tipus, id: missatge.usuariId }) : null;
   const ruta = !triable && !esEntitat ? (fitxaDeLaIA || rutaDePerfil(tipus, missatge.usuariId)) : null;
-  if (!ruta) return <span className="sdp-xat-bombolla__autor">{text}</span>;
+  /* Gauntlet R22 (xat-07) · Una entitat pren el color del seu nom, mai el de qui l'opera. */
+  const llavor = llavorDAutor(missatge, nom);
+  const classeTo = CLASSES_COLOR_AUTOR[toDeLlavor(llavor) % CLASSES_COLOR_AUTOR.length];
+  return { esIA, esEntitat, nom, text, ruta, llavor, classeTo };
+}
+
+function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
+  const { esIA, esEntitat, nom, text, ruta, classeTo } = dadesAutorDeMissatge(missatge, triable, t);
+  if (!esGrup && !esIA && !esEntitat) return null;
+  const classe = esGrup ? `sdp-xat-bombolla__autor ${classeTo}` : 'sdp-xat-bombolla__autor';
+  if (!ruta) return <span className={classe}>{text}</span>;
   /* Gauntlet 261025_0545 (TE-03) · El nom amb una funció de reemplaç: un
      «$&» del nom es diu tal qual (moderacio.js, omple). */
   return (
-    <Link className="sdp-xat-bombolla__autor" to={ruta} aria-label={t('section.xat.perfil.obri', 'Obri el perfil de {nom}').replace('{nom}', () => nom)}>
+    <Link className={classe} to={ruta} aria-label={t('section.xat.perfil.obri', 'Obri el perfil de {nom}').replace('{nom}', () => nom)}>
       {text}
     </Link>
   );
@@ -198,7 +208,8 @@ function Bombolla({
   missatge, esGrup = false, locale, t, configAdjunts, usuariAdjunts,
   seleccio = null, onReintenta, onDescarta, onCopia,
   primerDelGrup = true, citat = null, onVesACita = null, onRespon = null, ressaltat = false,
-  onDenuncia = null, onBloqueja = null, nomAutor = '', actorLlista = null, onMutaLlista = null
+  onDenuncia = null, onBloqueja = null, nomAutor = '', actorLlista = null, onMutaLlista = null,
+  onObriImatge = null, caraAutor = null
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -346,6 +357,27 @@ function Bombolla({
             {triat ? <CheckCircle2 size={20} focusable="false" /> : <Circle size={20} focusable="false" />}
           </span>
         ) : null}
+        {/* Gauntlet R22 · La cara dels grups és decorativa: el nom de l'autor, dins
+            de la bafarada, ja porta al perfil (workspace-07: un enllaç de 28 px
+            era una diana per davall de --sdp-touch), no repetix el nom al lector
+            (xat-02: alt="") i pren la foto del padró del fil (xat-09: `src`, que
+            és el que llig CaraXat) i la llavor de l'autor (xat-07). */}
+        {esGrup && !meu && !esborrat ? (() => {
+          if (!primerDelGrup) return <span className="sdp-xat-bombolla__espai-cara" aria-hidden="true" />;
+          const autorGrup = dadesAutorDeMissatge(missatge, triable, t);
+          return (
+            <span className="sdp-xat-bombolla__cara" aria-hidden="true">
+              <CaraXat
+                nom={autorGrup.nom}
+                src={caraAutor || null}
+                llavor={autorGrup.llavor}
+                mida="sm"
+                alt=""
+                className="sdp-xat-bombolla__avatar-grup"
+              />
+            </span>
+          );
+        })() : null}
         <div className={`sdp-xat-bombolla ${meu ? 'sdp-xat-bombolla--meu' : 'sdp-xat-bombolla--altre'}${primerDelGrup ? ' sdp-xat-bombolla--cua' : ''}${enError ? ' sdp-xat-bombolla--error' : ''}${llistaComu ? ' sdp-xat-bombolla--llista' : ''}`}>
           {!meu && !esborrat && primerDelGrup ? (
             <AutorDeLaBombolla missatge={missatge} esGrup={esGrup} triable={triable} t={t} />
@@ -368,7 +400,17 @@ function Bombolla({
                   vista quieta no té <audio>, i el reproductor tornaria amb
                   l'estat d'abans («Pausa») i sense font. La seua URL es demana
                   en prémer, mai en muntar, i el play següent la torna a signar. */}
-              <AdjuntXat key={missatge.tipus === 'veu' && triable ? 'veu-quieta' : 'adjunt'} adjunt={missatge.metadades.adjunt} tipus={missatge.tipus} externalConfig={configAdjunts} usuariId={usuariAdjunts} locale={locale} t={t} interactiu={!triable} />
+              <AdjuntXat
+                key={missatge.tipus === 'veu' && triable ? 'veu-quieta' : 'adjunt'}
+                adjunt={missatge.metadades.adjunt}
+                tipus={missatge.tipus}
+                externalConfig={configAdjunts}
+                usuariId={usuariAdjunts}
+                locale={locale}
+                t={t}
+                interactiu={!triable}
+                onObriImatge={!triable && missatge.tipus === 'imatge' && typeof onObriImatge === 'function' ? (url, obridor) => onObriImatge(missatge, url, obridor) : null}
+              />
               {String(text ?? '').trim() ? <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} interactiu={!triable} /></p> : null}
             </>
           ) : (

@@ -974,6 +974,68 @@ test('readme 1.1.10: el text valencià publicat a WordPress.org, sense cap afirm
   }
 });
 
+/* Onada R22 (Gauntlet 5 sobre el COMMIT 5) · El que la 1.1.14 diu al Changelog i a l'Upgrade Notice, contra el codi que
+   porta el paquet. Les dues guardes obliguen a tornar a escriure el text si el codi canvia:
+   · pwa-02 i honestedat-04 · La recuperació dels trossos vells només la instal·la registraServiceWorker (src/pwa/registre.js),
+     que només crida src/main.jsx. El paquet entra per src/embed.jsx; ni embed.jsx, ni host.js («No hi ha recàrregues
+     automàtiques»), ni PedraSecaEmbed.jsx no importen res de pwa/, i dins d'un iframe motiuPerNoRegistrar torna
+     'incrustat'. El visor del connector no es recupera sol: el readme no ho promet.
+   · honestedat-03 i dades-01 (segona ronda, carril text2) · lligPublicacions (src/data/supabase/content.js) llig per
+     les RPC llig_mur_* i, davant d'un 404 PGRST202, baixa a la lectura d'abans (lligPublicacionsAnteriors,
+     section_submissions): sense cap migració, el Mur, el Mercat, el Calendari i Multimèdia es lligen com abans, sense la
+     lectura mínima. Sense 2611122200, publica_nota_al_mur respon 404 PGRST202 i el client ho torna amb
+     CODI_ESQUEMA_ABSENT: el Bloc de Notes no publica res al Mur i ho diu. El readme diu les dues coses com un requisit
+     del servidor, i ja no diu que les seccions «no carreguen». La guarda de la primera ronda buscava
+     `async function lligPublicacions` sense el parèntesi i trobava lligPublicacionsAnteriors: ara cada funció es busca
+     pel seu nom exacte, i el flux es llig pel seu control (el catch de cada RPC i el return de la lectura d'abans).
+   · sql-03, notes-01 i honestedat-02 · bloqueja_publicacio_mur i denuncia_publicacio_mur (2611122200) guarden una fila
+     opaca o un autor null per a qui no llig l'autoria d'eixe poble (private.mur_lector_ric, amb is_town_member), i
+     llistaBloquejos (moderacio.js) mostra eixos bloquejos sense nom: el readme diu que no revelen l'autor a qui no és
+     membre d'este poble si i només si és així. */
+test('readme 1.1.14: cap recuperació automàtica que el paquet no porta, i el requisit del servidor del Mur dit sencer', () => {
+  const readme = llig('readme.txt');
+  const entrada = (seccio) => ((readme.split(new RegExp(`^== ${seccio} ==$`, 'm'))[1] ?? '').split(/^= 1\.1\.14 =$/m)[1] ?? '').split(/^= /m)[0];
+  const notes = entrada('Changelog');
+  const avis = entrada('Upgrade Notice');
+  assert.ok(notes.trim() && avis.trim(), 'la 1.1.14 té notes i avís');
+  const codi = (rel) => fs.readFileSync(path.join(ARREL, rel), 'utf8');
+
+  const importsDelPaquet = ['src/embed.jsx', 'src/host.js', 'src/PedraSecaEmbed.jsx'].map(codi).join('\n')
+    .match(/^\s*import\b[^;]*?['"][^'"]+['"]|\bimport\(\s*['"][^'"]+['"]/gm) ?? [];
+  assert.ok(importsDelPaquet.length > 0, 'els imports del paquet es lligen');
+  if (!importsDelPaquet.some((linia) => /pwa\/|recuperacioChunkDeploy/.test(linia))) {
+    assert.doesNotMatch(notes + avis, /recupera|recàrrega|recarrega/i, 'el visor del connector no porta la recuperació de la web pròpia');
+  }
+
+  const content = codi('src/data/supabase/content.js');
+  const funcio = (nom) => content.match(new RegExp(`\\nasync function ${nom}\\([\\s\\S]*?\\n\\}\\n`))?.[0] ?? '';
+  const lectura = funcio('lligPublicacions');
+  const anteriors = funcio('lligPublicacionsAnteriors');
+  assert.ok(lectura && anteriors, 'lligPublicacions i lligPublicacionsAnteriors hi són');
+  const llegixComAbans = /rpc\/\$\{membres \? 'llig_mur_membres' : 'llig_mur_public'\}/.test(lectura)
+    && /\} catch \(error\) \{\n\s*if \(!esRpcAbsent\(error\)\) throw error;/.test(lectura)
+    && /\} catch \(absent\) \{\n\s*if \(!esRpcAbsent\(absent\)\) throw absent;\n[\s\S]*?const anteriors = await lligPublicacionsAnteriors\([\s\S]*?return anteriors;/.test(lectura)
+    && /`\/rest\/v1\/section_submissions\?select=/.test(anteriors) && !/llig_mur_/.test(anteriors);
+  const notesHoDiuen = /rpc\/publica_nota_al_mur'[\s\S]*?\} catch \(error\) \{[\s\S]*?if \(esRpcAbsent\(error\)\) \{\n\s*throw Object\.assign\([\s\S]*?codi: CODI_ESQUEMA_ABSENT/.test(content);
+  const requisit = "* **Requisit del servidor:** la lectura mínima del Mur i la publicació de notes al Mur requerixen les migracions 2611121430, 2611121850 i 2611122200 del servidor de Sóc de Poble, aplicades en ordre abans de publicar este visor. Sense cap d'elles, el visor llig el Mur, el Mercat, el Calendari i Multimèdia com abans; sense la 2611122200, el Bloc de Notes no publica res al Mur i ho diu.";
+  assert.equal(notes.includes(requisit), llegixComAbans && notesHoDiuen, 'el requisit del servidor, dit com el codi ho fa: la lectura d\'abans sense migracions i les Notes que no publiquen sense 2611122200');
+  assert.equal(/La lectura mínima i les notes al Mur requerixen migracions noves del servidor de Sóc de Poble\./.test(avis), llegixComAbans && notesHoDiuen, 'i l\'avís d\'actualització també el diu');
+  assert.doesNotMatch(notes + avis, /no carreguen|només amb les funcions de lectura noves/, 'cap secció que «no carrega» mentre hi haja la lectura d\'abans');
+
+  const migracio = fs.readdirSync(path.join(ARREL, 'supabase/migrations')).find((nom) => nom.startsWith('2611122200_'));
+  const sql = codi(`supabase/migrations/${migracio}`);
+  const funcioSql = (nom) => sql.match(new RegExp(`create or replace function ${nom.replace('.', '\\.')}\\([\\s\\S]*?\\n\\$\\$;`))?.[0] ?? '';
+  const moderacioOpaca = /private\.is_town_member\(p_tenant\)/.test(funcioSql('private.mur_lector_ric'))
+    && /if private\.mur_lector_ric\(s\.tenant_id\) then/.test(funcioSql('public.bloqueja_publicacio_mur'))
+    && /insert into public\.bloquejos\(bloquejat_tipus,publicacio_id\) values\('publicacio',p_id\)/.test(funcioSql('public.bloqueja_publicacio_mur'))
+    && /v_opac:=auth\.uid\(\) is not null and not private\.mur_lector_ric\(s\.tenant_id\);/.test(funcioSql('public.denuncia_publicacio_mur'))
+    && /case when v_opac then null else v_autor_id end/.test(funcioSql('public.denuncia_publicacio_mur'))
+    && /tipus: TIPUS_PUBLICACIO, id: publicacio\.toLowerCase\(\), nom: null/.test(codi('src/data/supabase/moderacio.js'));
+  assert.equal(notes.includes("Denunciar i Bloquejar des d'una publicació no revelen l'autor a qui no és membre d'este poble."), moderacioOpaca,
+    'Denunciar i Bloquejar no revelen l\'autor a qui no és membre, mentre el servidor guarde opac el que no llig');
+  assert.doesNotMatch(notes + avis, /encara no s'han aplicat/, 'cap estat del servidor que la publicació desmentiria');
+});
+
 test('doble còpia: el fitxer principal no declara cap funció ni classe, i la guarda va abans de cap constant', () => {
   const principal = llig('socdepoble-enxufe.php');
   const codi = codiDe['socdepoble-enxufe.php'];

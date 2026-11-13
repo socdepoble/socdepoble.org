@@ -196,21 +196,29 @@ describe('CSS de l’enllaç del copyright (components.css)', () => {
     expect(capa).toBeGreaterThan(vel);
   });
 
-  /* Ordre del Mestre (261007) · Una sola línia a totes les targetes i a la
-     capçalera: el retall va a l'enllaç, mai al paràgraf (retallaria la zona
-     tàctil, que en sobreïx per dalt i per baix). */
-  test('una sola línia a totes les targetes: l’enllaç es retalla amb punts suspensius, el paràgraf no retalla', () => {
+  /* Ordre del Mestre (R21.10 · P0-AUTORIA-256-SENSE-RETALL) · El camp d'autoria i
+     llicència s'expandeix netament en múltiples línies fins als 256 caràcters del
+     contracte SQL sense retallar amb punts suspensius, tant a la targeta com a la fitxa. */
+  test('fins a 256 caràcters sense punts suspensius: l’enllaç parteix línia i el paràgraf no retalla', () => {
     const repos = regla('.sp-card-copyright__enllac');
-    expect(repos).toMatch(/overflow: hidden;/);
-    expect(repos).toMatch(/text-overflow: ellipsis;/);
-    expect(repos).toMatch(/white-space: nowrap;/);
+    expect(repos).toMatch(/white-space: normal;/);
+    expect(repos).toMatch(/overflow-wrap: anywhere;/);
     expect(repos).toMatch(/max-inline-size: 100%;/);
+    expect(repos).not.toMatch(/text-overflow:\s*ellipsis/);
+    expect(repos).not.toMatch(/white-space:\s*nowrap/);
+    expect(repos).not.toMatch(/overflow:\s*hidden/);
     expect(regla('.sp-card-copyright.page-title-copyright')).toBe('overflow: visible;');
     expect(regla('.page-title-copyright > .sp-card-copyright__enllac')).toBeNull();
-    // Cap regla del paràgraf de la targeta el retalla ni el fa partir línia.
+    // Cap regla del paràgraf de la targeta el retalla ni li posa line-clamp.
     for (const [, cos] of COMPONENTS.matchAll(/(?:^|\n)\.sp-card-copyright \{([^}]*)\}/g)) {
       expect(cos).not.toMatch(/overflow|line-clamp/);
     }
+    const text256 = `CC BY-NC-SA 4.0 ${'Associació Cultural i Gastronòmica de Poble · '.repeat(6)}`.slice(0, 256);
+    expect(text256).toHaveLength(256);
+    const { container } = pinta({ copyright: text256 });
+    const enllac = container.querySelector('.sp-card-copyright__enllac');
+    expect(enllac.textContent).toBe(text256);
+    expect(enllac.textContent.endsWith('...')).toBe(false);
   });
 
   test('Pedra Seca: només tokens, cap color cru, cap ombra, cap selector de pare', () => {

@@ -73,7 +73,7 @@ test('paginaDElement: els drets i la data de la publicació, com el detall de la
   expect(pagina).toMatchObject({
     title: 'Recepta de coca', heroImage: '/assets/coca.png', heroAlt: 'Recepta de coca', copyright: 'CC BY 4.0',
     authorName: 'Pepa', authorHref: '/empresa/forn',
-    labels: [{ text: 'Publicació', className: 'sdp-badge-system' }, { text: 'cc', className: 'sdp-badge-category' }],
+    labels: [{ text: 'Publicació', className: 'sdp-badge-system' }],
     /* T51 · el format únic (dd/mm/aa i hh:mm) i un ISO de veres. */
     ...dataHoraDeBarra({ publicat: '2026-10-05T08:30:00.000Z' })
   });

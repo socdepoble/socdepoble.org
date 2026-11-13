@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { esTextBuitOSolsMarques as deLaNegreta } from './negreta.js';
 import {
   LIMIT_PAGINA,
   MAX_REINTENTS,
@@ -12,6 +13,7 @@ import {
   creaAgrupadorMarques,
   derivaEstat,
   esSilenciat,
+  esTextBuitOSolsMarques,
   esperaReintent,
   estatDeLUltim,
   filIgual,
@@ -48,6 +50,14 @@ describe('generaId', () => {
 });
 
 describe('mapejaFil', () => {
+  it('R21.9b conserva la marca canònica Beta fins al context, sense confiar en noms o metadata', () => {
+    const base = { id: 'real', tipus: 'grup', titol: 'Canal reanomenat' };
+    const fil = mapejaFil({ ...base, canalClau: 'beta_testers', canalBetaTesters: true });
+    expect(fil).toMatchObject({ canalClau: 'beta_testers', canalBetaTesters: true });
+    expect(filIgual(fil, mapejaFil(base))).toBe(false);
+    expect(mapejaFil({ ...base, titol: 'Beta Testers', metadades: { canalBetaTesters: true } })).not.toHaveProperty('canalBetaTesters');
+    expect(mapejaFil({ ...base, tipus: 'directe', canalClau: 'beta_testers', canalBetaTesters: true })).not.toHaveProperty('canalBetaTesters');
+  });
   it('dona nom, hores en ISO sense formatar i marques numèriques', () => {
     const fil = mapejaFil({
       id: 'f1', titol: null, altresNoms: ['Pepa', 'Toni'], ultimText: 'Hola', ultimAl: '2026-09-26T08:00:00Z',
@@ -573,5 +583,17 @@ describe('filIgual i filsEquivalents', () => {
     });
     expect(estatDeLUltim(propi, 'jo')).toBe('llegit');
     expect(contactesFrequents([propi], 'jo')).toEqual([]);
+  });
+});
+
+/* Onada R22 · BOOT3 · La guarda d'enviament de XatContext (a l'arrencada) viu ací, sense el tokenitzador
+   de la negreta; negreta.js la reexporta per al compositor: la mateixa funció, no una còpia. */
+describe('esTextBuitOSolsMarques (R21.8)', () => {
+  it('és la mateixa funció que reexporta negreta.js', () => {
+    expect(deLaNegreta).toBe(esTextBuitOSolsMarques);
+  });
+  it('només és certa sense cap caràcter real per enviar', () => {
+    for (const buit of ['', '   ', '**', ' **  ** ', '*\n*', null, undefined]) expect(esTextBuitOSolsMarques(buit)).toBe(true);
+    for (const ple of ['*a*', 'Hola **', '0', '\\*']) expect(esTextBuitOSolsMarques(ple)).toBe(false);
   });
 });

@@ -197,9 +197,9 @@ test('XU-14 · el camp pren la direcció del text que s’hi escriu (dir="auto")
   expect(camp().getAttribute('dir')).toBe('auto');
 });
 
-test('TE-03 · un nom amb «$&», «$\'» o «$`» es pinta tal qual a la línia de qui signa i a l’avís públic', () => {
+test('TE-03 + R21.8 · un nom amb «$&», «$\'» o «$`» es pinta tal qual a l’avís públic, sense rètol de qui signa damunt del camp', () => {
   const fil = { id: 'c', tipus: 'directe', comEntitat: true, entitatNom: "Bar $` $& $' Co", subjecte: { titol: "Plaça $'" } };
   render(<Prova fil={fil} />);
-  expect(screen.getByText("Escrius com a Bar $` $& $' Co.")).toBeTruthy();
+  expect(screen.queryByText(/Escrius com a/)).toBeNull();
   expect(screen.getByText("Escrius al xat públic de «Plaça $'».")).toBeTruthy();
 });

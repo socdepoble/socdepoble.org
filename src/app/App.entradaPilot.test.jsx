@@ -86,7 +86,7 @@ const peticionsAlServidor = (xarxa) => xarxa.mock.calls
 describe('F66 · l’entrada pilot local, de punta a punta', () => {
   test('seed · amb el servidor caigut, entra com a persona pilot sense cap petició i aterra al seu perfil', async () => {
     await muntaLApp('seed', async (xarxa) => {
-      const avis = await screen.findByText(/El servidor del poble no respon ara mateix/, undefined, ESPERA);
+      const avis = await screen.findByText(/El servidor de poble no respon ara mateix/, undefined, ESPERA);
       expect(avis.closest('[role="status"]')).not.toBeNull();
       // Fins ací, només la sonda de salut: cap petició d'entrada ni de dades.
       expect(peticionsAlServidor(xarxa).length).toBeGreaterThan(0);

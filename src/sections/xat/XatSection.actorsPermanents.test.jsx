@@ -676,7 +676,7 @@ describe('el compositor d’un fil de només lectura que no és uns Avisos', () 
    amb sessió remota encara que chatThreads siga [] i quan qui mira és Javi.
    La fila de Javi obri SEMPRE una conversa, sense cap avís que la bloquege. */
 describe('P1-70 · els quatre actors permanents en tots els modes', () => {
-  const AVIS_TU = 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent del poble. Les converses que t’escriguen arribaran a la llista com a directes.';
+  const AVIS_TU = 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent de poble. Les converses que t’escriguen arribaran a la llista com a directes.';
   const AVIS_SENSE = 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.';
   const ACTORS = ['sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia'];
   const filaDe = (clau) => llista().querySelector(`li[data-clau="${clau}"]`);
@@ -748,14 +748,8 @@ describe('P1-70 · els quatre actors permanents en tots els modes', () => {
     mocks.joEsJavi = true;
     mocks.threads = ambXatsPerDefecte([]).map((f) => mapejaFil(f));
     const vista = render(<XatSection />);
-    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
-    expect(filaDe('sdp-per-defecte:javi').textContent).toContain('Javi Llinares (Tu)');
-    expect(filaDe('sdp-per-defecte:javi').textContent).toContain("Envia't missatges a tu mateix");
-    fireEvent.click(filaDe('sdp-per-defecte:javi').querySelector('button'));
-    expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/sdp-per-defecte%3Ajavi');
-    mocks.threadId = 'sdp-per-defecte:javi';
-    vista.rerender(<XatSection />);
-    expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=0001', { replace: true });
+    /* R21.8 · Excepció de Javi: mentre el seu fil propi no té missatges, no es fixa dalt a la llista principal (resta disponible a Nova conversa). */
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
     mocks.threads = [
       mapejaFil({ id: 'propi-0001', tipus: 'directe', esPropi: true, titol: 'Javi Llinares', altres: [] }),
       ...ambXatsPerDefecte([]).map((f) => mapejaFil(f))
@@ -766,16 +760,24 @@ describe('P1-70 · els quatre actors permanents en tots els modes', () => {
     expect(screen.queryByText(AVIS_TU)).toBeNull();
     expect(screen.getByRole('textbox', { name: /Escriu un missatge/ })).not.toBeNull();
     expect(mocks.showToast).not.toHaveBeenCalled();
+    /* En tindre un missatge real, puja a la 2a plaça com a «Javi Llinares (Tu)». */
+    mocks.threads = [
+      mapejaFil({ id: 'propi-0001', tipus: 'directe', esPropi: true, titol: 'Javi Llinares', ultimText: 'Apunt per a demà', ultimSeq: 1, altres: [] }),
+      ...ambXatsPerDefecte([]).map((f) => mapejaFil(f))
+    ];
+    vista.rerender(<XatSection />);
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'propi-0001', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
+    expect(filaDe('propi-0001').textContent).toContain('Javi Llinares (Tu)');
+    expect(filaDe('propi-0001').textContent).toContain('Apunt per a demà');
   });
 
-  test('R21.4-UI · qui mira és Javi en remot amb chatThreads []: la fila de reserva mostra «Javi Llinares (Tu)» i obri ?amb=<joId> (xat propi)', () => {
+  test('R21.8 · qui mira és Javi en remot amb chatThreads []: no es fixa buit dalt i una ruta sdp-per-defecte:javi continua redirigint a ?amb=<joId>', () => {
     mocks.threads = [];
     mocks.joId = '5a5a5a5a-0000-4000-8000-0000000000aa';
     mocks.joNom = 'Javi Llinares';
     mocks.joEsJavi = true;
     const vista = render(<XatSection />);
-    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
-    expect(filaDe('sdp-per-defecte:javi').textContent).toContain('Javi Llinares (Tu)');
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
     mocks.threadId = 'sdp-per-defecte:javi';
     vista.rerender(<XatSection />);
     expect(navegacions()).toEqual([['/xat?amb=5a5a5a5a-0000-4000-8000-0000000000aa', { replace: true }]]);

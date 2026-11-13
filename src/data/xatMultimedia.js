@@ -3,6 +3,8 @@
    urlAdjuntXat(id, config, { renova }?): amb renova=true, una signatura nova
    (cap URL desada no es reutilitza); la interfície la demana després d'un
    error de càrrega, que sol ser una URL caducada.
+   Gauntlet R22 (xat-05) · { descarrega: true | nom } demana la URL de
+   descàrrega (Content-Disposition: attachment al servidor); vegeu contracte.js.
    XAT-03 · publicaAdjuntXat(filId, entrada, config) admet config.onProgres
    (opcional): rep la fracció 0..1 dels bytes ja pujats. Qui no puja res de
    veres (seed, local) l'ignora. El contracte és a contracte.js; el preu de

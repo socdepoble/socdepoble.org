@@ -150,7 +150,7 @@ export function motiuNoActualitzable(item, t = null) {
   const tr = (clau, reserva) => (typeof t === 'function' ? t(clau, reserva) : reserva);
   return item?.data?.seccio === 'events'
     ? tr('section.notes.publicacio.noActualitzableActe', 'Els actes de l’agenda encara no s’actualitzen des del Bloc: el canvi només és en esta vista.')
-    : tr('section.notes.publicacio.noActualitzableLlavor', 'Esta publicació és de l’arxiu editorial del poble i encara no s’actualitza des del Bloc: el canvi només és en esta vista.');
+    : tr('section.notes.publicacio.noActualitzableLlavor', 'Esta publicació és de l’arxiu editorial del municipi i encara no s’actualitza des del Bloc: el canvi només és en esta vista.');
 }
 
 /** Els camps que la nota adoptada rep en crear-se (createNote) i en lligar-se (updateNote). */

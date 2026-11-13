@@ -1,3 +1,6 @@
+import { beforeEach as abansDePublicar } from 'vitest';
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
+abansDePublicar(() => { globalThis.indexedDB = creaIdbFalsEstructurat(); });
 /* T40 (ordre del Mestre, 260928) · La data de publicació de la nota: es desa
    pel canal de sempre (autodesament) i publishNote l'envia al Mur. Fitxer
    propi: el gestor de desament (bgSaveManager) és d'àmbit de mòdul.
@@ -10,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: mocks.notes, noteFolders: [], scopeKey: mocks.scopeKey, workspaceKey: mocks.workspaceKey, config: { tenantId: 'tenant' },
-  status: 'ready', updateNote: mocks.update, mouNota: vi.fn(), esborraNota: vi.fn()
+  status: 'ready', updateNote: mocks.update, confirmaPublicacioNota: vi.fn(), mouNota: vi.fn(), esborraNota: vi.fn()
 }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ locale: 'ca', externalConfig: mocks.externalConfig }),
@@ -33,7 +36,7 @@ import { bgSaveManager } from './GlobalSaveManager.js';
 
 beforeEach(() => {
   mocks.toast.mockReset();
-  mocks.send.mockReset().mockResolvedValue(undefined);
+  mocks.send.mockReset().mockImplementation(async sub => ({ publicacio: { id: sub.id }, nota_revision: sub.expectedNoteRevision + 1, publicada_revision: sub.expectedNoteRevision + 1, replay: false }));
   mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: revision + 1 }));
   mocks.actor = null;
   mocks.user = null;

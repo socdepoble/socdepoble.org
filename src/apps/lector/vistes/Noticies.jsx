@@ -122,6 +122,17 @@ const GRUP = 'carpetes';
    rail de documents (a la mateixa columna en ample i en mitjana; a #app-grid-rail en estret).
    Mai l'arbre ni el detall. */
 const SCROLL_DE_LA_LLISTA = '#app-grid-list .sdp-workspace-column__body, .sdp-workspace-rail--documents';
+/* Gauntlet R22 (ronda 4) · A dalt de colp, abans de pintar: la Columna 2 té scroll-behavior suau
+   (modules.css, --llista) i assignar scrollTop el seguiria, de manera que la llista nova es pintaria
+   a la posició de l'anterior i després pujaria animada. behavior: 'instant' mana sobre el CSS; un
+   navegador que no el coneix rebutja el diccionari i es cau a scrollTop (com portaADalt, a
+   enllacosInterns.js). */
+function aDaltDeColp(node) {
+  if (typeof node.scrollTo === 'function') {
+    try { node.scrollTo({ top: 0, behavior: 'instant' }); } catch { /* scrollTop */ }
+  }
+  if (node.scrollTop !== 0) node.scrollTop = 0;
+}
 /* Una columna que la closca té tancada (AppGridShell la marca inert): el navegador no hi enfoca res. */
 const COLUMNA_TANCADA = '[inert]';
 
@@ -494,7 +505,7 @@ export function EspaiNoticies({ params = null, totes = false }) {
     llistaDelScroll.current = llista;
     if (!closca.current?.isConnected) return;
     for (const node of closca.current.querySelectorAll(SCROLL_DE_LA_LLISTA)) {
-      if (node.scrollTop !== 0) node.scrollTop = 0;
+      if (node.scrollTop !== 0) aDaltDeColp(node);
     }
   });
 

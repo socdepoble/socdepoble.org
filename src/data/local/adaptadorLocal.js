@@ -76,7 +76,7 @@ export const MODES_ADAPTADOR_LOCAL = Object.freeze(['seed', 'local']);
 /* FEDI-16 + FEDI23 · Les capacitats declarades són completes. La versió mínima local és
    null; l'administració multipoble només opera amb autoritat LOCAL injectada.
    Declarar mètodes no concedix autoritat ni permisos sobre cap servidor. */
-export const CAPACITATS_NO_DECLARADES = Object.freeze(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+export const CAPACITATS_NO_DECLARADES = Object.freeze(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
 
 /* Les claus d'abast de qui crida: l'adaptador és amo del seu backend (Model B)
    i mai no parla en nom d'un altre node. La resta (signal, limit, cursors del

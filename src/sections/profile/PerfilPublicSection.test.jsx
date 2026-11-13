@@ -210,7 +210,7 @@ test('en seed el «Perfil no trobat» no parla de cap límit del servidor', asyn
   mocks.load.mockResolvedValue(null);
   render(<PerfilPublicSection agents={mocks.agents} />);
   expect(await screen.findByRole('heading', { level: 1, name: 'Perfil no trobat' })).toBeTruthy();
-  expect(screen.getByText('Ningú del poble té este identificador, o la seua fitxa és privada.')).toBeTruthy();
+  expect(screen.getByText('No hi ha ningú amb este identificador, o la seua fitxa és privada.')).toBeTruthy();
   expect(screen.queryByText(/encara no es poden obrir/)).toBeNull();
 });
 
@@ -747,7 +747,7 @@ test.each(ASSISTENTS.map((agent) => [agent.name, agent]))('Gauntlet 261016 · se
   expect(etiquetesDelTitol(container)).toEqual(['Intel·ligència artificial', agent.town_name]);
   const avis = screen.getByRole('status');
   expect(avis.textContent).toContain('Este perfil és una intel·ligència artificial');
-  expect(avis.textContent).toContain(`${agent.name} és una màquina de Sóc de Poble, en proves. No substituïx cap persona del poble.`);
+  expect(avis.textContent).toContain(`${agent.name} és una màquina de Sóc de Poble, en proves. No substituïx cap persona de poble.`);
   expect(avis.textContent).not.toMatch(/IAIA|frases fetes/);
   expect(screen.queryByRole('button', { name: 'Parla amb la IAIA' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: `Parla amb ${agent.name}` }));

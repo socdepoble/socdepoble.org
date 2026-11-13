@@ -31,6 +31,20 @@ beforeEach(() => {
   mock.getClient.mockResolvedValue(client);
 });
 
+it('R21.9b · només la columna SQL canònica mapeja el canal Beta remot', async () => {
+  const beta = '7d1e5c2a-0000-4000-8000-0000000000bb';
+  query.data = [
+    { id: beta, tipus: 'grup', titol: 'Feedback reanomenat', canal_clau: 'beta_testers' },
+    { id: '7d1e5c2a-0000-4000-8000-0000000000cc', tipus: 'grup', titol: 'Beta Testers', metadades: { canal_clau: 'beta_testers' } },
+    { id: 'no-uuid', tipus: 'grup', canal_clau: 'beta_testers' },
+    { id: ALTRE, tipus: 'directe', canal_clau: 'beta_testers' }
+  ];
+  const rows = await loadFils(REMOT);
+  expect(rows.find(r => r.id === beta)).toMatchObject({ canalClau: 'beta_testers', canalBetaTesters: true, titol: 'Feedback reanomenat' });
+  for (const row of rows.filter(r => r.id !== beta)) expect(row).not.toHaveProperty('canalBetaTesters');
+  expect(client.rpc).toHaveBeenCalledWith('xat_fils_meus', { p_tenant_id: REMOT.tenantId });
+});
+
 const calls = [
   ['llista', config => loadFils(config)],
   ['missatges', config => loadMissatges('fil', config)],

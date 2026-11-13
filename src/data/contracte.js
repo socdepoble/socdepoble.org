@@ -76,6 +76,7 @@ export const SECCIONS_PAGINABLES = Object.freeze({
 });
 
 export const CAPACITATS = Object.freeze({
+  revocacioPublicacions: Object.freeze(['revocaPublicacioMur', 'drenaRevocacionsMur', 'encuaRevocacioNotaMur']),
   /* R19 · El recurs s'identifica per { recursTipus, recursId }. La lectura
      torna { recursTipus, recursId, versio, publicadorsRegistrats, publicadorEfectiu }.
      Els actors provenen del padró vigent i estan ordenats: principal, després
@@ -154,7 +155,11 @@ export const CAPACITATS = Object.freeze({
   ]),
   /* Fase 4. No és nucli a posta: un backend sense Storage segueix sent
      vàlid i la interfície cau cap a data URL. teCapacitat('mitjans')
-     és l'única manera legítima de preguntar-ho. */
+     és l'única manera legítima de preguntar-ho.
+     Gauntlet R22 (sql-02) · promoteToPublic(ref, config) torna la ref pública;
+     si el servidor rebutja la còpia pública (i no és el duplicat dels mateixos
+     bytes), rebutja amb `codi` CODI_PROMOCIO_PUBLICA (errorsBackend.js): qui
+     publica s'atura i mai deixa una ref privada dins del contingut públic. */
   mitjans: Object.freeze([
     'uploadToStorage',
     'getPublicUrl',
@@ -193,8 +198,13 @@ export const CAPACITATS = Object.freeze({
        config.onProgres(fraccio 0..1) és opcional (XAT-03): els bytes ja pujats;
        no viatja a les RPC i qui no puja res de veres (seed, local) l'ignora.
      descartaAdjuntXat(id, config) → true després d’esborrar un pendent propi.
-     urlAdjuntXat(id, config, { renova }?) → URL temporal, només amb accés vigent al fil;
+     urlAdjuntXat(id, config, { renova, descarrega }?) → URL temporal, només amb accés vigent al fil;
        renova=true obliga a una signatura nova (cap URL desada).
+       descarrega=true | nom de fitxer (Gauntlet R22, xat-05): la URL demana al
+       servidor que la servisca com a descàrrega (Content-Disposition: attachment),
+       perquè l'atribut `download` d'un enllaç a un altre origen no compta. Un nom
+       que no és net cau al de l'objecte. Un adjunt xifrat es servix com a blob:
+       del mateix origen, sense el paràmetre: ací l'atribut `download` ja val.
      Sense servidor/migració: error 'sense-capacitat', mai èxit local simulat. */
   xatMultimedia: Object.freeze(['quotaXat', 'publicaAdjuntXat', 'urlAdjuntXat', 'descartaAdjuntXat']),
   /* P1-12 · Disseny E2EE §8.3: transport opac i opcional, sense activar el
@@ -517,8 +527,19 @@ export const CAPACITATS = Object.freeze({
          `repetida`: la mateixa persona ja l'havia denunciat i està pendent.
        llistaBloquejos(config) → Promise<Bloqueig[]>  (de qui crida; [] sense sessió)
        bloquejaAutor({ tipus, id, nom? }, config) → Promise<Bloqueig>  (idempotent)
+       bloquejaAutor({ publicacioId: UUID }, config) → Promise<{ bloquejat:true, publicacioId }>
+       denunciaContingut({ objecte, motiu, detall?, murPublic:true }, config): autor resolt al servidor
        desbloquejaAutor({ tipus, id }, config) → Promise<{ desbloquejat: boolean }>
-     Bloqueig: { tipus: 'persona' | 'entitat', id, nom: string | null, creatAl: ISO | null }.
+       desbloquejaAutor({ tipus: 'publicacio', id: UUID }, config) → Promise<{ desbloquejat: boolean }>
+     Bloqueig: { tipus: 'persona' | 'entitat', id, nom: string | null, creatAl: ISO | null }
+       o, R22 (2611122200), el bloqueig opac per UUID de publicació d'un Foraster:
+       { tipus: 'publicacio', id: UUID públic de la publicació, nom: null, creatAl: ISO | null }.
+       El servidor guarda l'autor en privat: la fila no porta mai cap identitat
+       (nom sempre null) i només es desfà pel mateix UUID (desbloquejaAutor amb
+       tipus 'publicacio'). Els tipus d'una llista són TIPUS_BLOQUEIG_LLISTAT;
+       bloquejaAutor({ tipus, id }) i denunciaContingut continuen acceptant només
+       TIPUS_BLOQUEJAT. Un node sense bloquejos opacs no en llista cap i, a
+       desbloquejaAutor amb un UUID vàlid, torna { desbloquejat: false }.
      Els errors porten `code` de CODI_MODERACIO; sense la migració aplicada,
      'no-disponible'. */
   moderacio: Object.freeze([
@@ -780,8 +801,11 @@ export const LIMIT_DADES_OBERTES = 5000;
    261112_2008 diu que MarIA va pujar binaris 1.1.12 amb el build 3, i este
    fitxer encara deia 2): per això la v1.2.0 passa del 2 al 4. Mai per davall del mínim
    del servidor (2611011510 i les que la tornen a crear): l'app nova es
-   bloquejaria ella mateixa. */
-export const VERSIO_CLIENT_NATIU = 4;
+   bloquejaria ella mateixa.
+   Onada R21 (COMMIT 5) · La v1.2.0 passa del build 4 al 5: cap número que ja
+   s'haja pujat a una botiga es reutilitza. MARKETING_VERSION i versionName
+   continuen dient 1.2.0. */
+export const VERSIO_CLIENT_NATIU = 5;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,
@@ -906,7 +930,7 @@ export const MISSATGES_MEMBRES_ORGANITZACIO = Object.freeze({
   'SDP-ORGMEM-000': 'Cal iniciar sessió.',
   'SDP-ORGMEM-001': 'El tipus de membre o el rol no és vàlid.',
   'SDP-ORGMEM-002': 'Només qui administra l’organització en veu i en gestiona els membres.',
-  'SDP-ORGMEM-003': 'Esta persona no és del poble de l’organització o ha demanat la baixa.',
+  'SDP-ORGMEM-003': 'Esta persona no és del municipi de l’organització o ha demanat la baixa.',
   'SDP-ORGMEM-004': 'No pots canviar el teu propi rol.',
   'SDP-ORGMEM-005': 'La propietària no es canvia ni es lleva.',
   'SDP-ORGMEM-006': 'Només la propietària nomena, degrada o lleva administradores.',
@@ -964,6 +988,15 @@ export function destinatariaDeTransferencia(dades) {
 export const TIPUS_OBJECTE_DENUNCIA = Object.freeze(['publicacio', 'producte', 'esdeveniment', 'missatge', 'persona', 'entitat']);
 export const MOTIUS_DENUNCIA = Object.freeze(['ofensiu', 'spam_frau', 'desinformacio', 'altre']);
 export const TIPUS_BLOQUEJAT = Object.freeze(['persona', 'entitat']);
+/* Gauntlet R22 (sql-01, fora de carril de l'SQL) · El bloqueig opac per UUID
+   de publicació (bloqueja_publicacio_mur, 2611122200): llistaBloquejos el pot
+   tornar ({ tipus: 'publicacio', id: UUID, nom: null }) i desbloquejaAutor
+   l'accepta pel mateix UUID. No és cap identitat: TIPUS_BLOQUEJAT (el que es
+   bloqueja o es denuncia per autor) no el porta, i la llista dels tipus que
+   pot tornar una llista és esta, el CHECK bloquejat_tipus de 2611122200
+   (src/data/supabase/moderacio.migracio.test.js els contrasta). */
+export const TIPUS_BLOQUEIG_PUBLICACIO = 'publicacio';
+export const TIPUS_BLOQUEIG_LLISTAT = Object.freeze([...TIPUS_BLOQUEJAT, TIPUS_BLOQUEIG_PUBLICACIO]);
 export const MAXIM_DETALL_DENUNCIA = 1000;
 export const MAXIM_NOM_BLOQUEJAT = 120;
 /* Canviar el text de les normes vol dir pujar esta data: tothom les torna a acceptar. */

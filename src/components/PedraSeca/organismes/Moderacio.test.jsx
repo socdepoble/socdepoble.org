@@ -38,14 +38,17 @@ describe('BotoModeracio', () => {
     expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Denuncia el contingut' }));
   });
 
-  test('amb permís i un nom, també «Bloqueja Pepa»; sense nom, no', () => {
+  test('amb permís bloqueja per nom o amb la referència opaca sense publicar identitat', () => {
     render(<BotoModeracio titol="Fira de tardor" nomAutor="Pepa" potBloquejar onTria={vi.fn()} />);
     obri();
     expect(files()).toEqual(['Denuncia el contingut', 'Bloqueja Pepa']);
     cleanup();
-    render(<BotoModeracio titol="Fira de tardor" nomAutor="  " potBloquejar onTria={vi.fn()} />);
-    obri();
-    expect(files()).toEqual(['Denuncia el contingut']);
+    const onTria = vi.fn();
+    render(<BotoModeracio titol="Fira de tardor" nomAutor="  " potBloquejar onTria={onTria} />);
+    const boto = obri();
+    expect(files()).toEqual(['Denuncia el contingut', 'Bloqueja qui firma esta publicació']);
+    act(() => fireEvent.click(screen.getByRole('menuitem', { name: 'Bloqueja qui firma esta publicació' })));
+    expect(onTria).toHaveBeenCalledWith('bloqueja', boto);
   });
 
   test('un perfil diu «Denuncia {nom}» i un nom amb «$&» es pinta tal qual', () => {

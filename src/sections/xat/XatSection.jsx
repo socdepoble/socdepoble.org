@@ -443,9 +443,6 @@ function XatWorkspace({ origen = null }) {
        ('disponible' | 'per-confirmar' | 'no' | null). Un context d'abans no el
        porta: 'no', l'avís honest d'abans de R21.4 i cap promesa. */
     xatPropi = 'no',
-    /* Pla 261014_1450 (front C) · L'entitat de la barra negra: baixa a la
-       Conversa, i el Compositor diu qui signa. */
-    entitatActiva = null,
     senseSessio = false,
     ambitEstable = '',
     /* Auditoria 261008 (B04) · Si l'última càrrega de la llista ha anat bé, i
@@ -1844,7 +1841,6 @@ function XatWorkspace({ origen = null }) {
           cortesiaIAIA={modeDades === 'remote' && !senseSessio && !iaiaApagada && !activeThread.filLocalIAIA && esXatDeLaIAIA(activeThread)}
           consultaIAIA={!iaiaApagada && (esXatDeLaIAIA(activeThread) || (senseSessio && activeThread.id === ID_FIL_DE_MOSTRA_DE_LA_IAIA))}
           fil={activeThread}
-          entitatActiva={entitatActiva}
           moderacio={moderacioDelXat}
           actorLlista={actorLlista}
           messages={messages}

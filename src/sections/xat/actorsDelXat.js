@@ -113,12 +113,21 @@ export const comunitatDeReserva = (modeDades) => (potPortarLaComunitat(modeDades
 
 const idDe = (fil) => String(fil?.id ?? '');
 
-/* Javi: la fila sintètica, el xat de mostra, un directe real amb ell o, quan
-   qui mira és el mateix Javi (joEsJavi), el seu fil personal esPropi. */
-const esFilDeJavi = (fil, joEsJavi = false) => fil?.perDefecte === 'javi'
-  || idDe(fil) === ID_FIL_DE_MOSTRA_DE_JAVI
-  || jaTeElXat(fil, 'javi')
-  || (joEsJavi && Boolean(fil?.esPropi));
+/* R21.8 · El xat propi de Javi (`joEsJavi === true`) segueix el patró oficial
+   de WhatsApp: només puja a la llista principal si realment conté missatges;
+   mentre és buit, resta disponible dins de «Nova conversa» (`<Nom> (Tu)`). */
+export const filPropiAmbMissatges = (fil) => Boolean(fil?.esPropi)
+  && (Number(fil.ultimSeq) > 0 || Boolean(String(fil.ultimText ?? '').trim()) || Boolean(fil.ultimTipus));
+
+/* Javi: per als altres veïns, la fila sintètica, el xat de mostra o un directe
+   real amb ell; quan qui mira és el mateix Javi (joEsJavi), només el seu fil
+   personal `esPropi` amb missatges reals. */
+const esFilDeJavi = (fil, joEsJavi = false) => {
+  if (joEsJavi) return filPropiAmbMissatges(fil);
+  return fil?.perDefecte === 'javi'
+    || idDe(fil) === ID_FIL_DE_MOSTRA_DE_JAVI
+    || jaTeElXat(fil, 'javi');
+};
 
 /** R21.4-UI · El xat públic de la pàgina /iaia només s'obri contextualment des
  *  de /iaia (?sobre=pagina:/iaia), mai com a segona fila clònica a la columna
@@ -186,19 +195,30 @@ export function anteposaActors(
   const entitatDeReserva = comunitat && typeof comunitat === 'object' ? comunitat : COMUNITAT_DE_SOC_DE_POBLE;
   const deSocDePoble = troba((fila) => fila?.tipus === 'comunitat' && esComunitatDeSocDePoble(fila.comunitat))
     || (comunitat ? { clau: CLAU_FILA_DE_SOC_DE_POBLE, tipus: 'entitat', entitat: entitatDeReserva } : null);
-  const javiRealPropi = joEsJavi ? troba((fila) => esFila(fila) && Boolean(fila.fil?.esPropi)) : null;
-  const javiTrobat = javiRealPropi || troba((fila) => esFila(fila) && esFilDeJavi(fila.fil, joEsJavi));
-  const javiSinteticDescartat = javiRealPropi ? troba((fila) => esFila(fila) && fila.fil?.perDefecte === 'javi') : null;
-  const deJavi = ambFilaDeJavi(javiTrobat || reservaJavi, { subtitol: subtitolDeJavi, joEsJavi, nomPropiDeJavi });
+  const javiRealPropi = joEsJavi ? troba((fila) => esFila(fila) && filPropiAmbMissatges(fila.fil)) : null;
+  const javiTrobat = joEsJavi
+    ? javiRealPropi
+    : troba((fila) => esFila(fila) && esFilDeJavi(fila.fil, false));
+  const deJavi = joEsJavi
+    ? (javiRealPropi ? ambFilaDeJavi(javiRealPropi, { subtitol: subtitolDeJavi, joEsJavi, nomPropiDeJavi }) : null)
+    : ambFilaDeJavi(javiTrobat || reservaJavi, { subtitol: subtitolDeJavi, joEsJavi, nomPropiDeJavi });
   const delPoble = troba((fila) => fila?.delPoble === true);
   const deLaIAIA = troba((fila) => esFila(fila) && !fila.fil.sessioLocalIAIA && esDirecteDeLaIAIA(fila.fil))
     || troba((fila) => esFila(fila) && !fila.fil.sessioLocalIAIA && !esXatPublicDePaginaIAIA(fila.fil) && esXatDeLaIAIA(fila.fil))
     || reservaIAIA;
   const actors = [deSocDePoble, deJavi, delPoble, deLaIAIA].filter(Boolean);
-  if (!actors.length) return files;
-  /* La fila de Javi trobada (i la sintètica si ja hi ha el fil propi real) també és «de dalt»: mai es duplica. */
-  const dalt = new Set([...actors, javiTrobat, javiSinteticDescartat]);
-  const resultat = [...actors, ...files.filter((fila) => !dalt.has(fila))];
+  /* Quan qui mira és Javi (`joEsJavi`), ni la fila sintètica ni el seu fil propi
+     mentre encara és buit ocupen lloc a la llista principal (patró WhatsApp:
+     resta disponible a «Nova conversa» fins que hi envia el primer missatge). */
+  const exclouFilaJavi = (fila) => joEsJavi && esFila(fila) && (
+    fila.fil?.perDefecte === 'javi'
+    || idDe(fila.fil) === ID_FIL_DE_MOSTRA_DE_JAVI
+    || (Boolean(fila.fil?.esPropi) && !filPropiAmbMissatges(fila.fil))
+  );
+  if (!actors.length && !files.some(exclouFilaJavi)) return files;
+  /* La fila de Javi trobada mai es duplica davall dels actors. */
+  const dalt = new Set([...actors, javiTrobat]);
+  const resultat = [...actors, ...files.filter((fila) => !dalt.has(fila) && !exclouFilaJavi(fila))];
   const igual = resultat.length === files.length && resultat.every((fila, i) => fila === files[i]);
   return igual ? files : resultat;
 }

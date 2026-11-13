@@ -42,7 +42,7 @@ export const FITXA_NATIVA = Object.freeze({
   paquet: 'org.socdepoble.app',
   extensioCompartir: 'org.socdepoble.app.compartir',
   versio: '1.2.0',
-  build: 4,
+  build: 5,
   iosMinim: '16.0',
   minSdk: 24,
   compileSdk: 36,

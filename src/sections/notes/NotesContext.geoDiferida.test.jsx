@@ -1,3 +1,7 @@
+const rellotgeRealDeProva = globalThis.setTimeout;
+import { beforeEach as abansDePublicar } from 'vitest';
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
+abansDePublicar(() => { globalThis.indexedDB = creaIdbFalsEstructurat(); });
 /* P1-20 · D15 (Assalt 10/10, T4a, 261101) · geoDeLesFotos.js (i l'EXIF que
    arrossega) ja no és al tros d'entrada: publishNote el demana amb import()
    només quan publica una nota pròpia. Si el tros no baixa, o no arriba en
@@ -9,7 +13,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ update: vi.fn(), send: vi.fn(), toast: vi.fn(), promou: vi.fn(), resol: vi.fn(), capacitats: new Set(), demanat: 0, penja: false }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: [], noteFolders: [], scopeKey: 'tenant-user', workspaceKey: 'session', config: { tenantId: 'tenant' },
-  status: 'ready', updateNote: mocks.update, mouNota: vi.fn(), esborraNota: vi.fn()
+  status: 'ready', updateNote: mocks.update, confirmaPublicacioNota: vi.fn(), mouNota: vi.fn(), esborraNota: vi.fn()
 }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ locale: 'ca', externalConfig: {} }),
@@ -49,7 +53,7 @@ beforeEach(() => {
   mocks.capacitats = new Set();
   mocks.promou.mockReset().mockImplementation(async (ref) => ref.replace('mitjans_privats/', 'mitjans/'));
   mocks.resol.mockReset();
-  mocks.send.mockReset().mockResolvedValue(undefined);
+  mocks.send.mockReset().mockImplementation(async sub => ({ publicacio: { id: sub.id }, nota_revision: sub.expectedNoteRevision + 1, publicada_revision: sub.expectedNoteRevision + 1, replay: false }));
   mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: revision + 1 }));
 });
 afterEach(cleanup);
@@ -90,6 +94,7 @@ test('si el tros de la geo no arriba mai, la publicació no l’espera més de 4
       resultat = result.current.publishNote({ id: 'lenta', title: 'La font', content: COS, revision: 1, coverImage: 'data:image/jpeg;base64,AAAA' })
         .then((valor) => { publicada = true; return valor; });
     });
+    for (let i=0; i<80 && mocks.demanat===abans; i++) await act(async()=>{await new Promise(resolve=>rellotgeRealDeProva(resolve,5));});
     await act(async () => { await vi.advanceTimersByTimeAsync(3999); });
     // Ha demanat el tros i encara l'espera: no hi ha cap termini més curt.
     expect(mocks.demanat - abans).toBe(1);

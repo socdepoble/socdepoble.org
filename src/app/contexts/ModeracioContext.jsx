@@ -76,8 +76,8 @@ import { getDefaultUserId } from '../../data/identitat.js';
 import { backendScope, normalizeBackendConfig } from '../../config/backendConfig.js';
 import { delVal, getVal, setVal } from '../../config/storage.js';
 import {
-  afigAlCanvi, canviBuit, clauDeBloqueig, elementBloquejat, firmaDeClaus, fotoDelCanvi, fusionaBloquejos, llevaDelCanvi,
-  objectiuDeContrapart, objectiuDeMissatge, objectiuDeTargeta, omple, revertix
+  TIPUS_BLOQUEIG_PUBLICACIO, afigAlCanvi, canviBuit, clauDeBloqueig, elementBloquejat, firmaDeClaus, fotoDelCanvi, fusionaBloquejos,
+  llevaDelCanvi, objectiuDeContrapart, objectiuDeMissatge, objectiuDeTargeta, omple, revertix
 } from '../../config/moderacio.js';
 import { useSession } from './SessionContext.jsx';
 import { useScopedResource } from './useScopedResource.js';
@@ -93,11 +93,14 @@ const CAP = Object.freeze([]);
    section.moderacio.* (i18n.js) i la reserva, el valencià: la mateixa que
    la taula de textos de la interfície. */
 const AVISOS_MODERACIO = Object.freeze({
+  bloqueigPublicFet: Object.freeze(['section.moderacio.bloqueig.fetPublic', 'Has bloquejat qui firma esta publicació.']),
   bloqueigFet: Object.freeze(['section.moderacio.bloqueig.fet', 'Has bloquejat {nom}.']),
   bloqueigNomesSessio: Object.freeze(['section.moderacio.bloqueig.nomesSessio',
     'Has bloquejat {nom} en esta sessió: el servidor encara no guarda els bloquejos.']),
   desbloqueigFet: Object.freeze(['section.moderacio.desbloqueig.fet', 'Has desbloquejat {nom}.']),
-  senseNom: Object.freeze(['section.moderacio.bloquejos.senseNom', 'Sense nom'])
+  senseNom: Object.freeze(['section.moderacio.bloquejos.senseNom', 'Sense nom']),
+  /* R22 · El nom d'un bloqueig opac per UUID de publicació: mai l'autor. */
+  autorPublic: Object.freeze(['section.moderacio.autorPublic', 'qui firma esta publicació'])
 });
 
 /* Com MurContext (potPaginar): un port sense adaptador encara instal·lat és
@@ -174,10 +177,14 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
   const firma = firmaDeClaus(mapa.keys());
   const firmaLlista = [...mapa.values()].map((b) => `${b.tipus}:${b.id}\t${b.nom ?? ''}\t${b.creatAl ?? ''}`).join('\n');
   const claus = useMemo(() => new Set(firma ? firma.split('\n') : []), [firma]);
+  const autorPublic = tradueix(t, AVISOS_MODERACIO.autorPublic);
   /* Com App.jsx (stableConfig): la llista nova només quan canvia el que es
-     veu; `mapa` és nou a cada pintat. */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const bloquejats = useMemo(() => (firmaLlista ? Object.freeze([...mapa.values()]) : CAP), [firmaLlista]);
+     veu; `mapa` és nou a cada pintat. R22 · Un bloqueig opac (per UUID de
+     publicació) es diu «qui firma esta publicació», mai amb cap autor. */
+  const bloquejats = useMemo(() => (firmaLlista
+    ? Object.freeze([...mapa.values()].map((b) => (b.tipus === TIPUS_BLOQUEIG_PUBLICACIO && !b.nom ? Object.freeze({ ...b, nom: autorPublic }) : b)))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    : CAP), [firmaLlista, autorPublic]);
   const mapaRef = useRef(mapa);
   useLayoutEffect(() => { mapaRef.current = mapa; });
 
@@ -187,10 +194,13 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
     () => (claus.size ? (id) => claus.has(clauDeBloqueig('persona', String(id ?? ''))) : MAI),
     [claus]
   );
+  const [publicsBloquejats, setPublicsBloquejats] = useState(() => ({ ambit, ids: new Set(), versio: 0 }));
+  const publics = publicsBloquejats.ambit === ambit ? publicsBloquejats : null;
   const esElementBloquejat = useMemo(
-    () => (claus.size ? (item) => elementBloquejat(item, claus, { esDeQuiMira }) : MAI),
-    [claus, esDeQuiMira]
+    () => (item) => publics?.ids.has(String(item?.id)) || elementBloquejat(item, claus, { esDeQuiMira }),
+    [claus, esDeQuiMira, publics]
   );
+  const versioBloquejos = publics?.versio || 0;
   const objectiuDeTargetaDeQuiMira = useCallback((objecte) => objectiuDeTargeta(objecte, { esDeQuiMira }), [esDeQuiMira]);
 
   /* ── Els diàlegs ── */
@@ -203,7 +213,7 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
     if (objectiu?.tipus && objectiu.id) obre('denuncia', objectiu, obridor);
   }, [obre]);
   const demanaBloqueig = useCallback((objectiu, obridor = null) => {
-    if (objectiu?.bloquejable === true && objectiu.autor?.id) obre('bloqueig', objectiu, obridor);
+    if (objectiu?.bloquejable === true && (objectiu.autor?.id || objectiu.murPublic === true)) obre('bloqueig', objectiu, obridor);
   }, [obre]);
   const tanca = useCallback(() => setDialeg(null), []);
 
@@ -224,12 +234,27 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
 
   const nomDe = useCallback((autor) => {
     const nom = autor?.nom || mapaRef.current.get(clauDeBloqueig(autor?.tipus, autor?.id))?.nom;
+    if (!nom && autor?.tipus === TIPUS_BLOQUEIG_PUBLICACIO) return tradueix(t, AVISOS_MODERACIO.autorPublic);
     return nom || tradueix(t, AVISOS_MODERACIO.senseNom);
   }, [t]);
 
   /* Bloquejar: s'amaga a l'instant, davall del diàleg. */
   const confirmaBloqueig = useCallback(async (objectiu) => {
     const autor = objectiu?.autor;
+    if (objectiu?.murPublic === true) {
+      const ambitAra = ambitRef.current;
+      await bloquejaAutor({ publicacioId: objectiu.id }, configRef.current);
+      if (desmuntat.current || ambitRef.current !== ambitAra) return;
+      /* R22 · El bloqueig opac entra a la llista pel UUID públic, sense
+         autor: es pot desfer des d'ací mateix, sense recarregar. */
+      mutaCanvis(ambitAra, (c) => afigAlCanvi(c, Object.freeze({ tipus: TIPUS_BLOQUEIG_PUBLICACIO, id: String(objectiu.id), nom: null, creatAl: null })));
+      setPublicsBloquejats(actual => ({ ambit: ambitAra,
+        ids: new Set([...(actual.ambit === ambitAra ? actual.ids : []), objectiu.id]),
+        versio: (actual.ambit === ambitAra ? actual.versio : 0) + 1 }));
+      setDialeg(null);
+      showToast(tradueix(t, AVISOS_MODERACIO.bloqueigPublicFet), 'success');
+      return;
+    }
     if (!autor?.id) return;
     const ambitAra = ambitRef.current;
     const k = clauDeBloqueig(autor.tipus, autor.id);
@@ -254,6 +279,7 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
     if (desat?.tipus === autor.tipus && String(desat.id) === autor.id) {
       mutaCanvis(ambitAra, (c) => (c.llevats.has(k) ? c : afigAlCanvi(c, Object.freeze({ ...desat, id: autor.id }))));
     }
+    setPublicsBloquejats(actual => ({ ambit: ambitAra, ids: actual.ambit === ambitAra ? actual.ids : new Set(), versio: (actual.ambit === ambitAra ? actual.versio : 0) + 1 }));
     setDialeg(null);
     showToast(omple(tradueix(t, AVISOS_MODERACIO.bloqueigFet), { nom: nomDe(autor) }), 'success');
   }, [vigentsDe, mutaCanvis, showToast, t, nomDe]);
@@ -278,6 +304,7 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
       }
     }
     if (desmuntat.current || ambitRef.current !== ambitAra) return;
+    setPublicsBloquejats(actual => ({ ambit: ambitAra, ids: new Set(), versio: (actual.ambit === ambitAra ? actual.versio : 0) + 1 }));
     showToast(omple(tradueix(t, AVISOS_MODERACIO.desbloqueigFet), { nom }), 'success');
   }, [vigentsDe, mutaCanvis, nomDe, showToast, t]);
 
@@ -289,7 +316,8 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
       motiu,
       detall,
       autor: objectiu.autor ? { tipus: objectiu.autor.tipus, id: objectiu.autor.id } : null,
-      filId: objectiu.filId
+      filId: objectiu.filId,
+      ...(objectiu.murPublic === true ? { murPublic: true } : {})
     }, configRef.current);
   }, []);
 
@@ -410,6 +438,7 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
     bloquejats,
     esPersonaBloquejada,
     esElementBloquejat,
+    versioBloquejos,
     objectiuDeTargeta: objectiuDeTargetaDeQuiMira,
     objectiuDeMissatge,
     objectiuDeContrapart,
@@ -418,13 +447,13 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
     desbloqueja,
     normesPendents,
     asseguraNormes
-  }), [disponible, potBloquejar, recurs.status, codiErrorBloquejos, bloquejats, esPersonaBloquejada, esElementBloquejat,
+  }), [disponible, potBloquejar, recurs.status, codiErrorBloquejos, bloquejats, esPersonaBloquejada, esElementBloquejat, versioBloquejos,
     objectiuDeTargetaDeQuiMira, demanaDenuncia, demanaBloqueig, desbloqueja, normesPendents, asseguraNormes]);
 
   const objectiu = dialeg?.objectiu ?? null;
   const autorDelDialeg = objectiu?.autor ?? null;
-  const potBloquejarTambe = potBloquejar && objectiu?.bloquejable === true && Boolean(autorDelDialeg?.id)
-    && !claus.has(clauDeBloqueig(autorDelDialeg.tipus, autorDelDialeg.id));
+  const potBloquejarTambe = potBloquejar && objectiu?.bloquejable === true && (objectiu.murPublic === true || Boolean(autorDelDialeg?.id))
+    && !claus.has(clauDeBloqueig(autorDelDialeg?.tipus, autorDelDialeg?.id));
 
   return (
     <ModeracioContext.Provider value={value}>

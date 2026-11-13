@@ -73,7 +73,10 @@ describe('Legal · el botó «Traduir» (apartat 21)', () => {
     const xat = resolve(process.cwd(), 'src/sections/xat');
     const ambBarra = readdirSync(xat, { recursive: true }).map(String)
       .filter((fitxer) => /\.(?:js|jsx)$/.test(fitxer) && !/\.test\.(?:js|jsx)$/.test(fitxer))
-      .filter((fitxer) => /\b(?:PageFrame|UniversalPage|PaginaApp|useTraduccioPagina)\b/.test(readFileSync(resolve(xat, fitxer), 'utf8')));
+      /* Munta una pàgina o barra amb «Traduir»: JSX <PageFrame|UniversalPage|PaginaApp>, importació per defecte
+         d'eixos components o el hook useTraduccioPagina. Una funció auxiliar amb nom (capaDeDalt de PageFrame,
+         la capa del visor de fotos) no munta cap barra. */
+      .filter((fitxer) => /<(?:PageFrame|UniversalPage|PaginaApp)\b|\bimport\s+(?:PageFrame|UniversalPage|PaginaApp)\b|\bimport\s*\{[^}]*\b(?:PageFrame|UniversalPage|PaginaApp)\b[^}]*\}|\buseTraduccioPagina\b/.test(readFileSync(resolve(xat, fitxer), 'utf8')));
     expect(ambBarra).toEqual([]);
     expect(text).toContain('Els missatges del Xat i les pàgines de les aplicacions no passen mai pel traductor.');
     // Al lloc amb servidor propi (el connector de WordPress), el text passa per eixe servidor.

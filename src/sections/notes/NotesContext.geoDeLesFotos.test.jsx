@@ -1,3 +1,6 @@
+import { beforeEach as abansDePublicar } from 'vitest';
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
+abansDePublicar(() => { globalThis.indexedDB = creaIdbFalsEstructurat(); });
 /* P1-64 (pla 261028_1526 §3.1.1; contracte de dades del Mapa, Mestre 261028)
    · publishNote deriva l'índex del Mapa fotogràfic: payload.fotos_geo (les
    fotos del cos amb data-*) i payload.geolocalitzacio i payload.dataCaptura
@@ -9,7 +12,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ update: vi.fn(), send: vi.fn(), toast: vi.fn(), promou: vi.fn(), resol: vi.fn(), capacitats: new Set() }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: [], noteFolders: [], scopeKey: 'tenant-user', workspaceKey: 'session', config: { tenantId: 'tenant' },
-  status: 'ready', updateNote: mocks.update, mouNota: vi.fn(), esborraNota: vi.fn()
+  status: 'ready', updateNote: mocks.update, confirmaPublicacioNota: vi.fn(), mouNota: vi.fn(), esborraNota: vi.fn()
 }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ locale: 'ca', externalConfig: {} }),
@@ -46,7 +49,7 @@ beforeEach(() => {
   mocks.capacitats = new Set();
   mocks.promou.mockReset().mockImplementation(async (ref) => ref.replace('mitjans_privats/', 'mitjans/'));
   mocks.resol.mockReset();
-  mocks.send.mockReset().mockResolvedValue(undefined);
+  mocks.send.mockReset().mockImplementation(async sub => ({ publicacio: { id: sub.id }, nota_revision: sub.expectedNoteRevision + 1, publicada_revision: sub.expectedNoteRevision + 1, replay: false }));
   mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: revision + 1 }));
 });
 afterEach(cleanup);

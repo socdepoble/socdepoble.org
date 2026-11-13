@@ -5,7 +5,8 @@ import { describe, expect, test, vi } from 'vitest';
 import {
   ACTORS_PERMANENTS, AJUDA, AJUDA_PER_CLAU, CARA_DE_LA_IAIA, CONTACTE_HUMA, ID_FIL_DE_MOSTRA_DE_JAVI, MISSATGE_AUTOMATIC_DE_JAVI, PREFIX_PER_DEFECTE,
   ambXatsPerDefecte, caraDeLaIAIA, clauPerDefecteDe, conversaPerDefecteDe, esIdPerDefecte, esLaIdentitatDAjuda, esLaPersonaDeContacte,
-  esXatDeLaIAIA, entitatDeMostraDe, filDeMostraDEntitat, filDeMostraDeJavi, gestionaLEntitatPilot, jaTeElXat, missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte, vestixLaIAIA
+  esXatDeLaIAIA, entitatDeMostraDe, filDeMostraDEntitat, filDeMostraDeJavi, gestionaLEntitatPilot, jaTeElXat, missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte, vestixLaIAIA,
+  CLAU_CANAL_BETA_TESTERS, ID_FIL_BETA_TESTERS_LLAVOR, esCanalBetaTesters, trobaCanalBetaTesters
 } from './xatsPerDefecte.js';
 import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, IAIA_ID, PERSONA_PILOT } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
@@ -17,6 +18,19 @@ const LOGO_QUADRAT = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png
 /* El mateix patró que l'adaptador (supabase/xat.js, W4-10). */
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const UUID_ENTITAT = '7d1e5c2a-0000-4000-8000-0000000000aa';
+
+test('R21.9b · Beta es resol per marca canònica o UUID local, mai per nom o metadata', () => {
+  const seed = { id: ID_FIL_BETA_TESTERS_LLAVOR, tipus: 'grup', titol: 'Nom local' };
+  const real = { id: UUID_ENTITAT, tipus: 'grup', titol: 'Canal reanomenat', canalClau: CLAU_CANAL_BETA_TESTERS, canalBetaTesters: true };
+  const impostor = { id: 'fals', tipus: 'grup', titol: 'Beta Testers', metadades: { canalBetaTesters: true } };
+  expect(esCanalBetaTesters(impostor)).toBe(false);
+  expect(esCanalBetaTesters({ ...real, tipus: 'directe' })).toBe(false);
+  expect(esCanalBetaTesters({ ...real, canalClau: 'un_altre' })).toBe(false);
+  expect(trobaCanalBetaTesters([impostor, seed, real])).toBe(real);
+  expect(trobaCanalBetaTesters([impostor, seed])).toBe(seed);
+  expect(trobaCanalBetaTesters([impostor])).toBeNull();
+  expect(trobaCanalBetaTesters(null)).toBeNull();
+});
 
 const real = (extra = {}) => ({ id: 'f-real', tipus: 'directe', altres: [], subjecte: null, entitatId: null, ultimSeq: 3, ...extra });
 const claus = (llista) => llista.map((c) => c.perDefecte ?? c.id);

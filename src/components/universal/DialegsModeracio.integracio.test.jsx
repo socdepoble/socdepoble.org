@@ -40,12 +40,12 @@ const PUBLICACIO = objecteDe({ id: 'p1', title: 'Fira de tardor', ownerUserId: '
 
 let valor;
 function Sonda() { valor = useModeracio(); return null; }
-const arbre = () => (
+const arbre = (objecte = PUBLICACIO) => (
   <MemoryRouter rutaInicial="/mur">
     <ProveidorModeracio config={REMOT} Dialegs={DialegsModeracio}>
       <Sonda />
       <UniversalCard title="Fira de tardor" author="Pepa" time="11:00" date="25/10/26" dateTime="2026-10-25T11:00:00"
-        mainHref="/mur/p1" objecte={PUBLICACIO} hasFooter={true} ambModeracio />
+        mainHref="/mur/p1" objecte={objecte} hasFooter={true} ambModeracio />
     </ProveidorModeracio>
   </MemoryRouter>
 );
@@ -119,7 +119,7 @@ test('les normes: dues preguntes alhora, un sol diàleg; acceptar desa la versi�
   let segona;
   act(() => { primera = valor.asseguraNormes(); segona = valor.asseguraNormes(); });
   expect(segona).toBe(primera);
-  const normes = screen.getByRole('dialog', { name: 'Normes de convivència del poble' });
+  const normes = screen.getByRole('dialog', { name: 'Normes de convivència de poble' });
   m.acceptaNormes.mockResolvedValueOnce({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: '2026-10-24T12:00:00Z' });
   act(() => { fireEvent.click(within(normes).getByRole('checkbox')); });
   await act(async () => { fireEvent.click(within(normes).getByRole('button', { name: 'Accepte i continue' })); });
@@ -136,12 +136,12 @@ test('les normes sense la migració (no-disponible): el diàleg ho diu, continua
   let resposta;
   let resolta = false;
   act(() => { resposta = valor.asseguraNormes(); resposta.then(() => { resolta = true; }); });
-  const normes = screen.getByRole('dialog', { name: 'Normes de convivència del poble' });
+  const normes = screen.getByRole('dialog', { name: 'Normes de convivència de poble' });
   m.acceptaNormes.mockRejectedValueOnce(errorDeModeracio(CODI_MODERACIO.NO_DISPONIBLE));
   act(() => { fireEvent.click(within(normes).getByRole('checkbox')); });
   await act(async () => { fireEvent.click(within(normes).getByRole('button', { name: 'Accepte i continue' })); });
   expect(within(normes).getByRole('alert').textContent).toMatch(/^Ara mateix no podem desar l’acceptació de les normes/);
-  expect(screen.getByRole('dialog', { name: 'Normes de convivència del poble' })).toBe(normes);
+  expect(screen.getByRole('dialog', { name: 'Normes de convivència de poble' })).toBe(normes);
   expect(resolta).toBe(false);
   expect(valor.normesPendents).toBe(true);
   act(() => { fireEvent.click(within(normes).getByRole('button', { name: 'Ara no' })); });
@@ -155,5 +155,35 @@ test('les normes: «Ara no» resol false i no desa res', async () => {
   act(() => { fireEvent.click(screen.getByRole('button', { name: 'Ara no' })); });
   await expect(resposta).resolves.toBe(false);
   expect(m.acceptaNormes).not.toHaveBeenCalled();
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+const UUID_PUBLIC = '6f835cea-1537-4a42-8829-2e8039b22fbb';
+const OBJECTE_PUBLIC = objecteDe({ id: UUID_PUBLIC, title: 'Fira de tardor', _murPublic: true }, 'mur');
+test('R21 v2 · el menú anònim permet denunciar per UUID sense identitat privada', async () => {
+  m.session = { currentUser: null, generacio: 2 };
+  render(arbre(OBJECTE_PUBLIC));
+  await waitFor(() => expect(valor.estatBloquejos).toBe('llest'));
+  fireEvent.click(screen.getByRole('button', { name: 'Més opcions: Fira de tardor' }));
+  expect(screen.queryByRole('menuitem', { name: /^Bloqueja/ })).toBeNull();
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Denuncia el contingut' }));
+  const dialog = screen.getByRole('dialog', { name: 'Denuncia este contingut' });
+  m.denunciaContingut.mockResolvedValue({ rebuda: true, repetida: false });
+  fireEvent.click(within(dialog).getByRole('radio', { name: /^Spam o frau/ }));
+  await act(async () => fireEvent.click(within(dialog).getByRole('button', { name: 'Envia la denúncia' })));
+  expect(m.denunciaContingut).toHaveBeenCalledWith({ objecte: { tipus: 'publicacio', id: UUID_PUBLIC },
+    motiu: 'spam_frau', detall: '', autor: null, filId: null, murPublic: true }, REMOT);
+});
+test('R21 v2 · Foraster autenticat bloqueja per UUID i invalida la lectura sense inventar autor', async () => {
+  render(arbre(OBJECTE_PUBLIC));
+  await waitFor(() => expect(valor.estatBloquejos).toBe('llest'));
+  fireEvent.click(screen.getByRole('button', { name: 'Més opcions: Fira de tardor' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Bloqueja qui firma esta publicació' }));
+  const dialog = screen.getByRole('dialog', { name: 'Vols bloquejar qui firma esta publicació?' });
+  m.bloquejaAutor.mockResolvedValue({ bloquejat: true, publicacioId: UUID_PUBLIC });
+  await act(async () => fireEvent.click(within(dialog).getByRole('button', { name: 'Bloqueja' })));
+  expect(m.bloquejaAutor).toHaveBeenCalledWith({ publicacioId: UUID_PUBLIC }, REMOT);
+  expect(valor.esElementBloquejat({ id: UUID_PUBLIC })).toBe(true);
+  expect(valor.versioBloquejos).toBe(1);
   expect(screen.queryByRole('dialog')).toBeNull();
 });

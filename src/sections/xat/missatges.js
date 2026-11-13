@@ -78,6 +78,8 @@ export function mapejaFil(fil, ara = Date.now()) {
   const rol = fil.rol || null;
   return {
     id: fil.id,
+    ...(tipus === 'grup' && fil.canalBetaTesters === true && fil.canalClau === 'beta_testers'
+      ? { canalClau: 'beta_testers', canalBetaTesters: true } : {}),
     tipus,
     esPropi,
     /* T63.2 i T67 · La comunitat i el subjecte passen tal qual. Una
@@ -202,6 +204,20 @@ export function seqMinim(missatges) {
   return min;
 }
 
+/* ───────────────────── Text que no s'envia (R21.8) ───────────────────── */
+
+/**
+ * R21.8 · Cert quan `valor` no té cap caràcter real per enviar: és buit,
+ * només porta espais/salts o només conté asteriscs d'obertura/tancament de
+ * negreta sense text entre ells (com el parell `**` inserit per «Escriure en
+ * negreta»). Lineal, sense retrocés. Viu ací i no a negreta.js perquè
+ * XatContext (a l'arrencada) la necessita sense arrossegar el tokenitzador de
+ * la negreta i dels enllaços; negreta.js la reexporta per al compositor.
+ */
+export function esTextBuitOSolsMarques(valor) {
+  return /^[*\s]*$/u.test(String(valor ?? ''));
+}
+
 /* ─────────────────────── Estat d'enviament (XAT-C) ─────────────────────── */
 
 /**
@@ -309,7 +325,9 @@ export function contactesFrequents(fils, membres, joId, n = 5) {
   const jo = joId == null ? '' : String(joId);
   const vistos = new Set();
   const resultat = [];
-  const directes = (Array.isArray(fils) ? fils : []).filter((f) => f?.tipus === 'directe').sort(perActivitat);
+  const directes = (Array.isArray(fils) ? fils : [])
+    .filter((f) => f?.tipus === 'directe' && !f.comEntitat && !f.entitatId && !f.subjecte)
+    .sort(perActivitat);
   for (const fil of directes) {
     if (fil.esPropi) continue;
     const altre = Array.isArray(fil.altres) ? fil.altres.find((a) => a?.id != null && String(a.id) !== jo) : null;

@@ -11,11 +11,15 @@
  *   · Límit de 4.096 caràcters amb comptador visible a partir de 3.900.
  *   · Barra única (pla 261028_1526, P1-66): [+] [camp amb la carona dins]
  *     [botó redó]. `adjunts` (el dona ControlsAdjunt, que en guarda l'estat)
- *     porta el + i el que fa el botó redó; sense (convidats, llavor, IAIA,
- *     només lectura, bloquejats) no hi ha + i el botó redó només envia text,
- *     com sempre. La interfície no promet el que no fa:
+ *     porta les opcions d'adjuntar del + i el que fa el botó redó; sense
+ *     (convidats, llavor, IAIA, bloquejats, un node sense la migració) el
+ *     botó redó només envia text, com sempre. R21.8 · El + hi és sempre en un
+ *     fil escrivible, amb «Escriure en negreta» al final del menú; sense
+ *     adjunts es diu «Més opcions» (Gauntlet R22, xat-02). La interfície no
+ *     promet el que no fa:
  *       - El + (aria-haspopup=menu) obri cap amunt un menú amb el que ja
- *         funciona («Fotos i vídeos», «Càmera» en tàctil) i la quota al peu.
+ *         funciona («Fotos i vídeos», «Càmera» en tàctil, la negreta) i la
+ *         quota al peu.
  *         El focus entra a la primera opció; Escape, clicar fora o triar el
  *         tanquen i el focus torna al +. Triar crida l'opció dins del mateix
  *         gest (iOS només obri el selector de fitxers així).
@@ -38,11 +42,11 @@
  *     damunt del formulari, i Escape dins del camp crida `onEscapa` (cancel·la
  *     la resposta) i queda consumit (preventDefault). `campRef` dona el
  *     textarea a Conversa, que hi porta el focus en triar «Respon».
- *   · Qui signa (pla 261014_1450, front C): una línia damunt del formulari
- *     diu amb quina veu ix el que s'envia (quiSigna). La decidix el servidor
- *     per fil, no la barra negra; `entitatActiva` (useXat, per Conversa) només
- *     servix perquè, si la barra diu una entitat i el fil el signa la persona,
- *     també es diga.
+ *   · Qui signa (pla 261014_1450, front C): R21.8 en va retirar la línia de
+ *     damunt del formulari (cap rètol intrusiu). quiSigna continua decidint,
+ *     per fil i segons el servidor, si el que s'envia ix amb la veu d'una
+ *     entitat, i ho diu la capçalera de la conversa (CapcaleraConversa,
+ *     Gauntlet R22, xat-06), també als Avisos i als fils de pàgina.
  *   · Emoticones (pla 261022_1425, paritat WhatsApp): la carona, dins del
  *     camp a l'esquerra (P1-66), obri el calaix gran (SelectorEmoticones)
  *     damunt del camp.
@@ -64,15 +68,14 @@
  *     passa mai de l'espai que hi ha entre el compositor i la llista de
  *     missatges: la capçalera de la conversa no es tapa.
  *   · Negreta (IDEA-53, pla 261029_1605, Bloc B; comportament literal del
- *     pla): el botó [N], dins del camp a la dreta (la carona és a l'esquerra),
- *     i Cmd+B o Ctrl+B al camp, com diu el seu títol. Amb text seleccionat
+ *     pla): «Escriure en negreta» al menú del + (R21.8 en va retirar el botó
+ *     [N] de dins del camp) i Cmd+B o Ctrl+B al camp. Amb text seleccionat
  *     l'embolica amb `*…*` (o el desembolica si ja era negreta) i la selecció
  *     i el focus es queden al camp, sobre el mateix text; sense selecció,
  *     insereix `**` amb el cursor al mig (negreta.js, commutaNegreta). Cap
  *     embolcall automàtic de paraula ni barra flotant.
- *       - El botó no pren el focus al camp (onMouseDown, XU-01): el teclat
- *         del mòbil no es tanca. Si el focus era fora (Tab fins al botó),
- *         s'aplica a l'última selecció recordada i el focus torna al camp.
+ *       - L'opció del menú s'aplica a l'última selecció recordada del camp
+ *         i el focus hi torna.
  *       - Mentre un IME compon, la drecera no fa res (va darrere de delIME).
  *         Mantindre la tecla premuda (e.repeat) es consumix però no commuta
  *         una volta i una altra.
@@ -80,19 +83,16 @@
  *         de desfer natiu del camp.
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Building2, Keyboard, Megaphone, Plus, Send, Smile, UserRound, Users } from 'lucide-react';
+import { Bold, Keyboard, Megaphone, Plus, Send, Smile, UserRound, Users } from 'lucide-react';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import { inserixAlCursor } from '../emoticonesXat.js';
-import { commutaNegreta, esDreceraDeNegreta } from '../negreta.js';
+import { commutaNegreta, esDreceraDeNegreta, esTextBuitOSolsMarques } from '../negreta.js';
 import SelectorEmoticones from './SelectorEmoticones.jsx';
 
 export const LIMIT_TEXT = 4096;
 export const LLINDAR_COMPTADOR = 3900;
-/* Pla 261014_1450 (front C) · Id estable de la línia de qui signa (n'hi ha un sol
-   compositor a la pantalla, com el seu textarea, #xat-message-input). */
-const ID_SIGNA = 'xat-message-signa';
 const ID_COMPTADOR = 'xat-message-comptador';
 const ID_EMOTICONES = 'xat-message-emoticones';
 /* P1-66 · El menú del + i el seu peu (la quota): ControlsAdjunt el reconeix
@@ -174,7 +174,7 @@ export function quiSigna(fil, entitatActiva = null) {
 
 export default function Compositor({
   valor, onCanvia, onEnvia, t, desactivat = false, fil = null,
-  barra = null, onEscapa = null, campRef = null, entitatActiva = null, adjunts = null
+  barra = null, onEscapa = null, campRef = null, adjunts = null
 }) {
   if (esNomesLectura(fil)) {
     /* Gauntlet 261016 (Bloc 3.6.1) · Un fil de només lectura que no és uns
@@ -203,41 +203,19 @@ export default function Compositor({
     );
   }
   const titolPublic = fil?.subjecte ? (fil.subjecte.titol || fil.name || fil.title || '') : '';
-  /* Pla 261014_1450 (front C) · Qui signa, amb la classe de l'avís públic.
-     La línia descriu el camp: el textarea la cita
-     a aria-describedby, i el lector de pantalla diu amb quina veu escrius en
-     entrar-hi. Sense línia, el camp no cita cap id. */
-  const signa = quiSigna(fil, entitatActiva);
   const camp = (
     <Formulari
       valor={valor} onCanvia={onCanvia} onEnvia={onEnvia} t={t} desactivat={desactivat}
-      onEscapa={onEscapa} campRef={campRef} idSigna={signa ? ID_SIGNA : null} adjunts={adjunts}
+      onEscapa={onEscapa} campRef={campRef} adjunts={adjunts}
     />
   );
-  const avisSigna = signa ? (
-    <p className="sdp-xat-avis-public" id={ID_SIGNA}>
-      {signa.tipus === 'entitat'
-        ? <Building2 size={16} aria-hidden="true" focusable="false" />
-        : <UserRound size={16} aria-hidden="true" focusable="false" />}
-      {/* Gauntlet 261025_0545 (TE-03) · Els noms van amb una funció de
-          reemplaç: un «$&» o un «$'» del nom es pinta tal qual (moderacio.js, omple). */}
-      <span>
-        {signa.tipus === 'entitat'
-          ? t('section.xat.signa.entitat', 'Escrius com a {nom}.').replace('{nom}', () => signa.nom)
-          : t('section.xat.signa.persona', 'Escrius com a tu: en esta conversa no parles en nom de {entitat}.').replace('{entitat}', () => signa.entitat)}
-      </span>
-    </p>
-  ) : null;
-  /* Sempre el mateix arbre (la barra i l'avís de qui signa poden ser null):
-     si canviara de forma en obrir o tancar la resposta, React tornaria a
-     muntar el textarea i el focus es perdria en enviar o en cancel·lar.
-     L'avís de qui signa va sempre primer, i el camp no canvia de lloc quan
-     la línia apareix o desapareix dins del mateix àmbit: el nom de l'entitat
-     que arriba tard (el de la barra o el del fil) o el fil que refresca
-     comEntitat. Canviar d'actor a la barra negra no passa per ací: canvia
-     ambitEstable (XatContext.jsx) i XatSection torna a muntar l'espai sencer
-     per key. */
-  const formulari = <>{avisSigna}{barra}{camp}</>;
+  /* Sempre el mateix arbre (la barra pot ser null): si canviara de forma en
+     obrir o tancar la resposta, React tornaria a muntar el textarea i el focus
+     es perdria en enviar o en cancel·lar. R21.8 · Sense avís intrusiu de signa
+     damunt del camp: la safata unificada ja distingix els canals d'entitat a
+     la fila i a la capçalera, i només el xat públic d'una pàgina conserva el
+     seu avís contextual. */
+  const formulari = <>{barra}{camp}</>;
   if (!fil?.subjecte) return formulari;
   return (
     <>
@@ -250,7 +228,7 @@ export default function Compositor({
   );
 }
 
-function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef, idSigna = null, adjunts = null }) {
+function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef, adjunts = null }) {
   const { mida } = useAppGrid();
   const estret = mida === 'estret';
   /* Pla 261022_1425 · Mòbil o tauleta: el calaix fa de teclat (la mida només
@@ -262,7 +240,10 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
      columna de WordPress o mitja finestra amb ratolí i teclat ja no es queda
      sense manera d'enviar amb el teclat; en ample, com sempre. */
   const retornEnvia = !estret || !pantallaTactil;
-  const buit = !String(valor ?? '').trim();
+  /* R21.8 · Ni espais ni marques de negreta buides (`**`) compten com a text
+     enviable: el botó primari es queda en micròfon (o submit desactivat) fins
+     que hi ha contingut real. */
+  const buit = esTextBuitOSolsMarques(valor);
   const llargada = String(valor ?? '').length;
   const mostraComptador = llargada >= LLINDAR_COMPTADOR;
   /* Gauntlet 261025_0545 (XU-16) · L'avís del comptador per al lector: el
@@ -276,20 +257,18 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
   if (avisComptador.nivell !== nivellComptador) {
     setAvisComptador({ nivell: nivellComptador, text: nivellComptador ? textComptador(llargada) : '' });
   }
-  /* Pla 261014_1450 (front C) · Qui signa i el comptador, cadascun només si es
-     pinta: cap id penjat a un element que no existix. */
-  const descritPer = [idSigna, mostraComptador ? ID_COMPTADOR : null].filter(Boolean).join(' ') || undefined;
+  const descritPer = mostraComptador ? ID_COMPTADOR : undefined;
 
   /* Pla 261022_1425 · El calaix d'emoticones: null tancat; obert, si el focus
      hi ha d'entrar (amb el teclat, o en tàctil per a amagar el de la pantalla).
      P1-66 · Una sola superposició: { tipus: 'emojis', enfoca } o
-     { tipus: 'adjunts' } (el menú del +); obrir-ne una tanca l'altra. */
+     { tipus: 'adjunts' } (el menú del +); obrir-ne una tanca l'altra.
+     R21.8 · El menú del + existix sempre en un fil escrivible perquè sempre
+     oferix «Escriure en negreta», fins i tot si el node encara no té adjunts. */
   const [superposicio, setSuperposicio] = useState(null);
   const calaix = superposicio?.tipus === 'emojis' ? superposicio : null;
   const obert = Boolean(calaix) && !desactivat;
-  /* El menú es tanca tot sol quan els adjunts es bloquegen (preparant,
-     gravant, enviant) o se'n van. */
-  const menuObert = superposicio?.tipus === 'adjunts' && Boolean(adjunts) && !adjunts.bloquejat && !desactivat;
+  const menuObert = superposicio?.tipus === 'adjunts' && !adjunts?.bloquejat && !desactivat;
   if (superposicio?.tipus === 'adjunts' && !menuObert) setSuperposicio(null);
   /* L'avís en viu de l'emoticona afegida quan el focus no és al camp. */
   const [afegida, setAfegida] = useState('');
@@ -410,18 +389,28 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
      l'Arrere d'Android amb el camí del seu Escape (tancaMenu). */
   useCapaEnrere(menuObert, tancaMenu);
   const commutaMenu = () => {
-    if (!adjunts || adjunts.bloquejat || desactivat) return;
+    if (adjunts?.bloquejat || desactivat) return;
     /* Tancar-lo amb el mateix + torna el focus al +: Safari no enfoca un
        botó en clicar-lo, i el focus que era a una opció quedaria a <body>. */
     if (menuObert) {
       tancaMenu();
       return;
     }
+    if (camp.current && teElFocus(camp.current)) {
+      seleccio.current = { inici: camp.current.selectionStart, fi: camp.current.selectionEnd };
+    }
     setSuperposicio({ tipus: 'adjunts' });
   };
-  /* Triar tanca, torna el focus al + i crida l'opció ací mateix: res
-     d'asíncron entre el toc i input.click(). */
+  /* Triar tanca, torna el focus al + (o al camp de text quan és una opció de
+     format com «Escriure en negreta») i crida l'opció ací mateix: res
+     d'asíncron entre el toc i input.click() o camp.focus(). */
   const triaOpcio = (opcio) => {
+    if (opcio.enfocaCamp) {
+      setSuperposicio(null);
+      opcio.onTria();
+      camp.current?.focus({ preventScroll: true });
+      return;
+    }
     tancaMenu();
     opcio.onTria();
   };
@@ -644,8 +633,47 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
      --adjunts: igual, amb el menú del + obert. */
   const classes = ['sdp-xat-compositor', mostraComptador && 'sdp-xat-compositor--comptador', obert && 'sdp-xat-compositor--emojis', menuObert && 'sdp-xat-compositor--adjunts'];
   /* El + porta aria-disabled (no disabled) mentre els adjunts estan ocupats:
-     el focus que hi torna no cau a <body>. */
+     el focus que hi torna no cau a <body>. R21.8 · El menú del + s'obri sempre
+     en qualsevol fil escrivible i inclou «Escriure en negreta» davall de les
+     opcions d'adjunts. */
   const adjuntaInactiu = Boolean(adjunts?.bloquejat) || desactivat;
+  /* Gauntlet R22 (xat-02) · Sense adjunts (un node sense la migració, la
+     llavor) el + només oferix la negreta: el seu nom i el del menú no
+     prometen adjuntar res. */
+  const etiquetaBotoMenu = adjunts
+    ? adjunts.etiqueta ?? t('section.xat.adjunts.menu', 'Adjunta')
+    : t('section.xat.compositor.mesOpcions', 'Més opcions');
+  const etiquetaDelMenu = adjunts
+    ? adjunts.etiquetaMenu ?? t('section.xat.adjunts.grup', 'Adjunts del xat')
+    : t('section.xat.compositor.opcions', 'Opcions d’escriptura');
+  const peuDelMenu = adjunts?.peuMenu ?? [];
+  const opcionsDelMenu = [
+    ...(adjunts?.opcions ?? []),
+    {
+      id: 'negreta',
+      etiqueta: t('section.xat.negreta.menu', 'Escriure en negreta'),
+      icona: Bold,
+      onTria: aplicaNegreta,
+      enfocaCamp: true
+    }
+  ];
+  const alAferrarAlCamp = (e) => {
+    if (desactivat || typeof adjunts?.triaFitxer !== 'function') return;
+    const dades = e.clipboardData;
+    if (!dades) return;
+    let fitxer = Array.from(dades.files || []).find((f) => /^(image|video)\//i.test(String(f?.type || '')));
+    if (!fitxer && dades.items) {
+      for (const item of Array.from(dades.items)) {
+        if (item?.kind === 'file' && /^(image|video)\//i.test(String(item.type || ''))) {
+          const candidat = item.getAsFile?.();
+          if (candidat) { fitxer = candidat; break; }
+        }
+      }
+    }
+    if (!fitxer) return;
+    e.preventDefault();
+    adjunts.triaFitxer(fitxer);
+  };
   return (
     <form
       ref={formulari}
@@ -653,25 +681,23 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
       onSubmit={(e) => { e.preventDefault(); envia(); }}
       onKeyDown={alTeclatDelFormulari}
     >
-      {adjunts ? (
-        <button
-          ref={posaAdjunta}
-          type="button"
-          className="sdp-xat-compositor__adjunta"
-          aria-label={adjunts.etiqueta}
-          aria-haspopup="menu"
-          aria-expanded={menuObert}
-          aria-controls={menuObert ? ID_MENU_ADJUNTS : undefined}
-          aria-disabled={adjuntaInactiu || undefined}
-          onClick={commutaMenu}
-        >
-          <Plus size={24} aria-hidden="true" focusable="false" />
-        </button>
-      ) : null}
+      <button
+        ref={posaAdjunta}
+        type="button"
+        className="sdp-xat-compositor__adjunta"
+        aria-label={etiquetaBotoMenu}
+        aria-haspopup="menu"
+        aria-expanded={menuObert}
+        aria-controls={menuObert ? ID_MENU_ADJUNTS : undefined}
+        aria-disabled={adjuntaInactiu || undefined}
+        onClick={commutaMenu}
+      >
+        <Plus size={24} aria-hidden="true" focusable="false" />
+      </button>
       {menuObert ? (
         <div className="sdp-xat-menu sdp-xat-menu--adjunts" ref={menuAdjunts}>
-          <div id={ID_MENU_ADJUNTS} role="menu" aria-label={adjunts.etiquetaMenu} aria-describedby={adjunts.peuMenu.length ? ID_PEU_ADJUNTS : undefined} onKeyDown={alTeclatDelMenu}>
-            {adjunts.opcions.map((opcio) => {
+          <div id={ID_MENU_ADJUNTS} role="menu" aria-label={etiquetaDelMenu} aria-describedby={peuDelMenu.length ? ID_PEU_ADJUNTS : undefined} onKeyDown={alTeclatDelMenu}>
+            {opcionsDelMenu.map((opcio) => {
               const Icona = opcio.icona;
               return (
                 <button key={opcio.id} type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaOpcio(opcio)}>
@@ -681,9 +707,9 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
               );
             })}
           </div>
-          {adjunts.peuMenu.length ? (
+          {peuDelMenu.length ? (
             <div className="sdp-xat-menu__peu" id={ID_PEU_ADJUNTS}>
-              {adjunts.peuMenu.map((linia) => <p key={linia}>{linia}</p>)}
+              {peuDelMenu.map((linia) => <p key={linia}>{linia}</p>)}
             </div>
           ) : null}
         </div>
@@ -705,10 +731,9 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
       {/* Gauntlet 261025_0545 (XU-16) · Sempre muntat i buit per davall de
           3.900: el text només canvia en passar un llindar, i així s'anuncia. */}
       <span className="sdp-nomes-lector" aria-live="polite">{avisComptador.text}</span>
-      {/* P1-66 · La carona viu dins del camp, a l'esquerra (el modificador
-          --carona: ConsultaIAIA usa el mateix camp sense carona). IDEA-53 ·
-          [N], a la dreta (el modificador --negreta). */}
-      <div className="sdp-xat-compositor__camp sdp-xat-compositor__camp--carona sdp-xat-compositor__camp--negreta" data-valor={valor}>
+      {/* P1-66 · La carona viu dins del camp, a l'esquerra; la barra inferior
+          queda 100% neta com a WhatsApp ([+] [😊 Escriu…] [🎤 / ✈️]). */}
+      <div className="sdp-xat-compositor__camp sdp-xat-compositor__camp--carona" data-valor={valor}>
         <button
           type="button"
           className="sdp-xat-compositor__emojis"
@@ -744,6 +769,7 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
           onBlur={(e) => { compon.current = false; recordaSeleccio(e); }}
           onFocus={tancaEnEntrar}
           onKeyDown={alTeclat}
+          onPaste={alAferrarAlCamp}
           onCompositionStart={() => { compon.current = true; }}
           onCompositionEnd={() => { compon.current = false; }}
           /* IDEA-133 (Onada R10, B2-02) · El placeholder curt de l'ordre del
@@ -755,20 +781,6 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
           enterKeyHint={retornEnvia ? 'send' : 'enter'}
           disabled={desactivat}
         />
-        {/* IDEA-53 · [N]: mai no pren el focus al camp (XU-01) i el teclat
-            del mòbil no es tanca. La lletra és decorativa: el nom és «Negreta». */}
-        <button
-          type="button"
-          className="sdp-xat-compositor__negreta"
-          aria-label={t('section.xat.negreta.etiqueta', 'Negreta')}
-          title={t('section.xat.negreta.titol', 'Negreta (⌘B / Ctrl+B)')}
-          aria-keyshortcuts="Meta+B Control+B"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={aplicaNegreta}
-          disabled={desactivat}
-        >
-          <span className="sdp-xat-compositor__negreta-lletra" aria-hidden="true">{t('section.xat.negreta.lletra', 'N')}</span>
-        </button>
         {mostraComptador ? (
           <span
             id={ID_COMPTADOR}

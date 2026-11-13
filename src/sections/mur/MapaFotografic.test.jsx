@@ -431,12 +431,12 @@ describe('textos, privacitat i visor', () => {
     const fotos = [...document.querySelectorAll('.sdp-mapa-foto')];
     const mirador = fotos.find((f) => f.textContent.includes('El mirador'));
     expect(mirador.classList.contains('sdp-mapa-foto--verd')).toBe(true);
-    expect(mirador.textContent).toContain('GPS només del poble');
-    expect(mirador.getAttribute('aria-label')).toContain('GPS només del poble');
+    expect(mirador.textContent).toContain('GPS només del municipi');
+    expect(mirador.getAttribute('aria-label')).toContain('GPS només del municipi');
     expect(fotos.filter((f) => f !== mirador).some((f) => /GPS (a uns|només)/.test(f.textContent))).toBe(false);
     await pinta(() => mapa.setZoom(14, { animate: false }));
     const parada = [...document.querySelectorAll('.sdp-mapa-targeta')].find((t) => t.textContent.includes('El mirador'));
-    expect(parada.textContent).toContain('GPS només del poble');
+    expect(parada.textContent).toContain('GPS només del municipi');
     // La foto de Penàguila, posada al centre del poble, no porta cap GPS: ocre i sense precisió de GPS.
     await pinta(() => mapa.setView([38.6315, -0.3892], 16, { animate: false }));
     const alPoble = document.querySelector('.sdp-mapa-foto');

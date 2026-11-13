@@ -192,7 +192,9 @@ describe('els errors del servidor', () => {
   test('sense la RPC (404 o PGRST202): NO-DISPONIBLE, a desar i a retirar', async () => {
     servidor.mockResolvedValueOnce(resposta({ code: 'PGRST202', message: 'Could not find the function public.xat_push_desa' }, 404));
     expect(await errorDe(desaDispositiuAvisos({ plataforma: 'web', adreca: WEB }, REMOT))).toMatchObject({ code: 'NO-DISPONIBLE' });
-    servidor.mockResolvedValueOnce(resposta({ code: 'PGRST202', message: 'Could not find the function public.xat_push_retira' }, 400));
+    /* R21.1 v2 · esRpcAbsent (runtime.js) només reconeix 404 + PGRST202, la resposta real de PostgREST
+       per a una funció absent; un 400 amb el mateix text no és absència d'esquema. */
+    servidor.mockResolvedValueOnce(resposta({ code: 'PGRST202', message: 'Could not find the function public.xat_push_retira' }, 404));
     expect(await errorDe(retiraDispositiuAvisos({ ...({ plataforma: 'web', adreca: WEB }), usuariEsperat: USUARI }, REMOT))).toMatchObject({ code: 'NO-DISPONIBLE' });
   });
 

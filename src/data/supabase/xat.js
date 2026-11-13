@@ -44,7 +44,7 @@ import { getClient } from './config.js';
 import { usuariDeSessio, versioSessio } from '../identitat.js';
 import { despertaXatConfirmat } from './despertaXat.js';
 import { DURADES_SILENCI, finsAlDelSilenci, subjecteDeXat } from '../contracte.js';
-import { PREFIX_PER_DEFECTE, ambXatsPerDefecte, vestixLaIAIA } from '../xatsPerDefecte.js';
+import { CLAU_CANAL_BETA_TESTERS, PREFIX_PER_DEFECTE, ambXatsPerDefecte, vestixLaIAIA } from '../xatsPerDefecte.js';
 import { generateUUID, getResolvedConfig } from './runtime.js';
 import { handleError } from './utils.js';
 
@@ -263,6 +263,8 @@ const esFilPropi = (f, usuariId) => typeof usuariId === 'string' && Boolean(usua
 
 const mapejaFil = (f, usuariId = null) => ({
   id: f.id,
+  ...(f.tipus === 'grup' && f.canal_clau === CLAU_CANAL_BETA_TESTERS && typeof f.id === 'string' && RE_UUID.test(f.id)
+    ? { canalClau: CLAU_CANAL_BETA_TESTERS, canalBetaTesters: true } : {}),
   ...(esFilPropi(f, usuariId) ? { esPropi: true } : {}),
   ...marquesXifratDeFila(f),
   tipus: f.tipus || 'directe',

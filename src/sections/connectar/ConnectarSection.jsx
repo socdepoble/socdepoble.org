@@ -134,7 +134,7 @@ import {
 /* El cos que es desa a la nota: mòdul pur de connexions, el mateix que llig el lector del MAS. */
 import { aHtml, contingutDeLaConnexio } from '../notes/connexions.js';
 /* D4 · l'avís dels drets reservats, el mateix de l'editor i del selector de visibilitat. */
-import { TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS } from '../notes/visibilitatNota.js';
+import { PARELL_TEXT_DRETS, PARELL_TITOL_DRETS } from '../notes/visibilitatNota.js';
 import { useAplicaAbast } from './useAplicaAbast.js';
 import { ResumConnexio } from './ResumConnexio.jsx';
 /* IDEA-22 (T5) · «Connectar com a»: les píndoles de tria única del Mercat (radiogroup), no una peça nova. */
@@ -230,10 +230,10 @@ const modeResolt = (config) => normalizeBackendConfig(config || {}).dataMode;
    EstatErrorDades del Mur), mai el missatge de l'adaptador. */
 function textDelBlocFallat(error, t) {
   if (esBackendInabastable(error)) {
-    return t('error.backendInabastable', 'El servidor del poble no respon ara mateix. El contingut no s’ha pogut carregar.');
+    return t('error.backendInabastable', 'El servidor de poble no respon ara mateix. El contingut no s’ha pogut carregar.');
   }
   if (Number(error?.status) >= 400) {
-    return t('error.servidor', 'El servidor del poble ha tornat un error. Torna-ho a provar més tard.');
+    return t('error.servidor', 'El servidor de poble ha tornat un error. Torna-ho a provar més tard.');
   }
   return t('error.xarxa', 'Revisa la connexió i torna-ho a provar.');
 }
@@ -930,7 +930,7 @@ function ConnectarElementIntern() {
 
           {mode === 'persones' ? (
             <div ref={panellPersonesRef} className="sdp-connectar__panell">
-              <Camp etiqueta={t('section.connectar.padro.cerca', 'Cerca al padró del poble')}
+              <Camp etiqueta={t('section.connectar.padro.cerca', 'Cerca al padró del teu poble')}
                 ajuda={omple(t('section.connectar.padro.ajuda', 'Tria fins a {n} persones. Només reben l’enllaç: la connexió continua sent teua.'), { n: LIMIT_PERSONES })}>
                 <CampText value={cerca} onChange={(e) => setCerca(e.target.value)} autoComplete="off" />
               </Camp>
@@ -942,7 +942,7 @@ function ConnectarElementIntern() {
               <p className="sdp-nomes-lector" aria-live="polite">
                 {padro.estat === 'llest' ? omple(t('section.connectar.padro.resultats', 'Resultats al padró: {n}.'), { n: padro.membres.length }) : ''}
               </p>
-              {padro.estat === 'error' ? <Alerta to="error">{padro.error || t('section.connectar.padro.error', 'No s’ha pogut obrir el padró del poble.')}</Alerta> : null}
+              {padro.estat === 'error' ? <Alerta to="error">{padro.error || t('section.connectar.padro.error', 'No s’ha pogut obrir el padró del teu poble.')}</Alerta> : null}
               {padro.estat === 'llest' && padro.membres.length === 0 ? (
                 <p className="sdp-connectar__ajuda">{t('section.connectar.padro.cap', 'Ningú del padró coincidix amb la cerca.')}</p>
               ) : null}
@@ -1201,10 +1201,12 @@ function ConnectarElementIntern() {
             {autorVisible ? <p className="sdp-connectar__autor">{omple(t('section.connectar.de', 'De {nom}'), { nom: autorVisible })}</p> : null}
             {persona ? <p className="sdp-connectar__identitat">{omple(t('section.connectar.esConnectaA', 'Es connecta a {nom}.'), { nom: persona })}</p> : null}
             {/* D4 (ordre del Mestre, 260930) · els drets de l'original resolt,
-                amb les mateixes claus que l'avís de l'editor (NotesEditor). */}
+                amb les mateixes claus que l'avís de l'editor (NotesEditor).
+                Gauntlet R22 (notes-06) · Els parells de visibilitatNota.js: la
+                clau del text és la nova (textCita), que no promet l'autoria. */}
             {dretsReservats ? (
-              <Alerta to="avis" titol={t('section.notes.drets.titol', TITOL_DRETS_RESERVATS)}>
-                {t('section.notes.drets.text', TEXT_DRETS_RESERVATS)}
+              <Alerta to="avis" titol={t(...PARELL_TITOL_DRETS)}>
+                {t(...PARELL_TEXT_DRETS)}
               </Alerta>
             ) : null}
           </section>

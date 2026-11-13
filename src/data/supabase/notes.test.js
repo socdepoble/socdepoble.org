@@ -100,3 +100,26 @@ test('una resposta buida distingix nota absent (404) de revisió vella (409)', a
   mocks.request.mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: uuid(6) }]);
   await expect(mouNota(uuid(6), 'arxivada', 1, config)).rejects.toMatchObject({ status: 409 });
 });
+
+test('R21 v2 · retirar l’acte conegut usa RPC exacta i adopta només l’estat confirmat', async () => {
+  mocks.request.mockResolvedValueOnce(true).mockResolvedValueOnce([{id:uuid(6),revision:8,is_published:false,published_submission_id:null,content:'<p>Privat</p>'}]);
+  const saved=await updateNote(uuid(6),{isPublished:false,publishedSubmissionId:null,revocaPublicacioId:uuid(7)},3,config);
+  expect(saved).toMatchObject({revision:8,isPublished:false,publishedSubmissionId:null});
+  expect(mocks.request.mock.calls[0]).toEqual(['/rest/v1/rpc/revoca_publicacio_de_nota',config,{method:'POST',body:{p_id:uuid(6),p_tenant_id:config.tenantId,p_expected_revision:3,p_publicacio_id:uuid(7)}}]);
+  expect(mocks.request.mock.calls.every(([, , options])=>options?.method!=='PATCH')).toBe(true);
+});
+/* Gauntlet R22 (dades-01) · Un servidor sense la retirada per acte (2611122200) no la pot fer: es diu, sense cap PATCH ni cap reintent encuat. */
+test('R22 · sense la RPC de retirada (404 PGRST202): codi esquema-absent i cap reintent encuat', async () => {
+  mocks.request.mockRejectedValueOnce(Object.assign(new Error('Supabase 404'), { status: 404, postgrestCode: 'PGRST202' }));
+  await expect(updateNote(uuid(6),{isPublished:false,publishedSubmissionId:null,revocaPublicacioId:uuid(7)},3,config))
+    .rejects.toMatchObject({ status: 404, codi: 'esquema-absent', revocacioNoReencuar: true });
+  expect(mocks.request).toHaveBeenCalledTimes(1);
+  const altre = Object.assign(new Error('Supabase 404'), { status: 404, postgrestCode: 'PGRST205' });
+  mocks.request.mockRejectedValueOnce(altre);
+  await expect(updateNote(uuid(6),{isPublished:false,publishedSubmissionId:null,revocaPublicacioId:uuid(7)},3,config)).rejects.toBe(altre);
+});
+test('R21 v2 · el replay tardà d’acte 1 no retira ni encua acte 2', async () => {
+  mocks.request.mockResolvedValueOnce(true).mockResolvedValueOnce([{id:uuid(6),revision:9,is_published:true,published_submission_id:uuid(8)}]);
+  await expect(updateNote(uuid(6),{isPublished:false,publishedSubmissionId:null,revocaPublicacioId:uuid(7)},9,config)).rejects.toMatchObject({status:409,revocacioNoReencuar:true});
+  expect(mocks.request.mock.calls.every(([, , options])=>options?.method!=='PATCH')).toBe(true);
+});

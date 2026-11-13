@@ -6,6 +6,7 @@ import { CONTRACTE_BACKEND, CONTRACTE_NUCLI, CAPACITATS } from './contracte.js';
    document: una instància nova d'este mòdul (el ?t= de l'HMR) veu el mateix
    backend segellat que la vella, en compte de nàixer buida. */
 import { estatPort } from './backendPortEstat.js';
+import { versioSessio } from './identitat.js';
 
 const avortaLectures = () => { for (const control of estatPort.lecturesEnVol) control.abort(); estatPort.lecturesEnVol.clear(); };
 const FORMES_LECTURA = Object.freeze({ loadCoreContent: ['towns', 'pages', 'agents'], loadMur: ['feedPosts', 'events', 'marketItems'], loadMultimedia: ['mediaItems'], loadNotes: ['notes', 'noteFolders'], loadNotesPage: ['notes'] });
@@ -58,6 +59,7 @@ export function setBackendImplementation(impl, force = false) {
   const prepared = validaBackendImplementation(impl);
   // Commit després de validar-ho tot; cap mètode de la implementació vella sobreviu.
   avortaLectures();
+  estatPort.dispose?.();
   estatPort.currentImpl = prepared.candidate;
   estatPort.dispose = prepared.dispose;
 }
@@ -120,6 +122,47 @@ const asseguraMetode = (nom) => (...args) => {
   return Object.hasOwn(FORMES_LECTURA, nom) ? lligAmbGuardes(nom, args, backend) : backend[nom](...args);
 };
 
+// R21 · La mutació remota és CAS i el trigger revoca dins de la mateixa
+// transacció. Si falla el transport, la cua guarda ID+revisió sense cap GET
+// previ. No s'anuncia un DELETE local reeixit: l'error original continua.
+// Gauntlet R22 (dades-02, notes-02) · Només s'encua quan hi ha alguna cosa a
+// retirar: l'acte publicat (revocaPublicacioId). Una nota que no s'ha publicat
+// mai no té res al Mur, i el servidor no pot confirmar mai una retirada sense
+// acte (42501 si ja no hi és, 40001 si la revisió ha avançat): la fila quedava
+// pendent per sempre. Amb l'acte, el servidor sempre convergix (retired_at).
+// Gauntlet R22 (dades-04) · Si encuar falla (sense IndexedDB, diari ple, o un
+// mode que no és el remot), l'error que es llança és l'ORIGINAL (el 409 o el
+// 404 que el Bloc llig per a refrescar), amb la marca revocacioNoPersistida, i
+// mai revocacioPendent: no hi ha cap retirada pendent que es puga prometre.
+const mutacioDeNota = (nom, retira) => (...args) => {
+  const backend = estatPort.currentImpl;
+  if (!backend || typeof backend[nom] !== 'function') return asseguraMetode(nom)(...args);
+  const actor = backend.getCurrentUser?.()?.id;
+  const epoch = versioSessio;
+  const result = backend[nom](...args);
+  const revision = args[nom === 'esborraNota' ? 1 : 2];
+  if (!retira(args) || typeof backend.encuaRevocacioNotaMur !== 'function'
+      || !Number.isSafeInteger(revision) || revision < 0 || !result?.catch) return result;
+  const config = args[nom === 'esborraNota' ? 2 : 3] || {};
+  const publicacioId = (nom === 'updateNote' ? args[1]?.revocaPublicacioId : null) || config.revocaPublicacioId || null;
+  if (!publicacioId) return result;
+  return result.catch(async error => {
+    // Conservar la voluntat també davant 403/404: el desplegament o permís pot canviar.
+    const transport = error?.name !== 'AbortError' && error?.revocacioNoReencuar !== true;
+    if (transport && estatPort.currentImpl === backend && backend.getCurrentUser?.()?.id === actor && epoch === versioSessio) {
+      let encuada;
+      try {
+        encuada = await backend.encuaRevocacioNotaMur(args[0], revision, config, publicacioId);
+      } catch (causa) {
+        if (error && typeof error === 'object') error.revocacioNoPersistida = causa?.codi || causa?.name || true;
+        throw error;
+      }
+      if (encuada?.pendent !== false && error && typeof error === 'object') error.revocacioPendent = true;
+    }
+    throw error;
+  });
+};
+
 export const adoptaSessioExterna = asseguraMetode('adoptaSessioExterna');
 export const getDefaultUserId = asseguraMetode('getDefaultUserId');
 export const refrescaSessio = asseguraMetode('refrescaSessio');
@@ -142,7 +185,10 @@ export const loadNotes = asseguraMetode('loadNotes');
 export const appendChatMessages = asseguraMetode('appendChatMessages');
 
 export const appendSectionSubmissionNetworkOnly = asseguraMetode('appendSectionSubmissionNetworkOnly');
-export const updateNote = asseguraMetode('updateNote');
+export const updateNote = mutacioDeNota('updateNote', args => args[1]?.isPublished === false);
+export const revocaPublicacioMur = asseguraMetode('revocaPublicacioMur');
+export const drenaRevocacionsMur = asseguraMetode('drenaRevocacionsMur');
+export const encuaRevocacioNotaMur = asseguraMetode('encuaRevocacioNotaMur');
 export const loginWithMagicLink = asseguraMetode('loginWithMagicLink');
 export const registerWithPassword = asseguraMetode('registerWithPassword');
 export const loginWithPassword = asseguraMetode('loginWithPassword');
@@ -250,8 +296,8 @@ export const revocaConsentiment = asseguraMetode('revocaConsentiment');
 
 /* Cicle de vida de les notes (capacitat 'cicleNotes'). Tampoc és nucli:
    l'editor només pinta «Borrar» si teCapacitat('cicleNotes'). */
-export const mouNota = asseguraMetode('mouNota');
-export const esborraNota = asseguraMetode('esborraNota');
+export const mouNota = mutacioDeNota('mouNota', args => ['paperera','arxivada'].includes(args[1]));
+export const esborraNota = mutacioDeNota('esborraNota', () => true);
 
 /* Lògica d'Usuari · perfil públic (capacitat 'directori') i agents IA
    administrats (capacitat 'agents'). Cap és nucli: la interfície pregunta

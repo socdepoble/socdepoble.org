@@ -46,7 +46,7 @@ function quotesDe(servei) {
   return desades;
 }
 
-export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, servei = PORT, externalConfig, usuariId, t: tProp, locale = 'ca-ES', actiu = true, children = null }) {
+export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFitxerRef = null, servei = PORT, externalConfig, usuariId, t: tProp, locale = 'ca-ES', actiu = true, children = null }) {
   const t = traductorAdjunt(tProp);
   // La cau és de la persona EN ESTE backend i poble, no del seu UUID a soles.
   // No valida el port des del render: la quota continua passant pel servei.
@@ -210,17 +210,24 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, servei
   /* Torna com ha acabat: 'preparada', 'fallida' (error a la vista), 'avortada'
      (la conversa s'ha tancat o s'ha cancel·lat) o 'ocupada' (no s'ha començat).
      El menú «Compartir» ho necessita per a saber si el fitxer torna al lot. */
-  const tria = async (fitxer) => {
+  const tria = async (fitxer, { ambPeu = false } = {}) => {
     if (!fitxer || pujant || ocupat) return 'ocupada';
     operacio.current?.abort();
     const controller = new AbortController(); operacio.current = controller;
     origen.current = 'tria';
+    if (ambPeu) setDeCompartir(true);
     setOcupat('tria'); setError(null);
     let estat = 'avortada';
     try {
       const adjunt = await preparaAdjunt(fitxer, { signal: controller.signal });
       if (viu.current && !controller.signal.aborted) { accepta(adjunt); estat = 'preparada'; }
-    } catch (e) { if (viu.current && !controller.signal.aborted) { setError(e); estat = 'fallida'; } }
+    } catch (e) {
+      if (viu.current && !controller.signal.aborted) {
+        if (ambPeu) { setPeu(''); setDeCompartir(false); }
+        setError(e);
+        estat = 'fallida';
+      }
+    }
     finally { if (viu.current && operacio.current === controller) setOcupat(null); }
     return estat;
   };
@@ -233,10 +240,21 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, servei
      abans d'aplicar el setOcupat de tria(): sense la guarda (una ref, no estat)
      l'efecte en prenia un altre i tria() avortava el primer. */
   const compartit = useCompartitPendent();
+  const bloquejat = pujant || Boolean(ocupat) || Boolean(preparat) || gravant;
+  const disponible = actiu && servei.teCapacitat('xatMultimedia') && !SENSE_PANELL.has(String(errorQuota?.code ?? ''))
+    && Boolean(quota || errorQuota);
+  const potTriarExtern = Boolean(disponible && quota && !bloquejat);
   // L'últim `tria`, per a l'efecte de baix sense tornar-lo a córrer a cada pintat.
   const triaRef = useRef(tria);
   const textOrfeRef = useRef(onTextOrfe);
-  useEffect(() => { triaRef.current = tria; textOrfeRef.current = onTextOrfe; });
+  useEffect(() => {
+    triaRef.current = tria;
+    textOrfeRef.current = onTextOrfe;
+    if (triaFitxerRef) {
+      triaFitxerRef.current = potTriarExtern ? (fitxer) => triaRef.current(fitxer, { ambPeu: true }) : null;
+    }
+    return () => { if (triaFitxerRef) triaFitxerRef.current = null; };
+  });
   useEffect(() => {
     if (!actiu || prenentRef.current || !quota || preparat || ocupat || pujant || gravant) return;
     if (compartit?.desti !== String(fil.id) || !compartit.fitxers.length) return;
@@ -331,8 +349,6 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, servei
      de la quota encara, el Compositor ix sense adjunts: ni + ni micròfon. El
      fragment té sempre la mateixa forma (safata, compositor): el camp no es
      torna a muntar quan els adjunts arriben. */
-  const disponible = actiu && servei.teCapacitat('xatMultimedia') && !SENSE_PANELL.has(String(errorQuota?.code ?? ''))
-    && Boolean(quota || errorQuota);
   if (!disponible) return <>{null}{children?.(null) ?? null}</>;
   const mb = (bytes, decimals = 1) => new Intl.NumberFormat(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(bytes / 1_000_000);
   const potGravar = Boolean(globalThis.navigator?.mediaDevices?.getUserMedia && mimeDeGravacio(globalThis.MediaRecorder));
@@ -434,7 +450,8 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, servei
     etiquetaMenu: t('section.xat.adjunts.grup', 'Adjunts del xat'),
     refBoto: botons.adjunta,
     refPrimari: botons.primari,
-    bloquejat: pujant || Boolean(ocupat) || Boolean(preparat) || gravant,
+    bloquejat,
+    triaFitxer: potTriarExtern ? (fitxer) => tria(fitxer, { ambPeu: true }) : null,
     opcions,
     peuMenu,
     primari

@@ -23,8 +23,8 @@ const sqlBase = (cos, cap = '') => `-- Prova.${cap ? `\n${cap}` : ''}\n-- Idempo
 
 function readmeDe(migracions, { estats = {}, nota = '', vinyetes = {}, sql = '' } = {}) {
   const noms = Object.keys(migracions).sort();
-  const bullets = noms.map((n) => `- \`migrations/${n}\`\n  Prova.${vinyetes[n.slice(0, 10)] ? ` ${vinyetes[n.slice(0, 10)]}` : ''}\n`).join('\n');
-  const files = noms.map((n, i) => `| ${String(i + 1).padStart(2, '0')} | \`${n.slice(0, 10)}\` | \`${n}\` | ${estats[n.slice(0, 10)] ?? NO_ACREDITAT} | prova |`).join('\n');
+  const bullets = noms.map((n) => `- \`migrations/${n}\`\n  Prova.${vinyetes[n.split('_')[0]] ? ` ${vinyetes[n.split('_')[0]]}` : ''}\n`).join('\n');
+  const files = noms.map((n, i) => `| ${String(i + 1).padStart(2, '0')} | \`${n.split('_')[0]}\` | \`${n}\` | ${estats[n.split('_')[0]] ?? NO_ACREDITAT} | prova |`).join('\n');
   return `# Supabase\n\n## Fitxers\n\n${bullets}\n- \`seed.sql\`\n  Contingut.\n\n## Ordre correcte\n\n1. Executar en ordre alfabètic.\n\n${sql}\n### Nota d'auditoria \`DF-06\` (\`P0-05\`) i seqüència\n\n${nota}\n\n### Taula canònica\n\n| Ordre | Versió | Fitxer | Estat declarat | Objectiu |\n| :---: | :--- | :--- | :--- | :--- |\n${files}\n`;
 }
 

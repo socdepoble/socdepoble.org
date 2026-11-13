@@ -565,6 +565,12 @@ export function DocumentEditor({ adapter, onToast }) {
      Revisió adversarial 261028 · demanaExif només amb fotosDePublicacio === true:
      el text d'una persona al Perfil és identitat i la foto hi entra neta. */
   const ambExifDelCos = fotosDePublicacio === true;
+  /* Gauntlet R22 (ronda 4) · ambExifDelCos també és l'exifTriat de la closca
+     i de CasellaExif. Les fotos d'una publicació (la capçalera i les
+     del cos) van al fitxer privat i ixen al Mur per la promoció, que només hi
+     deixa la tria de preparaTiffTriat (storage.js · ambExifTriat): l'avís de
+     la casella ho diu (exifTriat a la closca i a CasellaExif). La pregunta
+     del cos només s'obri amb fotosDePublicacio. */
   /* P1-59 (a) · El text fantasma del cos, només amb un text no buit (sense,
      cap clau nova a la crida). Un text, no un objecte: el memo no es refà. */
   const textFantasma = typeof placeholderCos === 'string' && placeholderCos.trim() ? placeholderCos : null;
@@ -1249,6 +1255,9 @@ export function DocumentEditor({ adapter, onToast }) {
       poblesDisponibles={visibilitat?.poblesDisponibles}
       poblePublicat={visibilitat?.poblePublicat ?? null}
       rutaPublicada={visibilitat?.rutaPublicada ?? null}
+      /* F03-UI · Verificació R21 (P1) · L'avís d'una retirada del Mur pendent
+         (el porta qui munta l'editor: NotesContext, per nota). */
+      retiradaPendent={visibilitat?.retiradaPendent}
       peticioEnfocament={peticioVisibilitat?.nota === document.id ? peticioVisibilitat : null}
       onPeticioAtesa={peticioVisibilitatAtesa}
       t={t}
@@ -1312,6 +1321,7 @@ export function DocumentEditor({ adapter, onToast }) {
       formattedDate={document.formattedDate}
       labels={labels || []}
       onImageUpload={uploadMedia}
+      exifTriat={ambExifDelCos}
       onLocalChange={desaLocal}
       onSaveField={desaCamp}
       onToast={onToast}
@@ -1448,7 +1458,7 @@ export function DocumentEditor({ adapter, onToast }) {
             </>
           )}
         >
-          <CasellaExif dades={preguntaExif.exif} conserva={preguntaExif.conserva}
+          <CasellaExif dades={preguntaExif.exif} conserva={preguntaExif.conserva} exifTriat
             onConserva={(conserva) => setPreguntaExif((p) => (p ? { ...p, conserva } : p))}
             precisio={preguntaExif.precisio} onPrecisio={(precisio) => setPreguntaExif((p) => (p ? { ...p, precisio } : p))} />
         </Dialeg>

@@ -25,13 +25,19 @@
 import { getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
 import { getDefaultUserId } from '../identitat.js';
 import {
-  CODI_MODERACIO, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, denunciaDelContracte, errorDeModeracio
+  CODI_MODERACIO, TIPUS_BLOQUEIG_PUBLICACIO, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, denunciaDelContracte, errorDeModeracio
 } from '../contracte.js';
 
 const MODES_LOCALS = new Set(['seed', 'local']);
 const esModeLocal = (resolt) => MODES_LOCALS.has(resolt.runtimeDataMode);
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SELECCIO = 'bloquejat_tipus,bloquejat_persona,bloquejat_entitat,nom,creat_al';
+/* R22 · La llista porta també els bloquejos opacs per UUID de publicació
+   (2611122200): una fila 'publicacio' amb el UUID públic i cap identitat de
+   l'autor, que el servidor guarda en privat. Un servidor sense la migració
+   no té la columna (42703) i es llig la llista de sempre. */
+const SELECCIO_LLISTA = `${SELECCIO},publicacio_id`;
+const TIPUS_PUBLICACIO = TIPUS_BLOQUEIG_PUBLICACIO;
 const CODIS = new Set(Object.values(CODI_MODERACIO));
 
 /* ── El magatzem en memòria (seed i local) ──
@@ -65,8 +71,15 @@ const propietariLocal = () => getCurrentUser()?.id || getDefaultUserId();
 const clau = ({ tipus, id }) => `${tipus}:${id}`;
 const signalDe = (config) => config?.signal;
 
-/* Una fila de public.bloquejos en la forma del contracte, o null. */
+/* Una fila de public.bloquejos en la forma del contracte, o null. Un
+   bloqueig opac es llista pel UUID públic de la publicació, sense nom. */
 const bloqueigDeFila = (fila) => {
+  if (fila?.bloquejat_tipus === TIPUS_PUBLICACIO) {
+    const publicacio = String(fila?.publicacio_id ?? '');
+    return RE_UUID.test(publicacio)
+      ? Object.freeze({ tipus: TIPUS_PUBLICACIO, id: publicacio.toLowerCase(), nom: null, creatAl: fila?.creat_al ?? null })
+      : null;
+  }
   const tipus = fila?.bloquejat_tipus === 'entitat' ? 'entitat' : 'persona';
   const id = String((tipus === 'entitat' ? fila?.bloquejat_entitat : fila?.bloquejat_persona) ?? '');
   return id
@@ -127,6 +140,13 @@ export async function denunciaContingut(dades = {}, config = {}) {
     if (!repetida) magatzem.denuncies.push({ qui, tipus, id, motiu: denuncia.motiu });
     return { rebuda: true, repetida };
   }
+  if (dades.murPublic === true && RE_UUID.test(denuncia.objecte.id)) {
+    const resposta = await rpc('denuncia_publicacio_mur', { p_id: denuncia.objecte.id,
+      p_motiu: denuncia.motiu, p_detall: denuncia.detall }, config, { signal: signalDe(config) })
+      .catch(error => { throw traduix(error); });
+    if (resposta?.rebuda !== true) throw errorDeModeracio(CODI_MODERACIO.DESCONEGUT);
+    return { rebuda: true, repetida: resposta.repetida === true };
+  }
   const cos = {
     p_objecte_tipus: denuncia.objecte.tipus,
     p_objecte_id: denuncia.objecte.id,
@@ -148,10 +168,17 @@ export async function llistaBloquejos(config = {}) {
   if (esModeLocal(resolt)) return [...(magatzem.bloquejos.get(propietariLocal())?.values() ?? [])].reverse();
   const uid = getCurrentUser()?.id;
   if (!uid) return [];
-  const files = await request(
-    `/rest/v1/bloquejos?select=${SELECCIO}&bloquejador=eq.${encodeURIComponent(uid)}&order=creat_al.desc&limit=1000`,
+  const llig = (seleccio) => request(
+    `/rest/v1/bloquejos?select=${seleccio}&bloquejador=eq.${encodeURIComponent(uid)}&order=creat_al.desc&limit=1000`,
     config, { signal: signalDe(config) }
-  ).catch((error) => { throw traduix(error); });
+  );
+  let files;
+  try {
+    files = await llig(SELECCIO_LLISTA);
+  } catch (error) {
+    if (error?.name === 'AbortError' || cosDePostgrest(error)?.code !== '42703') throw traduix(error);
+    files = await llig(SELECCIO).catch((segon) => { throw traduix(segon); });
+  }
   return (Array.isArray(files) ? files : []).map(bloqueigDeFila).filter(Boolean);
 }
 
@@ -161,6 +188,15 @@ export async function llistaBloquejos(config = {}) {
  * En remot, l'id ha de ser un UUID i ningú no es bloqueja a si mateix.
  */
 export async function bloquejaAutor(dades = {}, config = {}) {
+  // Variant opaca del mateix contracte: l'UUID públic substituïx la identitat privada.
+  if (Object.hasOwn(dades, 'publicacioId')) {
+    if (!RE_UUID.test(dades.publicacioId || '')) throw errorDeModeracio(CODI_MODERACIO.OBJECTIU_INVALID);
+    if (!getCurrentUser()?.id) throw errorDeModeracio(CODI_MODERACIO.SENSE_SESSIO);
+    const resposta = await rpc('bloqueja_publicacio_mur', { p_id: dades.publicacioId }, config, { signal: signalDe(config) })
+      .catch(error => { throw traduix(error); });
+    if (resposta?.bloquejat !== true || resposta?.publicacio_id !== dades.publicacioId) throw errorDeModeracio(CODI_MODERACIO.DESCONEGUT);
+    return { bloquejat: true, publicacioId: dades.publicacioId };
+  }
   const autor = autorDelContracte(dades);
   const resolt = getResolvedConfig(config);
   if (esModeLocal(resolt)) {
@@ -195,8 +231,24 @@ export async function bloquejaAutor(dades = {}, config = {}) {
   }
 }
 
-/** Desbloqueja ({ tipus, id }). Torna { desbloquejat }: false si no hi era. */
+/**
+ * Desbloqueja ({ tipus, id }). Torna { desbloquejat }: false si no hi era.
+ * R22 · { tipus: 'publicacio', id: UUID } desfà un bloqueig opac pel mateix
+ * UUID públic amb què es va fer: qui crida no coneix mai l'autor.
+ */
 export async function desbloquejaAutor(dades = {}, config = {}) {
+  if (dades?.tipus === TIPUS_PUBLICACIO) {
+    const publicacio = String(dades.id ?? '').trim();
+    if (!RE_UUID.test(publicacio)) throw errorDeModeracio(CODI_MODERACIO.OBJECTIU_INVALID);
+    if (esModeLocal(getResolvedConfig(config))) return { desbloquejat: false };
+    const uid = getCurrentUser()?.id;
+    if (!uid) throw errorDeModeracio(CODI_MODERACIO.SENSE_SESSIO);
+    const files = await request(
+      `/rest/v1/bloquejos?bloquejador=eq.${encodeURIComponent(uid)}&publicacio_id=eq.${encodeURIComponent(publicacio.toLowerCase())}&select=bloquejat_tipus`,
+      config, { method: 'DELETE', headers: { Prefer: 'return=representation' }, signal: signalDe(config) }
+    ).catch((error) => { throw traduix(error); });
+    return { desbloquejat: Array.isArray(files) && files.length > 0 };
+  }
   const autor = autorDelContracte(dades, { ambNom: false });
   const resolt = getResolvedConfig(config);
   if (esModeLocal(resolt)) return { desbloquejat: Boolean(magatzem.bloquejos.get(propietariLocal())?.delete(clau(autor))) };

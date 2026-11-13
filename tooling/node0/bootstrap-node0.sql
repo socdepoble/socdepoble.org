@@ -26,11 +26,17 @@ BEGIN
   END IF;
 END $roles$;
 CREATE TABLE IF NOT EXISTS node0.schema_migrations(
-  version text PRIMARY KEY CHECK (version ~ '^[0-9]{10}$'),
+  version text PRIMARY KEY CHECK (version ~ '^([0-9]{10}|[0-9]{14})$'),
   file text NOT NULL UNIQUE,
   sha256 text NOT NULL CHECK (sha256 ~ '^[0-9a-f]{64}$'),
   applied_at timestamptz NOT NULL DEFAULT now()
 );
+-- Widen the original named CHECK in place on existing Node 0 installations.
+-- IDs, source hashes and application timestamps remain unchanged; one ALTER
+-- replaces the constraint atomically and also validates existing ledger rows.
+ALTER TABLE node0.schema_migrations
+  DROP CONSTRAINT IF EXISTS schema_migrations_version_check,
+  ADD CONSTRAINT schema_migrations_version_check CHECK (version ~ '^([0-9]{10}|[0-9]{14})$');
 CREATE TABLE IF NOT EXISTS node0.public_documents(
   kind text NOT NULL CHECK (kind IN ('towns','pages','agents','feedPosts','events','marketItems','mediaItems')),
   id text NOT NULL CHECK (length(id) BETWEEN 1 AND 2048),

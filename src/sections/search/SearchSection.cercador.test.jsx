@@ -174,7 +174,7 @@ test('Pla 261022_1955 · un foraster (SDP-XAT-003, 403) no veu cap avís del pad
   await waitFor(() => expect(mocks.xat.cercaMembres).toHaveBeenCalled());
   await waitFor(() => expect(screen.getByRole('link', { name: 'Mestre Javi' })).toBeTruthy());
   expect(screen.queryByText(/Mode Foraster/)).toBeNull();
-  expect(screen.queryByText("No s'ha pogut buscar en el padró del poble")).toBeNull();
+  expect(screen.queryByText("No s'ha pogut buscar en el padró del teu poble")).toBeNull();
   expect(screen.queryByRole('button', { name: 'Torna-ho a provar' })).toBeNull();
   expect(screen.queryByText("Encara arriben resultats d'algunes fonts…")).toBeNull();
   expect(screen.getByRole('heading', { name: 'Javi Llinares' })).toBeTruthy();
@@ -191,7 +191,7 @@ test.each([
   await pinta();
   await waitFor(() => expect(mocks.xat.cercaMembres).toHaveBeenCalled());
   await waitFor(() => expect(screen.getByRole('link', { name: 'Mestre Javi' })).toBeTruthy());
-  expect(screen.queryByText("No s'ha pogut buscar en el padró del poble")).toBeNull();
+  expect(screen.queryByText("No s'ha pogut buscar en el padró del teu poble")).toBeNull();
 });
 
 test('Pla 261022_1955 · una fallada de veres del directori s’avisa, la resta es veu, i «Torna-ho a provar» el torna a demanar', async () => {
@@ -256,9 +256,9 @@ test('Pla 261022_1955 · una font que no respon passa a avís als deu segons, i 
   expect(screen.getByRole('link', { name: 'Mestre Javi' })).toBeTruthy();
   expect(screen.getByText("Encara arriben resultats d'algunes fonts…")).toBeTruthy();
   await act(async () => { vi.advanceTimersByTime(MS_TERMINI_FONT - 1); });
-  expect(screen.queryByText("No s'ha pogut buscar en el padró del poble")).toBeNull();
+  expect(screen.queryByText("No s'ha pogut buscar en el padró del teu poble")).toBeNull();
   await act(async () => { vi.advanceTimersByTime(2); });
-  expect(screen.getByText("No s'ha pogut buscar en el padró del poble")).toBeTruthy();
+  expect(screen.getByText("No s'ha pogut buscar en el padró del teu poble")).toBeTruthy();
   expect(screen.getByText("No s'ha pogut buscar en el directori d'entitats")).toBeTruthy();
   expect(screen.getAllByText('No ha respost a temps. La resta de resultats continua ací.')).toHaveLength(2);
   expect(screen.queryByText("Encara arriben resultats d'algunes fonts…")).toBeNull();
@@ -274,14 +274,14 @@ test('Pla 261022_1955 · després d’un termini, anar a Pobles i tornar a Tot n
   mocks.url = '?q=javi';
   await pinta();
   await act(async () => { vi.advanceTimersByTime(MS_TERMINI_FONT + 1); });
-  expect(screen.getByText("No s'ha pogut buscar en el padró del poble")).toBeTruthy();
+  expect(screen.getByText("No s'ha pogut buscar en el padró del teu poble")).toBeTruthy();
   await act(async () => { screen.getByRole('button', { name: /^Pobles/ }).click(); });
   await act(async () => { screen.getByRole('button', { name: /^Tot/ }).click(); });
   expect(mocks.xat.cercaMembres).toHaveBeenCalledTimes(2);
   await act(async () => { vi.advanceTimersByTime(50); });
-  expect(screen.queryByText("No s'ha pogut buscar en el padró del poble")).toBeNull();
+  expect(screen.queryByText("No s'ha pogut buscar en el padró del teu poble")).toBeNull();
   await act(async () => { vi.advanceTimersByTime(MS_TERMINI_FONT); });
-  expect(screen.getByText("No s'ha pogut buscar en el padró del poble")).toBeTruthy();
+  expect(screen.getByText("No s'ha pogut buscar en el padró del teu poble")).toBeTruthy();
 });
 
 /* Gauntlet (crític del hook; xarxa rural) · El directori no depén del filtre:

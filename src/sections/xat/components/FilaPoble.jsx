@@ -38,7 +38,7 @@ export default function FilaPoble({ poble, onObri, t, nom: nomPropi = null, avat
         <span className="sdp-xat-fila__cap">
           <span className="sdp-xat-fila__nom">
             {nom}
-            <span className="sdp-nomes-lector">{`, ${etiqueta || t('section.xat.poble.etiqueta', 'Grup del poble')}`}</span>
+            <span className="sdp-nomes-lector">{`, ${etiqueta || t('section.xat.poble.etiqueta', 'Grup de poble')}`}</span>
           </span>
           <ChevronRight className="sdp-xat-fila__xebro" size={20} aria-hidden="true" focusable="false" />
         </span>

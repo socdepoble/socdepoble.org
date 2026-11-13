@@ -77,7 +77,7 @@ const CLAUS = {
     ca: 'Torna-ho a provar', es: 'Vuelve a intentarlo', en: 'Try again', eu: 'Saiatu berriro', gl: 'Téntao de novo'
   },
   'error.backendInabastable': {
-    ca: 'El servidor del poble no respon ara mateix. El contingut no s’ha pogut carregar.',
+    ca: 'El servidor de poble no respon ara mateix. El contingut no s’ha pogut carregar.',
     es: 'El servidor del pueblo no responde ahora mismo. No se ha podido cargar el contenido.',
     en: 'The town server is not responding right now. The content could not be loaded.',
     eu: 'Herriko zerbitzariak ez du erantzuten oraintxe. Ezin izan da edukia kargatu.',
@@ -138,7 +138,7 @@ const CLAUS = {
     ca: 'Saber-ne més', es: 'Saber más', en: 'Learn more', eu: 'Gehiago jakin', gl: 'Saber máis'
   },
   'error.servidor': {
-    ca: 'El servidor del poble ha tornat un error. Torna-ho a provar més tard.',
+    ca: 'El servidor de poble ha tornat un error. Torna-ho a provar més tard.',
     es: 'El servidor del pueblo ha devuelto un error. Vuelve a intentarlo más tarde.',
     en: 'The town server returned an error. Try again later.',
     eu: 'Herriko zerbitzariak errore bat itzuli du. Saiatu berriro geroago.',
@@ -169,7 +169,7 @@ const CLAUS = {
   /* Ordre del Mestre, 261001 · Les tres claus que el Calendari
      (CalendariSection.jsx) ja cridava sense cap entrada al diccionari. */
   'section.calendari.title': {
-    ca: 'Totes les targetes del poble',
+    ca: 'Totes les targetes de poble',
     es: 'Todas las tarjetas del pueblo',
     en: 'Every card in the village',
     eu: 'Herriko txartel guztiak',
@@ -624,7 +624,7 @@ const CLAUS = {
      d'un poble (el nom del tablist) i el panell «Gent de …» (buit, carregant
      i error). Les d'eu i gl són proposta a revisar per algú que les parle. */
   'section.detail.pobles.pestanyes': {
-    ca: 'Continguts del poble',
+    ca: 'Continguts d’este poble',
     es: 'Contenidos del pueblo',
     en: 'Town content',
     eu: 'Herriko edukiak',
@@ -654,14 +654,14 @@ const CLAUS = {
     gl: 'Aínda non hai publicacións de fóra que falen desta vila.'
   },
   'section.detail.pobles.gent.carregant': {
-    ca: 'Carregant les publicacions del poble…',
+    ca: 'Carregant les publicacions d’este poble…',
     es: 'Cargando las publicaciones del pueblo…',
     en: 'Loading the town’s posts…',
     eu: 'Herriko argitalpenak kargatzen…',
     gl: 'Cargando as publicacións do pobo…'
   },
   'section.detail.pobles.gent.error': {
-    ca: 'No s’han pogut carregar les publicacions del poble',
+    ca: 'No s’han pogut carregar les publicacions d’este poble',
     es: 'No se han podido cargar las publicaciones del pueblo',
     en: 'The town’s posts could not be loaded',
     eu: 'Ezin izan dira herriko argitalpenak kargatu',
@@ -1029,5 +1029,26 @@ describe('claus i18n del receptari «Què dinem?» (patrimoni.receptes.*)', () =
   test('els marcadors {…} són els mateixos en totes les llengües', () => {
     const marcadors = (text) => [...String(text).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
     for (const clau of claus) for (const [codi, dic] of Object.entries(DICS)) expect([codi, clau, marcadors(dic[clau])]).toEqual([codi, clau, marcadors(CA[clau])]);
+  });
+});
+
+/* Gauntlet R22, ronda 3 (xat-08 i honestedat-08, parcials) · El vel d'arrossegar del xat (Conversa.jsx) només pinta
+   un <p>, amb 'section.xat.adjunts.deixaAnar'. El subtítol que el kit R21.9 va afegir als cinc diccionaris
+   ('…deixaAnarSubtitol', «S'optimitza automàticament en format WebP sencer…») no el crida cap codi, i la build web
+   no sempre fa eixa conversió: es retira, no es pinta. Cap clau del vel sense ús, i la que queda, en les cinc. */
+describe('claus del vel d’arrossegar del xat (section.xat.adjunts.deixaAnar*)', () => {
+  const DICS_VEL = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+  const font = fs.readFileSync(path.resolve(__dirI18n, '../sections/xat/components/Conversa.jsx'), 'utf8');
+  const claus = Object.keys(CA).filter((clau) => clau.startsWith('section.xat.adjunts.deixaAnar'));
+
+  test('cada clau del vel la crida Conversa.jsx, amb la reserva valenciana, i és a les cinc llengües', () => {
+    expect(claus).toEqual(['section.xat.adjunts.deixaAnar']);
+    for (const clau of claus) {
+      expect([clau, font.includes(`t('${clau}', '${CA[clau]}')`)]).toEqual([clau, true]);
+      for (const [codi, dic] of Object.entries(DICS_VEL)) expect([codi, clau, typeof dic[clau] === 'string' && dic[clau].length > 0]).toEqual([codi, clau, true]);
+    }
+    for (const [codi, dic] of Object.entries(DICS_VEL)) {
+      expect([codi, Object.keys(dic).filter((clau) => clau.startsWith('section.xat.adjunts.deixaAnar'))]).toEqual([codi, claus]);
+    }
   });
 });

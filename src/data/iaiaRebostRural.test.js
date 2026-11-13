@@ -8,8 +8,8 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { CAPSULES_RURALS } from './iaiaRebostRural.js';
 import {
-  ATLES_OPERATIU, ENCAPCALAMENT_DE_SOC_DE_POBLE, MAXIM_FRAGMENT_DE_L_ATLES, RUTA_DE_LA_WIKI, RUTA_INTERNA, cercaAlRebostRural,
-  cercaRellevant, consultaTecnicaIAIA, indexDeLaCapaLocal, indexDelRebostRural, oblidaIndexDeLaWiki, respostaDeLaIAIA
+  ATLES_OPERATIU, DOCUMENTS_PER_RESPOSTA, ENCAPCALAMENT_DE_SOC_DE_POBLE, MAXIM_FRAGMENT_DE_L_ATLES, RUTA_DE_LA_WIKI, RUTA_INTERNA,
+  cercaAlRebostRural, cercaRellevant, construeixIndex, indexDeLaCapaLocal, indexDelRebostRural, oblidaIndexDeLaWiki, respostaDeLaIAIA
 } from './iaiaLocal.js';
 import { SECTIONS } from '../config/sections.js';
 import { wikiManifest } from './wikiManifest.js';
@@ -210,10 +210,11 @@ describe('cada fet casa amb la seua font', () => {
   test('«D’això en parla la Wiki de Poble» és cert: el mètode Pedra Seca el respon la Wiki pública', async () => {
     expect(text(perId('rebost:pedra_seca'))).toContain("D'això en parla la Wiki de Poble");
     expect(wikiManifest.items.some((item) => /^# .*Pedra Seca/m.test(item.content || ''))).toBe(true);
-    /* La consulta del diàleg és la Wiki sola: hi troba el mètode pel títol. */
-    const consulta = await consultaTecnicaIAIA('Què és el mètode Pedra Seca?', { tempsMaxim: 60000 });
-    expect(consulta.estat).toBe('resposta');
-    expect(consulta.fonts.some((font) => font.titol.includes('Pedra Seca'))).toBe(true);
+    /* El cercador guiat de la Wiki sola (el de la consulta del diàleg, retirada
+       per D-C4-5) hi troba el mètode pel títol. */
+    const fonts = cercaRellevant(construeixIndex(wikiManifest.items), 'Què és el mètode Pedra Seca?', DOCUMENTS_PER_RESPOSTA, { cercaGuiada: true });
+    expect(fonts.length).toBeGreaterThan(0);
+    expect(fonts.some((font) => font.titol.includes('Pedra Seca'))).toBe(true);
     /* I al fil, la segona capa (no el rebost) cita eixe document de la Wiki. */
     const resposta = await respostaDeLaIAIA('Què és el mètode Pedra Seca?', { tempsMaxim: 60000 });
     expect(liniesDeRuta(resposta).some((linia) => linia.includes('Pedra Seca') && linia.includes(`${RUTA_DE_LA_WIKI}?item=`))).toBe(true);

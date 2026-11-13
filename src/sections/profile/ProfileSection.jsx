@@ -43,7 +43,7 @@ function dataDeTargetaDirectori(agent) {
 }
 
 /**
- * R21.5 · El directori de persones, entitats i col·lectius del poble (/perfil).
+ * R21.5 · El directori de persones, entitats i col·lectius d’este poble (/perfil).
  * Reixeta responsiva `sdp-card-grid` amb `UniversalCard` directa (1/2/3 columnes
  * segons `@container`), barra taronja completa (avatar + nom + poble + data),
  * enquadrament 1:1, Dignitat Humana per a persones i botó secundari «Anar al xat»

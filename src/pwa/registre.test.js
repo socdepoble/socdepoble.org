@@ -9,7 +9,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   ABAST_DEL_SW, ESDEVENIMENT_APP_VISITADA, ESDEVENIMENT_AVIS_XAT, ESPERA_ESCALFAMENT_MS, MISSATGE_AVIS_XAT, MISSATGE_ESCALFAMENT, RUTA_DEL_SW,
   TOPALL_REGISTRE_ACTIU_MS, escoltaAvisosDelWorker, escoltaEscalfament, missatgeDEscalfament, motiuPerNoRegistrar, registraServiceWorker,
-  registreActiu, registreDelSw, portMissatgesAvisos
+  registreActiu, registreDelSw, portMissatgesAvisos, actualitzaWorkerPerDeploy
 } from './registre.js';
 import { importaElModul } from '../../tests/helpers/especificadorsImport.js';
 
@@ -781,5 +781,90 @@ describe('R54 · portMissatgesAvisos conserva l’únic propietari', () => {
     expect(portMissatgesAvisos({ produccio: true, navegador: {}, finestra: entorn().finestra })).toBeNull();
     expect(portMissatgesAvisos({ produccio: true, navegador: Object.defineProperty({}, 'serviceWorker', { get() { throw Error('blocked'); } }), finestra: entorn().finestra })).toBeNull();
     expect(sw.addEventListener).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('actualització acotada després de provar desplegament nou', () => {
+  function prova() {
+    const origin = 'https://socdepoble.org';
+    const waiting = { scriptURL: origin + '/sw.js', postMessage: vi.fn() };
+    const reg = { scope: origin + '/', active: { scriptURL: origin + '/sw.js' }, waiting, update: vi.fn(async () => {}) };
+    return { reg, waiting, navegador: { serviceWorker: { getRegistration: vi.fn(async () => reg) } },
+      finestra: { location: { origin } } };
+  }
+  test('només el registre propi d’abast arrel rep update i SKIP_WAITING', async () => {
+    const e = prova(); await actualitzaWorkerPerDeploy(e);
+    expect(e.reg.update).toHaveBeenCalledOnce();
+    expect(e.waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+  });
+  test.each(['https://alie.invalid/sw.js', 'https://socdepoble.org/altre.js', 'https://socdepoble.org/sw.js?x=1', 'https://socdepoble.org/sw.js#x'])('refusa worker alié o no canònic %s', async scriptURL => {
+    const e = prova(); e.reg.active.scriptURL = scriptURL; e.waiting.scriptURL = scriptURL;
+    await actualitzaWorkerPerDeploy(e); expect(e.reg.update).not.toHaveBeenCalled();
+    expect(e.waiting.postMessage).not.toHaveBeenCalled();
+  });
+  test('abast diferent i cancel·lació durant update no avancen', async () => {
+    const e = prova(); e.reg.scope += 'app/';
+    await actualitzaWorkerPerDeploy(e); expect(e.reg.update).not.toHaveBeenCalled();
+    e.reg.scope = e.finestra.location.origin + '/'; let vigent = true;
+    e.reg.update.mockImplementation(async () => { vigent = false; });
+    await actualitzaWorkerPerDeploy({ ...e, vigent: () => vigent });
+    expect(e.waiting.postMessage).not.toHaveBeenCalled();
+  });
+
+  /* Gauntlet R22 (pwa-03) · update() es resol amb el worker nou encara a
+     `installing` (algoritme Install), no a `waiting`: el doble d'abans ja
+     portava un `waiting` i la prova passava pel motiu equivocat. */
+  function workerNou(origin) {
+    const escoltes = new Set();
+    const worker = { scriptURL: origin + '/sw.js', state: 'installing', postMessage: vi.fn(),
+      addEventListener: vi.fn((tipus, fn) => { if (tipus === 'statechange') escoltes.add(fn); }),
+      removeEventListener: vi.fn((tipus, fn) => { if (tipus === 'statechange') escoltes.delete(fn); }),
+      instalLat(reg) {
+        Object.assign(reg, { installing: null, waiting: worker }); worker.state = 'installed';
+        for (const fn of [...escoltes]) fn();
+      },
+      escoltes };
+    return worker;
+  }
+  test('pwa-03 · el worker nou rep SKIP_WAITING mentre s’instal·la i de nou en arribar a installed', async () => {
+    const e = prova(), nou = workerNou(e.finestra.location.origin);
+    e.reg.waiting = null;
+    e.reg.update.mockImplementation(async () => { e.reg.installing = nou; });
+    const feina = actualitzaWorkerPerDeploy(e);
+    await vi.waitFor(() => expect(nou.escoltes.size).toBe(1));
+    expect(nou.postMessage.mock.calls).toEqual([[{ type: 'SKIP_WAITING' }]]);
+    nou.instalLat(e.reg);
+    await feina;
+    expect(nou.postMessage.mock.calls).toEqual([[{ type: 'SKIP_WAITING' }], [{ type: 'SKIP_WAITING' }]]);
+    expect(nou.escoltes.size).toBe(0);
+  });
+  test('pwa-03 · un worker en espera i un de més nou instal·lant-se reben tots dos l’ordre', async () => {
+    const e = prova(), nou = workerNou(e.finestra.location.origin);
+    e.reg.update.mockImplementation(async () => { e.reg.installing = nou; setTimeout(() => nou.instalLat(e.reg), 0); });
+    await actualitzaWorkerPerDeploy(e);
+    expect(e.waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+    expect(nou.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+  });
+  test('pwa-03 · cancel·lació, topall i worker alié durant la instal·lació no envien res més', async () => {
+    const cancel = prova(), nou = workerNou(cancel.finestra.location.origin); let vigent = true;
+    cancel.reg.waiting = null;
+    cancel.reg.update.mockImplementation(async () => { cancel.reg.installing = nou; setTimeout(() => { vigent = false; nou.instalLat(cancel.reg); }, 0); });
+    await actualitzaWorkerPerDeploy({ ...cancel, vigent: () => vigent });
+    expect(nou.postMessage).toHaveBeenCalledTimes(1);
+
+    const quiet = prova(), encallat = workerNou(quiet.finestra.location.origin);
+    quiet.reg.waiting = null;
+    quiet.reg.update.mockImplementation(async () => { quiet.reg.installing = encallat; });
+    await actualitzaWorkerPerDeploy({ ...quiet, esperaMs: 5 });
+    expect(encallat.postMessage).toHaveBeenCalledTimes(1);
+    expect(encallat.escoltes.size).toBe(0);
+
+    const alie = prova(), estrany = workerNou('https://alie.invalid');
+    alie.reg.waiting = null;
+    alie.reg.update.mockImplementation(async () => { alie.reg.installing = estrany; });
+    await actualitzaWorkerPerDeploy(alie);
+    expect(estrany.postMessage).not.toHaveBeenCalled();
+    expect(estrany.addEventListener).not.toHaveBeenCalled();
   });
 });

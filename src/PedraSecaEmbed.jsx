@@ -114,7 +114,7 @@ import { getRuntimePolicy } from './config/runtimePolicy.js';
 import { normalitzaBase, triaRouter } from './app/contexts/politicaRouter.js';
 import { llegeixConfigAmfitrio, sanejaEtiqueta, sanejaIdentificador, sanejaRuta } from './config/configAmfitrio.js';
 import { baseRecursos, fixaBaseRecursos, hiHaPoliticaDeMitjans, origenDeMitjansExterns, resolveAsset } from './config/assetResolver.js';
-import { instalaFallbackDeBessones } from './config/fallbackBessones.js';
+import { instalaFallbackDeLaPolitica } from './config/fallbackBessones.js';
 import { permetOrigenMitjans } from './utils/sanitize.js';
 import { esLlenguaSuportada, precarregaIdioma } from './config/i18n.js';
 import { ORIGENS_BACKEND } from './config/origensSollutia.js';
@@ -831,9 +831,11 @@ class SocDePobleElement extends BaseElement {
     /* El shadow root sobreviu als moviments: es reaprofita, no es recrea. */
     if (!this._closedRoot) this._closedRoot = this.attachShadow({ mode: 'closed' });
     /* Encàrrec 261019_1425 · Amb política de mitjans (el directori o l'autònom),
-       una bessona que no arriba torna a l'original una vegada. Una per shadow root. */
+       una bessona que no arriba torna a l'original una vegada. Una per shadow root.
+       Onada R22 · BOOT3 · L'instal·lador de la política: el cens del web propi
+       (mapaBessonesPublic.js) no viatja a l'arrencada del paquet. */
     if (!this._retiraFallbackBessones && hiHaPoliticaDeMitjans()) {
-      this._retiraFallbackBessones = instalaFallbackDeBessones(this._closedRoot);
+      this._retiraFallbackBessones = instalaFallbackDeLaPolitica(this._closedRoot);
     }
 
     const arrel = this._closedRoot;

@@ -1,3 +1,4 @@
+import { useModeracio } from '../components/PedraSeca/hooks/moderacioDePoble.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useUIStateOpcional } from '../app/contexts/UIContext.jsx';
 import { useSessioOpcional } from '../app/contexts/SessionContext.jsx';
@@ -24,11 +25,18 @@ const disponible = () => { try { return teCapacitat('projeccionsCataleg'); } cat
  */
 export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}) {
   const ui = useUIStateOpcional(), session = useSessioOpcional(), identitat = useIdentitatOReserva();
+  const moderacio = useModeracio();
   const config = ui?.externalConfig ?? EMPTY;
   const ownerId = session?.currentUser?.id?.toLowerCase() ?? null;
   const autoritzat = Boolean(enabled && ownerId && session?.estat === 'dins' && !esIdentitatDeLectura(identitat));
   const capacitat = enabled && disponible();
   const backendId = JSON.stringify([backendScope(config), identitat.actorKey]);
+  /* Gauntlet R22 (notes-04) · versioBloquejos és FRESCOR, no identitat (com a
+     MurContext i MultimediaContext). Dins de la clau, cada bloqueig o
+     desbloqueig tancava la connexió: les referències tornaven a «carregant» i
+     una `desa` en vol rebia AbortError. Ara un canvi torna a llegir les
+     audiències en segon pla (refresca, baix) i es conserva el que ja hi era. */
+  const versioBloquejos = moderacio?.versioBloquejos || 0;
   const scopeKey = JSON.stringify([backendId, ownerId, autoritzat, capacitat, enabled, escriptura]);
   const viu = useRef(scopeKey); viu.current = scopeKey;
   const [state, setState] = useState({ scopeKey: null, projeccions: NONE, estat: 'carregant', error: null, persistent: false });
@@ -78,6 +86,16 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
       } while (cursor !== null);
       return rows;
     };
+    /* Les audiències del servidor. Una lectura més nova guanya: una de vella que
+       acabe després no la trepitja (refresca després d'un bloqueig). */
+    let lectura = 0;
+    const llegeixRemot = async () => {
+      const torn = ++lectura;
+      const rows = await Promise.all([loadAudience('publica'), ...(autoritzat ? [loadAudience('privada')] : [])]);
+      check();
+      if (torn !== lectura) return;
+      remote.rows = rows.flat(); remote.ok = true; publishState(null);
+    };
     const sync = async () => {
       check(); if (!service) throw configurationError ?? errorProjeccioCataleg('sense-permis');
       try {
@@ -100,10 +118,7 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
             if (configurationError) throw configurationError;
             if (service) { await service.prepara(); queue = await service.llista(); check(); for (const row of queue) if (registreProjeccioPendent(row)) active.add(row.clau); }
             publishState(null);
-            if (capacitat) {
-              const rows = await Promise.all([loadAudience('publica'), ...(autoritzat ? [loadAudience('privada')] : [])]);
-              check(); remote.rows = rows.flat(); remote.ok = true; publishState(null);
-            }
+            if (capacitat) await llegeixRemot();
             if (service && escriptura && queue.some(registreProjeccioPendent)) await sync();
           } catch (error) { if (error?.name !== 'AbortError') publishState(error); }
         })();
@@ -116,6 +131,13 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
         await sync(); return row;
       },
       sync,
+      /* Gauntlet R22 (notes-04) · Un bloqueig o un desbloqueig nou: es tornen a
+         llegir les audiències sense buidar l'estat ni tancar la connexió. */
+      async refresca() {
+        await this.prepara();
+        if (!capacitat) return;
+        try { check(); await llegeixRemot(); } catch (error) { if (error?.name !== 'AbortError') publishState(error); }
+      },
       subscriu() { return service?.subscriu(() => { update(null).catch(error => { if (error?.name !== 'AbortError') publishState(error); }); }) ?? (() => {}); },
       tanca() { closed = true; controller.abort(); service?.tanca(); }
     };
@@ -130,6 +152,15 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
     globalThis.window?.addEventListener('online', online);
     return () => { unsubscribe(); globalThis.window?.removeEventListener('online', online); connection.tanca(); if (connexioActual.current?.connection === connection) connexioActual.current = null; };
   }, [creaConnexio, autoritzat, scopeKey, enabled, escriptura]);
+  /* Gauntlet R22 (notes-04) · El primer muntatge no fa res; cada canvi de
+     versioBloquejos revalida la connexió vigent. */
+  const versioBloquejosVista = useRef(versioBloquejos);
+  useEffect(() => {
+    if (versioBloquejosVista.current === versioBloquejos) return;
+    versioBloquejosVista.current = versioBloquejos;
+    const actual = connexioActual.current;
+    if (actual?.scopeKey === scopeKey) actual.connection.refresca().catch(() => {});
+  }, [versioBloquejos, scopeKey]);
   const desa = useCallback((font, destins) => {
     const actual = connexioActual.current;
     if (!actual || actual.scopeKey !== scopeKey) return Promise.reject(errorProjeccioCataleg('sense-permis'));

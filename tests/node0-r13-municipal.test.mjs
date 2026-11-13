@@ -5,6 +5,7 @@ import path from 'node:path';
 import { readdirSync, readFileSync } from 'node:fs';
 import {createHash} from 'node:crypto';
 import {creaPlaMigracions,ROOT,SHA256_ZIP_CANONIC} from '../tooling/node0/hidrata-postgres-node0.mjs';
+import {versioDeFitxer} from '../scripts/supabase/verifica-migracions.mjs';
 import {llegeixZipNodeZero} from '../tooling/node0/paquet-opendata-node0.mjs';
 import {llegeixPaquetOpenData} from '../src/data/importaMunicipiOpenData.js';
 import {compilaOperacioNodeZero,creaBackendPrivatNodeZero} from '../tooling/node0/backend-node0.mjs';
@@ -61,7 +62,7 @@ test('R13 actual SQL catalogue, admin permissions, clean municipal restore and c
       for(const migration of plan.migrations)await db.exec(migration.sql);
       // Native Node0 adds this exact infrastructure grant in backend-node0.sql.
       await db.exec('GRANT SELECT(id) ON public.towns TO authenticated');
-      const files = readdirSync(path.join(ROOT, 'supabase/migrations')).filter(f => /^\d{10}_.+\.sql$/.test(f));
+      const files = readdirSync(path.join(ROOT, 'supabase/migrations')).filter(f => versioDeFitxer(f) !== null);
       assert.deepEqual(plan.migrations.map(m => m.file).sort(), files.sort());
       assert.equal(plan.migrations.some(m=>m.version==='2611091500'),true);
       archive=await llegeixZipNodeZero({root:ROOT,sha256Esperat:SHA256_ZIP_CANONIC});

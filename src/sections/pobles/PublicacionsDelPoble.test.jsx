@@ -57,13 +57,13 @@ describe('els estats', () => {
   test('mentre el Mur carrega: el Carregant, no el buit', () => {
     mocks.mur = { ...mocks.mur, status: 'loading', marketItems: [], events: [] };
     render(<PublicacionsDelPoble poble={TORRE} />);
-    expect(screen.getByRole('status').textContent).toContain('Carregant les publicacions del poble…');
+    expect(screen.getByRole('status').textContent).toContain('Carregant les publicacions d’este poble…');
   });
 
   test('si el Mur falla: l’error, i «Torna-ho a provar» crida el refresh del Mur', () => {
     mocks.mur = { ...mocks.mur, status: 'error', error: new Error('caigut'), marketItems: [], events: [] };
     render(<PublicacionsDelPoble poble={TORRE} />);
-    expect(screen.getByText('No s’han pogut carregar les publicacions del poble')).not.toBeNull();
+    expect(screen.getByText('No s’han pogut carregar les publicacions d’este poble')).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Torna-ho a provar/ }));
     expect(mocks.mur.refresh).toHaveBeenCalledTimes(1);
   });
@@ -110,7 +110,7 @@ describe('les targetes', () => {
       render(<><p>La pàgina de damunt</p><PublicacionsDelPoble poble={TORRE} /></>);
       expect(screen.getByText('La pàgina de damunt')).not.toBeNull();
       const alerta = screen.getByRole('alert');
-      expect(alerta.textContent).toContain('No s’han pogut carregar les publicacions del poble');
+      expect(alerta.textContent).toContain('No s’han pogut carregar les publicacions d’este poble');
       expect(within(alerta).getByRole('button', { name: 'Torna-ho a provar' })).not.toBeNull();
     } finally {
       window.removeEventListener('error', atesa);

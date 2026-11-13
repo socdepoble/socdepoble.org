@@ -1,3 +1,6 @@
+import { beforeEach as abansDePublicar } from 'vitest';
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
+abansDePublicar(() => { globalThis.indexedDB = creaIdbFalsEstructurat(); });
 /* R51 (P0-46 / IDEA-177; R51V-02) · El mode de traducció i la llengua
    original viatgen al Mur dins del payload (jsonb de section_submissions,
    el mateix camí que publish_date: cap migració). Els de la nota (l'editor
@@ -10,7 +13,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ update: vi.fn(), send: vi.fn(), toast: vi.fn(), feedPosts: [] }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: [], noteFolders: [], scopeKey: 'tenant-user', workspaceKey: 'session', config: { tenantId: 'tenant' },
-  status: 'ready', updateNote: mocks.update, mouNota: vi.fn(), esborraNota: vi.fn()
+  status: 'ready', updateNote: mocks.update, confirmaPublicacioNota: vi.fn(), mouNota: vi.fn(), esborraNota: vi.fn()
 }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ locale: 'ca', externalConfig: {} }),
@@ -32,7 +35,7 @@ import { NotesProvider, useNotes } from './NotesContext';
 
 beforeEach(() => {
   mocks.toast.mockReset();
-  mocks.send.mockReset().mockResolvedValue(undefined);
+  mocks.send.mockReset().mockImplementation(async sub => ({ publicacio: { id: sub.id }, nota_revision: sub.expectedNoteRevision + 1, publicada_revision: sub.expectedNoteRevision + 1, replay: false }));
   mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: revision + 1 }));
   mocks.feedPosts = [];
 });

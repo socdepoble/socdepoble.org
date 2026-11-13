@@ -1,6 +1,6 @@
 import { backendScope } from '../../config/backendConfig.js';
 import { useScopedResource } from '../../app/contexts/useScopedResource.js';
-import { useCallback, useContext, useMemo, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 /* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
    que no importa res del projecte. */
 import { MurContext } from './objectesDeContext.js';
@@ -127,8 +127,11 @@ export function MurProvider({ children, config }) {
   /* Fase D (261020, tasca 2) · El que has bloquejat no es veu enlloc on es
      llig el Mur, el Mercat o l'Agenda: es filtra UNA vegada, al valor (null
      sense ProveidorModeracio). Les pàgines, els cursors i hiHaMes no es
-     toquen: el filtre és del que es veu, no del que es carrega. */
-  const esElementBloquejat = useModeracio()?.esElementBloquejat ?? null;
+     toquen: el filtre és del que es veu, no del que es carrega. Un bloqueig
+     NOU (versioBloquejos) sí que revalida en segon pla i descarta les pàgines
+     extres (Gauntlet R22, notes-04: vegeu baix). */
+  const moderacio = useModeracio();
+  const esElementBloquejat = moderacio?.esElementBloquejat ?? null;
   /* Decisió 2 del Mestre (261007) · Renovació silenciosa del Mur, el Mercat i
      el Calendari. La clau d'àmbit és la d'AÏLLAMENT (backend, persona, actor),
      sense `generacio`: renovar el JWT ja no buida les targetes ni pinta
@@ -136,6 +139,14 @@ export function MurProvider({ children, config }) {
      demanar en segon pla. L'`operation` de publicar hereta esta clau: una
      renovació ja no avorta una publicació en vol (l'AbortError fals de Notes),
      i un canvi real de persona, actor o backend l'avorta com sempre. */
+  /* Gauntlet R22 (notes-04) · versioBloquejos és FRESCOR, no identitat: un
+     bloqueig o un desbloqueig no canvia ni el backend, ni la persona, ni
+     l'actor. Dins de la clau d'aïllament buidava el Mur fins a «Carregant»,
+     llevava les pàgines de «Mostra més» i avortava (AbortError) una
+     publicació de Notes que el servidor ja havia fet. Ara es revalida en
+     segon pla (refresh, baix): el filtre local ja amaga a l'instant el que es
+     coneix, i la lectura nova porta el que el servidor filtra per UUID. */
+  const versioBloquejos = moderacio?.versioBloquejos || 0;
   const scopeKey = JSON.stringify([backendScope(config),
     currentUser?.id, actorKey]);
   const data = useScopedResource(loadMur, actorId, scopeKey, config);
@@ -177,6 +188,7 @@ export function MurProvider({ children, config }) {
     assertCurrent();
     const saved = await appendSectionSubmissionNetworkOnly({ ...sub, actor: autoria }, config);
     assertCurrent();
+    if (sub?.consulta === true) return saved;
     restauraPublicacioEsborrada(sub?.sectionId || 'mur', saved?.id ?? sub?.id);
     refresh();
     return saved;
@@ -224,6 +236,33 @@ export function MurProvider({ children, config }) {
     };
   }, [ambit]);
 
+  /* Gauntlet R22 (notes-04) · Un bloqueig (o desbloqueig) nou: les pàgines
+     extres no es revaliden mai (extresVigents) i podrien conservar altres
+     publicacions de qui s'ha bloquejat per UUID; es descarten, també la que
+     estiga carregant (generacioPagines), i la primera pàgina es revalida
+     sense passar per 'loading'. El primer muntatge no fa res. */
+  const generacioPagines = useRef(0);
+  const versioBloquejosVista = useRef(versioBloquejos);
+  /* Gauntlet R22 (ronda 3, notes-04) · La primera pàgina que el bloqueig ha
+     deixat vella (la que es veu mentre arriba la revalidació, en 'ready'). Un
+     «Mostra més» clicat abans que arribe no la desa com a `primera` de les
+     extres: quan la revalidació mou la cua, extresVigents la tornaria a
+     afegir, i amb ella les altres publicacions de qui s'ha bloquejat per UUID
+     (el client no les pot reconéixer; el servidor ja no les torna). La pàgina
+     que es carrega amb el seu cursor sí que val: la llig el servidor després
+     del bloqueig. */
+  const payloadViu = useRef(payload);
+  useLayoutEffect(() => { payloadViu.current = payload; }, [payload]);
+  const payloadDelBloqueig = useRef(null);
+  useEffect(() => {
+    if (versioBloquejosVista.current === versioBloquejos) return;
+    versioBloquejosVista.current = versioBloquejos;
+    generacioPagines.current += 1;
+    payloadDelBloqueig.current = payloadViu.current;
+    setPagines((previ) => (previ.ambit === null ? previ : SENSE_ESTAT));
+    refresh();
+  }, [versioBloquejos, refresh]);
+
   const paginable = potPaginar();
   // Les extres d'un altre àmbit no es pinten mai, ni un sol pintat.
   const extres = pagines.ambit === ambit ? pagines.seccions : SENSE_PAGINES;
@@ -266,7 +305,11 @@ export function MurProvider({ children, config }) {
     if (!Object.hasOwn(SECCIONS_PAGINABLES, seccio) || !viu || viu.ambit !== ambit || !estat?.cursor || !potPaginar()) return false;
     if (enCurs.current.get(seccio) === ambit) return false;
     enCurs.current.set(seccio, ambit);
-    const { cursor, base, primera } = estat;
+    const tornDePagines = generacioPagines.current;
+    const vigent = () => ambitViu.current?.ambit === ambit && generacioPagines.current === tornDePagines;
+    const { cursor, base } = estat;
+    // Ronda 3 (notes-04) · Mentre no arriba la revalidació d'un bloqueig, cap primera pàgina vella a les extres.
+    const primera = payloadDelBloqueig.current !== null && payloadViu.current === payloadDelBloqueig.current ? [] : estat.primera;
     const posa = (canvi) => setPagines((previ) => {
       const actuals = previ.ambit === ambit ? previ.seccions : SENSE_PAGINES;
       return { ambit, seccions: { ...actuals, [seccio]: canvi(actuals[seccio]) } };
@@ -278,13 +321,13 @@ export function MurProvider({ children, config }) {
     posa((previ) => ({ elements: extresVigents(previ, base), primera, cursor, base, carregant: true, error: null }));
     try {
       const pagina = await loadSeccioPage({ seccio, cursor, signal: viu.senyal }, config);
-      if (ambitViu.current?.ambit !== ambit) return false;
+      if (!vigent()) return false;
       if (!Array.isArray(pagina?.elements) || typeof pagina.complete !== 'boolean') throw new Error('Pàgina de la secció amb un format inesperat.');
       posa((previ) => ({ ...previ, elements: afegixPagina(previ?.elements, nomesElements(pagina.elements)),
         cursor: pagina.complete ? null : (pagina.nextCursor || null), carregant: false, error: null }));
       return true;
     } catch (errorDeCarrega) {
-      if (ambitViu.current?.ambit !== ambit) return false;
+      if (!vigent()) return false;
       posa((previ) => ({ ...previ, carregant: false, error: errorDeCarrega }));
       return false;
     } finally {

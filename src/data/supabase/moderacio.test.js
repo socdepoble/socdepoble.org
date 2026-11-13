@@ -59,10 +59,46 @@ describe('remot · bloquejos sobre public.bloquejos', () => {
     ]);
     const { url, opcions } = crida();
     expect(url.pathname).toBe('/rest/v1/bloquejos');
+    /* R22 · La llista demana també publicacio_id (bloquejos opacs de 2611122200). */
     expect(Object.fromEntries(url.searchParams)).toEqual({
-      select: 'bloquejat_tipus,bloquejat_persona,bloquejat_entitat,nom,creat_al', bloquejador: `eq.${PERSONA}`, order: 'creat_al.desc', limit: '1000'
+      select: 'bloquejat_tipus,bloquejat_persona,bloquejat_entitat,nom,creat_al,publicacio_id', bloquejador: `eq.${PERSONA}`, order: 'creat_al.desc', limit: '1000'
     });
     expect(opcions.method).toBe('GET');
+  });
+
+  /* R22 (sql-03, notes-01, honestedat-02) · Un bloqueig per UUID públic es
+     llista pel UUID de la publicació, sense cap identitat de l'autor encara
+     que una fila malformada en portara; es desfà pel mateix UUID. */
+  test('un bloqueig opac es llista pel UUID públic sense autor i es desfà per publicacio_id', async () => {
+    fetchDeProva.mockResolvedValueOnce(resposta([
+      { bloquejat_tipus: 'publicacio', bloquejat_persona: VEINA, bloquejat_entitat: null, nom: 'NO', creat_al: '2026-11-13T01:00:00+00:00', publicacio_id: FIL.toUpperCase() },
+      { bloquejat_tipus: 'publicacio', bloquejat_persona: null, bloquejat_entitat: null, nom: null, creat_al: null, publicacio_id: 'no-uuid' },
+      { bloquejat_tipus: 'persona', bloquejat_persona: VEINA, bloquejat_entitat: null, nom: 'Veïna', creat_al: null, publicacio_id: null }
+    ]));
+    const llista = await llistaBloquejos(REMOT);
+    expect(llista).toEqual([
+      { tipus: 'publicacio', id: FIL, nom: null, creatAl: '2026-11-13T01:00:00+00:00' },
+      { tipus: 'persona', id: VEINA, nom: 'Veïna', creatAl: null }
+    ]);
+    expect(JSON.stringify(llista[0])).not.toContain(VEINA);
+    fetchDeProva.mockResolvedValueOnce(resposta([{ bloquejat_tipus: 'publicacio' }]));
+    expect(await desbloquejaAutor({ tipus: 'publicacio', id: FIL }, REMOT)).toEqual({ desbloquejat: true });
+    const { url, opcions } = crida(1);
+    expect(url.pathname).toBe('/rest/v1/bloquejos');
+    expect(Object.fromEntries(url.searchParams)).toEqual({ bloquejador: `eq.${PERSONA}`, publicacio_id: `eq.${FIL}`, select: 'bloquejat_tipus' });
+    expect(opcions.method).toBe('DELETE');
+    await expect(desbloquejaAutor({ tipus: 'publicacio', id: 'no-uuid' }, REMOT)).rejects.toMatchObject({ code: 'objectiu-invalid' });
+    expect(fetchDeProva).toHaveBeenCalledTimes(2);
+  });
+
+  test('un servidor sense la columna publicacio_id (42703) torna la llista de sempre; cap altre error es reintenta', async () => {
+    fetchDeProva.mockResolvedValueOnce(resposta({ code: '42703', message: 'column bloquejos.publicacio_id does not exist' }, 400));
+    fetchDeProva.mockResolvedValueOnce(resposta([{ bloquejat_tipus: 'persona', bloquejat_persona: VEINA, nom: 'Veïna', creat_al: null }]));
+    expect(await llistaBloquejos(REMOT)).toEqual([{ tipus: 'persona', id: VEINA, nom: 'Veïna', creatAl: null }]);
+    expect(crida(1).url.searchParams.get('select')).toBe('bloquejat_tipus,bloquejat_persona,bloquejat_entitat,nom,creat_al');
+    fetchDeProva.mockResolvedValueOnce(resposta({ code: '42501', message: 'permission denied for table bloquejos' }, 403));
+    await expect(llistaBloquejos(REMOT)).rejects.toMatchObject({ code: 'desconegut', status: 403 });
+    expect(fetchDeProva).toHaveBeenCalledTimes(3);
   });
 
   test('bloquejar és un POST amb return=representation; el servidor tria bloquejador i data', async () => {
@@ -246,4 +282,24 @@ describe.each(['seed', 'local'])('mode %s · el magatzem en memòria, sense xarx
     await estatNormes(config);
     expect(fetchDeProva).not.toHaveBeenCalled();
   });
+});
+
+test('R21 v2 · denúncia de DTO públic usa només UUID i motiu, sense owner al transport', async () => {
+  esborraSessio({ abast: 'tot' });
+  fetchDeProva.mockResolvedValueOnce(resposta({ rebuda: true, repetida: false }));
+  expect(await denunciaContingut({ objecte: { tipus: 'publicacio', id: FIL }, motiu: 'spam_frau',
+    murPublic: true, autor: { tipus: 'persona', id: VEINA } }, REMOT)).toEqual({ rebuda: true, repetida: false });
+  expect(crida().url.pathname).toBe('/rest/v1/rpc/denuncia_publicacio_mur');
+  expect(crida().cos).toEqual({ p_id: FIL, p_motiu: 'spam_frau', p_detall: null });
+});
+test('R21 v2 · bloqueig opac requerix sessió i un ACK exacte, mai un èxit buit', async () => {
+  fetchDeProva.mockResolvedValueOnce(resposta({ bloquejat: true, publicacio_id: FIL }));
+  expect(await bloquejaAutor({ publicacioId: FIL }, REMOT)).toEqual({ bloquejat: true, publicacioId: FIL });
+  expect(crida().url.pathname).toBe('/rest/v1/rpc/bloqueja_publicacio_mur');
+  expect(crida().cos).toEqual({ p_id: FIL });
+  fetchDeProva.mockResolvedValueOnce(resposta({}));
+  await expect(bloquejaAutor({ publicacioId: FIL }, REMOT)).rejects.toMatchObject({ code: 'desconegut' });
+  esborraSessio({ abast: 'tot' }); fetchDeProva.mockClear();
+  await expect(bloquejaAutor({ publicacioId: FIL }, REMOT)).rejects.toMatchObject({ code: 'sense-sessio' });
+  expect(fetchDeProva).not.toHaveBeenCalled();
 });

@@ -1,3 +1,6 @@
+import { beforeEach as abansDePublicar } from 'vitest';
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
+abansDePublicar(() => { globalThis.indexedDB = creaIdbFalsEstructurat(); });
 /* D4 (excepció del Mestre, 260930; desfà T54) · La connexió és una còpia
    editable: compartir-la al Mur publica el cos EDITAT, sense els paràgrafs
    fixos que parlen a qui la té, i hi afig la presentació de l'original
@@ -11,7 +14,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ update: vi.fn(), send: vi.fn(), toast: vi.fn() }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: [], noteFolders: [], scopeKey: 'tenant-user', workspaceKey: 'session', config: { tenantId: 'tenant' },
-  status: 'ready', updateNote: mocks.update, mouNota: vi.fn(), esborraNota: vi.fn()
+  status: 'ready', updateNote: mocks.update, confirmaPublicacioNota: vi.fn(), mouNota: vi.fn(), esborraNota: vi.fn()
 }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ locale: 'ca', externalConfig: {} }),
@@ -33,7 +36,7 @@ import { NotesProvider, useNotes } from './NotesContext';
 
 beforeEach(() => {
   mocks.toast.mockReset();
-  mocks.send.mockReset().mockResolvedValue(undefined);
+  mocks.send.mockReset().mockImplementation(async sub => ({ publicacio: { id: sub.id }, nota_revision: sub.expectedNoteRevision + 1, publicada_revision: sub.expectedNoteRevision + 1, replay: false }));
   mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: revision + 1 }));
 });
 afterEach(cleanup);
@@ -57,10 +60,11 @@ test('D4 · compartirNota d’una connexió sense editar: el cos desat sense els
   await act(async () => { expect(await result.current.compartirNota(connexio)).toBe(true); });
   const payload = payloadEnviat();
   expect(payload.type).toBe('compartit');
-  expect(payload.content).toContain('Element connectat des del Mercat de Sóc de Poble');
+  expect(payload.content).toContain('Compartit des del Mercat:');
+  expect(payload.content).not.toContain('de Sóc de Poble');
   expect(payload.content.split('href="/mercat/samarreta-socdepoble"')).toHaveLength(2);
   // El cos ja enllaça l'original: la presentació no es duplica.
-  expect(payload.content).not.toContain('Compartit des del');
+  expect(payload.content.match(/href=/g)).toHaveLength(1);
   expect(payload.content).not.toMatch(/MAS|Guardat|Ordena|etiqueta|compartix-lo/);
   // La nota desada no canvia: el cos del Mur no es desa mai, i el que es desa és el que ja tenia.
   const cossosDesats = mocks.update.mock.calls.filter(([, canvis]) => 'content' in canvis).map(([, canvis]) => canvis.content);
@@ -68,7 +72,7 @@ test('D4 · compartirNota d’una connexió sense editar: el cos desat sense els
   for (const cos of cossosDesats) expect(cos).not.toContain('Compartit des del');
   expect(cossosDesats.every((cos) => cos.includes('Guardat al teu MAS'))).toBe(true);
   expect(connexio.content).toBe(COS_PRIVAT);
-  expect(mocks.update).toHaveBeenLastCalledWith('n-9', { isPublished: true, publishedSubmissionId: 'n-9' }, expect.any(Number));
+  expect(mocks.update.mock.calls.some(([,changes])=>changes.isPublished)).toBe(false);
 });
 
 test('D4 · una connexió sense ruta de l’original: el cos editat i, al final, la presentació amb l’avís', async () => {
@@ -77,8 +81,8 @@ test('D4 · una connexió sense ruta de l’original: el cos editat i, al final,
   const connexio = { id: 'n-10', title: 'Pepa', content: cos, revision: 1, origen: { ...ORIGEN, ruta: '' } };
   await act(async () => { await result.current.compartirNota(connexio); });
   const contingut = payloadEnviat().content;
-  expect(contingut.startsWith('<p>Element connectat des del directori')).toBe(true);
-  expect(contingut).toContain('Compartit des del Mercat de Sóc de Poble: <strong>Samarreta</strong>');
+  expect(contingut.startsWith('<p>Compartit des del Mercat')).toBe(true);
+  expect(contingut).toContain('Compartit des del Mercat: <strong>Samarreta</strong>');
   expect(contingut).toContain('no porta l’enllaç de l’original');
   expect(contingut).not.toContain('<a ');
   expect(contingut).not.toMatch(/teu MAS|llegir-lo més tard/);
@@ -90,7 +94,7 @@ test('D4 · una connexió EDITADA publica el text de la persona i hi afig l’en
   await act(async () => { expect(await result.current.compartirNota(editada)).toBe(true); });
   const contingut = payloadEnviat().content;
   expect(contingut.startsWith('<p>La porte a la fira.</p>')).toBe(true);
-  expect(contingut).toContain('Compartit des del Mercat de Sóc de Poble: <a href="/mercat/samarreta-socdepoble"');
+  expect(contingut).toContain('Compartit des del Mercat: <a href="/mercat/samarreta-socdepoble"');
   expect(contingut.split('href="/mercat/samarreta-socdepoble"')).toHaveLength(2);
 });
 
@@ -158,7 +162,8 @@ test('T71b · publishNote d’un contingut de fora també el compartix: mai es p
   // D4 · el cos que ix és el de la nota (ja enllaça l'original), sense els paràgrafs privats.
   await act(async () => { await result.current.publishNote({ id: 'n-11', title: 'Samarreta', content: COS_PRIVAT, revision: 1, origen: ORIGEN }); });
   expect(payloadEnviat(1).type).toBe('compartit');
-  expect(payloadEnviat(1).content).toContain('Element connectat des del Mercat de Sóc de Poble');
+  expect(payloadEnviat(1).content).toContain('Compartit des del Mercat:');
+  expect(payloadEnviat(1).content).not.toContain('de Sóc de Poble');
   expect(payloadEnviat(1).content).not.toMatch(/teu MAS|Ordena/);
 });
 

@@ -160,7 +160,7 @@ test('T16 amb sonda · el servidor no respon: no es desa res, avís en mode de p
   render(<StrictMode><OnboardingSection /></StrictMode>);
   const avis = await screen.findByRole('status');
   expect(avis.classList.contains('sdp-alerta--avis')).toBe(true);
-  expect(avis.textContent).toContain('El servidor del poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.');
+  expect(avis.textContent).toContain('El servidor de poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.');
   expect(m.comprova).toHaveBeenCalledTimes(1);
   expect(m.enterRemote).not.toHaveBeenCalled();
   // Mentre no es pot entrar, ni el formulari ni Google.

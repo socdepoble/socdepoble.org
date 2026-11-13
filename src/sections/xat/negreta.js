@@ -298,3 +298,9 @@ export function esDreceraDeNegreta(e) {
   const tecla = String(e.key ?? '');
   return tecla.toLowerCase() === 'b' || (!/^[a-z]$/i.test(tecla) && e.code === 'KeyB');
 }
+
+/* R21.8 · esTextBuitOSolsMarques viu a missatges.js (el compositor la
+   continua important d'ací). Onada R22 · BOOT3: XatContext és a l'arrencada i
+   la demana per a la guarda d'enviament; si la importava d'este mòdul,
+   arrossegava negreta.js i enllacos.js sencers a l'arrencada estàtica. */
+export { esTextBuitOSolsMarques } from './missatges.js';

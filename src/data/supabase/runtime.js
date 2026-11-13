@@ -103,8 +103,11 @@ export async function request(path, config = {}, options = {}) {
         try {
           const detail = JSON.parse(text);
           if (typeof detail?.code === 'string' && /^[A-Z0-9]{5}$/.test(detail.code)) failure.sqlstate = detail.code;
+          if (typeof detail?.code === 'string' && /^PGRST\d{3}$/.test(detail.code)) failure.postgrestCode = detail.code;
           if (typeof detail?.message === 'string') {
-            const known = /^(SDP-MUR-(?:REVISION|OWNER))(?=:|$)/.exec(detail.message);
+            /* Gauntlet R22 (ronda 3, sql-05) · També SDP-MUR-MIDA (22001): una publicació que passa del
+               límit de mida és un rebuig definitiu, no una xarxa (NotesContext · publishNote). */
+            const known = /^(SDP-MUR-(?:REVISION|OWNER|MIDA))(?=:|$)/.exec(detail.message);
             if (known) failure.codi = known[1];
           }
         } catch { /* Non-JSON errors retain their HTTP status and retry policy. */ }
@@ -142,12 +145,18 @@ export async function request(path, config = {}, options = {}) {
 export async function rpc(nom, cos, config = {}, opcions = {}) {
   try { return await request(`/rest/v1/rpc/${nom}`, config, { ...opcions, method: 'POST', body: cos }); }
   catch (error) {
-    if (error?.status === 404 || /PGRST20[25]/.test(String(error?.message || ''))) {
-      throw new ErrorSupabase(`L'esquema requerit no està aplicat (falta "${nom}"). Executa les migracions corresponents.`, 404);
+    if (esRpcAbsent(error)) {
+      const absent = new ErrorSupabase(`L'esquema requerit no està aplicat (falta "${nom}" o la seua signatura). Executa les migracions corresponents.`, 404);
+      absent.postgrestCode = error.postgrestCode;
+      throw absent;
     }
     throw error;
   }
 }
+
+/* Un 404 genèric, PGRST205 (taula) o text que només menciona PGRST202 no
+   demostren l'absència d'una funció. El codi prové del JSON del protocol. */
+export const esRpcAbsent = error => error?.status === 404 && error?.postgrestCode === 'PGRST202';
 
 export function mapContentRowsToData(rows) {
   const lookup = new Map(rows.map((row) => [row.key, row.payload]));

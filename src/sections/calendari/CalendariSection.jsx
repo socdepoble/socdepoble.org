@@ -279,7 +279,7 @@ export default function CalendariSection() {
 
   const config = {
     title: t('section.events.calendarMeta', 'Calendari'),
-    subtitle: t('section.calendari.title', 'Totes les targetes del poble'),
+    subtitle: t('section.calendari.title', 'Totes les targetes de poble'),
     lead: t('section.calendari.subtitle', 'Cada publicació, acte i producte, el dia de la seua data.'),
     chrome: 'system',
     showLogos: true

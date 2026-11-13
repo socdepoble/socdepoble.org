@@ -267,7 +267,7 @@ export default function EspaiCerca() {
     const enllacEntra = (
       <Link className="sdp-boto sdp-boto--secundari"
         to={rutaDEntrada({ mode: 'entrar', tornar: q ? `/cerca?mode=espai&q=${encodeURIComponent(q)}` : '/cerca?mode=espai' })}>
-        {t('section.search.entra', 'Entra per a buscar gent del poble')}
+        {t('section.search.entra', 'Entra per a buscar gent del teu poble')}
       </Link>
     );
     const avisos = (
@@ -298,7 +298,7 @@ export default function EspaiCerca() {
     if (!q) {
       cos = (
         <EstatBuit icona={Search} titol={t('section.search.inicial.titol', 'Què vols buscar?')} accio={senseSessio ? enllacEntra : null}>
-          {t('section.search.inicial.text', "Escriu un nom o unes paraules. Busquem en la gent i les entitats del poble, els pobles, el Mur, l'agenda, el mercat, la multimèdia i les pàgines. També en les teues notes i converses, que només veus tu: de les notes carregades, el títol, el subtítol, l'entradilla i les etiquetes (el text de dins, només de les que ja has obert); de les converses, el nom, qui hi parla i l'últim missatge.")}
+          {t('section.search.inicial.text', "Escriu un nom o unes paraules. Busquem en la gent i les entitats del teu poble, els pobles, el Mur, l'agenda, el mercat, la multimèdia i les pàgines. També en les teues notes i converses, que només veus tu: de les notes carregades, el títol, el subtítol, l'entradilla i les etiquetes (el text de dins, només de les que ja has obert); de les converses, el nom, qui hi parla i l'últim missatge.")}
         </EstatBuit>
       );
     } else if (!entrada) {

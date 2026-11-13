@@ -31,7 +31,7 @@ test('el cos desat escapa el text i, sense ruta interna, no enllaça', () => {
 
 test('al Mur ix l’origen citat amb l’enllaç de l’original, sense res del cos privat', () => {
   const mur = cosDeConnexioPerAlMur(MERCAT);
-  expect(mur).toBe('<p>Compartit des del Mercat de Sóc de Poble: <a href="/mercat/samarreta-socdepoble">Samarreta</a>.</p>');
+  expect(mur).toBe('<p>Compartit des del Mercat: <a href="/mercat/samarreta-socdepoble">Samarreta</a>.</p>');
   expect(mur).not.toMatch(/MAS|Guardat|Ordena/);
 });
 
@@ -66,29 +66,29 @@ test('el paràgraf fix d’abans de T54 es lleva (amb qualsevol apòstrof); la r
 /* ── D4 · el cos editat d'una connexió al Mur ── */
 test('D4 · sense editar, el cos nascut en connectar ix sense el paràgraf privat i sense duplicar l’enllaç', () => {
   const mur = cosDeConnexioEditadaPerAlMur(contingutDeLaConnexio(MERCAT), MERCAT);
-  expect(mur).toBe('<p>Element connectat des del Mercat de Sóc de Poble: <a href="/mercat/samarreta-socdepoble">Samarreta</a>.</p>');
+  expect(mur).toBe(cosDeConnexioPerAlMur(MERCAT));
   expect(mur.split('href="/mercat/samarreta-socdepoble"')).toHaveLength(2);
 });
 
-test('D4 · editat: ix el text de la persona; si ja no enllaça l’original, s’hi afig la presentació amb l’autoria', () => {
+test('D4 · editat: ix el text de la persona; si ja no enllaça l’original, s’hi afig la presentació (origen i enllaç, sense el nom de qui signa)', () => {
   const propi = '<p>La samarreta de la festa, molt bonica.</p>';
   expect(cosDeConnexioEditadaPerAlMur(propi, MERCAT))
-    .toBe(`${propi}<p>Compartit des del Mercat de Sóc de Poble: <a href="/mercat/samarreta-socdepoble">Samarreta</a>.</p>`);
-  /* Revisió de D4 (260930) · Abans esta prova donava per bo que el cos amb
-     l'enllaç (reescrit per l'editor: atributs en un altre ordre, cometes
-     simples) però SENSE el nom de qui signa ixquera tal qual, i el Mur quedava
-     sense autoria. Ara l'enllaç sol no basta: s'hi afig la presentació amb
-     «de Sóc de Poble». Amb el nom al cos, o sense autor a l'origen, tal qual. */
+    .toBe(`${propi}<p>Compartit des del Mercat: <a href="/mercat/samarreta-socdepoble">Samarreta</a>.</p>`);
+  /* R21.1 v2 · Gauntlet R22 (notes-06) · Al Mur no es cita el nom de qui signa
+     l'original (l'origen desat no acredita que tinga un perfil públic): el cos
+     que ja enllaça l'original (reescrit per l'editor: atributs en un altre
+     ordre, cometes simples) ix tal qual, i mai no s'hi afig «de Sóc de Poble».
+     Els textos de la interfície ho diuen igual: «citant-ne l'origen i l'enllaç». */
   const reescrit = '<p>Mira-la <a target="_blank" rel="noopener" href=\'/mercat/samarreta-socdepoble\'>ací</a>.</p>';
   const ambPresentacio = cosDeConnexioEditadaPerAlMur(reescrit, MERCAT);
-  expect(ambPresentacio).toBe(`${reescrit}<p>Compartit des del Mercat de Sóc de Poble: <a href="/mercat/samarreta-socdepoble">Samarreta</a>.</p>`);
-  expect(ambPresentacio).toContain(' de Sóc de Poble');
+  expect(ambPresentacio).toBe(reescrit);
+  expect(ambPresentacio).not.toContain(' de Sóc de Poble');
   const ambNom = '<p>Mira-la <a target="_blank" rel="noopener" href=\'/mercat/samarreta-socdepoble\'>ací</a>, de sóc&nbsp;de\npoble.</p>';
   expect(cosDeConnexioEditadaPerAlMur(ambNom, MERCAT)).toBe(ambNom);
   expect(cosDeConnexioEditadaPerAlMur(reescrit, { ...MERCAT, autorNom: '' })).toBe(reescrit);
   // Un nom que només és dins d'un atribut (href, title) no cita ningú.
   const nomEnAtribut = '<p><a title="Sóc de Poble" href="/mercat/samarreta-socdepoble">ací</a></p>';
-  expect(cosDeConnexioEditadaPerAlMur(nomEnAtribut, MERCAT)).toContain('Compartit des del Mercat de Sóc de Poble');
+  expect(cosDeConnexioEditadaPerAlMur(nomEnAtribut, MERCAT)).toBe(nomEnAtribut);
   // Un enllaç a una altra pàgina no és l'original.
   const altre = '<p><a href="/mercat/altra">altra</a></p>';
   expect(cosDeConnexioEditadaPerAlMur(altre, MERCAT)).toContain('Compartit des del Mercat');
@@ -99,15 +99,15 @@ test('D4 · els paràgrafs fixos privats (d’ara i d’abans) no ixen al Mur; b
     + '<p>Ordena\'l a les teues carpetes, etiqueta\'l i, si vols, compartix-lo al teu mur.</p>'
     + '<p>Guardat al teu MAS per a llegir-lo quan vulgues.</p><p>Guardat per a llegir-lo més tard.</p>';
   const mur = cosDeConnexioEditadaPerAlMur(vell, MERCAT);
-  /* Revisió de D4 (260930) · Este cos vell enllaça l'original però no nomena
-     qui el signa («Sóc de Poble»): ara hi va també la presentació amb
-     l'autoria. Els paràgrafs privats continuen sense eixir. */
-  expect(mur).toBe(`<p>Element connectat des del Mercat: <a href="/mercat/samarreta-socdepoble">X</a>.</p>${cosDeConnexioPerAlMur(MERCAT)}`);
+  /* Gauntlet R22 (notes-06) · Este cos vell enllaça l'original: ix la
+     presentació pública (origen i enllaç, sense el nom de qui el signa) i els
+     paràgrafs privats continuen sense eixir. */
+  expect(mur).toBe(cosDeConnexioPerAlMur(MERCAT));
   expect(mur).not.toMatch(/MAS|Guardat|Ordena|Connectat per a/);
   // Amb l'autor nomenat (el cos d'ara ho fa), només es lleven els paràgrafs privats.
   const vellAmbAutor = vell.replace('des del Mercat:', 'des del Mercat de Sóc de Poble:');
   expect(cosDeConnexioEditadaPerAlMur(vellAmbAutor, MERCAT))
-    .toBe('<p>Element connectat des del Mercat de Sóc de Poble: <a href="/mercat/samarreta-socdepoble">X</a>.</p>');
+    .toBe(cosDeConnexioPerAlMur(MERCAT));
   expect(cosDeConnexioEditadaPerAlMur('', MERCAT)).toBe(cosDeConnexioPerAlMur(MERCAT));
   expect(cosDeConnexioEditadaPerAlMur(null, MERCAT)).toBe(cosDeConnexioPerAlMur(MERCAT));
 });
@@ -178,3 +178,12 @@ test('T63.2 · cap Pàgina Universal: un contingut de fora, una nota o res', () 
   // Una ruta insegura de dades desades no viatja.
   expect(objecteDeConnexio({ ...MERCAT, ruta: '//mal.example' }).ruta).toBe('');
 });
+
+ test('R21 v2 · no cita automàticament una identitat privada ni el títol d’un perfil', () => {
+   const origen = {...MERCAT, objecte:'persona',titol:'Nom privat',autorNom:'Nom privat',ruta:'/gent/perfil'};
+   const privat = contingutDeLaConnexio(origen);
+   expect(privat).toContain('Nom privat');
+   const publicat = cosDeConnexioEditadaPerAlMur(privat,origen);
+   expect(publicat).not.toContain('Nom privat'); expect(publicat).toContain('un perfil');
+   expect(cosDeConnexioEditadaPerAlMur('<p>La meua reflexió.</p>',origen)).toContain('La meua reflexió.');
+ });

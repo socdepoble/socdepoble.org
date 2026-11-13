@@ -27,6 +27,7 @@ export const TEXTOS_MODERACIO = Object.freeze({
   denunciaMissatge: clau('denunciaMissatge', 'Denuncia el missatge'),
   denunciaPersona: clau('denunciaPersona', 'Denuncia {nom}'),
   bloqueja: clau('bloqueja', 'Bloqueja {nom}'),
+  autorPublic: clau('autorPublic', 'qui firma esta publicació'),
   desbloqueja: clau('desbloqueja', 'Desbloqueja {nom}'),
   cancela: clau('cancela', 'Cancel·la'),
   tanca: clau('tanca', 'Tanca'),
@@ -63,7 +64,7 @@ export const TEXTOS_MODERACIO = Object.freeze({
   desbloqueigFet: clau('desbloqueig.fet', 'Has desbloquejat {nom}.'),
 
   /* Les normes de convivència, abans de la primera publicació */
-  normesTitol: clau('normes.titol', 'Normes de convivència del poble'),
+  normesTitol: clau('normes.titol', 'Normes de convivència de poble'),
   normesIntro: clau('normes.intro', 'Abans de publicar per primera vegada, llig-les. Són poques i de sentit comú.'),
   normesRespecte: clau('normes.respecte', 'Respecta les persones: res d’insults, amenaces, assetjament ni discriminació.'),
   normesContingut: clau('normes.contingut', 'Res de contingut sexual explícit, violent o il·legal, ni res que pose ningú en perill.'),

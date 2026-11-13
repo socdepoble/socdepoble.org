@@ -332,7 +332,7 @@ function Contingut({
       ) : null}
 
       {carregant && (!cercant || !hiHaPadro) ? (
-        <p className="sdp-workspace-state" role="status" aria-live="polite">{t('section.xat.padro.carregant', 'Carregant la gent del poble…')}</p>
+        <p className="sdp-workspace-state" role="status" aria-live="polite">{t('section.xat.padro.carregant', 'Carregant la gent del teu poble…')}</p>
       ) : null}
       {error ? (
         <div className="sdp-workspace-state" role="alert">

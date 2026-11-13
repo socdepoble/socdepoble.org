@@ -159,7 +159,7 @@ describe('propsDeLOriginal: un element d’una secció, la miniatura de la seua 
       author: 'Pep',
       location: 'Ador',
       avatarUrl: '/assets/pep.png',
-      labels: [{ text: 'Mercat', className: 'sdp-badge-system' }, { text: 'mel', className: 'sdp-badge-category' }],
+      labels: [{ text: 'Mercat', className: 'sdp-badge-system' }],
       copyright: COPYRIGHT_SDP,
       time: '10:00'
     });

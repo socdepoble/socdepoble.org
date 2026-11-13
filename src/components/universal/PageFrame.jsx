@@ -122,6 +122,13 @@ function destiDeLIndex(node) {
   return document.body;
 }
 
+/* La capa de dalt per a un visor a pantalla completa (xat-01): la mateixa destinació de l'Índex.
+   Encastat, la .sdp-root de l'arrel ombra (els tokens i el tema de l'amfitrió); a la SPA, el <body>,
+   per damunt de la barra negra i del menú lateral. PageFrame és la porta única del <body> (LLEI_06). */
+export function capaDeDalt(node) {
+  return destiDeLIndex(node);
+}
+
 /* L'id estable del diàleg de l'Índex: el botó «Índex» de la barra blava hi
    apunta amb aria-controls, i qui el busque (el Lector) no depén de la
    classe. El doble guió no ix mai d'un slug (seleccioUrl.js): no pot

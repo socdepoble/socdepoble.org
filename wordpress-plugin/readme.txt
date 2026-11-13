@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.13
+Stable tag: 1.1.14
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,11 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.14 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi més recent de la versió 1.2.0 de Sóc de Poble, el que explica la seua pàgina «Versions».
+* **Mur i xat:** qui no té compte o no és membre d'este poble veu una lectura mínima del Mur, sense imatges ni autoria; els membres el veuen sencer. Denunciar i Bloquejar des d'una publicació no revelen l'autor a qui no és membre d'este poble. El xat accepta imatges enganxades o arrossegades i les mostra en un visor amb zoom.
+* **Requisit del servidor:** la lectura mínima del Mur i la publicació de notes al Mur requerixen les migracions 2611121430, 2611121850 i 2611122200 del servidor de Sóc de Poble, aplicades en ordre abans de publicar este visor. Sense cap d'elles, el visor llig el Mur, el Mercat, el Calendari i Multimèdia com abans; sense la 2611122200, el Bloc de Notes no publica res al Mur i ho diu.
+
 = 1.1.13 =
 * **Traductor més protegit:** el servei de traducció del lloc també compta els caràcters que no troba a la memòria cau per a cada adreça: com a màxim 10000 cada 10 minuts, un límit que la constant `SDP_TRADUCCIO_LIMIT_IP_CARACTERS` pot canviar.
 * **Visor de la versió 1.2.0:** el paquet porta el visor compilat amb el codi de la versió 1.2.0 de Sóc de Poble, la que explica la seua pàgina «Versions».
@@ -215,6 +220,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.14 =
+Visor al dia amb la versió 1.2.0 més recent de Sóc de Poble: Mur amb lectura mínima per a qui no és membre d'este poble i imatges enganxades al xat. La lectura mínima i les notes al Mur requerixen migracions noves del servidor de Sóc de Poble.
 
 = 1.1.13 =
 Límit de caràcters per adreça al traductor del lloc, el visor de la versió 1.2.0 de Sóc de Poble i la llegenda de Fediversity al dia.

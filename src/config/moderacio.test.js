@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import {
   afigAlCanvi, anotaFilsBloquejats, anotaMissatgesBloquejats, canviBuit, clauDeBloqueig, elementBloquejat, filtraElementsBloquejats,
   firmaDeClaus, fotoDelCanvi, fusionaBloquejos, llevaDelCanvi, objectiuDeContrapart, objectiuDeMissatge, objectiuDeTargeta, omple,
-  revertix, senseDirectesBloquejats
+  revertix, senseDirectesBloquejats, TIPUS_BLOQUEIG_PUBLICACIO
 } from './moderacio.js';
 import { objecteDe, objecteDePerfil } from './navigation.js';
 import { ENTITAT_PILOT_ID, IAIA_ID } from '../data/identitatsSeed.js';
@@ -252,6 +252,22 @@ describe('la capa optimista de la sessió', () => {
     canvi = llevaDelCanvi(canvi, clauDeBloqueig('persona', 'joan'));
     expect(visibles([forn, joan, pep, { tipus: 'grup', id: 'g' }], canvi))
       .toEqual(['persona:rosa', k, `entitat:${FORN}`]);
+  });
+
+  /* R22 (sql-03, notes-01, honestedat-02) · Un bloqueig opac per UUID de
+     publicació també és de la llista (es pot desfer), i només amaga eixa
+     publicació de la lectura pública: no és cap persona ni cap entitat. */
+  test('un bloqueig opac per UUID de publicació entra a la llista i amaga només eixa publicació pública', () => {
+    const PUB = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
+    const opac = Object.freeze({ tipus: TIPUS_BLOQUEIG_PUBLICACIO, id: PUB, nom: null, creatAl: null });
+    expect(TIPUS_BLOQUEIG_PUBLICACIO).toBe('publicacio');
+    expect(visibles([opac], canviBuit('a'))).toEqual([`publicacio:${PUB}`]);
+    expect(visibles([], afigAlCanvi(canviBuit('a'), opac))).toEqual([`publicacio:${PUB}`]);
+    expect(visibles([opac], llevaDelCanvi(canviBuit('a'), clauDeBloqueig('publicacio', PUB)))).toEqual([]);
+    const conjunt = claus(clauDeBloqueig('publicacio', PUB));
+    expect(elementBloquejat({ id: PUB, _murPublic: true }, conjunt)).toBe(true);
+    expect(elementBloquejat({ id: 'altra', _murPublic: true }, conjunt)).toBe(false);
+    expect(elementBloquejat({ id: PUB, ownerUserId: PUB }, conjunt)).toBe(false);
   });
 
   test('firmaDeClaus és la mateixa siga quin siga l’ordre', () => {

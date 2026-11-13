@@ -1,11 +1,13 @@
 /**
  * useInformaDUnError.js — Onada 6 (prompt 261009_0230, punt 4: els beta
  * testers fan servir el xat per a informar d'errors) · On porta «Informa
- * d'un error», sense cap migració ni res que el Mestre haja de crear:
+ * d'un error», amb preferència pel canal real de la migració R21.9b:
  *   · en llavor, el grup «Beta testers» de la comunitat de Sóc de Poble
  *     (ID_FIL_BETA_TESTERS_LLAVOR, per id: mai pel nom; l'id viu a
  *     xatsPerDefecte.js perquè la interfície no importe la llavor sencera);
- *   · si no hi és (en remot), el xat privat amb Sóc de Poble, el MATEIX camí
+ *   · en remot, el grup amb marca canònica retornada pel servidor, encara
+ *     que canvie de títol; si la migració encara falta, el xat privat amb
+ *     Sóc de Poble, el MATEIX camí
  *     que la fila «Sóc de Poble» i que «Comentar → En privat»: l'entitat la
  *     resol una sola vegada per a tota l'app (useXatSocDePoble) i creaFil
  *     obri (o troba) la conversa. Al servidor és el canal de l'entitat, i qui
@@ -17,14 +19,15 @@
  * ha entrat sense pertinença al poble, l'entitat no és al servidor, la
  * xarxa…), l'informe no es perd: `reserva` el guarda amb l'enllaç de correu
  * i `copiaInforme` el copia al porta-retalls (BotoInformaDUnError ho ensenya).
- * Qui gestiona l'entitat pilot no el veu en remot (no es pot escriure a ella
- * mateixa, SDP-XAT-002); sense sessió, tampoc.
+ * Qui gestiona l'entitat pilot també pot usar el canal real. Si falta eixe
+ * canal, no s'oferix el directe amb l'entitat pròpia (SDP-XAT-002).
+ * Sense sessió no s'oferix cap enviament.
  */
 import { useCallback, useRef, useState } from 'react';
 import { useXat } from './XatContext.jsx';
 import { useXatSocDePoble } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { useIdentitatOpcional } from '../../app/contexts/IdentitatContext.jsx';
-import { ID_FIL_BETA_TESTERS_LLAVOR, gestionaLEntitatPilot } from '../../data/xatsPerDefecte.js';
+import { gestionaLEntitatPilot, trobaCanalBetaTesters } from '../../data/xatsPerDefecte.js';
 import { desaEsborrany, llegixEsborrany } from './esborranys.js';
 import { afigInforme, composaInforme, enllacDeCorreu } from './informeDError.js';
 import { textDeFalladaDirecte } from './errorsXat.js';
@@ -52,7 +55,7 @@ export default function useInformaDUnError({ t, navigate, showToast, pathname })
   const [reserva, setReserva] = useState(null);
   const enCurs = useRef(false);
 
-  const filBeta = chatThreads.find((f) => String(f?.id) === ID_FIL_BETA_TESTERS_LLAVOR) || null;
+  const filBeta = trobaCanalBetaTesters(chatThreads);
   const gestiona = gestionaLEntitatPilot(identitat?.identitats);
   const disponible = Boolean(joId) && !senseSessio && (Boolean(filBeta) || !gestiona);
 

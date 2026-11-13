@@ -1,3 +1,6 @@
+import { beforeEach as abansDePublicar } from 'vitest';
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
+abansDePublicar(() => { globalThis.indexedDB = creaIdbFalsEstructurat(); });
 import React from 'react';
 import { renderHook, act, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -11,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: mocks.notes, noteFolders: [], scopeKey: mocks.scopeKey, workspaceKey: mocks.workspaceKey, config: { tenantId: 'tenant' },
-  status: 'ready', updateNote: mocks.update, mouNota: mocks.mou, esborraNota: mocks.esborra
+  status: 'ready', updateNote: mocks.update, confirmaPublicacioNota: vi.fn(), mouNota: mocks.mou, esborraNota: mocks.esborra
 }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ locale: 'ca', externalConfig: {} }),
@@ -34,26 +37,22 @@ import { NotesProvider, useNotes, etiquetesDeNota } from './NotesContext';
 import { bgSaveManager, draftFields } from './GlobalSaveManager.js';
 import { motiuSignaturaAliena, publicaAmbMotiu } from './visibilitatNota.js';
 afterEach(cleanup);
-test('doble clic i reintent després de POST confirmat reutilitzen el mateix ID', async () => {
-  let revision = 1;
-  let linkFails = true;
-  const stored = new Map();
-  mocks.send.mockImplementation(async submission => { stored.set(submission.id, submission); });
-  mocks.update.mockImplementation(async (id, changes) => {
-    if (changes.isPublished && linkFails) { linkFails = false; throw new Error('timeout després de POST'); }
-    return { id, ...changes, revision: ++revision };
+test('doble clic i resposta perduda reutilitzen acte i operació sense segona PATCH', async () => {
+  let lost = true; const receipts = new Map();
+  mocks.send.mockImplementation(async sub => {
+    const receipt = receipts.get(sub.operationId) || { publicacio:{id:sub.id}, nota_revision:sub.expectedNoteRevision+1, publicada_revision:sub.expectedNoteRevision+1, replay:false };
+    receipts.set(sub.operationId,receipt);
+    if (lost) { lost=false; throw new Error('ACK perdut després del COMMIT'); }
+    return { ...receipt, replay:true };
   });
-  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
-  const note = { id: 'stable-note', title: 'Nova', content: '<p>Cos</p>', revision: 1 };
-  await act(async () => {
-    const first = result.current.publishNote(note);
-    expect(result.current.publishNote(note)).toBe(first);
-    expect(await first).toBe(false);
-  });
-  await act(async () => { expect(await result.current.publishNote(note)).toBe(true); });
-  expect(stored.size).toBe(1);
-  expect(mocks.send.mock.calls.map(([submission]) => submission.id)).toEqual(['stable-note', 'stable-note']);
-  expect(mocks.update.mock.calls.at(-1)[1]).toEqual({ isPublished: true, publishedSubmissionId: 'stable-note' });
+  mocks.update.mockImplementation(async (id,changes,revision)=>({id,...changes,revision:revision+1}));
+  const { result } = renderHook(useNotes,{wrapper:NotesProvider});
+  const note = {id:'stable-note',title:'Nova',content:'<p>Cos</p>',revision:1};
+  await act(async()=>{const first=result.current.publishNote(note); expect(result.current.publishNote(note)).toBe(first); expect(await first).toBe(false);});
+  await act(async()=>{expect(await result.current.publishNote(note)).toBe(true);});
+  const [first,retry]=mocks.send.mock.calls.map(([s])=>s);
+  expect(first.id).not.toBe(note.id); expect(retry.id).toBe(first.id); expect(retry.operationId).toBe(first.operationId);
+  expect(receipts.size).toBe(1); expect(mocks.update.mock.calls.some(([,changes])=>changes.isPublished)).toBe(false);
 });
 
 
@@ -263,7 +262,7 @@ describe('Grup E · la guarda de re-signatura de publishNote', () => {
 
   beforeEach(() => {
     mocks.toast.mockReset();
-    mocks.send.mockReset().mockResolvedValue(undefined);
+    mocks.send.mockReset().mockImplementation(async sub => ({ publicacio: { id: sub.id }, nota_revision: sub.expectedNoteRevision + 1, publicada_revision: sub.expectedNoteRevision + 1, replay: false }));
     mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: (revision ?? 1) + 1 }));
   });
   afterEach(() => {
@@ -354,7 +353,7 @@ describe('Grup E · la guarda de re-signatura de publishNote', () => {
       await act(async () => { expect(await result.current.publishNote(nota)).toBe(true); });
       unmount();
     }
-    expect(mocks.send.mock.calls.map(([submission]) => submission.id)).toEqual(['g-4', 'g-5', 'g-6', 'g-7']);
+    expect(mocks.send.mock.calls.map(([submission]) => submission.id)).toEqual(['g-4', 'g-5', 'g-6', expect.stringMatching(/^[0-9a-f-]{36}$/)]);
     expect(mocks.toast.mock.calls.filter(([, tipus]) => tipus === 'info')).toEqual([]);
   });
 });
@@ -385,15 +384,29 @@ describe('Integració 261024 · el rebuig del servidor per les normes', () => {
     expect(mocks.update.mock.calls.filter(([, canvis]) => canvis?.isPublished)).toEqual([]);
   });
 
-  test('acceptades de nou, el selector publica una sola vegada més amb el mateix id', async () => {
-    mocks.send.mockRejectedValueOnce(new Error(REBUIG)).mockResolvedValueOnce(undefined);
+  /* Gauntlet R22 (notes-08) · Un doble fidel del servidor: el rebuig per les normes desfà la transacció (l'operació
+     no existix), i la consulta d'una operació desconeguda torna null. El reintent, per tant, consulta i després
+     REENVIA el cos amb el mateix acte i la mateixa operació; no és cap replay. */
+  test('acceptades de nou, el selector consulta i torna a enviar una sola vegada amb el mateix acte i operació', async () => {
+    mocks.send.mockRejectedValueOnce(new Error(REBUIG))
+      .mockImplementationOnce(async sub => (sub.consulta === true ? null : { publicacio: { id: sub.id }, nota_revision: 99, publicada_revision: 99, replay: true }))
+      .mockImplementationOnce(async sub => ({ publicacio: { id: sub.id }, nota_revision: sub.expectedNoteRevision + 1, publicada_revision: sub.expectedNoteRevision + 1, replay: false }));
     const tornaAPreguntar = vi.fn(async () => true);
     const { result } = renderHook(useNotes, { wrapper: NotesProvider });
     await act(async () => {
       await expect(publicaAmbMotiu(() => result.current.publishNote(nota()), { tornaAPreguntar })).resolves.toBe(true);
     });
     expect(tornaAPreguntar).toHaveBeenCalledTimes(1);
-    expect(mocks.send.mock.calls.map(([submission]) => submission.id)).toEqual(['n-normes', 'n-normes']);
-    expect(mocks.update.mock.calls.at(-1)[1]).toEqual({ isPublished: true, publishedSubmissionId: 'n-normes' });
+    const crides = mocks.send.mock.calls.map(([submission]) => submission);
+    expect(crides).toHaveLength(3);
+    const [primera, consulta, reenviament] = crides;
+    expect(primera.id).not.toBe('n-normes');
+    expect(consulta).toMatchObject({ id: primera.id, operationId: primera.operationId, consulta: true });
+    expect(consulta.payload).toBeUndefined();
+    expect(reenviament.consulta).toBeUndefined();
+    expect(reenviament).toMatchObject({ id: primera.id, operationId: primera.operationId, noteId: primera.noteId });
+    expect(reenviament.payload).toMatchObject({ title: primera.payload.title });
+    expect(mocks.toast).toHaveBeenCalledWith('Nota publicada correctament al mur!', 'success');
+    expect(mocks.update.mock.calls.some(([, changes])=>changes.isPublished)).toBe(false);
   });
 });

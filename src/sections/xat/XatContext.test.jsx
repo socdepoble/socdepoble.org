@@ -1379,7 +1379,7 @@ describe('files d’ajuda per defecte', () => {
   /* P1-70 (261029) · Els dos avisos de la conversa d'atenció personal i servei
      tècnic (section.xat.javi.*). R21 (carril f2) · «tu mateix» torna mentre el
      backend no obri el xat propi de Javi. */
-  const AVIS_TU = 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent del poble. Les converses que t’escriguen arribaran a la llista com a directes.';
+  const AVIS_TU = 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent de poble. Les converses que t’escriguen arribaran a la llista com a directes.';
   const AVIS_PERSONAL = "Encara no pots escriure't a tu mateix: este poble no obri el xat personal.";
   const AVIS_SENSE = 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.';
 

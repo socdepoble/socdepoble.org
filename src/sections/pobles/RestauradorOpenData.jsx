@@ -5,7 +5,7 @@ import * as backendPort from '../../data/backendPort.js';
 
 const txt = (clau, reserva) => Object.freeze([`section.pobles.restaurador.${clau}`, reserva]);
 export const TEXTOS_RESTAURADOR = Object.freeze({
-  titol: txt('titol', 'Restaurar dades obertes del poble'),
+  titol: txt('titol', 'Restaurar dades obertes del municipi'),
   explica: txt('explica', 'Comprova un paquet abans de restaurar les seues dades públiques. No inclou comptes, xats ni notes privades.'),
   fitxer: txt('fitxer', 'Paquet Open Data (ZIP)'),
   ajudaFitxer: txt('ajudaFitxer', 'Tria un paquet municipal de fins a 64 MB. La lectura i la comprovació es fan en este dispositiu.'),

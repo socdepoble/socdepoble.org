@@ -1306,6 +1306,19 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
     assert.ok(tros, `el diccionari ${codi} té el seu propi tros diferit`);
     assert.deepEqual(tros.imports, [], `el tros del diccionari ${codi} no importa res`);
   }
+  /* Onada R22 · BOOT3 · Mòduls que un helper menut arrossegava sencers a l'arrencada perquè un mòdul
+     d'arrencada els importava un sol nom: negreta.js i enllacos.js (XatContext, esTextBuitOSolsMarques, ara a
+     missatges.js), mapaBessonesPublic.js (PedraSecaEmbed, ara instalaFallbackDeLaPolitica, sense el cens del
+     web propi), editorial.js (origenImatges, COPYRIGHT_VIQUIPEDIA, ara a pageContent.dretsPatrimoni.js) i
+     abastConnexio.js (connexions.js, desDe, ara a connexions.js). Cap d'ells no fa falta per al primer pintat. */
+  const relDe = (id) => path.relative(ARREL, id.split('?')[0]).split(path.sep).join('/');
+  const modulsDArrencada = new Set(deLArrencada.flatMap((chunk) => chunk.moduleIds).map(relDe));
+  for (const rel of ['src/sections/xat/negreta.js', 'src/sections/xat/enllacos.js', 'src/config/mapaBessonesPublic.js',
+    'src/components/universal/editorial.js', 'src/sections/connectar/abastConnexio.js']) {
+    assert.ok(!modulsDArrencada.has(rel), `${rel}: no viatja a l'arrencada estàtica`);
+  }
+  assert.ok(!chunks.some((chunk) => chunk.moduleIds.map(relDe).includes('src/config/mapaBessonesPublic.js')),
+    'el cens de bessones del web propi (main.jsx) no viatja al paquet: PedraSecaEmbed només instal·la el salvavides amb política de mitjans');
   const css = (chunk) => chunk.moduleIds.some((id) => id.includes(`${path.sep}src${path.sep}css${path.sep}index.css`));
   assert.ok(arrencada.some(css), 'src/css/index.css?inline viatja a l\'arrencada (tros «estils»)');
   assert.ok(!diferits.some(css), 'cap tros diferit porta el full');

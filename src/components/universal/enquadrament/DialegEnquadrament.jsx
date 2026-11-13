@@ -110,6 +110,15 @@
  *         no publica res a cegues: si la lectura porta un EXIF per a la
  *         casella, no es desa; la casella apareix, marcada, amb AVIS_REVISA_EXIF,
  *         i és el segon clic el que desa. Si no porta res, es desa com abans.
+ *   exifTriat (false) · Gauntlet R22 (ronda 4) · La destinació publica la
+ *     tria de preparaTiffTriat (exifIncrustat.js), no el bloc sencer: el
+ *     fitxer privat de les Notes, que ix al Mur per promoteToPublic
+ *     (storage.js · ambExifTriat). L'avís diu llavors el que porta la còpia
+ *     pública: amb la ubicació o la data, només eixes (cap dada de la
+ *     càmera); amb només la càmera, la marca i el model, mai el número de
+ *     sèrie ni cap nom; si no en queda cap, que no es publicaran. Sense la
+ *     prop (la capçalera d'una fitxa del Perfil, que puja el bloc sencer de
+ *     preparaTiff), l'avís de sempre. L'etiqueta i la tria no canvien.
  *   lectorExif: injectable per a les proves.
  *
  * ORDRE DEL MESTRE (18-10-2026, relleu del Pla 2000, punt 2) · «Agrupa
@@ -261,24 +270,32 @@ const PARTS_CAMERA = Object.freeze([
   ['serie', Object.freeze(['editor.enquadrament.cameraSerie', 'el número de sèrie'])],
   ['nom', Object.freeze(['editor.enquadrament.cameraNom', 'un nom de persona'])],
 ]);
-function dadesDeLaCamera(dades, t) {
-  const parts = PARTS_CAMERA.filter(([clau]) => dades.contingut?.[clau]).map(([, parell]) => tradueix(t, parell));
+/* Gauntlet R22 (ronda 4) · Les que publica una destinació que tria
+   (exifTriat; exifIncrustat.preparaTiffTriat, TRIA_CAMERA): la marca i el
+   model, mai el número de sèrie ni el nom. */
+const PARTS_CAMERA_TRIADES = Object.freeze(PARTS_CAMERA.filter(([clau]) => clau === 'marca' || clau === 'model'));
+function dadesDeLaCamera(dades, t, partsCamera = PARTS_CAMERA) {
+  const parts = partsCamera.filter(([clau]) => dades.contingut?.[clau]).map(([, parell]) => tradueix(t, parell));
   return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} ${tradueix(t, TEXTOS_ENQUADRAMENT.llistaI)} ${parts.at(-1)}` : (parts[0] || '');
 }
 
 /* L'avís de la casella per al que porta la foto; si no es pot conservar, com
    eixir-ne. Bloc B · Decidit pel bloc que es publica (teUbicacio, teData), i
-   amb les dades que identifiquen la càmera quan n'hi ha. */
-function ajudaConservaExif(dades, t) {
+   amb les dades que identifiquen la càmera quan n'hi ha.
+   Gauntlet R22 (ronda 4) · Amb `triat` (exifTriat), el que publica
+   preparaTiffTriat: amb la ubicació o la data, cap dada de la càmera
+   (TRIA_UBICACIO_I_DATA); sense, només la marca i el model (TRIA_CAMERA) i,
+   si no n'hi ha cap, que les de la càmera no es publicaran. */
+function ajudaConservaExif(dades, t, triat = false) {
   if (esNoConservable(dades)) return errorExifNoConservable(dades, t);
-  const camera = dadesDeLaCamera(dades, t);
   if (teUbicacio(dades) || teData(dades)) {
     const base = tradueix(t, teUbicacio(dades) ? TEXTOS_ENQUADRAMENT.exifAjudaUbicacio : TEXTOS_ENQUADRAMENT.exifAjudaData);
+    const camera = triat ? '' : dadesDeLaCamera(dades, t);
     return camera ? `${base} ${omple(tradueix(t, TEXTOS_ENQUADRAMENT.exifTambeCamera), { camera })}` : base;
   }
-  return camera
-    ? omple(tradueix(t, TEXTOS_ENQUADRAMENT.exifNomesCamera), { camera })
-    : tradueix(t, TEXTOS_ENQUADRAMENT.exifAjudaCamera);
+  const camera = dadesDeLaCamera(dades, t, triat ? PARTS_CAMERA_TRIADES : PARTS_CAMERA);
+  if (camera) return omple(tradueix(t, TEXTOS_ENQUADRAMENT.exifNomesCamera), { camera });
+  return tradueix(t, triat ? TEXTOS_ENQUADRAMENT.exifCameraNoEsPublica : TEXTOS_ENQUADRAMENT.exifAjudaCamera);
 }
 
 /**
@@ -289,9 +306,12 @@ function ajudaConservaExif(dades, t) {
  * davall, les píndoles de PRECISIONS (ràdios natius en un fieldset
  * role="radiogroup", com les formes del mode senzill) i la línia «Es desarà:
  * …» amb el punt ja arrodonit. Sense `onPrecisio`, només la casella: el DOM
- * de sempre.
+ * de sempre. Gauntlet R22 (ronda 4) · `exifTriat`: la destinació publica la
+ * tria de preparaTiffTriat i l'avís ho diu (ajudaConservaExif).
  */
-export function CasellaExif({ dades, conserva, onConserva, precisio = PRECISIO_PER_DEFECTE_PUBLICACIO, onPrecisio = null, desactivat = false }) {
+export function CasellaExif({
+  dades, conserva, onConserva, precisio = PRECISIO_PER_DEFECTE_PUBLICACIO, onPrecisio = null, desactivat = false, exifTriat = false,
+}) {
   const id = useId();
   const t = useTraductorOpcional();
   const precisions = useMemo(() => precisionsTraduides(t), [t]);
@@ -301,7 +321,7 @@ export function CasellaExif({ dades, conserva, onConserva, precisio = PRECISIO_P
   const idLinia = `${id}-desara`;
   return (
     <>
-      <Casella etiqueta={etiquetaConservaExif(dades, t)} ajuda={ajudaConservaExif(dades, t)}
+      <Casella etiqueta={etiquetaConservaExif(dades, t)} ajuda={ajudaConservaExif(dades, t, exifTriat === true)}
         checked={conserva} disabled={desactivat} onChange={(ev) => onConserva?.(ev.target.checked)} />
       {ambPrecisio ? (
         <fieldset className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-llegenda`}
@@ -402,6 +422,9 @@ export const TEXTOS_ENQUADRAMENT = Object.freeze({
   exifTambeCamera: Object.freeze(['editor.enquadrament.exifTambeCamera', 'També es publicaran les dades de la càmera: {camera}.']),
   exifNomesCamera: Object.freeze(['editor.enquadrament.exifNomesCamera',
     'Si la deixes marcada, les dades de la càmera es publicaran amb la foto: {camera}.']),
+  /* Gauntlet R22 (ronda 4) · exifTriat i una càmera sense marca ni model: la còpia pública no en porta cap. */
+  exifCameraNoEsPublica: Object.freeze(['editor.enquadrament.exifCameraNoEsPublica',
+    'Si la deixes marcada, les dades de la càmera es conservaran, però no es publicaran amb la foto.']),
   exifRevisa: Object.freeze(['editor.enquadrament.exifRevisa', AVIS_REVISA_EXIF]),
   gpsEliminat: Object.freeze(['editor.enquadrament.gpsEliminat', AVIS_GPS_ELIMINAT_PERFIL]),
   llistaI: Object.freeze(['editor.enquadrament.llistaI', 'i']),
@@ -434,6 +457,7 @@ export function DialegEnquadrament({
   senzill = false,
   mascara = null,
   ofereixConservarExif = false,
+  exifTriat = false,
   avisaGpsEliminat = false,
   noDestructiu = false,
   onCanviaFoto = null,
@@ -822,7 +846,7 @@ export function DialegEnquadrament({
      seu lloc. */
   const casellaExif = exifOriginal && imatge ? (
     <CasellaExif dades={exifOriginal} conserva={conservaExif} onConserva={setConservaExif}
-      precisio={precisioExif} onPrecisio={setPrecisioExif} desactivat={desant} />
+      precisio={precisioExif} onPrecisio={setPrecisioExif} desactivat={desant} exifTriat={exifTriat === true} />
   ) : (gpsEliminat && imatge ? <Alerta to="info">{text(TEXTOS_ENQUADRAMENT.gpsEliminat)}</Alerta> : null);
 
   /* Onada 4, T3a · La ubicació que es desaria ara mateix (ja arrodonida), o null. */

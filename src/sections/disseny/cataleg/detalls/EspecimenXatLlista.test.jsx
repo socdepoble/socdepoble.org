@@ -13,7 +13,7 @@ test('XatLlista porta la fila del grup del poble de l’amfitrió, amb l’anato
   const llista = screen.getByRole('list', { name: 'Grup del poble de mostra' });
   const [li] = within(llista).getAllByRole('listitem');
   expect(li.getAttribute('data-clau')).toBe('poble:la-torre-de-les-macanes');
-  const fila = within(llista).getByRole('button', { name: /Gent de la Torre, Grup del poble/ });
+  const fila = within(llista).getByRole('button', { name: /Gent de la Torre, Grup de poble/ });
   expect(fila.classList.contains('sdp-xat-fila--comunitat')).toBe(true);
   expect(fila.querySelector('.sdp-xat-apilat .sdp-xat-avatar--quadrat')).not.toBeNull();
   expect(fila.querySelector('.sdp-xat-fila__xebro')).not.toBeNull();

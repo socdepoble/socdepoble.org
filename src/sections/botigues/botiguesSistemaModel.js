@@ -10,7 +10,7 @@ export const COMPTADORS_COMUNICATS = Object.freeze({
   fontPlay: 'Comunicació de Javi Llinares, P0-53',
   fontWeb: 'Encàrrec R55: xifra 14 en web mòbil, sense hora, unitat o finestra de mesura acreditades',
 });
-export const VERSIO_WORDPRESS_LOCAL = '1.1.13';
+export const VERSIO_WORDPRESS_LOCAL = '1.1.14';
 export const URL_OPT_IN_PLAY = 'https://play.google.com/apps/testing/org.socdepoble.app';
 
 /** El canal de proves és separat del canal públic de canalsDeBotiga. */

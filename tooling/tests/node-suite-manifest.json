@@ -22,6 +22,8 @@
     "tests/cognitive-preflight.test.mjs",
     "tests/conformitat-amfitrio.test.mjs",
     "tests/connexions-publiques-postgres.test.mjs",
+    "tests/contrast-aaa.test.mjs",
+    "tests/copublicacio-foraster-opcio-a.test.mjs",
     "tests/copublicacio-postgres.test.mjs",
     "tests/copyright-scroll-cascade.test.mjs",
     "tests/corpus-dialectal-ingesta.test.mjs",
@@ -191,7 +193,12 @@
     "tests/agents-app-content-r21-5-postgres.test.mjs",
     "tests/logica-universal.test.mjs",
     "tests/contingut-frontera-r21-6-postgres.test.mjs",
-    "tests/auditoria-produccio-publica.test.mjs"
+    "tests/auditoria-produccio-publica.test.mjs",
+    "tests/mur-membres-actes-v2-postgres.test.mjs",
+    "tests/r21-9b-beta-postgres.test.mjs",
+    "tests/migracions-cataleg-mixt-r21-9b.test.mjs",
+    "tooling/menjarIBeure/syncAparadorsVius.test.mjs",
+    "tooling/vite/banderes-de-capacitat.test.mjs"
   ],
   "files": [
     {
@@ -330,6 +337,11 @@
       "reason": "P2-12 · B10 marató 261101_2143: detector de només lectura del consum acreditat (port de candidatsConsum del pegat 261025_1705). Reproducció del 261025, triatge CONS-A..D, protecció explícita, acreditació amb acta, HEAD i versió consolidada, actes que mantenen viu, rancis, CLI en fase avis (exit 0, cap escriptura), la porta Olivera no el crida; fixtures a mkdtemp."
     },
     {
+      "path": "tests/contrast-aaa.test.mjs",
+      "suite": "primary",
+      "reason": "R21 AAA: luminància relativa i composició alfa; contracte de parells semàntics clar/fosc/Bancal."
+    },
+    {
       "path": "tests/contrast_calendari_mes.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -343,6 +355,11 @@
       "path": "tests/convertir-a-webp.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del tractor de conversió a WebP quadrat (1200x1200 i 400x400) amb preservació estricta de metadades EXIF (GPS i dataCaptura)."
+    },
+    {
+      "path": "tests/copublicacio-foraster-opcio-a.test.mjs",
+      "suite": "primary",
+      "reason": "R21 D1/F03: PostgreSQL 18.6 real; denegació anon crua, projecció escalar i revocació CAS concurrent."
     },
     {
       "path": "tests/copublicacio-postgres.test.mjs",
@@ -1733,17 +1750,50 @@
     {
       "path": "tests/logica-universal.test.mjs",
       "suite": "primary",
+      "kind": "node",
       "reason": "R21.6: contracte AST adversarial de totes les seccions i apps."
     },
     {
       "path": "tests/contingut-frontera-r21-6-postgres.test.mjs",
       "suite": "primary",
-      "reason": "R21.6: límits públics i notes privades amb PostgreSQL18.6 real."
+      "kind": "postgres",
+      "reason": "R21.6: límits públics i notes privades amb PostgreSQL 18.6 real."
     },
     {
       "path": "tests/auditoria-produccio-publica.test.mjs",
       "suite": "primary",
+      "kind": "node",
       "reason": "R21.6: auditoria pública GET, redacció de credencials, límits i desconeguts explícits."
+    },
+    {
+      "path": "tests/mur-membres-actes-v2-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R21.1 v2: projecció anònima, membres, actes i moderació amb PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r21-9b-beta-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R21.9b: canal Beta Testers i registre d’aparadors amb PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/migracions-cataleg-mixt-r21-9b.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.9b: ordre cronològic del catàleg mixt de 10 i 14 dígits; Node 0 amb el pla ordenat, sense ordre alfabètic cru; avisa de les inversions que db push no respectaria; cap recepta executable (package.json, workflows, scripts/ i tooling/) aplica migracions amb db push ni amb un glob cru, i el README de supabase ho prohibix."
+    },
+    {
+      "path": "tooling/menjarIBeure/syncAparadorsVius.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.9b: motor pur de plans d’aparadors consentits (preus en cèntims, pending_review, seasonal_hidden)."
+    },
+    {
+      "path": "tooling/vite/banderes-de-capacitat.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.1 v2: banderes de capacitat de build (VITE_SDP_COPUBLICACIO apagada per defecte) sense servei remot."
     }
   ]
 }

@@ -1,7 +1,14 @@
 import { lazy } from 'react';
 
+// L'entrada web pròpia injecta esta capacitat; els mòduls no importen PWA.
+let recuperaErrorChunkDeploy = () => false;
+export function configuraRecuperacioLazy(recupera) {
+  recuperaErrorChunkDeploy = typeof recupera === 'function' ? recupera : () => false;
+}
+
 /** An import failure stays rejected in React and the browser module cache.
- * Recovery belongs to the route owner; loading never reloads the document. */
+ * Only the owned web entry may confirm a deployment and reserve one reload;
+ * otherwise recovery continues to belong to the route owner. */
 export class LazyRouteError extends Error {
   constructor(cause) {
     super('No s’ha pogut carregar el mòdul d’esta vista.', { cause });
@@ -9,12 +16,23 @@ export class LazyRouteError extends Error {
   }
 }
 
+export const ESPERA_TRANSICIO_DEPLOY_MS = 5000;
+
 export const esErrorLazy = (error) => error instanceof LazyRouteError;
 
+function rebuigDeCarrega(error, rebutja = () => {}) {
+  const falla = () => { rebutja(); throw esErrorLazy(error) ? error : new LazyRouteError(error); };
+  const intent = recuperaErrorChunkDeploy(error);
+  if (intent === false) return falla();
+  // A confirmed reload owns the document transition. Do not flash a red
+  // boundary while that new document is being requested. If navigation is
+  // cancelled or cannot leave, restore the honest boundary after a finite wait.
+  return intent.then(recarregant => recarregant
+    ? new Promise(resolve => setTimeout(resolve, ESPERA_TRANSICIO_DEPLOY_MS)).then(falla) : falla(), falla);
+}
+
 export function lazyRoute(importa) {
-  return lazy(() => Promise.resolve().then(importa).catch((error) => {
-    throw esErrorLazy(error) ? error : new LazyRouteError(error);
-  }));
+  return lazy(() => Promise.resolve().then(importa).catch(error => rebuigDeCarrega(error)));
 }
 
 /** A lazy view whose owner may ask again on a new intent (a different key),
@@ -28,10 +46,9 @@ export function lazyRouteRenovable(importa) {
   const SENSE = Symbol('sense');
   let Vista = null, demanada = SENSE, rebutjada = SENSE;
   const crea = () => {
-    const vista = lazy(() => Promise.resolve().then(importa).catch((error) => {
+    const vista = lazy(() => Promise.resolve().then(importa).catch(error => rebuigDeCarrega(error, () => {
       if (Vista === vista) rebutjada = demanada;
-      throw esErrorLazy(error) ? error : new LazyRouteError(error);
-    }));
+    })));
     return vista;
   };
   return {

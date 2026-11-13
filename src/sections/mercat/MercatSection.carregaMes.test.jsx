@@ -131,7 +131,7 @@ test('si la càrrega falla, l’avís de sempre del Mercat; «Torna-ho a provar�
   const avis = await screen.findByRole('alert');
   // T5 · P1-22 (kit de Codex, 261102): la reserva de t() ja no viu al component; el text és el de ca.js.
   expect(avis.textContent).toContain('No s’ha pogut carregar el Mercat');
-  expect(avis.textContent).toContain('El servidor del poble ha tornat un error.');
+  expect(avis.textContent).toContain('El servidor de poble ha tornat un error.');
   expect(avis.textContent).not.toMatch(/Supabase|503|upstream/);
   // Els productes que ja hi eren no se'n van.
   expect(targetes()).toHaveLength(2);

@@ -1,4 +1,4 @@
-import { useContext, useState, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
+import { useContext, useState, useMemo, useCallback, useRef, useLayoutEffect, useEffect } from 'react';
 /* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
    que no importa res del projecte. */
 import { NotesContext } from './objectesDeContext.js';
@@ -10,10 +10,15 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { useNotesData } from './NotesDataContext';
 import { useMur } from '../mur/MurContext';
 import { extractPlainText } from '../../utils/contentAdapter.js';
-import { promoteToPublic, teCapacitat } from '../../data/backendPort.js';
+import { promoteToPublic, teCapacitat, drenaRevocacionsMur } from '../../data/backendPort.js';
 import { dataIsoONull } from '../../utils/calendari.js';
 import { estatPerAlEditor } from './useEstatDesamentNota.js';
-import { ErrorPublicacio, esRebuigDeSeccio, motiuDesatPendent, motiuModeLocal, motiuPobleNoDeterminat, motiuSeccioPublicada } from './visibilitatNota.js';
+import {
+  ErrorPublicacio, ErrorRetirada, bloqueigDeNota, campQuePassaDelLimit, errorDeRetirada, esRebuigDeMida, esRebuigDefinitiuDePublicacio,
+  esRebuigDeRetirada, esRebuigDeSeccio, motiuDeMida, motiuDesatPendent, motiuModeLocal,
+  motiuPobleNoDeterminat, motiuPublicacioNoFeta, motiuSeccioPublicada, textRetirada
+} from './visibilitatNota.js';
+import { creaDiariPublicacions } from './actesPublicacio.js';
 import { motiuSignaturaDAltri } from './signaturaDAltri.js';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
 import { ErrorIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
@@ -24,7 +29,7 @@ import { pobleDeConfig } from '../xat/pobleAmfitrio.js';
 import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
 import { cosDeConnexioEditadaPerAlMur } from './connexions.js';
 import { cosDeLExternPerAlMur } from '../connectar/contingutExtern.js';
-import { CODI_ENTRADA, esRebuigDeNormes } from '../../data/errorsBackend.js';
+import { CODI_ENTRADA, CODI_ESQUEMA_ABSENT, CODI_PROMOCIO_PUBLICA, esRebuigDeNormes } from '../../data/errorsBackend.js';
 /* P4 (revisió, 261003) · El sanejador del canal viu a netejaCamp.js: la nota
    preparada (notaPreparada.js) en crear-se hi passa pel mateix. */
 import { netejaCamp } from './netejaCamp.js';
@@ -34,6 +39,9 @@ import { getVal, setVal } from '../../config/storage.js';
    Publicació: la fitxa d'àmbit d'una nota es projecta al payload amb ell. */
 import { ESTATS, canviaEstat, coaccionaAmbit, esFitxaDAmbit, projeccioPayload, seccioDAmbit } from '../../utils/publicacioUniversal.js';
 import { marcaPublicacioEsborrada } from '../../data/publicacionsEsborrades.js';
+
+/* F03-UI · Si la nota té (o ha tingut sense retirar) una publicació al Mur. */
+const esNotaPublicada = (note) => Boolean(note?.isPublished || note?.publishedSubmissionId);
 
 function retiraPublicacionsDeLaNota(note) {
   if (!note?.id) return;
@@ -140,6 +148,70 @@ function desaDestiPublicat(scopeKey, submissionId, { pobleId = '', authorLocatio
   return Boolean(setVal(CLAU_DESTINS_PUBLICATS, { v: VERSIO_DESTINS, destins }));
 }
 
+// Només una publicació vinculada és reutilitzable. Cada acte nou rep un UUID
+// durable del diari, mai el UUID immutable de la nota.
+const idDePublicacio = (_scope, note) => note.publishedSubmissionId || null;
+/* La UI recorda quines notes tenen una retirada sense ACK. El diari neutral
+   conserva la voluntat real, l’acte exacte i el backoff sense sostre LRU. */
+const CLAU_RETIRADES_PENDENTS = 'notes.retiradesPendents.v1';
+const VERSIO_RETIRADES_PENDENTS = 1;
+const MAXIM_DE_RETIRADES_PENDENTS = 200;
+/* Gauntlet R22 (notes-03) · La marca porta també l'acte que es retirava
+   (`actes`, camp additiu de la mateixa versió: les marques d'abans no en
+   tenen). Amb ell, una llista que porta la nota publicada amb un ALTRE acte
+   (retirat i republicat en un altre dispositiu) ja no deixa la nota
+   bloquejada per sempre. */
+const CAP_RETIRADA = new Set();
+
+function magatzemDeRetirades() {
+  const desat = getVal(CLAU_RETIRADES_PENDENTS, null);
+  return desat && typeof desat === 'object' && !Array.isArray(desat)
+    && desat.v === VERSIO_RETIRADES_PENDENTS
+    && desat.ids && typeof desat.ids === 'object' && !Array.isArray(desat.ids)
+    ? desat
+    : null;
+}
+function magatzemRetiradesPendents() {
+  return magatzemDeRetirades()?.ids ?? {};
+}
+function magatzemActesRetirats() {
+  const actes = magatzemDeRetirades()?.actes;
+  return actes && typeof actes === 'object' && !Array.isArray(actes) ? actes : {};
+}
+/** L'acte (UUID de la publicació) que es retirava d'una nota amb la marca, o null (marca d'abans). */
+function llegixActeRetirat(scopeKey, noteId) {
+  const clau = clauEntradaDesti(scopeKey, noteId);
+  const acte = clau ? magatzemActesRetirats()[clau] : null;
+  return typeof acte === 'string' && acte ? acte : null;
+}
+
+/** Els ids de les notes de l'àmbit amb una retirada pendent (un Set nou). */
+function llegixRetiradesPendents(scopeKey) {
+  const pendents = new Set();
+  for (const [clau, id] of Object.entries(magatzemRetiradesPendents())) {
+    if (typeof id === 'string' && id && clau === clauEntradaDesti(scopeKey, id)) pendents.add(id);
+  }
+  return pendents;
+}
+
+function desaRetiradaPendent(scopeKey, noteId, pendent, publicacioId = null) {
+  const clau = clauEntradaDesti(scopeKey, noteId);
+  if (!clau) return;
+  const ids = { ...magatzemRetiradesPendents() };
+  const actes = { ...magatzemActesRetirats() };
+  if (!pendent && !Object.hasOwn(ids, clau)) return;
+  delete ids[clau];
+  delete actes[clau];
+  if (pendent) {
+    ids[clau] = String(noteId);
+    if (publicacioId) actes[clau] = String(publicacioId);
+    const claus = Object.keys(ids);
+    for (const vella of claus.slice(0, Math.max(0, claus.length - MAXIM_DE_RETIRADES_PENDENTS))) { delete ids[vella]; delete actes[vella]; }
+  }
+  for (const clauActe of Object.keys(actes)) if (!Object.hasOwn(ids, clauActe)) delete actes[clauActe];
+  setVal(CLAU_RETIRADES_PENDENTS, { v: VERSIO_RETIRADES_PENDENTS, ids, actes });
+}
+
 export function etiquetesDeNota(note, _noteFolders, accions = {}) {
   // La carpeta organitza el bloc; no és una categoria editorial. Els labels
   // explícits de notes antigues són el fallback fins que tinguen categories.
@@ -166,7 +238,7 @@ export function NotesProvider({ children }) {
   const { showToast } = useToast();
   const { locale, externalConfig } = useUIState();
   const { normalizeSearchText, t } = useUIActions();
-  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, mouNota: mouNotaContext, esborraNota: esborraNotaContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, nomesLectura = false } = useNotesData();
+  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, confirmaPublicacioNota, mouNota: mouNotaContext, esborraNota: esborraNotaContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, nomesLectura = false } = useNotesData();
   const { sendSectionSubmission, feedPosts, marketItems } = useMur();
   /* Poliment T41/T43 · Qui signa la publicació: l'actor que MurContext envia
      com a author_org_id, també al nom, la foto i el poble del payload. */
@@ -222,6 +294,36 @@ export function NotesProvider({ children }) {
     setLocalNoteOverrides({});
     return () => { if (operationRef.current === operation) operationRef.current = null; };
   }, [operation]);
+  /* F03-UI · Verificació R21 (P1) · Les notes de l'àmbit amb una retirada del
+     Mur pendent (vegeu CLAU_RETIRADES_PENDENTS). L'estat de React mana durant
+     la sessió (també si el navegador no deixa desar); el magatzem el porta a
+     la recàrrega següent. */
+  const [retirades, setRetirades] = useState(() => ({ scopeKey, ids: llegixRetiradesPendents(scopeKey) }));
+  if (retirades.scopeKey !== scopeKey) setRetirades({ scopeKey, ids: llegixRetiradesPendents(scopeKey) });
+  const retiradesPendents = retirades.scopeKey === scopeKey ? retirades.ids : CAP_RETIRADA;
+  const retiradesRef = useRef(retiradesPendents);
+  useLayoutEffect(() => { retiradesRef.current = retiradesPendents; }, [retiradesPendents]);
+  /* Gauntlet R22 (ronda 3) · Quantes vegades s'ha marcat pendent cada nota en
+     esta sessió: una retirada nova (un altre intent a la cua) mentre es
+     resol la nota invalida la conclusió (conclouRetiradesSenseCua). */
+  const marquesDeRetirada = useRef(new Map());
+  const marcaRetiradaPendent = useCallback((noteId, pendent, publicacioId = null) => {
+    const id = noteId == null ? '' : String(noteId);
+    if (!id) return;
+    if (pendent) marquesDeRetirada.current.set(id, (marquesDeRetirada.current.get(id) ?? 0) + 1);
+    desaRetiradaPendent(scopeKey, id, pendent, publicacioId);
+    if (operationRef.current?.scopeKey !== scopeKey) return;
+    setRetirades((previ) => {
+      const base = previ.scopeKey === scopeKey ? previ.ids : llegixRetiradesPendents(scopeKey);
+      if (base.has(id) === Boolean(pendent)) return previ.scopeKey === scopeKey ? previ : { scopeKey, ids: base };
+      const ids = new Set(base);
+      if (pendent) ids.add(id); else ids.delete(id);
+      return { scopeKey, ids };
+    });
+  }, [scopeKey]);
+  const retiradaPendentDeNota = useCallback((noteId) => (
+    noteId != null && retiradesPendents.has(String(noteId))
+  ), [retiradesPendents]);
   /* T47b (ordre del Mestre, 260928) · Els desadors de l'operació viva. Una
      crida d'un editor d'abans (la tecla que el debounce de TipTap o el
      desmuntatge lliuren tard) que és del MATEIX actor va ací i no es perd.
@@ -232,6 +334,7 @@ export function NotesProvider({ children }) {
     return Boolean(viva && viva !== operation && viva.scopeKey === operation.scopeKey && vigentRef.current);
   }, [operation]);
   const publishing = useRef(new Map());
+  const diariPublicacions = useMemo(() => creaDiariPublicacions(), []);
   // Notes que han eixit del Bloc (paperera, arxiu o esborrat). L'editor encara
   // desa en desmuntar-se i a cada tecla; cap d'eixos desats ha d'arribar a una
   // nota que ja no hi és (tornaria 404 i un avís d'error fals).
@@ -390,14 +493,15 @@ export function NotesProvider({ children }) {
     }
     if (!seccio) return null;
     const seccioPrevista = seccioDAmbit((compartir ? null : fitxaDeNota(activeNote.fitxa))?.ambit);
-    const seccioDeLaFila = publicacioCarregada(activeNote.publishedSubmissionId || activeNote.id)?.seccio;
+    /* F03-UI · L'id que s'enviarà (idDePublicacio): després d'una retirada, el nou. */
+    const seccioDeLaFila = publicacioCarregada(idDePublicacio(scopeKey, activeNote))?.seccio;
     if (seccioDeLaFila && seccioDeLaFila !== seccioPrevista) {
       const motiu = motiuSeccioPublicada(seccioDeLaFila, t);
       showToast(motiu, 'info');
       return new ErrorPublicacio(motiu);
     }
     return null;
-  }, [actor, config, publicacioCarregada, showToast, t]);
+  }, [actor, config, publicacioCarregada, showToast, t, scopeKey]);
 
   /* T5 · `mode: 'compartir'`: la nota és d'altri (origen) i va al mur de la
      persona com a compartida, citant l'origen, mai com a publicació pròpia.
@@ -449,9 +553,45 @@ export function NotesProvider({ children }) {
        la finestra carregada, el rebuig del servidor (al catch de baix). */
     const rebuig = rebuigDePublicacio(activeNote, { compartir });
     if (rebuig) return Promise.reject(rebuig);
+    /* F03-UI · Verificació R21 (P1) · Amb una retirada del Mur pendent, cap
+       publicació ni actualització: tornaria a pujar la fila que s'ha de
+       retirar i, en pujar la revisió, el reintent ja no casaria. */
+    if (retiradesRef.current.has(String(activeNote.id))) {
+      const motiu = textRetirada('pendentBloqueja', t);
+      showToast(motiu, 'info');
+      return Promise.reject(new ErrorPublicacio(motiu));
+    }
     const seccioPrevista = seccioDAmbit((compartir ? null : fitxaDeNota(activeNote.fitxa))?.ambit);
     const key = `${workspaceKey}:${activeNote.id}`;
     if (publishing.current.has(key)) return publishing.current.get(key);
+    const result = (async () => {
+      const pending = await diariPublicacions.llegix(scopeKey, activeNote.id);
+      if (operationRef.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
+      let consultaSenseOperacio = false;
+      if (pending?.pending) {
+        const receipt = await sendSectionSubmission({ id:pending.actId, noteId:activeNote.id, operationId:pending.operationId,
+          expectedNoteRevision:pending.revision, sectionId:seccioPrevista, consulta:true });
+        if (operationRef.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
+        if (receipt?.retirada) {
+          await diariPublicacions.retira(scopeKey, activeNote.id);
+          refresh?.(); throw new ErrorPublicacio(textRetirada('jaRetirada',t));
+        }
+        if (receipt) {
+          if (receipt.publicacio?.id !== pending.actId || !Number.isSafeInteger(receipt.nota_revision)
+              || !Number.isSafeInteger(receipt.publicada_revision) || receipt.publicada_revision < 1 || receipt.publicada_revision > receipt.nota_revision) throw new Error('Rebut de publicació invàlid.');
+          const publicadaRevision = receipt.publicada_revision;
+          await diariPublicacions.confirma(scopeKey,activeNote.id,pending.operationId);
+          if (operationRef.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
+          await bgSaveManager.confirmRevision(scopeKey,activeNote.id,publicadaRevision);
+          await confirmaPublicacioNota(activeNote.id,{revision:receipt.nota_revision,publicadaRevision,isPublished:true,publishedSubmissionId:pending.actId});
+          bgSaveManager.marcaPublicada(scopeKey,activeNote.id,publicadaRevision);
+          // El replay confirma exactament l’acte anterior. Els canvis nous
+          // continuen al Bloc i necessiten una actualització deliberada.
+          showToast('Publicació confirmada. Els canvis posteriors es publiquen amb Actualitzar.', 'info');
+          return true;
+        }
+        consultaSenseOperacio = receipt === null;
+      }
     // Capture and persist the exact visible document, including editor changes
     // whose own debounce has not fired yet, before entering publication.
     /* Revisió de D4 (260930) · Una connexió no té drets propis que desar: el
@@ -462,7 +602,7 @@ export function NotesProvider({ children }) {
       if (field === 'copyright' && esConnexio(activeNote)) continue;
       if (activeNote[field] !== undefined) void saveNoteField(activeNote.id, field, activeNote[field]);
     }
-    const result = bgSaveManager.runExclusive(scopeKey, activeNote.id, async () => {
+    return bgSaveManager.runExclusive(scopeKey, activeNote.id, async () => {
     const assertCurrent = () => {
       if (operationRef.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
     };
@@ -600,8 +740,14 @@ export function NotesProvider({ children }) {
          escrit (author_location) es queda com el diu qui signa, excepte si
          tria explícitament publicar en un dels seus pobles vinculats, i en
          actualitzar sense canviar de poble conserva el ja publicat. */
-      const submissionId = activeNote.publishedSubmissionId || activeNote.id;
-      const destiRecordat = submissionId ? llegixDestiPublicat(scopeKey, submissionId) : null;
+      /* F03-UI (Onada R21) · Mai l'UUID d'una publicació retirada: després
+         d'una retirada, el triat abans del POST (idDePublicacio). */
+      /* Gauntlet R22 · L'acte vigent (el de la nota publicada) decidix el poble ja
+         publicat; l'intent durable es crea DESPRÉS de les guardes del client: un
+         rebuig local (cap poble triat) no deixa cap intent pendent al diari, que
+         faria una consulta de més al pròxim intent. */
+      const actIdVigent = activeNote.isPublished ? activeNote.publishedSubmissionId : null;
+      const destiRecordat = actIdVigent ? llegixDestiPublicat(scopeKey, actIdVigent) : null;
       const pobleIdDeLaNota = typeof activeNote.publishedPobleId === 'string' && activeNote.publishedPobleId.trim()
         ? activeNote.publishedPobleId.trim()
         : (typeof activeNote.poble_id === 'string' && activeNote.poble_id.trim() ? activeNote.poble_id.trim() : '');
@@ -637,15 +783,43 @@ export function NotesProvider({ children }) {
          connexió o un contingut de fora és d'altri: mai una fitxa pròpia.
          Sense fitxa, el payload és byte a byte el de sempre i la secció,
          'mur' (Llei del Píxel). */
+      const titolPublicat = compartir && ['persona','entitat','grup','ia'].includes(activeNote.origen?.objecte) ? 'Perfil compartit' : (netejaCamp('title', activeNote.title) || 'Sense Títol');
+      const resumPublicat = netejaCamp('lead', activeNote.lead);
+      /* Gauntlet R22 (ronda 3, sql-05) · El servidor rebutja (SDP-MUR-MIDA) un
+         títol, una entradilla o un cos que passen del límit; una foto enganxada
+         en data: dins del cos ja hi arriba. Es diu ací, abans d'obrir cap intent
+         al diari i amb el camp que passa, en lloc d'enviar una publicació que no
+         eixirà mai. Es mira el que s'enviaria: el cos ja amb les còpies públiques.
+         Gauntlet R22 (ronda 4) · Només per a un acte NOU (sense acte vigent). Una
+         actualització la decidix el servidor: mur_limita_mida deixa editar una
+         publicació d'abans del límit que ja en passava mentre el camp no cresca,
+         i si creix, el rebuig (SDP-MUR-MIDA, 22001) té el mateix motiu
+         (esRebuigDeMida i motiuDeMida, davall). */
+      const campMassaLlarg = actIdVigent ? null : campQuePassaDelLimit({ titol: titolPublicat, resum: resumPublicat, cos: finalContent });
+      if (campMassaLlarg) {
+        const motiu = motiuDeMida({ camp: campMassaLlarg, t });
+        showToast(motiu, 'error');
+        throw new ErrorPublicacio(motiu);
+      }
+      const currentRevision = bgSaveManager.getExpectedRevision(scopeKey, activeNote.id, activeNote.revision);
+      /* Gauntlet R22 (notes-07) · Si la consulta d'ací dalt ha confirmat que el
+         servidor no té l'operació pendent, el reintent porta la revisió vigent
+         (una edició després de la fallada ja no fa fallar el CAS una vegada). */
+      let intent = await diariPublicacions.comenca(scopeKey, activeNote.id, { actId: actIdVigent, revision: currentRevision, noAplicat: consultaSenseOperacio });
+      assertCurrent();
+      let submissionId = intent.actId;
       const fitxa = compartir ? null : fitxaDeNota(activeNote.fitxa);
       const seccio = seccioDAmbit(fitxa?.ambit);
       const payloadDeSempre = {
         sectionId: seccio,
         type: compartir ? 'compartit' : 'feed',
-        ...(compartir && activeNote.origen ? { origen: activeNote.origen } : {}),
-        title: netejaCamp('title', activeNote.title) || 'Sense Títol',
+        ...(compartir && activeNote.origen ? { origen: Object.fromEntries(
+          ['tipus','sectionId','itemId','objecte','ruta','url','lloc','titol','drets'].filter(k => activeNote.origen[k] != null)
+            .map(k => [k,k === 'titol' && ['persona','entitat','grup','ia'].includes(activeNote.origen.objecte) ? 'Perfil compartit' : activeNote.origen[k]])
+        ) } : {}),
+        title: titolPublicat,
         subtitle: netejaCamp('subtitle', activeNote.subtitle),
-        description: netejaCamp('lead', activeNote.lead),
+        description: resumPublicat,
         content: finalContent,
         copyright: netejaCamp('copyright', drets),
         image: finalHeroImage,
@@ -707,24 +881,46 @@ export function NotesProvider({ children }) {
       : payloadDeSempre;
 
     assertCurrent();
-    // The note UUID is also the stable submission UUID. Retrying an uncertain
-    // POST upserts the same row; linking can then be retried without duplicates.
-    await sendSectionSubmission({ id: submissionId, sectionId: seccio, payload });
+    const send = () => sendSectionSubmission({ id: submissionId, sectionId: seccio, payload,
+      noteId: activeNote.id, expectedNoteRevision: intent.revision, operationId: intent.operationId });
+    let receipt;
+    try { receipt = await send(); }
+    catch(error) {
+      if (error?.codi === 'SDP-MUR-REVISION' || /\bSDP-MUR-REVISION\b/.test(String(error?.message || ''))) {
+        // L’operació no té rebut i el servidor ha rebutjat el CAS: no ha
+        // publicat este intent. Una decisió nova usarà la nota refrescada.
+        // Gauntlet R22 (notes-07) · Es diu com un conflicte: mai «es reutilitzarà».
+        await diariPublicacions.retira(scopeKey,activeNote.id); refresh?.();
+        const motiu = motiuPublicacioNoFeta('conflicte', t);
+        if (operationRef.current === operation) showToast(motiu, 'error');
+        throw new ErrorPublicacio(motiu);
+      }
+      if (!esRebuigDeRetirada(error)) throw error;
+      if (activeNote.isPublished) { refresh?.(); throw new ErrorPublicacio(textRetirada('jaRetirada',t)); }
+      await diariPublicacions.retira(scopeKey,activeNote.id); assertCurrent();
+      intent = await diariPublicacions.comenca(scopeKey,activeNote.id,{revision:currentRevision});
+      submissionId = intent.actId; receipt = await send();
+    }
     assertCurrent();
-    if (pobleDePublicacio) {
-      desaDestiPublicatNota(submissionId, { pobleId: pobleDePublicacio, authorLocation: llocDePublicacio });
+    if (!Number.isSafeInteger(receipt?.nota_revision) || receipt?.publicacio?.id !== submissionId
+        || !Number.isSafeInteger(receipt.publicada_revision) || receipt.publicada_revision < 1 || receipt.publicada_revision > receipt.nota_revision) {
+      throw new Error('El servidor no ha confirmat el rebut atòmic de publicació.');
     }
     const changes = { isPublished: true, publishedSubmissionId: submissionId };
-    const expectedRevision = bgSaveManager.getExpectedRevision(scopeKey, activeNote.id, activeNote.revision);
-    const saved = await updateNoteContext(activeNote.id, changes, expectedRevision);
+    const saved = { ...changes, revision: receipt.nota_revision };
+    await diariPublicacions.confirma(scopeKey, activeNote.id, intent.operationId);
+    assertCurrent();
+    await confirmaPublicacioNota(activeNote.id, { ...saved, publicadaRevision: receipt.publicada_revision });
+    assertCurrent();
+    if (pobleDePublicacio) desaDestiPublicatNota(submissionId, { pobleId: pobleDePublicacio, authorLocation: llocDePublicacio });
     // D01 · La revisió de la publicació és pròpia: avança també la base persistida
     // de l'esborrany, perquè una recàrrega no la confonga amb un canvi d'altri.
     // La revisió en memòria s'anota en l'acte; si l'escriptura local fallara, la
     // publicació continua feta i, com a molt, una recàrrega demanaria decidir.
-    bgSaveManager.confirmRevision(scopeKey, activeNote.id, saved.revision).catch(() => {});
+    bgSaveManager.confirmRevision(scopeKey, activeNote.id, receipt.publicada_revision).catch(() => {});
     /* Revisió final R16a (carril FA) · El Mur té ara la nota a esta revisió:
        l'editor pot dir «Publicat» fins al pròxim desat (versioAlMur, baix). */
-    bgSaveManager.marcaPublicada(scopeKey, activeNote.id, saved?.revision);
+    bgSaveManager.marcaPublicada(scopeKey, activeNote.id, receipt.publicada_revision);
     assertCurrent();
     clearLocalNoteFields(activeNote.id, changes);
     showToast(compartir ? 'Compartit al teu mur, citant l’origen.' : 'Nota publicada correctament al mur!', 'success');
@@ -739,12 +935,50 @@ export function NotesProvider({ children }) {
        secció d'una fila (SDP-SEC-002): reintentar-ho no servix mai. La fila
        viu a l'altra secció de publishNote (seccioDAmbit només en torna dues),
        i el motiu ho diu en lloc de «Reintenta-la». */
+    /* Gauntlet R22 (notes-05) · És definitiu: l'intent del diari es retira (la RPC
+       no ha escrit res) i el pròxim intent no fa cap consulta de més. */
     if (operationRef.current === operation && esRebuigDeSeccio(error)) {
+      await diariPublicacions.retira(scopeKey, activeNote.id).catch(() => {});
       const motiu = motiuSeccioPublicada(seccioPrevista === 'mercat' ? 'mur' : 'mercat', t);
       showToast(motiu, 'info');
       throw new ErrorPublicacio(motiu);
     }
     if (error instanceof ErrorPublicacio) throw error;
+    /* Gauntlet R22 (sql-02) · La còpia pública d'una imatge no s'ha pogut pujar
+       (promoteToPublic rebutja amb CODI_PROMOCIO_PUBLICA, p. ex. SDP-PURGA-004):
+       no s'ha enviat res i mai una ref privada al Mur. Encara no s'ha obert cap
+       intent nou al diari (la promoció va abans), i no es toca. */
+    if (operationRef.current === operation && error?.codi === CODI_PROMOCIO_PUBLICA) {
+      const motiu = motiuPublicacioNoFeta('imatge', t);
+      showToast(motiu, 'error');
+      throw new ErrorPublicacio(motiu);
+    }
+    /* Gauntlet R22 (ronda 3, sql-05) · El servidor diu que un camp passa del
+       límit de mida (SDP-MUR-MIDA, 22001): és definitiu (la transacció s'ha desfet
+       i el mateix contingut fallaria sempre). L'intent es retira i el motiu diu
+       quin camp; mai «Reintenta-la: es reutilitzarà». */
+    if (operationRef.current === operation && esRebuigDeMida(error)) {
+      await diariPublicacions.retira(scopeKey, activeNote.id).catch(() => {});
+      const motiu = motiuDeMida({ error, t });
+      showToast(motiu, 'error');
+      throw new ErrorPublicacio(motiu);
+    }
+    /* Gauntlet R22 (notes-05) · SDP-MUR-OWNER o SDP-MUR-PUBLICACIO: definitius.
+       L'intent es retira i el motiu ho diu; mai «Reintenta-la: es reutilitzarà». */
+    if (operationRef.current === operation && esRebuigDefinitiuDePublicacio(error)) {
+      await diariPublicacions.retira(scopeKey, activeNote.id).catch(() => {});
+      const motiu = motiuPublicacioNoFeta('rebutjada', t);
+      showToast(motiu, 'error');
+      throw new ErrorPublicacio(motiu);
+    }
+    /* Gauntlet R22 (dades-01) · Sense la publicació atòmica al servidor no s'ha
+       publicat res: l'intent es descarta i el motiu ho diu (mai «pendent»). */
+    if (operationRef.current === operation && error?.codi === CODI_ESQUEMA_ABSENT) {
+      await diariPublicacions.retira(scopeKey, activeNote.id).catch(() => {});
+      const motiu = motiuPublicacioNoFeta('servidor', t);
+      showToast(motiu, 'error');
+      throw new ErrorPublicacio(motiu);
+    }
     if (operationRef.current === operation) {
       /* T2 · En mode de proves el port rebutja sense xarxa (code 'mode-local'):
          dir «pendent de confirmar» faria creure que s'ha enviat. */
@@ -754,13 +988,36 @@ export function NotesProvider({ children }) {
     }
     return false;
   }
-    }).catch((error) => {
+    });
+    })().catch((error) => {
       // La sessió ha canviat abans d'entrar: l'editor és d'una altra operació.
       if (error?.name === 'AbortError' || operationRef.current !== operation) return false;
       /* Integració 261024 · El rebuig per les normes ve de dins (vegeu dalt): passa tal qual. */
       if (esRebuigDeNormes(error)) throw error;
+      /* Gauntlet R22 (notes-05) · La consulta prèvia d'un intent pendent també pot
+         tornar un rebuig definitiu: l'intent es retira (sense esperar-ho). */
+      if (esRebuigDeSeccio(error)) {
+        void diariPublicacions.retira(scopeKey, activeNote.id).catch(() => {});
+        const motiu = motiuSeccioPublicada(seccioPrevista === 'mercat' ? 'mur' : 'mercat',t);
+        showToast(motiu,'info'); throw new ErrorPublicacio(motiu);
+      }
+      if (esRebuigDeRetirada(error)) { refresh?.(); throw new ErrorPublicacio(textRetirada('jaRetirada',t)); }
       /* idea61-01 · El motiu de la secció també ve de dins, amb el seu toast fet. */
       if (error instanceof ErrorPublicacio) throw error;
+      if (esRebuigDefinitiuDePublicacio(error)) {
+        void diariPublicacions.retira(scopeKey, activeNote.id).catch(() => {});
+        const motiu = motiuPublicacioNoFeta('rebutjada', t);
+        showToast(motiu, 'error');
+        throw new ErrorPublicacio(motiu);
+      }
+      /* Gauntlet R22 (dades-01) · La consulta prèvia contra un servidor sense la publicació atòmica:
+         l'intent es descarta (sense esperar-ho) i el motiu ho diu. */
+      if (error?.codi === CODI_ESQUEMA_ABSENT) {
+        void diariPublicacions.retira(scopeKey, activeNote.id).catch(() => {});
+        const motiu = motiuPublicacioNoFeta('servidor', t);
+        showToast(motiu, 'error');
+        throw new ErrorPublicacio(motiu);
+      }
       /* T47 · El desat previ no s'ha confirmat: el motiu és el de la ploma
          (conflicte D01, validació, sense còpia al dispositiu…), no «torna-ho a provar». */
       const motiu = motiuDesatPendent(estatPerAlEditor(bgSaveManager.estat(scopeKey, activeNote.id)).detall, t);
@@ -769,7 +1026,7 @@ export function NotesProvider({ children }) {
     }).finally(() => publishing.current.delete(key));
     publishing.current.set(key, result);
     return result;
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t, rebuigDePublicacio, publicacioCarregada, desaDestiPublicatNota]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, confirmaPublicacioNota, diariPublicacions, clearLocalNoteFields, showToast, nomesLectura, t, rebuigDePublicacio, publicacioCarregada, desaDestiPublicatNota, refresh]);
 
   const compartirNota = useCallback(
     (note, opcions) => publishNote(note, { mode: 'compartir', ...(opcions?.poble ? { poble: opcions.poble } : null) }),
@@ -828,6 +1085,172 @@ export function NotesProvider({ children }) {
     }
     return note && note.contentLoaded !== false ? note : null;
   }, [resolveNote, operation, notaViva]);
+
+  /* Retirada de servidor: l’ACK governa l’estat. Qualsevol error encuat
+     conserva la voluntat i l’acte exacte; el drenador reprén el mateix acte
+     encara que la nota s’edite després. El Bloc no anuncia èxit anticipat. */
+  const potRetirarDelMur = Boolean(
+    teCapacitat('revocacioPublicacions') && !nomesLectura
+      && config?.dataMode !== 'seed' && config?.dataMode !== 'local' && modeDeDadesResolt(config) === 'remote'
+  );
+  const retirant = useRef(new Map());
+  const executaRetirada = useCallback((note) => {
+    const key = `${workspaceKey}:${note.id}`;
+    if (retirant.current.has(key)) return retirant.current.get(key);
+    const result = bgSaveManager.runExclusive(scopeKey, note.id, async () => {
+      if (operationRef.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
+      const changes = { isPublished: false, publishedSubmissionId: null, ...(note.publishedSubmissionId ? { revocaPublicacioId: note.publishedSubmissionId } : {}) };
+      const expectedRevision = bgSaveManager.getExpectedRevision(scopeKey, note.id, note.revision);
+      let saved;
+      try {
+        saved = await updateNoteContext(note.id, changes, expectedRevision);
+      } catch (error) {
+        if (error?.name === 'AbortError') throw error;
+        throw errorDeRetirada(error, t);
+      }
+      if (Number.isSafeInteger(saved?.revision)) bgSaveManager.confirmRevision(scopeKey, note.id, saved.revision).catch(() => {});
+      /* Confirmada: l'UUID de la publicació següent es tria ara (cap
+         republicació no tornarà a l'UUID retirat), el Mur d'esta pestanya la
+         deixa de mostrar sense esperar la recàrrega i ja no és pendent. */
+      await diariPublicacions.retira(scopeKey, note.id).catch(() => {});
+      retiraPublicacionsDeLaNota(note);
+      marcaRetiradaPendent(note.id, false);
+      if (operationRef.current === operation) clearLocalNoteFields(note.id, changes);
+      return true;
+    }).catch((error) => {
+      if (error?.name === 'AbortError' || operationRef.current !== operation) return false;
+      /* runExclusive rebutja abans d'entrar si el desat previ no es confirma. */
+      const motiu = error instanceof ErrorRetirada ? error : new ErrorRetirada(textRetirada('desatPendent', t), 'desat');
+      if (motiu.tipus === 'pendent') marcaRetiradaPendent(note.id, true, note.publishedSubmissionId);
+      throw motiu;
+    }).finally(() => retirant.current.delete(key));
+    retirant.current.set(key, result);
+    return result;
+  }, [operation, t, workspaceKey, scopeKey, updateNoteContext, clearLocalNoteFields, marcaRetiradaPendent, diariPublicacions]);
+
+  const retiraDelMur = useCallback((note) => {
+    if (nomesLectura) return Promise.reject(new ErrorIdentitatDeLectura());
+    if (!note?.id || operationRef.current !== operation) return Promise.resolve(false);
+    if (!potRetirarDelMur) {
+      const connexio = esConnexio(note) || esExtern(note);
+      return Promise.reject(new ErrorRetirada(bloqueigDeNota({ publicada: true, connexio, t }).motiu, 'sense-capacitat'));
+    }
+    if (!esNotaPublicada(note)) return Promise.resolve(true);
+    return executaRetirada(note).then((fet) => {
+      if (fet && operationRef.current === operation) showToast(textRetirada('feta', t), 'success');
+      return fet;
+    }, (motiu) => {
+      if (operationRef.current === operation) showToast(motiu.message, motiu.tipus === 'pendent' ? 'info' : 'error');
+      throw motiu;
+    });
+  }, [nomesLectura, operation, potRetirarDelMur, t, executaRetirada, showToast]);
+
+  /* Gauntlet R22 (ronda 3, notes-03) · La cua ha dit que no queda cap
+     retirada pendent ({ pendents: 0 }): per a cada nota amb marca, decidix la
+     resposta del servidor que porta ESTA nota (resolveNote, una petició feta
+     després del drenatge). Mai una referència nova qualsevol de la llista: amb
+     més de 50 notes la recàrrega arriba pàgina a pàgina i les files que encara
+     no han arribat conserven l'objecte vell (mergeNotes), i un autodesat o una
+     altra resolució també en fan una de nova. Publicada amb el MATEIX acte (o
+     amb una marca d'abans, sense acte): la retirada no s'ha fet i no es
+     tornarà a provar sola; es diu (pendentFallida) i el panell es desbloqueja.
+     Amb un ALTRE acte: d'esta nota ja no queda res pendent. No publicada: la
+     llista, que resolveNote ja ha posat al dia, diu «feta» a l'efecte de baix.
+     Una retirada nova de la mateixa nota mentrestant (un altre intent a la
+     cua) deixa la decisió per a la pròxima vegada. */
+  const resolentRetirades = useRef(new Set());
+  const conclouRetiradesSenseCua = useCallback(async () => {
+    if (typeof resolveNote !== 'function') return;
+    for (const id of [...retiradesRef.current]) {
+      if (operationRef.current !== operation) return;
+      if (resolentRetirades.current.has(id) || retirant.current.has(`${workspaceKey}:${id}`)) continue;
+      resolentRetirades.current.add(id);
+      try {
+        const marca = marquesDeRetirada.current.get(id) ?? 0;
+        const acteRetirat = llegixActeRetirat(scopeKey, id);
+        const resolucio = await resolveNote(id).catch(() => null);
+        const nota = resolucio?.status === 'found' ? resolucio.note : null;
+        if (operationRef.current !== operation || !nota?.isPublished || !retiradesRef.current.has(id)
+            || retirant.current.has(`${workspaceKey}:${id}`) || (marquesDeRetirada.current.get(id) ?? 0) !== marca) continue;
+        const altreActe = Boolean(acteRetirat && nota.publishedSubmissionId
+          && String(nota.publishedSubmissionId).toLowerCase() !== acteRetirat.toLowerCase());
+        marcaRetiradaPendent(id, false);
+        if (!altreActe) showToast(textRetirada('pendentFallida', t), 'error');
+      } finally {
+        resolentRetirades.current.delete(id);
+      }
+    }
+  }, [resolveNote, operation, workspaceKey, scopeKey, marcaRetiradaPendent, showToast, t]);
+
+  /* Un despertar demana al diari un drenatge; no fabrica una altra retirada.
+     Els leases i nextRetryAt persistents són comuns a totes les pestanyes. */
+  const reprenRetirades = useCallback(() => {
+    if (!potRetirarDelMur || operationRef.current !== operation) return;
+    // La cua durable té el retard exponencial i el lease entre pestanyes.
+    // La UI mai crea intents nous de xarxa en resposta a un despertar.
+    void drenaRevocacionsMur(config).then((resultat) => {
+      // Cua buida: cap marca no pot esperar cap reintent més (vegeu dalt).
+      if (operationRef.current === operation && resultat?.pendents === 0) void conclouRetiradesSenseCua().catch(() => {});
+    }, () => {}).finally(() => {
+      if (operationRef.current === operation && typeof refresh === 'function') refresh();
+    });
+  }, [potRetirarDelMur, operation, config, refresh, conclouRetiradesSenseCua]);
+  const reprenRetiradesRef = useRef(reprenRetirades);
+  useLayoutEffect(() => { reprenRetiradesRef.current = reprenRetirades; }, [reprenRetirades]);
+
+  /* La llista del servidor diu si una retirada pendent ja s'ha fet (la cua del
+     port l'ha drenada, o un altre dispositiu): deixa de ser pendent.
+     Gauntlet R22 (notes-03) · Una eixida més, perquè la marca no bloquege la
+     nota per sempre: la nota és publicada amb un ALTRE acte que el que es
+     retirava (un altre dispositiu l'ha retirat i republicat): d'esta nota ja
+     no queda res pendent, i la publicació nova és de la persona. Que la
+     retirada NO s'ha fet (pendentFallida) no ho diu mai la llista: ho diu la
+     resposta que porta la nota (conclouRetiradesSenseCua, dalt). */
+  useEffect(() => {
+    if (!retiradesPendents.size || operationRef.current !== operation) return;
+    for (const id of retiradesPendents) {
+      if (retirant.current.has(`${workspaceKey}:${id}`)) continue;
+      const fila = rawNotes.find((n) => n && String(n.id) === id);
+      if (!fila) continue;
+      const acteRetirat = llegixActeRetirat(scopeKey, id);
+      if (!fila.isPublished) {
+        void diariPublicacions.retira(scopeKey, id).catch(() => {});
+        marcaRetiradaPendent(id, false);
+        showToast(textRetirada('feta', t), 'success');
+      } else if (acteRetirat && fila.publishedSubmissionId && String(fila.publishedSubmissionId).toLowerCase() !== acteRetirat.toLowerCase()) {
+        marcaRetiradaPendent(id, false);
+      }
+    }
+  }, [rawNotes, retiradesPendents, operation, workspaceKey, marcaRetiradaPendent, showToast, t, diariPublicacions, scopeKey]);
+
+  /* Recuperació de primer pla i després de recarregar. El rellotge únic del
+     provider respecta el backoff; ací només es refresca l’estat confirmat. */
+  const hiHaRetiradesPendents = retiradesPendents.size > 0;
+  const llistaLlesta = status === 'ready';
+  const represaInicial = useRef(null);
+  useEffect(() => {
+    /* Una sola vegada per àmbit, quan el Bloc ja és carregat: les pendents
+       que hi havia d'abans (una recàrrega). Una que es marca després no es
+       reprén a l'instant (el transport acaba de caure): ho farà 'online' o
+       el rellotge. */
+    if (!potRetirarDelMur || !llistaLlesta || represaInicial.current === scopeKey) return;
+    represaInicial.current = scopeKey;
+    if (hiHaRetiradesPendents) reprenRetiradesRef.current();
+  }, [potRetirarDelMur, hiHaRetiradesPendents, llistaLlesta, scopeKey]);
+  useEffect(() => {
+    if (!potRetirarDelMur || !hiHaRetiradesPendents || typeof window === 'undefined') return undefined;
+    const repren = () => {
+      reprenRetiradesRef.current();
+    };
+    window.addEventListener('online', repren);
+    window.addEventListener('focus', repren);
+    window.addEventListener('sdp-mur-revocat', refresh);
+    return () => {
+      window.removeEventListener('online', repren);
+      window.removeEventListener('focus', repren);
+      window.removeEventListener('sdp-mur-revocat', refresh);
+    };
+  }, [potRetirarDelMur, hiHaRetiradesPendents, refresh]);
 
   /* IDEA-61 (T0, prompt 261102_1532) · El canvi d'estat d'una fitxa d'àmbit
      (Disponible / Reservat / Complet / Tancat): actualitza note.fitxa.estat
@@ -918,7 +1341,7 @@ export function NotesProvider({ children }) {
       if (operationRef.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
       esborrades.current.add(note.id);
       try {
-        await mouNotaContext(note.id, estat, bgSaveManager.getExpectedRevision(scopeKey, note.id, note.revision));
+        await mouNotaContext(note.id, estat, bgSaveManager.getExpectedRevision(scopeKey, note.id, note.revision), ...(note.publishedSubmissionId ? [note.publishedSubmissionId] : []));
       } catch (error) {
         esborrades.current.delete(note.id);
         throw error;
@@ -928,18 +1351,35 @@ export function NotesProvider({ children }) {
          (recordaRetiradaDeLaN1, dalt): abans de cap espera, perquè el Bloc ja
          la trobe en pintar la llista sense la n1. */
       recordaRetiradaDeLaN1(note, config, scopeKey);
-      if (estat === 'paperera') retiraPublicacionsDeLaNota(note);
+      {
+        await diariPublicacions.retira(scopeKey, note.id).catch(() => {});
+        retiraPublicacionsDeLaNota(note);
+        /* El servidor retira tant la paperera com l’arxiu. */
+        marcaRetiradaPendent(note.id, false);
+      }
       /* T47b (ordre del Mestre, 260928) · retira i no oblida: el que el servidor
          no ha pogut guardar (l'emoticona en quarantena) es queda al dispositiu. */
       await bgSaveManager.retira(scopeKey, note.id).catch(() => {});
       oblidaOverlay(note.id);
       showToast(estat === 'paperera' ? 'Nota a la paperera. Es guardarà 30 dies.' : 'Nota arxivada.', 'success');
       return true;
-    }, () => {
-      if (operationRef.current === operation) showToast('No s’ha pogut moure la nota. Continua on estava.', 'error');
+    }, (error) => {
+      /* F03-UI · A la paperera amb el transport caigut, el port ha encuat la
+         retirada del Mur (revocacioPendent): la nota continua on estava, i la
+         retirada es tornarà a provar. Gauntlet R22 (dades-02) · El port només
+         l'encua amb l'acte publicat (config.revocaPublicacioId): només una
+         nota publicada té res a retirar, i només d'ella es diu (i es recorda,
+         amb l'acte, per a reprendre-la). */
+      const ambRetiradaPendent = error?.revocacioPendent === true && esNotaPublicada(note);
+      if (ambRetiradaPendent && potRetirarDelMur) marcaRetiradaPendent(note.id, true, note.publishedSubmissionId);
+      if (operationRef.current === operation) {
+        showToast(ambRetiradaPendent
+          ? textRetirada('pendentMoure', t)
+          : 'No s’ha pogut moure la nota. Continua on estava.', 'error');
+      }
       return false;
     });
-  }, [operation, scopeKey, mouNotaContext, oblidaOverlay, showToast, nomesLectura, config]);
+  }, [operation, scopeKey, mouNotaContext, oblidaOverlay, showToast, nomesLectura, config, t, marcaRetiradaPendent, potRetirarDelMur, diariPublicacions]);
 
   /* Esborrat definitiu: no es desa res. La cua pendent es cancel·la abans
      (oblida); si hi havia un desat en curs, el serial l'espera i la revisió es
@@ -951,20 +1391,30 @@ export function NotesProvider({ children }) {
     try {
       await bgSaveManager.oblida(scopeKey, note.id);
       await bgSaveManager.serial(`${scopeKey}:${note.id}`, () => esborraNotaContext(
-        note.id, bgSaveManager.getExpectedRevision(scopeKey, note.id, note.revision)));
-    } catch {
+        note.id, bgSaveManager.getExpectedRevision(scopeKey, note.id, note.revision), ...(note.publishedSubmissionId ? [note.publishedSubmissionId] : [])));
+    } catch (error) {
       esborrades.current.delete(note.id);
-      if (operationRef.current === operation) showToast('No s’ha pogut borrar la nota. Continua on estava.', 'error');
+      /* F03-UI · Com a mouNota: la retirada del Mur pot haver quedat encuada,
+         i només es diu (i es recorda) d'una nota publicada. */
+      const ambRetiradaPendent = error?.revocacioPendent === true && esNotaPublicada(note);
+      if (ambRetiradaPendent && potRetirarDelMur) marcaRetiradaPendent(note.id, true, note.publishedSubmissionId);
+      if (operationRef.current === operation) {
+        showToast(ambRetiradaPendent
+          ? textRetirada('pendentBorrar', t)
+          : 'No s’ha pogut borrar la nota. Continua on estava.', 'error');
+      }
       return false;
     }
     // T11-03 (D-M1) · Com a mouNota: abans de cap espera.
     recordaRetiradaDeLaN1(note, config, scopeKey);
+    await diariPublicacions.retira(scopeKey, note.id).catch(() => {});
     retiraPublicacionsDeLaNota(note);
+    marcaRetiradaPendent(note.id, false);
     await bgSaveManager.oblida(scopeKey, note.id).catch(() => {});
     oblidaOverlay(note.id);
     showToast('Nota borrada definitivament.', 'success');
     return true;
-  }, [operation, scopeKey, esborraNotaContext, oblidaOverlay, showToast, nomesLectura, config]);
+  }, [operation, scopeKey, esborraNotaContext, oblidaOverlay, showToast, nomesLectura, config, t, marcaRetiradaPendent, potRetirarDelMur, diariPublicacions]);
 
   const ctxValue = useMemo(() => ({
     notes,
@@ -1002,11 +1452,12 @@ export function NotesProvider({ children }) {
     mouNota,
     esborraNota,
     potEsborrar,
+    retiraDelMur, potRetirarDelMur, retiradaPendentDeNota,
     t
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField, desaNotaPreparada,
     publishNote, compartirNota, canviaEstatPublicacio, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, currentUser, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
-    mouNota, esborraNota, potEsborrar, t, nomesLectura, rebuigDePublicacio, versioAlMur,
+    mouNota, esborraNota, potEsborrar, retiraDelMur, potRetirarDelMur, retiradaPendentDeNota, t, nomesLectura, rebuigDePublicacio, versioAlMur,
     destiPublicatDeNota, desaDestiPublicatNota, versioDestinsPublicats
   ]);
 

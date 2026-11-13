@@ -93,7 +93,12 @@ const FITXERS = Object.freeze([
   /* IDEA-56 (pla 261029_1605, Bloc F.2) · El cervell local de la IAIA al xat
      de mostra i la seua resposta local, etiquetada, al grup públic de /iaia. */
   'src/sections/xat/components/FakeChatOnboarding.iaiaLocal.test.jsx',
-  'src/sections/xat/components/Conversa.iaiaLocal.test.jsx'
+  'src/sections/xat/components/Conversa.iaiaLocal.test.jsx',
+  /* Onada R21.9 · Multimèdia WhatsApp (Drag & Drop, Paste, VisorGaleriaXat),
+     grups amb CaraXat 28px + AAA i etiquetes humanes del Mercat. */
+  'src/sections/xat/components/VisorGaleriaXat.jsx',
+  'src/sections/mercat/etiquetesMercat.js',
+  'src/sections/xat/XatR21_9.multimediaGrupsIMercat.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

@@ -83,7 +83,7 @@ describe('els textos: la reserva és la de ca.js, caràcter a caràcter', () => 
     expect(TEXTOS_VERTICALS.mapa.subtitle[0]).toBe('section.mapa.lead');
     pinta('mapa');
     const entradilla = TEXTOS_VERTICALS.mapa.subtitle[1];
-    expect(entradilla).toBe('Punts d’interès, camins, patrimoni i incidències del terme que publica la gent del poble.');
+    expect(entradilla).toBe('Punts d’interès, camins, patrimoni i incidències del terme que publica la gent de poble.');
     expect(document.body.textContent).toContain(entradilla);
     expect(document.body.textContent).not.toMatch(/geogr[aà]fica/i);
     expect(estat.seo).toHaveBeenCalledWith(expect.objectContaining({ description: entradilla }));

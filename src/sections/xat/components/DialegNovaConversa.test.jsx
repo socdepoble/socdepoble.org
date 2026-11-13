@@ -245,13 +245,13 @@ test('amb un terme que el padró local no troba, carrega fins que respon el serv
   const dialeg = await obert();
   fireEvent.change(within(dialeg).getByRole('searchbox'), { target: { value: 'zor' } });
   expect(within(dialeg).queryByText('Cap contacte amb eixe nom.')).toBeNull();
-  expect(within(dialeg).getByText('Carregant la gent del poble…')).toBeTruthy();
+  expect(within(dialeg).getByText('Carregant la gent del teu poble…')).toBeTruthy();
   await waitFor(() => expect(props.cercaMembres).toHaveBeenCalledWith('zor'));
   expect(within(dialeg).queryByText('Cap contacte amb eixe nom.')).toBeNull();
 
   await act(async () => resol([{ usuari_id: 'u-zoraida', nom: 'Zoraida Ferrer', tipus: 'persona', fil_id: null }]));
   expect(within(dialeg).getByRole('button', { name: /Zoraida Ferrer/ })).toBeTruthy();
-  expect(within(dialeg).queryByText('Carregant la gent del poble…')).toBeNull();
+  expect(within(dialeg).queryByText('Carregant la gent del teu poble…')).toBeNull();
 });
 
 /* L'error d'obrir la conversa el pinta el diàleg: fora, un toast quedaria

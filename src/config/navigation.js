@@ -372,7 +372,8 @@ export function objecteDe(item, seccio) {
     seccio: seccio ? String(seccio) : '',
     ruta: esRutaInterna(ruta) ? ruta : '',
     autor: autor || nom ? { tipus: autor?.tipus || '', id: autor?.id || '', nom, ...marcaDelProjecte(autor) } : null,
-    ...marcaDeVisibilitat(item)
+    ...marcaDeVisibilitat(item),
+    ...(item._murPublic === true ? { murPublic: true } : {})
   };
 }
 

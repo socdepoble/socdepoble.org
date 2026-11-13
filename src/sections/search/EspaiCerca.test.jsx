@@ -506,7 +506,7 @@ describe('el detall', () => {
     pinta('mode=espai&q=festa');
     const cos = within(detall());
     expect(cos.getByText('Sense entrar, la cerca no veu la gent registrada al poble.')).toBeTruthy();
-    const entra = cos.getByRole('link', { name: 'Entra per a buscar gent del poble' });
+    const entra = cos.getByRole('link', { name: 'Entra per a buscar gent del teu poble' });
     expect(new URL(entra.getAttribute('href'), 'http://x').searchParams.get('tornar')).toBe('/cerca?mode=espai&q=festa');
   });
 
@@ -515,7 +515,7 @@ describe('el detall', () => {
     pinta('mode=espai');
     const cos = within(detall());
     expect(cos.queryByText('Sense entrar, la cerca no veu la gent registrada al poble.')).toBeNull();
-    const entra = cos.getAllByRole('link', { name: 'Entra per a buscar gent del poble' });
+    const entra = cos.getAllByRole('link', { name: 'Entra per a buscar gent del teu poble' });
     expect(entra).toHaveLength(1);
     expect(new URL(entra[0].getAttribute('href'), 'http://x').searchParams.get('tornar')).toBe('/cerca?mode=espai');
   });

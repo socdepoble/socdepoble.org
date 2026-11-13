@@ -5,13 +5,14 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {creaPlaMigracions,generaSql,preparaHidratacio,ROOT} from '../../tooling/node0/hidrata-postgres-node0.mjs';
+import {comparaVersions} from '../../scripts/supabase/verifica-migracions.mjs';
 export async function creaFixtureR20b(){
  const input=process.env.SDP_PGLITE_MODULE;if(!input)throw Error('Explicit local PGlite required');
  const url=input.startsWith('file:')?new URL(input):pathToFileURL(path.resolve(input));
  const {PGlite}=await import(url.href),{pgcrypto}=await import(new URL('./contrib/pgcrypto.js',url));
  const initial=new PGlite();await initial.exec('CREATE DATABASE socdepoble_node0');const image=await initial.dumpDataDir('none');await initial.close();
  const pg=new PGlite({database:'socdepoble_node0',loadDataDir:image,extensions:{pgcrypto}}),plan=creaPlaMigracions(),hydration=await preparaHidratacio();
- const baseline=plan.migrations.filter(m=>m.version<'2611052345');
+ const baseline=plan.migrations.filter(m=>comparaVersions(m.version,'2611052345')<0);
  if(baseline.length!==76)throw Error('Expected R7 baseline76 migrations');
  await pg.exec(generaSql({...plan,migrations:baseline},hydration,{advisoryLock:false}));
  for(const name of ['auth-node0.sql','backend-node0.sql'])await pg.exec(fs.readFileSync(path.join(ROOT,'tooling/node0',name),'utf8'));

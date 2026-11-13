@@ -242,6 +242,7 @@ import {
   contactesFrequents as calculaContactesFrequents,
   creaAgrupadorMarques,
   esSilenciat,
+  esTextBuitOSolsMarques,
   esperaReintent,
   filsEquivalents,
   fusionaPerSeq,
@@ -777,7 +778,7 @@ export function XatProvider({ children, config }) {
   const motiuServeiTecnic = !joId || convidat ? null
     : quiMiraEsJavi ? (joEsJavi ? null : 'tuMateix')
       : rutaDelXatDeJavi(modeDades) ? null : 'senseCompte';
-  const avisTuMateix = t('section.xat.javi.tuMateix', 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent del poble. Les converses que t’escriguen arribaran a la llista com a directes.');
+  const avisTuMateix = t('section.xat.javi.tuMateix', 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent de poble. Les converses que t’escriguen arribaran a la llista com a directes.');
   const avisSenseCompte = t('section.xat.javi.senseCompte', 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.');
   const filServeiTecnic = useMemo(() => {
     if (filDeMostra) return filDeMostra;
@@ -1749,7 +1750,7 @@ export function XatProvider({ children, config }) {
     if (fil?.potEscriure === false) return [];
     const filId = fil?.id;
     const cos = String(text ?? '').trim();
-    if (!filId || !cos) return [];
+    if (!filId || !cos || esTextBuitOSolsMarques(cos)) return [];
     const respostaA = opcions?.respostaA ? String(opcions.respostaA) : null;
     const esperaLaXarxa = opcions?.esperaLaXarxa !== false;
 
@@ -1802,7 +1803,7 @@ export function XatProvider({ children, config }) {
   const enviaAmbNormes = useCallback(async (fil, text, opcions) => {
     const moderacio = moderacioRef.current;
     const complet = filsRef.current.find((f) => f.id === fil?.id) || visitantsRef.current[fil?.id] || fil;
-    if (typeof moderacio?.asseguraNormes === 'function' && String(text ?? '').trim() && !esXatPrivatDeLaIAIA(complet)
+    if (typeof moderacio?.asseguraNormes === 'function' && !esTextBuitOSolsMarques(text) && !esXatPrivatDeLaIAIA(complet)
       && !(await moderacio.asseguraNormes())) {
       throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
     }

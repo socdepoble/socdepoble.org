@@ -215,7 +215,9 @@ test('D4 · una connexió amb drets reservats avisa a l’editor i al selector; 
   mocks.session = { currentUser: { id: 'U' } };
   render(<NotesEditor activeNote={ambDrets('© Pepa Soler')} />);
   const avis = screen.getByText('Contingut amb drets reservats', { selector: '.sdp-alerta__titol' }).closest('.sdp-alerta');
-  expect(avis.textContent).toContain('se’n citarà l’autoria i l’enllaç');
+  // Gauntlet R22 (notes-06) · Al Mur se'n citen l'origen, l'enllaç i els drets; el nom de qui signa, no.
+  expect(avis.textContent).toContain('se’n citaran l’origen, l’enllaç i els drets de l’original');
+  expect(avis.textContent).not.toMatch(/autoria/);
   expect(mocks.adapter.visibilitat.textos.descripcio).toContain('Contingut amb drets reservats.');
   expect(mocks.adapter.visibilitat.textos.publica.accio).toBe('Compartir al Mur');
   cleanup();

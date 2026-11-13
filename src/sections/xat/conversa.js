@@ -64,6 +64,71 @@ export function anotaGrups(files) {
   });
 }
 
+/* ─────────────────────────── Cara i color de l'autor ─────────────────────────── */
+
+/**
+ * Gauntlet R22 (xat-07) · La llavor del color i de la cara de l'autor d'un
+ * missatge (toDeLlavor, Avatar). Una entitat signa amb el seu nom: la llavor
+ * ix del nom de l'entitat, mai de l'usuariId de qui l'opera, que el color
+ * delataria (moderacio.js: «mai s'infereix qui opera una entitat»). La resta,
+ * l'usuariId i, sense, el nom.
+ */
+export function llavorDAutor(msg, nom) {
+  if (msg?.comEntitat) return `entitat:${nom || ''}`;
+  return String(msg?.usuariId || nom || 'vei');
+}
+
+/**
+ * Gauntlet R22 (xat-09) · Les cares que el fil ja porta: `fil.altres`, el
+ * padró de la conversa que donen el servidor (xat_fils_meus) i localXat, amb
+ * id, tipus i avatarUrl. Clau `entitat:<id>` per a les entitats i
+ * `altre:<id>` per a la resta. Cap petició: el que no hi és, inicials.
+ */
+export function caresDelFil(fil) {
+  const cares = new Map();
+  for (const altre of Array.isArray(fil?.altres) ? fil.altres : []) {
+    const id = altre?.id == null ? '' : String(altre.id);
+    const url = altre?.avatarUrl ?? altre?.avatar_url ?? null;
+    if (!id || typeof url !== 'string' || !url) continue;
+    cares.set(`${altre.tipus === 'entitat' ? 'entitat' : 'altre'}:${id}`, url);
+  }
+  return cares;
+}
+
+/**
+ * La cara (src de CaraXat) de l'autor d'un missatge, o null. Un missatge
+ * d'entitat pren la de l'entitat del fil, mai la de qui l'opera (xat-07).
+ */
+export function caraDAutor(msg, fil, cares) {
+  if (!msg || !cares?.size) return null;
+  if (msg.comEntitat) return fil?.entitatId != null ? cares.get(`entitat:${fil.entitatId}`) ?? null : null;
+  return msg.usuariId != null ? cares.get(`altre:${msg.usuariId}`) ?? null : null;
+}
+
+/**
+ * Les fotos de la conversa per al visor (VisorGaleriaXat): les imatges no
+ * esborrades ni bloquejades amb adjunt. Cada una porta l'autor, la seua cara
+ * (caraDAutor) i la llavor del color (llavorDAutor), mai l'usuariId.
+ */
+export function imatgesDeLaGaleria(messages, { t, fil = null, cares = null } = {}) {
+  return (messages || [])
+    .filter((m) => m && !m.esborrat && !m.esborratAl && !m.bloquejat && m.tipus === 'imatge' && m.metadades?.adjunt?.id && m.id != null)
+    .map((m) => {
+      const autor = m.sender === 'me'
+        ? (m.author || m.author_name || t('section.xat.tu', 'Tu'))
+        : (m.author || m.author_name || t('section.xat.vei', 'Veí'));
+      return {
+        id: String(m.id),
+        adjuntId: m.metadades.adjunt.id,
+        autor,
+        avatar: caraDAutor(m, fil, cares),
+        llavor: llavorDAutor(m, autor),
+        creatAl: m.creatAl || null,
+        text: m.text ?? m.content ?? ''
+      };
+    });
+}
+
 /* ─────────────────────────── No llegits en obrir ─────────────────────────── */
 
 /** La marca de lectura com a número, o null si no n'hi ha cap de coneguda. */

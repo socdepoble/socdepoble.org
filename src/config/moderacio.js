@@ -34,6 +34,13 @@ const MAI = () => false;
 /** La clau d'un bloqueig al conjunt de la sessió: 'persona:<id>' o 'entitat:<id>'. */
 export const clauDeBloqueig = (tipus, id) => `${tipus}:${id}`;
 
+/* R22 · Un bloqueig opac per UUID de publicació (bloqueja_publicacio_mur
+   d'un Foraster): la llista el porta amb el UUID públic i sense autor. El
+   servidor amaga les publicacions de qui firma; ací només es reconeix eixa
+   mateixa publicació, mai cap identitat. */
+export const TIPUS_BLOQUEIG_PUBLICACIO = 'publicacio';
+const TIPUS_DE_LA_LLISTA = Object.freeze([...TIPUS_BLOQUEJAT, TIPUS_BLOQUEIG_PUBLICACIO]);
+
 /**
  * El text amb cada {clau} de `valors` posada al seu lloc; una clau que no hi
  * és es queda com estava. Amb una funció de reemplaç: un nom amb «$&» o «$'»
@@ -70,6 +77,11 @@ export function objectiuDeTargeta(objecte, { esDeQuiMira = MAI } = {}) {
   }
   if (!MODERABLES.includes(objecte.tipus)) return null;
   const id = text(objecte.id).trim();
+  // Només el DTO públic marca esta via; la RPC resol l'autor i elegibilitat.
+  if (objecte.murPublic === true && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return Object.freeze({ tipus: objecte.tipus, id, titol: text(objecte.titol), autor: null,
+      filId: null, bloquejable: true, murPublic: true });
+  }
   const autor = objecte.autor;
   const autorId = text(autor?.id).trim();
   const nom = text(autor?.nom).trim();
@@ -131,6 +143,7 @@ export function objectiuDeContrapart(fil) {
  */
 export function elementBloquejat(item, claus, { esDeQuiMira = MAI } = {}) {
   if (!item || !claus?.size) return false;
+  if (item._murPublic === true && claus.has(clauDeBloqueig(TIPUS_BLOQUEIG_PUBLICACIO, text(item.id)))) return true;
   const autor = autorDe(item);
   return Boolean(autor) && esDeQuiMira(autor.id) !== true && claus.has(clauDeBloqueig(autor.tipus, autor.id));
 }
@@ -280,11 +293,11 @@ export function fusionaBloquejos(servidor, { afegits, llevats } = {}) {
   const mapa = new Map();
   for (const b of [...(afegits instanceof Map ? afegits.values() : [])].reverse()) {
     const k = clauDeBloqueig(b?.tipus, b?.id);
-    if (TIPUS_BLOQUEJAT.includes(b?.tipus) && b.id && !fora.has(k) && !mapa.has(k)) mapa.set(k, b);
+    if (TIPUS_DE_LA_LLISTA.includes(b?.tipus) && b.id && !fora.has(k) && !mapa.has(k)) mapa.set(k, b);
   }
   for (const b of Array.isArray(servidor) ? servidor : []) {
     const k = clauDeBloqueig(b?.tipus, b?.id);
-    if (TIPUS_BLOQUEJAT.includes(b?.tipus) && b.id && !fora.has(k) && !mapa.has(k)) mapa.set(k, b);
+    if (TIPUS_DE_LA_LLISTA.includes(b?.tipus) && b.id && !fora.has(k) && !mapa.has(k)) mapa.set(k, b);
   }
   return mapa;
 }

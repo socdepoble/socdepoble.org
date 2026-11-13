@@ -12,7 +12,16 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { StorageClient } from '@supabase/storage-js';
 
-const m = vi.hoisted(() => ({ firma: vi.fn(), baixa: vi.fn(), puja: vi.fn(), llista: vi.fn(), esborra: vi.fn(), usuari: null, client: null, peticions: [] }));
+const m = vi.hoisted(() => ({ firma: vi.fn(), baixa: vi.fn(), puja: vi.fn(), llista: vi.fn(), esborra: vi.fn(), usuari: null, client: null, peticions: [], trosExif: 0 }));
+/* Gauntlet R22 (ronda 3, dades-06) · El tros de l'EXIF, en fred: tarda més que els 50 ms reals que la promoció
+   d'una foto neta té per a arribar a la pujada (la cursa que feia roja «una pujada penjada al bucket públic…»).
+   Una foto sense cap bloc EXIF no l'ha d'esperar ni demanar. */
+vi.mock('../../components/universal/enquadrament/exifIncrustat.js', async (importOriginal) => {
+  m.trosExif += 1;
+  const { setTimeout: esperaElTros } = await import('node:timers/promises');
+  await esperaElTros(200);
+  return importOriginal();
+});
 vi.mock('./runtime.js', () => ({
   getResolvedConfig: (config = {}) => ({ ...config, runtimeDataMode: config.dataMode ?? 'remote' })
 }));
@@ -28,7 +37,9 @@ vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessi
 
 import { deleteFile, esborraElMeuMitja, llistaElsMeusMitjans, promoteToPublic, resolveAsset, uploadFile, uploadToStorage } from './storage.js';
 import { tempsLimitPujada } from '../xatMultimedia.js';
-import { CODI_BACKEND_INABASTABLE, esBackendInabastable } from '../errorsBackend.js';
+import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
+import { setTimeout as esperaReal } from 'node:timers/promises';
+import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_PROMOCIO_PUBLICA, esBackendInabastable } from '../errorsBackend.js';
 
 const UID = '11111111-1a1a-4000-8000-000000000001';
 const POBLE = '22222222-2b2b-4000-8000-000000000002';
@@ -125,14 +136,39 @@ describe('promoure (promoteToPublic)', () => {
     expect((await estatDespres(promocio, 60_000)).nom).toBe('pendent');
   });
 
-  test('una pujada penjada al bucket públic té el termini de la seua mida i torna la ref privada', async () => {
-    const fitxer = webp(1_000_000);
+  /* Gauntlet R22 (sql-02) · Vençut el termini, la pujada no ha fet la còpia pública:
+     la promoció rebutja (CODI_PROMOCIO_PUBLICA) i qui publica s'atura; abans tornava
+     la ref privada i el Mur la publicava trencada per a la resta. */
+  test('una pujada penjada al bucket públic té el termini de la seua mida i atura la publicació', async () => {
+    const fitxer = new Blob([WEBP_NET], { type: 'image/webp' });
     m.baixa.mockResolvedValue({ data: fitxer, error: null });
     m.puja.mockImplementation(penjada);
     const promocio = promoteToPublic(REF_PRIVADA, CONFIG);
+    // La lectura de Blob i WebCrypto acaben abans de mesurar el termini
+    // propi de la pujada; el rellotge fals no executa el pool criptogràfic.
+    for (let ronda = 0; ronda < 50 && !m.puja.mock.calls.length; ronda++) await esperaReal(1);
+    expect(m.puja).toHaveBeenCalledOnce();
     expect((await estatDespres(promocio, tempsLimitPujada(fitxer.size) - 1)).nom).toBe('pendent');
-    expect(await estatDespres(promocio, 1)).toEqual({ nom: 'resolta', valor: REF_PRIVADA });
+    const estat = await estatDespres(promocio, 1);
+    expect(estat.nom).toBe('rebutjada');
+    expect(estat.valor).toMatchObject({ codi: CODI_PROMOCIO_PUBLICA });
+    expect(estat.valor.cause).toBeInstanceOf(Error);
+    expect([...Object.values(CODI_MITJANS), CODI_BACKEND_INABASTABLE]).toContain(estat.valor.cause.codi);
   });
+});
+
+/* Gauntlet R22 (ronda 3, dades-06) · La promoció d'una foto sense cap bloc EXIF (la casella desmarcada, o una imatge
+   enganxada) no demana el mòdul de l'EXIF: ni l'espera ni depén de quan arribe. */
+test('R22 (ronda 3) · una foto sense cap bloc EXIF es promou sense demanar el tros de l’EXIF', async () => {
+  m.baixa.mockResolvedValue({ data: new Blob([WEBP_NET], { type: 'image/webp' }), error: null });
+  m.puja.mockResolvedValue({ data: { path: 'x' }, error: null });
+  const estat = { nom: 'pendent', valor: undefined };
+  promoteToPublic(REF_PRIVADA, CONFIG).then((valor) => Object.assign(estat, { nom: 'resolta', valor }), (valor) => Object.assign(estat, { nom: 'rebutjada', valor }));
+  for (let ronda = 0; ronda < 500 && estat.nom === 'pendent'; ronda++) await esperaReal(1);
+  expect(estat.nom).toBe('resolta');
+  expect(estat.valor).toMatch(/^sdp-media:\/\/mitjans\/.+\/sdp-net-v1-[0-9a-f]{64}\.webp$/);
+  expect(m.puja).toHaveBeenCalledOnce();
+  expect(m.trosExif).toBe(0);
 });
 
 describe('la biblioteca de fotos pròpies', () => {

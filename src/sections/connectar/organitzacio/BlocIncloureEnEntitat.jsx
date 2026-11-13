@@ -203,7 +203,7 @@ export function BlocIncloureEnEntitat({ entitats = [], persona = null, config = 
         {omple(t('section.connectar.incloure.titol', 'Incloure {nom} en una entitat teua'), { nom })}
       </h3>
       <p className="sdp-connectar__ajuda">
-        {t('section.connectar.incloure.ajuda', 'Formar part és una pertinença formal, no una connexió. Només s’hi pot incloure veïnat del poble de l’entitat.')}
+        {t('section.connectar.incloure.ajuda', 'Formar part és una pertinença formal, no una connexió. Només s’hi pot incloure veïnat del municipi de l’entitat.')}
       </p>
       {opcionsEntitat.length > 1 ? (
         <SelectorDeVariacions llegenda={t('section.connectar.incloure.entitat', 'A quina entitat?')}

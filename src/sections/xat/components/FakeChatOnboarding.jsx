@@ -129,7 +129,7 @@ function filsDeSocDePoble(t, ara) {
    els fils de mostra. */
 function filsDelPoble(poble, t, ara, avatar, nom) {
   if (!poble) return [];
-  const benvinguda = t('section.xat.fake.poble1', "Benvinguts al xat de {nom}. Registra't per a parlar amb la gent del poble.").replace('{nom}', nom);
+  const benvinguda = t('section.xat.fake.poble1', "Benvinguts al xat de {nom}. Registra't per a parlar amb la gent d’este poble.").replace('{nom}', nom);
   const comuna = { comunitatId: 'fake-poble', ultimAl: ara, llegitFinsSeq: 0 };
   return [
     { id: 'fake-poble', tipus: 'comunitat', esComunitat: true, name: nom, title: nom, avatar_url: avatar, subjecte: { ...objecteDelPoble(poble), titol: nom }, ultimAl: ara, noLlegits: 0 },

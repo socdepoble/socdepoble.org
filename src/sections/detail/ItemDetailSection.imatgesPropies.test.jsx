@@ -560,7 +560,7 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     const barra = container.querySelector('.sdp-pestanyes');
     expect(barra.className).toBe('sdp-pestanyes sdp-pestanyes--centrades');
     const llista = barra.querySelector('[role="tablist"]');
-    expect(llista.getAttribute('aria-label')).toBe('Continguts del poble');
+    expect(llista.getAttribute('aria-label')).toBe('Continguts d’este poble');
     /* Expectativa actualitzada a propòsit: P1-11 (T5B-01) · la segona pestanya,
        «Empreses i entitats», i sense les píndoles la barra va just després del botó blau. */
     expect([...llista.querySelectorAll('[role="tab"]')].map((p) => [p.textContent, p.getAttribute('aria-selected')]))

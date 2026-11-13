@@ -148,9 +148,9 @@ export const TEXTOS_PRIVACITAT = Object.freeze({
     senseVigent: textPrivacitat('consentiment.senseVigent', 'Encara no hi ha cap política de privacitat publicada.'),
     calTitol: textPrivacitat('consentiment.calTitol', 'Cal el teu consentiment'),
     accepta: textPrivacitat('consentiment.accepta', 'Acceptar la versió {versio}'),
-    calText: textPrivacitat('consentiment.calText', 'Sense acceptar la política vigent no apareixes al padró del poble.'),
+    calText: textPrivacitat('consentiment.calText', 'Sense acceptar la política vigent no apareixes al padró del teu poble.'),
     retira: textPrivacitat('consentiment.retira', 'Retirar el consentiment'),
-    retiraDescripcio: textPrivacitat('consentiment.retiraDescripcio', 'Deixaràs d’aparéixer al padró del poble fins que el tornes a acceptar.'),
+    retiraDescripcio: textPrivacitat('consentiment.retiraDescripcio', 'Deixaràs d’aparéixer al padró del teu poble fins que el tornes a acceptar.'),
     retiraConfirma: textPrivacitat('consentiment.retiraConfirma', 'Retirar-lo'),
     retiraText: textPrivacitat('consentiment.retiraText', 'El compte no s’esborra: per a això, demana la baixa. El registre de quan l’has donat i '
       + 'retirat es conserva, perquè la llei ens obliga a poder demostrar-ho.'),

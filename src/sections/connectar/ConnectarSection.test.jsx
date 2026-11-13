@@ -190,7 +190,7 @@ test('C16 · llevar una persona porta el focus a la següent; l’última, al ca
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Lleva Rosa Pla de la llista' }));
   fireEvent.click(document.activeElement);
   expect(screen.queryByRole('list', { name: 'Persones triades' })).toBeNull();
-  expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Cerca al padró del poble' }));
+  expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Cerca al padró del teu poble' }));
 });
 
 /* Correcció C18 (260928) · La carpeta triada es llig sense color; el nom accessible no canvia. */
@@ -699,7 +699,7 @@ test('Revisió · amb el Bloc en error no queda «Obrint el teu Bloc…»: l’A
   expect(screen.queryByRole('button', { name: 'Obrint el teu Bloc…' })).toBeNull();
   const avis = screen.getByText('No s’ha pogut obrir el teu Bloc.', { selector: '.sdp-alerta__titol' }).closest('.sdp-alerta');
   expect(avis.getAttribute('role')).toBe('alert');
-  expect(avis.textContent).toContain('El servidor del poble ha tornat un error. Torna-ho a provar més tard.');
+  expect(avis.textContent).toContain('El servidor de poble ha tornat un error. Torna-ho a provar més tard.');
   expect(avis.textContent).not.toMatch(/Supabase|relation/);
   // El botó de connectar no fa res mentre el Bloc no s'ha obert.
   const connecta = screen.getByRole('button', { name: CONNECTA });
@@ -715,9 +715,9 @@ test('Revisió · el text del Bloc fallat el tria el codi: servidor inabastable,
   mocks.canCreate = false;
   mocks.statusBloc = 'error';
   const casos = [
-    [{ codi: 'backend-inabastable' }, 'El servidor del poble no respon ara mateix.'],
-    [{ status: 0 }, 'El servidor del poble no respon ara mateix.'],
-    [{ status: 403 }, 'El servidor del poble ha tornat un error.'],
+    [{ codi: 'backend-inabastable' }, 'El servidor de poble no respon ara mateix.'],
+    [{ status: 0 }, 'El servidor de poble no respon ara mateix.'],
+    [{ status: 403 }, 'El servidor de poble ha tornat un error.'],
     [{}, 'Revisa la connexió i torna-ho a provar.']
   ];
   for (const [camps, text] of casos) {
@@ -736,7 +736,7 @@ test('Revisió · el contingut de fora amb el Bloc en error també ho diu i es p
   render(<ConnectarSection />);
   expect(screen.queryByRole('button', { name: 'Obrint el teu Bloc…' })).toBeNull();
   expect(screen.getByText('No s’ha pogut obrir el teu Bloc.', { selector: '.sdp-alerta__titol' })).toBeTruthy();
-  expect(screen.getByRole('alert').textContent).toContain('El servidor del poble no respon ara mateix.');
+  expect(screen.getByRole('alert').textContent).toContain('El servidor de poble no respon ara mateix.');
   expect(screen.getByRole('button', { name: CONNECTA }).disabled).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Torna-ho a provar' }));
   expect(mocks.refresh).toHaveBeenCalledTimes(1);
@@ -780,12 +780,40 @@ test('Revisió · un paquet seed amb l’elecció remota desada: sense sessió c
 
 test('Revisió · l’Alerta de drets reservats de /connectar passa per t() amb les claus de l’editor', () => {
   mocks.mur = MERCAT_AMB({ copyright: '© Pepa Soler' });
-  const traduccions = { 'section.notes.drets.titol': 'Contenido con derechos reservados', 'section.notes.drets.text': 'Texto traducido.' };
+  /* Gauntlet R22 (notes-06) · La clau del text és la de l'editor (PARELL_TEXT_DRETS, textCita): la vella
+     ('section.notes.drets.text') prometia citar l'autoria, i amb una traducció carregada era la que es pintava. */
+  const traduccions = { 'section.notes.drets.titol': 'Contenido con derechos reservados', 'section.notes.drets.textCita': 'Texto traducido.',
+    'section.notes.drets.text': 'Texto viejo que promete la autoría.' };
   mocks.t = (clau, alternativa) => traduccions[clau] ?? alternativa;
   render(<ConnectarSection />);
   const avis = screen.getByText('Contenido con derechos reservados', { selector: '.sdp-alerta__titol' }).closest('.sdp-alerta');
   expect(avis.textContent).toContain('Texto traducido.');
+  expect(avis.textContent).not.toContain('Texto viejo');
   expect(screen.queryByText('Contingut amb drets reservats')).toBeNull();
+});
+
+/* Gauntlet R22 (notes-06) · Amb els cinc diccionaris de veres: l'avís de /connectar és el de l'editor
+   (t(...PARELL_TEXT_DRETS)) i no promet citar l'autoria en cap llengua; les claus velles ja no hi són. */
+test('R22 · l’avís de drets de /connectar, amb els diccionaris de veres, no promet l’autoria', async () => {
+  const { createTranslator } = await import('../../config/i18n.js');
+  await import('../../../tests/helpers/diccionaris.js');
+  const { PARELL_TEXT_DRETS } = await import('../notes/visibilitatNota.js');
+  const PROMESA = { ca: /autoria/i, es: /autoría/i, en: /authorship/i, eu: /egile/i, gl: /autoría/i };
+  for (const [llengua, promesa] of Object.entries(PROMESA)) {
+    cleanup();
+    mocks.mur = MERCAT_AMB({ copyright: '© Pepa Soler' });
+    const t = createTranslator(llengua);
+    mocks.t = t;
+    render(<ConnectarSection />);
+    const avis = document.querySelector('.sdp-alerta');
+    expect(avis, llengua).toBeTruthy();
+    expect(avis.textContent, llengua).toContain(t(...PARELL_TEXT_DRETS));
+    expect(avis.textContent, llengua).not.toMatch(promesa);
+    for (const vella of ['section.notes.drets.text', 'section.notes.connexio.textEditable',
+      'section.notes.visibilitat.connexio.descripcio', 'section.notes.visibilitat.enLinia.publica.explicacioConnexio']) {
+      expect(t(vella, 'RESERVA'), `${llengua} ${vella}`).toBe('RESERVA');
+    }
+  }
 });
 
 test('Revisió · mentre la font de l’original carrega no es connecta; resolt, es connecta amb els seus drets', async () => {

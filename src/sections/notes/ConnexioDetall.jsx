@@ -89,7 +89,8 @@ export function ConnexioDetall({ nota }) {
   /* P1-22 (marató 261101_2143) · Els textos del selector en la llengua de l'app. */
   const textosMur = useMemo(() => textosDeNota({ connexio: true, t }), [t]);
   const {
-    noteFolders, setLocalNoteField, mouNota, esborraNota, compartirNota, potEsborrar = false, config
+    noteFolders, setLocalNoteField, mouNota, esborraNota, compartirNota, potEsborrar = false, config,
+    potRetirarDelMur = false
   } = useNotes() || {};
   /* T71 · el resolvedor únic: element d'una secció o pàgina de text. */
   const { section, item, page, pageKey, estat, targeta } = useOriginalDeConnexio(origen);
@@ -147,9 +148,17 @@ export function ConnexioDetall({ nota }) {
      bloqueigDeNota bloqueja «pública» i el botó no ix. Una connexió ja
      compartida es pot actualitzar, no retirar (ho diu el selector), i el botó
      de la tira ho diu amb el mateix text que el selector. Els errors es
-     tradueixen com a l'editor (publicaAmbMotiu). */
+     tradueixen com a l'editor (publicaAmbMotiu).
+     F03-UI (Onada R21) · La retirada del Mur (capacitat 'revocacioPublicacions')
+     viu a l'editor del Bloc, amb la confirmació en línia del panell
+     (PanellVisibilitatEnLinia): este lector no la porta (no el munta cap vista,
+     i el seu selector és la finestra SelectorVisibilitat). Amb la capacitat,
+     «privat» continua bloquejat, però el motiu diu on es retira ('bloc'), no
+     que no tinga contracte. */
   const compartida = Boolean(nota?.isPublished);
-  const bloqueigMur = bloqueigDeNota({ foraster: !currentUser, modeLocal, publicada: compartida, connexio: true, t });
+  const bloqueigMur = bloqueigDeNota({
+    foraster: !currentUser, modeLocal, publicada: compartida, connexio: true, retirada: potRetirarDelMur ? 'bloc' : 'no', t
+  });
   const pucCompartirAlMur = Boolean(currentUser && compartirNota && nota?.id && bloqueigMur?.opcio !== 'publica');
   const autoria = autoriaDeLActor(actor, currentUser);
   const accioMur = compartida
@@ -191,7 +200,8 @@ export function ConnexioDetall({ nota }) {
           onDesa={desaCarpeta} avis={tradueix(t, AVIS_CARPETES)} />
       ) : null}
       {dialeg === 'esborrar' && pucBorrar ? (
-        <DialegEsborrarNota obert nota={nota} onTanca={() => setDialeg(null)} onTria={triaBorrar} ocupat={borrant} />
+        <DialegEsborrarNota obert nota={nota} onTanca={() => setDialeg(null)} onTria={triaBorrar} ocupat={borrant}
+          retiraDelMur={Boolean(potRetirarDelMur && compartida)} />
       ) : null}
       {/* Muntat mentre es pot compartir, com a DocumentEditor: el selector
           continua on era si el navegador el tanca mentre treballa. */}

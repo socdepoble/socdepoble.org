@@ -180,12 +180,12 @@ test('P3 · mentre la llista carrega, la fila virtual del poble no tapa el «Car
   mocks.threads = [];
   const vista = render(<XatSection />);
   expect(screen.getByText('Carregant…').getAttribute('role')).toBe('status');
-  expect(screen.queryByRole('button', { name: /Gent de la Torre, Grup del poble/ })).toBeNull();
+  expect(screen.queryByRole('button', { name: /Gent de la Torre, Grup de poble/ })).toBeNull();
 
   /* Amb la llista definitiva i sense comunitat, la fila virtual hi és. */
   mocks.status = 'ready';
   vista.rerender(<XatSection />);
-  expect(screen.getByRole('button', { name: /Gent de la Torre, Grup del poble/ })).toBeTruthy();
+  expect(screen.getByRole('button', { name: /Gent de la Torre, Grup de poble/ })).toBeTruthy();
   expect(screen.queryByText('Carregant…')).toBeNull();
 });
 
@@ -195,7 +195,7 @@ test('P3 · prémer la fila virtual amb el teclat: quan naix la comunitat, el fo
   mocks.threadId = null;
   mocks.externalConfig = { poble: POBLE.id, nomPoble: POBLE.nom };
   const vista = render(<XatSection />);
-  const fila = screen.getByRole('button', { name: /Gent de la Torre, Grup del poble/ });
+  const fila = screen.getByRole('button', { name: /Gent de la Torre, Grup de poble/ });
   fila.focus();
   fireEvent.click(fila);
   const [ruta] = mocks.navigate.mock.calls.at(-1);
@@ -272,7 +272,7 @@ test('XAT-01 · en ample, sense la comunitat del poble, ni la crea ni navega: la
   expect(mocks.consumixEntrada).toHaveBeenCalledWith(`poble:${POBLE.id}`);
   expect(mocks.navigate).not.toHaveBeenCalled();
   expect(mocks.obriFilDePagina).not.toHaveBeenCalled();
-  expect(screen.getByRole('button', { name: /Gent de la Torre, Grup del poble/ })).toBeTruthy();
+  expect(screen.getByRole('button', { name: /Gent de la Torre, Grup de poble/ })).toBeTruthy();
   expect(await within(document.getElementById('app-grid-main')).findByTestId('document-per-defecte')).toBeTruthy();
 });
 

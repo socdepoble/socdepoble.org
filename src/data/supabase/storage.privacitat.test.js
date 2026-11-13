@@ -21,13 +21,16 @@ vi.mock('./runtime.js', () => ({ getResolvedConfig: (config = {}) => ({ ...confi
 vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => null }));
 
 import { promoteToPublic, resolveAsset } from './storage.js';
-import { CODI_MITJANS } from '../errorsBackend.js';
+import { CODI_MITJANS, CODI_PROMOCIO_PUBLICA } from '../errorsBackend.js';
+import { createHash } from 'node:crypto';
+import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 
 const UID = '11111111-1a1a-4000-8000-000000000001';
 const POBLE = '22222222-2b2b-4000-8000-000000000002';
-const RUTA = `${POBLE}/${UID}/notes/document-privat.pdf`;
+const RUTA = `${POBLE}/${UID}/notes/document-privat.webp`;
 const REF = `sdp-media://mitjans_privats/${RUTA}`;
-const FITXER = new Blob(['pdf'], { type: 'application/pdf' });
+const FITXER = new Blob([WEBP_NET], { type: 'image/webp' });
+const RUTA_PUBLICA = `${POBLE}/${UID}/notes/sdp-net-v1-${createHash('sha256').update(WEBP_NET).digest('hex')}.webp`;
 const CONFIG = { tenantId: POBLE };
 
 /* Un rebuig amb dades privades a tots els camps lliures: el missatge, un code i
@@ -117,34 +120,74 @@ describe('promoteToPublic · la còpia del privat al públic', () => {
     comprovaAvis(cru, PERMIS_403);
   });
 
-  test('la pujada rebutjada torna la ref i la consola queda neta', async () => {
+  /* Gauntlet R22 (sql-02) · Una pujada rebutjada que no és el duplicat atura la
+     publicació: mai la ref privada al payload del Mur. L'error no porta cap
+     dada privada al missatge; la pujada traduïda va a `cause`. */
+  const rebuigDePromocio = async (cru) => {
+    let error;
+    await promoteToPublic(REF, CONFIG).then((valor) => { throw new Error(`havia de rebutjar i ha tornat ${valor}`); }, (e) => { error = e; });
+    expect(error).toBeInstanceOf(Error);
+    expect(error.codi).toBe(CODI_PROMOCIO_PUBLICA);
+    expect(error.cause).toBeInstanceOf(Error);
+    expect(Object.values(CODI_MITJANS)).toContain(error.cause.codi);
+    expect(error.cause.cause).toBe(cru);
+    for (const secret of [RUTA, UID, POBLE, REF, 'document-privat']) {
+      expect(error.message).not.toContain(secret);
+      expect(error.cause.message).not.toContain(secret);
+    }
+    return error;
+  };
+
+  test('la pujada rebutjada atura la publicació (rebutja amb el codi de promoció) i la consola queda neta', async () => {
     const cru = errorPrivat();
     m.puja.mockResolvedValue({ data: null, error: cru });
-    expect(await promoteToPublic(REF, CONFIG)).toBe(REF);
-    expect(m.puja).toHaveBeenCalledWith('mitjans', RUTA, FITXER);
+    expect((await rebuigDePromocio(cru)).cause.codi).toBe(CODI_MITJANS.SENSE_PERMIS);
+    expect(m.puja).toHaveBeenCalledWith('mitjans', RUTA_PUBLICA, expect.any(Blob));
     comprovaAvis(cru, PERMIS_403);
+  });
+
+  /* Gauntlet R22 (sql-02) · La sonda del bloc B sobre PG 18.6: tornar a publicar la
+     mateixa foto després d'una retirada topa amb el guard de la cua de purga
+     (SDP-PURGA-004, 55000), no amb el 23505 del duplicat. Abans tornava la ref privada. */
+  test('R22 · SDP-PURGA-004 (55000, ruta a la cua de purga) no és cap duplicat: atura la publicació', async () => {
+    const cru = Object.assign(new Error('SDP-PURGA-004: ruta en procés de purga.'), { status: 400, statusCode: '500', code: '55000' });
+    m.puja.mockResolvedValue({ data: null, error: cru });
+    await rebuigDePromocio(cru);
+    expect(m.baixa).toHaveBeenCalledTimes(1);
+    expect(m.baixa).not.toHaveBeenCalledWith('mitjans', expect.anything(), expect.anything(), expect.anything());
   });
 
   /* Quan l'SDK llança, downloadFile i uploadFile tornen handleError(error), i el
      seu `error` és el missatge cru (utils.js:66-70): un text amb la ruta. */
-  test.each(['baixa', 'puja'])('una excepció de l’SDK durant la %s no imprimix el text cru', async (operacio) => {
+  test('una excepció de l’SDK durant la baixada no imprimix el text cru i torna la ref', async () => {
     const cru = errorPrivat();
-    m[operacio].mockRejectedValue(cru);
+    m.baixa.mockRejectedValue(cru);
     expect(await promoteToPublic(REF, CONFIG)).toBe(REF);
     comprovaAvis(cru, DESCONEGUT_SENSE_ESTAT);
   });
 
+  test('una excepció de l’SDK durant la pujada no imprimix el text cru i atura la publicació', async () => {
+    const cru = errorPrivat();
+    m.puja.mockRejectedValue(cru);
+    let error;
+    await promoteToPublic(REF, CONFIG).then((valor) => { throw new Error(`havia de rebutjar i ha tornat ${valor}`); }, (e) => { error = e; });
+    expect(error).toMatchObject({ codi: CODI_PROMOCIO_PUBLICA });
+    expect(error.cause.codi).toBe(CODI_MITJANS.DESCONEGUT);
+    for (const secret of [RUTA, UID, POBLE, REF, 'document-privat']) expect(`${error.message} ${error.cause.message}`).not.toContain(secret);
+    comprovaAvis(cru, DESCONEGUT_SENSE_ESTAT);
+  });
+
   test('control · l’èxit torna la ruta pública i no avisa', async () => {
-    expect(await promoteToPublic(REF, CONFIG)).toBe(`sdp-media://mitjans/${RUTA}`);
+    expect(await promoteToPublic(REF, CONFIG)).toBe(`sdp-media://mitjans/${RUTA_PUBLICA}`);
     expect(m.baixa).toHaveBeenCalledWith('mitjans_privats', RUTA, undefined, { signal: expect.any(AbortSignal) });
-    expect(m.puja).toHaveBeenCalledWith('mitjans', RUTA, FITXER);
+    expect(m.puja).toHaveBeenCalledWith('mitjans', RUTA_PUBLICA, expect.any(Blob));
     expect(avis).not.toHaveBeenCalled();
   });
 
   /* Auditoria 261007 (B) · Republicar promou la mateixa ruta: el segon intent
      topa amb «Duplicate» i abans tornava la ref privada al payload del Mur. */
   test('republicar: el segon intent amb 409 torna la ref pública i no avisa', async () => {
-    const PUBLICA = `sdp-media://mitjans/${RUTA}`;
+    const PUBLICA = `sdp-media://mitjans/${RUTA_PUBLICA}`;
     expect(await promoteToPublic(REF, CONFIG)).toBe(PUBLICA);
     m.puja.mockResolvedValue({ data: null, error: Object.assign(new Error('The resource already exists'), { status: 400, statusCode: '409' }) });
     expect(await promoteToPublic(REF, CONFIG)).toBe(PUBLICA);
@@ -158,14 +201,14 @@ describe('promoteToPublic · la còpia del privat al públic', () => {
     ['code copiat a statusCode', { status: 400, statusCode: 'Duplicate' }]
   ])('el duplicat (%s) és un èxit', async (_cas, camps) => {
     m.puja.mockResolvedValue({ data: null, error: Object.assign(new Error('Duplicate'), camps) });
-    expect(await promoteToPublic(REF, CONFIG)).toBe(`sdp-media://mitjans/${RUTA}`);
+    expect(await promoteToPublic(REF, CONFIG)).toBe(`sdp-media://mitjans/${RUTA_PUBLICA}`);
     expect(avis).not.toHaveBeenCalled();
   });
 
-  test('un 403 del cos dins d’un HTTP 409 no és un duplicat: torna la ref i avisa', async () => {
+  test('un 403 del cos dins d’un HTTP 409 no és un duplicat: atura la publicació i avisa', async () => {
     const cru = errorPrivat({ status: 409, statusCode: '403' });
     m.puja.mockResolvedValue({ data: null, error: cru });
-    expect(await promoteToPublic(REF, CONFIG)).toBe(REF);
+    expect((await rebuigDePromocio(cru)).cause.codi).toBe(CODI_MITJANS.SENSE_PERMIS);
     comprovaAvis(cru, { codi: CODI_MITJANS.SENSE_PERMIS, status: 409, statusCode: 403, code: undefined });
   });
 });

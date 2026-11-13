@@ -25,7 +25,7 @@ import { request } from './runtime.js';
 const TENANT = servidor.tenant;
 const id = (n) => `6c7d8e9f-a0b1-4c2d-8e3f-${String(n).padStart(12, '0')}`;
 const fila = (n, creat, extra = {}) => ({ id: id(n), title: `P${n}`, created_at: creat, updated_at: creat,
-  owner_user_id: 'U', author_org_id: null, payload: { title: `P${n}` }, ...extra });
+  public_content: `Cos públic ${n}`, tenant_id: TENANT, ...extra });
 /* 50 files del Mur de més nova a més vella, amb la data com la servix PostgREST. */
 const cinquanta = () => Array.from({ length: 50 }, (_, n) => fila(99 - n, `2026-10-07T10:${String(59 - n).padStart(2, '0')}:00.123456+00:00`));
 const cursor = (seccio, creat, n) => JSON.stringify([TENANT, seccio, creat, id(n)]);
@@ -42,44 +42,51 @@ beforeEach(() => {
 describe('Decisió 4 · loadMur porta el cursor de les seccions que tenen més', () => {
   test('una secció amb més files de les 50 porta el cursor de la seua última fila; les completes, cap', async () => {
     const mur = cinquanta();
-    respon('section_id=eq.mur', mur, '0-49/137');
-    respon('section_id=eq.events', [fila(1, '2026-10-01T09:00:00+00:00')], '0-0/1');
-    respon('section_id=eq.mercat', [], '*/0');
+    respon('p_section_id=mur', mur, '0-49/137');
+    respon('p_section_id=events', [fila(1, '2026-10-01T09:00:00+00:00')], '0-0/1');
+    respon('p_section_id=mercat', [], '*/0');
     const valor = await loadMur('U', {});
     expect(valor.feedPosts).toHaveLength(50);
+    /* Gauntlet R22 (dades-07) · La secció d'una sola fila és completa: cap «Mostra més» que només portaria []. */
     expect(valor.paginacio).toEqual({ mur: cursor('mur', mur.at(-1).created_at, 50) });
     // El total es demana a les tres seccions; app_content no en necessita.
     for (const seccio of ['mur', 'events', 'mercat']) {
-      expect(cridesA(`section_id=eq.${seccio}`)[0].opcions.headers).toEqual({ Prefer: 'count=exact' });
+      expect(cridesA(`p_section_id=${seccio}`)[0].opcions).toMatchObject({ anonim: true });
+      expect(cridesA(`p_section_id=${seccio}`)[0].opcions).not.toHaveProperty('onResponseMetadata');
     }
     expect(cridesA('app_content')[0].opcions).not.toHaveProperty('headers');
   });
 
   test('amb totes les seccions completes, la forma del nucli no canvia: ni tan sols el camp paginacio', async () => {
-    respon('section_id=eq.mur', [fila(1, '2026-10-01T09:00:00+00:00')], '0-0/1');
-    respon('section_id=eq.events', [], '*/0');
-    respon('section_id=eq.mercat', [], '*/0');
+    respon('p_section_id=mur', [], '*/0');
+    respon('p_section_id=events', [], '*/0');
+    respon('p_section_id=mercat', [], '*/0');
     const valor = await loadMur('U', {});
     expect(Object.keys(valor).sort()).toEqual(['events', 'feedPosts', 'marketItems']);
   });
 
-  test('una pàgina de menys de 50 sense total no es dona per completa (el servidor pot tallar abans)', async () => {
+  /* Gauntlet R22 (dades-07) · Les RPC de R21 limiten amb least(p_limit, 51) o least(p_limit, 200) i tots els
+     filtres són abans del LIMIT: una pàgina de menys de les 50 demanades és la darrera. Una de 50 justes, no. */
+  test('una pàgina de menys de 50 és la darrera (el límit del servidor és ≥ 50); una de 50, no', async () => {
     const files = cinquanta().slice(0, 20);
-    respon('section_id=eq.mur', files, null);
-    expect((await loadMur('U', {})).paginacio).toEqual({ mur: cursor('mur', files.at(-1).created_at, 80) });
+    respon('p_section_id=mur', files, null);
+    expect(await loadMur('U', {})).not.toHaveProperty('paginacio');
+    const plena = cinquanta();
+    respon('p_section_id=mur', plena, null);
+    expect((await loadMur('U', {})).paginacio).toEqual({ mur: cursor('mur', plena.at(-1).created_at, 50) });
   });
 
   test('el cursor ix de section_submissions, mai d’un element d’app_content', async () => {
     const mur = cinquanta();
     respon('app_content', [{ key: 'feedPosts', payload: [{ id: 'avis-de-l-ajuntament', created_at: '2020-01-01T00:00:00Z' }] }]);
-    respon('section_id=eq.mur', mur, '0-49/51');
+    respon('p_section_id=mur', mur, '0-49/51');
     const valor = await loadMur('U', {});
     expect(valor.feedPosts.map((element) => element.id)).toContain('avis-de-l-ajuntament');
     expect(JSON.parse(valor.paginacio.mur)).toEqual([TENANT, 'mur', mur.at(-1).created_at, id(50)]);
   });
 
   test('sense cap fila amb clau fiable no es promet cap pàgina: la primera pàgina es pinta igual', async () => {
-    respon('section_id=eq.mur', [fila(1, '2026-10-01T09:00:00+00:00', { id: 'p-sense-uuid' })], '0-0/9');
+    respon('p_section_id=mur', [fila(1, '2026-10-01T09:00:00+00:00', { id: 'p-sense-uuid' })], '0-0/9');
     const valor = await loadMur('U', {});
     expect(valor.feedPosts.map((element) => element.id)).toEqual(['p-sense-uuid']);
     expect(valor).not.toHaveProperty('paginacio');
@@ -89,7 +96,7 @@ describe('Decisió 4 · loadMur porta el cursor de les seccions que tenen més',
      cua de files sense clau fiable no apaga el «Mostra més» de tot el poble. */
   test('amb una cua de files sense clau fiable, el cursor ix de l’última que en té', async () => {
     const mur = [...cinquanta().slice(0, 48), fila(2, '-infinity'), fila(1, '0044-03-15T12:00:00+00:00 BC')];
-    respon('section_id=eq.mur', mur, '0-49/60');
+    respon('p_section_id=mur', mur, '0-49/60');
     const valor = await loadMur('U', {});
     expect(valor.feedPosts).toHaveLength(50);
     expect(valor.paginacio).toEqual({ mur: cursor('mur', mur[47].created_at, 52) });
@@ -109,49 +116,53 @@ describe('Decisió 4 · loadSeccioPage', () => {
 
   test('demana la pàgina següent amb el filtre de conjunt de claus, l’ordre estable, el límit i el total', async () => {
     const senyal = new AbortController().signal;
-    respon('section_submissions', [fila(41, CREAT), fila(40, '2026-10-06T08:00:00+00:00')], '0-1/2');
+    respon('/rpc/llig_mur_public', [fila(41, CREAT), fila(40, '2026-10-06T08:00:00+00:00')], '0-1/2');
     const pagina = await loadSeccioPage({ seccio: 'mercat', cursor: cursor('mercat', CREAT, 42), signal: senyal }, {});
+    // Dues files de les 50 demanades: la darrera pàgina (dades-07).
     expect(pagina).toEqual({ elements: [expect.objectContaining({ id: id(41) }), expect.objectContaining({ id: id(40) })], complete: true, nextCursor: null });
     const [{ url, opcions }] = servidor.crides;
     const params = new URL(url, 'http://poble.test').searchParams;
-    expect(params.get('section_id')).toBe('eq.mercat');
-    expect(params.get('tenant_id')).toBe(`eq.${TENANT}`);
-    expect(params.get('order')).toBe('created_at.desc,id.desc');
-    expect(params.get('limit')).toBe('50');
-    expect(params.get('or')).toBe(`(created_at.lt."${CREAT}",and(created_at.eq."${CREAT}",id.lt."${id(42)}"))`);
-    expect(opcions).toMatchObject({ signal: senyal, headers: { Prefer: 'count=exact' } });
+    expect(params.get('p_section_id')).toBe('mercat');
+    expect(params.get('p_tenant_id')).toBe(TENANT);
+    expect(new URL(url,'http://poble.test').pathname).toBe('/rest/v1/rpc/llig_mur_public');
+    expect(params.get('p_limit')).toBe('50');
+    expect(params.get('p_before_created_at')).toBe(CREAT);
+    expect(params.get('p_before_id')).toBe(id(42));
+    expect(params.has('or')).toBe(false);
+    expect(opcions).toMatchObject({ signal: senyal, anonim: true });
+    expect(opcions).not.toHaveProperty('headers');
   });
 
   test('codificació: el «+» del fus, els «:», les cometes i les comes viatgen codificats', async () => {
     await loadSeccioPage({ seccio: 'mur', cursor: cursor('mur', CREAT, 42) }, {});
     const [{ url }] = servidor.crides;
-    const cru = url.slice(url.indexOf('&or=') + 4, url.indexOf('&order='));
-    expect(cru).not.toMatch(/[+:",]/);
-    expect(cru).toContain('%2B00%3A00%22');
-    expect(cru).toContain('%2Cand(');
-    expect(decodeURIComponent(cru)).toBe(`(created_at.lt."${CREAT}",and(created_at.eq."${CREAT}",id.lt."${id(42)}"))`);
+    const encodedDate = url.split('p_before_created_at=')[1].split('&')[0];
+    expect(encodedDate).not.toMatch(/[+:",]/);
+    expect(encodedDate).toContain('%2B00%3A00');
+    expect(decodeURIComponent(encodedDate)).toBe(CREAT);
+    expect(new URL(url,'http://poble.test').searchParams.get('p_before_id')).toBe(id(42));
   });
 
   test('empats: files amb el mateix created_at i id decreixent avancen, i el cursor conserva els microsegons', async () => {
     const files = [fila(41, CREAT), fila(30, CREAT), fila(29, '2026-10-07T10:00:00.123455+00:00')];
-    respon('section_submissions', files, '0-2/9');
+    respon('/rpc/llig_mur_public', files, '0-2/9');
     const pagina = await loadSeccioPage({ seccio: 'mur', cursor: cursor('mur', CREAT, 42), limit: 3 }, {});
     expect(pagina.complete).toBe(false);
     expect(JSON.parse(pagina.nextCursor)).toEqual([TENANT, 'mur', '2026-10-07T10:00:00.123455+00:00', id(29)]);
   });
 
   test('una pàgina que no avança (un servidor que ignora el filtre) és un error, mai una pàgina repetida', async () => {
-    respon('section_submissions', [fila(42, CREAT)], '0-0/1');
+    respon('/rpc/llig_mur_public', [fila(42, CREAT)], '0-0/1');
     await expect(loadSeccioPage({ seccio: 'mur', cursor: cursor('mur', CREAT, 42) }, {})).rejects.toThrow('no avança');
-    respon('section_submissions', [fila(41, '2026-10-07T10:00:00.123457+00:00')], '0-0/1');
+    respon('/rpc/llig_mur_public', [fila(41, '2026-10-07T10:00:00.123457+00:00')], '0-0/1');
     await expect(loadSeccioPage({ seccio: 'mur', cursor: cursor('mur', CREAT, 42) }, {})).rejects.toThrow('no avança');
   });
 
   test('sense total, una pàgina plena no és la darrera; una buida sí', async () => {
-    respon('section_submissions', [fila(41, CREAT)], null);
+    respon('/rpc/llig_mur_public', [fila(41, CREAT)], null);
     expect(await loadSeccioPage({ seccio: 'mur', cursor: null, limit: 1 }, {}))
       .toMatchObject({ complete: false, nextCursor: cursor('mur', CREAT, 41) });
-    respon('section_submissions', [], null);
+    respon('/rpc/llig_mur_public', [], null);
     expect(await loadSeccioPage({ seccio: 'mur', cursor: null }, {})).toEqual({ elements: [], complete: true, nextCursor: null });
   });
 
@@ -161,7 +172,7 @@ describe('Decisió 4 · loadSeccioPage', () => {
      comprovació d'ordre: abans deixava la pàgina en error per a tothom. */
   test('una fila sense clau fiable es pinta igual i el cursor ix de l’última fila que en té', async () => {
     const files = [fila(41, CREAT), fila(40, '2026-10-06T08:00:00+00:00'), fila(39, '-infinity')];
-    respon('section_submissions', files, '0-2/9');
+    respon('/rpc/llig_mur_public', files, '0-2/9');
     const pagina = await loadSeccioPage({ seccio: 'mur', cursor: cursor('mur', CREAT, 42), limit: 3 }, {});
     expect(pagina.elements.map((element) => element.id)).toEqual([id(41), id(40), id(39)]);
     expect(pagina).toMatchObject({ complete: false, nextCursor: cursor('mur', '2026-10-06T08:00:00+00:00', 40) });
@@ -169,28 +180,39 @@ describe('Decisió 4 · loadSeccioPage', () => {
 
   test('una pàgina només de files sense clau fiable és la darrera: d’ací ja no es pot avançar', async () => {
     const files = [fila(39, '-infinity'), fila(38, '0044-03-15T12:00:00+00:00 BC'), fila(37, '10000-01-01T00:00:00+00:00')];
-    respon('section_submissions', files, '0-2/7');
+    respon('/rpc/llig_mur_public', files, '0-2/7');
     const pagina = await loadSeccioPage({ seccio: 'mur', cursor: cursor('mur', CREAT, 42), limit: 3 }, {});
     expect(pagina.elements).toHaveLength(3);
     expect(pagina).toMatchObject({ complete: true, nextCursor: null });
   });
 
   test('una fila sense clau no amaga una pàgina que no avança', async () => {
-    respon('section_submissions', [fila(39, '-infinity'), fila(42, CREAT)], '0-1/2');
+    respon('/rpc/llig_mur_public', [fila(39, '-infinity'), fila(42, CREAT)], '0-1/2');
     await expect(loadSeccioPage({ seccio: 'mur', cursor: cursor('mur', CREAT, 42) }, {})).rejects.toThrow('no avança');
   });
 
-  test('un rang o un total inconsistents són un error', async () => {
-    respon('section_submissions', [fila(41, CREAT)], '0-4/9');
-    await expect(loadSeccioPage({ seccio: 'mur' }, {})).rejects.toThrow('Rang');
-    respon('section_submissions', [fila(41, CREAT), fila(40, '2026-10-06T08:00:00+00:00')], '0-1/1');
-    await expect(loadSeccioPage({ seccio: 'mur' }, {})).rejects.toThrow('Total');
+  test('Content-Range de la RPC limitada no acredita el final: s’ignora encara que diga total 1', async () => {
+    // Una pàgina plena (limit 1) continua oberta encara que el rang diga «total 1»: mana el compte de files.
+    respon('/rpc/llig_mur_public', [fila(41, CREAT)], '0-0/1');
+    expect(await loadSeccioPage({ seccio: 'mur', limit: 1 }, {})).toMatchObject({ complete: false, nextCursor: cursor('mur',CREAT,41) });
+    // Una pàgina curta és la darrera encara que el rang diga un total més gran.
+    respon('/rpc/llig_mur_public', [fila(41, CREAT)], '0-0/9');
+    expect(await loadSeccioPage({ seccio: 'mur' }, {})).toMatchObject({ complete: true, nextCursor: null });
+    respon('/rpc/llig_mur_public', [], '*/0');
+    expect(await loadSeccioPage({ seccio: 'mur', cursor: cursor('mur',CREAT,41) }, {})).toEqual({ elements: [],complete: true,nextCursor: null });
+  });
+
+  test('una resposta malformada o més llarga que el límit rebutja', async () => {
+    respon('/rpc/llig_mur_public', { id: 'no-llista' });
+    await expect(loadSeccioPage({ seccio: 'mur' }, {})).rejects.toThrow('format');
+    respon('/rpc/llig_mur_public', [fila(41,CREAT),fila(40,'2026-10-06T08:00:00+00:00')]);
+    await expect(loadSeccioPage({ seccio: 'mur',limit: 1 }, {})).rejects.toThrow('format');
   });
 
   test('les pàgines següents passen pel mateix mapatge: cap clau d’autoritat del payload d’un veí', async () => {
-    respon('section_submissions', [fila(41, CREAT, { payload: { title: 'Avís', isSystem: true, mainHref: 'https://fals.example' } })], '0-0/1');
+    respon('/rpc/llig_mur_public', [fila(41, CREAT, { title: 'Avís', public_content: 'Públic', owner_user_id: 'U-PRIVAT', payload: { title: 'USURPAT', isSystem: true, mainHref: 'https://fals.example' } })], '0-0/1');
     const [element] = (await loadSeccioPage({ seccio: 'mur' }, {})).elements;
-    expect(element).toMatchObject({ id: id(41), title: 'Avís', ownerUserId: 'U' });
+    expect(element).toMatchObject({ id: id(41), title: 'Avís', ownerUserId: null });
     expect(element).not.toHaveProperty('isSystem');
     expect(element).not.toHaveProperty('mainHref');
   });

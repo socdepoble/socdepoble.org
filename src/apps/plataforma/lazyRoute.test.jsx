@@ -1,7 +1,7 @@
 import { Component, StrictMode, Suspense, useMemo } from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { esErrorLazy, LazyRouteError, lazyRouteRenovable } from './lazyRoute.js';
+import { configuraRecuperacioLazy, ESPERA_TRANSICIO_DEPLOY_MS, esErrorLazy, LazyRouteError, lazyRouteRenovable } from './lazyRoute.js';
 
 /* Pla 261028_1526 (P1-55, GN-R01) · lazyRouteRenovable: el propietari d'una
    vista diferida (la columna dreta d'una comunitat al Xat) la torna a demanar
@@ -11,7 +11,7 @@ import { esErrorLazy, LazyRouteError, lazyRouteRenovable } from './lazyRoute.js'
    seu «cap falso reintent» és a RouteErrorBoundary.test.jsx. */
 
 beforeEach(() => { vi.spyOn(console, 'error').mockImplementation(() => {}); });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); configuraRecuperacioLazy(null); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 const noArriba = () => new TypeError('Failed to fetch dynamically imported module');
 const Viva = ({ clau }) => <p>viva {clau}</p>;
@@ -203,4 +203,23 @@ test('reinicia · un rebuig que arriba després no es compta a la generació nov
   nova.rerender(<Columna fitxa={fitxa} clau="C" />);
   expect(await screen.findByText('viva C')).toBeTruthy();
   expect(importa).toHaveBeenCalledTimes(2);
+});
+
+
+test('una capacitat injectada que refusa o falla conserva la barrera honesta', async () => {
+  for (const recupera of [async () => false, async () => { throw Error('sonda fallida'); }]) {
+    configuraRecuperacioLazy(recupera);
+    const fitxa = lazyRouteRenovable(carregador(['falla']));
+    render(<Columna fitxa={fitxa} clau="A" />);
+    expect(await screen.findByText('buida A')).toBeTruthy(); cleanup();
+  }
+});
+test('una navegació cancel·lada no deixa Suspense pendent per sempre ni torna a importar', async () => {
+  vi.useFakeTimers(); configuraRecuperacioLazy(async () => true);
+  const importa = carregador(['falla']), fitxa = lazyRouteRenovable(importa);
+  render(<Columna fitxa={fitxa} clau="A" />);
+  await act(async () => { await Promise.resolve(); });
+  expect(screen.getByText('espera')).toBeTruthy();
+  await act(async () => { await vi.advanceTimersByTimeAsync(ESPERA_TRANSICIO_DEPLOY_MS); });
+  expect(screen.getByText('buida A')).toBeTruthy(); expect(importa).toHaveBeenCalledTimes(1);
 });

@@ -1,3 +1,4 @@
+import { capturaSessio } from '../identitat.js';
 import { sanejaDrets } from '../dretsAutor.js';
 import { getDefaultUserId, NOTE_FOLDERS_SEED } from '../appSeed.js';
 import { normalitzaOrigen } from '../origenNota.js';
@@ -7,6 +8,7 @@ import { dataIsoONull } from '../../utils/calendari.js';
 import { ambDescartats, creaColumnesOpcionals } from './columnesOpcionals.js';
 import { coaccionaAmbit, esFitxaDAmbit } from '../../utils/publicacioUniversal.js';
 import { nomDeCarpetaValid, carpetaDeFila } from '../carpetesNotes.js';
+import { CODI_ESQUEMA_ABSENT } from '../errorsBackend.js';
 
 async function carpetesPrivades(config, ownerUserId) {
   const { tenantId } = getResolvedConfig(config);
@@ -259,11 +261,41 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
     const { localNotes } = await import('../localNotes.js');
     return localNotes.update(id, updates, expectedRevision, config);
   }
+  const sessionGuard = capturaSessio();
   const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('ATURADOR CRÍTIC: No es pot actualitzar una nota sense connexió al servidor.');
   validateScope(tenantId);
   requireUuid(id, 'Nota');
   if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('ATURADOR CRÍTIC: expectedRevision és obligatori.');
+  if (updates.isPublished === false && updates.revocaPublicacioId) {
+    requireUuid(updates.revocaPublicacioId, 'Publicació');
+    if (Object.keys(updates).some(k => !['isPublished','publishedSubmissionId','revocaPublicacioId'].includes(k))) throw new TypeError('La retirada no admet canvis privats en la mateixa petició.');
+    let ack;
+    try {
+      ack = await request('/rest/v1/rpc/revoca_publicacio_de_nota', config, { method:'POST', body:{
+        p_id:id,p_tenant_id:tenantId,p_expected_revision:expectedRevision,p_publicacio_id:updates.revocaPublicacioId
+      } });
+    } catch (error) {
+      /* Gauntlet R22 (dades-01) · Sense la retirada per acte (2611122200) el servidor no pot retirar
+         esta publicació: es diu (CODI_ESQUEMA_ABSENT) i no s'encua cap reintent que no podria acabar. */
+      if (error?.status === 404 && error?.postgrestCode === 'PGRST202') {
+        throw Object.assign(new ErrorSupabase('El servidor encara no permet retirar publicacions del Mur.', 404),
+          { codi: CODI_ESQUEMA_ABSENT, revocacioNoReencuar: true });
+      }
+      throw error;
+    }
+    sessionGuard();
+    if (ack !== true) throw new Error('El servidor no ha confirmat la retirada.');
+    const rows = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}&select=*`,config);
+    sessionGuard();
+    if (!rows?.[0]) throw new ErrorSupabase('No accessible o eliminada.',404);
+    const actual = nota(rows[0]);
+    if (actual.isPublished || actual.publishedSubmissionId) {
+      // Un replay de l’acte antic no afecta una republicació posterior.
+      throw Object.assign(new ErrorSupabase('SDP-MUR-REVISION: hi ha una publicació posterior que este intent no retira.',409),{revocacioNoReencuar:true});
+    }
+    return actual;
+  }
   const payload = { folder_id: updates.folderId, title: updates.title, subtitle: updates.subtitle,
     lead: updates.lead, content: updates.content, copyright: updates.copyright === undefined ? undefined : sanejaDrets(updates.copyright, { estricte: true }), categories: updates.categories, tags: updates.tags,
     hero_image: updates.heroImage, logo_image: updates.logoImage, logo_image_dark: updates.logoImageDark, is_published: updates.isPublished,
@@ -283,6 +315,7 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
      escrit res) i el DTO diu quins camps no s'han desat. */
   const { resultat: rows, descartats } = await opcionalsNotes.envia(payload, (cos) => request(url, config,
     { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: cos }));
+  sessionGuard();
   if (!rows?.[0]) await senseFila(id, tenantId, config);
   return ambDescartats(nota(rows[0]), descartats);
 }
@@ -317,9 +350,9 @@ export async function mouNota(id, estat, expectedRevision, config = {}) {
   return nota(rows[0]);
 }
 
-/** Capacitat 'cicleNotes'. Esborrat definitiu, amb la mateixa guarda de
- * revisió. La publicació al Mur es conserva: la clau forana apunta des de la
- * nota cap a section_submissions i esborrar la nota no hi toca. */
+/** Esborrat definitiu amb guarda de revisió. La migració R21 revoca també
+ * la publicació vinculada en la mateixa transacció del servidor. El port
+ * encua abans la revocació perquè una caiguda de xarxa no la perda. */
 export async function esborraNota(id, expectedRevision, config = {}) {
   if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('ATURADOR CRÍTIC: expectedRevision és obligatori.');
   if (getResolvedConfig(config).runtimeDataMode !== 'remote') {

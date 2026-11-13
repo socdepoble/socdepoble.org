@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   ESTAT_EXIF, ETIQUETA_CONSERVA_CAMERA, ETIQUETA_CONSERVA_EXIF, MAX_BYTES_TIFF, MAX_BYTES_TIFF_WEBP, MOTIU_EXIF,
   ajustaPrecisioGps, ambExifDeLoriginal, analitzaTiff, etiquetaConservaExif, exifCapEnFormat, exifPublicable, extreuTiff,
-  incrustaEnDataUrl, incrustaEnJpeg, incrustaEnWebp, precisioDeGps, preparaTiff, sostreTiff, teExifPerConservar, teUbicacioOData,
+  incrustaEnDataUrl, incrustaEnJpeg, incrustaEnWebp, precisioDeGps, preparaTiff, preparaTiffTriat, sostreTiff, teExifPerConservar, teUbicacioOData,
 } from './exifIncrustat.js';
 import { geolocalitzacio } from './geolocalitzacio.js';
 import { llegixExif, teExif } from './exif.js';
@@ -850,5 +850,87 @@ describe('P1-64 · revisió adversarial · ajustaPrecisioGps no deixa cap punt e
 
   test('una altitud que no cap en 32 bits en arrodonir-la: null', () => {
     esperaNull(tiff({ gps: gpsTorre({ alt: [[0xffffffff, 1]] }) }), 'altitud');
+  });
+});
+
+/* Gauntlet R22 (ronda 3, privadesa) · La còpia pública (storage.js · ambExifTriat) no porta el bloc sencer de
+   preparaTiff: només les etiquetes de la casella marcada. Un EXIF «ple», com el d'un mòbil o una càmera, amb una
+   descripció, el programari, l'autoria, els drets, un comentari, el MakerNote, números de sèrie i el nom de qui té
+   la càmera. */
+const SECRETS = ['SECRET-DESCRIPCIO-PRIVADA', 'PROGRAMARI-SECRET', 'AUTORA-SECRETA', 'DRETS-SECRETS', 'COMENTARI-SECRET',
+  'MAKERNOTE-SECRET', 'PROPIETARIA-SECRETA', 'SN-COS-123456', 'SN-OBJECTIU-999', 'CARRER-SECRET-3'];
+const asciiE = (tag, text) => ({ tag, tipus: TIPUS.ASCII, valors: text });
+const bytesE = (tag, text) => ({ tag, tipus: TIPUS.BYTE, valors: [...ascii(text)] });
+function exifPle({ ubicacio = true, data = true, ordre = 'MM' } = {}) {
+  return tiff({
+    ordre,
+    ifd0: [
+      asciiE(0x010e, 'SECRET-DESCRIPCIO-PRIVADA'), asciiE(0x010f, 'MARCA-CAMERA'), asciiE(0x0110, 'MODEL-CAMERA'),
+      orientacio(6), asciiE(0x0131, 'PROGRAMARI-SECRET'), ...(data ? [asciiE(0x0132, '2026:10:16 10:00:00')] : []),
+      asciiE(0x013b, 'AUTORA-SECRETA'), asciiE(0x8298, 'DRETS-SECRETS'),
+    ],
+    exif: [
+      ...(data ? dataOriginal('2026:10:16 10:00:00', '+02:00') : []),
+      ...(data ? [asciiE(0x9004, '2026:10:16 10:00:01')] : []),
+      bytesE(0x9286, 'ASCII\0\0\0COMENTARI-SECRET'), bytesE(0x927c, 'MAKERNOTE-SECRET-0123456789'),
+      asciiE(0xa430, 'PROPIETARIA-SECRETA'), asciiE(0xa431, 'SN-COS-123456'), asciiE(0xa433, 'MARCA-OBJECTIU'),
+      asciiE(0xa434, 'MODEL-OBJECTIU'), asciiE(0xa435, 'SN-OBJECTIU-999'),
+    ],
+    gps: ubicacio ? [...gpsTorre(), bytesE(27, 'ASCII\0\0\0GPS'), bytesE(28, 'ASCII\0\0\0CARRER-SECRET-3')] : null,
+  });
+}
+/* Els tags de cada directori d'un bloc TIFF: { ifd0, exif, gps }. */
+function tagsDe(bloc) {
+  const v = new DataView(bloc.buffer, bloc.byteOffset, bloc.byteLength);
+  const le = v.getUint16(0) === 0x4949;
+  const llig = (offset) => (offset ? Array.from({ length: v.getUint16(offset, le) }, (_, i) => v.getUint16(offset + 2 + i * 12, le)) : []);
+  const ifd0 = llig(v.getUint32(4, le));
+  const punter = (tag) => {
+    const i = ifd0.indexOf(tag);
+    return i < 0 ? 0 : v.getUint32(v.getUint32(4, le) + 2 + i * 12 + 8, le);
+  };
+  return { ifd0, exif: llig(punter(0x8769)), gps: llig(punter(0x8825)) };
+}
+const latin1 = (bytes) => new TextDecoder('latin1').decode(bytes);
+
+describe('R22 (ronda 3) · preparaTiffTriat: la còpia pública només porta el que diu la casella', () => {
+  test.each(['MM', 'II'])('%s · «Conserva la ubicació i la data»: GPS (0 a 6) i dates; cap altra etiqueta, ni la càmera', (ordre) => {
+    const ple = exifPle({ ordre });
+    // L'abans: preparaTiff ho conservava tot (el bloc del fitxer privat).
+    for (const secret of SECRETS) expect(latin1(preparaTiff(ple)), secret).toContain(secret);
+    const triat = preparaTiffTriat(ple);
+    expect(triat).not.toBeNull();
+    const text = latin1(triat);
+    for (const secret of [...SECRETS, 'MARCA-CAMERA', 'MODEL-CAMERA', 'MARCA-OBJECTIU', 'MODEL-OBJECTIU']) expect(text, secret).not.toContain(secret);
+    expect(tagsDe(triat)).toEqual({ ifd0: [0x0132, 0x8769, 0x8825], exif: [0x9003, 0x9004, 0x9011], gps: [1, 2, 3, 4, 5, 6] });
+    const llegit = llegixExif(concatena(SOI, app1Exif(triat), IMATGE));
+    expect(llegit.gps).toMatchObject({ lat: expect.closeTo(38.5919, 3), lng: expect.closeTo(-0.4184, 3) });
+    expect(llegit.dataCaptura).toBe('2026-10-16T10:00:00+02:00');
+    expect(analitzaTiff(triat)).toMatchObject({ estat: ESTAT_EXIF.PUBLICABLE, contingut: { ubicacio: true, data: true, marca: false, model: false, serie: false, nom: false } });
+  });
+
+  test('«Conserva les dades de la càmera» (sense ubicació ni data): marca i model, mai la sèrie ni el nom', () => {
+    const triat = preparaTiffTriat(exifPle({ ubicacio: false, data: false }));
+    expect(triat).not.toBeNull();
+    const text = latin1(triat);
+    for (const secret of SECRETS) expect(text, secret).not.toContain(secret);
+    for (const dada of ['MARCA-CAMERA', 'MODEL-CAMERA', 'MARCA-OBJECTIU', 'MODEL-OBJECTIU']) expect(text, dada).toContain(dada);
+    expect(tagsDe(triat)).toEqual({ ifd0: [0x010f, 0x0110, 0x8769], exif: [0xa433, 0xa434], gps: [] });
+    expect(analitzaTiff(triat)).toMatchObject({ contingut: { marca: true, model: true, serie: false, nom: false } });
+  });
+
+  test('la precisió triada viatja tal qual (el denominador de marca) i el punt no torna a ser l’exacte', () => {
+    const arrodonit = ajustaPrecisioGps(preparaTiff(exifPle()), '100m');
+    expect(precisioDeGps(arrodonit)).toBe('100m');
+    const triat = preparaTiffTriat(arrodonit);
+    expect(precisioDeGps(triat)).toBe('100m');
+    expect(llegixExif(concatena(SOI, app1Exif(triat), IMATGE)).gps).toEqual(llegixExif(concatena(SOI, app1Exif(arrodonit), IMATGE)).gps);
+  });
+
+  test('sense res de la tria (només el programari, o un GPS IFD amb només la versió), o un bloc que no es pot conservar: null', () => {
+    expect(preparaTiffTriat(tiff({ ifd0: [asciiE(0x0131, 'PROGRAMARI-SECRET')] }))).toBeNull();
+    expect(preparaTiffTriat(tiff({ ifd0: [asciiE(0x0131, 'X')], gps: [{ tag: 0, tipus: TIPUS.BYTE, valors: [2, 3, 0, 0] }] }))).toBeNull();
+    expect(preparaTiffTriat(tiff({ ifd0: [asciiE(0x010f, 'M')], exif: dataOriginal('2026:10:16 10:00:00'), punterExif: 0x7fff }))).toBeNull();
+    expect(preparaTiffTriat(null)).toBeNull();
   });
 });

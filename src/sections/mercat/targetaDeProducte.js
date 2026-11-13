@@ -14,6 +14,7 @@ import { resolRecursPropi } from '../../config/assetResolver.js';
 import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
 import { FORASTER } from '../../components/universal/UniversalUtils.js';
 import { fotoDeLaTargeta } from './imatgesDeProducte.js';
+import { formataEtiquetaHumana, senseHtmlCru } from './etiquetesMercat.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 
 /* Sense traductor, la reserva en valencià. */
@@ -57,7 +58,7 @@ export function propsDeTargetaDeProducte(item, t = senseTraduccio) {
        sp-card-avatar--fallback; autoriaNota.js). L'entitat ja porta el seu
        logo explícit (autoriaSeed). */
     avatarUrl: resolRecursPropi(signatura.avatar),
-    body: item.lead || item.entradilla || item.description || '',
+    body: item.lead || item.entradilla || senseHtmlCru(item.description) || '',
     /* T39 · els drets triats al producte; sense, el text de sèrie
        (COPYRIGHT_SDP), el mateix que la seua targeta al Mur i la seua pàgina.
        Abans, un literal que no llegia item.copyright (revisió del 261007,
@@ -73,8 +74,8 @@ export function propsDeTargetaDeProducte(item, t = senseTraduccio) {
     labels: [
       { text: t('section.mercat.kicker', 'Mercat'), className: 'sdp-badge-system' },
       item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,
-      item.category_slug ? { text: item.category_slug, className: 'sdp-badge-category' } : null,
-      item.tag ? { text: item.tag, className: 'sdp-badge-tag' } : null
+      item.category_slug ? { text: formataEtiquetaHumana(item.category_slug), className: 'sdp-badge-category' } : null,
+      item.tag ? { text: formataEtiquetaHumana(item.tag), className: 'sdp-badge-tag' } : null
     ].filter(Boolean),
     location: item.author_location || item.population || 'La Torre de les Maçanes',
     mainHref: getSectionItemPath('mercat', item.id),

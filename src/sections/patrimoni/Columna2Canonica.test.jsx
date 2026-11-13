@@ -9,6 +9,7 @@ import { desaVista } from '../../components/universal/workspace/vistaCataleg.js'
 import { ARBRES_MONUMENTALS_2020 } from '../../data/patrimoni/arbresMonumentals2020.js';
 import { LLIBRES_ARBRES_MONUMENTALS } from '../../data/patrimoni/llibresArbresMonumentals.js';
 import { RECEPTES_QUE_DINEM, laminaDeRecepta } from '../../data/patrimoni/queDinem.js';
+import { etiquetaDApartat } from './cercaReceptes.js';
 import NaturaPatrimoniWorkspaceSection from './NaturaPatrimoniWorkspaceSection.jsx';
 import ReceptesWorkspaceSection from './ReceptesWorkspaceSection.jsx';
 import { sanitizeHtml } from '../../utils/sanitize.js';
@@ -99,8 +100,10 @@ describe('P0-115 + P0-116 · Columna 2 canònica i 3 modes de vista', () => {
 
     const recepta = RECEPTES_QUE_DINEM[78];
     const fila = llista.querySelector(`button.sdp-gestor-fitxa[data-element="${recepta.slug}"]`);
+    const subtitolEsperat = `${etiquetaDApartat(ui.t, recepta.apartat)} · p. ${recepta.pagina}`;
     expect(fila.querySelector('.sdp-gestor-fitxa__titol').textContent).toBe(recepta.titol);
-    expect(normalitzaFila(fila)).toBe(filaDeDisseny({ id: recepta.slug, title: recepta.titol, image: laminaDeRecepta(recepta).src }));
+    expect(fila.querySelector('.sdp-gestor-fitxa__subtitol').textContent).toBe(subtitolEsperat);
+    expect(normalitzaFila(fila)).toBe(filaDeDisseny({ id: recepta.slug, title: recepta.titol, subtitle: subtitolEsperat, image: laminaDeRecepta(recepta).src }));
   });
 
   it('la fila triada porta aria-current i obri la fitxa al detall', async () => {

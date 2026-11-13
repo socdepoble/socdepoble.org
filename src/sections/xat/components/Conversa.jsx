@@ -48,7 +48,7 @@ import {
   respostaDeLaIAIA
 } from '../../../data/iaiaLocal.js';
 import { Fragment, Suspense, forwardRef, lazy, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, FileText } from 'lucide-react';
+import { AlertTriangle, FileText, ImagePlus } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext.jsx';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
@@ -60,10 +60,11 @@ import BotoBaixar from './BotoBaixar.jsx';
 import BarraResposta from './BarraResposta.jsx';
 import Compositor, { esNomesLectura } from './Compositor.jsx';
 import ControlsAdjunt from './ControlsAdjunt.jsx';
+import VisorGaleriaXat from './VisorGaleriaXat.jsx';
 import {
-  MAX_PAGINES_NO_LLEGITS, MS_ESPERA_OBERTURA, MS_RESSALT, anotaGrups, anunciDeNous, clauDe, classificaCanvi,
-  comportamentDesplacament, construeixFiles, estaAlFons, estatObertura, extremsSeq, noLlegitsEnObrir,
-  nousAnunciables, scrollPerCentrar, scrollPerDeixarDalt
+  MAX_PAGINES_NO_LLEGITS, MS_ESPERA_OBERTURA, MS_RESSALT, anotaGrups, anunciDeNous, caraDAutor, caresDelFil, clauDe,
+  classificaCanvi, comportamentDesplacament, construeixFiles, estaAlFons, estatObertura, extremsSeq,
+  imatgesDeLaGaleria, noLlegitsEnObrir, nousAnunciables, scrollPerCentrar, scrollPerDeixarDalt
 } from '../conversa.js';
 import { desaEsborrany, llegixEsborrany } from '../esborranys.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../../config/xifratXat.js';
@@ -279,10 +280,12 @@ function estabilitza(rebuts, previ) {
   return { llista: igual ? previ.llista : llista, perClau };
 }
 
-/* Pla 261014_1450 (front C) · `entitatActiva` (l'entitat de la barra negra,
-   d'useXat per XatSection) baixa per props al Compositor, que diu qui signa.
-   Per props i no per IdentitatContext: la UI de la conversa no llig cap
-   context d'identitat (Conversa.antics.test.jsx el simula sense actor). */
+/* Pla 261014_1450 (front C) · Qui signa ja no ho diu el Compositor (R21.8
+   en va retirar la línia «Escrius com a…»): ho diu la capçalera
+   (CapcaleraConversa, quiSigna) quan el fil el signa una entitat. Gauntlet
+   R22 (xat-06) · `entitatActiva`, que ja no llegia ningú, ja no baixa per
+   ací. La UI de la conversa continua sense llegir cap context d'identitat
+   (Conversa.antics.test.jsx el simula sense actor). */
 /* Fase D (261020, tasca 2; pla 261020_1300) · `moderacio`: el valor de
    useModeracio, només amb la capacitat i una sessió (XatSection; mai el xat
    de mostra). Amb ell, cada bombolla d'una altra persona porta «Denuncia el
@@ -292,7 +295,7 @@ function estabilitza(rebuts, previ) {
 /* Fase E (261020, tasca 3; pla 261020_2045) · `actorLlista` ({ id, nom } de
    la sessió, memoritzat a XatSection) i `onMutaLlista` (el port de la tasca 4)
    baixen a cada Bombolla per a la llista viva d'«El Comú». Per props, com
-   entitatActiva i moderacio: la conversa no llig cap context d'identitat.
+   moderacio: la conversa no llig cap context d'identitat.
    Sense, les llistes es lligen però no es toquen. */
 /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · `onTornaAOrigen` baixa
    tal qual a la capçalera: la fletxa torna a la pàgina d'on s'ha entrat
@@ -324,7 +327,7 @@ function estabilitza(rebuts, previ) {
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages: missatgesRebuts, onSendMessage, onSendMedia = null, configAdjunts, usuariAdjunts, onBack, onEnviaAlBloc, onCopia,
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
-  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false,
+  moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false,
   carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false, respostaLocalIAIA = respostaDeLaIAIA,
   senseSessio = false, escrivint = 0, onEscrivint = null, onOblidaSessioIAIA = null
 }) {
@@ -1164,6 +1167,22 @@ export default function Conversa({
     return tria;
   }, [triesPerClau, alterna]);
 
+  const [visorGaleria, setVisorGaleria] = useState(null);
+  const obriImatgeGaleria = useCallback((msg, url, obridor) => {
+    if (!msg || msg.id == null) return;
+    setVisorGaleria({ missatgeId: String(msg.id), urlInicial: url || null, obridor: obridor || null });
+  }, []);
+  /* Gauntlet R22 (xat-03) · Estable: un onTanca nou a cada pintat ja no
+     tornava a muntar res al visor, però no cal. */
+  const tancaVisorGaleria = useCallback(() => setVisorGaleria(null), []);
+  /* Gauntlet R22 (xat-07, xat-09) · Les cares del padró del fil (fil.altres)
+     i, per a cada foto, la llavor de l'autor: una entitat, pel seu nom. */
+  const caresFil = useMemo(() => caresDelFil(fil), [fil]);
+  const galeriaImatges = useMemo(
+    () => imatgesDeLaGaleria(messages, { t, fil, cares: caresFil }),
+    [messages, t, fil, caresFil]
+  );
+
   const bombolles = useMemo(() => {
     const pintaAccionsIAIA = (preguntaText, respostaText) => {
       const accionsIAIA = extreuAccionsDeRespostaIAIA(respostaText);
@@ -1252,6 +1271,8 @@ export default function Conversa({
           onCopia={onCopia}
           actorLlista={actorLlista}
           onMutaLlista={onMutaLlista}
+          onObriImatge={obriImatgeGaleria}
+          caraAutor={caraDAutor(msg, fil, caresFil)}
         />
       );
       if (!accionsIAIANode) return bombollaNode;
@@ -1265,7 +1286,7 @@ export default function Conversa({
   }, [
     files, moderacio, fil, accionsDe, configAdjunts, usuariAdjunts, esGrup, perId, vesAlMissatge, potRespondre, respon,
     ressalt, locale, t, modeSeleccio, seleccioDe, triats, onReintenta, onDescarta, onCopia, actorLlista, onMutaLlista,
-    cortesiaIAIA, consultaIAIA, onEnviaAlBloc, enviaEsborranyIAIA, creantNota, senseSessio
+    obriImatgeGaleria, cortesiaIAIA, consultaIAIA, onEnviaAlBloc, enviaEsborranyIAIA, creantNota, senseSessio, caresFil
   ]);
 
   /* Fase D (261020, tasca 2) · L'altra part d'un directe 1:1 amb una persona
@@ -1295,8 +1316,87 @@ export default function Conversa({
   const revisaCanvisRef = useRef(null);
   revisaCanvisRef.current = E2EE_ACTIU_PER_DEFECTE ? canvisClau.revisaEnviament ?? null : null;
 
+  const potAdjuntarFitxers = !modeSeleccio && potRespondre && !contrapartBloquejada
+    && fil.participant !== false && Boolean(onSendMedia) && !(E2EE_ACTIU_PER_DEFECTE && avisBloqueig);
+  const triaFitxerRef = useRef(null);
+  const dragDepthRef = useRef(0);
+  const [arrossegantFitxer, setArrossegantFitxer] = useState(false);
+
+  const reiniciaArrossegament = useCallback(() => {
+    dragDepthRef.current = 0;
+    setArrossegantFitxer(false);
+  }, []);
+
+  useEffect(() => {
+    reiniciaArrossegament();
+    setVisorGaleria(null);
+  }, [fil?.id, reiniciaArrossegament]);
+
+  useEffect(() => {
+    if (!potAdjuntarFitxers && arrossegantFitxer) reiniciaArrossegament();
+  }, [potAdjuntarFitxers, arrossegantFitxer, reiniciaArrossegament]);
+
+  useEffect(() => {
+    if (!arrossegantFitxer || typeof window === 'undefined') return undefined;
+    window.addEventListener('blur', reiniciaArrossegament);
+    window.addEventListener('dragend', reiniciaArrossegament);
+    window.addEventListener('drop', reiniciaArrossegament);
+    return () => {
+      window.removeEventListener('blur', reiniciaArrossegament);
+      window.removeEventListener('dragend', reiniciaArrossegament);
+      window.removeEventListener('drop', reiniciaArrossegament);
+    };
+  }, [arrossegantFitxer, reiniciaArrossegament]);
+
+  const portaFitxers = (dt) => Boolean(dt && Array.from(dt.types || []).includes('Files'));
+  const alEntrarArrossegant = (e) => {
+    if (!potAdjuntarFitxers || typeof triaFitxerRef.current !== 'function' || !portaFitxers(e.dataTransfer)) return;
+    e.preventDefault();
+    dragDepthRef.current += 1;
+    setArrossegantFitxer(true);
+  };
+  const alPassarArrossegant = (e) => {
+    if (!potAdjuntarFitxers || typeof triaFitxerRef.current !== 'function' || !portaFitxers(e.dataTransfer)) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+  };
+  const alEixirArrossegant = (e) => {
+    if (!arrossegantFitxer) return;
+    e.preventDefault();
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+    if (dragDepthRef.current === 0) setArrossegantFitxer(false);
+  };
+  const alDeixarAnarFitxer = (e) => {
+    if (!potAdjuntarFitxers || typeof triaFitxerRef.current !== 'function' || !portaFitxers(e.dataTransfer)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    reiniciaArrossegament();
+    const fitxers = Array.from(e.dataTransfer?.files || []);
+    const preferit = fitxers.find((f) => /^(image|video)\//i.test(String(f?.type || ''))) || fitxers[0];
+    if (preferit) triaFitxerRef.current(preferit);
+  };
+
   return (
-    <div className="sdp-xat-conversa" ref={arrelRef} onKeyDown={alTeclatDeLaConversa} onBlurCapture={() => onEscrivint?.(false)}>
+    <div
+      className="sdp-xat-conversa"
+      ref={arrelRef}
+      onKeyDown={alTeclatDeLaConversa}
+      onBlurCapture={() => onEscrivint?.(false)}
+      onDragEnter={alEntrarArrossegant}
+      onDragOver={alPassarArrossegant}
+      onDragLeave={alEixirArrossegant}
+      onDrop={alDeixarAnarFitxer}
+    >
+      {arrossegantFitxer ? (
+        <div className="sdp-xat-arrossega-vel" role="status" aria-live="polite">
+          <div className="sdp-xat-arrossega-vel__caixa">
+            <ImagePlus size={36} aria-hidden="true" focusable="false" />
+            <p className="sdp-xat-arrossega-vel__text">
+              {t('section.xat.adjunts.deixaAnar', 'Deixa anar la foto o el vídeo per a compartir-lo')}
+            </p>
+          </div>
+        </div>
+      ) : null}
       <CapcaleraConversa
         fil={fil}
         escrivint={escrivint}
@@ -1516,7 +1616,8 @@ export default function Conversa({
         </div>
       ) : (
         <ControlsAdjunt
-          actiu={potRespondre && !contrapartBloquejada && fil.participant !== false && Boolean(onSendMedia) && !(E2EE_ACTIU_PER_DEFECTE && avisBloqueig)}
+          actiu={potAdjuntarFitxers}
+          triaFitxerRef={triaFitxerRef}
           fil={fil} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} locale={locale}
           onTextOrfe={(orfe) => canviaText(text.trim() ? `${text}\n\n${orfe}` : orfe)}
           onEnvia={async (conversa, adjunt, opcions) => {
@@ -1540,7 +1641,6 @@ export default function Conversa({
               onEnvia={envia}
               t={t}
               fil={E2EE_ACTIU_PER_DEFECTE && avisBloqueig ? { ...fil, potEscriure: false, avisNomesLectura: t(avisBloqueig[0], avisBloqueig[1]) } : fil}
-              entitatActiva={entitatActiva}
               campRef={campRef}
               onEscapa={resposta ? cancelaResposta : null}
               barra={resposta ? <BarraResposta missatge={resposta} onCancela={cancelaResposta} t={t} /> : null}
@@ -1550,6 +1650,17 @@ export default function Conversa({
         </ControlsAdjunt>
       )}
       {peu}
+      <VisorGaleriaXat
+        obert={Boolean(visorGaleria)}
+        imatges={galeriaImatges}
+        missatgeInicialId={visorGaleria?.missatgeId ?? null}
+        urlInicial={visorGaleria?.urlInicial ?? null}
+        obridor={visorGaleria?.obridor ?? null}
+        onTanca={tancaVisorGaleria}
+        externalConfig={configAdjunts}
+        locale={locale}
+        t={t}
+      />
     </div>
   );
 }

@@ -135,11 +135,15 @@ describe('anteposaActors · P1-70, les files de reserva', () => {
     const directeIaia = deFil(mapejaFil({ id: 'd-iaia', tipus: 'directe', titol: 'IAIA MarIA', altres: [{ id: IAIA_ID, tipus: 'ia' }] }));
     expect(claus(anteposaActors([directeIaia, pepa], RESERVES))).toEqual(['sdp-per-defecte:javi', 'd-iaia', 'f-pepa']);
   });
-  test('R21.4-UI · quan joEsJavi és cert, el fil personal de Javi (esPropi) ocupa la 2a plaça permanent sense duplicar la fila de reserva', () => {
-    const propiJavi = deFil(mapejaFil({ id: 'propi-javi', tipus: 'directe', esPropi: true, titol: 'Javi Llinares', altres: [] }));
-    const resultat = anteposaActors([propiJavi, delPoble, iaia], { ...RESERVES, joEsJavi: true, subtitolDeJavi: "Envia't missatges a tu mateix" });
+  test('R21.8 · quan joEsJavi és cert, un fil propi buit no es fixa dalt; quan té missatges reals ocupa la plaça permanent sense duplicar la reserva', () => {
+    const propiBuit = deFil(mapejaFil({ id: 'propi-javi', tipus: 'directe', esPropi: true, titol: 'Javi Llinares', altres: [] }));
+    const senseMissatges = anteposaActors([propiBuit, javi, delPoble, iaia], { ...RESERVES, joEsJavi: true, subtitolDeJavi: "Envia't missatges a tu mateix" });
+    expect(claus(senseMissatges)).toEqual(['poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
+
+    const propiAmbMissatges = deFil(mapejaFil({ id: 'propi-javi', tipus: 'directe', esPropi: true, titol: 'Javi Llinares', ultimText: 'Nota personal', ultimSeq: 1, altres: [] }));
+    const resultat = anteposaActors([propiAmbMissatges, javi, delPoble, iaia], { ...RESERVES, joEsJavi: true, subtitolDeJavi: "Envia't missatges a tu mateix" });
     expect(claus(resultat)).toEqual(['propi-javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
-    expect(resultat[0].fil.ultimText).toBe("Envia't missatges a tu mateix");
+    expect(resultat[0].fil.ultimText).toBe('Nota personal');
   });
   test('sense reserva de la IAIA (nivell d’IA 0), cap IAIA inventada', () => {
     expect(claus(anteposaActors([delPoble], { reservaJavi: FILA_DE_RESERVA_DE_JAVI }))).toEqual(['sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes']);

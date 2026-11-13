@@ -390,7 +390,7 @@ test('front A · la foto pujada de la persona en un node sense «mitjans»: inic
    del rail porta el SEU logo (amb la base del paquet), mai la foto de la
    persona, i el nom accessible ho diu. La conversa oberta diu qui signa: en
    un xat personal, la persona. */
-test('front C · amb entitatActiva, el peu porta el logo de l’entitat i la conversa diu que hi signes com a tu', async () => {
+test('front C + R21.8 · amb entitatActiva, el peu porta el logo de l’entitat sense cap rètol intrusiu damunt del compositor', async () => {
   ambLaBaseDelPaquet();
   mocks.threadId = 'f-pepa';
   munta({ ...ambSessio(), joAvatar: PUJADA_JO, entitatActiva: SDP_ACTIVA });
@@ -400,7 +400,7 @@ test('front C · amb entitatActiva, el peu porta el logo de l’entitat i la con
   expect(avatar.classList.contains('sdp-xat-avatar--quadrat')).toBe(true);
   expect(avatar.querySelector('img').getAttribute('src')).toBe(`${PAQUET}${LOGO_PNG}`);
   expect(caresDe(rail()).Javi).toBeUndefined();
-  expect(screen.getByText('Escrius com a tu: en esta conversa no parles en nom de Sóc de Poble.')).toBeTruthy();
+  expect(screen.queryByText(/Escrius com a/)).toBeNull();
 });
 
 test('una foto pujada (sdp-media) en un node sense la capacitat «mitjans»: inicials, mai una imatge trencada', async () => {

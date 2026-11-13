@@ -52,7 +52,7 @@ export const TEXTOS_VERTICALS = Object.freeze({
   mapa: Object.freeze({
     kicker: ['section.mapa.kicker', 'Mapa'],
     title: ['section.mapa.title', 'Mapa del territori'],
-    subtitle: ['section.mapa.lead', 'Punts d’interès, camins, patrimoni i incidències del terme que publica la gent del poble.'],
+    subtitle: ['section.mapa.lead', 'Punts d’interès, camins, patrimoni i incidències del terme que publica la gent de poble.'],
     buit: ['section.mapa.buit', 'Encara no hi ha cap punt del mapa publicat en este poble.'],
     error: ['section.mapa.error', 'No s’ha pogut carregar el Mapa'],
     carregant: ['section.mapa.carregant', 'Carregant els punts del mapa…'],
@@ -61,7 +61,7 @@ export const TEXTOS_VERTICALS = Object.freeze({
   vehicle: Object.freeze({
     kicker: ['section.vehicle.kicker', 'Compartir cotxe'],
     title: ['section.vehicle.title', 'Viatges per compartir'],
-    subtitle: ['section.vehicle.subtitle', 'Oferix o busca lloc al cotxe per a anar i tornar del poble.'],
+    subtitle: ['section.vehicle.subtitle', 'Oferix o busca lloc al cotxe per a anar al poble i tornar-ne.'],
     buit: ['section.vehicle.buit', 'Encara no hi ha cap viatge publicat en este poble.'],
     error: ['section.vehicle.error', 'No s’ha pogut carregar Compartir cotxe'],
     carregant: ['section.vehicle.carregant', 'Carregant els viatges…'],
@@ -69,7 +69,7 @@ export const TEXTOS_VERTICALS = Object.freeze({
   }),
   animalets: Object.freeze({
     kicker: ['section.animalets.kicker', 'Animalets'],
-    title: ['section.animalets.title', 'Animals del poble'],
+    title: ['section.animalets.title', 'Animals de poble'],
     subtitle: ['section.animalets.subtitle', 'Adopció, animals perduts, trobats i cura comunitària al poble.'],
     buit: ['section.animalets.buit', 'Encara no hi ha cap fitxa d’animalets publicada en este poble.'],
     error: ['section.animalets.error', 'No s’ha pogut carregar Animalets'],
@@ -79,7 +79,7 @@ export const TEXTOS_VERTICALS = Object.freeze({
   treball: Object.freeze({
     kicker: ['section.treball.kicker', 'Treball'],
     title: ['section.treball.title', 'Feina i oficis'],
-    subtitle: ['section.treball.subtitle', 'Ofertes de feina, oficis i jornals del poble.'],
+    subtitle: ['section.treball.subtitle', 'Ofertes de feina, oficis i jornals de poble.'],
     buit: ['section.treball.buit', 'Encara no hi ha cap oferta publicada en este poble.'],
     error: ['section.treball.error', 'No s’ha pogut carregar Treball'],
     carregant: ['section.treball.carregant', 'Carregant les ofertes…'],

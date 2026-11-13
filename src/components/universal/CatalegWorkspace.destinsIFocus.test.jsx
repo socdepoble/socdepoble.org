@@ -7,6 +7,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
+import { SessionContext } from '../../app/contexts/objectesDeContext.js';
 import { delVal } from '../../config/storage.js';
 import { CLAU_VISTA_CATALEG } from './workspace/vistaCataleg.js';
 const ui = vi.hoisted(() => ({ language: 'ca' }));
@@ -26,47 +27,58 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.uns
 
 const model = { status: 'ready', canAutoSelect: () => false, categories: [{ id: 'a', label: 'Carpeta A' }],
   items: ['Romer', 'Timonet', 'Sàlvia'].map((title, index) => ({ id: `planta-${index + 1}`, title, categoryIds: ['a'], glyph: '🌿' })) };
-function Path() { const { pathname, search } = useLocation(); return <output data-testid="path">{pathname + search}</output>; }
+function Path() {
+  const { pathname, search } = useLocation();
+  const sufix = search ? (search.startsWith('?') ? search : `?${search}`) : '';
+  return <output data-testid="path">{pathname + sufix}</output>;
+}
 const detall = ({ item, onClose, onTriaItem }) => item
   ? <section className="sdp-cataleg-workspace__fitxa"><h3>{item.title}</h3>
     <button type="button" onClick={onClose}>Tancar</button>
     <button type="button" onClick={() => onTriaItem('planta-3')}>Germana Sàlvia</button></section>
   : <header className="page-title"><h1>Introducció canònica</h1></header>;
-function mount({ ruta = '/page/herbari', rutaInicial = ruta, ...props } = {}) {
-  return render(<MemoryRouter rutaInicial={rutaInicial}><CatalegWorkspace id="prova-cataleg" ruta={ruta} model={model}
-    renderDetail={detall} {...props} /><Path /></MemoryRouter>);
+function mount({ ruta = '/page/herbari', rutaInicial = ruta, sessio = null, ...props } = {}) {
+  const arbre = <MemoryRouter rutaInicial={rutaInicial}><CatalegWorkspace id="prova-cataleg" ruta={ruta} model={model}
+    renderDetail={detall} {...props} /><Path /></MemoryRouter>;
+  return render(sessio ? <SessionContext.Provider value={sessio}>{arbre}</SessionContext.Provider> : arbre);
 }
 /* El doble requestAnimationFrame del gestor de la fitxa. */
 const marcs = () => act(() => new Promise(resolve => setTimeout(resolve, 80)));
 const titolDeLaFitxa = container => container.querySelector('.sdp-cataleg-workspace__fitxa h3');
 const overlay = (container, id) => container.querySelector(`#app-grid-list [data-element="${id}"]`);
-const opcions = (etiqueta = 'Pàgina de destinació') => [...screen.getByLabelText(etiqueta).querySelectorAll('option')].map(o => [o.value, o.textContent]);
 
-test('producció sense apps: cap destí al Rebost ni al Bar, ni el nom del negoci', () => {
+test('producció sense apps: cap destí al Rebost ni al Bar, ni el nom del negoci, ni selector de destinació a columna 1', () => {
   vi.stubEnv('DEV', false); vi.stubEnv('VITE_SDP_APP_NEVERA', '0'); vi.stubEnv('VITE_SDP_APP_BAR', '0');
   mount({ font: 'herbari', destiPublicacio: 'herbari', permetreEdicioDestins: true, rutaInicial: '/page/herbari?fitxa=planta-1' });
-  expect(opcions()).toEqual([['/page/herbari', 'Herbari'], ['/page/banc-de-llavors', 'Banc de llavors'], ['/page/receptes', 'Receptes']]);
+  expect(screen.queryByLabelText('Pàgina de destinació')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Obri la pàgina' })).toBeNull();
   expect(screen.queryByRole('checkbox', { name: 'Rebost privat' })).toBeNull();
   expect(screen.queryByRole('checkbox', { name: 'TPV Bar privat' })).toBeNull();
   expect(screen.getByRole('checkbox', { name: 'Mur' })).toBeTruthy();
   expect(document.body.textContent).not.toMatch(/Parr[òo]quia/);
 });
 
-test('amb les apps al build hi són, amb una etiqueta genèrica traduïda', () => {
+test('amb les apps al build, els destins de publicació de la fitxa hi són sense nom de negoci i sense selector de prova a columna 1', () => {
   vi.stubEnv('DEV', true);
-  mount();
-  expect(opcions().map(([valor]) => valor)).toEqual(['/page/herbari', '/page/banc-de-llavors', '/page/receptes', '/app/nevera/rebost', '/app/bar/cataleg']);
-  expect(opcions().at(-1)[1]).toBe('El Bar');
+  mount({ font: 'herbari', destiPublicacio: 'herbari', permetreEdicioDestins: true, rutaInicial: '/page/herbari?fitxa=planta-1' });
+  expect(screen.queryByLabelText('Pàgina de destinació')).toBeNull();
+  expect(screen.getByRole('checkbox', { name: 'Mur' })).toBeTruthy();
+  expect(screen.getByRole('checkbox', { name: 'Rebost privat' })).toBeTruthy();
+  expect(screen.getByRole('checkbox', { name: 'TPV Bar privat' })).toBeTruthy();
   expect(document.body.textContent).not.toMatch(/Parr[òo]quia/);
-  cleanup(); ui.language = 'en'; mount();
-  expect(opcions('Destination page').map(([, etiqueta]) => etiqueta)).toEqual(['Herbarium', 'Seed bank', 'Recipes', 'Pantry', 'The Bar']);
 });
 
-test('una pàgina que no és entre les opcions obri la que mostra el selector', () => {
-  mount({ ruta: '/page/fediversity' });
-  expect(screen.getByLabelText('Pàgina de destinació').value).toBe('/page/herbari');
-  fireEvent.click(screen.getByRole('button', { name: 'Obri la pàgina' }));
-  expect(screen.getByTestId('path').textContent).toBe('/page/herbari');
+test('R21.7 · «+ Afegir catàleg» només apareix quan la secció amfitriona el concedix (superadministració); el nucli no llig la sessió', () => {
+  mount({});
+  expect(screen.queryByRole('button', { name: '+ Afegir catàleg' })).toBeNull();
+  expect(screen.queryByLabelText('Pàgina de destinació')).toBeNull();
+  cleanup();
+  mount({ afegirCataleg: false, sessio: { esSuperadmin: true } });
+  expect(screen.queryByRole('button', { name: '+ Afegir catàleg' })).toBeNull();
+  cleanup();
+  mount({ afegirCataleg: true });
+  fireEvent.click(screen.getByRole('button', { name: '+ Afegir catàleg', exact: true }));
+  expect(screen.getByTestId('path').textContent).toBe('/el-meu-perfil?vista=admin-importacio');
 });
 
 test('la lectura pública és la mateixa per a qui administra i per a qualsevol visitant: per defecte no es mostra On es publica?; amb permetreEdicioDestins=true ho veu qui publica', () => {

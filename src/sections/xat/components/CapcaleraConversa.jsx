@@ -74,13 +74,13 @@
  * h4, i /disseny/fonaments/xat continua amb un sol H1, el de la pàgina.
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { ArrowLeft, MoreVertical, X } from 'lucide-react';
+import { ArrowLeft, Building2, MoreVertical, X } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { rutaDePerfil } from '../../../config/navigation.js';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { AvatarFil } from './FilaConversa.jsx';
 import { rutaCanonicaDelXat } from '../actorsDelXat.js';
-import { mouFocusDelMenu } from './Compositor.jsx';
+import { mouFocusDelMenu, quiSigna } from './Compositor.jsx';
 import IndicadorEscrivint from './IndicadorEscrivint.jsx';
 
 /* «{n} participants» (o «1 participant»); res si el backend no ho diu. */
@@ -220,13 +220,25 @@ export default function CapcaleraConversa({
   const altres = Array.isArray(fil?.altresNoms) ? fil.altresNoms : [];
   const esGrup = fil?.tipus === 'grup';
   const subjecte = fil?.subjecte || null;
+  const esCanalDEntitat = !subjecte && !fil?.esPropi && !(esGrup || altres.length > 1)
+    && Boolean(fil?.comEntitat && fil?.entitatNom);
+  /* Gauntlet R22 (xat-06) · R21.8 va retirar «Escrius com a…» de damunt del
+     compositor perquè la fila i la capçalera ja ho deien, però la capçalera
+     només ho deia en el canal 1:1 d'una entitat. Als Avisos (un canal amb
+     subjecte), als grups i als fils de pàgina on el que escrius ix amb la veu
+     d'una entitat (quiSigna: comEntitat del servidor, o qui pot escriure als
+     Avisos d'una entitat), ara ho diu ací, compacte, amb la mateixa marca. */
+  const signa = esCanalDEntitat ? null : quiSigna(fil);
+  const signaEntitat = signa?.tipus === 'entitat' && signa.nom
+    ? t('section.xat.signa.entitat', 'Escrius com a {nom}.').replace('{nom}', () => signa.nom)
+    : '';
   /* Gauntlet 261025_0545 (TE-03) · Els noms i els títols entren amb una
      funció de reemplaç: un «Bar $` Co» es pinta tal qual (moderacio.js, omple). */
   let linia = '';
   if (subjecte) linia = participantsDe(fil?.participants, t);
   else if (fil?.esPropi) linia = t('section.xat.nou.tuMateix', "Envia't missatges a tu mateix");
   else if (esGrup || altres.length > 1) linia = altres.join(', ');
-  else if (fil?.comEntitat && fil?.entitatNom) linia = t('section.xat.entitat.canal', 'Canal de {nom}').replace('{nom}', () => fil.entitatNom);
+  else if (esCanalDEntitat) linia = t('section.xat.entitat.canal', 'Canal de {nom}').replace('{nom}', () => fil.entitatNom);
   else if (fil?.esIA) linia = t('section.xat.ia.avis', 'Intel·ligència artificial en proves');
 
   /* L'altra part, amb id i tipus: només llavors hi ha perfil on anar. Un fil
@@ -250,11 +262,24 @@ export default function CapcaleraConversa({
       <div className="sdp-xat-capcalera__info">
         <strong className="sdp-xat-capcalera__nom" {...propsDeTitol(nivellTitol)}>{nom}</strong>
         {escrivint > 0 ? <IndicadorEscrivint quants={escrivint} t={t} /> : null}
-        {!escrivint && (sobre || linia) ? (
+        {!escrivint && (sobre || linia || signaEntitat) ? (
           <span className="sdp-xat-capcalera__sub" id={idSub}>
+            {/* xat-06 · Primer qui signa: la línia es retalla per la dreta en una pantalla estreta. */}
+            {signaEntitat ? (
+              <span className="sdp-xat-capcalera__entitat">
+                <Building2 size={14} aria-hidden="true" focusable="false" />
+                <span>{signaEntitat}</span>
+              </span>
+            ) : null}
+            {signaEntitat && (sobre || linia) ? ' · ' : null}
             {sobre}
             {sobre && linia ? ' · ' : null}
-            {linia}
+            {esCanalDEntitat ? (
+              <span className="sdp-xat-capcalera__entitat">
+                <Building2 size={14} aria-hidden="true" focusable="false" />
+                <span>{linia}</span>
+              </span>
+            ) : linia}
           </span>
         ) : null}
       </div>

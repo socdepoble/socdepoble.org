@@ -564,7 +564,8 @@ test('D-C · etiqueta amb acció: modificador de classe, sense retallar el botó
   expect(FULL.indexOf(`${MODIFICADOR} {`)).toBeGreaterThan(FULL.indexOf('.sp-card-labels .sp-card-label,'));
   expect(valorDe(MODIFICADOR, 'overflow')).toBeUndefined();
   expect(valorDe(MODIFICADOR, 'padding')).toBe('0');
-  expect(valorDe('.sp-card-labels .sp-card-label, .sp-card-label', 'height')).toBe('24px');
+  expect(valorDe('.sp-card-labels .sp-card-label, .sp-card-label', 'height')).toBe('28px');
+  expect(valorDe('.sp-card-labels .sp-card-label, .sp-card-label', 'padding')).toBe('0 var(--sdp-space-4)');
   expect(valorDe('.sp-card-label--amb-accio > .sp-card-label__action', 'position')).toBe('relative');
   const diana = '.sp-card-label--amb-accio > .sp-card-label__action::after';
   expect(valorDe(diana, 'inset-block')).toBe('calc((100% - var(--sdp-touch)) / 2)');

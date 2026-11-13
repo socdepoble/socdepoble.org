@@ -21,6 +21,14 @@ const TEXTOS = {
     'Herbarioa', 'Ibilbideak eta bideak']
 };
 
+const MULTIPOBLE = {
+  ca: ['Catàlegs municipals disponibles', 'Cada poble conserva la seua font documental, autoria i drets propis dins de la mateixa llibreria compartida.', 'Obri el catàleg', '{n} arbres inventariats'],
+  es: ['Catálogos municipales disponibles', 'Cada pueblo conserva su fuente documental, autoría y derechos propios dentro de la misma biblioteca compartida.', 'Abrir el catálogo', '{n} árboles inventariados'],
+  en: ['Available municipal catalogues', 'Each town preserves its own documentary source, authorship and rights within the shared library.', 'Open catalogue', '{n} inventoried trees'],
+  gl: ['Catálogos municipais dispoñibles', 'Cada vila conserva a súa fonte documental, autoría e dereitos propios dentro da mesma biblioteca compartida.', 'Abrir o catálogo', '{n} árbores inventariadas'],
+  eu: ['Udal katalogo erabilgarriak', 'Herri bakoitzak bere iturri dokumentala, egiletza eta eskubide propioak gordetzen ditu liburutegi partekatuan.', 'Ireki katalogoa', '{n} zuhaitz inbentariatuta']
+};
+
 export function textosArbresWorkspace(language = 'ca') {
   const [llibreria, exemplars, general, portada, cerca, buit, senseResultats, carregant, errorPortada, reintenta,
     tornaLlibre, herbari, rutes] = TEXTOS[language] || TEXTOS.ca;
@@ -31,7 +39,8 @@ export function textosArbresWorkspace(language = 'ca') {
     gl: ['Todas as árbores', 'Monumentais (Lei 4/2006)', 'Emblemáticas de Interese Local', 'Acceso libre público', 'Seguimento fotográfico 2020'],
     eu: ['Zuhaitz guztiak', 'Monumentalak (4/2006 Legea)', 'Tokiko intereseko enblematikoak', 'Sarbide publiko librea', 'Argazki-jarraipena 2020']
   })[language] || ['Tots els arbres', 'Monumentals (Llei 4/2006)', 'Emblemàtics d’Interés Local', 'Accés lliure públic', 'Seguiment fotogràfic 2020'];
+  const [catalegsMunicipals, introMultipoble, obriCataleg, recompteArbres] = MULTIPOBLE[language] || MULTIPOBLE.ca;
   return { tots, monumentals, emblematics, acces, seguiment, language: Object.hasOwn(TEXTOS, language) ? language : 'ca',
     llibreria, exemplars, general, portada, cerca, buit, senseResultats, carregant, errorPortada, reintenta,
-    tornaLlibre, herbari, rutes };
+    tornaLlibre, herbari, rutes, catalegsMunicipals, introMultipoble, obriCataleg, recompteArbres };
 }

@@ -18,10 +18,10 @@ import { eleccioRemotaActiva, exitRemoteMode } from '../../config/dataMode.js';
    on sí que té sentit revisar la connexió. */
 function textDError(error, t) {
   if (esBackendInabastable(error)) {
-    return t('error.backendInabastable', 'El servidor del poble no respon ara mateix. El contingut no s’ha pogut carregar.');
+    return t('error.backendInabastable', 'El servidor de poble no respon ara mateix. El contingut no s’ha pogut carregar.');
   }
   if (Number(error?.status) >= 400) {
-    return t('error.servidor', 'El servidor del poble ha tornat un error. Torna-ho a provar més tard.');
+    return t('error.servidor', 'El servidor de poble ha tornat un error. Torna-ho a provar més tard.');
   }
   return t('error.xarxa', 'Revisa la connexió i torna-ho a provar.');
 }

@@ -58,7 +58,7 @@ import { createTranslator } from '../../config/i18n.js';
 
 const CARREGANT = 'Carregant el perfil…';
 const SENSE_RESPOSTA = 'No s’ha pogut carregar el perfil';
-const SENSE_RESPOSTA_TEXT = 'El servidor del poble no respon ara mateix. Pots tornar-ho a provar o continuar navegant.';
+const SENSE_RESPOSTA_TEXT = 'El servidor de poble no respon ara mateix. Pots tornar-ho a provar o continuar navegant.';
 const ENTRADILLA_DE_JAVI = "Dissenyador gràfic, sempre disposat a integrar-me en equips de treball on aprendre i aportar valor als projectes. Dins de l'Associació El Rentonar, coordine el Projecte Sóc de Poble.";
 const UUID_JAVI = '7a7a7a7a-1b1b-4c4c-8d8d-9e9e9e9e9e9e';
 const PERSONA = Object.freeze({

@@ -3,10 +3,11 @@ import { propsDePaginaDeText } from '../text/paginaDeText.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 import { useEffect, useMemo, useState } from 'react';
 import CatalegWorkspace from '../../components/universal/CatalegWorkspace.jsx';
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
 import { usePublicadorsBarraRecurs } from '../../hooks/usePublicadorsBarraRecurs.js';
-import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
-import { Boto } from '../../components/PedraSeca/index.js';
+import { COPYRIGHT_SDP, dataHoraDeBarra, encapcalamentDeTargeta } from '../../components/universal/editorial.js';
+import { Boto, UniversalCard } from '../../components/PedraSeca/index.js';
 import { Link, Navigate, useSearchParams } from '../../app/contexts/RouterContext.jsx';
 import { useUIActionsOpcional } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO.js';
@@ -123,6 +124,7 @@ export default function NaturaPatrimoniWorkspaceSection({
   llibres = LLIBRES_ARBRES_MONUMENTALS
 }) {
   const ui = useUIActionsOpcional();
+  const esSuperadmin = useSessioOpcional()?.esSuperadmin === true;
   const textos = useMemo(() => textosArbresWorkspace(ui?.language), [ui?.language]);
   const [parametres] = useSearchParams();
   const llibreDemanat = parametres.get('llibre') || llibreInicial;
@@ -145,20 +147,52 @@ export default function NaturaPatrimoniWorkspaceSection({
 
   return <CatalegWorkspace id="arbres-monumentals-r18" ruta="/page/arbres-monumentals" model={model}
     itemSlug={itemSlug} sincronitzaRuta={sincronitzaRuta}
-    destiPublicacio="arbres-monumentals" inclouDescendents afegirCataleg navegacioLlibres={{ categoriaInicial, fitxaInicial: fitxa?.arbre ? fitxa.id : null,
+    destiPublicacio="arbres-monumentals" inclouDescendents afegirCataleg={esSuperadmin} navegacioLlibres={{ categoriaInicial, fitxaInicial: fitxa?.arbre ? fitxa.id : null,
       portadaInicial: llibre && !fitxa?.arbre ? `portada-${llibre.id}` : null }}
     labels={{ categories: textos.llibreria, items: textos.exemplars, all: `${textos.tots} (${totalArbres})`,
       search: textos.cerca, empty: textos.buit, noResults: textos.senseResultats }}
-    renderDetail={({ item, selection, onClose }) => {
+    renderDetail={({ item, selection, onClose, onTriaCategoria }) => {
       const categoria = model.categories.find(row => row.id === selection.categoryId);
       const llibreActiu = item?.llibre || llibres.find(row => row.id === (categoria?.llibreId || selection.categoryId));
       if (item?.arbre) return <PaginaFitxaArbre key={item.id} item={item} textos={textos} onClose={onClose} />;
       if (llibreActiu) return <PortadaDelLlibre key={llibreActiu.id} llibre={llibreActiu} textos={textos} />;
+      const prestatgeriaMultipoble = <section className="sdp-prose" aria-labelledby="sdp-arbres-catalegs-municipals">
+        <h2 id="sdp-arbres-catalegs-municipals">{textos.catalegsMunicipals}</h2>
+        <p>{textos.introMultipoble}</p>
+        <div className="sdp-card-grid">
+          {llibres.map(llibreItem => {
+            const primerExemplar = llibreItem.exemplars?.[0] ?? null;
+            const fotoPortada = primerExemplar?.fotos?.foto2020 || primerExemplar?.fotos?.foto2007 || '';
+            const recompte = textos.recompteArbres.replace('{n}', () => String(llibreItem.exemplars?.length ?? 0));
+            return (
+              <UniversalCard
+                key={llibreItem.id}
+                headingLevel="h3"
+                title={llibreItem.titol}
+                subtitle={`${llibreItem.poble} · ${recompte}`}
+                body={llibreItem.fontDoctoral?.autoriaTecnica || llibreItem.autoria?.nom || undefined}
+                imageUrl={fotoPortada ? resolveAsset(fotoPortada) : undefined}
+                imageAlt={primerExemplar ? `${primerExemplar.nom} (${llibreItem.poble})` : llibreItem.titol}
+                /* R21.7 · Capçalera de lectura per la font editorial compartida: l'autoria del catàleg, el seu poble i
+                   l'any de l'edició revisada; sense any conegut, «Data no indicada» (cap data inventada). */
+                {...encapcalamentDeTargeta({ year: llibreItem.fontDoctoral?.anyEdicioRevisada },
+                  { author: llibreItem.autoria?.nom, location: llibreItem.poble, idioma: ui?.language })}
+                {...(llibreItem.autoria?.ruta ? { authorHref: llibreItem.autoria.ruta } : {})}
+                avatarUrl={llibreItem.autoria?.logo ? resolveAsset(llibreItem.autoria.logo) : undefined}
+                copyright={llibreItem.autoria?.drets || llibreItem.fontDoctoral?.llicencia || undefined}
+                labels={[llibreItem.poble]}
+                etiquetesAmbAccio
+                accio={<Boto varietat="secundari" onClick={() => onTriaCategoria?.(llibreItem.id)}>{`${textos.obriCataleg}: ${llibreItem.poble}`}</Boto>}
+              />
+            );
+          })}
+        </div>
+      </section>;
       const enllacos = <nav aria-label={textos.llibreria}>
         <p><Link to="/page/herbari">{textos.herbari}</Link> · <Link to="/page/rutes-de-poble">{textos.rutes}</Link></p>
       </nav>;
       return page ? <TextSection page={{ ...page, copyright: COPYRIGHT_SDP }} pageKey="arbres-monumentals" accioPrincipal={accioPrincipal}>
-        {enllacos}{children}
-      </TextSection> : <UniversalPage title={textos.general} copyright={COPYRIGHT_SDP}>{enllacos}{children}</UniversalPage>;
+        {prestatgeriaMultipoble}{enllacos}{children}
+      </TextSection> : <UniversalPage title={textos.general} copyright={COPYRIGHT_SDP}>{prestatgeriaMultipoble}{enllacos}{children}</UniversalPage>;
     }} />;
 }

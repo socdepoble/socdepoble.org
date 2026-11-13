@@ -44,6 +44,12 @@
       "despres": "2611091500",
       "motiu": "Extensió additiva del contracte de sessions; el resum anterior es conserva.",
       "font": "README R15; capçalera2611091500"
+    },
+    {
+      "abans": "2611122200",
+      "despres": "20261113003000",
+      "motiu": "R21.9b va després del Mur v2 (2611122200); per ordre alfabètic cru, 20261113003000 aniria abans de tot el catàleg de deu dígits.",
+      "font": "README «Ordre correcte» pas 3 i Nota d'auditoria §16; migrations/README.md R21.9b"
     }
   ],
   "portes": [
@@ -205,6 +211,21 @@
       ],
       "abans": [],
       "font": "README R54 política2.6"
+    },
+    {
+      "id": "client-v1-2-0-build-5-mur-r21",
+      "tipus": "client",
+      "descripcio": "Publicar el client v1.2.0 build 5 (web, zip del connector WordPress 1.1.14, Android versionCode 5 i iOS build 5) només amb tota la cadena del Mur R21 ja aplicada al servidor: 2611111735 → 2611112149 → 2611121430 → 2611121850 → 2611122200 → 20261113003000. Este client llig el Mur, el Mercat, l'Agenda i Multimèdia amb llig_mur_public i llig_mur_membres (també amb p_nomes_projeccions) i publica des de Notes amb publica_nota_al_mur. Cap zip ni pujada a les botigues abans.",
+      "despres": [
+        "2611111735",
+        "2611112149",
+        "2611121430",
+        "2611121850",
+        "2611122200",
+        "20261113003000"
+      ],
+      "abans": [],
+      "font": "README Nota d'auditoria §16 i vinyetes de 2611121430 i 2611122200; Gauntlet R22 dades-01, dades-05 i honestedat-03"
     }
   ],
   "fantasmes": [

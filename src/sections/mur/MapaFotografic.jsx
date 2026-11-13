@@ -86,14 +86,14 @@ const ETIQUETES_DE_L_ESTAT = Object.freeze({
 });
 const FRASES_DE_L_ESTAT = Object.freeze({
   estimada: Object.freeze(['section.mur.mapa.origen.estimadaCurta', 'ubicació estimada per una altra foto de la publicació']),
-  poble: Object.freeze(['section.mur.mapa.origen.pobleCurta', 'posada al centre del poble: la foto no porta GPS']),
+  poble: Object.freeze(['section.mur.mapa.origen.pobleCurta', 'posada al centre del municipi: la foto no porta GPS']),
   indicada: Object.freeze(['section.mur.mapa.origen.indicadaCurta', 'ubicació indicada per l’autor'])
 });
 /* Un GPS de veres però arrodonit per l'autor continua verd: la targeta en diu
    la precisió, perquè des del zoom 16 el punt no sembla més exacte del que és. */
 const PRECISIONS_DE_LA_TARGETA = Object.freeze({
   '100m': Object.freeze(['section.mur.mapa.precisio.centCurta', 'GPS a uns 100 m']),
-  poble: Object.freeze(['section.mur.mapa.precisio.pobleCurta', 'GPS només del poble'])
+  poble: Object.freeze(['section.mur.mapa.precisio.pobleCurta', 'GPS només del municipi'])
 });
 const FLETXES = Object.freeze({ ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] });
 
@@ -884,7 +884,7 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
         {tr('section.mur.mapa.llegenda.verd', 'Verd: ubicació GPS de la foto')}
         {' · '}
         <span className="sdp-mapa__mostra sdp-mapa__mostra--ocre" aria-hidden="true" />
-        {tr('section.mur.mapa.llegenda.ocre', 'Ocre: estimada, del poble o indicada per l’autor')}
+        {tr('section.mur.mapa.llegenda.ocre', 'Ocre: estimada, al poble o indicada per l’autor')}
         {' · '}
         {tr('section.mur.mapa.llegenda.linies', 'Línia contínua: l’ordre de les fotos d’una publicació, no els carrers exactes. Línia discontínua: de la targeta al seu punt.')}
       </p>
@@ -932,7 +932,7 @@ function metadadesDe(foto, tr, perId) {
     });
     if (foto.incertesaAlta) origen = `${origen} · ${tr('section.mur.mapa.incertesaAlta', 'incertesa alta')}`;
   } else if (foto.estat === 'poble') {
-    origen = tr('section.mur.mapa.origen.poble', 'Centre del poble: la foto no porta GPS');
+    origen = tr('section.mur.mapa.origen.poble', 'Centre del municipi: la foto no porta GPS');
   } else if (foto.estat === 'indicada') {
     origen = tr('section.mur.mapa.origen.indicada', 'Indicada per l’autor, no pel GPS de la foto');
   }

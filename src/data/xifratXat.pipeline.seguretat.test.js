@@ -436,6 +436,10 @@ describe('pas 17 · LRU dels adjunts desxifrats i oblit amb CI explícita', () =
     await p.d.urlAdjuntXat(ALIE, { dataMode: 'remote' }, { renova: true, reten });
     expect(p.impl.urlAdjuntXat).toHaveBeenLastCalledWith(ALIE, { dataMode: 'remote' }, { renova: true });
     expect(alliberes).toHaveLength(3);
+    // Gauntlet R22 (xat-05) · La descàrrega del visor (descarrega) sí que arriba a l'adaptador.
+    await p.d.urlAdjuntXat(ALIE, { dataMode: 'remote' }, { renova: true, descarrega: 'foto-xat-m1.webp', reten });
+    expect(p.impl.urlAdjuntXat).toHaveBeenLastCalledWith(ALIE, { dataMode: 'remote' }, { renova: true, descarrega: 'foto-xat-m1.webp' });
+    expect(alliberes).toHaveLength(3);
 
     // Canviar d'actor ho revoca tot, també el retingut; els alliberaments tardans no fan res.
     const u3 = await p.d.urlAdjuntXat(P3, {}, { reten });

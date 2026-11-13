@@ -9,6 +9,7 @@
 export * from './runtime.js';
 export * from './admin.js';
 export * from './content.js';
+export { revocaPublicacioMur, drenaRevocacionsMur, encuaRevocacioNotaMur, destroy } from './copublicacioMur.js';
 export * from './organizations.js';
 export * from './auth.js';
 export * from './notes.js';

@@ -3,7 +3,8 @@ import {
   capturaConsultaPublicadors, capturaReversioPublicacio, capturaTraspasPublicacio,
   errorCopublicacio, publicacioPerDefecte, validaRespostaCopublicacio
 } from '../copublicacio.js';
-import { getCurrentUser, getResolvedConfig, rpc } from './runtime.js';
+import { esRpcAbsent, getCurrentUser, getResolvedConfig, rpc } from './runtime.js';
+import { esCapacitatRpcNoDisponible, rpcOpcional } from './capacitatRpc.js';
 
 const ERRORS_RPC = Object.freeze({
   '001': 'publicacio-invalida',
@@ -19,7 +20,7 @@ const ERRORS_RPC = Object.freeze({
 function errorDeServidor(causa) {
   const id = String(causa?.message ?? '').match(/SDP-COPUB-(\d{3})\b/)?.[1];
   if (id && Object.hasOwn(ERRORS_RPC, id)) return errorCopublicacio(ERRORS_RPC[id]);
-  if (causa?.status === 404) return errorCopublicacio('no-disponible');
+  if (esRpcAbsent(causa) || esCapacitatRpcNoDisponible(causa)) return errorCopublicacio('no-disponible');
   return causa;
 }
 
@@ -40,7 +41,8 @@ export async function lligPublicadorsRegistrats(entrada, config = {}) {
   const comprovaSessio = capturaSessio();
   let resposta;
   try {
-    resposta = await rpc('llig_publicadors_registrats', parametres(tenantId, recurs), config, { signal: config.signal });
+    resposta = await rpcOpcional('llig_publicadors_registrats', parametres(tenantId, recurs), config,
+      { signal: config.signal, disponible: import.meta.env.VITE_SDP_COPUBLICACIO === '1' });
   } catch (causa) { throw errorDeServidor(causa); }
   comprovaSessio();
   comprovaSenyal(config);
@@ -54,6 +56,7 @@ async function canviaPublicacio(operacio, nom, camps, config) {
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (runtimeDataMode !== 'remote' || !hasSupabaseConfig || !tenantId) throw errorCopublicacio('no-disponible');
   if (!getCurrentUser()?.id) throw errorCopublicacio('sense-sessio');
+  if (import.meta.env.VITE_SDP_COPUBLICACIO !== '1') throw errorCopublicacio('no-disponible');
   const comprovaSessio = capturaSessio();
   let resposta;
   try {

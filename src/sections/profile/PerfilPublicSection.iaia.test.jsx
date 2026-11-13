@@ -149,7 +149,7 @@ describe('el perfil pintat', () => {
     const avis = screen.getByRole('status');
     expect(avis.textContent).toContain(AVIS);
     expect(avis.textContent).toContain('en proves');
-    expect(avis.textContent).toContain('no substituïx cap persona del poble');
+    expect(avis.textContent).toContain('no substituïx cap persona de poble');
     expect(avis.compareDocumentPosition(cos) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Parla amb la IAIA' }));
     expect(mocks.navigate).toHaveBeenCalledWith(`/xat?amb=${IAIA_ID}`);

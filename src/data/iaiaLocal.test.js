@@ -8,7 +8,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   DOCUMENTS_PER_RESPOSTA, ENCAPCALAMENT_DE_LA_WIKI, RUTA_DE_LA_WIKI, SALUTACIO_TECNICA_IAIA, TEMPS_MAXIM_DE_LA_WIKI,
-  arrel, cerca, cercaRellevant, componResposta, construeixIndex, consultaTecnicaIAIA, oblidaIndexDeLaWiki, respostaDeLaIAIA,
+  arrel, cerca, cercaRellevant, componResposta, construeixIndex, oblidaIndexDeLaWiki, respostaDeLaIAIA,
   rutaDeDocumentWiki,
   termesDeLaPregunta, titolDeDocument, tokenitza
 } from './iaiaLocal.js';
@@ -255,6 +255,12 @@ describe('respostaDeLaIAIA', () => {
 describe('amb la Wiki de veres del paquet', () => {
   const ids = new Set(wikiManifest.items.map((item) => item.id));
   const enllacos = (text) => [...String(text).matchAll(/\/wikidepoble\?item=([^\s]+)/g)].map((m) => decodeURIComponent(m[1]));
+  /* D-C4-5 (COMMIT 5) · El cercador guiat de la Wiki pel mateix camí que
+     l'embolcall retirat (consultaTecnicaIAIA): l'índex del manifest i
+     cercaRellevant amb cercaGuiada. Una llista buida és 'sense_resultats'. */
+  let indexDeLaWiki = null;
+  const guiat = (pregunta) => cercaRellevant(indexDeLaWiki ??= construeixIndex(wikiManifest.items), pregunta, DOCUMENTS_PER_RESPOSTA, { cercaGuiada: true })
+    .map((font) => font.id);
 
   test('la càrrega per defecte (import() del manifest) troba 3 documents que la Wiki pinta', async () => {
     const text = await respostaDeLaIAIA('Què és Sollutia i el Model B?');
@@ -281,8 +287,9 @@ describe('amb la Wiki de veres del paquet', () => {
      cap altra font fora de les que hi toquen. Cap instrucció per a la IA, cap
      plantilla, cap fitxa de l'equip. La Wiki pública encara no té cap manual
      d'ús (Tasca 4 PARCIAL): les fonts que hi toquen són de projecte.
-     IDEA-56 (pla 261029_1605, Bloc F.2) · Esta és la consulta del diàleg
-     «Pregunta a la IAIA», que continua sent la Wiki sola: el fil de la IAIA
+     IDEA-56 (pla 261029_1605, Bloc F.2) · Este és el cercador guiat, la Wiki
+     sola (el de la consulta del diàleg, sense interfície des de R21.3 i
+     retirada per D-C4-5; ací se'n prova el rànquing): el fil de la IAIA
      ja respon «Com puc publicar al Mercat?» o «Com faig una nota?» amb l'Atles
      (vegeu iaiaLocal.atles.test.js). «Sóc de Poble» és ara un sol terme, i
      «Qui porta Sóc de Poble?» comença per la visió i els pilars en lloc del
@@ -324,19 +331,17 @@ describe('amb la Wiki de veres del paquet', () => {
     ['Com funciona el Bar?', 'resposta', 'ADR-2026-12-MODULS-OPCIONALS',
       ['ADR-2026-12-MODULS-OPCIONALS', 'ADR-2026-10-APPS-DEL-DISPOSITIU', 'ADR-2026-13-BYOP-XIFRAT-LOCAL']],
     ['Com passe les portes de qualitat?', 'sense_resultats']
-  ])('«%s»: %s', async (pregunta, estat, primera, quehitoquen = []) => {
-    const r = await consultaTecnicaIAIA(pregunta);
-    const ids = r.fonts.map((font) => font.id);
-    expect([pregunta, r.estat, ids[0]]).toEqual([pregunta, estat, primera]);
-    expect([pregunta, ids.filter((id) => !quehitoquen.includes(id))]).toEqual([pregunta, []]);
+  ])('«%s»: %s', (pregunta, estat, primera, quehitoquen = []) => {
+    const trobats = guiat(pregunta);
+    expect([pregunta, trobats.length ? 'resposta' : 'sense_resultats', trobats[0]]).toEqual([pregunta, estat, primera]);
+    expect([pregunta, trobats.filter((id) => !quehitoquen.includes(id))]).toEqual([pregunta, []]);
   });
 
-  test('les fonts bones continuen arribant: Sollutia, la privacitat, els pilars i el Trellat', async () => {
-    expect((await consultaTecnicaIAIA('Què és Sollutia?')).fonts.map((f) => f.id).slice(0, 2).sort())
-      .toEqual(['ADR-2026-09-SOLLUTIA-MODEL-B', 'soci_sollutia']);
-    expect((await consultaTecnicaIAIA('Què diu la llei de privacitat?')).fonts[0].id).toBe('llei_05_privacitat');
-    expect((await consultaTecnicaIAIA('Quins són els pilars de Sóc de Poble?')).fonts[0].id).toBe('00_visio_i_pilars');
-    expect((await consultaTecnicaIAIA('Què és el Trellat?')).fonts[0].id).toBe('01_trellat');
+  test('les fonts bones continuen arribant: Sollutia, la privacitat, els pilars i el Trellat', () => {
+    expect(guiat('Què és Sollutia?').slice(0, 2).sort()).toEqual(['ADR-2026-09-SOLLUTIA-MODEL-B', 'soci_sollutia']);
+    expect(guiat('Què diu la llei de privacitat?')[0]).toBe('llei_05_privacitat');
+    expect(guiat('Quins són els pilars de Sóc de Poble?')[0]).toBe('00_visio_i_pilars');
+    expect(guiat('Què és el Trellat?')[0]).toBe('01_trellat');
   });
 
   /* Si un d'estos documents canvia d'id, la prova ho diu: la llista

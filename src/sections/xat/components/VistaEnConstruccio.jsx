@@ -49,7 +49,7 @@ export const VISTES_EN_CONSTRUCCIO = Object.freeze({
   telefonades: Object.freeze({
     accio: Object.freeze({ tipus: 'nou', etiqueta: ['section.xat.vista.telefonades.nova', 'Nova telefonada'] }),
     cerca: ['section.xat.nou.cerca', 'Nom del contacte'],
-    descripcio: ['section.xat.vista.telefonades.text', 'Ací hi haurà les telefonades i les videotelefonades amb la gent del poble: les perdudes, les rebudes i les que fas tu.'],
+    descripcio: ['section.xat.vista.telefonades.text', 'Ací hi haurà les telefonades i les videotelefonades amb la gent de poble: les perdudes, les rebudes i les que fas tu.'],
     avis: Object.freeze(['nav.telefonades.avis', 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.'])
   }),
   destacats: Object.freeze({

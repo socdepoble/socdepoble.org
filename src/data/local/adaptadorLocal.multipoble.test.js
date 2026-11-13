@@ -31,11 +31,11 @@ function autoritatPendent() {
   return { inici, fi, autoritza: vi.fn(async () => { inici.resol(); return fi.promesa; }) };
 }
 
-test('el local conserva les capacitats declarades, les set absències explícites i els casos històrics', async () => {
+test('el local conserva les capacitats declarades, les huit absències explícites i els casos històrics', async () => {
   const a = crea();
-  expect(Object.keys(CAPACITATS)).toHaveLength(54);
-  expect(Object.values(CAPACITATS).flat().filter(m => typeof a[m] !== 'function')).toEqual(['adminResumSessionsDispositius','adminLlistaSessionsDispositius','estatCuradoriaCultural','llistaAportacionsCulturals','enviaAportacioCultural','revisaAportacioCultural','consultaIAIA','loadRitmeXat','actualitzaPresenciaXat','importaMunicipiOpenData','confirmaCorreu','reenviaVerificacioCorreu','demanaRestablimentCorreu','restablixContrasenyaAmbCorreu']);
-  expect(CASOS).toHaveLength(219);
+  expect(Object.keys(CAPACITATS)).toHaveLength(55);
+  expect(Object.values(CAPACITATS).flat().filter(m => typeof a[m] !== 'function')).toEqual(['revocaPublicacioMur','drenaRevocacionsMur','encuaRevocacioNotaMur','adminResumSessionsDispositius','adminLlistaSessionsDispositius','estatCuradoriaCultural','llistaAportacionsCulturals','enviaAportacioCultural','revisaAportacioCultural','consultaIAIA','loadRitmeXat','actualitzaPresenciaXat','importaMunicipiOpenData','confirmaCorreu','reenviaVerificacioCorreu','demanaRestablimentCorreu','restablixContrasenyaAmbCorreu']);
+  expect(CASOS).toHaveLength(222);
   for (const plataforma of ['ios', 'android', 'web', '', null, {}]) expect(await a.versioMinimaClient(plataforma, { dataMode: 'remote', supabaseUrl: 'https://fora.invalid' })).toBeNull();
 });
 

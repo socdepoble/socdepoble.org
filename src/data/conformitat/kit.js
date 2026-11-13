@@ -15,7 +15,8 @@
    Els casos d'ESCRIPTURA (escriu: true) només corren amb
    contextDeConformitat({ escriptures: true }): creen dades. */
 import {
-  CAPACITATS, CODI_MODERACIO, COLECCIONS_DADES_OBERTES, CONTRACTE_NUCLI, LIMIT_DADES_OBERTES, SECCIONS_PAGINABLES, TIPUS_BLOQUEJAT, TIPUS_SEGUIT
+  CAPACITATS, CODI_MODERACIO, COLECCIONS_DADES_OBERTES, CONTRACTE_NUCLI, LIMIT_DADES_OBERTES, SECCIONS_PAGINABLES, TIPUS_BLOQUEIG_LLISTAT,
+  TIPUS_BLOQUEIG_PUBLICACIO, TIPUS_SEGUIT
 } from '../contracte.js';
 
 /* ── Ajudants de forma: cada un torna la llista de falles (buida = conforme). ── */
@@ -23,6 +24,8 @@ import {
 const tipusDe = (valor) => (valor === null ? 'null' : Array.isArray(valor) ? 'array' : typeof valor);
 const esObjecte = (valor) => tipusDe(valor) === 'object';
 const esTextNoBuit = (valor) => typeof valor === 'string' && valor.trim() !== '';
+/* L'UUID públic d'una publicació bloquejada de manera opaca (llistaBloquejos). */
+const RE_UUID_BLOQUEIG = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const esEnter = (valor) => Number.isSafeInteger(valor) && valor >= 0;
 const teId = (element) => esObjecte(element) && element.id !== null && element.id !== undefined && String(element.id) !== '';
 
@@ -1031,15 +1034,22 @@ export const CASOS = Object.freeze([
      l'estat de les normes només es lligen, i els rebuigs ixen de la regla
      d'entrada del contracte (denunciaDelContracte, autorDelContracte i la
      versió vigent), abans de cap xarxa. */
+  /* Gauntlet R22 (sql-01) · Un node real amb bloquejos opacs per UUID de
+     publicació (2611122200) en llista files { tipus: 'publicacio', id: UUID,
+     nom: null }: són conformes (TIPUS_BLOQUEIG_LLISTAT). Una fila opaca amb
+     nom, o amb un id que no és un UUID, revelaria o inventaria una identitat:
+     és una falla. */
   cas({
     metode: 'llistaBloquejos', capacitat: 'moderacio',
-    titol: "llistaBloquejos(config) → Bloqueig[] ({ tipus: 'persona' | 'entitat', id, nom: text | null, creatAl: ISO | null }); buida sense sessió",
+    titol: "llistaBloquejos(config) → Bloqueig[] ({ tipus: 'persona' | 'entitat' | 'publicacio', id, nom: text | null (null si és 'publicacio'), creatAl: ISO | null }); buida sense sessió",
     arguments: (ctx) => [ctx.config],
     comprova: (llista) => {
       if (!Array.isArray(llista)) return [`havia de ser una llista i és ${tipusDe(llista)}`];
       return llista.flatMap((b) => [
-        ...(TIPUS_BLOQUEJAT.includes(b?.tipus) ? [] : [`un bloqueig té tipus ${JSON.stringify(b?.tipus)}`]),
+        ...(TIPUS_BLOQUEIG_LLISTAT.includes(b?.tipus) ? [] : [`un bloqueig té tipus ${JSON.stringify(b?.tipus)}`]),
         ...(esTextNoBuit(b?.id) ? [] : ['un bloqueig sense id de text']),
+        ...(b?.tipus !== TIPUS_BLOQUEIG_PUBLICACIO || RE_UUID_BLOQUEIG.test(String(b?.id ?? '')) ? [] : [`el bloqueig opac ${b?.id} no té un UUID de publicació`]),
+        ...(b?.tipus !== TIPUS_BLOQUEIG_PUBLICACIO || b?.nom === null ? [] : [`el bloqueig opac ${b?.id} porta un nom: no pot revelar cap identitat`]),
         ...(b?.nom === null || typeof b?.nom === 'string' ? [] : [`el bloqueig ${b?.id} té un nom que no és text ni null`]),
         ...(b?.creatAl === null || esTextNoBuit(b?.creatAl) ? [] : [`el bloqueig ${b?.id} té un creatAl que no és text ni null`])
       ]);
@@ -1318,6 +1328,9 @@ export const CASOS = Object.freeze([
      rebutjar que eixe mateix compte la revise (SDP-CULTURA-PROPIA, 42501), també si és superadmin. */
   cas({ metode: 'revisaAportacioCultural', capacitat: 'curadoriaCultural', escriu: true, requerix: ['curadoriaOperativa','aportacioCulturalId'], espera: 'rebutja', titol: 'R15: el mateix compte no pot revisar la seua pròpia aportació (quatre ulls)', arguments: ctx => [{ id: ctx.aportacioCulturalId, estat: 'aprovat', nota: 'Revisió sintètica de conformitat' },ctx.config], comprova: rebuigPermisR15 }),
   cas({ metode: 'revisaAportacioCultural', capacitat: 'curadoriaCultural', espera: 'rebutja', titol: 'R15: estat ingerit inventat rebutja abans de cap canvi', arguments: ctx => [{ id: ctx.idMissatge, estat: 'aprovat_node0', nota: '' },ctx.config], comprova: rebuigTipusR15 }),
+  cas({ metode: 'revocaPublicacioMur', capacitat: 'revocacioPublicacions', espera: 'rebutja', titol: 'R21: UUID invàlid no revoca publicacions', arguments: ctx => ['no-uuid', ctx.config], comprova: e => e instanceof Error ? [] : ['cal rebutjar la retirada invàlida'] }),
+  cas({ metode: 'encuaRevocacioNotaMur', capacitat: 'revocacioPublicacions', espera: 'rebutja', titol: 'R21: una revisió invàlida no encua una retirada', arguments: ctx => ['no-uuid', -1, ctx.config], comprova: e => e instanceof Error ? [] : ['cal rebutjar la revisió invàlida'] }),
+  cas({ metode: 'drenaRevocacionsMur', capacitat: 'revocacioPublicacions', escriu: true, titol: 'R21: el drenatge confirma zero pendents després dels ACK', arguments: ctx => [ctx.config], comprova: v => esObjecte(v) && v.pendents === 0 ? [] : ['cal un estat de pendents explícit'] }),
   cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', espera: 'rebutja', titol: 'P0-59: audiència inventada rebutja abans de lectura', arguments: ctx => [{ audiencia: 'inventada' },ctx.config], comprova: rebuigAmbCodi('projeccio-invalida') }),
   cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', requerix: ['projeccionsOperatives'], titol: 'P0-59: pàgina de referències públiques té cursor explícit', arguments: ctx => [{ audiencia: 'publica', cursor: null, limit: 100 },ctx.config], comprova: v => esObjecte(v) && Array.isArray(v.items) && v.items.every(teId) && (v.cursor === null || esTextNoBuit(v.cursor)) ? [] : ['pàgina de projeccions invàlida'] }),
   cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', requerix: ['projeccionsSenseSessio'], espera: 'rebutja', titol: 'P0-59: cap lectura privada sense sessió', arguments: ctx => [{ audiencia: 'privada' },ctx.config], comprova: rebuigAmbCodi('sense-sessio') }),

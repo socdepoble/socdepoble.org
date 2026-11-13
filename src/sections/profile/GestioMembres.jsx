@@ -39,7 +39,7 @@ const ROLS_D_ALTA = Object.freeze(['member', 'admin']);
 const textMembres = (nom, reserva) => Object.freeze([`section.perfil.membres.${nom}`, reserva]);
 export const TEXTOS_MEMBRES = Object.freeze({
   errorLlista: textMembres('errorLlista', 'No s’ha pogut llegir la llista de membres.'),
-  errorCerca: textMembres('errorCerca', 'No s’ha pogut cercar a la gent del poble.'),
+  errorCerca: textMembres('errorCerca', 'No s’ha pogut cercar a la gent del municipi.'),
   opcioEscriu: textMembres('opcio.escriu', 'Primer escriu un nom…'),
   opcioCercant: textMembres('opcio.cercant', 'Cercant…'),
   opcioTria: textMembres('opcio.tria', 'Tria un resultat…'),
@@ -64,7 +64,7 @@ export const TEXTOS_MEMBRES = Object.freeze({
   lleva: textMembres('lleva', 'Llevar'),
   buit: textMembres('buit', 'Encara no hi ha cap membre.'),
   afegirLlegenda: textMembres('afegirLlegenda', 'Afegir un membre'),
-  cercaAjuda: textMembres('cercaAjuda', 'Persones del poble o organitzacions que també administres. Escriu almenys {n} lletres.'),
+  cercaAjuda: textMembres('cercaAjuda', 'Persones del municipi o organitzacions que també administres. Escriu almenys {n} lletres.'),
   quiAfegir: textMembres('quiAfegir', 'Qui vols afegir'),
   afegir: textMembres('afegir', 'Afegir'),
   dialegTitol: textMembres('dialegTitol', 'Llevar {nom} de {org}?'),
@@ -98,7 +98,7 @@ export const ERRORS_MEMBRES = Object.freeze({
   'SDP-ORGMEM-000': textErrorMembre('orgmem000', 'Cal iniciar sessió.'),
   'SDP-ORGMEM-001': textErrorMembre('orgmem001', 'El tipus de membre o el rol no és vàlid.'),
   'SDP-ORGMEM-002': textErrorMembre('orgmem002', 'Només qui administra l’organització en veu i en gestiona els membres.'),
-  'SDP-ORGMEM-003': textErrorMembre('orgmem003', 'Esta persona no és del poble de l’organització o ha demanat la baixa.'),
+  'SDP-ORGMEM-003': textErrorMembre('orgmem003', 'Esta persona no és del municipi de l’organització o ha demanat la baixa.'),
   'SDP-ORGMEM-004': textErrorMembre('orgmem004', 'No pots canviar el teu propi rol.'),
   'SDP-ORGMEM-005': textErrorMembre('orgmem005', 'La propietària no es canvia ni es lleva.'),
   'SDP-ORGMEM-006': textErrorMembre('orgmem006', 'Només la propietària nomena, degrada o lleva administradores.'),

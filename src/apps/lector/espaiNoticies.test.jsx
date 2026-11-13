@@ -479,6 +479,24 @@ describe('en canviar de carpeta, la llista torna a dalt', () => {
     expect([cos.scrollTop, cosDeLArbre.scrollTop]).toEqual([0, 50]);
   });
 
+  /* Gauntlet R22 (ronda 4) · La Columna 2 (el cos de la llista, amb el modificador --llista) té scroll-behavior
+     suau; la Columna 1 no. Assignar scrollTop seguiria el CSS i la llista nova pujaria animada des de la posició
+     de l'anterior: el reinici demana behavior: 'instant'. jsdom no fa scroll: es captura la crida. */
+  test('R22 (ronda 4) · el reinici de la llista va de colp (behavior: instant), i només la Columna 2 porta el modificador suau', async () => {
+    munta('/app/lector/noticies/hui');
+    await screen.findByRole('region', { name: 'Hui' });
+    const cos = cosDeLaLlista();
+    expect(cos.classList.contains('sdp-workspace-column__body--llista')).toBe(true);
+    expect(document.querySelector('#app-grid-sidebar nav.sdp-workspace-column__body').classList.contains('sdp-workspace-column__body--llista')).toBe(false);
+    const crides = [];
+    cos.scrollTo = vi.fn((opcions) => { crides.push(opcions); cos.scrollTop = opcions.top; });
+    cos.scrollTop = 120;
+    fireEvent.click(filaDeLArbre('Cultura i festes'));
+    await screen.findByRole('region', { name: 'Cultura i festes' });
+    expect(crides).toEqual([{ top: 0, behavior: 'instant' }]);
+    expect(cos.scrollTop).toBe(0);
+  });
+
   test('l’arrere del navegador cap a una altra carpeta també la torna a dalt, i el focus de l’amfitrió no es mou', async () => {
     const campDeLAmfitrio = document.createElement('input');
     document.body.append(campDeLAmfitrio);

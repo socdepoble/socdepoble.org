@@ -61,6 +61,16 @@ test('R21.6 preserves SQLSTATE without confusing generic serialization with a re
   try { await request('/rest/v1/rpc/synthetic', CONFIG); throw new Error('unexpected success'); }
   catch (e) { expect(e).toMatchObject({ status: 403 }); expect(e.sqlstate).toBeUndefined(); expect(e.codi).toBeUndefined(); }
 });
+/* Gauntlet R22 (ronda 3, sql-05) · El límit de mida del disparador section_submissions_limita_mida arriba amb el seu
+   codi neutral: el client el reconeix com a rebuig definitiu, no com una xarxa. */
+test('R22 (ronda 3) · SDP-MUR-MIDA (22001) porta el codi neutral; un text que només l’esmenta, no', async () => {
+  vi.stubGlobal('fetch', vi.fn()
+    .mockResolvedValueOnce({ ...resposta(400), text: async () => JSON.stringify({ code: '22001', message: 'SDP-MUR-MIDA: el cos d\'una publicació no pot passar de 100000 caràcters.' }) })
+    .mockResolvedValueOnce({ ...resposta(400), text: async () => JSON.stringify({ code: '22023', message: 'altre: SDP-MUR-MIDA: no' }) }));
+  await expect(request('/rest/v1/rpc/publica_nota_al_mur', CONFIG)).rejects.toMatchObject({ status: 400, sqlstate: '22001', codi: 'SDP-MUR-MIDA' });
+  try { await request('/rest/v1/rpc/publica_nota_al_mur', CONFIG); throw new Error('unexpected success'); }
+  catch (e) { expect(e).toMatchObject({ status: 400, sqlstate: '22023' }); expect(e.codi).toBeUndefined(); }
+});
 const accioDA = () => request('/rest/v1/rpc/registra_consentiment', CONFIG, { method: 'POST', body: { p_tipus: 'synthetic-consent-A' } });
 const tokens = (fetch) => fetch.mock.calls.map(([, options]) => options.headers.Authorization);
 afterEach(() => { vi.unstubAllGlobals(); m.store.clear(); configuraRefrescSessio(async () => false); });

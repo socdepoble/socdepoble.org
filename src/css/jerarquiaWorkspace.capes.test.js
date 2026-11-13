@@ -1,5 +1,5 @@
 /* Decisió del Mestre, 14-10-2026 (pla 261013_1930, front 1b) · Jerarquia de la
-   1a columna de UniversalWorkspace: els contenidors van en Taronja 400 amb un
+   1a columna de UniversalWorkspace: els contenidors van en Taronja 200 amb un
    token de LLETRA propi, --sdp-crom-contenidor-text, declarat una sola vegada
    al :root clar (tractor-crom, K1):
      · contenidor pur: la capçalera de grup (.sdp-workspace-group-heading), que
@@ -282,35 +282,35 @@ describe('les guardes detecten les regles que no complixen', () => {
 
 /* ── Els fulls d'ara ─────────────────────────────────────────────────── */
 describe('el token de lletra dels contenidors · tokens.css', () => {
-  test('es declara una sola vegada a tot src, al :root clar, amb la Taronja 400; mai al fosc ni al Bancal (K1)', () => {
+  test('es declara una sola vegada a tot src, al :root clar, amb la Taronja 200; mai al fosc ni al Bancal (K1)', () => {
     const patro = new RegExp(`${TOKEN}\\s*:`, 'g');
     const on = FULLS_SRC.flatMap((abs) => (senseComentaris(readFileSync(abs, 'utf8')).match(patro) || []).map(() => relatiu(abs)));
     expect(on).toEqual(['src/css/tokens.css']);
-    expect(tokensDe(bloc(TOKENS, SEL_CLAR))[TOKEN]).toBe(varDe('--sdp-primary-400'));
+    expect(tokensDe(bloc(TOKENS, SEL_CLAR))[TOKEN]).toBe(varDe('--sdp-primary-200'));
     for (const selector of [SEL_FOSC, SEL_BANCAL, SEL_BANCAL_FOSC]) expect(tokensDe(bloc(TOKENS, selector))[TOKEN]).toBeUndefined();
   });
 
-  test('no és el token de grup de la roca ni el de fons de l’actiu, i és el to de l’anell de focus del crom', () => {
+  test('no és el token de grup de la roca ni el de fons de l’actiu, ni el to de l’anell de focus del crom', () => {
     const cru = tokensDe(bloc(TOKENS, SEL_CLAR))[TOKEN];
     expect(cru).not.toMatch(/--sdp-crom-grup-text|--sdp-crom-actiu-fons|--sdp-primary-500/);
     expect(hex(CLAR, TOKEN)).not.toBe(hex(CLAR, GRUP));
-    expect(hex(CLAR, TOKEN)).toBe(hex(CLAR, '--sdp-crom-focus'));
+    expect(hex(CLAR, TOKEN)).not.toBe(hex(CLAR, '--sdp-crom-focus'));
   });
 
-  test.each(Object.keys(MODES))('en %s: la mateixa Taronja 400 sobre la mateixa columna, 4,5:1 o més', (mode) => {
+  test.each(Object.keys(MODES))('en %s: la mateixa Taronja 200 sobre la mateixa columna, 7:1 o més', (mode) => {
     const mapa = MODES[mode];
     expect(hex(mapa, TOKEN)).toBe(hex(CLAR, TOKEN));
     expect(hex(mapa, NAV)).toBe(hex(CLAR, NAV));
-    expect(contrast(mapa, TOKEN, NAV)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(mapa, TOKEN, NAV)).toBeGreaterThanOrEqual(7);
   });
 
-  test('al to canònic fa 5,17:1 sobre la columna', () => {
-    expect(Math.abs(contrast(CLAR, TOKEN, NAV) - 5.17)).toBeLessThan(0.005 + 1e-9);
+  test('al to canònic fa 8,05:1 sobre la columna', () => {
+    expect(Math.abs(contrast(CLAR, TOKEN, NAV) - 8.05)).toBeLessThan(0.005 + 1e-9);
   });
 
-  test('amb el ratolí baixaria del 4,5:1 sobre el vel: per això el hover torna al blanc, AAA', () => {
+  test('amb el ratolí baixaria del 7:1 sobre el vel: per això el hover torna al blanc, AAA', () => {
     const vel = compost(CLAR, VEL, NAV);
-    expect(contrastHex(hex(CLAR, TOKEN), vel)).toBeLessThan(4.5);
+    expect(contrastHex(hex(CLAR, TOKEN), vel)).toBeLessThan(7);
     expect(contrastHex(hex(CLAR, '--sdp-crom-text'), vel)).toBeGreaterThanOrEqual(7);
   });
 
@@ -328,8 +328,8 @@ describe('el token de lletra dels contenidors · tokens.css', () => {
 describe('veracitat del comentari del token', () => {
   const TEXT = comentariAbans(TOKENS, `${TOKEN}:`);
   const COMENTARIS = [
-    { diu: '5,17:1', que: 'la Taronja 400 sobre la columna', mesura: () => contrast(CLAR, TOKEN, NAV) },
-    { diu: '3,92:1', que: 'la Taronja 400 sobre el vel de hover', mesura: () => contrastHex(hex(CLAR, TOKEN), compost(CLAR, VEL, NAV)) },
+    { diu: '8,05:1', que: 'la Taronja 200 sobre la columna', mesura: () => contrast(CLAR, TOKEN, NAV) },
+    { diu: '6,09:1', que: 'la Taronja 200 sobre el vel de hover', mesura: () => contrastHex(hex(CLAR, TOKEN), compost(CLAR, VEL, NAV)) },
     { diu: '4,11:1', que: 'el cànon sobre la columna', mesura: () => contrast(CLAR, GRUP, NAV) }
   ];
 

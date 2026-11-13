@@ -9,6 +9,8 @@ vi.mock('./runtime.js', () => ({
   request: vi.fn(async (url) => {
     if (url.includes('seed_revisions')) { if (servidor.seed instanceof Error) throw servidor.seed; return structuredClone(servidor.seed ?? []); }
     if (url.includes('app_content')) return [{ key: 'feedPosts', payload: [{ id: 'manifest-de-poble', title: 'Manifest de Poble', owner_user_id: 'A' }], version: servidor.version }, { key: 'events', payload: [], version: 1 }];
+    /* R21 · Amb sessió, la lectura de les publicacions és llig_mur_membres, que torna el sobre { lectura, files }. */
+    if (url.includes('/rpc/llig_mur_membres')) return { lectura: 'membre', files: [] };
     return [];
   }),
   rpc: (...args) => servidor.rpc(...args),

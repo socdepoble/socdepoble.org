@@ -796,8 +796,9 @@ test('els drets del catàleg receptes conserven l’atribució exacta al bloc de
     expect(dt, 'el bloc de crèdits de l’obra ha de tindre la fila «Drets»').toBeTruthy();
     const [drets, permis] = [dt.nextElementSibling, dt.nextElementSibling?.nextElementSibling];
     expect(drets.textContent).toBe(DRETS_QUE_DINEM);
-    expect(drets.textContent.endsWith(ASSOCIACIO)).toBe(true);
-    expect(drets.textContent).not.toContain('Sóc de Poble');
+    expect(drets.textContent).toContain('CC BY-NC-SA 4.0');
+    expect(drets.textContent).toContain(ASSOCIACIO);
+    expect(drets.textContent).toContain('Sóc de Poble');
     expect(permis.textContent).toBe(OBRA_QUE_DINEM.permis);
     expect(OBRA_QUE_DINEM.associacio).toBe(ASSOCIACIO);
     expect(container.textContent).not.toContain(COPYRIGHT_SDP);

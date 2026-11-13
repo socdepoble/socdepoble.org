@@ -483,6 +483,12 @@ export function UniversalEditorShell({
   logoEditHelp = null,
   ajudaAmbImatge = null,
   ajudaNomesEnPujada = false,
+  /* Gauntlet R22 (ronda 4) · `exifTriat`: la capçalera es publica per la
+     promoció de les Notes (storage.js · ambExifTriat), que només hi deixa la
+     tria de preparaTiffTriat. El diàleg d'enquadrament ho diu a l'avís de la
+     casella de l'EXIF (DialegEnquadrament · exifTriat). Sense, l'avís de
+     sempre. DocumentEditor la passa amb fotosDePublicacio. */
+  exifTriat = false,
   statusIcon = null,
   /* T41 (ordre del Mestre, 260928) · La bola del món (o el cadenat) de la
      barra taronja és un <button> que obri el selector de visibilitat del
@@ -763,6 +769,7 @@ export function UniversalEditorShell({
     logoEditHelp,
     ajudaAmbImatge,
     ajudaNomesEnPujada,
+    exifTriat,
     edicioAvancada,
     statusIcon,
     onObriVisibilitat,
@@ -1231,6 +1238,7 @@ function useEditorShell({
   logoEditHelp = null,
   ajudaAmbImatge = null,
   ajudaNomesEnPujada = false,
+  exifTriat = false,
   edicioAvancada = false,
   statusIcon = null,
   onObriVisibilitat = null,
@@ -1510,7 +1518,7 @@ function useEditorShell({
     dialegEnquadrament: enquadrament ? (
       <DialegEnquadrament font={enquadrament.font} formatInicial={enquadrament.formatInicial ?? CAPCALERA.formatInicial} formats={formatsDelDialeg}
         descripcio={descripcioDelDialeg} sortida={enquadrament.sortida} noDestructiu={CAPCALERA.noDestructiu}
-        onTanca={() => setEnquadrament(null)} onDesa={desaEnquadrament} ofereixConservarExif />
+        onTanca={() => setEnquadrament(null)} onDesa={desaEnquadrament} ofereixConservarExif exifTriat={exifTriat === true} />
     ) : null
   };
 }

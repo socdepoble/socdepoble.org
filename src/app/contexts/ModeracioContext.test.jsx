@@ -166,6 +166,38 @@ describe('bloquejos', () => {
     expect(valor.esPersonaBloquejada('pepa')).toBe(true);
   });
 
+  /* R22 (sql-03, notes-01, honestedat-02) · El bloqueig d'un Foraster per
+     UUID públic no porta mai autor: entra a la llista com «qui firma esta
+     publicació», amaga la targeta i es desfà pel mateix UUID. */
+  test('un bloqueig per UUID públic entra a la llista sense autor i es desfà pel mateix UUID', async () => {
+    const PUB = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
+    const TARGETA = { id: PUB, _murPublic: true };
+    m.llistaBloquejos.mockResolvedValue([]);
+    await munta();
+    act(() => valor.demanaBloqueig(Object.freeze({ tipus: 'publicacio', id: PUB, titol: 'Fira', autor: null, filId: null, bloquejable: true, murPublic: true })));
+    m.bloquejaAutor.mockResolvedValueOnce({ bloquejat: true, publicacioId: PUB });
+    await act(async () => { await dialegs.bloqueig.onConfirma(); });
+    expect(m.bloquejaAutor).toHaveBeenCalledWith({ publicacioId: PUB }, REMOT);
+    expect(valor.bloquejats).toEqual([{ tipus: 'publicacio', id: PUB, nom: 'qui firma esta publicació', creatAl: null }]);
+    expect(valor.esElementBloquejat(TARGETA)).toBe(true);
+    m.desbloquejaAutor.mockResolvedValueOnce({ desbloquejat: true });
+    await act(async () => { await valor.desbloqueja(valor.bloquejats[0]); });
+    expect(m.desbloquejaAutor).toHaveBeenCalledWith({ tipus: 'publicacio', id: PUB }, REMOT);
+    expect(valor.bloquejats).toEqual([]);
+    expect(valor.esElementBloquejat(TARGETA)).toBe(false);
+    expect(m.toast).toHaveBeenLastCalledWith('Has desbloquejat qui firma esta publicació.', 'success');
+  });
+
+  test('un bloqueig opac que torna el servidor es diu sense autor i amaga només eixa publicació pública', async () => {
+    const PUB = 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e';
+    m.llistaBloquejos.mockResolvedValue([{ tipus: 'publicacio', id: PUB, nom: null, creatAl: '2026-11-13T01:00:00Z' }]);
+    await munta();
+    expect(valor.bloquejats).toEqual([{ tipus: 'publicacio', id: PUB, nom: 'qui firma esta publicació', creatAl: '2026-11-13T01:00:00Z' }]);
+    expect(valor.esElementBloquejat({ id: PUB, _murPublic: true })).toBe(true);
+    expect(valor.esElementBloquejat({ id: PUB, ownerUserId: 'pepa' })).toBe(false);
+    expect(valor.esPersonaBloquejada(PUB)).toBe(false);
+  });
+
   test('canviar de persona buida la capa de la sessió i torna a carregar', async () => {
     m.llistaBloquejos.mockResolvedValue([]);
     const vista = await munta();

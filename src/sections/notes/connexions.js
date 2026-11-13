@@ -1,32 +1,28 @@
-/**
- * connexions.js — El cos d'una connexió del MAS (T5, T43, T54). Pur: sense
- * React ni backend (Model B).
- *
- *   · contingutDeLaConnexio: el cos que es desa a la nota en connectar
- *     (ConnectarSection). Una presentació curta que enllaça l'element de veres.
- *   · senseParagrafHeretat: el lector del MAS (ConnexioDetall) no pinta el
- *     paràgraf fix de les connexions d'abans de T54.
- *   · cosDeConnexioPerAlMur: la presentació feta amb l'origen (títol, qui
- *     l'ha escrit si l'origen ho porta, i l'enllaç de l'original o l'avís que
- *     no en porta).
- *   · cosDeConnexioEditadaPerAlMur (D4, excepció del Mestre, 260930): el cos
- *     que ix al Mur quan es compartix una connexió. La connexió és una còpia
- *     editable: ix el cos de la nota tal com l'ha deixat la persona (sense
- *     els paràgrafs fixos que el sistema li va escriure a ella) i, si ja no
- *     enllaça l'original o ja no nomena qui el signa (revisió, 260930), la
- *     presentació amb l'enllaç i l'autoria al final. Germana de
- *     cosDeLExternPerAlMur (connectar/contingutExtern.js).
- *   · hrefsDe: les adreces dels enllaços d'un HTML, desentitzades (les usen
- *     les dues funcions del Mur per a saber si el cos ja cita l'original).
- *   · rutaSegura: la ruta de l'original, tornada a validar (també al lector).
- *   · signaturaDeCaiguda (T71): qui signa una connexió quan l'original no es
- *     resol (la caiguda del lector i la fitxa del Bloc). Cap autor inventat.
- *   · objecteDeConnexio (T63.2): el descriptor de l'ORIGINAL d'una connexió,
- *     el que el lector passa a Comentar. Mai el de la nota, que és privada.
- */
-import { desDe } from '../connectar/abastConnexio.js';
+/** Connexions privades i comparticions públiques. El lector privat conserva
+ * l’origen; la publicació conserva l’enllaç i el text escrit, i elimina el
+ * paràgraf de sistema que podia citar automàticament una identitat privada.
+ * L’origen desat no acredita que el seu autor tinga un perfil públic. */
 import { esRutaInterna, TIPUS_OBJECTE, tipusDeSeccio } from '../../config/objecteConnectable.js';
 import { llevaEtiquetes } from '../../config/contentHelpers.js';
+
+/** «des del Mur», «des de l'agenda»… Una secció desconeguda: «des de Sóc de Poble».
+ * No es traduïx: va al cos persistent de la nota. Abans vivia a
+ * connectar/abastConnexio.js, que el reexporta (Onada R22 · BOOT3: este mòdul
+ * és a l'arrencada i aquell no hi ha de ser). */
+const DES_DE = Object.freeze({
+  mur: 'des del Mur',
+  mercat: 'des del Mercat',
+  events: 'des de l’agenda',
+  pobles: 'des dels Pobles',
+  multimedia: 'des de Multimèdia',
+  notes: 'des del Bloc',
+  perfil: 'des del directori',
+  /* IDEA-61 (T0, prompt 261102_1532; L3-A3) · Les tres verticals del flux universal. */
+  vehicle: 'des de Compartir cotxe',
+  treball: 'des de Treball',
+  habitatge: 'des d’Habitatge'
+});
+export const desDe = (seccio) => DES_DE[seccio] || 'des de Sóc de Poble';
 
 /* Text pla → HTML que la closca pinta tal qual (el sanejador ho torna a passar).
    T71 · també el fa servir el contingut de fora (connectar/contingutExtern.js). */
@@ -81,10 +77,10 @@ export function objecteDeConnexio(origen) {
 
 /* «des del Mercat de Sóc de Poble: <a>Samarreta</a>»: d'on ve, de qui és i
    l'element (enllaçat només si té ruta interna i segura). */
-function presentacio(dades) {
+function presentacio(dades, publica = false) {
   const origen = dades || {};
-  const qui = origen.autorNom ? ` de ${aHtml(origen.autorNom)}` : '';
-  const titol = aHtml(origen.titol || origen.itemId || 'un element');
+  const qui = !publica && origen.autorNom ? ` de ${aHtml(origen.autorNom)}` : '';
+  const titol = aHtml(publica && OBJECTES_PERFIL.has(origen.objecte) ? 'un perfil' : (origen.titol || origen.itemId || 'un element'));
   const ruta = rutaSegura(origen);
   const enllac = ruta ? `<a href="${aHtml(ruta)}">${titol}</a>` : `<strong>${titol}</strong>`;
   return `${desDe(origen.sectionId)}${qui}: ${enllac}`;
@@ -135,40 +131,21 @@ export function hrefsDe(html) {
  * Sense ruta de l'original, ho diu. */
 export function cosDeConnexioPerAlMur(origen) {
   const avis = rutaSegura(origen) ? '' : '<p>Esta publicació no porta l’enllaç de l’original.</p>';
-  return `<p>Compartit ${presentacio(origen)}.</p>${avis}`;
+  return `<p>Compartit ${presentacio(origen, true)}.</p>${avis}`;
 }
 
-/* Revisió de D4 (260930) · El text que es llig d'un HTML: sense etiquetes ni
-   atributs (un nom dins d'un href no el cita), amb els espais durs i les
-   entitats desfets, els espais plegats i en minúscules per a comparar.
-   Auditoria de seguretat 261019 (R4) · Les etiquetes, en temps lineal
-   (contentHelpers.js · llevaEtiquetes), amb el mateix resultat que
-   /<[^>]*>/g, que era quadràtica amb un cos de molts '<' i cap '>'. */
-const plega = (text) => String(text ?? '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('ca');
-const textVisible = (html) => plega(desentitza(llevaEtiquetes(String(html ?? ''))
-  .replace(/&(?:nbsp|#0*160|#x0*a0);/gi, ' ')));
-
-/* El cos ja nomena qui signa l'original? Sense autor a l'origen, no hi ha
-   ningú a citar. */
-const nomenaLAutor = (cos, origen) => {
-  const autor = plega(origen?.autorNom);
-  return !autor || textVisible(cos).includes(autor);
-};
-
-/**
- * D4 (excepció del Mestre, 260930) · El cos d'una connexió quan es compartix
- * al Mur: el de la nota, que la persona ha pogut editar, sense els paràgrafs
- * fixos privats, i la presentació de l'original (enllaç i autoria) al final.
- * Revisió (260930) · El cos ix sense afegits NOMÉS si ja enllaça la ruta de
- * l'original I també nomena qui el signa (origen.autorNom; sense autor, amb
- * l'enllaç n'hi ha prou): conservar l'enllaç i esborrar el nom no deixa la
- * publicació sense autoria, que és el que prometen l'avís de l'editor i el de
- * drets reservats. Sense ruta segura, la presentació sempre, amb l'avís.
- * `html` ha de ser el cos ja sanejat: es mira el que arribarà al Mur.
- */
+/** Cos públic d’una connexió: conserva la prosa escrita i l’enllaç a
+ * l’original. Cap nom desat a origen.autorNom es torna a afegir d’ofici. */
 export function cosDeConnexioEditadaPerAlMur(html, origen) {
-  const cos = senseParagrafsPrivats(html);
+  // El sanejador pot haver afegit atributs als enllaços antics. Reconeguem
+  // el primer paràgraf de sistema pel prefix reservat; cap cerca de noms.
+  let cos = senseParagrafsPrivats(html);
+  const first = /^\s*<p(?:\s[^>]*)?>/i.exec(cos);
+  if (first) {
+    const end = cos.toLowerCase().indexOf('</p>', first[0].length);
+    if (end >= 0 && /^Element connectat\s/i.test(llevaEtiquetes(cos.slice(first[0].length,end)).trim())) cos = cos.slice(end+4);
+  }
   const ruta = rutaSegura(origen);
-  if (ruta && hrefsDe(cos).includes(ruta) && nomenaLAutor(cos, origen)) return cos;
+  if (ruta && hrefsDe(cos).includes(ruta) && !OBJECTES_PERFIL.has(origen?.objecte)) return cos;
   return `${cos}${cosDeConnexioPerAlMur(origen)}`;
 }

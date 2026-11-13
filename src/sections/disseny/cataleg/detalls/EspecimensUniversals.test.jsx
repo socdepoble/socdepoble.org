@@ -862,7 +862,7 @@ describe('Especímens del Xat · onada 3B', () => {
     tanca();
 
     obri('Carregant');
-    expect(await within(dialeg()).findByText('Carregant la gent del poble…')).toBeTruthy();
+    expect(await within(dialeg()).findByText('Carregant la gent del teu poble…')).toBeTruthy();
     expect(within(dialeg()).queryByText('Contactes freqüents')).toBeNull();
     tanca();
     expect(screen.queryByRole('dialog', { name: 'Nova conversa' })).toBeNull();

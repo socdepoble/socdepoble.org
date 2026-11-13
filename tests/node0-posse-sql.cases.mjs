@@ -24,8 +24,14 @@ function ready(rows){
  const functionHashes=Object.fromEntries(['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'].map(name=>{const start=sqlPosse.indexOf(`CREATE OR REPLACE FUNCTION node0_posse.${name}(`),body=sqlPosse.indexOf('AS $f$',start),end=sqlPosse.indexOf('$f$;',body+6);return[name,sha(sqlPosse.slice(body+6,end))];}));
  return{version:'posse.r11.v1',migrations:rows.length,migrationLedgerSha256:ledgerHash(rows),ownerStable:true,tablesPrivate:true,sourceInstalled:true,remoteInstalled:true,functionHashes};
 }
-test('POSSE accepts historical76..81/R5485, exactA3deferred85 and fullR1586 source identities',async()=>{
- assert.deepEqual(catalogues.map(rows=>rows.length),[76,77,78,79,80,81,85,85,86]);
+test('POSSE accepts exact source ledgers derived from the complete migration catalogue',async()=>{
+ const all=creaPlaMigracions().migrations,known=new Set(all.map(row=>row.version));
+ for(const [index,excluded] of PERFILS.entries()){
+  assert.equal(new Set(excluded).size,excluded.length);
+  assert.ok(excluded.every(version=>known.has(version)),'a missing historical migration must fail explicitly');
+  assert.equal(catalogues[index].length,all.length-excluded.length);
+  assert.equal(new Set(catalogues[index].map(row=>row.version)).size,catalogues[index].length);
+ }
  assert.notEqual(ledgerHash(catalogues[6]),ledgerHash(catalogues[7]));
  for(const rows of catalogues){let calls=0;assert.equal(await verificaEsquemaPosseNodeZero({db:{async query(sql,options){calls++;assert.equal(sql,'SELECT node0_posse.readiness();');assert.equal(options.privateValues,true);return ready(rows);}}}),true);assert.equal(calls,1);}
 });

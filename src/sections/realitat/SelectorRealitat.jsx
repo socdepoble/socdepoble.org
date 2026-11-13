@@ -24,7 +24,7 @@ const NIVELLS = [
     etiqueta: ['section.realitat.nivell0.etiqueta', 'Apagada'],
     Icona: PowerOff,
     descripcio: ['section.realitat.nivell0.descripcio', 'La IAIA MarIA desapareix del xat: ni la seua conversa, ni respostes, ni suggeriments.'],
-    estat: ['section.realitat.nivell0.estat', 'La IAIA MarIA està apagada: no apareix al xat, no respon i no hi ha suggeriments de pregunta. Al xat, només tu i la gent del poble.'],
+    estat: ['section.realitat.nivell0.estat', 'La IAIA MarIA està apagada: no apareix al xat, no respon i no hi ha suggeriments de pregunta. Al xat, només tu i la gent d’este poble.'],
     detall: ['section.realitat.nivell0.detall', 'Apagada · Fora del xat']
   },
   {

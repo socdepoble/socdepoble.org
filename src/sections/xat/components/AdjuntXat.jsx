@@ -425,11 +425,32 @@ function EstatAdjunt({ error, onReintenta, t }) {
   );
 }
 
-function ImatgeAdjunta({ obteUrl, t, interactiu }) {
+function ImatgeAdjunta({ obteUrl, t, interactiu, onObriImatge = null }) {
   const font = useFontVisible(obteUrl);
+  const etiquetaFoto = t('section.xat.adjunts.foto', 'Foto adjunta');
+  const imatge = font.url ? (
+    <img
+      className="sdp-xat-adjunt__imatge"
+      src={font.url}
+      alt={etiquetaFoto}
+      onLoad={font.correcte}
+      onError={font.fallaCarrega}
+    />
+  ) : null;
+  const potObrir = Boolean(font.url && interactiu && typeof onObriImatge === 'function');
   return (
     <div className="sdp-xat-adjunt" ref={font.caixa}>
-      {font.url ? <img className="sdp-xat-adjunt__imatge" src={font.url} alt={t('section.xat.adjunts.foto', 'Foto adjunta')} onLoad={font.correcte} onError={font.fallaCarrega} /> : null}
+      {potObrir ? (
+        <button
+          type="button"
+          className="sdp-xat-adjunt__obridor"
+          aria-haspopup="dialog"
+          aria-label={etiquetaFoto}
+          onClick={(e) => onObriImatge(font.url, e.currentTarget)}
+        >
+          {imatge}
+        </button>
+      ) : imatge}
       {!font.url ? <EstatAdjunt error={font.error} onReintenta={interactiu ? font.reintenta : null} t={t} /> : null}
     </div>
   );
@@ -483,7 +504,7 @@ export function PrevisualitzacioAdjunt({ tipus, url, onError, duradaMs = null, l
 /** La bombolla guarda l'id, mai una URL pública ni una URL signada persistent.
  *  `interactiu` fals (el mode de selecció) la pinta sense controls: la foto i
  *  el vídeo, muntats (el mateix node); la nota de veu, quieta (ADV-MEDIA-10). */
-export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, locale, t: tProp, interactiu = true }) {
+export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, locale, t: tProp, interactiu = true, onObriImatge = null }) {
   const t = traductorAdjunt(tProp);
   const obteUrl = useCallback(({ signal, renova = false, reten = null } = {}) => (
     urlAdjuntXat(adjunt.id, { ...externalConfig, signal }, typeof reten === 'function' && ambRetencio() ? { renova, reten } : { renova })
@@ -493,7 +514,7 @@ export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, loc
   }
   // Un canvi de sessió munta una peça nova: res de la URL anterior no passa a l'altra persona.
   const clau = String(usuariId ?? '');
-  if (tipus === 'imatge') return <ImatgeAdjunta key={clau} obteUrl={obteUrl} t={t} interactiu={interactiu} />;
+  if (tipus === 'imatge') return <ImatgeAdjunta key={clau} obteUrl={obteUrl} t={t} interactiu={interactiu} onObriImatge={onObriImatge} />;
   if (tipus === 'video') return <VideoAdjunt key={clau} obteUrl={obteUrl} t={t} interactiu={interactiu} />;
   return <div className="sdp-xat-adjunt"><ReproductorVeu key={clau} obteUrl={obteUrl} duradaMs={adjunt.duradaMs} memoria={`${clau}/${adjunt.id}`} locale={locale} t={t} interactiu={interactiu} /></div>;
 }

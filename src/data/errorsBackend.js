@@ -38,6 +38,15 @@ export const CODI_BACKEND_INABASTABLE = 'backend-inabastable';
  * com a reserva per als adaptadors que encara no el traduïxen. */
 export const CODI_ESQUEMA_ABSENT = 'esquema-absent';
 
+/** Gauntlet R22 (sql-02, part client) · La còpia pública d'un mitjà privat
+ * (promoteToPublic) no s'ha pogut pujar i no era el duplicat dels mateixos
+ * bytes: per exemple, SDP-PURGA-004 (55000, la ruta és a la cua de purga
+ * després d'una retirada) o un rebuig de permisos. Va a `error.codi`, amb el
+ * rebuig de la pujada traduït (errorDePujada: codi de CODI_MITJANS i estat
+ * HTTP) a `cause`. Qui publica s'atura: mai una referència privada dins d'un
+ * contingut que llig tot el poble (la imatge es veuria trencada per sempre). */
+export const CODI_PROMOCIO_PUBLICA = 'mitjans-promocio-publica';
+
 /** F2 (ordre del Mestre, 261004; pla 2045, Marató 2230) · Pujada de fitxers
  * (capacitat 'mitjans'). Va a `error.codi`, com CODI_BACKEND_INABASTABLE. Eixe
  * codi és genèric (qualsevol petició que no arriba al servidor, no només les

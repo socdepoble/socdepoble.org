@@ -4,14 +4,19 @@ import {readdirSync,readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 const arrel=fileURLToPath(new URL('../../../',import.meta.url));
 const readme=readFileSync(arrel+'supabase/README.md','utf8');
-const reals=readdirSync(arrel+'supabase/migrations').filter(n=>n.endsWith('.sql')).sort();
+/* R21.9b · Catàleg mixt: els noms de 10 dígits (AAMMDDhhmm) s'ordenen com 20AAMMDDhhmm00 i els de 14 (AAAAMMDDhhmmss)
+   es conserven, igual que clauOrdreVersio de scripts/supabase/verifica-migracions.mjs. Cap ordre alfabètic cru. */
+const versio=n=>(/^(\d{14}|\d{10})_/.exec(n)||[])[1];
+const clau=n=>{const v=versio(n);return v&&v.length===10?`20${v}00`:v;};
+const perOrdre=(a,b)=>clau(a).localeCompare(clau(b))||a.localeCompare(b);
+const reals=readdirSync(arrel+'supabase/migrations').filter(n=>n.endsWith('.sql')).sort(perOrdre);
 function comprova(text,fitxers){
  const bullets=[...text.split('\n- `seed.sql`')[0].matchAll(/^- `migrations\/([^`\n]+\.sql)`$/gm)].map(m=>m[1]);
- const taula=[...text.matchAll(/^\| (\d+) \| `(\d{10})` \| `([^`]+\.sql)` \| [^|]+ \| [^|]+ \|$/gm)];
- expect(bullets).toEqual([...new Set(bullets)].sort());
+ const taula=[...text.matchAll(/^\| (\d+) \| `(\d{14}|\d{10})` \| `([^`]+\.sql)` \| [^|]+ \| [^|]+ \|$/gm)];
+ expect(bullets).toEqual([...new Set(bullets)].sort(perOrdre));
  expect(taula.map(m=>m[3])).toEqual(bullets);
- taula.forEach((m,i)=>{expect(Number(m[1])).toBe(i+1);expect(m[3].slice(0,10)).toBe(m[2]);});
- expect(new Set(fitxers.map(n=>n.slice(0,10))).size).toBe(fitxers.length);
+ taula.forEach((m,i)=>{expect(Number(m[1])).toBe(i+1);expect(versio(m[3])).toBe(m[2]);});
+ expect(new Set(fitxers.map(versio)).size).toBe(fitxers.length);
  for(const n of fitxers)expect(text,`Migració real no documentada: ${n}`).toContain('`migrations/'+n+'`');
  for(const n of bullets.filter(n=>!fitxers.includes(n))){
   expect(['2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql','2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql']).toContain(n);

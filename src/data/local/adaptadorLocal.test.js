@@ -78,8 +78,8 @@ describe('opcions de la factoria', () => {
   test('les capacitats no declarades són exactament les que el contracte té i este node deixa a posta', () => {
     const a = creaAdaptadorLocal();
     const absents = Object.keys(CAPACITATS).filter((cap) => CAPACITATS[cap].every((m) => typeof a[m] !== 'function'));
-    expect(Object.keys(CAPACITATS)).toHaveLength(54);
-    expect(CAPACITATS_NO_DECLARADES).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+    expect(Object.keys(CAPACITATS)).toHaveLength(55);
+    expect(CAPACITATS_NO_DECLARADES).toEqual(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
     expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
     const deContracte = CONTRACTE_BACKEND.filter((m) => !absents.some((cap) => CAPACITATS[cap].includes(m)));
     expect(deContracte.filter((m) => typeof a[m] !== 'function')).toEqual([]);
@@ -564,6 +564,18 @@ describe('formes del contracte de la comunitat', () => {
     expect(await a.desbloquejaAutor(seguit, {})).toEqual({ desbloquejat: true });
     expect(await a.desbloquejaAutor(seguit, {})).toEqual({ desbloquejat: false });
     await expect(a.bloquejaAutor({ tipus: 'persona', id: PERSONA }, {})).rejects.toEqual(ambCodi('autobloqueig'));
+  });
+
+  /* Gauntlet R22 (sql-01) · El contracte accepta desbloquejaAutor({ tipus: 'publicacio', id: UUID });
+     el magatzem local no fa bloquejos opacs: no en llista cap i un UUID vàlid no desbloqueja res. */
+  test('R22 · desbloquejar un bloqueig opac per publicació: false amb un UUID, objectiu-invalid sense, i la llista intacta', async () => {
+    const a = creaAdaptadorLocal({ ara });
+    entra(a);
+    const veina = { tipus: 'entitat', id: RENTONAR, nom: 'Rentonar' };
+    await a.bloquejaAutor(veina, {});
+    expect(await a.desbloquejaAutor({ tipus: 'publicacio', id: '55000000-0000-4000-8000-00000000000a' }, {})).toEqual({ desbloquejat: false });
+    await expect(a.desbloquejaAutor({ tipus: 'publicacio', id: 'no-es-uuid' }, {})).rejects.toMatchObject({ code: 'objectiu-invalid' });
+    expect((await a.llistaBloquejos({})).map((b) => [b.tipus, b.id])).toEqual([['entitat', RENTONAR]]);
   });
 
   test('denúncies sense sessió (repetida la segona vegada) i normes només amb sessió', async () => {

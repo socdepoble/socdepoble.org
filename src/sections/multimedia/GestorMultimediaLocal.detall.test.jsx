@@ -133,7 +133,7 @@ describe('editor de text', () => {
     const { unmount } = await obri(dir, { blocDeNotes: { potCrear: true, crea, obri: obriNota } });
     fireEvent.click(tessela('llista.md'));
     await screen.findByLabelText('Contingut de «llista.md»');
-    expect(screen.getByText(/amb sessió, la nota es desa al servidor del poble/)).not.toBeNull();
+    expect(screen.getByText(/amb sessió, la nota es desa al servidor de poble/)).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Enviar al Bloc de Notes' }));
     await waitFor(() => expect(obriNota).toHaveBeenCalledWith('n-1'));
     const [entrada] = crea.mock.calls[0];

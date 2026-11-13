@@ -214,7 +214,7 @@ describe('incloure', () => {
     expect(boto.getAttribute('aria-describedby')).toBeTruthy();
     expect(boto.getAttribute('aria-describedby').split(' ').map((idAvis) => document.getElementById(idAvis)?.textContent)).toEqual([avis]);
     expect(screen.getByText(avis).compareDocumentPosition(boto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByText('Formar part és una pertinença formal, no una connexió. Només s’hi pot incloure veïnat del poble de l’entitat.')).toBeTruthy();
+    expect(screen.getByText('Formar part és una pertinença formal, no una connexió. Només s’hi pot incloure veïnat del municipi de l’entitat.')).toBeTruthy();
     await act(async () => { fireEvent.click(boto); });
     expect(m.desa).toHaveBeenCalledTimes(1);
     expect(m.desa).toHaveBeenCalledWith('org-r', { tipus: 'persona', id: UUID_PEPA, rol: 'member' }, {});
@@ -231,7 +231,7 @@ describe('incloure', () => {
     render(bloc());
     const treballador = await screen.findByRole('radio', { name: /^Treballador \/ Soci/ });
     expect(treballador.disabled).toBe(true);
-    expect(treballador.closest('.sdp-casella').textContent).toContain('Encara no es pot desar: el servidor del poble només distingix administradores i membres.');
+    expect(treballador.closest('.sdp-casella').textContent).toContain('Encara no es pot desar: el servidor de poble només distingix administradores i membres.');
   });
 
   test('administradora: només la propietària, amb confirmació; cancel·lar no escriu', async () => {

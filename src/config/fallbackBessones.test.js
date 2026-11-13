@@ -1,16 +1,16 @@
 /**
- * Encàrrec 261019_1425 · El recurs de pintat: si una bessona .webp no arriba,
- * l'original al mateix lloc, una sola vegada, sense que el component amague
- * la imatge mentrestant.
+ * Encàrrec 261019_1425 + Onada R21.7 · El recurs de pintat: si una bessona .webp
+ * no arriba, demana una sola vegada l'original ràster que realment existix (tant
+ * amb política segellada com al web propi via `MAPA_BESSONES_PUBLIC`), sense
+ * demanar mai extensions `.png` o `.JPG` inexistents ni tocar `.webp` autònomes.
  */
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { fixaPoliticaDeMitjans } from './assetResolver.js';
-import { EXTENSIONS_ORIGINALS, MARCA_FALLBACK, instalaFallbackDeBessones } from './fallbackBessones.js';
+import { EXTENSIONS_ORIGINALS, MARCA_FALLBACK, instalaFallbackDeBessones, instalaFallbackDeLaPolitica } from './fallbackBessones.js';
 
 const ORIGEN = 'https://socdepoble.org';
 const POLITICA = { origen: ORIGEN, externs: ['assets/uploads/'], bessones: ['assets/uploads/poble/DSC00410.JPG'] };
 
-/* Pla 261022_1645 · Cada salt avisa per consola: ací es mira, i no embruta l'eixida. */
 let avis;
 beforeEach(() => { avis = vi.spyOn(console, 'warn').mockImplementation(() => {}); });
 afterEach(() => {
@@ -19,7 +19,6 @@ afterEach(() => {
   avis.mockRestore();
 });
 
-/* Un shadow root com el de <soc-de-poble>, amb una imatge que avisa del seu error. */
 function arrelAmbImatge(src) {
   const host = document.createElement('div');
   document.body.appendChild(host);
@@ -40,7 +39,6 @@ test('una bessona que no arriba torna a l’original una vegada; el component no
   expect(img.getAttribute('src')).toBe(`${ORIGEN}/assets/uploads/poble/DSC00410.JPG`);
   expect(img.dataset[MARCA_FALLBACK]).toBe('original');
   expect(delComponent).not.toHaveBeenCalled();
-  // L'original tampoc no arriba: el segon error seguix el camí de sempre.
   img.dispatchEvent(new Event('error'));
   expect(img.getAttribute('src')).toBe(`${ORIGEN}/assets/uploads/poble/DSC00410.JPG`);
   expect(delComponent).toHaveBeenCalledTimes(1);
@@ -57,29 +55,40 @@ test('amb política, una imatge que no és cap bessona no es toca (cap endevinal
   expect(avis).not.toHaveBeenCalled();
 });
 
-/* Pla 261022_1645 (tasca 3) · El web propi (main.jsx) no porta política: el
-   recurs hi prova el mateix camí amb les extensions dels originals, una per
-   error, i acabades deixa passar l'error. */
-test('sense política (el web propi): una .webp d’assets/ prova .jpg, .png i .JPG, amb avís, i després l’error seguix', () => {
+test('sense política (el web propi): una .webp amb bessona real prova únicament la seua extensió existent i mai .png/.JPG inexistents', () => {
   expect(EXTENSIONS_ORIGINALS).toEqual(['.jpg', '.png', '.JPG']);
   const { arrel, img, delComponent } = arrelAmbImatge('/assets/towns/tibi/1.webp?v=3');
   instalaFallbackDeBessones(arrel);
   img.dispatchEvent(new Event('error'));
   expect(img.getAttribute('src')).toMatch(/\/assets\/towns\/tibi\/1\.jpg\?v=3$/);
+  expect(img.dataset[MARCA_FALLBACK]).toBe('original');
   expect(avis).toHaveBeenCalledTimes(1);
   expect(avis.mock.calls[0][0]).toBe('[Bessones] No ha arribat');
-  img.dispatchEvent(new Event('error'));
-  expect(img.getAttribute('src')).toMatch(/\/assets\/towns\/tibi\/1\.png\?v=3$/);
-  img.dispatchEvent(new Event('error'));
-  expect(img.getAttribute('src')).toMatch(/\/assets\/towns\/tibi\/1\.JPG\?v=3$/);
   expect(delComponent).not.toHaveBeenCalled();
-  // Cap original: el quart error arriba al component, i cap altre salt (cap bucle).
+  // Si el .jpg real tampoc no arriba, l'error passa al component sense provar .png ni .JPG inexistents.
   img.dispatchEvent(new Event('error'));
+  expect(img.getAttribute('src')).toMatch(/\/assets\/towns\/tibi\/1\.jpg\?v=3$/);
   expect(delComponent).toHaveBeenCalledTimes(1);
-  expect(img.dataset[MARCA_FALLBACK]).toBe('original');
-  img.dispatchEvent(new Event('error'));
-  expect(delComponent).toHaveBeenCalledTimes(2);
-  expect(avis).toHaveBeenCalledTimes(3);
+  expect(avis).toHaveBeenCalledTimes(1);
+});
+
+test('R21.7 · una .webp autònoma sense original ràster (xat_portada.webp) i la-torre-de-les-macanes/2.webp mai demanen .png ni .JPG', () => {
+  const portada = arrelAmbImatge('/assets/uploads/brain/xat_portada.webp');
+  instalaFallbackDeBessones(portada.arrel);
+  portada.img.dispatchEvent(new Event('error'));
+  expect(portada.img.getAttribute('src')).toBe('/assets/uploads/brain/xat_portada.webp');
+  expect(portada.delComponent).toHaveBeenCalledTimes(1);
+  expect(avis).not.toHaveBeenCalled();
+
+  const torre = arrelAmbImatge('/assets/towns/la-torre-de-les-macanes/2.webp');
+  instalaFallbackDeBessones(torre.arrel);
+  torre.img.dispatchEvent(new Event('error'));
+  expect(torre.img.getAttribute('src')).toBe('/assets/towns/la-torre-de-les-macanes/2.jpg');
+  expect(avis).toHaveBeenCalledTimes(1);
+  torre.img.dispatchEvent(new Event('error'));
+  expect(torre.img.getAttribute('src')).toBe('/assets/towns/la-torre-de-les-macanes/2.jpg');
+  expect(torre.delComponent).toHaveBeenCalledTimes(1);
+  expect(avis).toHaveBeenCalledTimes(1);
 });
 
 test('sense política, el que no és una .webp d’assets/ no es toca (una pujada de Storage, un .jpg)', () => {
@@ -114,4 +123,35 @@ test('retirar el recurs el deixa sense efecte; una arrel buida no fa res', () =>
   expect(img.getAttribute('src')).toBe(`${ORIGEN}/assets/uploads/poble/DSC00410.webp`);
   expect(delComponent).toHaveBeenCalledTimes(1);
   expect(typeof instalaFallbackDeBessones(null)).toBe('function');
+});
+
+/* Onada R22 · BOOT3 · L'instal·lador del paquet (PedraSecaEmbed, que només l'instal·la amb política):
+   el mateix salt exacte de la política, i sense el cens del web propi, que així no viatja a l'arrencada. */
+test('instalaFallbackDeLaPolitica fa el mateix salt exacte que instalaFallbackDeBessones amb política', () => {
+  fixaPoliticaDeMitjans(POLITICA);
+  const { arrel, img, delComponent } = arrelAmbImatge(`${ORIGEN}/assets/uploads/poble/DSC00410.webp?v=2`);
+  const retira = instalaFallbackDeLaPolitica(arrel);
+  img.dispatchEvent(new Event('error'));
+  expect(img.getAttribute('src')).toBe(`${ORIGEN}/assets/uploads/poble/DSC00410.JPG?v=2`);
+  expect(img.dataset[MARCA_FALLBACK]).toBe('original');
+  expect(delComponent).not.toHaveBeenCalled();
+  img.dispatchEvent(new Event('error'));
+  expect(delComponent).toHaveBeenCalledTimes(1);
+  const altra = arrelAmbImatge(`${ORIGEN}/assets/uploads/poble/altra.webp`);
+  instalaFallbackDeLaPolitica(altra.arrel);
+  altra.img.dispatchEvent(new Event('error'));
+  expect(altra.img.getAttribute('src')).toBe(`${ORIGEN}/assets/uploads/poble/altra.webp`);
+  expect(altra.delComponent).toHaveBeenCalledTimes(1);
+  retira();
+  expect(typeof instalaFallbackDeLaPolitica(null)).toBe('function');
+});
+
+test('instalaFallbackDeLaPolitica no consulta el cens del web propi: sense política, cap imatge no es toca', () => {
+  const { arrel, img, delComponent } = arrelAmbImatge('/assets/towns/tibi/1.webp');
+  instalaFallbackDeLaPolitica(arrel);
+  img.dispatchEvent(new Event('error'));
+  expect(img.getAttribute('src')).toBe('/assets/towns/tibi/1.webp');
+  expect(img.dataset[MARCA_FALLBACK]).toBeUndefined();
+  expect(delComponent).toHaveBeenCalledTimes(1);
+  expect(avis).not.toHaveBeenCalled();
 });

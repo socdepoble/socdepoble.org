@@ -187,7 +187,7 @@ async function esperaSenseFrontera(espia, cerca, timeout = 8000) {
   return trobat.element;
 }
 
-const botoEixir = (espia) => esperaSenseFrontera(espia, () => screen.getByRole('button', { name: /Eixir del poble/ }));
+const botoEixir = (espia) => esperaSenseFrontera(espia, () => screen.getByRole('button', { name: /Eixir de poble/ }));
 const vistaDeRegistre = (espia) => esperaSenseFrontera(espia, () => screen.getByText(REGISTRE));
 /* La navegació també passa per la frontera: si l'arbre cau entre el clic i
    /registre, falla amb la frontera i la causa, no amb «Unable to find ubicacio». */
@@ -238,7 +238,7 @@ test('T1 · «Eixir del poble» de veres: tanca la sessió pel proveïdor, porta
   /* La ruta nova, la d'OnboardingSection, és dins del mateix proveïdor i ja veu la sessió tancada. */
   await vistaDeRegistre(errors);
   expect(screen.getByTestId('registre').textContent).toBe('fora:ningú');
-  expect(screen.queryByRole('button', { name: /Eixir del poble/ })).toBeNull();
+  expect(screen.queryByRole('button', { name: /Eixir de poble/ })).toBeNull();
   senseCrash(errors);
 }, 15000);
 
@@ -266,7 +266,7 @@ test('T1 · si la sessió cau amb el Panell obert (una altra pestanya), el Panel
   await botoEixir(errors);
   act(() => { m.emet(m.FORA); });
   expect(ubicacio()).toBe('/control');
-  fireEvent.click(screen.getByRole('button', { name: /Eixir del poble/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Eixir de poble/ }));
   await arribaARegistre(errors);
   expect(m.logout).toHaveBeenCalledTimes(1);
   await vistaDeRegistre(errors);

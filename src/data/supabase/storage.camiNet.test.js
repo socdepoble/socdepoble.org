@@ -7,6 +7,8 @@
    orígens són sintètics. */
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { StorageClient } from '@supabase/storage-js';
+import { createHash } from 'node:crypto';
+import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 
 const m = vi.hoisted(() => ({ client: null }));
 vi.mock('./config.js', () => ({ getClient: async () => m.client }));
@@ -20,12 +22,16 @@ const UID = '11111111-1a1a-4000-8000-000000000001';
 const POBLE = '22222222-2b2b-4000-8000-000000000002';
 const RUTA = `${POBLE}/${UID}/avatars/33333333-3c3c-4000-8000-000000000003.webp`;
 
+const RUTA_PUBLICA = `${POBLE}/${UID}/avatars/sdp-net-v1-${createHash('sha256').update(WEBP_NET).digest('hex')}.webp`;
+
 /* El client de storage-js de veres, amb un fetch que anota on va cada petició. */
 let peticions;
 function clientDeVeres() {
   peticions = [];
   const fetch = vi.fn(async (url, opcions = {}) => {
     peticions.push({ url: String(url), metode: opcions.method || 'GET', autoritzacio: new Headers(opcions.headers).get('authorization') });
+    if ((!opcions.method || opcions.method === 'GET') && String(url).includes('/object/'))
+      return new Response(WEBP_NET, { status: 200, headers: { 'Content-Type': 'image/webp' } });
     return new Response(JSON.stringify({ signedURL: `/object/sign/x?token=t`, Id: 'id', Key: 'k' }), {
       status: 200, headers: { 'Content-Type': 'application/json' }
     });
@@ -94,10 +100,10 @@ describe('promoteToPublic · ni baixa ni puja un camí que moga la URL', () => {
   });
 
   test('control · una pujada privada neta es promou', async () => {
-    expect(await promoteToPublic(`sdp-media://mitjans_privats/${RUTA}`, {})).toBe(`sdp-media://mitjans/${RUTA}`);
+    expect(await promoteToPublic(`sdp-media://mitjans_privats/${RUTA}`, {})).toBe(`sdp-media://mitjans/${RUTA_PUBLICA}`);
     expect(peticions.map(desti)).toEqual([
       `/storage/v1/object/mitjans_privats/${RUTA}`,
-      `/storage/v1/object/mitjans/${RUTA}`
+      `/storage/v1/object/mitjans/${RUTA_PUBLICA}`
     ]);
   });
 });
@@ -122,8 +128,8 @@ describe('el marc de la capçalera (#sdp-crop=) viatja amb la referència', () =
   });
 
   test('publicar promou la base i la referència pública conserva el marc', async () => {
-    expect(await promoteToPublic(`sdp-media://mitjans_privats/${RUTA}${MARC}`, {})).toBe(`sdp-media://mitjans/${RUTA}${MARC}`);
-    expect(peticions.map(desti)).toEqual([`/storage/v1/object/mitjans_privats/${RUTA}`, `/storage/v1/object/mitjans/${RUTA}`]);
+    expect(await promoteToPublic(`sdp-media://mitjans_privats/${RUTA}${MARC}`, {})).toBe(`sdp-media://mitjans/${RUTA_PUBLICA}${MARC}`);
+    expect(peticions.map(desti)).toEqual([`/storage/v1/object/mitjans_privats/${RUTA}`, `/storage/v1/object/mitjans/${RUTA_PUBLICA}`]);
   });
 
   test('un camí que mou la URL, amb el marc, continua sense cap petició', async () => {

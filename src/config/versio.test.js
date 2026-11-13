@@ -46,7 +46,9 @@ describe('la versió canònica', () => {
        (wordpress-plugin/socdepoble-enxufe.php); el número de build (versionCode 2 i
        CURRENT_PROJECT_VERSION 2) no canvia fins a la pròxima pujada a les botigues.
        Onada R21 (COMMIT 3): package.json, Android i iOS passen a 1.2.0 amb el build 4 (VERSIO_CLIENT_NATIU 4), i el
-       connector WordPress del repositori, a la 1.1.13 (la publicada a WordPress.org continua sent la 1.1.12). */
+       connector WordPress del repositori, a la 1.1.13 (la publicada a WordPress.org continua sent la 1.1.12).
+       Onada R21 (COMMIT 5): la 1.2.0 passa al build 5 (VERSIO_CLIENT_NATIU 5) perquè cap número pujat a una botiga es
+       reutilitze, i el connector del repositori, a la 1.1.14. */
     expect(versioCanonica()).toBe('v1.2.0');
   });
 

@@ -292,39 +292,41 @@ function rutaDeNotes(url, metode, cos) {
 
 const SUBMISSIO_DEL_MUR = {
   id: '5b6c7d8e-9fa0-4b1c-8d2e-3f4a5b6c7d8e', title: 'Fira de tardor', created_at: ARA, updated_at: ARA,
-  owner_user_id: VEINA, author_org_id: null,
-  payload: { sectionId: 'mur', type: 'feed', title: 'Fira de tardor', author_name: 'Veïna', labels: [{ text: 'Festes', className: 'sdp-badge-category' }] }
+  tenant_id: POBLE, section_id: 'mur', description: 'Entradeta pública', public_content: 'Cos públic'
 };
 
-/* Decisió 4 del Mestre (261007) · section_submissions com PostgREST: el
-   filtre de conjunt de claus (or=(created_at.lt."X",and(created_at.eq."X",
-   id.lt."Y"))), l'ordre created_at.desc,id.desc, el límit i el total amb
-   Prefer: count=exact. Un `or` amb una altra forma és una ruta desconeguda:
-   la passada cau si l'adaptador el codifica malament. */
-const TALL_DE_CLAUS = /^\(created_at\.lt\."([^"]+)",and\(created_at\.eq\."([^"]+)",id\.lt\."([^"]+)"\)\)$/;
+/* R21: el doble exposa únicament la RPC pública escalar; un GET cru a
+   section_submissions és un error. El keyset es passa amb paràmetres tipats. */
 function rutaDePublicacions(url, opcions) {
-  const p = url.searchParams;
   if (opcions.method === 'POST') {
     const files = JSON.parse(opcions.body);
     estat.publicacioDesada = structuredClone(files[0]);
     return resposta(files);
   }
+  estat.rutesDesconegudes.push('GET cru section_submissions');
+  return resposta({ code: '42501', message: 'permission denied' }, { status: 403 });
+}
+function rutaDelMurPublic(url, opcions) {
+  expect(opcions.method || 'GET').toBe('GET');
+  const membre = url.pathname.endsWith('llig_mur_membres');
+  expect(opcions.headers.Authorization).toBe(`Bearer ${membre ? JWT : CONFIG_REMOT.supabaseAnonKey}`);
+  const p = url.searchParams;
+  expect(p.get('p_tenant_id')).toBe(POBLE);
+  expect([...p.keys()].every(k => ['p_tenant_id','p_section_id','p_limit','p_before_created_at','p_before_id'].includes(k))).toBe(true);
   const publicacions = estat.publicacions || { mur: [SUBMISSIO_DEL_MUR] };
-  let files = [...(publicacions[eq(p.get('section_id'))] || [])];
-  if (p.has('or')) {
-    const tall = TALL_DE_CLAUS.exec(p.get('or'));
-    if (!tall || tall[1] !== tall[2]) {
-      estat.rutesDesconegudes.push(`or ${p.get('or')}`);
-      return resposta({ message: 'filtre or desconegut' }, { status: 400 });
-    }
-    const [, instant, , id] = tall;
-    files = files.filter((f) => Date.parse(f.created_at) < Date.parse(instant)
+  let files = [...(publicacions[p.get('p_section_id')] || [])];
+  if (p.has('p_before_created_at') || p.has('p_before_id')) {
+    const instant = p.get('p_before_created_at');
+    const id = p.get('p_before_id');
+    expect(instant).toBeTruthy(); expect(id).toMatch(RE_UUID);
+    files = files.filter(f => Date.parse(f.created_at) < Date.parse(instant)
       || (Date.parse(f.created_at) === Date.parse(instant) && f.id < id));
   }
-  files.sort((a, b) => (Date.parse(b.created_at) - Date.parse(a.created_at)) || (a.id < b.id ? 1 : -1));
-  const pagina = files.slice(0, Number(p.get('limit')));
-  const ambTotal = /count=exact/.test(opcions.headers?.Prefer || '');
-  return resposta(pagina, { contentRange: ambTotal ? (pagina.length ? `0-${pagina.length - 1}/${files.length}` : '*/0') : null });
+  files.sort((a,b) => (Date.parse(b.created_at)-Date.parse(a.created_at)) || (a.id<b.id ? 1 : -1));
+  const pagina = files.slice(0,Number(p.get('p_limit')));
+  // Una RPC amb LIMIT no promet que Content-Range siga el total original.
+  return resposta(membre ? { lectura: 'membre', files: pagina.map(f => ({ ...f, owner_user_id: PERSONA, author_org_id: null,
+    payload: { title: f.title, content: f.public_content, author_name: 'Persona de prova', ...f.payload } })) } : pagina);
 }
 
 /* Pla 261022_1955 (Cercador Universal, T1; Gauntlet, crític de dades) · La
@@ -415,6 +417,8 @@ function fetchDelServidor(entrada, opcions = {}) {
         : []);
     },
     '/rest/v1/section_submissions': () => rutaDePublicacions(url, opcions),
+    '/rest/v1/rpc/llig_mur_public': () => rutaDelMurPublic(url,opcions),
+    '/rest/v1/rpc/llig_mur_membres': () => rutaDelMurPublic(url,opcions),
     '/rest/v1/notes': () => rutaDeNotes(url, metode, cos),
     '/rest/v1/note_folders': () => {
       expect(metode).toBe('GET');expect(p.get('select')).toBe('id,nom');
@@ -473,12 +477,14 @@ const invocatsRemots = new Set();
 
 describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)', () => {
   beforeAll(() => {
+    vi.stubEnv('VITE_SDP_COPUBLICACIO', '1');
     estat = estatDelServidor();
     Object.assign(servidor, { actiu: true, client: clientFals(), fetch: fetchDelServidor });
     configuraBackendSessio(CONFIG_REMOT);
     expect(desaSessio({ access_token: JWT, user: { id: PERSONA, email: 'conformitat@poble.invalid' } })).toBe(true);
   });
   afterAll(() => {
+    vi.unstubAllEnvs();
     esborraSessio({ abast: 'tot' });
     Object.assign(servidor, { actiu: false, client: null, fetch: null });
   });
@@ -576,7 +582,7 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
      repetir ni perdre cap publicació, també amb empats de created_at al tall. */
   test('Decisió 4 · loadMur porta el cursor del Mur i loadSeccioPage continua fins al final', async () => {
     const fila = (n, creat) => ({ ...SUBMISSIO_DEL_MUR, id: `6c7d8e9f-a0b1-4c2d-8e3f-${String(n).padStart(12, '0')}`,
-      title: `Publicació ${n}`, created_at: creat, payload: { ...SUBMISSIO_DEL_MUR.payload, title: `Publicació ${n}` } });
+      title: `Publicació ${n}`, created_at: creat, public_content: `Cos públic ${n}` });
     // 53 files: 30 empatades en ARA (amb el «+» del fus) i 23 més velles, també en grups empatats.
     const files = Array.from({ length: 53 }, (_, n) => fila(n, n < 30 ? ARA : `2026-10-0${1 + (n % 5)}T08:00:00.123+00:00`));
     const urls = [];
@@ -591,6 +597,8 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
       expect(await executaCas(loadMur, adaptador, { ...ctxRemot, ownerUserId: PERSONA })).toMatchObject({ estat: 'ok', falles: [] });
 
       const pagina = await adaptador.loadSeccioPage({ seccio: 'mur', cursor: mur.paginacio.mur }, CONFIG_REMOT);
+      /* Gauntlet R22 (dades-07) · 3 files de les 50 demanades: la RPC limita amb least(p_limit, 51|200),
+         per tant és la darrera pàgina i no cal cap petició més que només tornaria []. */
       expect(pagina).toMatchObject({ complete: true, nextCursor: null });
       expect(pagina.elements).toHaveLength(3);
       const vistos = [...mur.feedPosts, ...pagina.elements].map((element) => element.id);
@@ -599,7 +607,8 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
       // El filtre viatja codificat: cap «+» cru que PostgREST llegiria com un espai.
       const ultima = new URL(urls.at(-1));
       expect(ultima.search).not.toContain('+');
-      expect(ultima.searchParams.get('or')).toMatch(/^\(created_at\.lt\."2026-10-0\dT08:00:00\.123\+00:00",and\(/);
+      expect(ultima.searchParams.get('p_before_created_at')).toMatch(/^2026-10-0\dT08:00:00\.123\+00:00$/);
+      expect(ultima.searchParams.get('p_before_id')).toMatch(RE_UUID);
       expect(estat.rutesDesconegudes).toEqual([]);
     } finally {
       estat.publicacions = null;

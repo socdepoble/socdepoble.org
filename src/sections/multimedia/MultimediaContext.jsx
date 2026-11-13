@@ -1,7 +1,8 @@
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { backendScope } from '../../config/backendConfig.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { useScopedResource } from '../../app/contexts/useScopedResource.js';
-import { useContext, useMemo } from 'react';
+import { useContext, useEffect, useMemo, useRef } from 'react';
 /* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
    que no importa res del projecte. */
 import { MultimediaContext } from './objectesDeContext.js';
@@ -45,14 +46,29 @@ const esFotoVivaPintable = (foto) => esFontImatgePropia(foto.src) && !esMitjaOpa
 export function MultimediaProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitatOpcional() || IDENTITAT_DE_RESERVA;
   const { currentUser } = useSession();
+  const moderacio = useModeracio();
   /* Decisió 2 del Mestre (261007) · Renovació silenciosa. La clau d'àmbit és
      la d'AÏLLAMENT (backend, persona, actor), sense `generacio`: renovar el
      JWT ja no buida la Multimèdia. La frescor per generació la porta
-     useScopedResource. */
+     useScopedResource.
+     Gauntlet R22 (notes-04) · versioBloquejos és FRESCOR, no identitat (com a
+     MurContext): dins de la clau d'aïllament, cada bloqueig o desbloqueig
+     buidava l'Arxiu fins a «Carregant». Ara un canvi revalida en segon pla
+     (refresh, baix) i el que ja hi era es queda en 'ready'. */
+  const versioBloquejos = moderacio?.versioBloquejos || 0;
   const scopeKey = JSON.stringify([backendScope(config),
     currentUser?.id, actorKey]);
   const data = useScopedResource(loadMultimedia, actorId, scopeKey, config);
   const { status, payload, error, errorRevalidacio, refresh } = data;
+
+  /* Gauntlet R22 (notes-04) · Un bloqueig (o desbloqueig) nou revalida sense
+     passar per 'loading'; el primer muntatge no fa res. */
+  const versioBloquejosVista = useRef(versioBloquejos);
+  useEffect(() => {
+    if (versioBloquejosVista.current === versioBloquejos) return;
+    versioBloquejosVista.current = versioBloquejos;
+    refresh?.();
+  }, [versioBloquejos, refresh]);
 
   /* Onada 0.3 (Gauntlet 261016, M03 i I35; MCR 261016, b03_multimedia.2) ·
      Les fotos vives dels articles que el proveïdor ja té carregats: el Mur,

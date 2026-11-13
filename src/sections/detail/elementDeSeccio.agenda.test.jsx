@@ -39,8 +39,7 @@ const ACTES = buildEventsDetailSectionMeta({ events: [], t });
 test('l’etiqueta «Agenda» d’un acte porta al seu dia al Calendari, amb la diana de l’etiqueta enllaçada', () => {
   const pagina = paginaDElement(ACTES, { id: 'fira', title: 'Fira de tardor', date: '2026-11-14' });
   expect(pagina.labels).toEqual([
-    { text: 'Agenda', className: 'sdp-badge-system sp-card-label--enllac', href: '/calendari?vista=mes&date=2026-11-14' },
-    { text: 'fira', className: 'sdp-badge-category' }
+    { text: 'Agenda', className: 'sdp-badge-system sp-card-label--enllac', href: '/calendari?vista=mes&date=2026-11-14' }
   ]);
 });
 
@@ -157,15 +156,12 @@ test('fora del Calendari, les etiquetes pròpies només passen al detall amb cat
   ]);
   const vei = { id: '7f0c', title: 'Recepta de coca', labels: [{ text: 'Receptes', className: 'sdp-badge-category' }, { text: 'Forn', className: 'sdp-badge-tag' }] };
   expect(paginaDElement(mur, vei).labels).toEqual([
-    { text: 'Publicació', className: 'sdp-badge-system' },
-    { text: '7f0c', className: 'sdp-badge-category' }
+    { text: 'Publicació', className: 'sdp-badge-system' }
   ]);
   expect(paginaDElement(mur, { id: 'cc', title: 'Sense etiquetes' }).labels).toEqual([
-    { text: 'Publicació', className: 'sdp-badge-system' },
-    { text: 'cc', className: 'sdp-badge-category' }
+    { text: 'Publicació', className: 'sdp-badge-system' }
   ]);
   expect(paginaDElement(mercat, { id: 'mel', title: 'Mel', labels: ['Mel', 'Venda'] }).labels).toEqual([
-    { text: 'Producte', className: 'sdp-badge-system' },
-    { text: 'mel', className: 'sdp-badge-category' }
+    { text: 'Mercat', className: 'sdp-badge-system' }
   ]);
 });

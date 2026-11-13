@@ -813,10 +813,10 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
     return valors[c.metode];
   }
 
-  test('cens exacte del contracte, 32 obligatòries i 124 opcionals; cap nom sense cas', () => {
+  test('cens exacte del contracte, 32 obligatòries i 127 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(54);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(124);
+    expect(Object.keys(CAPACITATS)).toHaveLength(55);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(127);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });
@@ -967,4 +967,31 @@ describe('R15 · contracte semàntic de sessions i curadoria',()=>{
   }
   expect(await executaCas(c,{[c.metode]:async()=>({consultatA:instant,total:1,files:[{...fila,correuMascarat:null}]})},ctx())).toMatchObject({estat:'ok'});
  });
+});
+
+/* Gauntlet R22 (sql-01) · Un node real amb bloquejos opacs per UUID de
+   publicació (2611122200) torna files { tipus: 'publicacio', id, nom: null }:
+   el cas de llistaBloquejos no el pot marcar com a no conforme. El doble que
+   torna [] no ho veia; ací la fila hi és. Una fila opaca que portara un nom
+   o un id que no és UUID continua sent una falla. */
+describe('R22 · llistaBloquejos amb un bloqueig opac per publicació', () => {
+  const ctx = () => contextDeConformitat({ config: { dataMode: 'seed' } });
+  const UUID = '55000000-0000-4000-8000-00000000000a';
+  const llista = () => cas('llistaBloquejos');
+
+  test('una fila { tipus: publicacio, id: UUID, nom: null } és conforme, al costat de persona i entitat', async () => {
+    expect(llista().titol).toContain("'publicacio'");
+    const files = [{ tipus: 'publicacio', id: UUID, nom: null, creatAl: '2026-11-12T22:00:00Z' },
+      { tipus: 'persona', id: 'p1', nom: 'Pepa', creatAl: null }, { tipus: 'entitat', id: 'e1', nom: null, creatAl: null }];
+    expect(await executaCas(llista(), { llistaBloquejos: async () => files }, ctx())).toMatchObject({ estat: 'ok', falles: [] });
+  });
+
+  test('una fila opaca amb nom o sense UUID, o un tipus inventat, és una falla amb el seu motiu', async () => {
+    expect(await executaCas(llista(), { llistaBloquejos: async () => [{ tipus: 'publicacio', id: UUID, nom: 'Pepa', creatAl: null }] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: [`el bloqueig opac ${UUID} porta un nom: no pot revelar cap identitat`] });
+    expect(await executaCas(llista(), { llistaBloquejos: async () => [{ tipus: 'publicacio', id: 'p1', nom: null, creatAl: null }] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['el bloqueig opac p1 no té un UUID de publicació'] });
+    expect(await executaCas(llista(), { llistaBloquejos: async () => [{ tipus: 'autor', id: UUID, nom: null, creatAl: null }] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['un bloqueig té tipus "autor"'] });
+  });
 });

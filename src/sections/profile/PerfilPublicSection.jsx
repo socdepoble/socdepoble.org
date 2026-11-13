@@ -489,7 +489,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
         chrome="system"
         showLogos={true}
         title={titolSenseFitxa}
-        lead={t('section.perfil.public.senseRespostaText', 'El servidor del poble no respon ara mateix. Pots tornar-ho a provar o continuar navegant.')}
+        lead={t('section.perfil.public.senseRespostaText', 'El servidor de poble no respon ara mateix. Pots tornar-ho a provar o continuar navegant.')}
         objecte={null}
       >
         {/* Revisió del Gauntlet 261022_0225 (REV-PERF-9) · El «Carregant…» era
@@ -515,8 +515,8 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
         showLogos={true}
         title={t('section.perfil.public.noTrobat', 'Perfil no trobat')}
         lead={remot
-          ? t('section.perfil.public.noTrobatTextRemot', 'Ningú del poble té este identificador, o la seua fitxa és privada. Les fitxes d’altres persones encara no es poden obrir en este servidor.')
-          : t('section.perfil.public.noTrobatText', 'Ningú del poble té este identificador, o la seua fitxa és privada.')}
+          ? t('section.perfil.public.noTrobatTextRemot', 'No hi ha ningú amb este identificador, o la seua fitxa és privada. Les fitxes d’altres persones encara no es poden obrir en este servidor.')
+          : t('section.perfil.public.noTrobatText', 'No hi ha ningú amb este identificador, o la seua fitxa és privada.')}
         labels={[{ text: 'Error', className: 'sdp-badge-system' }]}
         objecte={null}
       >
@@ -760,8 +760,8 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
       ? (senseSessio ? `/xat/${ID_FIL_DE_MOSTRA_DE_JAVI}` : rutaDelXatDeJavi(modeDades))
       : `/xat?amb=${encodeURIComponent(perfil.id)}`;
   const avisDIA = esLaIAIA
-    ? t('section.perfil.public.iaText', 'La IAIA MarIA és una màquina de Sóc de Poble, en proves. Respon amb frases fetes i no substituïx cap persona del poble.')
-    : omple(t('section.perfil.public.iaAltresText', '{nom} és una màquina de Sóc de Poble, en proves. No substituïx cap persona del poble.'), { nom: perfil.nom });
+    ? t('section.perfil.public.iaText', 'La IAIA MarIA és una màquina de Sóc de Poble, en proves. Respon amb frases fetes i no substituïx cap persona de poble.')
+    : omple(t('section.perfil.public.iaAltresText', '{nom} és una màquina de Sóc de Poble, en proves. No substituïx cap persona de poble.'), { nom: perfil.nom });
   const parlaAmbLaIA = esLaIAIA
     ? t('section.perfil.public.parlaIA', 'Parla amb la IAIA')
     : omple(t('section.perfil.public.parlaIAAltres', 'Parla amb {nom}'), { nom: perfil.nom });

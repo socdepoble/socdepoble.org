@@ -352,7 +352,7 @@ async function clicAlTitularFinsAlRegistre() {
   expect(tornar()).toBe('/app/gestoria/tauler');
   expect(await screen.findByRole('heading', { name: 'Benvinguda al Mas Electrònic' }, { timeout: 8000 })).toBeTruthy();
 }
-const AVIS_SERVIDOR_CAIGUT = /El servidor del poble no respon ara mateix/;
+const AVIS_SERVIDOR_CAIGUT = /El servidor de poble no respon ara mateix/;
 
 test.each(['local', 'seed'])('[DEFECTE D1] sense sessió, en mode %s i amb un port sense la capacitat ‘salut’, el clic al titular porta a /registre i l’entrada demana enterRemoteMode (la real desa l’elecció i recarrega)', async (mode) => {
   await munta('/app/gestoria/tauler', async ({ crides }) => {
@@ -520,7 +520,7 @@ test('sense sessió, /control continua sense guarda: es pinta el Panell, com aba
   await munta('/control', async () => {
     const maquinaria = await screen.findByRole('heading', { level: 2, name: 'Maquinària i Sistema' }, { timeout: 8000 });
     expect(maquinaria.closest('section')?.classList.contains('sdp-control-maquinaria')).toBe(true);
-    expect(screen.getByRole('button', { name: 'Eixir del poble' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Eixir de poble' })).toBeTruthy();
     const barra = screen.getByRole('navigation', { name: 'Navegació principal' });
     expect(within(barra).getByRole('button', { name: 'Panell de control' }).getAttribute('aria-current')).toBe('page');
     expect(window.location.pathname).toBe('/control');

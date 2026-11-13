@@ -98,12 +98,12 @@ export default function DetallPoble({ poble, t = senseTraductor, exporta = expor
   return (
     <>
     {connexions}
-    <section aria-label={federat ? t('section.detail.pobles.opendata.regio.federat', 'Dades obertes i identitat federada') : t('section.detail.pobles.opendata.regio', 'Dades obertes del poble')}>
+    <section aria-label={federat ? t('section.detail.pobles.opendata.regio.federat', 'Dades obertes i identitat federada') : t('section.detail.pobles.opendata.regio', 'Dades obertes d’este poble')}>
       {natiu
         ? <p>{t('section.detail.pobles.opendata.natiu', 'Dins de l’app el paquet no es pot desar a les descàrregues: descarrega’l des de socdepoble.org.')}</p>
         : <p><Boto onClick={descarregar} disabled={ocupat} carregant={ocupat}>{federat
-          ? t('section.detail.pobles.opendata.descarregaFederat', 'Descarregar paquet Open Data del poble (JSON / ActivityStreams 2.0 + JSON-LD)')
-          : t('section.detail.pobles.opendata.descarrega', 'Descarregar paquet Open Data del poble (JSON / JSON-LD)')}</Boto></p>}
+          ? t('section.detail.pobles.opendata.descarregaFederat', 'Descarregar paquet Open Data d’este poble (JSON / ActivityStreams 2.0 + JSON-LD)')
+          : t('section.detail.pobles.opendata.descarrega', 'Descarregar paquet Open Data d’este poble (JSON / JSON-LD)')}</Boto></p>}
       {federat ? (
         <>
           <p>{t('section.detail.pobles.opendata.identificador', 'Identificador federat:')} <code>{identificador}</code></p>

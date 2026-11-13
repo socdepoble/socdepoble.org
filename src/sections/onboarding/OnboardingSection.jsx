@@ -632,7 +632,7 @@ export default function OnboardingSection() {
                   ) : null}
                 </>}
               >
-                {tr('section.login.servidor.caigut', 'El servidor del poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.')}
+                {tr('section.login.servidor.caigut', 'El servidor de poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.')}
               </Alerta>
             ) : null}
 
@@ -641,7 +641,7 @@ export default function OnboardingSection() {
                 to="avis"
                 accions={<Boto varietat="secundari" carregant={sondant} onClick={decidixEntrada}>{tr('section.login.servidor.connecta', 'Connectar amb el servidor')}</Boto>}
               >
-                {tr('section.login.servidor.suspesa', 'Has tornat al mode de proves: pots explorar l’app amb dades de mostra. Per a crear el compte o entrar, connecta amb el servidor del poble.')}
+                {tr('section.login.servidor.suspesa', 'Has tornat al mode de proves: pots explorar l’app amb dades de mostra. Per a crear el compte o entrar, connecta amb el servidor de poble.')}
               </Alerta>
             ) : null}
 

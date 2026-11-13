@@ -8,7 +8,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { capcalera, dependenciesDeclarades, llegixOrdre, ordena } from '../../scripts/supabase/verifica-migracions.mjs';
+import { capcalera, dependenciesDeclarades, llegixOrdre, ordena, validaNom, versioDeFitxer, comparaVersions } from '../../scripts/supabase/verifica-migracions.mjs';
 import { llegeixPaquetOpenData } from '../../src/data/importaMunicipiOpenData.js';
 import { llegeixZipNodeZero } from './paquet-opendata-node0.mjs';
 
@@ -90,17 +90,20 @@ export function cosMigracio(sql) {
 
 export function creaPlaMigracions({ root = ROOT } = {}) {
   const directory = path.join(root, 'supabase/migrations');
-  const files = fs.readdirSync(directory).filter(file => /^\d{10}_.+\.sql$/.test(file)).sort();
-  const versions = files.map(file => file.slice(0, 10));
+  const files = fs.readdirSync(directory).filter(file => file.endsWith('.sql'));
+  if (files.some(file => validaNom(file).errors.length || !fs.lstatSync(path.join(directory, file)).isFile())) throw new TypeError('node0_migration_catalog_invalid');
+  files.sort((a, b) => comparaVersions(versioDeFitxer(a), versioDeFitxer(b)) || a.localeCompare(b, 'en'));
+  const versions = files.map(versioDeFitxer);
   if (!files.length || versions.length !== new Set(versions).size) throw new TypeError('node0_migration_catalog_invalid');
   const orderBytes = fs.readFileSync(path.join(root, 'supabase/ordre_desplegament.json'));
   const declared = llegixOrdre(orderBytes.toString('utf8'), new Set(versions));
   const sources = new Map(files.map(file => {
     const bytes = fs.readFileSync(path.join(directory, file));
-    return [file.slice(0, 10), { version: file.slice(0, 10), file, sha256: sha(bytes), sql: bytes.toString('utf8') }];
+    const version = versioDeFitxer(file);
+    return [version, { version, file, sha256: sha(bytes), sql: bytes.toString('utf8') }];
   }));
   const dependencies = new Map([...sources.values()].map(source => [source.version,
-    dependenciesDeclarades(capcalera(source.sql), source.version).filter(d => d.versio < source.version).map(d => d.versio)]));
+    dependenciesDeclarades(capcalera(source.sql), source.version).filter(d => comparaVersions(d.versio, source.version) < 0).map(d => d.versio)]));
   const order = ordena({ versions, dependencies, restriccions: declared.restriccions, portes: declared.portes });
   if (order.errors.length) throw new TypeError('node0_migration_order_invalid');
   const migrations = order.ordre.filter(p => p.tipus === 'migracio').map(p => sources.get(p.id));

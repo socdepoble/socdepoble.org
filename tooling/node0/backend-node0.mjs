@@ -144,7 +144,7 @@ export function compilaOperacioNodeZero(action,body,tenantId,{xatRitmeReady=fals
   }
   if(action==='appendSectionSubmissionNetworkOnly'){
     const submission=body.submission;
-    if(!plain(submission)||Object.keys(submission).some(key=>!['id','sectionId','title','description','payload','actor'].includes(key)))fail('invalid_submission');
+    if(!plain(submission)||Object.keys(submission).some(key=>!['id','sectionId','title','description','payload','actor','noteId','expectedNoteRevision','operationId','consulta'].includes(key)))fail('invalid_submission');
     const id=submission.id?uuid(submission.id):randomUUID(),section=text(submission.sectionId,32);
     if(!['mur','mercat','events','multimedia','notes'].includes(section))fail('invalid_section');
     const source=submission.payload??{};
@@ -163,6 +163,14 @@ export function compilaOperacioNodeZero(action,body,tenantId,{xatRitmeReady=fals
       if(actor.tipus==='entitat')org=`${sqlText(uuid(actor.id))}::uuid`;
       else if(actor.id!==undefined){const expected=sqlText(uuid(actor.id));actorCheck=`DO $node0_publisher$ BEGIN IF (SELECT auth.uid())::text IS DISTINCT FROM ${expected} THEN RAISE EXCEPTION 'publisher_mismatch' USING ERRCODE='42501'; END IF; END $node0_publisher$;\n`;}
     }
+    if(Object.hasOwn(submission,'noteId')) {
+      const noteId=uuid(submission.noteId),operationId=uuid(submission.operationId),revision=integer(submission.expectedNoteRevision,1,2147483647);
+      if(Object.hasOwn(submission,'consulta')&&typeof submission.consulta!=='boolean')fail('invalid_submission');
+      const scopeCheck=`DO $node0_note_scope$ BEGIN IF NOT EXISTS(SELECT 1 FROM public.notes WHERE id=${sqlText(noteId)}::uuid AND tenant_id=${tenant} AND owner_user_id=(SELECT auth.uid())) THEN RAISE EXCEPTION 'note_unavailable' USING ERRCODE='42501'; END IF; END $node0_note_scope$;`;
+      const descriptor=submission.consulta===true?'NULL::jsonb':`jsonb_build_object('payload',${sqlJson(payload)},'title',${sqlText(title)},'description',${sqlText(description)},'author_org_id',${org})`;
+      return actorCheck+scopeCheck+result(`public.publica_nota_al_mur(${sqlText(noteId)}::uuid,${sqlText(id)}::uuid,${sqlText(section)},${descriptor},${intSql(revision)},${sqlText(operationId)}::uuid)`);
+    }
+    if(['expectedNoteRevision','operationId','consulta'].some(key=>Object.hasOwn(submission,key)))fail('invalid_submission');
     // Authoritative columns and payload aliases both derive from the verified
     // SQL context. Canonical RLS, organisation signing and norms triggers run.
     const content=`${sqlJson(payload)}||jsonb_build_object('id',${sqlText(id)},'ownerUserId',(SELECT auth.uid()),'author_org_id',${org},'authorOrgId',${org},'sectionId',${sqlText(section)})`;
@@ -175,19 +183,20 @@ export function compilaOperacioNodeZero(action,body,tenantId,{xatRitmeReady=fals
   if(action==='loadSeccioPage'){
     const section=text(body.sectionId,32),limit=body.limit===undefined?50:integer(body.limit,1,50);
     if(!['mur','mercat','events','multimedia'].includes(section))fail('invalid_section');
-    let cursor='';
     if(body.cursor!=null){
       const c=body.cursor;
       if(!plain(c)||Object.keys(c).length!==2||!Object.hasOwn(c,'createdAt')||!Object.hasOwn(c,'id')||typeof c.createdAt!=='string'||c.createdAt.length>64||!/^\d{4}-\d{2}-\d{2}T[\d:.]+(?:Z|[+-]\d{2}:\d{2})$/.test(c.createdAt)||!Number.isFinite(Date.parse(c.createdAt)))fail('invalid_cursor');
-      cursor=` AND (created_at,id)<(${sqlText(c.createdAt)}::timestamptz,${sqlText(uuid(c.id))}::uuid)`;
+      uuid(c.id);
     }
-    // Respect the canonical member-only RLS; this action is never public CORS.
-    // Bound bytes as well as row count and return an explicit continuation.
-    return `WITH candidates AS MATERIALIZED (SELECT ${SUBMISSION_COLUMNS} FROM public.section_submissions WHERE tenant_id=${tenant} AND section_id=${sqlText(section)}${cursor} ORDER BY created_at DESC,id DESC LIMIT ${intSql(limit+1)}),
-      sized AS (SELECT candidates.*,row_number() OVER(ORDER BY created_at DESC,id DESC) AS n,sum(octet_length(row_to_json(candidates)::text)+2) OVER(ORDER BY created_at DESC,id DESC ROWS UNBOUNDED PRECEDING) AS bytes FROM candidates),
-      chosen AS (SELECT ${SUBMISSION_COLUMNS} FROM sized WHERE n<=${intSql(limit)} AND bytes<=1048576),
-      page AS (SELECT coalesce(jsonb_agg(to_jsonb(chosen) ORDER BY created_at DESC,id DESC),'[]'::jsonb) AS items FROM chosen)
-      SELECT jsonb_build_object('status',CASE WHEN EXISTS(SELECT 1 FROM candidates) AND NOT EXISTS(SELECT 1 FROM chosen) THEN 413 ELSE 200 END,'body',CASE WHEN EXISTS(SELECT 1 FROM candidates) AND NOT EXISTS(SELECT 1 FROM chosen) THEN jsonb_build_object('error','publication_too_large_to_read') ELSE jsonb_build_object('rows',page.items,'complete',(SELECT count(*) FROM candidates)=(SELECT count(*) FROM chosen),'nextCursor',CASE WHEN (SELECT count(*) FROM candidates)>(SELECT count(*) FROM chosen) THEN (SELECT jsonb_build_object('createdAt',created_at,'id',id) FROM chosen ORDER BY created_at,id LIMIT 1) ELSE NULL END) END) FROM page;`;
+    // Mateixa frontera que web: el servidor resol membres i DTO públic.
+    // Només comptem/publicitem files elegibles; les notes privades no entren ací.
+    const before=body.cursor ? `${sqlText(body.cursor.createdAt)}::timestamptz,${sqlText(uuid(body.cursor.id))}::uuid` : 'NULL::timestamptz,NULL::uuid';
+    return `WITH envelope AS MATERIALIZED (SELECT public.llig_mur_membres(${tenant},${sqlText(section)},${intSql(limit+1)},${before}) AS data),
+      candidates AS MATERIALIZED (SELECT j FROM envelope,jsonb_array_elements(data->'files') AS j),
+      sized AS (SELECT j,row_number() OVER(ORDER BY (j->>'created_at')::timestamptz DESC,j->>'id' DESC) AS n,sum(octet_length(j::text)+2) OVER(ORDER BY (j->>'created_at')::timestamptz DESC,j->>'id' DESC ROWS UNBOUNDED PRECEDING) AS bytes FROM candidates),
+      chosen AS (SELECT j FROM sized WHERE n<=${intSql(limit)} AND bytes<=1048576),
+      page AS (SELECT coalesce(jsonb_agg(j ORDER BY (j->>'created_at')::timestamptz DESC,j->>'id' DESC),'[]'::jsonb) AS items FROM chosen)
+      SELECT jsonb_build_object('status',CASE WHEN EXISTS(SELECT 1 FROM candidates) AND NOT EXISTS(SELECT 1 FROM chosen) THEN 413 ELSE 200 END,'body',CASE WHEN EXISTS(SELECT 1 FROM candidates) AND NOT EXISTS(SELECT 1 FROM chosen) THEN jsonb_build_object('error','publication_too_large_to_read') ELSE jsonb_build_object('lectura',(SELECT data->'lectura' FROM envelope),'rows',page.items,'complete',(SELECT count(*) FROM candidates)=(SELECT count(*) FROM chosen),'nextCursor',CASE WHEN (SELECT count(*) FROM candidates)>(SELECT count(*) FROM chosen) THEN (SELECT jsonb_build_object('createdAt',j->>'created_at','id',j->>'id') FROM chosen ORDER BY (j->>'created_at')::timestamptz,j->>'id' LIMIT 1) ELSE NULL END) END) FROM page;`;
   }
   if(action==='loadFils')return result(rows(`SELECT * FROM public.xat_fils_meus(${tenant})`));
   if(action==='carregaMembres')return result(rows(`SELECT * FROM public.membres_del_poble(${tenant},${body.cerca==null?'NULL':sqlText(text(body.cerca,200))},${intSql(body.limit===undefined?100:integer(body.limit,1,100))})`));

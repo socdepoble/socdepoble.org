@@ -52,9 +52,9 @@ const TENANT = '11111111-2222-3333-4444-555555555555';
 const NODE = { supabaseUrl: 'http://localhost:54321', supabaseAnonKey: 'sb_publishable_proves', tenantId: TENANT };
 const CONFIG_REMOT = { ...NODE, dataMode: 'remote' };
 const CONFIG_SEED = { ...NODE, dataMode: 'seed' };
-const TEXT_INABASTABLE = 'El servidor del poble no respon ara mateix. El contingut no s’ha pogut carregar.';
+const TEXT_INABASTABLE = 'El servidor de poble no respon ara mateix. El contingut no s’ha pogut carregar.';
 const TEXT_XARXA = 'Revisa la connexió i torna-ho a provar.';
-const TEXT_SERVIDOR = 'El servidor del poble ha tornat un error. Torna-ho a provar més tard.';
+const TEXT_SERVIDOR = 'El servidor de poble ha tornat un error. Torna-ho a provar més tard.';
 const MISSATGE_ADAPTADOR = 'Error de xarxa: No es pot connectar al servidor. Comprova la teua connexió a internet o que el backend local estiga en marxa.';
 
 /* Els errors tal com els llança l'adaptador (runtime.js), sense importar-lo. */

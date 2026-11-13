@@ -138,7 +138,7 @@ test('si la càrrega falla, l’avís de sempre; «Torna-ho a provar» torna a d
   await act(async () => { boto.click(); });
   const avis = await screen.findByRole('alert');
   expect(avis.textContent).toContain("No s'ha pogut carregar el Mur");
-  expect(avis.textContent).toContain('El servidor del poble ha tornat un error.');
+  expect(avis.textContent).toContain('El servidor de poble ha tornat un error.');
   expect(avis.textContent).not.toMatch(/Supabase|503|upstream/);
   // Les targetes que ja hi eren no se'n van.
   expect(targetes()).toHaveLength(2);

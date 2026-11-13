@@ -268,6 +268,13 @@ export function creaContingutLocal(e) {
       return { items: rows, cursor: rows.length ? creaCursorProjeccionsCataleg(rows.at(-1), scope) : null };
     },
     async appendSectionSubmissionNetworkOnly(submission) {
+      /* Este node no declara revocacioPublicacions ni una transacció comuna
+         entre Notes persistents i el Mur en memòria. Un descriptor atòmic
+         mai es degrada a l’upsert legacy: tampoc una consulta pot escriure. */
+      if (submission && (typeof submission === 'object' || typeof submission === 'function')
+          && ['noteId', 'operationId', 'expectedNoteRevision', 'consulta'].some(key => key in submission)) {
+        throw Object.assign(new Error('Este node local no oferix publicació atòmica de notes.'), { code: 'no-disponible' });
+      }
       const ownerUserId = e.usuari()?.id;
       if (!ownerUserId) throw new Error('Cal iniciar sessió per publicar.');
       const sectionId = String(submission?.sectionId || '').trim();

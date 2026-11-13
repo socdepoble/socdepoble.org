@@ -100,7 +100,8 @@ describe('R21 · honestedat dels textos amb la política 2611112005', () => {
     expect(typeof contacte, idioma).toBe('string');
     expect(contacte, idioma).not.toMatch(FALSES[idioma].registrada);
     /* Amb la versió filtrada el contacte ja no ixiria enlloc: el text s'haurà de reescriure. */
-    expect(QUALSEVOL[idioma].test(contacte), idioma).toBe(!MUR_PUBLIC_FILTRAT);
+    expect(QUALSEVOL[idioma].test(contacte), idioma).toBe(false);
+    expect(contacte,idioma).toMatch({ca:/membres/,es:/miembros/,en:/members/,eu:/kideek/,gl:/membros/}[idioma]);
     if (idioma !== 'ca') expect(contacte, idioma).not.toBe(CA['editor.ambit.contacteVisible']);
   });
 
@@ -149,7 +150,11 @@ describe('D1 Opció A · paritat de les claus que diuen qui llig el Mur', () => 
         expect(dic[clau], `${idioma}/${clau}`).toMatch(QUALSEVOL[idioma]);
       }
     }
-    expect(CA['section.notes.visibilitat.versioPublica']).toContain('Mai hi ix el teu identificador intern, el teu contacte privat ni la ubicació exacta de les fotos.');
+    // La projecció anònima i la lectura de membres es descriuen per separat.
+    expect(CA['section.notes.visibilitat.versioPublica']).toContain('Les persones membres de poble poden llegir la publicació completa.');
+    expect(CA['section.notes.visibilitat.versioPublica']).toContain('La versió anònima mai mostra identificadors interns, contacte privat ni ubicació de les fotos.');
+    for (const [idioma,dic] of Object.entries(DICCIONARIS)) expect(dic['section.notes.visibilitat.versioPublica'],idioma).toMatch({ca:/membres/,es:/miembros/,en:/members/,eu:/kideek/,gl:/membros/}[idioma]);
+
   });
 });
 
@@ -178,6 +183,14 @@ describe('D1 Opció A · prova d’acoblament: el text només promet el que el c
   test('MUR_PUBLIC_FILTRAT només és true si el catàleg revoca la fila crua a anon i crea llig_mur_public', () => {
     const estat = { bandera: MUR_PUBLIC_FILTRAT, cataleg: murPublicDelCataleg().filtrat };
     expect(estat, 'MUR_PUBLIC_FILTRAT sense revocació ni RPC al catàleg de migracions').not.toEqual({ bandera: true, cataleg: false });
+  });
+
+  /* F03-UI (Onada R21) · 2611121430_mur_foraster_projeccio_publica_opcio_a ja
+     és al catàleg: revoca la taula i les columnes a anon i crea la RPC. La
+     bandera s'encén en el mateix lliurament. */
+  test('F03-UI · amb 2611121430 al catàleg, la versió pública és filtrada i la bandera ho diu', () => {
+    expect(murPublicDelCataleg()).toEqual({ filaCrua: false, projeccio: true, filtrat: true });
+    expect(MUR_PUBLIC_FILTRAT).toBe(true);
   });
 
   test.each(Object.keys(DICCIONARIS))('el selector només diu què no hi ix amb la versió filtrada (%s)', (idioma) => {

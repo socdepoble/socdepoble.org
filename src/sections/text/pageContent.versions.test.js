@@ -17,8 +17,14 @@
    Les invariants d'honestedat de cada entrega es conserven: només ha canviat
    l'estructura (els h4 de categoria i els <li> → h4 amb prefix + <p>) i el
    número dels títols. */
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
+import { MARCA_FALLBACK, instalaFallbackDeBessones } from '../../config/fallbackBessones.js';
+import { LLIBRES_ARBRES_MONUMENTALS } from '../../data/patrimoni/llibresArbresMonumentals.js';
+import { VERSIO_CLIENT_NATIU } from '../../data/contracte.js';
+import { MUR_PUBLIC_FILTRAT } from '../notes/visibilitatNota.js';
+import { caraDAutor, caresDelFil } from '../xat/conversa.js';
+import { ENTRADES_AMB_ESTAT_EN_MEMORIA, FINESTRA_ANTI_BUCLE_MS, instalLaRecuperacioChunkDeploy, recuperaErrorChunkDeploy } from '../../pwa/recuperacioChunkDeploy.js';
 import { CANALS_DE_BOTIGA } from '../../config/canalsDeBotiga.js';
 import { VERSIO_FORMAT, exportaMunicipiOpenData } from '../../data/exportaMunicipiOpenData.js';
 import { webcrypto } from 'node:crypto';
@@ -133,6 +139,11 @@ const TITOL_FITA_R21 = '12 de novembre de 2026 · Onada R21 · La versió 1.2.0,
 const fitaR21 = blocDe(TITOL_FITA_R21);
 const INICIS_R21 = { ca: '12 de novembre de 2026 · Onada R21', es: '12 de noviembre de 2026 · Oleada R21', en: '12 November 2026 · Wave R21',
   eu: '2026ko azaroaren 12a · R21 olatua', gl: '12 de novembro de 2026 · Onda R21' };
+/* Onada R21 (COMMIT 5) · La fita R21 C5, la del build 5 i el connector 1.1.14, obri /versions, davant de la fita R21. */
+const TITOL_FITA_R21_C5 = '13 de novembre de 2026 · Onada R21 (COMMIT 5) · El Mur per als membres, el xat amb imatges i la recuperació després de cada actualització';
+const fitaR21C5 = blocDe(TITOL_FITA_R21_C5);
+const INICIS_R21_C5 = { ca: '13 de novembre de 2026 · Onada R21 (COMMIT 5)', es: '13 de noviembre de 2026 · Oleada R21 (COMMIT 5)',
+  en: '13 November 2026 · Wave R21 (COMMIT 5)', eu: '2026ko azaroaren 13a · R21 olatua (COMMIT 5)', gl: '13 de novembro de 2026 · Onda R21 (COMMIT 5)' };
 
 /* Onada R20 (Llei 0) · La crònica R19 no ven les làmines generades com a fotos: diu la quarantena reversible de les
    67 recreacions sintètiques, els 24 estudis morfològics corregits i el mòdul diferit de 0 B, en les cinc llengües. */
@@ -199,7 +210,9 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
   test('els títols de les entregues, amb numeració pròpia i de la més nova a la més vella', () => {
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
     expect(titols).toEqual([
-      // Onada R21 · La fita R21 obri la pàgina: diu la versió 1.2.0, però no com a número vX.Y.Z del títol.
+      // Onada R21 (COMMIT 5) · La fita R21 C5 obri la pàgina, sense cap número vX.Y.Z al títol.
+      TITOL_FITA_R21_C5,
+      // Onada R21 · La fita R21, darrere de la C5: diu la versió 1.2.0, però no com a número vX.Y.Z del títol.
       TITOL_FITA_R21,
       // Onada R20 · La crònica de l'Onada R20, davant de R19, sense número vX.Y.Z al títol.
       TITOL_FITA_R20,
@@ -237,7 +250,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
     const entregues = html.split(/(?=<h3>)/).filter((b) => b.startsWith('<h3>') && !b.startsWith('<h3>Crònica') && !/^<h3>[^<]* · v1\.2\.0 · suplement/.test(b));
     // P0-62, encàrrec R13+R14, R15b, R16b, R18, R19, R20 i R21 · Set entregues, la fita de l'App Store, la crònica R13+R14,
     // les fites R15 i R16, la crònica R17+R18, la crònica R19, la crònica R20 i la fita R21, amb el mateix format.
-    expect(entregues).toHaveLength(15);
+    // R21 (COMMIT 5) · I la fita R21 C5: setze en total.
+    expect(entregues).toHaveLength(16);
     for (const entrega of entregues) {
       const titol = entrega.match(/^<h3>([^<]+)<\/h3>/)[1];
       expect(entrega, titol).toMatch(/^<h3>[^<]+<\/h3>\n {6}<p>/);
@@ -327,7 +341,8 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
   });
 
   /* Onada R21 · L'entrada de la 1.1.0 diu el build d'aquell dia, el 2: és història i es fixa literal (abans es derivava
-     del versionCode, i pujar el build l'haguera reescrita). Les apps d'ara, 1.2.0 amb el build 4, les fixa la fita R21. */
+     del versionCode, i pujar el build l'haguera reescrita). Les apps d'ara, 1.2.0 amb el build 4, les fixa la fita R21.
+     Onada R21 (COMMIT 5) · El build passa al 5 (la fita R21 C5), sense tocar la versió 1.2.0. */
   test('la versió de les apps d’ara és la 1.2.0, unificada amb package.json, i l’entrada conserva el build d’aquell dia, el 2', () => {
     const gradle = llegix('android/app/build.gradle');
     const pbx = llegix('ios/App/App.xcodeproj/project.pbxproj');
@@ -336,7 +351,7 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
     expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.2.0']));
     const build = gradle.match(/versionCode (\d+)/)[1];
     expect(new Set([...pbx.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)].map((m) => m[1]))).toEqual(new Set([build]));
-    expect(build).toBe('4');
+    expect(build).toBe('5');
     expect(pla).toContain('el número de build de les apps, el 2, no canvia');
   });
 
@@ -468,7 +483,8 @@ describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de nov
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
     // P0-62, encàrrec R13+R14, R15b, R16b, R18 i R19 · Sis posicions més avall: les cròniques R19 i R17+R18, les fites R16 i R15,
     // la crònica R13+R14 i la fita de l'App Store obrin la pàgina. R20 i R21 · Les cròniques R20 i R21 també (R21, una posició més).
-    expect(titols[11]).toMatch(/^1 de novembre de 2026 · v/);
+    // R21 (COMMIT 5) · La fita R21 C5, una posició més.
+    expect(titols[12]).toMatch(/^1 de novembre de 2026 · v/);
     expect(entrega261101).toMatch(/^<h3>1 de novembre de 2026 · v1\.0\.3 \(build pendent de desplegar\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
     expect(titolsH4(entrega261101)).toEqual([
       'Novetat · Connector a WordPress.org (wordpress.org/plugins/socdepoble)', 'Novetat · Alertes municipals al Mur',
@@ -594,8 +610,10 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
    l'Onada 6): ara la segona, amb el format de les altres, i cap mentida bella. Res no és desplegat ni
    publicat, les migracions noves no estan aplicades i el xifratge continua apagat: el text ho diu, i
    cada peça que es pot derivar del codi se'n deriva. */
+/* Onada R21 (COMMIT 5) · Amb R21.1 v1+v2, revocacioPublicacions és al contracte i l'adaptador local no l'oferix: entra a
+   l'inventari d'ara (com a pageContent.fediversity.test.js), i el rebut de l'1 de novembre continua sense nomenar-la. */
 test('12 de novembre · l’inventari local actual no reescriu el rebut històric de l’1 de novembre', () => {
-  expect(CAPACITATS_NO_DECLARADES).toEqual(['administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+  expect(CAPACITATS_NO_DECLARADES).toEqual(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
   expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda/);
   expect(entregaAssalt).not.toContain('revocacioPublicacions');
 });
@@ -607,7 +625,8 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
     // P0-62, encàrrec R13+R14, R15b, R16b, R18 i R19 · Sis posicions més avall: les cròniques R19 i R17+R18, les fites R16 i R15,
     // la crònica R13+R14 i la fita de l'App Store obrin la pàgina. R20 i R21 · Les cròniques R20 i R21 també (R21, una posició més).
-    expect(titols[10]).toMatch(/^1 de novembre de 2026, tarda · /);
+    // R21 (COMMIT 5) · La fita R21 C5, una posició més.
+    expect(titols[11]).toMatch(/^1 de novembre de 2026, tarda · /);
     expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda · v1\.0\.4 \(build pendent de desplegar\) · Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>\n {6}<p>/);
     expect(titolsH4(entregaAssalt).map((t) => t.split(' · ')[0])).toEqual([
       ...Array(6).fill('Novetat'), ...Array(12).fill('Millora'), ...Array(3).fill('Correcció')
@@ -662,9 +681,11 @@ describe('P0-62 · /versions s’obri amb la fita de l’App Store', () => {
     // R18, R16b, R15b i encàrrec R13+R14 · La crònica R17+R18 i les fites R16 i R15 van primer, la crònica de les Onades R13 i R14
     // després i la fita, tot seguit.
     // Onada R21 · La fita R21 va davant de tot, i la resta, en el mateix ordre.
+    // Onada R21 (COMMIT 5) · La fita R21 C5 va davant de la R21.
     const cos = html.trimStart();
-    expect(cos.startsWith(`<h3>${TITOL_FITA_R21}</h3>`)).toBe(true);
-    const r21 = fitaR21.length;
+    expect(cos.startsWith(`<h3>${TITOL_FITA_R21_C5}</h3>`)).toBe(true);
+    expect(cos.slice(fitaR21C5.length).startsWith(`<h3>${TITOL_FITA_R21}</h3>`)).toBe(true);
+    const r21 = fitaR21C5.length + fitaR21.length;
     expect(cos.slice(r21).startsWith(`<h3>${TITOL_FITA_R20}</h3>`)).toBe(true);
     expect(cos.slice(r21 + fitaR20.length).startsWith(`<h3>${TITOL_FITA_R19}</h3>`)).toBe(true);
     expect(cos.slice(r21 + fitaR20.length + fitaR19.length).startsWith(`<h3>${TITOL_FITA_R18}</h3>`)).toBe(true);
@@ -701,16 +722,17 @@ describe('P0-62 · /versions s’obri amb la fita de l’App Store', () => {
       const pagina = localitzaPagina(PAGE_COPY.versions, llengua);
       const cos = pagina.html.trimStart();
       // Onada R21 · La fita R21 obri la pàgina i la resta baixa una posició.
-      expect([llengua, cos.startsWith(`<h3>${INICIS_R21[llengua]}`)]).toEqual([llengua, true]);
+      // Onada R21 (COMMIT 5) · La fita R21 C5 obri la pàgina, davant de la R21, i la resta baixa una posició més.
+      expect([llengua, cos.startsWith(`<h3>${INICIS_R21_C5[llengua]}`)]).toEqual([llengua, true]);
       const h3 = [...cos.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
-      expect([llengua, h3[1].startsWith(INICIS_R20[llengua]), h3[2].startsWith(INICIS_R19[llengua]), h3[3].startsWith(r18), h3[4].startsWith(r16), h3[5].startsWith(r15), h3[6].startsWith(cronica), h3[7].startsWith(fita), h3[8].startsWith(seguent)]).toEqual([llengua, true, true, true, true, true, true, true, true]);
+      expect([llengua, h3[1].startsWith(INICIS_R21[llengua]), h3[2].startsWith(INICIS_R20[llengua]), h3[3].startsWith(INICIS_R19[llengua]), h3[4].startsWith(r18), h3[5].startsWith(r16), h3[6].startsWith(r15), h3[7].startsWith(cronica), h3[8].startsWith(fita), h3[9].startsWith(seguent)]).toEqual([llengua, true, true, true, true, true, true, true, true, true]);
       const hrefs = (des, fins) => [...cos.slice(des, fins).matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
-      expect([llengua, hrefs(cos.indexOf(h3[7]), cos.indexOf(h3[8]))]).toEqual([llengua, [APP_STORE]]);
+      expect([llengua, hrefs(cos.indexOf(h3[8]), cos.indexOf(h3[9]))]).toEqual([llengua, [APP_STORE]]);
+      expect([llengua, hrefs(cos.indexOf(h3[7]), cos.indexOf(h3[8]))]).toEqual([llengua, ['/page/receptes']]);
       expect([llengua, hrefs(cos.indexOf(h3[6]), cos.indexOf(h3[7]))]).toEqual([llengua, ['/page/receptes']]);
-      expect([llengua, hrefs(cos.indexOf(h3[5]), cos.indexOf(h3[6]))]).toEqual([llengua, ['/page/receptes']]);
-      expect([llengua, hrefs(cos.indexOf(h3[4]), cos.indexOf(h3[5]))]).toEqual([llengua, ['/control', '/page/la-iaia-sabuda', '/page/receptes']]);
-      expect([llengua, hrefs(cos.indexOf(h3[3]), cos.indexOf(h3[4]))]).toEqual([llengua, ['/control', '/page/arbres-monumentals', '/page/avisador', '/page/receptes', '/disseny']]);
-      expect([llengua, cos.indexOf('<div lang="ca">') === -1 || cos.indexOf('<div lang="ca">') > cos.indexOf(h3[8])]).toEqual([llengua, true]);
+      expect([llengua, hrefs(cos.indexOf(h3[5]), cos.indexOf(h3[6]))]).toEqual([llengua, ['/control', '/page/la-iaia-sabuda', '/page/receptes']]);
+      expect([llengua, hrefs(cos.indexOf(h3[4]), cos.indexOf(h3[5]))]).toEqual([llengua, ['/control', '/page/arbres-monumentals', '/page/avisador', '/page/receptes', '/disseny']]);
+      expect([llengua, cos.indexOf('<div lang="ca">') === -1 || cos.indexOf('<div lang="ca">') > cos.indexOf(h3[9])]).toEqual([llengua, true]);
     }
   });
 });
@@ -735,13 +757,14 @@ describe('Encàrrec R13+R14 · /versions s’obri amb la crònica de les Onades 
   };
 
   test('és la quarta entrada, darrere de la crònica R17+R18 i de les fites R16 i R15, amb el format de les entregues i tres apartats amb el prefix de novetat de cada llengua', () => {
-    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_R21}</h3>`)).toBe(true);
-    expect(html.trimStart().slice(fitaR21.length).startsWith(`<h3>${TITOL_FITA_R20}</h3>`)).toBe(true);
-    expect(html.trimStart().slice(fitaR21.length + fitaR20.length).startsWith(`<h3>${TITOL_FITA_R19}</h3>`)).toBe(true);
-    expect(html.trimStart().slice(fitaR21.length + fitaR20.length + fitaR19.length).startsWith(`<h3>${TITOL_FITA_R18}</h3>`)).toBe(true);
-    expect(html.trimStart().slice(fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length).startsWith(`<h3>${TITOL_FITA_R16}</h3>`)).toBe(true);
-    expect(html.trimStart().slice(fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
-    expect(html.trimStart().slice(fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length + fitaR15.length).startsWith(`<h3>${TITOL_FITA_R13_R14}</h3>`)).toBe(true);
+    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_R21_C5}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length).startsWith(`<h3>${TITOL_FITA_R21}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length + fitaR21.length).startsWith(`<h3>${TITOL_FITA_R20}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length + fitaR21.length + fitaR20.length).startsWith(`<h3>${TITOL_FITA_R19}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length).startsWith(`<h3>${TITOL_FITA_R18}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length).startsWith(`<h3>${TITOL_FITA_R16}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length + fitaR15.length).startsWith(`<h3>${TITOL_FITA_R13_R14}</h3>`)).toBe(true);
     expect(titolsH4(fitaR13R14)).toEqual(['Novetat · Administració del sistema', 'Novetat · Segon Brain', 'Novetat · Notes i accés']);
     expect(TITOL_FITA_R13_R14).not.toMatch(/ · v\d+\.\d+\.\d+/);
     const PREFIX = { ca: 'Novetat', es: 'Novedad', en: 'New', eu: 'Berritasuna', gl: 'Novidade' };
@@ -831,7 +854,7 @@ describe('R15b · /versions porta la fita R15, darrere de la fita R16', () => {
   };
 
   test('és la tercera entrada, darrere de la crònica R17+R18 i de la fita R16, amb el format de les entregues i tres novetats en cada llengua', () => {
-    expect(html.trimStart().slice(fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
     expect(titolsH4(fitaR15)).toEqual(['Novetat · El Workspace dels catàlegs', 'Novetat · Al·lèrgens de les receptes', 'Novetat · Usuaris, dispositius i Nodrir la IAIA']);
     expect(TITOL_FITA_R15).not.toMatch(/ · v\d+\.\d+\.\d+/);
     for (const llengua of LLENGUES) {
@@ -935,8 +958,8 @@ describe('R16b · /versions s’obri amb la fita R16, la de la versió 1.1.12', 
   const apartatEn = (llengua, index) => apartats(blocEn(llengua))[index];
 
   test('és la quarta entrada, darrere de les cròniques R20, R19 i R17+R18 i davant de la fita R15, amb el format de les entregues i quatre novetats en cada llengua', () => {
-    expect(html.trimStart().slice(fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length).startsWith(`<h3>${TITOL_FITA_R16}</h3>`)).toBe(true);
-    expect(html.trimStart().slice(fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length).startsWith(`<h3>${TITOL_FITA_R16}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
     expect(titolsH4(fitaR16)).toEqual([
       'Novetat · El Panell de Control, en tres espais', 'Novetat · La IAIA Sabuda', 'Novetat · «Què dinem?» al Mur',
       'Novetat · La subnavegació de Pobles i Gent'
@@ -1305,7 +1328,10 @@ describe('R20 · /versions conserva la crònica de l’Onada R20 en les cinc lle
       const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
       const bloc = blocEn(llengua);
       const inici = cos.indexOf(`<h3>${INICIS_R20[llengua]}`);
-      expect([llengua, cos.startsWith(`<h3>${INICIS_R21[llengua]}`), cos.startsWith(`<h3>${INICIS_R19[llengua]}`, inici + bloc.length)]).toEqual([llengua, true, true]);
+      // Onada R21 (COMMIT 5) · La C5 obri la pàgina; la R21 la seguix i acaba just on comença la R20.
+      const iniciR21 = cos.indexOf(`<h3>${INICIS_R21[llengua]}`);
+      const fiR21 = cos.indexOf('<h3>', iniciR21 + 1);
+      expect([llengua, cos.startsWith(`<h3>${INICIS_R21_C5[llengua]}`), iniciR21 > 0, fiR21 === inici, cos.startsWith(`<h3>${INICIS_R19[llengua]}`, inici + bloc.length)]).toEqual([llengua, true, true, true, true]);
       expect([llengua, bloc]).toEqual([llengua, expect.stringMatching(/^<h3>[^<]+<\/h3>\n {6}<p>/)]);
       expect([llengua, titolsH4(bloc).map((t) => t.split(' · ')[0])]).toEqual([llengua, PREFIXOS[llengua]]);
       expect([llengua, bloc.endsWith('</p>\n\n      ')]).toEqual([llengua, true]);
@@ -1352,7 +1378,7 @@ describe('R20 · /versions conserva la crònica de l’Onada R20 en les cinc lle
    canviant. Del repositori només es lligen els fitxers que ja no canvien (les migracions segellades). I cap promesa
    per damunt del que hi ha: les tres migracions noves no s'han aplicat al servidor, la política 2.6 no s'ha publicat,
    el kit R21.1 no hi és i la capçalera diu la versió del connector publicada a WordPress.org, no la del repositori. */
-describe('R21 · /versions s’obri amb la fita R21, la de la versió 1.2.0, en les cinc llengües', () => {
+describe('R21 · /versions porta la fita R21, la de la versió 1.2.0, darrere de la fita R21 C5, en les cinc llengües', () => {
   const LLENGUES = ['ca', 'es', 'en', 'eu', 'gl'];
   const PREFIXOS = {
     ca: ['Novetat', 'Novetat', 'Novetat', 'Millora', 'Correcció'],
@@ -1380,19 +1406,24 @@ describe('R21 · /versions s’obri amb la fita R21, la de la versió 1.2.0, en 
   const PROPI_R21 = { ca: '«(Tu)»', es: '«(Tú)»', en: '“(You)”', eu: '«(Zu)»', gl: '«(Ti)»' };
   const RETIRAT_R21 = { ca: '«Pregunta a la IAIA»', es: '«Pregunta a la IAIA»', en: '“Ask IAIA”', eu: '«Galdetu IAIAri»', gl: '«Pregunta á IAIA»' };
   const NOU_CLAUS = { ca: 'nou claus', es: 'nueve claves', en: 'nine keys', eu: 'bederatzi gakoak', gl: 'nove claves' };
+  /* Onada R21 (COMMIT 5) · La fita R21 ja no és la primera: va just darrere de la fita R21 C5 i es busca pel seu
+     títol en cada llengua. */
   const blocEn = (llengua) => {
     const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
-    expect([llengua, cos.startsWith(`<h3>${INICIS_R21[llengua]}`)]).toEqual([llengua, true]);
-    return cos.slice(0, cos.indexOf('<h3>', 1));
+    const inici = cos.indexOf(`<h3>${INICIS_R21[llengua]}`);
+    expect([llengua, inici > 0]).toEqual([llengua, true]);
+    return cos.slice(inici, cos.indexOf('<h3>', inici + 1));
   };
 
-  test('obri la pàgina davant de R20, sense número vX.Y.Z, amb tres paràgrafs d’obertura, cinc apartats, rutes vives, densitat de negretes i regla 2.3.10', () => {
+  test('va darrere de la fita R21 C5 i davant de R20, sense número vX.Y.Z, amb tres paràgrafs d’obertura, cinc apartats, rutes vives, densitat de negretes i regla 2.3.10', () => {
     expect(TITOL_FITA_R21).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(fitaR21.startsWith(`<h3>${TITOL_FITA_R21}</h3>`)).toBe(true);
     for (const llengua of LLENGUES) {
       const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
       const bloc = blocEn(llengua);
-      expect([llengua, cos.startsWith(`<h3>${INICIS_R20[llengua]}`, bloc.length)]).toEqual([llengua, true]);
+      const inici = cos.indexOf(bloc);
+      const blocC5 = cos.slice(0, cos.indexOf('<h3>', 1));
+      expect([llengua, cos.startsWith(`<h3>${INICIS_R21_C5[llengua]}`), inici === blocC5.length, cos.startsWith(`<h3>${INICIS_R20[llengua]}`, inici + bloc.length)]).toEqual([llengua, true, true, true]);
       expect([llengua, bloc]).toEqual([llengua, expect.stringMatching(/^<h3>[^<]+<\/h3>\n {6}<p>[\s\S]*?<\/p>\n {6}<p>[\s\S]*?<\/p>\n {6}<p>[\s\S]*?<\/p>\n {6}<h4>/)]);
       expect([llengua, titolsH4(bloc).map((t) => t.split(' · ')[0])]).toEqual([llengua, PREFIXOS[llengua]]);
       expect([llengua, apartats(bloc).length]).toEqual([llengua, 5]);
@@ -1517,6 +1548,394 @@ describe('R21 · /versions s’obri amb la fita R21, la de la versió 1.2.0, en 
       expect([llengua, titol.startsWith(`${PREFIXOS[llengua][0]} · `)]).toEqual([llengua, true]);
       expect([llengua, pla.includes(PROPI_R21[llengua]), pla.includes(RETIRAT_R21[llengua]), pla.includes('IAIA MarIA')]).toEqual([llengua, true, true, true]);
       expect([llengua, [...cos.matchAll(/href="([^"]+)"/g)].map((m) => m[1])]).toEqual([llengua, ['/xat']]);
+    }
+  });
+});
+
+/* Onada R21 (COMMIT 5; v1.2.0 · build 5 · WP 1.1.14) · La fita R21 C5 obri /versions en les cinc llengües, davant de la
+   fita R21: dos paràgrafs d'obertura (la versió i el build; els kits que reunix i el que encara no és al servidor) i sis
+   apartats, de Novetat a Correcció.
+   És història del 13-11-2026 i es fixa literal, com les fites R16 a R21: la versió, el build, el connector del
+   repositori, els kits, les migracions i els noms de cada llengua no es deriven del codi d'ara, que continuarà
+   canviant. Del repositori es lligen només els fets que el text no pot contradir: les migracions segellades, la bandera
+   del Mur filtrat, la porta de la co-publicació i el nom del menú de la negreta de cada diccionari. Cap promesa per
+   damunt del que hi ha: cap migració s'ha aplicat al servidor, la co-publicació registrada continua apagada, cap tasca
+   programada no corre, i la capçalera diu la versió del connector publicada a WordPress.org, no la del repositori.
+   Marca «de poble»: cap «del poble» (ni «del pueblo» ni «do pobo»), que només val per a un poble concret.
+   Onada R22 (Gauntlet 5 sobre el COMMIT 5) · Quatre guardes més, cadascuna lligada al codi que la justifica i escrita
+   perquè obligue a tornar a escriure el text si el codi canvia:
+   · honestedat-03 · El text diu sencera la dependència del Mur, el Mercat, el Calendari i Multimèdia (loadMur i
+     loadMultimedia) de les migracions 2611121430 i 2611122200, no com una part del Mur. Què fan sense elles ho diu la
+     segona ronda (dades-01, més avall): lligPublicacions baixa a la lectura d'abans i les quatre es lligen com abans.
+   · honestedat-04 · La recuperació dels trossos vells és de la web pròpia (main.jsx): ni el paquet del connector
+     (embed.jsx, host.js) ni l'app nativa (motiuPerNoRegistrar torna 'nativa') no la porten. Mentre el worker no espere
+     el seu statechange (pwa-03), el text no diu que el service worker es posa al dia.
+   · honestedat-07 · Arbres i receptes continuen en dos espais (dos CatalegWorkspace amb id propi) i la graella de
+     catàlegs municipals en té un (LLIBRES_ARBRES_MONUMENTALS): cap espai «unificat» ni cap prestatgeria «multipoble».
+   · honestedat-09 · La correcció dels 404 es comprova pel comportament de fallbackBessones.js, no per un nom que ja hi
+     era al COMMIT 4.
+   Onada R22, segona ronda (carril text2) · Amb les correccions dels altres carrils integrades, quatre frases ja no eren
+   certes i s'han tornat a escriure, cadascuna amb la guarda que la lliga al codi (simètrica: si el codi canvia, la
+   frase ha de canviar):
+   · dades-01 · lligPublicacions baixa a la lectura d'abans (lligPublicacionsAnteriors, section_submissions) davant
+     d'un 404 PGRST202: sense cap migració, les quatre seccions es lligen com abans, sense la lectura mínima. Sense
+     2611122200, el Bloc de Notes no publica res al Mur i ho diu (CODI_ESQUEMA_ABSENT → motiuPublicacioNoFeta). La
+     guarda d'abans buscava `async function lligPublicacions` sense el parèntesi i trobava lligPublicacionsAnteriors.
+   · dades-06 i honestedat-06 · La còpia pública porta el bloc EXIF que la casella de l'editor ha deixat conservar.
+   · sql-03, notes-01 i honestedat-02 · Bloquejar i Denunciar des d'una publicació guarden una fila opaca o un autor
+     null per a qui no és membre del poble (private.mur_lector_ric).
+   · xat-01 i xat-09 · El visor es pinta amb un portal per damunt de les barres, i les cares dels grups prenen la foto
+     del padró del fil o, sense, les inicials.
+   · pwa-01 · La recuperació, provada pel comportament: com a molt una recàrrega per build retirat i cap després d'una
+     entrada de la persona; l'avís de la secció és el de RouteErrorBoundary. */
+describe('R21 C5 · /versions s’obri amb la fita R21 C5, la del build 5, en les cinc llengües', () => {
+  const LLENGUES = ['ca', 'es', 'en', 'eu', 'gl'];
+  const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+  const PREFIXOS = {
+    ca: ['Novetat', 'Novetat', 'Novetat', 'Novetat', 'Millora', 'Correcció'],
+    es: ['Novedad', 'Novedad', 'Novedad', 'Novedad', 'Mejora', 'Corrección'],
+    en: ['New', 'New', 'New', 'New', 'Improvement', 'Fix'],
+    eu: ['Berritasuna', 'Berritasuna', 'Berritasuna', 'Berritasuna', 'Hobekuntza', 'Zuzenketa'],
+    gl: ['Novidade', 'Novidade', 'Novidade', 'Novidade', 'Mellora', 'Corrección']
+  };
+  const VERSIO_C5 = '1.2.0';
+  const BUILD_C5 = 5;
+  const CONNECTOR_C5 = '1.1.14';
+  const FRASE_BUILD_C5 = {
+    ca: 'número de build 5', es: 'número de build 5', en: 'build number 5', eu: 'build zenbakia 5 da', gl: 'número de build 5'
+  };
+  const KITS_C5 = ['R21.1', 'R21.7', 'R21.10', 'R21.9b'];
+  const MIGRACIONS_MUR_C5 = ['2611121430', '2611121850', '2611122200'];
+  const MIGRACIO_BETA_C5 = '20261113003000';
+  /* Les frases que diuen que res d'açò no és al servidor ni encés, literals de cada llengua. */
+  const SENSE_APLICAR_C5 = {
+    ca: ['Les migracions noves encara no s’han aplicat al servidor', 'la co-publicació registrada entre entitats continua apagada', 'que encara no s’han aplicat al servidor', 'encara no s’ha aplicat', 'sense cap tasca programada en marxa'],
+    es: ['Las migraciones nuevas todavía no se han aplicado en el servidor', 'la copublicación registrada entre entidades sigue apagada', 'que todavía no se han aplicado en el servidor', 'todavía no se ha aplicado', 'sin ninguna tarea programada en marcha'],
+    en: ['The new migrations have not been applied on the server yet', 'registered co-publishing between entities stays switched off', 'which have not been applied on the server yet', 'it has not been applied yet', 'with no scheduled task running'],
+    eu: ['Migrazio berriak oraindik ez dira aplikatu zerbitzarian', 'erakundeen arteko ko-argitalpen erregistratua itzalita dago', 'horiek oraindik ez dira aplikatu zerbitzarian', 'oraindik ez da aplikatu', 'programatutako atazarik martxan jarri gabe'],
+    gl: ['As migracións novas aínda non se aplicaron no servidor', 'a copublicación rexistrada entre entidades segue apagada', 'que aínda non se aplicaron no servidor', 'aínda non se aplicou', 'sen ningunha tarefa programada en marcha']
+  };
+  const COMETES = { ca: ['«', '»'], es: ['«', '»'], en: ['“', '”'], eu: ['«', '»'], gl: ['«', '»'] };
+  /* Les frases de la dependència del Mur (dades-01) i de les metadades de les còpies públiques (dades-06,
+     honestedat-06) viuen amb les seues proves de comportament a src/data/supabase/versionsC5.comportament.test.js. */
+  /* Onada R22, segona ronda (sql-03, notes-01, honestedat-02) · Denunciar i Bloquejar, sense revelar l'autor a qui no
+     és membre d'este poble. */
+  const MODERACIO_C5 = {
+    ca: 'Denunciar i Bloquejar des d’una publicació no revelen l’autor a qui no és membre d’este poble',
+    es: 'Denunciar y Bloquear desde una publicación no revelan el autor a quien no es miembro de este pueblo',
+    en: 'Report and Block from a post do not reveal the author to people who are not members of this village',
+    eu: 'Argitalpen batetik, Salatu eta Blokeatu aukerek ez diote egilea erakusten herri honetako kide ez denari',
+    gl: 'Denunciar e Bloquear desde unha publicación non revelan o autor a quen non é membro deste pobo'
+  };
+  /* Onada R22, segona ronda (xat-01, xat-09) · El visor per damunt de les barres, i la cara amb foto o inicials. */
+  const XAT_C5 = {
+    ca: ['visor de galeria per damunt de les barres i del menú lateral, amb zoom i miniatures', 'cara de qui escriu, amb la foto que porta la conversa o, si no n’hi ha, amb les inicials'],
+    es: ['visor de galería por encima de las barras y del menú lateral, con zoom y miniaturas', 'cara de quien escribe, con la foto que lleva la conversación o, si no la hay, con las iniciales'],
+    en: ['gallery viewer above the bars and the side menu, with zoom and thumbnails', 'face of the writer, with the photo the conversation carries or, if there is none, their initials'],
+    eu: ['galeria-ikustailean irekitzen da, barren eta alboko menuaren gainean', 'idazten duenaren aurpegia erakusten dute, elkarrizketak daraman argazkiarekin edo, argazkirik ez badago, inizialekin'],
+    gl: ['visor de galería por riba das barras e do menú lateral, con zoom e miniaturas', 'cara de quen escribe, coa foto que leva a conversa ou, se non a hai, coas iniciais']
+  };
+  /* Onada R22, segona ronda (pwa-01) · Com a molt una vegada, sense bucles; i res després d'una entrada de la persona. */
+  const UNA_VEGADA_C5 = {
+    ca: 'com a molt una vegada, sense bucles', es: 'como mucho una vez, sin bucles', en: 'at most once, without loops',
+    eu: 'gehienez behin, begiztarik gabe', gl: 'como moito unha vez, sen bucles'
+  };
+  /* Tercera ronda (regressió del crític, pwa-01 parcial) · El veto només el donen les entrades
+     (ENTRADES_AMB_ESTAT_EN_MEMORIA); un toc sol (les preguntes suggerides de la IAIA, una emoticona del calaix) no deixa
+     cap entrada ni cap camp amb valor, la pàgina es recarrega i eixe estat es pot perdre. El text ja no diu «no
+     s'esborra res» ni compta «triar» com si fora qualsevol tria: diu «en un camp» i diu el límit dels tocs. */
+  const VETO_C5 = {
+    ca: 'Si la persona ja hi ha escrit, enganxat o deixat anar res, o ha triat res en un camp, la pàgina no es recarrega; el que naix només d’un toc, com una pregunta suggerida de la IAIA o una emoticona triada al calaix, no impedix la recàrrega i s’hi pot perdre. Si el que no ha pogut carregar és una secció, ho diu i avisa que recarregar descarta el que només viu a la memòria.',
+    es: 'Si la persona ya ha escrito, pegado o soltado algo, o ha elegido algo en un campo, la página no se recarga; lo que nace solo de un toque, como una pregunta sugerida de la IAIA o un emoticono elegido en el cajón, no impide la recarga y puede perderse con ella. Si lo que no ha podido cargarse es una sección, lo dice y avisa de que recargar descarta lo que solo vive en la memoria.',
+    en: 'If the person has already typed, pasted or dropped anything, or picked anything in a field, the page does not reload; what comes from a tap alone, such as one of IAIA’s suggested questions or an emoji picked from the drawer, does not prevent the reload and can be lost with it. If what failed to load is a section, it says so and warns that reloading discards whatever lives only in memory.',
+    eu: 'Pertsonak dagoeneko zerbait idatzi, itsatsi edo jaregin badu, edo eremu batean zerbait aukeratu badu, orria ez da birkargatzen; ukitu bakar batetik sortzen dena, hala nola IAIAren galdera iradokietako bat edo tiradetik aukeratutako emotikono bat, ez du birkarga eragozten eta harekin gal daiteke. Kargatu ezin izan dena atal bat bada, hala esaten du eta ohartarazten du birkargatzeak memorian bakarrik dagoena baztertzen duela.',
+    gl: 'Se a persoa xa escribiu, pegou ou soltou algo, ou escolleu algo nun campo, a páxina non se recarga; o que nace só dun toque, como unha pregunta suxerida da IAIA ou unha emoticona escollida no caixón, non impide a recarga e pode perderse con ela. Se o que non puido cargar é unha sección, dío e avisa de que recargar descarta o que só vive na memoria.'
+  };
+  /* La promesa de la segona ronda, en cada llengua: no torna mentre un toc sol no vete la recàrrega. */
+  const NO_SESBORRA_RES = /no s’esborra res|no se borra nada|nothing is deleted|ez da ezer ezabatzen|non se borra nada/i;
+  /* Onada R22 (honestedat-04) · La recuperació és de la web pròpia; el connector i les apps no la porten. */
+  const RECUPERACIO_NOMES_WEB_C5 = {
+    ca: ['A la web pròpia de Sóc de Poble', 'El connector de WordPress i les apps no porten esta recuperació.'],
+    es: ['En la web propia de Sóc de Poble', 'El conector de WordPress y las apps no llevan esta recuperación.'],
+    en: ['On the Sóc de Poble website itself', 'The WordPress plugin and the apps do not carry this recovery.'],
+    eu: ['Sóc de Poble-ren webgune propioan', 'WordPress konektoreak eta aplikazioek ez dute berreskurapen hau.'],
+    gl: ['Na web propia de Sóc de Poble', 'O conector de WordPress e as apps non levan esta recuperación.']
+  };
+  /* Onada R22 (honestedat-07) · Cap espai unificat ni cap prestatgeria multipoble, en cap llengua. */
+  const UNIFICAT = /unifica|unified|bateratu/i;
+  const MULTIPOBLE = /multipob|multi-village|multipueblo|herri anitz/i;
+  const blocEn = (llengua) => {
+    const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+    expect([llengua, cos.startsWith(`<h3>${INICIS_R21_C5[llengua]}`)]).toEqual([llengua, true]);
+    return cos.slice(0, cos.indexOf('<h3>', 1));
+  };
+
+  test('obri la pàgina davant de la fita R21, sense número vX.Y.Z, amb dos paràgrafs d’obertura, sis apartats, rutes vives, densitat de negretes, regla 2.3.10 i marca «de poble»', () => {
+    expect(TITOL_FITA_R21_C5).not.toMatch(/ · v\d+\.\d+\.\d+/);
+    expect(fitaR21C5.startsWith(`<h3>${TITOL_FITA_R21_C5}</h3>`)).toBe(true);
+    for (const llengua of LLENGUES) {
+      const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+      const bloc = blocEn(llengua);
+      expect([llengua, cos.startsWith(`<h3>${INICIS_R21[llengua]}`, bloc.length)]).toEqual([llengua, true]);
+      expect([llengua, bloc.match(/^<h3>([^<]+)<\/h3>/)[1]]).toEqual([llengua, expect.not.stringMatching(/ · v\d+\.\d+\.\d+/)]);
+      expect([llengua, bloc]).toEqual([llengua, expect.stringMatching(/^<h3>[^<]+<\/h3>\n {6}<p>[\s\S]*?<\/p>\n {6}<p>[\s\S]*?<\/p>\n {6}<h4>/)]);
+      expect([llengua, titolsH4(bloc).map((t) => t.split(' · ')[0])]).toEqual([llengua, PREFIXOS[llengua]]);
+      expect([llengua, apartats(bloc).length]).toEqual([llengua, 6]);
+      expect([llengua, bloc.endsWith('</p>\n\n      ')]).toEqual([llengua, true]);
+      // Darrere del primer h4, només parells h4 + p; cada explicació comença en majúscula, per un codi o per un enllaç.
+      expect([llengua, bloc.slice(bloc.indexOf('<h4>')).replace(/<h4>[\s\S]*?<\/h4>\n {6}<p>[\s\S]*?<\/p>(?:\n {6}|\n\n {6})/g, '')]).toEqual([llengua, '']);
+      for (const { titol: h4, cos: p } of apartats(bloc)) expect([llengua, h4, /^(?:<code>|<a |[«(“]?[A-ZÀ-ÚÇ])/.test(p.replace(/<\/?strong>/g, ''))]).toEqual([llengua, h4, true]);
+      const enllacos = [...bloc.matchAll(/<a\b[^>]*>/g)].map((m) => m[0]);
+      expect([llengua, enllacos]).toEqual([llengua, ['<a href="/mur">', '<a href="/notes">', '<a href="/xat">', '<a href="/page/arbres-monumentals">', '<a href="/page/receptes">', '<a href="/mercat">']]);
+      expect([llengua, bloc.match(/[^\s>]<a |<\/a>[^\s,.:]/g)]).toEqual([llengua, null]);
+      const pla = text(bloc);
+      expect([llengua, PLATAFORMA_ALIENA.test(pla)]).toEqual([llengua, false]);
+      expect([llengua, /Google|Apple|App Store|iPhone|iPad|TestFlight|\bPlay\b/.test(pla)]).toEqual([llengua, false]);
+      expect([llengua, /\bdesplegad[ae]s?\b|\bdesplegat|en producció|en producción|in production|\bactivad[ao]\b|\bactivat\b|aviat|pròximament|properament|IDEA-\d|P\d-\d|torn_|mas[i]a|sobir/i.test(pla)]).toEqual([llengua, false]);
+      // Marca: «de poble»; cap «del poble» (ni la seua forma castellana o gallega), que només val per a un poble concret.
+      expect([llengua, /\bdel poble\b|\bdel pueblo\b|\bdo pobo\b/i.test(pla)]).toEqual([llengua, false]);
+      expect([llengua, pla.includes('Sóc de Poble')]).toEqual([llengua, true]);
+      const segmentador = new Intl.Segmenter(llengua, { granularity: 'word' });
+      const paragrafsDelBloc = [...bloc.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+      expect([llengua, paragrafsDelBloc.length]).toEqual([llengua, 8]);
+      for (const p of paragrafsDelBloc) {
+        const w = [...segmentador.segment(p.replace(/<[^>]+>/g, ''))].filter((s) => s.isWordLike).length;
+        const n = (p.match(/<strong>/g) ?? []).length;
+        const [min, max] = w >= 40 ? [6, 8] : w >= 25 ? [5, 7] : w >= 12 ? [2, 4] : [1, 3];
+        expect(n >= min && n <= max, `${llengua}: ${n} negretes per a ${w} paraules (${min}–${max})`).toBe(true);
+      }
+      for (const m of bloc.matchAll(/<strong>([\s\S]*?)<\/strong>/g)) {
+        expect([llengua, m[1]]).toEqual([llengua, expect.not.stringMatching(/<strong>/)]);
+        expect([llengua, m[1].replace(/<[^>]+>/g, '').trim().split(/\s+/).length <= 6]).toEqual([llengua, true]);
+      }
+      expect(bloc, llengua).not.toMatch(/<h([34])>(?:(?!<\/h\1>)[\s\S])*<strong>/);
+      expect(bloc, llengua).not.toMatch(/<code>(?:(?!<\/code>)[\s\S])*<strong>/);
+    }
+    for (const ruta of interns(fitaR21C5)) expect(rutaExistix(ruta), ruta).toBe(true);
+  });
+
+  test('la versió 1.2.0, el build 5 i el connector 1.1.14 del repositori, literals; el codi no hi va per darrere i la capçalera diu el connector publicat', () => {
+    for (const llengua of LLENGUES) {
+      const obertura = text(blocEn(llengua).match(/<\/h3>\n {6}<p>([\s\S]*?)<\/p>/)[1]);
+      expect([llengua, obertura.includes(VERSIO_C5), obertura.includes(FRASE_BUILD_C5[llengua]), obertura.includes(CONNECTOR_C5), obertura.includes('WordPress.org'), obertura.includes('COMMIT 5')])
+        .toEqual([llengua, true, true, true, true, true]);
+    }
+    expect(noMesNova(VERSIO_C5, PAQUET.version), `${VERSIO_C5} ≤ ${PAQUET.version}`).toBe(true);
+    expect(noMesNova(CONNECTOR_C5, CONNECTOR), `${CONNECTOR_C5} ≤ ${CONNECTOR}`).toBe(true);
+    expect(VERSIO_CLIENT_NATIU).toBeGreaterThanOrEqual(BUILD_C5);
+    expect(Number(llegix('android/app/build.gradle').match(/versionCode (\d+)/)[1])).toBeGreaterThanOrEqual(BUILD_C5);
+    expect(PAGE_COPY.versions.subtitle).toBe(`Versió actual: v${PAQUET.version} · Connector WordPress v${CONNECTOR_PUBLICAT} a WordPress.org`);
+  });
+
+  test('els kits que reunix, i cap promesa per damunt del que hi ha: migracions sense aplicar, co-publicació apagada i cap tasca programada', () => {
+    const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations'));
+    for (const id of [...MIGRACIONS_MUR_C5, MIGRACIO_BETA_C5]) expect([id, migracions.filter((nom) => nom.startsWith(`${id}_`)).length]).toEqual([id, 1]);
+    // El Mur filtrat és el que diu el text; la co-publicació només s'encén amb la bandera exacta, que cap .env del repositori encén.
+    expect(MUR_PUBLIC_FILTRAT).toBe(true);
+    expect(llegix('src/data/supabase/copublicacio.js')).toContain("import.meta.env.VITE_SDP_COPUBLICACIO !== '1'");
+    expect(llegix('.env.example')).not.toMatch(/^\s*VITE_SDP_COPUBLICACIO\s*=\s*1\b/m);
+    // La migració del canal no programa cap tasca (cron.schedule), com diu el text.
+    const beta = llegix(`supabase/migrations/${migracions.find((nom) => nom.startsWith(`${MIGRACIO_BETA_C5}_`))}`);
+    expect(beta).not.toMatch(/cron\.schedule/i);
+    expect(llegix('src/pwa/recuperacioChunkDeploy.js')).toContain('FINESTRA_ANTI_BUCLE_MS');
+    // La correcció dels 404: la bessona sense original ràster no demana cap còpia inventada (fallbackBessones.js).
+    // Amb política de mitjans (connector i autònom), el parell exacte de la política, com al COMMIT 4.
+    expect(llegix('src/config/fallbackBessones.js')).toContain('recursOriginalDeBessona');
+    /* Onada R22 (honestedat-09) · I sense política (la web pròpia), el canvi d'R21.7 pel seu comportament, no per un nom
+       que ja hi era: una .webp autònoma sense original ràster no demana cap adreça, i una bessona amb original en demana
+       només l'extensió exacta, una vegada, mai .png ni .JPG. Amb la cascada .jpg → .png → .JPG del COMMIT 4, cap de les
+       dues imatges no acabaria on diu el text. */
+    const avisos = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      for (const [src, final] of [['/assets/uploads/brain/xat_portada.webp', '/assets/uploads/brain/xat_portada.webp'], ['/assets/towns/tibi/1.webp', '/assets/towns/tibi/1.jpg']]) {
+        const arrel = document.createElement('div');
+        const img = document.createElement('img');
+        img.setAttribute('src', src);
+        arrel.appendChild(img);
+        document.body.appendChild(arrel);
+        const retira = instalaFallbackDeBessones(arrel);
+        img.dispatchEvent(new Event('error'));
+        img.dispatchEvent(new Event('error'));
+        retira();
+        arrel.remove();
+        expect([src, img.getAttribute('src'), img.dataset[MARCA_FALLBACK] ?? null]).toEqual([src, final, src === final ? null : 'original']);
+      }
+    } finally { avisos.mockRestore(); }
+    for (const llengua of LLENGUES) {
+      const bloc = blocEn(llengua);
+      const abast = bloc.match(/<\/h3>\n {6}<p>[\s\S]*?<\/p>\n {6}<p>([\s\S]*?)<\/p>/)[1];
+      expect([llengua, KITS_C5.filter((kit) => !abast.includes(kit))]).toEqual([llengua, []]);
+      const pla = text(bloc);
+      expect([llengua, [...MIGRACIONS_MUR_C5, MIGRACIO_BETA_C5].filter((id) => !bloc.includes(`<code>${id}</code>`))]).toEqual([llengua, []]);
+      expect([llengua, SENSE_APLICAR_C5[llengua].filter((frase) => !pla.includes(frase))]).toEqual([llengua, []]);
+    }
+  });
+
+  test('el Mur en dues lectures, el menú de la negreta amb el nom de cada diccionari i la retirada durable de les Notes', () => {
+    for (const llengua of LLENGUES) {
+      const [mur, notes, xat] = apartats(blocEn(llengua));
+      expect([llengua, [...mur.cos.matchAll(/href="([^"]+)"/g)].map((m) => m[1]), [...notes.cos.matchAll(/href="([^"]+)"/g)].map((m) => m[1]), [...xat.cos.matchAll(/href="([^"]+)"/g)].map((m) => m[1])])
+        .toEqual([llengua, ['/mur'], ['/notes'], ['/xat']]);
+      const [obri, tanca] = COMETES[llengua];
+      expect([llengua, text(xat.cos).includes(`${obri}${DICCIONARIS[llengua]['section.xat.negreta.menu']}${tanca}`)]).toEqual([llengua, true]);
+      expect([llengua, MIGRACIONS_MUR_C5.filter((id) => !mur.cos.includes(`<code>${id}</code>`))]).toEqual([llengua, []]);
+      expect([llengua, notes.cos.includes('<code>2611122200</code>')]).toEqual([llengua, true]);
+    }
+  });
+
+  /* Onada R22 (honestedat-03, dades-01; dades-06, honestedat-06) · La dependència del Mur i les metadades de les
+     còpies públiques es proven pel comportament de content.js i storage.js de veritat. Fora del port cap mòdul no
+     importa l'adaptador (Porta Enxufe, E1): les dues proves, amb les seues frases, viuen a
+     src/data/supabase/versionsC5.comportament.test.js. */
+
+  /* Onada R22, segona ronda (sql-03, notes-01, honestedat-02) · bloqueja_publicacio_mur i denuncia_publicacio_mur
+     (2611122200) només guarden l'autor a la fila de qui el llig (private.mur_lector_ric: compte actiu i membre del
+     poble). Per a la resta, el bloqueig és una fila opaca ('publicacio' + UUID públic, l'autor en
+     private.mur_bloquejos_opacs) i la denúncia guarda l'autor null (l'autoria, en private.mur_denuncies_autoria); i
+     llistaBloquejos (moderacio.js) mostra eixos bloquejos pel UUID, sense nom. El text diu «no revelen l'autor a qui no
+     és membre d'este poble» si i només si és així. */
+  test('Denunciar i Bloquejar des d’una publicació no revelen l’autor a qui no és membre d’este poble', () => {
+    const migracio = readdirSync(resolve(process.cwd(), 'supabase/migrations')).find((nom) => nom.startsWith('2611122200_'));
+    const sql = llegix(`supabase/migrations/${migracio}`);
+    const funcio = (nom) => sql.match(new RegExp(`create or replace function ${nom.replace('.', '\\.')}\\([\\s\\S]*?\\n\\$\\$;`))?.[0] ?? '';
+    const lector = funcio('private.mur_lector_ric');
+    const bloqueja = funcio('public.bloqueja_publicacio_mur');
+    const denuncia = funcio('public.denuncia_publicacio_mur');
+    expect([lector === '', bloqueja === '', denuncia === '']).toEqual([false, false, false]);
+    const nomesMembres = /private\.is_town_member\(p_tenant\)/.test(lector);
+    const bloqueigOpac = /if private\.mur_lector_ric\(s\.tenant_id\) then/.test(bloqueja)
+      && /insert into public\.bloquejos\(bloquejat_tipus,publicacio_id\) values\('publicacio',p_id\)/.test(bloqueja)
+      && /insert into private\.mur_bloquejos_opacs\(/.test(bloqueja);
+    const denunciaOpaca = /v_opac:=auth\.uid\(\) is not null and not private\.mur_lector_ric\(s\.tenant_id\);/.test(denuncia)
+      && /case when v_opac then null else v_autor_id end/.test(denuncia);
+    const llistaSenseNom = /tipus: TIPUS_PUBLICACIO, id: publicacio\.toLowerCase\(\), nom: null/.test(llegix('src/data/supabase/moderacio.js'));
+    for (const llengua of LLENGUES) {
+      const pla = text(apartats(blocEn(llengua))[0].cos);
+      expect([llengua, pla.includes(MODERACIO_C5[llengua])]).toEqual([llengua, nomesMembres && bloqueigOpac && denunciaOpaca && llistaSenseNom]);
+    }
+  });
+
+  /* Onada R22, segona ronda (xat-01, xat-09) · VisorGaleriaXat es pinta amb createPortal a la capa de dalt, amb
+     --z-calaix per damunt de la barra negra, del lateral i de la navegació mòbil. Les cares dels grups (Bombolla) i
+     del visor prenen `src`, el que llig CaraXat, del padró del fil (caresDelFil, caraDAutor): la foto de la persona o
+     de l'entitat que la conversa porta, i sense foto, null (CaraXat hi posa les inicials). */
+  test('el visor del xat per damunt de les barres i les cares dels grups amb la foto de la conversa o les inicials', () => {
+    const visor = llegix('src/sections/xat/components/VisorGaleriaXat.jsx');
+    const tokens = llegix('src/css/tokens.css');
+    const z = (nom) => Number(tokens.match(new RegExp(`--z-${nom}: (\\d+);`))?.[1] ?? NaN);
+    const perDamunt = /^import \{ createPortal \} from 'react-dom';$/m.test(visor) && /return createPortal\(/.test(visor)
+      && /\.sdp-xat-visor \{[^}]*position: fixed;[^}]*z-index: var\(--z-calaix\);/.test(llegix('src/css/modules.css'))
+      && ['barra-negra', 'sidebar', 'nav-mobil'].every((capa) => z('calaix') > z(capa));
+    const fil = { entitatId: 'e1', altres: [{ id: 'u1', tipus: 'persona', avatarUrl: 'https://exemple.test/u1.webp' },
+      { id: 'e1', tipus: 'entitat', avatarUrl: 'https://exemple.test/e1.webp' }, { id: 'u2', tipus: 'persona', avatarUrl: null }] };
+    const cares = caresDelFil(fil);
+    const ambFoto = [caraDAutor({ usuariId: 'u1' }, fil, cares), caraDAutor({ usuariId: 'u1', comEntitat: true }, fil, cares),
+      caraDAutor({ usuariId: 'u2' }, fil, cares), caraDAutor({ usuariId: 'u3' }, fil, cares)];
+    const caresDelPadro = JSON.stringify(ambFoto) === JSON.stringify(['https://exemple.test/u1.webp', 'https://exemple.test/e1.webp', null, null])
+      && /^export default function CaraXat\(\{ nom, src = null,/m.test(llegix('src/sections/xat/components/CaraXat.jsx'))
+      && /<CaraXat\s+nom=\{autorGrup\.nom\}\s+src=\{caraAutor \|\| null\}/.test(llegix('src/sections/xat/components/Bombolla.jsx'))
+      && /caraAutor=\{caraDAutor\(msg, fil, caresFil\)\}/.test(llegix('src/sections/xat/components/Conversa.jsx'))
+      && /<CaraXat nom=\{actual\.autor\} src=\{actual\.avatar \|\| null\}/.test(visor);
+    for (const llengua of LLENGUES) {
+      const pla = text(apartats(blocEn(llengua))[2].cos);
+      const [visorText, caraText] = XAT_C5[llengua];
+      expect([llengua, pla.includes(visorText), pla.includes(caraText)]).toEqual([llengua, perDamunt, caresDelPadro]);
+    }
+  });
+
+  /* Onada R22, segona ronda (pwa-01) · La recuperació, provada pel seu comportament amb la mateixa màquina que
+     instal·la la web (instalLaRecuperacioChunkDeploy) i un document fals: un error d'un tros retirat recarrega una
+     vegada; el mateix build ja no torna a recarregar ni passat FINESTRA_ANTI_BUCLE_MS (sense bucles); i després d'una
+     entrada de la persona (escriure, enganxar, triar o deixar anar: ENTRADES_AMB_ESTAT_EN_MEMORIA) no recarrega mai.
+     L'avís és el de RouteErrorBoundary, la barrera de les seccions. El text ho diu si i només si és així.
+     Tercera ronda · I el límit: un toc sol (pointerdown, click) no veta i la pàgina es recarrega; el text ho diu i ja no
+     promet «no s'esborra res». */
+  test('la recuperació: com a molt una vegada, sense bucles, i res després d’una entrada de la persona; la secció ho avisa', async () => {
+    const ORIGEN = 'https://socdepoble.org';
+    const bytes = new TextEncoder().encode('<!doctype html><html><head><script type="module" src="/assets/index-Nou12345.js"></script></head><body></body></html>');
+    const prova = async (entrada = null) => {
+      const dades = new Map();
+      const oients = new Map();
+      const reload = vi.fn();
+      const finestra = {
+        document: { querySelectorAll: (selector) => (selector.startsWith('script') ? [{ getAttribute: () => '/assets/index-Vell1234.js' }] : []) },
+        sessionStorage: { getItem: (clau) => dades.get(clau) ?? null, setItem: (clau, valor) => { dades.set(clau, valor); } },
+        location: { origin: ORIGEN, href: `${ORIGEN}/xat`, reload },
+        addEventListener: (tipus, oient) => { oients.set(tipus, oient); },
+        removeEventListener: (tipus) => { oients.delete(tipus); }
+      };
+      const fetchFn = async (url) => (url.endsWith('/index.html')
+        ? { status: 200, redirected: false, url, headers: { get: (nom) => (nom === 'content-type' ? 'text/html; charset=utf-8' : null) },
+          body: { getReader: () => { let llegit = false; return { read: async () => { if (llegit) return { done: true }; llegit = true; return { done: false, value: bytes }; }, cancel: async () => {} }; } } }
+        : { status: 404, redirected: false, url, headers: { get: () => null } });
+      let ara = 1_000_000;
+      const atura = instalLaRecuperacioChunkDeploy({ finestra, navegador: { onLine: true }, fetchFn, ara: () => ara, topallMs: 1000 });
+      try {
+        if (entrada) oients.get(entrada)?.({ type: entrada });
+        const error = new TypeError(`Failed to fetch dynamically imported module: ${ORIGEN}/assets/FitxaVivaDeComunitat-CQbREbBV.js`);
+        const primera = await recuperaErrorChunkDeploy(error);
+        ara += FINESTRA_ANTI_BUCLE_MS * 10;
+        const segona = await recuperaErrorChunkDeploy(error);
+        return [primera, segona, reload.mock.calls.length];
+      } finally { atura(); }
+    };
+    // Una sola recuperació instal·lada alhora (instalLaRecuperacioChunkDeploy atura l'anterior): en sèrie.
+    const senseEntrada = await prova();
+    const ambEntrada = [];
+    for (const tipus of ENTRADES_AMB_ESTAT_EN_MEMORIA) ambEntrada.push(await prova(tipus));
+    const unaVegada = JSON.stringify(senseEntrada) === JSON.stringify([true, false, 1]);
+    const vetoDeLesEntrades = [...ENTRADES_AMB_ESTAT_EN_MEMORIA].sort().join() === 'change,drop,input,paste'
+      && ambEntrada.every((resultat) => JSON.stringify(resultat) === JSON.stringify([false, false, 0]));
+    // Tercera ronda · El límit que el text diu: un toc sol no veta (cap escolta de clic), i la pàgina es recarrega.
+    const ambToc = [];
+    for (const tipus of ['pointerdown', 'click']) ambToc.push(await prova(tipus));
+    const unTocNoHoVeta = ambToc.every((resultat) => JSON.stringify(resultat) === JSON.stringify([true, false, 1]));
+    const barrera = llegix('src/app/RouteErrorBoundary.jsx');
+    const laSeccioHoAvisa = barrera.includes('Aquesta secció no ha pogut carregar-se correctament.')
+      && barrera.includes('Recarregar reinicia l’aplicació i descarta les dades que només viuen a la memòria.');
+    for (const llengua of LLENGUES) {
+      const pla = text(apartats(blocEn(llengua))[5].cos);
+      expect([llengua, pla.includes(UNA_VEGADA_C5[llengua]), pla.includes(VETO_C5[llengua])])
+        .toEqual([llengua, unaVegada, unaVegada && vetoDeLesEntrades && unTocNoHoVeta && laSeccioHoAvisa]);
+      if (unTocNoHoVeta) expect([llengua, NO_SESBORRA_RES.test(pla)]).toEqual([llengua, false]);
+    }
+  });
+
+  /* Onada R22 (honestedat-04) · La recuperació dels trossos vells només la instal·la registraServiceWorker, que només
+     crida main.jsx: el paquet del connector (embed.jsx, host.js i PedraSecaEmbed.jsx) no importa res de pwa/, i
+     motiuPerNoRegistrar exclou l'app nativa. El text la limita a la web pròpia i ho diu. I mentre actualitzaWorkerPerDeploy
+     no espere el statechange del worker nou (pwa-03), el text no diu que el service worker es posa al dia. */
+  test('la recuperació després d’una actualització és de la web pròpia: ni el connector de WordPress ni les apps no la porten', () => {
+    const importsDelPaquet = ['src/embed.jsx', 'src/host.js', 'src/PedraSecaEmbed.jsx'].map(llegix).join('\n')
+      .match(/^\s*import\b[^;]*?['"][^'"]+['"]|\bimport\(\s*['"][^'"]+['"]/gm) ?? [];
+    expect(importsDelPaquet.length).toBeGreaterThan(0);
+    const paquetAmbRecuperacio = importsDelPaquet.some((linia) => /pwa\/|recuperacioChunkDeploy/.test(linia));
+    const registre = llegix('src/pwa/registre.js');
+    const nativaExclosa = /isNativePlatform\(\)\) return 'nativa'/.test(registre);
+    const swAlDia = /statechange/.test(registre);
+    for (const llengua of LLENGUES) {
+      const pla = text(apartats(blocEn(llengua))[5].cos);
+      const [webPropia, senseConnector] = RECUPERACIO_NOMES_WEB_C5[llengua];
+      expect([llengua, pla.includes(webPropia)]).toEqual([llengua, true]);
+      expect([llengua, pla.includes(senseConnector)]).toEqual([llengua, !paquetAmbRecuperacio && nativaExclosa]);
+      if (!swAlDia) expect([llengua, /service worker/i.test(pla)]).toEqual([llengua, false]);
+    }
+  });
+
+  /* Onada R22 (honestedat-07) · Arbres i receptes continuen en dos espais de treball (cada secció amb el seu
+     CatalegWorkspace i el seu id), i la graella de catàlegs municipals recorre LLIBRES_ARBRES_MONUMENTALS, que hui en té
+     un. El text no diu cap espai unificat ni cap prestatgeria multipoble, i nomena el poble del catàleg que hi ha. */
+  test('patrimoni: dos espais de treball i un sol catàleg municipal, sense cap espai unificat ni prestatgeria multipoble', () => {
+    const ids = ['src/sections/patrimoni/NaturaPatrimoniWorkspaceSection.jsx', 'src/sections/patrimoni/ReceptesWorkspaceSection.jsx']
+      .map((ruta) => llegix(ruta).match(/<CatalegWorkspace\b[\s\S]*?\bid="([^"]+)"/)?.[1] ?? null);
+    expect(ids.every(Boolean)).toBe(true);
+    const dosEspais = new Set(ids).size === 2;
+    for (const llengua of LLENGUES) {
+      const pla = text(apartats(blocEn(llengua))[4].cos);
+      if (dosEspais) expect([llengua, UNIFICAT.test(pla)]).toEqual([llengua, false]);
+      if (LLIBRES_ARBRES_MONUMENTALS.length === 1) {
+        expect([llengua, MULTIPOBLE.test(pla), pla.includes(LLIBRES_ARBRES_MONUMENTALS[0].poble)]).toEqual([llengua, false, true]);
+      }
     }
   });
 });

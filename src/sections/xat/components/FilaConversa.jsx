@@ -38,7 +38,7 @@
  * la drecera (aria-keyshortcuts) i la pista per al lector de pantalla
  * (aria-describedby). Sense `premuda`, el botó de sempre.
  */
-import { BellOff, ChevronRight, Circle, CircleCheck, Megaphone, MessageCircleMore, Pin, Users } from 'lucide-react';
+import { BellOff, Building2, ChevronRight, Circle, CircleCheck, Megaphone, MessageCircleMore, Pin, Users } from 'lucide-react';
 import CaraXat from './CaraXat.jsx';
 import MarquesEstat from './MarquesEstat.jsx';
 import PastillaNoLlegits from './PastillaNoLlegits.jsx';
@@ -58,6 +58,9 @@ export function etiquetaDeTipus(fil, t) {
   if (esComunitat(fil)) return t('section.xat.comunitat.etiqueta', 'Comunitat');
   if (esCanal(fil)) return t('section.xat.canal.etiqueta', "Canal d'avisos");
   if (esGrup(fil)) return t('section.xat.grup.etiqueta', 'Grup');
+  if (fil?.comEntitat && fil?.entitatNom) {
+    return t('section.xat.entitat.canal', 'Canal de {nom}').replace('{nom}', () => fil.entitatNom);
+  }
   return null;
 }
 
@@ -188,6 +191,12 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
       {seleccio ? <MarcaTria triada={seleccio.triada} /> : null}
       <AvatarFil fil={fil} nom={nomBase} />
       <span className="sdp-xat-fila__cos">
+        {fil.comEntitat && fil.entitatNom ? (
+          <span className="sdp-xat-fila__entitat" aria-hidden="true">
+            <Building2 size={14} aria-hidden="true" focusable="false" />
+            <span className="sdp-xat-fila__entitat-nom">{fil.entitatNom}</span>
+          </span>
+        ) : null}
         <span className="sdp-xat-fila__cap">
           <span className="sdp-xat-fila__nom">
             {nom}

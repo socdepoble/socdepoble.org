@@ -664,7 +664,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
             disabled={eixida.ocupat || Boolean(eixida.avis)}
             className="sdp-btn-ample"
           >
-            {t('section.control.eixir', 'Eixir del poble')}
+            {t('section.control.eixir', 'Eixir de poble')}
           </UniversalButton>
         </div>
         {eixida.avis}

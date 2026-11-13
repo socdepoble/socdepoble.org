@@ -15,6 +15,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
 import '../../../tests/helpers/diccionaris.js';
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
 
 const mocks = vi.hoisted(() => ({
   t: null,
@@ -31,6 +32,7 @@ const mocks = vi.hoisted(() => ({
   potPaginar: false,
   loadSeccioPage: vi.fn(),
   useDades: null,
+  servidor: null,
 }));
 mocks.t = createTranslator('ca');
 
@@ -112,12 +114,14 @@ import { bgSaveManager } from './GlobalSaveManager.js';
 import { ErrorPublicacio, motiuPobleNoDeterminat, textosEnLiniaDeNota } from './visibilitatNota.js';
 
 const AMBIT = 'ambit-damia-r20';
+const UUID_ACTE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const Dades = createContext(null);
 mocks.useDades = function useDadesDamia() {
   return useContext(Dades);
 };
 
 function ProveidorDamia({ servidor, children }) {
+  mocks.servidor = servidor;
   const [notes, setNotes] = useState(() => [...servidor.values()]);
   const updateNote = useCallback(async (id, canvis, revisio) => {
     const actual = servidor.get(id);
@@ -126,6 +130,14 @@ function ProveidorDamia({ servidor, children }) {
     servidor.set(id, nova);
     setNotes([...servidor.values()]);
     return nova;
+  }, [servidor]);
+  /* R21.1 v2 · NotesDataContext · confirmaPublicacioNota: la llista adopta l'estat que el rebut atòmic confirma. */
+  const confirmaPublicacioNota = useCallback(async (id, rebut) => {
+    const actual = servidor.get(id);
+    const canvis = { revision: rebut.revision, isPublished: Boolean(rebut.isPublished), publishedSubmissionId: rebut.publishedSubmissionId ?? null };
+    servidor.set(id, { ...actual, ...canvis });
+    setNotes([...servidor.values()]);
+    return canvis;
   }, [servidor]);
   const valor = useMemo(() => ({
     notes,
@@ -136,7 +148,8 @@ function ProveidorDamia({ servidor, children }) {
     status: 'ready',
     config: { dataMode: 'remote', tenantId: '00000000-0000-4000-8000-0000000000a1' },
     updateNote,
-  }), [notes, updateNote]);
+    confirmaPublicacioNota,
+  }), [notes, updateNote, confirmaPublicacioNota]);
   return <Dades.Provider value={valor}>{children}</Dades.Provider>;
 }
 
@@ -149,6 +162,9 @@ function NotaVivaDamia({ id, onCtx = null }) {
 
 describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 modals + multi-poble + 5 llengües)', () => {
   beforeEach(() => {
+    /* R21.1 v2 · La publicació atòmica conserva l'intent (actId i operationId) a IndexedDB i falla tancada
+       sense persistència (actesPublicacio.js): la prova li dona un IndexedDB fals estructurat, com les de Codex. */
+    vi.stubGlobal('indexedDB', creaIdbFalsEstructurat());
     window.localStorage.clear();
     bgSaveManager.revisionsAlMur.clear();
     bgSaveManager.knownRevisions.clear();
@@ -164,17 +180,26 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     mocks.marketItems = [];
     mocks.potPaginar = false;
     mocks.loadSeccioPage = vi.fn();
-    mocks.send = vi.fn(async ({ id, sectionId, payload }) => {
+    /* R21.1 v2 · Un doble fidel de publica_nota_al_mur (2611122200): la consulta d'una operació desconeguda torna
+       null; l'enviament comprova la revisió (CAS), vincula la nota a l'acte (UUID propi, mai l'id de la nota),
+       avança la revisió i torna el rebut atòmic. */
+    mocks.send = vi.fn(async ({ id, noteId, sectionId, payload, expectedNoteRevision, consulta }) => {
+      if (consulta) return null;
+      const nota = mocks.servidor.get(noteId);
+      if (nota.revision !== expectedNoteRevision) throw Object.assign(new Error('SDP-MUR-REVISION: la nota ha canviat'), { codi: 'SDP-MUR-REVISION' });
+      const revision = nota.revision + 1;
+      mocks.servidor.set(noteId, { ...nota, revision, isPublished: true, publishedSubmissionId: id });
       if (sectionId === 'mur') {
         mocks.feedPosts = [
           ...mocks.feedPosts.filter((p) => p.id !== id),
           { id, ...payload },
         ];
       }
+      return { publicacio: { id }, nota_revision: revision, publicada_revision: revision, replay: false };
     });
   });
 
-  afterEach(cleanup);
+  afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
   test('Damià pot traure les seues 2 notes privades al Mur triant el poble de destinació, sense cap modal flotant, passant de Blau «Publicar al Mur» a Verd «Publicat» amb enllaç al Mur', async () => {
     const servidor = new Map([
@@ -200,7 +225,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     expect(within(panell).getByText('Publicaràs com a Damià Llorens Jordà.')).toBeTruthy();
 
     const radioPrivat = within(panell).getByRole('radio', { name: /🔒 Esborrany privat \(només per a tu\)/ });
-    const radioPublic = within(panell).getByRole('radio', { name: /📣 Públic al Mur del poble/ });
+    const radioPublic = within(panell).getByRole('radio', { name: /📣 Públic al Mur de poble/ });
     expect(radioPrivat.checked).toBe(true);
     expect(radioPublic.checked).toBe(false);
 
@@ -228,8 +253,11 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       expect(mocks.send).toHaveBeenCalledTimes(1);
     });
     expect(screen.queryByRole('dialog')).toBeNull();
+    /* R21.1 v2 · L'acte de publicació té un UUID propi (diari d'actes), mai l'id de la nota; la nota hi viatja a part. */
+    const acte2 = mocks.send.mock.calls[0][0].id;
+    expect(acte2).toMatch(UUID_ACTE);
     expect(mocks.send.mock.calls[0][0]).toMatchObject({
-      id: 'nota-damia-2',
+      noteId: 'nota-damia-2',
       sectionId: 'mur',
       payload: {
         title: 'Collita d’ametla',
@@ -241,7 +269,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
 
     // Rerender per reflectir feedPosts actualitzat: ara el panell i la barra mostren Verd «Publicat» + enllaç directe!
     await waitFor(() => {
-      expect(servidor.get('nota-damia-2')?.isPublished).toBe(true);
+      expect(servidor.get('nota-damia-2')).toMatchObject({ isPublished: true, publishedSubmissionId: acte2 });
     });
     rerender(
       <ProveidorDamia servidor={servidor}>
@@ -259,9 +287,9 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     expect(estatVerd.textContent).toContain('Publicat');
 
     const enllacMur = within(panell).getByRole('link', { name: /Veure al Mur/ });
-    expect(enllacMur.getAttribute('href')).toBe('/mur/nota-damia-2');
+    expect(enllacMur.getAttribute('href')).toBe(`/mur/${acte2}`);
     fireEvent.click(enllacMur);
-    expect(mocks.navega).toHaveBeenCalledWith('/mur/nota-damia-2');
+    expect(mocks.navega).toHaveBeenCalledWith(`/mur/${acte2}`);
 
     // Si Damià canvia el poble de destinació a La Torre de les Maçanes, torna a aparèixer el botó Blau «Actualitzar al Mur»!
     fireEvent.change(within(panell).getByLabelText('Poble on es publica'), {
@@ -270,7 +298,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     const botoActualitzar = within(panell).getByRole('button', { name: 'Actualitzar al Mur' });
     expect(botoActualitzar.className).toContain('sdp-visibilitat-linia__boto--publicar');
 
-    // Segona nota privada atrapada ('nota-damia-1'): amb «Esborrany privat» marcat no dispara res; en marcar «📣 Públic al Mur del poble» (o «Publicar» a la barra), mostra l'avís d'irreversibilitat i publica al seu poble principal!
+    // Segona nota privada atrapada ('nota-damia-1'): amb «Esborrany privat» marcat no dispara res; en marcar «📣 Públic al Mur de poble» (o «Publicar» a la barra), mostra l'avís d'irreversibilitat i publica al seu poble principal!
     rerender(
       <ProveidorDamia servidor={servidor}>
         <NotesProvider>
@@ -281,7 +309,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     const panellNota1 = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
     expect(within(panellNota1).getByRole('button', { name: 'Publicar al Mur' }).disabled).toBe(true);
     fireEvent.click(screen.getByTestId('barra-publicar'));
-    expect(within(panellNota1).getByRole('radio', { name: /📣 Públic al Mur del poble/ }).checked).toBe(true);
+    expect(within(panellNota1).getByRole('radio', { name: /📣 Públic al Mur de poble/ }).checked).toBe(true);
     expect(within(panellNota1).getByText(/Una vegada al Mur, encara no es pot retirar/)).toBeTruthy();
     await act(async () => {
       fireEvent.click(within(panellNota1).getByRole('button', { name: 'Publicar al Mur' }));
@@ -289,8 +317,10 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     await waitFor(() => {
       expect(mocks.send).toHaveBeenCalledTimes(2);
     });
+    expect(mocks.send.mock.calls[1][0].id).toMatch(UUID_ACTE);
+    expect(mocks.send.mock.calls[1][0].id).not.toBe(acte2);
     expect(mocks.send.mock.calls[1][0]).toMatchObject({
-      id: 'nota-damia-1',
+      noteId: 'nota-damia-1',
       sectionId: 'mur',
       payload: {
         title: 'Crònica del pou vell',
@@ -321,20 +351,23 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     });
     await waitFor(() => expect(mocks.send).toHaveBeenCalledTimes(1));
     expect(mocks.send.mock.calls[0][0].payload).toMatchObject({ poble_id: 'xixona', author_location: 'Xixona' });
+    /* R21.1 v2 · El servidor vincula la nota a l'acte (UUID propi): el marcador persistent del poble és d'eixe acte. */
+    const acte = mocks.send.mock.calls[0][0].id;
+    expect(acte).toMatch(UUID_ACTE);
+    await waitFor(() => expect(servidor.get('nota-xixona')).toMatchObject({ isPublished: true, publishedSubmissionId: acte }));
 
     primera.unmount();
 
     // Recàrrega real de pestanya (memòria buida) mentre la publicació cau fora de la finestra carregada (feedPosts = []).
     bgSaveManager.revisionsAlMur.clear();
+    bgSaveManager.knownRevisions.clear();
     mocks.feedPosts = [];
     mocks.send.mockClear();
     const actual = servidor.get('nota-xixona');
     servidor.set('nota-xixona', {
       ...actual,
       content: '<p>Versió 2 editada.</p>',
-      revision: (actual?.revision ?? 3) + 1,
-      isPublished: true,
-      publishedSubmissionId: 'nota-xixona',
+      revision: actual.revision + 1,
     });
 
     render(
@@ -356,7 +389,8 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     });
     await waitFor(() => expect(mocks.send).toHaveBeenCalledTimes(1));
     expect(mocks.send.mock.calls[0][0]).toMatchObject({
-      id: 'nota-xixona',
+      id: acte,
+      noteId: 'nota-xixona',
       sectionId: 'mur',
       payload: {
         poble_id: 'xixona',
@@ -592,7 +626,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     expect(selectPoble.options).toHaveLength(2);
     fireEvent.change(selectPoble, { target: { value: 'Xixona' } });
 
-    const radioPublic = within(panell).getByRole('radio', { name: /Públic al Mur del poble/i });
+    const radioPublic = within(panell).getByRole('radio', { name: /Públic al Mur de poble/i });
     fireEvent.click(radioPublic);
 
     const botoPublicar = within(panell).getByRole('button', { name: 'Publicar al Mur' });

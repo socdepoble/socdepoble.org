@@ -270,7 +270,7 @@ test('si el padró falla de veres (la xarxa) es pinta una Alerta i la resta de r
   mocks.url = '?q=javi';
   await pinta();
   await waitFor(() => expect(screen.getByText('Error de xarxa en carregar el padró')).toBeTruthy());
-  expect(screen.getByText("No s'ha pogut buscar en el padró del poble")).toBeTruthy();
+  expect(screen.getByText("No s'ha pogut buscar en el padró del teu poble")).toBeTruthy();
   expect(screen.getByRole('link', { name: 'Mestre Javi' })).toBeTruthy();
   /* 261019 · La pròpia es veu (sense 'directori' no enllaça: revisió adversarial). */
   expect(screen.getByRole('heading', { name: 'Javi Llinares' })).toBeTruthy();
@@ -281,7 +281,7 @@ test('si el padró falla de veres (la xarxa) es pinta una Alerta i la resta de r
   expect(document.activeElement).toBe(estat());
   /* En remot la persona del padró es troba amb «Escriu-li» (la fitxa encara no s'obri). */
   await waitFor(() => expect(screen.getByRole('link', { name: 'Escriu-li a Javi Soler' })).toBeTruthy());
-  expect(screen.queryByText("No s'ha pogut buscar en el padró del poble")).toBeNull();
+  expect(screen.queryByText("No s'ha pogut buscar en el padró del teu poble")).toBeNull();
 });
 
 test('mentre el contingut carrega es veu l’esquelet, mai «Cap resultat»', async () => {
@@ -322,7 +322,7 @@ test('mentre la sessió es comprova no avisa d’entrar ni diu «Cap resultat»:
   let pintat;
   await act(async () => { pintat = render(<SearchSection />); });
   expect(screen.queryByText('Sense entrar, la cerca no veu la gent registrada al poble.')).toBeNull();
-  expect(screen.queryByRole('link', { name: 'Entra per a buscar gent del poble' })).toBeNull();
+  expect(screen.queryByRole('link', { name: 'Entra per a buscar gent del teu poble' })).toBeNull();
   expect(screen.queryByText(/Cap resultat/)).toBeNull();
   expect(document.querySelector('.sdp-esquelet')).not.toBeNull();
   expect(estat().textContent).toBe('Buscant…');
@@ -354,7 +354,7 @@ test('sense sessió en remot avisa d’entrar i no crida el padró', async () =>
   mocks.identitat = { identitats: BUIT };
   mocks.url = '?q=javi';
   await pinta();
-  const enllac = screen.getByRole('link', { name: 'Entra per a buscar gent del poble' });
+  const enllac = screen.getByRole('link', { name: 'Entra per a buscar gent del teu poble' });
   /* Auditoria 261007 (B) · El botó diu «Entra»: /registre en el mode d'entrar,
      per rutaDEntrada (mode i després tornar). Abans no portava mode i
      OnboardingSection obria «Crear compte». */
@@ -367,13 +367,13 @@ test('Auditoria 261007 (B) · sense sessió i sense consulta, «Entra» de l’e
   mocks.session = { currentUser: null, estat: 'fora' };
   mocks.identitat = { identitats: BUIT };
   await pinta();
-  const enllac = screen.getByRole('link', { name: 'Entra per a buscar gent del poble' });
+  const enllac = screen.getByRole('link', { name: 'Entra per a buscar gent del teu poble' });
   expect(enllac.getAttribute('href')).toBe('/registre?mode=entrar&tornar=%2Fcerca');
   // La consulta viatja codificada dins de la tornada, sense cap espai cru.
   cleanup();
   mocks.url = '?q=pepa%20ferrer';
   await pinta();
-  const ambEspai = screen.getByRole('link', { name: 'Entra per a buscar gent del poble' }).getAttribute('href');
+  const ambEspai = screen.getByRole('link', { name: 'Entra per a buscar gent del teu poble' }).getAttribute('href');
   expect(new URLSearchParams(ambEspai.split('?')[1]).get('tornar')).toBe('/cerca?q=pepa%20ferrer');
   expect(new URLSearchParams(ambEspai.split('?')[1]).get('mode')).toBe('entrar');
 });

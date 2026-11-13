@@ -241,10 +241,9 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
     expect(img.getAttribute('fetchpriority')).toBe('high');
     expect(container.querySelector('.sdp-recepta__capcalera')).toBeNull();
     expect(container.querySelector('.sdp-recepta__lamina')).toBeNull();
-    /* Onada R20 (DRETS_QUE_DINEM) · La font només acredita «permís d’ús»: els drets són de l'Associació (©), i cap
-       llicència Creative Commons inventada no torna a signar l'obra, ni als crèdits ni al copyright de la pàgina. */
+    /* Onada R21.10 (DRETS_QUE_DINEM · ordre directa del Mestre) · L'Associació publica en obert amb la llicència CC BY-NC-SA 4.0 compartida amb Sóc de Poble. */
     expect(container.textContent).toContain(DRETS_QUE_DINEM);
-    expect(container.textContent).not.toMatch(/CC BY[^·]*Associació Gastronòmica/);
+    expect(DRETS_QUE_DINEM).toBe('CC BY-NC-SA 4.0 Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta» · Sóc de Poble');
     // El vídeo, en el seu bloc: la façana de VideoEditorial i cap iframe abans del clic. Cap commutador.
     expect(container.querySelector('section[data-bloc="video"] .video-editorial__facana')).toBeTruthy();
     expect(container.querySelector('iframe')).toBeNull();
@@ -501,10 +500,12 @@ describe('P3-3 · l’etiqueta del quadrat-botó cap dins del quadrat', () => {
     expect(text).toMatch(/font-size: var\(--sdp-text-meta\);/);
     expect(text).toMatch(/max-width: 100%;/);
     expect(text).toMatch(/overflow-wrap: anywhere;/);
+    expect(text).toMatch(/color: currentColor;/);
     expect(text).not.toMatch(/font-size: 1rem/);
     const quadrat = regla('.sdp-recepta__quadrats .sp-card-calendar-badge');
     expect(quadrat).toMatch(/width: 96px;/);
     expect(quadrat).toMatch(/height: 96px;/);
+    expect(quadrat).toMatch(/color: var\(--sdp-text-titol\);/);
     expect(css).not.toContain('.sdp-recepta__commutador');
   });
 });

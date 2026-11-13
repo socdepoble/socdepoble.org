@@ -1,10 +1,11 @@
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  AJUDA_CONSERVA_CAMERA, AJUDA_CONSERVA_DATA, AJUDA_CONSERVA_UBICACIO, AVIS_REVISA_EXIF, DialegEnquadrament, LLEGENDA_PRECISIO,
+  AJUDA_CONSERVA_CAMERA, AJUDA_CONSERVA_DATA, AJUDA_CONSERVA_UBICACIO, AVIS_REVISA_EXIF, CasellaExif, DialegEnquadrament, LLEGENDA_PRECISIO,
 } from './DialegEnquadrament.jsx';
 import {
-  ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA, ETIQUETA_CONSERVA_CAMERA, ETIQUETA_CONSERVA_EXIF, exifPublicable,
+  ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA, ETIQUETA_CONSERVA_CAMERA, ETIQUETA_CONSERVA_EXIF, analitzaTiff, exifPublicable,
+  extreuTiff, preparaTiffTriat,
 } from './exifIncrustat.js';
 import { configDeForma } from './useEnquadramentImatge.jsx';
 import { TIPUS, dataOriginal, gpsTorre, jpegAmbExif, orientacio } from '../../../../tests/helpers/jpegProva.js';
@@ -380,5 +381,67 @@ describe('P1-64 · la precisió de la ubicació', () => {
     await carregat();
     await vista.findByRole('checkbox', CASELLA);
     expect(vista.getByRole('radio', { name: 'Exacta' }).checked).toBe(true);
+  });
+});
+
+/* Gauntlet R22 (ronda 4) · Una foto de Notes va al fitxer privat amb el bloc
+   sencer i ix al Mur per promoteToPublic, que només hi deixa la tria de
+   preparaTiffTriat (storage.js · ambExifTriat). Amb exifTriat, l'avís de la
+   casella diu el que porta eixa còpia pública: es compara amb el contingut
+   de veres del bloc triat (la mateixa cadena: extreuTiff → preparaTiffTriat). */
+describe('R22 (ronda 4) · exifTriat: l’avís diu el que publica preparaTiffTriat', () => {
+  const texte = (tag, valors) => ({ tag, tipus: TIPUS.ASCII, valors });
+  const CAMERA = [texte(0x010f, 'NIKON'), texte(0x0110, 'D850')];
+  const SERIE = texte(0xa431, '0123456789');
+  const AUTORA = texte(0x013b, 'AUTORA-SECRETA');
+  const PROPIETARIA = texte(0xa430, 'PROPIETARIA-SECRETA');
+  const mobil = () => jpegAmbExif({ ifd0: [orientacio(1), ...CAMERA], exif: [...dataOriginal('2017:05:14 10:22:33'), SERIE], gps: gpsTorre() });
+  const camera = () => jpegAmbExif({ ifd0: [...CAMERA, AUTORA], exif: [PROPIETARIA, SERIE] });
+  const serie = () => jpegAmbExif({ ifd0: [AUTORA], exif: [PROPIETARIA, SERIE] });
+  const publicat = (bytes) => {
+    const triat = preparaTiffTriat(extreuTiff(bytes));
+    return triat ? analitzaTiff(triat).contingut : null;
+  };
+  const NOMES_MARCA_I_MODEL = 'Si la deixes marcada, les dades de la càmera es publicaran amb la foto: la marca i el model.';
+  const NO_ES_PUBLICA = 'Si la deixes marcada, les dades de la càmera es conservaran, però no es publicaran amb la foto.';
+
+  test('ubicació, data i càmera: la còpia pública no porta cap dada de la càmera, i l’avís tampoc no en parla', async () => {
+    const bytes = mobil();
+    expect(publicat(bytes)).toMatchObject({ ubicacio: true, data: true, marca: false, model: false, serie: false, nom: false });
+    const vista = munta({ font: new File([bytes], 'mobil.jpg', { type: 'image/jpeg' }), ofereixConservarExif: true, exifTriat: true });
+    expect((await vista.findByRole('checkbox', CASELLA)).checked).toBe(true);
+    expect(vista.getByText(AJUDA_CONSERVA_UBICACIO)).toBeTruthy();
+    expect(vista.queryByText(/dades de la càmera/)).toBeNull();
+  });
+
+  test('només la càmera: la còpia pública porta la marca i el model, i l’avís només diu això (mai la sèrie ni el nom)', async () => {
+    const bytes = camera();
+    expect(publicat(bytes)).toMatchObject({ ubicacio: false, data: false, marca: true, model: true, serie: false, nom: false });
+    const vista = munta({ font: new File([bytes], 'camera.jpg', { type: 'image/jpeg' }), ofereixConservarExif: true, exifTriat: true });
+    await vista.findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_CAMERA) });
+    expect(vista.getByText(NOMES_MARCA_I_MODEL)).toBeTruthy();
+    expect(vista.queryByText(/número de sèrie|nom de persona/)).toBeNull();
+  });
+
+  test('només la sèrie i noms: la còpia pública no en porta res, i l’avís diu que no es publicaran', async () => {
+    const bytes = serie();
+    expect(publicat(bytes)).toBeNull();
+    const vista = munta({ font: new File([bytes], 'serie.jpg', { type: 'image/jpeg' }), ofereixConservarExif: true, exifTriat: true });
+    await vista.findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_CAMERA) });
+    expect(vista.getByText(NO_ES_PUBLICA)).toBeTruthy();
+  });
+
+  test('sense exifTriat (la capçalera d’una fitxa, que puja el bloc sencer), l’avís de sempre amb totes les dades', async () => {
+    const vista = munta({ font: new File([camera()], 'camera.jpg', { type: 'image/jpeg' }), ofereixConservarExif: true });
+    await vista.findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_CAMERA) });
+    expect(vista.getByText('Si la deixes marcada, les dades de la càmera es publicaran amb la foto: la marca, el model, el número de sèrie i un nom de persona.')).toBeTruthy();
+  });
+
+  test('CasellaExif amb exifTriat (l’ordre «/» Imatge de les Notes): el mateix avís', async () => {
+    const dades = await exifPublicable(new File([mobil()], 'mobil.jpg', { type: 'image/jpeg' }));
+    const vista = render(<CasellaExif dades={dades} conserva onConserva={vi.fn()} exifTriat />);
+    expect(vista.getByText(AJUDA_CONSERVA_UBICACIO)).toBeTruthy();
+    vista.rerender(<CasellaExif dades={await exifPublicable(new File([camera()], 'c.jpg', { type: 'image/jpeg' }))} conserva onConserva={vi.fn()} exifTriat />);
+    expect(vista.getByText(NOMES_MARCA_I_MODEL)).toBeTruthy();
   });
 });

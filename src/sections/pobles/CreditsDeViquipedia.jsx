@@ -18,7 +18,7 @@ import { miniaturaDeCommons } from './fitxaDelPoble.js';
 /* [clau, reserva en valencià] · la clau és la de src/config/idiomes/*.js. */
 export const TEXTOS_VIQUIPEDIA = Object.freeze({
   titol: ['section.detail.pobles.viquipedia.titol', 'Completa esta fitxa amb la Viquipèdia'],
-  explica: ['section.detail.pobles.viquipedia.explica', 'A la fitxa d’este poble li falten dades. El teu navegador les pot portar de la Viquipèdia, Wikidata i Wikimedia Commons, que són públiques i lliures. Fins que no prems el botó no es connecta amb ningú. Quan el prems, Wikimedia rep el nom del poble i la teua adreça IP, sense galetes ni l’adreça d’esta pàgina. El que porte es guarda només en este navegador, i res no s’escriu al servidor de Sóc de Poble.'],
+  explica: ['section.detail.pobles.viquipedia.explica', 'A la fitxa d’este poble li falten dades. El teu navegador les pot portar de la Viquipèdia, Wikidata i Wikimedia Commons, que són públiques i lliures. Fins que no prems el botó no es connecta amb ningú. Quan el prems, Wikimedia rep el nom d’este poble i la teua adreça IP, sense galetes ni l’adreça d’esta pàgina. El que porte es guarda només en este navegador, i res no s’escriu al servidor de Sóc de Poble.'],
   recorda: ['section.detail.pobles.viquipedia.recorda', 'Recorda-ho en este navegador'],
   porta: ['section.detail.pobles.viquipedia.porta', 'Porta-ho de la Viquipèdia'],
   senseXarxa: ['section.detail.pobles.viquipedia.senseXarxa', 'Sense connexió: ara no es pot portar res de la Viquipèdia.'],

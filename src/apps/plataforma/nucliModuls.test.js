@@ -10,6 +10,7 @@ import * as jsxRuntime from 'react/jsx-runtime';
 import { describe, expect, test } from 'vitest';
 import * as Router from '../../app/contexts/RouterContext.jsx';
 import * as PedraSeca from '../../components/PedraSeca/index.js';
+import { encapcalamentDeTargeta } from '../../components/PedraSeca/organismes/encapcalamentDeTargeta.js';
 import * as Workspace from '../../components/universal/workspace/index.js';
 import * as plataforma from './index.js';
 import {
@@ -103,6 +104,12 @@ describe('l’objecte SocDePoble.nucli', () => {
       if (clau === 'React') continue;
       expect(Object.keys(NUCLI[clau]).filter((nom) => vetats.test(nom)), clau).toEqual([]);
     }
+  });
+  test('1.6 exposa la mateixa funció pura de capçalera per les dues façanes', () => {
+    expect(NUCLI.pedraSeca.encapcalamentDeTargeta).toBe(encapcalamentDeTargeta);
+    expect(PedraSeca.encapcalamentDeTargeta).toBe(encapcalamentDeTargeta);
+    expect(encapcalamentDeTargeta({ author_name: 'Autoria sintètica', town_name: 'Alcoi', created_at: '2026-11-13' }))
+      .toMatchObject({ author: 'Autoria sintètica', location: 'Alcoi', date: '13/11/26', dateTime: '2026-11-13' });
   });
 });
 

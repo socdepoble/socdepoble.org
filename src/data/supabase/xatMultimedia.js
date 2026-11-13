@@ -203,11 +203,28 @@ function recordaSignatura(usuari, id, valor) {
   if (signatures.size > MAXIM_SIGNATURES) signatures.delete(signatures.keys().next().value);
 }
 
-export async function urlAdjuntXat(id, config = {}, { renova = false } = {}) {
+/* Gauntlet R22 (xat-05) · «Descarrega» del visor: la URL signada és d'un altre
+   origen (Storage) i el navegador hi ignora l'atribut `download` de l'enllaç
+   (obria la foto en una pestanya nova). Storage admet el paràmetre `download`
+   a la URL signada (GET /object/sign/…?token=…&download=<nom>, el mateix que
+   afig createSignedUrl(ruta, segons, { download }) de storage-js) i respon amb
+   Content-Disposition: attachment. No és part de la signatura (el token):
+   s'afig a la URL que es torna, mai a la desada, i la bombolla continua rebent
+   la de veure. `descarrega: true` deixa el nom de l'objecte; un text, eixe nom
+   si és un nom de fitxer net (lletres i xifres ASCII, punt, guió i guió baix,
+   fins a 120); si no, també el de l'objecte. */
+const RE_NOM_DESCARREGA = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
+function ambDescarrega(url, descarrega) {
+  if (descarrega !== true && typeof descarrega !== 'string') return url;
+  const nom = typeof descarrega === 'string' && RE_NOM_DESCARREGA.test(descarrega) ? descarrega : '';
+  return `${url}&download=${encodeURIComponent(nom)}`;
+}
+
+export async function urlAdjuntXat(id, config = {}, { renova = false, descarrega = false } = {}) {
   const usuari = context(config);
   if (!UUID.test(id)) throw errorAdjuntXat('no-disponible');
   const desat = propietariSignatures === usuari ? signatures.get(id) : null;
-  if (!renova && desat?.url && desat.caducaAl - Date.now() > MARGE_SIGNATURA_MS) return desat.url;
+  if (!renova && desat?.url && desat.caducaAl - Date.now() > MARGE_SIGNATURA_MS) return ambDescarrega(desat.url, descarrega);
   let ruta = desat?.ruta;
   if (!ruta) {
     const fila = primera(await crida('xat_llegix_adjunt', { p_id: id }, config));
@@ -230,7 +247,7 @@ export async function urlAdjuntXat(id, config = {}, { renova = false } = {}) {
   if (!data?.signedURL?.startsWith(esperat)) throw errorAdjuntXat('obrir');
   const url = `${getResolvedConfig(config).supabaseUrl}/storage/v1${data.signedURL}`;
   recordaSignatura(usuari, id, { ruta, url, caducaAl: inici + SEGONS_SIGNATURA * 1000 });
-  return url;
+  return ambDescarrega(url, descarrega);
 }
 
 /* E1.2 (pla 261029_1305) · Les peces del transport que la branca xifrada

@@ -68,15 +68,15 @@
       "data": "2026-11-07"
     },
     "fedivers": {
-      "sha256": "7f14f53c0d3047aa38ed9a3e882d7d54030a0ceac947a6b3be1686241c104292",
+      "sha256": "f98fe8d822deceff1c7acbcd9ad22508cd35e85bd322248ad148ad8b2f1f29a1",
       "html": 21948,
-      "aprovat_per": "Mestre Javi (prompt 261112_2008 T1b ordre 21:26 i T3 v1.2.0 build 4; kits R21.2-R21.6 integrats per Claude R21 COMMIT 4, revocable)",
+      "aprovat_per": "Mestre Javi (prompt 261113_0214 T1 COMMIT 5: kits R21.1 v2, R21.7-R21.10 i R21.9b, D-C4-1..5, build 5 i WP 1.1.14; integrat per Claude R21, revocable)",
       "data": "2026-11-13"
     },
     "fediversity": {
-      "sha256": "62d19ea90a39d365f4ed161b0770043e34017757c0876b49b5fada1a8b72125c",
-      "html": 63694,
-      "aprovat_per": "Mestre Javi (prompt 261112_2008 T1b ordre 21:26 i T3 v1.2.0 build 4; kits R21.2-R21.6 integrats per Claude R21 COMMIT 4, revocable)",
+      "sha256": "63a4e598e03a9f14f634a9640814f0155ea2de6b52db856c6c10234d846a3f9c",
+      "html": 63731,
+      "aprovat_per": "Mestre Javi (prompt 261113_0214 T1 COMMIT 5: kits R21.1 v2, R21.7-R21.10 i R21.9b, D-C4-1..5, build 5 i WP 1.1.14; integrat per Claude R21, revocable)",
       "data": "2026-11-13"
     },
     "habitatge": {
@@ -104,9 +104,9 @@
       "data": "2026-11-07"
     },
     "node-zero": {
-      "sha256": "19d498f632810748434178db6c2b188b1c7c0e1c487f781bb03eb2b4adf50722",
+      "sha256": "f502a3629890bb86cab2e26241edb236295339bd3747502db64c6e3f7ef5a329",
       "html": 22576,
-      "aprovat_per": "Mestre Javi (prompt 261112_2008 T1b ordre 21:26 i T3 v1.2.0 build 4; kits R21.2-R21.6 integrats per Claude R21 COMMIT 4, revocable)",
+      "aprovat_per": "Mestre Javi (prompt 261113_0214 T1 COMMIT 5: kits R21.1 v2, R21.7-R21.10 i R21.9b, D-C4-1..5, build 5 i WP 1.1.14; integrat per Claude R21, revocable)",
       "data": "2026-11-13"
     },
     "notes": {
@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "92196edb2de29d98aabac4dcb8a6456fd532ce6de42b0704c76b52fd2ed69bb4",
-      "html": 58740,
-      "aprovat_per": "Mestre Javi (prompt 261112_2008 T1b ordre 21:26 i T3 v1.2.0 build 4; kits R21.2-R21.6 integrats per Claude R21 COMMIT 4, revocable)",
+      "sha256": "1b7c1382864edf7e491a2e0cd69ecd5c82cc94765e061b3de1a492fe2729c95d",
+      "html": 64648,
+      "aprovat_per": "Mestre Javi (prompt 261113_0214 T1 COMMIT 5: kits R21.1 v2, R21.7-R21.10 i R21.9b, D-C4-1..5, build 5 i WP 1.1.14; integrat per Claude R21, revocable)",
       "data": "2026-11-13"
     },
     "wikidepoble": {

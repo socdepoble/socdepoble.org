@@ -13,13 +13,10 @@ import { dosDigits, horaDe } from '../../utils/calendari.js';
 /** Copyright de les pàgines de sistema. El mateix text que pintava TextSection. */
 export { COPYRIGHT_SDP } from '../../sections/text/pageContent.dretsPatrimoni.js';
 
-/**
- * Onada 5 (ordre del Mestre, 261008) · Copyright d'un poble: l'entradilla i
- * les fotos són de la Viquipèdia i de Wikimedia Commons, amb CC BY-SA. El
- * mateix text que pinta la targeta de /pobles. No porta NC: afegir-lo a un
- * text BY-SA no és compatible amb la llicència.
- */
-export const COPYRIGHT_VIQUIPEDIA = '© Viquipèdia / Wikimedia Commons (CC BY-SA)';
+/** Onada 5 (261008) · Copyright d'un poble (Viquipèdia i Wikimedia Commons,
+ * CC BY-SA). Viu al costat de COPYRIGHT_SDP (Onada R22 · BOOT3): origenImatges.js
+ * és a l'arrencada i el demana; d'ací arrossegava tot este mòdul. */
+export { COPYRIGHT_VIQUIPEDIA } from '../../sections/text/pageContent.dretsPatrimoni.js';
 
 /**
  * Lleva els espais finals i UN punt final. Els punts suspensius («...» i «…»)

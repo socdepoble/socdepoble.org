@@ -27,7 +27,8 @@ import {
 } from '../../components/universal/classificacio/model.js';
 import { esConnexio, esExtern, netejaDrets, teDretsReservats } from '../../data/origenNota.js';
 import {
-  TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textosAmbDrets, textosDeNota, textosEnLiniaDeNota, textosExtern
+  PARELL_CONNEXIO_EDITABLE, PARELL_TEXT_DRETS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textRetirada, textosAmbDrets, textosDeNota, textosEnLiniaDeNota,
+  textosExtern
 } from './visibilitatNota.js';
 import { llistaDePobles, slugDelPoble } from '../pobles/nomsDelPoble.js';
 import { nomDeCarpeta } from './carpetes.js';
@@ -194,7 +195,9 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
     notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey,
     nomesLectura = false, motiuModeTraduccio = null, modeTraduccioNomesLocal = false, versioAlMur = null,
-    destiPublicatDeNota = null, desaDestiPublicatNota = null
+    destiPublicatDeNota = null, desaDestiPublicatNota = null,
+    /* F03-UI (Onada R21) · Retirar del Mur (NotesContext; capacitat 'revocacioPublicacions', en remot). */
+    retiraDelMur = null, potRetirarDelMur = false, retiradaPendentDeNota = null
   } = useNotes();
   // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
   const { actorId, actor, memberships } = useIdentitatOReserva();
@@ -766,21 +769,43 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     return () => ctrl.abort();
   }, [idPublicatNota, teMultiPoble, pobleIdPublicat, seccioNota, config, desaDestiPublicatNota]);
 
+  /* F03-UI (Onada R21) · L'editor del Bloc retira del Mur quan el port en té
+     la capacitat i la nota és de la persona: amb sessió, al servidor (ni la
+     còpia de prova, ni la nota preparada, ni seed/local, ni la reserva de
+     només lectura). Una connexió o un contingut de fora compartits també: són
+     la mateixa fila de notes i el mateix trigger del servidor. */
+  const modeLocalNota = config?.dataMode === 'seed' || config?.dataMode === 'local';
+  /* Verificació R21 (P1) · Una publicació del Mur oberta sense cap nota
+     (PublicacioEditable · notaDeLaPublicacio: `deLaPublicacio`, revisió 0) no
+     té cap fila de notes que updateNote puga despublicar: no es retira d'ací,
+     i el motiu ho diu ('senseNota'). PublicacioEditable tampoc no passa
+     retiraDelMur. */
+  const senseFilaDeNota = Boolean(notaEnEdicio?.deLaPublicacio);
+  const retirable = Boolean(potRetirarDelMur && typeof retiraDelMur === 'function'
+    && !senseSessio && !esSandbox && !esPreparada && !modeLocalNota && !nomesLectura && !senseFilaDeNota);
+  /* Verificació R21 (P1) · La retirada pendent viu al NotesContext (per nota,
+     també després de canviar de nota o de recarregar), no dins del panell. */
+  const retiradaPendent = Boolean(notaEnEdicio?.isPublished && notaEnEdicio?.id != null
+    && typeof retiradaPendentDeNota === 'function' && retiradaPendentDeNota(notaEnEdicio.id));
+
   const notesAdapter = useMemo(() => {
     /* T41 (ordre del Mestre, 260928) · PUBLICAR (i la bola del món) obrin el
        selector de visibilitat: publicar o compartir al Mur només en confirmar.
-       Triar «privada» no toca res: una nota sense publicar ja ho és, i una de
-       publicada no es pot retirar del Mur (cap mètode al port): bloquejada,
-       amb el motiu. publishNote fa els seus toasts de resultat de xarxa. */
+       Triar «privada» no toca res: una nota sense publicar ja ho és. Una de
+       publicada, sense la capacitat de retirar, queda bloquejada amb el motiu;
+       F03-UI · amb `retirable`, el panell en línia demana la confirmació i
+       onTria(false) la retira (retiraDelMur). publishNote fa els seus toasts
+       de resultat de xarxa. */
     const bloqueig = bloqueigDeNota({
       foraster: senseSessio || esSandbox,
-      modeLocal: config?.dataMode === 'seed' || config?.dataMode === 'local',
+      modeLocal: modeLocalNota,
       publicada: Boolean(notaEnEdicio?.isPublished),
       /* T71b · el mateix motiu que publishNote en mode compartir. */
       connexio: citaOrigen,
       /* P4 · la nota preparada encara no és al servidor: no hi ha res a
          publicar. Revisió · el motiu segons la creació: buida, en camí o fallida. */
       preparada: esPreparada ? (creacioPreparada?.estat || 'buida') : false,
+      retirada: retirable ? 'aci' : (potRetirarDelMur && senseFilaDeNota ? 'senseNota' : 'no'),
       /* P1-22 · els motius en la llengua de l'app. */
       t,
     });
@@ -794,12 +819,15 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     const visibilitat = {
       enLinia: true,
       /* D4 · amb els drets reservats de l'original, el selector ho avisa. */
-      textos: textosAmbDrets(extern ? textosExtern(t) : textosDeNota({ connexio, t }), dretsReservats, t),
-      textosEnLinia: textosEnLiniaDeNota({ connexio, extern, dretsReservats, seccio: seccioNota, t }),
+      textos: textosAmbDrets(extern ? textosExtern(t, { retirable }) : textosDeNota({ connexio, t, retirable }), dretsReservats, t),
+      textosEnLinia: textosEnLiniaDeNota({ connexio, extern, dretsReservats, seccio: seccioNota, retirable, t }),
       poblesDisponibles,
       poblePublicat,
       rutaPublicada,
       bloqueig,
+      /* F03-UI · Verificació R21 (P1) · L'avís de la retirada pendent (el panell
+         en línia bloqueja la tria i «Actualitzar al Mur» mentre hi siga). */
+      retiradaPendent: retiradaPendent ? textRetirada('pendent', t) : null,
       /* La identitat que signa la publicació (MurContext signa amb el mateix
          actor), amb el nom que publishNote hi posarà: mai un correu. */
       comNom: bloqueig?.opcio === 'publica' ? null : (autoria?.nom || null),
@@ -811,7 +839,11 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          servidor…), que no es tapa amb «torna-ho a provar». La traducció és
          la de visibilitatNota.js (publicaAmbMotiu), la mateixa del lector. */
       onTria: async (publica, doc, opcions) => {
-        if (!publica || bloqueig?.opcio === 'publica') return true;
+        /* F03-UI · «Privada» d'una nota publicada, ja confirmada al panell en
+           línia: la retirada de veres (true, false o un ErrorRetirada amb el
+           motiu; el panell el diu en línia). Sense `retirable`, com sempre. */
+        if (!publica) return retirable && doc?.isPublished ? retiraDelMur(doc) : true;
+        if (bloqueig?.opcio === 'publica') return true;
         /* IDEA-61 (T0, prompt 261102_1532) · Una fitxa d'àmbit vertical
            incompleta no ix al Mur: el motiu, en línia, al selector
            (SelectorVisibilitat pinta el missatge de l'error que llança onTria). */
@@ -1030,7 +1062,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio, idPublicatNota, seccioNota, pobleIdPublicat, llocPublicatConegut]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio, idPublicatNota, seccioNota, pobleIdPublicat, llocPublicatConegut, modeLocalNota, retirable, retiraDelMur, potRetirarDelMur, senseFilaDeNota, retiradaPendent]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.
@@ -1063,14 +1095,14 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       {/* D4 (excepció del Mestre, 260930) · la connexió és una còpia editable. */}
       {connexio ? (
         <Alerta to="info" titol={t('section.notes.connexio.titol', 'Element connectat')}>
-          {t('section.notes.connexio.textEditable', 'Este contingut el signa {autor}. És una còpia teua: el pots editar i el pots canviar de carpeta; compartir-lo el porta al teu Mur citant-ne l’origen i l’autoria.')
+          {t(...PARELL_CONNEXIO_EDITABLE)
             .replace('{autor}', () => notaEnEdicio?.origen?.autorNom || t('section.notes.connexio.altri', 'una altra persona'))}
         </Alerta>
       ) : null}
       {/* D4 · l'original porta els drets reservats: cal saber-ho abans de republicar. */}
       {dretsReservats ? (
         <Alerta to="avis" titol={t('section.notes.drets.titol', TITOL_DRETS_RESERVATS)}>
-          {t('section.notes.drets.text', TEXT_DRETS_RESERVATS)}
+          {t(...PARELL_TEXT_DRETS)}
         </Alerta>
       ) : null}
       {/* T71b · un contingut de fora: és teu i s'edita, però ve d'una altra web. */}
@@ -1143,6 +1175,13 @@ export default function NotesEditor({ activeNote, onToast = null }) {
           onTanca={tancaDialeg}
           onTria={triaBorrar}
           ocupat={borrant}
+          /* F03-UI · Amb la capacitat, la paperera i l'esborrat també la
+             retiren del Mur (trigger mur_retira_des_de_nota); l'arxiu, no.
+             Verificació R21 (P1) · potRetirarDelMur ja és només en remot i
+             amb sessió d'escriptura (NotesContext): amb la llavor o en local,
+             res no arriba a cap servidor i el diàleg diu el text de sempre. */
+          retiraDelMur={Boolean(potRetirarDelMur && notaEnEdicio.isPublished)}
+          seccio={seccioNota}
         />
       ) : null}
     </>

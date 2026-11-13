@@ -49,8 +49,8 @@ export function textosDeLesEntitats(t = senseTraduccio) {
   return {
     titol: '',
     buit: tradueix('section.detail.pobles.entitats.buit', 'Encara no hi ha cap empresa ni entitat d’este poble al directori.'),
-    carregant: tradueix('section.detail.pobles.entitats.carregant', 'Carregant les empreses i entitats del poble…'),
-    error: tradueix('section.detail.pobles.entitats.error', 'No s’han pogut carregar les empreses i entitats del poble'),
+    carregant: tradueix('section.detail.pobles.entitats.carregant', 'Carregant les empreses i entitats d’este poble…'),
+    error: tradueix('section.detail.pobles.entitats.error', 'No s’han pogut carregar les empreses i entitats d’este poble'),
     noDisponible: tradueix('section.detail.pobles.entitats.noDisponible', 'Este servidor encara no llista les empreses i entitats dels pobles.'),
     tipus: {
       company: tradueix('section.detail.pobles.entitats.empresa', 'Empresa'),

@@ -432,7 +432,7 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
       font('multimedia', t('section.search.font.multimedia', 'la multimèdia'), media.status, media.error, media.refresh, ['multimedia']),
       font('notes', t('section.search.font.notes', 'les teues notes'), notes.status, notes.error, notes.refresh, ['notes']),
       font('converses', t('section.search.font.converses', 'les teues converses'), xat.status, null, xat.recarrega, ['converses']),
-      font('padro', t('section.search.font.padro', 'el padró del poble'), estatPadro, missatgePadro, reintentaPadro, ['persones', 'entitats']),
+      font('padro', t('section.search.font.padro', 'el padró del teu poble'), estatPadro, missatgePadro, reintentaPadro, ['persones', 'entitats']),
       font('directori', t('section.search.font.directori', "el directori d'entitats"), estatDirectori, missatgeDirectori,
         reintentaDirectori, ['entitats'])
     ];

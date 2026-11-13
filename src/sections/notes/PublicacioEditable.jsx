@@ -188,7 +188,14 @@ export function PublicacioEditable({ item }) {
     canviaEstatPublicacio: undefined,
     mouNota: undefined,
     esborraNota: undefined,
-    potEsborrar: false
+    potEsborrar: false,
+    /* F03-UI · Verificació R21 (P1) · La retirada del Mur va per una nota
+       (updateNote({ isPublished: false }) i el trigger de public.notes), i
+       esta nota en memòria no en té cap al servidor: cap retirada d'ací.
+       potRetirarDelMur es queda el del Bloc perquè NotesEditor diga el motiu
+       cert ('senseNota') en lloc de «encara no té contracte». */
+    retiraDelMur: undefined,
+    retiradaPendentDeNota: undefined
   } : null), [base, escriu, publicaIMarca, motiuModeTraduccio, modeTraduccioNomesLocal, nota.id, alDia]);
 
   if (!valor) return null;

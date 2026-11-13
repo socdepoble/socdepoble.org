@@ -48,8 +48,8 @@
    Només el registra src/pwa/registre.js, des de src/main.jsx i en producció.
    Cap amfitrió el rep: és a PROPIS_DEL_LLOC (vite.standalone.config.js).
    Sense skipWaiting: una versió nova espera que es tanquen les pestanyes.
-   L'única excepció és l'ordre de la PWA de juny (MISSATGE_LLEGAT_SALTA_ESPERA),
-   que la pàgina d'ara no envia mai (261023).
+   L'excepció és l'ordre explícita SKIP_WAITING: la PWA de juny o una
+   recuperació R21.9b amb build nou provat i pressupost de sessió reservat.
    Les funcions pures de dalt es proven a src/pwa/sw.test.js. */
 'use strict';
 
@@ -178,11 +178,11 @@ function classificaPeticio(peticio, origenPropi) {
 function esRespostaGuardable(resposta) {
   if (!resposta || resposta.status !== 200 || resposta.tipus !== 'basic' || resposta.redirigida) return false;
   if (/\b(?:no-store|private)\b/i.test(resposta.cacheControl || '')) return false;
-  const tipus = String(resposta.contentType || '').toLowerCase();
+  const tipus = String(resposta.contentType || '').split(';', 1)[0].trim().toLowerCase();
   if (!tipus || tipus.includes('text/html')) return false;
   const extensio = (RECURS_AMB_EMPREMTA.exec(resposta.cami || '') || [])[1];
-  if (extensio === 'js' || extensio === 'mjs') return tipus.includes('javascript');
-  if (extensio === 'css') return tipus.includes('text/css');
+  if (extensio === 'js' || extensio === 'mjs') return ['application/javascript', 'text/javascript', 'application/ecmascript', 'text/ecmascript'].includes(tipus);
+  if (extensio === 'css') return tipus === 'text/css';
   return extensio === 'woff' || extensio === 'woff2';
 }
 
@@ -630,7 +630,7 @@ async function navega(event) {
   }
   if (!resposta) {
     try {
-      resposta = await fetch(event.request);
+      resposta = await fetch(event.request, { cache: 'no-store' });
     } catch {
       if (!app) return respostaSenseConnexio();
       return (await closcaDesada(cami)) || respostaSenseConnexio(true);
@@ -684,7 +684,10 @@ async function recursAmbEmpremta(event) {
   try {
     memoria = await caches.open(MEMORIA_RECURSOS);
     const desada = await memoria.match(peticio);
-    if (desada) return desada;
+    // Una versió antiga podia haver desat HTML de fallback sota un hash JS.
+    // També les lectures es validen: arreglar només els nous put no el lleva.
+    if (desada && esRespostaGuardable(descriuResposta(desada, peticio.url))) return desada;
+    if (desada) await memoria.delete(peticio);
   } catch {
     memoria = null;
   }

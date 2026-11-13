@@ -23,6 +23,9 @@
    cada vegada que un observador de Resource Timing veu carregar un recurs
    amb empremta nou: el de l'app, el d'una vista oberta més tard. */
 
+import { configuraRecuperacioLazy } from '../apps/plataforma/lazyRoute.js';
+import { recuperaErrorChunkDeploy, instalLaRecuperacioChunkDeploy } from './recuperacioChunkDeploy.js';
+
 export const RUTA_DEL_SW = '/sw.js';
 export const ABAST_DEL_SW = '/';
 /* El nom que dispara src/apps/plataforma/escalfamentMemoriaCau.js (registre.test.js comprova que és el mateix). */
@@ -97,6 +100,59 @@ export function motiuPerNoRegistrar({ produccio, navegador, finestra } = {}) {
   const capacitor = finestra.Capacitor;
   if (capacitor && typeof capacitor.isNativePlatform === 'function' && capacitor.isNativePlatform()) return 'nativa';
   return null;
+}
+
+/* Gauntlet R22 (pwa-03) · Quant s'espera, com a molt, que el worker nou passe
+   de `installing` a `installed`. El motor talla abans (1500 ms en total). */
+export const ESPERA_INSTALLACIO_DEPLOY_MS = 1500;
+
+/* Fins que `worker` deixa `installing` (statechange), el topall o el primer
+   que arribe. Sense escolta possible, de seguida. Mai llança. */
+function esperaQueDeixeDInstallarSe(worker, ms) {
+  return new Promise(resol => {
+    let rellotge = null;
+    const fi = () => {
+      clearTimeout(rellotge);
+      try { worker.removeEventListener?.('statechange', mira); } catch { /* res a retirar */ }
+      resol();
+    };
+    const mira = () => { if (worker.state !== 'installing') fi(); };
+    try {
+      if (worker.state !== 'installing' || typeof worker.addEventListener !== 'function') return resol();
+      worker.addEventListener('statechange', mira);
+      rellotge = setTimeout(fi, ms);
+    } catch { fi(); }
+  });
+}
+
+/** Capacitat estreta injectada a la recuperació de chunks. L'entrada pròpia
+ * conserva tota la gestió del worker; el motor només rep una operació acotada.
+ * pwa-03 · `update()` es resol quan el worker nou encara és `installing`
+ * (algoritme Install: la promesa del treball es resol abans de l'esdeveniment
+ * install), no `waiting`. L'ordre va, doncs, al worker en espera i al que
+ * s'instal·la (`skipWaiting()` durant la instal·lació és vàlid), i torna a
+ * anar al nou quan arriba a `installed`, per si el primer missatge no hi
+ * arriba. Repetir-la no fa res més: skipWaiting és idempotent. */
+export async function actualitzaWorkerPerDeploy({ navegador, finestra, vigent = () => true, esperaMs = ESPERA_INSTALLACIO_DEPLOY_MS } = {}) {
+  const origin = finestra?.location?.origin, sw = navegador?.serviceWorker;
+  if (!vigent() || !origin || !sw?.getRegistration) return;
+  const reg = await sw.getRegistration(origin + '/');
+  if (!vigent() || !reg || reg.scope !== origin + '/') return;
+  const propi = worker => {
+    try {
+      const u = new URL(worker?.scriptURL);
+      return u.origin === origin && u.pathname === RUTA_DEL_SW && !u.search && !u.hash && !u.username && !u.password;
+    } catch { return false; }
+  };
+  if (![reg.active, reg.waiting, reg.installing].some(propi)) return;
+  try { await reg.update(); } catch { /* el nou build ja està provat */ }
+  const salta = worker => { if (vigent() && propi(worker)) worker.postMessage({ type: 'SKIP_WAITING' }); };
+  const nou = reg.installing;
+  salta(reg.waiting);
+  salta(nou);
+  if (!vigent() || !propi(nou)) return;
+  await esperaQueDeixeDInstallarSe(nou, Number.isFinite(esperaMs) ? Math.max(0, Math.min(ESPERA_INSTALLACIO_DEPLOY_MS, esperaMs)) : 0);
+  if (nou.state === 'installed' || reg.waiting === nou) salta(nou);
 }
 
 /** Port de lectura dels missatges del worker propi. Només l'entrada web
@@ -258,6 +314,15 @@ export function registraServiceWorker({
   navegador = globalThis.navigator,
   finestra = globalThis.window
 } = {}) {
+  // La recuperació de chunks no necessita suport SW. Manté, però, la mateixa
+  // frontera de producció, document propi, HTTPS i exclusió de Capacitor.
+  try {
+    if (!motiuPerNoRegistrar({ produccio, navegador: { serviceWorker: null }, finestra })) {
+      instalLaRecuperacioChunkDeploy({ navegador, finestra,
+        preparaWorker: ({ vigent }) => actualitzaWorkerPerDeploy({ navegador, finestra, vigent }) });
+      configuraRecuperacioLazy(recuperaErrorChunkDeploy);
+    }
+  } catch { /* sense una frontera verificable, l'ErrorBoundary continua */ }
   const motiu = motiuPerNoRegistrar({ produccio, navegador, finestra });
   if (motiu) return Promise.resolve({ registrat: false, motiu });
 

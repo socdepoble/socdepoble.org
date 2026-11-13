@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import CatalegWorkspace from '../../components/universal/CatalegWorkspace.jsx';
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
 import { usePublicadorsBarraRecurs } from '../../hooks/usePublicadorsBarraRecurs.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
@@ -8,6 +9,7 @@ import { OBRA_QUE_DINEM, RECEPTES_QUE_DINEM, laminaDeRecepta } from '../../data/
 import TextSection from '../text/TextSection';
 import CreditsQueDinem from './CreditsQueDinem.jsx';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { etiquetaDApartat } from './cercaReceptes.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
 import { COPYRIGHT_QUE_DINEM, PaginaDeRecepta } from './ReceptaDetailSection.jsx';
 
@@ -68,6 +70,7 @@ function PortadaLlibreQueDinem({ tr, onTorna }) {
 
 export default function ReceptesWorkspaceSection({ page, accioPrincipal, children, itemSlug = null, sincronitzaRuta = false }) {
   const { t } = useUIActions();
+  const esSuperadmin = useSessioOpcional()?.esSuperadmin === true;
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const model = useMemo(() => ({
     status: 'ready',
@@ -93,6 +96,8 @@ export default function ReceptesWorkspaceSection({ page, accioPrincipal, childre
       id: recepta.slug,
       slugRuta: recepta.slug,
       title: recepta.titol,
+      subtitle: `${etiquetaDApartat(tr, recepta.apartat)} · p. ${recepta.pagina}`,
+      lead: `${OBRA_QUE_DINEM.titol} · ${OBRA_QUE_DINEM.lloc} (${OBRA_QUE_DINEM.any})`,
       categoryIds: [ID_LLIBRE_QUE_DINEM, recepta.apartat],
       glyph: '🍲',
       recepta,
@@ -109,7 +114,7 @@ export default function ReceptesWorkspaceSection({ page, accioPrincipal, childre
       ruta="/page/receptes"
       model={model}
       inclouDescendents
-      afegirCataleg
+      afegirCataleg={esSuperadmin}
       itemSlug={itemSlug}
       sincronitzaRuta={sincronitzaRuta}
       labels={{ categories: 'Catàlegs', items: 'Receptes', all: `Totes les receptes (${RECEPTES_QUE_DINEM.length})` }}

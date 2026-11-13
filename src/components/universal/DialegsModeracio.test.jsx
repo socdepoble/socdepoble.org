@@ -226,7 +226,7 @@ describe('DialegNormes', () => {
 
   test('les cinc normes (l’última, la tolerància zero amb el termini), les eines i l’avís legal', () => {
     pinta(<DialegNormes {...props()} />);
-    const finestra = screen.getByRole('dialog', { name: 'Normes de convivència del poble' });
+    const finestra = screen.getByRole('dialog', { name: 'Normes de convivència de poble' });
     const normes = within(finestra).getAllByRole('listitem');
     expect(normes).toHaveLength(5);
     expect(normes[4].className).toBe('sdp-normes__zero');
@@ -267,7 +267,7 @@ describe('DialegNormes', () => {
     const alerta = within(dialeg()).getByRole('alert').textContent;
     expect(alerta).toBe('Ara mateix no podem desar l’acceptació de les normes, i sense ella no es pot publicar. Torna-ho a provar més tard o escriu-nos a socdepoble@socdepoble.org.');
     expect(alerta).not.toMatch(/denúncies/);
-    expect(screen.getByRole('dialog', { name: 'Normes de convivència del poble' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Normes de convivència de poble' })).toBeTruthy();
   });
 
   test('la tolerància zero és proporcionada: el contingut, sempre fora; la persona, segons la gravetat (DSA art. 14.4)', () => {
@@ -310,6 +310,6 @@ describe('DialegsModeracio (l’amfitrió)', () => {
     expect(dialegs).toHaveLength(3);
     expect(dialegs[0].hasAttribute('open')).toBe(false);
     expect(within(dialegs[1]).getByRole('heading').textContent).toBe('Vols bloquejar Pepa?');
-    expect(within(dialegs[2]).getByRole('heading').textContent).toBe('Normes de convivència del poble');
+    expect(within(dialegs[2]).getByRole('heading').textContent).toBe('Normes de convivència de poble');
   });
 });

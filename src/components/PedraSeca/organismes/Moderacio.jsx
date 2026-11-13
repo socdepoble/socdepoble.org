@@ -41,7 +41,7 @@ const PERFILS = new Set(['persona', 'entitat']);
 export function MenuModeracio({ potBloquejar = false, nomAutor = '', tipusObjectiu = '', onTria, onTanca, botoRef = null, mostra = false }) {
   const t = useTraductorOpcional();
   const { ref, tria, mouFocus } = useMenuEmergent({ files: FILES, onTria, onTanca, botoRef, mostra });
-  const nom = String(nomAutor || '').trim();
+  const nom = String(nomAutor || '').trim() || (potBloquejar ? tradueix(t, TEXTOS_MODERACIO.autorPublic) : '');
   const denuncia = PERFILS.has(tipusObjectiu) && nom
     ? omple(tradueix(t, TEXTOS_MODERACIO.denunciaPersona), { nom })
     : tradueix(t, tipusObjectiu === 'missatge' ? TEXTOS_MODERACIO.denunciaMissatge : TEXTOS_MODERACIO.denuncia);

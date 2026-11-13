@@ -375,7 +375,7 @@ describe('cap salt de maquetació · la imatge reserva el seu lloc', () => {
     expect(de(base.find((r) => r.prelud === 'h4, .h4'), 'color')).toBe('var(--sdp-accent-titol)');
     const tokens = llig('src/css/tokens.css');
     expect(tokens).toMatch(/--sdp-accio-text[:]\s*var\(--sdp-secondary-700\);/);
-    expect(tokens).toMatch(/--sdp-accent-titol[:]\s*var\(--sdp-primary-700\);/);
+    expect(tokens).toMatch(/--sdp-accent-titol[:]\s*var\(--sdp-primary-800\);/);
     // Cap regla de l'Índex no pinta els seus títols d'un altre color.
     expect(SUPERFICIE.filter((r) => r.prelud.startsWith('.sdp-consola__index') && /\bh[234]\b/.test(r.prelud) && de(r, 'color') && de(r, 'color') !== 'inherit').map(on)).toEqual([]);
   });

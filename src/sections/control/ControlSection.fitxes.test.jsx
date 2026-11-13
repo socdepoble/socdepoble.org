@@ -117,7 +117,7 @@ afterEach(cleanup);
 
 const FITXES = [
   { boto: 'Mode rural', consulta: '/control?fitxa=mode-rural', fitxa: 'mode-rural' },
-  { boto: 'Restaurar dades obertes del poble', consulta: '/control?fitxa=opendata', fitxa: 'opendata' }
+  { boto: 'Restaurar dades obertes del municipi', consulta: '/control?fitxa=opendata', fitxa: 'opendata' }
 ];
 
 test.each(FITXES)('control-03 · «$boto» obri la fitxa des de dalt amb el focus a <main>, també la segona vegada, i en tornar el Panell és on era', async ({ boto, consulta, fitxa }) => {
@@ -181,7 +181,7 @@ const TEXTOS_PANELL = [
   ['section.control.dubtes', 'Missatges per a dubtes'],
   /* P0-63 / IDEA-194 (261108) · L'accés directe a «El compte» del Perfil. */
   ['section.control.compte', 'Compte i contrasenya'],
-  ['section.control.eixir', 'Eixir del poble']
+  ['section.control.eixir', 'Eixir de poble']
 ];
 const marca = (clau) => `⟦${clau}⟧`;
 

@@ -262,7 +262,7 @@ describe('P1-15 · el recompte de la cerca, per al lector de pantalla', () => {
     await screen.findByRole('region', { name: 'Membres de Forn' });
     escriu('Cerca', 'Qu');
     // T11-02 · Sense codi, el genèric de la cerca: mai el text de l'error.
-    expect((await screen.findByRole('alert', {}, { timeout: 2000 })).textContent).toBe('No s’ha pogut cercar a la gent del poble.');
+    expect((await screen.findByRole('alert', {}, { timeout: 2000 })).textContent).toBe('No s’ha pogut cercar a la gent del municipi.');
     expect(anunci().textContent).toBe('');
   });
 
@@ -365,7 +365,7 @@ describe('T11-02 · els errors del port, pel codi', () => {
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Añadir' })); });
     expect(desaMembre).toHaveBeenCalledTimes(2);
     expect(screen.getByRole('alert').textContent).toBe('No se ha podido añadir al miembro.');
-    expect(document.body.textContent).not.toMatch(/no ha confirmat|no és del poble/);
+    expect(document.body.textContent).not.toMatch(/no ha confirmat|no és del poble|no és del municipi/);
   });
 
   test('en castellà, el canvi de rol rebutjat (SDP-ORGMEM-006) ho diu en castellà', async () => {

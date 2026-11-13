@@ -436,6 +436,22 @@ export function senseLaIAIA(converses) {
  */
 export const ID_FIL_BETA_TESTERS_LLAVOR = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d09';
 
+/** Identitat funcional de canal retornada pel servidor, mai derivada del títol.
+ * El UUID de la llavor només és compatibilitat local, no un destinatari remot. */
+export const CLAU_CANAL_BETA_TESTERS = 'beta_testers';
+export function esCanalBetaTesters(fil) {
+  return fil?.tipus === 'grup' && (
+    (fil.canalBetaTesters === true && fil.canalClau === CLAU_CANAL_BETA_TESTERS)
+    || String(fil.id) === ID_FIL_BETA_TESTERS_LLAVOR);
+}
+
+/** El canal real preval sobre la llavor; no inventa files, membres ni UUID. */
+export function trobaCanalBetaTesters(fils) {
+  if (!Array.isArray(fils)) return null;
+  return fils.find(f => esCanalBetaTesters(f) && f.canalBetaTesters === true)
+    || fils.find(esCanalBetaTesters) || null;
+}
+
 /* Els rols que manen en una entitat: els de ROLS_QUE_SIGNEN
    (IdentitatContext.jsx), que este mòdul neutre no importa.
    Auditoria 261007 (B) · No s'importa: IdentitatContext.jsx porta React, el

@@ -104,16 +104,21 @@ export function payloadProjeccioCataleg({ font, destins, audiencia }) {
  * Invalid markers never turn into a public destination or a source entity. */
 export function projeccioCatalegDe(item) {
   try {
-    if (!pla(item) || typeof item.id !== 'string' || typeof item.ownerUserId !== 'string' || !UUID.test(item.ownerUserId)) return null;
+    if (!pla(item) || typeof item.id !== 'string') return null;
     const marker = camps(item.projeccioCataleg, ['v', 'font', 'id', 'destins', 'audiencia']);
     if (marker.v !== 1 || !['publica', 'privada'].includes(marker.audiencia)) return null;
+    // R21: la projecció pública no transporta l'UUID del propietari. Esta
+    // marca és de representació, no atorga cap permís ni audiència privada.
+    const publicaFiltrada = item._projeccioPublicaFiltrada === true && marker.audiencia === 'publica'
+      && item.ownerUserId == null && item._projeccioLocal !== true && item._projeccioPendent !== true;
+    if (!publicaFiltrada && (typeof item.ownerUserId !== 'string' || !UUID.test(item.ownerUserId))) return null;
     const font = capturaFontCataleg({ font: marker.font, id: marker.id, title: item.title, subtitle: item.subtitle ?? '', lead: item.entradilla ?? item.description ?? '' });
     const destins = capturaDestinsDeFontCataleg(font, marker.destins);
     if (font.font === 'importacio-wp' && Object.hasOwn(item, 'destinacio_workspace')
       && item.destinacio_workspace !== (destins[0] ?? null)) return null;
     if (destinsPerAudiencia(destins, marker.audiencia).length !== destins.length) return null;
     if (item.sectionId !== (marker.audiencia === 'privada' ? 'notes' : 'mur')) return null;
-    return { id: item.id, ownerId: item.ownerUserId.toLowerCase(), font, destins, audiencia: marker.audiencia,
+    return { id: item.id, ownerId: publicaFiltrada ? null : item.ownerUserId.toLowerCase(), font, destins, audiencia: marker.audiencia,
       local: item._projeccioLocal === true, pendent: item._projeccioPendent === true,
       estat: item._projeccioPendent === true ? 'pendent' : 'confirmat' };
   } catch { return null; }

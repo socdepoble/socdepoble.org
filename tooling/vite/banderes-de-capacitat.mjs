@@ -7,6 +7,7 @@
  *   VITE_SDP_XAT_RITME=1      ritme del xat (xat_ritme, xat_presencia) i el desvetllador
  *   VITE_SDP_IAIA_SERVIDOR=1  la IAIA amb servidor (funció iaia)
  *   VITE_SDP_PUSH_NATIU=1     el cicle de push natiu (FCM/APNs)
+ *   VITE_SDP_COPUBLICACIO=1   co-publicació registrada (migració 2611111735)
  *
  * En compilar, este connector les definix com a literals ('1' o ''), perquè el
  * codi que les mira (`import.meta.env.VITE_SDP_… === '1'`) es plegue i Rollup
@@ -17,7 +18,7 @@
 import path from 'node:path';
 import { loadEnv } from 'vite';
 
-export const BANDERES_DE_CAPACITAT = Object.freeze(['VITE_SDP_XAT_RITME', 'VITE_SDP_IAIA_SERVIDOR', 'VITE_SDP_PUSH_NATIU']);
+export const BANDERES_DE_CAPACITAT = Object.freeze(['VITE_SDP_XAT_RITME', 'VITE_SDP_IAIA_SERVIDOR', 'VITE_SDP_PUSH_NATIU', 'VITE_SDP_COPUBLICACIO']);
 
 /** Els valors tal com els veu Vite: els .env de envDir i l'entorn del procés. */
 export function valorsDeLesBanderes(config = {}, mode = 'production') {

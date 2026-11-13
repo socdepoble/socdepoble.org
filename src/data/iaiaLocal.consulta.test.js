@@ -1,24 +1,43 @@
-import { afterEach, expect, test, vi } from 'vitest';
+/* D-C4-5 (COMMIT 5, decisió del Mestre) · La consulta documental del diàleg
+   va perdre la interfície en R21.3 (ConsultaIAIA.jsx) i el seu embolcall
+   (consultaTecnicaIAIA) s'ha retirat d'iaiaLocal.js. Ací queda el que valia:
+   el rànquing del cercador guiat de la Wiki, provat amb el mateix camí que
+   feia l'embolcall (construeixIndex del manifest i cercaRellevant amb
+   DOCUMENTS_PER_RESPOSTA i cercaGuiada), la guarda de visibilitat i la
+   salutació. Una llista buida és l'antic estat 'sense_resultats'. Les proves
+   que només provaven l'embolcall (cancel·lació, temps màxim, pregunta
+   invàlida, salutació, indisponibilitat i escalfament) s'han esborrat amb ell. */
+import { expect, test } from 'vitest';
 import {
-  consultaTecnicaIAIA, construeixIndex, cerca, cercaRellevant, MAXIM_PREGUNTA_IAIA, respostaDeLaIAIA, SALUTACIO_TECNICA_IAIA,
-  TEMPS_MAXIM_DE_LA_CONSULTA, TEMPS_MAXIM_DE_LA_WIKI, arrel, termesDeLaPregunta, tokenitza
+  construeixIndex, cerca, cercaRellevant, componResposta, DOCUMENTS_PER_RESPOSTA, respostaDeLaIAIA, SALUTACIO_TECNICA_IAIA,
+  arrel, termesDeLaPregunta, tokenitza
 } from './iaiaLocal.js';
 import { wikiManifest } from './wikiManifest.js';
 import { publicMetadata } from '../../tooling/wiki/lib/publication-policy.mjs';
 import CA from '../config/idiomes/ca.js';
 
+/* El cercador guiat, tal com el cridava l'embolcall retirat. */
+const guiat = (index, pregunta) => cercaRellevant(index, pregunta, DOCUMENTS_PER_RESPOSTA, { cercaGuiada: true });
+const ids = (fonts) => fonts.map((font) => font.id);
+/* La Wiki del paquet, indexada una sola vegada per a tot el fitxer. */
+let indexDeLaWiki = null;
+const wiki = () => (indexDeLaWiki ??= construeixIndex(wikiManifest.items));
+/* La ruta de cada línia de la resposta composta (componResposta, la del fil). */
+const destins = (fonts) => (componResposta(fonts) ?? '').split('\n')
+  .filter((linia) => linia.startsWith('· ')).map((linia) => linia.split(' — ').pop());
+
 /* Revisió de la crítica · Una pregunta d'una sola paraula («Com funciona
    Sollutia?») demana la paraula al títol del document. */
 const publicDoc = { id: 'model', title: 'Arquitectura amb Sollutia', content: '# Arquitectura amb Sollutia\n\nEl client passa pel port neutral. Sollutia només oferix lectura GET.\n\nEl taulell mostra les vendes del dia.' };
-const carrega = async () => ({ items: [publicDoc] });
-afterEach(() => vi.useRealTimers());
 
-test('la resposta conté una afirmació de la font i un destí navegable, sense inventar una síntesi', async () => {
-  const r = await consultaTecnicaIAIA('Com funciona Sollutia?', { carrega });
-  expect(r.estat).toBe('resposta');
-  expect(r.fonts).toEqual([{ id: 'model', titol: 'Arquitectura amb Sollutia', fragment: 'El client passa pel port neutral. Sollutia només oferix lectura GET.', ruta: '/wikidepoble?item=model' }]);
-  expect(r.text).toContain(r.fonts[0].fragment);
-  expect(r.text).not.toContain('vendes');
+test('la font porta una afirmació del document i un destí navegable, sense inventar una síntesi', () => {
+  const fonts = guiat(construeixIndex([publicDoc]), 'Com funciona Sollutia?');
+  expect(fonts.map(({ id, titol, fragment }) => ({ id, titol, fragment }))).toEqual([
+    { id: 'model', titol: 'Arquitectura amb Sollutia', fragment: 'El client passa pel port neutral. Sollutia només oferix lectura GET.' }
+  ]);
+  expect(destins(fonts)).toEqual(['/wikidepoble?item=model']);
+  expect(componResposta(fonts)).toContain(fonts[0].fragment);
+  expect(componResposta(fonts)).not.toContain('vendes');
 });
 
 test('un document explícitament privat mai entra a la cerca encara que el carregador el torne', () => {
@@ -55,72 +74,29 @@ test('les plantilles i els prompts publicats no es presenten com a instruccions 
 /* IAIA-2 · Documents públics que parlen a la IA («Eres L'Ens Híbrid…»,
    «tin en compte el cens del Consell…»): no són ajuda per al poble. */
 test('els documents d’instruccions per a la IA no són coneixement d’ajuda', () => {
-  const ids = ['personalitat_iaia', 'perfil_psiquiatric', 'agents_equip_ia', 'sgq_prompts', '03_llibre_d_or_memoria_episodica',
+  const perALaIA = ['personalitat_iaia', 'perfil_psiquiatric', 'agents_equip_ia', 'sgq_prompts', '03_llibre_d_or_memoria_episodica',
     '04_taula_potencia_models', '03_equip_ia'];
   const carpetes = ['folder:02_saber/obsidian_plugins', 'folder:02_saber/03_consola_termodinamica'];
-  const index = construeixIndex([...ids.map((id) => ({ ...publicDoc, id })), ...carpetes.map((categoryId, i) => ({ ...publicDoc, id: `equip${i}`, categoryId })),
+  const index = construeixIndex([...perALaIA.map((id) => ({ ...publicDoc, id })), ...carpetes.map((categoryId, i) => ({ ...publicDoc, id: `equip${i}`, categoryId })),
     { ...publicDoc, id: 'model' }]);
   expect(cerca(index, 'Sollutia').map((r) => r.id)).toEqual(['model']);
 });
 
-test('una consulta funcional no premia «funciona» i conserva el tema al final d’un paràgraf llarg', async () => {
-  const r = await consultaTecnicaIAIA('Com funciona el Rebost, IAIA?', { carrega: async () => ({ items: [
+test('una pregunta funcional no premia «funciona» i conserva el tema al final d’un paràgraf llarg', () => {
+  const fonts = guiat(construeixIndex([
     { id: 'personalitat', title: 'IAIA', content: '# IAIA\n\nLa IAIA parla amb una personalitat amable i directa.' },
     { id: 'soroll', title: 'Com funciona', content: '# Com funciona\n\nEsta funció funciona per a totes les persones del poble.' },
     { id: 'rebost', title: 'El Rebost', content: `# El Rebost\n\nRebostar és una paraula diferent. ${'Una col·laboració il·lustrada. '.repeat(350)}El Rebost guarda la llista dels productes que necessites comprar.` }
-  ] }) });
-  expect(r.fonts).toHaveLength(1);
-  expect(r.fonts[0].fragment).toContain('El Rebost guarda');
-  expect(r.fonts[0].fragment.length).toBeLessThanOrEqual(362);
+  ]), 'Com funciona el Rebost, IAIA?');
+  expect(fonts).toHaveLength(1);
+  expect(fonts[0].fragment).toContain('El Rebost guarda');
+  expect(fonts[0].fragment.length).toBeLessThanOrEqual(362);
 });
 
-test('una consulta ja cancel·lada no comença a carregar la Wiki', async () => {
-  const control = new AbortController();
-  control.abort();
-  const loader = vi.fn(carrega);
-  expect((await consultaTecnicaIAIA('Sollutia', { signal: control.signal, carrega: loader })).estat).toBe('cancel·lada');
-  expect(loader).not.toHaveBeenCalled();
-});
-
-test('el fragment no interpreta HTML, comentaris ni blocs de codi com una resposta', async () => {
-  const r = await consultaTecnicaIAIA('quota', { carrega: async () => ({ items: [{ id: 'quota', title: 'Quota', content: '# Quota\n\n<!-- quota secret -->\n\n```js\nquota executable\n```\n\nLa quota limita la mida dels fitxers que es poden pujar.' }] }) });
-  expect(r.fonts[0].fragment).toBe('La quota limita la mida dels fitxers que es poden pujar.');
-  expect(r.text).not.toMatch(/secret|executable/);
-});
-
-test('buit, massa llarg, salutació i cap coincidència tenen estats diferents', async () => {
-  const loader = vi.fn(carrega);
-  expect((await consultaTecnicaIAIA('', { carrega: loader })).estat).toBe('pregunta_invalida');
-  expect((await consultaTecnicaIAIA('x'.repeat(MAXIM_PREGUNTA_IAIA + 1), { carrega: loader })).estat).toBe('pregunta_invalida');
-  expect(await consultaTecnicaIAIA('Bon dia, IAIA', { carrega: loader })).toMatchObject({ estat: 'salutacio', text: SALUTACIO_TECNICA_IAIA });
-  expect(loader).not.toHaveBeenCalled();
-  expect((await consultaTecnicaIAIA('zzqxx', { carrega: loader })).estat).toBe('sense_resultats');
-});
-
-test('xarxa que no acaba: termini limitat i cap temporitzador viu', async () => {
-  vi.useFakeTimers();
-  const consulta = consultaTecnicaIAIA('Sollutia', { carrega: () => new Promise(() => {}), tempsMaxim: 3000 });
-  await vi.advanceTimersByTimeAsync(3000);
-  expect((await consulta).estat).toBe('no_disponible');
-  expect(vi.getTimerCount()).toBe(0);
-});
-
-test('cancel·lar allibera el temporitzador i ignora una resposta tardana', async () => {
-  vi.useFakeTimers();
-  const control = new AbortController();
-  let resol;
-  const consulta = consultaTecnicaIAIA('Sollutia', { signal: control.signal, carrega: () => new Promise((r) => { resol = r; }) });
-  await Promise.resolve();
-  control.abort();
-  expect((await consulta).estat).toBe('cancel·lada');
-  expect(vi.getTimerCount()).toBe(0);
-  resol({ items: [publicDoc] });
-  await Promise.resolve();
-});
-
-test('rebuig de càrrega és indisponibilitat, mai una llista buida presentada com a coneixement', async () => {
-  const r = await consultaTecnicaIAIA('Sollutia', { carrega: () => Promise.reject(new Error('xarxa')) });
-  expect(r).toEqual({ estat: 'no_disponible', fonts: [] });
+test('el fragment no interpreta HTML, comentaris ni blocs de codi com una resposta', () => {
+  const fonts = guiat(construeixIndex([{ id: 'quota', title: 'Quota', content: '# Quota\n\n<!-- quota secret -->\n\n```js\nquota executable\n```\n\nLa quota limita la mida dels fitxers que es poden pujar.' }]), 'quota');
+  expect(fonts[0].fragment).toBe('La quota limita la mida dels fitxers que es poden pujar.');
+  expect(componResposta(fonts)).not.toMatch(/secret|executable/);
 });
 
 /* IAIA-8 · La salutació literal del Mestre (prompt 261022_0225, Tasca 4). */
@@ -130,57 +106,17 @@ test('la salutació és, lletra per lletra, la del Mestre, i el diccionari valen
   expect(CA['section.xat.iaia.salutacio']).toBe(literal);
 });
 
-/* IAIA-7 · Una connexió lenta del poble: la consulta espera més que la
-   resposta del fil, perquè qui pregunta veu «Consultant la Wiki…». */
-test('la consulta espera la primera càrrega més que el fil de la IAIA', async () => {
-  vi.useFakeTimers();
-  expect(TEMPS_MAXIM_DE_LA_CONSULTA).toBeGreaterThan(TEMPS_MAXIM_DE_LA_WIKI);
-  const lenta = () => new Promise((r) => { setTimeout(() => r({ items: [publicDoc] }), TEMPS_MAXIM_DE_LA_WIKI + 2000); });
-  const consulta = consultaTecnicaIAIA('Sollutia', { carrega: lenta });
-  const fil = respostaDeLaIAIA('Sollutia', { carrega: lenta });
-  await vi.advanceTimersByTimeAsync(TEMPS_MAXIM_DE_LA_WIKI + 2000);
-  expect((await consulta).estat).toBe('resposta');
-  await expect(fil).resolves.toBeNull();
-  expect(vi.getTimerCount()).toBe(0);
-});
-
-/* Revisió de la crítica · Escalfar només baixa: l'índex (uns 50-80 ms al
-   fil principal) es construïx a la primera pregunta, no mentre s'escriu. */
-test('preparaWikiDeLaIAIA comença la càrrega del paquet abans de cap pregunta, no construïx l’índex i mai no rebutja', async () => {
-  vi.resetModules();
-  let carregues = 0;
-  let lectures = 0;
-  vi.doMock('./wikiManifest.js', () => {
-    carregues += 1;
-    return { wikiManifest: { get items() { lectures += 1; return [publicDoc]; } } };
-  });
-  try {
-    const modul = await import('./iaiaLocal.js');
-    expect(modul.preparaWikiDeLaIAIA()).toBeUndefined();
-    await vi.waitFor(() => expect(carregues).toBe(1));
-    await new Promise((resol) => { setTimeout(resol, 0); });
-    expect(lectures).toBe(0);
-    expect((await modul.consultaTecnicaIAIA('Sollutia')).estat).toBe('resposta');
-    expect(carregues).toBe(1);
-    expect(lectures).toBeGreaterThan(0);
-  } finally {
-    vi.doUnmock('./wikiManifest.js');
-    vi.resetModules();
-  }
-});
-
 /* IDEA-56 (pla 261029_1605, Bloc F.2) · L'Atles i les pàgines són del fil
-   de la IAIA: la consulta del diàleg continua sent la Wiki sola (els seus
-   textos diuen «He trobat N fonts a la Wiki»).
+   de la IAIA: el cercador guiat continua sent la Wiki sola.
    Ordre del Mestre (30-10-2026; f4 D.2, P1-49) · «Què és el Mercat?» ja no
    torna buit: troba les dues pàgines de la Wiki que nomenen el Mercat, i
    continua sense cap entrada de l'Atles (actualitzat a posta). */
-test('la consulta del diàleg continua sent la Wiki: «Què és el Mercat?» troba la Wiki, i cap font és de l’Atles, d’un poble ni d’una pàgina', async () => {
-  expect((await consultaTecnicaIAIA('Què és el Mercat?')).fonts.map((font) => font.id)).toEqual(['ADR-2026-11-PAGINACIO-SECCIONS', '00_index_maquina']);
+test('el cercador guiat és la Wiki: «Què és el Mercat?» troba la Wiki, i cap font és de l’Atles, d’un poble ni d’una pàgina', () => {
+  expect(ids(guiat(wiki(), 'Què és el Mercat?'))).toEqual(['ADR-2026-11-PAGINACIO-SECCIONS', '00_index_maquina']);
   for (const pregunta of ['Què és el Mercat?', 'Qui és Javi?', 'Què és un node?', 'Penàguila', 'Què és Sollutia?']) {
-    const { fonts } = await consultaTecnicaIAIA(pregunta);
-    expect([pregunta, fonts.filter((font) => /^(?:atles|poble|pagina):/.test(font.id))]).toEqual([pregunta, []]);
-    expect([pregunta, fonts.every((font) => font.ruta.startsWith('/wikidepoble?item='))]).toEqual([pregunta, true]);
+    const fonts = guiat(wiki(), pregunta);
+    expect([pregunta, ids(fonts).filter((id) => /^(?:atles|poble|pagina):/.test(id))]).toEqual([pregunta, []]);
+    expect([pregunta, destins(fonts).every((desti) => desti.startsWith('/wikidepoble?item='))]).toEqual([pregunta, true]);
   }
 });
 
@@ -200,24 +136,22 @@ const COMU = { id: 'comu', title: 'Diari de la collita', content: [
   'Sóc de Poble és la plataforma on la gent escriu del seu poble.',
   'La funció `Sentinelles` vigila la porta dels avisos del sistema.'
 ].join('\n\n') };
-const guiada = async () => ({ items: [ADR, FULL, COMU] });
+const GUIATS = [ADR, FULL, COMU];
 
-test('f4 D.2 · el nom d’una eina al cos troba la Wiki que el diu; el fil de la IAIA no canvia', async () => {
-  const mercat = await consultaTecnicaIAIA('Mercat', { carrega: guiada });
-  expect(mercat.estat).toBe('resposta');
-  expect(mercat.fonts.map((font) => font.id)).toEqual(['adr']);
-  expect(mercat.fonts[0].fragment).toContain('al Mercat');
-  expect((await consultaTecnicaIAIA('Què és el Xat?', { carrega: guiada })).fonts.map((font) => font.id)).toEqual(['full']);
-  expect((await consultaTecnicaIAIA('¿Qué es el mercado?', { carrega: guiada })).fonts.map((font) => font.id)).toEqual(['adr']);
-  const index = construeixIndex([ADR, FULL, COMU]);
+test('f4 D.2 · el nom d’una eina al cos troba la Wiki que el diu; el fil de la IAIA no canvia', () => {
+  const index = construeixIndex(GUIATS);
+  const mercat = guiat(index, 'Mercat');
+  expect(ids(mercat)).toEqual(['adr']);
+  expect(mercat[0].fragment).toContain('al Mercat');
+  expect(ids(guiat(index, 'Què és el Xat?'))).toEqual(['full']);
+  expect(ids(guiat(index, '¿Qué es el mercado?'))).toEqual(['adr']);
   expect(cercaRellevant(index, 'Mercat')).toEqual([]);
   expect(cercaRellevant(index, 'Què és el Xat?')).toEqual([]);
-  expect(cercaRellevant(index, 'Mercat', 3, { cercaGuiada: true }).map((resultat) => resultat.id)).toEqual(['adr']);
 });
 
-test('f4 D.2 · una paraula comuna, una majúscula d’inici de frase, «Sóc de Poble» o el codi en línia no fan cap nom', async () => {
+test('f4 D.2 · una paraula comuna, una majúscula d’inici de frase, «Sóc de Poble» o el codi en línia no fan cap nom', () => {
   for (const pregunta of ['Quant costa?', 'Com faig una nota?', 'Consola', 'Poble', 'Sentinelles', 'preu']) {
-    expect([pregunta, await consultaTecnicaIAIA(pregunta, { carrega: guiada })]).toEqual([pregunta, { estat: 'sense_resultats', fonts: [] }]);
+    expect([pregunta, guiat(construeixIndex(GUIATS), pregunta)]).toEqual([pregunta, []]);
   }
 });
 
@@ -256,35 +190,34 @@ test('f4a · una paraula que la Wiki escriu sobretot en minúscula no és nom d�
 });
 
 /* Les preguntes literals de l'ordre, sobre la Wiki de veres del paquet. Cada
-   font mostra el nom de l'eina al seu fragment: la consulta no promet res
+   font mostra el nom de l'eina al seu fragment: el cercador no promet res
    que no es veja. */
 test.each([
   ['Consola', 'el_projecte', 'Consola'],
   ['Mercat', 'ADR-2026-11-PAGINACIO-SECCIONS', 'Mercat'],
   ['Què és el Xat?', '00_full_de_ruta', 'Xat'],
   ['Com funcionen els tractors?', 'ADR-2026-12-MODULS-OPCIONALS', 'Tractors']
-])('f4 D.2 · «%s» troba la Wiki pública que en parla', async (pregunta, primera, nom) => {
-  const r = await consultaTecnicaIAIA(pregunta);
-  expect([pregunta, r.estat, r.fonts[0]?.id]).toEqual([pregunta, 'resposta', primera]);
-  expect([pregunta, r.fonts.filter((font) => !font.fragment.includes(nom)).map((font) => font.id)]).toEqual([pregunta, []]);
-  expect([pregunta, r.fonts.every((font) => font.ruta === `/wikidepoble?item=${encodeURIComponent(font.id)}`)]).toEqual([pregunta, true]);
+])('f4 D.2 · «%s» troba la Wiki pública que en parla', (pregunta, primera, nom) => {
+  const fonts = guiat(wiki(), pregunta);
+  expect([pregunta, fonts[0]?.id]).toEqual([pregunta, primera]);
+  expect([pregunta, fonts.filter((font) => !font.fragment.includes(nom)).map((font) => font.id)]).toEqual([pregunta, []]);
+  expect([pregunta, destins(fonts)]).toEqual([pregunta, fonts.map((font) => `/wikidepoble?item=${encodeURIComponent(font.id)}`)]);
 });
 
 /* Sentinelles i la Viquipèdia no surten a cap document de la Wiki pública
    (ni al títol ni al cos), ni cap pàgina explica com es traduïx una pàgina o
-   com es ven al Mercat: l'estat buit és la veritat. Si la Wiki en publica
+   com es ven al Mercat: la llista buida és la veritat. Si la Wiki en publica
    una pàgina, esta prova cau i la cerca l'ha de trobar. */
 test.each([
   ['Sentinelles', ['sentinelles']],
   ['Viquipèdia', ['viquipèdia', 'wikipedia']],
   ['Com tradueixo una pàgina?', []],
   ['Com vendre al Mercat?', []]
-])('f4 D.2 · «%s»: la Wiki pública no en parla, i la consulta no s’ho inventa', async (pregunta, absents) => {
-  expect(await consultaTecnicaIAIA(pregunta)).toEqual({ estat: 'sense_resultats', fonts: [] });
-  const index = construeixIndex(wikiManifest.items);
+])('f4 D.2 · «%s»: la Wiki pública no en parla, i el cercador no s’ho inventa', (pregunta, absents) => {
+  expect(guiat(wiki(), pregunta)).toEqual([]);
   for (const paraula of absents) {
     const [forma] = tokenitza(paraula);
-    expect([paraula, index.docsAmb.get(arrel(forma)) ?? 0]).toEqual([paraula, 0]);
+    expect([paraula, wiki().docsAmb.get(arrel(forma)) ?? 0]).toEqual([paraula, 0]);
   }
 });
 
@@ -293,29 +226,28 @@ test.each([
    «Quina hora és?» trobava l'arquitectura («· Data: … · Hora: 14:30»), «Foto»
    les regles del prompt d'imatges i «Sessió», l'índex de les plantilles. */
 test.each(['Quina hora és?', 'Quin temps fa?', 'Data', 'Mostrar', 'Estat', 'Demana', 'Sessió', 'Regla', 'Foto', 'Temps', 'Ordre',
-  'Memòria', 'Codi', 'Prompt', 'Mode', 'Arxiu', 'Valencià', 'Línia'])('f4a · «%s»: la consulta guiada no pren una paraula comuna per nom d’eina', async (pregunta) => {
-  expect(await consultaTecnicaIAIA(pregunta)).toEqual({ estat: 'sense_resultats', fonts: [] });
+  'Memòria', 'Codi', 'Prompt', 'Mode', 'Arxiu', 'Valencià', 'Línia'])('f4a · «%s»: el cercador guiat no pren una paraula comuna per nom d’eina', (pregunta) => {
+  expect(guiat(wiki(), pregunta)).toEqual([]);
 });
 
-test('f4a · cap font de la consulta guiada és l’índex de les plantilles, els connectors de disseny ni les regles del prompt d’imatges', async () => {
+test('f4a · cap font del cercador guiat és l’índex de les plantilles, els connectors de disseny ni les regles del prompt d’imatges', () => {
   const instruccions = ['00_index_plantilles', 'connectors_mcp_disseny', 'identitat_visual'];
   for (const pregunta of ['Consell', 'Sessió', 'Prompt', 'Codi', 'Mode', 'Regla', 'Foto', 'Valencià', 'Línia', 'Marmota', 'Acta']) {
-    const { fonts } = await consultaTecnicaIAIA(pregunta);
-    expect([pregunta, fonts.map((font) => font.id).filter((id) => instruccions.includes(id))]).toEqual([pregunta, []]);
+    expect([pregunta, ids(guiat(wiki(), pregunta)).filter((id) => instruccions.includes(id))]).toEqual([pregunta, []]);
   }
 });
 
 /* Gauntlet f4a (corrector iaia-consulta; iaia-salut-paraula-buida-nom-d-app) ·
    «Salut» és el nom d'una app i una salutació: la pregunta troba l'app, i la
-   salutació continua saludant, al diàleg i al fil. */
+   salutació no busca res (cap terme de la pregunta) i continua saludant al fil. */
 test('f4a · «Què és Salut?» troba l’app a la Wiki; «Salut!» continua sent una salutació', async () => {
   for (const pregunta of ['Què és Salut?', 'Com funciona Salut']) {
-    const r = await consultaTecnicaIAIA(pregunta);
-    expect([pregunta, r.estat, r.fonts.map((font) => font.id).includes('ADR-2026-10-APPS-DEL-DISPOSITIU')]).toEqual([pregunta, 'resposta', true]);
-    expect([pregunta, r.fonts.filter((font) => !font.fragment.includes('Salut')).map((font) => font.id)]).toEqual([pregunta, []]);
+    const fonts = guiat(wiki(), pregunta);
+    expect([pregunta, ids(fonts).includes('ADR-2026-10-APPS-DEL-DISPOSITIU')]).toEqual([pregunta, true]);
+    expect([pregunta, fonts.filter((font) => !font.fragment.includes('Salut')).map((font) => font.id)]).toEqual([pregunta, []]);
   }
   for (const salutacio of ['Salut!', 'Salut', 'IAIA, salut! Com va?', 'IAIA salut, com va?', 'Moltes gràcies i salut']) {
-    expect([salutacio, (await consultaTecnicaIAIA(salutacio)).estat]).toEqual([salutacio, 'salutacio']);
+    expect([salutacio, termesDeLaPregunta(salutacio)]).toEqual([salutacio, []]);
     expect([salutacio, await respostaDeLaIAIA(salutacio)]).toEqual([salutacio, SALUTACIO_TECNICA_IAIA]);
   }
   expect(termesDeLaPregunta('Salut, què és el Mercat?')).toEqual(['mercat']);

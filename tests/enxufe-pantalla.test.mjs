@@ -278,7 +278,10 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
   // O6: entrega nova; les entrades1.1.11i1.1.10 es mantenen íntegres.
   /* Onada R21 (v1.2.0) · La 1.1.13 obri el registre amb la negreta del readme ja feta etiqueta, i la 1.1.12
      publicada continua darrere com a història, íntegra. */
-  assert.ok(changelog.startsWith('<h4>1.1.13</h4><ul><li><strong>Traductor més protegit:</strong> el servei de traducció del lloc'), 'R21: la 1.1.13 obri el registre');
+  /* Onada R21 (COMMIT 5; v1.2.0 build 5) · La 1.1.14 obri el registre amb la negreta feta etiqueta, i la 1.1.13
+     continua darrere, íntegra, com a història. */
+  assert.ok(changelog.startsWith('<h4>1.1.14</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat'), 'R21 COMMIT 5: la 1.1.14 obri el registre');
+  assert.ok(changelog.includes('</ul><h4>1.1.13</h4><ul><li><strong>Traductor més protegit:</strong> el servei de traducció del lloc'), 'R21: la 1.1.13 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.12</h4><p>Cinc idiomes integrats als ajustos'), 'O6: l’entrega 1.1.12 amb text editorial es conserva');
   assert.ok(changelog.includes('<h4>1.1.11</h4><ul><li><strong>«Mostra els detalls» com a WordPress.org:</strong> la finestra'), 'la història1.1.11 i el seu format es conserven');
   assert.ok(changelog.includes('</ul><h4>1.1.10</h4><ul><li>'), 'la 1.1.10 publicada es queda al registre');

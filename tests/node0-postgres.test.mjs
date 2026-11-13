@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { startLocalPostgres } from './fixtures/postgres-local.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { creaPlaMigracions, preparaHidratacio, cosMigracio, generaSql, aplicaAmbPsql, validaEntornLocal, main, ROOT, SHA256_ZIP_CANONIC, uuidMunicipi, dataHoraMunicipal } from '../tooling/node0/hidrata-postgres-node0.mjs';
@@ -8,7 +8,7 @@ import { creaPlaMigracions, preparaHidratacio, cosMigracio, generaSql, aplicaAmb
 const plan = creaPlaMigracions();
 const local = { PGHOST: '/tmp', PGDATABASE: 'socdepoble_node0', PGUSER: 'node0_operator' };
 test('catalogue is complete, canonical ordered and records exact source hashes', () => {
-  const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).filter(f=>/^\d{10}_.+\.sql$/.test(f));
+  const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).filter(f=>/^(?:\d{10}|\d{14})_.+\.sql$/.test(f));
   assert.equal(plan.migrations.length,files.length);
   assert.equal(new Set(plan.migrations.map(m=>m.version)).size,files.length);
   const i=v=>plan.migrations.findIndex(m=>m.version===v);
@@ -60,14 +60,11 @@ test('real Open Data ZIP pin validates, no fictional market or personal accounts
   assert.equal(hydration.documents.filter(d=>['perfils','mercat'].includes(d.kind)).length,0);
   await assert.rejects(preparaHidratacio({sha256Esperat:'0'.repeat(64)}));
 });
-const modulePath=process.env.SDP_PGLITE_MODULE;
-if(!modulePath){test('SQL integration needs explicitly provided existing PGlite',{skip:'No PostgreSQL SQL executed without SDP_PGLITE_MODULE'},()=>{});}
-else {
-  const moduleURL=modulePath.startsWith('file:')?new URL(modulePath):pathToFileURL(path.resolve(modulePath));
-  const {PGlite}=await import(moduleURL.href);const {pgcrypto}=await import(new URL('./contrib/pgcrypto.js',moduleURL));
   test('all canonical PostgreSQL migrations, bootstrap, hydration, idempotence and failclosed ledger',async()=>{
-    const db=new PGlite({extensions:{pgcrypto}});
+    const cluster=await startLocalPostgres();
+    const db={query:(...args)=>cluster.db.query(...args),exec:sql=>cluster.db.query(sql),close:()=>cluster.close()};
     try {
+    assert.match((await db.query('select version() AS version')).rows[0].version,/PostgreSQL 18\.6(?:\s|$)/);
       const h=await preparaHidratacio();
       const sql=generaSql(plan,h,{advisoryLock:false});
       await db.exec(sql);
@@ -101,4 +98,3 @@ else {
       await db.exec('ROLLBACK').catch(()=>{});
     } finally {await db.close();}
   });
-}

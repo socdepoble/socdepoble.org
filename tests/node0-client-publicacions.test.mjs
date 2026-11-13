@@ -24,11 +24,12 @@ test('private publication composition uses the existing DOM mapper and preserves
     }});
     const transport={demanaAuth:async()=>({user:state.user}),async demanaPrivat(action,body,config){
       state.privateCalls.push({action,body,config});assert.equal(config.expectedActor,state.user?.id);
-      if(action==='loadSeccioPage')return state.sections[body.sectionId]??{rows:[],complete:true,nextCursor:null};
+      if(action==='loadSeccioPage')return state.sections[body.sectionId]??{lectura:'membre',rows:[],complete:true,nextCursor:null};
       if(action==='appendSectionSubmissionNetworkOnly'){
         const input=body.submission;
-        return {id:input.id,section_id:input.sectionId,owner_user_id:state.user.id,author_org_id:null,title:input.title??'',description:input.description??'',
+        const row = {id:input.id,section_id:input.sectionId,owner_user_id:state.user.id,author_org_id:null,title:input.title??'',description:input.description??'',
           created_at:TIME,updated_at:TIME,payload:{...input.payload,ownerUserId:state.user.id,author_org_id:null,sectionId:input.sectionId}};
+        return input.noteId ? {publicacio:row,nota_revision:input.expectedNoteRevision+1,publicada_revision:input.expectedNoteRevision+1,replay:false} : row;
       }
       assert.fail('Unexpected simulated private operation');
     },destroy(){}};
@@ -47,17 +48,33 @@ test('private publication composition uses the existing DOM mapper and preserves
   });
   await t.test('loadMur merges only three authenticated pages with the public seed, preserving a microsecond cursor',async()=>{
     const {state,client}=await fixture();
-    state.sections.mur={rows:[{id:ID,section_id:'mur',owner_user_id:A,author_org_id:null,title:'Persisted',created_at:TIME,updated_at:TIME,payload:{content:'<p>Saved</p>',ownerUserId:B,author_org_id:B,isSystem:true}}],complete:false,nextCursor:{createdAt:TIME,id:ID}};
+    state.sections.mur={lectura:'membre',rows:[{id:ID,section_id:'mur',owner_user_id:A,author_org_id:null,title:'Persisted',created_at:TIME,updated_at:TIME,payload:{content:'<p>Saved</p>',ownerUserId:B,author_org_id:B,isSystem:true}}],complete:false,nextCursor:{createdAt:TIME,id:ID}};
     const first=await client.adapter.loadMur(A);assert.deepEqual(first.feedPosts.map(value=>value.id),['seed-public',ID]);
     assert.equal(first.feedPosts[1].ownerUserId,A);assert.equal(first.feedPosts[1].author_org_id,null);assert.equal(first.feedPosts[1].isSystem,undefined);
     assert.deepEqual(state.privateCalls.map(call=>call.body.sectionId),['mur','events','mercat']);
     const decoded=JSON.parse(first.paginacio.mur);assert.deepEqual(decoded,[TOWN,A,'mur',TIME,ID]);
-    state.sections.mur={rows:[{id:ID2,section_id:'mur',owner_user_id:A,author_org_id:null,title:'Older',created_at:'2026-11-04T10:20:30.123455+00:00',updated_at:TIME,payload:{}}],complete:true,nextCursor:null};
+    state.sections.mur={lectura:'membre',rows:[{id:ID2,section_id:'mur',owner_user_id:A,author_org_id:null,title:'Older',created_at:'2026-11-04T10:20:30.123455+00:00',updated_at:TIME,payload:{}}],complete:true,nextCursor:null};
     const next=await client.adapter.loadSeccioPage({seccio:'mur',cursor:first.paginacio.mur,limit:17});assert.equal(next.complete,true);assert.equal(next.nextCursor,null);assert.equal(next.elements[0].id,ID2);
     assert.deepEqual(state.privateCalls.at(-1).body.cursor,{createdAt:TIME,id:ID});assert.equal(state.privateCalls.at(-1).body.limit,17);
     const before=state.privateCalls.length;
     await assert.rejects(client.adapter.loadSeccioPage({seccio:'mur',cursor:JSON.stringify([TOWN,B,'mur',TIME,ID])}),error=>error.codi==='NODE0_CURSOR_INVALID');
     assert.equal(state.privateCalls.length,before);
+  });
+  await t.test('R21 v2 Foraster autenticat mapeja el DTO públic sense exigir ni filtrar owner cru',async()=>{
+    const {state,client}=await fixture();
+    state.sections.mur={lectura:'public',rows:[{id:ID,section_id:'mur',title:'Públic',created_at:TIME,
+      public_content:'Text net',owner_user_id:B,payload:{phone:'PRIVATE',image:'/private.jpg'}}],complete:true,nextCursor:null};
+    const item=(await client.adapter.loadMur(A)).feedPosts.find(v=>v.id===ID);
+    assert.equal(item._murPublic,true);assert.equal(item.ownerUserId,null);assert.equal(item.image,undefined);
+    assert.equal(JSON.stringify(item).includes('PRIVATE'),false);
+  });
+  await t.test('R21 v2 atomic descriptor preserves note/operation UUID and both receipt revisions without second PATCH',async()=>{
+    const {state,client}=await fixture();const noteId='55555555-5555-4555-8555-555555555555',operationId='66666666-6666-4666-8666-666666666666';
+    const receipt=await client.adapter.appendSectionSubmissionNetworkOnly({id:ID,noteId,operationId,expectedNoteRevision:2,sectionId:'mur',title:'Atomic',payload:{content:'<p>Safe</p>'}});
+    assert.equal(receipt.publicacio.id,ID);assert.equal(receipt.nota_revision,3);assert.equal(receipt.publicada_revision,3);
+    assert.equal(state.privateCalls.length,1);assert.equal(state.privateCalls[0].body.submission.noteId,noteId);assert.equal(state.privateCalls[0].body.submission.operationId,operationId);
+    await assert.rejects(client.adapter.appendSectionSubmissionNetworkOnly({id:ID,noteId:'bad',operationId,expectedNoteRevision:2,sectionId:'mur',payload:{}}));
+    assert.equal(state.privateCalls.length,1);
   });
   await t.test('anonymous read stays on public collections; personal data is never fetched through public GET',async()=>{
     const {state,client}=await fixture(null);const result=await client.adapter.loadMur();assert.equal(result.feedPosts[0].id,'seed-public');
@@ -67,9 +84,9 @@ test('private publication composition uses the existing DOM mapper and preserves
   });
   await t.test('multimedia uses its own authenticated page and page corruption never degrades to public-only success',async()=>{
     const {state,client}=await fixture();
-    state.sections.multimedia={rows:[{id:ID,section_id:'multimedia',owner_user_id:A,author_org_id:null,title:'Private member media',created_at:TIME,updated_at:TIME,payload:{type:'media',title:'Media'}}],complete:true,nextCursor:null};
+    state.sections.multimedia={lectura:'membre',rows:[{id:ID,section_id:'multimedia',owner_user_id:A,author_org_id:null,title:'Private member media',created_at:TIME,updated_at:TIME,payload:{type:'media',title:'Media'}}],complete:true,nextCursor:null};
     const result=await client.adapter.loadMultimedia(A);assert.deepEqual(result.mediaItems.map(value=>value.id),['seed-media',ID]);assert.equal(state.privateCalls.at(-1).body.sectionId,'multimedia');
-    state.sections.mur={rows:[],complete:false,nextCursor:null};
+    state.sections.mur={lectura:'membre',rows:[],complete:false,nextCursor:null};
     await assert.rejects(client.adapter.loadMur(A),error=>error.codi==='BACKEND_RESPOSTA_INVALIDA');
   });
   await t.test('publication accessors and excessive bodies stop before HTTP and without executing a getter',async()=>{

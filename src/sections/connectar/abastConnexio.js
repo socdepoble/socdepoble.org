@@ -94,21 +94,10 @@ export function etiquetaObjecte(objecte, t = senseTraductor) {
   return text(t, Object.hasOwn(PARELLS_OBJECTE, objecte) ? PARELLS_OBJECTE[objecte] : PARELL_ELEMENT);
 }
 
-/** «des del Mur», «des de l'agenda»… Una secció desconeguda: «des de Sóc de Poble». */
-const DES_DE = Object.freeze({
-  mur: 'des del Mur',
-  mercat: 'des del Mercat',
-  events: 'des de l’agenda',
-  pobles: 'des dels Pobles',
-  multimedia: 'des de Multimèdia',
-  notes: 'des del Bloc',
-  perfil: 'des del directori',
-  /* IDEA-61 (T0, prompt 261102_1532; L3-A3) · Les tres verticals del flux universal. */
-  vehicle: 'des de Compartir cotxe',
-  treball: 'des de Treball',
-  habitatge: 'des d’Habitatge'
-});
-export const desDe = (seccio) => DES_DE[seccio] || 'des de Sóc de Poble';
+/* «des del Mur», «des de l'agenda»… (desDe) viu a notes/connexions.js, l'únic
+   mòdul de l'arrencada que el demana (el cos persistent de la connexió).
+   Onada R22 · BOOT3: importat d'ací, arrossegava tot este mòdul a l'arrencada. */
+export { desDe } from '../notes/connexions.js';
 
 /** Els grups de xat on la persona ja és: fils de tipus 'grup', no arxivats. */
 export function grupsDeXat(fils, t = senseTraductor) {

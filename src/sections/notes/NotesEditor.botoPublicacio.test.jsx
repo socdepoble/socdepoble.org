@@ -9,8 +9,9 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
 
-const mocks = vi.hoisted(() => ({ barra: null, adapter: null, useDades: null, send: null }));
+const mocks = vi.hoisted(() => ({ barra: null, adapter: null, useDades: null, send: null, servidor: null }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => mocks.useDades() }));
 vi.mock('../../components/universal/richText', () => ({
   useUniversalRichText: () => null,
@@ -61,6 +62,7 @@ mocks.useDades = function useDadesDeProva() { return useContext(Dades); };
 
 /* El servidor de notes: CAS de revisió, i la llista viva torna la fila desada (NotesDataContext). */
 function ProveidorDeDades({ servidor, children }) {
+  mocks.servidor = servidor;
   const [notes, setNotes] = useState(() => [...servidor.values()]);
   const updateNote = useCallback(async (id, canvis, revisio) => {
     const actual = servidor.get(id);
@@ -70,10 +72,17 @@ function ProveidorDeDades({ servidor, children }) {
     setNotes([...servidor.values()]);
     return nova;
   }, [servidor]);
+  /* R21.1 v2 · La llista adopta l'estat que confirma el rebut atòmic (NotesDataContext · confirmaPublicacioNota). */
+  const confirmaPublicacioNota = useCallback(async (nota, rebut) => {
+    const canvis = { revision: rebut.revision, isPublished: Boolean(rebut.isPublished), publishedSubmissionId: rebut.publishedSubmissionId ?? null };
+    servidor.set(nota, { ...servidor.get(nota), ...canvis });
+    setNotes([...servidor.values()]);
+    return canvis;
+  }, [servidor]);
   const valor = useMemo(() => ({
     notes, noteFolders: [], scopeKey: AMBIT, workspaceKey: 'sessio-fa', notesComplete: true, status: 'ready',
-    config: { dataMode: 'remote', tenantId: '00000000-0000-4000-8000-0000000000a1' }, updateNote
-  }), [notes, updateNote]);
+    config: { dataMode: 'remote', tenantId: '00000000-0000-4000-8000-0000000000a1' }, updateNote, confirmaPublicacioNota
+  }), [notes, updateNote, confirmaPublicacioNota]);
   return <Dades.Provider value={valor}>{children}</Dades.Provider>;
 }
 
@@ -113,9 +122,19 @@ const actualitzaAlMur = async () => {
 beforeEach(() => {
   mocks.barra = null;
   mocks.adapter = null;
-  mocks.send = vi.fn(async () => undefined);
+  /* R21.1 v2 · El diari d'actes (IndexedDB) i un doble fidel de publica_nota_al_mur: CAS de revisió, vincle
+     nota-acte, revisió nova i rebut atòmic; la consulta d'una operació desconeguda torna null. */
+  vi.stubGlobal('indexedDB', creaIdbFalsEstructurat());
+  mocks.send = vi.fn(async ({ id, noteId, expectedNoteRevision, consulta }) => {
+    if (consulta) return null;
+    const nota = mocks.servidor.get(noteId);
+    if (nota.revision !== expectedNoteRevision) throw Object.assign(new Error('SDP-MUR-REVISION'), { codi: 'SDP-MUR-REVISION' });
+    const revision = nota.revision + 1;
+    mocks.servidor.set(noteId, { ...nota, revision, isPublished: true, publishedSubmissionId: id });
+    return { publicacio: { id }, nota_revision: revision, publicada_revision: revision, replay: false };
+  });
 });
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 const PUBLICADA = { title: 'Festa', content: '<p>Cos</p>', folderId: 'f-mur', isPublished: true, revision: 3, contentLoaded: true };
 

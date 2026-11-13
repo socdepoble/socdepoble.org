@@ -249,7 +249,7 @@ describe('P0-23 · la pantalla «Cal actualitzar l’app»', () => {
     const html = renderToStaticMarkup(<CalActualitzarDeDalt enllac={PLAY} />);
     expect(html).toContain('<main class="sdp-buit sdp-cal-actualitzar" aria-labelledby="sdp-cal-actualitzar-titol">');
     expect(html).toContain('<h2 id="sdp-cal-actualitzar-titol" tabindex="-1" class="sdp-buit__titol">Cal actualitzar l’app</h2>');
-    expect(html).toContain('ja no s’entén amb el servidor del poble');
+    expect(html).toContain('ja no s’entén amb el servidor de poble');
     expect(html).toContain(`<a class="sdp-boto sdp-boto--primari sdp-boto--gran" href="${PLAY}" target="_blank" rel="noopener noreferrer">Actualitza l’app</a>`);
     expect(html).toMatch(/<a class="sdp-boto sdp-boto--fantasma" href="https?:\/\/[^"]+" target="_blank" rel="noopener noreferrer">Obri Sóc de Poble al navegador<\/a>/);
     /* Cap capçalera de primer nivell fora de la de pàgina (Pedra Seca §4). El

@@ -2,6 +2,7 @@ import { webcrypto } from 'node:crypto';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
+import { SessionContext } from '../../app/contexts/objectesDeContext.js';
 import { LLIBRES_ARBRES_MONUMENTALS, modelLlibresArbres } from '../../data/patrimoni/llibresArbresMonumentals.js';
 import { ARBRES_MONUMENTALS_2020 } from '../../data/patrimoni/arbresMonumentals2020.js';
 import * as importacio from '../../data/importacio/paginesTrilogiaIMoliEditorial.js';
@@ -35,11 +36,12 @@ function Ruta() {
   const { pathname, search } = useLocation();
   return <output data-testid="ruta">{pathname}{search ? `?${search}` : ''}</output>;
 }
-function munta({ ruta = '/page/arbres-monumentals', llibres } = {}) {
-  return render(<MemoryRouter rutaInicial={ruta}>
+function munta({ ruta = '/page/arbres-monumentals', llibres, sessio = null } = {}) {
+  const arbre = <MemoryRouter rutaInicial={ruta}>
     <NaturaPatrimoniWorkspaceSection page={paginaGeneral} llibres={llibres} />
     <Ruta />
-  </MemoryRouter>);
+  </MemoryRouter>;
+  return render(sessio ? <SessionContext.Provider value={sessio}>{arbre}</SessionContext.Provider> : arbre);
 }
 const llista = container => within(container.querySelector('#app-grid-list'));
 const triaLlibre = () => fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${LLIBRES_ARBRES_MONUMENTALS[0].etiquetaNavegacio}`) }));
@@ -250,6 +252,9 @@ test('P116 · carpeta nativa desplega quatre filtres reals i un únic CTA porta 
     expect(visibles).toHaveLength(ARBRES_MONUMENTALS_2020.filter(predicat).length);
     for (const arbre of ARBRES_MONUMENTALS_2020.filter(predicat)) expect(llista(container).getByRole('button', { name: `#${arbre.ordre} · ${arbre.nom}`, exact: true })).toBeTruthy();
   }
+  expect(screen.queryByRole('button', { name: '+ Afegir catàleg', exact: true })).toBeNull();
+  cleanup();
+  munta({ sessio: { esSuperadmin: true } });
   expect(screen.getAllByRole('button', { name: '+ Afegir catàleg', exact: true })).toHaveLength(1);
   fireEvent.click(screen.getByRole('button', { name: '+ Afegir catàleg', exact: true }));
   expect(screen.getByTestId('ruta').textContent).toBe('/el-meu-perfil?vista=admin-importacio');
@@ -306,4 +311,18 @@ test('P116 · tornar a clicar la carpeta activa reobri la portada i conserva el 
   triaLlibre();
   await screen.findByText(/WP #619/, {}, { timeout: 5000 });
   expect(screen.getByRole('button', { name: /^Catàleg d’Arbres Monumentals de La Torre de les Maçanes/ }).getAttribute('aria-expanded')).toBe('true');
+});
+
+test('R21.7 · la prestatgeria multipoble mostra una targeta Pedra Seca per municipi i obri el catàleg amb la CTA secundària', async () => {
+  const segon = {
+    id: 'benifallim-prova', titol: 'Catàleg d’Arbres de Benifallim', poble: 'Benifallim',
+    portada: { pagina: { title: 'Portada de Benifallim', html: '<p>Inventari municipal de Benifallim.</p>' } },
+    fontDoctoral: { ...LLIBRES_ARBRES_MONUMENTALS[0].fontDoctoral, id: 'font-benifallim-prova', titol: 'Font Benifallim' },
+    exemplars: [{ ...primer, nom: 'Carrasca Grossa' }]
+  };
+  const { container } = munta({ llibres: [...LLIBRES_ARBRES_MONUMENTALS, segon] });
+  expect(screen.getByRole('heading', { name: 'Catàlegs municipals disponibles', level: 2 })).toBeTruthy();
+  expect(container.querySelectorAll('.sdp-card-grid article.sp-card')).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Obri el catàleg: Benifallim' }));
+  expect(await screen.findByRole('heading', { name: 'Portada de Benifallim', level: 1 })).toBeTruthy();
 });

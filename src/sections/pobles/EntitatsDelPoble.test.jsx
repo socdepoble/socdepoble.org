@@ -49,7 +49,7 @@ beforeEach(() => {
 describe('EntitatsDelPoble · el panell', () => {
   test('demana el directori pel NOM del poble, amb el senyal, i pinta la targeta del directori de cada entitat', async () => {
     render(<EntitatsDelPoble poble={POBLE} />);
-    expect(screen.getByText('Carregant les empreses i entitats del poble…')).toBeTruthy();
+    expect(screen.getByText('Carregant les empreses i entitats d’este poble…')).toBeTruthy();
     await waitFor(() => expect(m.llista).toHaveBeenCalledTimes(1));
     expect(m.llista.mock.calls[0]).toEqual([{ poble: 'Vilanova de Prova SdP', signal: expect.any(AbortSignal) }, { dataMode: 'seed' }]);
     const forn = await screen.findByRole('heading', { name: 'Forn de la Plaça' });
@@ -111,7 +111,7 @@ describe('EntitatsDelPoble · el panell', () => {
     m.llista.mockRejectedValueOnce(Object.assign(new Error('sense town_name'), { code: 'NO-DISPONIBLE' }));
     render(<EntitatsDelPoble poble={POBLE} />);
     expect(await screen.findByText('Este servidor encara no llista les empreses i entitats dels pobles.')).toBeTruthy();
-    expect(screen.queryByText('Carregant les empreses i entitats del poble…')).toBeNull();
+    expect(screen.queryByText('Carregant les empreses i entitats d’este poble…')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Torna-ho a provar' })).toBeNull();
   });
 
@@ -120,7 +120,7 @@ describe('EntitatsDelPoble · el panell', () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
     render(<EntitatsDelPoble poble={POBLE} />);
     const alerta = await screen.findByRole('alert');
-    expect(alerta.textContent).toContain('No s’han pogut carregar les empreses i entitats del poble');
+    expect(alerta.textContent).toContain('No s’han pogut carregar les empreses i entitats d’este poble');
     /* És l'estat d'error de les dades, no la barrera de les targetes: res no ha petat. */
     expect(alerta.textContent).not.toContain('La resta de la pàgina continua com sempre.');
     expect(errors).not.toHaveBeenCalled();

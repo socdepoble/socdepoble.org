@@ -30,7 +30,7 @@ import { traductorPatrimoni } from './textosPatrimoni.js';
      és oberta per defecte, i el motor entra al build per defecte; amb VITE_SDP_APP_NEVERA=0 Vite el trau. */
 /* Les mides de la portada són les que registra pageContent.patrimoniR14.js per a PORTADA_IMAGE (1200×675). */
 const PORTADA_FALLBACK_QUE_DINEM = '/assets/uploads/patrimoni/portada_que_dinem_muro.webp';
-/* Onada R20 (DRETS_QUE_DINEM) · La font només acredita «permís d’ús»: el copyright de la pàgina és el de l'obra, el mateix dels crèdits. */
+/* Onada R21.10 (DRETS_QUE_DINEM) · Llicència Creative Commons oberta compartida per l'Associació i Sóc de Poble. */
 export const COPYRIGHT_QUE_DINEM = DRETS_QUE_DINEM;
 
 const MotorDeLaRecepta = import.meta.env.VITE_SDP_APP_NEVERA !== '0'

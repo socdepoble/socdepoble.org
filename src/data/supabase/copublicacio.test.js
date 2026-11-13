@@ -1,11 +1,18 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const simulacio = vi.hoisted(() => ({ rpc: vi.fn(), usuari: null, entrada: 0 }));
 vi.mock('./runtime.js', () => ({
   getCurrentUser: () => simulacio.usuari,
   getResolvedConfig: config => ({ runtimeDataMode: config.dataMode ?? 'remote', hasSupabaseConfig: true,
     tenantId: '11000000-0000-4000-8000-000000000001' }),
-  rpc: simulacio.rpc
+  rpc: simulacio.rpc,
+  esRpcAbsent: error => error?.status === 404 && error?.postgrestCode === 'PGRST202'
+}));
+vi.mock('./capacitatRpc.js', () => ({
+  esCapacitatRpcNoDisponible: error => error?.codi === 'capacitat-no-disponible',
+  rpcOpcional: (nom, cos, config, { disponible, ...opcions }) => disponible
+    ? simulacio.rpc(nom, cos, config, opcions)
+    : Promise.reject(Object.assign(new Error('Capacitat no disponible.'), { codi: 'capacitat-no-disponible' }))
 }));
 vi.mock('../identitat.js', () => ({
   capturaSessio: () => {
@@ -35,12 +42,31 @@ const resposta = (versio, publicadorsRegistrats = [], altres = {}) =>
   ({ ...REC, versio, publicadorsRegistrats, ...altres });
 
 beforeEach(() => {
+  vi.stubEnv('VITE_SDP_COPUBLICACIO', '1');
   simulacio.rpc.mockReset();
   simulacio.usuari = { id: A };
   simulacio.entrada = 1;
 });
+afterEach(() => vi.unstubAllEnvs());
 
 describe('Contracte R19 de co-publicació', () => {
+  test('R21.1 v2 · sense declaració de desplegament no fa cap lectura ni mutació remota', async () => {
+    vi.stubEnv('VITE_SDP_COPUBLICACIO', '');
+    await expect(lligPublicadorsRegistrats(REC)).rejects.toMatchObject({ code: 'no-disponible' });
+    await expect(traspassaPublicacio(TRASPAS)).rejects.toMatchObject({ code: 'no-disponible' });
+    await expect(reverteixTraspasPublicacio(REVERSIO)).rejects.toMatchObject({ code: 'no-disponible' });
+    expect(simulacio.rpc).not.toHaveBeenCalled();
+    // La reserva local continua llegible amb la bandera apagada.
+    expect((await lligPublicadorsRegistrats(REC, { dataMode: 'local' })).publicadorsRegistrats).toEqual([]);
+  });
+
+  test('R21.1 v2 · només una absència de funció acreditada es degrada; un 404 inesperat continua visible', async () => {
+    const inesperat = Object.assign(new Error('Ruta inesperada.'), { status: 404 });
+    simulacio.rpc.mockRejectedValueOnce(inesperat);
+    await expect(lligPublicadorsRegistrats(REC)).rejects.toBe(inesperat);
+    simulacio.rpc.mockRejectedValueOnce(Object.assign(new Error('Funció absent.'), { status: 404, postgrestCode: 'PGRST202' }));
+    await expect(traspassaPublicacio(TRASPAS)).rejects.toMatchObject({ code: 'no-disponible' });
+  });
   test('el publicador oficial es resol sense barrejar-lo amb el padró o la font editorial', async () => {
     simulacio.rpc.mockResolvedValue(resposta(0, [], { publicadorEfectiu: { actor_id: 'inventat' }, copyright: 'forjat' }));
     const r = await lligPublicadorsRegistrats(REC);

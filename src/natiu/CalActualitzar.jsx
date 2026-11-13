@@ -29,7 +29,7 @@ export default function CalActualitzar({ enllac = null, amfitrio = null }) {
     <main className="sdp-buit sdp-cal-actualitzar" aria-labelledby="sdp-cal-actualitzar-titol">
       <h2 id="sdp-cal-actualitzar-titol" ref={titolRef} tabIndex={-1} className="sdp-buit__titol">{t('app.actualitza.titol', 'Cal actualitzar l’app')}</h2>
       <p className="sdp-buit__text">
-        {t('app.actualitza.text', 'Esta versió de l’app ja no s’entén amb el servidor del poble. Actualitza-la per a continuar publicant i xatejant. Mentrestant, pots entrar per la web.')}
+        {t('app.actualitza.text', 'Esta versió de l’app ja no s’entén amb el servidor de poble. Actualitza-la per a continuar publicant i xatejant. Mentrestant, pots entrar per la web.')}
       </p>
       {enllac ? (
         <a className="sdp-boto sdp-boto--primari sdp-boto--gran" href={enllac} target="_blank" rel="noopener noreferrer">

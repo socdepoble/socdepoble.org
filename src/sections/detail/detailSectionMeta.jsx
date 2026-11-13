@@ -12,6 +12,7 @@ import { Link } from '../../app/contexts/RouterContext.jsx';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { portadaDeLaPublicacio } from '../../data/mapejadorSeccions.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
+import { senseHtmlCru } from '../mercat/etiquetesMercat.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 import { esFontImatgePropia, fontVideoPropia, sanitizeHtml } from '../../utils/sanitize.js';
 import { isSafeUrl } from '../../components/universal/UniversalUtils.js';
@@ -518,12 +519,12 @@ function CompraDelProducte({ item, t, onAfegeixAlCabas }) {
 export function buildMercatDetailSectionMeta({ marketItems = [], t, onAfegeixAlCabas }) {
   return {
     title: t('section.detail.mercat.title', 'Mercat'),
-    label: t('section.detail.mercat.label', 'Producte'),
+    label: t('nav.mercat', 'Mercat'),
     listPath: '/mercat',
     getAuthorHref: rutaDePerfilPublicDAutor,
     items: marketItems,
     getTitle: (item) => item.title || t('section.detail.mercat.itemTitle', 'Producte'),
-    getSubtitle: (item) => item.subtitle || item.description || item.summary || '',
+    getSubtitle: (item) => item.subtitle || senseHtmlCru(item.description) || item.summary || '',
     /* Ordre del Mestre (261007) · La portada és la primera foto del producte
        (imatgesDeProducte), mai el logotip de qui ven. Abans,
        imageSrc || … || avatar_url: la marca de Sóc de Poble guanyava a la
@@ -615,9 +616,9 @@ function PestanyesDelPoble({ poble, gent, t }) {
   const publicacions = (pestanya) => (
     <BarreraDelPanellDelPoble
       resetKey={`${String(poble?.id ?? '')}:${pestanya}`}
-      fallback={<Alerta to="error" titol={t('section.detail.pobles.gent.error', 'No s’han pogut carregar les publicacions del poble')}>{fallada}</Alerta>}
+      fallback={<Alerta to="error" titol={t('section.detail.pobles.gent.error', 'No s’han pogut carregar les publicacions d’este poble')}>{fallada}</Alerta>}
     >
-      <React.Suspense fallback={<Carregant etiqueta={t('section.detail.pobles.gent.carregant', 'Carregant les publicacions del poble…')} />}>
+      <React.Suspense fallback={<Carregant etiqueta={t('section.detail.pobles.gent.carregant', 'Carregant les publicacions d’este poble…')} />}>
         <PublicacionsDelPoble poble={poble} pestanya={pestanya} />
       </React.Suspense>
     </BarreraDelPanellDelPoble>
@@ -625,7 +626,7 @@ function PestanyesDelPoble({ poble, gent, t }) {
   return (
     <Pestanyes
       centrades
-      etiqueta={t('section.detail.pobles.pestanyes', 'Continguts del poble')}
+      etiqueta={t('section.detail.pobles.pestanyes', 'Continguts d’este poble')}
       activa={activa}
       onCanvi={tria}
       pestanyes={[{
@@ -647,12 +648,12 @@ function PestanyesDelPoble({ poble, gent, t }) {
           <BarreraDelPanellDelPoble
             resetKey={String(poble?.id ?? '')}
             fallback={(
-              <Alerta to="error" titol={t('section.detail.pobles.entitats.error', 'No s’han pogut carregar les empreses i entitats del poble')}>
+              <Alerta to="error" titol={t('section.detail.pobles.entitats.error', 'No s’han pogut carregar les empreses i entitats d’este poble')}>
                 {fallada}
               </Alerta>
             )}
           >
-            <React.Suspense fallback={<Carregant etiqueta={t('section.detail.pobles.entitats.carregant', 'Carregant les empreses i entitats del poble…')} />}>
+            <React.Suspense fallback={<Carregant etiqueta={t('section.detail.pobles.entitats.carregant', 'Carregant les empreses i entitats d’este poble…')} />}>
               <EntitatsDelPoble poble={poble} />
             </React.Suspense>
           </BarreraDelPanellDelPoble>

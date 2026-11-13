@@ -230,7 +230,7 @@ test('PUBLICAR amb un valor fora de rang al bloc (Habitacions «60») s’atura 
   // Onada R20 (Bucle 1 · zero modals flotants a /notes): l'acció enfoca i preselecciona el panell en línia.
   expect(screen.queryByRole('dialog')).toBeNull();
   const panell = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
-  expect(within(panell).getByRole('radio', { name: /Públic al Mur del poble/ }).checked).toBe(true);
+  expect(within(panell).getByRole('radio', { name: /Públic al Mur de poble/ }).checked).toBe(true);
   await act(async () => { fireEvent.click(within(panell).getByRole('button', { name: 'Publicar al Mur' })); });
   expect(within(panell).getByRole('alert').textContent).toBe('La fitxa de «Habitatge» no està completa.');
   // Corregit el valor, la guarda ja no la para per la fitxa.

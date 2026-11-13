@@ -211,7 +211,7 @@ test('sense nomPoble, la fila virtual i el grup que crea es diuen com la gent de
   mocks.towns = [{ id: 'olivera-inventada', title: "L'Olivera Inventada" }];
   render(<XatSection />);
   const fila = llista().querySelector('li[data-clau="poble:olivera-inventada"]');
-  expect(fila.querySelector('.sdp-xat-fila__nom').textContent).toBe("Gent de l'Olivera Inventada, Grup del poble");
+  expect(fila.querySelector('.sdp-xat-fila__nom').textContent).toBe("Gent de l'Olivera Inventada, Grup de poble");
   fireEvent.click(fila.querySelector('button'));
   const url = new URL(mocks.navigate.mock.calls.at(-1)[0], 'https://x.invalid');
   expect(url.searchParams.get('sobre')).toBe('poble:olivera-inventada');

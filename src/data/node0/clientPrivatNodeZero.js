@@ -185,14 +185,15 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
       next=pageCursor({createdAt:decoded[3],id:decoded[4]});
     }
     const result=await rpc('loadSeccioPage',{sectionId:section,limit,...(next?{cursor:next}:{})},options);
-    if(!plain(result)||!Array.isArray(result.rows)||result.rows.length>limit||typeof result.complete!=='boolean'||new TextEncoder().encode(JSON.stringify(result.rows)).byteLength>1048576)throw invalid();
+    if(!plain(result)||!['membre','public'].includes(result.lectura)||!Array.isArray(result.rows)||result.rows.length>limit||typeof result.complete!=='boolean'||new TextEncoder().encode(JSON.stringify(result.rows)).byteLength>1048576)throw invalid();
     const cursorOut=result.nextCursor===null?null:pageCursor(result.nextCursor);
     if(result.complete!==(cursorOut===null)||!result.complete&&result.rows.length===0)throw invalid();
-    const mapper=await mappers();current(captured.ticket);
+    const { elementDeMurMembre, elementDeMurPublic } = await import('../murPublic.js');current(captured.ticket);
     const elements=result.rows.map(value=>{
-      row(value);if(value.section_id!==section||!UUID.test(value.owner_user_id??'')||value.author_org_id!==null&&value.author_org_id!==undefined&&!UUID.test(value.author_org_id)||!INSTANT.test(value.created_at??''))throw invalid();
-      return mapper.elementDeFilaPublicada({id:value.id,payload:value.payload,titol:value.title,createdAt:value.created_at,updatedAt:value.updated_at,
-        ownerUserId:value.owner_user_id,authorOrgId:value.author_org_id,sectionId:section});
+      if(!plain(value)||!UUID.test(value.id??'')||!INSTANT.test(value.created_at??''))throw invalid();
+      if(result.lectura==='public')return elementDeMurPublic(value,section);
+      if(value.section_id!==section||!UUID.test(value.owner_user_id??'')||value.author_org_id!==null&&value.author_org_id!==undefined&&!UUID.test(value.author_org_id))throw invalid();
+      return elementDeMurMembre(value,section);
     });
     if(cursorOut){const last=result.rows.at(-1);if(cursorOut.createdAt!==last.created_at||cursorOut.id!==last.id)throw invalid();}
     current(captured.ticket);
@@ -281,6 +282,7 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
   if(publications)adapter.appendSectionSubmissionNetworkOnly=async(submission,options={})=>{
     const captured=actor(),input=dataCopy(submission);
     if(!plain(input)||!PUBLISH_SECTIONS.has(input.sectionId)||input.id!==undefined&&!UUID.test(input.id))throw fail('NODE0_PUBLICACIO_INVALIDA');
+    if(own(input,'noteId')&&(!UUID.test(input.noteId??'')||!UUID.test(input.operationId??'')||!Number.isSafeInteger(input.expectedNoteRevision)||input.expectedNoteRevision<1))throw invalid();
     const id=input.id??globalThis.crypto.randomUUID();
     if(!plain(input.payload??{})||new TextEncoder().encode(JSON.stringify(input.payload??{})).byteLength>128*1024)throw fail('NODE0_PUBLICACIO_MASSA_GRAN');
     const mapper=await mappers();current(captured.ticket);
@@ -288,8 +290,17 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
     // substitute sanitizer; server-authoritative fields are removed separately.
     const normalized=mapper.mapSectionSubmissionToItem({...input,id,payload:input.payload??{}});
     const payload=Object.fromEntries(Object.entries(normalized).filter(([key])=>!authorityKeys.has(key)));
-    const wire={id,sectionId:input.sectionId,payload};for(const field of ['title','description','actor'])if(own(input,field))wire[field]=input[field];
+    const wire={id,sectionId:input.sectionId,payload};for(const field of ['title','description','actor','noteId','expectedNoteRevision','operationId','consulta'])if(own(input,field))wire[field]=input[field];
     let saved;try{saved=await rpc('appendSectionSubmissionNetworkOnly',{submission:wire},options,true);}catch(error){error.requestId=id;throw error;}
+    if(own(input,'noteId')) {
+      if(!UUID.test(input.noteId??'')||!UUID.test(input.operationId??'')||!Number.isSafeInteger(input.expectedNoteRevision)||input.expectedNoteRevision<1)throw invalid();
+      current(captured.ticket);
+      if(input.consulta===true&&(saved===null||saved?.retirada===true))return saved;
+      if(!plain(saved)||!plain(saved.publicacio)||saved.publicacio.id!==id||saved.publicacio.owner_user_id!==captured.id
+        ||saved.publicacio.section_id!==input.sectionId||!Number.isSafeInteger(saved.nota_revision)||saved.nota_revision<1
+        ||!Number.isSafeInteger(saved.publicada_revision)||saved.publicada_revision<1||saved.publicada_revision>saved.nota_revision||typeof saved.replay!=='boolean')throw invalid();
+      return saved;
+    }
     row(saved);if(saved.id!==id||saved.owner_user_id!==captured.id||saved.section_id!==input.sectionId||!INSTANT.test(saved.created_at??''))throw invalid();
     const published=mapper.elementDeFilaPublicada({id:saved.id,payload:saved.payload,titol:saved.title,createdAt:saved.created_at,updatedAt:saved.updated_at,
       ownerUserId:saved.owner_user_id,authorOrgId:saved.author_org_id,sectionId:saved.section_id});current(captured.ticket);

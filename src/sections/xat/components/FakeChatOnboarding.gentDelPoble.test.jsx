@@ -72,13 +72,13 @@ test('xat de mostra: el nom declarat per l’amfitrió mana; sense fitxa, l’id
 test('la fila virtual del poble (FilaPoble) es diu com la gent, també d’un poble inventat', () => {
   const nomDeLaFila = () => document.querySelector('.sdp-xat-fila__nom').textContent;
   filaPoble({ id: TORRE.id, nom: '' });
-  expect(nomDeLaFila()).toBe(`${TORRE.author}, Grup del poble`);
-  expect(screen.getByRole('button', { name: new RegExp(`${TORRE.author}, Grup del poble`) })).toBeTruthy();
+  expect(nomDeLaFila()).toBe(`${TORRE.author}, Grup de poble`);
+  expect(screen.getByRole('button', { name: new RegExp(`${TORRE.author}, Grup de poble`) })).toBeTruthy();
   cleanup();
   filaPoble({ id: INVENTAT.id, nom: '' });
-  expect(nomDeLaFila()).toBe("Gent de l'Olivera Inventada, Grup del poble");
+  expect(nomDeLaFila()).toBe("Gent de l'Olivera Inventada, Grup de poble");
   cleanup();
   mocks.towns = [];
   filaPoble({ id: INVENTAT.id, nom: '' });
-  expect(nomDeLaFila()).toBe(`${INVENTAT.id}, Grup del poble`);
+  expect(nomDeLaFila()).toBe(`${INVENTAT.id}, Grup de poble`);
 });

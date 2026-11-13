@@ -57,7 +57,7 @@ function useCadaObertura(obert, reinicia) {
   }
 }
 
-const nomDe = (objectiu, t) => String(objectiu?.autor?.nom || objectiu?.titol || '').trim()
+const nomDe = (objectiu, t) => objectiu?.murPublic === true ? tradueix(t, TEXTOS_MODERACIO.autorPublic) : String(objectiu?.autor?.nom || objectiu?.titol || '').trim()
   || tradueix(t, TEXTOS_MODERACIO.bloquejosSenseNom);
 
 /** El diàleg «Denuncia este contingut». Vegeu la capçalera i ModeracioContext.jsx (el contracte de les props). */

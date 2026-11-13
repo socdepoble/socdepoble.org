@@ -5,11 +5,13 @@
  * escriu a la IAIA en llavor o en local, el magatzem que fa de servidor en
  * estos dos modes (localXat.js) li demana una resposta ací.
  * Gauntlet 261022_0225 (crítica Claude) · En remot l'adaptador mai no escriu
- * per ella: cap missatge del fil ix d'este mòdul, i això no canvia. El que sí
- * que pot oferir la interfície, també en remot, és la consulta documental
- * (consultaTecnicaIAIA, que pinta ConsultaIAIA.jsx): local, rotulada com a
- * ajuda amb la Wiki, que es queda al navegador i no publica res ni al fil ni
- * al grup públic de /iaia.
+ * per ella: cap missatge del fil ix d'este mòdul, i això no canvia.
+ * D-C4-5 (COMMIT 5, decisió del Mestre) · La consulta documental del diàleg
+ * va perdre la interfície en R21.3, quan es va esborrar ConsultaIAIA.jsx, i el
+ * seu embolcall (consultaTecnicaIAIA, preparaWikiDeLaIAIA i el seu temps
+ * màxim) s'ha retirat d'ací. Queda el motor: respostaDeLaIAIA per al fil i
+ * cercaRellevant, amb l'opció cercaGuiada, que hui només fan servir les
+ * proves del rànquing (iaiaLocal.consulta.test.js).
  *
  * QUÈ FA
  *   Busca els 3 documents de la Wiki pública més pròxims a la pregunta i
@@ -26,7 +28,7 @@
  *   De src/data/wikiManifest.js, que ja és al paquet (és el que pinta
  *   /wikidepoble) i només porta el que deixa eixir la política de publicació
  *   del compilador (tooling/wiki/compile-wiki-to-app.mjs). Es carrega amb
- *   import() la primera vegada que algú escriu a la IAIA o obri la consulta:
+ *   import() la primera vegada que algú escriu a la IAIA:
  *   cap byte més al tros d'entrada ni al nucli, i cap descàrrega de
  *   public/rag-index.json. No fa servir tooling/wiki/core/edge_rag.mjs, que
  *   indexa documents no públics.
@@ -59,8 +61,7 @@
  *   resposta de l'Atles o d'una pàgina porta la capçalera
  *   ENCAPCALAMENT_DE_SOC_DE_POBLE i la ruta interna de la secció (RUTA_INTERNA,
  *   la mateixa llista tancada que la bombolla converteix en enllaç,
- *   sections/xat/enllacos.js). La consulta del diàleg (consultaTecnicaIAIA)
- *   continua sent la Wiki sola.
+ *   sections/xat/enllacos.js).
  *
  * P1-24 (Onada 2, 261101) · Entre les dues capes, el rebost rural
  * (iaiaRebostRural.js): càpsules curades de cultura i d'ús quotidià, també
@@ -95,11 +96,6 @@ export const DF_MAXIM_DEL_COS = 3;
 /* Si la Wiki no ha arribat en este temps, la IAIA contesta la frase de sempre
    i la càrrega continua: la pregunta següent ja la troba. */
 export const TEMPS_MAXIM_DE_LA_WIKI = 4000;
-/* Gauntlet 261022_0225 (crítica Claude) · La consulta l'espera qui pregunta,
-   amb «Consultant la Wiki…» a la vista i el diàleg per a tancar-la: la
-   primera càrrega (187 KB gzip) té més marge en una connexió lenta del poble.
-   Si tampoc no arriba, la càrrega continua i tornar-ho a provar la troba. */
-export const TEMPS_MAXIM_DE_LA_CONSULTA = 15000;
 
 /* Pes de cada camp del document en la freqüència d'un terme. */
 const PES_TITOL = 3;
@@ -657,8 +653,9 @@ export function cerca(index, pregunta, limit = DOCUMENTS_PER_RESPOSTA) {
        (prosa per a persones, mai el cos d'un document tècnic de la Wiki), si
        cap títol ni etiqueta no la porta i si és específica (DF_MAXIM_DEL_COS):
        «Què és un node?» troba Nodes i Fedivers.
-   Ordre del Mestre (30-10-2026; f4 D.2, P1-49) · La cerca guiada del diàleg
-   «Pregunta a la IAIA» (consultaTecnicaIAIA, només la Wiki) és un cercador:
+   Ordre del Mestre (30-10-2026; f4 D.2, P1-49) · La cerca guiada
+   (cercaGuiada; la va fer servir la consulta documental del diàleg, sense
+   interfície des de R21.3 i retirada per D-C4-5) és un cercador de la Wiki:
    el nom d'una eina que cap títol ni etiqueta no porta troba el document de
    la Wiki que el diu al fragment mostrat com a nom (comANom: «al Mercat»,
    «la Consola», «**Xat E2EE…**»). Una paraula comuna («Quant costa?», «Com
@@ -681,8 +678,9 @@ function passaElLlindar(resultat, termes, index, cercaGuiada = false) {
 /**
  * Com `cerca`, però només amb els documents que passen el llindar de
  * rellevància, triats d'entre tots: si cap no hi passa, cap. Funció pura.
- * `cercaGuiada` (la consulta del diàleg): el nom d'una eina al cos d'un
- * document de la Wiki també hi passa (passaElLlindar).
+ * `cercaGuiada` (el cercador guiat de la Wiki; cap crida de producció des
+ * que D-C4-5 en va retirar la consulta del diàleg): el nom d'una eina al cos
+ * d'un document de la Wiki també hi passa (passaElLlindar).
  */
 export function cercaRellevant(index, pregunta, limit = DOCUMENTS_PER_RESPOSTA, { cercaGuiada = false } = {}) {
   const termes = arrelsDeLaPregunta(pregunta);
@@ -1157,8 +1155,6 @@ export function documentsDePageCopy(pageCopy) {
   return documents;
 }
 
-/* La Wiki del paquet, a demanda (la consulta del diàleg). */
-const carregaWikiDelPaquet = () => import('./wikiManifest.js').then((modul) => modul.wikiManifest);
 /* IDEA-56 (Bloc F.2) · La segona capa del fil: la Wiki i les pàgines
    triades, totes dues a demanda (import() sense espai: XatSection.pes.test.js
    no el compta com a estàtic). La Wiki es baixa ací; PAGE_COPY ja és en
@@ -1167,34 +1163,22 @@ const carregaWikiDelPaquet = () => import('./wikiManifest.js').then((modul) => m
 const carregaPaquetDeLaIAIA = () => Promise.all([import('./wikiManifest.js'), import('../sections/text/pageContent.js')])
   .then(([wiki, pagines]) => ({ items: [...(Array.isArray(wiki.wikiManifest?.items) ? wiki.wikiManifest.items : []), ...documentsDePageCopy(pagines.PAGE_COPY)] }));
 
-/* Cada índex del paquet es construïx una sola vegada per pestanya. Si la
+/* L'índex del paquet es construïx una sola vegada per pestanya. Si la
    càrrega falla, es descarta i la pregunta següent ho torna a provar. Un
-   carregador injectat (les proves) no es guarda. */
-const CARREGADORS_DEL_PAQUET = new Set([carregaWikiDelPaquet, carregaPaquetDeLaIAIA]);
+   carregador injectat (les proves) no es guarda. D-C4-5 · L'únic carregador
+   del paquet és el del fil: el de la Wiki sola (carregaWikiDelPaquet) era de
+   la consulta del diàleg i s'ha retirat amb ella. */
 const indexosDelPaquet = new Map();
 
 function indexDe(carrega) {
   const construeix = () => Promise.resolve().then(carrega).then((manifest) => construeixIndex(manifest?.items));
-  if (!CARREGADORS_DEL_PAQUET.has(carrega)) return construeix();
+  if (carrega !== carregaPaquetDeLaIAIA) return construeix();
   if (!indexosDelPaquet.has(carrega)) {
     const promesa = construeix();
     indexosDelPaquet.set(carrega, promesa);
     promesa.catch(() => { if (indexosDelPaquet.get(carrega) === promesa) indexosDelPaquet.delete(carrega); });
   }
   return indexosDelPaquet.get(carrega);
-}
-
-/**
- * Gauntlet 261022_0225 (crítica Claude) · Comença a baixar la Wiki del
- * paquet abans de la primera pregunta (ConsultaIAIA ho fa en obrir-se): el
- * temps d'escriure-la cobrix la descàrrega. Només la baixa: l'índex es
- * construïx a la primera pregunta, mentre es veu «Consultant la Wiki…», i no
- * ocupa el fil principal mentre algú escriu. import() es queda el mòdul, i la
- * pregunta no el torna a demanar. Mai no rebutja; una fallada es descarta i
- * la pregunta la torna a provar.
- */
-export function preparaWikiDeLaIAIA() {
-  carregaWikiDelPaquet().catch(() => {});
 }
 
 /** Una promesa que es resol amb `reserva` si `promesa` no ha acabat en `ms`. */
@@ -1244,39 +1228,8 @@ export async function respostaDeLaIAIA(pregunta, { carrega = carregaPaquetDeLaIA
   }
 }
 
-/** Consulta documental privada de la interfície, també en mode remot.
- * No envia ni desa missatges, no impersona l'agent del servidor. La resposta
- * és extractiva: cada afirmació prové del document enllaçat, i només hi entra
- * el que passa el llindar de rellevància (si no, 'sense_resultats').
- * Ordre del Mestre (30-10-2026; f4 D.2, P1-49) · És el cercador guiat de la
- * Wiki: el nom d'una eina troba el document que el diu (cercaGuiada). */
-export async function consultaTecnicaIAIA(pregunta, {
-  carrega = carregaWikiDelPaquet, tempsMaxim = TEMPS_MAXIM_DE_LA_CONSULTA, signal
-} = {}) {
-  if (signal?.aborted) return { estat: 'cancel·lada', fonts: [] };
-  if (typeof pregunta !== 'string' || !pregunta.trim() || pregunta.length > MAXIM_PREGUNTA_IAIA) {
-    return { estat: 'pregunta_invalida', fonts: [] };
-  }
-  if (!termesDeLaPregunta(pregunta).length) return { estat: 'salutacio', text: SALUTACIO_TECNICA_IAIA, fonts: [] };
-  let atura;
-  const cancel = new Promise((resol) => { atura = () => resol(null); });
-  signal?.addEventListener('abort', atura, { once: true });
-  try {
-    const index = await ambTempsMaxim(Promise.race([indexDe(carrega), cancel]), tempsMaxim, null);
-    if (signal?.aborted) return { estat: 'cancel·lada', fonts: [] };
-    if (!index) return { estat: 'no_disponible', fonts: [] };
-    const fonts = cercaRellevant(index, pregunta, DOCUMENTS_PER_RESPOSTA, { cercaGuiada: true })
-      .map(({ id, titol, fragment }) => ({ id, titol, fragment, ruta: rutaDeDocumentWiki(id) }));
-    return fonts.length ? { estat: 'resposta', fonts, text: componResposta(fonts) } : { estat: 'sense_resultats', fonts: [] };
-  } catch {
-    return { estat: 'no_disponible', fonts: [] };
-  } finally {
-    signal?.removeEventListener('abort', atura);
-  }
-}
-
-/** Per a les proves: oblida els índexs del paquet (la Wiki sola i la Wiki
-    amb les pàgines), el de la capa local i el del rebost rural. */
+/** Per a les proves: oblida l'índex del paquet (la Wiki amb les pàgines),
+    el de la capa local i el del rebost rural. */
 export function oblidaIndexDeLaWiki() {
   indexosDelPaquet.clear();
   indexLocal = null;

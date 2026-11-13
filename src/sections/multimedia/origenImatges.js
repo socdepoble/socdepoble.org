@@ -28,7 +28,7 @@
  *     «javi-llinares-perfil-1200px.jpg»). El visor no en llig ni en pinta el
  *     GPS. No depén del cens, que arriba tard: l'arxiu ho diu al seu camp.
  */
-import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA } from '../text/pageContent.dretsPatrimoni.js';
 
 export const ORIGENS = Object.freeze(['ia', 'foto', 'sistema']);
 

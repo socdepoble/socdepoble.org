@@ -18,6 +18,12 @@ vi.mock('./richText', async (importOriginal) => ({
   useTipTapToolbarAdapter: () => ({ state: {}, exec: {} }),
   UniversalRichTextToolbar: () => null,
 }));
+/* Gauntlet R22 (ronda 4) · jsdom no té canvas: el diàleg de la capçalera carrega, dibuixa i exporta per dobles. */
+vi.mock('./enquadrament/imatgeCanvas.js', () => ({
+  carregaImatge: vi.fn(async () => ({ amplada: 800, alcada: 400, tipus: 'image/jpeg', element: {}, allibera: () => {} })),
+  dibuixaVisor: () => true,
+  exportaRetall: vi.fn(async () => new File(['y'], 'enquadrament.jpg', { type: 'image/jpeg' })),
+}));
 vi.mock('./richText/extensions', async (importOriginal) => {
   const real = await importOriginal();
   m.extensions = vi.fn(real.extensionsRiques);
@@ -25,7 +31,8 @@ vi.mock('./richText/extensions', async (importOriginal) => {
 });
 import { DocumentEditor } from './DocumentEditor.jsx';
 import { ETIQUETA_CONSERVA_EXIF, exifPublicable } from './enquadrament/exifIncrustat.js';
-import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
+import { AJUDA_CONSERVA_UBICACIO } from './enquadrament/DialegEnquadrament.jsx';
+import { TIPUS, dataOriginal, gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 
 afterEach(() => {
   cleanup();
@@ -101,4 +108,39 @@ test('si l’editor es desmunta amb la pregunta oberta, es cancel·la (null): l�
   const { resposta } = await pregunta();
   vista.unmount();
   await expect(resposta).resolves.toBeNull();
+});
+
+/* Gauntlet R22 (ronda 4) · Les fotos d'una publicació de les Notes (la
+   capçalera i les del cos) ixen al Mur per la promoció, que només hi deixa la
+   tria de preparaTiffTriat: amb la ubicació o la data, cap dada de la càmera.
+   L'avís de la casella no en pot prometre cap (exifTriat). */
+const fotoDeMobil = () => new File([jpegAmbExif({
+  ifd0: [{ tag: 0x010f, tipus: TIPUS.ASCII, valors: 'NIKON' }, { tag: 0x0110, tipus: TIPUS.ASCII, valors: 'D850' }],
+  exif: [...dataOriginal('2017:05:14 10:22:33'), { tag: 0xa431, tipus: TIPUS.ASCII, valors: '0123456789' }],
+  gps: gpsTorre(),
+})], 'mobil.jpg', { type: 'image/jpeg' });
+const TAMBE_CAMERA = /També es publicaran les dades de la càmera/;
+
+test('R22 (ronda 4) · foto del cos amb ubicació i càmera: l’avís només diu la ubicació', async () => {
+  pinta();
+  const original = fotoDeMobil();
+  const exif = await exifPublicable(original);
+  await act(async () => { demanaExif()(original, exif); });
+  const dialeg = screen.getByRole('dialog', TITOL);
+  expect(within(dialeg).getByText(AJUDA_CONSERVA_UBICACIO)).toBeTruthy();
+  expect(within(dialeg).queryByText(TAMBE_CAMERA)).toBeNull();
+});
+
+test.each([
+  ['amb fotosDePublicacio (les Notes): l’avís de la tria, sense la càmera', { fotosDePublicacio: true }, false],
+  ['sense (una destinació que puja el bloc sencer): l’avís de sempre, amb la càmera', {}, true],
+])('R22 (ronda 4) · la capçalera %s', async (_cas, extra, ambCamera) => {
+  const vista = pinta(extra);
+  await act(async () => {
+    fireEvent.change(vista.container.querySelector('.hero-image input[type="file"]'), { target: { files: [fotoDeMobil()] } });
+  });
+  const dialeg = screen.getByRole('dialog', { name: 'Enquadrar la imatge' });
+  await within(dialeg).findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_EXIF) });
+  expect(within(dialeg).queryByText(TAMBE_CAMERA) !== null).toBe(ambCamera);
+  expect(within(dialeg).getByText(new RegExp(`^${AJUDA_CONSERVA_UBICACIO}`))).toBeTruthy();
 });

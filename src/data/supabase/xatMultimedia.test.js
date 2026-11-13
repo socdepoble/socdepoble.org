@@ -275,3 +275,33 @@ test('Lot 2 C2120-02: un responseURL buit, malformat o aliè en load no confirma
     expect(m.rpc.mock.calls.some(([nom])=>nom==='xat_publica_adjunt')).toBe(false);
   }
 });
+
+/* Gauntlet R22 (xat-05) · La descàrrega del visor: Storage és un altre origen i el navegador hi ignora
+   l'atribut `download`. La URL signada porta `download` (el paràmetre de createSignedUrl de storage-js):
+   el servidor respon amb Content-Disposition: attachment. Mai a la URL desada ni a la de la bombolla. */
+test('R22 · descarrega afig download a la URL signada (amb un nom net o el de l’objecte) i no toca la de veure', async () => {
+  const id = idNou();
+  const base = `https://node.test/storage/v1/object/sign/xat_adjunts/${id}?token=a`;
+  m.request.mockResolvedValueOnce(signada(id, 'a'));
+  await expect(urlAdjuntXat(id, {}, { descarrega: 'foto-xat-m1.webp' })).resolves.toBe(`${base}&download=foto-xat-m1.webp`);
+  // La desada és la de veure: la bombolla la reutilitza sense paràmetre i sense cap petició.
+  await expect(urlAdjuntXat(id)).resolves.toBe(base);
+  await expect(urlAdjuntXat(id, {}, { descarrega: true })).resolves.toBe(`${base}&download=`);
+  // Un nom que no és net (camí, consulta, espais, massa llarg) no entra a la URL: el de l'objecte.
+  for (const brut of ['../x.webp', 'a&token=b', 'foto amb espai.webp', `${'n'.repeat(121)}.webp`, '', 'ç.webp']) {
+    await expect(urlAdjuntXat(id, {}, { descarrega: brut })).resolves.toBe(`${base}&download=`);
+  }
+  for (const res of [false, null, undefined, 0, {}]) await expect(urlAdjuntXat(id, {}, { descarrega: res })).resolves.toBe(base);
+  expect(m.request).toHaveBeenCalledOnce();
+  expect(m.request.mock.calls[0][2].body).toEqual({ expiresIn: 60 });
+});
+
+test('R22 · renova i descarrega: una signatura nova, amb download, i la desada continua sense', async () => {
+  const id = idNou();
+  m.request.mockResolvedValueOnce(signada(id, 'a')).mockResolvedValueOnce(signada(id, 'b'));
+  await urlAdjuntXat(id);
+  await expect(urlAdjuntXat(id, {}, { renova: true, descarrega: 'foto.webp' }))
+    .resolves.toBe(`https://node.test/storage/v1/object/sign/xat_adjunts/${id}?token=b&download=foto.webp`);
+  await expect(urlAdjuntXat(id)).resolves.toBe(`https://node.test/storage/v1/object/sign/xat_adjunts/${id}?token=b`);
+  expect(m.request).toHaveBeenCalledTimes(2);
+});

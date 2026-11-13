@@ -64,51 +64,37 @@ function pinta(props) {
   );
 }
 
-describe('la línia de qui signa', () => {
-  test('al canal de l’entitat: «Escrius com a …», amb la classe de l’avís públic i la icona d’edifici', () => {
-    const { container } = pinta({ fil: canalDeLEntitat() });
-    const avis = container.querySelector('.sdp-xat-avis-public');
-    expect(avis.textContent).toBe('Escrius com a Sóc de Poble.');
-    expect(avis.querySelector('svg.lucide-building-2').getAttribute('aria-hidden')).toBe('true');
-    expect(avis.nextElementSibling.tagName).toBe('FORM');
-  });
-
-  test('en un fil personal amb una entitat activa: «Escrius com a tu…», amb la icona de persona', () => {
-    const { container } = pinta({ fil: directe(), entitatActiva: SDP });
-    const avis = container.querySelector('.sdp-xat-avis-public');
-    expect(avis.textContent).toBe('Escrius com a tu: en esta conversa no parles en nom de Sóc de Poble.');
-    expect(avis.querySelector('svg.lucide-user-round')).toBeTruthy();
-  });
-
-  test('sense entitat activa en un fil personal, cap línia (Llei del Píxel)', () => {
-    const { container } = pinta({ fil: directe() });
+describe('R21.8 · compositor net sense rètol de qui signa (només avís en xat públic de pàgina)', () => {
+  test('al canal d’una entitat o amb entitatActiva, cap rètol «Escrius com a…» damunt del camp', () => {
+    const { container, rerender } = pinta({ fil: canalDeLEntitat() });
     expect(container.querySelector('.sdp-xat-avis-public')).toBeNull();
+    expect(document.getElementById('xat-message-signa')).toBeNull();
     expect(container.firstElementChild.tagName).toBe('FORM');
+
+    rerender(
+      <AppGridContext.Provider value={{ mida: 'ample', setPanellObert: vi.fn() }}>
+        <Compositor valor="" onCanvia={vi.fn()} onEnvia={vi.fn()} t={t} fil={directe()} entitatActiva={SDP} />
+      </AppGridContext.Provider>
+    );
+    expect(container.querySelector('.sdp-xat-avis-public')).toBeNull();
+    expect(screen.queryByText(/Escrius com a/)).toBeNull();
   });
 
-  test('als Avisos de només lectura, cap línia: hi ha l’avís dels administradors', () => {
+  test('als Avisos de només lectura, es manté l’avís dels administradors', () => {
     const { container } = pinta({ fil: avisos('membre'), entitatActiva: SDP });
     expect(container.querySelector('.sdp-xat-avis-public')).toBeNull();
     expect(screen.getByRole('status').textContent).toBe('En Avisos només escriuen els administradors.');
   });
 
-  test('en un xat de pàgina, l’avís públic va primer i després qui signa', () => {
+  test('en un xat públic de pàgina, es mostra només l’avís públic del subjecte', () => {
     const subjecte = { tipus: 'pagina', id: '/fedivers', ruta: '/fedivers', titol: 'Fedivers' };
     const { container } = pinta({ fil: mapejaFil({ id: 'g-1', tipus: 'grup', titol: 'Fedivers', subjecte }), entitatActiva: SDP });
     expect([...container.querySelectorAll('.sdp-xat-avis-public')].map((p) => p.textContent)).toEqual([
-      'Escrius al xat públic de «Fedivers».',
-      'Escrius com a tu: en esta conversa no parles en nom de Sóc de Poble.'
+      'Escrius al xat públic de «Fedivers».'
     ]);
   });
 
-  /* L'avís va sempre a la primera posició del fragment: si la línia apareix o
-     desapareix dins del mateix àmbit (el nom de l'entitat que arriba tard, el
-     fil que refresca comEntitat), el camp no es torna a muntar ni perd el
-     focus. Ací `entitatActiva` null fa el mateix que una entitat encara sense
-     nom (quiSigna torna null en tots dos casos). Canviar d'actor a la barra
-     negra és un altre cas: canvia ambitEstable i XatSection torna a muntar
-     l'espai sencer per key. */
-  test('aparéixer o desaparéixer la línia dins del mateix àmbit no torna a muntar el camp', () => {
+  test('canviar entitatActiva dins del mateix àmbit no torna a muntar el camp ni perd el focus', () => {
     const fil = directe();
     const onCanvia = vi.fn();
     const { rerender } = pinta({ fil, onCanvia });
@@ -120,49 +106,31 @@ describe('la línia de qui signa', () => {
       </AppGridContext.Provider>
     );
     torna(SDP);
-    expect(screen.getByText('Escrius com a tu: en esta conversa no parles en nom de Sóc de Poble.')).toBeTruthy();
+    expect(screen.queryByText(/Escrius com a/)).toBeNull();
     expect(screen.getByRole('textbox', { name: 'Escriu un missatge' })).toBe(camp);
     expect(document.activeElement).toBe(camp);
     torna(null);
-    expect(screen.queryByText(/Escrius com a/)).toBeNull();
     expect(screen.getByRole('textbox', { name: 'Escriu un missatge' })).toBe(camp);
     expect(document.activeElement).toBe(camp);
     fireEvent.change(camp, { target: { value: 'hola' } });
     expect(onCanvia).toHaveBeenCalledWith('hola');
   });
 
-  /* Pla 261014_1450 (front C) · La línia descriu el camp (aria-describedby),
-     junt amb el comptador quan es mostra; cada id només si l'element hi és. */
-  test('la línia de qui signa és la descripció accessible del camp; sense línia, cap id penjat', () => {
+  test('aria-describedby només cita el comptador quan es mostra; mai cap id penjat', () => {
     const camp = () => screen.getByRole('textbox', { name: 'Escriu un missatge' });
-    const descripcio = (el) => (el.getAttribute('aria-describedby') || '').split(' ').filter(Boolean)
-      .map((id) => document.getElementById(id)?.textContent ?? `(id penjat: ${id})`).join(' ');
 
     pinta({ fil: canalDeLEntitat() });
-    expect(camp().getAttribute('aria-describedby')).toBe('xat-message-signa');
-    expect(descripcio(camp())).toContain('Escrius com a Sóc de Poble.');
-    cleanup();
-
-    pinta({ fil: directe(), entitatActiva: SDP });
-    expect(descripcio(camp())).toContain('Escrius com a tu: en esta conversa no parles en nom de Sóc de Poble.');
-    cleanup();
-
-    /* Amb el comptador visible, tots dos. */
-    pinta({ fil: canalDeLEntitat(), valor: 'a'.repeat(3900) });
-    expect(camp().getAttribute('aria-describedby')).toBe('xat-message-signa xat-message-comptador');
-    expect(descripcio(camp())).toBe('Escrius com a Sóc de Poble. 3900 de 4096 caràcters');
-    cleanup();
-
-    /* Sense línia: ni atribut ni id. */
-    pinta({ fil: directe() });
     expect(camp().hasAttribute('aria-describedby')).toBe(false);
     expect(document.getElementById('xat-message-signa')).toBeNull();
     cleanup();
 
-    /* Sense línia i amb comptador: només el comptador. */
-    pinta({ fil: directe(), valor: 'a'.repeat(3900) });
+    pinta({ fil: canalDeLEntitat(), valor: 'a'.repeat(3900) });
     expect(camp().getAttribute('aria-describedby')).toBe('xat-message-comptador');
-    expect(document.getElementById('xat-message-signa')).toBeNull();
+    expect(document.getElementById('xat-message-comptador').textContent).toBe('3900 de 4096 caràcters');
+    cleanup();
+
+    pinta({ fil: directe() });
+    expect(camp().hasAttribute('aria-describedby')).toBe(false);
   });
 
   test('P0-36 / IDEA-154 · el camp mostra el placeholder curt «Escriu…» per a mòbil mantenint l’aria-label accessible «Escriu un missatge»', () => {

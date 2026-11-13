@@ -1,3 +1,4 @@
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
 /**
  * P1-22 (marató 261101_2143, B3-I18N §3.A) · El selector de visibilitat del
  * Bloc en la llengua de l'app. Amb el traductor de veres (createTranslator,
@@ -61,6 +62,13 @@ import {
   AVIS_DRETS_RESERVATS, ErrorPublicacio, MOTIU_NORMES, MUR_PUBLIC_FILTRAT, avisDretsReservats, bloqueigDeNota, motiuDesatPendent,
   motiuModeLocal, motiuSignaturaAliena, publicaAmbMotiu, textosAmbDrets, textosDeNota, textosExtern
 } from './visibilitatNota.js';
+import { TEXTOS_RETIRADA, bloqueigDeNota as bloqueigAmbRetirada, errorDeRetirada, textosEnLiniaDeNota } from './visibilitatNota.js';
+import { TEXTOS_ESBORRAR_PUBLICADA } from './DialegEsborrarNota.jsx';
+import CA_DIC from '../../config/idiomes/ca.js';
+import ES_DIC from '../../config/idiomes/es.js';
+import EN_DIC from '../../config/idiomes/en.js';
+import EU_DIC from '../../config/idiomes/eu.js';
+import GL_DIC from '../../config/idiomes/gl.js';
 import { ConnexioDetall } from './ConnexioDetall.jsx';
 import NotesEditor from './NotesEditor.jsx';
 
@@ -78,10 +86,10 @@ const EN_LOCAL_CONNEXIO = 'Connection saved on this device. Connect a backend to
 const EN_PUBLICADA = 'Removing a note from the Wall has no data contract with the server yet: you can update it, but not make it private again.';
 /* D1 Opció A (261112) · Darrere de publicar o compartir, qui ho pot llegir; amb MUR_PUBLIC_FILTRAT, la versió pública. */
 const EN_DARRERE = MUR_PUBLIC_FILTRAT
-  ? 'Anyone, even without an account, can read its public version: the title and the text, the town and the date. Your internal identifier, your private contact details and the exact location of the photos never appear in it.'
+  ? 'Anyone, even without an account, can read the filtered anonymous version. Town members can read the complete publication. Without an account, a filtered version shows the title, available public text and date, without photos, links or signature. The anonymous version never exposes internal identifiers, private contact details or photo locations.'
   : 'Anyone can read it, even without an account.';
 const EU_DARRERE = MUR_PUBLIC_FILTRAT
-  ? 'Edonork irakur dezake bertsio publikoa, konturik gabe ere: izenburua eta testua, herria eta data. Ez dira inoiz agertzen zure barne-identifikatzailea, zure harremanetarako datu pribatuak ezta argazkien kokapen zehatza ere.'
+  ? 'Edonork irakur dezake bertsio anonimo iragazia, konturik gabe ere. Herriko kideek argitalpen osoa irakur dezakete. Konturik gabe bertsio iragaziak izenburua, eskuragarri dagoen testu publikoa eta data erakusten ditu, argazki, esteka eta sinadurarik gabe. Bertsio anonimoak ez du inoiz barne-identifikatzailerik, harremanetarako datu pribaturik edo argazkien kokapenik erakusten.'
   : 'Edonork irakur dezake, konturik gabe ere.';
 
 describe('textosDeNota · «Qui pot vore esta nota?»', () => {
@@ -112,7 +120,8 @@ describe('textosDeNota · «Qui pot vore esta nota?»', () => {
   test('en basc, la connexió sencera; les accions de compartir són les claus del botó del lector', () => {
     expect(textosDeNota({ connexio: true, t: EU })).toEqual({
       titol: 'Nork ikus dezake eduki hau?',
-      descripcio: 'Besteren edukia da: zure oharretan irakurri eta karpetaz alda dezakezu, eta zure kopia gisa edita dezakezu; partekatzeak zure Hormara eramaten du, jatorria eta egilea aipatuz.',
+      // Gauntlet R22 (notes-06) · jatorria eta esteka, ez egilea (el Mur no cita el nom de qui signa l'original).
+      descripcio: 'Besteren edukia da: zure oharretan irakurri eta karpetaz alda dezakezu, eta zure kopia gisa edita dezakezu; partekatzeak zure Hormara eramaten du, jatorria eta esteka aipatuz.',
       llegenda: 'Edukiaren ikusgarritasuna',
       publica: {
         etiqueta: 'Zure Horman partekatua',
@@ -168,6 +177,50 @@ describe('textosDeNota · «Qui pot vore esta nota?»', () => {
   });
 });
 
+/* F03-UI (Onada R21) · Retirar del Mur: cada text nou té valor propi en les
+   cinc llengües (paritat de claus), la reserva és el valencià del diccionari
+   (Llei del Píxel) i cap no es queda en valencià en una altra llengua. */
+describe('F03-UI · retirar del Mur en les cinc llengües', () => {
+  const DICS = { ca: CA_DIC, es: ES_DIC, en: EN_DIC, eu: EU_DIC, gl: GL_DIC };
+  const PARELLS = [
+    ...Object.values(TEXTOS_RETIRADA),
+    ...Object.values(TEXTOS_ESBORRAR_PUBLICADA),
+    ['section.notes.visibilitat.nota.reversible', textosDeNota({ retirable: true }).reversible],
+    ['section.notes.visibilitat.connexio.reversible', textosDeNota({ connexio: true, retirable: true }).reversible],
+    ['section.notes.visibilitat.motiu.retiraDesDelBloc', bloqueigAmbRetirada({ publicada: true, retirada: 'bloc' }).motiu],
+    ['section.notes.visibilitat.motiu.retiraDesDelBlocConnexio', bloqueigAmbRetirada({ publicada: true, connexio: true, retirada: 'bloc' }).motiu],
+    ['section.notes.visibilitat.motiu.retiraSenseNota', bloqueigAmbRetirada({ publicada: true, retirada: 'senseNota' }).motiu],
+  ];
+
+  test.each(PARELLS.map(([clau]) => clau))('%s: valor propi en cada llengua', (clau) => {
+    for (const [codi, dic] of Object.entries(DICS)) {
+      expect(typeof dic[clau], `${codi}/${clau}`).toBe('string');
+      expect(dic[clau].trim(), `${codi}/${clau}`).not.toBe('');
+    }
+  });
+
+  test('Llei del Píxel · cada reserva és el valencià del diccionari', () => {
+    for (const [clau, reserva] of PARELLS) expect(CA_DIC[clau], clau).toBe(reserva);
+    expect(textosEnLiniaDeNota({ retirable: true, t: CA })).toEqual(textosEnLiniaDeNota({ retirable: true }));
+    expect(textosDeNota({ connexio: true, retirable: true, t: CA })).toEqual(textosDeNota({ connexio: true, retirable: true }));
+  });
+
+  test.each(ALTRES)('%s: la confirmació, els errors i els avisos de la retirada, traduïts', (codi) => {
+    const t = createTranslator(codi);
+    for (const cas of [{}, { seccio: 'mercat' }, { connexio: true }, { extern: true }]) {
+      const valencia = textosEnLiniaDeNota({ ...cas, retirable: true });
+      const traduit = textosEnLiniaDeNota({ ...cas, retirable: true, t });
+      for (const camp of ['avis', 'accio', 'feta']) expect(traduit.retirada[camp], `${codi}/${camp}`).not.toBe(valencia.retirada[camp]);
+      expect(traduit.reversible).not.toBe(valencia.reversible);
+      expect(traduit.irreversible).toBeNull();
+    }
+    for (const [clau, reserva] of Object.values(TEXTOS_RETIRADA)) expect(t(clau, reserva), `${codi}/${clau}`).not.toBe(reserva);
+    expect(bloqueigAmbRetirada({ publicada: true, retirada: 'senseNota', t }).motiu).not.toBe(bloqueigAmbRetirada({ publicada: true, retirada: 'senseNota' }).motiu);
+    for (const [clau, reserva] of Object.values(TEXTOS_ESBORRAR_PUBLICADA)) expect(t(clau, reserva), `${codi}/${clau}`).not.toBe(reserva);
+    expect(errorDeRetirada({ revocacioPendent: true }, t).message).toBe(t(TEXTOS_RETIRADA.pendent[0], TEXTOS_RETIRADA.pendent[1]));
+  });
+});
+
 describe('els motius i els errors de publicar', () => {
   test('bloqueigDeNota: cada motiu en anglés, amb el mateix ordre de sempre', () => {
     expect(bloqueigDeNota({ preparada: 'enviant', t: EN })).toEqual({
@@ -210,7 +263,8 @@ describe('els motius i els errors de publicar', () => {
   });
 
   test('els drets reservats i el contingut de fora, en anglés', () => {
-    const avis = 'Content with all rights reserved. You can connect it for yourself. If you republish it, its authorship and link will be cited; do not copy the whole content without permission from whoever signs it.';
+    // Gauntlet R22 (notes-06) · source, link and rights of the original; not the authorship.
+    const avis = 'Content with all rights reserved. You can connect it for yourself. If you republish it, its source, link and the rights of the original will be cited; do not copy the whole content without permission from whoever signs it.';
     expect(avisDretsReservats(EN)).toBe(avis);
     const base = textosDeNota({ connexio: true, t: EN });
     expect(textosAmbDrets(base, true, EN).descripcio).toBe(`${base.descripcio} ${avis}`);
@@ -242,6 +296,7 @@ describe('ConnexioDetall · el selector i el rebuig per les normes en la llengua
   });
 
   test('en anglés: textos, rebuig per les normes, error de xarxa i noms de les carpetes de sèrie', async () => {
+    globalThis.indexedDB = creaIdbFalsEstructurat();
     mocks.t = EN;
     render(createElement(ConnexioDetall, { nota: NOTA }));
     expect(screen.getByRole('button', { name: 'Share to the Wall' })).toBeTruthy();
@@ -261,10 +316,26 @@ describe('ConnexioDetall · el selector i el rebuig per les normes en la llengua
      amb sessió i amb Mur. Sense sessió o en local el botó no ix; per això el cas
      que el mostra és una connexió ja compartida («privada» bloquejada). */
   test('una connexió ja compartida, en anglés: el botó d’actualitzar i el motiu de no retirar-la', () => {
+    globalThis.indexedDB = creaIdbFalsEstructurat();
     mocks.t = EN;
     render(createElement(ConnexioDetall, { nota: { ...NOTA, isPublished: true } }));
     expect(screen.getByRole('button', { name: 'Update on the Wall' })).toBeTruthy();
     expect(mocks.selector.bloqueig).toEqual({ opcio: 'privada', motiu: EN_PUBLICADA });
+  });
+
+  /* F03-UI (Onada R21) · Amb la capacitat de retirar, este lector continua
+     sense retirar-la (el seu selector és la finestra SelectorVisibilitat; la
+     retirada viu a l'editor del Bloc), però el motiu ja no diu «encara no té
+     contracte»: diu on es fa. */
+  test('F03-UI · amb la capacitat de retirar, el lector diu on es retira, en anglés', () => {
+    globalThis.indexedDB = creaIdbFalsEstructurat();
+    mocks.t = EN;
+    mocks.notes = { ...mocks.notes, potRetirarDelMur: true };
+    render(createElement(ConnexioDetall, { nota: { ...NOTA, isPublished: true } }));
+    expect(mocks.selector.bloqueig).toEqual({
+      opcio: 'privada', motiu: 'It cannot be removed from this reader: open the content in the editor of your Notebook to remove it from the Wall. Here you can only update it.'
+    });
+    expect(mocks.selector.bloqueig.motiu).not.toBe(EN_PUBLICADA);
   });
 
   test('amb un traductor que torna la reserva, el valencià de sempre', async () => {
@@ -298,6 +369,7 @@ describe('NotesEditor · el selector, els motius i les carpetes en la llengua de
     mocks.adapter = null;
     mocks.carpeta = null;
     mocks.user = { id: 'U' };
+    globalThis.indexedDB = creaIdbFalsEstructurat();
     mocks.t = EN;
     publica.mockReset();
     compartir.mockReset();
@@ -365,6 +437,7 @@ describe('NotesProvider · els motius de no publicar en la llengua de l’app', 
   });
   afterEach(cleanup);
   beforeEach(() => {
+    globalThis.indexedDB = creaIdbFalsEstructurat();
     mocks.t = EN;
     mocks.user = { id: 'U' };
     mocks.actor = { tipus: 'persona', id: 'U', nom: 'Pep' };
@@ -374,7 +447,7 @@ describe('NotesProvider · els motius de no publicar en la llengua de l’app', 
     update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: (revision ?? 1) + 1 }));
     mocks.dades = {
       notes: [], noteFolders: [], scopeKey: 'tenant-user', workspaceKey: 'session', config: { tenantId: 'tenant' },
-      status: 'ready', updateNote: update, mouNota: vi.fn(), esborraNota: vi.fn()
+      status: 'ready', updateNote: update, confirmaPublicacioNota: vi.fn(), mouNota: vi.fn(), esborraNota: vi.fn()
     };
   });
 

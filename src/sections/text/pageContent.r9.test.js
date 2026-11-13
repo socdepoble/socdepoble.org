@@ -197,7 +197,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     }
     const versions = doc(PAGE_COPY.versions.html).body;
     // R21, R20 i R19 s'afigen davant de les sis entrades històriques: cap s'esborra ni es reescriu.
-    expect([...versions.querySelectorAll('h3')].slice(0, 9).map((h3) => h3.textContent)).toEqual([
+    // R21 (COMMIT 5) · La fita R21 C5 s'afig davant de la R21.
+    expect([...versions.querySelectorAll('h3')].slice(0, 10).map((h3) => h3.textContent)).toEqual([
+      '13 de novembre de 2026 · Onada R21 (COMMIT 5) · El Mur per als membres, el xat amb imatges i la recuperació després de cada actualització',
       '12 de novembre de 2026 · Onada R21 · La versió 1.2.0, el xat propi, la IAIA en una sola fila i la frontera del contingut públic',
       '11 de novembre de 2026, nit · Onada R20 · Publicació en línia de Notes cap al Mur, filtre de verificació de les imatges botàniques i poliment responsive del Panell',
       '11 de novembre de 2026, vesprada · Onada R19 · Co-publicació entre entitats a la barra taronja, traspàs en línia i revisió de les làmines fotobotàniques',

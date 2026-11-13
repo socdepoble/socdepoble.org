@@ -6,6 +6,12 @@ import {preparaConsultaPrivadaNodeZero,POLITICA_LOG_PRIVAT_NODE0} from './consul
 export const sqlText = (value) => `convert_from(decode('${Buffer.from(String(value)).toString('base64')}','base64'),'UTF8')`;
 export const sqlJson = (value) => `${sqlText(JSON.stringify(value))}::jsonb`;
 
+/** Original ledger ID on the latest clock instant, across both timestamp formats.
+ * Ledger hash ordering remains a separate, unchanged cryptographic convention. */
+export const SQL_ULTIMA_MIGRACIO_NODE0 = `SELECT version FROM node0.schema_migrations
+  ORDER BY CASE WHEN length(version)=10 THEN '20'||version||'00' ELSE version END DESC,
+    version COLLATE "C" DESC LIMIT 1`;
+
 export function sqlDesaDocuments(kind, documents) {
   if (!Array.isArray(documents) || documents.length > 100) throw new Error('node0_document_limit');
   for (const doc of documents) if (!doc || typeof doc.id !== 'string' || !doc.id || doc.id.length > 2048 || doc.visibility !== 'public') throw new Error('node0_public_document_required');
@@ -109,6 +115,6 @@ export function creaPostgres({ env = process.env, executable = env.NODE0_PSQL ||
       return query(`SELECT public.llegix_municipi_open_data_per_slug(${sqlText(slug)});`);
     },
     desaDocuments: (kind, documents) => query(sqlDesaDocuments(kind, documents)),
-    status: () => query(`SELECT json_build_object('ok',true,'version',current_setting('server_version'),'schemaVersion',(SELECT max(version) FROM node0.schema_migrations),'taules',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','node0') AND c.relkind='r'),'registres',(SELECT coalesce(json_object_agg(kind,n),'{}'::json) FROM (SELECT kind,count(*) AS n FROM node0.public_documents GROUP BY kind) t),'activitypub',json_build_object('received',(SELECT count(*) FROM node0.inbox WHERE actor='https://mastodont.cat/users/depoble'),'followers',(SELECT count(*) FROM node0.followers),'pending',(SELECT count(*) FROM node0.outbox WHERE delivered_at IS NULL),'outbox',${SQL_ESTAT_OUTBOX_NODE0}));`)
+    status: () => query(`SELECT json_build_object('ok',true,'version',current_setting('server_version'),'schemaVersion',(${SQL_ULTIMA_MIGRACIO_NODE0}),'taules',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','node0') AND c.relkind='r'),'registres',(SELECT coalesce(json_object_agg(kind,n),'{}'::json) FROM (SELECT kind,count(*) AS n FROM node0.public_documents GROUP BY kind) t),'activitypub',json_build_object('received',(SELECT count(*) FROM node0.inbox WHERE actor='https://mastodont.cat/users/depoble'),'followers',(SELECT count(*) FROM node0.followers),'pending',(SELECT count(*) FROM node0.outbox WHERE delivered_at IS NULL),'outbox',${SQL_ESTAT_OUTBOX_NODE0}));`)
   });
 }

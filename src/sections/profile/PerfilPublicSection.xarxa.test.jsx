@@ -91,7 +91,7 @@ test('sense xarxa: l’avís amb «Torna-ho a provar», no «Perfil no trobat»;
   render(<PerfilPublicSection />);
   expect((await screen.findByRole('heading', { level: 1, name: SENSE_RESPOSTA })).textContent).toBe(SENSE_RESPOSTA);
   expect(screen.queryByText('Perfil no trobat')).toBeNull();
-  expect(document.querySelector('p.lead').textContent).toBe('El servidor del poble no respon ara mateix. Pots tornar-ho a provar o continuar navegant.');
+  expect(document.querySelector('p.lead').textContent).toBe('El servidor de poble no respon ara mateix. Pots tornar-ho a provar o continuar navegant.');
   /* REV-PERF-9 · El lector de pantalla també ho sap. */
   expect(screen.getByRole('alert').textContent).toBe(SENSE_RESPOSTA);
   m.fetch.mockResolvedValue(resposta([{ id: 'org-forn', slug: 'forn-de-proves', name: 'Forn de Proves', kind: 'company' }]));

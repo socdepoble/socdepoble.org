@@ -9,7 +9,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test } from 'vitest';
 import {
-  MAXIM_DETALL_DENUNCIA, MAXIM_NOM_BLOQUEJAT, MOTIUS_DENUNCIA, TIPUS_BLOQUEJAT, TIPUS_OBJECTE_DENUNCIA, VERSIO_NORMES_CONVIVENCIA
+  MAXIM_DETALL_DENUNCIA, MAXIM_NOM_BLOQUEJAT, MOTIUS_DENUNCIA, TIPUS_BLOQUEIG_LLISTAT, TIPUS_BLOQUEJAT, TIPUS_OBJECTE_DENUNCIA,
+  VERSIO_NORMES_CONVIVENCIA
 } from '../contracte.js';
 
 /* vitest s'executa des de l'arrel del repositori (com qualitat.test.js). */
@@ -115,6 +116,16 @@ test('les llistes blanques dels CHECK són les del contracte', () => {
   /* La versió vigent del client passa el CHECK de private.normes_acceptades. */
   expect(CODI).toContain("check (versio ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$')");
   expect(VERSIO_NORMES_CONVIVENCIA).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
+});
+
+/* Gauntlet R22 (sql-01) · 2611122200 amplia el CHECK amb el bloqueig opac per
+   UUID de publicació: és la llista de tipus que pot tornar llistaBloquejos. */
+test('R22 · el CHECK bloquejat_tipus de 2611122200 és TIPUS_BLOQUEIG_LLISTAT', () => {
+  const v2 = readFileSync(path.join(MIGRACIONS, '2611122200_mur_membres_i_actes_v2.sql'), 'utf8')
+    .split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');
+  const checks = [...v2.matchAll(/check \(bloquejat_tipus in \(([^)]*)\)\)/gi)]
+    .map((m) => [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]));
+  expect(checks).toEqual([[...TIPUS_BLOQUEIG_LLISTAT]]);
 });
 
 test('les claus foranes: qui denuncia es queda en null; bloquejador i bloquejats, en cascada', () => {

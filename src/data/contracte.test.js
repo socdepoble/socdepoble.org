@@ -12,6 +12,8 @@ import {
   CODI_MODERACIO, MAXIM_DETALL_DENUNCIA, MAXIM_NOM_BLOQUEJAT, MISSATGE_MODERACIO, MOTIUS_DENUNCIA, TIPUS_BLOQUEJAT,
   TIPUS_OBJECTE_DENUNCIA, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, denunciaDelContracte, errorDeModeracio, esIdDeModeracio
 } from './contracte.js';
+/* Gauntlet R22 (sql-01) · El bloqueig opac per UUID de publicació. */
+import { TIPUS_BLOQUEIG_LLISTAT, TIPUS_BLOQUEIG_PUBLICACIO } from './contracte.js';
 /* T6b (IDEA-14) · Els seguiments: import a banda, pel mateix motiu. */
 import { MISSATGES_SEGUIMENTS, TIPUS_SEGUIT, comDelContracte, errorDeSeguiment, seguitDelContracte } from './contracte.js';
 /* T8b · P0-23 (BOT-A2) · La versió de l'app nativa: import a banda, pel mateix motiu. */
@@ -543,6 +545,19 @@ describe('Fase D · la regla d’entrada de la moderació', () => {
     expect(codi({ objecte: { tipus: 'publicacio', id: 'amb espai' }, motiu: 'ofensiu' })).toBe('objectiu-invalid');
     expect(codi({ objecte: { tipus: 'publicacio', id: 'p1' }, motiu: 'inventat' })).toBe('motiu-invalid');
     expect(codi({ objecte: { tipus: 'publicacio', id: 'p1' }, motiu: 'ofensiu', detall: 'x'.repeat(1001) })).toBe('detall-massa-llarg');
+  });
+
+  /* Gauntlet R22 (sql-01) · llistaBloquejos pot tornar { tipus: 'publicacio', id, nom: null } (2611122200), però
+     'publicacio' no és cap identitat: ni es bloqueja per autor ni s'hi denuncia cap autor. */
+  it('R22 · TIPUS_BLOQUEIG_LLISTAT afig el bloqueig opac per publicació a TIPUS_BLOQUEJAT, que no canvia', () => {
+    expect(TIPUS_BLOQUEIG_PUBLICACIO).toBe('publicacio');
+    expect(TIPUS_BLOQUEIG_LLISTAT).toEqual(['persona', 'entitat', 'publicacio']);
+    expect(TIPUS_BLOQUEJAT).toEqual(['persona', 'entitat']);
+    expect(Object.isFrozen(TIPUS_BLOQUEIG_LLISTAT)).toBe(true);
+    expect(() => autorDelContracte({ tipus: 'publicacio', id: '11111111-1111-4111-8111-111111111111' }))
+      .toThrow(expect.objectContaining({ code: 'objectiu-invalid' }));
+    expect(denunciaDelContracte({ objecte: { tipus: 'publicacio', id: 'p1' }, motiu: 'altre',
+      autor: { tipus: 'publicacio', id: '11111111-1111-4111-8111-111111111111' } }).autor).toBeNull();
   });
 
   it('autorDelContracte normalitza el nom (retallat, null si és buit) i rebutja el que no és persona ni entitat', () => {

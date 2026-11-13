@@ -123,7 +123,7 @@ test('els errors del servidor es llegixen pel prefix SDP i es diuen en valencià
     [errorServidor(403, '{"code":"42501","message":"SDP-ORGMEM-005: la propietària no es canvia ni es lleva."}'),
       'SDP-ORGMEM-005', 'La propietària no es canvia ni es lleva.'],
     [errorServidor(400, '{"code":"22023","message":"SDP-ORGMEM-003: la persona no és del poble de l\'organització o ha demanat la baixa."}'),
-      'SDP-ORGMEM-003', 'Esta persona no és del poble de l’organització o ha demanat la baixa.'],
+      'SDP-ORGMEM-003', 'Esta persona no és del municipi de l’organització o ha demanat la baixa.'],
     [errorServidor(404, '{"code":"PGRST202","message":"Could not find the function public.desa_membre_organitzacio"}'),
       'NO-DISPONIBLE', 'El servidor d’este poble encara no gestiona els membres de les organitzacions.']
   ];

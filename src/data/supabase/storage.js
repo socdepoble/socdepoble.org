@@ -17,10 +17,11 @@ import { getResolvedConfig } from './runtime.js';
 import { getClient } from './config.js';
 import { usuariDeSessio, capturaSessio } from '../identitat.js';
 import { handleError } from './utils.js';
-import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable } from '../errorsBackend.js';
+import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_PROMOCIO_PUBLICA, CODI_SEGON_FACTOR, esBackendInabastable } from '../errorsBackend.js';
 import { tempsLimitPujada } from '../xatMultimedia.js';
 import { controlStorageDe, informaReconciliacioStorage } from './controlStorage.js';
 import { conservaEnquadrament, llevaEnquadrament } from '../../utils/enquadramentUrl.js';
+import { netejaImatgePublica, portaBlocExif } from '../mitjansPublicsNets.js';
 
 /* Límits per fitxer (ARQ-G07): 25 MiB al bucket privat, 5 MiB al públic. */
 const MIDA_MAX_PRIVADA = 26214400;
@@ -481,8 +482,46 @@ const resolAssetSenseMarc = async (ref, config = {}) => {
   }
 };
 
+/* Gauntlet R22 (dades-06, honestedat-06) · La còpia pública ix neta de TOTA
+   metadada (netejaImatgePublica: XMP, comentaris, ICC, IFD1 i la resta de
+   blocs), LLEVAT de les dades EXIF que la persona ha triat conservar a la
+   casella «Conserva la ubicació i la data de la foto» (o «… les dades de la
+   càmera»).
+   El fitxer privat de Notes és el registre d'eixa tria: el DialegEnquadrament
+   hi ha incrustat el bloc preparat (exifIncrustat.preparaTiff, amb la
+   precisió de la ubicació triada) o cap bloc, si l'ha desmarcada; la resta de
+   camins (imatges enganxades, l'ordre «/» Imatge) el pugen net. Així el
+   fitxer públic diu el que diu la casella («es publicarà amb la foto») i la
+   política 2.5 servida («va dins del fitxer de la foto»), i el hero torna a
+   eixir al Mapa fotogràfic (geoDelHero llig la còpia pública).
+   Gauntlet R22 (ronda 3, privadesa) · Del bloc privat només passen les
+   etiquetes de la casella marcada (exifIncrustat.preparaTiffTriat): GPS i
+   dates amb «Conserva la ubicació i la data», o marca i model amb «Conserva
+   les dades de la càmera». Mai el bloc sencer: ni la descripció, el
+   programari, l'autoria, els drets, els comentaris, el MakerNote, els
+   números de sèrie ni el nom de qui té la càmera. Gauntlet R22 (ronda 4) ·
+   L'avís de la casella de les Notes diu eixa tria (DialegEnquadrament i
+   CasellaExif amb exifTriat), no el bloc sencer. Un fitxer privat antic,
+   d'abans de la casella, tampoc publica cap miniatura de l'original sense
+   retallar (IFD1); un bloc que no es pot preparar no ix. El mòdul es demana
+   ací (import dinàmic): l'EXIF no viatja al tros d'entrada (P1-20, D15).
+   Gauntlet R22 (ronda 3, dades-06) · I només si el fitxer porta cap bloc
+   EXIF (portaBlocExif, una lectura del contenidor): una foto neta no espera
+   cap tros. Sense bloc, o si no hi cap, la còpia neta. */
+async function ambExifTriat(original, imatge) {
+  if (imatge.mime !== 'image/jpeg' && imatge.mime !== 'image/webp') return imatge;
+  if (!portaBlocExif(original)) return imatge;
+  const { extreuTiff, preparaTiffTriat, incrustaEnJpeg, incrustaEnWebp } = await import('../../components/universal/enquadrament/exifIncrustat.js');
+  const tiff = preparaTiffTriat(extreuTiff(original));
+  if (!tiff) return imatge;
+  const amb = imatge.mime === 'image/jpeg' ? incrustaEnJpeg(imatge.bytes, tiff) : incrustaEnWebp(imatge.bytes, tiff);
+  return amb && amb.length <= MIDA_MAX_PUBLICA ? { ...imatge, bytes: amb } : imatge;
+}
+
 /**
  * Promou un actiu privat a públic, movent-lo del bucket privat al públic.
+ * Si la pujada de la còpia pública es rebutja (i no és el duplicat dels
+ * mateixos bytes), rebutja amb `codi` CODI_PROMOCIO_PUBLICA (Gauntlet R22, sql-02).
  * @param {string} ref - Referència opaca de mitjans_privats
  * @param {object} config
  * @returns {Promise<string>} La nova referència promoguda
@@ -494,37 +533,69 @@ const promouSenseMarc = async (ref, config = {}) => {
   const path = ref.replace('sdp-media://mitjans_privats/', '');
   // F5 · El mateix camí net que resolveAsset, abans de baixar i de pujar.
   if (!camiNet(path)) return ref;
+  const vigent = capturaSessio();
+  const comprova = () => { vigent(); if (config.signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError'); };
+  comprova();
 
   // 1. Descarreguem l'arxiu des del bucket privat
   const { data: fileData, error: downloadError } = await downloadFile('mitjans_privats', path, config);
+  comprova();
   if (downloadError) {
     // F2 · Sense l'error cru de l'SDK ni el text de handleError (diagnosiDeStorage).
     console.warn("[Storage] Error baixant el fitxer per a promoure'l", diagnosiDeStorage(downloadError));
     return ref; // Deixem l'original
   }
 
-  // 2. El pugem al bucket públic en la mateixa ruta
-  const { error: uploadError } = await uploadFile('mitjans', path, fileData, config);
-  /* Auditoria 261007 (B) · La promoció és idempotent. Republicar («Actualitzar
-     al Mur») torna a promoure la mateixa ruta, i Storage (upsert: false per
-     defecte a storage-js) contesta «Duplicate» amb un 409 al cos o a la
-     resposta. Abans es tornava la ref PRIVADA i l'upsert de section_submissions
-     la desava al payload compartit. El fitxer privat és immutable (UUID nou i
-     upsert: false a uploadToStorage), així que la còpia pública ja és idèntica:
-     el duplicat és un èxit i no avisa. Una fallada real (mida, format, permís)
-     continua tornant la ref, a l'espera de la decisió del Mestre. */
-  if (uploadError && esDuplicat(uploadError)) return `sdp-media://mitjans/${path}`;
+  // 2. No es copien bytes privats crus. Un format no sanejable queda privat.
+  let imatge, publica, publicPath;
+  try {
+    if (!(fileData instanceof Blob) || !fileData.size || fileData.size > MIDA_MAX_PUBLICA) return ref;
+    const original = new Uint8Array(await fileData.arrayBuffer());
+    imatge = netejaImatgePublica(original, fileData.type);
+    comprova();
+    imatge = await ambExifTriat(original, imatge);
+    comprova();
+    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', imatge.bytes));
+    const hex = Array.from(hash, byte => byte.toString(16).padStart(2, '0')).join('');
+    publicPath = `${path.slice(0, path.lastIndexOf('/') + 1)}sdp-net-v1-${hex}.${imatge.extensio}`;
+    publica = new Blob([imatge.bytes], { type: imatge.mime });
+  } catch (error) {
+    if (error?.name === 'AbortError') throw error;
+    return ref;
+  }
+  comprova();
+  const { error: uploadError } = await uploadFile('mitjans', publicPath, publica, config);
+  comprova();
+  /* La versió + hash evita reutilitzar còpies històriques sense sanejar.
+     Un 409 no acredita els bytes: el propietari pot haver creat eixa ruta.
+     Només s'accepta el duplicat després de comparar el contingut exacte. */
+  if (uploadError && esDuplicat(uploadError)) {
+    const { data: existent, error: errorExistent } = await downloadFile('mitjans', publicPath, config);
+    comprova();
+    if (errorExistent || !(existent instanceof Blob) || existent.type !== imatge.mime || existent.size !== imatge.bytes.length) return ref;
+    let bytes;
+    try { bytes = new Uint8Array(await existent.arrayBuffer()); } catch { return ref; }
+    comprova();
+    return bytes.length === imatge.bytes.length && bytes.every((byte, index) => byte === imatge.bytes[index])
+      ? `sdp-media://mitjans/${publicPath}` : ref;
+  }
   if (uploadError) {
     // F2 · Com la baixada: només dades validades (diagnosiDeStorage).
     console.warn("[Storage] Error pujant el fitxer al promoure'l", diagnosiDeStorage(uploadError));
-    return ref;
+    /* Gauntlet R22 (sql-02) · Un rebuig que no és el duplicat (SDP-PURGA-004/55000
+       d'una ruta a la cua de purga, permisos, un temps esgotat…) atura qui publica:
+       tornar la ref privada la deixava al payload del Mur, i qualsevol altre membre
+       hi veia una imatge trencada per sempre. Cap text cru: la causa és la pujada
+       traduïda (errorDePujada), i el seu `cause`, l'original. */
+    throw Object.assign(new Error('No s’ha pogut fer pública una imatge de la publicació.', { cause: errorDePujada(uploadError) }),
+      { codi: CODI_PROMOCIO_PUBLICA });
   }
   
   // C17 (Auditoria): No esborrem l'original per evitar pèrdua de dades si falla 
   // la persistència de la nova referència o la publicació al Mur.
   // await deleteFile('mitjans_privats', path, config);
 
-  return `sdp-media://mitjans/${path}`;
+  return `sdp-media://mitjans/${publicPath}`;
 };
 
 /* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·

@@ -454,3 +454,34 @@ test('mentre es restaura la sessió (comprovant sense usuari) no es demana res; 
   await waitFor(() => expect(result.current.status).toBe('ready'));
   expect(mocks.loadNotes).toHaveBeenCalledTimes(1);
 });
+
+test('R21 v2 · adopta el rebut atòmic sense PATCH ni GET i no tapa una revisió posterior', async () => {
+  const config={tenantId:TENANT};
+  mocks.loadNotes.mockResolvedValue({notes:[{id:'nota',revision:4,title:'Cos privat',isPublished:false}],noteFolders:[]});
+  const wrapper=({children})=><NotesDataProvider config={config}>{children}</NotesDataProvider>;
+  const {result}=renderHook(useNotesData,{wrapper}); await waitFor(()=>expect(result.current.status).toBe('ready'));
+  const loads=mocks.loadNotes.mock.calls.length;
+  act(()=>{result.current.confirmaPublicacioNota('nota',{revision:5,isPublished:true,publishedSubmissionId:'acte'});});
+  expect(result.current.notes[0]).toMatchObject({revision:5,title:'Cos privat',isPublished:true,publishedSubmissionId:'acte'});
+  act(()=>{result.current.confirmaPublicacioNota('nota',{revision:3,isPublished:false,publishedSubmissionId:null});});
+  expect(result.current.notes[0].isPublished).toBe(true); expect(mocks.updateNote).not.toHaveBeenCalled(); expect(mocks.loadNotes).toHaveBeenCalledTimes(loads);
+});
+
+/* Gauntlet R22 (ronda 3, notes-03) · resolveNote torna també la fila que porta ESTA resposta del servidor: qui ha de
+   decidir per l'estat del servidor (la retirada pendent de NotesContext) no la llig d'una llista que pot conservar
+   una fila més nova (revisió local més alta) o la vella d'una pàgina que encara no ha arribat. */
+test('resolveNote torna la fila del servidor d’esta resposta, encara que la llista conserve la seua', async () => {
+  const vella = { id: 'n1', title: 'A', revision: 5, isPublished: true, publishedSubmissionId: 'x', contentLoaded: true, content: '<p>A</p>' };
+  const servidor = { ...vella, revision: 4, isPublished: false, publishedSubmissionId: null };
+  mocks.loadNotes.mockImplementation(async (_owner, cfg) => (cfg.noteId
+    ? { notes: [servidor], noteResolution: { id: 'n1', status: 'found' } }
+    : { notes: [vella], noteFolders: [], notesComplete: true }));
+  const wrapper = ({ children }) => <NotesDataProvider config={{ tenantId: TENANT }}>{children}</NotesDataProvider>;
+  const { result } = renderHook(useNotesData, { wrapper });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  let resolucio;
+  await act(async () => { resolucio = await result.current.resolveNote('n1'); });
+  expect(resolucio).toEqual({ status: 'found', note: servidor });
+  // La llista es queda amb la revisió local més alta (mergeNotes); la resposta, amb la del servidor.
+  expect(result.current.notes[0]).toMatchObject({ revision: 5, isPublished: true });
+});

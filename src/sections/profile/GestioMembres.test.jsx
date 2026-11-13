@@ -180,7 +180,7 @@ test('si el servidor rebutja l’alta, el missatge del codi es diu en línia i l
   cerca('qui');
   await triaCandidat('Quique · Persona');
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Afegir' })); });
-  expect(screen.getByRole('alert').textContent).toBe('Esta persona no és del poble de l’organització o ha demanat la baixa.');
+  expect(screen.getByRole('alert').textContent).toBe('Esta persona no és del municipi de l’organització o ha demanat la baixa.');
   expect(textDeFiles()).toHaveLength(4);
 });
 

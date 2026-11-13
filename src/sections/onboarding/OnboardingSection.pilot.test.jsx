@@ -86,7 +86,7 @@ async function servidorQueNoRespon() {
 test('seed · el servidor no respon: l’entrada pilot és visible i honesta, fora de la regió viva, i substituïx el «Mock»', async () => {
   const avis = await servidorQueNoRespon();
   // L'avís de sempre, amb el text i l'únic botó de sempre.
-  expect(avis.textContent).toContain('El servidor del poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.');
+  expect(avis.textContent).toContain('El servidor de poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.');
   expect(within(avis).getAllByRole('button').map((b) => b.textContent)).toEqual(['Torna-ho a provar']);
   expect(screen.queryByRole('button', { name: 'Forçar entrada local (Mock)' })).toBeNull();
 

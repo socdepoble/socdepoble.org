@@ -5,7 +5,7 @@
    cap alerta; amb la quota, el panell hi és.
    Pla 261028_1526 (P1-66) · El «panell» és ara el + de la barra única, amb la
    quota dins del seu menú; la safata buida no ocupa lloc ni és cap grup. */
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter } from '../../../app/contexts/RouterContext.jsx';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
@@ -55,6 +55,11 @@ test('un node sense la migració: Conversa no pinta cap panell d’adjunts ni ca
   expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Grava àudio' })).toBeNull();
   expect(screen.getByRole('textbox', { name: 'Escriu un missatge' })).toBeTruthy();
+  /* R21.8 · El + hi és sempre, però sense adjunts no promet adjuntar (Gauntlet R22, xat-02):
+     es diu «Més opcions» i el seu menú només porta la negreta. */
+  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
+  const menu = screen.getByRole('menu', { name: 'Opcions d’escriptura' });
+  expect(within(menu).getAllByRole('menuitem').map((opcio) => opcio.textContent)).toEqual(['Escriure en negreta']);
 });
 
 test('amb la migració, el mateix muntatge pinta el + amb la quota al menú, i la safata buida no és cap grup', async () => {

@@ -62,7 +62,7 @@ const PERSONATGES_OBSOLETS_NOM = Object.freeze([
 test('R21.5 · el directori usa sdp-card-grid amb UniversalCard directa, encapçalament Gent i Entitats i barra taronja completa (avatar + nom + poble + data)', () => {
   const { container } = render(<ProfileSection agents={AGENTS} />);
   expect(screen.getByRole('heading', { level: 1, name: 'Gent i Entitats' })).toBeTruthy();
-  expect(screen.getByText('Directori de persones, entitats i col·lectius del poble')).toBeTruthy();
+  expect(screen.getByText('Directori de persones, entitats i col·lectius d’este poble')).toBeTruthy();
   expect(container.textContent).not.toMatch(/\bagents\b/i);
 
   const graella = container.querySelector('.sdp-card-grid');

@@ -42,6 +42,9 @@ function Barra({ t, ...props }) {
   );
 }
 const mes = () => screen.getByRole('button', { name: 'Adjunta' });
+/* Gauntlet R22 (xat-02) · Sense adjunts (cap migració, cap capacitat, la quota encara
+   no llegida o actiu fals), el + es diu «Més opcions»: no promet adjuntar. */
+const mesSenseAdjunts = () => screen.getByRole('button', { name: 'Més opcions' });
 // En una altra llengua, el + es busca per la classe.
 const plus = () => document.querySelector('.sdp-xat-compositor__adjunta');
 /* Obri el menú del +, en llig el peu (la quota, discreta: una línia per avís)
@@ -99,7 +102,7 @@ test('canviar de conversa aborta upload i ignora la confirmació tardana', async
   await act(async () => { tard.resolve([{ id: 'm' }]); });
   expect(screen.queryByAltText('Foto adjunta')).toBeNull(); expect(screen.queryByRole('alert')).toBeNull();
 });
-/* Gauntlet 261022_0225 (crítica Claude, MEDIA-10) · Sense migració, el xat es veu com abans. */
+/* Gauntlet 261022_0225 (crítica Claude, MEDIA-10) + R21.8 · Sense migració, ni panell d'adjunts ni alerta; el + del compositor només mostra «Escriure en negreta». */
 test('un node sense migració no pinta cap panell ni cap alerta', async () => {
   servei.quotaXat.mockRejectedValueOnce(errorAdjuntXat('sense-capacitat'));
   const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
@@ -107,21 +110,25 @@ test('un node sense migració no pinta cap panell ni cap alerta', async () => {
   await act(async () => {});
   expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
   expect(screen.queryByRole('alert')).toBeNull();
-  // P1-66 · El Compositor ix com sempre: ni + ni micròfon (IDEA-53: i [N] Negreta).
-  expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Emoticones', 'Negreta', 'Envia']);
+  expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Més opcions', 'Emoticones', 'Envia']);
+  fireEvent.click(mesSenseAdjunts());
+  expect(screen.getAllByRole('menuitem').map((b) => b.textContent)).toEqual(['Escriure en negreta']);
+  expect(document.getElementById('xat-message-adjunts-peu')).toBeNull();
 });
 test('sense la capacitat al port, ni tan sols es pregunta la quota', () => {
   const sense = { teCapacitat: () => false, quotaXat: vi.fn() };
   const vista = render(<Barra usuariId={m.user} fil={fil} servei={sense} onEnvia={vi.fn()} />);
   expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
   expect(sense.quotaXat).not.toHaveBeenCalled();
+  fireEvent.click(mesSenseAdjunts());
+  expect(screen.getAllByRole('menuitem').map((b) => b.textContent)).toEqual(['Escriure en negreta']);
 });
 test('mentre es llig la quota no hi ha cap panell que després desaparega', () => {
   servei.quotaXat.mockReturnValueOnce(new Promise(() => {}));
   const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
+  fireEvent.click(mesSenseAdjunts());
+  expect(screen.getAllByRole('menuitem').map((b) => b.textContent)).toEqual(['Escriure en negreta']);
 });
 test('una quota que no es pot llegir es diu sense alerta i es pot tornar a provar', async () => {
   servei.quotaXat.mockRejectedValueOnce(errorAdjuntXat('xarxa'));
@@ -281,18 +288,18 @@ test('després d’una quota llegida, el fil següent pinta el panell des del pr
 });
 test('la quota desada és de cada persona, i un node sense adjunts l’oblida', async () => {
   const primer = render(<Barra usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  await screen.findByRole('button', { name: 'Adjunta' });
+  await waitFor(() => expect(primer.container.querySelector('.sdp-xat-adjunts')).toBeTruthy());
   primer.unmount();
   servei.quotaXat.mockReturnValueOnce(new Promise(() => {}));
   const altra = render(<Barra usuariId="B" fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  expect(altra.container.querySelector('.sdp-xat-compositor__adjunta')).toBeNull();
+  expect(altra.container.querySelector('.sdp-xat-adjunts')).toBeNull();
   altra.unmount();
   servei.quotaXat.mockRejectedValueOnce(errorAdjuntXat('sense-capacitat'));
   const sense = render(<Barra usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  await waitFor(() => expect(sense.container.querySelector('.sdp-xat-compositor__adjunta')).toBeNull());
+  await waitFor(() => expect(sense.container.querySelector('.sdp-xat-adjunts')).toBeNull());
   sense.unmount();
   servei.quotaXat.mockReturnValueOnce(new Promise(() => {}));
-  expect(render(<Barra usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />).container.querySelector('.sdp-xat-compositor__adjunta')).toBeNull();
+  expect(render(<Barra usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />).container.querySelector('.sdp-xat-adjunts')).toBeNull();
 });
 /* ADV-MEDIA-5 · A l'encastat, el ShadowRoot no té activeElement quan el focus
    és a la pàgina amfitriona: acabar un pas llarg no el pren. */
@@ -562,16 +569,17 @@ test('P1-66 · amb un fitxer preparat, el + no obri el menú (cap foto triada a 
   fireEvent.click(mes());
   expect(screen.queryByRole('menu')).toBeNull();
 });
-test('P1-66 · amb la quota ja desada, actiu fals no pinta + ni micròfon ni safata, i no torna a llegir-la', async () => {
+test('P1-66 + R21.8 · amb la quota ja desada, actiu fals no pinta micròfon ni safata d’adjunts, i no torna a llegir-la', async () => {
   ambMicrofon();
   const primer = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  await screen.findByRole('button', { name: 'Adjunta' });
+  await waitFor(() => expect(primer.container.querySelector('.sdp-xat-adjunts')).toBeTruthy());
   primer.unmount();
   const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} actiu={false} />);
   await act(async () => {});
-  expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Grava àudio' })).toBeNull();
   expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
+  fireEvent.click(mesSenseAdjunts());
+  expect(screen.getAllByRole('menuitem').map((b) => b.textContent)).toEqual(['Escriure en negreta']);
   expect(servei.quotaXat).toHaveBeenCalledOnce();
 });
 test('P1-66 · enviar una nota de veu deixa el focus al botó redó, que torna a ser «Grava àudio»', async () => {
@@ -590,14 +598,14 @@ test('P1-66 · enviar una nota de veu deixa el focus al botó redó, que torna a
   await waitFor(() => expect(screen.getByRole('button', { name: 'Grava àudio' })).toBe(boto));
   expect(document.activeElement).toBe(boto);
 });
-test('P1-66 · una lectura bona esborra l’error d’abans: «sense migració» en un fil no amaga el + en el següent', async () => {
+test('P1-66 · una lectura bona esborra l’error d’abans: «sense migració» en un fil no amaga els adjunts en el següent', async () => {
   servei.quotaXat.mockRejectedValueOnce(errorAdjuntXat('SDP-XAT-001'));
   const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   await waitFor(() => expect(servei.quotaXat).toHaveBeenCalledOnce());
   await act(async () => {});
-  expect(vista.container.querySelector('.sdp-xat-compositor__adjunta')).toBeNull();
+  expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
   vista.rerender(<Barra usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={vi.fn()} />);
-  expect(await screen.findByRole('button', { name: 'Adjunta' })).toBeTruthy();
+  await waitFor(() => expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeTruthy());
   expect(peuDelMenu()[0]).toBe('0,0 de 20 MB del xat');
 });
 
@@ -610,7 +618,7 @@ test('el mateix usuari en un altre backend no rep la quota ni els pendents del p
   await screen.findByRole('button', { name: 'Descarta el fitxer pendent (12,0 MB)' });
   vista.unmount();
   servei.quotaXat.mockReturnValueOnce(new Promise(() => {}));
-  render(<Barra usuariId="mateix-uuid" externalConfig={configB} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  const segona = render(<Barra usuariId="mateix-uuid" externalConfig={configB} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   expect(screen.queryByRole('button', { name: 'Descarta el fitxer pendent (12,0 MB)' })).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
+  expect(segona.container.querySelector('.sdp-xat-adjunts')).toBeNull();
 });

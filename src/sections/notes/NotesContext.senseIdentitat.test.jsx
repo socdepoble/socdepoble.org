@@ -1,3 +1,6 @@
+import { beforeEach as abansDePublicar } from 'vitest';
+import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
+abansDePublicar(() => { globalThis.indexedDB = creaIdbFalsEstructurat(); });
 /* D-7 (pla 261101_1246; P1-71) · NotesProvider amb el proveïdor de dades de
    només lectura (NotesDataContext sense IdentitatProvider: nomesLectura) i
    sense IdentitatProvider: no llança, i res del que escriu arriba a la cua de
@@ -20,7 +23,7 @@ vi.mock('./NotesDataContext', () => ({
   useNotesData: () => ({
     notes: LLISTA, noteFolders: CAP, status: 'ready', error: null, scopeKey: 'escopi', workspaceKey: 'espai',
     notesComplete: true, config: { dataMode: 'remote' }, canCreate: false, nomesLectura: m.nomesLectura,
-    creaNota: vi.fn(), updateNote: m.updateNote, mouNota: m.mouNota, esborraNota: m.esborraNota,
+    creaNota: vi.fn(), updateNote: m.updateNote, confirmaPublicacioNota: vi.fn(), mouNota: m.mouNota, esborraNota: m.esborraNota,
     resolveNote: vi.fn(), refresh: vi.fn()
   })
 }));

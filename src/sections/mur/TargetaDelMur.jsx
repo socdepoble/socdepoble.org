@@ -81,6 +81,7 @@ import { ofereixTraduir, planTraduccioPublicacio, propia } from '../../component
 export function rutaDeLaBoinaDelMur(item) {
   const deQuiSigna = rutaDePerfilDAutor(item);
   if (deQuiSigna) return deQuiSigna;
+  if (item?._murPublic === true) return undefined;
   const ambNomPropi = Boolean(item?.author_name || item?.seller);
   return item?.isSystem || !ambNomPropi ? RUTA_PERFIL_PROJECTE : undefined;
 }
@@ -227,8 +228,8 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
      Abans el quadrat verd signava al costat del seu nom. */
   const signaPersona = autorDe(item)?.tipus === 'persona';
   const signatura = signaturaDeQuiSigna(item, {
-    nom: item.author_name || item.seller || "Sóc de Poble",
-    avatar: item.author_avatar || item.avatar_url || (signaPersona ? null : DEFAULT_AUTHOR.avatarUrl)
+    nom: item.author_name || item.seller || (item._murPublic ? "Autoria no publicada" : "Sóc de Poble"),
+    avatar: item.author_avatar || item.avatar_url || (signaPersona || item._murPublic ? null : DEFAULT_AUTHOR.avatarUrl)
   });
   /* P0-33 / IDEA-150 (Llei 1:1 UniversalPage ↔ UniversalCard, 261107) · La
      targeta del Mur pinta la mateixa entradilla (entradilla || lead) i el
@@ -337,13 +338,13 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
       avatarUrl={esMitjaOpac(signatura.avatar)
         ? fotoDelBucketPublic(signatura.avatar)
         : fontImatgePropia(resolveAsset(signatura.avatar))}
-      location={item.author_location || item.population || "La Torre de les Maçanes"}
+      location={item.author_location || item.population || (item._murPublic ? "Poble no indicat" : "La Torre de les Maçanes")}
       date={data.date}
       time={data.time}
       dateTime={data.dateTime}
       /* T39 · els drets triats a la publicació (payload.copyright); el
          text de sèrie, només per a la llavor i les d'abans de T39. */
-      copyright={item.copyright || COPYRIGHT_SDP}
+      copyright={item.copyright || (item._murPublic ? undefined : COPYRIGHT_SDP)}
       calendarBadge={null}
       price={item.price}
       labels={etiquetes}

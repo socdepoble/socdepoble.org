@@ -43,8 +43,8 @@ export function textosDelPoble(t = senseTraduccio, pestanya = 'gent') {
       : pestanya === 'xarxa'
         ? tradueix('section.detail.pobles.xarxa.buit', 'Encara no hi ha publicacions de fora que parlen d’este poble.')
         : tradueix('section.detail.pobles.gent.buit', 'Encara no hi ha cap publicació des d’este poble.'),
-    carregant: tradueix('section.detail.pobles.gent.carregant', 'Carregant les publicacions del poble…'),
-    error: tradueix('section.detail.pobles.gent.error', 'No s’han pogut carregar les publicacions del poble')
+    carregant: tradueix('section.detail.pobles.gent.carregant', 'Carregant les publicacions d’este poble…'),
+    error: tradueix('section.detail.pobles.gent.error', 'No s’han pogut carregar les publicacions d’este poble')
   };
 }
 

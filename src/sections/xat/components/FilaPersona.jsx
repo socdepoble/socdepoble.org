@@ -20,7 +20,7 @@ export default function FilaPersona({ membre, obrint = false, onSelect, t }) {
   if (membre.noDisponible) estat = t('section.xat.padro.noDisponible', 'No disponible');
   const tipus = etiquetaDeTipus(membre.tipus, t);
   const conversa = membre.noDisponible
-    ? t('section.xat.padro.ajudaPendent', 'Este contacte encara no està connectat al xat del poble.')
+    ? t('section.xat.padro.ajudaPendent', 'Este contacte encara no està connectat al xat de poble.')
     : membre.fil_id
     ? t('section.xat.padro.jaOberta', 'Ja teniu una conversa oberta.')
     : t('section.xat.padro.encaraNo', 'Encara no heu parlat.');

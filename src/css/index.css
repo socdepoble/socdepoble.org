@@ -70,10 +70,12 @@
 @import url('../sections/profile/PerfilShell.css') layer(components);
 @import url('../apps/plataforma/apps.css') layer(components);
 /* Els fulls de les peces (pecesApps, catalegColleccio, alergens, tpv,
-   UniversalListCard, AdjuntXat i ConsultaIAIA) ja no entren per ací: des del
-   261030 (tractor-vocabulari, ordre del Mestre) són els blocs del final de
+   UniversalListCard i AdjuntXat) ja no entren per ací: des del 261030
+   (tractor-vocabulari, ordre del Mestre) són els blocs del final de
    modules.css, en el mateix ordre i dins de `@layer components`. Arriben al
-   Shadow DOM de l'element incrustat dins d'este mateix full. */
+   Shadow DOM de l'element incrustat dins d'este mateix full. El de la
+   consulta documental de la IAIA es va retirar amb el seu component en
+   R21.3. */
 /* Ús de les amplades estretes de Noto Sans (261004). També escriu dins de
    `@layer components`: sense layer(), perquè amb layer(components) aniria a
    la subcapa components.components, que perd sempre contra components.css i

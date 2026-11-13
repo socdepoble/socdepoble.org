@@ -34,7 +34,7 @@ export const TEXTOS_ROL = Object.freeze({
   adminNomesPropietaria: Object.freeze(['section.connectar.rol.adminNomesPropietaria', 'Només la propietària de l’entitat nomena administradores.']),
   membreAjuda: Object.freeze(['section.connectar.rol.membreAjuda', 'Consta a la llista de membres, sense cap permís de gestió.']),
   treballadorAjuda: Object.freeze(['section.connectar.rol.treballadorAjuda', 'Hi treballa o n’és sòcia: consta a la llista de membres, sense cap permís de gestió.']),
-  treballadorPendent: Object.freeze(['section.connectar.rol.treballadorPendent', 'Encara no es pot desar: el servidor del poble només distingix administradores i membres.']),
+  treballadorPendent: Object.freeze(['section.connectar.rol.treballadorPendent', 'Encara no es pot desar: el servidor de poble només distingix administradores i membres.']),
   treballadorDemana: Object.freeze(['section.connectar.rol.treballadorDemana', 'Qui l’administra decidirà amb quin rol t’hi dona d’alta.'])
 });
 

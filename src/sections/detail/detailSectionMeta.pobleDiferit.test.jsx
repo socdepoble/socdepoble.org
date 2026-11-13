@@ -66,7 +66,7 @@ describe('el panell diferit del poble', () => {
     const { container } = render(<BarreraDeLaRuta>{meta.renderBody(POBLE, { detall: true })}</BarreraDeLaRuta>);
     const panell = container.querySelector('[role="tabpanel"]');
     await waitFor(() => expect(panell.querySelector('.sdp-alerta--error')).not.toBeNull());
-    expect(screen.getByRole('alert').textContent).toContain('No s’han pogut carregar les publicacions del poble');
+    expect(screen.getByRole('alert').textContent).toContain('No s’han pogut carregar les publicacions d’este poble');
     expect(panell.textContent).toContain('La resta de la pàgina continua com sempre.');
     // Cap reintent fals: un import fallit no es recupera sense recarregar.
     expect(panell.querySelector('button')).toBeNull();

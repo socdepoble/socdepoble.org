@@ -82,7 +82,7 @@
   --sdp-primary-500: var(--sdp-canon-taronja);   /* el cànon. Només com a FONS; derogat EN PART per l'ordre del Mestre, 13-10-2026 (front C): lletra només sobre la roca, amb --sdp-crom-grup-text. */
   --sdp-primary-600: #dd6302;
   --sdp-primary-700: #ad4c03;   /* Taronja fort · text i fons massís d'accent */
-  --sdp-primary-800: #873a01;   /* text accent · 7,97:1 · AAA */
+  --sdp-primary-800: #833801;   /* P1-22 · 8,30:1 blanc; 7,04:1 fons subtil */
   --sdp-primary-900: #602701;
 
   /* Secundari · blau de mar — OKLCH H 250.6° (to exacte del cànon #0984E3) */
@@ -98,9 +98,9 @@
   --sdp-secondary-900: #002546;
 
   /* Estat */
-  --sdp-error-500: #c2181d;  --sdp-error-50: #ffedeb;  --sdp-error-700: #92000c;
+  --sdp-error-500: #c2181d;  --sdp-error-600: #b21019;  --sdp-error-50: #ffedeb;  --sdp-error-700: #92000c;
   --sdp-avis-500:  #9c6902;  --sdp-avis-50:  #fff1df;  --sdp-avis-700:  #6e4901;
-  --sdp-exit-500:  #027e38;  --sdp-exit-50:  #e4f8e7;  --sdp-exit-700:  #005c27;
+  --sdp-exit-500:  #027e38;  --sdp-exit-600: #00672c;  --sdp-exit-50:  #e4f8e7;  --sdp-exit-700:  #005c27;
 
   /* IDEA-40 (decisió del Mestre, 261028, Bloc H) · El verd de marca, un sol
      token: el de la icona i la pantalla d'inici natives, el logotip i la barra
@@ -167,12 +167,12 @@
   --sdp-fons-vel:        rgba(14, 13, 12, 0.55);
   --sdp-color-focus:     var(--sdp-secondary-500);
 
-  /* Text — TOT compleix AA (≥4.5:1) i la majoria AAA (≥7:1) sobre la seua superfície */
+  /* P1-22 · Text semàntic: ≥7:1 sobre les superfícies declarades al verificador. */
   --sdp-text-titol:  var(--sdp-pedra-900);   /* 19,42:1 */
   --sdp-text-cos:    var(--sdp-pedra-700);   /* 11,20:1 */
   --sdp-text-suau:   var(--sdp-pedra-650);   /*  9,09:1 · AAA · 8,00 sobre l'app, 7,71 sobre el fons subtil */
   --sdp-text-invers: var(--sdp-pedra-50);
-  --sdp-text-desactivat: var(--sdp-pedra-500);  /* Afegeix ací overrides temporals o experiments en viu */
+  --sdp-text-desactivat: var(--sdp-text-suau); /* P1-22 · placeholders llegibles */
 
   /* Vores */
   --sdp-vora:         var(--sdp-pedra-300);   /* decorativa */
@@ -187,11 +187,11 @@
   --sdp-accent-hover:      var(--sdp-primary-400);
   --sdp-accent-subtil:     var(--sdp-primary-50);
   --sdp-sobre-accent:      var(--sdp-pedra-900);    /*  7,12:1 · AAA */
-  --sdp-accent-text:       var(--sdp-primary-700);  /*  5,51:1 · AA  (interacció) */
-  --sdp-accent-text-hover: var(--sdp-primary-800);  /*  7,97:1 · AAA */
-  --sdp-accent-titol:      var(--sdp-primary-700);  /*  5,51:1 · AA (h2, h4) */
-  --sdp-accent-control:       var(--sdp-primary-700);
-  --sdp-accent-control-hover: var(--sdp-primary-800);
+  --sdp-accent-text:       var(--sdp-primary-800);  /* P1-22 · ≥7:1 també sobre fons subtil */
+  --sdp-accent-text-hover: var(--sdp-primary-900);  /* P1-22 · el hover augmenta el contrast */
+  --sdp-accent-titol:      var(--sdp-primary-800);  /* P1-22 · també és text d’enllaç menut */
+  --sdp-accent-control:       var(--sdp-primary-800);
+  --sdp-accent-control-hover: var(--sdp-primary-900);
 
   /* Acció · blau */
   --sdp-accio:         var(--sdp-secondary-500);
@@ -216,10 +216,21 @@
   --sdp-focus-sobre-accio: var(--sdp-pedra-900);
 
   /* Estat semàntic */
-  --sdp-error: var(--sdp-error-500);  --sdp-error-fons: var(--sdp-error-50);  --sdp-error-text: var(--sdp-error-700);
+  --sdp-error: var(--sdp-error-600);  --sdp-error-fons: var(--sdp-error-50);  --sdp-error-text: var(--sdp-error-700);
   --sdp-avis:  var(--sdp-avis-500);   --sdp-avis-fons:  var(--sdp-avis-50);   --sdp-avis-text:  var(--sdp-avis-700);
   --sdp-exit:  var(--sdp-exit-500);   --sdp-exit-fons:  var(--sdp-exit-50);   --sdp-exit-text:  var(--sdp-exit-700);
   --sdp-info:  var(--sdp-secondary-500); --sdp-info-fons: var(--sdp-secondary-50); --sdp-info-text: var(--sdp-secondary-700);
+  /* P1-22 · El control amb lletra blanca necessita ≥7:1; el senyal gràfic
+     conserva exit-500 perquè es distingisca ≥3:1 de la targeta fosca. */
+  --sdp-exit-control: var(--sdp-exit-600);
+
+  /* Paleta determinista d'autors en grups del Xat (R21.9 · WCAG AAA >= 7:1 sobre --sdp-accent-subtil #fff6f0 i #ffffff) */
+  --sdp-xat-autor-1: #004983;
+  --sdp-xat-autor-2: #0a4d22;
+  --sdp-xat-autor-3: #6b1d5c;
+  --sdp-xat-autor-4: #602701;
+  --sdp-xat-autor-5: #004d56;
+  --sdp-xat-autor-6: #5c2d00;
 
   /* ═══ MÈTRIQUES, MOVIMENT, TIPOGRAFIA ═════════════════════════ */
 
@@ -240,7 +251,7 @@
   --sdp-radi-boto: var(--sdp-radi-pastilla);
   /* P1-37 (ordre del Mestre, 261026_2057; pla 261028_1526 §3.5.1) · L'aire dels
      botons, àlies de la reixeta com --sdp-radi-boto: el marge d'un botó de bloc
-     que va a soles (16px als costats, 12px dalt i baix, «Pregunta a la IAIA») i
+     que va a soles (16px als costats, 12px dalt i baix) i
      el buit entre els botons d'un grup, que dona el gap del contenidor i mai un
      marge enganxat a un divisor. Cap tema ni el Bancal els redefinix. */
   --sdp-boto-marge-inline: var(--sdp-space-4);
@@ -442,6 +453,7 @@
   --sdp-space-3: 12px;  --sdp-space-4: 16px;  --sdp-space-5: 20px;
   --sdp-space-6: 24px;  --sdp-space-8: 32px;  --sdp-space-10: 40px;
   --sdp-space-12: 48px; --sdp-space-16: 64px; --sdp-space-20: 80px;
+  --sdp-alt-pastilla: 28px;
 
   /* ── RITME VERTICAL EDITORIAL ── */
   --sdp-measure: 68ch;                 /* mesura de columna · APLICADA */
@@ -502,22 +514,15 @@
      La xifra val per al to canònic (crom.js gira la rampa, com amb l'actiu).
      Va en línia pròpia: C2 (tractor-cromatic) mesura contra la targeta blanca. */
   --sdp-crom-grup-text:         var(--sdp-primary-500);
-  /* Decisió del Mestre, 14-10-2026 (pla 261013_1930, front 1b) · Jerarquia de
-     la 1a columna de UniversalWorkspace: els contenidors (capçaleres de grup,
-     carpetes amb fills i el seu desplegador) van en Taronja 400; les fulles
-     continuen en --sdp-crom-text i la selecció, en blau (T62b). Token de LLETRA
-     propi sobre --sdp-workspace-nav-fons, Grafit 700 (#3d3b35), estable en els
-     quatre modes (clar, fosc, Bancal i Bancal fosc). Taronja 400 (#ff955b) hi
-     fa 5,17:1, AA per a la lletra de 16px/600 (el llindar de l'ordre és 4,5:1).
-     Amb el ratolí, sobre el vel de --sdp-crom-hover (#4e4d47), baixaria a
-     3,92:1: el hover torna a --sdp-crom-text, com «Sistema» (layout.css). És el
-     mateix to que l'anell de focus del crom (--sdp-crom-focus).
-     No es reutilitza --sdp-crom-grup-text perquè el cànon fa 4,11:1 sobre el
-     Grafit 700 i el cens d'eixe token és de dos usos sobre la roca
-     (jerarquiaBarraLateral).
-     La xifra val per al to canònic (crom.js gira la rampa, com amb l'actiu).
-     Va en línia pròpia: C2 (tractor-cromatic) mesura contra la targeta blanca. */
-  --sdp-crom-contenidor-text:   var(--sdp-primary-400);
+  /* P1-22 · La jerarquia de contenidors de la primera columna conserva el
+     taronja, ara Taronja 200 (#ffd1bb): 8,05:1 sobre el Grafit 700
+     (#3d3b35), AAA per a text normal. Sobre el vel de hover (#4e4d47)
+     faria 6,09:1 (vel quantitzat a 8 bits): el hover continua amb --sdp-crom-text, AAA.
+     El cànon del grup de la roca fa 4,11:1 sobre la columna i no és
+     intercanviable amb este token. No es reutilitza el to de l'anell de
+     focus: text i focus tenen llindars diferents. Declaració immutable
+     entre temes (K1); la xifra va fora de la línia del token (C2). */
+  --sdp-crom-contenidor-text:   var(--sdp-primary-200);
   /* T62 · Selecció de la navegació secundària sobre crom: la 1a columna
      (arbre de carpetes, famílies i categories, rail del Xat) i els rails
      plegats. Els actius van en blau (Pedra Seca §2); la barra principal,
@@ -725,7 +730,7 @@
   --sdp-text-cos:    var(--sdp-pedra-200);   /* 15,20:1 */
   --sdp-text-suau:   var(--sdp-pedra-300);   /* 12,49:1 */
   --sdp-text-invers: var(--sdp-pedra-900);
-  --sdp-text-desactivat: var(--sdp-pedra-500);
+  --sdp-text-desactivat: var(--sdp-text-suau);
 
   --sdp-vora:         var(--sdp-pedra-750);
   --sdp-vora-control: var(--sdp-pedra-500);  /*  4,90:1 */
@@ -735,9 +740,9 @@
   --sdp-accent-hover:      var(--sdp-primary-400);
   --sdp-accent-subtil:     var(--sdp-primary-900);
   --sdp-sobre-accent:      var(--sdp-pedra-900);   /*  7,12:1 sobre --sdp-accent */
-  --sdp-accent-text:       var(--sdp-primary-400); /*  8,28:1 */
-  --sdp-accent-text-hover: var(--sdp-primary-300); /* 10,30:1 */
-  --sdp-accent-titol:      var(--sdp-primary-300); /* 10,30:1 */
+  --sdp-accent-text:       var(--sdp-primary-200); /* P1-22 · ≥7:1 sobre accent-subtil */
+  --sdp-accent-text-hover: var(--sdp-primary-100); /* P1-22 · el hover augmenta el contrast */
+  --sdp-accent-titol:      var(--sdp-primary-200); /* P1-22 · ≥7:1 sobre accent-subtil */
 
   --sdp-accio:         var(--sdp-secondary-500);
   --sdp-accio-hover:   var(--sdp-secondary-400);
@@ -764,6 +769,14 @@
   --sdp-marca-google-fons: #131314;
   --sdp-marca-google-vora: #8e918f;
   --sdp-marca-google-text: #e3e3e3;
+
+  /* Paleta determinista d'autors en grups del Xat en tema fosc (R21.9 · WCAG AAA >= 7.99:1 sobre --sdp-accent-subtil #602701 i >= 10.95:1 sobre #22211e) */
+  --sdp-xat-autor-1: #b3d9ff;
+  --sdp-xat-autor-2: #9ce8b5;
+  --sdp-xat-autor-3: #ffc8f0;
+  --sdp-xat-autor-4: #ffe082;
+  --sdp-xat-autor-5: #80ecff;
+  --sdp-xat-autor-6: #ffd6c2;
 }
 
 /* ═══ MODE BANCAL · CONTRAST EXTREM PER A L'HORT A PLE SOL ════════════
@@ -793,8 +806,8 @@
 :root[data-contrast="bancal"] .sdp-root, :host([data-contrast="bancal"]) .sdp-root {
   --sdp-text-cos:  var(--sdp-pedra-800);   /* 16,10:1 · 14,17 sobre l'app · 13,66 sobre el fons subtil */
   --sdp-text-suau: var(--sdp-pedra-700);   /* 11,20:1 · 9,86 sobre l'app · 9,50 sobre el fons subtil */
-  --sdp-accent-text:       var(--sdp-primary-800);  /* 7,97:1 · 7,01 sobre l'app */
-  --sdp-accent-titol:      var(--sdp-primary-800);  /* 7,97:1 · enllaços, h2 i h4 */
+  --sdp-accent-text:       var(--sdp-primary-800);  /* P1-22 · ≥7:1 també sobre fons subtil */
+  --sdp-accent-titol:      var(--sdp-primary-800);  /* P1-22 · enllaços i títols menuts AAA */
   --sdp-accent-text-hover: var(--sdp-primary-900);  /* 11,74:1 · el hover enfosquix, mai aclarix */
   --sdp-escala-premut: 1;
 }
@@ -804,9 +817,9 @@
 :root[data-theme="dark"][data-contrast="bancal"] .sdp-root, :host([data-theme="dark"][data-contrast="bancal"]) .sdp-root {
   --sdp-text-cos:  var(--sdp-pedra-100);   /* 16,62:1 sobre la targeta fosca */
   --sdp-text-suau: var(--sdp-pedra-200);   /* 15,20:1 · 11,51 sobre el fons subtil fosc */
-  --sdp-accent-text:       var(--sdp-primary-300);  /* 10,30:1 */
-  --sdp-accent-titol:      var(--sdp-primary-300);  /* 10,30:1 */
-  --sdp-accent-text-hover: var(--sdp-primary-200);  /* 12,87:1 */
+  --sdp-accent-text:       var(--sdp-primary-200);  /* P1-22 · no rebaixa el tema fosc */
+  --sdp-accent-titol:      var(--sdp-primary-200);  /* P1-22 · no rebaixa el tema fosc */
+  --sdp-accent-text-hover: var(--sdp-primary-100);  /* P1-22 · el hover augmenta el contrast */
 }
 
 /* Moviment reduït · les escales valen 1 i el desplaçament 0: ni el CSS ni
@@ -835,8 +848,8 @@
    1.4.11); les xifres blanques de les targetes, sobre el verd i l'ocre. */
 :root, :host, .sdp-root {
   --sdp-mapa-fons:          #e3e9e2;
-  --sdp-mapa-gps:           #226b5c;   /* 5,12:1 · xifra blanca 6,31:1 */
-  --sdp-mapa-estimada:      #a77022;   /* 3,42:1 · xifra blanca 4,21:1 */
+  --sdp-mapa-gps:           #206353;   /* P1-22 · nombre/hora blancs ≥7:1 */
+  --sdp-mapa-estimada:      #795018;   /* P1-22 · nombre/hora blancs ≥7:1 */
   --sdp-mapa-sobre:         var(--sdp-blanc-pur);
   --sdp-mapa-recorregut:    #547b88;   /* 3,73:1 */
   --sdp-mapa-halo:          #fffdf7;

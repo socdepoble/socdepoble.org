@@ -1,9 +1,8 @@
-/* IDEA-53 (pla 261029_1605, Bloc B) · El botó [N] i Cmd/Ctrl+B al
-   compositor, amb el comportament literal del pla: amb text seleccionat
-   l'embolica amb *…* (o el desembolica si ja era negreta) i la selecció i el
-   focus es queden al camp; sense selecció, insereix ** amb el cursor al mig.
-   El botó no pren el focus al camp, la drecera respecta l'IME i no commuta
-   amb la tecla mantinguda, i Retorn i Escape continuen com sempre. */
+/* R21.8 (substituïx el botó visible [N] d'IDEA-53) · «Escriure en negreta» viu
+   dins del menú del [+] (davall de les opcions d'adjunts, i com a única opció
+   quan el node no té adjunts), deixant la barra inferior 100% neta com a
+   WhatsApp: [+] [😊 Escriu…] [🎤 / ✈️]. Cmd/Ctrl+B continua idèntic, i un camp
+   amb només `**` es considera buit a efectes d'enviament. */
 import { useState } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -41,56 +40,66 @@ function Prova({ inicial = '', onCanvia = () => {}, onEnvia = () => {}, ...props
 }
 
 const camp = () => screen.getByRole('textbox', { name: 'Escriu un missatge' });
-const negreta = () => screen.getByRole('button', { name: 'Negreta' });
+/* Gauntlet R22 (xat-02) · Sense adjunts, el + es diu «Més opcions»: no promet adjuntar. */
+const mes = () => screen.getByRole('button', { name: 'Més opcions' });
+const clicaNegreta = () => {
+  fireEvent.click(mes());
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Escriure en negreta' }));
+};
 const tria = (inici, fi = inici) => { camp().focus(); camp().setSelectionRange(inici, fi); };
 const seleccio = () => [camp().selectionStart, camp().selectionEnd];
 
-describe('el botó [N]', () => {
-  test('dins del camp, darrere del textarea; títol literal i drecera declarada', () => {
+describe('«Escriure en negreta» dins del menú + (R21.8)', () => {
+  test('cap botó [N] dins del camp; l’opció viu dins del menú del +', () => {
     render(<Prova />);
-    const boto = negreta();
-    expect(boto.type).toBe('button');
-    expect(boto.getAttribute('title')).toBe('Negreta (⌘B / Ctrl+B)');
-    expect(boto.getAttribute('aria-keyshortcuts')).toBe('Meta+B Control+B');
-    expect(boto.parentElement).toBe(camp().parentElement);
-    expect(boto.parentElement.classList.contains('sdp-xat-compositor__camp--negreta')).toBe(true);
-    expect(camp().compareDocumentPosition(boto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    // La lletra és decorativa: el nom accessible és «Negreta».
-    expect(boto.querySelector('.sdp-xat-compositor__negreta-lletra').getAttribute('aria-hidden')).toBe('true');
-    expect(boto.textContent).toBe('N');
+    expect(screen.queryByRole('button', { name: 'Negreta' })).toBeNull();
+    expect(document.querySelector('.sdp-xat-compositor__negreta')).toBeNull();
+    expect(camp().parentElement.classList.contains('sdp-xat-compositor__camp--negreta')).toBe(false);
+    expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
+    fireEvent.click(mes());
+    const item = screen.getByRole('menuitem', { name: 'Escriure en negreta' });
+    expect(item).toBeTruthy();
   });
 
-  test('desactivat amb el camp', () => {
+  test('desactivat amb el camp: el + queda aria-disabled i no obri el menú', () => {
     render(<Prova desactivat />);
-    expect(negreta().disabled).toBe(true);
+    expect(mes().getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(mes());
+    expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  test('no pren el focus al camp (mousedown consumit)', () => {
-    render(<Prova inicial="Bon dia" />);
-    tria(4, 7);
-    expect(fireEvent.mouseDown(negreta())).toBe(false);
-    expect(document.activeElement).toBe(camp());
-  });
-
-  test('amb selecció: embolica, la selecció i el focus es queden sobre el text; un segon clic desfà', async () => {
+  test('amb selecció: embolica, tanca el menú i la selecció i el focus tornen al camp; repetir desfà', async () => {
     const onCanvia = vi.fn();
     render(<Prova inicial="Bon dia" onCanvia={onCanvia} />);
     tria(4, 7);
-    fireEvent.click(negreta());
+    clicaNegreta();
     await waitFor(() => expect(camp().value).toBe('Bon *dia*'));
+    expect(screen.queryByRole('menu')).toBeNull();
     expect(onCanvia).toHaveBeenLastCalledWith('Bon *dia*');
     expect(seleccio()).toEqual([5, 8]);
     expect(document.activeElement).toBe(camp());
-    fireEvent.click(negreta());
+    clicaNegreta();
     await waitFor(() => expect(camp().value).toBe('Bon dia'));
     expect(seleccio()).toEqual([4, 7]);
   });
 
-  test('sense selecció: ** amb el cursor al mig, i Retorn envia com sempre', async () => {
+  test('en camp buit: inserix ** amb el cursor al mig (*|*), però NO activa Envia ni envia ** buits', async () => {
+    const onEnvia = vi.fn();
+    render(<Prova inicial="" onEnvia={onEnvia} />);
+    clicaNegreta();
+    await waitFor(() => expect(camp().value).toBe('**'));
+    expect(seleccio()).toEqual([1, 1]);
+    expect(document.activeElement).toBe(camp());
+    expect(screen.getByRole('button', { name: 'Envia' }).disabled).toBe(true);
+    fireEvent.keyDown(camp(), { key: 'Enter' });
+    expect(onEnvia).not.toHaveBeenCalled();
+  });
+
+  test('sense selecció després de text: ** amb el cursor al mig, i Retorn envia quan ja hi ha text real', async () => {
     const onEnvia = vi.fn();
     render(<Prova inicial="Hola " onEnvia={onEnvia} />);
     tria(5);
-    fireEvent.click(negreta());
+    clicaNegreta();
     await waitFor(() => expect(camp().value).toBe('Hola **'));
     expect(seleccio()).toEqual([6, 6]);
     expect(fireEvent.keyDown(camp(), { key: 'Enter' })).toBe(false);
@@ -100,7 +109,7 @@ describe('el botó [N]', () => {
   test('sense selecció enmig d’una paraula: literal, cap embolcall de paraula', async () => {
     render(<Prova inicial="hola" />);
     tria(2);
-    fireEvent.click(negreta());
+    clicaNegreta();
     await waitFor(() => expect(camp().value).toBe('ho**la'));
     expect(seleccio()).toEqual([3, 3]);
   });
@@ -110,7 +119,7 @@ describe('el botó [N]', () => {
     tria(4, 7);
     fireEvent.select(camp());
     screen.getByRole('button', { name: 'Fora' }).focus();
-    fireEvent.click(negreta());
+    clicaNegreta();
     await waitFor(() => expect(camp().value).toBe('Bon *dia*'));
     expect(document.activeElement).toBe(camp());
     expect(seleccio()).toEqual([5, 8]);
@@ -121,21 +130,9 @@ describe('el botó [N]', () => {
     const ple = 'a'.repeat(4095);
     render(<Prova inicial={ple} onCanvia={onCanvia} />);
     tria(0, ple.length);
-    fireEvent.click(negreta());
+    clicaNegreta();
     expect(camp().value).toBe(ple);
     expect(onCanvia).not.toHaveBeenCalled();
-  });
-
-  test('amb el calaix d’emoticones obert en ample, [N] no el tanca', async () => {
-    render(<Prova inicial="Bon dia" />);
-    fireEvent.click(screen.getByRole('button', { name: 'Emoticones' }), { detail: 1 });
-    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Emoticones' })).toBeTruthy());
-    tria(4, 7);
-    fireEvent.pointerDown(negreta());
-    fireEvent.mouseDown(negreta());
-    fireEvent.click(negreta());
-    await waitFor(() => expect(camp().value).toBe('Bon *dia*'));
-    expect(screen.getByRole('dialog', { name: 'Emoticones' })).toBeTruthy();
   });
 });
 
@@ -148,7 +145,7 @@ describe('la drecera Cmd/Ctrl+B', () => {
     expect(seleccio()).toEqual([1, 4]);
   });
 
-  test('Cmd+B també (és el que diu el títol)', async () => {
+  test('Cmd+B també', async () => {
     render(<Prova inicial="Bon dia" />);
     tria(4, 7);
     expect(fireEvent.keyDown(camp(), { key: 'b', metaKey: true })).toBe(false);
