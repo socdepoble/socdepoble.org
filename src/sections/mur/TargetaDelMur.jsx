@@ -53,7 +53,7 @@ import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { accioDeLaTargeta } from '../../config/systemPages.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
-import { fontImatgePropia } from '../../utils/sanitize.js';
+import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
 import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { portadaDeLaPublicacio } from '../../data/mapejadorSeccions.js';
@@ -302,6 +302,7 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
       /* Decisió 3 (261007) · Només una imatge pròpia, resolta (la que es
          demanaria); una de fora, null: cap petició i cap portada. */
       imageUrl={fontImatgePropia(resolveAsset(seccio === 'mercat' ? fotoDeLaTargeta(item, imatge) : imatge))}
+      videoUrl={typeof item.video_url === 'string' && item.video_url ? (fontVideoPropia(resolveAsset(item.video_url)) || undefined) : undefined}
       imageAlt={item.imageAlt || item.title || ''}
       imatgePrivada
       /* IDEA-42 (B7h) · La targeta 16:9 amb el punt focal de l'autor. */

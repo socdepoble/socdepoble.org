@@ -59,6 +59,7 @@ export function propsDeTargetaViva(document, { autor = null, etiquetes = SENSE_E
     subtitle: textPla(d.subtitle) || TEXTOS_LLAVOR.subtitol,
     body: textPla(d.lead) || TEXTOS_LLAVOR.entradilla,
     imageUrl: d.heroImage || undefined,
+    ...(d.heroVideo ? { videoUrl: d.heroVideo } : {}),
     emoticona: emojiSol(d.icon) || '',
     author: qui.nom || undefined,
     authorHref: qui.ruta || undefined,

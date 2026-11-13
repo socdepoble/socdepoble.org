@@ -67,9 +67,12 @@ const dataCrua = (valor) => (typeof valor === 'string' && valor ? valor : null);
 
 /** La fitxa pública d'una fila d'`organization_directory` (exportada per a les proves de contracte). */
 export function perfilDOrganitzacio(org) {
+  /* R22.1 · El vídeo principal, només el de la fila (20261113060000 l'afig a
+     la vista): el client no n'hi posa cap ni n'hidrata cap de llavor. */
+  const heroVideo = text(org.hero_video_url);
   return {
     tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: text(org.name),
-    avatar: text(org.logo_url), hero: text(org.hero_url), lema: text(org.lema), bio: text(org.description),
+    avatar: text(org.logo_url), hero: text(org.hero_url), ...(heroVideo ? { heroVideo } : null), lema: text(org.lema), bio: text(org.description),
     /* Ordre del Mestre (261008, grup C) · El poble de l'organització (columna
        `town_name` de la vista, 2610081401). Sense la columna o sense tria,
        '' com abans. */
@@ -100,9 +103,10 @@ export function perfilDOrganitzacio(org) {
 
 /** La fitxa pública d'una fila de `profiles` (exportada per a les proves de contracte). */
 export function perfilDePersona(fila, usuari) {
+  const heroVideo = text(fila.hero_video_url);
   return {
     tipus: 'persona', id: fila.id, slug: null, nom: text(fila.full_name), avatar: text(fila.avatar_url),
-    hero: text(fila.hero_url), lema: text(fila.lema), bio: text(fila.bio), presentacioHtml: text(fila.presentacio_html),
+    hero: text(fila.hero_url), ...(heroVideo ? { heroVideo } : null), lema: text(fila.lema), bio: text(fila.bio), presentacioHtml: text(fila.presentacio_html),
     poble: text(fila.town_name), esIA: false, publicat: Boolean(fila.is_public),
     propietari: Boolean(usuari?.id) && fila.id === usuari.id, copyright: text(fila.copyright),
     creat: dataCrua(fila.created_at), modificat: dataCrua(fila.updated_at),

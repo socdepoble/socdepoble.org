@@ -49,14 +49,17 @@ describe('Pla 2000 · «Canviar foto» dins del diàleg', () => {
     expect(dialeg(vista).contains(entrada)).toBe(true);
     expect(entrada.getAttribute('accept')).toBe('image/png,image/jpeg,image/webp');
     expect(entrada.getAttribute('tabindex')).toBe('-1');
-    expect(entrada.getAttribute('aria-hidden')).toBe('true');
+    expect(entrada.hasAttribute('aria-hidden')).toBe(false);
+    // R22.1 (r221-ui-02) · Sense aria-hidden és a l'arbre accessible: porta el nom del botó que l'obri.
+    expect(within(dialeg(vista)).getByLabelText(ETIQUETA_CANVIA_FOTO, { selector: 'input[type="file"]' })).toBe(entrada);
     const clic = vi.spyOn(entrada, 'click');
     fireEvent.click(canvia);
     expect(clic).toHaveBeenCalledTimes(1);
-    // La fila va davall del visor i de la fila de zoom.
+    // R22.1 · La fila amb «Canviar foto» va la primera, abans del visor i del zoom (l'ordre del DOM; l'alçada, el pressupost de modules.css).
     const fila = dialeg(vista).querySelector('.sdp-enquadrament__foto');
     expect(fila.querySelector('.sdp-camp__ajuda').textContent).toBe(AJUDA);
-    expect(Boolean(dialeg(vista).querySelector('.sdp-enquadrament__zoom').compareDocumentPosition(fila) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    expect(Boolean(fila.compareDocumentPosition(dialeg(vista).querySelector('.sdp-enquadrament__visor-caixa')) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    expect(Boolean(fila.compareDocumentPosition(dialeg(vista).querySelector('.sdp-enquadrament__zoom')) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
     expect(document.querySelector('[style]')).toBeNull();
   });
 

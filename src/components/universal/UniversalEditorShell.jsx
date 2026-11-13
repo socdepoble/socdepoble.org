@@ -43,6 +43,9 @@ export const TEXTOS_CLOSCA = Object.freeze({
   campEntradilla: parellCloscaEditor('camp.entradilla', 'Entradilla'),
   campCos: parellCloscaEditor('camp.cos', 'Cos'),
   campCapcalera: parellCloscaEditor('camp.capcalera', 'Capçalera'),
+  /* R22.1 (r221-ui-07) · El vídeo de capçalera té avís propi: amb «Capçalera»
+     no se sabia si s'havia perdut la foto o el vídeo. */
+  campVideo: parellCloscaEditor('camp.video', 'Vídeo de capçalera'),
   campAvatar: parellCloscaEditor('camp.avatar', 'Avatar'),
   campDrets: parellCloscaEditor('camp.drets', 'Drets d’autor'),
   campEmoticona: parellCloscaEditor('camp.emoticona', 'Emoticona'),
@@ -150,7 +153,7 @@ function valorDelCamp(html) {
    Perfil: un rebuig del servidor (sense columna, validació) també es veu. */
 const PARELLS_CAMP = Object.freeze({
   title: TEXTOS_CLOSCA.campTitol, subtitle: TEXTOS_CLOSCA.campSubtitol, lead: TEXTOS_CLOSCA.campEntradilla, content: TEXTOS_CLOSCA.campCos,
-  heroImage: TEXTOS_CLOSCA.campCapcalera, logoImage: TEXTOS_CLOSCA.campAvatar, logoImageDark: TEXTOS_CLOSCA.altLogotipFosc, copyright: TEXTOS_CLOSCA.campDrets, icon: TEXTOS_CLOSCA.campEmoticona,
+  heroImage: TEXTOS_CLOSCA.campCapcalera, heroVideo: TEXTOS_CLOSCA.campVideo, logoImage: TEXTOS_CLOSCA.campAvatar, logoImageDark: TEXTOS_CLOSCA.altLogotipFosc, copyright: TEXTOS_CLOSCA.campDrets, icon: TEXTOS_CLOSCA.campEmoticona,
 });
 const CAMPS_AMB_AVIS = Object.keys(PARELLS_CAMP);
 
@@ -182,6 +185,7 @@ const DESTINS_FOCUS = Object.freeze({
   lead: '.editor-lead-input',
   content: '.ProseMirror[contenteditable="true"]',
   heroImage: '.hero-image [role="button"], .hero-image button:not(:disabled), [data-sdp-ranura="capcalera"] [role="button"], [data-sdp-ranura="capcalera"] button:not(:disabled)',
+  heroVideo: '.hero-image [role="button"], .hero-image button:not(:disabled), [data-sdp-ranura="capcalera"] [role="button"], [data-sdp-ranura="capcalera"] button:not(:disabled)',
   /* Encàrrec d'harmonització (261018) · L'avatar redó del Perfil també viu dins
      del desplegable (.sdp-edicio-avancada__identitat). */
   logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia, .sdp-edicio-avancada__identitat .page-title-avatar--canvia, [data-sdp-ranura="logotip"] [role="button"], [data-sdp-ranura="logotip"] button:not(:disabled)',

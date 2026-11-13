@@ -24,6 +24,10 @@ import { GraellaTargetes } from '../../components/PedraSeca/organismes/GraellaTa
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { SlotErrorBoundary } from '../../components/universal/workspace/SlotErrorBoundary.jsx';
 import { objecteDePerfil, rutaConnectarPerfil, rutaDePerfil, rutaXatDePagina } from '../../config/navigation.js';
+import { resolRecursPropi } from '../../config/assetResolver.js';
+import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
+import { esMitjaOpac } from '../../utils/mitjaOpac.js';
+import { fontVideoPropia } from '../../utils/sanitize.js';
 import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
 import { FalladaDeLHistoric } from '../mur/PublicacionsDeLActor.jsx';
 import { useEntitatsDelPoble } from './useEntitatsDelPoble.js';
@@ -70,13 +74,32 @@ function TargetaDeLEntitat({ fila, textos, t, navigate }) {
   const desti = rutaXatDePagina(objecteDePerfil(perfil));
   const poble = typeof fila.town_name === 'string' ? fila.town_name.trim() : '';
   const capcalera = encapcalamentDeTargeta(fila, { author: fila.name, location: poble, t });
+  /* R22.1 · El vídeo principal és el de la fila del directori
+     (COLUMNES_DIRECTORI; la vista el porta des de 20261113060000), mai un de
+     llavor hidratat al client: sense columna o sense vídeo, la targeta de sempre.
+     Gauntlet R22.1 (regressió de la targeta) · Una referència opaca del bucket
+     públic (sdp-media://mitjans/…, que el validador i el CHECK admeten) es
+     resol pel port (useResolvedAsset → resolveAsset), com la portada i el
+     logotip i com a la fitxa pública (FitxaPublica), i després passa pel
+     filtre de vídeo propi. Abans es filtrava crua i no es veia mai: mentre es
+     resol, o si no es pot resoldre, la targeta de sempre. */
+  const videoCru = typeof fila.hero_video_url === 'string' ? fila.hero_video_url.trim() : '';
+  /* La forma canònica que demana el port: l'esquema en minúscules (com refDelPort d'UniversalCard). */
+  const videoDelPort = useResolvedAsset(esMitjaOpac(videoCru) ? videoCru.replace(/^sdp-media:/i, 'sdp-media:') : '');
+  const videoHero = videoCru
+    ? fontVideoPropia(esMitjaOpac(videoCru) ? videoDelPort : resolRecursPropi(videoCru))
+    : null;
+  const imatgeTargeta = videoHero
+    ? (resolRecursPropi(fila.hero_url || fila.logo_url) || undefined)
+    : (fila.logo_url || fila.hero_url || undefined);
   /* PS-07 (B7, marató 261101_2143) · Un sol primari per vista: el blau és
      de l'acció de la pàgina del poble; «Anar al xat» de cada entitat de la
      graella és secundari, gran i a l'ample com sempre. */
   return (
     <UniversalCard
       mainHref={rutaDePerfil(tipus, fila.id)}
-      imageUrl={fila.logo_url || fila.hero_url || undefined}
+      imageUrl={imatgeTargeta}
+      videoUrl={videoHero || undefined}
       title={fila.name}
       subtitle={fila.lema || undefined}
       body={fila.description || undefined}

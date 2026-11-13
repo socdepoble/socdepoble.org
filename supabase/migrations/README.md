@@ -24,6 +24,21 @@ npx vitest run src/data/xatsPerDefecte.test.js src/data/supabase/xat.test.js src
 
 PostgreSQL 18.6 efímer real, serveis Auth/Storage representats només per primitives de plataforma locals. Cap prova local acredita aplicació remota, lliurament push, descodificació d’imatges ni consentiment d’una botiga real.
 
+## R22.1 · Vídeo principal de capçalera (`hero_video_url`)
+
+`20261113060000_r22_1_hero_video_url.sql` va **després de `20261113003000`** i del catàleg històric que copia o amplia: `2609261500` (`hero_url` i el seu CHECK), `2610081401` (`list_my_organizations`), `2610160250` (UPDATE propi de `profiles`), `2610281730` (`organization_directory` amb `correu_public`) i `2610282100` (`perfil_public`). Ordre manual: catàleg històric → `20261113003000` → `20261113060000`. La classificació alfabètica crua la col·locaria abans de tot el catàleg de deu dígits.
+
+Crea `profiles.hero_video_url` i `organizations.hero_video_url` amb un CHECK per taula: buit, o com a molt 2.048 caràcters sense control ni barra inversa, i o una referència opaca del bucket públic (`sdp-media://mitjans/…`, sense `..`; mai `mitjans_privats`, que cap visitant pot signar), o un `https://` amb camí, o un camí propi, sempre `.mp4` o `.webm`. L'origen propi d'un `https` és configuració de cada node i el comproven el client en desar (`esVideoDeCapcaleraDesable`, `src/utils/sanitize.js`) i en pintar (`fontVideoPropia`). Permisos de columna: UPDATE per a `authenticated` a les dues taules (la fila la protegixen les polítiques vigents) i SELECT de la columna d'`organizations` per a `anon` i `authenticated`, com `hero_url`. La lectura: `organization_directory` i `list_my_organizations` la porten al final, i `perfil_public` només a la fitxa sencera, com `hero_url`. Cap política, taula, dada ni permís retirat; idempotent.
+
+El client no la requerix per a arrencar: la fila sense la columna amaga el panell del vídeo (`admetVideoDeCapcalera`, `src/sections/profile/perfilCamps.js`) i el directori la lleva del select amb la memòria de 42703. El client no hidrata cap vídeo ni cap portada d'una entitat real: el contingut d'Oli de La Torre o de qualsevol altra el posa un SQL revisat pel Mestre.
+
+```sh
+node --test tests/r22-1-hero-video-url-postgres.test.mjs
+npx vitest run src/data/r22_1.senseDadesDEntitatsReals.test.js src/sections/profile/PerfilVideoPortada.r22_1.test.jsx
+```
+
+PostgreSQL 18.6 efímer real; cap prova local acredita aplicació remota.
+
 ## Registre FEDI-16 i dependències
 
 | Migració | Canvi i dependències | Privilegis i verificació |

@@ -90,17 +90,18 @@ import {
 const ROLS_QUE_MANEN = new Set(['owner', 'admin']);
 /* T66 · `icon`: l'emoticona de la fitxa de la persona (profiles.icon). Còpia de
    la llista blanca de supabase/auth.js: totes dues han de dir el mateix. */
-const CAMPS_PERFIL = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright', 'icon'];
+const CAMPS_PERFIL = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'hero_video_url', 'copyright', 'icon'];
 /* Grup C (261008) · `town_name`: el poble de l'organització (2610081401). */
 /* P1-59 (c) · Les figures públiques del directori (decisió del Mestre, xat 261031). */
 const KINDS_FIGURA_PUBLICA = Object.freeze(['company', 'entity', 'city_hall']);
-const CAMPS_ORG = ['name', 'slug', 'description', 'kind', 'parent_organization_id', 'lema', 'logo_url', 'visibility', 'presentacio_html', 'hero_url', 'copyright', 'town_name'];
-const CAMPS_AGENT = ['name', 'role', 'lema', 'short_bio', 'avatar_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name'];
+const CAMPS_ORG = ['name', 'slug', 'description', 'kind', 'parent_organization_id', 'lema', 'logo_url', 'visibility', 'presentacio_html', 'hero_url', 'hero_video_url', 'copyright', 'town_name'];
+const CAMPS_AGENT = ['name', 'role', 'lema', 'short_bio', 'avatar_url', 'hero_url', 'hero_video_url', 'presentacio_html', 'copyright', 'town_name'];
 /* Pla 261022_1955 (T1) · Les columnes d'organization_directory (2610081401), en
    el seu ordre: el directori local torna la mateixa fila que el servidor. Una
-   columna que la fitxa no porta ix null, com al servidor. */
+   columna que la fitxa no porta ix null, com al servidor.
+   R22.1 · `hero_video_url` al final, com la vista de 20261113060000. */
 const COLUMNES_DIRECTORI_LOCAL = ['id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
-  'created_at', 'updated_at', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name'];
+  'created_at', 'updated_at', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name', 'hero_video_url'];
 /* Gauntlet (crític de dades) · El filtre local pot plegar de veres (el
    servidor fa un superconjunt tolerant): minúscules, sense diacrítics ni
    punt volat, i les lligadures descompostes (NFKD). */
@@ -196,7 +197,7 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       estat.perfils.set(usuari.id, {
         id: usuari.id, full_name: nomDeSessio(usuari), avatar_url: avatarDeSessio(usuari),
         visibility: 'private', is_public: true, town_name: PERSONA_PILOT.poble,
-        bio: PERSONA_PILOT.bio, lema: PERSONA_PILOT.lema, presentacio_html: '', hero_url: PERSONA_PILOT.hero_url, copyright: '',
+        bio: PERSONA_PILOT.bio, lema: PERSONA_PILOT.lema, presentacio_html: '', hero_url: PERSONA_PILOT.hero_url, hero_video_url: '', copyright: '',
         /* T66 · Com la columna nova del servidor: null fins que se'n tria una. */
         icon: null,
         baixa_demanada_at: null, slug: PERSONA_PILOT.slug, alies: [...PERSONA_PILOT.alies],
@@ -317,7 +318,8 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
 
   const publicDePersona = (perfil, usuari) => ({
     tipus: 'persona', id: perfil.id, slug: perfil.slug || null, nom: perfil.full_name, avatar: perfil.avatar_url || '',
-    hero: perfil.hero_url || '', lema: perfil.lema || '', bio: perfil.bio || '', presentacioHtml: perfil.presentacio_html || '',
+    hero: perfil.hero_url || '', ...(perfil.hero_video_url ? { heroVideo: perfil.hero_video_url } : null),
+    lema: perfil.lema || '', bio: perfil.bio || '', presentacioHtml: perfil.presentacio_html || '',
     poble: perfil.town_name || '', esIA: false, publicat: Boolean(perfil.is_public), propietari: Boolean(usuari?.id) && perfil.id === usuari.id,
     copyright: perfil.copyright || '', creat: perfil.created_at, modificat: perfil.updated_at,
     /* T66 · L'emoticona triada, ja passada per emojiSol; '' sense tria. */
@@ -328,7 +330,8 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
   });
   const publicDEntitat = (org, usuari) => ({
     tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: org.name, avatar: org.logo_url || '',
-    hero: org.hero_url || '', lema: org.lema || '', bio: org.description || '', presentacioHtml: org.presentacio_html || '',
+    hero: org.hero_url || '', ...(org.hero_video_url ? { heroVideo: org.hero_video_url } : null),
+    lema: org.lema || '', bio: org.description || '', presentacioHtml: org.presentacio_html || '',
     poble: org.town_name || '', esIA: false, publicat: org.visibility === 'public',
     propietari: ROLS_QUE_MANEN.has(rolDe(org.id, usuari)), copyright: org.copyright || '',
     /* T43 · Només el correu que l'organització ha fet públic; mai el privat. */
@@ -339,7 +342,8 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
   });
   const publicDAgent = (agent, usuari) => ({
     tipus: 'ia', id: agent.id, slug: agent.slug || null, nom: agent.name, avatar: agent.avatar_url || '',
-    hero: agent.hero_url || '', lema: agent.lema || '', bio: agent.role || '', presentacioHtml: agent.presentacio_html || agent.short_bio || '',
+    hero: agent.hero_url || '', ...(agent.hero_video_url ? { heroVideo: agent.hero_video_url } : null),
+    lema: agent.lema || '', bio: agent.role || '', presentacioHtml: agent.presentacio_html || agent.short_bio || '',
     poble: agent.town_name || '', esIA: true, publicat: true,
     propietari: Boolean(agent.owner_org_id) && ROLS_QUE_MANEN.has(rolDe(agent.owner_org_id, usuari)), copyright: agent.copyright || '',
     creat: agent.created_at, modificat: agent.updated_at, emoticona: ''
@@ -350,7 +354,9 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
     const tipus = tipusDAgent(agent);
     return {
       tipus, id: agent.id, slug: null, nom: agent.name,
-      avatar: (esLaPilot(agent.id) ? PERSONA_PILOT.avatar : agent.avatar_url) || '', hero: '',
+      avatar: (esLaPilot(agent.id) ? PERSONA_PILOT.avatar : agent.avatar_url) || '',
+      hero: agent.hero_video_url ? (agent.hero_url || '') : '',
+      ...(agent.hero_video_url ? { heroVideo: agent.hero_video_url } : null),
       lema: agent.lema || '', bio: agent.role || '', presentacioHtml: agent.short_bio || '', poble: agent.town_name || '',
       esIA: tipus === 'ia', publicat: true, propietari: false, copyright: '',
       /* T51 · Fitxa de només lectura: el naixement del magatzem. */
@@ -545,8 +551,11 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       return { desat: true, usuari: username, confirmat_al: confirmat };
     },
 
+    /* R22.1 · El magatzem local ja té la columna hero_video_url (CAMPS_ORG):
+       la fila la porta sempre, null sense vídeo, com list_my_organizations de
+       20261113060000. Així l'editor sap que el vídeo es pot desar. */
     listMyOrganizations(usuari) {
-      return orgsOnMana(usuari).map((org) => ({ ...org, role: rolDe(org.id, usuari), tenant_id: null }));
+      return orgsOnMana(usuari).map((org) => ({ hero_video_url: null, ...org, role: rolDe(org.id, usuari), tenant_id: null }));
     },
 
     updateOrganization(id, updates = {}) {
@@ -595,7 +604,7 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
 
     listMyAgents(usuari) {
       const meues = new Set(orgsOnMana(usuari).map((org) => org.id));
-      return [...estat.agents.values()].filter((a) => meues.has(a.owner_org_id)).map((a) => ({ ...a, es_ia: true }));
+      return [...estat.agents.values()].filter((a) => meues.has(a.owner_org_id)).map((a) => ({ hero_video_url: null, ...a, es_ia: true }));
     },
 
     updateAgent(id, updates = {}) {

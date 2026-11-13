@@ -29,6 +29,7 @@ import { useCallback, useLayoutEffect, useState, useSyncExternalStore } from 're
 import { IdCard } from 'lucide-react';
 import { UniversalCard, Dialeg, Boto } from '../PedraSeca/index.js';
 import { useImatgeResolta } from '../../hooks/useImatgeTargeta.js';
+import { fontVideoPropia } from '../../utils/sanitize.js';
 import { emojiDelQuadrat, propsDeTargetaViva } from './targetaViva.js';
 import { insigniaEmojiXL } from './insigniaEmoji.jsx';
 import { llegixDocumentViu, publicaDocumentViu, subscriuDocumentViu } from './documentViu.js';
@@ -93,6 +94,8 @@ export function TargetaViva({ document, autor = null, etiquetes, className, onMa
 
   const props = propsDeTargetaViva(document, { autor, etiquetes });
   const imatge = useImatgeResolta(props.imageUrl);
+  const video = useImatgeResolta(props.videoUrl);
+  const videoSegur = video ? (fontVideoPropia(video) || undefined) : undefined;
   const avatar = useImatgeResolta(props.avatarUrl);
   /* Ordre del Mestre (261007) · «Aplica a TargetaViva.jsx (quan actua com a
      ítem de llista)»: sense imatge i amb una emoticona triada, l'emoji XL
@@ -113,6 +116,7 @@ export function TargetaViva({ document, autor = null, etiquetes, className, onMa
       <UniversalCard
         {...props}
         imageUrl={imatge}
+        videoUrl={videoSegur}
         avatarUrl={avatar}
         squareBadge={insignia}
         className={['sdp-targeta-viva-carta', className].filter(Boolean).join(' ')}

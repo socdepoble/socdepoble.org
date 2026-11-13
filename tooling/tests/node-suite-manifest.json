@@ -196,6 +196,7 @@
     "tests/auditoria-produccio-publica.test.mjs",
     "tests/mur-membres-actes-v2-postgres.test.mjs",
     "tests/r21-9b-beta-postgres.test.mjs",
+    "tests/r22-1-hero-video-url-postgres.test.mjs",
     "tests/migracions-cataleg-mixt-r21-9b.test.mjs",
     "tooling/menjarIBeure/syncAparadorsVius.test.mjs",
     "tooling/vite/banderes-de-capacitat.test.mjs"
@@ -1776,6 +1777,12 @@
       "suite": "primary",
       "kind": "postgres",
       "reason": "R21.9b: canal Beta Testers i registre d’aparadors amb PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r22-1-hero-video-url-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.1: hero_video_url amb CHECK, permisos de columna, directori, list_my_organizations i perfil_public sobre PostgreSQL 18.6 real, cap servei remot."
     },
     {
       "path": "tests/migracions-cataleg-mixt-r21-9b.test.mjs",

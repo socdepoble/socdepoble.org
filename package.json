@@ -121,7 +121,7 @@
     "test:node:all": "node tooling/tests/run-node-tests.mjs --suite all",
     "porta:vigilant": "node tooling/gates/tractor-vigilant.mjs",
     "check:secret-literals": "node tooling/gates/literals-secrets-node0.mjs",
-    "test:sql": "node --test tests/copublicacio-postgres.test.mjs tests/copublicacio-foraster-opcio-a.test.mjs tests/contingut-frontera-r21-6-postgres.test.mjs tests/missatgeria-r21-2-postgres.test.mjs tests/xat-propi-r21-4-postgres.test.mjs tests/agents-app-content-r21-5-postgres.test.mjs tests/mur-membres-actes-v2-postgres.test.mjs tests/r21-9b-beta-postgres.test.mjs",
+    "test:sql": "node --test tests/copublicacio-postgres.test.mjs tests/copublicacio-foraster-opcio-a.test.mjs tests/contingut-frontera-r21-6-postgres.test.mjs tests/missatgeria-r21-2-postgres.test.mjs tests/xat-propi-r21-4-postgres.test.mjs tests/agents-app-content-r21-5-postgres.test.mjs tests/mur-membres-actes-v2-postgres.test.mjs tests/r21-9b-beta-postgres.test.mjs tests/r22-1-hero-video-url-postgres.test.mjs",
     "porta:logica-universal": "node tooling/gates/porta-logica-universal.mjs"
   },
   "dependencies": {

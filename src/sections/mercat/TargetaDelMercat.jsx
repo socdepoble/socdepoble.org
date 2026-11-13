@@ -33,7 +33,7 @@ import { objecteDe, rutaConnectarObjecte } from '../../config/navigation';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
-import { fontImatgePropia } from '../../utils/sanitize.js';
+import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
 import { propsDeTargetaDeProducte } from './targetaDeProducte.js';
 import { ofereixTraduir, planTraduccioPublicacio, propia } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 
@@ -78,8 +78,11 @@ export function TargetaDelMercat({ item }) {
     <UniversalCard
       {...props}
       /* Decisió 3 (261007) · Només la foto i l'avatar propis, ja resolts
-         (targetaDeProducte.js); un de fora, null: cap petició. */
+         (targetaDeProducte.js); un de fora, null: cap petició.
+         Onada R22.1 · El vídeo principal (videoUrl) es filtra amb fontVideoPropia
+         i es reproduïx des de la mateixa Card amb imageUrl com a poster. */
       imageUrl={imatgePropia(props.imageUrl)}
+      videoUrl={props.videoUrl ? (fontVideoPropia(props.videoUrl) || undefined) : undefined}
       avatarUrl={imatgePropia(props.avatarUrl)}
       imatgePrivada
       objecte={producte}

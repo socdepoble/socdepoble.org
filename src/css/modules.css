@@ -9957,6 +9957,23 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-enquadrament--formes .sdp-enquadrament__visor-caixa > .sdp-enquadrament__visor {
     max-height: max(10rem, min(45vh, 22rem, calc(100vh - 32rem)));
   }
+  /* R22.1 (r221-ui-08) · La fila de «Canviar foto» va ara DAMUNT del visor
+     (components.css): el pressupost la resta, o les píndoles tornen a quedar
+     davall del plec. La fila fa el botó (--sdp-touch-min), el farciment de
+     dalt i de baix i el gap intern (tres --sdp-space-2), la línia d'ajuda
+     (--sdp-text-meta a l'interlineat 1,5 del cos) i la vora; i, fins al
+     visor, el gap de .sdp-enquadrament (--sdp-space-4). Es resta dels dos
+     límits: del de la pantalla (100vh) i del de 22rem, que és l'espai del
+     visor quan el diàleg ja no creix (min(88dvh, 48rem), components.css; per
+     damunt de 873 px d'alt el cos queda fix). Mesurat en Chrome amb Noto
+     Sans: el visor, el zoom i les píndoles tornen a cabre sense scroll a
+     1280 × 800, 1366 × 768, 1440 × 900, 1920 × 1080 i 768 × 1024; a
+     1280 × 720 i a 375 × 812 mana el sòl de 10rem i el cos fa scroll.
+     Sense la fila (cap onCanviaFoto), el de damunt. El germà (~), no :has()
+     (Safari 16). */
+  .sdp-enquadrament--formes > .sdp-enquadrament__foto ~ .sdp-enquadrament__visor-caixa > .sdp-enquadrament__visor {
+    max-height: max(10rem, min(45vh, calc(22rem - var(--sdp-touch-min) - var(--sdp-space-2) * 3 - var(--sdp-text-meta) * 1.5 - 1px - var(--sdp-space-4)), calc(100vh - 32rem - var(--sdp-touch-min) - var(--sdp-space-2) * 3 - var(--sdp-text-meta) * 1.5 - 1px - var(--sdp-space-4))));
+  }
   .sdp-enquadrament__formats {
     align-self: center;
     width: 100%;
@@ -10061,6 +10078,9 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-enquadrament__dialeg--senzill .sdp-dialeg__peu .sdp-boto { width: auto; flex: 1 1 auto; padding-inline: var(--sdp-space-3); }
     .sdp-enquadrament--formes .sdp-enquadrament__visor-caixa > .sdp-enquadrament__visor {
       max-height: max(10rem, min(45vh, 22rem, calc(100vh - 39rem)));
+    }
+    .sdp-enquadrament--formes > .sdp-enquadrament__foto ~ .sdp-enquadrament__visor-caixa > .sdp-enquadrament__visor {
+      max-height: max(10rem, min(45vh, calc(22rem - var(--sdp-touch-min) - var(--sdp-space-2) * 3 - var(--sdp-text-meta) * 1.5 - 1px - var(--sdp-space-4)), calc(100vh - 39rem - var(--sdp-touch-min) - var(--sdp-space-2) * 3 - var(--sdp-text-meta) * 1.5 - 1px - var(--sdp-space-4))));
     }
   }
 }

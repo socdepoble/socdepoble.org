@@ -284,7 +284,13 @@ export const CAPACITATS = Object.freeze({
          { id, tenant_id, slug, name, kind ('company' | 'entity' | 'group'),
          parent_organization_id, lema, description, logo_url (URL, ruta
          pròpia o referència opaca 'sdp-media://…'), hero_url,
-         presentacio_html, copyright, town_name (o null), created_at, updated_at }.
+         presentacio_html, copyright, town_name (o null), created_at, updated_at,
+         hero_video_url }.
+         R22.1 · hero_video_url és OPCIONAL: el vídeo principal de la
+         capçalera (un fitxer .mp4 o .webm propi: https, un camí propi o
+         'sdp-media://mitjans/…'), o null quan l'entitat no en té. Un servidor
+         sense la migració 20261113060000 no la porta, i el client ho llig com
+         a null (sense vídeo): mai és cap error ni cap altra mena de valor.
      Els errors porten l'estat HTTP (`status`) quan n'hi ha; un tall o una
      cancel·lació, el seu nom (AbortError, TimeoutError). Cap codi més: qui
      busca no decidix res pel tipus d'error del directori. */

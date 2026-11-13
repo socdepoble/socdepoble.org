@@ -158,9 +158,18 @@ test('cap dada sensible: ni correu, ni rol, ni visibilitat, ni consentiment, ni 
 /* Expectativa actualitzada a propòsit: P1-68 (2610282100). El client es
    contrasta amb la versió VIGENT de la RPC (l'última migració que la crea),
    que hi afig `usuari` al final; la història de 2610021520 la fixen les
-   proves de dalt. */
+   proves de dalt.
+   R22.1 · «L'última» és la del pla del verificador, no la de l'alfabet: en el
+   catàleg mixt, una versió de deu dígits es compara com `20AAMMDDhhmm00`
+   (supabase/README.md, «Ordre correcte»), i 20261113060000 va darrere de
+   2610282100 encara que l'alfabet la pose davant. */
+const versioCronologica = (fitxer) => {
+  const versio = fitxer.split('_')[0];
+  return versio.length === 10 ? `20${versio}00` : versio;
+};
 function columnesDeLaVigent() {
-  const migracions = fs.readdirSync(path.join(ARREL, 'supabase/migrations')).filter((f) => f.endsWith('.sql')).sort();
+  const migracions = fs.readdirSync(path.join(ARREL, 'supabase/migrations')).filter((f) => f.endsWith('.sql'))
+    .sort((a, b) => versioCronologica(a).localeCompare(versioCronologica(b)) || a.localeCompare(b));
   const vigent = migracions.filter((f) => /create\s+(or\s+replace\s+)?function\s+public\.perfil_public\b/i
     .test(fs.readFileSync(path.join(ARREL, 'supabase/migrations', f), 'utf8'))).at(-1);
   const codi = fs.readFileSync(path.join(ARREL, 'supabase/migrations', vigent), 'utf8').split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');

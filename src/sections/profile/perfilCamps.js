@@ -1,6 +1,7 @@
 import { desglossaDrets, llargariaDe, MAXIM_AUTORIA, MAXIM_DRETS_DESATS, sanejaAutoria } from '../../data/dretsAutor.js';
+import { resolRecursPropi } from '../../config/assetResolver.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
-import { netejaText, sanitizeHtml } from '../../utils/sanitize.js';
+import { esVideoDeCapcaleraDesable, netejaText, sanitizeHtml } from '../../utils/sanitize.js';
 import { ErrorValidacio } from '../../data/autodesament/errors.js';
 import { MAXIM_EMOTICONA, MAXIM_LEMA } from '../../data/limitsText.js';
 import { emojiSol } from '../../utils/emoji.js';
@@ -24,17 +25,17 @@ import { emojiSol } from '../../utils/emoji.js';
 export const CAMPS_FITXA = Object.freeze({
   persona: Object.freeze({
     title: 'full_name', subtitle: 'bio', lead: 'lema', content: 'presentacio_html',
-    logoImage: 'avatar_url', heroImage: 'hero_url', copyright: 'copyright', icon: 'icon',
+    logoImage: 'avatar_url', heroImage: 'hero_url', heroVideo: 'hero_video_url', copyright: 'copyright', icon: 'icon',
   }),
   organitzacio: Object.freeze({
     title: 'name', subtitle: 'description', lead: 'lema', content: 'presentacio_html',
-    logoImage: 'logo_url', heroImage: 'hero_url', copyright: 'copyright',
+    logoImage: 'logo_url', heroImage: 'hero_url', heroVideo: 'hero_video_url', copyright: 'copyright',
   }),
   /* Lògica d'Usuari (T4): la fitxa d'un agent IA té la mateixa anatomia.
      H1 = name, H2 = role, entradilla = lema, cos = presentacio_html. */
   agent: Object.freeze({
     title: 'name', subtitle: 'role', lead: 'lema', content: 'presentacio_html',
-    logoImage: 'avatar_url', heroImage: 'hero_url', copyright: 'copyright',
+    logoImage: 'avatar_url', heroImage: 'hero_url', heroVideo: 'hero_video_url', copyright: 'copyright',
   }),
 });
 
@@ -61,6 +62,20 @@ const CAMPS_IMATGE = new Set(['logoImage', 'heroImage']);
 export const menaDeFitxa = (identitat) => (
   identitat?.mena === 'persona' ? 'persona' : identitat?.mena === 'agent' ? 'agent' : 'organitzacio'
 );
+
+/* R22.1 (Gauntlet r221-text-05 i r221-ui-06) · El vídeo principal només
+   s'oferix quan el servidor el pot desar, i ho diu la fila mateixa: porta la
+   columna (hero_video_url, null sense vídeo). La porten la fila de profiles
+   (llegida sense select=) i list_my_organizations des de 20261113060000, i
+   el magatzem local (localPerfils). Un servidor sense la migració no la
+   torna: el panell no ix, perquè cada desat hi fallaria amb PGRST204. Cap
+   bandera de compilació: la detecció és de la fila viva. El Node 0 tampoc no
+   la propaga (clientPrivatNodeZero.js) mentre el seu backend no la pot desar. */
+export function admetVideoDeCapcalera(identitat) {
+  const dades = identitat?.dades;
+  const columna = CAMPS_FITXA[menaDeFitxa(identitat)]?.heroVideo;
+  return Boolean(columna) && dades !== null && typeof dades === 'object' && Object.hasOwn(dades, columna);
+}
 
 /** Text pla → HTML que la closca pinta tal qual (EditableField saneja). */
 export const aHtml = (text) => String(text ?? '')
@@ -100,6 +115,7 @@ export function fitxaDeLectura(identitat) {
     lead: text(dades[camps.lead]),
     content: text(dades[camps.content]),
     heroImage: text(dades[camps.heroImage]),
+    heroVideo: text(dades[camps.heroVideo]),
     copyright: ambDretsDeFitxa(identitat) ? copyrightDeFitxa(identitat) : '',
   };
 }
@@ -135,6 +151,7 @@ export function documentDeFitxa(identitat, local = {}) {
     content: local.content ?? lectura.content,
     logoImage: local.logoImage ?? text(dades[camps.logoImage]),
     heroImage: local.heroImage ?? lectura.heroImage,
+    heroVideo: local.heroVideo ?? lectura.heroVideo,
     isPublished: fitxaPublicada(identitat),
     /* Dignitat Humana (261015) · Per a la persona, '' també amb un esborrany
        vell de «Desar autoria» a la cua: cap via el torna a pintar. */
@@ -186,6 +203,20 @@ export function valorPerDesar(mena, camp, valor) {
   if (CAMPS_IMATGE.has(camp)) {
     const url = String(valor ?? '').trim();
     return { columna, valor: url || null };
+  }
+
+  /* Onada R22.1 · Vídeo principal de capçalera (estil YouTube): buit és null
+     («sense vídeo»); amb valor, el validador comú (esVideoDeCapcaleraDesable):
+     una adreça pròpia o una referència opaca del bucket públic, sempre .mp4 o
+     .webm. Gauntlet r221-dades-07 i r221-text-09 · Abans admetia el bucket
+     privat i qualsevol adreça pròpia sense extensió, contra el seu missatge. */
+  if (camp === 'heroVideo') {
+    const url = String(valor ?? '').trim();
+    if (!url) return { columna, valor: null };
+    if (!esVideoDeCapcaleraDesable(url, resolRecursPropi)) {
+      throw new ErrorValidacio('Només s’admeten vídeos propis de Sóc de Poble en HTTPS (.mp4 o .webm).', { columna });
+    }
+    return { columna, valor: url };
   }
 
   /* T66 · L'emoticona: buida és null («sense emoticona», la columna l'admet);

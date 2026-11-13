@@ -48,6 +48,18 @@ function userFrom(body){
     user_metadata:Object.freeze(metadata),...(metadata.full_name?{full_name:metadata.full_name}:{}),...(metadata.avatar_url?{avatar_url:metadata.avatar_url}:{})});
 }
 function row(value){if(!plain(value)||typeof value.id!=='string'||!UUID.test(value.id))throw invalid();return value;}
+/* R22.1 (Gauntlet, P2 del Node 0) · El vídeo principal de capçalera
+ * (hero_video_url) NO és una capacitat del Node 0: el backend privat
+ * (tooling/node0/backend-node0.mjs) no el porta a les llistes blanques PROFILE
+ * i ORGANIZATION i hi respon unsupported_field. L'editor l'oferix només si la
+ * fila llegida porta la columna (admetVideoDeCapcalera, perfilCamps.js): les
+ * lectures del Node 0 no la propaguen, encara que la Postgres hidratada ja la
+ * tinga (SELECT *), i una escriptura que la porte es rebutja ací, abans de la
+ * xarxa, amb 'sense-capacitat'. Quan el backend l'admeta (amb el validador del
+ * CHECK de 20261113060000), es lleva d'esta llista amb la seua prova de paritat. */
+const COLUMNES_SENSE_CAPACITAT=Object.freeze(['hero_video_url']);
+const senseColumnesNoAdmeses=value=>{if(!plain(value)||!COLUMNES_SENSE_CAPACITAT.some(key=>own(value,key)))return value;const output={...value};for(const key of COLUMNES_SENSE_CAPACITAT)delete output[key];return output;};
+const exigixColumnesAdmeses=updates=>{if(plain(updates)&&COLUMNES_SENSE_CAPACITAT.some(key=>own(updates,key)))throw fail('sense-capacitat','El Node 0 encara no desa el vídeo de capçalera.');return updates;};
 const list=value=>{if(!Array.isArray(value)||value.some(item=>!plain(item)))throw invalid();return value;};
 function note(value){
   row(value);if(!Number.isSafeInteger(value.revision)||value.revision<1)throw invalid();
@@ -238,11 +250,11 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
       if(typeof options.currentPassword!=='string'||!options.currentPassword)throw fail('NODE0_CONTRASENYA_ACTUAL','Cal la contrasenya actual.');
       await mutate('password',{currentPassword:options.currentPassword,password},options,result=>{if(result?.password_changed!==true||result.login_required!==true)throw invalid();});return true;
     },
-    async getProfile(options={}){open();if(state==='verified'&&!user)return null;const value=await rpc('getProfile',{},options);if(value===null)return null;row(value);if(value.id!==user.id)throw invalid();return value;},
-    async updateProfile(updates,options={}){const value=await rpc('updateProfile',{updates},options,true);row(value);if(value.id!==user.id)throw invalid();return value;},
-    async listMyOrganizations(options={}){open();if(state==='verified'&&!user)return [];return list(await rpc('listMyOrganizations',{},options));},
-    async createOrganization(organization,options={}){if(status.capabilities.createOrganization!==true)return absent();return row(await rpc('createOrganization',{organization},options,true));},
-    async updateOrganization(id,updates,options={}){const value=await rpc('updateOrganization',{id,updates},options,true);row(value);return value;},
+    async getProfile(options={}){open();if(state==='verified'&&!user)return null;const value=await rpc('getProfile',{},options);if(value===null)return null;row(value);if(value.id!==user.id)throw invalid();return senseColumnesNoAdmeses(value);},
+    async updateProfile(updates,options={}){exigixColumnesAdmeses(updates);const value=await rpc('updateProfile',{updates},options,true);row(value);if(value.id!==user.id)throw invalid();return senseColumnesNoAdmeses(value);},
+    async listMyOrganizations(options={}){open();if(state==='verified'&&!user)return [];return list(await rpc('listMyOrganizations',{},options)).map(senseColumnesNoAdmeses);},
+    async createOrganization(organization,options={}){if(status.capabilities.createOrganization!==true)return absent();exigixColumnesAdmeses(organization);return senseColumnesNoAdmeses(row(await rpc('createOrganization',{organization},options,true)));},
+    async updateOrganization(id,updates,options={}){exigixColumnesAdmeses(updates);const value=await rpc('updateOrganization',{id,updates},options,true);row(value);return senseColumnesNoAdmeses(value);},
     async loadNotes(owner,options={}){
       open();if(owner!==undefined&&owner!==(user?.id??CONVIDAT_NODE_ZERO))throw fail('NODE0_PROPIETARI_INVALID');
       const body={};for(const field of ['noteId','limit'])if(options[field]!==undefined)body[field]=options[field];

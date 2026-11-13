@@ -743,6 +743,10 @@ export const CASOS = Object.freeze([
         if (['contact_email', 'public_email', 'correu_public', 'email', 'correu'].some((camp) => Object.hasOwn(fila, camp))) {
           falles.push(`la fila ${fila.id} porta un correu`);
         }
+        /* R22.1 · hero_video_url és opcional (contracte.js): si hi és, un text o null. */
+        if (Object.hasOwn(fila, 'hero_video_url') && fila.hero_video_url !== null && typeof fila.hero_video_url !== 'string') {
+          falles.push(`la fila ${fila.id} porta un hero_video_url que no és text ni null`);
+        }
       }
       return falles;
     },

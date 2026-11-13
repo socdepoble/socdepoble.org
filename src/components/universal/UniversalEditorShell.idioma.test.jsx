@@ -15,6 +15,9 @@ import '../../../tests/helpers/diccionaris.js';
 import { createTranslator } from '../../config/i18n.js';
 import CA from '../../config/idiomes/ca.js';
 import EN from '../../config/idiomes/en.js';
+import ES from '../../config/idiomes/es.js';
+import EU from '../../config/idiomes/eu.js';
+import GL from '../../config/idiomes/gl.js';
 
 const m = vi.hoisted(() => ({ t: null, showToast: vi.fn(), dialeg: null, pagina: null }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
@@ -97,13 +100,15 @@ afterEach(() => {
 describe('les reserves són el valencià del diccionari', () => {
   /* AH-03 i AH-08.1 (ordre del Mestre, 261104) · El parell 40 és el del botó
      gran «Tancar l’edició avançada» (editor.closca.tancaEdicioAvancada).
-     AH-02 (Onada R21) · El 41, el botó «Editar» del document en repòs. */
-  test('els 41 parells de TEXTOS_CLOSCA: clau editor.closca.*, reserva = ca i traducció pròpia en anglés', () => {
+     AH-02 (Onada R21) · El 41, el botó «Editar» del document en repòs.
+     R22.1 (r221-ui-07) · El 42, el nom del camp del vídeo de capçalera als avisos. */
+  test('els 42 parells de TEXTOS_CLOSCA: clau editor.closca.*, reserva = ca i traducció pròpia en anglés', () => {
     const parells = Object.values(TEXTOS_CLOSCA);
-    expect(parells).toHaveLength(41);
-    expect(new Set(parells.map(([clau]) => clau)).size).toBe(41);
+    expect(parells).toHaveLength(42);
+    expect(new Set(parells.map(([clau]) => clau)).size).toBe(42);
     expect(TEXTOS_CLOSCA.tancaEdicioAvancada).toEqual(['editor.closca.tancaEdicioAvancada', 'Tancar l’edició avançada']);
     expect(TEXTOS_CLOSCA.editaText).toEqual(['editor.closca.edita.text', 'Editar']);
+    expect(TEXTOS_CLOSCA.campVideo).toEqual(['editor.closca.camp.video', 'Vídeo de capçalera']);
     for (const [clau, reserva] of parells) {
       expect(clau).toMatch(/^editor\.closca\.[\w.]+$/);
       expect([clau, CA[clau]]).toEqual([clau, reserva]);
@@ -164,6 +169,33 @@ describe('en anglés', () => {
     expect(alerta.querySelector('.sdp-alerta__titol').textContent).toBe(E('camp.entradilla'));
     fireEvent.click(within(alerta).getByRole('button', { name: 'Retry' }));
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  /* R22.1 (r221-ui-07) · Si fallen la foto i el vídeo de la capçalera, eixien
+     dues alertes «Capçalera» idèntiques, i amb una sola no se sabia quin dels
+     dos s'havia perdut. El vídeo porta el seu nom, en cinc llengües. */
+  test.each([
+    ['ca', CA],
+    ['es', ES],
+    ['en', EN],
+    ['eu', EU],
+    ['gl', GL],
+  ])('a %s, l’alerta del vídeo de capçalera es distingix de la de la foto', (idioma, diccionari) => {
+    m.t = createTranslator(idioma);
+    const { container } = closca({
+      avisosCamps: {
+        heroImage: { error: { missatge: 'Foto', accions: [] } },
+        heroVideo: { error: { missatge: 'Vídeo', accions: [] } },
+      },
+    });
+    const titols = [...container.querySelectorAll('.sdp-avis-camp')].map((alerta) => [
+      alerta.querySelector('.sdp-alerta__titol').textContent, alerta.querySelector('p:not(.sdp-alerta__titol)').textContent,
+    ]);
+    expect(titols).toEqual([
+      [diccionari['editor.closca.camp.capcalera'], 'Foto'],
+      [diccionari['editor.closca.camp.video'], 'Vídeo'],
+    ]);
+    expect(diccionari['editor.closca.camp.video']).not.toBe(diccionari['editor.closca.camp.capcalera']);
   });
 
   test('«Edició avançada», sola i amb resum', () => {

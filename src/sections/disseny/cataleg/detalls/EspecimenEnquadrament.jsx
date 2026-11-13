@@ -239,7 +239,9 @@ export default function EspecimenEnquadrament() {
       <Accions>
         <Boto icona={Crop} aria-haspopup="dialog" onClick={() => setFont(MOSTRA)}>Enquadrar una foto apaisada</Boto>
         <Boto icona={ImageUp} aria-haspopup="dialog" onClick={() => input.current?.click()}>Provar amb una foto teua</Boto>
-        <input ref={input} type="file" accept="image/*" onChange={tria} className="sdp-nomes-lector" tabIndex={-1} aria-hidden="true" />
+        {/* R22.1 (r221-ui-02) · Sense aria-hidden, amb el nom del botó que l’obri. */}
+        <input ref={input} type="file" accept="image/*" onChange={tria} className="sdp-nomes-lector" tabIndex={-1}
+          aria-label="Provar amb una foto teua" />
       </Accions>
       {resultat ? (
         <figure className="sdp-enquadrament__resultat">
@@ -264,7 +266,8 @@ export default function EspecimenEnquadrament() {
         {/* Encastat, '/assets/…' va per la base del paquet (resolRecursPropi), no a l'arrel del domini. */}
         <Boto icona={CircleUserRound} aria-haspopup="dialog" onClick={() => { setAvisAvatar(null); avatar.obri(resolRecursPropi(MOSTRA_AVATAR)); }}>Enquadrar l’avatar de la IAIA</Boto>
         <Boto icona={ImageUp} aria-haspopup="dialog" onClick={() => inputAvatar.current?.click()}>Provar un avatar amb una foto teua</Boto>
-        <input ref={inputAvatar} type="file" accept="image/*" onChange={triaAvatar} className="sdp-nomes-lector" tabIndex={-1} aria-hidden="true" />
+        <input ref={inputAvatar} type="file" accept="image/*" onChange={triaAvatar} className="sdp-nomes-lector" tabIndex={-1}
+          aria-label="Provar un avatar amb una foto teua" />
       </Accions>
       {avisAvatar ? <Alerta to="error">{avisAvatar}</Alerta> : null}
       {resultatAvatar ? (
@@ -289,7 +292,8 @@ export default function EspecimenEnquadrament() {
       </p>
       <Accions>
         <Boto icona={MapPin} aria-haspopup="dialog" onClick={() => inputGeo.current?.click()}>Provar amb una foto teua, amb l’opció de geolocalitzar</Boto>
-        <input ref={inputGeo} type="file" accept="image/*" onChange={triaGeo} className="sdp-nomes-lector" tabIndex={-1} aria-hidden="true" />
+        <input ref={inputGeo} type="file" accept="image/*" onChange={triaGeo} className="sdp-nomes-lector" tabIndex={-1}
+          aria-label="Provar amb una foto teua, amb l’opció de geolocalitzar" />
       </Accions>
       {resultatGeo ? (
         <figure className="sdp-enquadrament__resultat">

@@ -6,7 +6,7 @@ const TEXT = new Set([
   'title','subtitle','post_subtitle','description','excerpt','summary','lead','entradilla','content','html',
   'name','full_name','author_name','author_role','author_location','town_name','townName','location','comarca',
   'type','kind','category','category_slug','tag','sectionId','searchText',
-  'image','imageSrc','image_url','imageAlt','src','source','avatar_url','author_avatar',
+  'image','imageSrc','image_url','imageAlt','src','source','avatar_url','author_avatar','video_url','hero_url','hero_video_url',
   'mainHref','href','url','slug','linkTo','external_url','copyright','icon',
   'author_id','author_entity_id','author_org_id','authorOrgId','owner_user_id'
 ]);

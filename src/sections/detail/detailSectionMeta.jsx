@@ -249,7 +249,7 @@ export function portadaDElement(section, item, pagina, t) {
   const ambVisor = delMur && item?.id != null && String(item.id) !== '';
   const clau = String(item.id ?? '');
   const obri = t('section.multimedia.visor.obri', 'Veure la imatge a pantalla completa');
-  const videoPropi = typeof item?.video_url === 'string' ? fontVideoPropia(item.video_url) : null;
+  const videoPropi = typeof item?.video_url === 'string' ? fontVideoPropia(resolveAsset(item.video_url)) : null;
   if (videoPropi) {
     const poster = typeof pagina?.heroImage === 'string' && pagina.heroImage.trim() !== ''
       ? resolveAsset(pagina.heroImage)

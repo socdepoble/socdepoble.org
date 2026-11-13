@@ -8,6 +8,8 @@ import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { objecteDePerfil, rutaConnectarPerfil, rutaDePerfil, rutaXatDePagina } from '../../config/navigation.js';
 import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
 import { ETIQUETA_IA, TEXTOS_FITXA_PERFIL } from './fitxaDePerfil.js';
+import { resolRecursPropi } from '../../config/assetResolver.js';
+import { fontVideoPropia } from '../../utils/sanitize.js';
 import SubnavigacioPoblesIGent, { encapcalamentDirectoriGent, filtraAgentsDelDirectori } from '../pobles/SubnavigacioPoblesIGent.jsx';
 
 /* Technical catalogue fallback, from the same source as the repaired server.
@@ -106,6 +108,12 @@ export default function ProfileSection({ agents = [] }) {
           const data = fontData.date ? fontData : capcalera;
           const excerpt = agent.short_bio || agent.lema || agent.type || '';
           const labels = etiquetesDeTargeta(agent, tipus, t);
+          const videoHero = typeof agent?.hero_video_url === 'string' && agent.hero_video_url.trim()
+            ? fontVideoPropia(resolRecursPropi(agent.hero_video_url))
+            : null;
+          const imatgeTargeta = videoHero
+            ? (resolRecursPropi(agent.hero_url || agent.avatar_url) || agent.avatar_url)
+            : agent.avatar_url;
 
           return (
             <UniversalCard
@@ -117,7 +125,8 @@ export default function ProfileSection({ agents = [] }) {
               date={data.date}
               time={data.time}
               dateTime={data.dateTime}
-              imageUrl={agent.avatar_url}
+              imageUrl={imatgeTargeta}
+              videoUrl={videoHero || undefined}
               imageAlt={agent.name}
               title={agent.name}
               subtitle={agent.role}

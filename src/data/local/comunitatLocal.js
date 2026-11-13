@@ -30,7 +30,7 @@ const RE_UUID_PUBLICACIO = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
 const CAMPS_ORGANITZACIO = Object.freeze({
   name: 'name', slug: 'slug', description: 'description', kind: 'kind', parentOrganizationId: 'parent_organization_id',
   lema: 'lema', logo_url: 'logo_url', visibility: 'visibility', presentacio_html: 'presentacio_html', hero_url: 'hero_url',
-  copyright: 'copyright', town_name: 'town_name'
+  hero_video_url: 'hero_video_url', copyright: 'copyright', town_name: 'town_name'
 });
 const LIMIT_JUSTIFICACIO = 1000;
 const errorAmbCodi = (missatge, code) => Object.assign(new Error(missatge), { code });

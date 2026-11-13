@@ -162,10 +162,13 @@ describe('Model B i maquinària existent', () => {
     expect(lector.match(/imatgePropiaDelDetall\(/g)).toHaveLength(3);
     expect(lector).toContain('const cosDelLector = !esProducte && esSeccioDelMur(seccio) ? cosAmbImatgesPropies(cos) : cos;');
     const mercat = codiDe('src/sections/mercat/TargetaDelMercat.jsx');
-    expect(mercat).toContain("import { fontImatgePropia } from '../../utils/sanitize.js';");
+    /* R22.1 · Estricta com abans del kit: la línia d'importació exacta, i el
+       vídeo (infraestructura genèrica) també filtrat a la vora, amb fontVideoPropia. */
+    expect(mercat).toContain("import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';");
     expect(mercat).toMatch(/^\s*imatgePrivada$/m);
     expect(mercat).toContain('imageUrl={imatgePropia(props.imageUrl)}');
     expect(mercat).toContain('avatarUrl={imatgePropia(props.avatarUrl)}');
+    expect(mercat).toContain('videoUrl={props.videoUrl ? (fontVideoPropia(props.videoUrl) || undefined) : undefined}');
   });
 
   test('l’element <soc-de-poble> registra també l’origen del paquet', () => {

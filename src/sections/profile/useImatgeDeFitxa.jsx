@@ -34,6 +34,16 @@ export { AVIS_IMATGE_PUJANT };
    Es para a l'input (React només escolta `cancel` al <dialog>). */
 const paraCancel = (e) => e.stopPropagation();
 
+/* R22.1 (r221-ui-02) · El nom accessible del selector de fitxers, per forma:
+   el del camp de la fitxa (els parells de la closca, ja en cinc llengües).
+   TEXTOS_CLOSCA es llig dins de la funció, mai en avaluar el mòdul (vegeu
+   AVIS_IMATGE_PUJANT, damunt). */
+function nomDelSelector(forma) {
+  if (forma === 'avatar') return TEXTOS_CLOSCA.campAvatar;
+  if (forma === 'logotip') return TEXTOS_CLOSCA.altLogotip;
+  return TEXTOS_CLOSCA.campCapcalera;
+}
+
 /**
  * useImatgeDeFitxa — Onada 4 (retallador senzill, ordre del Mestre 261008).
  * Un botó, una imatge: «Capçalera», «Avatar» o «Logotip» de la fitxa del
@@ -127,7 +137,8 @@ export function useImatgeDeFitxa({
      B3-I18N §3.C · I l'avís de pujada i l'error de desat, que es diuen des de
      callbacks estables (el ref sempre porta el traductor d'este pintat). */
   const tRef = useRef(null);
-  tRef.current = useTraductorOpcional();
+  const t = useTraductorOpcional();
+  tRef.current = t;
   const desatRef = useRef(onDesat);
   desatRef.current = onDesat;
   /* La guarda de pujada: el ref mana (el gest pot arribar abans del render);
@@ -265,9 +276,13 @@ export function useImatgeDeFitxa({
     node?.addEventListener('cancel', paraCancel);
   }, []);
 
+  /* R22.1 (r221-ui-02, r221-text-11) · Sense aria-hidden, el selector és a
+     l'arbre accessible (tabIndex -1 només el trau de l'ordre del tabulador):
+     porta el nom del camp de la fitxa, traduït, com el botó que l'obri. */
   const input = (
     <input ref={refInput} type="file" accept={ACCEPT_FOTO} onChange={enTria} className="sdp-nomes-lector"
-      tabIndex={-1} aria-hidden="true" data-imatge-de-fitxa={camp} />
+      tabIndex={-1} aria-label={tradueix(t, nomDelSelector(forma))}
+      data-imatge-de-fitxa={camp} />
   );
 
   return {

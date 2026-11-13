@@ -16,6 +16,7 @@ import { FORASTER } from '../../components/universal/UniversalUtils.js';
 import { fotoDeLaTargeta } from './imatgesDeProducte.js';
 import { formataEtiquetaHumana, senseHtmlCru } from './etiquetesMercat.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
+import { fontVideoPropia } from '../../utils/sanitize.js';
 
 /* Sense traductor, la reserva en valencià. */
 const senseTraduccio = (_clau, reserva) => reserva;
@@ -69,8 +70,13 @@ export function propsDeTargetaDeProducte(item, t = senseTraduccio) {
     dateTime: data.dateTime,
     imageAlt: item.title,
     /* Ordre del Mestre (261007) · la foto principal és la de la pàgina
-       (imatgesDeProducte); sense cap foto pròpia, la reserva de sempre. */
+       (imatgesDeProducte); sense cap foto pròpia, la reserva de sempre.
+       Onada R22.1 · Quan el producte porta vídeo principal propi (video_url),
+       imageUrl actua com a portada estil YouTube (poster) a UniversalCard. */
     imageUrl: resolRecursPropi(fotoDeLaTargeta(item, item.imageSrc)),
+    ...(typeof item.video_url === 'string' && fontVideoPropia(resolRecursPropi(item.video_url))
+      ? { videoUrl: fontVideoPropia(resolRecursPropi(item.video_url)) }
+      : null),
     labels: [
       { text: t('section.mercat.kicker', 'Mercat'), className: 'sdp-badge-system' },
       item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,

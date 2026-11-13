@@ -1661,6 +1661,10 @@ description: "Documentació canònica de Sóc de Poble."
 
   R21.9b. Aplicar després del catàleg històric complet, incloses 2611111735, 2611121630 i 2611122200, abans del client R21.9b. Beta amb clau canònica, pertinença vigent i reconciliació idempotent sense reactivar eixides; General conserva el seu UUID. Una reconciliació incoherent (rotació del principal, `SDP-XAT-018`) o amb el pany per poble ocupat (`55P03`) es descarta amb avís al registre, amb el SQLSTATE real, sense fer caure la safata; qualsevol altre error es propaga amb el seu SQLSTATE, i un membre ja reconciliat llista sense el pany per poble. PNG afegit al contracte d’adjunts amb els límits vigents i E2EE intacte. Registre de sincronització privat, consentiment i CAS només per al servei; no publica fitxes ni activa cron. Estat remot no acreditat. Prova PostgreSQL 18.6: `tests/r21-9b-beta-postgres.test.mjs`.
 
+- `migrations/20261113060000_r22_1_hero_video_url.sql`
+
+  R22.1 (Gauntlet r221-dades-03, r221-dades-06 i r221-ui-04). Després de 20261113003000 i de 2609261500, 2610081401, 2610160250, 2610281730 i 2610282100. Crea `hero_video_url` a `profiles` i a `organizations` amb un CHECK per taula (buit, o com a molt 2.048 caràcters: el bucket públic `sdp-media://mitjans/`, un `https://` amb camí o un camí propi, sempre `.mp4` o `.webm`; mai `mitjans_privats`), l'UPDATE de la columna per a `authenticated` i el SELECT de la columna d'`organizations` per a `anon` i `authenticated`, i la torna a llegir: `organization_directory`, `list_my_organizations` i `perfil_public` (només a la fitxa sencera) la porten al final. Additiva i idempotent; cap dada, política ni permís retirat. **NO aplicada: l'aplica el Mestre.** El client no la requerix: sense ella, la fila no porta la columna, el panell del vídeo no s'oferix i el directori la lleva del select (42703). Cap contingut real d'una entitat no l'escriu el client; el posa un SQL revisat pel Mestre. Prova PostgreSQL 18.6: `tests/r22-1-hero-video-url-postgres.test.mjs`.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1668,7 +1672,7 @@ description: "Documentació canònica de Sóc de Poble."
 
 1. Crear el projecte en Supabase.
 2. Obrir el SQL Editor.
-3. Executar el pla del verificador, tant en una base nova com en un node existent. Les versions històriques de deu dígits es comparen per data com `20AAMMDDhhmm00`; les de catorze conserven `AAAAMMDDhhmmss`. Els noms i els identificadors originals del llibre no canvien. No usar ordre alfabètic cru ni `supabase db push` sobre el catàleg mixt sense verificar-ne abans el pla. Conservar les restriccions de `ordre_desplegament.json` (2610312000 just després de 2610311800 i abans de 2610311900); aplicar `2611122200` abans de `20261113003000`, i tota la cadena del Mur R21 abans de publicar el client v1.2.0 build 5 (Nota d'auditoria §16).
+3. Executar el pla del verificador, tant en una base nova com en un node existent. Les versions històriques de deu dígits es comparen per data com `20AAMMDDhhmm00`; les de catorze conserven `AAAAMMDDhhmmss`. Els noms i els identificadors originals del llibre no canvien. No usar ordre alfabètic cru ni `supabase db push` sobre el catàleg mixt sense verificar-ne abans el pla. Conservar les restriccions de `ordre_desplegament.json` (2610312000 just després de 2610311800 i abans de 2610311900); aplicar `2611122200` abans de `20261113003000`, i tota la cadena del Mur R21 abans de publicar el client v1.2.0 build 5 (Nota d'auditoria §16). R22.1: `20261113060000` va després de `20261113003000`.
 4. Crear el poble corresponent a `VITE_TENANT_ID` i configurar el node. `seed.sql` és opcional per a demostracions; l’entrada real no requerix dades seed.
 5. Configurar el `.env` local amb `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` i `VITE_TENANT_ID`. No usar mai `service_role` en el client.
 
@@ -1866,6 +1870,7 @@ verificador sense avisos.
 | 98 | `2611121850` | `2611121850_mur_text_dates_i_contactes.sql` | Estat remot no acreditat; candidata R21.6 | Dates vàlides i rangs del Mur sense regressió de redacció de contactes |
 | 99 | `2611122200` | `2611122200_mur_membres_i_actes_v2.sql` | Estat remot no acreditat; candidata R21.1 v2 | Lectura anònima i de membres, actes atòmics, denúncia i bloqueig per UUID |
 | 100 | `20261113003000` | `20261113003000_r21_9b_canal_beta_testers_i_sync_aparadors.sql` | Estat remot no acreditat; candidata R21.9b | Beta canònic, PNG amb reserva, registre privat de sincronització consentida i CAS |
+| 101 | `20261113060000` | `20261113060000_r22_1_hero_video_url.sql` | **NO aplicada: candidata R22.1, l'aplica el Mestre** | `hero_video_url` amb CHECK i permisos de columna a `profiles` i `organizations`; la vista, `list_my_organizations` i `perfil_public` la tornen |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

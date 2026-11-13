@@ -82,6 +82,25 @@ async function triaFitxer(input, fitxer) {
   await act(async () => {});
 }
 
+/* R22.1 (r221-ui-02) · Sense aria-hidden, els tres selectors amagats són a
+   l'arbre accessible (tabIndex -1 només els trau del tabulador): cadascun
+   porta el nom del botó que l'obri. Abans no en tenien cap. */
+it('R22.1 · els tres selectors de fitxers porten el nom del botó que els obri', () => {
+  const { container } = munta();
+  const noms = [
+    'Provar amb una foto teua',
+    'Provar un avatar amb una foto teua',
+    'Provar amb una foto teua, amb l’opció de geolocalitzar',
+  ];
+  expect(selectors(container)).toHaveLength(3);
+  selectors(container).forEach((input, i) => {
+    expect(input.hasAttribute('aria-hidden')).toBe(false);
+    expect(input.tabIndex).toBe(-1);
+    expect(screen.getByRole('button', { name: noms[i] })).toBeTruthy();
+    expect(screen.getByLabelText(noms[i], { selector: 'input[type="file"]' })).toBe(input);
+  });
+});
+
 it('K1 · geolocalització: el resultat ensenya les coordenades que arriben com a tercer argument (metadades.geolocalitzacio)', async () => {
   const { container } = munta();
   const foto = new File([jpegAmbExif({ ifd0: [orientacio(1)], exif: dataOriginal('2017:05:14 10:22:33', '+02:00'), gps: gpsTorre() })],

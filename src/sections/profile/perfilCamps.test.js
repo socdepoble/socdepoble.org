@@ -19,8 +19,8 @@ const empresa = {
 
 describe('D2 · mapatge de la fitxa (opció A)', () => {
   it('declara les columnes del contracte per a la persona i l’organització', () => {
-    expect(CAMPS_FITXA.persona).toEqual({ title: 'full_name', subtitle: 'bio', lead: 'lema', content: 'presentacio_html', logoImage: 'avatar_url', heroImage: 'hero_url', copyright: 'copyright', icon: 'icon' });
-    expect(CAMPS_FITXA.organitzacio).toEqual({ title: 'name', subtitle: 'description', lead: 'lema', content: 'presentacio_html', logoImage: 'logo_url', heroImage: 'hero_url', copyright: 'copyright' });
+    expect(CAMPS_FITXA.persona).toEqual({ title: 'full_name', subtitle: 'bio', lead: 'lema', content: 'presentacio_html', logoImage: 'avatar_url', heroImage: 'hero_url', heroVideo: 'hero_video_url', copyright: 'copyright', icon: 'icon' });
+    expect(CAMPS_FITXA.organitzacio).toEqual({ title: 'name', subtitle: 'description', lead: 'lema', content: 'presentacio_html', logoImage: 'logo_url', heroImage: 'hero_url', heroVideo: 'hero_video_url', copyright: 'copyright' });
     expect(menaDeFitxa(persona)).toBe('persona');
     expect(menaDeFitxa({ mena: 'grup' })).toBe('organitzacio');
   });

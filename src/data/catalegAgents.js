@@ -48,7 +48,7 @@ export function esAgentFicticiLegacy(agent) {
 // the SQL migration never silently destroys an unparseable catalogue.
 function fitxaPublicable(agent) {
   if (!objecte(agent) || !text(agent.id) || !text(agent.name)) return false;
-  const fields = ['type', 'avatar_url', 'avatarName', 'role', 'tag', 'color', 'calendarCategory', 'lema', 'town_name', 'short_bio', 'created_at', 'last_message_content'];
+  const fields = ['type', 'avatar_url', 'avatarName', 'role', 'tag', 'color', 'calendarCategory', 'lema', 'town_name', 'short_bio', 'created_at', 'last_message_content', 'hero_url', 'hero_video_url'];
   return fields.every(field => agent[field] == null || typeof agent[field] === 'string');
 }
 

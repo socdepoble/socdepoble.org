@@ -28,8 +28,10 @@ const DIA_MS = 24 * 60 * 60 * 1000;
 const SENSE_BAIXA = Object.freeze({ demanada: false, demanadaAl: null, purgaPrevistaAl: null });
 /* Els tipus del CHECK de consentiments (2609150000). */
 const TIPUS_CONSENTIMENT = Object.freeze(['rgpd_acepta', 'marketing_butlleti', 'analitica']);
-/* Les columnes de profiles que es poden desar i les que viatgen a la sessió (auth.js). */
-const CAMPS_PERFIL = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright', 'icon']);
+/* Les columnes de profiles que es poden desar i les que viatgen a la sessió (auth.js).
+   R22.1 · Amb hero_video_url (CAMPS_PERFIL_OPCIONALS d'auth.js): el magatzem
+   local ja la té i la fitxa la porta; sense ella el vídeo es perdia en silenci. */
+const CAMPS_PERFIL = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'hero_video_url', 'copyright', 'icon']);
 const CAMPS_METADATA = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public']);
 
 const modeLocal = () => ambCodi(new Error('L’entrada real encara s’està preparant. Recarrega el formulari d’entrada.'), CODI_ENTRADA.MODE_LOCAL);

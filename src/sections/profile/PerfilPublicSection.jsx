@@ -70,6 +70,7 @@ import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../components/universal/Un
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { resolveAsset } from '../../config/assetResolver.js';
+import { fontVideoPropia } from '../../utils/sanitize.js';
 import {
   ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, entitatSeed, esComptePersonaPilot,
   esIAIA, fundacionalDeLaClau
@@ -133,7 +134,10 @@ export function perfilDelCataleg(agent) {
   if (!agent) return null;
   const tipus = tipusDAgent(agent);
   return {
-    tipus, id: agent.id, slug: null, nom: agent.name, avatar: agent.avatar_url || '', hero: '', lema: agent.lema || '',
+    tipus, id: agent.id, slug: null, nom: agent.name, avatar: agent.avatar_url || '',
+    hero: agent.hero_video_url ? (agent.hero_url || '') : '',
+    ...(agent.hero_video_url ? { heroVideo: agent.hero_video_url } : null),
+    lema: agent.lema || '',
     bio: agent.role || '', presentacioHtml: agent.short_bio || '', poble: agent.town_name || '', esIA: tipus === 'ia',
     publicat: true, propietari: false, copyright: '', emoticona: ''
   };
@@ -152,7 +156,8 @@ export function perfilDeLaIADelPaquet(agent) {
   if (!agent) return null;
   return {
     tipus: 'ia', id: agent.id, slug: agent.slug || null, nom: agent.name, avatar: agent.avatar_url || '',
-    hero: agent.hero_url || '', lema: agent.lema || '', bio: agent.role || '',
+    hero: agent.hero_url || '', ...(agent.hero_video_url ? { heroVideo: agent.hero_video_url } : null),
+    lema: agent.lema || '', bio: agent.role || '',
     presentacioHtml: agent.presentacio_html || agent.short_bio || '', poble: agent.town_name || '',
     esIA: true, publicat: true, propietari: false, copyright: agent.copyright || '', emoticona: '',
     /* Ordre del Mestre (261021, pla 261021_0015 §8.1) · La pastilla de data i
@@ -189,7 +194,9 @@ export function perfilFundacionalDelPaquet(clau) {
   if (!entitat) return null;
   return {
     tipus: entitat.kind === 'group' ? 'grup' : 'entitat', id: entitat.id, slug: entitat.slug, nom: entitat.name,
-    avatar: entitat.logo_url || '', hero: entitat.hero_url || '', lema: entitat.lema || '', bio: entitat.description || '',
+    avatar: entitat.logo_url || '', hero: entitat.hero_url || '',
+    ...(entitat.hero_video_url ? { heroVideo: entitat.hero_video_url } : null),
+    lema: entitat.lema || '', bio: entitat.description || '',
     presentacioHtml: entitat.presentacio_html || '', poble: entitat.town_name || '', esIA: false,
     publicat: entitat.visibility === 'public', propietari: false, copyright: entitat.copyright || '', correu: '', emoticona: ''
   };
@@ -622,6 +629,15 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
   const logoCru = esEntitat && !esElProjecte && typeof perfil.avatar === 'string' ? perfil.avatar.trim() : '';
   const logoDelPort = useResolvedAsset(logoCru.startsWith('sdp-media://') ? logoCru : '');
   const logoPropi = logoCru.startsWith('sdp-media://') ? logoDelPort : (logoCru ? resolveAsset(logoCru) : '');
+  const videoCru = typeof perfil?.heroVideo === 'string' ? perfil.heroVideo.trim() : '';
+  const videoDelPort = useResolvedAsset(videoCru.startsWith('sdp-media://') ? videoCru : '');
+  const videoCandidat = videoCru.startsWith('sdp-media://') ? videoDelPort : (videoCru ? resolveAsset(videoCru) : '');
+  const videoPropi = videoCandidat ? fontVideoPropia(videoCandidat) : null;
+  const posterCru = typeof perfil?.hero === 'string' ? perfil.hero.trim() : '';
+  const posterDelPort = useResolvedAsset(posterCru.startsWith('sdp-media://') ? posterCru : '');
+  const posterPropi = posterCru.startsWith('sdp-media://')
+    ? (posterDelPort || undefined)
+    : (posterCru ? resolveAsset(posterCru) : undefined);
   /* Ordre del Mestre (261022): les persones ja porten avatar a la barra
      taronja. Només els altres agents IA el conserven davant de l'H1. */
   const esAgentIA = perfil?.tipus === 'ia';
@@ -825,7 +841,21 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
         authorName: perfil.nom,
         authorAvatar: esElProjecte ? DEFAULT_AUTHOR.avatarUrl : (perfil.avatar || ''),
         authorLocation: poble, emoticona: perfil.emoticona || '',
-        authorHref: rutaDAutoria({ tipus: perfil.tipus, id: perfil.id })
+        authorHref: rutaDAutoria({ tipus: perfil.tipus, id: perfil.id }),
+        ...(videoPropi ? {
+          heroComponent: (
+            <div className="sdp-hero-video">
+              <video
+                className="sdp-hero-video__player"
+                src={videoPropi}
+                poster={posterPropi}
+                controls
+                playsInline
+                preload="metadata"
+              />
+            </div>
+          )
+        } : null)
       }}
       onConnect={rutaConnectarPerfil(perfil) ? () => navigate(rutaConnectarPerfil(perfil)) : false}
       /* Fase D (261020, tasca 2; crítica 261020, 6) · Des de 2610181800 els

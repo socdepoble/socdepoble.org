@@ -264,7 +264,12 @@ export function netejaText(valor, maxim = 4000) {
    opaca sdp-media:// dels dos buckets, o http(s) del mateix origen o d'un
    origen que `admetOrigen` accepte. Un camí relatiu es resol contra l'origen
    de la finestra: un '//altre.example' o un '/\altre.example' (el navegador
-   llig la barra inversa com a barra) ixen d'ací amb l'origen de fora. */
+   llig la barra inversa com a barra) ixen d'ací amb l'origen de fora.
+   R22.1 (Gauntlet, regressió de admetFont) · Cap origen del Node 0 ací: el
+   mode estricte de les IMATGES (Mur, Notes, sanitizeHtml) és el del COMMIT 5
+   i el del disparador del servidor (private.mur_imatge_propia, que només
+   admet private.ajustos.origens_mitjans_propis). Els /media/ del Node 0 només
+   valen per al vídeo (esFontVideoPropia). */
 function admetFont(url, admetOrigen) {
   if (!url) return false;
   const net = String(url).trim();
@@ -360,11 +365,16 @@ export function esAvatarDeProveidorOAuth(url) {
 
 /* Ordre del Mestre (03-11-2026) · Vídeo protagonista allotjat al servidor
    de mitjans del Node 0 (https://socdepoble.cat/media/...) o al mateix
-   origen. Cap servidor de tercers (YouTube, Vimeo, CDN alienes). */
+   origen. Cap servidor de tercers (YouTube, Vimeo, CDN alienes). Només per al
+   VÍDEO: les imatges continuen amb admetFont (vegeu-la, damunt). */
 const ORIGENS_VIDEO_NODE0 = Object.freeze([
   'https://socdepoble.cat',
   'https://socdepoble.org'
 ]);
+
+const esMitjaPropiNode0 = (u) => u.protocol === 'https:'
+  && ORIGENS_VIDEO_NODE0.includes(u.origin)
+  && u.pathname.startsWith('/media/');
 
 export function esFontVideoPropia(url) {
   if (esCamiPropi(url)) return true;
@@ -377,7 +387,7 @@ export function esFontVideoPropia(url) {
     if (typeof window !== 'undefined' && u.origin === window.location.origin) return true;
     if (u.protocol !== 'https:') return false;
     if (origensPropis.includes(u.origin)) return true;
-    return ORIGENS_VIDEO_NODE0.includes(u.origin) && u.pathname.startsWith('/media/');
+    return esMitjaPropiNode0(u);
   } catch {
     return false;
   }
@@ -385,4 +395,51 @@ export function esFontVideoPropia(url) {
 
 export function fontVideoPropia(url) {
   return esFontVideoPropia(url) ? url.trim() : null;
+}
+
+/* R22.1 (Gauntlet r221-dades-07, r221-text-09 i r221-dades-03) · El vídeo
+   principal que es pot DESAR en una capçalera pública (hero_video_url). Un sol
+   validador: el fan servir valorPerDesar (perfilCamps.js) i el diàleg
+   (DialegEnquadrament.jsx). La regla canònica té dos passos:
+   1. El SOBRE, el del CHECK de 20261113060000 i escrit igual: el text que es
+      desa (sense espais als extrems) té com a molt 2.048 caràcters, cap
+      caràcter de control ni barra inversa, i és una d'estes tres formes:
+      · sdp-media://mitjans/<camí>.mp4|.webm (el bucket PÚBLIC: mai
+        mitjans_privats, que cap visitant pot signar, ni cap '..');
+      · https://<host>/<camí>.mp4|.webm, amb ? o # opcionals darrere;
+      · /<camí>.mp4|.webm, un camí propi d'UNA barra.
+      Un camí relatiu sense barra inicial ('media/x.mp4', './x.mp4',
+      'x.webm') o un http:// (també el del servidor de desenvolupament) NO hi
+      entra: el CHECK el rebutjaria (23514), i un relatiu es resoldria segons
+      la pàgina on es pinta.
+   2. L'ORIGEN, que el CHECK no pot saber (és configuració de cada node): una
+      adreça https o un camí ha de ser propi després de `resol`, el resolutor
+      de camins del paquet (esFontVideoPropia: el mateix origen, origensPropis
+      o els /media/ del Node 0), i el seu camí, acabat en .mp4 o .webm.
+   Tot el que admet este validador ho admet el CHECK; el CHECK n'admet més
+   (qualsevol host https), mai al revés. Per això el client és, si de cas, més
+   estricte: el [[:cntrl:]] de PostgreSQL en UTF-8 pot incloure els controls
+   C1 (U+0080-U+009F) i els separadors U+2028 i U+2029, i el client els
+   rebutja sempre. Les proves de paritat són src/utils/sanitize.videoCapcalera.test.js
+   (amb el text del CHECK) i tests/r22-1-hero-video-url-postgres.test.mjs
+   (contra PostgreSQL 18.6 de veres). */
+const MAXIM_URL_VIDEO = 2048;
+const CARACTER_DE_FORA_VIDEO = /[\u0000-\u001F\u007F-\u009F\u2028\u2029\\]/;
+const RE_VIDEO_OPAC_PUBLIC = /^sdp-media:\/\/mitjans\/(?![A-Za-z0-9._/-]*\.\.)[A-Za-z0-9._/-]{1,200}\.(?:mp4|webm)$/i;
+const RE_SOBRE_VIDEO_HTTPS = /^https:\/\/[^/?#\s]+\/[^?#]*\.(?:mp4|webm)(?:[?#].*)?$/i;
+const RE_SOBRE_VIDEO_CAMI = /^\/[^/][^?#]*\.(?:mp4|webm)(?:[?#].*)?$/i;
+const RE_EXTENSIO_VIDEO = /\.(?:mp4|webm)$/i;
+
+export function esVideoDeCapcaleraDesable(url, resol = (valor) => valor) {
+  const net = typeof url === 'string' ? url.trim() : '';
+  if (!net || net.length > MAXIM_URL_VIDEO || CARACTER_DE_FORA_VIDEO.test(net)) return false;
+  if (/^sdp-media:/i.test(net)) return RE_VIDEO_OPAC_PUBLIC.test(net);
+  if (!RE_SOBRE_VIDEO_HTTPS.test(net) && !RE_SOBRE_VIDEO_CAMI.test(net)) return false;
+  const resolt = fontVideoPropia(resol(net));
+  if (!resolt) return false;
+  try {
+    return RE_EXTENSIO_VIDEO.test(new URL(resolt, 'https://socdepoble.org').pathname);
+  } catch {
+    return false;
+  }
 }

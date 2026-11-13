@@ -1,7 +1,10 @@
 import { getCurrentUser, getResolvedConfig, request } from './runtime.js';
+import { ambDescartats, creaColumnesOpcionals } from './columnesOpcionals.js';
 import { normalitzaContacte, normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
 import { LIMIT_DIRECTORI_ENTITATS, destinatariaDeTransferencia, errorDeMembre, membreDOrganitzacio } from '../contracte.js';
 import { esPobleImpossible, pobleDOrganitzacio, pobleDelFiltre } from '../pobleOrganitzacio.js';
+
+let columnesOpcionalsOrg = creaColumnesOpcionals('l’organització', { hero_video_url: 'hero_video_url' });
 
 /* Lògica d'Usuari · en seed i local les organitzacions on la persona mana són
    les del padró pilot (localPerfils). Comprovació explícita: sense mode, remot. */
@@ -128,8 +131,10 @@ async function organitzacioDelSlug(slug, tenantId, config) {
    tot el PATCH amb 42501.
    Ordre del Mestre (261008, grup C) · `town_name`, el poble de l'organització
    (2610081401). Mentre la migració no s'aplica, el reintent de T47 la lleva
-   del select; desar-la torna l'error de columna absent (PGRST204). */
-const COLUMNES_ORG = 'id,tenant_id,slug,name,kind,parent_organization_id,lema,description,visibility,logo_url,hero_url,presentacio_html,copyright,town_name,created_at,updated_at';
+   del select; desar-la torna l'error de columna absent (PGRST204).
+   R22.1 · `hero_video_url` (20261113060000, amb el seu grant de SELECT): sense
+   la migració, el mateix reintent la lleva del select. */
+const COLUMNES_ORG = 'id,tenant_id,slug,name,kind,parent_organization_id,lema,description,visibility,logo_url,hero_url,hero_video_url,presentacio_html,copyright,town_name,created_at,updated_at';
 
 /* T47 (ordre del Mestre, 260928) · Una columna del RETURNING que el servidor
    encara no té (p. ex. `copyright` mentre 2609262232 no s'aplica) feia fallar
@@ -158,9 +163,12 @@ const selectOrg = () => COLUMNES_ORG.split(',').filter((columna) => !columnesSel
    vista d'un servidor encara no en té alguna (town_name abans de
    2610081401), es torna a llegir sense ella i es recorda, com
    organitzacioDelSlug. La memòria és d'esta vista, no de la taula.
+   R22.1 · `hero_video_url` (la vista des de 20261113060000): el vídeo propi
+   de cada entitat a la seua targeta; una vista sense la columna (42703) es
+   torna a llegir sense ella, com town_name.
    ═══════════════════════════════════════════════════════════════════ */
 const COLUMNES_DIRECTORI = Object.freeze(['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema',
-  'description', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name', 'created_at', 'updated_at']);
+  'description', 'logo_url', 'hero_url', 'hero_video_url', 'presentacio_html', 'copyright', 'town_name', 'created_at', 'updated_at']);
 /* Sense estes no hi ha fila que es puga pintar ni enllaçar: mai es lleven del select. */
 const COLUMNES_DIRECTORI_FIXES = new Set(['id', 'slug', 'name']);
 /* G-P11-01 (auditoria Codex 261025_0031) · La memòria de les columnes que
@@ -276,40 +284,46 @@ export async function listPublicOrganizations(filtre = {}, config = {}) {
 /* Per a les proves: la memòria de columnes és del mòdul i duraria d'una prova a l'altra. */
 export function reiniciaMemoriaDirectori() {
   columnesDirectoriAbsents.clear();
+  columnesOpcionalsOrg = creaColumnesOpcionals('l’organització', { hero_video_url: 'hero_video_url' });
 }
 
 export async function updateOrganization(id, updates, config = {}) {
   const payload = {};
   const camps = { name: 'name', slug: 'slug', description: 'description', kind: 'kind',
     parentOrganizationId: 'parent_organization_id', lema: 'lema', logo_url: 'logo_url',
-    visibility: 'visibility', presentacio_html: 'presentacio_html', hero_url: 'hero_url', copyright: 'copyright',
-    town_name: 'town_name' };
+    visibility: 'visibility', presentacio_html: 'presentacio_html', hero_url: 'hero_url',
+    hero_video_url: 'hero_video_url', copyright: 'copyright', town_name: 'town_name' };
   for (const [origen, desti] of Object.entries(camps)) if (updates?.[origen] !== undefined) payload[desti] = updates[origen];
   if (!Object.keys(payload).length) throw new Error('Cap camp de l’organització per desar.');
   if (esModeLocal(config)) return (await perfilsLocals()).updateOrganization(id, payload);
   /* Com updateProfile: una imatge incrustada no es desa mai a la fila (hero_url
      la rebutjaria el CHECK amb 23514; logo_url no en té cap i s'inflaria). */
   if (getResolvedConfig(config).runtimeDataMode !== 'seed'
-    && [payload.logo_url, payload.hero_url].some((url) => typeof url === 'string' && url.startsWith('data:'))) {
+    && [payload.logo_url, payload.hero_url, payload.hero_video_url].some((url) => typeof url === 'string' && url.startsWith('data:'))) {
     throw new Error('Les imatges no es desen incrustades. Puja-les amb uploadToStorage.');
   }
-  const opcions = { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: payload };
   const columnesOrg = COLUMNES_ORG.split(',');
-  let rows;
-  for (;;) {
-    try {
-      rows = await request(`/rest/v1/organizations?id=eq.${encodeURIComponent(id)}&select=${selectOrg()}`, config, opcions);
-      break;
-    } catch (error) {
-      const columna = columnaAbsentDelSelect(error);
-      const nomesDelSelect = columna && columnesOrg.includes(columna) && !Object.hasOwn(payload, columna)
-        && !columnesSelectAbsents.has(columna);
-      if (!nomesDelSelect) throw error;
-      columnesSelectAbsents.add(columna);
+  const { resultat: rows, descartats } = await columnesOpcionalsOrg.envia(payload, async (cosNet) => {
+    const opcions = { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: cosNet };
+    for (;;) {
+      try {
+        return await request(`/rest/v1/organizations?id=eq.${encodeURIComponent(id)}&select=${selectOrg()}`, config, opcions);
+      } catch (error) {
+        const columna = columnaAbsentDelSelect(error);
+        const nomesDelSelect = columna && columnesOrg.includes(columna) && !Object.hasOwn(cosNet, columna)
+          && !columnesSelectAbsents.has(columna);
+        if (!nomesDelSelect) throw error;
+        columnesSelectAbsents.add(columna);
+      }
     }
-  }
+  });
   if (!rows?.[0]) throw new Error("No s'ha pogut actualitzar l'organització.");
-  return rows[0];
+  const filaConfirmada = Object.hasOwn(payload, 'hero_video_url')
+    && !descartats.includes('hero_video_url')
+    && !Object.hasOwn(rows[0], 'hero_video_url')
+    ? { ...rows[0], hero_video_url: payload.hero_video_url }
+    : rows[0];
+  return ambDescartats(filaConfirmada, descartats);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -508,6 +522,7 @@ export function reiniciaMemoriaContacte() {
   rpcsAbsents.clear();
   rpcsPresents.clear();
   sondesEnCurs.clear();
+  columnesOpcionalsOrg = creaColumnesOpcionals('l’organització', { hero_video_url: 'hero_video_url' });
 }
 
 async function rpcDeContacte(rpc, body, config) {

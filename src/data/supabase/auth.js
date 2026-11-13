@@ -305,6 +305,13 @@ const reafirmaSenseEsperar = (config) => { void reafirmaAvatarPropi({ ...config 
 /* Fase 1 · Perfil (D2). Columnes de profiles que el PATCH pot escriure (i que la RLS admet).
    T66 · `icon` (migració 2609282035): l'emoticona de la fitxa, mai a user_metadata. */
 const CAMPS_PERFIL = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright', 'icon']);
+/* R22.1 (Gauntlet r221-dades-03) · Columnes que naixen en una migració
+   pendent, amb el seu propi grant d'UPDATE: `hero_video_url`
+   (20261113060000). No entren a CAMPS_PERFIL, que és la paritat del bucle de
+   2610160250 (perfilUpdatePropi.migracio.test.js); sense la migració, el PATCH
+   torna PGRST204 i errorDeColumnaAbsent el degrada com qualsevol altra. */
+const CAMPS_PERFIL_OPCIONALS = Object.freeze(['hero_video_url']);
+const CAMPS_PERFIL_DESABLES = Object.freeze([...CAMPS_PERFIL, ...CAMPS_PERFIL_OPCIONALS]);
 /* Només estos viatgen també a user_metadata, que va dins del JWT. Les columnes noves,
    mai: una presentació de 20.000 caràcters inflaria cada petició de la sessió. */
 const CAMPS_METADATA = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public']);
@@ -424,7 +431,7 @@ export async function updateProfile(entrada, config = {}) {
     const usuari = getCurrentUser();
     if (!usuari) throw new Error('Cal iniciar sessió per a desar la fitxa.');
     const segurs = {};
-    for (const k of CAMPS_PERFIL) if (updates?.[k] !== undefined) segurs[k] = updates[k];
+    for (const k of CAMPS_PERFIL_DESABLES) if (updates?.[k] !== undefined) segurs[k] = updates[k];
     const fila = local.updateProfile(usuari, segurs);
     const metadades = {};
     for (const k of CAMPS_METADATA) if (segurs[k] !== undefined) metadades[k] = segurs[k];
@@ -434,7 +441,7 @@ export async function updateProfile(entrada, config = {}) {
   const user = (jwtEnviable() && getCurrentUser()) || await asseguraUsuari(capturedConfig, current);
   current();
   if (!user) throw new Error('La sessió ha caducat. Torna a entrar.');
-  const urls = [updates?.avatar_url, updates?.logo_url, updates?.hero_url];
+  const urls = [updates?.avatar_url, updates?.logo_url, updates?.hero_url, updates?.hero_video_url];
   if (getResolvedConfig(capturedConfig).runtimeDataMode !== 'seed'
     && urls.some((url) => typeof url === 'string' && url.startsWith('data:'))) {
     throw new Error('Les imatges no es desen incrustades. Puja-les amb uploadToStorage.');
@@ -442,7 +449,7 @@ export async function updateProfile(entrada, config = {}) {
 
   // Filtrar camps segurs per a RLS (evita l'error 42501 amb camps com logo_url)
   let safeUpdates = {};
-  for (const k of CAMPS_PERFIL) {
+  for (const k of CAMPS_PERFIL_DESABLES) {
     if (updates[k] !== undefined) safeUpdates[k] = updates[k];
   }
 

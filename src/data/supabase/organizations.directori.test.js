@@ -12,7 +12,7 @@ import { listPublicOrganizations, reiniciaMemoriaDirectori } from './organizatio
 import { reiniciaLocalPerfils } from '../localPerfils.js';
 import { ENTITAT_PILOT_ID } from '../identitatsSeed.js';
 
-const SELECT = 'id,tenant_id,slug,name,kind,parent_organization_id,lema,description,logo_url,hero_url,presentacio_html,copyright,town_name,created_at,updated_at';
+const SELECT = 'id,tenant_id,slug,name,kind,parent_organization_id,lema,description,logo_url,hero_url,hero_video_url,presentacio_html,copyright,town_name,created_at,updated_at';
 const ruta = (n = 0) => m.request.mock.calls[n][0];
 const filtreAnd = (cami) => decodeURIComponent(cami.split('&and=')[1].split('&')[0]);
 const columnaAbsent = (columna) => new Error(`Supabase 400: {"code":"42703","message":"column organization_directory.${columna} does not exist"}`);
@@ -73,6 +73,24 @@ test('Pla 261022_1955 · una columna que la vista encara no té es lleva del sel
   await listPublicOrganizations({}, {});
   expect(m.request).toHaveBeenCalledTimes(3);
   expect(ruta(2)).not.toContain('town_name');
+});
+
+/* R22.1 (Gauntlet r221-dades-06 i r221-ui-05) · El directori demana el vídeo
+   principal de cada entitat; una vista d'abans de 20261113060000 el lleva del
+   select i la càrrega continua (cap targeta perduda per una columna nova). */
+test('R22.1 · hero_video_url es demana a la vista; sense la columna (42703) es lleva del select i es recorda', async () => {
+  const forn = { id: 'o', slug: 'forn', name: 'Forn', hero_video_url: 'https://socdepoble.org/media/forn.mp4' };
+  m.request.mockResolvedValueOnce([forn]);
+  await expect(listPublicOrganizations({}, {})).resolves.toEqual([forn]);
+  expect(ruta(0)).toContain(',hero_url,hero_video_url,');
+  reiniciaMemoriaDirectori();
+  m.request.mockReset();
+  m.request.mockRejectedValueOnce(columnaAbsent('hero_video_url')).mockResolvedValueOnce([{ id: 'o' }]).mockResolvedValue([]);
+  await expect(listPublicOrganizations({}, {})).resolves.toEqual([{ id: 'o' }]);
+  expect(m.request).toHaveBeenCalledTimes(2);
+  expect(ruta(1)).not.toContain('hero_video_url');
+  await listPublicOrganizations({}, {});
+  expect(ruta(2)).not.toContain('hero_video_url');
 });
 
 test.each(['id', 'name', 'slug', 'description'])('Pla 261022_1955 · sense la columna %s (de la fila o del filtre) l’error puja', async (columna) => {

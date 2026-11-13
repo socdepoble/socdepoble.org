@@ -20,8 +20,9 @@ const POBLE_AMB_RPC = '00000000-0000-4000-8000-0000000000a2';
 
 /* Les columnes amb grant de SELECT (M01 + F1 + grup C: town_name, 2610081401).
    Cap més: el RETURNING les demana totes. */
+/* R22.1 · hero_video_url (20261113060000, amb el seu grant de SELECT). */
 const COLUMNES = ['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
-  'visibility', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name', 'created_at', 'updated_at'];
+  'visibility', 'logo_url', 'hero_url', 'hero_video_url', 'presentacio_html', 'copyright', 'town_name', 'created_at', 'updated_at'];
 beforeEach(() => {
   m.user = { id: 'A' }; m.tenantId = POBLE; m.supabaseUrl = 'https://poble.test';
   m.request.mockReset(); m.request.mockResolvedValue([{ id: 'O' }]);

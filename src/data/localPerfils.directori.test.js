@@ -6,9 +6,9 @@ import { beforeEach, expect, test } from 'vitest';
 import { createLocalPerfilsAdapter } from './localPerfils.js';
 import { ENTITATS_SEED, ENTITAT_PILOT_ID } from './identitatsSeed.js';
 
-/* Les 15 columnes de la vista (2610081401). */
+/* Les 15 columnes de la vista (2610081401) i hero_video_url (20261113060000). */
 const COLUMNES = ['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
-  'created_at', 'updated_at', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name'];
+  'created_at', 'updated_at', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name', 'hero_video_url'];
 const FORN = Object.freeze({
   id: 'forn-proves', slug: 'forn', kind: 'company', name: 'Forn de la Plaça', lema: 'Pa de llenya',
   description: 'Coca i pa cada matí', visibility: 'public', town_name: 'Benifallim',

@@ -572,6 +572,19 @@ describe('IDEA-22 · els casos de la titular', () => {
     }
   });
 
+  /* R22.1 · hero_video_url, opcional: absent, null o un text; res més. */
+  test('el directori admet hero_video_url absent, null o text, i res més', async () => {
+    const directori = cas('listPublicOrganizations', 'sense correu');
+    for (const fila of [{ id: 'org-1', name: 'Forn' }, { id: 'org-1', name: 'Forn', hero_video_url: null },
+      { id: 'org-1', name: 'Forn', hero_video_url: 'https://socdepoble.org/media/forn.mp4' }]) {
+      expect(await executaCas(directori, { listPublicOrganizations: async () => [fila] }, ctx()), JSON.stringify(fila)).toMatchObject({ estat: 'ok' });
+    }
+    for (const valor of [42, { url: 'x' }, true]) {
+      expect(await executaCas(directori, { listPublicOrganizations: async () => [{ id: 'org-1', name: 'Forn', hero_video_url: valor }] }, ctx()), String(valor))
+        .toMatchObject({ estat: 'falla', falles: ['la fila org-1 porta un hero_video_url que no és text ni null'] });
+    }
+  });
+
   test('el directori deixa al context una organització pública per a la titular', async () => {
     const c = ctx();
     const directori = cas('listPublicOrganizations', 'sense correu');

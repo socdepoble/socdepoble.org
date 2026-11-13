@@ -16,7 +16,7 @@ import { DialegEmoticona } from '../../components/universal/classificacio/Dialeg
 import { carregaCatalegEmojis } from '../notes/canalEmojis.js';
 import { bloqueigDeFitxa, textosDeFitxa } from './visibilitatFitxa.js';
 import {
-  CAMPS_FITXA, LIMITS_TEXT, copyrightDeFitxa, documentDeFitxa, fitxaDeLectura, fitxaPublicada, llargariaDeCamp, menaDeFitxa, retallaCamp, textDeCamp,
+  CAMPS_FITXA, LIMITS_TEXT, admetVideoDeCapcalera, copyrightDeFitxa, documentDeFitxa, fitxaDeLectura, fitxaPublicada, llargariaDeCamp, menaDeFitxa, retallaCamp, textDeCamp,
   valorPerDesar,
 } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
@@ -678,9 +678,20 @@ export function PerfilEditor({ identitat }) {
      d'una PERSONA és identitat: puja neta, sense casella, i amb l'avís si la
      foto portava GPS. La d'una organització o d'un agent conserva la casella.
      L'avatar (persona i agent) ja ho és per la forma (FORMES.avatar). */
-  const finestraCapcalera = useMemo(() => (fitxa.heroImage ? {
-    canviaFoto: true, ajudaFoto: AJUDA_FOTO,
-  } : null), [fitxa.heroImage]);
+  const desaVideoCapcalera = useCallback(
+    (valor) => desaImatgeDeLaFinestra('heroVideo', valor),
+    [desaImatgeDeLaFinestra],
+  );
+  /* R22.1 (Gauntlet r221-text-05 i r221-ui-06) · El panell del vídeo només
+     quan la fila porta la columna (admetVideoDeCapcalera): sense la migració
+     20261113060000, la finestra de sempre (cap panell que no es puga desar). */
+  const ambVideo = admetVideoDeCapcalera(identitat);
+  const finestraCapcalera = useMemo(() => (ambVideo ? {
+    canviaFoto: true,
+    ajudaFoto: AJUDA_FOTO,
+    videoUrl: fitxa.heroVideo || '',
+    onCanviaVideo: desaVideoCapcalera,
+  } : (fitxa.heroImage ? { canviaFoto: true, ajudaFoto: AJUDA_FOTO } : null)), [ambVideo, fitxa.heroImage, fitxa.heroVideo, desaVideoCapcalera]);
   /* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026) · La capçalera de la
      persona i de l'agent es puja sencera, amb el marc al fragment #sdp-crop=
      de hero_url (useImatgeDeFitxa). La d'una ORGANITZACIÓ continua retallada

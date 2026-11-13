@@ -204,10 +204,12 @@
  *       només hi afig el fragment.
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Camera, Minus, Plus, Trash2 } from 'lucide-react';
+import { Camera, Film, Minus, Plus, Trash2, Upload } from 'lucide-react';
 import { Alerta, Boto, Camp, CampText, Carregant, Casella, Dialeg, GrupOpcions } from '../../PedraSeca/index.js';
 import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
+import { resolRecursPropi } from '../../../config/assetResolver.js';
 import { omple } from '../../../config/moderacio.js';
+import { esVideoDeCapcaleraDesable } from '../../../utils/sanitize.js';
 import {
   FORMATS, FORMAT_PER_DEFECTE, ambLliscador, ambRoda, ambTecla, arrossega, esSencera, estatInicial, etiquetaDeForma, limita,
   lliscador, marges, midaVisor, opcionsSortida, pessic, proporcio, rectDeRetall, textAmpliacio, zoomMaxim,
@@ -413,6 +415,19 @@ export const TEXTOS_ENQUADRAMENT = Object.freeze({
   anunciAmpliacio: Object.freeze(['editor.enquadrament.anunciAmpliacio', 'Ampliació {valor}']),
   canviaFoto: Object.freeze(['editor.enquadrament.canviaFoto', ETIQUETA_CANVIA_FOTO]),
   llevaFoto: Object.freeze(['editor.enquadrament.llevaFoto', ETIQUETA_LLEVA_FOTO]),
+  videoEtiqueta: Object.freeze(['editor.enquadrament.videoEtiqueta', 'Vídeo principal de capçalera (opcional)']),
+  /* R22.1 (r221-text-06) · «Vídeos propis» es llegia «els meus»: el filtre
+     (validaUrlVideoPropi, és a dir esVideoDeCapcaleraDesable) només admet els
+     allotjats a Sóc de Poble. I la portada és la foto de capçalera tal com es desa, sense
+     prometre el marc que es tria ací. */
+  videoAjudaPortada: Object.freeze(['editor.enquadrament.videoAjudaPortada',
+    'Només s’admeten vídeos allotjats a Sóc de Poble (.mp4 o .webm). Mentre no es reproduïx, el vídeo mostra la foto de capçalera.']),
+  videoVincula: Object.freeze(['editor.enquadrament.videoVincula', 'Vincular vídeo']),
+  videoPuja: Object.freeze(['editor.enquadrament.videoPuja', 'Pujar vídeo']),
+  videoPujant: Object.freeze(['editor.enquadrament.videoPujant', 'Pujant el vídeo…']),
+  videoLleva: Object.freeze(['editor.enquadrament.videoLleva', 'Llevar vídeo']),
+  videoErrorFont: Object.freeze(['editor.enquadrament.videoErrorFont',
+    'Només s’admeten vídeos propis de Sóc de Poble en HTTPS (.mp4 o .webm).']),
   errorFitxer: Object.freeze(['editor.enquadrament.errorFitxer', ERROR_CARREGA_FITXER]),
   errorUrl: Object.freeze(['editor.enquadrament.errorUrl', ERROR_CARREGA_URL]),
   errorExporta: Object.freeze(['editor.enquadrament.errorExporta', ERROR_EXPORTA]),
@@ -443,6 +458,20 @@ const GEO_INICIAL = Object.freeze({
   precisio: PRECISIO_PER_DEFECTE, dataCaptura: null,
 });
 
+const PLACEHOLDER_VIDEO_PROPI = 'https://socdepoble.cat/media/video.mp4';
+
+/* R22.1 (Gauntlet r221-dades-07, r221-text-09 i r221-ui-06) · Un sol
+   validador, el de valorPerDesar: esVideoDeCapcaleraDesable (utils/sanitize.js),
+   amb el mateix resolutor de camins. Abans el diàleg en tenia un de propi que
+   admetia el bucket privat i '..': «Vincular vídeo» el donava per bo i el
+   rebutjava després la cua, amb un avís d'«imatge» que culpava el servidor.
+   Buit → '' (llevar el vídeo); vàlid → el text net, el que es desa; si no, null. */
+function validaUrlVideoPropi(cru) {
+  const net = typeof cru === 'string' ? cru.trim() : '';
+  if (!net) return '';
+  return esVideoDeCapcaleraDesable(net, resolRecursPropi) ? net : null;
+}
+
 export function DialegEnquadrament({
   obert = true,
   font,
@@ -467,6 +496,10 @@ export function DialegEnquadrament({
   onLleva = null,
   etiquetaLleva,
   etiquetaDesa = null,
+  videoUrl = '',
+  onCanviaVideo = null,
+  onPujaVideo = null,
+  acceptVideo = 'video/mp4,video/webm',
   carregador = carregaImatge,
   exportador = exportaRetall,
   dibuixant = dibuixaVisor,
@@ -542,6 +575,41 @@ export function DialegEnquadrament({
   canviaFotoRef.current = onCanviaFoto;
   const ambCanviaFoto = senzill && typeof onCanviaFoto === 'function';
   const ambLleva = senzill && typeof onLleva === 'function';
+  const ambVideo = typeof onCanviaVideo === 'function';
+  const ambPujaVideo = ambVideo && typeof onPujaVideo === 'function';
+  const canviaVideoRef = useRef(onCanviaVideo);
+  canviaVideoRef.current = onCanviaVideo;
+  const pujaVideoRef = useRef(onPujaVideo);
+  pujaVideoRef.current = onPujaVideo;
+  const entradaVideoRef = useRef(null);
+  const [esborranyVideo, setEsborranyVideo] = useState(() => String(videoUrl || ''));
+  const [desantVideo, setDesantVideo] = useState(false);
+  /* R22.1 (r221-text-07) · «Pujant el vídeo…» només mentre es puja de veres:
+     vincular o llevar també desen (desantVideo), però no pugen res. */
+  const [pujantVideo, setPujantVideo] = useState(false);
+  /* R22.1 (r221-ui-09) · Després de vincular o de llevar, el botó premut es
+     desmunta («Llevar vídeo») o queda desactivat («Vincular vídeo», amb
+     l'adreça ja desada): el focus queia al <body>. Torna al camp de
+     l'adreça, dins del diàleg, quan el desat ha acabat. */
+  const seccioVideoRef = useRef(null);
+  const focusVideoPendent = useRef(false);
+
+  useEffect(() => {
+    setEsborranyVideo(String(videoUrl || ''));
+  }, [videoUrl, obert]);
+
+  useEffect(() => {
+    if (!focusVideoPendent.current || desantVideo) return;
+    const camp = seccioVideoRef.current?.querySelector('input[type="url"]');
+    if (!camp || camp.disabled) return;
+    focusVideoPendent.current = false;
+    /* Només si el focus s'ha perdut (el body, un node que ja no hi és o un
+       control desactivat): si la persona ja és en un altre lloc, s'hi queda. */
+    const arrel = camp.getRootNode?.();
+    const actiu = (arrel && 'activeElement' in arrel ? arrel.activeElement : null) ?? null;
+    const perdut = !actiu || actiu === camp.ownerDocument?.body || !actiu.isConnected || actiu.disabled === true;
+    if (perdut) camp.focus();
+  }, [desantVideo, esborranyVideo, videoUrl]);
 
   const actualitza = useCallback((nou) => {
     estatRef.current = nou;
@@ -816,26 +884,151 @@ export function DialegEnquadrament({
     if (typeof avis === 'string' && avis) fallaDesat(avis);
   };
   const idAjudaFoto = `${id}-foto`;
+  const rotolCanviaFoto = etiquetaCanviaFoto ?? text(TEXTOS_ENQUADRAMENT.canviaFoto);
   /* Els botons de la foto i els formats, també sense imatge (una adreça que
-     no s'ha pogut obrir): «Canviar foto» n'és l'eixida. */
+     no s'ha pogut obrir): «Canviar foto» n'és l'eixida.
+     R22.1 (r221-ui-02, r221-text-11) · Sense aria-hidden (el kit R22.1 el
+     va llevar per l'avís de Chrome sobre un aria-hidden amb el focus a
+     dins), però amb nom: tabIndex -1 no el trau de l'arbre accessible, el
+     cursor del lector de pantalla el troba i, sense nom, el navegador el
+     deia en la seua llengua. El nom és el del botó que l'obri, traduït,
+     com a ControlsAdjunt. */
   const accionsFoto = ambCanviaFoto || ambLleva ? (
     <div className="sdp-enquadrament__foto">
       {ambCanviaFoto ? (
         <input ref={refEntradaFoto} type="file" accept={acceptFoto} onChange={triaFoto} className="sdp-nomes-lector"
-          tabIndex={-1} aria-hidden="true" data-enquadrament-foto="" />
+          tabIndex={-1} aria-label={rotolCanviaFoto} data-enquadrament-foto="" />
       ) : null}
       <div className="sdp-enquadrament__foto-accions">
         {ambCanviaFoto ? (
-          <Boto varietat="secundari" icona={Camera} onClick={() => entradaFotoRef.current?.click()} disabled={desant}
-            aria-describedby={ajudaFoto ? idAjudaFoto : undefined}>{etiquetaCanviaFoto ?? text(TEXTOS_ENQUADRAMENT.canviaFoto)}</Boto>
+          <Boto varietat="secundari" icona={Camera} onClick={() => entradaFotoRef.current?.click()} disabled={desant || desantVideo}
+            aria-describedby={ajudaFoto ? idAjudaFoto : undefined}>{rotolCanviaFoto}</Boto>
         ) : null}
         {ambLleva ? (
-          <Boto varietat="secundari" icona={Trash2} onClick={onLleva} disabled={desant}>
+          <Boto varietat="secundari" icona={Trash2} onClick={onLleva} disabled={desant || desantVideo}>
             {etiquetaLleva ?? text(TEXTOS_ENQUADRAMENT.llevaFoto)}
           </Boto>
         ) : null}
       </div>
       {ajudaFoto ? <p id={idAjudaFoto} className="sdp-camp__ajuda">{ajudaFoto}</p> : null}
+    </div>
+  ) : null;
+
+  const refEntradaVideo = useCallback((node) => {
+    entradaVideoRef.current?.removeEventListener('cancel', paraCancel);
+    entradaVideoRef.current = node;
+    node?.addEventListener('cancel', paraCancel);
+  }, []);
+
+  const vinculaVideo = async () => {
+    if (!ambVideo || desant || desantVideo) return;
+    const validat = validaUrlVideoPropi(esborranyVideo);
+    if (validat === null) {
+      fallaDesat(text(TEXTOS_ENQUADRAMENT.videoErrorFont));
+      return;
+    }
+    setErrorDesat(null);
+    focusVideoPendent.current = true;
+    setDesantVideo(true);
+    try {
+      await canviaVideoRef.current?.(validat);
+      if (muntatRef.current) setEsborranyVideo(validat);
+    } catch (err) {
+      fallaDesat(err?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
+    } finally {
+      if (muntatRef.current) setDesantVideo(false);
+    }
+  };
+
+  const llevaVideo = async () => {
+    if (!ambVideo || desant || desantVideo) return;
+    setErrorDesat(null);
+    const teniaDesat = Boolean(String(videoUrl || '').trim());
+    focusVideoPendent.current = true;
+    setEsborranyVideo('');
+    if (!teniaDesat) return;
+    setDesantVideo(true);
+    try {
+      await canviaVideoRef.current?.('');
+    } catch (err) {
+      fallaDesat(err?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
+    } finally {
+      if (muntatRef.current) setDesantVideo(false);
+    }
+  };
+
+  const triaVideo = async (ev) => {
+    const fitxer = ev.target.files?.[0];
+    ev.target.value = '';
+    if (!fitxer || !ambPujaVideo || desant || desantVideo) return;
+    setErrorDesat(null);
+    setDesantVideo(true);
+    setPujantVideo(true);
+    try {
+      const pujat = await pujaVideoRef.current?.(fitxer);
+      const validat = validaUrlVideoPropi(pujat);
+      if (!validat) {
+        fallaDesat(text(TEXTOS_ENQUADRAMENT.videoErrorFont));
+        return;
+      }
+      await canviaVideoRef.current?.(validat);
+      if (muntatRef.current) setEsborranyVideo(validat);
+    } catch (err) {
+      fallaDesat(err?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
+    } finally {
+      if (muntatRef.current) {
+        setDesantVideo(false);
+        setPujantVideo(false);
+      }
+    }
+  };
+
+  const seccioVideo = ambVideo ? (
+    <div ref={seccioVideoRef} className="sdp-enquadrament__video">
+      {ambPujaVideo ? (
+        <input ref={refEntradaVideo} type="file" accept={acceptVideo} onChange={triaVideo} className="sdp-nomes-lector"
+          tabIndex={-1} aria-label={text(TEXTOS_ENQUADRAMENT.videoPuja)} data-enquadrament-video="" />
+      ) : null}
+      <Camp etiqueta={text(TEXTOS_ENQUADRAMENT.videoEtiqueta)} ajuda={text(TEXTOS_ENQUADRAMENT.videoAjudaPortada)}>
+        <CampText
+          tipus="url"
+          value={esborranyVideo}
+          placeholder={PLACEHOLDER_VIDEO_PROPI}
+          disabled={desant || desantVideo}
+          onChange={(ev) => setEsborranyVideo(ev.target.value)}
+        />
+      </Camp>
+      <div className="sdp-enquadrament__video-accions">
+        <Boto
+          varietat="secundari"
+          icona={Film}
+          onClick={vinculaVideo}
+          carregant={desantVideo}
+          disabled={desant || desantVideo || !esborranyVideo.trim() || esborranyVideo.trim() === String(videoUrl || '').trim()}
+        >
+          {text(TEXTOS_ENQUADRAMENT.videoVincula)}
+        </Boto>
+        {ambPujaVideo ? (
+          <Boto
+            varietat="secundari"
+            icona={Upload}
+            onClick={() => entradaVideoRef.current?.click()}
+            disabled={desant || desantVideo}
+          >
+            {pujantVideo ? text(TEXTOS_ENQUADRAMENT.videoPujant) : text(TEXTOS_ENQUADRAMENT.videoPuja)}
+          </Boto>
+        ) : null}
+        {(String(videoUrl || '').trim() || esborranyVideo.trim()) ? (
+          <Boto
+            varietat="secundari"
+            icona={Trash2}
+            onClick={llevaVideo}
+            disabled={desant || desantVideo}
+          >
+            {text(TEXTOS_ENQUADRAMENT.videoLleva)}
+          </Boto>
+        ) : null}
+      </div>
     </div>
   ) : null;
 
@@ -890,7 +1083,13 @@ export function DialegEnquadrament({
   };
 
   const desa = async () => {
-    if (!imatge || desant || (geo.actiu && geo.llegint)) return;
+    if (!imatge || desant || desantVideo || (geo.actiu && geo.llegint)) return;
+    const videoPendent = ambVideo && esborranyVideo.trim() !== String(videoUrl || '').trim();
+    const videoValidat = videoPendent ? validaUrlVideoPropi(esborranyVideo) : '';
+    if (videoPendent && videoValidat === null) {
+      fallaDesat(text(TEXTOS_ENQUADRAMENT.videoErrorFont));
+      return;
+    }
     const e = estatRef.current;
     const rect = rectDeRetall(e, W, H, formats);
     const sencera = esSencera(e, W, H, formats);
@@ -918,6 +1117,19 @@ export function DialegEnquadrament({
       const llegitAbans = lecturaAbans ? await lecturaAbans.promesa : null;
       if (lecturaAbans && (!muntatRef.current || fontRef.current !== font)) return;
       if (!teUbicacio(llegitAbans)) {
+        if (videoPendent) {
+          setErrorDesat(null);
+          setDesant(true);
+          try {
+            await canviaVideoRef.current?.(videoValidat);
+            onTanca?.('boto');
+          } catch (err) {
+            fallaDesat(err?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
+          } finally {
+            if (muntatRef.current) setDesant(false);
+          }
+          return;
+        }
         if (lecturaAbans) setDesant(false);
         onTanca?.('boto');
         return;
@@ -1002,7 +1214,23 @@ export function DialegEnquadrament({
           return;
         }
       }
+      /* R22.1 (Gauntlet, P2 del Node 0 i r221-text-05 b) · Un vídeo pendent
+         mai bloqueja la foto: es prova de desar primer i, falle com falle
+         (xarxa, RLS, un servidor sense la capacitat), la foto es desa igual.
+         Si la foto falla, l'avís és el de la foto. Si la foto es desa i la
+         finestra continua oberta, l'avís del vídeo ix ací; si el pare la
+         tanca, la cua de la fitxa conserva el vídeo no desat i l'estat de
+         desament de l'editor ho diu. */
+      let errorVideo = null;
+      if (videoPendent) {
+        try {
+          await canviaVideoRef.current?.(videoValidat);
+        } catch (err) {
+          errorVideo = err;
+        }
+      }
       await onDesa?.(fitxer, info, metadades);
+      if (errorVideo) fallaDesat(errorVideo?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
     } catch (err) {
       fallaDesat(err?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
     } finally {
@@ -1049,6 +1277,7 @@ export function DialegEnquadrament({
         <div ref={arrelRef} className={ambFormes ? 'sdp-enquadrament sdp-enquadrament--formes' : 'sdp-enquadrament'}>
           {errorCarrega ? <Alerta to="error">{errorCarrega}</Alerta> : null}
           {errorDesat ? <Alerta key={errorDesat.intent} to="error">{errorDesat.text}</Alerta> : null}
+          {accionsFoto}
           {!errorCarrega && !imatge ? <Carregant etiqueta={text(TEXTOS_ENQUADRAMENT.obrint)} /> : null}
           {imatge ? (
             <>
@@ -1112,7 +1341,7 @@ export function DialegEnquadrament({
               {casellaExif}
             </>
           ) : null}
-          {accionsFoto}
+          {seccioVideo}
         </div>
       </Dialeg>
     );
@@ -1198,6 +1427,7 @@ export function DialegEnquadrament({
               {permetGeolocalitzacio ? (
                 <UbicacioImatge geo={geo} resultat={ubicacio} desactivat={desant} onActiva={activaGeo} onCanvi={canviaGeo} />
               ) : null}
+              {seccioVideo}
             </div>
           </div>
         ) : null}

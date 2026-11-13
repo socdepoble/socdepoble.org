@@ -24,7 +24,11 @@ import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorS
 import { ERROR_PRESSUPOST } from '../../utils/pujadaImatge.js';
 import { UIActionsContext } from '../../app/contexts/objectesDeContext.js';
 import { createTranslator } from '../../config/i18n.js';
+import CA from '../../config/idiomes/ca.js';
 import EN from '../../config/idiomes/en.js';
+import ES from '../../config/idiomes/es.js';
+import EU from '../../config/idiomes/eu.js';
+import GL from '../../config/idiomes/gl.js';
 import { ETIQUETA_CONSERVA_EXIF } from '../../components/universal/enquadrament/exifIncrustat.js';
 import { gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 
@@ -134,9 +138,21 @@ describe('el selector de fitxers', () => {
     expect(clic).toHaveBeenCalledTimes(1);
     expect(vista.input.getAttribute('accept')).toBe(ACCEPT_FOTO);
     expect(ACCEPT_FOTO).toBe('image/png,image/jpeg,image/webp');
-    expect(vista.input.getAttribute('aria-hidden')).toBe('true');
+    expect(vista.input.hasAttribute('aria-hidden')).toBe(false);
     expect(vista.input.tabIndex).toBe(-1);
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  /* R22.1 (r221-ui-02, r221-text-11) · Sense aria-hidden, el selector és a
+     l'arbre accessible: porta el nom del camp de la fitxa (sense proveïdor,
+     el valencià de sempre). Abans no en tenia cap. */
+  test.each([
+    ['heroImage', 'capcalera', 'Capçalera'],
+    ['logoImage', 'avatar', 'Avatar'],
+    ['logoImage', 'logotip', 'Logotip'],
+  ])('el selector de %s (%s) té el nom «%s»', (camp, forma, nom) => {
+    const vista = munta({ camp, forma });
+    expect(screen.getByLabelText(nom, { selector: 'input[type="file"]' })).toBe(vista.input);
   });
 
   test('tancar el selector sense triar (cancel) no puja fins a cap <dialog>', () => {
@@ -770,5 +786,35 @@ describe('P0-80 · el viatge d’anada i tornada de la capçalera', () => {
     // 4.000 × 2.000 en quadrat: el quadrat central, retallat dins del fitxer.
     expect(dobles.exportaRetall.mock.calls[0][1]).toEqual({ x: 1000, y: 0, w: 2000, h: 2000 });
     expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_MITJA]]);
+  });
+});
+
+/* R22.1 (r221-ui-02, r221-text-11) · El nom del selector, en la llengua de la
+   interfície (els parells de la closca editor.closca.camp.capcalera,
+   .camp.avatar i .alt.logotip), en les cinc llengües. */
+describe('R22.1 · el nom del selector de fitxers, en cinc llengües', () => {
+  test.each([
+    ['ca', CA],
+    ['es', ES],
+    ['en', EN],
+    ['eu', EU],
+    ['gl', GL],
+  ])('a %s', (idioma, diccionari) => {
+    const t = createTranslator(idioma);
+    for (const [camp, forma, clau] of [
+      ['heroImage', 'capcalera', 'editor.closca.camp.capcalera'],
+      ['logoImage', 'avatar', 'editor.closca.camp.avatar'],
+      ['logoImage', 'logotip', 'editor.closca.alt.logotip'],
+    ]) {
+      const vista = render(
+        <UIActionsContext.Provider value={{ t }}>
+          <Prova camp={camp} forma={forma} onImageUpload={vi.fn()} onDesaCamp={vi.fn()} onError={vi.fn()} />
+        </UIActionsContext.Provider>,
+      );
+      const input = vista.container.querySelector(`input[data-imatge-de-fitxa="${camp}"]`);
+      expect(typeof diccionari[clau]).toBe('string');
+      expect(screen.getByLabelText(diccionari[clau], { selector: 'input[type="file"]' })).toBe(input);
+      cleanup();
+    }
   });
 });

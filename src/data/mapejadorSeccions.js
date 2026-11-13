@@ -128,6 +128,18 @@ function validaUrl(url) {
   }
 }
 
+function validaVideoUrl(url) {
+  const validada = validaUrl(url);
+  return validada && !validada.startsWith('data:') ? validada : null;
+}
+
+function netejaVideoDelPayload(element) {
+  if (!Object.hasOwn(element, 'video_url')) return;
+  const neta = validaVideoUrl(element.video_url);
+  if (neta) element.video_url = neta;
+  else delete element.video_url;
+}
+
 /* Relleu 261007 · «Límits» §5 · Abans, variations.map(netejaText) i
    tags.map(netejaText): Array.prototype.map passa (element, índex), i l'índex
    queia al segon paràmetre de netejaText(valor, maxim) i retallava cada element
@@ -272,6 +284,7 @@ export function mapSectionSubmissionToItem(submission) {
   /* IDEA-42 (B7h) · La portada sencera i l'enquadrament de la targeta, nets
      (portadaDeLaPublicacio, davall) abans de cap branca: totes escampen baseItem. */
   netejaPortada(baseItem);
+  netejaVideoDelPayload(baseItem);
 
   if (sectionId === 'mur') {
     const element = {
@@ -514,7 +527,7 @@ const CLAUS_DE_TEXT_DEL_PAYLOAD = Object.freeze([
   'location', 'population', 'town_name', 'provincia', 'comarca', 'tag', 'category_slug', 'category',
   'copyright', 'source', 'autor', 'nomPoble', 'poble', 'poble_id', 'icon', 'imageAlt', 'type', 'kind',
   'date', 'time', 'publish_date', 'dataCaptura', 'searchText', 'comments', 'likes', 'file', 'sectionId',
-  'translation_mode', 'source_language'
+  'translation_mode', 'source_language', 'video_url'
 ]);
 /* seguretat-01 (261104) · Les claus de text que la vista llig amb un || (les
    píndoles del detall d'un acte, detailSectionMeta): la regla de
