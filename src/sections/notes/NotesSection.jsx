@@ -370,7 +370,7 @@ function NotesSectionBase() {
   const modeResolt = useMemo(() => modeDeDadesResolt(config), [config]);
   const alies = useMemo(() => aliesDeLActor(actor, { dataMode: modeResolt }), [actor, modeResolt]);
   const {
-    status, error, notes, noteFolders, creaNota, setLocalNoteField, updateNote,
+    status, error, notes, noteFolders, creaNota, setLocalNoteField, updateNote, desaNotaPreparada,
     informaError, obriConfiguracioNotes, refresh, canCreate, teSessio = false,
     notesComplete, resolveNote, workspaceKey, scopeKey
   } = notesContextValue || {
@@ -640,7 +640,7 @@ function NotesSectionBase() {
   const preparada = useNotaPreparada({
     /* Bloc 3.9 · La llavor d'ara i la d'abans: cap de les dues no crea la nota. */
     clau: workspaceKey ?? null, base: basePreparada, llavor: LLAVORS_NOTA,
-    notes, creaNota, resolNota: resolveNote, setLocalNoteField, updateNote, informaError, adopta: adoptaNota
+    notes, creaNota, resolNota: resolveNote, setLocalNoteField, updateNote, desaNotaPreparada, informaError, adopta: adoptaNota
   });
   /* Revisió de P4 · CREAR NOTA la fixa a la llista (vegeu llistaParcial). */
   const [demanada, setDemanada] = useState(null);

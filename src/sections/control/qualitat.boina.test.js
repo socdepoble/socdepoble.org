@@ -30,8 +30,6 @@ const FRONT = [
   'src/sections/mur/TargetaDelMur.autoria.test.jsx',
   'src/components/universal/EventCard.jsx',
   'src/components/universal/EventCard.test.jsx',
-  'src/components/SectionItemCard.jsx',
-  'src/components/SectionItemCard.test.jsx',
   'src/sections/mercat/MercatSection.jsx',
   'src/sections/detail/PageDetailSection.jsx',
   'src/sections/detail/PageDetailSection.test.jsx',

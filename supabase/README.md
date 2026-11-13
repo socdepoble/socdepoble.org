@@ -1633,6 +1633,18 @@ description: "Documentació canònica de Sóc de Poble."
 
   R20. Depén de 2611111735 i 2611112005. Predicat compartit entre la política SELECT i la resolució del padró de publicadors: esborranys, privats, marques contradictòries i metadades malformades no es projecten. Conserva els registres antics sense marques i les notes privades del propietari. Provada dues vegades sobre el mateix clúster amb `npm run test:sql`, incloent notes reals i frontera de 64 capes. **NO aplicada: candidata local pendent d'arbitratge i aplicació pel Mestre.**
 
+- `migrations/2611121630_xat_propi.sql`
+
+  R21.4. Fil propi privat, únic per propietari i poble, lectura automàtica i cap destinatari push propi. Requerix el xat E2EE vigent de 2610311800 i la cadena 2611020417 → 2611080431; assajat amb 2611080432. No requerix la migració IAIA 2611080430. Idempotent; estat remot no acreditat. Prova PostgreSQL 18.6: `tests/xat-propi-r21-4-postgres.test.mjs`.
+
+- `migrations/2611121700_purga_agents_app_content_i_hidratacio_canonica.sql`
+
+  R21.5. Depén d'`app_content` de 2609080000. Retira identificadors de ficció declarats i hidrata les tres identitats canòniques, preservant persones/entitats reals addicionals, ordre, duplicats i metadades. Valida formes/mides i aborta íntegrament davant d'entrada no admesa. Idempotent, sense grants ni RPC nous; estat remot no acreditat. Prova PostgreSQL 18.6: `tests/agents-app-content-r21-5-postgres.test.mjs`.
+
+- `migrations/2611121830_frontera_contingut_editorial_i_notes_privades.sql`
+
+  R21.6. Requerix les taules `app_content`/`notes`, `private.is_town_member` i l'autoritat real AAL2 de 2610061448; reafirma el contracte de nou claus de 2610101900 i les guardes restrictives contra polítiques permissives obsoletes. Notes privades només per propietari membre, sense privilegis PUBLIC/anon. No reescriu payloads, versions ni dates. Transaccional i idempotent; estat remot no acreditat. Prova PostgreSQL 18.6: `tests/contingut-frontera-r21-6-postgres.test.mjs`.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1830,6 +1842,9 @@ verificador sense avisos.
 | 91 | `2611111735` | `2611111735_copublicacio_registrada.sql` | **NO aplicada: l'aplica el Mestre** | R19: publicadors registrats, traspàs, reversió i historial privat amb CAS i AAL2. |
 | 92 | `2611112005` | `2611112005_mur_lectura_publica_foraster.sql` | Aplicada segons l'ESTAT de l'11-11-2026 a les 21:21 (Mestre i MarIA; sense lectura REST) | P0 Mur Foraster: lectura pública de `mur`, `mercat`, `events` i `multimedia`; `notes` privades; UUID d'autoria llegible per a `anon`; esborranys exposats segons Codex R20, correcció additiva 2611112149 |
 | 93 | `2611112149` | `2611112149_mur_estat_public_i_padro.sql` | **NO aplicada: candidata R20, l'aplica el Mestre** | Frontera pública coherent entre SELECT i padró; marques privades o d'esborrany dominen, assaig natiu sense omissions |
+| 94 | `2611121630` | `2611121630_xat_propi.sql` | Estat remot no acreditat; candidata R21.4 | Fil propi únic, RLS privada, lectura automàtica i zero auto-push |
+| 95 | `2611121700` | `2611121700_purga_agents_app_content_i_hidratacio_canonica.sql` | Estat remot no acreditat; candidata R21.5 | Purga per identitat i hidratació canònica, dades legítimes preservades |
+| 96 | `2611121830` | `2611121830_frontera_contingut_editorial_i_notes_privades.sql` | Estat remot no acreditat; candidata R21.6 | Frontera pública de nou claus i Notes privades, autoritat AAL2 real |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

@@ -411,27 +411,50 @@ describe('xat-flux-01 · mentre la sessió remota es comprova, cap 404 ni «comu
   });
 });
 
-it('«Nova conversa» amb la IAIA obri un fil privat, el titula i el torna a obrir després de recarregar', async () => {
-  vi.stubGlobal('indexedDB', creaIdbFals().idb);
+/* R21 (carril f1) · Política 2.5 en vigor (§14) i avís de la conversa local:
+   l'historial de la IAIA viu en memòria i s'esborra en eixir del Xat. */
+it('R21.4-UI · «Nova conversa» amb la IAIA obri la fila única /xat/iaia-local, i en recarregar l’historial ja no hi és (res a IndexedDB)', async () => {
+  const fals = creaIdbFals();
+  vi.stubGlobal('indexedDB', fals.idb);
   vi.stubGlobal('BroadcastChannel', null);
-  const vista = render(arbre());
+  mocks.port.teCapacitat.mockImplementation((cap) => cap !== 'iaia');
+  const configRemota = {
+    ...CONFIG,
+    dataMode: 'remote',
+    supabaseUrl: 'https://test.supabase.co',
+    supabaseAnonKey: 'sb_publishable_test'
+  };
+  const arbreRemot = () => <XatProvider config={configRemota}><XatSection /></XatProvider>;
+  const vista = render(arbreRemot());
   fireEvent.click(await screen.findByRole('button', { name: 'Nova conversa' }));
   const dialeg = screen.getByRole('dialog', { name: 'Nova conversa' });
-  fireEvent.click(await within(dialeg).findByRole('button', { name: /IAIA MarIA/ }));
+  const botoIaia = await within(dialeg).findByRole('button', { name: /IAIA MarIA/ });
+  fireEvent.click(botoIaia);
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/iaia-local'));
   const ruta = mocks.navigate.mock.calls.at(-1)?.[0];
-  expect(ruta).toMatch(/^\/xat\/iaia-local-[0-9a-f-]+$/u);
+  expect(ruta).toBe('/xat/iaia-local');
   vesA(ruta);
-  vista.rerender(arbre());
+  vista.rerender(arbreRemot());
   const camp = await screen.findByRole('textbox', { name: 'Escriu un missatge' });
-  fireEvent.change(camp, { target: { value: 'Què és el Mercat? Detall efímer.' } });
+  fireEvent.change(camp, { target: { value: 'Què és el Mercat? Nota privada local.' } });
   fireEvent.keyDown(camp, { key: 'Enter' });
-  await waitFor(() => expect(screen.getAllByText('el Mercat').length).toBeGreaterThan(0));
+  await waitFor(() => {
+    expect(screen.getByText('Què és el Mercat? Nota privada local.')).not.toBeNull();
+    expect(screen.getByRole('button', { name: /Envia l’esborrany al Bloc de Notes/ })).not.toBeNull();
+  });
   expect(mocks.port.creaFilDirecte).not.toHaveBeenCalled();
   expect(mocks.port.enviaMissatge).not.toHaveBeenCalled();
   vista.unmount();
 
-  render(arbre());
-  await waitFor(() => expect(screen.getAllByText('el Mercat').length).toBeGreaterThan(0));
-  expect(screen.queryByText('Què és el Mercat? Detall efímer.')).toBeNull();
+  const disc = JSON.stringify([...fals.bases].map(([nom, base]) => [nom, [...base.stores].map(([store, m]) => [store, [...m.files.values()]])]));
+  expect(disc).not.toContain('Nota privada local');
+
+  vesA('/xat/iaia-local');
+  render(arbreRemot());
+  await screen.findByRole('textbox', { name: 'Escriu un missatge' });
+  await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+  expect(document.querySelector('[data-missatge="iaia-local:benvinguda"]')).not.toBeNull();
+  expect(screen.queryByText('Què és el Mercat? Nota privada local.')).toBeNull();
+  expect(screen.queryByRole('button', { name: /Envia l’esborrany al Bloc de Notes/ })).toBeNull();
   expect(mocks.pintades404).toBe(0);
 });

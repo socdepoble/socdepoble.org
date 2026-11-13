@@ -144,6 +144,49 @@ async function aInbox() {
 }
 
 describe('les tres columnes', () => {
+  test('R21.6 · una fallada del catàleg mostra reintent i conserva la foto demanada fins que el servidor torna', async () => {
+    const refresh = vi.fn();
+    mocks.multimedia = { status: 'error', error: new Error('private diagnostic must not render'), refresh, mediaItems: [], mediaTimelineGroups: [] };
+    const view = munta('/multimedia?foto=town-tibi&referencia=publica');
+    const retry = await screen.findByRole('button', { name: 'Reintentar' });
+    expect(screen.getAllByRole('alert').some(alert => alert.textContent.includes('No s’han pogut carregar les dades.'))).toBe(true);
+    expect(document.body.textContent).not.toContain('private diagnostic must not render');
+    expect(params().get('foto')).toBe('town-tibi');
+    expect(params().get('referencia')).toBe('publica');
+    fireEvent.click(retry);
+    expect(refresh).toHaveBeenCalledTimes(1);
+    mocks.multimedia = { status: 'ready', mediaItems: MITJANS, mediaTimelineGroups: agrupaPerMes(MITJANS), refresh };
+    view.rerender(<MemoryRouter rutaInicial="/multimedia?foto=town-tibi&referencia=publica"><MultimediaSection /><Sonda /></MemoryRouter>);
+    expect(document.querySelector('dialog.sdp-visor').hasAttribute('open')).toBe(true);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  test('R21.6 · la portada declara la fallada remota i conserva les eines locals disponibles', async () => {
+    const refresh = vi.fn();
+    mocks.multimedia = { status: 'error', refresh, mediaItems: [], mediaTimelineGroups: [] };
+    munta();
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('No s’han pogut carregar les dades.');
+    fireEvent.click(within(alert).getByRole('button', { name: 'Reintentar' }));
+    expect(refresh).toHaveBeenCalledTimes(1);
+    fireEvent.click(arbre().getByRole('button', { name: 'Carpeta local · Volums muntats' }));
+    expect(params().get('categoria')).toBe('local_root');
+    expect(arbre().getByRole('button', { name: 'Vincular carpeta local' })).toBeTruthy();
+  });
+
+  test('R21.6 · una revalidació fallada s’avisa sense llevar la fotografia ja llegida', async () => {
+    const refresh = vi.fn();
+    mocks.multimedia = { ...mocks.multimedia, errorRevalidacio: new Error('private revalidation diagnostic'), refresh };
+    munta('/multimedia?categoria=galeria_tots&item=town-tibi');
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('No s’han pogut carregar les dades.');
+    expect(document.body.textContent).not.toContain('private revalidation diagnostic');
+    expect(detall().getByRole('heading', { name: 'Tibi' })).toBeTruthy();
+    expect(params().get('item')).toBe('town-tibi');
+    fireEvent.click(within(alert).getByRole('button', { name: 'Reintentar' }));
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
   test('/multimedia: navegació, llista i detall; les cinc arrels en ordre; l’H1 «Arxiu visual»; cap pastilla de mode', async () => {
     munta();
     expect(columna('app-grid-sidebar')).not.toBeNull();

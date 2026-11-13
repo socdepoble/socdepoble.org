@@ -185,6 +185,14 @@ function exigixParticipant(estat, filId, jo) {
  * qui hi ha; només es veu l'entitat, si el fil és seu i jo no hi signe.
  */
 function altresDe(estat, fil, meu) {
+  if (esFilPropi(estat, fil, meu.usuariId)) {
+    const sessio = usuariDeSessio();
+    const metadades = sessio?.id === meu.usuariId ? sessio.user_metadata : null;
+    const text = valor => typeof valor === 'string' && valor.trim() ? valor.trim() : null;
+    const propia = fitxaDe(estat, meu.usuariId);
+    return [{ ...propia, nom: text(metadades?.full_name) || text(metadades?.name) || propia.nom,
+      avatarUrl: text(metadades?.avatar_url) || propia.avatarUrl, slug: null }];
+  }
   if (fil.subjecte) return fil.orgId && !meu.comOrgId ? [fitxaDe(estat, fil.orgId)] : [];
   const parts = [...estat.participants.get(fil.id).values()].filter((p) => p.usuariId !== meu.usuariId);
   const visibles = meu.comOrgId
@@ -301,6 +309,10 @@ function entraAlFil(estat, fil, jo) {
 
 /** Persones que participen en un fil, sense la participant virtual de l'entitat. */
 const participantsDe = (estat, fil) => [...estat.participants.get(fil.id).values()].filter((p) => !p.esEntitat).length;
+/* El marcador intern no s'inferix de qualsevol fil amb un únic membre. */
+const esFilPropi = (estat, fil, jo) => fil.tipus === 'directe' && fil.propiUsuariId === jo
+  && !fil.orgId && !fil.subjecte && estat.participants.get(fil.id)?.size === 1
+  && estat.participants.get(fil.id)?.has(jo);
 
 /** La Conversa que veu `jo`, amb la mateixa forma que torna el servidor. */
 function conversaDe(estat, fil, meu, jo) {
@@ -310,6 +322,7 @@ function conversaDe(estat, fil, meu, jo) {
   const entitat = fil.orgId ? estat.entitats.get(fil.orgId) : null;
   return {
     id: fil.id,
+    ...(esFilPropi(estat, fil, jo) ? { esPropi: true } : {}),
     tipus: fil.tipus,
     titol: fil.titol,
     altresNoms: altres.map((p) => p.nom),
@@ -552,8 +565,18 @@ export function createLocalXatAdapter() {
      */
     async creaFilDirecte(altreUsuariId, titol = null, config = {}) {
       const { estat, jo } = magatzem(config);
-      if (!altreUsuariId || altreUsuariId === jo) throw errorPla('No pots obrir una conversa amb tu mateix.');
+      if (!altreUsuariId) throw errorPla('No s’ha indicat la persona de la conversa.');
       const altre = String(altreUsuariId);
+      /* R21.4 · Una persona amb sessió pot enviar-se missatges. El marcador
+         evita reutilitzar un directe ordinari on també hi haja una altra
+         persona; el magatzem ja està separat per poble i propietari. */
+      if (altre === jo) {
+        if (usuariDeSessio()?.id !== jo) throw errorXat('SDP-XAT-001', 'cal una sessió per a obrir el xat propi.');
+        for (const fil of estat.fils.values()) if (esFilPropi(estat, fil, jo)) return fil.id;
+        const fil = creaFil(estat, 'directe', null, [participantNou(null, jo)], { propiUsuariId: jo });
+        if (titol) fil.titol = titol;
+        return fil.id;
+      }
       if (!estat.membres.some((membre) => membre.usuariId === altre) && !estat.entitats.has(altre)) throw errorForastera();
       const existent = filAmb(estat, jo, altre);
       if (existent) return existent;

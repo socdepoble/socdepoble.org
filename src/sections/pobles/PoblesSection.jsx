@@ -9,7 +9,7 @@ import { useSEO } from '../../hooks/useSEO';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useMur } from '../mur/MurContext';
-import { COPYRIGHT_VIQUIPEDIA, dataDElement, momentDElement } from '../../components/universal/editorial.js';
+import { COPYRIGHT_VIQUIPEDIA, encapcalamentDeTargeta, momentDElement } from '../../components/universal/editorial.js';
 import { nomDeLaGent } from './nomsDelPoble.js';
 import { poblesAmbUltimaPublicacio } from './clauDelPoble.js';
 import { objecteDelPobleXat } from './xatDelPoble.js';
@@ -17,9 +17,11 @@ import { ArbreTerritorial } from './TerritoriDelPoble.jsx';
 import SubnavigacioPoblesIGent from './SubnavigacioPoblesIGent.jsx';
 import { filtraTerritori } from './territoriDelPoble.js';
 import { usePoblesHidratats } from './usePobleHidratat.js';
+import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
+import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 
 export default function PoblesSection() {
-  const { sortedTowns, status, error } = useCoreContent();
+  const { sortedTowns, status, error, refresh } = useCoreContent();
   const { feedPosts, marketItems, events } = useMur();
   const { t, language } = useUIActions();
   const navigate = useNavigate();
@@ -84,23 +86,10 @@ export default function PoblesSection() {
     >
       <SubnavigacioPoblesIGent actiu="pobles" idioma={language} />
       <ArbreTerritorial pobles={poblesVisibles} t={t} />
+      {status === 'loading' ? <Carregant etiqueta={t('section.pobles.loading', 'Carregant pobles...')} /> : null}
+      {status === 'error' ? <EstatErrorDades titol={t('section.pobles.error', 'Error carregant els pobles.')} error={error} onReintenta={refresh} /> : null}
+      {status === 'ready' && poblesFiltrats.length === 0 ? <p role="status">{t('section.pobles.noResults', 'Cap poble trobat.')}</p> : null}
       <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
-        {status === 'loading' && (
-          <div>
-            <p>{t('section.pobles.loading')}</p>
-          </div>
-        )}
-        {status === 'error' && (
-          <div>
-            <p>{t('section.pobles.error')}</p>
-            <pre>{error?.message || String(error)}</pre>
-          </div>
-        )}
-        {status === 'ready' && poblesFiltrats.length === 0 && (
-          <div>
-            {t('section.pobles.noResults', 'Cap poble trobat.')}
-          </div>
-        )}
         {status === 'ready' && poblesFiltrats.map((town) => {
           /* T63.2 · el descriptor del poble ('poble', id i ruta): Connectar se
              l'emporta, com sempre. */
@@ -131,7 +120,7 @@ export default function PoblesSection() {
           const portaDelXat = xatDelPoble
             ? { id: 'xat-del-poble', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti: xatDelPoble, varietat: 'secundari' }
             : null;
-          const data = dataDElement({ created_at: town._ultimaPublicacioPublica });
+          const data = encapcalamentDeTargeta({ created_at: town._ultimaPublicacioPublica }, { t });
           /* Onada 5 (F5, fase 3) · Les dades manen: l'`author` de la fitxa
              (la llavor porta el nom curt «Gent de la Torre») i, si no en porta,
              la regla única de nomsDelPoble.js, la mateixa de l'H1 i de la barra

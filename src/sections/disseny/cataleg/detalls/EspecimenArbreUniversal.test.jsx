@@ -117,9 +117,12 @@ describe('Arbre universal (relacions)', () => {
   it('els consumidors d’UniversalCard són tots els que la munten a l’app', () => {
     const consumidors = nodeUniversal('card').consumidors.join(' · ');
     for (const fitxer of [
-      'MurSection', 'MercatSection', 'PoblesSection', 'ConnectarSection', 'EventCard', 'SectionItemCard',
+      'MurSection', 'MercatSection', 'PoblesSection', 'ConnectarSection', 'EventCard', 'ProfileSection', 'EntitatsDelPoble',
       'TargetaConsola', 'TargetaResum', 'OnboardingSteps', 'ControlSection', 'TranslationsSection'
     ]) expect(consumidors).toContain(fitxer);
+    /* Gauntlet R21 (versions_i_portes-02) · SectionItemCard s'ha retirat: el
+       directori munta la UniversalCard directament. */
+    expect(consumidors).not.toContain('SectionItemCard');
     expect(consumidors).not.toContain('ResultatCerca');
     expect(consumidors).not.toContain('TargetaViva');
   });

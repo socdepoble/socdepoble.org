@@ -323,7 +323,7 @@ const primeraImatge = (...valors) => {
  */
 function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos = [], etiquetes = [], poble = '',
   imatge = null, avatar = null, href = null, accio = null, data = null, privada = false, propia = false, fotoDe = null,
-  canonica = null, ambit = null, estat = null }) {
+  canonica = null, ambit = null, estat = null, autoria = '', dataEditorial = data }) {
   if (id == null || String(id) === '') return null;
   const textExtracte = textPla(extracte);
   const textTitol = textPla(titol).slice(0, 200) || textExtracte.slice(0, 80);
@@ -335,6 +335,15 @@ function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos 
      esCorreu, sobre una paraula llarga sense espais, és quadràtica. */
   const pobleCurt = Array.from(textPoble.slice(0, 240)).slice(0, 120).join('');
   const src = primeraImatge(imatge?.src);
+  const nomAutor = textPla(autoria || (tipus === 'persones' || tipus === 'entitats' ? textTitol : '')).slice(0, 200);
+  /* Keep public reading metadata before the ranking date is reduced to epoch
+     milliseconds. A day-only source remains day-only, never midnight today.
+     This whitelist carries neither a raw profile nor private contact fields. */
+  const editorial = {
+    author: esCorreu(nomAutor) ? '' : nomAutor,
+    location: pobleCurt.includes('@') ? '' : pobleCurt,
+    date: typeof dataEditorial === 'string' ? dataEditorial.slice(0, 100) : null
+  };
   return {
     clau: `${tipus}:${id}`,
     tipus,
@@ -348,6 +357,7 @@ function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos 
     href: href || null,
     accio,
     data: marcaTemps(data),
+    editorial,
     privada: Boolean(privada),
     propia,
     /* La clau de l'article del qual esta entrada és la foto (deMedia), o null. */
@@ -446,6 +456,7 @@ export function deAgent(agent, opcions = {}) {
     cos: [agent?.role, agent?.town_name, agent?.tag, agent?.lema],
     etiquetes: [agent?.role, agent?.lema, agent?.tag],
     poble: agent?.town_name,
+    dataEditorial: agent?.created_at,
     avatar: { src: agent?.avatar_url, llavor: agent?.id },
     href: rutaDeLaFitxa(perfil, agent?.id),
     canonica: clauCanonica(perfil, agent?.id)
@@ -509,6 +520,7 @@ export function deMembre(membre, opcions = {}) {
        la bonificació del poble actiu. Mai es pinta a la meta: no és cap dada
        de la fila. */
     poble: poble || opcions.pobleDelPadro || '',
+    dataEditorial: membre?.created_at,
     avatar: { src: membre?.avatar_url ?? membre?.avatarUrl, llavor: id },
     href: fitxaOberta ? rutaDeLaFitxa(perfil, id) : null,
     accio: id == null ? null : {
@@ -560,6 +572,7 @@ export function deIdentitat(identitat, opcions = {}) {
     meta: esEntitat ? [pobleDeLEntitat] : [opcions.poble],
     cos: esEntitat ? [identitat.slug, pobleDeLEntitat] : [opcions.poble],
     poble: esEntitat ? pobleDeLEntitat : opcions.poble,
+    dataEditorial: identitat.created_at ?? identitat.dades?.created_at,
     avatar: { src: identitat.avatar, llavor: identitat.id },
     href: fitxaOberta ? rutaDeLaFitxa(perfil, identitat.id) : null,
     propia: perfil,
@@ -621,6 +634,7 @@ export function deOrganitzacio(org, opcions = {}) {
     cos: [org?.slug, poble],
     etiquetes: [org?.lema],
     poble,
+    dataEditorial: org?.created_at,
     avatar: { src: org?.logo_url, llavor: id },
     href: RUTES_CANONIQUES[canonica] || rutaDePerfil('entitat', clauDeRutaDOrganitzacio(org, opcions.tenantActiu)),
     data: org?.updated_at || org?.created_at,
@@ -639,6 +653,8 @@ export function dePoble(poble) {
     cos: [poble?.comarca, poble?.population, poble?.author],
     etiquetes: [poble?.comarca],
     poble: primerText(poble?.title, poble?.name),
+    autoria: poble?.author,
+    dataEditorial: poble?._ultimaPublicacioPublica || poble?.created_at,
     imatge: { src: primeraImatge(poble?.imageSrc, poble?.image_url, poble?.avatar_url) },
     href: poble?.id == null ? null : getSectionItemPath('pobles', poble.id),
     data: poble?.created_at
@@ -690,6 +706,7 @@ export function dePublicacio(post, opcions = {}) {
     cos: [post?.post_subtitle, post?.description, autor, post?.town_name, post?.tag, ...cosDAmbit(post)],
     etiquetes: [post?.post_subtitle, post?.tag],
     poble: post?.town_name,
+    autoria: autor,
     imatge: { src: primeraImatge(post?.imageSrc, post?.image_url, post?.image) },
     href: ambit ? rutaDAmbit(ambit, post?.id) : resolveItemPath({ ...post, sectionId: post?.sectionId || 'mur' }),
     data,
@@ -709,6 +726,8 @@ function entradaDActe(acte, opcions, tipus) {
     detall: acte?.description,
     cos: [acte?.subtitle, acte?.entradilla, acte?.author_name, acte?.author_location],
     etiquetes: [acte?.subtitle, acte?.entradilla],
+    autoria: acte?.author_name,
+    poble: acte?.author_location || acte?.town_name,
     imatge: { src: primeraImatge(acte?.image_url, acte?.imageSrc) },
     href: resolveItemPath({ ...acte, sectionId: acte?.sectionId || 'events' }),
     data: acte?.date || acte?.created_at
@@ -754,6 +773,7 @@ export function deProducte(producte) {
     cos: [producte?.subtitle, venedor, producte?.tag, producte?.category_slug, producte?.population, ...cosDAmbit(producte)],
     etiquetes: [producte?.subtitle, producte?.tag, producte?.category_slug],
     poble: producte?.population,
+    autoria: venedor,
     /* Onada 12 (261011; ordres 261011_0130, punt 1) · La miniatura és la foto
        del producte, la mateixa regla de la targeta i del detall
        (imatgesDeProducte: `images` primer, mai l'avatar de qui ven). Abans
@@ -938,6 +958,11 @@ function fusiona(primera, altra) {
     href: hrefDeLaFusio(primera, altra),
     accio: primera.accio || altra.accio || null,
     data: primera.data || altra.data || 0,
+    editorial: {
+      author: primera.editorial?.author || altra.editorial?.author || '',
+      location: primera.editorial?.location || altra.editorial?.location || '',
+      date: primera.editorial?.date || altra.editorial?.date || null
+    },
     etiquetesPlegades: [primera.etiquetesPlegades, altra.etiquetesPlegades].filter((valor) => typeof valor === 'string' && valor).join(' '),
     /* El poble llegible, de la mateixa font que poblePlegat (IDEA-46, B6-B1). */
     poble: primera.poblePlegat ? primera.poble || '' : altra.poble || '',

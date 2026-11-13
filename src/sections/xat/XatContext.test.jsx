@@ -1376,8 +1376,11 @@ describe('files d’ajuda per defecte', () => {
     render(tree(CONFIG));
     await waitFor(() => expect(value.status).toBe('ready'));
   }
-  /* P1-70 (261029) · Els dos avisos de la conversa d'atenció personal i servei tècnic (section.xat.javi.*). */
+  /* P1-70 (261029) · Els dos avisos de la conversa d'atenció personal i servei
+     tècnic (section.xat.javi.*). R21 (carril f2) · «tu mateix» torna mentre el
+     backend no obri el xat propi de Javi. */
   const AVIS_TU = 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent del poble. Les converses que t’escriguen arribaran a la llista com a directes.';
+  const AVIS_PERSONAL = "Encara no pots escriure't a tu mateix: este poble no obri el xat personal.";
   const AVIS_SENSE = 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.';
 
   /* Gauntlet 261016 (Bloc 3.6) · Tres files des d'ara: Javi Llinares entre
@@ -1390,6 +1393,17 @@ describe('files d’ajuda per defecte', () => {
     expect(value.chatThreads.find(f => f.id === 'fil-A').perDefecte).toBeNull();
     expect(value.totalNoLlegits).toBe(2);
     expect(value.contactesFrequents).toEqual([]);
+  });
+
+  /* Gauntlet R21 (regressio_ui_xat-08) · El xat públic de /iaia no és a la
+     llista (XatSection, esXatPublicDePaginaIAIA): tampoc al comptador. */
+  it('R21 f2 · els no llegits del xat públic de /iaia, amagat de la llista, no sumen al comptador', async () => {
+    const paginaIAIA = { id: 'g-iaia', tipus: 'grup', titol: "L'ànima de la iaia", ultimSeq: 9, llegitFinsSeq: 2, noLlegits: 7,
+      ultimAl: '2026-09-24T11:00:00Z', subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" } };
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil(), paginaIAIA]));
+    await muntat();
+    expect(value.chatThreads.some(f => f.id === 'g-iaia')).toBe(true);
+    expect(value.totalNoLlegits).toBe(2);
   });
 
   it('sense files sintètiques (la llavor), la llista no canvia', async () => {
@@ -1439,46 +1453,135 @@ describe('files d’ajuda per defecte', () => {
      la veu, i la seua conversa és la d'atenció personal i servei tècnic de
      només lectura (filServeiTecnic), mai un directe amb ell mateix
      (SDP-XAT-002): creaFil no arriba al port. */
-  it('P1-70 · Javi Llinares (per id o àlies del padró pilot) veu la seua fila; la conversa és la de servei tècnic i cap directe amb ell mateix', async () => {
-    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+  /* R21.4-UI · Xat Propi `<Nom> (Tu)` («Envia't missatges a tu mateix») i fi de
+     `fake-javi` mort quan Javi mira la seua pròpia sessió: `joEsJavi` és cert,
+     `filServeiTecnic` és null i `creaFil` amb qualsevol àlies de Javi ('0001',
+     'javillinares' o el seu UUID) obri el seu fil personal escrivible d'1 sol
+     participant (`creaFilDirecte(joId)` amb `esPropi: true`). */
+  /* R21 (carril f2; Gauntlet R21 regressio_ui_xat-05, honestedat_textos-04) ·
+     En remot, «Javi Llinares (Tu)» depén de la migració 2611121630_xat_propi,
+     que el servidor encara no acredita. Sense cap resposta seua, la fila de
+     Javi torna a ser la conversa de servei tècnic amb l'avís «tu mateix»
+     (P1-70) i un àlies seu no arriba al port; escriure's a si mateix (el seu
+     id) és la pregunta, i un servidor que l'obri ho acredita: des d'eixe
+     moment, el fil propi escrivible. */
+  it('R21 f2 · en remot, Javi sense xat propi acreditat: servei tècnic «tu mateix»; el seu id pregunta al servidor i, si l’obri, el fil propi escrivible', async () => {
+    mock.loadFils
+      .mockResolvedValueOnce(ambXatsPerDefecte([fil()]))
+      .mockResolvedValueOnce(ambXatsPerDefecte([{ id: 'fil-propi-javi', tipus: 'directe', esPropi: true, altres: [] }, fil()]));
+    mock.creaFilDirecte.mockResolvedValueOnce('fil-propi-javi');
     mock.session = { currentUser: { id: 'javillinares' }, generacio: 1 }; mock.actorKey = 'persona::javillinares';
-    mock.identitats = [{ tipus: 'persona', id: 'javillinares', nom: 'Javi Llinares' }];
+    mock.identitats = [{ tipus: 'persona', id: 'javillinares', nom: 'Javi Llinares', avatar: '/img/javi.png' }];
     await muntat();
     expect(perDefecte()).toEqual(['javi', 'iaia']);
-    expect(value.filServeiTecnic).toMatchObject({ id: 'fake-javi', potEscriure: false, ultimText: null, avisNomesLectura: AVIS_TU });
+    expect(value.xatPropi).toBe('per-confirmar');
+    expect(value.joEsJavi).toBe(false);
+    expect(value.filServeiTecnic).toMatchObject({ id: 'fake-javi', potEscriure: false, avisNomesLectura: AVIS_TU });
     let filId;
     await act(async () => { filId = await value.creaFil('0001'); });
     expect(filId).toBe('fake-javi');
     expect(mock.creaFilDirecte).not.toHaveBeenCalled();
+    await act(async () => { filId = await value.creaFil('javillinares'); });
+    expect(filId).toBe('fil-propi-javi');
+    expect(mock.creaFilDirecte).toHaveBeenCalledWith('javillinares', null, expect.anything());
+    expect(value.xatPropi).toBe('disponible');
+    expect(value.joEsJavi).toBe(true);
+    expect(value.filServeiTecnic).toBeNull();
+    const propi = value.chatThreads.find((f) => f.id === 'fil-propi-javi');
+    expect(propi).toMatchObject({ esPropi: true, name: 'Javi Llinares', avatar_url: '/img/javi.png' });
+    /* Amb el xat propi acreditat, un àlies de Javi ja porta al seu fil propi. */
+    mock.creaFilDirecte.mockResolvedValueOnce('fil-propi-javi');
+    await act(async () => { filId = await value.creaFil('0001'); });
+    expect(filId).toBe('fil-propi-javi');
+    expect(mock.creaFilDirecte).toHaveBeenLastCalledWith('javillinares', null, expect.anything());
   });
 
-  /* P1-70 (261029) · La conversa d'atenció personal i servei tècnic segons qui
-     mira i el mode: Javi (per id o àlies, o el compte remot pel correu
-     acreditat) → «tu mateix»; un veí en remot sense el compte de Javi declarat
-     → «sense compte»; un veí en llavor o en local → cap (el directe de veres);
-     el convidat → el xat de mostra de sempre. Mai cap crida al port. */
-  it.each([['seed', '0001'], ['local', 'javillinares']])('P1-70 · en %s, Javi (%s) veu la seua fila; servei tècnic «tu mateix», cap bombolla i cap crida al port', async (dataMode, id) => {
+  it('R21 f2 · en remot, el servidor sense 2611121630 respon SDP-XAT-002: l’avís honest, mai el text d’«amb tu mateix», i cap segona petició', async () => {
     mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    const rebuig = Object.assign(new Error('No pots obrir un xat privat amb tu mateix ni amb una entitat que representes.'), { code: 'SDP-XAT-002', retriable: false });
+    mock.creaFilDirecte.mockRejectedValueOnce(rebuig);
+    mock.session = { currentUser: { id: 'javillinares' }, generacio: 1 }; mock.actorKey = 'persona::javillinares';
+    mock.identitats = [{ tipus: 'persona', id: 'javillinares', nom: 'Javi Llinares' }];
+    await muntat();
+    let error = null;
+    await act(async () => { error = await value.creaFil('javillinares').catch((e) => e); });
+    expect(error).toMatchObject({ code: 'XAT_PROPI_NO_DISPONIBLE', message: AVIS_PERSONAL, retriable: false });
+    expect(error.cause).toBe(rebuig);
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+    expect(value.xatPropi).toBe('no');
+    expect(value.joEsJavi).toBe(false);
+    expect(value.filServeiTecnic).toMatchObject({ id: 'fake-javi', avisNomesLectura: AVIS_TU });
+    await act(async () => { error = await value.creaFil('javillinares').catch((e) => e); });
+    expect(error).toMatchObject({ code: 'XAT_PROPI_NO_DISPONIBLE', message: AVIS_PERSONAL });
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+    /* Un àlies seu continua portant a la conversa de servei tècnic. */
+    await act(async () => { expect(await value.creaFil('0001')).toBe('fake-javi'); });
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+  });
+
+  it('R21 f2 · un veí en remot: «per confirmar» fins que el servidor respon; un fil propi a la llista l’acredita; el «no» és de la persona i del backend', async () => {
+    const rebuig = Object.assign(new Error('x'), { code: 'SDP-XAT-002' });
+    mock.loadFils.mockResolvedValue([fil()]);
+    mock.creaFilDirecte.mockRejectedValueOnce(rebuig);
+    const view = render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.xatPropi).toBe('per-confirmar');
+    await act(async () => { await value.creaFil('A').catch(() => null); });
+    expect(value.xatPropi).toBe('no');
+    /* Una altra persona (o una altra sessió) torna a preguntar. */
+    mock.session = { currentUser: { id: 'B' }, generacio: 2 }; mock.actorKey = 'persona::B';
+    view.rerender(tree(CONFIG));
+    await waitFor(() => expect(value.joId).toBe('B'));
+    expect(value.xatPropi).toBe('per-confirmar');
+    cleanup();
+    /* Un servidor que ja torna el fil propi (només amb la forma de 2611121630). */
+    mock.loadFils.mockResolvedValue([fil(), { id: 'fil-propi-b', tipus: 'directe', esPropi: true, altres: [] }]);
+    render(tree(CONFIG));
+    await waitFor(() => expect(value.chatThreads.some((f) => f.id === 'fil-propi-b')).toBe(true));
+    expect(value.xatPropi).toBe('disponible');
+  });
+
+  it('R21 f2 · sense sessió comprovada ni en la reserva de només lectura, cap xat propi', async () => {
+    mock.session = { currentUser: null, generacio: 1, estat: 'fora' };
+    mock.loadFils.mockResolvedValue([fil()]);
+    render(tree(CONFIG));
+    await waitFor(() => expect(value.senseSessio).toBe(true));
+    expect(value.xatPropi).toBeNull();
+  });
+
+  it.each([['seed', '0001'], ['local', 'javillinares']])('R21.4-UI · en %s, Javi (%s) obri el seu xat propi escrivible via creaFilDirecte(joId) i cap fake-javi mort', async (dataMode, id) => {
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    mock.creaFilDirecte.mockResolvedValueOnce(`propi-${id}`);
     mock.session = { currentUser: { id }, generacio: 1 }; mock.actorKey = `persona::${id}`;
+    mock.identitats = [{ tipus: 'persona', id, nom: 'Javi Llinares' }];
     render(tree({ dataMode }));
     await waitFor(() => expect(value.status).toBe('ready'));
     expect(perDefecte()).toEqual(['javi', 'iaia']);
-    expect(value.filServeiTecnic).toMatchObject({ id: 'fake-javi', avisNomesLectura: AVIS_TU, ultimSeq: 0 });
-    expect(value.getThreadMessages('fake-javi')).toEqual([]);
+    expect(value.joEsJavi).toBe(true);
+    expect(value.filServeiTecnic).toBeNull();
     let filId;
     await act(async () => { filId = await value.creaFil(id); });
-    expect(filId).toBe('fake-javi');
-    expect(mock.creaFilDirecte).not.toHaveBeenCalled();
+    expect(filId).toBe(`propi-${id}`);
+    expect(mock.creaFilDirecte).toHaveBeenCalledWith(id, null, expect.anything());
   });
 
-  it('P1-70 · en remot, el compte de la persona pilot pel correu acreditat és «tu mateix»; sense confirmar, «sense compte»', async () => {
+  it('R21 f2 · en remot, el compte de la persona pilot pel correu acreditat: «tu mateix» sense xat propi acreditat, el fil propi amb ell; sense confirmar, «sense compte»', async () => {
     mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
     mock.session = { currentUser: { id: '5a5a5a5a-0000-4000-8000-0000000000aa', email: 'SocDePobleCom@gmail.com', email_confirmed_at: '2026-10-18T10:00:00Z' }, generacio: 1 };
     await muntat();
+    expect(value.joEsJavi).toBe(false);
     expect(value.filServeiTecnic.avisNomesLectura).toBe(AVIS_TU);
     cleanup();
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil(), { id: 'fil-propi-javi', tipus: 'directe', esPropi: true, altres: [] }]));
+    await muntat();
+    await waitFor(() => expect(value.xatPropi).toBe('disponible'));
+    expect(value.joEsJavi).toBe(true);
+    expect(value.filServeiTecnic).toBeNull();
+    cleanup();
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
     mock.session = { currentUser: { id: '5a5a5a5a-0000-4000-8000-0000000000aa', email: 'socdepoblecom@gmail.com' }, generacio: 1 };
     await muntat();
+    expect(value.joEsJavi).toBe(false);
     expect(value.filServeiTecnic.avisNomesLectura).toBe(AVIS_SENSE);
   });
 

@@ -1,71 +1,91 @@
-import { useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import SectionItemCard from '../../components/SectionItemCard';
+import { UniversalCard } from '../../components/PedraSeca';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
+import { dataDElement, encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { useNavigate } from '../../app/contexts/RouterContext';
+import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { objecteDePerfil, rutaConnectarPerfil, rutaDePerfil, rutaXatDePagina } from '../../config/navigation.js';
-/* El tipus d'agent del catàleg, en el vocabulari del perfil públic. Gauntlet
-   261016 (Bloc 3) · La font única viu a la capa de dades (agentsSeed.js), on
-   un personatge ANIMAL és una IA; abans n'hi havia una còpia ací. */
-import { tipusDAgent } from '../../data/agentsSeed.js';
-import { ETIQUETA_IA } from './fitxaDePerfil.js';
-import SubnavigacioPoblesIGent, { filtraAgentsDelDirectori } from '../pobles/SubnavigacioPoblesIGent.jsx';
+import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
+import { ETIQUETA_IA, TEXTOS_FITXA_PERFIL } from './fitxaDePerfil.js';
+import SubnavigacioPoblesIGent, { encapcalamentDirectoriGent, filtraAgentsDelDirectori } from '../pobles/SubnavigacioPoblesIGent.jsx';
 
-/* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL i els
-   agents són IA «no com a humans», «preservant la seua fitxa») · L'etiqueta
-   de la targeta del directori: per a una IA (tipusDAgent 'ia': AI i ANIMAL),
-   la marca d'IA, ETIQUETA_IA, la de la seua fitxa pública; mai l'etiqueta
-   humana de la fitxa (una IA del contingut remot hi pot portar 'GENT'; el
-   catàleg del paquet ja només té la IAIA, P0-72 / IDEA-203). La fitxa no es
-   toca: només canvia el que pinta la targeta. La resta, el tag de sempre. */
-const etiquetaDeLaTargeta = (agent) => (tipusDAgent(agent) === 'ia' ? ETIQUETA_IA : agent?.tag);
+/* Technical catalogue fallback, from the same source as the repaired server.
+   This is not a person's birth date or legal incorporation date. */
+const DATA_FUNDACIONAL_SDP = AGENTS_MAP.SOCDEPOBLE.created_at;
 
-/* Gauntlet 261016 (Bloc 3; ordre del Mestre: «mostrar clarament el poble de
-   cada persona a la targeta del directori») · El poble va a la boina de la
-   targeta (`location`), on UniversalCard el pinta també per a una persona (la
-   guarda de dignitat no el toca). Amb el poble va l'avatar de l'agent: sense,
-   la boina pintaria la silueta de reserva al costat d'una fitxa que sí que
-   té foto. A totes les targetes del directori, per coherència de la graella.
-   Sense poble, cap prop nova: el DOM de sempre. */
-const boinaDelPoble = (agent) => {
-  const poble = typeof agent?.town_name === 'string' ? agent.town_name.trim() : '';
-  return poble ? { location: poble, avatarUrl: agent.avatar_url || undefined } : {};
-};
+function pobleNormalitzat(agent) {
+  const cru = typeof agent?.town_name === 'string' ? agent.town_name.trim() : '';
+  if (cru === 'Sóc de Poble') return AGENTS_MAP.SOCDEPOBLE.town_name;
+  if (!cru && agent?.id === AGENTS_MAP.SOCDEPOBLE.id) return AGENTS_MAP.SOCDEPOBLE.town_name;
+  return cru;
+}
+
+/* Gauntlet 261016 (Bloc 3; ordre del Mestre: les IA «no com a humans») i
+   Gauntlet R21 (regressio_ui_xat-04, honestedat_textos-03) · L'etiqueta de la
+   targeta del directori: per a una IA (tipusDAgent 'ia'; al directori, només la
+   IAIA MarIA) la marca d'IA de la seua fitxa, ETIQUETA_IA («Intel·ligència
+   artificial», en la llengua de la interfície), mai l'etiqueta interna del
+   catàleg («MASTER») ni una d'humana que porte el contingut remot («GENT»). Una
+   persona no en porta cap (Dignitat Humana); una entitat, la seua. */
+function etiquetesDeTargeta(agent, tipus, t) {
+  if (tipus === 'ia') return [t(TEXTOS_FITXA_PERFIL.ia[0], ETIQUETA_IA)];
+  return tipus !== 'persona' && agent?.tag ? [agent.tag] : [];
+}
+
+function dataDeTargetaDirectori(agent) {
+  const directa = dataDElement(agent);
+  if (directa.date || directa.time) return directa;
+  if (agent?.id === AGENTS_MAP.SOCDEPOBLE.id) {
+    return dataDElement({ created_at: DATA_FUNDACIONAL_SDP });
+  }
+  return directa;
+}
 
 /**
- * El directori de persones, entitats i agents del portal. Cada targeta porta
- * al perfil públic (PerfilPublicSection, rutes /gent, /empresa i /perfil/:id).
+ * R21.5 · El directori de persones, entitats i col·lectius del poble (/perfil).
+ * Reixeta responsiva `sdp-card-grid` amb `UniversalCard` directa (1/2/3 columnes
+ * segons `@container`), barra taronja completa (avatar + nom + poble + data),
+ * enquadrament 1:1, Dignitat Humana per a persones i botó secundari «Anar al xat»
+ * per a entitats (`PS-07`). La purga exclou els personatges històrics i conserva la IAIA canònica.
  */
 export default function ProfileSection({ agents = [] }) {
   const { t, language } = useUIActions();
   const navigate = useNavigate();
-  const [filtreTipus, canviaFiltreTipus] = useState('');
+  const [params, setParams] = useSearchParams();
+  const filtreTipus = ['persona', 'entitat'].includes(params.get('tipus')) ? params.get('tipus') : 'tots';
+  const canviaFiltreTipus = (valor) => {
+    const next = new URLSearchParams(params);
+    if (valor === 'persona' || valor === 'entitat') next.set('tipus', valor);
+    else next.delete('tipus');
+    if (next.toString() !== params.toString()) setParams(next, { replace: false });
+  };
   const agentsVisibles = filtraAgentsDelDirectori(agents, filtreTipus);
-  /* T43 (ordre del Mestre, 260928) · Connectar una persona, entitat o IA del
-     directori porta el seu descriptor (tipus, id i ruta del perfil públic) i,
-     per a una entitat, `organitzacio=ID`: el mateix camí que la fitxa pública. */
-  const connecta = (agent) => {
-    const ruta = rutaConnectarPerfil({ tipus: tipusDAgent(agent), id: agent?.id, nom: agent?.name });
+
+  const connecta = (agent, tipus) => {
+    const ruta = rutaConnectarPerfil({ tipus, id: agent?.id, nom: agent?.name });
     return ruta ? () => navigate(ruta) : undefined;
   };
-  /* Onada 8 (261009; requeriments, punt 4) · La targeta d'una entitat (o
-     d'un grup) del directori porta el botó gran «Anar al xat», cap al xat
-     comú de la seua pàgina (la Comunitat: rutaXatDePagina sobre el seu
-     descriptor, el mateix de «Comentar · En públic»), com la del poble. Una
-     persona o una IA no en tenen (el seu és el directe, «En privat»): cap
-     botó. Les etiquetes es queden (etiquetesAmbAccio). */
-  const portaDelXat = (agent) => {
-    const tipus = tipusDAgent(agent);
+
+  const portaDelXat = (agent, tipus) => {
     if (tipus !== 'entitat' && tipus !== 'grup') return null;
     const desti = rutaXatDePagina(objecteDePerfil({ tipus, id: agent?.id, nom: agent?.name }));
-    return desti ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti, varietat: 'primari' }} /> : null;
+    return desti
+      ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti, varietat: 'secundari' }} varietat="secundari" />
+      : null;
   };
+
+  const reservesCap = encapcalamentDirectoriGent(language);
+  const { titol, subtitol } = encapcalamentDirectoriGent(
+    language,
+    t('section.profile.title', reservesCap.titol),
+    t('section.profile.subtitle', reservesCap.subtitol)
+  );
 
   return (
     <UniversalPage
-      title={t('section.profile.title', 'Agents i persones')}
-      subtitle={t('section.profile.subtitle', 'Directori de persones, grups i agents del portal.')}
+      title={titol}
+      subtitle={subtitol}
       chrome="system"
       showLogos={true}
     >
@@ -75,25 +95,51 @@ export default function ProfileSection({ agents = [] }) {
         filtreActiu={filtreTipus}
         onCanviaFiltre={canviaFiltreTipus}
       />
-      <div className="feed-grid">
-        {agentsVisibles.map((agent, index) => (
-          <SectionItemCard
-            key={`${agent.id}-${index}`}
-            to={rutaDePerfil(tipusDAgent(agent), agent.id)}
-            state={{ preloadedItem: agent }}
-            image={agent.avatar_url}
-            title={agent.name}
-            subtitle={agent.role}
-            excerpt={agent.short_bio || agent.lema}
-            eyebrow={etiquetaDeLaTargeta(agent)}
-            meta={[agent.type]}
-            buttonLabel={t('common.readMore', 'Llegir més')}
-            onConnect={connecta(agent)}
-            accio={portaDelXat(agent)}
-            etiquetesAmbAccio
-            {...boinaDelPoble(agent)}
-          />
-        ))}
+      <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
+        {agentsVisibles.map((agent, index) => {
+          const tipus = tipusDAgent(agent);
+          const ruta = rutaDePerfil(tipus, agent.id);
+          const objecte = objecteDePerfil({ tipus, id: agent?.id, nom: agent?.name }) || undefined;
+          const poble = pobleNormalitzat(agent);
+          const capcalera = encapcalamentDeTargeta(agent, { author: agent.name, location: poble, t });
+          const fontData = dataDeTargetaDirectori(agent);
+          const data = fontData.date ? fontData : capcalera;
+          const excerpt = agent.short_bio || agent.lema || agent.type || '';
+          const labels = etiquetesDeTargeta(agent, tipus, t);
+
+          return (
+            <UniversalCard
+              key={`${agent.id}-${index}`}
+              author={capcalera.author}
+              authorHref={ruta || undefined}
+              avatarUrl={agent.avatar_url || undefined}
+              location={capcalera.location}
+              date={data.date}
+              time={data.time}
+              dateTime={data.dateTime}
+              imageUrl={agent.avatar_url}
+              imageAlt={agent.name}
+              title={agent.name}
+              subtitle={agent.role}
+              body={excerpt}
+              labels={labels}
+              accio={portaDelXat(agent, tipus)}
+              etiquetesAmbAccio
+              mainHref={ruta || undefined}
+              onMainClick={ruta ? (e) => {
+                e.preventDefault();
+                navigate(ruta, { state: { preloadedItem: agent } });
+              } : undefined}
+              hasFooter={true}
+              showTranslate={true}
+              showComment={true}
+              showShare={true}
+              showConnect={true}
+              objecte={objecte}
+              onConnect={connecta(agent, tipus)}
+            />
+          );
+        })}
       </div>
     </UniversalPage>
   );

@@ -321,6 +321,47 @@ export function dataDElement(item) {
   return dataHoraDeBarra(fontsDElement(item));
 }
 
+/* R21 (regressio_ui_xat-09, honestedat_textos-06) · Els marcadors honestos, en les cinc llengües.
+   Qui té el traductor de la interfície passa `t` (claus editorial.* dels cinc diccionaris); una app
+   (Model B) no pot llegir UIContext i passa `idioma` (useClosaAplicacio().idioma, R16-F). Esta taula
+   ha de dir el mateix que els diccionaris: ho guarda editorial.encapcalament.test.jsx. */
+export const MARCADORS_NO_INDICATS = Object.freeze({
+  ca: Object.freeze({ author: 'Autoria no indicada', location: 'Poble no indicat', date: 'Data no indicada' }),
+  es: Object.freeze({ author: 'Autoría no indicada', location: 'Pueblo no indicado', date: 'Fecha no indicada' }),
+  en: Object.freeze({ author: 'Author not stated', location: 'Town not stated', date: 'Date not stated' }),
+  eu: Object.freeze({ author: 'Egilea adierazi gabe', location: 'Herria adierazi gabe', date: 'Data adierazi gabe' }),
+  gl: Object.freeze({ author: 'Autoría non indicada', location: 'Pobo non indicado', date: 'Data non indicada' })
+});
+
+/** Complete reading header without inventing authorship, locality or dates.
+ * A year or an unknown date is visible, but has no datetime/calendar action.
+ * `t` (the interface translator) wins; without it, `idioma` picks the marker; otherwise Valencian.
+ */
+export function encapcalamentDeTargeta(item, { author, location, t, idioma } = {}) {
+  const text = value => typeof value === 'string' && value.trim() ? value.trim().slice(0, 500) : '';
+  const pobleReal = value => {
+    const net = text(value);
+    return /^sóc\s+de\s+poble$/iu.test(net) ? '' : net;
+  };
+  const marcadors = MARCADORS_NO_INDICATS[typeof idioma === 'string' && Object.hasOwn(MARCADORS_NO_INDICATS, idioma) ? idioma : 'ca'];
+  const label = (key, fallback) => {
+    const translated = typeof t === 'function' ? t(key) : null;
+    return text(translated) && translated !== key ? text(translated) : fallback;
+  };
+  const autoria = text(author) || text(item?.author_name) || text(item?.author?.name) || text(item?.author?.nom) || text(item?.author);
+  const poble = pobleReal(location) || pobleReal(item?.town_name) || pobleReal(item?.townName) || pobleReal(item?.poble?.nom) || pobleReal(item?.poble);
+  const actual = dataDElement(item);
+  const year = [item?.year, item?.any, item?.date, item?.publish_date, item?.created_at]
+    .find(value => typeof value === 'string' ? /^[1-9][0-9]{3}$/.test(value.trim()) : Number.isInteger(value) && value >= 1000 && value <= 9999);
+  return {
+    author: autoria || label('editorial.autoriaNoIndicada', marcadors.author),
+    location: poble || label('editorial.pobleNoIndicat', marcadors.location),
+    time: actual.time,
+    date: actual.date || (year === undefined ? label('editorial.dataNoIndicada', marcadors.date) : `${year}`.trim()),
+    dateTime: actual.dateTime || null
+  };
+}
+
 /**
  * L'instant (ms) de la mateixa data que pinta dataDElement. Ja no ordena el
  * Mur (R51: mur/targetesMur.js · momentEditorial); l'ordena /pobles, amb la

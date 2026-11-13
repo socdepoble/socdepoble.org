@@ -113,11 +113,12 @@ export const useNotaPreparadaDelBloc = () => useContext(NotaPreparadaContext);
  * @param {Array} opcions.notes        Les notes de la llista (per a vore quan ja hi és).
  * @param {Function} [opcions.resolNota] resolveNote: si una creació incerta ha arribat.
  * @param {Function} [opcions.adopta]  (idPreparat, idDelServidor) quan l'endoll posa un altre id.
+ * @param {Function} [opcions.desaNotaPreparada] Lliura la nota creada i els camps finals al diari scoped de NotesContext.
  * @returns {{ id: string, document: object, camps: object, creacio: object|null,
  *   escriu: Function, desa: Function, reintenta: Function, buidaEntrada: Function }}
  */
 export function useNotaPreparada({
-  clau = null, base = null, llavor = null, notes, creaNota, resolNota, setLocalNoteField, updateNote, informaError, adopta
+  clau = null, base = null, llavor = null, notes, creaNota, resolNota, setLocalNoteField, updateNote, desaNotaPreparada, informaError, adopta
 }) {
   const [estat, setEstat] = useState(() => estatNou(clau));
   const estatRef = useRef(estat);
@@ -132,19 +133,22 @@ export function useNotaPreparada({
   const avisatRef = useRef(null);
   const viusRef = useRef(null);
   useLayoutEffect(() => {
-    viusRef.current = { base, llavor, creaNota, resolNota, setLocalNoteField, updateNote, informaError, adopta };
+    viusRef.current = { base, llavor, creaNota, resolNota, setLocalNoteField, updateNote, desaNotaPreparada, informaError, adopta };
   });
 
   /* Eixir del Bloc amb la creació en vol: esta memòria se'n va amb el
      component, i el que s'ha escrit mentrestant no es pot perdre. Quan la
      creació torna, el que difereix de la nota CREADA (l'adaptador remot no
      insereix ni el subtítol, ni l'entradilla, ni les imatges) s'envia sanejat
-     amb updateNote, l'id i la revisió de la nota creada. Es llig en tornar, no
+     al diari de NotesContext (o updateNote en un consumidor aïllat), amb l'id
+     i la revisió de la nota creada. Es llig en tornar, no
      ara: React neteja de pare a fill, i el buidatge final de l'editor (fill)
      arriba després d'esta neteja. */
   useLayoutEffect(() => () => {
     const enVol = enVolRef.current;
     if (!enVol || creacioRef.current !== enVol.id) return;
+    // Keep the notifier/update function of this scope after the editor unmounts.
+    const { updateNote: desaFinal, desaNotaPreparada: lliuraAlDiari, informaError: avisaFinal } = viusRef.current || {};
     enVol.promesa.then((creada) => {
       const { id, camps } = estatRef.current;
       if (id !== enVol.id) return undefined;
@@ -155,8 +159,13 @@ export function useNotaPreparada({
         if (!iguals(referencia[camp], net)) diferents[camp] = net;
       }
       if (!Object.keys(diferents).length) return undefined;
-      return viusRef.current?.updateNote?.(String(referencia.id ?? id), diferents, creada?.revision);
-    }).catch(() => {});
+      return Promise.resolve().then(() => typeof lliuraAlDiari === 'function'
+        ? lliuraAlDiari(referencia, diferents)
+        : desaFinal?.(String(referencia.id ?? id), diferents, creada?.revision))
+        .catch((error) => {
+          if (error?.name !== 'AbortError') avisaFinal?.(error);
+        });
+    }, () => { /* Creation failures already use falla/resolNota; only the final flush is handled here. */ });
   }, []);
 
   const renova = useCallback((nou) => {

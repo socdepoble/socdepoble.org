@@ -124,6 +124,18 @@ describe('/page/receptes · ReceptesQueDinemSection', () => {
     expect(ubicacio()).toBe(`/receptes/${primera.slug}`);
   });
 
+  test('R21.6 · cada recepta conserva l’autoria, el poble i només l’any que documenta el llibre', () => {
+    const { container } = llista();
+    const cards = [...container.querySelectorAll('.sdp-card-grid > article.sp-card')];
+    expect(cards).toHaveLength(24);
+    for (const card of cards) {
+      expect(card.querySelector('.sp-card-author-name').textContent).toBe(OBRA_QUE_DINEM.associacio);
+      expect(card.querySelector('.sp-card-author-location').textContent).toBe(OBRA_QUE_DINEM.lloc);
+      expect(card.querySelector('.btn-date-time').textContent).toBe(String(OBRA_QUE_DINEM.any));
+      expect(card.querySelector('button.btn-date-time, time[datetime]')).toBeNull();
+    }
+  });
+
   test('el quadrat diu «▶ VÍDEO» només a les receptes que en tenen', () => {
     const { container } = llista();
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: ambVideoILamina.titol } });

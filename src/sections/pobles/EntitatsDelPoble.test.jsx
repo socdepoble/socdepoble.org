@@ -58,7 +58,7 @@ describe('EntitatsDelPoble · el panell', () => {
     /* L'etiqueta del tipus i la fitxa pública de cadascuna (un grup, /grup). */
     expect(screen.getByText('Empresa')).toBeTruthy();
     expect(screen.getByText('Grup')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Colla de la Serra' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Colla de la Serra' }));
     expect(m.navega).toHaveBeenCalledWith('/grup/org-colla', expect.anything());
     /* Doctrina del Connectar · cap botó solt de seguir: la relació passa per /connectar. */
     expect(document.body.textContent).not.toMatch(/Seguir|seguix|Seguidors/);
@@ -70,6 +70,25 @@ describe('EntitatsDelPoble · el panell', () => {
     expect(await screen.findByRole('heading', { name: 'Forn de la Plaça' })).toBeTruthy();
     expect(screen.queryByText('Taller de fora')).toBeNull();
     expect(screen.queryByText('Colla de la Serra')).toBeNull();
+  });
+
+  test('R21.6 · les entitats són filles directes de la graella i la data prové de la fitxa, mai del rellotge', async () => {
+    m.llista.mockResolvedValueOnce([{ ...FORN, created_at: '2024-03-17T09:15:00Z' }, COLLA]);
+    const { container } = render(<EntitatsDelPoble poble={POBLE} />);
+    await screen.findByRole('heading', { name: FORN.name });
+    const cards = [...container.querySelectorAll('.sdp-card-grid > article.sp-card')];
+    expect(cards).toHaveLength(2);
+    expect(container.querySelectorAll('.sdp-card-grid article.sp-card')).toHaveLength(cards.length);
+    const forn = cards.find(card => card.querySelector('.sp-card-title').textContent === FORN.name);
+    const colla = cards.find(card => card.querySelector('.sp-card-title').textContent === COLLA.name);
+    expect(forn.querySelector('.sp-card-author-name').textContent).toBe(FORN.name);
+    expect(forn.querySelector('.sp-card-author-location').textContent).toBe(FORN.town_name);
+    const data = within(forn).getByRole('button', { name: /17\/03\/24 · Obri el calendari d’eixe mes/ });
+    fireEvent.click(data);
+    expect(m.navega).toHaveBeenCalledWith('/calendari?mes=2024-03');
+    expect(colla.querySelector('.btn-date-time').textContent).toBe('Data no indicada');
+    expect(colla.querySelector('button.btn-date-time, time[datetime]')).toBeNull();
+    expect(container.querySelector('.sdp-card-grid .sdp-boto--primari')).toBeNull();
   });
 
   test('el buit, sense capacitat i sense nom de poble: un text i, sense nom, cap crida', async () => {

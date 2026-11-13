@@ -9,6 +9,27 @@ import { appendSectionSubmissionNetworkOnly, loadMur, loadMultimedia, loadCoreCo
 import { getCurrentUser, buildSeedAppData, mapContentRowsToData } from './runtime.js';
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El camp additiu `personalitzacio` de loadCoreContent. */
 import { adminDesaPersonalitzacio, reiniciaPersonalitzacioLocal } from './personalitzacio.js';
+import { AGENTS_CANONICS, IDS_FICCIO_LEGACY } from '../catalegAgents.js';
+
+test('R21.6 · remote editorial rows cannot inject complex rendered fields through loadMur', async () => {
+  request.mockReset();
+  const real={id:'real-catalogue',title:'Fira',unknown:{keep:true},town_name:'Penàguila'};
+  const hostile={id:'old-catalogue',title:{bad:true},subtitle:['invalid'],author_name:{bad:true},location:'Sóc de Poble',created_at:{bad:true}};
+  request.mockImplementation(async url=>url.includes('app_content')?[{key:'feedPosts',payload:[null,'text',hostile,real]},{key:'events',payload:[]},{key:'marketItems',payload:[]}]:[]);
+  const result=await loadMur('A');
+  expect(result.feedPosts).toEqual([{id:'old-catalogue',title:'',subtitle:'',author_name:'',location:'',created_at:''},real]);
+  expect(hostile.title).toEqual({bad:true});
+  request.mockReset();request.mockResolvedValue([]);
+});
+
+test('R21.6 · loadCoreContent normalizes only unsafe town display fields and preserves real metadata', async () => {
+  request.mockReset();request.mockResolvedValue([]);
+  buildSeedAppData.mockResolvedValue({pages:[],towns:[],agents:[]});
+  mapContentRowsToData.mockReturnValue({towns:[null,42,{id:'real-town',title:{bad:true},image_url:[],lat:38.6,lng:-0.4,custom:{keep:true}}],agents:[]});
+  expect((await loadCoreContent('A')).towns).toEqual([{id:'real-town',title:'',image_url:'',lat:38.6,lng:-0.4,custom:{keep:true}}]);
+  mapContentRowsToData.mockReturnValue({towns:[],agents:[]});
+  request.mockClear();
+});
 test('Mur i Multimèdia no consulten Notes ni descarreguen app_content alié', async () => {
   await loadMur('A'); await loadMultimedia('A');
   const urls = request.mock.calls.map(([url]) => url);
@@ -133,12 +154,12 @@ test('Onada 12 · una fila feedPosts que no és una llista no rebutja la càrreg
   }
 });
 
-test('el core remot conserva documents estàtics, però identitats i pobles només venen del servidor', async () => {
+test('R21.5 el core remot conserva documents i identitats canòniques, sense inventar pobles ni persones extra', async () => {
   request.mockClear();
   buildSeedAppData.mockResolvedValue({ pages: [{ id: 'projecte' }], towns: [{ id: 'demo-town' }], agents: [{ id: 'demo-agent' }] });
   mapContentRowsToData.mockReturnValue({ towns: [], agents: [] });
   /* Onada 11 · Sense files de taxonomia ni estil, el camp additiu diu null per clau. */
-  expect(await loadCoreContent('A')).toEqual({ ownerUserId: 'A', pages: [{ id: 'projecte' }], pageCopy: {}, towns: [], agents: [],
+  expect(await loadCoreContent('A')).toEqual({ ownerUserId: 'A', pages: [{ id: 'projecte' }], pageCopy: {}, towns: [], agents: AGENTS_CANONICS,
     personalitzacio: { taxonomia: null, estil: null } });
 });
 
@@ -181,8 +202,33 @@ test('Onada 11 · en local, loadCoreContent porta el camp additiu amb null per c
   reiniciaPersonalitzacioLocal();
   request.mockClear();
   buildSeedAppData.mockResolvedValue({ pages: [{ id: 'projecte' }], towns: [], agents: [] });
-  expect(await loadCoreContent('A')).toEqual({ towns: [], pages: [{ id: 'projecte' }], pageCopy: {}, agents: [], ownerUserId: 'A',
+  expect(await loadCoreContent('A')).toEqual({ towns: [], pages: [{ id: 'projecte' }], pageCopy: {}, agents: AGENTS_CANONICS, ownerUserId: 'A',
     personalitzacio: { taxonomia: null, estil: null } });
+  expect(request).not.toHaveBeenCalled();
+}));
+
+test('R21.5 remote catalogue repairs stale canonicals and removes known fiction while preserving real people and metadata', async () => {
+  request.mockResolvedValue([]);
+  buildSeedAppData.mockResolvedValue({ pages: [], towns: [], agents: [] });
+  const real = { id: 'real-andreu', name: 'Andreu Soler', type: 'PERSON', custom: { public: true }, town_name: 'Penàguila' };
+  const company = { id: 'real-company', name: 'Cooperativa real', type: 'COMPANY', unknownMetadata: ['keep'] };
+  mapContentRowsToData.mockReturnValue({ towns: [], agents: [
+    { id: 'socdepoble', name: { hostile: true }, town_name: 'Sóc de Poble', private_album: ['old'] },
+    { id: IDS_FICCIO_LEGACY[0], name: 'Andreu fictici', type: 'PERSON' },
+    { id: 'unknown-bot', name: 'Old bot', type: ' ai ' }, real, company, real,
+    { id: { toString: null }, name: ['invalid'], type: 'PERSON' }
+  ] });
+  const core = await loadCoreContent('A');
+  expect(core.agents.slice(0, 3)).toEqual(AGENTS_CANONICS);
+  expect(core.agents.slice(3)).toEqual([real, company, real]);
+  expect(core.agents[0]).not.toHaveProperty('private_album');
+  mapContentRowsToData.mockReturnValue({ towns: [], agents: [] });
+});
+
+test('R21.5 seed fallback uses the same canonical hydration without a network call', () => ambMode('seed', async () => {
+  request.mockClear();
+  buildSeedAppData.mockResolvedValue({ pages: [], towns: [], agents: [{ id: 'socdepoble', name: 'Old name' }, { id: IDS_FICCIO_LEGACY[1], name: 'Legacy', type: 'PERSON' }] });
+  expect((await loadCoreContent('A')).agents).toEqual(AGENTS_CANONICS);
   expect(request).not.toHaveBeenCalled();
 }));
 

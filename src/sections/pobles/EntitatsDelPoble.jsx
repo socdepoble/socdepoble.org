@@ -4,7 +4,7 @@
  * la pàgina d'un poble, «Empreses i entitats»: les empreses, les entitats i
  * els grups públics que declaren eixe poble (organizations.town_name).
  *
- * Cap peça nova: la targeta és la del directori (SectionItemCard, la
+ * Cap peça nova: la targeta és la del directori (UniversalCard, la
  * mateixa de /perfil: «Llegir més» a la fitxa pública, el Connectar
  * centralitzat i el botó gran «Anar al xat» de l'entitat), dins de
  * GraellaTargetes; el Carregant, EstatErrorDades amb «Torna-ho a provar» i
@@ -17,7 +17,8 @@
  */
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useNavigate } from '../../app/contexts/RouterContext';
-import SectionItemCard from '../../components/SectionItemCard';
+import { UniversalCard } from '../../components/PedraSeca';
+import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 import { GraellaTargetes } from '../../components/PedraSeca/organismes/GraellaTargetes.jsx';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
@@ -68,22 +69,30 @@ function TargetaDeLEntitat({ fila, textos, t, navigate }) {
   const connectar = rutaConnectarPerfil(perfil);
   const desti = rutaXatDePagina(objecteDePerfil(perfil));
   const poble = typeof fila.town_name === 'string' ? fila.town_name.trim() : '';
+  const capcalera = encapcalamentDeTargeta(fila, { author: fila.name, location: poble, t });
   /* PS-07 (B7, marató 261101_2143) · Un sol primari per vista: el blau és
      de l'acció de la pàgina del poble; «Anar al xat» de cada entitat de la
      graella és secundari, gran i a l'ample com sempre. */
   return (
-    <SectionItemCard
-      to={rutaDePerfil(tipus, fila.id)}
-      image={fila.logo_url || fila.hero_url || undefined}
+    <UniversalCard
+      mainHref={rutaDePerfil(tipus, fila.id)}
+      imageUrl={fila.logo_url || fila.hero_url || undefined}
       title={fila.name}
       subtitle={fila.lema || undefined}
-      excerpt={fila.description || undefined}
-      eyebrow={textos.tipus[fila.kind] || textos.tipus.entity}
-      buttonLabel={t('common.readMore', 'Llegir més')}
+      body={fila.description || undefined}
+      labels={[textos.tipus[fila.kind] || textos.tipus.entity]}
+      {...capcalera}
+      authorHref={rutaDePerfil(tipus, fila.id)}
+      avatarUrl={fila.logo_url || undefined}
+      onMainClick={(event) => { event.preventDefault(); navigate(rutaDePerfil(tipus, fila.id), {}); }}
       onConnect={connectar ? () => navigate(connectar) : undefined}
       accio={desti ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti, varietat: 'secundari' }} varietat="secundari" /> : null}
       etiquetesAmbAccio
-      {...(poble ? { location: poble, avatarUrl: fila.logo_url || undefined } : {})}
+      objecte={objecteDePerfil(perfil) || undefined}
+      hasFooter
+      showTranslate
+      showComment
+      showShare
     />
   );
 }

@@ -6,7 +6,7 @@
  * escriu cap codi: la targeta eixia sense pastilla. Ara la pastilla és la de
  * l'última publicació pública del poble (P0-39 / R37, clauDelPoble.js ·
  * poblesAmbUltimaPublicacio), amb el lector únic de Pedra Seca §10
- * (editorial.js · dataDElement); sense publicació, cap. Ni el naixement ni
+ * (editorial.js · dataDElement); sense publicació, «Data no indicada», sense acció. Ni el naixement ni
  * una edició de la fitxa (updated_at; R51) no hi compten. Les proves s'executen a Europe/Madrid
  * (vite.config.js), i per això les hores literals són les de València.
  */
@@ -15,7 +15,7 @@ import { createTranslator } from '../../config/i18n.js';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn(), t: (_, alternativa) => alternativa, core: {}, mur: {}, entitats: {} }));
+const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn(), refresh: vi.fn(), t: (_, alternativa) => alternativa, core: {}, mur: {}, entitats: {} }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useNavigate: () => mocks.navigate,
   useSearchParams: () => [new URLSearchParams('')],
@@ -26,7 +26,7 @@ vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () 
 /* PS-07 · La graella d'entitats d'un poble (/pobles/:id) amb dades fixes: el
    ganxo de dades és l'únic que es substituïx; la targeta és la de veres. */
 vi.mock('./useEntitatsDelPoble.js', async (original) => ({ ...(await original()), useEntitatsDelPoble: () => mocks.entitats }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }), useUIState: () => ({ externalConfig: {} }) }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
 /* Onada 6 · Les publicacions del Mur, per al naixement de cada poble. */
@@ -48,7 +48,7 @@ import { EntitatsDelPoble } from './EntitatsDelPoble.jsx';
 import PanellDeViquipedia from './PanellDeViquipedia.jsx';
 import { VistaPublicacionsDeLActor } from '../mur/PublicacionsDeLActor.jsx';
 
-const llavor = (towns) => ({ status: 'ready', error: null, sortedTowns: towns });
+const llavor = (towns) => ({ status: 'ready', error: null, sortedTowns: towns, refresh: mocks.refresh });
 const targetes = (arrel) => [...arrel.querySelectorAll('article.sp-card')];
 const titol = (targeta) => targeta.querySelector('.sp-card-title').textContent;
 const targetaDe = (arrel, nom) => targetes(arrel).find((targeta) => titol(targeta) === nom);
@@ -82,8 +82,29 @@ test('T2 · cada poble conserva avatar; sense publicacions no inventa una pastil
   for (const targeta of llista) {
     const town = TOWNS.find((t) => t.title === titol(targeta));
     expect(targeta.querySelector('.sp-card-author img.sp-card-avatar').getAttribute('src')).toBe(town.avatar_url);
-    expect(pastilla(targeta)).toBeNull();
+    expect(pastilla(targeta)).toEqual(['Data no indicada']);
+    expect(targeta.querySelector('button.btn-date-time, time.btn-date-time')).toBeNull();
   }
+});
+
+test('R21.6 · carregant i fallada es mostren fora de la graella i el reintent torna a carregar', () => {
+  mocks.core = { ...llavor([]), status: 'loading' };
+  const { container, rerender } = render(<PoblesSection />);
+  expect(screen.getByText('Carregant pobles...')).toBeTruthy();
+  expect(screen.queryByText('Cap poble trobat.')).toBeNull();
+  expect(container.querySelector('.sdp-card-grid').children).toHaveLength(0);
+  mocks.core = { ...llavor([]), status: 'error', error: Object.assign(new Error('fallada controlada'), { status: 503 }) };
+  rerender(<PoblesSection />);
+  const alert = screen.getByRole('alert');
+  expect(alert.textContent).toContain('Error carregant els pobles.');
+  expect(alert.closest('.sdp-card-grid')).toBeNull();
+  fireEvent.click(within(alert).getByRole('button', { name: 'Torna-ho a provar' }));
+  expect(mocks.refresh).toHaveBeenCalledTimes(1);
+  expect(screen.queryByText('Cap poble trobat.')).toBeNull();
+  mocks.core = llavor(TOWNS);
+  rerender(<PoblesSection />);
+  expect(screen.queryByRole('alert')).toBeNull();
+  expect(container.querySelectorAll('.sdp-card-grid > article.sp-card')).toHaveLength(TOWNS.length);
 });
 
 test('T2 · la pastilla diu la publicació en hora local i porta al Calendari d’eixe mes', () => {
@@ -111,8 +132,8 @@ test('T2 · una edició de fitxa no puja el poble; sense publicació real, cap p
   const llista = targetes(container);
   expect(llista.map(titol)).toEqual(['Nou', 'Sense data', 'Vell']);
   expect(pastilla(llista[0])).toEqual(['10:00', '01/09/26']);
-  expect(pastilla(llista[1])).toBeNull();
-  expect(pastilla(llista[2])).toBeNull();
+  expect(pastilla(llista[1])).toEqual(['Data no indicada']);
+  expect(pastilla(llista[2])).toEqual(['Data no indicada']);
   expect(llista[2].textContent).not.toMatch(/--/);
 });
 
@@ -449,10 +470,10 @@ test('P0-39 / IDEA-166 · un poble sense data a la fitxa mostra la seua última 
   const [campello, buit, nomesText] = targetes(container);
   expect(titol(campello)).toBe('El Campello');
   expect(pastilla(campello)).toEqual(['10:00', '05/09/26']);
-  expect(pastilla(buit)).toBeNull();
+  expect(pastilla(buit)).toEqual(['Data no indicada']);
   // Casat només pel text: sense pastilla.
   expect(titol(nomesText)).toBe('Només Text');
-  expect(pastilla(nomesText)).toBeNull();
+  expect(pastilla(nomesText)).toEqual(['Data no indicada']);
 });
 
 /* P0-49 / IDEA-180 (261107) · La data real de l'article del Pou de Neu (07-11-2026, 21:20, l'hora del commit) i, en mode seed,
@@ -472,7 +493,7 @@ test.each([
   for (const targeta of llista) {
     const town = TOWNS.find((t) => t.title === titol(targeta));
     if (town.id === 'la-torre-de-les-macanes') expect(pastilla(targeta)).toEqual(rellotgeTorre);
-    else expect(pastilla(targeta), town.id).toBeNull();
+    else expect(pastilla(targeta), town.id).toEqual(['Data no indicada']);
   }
   expect(pastilla(llista[0])).toEqual(rellotgeTorre);
 });

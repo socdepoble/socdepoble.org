@@ -23,9 +23,21 @@ export const CLAUS_ERROR_SDP = Object.freeze({
   'SDP-XAT-429': 'section.xat.error.massaMissatges'
 });
 
+/** R21 (carril f2) · El xat propi «<Nom> (Tu)» que el backend no obri: el
+ *  servidor ha respost SDP-XAT-002 a crea_fil_directe(jo) (sense la migració
+ *  2611121630_xat_propi) o ja ho havia dit en esta sessió (XatContext). No és
+ *  cap codi SDP del servidor: és la conclusió de la interfície, amb l'avís
+ *  honest de sempre (section.xat.nou.personalNo) en lloc del text de
+ *  SDP-XAT-002, que en este cas contradiria la fila «Envia't missatges a tu
+ *  mateix». */
+export const CODI_XAT_PROPI_NO = 'XAT_PROPI_NO_DISPONIBLE';
+const CLAUS_ERROR_INTERFICIE = Object.freeze({ [CODI_XAT_PROPI_NO]: 'section.xat.nou.personalNo' });
+
 /** El text per a la persona d'un error del xat ({ code, message }), o `perDefecte` si no en porta cap. */
 export function textDErrorDelXat(error, t, perDefecte = '') {
-  const clau = Object.hasOwn(CLAUS_ERROR_SDP, String(error?.code ?? '')) ? CLAUS_ERROR_SDP[error.code] : null;
+  const codi = String(error?.code ?? '');
+  const clau = Object.hasOwn(CLAUS_ERROR_SDP, codi) ? CLAUS_ERROR_SDP[codi]
+    : Object.hasOwn(CLAUS_ERROR_INTERFICIE, codi) ? CLAUS_ERROR_INTERFICIE[codi] : null;
   if (clau && typeof t === 'function') return t(clau, error?.message || perDefecte);
   return error?.message || perDefecte;
 }

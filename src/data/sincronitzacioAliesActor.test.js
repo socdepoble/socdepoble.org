@@ -52,7 +52,8 @@ describe('IDEA-73 · Sincronització universal d’aliesDeLaFitxa, aliesDeLActor
     });
 
     expect(actualitzada.title).toBe('Javi Llinares');
-    expect(actualitzada.location).toBe('@javillinares · La Torre de les Maçanes');
+    expect(actualitzada.author).toBe('Javi Llinares');
+    expect(actualitzada.location).toBe('La Torre de les Maçanes');
     expect(actualitzada.mainHref).toBe(`/${PERSONA_PILOT.slug}`);
 
     const entitatPilot = aliesDeLaFitxa({ tipus: 'entitat', id: ENTITAT_PILOT_ID });

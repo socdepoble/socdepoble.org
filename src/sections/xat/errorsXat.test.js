@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import '../../../tests/helpers/diccionaris.js';
-import { CLAUS_ERROR_SDP, textDErrorDelXat, textDeFalladaDirecte } from './errorsXat.js';
+import { CLAUS_ERROR_SDP, CODI_XAT_PROPI_NO, textDErrorDelXat, textDeFalladaDirecte } from './errorsXat.js';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
 
 /* Onada 6 (verificació, 261009) · El text de l'adaptador es llig del disc,
@@ -45,6 +45,24 @@ describe('textDErrorDelXat', () => {
     expect(textDErrorDelXat(null, ca, 'reserva')).toBe('reserva');
     /* Un codi heretat de l'objecte no és cap clau. */
     expect(textDErrorDelXat({ code: 'toString', message: 'm' }, ca)).toBe('m');
+  });
+
+  /* R21 (carril f2; Gauntlet R21 honestedat_textos-04) · El xat propi que el
+     backend no obri (SDP-XAT-002 a crea_fil_directe(jo), sense 2611121630) no
+     diu el text de SDP-XAT-002, que contradiria la fila «(Tu)»: diu l'avís
+     honest, traduït a les cinc llengües, sense cap codi. */
+  it('R21 f2 · el xat propi no disponible diu l’avís honest en les cinc llengües, mai el text de SDP-XAT-002', () => {
+    const error = { code: CODI_XAT_PROPI_NO, message: ca('section.xat.nou.personalNo') };
+    const traduccions = new Set();
+    for (const { code } of SUPPORTED_LANGUAGES) {
+      const t = createTranslator(code);
+      const text = textDeFalladaDirecte(error, t);
+      expect([code, text]).toEqual([code, t('section.xat.nou.personalNo')]);
+      expect(text).not.toBe(t('section.xat.error.ambTuMateix'));
+      expect(text).not.toMatch(/XAT_PROPI|SDP-XAT/);
+      traduccions.add(text);
+    }
+    expect(traduccions.size).toBe(SUPPORTED_LANGUAGES.length);
   });
 
   it('textDeFalladaDirecte: el 429 també, i sense missatge el text genèric d’obrir', () => {

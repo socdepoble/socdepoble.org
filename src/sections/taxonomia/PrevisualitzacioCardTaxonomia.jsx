@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { UniversalCard } from '../../components/PedraSeca/organismes/UniversalCard.jsx';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 
 const fontsDePresentacio = (frame) => [...new Set([
   frame.closest('.sdp-root'), frame.closest('[data-theme]'), frame.closest('[data-contrast]'),
@@ -12,6 +14,7 @@ const fontsDePresentacio = (frame) => [...new Set([
 /** El viewport és real; el zoom CSS només reduïx la representació externa. */
 export function PrevisualitzacioCardTaxonomia({ amplaria, article, etapa = '' }) {
   const { personalitzacio } = useCoreContent();
+  const t = useTraductorOpcional();
   const estilActiu = personalitzacio?.estil?.payload;
   const iframe = useRef(null);
   const contingut = useRef(null);
@@ -89,8 +92,8 @@ export function PrevisualitzacioCardTaxonomia({ amplaria, article, etapa = '' })
       className={amplaria === 375 ? 'sdp-taxonomia__frame sdp-taxonomia__frame--mobil' : 'sdp-taxonomia__frame sdp-taxonomia__frame--escriptori'} onLoad={prepara}/>
     {doc && createPortal(<div ref={contingut} className="sdp-root sdp-taxonomia__preview-contingut" inert="">
       <UniversalCard title={article?.title || 'Proposta de classificació'} subtitle="Simulació del laboratori" labels={article?.labels || []}
-        author={DEFAULT_AUTHOR.name} authorHref={DEFAULT_AUTHOR.href} avatarUrl={DEFAULT_AUTHOR.avatarUrl}
-        location={DEFAULT_AUTHOR.location} date={creat} hasFooter={false} traduccio={false}
+        {...encapcalamentDeTargeta({ created_at: creat }, { author: DEFAULT_AUTHOR.name, location: DEFAULT_AUTHOR.location, t })}
+        authorHref={DEFAULT_AUTHOR.href} avatarUrl={DEFAULT_AUTHOR.avatarUrl} hasFooter={false} traduccio={false}
         body={<p>Els noms són un esborrany. La publicació original conserva la classificació.</p>}/>
     </div>, doc.body)}
   </section>;

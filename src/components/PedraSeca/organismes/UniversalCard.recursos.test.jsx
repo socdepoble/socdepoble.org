@@ -1,9 +1,12 @@
 /**
  * UniversalCard · base dels recursos (T5, 261001).
  *
- * L'avatar de Pobles (avatar_url cru) i el directori de perfils (/perfil, via
- * SectionItemCard) arribaven a la targeta amb '/assets/…' sense resoldre.
+ * L'avatar de Pobles (avatar_url cru) i el directori de perfils (/perfil)
+ * arribaven a la targeta amb '/assets/…' sense resoldre.
  * Ara imageUrl i avatarUrl es resolen en pintar-los. Sense base, idèntics.
+ * Gauntlet R21 · SectionItemCard s'ha retirat (orfe, Tractor Pedra Seca
+ * LLEI_08): el cas del directori el guarda ara ProfileSection.poble.test.jsx
+ * sobre la targeta que pinta /perfil.
  */
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -18,7 +21,6 @@ vi.mock('../../../app/contexts/RouterContext', async () => {
 vi.mock('../../universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
 import { UniversalCard } from './UniversalCard.jsx';
-import SectionItemCard from '../../SectionItemCard.jsx';
 import { fixaBaseRecursos } from '../../../config/assetResolver.js';
 
 const PAQUET = 'https://wp.example/wp-content/plugins/socdepoble-enxufe/dist';
@@ -61,11 +63,4 @@ test('amb base, una font insegura continua sense pintar-se', () => {
   fixaBaseRecursos(PAQUET);
   expect(fonts({ imageUrl: 'javascript:alert(1)', avatarUrl: 'javascript:alert(1)', author: 'Pepa' }))
     .toEqual({ imatge: null, avatar: null });
-});
-
-test('el directori de perfils (SectionItemCard) amb base: la foto de la IAIA penja del paquet', () => {
-  fixaBaseRecursos(PAQUET);
-  const { container } = render(<SectionItemCard title="IAIA MarIA" image="/assets/fotos/iaia-maria.png" to="/perfil/iaia" />);
-  expect(container.querySelector('img.sp-card-media').getAttribute('src')).toBe(`${PAQUET}/assets/fotos/iaia-maria.png`);
-  expect(container.querySelectorAll('img[src^="/assets/"]')).toHaveLength(0);
 });

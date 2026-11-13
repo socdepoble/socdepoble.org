@@ -49,7 +49,7 @@
  */
 import { CalendarDays, CalendarX, CircleDashed, Sun, Sunrise, Sunset } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
-import { EstatBuit, GraellaTargetes, MarcColumna, NavegacioPeriode, UniversalCard } from '../../../components/PedraSeca/index.js';
+import { encapcalamentDeTargeta, EstatBuit, GraellaTargetes, MarcColumna, NavegacioPeriode, UniversalCard } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, useVistesEsquelet } from '../../comu/esquelet/index.js';
 import { useClosaAplicacio, useParametresConsulta } from '../../plataforma/index.js';
 import { articlePerId } from '../nucli/index.js';
@@ -124,6 +124,7 @@ function useAccioEstreta(accio) {
 /** «La llista per temporada»: el mig de l'entrada Temporada. */
 export function ColumnaLlistaPerTemporada({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
+  const { idioma } = useClosaAplicacio();
   const vista = useVistaTemporada();
   const vistes = useVistesEsquelet(TEMPORADA);
   const llista = llistaVigent(params);
@@ -159,10 +160,9 @@ export function ColumnaLlistaPerTemporada({ params }) {
             <UniversalCard
               key={article.id}
               headingLevel="h4"
-              author={boina.nom || undefined}
+              {...encapcalamentDeTargeta(delCataleg, { author: boina.nom, location: boina.poble, idioma })}
               authorHref={boina.href || undefined}
               avatarUrl={boina.avatar || undefined}
-              location={boina.poble || undefined}
               title={article.nom}
               /* Integració final (261004, F04) · Subtítol i entradeta reals, com a l'esquelet
                  (vestits.js): la secció de l'article i, sense especificació, d'on ix. */

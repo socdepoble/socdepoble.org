@@ -36,7 +36,7 @@ test('una fitxa de Compartir cotxe: l’enllaç /vehicle/<id>, la meta de la fil
 /* Revisió adversarial · La boina és la del directori (boinaDelPoble): cara i
    meta, sense el nom ni un enllaç propi. El nom, una sola vegada (el títol), i
    un sol enllaç, el de tota la targeta. */
-test('una persona: la boina és la del directori (cara i meta), el nom és el títol i l’únic enllaç, sense etiquetes ni peu', () => {
+test('una persona: nom i poble propis a la capçalera; la data desconeguda es diu sense inventar-la', () => {
   const persona = deAgent({ id: 'u7', name: 'Pepa Güell', type: 'PERSON', avatar_url: '/assets/pepa.jpg', town_name: 'Benifallim' });
   expect(propsDeTargetaDeResultat(persona)).toEqual({
     title: 'Pepa Güell',
@@ -45,6 +45,10 @@ test('una persona: la boina és la del directori (cara i meta), el nom és el t�
     imageAlt: '',
     avatarUrl: '/assets/pepa.jpg',
     location: 'Benifallim',
+    author: 'Pepa Güell',
+    date: 'Data no indicada',
+    time: '',
+    dateTime: null,
     labels: [],
     idElement: 'persones:u7',
     hasFooter: false
@@ -54,18 +58,29 @@ test('una persona: la boina és la del directori (cara i meta), el nom és el t�
 test('la meta de la fila mana (amb «El teu perfil» davant) i la pròpia porta a la fitxa pública', () => {
   const propia = deIdentitat({ tipus: 'persona', id: 'jo', nom: 'Javi Poble' }, { poble: 'La Vila' });
   const props = propsDeTargetaDeResultat(propia, { meta: ['El teu perfil', ...propia.meta] });
-  expect([props.location, props.mainHref, props.avatarUrl]).toEqual(['El teu perfil · La Vila', '/gent/jo', undefined]);
-  expect([props.author, props.authorHref]).toEqual([undefined, undefined]);
+  expect([props.location, props.mainHref, props.avatarUrl]).toEqual(['La Vila', '/gent/jo', undefined]);
+  expect([props.author, props.authorHref]).toEqual(['Javi Poble', undefined]);
 });
 
 test('una persona del padró sense fitxa oberta: cap enllaç (ni a la targeta ni a la boina)', () => {
   const props = propsDeTargetaDeResultat(deMembre({ usuari_id: 'u1', nom: 'Maria', tipus: 'persona' }));
-  expect([props.title, props.mainHref, props.authorHref, props.author]).toEqual(['Maria', undefined, undefined, undefined]);
+  expect([props.title, props.mainHref, props.authorHref, props.author]).toEqual(['Maria', undefined, undefined, 'Maria']);
 });
 
 test('un poble i un producte: la imatge damunt i la meta en etiquetes, sense boina', () => {
   const poble = propsDeTargetaDeResultat(dePoble({ id: 'tibi', title: 'Tibi', comarca: "L'Alcoià", population: '1.700 hab', image_url: '/assets/tibi.jpg' }));
-  expect([poble.mainHref, poble.imageUrl, poble.labels, poble.author, poble.location]).toEqual(['/pobles/tibi', '/assets/tibi.jpg', ["L'Alcoià", '1.700 hab'], undefined, undefined]);
+  expect([poble.mainHref, poble.imageUrl, poble.labels, poble.author, poble.location]).toEqual(['/pobles/tibi', '/assets/tibi.jpg', ["L'Alcoià", '1.700 hab'], 'Autoria no indicada', 'Tibi']);
   const producte = propsDeTargetaDeResultat(deProducte({ id: 'mac', title: 'Mac Mini', price: '900 €', author_name: 'Javi Llinares', images: ['/assets/mac.jpg'] }));
   expect([producte.mainHref, producte.imageUrl, producte.labels]).toEqual(['/mercat/mac', '/assets/mac.jpg', ['900 €', 'Javi Llinares']]);
+});
+
+test('la font editorial conserva dia sol i nom/poble reals, sense convertir el rànquing en una data inventada', () => {
+  const person = deAgent({ id: 'public-person', name: 'Persona pública', type: 'PERSON', town_name: 'Poble real', created_at: '2026-09-08', email: 'never-render@example.invalid' });
+  const card = propsDeTargetaDeResultat(person);
+  expect(card).toMatchObject({ author: 'Persona pública', location: 'Poble real', date: '08/09/26', dateTime: '2026-09-08', time: '' });
+  expect(person.data).toBe(0); // Ranking is preserved; the raw source has its own field.
+  expect(Object.keys(person.editorial).sort()).toEqual(['author', 'date', 'location']);
+  expect(JSON.stringify(person)).not.toContain('never-render@example.invalid');
+  expect(propsDeTargetaDeResultat(deProducte({ id: 'product', title: 'Producte', author_name: 'Autora', population: 'Poble', created_at: 'bad-date' })))
+    .toMatchObject({ author: 'Autora', location: 'Poble', date: 'Data no indicada', dateTime: null });
 });

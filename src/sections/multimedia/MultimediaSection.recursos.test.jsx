@@ -29,6 +29,8 @@ const PAQUET = 'https://wp.example/wp-content/plugins/socdepoble-enxufe/dist';
 /* Un producte del Mercat (el logo cru de marketSeed), un poble i una URL ja
    absoluta, que no s'ha de tocar. */
 mocks.multimedia = {
+  // The real provider always declares loading/error/ready; this fixture is a loaded catalogue.
+  status: 'ready',
   mediaItems: [
     { id: 'market-0', title: 'Oli', src: LOGO, created_at: '2026-09-01T10:00:00Z' },
     { id: 'town-tibi', title: 'Tibi', src: ERA, created_at: '2026-08-01T10:00:00Z' },

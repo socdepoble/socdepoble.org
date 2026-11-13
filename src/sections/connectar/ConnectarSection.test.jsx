@@ -398,14 +398,15 @@ test('T43 · tot el poble (remot amb sessió): connecta, no publica sol i diu qu
 });
 
 /* T54 · La mini-card resol l'original en local (sectionId + item_id): l'URL no porta cap imatge. */
-test('T54 · mini-card amb la foto de l’original quan l’element és al Mercat, sense peu ni data', () => {
+test('T54/R21.6 · mini-card amb foto i capçalera honesta, sense peu ni calendari; la regió es diu com l’element', () => {
   mocks.mur = { status: 'ready', feedPosts: [], events: [], marketItems: [{ id: 'samarreta-socdepoble', title: 'Samarreta', image_url: '/assets/x.png' }] };
   const { container } = render(<ConnectarSection />);
   const targeta = container.querySelector('.sdp-connectar__previsualitzacio .sp-card');
   expect(targeta.querySelector('img.sp-card-media').getAttribute('src')).toBe('/assets/x.png');
   expect(targeta.querySelector('.sp-card-title').textContent).toBe('Samarreta');
   expect(targeta.querySelector('.sp-card-footer')).toBeNull();
-  expect(targeta.querySelector('.btn-date-time')).toBeNull();
+  expect(targeta.querySelector('.btn-date-time').textContent).toBe('Data no indicada');
+  expect(targeta.querySelector('.btn-date-time[datetime], button.btn-date-time')).toBeNull();
   expect(targeta.querySelector('.sp-card-title-icon')).toBeNull();
   expect(screen.getByText('Producte del Mercat')).toBeTruthy();
   expect(screen.getByRole('region', { name: 'Samarreta' })).toBeTruthy();

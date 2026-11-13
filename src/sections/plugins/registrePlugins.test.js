@@ -194,11 +194,12 @@ describe('registre de plugins', () => {
     expect(fontApp).toContain(`const AvisadorPage = ${LITERAL_AVISADOR} ? lazyRoute(() => import('../pages/AvisadorPage.jsx')) : null;`);
     expect(fontApp).toContain(`const AvisadorEnSessio = ${LITERAL_AVISADOR} ? lazyRoute(() => import('../components/salut/AvisadorEnSessio.jsx')) : null;`);
     expect(fontApp).toContain(`{${LITERAL_AVISADOR} ? <Route path="/page/avisador" element={<AvisadorPage />} /> : null}`);
+    expect(fontApp).toContain(`{${LITERAL_AVISADOR} ? <Route path="/app/avisador" element={<RedireccioCanonica to="/page/avisador" />} /> : null}`);
     expect(fontApp).toContain(`{${LITERAL_AVISADOR} ? <AvisadorAjornat config={config} targetNode={targetNode} /> : null}`);
-    // Cap muntatge fora del literal: una sola ruta, un sol vigilant i quatre usos del literal a App.jsx.
+    // La pàgina, l’àlies de recàrrega i el vigilant comparteixen el mateix interruptor.
     expect(fontApp.match(/<AvisadorPage \/>/g)).toHaveLength(1);
     expect(fontApp.match(/<AvisadorAjornat /g)).toHaveLength(1);
-    expect(fontApp.split(LITERAL_AVISADOR)).toHaveLength(5);
+    expect(fontApp.split(LITERAL_AVISADOR)).toHaveLength(6);
     // La ruta continua abans de /page/:slug, que la recull quan el build no la porta.
     const rutes = rutesDApp();
     expect(rutes.indexOf('/page/avisador')).toBeGreaterThanOrEqual(0);

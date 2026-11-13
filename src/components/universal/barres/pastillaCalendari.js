@@ -67,15 +67,18 @@ export function usePastillaCalendari({ time, date, dateTime } = {}) {
     navigate = null;
   }
   const dinsDelCalendari = useContext(DinsDelCalendari);
+  const mes = mesDeLaPastilla({ dateTime, date });
   const onClick = (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (typeof navigate !== 'function') return;
-    const mes = mesDeLaPastilla({ dateTime, date });
     const propia = typeof dinsDelCalendari === 'function' ? dinsDelCalendari(mes) : null;
     const ruta = typeof propia === 'string' && propia ? propia : rutaCalendariDelMes(mes);
     if (dinsDelCalendari) navigate(ruta, { replace: true });
     else navigate(ruta);
   };
-  return { onClick, etiqueta: etiquetaPastillaCalendari({ time, date }) };
+  return {
+    onClick: mes ? onClick : null,
+    etiqueta: mes ? etiquetaPastillaCalendari({ time, date }) : [time, date].filter(value => typeof value === 'string' && value.trim()).join(' ')
+  };
 }

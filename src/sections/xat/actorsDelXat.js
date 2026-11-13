@@ -55,7 +55,9 @@
 import { RUTA_FITXA_IAIA, RUTES_CANONIQUES, coneixIdRemotDelProjecte, esEntitatDelProjecte } from '../../config/navigation.js';
 import { rutaXatDePagina } from '../../config/objecteConnectable.js';
 import { ENTITAT_PILOT_SLUG, PERSONA_PILOT, esIAIA } from '../../data/identitatsSeed.js';
-import { AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, conversaPerDefecteDe, esLaPersonaDeContacte, esXatDeLaIAIA, jaTeElXat } from '../../data/xatsPerDefecte.js';
+import {
+  AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, conversaPerDefecteDe, esLaPersonaDeContacte, esXatDeLaIAIA, esXatPublicDePaginaIAIA, jaTeElXat
+} from '../../data/xatsPerDefecte.js';
 import { mapejaFil } from './missatges.js';
 import { ID_FIL_DE_MOSTRA_DE_LA_IAIA } from './useObriXatPerDefecte.js';
 
@@ -111,11 +113,21 @@ export const comunitatDeReserva = (modeDades) => (potPortarLaComunitat(modeDades
 
 const idDe = (fil) => String(fil?.id ?? '');
 
-/* Javi: la fila sintètica, el xat de mostra o un directe real amb ell. */
-const esFilDeJavi = (fil) => fil?.perDefecte === 'javi' || idDe(fil) === ID_FIL_DE_MOSTRA_DE_JAVI || jaTeElXat(fil, 'javi');
+/* Javi: la fila sintètica, el xat de mostra, un directe real amb ell o, quan
+   qui mira és el mateix Javi (joEsJavi), el seu fil personal esPropi. */
+const esFilDeJavi = (fil, joEsJavi = false) => fil?.perDefecte === 'javi'
+  || idDe(fil) === ID_FIL_DE_MOSTRA_DE_JAVI
+  || jaTeElXat(fil, 'javi')
+  || (joEsJavi && Boolean(fil?.esPropi));
 
-/* La IAIA, primer pel xat on contesta (la fila, la mostra, el fil o un
-   directe) i, si no n'hi ha cap, pel xat públic de la seua pàgina. */
+/** R21.4-UI · El xat públic de la pàgina /iaia només s'obri contextualment des
+ *  de /iaia (?sobre=pagina:/iaia), mai com a segona fila clònica a la columna
+ *  principal de converses privades. R21 (carril f2) · El predicat viu a
+ *  data/xatsPerDefecte.js perquè XatContext l'aplique també al comptador de
+ *  no llegits; ací es reexporta amb el mateix nom. */
+export { esXatPublicDePaginaIAIA };
+
+/* La IAIA: el xat on contesta (la fila, la mostra, el fil local o un directe). */
 const esDirecteDeLaIAIA = (fil) => fil?.perDefecte === 'iaia' || idDe(fil) === ID_FIL_DE_MOSTRA_DE_LA_IAIA
   || (esXatDeLaIAIA(fil) && fil.subjecte?.tipus !== 'pagina');
 
@@ -132,10 +144,24 @@ export const FILA_DE_RESERVA_DE_JAVI = filaPerDefecte('javi');
 export const FILA_DE_RESERVA_DE_LA_IAIA = filaPerDefecte('iaia');
 
 /* P1-70 (261029) · La fila de Javi diu què és quan no porta cap últim text
-   (una còpia: la de reserva és congelada i un fil del port no es muta). */
-const ambSubtitol = (fila, subtitol) => (fila && subtitol && !fila.fil?.ultimText
-  ? { ...fila, fil: { ...fila.fil, ultimText: subtitol } }
-  : fila);
+   (una còpia: la de reserva és congelada i un fil del port no es muta).
+   R21.4-UI · Si qui mira és Javi i encara veu la fila sintètica (perDefecte),
+   porta esPropi: true perquè FilaConversa mostre «Javi Llinares (Tu)». */
+const ambFilaDeJavi = (fila, { subtitol = '', joEsJavi = false, nomPropiDeJavi = '' } = {}) => {
+  if (!fila?.fil) return fila;
+  const marcarPropi = joEsJavi && fila.fil.perDefecte === 'javi' && !fila.fil.esPropi;
+  const calSubtitol = Boolean(subtitol) && !fila.fil.ultimText;
+  if (!marcarPropi && !calSubtitol) return fila;
+  const nom = marcarPropi && nomPropiDeJavi ? nomPropiDeJavi : fila.fil.name;
+  return {
+    ...fila,
+    fil: {
+      ...fila.fil,
+      ...(marcarPropi ? { esPropi: true, name: nom, title: nom } : {}),
+      ...(calSubtitol ? { ultimText: subtitol } : {})
+    }
+  };
+};
 
 /**
  * Les files de la llista (les de XatSection, després d'anteposaPoble) amb els
@@ -151,22 +177,27 @@ const ambSubtitol = (fila, subtitol) => (fila && subtitol && !fila.fil?.ultimTex
  * (comunitatDeReserva): la fila porta eixa, amb la mateixa clau; `true` és
  * COMUNITAT_DE_SOC_DE_POBLE.
  */
-export function anteposaActors(files, { comunitat = false, reservaJavi = null, reservaIAIA = null, subtitolDeJavi = '' } = {}) {
+export function anteposaActors(
+  files,
+  { comunitat = false, reservaJavi = null, reservaIAIA = null, subtitolDeJavi = '', joEsJavi = false, nomPropiDeJavi = '' } = {}
+) {
   if (!Array.isArray(files)) return files;
   const troba = (predicat) => files.find(predicat) || null;
   const entitatDeReserva = comunitat && typeof comunitat === 'object' ? comunitat : COMUNITAT_DE_SOC_DE_POBLE;
   const deSocDePoble = troba((fila) => fila?.tipus === 'comunitat' && esComunitatDeSocDePoble(fila.comunitat))
     || (comunitat ? { clau: CLAU_FILA_DE_SOC_DE_POBLE, tipus: 'entitat', entitat: entitatDeReserva } : null);
-  const javiTrobat = troba((fila) => esFila(fila) && esFilDeJavi(fila.fil));
-  const deJavi = ambSubtitol(javiTrobat || reservaJavi, subtitolDeJavi);
+  const javiRealPropi = joEsJavi ? troba((fila) => esFila(fila) && Boolean(fila.fil?.esPropi)) : null;
+  const javiTrobat = javiRealPropi || troba((fila) => esFila(fila) && esFilDeJavi(fila.fil, joEsJavi));
+  const javiSinteticDescartat = javiRealPropi ? troba((fila) => esFila(fila) && fila.fil?.perDefecte === 'javi') : null;
+  const deJavi = ambFilaDeJavi(javiTrobat || reservaJavi, { subtitol: subtitolDeJavi, joEsJavi, nomPropiDeJavi });
   const delPoble = troba((fila) => fila?.delPoble === true);
   const deLaIAIA = troba((fila) => esFila(fila) && !fila.fil.sessioLocalIAIA && esDirecteDeLaIAIA(fila.fil))
-    || troba((fila) => esFila(fila) && !fila.fil.sessioLocalIAIA && esXatDeLaIAIA(fila.fil))
+    || troba((fila) => esFila(fila) && !fila.fil.sessioLocalIAIA && !esXatPublicDePaginaIAIA(fila.fil) && esXatDeLaIAIA(fila.fil))
     || reservaIAIA;
   const actors = [deSocDePoble, deJavi, delPoble, deLaIAIA].filter(Boolean);
   if (!actors.length) return files;
-  /* La fila de Javi trobada també és «de dalt»: la còpia amb el subtítol no la duplica. */
-  const dalt = new Set([...actors, javiTrobat]);
+  /* La fila de Javi trobada (i la sintètica si ja hi ha el fil propi real) també és «de dalt»: mai es duplica. */
+  const dalt = new Set([...actors, javiTrobat, javiSinteticDescartat]);
   const resultat = [...actors, ...files.filter((fila) => !dalt.has(fila))];
   const igual = resultat.length === files.length && resultat.every((fila, i) => fila === files[i]);
   return igual ? files : resultat;

@@ -79,7 +79,9 @@ describe('261007 · la targeta d’El Xat', () => {
     const boto = screen.getByRole('link', { name: 'Anar al xat' });
     expect(article.querySelector('.sp-card-body > .sp-card-accio').contains(boto)).toBe(true);
     expect(boto.getAttribute('href')).toBe('/xat');
-    expect(boto.className.split(' ')).toEqual(expect.arrayContaining(['sdp-boto', 'sdp-boto--primari', 'sdp-boto--gran']));
+    /* PS-07: una porta repetida dins de la graella és secundària, gran igualment. */
+    expect(boto.className.split(' ')).toEqual(expect.arrayContaining(['sdp-boto', 'sdp-boto--secundari', 'sdp-boto--gran']));
+    expect(boto.classList.contains('sdp-boto--primari')).toBe(false);
     cleanup();
     const { container: altra } = pinta(sistema('constitucio'));
     expect(altra.querySelector('ul.sp-card-labels')).not.toBeNull();

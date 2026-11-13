@@ -62,6 +62,8 @@ describe('amb el Bloc de només lectura i sense IdentitatProvider', () => {
   test('desar un camp resol fals i no encua res; la capa local no canvia la nota', async () => {
     const { result } = munta();
     await expect(result.current.saveNoteField('n9', 'title', 'Canvi')).resolves.toBe(false);
+    await expect(result.current.desaNotaPreparada({ id: 'n9', revision: 1 }, { title: 'Canvi' }))
+      .rejects.toMatchObject({ name: 'ErrorIdentitatDeLectura', code: 'SDP-IDENTITAT-001' });
     act(() => { result.current.setLocalNoteField('n9', 'title', 'Canvi'); });
     expect(result.current.notes[0].title).toBe(NOTA.title);
     expect(m.enqueue).not.toHaveBeenCalled();

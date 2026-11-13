@@ -8,11 +8,6 @@ vi.mock('./InstalaLaPwa.jsx',()=>({InstalaLaPwa:()=>null,useInstalacioDeLaPagina
 vi.mock('../patrimoni/HerbariWorkspaceSection.jsx',()=>({default:({children})=><section>Visor herbari lazy<article>{children}</article></section>}));
 vi.mock('../text/AparadorFediversity.jsx',()=>({default:()=><section>Demostrador real Karpathy lazy</section>}));
 vi.mock('../../app/contexts/ProveidorProjeccionsCataleg.jsx',()=>({default:({children})=><>{children}</>}));
-// Dispatch fixture: the full workspace geometry is covered by App.fediversity.
-vi.mock('../text/FediversityWorkspaceSection.jsx',async()=>{
- const{default:TextSection}=await import('../text/TextSection');const{default:Aparador}=await import('../text/AparadorFediversity.jsx');
- return{default:({children,...props})=><TextSection {...props}><Aparador/>{children}</TextSection>};
-});
 import PageDetailSection from'./PageDetailSection.jsx';
 afterEach(cleanup);
 test('P0-69 Herbari com arrel Workspace i Publicar continua al final',async()=>{
@@ -20,8 +15,9 @@ test('P0-69 Herbari com arrel Workspace i Publicar continua al final',async()=>{
  expect(screen.getByRole('button',{name:'Publicar herbari'})).toBeTruthy();expect(container.querySelector('article').lastElementChild.tagName).toBe('BUTTON');
  expect(screen.queryByText('Demostrador real Karpathy lazy')).toBeNull();
 });
+// T1b (ordre del Mestre, 12-11-2026 21:26): /page/fediversity va pel flux comú de TextSection, sense Workspace.
 test('R20 aparador només FEDiversity/NodeZero; fedivers conserva la redirecció canònica',async()=>{
- for(const slug of['fediversity','node-zero']){m.slug=slug;const{container,unmount}=render(<PageDetailSection/>);await screen.findByText('Demostrador real Karpathy lazy');expect(container.querySelector('article').lastElementChild.textContent).toBe(`Publicar ${slug}`);expect(screen.queryByText('Visor herbari lazy')).toBeNull();unmount();}
+ for(const slug of['fediversity','node-zero']){m.slug=slug;const{container,unmount}=render(<PageDetailSection/>);await screen.findByText('Demostrador real Karpathy lazy');expect(container.querySelectorAll('article')).toHaveLength(1);expect(container.firstElementChild.tagName).toBe('ARTICLE');expect(container.querySelector('article').lastElementChild.textContent).toBe(`Publicar ${slug}`);expect(screen.queryByText('Visor herbari lazy')).toBeNull();unmount();}
  m.slug='fedivers';const{unmount}=render(<PageDetailSection/>);expect(screen.getByText('/fedivers')).toBeTruthy();expect(screen.queryByText('Demostrador real Karpathy lazy')).toBeNull();unmount();
  m.slug='guia';render(<PageDetailSection/>);await waitFor(()=>expect(screen.getByRole('button',{name:'Publicar guia'})).toBeTruthy());expect(screen.queryByText('Demostrador real Karpathy lazy')).toBeNull();expect(screen.queryByText('Visor herbari lazy')).toBeNull();
 });

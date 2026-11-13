@@ -21,7 +21,7 @@
    (desactivar un botó amb el focus el deixa caure a <body>). */
 import { useEffect, useRef } from 'react';
 import { Interruptor } from '../../../components/PedraSeca/index.js';
-import { TEXTOS_AVISOS } from '../useAvisosPushXat.js';
+import { TEXTOS_AVISOS, esMotiuSenseConfigurar, textAvisEntorn } from '../useAvisosPushXat.js';
 
 const RESERVA = (_clau, reserva) => reserva;
 
@@ -43,9 +43,17 @@ export default function PaginaNotificacions({ avisos = null, t = RESERVA }) {
     node.querySelector('[role="switch"]')?.focus();
   }, [ocupat]);
 
-  if (!avisos || (!avisos.oferit && !avisos.nomesNota)) return null;
+  const mostraEntorn = Boolean(!avisos?.oferit && (avisos?.avisEntorn || esMotiuSenseConfigurar(avisos?.motiu)));
+  if (!avisos || (!avisos.oferit && !avisos.nomesNota && !mostraEntorn)) return null;
   const notes = Array.isArray(avisos.notes) ? avisos.notes : [];
-  const nota = avisos.oferit && avisos.nota && typeof avisos.nota.text === 'string' && avisos.nota.text ? avisos.nota : null;
+  const notaEntorn = mostraEntorn
+    ? (avisos.nota && typeof avisos.nota.text === 'string' && avisos.nota.text
+      ? avisos.nota
+      : (esMotiuSenseConfigurar(avisos.motiu) ? { text: textAvisEntorn(avisos.motiu, t), error: false } : null))
+    : null;
+  const nota = avisos.oferit && avisos.nota && typeof avisos.nota.text === 'string' && avisos.nota.text
+    ? avisos.nota
+    : notaEntorn;
   /* Buida, la regió viva no ocupa cap fila de la reixeta del grup (cap gap de més). */
   let classeEstat = 'sdp-sr-only';
   if (nota) classeEstat = nota.error ? 'sdp-xat-ajustos__nota sdp-xat-ajustos__nota--error' : 'sdp-xat-ajustos__nota';
@@ -66,7 +74,7 @@ export default function PaginaNotificacions({ avisos = null, t = RESERVA }) {
           </li>
         </ul>
       ) : null}
-      {avisos.oferit ? <p className={classeEstat} role="status">{nota ? nota.text : ''}</p> : null}
+      {avisos.oferit || mostraEntorn ? <p className={classeEstat} role="status">{nota ? nota.text : ''}</p> : null}
       {notes.map((text) => <p key={text} className="sdp-xat-ajustos__nota">{text}</p>)}
     </div>
   );

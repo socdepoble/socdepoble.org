@@ -534,7 +534,7 @@ export const ARBRE_UNIVERSAL = Object.freeze([
     rol: 'Capçalera ≈ barra taronja, mitjà 1:1, cos i peu ≈ barra blava sense navegació. No importa PageFrame ni les barres: fa servir els mateixos àtoms.',
     consumidors: [
       'el Mur (MurSection)', 'el Mercat (MercatSection)', 'Pobles (PoblesSection)', 'Connectar (ConnectarSection, la previsualització)',
-      'EventCard (el Mur)', 'SectionItemCard (ProfileSection)', 'la Consola (TargetaConsola i TargetaResum)',
+      'EventCard (el Mur)', 'el directori Gent i Entitats (ProfileSection i EntitatsDelPoble)', 'la Consola (TargetaConsola i TargetaResum)',
       'l’acollida (OnboardingSteps)', 'Control (ControlSection)', 'Traduccions (TranslationsSection)'
     ] },
   /* AH-02 (G3-g2-matriu-09) · NotaFitxa i PerfilShell ja no la munten: la fila activa és la compacta. */

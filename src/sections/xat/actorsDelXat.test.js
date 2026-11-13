@@ -61,10 +61,10 @@ describe('anteposaActors · l’ordre estricte del Mestre', () => {
     expect(anteposaActors([pepa, homonim])).toEqual([pepa, homonim]);
   });
 
-  test('la IAIA: primer el xat on contesta (fila, mostra, fil o directe); el xat públic de /iaia només si no n’hi ha cap', () => {
+  test('R21.4-UI · la IAIA: només el xat 1:1 on contesta (fila, mostra, fil o directe); el xat públic de /iaia mai ocupa la 4a plaça permanent', () => {
     const pagina = deFil(mapejaFil({ id: 'p-iaia', tipus: 'grup', titol: 'IAIA MarIA', subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia' }, ultimAl: '2026-10-16T10:00:00Z' }));
     expect(claus(anteposaActors([pepa, pagina, iaia]))).toEqual(['sdp-per-defecte:iaia', 'f-pepa', 'p-iaia']);
-    expect(claus(anteposaActors([pepa, pagina]))).toEqual(['p-iaia', 'f-pepa']);
+    expect(claus(anteposaActors([pepa, pagina]))).toEqual(['f-pepa', 'p-iaia']);
     const directe = deFil(mapejaFil({ id: 'd-iaia', tipus: 'directe', altres: [{ id: IAIA_ID, tipus: 'ia' }] }));
     expect(claus(anteposaActors([pepa, pagina, directe]))).toEqual(['d-iaia', 'f-pepa', 'p-iaia']);
     expect(claus(anteposaActors([pepa, deFil({ id: 'fake-iaia', tipus: 'ia', name: 'IAIA MarIA' })]))).toEqual(['fake-iaia', 'f-pepa']);
@@ -127,13 +127,19 @@ describe('anteposaActors · P1-70, les files de reserva', () => {
     expect(claus(anteposaActors([delPoble, pepa], { ...RESERVES, comunitat: true })))
       .toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia', 'f-pepa']);
   });
-  test('si ja hi són (la sintètica, el xat de mostra, un directe o el xat de /iaia), la reserva no en pinta cap segona', () => {
+  test('si ja hi són (la sintètica, el xat de mostra o un directe 1:1), la reserva no en pinta cap segona; pagina:/iaia no substituïx la fila 1:1 de la IAIA', () => {
     const mostra = deFil(filDeMostraDeJavi());
     const paginaIaia = deFil(mapejaFil({ id: 'g-iaia', tipus: 'grup', titol: "L'ànima de la iaia", subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia' } }));
-    expect(claus(anteposaActors([delPoble, mostra, paginaIaia], RESERVES))).toEqual(['fake-javi', 'poble:la-torre-de-les-macanes', 'g-iaia']);
+    expect(claus(anteposaActors([delPoble, mostra, paginaIaia], RESERVES))).toEqual(['fake-javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia', 'g-iaia']);
     expect(claus(anteposaActors([javi, delPoble, iaia], RESERVES))).toEqual(['sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
     const directeIaia = deFil(mapejaFil({ id: 'd-iaia', tipus: 'directe', titol: 'IAIA MarIA', altres: [{ id: IAIA_ID, tipus: 'ia' }] }));
     expect(claus(anteposaActors([directeIaia, pepa], RESERVES))).toEqual(['sdp-per-defecte:javi', 'd-iaia', 'f-pepa']);
+  });
+  test('R21.4-UI · quan joEsJavi és cert, el fil personal de Javi (esPropi) ocupa la 2a plaça permanent sense duplicar la fila de reserva', () => {
+    const propiJavi = deFil(mapejaFil({ id: 'propi-javi', tipus: 'directe', esPropi: true, titol: 'Javi Llinares', altres: [] }));
+    const resultat = anteposaActors([propiJavi, delPoble, iaia], { ...RESERVES, joEsJavi: true, subtitolDeJavi: "Envia't missatges a tu mateix" });
+    expect(claus(resultat)).toEqual(['propi-javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
+    expect(resultat[0].fil.ultimText).toBe("Envia't missatges a tu mateix");
   });
   test('sense reserva de la IAIA (nivell d’IA 0), cap IAIA inventada', () => {
     expect(claus(anteposaActors([delPoble], { reservaJavi: FILA_DE_RESERVA_DE_JAVI }))).toEqual(['sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes']);

@@ -101,6 +101,11 @@ keystore.properties
 *.mobileprovision
 google-services.json
 GoogleService-Info.plist
+# R21 · Secrets de l'aprovisionament push (tooling/push/aprovisiona-push.mjs: clau privada VAPID,
+# secret del cron, P8 d'APNs i compte de servei FCM). L'eina refusa un --private-dir dins d'un
+# arbre git; esta és la segona línia, per si algú els copia a mà dins del repositori.
+*.private.env
+edge.secrets.env
 
 # Registre local: mai dades de sessió al control de versions.
 /.agents/runtime/antigravity-hook.log

@@ -395,7 +395,7 @@ export default function DevicesSection() {
                         </div>
                         <div className="devices-panel__accions">
                           {(state === 'idle' || state === 'declined') ? (
-                            <button type="button" className="sdp-boto sdp-boto--primari" onClick={() => requestConnection(device.id)}>
+                            <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => requestConnection(device.id)}>
                               <Link2 size={16} /> <span>Connectar</span>
                             </button>
                           ) : null}
@@ -407,7 +407,7 @@ export default function DevicesSection() {
                           {state === 'pending' ? <span className="sdp-insignia sdp-insignia--info">Esperant resposta</span> : null}
                           {state === 'incoming' ? (
                             <>
-                              <button type="button" className="sdp-boto sdp-boto--primari" onClick={() => acceptConnection(device.id)}>
+                              <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => acceptConnection(device.id)}>
                                 <Check size={16} /> Acceptar
                               </button>
                               <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => declineConnection(device.id)}>

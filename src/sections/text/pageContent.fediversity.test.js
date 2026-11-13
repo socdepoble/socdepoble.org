@@ -679,12 +679,12 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     // dated note (one source, INVENTARI_CONTRACTE), checked against the code.
     expect(fet).toContain(nucli+' mètodes obligatoris i '+capacitats+' capacitats opcionals declarades');
     expect(fet).toContain(opcionals+' mètodes addicionals: '+total+' mètodes en total');
-    expect(fet).toContain('recompte del codi local de l’11 de novembre de 2026');
+    expect(fet).toContain('recompte del codi local del 12 de novembre de 2026');
     expect(fet).toContain('no certifica les '+total+' operacions contra un servidor remot');
     const paginaCompleta=new DOMParser().parseFromString(copy.html,'text/html');
     const notaActual=[...paginaCompleta.querySelectorAll('p')].find(p=>p.textContent.includes('Inventari del codi local.'))?.textContent;
     const {CASOS,metodesSenseCas}=await import('../../data/conformitat/kit.js');
-    expect(notaActual).toContain('11 de novembre de 2026');
+    expect(notaActual).toContain('12 de novembre de 2026');
     expect(notaActual).toContain(capacitats+' capacitats i '+total+' mètodes amb '+CASOS.length+' casos');
     expect(notaActual).toContain('46/138/190');
     expect(notaActual).toContain('no acredita activació');
@@ -713,7 +713,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     for(const frase of[nucli+' operacions obligatòries',capacitats+' capacitats atòmiques opcionals',opcionals+' mètodes addicionals',total+' mètodes'])expect(model).toContain(frase);
     expect(model).toContain(CASOS.length+' casos sobre '+new Set(CASOS.map(c=>c.metode)).size+' mètodes');
     expect(model).toContain((capacitats-CAPACITATS_NO_DECLARADES.length)+' dels '+capacitats+' grups declarats');
-    expect(model).toContain('els 22 casos');
+    expect(model).toContain('els '+CASOS.filter(c=>CAPACITATS_NO_DECLARADES.includes(c.capacitat)).length+' casos');
     for(const absent of CAPACITATS_NO_DECLARADES)expect(model).toContain('`'+absent+'`');
     expect(model).toContain('La verificació de les '+total+' operacions en un servidor remot continua pendent.');
     expect(model).toContain('no acredita un èxit funcional ni un servei de correu desplegat');

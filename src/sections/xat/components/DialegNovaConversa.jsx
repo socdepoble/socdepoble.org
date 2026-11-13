@@ -8,17 +8,25 @@
  *   · la targeta «Nou grup» · «Nova comunitat»: cap RPC en crea cap, i per
  *     això obrin, DINS del diàleg, un panell honest que diu d'on naixen (una
  *     Pàgina Universal i «Comentar») amb el camí al Mur i a Pobles;
- *   · sense cerca, només «Sóc de Poble» i «IAIA MarIA» (la IAIA, no, amb
- *     `senseIAIA`: el nivell d'IA a 0, Onada 6);
+ *   · sense cerca, la fila «(Tu)» si el backend obri el xat propi (davall),
+ *     i «Sóc de Poble» i «IAIA MarIA» (la IAIA, no, amb `senseIAIA`: el
+ *     nivell d'IA a 0, Onada 6);
  *   · amb cerca, freqüents, un mateix i padró en seccions alfabètiques.
  * Els contactes d'ajuda sense destinatari connectat es mostren inactius.
  * El cercador filtra totes les seccions amb el plegat de /cerca (indexCerca):
  * «jose» troba «José». El padró es demana al servidor en obrir (fins a 100)
  * i, amb un terme, també amb el terme; les dues respostes es fusionen.
  *
- * Escriure't a tu mateix: cap backend no obri encara el fil 'personal'
- * (localXat ho rebutja i cap RPC el crea). Si ja n'hi ha un a la llista,
- * s'obri; si no, la fila ho diu en lloc de fallar.
+ * Escriure't a tu mateix (R21.4-UI, R21 carril f2): la fila «<Nom> (Tu)»
+ * segons `xatPropi`, el que el backend ha acreditat (XatContext):
+ *   · 'disponible' · va dalt de tot de «Contactes a Sóc de Poble», també
+ *     sense cerca; obri el fil propi o el crea (onTriaMembre amb joId);
+ *   · 'per-confirmar' · només amb una cerca que hi case; prémer-la és la
+ *     pregunta al servidor (onTriaMembre), que l'obri o respon que no;
+ *   · 'no' (per defecte: qui no ho diu no promet res) · només amb una cerca,
+ *     i prémer-la pinta l'avís honest davall de la fila, sense cap petició;
+ *   · null · cap fila.
+ * Si ja hi ha un fil propi a la llista (`filPersonal`), s'obri sempre.
  *
  * Mentre el servidor no ha respost per al terme escrit, es diu que carrega i
  * no «Cap contacte»: el padró local només en porta 100 i la persona pot ser
@@ -31,9 +39,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CircleX, Search, Users, UsersRound } from 'lucide-react';
 import { Dialeg } from '../../../components/PedraSeca/index.js';
-import { Avatar } from '../../../components/PedraSeca/index.js';
 import { rutaDEntrada } from '../../../config/rutaEntrada.js';
+import { IAIA_ID } from '../../../data/identitatsSeed.js';
 import { fitxes as fitxesDeConsulta, plega } from '../../search/indexCerca.js';
+import CaraXat from './CaraXat.jsx';
 import FilaPersona from './FilaPersona.jsx';
 import { contactesDAjuda, esContacteDeLaIAIA, senseContacteDeLaIAIA } from '../contactesAjuda.js';
 
@@ -82,7 +91,7 @@ export default function DialegNovaConversa(props) {
 }
 
 function Contingut({
-  t, cercaMembres, contactesFrequents = CAP, joId = null, joNom = null, filPersonal = null,
+  t, cercaMembres, contactesFrequents = CAP, joId = null, joNom = null, joAvatar = null, filPersonal = null, xatPropi = 'no',
   onTriaMembre, obrintAmb = null, onObriFil, onVes, campRef, errorObrir = null, senseSessio = false, tornar,
   senseIAIA = false, teSessionsIAIA = false
 }) {
@@ -147,7 +156,12 @@ function Contingut({
     const candidates = cercant ? padro : ajudes;
     const iaia = teSessionsIAIA && ajudes.find(esContacteDeLaIAIA);
     const disponibles = iaia
-      ? [...senseContacteDeLaIAIA(candidates), { ...iaia, noDisponible: false, fil_id: null }]
+      ? [...senseContacteDeLaIAIA(candidates), {
+        ...iaia,
+        usuari_id: iaia.usuari_id && !String(iaia.usuari_id).startsWith('ajuda:') ? iaia.usuari_id : IAIA_ID,
+        noDisponible: false,
+        fil_id: iaia.fil_id ?? null
+      }]
       : candidates;
     const persones = disponibles
       .filter((m) => idDe(m) !== jo && typeof m.nom === 'string' && m.nom.trim() && casa(m.nom, llistaFitxes))
@@ -162,13 +176,31 @@ function Contingut({
   }, [perId, jo, llistaFitxes, cercant, senseIAIA, teSessionsIAIA]);
 
   const nomJo = joNom || t('section.xat.nou.jo', 'Jo');
-  const etiquetaTu = t('section.xat.nou.tu', '{nom} (Tu)').replace('{nom}', nomJo);
-  const joCasa = Boolean(jo) && cercant && casa(`${nomJo} ${t('section.xat.nou.jo', 'Jo')}`, llistaFitxes);
+  const etiquetaTu = t('section.xat.nou.tu', '{nom} (Tu)').replace('{nom}', () => nomJo);
+  /* R21.4-UI · «<Nom> (Tu)» és el primer contacte fixe dalt de tot de
+     «Contactes a Sóc de Poble» (patró WhatsApp 19.12.49), i també quan el
+     cercador casa amb el seu nom o «Jo / (Tu)».
+     R21 (carril f2) · Fixe, només si el backend obri el xat propi (o ja n'hi
+     ha un): si no, com abans de R21.4, només amb una cerca. */
+  const ambFilaPropia = !senseSessio && Boolean(jo) && xatPropi != null;
+  const propiOferit = xatPropi === 'disponible' || filPersonal != null;
+  const joCasa = ambFilaPropia && (cercant ? casa(`${nomJo} ${etiquetaTu} ${t('section.xat.nou.jo', 'Jo')}`, llistaFitxes) : propiOferit);
   const hiHaPadro = seccions.length > 0;
+  const obrintJo = Boolean(jo) && obrintAmb != null && String(obrintAmb) === jo;
+  const avisPropi = avisPersonal && xatPropi === 'no' && filPersonal == null;
 
   const triaJo = () => {
-    if (filPersonal != null) onObriFil(filPersonal);
-    else setAvisPersonal(true);
+    if (obrintJo) return;
+    if (filPersonal != null) {
+      onObriFil(filPersonal);
+      return;
+    }
+    /* Amb 'no', l'avís i cap petició. Amb 'per-confirmar', la petició és la
+       pregunta: si el servidor diu que no, xatPropi passa a 'no' i l'avís ix
+       ací, davall de la fila (XatSection no el repetix a dalt). */
+    setAvisPersonal(true);
+    if (xatPropi === 'no') return;
+    onTriaMembre?.({ usuari_id: joId, nom: nomJo, tipus: 'persona', avatar_url: joAvatar || null, fil_id: null });
   };
 
   if (panell) {
@@ -265,8 +297,9 @@ function Contingut({
         <Seccio titol={t('section.xat.nou.contactes', 'Contactes a Sóc de Poble')}>
           {joCasa ? (
             <div className="sdp-xat-targeta">
-              <button type="button" className="sdp-xat-fila" onClick={triaJo} aria-describedby={avisPersonal ? 'xat-nou-avis-personal' : undefined}>
-                <Avatar nom={nomJo} mida="md" llavor={joId} alt="" />
+              <button type="button" className="sdp-xat-fila" onClick={triaJo} disabled={obrintJo} aria-busy={obrintJo || undefined}
+                aria-describedby={avisPropi ? 'xat-nou-avis-personal' : undefined}>
+                <CaraXat nom={nomJo} src={joAvatar} mida="md" llavor={joId} alt="" />
                 <span className="sdp-xat-fila__cos">
                   <span className="sdp-xat-fila__cap">
                     <span className="sdp-xat-fila__nom">{etiquetaTu}</span>
@@ -276,7 +309,7 @@ function Contingut({
                   </span>
                 </span>
               </button>
-              {avisPersonal ? (
+              {avisPropi ? (
                 <p id="xat-nou-avis-personal" className="sdp-xat-avis" role="status">
                   {t('section.xat.nou.personalNo', "Encara no pots escriure't a tu mateix: este poble no obri el xat personal.")}
                 </p>

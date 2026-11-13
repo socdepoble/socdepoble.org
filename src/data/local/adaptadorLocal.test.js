@@ -144,12 +144,15 @@ describe('entrada, sessió i eixida', () => {
 });
 
 describe('Xat', () => {
-  cobrix(['creaFilDirecte'], 'creaFilDirecte és idempotent, rebutja tu mateix i una persona forastera', async () => {
+  cobrix(['creaFilDirecte'], 'creaFilDirecte és idempotent, permet el xat propi i rebutja una persona forastera', async () => {
     const a = creaAdaptadorLocal({ mode: 'local' });
     entra(a);
     const filId = await a.creaFilDirecte('0001', null, {});
     expect(await a.creaFilDirecte('0001', null, {})).toBe(filId);
-    await expect(a.creaFilDirecte(PERSONA, null, {})).rejects.toThrow('No pots obrir una conversa amb tu mateix.');
+    const propi = await a.creaFilDirecte(PERSONA, null, {});
+    expect(propi).not.toBe(filId);
+    expect(await a.creaFilDirecte(PERSONA, null, {})).toBe(propi);
+    expect((await a.loadFils()).find(f => f.id === propi)).toMatchObject({ esPropi: true, participants: 1, altres: [{ id: PERSONA, tipus: 'persona' }] });
     await expect(a.creaFilDirecte('persona-de-fora', null, {})).rejects.toEqual(ambCodi('SDP-XAT-004'));
   });
 
@@ -276,6 +279,7 @@ describe('compte i consentiment', () => {
     const baixa = await a.demanaBaixa({ motiu: 'Me’n vaig' }, {});
     expect(baixa).toEqual({ demanada: true, demanadaAl: '2026-11-01T10:00:00.000Z', purgaPrevistaAl: '2026-12-01T10:00:00.000Z' });
     expect(a.getCurrentUser()).toBeNull();
+    await expect(a.creaFilDirecte(a.getDefaultUserId(), null, {})).rejects.toMatchObject({ code: 'SDP-XAT-001' });
     entra(a);
     expect(await a.estatBaixa({})).toEqual(baixa);
     expect(await a.cancelaBaixa({})).toEqual({ demanada: false, demanadaAl: null, purgaPrevistaAl: null });
@@ -864,5 +868,17 @@ test('R15 · sense servidor no s’inventen sessions ni rol de curadoria cultura
    expect(CAPACITATS_NO_DECLARADES).toContain(cap);
    for(const metode of CAPACITATS[cap])expect(a[metode],metode).toBeUndefined();
   }
+ }finally{await a.destroy();}
+});
+
+test('R21.6 · la lectura canònica seed no substituïx el catàleg propi d’un node local real',async()=>{
+ const agents=[{id:'persona-local-real',name:'Persona real',type:'PERSON',town_name:'Tibi',extra:{conserva:true}}];
+ const a=creaAdaptadorLocal({mode:'local',dades:{agents}});
+ try{
+  const core=await a.loadCoreContent();
+  expect(core.agents).toEqual(agents);
+  expect(core.agents).not.toBe(agents);
+  core.agents[0].extra.conserva=false;
+  expect((await a.loadCoreContent()).agents).toEqual(agents);
  }finally{await a.destroy();}
 });

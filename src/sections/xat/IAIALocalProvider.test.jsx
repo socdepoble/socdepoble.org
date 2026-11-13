@@ -370,3 +370,63 @@ it('una lectura que acaba tard no restaura el títol que una notificació més n
     expect(result.current.getThreadMessages(id)).toEqual([]);
   } finally { pendent.resolve(estatAntic); fabrica.mockRestore(); }
 });
+
+/* R21 (carril f1) · Política 2.5 en vigor (§14) i avís de la conversa local
+   («s'esborren en eixir del Xat»): ni el fil principal iaia-local ni les
+   respostes d'una sessió es desen a IndexedDB. Només hi viu el títol de la
+   sessió (generat de la primera pregunta), com diu l'avís. */
+const contingutDelDisc = (fals) => JSON.stringify([...fals.bases].map(([nom, base]) => [
+  nom, [...base.stores].map(([store, magatzem]) => [store, [...magatzem.files.values()]])
+]));
+const deixaEscriure = () => act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+
+it('R21 · el fil principal iaia-local viu només en memòria: res a IndexedDB, en tornar a muntar torna a la benvinguda i oblidar-lo el buida', async () => {
+  const fals = creaIdbFals();
+  vi.stubGlobal('indexedDB', fals.idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const original = { ...base(), ambitEstable: JSON.stringify(['remot', 'usuari-a', 'usuari-a']) };
+  const primera = setup(original, (text) => `Resposta privada a: ${text}`);
+  await act(async () => { await primera.result.current.sendChatMessage(fil(primera.result), 'Pregunta de prova'); });
+  await waitFor(() => expect(missatges(primera.result).map((m) => m.text)).toEqual([
+    BENVINGUDA_IAIA, 'Pregunta de prova', 'Resposta privada a: Pregunta de prova'
+  ]));
+  await deixaEscriure();
+  expect([...fals.bases.get('xat-iaia-titols').stores.keys()].sort()).toEqual(['oblit', 'titols']);
+  expect(contingutDelDisc(fals)).not.toContain('Pregunta de prova');
+  expect(contingutDelDisc(fals)).not.toContain('Resposta privada');
+
+  await act(async () => { expect(await primera.result.current.oblidaSessioIAIA(ID_FIL_LOCAL_IAIA)).toBe(true); });
+  expect(missatges(primera.result).map((m) => m.text)).toEqual([BENVINGUDA_IAIA]);
+  await act(async () => { await primera.result.current.sendChatMessage(fil(primera.result), 'Segona pregunta'); });
+  await waitFor(() => expect(missatges(primera.result)).toHaveLength(3));
+  await deixaEscriure();
+  primera.unmount();
+
+  /* Eixir del Xat i tornar (o recarregar): el muntatge nou no recupera res. */
+  const segona = setup(original);
+  await deixaEscriure();
+  expect(missatges(segona.result).map((m) => m.text)).toEqual([BENVINGUDA_IAIA]);
+  expect(fil(segona.result).ultimText).toBeNull();
+  expect(contingutDelDisc(fals)).not.toContain('Segona pregunta');
+  segona.unmount();
+});
+
+it('R21 · una sessió local desa només el títol curt: ni la pregunta sencera ni la resposta arriben a IndexedDB', async () => {
+  const fals = creaIdbFals();
+  vi.stubGlobal('indexedDB', fals.idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const original = { ...base(), ambitEstable: JSON.stringify(['remot', 'usuari-a', 'usuari-a']) };
+  const PREGUNTA = 'Com funciona el Bloc de Notes quan no tinc cobertura al camp?';
+  const { result, unmount } = setup(original, () => 'Resposta privada de la sessió');
+  let id;
+  act(() => { id = result.current.novaSessioIAIA(); });
+  await waitFor(() => expect(result.current.esperaSessioIAIA(id)).toBe(false));
+  const sessio = result.current.chatThreads.find((f) => f.id === id);
+  await act(async () => { await result.current.sendChatMessage(sessio, PREGUNTA); });
+  await waitFor(() => expect(result.current.getThreadMessages(id).at(-1).text).toBe('Resposta privada de la sessió'));
+  await deixaEscriure();
+  expect(fals.files('xat-iaia-titols', 'titols')[0].sessions).toEqual([{ id, titol: 'Com funciona el Bloc de Notes quan…' }]);
+  expect(contingutDelDisc(fals)).not.toContain(PREGUNTA);
+  expect(contingutDelDisc(fals)).not.toContain('Resposta privada');
+  unmount();
+});

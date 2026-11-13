@@ -69,6 +69,11 @@ export function DateTimeControl({ time, date, dateTime, label, onClick }) {
     );
   }
 
+  // Explicit null is a truthful unknown/year-only label, never a fake <time>.
+  if (dateTime === null) {
+    return <span className="btn-date-time" aria-label={accessibleLabel}>{content}</span>;
+  }
+
   return (
     <time
       className="btn-date-time"

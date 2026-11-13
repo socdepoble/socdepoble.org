@@ -35,6 +35,12 @@
  * amb el + (menú amb «Fotos i vídeos» i la quota al peu), la carona dins del
  * camp i el botó redó que grava, atura, envia el fitxer o envia el text. En
  * local i en la llavor no hi ha adjunts (només en remot): ací es poden vore.
+ *
+ * Gauntlet 261112 (R21, regressio_ui_xat-07) · Les tres capçaleres de mostra
+ * passen `nivellTitol={5}` (NIVELL_TITOL_MOSTRA): a la vista del xat el nom de
+ * la conversa és l'encapçalament de nivell 1, però ací van davall dels h4 de
+ * l'espècimen. Sense, /disseny/fonaments/xat tenia quatre H1 (el de la pàgina
+ * i tres de mostra). El píxel no canvia: el nom és el mateix <strong>.
  */
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
@@ -212,12 +218,15 @@ const FIL_AVISOS = mapejaFil({
   imatgeUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png'
 });
 
+/* Davall dels h4 de l'espècimen (h3), com les targetes de mostra (h5). */
+const NIVELL_TITOL_MOSTRA = 5;
+
 function CapcaleresDeMostra() {
   const [avis, setAvis] = useState('');
   return (
     <>
-      <CapcaleraConversa fil={FIL_PAGINA} onTorna={() => setAvis('Fletxa: tornaria a la llista.')} onSeleccionar={() => setAvis('Entraria a «Seleccionar missatges».')} t={t} />
-      <CapcaleraConversa fil={FIL_AVISOS} onTorna={() => setAvis('Fletxa: tornaria a la llista.')} onSeleccionar={() => setAvis('Entraria a «Seleccionar missatges».')} t={t} />
+      <CapcaleraConversa fil={FIL_PAGINA} nivellTitol={NIVELL_TITOL_MOSTRA} onTorna={() => setAvis('Fletxa: tornaria a la llista.')} onSeleccionar={() => setAvis('Entraria a «Seleccionar missatges».')} t={t} />
+      <CapcaleraConversa fil={FIL_AVISOS} nivellTitol={NIVELL_TITOL_MOSTRA} onTorna={() => setAvis('Fletxa: tornaria a la llista.')} onSeleccionar={() => setAvis('Entraria a «Seleccionar missatges».')} t={t} />
       {avis ? <p role="status">{avis}</p> : null}
     </>
   );
@@ -299,7 +308,7 @@ export default function EspecimenXat() {
         ['BotoBaixar', '{ nous, onBaixa, t }', '0', 'Botó redó «Baixa al final»; la pastilla ix amb nous > 0 («99+» per damunt de 99).'],
         ['BarraResposta', '{ missatge, onCancela, t }', '—', 'Autor («Tu» si és teu) i text a una línia; la ✕ «Cancel·la la resposta».'],
         ['CitaResposta', '{ citat, onVes?, interactiva?, t }', 'interactiva = true', 'Botó cap a l’original; «Missatge no carregat» sense acció si citat és null.'],
-        ['CapcaleraConversa', '{ fil, onTorna, onSeleccionar, seleccio?, t }', '—', 'Avatar, nom i línia. Un fil de pàgina porta «Sobre: …» i els participants, i tot el bloc enllaça a la pàgina; un canal, el megàfon.'],
+        ['CapcaleraConversa', '{ fil, onTorna, onSeleccionar, seleccio?, t, nivellTitol? }', 'nivellTitol = 1', 'Avatar, nom i línia. Un fil de pàgina porta «Sobre: …» i els participants, i tot el bloc enllaça a la pàgina; un canal, el megàfon. El nom és l’encapçalament de nivell nivellTitol (role="heading" sobre el <strong>, mai un element H1); fora de la vista del xat, un nivell més baix o null.'],
         ['PastillaNoLlegits', '{ quants, t }', '0', 'Res si quants és 0; «99+» per damunt de 99.'],
         ['MarquesEstat', "{ estat: 'pendent'|'enviat'|'lliurat'|'llegit'|'error', t }", "'enviat'", 'Icona més text per al lector de pantalla.']
       ]}
@@ -363,7 +372,7 @@ export default function EspecimenXat() {
       <CompositorsDePagina />
 
       <h4>Presència observada al servidor (R54, mostra fixa)</h4>
-      <CapcaleraConversa fil={FILS[0]} escrivint={2} onTorna={() => {}} t={t} />
+      <CapcaleraConversa fil={FILS[0]} nivellTitol={NIVELL_TITOL_MOSTRA} escrivint={2} onTorna={() => {}} t={t} />
       <IndicadorEscrivint quants={1} t={t} />
       <IndicadorEscrivint quants={3} t={t} />
       <h4>Pastilla de no llegits i marques d’estat (UX-B05)</h4>

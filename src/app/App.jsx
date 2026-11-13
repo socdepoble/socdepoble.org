@@ -1122,12 +1122,20 @@ function RedireccioDEntrada({ mode }) {
   return <Navigate to={to} replace />;
 }
 
+/* Public section names share one implementation and preserve reload state. */
+function RedireccioCanonica({ to }) {
+  const { search, hash } = useLocation();
+  return <Navigate to={`${to}${search ? `?${search}` : ''}${hash || ''}`} replace />;
+}
+
 function AppRoutes() {
   const { agents = [] } = useCoreContent();
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
         <Route path="/" element={<Navigate to={`${DEFAULT_SECTION_PATH}`} replace />} />
+        <Route path="/esdeveniments" element={<RedireccioCanonica to="/calendari" />} />
+        <Route path="/panell" element={<RedireccioCanonica to="/control" />} />
         
         {/* Rutes globals i administratives */}
         <Route path="/admin/*" element={<RequireAuth rol="superadmin"><AdminSection /></RequireAuth>} />
@@ -1153,6 +1161,7 @@ function AppRoutes() {
         <Route path="/connectar" element={<ConnectarSection agents={agents} />} />
         {/* P0-114 · Amb VITE_SDP_APP_AVISADOR=0, /page/avisador cau a /page/:slug (la 404 de sempre). */}
         {import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? <Route path="/page/avisador" element={<AvisadorPage />} /> : null}
+        {import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? <Route path="/app/avisador" element={<RedireccioCanonica to="/page/avisador" />} /> : null}
         <Route path="/page/:slug/:itemSlug" element={<PageDetailSection />} />
         <Route path="/page/:slug" element={<PageDetailSection />} />
         <Route path="/plugin/:id" element={<PluginPage />} />

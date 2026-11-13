@@ -46,7 +46,8 @@ import {
 } from '../../components/PedraSeca/index.js';
 import { fontsDeLActe } from '../../components/universal/EventCard.jsx';
 import { publicacioTraduible } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
-import { dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { dataHoraDeBarra, encapcalamentDeTargeta } from '../../components/universal/editorial.js';
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { recurrenciaSuportada } from '../../utils/esdeveniment.js';
 import { clauDeData, sumaDies } from '../../utils/periodes.js';
 import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
@@ -64,11 +65,12 @@ const nomDelMes = ({ any, mes }) => new Date(any, mes, 1).toLocaleDateString(LOC
    barra taronja: sempre plena). No porta cap enllaç: l'acte no té pàgina a
    Sóc de Poble. */
 function TargetaDeLAgenda({ entrada }) {
+  const t = useTraductorOpcional();
   const esdeveniment = entrada.acte;
   const data = dataHoraDeBarra(fontsDeLActe(esdeveniment));
   return (
     <UniversalCard title={esdeveniment.titol} body={esdeveniment.lloc || undefined}
-      date={data.date} time={data.time} dateTime={data.dateTime} />
+      {...encapcalamentDeTargeta({ date: data.dateTime }, { t })} />
   );
 }
 

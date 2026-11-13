@@ -307,8 +307,12 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
      el sostre passa de 24 a 28 KB.
      Gauntlet 261101 · X-E-readme (E-11): la PMF recupera els atributs, els filtres i les
      dos còpies que el codi manté (uns 29 KB); el sostre passa de 28 a 32 KB, i el
-     límit real continua sent el de paraules. */
-  assert.ok(Buffer.byteLength(readme) < 32768, 'readme de menys de 32 KB');
+     límit real continua sent el de paraules.
+     Onada R21 (v1.2.0 · WP 1.1.13) · El readme de la 1.1.12 ja en feia 32.740 B (28 de marge):
+     les notes obligatòries de la 1.1.13 (Changelog i Upgrade Notice, prova de dalt) no hi caben
+     sense esborrar història publicada. El sostre passa de 32 a 36 KB; el límit real continua
+     sent el de paraules. */
+  assert.ok(Buffer.byteLength(readme) < 36864, 'readme de menys de 36 KB');
   // E-10: WordPress.org pinta «Donate link» com un botó de donació, i cap pàgina de socdepoble.org no permet donar.
   assert.equal(capcalera(readme, 'Donate link'), null, 'sense Donate link fins que hi haja una pàgina de donacions real');
   const etiquetes = capcalera(readme, 'Tags').split(',').map((e) => e.trim()).filter(Boolean);

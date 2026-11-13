@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.12
+Stable tag: 1.1.13
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,11 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.13 =
+* **Traductor més protegit:** el servei de traducció del lloc també compta els caràcters que no troba a la memòria cau per a cada adreça: com a màxim 10000 cada 10 minuts, un límit que la constant `SDP_TRADUCCIO_LIMIT_IP_CARACTERS` pot canviar.
+* **Visor de la versió 1.2.0:** el paquet porta el visor compilat amb el codi de la versió 1.2.0 de Sóc de Poble, la que explica la seua pàgina «Versions».
+* **Captura de Fediversity:** la llegenda diu que la sol·licitud d'agost 2026-08-1a6 no va passar la primera selecció i que Sóc de Poble no rep cap finançament d'NGI Fediversity.
+
 = 1.1.12 =
 Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia clara en tres passos. Canviar de llengua conserva els camps sense guardar. La marca i el lema castellà es mantenen en valencià.
 
@@ -210,6 +215,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.13 =
+Límit de caràcters per adreça al traductor del lloc, el visor de la versió 1.2.0 de Sóc de Poble i la llegenda de Fediversity al dia.
 
 = 1.1.12 =
 Cinc idiomes integrats, lletra gran i guia en tres passos; els camps es conserven en canviar de llengua.

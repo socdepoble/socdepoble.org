@@ -29,10 +29,12 @@
        fixar res: el servidor la llig en cada desat.
 
      · useControlAvisosPush(t) · el contenidor del full Ajustos. Diu si
-       s'oferix l'interruptor (o només la nota d'instal·lar a l'iPhone) i
-       dona l'onCanvi del GEST: onCanvi(true) crida activaAvisosPush() en el
-       mateix tic, sense cap espera, efecte ni import() pel camí (Safari i
-       Firefox perdrien el gest i el permís no eixiria).
+       s'oferix l'interruptor (o només la nota d'instal·lar a l'iPhone, o
+       l'avís honest d'un entorn sense configurar) i dona l'onCanvi del GEST:
+       onCanvi(true) crida activaAvisosPush() en el mateix tic, sense cap
+       espera, efecte ni import() pel camí (Safari i Firefox perdrien el gest
+       i el permís no eixiria). Els textos passen per `t`, el traductor de la
+       llengua de la pàgina: el hook no llig cap llengua.
 
    Ni este fitxer ni la pàgina nomenen el worker del navegador, el pont natiu
    ni cap emmagatzematge: tot passa pel registre. */
@@ -51,6 +53,31 @@ import { useXat } from './XatContext';
    amb prova de paritat): no hi ha interruptor, només la nota. */
 export const MOTIU_IOS_SENSE_INSTALAR = 'ios-sense-instalar';
 
+const RESERVA = (_clau, reserva) => reserva;
+
+/* R21.4-UI (R21.2-F04) · Transparència honesta quan l'entorn no té configurada
+   la clau VAPID, la configuració push o el connector natiu: un avís per motiu,
+   com a parell [clau, reserva] (la reserva és, caràcter a caràcter, el valor
+   valencià del diccionari; les altres quatre llengües són als seus
+   diccionaris, i `t` tria la de la pàgina). */
+export const TEXTOS_AVISOS_ENTORN = Object.freeze({
+  'sense-clau': ['section.xat.ajustos.avisos.entorn.senseClau', 'Les notificacions push d’este entorn encara no estan configurades (falta la clau d’avisos web).'],
+  'sense-config': ['section.xat.ajustos.avisos.entorn.senseConfig', 'Les notificacions push d’este entorn encara no estan configurades.'],
+  'sense-connector': ['section.xat.ajustos.avisos.entorn.senseConnector', 'Les notificacions push d’esta aplicació encara no estan configurades en este entorn.']
+});
+
+export const MOTIUS_SENSE_CONFIGURAR = Object.freeze(Object.keys(TEXTOS_AVISOS_ENTORN));
+
+export const esMotiuSenseConfigurar = (motiu) => typeof motiu === 'string' && MOTIUS_SENSE_CONFIGURAR.includes(motiu);
+
+/* Un parell [clau, reserva] pel traductor; sense traductor, la reserva. */
+const traductorDeParells = (t) => (typeof t === 'function' ? ([clau, reserva]) => t(clau, reserva) : ([, reserva]) => reserva);
+
+/** L'avís d'entorn d'un motiu sense configurar, en la llengua de `t`; null per a qualsevol altre motiu. */
+export function textAvisEntorn(motiu, t = RESERVA) {
+  return esMotiuSenseConfigurar(motiu) ? traductorDeParells(t)(TEXTOS_AVISOS_ENTORN[motiu]) : null;
+}
+
 /* Els textos de la pàgina «Notificacions», com a parells [clau, reserva]: la
    reserva és, caràcter a caràcter, el valor valencià del diccionari. */
 export const TEXTOS_AVISOS = Object.freeze({
@@ -65,7 +92,6 @@ export const TEXTOS_AVISOS = Object.freeze({
   eixida: ['section.xat.ajustos.avisos.eixida', 'Quan tanques la sessió, este dispositiu deixa de rebre avisos.']
 });
 
-const RESERVA = (_clau, reserva) => reserva;
 /* La marca de «ja desvinculat per a esta sessió fora». */
 const FORA = 'fora';
 const SENSE_NOTES = Object.freeze({ nota: null, notes: Object.freeze([]) });
@@ -76,9 +102,16 @@ const SENSE_NOTES = Object.freeze({ nota: null, notes: Object.freeze([]) });
  * Amb l'interruptor: la nota cega i la de l'eixida, sempre. Només amb la nota
  * d'instal·lar: eixa i prou. Sense res a oferir: cap.
  */
-export function notesDelsAvisos({ oferit = false, nomesNota = false, estat = null, tipus = null } = {}, t = RESERVA) {
-  const tr = typeof t === 'function' ? ([clau, reserva]) => t(clau, reserva) : ([, reserva]) => reserva;
+export function notesDelsAvisos(
+  { oferit = false, nomesNota = false, avisEntorn = false, motiu = null, estat = null, tipus = null } = {},
+  t = RESERVA
+) {
+  const tr = traductorDeParells(t);
   if (nomesNota && !oferit) return { nota: null, notes: [tr(TEXTOS_AVISOS.ios)] };
+  if (!oferit && (avisEntorn || esMotiuSenseConfigurar(motiu))) {
+    const avis = textAvisEntorn(motiu, t);
+    return avis ? { nota: { text: avis, error: false }, notes: [] } : SENSE_NOTES;
+  }
   if (!oferit) return SENSE_NOTES;
   let nota = null;
   if (estat === ESTAT_AVISOS.DENEGAT) nota = { text: tr(tipus === 'natiu' ? TEXTOS_AVISOS.denegatApp : TEXTOS_AVISOS.denegat), error: false };
@@ -226,11 +259,13 @@ export function useControlAvisosPush(t) {
   const base = inst.disponible && sessio?.estat === 'dins' && !inst.eixint && modeDades === 'remote' && teCapacitatSegura('avisosPush');
   const oferit = Boolean(base && inst.motiu === null && inst.ambServidor);
   const nomesNota = Boolean(base && !oferit && inst.motiu === MOTIU_IOS_SENSE_INSTALAR);
+  const avisEntorn = Boolean(base && !oferit && esMotiuSenseConfigurar(inst.motiu));
+  const motiu = avisEntorn ? inst.motiu : null;
   /* El GEST: síncron fins al registre (cap async, cap await, cap setState previ). */
   const onCanvi = useCallback((encesa) => (encesa === true ? activaAvisosPush() : desactivaAvisosPush()), []);
-  const { nota, notes } = notesDelsAvisos({ oferit, nomesNota, estat: inst.estat, tipus: inst.tipus }, t);
+  const { nota, notes } = notesDelsAvisos({ oferit, nomesNota, avisEntorn, motiu, estat: inst.estat, tipus: inst.tipus }, t);
   return {
-    oferit, nomesNota, actiu: inst.estat === ESTAT_AVISOS.ACTIU, ocupat: inst.ocupat === true,
+    oferit, nomesNota, avisEntorn, motiu, actiu: inst.estat === ESTAT_AVISOS.ACTIU, ocupat: inst.ocupat === true,
     estat: inst.estat, tipus: inst.tipus, nota, notes, onCanvi
   };
 }

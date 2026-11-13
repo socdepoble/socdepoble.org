@@ -60,7 +60,6 @@ import BotoBaixar from './BotoBaixar.jsx';
 import BarraResposta from './BarraResposta.jsx';
 import Compositor, { esNomesLectura } from './Compositor.jsx';
 import ControlsAdjunt from './ControlsAdjunt.jsx';
-import ConsultaIAIA from './ConsultaIAIA.jsx';
 import {
   MAX_PAGINES_NO_LLEGITS, MS_ESPERA_OBERTURA, MS_RESSALT, anotaGrups, anunciDeNous, clauDe, classificaCanvi,
   comportamentDesplacament, construeixFiles, estaAlFons, estatObertura, extremsSeq, noLlegitsEnObrir,
@@ -313,10 +312,12 @@ function estabilitza(rebuts, previ) {
    `cortesiaIAIA` (remot amb sessió, al grup públic de /iaia, on ningú no
    contesta): després d'enviar la pregunta, la IAIA respon ací mateix, amb una
    bombolla seua i l'avís «Resposta local de la IAIA: només la veus tu…».
-   La resposta viu a l'estat d'esta conversa: mai no va al port ni al
-   servidor, no porta `seq` (no marca res com a llegit) i es perd en canviar
-   de fil o recarregar. Si l'enviament falla o la persona no accepta les
-   normes, no hi ha resposta. */
+   La resposta viu a l'estat d'esta conversa: mai no va al port, al servidor
+   ni a IndexedDB, no porta `seq` (no marca res com a llegit) i es perd en
+   canviar de fil o recarregar (Política 2.5, §14: «no es guarda»).
+   «Oblida les respostes de la IAIA» les lleva abans; les preguntes
+   publicades continuen al servidor. Si l'enviament falla o la persona no
+   accepta les normes, no hi ha resposta. */
 /* T7a (261104) · xat-ux-a11y-05: `senseSessio` (XatSection, el Xat de mostra)
    amaga «Envia l’esborrany al Bloc de Notes» de la IAIA: sense sessió, crear
    la nota falla sempre. Per defecte fals: el de sempre. */
@@ -348,17 +349,11 @@ export default function Conversa({
   /* B8C-5 · L'entrada del silenci al menú «⋯» i el seu diàleg (null fora del proveïdor). */
   const silenci = useSilenciDelFil(fil, t, locale);
   const [oblitObert, setOblitObert] = useState(null);
+  /* La via que el diàleg confirma, fixada en obrir-lo: el títol i el text no
+     canvien mentre es tanca, quan ja no queda res per oblidar. */
+  const [viaDelDialeg, setViaDelDialeg] = useState(null);
   const [oblidant, setOblidant] = useState(false);
   const [errorOblit, setErrorOblit] = useState(false);
-  const potOblidar = fil?.sessioLocalIAIA && typeof onOblidaSessioIAIA === 'function';
-  const confirmaOblit = async () => {
-    if (oblidant || !potOblidar) return;
-    setOblidant(true);
-    setErrorOblit(false);
-    try { await onOblidaSessioIAIA(fil.id); setOblitObert(false); }
-    catch { setErrorOblit(true); }
-    finally { setOblidant(false); }
-  };
   /* Els nous d'altres que ha d'anunciar la regió en viu (#11): AnunciDeNous. */
   const anunciRef = useRef(null);
   /* En estret (mòbil), enfocar el camp obriria el teclat (#6). */
@@ -432,10 +427,69 @@ export default function Conversa({
   const muntadaRef = useRef(false);
   const comptadorLocalRef = useRef(0);
   const cuaLocalRef = useRef(Promise.resolve());
+  /* R21 (carril f1) · Puja amb cada oblit de les respostes locals: una
+     resposta que encara volava no torna a aparéixer després. */
+  const generacioLocalRef = useRef(0);
   useEffect(() => {
     muntadaRef.current = true;
     return () => { muntadaRef.current = false; };
   }, []);
+
+  /* R21.4-UI + R21 (carril f1) · «Oblida» té tres vies, i cada una diu el
+     que fa de veritat (Política 2.5, §14): la sessió local (títol al
+     navegador i missatges en memòria), el fil principal iaia-local (només en
+     memòria) i, al xat de la IAIA amb cortesia, les respostes locals (en
+     memòria; les preguntes enviades continuen al servidor). */
+  const potOblidarSessio = Boolean(fil?.sessioLocalIAIA && typeof onOblidaSessioIAIA === 'function');
+  const potOblidarFilLocal = Boolean(fil?.filLocalIAIA && !fil?.sessioLocalIAIA && typeof onOblidaSessioIAIA === 'function' && messages.length > 1);
+  const potOblidarCortesia = Boolean(cortesiaIAIA && !fil?.filLocalIAIA && respostesLocals.length > 0);
+  const viaOblit = (potOblidarSessio && 'sessio') || (potOblidarFilLocal && 'local') || (potOblidarCortesia && 'cortesia') || null;
+  const textosOblit = (via) => (via === 'cortesia'
+    ? {
+      accio: t('section.xat.iaia.oblit.accioCortesia', 'Oblida les respostes de la IAIA'),
+      text: t('section.xat.iaia.oblit.textCortesia', 'S’esborraran de la pantalla les respostes locals de la IAIA, que només veus tu. Les preguntes que has enviat no s’esborren: continuen al servidor, i en un xat públic les poden llegir les altres persones.'),
+      confirma: t('section.xat.iaia.oblit.confirmaCortesia', 'Oblida les respostes')
+    }
+    : {
+      accio: t('section.xat.iaia.oblit.accio', 'Oblida esta conversa'),
+      text: via === 'local'
+        ? t('section.xat.iaia.oblit.textLocal', 'S’esborraran de la pantalla les preguntes i les respostes d’esta conversa amb la IAIA. Este dispositiu no en guarda cap còpia.')
+        : t('section.xat.iaia.oblit.text', 'S’esborraran el títol guardat i els missatges temporals d’esta conversa en este dispositiu.'),
+      confirma: t('section.xat.iaia.oblit.confirma', 'Oblida la conversa')
+    });
+  /* regressio_ui_xat-06 · El diàleg es tanca per la via normal (obert=false)
+     encara que ja no quede res per oblidar, i no es desmunta obert. Com que
+     l'entrada del menú desapareix, el focus torna explícitament al «⋯» que
+     l'ha obert (WCAG 2.4.3), després que Dialeg (fill: el seu efecte va
+     abans) haja tancat el <dialog>; mai no cau a <body>. */
+  const obridorOblitRef = useRef(null);
+  const focusAlObridorRef = useRef(false);
+  useEffect(() => {
+    if (oblitObert !== false || !focusAlObridorRef.current) return;
+    focusAlObridorRef.current = false;
+    const obridor = obridorOblitRef.current;
+    if (obridor?.isConnected) obridor.focus({ preventScroll: true });
+  }, [oblitObert]);
+  const confirmaOblit = async () => {
+    if (oblidant) return;
+    if (!viaDelDialeg || viaDelDialeg !== viaOblit) { focusAlObridorRef.current = true; setOblitObert(false); return; }
+    setOblidant(true);
+    setErrorOblit(false);
+    try {
+      if (viaDelDialeg === 'cortesia') {
+        generacioLocalRef.current += 1;
+        setRespostesLocals([]);
+      } else {
+        await onOblidaSessioIAIA(fil.id);
+      }
+      focusAlObridorRef.current = true;
+      setOblitObert(false);
+    } catch {
+      setErrorOblit(true);
+    } finally {
+      setOblidant(false);
+    }
+  };
   const geometria = useRef({ claus: [], alcada: 0 });
   /* Als grups i als Avisos cada bombolla diu qui l'ha escrita. */
   const esGrup = fil?.tipus === 'grup' || fil?.tipus === 'canal';
@@ -829,11 +883,12 @@ export default function Conversa({
 
   const encuaRespostaLocal = useCallback((value, idPropi, previs) => {
     if (!cortesiaIAIA || typeof respostaLocalIAIA !== 'function') return;
+    const generacio = generacioLocalRef.current;
     cuaLocalRef.current = cuaLocalRef.current
       .then(() => respostaLocalIAIA(value))
       .catch(() => null)
       .then((trobada) => {
-        if (!muntadaRef.current) return;
+        if (!muntadaRef.current || generacio !== generacioLocalRef.current) return;
         comptadorLocalRef.current += 1;
         const missatge = {
           id: `iaia-local:${comptadorLocalRef.current}`, sender: 'other', author: NOM_IAIA, usuariId: IAIA_ID, is_ai: true,
@@ -1058,8 +1113,8 @@ export default function Conversa({
   /* Gauntlet 261029 (cicle 1) · Amb la cortesia, les respostes locals de la
      IAIA hi entren darrere de la seua pregunta (intercalaRespostesLocals). */
   const files = useMemo(
-    () => (cortesiaIAIA ? intercalaRespostesLocals(filesDelFil, respostesLocals) : filesDelFil),
-    [filesDelFil, cortesiaIAIA, respostesLocals]
+    () => (cortesiaIAIA && !carregantFil ? intercalaRespostesLocals(filesDelFil, respostesLocals) : filesDelFil),
+    [carregantFil, filesDelFil, cortesiaIAIA, respostesLocals]
   );
 
   /* Els missatges per id, per a trobar el que cita cada resposta. */
@@ -1253,22 +1308,27 @@ export default function Conversa({
         {...accionsDeLaContrapart}
         accioXifratge={accioXifratge}
         accioSilenci={silenci.accio}
-        accioOblit={potOblidar ? {
-          etiqueta: t('section.xat.iaia.oblit.accio', 'Oblida esta conversa'),
-          onTria: () => { setErrorOblit(false); setOblitObert(true); }
+        accioOblit={viaOblit ? {
+          etiqueta: textosOblit(viaOblit).accio,
+          onTria: (obridor) => {
+            obridorOblitRef.current = obridor ?? null;
+            setErrorOblit(false);
+            setViaDelDialeg(viaOblit);
+            setOblitObert(true);
+          }
         } : null}
       />
       <DialegSilenci {...silenci.dialeg} t={t} />
-      {potOblidar && oblitObert !== null ? (
+      {oblitObert !== null ? (
         <DialegConfirmacio
           obert={oblitObert}
           onTanca={() => { if (!oblidant) setOblitObert(false); }}
           onConfirma={confirmaOblit}
           carregant={oblidant}
           destructiu
-          titol={t('section.xat.iaia.oblit.accio', 'Oblida esta conversa')}
-          descripcio={t('section.xat.iaia.oblit.text', 'S’esborraran el títol guardat i els missatges temporals d’esta conversa en este dispositiu.')}
-          etiquetaConfirma={t('section.xat.iaia.oblit.confirma', 'Oblida la conversa')}
+          titol={textosOblit(viaDelDialeg).accio}
+          descripcio={textosOblit(viaDelDialeg).text}
+          etiquetaConfirma={textosOblit(viaDelDialeg).confirma}
           etiquetaCancela={t('common.cancela', 'Cancel·lar')}
         >
           {errorOblit ? <p role="alert">{t('section.xat.iaia.oblit.error', 'No s’ha pogut oblidar la conversa. Torna-ho a provar.')}</p> : null}
@@ -1431,12 +1491,10 @@ export default function Conversa({
         </div>
       ) : null}
 
-      {/* Ordre del Mestre (261026_2126; P1-37) · L'àncora de «Baixa al final»
-          va damunt de «Pregunta a la IAIA»: el botó flota sobre els missatges,
-          com a tota conversa, i no tapa la punta dreta de la píndola. */}
+      {/* Ordre del Mestre (261026_2126; P1-37) + R21.3 · El botó «Baixa al
+          final» flota sobre els missatges, damunt de la barra del compositor
+          (eliminat definitivament el botó/modal inferior «Pregunta a la IAIA»). */}
       {aBaix ? null : <BotoBaixar nous={nousAvall} onBaixa={baixaAlFinal} t={t} />}
-
-      {consultaIAIA && !modeSeleccio ? <ConsultaIAIA t={t} /> : null}
 
       {/* Pla 261028_1526 (P1-66) · Una sola barra: ControlsAdjunt guarda
           l'estat dels adjunts i munta el Compositor (render-prop), sempre el

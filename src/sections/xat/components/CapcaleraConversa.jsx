@@ -60,6 +60,18 @@
  * de missatges, el focus perdut va a la creu «Eixir de la selecció» i, en
  * eixir-ne, al «⋯» (les dues capçaleres porten `key`: React ja no reutilitza la
  * creu com a fletxa «Torna a la llista»).
+ *
+ * Gauntlet R21 (regressio_ui_xat-03 i -07, versions_i_portes-01) · El nom de la
+ * conversa és l'encapçalament de nivell 1 de la vista del xat (R21-GC-04), en
+ * les dues capçaleres (la de la selecció, només per al lector), però es pinta
+ * com sempre: un <strong> amb role="heading" i aria-level, no un element H1.
+ * L'H1 heretava de base.css el text-align:center i el letter-spacing dels
+ * títols de pàgina (el nom ixia centrat i la línia de davall, a l'esquerra), i
+ * la Regla de les Capçaleres (tooling/gates/design_guard.mjs) només admet l'H1
+ * de pàgina dins de header.page-title. `nivellTitol` (1 per defecte; un enter
+ * d'1 a 6, o null per a cap encapçalament) el baixa on la capçalera no és la
+ * vista: l'espècimen del catàleg (EspecimenXat) en passa 5, davall dels seus
+ * h4, i /disseny/fonaments/xat continua amb un sol H1, el de la pàgina.
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, MoreVertical, X } from 'lucide-react';
@@ -77,6 +89,14 @@ function participantsDe(n, t) {
   if (n == null || !Number.isFinite(quants) || quants < 0) return '';
   if (quants === 1) return t('section.xat.pagina.participant', '1 participant');
   return t('section.xat.pagina.participants', '{n} participants').replace('{n}', String(quants));
+}
+
+/* Gauntlet R21 · Els atributs d'encapçalament del nom: res si el nivell no
+   és un enter d'1 a 6 (el nom es pinta igual, sense encapçalament). */
+function propsDeTitol(nivell) {
+  return Number.isInteger(nivell) && nivell >= 1 && nivell <= 6
+    ? { role: 'heading', 'aria-level': nivell }
+    : {};
 }
 
 /* Només les rutes internes de l'aplicació: mai un enllaç a fora des d'ací. */
@@ -97,7 +117,8 @@ function focusPerdut(node) {
 export default function CapcaleraConversa({
   fil, onTorna, onSeleccionar, seleccio = null, t,
   onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
-  onTornaAOrigen = null, accioXifratge = null, accioSilenci = null, accioOblit = null, escrivint = 0
+  onTornaAOrigen = null, accioXifratge = null, accioSilenci = null, accioOblit = null, escrivint = 0,
+  nivellTitol = 1
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -172,6 +193,12 @@ export default function CapcaleraConversa({
     if (desti && focusPerdut(desti)) desti.focus();
   }, [enSeleccio]);
 
+  const nomBase = fil?.name || fil?.title || t('section.xat.conversaSenseNom', 'Conversa');
+  const sufixTu = `(${t('section.xat.rail.tu', 'Tu')})`;
+  const nom = fil?.esPropi && !nomBase.endsWith(sufixTu)
+    ? t('section.xat.nou.tu', '{nom} (Tu)').replace('{nom}', () => nomBase)
+    : nomBase;
+
   if (seleccio) {
     const { quants, onEixir } = seleccio;
     const recompte = quants === 0
@@ -184,12 +211,12 @@ export default function CapcaleraConversa({
         <button ref={creuRef} type="button" className="sdp-xat-icona" onClick={onEixir} aria-label={t('section.xat.seleccio.eixir', 'Eixir de la selecció')}>
           <X size={24} aria-hidden="true" focusable="false" />
         </button>
+        <strong className="sdp-sr-only" {...propsDeTitol(nivellTitol)}>{nom}</strong>
         <strong className="sdp-xat-capcalera__info" aria-live="polite">{recompte}</strong>
       </header>
     );
   }
 
-  const nom = fil?.name || fil?.title || t('section.xat.conversaSenseNom', 'Conversa');
   const altres = Array.isArray(fil?.altresNoms) ? fil.altresNoms : [];
   const esGrup = fil?.tipus === 'grup';
   const subjecte = fil?.subjecte || null;
@@ -197,6 +224,7 @@ export default function CapcaleraConversa({
      funció de reemplaç: un «Bar $` Co» es pinta tal qual (moderacio.js, omple). */
   let linia = '';
   if (subjecte) linia = participantsDe(fil?.participants, t);
+  else if (fil?.esPropi) linia = t('section.xat.nou.tuMateix', "Envia't missatges a tu mateix");
   else if (esGrup || altres.length > 1) linia = altres.join(', ');
   else if (fil?.comEntitat && fil?.entitatNom) linia = t('section.xat.entitat.canal', 'Canal de {nom}').replace('{nom}', () => fil.entitatNom);
   else if (fil?.esIA) linia = t('section.xat.ia.avis', 'Intel·ligència artificial en proves');
@@ -218,9 +246,9 @@ export default function CapcaleraConversa({
 
   const identitat = (
     <>
-      <AvatarFil fil={fil} nom={nom} mida="sm" />
+      <AvatarFil fil={fil} nom={nomBase} mida="sm" />
       <div className="sdp-xat-capcalera__info">
-        <strong className="sdp-xat-capcalera__nom">{nom}</strong>
+        <strong className="sdp-xat-capcalera__nom" {...propsDeTitol(nivellTitol)}>{nom}</strong>
         {escrivint > 0 ? <IndicadorEscrivint quants={escrivint} t={t} /> : null}
         {!escrivint && (sobre || linia) ? (
           <span className="sdp-xat-capcalera__sub" id={idSub}>

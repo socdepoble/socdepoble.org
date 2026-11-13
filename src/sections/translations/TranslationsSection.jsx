@@ -4,6 +4,8 @@ import { UniversalCard } from '../../components/PedraSeca';
 import { SUPPORTED_LANGUAGES } from '../../config/i18n';
 import { useUIState, useUIActions } from '../../app/contexts/UIContext';
 import { traduccioDePaginesDisponible } from '../../components/PedraSeca/hooks/useTraduccioPagina.js';
+import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 
 /* /traduccions amb les mateixes targetes que el Panell i la Consola (pla
    260924_1850 §4). Abans hi havia dos fantasmes fets a mà:
@@ -142,6 +144,7 @@ export default function TranslationsSection() {
 
           <div className="sdp-card-grid">
             <UniversalCard
+              {...encapcalamentDeTargeta(null, { author: DEFAULT_AUTHOR.name, location: DEFAULT_AUTHOR.location, t })}
               icon={<Languages aria-hidden="true" />}
               title={t('section.translations.pages.card.title', 'Botó Traduir de la Barra Blava')}
               body={[
@@ -175,6 +178,7 @@ export default function TranslationsSection() {
             {informacio.map(({ id, Icona, titol, cos, pendent }) => (
               <UniversalCard
                 key={id}
+                {...encapcalamentDeTargeta(null, { author: DEFAULT_AUTHOR.name, location: DEFAULT_AUTHOR.location, t })}
                 icon={<Icona aria-hidden="true" />}
                 title={titol}
                 body={cos}

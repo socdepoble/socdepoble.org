@@ -1310,7 +1310,8 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
   assert.ok(arrencada.some(css), 'src/css/index.css?inline viatja a l\'arrencada (tros «estils»)');
   assert.ok(!diferits.some(css), 'cap tros diferit porta el full');
   const codiDArrencada = deLArrencada.map((chunk) => chunk.code).join('\n');
-  assert.match(codiDArrencada, /\.sdp-iaia-consulta\{overflow:hidden\}/, 'el diàleg IAIA porta els seus estils dins del Shadow DOM');
+  assert.match(codiDArrencada, /\.sdp-xat-iaia-suggeriments\{/, 'els suggeriments superiors de la IAIA porten els seus estils dins del Shadow DOM');
+  assert.doesNotMatch(codiDArrencada, /\.sdp-iaia-consulta\b/, 'el modal/botó inferior ConsultaIAIA ha sigut eliminat (R21.3)');
   assert.match(codiDArrencada, /\.sdp-xat-adjunts\{flex:none;/, 'els controls multimèdia porten els seus estils dins del Shadow DOM');
   const deSrc = entrada.moduleIds
     .filter((id) => id.startsWith(path.join(ARREL, 'src') + path.sep))

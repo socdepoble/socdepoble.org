@@ -91,7 +91,7 @@ export function rutaDeLaBoinaDelMur(item) {
    alertaMunicipalDe, amb useAjuntamentsDelMur). La targeta no ho decidix: el
    MurSection és qui pregunta al directori. Sense la prop (el Calendari,
    l'històric de l'actor, el peu «Ja publicat»), el DOM de sempre. */
-export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunicipal = null, varietatPorta = 'primari' }) {
+export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunicipal = null, varietatPorta = 'secundari' }) {
   const { t, language = 'ca' } = useUIActions();
   /* Cadena R11, Loop 3 (L2-09) · Les categories mares (P0-40) es lligen en la
      llengua de la interfície, com a les pàgines (localitzaPagina). En

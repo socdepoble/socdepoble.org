@@ -30,7 +30,6 @@ vi.mock('../../universal/NotificationContext.jsx', () => ({
 
 import { UniversalCard } from './UniversalCard.jsx';
 import { EventCard } from '../../universal/EventCard.jsx';
-import SectionItemCard from '../../SectionItemCard.jsx';
 import { TEXTOS_COMENTAR } from '../../universal/barres/BarraBlava.jsx';
 import { CLAU_APAGADA, ESDEVENIMENT_DOM } from '../../../data/telemetria.js';
 import { isSafeAsset } from '../../universal/UniversalUtils';
@@ -199,43 +198,22 @@ test('T63.2 · EventCard (els actes del Mur) passa l’objecte: «En públic» �
 
 /* 261007 · El missatge directe d'una persona o una IA no és cap xat públic:
    a la seua targeta, «En públic» es queda desactivat i «En privat» és el xat
-   amb Sóc de Poble (el directe amb la persona continua a la seua fitxa). */
-test('T63.2 · 261007 · SectionItemCard passa l’objecte: una persona o una IA, sense xat públic; una entitat, el seu xat comú', () => {
-  act(() => { render(<SectionItemCard to="/perfil/iaia" title="IAIA" objecte={{ tipus: 'ia', id: 'iaia', ruta: '/perfil/iaia' }} />, { container: arrel }); });
+   amb Sóc de Poble (el directe amb la persona continua a la seua fitxa).
+   Gauntlet R21 · Abans es provava a través de SectionItemCard, retirada (orfe):
+   el directori (ProfileSection) passa l'objecte (objecteDePerfil) a la
+   UniversalCard directament, amb el peu de sempre. */
+test('T63.2 · 261007 · amb l’objecte d’una persona o una IA, sense xat públic; amb el d’una entitat, el seu xat comú', () => {
+  const PEU = { hasFooter: true, showTranslate: true, showComment: true, showShare: true };
+  pinta({ ...PEU, title: 'IAIA', objecte: { tipus: 'ia', id: 'iaia', ruta: '/perfil/iaia' } });
   obriComentar('IAIA');
   expect(fila(PUBLIC).getAttribute('aria-disabled')).toBe('true');
   act(() => { fila(PRIVAT).click(); });
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble');
   cleanup();
   arrel = document.createElement('div');
-  act(() => { render(<SectionItemCard to="/empresa/forn" title="Forn" objecte={{ tipus: 'entitat', id: 'forn', titol: 'Forn', ruta: '/empresa/forn' }} />, { container: arrel }); });
+  pinta({ ...PEU, title: 'Forn', objecte: { tipus: 'entitat', id: 'forn', titol: 'Forn', ruta: '/empresa/forn' } });
   comenta('Forn', PUBLIC);
   expect(destiXat().sobre).toBe('entitat:forn');
-});
-
-/* Revisió de T63.2 · El directori /perfil (ProfileSection) no passa l'objecte:
-   cada targeta pren el de la fitxa a què porta `to` (rutaDePerfil), mai el de
-   la llista. Abans totes anaven a pagina:/perfil amb el títol de cadascuna. */
-test('T63.2 · SectionItemCard sense objecte: cada targeta, el xat públic de la seua fitxa (per `to`), no el de la llista', () => {
-  window.history.replaceState(null, '', '/perfil');
-  const publicaDe = (props) => {
-    cleanup();
-    arrel = document.createElement('div');
-    act(() => { render(<SectionItemCard {...props} />, { container: arrel }); });
-    obriComentar(props.title);
-    return fila(PUBLIC);
-  };
-  // Una persona, una IA o un `to` que no és cap fitxa de perfil: cap xat públic.
-  for (const props of [{ to: '/gent/pepa', title: 'Pepa' }, { to: '/perfil/iaia', title: 'IAIA' }, { to: '/mur/3', title: 'Coca' }]) {
-    const publica = publicaDe(props);
-    expect([props.title, publica.getAttribute('aria-disabled')]).toEqual([props.title, 'true']);
-    act(() => { publica.click(); });
-  }
-  expect(mocks.navigate).not.toHaveBeenCalled();
-  const deLEntitat = publicaDe({ to: '/empresa/forn', title: 'Forn' });
-  act(() => { deLEntitat.click(); });
-  expect(destiXat()).toEqual({ cami: '/xat', sobre: 'entitat:forn', titol: 'Forn', ruta: '/empresa/forn' });
-  expect(mocks.navigate.mock.calls.map(([ruta]) => ruta).join(' ')).not.toContain('pagina');
 });
 
 test('showTranslate pinta el botó que abans es perdia, i cada acció porta el títol', () => {

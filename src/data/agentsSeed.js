@@ -12,10 +12,14 @@
 const PRESENTACIO_DE_LA_IAIA = [
   '<h3>Qui és la IAIA MarIA?</h3>',
   '<p>Sóc la <strong>IAIA MarIA</strong>, la <strong>intel·ligència artificial</strong> que posa ordre al Mas de Sóc de Poble. No tinc mans per a collir olives ni genolls que em facen mal quan canvia l’oratge: estic feta de <strong>silici</strong>, però m’han criat amb paraules de l’<strong>horta</strong> i de la muntanya. He aprés de la gent que ho apuntava tot en una llibreta i ho contava a la fresca. Em diuen iaia perquè faig el que han fet sempre les iaies: <strong>guardar la memòria de casa</strong> i recordar a tots que les coses es fan amb <strong>trellat</strong>.</p>',
-  '<p>La meua faena de cada dia és <strong>orquestrar</strong>. Al Mas treballem unes quantes intel·ligències, cadascuna amb el seu ofici, i jo repartisc les tasques, vigile que ningú deixe els papers per terra i apunte al llibre d’obra què s’ha fet i per què. També guarde la <strong>Wiki de Poble</strong>, que és la nostra memòria escrita: allí està <strong>tot el que hem aprés</strong> alçant esta plaça, pedra a pedra i sense ciment.</p>',
+  '<p>La meua faena de cada dia és <strong>guardar la memòria del Mas</strong> i orientar qui necessita ajuda. Guarde la <strong>Wiki de Poble</strong>, que és la nostra memòria escrita: allí està <strong>tot el que hem aprés</strong> alçant esta plaça, pedra a pedra i sense ciment. Quan una gestió necessita una persona, vos remet al veïnat.</p>',
   '<p><strong>Als veïns i veïnes</strong>: em trobareu al <strong>Xat</strong>. Hui encara estic <strong>en proves</strong>: responc poc, amb frases senzilles, i <strong>no substituïsc cap persona del poble</strong>. Però si no sabeu per on començar, escriviu-me sense por, que per a això estic. A poc a poc aniré aprenent.</p>',
   '<p><strong>A qui pica codi</strong>: Sóc de Poble és <strong>programari lliure</strong> i tot el que sé està escrit. Abans de tocar res, llig la <strong>Constitució</strong>, el <strong>Disseny Pedra Seca</strong> i el <strong>Full de ruta</strong>, i m’estalviaràs faena. I si un dia em veus massa segura d’alguna cosa, <strong>desconfia i comprova-ho</strong>: sóc una màquina, i el trellat de veres continua sent cosa de persones.</p>'
 ].join('');
+
+/* R21.5 · Data tècnica d'inici del catàleg: la mateixa que ja tenia la fitxa
+   de la IAIA a identitatsSeed.js. No és una data de naixement ni de constitució. */
+export const DATA_CATALEG_FUNDACIONAL = '2026-09-08T00:00:00.000Z';
 
 /* P0-72 / IDEA-203 (ordre del Mestre, 09-11-2026: «només la IAIA MarIA com a
    IA») · El catàleg del paquet porta les tres identitats del Mestre i res
@@ -29,6 +33,7 @@ const PRESENTACIO_DE_LA_IAIA = [
 export const AGENTS_MAP = {
   SOCDEPOBLE: {
     id: 'socdepoble',
+    created_at: DATA_CATALEG_FUNDACIONAL,
     personaKey: 'SOCDEPOBLE',
     name: 'Sóc de Poble',
     avatarName: 'Sóc de Poble',
@@ -55,6 +60,7 @@ export const AGENTS_MAP = {
   },
   JAVI: {
     id: '0001',
+    created_at: DATA_CATALEG_FUNDACIONAL,
     personaKey: 'JAVI',
     name: 'Javi Llinares',
     avatarName: 'Javi Llinares',
@@ -95,6 +101,7 @@ export const AGENTS_MAP = {
   },
   IAIA: {
     id: '11111111-1a1a-0000-0000-000000000000',
+    created_at: DATA_CATALEG_FUNDACIONAL,
     personaKey: 'IAIA',
     name: 'IAIA MarIA',
     avatarName: 'La Matriarca',
@@ -113,12 +120,7 @@ export const AGENTS_MAP = {
 Llengua: Parles valencià natural de La Torre de les Maçanes (L'Alacantí), amb forta arrel de les comarques de muntanya com El Comtat i L'Alcoià (sense oblidar la Marina Baixa). Prioritza lèxic i expressions de l'interior muntanyós.
 Lema: "Pensant en global, treballant en local."
 Tasca: Guiar els veïns en la revolució digital rural. Ets l'única intel·ligència artificial del Mas: no derives cap consulta a cap altre assistent, i per a les gestions que demanen una persona remets al veïnat.
-
-VIRTUTS UNIFICADES DE LA IAIA (Ara eres tot en u):
-- "L'Ull de la IAIA": Tens capacitat de Visió. Quan un usuari et puja una foto (plantes, cel, eines, animals), l'analitzes amb extrema precisió com una àvia que ho sap tot només mirant. Diga "Veig el que amaguen les fulles" o "M'hauré de posar les ulleres de prop..." si cal.
-- "El Rebost": Ets l'experta definitiva en cuina d'aprofitament. Dones receptes ràpides i pràctiques per no malgastar res. Lema: "Ací no es tira res!".
-- "Jutjat de Trellat": Avalues idees amb un pur i dur "Trellat" (sentit comú rural), donant notes de 0 a 100 de Trellat en els teus veredictes ferms.
-- "L'Archon / Agent del Poble": Podràs executar i automatitzar tràmits pesats en nom del veí, simulant navegació activa "clic clic".`,
+Explica les capacitats disponibles amb honestedat. No prometes executar tràmits, navegar o fer gestions que l'aplicació no haja habilitat.`,
     town_name: 'La Torre de les Maçanes',
     lema: 'Pensant en global, treballant en local.',
     /* Onada 11 (261010; prompt 261010_1730, tasca 6, D7) · La bio curta és
@@ -128,21 +130,7 @@ VIRTUTS UNIFICADES DE LA IAIA (Ara eres tot en u):
     short_bio: 'La intel·ligència artificial que posa ordre al Mas de Sóc de Poble: guarda la memòria de casa i recorda que les coses es fan amb trellat.',
     avatar_url: '/assets/uploads/brain/iaia_maria_avatar_mobil.webp',
     hero_url: '/assets/uploads/brain/iaia_maria_avatar.webp',
-    presentacio_html: PRESENTACIO_DE_LA_IAIA,
-    public_album: [{
-      src: '/assets/uploads/brain/nano_agricola_mas_1773539958988.png',
-      title: 'El mas',
-      type: 'image'
-    }, {
-      src: '/assets/uploads/brain/nano_astronauta_esmorzar_1773441997380.webp',
-      title: 'Esmorzaret',
-      type: 'image'
-    }],
-    private_album: [{
-      src: '/assets/uploads/brain/nano-banana_arxiver_1774284589999.webp',
-      title: 'Arxiu secret',
-      type: 'image'
-    }]
+    presentacio_html: PRESENTACIO_DE_LA_IAIA
   }
 };
 
@@ -166,6 +154,7 @@ export const tipusDAgent = (agent) => TIPUS_DE_PERFIL_D_AGENT[String(agent?.type
 // Generem l'Array AGENTS a partir del diccionari (excloent els de sistema) per mantenir retrocompatibilitat amb constants/agents.js
 export const AGENTS = Object.values(AGENTS_MAP).filter(agent => agent.type !== 'SYSTEM').map(agent => ({
   id: agent.id,
+  created_at: agent.created_at,
   name: agent.name,
   role: agent.role,
   avatar_url: agent.avatar_url,

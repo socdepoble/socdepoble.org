@@ -299,7 +299,7 @@ describe('Pedra Seca · tpv.css', () => {
     const inici = posicio('/* ═══ BLOC tpv · ');
     expect(inici).toBeGreaterThan(posicio('/* ═══ FI DEL BLOC catalegColleccio ═══ */'));
     expect(inici).toBeGreaterThan(posicio('/* ═══ FI DEL BLOC alergens ═══ */'));
-    const darrereDelsMigrats = moduls.slice(posicio('/* ═══ FI DEL BLOC ConsultaIAIA ═══ */'));
+    const darrereDelsMigrats = moduls.slice(posicio('/* ═══ FI DEL BLOC AdjuntXat ═══ */'));
     expect(senseComentaris(darrereDelsMigrats)).not.toMatch(/\.sdp-(?:control|pindola|pestanyes)(?![a-z0-9])/);
     /* Sonda: la guarda veu una regla posterior que ajustaria les peces. */
     expect(senseComentaris('/* x */ @layer components { .sdp-pestanyes__panell { padding: 0; } }')).toMatch(/\.sdp-(?:control|pindola|pestanyes)(?![a-z0-9])/);

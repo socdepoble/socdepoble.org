@@ -345,7 +345,7 @@ describe('forma="targetes" (UniversalCard)', () => {
     /* El text és dins de l'element principal, que continua sent el segon fill de l'article. */
     const llet = screen.getByRole('button', { name: 'Llet' });
     expect(document.getElementById(llet.getAttribute('aria-describedby')).parentElement).toBe(llet);
-    expect([...llet.closest('article').children].map((e) => e.className)).toEqual(['sp-card-link-overlay', 'sp-card-body has-calendar-badge has-aside', 'sp-card-footer']);
+    expect([...llet.closest('article').children].map((e) => e.className)).toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-body has-calendar-badge has-aside', 'sp-card-footer']);
   });
 
   test('ColumnaColleccio: pendent diu l’estat; fet i anul·lat, el seu text de la línia de davall; la quantitat, la insígnia', () => {
@@ -362,7 +362,7 @@ describe('forma="targetes" (UniversalCard)', () => {
 
   /* REGLA D'OR 1 (ordre del Mestre, 261004) · La boina taronja amb l'autor real: la que l'app vestix
      a cada article (`autoria`, la forma de PaginaApp). L'esquelet no n'inventa cap. */
-  test('la boina: `article.autoria` (nom, poble, avatar i ruta) a dalt de la targeta; sense, la targeta de sempre', () => {
+  test('la boina: `article.autoria` a dalt de la targeta; les metadades absents es declaren', () => {
     const PROJECTE = { nom: 'Sóc de Poble', poble: 'La Torre de les Maçanes', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', href: RUTA_PERFIL_PROJECTE };
     const articles = [{ ...ARTICLES[0], autoria: PROJECTE }, { ...ARTICLES[1], autoria: { nom: 'Tu' } }, ARTICLES[2]];
     munta(<ColumnaCataleg forma="targetes" titol="Productes" categories={CATEGORIES} articles={articles} />);
@@ -379,14 +379,31 @@ describe('forma="targetes" (UniversalCard)', () => {
     const llet = targetaDe('Cafè amb llet').querySelector('header.sp-card-header');
     expect(llet.querySelector('span.sp-card-author-block .sp-card-author-name').textContent).toBe('Tu');
     expect(within(llet).queryByRole('link')).toBeNull();
-    /* Sense autoria: cap boina inventada. */
-    expect(targetaDe('Aigua').querySelector('header.sp-card-header')).toBeNull();
+    /* Unknown metadata is explicit; no person, town or current date is invented. */
+    const missing = targetaDe('Aigua').querySelector('header.sp-card-header');
+    expect(missing.textContent).toContain('Autoria no indicada');
+    expect(missing.textContent).toContain('Poble no indicat');
+    expect(missing.textContent).toContain('Data no indicada');
+    expect(missing.querySelector('[datetime]')).toBeNull();
+  });
+
+  test('R21.6 · la data real de l’article es conserva i els buits no es daten amb hui', () => {
+    const articles = [{ ...ARTICLES[0], created_at: '2023-06-07T11:30:00Z', autoria: { nom: 'Forn real', poble: 'Benifallim' } }, ARTICLES[2]];
+    munta(<ColumnaCataleg forma="targetes" titol="Productes" articles={articles} selector={null} />);
+    const tallat = targetaDe('Tallat');
+    expect(tallat.querySelector('.sp-card-author-name').textContent).toBe('Forn real');
+    expect(tallat.querySelector('.sp-card-author-location').textContent).toBe('Benifallim');
+    const aigua = targetaDe('Aigua');
+    expect(aigua.querySelector('.btn-date-time').textContent).toBe('Data no indicada');
+    expect(aigua.querySelector('button.btn-date-time, time[datetime]')).toBeNull();
+    fireEvent.click(within(tallat).getByRole('button', { name: /07\/06\/23 · Obri el calendari d’eixe mes/ }));
+    expect(ubicacio()).toBe('/calendari?mes=2023-06');
   });
 
   test('ColumnaColleccio: la boina de cada línia (`linia.autoria`)', () => {
     const linies = [{ id: 'p', articleId: 'pomes', quantitat: 1, nom: 'Pomes', autoria: { nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE } }];
     munta(<ColumnaColleccio forma="targetes" titol="Llista" linies={linies} onTria={() => {}} />);
-    expect(within(targetaDe('Pomes')).getByRole('link', { name: 'Sóc de Poble' }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
+    expect(within(targetaDe('Pomes')).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
   });
 
   test('Llei del Píxel: sense la prop, el cos de sempre (rajoles i files), cap UniversalCard', () => {

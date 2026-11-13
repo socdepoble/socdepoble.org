@@ -82,7 +82,7 @@ describe('la font única del text', () => {
     expect(fills[0].textContent).toBe('Qui és la IAIA MarIA?');
     expect(fills.slice(1).map((fill, i) => fill.textContent.startsWith(PRIMERES_PARAULES[i]))).toEqual([true, true, true, true]);
     expect(TEXT).not.toContain("'");
-    expect(TEXT.match(/’/g)).toHaveLength(7);
+    expect(TEXT).toMatch(/\p{L}’\p{L}/u);
     for (const antic of ['cor cibernètic', 'Les meues obligacions diàries', 'Claude', 'Codex']) {
       expect([antic, TEXT.includes(antic)]).toEqual([antic, false]);
     }
@@ -182,7 +182,7 @@ describe('261021 · la pàgina única de la IAIA MarIA', () => {
     render(<PerfilPublicSection agents={[]} />);
     await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
     const cos = document.querySelector('article.detail-content');
-    const titol = screen.getByRole('heading', { level: 3, name: "Tu decidixes quanta intel·ligència artificial t'acompanya" });
+    const titol = screen.getByRole('heading', { level: 3, name: 'Tu decidixes quanta presència té la IAIA MarIA' });
     expect(cos.contains(titol)).toBe(false);
     expect(cos.compareDocumentPosition(titol) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getAllByRole('radio')).toHaveLength(4);

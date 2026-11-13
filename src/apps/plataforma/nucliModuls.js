@@ -37,6 +37,8 @@ import { ESTATS_ARTICLE, TEXTOS_ESTAT_LINIA, estatLinia, mouCategoria } from '..
 import { BarraResum } from '../../components/PedraSeca/organismes/BarraResum.jsx';
 import { DetallArticle } from '../../components/PedraSeca/organismes/DetallArticle.jsx';
 import { Dialeg, DialegConfirmacio } from '../../components/PedraSeca/organismes/Dialeg.jsx';
+/* Nucli 1.6.0 (R21.6): la capçalera de lectura de la targeta, pel seu fitxer de Pedra Seca. */
+import { encapcalamentDeTargeta } from '../../components/PedraSeca/organismes/encapcalamentDeTargeta.js';
 import {
   AreaText, Camp, CampFitxer, CampText, Casella, GrupCamps, GrupOpcions, Interruptor, Selector
 } from '../../components/PedraSeca/organismes/formulari.jsx';
@@ -79,7 +81,7 @@ export const NUCLI = Object.freeze({
     Fila, GraellaArticles, GraellaTargetes, GrupCamps, GrupOpcions, Histograma, IconButton, Insignia, Interruptor, LiniaDelTemps,
     LiniesColleccio, LlistaArticles, MarcColumna, NavegacioPeriode, OrdenaCategories, PaginaApp, Pestanyes, Pila, PillToggle,
     Progres, Selector, SelectorCategoria, TEXTOS_ESTAT_LINIA, TargetesColleccions, Taula, TeclatNumeric, UniversalCard,
-    UniversalTPV, estatLinia, mouCategoria, nivellHistograma
+    UniversalTPV, encapcalamentDeTargeta, estatLinia, mouCategoria, nivellHistograma
   }),
   workspace: Object.freeze({ CatalegWorkspace, DefaultItemCard, DetallCataleg, UniversalWorkspace })
 });

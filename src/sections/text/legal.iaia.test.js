@@ -132,14 +132,18 @@ describe('P1-24 · la IAIA de /legal és la IAIA del codi', () => {
     expect(blocs.filter((bloc) => GRANS_EMPRESES.test(bloc) && PARLA_D_IA.test(bloc))).toEqual([]);
   });
 
-  test('l’apartat 14 diu que la IAIA respon al dispositiu, on va la pregunta i què passa si canvia', () => {
+  test('l’apartat 14 diu que la IAIA respon al dispositiu, on va la pregunta i què passa si canvia; ConsultaIAIA.jsx està eliminat (R21.3)', () => {
     const catorze = pla(apartat(14));
     expect(catorze).not.toMatch(/Anthropic|OpenAI|contracte d'encarregat/);
     expect(catorze).not.toMatch(GRANS_EMPRESES);
     expect(catorze).toMatch(/no envia el que li escrius a cap empresa d'intel·ligència artificial/);
     expect(catorze).toMatch(/xat públic de la pàgina de la IAIA/);
-    expect(catorze).toMatch(/«Pregunta a la IAIA», dins d'una conversa, no publica res/);
     expect(catorze).toMatch(/apartat 18/);
+    expect(existsSync(path.join(ARREL, 'src/sections/xat/components/ConsultaIAIA.jsx'))).toBe(false);
+    // Mentres el text segellat SDP-RGPD-021 siga la 2.5, la migració 2.6 ja en retira la menció a «Pregunta a la IAIA»; a partir de 2.6, no hi pot aparéixer.
+    if (!/Versió 2\.5\b/.test(pla(HTML))) {
+      expect(catorze).not.toMatch(/«Pregunta a la IAIA»/);
+    }
   });
 
   test('l’assistent amb compte és local; el grup públic conserva la cortesia local', () => {

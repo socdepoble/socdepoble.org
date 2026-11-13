@@ -46,6 +46,8 @@ const mocks = vi.hoisted(() => ({
   contactesFrequents: [],
   joId: 'jo',
   joNom: 'Javi',
+  /* R21 (carril f2) · Sense valor, com un context d'abans (XatSection: 'no'). */
+  xatPropi: undefined,
   senseSessio: false,
   totalNoLlegits: 0,
   amplada: 1280,
@@ -175,6 +177,7 @@ vi.mock('./XatContext', async (importOriginal) => ({
     obriFilDePagina: mocks.obriFilDePagina,
     joId: mocks.joId,
     joNom: mocks.joNom,
+    xatPropi: mocks.xatPropi,
     senseSessio: mocks.senseSessio
   })
 }));
@@ -227,6 +230,7 @@ beforeEach(() => {
   mocks.contactesFrequents = [];
   mocks.joId = 'jo';
   mocks.joNom = 'Javi';
+  mocks.xatPropi = undefined;
   mocks.senseSessio = false;
   mocks.totalNoLlegits = 0;
   mocks.vivaSenseFitxa = false;
@@ -2352,6 +2356,32 @@ test('si obrir la conversa falla des del diàleg «Nova conversa», l’avís es
   fireEvent.click(within(dialeg).getByRole('button', { name: 'Tancar' }));
   fireEvent.click(screen.getByRole('button', { name: 'Nova conversa' }));
   expect(within(screen.getByRole('dialog', { name: 'Nova conversa' })).queryByRole('alert')).toBeNull();
+});
+
+/* R21 (carril f2; Gauntlet R21 honestedat_textos-04) · En remot sense el xat
+   propi acreditat (2611121630), «(Tu)» només ix amb una cerca; prémer-la
+   pregunta al servidor (creaFil amb el propi id) i el seu «no» és l'avís honest
+   davall de la fila: ni l'alerta de dalt amb el text de SDP-XAT-002, ni cap
+   toast tapat pel vel, ni cap navegació. */
+test('R21 f2 · «Nova conversa» amb el xat propi per confirmar: el «no» del servidor és l’avís honest de la fila, mai un error mut', async () => {
+  mocks.threadId = null;
+  mocks.xatPropi = 'per-confirmar';
+  mocks.members.mockResolvedValue([]);
+  mocks.createThread.mockImplementation(async () => {
+    mocks.xatPropi = 'no';
+    throw Object.assign(new Error("Encara no pots escriure't a tu mateix: este poble no obri el xat personal."), { code: 'XAT_PROPI_NO_DISPONIBLE' });
+  });
+  render(<XatSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Nova conversa' }));
+  const dialeg = screen.getByRole('dialog', { name: 'Nova conversa' });
+  expect(within(dialeg).queryByRole('button', { name: /\(Tu\)/ })).toBeNull();
+  fireEvent.change(within(dialeg).getByRole('searchbox'), { target: { value: 'javi' } });
+  fireEvent.click(await within(dialeg).findByRole('button', { name: /Javi \(Tu\)/ }));
+  await waitFor(() => expect(within(dialeg).getByText("Encara no pots escriure't a tu mateix: este poble no obri el xat personal.").getAttribute('role')).toBe('status'));
+  expect(mocks.createThread).toHaveBeenCalledWith('jo', null);
+  expect(within(dialeg).queryByRole('alert')).toBeNull();
+  expect(mocks.showToast).not.toHaveBeenCalled();
+  expect(mocks.navigate).not.toHaveBeenCalled();
 });
 
 /* En estret i en mitjà la closca del Xat no pinta pestanyes (la regla viu a

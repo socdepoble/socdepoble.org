@@ -196,8 +196,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
       expect(seccio(body, BALANC.ca[1]).map((n) => n.textContent).join(' ')).not.toContain('segellats en còpia aïllada');
     }
     const versions = doc(PAGE_COPY.versions.html).body;
-    // R20 i R19 s'afigen davant de les sis entrades històriques: cap s'esborra ni es reescriu.
-    expect([...versions.querySelectorAll('h3')].slice(0, 8).map((h3) => h3.textContent)).toEqual([
+    // R21, R20 i R19 s'afigen davant de les sis entrades històriques: cap s'esborra ni es reescriu.
+    expect([...versions.querySelectorAll('h3')].slice(0, 9).map((h3) => h3.textContent)).toEqual([
+      '12 de novembre de 2026 · Onada R21 · La versió 1.2.0, el xat propi, la IAIA en una sola fila i la frontera del contingut públic',
       '11 de novembre de 2026, nit · Onada R20 · Publicació en línia de Notes cap al Mur, filtre de verificació de les imatges botàniques i poliment responsive del Panell',
       '11 de novembre de 2026, vesprada · Onada R19 · Co-publicació entre entitats a la barra taronja, traspàs en línia i revisió de les làmines fotobotàniques',
       '11 de novembre de 2026 · Onades R17 i R18 · Nucli verge, biblioteca multipoble d’arbres, L’Avisador i l’autoria dels catàlegs',
@@ -475,11 +476,11 @@ describe('Gauntlet R9 · G1-01, G1-06 i G3-N02 · el balanç diu què falta de v
 });
 
 const CENS = {
-  ca: 'les 58 portes del cens (run-portes --cens, 6-11-2026)',
-  es: 'las 58 puertas del censo (run-portes --cens, 6-11-2026)',
-  en: 'the 58 census gates (run-portes --cens, 6 November 2026)',
-  eu: 'zentsuko 58 ateekin (run-portes --cens, 2026ko azaroaren 6a)',
-  gl: 'as 58 portas do censo (run-portes --cens, 6-11-2026)'
+  ca: 'les 59 portes del cens (run-portes --cens, 12-11-2026)',
+  es: 'las 59 puertas del censo (run-portes --cens, 12-11-2026)',
+  en: 'the 59 census gates (run-portes --cens, 12 November 2026)',
+  eu: 'zentsuko 59 ateekin (run-portes --cens, 2026ko azaroaren 12a)',
+  gl: 'as 59 portas do censo (run-portes --cens, 12-11-2026)'
 };
 /* R10 · VFT-07 · La xifra s'ancora a la font: Vitest sencer de l'arbre R9, 6-11-2026: 33.705 proves (més de 33.000;
    15 roges de base). La passa cada onada (l'àrbitre, sobre l'arbre sencer); el hook de cada commit no. */
@@ -557,9 +558,9 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
   });
 
   test('les peces que sostenen les xifres', () => {
-    // El cens del 6-11-2026: 58 portes (totes les que no són bateries de proves). Si en canvia el nombre, cal
+    // El cens del 12-11-2026: 59 portes (totes les que no són bateries de proves). Si en canvia el nombre, cal
     // tornar a passar el cens i reescriure la xifra i la data en les 5 llengües.
-    expect(passos.filter((pas) => !pas.prova)).toHaveLength(58);
+    expect(passos.filter((pas) => !pas.prova)).toHaveLength(59);
     // L'índex local és l'Atles operatiu més les fitxes dels pobles de la llavor; la Wiki arriba per import().
     expect(ATLES_OPERATIU.length).toBe(25);
     expect(llegix('src/data/iaiaLocal.js')).toContain('...ATLES_OPERATIU.map(documentDeLAtles), ...MOCK_TOWNS.map(documentDelPoble)');

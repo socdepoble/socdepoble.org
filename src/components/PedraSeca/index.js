@@ -29,6 +29,10 @@ export { Dropdown, DropdownItem } from './molecules/Dropdown.jsx';
 
 // ── ORGANISMES (Composicions complexes) ────────────────────────────────────
 export { UniversalCard, UniversalCard as Targeta } from './organismes/UniversalCard.jsx';
+/* La capçalera de lectura és part del contracte públic de la targeta.
+   Les apps no entren als detalls interns de components/universal; les que es
+   compilen com a mòdul la reben del nucli 1.6.0 pel seu fitxer de Pedra Seca. */
+export { encapcalamentDeTargeta } from './organismes/encapcalamentDeTargeta.js';
 /* Ordre del Mestre, 261007 («Comentaris = xat») · el botó Comentar i el seu menú
    de dues vies, els mateixos a la barra blava i al peu de la targeta. */
 export { BotoComentar, MenuComentar } from './organismes/Comentar.jsx';

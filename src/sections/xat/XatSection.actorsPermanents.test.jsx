@@ -61,6 +61,9 @@ const mocks = vi.hoisted(() => ({
   missatges: {},
   modeDades: 'remote',
   joId: 'jo',
+  joNom: 'Pepa',
+  joAvatar: null,
+  joEsJavi: false,
   iaiaApagada: false,
   senseSessio: false,
   filServeiTecnic: null,
@@ -127,7 +130,9 @@ vi.mock('./XatContext', async (importOriginal) => {
         marcaLlegides: () => 0,
         obriFilDePagina: vi.fn(async () => null),
         joId: mocks.joId,
-        joNom: 'Pepa',
+        joNom: mocks.joNom,
+        joAvatar: mocks.joAvatar,
+        joEsJavi: mocks.joEsJavi,
         senseSessio: mocks.senseSessio,
         iaiaApagada: mocks.iaiaApagada,
         esFilAmagat: () => false,
@@ -186,14 +191,17 @@ const UUID_SDP = '7d1e5c2a-0000-4000-8000-0000000000aa';
 test.each([
   { id: 'fake-iaia', tipus: 'ia', senseSessio: true },
   { id: 'iaia-real', tipus: 'iaia', senseSessio: false }
-])('consulta Wiki en el fil $id, retirada quan la IAIA s’apaga', ({ id, tipus, senseSessio }) => {
+])('suggeriments ràpids superiors en el fil $id (sense botó «Pregunta a la IAIA» baix), retirats quan la IAIA s’apaga', ({ id, tipus, senseSessio }) => {
   mocks.senseSessio = senseSessio;
   mocks.threadId = id;
   mocks.threads = [{ id, tipus, name: 'IAIA MarIA', title: 'IAIA MarIA', potEscriure: true }];
   const vista = render(<XatSection />);
-  expect(screen.getByRole('button', { name: 'Pregunta a la IAIA' })).toBeTruthy();
+  const grup = screen.getByRole('group', { name: 'Suggeriments ràpids d’ajuda rural' });
+  expect(grup.querySelectorAll('button')).toHaveLength(3);
+  expect(screen.queryByRole('button', { name: 'Pregunta a la IAIA' })).toBeNull();
   mocks.iaiaApagada = true;
   vista.rerender(<XatSection />);
+  expect(screen.queryByRole('group', { name: 'Suggeriments ràpids d’ajuda rural' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Pregunta a la IAIA' })).toBeNull();
 });
 
@@ -201,6 +209,7 @@ test('el mateix nom en un altre directe no activa l’ajuda oficial', () => {
   mocks.threadId = 'un-altre';
   mocks.threads = [{ id: 'un-altre', tipus: 'directe', name: 'IAIA MarIA', title: 'IAIA MarIA', potEscriure: true }];
   render(<XatSection />);
+  expect(screen.queryByRole('group', { name: 'Suggeriments ràpids d’ajuda rural' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Pregunta a la IAIA' })).toBeNull();
 });
 
@@ -219,6 +228,9 @@ beforeEach(() => {
   mocks.missatges = {};
   mocks.modeDades = 'remote';
   mocks.joId = 'jo';
+  mocks.joNom = 'Pepa';
+  mocks.joAvatar = null;
+  mocks.joEsJavi = false;
   mocks.iaiaApagada = false;
   mocks.senseSessio = false;
   mocks.filServeiTecnic = null;
@@ -729,19 +741,64 @@ describe('P1-70 · els quatre actors permanents en tots els modes', () => {
     expect(mocks.showToast).not.toHaveBeenCalled();
   });
 
-  test('qui mira és Javi (0001, llavor): la seua fila hi és i obri la conversa de servei tècnic, sense directe amb ell mateix', () => {
+  test('R21.4-UI · qui mira és Javi (0001, llavor): la seua fila mostra «Javi Llinares (Tu)» + «Envia’t missatges a tu mateix» i obri el seu fil personal escrivible', () => {
     mocks.modeDades = 'seed';
     mocks.joId = '0001';
+    mocks.joNom = 'Javi Llinares';
+    mocks.joEsJavi = true;
     mocks.threads = ambXatsPerDefecte([]).map((f) => mapejaFil(f));
-    mocks.filServeiTecnic = filDeMostraDeJavi({ avis: AVIS_TU, ambMissatge: false });
     const vista = render(<XatSection />);
     expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
+    expect(filaDe('sdp-per-defecte:javi').textContent).toContain('Javi Llinares (Tu)');
+    expect(filaDe('sdp-per-defecte:javi').textContent).toContain("Envia't missatges a tu mateix");
     fireEvent.click(filaDe('sdp-per-defecte:javi').querySelector('button'));
     expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/sdp-per-defecte%3Ajavi');
     mocks.threadId = 'sdp-per-defecte:javi';
     vista.rerender(<XatSection />);
-    expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/fake-javi', { replace: true });
-    expect(navegacions().some(([ruta]) => String(ruta).startsWith('/xat?amb='))).toBe(false);
+    expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=0001', { replace: true });
+    mocks.threads = [
+      mapejaFil({ id: 'propi-0001', tipus: 'directe', esPropi: true, titol: 'Javi Llinares', altres: [] }),
+      ...ambXatsPerDefecte([]).map((f) => mapejaFil(f))
+    ];
+    mocks.threadId = 'propi-0001';
+    vista.rerender(<XatSection />);
+    expect(screen.queryByTestId('pagina-no-trobada')).toBeNull();
+    expect(screen.queryByText(AVIS_TU)).toBeNull();
+    expect(screen.getByRole('textbox', { name: /Escriu un missatge/ })).not.toBeNull();
+    expect(mocks.showToast).not.toHaveBeenCalled();
+  });
+
+  test('R21.4-UI · qui mira és Javi en remot amb chatThreads []: la fila de reserva mostra «Javi Llinares (Tu)» i obri ?amb=<joId> (xat propi)', () => {
+    mocks.threads = [];
+    mocks.joId = '5a5a5a5a-0000-4000-8000-0000000000aa';
+    mocks.joNom = 'Javi Llinares';
+    mocks.joEsJavi = true;
+    const vista = render(<XatSection />);
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
+    expect(filaDe('sdp-per-defecte:javi').textContent).toContain('Javi Llinares (Tu)');
+    mocks.threadId = 'sdp-per-defecte:javi';
+    vista.rerender(<XatSection />);
+    expect(navegacions()).toEqual([['/xat?amb=5a5a5a5a-0000-4000-8000-0000000000aa', { replace: true }]]);
+    expect(mocks.showToast).not.toHaveBeenCalled();
+  });
+
+  /* R21 (carril f2; Gauntlet R21 regressio_ui_xat-05) · Mentre el servidor no
+     acredita el xat propi (2611121630), XatContext dona joEsJavi fals i la
+     conversa de servei tècnic amb «tu mateix»: la fila de Javi no promet cap
+     «(Tu)» i porta al servei tècnic de només lectura, sense ?amb= ni cap avís. */
+  test('R21 f2 · qui mira és Javi en remot sense xat propi acreditat: «Javi Llinares» de servei tècnic, sense «(Tu)», i obri la conversa de només lectura', () => {
+    mocks.threads = [];
+    mocks.joId = '5a5a5a5a-0000-4000-8000-0000000000aa';
+    mocks.joNom = 'Javi Llinares';
+    mocks.joEsJavi = false;
+    mocks.filServeiTecnic = filDeMostraDeJavi({ avis: AVIS_TU, ambMissatge: false });
+    const vista = render(<XatSection />);
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
+    expect(filaDe('sdp-per-defecte:javi').textContent).not.toContain('(Tu)');
+    expect(filaDe('sdp-per-defecte:javi').textContent).not.toContain("Envia't missatges a tu mateix");
+    mocks.threadId = 'sdp-per-defecte:javi';
+    vista.rerender(<XatSection />);
+    expect(navegacions()).toEqual([['/xat/fake-javi', { replace: true }]]);
     mocks.threadId = 'fake-javi';
     vista.rerender(<XatSection />);
     expect(screen.queryByTestId('pagina-no-trobada')).toBeNull();
@@ -750,27 +807,39 @@ describe('P1-70 · els quatre actors permanents en tots els modes', () => {
     expect(mocks.showToast).not.toHaveBeenCalled();
   });
 
-  test('qui mira és Javi en remot amb chatThreads []: la fila de reserva hi és i obri la seua conversa de servei tècnic', () => {
-    mocks.threads = [];
-    mocks.joId = '5a5a5a5a-0000-4000-8000-0000000000aa';
-    mocks.filServeiTecnic = filDeMostraDeJavi({ avis: AVIS_TU, ambMissatge: false });
+  test('R21.4-UI · una sola fila de IAIA MarIA a la llista principal: el fil públic pagina:/iaia s’oculta de Converses però funciona obert des de /iaia', () => {
+    const publicIaia = mapejaFil({
+      id: 'g-iaia-public',
+      tipus: 'grup',
+      titol: 'Xat públic de la IAIA',
+      subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: 'IAIA MarIA' },
+      participant: true
+    });
+    const localIaia = mapejaFil({ id: 'iaia-local', tipus: 'iaia', titol: 'IAIA MarIA', ultimText: 'Hola, bonica.' });
+    mocks.threads = [localIaia, publicIaia];
     const vista = render(<XatSection />);
-    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
-    mocks.threadId = 'sdp-per-defecte:javi';
+    expect(clausDeLaLlista()).toContain('iaia-local');
+    expect(clausDeLaLlista()).not.toContain('g-iaia-public');
+    expect(llista().textContent).not.toContain('Xat públic de la IAIA');
+
+    mocks.threadId = 'g-iaia-public';
+    mocks.params = new URLSearchParams('sobre=pagina:/iaia');
     vista.rerender(<XatSection />);
-    expect(navegacions()).toEqual([['/xat/fake-javi', { replace: true }]]);
-    expect(mocks.showToast).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('pagina-no-trobada')).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: /Xat públic de la IAIA/ })).not.toBeNull();
   });
 
-  test('useObriXatPerDefecte · Javi mai no mostra cap avís: el directe on es pot; si no, la conversa de servei tècnic', () => {
+  test('useObriXatPerDefecte · Javi mai no mostra cap avís: xat propi si joEsJavi; si no, directe o conversa de servei tècnic', () => {
     const { result } = renderHook(() => useObriXatPerDefecte());
     result.current('javi', { modeDades: 'seed' });
     result.current('javi', { modeDades: 'seed', serveiTecnic: true });
     result.current('javi', { modeDades: 'remote' });
     result.current('javi', { modeDades: 'remote', senseSessio: true });
+    result.current('javi', { modeDades: 'remote', joEsJavi: true, joId: 'uuid-javi' });
     expect(navegacions()).toEqual([
       ['/xat?amb=0001', { replace: true }], ['/xat/fake-javi', { replace: true }],
-      ['/xat/fake-javi', { replace: true }], ['/xat/fake-javi', { replace: true }]
+      ['/xat/fake-javi', { replace: true }], ['/xat/fake-javi', { replace: true }],
+      ['/xat?amb=uuid-javi', { replace: true }]
     ]);
     expect(mocks.showToast).not.toHaveBeenCalled();
   });

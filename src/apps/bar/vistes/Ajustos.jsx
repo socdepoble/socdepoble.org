@@ -14,7 +14,7 @@
  * llavors queden desactivats. La còpia, la persistència i els interruptors
  * del dispositiu no escriuen dades del Bar i continuen igual.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Download, HardDrive } from 'lucide-react';
 import {
   Alerta, BarraResum, Boto, Camp, CampText, DialegConfirmacio, Interruptor, LiniesColleccio
@@ -58,17 +58,35 @@ function Dispositiu() {
   const interruptors = useInterruptorsApp();
   const [estat, setEstat] = useState(null);
   const [avis, setAvis] = useState(null);
+  const [errorPersistencia, setErrorPersistencia] = useState(false);
+  const [demanant, setDemanant] = useState(false);
+  const peticioPersistencia = useRef(false);
   const [fitxerCopia, setFitxerCopia] = useState(null);
   const [ocupat, executa] = useUnaVegada();
   useEffect(() => {
     let viu = true;
-    accions.estatPersistencia().then((e) => { if (viu) setEstat(e); }).catch(() => {});
+    Promise.resolve().then(() => accions.estatPersistencia())
+      .then((e) => { if (viu) setEstat(e); })
+      .catch(() => { if (viu) setErrorPersistencia(true); });
     return () => { viu = false; };
   }, [accions]);
   const demana = async () => {
-    const concedit = await accions.demanaPersistencia();
-    setAvis(concedit === null ? 'Este navegador no permet demanar-ho.' : (concedit ? 'Fet: el navegador no les esborrarà per falta d’espai.' : 'El navegador no ho ha concedit.'));
-    setEstat(await accions.estatPersistencia());
+    if (peticioPersistencia.current) return;
+    peticioPersistencia.current = true;
+    setDemanant(true);
+    setErrorPersistencia(false);
+    setAvis(null);
+    try {
+      const concedit = await accions.demanaPersistencia();
+      const nouEstat = await accions.estatPersistencia();
+      setEstat(nouEstat);
+      setAvis(concedit === null ? 'Este navegador no permet demanar-ho.' : (concedit ? 'Fet: el navegador no les esborrarà per falta d’espai.' : 'El navegador no ho ha concedit.'));
+    } catch {
+      setErrorPersistencia(true);
+    } finally {
+      peticioPersistencia.current = false;
+      setDemanant(false);
+    }
   };
   const copia = async () => {
     try {
@@ -107,12 +125,13 @@ function Dispositiu() {
     <Columna titol="Dispositiu">
       <AvisBase />
       <AvisOperacio />
+      {errorPersistencia ? <Alerta to="error">No s’ha pogut comprovar o demanar la persistència del navegador. Torna-ho a provar; desa una còpia del Bar.</Alerta> : null}
       {avis ? <Alerta to="info" onTanca={() => setAvis(null)}>{avis}</Alerta> : null}
       <BarraResum etiqueta="On són les dades" comptador={0} textComptador={() => ''}
         total={persistent ? 'En este navegador' : 'Només en memòria'} textTotal="Lloc" />
       <p>Les dades del bar no ixen d’este dispositiu: no es sincronitzen amb cap servidor. Esborrar les dades del navegador les esborra. Desa una còpia en cada tancament.</p>
       {estat ? <p>{estat.duradora ? 'El navegador ha promés no esborrar-les per falta d’espai.' : 'El navegador encara no ha promés guardar-les.'}</p> : null}
-      <Boto icona={HardDrive} onClick={demana}>Demana que no s’esborren</Boto>
+      <Boto icona={HardDrive} onClick={demana} carregant={demanant} disabled={demanant}>Demana que no s’esborren</Boto>
       <Boto icona={Download} onClick={copia}>Desa una còpia (JSON)</Boto>
       <Camp etiqueta="Restaura una còpia del Bar" ajuda="Disponible en un navegador que encara no tinga dades del Bar.">
         <CampText tipus="file" accept=".json,application/json" onChange={triaCopia}

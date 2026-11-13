@@ -339,9 +339,31 @@ export function NotesProvider({ children }) {
     });
   }, [operation, saveNoteField, delMateixActor, nomesLectura]);
 
+  /* R21.6 · La preparada pot rebre l'ACK de creació després que l'editor haja
+     eixit. La seua revisió encara pot no ser a rawNotes: és la creada la que
+     inicia la base CAS. Els últims camps entren al MATEIX diari durable abans
+     de la xarxa, i el gestor conserva/reprén el lot si el servidor falla. */
+  const desaNotaPreparada = useCallback(async (creada, camps) => {
+    if (nomesLectura) throw new ErrorIdentitatDeLectura();
+    if (delMateixActor()) return vigentRef.current.desaNotaPreparada(creada, camps);
+    if (operationRef.current !== operation) throw new DOMException('Operació cancel·lada.', 'AbortError');
+    const id = typeof creada?.id === 'string' || typeof creada?.id === 'number' ? String(creada.id) : '';
+    if (!id || esborrades.current.has(id)) throw new DOMException('Operació cancel·lada.', 'AbortError');
+    if (!Number.isSafeInteger(creada.revision) || creada.revision < 0) throw new Error('La nota creada no porta una revisió vàlida per a conservar l’esborrany.');
+    const nets = Object.fromEntries(Object.entries(camps || {}).map(([camp, valor]) => [camp,
+      camp === 'fitxa' ? fitxaDeNota(valor) : netejaCamp(camp, valor)]));
+    if (!Object.keys(nets).length) return true;
+    for (const [camp, valor] of Object.entries(nets)) {
+      void bgSaveManager.enqueue(scopeKey, id, camp, valor, () => ({ revision: creada.revision }),
+        updateNoteContext, clearLocalNoteFields, (msg, type) => showToast(msg, type));
+    }
+    setLocalNoteOverrides(prev => ({ ...prev, [id]: { ...prev[id], ...nets } }));
+    return bgSaveManager.flush(scopeKey, id);
+  }, [nomesLectura, delMateixActor, operation, scopeKey, updateNoteContext, clearLocalNoteFields, showToast]);
+
   useLayoutEffect(() => {
-    vigentRef.current = { saveNoteField, setLocalNoteField };
-  }, [saveNoteField, setLocalNoteField]);
+    vigentRef.current = { saveNoteField, setLocalNoteField, desaNotaPreparada };
+  }, [saveNoteField, setLocalNoteField, desaNotaPreparada]);
 
   /* P0-25 (Onada R6, Bloc 2) · Les guardes de publishNote que miren la
      publicació (signatura aliena i canvi de secció), soles i exposades:
@@ -949,6 +971,7 @@ export function NotesProvider({ children }) {
     noteFolders,
     saveNoteField,
     setLocalNoteField,
+    desaNotaPreparada,
     publishNote,
     compartirNota,
     /* Revisió final R16a (carril FA) · si el Mur té la versió de la nota. */
@@ -981,7 +1004,7 @@ export function NotesProvider({ children }) {
     potEsborrar,
     t
   }), [
-    notes, noteFolders, saveNoteField, setLocalNoteField,
+    notes, noteFolders, saveNoteField, setLocalNoteField, desaNotaPreparada,
     publishNote, compartirNota, canviaEstatPublicacio, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, currentUser, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
     mouNota, esborraNota, potEsborrar, t, nomesLectura, rebuigDePublicacio, versioAlMur,
     destiPublicatDeNota, desaDestiPublicatNota, versioDestinsPublicats

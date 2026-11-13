@@ -5,7 +5,8 @@
    nucliModuls.test.js hi lliga el contracte: cap porta ni cap nom de
    l'1.0.0 s'ha llevat, i el que s'hi ha afegit és exactament
    NOMS_DEL_NUCLI_1_1 més NOMS_DEL_NUCLI_1_2 i, des del 261024 (T5),
-   NOMS_DEL_NUCLI_1_3. guardesDelModul.test.js
+   NOMS_DEL_NUCLI_1_3 (i, després, els de l'1.4, l'1.5 i l'1.6, R21.6).
+   guardesDelModul.test.js
    comprova que cada nom de l'1.1.0 el fa servir alguna app i, des del
    Gauntlet 261016, que l'1.2.0 té ús en una app de veres (el Lector munta
    UniversalWorkspace) i que cada nom seu el fa servir una app o el mòdul de
@@ -70,4 +71,11 @@ export const NOMS_DEL_NUCLI_1_5 = congela({
   plataforma: ['candidatsVariantParroquia'],
   pedraSeca: ['CandidatsAlergens'],
   workspace: ['CatalegWorkspace', 'DetallCataleg']
+});
+
+/* El que l'1.6.0 (R21.6) afig a l'1.5.0: un nom a la porta 'pedraSeca', la
+   capçalera de lectura de la targeta (una funció pura). guardesDelModul.test.js
+   comprova que el fan servir la Nevera, l'esquelet comú i la Gestoria. */
+export const NOMS_DEL_NUCLI_1_6 = congela({
+  pedraSeca: ['encapcalamentDeTargeta']
 });

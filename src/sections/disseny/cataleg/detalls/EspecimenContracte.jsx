@@ -9,7 +9,11 @@ import { tradueix, useTraductorOpcional } from '../../../../components/PedraSeca
    d'espais encara usen el diàleg (WorkspaceSettingsDialog) i el xat obri FullAjustos en un Dialeg.
    Cap llei sobre els altres diàlegs: el codi no la seguix. Cap veredicte ni cens escrit a mà. El
    text nou passa pel traductor (cinc diccionaris de src/config/idiomes/); la `estructura` és codi
-   (un selector CSS que casa amb el que es pinta) i no es traduïx. */
+   (un selector CSS que casa amb el que es pinta) i no es traduïx.
+   Gauntlet 261112 (T1b, verificador) · /page/fediversity ja és una UniversalPage i no munta cap
+   CatalegWorkspace: Fediversity ix de la llista de la columna 3 i hi entren els Arbres monumentals
+   (NaturaPatrimoniWorkspaceSection.jsx), que ja ho eren. La llista és la dels consumidors de
+   CatalegWorkspace: Herbari, Banc de llavors, Receptes, Arbres monumentals, Rebost i Bar. */
 const P = (nom, reserva) => [`section.disseny.contracte.${nom}`, reserva];
 const TEXTOS_LLEIS = Object.freeze({
   quadreBlanc: P('quadreBlanc.titol', 'Llei del quadre blanc editorial i del fals tauler en columnes'),
@@ -20,7 +24,7 @@ const TEXTOS_LLEIS = Object.freeze({
   estructura: P('estructura', 'Estructura:'),
   modals: P('modals.titol', 'Ajustos de l’espai de treball: columna 3 als catàlegs, diàleg a la resta'),
   columna3Titol: P('modals.columna3.titol', 'Catàlegs: ajustos en la columna 3'),
-  columna3: P('modals.columna3.text', 'Els ajustos de l’espai de treball dels catàlegs fets amb CatalegWorkspace (Herbari, Banc de llavors, Receptes, Fediversity, Rebost i catàleg del TPV) es pinten dins de la columna 3 de detall, amb un botó de tornada dalt i un altre davall, i no en un modal flotant que tape el context.'),
+  columna3: P('modals.columna3.text', 'Els ajustos de l’espai de treball dels catàlegs fets amb CatalegWorkspace (Herbari, Banc de llavors, Receptes, Arbres monumentals, Rebost i catàleg del TPV) es pinten dins de la columna 3 de detall, amb un botó de tornada dalt i un altre davall, i no en un modal flotant que tape el context.'),
   dialegTitol: P('modals.dialeg.titol', 'Resta d’espais: ajustos en un diàleg'),
   dialeg: P('modals.dialeg.text', 'Els altres espais de treball fets amb UniversalWorkspace, quan tenen ajustos, encara els obrin en un diàleg (WorkspaceSettingsDialog). El full d’Ajustos del xat (FullAjustos) també s’obri en un diàleg.')
 });

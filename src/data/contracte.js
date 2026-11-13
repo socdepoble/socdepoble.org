@@ -773,12 +773,15 @@ export const LIMIT_DADES_OBERTES = 5000;
    versioMinimaClient (capacitat 'versioClient'). Un enter que PUJA A CADA
    BUILD DE BOTIGA i que val el mateix que el --build de scripts/botigues (el
    versionCode d'android/app/build.gradle i el CURRENT_PROJECT_VERSION del
-   pbxproj d'iOS, 2 tots dos des de 8bd00f0ab): puja-ios.mjs i
-   puja-android.mjs paren si no casen (versio-client.mjs). El build 1
-   (TestFlight 1.0.0 (1) i l'AAB 1.0.0+1) no porta la porta: el 2 és el primer
-   que la porta. Mai per davall del mínim del servidor (2611011510 i les que la
-   tornen a crear): l'app nova es bloquejaria ella mateixa. */
-export const VERSIO_CLIENT_NATIU = 2;
+   pbxproj d'iOS, 2 tots dos des de 8bd00f0ab i 4 des de la v1.2.0 de l'Onada
+   R21): puja-ios.mjs i puja-android.mjs paren si no casen (versio-client.mjs).
+   El build 1 (TestFlight 1.0.0 (1) i l'AAB 1.0.0+1) no porta la porta: el 2 és
+   el primer que la porta. El 3 no ha estat mai a l'arbre (el prompt
+   261112_2008 diu que MarIA va pujar binaris 1.1.12 amb el build 3, i este
+   fitxer encara deia 2): per això la v1.2.0 passa del 2 al 4. Mai per davall del mínim
+   del servidor (2611011510 i les que la tornen a crear): l'app nova es
+   bloquejaria ella mateixa. */
+export const VERSIO_CLIENT_NATIU = 4;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

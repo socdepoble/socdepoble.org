@@ -32,7 +32,9 @@ import { NOMS_PER_FITXER_DE_PEDRA_SECA, VERSIO_NUCLI, exposaElNom, portaDeLaFont
 import {
   ADRECES_DE_TOTS, DECLARACIONS_DELS_MODULS, MAGATZEMS, XARXA, declaracioDe, hostsDe, infraccionsDelText
 } from './guardesDelModul.js';
-import { NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5 } from './__fixtures__/nomsDelNucli.js';
+import {
+  NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6
+} from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const PONT = 'src/apps/gestoria/AppGestoria.jsx';
@@ -540,4 +542,32 @@ test('R15: each1.5name is imported by a real catalogue app through its versioned
     }
   }
   for (const [door, names] of Object.entries(NOMS_DEL_NUCLI_1_5)) expect(names.filter(name => !used[door].has(name)), door).toEqual([]);
+});
+
+/* R21.6 · El nom que l'1.6.0 afig a la porta 'pedraSeca' (encapcalamentDeTargeta, la capçalera de
+   lectura de la targeta) té ús en codi de veres que es compila com a mòdul: la Nevera, l'esquelet comú
+   (el Bar i la Nevera el munten) i el tauler de la Gestoria. Tots el prenen per la façana de Pedra Seca,
+   que el nucli exposa, i cap el pren de components/universal (que viatjaria dins del cos). */
+test('R21.6: cada nom de l’1.6 el fan servir la Nevera, l’esquelet comú i la Gestoria, per la porta del nucli', () => {
+  const usPerCarril = new Map();
+  const deFora = [];
+  for (const carril of ['src/apps/nevera', 'src/apps/comu', ...CARRILS]) {
+    for (const ruta of fitxersDe(carril)) {
+      for (const { especificador, noms } of importacions(llig(ruta))) {
+        const desti = resol(ruta, especificador) || '';
+        const porta = portaDeLaFont(desti);
+        for (const nom of noms) {
+          if (!Object.values(NOMS_DEL_NUCLI_1_6).flat().includes(nom)) continue;
+          if (!porta) { deFora.push(`${ruta}: ${nom} de ${desti}`); continue; }
+          if (!usPerCarril.has(carril)) usPerCarril.set(carril, new Set());
+          usPerCarril.get(carril).add(`${porta.clau}.${nom}`);
+        }
+      }
+    }
+  }
+  expect(deFora).toEqual([]);
+  const esperats = Object.entries(NOMS_DEL_NUCLI_1_6).flatMap(([porta, noms]) => noms.map((nom) => `${porta}.${nom}`));
+  for (const carril of ['src/apps/nevera', 'src/apps/comu', 'src/sections/gestoria']) {
+    expect([...(usPerCarril.get(carril) || [])].sort(), carril).toEqual(esperats.sort());
+  }
 });

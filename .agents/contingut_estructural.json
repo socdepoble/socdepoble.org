@@ -68,16 +68,16 @@
       "data": "2026-11-07"
     },
     "fedivers": {
-      "sha256": "da1fa3a806e904b18f50174d08ab6191e5d018c4558aed89806d2dd39dcd5b8b",
-      "html": 21947,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59 i prompt R21: correcció de veracitat del Gauntlet regressio_commit1-01 sobre FITA_R20 i aiNode0; integrat per Claude R21, revocable)",
-      "data": "2026-11-12"
+      "sha256": "7f14f53c0d3047aa38ed9a3e882d7d54030a0ceac947a6b3be1686241c104292",
+      "html": 21948,
+      "aprovat_per": "Mestre Javi (prompt 261112_2008 T1b ordre 21:26 i T3 v1.2.0 build 4; kits R21.2-R21.6 integrats per Claude R21 COMMIT 4, revocable)",
+      "data": "2026-11-13"
     },
     "fediversity": {
-      "sha256": "6fc45b6a885c32e9e3bfb27a2ffdf5b9d630b904de018fd3292005b91eb40c5f",
+      "sha256": "62d19ea90a39d365f4ed161b0770043e34017757c0876b49b5fada1a8b72125c",
       "html": 63694,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59 i prompt R21: correcció de veracitat del Gauntlet regressio_commit1-01 sobre FITA_R20 i aiNode0; integrat per Claude R21, revocable)",
-      "data": "2026-11-12"
+      "aprovat_per": "Mestre Javi (prompt 261112_2008 T1b ordre 21:26 i T3 v1.2.0 build 4; kits R21.2-R21.6 integrats per Claude R21 COMMIT 4, revocable)",
+      "data": "2026-11-13"
     },
     "habitatge": {
       "sha256": "77c25f12150cc07c8bb56b6ebd1f3b5a2d057ac6ec3f02997f47654ce0b94da2",
@@ -104,10 +104,10 @@
       "data": "2026-11-07"
     },
     "node-zero": {
-      "sha256": "9f4cc249a51e148c5a4fbf2e695d7f7ff03eac0a13dacc26a03b711a7bf0b664",
-      "html": 22575,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59 i prompt R21: correcció de veracitat del Gauntlet regressio_commit1-01 sobre FITA_R20 i aiNode0; integrat per Claude R21, revocable)",
-      "data": "2026-11-12"
+      "sha256": "19d498f632810748434178db6c2b188b1c7c0e1c487f781bb03eb2b4adf50722",
+      "html": 22576,
+      "aprovat_per": "Mestre Javi (prompt 261112_2008 T1b ordre 21:26 i T3 v1.2.0 build 4; kits R21.2-R21.6 integrats per Claude R21 COMMIT 4, revocable)",
+      "data": "2026-11-13"
     },
     "notes": {
       "sha256": "336230c5e5b9c3ce193ba63d75cd66d2d51261e3efad78d6f294af702697f42d",
@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "1e1af75b6411f6b749db95d81c27ce6cdfbd55d60493179c2773c68f2471d612",
-      "html": 54538,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59 i prompt R21: correcció de veracitat del Gauntlet regressio_commit1-01 sobre FITA_R20 i aiNode0; integrat per Claude R21, revocable)",
-      "data": "2026-11-12"
+      "sha256": "92196edb2de29d98aabac4dcb8a6456fd532ce6de42b0704c76b52fd2ed69bb4",
+      "html": 58740,
+      "aprovat_per": "Mestre Javi (prompt 261112_2008 T1b ordre 21:26 i T3 v1.2.0 build 4; kits R21.2-R21.6 integrats per Claude R21 COMMIT 4, revocable)",
+      "data": "2026-11-13"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

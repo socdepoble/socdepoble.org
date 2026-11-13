@@ -256,7 +256,7 @@ function CercaClassica() {
     return (
       <UniversalCard
         key={id}
-        {...propsDeTargetaDeResultat(e, { meta: metaDe(e) })}
+        {...propsDeTargetaDeResultat(e, { meta: metaDe(e), t })}
         headingLevel="h4"
         body={extracte ? <Ressaltat parts={extracte} /> : undefined}
         accio={accioDe(e)}

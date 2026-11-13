@@ -53,7 +53,7 @@ const POBLE_DE_L_AVIS = TOWNS.find((poble) => poble.title === SDP.location) || n
 const deVeritat = (clau) => {
   const props = propsDeTargetaDeLaPagina(propsDePaginaDeText(PAGE_COPY[clau], clau));
   const porta = accioDeLaTargeta(clau);
-  return { ...props, mainHref: `/page/${clau}`, ...(porta ? { accio: <PortaDePagina porta={porta} /> } : null) };
+  return { ...props, mainHref: `/page/${clau}`, ...(porta ? { accio: <PortaDePagina porta={porta} varietat="secundari" /> } : null) };
 };
 const PEU = { hasFooter: true, showTranslate: true, showComment: true, showShare: true, showConnect: true };
 

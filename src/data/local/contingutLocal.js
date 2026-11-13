@@ -17,6 +17,8 @@ import { elementDeFilaPublicada, mapSectionSubmissionToItem, mergeById } from '.
 import { CODI_PERSONALITZACIO, errorDePersonalitzacio } from '../errorsBackend.js';
 import { poblesDeLEstat, totesDeLEstat } from '../dadesObertesLot.js';
 import { unioPerId } from './dadesObertesLocal.js';
+import { hidrataCatalegAgents } from '../catalegAgents.js';
+import { normalitzaFilesEditorials } from '../contingutEditorialPublic.js';
 
 const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);
 /* La secció de cada llista de loadMur i de loadMultimedia (content.js). */
@@ -146,7 +148,7 @@ export function creaContingutLocal(e) {
     const originals=marcaFilesEditorials(seccioSeed ? marcaFontRevisioSeed(revisades, versioVisible(editorial.versio)) : revisades,clau,versioVisible(editorial.versio));
     const base = restaurada ? unioPerId(originals, totesDeLEstat(e.dadesObertes.estat, restaurada)) : originals;
     const veins = publicacionsDe(SECCIO_DE_LA_LLISTA[clau]);
-    return veins.length ? mergeById(base, veins) : base;
+    return normalitzaFilesEditorials(veins.length ? mergeById(base, veins) : base);
   };
   /* T2 · D04/D10 · Els pobles de la llavor (o de `dades`) i els restaurats que no hi són (per id o slug). */
   const pobles = () => {
@@ -154,7 +156,7 @@ export function creaContingutLocal(e) {
     const coneguts = new Set(base.flatMap((poble) => [poble?.id, poble?.slug]).filter((clau) => typeof clau === 'string'));
     const restaurats = poblesDeLEstat(e.dadesObertes.estat).filter((poble) => !coneguts.has(poble.slug))
       .map((poble) => ({ id: poble.slug, slug: poble.slug, name: poble.nom, title: poble.nom }));
-    return [...base, ...restaurats];
+    return normalitzaFilesEditorials([...base, ...restaurats]);
   };
 
   const clauValida = (clau) => {
@@ -210,7 +212,10 @@ export function creaContingutLocal(e) {
     async loadCoreContent(ownerUserId = getDefaultUserId()) {
       return {
         towns: pobles(), pages: marcaFilesEditorials(editorialDe('pages').items,'pages',versioVisible(editorialDe('pages').versio)), pageCopy: {},
-        agents: e.copia(e.coleccio('agents')), ownerUserId, personalitzacio: personalitzacio()
+        // Seed reads share the same canonical catalogue as the Supabase seed
+        // port. A real local node keeps its own catalogue and authority.
+        agents: e.mode === 'seed' ? hidrataCatalegAgents(e.copia(e.coleccio('agents'))) : e.copia(e.coleccio('agents')),
+        ownerUserId, personalitzacio: personalitzacio()
       };
     },
 

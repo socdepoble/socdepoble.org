@@ -15,7 +15,25 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: registre.js, 2026-11-09T22:21:01+01:00,
+ * Darrera posada al dia: manifest.js i EspecimenXat.jsx, 2026-11-12T23:04:01+01:00,
+ * Gauntlet 261112 dels kits R21 (regressio_ui_xat-07, versions_i_portes-02): EspecimenXat.jsx
+ * passa nivellTitol={5} a les tres capçaleres de mostra (CapcaleraConversa), perquè
+ * /disseny/fonaments/xat no pinte cap H1 de mostra, i el contracte en documenta la prop;
+ * manifest.js nomena el directori (ProfileSection i EntitatsDelPoble) entre els consumidors
+ * d'UniversalCard en lloc de SectionItemCard, retirada perquè ja no la muntava ningú.
+ * Arreplega EspecimenGraellaTargetes.jsx (encapcalamentDeTargeta a les targetes de mostra)
+ * i EspecimenUniversalCard.jsx (PortaDePagina secundària), tocats pels kits R21 sense posar-la al dia.
+ * Abans (22:41, carril T1b): EspecimenContracte.jsx,
+ * Gauntlet 261112 de l'Onada R21 (T1b, verificador): /page/fediversity ja és una UniversalPage sense
+ * CatalegWorkspace, i la columna 3 dels ajustos (section.disseny.contracte.modals.columna3.text, cinc
+ * llengües) ja no nomena Fediversity i nomena els Arbres monumentals, que sí que en són. Només text: cap
+ * espècimen ni entrada de manifest nous. Arreplega també els fitxers del catàleg tocats des de la versió
+ * anterior sense posar-la al dia (segons git log): EspecimenEnquadrament.jsx (R16a), EspecimenBotiguesSistema.jsx
+ * i EspecimenContracte.jsx (R16b), destinsEmoji.js, detailRegistry.jsx, EspecimenControlsBarra.jsx,
+ * EspecimenSelectorVisibilitat.jsx, EspecimenTraspasCopublicacio.jsx, EspecimenUniversalWorkspace.jsx i
+ * manifest.js (R21 COMMIT 1), EspecimenResumConnexio.jsx (R21 COMMIT 2), i EspecimenGraellaTargetes.jsx i
+ * EspecimenUniversalCard.jsx (kit R21.6 de Codex).
+ * Versió anterior: registre.js, 2026-11-09T22:21:01+01:00,
  * Onada R15b (porta Catàleg): CandidatsAlergens, la revisió dels al·lèrgens candidats de la fitxa de recepta
  * (kit R15.2), registrada com a «extern» fins que tinga espècimen a detalls/.
  * Versió anterior: EspecimenTaula.jsx, 2026-11-09T03:51:29+01:00,
@@ -329,4 +347,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-09T22:21:01+01:00';
+export const VERSIO_CATALEG = '2026-11-12T23:04:01+01:00';

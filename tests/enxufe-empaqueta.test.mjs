@@ -899,8 +899,10 @@ test('el readme del directori declara el servidor de mitjans en lloc del canal p
      WordPress.org (1.1.10); el límit real del directori és de paraules i el mesura
      enxufe-plugin.test.mjs («límit de paraules de WordPress.org»).
      Gauntlet 261101 · X-E-readme (E-11): de 28 a 32 KB amb la documentació per a
-     desenvolupadors recuperada a la PMF. */
-  assert.ok(Buffer.byteLength(amb) < 32768, 'el readme del directori continua dins del límit');
+     desenvolupadors recuperada a la PMF.
+     Onada R21 (WP 1.1.13): de 32 a 36 KB amb les notes obligatòries de la 1.1.13, com a
+     enxufe-plugin.test.mjs. */
+  assert.ok(Buffer.byteLength(amb) < 36864, 'el readme del directori continua dins del límit');
 });
 
 /* Gauntlet 261030, cicle 3 (vq-wordpress-readme-sense-wikimedia) · El panell

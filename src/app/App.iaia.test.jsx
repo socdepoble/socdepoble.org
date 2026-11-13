@@ -321,7 +321,7 @@ describe('261021 · /iaia, la porta única de la IAIA MarIA, amb el Selector de 
       expect(document.querySelector('.hero-image img')?.getAttribute('src')).toContain('iaia_maria_avatar.webp');
       await waitFor(() => expect(screen.getAllByRole('radio')).toHaveLength(4), ESPERA);
       expect(screen.getByRole('radio', { name: 'Nivell 1 Passiva' }).checked).toBe(true);
-      const selector = screen.getByRole('heading', { level: 3, name: "Tu decidixes quanta intel·ligència artificial t'acompanya" });
+      const selector = screen.getByRole('heading', { level: 3, name: 'Tu decidixes quanta presència té la IAIA MarIA' });
       const presentacio = document.querySelector('article.detail-content');
       expect(presentacio.compareDocumentPosition(selector) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(presentacio.contains(selector)).toBe(false);

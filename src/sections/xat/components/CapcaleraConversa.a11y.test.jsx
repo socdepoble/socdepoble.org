@@ -219,4 +219,56 @@ describe('CapcaleraConversa.a11y · Ronda 13 (WCAG 2.1.3 Teclat, Entitats, ARIA 
       cleanup();
     }
   });
+
+  /* Gauntlet R21 (regressio_ui_xat-03, versions_i_portes-01) · L'encapçalament de
+     nivell 1 és un <strong> amb role="heading": cap element H1 (base.css el centrava
+     i la Regla de les Capçaleres només l'admet dins de header.page-title). */
+  test('5. R21-GC-04 · Exposa exactament un encapçalament de nivell 1 amb el nom de la conversa (normal i selecció), sense cap element H1, mantenint el botó enrere com a primer fill', () => {
+    const fil = { id: 'fake-iaia', name: 'IAIA MarIA', tipus: 'ia', esIA: true };
+    const { container, rerender } = render(
+      <CapcaleraConversa fil={fil} onTorna={vi.fn()} onSeleccionar={vi.fn()} t={traductorDe('ca')} />
+    );
+    const h1Normal = screen.getAllByRole('heading', { level: 1 });
+    expect(h1Normal).toHaveLength(1);
+    expect(h1Normal[0].textContent).toBe('IAIA MarIA');
+    expect(h1Normal[0].tagName).toBe('STRONG');
+    expect(h1Normal[0].classList.contains('sdp-xat-capcalera__nom')).toBe(true);
+    expect(container.querySelector('h1')).toBeNull();
+    expect(container.querySelector('header.sdp-xat-capcalera > button:first-child')).not.toBeNull();
+
+    rerender(
+      <CapcaleraConversa
+        fil={fil}
+        seleccio={{ quants: 2, onEixir: vi.fn() }}
+        t={traductorDe('ca')}
+      />
+    );
+    const h1Seleccio = screen.getAllByRole('heading', { level: 1 });
+    expect(h1Seleccio).toHaveLength(1);
+    expect(h1Seleccio[0].textContent).toBe('IAIA MarIA');
+    expect(h1Seleccio[0].classList.contains('sdp-sr-only')).toBe(true);
+    expect(container.querySelector('h1')).toBeNull();
+    expect(container.querySelector('header.sdp-xat-capcalera > button:first-child')).not.toBeNull();
+  });
+
+  /* Gauntlet R21 (regressio_ui_xat-07) · Fora de la vista del xat (l'espècimen del
+     catàleg), `nivellTitol` baixa l'encapçalament: cap nivell 1 de més a la pàgina. */
+  test('6. nivellTitol: 5 el baixa a nivell 5 (normal i selecció); null el deixa sense encapçalament; un valor fora de rang, també', () => {
+    const fil = { id: 'g-festa', name: 'Festa major', tipus: 'grup', altresNoms: ['Pepa', 'Vicent'] };
+    const { container, rerender } = render(
+      <CapcaleraConversa fil={fil} nivellTitol={5} onTorna={vi.fn()} onSeleccionar={vi.fn()} t={traductorDe('ca')} />
+    );
+    expect(screen.queryAllByRole('heading', { level: 1 })).toHaveLength(0);
+    expect(screen.getByRole('heading', { level: 5 }).textContent).toBe('Festa major');
+
+    rerender(<CapcaleraConversa fil={fil} nivellTitol={5} seleccio={{ quants: 0, onEixir: vi.fn() }} t={traductorDe('ca')} />);
+    expect(screen.queryAllByRole('heading', { level: 1 })).toHaveLength(0);
+    expect(screen.getByRole('heading', { level: 5 }).textContent).toBe('Festa major');
+
+    for (const nivell of [null, 0, 7, '1']) {
+      rerender(<CapcaleraConversa fil={fil} nivellTitol={nivell} onTorna={vi.fn()} onSeleccionar={vi.fn()} t={traductorDe('ca')} />);
+      expect([nivell, screen.queryAllByRole('heading')]).toEqual([nivell, []]);
+      expect([nivell, container.querySelector('strong.sdp-xat-capcalera__nom')?.textContent]).toEqual([nivell, 'Festa major']);
+    }
+  });
 });

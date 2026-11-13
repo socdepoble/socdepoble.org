@@ -35,6 +35,7 @@
  * nucli/targetesTauler.js; ací només es pinten.
  */
 import { useState } from 'react';
+import { encapcalamentDeTargeta } from '../../../components/PedraSeca/index.js';
 import {
   Building2, Calculator, Eye, EyeOff, Hourglass, Landmark, Link2, Percent, Receipt, Scale, TrendingDown, TrendingUp, Wallet
 } from 'lucide-react';
@@ -148,14 +149,10 @@ export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicia
   return (
     <UniversalCard
       className="sdp-gestoria-tauler__targeta"
-      author={titular?.nom}
-      location={titular?.poble || undefined}
+      {...encapcalamentDeTargeta({ date: pastilla?.dateTime || pastilla?.date, time: pastilla?.time }, { author: titular?.nom, location: titular?.poble })}
       avatarUrl={titular?.avatar || undefined}
       authorHref={titular?.href || undefined}
       imatgePrivada
-      time={pastilla?.time}
-      date={pastilla?.date}
-      dateTime={pastilla?.dateTime}
       onDateTime={false}
       headerAction={ambXifra ? (
         <UllPrivacitat visible={visible} etiqueta={`Mostra la xifra de ${targeta.titol}`}

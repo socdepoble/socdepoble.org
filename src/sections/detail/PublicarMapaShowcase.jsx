@@ -142,6 +142,7 @@ export function PublicarMapaExempleShowcase() {
         <UniversalCard
           dataTestId="publicar-mapa-universal-card-arbre"
           author={AUTORIA_RENTONAR}
+          location="La Torre de les Maçanes"
           authorHref={RUTA_PERFIL_RENTONAR}
           avatarUrl={AVATAR_RENTONAR}
           avatarAlt={AUTORIA_RENTONAR}

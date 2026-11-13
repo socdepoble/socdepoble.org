@@ -132,19 +132,21 @@ import IAIALocalProvider from './IAIALocalProvider.jsx';
 import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
 /* Ordre del Mestre (261007) · Les files d'ajuda per defecte i on porten. */
-import useObriXatPerDefecte, { ID_FIL_DE_MOSTRA_DE_LA_IAIA } from './useObriXatPerDefecte.js';
+import useObriXatPerDefecte, { ID_FIL_DE_MOSTRA_DE_LA_IAIA, ID_FIL_LOCAL_IAIA } from './useObriXatPerDefecte.js';
 /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · La fletxa de la conversa torna a la pàgina d'origen. */
 import { useOrigenDelXat } from './origenDelXat.js';
 import { ID_FIL_DE_MOSTRA_DE_JAVI, PREFIX_PER_DEFECTE, clauPerDefecteDe, esIdPerDefecte, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
 /* Gauntlet 261016_1530 (Bloc 3.6) · Els quatre actors al capdamunt, en
    l'ordre del Mestre, i la fila que porta a la comunitat de Sóc de Poble.
    P1-70 (261029) · I les files de reserva de Javi i de la IAIA. */
-import { FILA_DE_RESERVA_DE_JAVI, FILA_DE_RESERVA_DE_LA_IAIA, RUTA_SOBRE_DE_SOC_DE_POBLE, anteposaActors, comunitatDeReserva } from './actorsDelXat.js';
+import {
+  FILA_DE_RESERVA_DE_JAVI, FILA_DE_RESERVA_DE_LA_IAIA, RUTA_SOBRE_DE_SOC_DE_POBLE, anteposaActors, comunitatDeReserva, esXatPublicDePaginaIAIA
+} from './actorsDelXat.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 /* Onada 6 · La IAIA apagada (nivell d'IA 0), els errors SDP traduïts i
    «Informa d'un error» per als beta testers. */
 import { esContacteDeLaIAIA, senseContacteDeLaIAIA } from './contactesAjuda.js';
-import { textDErrorDelXat, textDeFalladaDirecte } from './errorsXat.js';
+import { CODI_XAT_PROPI_NO, textDErrorDelXat, textDeFalladaDirecte } from './errorsXat.js';
 import useInformaDUnError from './useInformaDUnError.js';
 import BotoInformaDUnError from './components/BotoInformaDUnError.jsx';
 import {
@@ -435,6 +437,12 @@ function XatWorkspace({ origen = null }) {
     obriFilDePagina = senseXat,
     joId = null,
     joNom = null,
+    joAvatar = null,
+    joEsJavi = false,
+    /* R21 (carril f2) · Si el backend obri el xat propi «<Nom> (Tu)»
+       ('disponible' | 'per-confirmar' | 'no' | null). Un context d'abans no el
+       porta: 'no', l'avís honest d'abans de R21.4 i cap promesa. */
+    xatPropi = 'no',
     /* Pla 261014_1450 (front C) · L'entitat de la barra negra: baixa a la
        Conversa, i el Compositor diu qui signa. */
     entitatActiva = null,
@@ -680,8 +688,8 @@ function XatWorkspace({ origen = null }) {
     const previ = perDefecteTractat.current;
     if (previ && previ.threadId === threadId && previ.params === params) return;
     perDefecteTractat.current = { threadId, params };
-    obriPerDefecte(trobatPerDefecte, { modeDades, senseSessio, serveiTecnic: ambServeiTecnic });
-  }, [trobatPerDefecte, threadId, params, obriPerDefecte, modeDades, senseSessio, ambServeiTecnic, joId]);
+    obriPerDefecte(trobatPerDefecte, { modeDades, senseSessio, serveiTecnic: ambServeiTecnic, joEsJavi, joId });
+  }, [trobatPerDefecte, threadId, params, obriPerDefecte, modeDades, senseSessio, ambServeiTecnic, joEsJavi, joId]);
 
   /* Onada 6 (tasca 12) · La IAIA s'ha apagat (o ja ho estava) amb la persona
      dins d'un xat seu: a la llista, amb replace i l'avís de per què. */
@@ -1002,7 +1010,7 @@ function XatWorkspace({ origen = null }) {
       llista.push({ clau: `comunitat:${c.fil.id}`, tipus: 'comunitat', comunitat: c, fixat: Boolean(c.fil.fixat), instant: instantDe(c.ultimAl || c.fil.ultimAl) });
     }
     for (const fil of threads) {
-      if (fil.arxivat || esComunitat(fil) || agrupats.has(String(fil.id))) continue;
+      if (fil.arxivat || esComunitat(fil) || agrupats.has(String(fil.id)) || esXatPublicDePaginaIAIA(fil)) continue;
       llista.push({ clau: String(fil.id), tipus: 'fil', fil, fixat: Boolean(fil.fixat), instant: instantDe(fil.ultimAl) });
     }
     llista.sort((a, b) => (Number(b.fixat) - Number(a.fixat)) || (b.instant - a.instant));
@@ -1033,9 +1041,13 @@ function XatWorkspace({ origen = null }) {
       comunitat: virtual ? comunitatDeLaReserva : false,
       reservaJavi: virtual ? FILA_DE_RESERVA_DE_JAVI : null,
       reservaIAIA: virtual && !iaiaApagada ? FILA_DE_RESERVA_DE_LA_IAIA : null,
-      subtitolDeJavi: t('section.xat.javi.subtitol', 'Atenció personal i servei tècnic')
+      subtitolDeJavi: joEsJavi
+        ? t('section.xat.nou.tuMateix', "Envia't missatges a tu mateix")
+        : t('section.xat.javi.subtitol', 'Atenció personal i servei tècnic'),
+      joEsJavi,
+      nomPropiDeJavi: joEsJavi ? (joNom || '') : ''
     });
-  }, [comunitats, threads, pobleDeLaLlista, senseSessio, status, iaiaApagada, comunitatDeLaReserva, t]);
+  }, [comunitats, threads, pobleDeLaLlista, senseSessio, status, iaiaApagada, comunitatDeLaReserva, joEsJavi, joNom, t]);
   /* La fila virtual del poble no es pot triar: fora mentre se seleccionen xats.
      Ordre del Mestre (261007) · Les files d'ajuda per defecte tampoc: no són
      converses i no tenen res a marcar. Gauntlet 261016_1530 · Ni la que porta
@@ -1208,9 +1220,12 @@ function XatWorkspace({ origen = null }) {
   const missatgesDelContext = activeThread ? getThreadMessages(activeThread.id) : CAP;
   const { ritme, onEscrivint } = useRitmeXat({ fil: activeThread, joId, modeDades, senseSessio, ambit: ambitEstable, config: externalConfig });
   const messages = useMemo(() => missatgesDelContext.map(m => {
-    const estat = derivaEstat(m, Math.max(activeThread?.llegitPelsAltresFinsSeq ?? 0, ritme.llegitPelsAltresFinsSeq), ritme.rebutPelsAltresFinsSeq);
+    const llegitFins = activeThread?.esPropi
+      ? Math.max(activeThread.llegitFinsSeq ?? 0, activeThread.ultimSeq ?? 0, activeThread.llegitPelsAltresFinsSeq ?? 0, ritme.llegitPelsAltresFinsSeq)
+      : Math.max(activeThread?.llegitPelsAltresFinsSeq ?? 0, ritme.llegitPelsAltresFinsSeq);
+    const estat = derivaEstat(m, llegitFins, ritme.rebutPelsAltresFinsSeq);
     return estat === m.estatEnviament ? m : { ...m, estatEnviament: estat };
-  }), [missatgesDelContext, activeThread?.llegitPelsAltresFinsSeq, ritme]);
+  }), [missatgesDelContext, activeThread?.esPropi, activeThread?.llegitFinsSeq, activeThread?.ultimSeq, activeThread?.llegitPelsAltresFinsSeq, ritme]);
 
   if (threadId && !trobat && status === 'ready' && llistaFresca && sessioResolta && !reobrint && !esperaSessioIAIA(threadId) && !dinsDeLaIAIA && !clauDeLaRuta) {
     return <NotFoundPage />;
@@ -1236,8 +1251,13 @@ function XatWorkspace({ origen = null }) {
     const desDelDialeg = dialegNou;
     const tanca = () => { tancaDialegNou(); netejaCerca(); };
     setErrorObrir(null);
-    const novaAmbIAIA = desDelDialeg && novaSessioIAIA && esContacteDeLaIAIA(membre);
-    const filObert = novaAmbIAIA ? novaSessioIAIA() : membre.fil_id;
+    const filPrincipalIAIA = desDelDialeg && esContacteDeLaIAIA(membre)
+      ? (threads.find((f) => f.id === ID_FIL_LOCAL_IAIA)?.id
+        ?? threads.find((f) => !f.perDefecte && esXatDeLaIAIA(f) && !esXatPublicDePaginaIAIA(f))?.id
+        ?? null)
+      : null;
+    const novaAmbIAIA = desDelDialeg && !filPrincipalIAIA && novaSessioIAIA && esContacteDeLaIAIA(membre);
+    const filObert = filPrincipalIAIA || (novaAmbIAIA ? novaSessioIAIA() : membre.fil_id);
     if (novaAmbIAIA && !filObert) return;
     if (filObert) {
       tanca();
@@ -1252,6 +1272,10 @@ function XatWorkspace({ origen = null }) {
       navigate(`/xat/${enc(filId)}${consulta()}`);
     } catch (error) {
       if (!mounted.current) return;
+      /* R21 (carril f2) · El xat propi que el backend no obri: dins del diàleg,
+         l'avís honest el pinta la mateixa fila «(Tu)» (xatPropi passa a 'no'),
+         i un segon avís a dalt el repetiria. Fora del diàleg, el toast. */
+      if (desDelDialeg && error?.code === CODI_XAT_PROPI_NO) return;
       const text = textDeFalladaDirecte(error, t);
       if (desDelDialeg) setErrorObrir(text);
       else showToast(text, 'error');
@@ -1787,7 +1811,9 @@ function XatWorkspace({ origen = null }) {
         contactesFrequents={contactesFrequents}
         joId={joId}
         joNom={joNom}
-        filPersonal={threads.find((f) => f.tipus === 'personal')?.id ?? null}
+        joAvatar={joAvatar}
+        xatPropi={xatPropi}
+        filPersonal={threads.find((f) => f.esPropi || f.tipus === 'personal')?.id ?? null}
         onTriaMembre={obriConversaAmb}
         obrintAmb={obrintAmb}
         onObriFil={(id) => { tancaDialegNou(); navigate(`/xat/${enc(id)}${consulta()}`); }}
@@ -1829,8 +1855,8 @@ function XatWorkspace({ origen = null }) {
           configAdjunts={externalConfig}
           usuariAdjunts={joId}
           onBack={handleBackToList}
-          onOblidaSessioIAIA={activeThread.sessioLocalIAIA && oblidaSessioIAIA ? async (id) => {
-            if (await oblidaSessioIAIA(id)) navigate(`/xat${consulta()}`, { replace: true });
+          onOblidaSessioIAIA={(activeThread.sessioLocalIAIA || activeThread.id === ID_FIL_LOCAL_IAIA) && oblidaSessioIAIA ? async (id) => {
+            if (await oblidaSessioIAIA(id) && activeThread.sessioLocalIAIA) navigate(`/xat${consulta()}`, { replace: true });
           } : null}
           onTornaAOrigen={tornaAOrigen}
           onEnviaAlBloc={enviaAlBloc}

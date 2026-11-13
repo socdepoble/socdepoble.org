@@ -22,6 +22,8 @@ import {
   empremtaDeKeytool, executa, normalitzaEmpremta, plega, rutaDe, sha256DeFitxer
 } from './entorn.mjs';
 import { arrelComprovada, preflight } from './preflight.mjs';
+import { main as pujaAndroid } from './puja-android.mjs';
+import { main as pujaIos } from './puja-ios.mjs';
 import { CANALS_JARVIS, recullEmpaquetats } from '../../tooling/vite/consola-iaia.mjs';
 import { inspeccionaHigienePaquets } from '../../tooling/gates/tractor-higiene-paquets.mjs';
 
@@ -43,7 +45,7 @@ const ADMESOS = Object.freeze({
 });
 
 const PLATAFORMES_VALIDES = Object.freeze(['totes', 'web', 'wordpress', 'android', 'ios']);
-const US = 'Ús: --notes "<notes>" [--canals web,wordpress,android,ios] [--sec] | --versio X.Y.Z --build N [--plataforma totes|web|wordpress|android|ios] [--canal intern|produccio] [--compila] [--confirma=...] [--json]';
+const US = 'Ús: --notes "<notes>" [--canals web,wordpress,android,ios] [--sec] | --versio X.Y.Z --build N [--plataforma totes|web|wordpress|android|ios] [--canal intern|produccio] [--push] [--json] | --versio X.Y.Z --build N --plataforma android|ios [--canal intern|produccio] [--push] [--compila] [--confirma=X.Y.Z+N|produccio:X.Y.Z+N@<sha12>]';
 
 export const APK_RELEASE = Object.freeze(['android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk']);
 export const NOM_APK_PUBLIC = 'socdepoble-android-latest.apk';
@@ -54,7 +56,7 @@ const sanejaTextPas = (txt) => String(txt ?? '').replace(CAMI_ABSOLUT, '<camí>'
 /**
  * Construeix el resum omnicanal en sec (sense secrets) per a la CLI i per a proves.
  */
-export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, plataforma = 'totes', env = process.env, consultes = {} } = {}) {
+export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, plataforma = 'totes', push = false, env = process.env, consultes = {} } = {}) {
   const empaquetats = recullEmpaquetats(arrel);
   const v = versio ?? empaquetats.canonica ?? '1.0.0';
   const b = build ?? empaquetats.plataformes?.android?.builds?.[0] ?? '2';
@@ -62,7 +64,7 @@ export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, pl
   const natives = plataformes.filter((p) => p === 'android' || p === 'ios');
 
   const pre = natives.length
-    ? preflight({ arrel, plataformes: natives, signa: false, env, consultes, canal })
+    ? preflight({ arrel, plataformes: natives, signa: false, env, consultes, canal, push })
     : { codi: EIXIDA.BE, linies: [], valors: {}, fastlane: false, jdk: null, segell: null };
 
   const higiene = inspeccionaHigienePaquets(arrel);
@@ -310,6 +312,9 @@ export async function main(argv = process.argv.slice(2)) {
 
   // Camí del corredor Jarvis (--notes, --canals, --sec)
   if (opcions.notes !== undefined || opcions.canals !== undefined || opcions.sec) {
+    if (['versio', 'build', 'plataforma', 'canal', 'compila', 'confirma', 'push', 'json'].some((nom) => opcions[nom] !== undefined)) {
+      return plega(EIXIDA.US, 'No es poden mesclar les opcions del corredor --notes/--canals/--sec amb les de versió i plataforma.');
+    }
     const notes = String(opcions.notes ?? '').trim();
     if (!notes) return plega(EIXIDA.US, 'Cal indicar --notes "<notes>" no buides.');
     const llistaCrua = String(opcions.canals ?? '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -336,7 +341,7 @@ export async function main(argv = process.argv.slice(2)) {
     return plega(EIXIDA.US, US);
   }
 
-  const resum = resumOmnicanal(arrel, { versio, build, canal, plataforma });
+  const resum = resumOmnicanal(arrel, { versio, build, canal, plataforma, push: Boolean(opcions.push) });
 
   if (!opcions.compila && opcions.confirma === undefined) {
     if (opcions.json) {
@@ -353,14 +358,34 @@ export async function main(argv = process.argv.slice(2)) {
         ''
       ].join('\n'));
     }
-    return resum.higiene.valid ? EIXIDA.BE : EIXIDA.ARBRE;
+    return resum.higiene.valid ? resum.preflight.codi : EIXIDA.ARBRE;
   }
+
+  /* Una acció real sempre pertany a un únic artefacte: la confirmació de
+     producció porta el seu sha12 i no pot autoritzar alhora AAB i IPA. Les
+     guardes de versió, preflight i confirmació són les dels scripts existents. */
+  if (plataforma === 'totes') {
+    return plega(EIXIDA.US, 'Per a --compila o --confirma, tria una sola --plataforma android o ios; cada artefacte té el seu rebut i la seua confirmació.');
+  }
+  if (plataforma === 'web' || plataforma === 'wordpress') {
+    return plega(EIXIDA.EINA, `L’acció ${plataforma} no té cap publicador connectat a esta CLI; el resum en sec mostra les ordres disponibles.`);
+  }
+  if (opcions.json) return plega(EIXIDA.US, '--json és només per al resum en sec; la compilació o pujada conserva el rebut del script natiu.');
 
   if (!resum.higiene.valid) {
     return plega(EIXIDA.ARBRE, 'IDEA-62: tractor-higiene-paquets ha detectat contaminació als paquets:', resum.higiene.incidencies.map((i) => `${i.cami}: ${i.motiu}`));
   }
 
-  if (opcions.compila && (plataforma === 'totes' || plataforma === 'android')) {
+  const argumentsNatius = ['--versio', versio, '--build', build, '--canal', canal];
+  if (opcions.push) argumentsNatius.push('--push');
+  if (opcions.compila) argumentsNatius.push('--compila');
+  if (opcions.confirma !== undefined) argumentsNatius.push(`--confirma=${opcions.confirma}`);
+  const codiNatiu = await (plataforma === 'ios' ? pujaIos : pujaAndroid)(argumentsNatius);
+  if (codiNatiu !== EIXIDA.BE) return codiNatiu;
+
+  /* El script d'Android ja ha compilat i verificat l'AAB. El mateix build
+     genera també l'APK directe, sense substituir ni duplicar la pujada. */
+  if (opcions.compila && plataforma === 'android') {
     const pre = preflight({ arrel, plataformes: ['android'], signa: true, canal, push: Boolean(opcions.push) });
     if (pre.codi !== EIXIDA.BE) return plega(pre.codi, 'Preflight Android amb problemes: no es compila res.', pre.linies);
     const resApk = await compilaApkDirecte({ arrel, valors: pre.valors, jdkHome: pre.jdk.home, versio, build });

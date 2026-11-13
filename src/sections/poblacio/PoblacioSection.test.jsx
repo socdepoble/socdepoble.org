@@ -4,32 +4,55 @@
    2.1.1, axe scrollable-region-focusable) i les capçaleres de columna van en
    la llengua de la interfície, amb scope. Les dues classes .sdp-taula es
    conserven (la doble vora és un píxel). */
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import '../../../tests/helpers/diccionaris.js';
 import { createTranslator } from '../../config/i18n.js';
 
-const mocks = vi.hoisted(() => ({ t: (_clau, reserva) => reserva }));
+const mocks = vi.hoisted(() => ({ t: (_clau, reserva) => reserva, status: 'ready', error: null, refresh: vi.fn(), towns: null }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({
   useCoreContent: () => ({
-    sortedTowns: [
+    status: mocks.status, error: mocks.error, refresh: mocks.refresh,
+    sortedTowns: mocks.towns ?? [
       { id: 'tibi', title: 'Tibi', comarca: 'Alcoià', population: '1.700 hab' },
       { id: 'torre', title: 'La Torre de les Maçanes', comarca: 'Alacantí', population: '700 hab' }
     ]
   })
 }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }), useUIState: () => ({ externalConfig: { dataMode: 'seed' } }) }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/RouterContext', () => ({ Link: ({ to, children, ...rest }) => <a href={to} {...rest}>{children}</a> }));
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: ({ title, children }) => <article><header className="page-title"><h1>{title}</h1></header>{children}</article>
 }));
-import PoblacioSection from './PoblacioSection.jsx';
+import PoblacioSection, { habitantsDe } from './PoblacioSection.jsx';
 
-beforeEach(() => { mocks.t = (_clau, reserva) => reserva; });
+beforeEach(() => { mocks.t = (_clau, reserva) => reserva; mocks.status = 'ready'; mocks.error = null; mocks.towns = null; mocks.refresh.mockReset(); });
 afterEach(() => cleanup());
 
 describe('/poblacio: la taula', () => {
+  test('una càrrega o fallada de la font no es disfressa de taula buida i el reintent arriba al port', () => {
+    mocks.status = 'loading';
+    const view = render(<PoblacioSection />);
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(screen.getByText('Carregant pobles...')).toBeTruthy();
+    mocks.status = 'error'; mocks.error = new Error('Source unavailable');
+    view.rerender(<PoblacioSection />);
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(screen.getByRole('alert')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Torna-ho a provar' }));
+    expect(mocks.refresh).toHaveBeenCalledTimes(1);
+    mocks.status = 'ready';
+    view.rerender(<PoblacioSection />);
+    expect(screen.getByRole('table')).toBeTruthy();
+  });
+
+  test('les poblacions complexes no tomben la secció ni inventen un recompte', () => {
+    expect(['1.700 hab', 700, null, {}, ['5'], NaN, -8].map(habitantsDe)).toEqual([1700, 700, 0, 0, 0, 0, 0]);
+    mocks.towns = [null, { id: 'invalid', title: 'Sense recompte', comarca: {}, population: {} }, { id: 'known', title: 'Poble conegut', comarca: 'Alcoià', population: 24 }];
+    render(<PoblacioSection />);
+    expect(screen.getAllByRole('row').slice(1).map(row => row.querySelector('a').textContent)).toEqual(['Poble conegut', 'Sense recompte']);
+  });
   test('una regió amb nom, que rep el focus i conté la taula; les dues classes de sempre', () => {
     render(<PoblacioSection />);
     const regio = screen.getByRole('region', { name: 'Pobles per habitants' });

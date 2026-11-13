@@ -50,6 +50,17 @@ const CONFIG = { supabaseUrl: 'https://api.example.test', supabaseAnonKey: 'sb_p
 const desa = (token, id) => { m.epoch++; m.store.set('jwt', token); m.store.set('user', { id }); };
 const esborra = () => { m.epoch++; m.store.clear(); };
 const resposta = (status, body = null) => ({ ok: status < 400, status, text: async () => '', json: async () => body, headers: { get: () => null } });
+
+test('R21.6 preserves SQLSTATE without confusing generic serialization with a revision rejection', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce({ ...resposta(409), text: async () => JSON.stringify({ code: '40001', message: 'serialization conflict' }) })
+    .mockResolvedValueOnce({ ...resposta(409), text: async () => JSON.stringify({ code: '40001', message: 'SDP-MUR-REVISION: conflicte de revisió' }) })
+    .mockResolvedValueOnce({ ...resposta(403), text: async () => JSON.stringify({ code: { raw: 'bad' }, message: 'untrusted SDP-MUR-OWNER: body' }) }));
+  await expect(request('/rest/v1/rpc/synthetic', CONFIG)).rejects.toMatchObject({ status: 409, sqlstate: '40001' });
+  try { await request('/rest/v1/rpc/synthetic', CONFIG); throw new Error('unexpected success'); }
+  catch (e) { expect(e).toMatchObject({ status: 409, sqlstate: '40001', codi: 'SDP-MUR-REVISION' }); }
+  try { await request('/rest/v1/rpc/synthetic', CONFIG); throw new Error('unexpected success'); }
+  catch (e) { expect(e).toMatchObject({ status: 403 }); expect(e.sqlstate).toBeUndefined(); expect(e.codi).toBeUndefined(); }
+});
 const accioDA = () => request('/rest/v1/rpc/registra_consentiment', CONFIG, { method: 'POST', body: { p_tipus: 'synthetic-consent-A' } });
 const tokens = (fetch) => fetch.mock.calls.map(([, options]) => options.headers.Authorization);
 afterEach(() => { vi.unstubAllGlobals(); m.store.clear(); configuraRefrescSessio(async () => false); });

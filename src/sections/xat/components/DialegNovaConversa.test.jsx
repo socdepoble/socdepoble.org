@@ -25,6 +25,9 @@ beforeEach(() => {
     contactesFrequents: [{ usuari_id: 'u-toni', nom: 'Toni Pastor', tipus: 'persona', avatar_url: null, fil_id: 'f-toni' }],
     joId: 'jo',
     joNom: 'Javi Llinares',
+    /* R21 (carril f2) · El backend obri el xat propi (XatContext): la fila
+       «(Tu)» va dalt. Els altres estats tenen la seua prova, davall. */
+    xatPropi: 'disponible',
     filPersonal: null,
     onTriaMembre: vi.fn(),
     onObriFil: vi.fn(),
@@ -60,11 +63,16 @@ test('el focus va al cercador i el diàleg té les seccions de la referència en
   ]);
   expect(within(dialeg).getByRole('button', { name: 'Nou grup' })).toBeTruthy();
   expect(within(dialeg).getByRole('button', { name: 'Nova comunitat' })).toBeTruthy();
-  expect(within(dialeg).queryByRole('button', { name: /Javi/ })).toBeNull();
+  const botoPropi = within(dialeg).getByRole('button', { name: /Javi Llinares \(Tu\)/ });
+  expect(botoPropi.textContent).toContain("Envia't missatges a tu mateix");
+  expect(within(dialeg).queryByRole('heading', { name: 'J' })).toBeNull();
   expect(within(dialeg).queryByRole('button', { name: /Toni Pastor/ })).toBeNull();
   expect(within(dialeg).queryByRole('button', { name: /José Martí/ })).toBeNull();
   expect(within(dialeg).getByRole('button', { name: /Sóc de Poble/ }).textContent).toContain('Entitat o empresa');
   expect(within(dialeg).getByRole('button', { name: /IAIA MarIA/ }).textContent).toContain('Intel·ligència artificial');
+  /* R21.4-UI · Ordre canònic dins de «Contactes a Sóc de Poble»: <Nom> (Tu) dalt de tot. */
+  const grupContactes = within(dialeg).getByRole('heading', { name: 'Contactes a Sóc de Poble' }).parentElement;
+  expect(within(grupContactes).getAllByRole('button')[0]).toBe(botoPropi);
 });
 
 test('el cercador filtra totes les seccions amb el plegat d’accents i el ⊗ l’esborra', async () => {
@@ -147,18 +155,84 @@ test('«Nou grup» i «Nova comunitat» obrin dins del diàleg el panell honest,
   expect(within(dialeg).getByText(/naixen d'una Pàgina Universal/)).toBeTruthy();
 });
 
-test('escriure’s a un mateix: sense fil personal ho avisa; amb fil, l’obri', async () => {
+test('R21.4-UI · escriure’s a un mateix: sense fil personal crida onTriaMembre amb joId; amb filPersonal l’obri; sense sessió no s’oferix', async () => {
   let dialeg = await obert();
-  fireEvent.change(within(dialeg).getByRole('searchbox'), { target: { value: 'javi' } });
-  fireEvent.click(within(dialeg).getByRole('button', { name: /\(Tu\)/ }));
-  expect(within(dialeg).getByText(/Encara no pots escriure't a tu mateix/).getAttribute('role')).toBe('status');
+  fireEvent.click(within(dialeg).getByRole('button', { name: /Javi Llinares \(Tu\)/ }));
+  expect(within(dialeg).queryByText(/Encara no pots escriure't a tu mateix/)).toBeNull();
+  expect(props.onTriaMembre).toHaveBeenCalledWith({
+    usuari_id: 'jo',
+    nom: 'Javi Llinares',
+    tipus: 'persona',
+    avatar_url: null,
+    fil_id: null
+  });
   expect(props.onObriFil).not.toHaveBeenCalled();
   cleanup();
 
+  props.onTriaMembre = vi.fn();
+  props.onObriFil = vi.fn();
   dialeg = await obert({ filPersonal: 'f-jo' });
   fireEvent.change(within(dialeg).getByRole('searchbox'), { target: { value: 'javi' } });
-  fireEvent.click(within(dialeg).getByRole('button', { name: /\(Tu\)/ }));
+  fireEvent.click(within(dialeg).getByRole('button', { name: /Javi Llinares \(Tu\)/ }));
   expect(props.onObriFil).toHaveBeenCalledWith('f-jo');
+  expect(props.onTriaMembre).not.toHaveBeenCalled();
+  cleanup();
+
+  props.cercaMembres = vi.fn(async () => []);
+  dialeg = await obert({ senseSessio: true });
+  expect(within(dialeg).queryByRole('button', { name: /\(Tu\)/ })).toBeNull();
+});
+
+/* R21 (carril f2; Gauntlet R21 regressio_ui_xat-02/-05, honestedat_textos-04) ·
+   En remot, el xat propi depén de la migració 2611121630_xat_propi. Sense que
+   el backend l'haja acreditat, «(Tu)» no s'oferix dalt: només amb una cerca,
+   i prémer-la acaba en l'avís honest (role="status", lligat a la fila), mai
+   en un error mut ni en el text de SDP-XAT-002. */
+const AVIS_PERSONAL = "Encara no pots escriure't a tu mateix: este poble no obri el xat personal.";
+
+test('R21 f2 · «per confirmar»: cap «(Tu)» dalt; amb cerca, prémer-la pregunta (onTriaMembre) i el «no» del servidor pinta l’avís honest', async () => {
+  const vista = render(<Arnes xatPropi="per-confirmar" />);
+  let dialeg = screen.getByRole('dialog', { name: 'Nova conversa' });
+  await waitFor(() => expect(within(dialeg).getByRole('heading', { name: 'I' })).toBeTruthy());
+  expect(within(dialeg).queryByRole('button', { name: /\(Tu\)/ })).toBeNull();
+  fireEvent.change(within(dialeg).getByRole('searchbox'), { target: { value: 'javi' } });
+  const fila = within(dialeg).getByRole('button', { name: /Javi Llinares \(Tu\)/ });
+  fireEvent.click(fila);
+  expect(props.onTriaMembre).toHaveBeenCalledWith(expect.objectContaining({ usuari_id: 'jo', fil_id: null }));
+  expect(within(dialeg).queryByText(AVIS_PERSONAL)).toBeNull();
+  /* XatContext: SDP-XAT-002 → xatPropi 'no'. */
+  vista.rerender(<Arnes xatPropi="no" />);
+  dialeg = screen.getByRole('dialog', { name: 'Nova conversa' });
+  const avis = within(dialeg).getByText(AVIS_PERSONAL);
+  expect(avis.getAttribute('role')).toBe('status');
+  expect(within(dialeg).getByRole('button', { name: /Javi Llinares \(Tu\)/ }).getAttribute('aria-describedby')).toBe(avis.id);
+  expect(props.onTriaMembre).toHaveBeenCalledTimes(1);
+});
+
+test.each([
+  ['no', { xatPropi: 'no' }],
+  ['sense la prop (un consumidor d’abans)', { xatPropi: undefined }]
+])('R21 f2 · «%s»: cap «(Tu)» dalt; amb cerca, prémer-la només avisa i no crida cap conversa', async (_, extra) => {
+  const dialeg = await obert(extra);
+  expect(within(dialeg).queryByRole('button', { name: /\(Tu\)/ })).toBeNull();
+  fireEvent.change(within(dialeg).getByRole('searchbox'), { target: { value: 'javi' } });
+  fireEvent.click(within(dialeg).getByRole('button', { name: /Javi Llinares \(Tu\)/ }));
+  expect(within(dialeg).getByText(AVIS_PERSONAL).getAttribute('role')).toBe('status');
+  expect(props.onTriaMembre).not.toHaveBeenCalled();
+  expect(props.onObriFil).not.toHaveBeenCalled();
+});
+
+test('R21 f2 · amb un fil propi ja a la llista, la fila va dalt i l’obri; sense xat propi possible (null), cap fila', async () => {
+  let dialeg = await obert({ xatPropi: 'no', filPersonal: 'f-jo' });
+  fireEvent.click(within(dialeg).getByRole('button', { name: /Javi Llinares \(Tu\)/ }));
+  expect(props.onObriFil).toHaveBeenCalledWith('f-jo');
+  expect(within(dialeg).queryByText(AVIS_PERSONAL)).toBeNull();
+  cleanup();
+
+  dialeg = await obert({ xatPropi: null });
+  fireEvent.change(within(dialeg).getByRole('searchbox'), { target: { value: 'javi' } });
+  await waitFor(() => expect(within(dialeg).getByRole('status').textContent).toBe('Cap contacte amb eixe nom.'));
+  expect(within(dialeg).queryByRole('button', { name: /\(Tu\)/ })).toBeNull();
 });
 
 /* El padró local en porta com a molt 100: mentre el servidor no ha respost

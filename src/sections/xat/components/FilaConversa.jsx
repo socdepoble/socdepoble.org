@@ -167,7 +167,14 @@ function propsDeFila({ seleccio, activa, onPrem, classe, premuda = null }) {
 }
 
 export default function FilaConversa({ fil, activa = false, onSelect, locale, t, seleccio = null, joId = null, premuda = null }) {
-  const nom = fil.name || fil.title || t('section.xat.conversaSenseNom', 'Conversa');
+  const nomBase = fil.name || fil.title || t('section.xat.conversaSenseNom', 'Conversa');
+  const sufixTu = `(${t('section.xat.rail.tu', 'Tu')})`;
+  const nom = fil.esPropi && !nomBase.endsWith(sufixTu)
+    ? t('section.xat.nou.tu', '{nom} (Tu)').replace('{nom}', () => nomBase)
+    : nomBase;
+  const previaBuida = fil.esPropi
+    ? t('section.xat.nou.tuMateix', "Envia't missatges a tu mateix")
+    : t('section.xat.capMissatge', 'Cap missatge.');
   const noLlegits = Number(fil.noLlegits) || 0;
   const silenciat = Boolean(fil.silenciat);
   /* T1 · Silenciat, l'hora no es ressalta: la pastilla grisa ja ho diu. */
@@ -179,7 +186,7 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
   return (
     <button type="button" {...propsDeFila({ seleccio, activa, onPrem: () => onSelect(fil.id), classe, premuda })}>
       {seleccio ? <MarcaTria triada={seleccio.triada} /> : null}
-      <AvatarFil fil={fil} nom={nom} />
+      <AvatarFil fil={fil} nom={nomBase} />
       <span className="sdp-xat-fila__cos">
         <span className="sdp-xat-fila__cap">
           <span className="sdp-xat-fila__nom">
@@ -199,7 +206,7 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
                 {fil.ultimText || fil.ultimTipus ? <IniciPrevia fil={fil} joId={joId} t={t} /> : null}
                 {/* IDEA-53 · La previa és una línia meta: sense les marques de
                     la negreta i sense <strong> (el pes ja diu els no llegits). */}
-                {senseMarquesDeNegreta(fil.ultimText) || textDAdjunt(fil.ultimTipus, t) || t('section.xat.capMissatge', 'Cap missatge.')}
+                {senseMarquesDeNegreta(fil.ultimText) || textDAdjunt(fil.ultimTipus, t) || previaBuida}
               </>
             )}
           </span>

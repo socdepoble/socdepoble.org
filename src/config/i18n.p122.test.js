@@ -128,7 +128,6 @@ const FITXERS_AUDITATS_P122 = Object.freeze([
   "src/sections/xat/components/CapcaleraConversa.jsx",
   "src/sections/xat/components/CitaResposta.jsx",
   "src/sections/xat/components/Compositor.jsx",
-  "src/sections/xat/components/ConsultaIAIA.jsx",
   "src/sections/xat/components/ControlsAdjunt.jsx",
   "src/sections/xat/components/DialegCompartir.jsx",
   "src/sections/xat/components/DialegNovaConversa.jsx",

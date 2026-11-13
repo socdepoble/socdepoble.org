@@ -52,6 +52,7 @@ export const passos = [
   { nom: 'Porta Enxufe', cmd: 'node', args: ['tooling/gates/tractor-enxufe.mjs'], script: 'porta:enxufe' },
   { nom: 'Porta Maquinari', cmd: 'node', args: ['tooling/gates/tractor-doctrina-maquinari.mjs'], script: 'porta:maquinari' },
   { nom: 'Porta Graella', cmd: 'node', args: ['tooling/gates/tractor-graella.mjs'], script: 'porta:graella' },
+  { nom: 'Lògica universal', cmd: 'node', args: ['tooling/gates/porta-logica-universal.mjs'], script: 'porta:logica-universal', readOnly: true },
   { nom: 'Porta InnerHTML', cmd: 'node', args: ['tooling/gates/tractor-innerhtml.mjs'], script: 'porta:innerhtml' },
   { nom: 'Porta Rutes', cmd: 'node', args: ['tooling/gates/tractor-rutes.mjs'], script: 'porta:rutes' },
   { nom: 'Porta Rutes Web', cmd: 'node', args: ['tooling/gates/tractor-rutes-web.mjs'], script: 'porta:rutes-web' },

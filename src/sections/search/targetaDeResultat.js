@@ -15,12 +15,10 @@
  *
  * La targeta porta les MATEIXES dades que la fila de la llista i el mateix
  * enllaç; no s'inventa res:
- *   · una persona o una entitat (porta avatar): la boina és la del directori
- *     (ProfileSection · boinaDelPoble): la seua cara i la meta de la fila al
- *     lloc del poble, sense el nom ni un enllaç propi. El nom és el títol i
- *     l'únic enllaç, el de tota la targeta, a la seua fitxa pública: abans el
- *     nom eixia dues vegades (boina i títol) i la targeta tenia dos enllaços
- *     al mateix lloc (revisió adversarial). Cap etiqueta: una persona no es
+ *   · una persona o una entitat (porta avatar): la boina porta la cara, el
+ *     nom i el poble real, o les metadades declarades com a desconegudes.
+ *     «El teu perfil» és meta de la llista, no un poble. La boina no duplica
+ *     l'enllaç a la fitxa: només hi ha el de tota la targeta. Cap etiqueta: una persona no es
  *     categoritza (Directiva de Dignitat Humana, UniversalCard);
  *   · un poble o un producte (porta imatge): la imatge damunt i la meta en
  *     etiquetes;
@@ -29,6 +27,8 @@
  * (Compartir cotxe, Treball, Habitatge) també: una fitxa és una targeta, com
  * un producte, amb la meta de la fila en etiquetes.
  */
+
+import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 
 /** Els tipus del filtre que ofereixen la vista de targetes. */
 export const TIPUS_AMB_TARGETES = Object.freeze(['persones', 'entitats', 'pobles', 'mercat', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
@@ -49,11 +49,16 @@ const ambText = (valor) => typeof valor === 'string' && valor.trim() !== '';
  * entrada). `meta` és la de la fila tal com la pinta la llista (amb «El teu
  * perfil» o «La gestiones tu» davant); sense, la de l'entrada.
  */
-export function propsDeTargetaDeResultat(entrada, { meta, nomActual } = {}) {
+export function propsDeTargetaDeResultat(entrada, { meta, nomActual, t } = {}) {
   const dades = (Array.isArray(meta) ? meta : Array.isArray(entrada?.meta) ? entrada.meta : []).filter(ambText);
   const ambAvatar = Boolean(entrada?.avatar);
   const href = ambText(entrada?.href) ? entrada.href : undefined;
   return {
+    ...encapcalamentDeTargeta(entrada?.editorial, {
+      author: ambText(nomActual) && (entrada?.tipus === 'persones' || entrada?.tipus === 'entitats') ? nomActual : entrada?.editorial?.author,
+      location: entrada?.editorial?.location || entrada?.poble,
+      t
+    }),
     title: ambText(nomActual) ? nomActual.trim() : (entrada?.titol || ''),
     mainHref: href,
     imageUrl: entrada?.imatge?.src || undefined,
@@ -61,7 +66,6 @@ export function propsDeTargetaDeResultat(entrada, { meta, nomActual } = {}) {
     /* Pla 261022_1955 (T2) · Sense foto que es puga pintar, la referència del
        bucket públic (un logo pujat): UniversalCard la demana al port. */
     avatarUrl: ambAvatar ? entrada.avatar.src || entrada.avatar.ref || undefined : undefined,
-    location: ambAvatar && dades.length ? dades.join(' · ') : undefined,
     labels: ambAvatar ? [] : dades,
     /* data-element a l'enllaç de la targeta: «Mostra'n més» hi porta el focus. */
     idElement: entrada?.clau,

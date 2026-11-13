@@ -1,6 +1,6 @@
 {
   "name": "socdepoble-react",
-  "version": "1.1.12",
+  "version": "1.2.0",
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "sideEffects": [
@@ -121,7 +121,9 @@
     "test:node:all": "node tooling/tests/run-node-tests.mjs --suite all",
     "porta:vigilant": "node tooling/gates/tractor-vigilant.mjs",
     "check:secret-literals": "node tooling/gates/literals-secrets-node0.mjs",
-    "test:sql": "node --test tests/copublicacio-postgres.test.mjs"
+    "test:sql": "node --test tests/copublicacio-postgres.test.mjs tests/contingut-frontera-r21-6-postgres.test.mjs tests/missatgeria-r21-2-postgres.test.mjs tests/xat-propi-r21-4-postgres.test.mjs tests/agents-app-content-r21-5-postgres.test.mjs",
+    "test:node-suite": "node tooling/tests/run-node-tests.mjs",
+    "porta:logica-universal": "node tooling/gates/porta-logica-universal.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

@@ -17,6 +17,11 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MOTIU_PUSH } from '../../pwa/avisosPush.js';
+import CA from '../../config/idiomes/ca.js';
+import ES from '../../config/idiomes/es.js';
+import EN from '../../config/idiomes/en.js';
+import EU from '../../config/idiomes/eu.js';
+import GL from '../../config/idiomes/gl.js';
 
 const mock = vi.hoisted(() => ({
   sessio: null,
@@ -50,7 +55,13 @@ vi.mock('../../config/avisosPushXat.js', async (importOriginal) => {
 /* Onada R9 (C3) · El motor del registre, que s'endolla a la façana en avaluar-se (com a l'entrada). */
 import '../../config/motorAvisosPushXat.js';
 import * as registre from '../../config/avisosPushXat.js';
-import { MOTIU_IOS_SENSE_INSTALAR, TEXTOS_AVISOS, notesDelsAvisos, useControlAvisosPush, useSincronitzaAvisosPush } from './useAvisosPushXat.js';
+import {
+  MOTIU_IOS_SENSE_INSTALAR, TEXTOS_AVISOS, TEXTOS_AVISOS_ENTORN, notesDelsAvisos, textAvisEntorn, useControlAvisosPush, useSincronitzaAvisosPush
+} from './useAvisosPushXat.js';
+
+/* El t de la pàgina en cada llengua (el de UIContext): el diccionari i, si no hi és, la reserva. */
+const DICCIONARIS = Object.freeze({ ca: CA, es: ES, en: EN, eu: EU, gl: GL });
+const traductorDe = (llengua) => (clau, reserva) => DICCIONARIS[llengua][clau] || reserva;
 
 const ADRECA = 'https://fcm.googleapis.com/fcm/send/abc';
 const ordre = [];
@@ -86,8 +97,10 @@ function Sincro() {
   return null;
 }
 let control = null;
+/* El traductor de la pàgina: la reserva, si una prova no en demana un altre. */
+let traductor = null;
 function Control() {
-  control = useControlAvisosPush((_clau, reserva) => reserva);
+  control = useControlAvisosPush(traductor || ((_clau, reserva) => reserva));
   return (
     <>
       <button type="button" onClick={() => control.onCanvi(true)}>encén</button>
@@ -124,6 +137,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   ordre.length = 0;
   control = null;
+  traductor = null;
 });
 afterEach(() => {
   cleanup();
@@ -415,10 +429,24 @@ describe('useControlAvisosPush', () => {
     expect(control).toMatchObject({ oferit: false, nomesNota: true });
     expect(control.notes).toEqual([TEXTOS_AVISOS.ios[1]]);
 
-    adaptador.motiu.mockImplementation(() => 'sense-clau');
-    cleanup();
-    await ambServidor();
-    expect(control).toMatchObject({ oferit: false, nomesNota: false, notes: [] });
+    /* El text de l'avís d'entorn és el del diccionari de la llengua de la pàgina (el t que rep el hook). */
+    for (const motiu of ['sense-clau', 'sense-config', 'sense-connector']) {
+      for (const llengua of ['ca', 'es', 'en', 'eu', 'gl']) {
+        adaptador.motiu.mockImplementation(() => motiu);
+        mock.llengua = llengua;
+        traductor = traductorDe(llengua);
+        cleanup();
+        await ambServidor();
+        expect(control).toMatchObject({
+          oferit: false,
+          nomesNota: false,
+          avisEntorn: true,
+          motiu,
+          nota: { text: DICCIONARIS[llengua][TEXTOS_AVISOS_ENTORN[motiu][0]], error: false },
+          notes: []
+        });
+      }
+    }
   });
 
   test.each([
@@ -496,5 +524,25 @@ describe('notesDelsAvisos (pura)', () => {
 
   test('a l\'app (natiu), el permís denegat parla del dispositiu, no del navegador', () => {
     expect(notesDelsAvisos({ oferit: true, estat: 'denegat', tipus: 'natiu' }, t).nota).toEqual({ text: R.denegatApp, error: false });
+  });
+
+  /* R21.4-UI (R21.2-F04) · L'avís d'entorn passa pel traductor com la resta: cada motiu té la seua clau
+     als 5 diccionaris, la reserva és el valor valencià i, sense traductor, la reserva. Cap altre motiu en dona. */
+  test('l\'avís d\'entorn: un parell [clau, reserva] per motiu, traduït en les 5 llengües', () => {
+    expect(Object.keys(TEXTOS_AVISOS_ENTORN)).toEqual(['sense-clau', 'sense-config', 'sense-connector']);
+    for (const [motiu, [clau, reserva]] of Object.entries(TEXTOS_AVISOS_ENTORN)) {
+      expect(reserva, motiu).toBe(CA[clau]);
+      expect(textAvisEntorn(motiu)).toBe(reserva);
+      expect(textAvisEntorn(motiu, null)).toBe(reserva);
+      for (const llengua of Object.keys(DICCIONARIS)) {
+        const text = DICCIONARIS[llengua][clau];
+        expect(typeof text === 'string' && text.trim().length > 0, `${llengua}: ${clau}`).toBe(true);
+        if (llengua !== 'ca') expect(text, `${llengua}: ${clau}`).not.toBe(reserva);
+        expect(textAvisEntorn(motiu, traductorDe(llengua))).toBe(text);
+        expect(notesDelsAvisos({ avisEntorn: true, motiu }, traductorDe(llengua))).toEqual({ nota: { text, error: false }, notes: [] });
+      }
+    }
+    for (const motiu of [null, undefined, '', 'ios-sense-instalar', 'sense-res', 42]) expect(textAvisEntorn(motiu, t)).toBeNull();
+    expect(notesDelsAvisos({ oferit: true, avisEntorn: true, motiu: 'sense-clau', estat: 'inactiu' }, t)).toEqual({ nota: null, notes: [R.cec, R.eixida] });
   });
 });

@@ -3,6 +3,9 @@
  * continua al port: parlar amb l'assistent no publica cap pregunta allí.
  * Cada sessió conserva al navegador només el títol. Els missatges viuen
  * en el muntatge del Xat, aïllats per persona, actor i backend.
+ * R21 (carril f1) · Política 2.5 en vigor (§14) i avís
+ * `section.xat.iaia.local.conversa`: l'historial, també el del fil principal
+ * iaia-local, no es desa a IndexedDB i s'esborra en eixir del Xat.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createTranslator } from '../../config/i18n.js';
@@ -108,8 +111,22 @@ function IAIALocalProviderAmbit({ children, original, respostaIAIA = respostaDeL
   useEffect(() => { if (original.iaiaApagada) avorta(); }, [original.iaiaApagada, avorta]);
 
   const oblidaSessioIAIA = useCallback((id) => {
-    if (!muntat.current || !idsLocals.current.has(id) || id === ID_FIL_LOCAL_IAIA) return Promise.resolve(false);
+    if (!muntat.current || !idsLocals.current.has(id)) return Promise.resolve(false);
     if (oblitsEnCurs.current.has(id)) return oblitsEnCurs.current.get(id);
+    if (id === ID_FIL_LOCAL_IAIA) {
+      // El fil principal no té títol ni res al disc: oblidar-lo és buidar la
+      // memòria i avortar les respostes que encara volen.
+      for (const [control, filId] of controls.current) {
+        if (filId === ID_FIL_LOCAL_IAIA) { control.abort(); controls.current.delete(control); }
+      }
+      posaHistorial((previ) => {
+        if (!(ID_FIL_LOCAL_IAIA in previ)) return previ;
+        const copia = { ...previ };
+        delete copia[ID_FIL_LOCAL_IAIA];
+        return copia;
+      });
+      return Promise.resolve(true);
+    }
     const operacio = (async () => {
       if (ambit) await registre.oblidaSessio(ambit, id);
       if (muntat.current) netejaFils([id]);
@@ -191,7 +208,7 @@ function IAIALocalProviderAmbit({ children, original, respostaIAIA = respostaDeL
     const control = new AbortController(); controls.current.set(control, filId);
     Promise.resolve().then(() => control.signal.aborted ? null : respostaIAIA(valor, { signal: control.signal })).catch(() => null).then((trobada) => {
       controls.current.delete(control);
-      if (control.signal.aborted || ticket !== epoch.current || !muntat.current || originalRef.current.iaiaApagada) return;
+      if (control.signal.aborted || ticket !== epoch.current || !muntat.current || originalRef.current.iaiaApagada || oblitsEnCurs.current.has(filId)) return;
       const resposta = { id: `${id}:resposta`, sender: 'other', author: AJUDA_PER_CLAU.iaia.nom,
         usuariId: IAIA_ID, is_ai: true, text: typeof trobada === 'string' && trobada.trim() ? trobada : RESPOSTA_IAIA,
         creatAl: new Date().toISOString() };

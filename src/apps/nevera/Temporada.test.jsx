@@ -342,12 +342,12 @@ describe('la boina de totes les targetes (REGLA D’OR 1)', () => {
     munta('/app/nevera/temporada/casa?mes=8', await prepara(ambLinies(['tomaques'])));
     await screen.findByRole('region', { name: REGIO });
     const targeta = mig().getByRole('button', { name: 'Tomaques' }).closest('article.sp-card');
-    expect(targeta.querySelector('.sp-card-author-name')).toBeNull();
+    expect(targeta.querySelector('.sp-card-author-name').textContent).toBe('Autoria no indicada');
     expect(within(targeta).queryByRole('link')).toBeNull();
     expect(within(targeta).getByText('Per comprar')).toBeTruthy();
     /* El detall (l'esquelet) ja ho tolerava: també sense boina. */
     const carabasso = detall().getByRole('button', { name: 'Carabassó' }).closest('article.sp-card');
-    expect(carabasso.querySelector('.sp-card-author-name')).toBeNull();
+    expect(carabasso.querySelector('.sp-card-author-name').textContent).toBe('Autoria no indicada');
   });
 });
 

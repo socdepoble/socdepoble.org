@@ -56,11 +56,14 @@ function referenciesAFullsMigrats(fonts, blocs) {
 const BLOCS = blocsMigrats(llig(MODULS));
 
 describe('fulls CSS migrats a src/css/modules.css', () => {
-  test('les marques nomenen els set fulls del cicle 4, i cap no torna a existir', () => {
+  test('les marques nomenen els sis fulls vius del cicle 4 (retirat ConsultaIAIA en R21.3), i cap no torna a existir', () => {
     expect(BLOCS.map(({ nom }) => nom)).toEqual(expect.arrayContaining([
       'pecesApps.css', 'catalegColleccio.css', 'alergens.css', 'tpv.css',
-      'UniversalListCard.css', 'AdjuntXat.css', 'ConsultaIAIA.css'
+      'UniversalListCard.css', 'AdjuntXat.css'
     ]));
+    expect(BLOCS.map(({ nom }) => nom)).not.toContain('ConsultaIAIA.css');
+    expect(existsSync(path.join(ARREL, 'src/sections/xat/components/ConsultaIAIA.css'))).toBe(false);
+    expect(existsSync(path.join(ARREL, 'src/sections/xat/components/ConsultaIAIA.jsx'))).toBe(false);
     for (const { cami } of BLOCS) expect(existsSync(path.join(ARREL, cami)), cami).toBe(false);
   });
 

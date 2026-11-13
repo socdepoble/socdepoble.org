@@ -365,9 +365,10 @@ export function CosAjustos({
   let cos;
   if (resultats) cos = <ResultatsAjustos resultats={resultats} terme={terme} t={t} onObri={obriResultat} />;
   else if (pagina.especial === 'preferits') cos = <PaginaPreferits preferits={preferits} t={t} onObri={onObriConversa} />;
-  /* B8C-6 · Per l'identificador de la pàgina: ajustosXat.js la continua
-     tenint «en construcció» (ARB-04), i ho és mentre no hi haja res a oferir. */
-  else if (pagina.id === 'notificacions' && (avisos?.oferit || avisos?.nomesNota)) cos = <PaginaNotificacions avisos={avisos} t={t} />;
+  /* B8C-6 + R21.4-UI (R21.2-F04) · Per l'identificador de la pàgina: si hi ha
+     interruptor, nota d'iOS o un avís honest d'entorn sense configurar
+     (sense-clau, sense-config, sense-connector), munta PaginaNotificacions. */
+  else if (pagina.id === 'notificacions' && (avisos?.oferit || avisos?.nomesNota || avisos?.avisEntorn)) cos = <PaginaNotificacions avisos={avisos} t={t} />;
   else if (pagina.construccio) cos = <PaginaEnConstruccio construccio={pagina.construccio} t={t} />;
   else {
     cos = (

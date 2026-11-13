@@ -44,8 +44,10 @@ describe('la versió canònica', () => {
        Onada 6, 261103): salt a v1.1.0. Onada R16: package.json, Android i iOS
        passen a 1.1.12, la versió del connector WordPress
        (wordpress-plugin/socdepoble-enxufe.php); el número de build (versionCode 2 i
-       CURRENT_PROJECT_VERSION 2) no canvia fins a la pròxima pujada a les botigues. */
-    expect(versioCanonica()).toBe('v1.1.12');
+       CURRENT_PROJECT_VERSION 2) no canvia fins a la pròxima pujada a les botigues.
+       Onada R21 (COMMIT 3): package.json, Android i iOS passen a 1.2.0 amb el build 4 (VERSIO_CLIENT_NATIU 4), i el
+       connector WordPress del repositori, a la 1.1.13 (la publicada a WordPress.org continua sent la 1.1.12). */
+    expect(versioCanonica()).toBe('v1.2.0');
   });
 
   test('la forma: «vX.Y.Z» o «vX.Y.Z (build aammdd)»; un segell que no és aammdd no s’hi posa', () => {

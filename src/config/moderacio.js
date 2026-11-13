@@ -112,7 +112,7 @@ export function objectiuDeMissatge(missatge, fil) {
  * fils de pàgina, ni fils de mostra. Pura.
  */
 export function objectiuDeContrapart(fil) {
-  if (!fil || fil.tipus !== 'directe' || fil.esIA || fil.subjecte || fil.comEntitat) return null;
+  if (!fil || fil.tipus !== 'directe' || fil.esPropi || fil.esIA || fil.subjecte || fil.comEntitat) return null;
   const filId = text(fil.id);
   const altres = Array.isArray(fil.altres) ? fil.altres : [];
   if (esFilDeMentida(filId) || altres.length !== 1) return null;
@@ -162,7 +162,7 @@ export function anotaMissatgesBloquejats(missatges, esPersonaBloquejada) {
 
 /* La persona de l'altra part d'un directe 1:1, o null. */
 function personaDelDirecte(fil) {
-  if (fil?.tipus !== 'directe') return null;
+  if (fil?.tipus !== 'directe' || fil.esPropi) return null;
   const altres = Array.isArray(fil.altres) ? fil.altres : [];
   return altres.length === 1 && altres[0]?.tipus === 'persona' && altres[0].id != null ? String(altres[0].id) : null;
 }

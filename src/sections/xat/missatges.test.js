@@ -549,4 +549,29 @@ describe('filIgual i filsEquivalents', () => {
     expect(filsEquivalents([], [])).toBe(true);
     expect(filsEquivalents(null, [])).toBe(false);
   });
+
+  it('R21.4-UI · mapejaFil i estatDeLUltim sobre el xat propi (esPropi / tipus personal): 0 noLlegits, doble tic blau llegit i fora de contactesFrequents', () => {
+    const ara = Date.UTC(2026, 10, 12);
+    const propi = mapejaFil(brut({
+      id: 'propi-1',
+      tipus: 'directe',
+      esPropi: true,
+      titol: 'Pepa',
+      altres: [],
+      noLlegits: 4,
+      ultimSeq: 7,
+      ultimAutorId: 'jo',
+      llegitFinsSeq: 5,
+      llegitPelsAltresFinsSeq: null
+    }), ara);
+    expect(propi).toMatchObject({
+      id: 'propi-1',
+      tipus: 'directe',
+      esPropi: true,
+      noLlegits: 0,
+      llegitFinsSeq: 5
+    });
+    expect(estatDeLUltim(propi, 'jo')).toBe('llegit');
+    expect(contactesFrequents([propi], 'jo')).toEqual([]);
+  });
 });

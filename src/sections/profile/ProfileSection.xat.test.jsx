@@ -1,9 +1,9 @@
 /**
- * Onada 8 (261009; requeriments, punt 4) · Les targetes d'entitat amb xat
- * propi: al directori (ProfileSection), la d'una entitat porta el botó gran
- * «Anar al xat», cap al xat comú de la seua pàgina (el de «Comentar · En
- * públic»), i conserva les seues etiquetes. Una persona o una IA no en
- * porten: el seu xat és el directe, «Comentar · En privat».
+ * Onada 8 + R21.5 (PS-07) · Les targetes d'entitat amb xat propi: al directori
+ * (ProfileSection), la d'una entitat porta el botó secundari «Anar al xat»
+ * (mai primari blau repetit en graella), cap al xat comú de la seua pàgina,
+ * i conserva les seues etiquetes. Una persona no porta botó ni etiquetes
+ * (Dignitat Humana), i les IA queden fora del directori de Gent i Entitats.
  */
 import React from 'react';
 import { cleanup, render, within } from '@testing-library/react';
@@ -11,6 +11,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 
 vi.mock('../../app/contexts/RouterContext', () => ({
   useNavigate: () => vi.fn(),
+  useSearchParams: () => React.useState(() => new URLSearchParams()),
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
@@ -23,31 +24,28 @@ afterEach(cleanup);
 
 const AGENTS = [
   { id: 'forn', name: 'Forn de la Plaça', type: 'COMPANY', role: 'Forn', tag: 'Comerç' },
-  { id: 'pepa', name: 'Pepa', type: 'PERSON', role: 'Forner', tag: 'Veïna' },
-  { id: 'iaia', name: 'IAIA MarIA', type: 'AI', role: 'Agent', tag: 'IA' }
+  { id: 'pepa', name: 'Pepa', type: 'PERSON', role: 'Fornera', tag: 'Veïna' },
+  { id: 'iaia', name: 'IAIA MarIA', type: 'AI', role: 'Matriarca', tag: 'IA' }
 ];
 const targeta = (arrel, nom) => [...arrel.querySelectorAll('article.sp-card')].find((a) => a.querySelector('.sp-card-title')?.textContent === nom);
 
-test('l’entitat porta «Anar al xat» cap al seu xat comú, i les etiquetes es queden', () => {
+test('l’entitat porta «Anar al xat» en varietat secundària (PS-07) cap al seu xat comú, i les etiquetes es queden', () => {
   const { container } = render(<ProfileSection agents={AGENTS} />);
   const forn = targeta(container, 'Forn de la Plaça');
   const boto = within(forn).getByRole('link', { name: 'Anar al xat' });
   expect(boto.getAttribute('href')).toBe(rutaXatDePagina(objecteDePerfil({ tipus: 'entitat', id: 'forn', nom: 'Forn de la Plaça' })));
   expect(boto.getAttribute('href')).toMatch(/^\/xat\?sobre=entitat:forn&/);
   expect(boto.closest('.sp-card-accio')).not.toBeNull();
+  expect(boto.classList.contains('sdp-boto--secundari')).toBe(true);
+  expect(boto.classList.contains('sdp-boto--primari')).toBe(false);
   expect([...forn.querySelectorAll('.sp-card-labels > li')].map((li) => li.textContent)).toEqual(['Comerç']);
 });
 
-/* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · La targeta
-   d'una PERSONA del directori no porta categories (UniversalCard, pel tipus
-   del seu descriptor): «Veïna» desapareix. La IA conserva la seua. */
-test('una persona o una IA, cap botó: el DOM de sempre; la persona, sense categories', () => {
+test('una persona no porta botó ni categories (Dignitat Humana), i una IA no ix al directori de Gent i Entitats', () => {
   const { container } = render(<ProfileSection agents={AGENTS} />);
-  for (const [nom, etiquetes] of [['Pepa', 0], ['IAIA MarIA', 1]]) {
-    const fitxa = targeta(container, nom);
-    expect([nom, within(fitxa).queryByRole('link', { name: 'Anar al xat' })]).toEqual([nom, null]);
-    expect([nom, fitxa.querySelector('.sp-card-accio')]).toEqual([nom, null]);
-    expect([nom, fitxa.querySelectorAll('.sp-card-labels > li').length]).toEqual([nom, etiquetes]);
-  }
-  expect(targeta(container, 'Pepa').querySelector('.sp-card-labels')).toBeNull();
+  const pepa = targeta(container, 'Pepa');
+  expect(within(pepa).queryByRole('link', { name: 'Anar al xat' })).toBeNull();
+  expect(pepa.querySelector('.sp-card-accio')).toBeNull();
+  expect(pepa.querySelector('.sp-card-labels')).toBeNull();
+  expect(targeta(container, 'IAIA MarIA')).toBeUndefined();
 });

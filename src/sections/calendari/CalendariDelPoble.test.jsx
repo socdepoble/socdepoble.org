@@ -84,6 +84,19 @@ test('cada esdeveniment amb targeta porta a la pàgina de la seua publicació, l
   expect(document.querySelector('.sdp-card-grid a.sp-card-link-overlay[href="/events/fira"]')).not.toBeNull();
 });
 
+test('R21.6 · l’agenda externa preserva l’inici real i declara l’autoria i el poble desconeguts', () => {
+  pinta('vista=mes&date=2026-10-10', [CONCERT]);
+  const card = document.querySelector('.sdp-card-grid > article.sp-card');
+  expect(card.querySelector('.sp-card-title').textContent).toBe('Concert de l’agenda');
+  expect(card.querySelector('.sp-card-author-name').textContent).toBe('Autoria no indicada');
+  expect(card.querySelector('.sp-card-author-location').textContent).toBe('Poble no indicat');
+  const pill = within(card).getByRole('button', { name: /10\/10\/26 · Obri el calendari d’eixe mes/ });
+  expect(pill.textContent).toContain(hora('2026-10-10T17:00:00.000Z'));
+  expect(card.querySelector('.sp-card-link-overlay')).toBeNull();
+  act(() => pill.click());
+  expect(onSoc()).toBe('/calendari?mes=2026-10');
+});
+
 test('clicar l’esdeveniment navega a la publicació amb el router; clicar el dia, fora de l’enllaç, en mostra les targetes davall', () => {
   pinta();
   // El dia: ?date= i davall, les seues targetes (la regla única, entradesDelDia).

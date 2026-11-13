@@ -67,10 +67,10 @@ test('directori: persona, entitat i IA amb el seu tipus i la ruta del perfil pú
   render(<ProfileSection agents={[
     { id: '0001', name: 'Javi', type: 'PERSON' },
     { id: 'socdepoble', name: 'Sóc de Poble', type: 'COMPANY' },
-    { id: 'iaia', name: 'IAIA MarIA', type: 'AI' }
+    { id: '11111111-1a1a-0000-0000-000000000000', name: 'IAIA MarIA', type: 'AI' }
   ]} />);
   expect(connecta('Javi')).toEqual({ item_id: '0001', title: 'Javi', sectionId: 'perfil', objecte: 'persona', ruta: '/gent/0001' });
   // Poliment T43 · el mateix camí que la fitxa pública: una entitat porta organitzacio=ID.
   expect(connecta('Sóc de Poble')).toMatchObject({ objecte: 'entitat', ruta: '/empresa/socdepoble', organitzacio: 'socdepoble' });
-  expect(connecta('IAIA MarIA')).toMatchObject({ objecte: 'ia', ruta: '/perfil/iaia' });
+  expect(connecta('IAIA MarIA')).toMatchObject({ objecte: 'ia', ruta: '/perfil/11111111-1a1a-0000-0000-000000000000' });
 });

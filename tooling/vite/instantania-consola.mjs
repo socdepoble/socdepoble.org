@@ -246,11 +246,11 @@ const BLOQUEJANTS = Object.freeze([
   [ASSIGNACIO, 'una assignació d’un secret']
 ]);
 /* Els noms d'entorn que porten secrets (a més dels de secretsPrivatsDeLEntorn). */
-const NOM_SECRET = /(?:^|_)(?:KEY|SECRET|TOKEN|PASS|PASSWORD|PASSWD|PWD|PIN|PRIVATE|PRIVADA|PRIV|SERVICE_ROLE|JWT|CREDENTIALS?|SALT|DSN)(?:_|$)/i;
+const NOM_SECRET = /(?:^|_)(?:KEY|SECRET|TOKEN|PASS|PASSWORD|PASSWD|PWD|OLDPWD|PIN|PRIVATE|PRIVADA|PRIV|SERVICE_ROLE|JWT|CREDENTIALS?|SALT|DSN)(?:_|$)/i;
 /* …llevat dels que en diuen on és o com es diu, no el secret: SDP_ASC_KEY_PATH, SDP_ANDROID_KEY_ALIAS. */
 const NOM_NO_SECRET = /_(?:PATH|DIR|FILE|URL|HOST|ID|ALIAS|NAME|ISSUER)$/i;
 /* Una contrasenya pot ser curta: s'hi busca des de 8 caràcters; la resta, des de 16. */
-const NOM_CONTRASENYA = /(?:^|_)(?:PASS|PASSWORD|PASSWD|PWD|PIN|CONTRASENYA)(?:_|$)/i;
+const NOM_CONTRASENYA = /(?:^|_)(?:PASS|PASSWORD|PASSWD|PWD|OLDPWD|PIN|CONTRASENYA)(?:_|$)/i;
 const MINIM_AGULLA = 16;
 const MINIM_CONTRASENYA = 8;
 /* Noms d'usuari que són paraules corrents en qualsevol text (CI, contenidors). */
@@ -285,6 +285,18 @@ export function valorsDelsEnv(arrel) {
   return fonts;
 }
 
+/* R21.6 · Només les metadades de directori acreditades del procés. No es
+   descarta el mateix valor sota un altre nom ni en cap fitxer dotenv. */
+function esRutaReservadaDelProces(nom, valor) {
+  if (!['PWD', 'OLDPWD'].includes(nom) || typeof valor !== 'string'
+    || valor !== process.env[nom] || !path.isAbsolute(valor)) return false;
+  try {
+    const real = fs.realpathSync(valor);
+    if (!fs.statSync(real).isDirectory()) return false;
+    return nom === 'OLDPWD' || real === fs.realpathSync(process.cwd());
+  } catch { return false; }
+}
+
 /**
  * Les agulles dels secrets de l'entorn: secretsPrivatsDeLEntorn (dist-secrets.mjs:
  * les claus privades del procés i dels .env* d'`arrel`) i el valor de cada
@@ -294,8 +306,10 @@ export function valorsDelsEnv(arrel) {
  * cap al sanejador.
  */
 export function agullesDeLEntorn({ entorn = {}, arrel = null } = {}) {
-  const agulles = new Set(secretsPrivatsDeLEntorn({ env: entorn, arrel }));
-  const fonts = [entorn && typeof entorn === 'object' ? entorn : {}, ...(arrel ? valorsDelsEnv(arrel) : [])];
+  const fontEntorn = Object.fromEntries(Object.entries(entorn && typeof entorn === 'object' ? entorn : {})
+    .filter(([nom, valor]) => !esRutaReservadaDelProces(nom, valor)));
+  const agulles = new Set(secretsPrivatsDeLEntorn({ env: fontEntorn, arrel }));
+  const fonts = [fontEntorn, ...(arrel ? valorsDelsEnv(arrel) : [])];
   for (const font of fonts) {
     for (const [nom, valor] of Object.entries(font)) {
       const net = typeof valor === 'string' ? valor.trim() : '';

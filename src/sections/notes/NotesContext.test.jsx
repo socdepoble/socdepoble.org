@@ -208,6 +208,29 @@ test('T47b · una tecla tardana d’un editor d’abans del mateix actor es desa
   }
 });
 
+test('R21.6 · el lliurament final usa la revisió creada encara fora de la llista; d’un altre actor o sense revisió vàlida no encua', async () => {
+  mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: revision + 1 }));
+  mocks.toast.mockReset();
+  mocks.notes = [];
+  try {
+    mocks.scopeKey = 'tenant-user'; mocks.workspaceKey = 'lliurament-1';
+    const { result, rerender } = renderHook(useNotes, { wrapper: NotesProvider });
+    const deA = result.current.desaNotaPreparada;
+    await act(async () => {
+      expect(await deA({ id: 'acabada-de-crear', revision: 17 }, { title: 'Últim títol' })).toBe(true);
+    });
+    expect(mocks.update).toHaveBeenCalledExactlyOnceWith('acabada-de-crear', { title: 'Últim títol' }, 17);
+    await expect(deA({ id: 'revisio-invalida', revision: '17' }, { title: 'No' })).rejects.toThrow('revisió vàlida');
+    expect(bgSaveManager.queues.has('tenant-user:revisio-invalida')).toBe(false);
+    mocks.scopeKey = 'tenant-altra'; mocks.workspaceKey = 'lliurament-2'; rerender();
+    mocks.update.mockClear();
+    await expect(deA({ id: 'de-la-persona-A', revision: 17 }, { title: 'No va a B' })).rejects.toMatchObject({ name: 'AbortError' });
+    expect(bgSaveManager.queues.has('tenant-user:de-la-persona-A')).toBe(false);
+    expect(bgSaveManager.queues.has('tenant-altra:de-la-persona-A')).toBe(false);
+    expect(mocks.update).not.toHaveBeenCalled();
+  } finally { mocks.scopeKey = 'tenant-user'; mocks.workspaceKey = 'session'; }
+});
+
 test('les etiquetes editorials compartides no incorporen la carpeta i respecten les categories explícites', () => {
   const categoria = vi.fn();
   const note = { folderId: 'f-mur', categories: ['Sistema'], tags: ['Productivitat', 'Tutorial'], labels: ['Antiga'] };

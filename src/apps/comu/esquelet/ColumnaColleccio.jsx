@@ -70,7 +70,7 @@ export function ColumnaColleccio({
   onTria, onEdita, onResta, onSuma, onLleva, textosLinies, peu = null, primer, tram, textos, avis = null
 }) {
   const t = { ...TEXTOS_COLLECCIO, ...textos };
-  const { mida } = useClosaAplicacio();
+  const { mida, idioma } = useClosaAplicacio();
   const vistes = useVistesEsquelet({ primer, tram });
   const llista = Array.isArray(linies) ? linies.filter((linia) => linia && typeof linia.id === 'string') : [];
   const perId = new Map(llista.map((linia) => [linia.id, linia]));
@@ -88,6 +88,7 @@ export function ColumnaColleccio({
       eines={resum ? <BarraResum {...resum} forma="capcalera" /> : null} peu={peu} avis={avis} etiqueta={titol}>
       {forma === 'targetes' ? (
         <TargetesArticles
+          idioma={idioma}
           elements={llista.map((linia) => ({
             /* Ordre del Mestre, 261004 (integració final, F04) · El subtítol i l'entradeta que l'app
                vestix a la línia (linia.subtitol, linia.entradeta), com al catàleg. */

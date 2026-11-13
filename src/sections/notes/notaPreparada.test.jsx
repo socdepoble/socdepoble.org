@@ -153,6 +153,21 @@ test('ja a la llista, el que s’ha escrit mentre viatjava va a la cua de sempre
   expect(creaNota).toHaveBeenCalledTimes(1);
 });
 
+test.each([['fallada', new Error('no s’ha desat l’última edició'), 1], ['cancel·lada', new DOMException('àmbit cancel·lat', 'AbortError'), 0]])('R21.6 · eixir mentre es crea: la darrera escriptura %s informa una vegada i no inventa un desat', async (_name, failure, avisos) => {
+  let finish;
+  const creaNota = vi.fn(() => new Promise(resolve => { finish = resolve; }));
+  const view = munta({ creaNota });
+  const id = view.result.current.id;
+  await act(async () => { view.result.current.escriu(id, 'title', 'Primer títol'); });
+  await act(async () => { view.result.current.escriu(id, 'title', 'Última edició'); });
+  view.updateNote.mockRejectedValueOnce(failure);
+  view.unmount();
+  await act(async () => { finish({ id, title: 'Primer títol', revision: 7 }); });
+  expect(view.updateNote).toHaveBeenCalledExactlyOnceWith(id, { title: 'Última edició' }, 7);
+  expect(view.informaError).toHaveBeenCalledTimes(avisos);
+  if (avisos) expect(view.informaError).toHaveBeenCalledWith(failure);
+});
+
 test('si la creació falla, ho diu una vegada; cada tecla no ho torna a provar, el desat amb pausa sí; un AbortError calla', async () => {
   const informaError = vi.fn();
   const creaNota = vi.fn()

@@ -520,12 +520,14 @@ test('la cortesia remota de la IAIA és explícita i no inventa missatges ni cri
   expect(screen.queryByText(BENVINGUDA_IAIA)).toBeNull();
 });
 
-test('la consulta personal té una porta explícita i desapareix quan es desactiva', () => {
+test('consultaIAIA mostra els 3 suggeriments superiors de benvinguda, mai el botó ni modal inferior «Pregunta a la IAIA», i desapareix en desactivar-la', () => {
   const { props, repinta } = pinta({ consultaIAIA: true });
-  fireEvent.click(screen.getByRole('button', { name: 'Pregunta a la IAIA' }));
-  expect(screen.getByRole('dialog', { name: 'IAIA · ajuda amb la Wiki' })).toBeTruthy();
+  const grup = screen.getByRole('group', { name: 'Suggeriments ràpids d’ajuda rural' });
+  expect(grup.querySelectorAll('button')).toHaveLength(3);
+  expect(screen.queryByRole('button', { name: 'Pregunta a la IAIA' })).toBeNull();
+  expect(screen.queryByRole('dialog', { name: 'IAIA · ajuda amb la Wiki' })).toBeNull();
   expect(props.onSendMessage).not.toHaveBeenCalled();
   repinta({ consultaIAIA: false });
-  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.queryByRole('group', { name: 'Suggeriments ràpids d’ajuda rural' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Pregunta a la IAIA' })).toBeNull();
 });

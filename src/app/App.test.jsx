@@ -666,6 +666,16 @@ async function muntaAmbSessio(ruta, cos) {
   }
 }
 
+test.each([
+  ['/esdeveniments?vista=mes&mes=2026-01#agenda', '/calendari?vista=mes&mes=2026-01#agenda'],
+  ['/panell?origen=prova%20local#utilitats', '/control?origen=prova+local#utilitats'],
+  ['/app/avisador?origen=app#preferencies', '/page/avisador?origen=app#preferencies']
+])('R21.6 · public alias %s preserves query and fragment', async (origin, expected) => {
+  await muntaAmbSessio(origin, async () => {
+    await waitFor(() => expect(window.location.pathname + window.location.search + window.location.hash).toBe(expected));
+  });
+});
+
 test.each(['/el-meu-perfil', '/el-meu-perfil?organitzacio=o-1'])('T61 · a %s no s’encén cap entrada de la barra lateral ni de la mòbil', async ruta => {
   vi.stubGlobal('innerWidth', 1024);
   await muntaAmbSessio(ruta, async () => {

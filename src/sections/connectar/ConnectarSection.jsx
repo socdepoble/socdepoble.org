@@ -106,6 +106,7 @@ import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { Check, Globe, Layers, NotebookPen, X } from 'lucide-react';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotesData } from '../notes/NotesDataContext';
@@ -1180,21 +1181,21 @@ function ConnectarElementIntern() {
           </div>
         ) : (
           <div className="sdp-connectar__principal">
-          <section className="sdp-connectar__objecte" aria-labelledby={`${id}-objecte`}>
+          <section className="sdp-connectar__objecte" aria-label={titolDeLaTargeta}>
             <p className="sdp-connectar__tipus">{etiquetaObjecte(origen.objecte, t)}</p>
-            {/* T54 · mini-card de lectura: foto i títol, sense peu ni data
-                clicable. Sense foto (perfil, pàgina o element que no és ací), la
+            {/* T54/R21.6 · mini-card de lectura: foto, títol i capçalera declarada,
+                sense peu ni data clicable. Sense foto (perfil, pàgina o element que no és ací), la
                 icona de capes ocupa el lloc de la icona del títol perquè la
                 targeta no quede en una línia de text nua. */}
             <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
               <UniversalCard
+                {...encapcalamentDeTargeta(itemOriginal, { author: autorVisible, t })}
                 title={titolDeLaTargeta}
                 imageUrl={imatgeOriginal || undefined}
                 imageAlt=""
                 icon={imatgeOriginal ? undefined : <Layers size={32} aria-hidden="true" focusable="false" />}
                 hasFooter={false}
                 onDateTime={false}
-                showDateTime={false}
               />
             </div>
             {autorVisible ? <p className="sdp-connectar__autor">{omple(t('section.connectar.de', 'De {nom}'), { nom: autorVisible })}</p> : null}
@@ -1302,13 +1303,13 @@ function ConnectarContingutExtern({ params }) {
             <>
               <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
                 <UniversalCard
+                  {...encapcalamentDeTargeta(null, { t })}
                   title={valor.titol}
                   subtitle={valor.subtitol || undefined}
                   body={valor.entradilla || undefined}
                   icon={<Globe size={32} aria-hidden="true" focusable="false" />}
                   hasFooter={false}
                   onDateTime={false}
-                  showDateTime={false}
                 />
               </div>
               {/* P1-22 · Una web no és cap autora: «De» vol dir d'on ve (clau pròpia). */}

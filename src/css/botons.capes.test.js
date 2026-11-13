@@ -101,16 +101,10 @@ describe('P1-37 · els tokens dels botons', () => {
     for (const cos of ALTRES) for (const nom of Object.keys(ESPERATS)) expect(declaracions(cos)[nom], nom).toBeUndefined();
   });
 
-  test('els consumixen la píndola de la IAIA i el bloc d’accions, amb els mateixos píxels', () => {
-    /* tractor-vocabulari (261030) · El full de la IAIA és el bloc ConsultaIAIA de modules.css. */
-    const moduls = llig('src/css/modules.css');
-    const inici = moduls.indexOf('/* ═══ BLOC ConsultaIAIA · ');
-    const fi = moduls.indexOf('/* ═══ FI DEL BLOC ConsultaIAIA ═══ */');
-    expect(inici).toBeGreaterThan(-1);
-    expect(fi).toBeGreaterThan(inici);
-    const iaia = moduls.slice(inici, fi);
-    expect(valor(iaia, '.sdp-xat-pindola.sdp-xat-pindola--iaia', 'margin-inline')).toBe('var(--sdp-boto-marge-inline)');
-    expect(valor(iaia, '.sdp-xat-pindola.sdp-xat-pindola--iaia', 'margin-block')).toBe('var(--sdp-boto-marge-block)');
+  test('els consumix el bloc d’accions canònic, i la píndola/modal ConsultaIAIA ja no existix a modules.css (R21.3)', () => {
+    const moduls = senseComentaris(llig('src/css/modules.css'));
+    expect(moduls).not.toMatch(/\.sdp-xat-pindola--iaia\b/);
+    expect(moduls).not.toMatch(/\.sdp-iaia-consulta\b/);
     const components = llig('src/css/components.css');
     expect(valor(components, '.sdp-accions', 'gap')).toBe('var(--sdp-boto-separacio)');
     // Els 24px de dalt i de baix de l'Accions són la distància al text (IDEA-26/27), no un marge de botó.

@@ -35,6 +35,12 @@
  *   1.5.0 · R15: CatalegWorkspace i DetallCataleg a workspace, CandidatsAlergens
  *           a Pedra Seca i candidatsVariantParroquia a plataforma. Extensió
  *           compatible: cap nom publicat es lleva i els mòduls nous demanen ^1.5.
+ *   1.6.0 · R21.6: encapcalamentDeTargeta a Pedra Seca, la capçalera de
+ *           lectura d'UniversalCard (autoria, poble i data sense inventar-ne
+ *           cap) que ja pinten la Nevera, l'esquelet comú (el Bar i la
+ *           Nevera) i el tauler de la Gestoria. Una funció pura, la mateixa
+ *           de la pàgina. Només s'afig un nom: un mòdul de '^1.0' a '^1.5'
+ *           continua valent, i els mòduls nous demanen ^1.6.
  *
  * MAI hi entren el port del backend, SessionContext ni IdentitatContext
  * (Model B i Llei de l'Enxufabilitat): un mòdul només sap si té dades del
@@ -42,7 +48,7 @@
  */
 
 export const ESQUEMA_MODUL = 'sdp.modul.v1';
-export const VERSIO_NUCLI = '1.5.0';
+export const VERSIO_NUCLI = '1.6.0';
 /* L'expressió global de l'objecte: el build dels mòduls hi penja cada porta. */
 export const GLOBAL_DEL_NUCLI = 'SocDePoble.nucli';
 
@@ -108,7 +114,10 @@ const PEDRA_SECA_V1 = Object.freeze([
   ['organismes/TargetesColleccions.jsx', ['TargetesColleccions']],
   ['organismes/TeclatNumeric.jsx', ['TeclatNumeric']],
   ['organismes/UniversalTPV.jsx', ['UniversalTPV']],
-  ['organismes/articles.js', ['ESTATS_ARTICLE', 'TEXTOS_ESTAT_LINIA', 'estatLinia', 'mouCategoria']]
+  ['organismes/articles.js', ['ESTATS_ARTICLE', 'TEXTOS_ESTAT_LINIA', 'estatLinia', 'mouCategoria']],
+  /* Nucli 1.6.0 (R21.6): la capçalera de lectura de la targeta, una funció
+     pura (la mateixa que la pàgina pren de components/universal/editorial.js). */
+  ['organismes/encapcalamentDeTargeta.js', ['encapcalamentDeTargeta']]
 ]);
 
 /**

@@ -14,6 +14,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { randomBytes } from 'node:crypto';
 import { loadEnv } from 'vite';
 import {
   CARPETA_INSTANTANIA, CORREUS_PUBLICS, ESQUEMA_ERROR, ErrorInstantania, FONTS_INSTANTANIA, MARQUES, agullesDeLEntorn,
@@ -308,6 +309,60 @@ test('fail-closed: una contrasenya de .env.botigues.local (i de qualsevol .env.<
     assert.throws(() => sanejaInstantania({ nota: `la clau del keystore és ${valor}` }, { agulles, usuari: null }),
       (e) => e instanceof ErrorInstantania && /secret de l’entorn/.test(e.message) && !e.message.includes(valor));
   }
+});
+
+function provaEntornReservat(t) {
+  const abans = { PWD: process.env.PWD, OLDPWD: process.env.OLDPWD };
+  t.after(() => {
+    for (const [nom, valor] of Object.entries(abans)) {
+      if (valor === undefined) delete process.env[nom]; else process.env[nom] = valor;
+    }
+  });
+  const temporal = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-instantania-r21-')));
+  t.after(() => fs.rmSync(temporal, { recursive: true, force: true }));
+  return { actual: fs.realpathSync(process.cwd()), temporal };
+}
+function comprovaAgullaSenseMostrarValor(entorn, valor, arrel = null) {
+  const agulles = agullesDeLEntorn({ entorn, arrel });
+  assert.ok(agulles.includes(valor), 'el valor protegit continua com a agulla');
+  assert.throws(() => sanejaInstantania({ nota: valor }, { agulles, usuari: null }),
+    e => e instanceof ErrorInstantania && /secret de l’entorn/.test(e.tipus) && !e.message.includes(valor));
+}
+
+test('R21.6 · PWD i OLDPWD absoluts, reals i coincidents amb el procés són rutes de sistema', t => {
+  const { actual, temporal } = provaEntornReservat(t);
+  process.env.PWD = actual; process.env.OLDPWD = temporal;
+  const agulles = agullesDeLEntorn({ entorn: { PWD: actual, OLDPWD: temporal } });
+  assert.ok(!agulles.includes(actual) && !agulles.includes(temporal), 'només les dos entrades de procés acreditades queden fora');
+  assert.doesNotThrow(() => sanejaInstantania({ nota: actual, anterior: temporal }, { agulles, usuari: null }));
+});
+
+test('R21.6 · contrasenyes PWD, rutes no acreditades i altres noms conserven el bloqueig', t => {
+  const { actual, temporal } = provaEntornReservat(t);
+  const contrasenya = randomBytes(20).toString('hex');
+  process.env.PWD = contrasenya; process.env.OLDPWD = contrasenya;
+  comprovaAgullaSenseMostrarValor({ PWD: contrasenya, OLDPWD: contrasenya }, contrasenya);
+  process.env.PWD = actual; process.env.OLDPWD = temporal;
+  for (const nom of ['DB_PASSWORD', 'PASSWORD', 'pwd', 'OLDpwd']) comprovaAgullaSenseMostrarValor({ [nom]: actual }, actual);
+  comprovaAgullaSenseMostrarValor({ PWD: temporal }, temporal); // existent, però no és el PWD real del procés
+  process.env.PWD = temporal;
+  comprovaAgullaSenseMostrarValor({ PWD: temporal }, temporal); // ni coincidint amb env, si no és cwd
+  const absent = path.join(temporal, 'absent'); process.env.OLDPWD = absent;
+  comprovaAgullaSenseMostrarValor({ OLDPWD: absent }, absent);
+  const fitxer = path.join(temporal, 'fitxer'); fs.writeFileSync(fitxer, 'fixture'); process.env.OLDPWD = fitxer;
+  comprovaAgullaSenseMostrarValor({ OLDPWD: fitxer }, fitxer);
+});
+
+test('R21.6 · PWD dels fitxers dotenv es protegix encara que coincidisca amb el cwd del procés', t => {
+  const { actual, temporal } = provaEntornReservat(t);
+  process.env.PWD = actual; process.env.OLDPWD = temporal;
+  const fitxer = path.join(temporal, '.env.botigues.local');
+  for (const valor of [randomBytes(20).toString('hex'), actual]) {
+    fs.writeFileSync(fitxer, `PWD=${valor}\n`);
+    comprovaAgullaSenseMostrarValor({ PWD: actual }, valor, temporal);
+  }
+  fs.writeFileSync(fitxer, `DB_PASSWORD=${actual}\n`);
+  comprovaAgullaSenseMostrarValor({ PWD: actual }, actual, temporal);
 });
 
 test('fail-closed: el que no és JSON pla (funcions, cicles, NaN) atura el build', () => {

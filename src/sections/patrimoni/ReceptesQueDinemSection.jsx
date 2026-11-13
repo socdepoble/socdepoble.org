@@ -7,6 +7,7 @@ import { OBRA_QUE_DINEM, RECEPTES_QUE_DINEM, laminaDeRecepta } from '../../data/
 import CreditsQueDinem from './CreditsQueDinem.jsx';
 import { etiquetaDApartat, filtraReceptes, rutaDeRecepta } from './cercaReceptes.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
+import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 
 /* Onada R14 · /page/receptes: el receptari «Què dinem?» de l'Associació Gastronòmica i Cultural «Fins rebentar com
    Sangonereta» (Muro, El Comtat, 2019), davall del text breu de PAGE_COPY (PageDetailSection el carrega en un tros
@@ -91,6 +92,7 @@ export default function ReceptesQueDinemSection() {
           {receptes.slice(0, limit).map((recepta) => (
             <UniversalCard
               key={recepta.slug}
+              {...encapcalamentDeTargeta({ year: OBRA_QUE_DINEM.any }, { author: OBRA_QUE_DINEM.associacio, location: OBRA_QUE_DINEM.lloc, t })}
               title={recepta.titol}
               llenguaContingut="ca"
               imageUrl={recepta.lamina || undefined}

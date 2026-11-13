@@ -96,7 +96,20 @@ export async function request(path, config = {}, options = {}) {
         return request(path, config, { ...options, _isRetry: true });
       }
       const text = await response.text();
-      throw new ErrorSupabase(`Supabase ${response.status}: ${text || 'Error desconegut.'}`, response.status);
+      const failure = new ErrorSupabase(`Supabase ${response.status}: ${text || 'Error desconegut.'}`, response.status);
+      // Preserve bounded protocol codes for retry decisions, never store a
+      // server message in a durable queue or infer authority from arbitrary text.
+      if (text.length <= 65536) {
+        try {
+          const detail = JSON.parse(text);
+          if (typeof detail?.code === 'string' && /^[A-Z0-9]{5}$/.test(detail.code)) failure.sqlstate = detail.code;
+          if (typeof detail?.message === 'string') {
+            const known = /^(SDP-MUR-(?:REVISION|OWNER))(?=:|$)/.exec(detail.message);
+            if (known) failure.codi = known[1];
+          }
+        } catch { /* Non-JSON errors retain their HTTP status and retry policy. */ }
+      }
+      throw failure;
     }
     if (response.status === 204) return null;
     const json = await response.json(); // F06: Esperar que descarregue tot el cos abans del finally

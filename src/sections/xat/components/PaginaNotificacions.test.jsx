@@ -15,7 +15,7 @@ import EN from '../../../config/idiomes/en.js';
 import EU from '../../../config/idiomes/eu.js';
 import GL from '../../../config/idiomes/gl.js';
 import PaginaNotificacions from './PaginaNotificacions.jsx';
-import { TEXTOS_AVISOS, notesDelsAvisos } from '../useAvisosPushXat.js';
+import { TEXTOS_AVISOS, TEXTOS_AVISOS_ENTORN, notesDelsAvisos } from '../useAvisosPushXat.js';
 
 const t = (_clau, reserva) => reserva;
 const R = Object.fromEntries(Object.entries(TEXTOS_AVISOS).map(([nom, [, reserva]]) => [nom, reserva]));
@@ -123,6 +123,27 @@ describe('les notes', () => {
     expect(container.innerHTML).toBe('');
     cleanup();
     expect(render(<PaginaNotificacions avisos={null} t={t} />).container.innerHTML).toBe('');
+  });
+
+  /* El t de la pàgina en cada llengua: el diccionari (com createTranslator) i, si no hi és, la reserva. */
+  test.each(['ca', 'es', 'en', 'eu', 'gl'])('R21.4-UI (R21.2-F04) · en %s, amb motiu sense-clau / sense-config / sense-connector pinta avís honest amb role="status" i cap interruptor', (llengua) => {
+    const dic = { ca: CA, es: ES, en: EN, eu: EU, gl: GL }[llengua];
+    const tr = (clau, reserva) => dic[clau] || CA[clau] || reserva;
+    for (const motiu of ['sense-clau', 'sense-config', 'sense-connector']) {
+      const esperat = dic[TEXTOS_AVISOS_ENTORN[motiu][0]];
+      /* Les notes del hook, i també la reserva de la pàgina quan l'avís arriba sense nota. */
+      for (const avisos of [
+        { oferit: false, nomesNota: false, avisEntorn: true, motiu, ...notesDelsAvisos({ oferit: false, avisEntorn: true, motiu }, tr) },
+        { oferit: false, nomesNota: false, avisEntorn: true, motiu, nota: null, notes: [] }
+      ]) {
+        const { container } = render(<PaginaNotificacions avisos={avisos} t={tr} />);
+        expect(screen.queryByRole('switch')).toBeNull();
+        const regio = screen.getByRole('status');
+        expect(regio.textContent).toBe(esperat);
+        expect(container.querySelectorAll('.sdp-xat-ajustos__nota')).toHaveLength(1);
+        cleanup();
+      }
+    }
   });
 
   test('el marcatge de targeta dels altres grups (ul + li) i les classes que ja existixen', () => {

@@ -857,9 +857,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   list-style-type: disc;
 }
 
-/* ── Fitxa de secció · SectionItemCard.jsx ───────────────────────── */
-.sdp-fitxa-seccio { display: flex; flex-direction: column; height: 100%; }
-
 /* ── Pàgina universal · UniversalPage.jsx i gestors ──────────────── */
 .sp-card-price--en-linia {
   float: none;
@@ -4021,6 +4018,9 @@ details[open] summary.accordion-header svg:last-child {
     min-width: 0;
     display: grid;
   }
+  /* Gauntlet R21 (regressio_ui_xat-03) · El nom és un <strong> amb
+     role="heading" (CapcaleraConversa.jsx), mai un element H1: base.css hi
+     posaria el text-align:center i el letter-spacing dels títols de pàgina. */
   .sdp-xat-capcalera__nom {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -9489,8 +9489,7 @@ details[open] summary.accordion-header svg:last-child {
     margin-inline: auto;
   }
   .sdp-realitat .sdp-grup { margin: 0; }
-  .sdp-realitat__estat,
-  .sdp-realitat__connexio {
+  .sdp-realitat__estat {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -9502,9 +9501,7 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-realitat__estat-text { flex: 1; display: flex; flex-direction: column; gap: var(--sdp-space-1); min-width: 0; }
   .sdp-realitat__estat-titol { margin: 0; font-weight: 800; color: var(--sdp-text-titol); }
-  .sdp-realitat__estat-desc,
-  .sdp-realitat__connexio-text { margin: 0; font-size: var(--sdp-text-small); line-height: 1.6; color: var(--sdp-text-cos); }
-  .sdp-realitat__connexio-text { flex: 1 1 14rem; min-width: 0; }
+  .sdp-realitat__estat-desc { margin: 0; font-size: var(--sdp-text-small); line-height: 1.6; color: var(--sdp-text-cos); }
   .sdp-realitat__iaia {
     flex: none;
     display: inline-grid;
@@ -9534,43 +9531,10 @@ details[open] summary.accordion-header svg:last-child {
     border-radius: var(--sdp-radi-s);
   }
   .sdp-realitat__pedra--plena { border-color: var(--sdp-accent); background: var(--sdp-accent); }
-  /* Acompanyants del nivell 2: targetes-casella. La vora de la triada la
-     posa React amb una classe, no :has(). */
-  .sdp-realitat__acompanyants { padding: 0; border: 0; min-width: 0; }
-  .sdp-realitat__acompanyants > .sdp-grup__llegenda { padding: 0; font-size: var(--sdp-text-base); }
-  .sdp-realitat__acompanyants > .sdp-camp__ajuda { margin: var(--sdp-space-1) 0 0; }
-  .sdp-realitat__graella {
-    display: grid;
-    gap: var(--sdp-space-3);
-    margin-top: var(--sdp-space-3);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-  }
-  .sdp-realitat__company {
-    align-items: center;
-    min-width: 0;
-    padding: var(--sdp-space-3) var(--sdp-space-4);
-    border: 2px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-g);
-    background: var(--sdp-fons-targeta);
-    transition: border-color var(--sdp-t), background-color var(--sdp-t);
-  }
-  .sdp-realitat__company--triat { border-color: var(--sdp-accio); background: var(--sdp-accio-subtil); }
-  .sdp-realitat__company .sdp-casella__etiqueta {
-    flex: 1;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    column-gap: var(--sdp-space-3);
-    row-gap: var(--sdp-space-1);
-    align-items: center;
-    min-width: 0;
-  }
-  .sdp-realitat__company .sdp-avatar { grid-row: span 2; }
-  .sdp-realitat__company-nom { font-weight: 700; color: var(--sdp-text-titol); }
-  .sdp-realitat__company .sdp-casella__ajuda { grid-column: 2; }
-  .sdp-realitat__connexio .sdp-avatar-grup { flex: none; }
-  /* 261021 (pla §11.4) · Dins del desplegable de «Connexió total», la vora i el
-     fons ja són els del desplegable: cap caixa dins de la caixa. */
-  .sdp-grup__desplegable > .sdp-realitat__connexio { padding: 0; border: 0; background: none; }
+  /* Gauntlet R21 (regressio_ui_xat-01) · R21.5 va retirar del selector els
+     acompanyants i la «Connexió total» (l'única IA del Mas és la IAIA MarIA):
+     fora també les seues regles (__acompanyants, __graella, __company*,
+     __connexio i __connexio-text), que ja no pinta cap component. */
 }
 
 /* T45 · cerca avançada */
@@ -11349,7 +11313,7 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-calendari--gran .sdp-calendari__pindola,
     .sdp-connectar__autor, .sdp-connectar__identitat, .sdp-connectar__ajuda,
     .sdp-connectar__nota, .sdp-connexio-resum__detall, .sdp-calaix-identitats__rol,
-    .sdp-targeta-opcio__ajuda, .sdp-realitat__connexio-text,
+    .sdp-targeta-opcio__ajuda,
     .sdp-resultat-cerca__meta, .sdp-cerca__estat,
     .toc-level-4 button, .toc-level-5 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
     .sdp-avisador-efimer, .sdp-chat-bubble-meta,
@@ -11366,7 +11330,7 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-calendari--gran .sdp-calendari__pindola,
     .sdp-connectar__autor, .sdp-connectar__identitat, .sdp-connectar__ajuda,
     .sdp-connectar__nota, .sdp-connexio-resum__detall, .sdp-calaix-identitats__rol,
-    .sdp-targeta-opcio__ajuda, .sdp-realitat__connexio-text,
+    .sdp-targeta-opcio__ajuda,
     .sdp-resultat-cerca__meta, .sdp-cerca__estat,
     .toc-level-4 button, .toc-level-5 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
     .sdp-avisador-efimer, .sdp-chat-bubble-meta,
@@ -14477,36 +14441,6 @@ details[open] summary.accordion-header svg:last-child {
 }
 /* ═══ FI DEL BLOC AdjuntXat ═══ */
 
-/* ═══ BLOC ConsultaIAIA · abans src/sections/xat/components/ConsultaIAIA.css ═══
-   «Pregunta a la IAIA» (ConsultaIAIA.jsx; P1-49, el cercador guiat de la
-   Wiki): la píndola entre els missatges i el compositor, i el seu diàleg.
-   Darrere del bloc AdjuntXat i dins de `@layer components { }`.
-   ═══════════════════════════════════════════════════════════════════ */
-@layer components {
-  /* La resposta llarga té un sol desplaçament: el cos del diàleg canònic. */
-  .sdp-iaia-consulta { overflow: hidden; }
-  .sdp-iaia-consulta .sdp-dialeg__cap { flex-shrink: 0; }
-  .sdp-iaia-consulta .sdp-dialeg__cos { min-height: 0; }
-  /* Gauntlet 261022_0225 (crítica Claude) · Mentre consulta, el botó no es
-     desactiva (el focus no cau) però s'apaga com un .sdp-boto:disabled. */
-  .sdp-iaia-consulta .sdp-boto[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
-  /* Ordre del Mestre (261026_2126; P1-37) · «Pregunta a la IAIA», entre els
-     missatges i el compositor, anava a tota l'amplària i sense cap marge:
-     enganxat a «Escriu un missatge…» i a les vores. Ara respira amb els
-     espais de la reixeta, 16px als costats i 12px dalt i baix. És un sol
-     botó, no un grup: el separen els seus marges (un grup, el gap del seu
-     contenidor). L'amplària la dona el contenidor (flex en columna,
-     .sdp-xat-conversa) menys els marges; el doble selector guanya el 100%
-     de .sdp-xat-pindola siga quin siga l'ordre dels fulls. P1-37 · Els
-     marges són els tokens del botó de bloc (tokens.css), els mateixos 16/12px. */
-  .sdp-xat-pindola.sdp-xat-pindola--iaia {
-    width: auto;
-    margin-inline: var(--sdp-boto-marge-inline);
-    margin-block: var(--sdp-boto-marge-block);
-  }
-}
-/* ═══ FI DEL BLOC ConsultaIAIA ═══ */
-
 /* ═══ BLOC SuggerimentsIAIA i PersonesConfianca (IDEA-28, IDEA-48, IDEA-56) ═══ */
 @layer components {
   .sdp-xat-iaia-benvinguda-suggeriments { padding-block: var(--sdp-space-2); }
@@ -14516,10 +14450,6 @@ details[open] summary.accordion-header svg:last-child {
     justify-content: center;
     gap: var(--sdp-space-2);
     margin-block-start: var(--sdp-space-2);
-  }
-  .sdp-iaia-consulta .sdp-xat-iaia-suggeriments {
-    justify-content: flex-start;
-    margin-block: 0 var(--sdp-space-2);
   }
   .sdp-xat-iaia-suggeriment {
     display: inline-flex;
@@ -15976,10 +15906,12 @@ details[open] summary.accordion-header svg:last-child {
     overflow-wrap: anywhere;
   }
 
-  /* ═══ Onada R16.12 (R16-X1) · Subnavegació Pobles ↔ Gent i Entitats ↔ Demografia ═══ */
+  /* ═══ Onada R16.12 (R16-X1) + R21.5 · Subnavegació Pobles ↔ Gent i Entitats ↔ Demografia ═══ */
   .sdp-subnav-pobles-gent-contenidor {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    width: 100%;
     gap: var(--sdp-space-3);
     margin-block-end: var(--sdp-space-4);
   }

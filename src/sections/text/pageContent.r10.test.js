@@ -39,10 +39,8 @@ describe('AH-22 · rural content and dated production balance in five languages'
  });
  test.each(languages)('%s keeps contract counts aligned with code without announcing activation', language => {
   const text=doc(localitzaPagina(PAGE_COPY.fediversity,language).html).body.textContent;
-  const phrases={ca:'54 capacitats i 156 mètodes amb 219 casos',es:'54 capacidades y 156 métodos con 219',en:'54 capabilities and 156 methods with 219',eu:'54 gaitasun eta 156 metodo ditu 219',gl:'54 capacidades e 156 métodos con 219'};
-  expect(Object.keys(CAPACITATS)).toHaveLength(54);
-  expect(CONTRACTE_BACKEND).toHaveLength(156);
-  expect(CASOS).toHaveLength(219);
+  const capacities=Object.keys(CAPACITATS).length, methods=CONTRACTE_BACKEND.length, cases=CASOS.length;
+  const phrases={ca:`${capacities} capacitats i ${methods} mètodes amb ${cases} casos`,es:`${capacities} capacidades y ${methods} métodos con ${cases}`,en:`${capacities} capabilities and ${methods} methods with ${cases}`,eu:`${capacities} gaitasun eta ${methods} metodo ditu ${cases}`,gl:`${capacities} capacidades e ${methods} métodos con ${cases}`};
   expect(text).toContain(phrases[language]);
   const notes=[...doc(localitzaPagina(PAGE_COPY.fediversity,language).html).querySelectorAll('p')].filter(p=>p.textContent.includes(phrases[language])&&p.textContent.includes('46/138/190'));
   expect(notes).toHaveLength(1);const note=notes[0];

@@ -215,10 +215,31 @@ test('B03 · crea_fil_directe és la de 2609272200 lletra a lletra amb el consen
 });
 
 /* Revisió 261008 · Només les migracions: el client pot (i hauria de) traduir
-   SDP-XAT-016 a un missatge humà; és feina de l'adaptador i d'i18n. */
-test('B03 · SDP-XAT-016 és nou: cap altra migració no l’usava', () => {
+   SDP-XAT-016 a un missatge humà; és feina de l'adaptador i d'i18n.
+   R21 · Una migració POSTERIOR que redefinix crea_fil_directe (2611121630,
+   fil propi) l'ha de conservar: no és un altre ús del codi, és el mateix
+   contracte. Només s'admet si el codi hi és una sola vegada, dins de la
+   redefinició de crea_fil_directe, amb el bloc de consentiment idèntic i en
+   el mateix lloc («Directe nou»). Qualsevol altre ús continua prohibit. */
+const redefinicioFidel = (fitxer) => {
+  if (ORDRE.indexOf(fitxer) <= ORDRE.indexOf(NOM)) return `${fitxer} és anterior a ${NOM}`;
+  const sts = sentencies(llig(fitxer));
+  const amb = sts.filter((st) => st.includes('SDP-XAT-016'));
+  if (amb.length !== 1 || !esFuncio('crea_fil_directe')(amb[0])) return `${fitxer} usa SDP-XAT-016 fora de crea_fil_directe`;
+  if (amb[0] !== funcioDe(sts, 'crea_fil_directe')) return `${fitxer} no l'usa a la seua última definició de crea_fil_directe`;
+  const n = normalitza(amb[0]);
+  if (n.split('sdp-xat-016').length !== 2) return `${fitxer} usa SDP-XAT-016 més d'una vegada`;
+  if (n.split(BLOC_CONSENTIMENT).length !== 2) return `${fitxer} ha canviat el bloc de consentiment`;
+  if (!n.includes(`limit 1; if v_fil is null then ${BLOC_CONSENTIMENT} insert into public.xat_fils (tenant_id, titol, creat_per, tipus) values`)) {
+    return `${fitxer} ha mogut la comprovació fora de «if v_fil is null» de les persones`;
+  }
+  return null;
+};
+
+test('B03 · SDP-XAT-016 és nou: cap altra migració no l’usa, tret de les redefinicions fidels de crea_fil_directe', () => {
   const altres = ORDRE.filter((f) => f !== NOM && llig(f).includes('SDP-XAT-016'));
-  assert.deepEqual(altres, []);
+  assert.deepEqual(altres.map(redefinicioFidel).filter(Boolean), []);
+  assert.deepEqual(altres, ['2611121630_xat_propi.sql'], 'una redefinició nova de crea_fil_directe: revisa-la i afig-la ací');
   assert.equal(SQL.split("raise exception 'SDP-XAT-016").length, 2);
 });
 

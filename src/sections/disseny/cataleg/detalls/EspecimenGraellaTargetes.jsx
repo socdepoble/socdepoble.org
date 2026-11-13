@@ -7,6 +7,8 @@
 import { Newspaper, Sprout } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
 import { GraellaTargetes, UniversalCard } from '../../../../components/PedraSeca/index.js';
+import { encapcalamentDeTargeta } from '../../../../components/universal/editorial.js';
+import { useTraductorOpcional } from '../../../../components/PedraSeca/hooks/useTraductorOpcional.js';
 
 const CATEGORIES = [
   { id: 'poble', nom: 'Del poble', icona: Newspaper, visible: true, ordre: 0 },
@@ -22,12 +24,14 @@ const NOTICIES = [
 /* La targeta de cada element: la pinta qui munta la graella, mai la graella.
    Dins de l'espècimen (h3) i dels seus apartats (h4), el títol baixa a h5 i,
    davall d'una secció (h5), a h6. */
-const targeta = (element, extres = {}) => (
+const targeta = (element, t, extres = {}) => (
   <UniversalCard key={element.id} headingLevel="h5" title={element.title} subtitle={element.subtitle} body={element.body}
+    {...encapcalamentDeTargeta(element, { t })}
     labels={[{ text: 'Notícies', className: 'sdp-badge-system' }]} {...extres} />
 );
 
 export default function EspecimenGraellaTargetes() {
+  const t = useTraductorOpcional();
   return (
     <Especimen id="graella-targetes" nom="GraellaTargetes · la graella de les targetes" fitxer="src/components/PedraSeca/organismes/GraellaTargetes.jsx"
       descripcio="No és cap targeta: posa les UniversalCard d’una llista en la graella de sempre (la .sdp-card-grid del Mercat) o en columna, i, amb categories, les agrupa en seccions (SeccionsCategoria). És la peça amb què Notícies i la Nevera deixen les seues targetes pròpies: les apps no escriuen classes ni llistes, i la graella la porta Pedra Seca."
@@ -46,11 +50,11 @@ export default function EspecimenGraellaTargetes() {
       noFacis={['Una targeta pròpia de l’app, ni una graella feta amb classes a mà.', 'Posar-hi altra cosa que targetes: la graella no és un formulari.']}>
       <h4>Graella amb seccions</h4>
       <GraellaTargetes elements={NOTICIES} categories={CATEGORIES} nivell={5}>
-        {(element) => targeta(element, { headingLevel: 'h6' })}
+        {(element) => targeta(element, t, { headingLevel: 'h6' })}
       </GraellaTargetes>
       <h4>Llista de targetes planes</h4>
       <GraellaTargetes elements={NOTICIES} variant="llista" etiqueta="Notícies en llista de mostra">
-        {(element) => targeta(element, { variant: 'pla' })}
+        {(element) => targeta(element, t, { variant: 'pla' })}
       </GraellaTargetes>
     </Especimen>
   );

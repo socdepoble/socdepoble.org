@@ -7,7 +7,7 @@
    A nivell de Conversa, cap adjunt per a qui no en pot enviar. I la geometria
    dels fulls: dianes de 48px, la carona dins del camp i la safata que
    col·lapsa a 0 (jsdom no fa maquetació: es comproven les regles). */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { useState } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -744,7 +744,7 @@ describe('la geometria de la barra única', () => {
     expect(valor('.sdp-xat-menu__item', 'min-height')).toBe('var(--sdp-touch)');
   });
 
-  test('la carona entra al camp només amb el modificador: el camp de ConsultaIAIA no canvia', () => {
+  test('la carona entra al camp només amb el modificador; ConsultaIAIA s’ha eliminat definitivament (R21.3)', () => {
     expect(valor('.sdp-xat-compositor__camp--carona', 'grid-template-columns')).toBe('auto minmax(0, 1fr)');
     expect(valor('.sdp-xat-compositor__camp--carona > .sdp-xat-compositor__emojis', 'grid-area')).toBe('1 / 1 / 2 / 2');
     expect(valor('.sdp-xat-compositor__camp--carona > .sdp-xat-compositor__textarea', 'grid-area')).toBe('1 / 2 / 2 / 3');
@@ -757,9 +757,7 @@ describe('la geometria de la barra única', () => {
       expect(valor(selector, 'padding-left'), selector).toBe('var(--sdp-space-1)');
       expect(valor(selector, 'padding-inline-start'), selector).toBeNull();
     }
-    const consulta = llig('src/sections/xat/components/ConsultaIAIA.jsx');
-    expect(consulta).toMatch(/className="sdp-xat-compositor__camp"/);
-    expect(consulta).not.toMatch(/sdp-xat-compositor__camp--carona/);
+    expect(existsSync(resolve('src/sections/xat/components/ConsultaIAIA.jsx'))).toBe(false);
   });
 
   test('IDEA-53 · [N] a la tercera columna, només amb els dos modificadors; el mirall i el textarea, amb el mateix coixí', () => {
@@ -773,8 +771,6 @@ describe('la geometria de la barra única', () => {
     expect(valor('.sdp-xat-compositor__negreta', 'min-height')).toBe('var(--sdp-touch-min)');
     /* La negreta de la bombolla: l'extra de la casa, no el «bolder» del navegador. */
     expect(valor('.sdp-xat-bombolla__text strong', 'font-weight')).toBe('var(--sdp-pes-extra)');
-    const consulta = llig('src/sections/xat/components/ConsultaIAIA.jsx');
-    expect(consulta).not.toMatch(/sdp-xat-compositor__camp--negreta/);
   });
 
   test('la safata sense feina col·lapsa a 0: cap coixí ni filet (abans, 151px fixos en repòs)', () => {

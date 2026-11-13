@@ -7,35 +7,30 @@ vi.mock('../../config/storage.js', () => ({
   getVal: (clau, reserva) => (magatzem.has(clau) ? magatzem.get(clau) : reserva),
   setVal: (clau, valor) => { magatzem.set(clau, valor); }
 }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, reserva) => reserva }) }));
-/* Avatar resol els recursos propis amb resolRecursPropi (T5, 261001): el mock
-   també l'ha de portar, identitat com resolveAsset. */
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
-/* Gauntlet 261016 (Bloc 3) · El catàleg ve de la capa de dades: es falseja
-   només AGENTS, i tipusDAgent és el de veres (la font única del vocabulari).
-   Un de cada tipus: la IA i el personatge ANIMAL són acompanyants; la
-   persona, l'entitat, un tipus fora del catàleg i l'antic MASTER, no. */
-vi.mock('../../data/agentsSeed.js', async (importOriginal) => ({
-  ...(await importOriginal()),
-  AGENTS: [
-    { id: 'iaia', name: 'IAIA MarIA', role: 'Matriarca', type: 'AI', avatar_url: '/a.png' },
-    { id: 'gall', name: 'El Gall', role: 'Meteo', type: 'ANIMAL', avatar_url: '/b.png' },
-    { id: 'javi', name: 'Javi Llinares', role: 'Coordinador', type: 'PERSON', avatar_url: '/c.png' },
-    { id: 'socdepoble', name: 'Sóc de Poble', role: 'Empresa', type: 'COMPANY', avatar_url: '/d.png' },
-    { id: 'pep', name: 'Pep', role: 'Veí', type: 'HUMAN', avatar_url: '/e.png' },
-    { id: 'antic', name: 'Tipus antic', role: '—', type: 'MASTER', avatar_url: '/f.png' }
-  ]
-}));
+/* R21 · El traductor es pot canviar per prova: per defecte, la reserva valenciana. */
+const reserva = (_clau, text) => text;
+let traductor = reserva;
+vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (clau, text) => traductor(clau, text) }) }));
 
 import SelectorRealitat from './SelectorRealitat.jsx';
 import { EVENT_NIVELL_IAIA, esIaiaActiva } from './nivellIaia.js';
+import CA from '../../config/idiomes/ca.js';
+import ES from '../../config/idiomes/es.js';
+import EN from '../../config/idiomes/en.js';
+import EU from '../../config/idiomes/eu.js';
+import GL from '../../config/idiomes/gl.js';
 
-beforeEach(() => magatzem.clear());
+beforeEach(() => { magatzem.clear(); traductor = reserva; });
 afterEach(cleanup);
 
-/* T44 · el nom accessible ara el compon aria-labelledby (antetítol + títol):
-   la comparació exacta garantix que ni la descripció ni la insígnia s'hi escolen. */
-test('T31 · els nivells són un grup d’opcions de Pedra Seca i el triat es veu marcat', () => {
+const QUATRE_NIVELLS = [
+  'Nivell 0 Apagada',
+  'Nivell 1 Passiva',
+  'Nivell 2 Interactiva',
+  'Nivell 3 Activa'
+];
+
+test('T31 + R21.5 · els 4 nivells de la IAIA MarIA són un grup d’opcions de Pedra Seca i el triat es veu marcat', () => {
   render(<SelectorRealitat />);
   const radios = screen.getAllByRole('radio');
   expect(radios).toHaveLength(4);
@@ -44,50 +39,41 @@ test('T31 · els nivells són un grup d’opcions de Pedra Seca i el triat es ve
   expect(document.querySelector('.sdp-realitat fieldset.sdp-grup')).toBeTruthy();
 });
 
-test('T31 · el nivell 2 ensenya els acompanyants d’IA com a caselles, i el nivell es desa', () => {
-  render(<SelectorRealitat />);
-  expect(screen.queryByRole('checkbox')).toBeNull();
-  fireEvent.click(screen.getByRole('radio', { name: /Nivell 2/ }));
-  const caselles = screen.getAllByRole('checkbox');
-  expect(caselles).toHaveLength(2);
-  /* Ordre del Mestre (261021, pla 261021_0015 §11.4) · Els acompanyants
-     s'obrin amb la targeta d'«Interactiva», com un acordió: just darrere
-     d'ella, no al final del formulari. */
-  const desplegable = screen.getByRole('group', { name: 'Tria els teus acompanyants' }).closest('.sdp-grup__desplegable');
-  expect(desplegable).toBeTruthy();
-  expect(desplegable.previousElementSibling.querySelector('input[type="radio"]').value).toBe('2');
-  fireEvent.click(screen.getByRole('radio', { name: 'Nivell 1 Passiva' }));
-  expect(document.querySelector('.sdp-grup__desplegable')).toBeNull();
-  fireEvent.click(screen.getByRole('radio', { name: /Nivell 2/ }));
-  fireEvent.click(screen.getByRole('checkbox', { name: /IAIA MarIA/ }));
-  expect(magatzem.get('socdepoble-iaia-level')).toBe('2');
-  expect(magatzem.get('socdepoble-iaia-companions')).toEqual(['iaia']);
+test('R21.5 · s’han extirpat per complet els desplegables d’acompanyants, les caselles, GrupAvatars i qualsevol menció a agents o acompanyants', () => {
+  const { container } = render(<SelectorRealitat />);
+  for (const nivell of QUATRE_NIVELLS) {
+    fireEvent.click(screen.getByRole('radio', { name: nivell }));
+    expect(screen.queryByRole('checkbox')).toBeNull();
+    expect(container.querySelector('.sdp-grup__desplegable')).toBeNull();
+    expect(container.querySelector('.sdp-avatar-grup')).toBeNull();
+    expect(container.querySelector('.sdp-realitat__connexio')).toBeNull();
+    expect(container.textContent).not.toMatch(/acompanyant|assistent|\bagents?\b|tots els agents del Mas|de el Mas/i);
+  }
+  expect(magatzem.has('socdepoble-iaia-companions')).toBe(false);
 });
 
-/* T30.2 · la barra negra sap el nivell per esdeveniment: activa a partir del 2. */
-test('T30.2 · canviar de nivell anuncia l’esdeveniment i «activa» comença al nivell 2', () => {
+test('T30.2 · canviar de nivell desa el valor, anuncia l’esdeveniment i «activa» comença al nivell 2', () => {
   const rebuts = [];
   const escolta = (e) => rebuts.push(e.detail);
   window.addEventListener(EVENT_NIVELL_IAIA, escolta);
   render(<SelectorRealitat />);
-  fireEvent.click(screen.getByRole('radio', { name: /Nivell 3/ }));
-  fireEvent.click(screen.getByRole('radio', { name: /Nivell 0/ }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Nivell 3 Activa' }));
+  expect(magatzem.get('socdepoble-iaia-level')).toBe('3');
+  fireEvent.click(screen.getByRole('radio', { name: 'Nivell 0 Apagada' }));
+  expect(magatzem.get('socdepoble-iaia-level')).toBe('0');
   window.removeEventListener(EVENT_NIVELL_IAIA, escolta);
   expect(rebuts).toEqual([1, 3, 0]);
   expect([0, 1, 2, 3].map(esIaiaActiva)).toEqual([false, false, true, true]);
 });
 
-test('T44 · els nivells són targetes amb descripció i efecte real sobre la IAIA', () => {
+test('T44 + R21.5 · els 4 nivells són targetes dedicades exclusivament a la IAIA MarIA amb descripció i detall propis', () => {
   render(<SelectorRealitat />);
   expect(document.querySelector('.sdp-realitat fieldset.sdp-grup--targetes')).toBeTruthy();
   expect(document.querySelectorAll('.sdp-realitat .sdp-targeta-opcio')).toHaveLength(4);
-  /* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
-     261021_0015 §11.3): el detall de cada targeta, propi i sense argot. */
-  expect(screen.getByRole('radio', { name: 'Nivell 0 Apagada', description: /Completament apagada · Zero IA/ })).toBeTruthy();
-  expect(screen.getByRole('radio', { name: 'Nivell 1 Passiva', description: /En espera · Només respon si tu li preguntes/ })).toBeTruthy();
-  expect(screen.getByRole('radio', { name: 'Nivell 2 Interactiva', description: /Activa · Amb els acompanyants que tries tu/ })).toBeTruthy();
-  expect(screen.getByRole('radio', { name: 'Nivell 3 Connexió total', description: /Comunitat plena · Tot el Mas al teu servei/ })).toBeTruthy();
-  expect(document.querySelector('.sdp-realitat')?.textContent).not.toContain('de el Mas');
+  expect(screen.getByRole('radio', { name: 'Nivell 0 Apagada', description: /Apagada · Fora del xat/ })).toBeTruthy();
+  expect(screen.getByRole('radio', { name: 'Nivell 1 Passiva', description: /Al xat · Només respon si li escrius/ })).toBeTruthy();
+  expect(screen.getByRole('radio', { name: 'Nivell 2 Interactiva', description: /Al xat · La icona s’il·lumina/ })).toBeTruthy();
+  expect(screen.getByRole('radio', { name: 'Nivell 3 Activa', description: /Com el nivell 2 · Sense funció pròpia encara/ })).toBeTruthy();
 });
 
 test('T44 · la triada es llig sense color: una sola insígnia «Nivell actual», dins de la targeta marcada', () => {
@@ -98,101 +84,92 @@ test('T44 · la triada es llig sense color: una sola insígnia «Nivell actual»
   expect(targeta.querySelector('input[type="radio"]').checked).toBe(true);
   expect(targeta.querySelector('input[type="radio"]').value).toBe('1');
 
-  fireEvent.click(screen.getByRole('radio', { name: 'Nivell 3 Connexió total' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Nivell 3 Activa' }));
   const despres = screen.getAllByText('Nivell actual');
   expect(despres).toHaveLength(1);
   expect(despres[0].closest('.sdp-targeta-opcio').querySelector('input').value).toBe('3');
 });
 
-test('T44 · el tauler d’estat seguix la IAIA de la barra negra (T30)', () => {
+test('T44 · el tauler d’estat seguix la presència de la IAIA MarIA', () => {
   render(<SelectorRealitat />);
   const iaia = document.querySelector('.sdp-realitat__iaia');
   expect(iaia.getAttribute('aria-hidden')).toBe('true');
   expect(iaia.classList.contains('sdp-realitat__iaia--activa')).toBe(false);
   expect(screen.getByText('Ara: nivell 1 · Passiva')).toBeTruthy();
-  expect(screen.getByText(/en silenci i a l'espera/)).toBeTruthy();
+  expect(screen.getByText(/és al xat i espera: només respon quan li escrius/)).toBeTruthy();
 
   fireEvent.click(screen.getByRole('radio', { name: 'Nivell 2 Interactiva' }));
   expect(document.querySelector('.sdp-realitat__iaia').classList.contains('sdp-realitat__iaia--activa')).toBe(true);
   expect(screen.getByText('Ara: nivell 2 · Interactiva')).toBeTruthy();
-  expect(screen.getByText(/Col·laboració activa amb els acompanyants que tu tries/)).toBeTruthy();
+  expect(screen.getByText(/fa el mateix que al nivell 1: només respon quan li escrius/)).toBeTruthy();
 });
 
-/* Ordre del Mestre (261021, pla 261021_0015 §11.2-11.3) · «La barra negra» era
-   argot de desenvolupament: cap text del selector en parla. Cada nivell porta
-   el seu text propi al tauler d'estat (abans, 0 i 1 i 2 i 3 en compartien un)
-   i cap promet moviment. */
-test('261021 · cap text parla de la barra negra, i cada nivell té el seu text propi al tauler', () => {
+test('261021 + R21.5 · cap text parla de la barra negra ni promet moviment, i cada nivell té el seu text propi al tauler', () => {
   render(<SelectorRealitat />);
   const textos = [];
-  for (const nivell of ['Nivell 0 Apagada', 'Nivell 1 Passiva', 'Nivell 2 Interactiva', 'Nivell 3 Connexió total']) {
+  for (const nivell of QUATRE_NIVELLS) {
     fireEvent.click(screen.getByRole('radio', { name: nivell }));
     const text = document.querySelector('.sdp-realitat').textContent;
     expect(text).not.toMatch(/barra negra|respira|es mou|batega|s'anima/);
     textos.push(document.querySelector('.sdp-realitat__estat-desc').textContent);
   }
   expect(new Set(textos).size).toBe(4);
-  expect(textos[0]).toMatch(/^La intel·ligència artificial està completament desconnectada\./);
-  expect(textos[3]).toMatch(/^El Mas connectat en comunitat plena\./);
+  expect(textos[0]).toMatch(/^La IAIA MarIA està apagada: no apareix al xat/);
+  expect(textos[3]).toMatch(/^De moment, el nivell 3 fa el mateix que el 2/);
 });
 
-test('T44 · la targeta d’acompanyant marca la triada amb una classe (sense :has())', () => {
+/* R21 (honestedat_textos-05) · El codi: el nivell 0 trau la IAIA del xat (XatContext · iaiaApagada);
+   de l'1 al 3 el xat és el mateix, i només la icona de dalt canvia a partir del 2 (esIaiaActiva).
+   Cap text no pot prometre iniciativa, redacció per al Mur, dreceres ni ajuda contextual. */
+test('R21 · els nivells no prometen res que el codi no fa: de l’1 al 3, el mateix xat; el 3, sense funció pròpia', () => {
   render(<SelectorRealitat />);
-  fireEvent.click(screen.getByRole('radio', { name: 'Nivell 2 Interactiva' }));
-  const casella = screen.getByRole('checkbox', { name: /IAIA MarIA/ });
-  const targeta = casella.closest('.sdp-casella');
-  expect(targeta.classList.contains('sdp-realitat__company')).toBe(true);
-  expect(targeta.classList.contains('sdp-realitat__company--triat')).toBe(false);
-  fireEvent.click(casella);
-  expect(screen.getByRole('checkbox', { name: /IAIA MarIA/ }).closest('.sdp-casella').classList.contains('sdp-realitat__company--triat')).toBe(true);
-  /* L'avatar va amb alt="" i sense title: el nom no es duplica. */
-  expect(targeta.querySelector('.sdp-avatar').getAttribute('title')).toBeNull();
-  const grup = screen.getByRole('group', { name: 'Tria els teus acompanyants' });
-  const idAjuda = grup.getAttribute('aria-describedby');
-  expect(document.getElementById(idAjuda).textContent).toBe('Marca amb quins acompanyants vols conversar.');
+  const estats = [];
+  for (const nivell of QUATRE_NIVELLS) {
+    fireEvent.click(screen.getByRole('radio', { name: nivell }));
+    const text = document.querySelector('.sdp-realitat').textContent;
+    expect(text).not.toMatch(/redact|esborrany|\bMur\b|drecer|contextual|iniciativa|plenament|al teu servei|Zero IA|privadesa manual|sense eixir del teu dispositiu/i);
+    estats.push(document.querySelector('.sdp-realitat__estat-desc').textContent);
+  }
+  expect(estats[0]).toMatch(/no apareix al xat, no respon/);
+  for (const estat of estats.slice(1)) expect(estat).toMatch(/només respon quan li escrius/);
+  expect(estats[2]).toMatch(/L’única diferència és que la seua icona/);
+  expect(estats[3]).toMatch(/Encara no hi ha cap funció pròpia d’este nivell/);
+  expect([0, 1, 2, 3].map(esIaiaActiva)).toEqual([false, false, true, true]);
 });
 
-/* Gauntlet 261016 (Bloc 3) · Actualitzada a posta: abans hi entrava l'agent de
-   tipus MASTER («Mestre»), que no existix al catàleg, i en quedava fora el
-   personatge ANIMAL. Ara són la IA i El Gall. */
-test('T44 · el nivell 3 no demana triar: avatars de tots i el text de la connexió', () => {
+test('R21 · cada text del selector té clau als 5 diccionaris, amb el valencià igual que la reserva i 4 estats distints per llengua', () => {
+  const demanades = new Map();
+  traductor = (clau, text) => { demanades.set(clau, text); return text; };
   render(<SelectorRealitat />);
-  fireEvent.click(screen.getByRole('radio', { name: 'Nivell 3 Connexió total' }));
-  expect(screen.queryByRole('checkbox')).toBeNull();
-  expect(screen.getByText(/t'acompanyen tots alhora: IAIA MarIA i El Gall\./)).toBeTruthy();
-  expect(document.querySelectorAll('.sdp-realitat__connexio .sdp-avatar-grup .sdp-avatar')).toHaveLength(2);
-  /* 261021 (pla §11.4) · També s'obri amb la seua targeta. */
-  const desplegable = document.querySelector('.sdp-realitat__connexio').closest('.sdp-grup__desplegable');
-  expect(desplegable.previousElementSibling.querySelector('input[type="radio"]').value).toBe('3');
+  for (const nivell of QUATRE_NIVELLS) fireEvent.click(screen.getByRole('radio', { name: nivell }));
+  const propies = [...demanades.keys()].filter((clau) => /^section\.realitat\.(nivell\d|ara$|antetitol$|nivellActual$)/.test(clau));
+  expect(propies).toHaveLength(4 * 4 + 3);
+  for (const clau of propies) expect(CA[clau], clau).toBe(demanades.get(clau));
+  for (const [llengua, diccionari] of Object.entries({ ca: CA, es: ES, en: EN, eu: EU, gl: GL })) {
+    for (const clau of propies) expect(typeof diccionari[clau] === 'string' && diccionari[clau].trim().length > 0, `${llengua}: ${clau}`).toBe(true);
+    expect(new Set([0, 1, 2, 3].map((n) => diccionari[`section.realitat.nivell${n}.estat`])).size, llengua).toBe(4);
+    for (const plantilla of ['section.realitat.ara', 'section.realitat.antetitol']) expect(diccionari[plantilla], `${llengua}: ${plantilla}`).toContain('{nivell}');
+    expect(diccionari['section.realitat.ara'], llengua).toContain('{etiqueta}');
+  }
 });
 
-/* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL del
-   catàleg són IA) · Els acompanyants els tria tipusDAgent: la IA i el
-   personatge ANIMAL hi són; la persona, l'entitat, un tipus fora del catàleg
-   i l'antic MASTER, no. */
-test('Gauntlet 261016 · acompanyants: la IA i el personatge ANIMAL, mai una persona, una entitat ni un tipus desconegut', () => {
+test('R21 · en anglés, el selector es llig sencer en anglés', () => {
+  traductor = (clau, text) => EN[clau] ?? text;
   render(<SelectorRealitat />);
-  fireEvent.click(screen.getByRole('radio', { name: 'Nivell 2 Interactiva' }));
-  const noms = screen.getAllByRole('checkbox').map((casella) => casella.closest('.sdp-casella').querySelector('.sdp-realitat__company-nom').textContent);
-  expect(noms).toEqual(['IAIA MarIA', 'El Gall']);
-  fireEvent.click(screen.getByRole('checkbox', { name: /El Gall/ }));
-  expect(magatzem.get('socdepoble-iaia-companions')).toEqual(['gall']);
+  expect(screen.getByRole('radio', { name: 'Level 1 Passive' }).checked).toBe(true);
+  expect(screen.getByText('Now: level 1 · Passive')).toBeTruthy();
+  expect(screen.getAllByText('Current level')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('radio', { name: 'Level 3 Active' }));
+  expect(screen.getByText(/^For now, level 3 does the same as level 2/)).toBeTruthy();
+  expect(document.querySelector('.sdp-realitat').textContent).not.toMatch(/Nivell|Apagada|Passiva|Ara:/);
 });
 
-/* El cas MASTER s'ha tret perquè el catàleg de veres no en porta cap: el seu
-   vocabulari és el de tipusDAgent (PERSON, AI, ANIMAL i COMPANY), i hi
-   entren com a acompanyants totes les IA i el personatge ANIMAL.
-   Expectativa actualitzada a propòsit (P0-72 / IDEA-203, ordre del Mestre
-   del 09-11-2026: «només la IAIA MarIA com a IA») · Dels cinc assistents
-   oficials (pla 261021_0015 §12) només es queda la IAIA, i el catàleg ja no
-   porta cap personatge ANIMAL: l'únic acompanyant de veres és ella. Que un
-   ANIMAL siga acompanyant ho continua provant el catàleg falsejat de dalt. */
-test('Gauntlet 261016 + P0-72 · el catàleg de veres no porta cap tipus MASTER, i l’únic acompanyant és la IAIA MarIA', async () => {
-  const cataleg = await vi.importActual('../../data/agentsSeed.js');
+test('P0-72 + R21.5 · el catàleg de dades no porta cap tipus MASTER i l’única IA del sistema és la IAIA MarIA', async () => {
+  const cataleg = await import('../../data/agentsSeed.js');
   expect(cataleg.AGENTS.filter((agent) => agent.type === 'MASTER')).toEqual([]);
   expect(new Set(cataleg.AGENTS.map((agent) => agent.type))).toEqual(new Set(['COMPANY', 'PERSON', 'AI']));
-  const acompanyants = cataleg.AGENTS.filter((agent) => cataleg.tipusDAgent(agent) === 'ia');
-  expect(acompanyants.map((agent) => [agent.name, agent.type])).toEqual([['IAIA MarIA', 'AI']]);
+  const ia = cataleg.AGENTS.filter((agent) => cataleg.tipusDAgent(agent) === 'ia');
+  expect(ia.map((agent) => [agent.name, agent.type])).toEqual([['IAIA MarIA', 'AI']]);
 });
 
 test('T44 · un nivell desat fora de rang torna a Passiva', () => {

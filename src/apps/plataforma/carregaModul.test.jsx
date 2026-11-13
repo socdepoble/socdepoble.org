@@ -147,7 +147,9 @@ describe('carregaCos · el camí bo', () => {
     const script = await scriptInjectat();
     /* Actualitzat a posta (261016): el nucli real és l'1.2.0, que afig la porta 'workspace'.
        Actualitzada a posta (261024 T5): ara l'1.3.0, que afig useServeiNoticies a la plataforma. */
-    expect(carregador.nucli()).toMatchObject({ versio: '1.5.0' });
+    expect(carregador.nucli()).toMatchObject({ versio: '1.6.0' });
+    /* R21.6 · l'1.6.0 afig la capçalera de lectura de la targeta a la Pedra Seca. */
+    expect(carregador.nucli().pedraSeca.encapcalamentDeTargeta).toBeTypeOf('function');
     expect(carregador.nucli().plataforma.useServeiNoticies).toBeTypeOf('function');
     expect(Object.keys(carregador.nucli().workspace).sort()).toEqual(['CatalegWorkspace', 'DefaultItemCard', 'DetallCataleg', 'UniversalWorkspace']);
     expect(Object.isFrozen(carregador.nucli())).toBe(true);
@@ -212,16 +214,17 @@ describe('carregaCos · el que no passa (LazyRouteError, mai una recàrrega)', (
 
   /* Actualitzat a posta (261016): el missatge nomena la versió del contracte, ara l'1.2.0.
      Actualitzada a posta (261024 T5): ara l'1.3.0. */
-  test('un nucli que no és el1.5.0 congelat', async () => {
+  test('un nucli que no és el 1.6.0 congelat', async () => {
     const error = await carregaAmbFallada(null, null, { importaNucli: () => Promise.resolve({ NUCLI: { versio: VERSIO_NUCLI } }) });
-    expect(error.cause.message).toContain('no és el 1.5.0 congelat');
+    expect(error.cause.message).toContain('no és el 1.6.0 congelat');
   });
 
   /* Onada 7 (261009) · un nucli congelat d'una altra versió (l'1.0.0 d'abans) tampoc no passa.
-     261016 · tampoc l'1.1.0, el d'abans de la porta 'workspace'. 261024 (T5) · tampoc l'1.2.0. */
-  test.each(['1.0.0', '1.1.0', '1.2.0', '1.3.0'])('un nucli congelat d’una altra versió (%s)', async (versio) => {
+     261016 · tampoc l'1.1.0, el d'abans de la porta 'workspace'. 261024 (T5) · tampoc l'1.2.0.
+     R21.6 · tampoc l'1.5.0, el d'abans de la capçalera de lectura de la targeta. */
+  test.each(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.5.0'])('un nucli congelat d’una altra versió (%s)', async (versio) => {
     const error = await carregaAmbFallada(null, null, { importaNucli: () => Promise.resolve({ NUCLI: Object.freeze({ versio }) }) });
-    expect(error.cause.message).toContain('no és el 1.5.0 congelat');
+    expect(error.cause.message).toContain('no és el 1.6.0 congelat');
   });
 
   test('una app que no és un mòdul', async () => {

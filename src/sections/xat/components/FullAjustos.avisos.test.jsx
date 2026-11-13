@@ -13,6 +13,11 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { delVal, getVal, setVal } from '../../../config/storage.js';
+import CA from '../../../config/idiomes/ca.js';
+import ES from '../../../config/idiomes/es.js';
+import EN from '../../../config/idiomes/en.js';
+import EU from '../../../config/idiomes/eu.js';
+import GL from '../../../config/idiomes/gl.js';
 import ClosCaXat, { BotoObriRail, CLAU_RAIL } from './ClosCaXat.jsx';
 import PanellInicialMobil from './PanellInicialMobil.jsx';
 /* Onada R9 (C3) · El motor del registre, que s'endolla a la façana en avaluar-se (com a l'entrada). */
@@ -20,7 +25,10 @@ import '../../../config/motorAvisosPushXat.js';
 import {
   AVISOS_PUSH_XAT_ACTIUS, avisosPushDisponibles, fixaServidorAvisosPush, registraAvisosPush
 } from '../../../config/avisosPushXat.js';
-import { TEXTOS_AVISOS } from '../useAvisosPushXat.js';
+import { TEXTOS_AVISOS, TEXTOS_AVISOS_ENTORN } from '../useAvisosPushXat.js';
+
+/* Els diccionaris de les 5 llengües, per al t del banc (vegeu el mock d'UIContext). */
+const DICCIONARIS = Object.freeze({ ca: CA, es: ES, en: EN, eu: EU, gl: GL });
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -28,7 +36,8 @@ const mocks = vi.hoisted(() => ({
   mode: 'remote',
   capacitat: true,
   motiu: null,
-  tipus: 'web'
+  tipus: 'web',
+  language: 'ca'
 }));
 
 vi.mock('../../../app/contexts/RouterContext', () => ({
@@ -37,9 +46,16 @@ vi.mock('../../../app/contexts/RouterContext', () => ({
   useSearchParams: () => [new URLSearchParams()],
   useParams: () => ({})
 }));
+/* El t del banc: les claus dels avisos de la pàgina «Notificacions», amb el diccionari de la llengua
+   triada (com el t de UIContext); la resta, la reserva valenciana, perquè el banc navega pel full
+   amb els noms de sempre. */
 vi.mock('../../../app/contexts/UIContext', () => ({
-  useUIActions: () => ({ t: (_, alternativa) => alternativa, setTheme: vi.fn(), setLanguage: vi.fn() }),
-  useUIState: () => ({ themePreference: 'light', language: 'ca' })
+  useUIActions: () => ({
+    t: (clau, alternativa) => (String(clau).startsWith('section.xat.ajustos.avisos.') && DICCIONARIS[mocks.language]?.[clau]) || alternativa,
+    setTheme: vi.fn(),
+    setLanguage: vi.fn()
+  }),
+  useUIState: () => ({ themePreference: 'light', language: mocks.language })
 }));
 vi.mock('../../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ status: 'ready', towns: [] }) }));
 vi.mock('../XatContext', () => ({
@@ -91,6 +107,7 @@ beforeEach(() => {
   mocks.sessio = { estat: 'dins', currentUser: { id: 'A', email: 'a@exemple.org' }, preparaEixida: vi.fn(async () => ({})), logout: vi.fn() };
   mocks.mode = 'remote';
   mocks.capacitat = true;
+  mocks.language = 'ca';
   vi.clearAllMocks();
 });
 afterEach(() => {
@@ -152,10 +169,21 @@ describe('amb un adaptador registrat', () => {
     expect([...cos.querySelectorAll('.sdp-xat-ajustos__nota')].map((n) => n.textContent)).toEqual([TEXTOS_AVISOS.ios[1]]);
   });
 
-  test('adaptador natiu sense connector (motiu \'sense-connector\'): la construcció de hui (ARB-06)', () => {
-    ambAdaptador({ tipus: 'natiu', motiu: 'sense-connector' });
-    const cos = obriNotificacions();
-    expect(normalitza(cos.innerHTML)).toBe(CONSTRUCCIO_DE_HUI);
+  test.each([
+    ['web', 'sense-clau'],
+    ['web', 'sense-config'],
+    ['natiu', 'sense-connector']
+  ])('R21.4-UI (R21.2-F04) · %s amb motiu %s mostra avís honest d\'entorn en les 5 llengües, sense interruptor ni "En construcció"', (tipus, motiu) => {
+    for (const llengua of ['ca', 'es', 'en', 'eu', 'gl']) {
+      mocks.language = llengua;
+      ambAdaptador({ tipus, motiu });
+      const cos = obriNotificacions();
+      expect(within(cos).queryByRole('region', { name: 'En construcció' })).toBeNull();
+      expect(screen.queryByRole('switch')).toBeNull();
+      const estat = within(cos).getByRole('status');
+      expect(estat.textContent).toBe(DICCIONARIS[llengua][TEXTOS_AVISOS_ENTORN[motiu][0]]);
+      cleanup();
+    }
   });
 
   test.each([
@@ -163,8 +191,7 @@ describe('amb un adaptador registrat', () => {
     ['amb la sessió fora', () => { ambAdaptador(); mocks.sessio = null; }],
     ['amb la sessió en comprovant', () => { ambAdaptador(); mocks.sessio = { ...mocks.sessio, estat: 'comprovant' }; }],
     ['en llavor', () => { ambAdaptador(); mocks.mode = 'seed'; }],
-    ['sense la capacitat avisosPush', () => { ambAdaptador(); mocks.capacitat = false; }],
-    ['amb un motiu que no s\'oferix (sense clau)', () => ambAdaptador({ motiu: 'sense-clau' })]
+    ['sense la capacitat avisosPush', () => { ambAdaptador(); mocks.capacitat = false; }]
   ])('%s: la construcció de hui', (_nom, prepara) => {
     prepara();
     const cos = obriNotificacions();

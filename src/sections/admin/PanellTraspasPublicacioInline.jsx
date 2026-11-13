@@ -7,6 +7,8 @@ import { ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, ENTITATS_SEED, entitatSeed }
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { Alerta, Boto, Camp, Casella, GrupCamps, Selector } from '../../components/PedraSeca/index.js';
 import { BarraTaronja } from '../../components/universal/barres/BarraTaronja.jsx';
+import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import {
   PUBLICADOR_PER_DEFECTE,
   UUID_ACTOR_RE,
@@ -229,6 +231,7 @@ function EditorTraspasPublicacioInline({
   config
 }) {
   const idTitol = useId();
+  const traductor = useTraductorOpcional();
   const configActual = useRef(config);
   configActual.current = config;
 
@@ -249,6 +252,8 @@ function EditorTraspasPublicacioInline({
   }, [clauRecurs, recursTipusInicial, recursIdInicial]);
 
   const [actorsRemots, setActorsRemots] = useState([]);
+  const [estatDirectori, setEstatDirectori] = useState('loading');
+  const [intentDirectori, setIntentDirectori] = useState(0);
   const [actorsVigents, setActorsVigents] = useState([]);
   const [intentLectura, setIntentLectura] = useState(0);
   const [versioEsperada, setVersioEsperada] = useState(0);
@@ -332,12 +337,23 @@ function EditorTraspasPublicacioInline({
     if (!capacitatActiva) return undefined;
     const control = new AbortController();
     const configCrida = { ...configActual.current, signal: control.signal };
+    setEstatDirectori('loading');
+    setActorsRemots([]);
     Promise.resolve()
       .then(() => listPublicOrganizations({}, configCrida))
-      .then(files => { if (!control.signal.aborted && Array.isArray(files)) setActorsRemots(files); })
-      .catch(() => {});
+      .then(files => {
+        if (control.signal.aborted) return;
+        if (!Array.isArray(files)) throw new Error('El directori no ha tornat una llista.');
+        setActorsRemots(files);
+        setEstatDirectori('ready');
+      })
+      .catch(() => {
+        if (control.signal.aborted) return;
+        setActorsRemots([]);
+        setEstatDirectori('error');
+      });
     return () => control.abort();
-  }, [capacitatActiva]);
+  }, [capacitatActiva, intentDirectori]);
 
   useEffect(() => {
     if (!capacitatActiva) return undefined;
@@ -417,7 +433,8 @@ function EditorTraspasPublicacioInline({
     ));
   };
 
-  const lecturaBloquejada = !modeEspecimen && (!capacitatActiva || carregantLectura || clauLecturaValida !== recursActual.clau);
+  const lecturaBloquejada = !modeEspecimen && (!capacitatActiva || estatDirectori !== 'ready' || carregantLectura || clauLecturaValida !== recursActual.clau);
+  const dataPrevisualitzacio = encapcalamentDeTargeta(modeEspecimen ? { date: '2026-11-11T18:00:00' } : null, { t: traductor });
 
   function simula(revertir) {
     if (revertir) {
@@ -565,14 +582,20 @@ function EditorTraspasPublicacioInline({
       </div>
 
       {!modeEspecimen && !capacitatActiva ? <Alerta to="info">El node encara no oferix la co-publicació registrada.</Alerta> : null}
+      {!modeEspecimen && capacitatActiva && estatDirectori === 'error' ? (
+        <Alerta to="avis" titol="No s’ha pogut carregar el directori de comptes registrats"
+          accions={<Boto disabled={aplicant} onClick={() => setIntentDirectori(intent => intent + 1)}>Torna-ho a provar</Boto>}>
+          El traspàs queda bloquejat fins que es puga comprovar la llista. La lectura dels publicadors de la fitxa es conserva separadament.
+        </Alerta>
+      ) : null}
       <div className="sdp-traspas-inline__previsualitzacio">
         <h4 className="sdp-traspas-inline__subtitol">{modeEspecimen || (!carregantLectura && !lecturaBloquejada && actorValid) ? 'Previsualització de la Barra Taronja' : 'Publicació registrada actual'}</h4>
         <BarraTaronja
           publicadorsRegistrats={modeEspecimen || (!carregantLectura && !lecturaBloquejada && actorValid) ? previsualitzacioPublicadors : actorsVigents}
           etiqueta={modeEspecimen || (!carregantLectura && !lecturaBloquejada && actorValid) ? 'Previsualització de co-publicació registrada' : 'Publicació registrada actual'}
-          date="11/11/26"
-          time="18:00"
-          dateTime="2026-11-11T18:00:00"
+          date={dataPrevisualitzacio.date}
+          time={dataPrevisualitzacio.time}
+          dateTime={dataPrevisualitzacio.dateTime}
         />
       </div>
 

@@ -24,7 +24,7 @@ import { Calendar, CalendarDays, Files, GalleryVerticalEnd, HardDrive, Images, L
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useMultimedia } from './MultimediaContext';
 import { useUIActions, useUIStateOpcional } from '../../app/contexts/UIContext';
-import { DialegConfirmacio } from '../../components/PedraSeca/index.js';
+import { Alerta, Boto, DialegConfirmacio } from '../../components/PedraSeca/index.js';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import { useSEO } from '../../hooks/useSEO';
 import { fusionaMitjans } from './mediaContent.js';
@@ -71,7 +71,7 @@ const indexDe = (llista, id) => (id == null ? -1 : llista.findIndex((item) => St
 const esImatgeLocal = (el) => el.vista === 'imatge' || el.vista === 'svg';
 
 export default function MultimediaSection({ magatzemCarpetes = null, entorn = globalThis, cripto = globalThis.crypto } = {}) {
-  const { status, mediaItems, mediaTimelineGroups } = useMultimedia();
+  const { status, error, errorRevalidacio, refresh, mediaItems, mediaTimelineGroups } = useMultimedia();
   const { t } = useUIActions();
   /* Revisió adversarial del 261016 · Els mesos de la Cronologia, en la
      llengua activa (abans, sempre en ca-ES). Sense UIProvider, el de sèrie. */
@@ -126,7 +126,8 @@ export default function MultimediaSection({ magatzemCarpetes = null, entorn = gl
     [totes, deLaIaia, timelineGroups]
   );
   const perId = useMemo(() => new Map(cataleg.totes.map((m) => [String(m.id), m])), [cataleg.totes]);
-  const catalegLlest = status !== 'loading' && censLlest;
+  // A failed request cannot prove that a requested public photograph is absent.
+  const catalegLlest = status === 'ready' && censLlest;
 
   /* ── Els textos del model, una vegada per llengua ── */
   const tr = useCallback((parell, valors) => tradueix(t, parell, valors), [t]);
@@ -223,7 +224,9 @@ export default function MultimediaSection({ magatzemCarpetes = null, entorn = gl
   /* El patró esperaElRol de la Wiki: 'loading' NOMÉS si la URL demana una cosa
      que encara no hi pot ser (el catàleg o un id local abans d'obrir el
      volum); així el workspace no la dona per absent ni reescriu la URL. */
-  const estatModel = (demanda.cataleg && !catalegLlest) || (demanda.localProfund && !gestor.arrencadaLlesta) ? 'loading' : 'ready';
+  const errorCataleg = demanda.cataleg && status === 'error';
+  const estatModel = errorCataleg ? 'error'
+    : (demanda.cataleg && !catalegLlest) || (demanda.localProfund && !gestor.arrencadaLlesta) ? 'loading' : 'ready';
   const carpetaActiva = index && efectiva.local ? efectiva.local.carpeta : null;
   const rutaSeleccionada = efectiva.local?.ruta ?? null;
 
@@ -257,8 +260,8 @@ export default function MultimediaSection({ magatzemCarpetes = null, entorn = gl
     miniatures, exactes: gestor.exactes, textos: textosModel, icones: ICONES, locale
   }), [cataleg, index, gestor.analisi.elements, gestor.nomVolum, carpetaActiva, rutaSeleccionada, miniatures, gestor.exactes, textosModel, locale]);
   const model = useMemo(
-    () => ({ status: estatModel, itemsComplete: true, workspaceKey: 'multimedia', categories, items }),
-    [estatModel, categories, items]
+    () => ({ status: estatModel, error: errorCataleg ? error : null, refresh, itemsComplete: catalegLlest, workspaceKey: 'multimedia', categories, items }),
+    [estatModel, errorCataleg, error, refresh, catalegLlest, categories, items]
   );
   const seleccio = useMemo(
     () => ({ categoryId: efectiva.categoryId, itemId: efectiva.itemId }),
@@ -387,6 +390,13 @@ export default function MultimediaSection({ magatzemCarpetes = null, entorn = gl
 
   return (
     <>
+      {/* Home/local tools remain usable when only the public source failed.
+          Requested public items use the workspace's error/retry contract. */}
+      {(!demanda.cataleg && status === 'error') || errorRevalidacio ? (
+        <Alerta to="error" accions={refresh ? <Boto onClick={refresh}>{tr(E.reintenta)}</Boto> : null}>
+          {tr(E.error)}
+        </Alerta>
+      ) : null}
       <UniversalWorkspace
         collapsibleNavigation={false}
         sortable

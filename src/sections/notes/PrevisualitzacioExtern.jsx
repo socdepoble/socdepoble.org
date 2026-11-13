@@ -25,6 +25,7 @@ import { Globe } from 'lucide-react';
 import { Alerta, Boto, UniversalCard } from '../../components/PedraSeca/index.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../config/moderacio.js';
+import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 
 const CAP = Object.freeze([]);
 const p = (nom, reserva) => Object.freeze([`section.notes.extern.${nom}`, reserva]);
@@ -93,13 +94,13 @@ export function PrevisualitzacioExtern({
           <>
             <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
               <UniversalCard
+                {...encapcalamentDeTargeta(null, { t })}
                 title={valor.titol}
                 subtitle={valor.subtitol || undefined}
                 body={valor.entradilla || undefined}
                 icon={<Globe size={32} aria-hidden="true" focusable="false" />}
                 hasFooter={false}
                 onDateTime={false}
-                showDateTime={false}
               />
             </div>
             <p className="sdp-connectar__autor">{omple(tradueix(t, TEXTOS_EXTERN.autorDe), { lloc: valor.lloc })}</p>

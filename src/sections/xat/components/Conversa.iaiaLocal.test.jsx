@@ -15,6 +15,7 @@ import { ENCAPCALAMENT_DE_SOC_DE_POBLE, SUGGERIMENTS_RAPIDS_IAIA, oblidaIndexDeL
 import { construeixRetall } from '../retall.js';
 import { proposaCard } from '../../notes/proposaCard.js';
 import { buidaEsborranys } from '../esborranys.js';
+import { creaIdbFals } from '../../../utils/__fixtures__/navegadorFals.js';
 
 const t = (_, alternativa) => alternativa;
 const AVIS = 'Resposta local de la IAIA: només la veus tu i no s’ha guardat al xat compartit.';
@@ -286,4 +287,45 @@ test('suggeriments ràpids clicables, botons directes a cada secció i enviament
   expect(proposta.motiu).toBe('proposta');
   expect(proposta.camps.subtitle.length).toBeGreaterThan(10);
   expect(proposta.camps.lead.length).toBeGreaterThan(10);
+});
+
+/* R21 (carril f1) · Política 2.5 en vigor, §14: «la resposta de la IAIA només
+   la veus tu i no es guarda». Cap base IndexedDB rep la resposta ni la
+   pregunta, ni l'emmagatzematge del navegador, i en tornar a muntar el fil
+   (canviar de fil o recarregar) la resposta ja no hi és. */
+const contingutDelDisc = (fals) => JSON.stringify([...fals.bases].map(([nom, base]) => [
+  nom, [...base.stores].map(([store, magatzem]) => [store, [...magatzem.files.values()]])
+]));
+
+test('R21 · la resposta de cortesia no es desa al dispositiu: ni IndexedDB ni localStorage, i en tornar al fil ja no hi és', async () => {
+  const fals = creaIdbFals();
+  const obri = vi.spyOn(fals.idb, 'open');
+  vi.stubGlobal('indexedDB', fals.idb);
+  vi.stubGlobal('BroadcastChannel', null);
+  const PREGUNTA = 'Com publique al Mercat?';
+  const PRIVADA = 'Resposta privada de prova per al Mercat';
+  const cervell = vi.fn(async () => PRIVADA);
+  /* `ambitCortesia` era el prop amb què el kit R21.3 desava les respostes a
+     IndexedDB; Conversa ja no el té i l'ha d'ignorar. */
+  const AMBIT = JSON.stringify(['remot', 'usuari-1', 'usuari-1']);
+  const primeraVista = pinta({ ambitCortesia: AMBIT, onSendMessage: vi.fn().mockResolvedValue([{ id: 'msg-q1' }]), respostaLocalIAIA: cervell });
+  await pregunta(PREGUNTA);
+  expect(locals()).toHaveLength(1);
+  expect(locals()[0].querySelector('.sdp-xat-bombolla__text').textContent).toBe(PRIVADA);
+  /* Les macrotasques de creaIdbFals (setTimeout 0) tindrien temps d'escriure. */
+  await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+  expect(obri.mock.calls.map(([nom]) => nom)).not.toContain('xat-iaia-titols');
+  expect(contingutDelDisc(fals)).not.toContain(PRIVADA);
+  expect(contingutDelDisc(fals)).not.toContain(PREGUNTA);
+  expect(JSON.stringify({ ...localStorage })).not.toContain(PRIVADA);
+  expect(JSON.stringify({ ...sessionStorage })).not.toContain(PRIVADA);
+  primeraVista.unmount();
+
+  /* Tornar al fil: el servidor porta la pregunta publicada, la resposta local no torna. */
+  pinta({ ambitCortesia: AMBIT, messages: [propi('msg-q1', 2, PREGUNTA), dePep('msg-pep', 3)], respostaLocalIAIA: cervell });
+  await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+  expect(ordre()).toEqual(['msg-q1', 'msg-pep']);
+  expect(locals()).toEqual([]);
+  expect(screen.queryByText(PRIVADA)).toBeNull();
+  expect(cervell).toHaveBeenCalledTimes(1);
 });

@@ -108,6 +108,10 @@ import { creaEmissorRebutsEntrega } from '../../data/rebutsEntregaXat.js';
  * amb «(Tu)»), `joNom` (el nom de la PERSONA, no el de l'entitat amb què
  * actua) i `senseSessio` (remot sense sessió, ja comprovada: mai mentre la
  * sessió es comprova). Cap valor d'un altre scope: van amb `visible`.
+ *   R21 (carril f2) · `xatPropi` ('disponible' | 'per-confirmar' | 'no' |
+ *   null) diu si el backend obri el xat propi «<Nom> (Tu)»: «Nova conversa»
+ *   i la fila de Javi només el prometen amb 'disponible' (vegeu el bloc del
+ *   xat propi, després de `fils`).
  *   Pla 261014_1450 (front C) · `joId`, `joNom` i `joAvatar` CONTINUEN sent
  *   la persona, també quan la barra negra actua com una entitat: el servidor
  *   desa usuari_id = auth.uid() (xat_envia, migració 2610081543) i
@@ -202,9 +206,11 @@ import { DURADES_SILENCI, finsAlDelSilenci, subjecteDeXat } from '../../data/con
 /* B8C-5 (marató 261101_2143) · El silenci de la conversa: les regles pures i el silenci en memòria. */
 import { aplicaSilencisLocals, estatSilenciLocal, potSilenciar, properaCaducitat } from './silenciXat.js';
 import {
-  ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, filDeMostraDeJavi,
-  missatgesDeMostraDeJavi, senseLaIAIA
+  ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, esXatPublicDePaginaIAIA,
+  filDeMostraDeJavi, missatgesDeMostraDeJavi, senseLaIAIA
 } from '../../data/xatsPerDefecte.js';
+/* R21 (carril f2) · El codi de l'avís honest del xat propi que el backend no obri. */
+import { CODI_XAT_PROPI_NO } from './errorsXat.js';
 /* P1-70 (261029) · Qui mira és Javi (el compte acreditat, mai pel nom) i on porta la seua fila en cada mode. */
 import { esComptePersonaPilot } from '../../data/identitatsSeed.js';
 import { rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
@@ -324,6 +330,15 @@ const CAP = Object.freeze([]);
    una sola funció, perquè cap derivat no canvie de referència. */
 const SENSE_BLOQUEIG = () => false;
 
+/* R21 (carril f2) · El backend no obri el xat propi: la interfície ho diu amb
+   l'avís honest (el text ja traduït; errorsXat.js el torna a traduir pel
+   codi), mai amb el text de SDP-XAT-002. */
+const errorXatPropiNo = (text, causa) => Object.assign(
+  new Error(text),
+  { code: CODI_XAT_PROPI_NO, retriable: false },
+  causa ? { cause: causa } : null
+);
+
 /* Sense la capacitat 'xatDePagina', «Comentar» ho ha de dir amb un avís honest. */
 const errorSenseCapacitat = () => Object.assign(
   new Error('Este node no té xat de pàgina.'),
@@ -428,6 +443,10 @@ const BUIT = {
   joId: null,
   joNom: null,
   joAvatar: null,
+  joEsJavi: false,
+  /* R21 (carril f2) · Si el backend obri el xat propi «<Nom> (Tu)»: fora del
+     proveïdor, cap (null, i «Nova conversa» no el pinta). */
+  xatPropi: null,
   entitatActiva: null,
   senseSessio: false,
   chatThreads: [],
@@ -650,14 +669,8 @@ export function XatProvider({ children, config }) {
      El convidat continua amb el xat de mostra (filDeMostra). Sense sessió
      comprovada (joId null), cap: la ruta de pas de XatSection espera. */
   const quiMiraEsJavi = esLaPersonaDeContacte({ id: joId }) || esComptePersonaPilot(usuari);
-  const motiuServeiTecnic = !joId || convidat ? null : quiMiraEsJavi ? 'tuMateix' : rutaDelXatDeJavi(modeDades) ? null : 'senseCompte';
-  const avisTuMateix = t('section.xat.javi.tuMateix', 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent del poble. Les converses que t’escriguen arribaran a la llista com a directes.');
-  const avisSenseCompte = t('section.xat.javi.senseCompte', 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.');
-  const filServeiTecnic = useMemo(() => {
-    if (filDeMostra) return filDeMostra;
-    if (!motiuServeiTecnic) return null;
-    return filDeMostraDeJavi({ avis: motiuServeiTecnic === 'tuMateix' ? avisTuMateix : avisSenseCompte, ambMissatge: false });
-  }, [filDeMostra, motiuServeiTecnic, avisTuMateix, avisSenseCompte]);
+  /* R21 (carril f2) · joEsJavi, filServeiTecnic i el xat propi viuen més
+     avall, després de `fils`: depenen de si el backend obri el xat propi. */
   const missatgesDeMostra = useMemo(() => missatgesDeMostraDeJavi(araDeLaMostra), [araDeLaMostra]);
   const scopeKey = JSON.stringify([backendScope(config), joId, actorKey, generacio]);
   /* Revisió adversarial 260930 · Les claus que NO porten `generacio`: una
@@ -726,6 +739,51 @@ export function XatProvider({ children, config }) {
 
   const [fils, setFils] = useState([]);
   const filsRef = useRef([]);
+  /* ── R21 (carril f2) · El xat propi «<Nom> (Tu)» ──
+     Gauntlet R21 (regressio_ui_xat-02/-05, honestedat_textos-04) · La fila
+     «<Nom> (Tu)» i la fila de Javi com a «Javi Llinares (Tu)» només
+     s'oferixen quan el backend obri el xat propi DE VERES. En remot el
+     servidor l'obri amb la migració 2611121630_xat_propi, que encara no està
+     acreditada a producció: sense ella crea_fil_directe(jo) torna SDP-XAT-002.
+     Cap RPC de lectura no ho diu abans, i el port no en té capacitat; per
+     això `xatPropi` ho deduïx del que el backend ha respost:
+       · 'disponible' · la llavor i el mode local (localXat.js l'obri amb
+         sessió); en remot, el servidor ja ha tornat un fil propi a la llista
+         (esPropi, que l'adaptador només marca amb la forma de 2611121630) o
+         n'ha creat un en esta sessió;
+       · 'no' · el backend ha respost SDP-XAT-002 a crea_fil_directe(jo) en
+         esta sessió (persona i backend: clauPersona). Ja no s'hi torna a
+         preguntar i l'avís honest ho diu (section.xat.nou.personalNo);
+       · 'per-confirmar' · en remot, encara sense cap resposta. La fila no
+         s'oferix dalt: només amb una cerca, i prémer-la pregunta al servidor
+         (creaFil(joId)), que l'obri o fa eixir l'avís honest;
+       · null · sense sessió (o el convidat de la llavor): ni fila ni avís. */
+  const [sondaPropi, setSondaPropi] = useState(null);
+  const estatSondaPropi = sondaPropi?.clau === clauPersona ? sondaPropi.estat : null;
+  const filPropiAlBackend = useMemo(() => fils.some((f) => f?.esPropi), [fils]);
+  const xatPropi = !joId || convidat ? null
+    : filPropiAlBackend ? 'disponible'
+      : estatSondaPropi === 'no' ? 'no'
+        : modeDades !== 'remote' || estatSondaPropi === 'si' ? 'disponible' : 'per-confirmar';
+  /* R21.4-UI · Quan qui mira és Javi amb sessió activa i el backend obri el
+     xat propi, la seua fila obri el seu fil personal escrivible («Javi
+     Llinares (Tu)»), mai el blocatge mort d'atenció personal.
+     R21 (carril f2) · Si el backend encara no l'obri, torna la conversa de
+     servei tècnic de només lectura amb l'avís «tu mateix» (P1-70), en lloc
+     d'una fila que promet un xat que el servidor nega. Per a la resta de
+     veïns, filServeiTecnic només s'activa en remot mentre no hi haja UUID
+     declarat a IDS_REMOTS_FUNDACIONALS. */
+  const joEsJavi = Boolean(joId && !convidat && quiMiraEsJavi && xatPropi === 'disponible');
+  const motiuServeiTecnic = !joId || convidat ? null
+    : quiMiraEsJavi ? (joEsJavi ? null : 'tuMateix')
+      : rutaDelXatDeJavi(modeDades) ? null : 'senseCompte';
+  const avisTuMateix = t('section.xat.javi.tuMateix', 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent del poble. Les converses que t’escriguen arribaran a la llista com a directes.');
+  const avisSenseCompte = t('section.xat.javi.senseCompte', 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.');
+  const filServeiTecnic = useMemo(() => {
+    if (filDeMostra) return filDeMostra;
+    if (!motiuServeiTecnic) return null;
+    return filDeMostraDeJavi({ avis: motiuServeiTecnic === 'tuMateix' ? avisTuMateix : avisSenseCompte, ambMissatge: false });
+  }, [filDeMostra, motiuServeiTecnic, avisTuMateix, avisSenseCompte]);
   /* B8C-5 (marató 261101_2143; D-B8C-4) · Els silencis en memòria d'esta càrrega
      (filId → data de fi ISO, o null si s'ha desfet), quan el servidor encara no
      sap silenciar. Mai a l'emmagatzematge del navegador: en un ordinador
@@ -1926,13 +1984,32 @@ export function XatProvider({ children, config }) {
        (filServeiTecnic: Javi mateix, o el remot sense el seu compte declarat)
        hi va també, per id o àlies del padró pilot o per l'UUID declarat: cap
        directe amb un mateix (SDP-XAT-002) ni cap DESTINATARI_INVALID. */
-    if (filServeiTecnic && esComptePersonaPilot({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
+    /* R21 (carril f2) · Escriure's a un mateix (la fila «(Tu)» o un ?amb= amb
+       el propi id) és el xat propi: si el backend ja ha dit que no l'obri, ho
+       diu l'avís honest sense tornar-li a preguntar; si encara no ho ha dit,
+       la petició és la pregunta (vegeu `xatPropi`, dalt). */
+    const propi = String(altreUsuariId ?? '') === String(joId);
+    const avisPropiNo = () => traductorRef.current('section.xat.nou.personalNo', "Encara no pots escriure't a tu mateix: este poble no obri el xat personal.");
+    if (propi && xatPropi === 'no') throw errorXatPropiNo(avisPropiNo());
+    if (!propi && filServeiTecnic && esComptePersonaPilot({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
+    const destinatari = joEsJavi && esComptePersonaPilot({ id: altreUsuariId }) ? joId : altreUsuariId;
+    const alPropi = String(destinatari ?? '') === String(joId);
+    const marcaSonda = (estat) => { if (alPropi && vigent(op)) setSondaPropi({ clau: clauPersona, estat }); };
     try {
       const opcions = { ...config, signal: op.controller.signal };
       let filId;
       try {
-        filId = await creaFilDirecte(altreUsuariId, titol, opcions);
+        filId = await creaFilDirecte(destinatari, titol, opcions);
+        if (filId) marcaSonda('si');
       } catch (error) {
+        /* R21 (carril f2) · SDP-XAT-002 a crea_fil_directe(jo): el backend no
+           obri el xat propi (en remot, sense 2611121630). Mai el text de
+           SDP-XAT-002, que diria «amb tu mateix» davall d'una fila que ho
+           acabava d'oferir: l'avís honest, i ja no es torna a preguntar. */
+        if (alPropi && vigent(op) && error?.code === 'SDP-XAT-002') {
+          marcaSonda('no');
+          throw errorXatPropiNo(avisPropiNo(), error);
+        }
         /* El proveïdor decidix el format dels ids. Si rebutja el de la URL,
            un slug d'organització es resol al directori del mateix port i
            poble; mai es canvia el destinatari per la comunitat del projecte.
@@ -1940,9 +2017,9 @@ export function XatProvider({ children, config }) {
         const rebutjaLaClau = error?.code === 'DESTINATARI_INVALID'
           || (modeDades !== 'remote' && error?.code === 'SDP-XAT-004');
         if (!vigent(op) || !rebutjaLaClau || !teCapacitat('directori')) throw error;
-        const perfil = await loadPerfilPublic(altreUsuariId, opcions);
+        const perfil = await loadPerfilPublic(destinatari, opcions);
         if (vigent(op)) {
-          if (!['entitat', 'grup'].includes(perfil?.tipus) || !perfil.id || perfil.id === altreUsuariId) throw error;
+          if (!['entitat', 'grup'].includes(perfil?.tipus) || !perfil.id || perfil.id === destinatari) throw error;
           filId = await creaFilDirecte(perfil.id, titol, opcions);
         }
       }
@@ -1959,7 +2036,7 @@ export function XatProvider({ children, config }) {
       if (vigent(op)) throw error;
     }
     return despresDelRelleu(op, accionsRef, 'creaFil', [altreUsuariId, titol]);
-  }, [joId, filServeiTecnic, modeDades, config, captura, vigent, accioVigent, carregaFils]);
+  }, [joId, joEsJavi, xatPropi, clauPersona, filServeiTecnic, modeDades, config, captura, vigent, accioVigent, carregaFils]);
 
   /* ── T63.2 i T67 · El xat comú d'una Pàgina Universal ──
      Null si el subjecte no en té; 'sense-capacitat' si el backend no el sap
@@ -2052,15 +2129,26 @@ export function XatProvider({ children, config }) {
   }, [silencisLocals, araSilenci]);
   /* Onada 6 (tasca 12) · Amb la IAIA apagada, cap xat seu (senseLaIAIA): la
      llista, les dues cerques i les comunitats lligen d'ací. */
+  const nomPropi = joNom || t('section.xat.nou.jo', 'Jo');
   const filsDeLaLlista = useMemo(() => {
     const ids = new Set(filsAmbSilencis.map((f) => f.id));
     const extra = Object.values(visitants).filter((f) => !ids.has(f.id));
-    const ambAjuda = ambXatsPerDefecte(extra.length ? [...filsAmbSilencis, ...extra] : filsAmbSilencis, { afig: false, paginaDeLaIAIA });
+    const units = extra.length ? [...filsAmbSilencis, ...extra] : filsAmbSilencis;
+    const enriquits = units.some((f) => f?.esPropi)
+      ? units.map((f) => {
+        if (!f?.esPropi) return f;
+        const nom = f.titol || (Array.isArray(f.altresNoms) && f.altresNoms[0]) || nomPropi;
+        const avatar = f.avatar_url || joAvatar || null;
+        if (f.name === nom && f.title === nom && f.avatar_url === avatar) return f;
+        return { ...f, name: nom, title: nom, avatar_url: avatar };
+      })
+      : units;
+    const ambAjuda = ambXatsPerDefecte(enriquits, { afig: false, paginaDeLaIAIA });
     const llista = filDeMostra && ambAjuda.some((f) => f.perDefecte === 'javi')
       ? ambAjuda.map((f) => (f.perDefecte === 'javi' ? filDeMostra : f))
       : ambAjuda;
     return iaiaApagada ? senseLaIAIA(llista) : llista;
-  }, [filsAmbSilencis, visitants, paginaDeLaIAIA, filDeMostra, iaiaApagada]);
+  }, [filsAmbSilencis, visitants, paginaDeLaIAIA, filDeMostra, iaiaApagada, nomPropi, joAvatar]);
   /* Integració Xat i Pobles (Onada 6, pla 261009_0245, ítem 4: «El fil de
      xat específic també es dirà 'Gent de la Torre'») · El xat d'un poble que
      és a les fitxes (useCoreContent) es diu com la seua gent a la llista, a
@@ -2074,10 +2162,14 @@ export function XatProvider({ children, config }) {
      llegits i els contactes freqüents. La mateixa referència si no n'hi ha. */
   /* Fase D (261020, tasca 2) · Ni els directes amb una persona bloquejada,
      com la IAIA apagada: el seu recompte del servidor no s'hi suma. */
-  const filsComptats = useMemo(
-    () => senseDirectesBloquejats(iaiaApagada ? senseLaIAIA(filsAmbSilencis) : filsAmbSilencis, esPersonaBloquejada),
-    [filsAmbSilencis, iaiaApagada, esPersonaBloquejada]
-  );
+  /* Gauntlet R21 (regressio_ui_xat-08) · Ni el xat públic de la pàgina /iaia,
+     que la llista no pinta (esXatPublicDePaginaIAIA): els seus no llegits
+     feien un comptador que la persona no podia trobar enlloc de la llista. */
+  const filsComptats = useMemo(() => {
+    const ambIAIA = iaiaApagada ? senseLaIAIA(filsAmbSilencis) : filsAmbSilencis;
+    const llistables = ambIAIA.some(esXatPublicDePaginaIAIA) ? ambIAIA.filter((f) => !esXatPublicDePaginaIAIA(f)) : ambIAIA;
+    return senseDirectesBloquejats(llistables, esPersonaBloquejada);
+  }, [filsAmbSilencis, iaiaApagada, esPersonaBloquejada]);
   /* Fase D (261020, tasca 2) · La llista que es VEU, amb la vista prèvia
      d'una persona bloquejada amagada. Internament (missatgesDerivats,
      comunitats, la cerca de fils per id) es continua llegint filsVisibles. */
@@ -2099,8 +2191,11 @@ export function XatProvider({ children, config }) {
       /* Fase D (261020, tasca 2) · Els d'una persona bloquejada, anotats i
          sense text: la cerca, la cita, la multimèdia i les Notes ja no el
          veuen. La MATEIXA llista si no n'hi ha cap. */
+      const llegitAltres = fil?.esPropi
+        ? Math.max(fil.llegitFinsSeq ?? 0, fil.ultimSeq ?? 0, fil.llegitPelsAltresFinsSeq ?? 0)
+        : (fil?.llegitPelsAltresFinsSeq ?? 0);
       resultat[id] = anotaMissatgesBloquejats(
-        combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], fil?.llegitPelsAltresFinsSeq ?? 0),
+        combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], llegitAltres),
         esPersonaBloquejada
       );
     }
@@ -2320,6 +2415,8 @@ export function XatProvider({ children, config }) {
     joId: visible ? joId : null,
     joNom: visible ? joNom : null,
     joAvatar: visible ? joAvatar : null,
+    joEsJavi: visible ? joEsJavi : false,
+    xatPropi: visible ? xatPropi : null,
     /* Pla 261014_1450 (front C) · L'entitat de la barra negra, només per a
        pintar-la (rail i compositor); null si actua com a persona. */
     entitatActiva: visible ? entitatActiva : null,
@@ -2376,7 +2473,7 @@ export function XatProvider({ children, config }) {
     /* B8C-5 · Si el fil es pot silenciar i el silenci (8h, 1setmana, sempre o cap). */
     potSilenciarFil,
     silenciaFil
-  }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, usuari?.id, actuaComEntitat, clauPersona, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
+  }), [visible, joId, joNom, joAvatar, joEsJavi, xatPropi, entitatActiva, estatSessio, usuari?.id, actuaComEntitat, clauPersona, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, filCarregat, avisFil, recarregaFil, tipusAvisFil, llegintFil,
     enviaAmbNormes, sendChatMedia, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,

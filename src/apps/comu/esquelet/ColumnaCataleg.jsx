@@ -34,7 +34,7 @@ import { isValidElement, useEffect, useLayoutEffect, useRef } from 'react';
 import { FileText, LayoutGrid, List } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import {
-  AfegitRapid, BarraResum, Boto, DetallArticle, ESTATS_ARTICLE, EstatBuit, GraellaArticles, GraellaTargetes, LlistaArticles,
+  AfegitRapid, BarraResum, Boto, DetallArticle, encapcalamentDeTargeta, ESTATS_ARTICLE, EstatBuit, GraellaArticles, GraellaTargetes, LlistaArticles,
   MarcColumna, PaginaApp, PillToggle, SelectorCategoria, UniversalCard
 } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
@@ -102,12 +102,14 @@ function iconaDelQuadrat(icona) {
  * `article.autoria` { nom, href, avatar, poble } (la forma de l'autoria de
  * PaginaApp), que l'app vestix (autoriaDe de la plataforma per a l'entitat,
  * resolta per identificador). L'esquelet no sap qui ha escrit res i no
- * n'inventa cap: sense `autoria`, la targeta de sempre. L'avatar passa pel
+ * n'inventa cap: sense `autoria`, declara l'autoria i el poble no indicats. L'avatar passa pel
  * filtre de les imatges privades, com la foto.
  */
 export function TargetesArticles({
   elements = [], categories = null, etiqueta, pla = false, nivellTargeta = 'h3', commutable = false, textos,
-  onTria, onAccioSecundaria, renderMedia, plegades, onPlega, textArticles, buit = null
+  onTria, onAccioSecundaria, renderMedia, plegades, onPlega, textArticles, buit = null,
+  /* R21 · La llengua de la closca (useClosaAplicacio().idioma) per als marcadors honestos de la capçalera. */
+  idioma
 }) {
   const t = { ...TEXTOS_TARGETES, ...textos };
   const ambSeccions = Array.isArray(categories);
@@ -125,10 +127,9 @@ export function TargetesArticles({
         key={article.id}
         variant={pla ? 'pla' : 'default'}
         headingLevel={ambSeccions ? 'h4' : nivellTargeta}
-        author={boina.nom}
+        {...encapcalamentDeTargeta({ ...article, date: article.date ?? article.data, created_at: article.created_at ?? article.createdAt }, { author: boina.nom, location: boina.poble, idioma })}
         authorHref={boina.href}
         avatarUrl={boina.avatar}
-        location={boina.poble}
         title={article.nom}
         subtitle={textDe(article.subtitol)}
         body={entradetaDe(article) || undefined}
@@ -209,7 +210,7 @@ export function ColumnaCataleg({
   avis = null
 }) {
   const t = { ...TEXTOS_CATALEG, ...textos };
-  const { mida } = useClosaAplicacio();
+  const { mida, idioma } = useClosaAplicacio();
   const vista = useVistaCataleg(vistaPerDefecte);
   const vistes = useVistesEsquelet({ primer, tram });
   const llista = Array.isArray(articles) ? articles : [];
@@ -323,6 +324,7 @@ export function ColumnaCataleg({
         </FitxaArticle>
       ) : ambTargetes ? (
         <TargetesArticles
+          idioma={idioma}
           elements={articlesCos.map((article, i) => ({ article, categoria: perId.get(propis[i]?.categoriaId) || null }))}
           categories={categoriesCos}
           etiqueta={titol}

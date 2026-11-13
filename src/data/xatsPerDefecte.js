@@ -394,6 +394,14 @@ export function esXatDeLaIAIA(conversa) {
 }
 
 /**
+ * R21.4-UI · El xat públic de la pàgina /iaia (el grup del subjecte
+ * pagina:/iaia), que la llista de converses no pinta: s'obri des de /iaia
+ * («Comentar»). R21 (carril f2) · Tampoc no suma al comptador de no llegits
+ * (XatContext): un número que no es pot trobar a la llista no diu la veritat.
+ */
+export const esXatPublicDePaginaIAIA = (conversa) => conversa?.subjecte?.tipus === 'pagina' && esXatDeLaIAIA(conversa);
+
+/**
  * Tasca 12 · El xat de la IAIA es diu «IAIA MarIA» i porta la seua cara,
  * també el xat públic de la seua pàgina, que el servidor titula «L'ànima de
  * la iaia» (2610042330_xat_pagina_iaia.sql) i abans substituïa la fila

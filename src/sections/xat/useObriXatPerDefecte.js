@@ -107,9 +107,13 @@ export const RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI = `/xat/${ID_FIL_DE_MOSTRA_DE_JAV
  */
 export default function useObriXatPerDefecte() {
   const navigate = useNavigate();
-  return (clau, { modeDades = 'remote', senseSessio = false, serveiTecnic = false } = {}) => {
+  return (clau, { modeDades = 'remote', senseSessio = false, serveiTecnic = false, joEsJavi = false, joId = null } = {}) => {
     if (clau === 'iaia') navigate(rutaDelXatDeLaIAIA(modeDades, senseSessio), { replace: true });
     else if (clau === 'javi') {
+      if (!senseSessio && joEsJavi && joId) {
+        navigate(rutaXatPrivat({ id: joId }), { replace: true });
+        return;
+      }
       const ruta = senseSessio || serveiTecnic ? null : rutaDelXatDeJavi(modeDades);
       navigate(ruta || RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI, { replace: true });
     }

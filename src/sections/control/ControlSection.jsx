@@ -195,9 +195,10 @@ import { Suspense, lazy, useCallback, useEffect, useId, useLayoutEffect, useRef,
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 import { Alerta, UniversalButton, UniversalCard } from '../../components/PedraSeca';
 import { useXatSocDePobleResolt } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { llegixUtilitatsActives, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
@@ -281,6 +282,7 @@ function TargetaDeDesti({ desti, t }) {
    T6 (261004) · La boina porta al projecte, com dalt.
    Ordre del Mestre (261007) · Comentar, el menú de dues vies, com dalt. */
 function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '', ruta, abansDObrir, data = null, etiquetes, dataTestId }) {
+  const t = useTraductorOpcional();
   return (
     <UniversalCard
       title={titol}
@@ -289,7 +291,7 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
       imageUrl={imatge}
       imageAlt={imatgeAlt}
       {...AUTORIA_SOCDEPOBLE}
-      {...(data ? dataHoraDeBarra({ creat: data }) : null)}
+      {...encapcalamentDeTargeta({ created_at: data }, { author: AUTORIA_SOCDEPOBLE.author, location: AUTORIA_SOCDEPOBLE.location, t })}
       labels={etiquetes}
       mainHref={ruta}
       onMainClick={abansDObrir}

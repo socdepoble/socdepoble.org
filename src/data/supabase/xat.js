@@ -252,8 +252,18 @@ function sobreXifratDeFila(m) {
   return { xifrat:m.xifrat };
 }
 
-const mapejaFil = (f) => ({
+/* R21.4 · La RPC conserva la forma: el fil propi és un directe d'una sola
+   persona i projecta la identitat pròpia a altres. Un singleton buit o un
+   grup de pàgina no és suficient per a etiquetar-lo com a propi. */
+const esFilPropi = (f, usuariId) => typeof usuariId === 'string' && Boolean(usuariId)
+  && f.tipus === 'directe' && numero(f.participants) === 1
+  && !subjecteDeFila(f) && !f.org_id && !f.entitatId && !(f.comEntitat ?? f.com_entitat)
+  && Array.isArray(f.altres) && f.altres.length === 1
+  && f.altres[0]?.id === usuariId && f.altres[0]?.tipus === 'persona';
+
+const mapejaFil = (f, usuariId = null) => ({
   id: f.id,
+  ...(esFilPropi(f, usuariId) ? { esPropi: true } : {}),
   ...marquesXifratDeFila(f),
   tipus: f.tipus || 'directe',
   titol: f.titol ?? null,
@@ -711,7 +721,7 @@ export const loadFils = async (config = {}) => {
        seua cara (vestixLaIAIA): el xat públic de /iaia que la fila obri ja no
        la canvia de nom. La llavor no en necessita: el seu fil 'iaia' ja es
        diu així, i el xat públic de la pàgina hi és un altre xat. */
-    return ambXatsPerDefecte((Array.isArray(data) ? data : []).map((f) => vestixLaIAIA(mapejaFil(f))));
+    return ambXatsPerDefecte((Array.isArray(data) ? data : []).map((f) => vestixLaIAIA(mapejaFil(f, user.id))));
   } catch (error) {
     throw errorDeXat(error, 'No s’han pogut carregar les converses.', config);
   }

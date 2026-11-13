@@ -445,7 +445,7 @@ test('261019 · doble vista: la llista per defecte i, amb «Targetes», les Univ
    directori (boinaDelPoble): la cara i la meta, sense el nom ni un enllaç
    propi. El nom ix una vegada (el títol) i la targeta té un sol enllaç a la
    fitxa, més «Escriu-li» quan n'hi ha. */
-test('261019 · les persones en targetes: el nom una vegada, un sol enllaç a la fitxa pública, «El teu perfil» a la boina i «Escriu-li»', async () => {
+test('R21.6 · persones amb capçalera completa, un sol enllaç públic i dades desconegudes declarades sense calendari fals', async () => {
   mocks.session = { ...mocks.session, teCapacitat: (nom) => nom === 'directori' };
   mocks.url = '?q=javi&tipus=persones&vista=graella';
   await pinta();
@@ -455,16 +455,19 @@ test('261019 · les persones en targetes: el nom una vegada, un sol enllaç a la
   const propia = targeta('Javi Llinares');
   expect(enllacosDe(propia)).toEqual(['/gent/jo']);
   expect(propia.querySelector('a.sp-card-link-overlay').getAttribute('aria-label')).toBe('Javi Llinares');
-  expect([propia.querySelector('a.sp-card-author-link'), propia.querySelector('.sp-card-author-name')]).toEqual([null, null]);
-  expect(propia.textContent.split('Javi Llinares')).toHaveLength(2);
-  expect(propia.querySelector('.sp-card-author-location').textContent).toBe('El teu perfil');
+  expect(propia.querySelector('a.sp-card-author-link')).toBeNull();
+  expect(propia.querySelector('.sp-card-author-name').textContent).toBe('Javi Llinares');
+  expect(propia.textContent.split('Javi Llinares')).toHaveLength(3);
+  expect(propia.querySelector('.sp-card-author-location').textContent).toBe('Poble no indicat');
+  expect(propia.querySelector('.btn-date-time').textContent).toBe('Data no indicada');
+  expect(propia.querySelector('button.btn-date-time, time[datetime]')).toBeNull();
   /* Una persona no es categoritza: cap etiqueta. */
   expect(propia.querySelector('.sp-card-labels')).toBeNull();
-  /* La persona del padró: la targeta a la seua fitxa i «Escriu-li»; el nom, una vegada. */
+  /* La persona del padró conserva fitxa i «Escriu-li», sense inventar una segona ruta de boina. */
   const ferrer = targeta('Javi Ferrer');
   expect(enllacosDe(ferrer)).toEqual(['/gent/u-pepa', '/xat?amb=u-pepa']);
   expect(ferrer.querySelector('.sp-card-accio a').getAttribute('href')).toBe('/xat?amb=u-pepa');
-  expect(ferrer.querySelector('.sp-card-author-name')).toBeNull();
+  expect(ferrer.querySelector('.sp-card-author-name').textContent).toBe('Javi Ferrer');
   expect(targeta('Mestre Javi').querySelector('a.sp-card-link-overlay').getAttribute('href')).toBe('/javillinares');
   expect(document.querySelector('a[href^="/el-meu-perfil"]')).toBeNull();
 });

@@ -17,7 +17,9 @@ import {
   globalDeLaPorta, nucliSatisfa, portaDeLaFont
 } from './contracteNucli.js';
 import { NUCLI } from './nucliModuls.js';
-import { NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5 } from './__fixtures__/nomsDelNucli.js';
+import {
+  NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6
+} from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const ordenat = (llista) => [...llista].sort();
@@ -76,6 +78,23 @@ describe('l’objecte SocDePoble.nucli', () => {
     expect(proposal.estat).toBe('pendent_validacio_humana');
     expect(proposal.alergens).toHaveLength(14);
     expect(proposal.alergens.every(item => item.ingredient.estat === 'desconegut' && item.traca.estat === 'desconegut')).toBe(true);
+  });
+
+  /* R21.6 · El nom de l'1.6.0 és la capçalera de la pàgina (la mateixa funció, pel seu fitxer de Pedra
+     Seca) i, executada des del nucli, no inventa autoria, poble ni data. */
+  test('R21.6: el nucli 1.6 dona la capçalera de lectura de la pàgina, pura i sense inventar res', () => {
+    for (const [porta, noms] of Object.entries(NOMS_DEL_NUCLI_1_6)) {
+      for (const nom of noms) {
+        expect(typeof NUCLI[porta][nom], `${porta}.${nom}`).toBe('function');
+        expect(NUCLI[porta][nom], `${porta}.${nom}`).toBe(PedraSeca[nom]);
+      }
+    }
+    expect(NOMS_PER_FITXER_DE_PEDRA_SECA['src/components/PedraSeca/organismes/encapcalamentDeTargeta.js']).toEqual(['encapcalamentDeTargeta']);
+    expect(NUCLI.pedraSeca.encapcalamentDeTargeta({})).toEqual({
+      author: 'Autoria no indicada', location: 'Poble no indicat', time: '', date: 'Data no indicada', dateTime: null
+    });
+    expect(NUCLI.pedraSeca.encapcalamentDeTargeta({ year: 1998 }, { author: 'Pepa', location: 'Alcoi' }))
+      .toEqual({ author: 'Pepa', location: 'Alcoi', time: '', date: '1998', dateTime: null });
   });
 
   test('cap porta dona el backend, la sessió ni la identitat', () => {
@@ -138,6 +157,9 @@ describe('el contracte (contracteNucli.js)', () => {
     ['^1.5', '1.4.0', false],
     ['^1.5', '1.5.0', true],
     ['^1.6', '1.5.0', false],
+    ['^1.5', '1.6.0', true],
+    ['^1.6', '1.6.0', true],
+    ['^1.7', '1.6.0', false],
     ['^2', '1.0.0', false],
     ['^0', '1.0.0', false],
     ['1', '1.0.0', false],
@@ -155,16 +177,18 @@ describe('el contracte (contracteNucli.js)', () => {
      Actualitzada a posta (261024 T5): l'1.3.0 afig useServeiNoticies a la porta 'plataforma'; un
      mòdul de '^1.3' ja entra. R14: els serveis de Menjar i Beure i Botonera
      entren en1.4. R15 afig els catàlegs i la revisió pendent en1.5;
-     el primer rang futur rebutjat és ara '^1.6'. */
-  test('el rang1.5 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
-    expect(VERSIO_NUCLI).toBe('1.5.0');
+     R21.6 afig la capçalera de lectura de la targeta en l'1.6: el primer
+     rang futur rebutjat és ara '^1.7'. */
+  test('el rang 1.6 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
+    expect(VERSIO_NUCLI).toBe('1.6.0');
     expect(nucliSatisfa('^1.0')).toBe(true);
     expect(nucliSatisfa('^1.1')).toBe(true);
     expect(nucliSatisfa('^1.2')).toBe(true);
     expect(nucliSatisfa('^1.3')).toBe(true);
     expect(nucliSatisfa('^1.4')).toBe(true);
     expect(nucliSatisfa('^1.5')).toBe(true);
-    expect(nucliSatisfa('^1.6')).toBe(false);
+    expect(nucliSatisfa('^1.6')).toBe(true);
+    expect(nucliSatisfa('^1.7')).toBe(false);
   });
 
   /* La promesa de cada menor («només s'afig») amb noms, no amb números. Cada
@@ -177,8 +201,9 @@ describe('el contracte (contracteNucli.js)', () => {
      Actualitzada a posta (261024 T5): i NOMS_DEL_NUCLI_1_3, un nom nou a una porta que ja hi era
      (useServeiNoticies, a la de la plataforma), cap porta nova.
      R14: NOMS_DEL_NUCLI_1_4 fixa els serveis de domini i Botonera.
-     R15: NOMS_DEL_NUCLI_1_5 fixa els catàlegs i la revisió assistida pendent. */
-  test('el nucli1.5 conserva tots els noms publicats i només afig els declarats per versió', () => {
+     R15: NOMS_DEL_NUCLI_1_5 fixa els catàlegs i la revisió assistida pendent.
+     R21.6: NOMS_DEL_NUCLI_1_6 fixa la capçalera de lectura de la targeta. */
+  test('el nucli 1.6 conserva tots els noms publicats i només afig els declarats per versió', () => {
     for (const clau of Object.keys(NOMS_DEL_NUCLI_1_2)) {
       expect(Object.hasOwn(NOMS_DEL_NUCLI_1_0, clau) || Object.hasOwn(NOMS_DEL_NUCLI_1_1, clau), `${clau}: porta nova`).toBe(false);
     }
@@ -197,6 +222,8 @@ describe('el contracte (contracteNucli.js)', () => {
       const nous = noms.filter((nom) => !abans.includes(nom));
       if (nous.length) afegits[clau] = ordenat(nous);
     }
-    expect(afegits).toEqual(fusiona(NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5));
+    expect(afegits).toEqual(fusiona(
+      NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6
+    ));
   });
 });

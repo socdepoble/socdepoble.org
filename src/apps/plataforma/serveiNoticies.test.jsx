@@ -55,8 +55,8 @@ describe('useServeiNoticies (l’API pública)', () => {
     }
   });
 
-  test('el nucli1.5 conserva la porta de notícies publicada en1.3', () => {
-    expect(VERSIO_NUCLI).toBe('1.5.0');
+  test('el nucli 1.6 conserva la porta de notícies publicada en 1.3', () => {
+    expect(VERSIO_NUCLI).toBe('1.6.0');
     expect(PORTES_DEL_NUCLI.find((porta) => porta.clau === 'plataforma').noms).toContain('useServeiNoticies');
   });
 });

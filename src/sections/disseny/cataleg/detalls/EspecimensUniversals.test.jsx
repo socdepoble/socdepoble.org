@@ -704,6 +704,17 @@ describe('Especímens del Xat · onada 3B', () => {
     expect(avisos.querySelector('img')).toBeNull();
     expect(screen.getByText('En Avisos només escriuen els administradors.').closest('.sdp-xat-compositor--avis')).not.toBeNull();
     expect(screen.getByText('Escrius al xat públic de «Festa major».')).toBeTruthy();
+    /* Gauntlet R21 (regressio_ui_xat-07) · Les capçaleres de mostra no pinten cap
+       H1: l'únic de /disseny/fonaments/xat és el de la pàgina. El nom de cada
+       una és un encapçalament de nivell 5, davall dels h4 de l'espècimen. */
+    expect(arrel.querySelector('h1')).toBeNull();
+    expect(screen.queryAllByRole('heading', { level: 1 })).toEqual([]);
+    expect([...arrel.querySelectorAll('.sdp-xat-capcalera__nom')].map((nom) => [nom.tagName, nom.getAttribute('role'), nom.getAttribute('aria-level'), nom.textContent]))
+      .toEqual([
+        ['STRONG', 'heading', '5', 'Festa major'],
+        ['STRONG', 'heading', '5', 'Avisos'],
+        ['STRONG', 'heading', '5', 'Comissió de Festes']
+      ]);
   });
 
   /* Ordre del Mestre (261026_2126, P1-36) · Sense el «…» (MenuLlista): la
@@ -797,12 +808,20 @@ describe('Especímens del Xat · onada 3B', () => {
     const dialeg = () => screen.getByRole('dialog', { name: 'Nova conversa' });
     const tanca = () => fireEvent.click(within(dialeg()).getByRole('button', { name: 'Tancar' }));
 
+    /* R21 (carril f2) · Amb el xat propi acreditat pel backend, «Javi Llinares
+       (Tu)» és el primer botó de «Contactes a Sóc de Poble», sense cerca, i
+       obri el fil propi que ja hi ha. */
     obri('Llista');
     expect(await within(dialeg()).findByText('IAIA MarIA')).toBeTruthy();
     expect(within(dialeg()).getByText('Sóc de Poble')).toBeTruthy();
-    expect(within(dialeg()).queryByText('Javi Llinares (Tu)')).toBeNull();
+    const contactes = within(dialeg()).getByRole('heading', { name: 'Contactes a Sóc de Poble' }).parentElement;
+    const propi = within(contactes).getAllByRole('button')[0];
+    expect(propi.textContent).toContain('Javi Llinares (Tu)');
+    expect(propi.textContent).toContain("Envia't missatges a tu mateix");
     expect(within(dialeg()).queryByText('Maria la Vall')).toBeNull();
-    tanca();
+    fireEvent.click(propi);
+    expect(screen.queryByRole('dialog', { name: 'Nova conversa' })).toBeNull();
+    expect(screen.getByText('Obriria el xat personal-jo.')).toBeTruthy();
 
     obri('Cerca');
     fireEvent.change(within(dialeg()).getByRole('searchbox'), { target: { value: 'ma' } });
@@ -815,10 +834,27 @@ describe('Especímens del Xat · onada 3B', () => {
     expect(within(dialeg()).getByText(/naixen d'una Pàgina Universal/)).toBeTruthy();
     tanca();
 
-    obri('Avís personal');
+    /* R21 (carril f2) · Sense resposta del servidor, la fila no va dalt;
+       amb una cerca, prémer-la és la pregunta, i el «no» del servidor de
+       mostra (SDP-XAT-002) deixa el diàleg obert amb l'avís honest. */
+    const AVIS_PERSONAL = "Encara no pots escriure't a tu mateix: este poble no obri el xat personal.";
+    obri('Per confirmar');
+    expect(await within(dialeg()).findByText('IAIA MarIA')).toBeTruthy();
+    expect(within(dialeg()).queryByText('Javi Llinares (Tu)')).toBeNull();
     fireEvent.change(within(dialeg()).getByRole('searchbox'), { target: { value: 'javi' } });
     fireEvent.click(within(dialeg()).getByText('Javi Llinares (Tu)').closest('button'));
-    expect(within(dialeg()).getByText("Encara no pots escriure't a tu mateix: este poble no obri el xat personal.")).toBeTruthy();
+    const avisConfirmat = within(dialeg()).getByText(AVIS_PERSONAL);
+    expect(avisConfirmat.getAttribute('role')).toBe('status');
+    expect(within(dialeg()).getByText('Javi Llinares (Tu)').closest('button').getAttribute('aria-describedby')).toBe(avisConfirmat.id);
+    tanca();
+
+    /* Amb el «no» ja dit, la fila tampoc no va dalt i prémer-la només avisa. */
+    obri('Avís personal');
+    expect(await within(dialeg()).findByText('IAIA MarIA')).toBeTruthy();
+    expect(within(dialeg()).queryByText('Javi Llinares (Tu)')).toBeNull();
+    fireEvent.change(within(dialeg()).getByRole('searchbox'), { target: { value: 'javi' } });
+    fireEvent.click(within(dialeg()).getByText('Javi Llinares (Tu)').closest('button'));
+    expect(within(dialeg()).getByText(AVIS_PERSONAL)).toBeTruthy();
     tanca();
 
     obri('Error en obrir');

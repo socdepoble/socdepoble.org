@@ -21,6 +21,8 @@ import { NOVES_TECNOLOGIES_CULTURA_RURAL_POST } from '../../sections/mur/article
    del magatzem en memòria de personalitzacio.js. */
 import { CLAUS_PERSONALITZACIO, personalitzacioDeFiles, personalitzacioLocal } from './personalitzacio.js';
 import { llistaDe } from '../../utils/autocuracio.js';
+import { hidrataCatalegAgents } from '../catalegAgents.js';
+import { normalitzaFilesEditorials } from '../contingutEditorialPublic.js';
 
 const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);
 /* T2 (ordre del Mestre, 260930) · Com auth.js: la comprovació de mode local
@@ -144,13 +146,13 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
 const CLAUS_CORE = ['towns', 'agents', ...CLAUS_PERSONALITZACIO].join(',');
 export async function loadCoreContent(ownerUserId = getDefaultUserId(), config = {}) {
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config); const seed = await buildSeedAppData(ownerUserId);
-  if (runtimeDataMode === 'seed') return { towns: seed.towns, pages: llavorAmbDatesDeProva(seed).pages, pageCopy: {}, agents: seed.agents, ownerUserId, personalitzacio: personalitzacioLocal() };
-  if (runtimeDataMode === 'local') return { towns: [], pages: seed.pages, pageCopy: {}, agents: [], ownerUserId, personalitzacio: personalitzacioLocal() };
+  if (runtimeDataMode === 'seed') return { towns: normalitzaFilesEditorials(seed.towns), pages: llavorAmbDatesDeProva(seed).pages, pageCopy: {}, agents: hidrataCatalegAgents(seed.agents), ownerUserId, personalitzacio: personalitzacioLocal() };
+  if (runtimeDataMode === 'local') return { towns: [], pages: seed.pages, pageCopy: {}, agents: hidrataCatalegAgents([]), ownerUserId, personalitzacio: personalitzacioLocal() };
   if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar el contingut Core.');
   if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
   const rows = await request(`/rest/v1/app_content?select=key,payload,version&key=in.(${CLAUS_CORE})&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal });
   const base = mapContentRowsToData(rows || []);
-  return { towns: base.towns, pages: seed.pages, pageCopy: {}, agents: base.agents, ownerUserId, personalitzacio: personalitzacioDeFiles(rows || []) };
+  return { towns: normalitzaFilesEditorials(base.towns), pages: seed.pages, pageCopy: {}, agents: hidrataCatalegAgents(base.agents), ownerUserId, personalitzacio: personalitzacioDeFiles(rows || []) };
 }
 /** Carrega exclusivament les fonts d’una secció; Notes té el seu port propi.
  * Decisió 4 del Mestre (261007) · Amb `ambPaginacio` (només loadMur), demana
@@ -162,7 +164,7 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
   if (runtimeDataMode === 'local') return Object.fromEntries(sections.map(([key]) => [key, []]));
   if (runtimeDataMode === 'seed') {
     const seed = llavorAmbDatesDeProva(await buildSeedAppData(ownerUserId));
-    return Object.fromEntries(sections.map(([key]) => [key, seed[key] || []]));
+    return Object.fromEntries(sections.map(([key]) => [key, normalitzaFilesEditorials(seed[key])]));
   }
   if (!hasSupabaseConfig || !tenantId) throw new Error('Falta configuració de dades del poble.');
   const tenant = encodeURIComponent(tenantId);
@@ -198,7 +200,7 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
     /* R12 (B4-S1) · Cada element porta la versió de la fila (_editorialVersio):
        la revisió editorial la necessita per a la RPC amb CAS de versió. */
     const filaEditorial = rows.find(row => row.key === key);
-    let baseAppContent = marcaFilesEditorials(llistaDe(filaEditorial?.payload, key), key, filaEditorial?.version);
+    let baseAppContent = marcaFilesEditorials(normalitzaFilesEditorials(llistaDe(filaEditorial?.payload, key)), key, filaEditorial?.version);
     if (section === 'mur' || section === 'events') {
       const ids = [...new Set(baseAppContent.map(item => item.id).filter(id => typeof id === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(id)))];
       const revisions = [];

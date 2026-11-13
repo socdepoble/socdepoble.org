@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 if (typeof globalThis.ResizeObserver === 'undefined') {
@@ -69,6 +69,48 @@ import { PAGE_COPY } from '../text/pageContent.js';
 const UUID_SANGONERETA = '99999999-9999-4999-8999-999999999999';
 const UUID_SDP = 'a240e870-4aef-4d92-b138-e8b4e2f2123a';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+test('R21.6 · el directori fallat s’avisa i reintenta; no habilita un traspàs amb una llista desconeguda', async () => {
+  const directory = vi.fn().mockRejectedValueOnce(new Error('private directory diagnostic'))
+    .mockResolvedValueOnce([{ id: UUID_SANGONERETA, name: 'Associació real', town_name: 'Muro' }]);
+  mocks.port = {
+    lligPublicadorsRegistrats: vi.fn(async () => ({ recursTipus: 'pagina', recursId: 'receptes', versio: 2,
+      publicadorsRegistrats: [{ actor_id: UUID_SDP, slug_ruta: `/perfil/${UUID_SDP}?registre=organitzacio`, nom: 'Sóc de Poble', avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png', poble_nom: 'La Torre de les Maçanes', rol_publicacio: 'principal' }] })),
+    listPublicOrganizations: directory, traspassaPublicacio: vi.fn()
+  };
+  const { container } = render(<PanellTraspasPublicacioInline />);
+  const title = await screen.findByText('No s’ha pogut carregar el directori de comptes registrats');
+  const alert = title.closest('[role="status"]');
+  expect(alert.textContent).not.toContain('private directory diagnostic');
+  expect(container.querySelector('.sdp-traspas-inline__accions button').disabled).toBe(true);
+  expect(screen.queryByText('Publicació actualitzada')).toBeNull();
+  fireEvent.click(within(alert).getByRole('button', { name: 'Torna-ho a provar' }));
+  await screen.findByRole('option', { name: /^Associació real/ });
+  await waitFor(() => expect(container.querySelector('.sdp-traspas-inline__accions button').disabled).toBe(false));
+  expect(screen.queryByText('No s’ha pogut carregar el directori de comptes registrats')).toBeNull();
+  expect(directory).toHaveBeenCalledTimes(2);
+  expect(mocks.port.lligPublicadorsRegistrats).toHaveBeenCalledTimes(1);
+  expect(mocks.port.traspassaPublicacio).not.toHaveBeenCalled();
+  const header = container.querySelector('.sdp-traspas-inline__previsualitzacio');
+  expect(header.querySelector('.btn-date-time').textContent).toBe('Data no indicada');
+  expect(header.querySelector('button.btn-date-time, time[datetime]')).toBeNull();
+});
+
+test('R21.6 · recuperar el directori no amaga la fallada autoritativa del recurs ni desbloqueja el traspàs', async () => {
+  mocks.port = {
+    lligPublicadorsRegistrats: vi.fn().mockRejectedValue(new Error('primary read failed')),
+    listPublicOrganizations: vi.fn().mockRejectedValueOnce(new Error('directory failed')).mockResolvedValueOnce([]),
+    traspassaPublicacio: vi.fn()
+  };
+  const { container } = render(<PanellTraspasPublicacioInline />);
+  await screen.findByText('Error en llegir els publicadors del recurs');
+  const directoryAlert = (await screen.findByText('No s’ha pogut carregar el directori de comptes registrats')).closest('[role="status"]');
+  fireEvent.click(within(directoryAlert).getByRole('button', { name: 'Torna-ho a provar' }));
+  await waitFor(() => expect(screen.queryByText('No s’ha pogut carregar el directori de comptes registrats')).toBeNull());
+  expect(screen.getByText('Error en llegir els publicadors del recurs')).toBeTruthy();
+  expect(container.querySelector('.sdp-traspas-inline__accions button').disabled).toBe(true);
+  expect(mocks.port.traspassaPublicacio).not.toHaveBeenCalled();
+});
 
 afterEach(() => {
   cleanup();
@@ -432,6 +474,7 @@ test('el resultat d’una operació pendent queda descartat si es tanca la sessi
   let acaba;
   mocks.port = {
     lligPublicadorsRegistrats: vi.fn(async recurs => ({ ...recurs, versio: 2, publicadorsRegistrats: [DTO] })),
+    listPublicOrganizations: vi.fn(async () => []),
     traspassaPublicacio: vi.fn(entrada => new Promise(resolve => {
       acaba = () => resolve({ ...entrada, versio: 3, versioOperacio: 3, repetida: false, publicadorsRegistrats: [DTO] });
     }))
@@ -451,6 +494,7 @@ test('el resultat d’una operació pendent queda descartat si es tanca la sessi
 test('un reintent ja superat per una altra versió no oferix reversió de la versió antiga', async () => {
   mocks.port = {
     lligPublicadorsRegistrats: vi.fn(async recurs => ({ ...recurs, versio: 2, publicadorsRegistrats: [DTO] })),
+    listPublicOrganizations: vi.fn(async () => []),
     traspassaPublicacio: vi.fn(async entrada => ({
       ...entrada, versio: 7, versioOperacio: 3, repetida: true, publicadorsRegistrats: [DTO]
     }))
@@ -465,6 +509,7 @@ test('un reintent ja superat per una altra versió no oferix reversió de la ver
 test('la lectura i el traspàs mantenen el backend i el poble de l’amfitrió', async () => {
   mocks.port = {
     lligPublicadorsRegistrats: vi.fn(async recurs => ({ ...recurs, versio: 2, publicadorsRegistrats: [DTO] })),
+    listPublicOrganizations: vi.fn(async () => []),
     traspassaPublicacio: vi.fn(async entrada => ({
       ...entrada, versio: 3, versioOperacio: 3, repetida: false, publicadorsRegistrats: [DTO]
     }))

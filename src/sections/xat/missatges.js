@@ -74,10 +74,12 @@ export function mapejaFil(fil, ara = Date.now()) {
   const llegitFinsSeq = numero(fil.llegitFinsSeq);
   const ultimText = fil.ultimText || '';
   const tipus = fil.tipus || 'directe';
+  const esPropi = Boolean(fil.esPropi || tipus === 'personal');
   const rol = fil.rol || null;
   return {
     id: fil.id,
     tipus,
+    esPropi,
     /* T63.2 i T67 · La comunitat i el subjecte passen tal qual. Una
        'comunitat' és un contenidor sense missatges; el 'canal' («Avisos»)
        només l'escriuen els seus administradors; un fil de pàgina que encara
@@ -115,9 +117,11 @@ export function mapejaFil(fil, ara = Date.now()) {
     ultimSeq,
     llegitFinsSeq,
     llegitPelsAltresFinsSeq: numero(fil.llegitPelsAltresFinsSeq),
-    noLlegits: fil.noLlegits != null
-      ? Math.max(0, numero(fil.noLlegits))
-      : Math.max(0, ultimSeq - llegitFinsSeq),
+    noLlegits: esPropi
+      ? 0
+      : fil.noLlegits != null
+        ? Math.max(0, numero(fil.noLlegits))
+        : Math.max(0, ultimSeq - llegitFinsSeq),
     arxivat: Boolean(fil.arxivatAl),
     fixat: Boolean(fil.fixatAl),
     silenciat: esSilenciat(fil.silenciatFinsAl, ara),
@@ -223,7 +227,8 @@ export function derivaEstat(m, llegitPelsAltresFinsSeq, rebutPelsAltresFinsSeq =
  */
 export function estatDeLUltim(fil, joId) {
   if (!fil || !joId || fil.ultimAutorId !== joId || !fil.ultimSeq) return null;
-  return derivaEstat({ sender: 'me', seq: fil.ultimSeq }, fil.llegitPelsAltresFinsSeq);
+  const llegit = fil.esPropi ? Math.max(numero(fil.llegitFinsSeq), numero(fil.ultimSeq)) : fil.llegitPelsAltresFinsSeq;
+  return derivaEstat({ sender: 'me', seq: fil.ultimSeq }, llegit);
 }
 
 /** Missatges del servidor (per `seq`) amb l'estat derivat i, al final, els pendents i fallits. */
@@ -306,6 +311,7 @@ export function contactesFrequents(fils, membres, joId, n = 5) {
   const resultat = [];
   const directes = (Array.isArray(fils) ? fils : []).filter((f) => f?.tipus === 'directe').sort(perActivitat);
   for (const fil of directes) {
+    if (fil.esPropi) continue;
     const altre = Array.isArray(fil.altres) ? fil.altres.find((a) => a?.id != null && String(a.id) !== jo) : null;
     const id = altre ? String(altre.id) : '';
     if (!id || vistos.has(id)) continue;

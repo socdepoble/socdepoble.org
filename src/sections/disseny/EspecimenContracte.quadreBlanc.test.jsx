@@ -75,6 +75,10 @@ describe('EspecimenContracte · quadre blanc editorial i ajustos de l’espai de
       .toEqual(['Catàlegs: ajustos en la columna 3', 'Resta d’espais: ajustos en un diàleg']);
     const [columna3, dialeg] = within(ajustos).getAllByRole('article');
     expect(columna3.textContent).toContain('CatalegWorkspace');
+    /* Gauntlet 261112 (T1b, verificador) · /page/fediversity és una UniversalPage sense CatalegWorkspace:
+       la llista no la nomena, i nomena els Arbres monumentals, que sí que ho són. */
+    expect(columna3.textContent).toContain('Arbres monumentals');
+    expect(columna3.textContent).not.toContain('Fediversity');
     expect(dialeg.textContent).toContain('WorkspaceSettingsDialog');
     expect(dialeg.textContent).toContain('FullAjustos');
     /* La llei antiga (cap modal per a la configuració densa; un modal només per a confirmar) no es pinta. */
@@ -107,6 +111,8 @@ describe('EspecimenContracte · quadre blanc editorial i ajustos de l’espai de
     const matriu = screen.getByRole('group', { name: diccionari['section.disseny.contracte.quadreBlanc.diagnostic'] });
     const ajustos = screen.getByRole('group', { name: diccionari['section.disseny.contracte.modals.titol'] });
     const textNou = `${matriu.textContent} ${ajustos.textContent}`;
+    /* Gauntlet 261112 (T1b, verificador) · En cap llengua la columna 3 no nomena Fediversity. */
+    expect(within(ajustos).getAllByRole('article')[0].textContent).not.toContain('Fediversity');
     for (const clau of clausNoves) {
       if (CA[clau] !== diccionari[clau]) expect(textNou, clau).not.toContain(CA[clau]);
     }

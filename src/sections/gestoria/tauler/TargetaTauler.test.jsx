@@ -57,7 +57,7 @@ describe('la boina personal', () => {
     expect(autor.querySelector('.sp-card-author-location').textContent).toBe('Poble de Prova');
     const pastilla = targeta.querySelector('header .btn-date-time');
     expect(pastilla.tagName).toBe('TIME');
-    expect(pastilla.getAttribute('datetime')).toBe('2026-10-04T08:00');
+    expect(new Date(pastilla.getAttribute('datetime')).getTime()).toBe(new Date(PASTILLA.dateTime).getTime());
     expect(targeta.querySelector('header .sdp-gestoria-ull')).not.toBeNull();
   });
 });

@@ -24,12 +24,15 @@ import { CopublicacioDePaginaContext } from './CopublicacioDePaginaContext.js';
 const PAGINA_PUBLICAR_MAPA = 'publicar_mapa';
 const PublicarMapaMapaShowcase = lazyRoute(() => import('./PublicarMapaShowcase.jsx').then((m) => ({ default: m.PublicarMapaMapaShowcase })));
 const PublicarMapaExempleShowcase = lazyRoute(() => import('./PublicarMapaShowcase.jsx').then((m) => ({ default: m.PublicarMapaExempleShowcase })));
+/* T1b (ordre directa del Mestre, 12-11-2026 21:26) · Només els catàlegs de patrimoni obrin un Workspace.
+   /page/fediversity ja no n'és cap: és una UniversalPage normal (TextSection), ampla i seguida, amb
+   l'aparador al final per la branca comuna de més avall (Llei de Sistematització, sense excepcions per slug).
+   Els cinc rols i la portabilitat ja els pinta AparadorFediversity; /page/fediversity/<fitxa> dona 404. */
 const WORKSPACES_PATRIMONI = {
   herbari: lazy(() => import('../patrimoni/HerbariWorkspaceSection.jsx')),
   'banc-de-llavors': lazy(() => import('../patrimoni/BancLlavorsWorkspaceSection.jsx')),
   'arbres-monumentals': lazy(() => import('../patrimoni/NaturaPatrimoniWorkspaceSection.jsx')),
-  receptes: lazy(() => import('../patrimoni/ReceptesWorkspaceSection.jsx')),
-  fediversity: lazy(() => import('../text/FediversityWorkspaceSection.jsx'))
+  receptes: lazy(() => import('../patrimoni/ReceptesWorkspaceSection.jsx'))
 };
 const NodrirLaIaiaSection = lazy(() => import('../patrimoni/NodrirLaIaiaSection.jsx'));
 const PaginesImportadesSection = lazy(() => import('../text/PaginesImportadesSection.jsx'));
@@ -211,9 +214,7 @@ export default function PageDetailSection() {
   if (canonica) return itemSlug ? <NotFoundPage /> : <Navigate to={canonica} replace />;
   // Ordre del Mestre (261027) · Una pàgina només web no s'obri dins de l'app nativa.
   if (!esPaginaVisible(slug, { nativa: esAppNativa() })) return <Navigate to="/" replace />;
-  if (itemSlug && (!Object.hasOwn(WORKSPACES_PATRIMONI, slug) || slug === 'fediversity')) {
-    return <NotFoundPage />;
-  }
+  if (itemSlug && !Object.hasOwn(WORKSPACES_PATRIMONI, slug)) return <NotFoundPage />;
   if (slug === CLAU_PAGINES_IMPORTADES) return <Suspense fallback={null}><PaginesImportadesSection /></Suspense>;
 
   // El slug ve de la URL: només claus pròpies («constructor» no és cap pàgina).
@@ -232,17 +233,15 @@ export default function PageDetailSection() {
     if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><PouDeLaNeuAnatomiaCard /></Suspense>{alFinal}</>;
     else if (Object.hasOwn(WORKSPACES_PATRIMONI, slug)) {
       const Workspace = WORKSPACES_PATRIMONI[slug];
-      const contingut = slug !== 'fediversity' ? (
-        <PaginaPatrimoniCopublicable key={slug} Workspace={Workspace} slug={slug} itemSlug={itemSlug} page={page} accioPrincipal={accioPrincipal}>
-          {alFinal}
-        </PaginaPatrimoniCopublicable>
-      ) : (
-        <Workspace page={page} itemSlug={itemSlug || null} sincronitzaRuta={slug !== 'fediversity'} accioPrincipal={accioPrincipal}>
-          {alFinal}
-        </Workspace>
+      return (
+        <Suspense fallback={null}>
+          <ProveidorProjeccionsCataleg>
+            <PaginaPatrimoniCopublicable key={slug} Workspace={Workspace} slug={slug} itemSlug={itemSlug} page={page} accioPrincipal={accioPrincipal}>
+              {alFinal}
+            </PaginaPatrimoniCopublicable>
+          </ProveidorProjeccionsCataleg>
+        </Suspense>
       );
-      return <Suspense fallback={null}>{slug === 'fediversity' ? contingut
-        : <ProveidorProjeccionsCataleg>{contingut}</ProveidorProjeccionsCataleg>}</Suspense>;
     }
     else if (slug === 'la-iaia-sabuda') alFinal = <><Suspense fallback={null}><NodrirLaIaiaSection /></Suspense>{alFinal}</>;
     else if (Object.hasOwn(SECCIONS_DE_PATRIMONI, slug)) { const Consulta = SECCIONS_DE_PATRIMONI[slug]; alFinal = <><Suspense fallback={null}><Consulta /></Suspense>{alFinal}</>; }
