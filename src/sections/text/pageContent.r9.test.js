@@ -133,7 +133,8 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     for (const clau of PAGINES) {
       const body = doc(pagina(clau, llengua).html).body;
       const titols = [...body.querySelectorAll('h3')].map((h) => h.textContent);
-      const inici = clau === 'fediversity' ? 1 : 0; // la fediversity obri amb el bloc NLnet en les 5 llengües
+      // fediversity obri amb NLnet i node-zero obri amb el balanç didàctic del 14 de novembre (Onades R1–R23).
+      const inici = clau === 'fedivers' ? 0 : 1;
       expect(titols.slice(inici, inici + 3), `${clau} ${llengua}`).toEqual(BALANC[llengua]);
       const produccio = seccio(body, BALANC[llengua][0]);
       const externs = produccio.flatMap((n) => [...n.querySelectorAll('a[href^="https://"]')].map((a) => a.getAttribute('href')));
@@ -198,7 +199,11 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     const versions = doc(PAGE_COPY.versions.html).body;
     // R21, R20 i R19 s'afigen davant de les sis entrades històriques: cap s'esborra ni es reescriu.
     // R21 (COMMIT 5) · La fita R21 C5 s'afig davant de la R21.
-    expect([...versions.querySelectorAll('h3')].slice(0, 10).map((h3) => h3.textContent)).toEqual([
+    // Onada R23 · La crònica de l'Onada R23 obri /versions, davant de la fita R21 C5.
+    // Onada R24 · La crònica de l'Onada R24 obri /versions, davant de la crònica R23.
+    expect([...versions.querySelectorAll('h3')].slice(0, 11).map((h3) => h3.textContent)).toEqual([
+      '14 de novembre de 2026, matinada · Onada R24 · Manual editorial a les pàgines públiques, precomanda per a la botiga local i reforç dels jocs de veu',
+      '14 de novembre de 2026 · Onada R23 · La veu oberta del Node 0, el reproductor flotant universal, el joc «D’on parles?» i la frescor editorial',
       '13 de novembre de 2026 · Onada R21 (COMMIT 5) · El Mur per als membres, el xat amb imatges i la recuperació després de cada actualització',
       '12 de novembre de 2026 · Onada R21 · La versió 1.2.0, el xat propi, la IAIA en una sola fila i la frontera del contingut públic',
       '11 de novembre de 2026, nit · Onada R20 · Publicació en línia de Notes cap al Mur, filtre de verificació de les imatges botàniques i poliment responsive del Panell',
@@ -207,8 +212,7 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
       '10 de novembre de 2026 · Onada R16 · La versió 1.1.12, el Panell de Control en tres espais i La IAIA Sabuda',
       '9 de novembre de 2026 · Onada R15 · El Workspace dels catàlegs i la proposta d’al·lèrgens',
       '9 de novembre de 2026 · Onades R13 i R14 · El receptari «Què dinem?», la targeta d’usuaris i dispositius i el Segon Brain',
-      '6 de novembre de 2026 · Fita · L’app d’iPhone i iPad, publicada a l’App Store (versió 1.0)',
-      '5 de novembre de 2026 · v1.2.0 · suplement pendent d’integració'
+      '6 de novembre de 2026 · Fita · L’app d’iPhone i iPad, publicada a l’App Store (versió 1.0)'
     ]);
     expect(versions.textContent).toContain('COMMIT R1–R6');
     expect(versions.textContent).not.toContain('R1–R8');
@@ -274,9 +278,13 @@ describe('R7G-5-05 i R7G-9-02 · la secció d’IA diu el que fa el codi', () =>
     // «el contingut privat i el de l'E2EE no s'envien a cap traductor»: la guarda de traductor.js.
     for (const marca of [{ e2ee: true }, { privat: true }, { visibility: 'private' }]) expect(contingutNoTraduible(marca)).toBe(true);
     expect(contingutNoTraduible({ visibility: 'public' })).toBe(false);
+    /* Text, no codi: les cròniques editorials i el paquet generat de la Wiki (wikiManifest.js, de
+       tooling/wiki/compile-wiki-to-app.mjs; legal.iaia.test.js ja el deixa fora pel mateix motiu), on la
+       Wiki de l'Onada R23 nomena Whisper com a eina d'investigació del taller. */
+    const textosEditorials = new Set(['sections/text/pageContent.r10.js', 'sections/mur/articles/laVeuDeSocDePobleContent.js', 'data/wikiManifest.js']);
     const fonts = readdirSync(path.join(ARREL, 'src'), { recursive: true })
       .map((f) => String(f).split(path.sep).join('/'))
-      .filter((f) => /\.(?:js|jsx)$/.test(f) && !f.includes('.test.') && f !== 'sections/text/pageContent.r10.js');
+      .filter((f) => /\.(?:js|jsx)$/.test(f) && !f.includes('.test.') && !textosEditorials.has(f));
     const ambDictat = fonts.filter((f) => /Whisper|Parakeet|SpeechRecognition/.test(readFileSync(path.join(ARREL, 'src', f), 'utf8')));
     expect(ambDictat).toEqual([]);
   });
@@ -478,11 +486,11 @@ describe('Gauntlet R9 · G1-01, G1-06 i G3-N02 · el balanç diu què falta de v
 });
 
 const CENS = {
-  ca: 'les 59 portes del cens (run-portes --cens, 12-11-2026)',
-  es: 'las 59 puertas del censo (run-portes --cens, 12-11-2026)',
-  en: 'the 59 census gates (run-portes --cens, 12 November 2026)',
-  eu: 'zentsuko 59 ateekin (run-portes --cens, 2026ko azaroaren 12a)',
-  gl: 'as 59 portas do censo (run-portes --cens, 12-11-2026)'
+  ca: 'les 60 portes del cens (run-portes --cens, 14-11-2026)',
+  es: 'las 60 puertas del censo (run-portes --cens, 14-11-2026)',
+  en: 'the 60 census gates (run-portes --cens, 14 November 2026)',
+  eu: 'zentsuko 60 ateekin (run-portes --cens, 2026ko azaroaren 14a)',
+  gl: 'as 60 portas do censo (run-portes --cens, 14-11-2026)'
 };
 /* R10 · VFT-07 · La xifra s'ancora a la font: Vitest sencer de l'arbre R9, 6-11-2026: 33.705 proves (més de 33.000;
    15 roges de base). La passa cada onada (l'àrbitre, sobre l'arbre sencer); el hook de cada commit no. */
@@ -560,16 +568,18 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
   });
 
   test('les peces que sostenen les xifres', () => {
-    // El cens del 12-11-2026: 59 portes (totes les que no són bateries de proves). Si en canvia el nombre, cal
+    // El cens del 14-11-2026: 60 portes (totes les que no són bateries de proves; la 60a, Porta Cobertura Social, del
+    // P0-SEO-UNIVERSAL; cens repetit per la revisió adversària R22). Si en canvia el nombre, cal
     // tornar a passar el cens i reescriure la xifra i la data en les 5 llengües.
-    expect(passos.filter((pas) => !pas.prova)).toHaveLength(59);
+    expect(passos.filter((pas) => !pas.prova)).toHaveLength(60);
     // L'índex local és l'Atles operatiu més les fitxes dels pobles de la llavor; la Wiki arriba per import().
     expect(ATLES_OPERATIU.length).toBe(25);
     expect(llegix('src/data/iaiaLocal.js')).toContain('...ATLES_OPERATIU.map(documentDeLAtles), ...MOCK_TOWNS.map(documentDelPoble)');
     // «el codi de l'aplicació web no s'hi connecta»: cap fitxer de src, fora del text d'esta pàgina, no parla amb Ollama.
+    const textosEditorials = new Set(['sections/text/pageContent.r10.js', 'sections/mur/articles/laVeuDeSocDePobleContent.js']);
     const fonts = readdirSync(path.join(ARREL, 'src'), { recursive: true })
       .map((f) => String(f).split(path.sep).join('/'))
-      .filter((f) => /\.(?:js|jsx|mjs)$/.test(f) && !f.includes('.test.') && f !== 'sections/text/pageContent.r10.js');
+      .filter((f) => /\.(?:js|jsx|mjs)$/.test(f) && !f.includes('.test.') && !textosEditorials.has(f));
     // El port 11434 com a nombre sencer: no el confon amb les xifres d'una dada generada (68.711434826 a pouNeuOrderKeys.js).
     expect(fonts.filter((f) => /\bollama\b|(?<![\d.])11434(?!\d)/i.test(readFileSync(path.join(ARREL, 'src', f), 'utf8')))).toEqual([]);
   });
@@ -635,5 +645,26 @@ describe('Gauntlet R9 · G1-09 · gallec i anglés de les pàgines de patrimoni'
     // 0px d'ample i el text retallat.
     expect(css).toMatch(/@media \(min-width: 40\.01rem\) \{\s*\.sdp-amb-targetes h2,\s*\.sdp-amb-targetes h3 \{\s*overflow: hidden;\s*\}\s*\}/);
     expect(css.replace(/@media \(min-width: 40\.01rem\) \{\s*\.sdp-amb-targetes h2,\s*\.sdp-amb-targetes h3 \{\s*overflow: hidden;\s*\}\s*\}/, '')).not.toMatch(/\.sdp-amb-targetes h2,\s*\.sdp-amb-targetes h3 \{\s*overflow: hidden;/);
+  });
+});
+
+describe('Onada R23 · /page/node-zero obri amb la guia divulgativa del 14 de novembre de 2026 (R1–R23) en les 5 llengües', () => {
+  test.each(LLENGUES)('%s · les 8 escoles locals (9 mirades), Matxa-TTS v2 en viu, NEL-VIVES, PostgreSQL 17.11 i el cron de frescor editorial', (llengua) => {
+    const body = doc(pagina('node-zero', llengua).html).body;
+    const primerH3 = body.querySelector('h3');
+    expect(primerH3?.textContent).toMatch(/R1–R23/);
+    const obertura = seccio(body, primerH3.textContent).map((n) => n.textContent).join(' ');
+    expect(obertura).toContain('La Torre de les Maçanes');
+    expect(obertura).toContain('L’Alacantí');
+    for (const escola of ['Qwen', 'DeepSeek', 'Gemma 3', 'Hermes', 'Mistral', 'GLM-4', 'Phi-4', 'iaia-maria']) {
+      expect(obertura, `${llengua} -> ${escola}`).toContain(escola);
+    }
+    for (const veu of ['Matxa-TTS v2 Multiaccent', 'https://socdepoble.cat/api/v1/node0/veu', 'cat.socdepoble.veu-node0.plist', 'Gina', 'Berta', 'Arnau', 'Lluc', 'Emma', 'Èlia', 'Olga', 'NEL-VIVES', 'F5-TTS-MLX', 'CC BY-SA 4.0']) {
+      expect(obertura, `${llengua} -> ${veu}`).toContain(veu);
+    }
+    for (const infra of ['PostgreSQL 17.11', 'socdepoble.cat', 'org.socdepoble.node0.frescor-editorial']) {
+      expect(obertura, `${llengua} -> ${infra}`).toContain(infra);
+    }
+    expect(obertura).not.toMatch(/sobir[àa]|soberan/i);
   });
 });

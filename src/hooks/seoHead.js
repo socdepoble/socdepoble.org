@@ -11,6 +11,10 @@ let sequence = 0;
    el head servit (el seu canonical o og:url marcats), mentre els seus nodes
    continuen al document; null si no n'hi ha cap. */
 let rutaServida = null;
+/* R24 · xat_entrega (P1-4) · El prefix «(n) » del títol de la pestanya amb
+   els missatges no llegits del Xat (ComptadorGlobalXat). Només el títol del
+   document: og:title i twitter:title no el porten mai. */
+let prefixDelTitol = '';
 // Les propietats d'imatge van darrere d'og:image: restaurar per este ordre
 // manté cada propietat estructurada després de la imatge que descriu.
 const PROPIETATS_IMATGE = [['og:image:type', 'type'], ['og:image:width', 'width'],
@@ -81,6 +85,12 @@ function rutaDelHeadServit() {
     return null;
   }
 }
+/** P0-SEO-UNIVERSAL (13-11-2026) · Si el document porta el head d'un fitxer prerenderitzat (nodes marcats amb
+ *  ATRIBUT_SSR; purgaServits els lleva). Només es llig. La fitxa pública el consulta mentre carrega: amb un head
+ *  servit no diu index:false (que el faria purgar abans de saber qui és la fitxa). */
+export function hiHaHeadServit() {
+  return typeof document !== 'undefined' && document.head.querySelector(`[${ATRIBUT_SSR}]`) !== null;
+}
 function purgaServits() {
   document.head.querySelectorAll(`[${ATRIBUT_SSR}]`)
     .forEach(node => (node.tagName === 'TITLE' ? node.removeAttribute(ATRIBUT_SSR) : node.remove()));
@@ -139,7 +149,7 @@ function apply() {
   if (!chosen) return;
   const { data } = chosen;
   const fullTitle = data.title ? `${data.title} | Sóc de Poble` : 'Sóc de Poble';
-  document.title = fullTitle;
+  document.title = prefixDelTitol + fullTitle;
   meta('og:title', fullTitle, 'property'); meta('twitter:title', fullTitle);
   // Pla 261027_1154 (P1-61) · S3. La reserva és la genèrica, no la del head
   // capturat: un head servit amb la descripció d'un producte no la presta.
@@ -166,6 +176,15 @@ function apply() {
     const script = document.createElement('script'); script.type = 'application/ld+json'; script.dataset.sdpSeo = 'true';
     script.textContent = data.jsonLd; document.head.appendChild(script);
   }
+}
+/** R24 · xat_entrega (P1-4) · Fixa el prefix del títol (buit per a cap) i el
+ *  torna a aplicar si l'app ja governa el <head>. Sense cap propietari
+ *  registrat (en un iframe o sense manageDocumentHead) no escriu res. */
+export function fixaPrefixDelTitol(prefix) {
+  const nou = typeof prefix === 'string' ? prefix : '';
+  if (nou === prefixDelTitol) return;
+  prefixDelTitol = nou;
+  if (baseline && owners.size) apply();
 }
 export function registerSeo(owner, { path, priority = 1, ...data }, options = {}) {
   // L'únic propietari de head exigix autoritat explícita (l'amfitrió la declara amb

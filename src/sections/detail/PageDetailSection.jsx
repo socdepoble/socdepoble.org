@@ -38,6 +38,7 @@ const NodrirLaIaiaSection = lazy(() => import('../patrimoni/NodrirLaIaiaSection.
 const PaginesImportadesSection = lazy(() => import('../text/PaginesImportadesSection.jsx'));
 const AparadorFediversity=lazy(()=>import('../text/AparadorFediversity.jsx'));
 const PanellTraspasPublicacioInline = lazy(() => import('../admin/PanellTraspasPublicacioInline.jsx'));
+const GuiaCanalsActualitzacio = lazy(() => import('./GuiaCanalsActualitzacio.jsx'));
 
 function ControlCopublicacioDeCataleg({ recursId, enActualitzar }) {
   const sessio = useSessioOpcional();
@@ -262,12 +263,16 @@ export default function PageDetailSection() {
        passa com a funció del traductor: TextSection és qui té el `t`. A
        qualsevol altra pàgina, cap prop: les etiquetes de sempre. */
     const pastilla = slug === PAGINA_DE_LA_PASTILLA ? (t) => pastillaDeVersio(slug, t) : null;
+    const peuDescarregues = slug === 'descarregues'
+      ? <Suspense fallback={null}><GuiaCanalsActualitzacio /></Suspense>
+      : null;
     return (
       <TextSection
         page={page}
         pageKey={slug}
         accioPrincipal={accioPrincipal}
         {...(abansIntro ? { abansIntro } : null)}
+        {...(peuDescarregues ? { peuDePagina: peuDescarregues } : null)}
         {...(pastilla ? { etiquetaFinal: pastilla } : null)}
       >
         {alFinal}

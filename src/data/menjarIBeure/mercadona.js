@@ -14,7 +14,7 @@ const importaCataleg = import.meta.env.VITE_SDP_APP_NEVERA !== '0'
   : null;
 
 export function carregaMercadona() {
-  if (!importaCataleg) return Promise.reject(new Error('El catàleg de Mercadona no està inclòs en este build.'));
+  if (!importaCataleg) return Promise.reject(new Error('El catàleg de botiga no està inclòs en este build.'));
   if (!pendent) pendent = importaCataleg().then((modul) => Object.freeze({
     productes: modul.PRODUCTES_MERCADONA, metadades: modul.METADADES_MERCADONA,
     items: Object.freeze(modul.PRODUCTES_MERCADONA.map((p) => universalItemCataleg({ id: p.id, tipus: 'producte', nom: p.nom, font: { document: modul.METADADES_MERCADONA.font, sha256: modul.METADADES_MERCADONA.sha256, fila: p.filaFont }, dades: p })))

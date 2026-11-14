@@ -15,7 +15,10 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: manifest.js i EspecimenXat.jsx, 2026-11-12T23:04:01+01:00,
+ * Darrera posada al dia: manifest.js, detailRegistry.jsx, registre.js i EspecimenBarraReproductorVeu.jsx, 2026-11-14T02:55:00+01:00,
+ * Onada R23 (IDEA-255, 14-11-2026): BarraReproductorVeu i EspecimenBarraReproductorVeu (superposicions/barra-reproductor-veu),
+ * el mini-reproductor flotant universal de veu que PageFrame munta en diferit sota l'entradilla de totes les pàgines de lectura.
+ * Versió anterior: manifest.js i EspecimenXat.jsx, 2026-11-12T23:04:01+01:00,
  * Gauntlet 261112 dels kits R21 (regressio_ui_xat-07, versions_i_portes-02): EspecimenXat.jsx
  * passa nivellTitol={5} a les tres capçaleres de mostra (CapcaleraConversa), perquè
  * /disseny/fonaments/xat no pinte cap H1 de mostra, i el contracte en documenta la prop;
@@ -347,4 +350,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-12T23:04:01+01:00';
+export const VERSIO_CATALEG = '2026-11-14T02:55:00+01:00';

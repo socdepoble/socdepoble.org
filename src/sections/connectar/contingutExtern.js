@@ -45,9 +45,10 @@
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { omple } from '../../config/moderacio.js';
 import { MAXIM_LEMA } from '../../data/limitsText.js';
-import { MAXIM_CAMP_ORIGEN, MAXIM_URL, netejaCampOrigen, urlExterna, validaUrlExterna } from '../../data/origenNota.js';
+import { MAXIM_CAMP_ORIGEN, MAXIM_URL, netejaCampOrigen, validaUrlExterna } from '../../data/origenNota.js';
 import { CARPETA_CONNECTATS } from '../notes/carpetes.js';
-import { aHtml, hrefsDe } from '../notes/connexions.js';
+import { aHtml } from '../notes/connexions.js';
+import { citaDeLOrigenExtern, cosDeLExternPerAlMur } from './citaDeLOrigen.js';
 
 /** Els límits de cada camp, en caràcters de veres (com char_length). */
 export const LIMITS_EXTERN = Object.freeze({
@@ -195,32 +196,10 @@ export function contingutExternDeParams(params, t = senseTraductor) {
   return params.has('url') ? validaContingutExtern({ ...textos, url }, t) : null;
 }
 
-/** «Font: <a href=url>lloc</a>», escapat; '' sense url vàlida. */
-export function citaDeLOrigenExtern(origen) {
-  const { url } = validaUrlExterna(origen?.url);
-  if (!url) return '';
-  return `<p>Font: <a href="${aHtml(url)}">${aHtml(new URL(url).hostname)}</a></p>`;
-}
-
-/* El cos porta un enllaç a l'adreça d'origen (normalitzada com la desa
-   origenNota)? Els href es lligen amb hrefsDe (notes/connexions.js), la
-   mateixa lectura que fa el cos d'una connexió per al Mur (D4). */
-function portaEnllacDeLOrigen(html, origen) {
-  const url = urlExterna(origen?.url);
-  if (!url) return false;
-  return hrefsDe(html).some((href) => urlExterna(href) === url);
-}
-
-/**
- * T71b · El cos d'un contingut de fora quan es compartix al Mur: el de la
- * nota (és de la persona, que l'ha pogut editar) i, només si ja no porta cap
- * enllaç a l'adreça d'origen, la cita al final. Sense url vàlida, el cos tal
- * qual. `html` ha de ser el cos ja sanejat: es mira el que arribarà al Mur.
- */
-export function cosDeLExternPerAlMur(html, origen) {
-  const cos = String(html ?? '');
-  return portaEnllacDeLOrigen(cos, origen) ? cos : `${cos}${citaDeLOrigenExtern(origen)}`;
-}
+/* Onada R24 · wp_trinquet · citaDeLOrigenExtern i cosDeLExternPerAlMur viuen a
+   citaDeLOrigen.js, que l'arrencada importa sense este mòdul; ací es
+   reexporten amb els mateixos noms. */
+export { citaDeLOrigenExtern, cosDeLExternPerAlMur };
 
 /**
  * D1 · Qui pot desar (o connectar) un contingut: { modeDades, calEntrar,

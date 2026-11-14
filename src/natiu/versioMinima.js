@@ -1,6 +1,6 @@
 /**
  * natiu/versioMinima.js — P0-23 (BOT-A2; Gauntlet Claude 261025_1705) · La
- * porta de versió mínima de l'app nativa.
+ * porta de versió mínima i recomanada de l'app nativa.
  *
  * En arrencar, l'entrada nativa pregunta al node, pel port neutral (capacitat
  * 'versioClient', contracte.js), quina és la versió mínima de la seua
@@ -10,41 +10,93 @@
  * FAIL-OPEN: sense la capacitat, sense resposta, amb un error o amb una
  * resposta que no s'entén, l'app entra com sempre. Mai a la web ni al connector
  * de WordPress: només ho crida l'entrada nativa, i només a iOS i Android.
- *
- * El build 1 de les botigues no porta este codi: la porta només protegix el
- * build 2 i els següents (matís del verificador a BOT-A2).
  */
-
+import {
+  ENLLAC_ANDROID_MARKET,
+  ENLLAC_ANDROID_PLAY,
+  ENLLAC_IOS_APP_STORE,
+  enllacBotigaPerDefecte,
+  enllacSegur,
+  obriBotigaActualitzacio
+} from '../config/actualitzacioRecomanada.js';
 import { VERSIO_CLIENT_NATIU } from '../data/contracte.js';
 import { teCapacitat, versioMinimaClient } from '../data/backendPort.js';
+
+export {
+  ENLLAC_ANDROID_MARKET,
+  ENLLAC_ANDROID_PLAY,
+  ENLLAC_IOS_APP_STORE,
+  enllacBotigaPerDefecte,
+  enllacSegur,
+  obriBotigaActualitzacio
+};
 
 const PLATAFORMES = new Set(['ios', 'android']);
 const PORT = Object.freeze({ teCapacitat, versioMinimaClient });
 
-/** L'enllaç d'actualitzar, només si és una adreça https; si no, null. Mai llança. */
-export function enllacSegur(valor) {
-  if (typeof valor !== 'string' || valor.length > 2048) return null;
-  try {
-    const url = new URL(valor);
-    return url.protocol === 'https:' && url.hostname ? url.href : null;
-  } catch { return null; }
-}
-
 /**
- * Si cal bloquejar l'app: { versioMinima, enllac } quan la versió d'este codi
- * és més vella que la mínima de la plataforma; null en qualsevol altre cas
- * (també la mateixa versió o una de més nova). Mai rebutja.
+ * Resol en una sola crida del port l'estat de versió del client natiu (Onada R22 · T2):
+ *   · `{ estat: 'bloquejada', versioMinima, enllac }` si `versio < versioMinima`;
+ *   · `{ estat: 'recomanada', plataforma, versioRecomanada, enllac, marketUrl }`
+ *     si `versio >= versioMinima` però hi ha una `versioRecomanada > versio`;
+ *   · `null` si l'app està al dia, fora de plataforma nativa o en cas d'error (fail-open).
  */
-export async function bloqueigDeVersio({ plataforma, config, versio = VERSIO_CLIENT_NATIU, port = PORT } = {}) {
+export async function estatDeVersio({
+  plataforma,
+  config,
+  versio = VERSIO_CLIENT_NATIU,
+  port = PORT,
+  fontViva = null
+} = {}) {
   if (!PLATAFORMES.has(plataforma)) return null;
   try {
     if (port.teCapacitat('versioClient') !== true) return null;
     const minima = await port.versioMinimaClient(plataforma, config);
     const versioMinima = minima?.versioMinima;
-    if (!Number.isSafeInteger(versioMinima) || versioMinima <= versio) return null;
-    return { versioMinima, enllac: enllacSegur(minima.enllac) };
+    if (Number.isSafeInteger(versioMinima) && versioMinima > versio) {
+      return {
+        estat: 'bloquejada',
+        versioMinima,
+        enllac: enllacSegur(minima.enllac)
+      };
+    }
+    let versioRecomanada = Number.isSafeInteger(minima?.versioRecomanada) ? minima.versioRecomanada : null;
+    let enllacViva = enllacSegur(minima?.enllac);
+    if (versioRecomanada === null && typeof fontViva === 'function') {
+      try {
+        const viva = await fontViva(plataforma);
+        if (Number.isSafeInteger(viva?.versioRecomanada) && viva.versioRecomanada >= 1) {
+          versioRecomanada = viva.versioRecomanada;
+        }
+        const canalEnllac = enllacSegur(viva?.canals?.[plataforma]?.enllac ?? viva?.enllac);
+        if (!enllacViva && canalEnllac) enllacViva = canalEnllac;
+      } catch {
+        // Silenciós: el manifest estàtic auxiliar mai bloqueja ni embruta l'arrencada.
+      }
+    }
+    if (Number.isSafeInteger(versioRecomanada) && versioRecomanada > versio) {
+      return {
+        estat: 'recomanada',
+        plataforma,
+        versioRecomanada,
+        enllac: enllacViva || enllacBotigaPerDefecte(plataforma),
+        marketUrl: plataforma === 'android' ? ENLLAC_ANDROID_MARKET : null
+      };
+    }
+    return null;
   } catch (error) {
     console.warn('[natiu] No s’ha pogut saber la versió mínima; l’app entra igual:', error?.message ?? error);
     return null;
   }
+}
+
+/**
+ * Si cal bloquejar l'app: { versioMinima, enllac } quan la versió d'este codi
+ * és més vella que la mínima de la plataforma; null en qualsevol altre cas.
+ */
+export async function bloqueigDeVersio(opcions = {}) {
+  const resultat = await estatDeVersio(opcions);
+  return resultat?.estat === 'bloquejada'
+    ? { versioMinima: resultat.versioMinima, enllac: resultat.enllac }
+    : null;
 }

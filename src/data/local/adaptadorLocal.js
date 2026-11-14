@@ -59,6 +59,7 @@ import { capturaConsultaRevisionsSeed, capturaRevisioSeed } from '../seedRevisio
 import { capturaBaixaRevisioPatrimoni, capturaConsultaRevisionsPatrimoni, capturaEdicioRevisioPatrimoni } from '../revisionsPatrimoni.js';
 import { creaRevisionsPatrimoniLocal } from '../revisionsPatrimoniMemoria.js';
 import { creaRevisionsEditorialsWpLocal } from '../revisionsEditorialsWpMemoria.js';
+import { creaConsensIsoglossesMemoria } from '../consensIsoglosses.js';
 import { creaMitjansLocal } from './mitjansLocal.js';
 import { creaDadesObertesLocal } from './dadesObertesLocal.js';
 import { estatBuitDeDadesObertes } from '../dadesObertesLot.js';
@@ -290,6 +291,9 @@ export function creaAdaptadorLocal({
      public read DTOs never contain this ownership metadata. */
   const revisionsLlavor = { actuals: new Map(), autoria: new Map() };
   const usuari = () => usuariDeSessio();
+  /* R24 · CODEX-R24-03 · El consens del joc «D'on parles?» ('consensIsoglosses'): vots i
+     aportacions d'esta instància, amb l'autoria de la sessió (sense sessió, cap escriptura). */
+  const consensIsoglosses = creaConsensIsoglossesMemoria({ usuari, ara, nouId });
   /* Qui actua en local: la sessió o, sense sessió, el convidat (com moderacio.js en seed). */
   const qui = () => usuari()?.id || getDefaultUserId();
   const bloquejosDe = (persona) => [...(moderacio.bloquejos.get(String(persona))?.values() ?? [])].reverse();
@@ -335,7 +339,8 @@ export function creaAdaptadorLocal({
 
   const metodes = {};
   for (const part of [creaCompteLocal(e), creaAdminUsuarisLocal(e), creaContingutLocal(e), creaNotesLocal(e), creaConversesLocal(e),
-    creaComunitatLocal(e), creaMitjansLocal(e), creaDadesObertesLocal(e), copublicacioLocal, creaRevisionsPatrimoniLocal(usuari, nouId), creaRevisionsEditorialsWpLocal(usuari, ara)]) {
+    creaComunitatLocal(e), creaMitjansLocal(e), creaDadesObertesLocal(e), copublicacioLocal, creaRevisionsPatrimoniLocal(usuari, nouId), creaRevisionsEditorialsWpLocal(usuari, ara),
+    consensIsoglosses.metodes]) {
     for (const [nom, fn] of Object.entries(part)) {
       if (Object.hasOwn(metodes, nom)) throw new Error(`[adaptadorLocal] ${nom} ve de dos mòduls.`);
       if (typeof fn !== 'function') throw new TypeError(`[adaptadorLocal] ${nom} ha de ser una funció.`);
@@ -352,7 +357,9 @@ export function creaAdaptadorLocal({
      microtasca de la guarda, com l'adaptador Supabase (capturaSessio síncron a
      sessioDelCompte): un canvi de sessió en el mateix tic de la crida ja no
      entra al mètode. La resta de mètodes és l'opció C (seguiment de P2-08). */
-  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades', 'loadProjeccionsCataleg', ...ADMINISTRATIUS, ...METODES_CONNEXIONS, ...Object.keys(CAPTURA_REVISIONS_PATRIMONI), ...Object.keys(CAPTURA_COPUBLICACIO)]);
+  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades', 'loadProjeccionsCataleg', ...ADMINISTRATIUS, ...METODES_CONNEXIONS, ...Object.keys(CAPTURA_REVISIONS_PATRIMONI), ...Object.keys(CAPTURA_COPUBLICACIO),
+    /* R24 · CODEX-R24-03 · El vot i l'aportació porten l'autoria de la sessió: la de la crida. */
+    'votaVariantIsoglossaPoble', 'desaAportacioVeuPoble']);
   /* La guarda transversal: un adaptador tancat no respon, i una crida
      síncrona que llança es torna un rebuig. El senyal i el tancament es miren
      en cridar i, de nou, just abans d'entrar al magatzem (la microtasca
@@ -411,6 +418,7 @@ export function creaAdaptadorLocal({
     moderacio.bloquejos.clear();
     moderacio.normes.clear();
     dadesObertes.estat = estatBuitDeDadesObertes();
+    consensIsoglosses.reinicia();
     perfils.reinicia();
     seguiments.reinicia();
     /* Mai reiniciaLocalXat(): és global i buidaria també el Xat d'altres

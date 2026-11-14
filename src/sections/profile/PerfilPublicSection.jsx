@@ -54,10 +54,18 @@ import { loadPerfilPublic, teCapacitat } from '../../data/backendPort.js';
 import { renderRichText } from '../detail/detailRichText.jsx';
 import { useLlenguaDelContingut } from '../../components/universal/traduccio/llenguaDelContingut.js';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
-/* Gauntlet 261016 (Bloc 3) · El tipus de perfil d'un agent del catàleg, de la
-   seua font única a la capa de dades (abans, la còpia del directori): un
-   personatge ANIMAL és una IA. */
-import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
+/* P0-SEO-UNIVERSAL · Les fitxes del paquet i la regla que les fa de reserva
+   (mòdul pur, compartit amb el prerender social del build). El tipus de perfil
+   d'un agent del catàleg (Gauntlet 261016, Bloc 3) el llig ell de agentsSeed.js. */
+import {
+  ambReservaDelPaquet, perfilDelCataleg, perfilDeLaIADelPaquet, perfilDeLaPersonaPilot, perfilFundacionalDelPaquet
+} from './perfilsDelPaquet.js';
+/* P0-SEO-UNIVERSAL · El head de la fitxa (títol, descripció, imatge, adreça
+   canònica i indexació): la mateixa regla que escriu el prerender. */
+import { indexDePerfil, metadadesDePerfil, rutaPublicaDePerfil } from '../../config/metadadesDePerfil.js';
+import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
+/* El propietari del head (seoHead) diu si el document en porta un de servit pel prerender. */
+import { hiHaHeadServit } from '../../hooks/seoHead.js';
 import { backendScope, normalizeBackendConfig } from '../../config/backendConfig.js';
 import { esAppNativa, origenPublic } from '../../config/origenPublic.js';
 /* T43 (ordre del Mestre, 260928) · Connectar una fitxa pública porta el seu
@@ -72,8 +80,8 @@ import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 import { fontVideoPropia } from '../../utils/sanitize.js';
 import {
-  ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, entitatSeed, esComptePersonaPilot,
-  esIAIA, fundacionalDeLaClau
+  ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, esComptePersonaPilot,
+  esIAIA
 } from '../../data/identitatsSeed.js';
 /* Onada 11 (261010; refutació del front C, D12) · El destí del xat de la IAIA
    és el mateix que el de la seua fila de la llista i el del botó de /iaia. */
@@ -129,78 +137,12 @@ export function presentacioAmbLaTargetaDeLAnima(html) {
   return fiDelTitol === -1 ? `${text}${targeta}` : `${text.slice(0, fiDelTitol + 5)}${targeta}${text.slice(fiDelTitol + 5)}`;
 }
 
-/** El mateix DTO que loadPerfilPublic, però des del catàleg d'agents del paquet. */
-export function perfilDelCataleg(agent) {
-  if (!agent) return null;
-  const tipus = tipusDAgent(agent);
-  return {
-    tipus, id: agent.id, slug: null, nom: agent.name, avatar: agent.avatar_url || '',
-    hero: agent.hero_video_url ? (agent.hero_url || '') : '',
-    ...(agent.hero_video_url ? { heroVideo: agent.hero_video_url } : null),
-    lema: agent.lema || '',
-    bio: agent.role || '', presentacioHtml: agent.short_bio || '', poble: agent.town_name || '', esIA: tipus === 'ia',
-    publicat: true, propietari: false, copyright: '', emoticona: ''
-  };
-}
-
-/**
- * Onada 11 (261010; prompt 261010_1730, tasca 6, D12) · El mateix DTO que
- * loadPerfilPublic, des del padró d'IA del paquet (AGENTS_IA_SEED,
- * identitatsSeed.js: hui, la IAIA MarIA), amb la seua presentació sencera
- * (com publicDAgent de data/localPerfils.js). Sense `creat` ni `modificat`:
- * cap data inventada (T51), i la barra taronja no pinta cap pastilla.
- * `propietari` és sempre false: fora de la llavor no hi ha cap rol que mane
- * sobre ella.
- */
-export function perfilDeLaIADelPaquet(agent) {
-  if (!agent) return null;
-  return {
-    tipus: 'ia', id: agent.id, slug: agent.slug || null, nom: agent.name, avatar: agent.avatar_url || '',
-    hero: agent.hero_url || '', ...(agent.hero_video_url ? { heroVideo: agent.hero_video_url } : null),
-    lema: agent.lema || '', bio: agent.role || '',
-    presentacioHtml: agent.presentacio_html || agent.short_bio || '', poble: agent.town_name || '',
-    esIA: true, publicat: true, propietari: false, copyright: agent.copyright || '', emoticona: '',
-    /* Ordre del Mestre (261021, pla 261021_0015 §8.1) · La pastilla de data i
-       hora de la barra taronja: les dates que declara la fila de l'agent
-       (AGENTS_IA_SEED). Sense dates, cap pastilla (T51: cap data inventada). */
-    creat: agent.created_at || undefined, modificat: agent.updated_at || undefined
-  };
-}
-
-/**
- * Revisió adversarial del Gauntlet 261016 (encàrrec C; pla aprovat, Onada 1
- * punt 5: «perfilDeLaPersonaPilot com a fallback per a qualsevol àlies de la
- * persona pilot») · La fitxa de la persona pilot que el paquet ja publica: la
- * del catàleg (AGENTS_MAP.JAVI, la mateixa que localPerfils.js dona sense
- * sessió). Ningú no n'és propietari: fora de la llavor cap rol hi mana.
- */
-export const perfilDeLaPersonaPilot = () => perfilDelCataleg(AGENTS_MAP.JAVI);
-
-/**
- * Revisió adversarial del Gauntlet 261016 (encàrrec C) · La fitxa del paquet
- * d'una de les tres identitats del Mestre per la clau que es demana, o null.
- * La clau es reconeix per un identificador que declara la llavor
- * (identitatsSeed.js · fundacionalDeLaClau: id, àlies, slug declarat o id
- * remot declarat), mai pel nom ni pel slug que torne el servidor. Les dades són
- * les que el paquet ja publica: la persona pilot, la del catàleg; una entitat,
- * la del padró (ENTITATS_SEED), amb la forma del DTO de localPerfils.js. Sense
- * propietari, sense correu i sense dates (T51: cap data inventada).
- */
-export function perfilFundacionalDelPaquet(clau) {
-  const fundacional = fundacionalDeLaClau(clau);
-  if (!fundacional) return null;
-  if (fundacional === PERSONA_PILOT.slug) return perfilDeLaPersonaPilot();
-  const entitat = entitatSeed(fundacional);
-  if (!entitat) return null;
-  return {
-    tipus: entitat.kind === 'group' ? 'grup' : 'entitat', id: entitat.id, slug: entitat.slug, nom: entitat.name,
-    avatar: entitat.logo_url || '', hero: entitat.hero_url || '',
-    ...(entitat.hero_video_url ? { heroVideo: entitat.hero_video_url } : null),
-    lema: entitat.lema || '', bio: entitat.description || '',
-    presentacioHtml: entitat.presentacio_html || '', poble: entitat.town_name || '', esIA: false,
-    publicat: entitat.visibility === 'public', propietari: false, copyright: entitat.copyright || '', correu: '', emoticona: ''
-  };
-}
+/* P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) · Les fitxes del paquet
+   (perfilDelCataleg, perfilDeLaIADelPaquet, perfilDeLaPersonaPilot i
+   perfilFundacionalDelPaquet) viuen ara a perfilsDelPaquet.js, un mòdul pur que
+   també carrega el prerender social del build: el cos de cada una no ha canviat.
+   Es reexporten ací perquè cap import d'abans es trenque. */
+export { perfilDelCataleg, perfilDeLaIADelPaquet, perfilDeLaPersonaPilot, perfilFundacionalDelPaquet };
 
 /**
  * Gauntlet 261022_0225 (Tasca 1: «Erradicació del Spinner Infinit») · La
@@ -358,9 +300,8 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS, tipusIdAcredit
          la resposta buida del servidor continua manant: cap identitat del
          paquet suplix una d'inexistent al servidor (fora de les tres del
          Mestre, davall). Amb la capacitat de directori en llavor i en local el
-         port ja la torna, i ací no es passa. */
-      if (!tipusIdAcreditat && !perfil) perfil = perfilDeLaIADelPaquet(agentIASeed(clau));
-      /* Revisió adversarial del Gauntlet 261016 (encàrrec C; pla aprovat,
+         port ja la torna, i ací no es passa.
+         Revisió adversarial del Gauntlet 261016 (encàrrec C; pla aprovat,
          Onada 1 punt 5, «Paritat total entre local i producció»; prompt, Bloc
          3.5.1, les rutes canòniques dels beta-testers) · EXCEPCIÓ A D12,
          revocable per Direcció Tècnica: en remot el servidor no resol cap
@@ -375,9 +316,13 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS, tipusIdAcredit
          registrar. Si el servidor dona la fitxa, mana el servidor. Una clau de
          la persona només la pot resoldre una PERSONA: una organització que
          haja pres el slug «javillinares» (o '0001', 'javi'…) no es queda la
-         fitxa del Mestre. Per a tota altra persona o entitat, D12 es manté. */
-      const delPaquet = tipusIdAcreditat ? null : perfilFundacionalDelPaquet(clau);
-      if (delPaquet && (!perfil || (delPaquet.tipus === 'persona' && perfil.tipus !== 'persona'))) perfil = delPaquet;
+         fitxa del Mestre. Per a tota altra persona o entitat, D12 es manté.
+         P0-SEO-UNIVERSAL (13-11-2026) · La regla sencera viu a
+         perfilsDelPaquet.js · ambReservaDelPaquet, que també crida el
+         prerender social del build, amb una guarda més: una clau d'IA del
+         paquet només la resol una IA (una empresa amb el slug 'iaia-maria' no
+         es queda la fitxa de la IAIA). */
+      if (!tipusIdAcreditat) perfil = ambReservaDelPaquet(clau, perfil);
       clearTimeout(termini);
       /* Gauntlet 261022_0225 (Tasca 1) · Una fallada (el host que no
          arrenca, la consulta que es talla) no és «Perfil no trobat»: sense
@@ -455,8 +400,10 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
      fitxes, la URL de sempre (useSEO, sense `canonical`).
      Gauntlet 261016_1530 (Bloc 3.6.3) · La fitxa de la IAIA MarIA (pel seu
      id, mai pel nom) declara /iaia, s'obriga per /iaia, /perfil/<id> o
-     /perfil/iaia-maria (rutaCanonicaDePerfil). */
-  const rutaCanonica = rutaCanonicaDePerfil(perfil);
+     /perfil/iaia-maria (rutaCanonicaDePerfil).
+     P0-SEO-UNIVERSAL (13-11-2026) · La resta de fitxes també declaren ara la
+     seua (rutaPublicaDePerfil, davall): /empresa/<slug>, /grup/<slug> o
+     /gent/<id>; mai la d'una identitat del Mestre que no són. */
 
   /* Gauntlet 261022_0225 (T9-4) · Mentre carrega, el títol del document diu
      que carrega, no «Perfil no trobat», i no s'indexa; el de l'avís, l'avís. */
@@ -465,15 +412,30 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
     : senseResposta
       ? t('section.perfil.public.senseResposta', 'No s’ha pogut carregar el perfil')
       : t('section.perfil.public.noTrobat', 'Perfil no trobat');
+  /* P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) · El head de la fitxa és el
+     de metadadesDePerfil, la mateixa regla que escriu el prerender del build
+     (dist/<ruta>/index.html): títol = nom; descripció = lema o, sense, bio;
+     imatge = portada o, sense, avatar, ja resolta (una foto sdp-media:// del
+     bucket públic ix amb la seua URL; abans arribava crua a useSEO i el head
+     queia a la targeta genèrica). Tota fitxa declara la seua adreça canònica
+     (rutaPublicaDePerfil): s'obriga per on s'obriga, un sol perfil té una sola
+     adreça, la mateixa que porta el fitxer prerenderitzat. Mentre carrega, si el
+     document porta un head servit (el del fitxer prerenderitzat; ho diu
+     seoHead · hiHaHeadServit), index: true: un index: false ací feia que seoHead el purgara
+     abans de saber qui era la fitxa. Sense head servit, com sempre: mentre
+     carrega no s'indexa (T9-4). Una fitxa no trobada o sense resposta continua
+     sense indexar, i llavors seoHead sí que retira el head servit. */
+  const metadades = perfil ? metadadesDePerfil(perfil, opcionsDeLaImatgeSocial()) : null;
+  const rutaPublica = perfil ? rutaPublicaDePerfil(perfil) : null;
   useSEO({
-    title: perfil ? perfil.nom : titolSenseFitxa,
-    description: perfil ? (perfil.lema || perfil.bio || '') : '',
+    title: metadades ? metadades.title : titolSenseFitxa,
+    description: metadades ? metadades.description : '',
     /* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · La imatge SEO
        és la portada (sdp-universal-page §1.B); sense portada, l'avatar. */
-    image: perfil?.hero || perfil?.avatar || null,
+    image: metadades?.image || null,
     type: perfil?.tipus === 'persona' ? 'Person' : 'Organization',
-    index: Boolean(perfil?.publicat),
-    ...(rutaCanonica ? { canonical: urlCanonica(rutaCanonica) } : {})
+    index: perfil ? indexDePerfil(perfil, rutaPublica) : (carregant && hiHaHeadServit()),
+    ...(rutaPublica ? { canonical: urlCanonica(rutaPublica) } : {})
   });
 
   /* T63.2 · Mentre carrega o si no el troba, encara no sabem qui és (el prefix
@@ -767,9 +729,17 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
      Es queden «Parla amb…» d'una IA (en llavor, qui té sessió mana a Sóc de
      Poble i és propietari de la IAIA) i la persona pilot pel seu id (el del
      padró o l'UUID declarat): XatContext.creaFil la porta al servei tècnic
-     (P1-70), també per id i mai pel slug. */
-  const directeAmbUnMateix = !perfil.esIA && !esLaPilotDelPaquet && !esComptePersonaPilot({ id: perfil.id })
-    && (perfil.propietari === true || administra);
+     (P1-70), també per id i mai pel slug.
+     Onada R24.2 (revisió adversarial) · Llevat que qui té la sessió siga la
+     persona pilot (esComptePersonaPilot de l'usuari de sessió: id d'un àlies,
+     UUID declarat o correu acreditat): amb l'UUID declarat, el botó de la seua
+     fitxa (/javillinares o /gent/<UUID>) l'enviava a /xat?amb=<el seu UUID>,
+     el xat amb ell mateix («Encara no pots escriure't a tu mateix»). Per a
+     ella, la fitxa de la persona pilot és la pròpia i no pinta el botó. */
+  const esFitxaDeLaPilot = esLaPilotDelPaquet || esComptePersonaPilot({ id: perfil.id });
+  const directeAmbUnMateix = !perfil.esIA && (esFitxaDeLaPilot
+    ? esComptePersonaPilot(sessio?.currentUser)
+    : (perfil.propietari === true || administra));
   const rutaDelXat = (!ambXat || directeAmbUnMateix) ? null : esIAIA(perfil.id)
     ? rutaDelXatDeLaIAIA(modeDades, senseSessio)
     : esLaPilotDelPaquet
@@ -782,8 +752,9 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
     ? t('section.perfil.public.parlaIA', 'Parla amb la IAIA')
     : omple(t('section.perfil.public.parlaIAAltres', 'Parla amb {nom}'), { nom: perfil.nom });
   /* Revisió del Gauntlet 261022_0225 (REV-PERF-7) · Sense cap botó (la fitxa
-     del paquet de la persona pilot en remot amb sessió, P4b-3), la fila no es
-     pinta: el seu marge deixava un forat davall de l'entradilla. */
+     del paquet de la persona pilot en remot amb sessió, P4b-3, o mirada per
+     ella mateixa, R24.2), la fila no es pinta: el seu marge deixava un forat
+     davall de l'entradilla. */
   const ambAccions = Boolean(rutaDelXat) || (ambEdita && (perfil.propietari || administra)) || (administra && !actuaComEsta);
   /* Gauntlet 261030 (cicle 2, traduir-fitxa-propia-veinat-connectat;
      decisió 7) · La fitxa pròpia d'una persona, mirada per ella, porta al peu

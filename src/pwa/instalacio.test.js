@@ -2,8 +2,10 @@
 /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · el magatzem de
    l'oferta d'instal·lar a l'ordinador (beforeinstallprompt). Tot amb dobles:
    cap navegador, com registre.test.js. */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
-import { INSTALACIO, MODES_D_APP, capturaInstalacio, creaInstalacio, esFinestraDApp, motiuPerNoOferir } from './instalacio.js';
+import { INSTALACIO, MODES_D_APP, OFERTA_PROPIA_ESCRIPTORI, capturaInstalacio, creaInstalacio, esFinestraDApp, motiuPerNoOferir } from './instalacio.js';
 
 /** Una finestra i un navigator de Chrome d'escriptori, en condicions d'oferir. */
 function entorn({ suport = true, segur = true, incrustat = false, capacitor, modes = [], standalone, mobil } = {}) {
@@ -133,10 +135,10 @@ describe('creaInstalacio · captura', () => {
       escoltes.get('beforeinstallprompt')(e);
       expect([e.preventDefault.mock.calls.length, magatzem.ofereix(), magatzem.pot()]).toEqual([0, true, false]);
     }
-    // Linux d'escriptori no és Android: la pastilla, com sempre.
+    // Linux d'escriptori no és Android: la pastilla, com sempre (amb l'oferta pròpia muntada, R24 P-F).
     const { finestra, escoltes } = entorn();
     const magatzem = creaInstalacio();
-    magatzem.captura({ finestra, navegador: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', userAgentData: { mobile: false, platform: 'Linux' } } });
+    magatzem.captura({ finestra, navegador: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', userAgentData: { mobile: false, platform: 'Linux' } }, interceptaEscriptori: true });
     const e = oferta();
     escoltes.get('beforeinstallprompt')(e);
     expect([e.preventDefault.mock.calls.length, magatzem.pot()]).toEqual([1, true]);
@@ -202,12 +204,12 @@ describe('creaInstalacio · captura', () => {
     expect([...escoltes.keys()].sort()).toEqual(['appinstalled', 'beforeinstallprompt']);
   });
 
-  test('l\'oferta: preventDefault una volta, pot() passa a true i els subscriptors ho saben', () => {
+  test('l\'oferta amb la pastilla muntada: preventDefault una volta, pot() passa a true i els subscriptors ho saben', () => {
     const { finestra, navegador, escoltes } = entorn();
     const magatzem = creaInstalacio();
     const avisat = vi.fn();
     magatzem.subscriu(avisat);
-    magatzem.captura({ finestra, navegador });
+    magatzem.captura({ finestra, navegador, interceptaEscriptori: true });
     expect(magatzem.pot()).toBe(false);
     const e = oferta();
     escoltes.get('beforeinstallprompt')(e);
@@ -331,6 +333,63 @@ describe('creaInstalacio · demana', () => {
     expect(magatzem.pot()).toBe(false);
     escoltes.get('beforeinstallprompt')(oferta());
     expect(magatzem.pot()).toBe(true);
+  });
+});
+
+/* Onada R24 · Consola Zero (P-F, informe 261114 «consola_404_chunks» §3.5) ·
+   Cap preventDefault() a l'escriptori mentre la barra negra no munte la
+   pastilla: Chrome escrivia «Banner not shown: beforeinstallpromptevent.
+   preventDefault() called…» a cada càrrega instal·lable, i ningú no cridava
+   prompt(). L'esdeveniment es guarda igual: el botó de Descàrregues
+   (InstalaLaPwa) l'obri amb demana(). */
+describe('R24 · P-F · escriptori sense oferta pròpia muntada', () => {
+  test('per defecte, a l’escriptori guarda l’oferta SENSE preventDefault: ofereix() i pot() sí, i demana() obri el diàleg', async () => {
+    const { finestra, navegador, escoltes } = entorn({ mobil: false });
+    const magatzem = creaInstalacio();
+    expect(magatzem.captura({ finestra, navegador }).escolta).toBe(true);
+    const e = oferta();
+    escoltes.get('beforeinstallprompt')(e);
+    expect(e.preventDefault).not.toHaveBeenCalled();
+    expect([magatzem.ofereix(), magatzem.pot()]).toEqual([true, true]);
+    const promesa = magatzem.demana();
+    expect(e.prompt).toHaveBeenCalledTimes(1);
+    await expect(promesa).resolves.toBe('accepted');
+  });
+
+  test('interceptaEscriptori només val a l’escriptori: al mòbil i a Android mai no hi ha preventDefault', () => {
+    for (const opcions of [{ mobil: true }, {}]) {
+      const { finestra, escoltes } = entorn(opcions);
+      const navegador = opcions.mobil ? { userAgentData: { mobile: true } } : { userAgentData: { mobile: false, platform: 'Android' } };
+      const magatzem = creaInstalacio();
+      magatzem.captura({ finestra, navegador, interceptaEscriptori: true });
+      const e = oferta();
+      escoltes.get('beforeinstallprompt')(e);
+      expect([e.preventDefault.mock.calls.length, magatzem.ofereix(), magatzem.pot()]).toEqual([0, true, false]);
+    }
+  });
+
+  test('només el booleà true intercepta: un valor estrany no amaga l’oferta del navegador', () => {
+    for (const valor of [1, 'true', {}, null]) {
+      const { finestra, navegador, escoltes } = entorn({ mobil: false });
+      const magatzem = creaInstalacio();
+      magatzem.captura({ finestra, navegador, interceptaEscriptori: valor });
+      const e = oferta();
+      escoltes.get('beforeinstallprompt')(e);
+      expect(e.preventDefault, String(valor)).not.toHaveBeenCalled();
+    }
+  });
+
+  /* La constant i la barra negra diuen el mateix: si algú torna a muntar la
+     pastilla sense encendre la constant (o a l'inrevés), esta prova cau. Els
+     comentaris de bloc ({/* … *\/}) no compten: App.jsx nomena el component en
+     el que explica la pausa de la beta. */
+  test('OFERTA_PROPIA_ESCRIPTORI és cert si i només si src/app/App.jsx munta <BotoInstalaApp>', () => {
+    const app = readFileSync(path.join(process.cwd(), 'src/app/App.jsx'), 'utf8');
+    const senseComentaris = app.replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(typeof OFERTA_PROPIA_ESCRIPTORI).toBe('boolean');
+    expect(OFERTA_PROPIA_ESCRIPTORI).toBe(/<BotoInstalaApp\b/.test(senseComentaris));
+    // El comentari de la pausa continua nomenant-lo: la neteja de comentaris és la que decidix.
+    expect(app).toMatch(/<BotoInstalaApp \/>/);
   });
 });
 

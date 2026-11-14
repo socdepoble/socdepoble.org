@@ -6,7 +6,8 @@ import CapcaleraConversa from './CapcaleraConversa.jsx';
 import {MemoryRouter} from '../../../app/contexts/RouterContext.jsx';
 const t=(_,fallback)=>fallback;
 afterEach(cleanup);
-it.each([['enviat','Enviat'],['lliurat','Lliurat'],['llegit','Llegit'],['pendent','Pendent'],['error','No enviat']])('status%s has distinct accessible text', (estat,label)=>{
+/* R24 · xat_entrega (P2-9) · Textos honestos: «Enviat al servidor» i «Ha arribat a l’aplicació». */
+it.each([['enviat','Enviat al servidor'],['lliurat','Ha arribat a l’aplicació'],['llegit','Llegit'],['pendent','Pendent'],['error','No enviat']])('status%s has distinct accessible text', (estat,label)=>{
  const {container}=render(<MarquesEstat estat={estat} t={t}/>);expect(screen.getByText(label)).toBeTruthy();expect(container.querySelector(`.sdp-xat-marques--${estat}`)).toBeTruthy();expect(container.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
 });
 it('presence is silent when absent and generic when actually observed, with no names/text',()=>{

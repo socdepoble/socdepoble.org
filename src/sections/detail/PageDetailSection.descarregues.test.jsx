@@ -273,7 +273,10 @@ describe('P1-69 · Chromium amb l’oferta', () => {
       // Encara dins del clic: cap await abans de prompt().
       expect(e.prompt).toHaveBeenCalledTimes(1);
     });
-    expect(e.preventDefault).toHaveBeenCalledTimes(1);
+    /* Onada R24 (P-F) · L'entrada pròpia ja no cancel·la l'oferta a l'escriptori
+       mentre la barra negra no munta la pastilla (OFERTA_PROPIA_ESCRIPTORI fals):
+       prompt() l'obri igual, sense preventDefault ni «Banner not shown» a la consola. */
+    expect(e.preventDefault).not.toHaveBeenCalled();
     expect(screen.queryAllByRole('button', { name: INSTALAR })).toHaveLength(0);
     const avisos = [...document.querySelectorAll('.sdp-alerta--exit')];
     expect(avisos.map((avis) => avis.textContent)).toEqual([INSTALADA, INSTALADA]);

@@ -66,7 +66,10 @@ test('la IAIA porta avís d’intel·ligència artificial i el botó parla amb e
   fireEvent.click(screen.getByRole('button', { name: 'Parla amb la IAIA' }));
   expect(mocks.navigate).toHaveBeenCalledWith('/xat?amb=iaia');
   expect(screen.queryByRole('button', { name: 'Edita la fitxa' })).toBeNull();
-  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'IAIA MarIA', index: true }));
+  /* P0-SEO-UNIVERSAL (13-11-2026) · Expectativa actualitzada a posta: la fitxa declara la seua adreça canònica
+     (rutaPublicaDePerfil). Esta IA de mostra (id 'iaia', no la IAIA del paquet) la té a /perfil/iaia, la família
+     sense indexar: index false, com ja deia useSEO pel camí. La IAIA de veres declara /iaia (canonica.test). */
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'IAIA MarIA', index: false, canonical: expect.stringMatching(/\/perfil\/iaia$/) }));
 });
 
 test('la fitxa pròpia d’una entitat s’edita des del Workspace i no porta avís d’IA', async () => {

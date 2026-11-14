@@ -11,8 +11,16 @@
  * emmagatzematge persistent ni ix del navegador: recarregar la pàgina el
  * buida, i `buidaEsborranys` el buida en calent (XatContext, quan canvia la
  * persona: eixir o entrar; i les proves).
+ * Onada R24 (CODEX-R24-13) · Mentre hi ha cap esborrany, el mòdul ho marca al
+ * registre de l'estat pendent (src/pwa/estatsPendents.js, només la clau del
+ * proveïdor, cap text): la recuperació de desplegament no recarrega sola i el
+ * text no es perd. Buidat (també en canviar de persona), la marca se'n va.
  */
+import { marcaEstatPendent, netejaEstatPendent } from '../../pwa/estatsPendents.js';
+
 const esborranys = new Map();
+const CLAU_PENDENT = 'xat.esborranys';
+const senyalaPendent = () => (esborranys.size ? marcaEstatPendent(CLAU_PENDENT) : netejaEstatPendent(CLAU_PENDENT));
 
 /** El text desat per a `clau`, o '' si no n'hi ha (o si no hi ha clau). */
 export function llegixEsborrany(clau) {
@@ -26,15 +34,18 @@ export function desaEsborrany(clau, text) {
   const valor = String(text ?? '');
   if (valor) esborranys.set(String(clau), valor);
   else esborranys.delete(String(clau));
+  senyalaPendent();
 }
 
 /** Oblida l'esborrany de `clau` (en enviar). */
 export function esborraEsborrany(clau) {
   if (!clau) return;
   esborranys.delete(String(clau));
+  senyalaPendent();
 }
 
 /** Oblida tots els esborranys. */
 export function buidaEsborranys() {
   esborranys.clear();
+  senyalaPendent();
 }

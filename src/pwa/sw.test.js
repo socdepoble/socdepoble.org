@@ -366,11 +366,27 @@ describe('memòries: neteja i poda (pures)', () => {
 
   test('els sostres: més entrades que chunks té un build i més del doble del seu JS', () => {
     // 261101: 354 chunks amb empremta i 7,1 MB de JS per build.
-    expect(api.MAXIM_RECURSOS).toBe(600);
-    expect(api.MAXIM_BYTES).toBe(16 * 1024 * 1024);
+    expect(api.MAXIM_RECURSOS).toBe(1500);
+    expect(api.MAXIM_BYTES).toBe(48 * 1024 * 1024);
     expect(api.MAXIM_RECURSOS).toBeGreaterThan(354);
     expect(api.MAXIM_BYTES).toBeGreaterThan(2 * 7131819);
     expect(api.CAPCALERA_MIDA).toBe('x-sdp-mida');
+  });
+
+  /* Onada R24 · Consola Zero (P-C, informe 261114 «consola_404_chunks» §3.6) ·
+     La regla del comentari de MAXIM_RECURSOS, com a pressupost declarat: el
+     build de referència no pot passar de la meitat de cap dels dos sostres.
+     El de producció del 14-11 a les 03:27 (l'arxiu dist_produccio_261114_0327,
+     560 trossos amb empremta a l'arrel d'/assets i 16.802.988 B de JS) ja
+     passava de la meitat dels de 261101 (600 i 16 MiB): la poda treia trossos
+     del build viu abans d'hora. L'arnés Consola Zero (tooling/gates/
+     consola-zero.mjs) mesura cada build nou amb la mateixa regla. */
+  const BUILD_DE_REFERENCIA = Object.freeze({ data: '261114_0327', trossos: 560, bytes: 16802988 });
+  test('R24 · P-C: el build de referència cap dins de la meitat de cada sostre (la regla del comentari)', () => {
+    expect(BUILD_DE_REFERENCIA.trossos).toBeLessThanOrEqual(api.MAXIM_RECURSOS / 2);
+    expect(BUILD_DE_REFERENCIA.bytes).toBeLessThanOrEqual(api.MAXIM_BYTES / 2);
+    // El comentari de sw.js porta les xifres del build de referència: si canvien, es canvien als dos llocs.
+    expect(CODI).toMatch(/261114[^\n]*\n?[^\n]*560 trossos/);
   });
 });
 

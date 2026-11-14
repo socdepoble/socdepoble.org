@@ -16,7 +16,7 @@ const CATEGORIES_MARES_CANONIQUES_6 = [
   '🌿 Natura i Patrimoni',
   '🎭 Cultura, Música i Llengua',
   '🤝 Món Rural',
-  '💻 Tecnologia Lliure, Dades Obertes i Disseny',
+  '💻 Tecnologia i Disseny',
 ];
 
 const ETIQUETES_ANTIGUES_EXTIRPADES = [

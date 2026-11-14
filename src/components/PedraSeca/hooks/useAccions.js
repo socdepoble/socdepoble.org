@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate, useRouter } from '../../../app/contexts/RouterContext';
+import { useNavigate } from '../../../app/contexts/RouterContext';
 import { resolRuta, treuBase } from '../../../app/contexts/politicaRouter.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { registraEsdeveniment, seccioActual } from '../../../data/telemetria.js';
@@ -9,6 +9,7 @@ import {
 import { useXatSocDePoble } from './xatSocDePoble.js';
 import { useModeracio } from './moderacioDePoble.js';
 import { origenDeLaPagina, origenPublic, urlDeLaPagina } from '../../../config/origenPublic.js';
+import { useUbicacioApp } from './useUbicacioApp.js';
 
 /* T63.2 · La via pública de Comentar cridada on no hi ha cap xat públic (una
    pàgina sense xat comú, un element que no s'ha trobat): ho diu, no navega
@@ -31,24 +32,11 @@ export function registraConnectar({ origen, mode } = {}) {
   try { registraEsdeveniment('connectar', dades); } catch { /* la telemetria mai trenca el clic */ }
 }
 
-/**
- * T43a-1 (C3) · El router on viu l'app, si n'hi ha cap de llegible:
- * { memoria, basename, currentPath, searchParams }. null vol dir «llig la barra
- * d'adreces, com abans»: un arbre sense RouterProvider o una prova que simula
- * RouterContext només amb useNavigate (UniversalEditorShell, DocumentEditor,
- * PageFrame, UniversalCard…), on llegir useRouter peta.
- * L'ordre dels hooks no canvia mai: useRouter fa el seu useContext abans de
- * queixar-se, i una exportació simulada que falta peta abans de cridar-ne cap.
- * La forma `return useRouter()` és la que rules-of-hooks accepta dins d'un try:
- * una assignació (`r = useRouter()`) el fa passar per condicional.
- */
-export function useUbicacioApp() {
-  try {
-    return useRouter() ?? null;
-  } catch {
-    return null;
-  }
-}
+/* Onada R24 · wp_trinquet (SEO-R22-08) · useUbicacioApp (T43a-1, C3: el router on
+   viu l'app, o null) viu al seu mòdul, useUbicacioApp.js, i es reexporta d'ací
+   amb el mateix nom: la barra d'identitat, que és de l'arrencada, l'importa
+   d'allí sense arrossegar useAccions al tros d'entrada. */
+export { useUbicacioApp };
 
 const esRutaDeLApp = (valor) => typeof valor === 'string' && valor.startsWith('/') && !valor.startsWith('//');
 

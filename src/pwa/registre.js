@@ -24,6 +24,7 @@
    amb empremta nou: el de l'app, el d'una vista oberta més tard. */
 
 import { configuraRecuperacioLazy } from '../apps/plataforma/lazyRoute.js';
+import { hiHaEstatPendent } from './estatsPendents.js';
 import { recuperaErrorChunkDeploy, instalLaRecuperacioChunkDeploy } from './recuperacioChunkDeploy.js';
 
 export const RUTA_DEL_SW = '/sw.js';
@@ -316,9 +317,11 @@ export function registraServiceWorker({
 } = {}) {
   // La recuperació de chunks no necessita suport SW. Manté, però, la mateixa
   // frontera de producció, document propi, HTTPS i exclusió de Capacitor.
+  // Onada R24 (CODEX-R24-13) · `tePendents`: el registre explícit de l'estat
+  // que només viu en memòria (estatsPendents.js), que marquen els proveïdors.
   try {
     if (!motiuPerNoRegistrar({ produccio, navegador: { serviceWorker: null }, finestra })) {
-      instalLaRecuperacioChunkDeploy({ navegador, finestra,
+      instalLaRecuperacioChunkDeploy({ navegador, finestra, tePendents: hiHaEstatPendent,
         preparaWorker: ({ vigent }) => actualitzaWorkerPerDeploy({ navegador, finestra, vigent }) });
       configuraRecuperacioLazy(recuperaErrorChunkDeploy);
     }

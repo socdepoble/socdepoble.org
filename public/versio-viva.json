@@ -1,0 +1,16 @@
+{
+  "versioSistema": "1.2.0",
+  "versioMinima": 2,
+  "versioRecomanada": 2,
+  "canals": {
+    "android": {
+      "paquet": "org.socdepoble.app",
+      "enllac": "https://play.google.com/store/apps/details?id=org.socdepoble.app",
+      "marketUrl": "market://details?id=org.socdepoble.app"
+    },
+    "ios": {
+      "appId": "id6826441844",
+      "enllac": "https://apps.apple.com/es/app/soc-de-poble/id6826441844"
+    }
+  }
+}

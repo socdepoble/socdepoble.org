@@ -3,6 +3,7 @@
  * Fins que Node 0 tinga sessions d'usuari, auth/escriptura/xat rebutgen. */
 import { CONTRACTE_NUCLI } from '../contracte.js';
 import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
+import { urlSegura } from '../node0Client.js';
 export const BACKEND_ID_NODE_ZERO = 'sdp-node0-http';
 export const URL_NODE_ZERO = 'https://socdepoble.cat/api/v1/node0';
 export const CONVIDAT_NODE_ZERO = '00000000-0000-4000-8000-000000000001';
@@ -21,6 +22,11 @@ const TEXT = Object.freeze(['id','slug','type','kind','sectionId','name','title'
 const BOOL = Object.freeze(['isPublished','is_public','pinned','featured','portada_sencera','sensitive']);
 const NUM = Object.freeze(['lat','lng','revision','duration','width','height','_editorialVersio']);
 const LIST = Object.freeze(['labels','tags','images','image_urls','gallery','categories']);
+/* R22 (sospita de frontissa) · Els camps que acaben en un href: el filtre del R6 Bloc 4 (urlSegura,
+   node0Client.js) els deixa en http(s) sense credencials o en un camí de l'arrel; un `javascript:`,
+   un `data:` o un `//fora` del Node 0 queda buit (React 18 no bloqueja `javascript:` als href).
+   Les imatges no hi entren: poden ser sdp-media:// i les filtra qui les pinta (resolveAsset). */
+const ENLLACOS = new Set(['url','external_url','href','linkTo','source_url','canonicalUrl','uri']);
 const error = (codi, missatge, status) => Object.assign(new Error(missatge), { code:codi, codi, ...(status ? {status} : {}) });
 const invalid = () => error('BACKEND_RESPOSTA_INVALIDA', 'El Node 0 ha tornat dades invàlides.');
 const cancelacio = () => new DOMException('Operació cancel·lada.', 'AbortError');
@@ -39,7 +45,7 @@ export function normalitzaEndpointNodeZero(valor = URL_NODE_ZERO) {
 function filaPublica(fila) {
   if (!objecte(fila)) return null;
   const net = {};
-  for (const key of TEXT) if (Object.hasOwn(fila,key)) net[key] = text(fila[key]);
+  for (const key of TEXT) if (Object.hasOwn(fila,key)) net[key] = ENLLACOS.has(key) ? urlSegura(text(fila[key])) : text(fila[key]);
   if (!net.id) return null;
   for (const key of BOOL) if (typeof fila[key] === 'boolean') net[key] = fila[key];
   for (const key of NUM) if (typeof fila[key] === 'number' && Number.isFinite(fila[key])) net[key] = fila[key];

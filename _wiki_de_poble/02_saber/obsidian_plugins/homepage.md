@@ -10,7 +10,7 @@ tags:
 
 Fitxa de consulta del **connector comunitari Homepage**, que **obri una nota**, un llenç, una base o un espai de treball **en arrencar Obsidian** i el deixa a mà per a **tornar-hi**. És una **referència d'eines** per a treballar la Wiki des d'Obsidian, **no cap dependència de l'app**.
 
-## Com s'usa
+## Com s'utilitza
 
 Per defecte, Homepage obri en arrencar una nota anomenada `Home`, però es pot ajustar al flux de treball de cadascú des del panell `Homepage` de la configuració d'Obsidian.
 

@@ -80,7 +80,7 @@
  * missatgeria.
  */
 import { Component, Suspense, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, CircleX, MessageCircle, Plus, Search, Users, X } from 'lucide-react';
+import { Archive, ArrowLeft, CircleX, MessageCircle, Plus, Search, Users, X } from 'lucide-react';
 import { useLocation, useNavigate, useParams, useSearchParams } from '../../app/contexts/RouterContext';
 import NotFoundPage from '../../pages/NotFoundPage';
 import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
@@ -92,6 +92,7 @@ import { esErrorLazy, lazyRoute, lazyRouteRenovable } from '../../apps/plataform
 import { esperaDeLaLlista, useXat } from './XatContext';
 import { useRitmeXat } from './useRitmeXat.js';
 import { derivaEstat } from './missatges.js';
+import { TEXTOS_ARXIVA } from './arxivaXat.js';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../notes/NotesDataContext';
@@ -152,6 +153,8 @@ import BotoInformaDUnError from './components/BotoInformaDUnError.jsx';
 import {
   anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, pobleDelXat, rutaSobreDelPoble
 } from './pobleAmfitrio.js';
+/* Onada R24 · IDEA-260 (a) · Una fila per persona i cap directe buit. */
+import { clauDePersona, unaFilaPerPersona } from './unaFilaPerPersona.js';
 
 /* Els quatre filtres fixos del patró de missatgeria (XAT-A17): identificador
    i clau i18n. */
@@ -181,10 +184,15 @@ function focusPerdut(node) {
 }
 
 /* Ordre del Mestre (261026_2126, P1-36) · El botó de la fila amb la clau
-   `clau` (el <li data-clau> de LlistaConverses), si la llista el pinta. */
+   `clau` (el <li data-clau> de LlistaConverses), si la llista el pinta.
+   Onada R24 (IDEA-260 a) · O el de la fila plegada d'una persona que porta
+   eixe fil entre els seus canals (data-canals): en tornar d'una conversa, el
+   focus va a la fila de la persona encara que la represente un altre canal. */
 function botoDeLaFila(columna, clau) {
   if (!columna || clau == null) return null;
-  const fila = [...columna.querySelectorAll('li[data-clau]')].find((li) => li.getAttribute('data-clau') === clau);
+  const files = [...columna.querySelectorAll('li[data-clau]')];
+  const fila = files.find((li) => li.getAttribute('data-clau') === clau)
+    || files.find((li) => (li.getAttribute('data-canals') || '').split(' ').includes(clau));
   return fila?.querySelector('button') || null;
 }
 
@@ -462,7 +470,9 @@ function XatWorkspace({ origen = null }) {
     /* P1-70 (261029) · La conversa d'atenció personal i servei tècnic amb
        Javi, quan no se'n pot obrir cap directe (XatContext). Un context
        d'abans no la porta: null, i la fila fa el de sempre. */
-    filServeiTecnic = null
+    filServeiTecnic = null,
+    potArxivarFil = mai,
+    arxivaFil = null
   } = useXat();
   /* Fase D (261020, tasca 2; pla 261020_1300) · Denunciar i bloquejar des de
      la conversa: només amb la capacitat i una sessió (el xat de mostra, mai).
@@ -523,6 +533,7 @@ function XatWorkspace({ origen = null }) {
 
   const [modeSeleccio, setModeSeleccio] = useState(false);
   const [triades, setTriades] = useState(() => new Set());
+  const [safataArxivatsOberta, setSafataArxivatsOberta] = useState(false);
 
   /* On torna el focus quan un canvi de vista desmunta el control que el
      tenia: la columna, el «+» (Nova conversa), la creu de la selecció i la
@@ -532,6 +543,8 @@ function XatWorkspace({ origen = null }) {
      amb la pulsació llarga (el focus hi torna en eixir-ne). */
   const columnaRef = useRef(null);
   const botoNovaRef = useRef(null);
+  const botoArxivatsRef = useRef(null);
+  const tornaArxivatsRef = useRef(null);
   const filaDeLaSeleccio = useRef(null);
   const eixirSeleccioRef = useRef(null);
   const tornaFitxaRef = useRef(null);
@@ -1011,6 +1024,12 @@ function XatWorkspace({ origen = null }) {
       llista.push({ clau: String(fil.id), tipus: 'fil', fil, fixat: Boolean(fil.fixat), instant: instantDe(fil.ultimAl) });
     }
     llista.sort((a, b) => (Number(b.fixat) - Number(a.fixat)) || (b.instant - a.instant));
+    /* Onada R24 · IDEA-260 (a) (C1 i C2; opció B, compatible amb R21.8) ·
+       Una fila per persona: el directe personal i els canals d'entitat amb
+       la mateixa persona es pleguen en la fila de la més recent, amb tots els
+       canals (unaFilaPerPersona.js); i cap directe sense missatges, llevat
+       del fil obert. Abans dels actors, que continuen igual. */
+    const perPersona = unaFilaPerPersona(llista, { obert: threadId });
     /* T1 · El grup del poble, primer de tot; sense sessió no hi ha fila
        virtual (el xat fals porta la seua comunitat). Revisió adversarial
        260930 (P3) · Ni mentre la llista carrega: encara no se sap si la
@@ -1033,7 +1052,7 @@ function XatWorkspace({ origen = null }) {
        arxivat. Les files de reserva són les mateixes del port, i la de Javi
        diu què és quan no porta cap últim missatge. */
     const virtual = !senseSessio && status === 'ready';
-    const ambElPoble = anteposaPoble(llista, { poble: pobleDeLaLlista, comunitats, virtual });
+    const ambElPoble = anteposaPoble(perPersona, { poble: pobleDeLaLlista, comunitats, virtual });
     return anteposaActors(ambElPoble, {
       comunitat: virtual ? comunitatDeLaReserva : false,
       reservaJavi: virtual ? FILA_DE_RESERVA_DE_JAVI : null,
@@ -1044,7 +1063,7 @@ function XatWorkspace({ origen = null }) {
       joEsJavi,
       nomPropiDeJavi: joEsJavi ? (joNom || '') : ''
     });
-  }, [comunitats, threads, pobleDeLaLlista, senseSessio, status, iaiaApagada, comunitatDeLaReserva, joEsJavi, joNom, t]);
+  }, [comunitats, threads, threadId, pobleDeLaLlista, senseSessio, status, iaiaApagada, comunitatDeLaReserva, joEsJavi, joNom, t]);
   /* La fila virtual del poble no es pot triar: fora mentre se seleccionen xats.
      Ordre del Mestre (261007) · Les files d'ajuda per defecte tampoc: no són
      converses i no tenen res a marcar. Gauntlet 261016_1530 · Ni la que porta
@@ -1056,6 +1075,49 @@ function XatWorkspace({ origen = null }) {
      només s'amaguen amb «Tot», que no retalla res. Cap filtre amagat. */
   const filtreDeLaLlista = filtre;
   const filesVisibles = files.filter((fila) => passaFiltre(fila, filtreDeLaLlista) && (!modeSeleccio || esFilaTriable(fila)));
+  const filesArxivades = useMemo(() => {
+    const agrupats = new Set();
+    for (const c of comunitats) {
+      agrupats.add(String(c.fil.id));
+      for (const f of c.fills || CAP) agrupats.add(String(f.id));
+    }
+    const llista = [];
+    for (const c of comunitats) {
+      if (!c.fil.arxivat) continue;
+      llista.push({ clau: `comunitat:${c.fil.id}`, tipus: 'comunitat', comunitat: c, fixat: false, instant: instantDe(c.ultimAl || c.fil.ultimAl) });
+    }
+    for (const fil of threads) {
+      if (!fil.arxivat || esComunitat(fil) || agrupats.has(String(fil.id)) || esXatPublicDePaginaIAIA(fil)) continue;
+      llista.push({ clau: String(fil.id), tipus: 'fil', fil, fixat: false, instant: instantDe(fil.ultimAl) });
+    }
+    llista.sort((a, b) => b.instant - a.instant);
+    /* Onada R24 · IDEA-260 (a) · També una fila per persona, però amb els
+       buits: s'hi han arxivat a posta. */
+    return unaFilaPerPersona(llista, { obert: threadId, ambBuits: true });
+  }, [comunitats, threads, threadId]);
+  const filesArxivadesVisibles = filesArxivades.filter((fila) => (!modeSeleccio || esFilaTriable(fila)));
+  /* Onada R24 · IDEA-260 (a), CA-3 · Els canals de la fila plegada del fil
+     obert: la capçalera de la conversa hi pinta el selector «Personal ·
+     {entitat}» (CapcaleraConversa) perquè se sàpia sempre amb quina
+     identitat s'escriu. Null amb un sol canal. */
+  const idDelFilObert = activeThread ? String(activeThread.id) : '';
+  const canalsDelFilObert = useMemo(() => {
+    if (!idDelFilObert) return null;
+    const fila = [...files, ...filesArxivades].find((f) => f.canals?.some((c) => String(c.id) === idDelFilObert));
+    if (fila) return fila.canals;
+    /* R24 · Gauntlet (G-client-10) · Amb els directes buits: la llista amaga
+       el directe personal buit quan deixa de ser el fil obert, i des del
+       canal de l'entitat el selector ja no oferia «Personal» per a tornar-hi.
+       Els mateixos canals que plegaria la fila (mateixa persona, mateixa
+       safata), el més recent primer; un de sol, cap selector. */
+    const clau = clauDePersona(activeThread);
+    if (!clau) return null;
+    const arxivat = Boolean(activeThread.arxivat);
+    const canals = threads
+      .filter((fil) => Boolean(fil.arxivat) === arxivat && clauDePersona(fil) === clau)
+      .sort((a, b) => instantDe(b.ultimAl) - instantDe(a.ultimAl));
+    return canals.length > 1 ? canals : null;
+  }, [files, filesArxivades, idDelFilObert, activeThread, threads]);
   /* La comunitat de la fila del poble (el focus la seguix quan naix). La
      fitxa automàtica només la rep amb un poble declarat (EntradaDelPoble). */
   const comunitatDelPoble = comunitats.find((c) => esComunitatDelPoble(c, pobleDeLaLlista)) || null;
@@ -1100,6 +1162,23 @@ function XatWorkspace({ origen = null }) {
      Corrector (ARB-T2B-01) · Només mentre la barra es pinta (1538): amb la
      fitxa d'una comunitat damunt, l'Arrere no es gasta en una capa invisible. */
   useCapaEnrere(modeSeleccio && !comunitatId, () => { setModeSeleccio(false); setTriades(new Set()); });
+  /* Auditoria del kit de Gemini R22 · La safata «Arxivats» és a la pila de
+     l'Arrere només mentre es veu: la capa la posa CapaDeLaSafataArxivats, dins
+     de la closca, perquè en estret una conversa a pantalla completa la tapa. */
+  const capaSafataArxivats = safataArxivatsOberta && !comunitatId && !modeSeleccio && !vista;
+
+  const safataArxivatsPrevia = useRef(safataArxivatsOberta);
+  useEffect(() => {
+    if (safataArxivatsPrevia.current === safataArxivatsOberta) return;
+    safataArxivatsPrevia.current = safataArxivatsOberta;
+    const columna = columnaRef.current;
+    if (!focusPerdut(columna)) return;
+    if (safataArxivatsOberta) {
+      tornaArxivatsRef.current?.focus();
+    } else {
+      (botoArxivatsRef.current || botoNovaRef.current)?.focus();
+    }
+  }, [safataArxivatsOberta]);
 
   /* Focus coherent (T68). Només si el control que el tenia s'ha desmuntat.
      Ordre del Mestre (261026_2126, P1-36) · Sense el «…», la fila que ha obert
@@ -1176,6 +1255,7 @@ function XatWorkspace({ origen = null }) {
     setCercaOberta(false);
     setModeSeleccio(false);
     setTriades(new Set());
+    setSafataArxivatsOberta(false);
   }, [vista]);
 
   /* P1-36 · Focus coherent de la lupa. En obrir-la, el focus entra al camp,
@@ -1220,9 +1300,10 @@ function XatWorkspace({ origen = null }) {
     const llegitFins = activeThread?.esPropi
       ? Math.max(activeThread.llegitFinsSeq ?? 0, activeThread.ultimSeq ?? 0, activeThread.llegitPelsAltresFinsSeq ?? 0, ritme.llegitPelsAltresFinsSeq)
       : Math.max(activeThread?.llegitPelsAltresFinsSeq ?? 0, ritme.llegitPelsAltresFinsSeq);
-    const estat = derivaEstat(m, llegitFins, ritme.rebutPelsAltresFinsSeq);
+    const rebutFins = Math.max(activeThread?.rebutPelsAltresFinsSeq ?? 0, ritme.rebutPelsAltresFinsSeq);
+    const estat = derivaEstat(m, llegitFins, rebutFins);
     return estat === m.estatEnviament ? m : { ...m, estatEnviament: estat };
-  }), [missatgesDelContext, activeThread?.esPropi, activeThread?.llegitFinsSeq, activeThread?.ultimSeq, activeThread?.llegitPelsAltresFinsSeq, ritme]);
+  }), [missatgesDelContext, activeThread?.esPropi, activeThread?.llegitFinsSeq, activeThread?.ultimSeq, activeThread?.llegitPelsAltresFinsSeq, activeThread?.rebutPelsAltresFinsSeq, ritme]);
 
   if (threadId && !trobat && status === 'ready' && llistaFresca && sessioResolta && !reobrint && !esperaSessioIAIA(threadId) && !dinsDeLaIAIA && !clauDeLaRuta) {
     return <NotFoundPage />;
@@ -1412,17 +1493,56 @@ function XatWorkspace({ origen = null }) {
     });
   };
   const marcaTriadesLlegides = () => {
+    const font = safataArxivatsOberta ? filesArxivades : files;
     const ids = [];
-    for (const fila of files) {
+    for (const fila of font) {
       if (!triades.has(fila.clau)) continue;
       if (fila.tipus === 'comunitat') ids.push(...(fila.comunitat.fills || CAP).map((f) => f.id));
-      else ids.push(fila.fil.id);
+      /* Onada R24 · La fila d'una persona, tots els seus canals. */
+      else ids.push(...(fila.canals || [fila.fil]).map((f) => f.id));
     }
     const marcades = Number(marcaLlegides(ids)) || 0;
     showToast(marcades > 0
       ? t('section.xat.seleccio.marcades', '{n} converses marcades com a llegides.').replace('{n}', String(marcades))
       : t('section.xat.seleccio.capMarcada', 'Cap de les converses triades tenia missatges per llegir.'), 'info');
     ixDeSeleccio();
+  };
+  const filsTriatsArxivables = [];
+  if (modeSeleccio && typeof arxivaFil === 'function') {
+    const fontArxiu = safataArxivatsOberta ? filesArxivades : files;
+    for (const fila of fontArxiu) {
+      if (!triades.has(fila.clau) || fila.tipus !== 'fil') continue;
+      /* Onada R24 · Arxivar la fila d'una persona arxiva tots els seus canals:
+         si no, el canal que no la representava hi tornava com a fila. */
+      for (const fil of fila.canals || [fila.fil]) {
+        if (potArxivarFil(fil.id)) filsTriatsArxivables.push(fil);
+      }
+    }
+  }
+  const filsArxivatsALaSafata = filesArxivades.reduce((n, fila) => n + (fila.canals?.length || 1), 0);
+  const desarxivarEnLot = safataArxivatsOberta || (filsTriatsArxivables.length > 0 && filsTriatsArxivables.every((f) => Boolean(f.arxivat)));
+  const arxivaTriades = async () => {
+    if (typeof arxivaFil !== 'function' || filsTriatsArxivables.length === 0) return;
+    const objectiu = !desarxivarEnLot;
+    let canviades = 0;
+    let nomesEnMemoria = false;
+    for (const fil of filsTriatsArxivables) {
+      const r = await arxivaFil(fil.id, objectiu);
+      if (r?.estat === 'fet' || r?.estat === 'local') canviades += 1;
+      if (r?.estat === 'local') nomesEnMemoria = true;
+    }
+    ixDeSeleccio();
+    if (!objectiu && safataArxivatsOberta && canviades >= filsArxivatsALaSafata) {
+      setSafataArxivatsOberta(false);
+    }
+    /* Crítica de correcció R22 · Com el menú «⋯» (useArxivaDelFil): un arxiu
+       que només viu en memòria ho diu, no «Conversa arxivada». */
+    if (canviades > 0 && objectiu && nomesEnMemoria) {
+      showToast(t(TEXTOS_ARXIVA.nomesLocal[0], TEXTOS_ARXIVA.nomesLocal[1]));
+    } else if (canviades > 0) {
+      const parell = objectiu ? TEXTOS_ARXIVA.fet : TEXTOS_ARXIVA.desfet;
+      showToast(t(parell[0], parell[1]), 'success');
+    }
   };
 
   /* ── La cerca global (T69) ── */
@@ -1576,6 +1696,26 @@ function XatWorkspace({ origen = null }) {
           : t('section.xat.comunitat.noTrobada', 'Esta comunitat no és a la teua llista de converses.')}
       </p>
     );
+  } else if (safataArxivatsOberta) {
+    cos = (
+      <LlistaDeLaClosca
+        files={filesArxivadesVisibles}
+        filActiuId={filActiuId}
+        onSelect={handleSelectThread}
+        onObriComunitat={obriComunitat}
+        onObriPoble={obriPoble}
+        onObriEntitat={obriEntitat}
+        locale={locale}
+        t={t}
+        joId={joId}
+        estatBuit={t(TEXTOS_ARXIVA.safataBuida[0], TEXTOS_ARXIVA.safataBuida[1])}
+        avis={avis}
+        carregant={false}
+        seleccio={modeSeleccio ? { triades, onAlterna: alternaTria } : null}
+        onSelecciona={entraEnSeleccio}
+        informe={null}
+      />
+    );
   } else if (cercant) {
     cos = (
       <ResultatsDeLaClosca
@@ -1626,9 +1766,24 @@ function XatWorkspace({ origen = null }) {
        veu res fins que hi ha avís. El mateix text repetit pel sondeig no es
        torna a anunciar, a propòsit: seria soroll cada pocs segons. */
     const ambAvisLlista = Boolean(avisLlista) && !avis;
+    const mostraSafataArxivats = filesArxivades.length > 0 && !modeSeleccio;
     cos = (
       <>
         <p className={ambAvisLlista ? 'sdp-xat-avis' : 'sdp-nomes-lector'} role="status">{ambAvisLlista ? avisLlista : ''}</p>
+        {mostraSafataArxivats ? (
+          <button
+            ref={botoArxivatsRef}
+            type="button"
+            className="sdp-xat-safata-arxivats"
+            onClick={() => { netejaCerca(); setSafataArxivatsOberta(true); }}
+          >
+            <span className="sdp-xat-safata-arxivats__icona" aria-hidden="true">
+              <Archive size={20} focusable="false" />
+            </span>
+            <span className="sdp-xat-safata-arxivats__titol">{t(TEXTOS_ARXIVA.safata[0], TEXTOS_ARXIVA.safata[1])}</span>
+            <span className="sdp-xat-safata-arxivats__comptador">{filesArxivades.length}</span>
+          </button>
+        ) : null}
         {llista}
       </>
     );
@@ -1636,7 +1791,18 @@ function XatWorkspace({ origen = null }) {
 
   let capcalera;
   if (modeSeleccio && !comunitatId) {
-    capcalera = <BarraSeleccio quants={triades.size} onEixir={ixDeSeleccio} onMarcaLlegides={marcaTriadesLlegides} t={t} refEixir={eixirSeleccioRef} />;
+    const parellArxiva = desarxivarEnLot ? TEXTOS_ARXIVA.desarxivaSeleccionades : TEXTOS_ARXIVA.seleccionades;
+    capcalera = (
+      <BarraSeleccio
+        quants={triades.size}
+        onEixir={ixDeSeleccio}
+        onMarcaLlegides={marcaTriadesLlegides}
+        onArxivaSeleccionades={filsTriatsArxivables.length > 0 ? arxivaTriades : null}
+        etiquetaArxiva={filsTriatsArxivables.length > 0 ? t(parellArxiva[0], parellArxiva[1]) : null}
+        t={t}
+        refEixir={eixirSeleccioRef}
+      />
+    );
   } else if (comunitatId) {
     capcalera = (
       <AppGridColumn
@@ -1647,6 +1813,28 @@ function XatWorkspace({ origen = null }) {
           <>
             <BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />
             <button ref={tornaFitxaRef} type="button" className="sdp-xat-icona" onClick={tornaDeLaComunitat} aria-label={t('section.xat.tornaConverses', 'Torna a les converses')}>
+              <ArrowLeft size={24} aria-hidden="true" focusable="false" />
+            </button>
+          </>
+        )}
+      />
+    );
+  } else if (safataArxivatsOberta) {
+    capcalera = (
+      <AppGridColumn
+        esDark={true}
+        titol={t(TEXTOS_ARXIVA.safata[0], TEXTOS_ARXIVA.safata[1])}
+        icona={Archive}
+        esquerra={(
+          <>
+            <BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />
+            <button
+              ref={tornaArxivatsRef}
+              type="button"
+              className="sdp-xat-icona"
+              onClick={() => setSafataArxivatsOberta(false)}
+              aria-label={t('section.xat.tornaConverses', 'Torna a les converses')}
+            >
               <ArrowLeft size={24} aria-hidden="true" focusable="false" />
             </button>
           </>
@@ -1743,7 +1931,7 @@ function XatWorkspace({ origen = null }) {
           xats ni a les vistes del rail (que porten la seua). El filtre de
           cerca triat (T69) és una fitxa dins del camp; el ⊗ buida terme i
           filtre i, amb el camp buit, plega. */}
-      {!vistaNode && !comunitatId && !modeSeleccio && cercaOberta ? (
+      {!vistaNode && !comunitatId && !safataArxivatsOberta && !modeSeleccio && cercaOberta ? (
         <div className="sdp-xat-cerca" id={idCerca}>
           <div className={cercaActiva ? 'sdp-xat-cerca__camp sdp-xat-cerca__camp--actiu' : 'sdp-xat-cerca__camp'} ref={campRef} onBlur={alPerdreFocus} onKeyDown={alEscapeDelDesplegament}>
             {filtreActiu ? (
@@ -1788,13 +1976,13 @@ function XatWorkspace({ origen = null }) {
           </div>
         </div>
       ) : null}
-      {!vistaNode && !comunitatId && !modeSeleccio && (cercaOberta || filtre !== 'tot') ? (
+      {!vistaNode && !comunitatId && !safataArxivatsOberta && !modeSeleccio && (cercaOberta || filtre !== 'tot') ? (
         <FiltreConverses opcions={FILTRES} filtre={filtre} onTria={triaFiltre} onBlur={alPerdreFocus} onKeyDown={alEscapeDelDesplegament} refGrup={pindolesRef} idGrup={idPindoles} t={t} />
       ) : null}
       {/* Onada R9 · C3 (IDEA-120) · Un sol toc per a encendre els avisos push
           del Xat, a la llista de converses i només quan s'oferixen (sense
           clau, en una vista del rail, en una comunitat o seleccionant, res). */}
-      {!vistaNode && !comunitatId && !modeSeleccio ? <PindolaAvisosPushXat t={t} /> : null}
+      {!vistaNode && !comunitatId && !safataArxivatsOberta && !modeSeleccio ? <PindolaAvisosPushXat t={t} /> : null}
       {/* P1-54 · Les vistes del rail (Comunitats, Multimèdia, «En
           construcció») ja no porten l'accés: no són l'aterratge. */}
       {vistaNode ? null : <div className={peuDAcces ? 'sdp-workspace-column__body sdp-xat-cos--amb-peu' : 'sdp-workspace-column__body'}>{cos}{peuDAcces}</div>}
@@ -1832,6 +2020,7 @@ function XatWorkspace({ origen = null }) {
       <FocusDeLaConversa threadId={threadId} conversaId={filActiuId} columnaRef={columnaRef} botoNovaRef={botoNovaRef} tornaFitxaRef={tornaFitxaRef} ambComunitat={Boolean(comunitatId)} />
       <EntradaDelPoble poble={poble} comunitat={comunitatDelPoble} aLaLlista={!threadId && pathname === '/xat' && !params.toString()} onEntra={entraALaComunitat} />
       {activeThread ? <ConversaAPantallaCompleta /> : null}
+      <CapaDeLaSafataArxivats oberta={capaSafataArxivats} ambConversa={Boolean(activeThread)} onTanca={() => setSafataArxivatsOberta(false)} />
       {activeThread ? (
         <Conversa
           key={`${activeThread.id}\n${revisioEsborrany}`}
@@ -1855,8 +2044,12 @@ function XatWorkspace({ origen = null }) {
             if (await oblidaSessioIAIA(id) && activeThread.sessioLocalIAIA) navigate(`/xat${consulta()}`, { replace: true });
           } : null}
           onTornaAOrigen={tornaAOrigen}
+          canals={canalsDelFilObert}
+          onTriaCanal={handleSelectThread}
           onEnviaAlBloc={enviaAlBloc}
           senseSessio={senseSessio}
+          ambContingutCompartit={true}
+          ambArxivar={true}
           onCopia={copiaText}
           hiHaMes={Boolean(hiHaMesAntics(activeThread.id))}
           carregantMes={Boolean(carregantAntics(activeThread.id))}
@@ -2098,6 +2291,18 @@ function AccesAlXat({ t, tornar, navigate }) {
    barra inferior (ModeImmersiuContext); la fletxa torna a la llista i el mode
    s'apaga sol. En «mitja» la llista conviu amb la conversa i les barres es
    queden. Les pàgines universals no el demanen mai: la barra negra hi és fixa. */
+
+/* Auditoria del kit de Gemini R22 (kit_gemini_auditor) · La safata «Arxivats»
+   a la pila de l'Arrere d'Android, amb el criteri d'ARB-T2B-01: l'Arrere no es
+   gasta en una capa que ningú veu. En estret, amb una conversa a pantalla
+   completa (el mateix cas de ConversaAPantallaCompleta), la safata queda
+   tapada i no hi és; en tornar a la llista (o en ample, on conviuen), hi torna. */
+function CapaDeLaSafataArxivats({ oberta, ambConversa, onTanca }) {
+  const { mida, panellObert } = useAppGrid();
+  const tapada = ambConversa && mida === 'estret' && panellObert === null;
+  useCapaEnrere(oberta && !tapada, onTanca);
+  return null;
+}
 
 function ConversaAPantallaCompleta() {
   const { mida, panellObert } = useAppGrid();

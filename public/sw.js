@@ -73,9 +73,14 @@ const MEMORIES_VIVES = Object.freeze([MEMORIA_RECURSOS, MEMORIA_CLOSCA]);
    cal pujar-los. React i DOMPurify no canvien de nom entre desplegaments i un
    encert no els torna a inserir: serien sempre els més vells. Per això la poda
    no trau mai els recursos de la closca confirmada més nova
-   (protegitsDeLaPoda). */
-const MAXIM_RECURSOS = 600;
-const MAXIM_BYTES = 16 * 1024 * 1024;
+   (protegitsDeLaPoda).
+   Onada R24 (Consola Zero, P-C) · El build de producció del 261114 (03:27) en
+   té 560 trossos amb empremta i 16.802.988 B de JS: passava de la meitat dels
+   sostres de 261101 (600 i 16 MiB). Ara 1.500 entrades i 48 MiB (el build cap
+   dins de la meitat de cada un, amb marge); sw.test.js ho comprova i l'arnés
+   tooling/gates/consola-zero.mjs mesura cada build nou amb la mateixa regla. */
+const MAXIM_RECURSOS = 1500;
+const MAXIM_BYTES = 48 * 1024 * 1024;
 /* La mida desada viatja a la clau (una capçalera de la petició guardada):
    keys() la torna d'una tirada i la resposta es guarda intacta. */
 const CAPCALERA_MIDA = 'x-sdp-mida';

@@ -46,7 +46,9 @@
  */
 import { AGENTS_MAP } from './agentsSeed.js';
 import { PAGINES_AMB_XAT } from './contracte.js';
-import { AGENTS_IA_SEED, ENTITATS_SEED, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, PERSONA_PILOT, esIAIA } from './identitatsSeed.js';
+import {
+  AGENTS_IA_SEED, ENTITATS_SEED, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, IDS_REMOTS_FUNDACIONALS, PERSONA_PILOT, esIAIA, esIdRemotDe
+} from './identitatsSeed.js';
 
 /** Una entitat del padró local, per identificador declarat; mai pel nom.
  * No resol identitats remotes: les ha de declarar loadPerfilPublic. */
@@ -222,16 +224,27 @@ export function clauPerDefecteDe(id) {
  * Cert si `identitat` (un dels `altres` d'una conversa o una fila del padró:
  * { id | usuari_id | usuariId, tipus, slug? }) és el contacte d'ajuda `clau`.
  * Per id o per slug declarat, mai pel nom (doctrina de T6, navigation.js).
+ * Onada R24 (CA-5 / P1-7; R21.2-F01) · 'javi' també per l'UUID remot que el
+ * Mestre declara a IDS_REMOTS_FUNDACIONALS (identitatsSeed.js), amb la mateixa
+ * comparació que la fitxa pública (esIdRemotDe: en minúscules). Sense, cada
+ * veí connectat amb el Mestre veia «Javi Llinares» dues vegades: la fila
+ * sintètica (fake-javi, de només lectura) i el directe real. Mentre la llista
+ * és buida, res no canvia. `idsRemots` és per a les proves; per defecte, els
+ * declarats.
  */
-export function esLaIdentitatDAjuda(identitat, clau) {
+export function esLaIdentitatDAjuda(identitat, clau, { idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
   if (!identitat) return false;
   if (clau === 'socdepoble') {
     return identitat.tipus === 'entitat' && (identitat.slug === ENTITAT_PILOT_SLUG || idDe(identitat) === ENTITAT_PILOT_ID);
   }
   /* Auditoria 261007 (B) · La regla única de qui és la IAIA (identitatsSeed.js). */
   if (clau === 'iaia') return esIAIA(idDe(identitat));
-  /* Gauntlet 261016 (Bloc 3.6) · Javi, per l'id o un àlies del padró pilot. */
-  if (clau === 'javi') return identitat.tipus === 'persona' && PERSONA_PILOT.alies.includes(idDe(identitat));
+  /* Gauntlet 261016 (Bloc 3.6) · Javi, per l'id o un àlies del padró pilot.
+     Onada R24 (CA-5) · O per l'UUID remot declarat del seu compte. */
+  if (clau === 'javi') {
+    const id = idDe(identitat);
+    return identitat.tipus === 'persona' && (PERSONA_PILOT.alies.includes(id) || esIdRemotDe(PERSONA_PILOT.slug, id, idsRemots));
+  }
   return false;
 }
 
@@ -254,11 +267,16 @@ export function esLaIdentitatDAjuda(identitat, clau) {
  *     que es diguera «Javi Llinares» retirava la fila oficial. En remot, on
  *     el frontend no coneix l'UUID de Javi, un directe seu de veres conviu amb
  *     la fila sintètica fins que el Mestre decidisca com es declara el compte;
+ *     Onada R24 (CA-5 / P1-7) · la via és IDS_REMOTS_FUNDACIONALS: amb l'UUID
+ *     declarat, el directe real casa (esLaIdentitatDAjuda) i la fila
+ *     sintètica se'n va; la fila fixada de la llista (actorsDelXat.js) és
+ *     eixe directe i l'obri;
  *   · (P2) `opcions.paginaDeLaIAIA` (cert per defecte, el remot): amb fals, el
  *     xat públic de /iaia no compta com el de la IAIA. És la llavor i el local,
  *     on eixe xat és un grup on la IAIA no contesta.
+ * `opcions.idsRemots` és per a les proves; per defecte, els declarats.
  */
-export function jaTeElXat(conversa, clau, { paginaDeLaIAIA = true } = {}) {
+export function jaTeElXat(conversa, clau, { paginaDeLaIAIA = true, idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
   if (!conversa || conversa.perDefecte) return false;
   if (clau === 'socdepoble') {
     if (conversa.subjecte) return false;
@@ -273,7 +291,7 @@ export function jaTeElXat(conversa, clau, { paginaDeLaIAIA = true } = {}) {
   }
   if (clau === 'javi') {
     if (conversa.subjecte || conversa.tipus !== 'directe') return false;
-    return altresDe(conversa).some((altre) => esLaIdentitatDAjuda(altre, 'javi'));
+    return altresDe(conversa).some((altre) => esLaIdentitatDAjuda(altre, 'javi', { idsRemots }));
   }
   return false;
 }
@@ -334,15 +352,18 @@ export function conversaPerDefecteDe(clau) {
  *   · `paginaDeLaIAIA` (cert per defecte) passa a jaTeElXat: la llavor i el
  *     local el posen a fals (auditoria adversarial 261016), perquè allí el
  *     xat públic de /iaia no és el de la IAIA i la fila s'ha de quedar;
- *   · torna la MATEIXA referència si no canvia res.
+ *   · torna la MATEIXA referència si no canvia res;
+ *   · Onada R24 (CA-5) · `idsRemots` passa a jaTeElXat (proves; per defecte,
+ *     IDS_REMOTS_FUNDACIONALS): el directe real amb l'UUID declarat de Javi
+ *     lleva la seua fila sintètica.
  * Pura: no muta res.
  */
-export function ambXatsPerDefecte(converses, { afig = true, paginaDeLaIAIA = true } = {}) {
+export function ambXatsPerDefecte(converses, { afig = true, paginaDeLaIAIA = true, idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
   const llista = Array.isArray(converses) ? converses : [];
   const reals = llista.filter((conversa) => !conversa?.perDefecte);
   const cua = [];
   for (const contacte of ACTORS_PERMANENTS) {
-    if (reals.some((conversa) => jaTeElXat(conversa, contacte.clau, { paginaDeLaIAIA }))) continue;
+    if (reals.some((conversa) => jaTeElXat(conversa, contacte.clau, { paginaDeLaIAIA, idsRemots }))) continue;
     const present = llista.find((conversa) => conversa?.perDefecte === contacte.clau);
     if (present) cua.push(present);
     else if (afig) cua.push(conversaPerDefecte(contacte));

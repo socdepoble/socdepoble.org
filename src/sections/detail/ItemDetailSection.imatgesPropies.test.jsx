@@ -528,6 +528,11 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     expect(boto.textContent).toBe('Parlar amb la Gent de la Torre');
     /* AH-17 (ordre del Mestre, 261104) · El primer del cos és l'arbre territorial
        de quatre nivells (nav «Territori»); el botó blau el segueix. */
+    /* Onada R24.2 (fusió Claude + Gemini, ZERO-ROGES-02 de Gemini R24) · La fitxa
+       d'un poble és un directori amb l'arbre territorial i pestanyes, no una pàgina
+       de lectura: deteccioLecturaVeu l'exclou (nav «Territori») i PageFrame no hi
+       pinta el marc de lectura en veu alta. El cos va just davall de .page-intro. */
+    expect(container.querySelector('.sdp-veu-lectura-marc')).toBeNull();
     const cos = container.querySelector('.page-intro').nextElementSibling;
     expect(cos.firstElementChild.tagName).toBe('NAV');
     expect(cos.firstElementChild.getAttribute('aria-label')).toBe('Territori');
@@ -565,6 +570,8 @@ describe('Onada 5 · la pàgina d’un poble', () => {
        «Empreses i entitats», i sense les píndoles la barra va just després del botó blau. */
     expect([...llista.querySelectorAll('[role="tab"]')].map((p) => [p.textContent, p.getAttribute('aria-selected')]))
       .toEqual([['Tot', 'true'], ['Gent de la Torre', 'false'], ['Xarxa', 'false'], ['Empreses i entitats', 'false']]);
+    /* R24.2 (ZERO-ROGES-02) · cap marc de lectura en veu alta a la fitxa d'un poble. */
+    expect(container.querySelector('.sdp-veu-lectura-marc')).toBeNull();
     expect(container.querySelector('.page-intro').nextElementSibling.querySelector(':scope > .sdp-pagina-accio')).not.toBeNull();
     expect(container.querySelector('.content-wrapper > .sdp-pagina-accio').nextElementSibling).toBe(barra);
   });

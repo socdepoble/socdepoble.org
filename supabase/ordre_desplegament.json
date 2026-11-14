@@ -50,6 +50,18 @@
       "despres": "20261113003000",
       "motiu": "R21.9b va després del Mur v2 (2611122200); per ordre alfabètic cru, 20261113003000 aniria abans de tot el catàleg de deu dígits.",
       "font": "README «Ordre correcte» pas 3 i Nota d'auditoria §16; migrations/README.md R21.9b"
+    },
+    {
+      "abans": "20261114000100",
+      "despres": "20261114000200",
+      "motiu": "R22.3 usa private.peticio_de_servidor(), que crea R22.2.",
+      "font": "README R22.2 i R22.3; capçalera de 20261114000200"
+    },
+    {
+      "abans": "20261114000100",
+      "despres": "20261114000300",
+      "motiu": "Sense el desbloqueig de la propietat de R22.2, la purga d’una propietària falla igualment; la purga no es programa abans.",
+      "font": "README R22.4 i Nota d'auditoria §17; capçalera de 20261114000300"
     }
   ],
   "portes": [
@@ -271,6 +283,41 @@
         "2610250100"
       ],
       "font": "README, vinyeta de 2610250100"
+    },
+    {
+      "si": "20261113112500",
+      "llavors": [
+        "20261114000200"
+      ],
+      "font": "README, vinyeta de 20261114000200 (trigger_rate_limit_xat amb la quota per hora)"
+    },
+    {
+      "si": "2611110100",
+      "llavors": [
+        "20261114000300"
+      ],
+      "font": "README, vinyeta de 20261114000300 (purga_una_baixa amb l’assaig i SDP-BAIXA-044)"
+    },
+    {
+      "si": "2609130500",
+      "llavors": [
+        "20261114000400"
+      ],
+      "font": "README, vinyeta de 20261114000400 (mitjans llegir només propis)"
+    },
+    {
+      "si": "2611011500",
+      "llavors": [
+        "20261114000100"
+      ],
+      "font": "README, vinyeta de 20261114000100 (R14: 2611011500 torna a crear la CHECK d'autoria que R22.2 canvia per un disparador)"
+    },
+    {
+      "si": "2609291210",
+      "llavors": [
+        "20261114000100"
+      ],
+      "font": "README, vinyeta de 20261114000100 (R03: membres_del_poble de 2610081543)"
     }
   ]
 }

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {BASE_IMAGE,buildSocialManifest,FONTS_CONSOLA,LLISTES,normalizedKey,PAGINES_INFORMATIVES,plainText} from './build-social-manifest.mjs';
+import {BASE_IMAGE,buildSocialManifest,FONTS_CONSOLA,FONTS_DEL_ROUTER,FONT_DE_VERTICALS,LLISTA_DEL_DIRECTORI,LLISTES,normalizedKey,PAGINES_INFORMATIVES,plainText} from './build-social-manifest.mjs';
 import {sniffImage} from './prerender-social.mjs';
 import {selectMetadata} from './social-edge.mjs';
 const policyRoot=process.env.SDP_PROJECT_ROOT || process.cwd();
@@ -310,6 +310,9 @@ const PLUGINS_DE_L_ORDRE=Object.freeze(['mapa','vehicle','animalets','gestoria',
 const EXCLOSES_DE_PAGE=Object.freeze({
   notes_shared:'còpia antiga de la fitxa del Bloc de notes (/page/notes), amb el logotip SVG com a imatge: no és cap presentació pròpia',
   'la-iaia-sabuda':'espai de curadoria amb rol verificat i safata privada; no és una presentació pública per a rastrejadors',
+  /* P0-SEO-UNIVERSAL (13-11-2026) · El motiu de veres de 'node-zero': pageContent.r10.js i pageContent.fediversityR20.js
+     en recomponen l'entradeta en execució, i el productor (AST) en llegiria el literal: un head distint del del client.
+     Les tres claus tenen ara la seua exempció amb motiu a tooling/seo/exempcions-socials.mjs (la Porta de cobertura). */
   'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers'
   /* P0-60 / IDEA-191 (ordre del Mestre, 08-11-2026 17:09) · L'herbari, el banc de llavors, les rutes de
      poble i els arbres monumentals ja porten la seua il·lustració Ibáñez (la variant social és a
@@ -351,4 +354,114 @@ test('cobertura de l’arbre de veres: presentacions inventariades, /disseny, /w
   const senseCobertura=Object.keys(PAGE_COPY).filter(clau=>!resolvePageSlugPath(clau)&&!manifest.routes[`/page/${clau}`]&&!manifest.aliases[`/page/${clau}`]
     &&!Object.hasOwn(EXCLOSES_DE_PAGE,clau));
   assert.deepEqual(senseCobertura,[],'claus de /page/ sense head social ni motiu');
+});
+
+/* ── P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) ─────────────────────────────────────────
+   Tota ruta pública del Router té head propi: les fitxes (identitats del paquet i entitats del
+   directori), el directori /perfil sense indexar, les verticals i els àlies de redirecció. */
+const UUID_OLI='3073b933-69fc-4c3e-80dc-b0df9c6b8391';
+const FAMILIES=Object.freeze(['perfil','gent','empresa','entitats','ajuntament','grup']);
+const fitxa=(id,slug,tipus,title,extra={})=>({sectionId:'perfil',id,slug,tipus,visibility:'public',status:'published',title,description:`Lema de ${title}`,image:null,imageAlt:'',...extra});
+
+test('P0-SEO · arbre de veres sense snapshot: les identitats del paquet, /perfil sense indexar, les verticals, les pàgines i els àlies nous',async()=>{
+  const {manifest,evidence}=await buildSocialManifest({root:policyRoot,origin,policyRoot,estricte:true});
+  // Les quatre adreces netes, amb el seu schema i la seua dada del paquet.
+  assert.deepEqual(['/javillinares','/socdepoble','/rentonar','/iaia'].map(r=>[manifest.routes[r]?.title,manifest.routes[r]?.schema,manifest.routes[r]?.index,manifest.routes[r]?.canonical]),
+    [['Javi Llinares','Person',true,origin+'/javillinares'],['Sóc de Poble','Organization',true,origin+'/socdepoble'],['Rentonar','Organization',true,origin+'/rentonar'],['IAIA MarIA','SoftwareApplication',true,origin+'/iaia']]);
+  assert.equal(manifest.routes['/javillinares'].image.url,origin+'/assets/fotos/javi-llinares-perfil-1200px.jpg');
+  assert.equal(manifest.routes['/iaia'].image.url,origin+'/assets/uploads/brain/iaia_maria_avatar-social-1200x630.jpg');
+  // La marca de Sóc de Poble és una reserva: la targeta genèrica, mai el quadrat de 256 px.
+  for(const ruta of ['/socdepoble','/rentonar'])assert.equal(manifest.routes[ruta].image.url,origin+BASE_IMAGE,ruta);
+  // Cada clau declarada pel paquet, en cada família del Router, és un àlies de la canònica.
+  for(const [clau,canonica] of [['javillinares','/javillinares'],['0001','/javillinares'],['javi','/javillinares'],['javi-llinares','/javillinares'],
+    ['socdepoble','/socdepoble'],['soc-de-poble_official','/socdepoble'],['a240e870-4aef-4d92-b138-e8b4e2f2123a','/socdepoble'],
+    ['rentonar','/rentonar'],['b2c87505-53b1-4108-902f-2313e77b9968','/rentonar'],['iaia-maria','/iaia'],['11111111-1a1a-0000-0000-000000000000','/iaia']])
+    for(const familia of FAMILIES)assert.equal(manifest.aliases[`/${familia}/${clau}`],canonica,`/${familia}/${clau}`);
+  // Sense remot, Oli de La Torre no té fitxa del paquet (R22.1: cap dada real d'entitat al repositori).
+  for(const cami of ['/empresa/olidelatorre',`/empresa/${UUID_OLI}`])assert.equal(manifest.routes[cami]??manifest.aliases[cami],undefined,cami);
+  // /perfil: OpenGraph específic SENSE indexar (les dos marques), i el text que pinta ProfileSection.
+  assert.deepEqual(manifest.routes['/perfil'],{title:'Gent i Entitats',description:'Directori de persones, entitats i col·lectius d’este poble.',
+    image:manifest.routes['/mur'].image,type:'website',canonical:origin+'/perfil',index:false,compartible:true,schema:'CollectionPage'});
+  assert.match(fs.readFileSync(path.join(policyRoot,LLISTA_DEL_DIRECTORI[1]),'utf8'),/useSEO\(\{ title: titol, description: subtitol \}\)/);
+  for(const clau of [LLISTA_DEL_DIRECTORI[2][0],LLISTA_DEL_DIRECTORI[3][0]])assert.ok(fs.readFileSync(path.join(policyRoot,LLISTA_DEL_DIRECTORI[1]),'utf8').includes(`t('${clau}'`),clau);
+  // Les cinc verticals, amb el kicker i el subtítol de la secció.
+  assert.deepEqual(['/mapa','/vehicle','/animalets','/treball','/habitatge'].map(r=>[manifest.routes[r]?.title,manifest.routes[r]?.index,manifest.routes[r]?.schema]),
+    [['Mapa',true,'CollectionPage'],['Compartir cotxe',true,'CollectionPage'],['Animalets',true,'CollectionPage'],['Treball',true,'CollectionPage'],['Habitatge',true,'CollectionPage']]);
+  assert.equal(manifest.routes['/mapa'].description,'Punts d’interès, camins, patrimoni i incidències del terme que publica la gent de poble.');
+  // Els àlies que el Router redirigix a una ruta del manifest i els de PAGE_ROUTE_MAP que faltaven.
+  for(const [cami,desti] of [['/esdeveniments','/calendari'],['/wiki','/wikidepoble'],['/skills','/wikidepoble'],['/ia','/anima'],['/realitat','/iaia'],
+    ['/page/el-projecte','/projecte'],['/page/ia','/anima'],['/page/privadesa','/legal'],['/page/projecte-fediversity','/page/fediversity'],['/page/skills','/wikidepoble']])
+    assert.equal(manifest.aliases[cami],desti,cami);
+  // La safata de curadoria i les eines continuen fora.
+  for(const cami of ['/page/la-iaia-sabuda','/page/iaia-sabuda','/page/nodrir-la-iaia','/page/node-zero','/page/dispositius','/panell','/control','/el-meu-perfil','/app/avisador'])
+    assert.equal(manifest.routes[cami]??manifest.aliases[cami],undefined,cami);
+  // Cada clau del manifest passa el contracte del consumidor; cap ruta sense indexar porta només una marca.
+  for(const key of [...Object.keys(manifest.routes),...Object.keys(manifest.aliases)])assert.ok(selectMetadata(manifest,new URL(key,origin)),key);
+  for(const [ruta,entrada] of Object.entries(manifest.routes))assert.ok(entrada.index===true||(entrada.index===false&&entrada.compartible===true),ruta);
+  // L'evidència: les fonts del Router, de les verticals, de la fitxa i de la llavor, i la classe de cada ruta.
+  for(const font of [...FONTS_DEL_ROUTER,FONT_DE_VERTICALS,LLISTA_DEL_DIRECTORI[1]])assert.ok(evidence.sources[font],font);
+  for(const font of ['src/config/metadadesDePerfil.js','src/sections/profile/perfilsDelPaquet.js','src/data/identitatsSeed.js','src/data/agentsSeed.js'])assert.ok(evidence.sources[font],font);
+  assert.deepEqual(Object.entries(evidence.origens).filter(([,classe])=>classe!=='editorial').sort(),[['/iaia','paquet'],['/javillinares','paquet'],['/rentonar','paquet'],['/socdepoble','paquet']]);
+  assert.deepEqual(Object.keys(evidence.origens),Object.keys(manifest.routes));
+  assert.deepEqual([evidence.perfils.conflictes,evidence.perfils.avisos],[[],[]]);
+  // Cap dada privada de la llavor (el correu de la persona pilot) ni cap id intern d'autor.
+  assert.ok(!/@gmail|socdepoblecom|owner_org_id|usuariId/.test(JSON.stringify(manifest)));
+});
+
+test('P0-SEO · snapshot amb fitxes del directori: la canònica /empresa/<slug> i /grup/<slug>, i àlies en cada família per slug i per id',async()=>{
+  const COLLA='8b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  const publicSnapshot=[fitxa(UUID_OLI,'olidelatorre','entitat','Oli de La Torre',{image:'https://exemple.supabase.co/storage/v1/object/public/mitjans/t/u/organitzacions/portada.webp',imageAlt:'Oli de La Torre'}),
+    fitxa(COLLA,'colla','grup','La Colla'),
+    fitxa('a240e870-4aef-4d92-b138-e8b4e2f2123a','socdepoble','entitat','Sóc de Poble del servidor'),
+    {...fitxa('9b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6','no-exportar-a','entitat','NO_EXPORTAR'),visibility:'members'},
+    {...fitxa('ab0c1d2e-3f40-4a51-8b62-7c83d94ea5f6','no-exportar-b','entitat','NO_EXPORTAR'),status:'draft'}];
+  const {manifest,evidence}=await buildSocialManifest({root:policyRoot,origin,policyRoot,estricte:true,publicSnapshot,imageOrigins:['https://exemple.supabase.co']});
+  assert.deepEqual(manifest.routes['/empresa/olidelatorre'],{title:'Oli de La Torre',description:'Lema de Oli de La Torre',
+    image:{url:'https://exemple.supabase.co/storage/v1/object/public/mitjans/t/u/organitzacions/portada.webp',alt:'Oli de La Torre'},
+    type:'website',canonical:origin+'/empresa/olidelatorre',index:true,schema:'Organization'});
+  assert.equal(manifest.routes['/grup/colla'].canonical,origin+'/grup/colla');
+  // Dotze adreces per fitxa (sis famílies per slug i per id): una és la canònica i onze, àlies.
+  for(const [slug,id,canonica] of [['olidelatorre',UUID_OLI,'/empresa/olidelatorre'],['colla',COLLA,'/grup/colla']]) {
+    const camins=FAMILIES.flatMap(f=>[`/${f}/${slug}`,`/${f}/${id}`]);
+    assert.deepEqual(camins.filter(c=>manifest.routes[c]),[canonica]);
+    assert.deepEqual(camins.filter(c=>manifest.aliases[c]===canonica).length,11,slug);
+  }
+  // L'entitat pilot amb el seu id declarat: l'adreça neta, amb la dada del servidor (com a l'app).
+  assert.equal(manifest.routes['/socdepoble'].title,'Sóc de Poble del servidor');
+  assert.equal(evidence.origens['/socdepoble'],'veinal');assert.equal(evidence.origens['/empresa/olidelatorre'],'veinal');
+  // Una fitxa que no és pública o no és publicada no genera res.
+  assert.ok(!/NO_EXPORTAR|no-exportar|9b0c1d2e|ab0c1d2e/.test(JSON.stringify(manifest)));
+  for(const key of [...Object.keys(manifest.routes),...Object.keys(manifest.aliases)])assert.ok(selectMetadata(manifest,new URL(key,origin),['https://exemple.supabase.co']),key);
+  // Un element de perfil mal format és un snapshot trencat (la projecció no n'escriu cap): porta roja.
+  for(const dolent of [{...fitxa(UUID_OLI,'olidelatorre','persona','Una persona')},{...fitxa('NO-UUID','x','entitat','X')},{...fitxa(UUID_OLI,'Amb Majúscules','entitat','X')},{...fitxa(UUID_OLI,'x','entitat','')}])
+    await assert.rejects(buildSocialManifest({root:policyRoot,origin,policyRoot,publicSnapshot:[dolent]}),/Element de perfil invàlid/);
+});
+
+test('P0-SEO · una publicació veïnal del Mur entra sense indexar i amb la targeta genèrica; la editorial, com sempre',async t=>{
+  const {root}=fixture(t);
+  const publicSnapshot=[
+    {sectionId:'mur',id:'0b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6',visibility:'public',status:'published',title:'Venc llenya',description:'Llenya de carrasca',image:null,imageAlt:'',origen:'veinal'},
+    {sectionId:'mur',id:'editorial',visibility:'public',status:'published',title:'Editorial',description:'Del poble',image:'/assets/projecte.jpg',imageAlt:'Bancals'}];
+  const {manifest,evidence}=await buildSocialManifest({root,origin,policyRoot,publicSnapshot});
+  const veinal=manifest.routes['/mur/0b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6'];
+  assert.deepEqual([veinal.index,veinal.compartible,veinal.type,veinal.image.url],[false,true,'article',origin+BASE_IMAGE]);
+  assert.equal(evidence.origens['/mur/0b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6'],'veinal');
+  assert.deepEqual([manifest.routes['/mur/editorial'].index,manifest.routes['/mur/editorial'].compartible,evidence.origens['/mur/editorial']],[true,undefined,'editorial']);
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot,publicSnapshot:[{...publicSnapshot[0],origen:'altre'}]}),/Origen de publicació invàlid/);
+});
+
+test('P0-SEO · un arbre sense App.jsx no genera cap ruta de perfil, cap vertical ni cap àlies del Router; un Router il·legible és porta roja',async t=>{
+  const {root,put}=fixture(t);
+  const publicSnapshot=[fitxa(UUID_OLI,'olidelatorre','entitat','Oli de La Torre')];
+  const {manifest,evidence}=await buildSocialManifest({root,origin,policyRoot,publicSnapshot});
+  for(const cami of ['/javillinares','/iaia','/empresa/olidelatorre','/perfil','/mapa','/esdeveniments','/page/el-projecte'])assert.equal(manifest.routes[cami]??manifest.aliases[cami],undefined,cami);
+  assert.equal(evidence.perfils,undefined);
+  // Amb un Router, la fitxa hi entra; amb una forma de ruta que el lector no coneix, el build s'atura.
+  put('src/app/App.jsx',`export default function App(){return <Routes><Route path="empresa/:agentId" element={<PerfilPublicSection />} /><Route path="*" element={<NotFoundPage />} /></Routes>;}`);
+  const amb=await buildSocialManifest({root,origin,policyRoot,publicSnapshot});
+  assert.equal(amb.manifest.routes['/empresa/olidelatorre'].title,'Oli de La Torre');
+  assert.equal(amb.manifest.aliases[`/empresa/${UUID_OLI}`],'/empresa/olidelatorre');
+  assert.equal(amb.manifest.aliases['/gent/olidelatorre'],undefined,'només les famílies que el Router d’este arbre accepta');
+  put('src/app/App.jsx',`export default function App(){return <Routes>{rutes.map(r=><Route key={r} path={r} element={<X />} />)}</Routes>;}`);
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/El Router no es pot llegir amb seguretat/);
 });

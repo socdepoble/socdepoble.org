@@ -212,7 +212,7 @@ describe('anatomia (skill sdp-universal-page)', () => {
   test('etiquetes: Sistema, categoria mare i etiquetes canòniques, sense duplicats', () => {
     expect(copy.labels).toEqual([
       { text: 'Sistema', className: 'sdp-badge-system' },
-      { text: '💻 Tecnologia Lliure, Dades Obertes i Disseny', className: 'sdp-badge-category' },
+      { text: '💻 Tecnologia i Disseny', className: 'sdp-badge-category' },
       { text: 'NGI Fediversity', className: 'sdp-badge-tag' },
       { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
@@ -305,7 +305,7 @@ describe('O6 · lectura diagonal: H4 + paràgraf, i cap paràgraf pla', () => {
     /* 03-11-2026 (arbitratge 12:22; prova posada al dia a propòsit) · Cada raó porta ara al final
        l'«Exemple pràctic» de MarIA (10:50). La comparació continua exacta (toBe): qualsevol frase
        nova o canviada en estos tres paràgrafs fa caure la prova i s'ha de tornar a mirar. */
-    expect(dades).toBe("L'aplicació demana les dades a través d'un port neutral, src/data/backendPort.js, i un kit de conformitat comprova qualsevol adaptador abans d'enxufar-lo. La SPA usa el Supabase de Sóc de Poble; l’API pròpia del Node 0 ja té PostgreSQL 17.11, encara sense comptes ni escriptures de persones activats. Exemple pràctic: és com l'aigua del poble; les canonades i l'aixeta de casa són sempre les mateixes, tant si hui l'aigua ve d'un depòsit compartit com si demà l'ajuntament connecta el seu propi pou municipal sense picar cap paret.");
+    expect(dades).toBe("L'aplicació demana les dades a través d'un port neutral, src/data/backendPort.js, i un kit de conformitat comprova qualsevol adaptador abans d'enxufar-lo. La SPA utilitza el Supabase de Sóc de Poble; l’API pròpia del Node 0 ja té PostgreSQL 17.11, encara sense comptes ni escriptures de persones activats. Exemple pràctic: és com l'aigua del poble; les canonades i l'aixeta de casa són sempre les mateixes, tant si hui l'aigua ve d'un depòsit compartit com si demà l'ajuntament connecta el seu propi pou municipal sense picar cap paret.");
     expect(modelB).toBe("Una web amfitriona, com una de WordPress, pot allotjar l'aplicació com un component. Les dades del poble, però, viuen al servidor de Sóc de Poble, que és l'única font de veritat. Canviar de servidor és una decisió documentada, amb un adaptador que ha de passar el kit de conformitat. Exemple pràctic: l'associació Gent de la Torre ja tenia la seua web en WordPress; amb el nostre connector hi ha incrustat l'aplicació sencera en dos minuts, sense perdre el seu disseny ni haver de mantindre cap servidor propi.");
     expect(codi).toBe('El fitxer LICENSE del projecte declara la llicència GNU AGPL, versió 3 o posterior (AGPL-3.0-or-later). Hi és des del 3 de setembre de 2026. Exemple pràctic: qualsevol ajuntament o cooperativa pot obtindre el codi font, auditar-lo, copiar-lo i modificar-lo per a mantindre un servidor propi, complint els termes de l’AGPL.');
     expect(raons.map((node) => node.querySelector('code')?.textContent ?? null)).toEqual([null, 'src/data/backendPort.js', null, null, null, 'LICENSE']);
@@ -698,7 +698,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
       expect(absents).toEqual(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
-      expect(oferides).toHaveLength(47);
+      expect(oferides).toHaveLength(48);
       expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(25);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');

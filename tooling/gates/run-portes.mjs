@@ -56,6 +56,9 @@ export const passos = [
   { nom: 'Porta InnerHTML', cmd: 'node', args: ['tooling/gates/tractor-innerhtml.mjs'], script: 'porta:innerhtml' },
   { nom: 'Porta Rutes', cmd: 'node', args: ['tooling/gates/tractor-rutes.mjs'], script: 'porta:rutes' },
   { nom: 'Porta Rutes Web', cmd: 'node', args: ['tooling/gates/tractor-rutes-web.mjs'], script: 'porta:rutes-web' },
+  /* P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) · Tota ruta pública del Router té OpenGraph específic al manifest
+     social o una exempció declarada amb motiu. Només llig; sense xarxa. */
+  { nom: 'Porta Cobertura Social', cmd: 'node', args: ['tooling/gates/tractor-cobertura-social.mjs'], script: 'porta:cobertura-social', readOnly: true },
   { nom: 'Porta Frontera', cmd: 'node', args: ['tooling/gates/tractor-sollutia.mjs'], script: 'porta:frontera' },
   { nom: 'Porta Adaptadors', cmd: 'node', args: ['tooling/gates/tractor-adaptadors.mjs'], script: 'porta:adaptadors' },
   { nom: 'Porta Frontera Auth', cmd: 'node', args: ['tooling/wiki/tractor-frontera-auth.mjs'], script: 'porta:frontera-auth' },

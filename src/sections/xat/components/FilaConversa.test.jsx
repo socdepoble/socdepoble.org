@@ -66,12 +66,16 @@ const previa = (boto) => boto.querySelector('.sdp-xat-fila__previa');
 
 /* Sense «entregat»: el rebut que dona el port és el propi, no el dels altres
    (missatges.js, derivaEstat; ronda C3). Amb rebutFinsSeq, la fila continua
-   dient «Enviat»: pintar dos marques grises seria mentir. */
+   dient «Enviat»: pintar dos marques grises seria mentir.
+   R24 · xat_entrega (P2-9) · Sense rebutPelsAltresFinsSeq (servidor anterior a
+   20261114061000), el text ho diu: «Enviat al servidor (este servidor no
+   informa de l’entrega)». El ✓✓ gris amb el rebut dels altres el fixa
+   MarquesEstat.r24.test.jsx. */
 test('directa amb l’últim missatge meu: les marques de l’estat davant del text i cap «Tu: »', () => {
   const base = { id: 'd-1', tipus: 'directe', titol: 'Vicent', ultimText: 'Perfecte', ultimAutorId: 'jo', ultimSeq: 5 };
   const casos = [
-    [{}, 'sdp-xat-marques--enviat', 'Enviat'],
-    [{ rebutFinsSeq: 5 }, 'sdp-xat-marques--enviat', 'Enviat'],
+    [{}, 'sdp-xat-marques--enviat', 'Enviat al servidor (este servidor no informa de l’entrega)'],
+    [{ rebutFinsSeq: 5 }, 'sdp-xat-marques--enviat', 'Enviat al servidor (este servidor no informa de l’entrega)'],
     [{ llegitPelsAltresFinsSeq: 5 }, 'sdp-xat-marques--llegit', 'Llegit']
   ];
   for (const [extra, classe, text] of casos) {

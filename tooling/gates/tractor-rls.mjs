@@ -207,7 +207,10 @@ for (const file of files) {
   const content = fs.readFileSync(file, 'utf8');
   
   // Extract tables created
-  const createTableRegex = /create table (?:if not exists )?(?:[a-zA-Z0-9_]+\.)?([a-zA-Z0-9_]+)/gi;
+  /* Onada R24.2 · També les taules temporals de sessió (create temp[orary] table):
+     un insert into pg_temp.x d'una taula temporal creada al mateix catàleg no és cap
+     taula inexistent. R2 no les toca (no tenen RLS: viuen només dins de la sessió). */
+  const createTableRegex = /create (?:temp(?:orary)? )?table (?:if not exists )?(?:[a-zA-Z0-9_]+\.)?([a-zA-Z0-9_]+)/gi;
   let match;
   while ((match = createTableRegex.exec(content)) !== null) {
     tables.add(match[1]);

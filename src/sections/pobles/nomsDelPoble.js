@@ -9,7 +9,7 @@
  * sempre mana (la llavor porta noms curts triats per una persona); esta regla
  * és per als pobles que encara no en tenen.
  */
-import { slugDeSeccio } from '../../components/universal/workspace/seleccioUrl.js';
+import { slugDeSeccio } from '../../components/universal/workspace/slugDeSeccio.js';
 
 /* L'article del topònim es contrau amb «de» i va en minúscula, com mana
    l'IEC: «el Campello» → «del Campello», «l'Alfàs» → «de l'Alfàs». L'ordre

@@ -75,6 +75,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'retroalimentacio/resum-connexio': lazyRoute(() => import('./detalls/EspecimenResumConnexio.jsx')),
   /* T7-T9 (ordre del Mestre, 261001) · el pilot de connexió i la llista de nodes. */
   'retroalimentacio/connexio': lazyRoute(() => import('./detalls/EspecimenConnexio.jsx')),
+  /* Onada R22 · T2 · Bàner superior no bloquejant d'actualització viva a les apps natives. */
+  'retroalimentacio/barra-actualitzacio-app': lazyRoute(() => import('./detalls/EspecimenBarraActualitzacioApp.jsx')),
   /* T43 (ordre del Mestre, 260928) · identitat activa i administrar organitzacions. */
   'fonaments/identitat': lazyRoute(() => import('./detalls/EspecimenIdentitat.jsx')),
   'superposicions/dialeg': lazyRoute(() => import('./detalls/EspecimenDialeg.jsx')),
@@ -128,4 +130,6 @@ export const CATALOG_DETAIL_LOADERS = {
   'fonaments/publicacions-actor': lazyRoute(() => import('./detalls/EspecimenPublicacionsDeLActor.jsx')),
   /* Onada R19 · Co-publicació multi-entitat registrada i traspàs inline d'1 clic. */
   'formularis/traspas-copublicacio': lazyRoute(() => import('./detalls/EspecimenTraspasCopublicacio.jsx')),
+  /* IDEA-255 (Onada R23 · 14-11-2026) · Reproductor flotant universal de veu de PageFrame. */
+  'superposicions/barra-reproductor-veu': lazyRoute(() => import('./detalls/EspecimenBarraReproductorVeu.jsx')),
 };

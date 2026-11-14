@@ -8,6 +8,9 @@
  *   VITE_SDP_IAIA_SERVIDOR=1  la IAIA amb servidor (funció iaia)
  *   VITE_SDP_PUSH_NATIU=1     el cicle de push natiu (FCM/APNs)
  *   VITE_SDP_COPUBLICACIO=1   co-publicació registrada (migració 2611111735)
+ *   VITE_SDP_CONSENS_ISOGLOSSES=1  consens del joc «D'on parles?» (capacitat
+ *                             consensIsoglosses; migracions R23 de la RPC
+ *                             resum_consens_isoglosses_poble i de les seues taules)
  *
  * En compilar, este connector les definix com a literals ('1' o ''), perquè el
  * codi que les mira (`import.meta.env.VITE_SDP_… === '1'`) es plegue i Rollup
@@ -18,7 +21,7 @@
 import path from 'node:path';
 import { loadEnv } from 'vite';
 
-export const BANDERES_DE_CAPACITAT = Object.freeze(['VITE_SDP_XAT_RITME', 'VITE_SDP_IAIA_SERVIDOR', 'VITE_SDP_PUSH_NATIU', 'VITE_SDP_COPUBLICACIO']);
+export const BANDERES_DE_CAPACITAT = Object.freeze(['VITE_SDP_XAT_RITME', 'VITE_SDP_IAIA_SERVIDOR', 'VITE_SDP_PUSH_NATIU', 'VITE_SDP_COPUBLICACIO', 'VITE_SDP_CONSENS_ISOGLOSSES']);
 
 /** Els valors tal com els veu Vite: els .env de envDir i l'entorn del procés. */
 export function valorsDeLesBanderes(config = {}, mode = 'production') {

@@ -20,13 +20,24 @@ const TOPALL_VERSIO_MS = 5000;
 const LLARGARIA_MAXIMA_ENLLAC = 2048;
 
 /* Coacció primitiva: només un enter ≥ 1 és un mínim, i només un text https
-   sense espais, d'una llargària raonable, és un enllaç. Res més del cos passa. */
-function versioDeLaFila(fila) {
-  const versioMinima = fila?.versio_minima;
+   sense espais, d'una llargària raonable, és un enllaç. Si el servidor també
+   declara `versio_recomanada` (enter ≥ 1), viatja validada per a l'avís suau
+   no bloquejant (`BarraActualitzacioRecomanada`); sense ella, l'objecte té
+   exactament `{ versioMinima, enllac }`. Res més del cos passa. */
+export function coaccionaVersioViva(fila) {
+  const versioMinima = fila?.versio_minima ?? fila?.versioMinima;
   if (!Number.isSafeInteger(versioMinima) || versioMinima < 1) return null;
   const text = typeof fila.enllac === 'string' ? fila.enllac.trim() : '';
   const enllac = text.length <= LLARGARIA_MAXIMA_ENLLAC && /^https:\/\/\S+$/i.test(text) ? text : null;
+  const recomanadaCrua = fila?.versio_recomanada ?? fila?.versioRecomanada;
+  if (Number.isSafeInteger(recomanadaCrua) && recomanadaCrua >= 1) {
+    return { versioMinima, versioRecomanada: recomanadaCrua, enllac };
+  }
   return { versioMinima, enllac };
+}
+
+function versioDeLaFila(fila) {
+  return coaccionaVersioViva(fila);
 }
 
 export async function versioMinimaClient(plataforma, config = {}) {

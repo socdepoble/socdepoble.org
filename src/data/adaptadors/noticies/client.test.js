@@ -21,7 +21,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { FONTS_TERRITORIALS } from './cataleg.js';
 import {
-  CAMI_NOTICIES, ESPERA_ESTAT_MAXIMA_MS, ESPERA_ESTAT_MS, ErrorDades, ErrorNoticies, INCRUSTACIO_YOUTUBE, MAXIM_RESPOSTA, MAXIM_URL_PERSONAL,
+  CAMI_NOTICIES, ESPERA_ESTAT_MAXIMA_MS, ESPERA_ESTAT_MS, ESPERA_SENSE_SERVEI_MS, ErrorDades, ErrorNoticies, INCRUSTACIO_YOUTUBE, MAXIM_RESPOSTA, MAXIM_URL_PERSONAL,
   MOTIUS_NOTICIES, TEMPS_ESTAT_MS, TEMPS_FEED_MS,
   adrecaPersonalDelClient, creaServeiNoticies, decodificaEstat, decodificaFeed, decodificaFeedPersonal, motiuDe, videoDe
 } from './client.js';
@@ -204,9 +204,11 @@ describe('els motius', () => {
     expect(new ErrorNoticies('inventat').motiu).toBe('servidor');
   });
 
-  /* Actualitzada a posta (261024 Lector): dos motius nous, 'adreca' i 'personals-off'. */
+  /* Actualitzada a posta (261024 Lector): dos motius nous, 'adreca' i 'personals-off'.
+     Actualitzada a posta (R22, A-frontissa-federacio-r1-1): 'sense-servei', la funció sense desplegar. */
   test('MOTIUS_NOTICIES: la llista tancada (la mateixa de src/apps/lector/fontNoticies.js)', () => {
-    expect(MOTIUS_NOTICIES).toEqual(['sense-connexio', 'temps', 'servidor', 'font', 'limit', 'adreca', 'personals-off']);
+    expect(MOTIUS_NOTICIES).toEqual(['sense-connexio', 'temps', 'servidor', 'font', 'limit', 'adreca', 'personals-off', 'sense-servei']);
+    expect(new ErrorNoticies('sense-servei').motiu).toBe('sense-servei');
     expect(Object.isFrozen(MOTIUS_NOTICIES)).toBe(true);
     expect(new ErrorNoticies('adreca').motiu).toBe('adreca');
     expect(new ErrorNoticies('personals-off').motiu).toBe('personals-off');
@@ -241,14 +243,16 @@ describe('l’estat del servei (GET /fonts)', () => {
     expect(init).toMatchObject({ method: 'GET', credentials: 'omit', redirect: 'error', headers: { Accept: 'application/json' } });
   });
 
-  test('un 404 que no és del servei (la funció no hi és): no disponible, i cap feed ni personal ix (com a molt UNA petició fallida)', async () => {
+  /* Actualitzada a posta (R22, A-frontissa-federacio-r1-1): el motiu és 'sense-servei', no 'servidor'
+     («no respon, pot ser cosa d'un moment» era fals: la funció no està desplegada). */
+  test('un 404 que no és del servei (la funció no hi és): no disponible, motiu sense-servei, i cap feed ni personal ix (com a molt UNA petició fallida)', async () => {
     for (const fonts of [NO_TROBADA, () => new Response('<html>404</html>', { status: 404, headers: { 'content-type': 'text/html' } }),
       () => resposta({ code: `sdp_noticies_${'x'.repeat(5000)}` }, { status: 404 })]) {
       fetchImpl = fals({ fonts });
       const client = servei();
       const rebutjos = await Promise.all([...FONTS_TERRITORIALS.map((font) => motiuDelRebuig(client.feed(font.id))),
         motiuDelRebuig(client.feedPersonal('https://blog.example.org/feed'))]);
-      expect(rebutjos.map((error) => error.motiu)).toEqual(Array(FONTS_TERRITORIALS.length + 1).fill('servidor'));
+      expect(rebutjos.map((error) => error.motiu)).toEqual(Array(FONTS_TERRITORIALS.length + 1).fill('sense-servei'));
       expect(await client.estat()).toEqual({ disponible: false, personals: false });
       expect(fetchImpl).toHaveBeenCalledTimes(1);
     }
@@ -362,14 +366,23 @@ describe('l’estat del servei (GET /fonts)', () => {
     expect(cridesA(fetchImpl, '/fonts')).toHaveLength(3);
   });
 
-  test('un 404 que no és del servei també és definitiu: la funció no hi és, i no es torna a preguntar', async () => {
+  /* Actualitzada a posta (R22, A-frontissa-federacio-r1-1): abans valia tota la sessió, i una app que
+     no es tanca (la nativa, la PWA) no veia mai el servei el dia que es desplegava. Ara val
+     ESPERA_SENSE_SERVEI_MS: dins, cap petició més; passada, una sola pregunta, i si ja hi és, torna. */
+  test('un 404 que no és del servei val ESPERA_SENSE_SERVEI_MS (10 min): dins, cap petició més; després es torna a preguntar', async () => {
     let moment = 0;
-    fetchImpl = fals({ fonts: NO_TROBADA });
+    let desplegada = false;
+    fetchImpl = fals({ fonts: () => (desplegada ? resposta(ESTAT) : NO_TROBADA()) });
     const client = servei({ ara: () => moment });
     expect(await client.estat()).toEqual({ disponible: false, personals: false });
-    moment += 24 * 60 * 60 * 1000;
-    expect((await motiuDelRebuig(client.feed('emowe'))).motiu).toBe('servidor');
+    moment += ESPERA_SENSE_SERVEI_MS - 1;
+    expect((await motiuDelRebuig(client.feed('emowe'))).motiu).toBe('sense-servei');
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+    desplegada = true;
+    moment += 1;
+    expect(await client.estat()).toEqual({ disponible: true, personals: true });
+    expect(cridesA(fetchImpl, '/fonts')).toHaveLength(2);
+    expect(ESPERA_SENSE_SERVEI_MS).toBe(10 * 60 * 1000);
   });
 
   test('dues preguntes alhora mentre la de l’estat va de camí comparteixen la mateixa petició', async () => {

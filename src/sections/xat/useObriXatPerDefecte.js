@@ -83,8 +83,22 @@ export function rutaDelXatDeLaIAIA(modeDades, senseSessio = false) {
  */
 export function rutaDelXatDeJavi(modeDades, { idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
   if (MODES_LOCALS.has(modeDades)) return rutaXatPrivat({ id: AGENTS_MAP.JAVI.id });
+  const declarat = idRemotDeJavi(modeDades, { idsRemots });
+  return declarat ? rutaXatPrivat({ id: declarat }) : null;
+}
+
+/**
+ * Onada R24.2 (R21.2-F01, decisió del Mestre del 14-11-2026) · L'UUID del
+ * compte de Javi que el Mestre declara a IDS_REMOTS_FUNDACIONALS, fora dels
+ * modes locals; si no n'hi ha cap, null. XatContext (creaFil) el fa servir
+ * perquè un ?amb= amb un àlies del padró pilot («0001», «javillinares»)
+ * obriga en remot el directe amb el compte real, i no envie mai un àlies al
+ * servidor. `idsRemots` és per a les proves; per defecte, els declarats.
+ */
+export function idRemotDeJavi(modeDades, { idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
+  if (MODES_LOCALS.has(modeDades)) return null;
   const declarat = (idsRemots?.[PERSONA_PILOT.slug] || []).find((id) => typeof id === 'string' && id.trim());
-  return declarat ? rutaXatPrivat({ id: declarat.trim() }) : null;
+  return declarat ? declarat.trim() : null;
 }
 
 /** P1-70 (261029) · La conversa d'atenció personal i servei tècnic amb Javi

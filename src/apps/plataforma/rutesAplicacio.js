@@ -13,17 +13,13 @@
  */
 import { useCallback, useMemo } from 'react';
 import { useLocation, useRouter } from '../../app/contexts/RouterContext';
+import { esIdOpac, esSegmentSegur, tramsSegurs } from './tramsDeRuta.js';
 
 const MAX_SEGMENT = 64;
 
 /** Slug: minúscules, xifres i guions solts ('taules', 'caixa-1'). */
 export function esSlug(valor) {
   return typeof valor === 'string' && valor.length <= MAX_SEGMENT && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(valor);
-}
-
-/** Id opac: minúscules, xifres, '-' i '_'; comença per lletra o xifra. */
-export function esIdOpac(valor) {
-  return typeof valor === 'string' && /^[a-z0-9][a-z0-9_-]{0,63}$/.test(valor);
 }
 
 /** Data AAAA-MM-DD que existix al calendari (gregorià proléptic, sense zona). */
@@ -40,27 +36,12 @@ export function esUuid(valor) {
   return typeof valor === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(valor);
 }
 
-/** Un tram qualsevol d'una ruta d'app: el que admeten tots els validadors. */
-export function esSegmentSegur(valor) {
-  return esIdOpac(valor);
-}
+/* Onada R24 · wp_trinquet · esIdOpac, esSegmentSegur i tramsSegurs viuen a
+   tramsDeRuta.js, una fulla que l'arrencada importa sense estos hooks; ací es
+   reexporten amb els mateixos noms. */
+export { esIdOpac, esSegmentSegur, tramsSegurs };
 
 export const VALIDADORS = Object.freeze({ slug: esSlug, idOpac: esIdOpac, data: esData, uuid: esUuid });
-
-/**
- * Trams d'una ruta crua (sense descodificar) dins de /app. Torna null si
- * algun tram no és segur: una barra doble (també a l'inici, '//bar'), '..',
- * '%2e', una majúscula… Només es lleva UNA barra inicial i UNA de final
- * ('/app/bar/' no compta com a tram); qualsevol altra barra deixa un tram buit.
- */
-export function tramsSegurs(cami) {
-  if (typeof cami !== 'string') return null;
-  const senseInici = cami.startsWith('/') ? cami.slice(1) : cami;
-  if (senseInici === '') return [];
-  const net = senseInici.endsWith('/') ? senseInici.slice(0, -1) : senseInici;
-  const trams = net.split('/');
-  return trams.every(esSegmentSegur) ? trams : null;
-}
 
 const PATRO_PARAMETRE = /^:([a-z][a-zA-Z0-9]*)$/;
 

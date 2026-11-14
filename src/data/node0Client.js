@@ -70,9 +70,11 @@ export function normalitzaOrigenNode0(origen = ORIGEN_NODE_ZERO_DEFECTE) {
    absolut sense credencials o un camí relatiu a l'arrel (mai «//»): cap
    `javascript:`, `data:` ni esquema estrany no arriba a un href o a un src.
    La barra inversa i els caràcters de control es rebutgen perquè el navegador
-   els reinterpreta (`/\exemple.test` és una URL d'un altre origen). */
+   els reinterpreta (`/\exemple.test` és una URL d'un altre origen).
+   R22 (sospita de frontissa) · Exportat: el reutilitza l'adaptador HTTP del Node 0
+   (src/data/node0/adaptadorNodeZeroHttp.js), que és el que s'executa de veres. */
 const CAMPS_URL_PUBLICACIO = new Set(['image_url', 'avatar_url', 'hero_url', 'url', 'source_url', 'canonicalUrl', 'uri']);
-const urlSegura = (v) => {
+export const urlSegura = (v) => {
   if (v === '' || /[\u0000-\u001f\u007f\\]/.test(v)) return '';
   if (/^\/(?!\/)/.test(v)) return v;
   try {

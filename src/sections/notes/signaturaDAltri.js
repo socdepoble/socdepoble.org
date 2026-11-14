@@ -18,8 +18,8 @@
  */
 import { autorDe } from '../../config/navigation.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
-import { pertanyALActor } from './masDeLUsuari.js';
-import { modeDeDadesResolt } from './autoriaNota.js';
+import { pertanyALActor } from './pertinencaDeLActor.js';
+import { modeDeDadesResolt } from './autoriaDeLActor.js';
 import { motiuSignaturaAliena } from './visibilitatNota.js';
 
 /** El nom visible de qui signa: el de l'autoria, el de qui ven o el de qui

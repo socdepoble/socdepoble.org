@@ -14,8 +14,8 @@ export const ESCALA_FLUIDA = [
   ['--sdp-fluid-h4', 'h4', 20, 30],
   ['--sdp-fluid-h5', 'h5', 18, 26],
   ['--sdp-fluid-h6', 'h6', 16, 22],
-  ['--sdp-fluid-lead', '.lead i cites', 18, 22],
-  ['--sdp-fluid-cos', 'p, ul i ol', 16, 20]
+  ['--sdp-fluid-lead', '.lead i cites', 20, 22],
+  ['--sdp-fluid-cos', 'p, ul i ol', 19, 20]
 ];
 
 const mida = (token) => {

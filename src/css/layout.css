@@ -260,6 +260,8 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
 }
 
 .nav-item {
+  /* R24 · xat_entrega (P1-4) · Context de la pastilla de no llegits (.nav-item__insignia). */
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--sdp-space-3);
@@ -315,6 +317,26 @@ nav.app-sidebar .nav-item--desplegable {
   transition: transform var(--sdp-t);
 }
 .nav-item--desplegable[aria-expanded="true"] .nav-item__xebro { transform: rotate(180deg); }
+
+/* R24 · xat_entrega (IDEA-260 b, P1-4) · El comptador global de no llegits a
+   l'entrada «Xat» (ComptadorGlobalXat.jsx): la pastilla del Xat
+   (.sdp-xat-pastilla, 9,21:1 en clar i en fosc), a la dreta del rètol de la
+   barra oberta. Plegada (rail de 56px) i a la barra mòbil, a la cantonada de
+   la casella, sense moure la icona ni el rètol. El nom accessible el porta
+   l'enllaç («Xat, 3 missatges no llegits»): la pastilla és aria-hidden. La
+   casella és el context de posició (.nav-item, position: relative). */
+.nav-item__insignia {
+  display: inline-flex;
+  flex: none;
+  margin-inline-start: auto;
+}
+.sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .nav-item__insignia,
+:where(.sdp-root.is-compact) .mobile-nav .nav-item__insignia {
+  position: absolute;
+  inset-block-start: var(--sdp-space-1);
+  inset-inline-end: var(--sdp-space-1);
+  margin: 0;
+}
 
 /* ── 4. COLUMNA 2 · LLISTA CONTEXTUAL (opcional) ───────────────
    Esta demo no la inclou; l'app real (xats, llocs…) només ha de

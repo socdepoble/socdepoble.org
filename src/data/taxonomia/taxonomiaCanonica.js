@@ -34,10 +34,10 @@ const traduccionsCategories=[
     "🤝 Mundo Rural"
   ],
   [
-    "💻 Tecnología Libre, Datos Abiertos y Diseño",
-    "💻 Free Technology, Open Data and Design",
-    "💻 Teknologia Librea, Datu Irekiak eta Diseinua",
-    "💻 Tecnoloxía Libre, Datos Abertos e Deseño"
+    "💻 Tecnología y Diseño",
+    "💻 Technology and Design",
+    "💻 Teknologia eta Diseinua",
+    "💻 Tecnoloxía e Deseño"
   ]
 ];
 export const CATEGORIES_CANONIQUES=Object.freeze(Object.entries(CATEGORIES_CANONIQUES_BASE).map(([id,label],i)=>Object.freeze({id,labels:Object.freeze(Object.fromEntries(IDIOMES_TAXONOMIA.map((language,j)=>[language,j===0?label:traduccionsCategories[i][j-1]])))})));
@@ -81,13 +81,21 @@ export function nomEstructural(name,idioma='ca'){const i=indexIdioma(idioma);ret
  * d'altri): només les 6 categories mares, que porten emoji i no xoquen amb cap text lliure, passen a la
  * llengua de la interfície. Una etiqueta lliure («Muro», «Planos») es queda tal qual (L2-17). Sense canvis,
  * el mateix array. */
+const CATEGORIES_ANTIGUES_EQUIVALENTS=Object.freeze({
+ '💻 Tecnologia Lliure, Dades Obertes i Disseny':'tecnologia-lliure',
+ '💻 Tecnología Libre, Datos Abiertos y Diseño':'tecnologia-lliure',
+ '💻 Free Technology, Open Data and Design':'tecnologia-lliure',
+ '💻 Teknologia Librea, Datu Irekiak eta Diseinua':'tecnologia-lliure',
+ '💻 Tecnoloxía Libre, Datos Abertos e Deseño':'tecnologia-lliure'
+});
 export function localitzaCategoriesMares(labels,idioma='ca'){
  if(!Array.isArray(labels))return labels;
  let changed=false;
  const result=labels.map(label=>{
   if(!label||typeof label!=='object')return label;
   const cat=CATEGORIES_CANONIQUES.find(c=>Object.values(c.labels).includes(label.text));
-  const text=cat?nomCategoriaCanonica(cat.id,idioma):null;
+  const idCategoria=cat?.id??(Object.hasOwn(CATEGORIES_ANTIGUES_EQUIVALENTS,label.text)?CATEGORIES_ANTIGUES_EQUIVALENTS[label.text]:null);
+  const text=idCategoria?nomCategoriaCanonica(idCategoria,idioma):null;
   if(!text||text===label.text)return label;changed=true;return {...label,text};
  });
  return changed?result:labels;
@@ -100,9 +108,10 @@ export function localitzaEtiquetesCanoniques(labels,idioma='ca'){
  const result=labels.map(label=>{
   if(!label||typeof label!=='object')return label;
   const cat=CATEGORIES_CANONIQUES.find(c=>Object.values(c.labels).includes(label.text));
+  const idCategoria=cat?.id??(Object.hasOwn(CATEGORIES_ANTIGUES_EQUIVALENTS,label.text)?CATEGORIES_ANTIGUES_EQUIVALENTS[label.text]:null);
   const tag=NOMS_ETIQUETES_CANONIQUES_49.find(name=>IDIOMES_TAXONOMIA.some(lang=>nomEtiquetaCanonica(name,lang)===label.text));
   const structural=Object.keys(estructurals).find(name=>IDIOMES_TAXONOMIA.some(lang=>nomEstructural(name,lang)===label.text));
-  const text=cat?nomCategoriaCanonica(cat.id,idioma):tag?nomEtiquetaCanonica(tag,idioma):structural?nomEstructural(structural,idioma):label.text;
+  const text=idCategoria?nomCategoriaCanonica(idCategoria,idioma):tag?nomEtiquetaCanonica(tag,idioma):structural?nomEstructural(structural,idioma):label.text;
   if(text===label.text)return label;changed=true;return {...label,text};
  });
  return changed?result:labels;

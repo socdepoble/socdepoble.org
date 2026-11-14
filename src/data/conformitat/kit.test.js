@@ -826,10 +826,11 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
     return valors[c.metode];
   }
 
-  test('cens exacte del contracte, 32 obligatòries i 127 opcionals; cap nom sense cas', () => {
+  /* R24 · CODEX-R24-03 · 'consensIsoglosses' hi afig una capacitat i tres mètodes opcionals. */
+  test('cens exacte del contracte, 32 obligatòries i 130 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(55);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(127);
+    expect(Object.keys(CAPACITATS)).toHaveLength(56);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(130);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });
@@ -1007,4 +1008,27 @@ describe('R22 · llistaBloquejos amb un bloqueig opac per publicació', () => {
     expect(await executaCas(llista(), { llistaBloquejos: async () => [{ tipus: 'autor', id: UUID, nom: null, creatAl: null }] }, ctx()))
       .toMatchObject({ estat: 'falla', falles: ['un bloqueig té tipus "autor"'] });
   });
+});
+
+/* R24 · CODEX-R24-03 · Els tres casos de 'consensIsoglosses' comproven el rebuig d'una entrada
+   que el servidor no hauria de rebre mai (pregunta malformada, autoria del client, aportació
+   sense consentiment): un TypeError abans de cap efecte. Una resolució o un error de domini
+   aliè és una falla; sense la capacitat, el cas s'omet. */
+test('R24 · consensIsoglosses: tres casos de rebuig previ, un per mètode, que refuten resolucions i errors aliens', async () => {
+  const nous = CASOS.filter(c => c.titol.startsWith('R24:'));
+  expect(nous.map(c => c.metode)).toEqual(CAPACITATS.consensIsoglosses);
+  for (const c of nous) {
+    const ctx = contextDeConformitat({ config: { dataMode: 'remote' } }), args = c.arguments(ctx), crides = [];
+    expect(c.capacitat).toBe('consensIsoglosses');
+    expect(c.escriu).toBe(false);
+    expect(args.at(-1)).toBe(ctx.config);
+    const bo = async (...rebuts) => { crides.push(rebuts); throw new TypeError('Entrada invàlida'); };
+    expect(await executaCas(c, { [c.metode]: bo }, ctx)).toMatchObject({ estat: 'ok' });
+    expect(crides).toEqual([args]);
+    for (const mutant of [async () => [], async () => ({ nou: true }), async () => { throw new Error('xarxa'); },
+      async () => { throw Object.assign(new Error('servei absent'), { code: 'no-disponible' }); }]) {
+      expect(await executaCas(c, { [c.metode]: mutant }, ctx), c.titol).toMatchObject({ estat: 'falla' });
+    }
+    expect(await executaCas(c, {}, ctx)).toMatchObject({ estat: 'omés', motiu: 'capacitat consensIsoglosses absent' });
+  }
 });

@@ -864,6 +864,32 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(deps[AVISOS_LOCALS]).toBe('8.3.1');
     expect(deps[AVISOS_LOCALS]).toMatch(/^\d+\.\d+\.\d+$/);
   });
+
+  /* R24 botigues · D2 (RC-7) · El connector social de capgo 8.5.12 enllaça el SDK de Facebook
+     (com.facebook.android:facebook-login) si socialLogin.facebook.include no és 'false'
+     (android/build.gradle del connector: project.findProperty, per defecte 'true'). Fins ara
+     l'apagava només el gradle.properties que el ganxo capacitor:sync:before escriu DINS de
+     node_modules: un npm ci seguit de gradlew sense cap sync el tornava a portar, contra «No hi
+     ha Píxel de Meta» (legalContent §19). android/gradle.properties (el del projecte arrel, que
+     Gradle passa als subprojectes) l'apaga sempre. Facebook i Twitter fora; Google i Apple no es toquen. */
+  test('android/gradle.properties apaga Facebook i Twitter del connector social, amb els noms que llig capgo', () => {
+    const propietats = Object.fromEntries(llig(ARREL, 'android', 'gradle.properties').split('\n')
+      .map((linia) => linia.trim()).filter((linia) => linia && !linia.startsWith('#') && !linia.startsWith('!'))
+      .map((linia) => { const i = linia.search(/[=:]/); return [linia.slice(0, i).trim(), linia.slice(i + 1).trim()]; }));
+    expect(propietats['socialLogin.facebook.include']).toBe('false');
+    expect(propietats['socialLogin.twitter.include']).toBe('false');
+    for (const proveidor of ['google', 'apple']) expect(propietats[`socialLogin.${proveidor}.include`], proveidor).toBeUndefined();
+    const paquet = JSON.parse(llig(ARREL, 'package.json')).dependencies || {};
+    const SOCIAL = ['@cap', 'go/capacitor-social-login'].join('');
+    expect(paquet[SOCIAL]).toBe('8.5.12');
+    const gradleDelConnector = path.join(ARREL, 'node_modules', ...SOCIAL.split('/'), 'android', 'build.gradle');
+    if (fs.existsSync(gradleDelConnector)) {
+      const codi = llig(gradleDelConnector);
+      expect(codi).toContain("project.findProperty('socialLogin.facebook.include') ?: 'true'");
+      expect(codi).toContain("project.findProperty('socialLogin.twitter.include') ?: 'true'");
+      expect(codi).toMatch(/if \(includeFacebook == 'true'\) \{\s*implementation 'com\.facebook\.android:facebook-login:/);
+    }
+  });
 });
 
 test.skipIf(HI_HA_PROJECTE)('sense android/app/src/main en este arbre, les proves del projecte d’Android se salten', () => {

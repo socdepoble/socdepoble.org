@@ -20,7 +20,7 @@ import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Boto, Botonera } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions, useVistaCataleg } from '../../comu/esquelet/index.js';
 import { ARTICLES_PRODUCTES, LIMITS, articlePerId, liniesOrdenades, recentsDisponibles } from '../nucli/index.js';
-import { ambPreusMercadona, esLlistaMercadona } from '../mercadona.js';
+import { ambPreusMercadona, esLlistaMercadona, nomLlistaVisible } from '../mercadona.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
 import { COMPRA } from './constants.js';
@@ -28,9 +28,10 @@ import { llistaDelCami, textArticles, useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
 import { AvisCatalegMercadona, ComparadorMercadona, useMercadona } from './Mercadona.jsx';
 import { ComparticioLlistaCompra } from './ComparticioLlistaCompra.jsx';
+import { EncarrecBotigaPoble } from './EncarrecBotigaPoble.jsx';
 import { RecepcioRecepta } from './RecepcioRecepta.jsx';
 import {
-  articlesVestits, entradetaDe, liniesVestides, perArticle, productesALaGraella, seccionsDe, subtitolDe, suggerimentsVestits
+  articlesVestits, entradetaDe, liniesVestides, nomArticleVisible, perArticle, productesALaGraella, seccionsDe, subtitolDe, suggerimentsVestits
 } from './vestits.js';
 
 const TEXTOS_LLISTA = Object.freeze({
@@ -54,7 +55,7 @@ export function ColumnaLlistes({ params }) {
   return (
     <ColumnaColleccions
       titol="Les meues llistes"
-      colleccions={estat.llistes.map((llista) => ({ id: llista.id, nom: llista.nom, comptador: llista.linies.length }))}
+      colleccions={estat.llistes.map((llista) => ({ id: llista.id, nom: nomLlistaVisible(llista.nom), comptador: llista.linies.length }))}
       actiu={llistaDelCami(params) ?? llistaVigent(null).id}
       hrefDe={(colleccio) => ruta(COMPRA.entrada, colleccio.id)}
       onCrea={obriNovaLlista}
@@ -63,9 +64,9 @@ export function ColumnaLlistes({ params }) {
       avis={(
         <Botonera etiqueta="Catàlegs de compra">
           <Boto disabled={!mercadona && (!llegit || mode === 'lectora' || estat.llistes.length >= LIMITS.llistes)} onClick={() => {
-            const id = mercadona?.id || accions.creaLlista('Mercadona');
+            const id = mercadona?.id || accions.creaLlista('Botiga de poble');
             if (id) navigate(ruta(COMPRA.entrada, id));
-          }}>Obri Mercadona</Boto>
+          }}>Catàleg de botiga</Boto>
         </Botonera>
       )}
     />
@@ -86,7 +87,7 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
   return (
     <ColumnaColleccio
       forma="targetes"
-      titol={llista.nom}
+      titol={nomLlistaVisible(llista.nom)}
       linies={linies}
       resum={{ etiqueta: 'Per comprar', comptador: linies.length, textComptador: textArticles }}
       onTria={(linia) => accions.marcaComprat(llista.id, linia.articleId)}
@@ -97,6 +98,8 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
           <RecepcioRecepta llista={llista} />
           {/* R16-F · Compartir la llista i rebre'n una (#compartida=…). */}
           <ComparticioLlistaCompra key={llista.id} llista={llista} />
+          {/* IDEA-258b (Onada R24) · Precomanda per a la botiga local / de poble. */}
+          <EncarrecBotigaPoble key={`encarrec:${llista.id}`} llista={llista} />
         </>
       )}
       peu={<AvisNevera />}
@@ -138,7 +141,7 @@ export function ColumnaCatalegCompra({ params }) {
     articles: recents.map((recent) => {
       const article = articlePerId(estat, recent.articleId);
       return {
-        id: article.id, nom: article.nom, categoriaId: article.categoriaId, secundari: recent.especificacio || undefined,
+        id: article.id, nom: nomArticleVisible(article), categoriaId: article.categoriaId, secundari: recent.especificacio || undefined,
         /* REGLA D'OR 1 (261004) · La boina de la targeta, com les de la graella (vestits.js). */
         autoria: autoriaDArticle(article),
         /* Integració final (261004, F04) · El subtítol i l'entradeta, com les de la graella. */
@@ -183,7 +186,7 @@ export function ColumnaCatalegCompra({ params }) {
           }}>Lleva de la llista</Boto>
         ) : null)
       } : null}
-      resum={llista ? { etiqueta: llista.nom, comptador: linies.size, textComptador: textArticles } : null}
+      resum={llista ? { etiqueta: nomLlistaVisible(llista.nom), comptador: linies.size, textComptador: textArticles } : null}
       primer={COMPRA.primer}
       tram={COMPRA.tram}
     />

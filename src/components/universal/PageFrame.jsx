@@ -1,5 +1,5 @@
 import { resolveAsset } from '../../config/assetResolver';
-import { useCallback, useEffect, useId, useLayoutEffect, useState, useRef } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useId, useLayoutEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from '../../app/contexts/RouterContext';
 import { Camera, Image as ImageIcon, LoaderCircle, Trash2 } from 'lucide-react';
@@ -22,6 +22,12 @@ import { LlenguaDelContingut } from './traduccio/llenguaDelContingut.js';
 import { useToast } from './NotificationContext.jsx';
 import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../config/moderacio.js';
+import { VeuLecturaPaginaContext } from './veu/VeuLecturaPaginaContext.js';
+import { teProsaDeLectura } from './veu/deteccioLecturaVeu.js';
+
+const BarraReproductorVeuLazy = lazy(() => import('./veu/BarraReproductorVeu.jsx'));
+const PARELL_ESCOLTA_VEU = Object.freeze(['common.veuIaiaEscolta', '🔊 Escolta la IAIA']);
+const RE_EMOJI_INICIAL_VEU = /^\p{Extended_Pictographic}️?\s*/u;
 
 /* Ordre del Mestre, 261004 (D-A) · El Traduir d'una pàgina que no es
    traduïx (traduccio={false}: la pàgina de les apps, PaginaApp): ho diu i no
@@ -779,6 +785,11 @@ export function PageFrame({
      l'editor. Sense la prop (lectura, connexions, l'estat buit), l'enllaç de
      sempre a la pàgina «Drets d'autor». */
   onCanviaCopyright,
+  /* IDEA-255 (Onada R23) · `veuLectura`: en totes les pàgines de lectura amb
+     prosa real (excloent mode edició, `chrome="none"` i `veuLectura={false}`)
+     pinta el botó «🔊 Escolta la IAIA» sota l'entradilla (.page-intro) i obri
+     en diferit el Mini-Reproductor Flotant Universal (BarraReproductorVeu). */
+  veuLectura = true,
   children,
   className = '',
   LinkComponent = 'a' // To decouple from React Router's Link
@@ -791,7 +802,12 @@ export function PageFrame({
   const traduccioRef = useRef(null);
   /* §5 (261026_2126) · La capçalera, perquè l'Índex hi trobe l'H1. */
   const capcaleraRef = useRef(null);
+  const botoVeuLecturaRef = useRef(null);
   const tocIdPrefix = `toc-${useId().replace(/:/g, '')}`;
+  const enEdicioVeu = Boolean(onCanviaCopyright) || Boolean(accionsInoperatives) || chrome === 'none' || veuLectura === false;
+  const [teLecturaVeu, setTeLecturaVeu] = useState(false);
+  const [reproductorVeuObert, setReproductorVeuObert] = useState(false);
+  const [estatVeu, setEstatVeu] = useState({ oberta: false, parlant: false });
 
   /* Traductor de Poble (ordre del Mestre, 260930 · via B) · L'estat de la
      traducció d'esta pàgina. La font és sempre l'article original
@@ -867,6 +883,42 @@ export function PageFrame({
      la pàgina hi fa scroll. La que acaba d'escriure l'Índex no torna a fer
      scroll: el clic ja l'ha portada (seccioConsumida). */
   const router = useRouterOpcional();
+  const rutaActualVeu = router?.currentPath || '';
+
+  useEffect(() => {
+    setReproductorVeuObert(false);
+    setEstatVeu({ oberta: false, parlant: false });
+  }, [rutaActualVeu, enEdicioVeu]);
+
+  useLayoutEffect(() => {
+    const cosNode = containerRef.current;
+    if (!cosNode || enEdicioVeu) {
+      setTeLecturaVeu(false);
+      return undefined;
+    }
+    const comprova = () => {
+      const disponible = teProsaDeLectura(cosNode, { enEdicio: enEdicioVeu });
+      setTeLecturaVeu((abans) => (abans === disponible ? abans : disponible));
+    };
+    comprova();
+    if (typeof MutationObserver !== 'function') return undefined;
+    const obs = new MutationObserver(comprova);
+    obs.observe(cosNode, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, [enEdicioVeu, children, title]);
+
+  const tancaReproductorVeu = useCallback(() => {
+    setReproductorVeuObert(false);
+    setEstatVeu({ oberta: false, parlant: false });
+  }, []);
+
+  const premBotoVeuLectura = useCallback(() => {
+    setReproductorVeuObert((obert) => !obert);
+  }, []);
+
+  const etiquetaVeuTraduida = String(tradueix(tAvis, PARELL_ESCOLTA_VEU));
+  const etiquetaEscoltaVeu = etiquetaVeuTraduida.replace(RE_EMOJI_INICIAL_VEU, '') || etiquetaVeuTraduida;
+  const idiomaVeuLectura = traduida?.lang || llenguaDelContingut || traduccio?.llenguaInterficie || 'ca';
   /* Fase D (tasca 3.2) · ?seccio= mana; si no n'hi ha, el fragment del document
      (/legal#esborra-compte, l'adreça de la Play Console) també hi porta. */
   const seccioUrl = llegixSeccio(router?.searchParams) ?? seccioDelFragment(fragmentDelDocument(router));
@@ -1275,10 +1327,40 @@ export function PageFrame({
           </div>
         )}
         {filaInsignia}
-        <LlenguaDelContingut.Provider value={langDelContingut}>
-          {children}
-        </LlenguaDelContingut.Provider>
+        {teLecturaVeu && !traduida ? (
+          <div className="sdp-veu-lectura-marc" translate="no" data-sdp-no-locutar="">
+            <button
+              ref={botoVeuLecturaRef}
+              type="button"
+              className={estatVeu.parlant ? 'sdp-boto sdp-boto--primari sdp-boto-veu-iaia' : 'sdp-boto sdp-boto--secundari sdp-boto-veu-iaia'}
+              aria-pressed={reproductorVeuObert}
+              onClick={premBotoVeuLectura}
+            >
+              <span aria-hidden="true">🔊</span>
+              <span>{etiquetaEscoltaVeu}</span>
+            </button>
+          </div>
+        ) : null}
+        <VeuLecturaPaginaContext.Provider value={!enEdicioVeu}>
+          <LlenguaDelContingut.Provider value={langDelContingut}>
+            {children}
+          </LlenguaDelContingut.Provider>
+        </VeuLecturaPaginaContext.Provider>
       </article>
+      {traduida && teLecturaVeu ? (
+        <div className="sdp-veu-lectura-marc sdp-veu-lectura-marc--traduit" translate="no" data-sdp-no-locutar="">
+          <button
+            ref={botoVeuLecturaRef}
+            type="button"
+            className={estatVeu.parlant ? 'sdp-boto sdp-boto--primari sdp-boto-veu-iaia' : 'sdp-boto sdp-boto--secundari sdp-boto-veu-iaia'}
+            aria-pressed={reproductorVeuObert}
+            onClick={premBotoVeuLectura}
+          >
+            <span aria-hidden="true">🔊</span>
+            <span>{etiquetaEscoltaVeu}</span>
+          </button>
+        </div>
+      ) : null}
       {traduida ? (
         <article className="content-wrapper sdp-traduccio-cos" ref={traduccioRef} lang={traduida.lang}>
           {/* Cicle 4 (traduccio-llista-niuada-hereta-lang-ca) · La llengua de
@@ -1310,6 +1392,20 @@ export function PageFrame({
       <TableOfContentsDrawer isOpen={isTocOpen} onClose={tancaIndex}
         contentRef={traduida ? traduccioRef : containerRef} capcaleraRef={capcaleraRef}
         idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} onSeccio={traduida || seccioALaUrl === false ? null : escriuSeccioUrl} />
+      {reproductorVeuObert && teLecturaVeu ? (
+        <Suspense fallback={null}>
+          <BarraReproductorVeuLazy
+            oberta={reproductorVeuObert}
+            capcaleraRef={capcaleraRef}
+            cosRef={traduida ? traduccioRef : containerRef}
+            idioma={idiomaVeuLectura}
+            privat={!ambTraductor}
+            botoActivadorRef={botoVeuLecturaRef}
+            onTanca={tancaReproductorVeu}
+            onCanviEstat={setEstatVeu}
+          />
+        </Suspense>
+      ) : null}
     </>
   );
 }
@@ -1322,12 +1418,27 @@ export function PageFrame({
    conserven): la caixa pren la forma del marc i la foto s'hi pinta amb CSS
    (useEnquadramentDeImatge, caixa 'marc'), com s'ensenyava el retall d'abans.
    Sense fragment, l'<img> de sempre. */
-export function ImatgeDePortada({ src, className, onLoad, ...props }) {
+export function ImatgeDePortada({ src, className, onLoad, fetchpriority, loading, ...props }) {
   const ref = esMitjaOpac(src) ? src.trim().replace(/^sdp-media:/i, 'sdp-media:') : '';
   const { url } = useResolvedAssetState(ref);
   const font = ref ? (!esMitjaOpac(url) && isSafeAsset(url) ? url : '') : resolveAsset(src);
   const pintor = useEnquadramentDeImatge(font, { caixa: 'marc', onLoad });
-  return font ? <img {...props} ref={pintor.ref} src={pintor.src} className={ambClassesDelMarc(className, pintor.className)} onLoad={pintor.onLoad} /> : null;
+  /* Onada R22 · T3 (Tellado WPO + modern-web-guidance optimize-image-priority):
+     mai es combina `fetchpriority="high"` amb `loading="lazy"`, i `fetchpriority="auto"`
+     s'omet per mantindre el DOM net i deixar actuar l'heurística nativa. */
+  const prioritatEfectiva = fetchpriority === 'auto' ? undefined : fetchpriority;
+  const carregaEfectiva = prioritatEfectiva === 'high' && loading === 'lazy' ? undefined : loading;
+  return font ? (
+    <img
+      {...props}
+      fetchpriority={prioritatEfectiva}
+      loading={carregaEfectiva}
+      ref={pintor.ref}
+      src={pintor.src}
+      className={ambClassesDelMarc(className, pintor.className)}
+      onLoad={pintor.onLoad}
+    />
+  ) : null;
 }
 
 /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · Un src de

@@ -37,8 +37,16 @@
  * no obri la conversa ni alterna la casella. Fora de la selecció, la fila diu
  * la drecera (aria-keyshortcuts) i la pista per al lector de pantalla
  * (aria-describedby). Sense `premuda`, el botó de sempre.
+ *
+ * Onada R24 · IDEA-260 (a) (opció B, compatible amb R21.8) · `canals`: els
+ * fils de la fila plegada d'una persona (unaFilaPerPersona.js). Amb dues
+ * identitats o més, una píndola per identitat en ordre fix, la mateixa del
+ * canal d'entitat (.sdp-xat-fila__entitat): «Personal» (persona) i cada
+ * entitat (edifici); i el lector de pantalla diu «, 2 converses: Personal i
+ * Sóc de Poble». Cap canal d'entitat no queda amagat. Una fila d'un sol canal
+ * es pinta exactament igual que abans.
  */
-import { BellOff, Building2, ChevronRight, Circle, CircleCheck, Megaphone, MessageCircleMore, Pin, Users } from 'lucide-react';
+import { BellOff, Building2, ChevronRight, Circle, CircleCheck, Megaphone, MessageCircleMore, Pin, User, Users } from 'lucide-react';
 import CaraXat from './CaraXat.jsx';
 import MarquesEstat from './MarquesEstat.jsx';
 import PastillaNoLlegits from './PastillaNoLlegits.jsx';
@@ -47,6 +55,7 @@ import { textDAdjunt } from '../conversa.js';
 import { senseMarquesDeNegreta } from '../negreta.js';
 import { etiquetaLlista } from '../temps.js';
 import { caraDeComunitat } from '../caraDeSocDePoble.js';
+import { identitatsDeLaFila } from '../unaFilaPerPersona.js';
 
 const esCanal = (fil) => Boolean(fil?.esCanal) || fil?.tipus === 'canal';
 const esGrup = (fil) => Boolean(fil?.esGrup) || fil?.tipus === 'grup';
@@ -62,6 +71,27 @@ export function etiquetaDeTipus(fil, t) {
     return t('section.xat.entitat.canal', 'Canal de {nom}').replace('{nom}', () => fil.entitatNom);
   }
   return null;
+}
+
+/* «Personal i Sóc de Poble» amb la conjunció de la llengua (Intl.ListFormat);
+   un navegador sense, amb comes. */
+function llistaDeNoms(noms, locale) {
+  try {
+    if (typeof Intl !== 'undefined' && typeof Intl.ListFormat === 'function') {
+      return new Intl.ListFormat(locale || undefined, { style: 'long', type: 'conjunction' }).format(noms);
+    }
+  } catch {
+    /* Un locale que el navegador no coneix: les comes de sempre. */
+  }
+  return noms.join(', ');
+}
+
+/** Onada R24 · El text per a lectors de pantalla d'una fila plegada. */
+export function etiquetaDeLesConverses(identitats, t, locale) {
+  const noms = identitats.map(({ nom }) => nom || t('section.xat.canals.personal', 'Personal'));
+  return t('section.xat.canals.grup', '{n} converses: {llista}')
+    .replace('{n}', () => String(identitats.length))
+    .replace('{llista}', () => llistaDeNoms(noms, locale));
 }
 
 /**
@@ -128,7 +158,7 @@ function IniciPrevia({ fil, joId, t }) {
   const tu = esGrup(fil) || esCanal(fil) ? `${t('section.xat.fila.tu', 'Tu')}: ` : null;
   return (
     <>
-      {estat ? <><MarquesEstat estat={estat} t={t} />{' '}</> : null}
+      {estat ? <><MarquesEstat estat={estat} rebutsConeguts={fil?.esPropi || fil?.rebutsConeguts !== false} t={t} />{' '}</> : null}
       {tu}
     </>
   );
@@ -169,7 +199,7 @@ function propsDeFila({ seleccio, activa, onPrem, classe, premuda = null }) {
   };
 }
 
-export default function FilaConversa({ fil, activa = false, onSelect, locale, t, seleccio = null, joId = null, premuda = null }) {
+export default function FilaConversa({ fil, activa = false, onSelect, locale, t, seleccio = null, joId = null, premuda = null, canals = null }) {
   const nomBase = fil.name || fil.title || t('section.xat.conversaSenseNom', 'Conversa');
   const sufixTu = `(${t('section.xat.rail.tu', 'Tu')})`;
   const nom = fil.esPropi && !nomBase.endsWith(sufixTu)
@@ -183,7 +213,10 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
   /* T1 · Silenciat, l'hora no es ressalta: la pastilla grisa ja ho diu. */
   const ressaltada = !silenciat && (noLlegits > 0 || Boolean(fil.noLlegitManual));
   const hora = etiquetaLlista(fil.ultimAl, { locale, t });
-  const tipus = etiquetaDeTipus(fil, t);
+  /* Onada R24 · Una fila plegada: les seues identitats (dues o més). */
+  const identitats = identitatsDeLaFila(canals, fil.id);
+  const plegada = identitats.length > 1;
+  const tipus = plegada ? etiquetaDeLesConverses(identitats, t, locale) : etiquetaDeTipus(fil, t);
   const classe = `sdp-xat-fila${ressaltada ? ' sdp-xat-fila--nova' : ''}`;
 
   return (
@@ -191,7 +224,18 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
       {seleccio ? <MarcaTria triada={seleccio.triada} /> : null}
       <AvatarFil fil={fil} nom={nomBase} />
       <span className="sdp-xat-fila__cos">
-        {fil.comEntitat && fil.entitatNom ? (
+        {plegada ? (
+          <span className="sdp-xat-fila__identitats" aria-hidden="true">
+            {identitats.map(({ clau, nom }) => (
+              <span key={clau} className="sdp-xat-fila__entitat">
+                {nom
+                  ? <Building2 size={14} aria-hidden="true" focusable="false" />
+                  : <User size={14} aria-hidden="true" focusable="false" />}
+                <span className="sdp-xat-fila__entitat-nom">{nom || t('section.xat.canals.personal', 'Personal')}</span>
+              </span>
+            ))}
+          </span>
+        ) : fil.comEntitat && fil.entitatNom ? (
           <span className="sdp-xat-fila__entitat" aria-hidden="true">
             <Building2 size={14} aria-hidden="true" focusable="false" />
             <span className="sdp-xat-fila__entitat-nom">{fil.entitatNom}</span>

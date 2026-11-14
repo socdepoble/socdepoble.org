@@ -17,7 +17,7 @@ Guia de qualitat per a l’accessibilitat, el SEO tècnic i el rendiment de les 
 
 ## Accessibilitat
 
-1. Usa HTML semàntic abans que rols ARIA: `button`, `nav`, `main`, `form`, `label` i encapçalaments amb jerarquia comprensible.
+1. Utilitza HTML semàntic abans que rols ARIA: `button`, `nav`, `main`, `form`, `label` i encapçalaments amb jerarquia comprensible.
 2. Tot control ha de funcionar amb teclat, mostrar el focus i tindre un nom accessible en la llengua visible de la interfície.
 3. Cap control interactiu té una àrea tàctil menor que `var(--sdp-touch)`, i el text de lectura no baixa de 16 px. Els tokens semàntics `--sdp-*` de `src/css/tokens.css` són la font de veritat visual.
 4. El color no pot ser l’únic indicador d’estat. Contrast, errors i missatges s’han de comprovar sobre el resultat renderitzat.
@@ -28,7 +28,7 @@ Guia de qualitat per a l’accessibilitat, el SEO tècnic i el rendiment de les 
 
 1. El contingut essencial ha d’existir en un DOM comprensible i no dependre d’una cascada de JavaScript client per adquirir significat.
 2. Cada ruta pública defineix títol i descripció propis. Les URL indexables declaren la canònica quan puga haver-hi duplicats.
-3. Open Graph i altres metadades socials s’usen en pàgines compartibles i es validen amb URL absolutes desplegables.
+3. Open Graph i altres metadades socials s’utilitzen en pàgines compartibles i es validen amb URL absolutes desplegables.
 4. JSON-LD només s’afegeix quan correspon a una entitat real i les dades visibles sostenen el marcatge. No s’inventa Schema.org per omplir camps.
 5. Les imatges porten dimensions conegudes i text alternatiu segons la seua funció; la càrrega diferida només s’aplica fora del contingut inicial visible.
 

@@ -45,6 +45,12 @@
  * (section.xat.seleccio.pista) va FORA de la <ul>, davant, i la descriu cada
  * fila triable, amb la drecera a aria-keyshortcuts; sense cap fila triable,
  * no es pinta. Sense `onSelecciona`, la llista de sempre.
+ *
+ * Onada R24 · IDEA-260 (a) · Una fila plegada d'una persona
+ * ({ clau: 'persona:<id>', tipus: 'fil', fil, canals }, unaFilaPerPersona.js)
+ * passa els seus `canals` a FilaConversa (una píndola per identitat) i els
+ * diu al <li> (data-canals, ids separats per espais): en tancar una conversa,
+ * XatSection hi torna el focus encara que la fila la represente un altre canal.
  */
 import { useCallback, useId } from 'react';
 import { usePulsacioLlarga } from '../../../components/PedraSeca/organismes/pulsacioLlarga.js';
@@ -113,7 +119,7 @@ export default function LlistaConverses({
       ) : null}
       <ul className={peu ? 'sdp-xat-llista sdp-xat-llista--amb-peu' : 'sdp-xat-llista'} aria-label={t('section.xat.llista.titol', 'Converses')}>
         {llista.map((fila) => (
-          <li key={fila.clau} data-clau={fila.clau}>
+          <li key={fila.clau} data-clau={fila.clau} data-canals={fila.canals ? fila.canals.map((c) => c.id).join(' ') : undefined}>
             {fila.tipus === 'poble' ? (
               <FilaPoble poble={fila.poble} onObri={onObriPoble || (() => {})} t={t} />
             ) : fila.tipus === 'entitat' ? (
@@ -131,6 +137,7 @@ export default function LlistaConverses({
             ) : (
               <FilaConversa
                 fil={fila.fil}
+                canals={fila.canals || null}
                 activa={filActiuId != null && String(fila.fil.id) === String(filActiuId)}
                 onSelect={onSelect}
                 locale={locale}

@@ -943,7 +943,8 @@ export function DialegEnquadrament({
   const llevaVideo = async () => {
     if (!ambVideo || desant || desantVideo) return;
     setErrorDesat(null);
-    const teniaDesat = Boolean(String(videoUrl || '').trim());
+    const anterior = String(videoUrl || '').trim();
+    const teniaDesat = Boolean(anterior);
     focusVideoPendent.current = true;
     setEsborranyVideo('');
     if (!teniaDesat) return;
@@ -951,6 +952,7 @@ export function DialegEnquadrament({
     try {
       await canviaVideoRef.current?.('');
     } catch (err) {
+      if (muntatRef.current) setEsborranyVideo(anterior);
       fallaDesat(err?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
     } finally {
       if (muntatRef.current) setDesantVideo(false);

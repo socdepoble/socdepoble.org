@@ -15,8 +15,18 @@ vi.mock('../../config/capaDelPaquet.js', () => ({ capaDelPaquet: () => estat.cap
    Onada 11 (261010; prompt 261010_1730, tasca 6, D5) · I les etiquetes que
    rep per a la capçalera (`labels`), en una llista. */
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ title, subtitle, lead, time, date, dateTime, labels, children }) => (
-    <section data-pagina="fitxa" data-hora={time} data-dia={date} data-instant={dateTime}>
+  UniversalPage: ({ title, subtitle, lead, heroImage, heroAlt, portadaPlegable, time, date, dateTime, labels, children }) => (
+    <section
+      data-pagina="fitxa"
+      data-hora={time}
+      data-dia={date}
+      data-instant={dateTime}
+      data-hero={heroImage || ''}
+      data-hero-alt={heroAlt || ''}
+      data-portada-clau={portadaPlegable?.clau || ''}
+      data-portada-amaga={portadaPlegable?.etiquetes?.amaga || ''}
+      data-portada-mostra={portadaPlegable?.etiquetes?.mostra || ''}
+    >
       <p data-titol="pagina">{title}</p>
       <p data-subtitol="pagina">{subtitle}</p>
       <p data-lead="pagina">{lead}</p>
@@ -28,7 +38,7 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET } from './destiSnippet.js';
-import { FitxaSnippet } from './FitxaSnippet.jsx';
+import { ALT_HERO_SNIPPET, FitxaSnippet, IMATGE_HERO_SNIPPET } from './FitxaSnippet.jsx';
 
 const BOTIGA = 'https://chromewebstore.google.com/detail/snippet/abcdefghijklmnop';
 
@@ -171,4 +181,15 @@ test('una URL que no és https, que no és una adreça o que és un .crx no acti
     expect(screen.queryByRole('link'), url).toBeNull();
     cleanup();
   }
+});
+
+test('Onada R23 (P0-SNIPPET-HERO) · passa la mateixa imatge Hero en gran de la targeta i la portada plegable plugin:snippet', () => {
+  render(<FitxaSnippet />);
+  const pagina = document.querySelector('[data-pagina="fitxa"]');
+  expect(pagina.dataset.hero).toBe(IMATGE_HERO_SNIPPET);
+  expect(pagina.dataset.hero).toBe('/assets/nano_cards/snippet_nano_card.webp');
+  expect(pagina.dataset.heroAlt).toBe(ALT_HERO_SNIPPET);
+  expect(pagina.dataset.portadaClau).toBe('plugin:snippet');
+  expect(pagina.dataset.portadaAmaga).toBe('Amaga la portada');
+  expect(pagina.dataset.portadaMostra).toBe('Mostra la portada');
 });

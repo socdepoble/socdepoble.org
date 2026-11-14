@@ -33,7 +33,7 @@ import manifestGenealogia from '../genealogia/manifest.js';
 import { carregadorDelDocument } from './carregaModul.js';
 import { VERSIO_NUCLI, nucliSatisfa } from './contracteNucli.js';
 import { esIdApp, validaManifestApp } from './manifestApp.js';
-import { tramsSegurs } from './rutesAplicacio.js';
+import { tramsSegurs } from './tramsDeRuta.js';
 
 /** Les apps internes, en l'ordre del portal. */
 export const MANIFESTS_INTERNS = Object.freeze([manifestBar, manifestSalut, manifestNevera, manifestLector, manifestGestoria, manifestGenealogia]);

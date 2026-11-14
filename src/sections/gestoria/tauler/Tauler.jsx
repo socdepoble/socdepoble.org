@@ -18,6 +18,11 @@
  * del Mestre, l'estat honest «Cal aprovar el tractor» i el camí al panell de
  * Tractors; amb ella, el selector dels extractes. Cap xifra es pinta fins que
  * la persona prem l'ull (a la targeta o a la boina de la pàgina).
+ * Onada R24 (CODEX-R24-12) · El panell de Tractors només existix al servidor
+ * de desenvolupament: fora de DEV, l'acció de l'avís és AccioAprovacio
+ * (tractors/AprovacioEnLinia.jsx), que hi obri el diàleg d'aprovació amb la
+ * fitxa sencera i signa en este navegador pel camí de sempre. En DEV, el botó
+ * i les paraules de sempre.
  *
  * Panell ERP (ordre del Mestre, 261012):
  *   · LA VISTA COMPRIMIDA · el commutador «Targetes | Vista comprimida» de la
@@ -64,7 +69,9 @@ import { Camp, CampText } from '../../../components/PedraSeca/organismes/formula
 import { NavegacioPeriode } from '../../../components/PedraSeca/organismes/NavegacioPeriode.jsx';
 import { PaginaApp } from '../../../components/PedraSeca/organismes/PaginaApp.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
+import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/AprovacioEnLinia.jsx';
 import { LLEGENDA_ESTIMACIO } from '../impostos/nucli/impostos.js';
+import { TRACTOR_TAULER } from '../tractors.js';
 import { BLOCS_TAULER, etiquetaXifra, textAmagat, textXifra } from './nucli/targetesTauler.js';
 import { ACCEPTA_TAULER } from './nucli/tractorTauler.js';
 import { TargetaTauler, barraPrivada } from './TargetaTauler.jsx';
@@ -351,9 +358,9 @@ export function PortaTauler({ tauler, onObreTractors, onOblida }) {
     const estat = ESTATS_TRACTOR[fila?.estat] ?? ESTATS_TRACTOR.pendent;
     return (
       <Alerta to="avis" titol="Cal aprovar el tractor"
-        accions={<Boto varietat="primari" onClick={onObreTractors}>Obri el panell de Tractors</Boto>}>
+        accions={<AccioAprovacio porta={porta} id={TRACTOR_TAULER.id} onObreTractors={onObreTractors} />}>
         {`El Tauler llig els extractes del banc amb el tractor «Gestoria · Tauler de l’empresa», que ${estat}. `}
-        {'Aprova’l amb la teua signatura al panell de Tractors: sense, cap fitxer es llig i el Tauler no té xifres.'}
+        {`Aprova’l amb la teua signatura ${onSAprova()}: sense, cap fitxer es llig i el Tauler no té xifres.`}
         {porta.error ? ` ${porta.error}` : ''}
       </Alerta>
     );
@@ -378,6 +385,7 @@ export function PortaTauler({ tauler, onObreTractors, onOblida }) {
       {lectura || llegint ? (
         <Boto varietat="secundari" onClick={oblida}>Oblida les dades</Boto>
       ) : null}
+      <RevocaAprovacio porta={porta} id={TRACTOR_TAULER.id} />
     </div>
   );
 }

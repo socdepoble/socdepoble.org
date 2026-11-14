@@ -16,7 +16,15 @@ export function textDeRecompte(quants, t) {
   return t('section.xat.seleccio.seleccionades', '{n} seleccionades').replace('{n}', String(quants));
 }
 
-export default function BarraSeleccio({ quants = 0, onEixir, onMarcaLlegides, t, refEixir = null }) {
+export default function BarraSeleccio({
+  quants = 0,
+  onEixir,
+  onMarcaLlegides,
+  onArxivaSeleccionades = null,
+  etiquetaArxiva = null,
+  t,
+  refEixir = null
+}) {
   const eixir = (
     <button
       ref={refEixir}
@@ -34,6 +42,16 @@ export default function BarraSeleccio({ quants = 0, onEixir, onMarcaLlegides, t,
       esquerra={eixir}
       titol={<span className="sdp-xat-barra-seleccio__recompte" aria-live="polite">{textDeRecompte(quants, t)}</span>}
     >
+      {typeof onArxivaSeleccionades === 'function' && etiquetaArxiva ? (
+        <button
+          type="button"
+          className="sdp-xat-barra-seleccio__accio"
+          onClick={onArxivaSeleccionades}
+          disabled={quants === 0}
+        >
+          {etiquetaArxiva}
+        </button>
+      ) : null}
       <button
         type="button"
         className="sdp-xat-barra-seleccio__accio"

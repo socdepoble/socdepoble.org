@@ -16,7 +16,7 @@ Esta **peça de la Consola** respon a una pregunta: **per quin camí passa la fa
 Font estudiada: `mapa_agentes.py` v0.1 (1.341 línies), a `04_escriptori/02_investigacio_ia/001 NEXUS/mapa-de-mis-agentes/`. Cap skill d'Emowe declara res: tot ix del text.
 
 1. **Crida o menció** (funció `relaciones`). Quan el nom d'una skill apareix dins d'una altra, és una *menció*. Passa a ser *crida* quan, a menys de 80 caràcters, hi ha:
-   - un verb de la llista `VERBOS_LLAMADA` («monta», «ejecuta», «usa», «lanza», «invoca», «llama a», «carga», «aplica», «run», «use», «invoke», «call», «load», «apply»…);
+   - un verb de la llista `VERBOS_LLAMADA` («monta», «ejecuta», «utilitza», «lanza», «invoca», «llama a», «carga», «aplica», «run», «use», «invoke», «call», «load», «apply»…);
    - una ruta `nom/SKILL.md` o `nom/*.py`;
    - una ordre `uv run … nom`;
    - un enllaç d'Obsidian cap a la skill.
@@ -33,7 +33,7 @@ Font estudiada: `mapa_agentes.py` v0.1 (1.341 línies), a `04_escriptori/02_inve
 
 ## Per què no ho podem copiar tal qual
 
-- **L'idioma**. Els verbs de les regex són en **castellà i en anglés**, i les nostres **skills estan escrites en valencià**. «Llig», «escriu», «desa», «crida», «executa» o «carrega» **no hi casen**. **Només casen per coincidència** «usa», «aplica», «invoca» o «consulta». Un exemple: `core-memoria-historica` diu «Tanca amb la skill `wiki-cicle-de-vida`», i Emowe ho classificaria com a **menció, no com a crida**.
+- **L'idioma**. Els verbs de les regex són en **castellà i en anglés**, i les nostres **skills estan escrites en valencià**. «Llig», «escriu», «desa», «crida», «executa» o «carrega» **no hi casen**. **Només casen per coincidència** «utilitza», «aplica», «invoca» o «consulta». Un exemple: `core-memoria-historica` diu «Tanca amb la skill `wiki-cicle-de-vida`», i Emowe ho classificaria com a **menció, no com a crida**.
 - **Subcadenes sense frontera de paraula.** `V_ESC` acaba en `…|hacia|en)` i es busca sense `\b`. La síl·laba «en» apareix en quasi qualsevol línia («entrada», «document», «pendent»…), així que moltes rutes es classificarien com a eixides només pel soroll.
 - **Els nostres cridadors no són skills.** Per a Emowe és orfe tota skill que cap altra skill crida. Les nostres les activen canals declaratius:
   - els `@`-imports de `CLAUDE.md`;

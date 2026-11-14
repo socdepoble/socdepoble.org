@@ -105,13 +105,25 @@ test.each([
   expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: perfil.nom, canonical: canonica }));
 });
 
-test('cap altra fitxa no declara cap URL canònica: ni una altra entitat, ni la que es diu «Sóc de Poble» amb un altre slug, ni una fila remota amb el slug declarat i un UUID no declarat', async () => {
-  for (const perfil of [FORN, { ...PILOT_REMOT, slug: 'soc-de-poble-de-relleu' }, { ...JAVI, id: UUID }, PILOT_REMOT, RENTONAR_REMOT]) {
+/* P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) · Expectativa actualitzada a posta. Abans: «cap altra fitxa no
+   declara cap URL canònica». Ara tota fitxa declara la SEUA adreça única (rutaPublicaDePerfil), la mateixa que porta
+   el seu fitxer prerenderitzat (dist/empresa/<slug>/index.html): /empresa/<slug>, /grup/<slug> o /gent/<id>. El que
+   la prova vigilava es manté: cap fitxa que no és del Mestre rep MAI una de les seues adreces netes; una fila remota
+   amb el slug declarat i un UUID no declarat ix pel seu id. */
+test('cap altra fitxa no declara una URL canònica del Mestre: cada una declara la seua (per slug, o per id si el slug és reservat)', async () => {
+  for (const [perfil, esperada] of [
+    [FORN, 'https://socdepoble.org/empresa/forn'],
+    [{ ...PILOT_REMOT, slug: 'soc-de-poble-de-relleu' }, 'https://socdepoble.org/empresa/soc-de-poble-de-relleu'],
+    [{ ...JAVI, id: UUID }, `https://socdepoble.org/gent/${UUID}`],
+    [PILOT_REMOT, `https://socdepoble.org/empresa/${PILOT_REMOT.id}`],
+    [RENTONAR_REMOT, `https://socdepoble.org/grup/${RENTONAR_REMOT.id}`]
+  ]) {
     mocks.seo.mockClear();
     mocks.load.mockResolvedValue(perfil);
     render(<PerfilPublicSection />);
     await screen.findByRole('heading', { level: 1, name: perfil.nom });
-    expect(mocks.seo.mock.calls.every(([opcions]) => !Object.hasOwn(opcions, 'canonical'))).toBe(true);
+    expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: perfil.nom, canonical: esperada }));
+    expect(mocks.seo.mock.calls.every(([opcions]) => !/\/(?:socdepoble|rentonar|javillinares|iaia)$/.test(opcions.canonical || ''))).toBe(true);
     cleanup();
   }
 });
@@ -158,7 +170,10 @@ test('Bloc 3.6.3 · la fitxa de la IAIA declara /iaia per la ruta neta i per /pe
   mocks.id = 'gall';
   render(<PerfilPublicSection />);
   await screen.findByRole('heading', { level: 1, name: GALL.nom });
-  expect(mocks.seo.mock.calls.every(([opcions]) => !Object.hasOwn(opcions, 'canonical'))).toBe(true);
+  /* P0-SEO-UNIVERSAL (13-11-2026) · Una altra IA declara la seua adreça (/perfil/<id>, la família de les IA, sense
+     indexar), mai /iaia. */
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ canonical: 'https://socdepoble.org/perfil/gall', index: false }));
+  expect(mocks.seo.mock.calls.every(([opcions]) => !/\/iaia$/.test(opcions.canonical || ''))).toBe(true);
 });
 
 test('el poble desat sempre mana, i cap altra fitxa sense poble no se n’inventa cap', async () => {

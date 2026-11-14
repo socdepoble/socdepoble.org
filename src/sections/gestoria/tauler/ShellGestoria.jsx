@@ -103,6 +103,12 @@
  * dades (nucli/targetesTauler.js, «Compte 1, 2…»), i el diàleg del titular
  * només existix mentre està obert.
  * La mateixa instància conserva useTauler i useEscaner entre els mòduls.
+ * Onada R24 · A-gestoria-tpv-apps-1 (R22) i IDEA-244 / P0-113: fora de DEV,
+ * les portes dels tractors aproven ací, en este navegador
+ * (tractors/AprovacioEnLinia.jsx, CODEX-R24-12), i els cinc mòduls que s'obrin
+ * (Tauler, Bancs, Impostos, Full trimestral i Escàner Local) porten la
+ * insígnia «En proves · Beta oberta» (insigniaBetaOberta.js); els «en obres»
+ * continuen dient-ho, sense la insígnia.
  *
  * Proves: el magatzem, subtle, el catàleg, l'entorn, el rellotge, inflate,
  * avui i descarrega s'injecten i passen també a ContenidorGestoria (i el
@@ -120,6 +126,7 @@ import { Camp, CampText } from '../../../components/PedraSeca/organismes/formula
 import { PaginaApp } from '../../../components/PedraSeca/organismes/PaginaApp.jsx';
 import ContenidorGestoria, { CONSULTA_TRACTORS } from '../ContenidorGestoria.jsx';
 import { PanellEscaner } from '../escaner/PanellEscaner.jsx';
+import { ETIQUETA_BETA_OBERTA } from '../insigniaBetaOberta.js';
 import { useEscaner } from '../escaner/useEscaner.js';
 import { facturesQueFalten } from '../nucli/facturesQueFalten.js';
 import { PlantillaGestoria } from '../PlantillaGestoria.jsx';
@@ -195,6 +202,8 @@ const ETIQUETES_PANELL = Object.freeze([
   Object.freeze({ text: 'PANELL INTERN', className: 'sdp-badge-category' })
 ]);
 const ETIQUETA_EN_OBRES = Object.freeze({ text: 'En obres', className: 'sdp-badge-tag' });
+/* Els mòduls que existixen: GESTORIA, PANELL INTERN i la insígnia del Panell de Control (A-gestoria-tpv-apps-1). */
+const ETIQUETES_OBERTES = Object.freeze([...ETIQUETES_PANELL, ETIQUETA_BETA_OBERTA]);
 const EN_OBRES = 'Este mòdul de la Gestoria encara no existix: ací es diu què hi haurà i en quin pas del pla arriba.';
 
 const dosXifres = (n) => String(n).padStart(2, '0');
@@ -565,7 +574,7 @@ export default function ShellGestoria({
           <PaginaApp title={actual.titol} subtitle={actual.subtitol}
             lead={actual.id === 'tauler' ? (titular.configurat ? `Hola, ${titular.nom}! ${salutacio}` : salutacio) : actual.enObres ? EN_OBRES : undefined}
             author={titular} barActions={accionsBoina} rellotgeViu rellotge={rellotge}
-            labels={actual.enObres ? [...ETIQUETES_PANELL, ETIQUETA_EN_OBRES] : ETIQUETES_PANELL}
+            labels={actual.enObres ? [...ETIQUETES_PANELL, ETIQUETA_EN_OBRES] : ETIQUETES_OBERTES}
             refTitol={refTitol} {...barraPrivada(avisaAccio)}>
             {avisActual ? <Alerta to="info" onTanca={() => setAvis(null)}>{avisActual}</Alerta> : null}
             {contingut}

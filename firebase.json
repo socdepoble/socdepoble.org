@@ -88,6 +88,15 @@
         ]
       },
       {
+        "source": "/assets/og/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          }
+        ]
+      },
+      {
         "source": "/.well-known/host-meta",
         "headers": [
           {

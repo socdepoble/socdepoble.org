@@ -10,6 +10,10 @@
  * La pàgina (PaginaApp, amb la boina personal i l'ull de privacitat):
  *   · LA PORTA del tractor 'gestoria.historic': sense la signatura del
  *     Mestre, «Cal aprovar el tractor»; amb ella, el selector d'extractes.
+ *     Onada R24 (CODEX-R24-12) · Fora de DEV no hi ha panell de Tractors:
+ *     l'acció de l'avís és AccioAprovacio (tractors/AprovacioEnLinia.jsx),
+ *     que aprova ací, en este navegador. La pàgina porta la insígnia «En
+ *     proves · Beta oberta» (insigniaBetaOberta.js, A-gestoria-tpv-apps-1).
  *   · LA FOTO DEL DIRECTOR FINANCER: caixa, despesa mensual, consum net,
  *     autonomia, pes de l'IA i provisió d'impostos (targetes del Tauler, cada
  *     una amb la seua pàgina).
@@ -68,13 +72,16 @@ import { Histograma } from '../../../components/PedraSeca/organismes/Histograma.
 import { PaginaApp } from '../../../components/PedraSeca/organismes/PaginaApp.jsx';
 import { Pestanyes } from '../../../components/PedraSeca/organismes/Pestanyes.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
+import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/AprovacioEnLinia.jsx';
 import { cofreDeLaGestoria, persistenciaDelCofre } from '../cofre/cofre.js';
 import PortaCofre from '../cofre/PortaCofre.jsx';
 import { CATEGORIES, PROVEIDORS, TEXT_MOTIUS, categoriaDe, proveidorDe } from '../despeses/nucli/categories.js';
 import { perRevisar } from '../despeses/nucli/serieHistorica.js';
 import { formatData, nomMes } from '../nucli/dates.js';
+import { ETIQUETA_BETA_OBERTA } from '../insigniaBetaOberta.js';
 import { formatImport } from '../nucli/diners.js';
 import { BlocTargetes, PaginaTargeta, Xifra } from '../tauler/Tauler.jsx';
+import { TRACTOR_HISTORIC } from '../tractors.js';
 import { UllPrivacitat } from '../tauler/TargetaTauler.jsx';
 import { AVIS_SENSE_XIFRAR, creaLlibreGestora } from './nucli/llibreGestora.js';
 import { TEXT_COBERTURA, nomDelTram, targetesHistoric } from './nucli/targetesHistoric.js';
@@ -93,7 +100,8 @@ export const COLLECCIO_HISTORIC = 'historic';
 
 const ETIQUETES = Object.freeze([
   Object.freeze({ text: 'GESTORIA', className: 'sdp-badge-system' }),
-  Object.freeze({ text: 'Històric i IA', className: 'sdp-badge-category' })
+  Object.freeze({ text: 'Històric i IA', className: 'sdp-badge-category' }),
+  ETIQUETA_BETA_OBERTA
 ]);
 const ESTATS_TRACTOR = Object.freeze({
   pendent: 'encara no està aprovat',
@@ -178,9 +186,9 @@ function PortaHistoric({ h, onObreTractors, onOblida }) {
     const estat = ESTATS_TRACTOR[h.fila?.estat] ?? ESTATS_TRACTOR.pendent;
     return (
       <Alerta to="avis" titol="Cal aprovar el tractor"
-        accions={<Boto varietat="primari" onClick={onObreTractors}>Obri el panell de Tractors</Boto>}>
+        accions={<AccioAprovacio porta={h.porta} id={TRACTOR_HISTORIC.id} onObreTractors={onObreTractors} />}>
         {`L’Històric llig els extractes del banc amb el tractor «Gestoria · Històric del banc i despesa en IA», que ${estat}. `}
-        {'Aprova’l amb la teua signatura al panell de Tractors: sense, cap fitxer es llig i no hi ha cap xifra.'}
+        {`Aprova’l amb la teua signatura ${onSAprova()}: sense, cap fitxer es llig i no hi ha cap xifra.`}
         {h.porta.error ? ` ${h.porta.error}` : ''}
       </Alerta>
     );
@@ -208,6 +216,7 @@ function PortaHistoric({ h, onObreTractors, onOblida }) {
           <Boto varietat="secundari" onClick={onOblida}>Oblida les dades</Boto>
         </div>
       ) : null}
+      <RevocaAprovacio porta={h.porta} id={TRACTOR_HISTORIC.id} />
     </div>
   );
 }

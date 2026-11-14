@@ -8,7 +8,7 @@ import {
   esXatDeLaIAIA, entitatDeMostraDe, filDeMostraDEntitat, filDeMostraDeJavi, gestionaLEntitatPilot, jaTeElXat, missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte, vestixLaIAIA,
   CLAU_CANAL_BETA_TESTERS, ID_FIL_BETA_TESTERS_LLAVOR, esCanalBetaTesters, trobaCanalBetaTesters
 } from './xatsPerDefecte.js';
-import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, IAIA_ID, PERSONA_PILOT } from './identitatsSeed.js';
+import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, IAIA_ID, IDS_REMOTS_FUNDACIONALS, PERSONA_PILOT } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
 import { PAGINES_AMB_XAT } from './contracte.js';
 
@@ -460,5 +460,122 @@ describe('P1-70 · filDeMostraDeJavi sense missatge i conversaPerDefecteDe', () 
     expect(conversaPerDefecteDe('javi')).not.toBe(conversaPerDefecteDe('javi'));
     expect(conversaPerDefecteDe('socdepoble')).toBeNull();
     expect(conversaPerDefecteDe('x')).toBeNull();
+  });
+});
+
+/* Onada R24 · CA-5 / P1-7 (R21.2-F01; onada1/xat_duplicats.md i
+   xat_entrega_avisos.md) · El mirall: cada veí que havia rebut un «Connexió
+   nova» del Mestre veia «Javi Llinares» dues vegades, la fila sintètica fixada
+   (fake-javi, de només lectura, «Este missatge és automàtic…») i el directe
+   real. esLaIdentitatDAjuda('javi') només coneixia els àlies del padró pilot
+   ('0001', slugs), mai l'UUID remot del compte. Ara també l'UUID declarat a
+   IDS_REMOTS_FUNDACIONALS. L'UUID d'estes proves és un ACCESSORI: el paquet en
+   continua sense cap (la decisió de declarar-lo és del Mestre). */
+describe('Onada R24 · CA-5 · el directe real amb l’UUID declarat de Javi substituïx la fila sintètica', () => {
+  const UUID_JAVI_DE_PROVA = '9f3c0d1e-0000-4000-8000-0000000000f1';
+  /* Onada R24.2 (decisió del Mestre del 14-11-2026, 15:48) · L'UUID real del
+     compte de producció del Mestre, declarat a identitatsSeed.js sense cap
+     opció de prova: el veí que té el directe real amb ell el veu una sola
+     vegada, i l'UUID no fa de cap altre contacte. */
+  const UUID_JAVI_REAL = 'c7cc745b-2c54-4739-b9c1-add751aac3c4';
+  const idsRemots = Object.freeze({ [PERSONA_PILOT.slug]: Object.freeze([UUID_JAVI_DE_PROVA]) });
+  const directeAmbJavi = real({
+    id: 'd-javi',
+    titol: 'Javi Llinares',
+    altresNoms: ['Javi Llinares'],
+    ultimText: 'Connexió nova: m’he connectat amb tu a Sóc de Poble.',
+    ultimAl: '2026-11-03T20:56:00Z',
+    altres: [{ id: UUID_JAVI_DE_PROVA, tipus: 'persona', nom: 'Javi Llinares' }]
+  });
+  const directeAmbPep = real({
+    id: 'd-pep', titol: 'Pep c', altresNoms: ['Pep c'], ultimText: 'Bon dia', ultimAl: '2026-11-04T08:00:00Z',
+    altres: [{ id: UUID_HOMONIM, tipus: 'persona', nom: 'Pep c' }]
+  });
+  const filesDeJavi = (llista) => llista.filter((c) => c.perDefecte === 'javi' || c.id === ID_FIL_DE_MOSTRA_DE_JAVI || (c.titol ?? c.name) === 'Javi Llinares');
+
+  test('el paquet declara només l’UUID real del Mestre (R21.2-F01, R24.2): sense l’accessori, un altre UUID no és Javi', () => {
+    expect(IDS_REMOTS_FUNDACIONALS[PERSONA_PILOT.slug]).toEqual([UUID_JAVI_REAL]);
+    expect(esLaIdentitatDAjuda({ id: UUID_JAVI_DE_PROVA, tipus: 'persona' }, 'javi')).toBe(false);
+    expect(claus(ambXatsPerDefecte([directeAmbJavi]))).toEqual(['d-javi', 'javi', 'iaia']);
+  });
+
+  test('amb l’UUID real declarat al paquet (sense accessori), el veí veu UNA sola fila «Javi Llinares»', () => {
+    const directeReal = real({
+      id: 'd-javi-real',
+      titol: 'Javi Llinares',
+      altresNoms: ['Javi Llinares'],
+      ultimText: 'Connexió nova: m’he connectat amb tu a Sóc de Poble.',
+      ultimAl: '2026-11-03T20:56:00Z',
+      altres: [{ id: UUID_JAVI_REAL, tipus: 'persona', nom: 'Javi Llinares' }]
+    });
+    expect(esLaIdentitatDAjuda({ id: UUID_JAVI_REAL, tipus: 'persona' }, 'javi')).toBe(true);
+    expect(esLaIdentitatDAjuda({ usuari_id: UUID_JAVI_REAL.toUpperCase(), tipus: 'persona' }, 'javi')).toBe(true);
+    expect(esLaIdentitatDAjuda({ id: UUID_JAVI_REAL, tipus: 'entitat' }, 'javi')).toBe(false);
+    expect(esLaIdentitatDAjuda({ id: UUID_JAVI_REAL, tipus: 'persona' }, 'socdepoble')).toBe(false);
+    expect(jaTeElXat(directeReal, 'javi')).toBe(true);
+    const fils = ambXatsPerDefecte([directeAmbPep, directeReal]);
+    expect(claus(fils)).toEqual(['d-pep', 'd-javi-real', 'iaia']);
+    expect(filesDeJavi(fils)).toEqual([directeReal]);
+  });
+
+  test('esLaIdentitatDAjuda(·, javi) reconeix l’UUID declarat (també en majúscules i per usuari_id); mai una entitat ni un altre UUID', () => {
+    expect(esLaIdentitatDAjuda({ id: UUID_JAVI_DE_PROVA, tipus: 'persona' }, 'javi', { idsRemots })).toBe(true);
+    expect(esLaIdentitatDAjuda({ id: UUID_JAVI_DE_PROVA.toUpperCase(), tipus: 'persona' }, 'javi', { idsRemots })).toBe(true);
+    expect(esLaIdentitatDAjuda({ usuari_id: UUID_JAVI_DE_PROVA, tipus: 'persona' }, 'javi', { idsRemots })).toBe(true);
+    expect(esLaIdentitatDAjuda({ id: UUID_JAVI_DE_PROVA, tipus: 'entitat' }, 'javi', { idsRemots })).toBe(false);
+    expect(esLaIdentitatDAjuda({ id: UUID_HOMONIM, tipus: 'persona', nom: 'Javi Llinares' }, 'javi', { idsRemots })).toBe(false);
+    /* Els àlies del padró continuen valent, amb accessori o sense. */
+    expect(esLaIdentitatDAjuda({ id: '0001', tipus: 'persona' }, 'javi', { idsRemots })).toBe(true);
+    /* L'UUID de Javi no fa de cap altre contacte. */
+    expect(esLaIdentitatDAjuda({ id: UUID_JAVI_DE_PROVA, tipus: 'persona' }, 'socdepoble', { idsRemots })).toBe(false);
+    expect(esLaIdentitatDAjuda({ id: UUID_JAVI_DE_PROVA, tipus: 'ia' }, 'iaia', { idsRemots })).toBe(false);
+  });
+
+  test('un veí amb el directe real a eixe UUID veu UNA sola fila «Javi Llinares»: el directe, sense la sintètica', () => {
+    expect(jaTeElXat(directeAmbJavi, 'javi', { idsRemots })).toBe(true);
+    const fils = ambXatsPerDefecte([directeAmbPep, directeAmbJavi], { idsRemots });
+    expect(claus(fils)).toEqual(['d-pep', 'd-javi', 'iaia']);
+    expect(filesDeJavi(fils)).toHaveLength(1);
+    expect(filesDeJavi(fils)[0]).toBe(directeAmbJavi);
+    /* El context torna a passar la llista amb afig: false i la sintètica que ja hi era se'n va. */
+    const ambLaSintetica = [directeAmbPep, directeAmbJavi, ...ambXatsPerDefecte([], { idsRemots })];
+    expect(claus(ambXatsPerDefecte(ambLaSintetica, { afig: false, idsRemots }))).toEqual(['d-pep', 'd-javi', 'iaia']);
+    /* Un grup o un fil de pàgina amb Javi no és el seu directe: la fila es queda. */
+    expect(claus(ambXatsPerDefecte([{ ...directeAmbJavi, tipus: 'grup' }], { idsRemots }))).toEqual(['d-javi', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte([{ ...directeAmbJavi, subjecte: { tipus: 'pagina', id: '/mur' } }], { idsRemots }))).toEqual(['d-javi', 'javi', 'iaia']);
+  });
+
+  /* De punta a punta, amb l'UUID declarat on el declara el Mestre
+     (identitatsSeed.js · IDS_REMOTS_FUNDACIONALS) i cap opció de prova: la
+     llista d'un veí tal com la munta la interfície (adaptador → mapejaFil →
+     anteposaActors, amb la fila de reserva de XatSection). */
+  test('amb l’UUID declarat a identitatsSeed.js, la llista del veí porta UNA fila «Javi Llinares», la fixada, i obri el directe real', async () => {
+    vi.resetModules();
+    vi.doMock('./identitatsSeed.js', async (importOriginal) => {
+      const original = await importOriginal();
+      return {
+        ...original,
+        IDS_REMOTS_FUNDACIONALS: Object.freeze({ ...original.IDS_REMOTS_FUNDACIONALS, [original.PERSONA_PILOT.slug]: Object.freeze([UUID_JAVI_DE_PROVA]) })
+      };
+    });
+    try {
+      const { ambXatsPerDefecte: ambDeclarat } = await import('./xatsPerDefecte.js');
+      const { FILA_DE_RESERVA_DE_JAVI, FILA_DE_RESERVA_DE_LA_IAIA, anteposaActors } = await import('../sections/xat/actorsDelXat.js');
+      const { mapejaFil } = await import('../sections/xat/missatges.js');
+      const files = ambDeclarat([directeAmbPep, directeAmbJavi])
+        .map((conversa) => mapejaFil(conversa))
+        .map((fil) => ({ clau: String(fil.id), tipus: 'fil', fil }));
+      const llista = anteposaActors(files, { comunitat: true, reservaJavi: FILA_DE_RESERVA_DE_JAVI, reservaIAIA: FILA_DE_RESERVA_DE_LA_IAIA });
+      const deJavi = llista.filter((fila) => fila.fil?.name === 'Javi Llinares');
+      expect(deJavi).toHaveLength(1);
+      expect(deJavi[0].fil.id).toBe('d-javi');
+      expect(deJavi[0].fil.perDefecte).toBeNull();
+      /* Al lloc fix de Javi (2n, darrere de la comunitat de Sóc de Poble). */
+      expect(llista[1]).toBe(deJavi[0]);
+      expect(llista.some((fila) => fila.fil?.perDefecte === 'javi' || fila.fil?.id === ID_FIL_DE_MOSTRA_DE_JAVI)).toBe(false);
+    } finally {
+      vi.doUnmock('./identitatsSeed.js');
+      vi.resetModules();
+    }
   });
 });

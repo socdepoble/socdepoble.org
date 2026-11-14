@@ -137,8 +137,8 @@ describe('contracte compartit · moviment, focus, tàctil i tipografia al primer
       '--sdp-fluid-h4': 'clamp(1.25rem, 0.9659rem + 1.4205vw, 1.875rem)',
       '--sdp-fluid-h5': 'clamp(1.125rem, 0.8977rem + 1.1364vw, 1.625rem)',
       '--sdp-fluid-h6': 'clamp(1rem, 0.8295rem + 0.8523vw, 1.375rem)',
-      '--sdp-fluid-lead': 'clamp(1.125rem, 1.0114rem + 0.5682vw, 1.375rem)',
-      '--sdp-fluid-cos': 'clamp(1rem, 0.8864rem + 0.5682vw, 1.25rem)'
+      '--sdp-fluid-lead': 'clamp(1.25rem, 1.1932rem + 0.2841vw, 1.375rem)',
+      '--sdp-fluid-cos': 'clamp(1.1875rem, 1.1591rem + 0.142vw, 1.25rem)'
     };
     for (const [token, esperat] of Object.entries(FLUIDS)) {
       expect(P[token], token).toBe(esperat);

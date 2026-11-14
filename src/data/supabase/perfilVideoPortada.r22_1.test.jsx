@@ -28,6 +28,9 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children),
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+/* R22 (P0-SEO-UNIVERSAL, 13-11-2026) · ProfileSection registra ara el seu head amb useSEO (que llig useRouter):
+   ací se simula, com a ProfileSection.poble, .r21_6 i .xat. */
+vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIActions: () => ({ t: (_, alt) => alt, language: 'ca' }),
   useUIState: () => ({ externalConfig: {} }),

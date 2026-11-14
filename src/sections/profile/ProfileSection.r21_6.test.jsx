@@ -1,6 +1,9 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/RouterContext';
+/* P0-SEO-UNIVERSAL (13-11-2026) · El directori registra ara el seu head (useSEO amb el títol i el subtítol que
+   pinta): ací se simula, com a les proves de la fitxa pública. La paritat amb el prerender, a coberturaSocial.test.js. */
+vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_key, reserve) => reserve, language: 'ca' }) }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import ProfileSection from './ProfileSection.jsx';

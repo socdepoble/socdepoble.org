@@ -157,7 +157,7 @@ Aquest catàleg codifica com a **encapçalaments navegables al calaix de Taula d
 
 ### Error 08 · Dos agents en el mateix fitxer
 - **Cost real:** **dues funcions `trimestreOperatiu` duplicades**, un **error de sintaxi i 4 proves roges**, a només **sis dies del termini fiscal**.
-- **Antídot obligatori:** fixar **un únic implementador per fitxer declarat al prompt**, fer **mutacions en worktree aïllat** i usar un **tall congelat per a certificar** (fonts: `261014_2035_auditoria_claude.md`; `261014_0320_auditoria_claude.md`; `261016_0021_auditoria_codex.md`).
+- **Antídot obligatori:** fixar **un únic implementador per fitxer declarat al prompt**, fer **mutacions en worktree aïllat** i utilitzar un **tall congelat per a certificar** (fonts: `261014_2035_auditoria_claude.md`; `261014_0320_auditoria_claude.md`; `261016_0021_auditoria_codex.md`).
 
 ### Error 09 · Confondre desconegut amb zero
 - **Cost real:** **fallades de xarxa mostrades com si al poble no hi haguera res**, un **model 130 que passava de 50 € a 200 €** i un **«res a pagar» fals**.
@@ -185,7 +185,7 @@ Aquest catàleg codifica com a **encapçalaments navegables al calaix de Taula d
 
 ### Error 15 · Deixar secrets i dades personals a l'abast dels agents
 - **Cost real:** una **clau privada bolcada amb `cat .env`**, una **sessió de WhatsApp Web a l'historial de git** i **dades fiscals reals copiades a la Wiki**.
-- **Antídot obligatori:** mantindre **rutes de secrets denegades a tots els hooks**, configurar **`server.fs.deny` al servidor de desenvolupament** i usar **només dades sintètiques a les proves** (fonts: `261006_1150_auditoria_claude.md`; `260921_0950_informe_auditoria_infra.md`; `261014_0412_auditoria_claude.md`).
+- **Antídot obligatori:** mantindre **rutes de secrets denegades a tots els hooks**, configurar **`server.fs.deny` al servidor de desenvolupament** i utilitzar **només dades sintètiques a les proves** (fonts: `261006_1150_auditoria_claude.md`; `260921_0950_informe_auditoria_infra.md`; `261014_0412_auditoria_claude.md`).
 
 ### Error 16 · Deixar que la IA trie camps d'identitat legal
 - **Cost real:** el **cas Xylella, on un identificador personal va acabar al camp del nom** d'una comunicació oficial davant l'administració.

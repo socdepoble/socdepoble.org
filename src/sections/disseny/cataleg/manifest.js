@@ -60,7 +60,8 @@ export const ICONES_ESPECIMENS = Object.freeze({
   }),
   retroalimentacio: Object.freeze({
     alerta: '⚠️', insignia: '📛', buit: '📭', carrega: '⏳', progres: '🔋',
-    'estat-desament': '☁️', 'resum-connexio': '👀', connexio: '🟢'
+    'estat-desament': '☁️', 'resum-connexio': '👀', connexio: '🟢',
+    'barra-actualitzacio-app': '🔄'
   }),
   superposicions: Object.freeze({
     dialeg: '🪟', confirmacio: '❓', calaix: '🗄️', 'pantalla-completa': '📺', pista: '💡',
@@ -69,7 +70,9 @@ export const ICONES_ESPECIMENS = Object.freeze({
     /* Onada 0.3 (Gauntlet 261016) · el visor de fotos de l'Arxiu visual. */
     'visor-imatges': '📸',
     /* Pla 261101_1246 (T7 · S7) · el xifratge per conversa i «Persones de confiança» (maqueta). */
-    'xat-seguretat': '🔐'
+    'xat-seguretat': '🔐',
+    /* IDEA-255 (Onada R23 · 14-11-2026) · el reproductor flotant universal de veu de PageFrame. */
+    'barra-reproductor-veu': '🎧'
   }),
   inventari: Object.freeze({ global: '🗃️' }),
   emoticones: Object.freeze({ xl: '🌻' })
@@ -299,7 +302,11 @@ const RETROALIMENTACIO = [
   /* T7-T9 (ordre del Mestre, 261001) · el pilot de connexió amb el node i la llista de nodes del Perfil. */
   especimen('retroalimentacio', 'connexio', 'Connexió i nodes', 'PilotConnexio · LlistaNodes', ['atom', 'connexio', 'node'],
     'El pilot diu l’estat de la connexió amb el node: verd i ple quan l’App ha carregat el contingut del servidor, groc en anell mentre es connecta o sense connexió. La llista diu on estàs i qui guarda les dades.',
-    'pilot connexio node nodes fedivers amfitrio verd groc')
+    'pilot connexio node nodes fedivers amfitrio verd groc'),
+  /* Onada R22 · T2 · Bàner superior suau i no bloquejant d'actualització viva per a les apps instal·lades. */
+  especimen('retroalimentacio', 'barra-actualitzacio-app', 'Barra d’actualització d’app', 'BarraActualitzacioRecomanada · versioRecomanada', ['organisme', 'natiu', 'actualitzacio'],
+    'Avís superior compacte i no bloquejant per a Android i iOS quan la versió instal·lada encara complix versioMinima però hi ha una versioRecomanada més nova a Google Play o a l’App Store.',
+    'barra actualitzacio app nativa android ios google play app store versio recomanada minima')
 ];
 
 const SUPERPOSICIONS = [
@@ -472,7 +479,10 @@ CATALOG_ITEMS.push(
     'historic ja publicat actor avatar identitat entitat socdepoble samarreta aplec mur mercat esdeveniments notes peu pagina ranura graella targeta'),
   especimen('formularis', 'traspas-copublicacio', 'Traspàs i co-publicació', 'Co-publicació registrada i traspàs en línia d’1 clic', ['organisme', 'autoria', 'copublicacio'],
     'La BarraTaronja amb avatar compost quadrangular d’estil grup de xat quan dos o més comptes registrats co-publiquen un recurs, la guarda contra actors no registrats i el panell inline d’1 clic per a superadmin.',
-    'barra taronja copublicacio traspas autoria avatar compost mosaic entitats registrades superadmin inline PanellTraspasPublicacioInline AvatarCompostPublicadors')
+    'barra taronja copublicacio traspas autoria avatar compost mosaic entitats registrades superadmin inline PanellTraspasPublicacioInline AvatarCompostPublicadors'),
+  especimen('superposicions', 'barra-reproductor-veu', 'Reproductor flotant de veu', 'universal/veu/BarraReproductorVeu.jsx', ['organisme', 'veu', 'accessibilitat'],
+    'El mini-reproductor flotant que PageFrame obri en prémer «Escolta la IAIA» sota l’entradilla: avança o retrocedix per paràgrafs, pausa i continua al mateix bloc, salta per apartats o cerca al text, ressalta el paràgraf actiu i en copia el fragment.',
+    'veu iaia escolta reproductor flotant barra pausa continua apartats cerca copiar fragment pageframe matxa node0')
 );
 
 /* T52 (ordre del Mestre, 260928: «que quede clar quin és l'element universal
@@ -524,6 +534,8 @@ export const ARBRE_UNIVERSAL = Object.freeze([
     rol: 'Pare universal de pàgina: a soles dins de main, o a la columna dreta del gestor (renderDetail).' },
   { id: 'barres', nom: 'BarraBlava i BarraTaronja', fitxer: 'src/components/universal/barres/', pare: 'page', item: 'fonaments-controls-barra',
     rol: 'header.bar-blue i section.bar-orange: components propis que PageFrame munta (T51), fets amb IconButton, ActionControl i DateTimeControl.' },
+  { id: 'barra-veu', nom: 'BarraReproductorVeu', fitxer: 'src/components/universal/veu/BarraReproductorVeu.jsx', pare: 'page', item: 'superposicions-barra-reproductor-veu',
+    rol: 'El mini-reproductor flotant universal que PageFrame carrega en diferit quan es prem «Escolta la IAIA» sota .page-intro en una pàgina de lectura.' },
   { id: 'emoticona-barra', nom: 'EmoticonaBarra', fitxer: 'src/components/universal/EmoticonaBarra.jsx', pare: 'barres', item: 'fonaments-emoticona-barra',
     rol: 'L’espai central de la barra taronja: en edició, el botó d’emoticona (la ploma blanca mentre no n’hi ha cap); en lectura, l’emoticona triada o res.',
     consumidors: ['UniversalCard (la caputxa, només amb emoticona triada)'] },

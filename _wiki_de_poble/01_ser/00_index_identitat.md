@@ -54,7 +54,7 @@ futura; no són punts d'arrencada ni gates actius.
 
 ## Regla
 
-Usa el mapa anterior i el router documental; mantín identificador, procedència i enllaços quan canvie el cicle de vida.
+Utilitza el mapa anterior i el router documental; mantín identificador, procedència i enllaços quan canvie el cicle de vida.
 
 ## Estat mecànic
 

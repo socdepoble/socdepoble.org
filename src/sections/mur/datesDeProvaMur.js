@@ -82,8 +82,15 @@ const CAMP_DE_DATA = Object.freeze({ pages: 'date', feedPosts: 'created_at', mar
  * Pou de Neu. Retirem la seua data de prova i tornem a les dotze
  * importants. L'adreça /page/anatomia-rural porta a l'article complet
  * (àlies de PAGE_ROUTE_MAP, navigation.js).
+ *
+ * Onada R23 (14-11-2026 01:18; Llibre Mestre, «Publicació en viu de
+ * /mur/la-veu-de-soc-de-poble») · «La Veu de Sóc de Poble» entra la primera,
+ * la publicació més nova. Amb ella en són tretze. Si el Mestre la vol amb la
+ * seua data real també en la demostració, n'hi ha prou a llevar esta fila i
+ * tornar el sostre de la prova a dotze.
  */
 export const IMPORTANTS_DEL_MUR = Object.freeze([
+  ['feedPosts', 'la-veu-de-soc-de-poble'],
   ['feedPosts', 'noves-tecnologies-aplicades-a-la-cultura-rural'],
   ['pages', 'fediversity'],
   ['pages', 'descarregues'],

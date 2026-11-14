@@ -3716,6 +3716,8 @@ details[open] summary.accordion-header svg:last-child {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    /* R24 · G-client-4 · El selector «Escrius com a» hi porta la pastilla de no llegits. */
+    gap: var(--sdp-space-2);
     flex: none;
     min-block-size: calc(var(--sdp-touch) + 2px);
     padding: 0 var(--sdp-space-4);
@@ -3903,6 +3905,18 @@ details[open] summary.accordion-header svg:last-child {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* Onada R24 · IDEA-260 (a) · La fila plegada d'una persona porta una
+     píndola per identitat (Personal i cada entitat) en la mateixa línia que
+     la píndola d'entitat d'abans: la fila no creix. Les píndoles són les
+     mateixes i s'encongixen amb el·lipsi. */
+  .sdp-xat-fila__identitats {
+    justify-self: start;
+    display: flex;
+    gap: var(--sdp-space-1);
+    min-width: 0;
+    max-width: 100%;
+  }
+  .sdp-xat-fila__identitats > .sdp-xat-fila__entitat { min-width: 0; }
   .sdp-xat-fila__cap,
   .sdp-xat-fila__peu {
     display: flex;
@@ -16742,5 +16756,427 @@ details[open] summary.accordion-header svg:last-child {
     z-index: 1;
     box-shadow: var(--sdp-cataleg-filet);
   }
+
+  /* ═══ ONADA R22 · T1 & T2: CLON WHATSAPP, BARRA VIVA D'APPS I GUIA CANALS ═══ */
+
+  .sdp-xat-capcalera__titol-fila {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-width: 0;
+  }
+
+  /* Crítica de correcció R22 · La icona va damunt de la fila 1 fosca en els dos
+     temes: el crom de la capçalera, com .sdp-xat-capcalera__sub (10,3:1), mai el
+     --sdp-text-suau dels fons clars (1,77:1 en clar). */
+  .sdp-xat-capcalera__silenci {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--sdp-crom-text-suau);
+  }
+
+  .sdp-xat-safata-arxivats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    background-color: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    border: 0;
+    border-bottom: 1px solid var(--sdp-vora);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-safata-arxivats:hover {
+      background-color: var(--sdp-fons-subtil);
+    }
+  }
+
+  .sdp-xat-safata-arxivats:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+  }
+
+  .sdp-xat-safata-arxivats__icona {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--sdp-accio-text);
+  }
+
+  .sdp-xat-safata-arxivats__titol {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sdp-xat-safata-arxivats__comptador {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border-radius: var(--sdp-radi-pastilla);
+    background-color: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: 0.875rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .sdp-xat-adjunts-panell {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    border-bottom: 1px solid var(--sdp-vora);
+    max-height: 22rem;
+    min-height: 0;
+  }
+
+  .sdp-xat-adjunts-panell__cap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-3) var(--sdp-space-2) var(--sdp-space-4);
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-xat-adjunts-panell__titol {
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sdp-xat-adjunts-panell__pestanyes {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--sdp-vora);
+    background-color: var(--sdp-fons-targeta);
+  }
+
+  .sdp-xat-adjunts-panell__pestanya {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    background: transparent;
+    color: var(--sdp-text-suau);
+    border: 0;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-adjunts-panell__pestanya:hover {
+      color: var(--sdp-text-titol);
+      background-color: var(--sdp-fons-subtil);
+    }
+  }
+
+  .sdp-xat-adjunts-panell__pestanya[aria-selected="true"] {
+    color: var(--sdp-accio-text);
+  }
+
+  .sdp-xat-adjunts-panell__pestanya[aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    border-block-end: 3px solid var(--sdp-accio-text);
+  }
+
+  .sdp-xat-adjunts-panell__pestanya-etiqueta {
+    display: inline-block;
+  }
+
+  .sdp-xat-adjunts-panell__comptador {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0 var(--sdp-space-2);
+    border-radius: var(--sdp-radi-pastilla);
+    background-color: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  .sdp-xat-adjunts-panell__avis {
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    font-size: 0.875rem;
+    color: var(--sdp-text-suau);
+    background-color: var(--sdp-fons-app);
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-xat-adjunts-panell__cos {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .sdp-xat-adjunts-panell__buit {
+    margin: 0;
+    padding: var(--sdp-space-4);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-xat-adjunts-panell__llista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sdp-xat-adjunts-panell__item {
+    margin: 0;
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-xat-adjunts-panell__media-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+  }
+
+  .sdp-xat-adjunts-panell__miniatura-boto {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    padding: 0;
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background-color: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    overflow: hidden;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .sdp-xat-adjunts-panell__miniatura-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .sdp-xat-adjunts-panell__icona-caixa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--sdp-radi-s);
+    background-color: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    flex-shrink: 0;
+  }
+
+  .sdp-xat-adjunts-panell__detall {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+
+  .sdp-xat-adjunts-panell__titol-item,
+  .sdp-xat-adjunts-panell__domini {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-xat-adjunts-panell__enllac {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-xat-adjunts-panell__meta {
+    font-size: 0.875rem;
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-xat-adjunts-panell__salta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background-color: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-adjunts-panell__salta:hover {
+      background-color: var(--sdp-fons-subtil);
+    }
+  }
+
+  /* Barra viva no bloquejant d'actualització d'app nativa (T2 · WCAG AAA >= 7:1) */
+  .sdp-barra-actualitzacio {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    width: 100%;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    background-color: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    border-bottom: 2px solid var(--sdp-accio-control);
+    box-sizing: border-box;
+  }
+
+  .sdp-barra-actualitzacio__missatge {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sdp-space-3);
+    flex: 1 1 16rem;
+    min-width: 0;
+  }
+
+  .sdp-barra-actualitzacio__icona {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--sdp-space-1);
+    color: var(--sdp-accio-text);
+    flex-shrink: 0;
+  }
+
+  .sdp-barra-actualitzacio__text {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    line-height: 1.5;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-barra-actualitzacio__titol {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+
+  .sdp-barra-actualitzacio__detall {
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-barra-actualitzacio__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-barra-actualitzacio__cta,
+  .sdp-barra-actualitzacio__tanca {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    text-align: center;
+  }
+
+  /* Quadre blanc editorial dels canals d'actualització a /page/descarregues (T2) */
+  .sdp-guia-canals {
+    background-color: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    padding: var(--sdp-space-4);
+    margin: var(--sdp-space-4) 0;
+    box-sizing: border-box;
+  }
+
+  .sdp-guia-canals__titol {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-guia-canals__intro {
+    margin: 0 0 var(--sdp-space-4);
+    color: var(--sdp-text-cos);
+    line-height: 1.6;
+  }
+
+  .sdp-guia-canals__bloc {
+    padding-top: var(--sdp-space-3);
+    margin-top: var(--sdp-space-3);
+    border-top: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-guia-canals__bloc h4 {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-guia-canals__bloc p {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    line-height: 1.6;
+  }
+
+  .sdp-guia-canals__bloc--avis {
+    background-color: var(--sdp-fons-subtil);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    padding: var(--sdp-space-3);
+  }
+
+  .sdp-guia-canals__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--sdp-space-4);
+  }
+
+  @media (forced-colors: active) {
+    .sdp-xat-adjunts-panell__pestanya {
+      border: 1px solid ButtonText;
+    }
+    .sdp-xat-adjunts-panell__pestanya[aria-selected="true"] {
+      border-color: Highlight;
+    }
+  }
 }
-/* ═══ FI DEL BLOC ONADA R17 ═══ */
+/* ═══ FI DEL BLOC ONADA R22 ═══ */

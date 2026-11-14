@@ -166,7 +166,12 @@ describe('261021 · la pàgina única de la IAIA MarIA', () => {
     render(<PerfilPublicSection agents={[]} />);
     await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
     expect(document.querySelector('.hero-image img').getAttribute('src')).toContain('iaia_maria_avatar.webp');
-    expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ image: AGENTS_MAP.IAIA.hero_url }));
+    /* P0-SEO-UNIVERSAL (13-11-2026) · Expectativa actualitzada a posta: la imatge SEO continua sent la portada,
+       però ara arriba a useSEO resolta pel selector social (metadadesDePerfil), com a la resta de seccions: la
+       variant JPEG de 1200x630 (WhatsApp no pinta WebP), amb el nom com a alt. Abans hi arribava la ruta crua. */
+    expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({
+      image: { url: 'https://socdepoble.org/assets/uploads/brain/iaia_maria_avatar-social-1200x630.jpg', alt: 'IAIA MarIA' }
+    }));
   });
 
   test('l’avatar de la IA no és cap botó, ni per a qui l’administra; «Edita la fitxa» obri la seua fitxa al Perfil', async () => {

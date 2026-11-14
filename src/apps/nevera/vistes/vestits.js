@@ -76,6 +76,23 @@ export function seccionsDe(estat, llistaId, opcions) {
   return categoriesDeLlista(estat, llistaId, opcions).map((categoria) => ({ ...categoria, icona: ICONES[categoria.id] }));
 }
 
+const MARQUES_GRAN_SUPERFICIE = new Set(['mercadona', 'hacendado', 'bosque verde', 'deliplus', 'compy']);
+const PATRO_MARCA_GRAN_SUPERFICIE = /\b(?:Mercadona|Hacendado|Bosque Verde|Deliplus|Compy)\b/gi;
+const marcaVisible = (marca) => {
+  const neta = typeof marca === 'string' ? marca.trim() : '';
+  return neta && !MARQUES_GRAN_SUPERFICIE.has(neta.toLocaleLowerCase('ca')) ? neta : '';
+};
+
+export const nomProducteVisible = (nom) => (
+  typeof nom === 'string'
+    ? nom.replace(PATRO_MARCA_GRAN_SUPERFICIE, '').replace(/\s{2,}/g, ' ').trim()
+    : ''
+);
+
+export const nomArticleVisible = (article) => (
+  article?.font ? nomProducteVisible(article.nom) : article?.nom
+);
+
 /**
  * Els articles de la graella vestits per a ColumnaCataleg: els de base, els
  * propis i els `productes` de botiga que se li passen (productesALaGraella).
@@ -88,7 +105,7 @@ export function seccionsDe(estat, llistaId, opcions) {
 export function articlesVestits(estat, { aLaLlista = new Set(), secundari = () => undefined, productes = [], autoria = SENSE_AUTORIA } = {}) {
   return [...articlesDe(estat), ...productes].map((article) => ({
     id: article.id,
-    nom: article.nom,
+    nom: nomArticleVisible(article),
     categoriaId: article.categoriaId,
     secundari: secundari(article) || undefined,
     estat: aLaLlista.has(article.id) ? 'en-colleccio' : 'normal',
@@ -99,21 +116,21 @@ export function articlesVestits(estat, { aLaLlista = new Set(), secundari = () =
 }
 
 /**
- * «Hacendado · Bote 600 g»: la marca i l'envàs d'un producte de botiga, amb
- * la quantitat si l'envàs no la diu ja («Botella 500 ml», no «Botella 500 ml
- * 500 ml»). El preu no es mostra.
+ * La marca (si no és marca blanca de gran superfície) i l'envàs d'un producte
+ * de botiga, amb la quantitat si l'envàs no la diu ja («Botella 500 ml», no
+ * «Botella 500 ml 500 ml»). El preu no es mostra.
  */
 export function detallDeProducte(article) {
   const quantitat = textQuantitat(article.quantitat, article.unitat);
   const jaHiEs = quantitat !== '' && ` ${clauDeNom(article.envas)} `.includes(` ${clauDeNom(quantitat)} `);
   const envas = [article.envas, jaHiEs ? '' : quantitat].filter(Boolean).join(' ');
-  return [article.marca, envas].filter(Boolean).join(' · ');
+  return [marcaVisible(article.marca), envas].filter(Boolean).join(' · ');
 }
 
 /* Els productes vestits per a l'afegit ràpid, fets una sola vegada (n'hi ha centenars). */
 const PRODUCTES_SUGGERITS = Object.freeze(ARTICLES_PRODUCTES.map((article) => Object.freeze({
   id: article.id,
-  nom: article.nom,
+  nom: nomProducteVisible(article.nom),
   categoriaId: article.categoriaId,
   secundari: detallDeProducte(article) || undefined,
   estat: 'normal'
@@ -162,7 +179,7 @@ export function liniesVestides(estat, files, { detall = (fila) => fila.especific
     return {
       id: fila.articleId,
       articleId: fila.articleId,
-      nom: article?.nom ?? fila.articleId,
+      nom: article ? nomArticleVisible(article) : fila.articleId,
       detall: detall(fila) || undefined,
       icona: iconaDeSeccio(article?.categoriaId),
       autoria: autoria(article),

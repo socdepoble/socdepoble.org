@@ -10,7 +10,9 @@
  *   · LA PORTA · sense la signatura del tractor 'gestoria.escaner', l'estat
  *     honest «Cal aprovar el tractor» i el camí al panell de Tractors (com
  *     PortaTauler); si el que falta és el del Tauler, una nota: l'Escàner
- *     analitza igualment, però no pot abocar.
+ *     analitza igualment, però no pot abocar. Onada R24 (CODEX-R24-12) · Fora
+ *     de DEV no hi ha cap panell: l'acció de les dues és AccioAprovacio
+ *     (tractors/AprovacioEnLinia.jsx), que aprova ací, en este navegador.
  *   · «Tria la carpeta» · el selector del sistema (Boto) o, on no n'hi ha,
  *     l'<input type="file" webkitdirectory>, i el progrés de l'anàlisi.
  *   · «Radiografia de la carpeta» · una tessel·la per apartat (Bancs,
@@ -45,7 +47,9 @@ import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { Camp, CampText, Casella, GrupCamps } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
+import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/AprovacioEnLinia.jsx';
 import { formatData } from '../nucli/dates.js';
+import { TRACTOR_ESCANER, TRACTOR_TAULER } from '../tractors.js';
 
 /* Com diu la porta l'estat del tractor, quan no està aprovat (les paraules de PortaTauler). */
 const ESTATS_TRACTOR = Object.freeze({
@@ -417,9 +421,9 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
     const estat = ESTATS_TRACTOR[escaner.fila?.estat] ?? ESTATS_TRACTOR.pendent;
     return (
       <Alerta to="avis" titol="Cal aprovar el tractor"
-        accions={<Boto varietat="primari" onClick={onObreTractors}>Obri el panell de Tractors</Boto>}>
+        accions={<AccioAprovacio porta={porta} id={TRACTOR_ESCANER.id} onObreTractors={onObreTractors} />}>
         {`L’Escàner Local recorre la carpeta amb el tractor «Gestoria · Escàner Local de la carpeta», que ${estat}. `}
-        {'Aprova’l amb la teua signatura al panell de Tractors: sense, no es llista ni es llig cap fitxer.'}
+        {`Aprova’l amb la teua signatura ${onSAprova()}: sense, no es llista ni es llig cap fitxer.`}
         {porta?.error ? ` ${porta.error}` : ''}
       </Alerta>
     );
@@ -444,7 +448,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
     <div className="sdp-gestoria-escaner">
       {tauler.aprovat ? null : (
         <Alerta to="info" viva={false} titol="Per a abocar els extractes cal també el Tauler"
-          accions={<Boto varietat="secundari" onClick={onObreTractors}>Obri el panell de Tractors</Boto>}>
+          accions={<AccioAprovacio porta={porta} id={TRACTOR_TAULER.id} onObreTractors={onObreTractors} varietat="secundari" />}>
           El Tauler llig els extractes amb el seu tractor, «Gestoria · Tauler de l’empresa», que encara no està aprovat.
           L’Escàner pot analitzar la carpeta igualment.
         </Alerta>
@@ -480,6 +484,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
             max={progres && Number.isFinite(progres.total) && progres.total > 0 ? progres.total : 100} />
         ) : null}
         {escaner.error ? <Alerta to="error" titol="No s’ha pogut analitzar la carpeta">{escaner.error}</Alerta> : null}
+        <RevocaAprovacio porta={porta} id={TRACTOR_ESCANER.id} />
       </section>
 
       {r ? (

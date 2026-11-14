@@ -72,9 +72,19 @@
  * d'1 a 6, o null per a cap encapçalament) el baixa on la capçalera no és la
  * vista: l'espècimen del catàleg (EspecimenXat) en passa 5, davall dels seus
  * h4, i /disseny/fonaments/xat continua amb un sol H1, el de la pàgina.
+ *
+ * Onada R24 · IDEA-260 (a), CA-3 · `canals` (els fils de la fila plegada
+ * d'una persona, unaFilaPerPersona.js) i `onTriaCanal(id)`: amb dues
+ * identitats o més (la personal i la de cada entitat que gestiones), davall
+ * de la capçalera, el selector «Personal · {entitat}» amb la fila de
+ * píndoles del Xat (.sdp-xat-pindoles, la dels filtres: botons aria-pressed
+ * de --sdp-touch, d'abast amb Tab i Enter). La premuda és la del fil obert;
+ * una altra porta a /xat/<id> del seu canal. El Mestre va escriure «Hola
+ * amic!» com a Sóc de Poble creient que era el seu xat personal: ara ho veu i
+ * ho tria. Fora de la selecció de missatges. Sense, la capçalera de sempre.
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { ArrowLeft, Building2, MoreVertical, X } from 'lucide-react';
+import { ArrowLeft, BellOff, Building2, MoreVertical, X } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { rutaDePerfil } from '../../../config/navigation.js';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
@@ -82,6 +92,37 @@ import { AvatarFil } from './FilaConversa.jsx';
 import { rutaCanonicaDelXat } from '../actorsDelXat.js';
 import { mouFocusDelMenu, quiSigna } from './Compositor.jsx';
 import IndicadorEscrivint from './IndicadorEscrivint.jsx';
+import PastillaNoLlegits from './PastillaNoLlegits.jsx';
+import { identitatsDeLaFila } from '../unaFilaPerPersona.js';
+
+/* Onada R24 · CA-3 · El selector d'identitat d'una fila plegada: la mateixa
+   fila de píndoles que els filtres de la llista (FiltreConverses).
+   R24 · Gauntlet (G-client-4) · Cada identitat no premuda amb no llegits
+   porta la PastillaNoLlegits del seu canal (amb el text per al lector de
+   pantalla; grisa si el canal està silenciat): la fila diu «3» i el selector
+   diu on són. */
+function SelectorDeCanal({ identitats, actiu, onTria, t }) {
+  return (
+    <div className="sdp-xat-pindoles" role="group" aria-label={t('section.xat.canals.selector', 'Escrius com a')}>
+      {identitats.map(({ clau, nom, detall, fil }) => {
+        const premut = String(fil.id) === actiu;
+        return (
+          <button
+            key={clau}
+            type="button"
+            className="sdp-xat-pindoles__boto"
+            aria-pressed={premut}
+            onClick={() => { if (!premut) onTria(fil.id); }}
+          >
+            {nom || t('section.xat.canals.personal', 'Personal')}
+            {detall ? ` · ${detall}` : null}
+            {premut ? null : <PastillaNoLlegits quants={fil.noLlegits} silenciada={Boolean(fil.silenciat)} t={t} />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 /* «{n} participants» (o «1 participant»); res si el backend no ho diu. */
 function participantsDe(n, t) {
@@ -117,8 +158,9 @@ function focusPerdut(node) {
 export default function CapcaleraConversa({
   fil, onTorna, onSeleccionar, seleccio = null, t,
   onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
-  onTornaAOrigen = null, accioXifratge = null, accioSilenci = null, accioOblit = null, escrivint = 0,
-  nivellTitol = 1
+  onTornaAOrigen = null, accioXifratge = null, accioSilenci = null, accioArxiva = null,
+  accioContingutCompartit = null, accioOblit = null, escrivint = 0,
+  nivellTitol = 1, canals = null, onTriaCanal = null
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -260,7 +302,17 @@ export default function CapcaleraConversa({
     <>
       <AvatarFil fil={fil} nom={nomBase} mida="sm" />
       <div className="sdp-xat-capcalera__info">
-        <strong className="sdp-xat-capcalera__nom" {...propsDeTitol(nivellTitol)}>{nom}</strong>
+        {fil?.silenciat ? (
+          <span className="sdp-xat-capcalera__titol-fila">
+            <strong className="sdp-xat-capcalera__nom" {...propsDeTitol(nivellTitol)}>{nom}</strong>
+            <span className="sdp-xat-capcalera__silenci">
+              <BellOff size={14} aria-hidden="true" focusable="false" />
+              <span className="sdp-nomes-lector">{t('section.xat.silenciada', 'Silenciada')}</span>
+            </span>
+          </span>
+        ) : (
+          <strong className="sdp-xat-capcalera__nom" {...propsDeTitol(nivellTitol)}>{nom}</strong>
+        )}
         {escrivint > 0 ? <IndicadorEscrivint quants={escrivint} t={t} /> : null}
         {!escrivint && (sobre || linia || signaEntitat) ? (
           <span className="sdp-xat-capcalera__sub" id={idSub}>
@@ -323,7 +375,13 @@ export default function CapcaleraConversa({
     </button>
   );
 
-  return (
+  /* Onada R24 · CA-3 · Dues identitats o més: el selector, davall. */
+  const identitats = typeof onTriaCanal === 'function' ? identitatsDeLaFila(canals, fil?.id, { totsElsFils: true }) : [];
+  const selector = identitats.length > 1
+    ? <SelectorDeCanal identitats={identitats} actiu={String(fil?.id ?? '')} onTria={onTriaCanal} t={t} />
+    : null;
+
+  const capcalera = (
     <header key="conversa" className="sdp-xat-capcalera">
       {fletxa}
       {capIdentitat}
@@ -349,6 +407,11 @@ export default function CapcaleraConversa({
             >
               {t('section.xat.conversa.seleccionar', 'Seleccionar missatges')}
             </button>
+            {typeof accioContingutCompartit?.onTria === 'function' && accioContingutCompartit.etiqueta ? (
+              <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(accioContingutCompartit.onTria)}>
+                {accioContingutCompartit.etiqueta}
+              </button>
+            ) : null}
             {typeof accioXifratge?.onTria === 'function' && accioXifratge.etiqueta ? (
               <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(accioXifratge.onTria)}>
                 {accioXifratge.etiqueta}
@@ -357,6 +420,11 @@ export default function CapcaleraConversa({
             {typeof accioSilenci?.onTria === 'function' && accioSilenci.etiqueta ? (
               <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(accioSilenci.onTria)}>
                 {accioSilenci.etiqueta}
+              </button>
+            ) : null}
+            {typeof accioArxiva?.onTria === 'function' && accioArxiva.etiqueta ? (
+              <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(accioArxiva.onTria)}>
+                {accioArxiva.etiqueta}
               </button>
             ) : null}
             {typeof accioOblit?.onTria === 'function' && accioOblit.etiqueta ? (
@@ -384,4 +452,7 @@ export default function CapcaleraConversa({
       </div>
     </header>
   );
+  /* Sempre un fragment: la capçalera no es torna a muntar quan apareix o
+     desapareix el selector (el menú obert no es tanca). */
+  return <>{capcalera}{selector}</>;
 }

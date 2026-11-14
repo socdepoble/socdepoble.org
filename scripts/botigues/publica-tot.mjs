@@ -47,6 +47,15 @@ const ADMESOS = Object.freeze({
 const PLATAFORMES_VALIDES = Object.freeze(['totes', 'web', 'wordpress', 'android', 'ios']);
 const US = 'Ús: --notes "<notes>" [--canals web,wordpress,android,ios] [--sec] | --versio X.Y.Z --build N [--plataforma totes|web|wordpress|android|ios] [--canal intern|produccio] [--push] [--json] | --versio X.Y.Z --build N --plataforma android|ios [--canal intern|produccio] [--push] [--compila] [--confirma=X.Y.Z+N|produccio:X.Y.Z+N@<sha12>]';
 
+/* Onada R24 · Consola Zero (P-A) · Firebase Hosting publica versions atòmiques
+   des de dist/: sense retenció, una pestanya oberta abans del desplegament
+   demana trossos que ja no hi són (404 de modulepreload). L'ordre web passa a
+   ser build → arxiva → incorpora → deploy (tooling/scripts/retencio-assets.mjs),
+   amb l'arxiu sempre explícit. La ubicació és una proposta pendent del Mestre
+   (D-consola-1): fora del repositori i de dist/, dins del satèl·lit de builds. */
+export const ARXIU_RETENCIO_PROPOSAT = '../_builds_de_poble/web_assets_retencio';
+export const ORDRE_WEB = `npm run build && npm run deploy:arxiva -- --arxiu ${ARXIU_RETENCIO_PROPOSAT} && npm run deploy:retencio -- --arxiu ${ARXIU_RETENCIO_PROPOSAT} && firebase deploy --only hosting`;
+
 export const APK_RELEASE = Object.freeze(['android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk']);
 export const NOM_APK_PUBLIC = 'socdepoble-android-latest.apk';
 
@@ -75,7 +84,7 @@ export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, pl
     passos.push({
       plataforma: 'web',
       accio: 'Compilar i desplegar PWA + Open Data + ActivityPub a socdepoble.org',
-      ordre: 'npm run build && firebase deploy --only hosting'
+      ordre: ORDRE_WEB
     });
   }
   if (plataformes.includes('wordpress')) {

@@ -80,7 +80,11 @@ const ENTRADILLA_DE_JAVI = "Dissenyador gràfic, sempre disposat a integrar-me e
 const darrer = (nom) => m.renders.filter((props) => props.title === nom).at(-1);
 const pobleDe = (props) => props.labels.filter((etiqueta) => etiqueta.className === 'sdp-badge-category').map((etiqueta) => etiqueta.text);
 const consultesAlDirectori = () => m.request.mock.calls.map(([ruta]) => ruta).filter((ruta) => ruta.startsWith('/rest/v1/organization_directory'));
-const senseCanonica = () => m.seo.mock.calls.every(([opcions]) => !Object.hasOwn(opcions, 'canonical'));
+/* P0-SEO-UNIVERSAL (13-11-2026) · Abans, «cap canonical»: una fitxa que no era del Mestre no en declarava cap. Ara
+   tota fitxa declara la SEUA adreça (rutaPublicaDePerfil), i el que es vigila és el que importava: mai la d'una
+   identitat del Mestre que no és. Un slug reservat amb un id no declarat ix pel seu id (/empresa/<uuid>). */
+const senseCanonicaDelMestre = () => m.seo.mock.calls.every(([opcions]) => !/\/(?:socdepoble|rentonar|javillinares|iaia)$/.test(opcions.canonical || ''));
+const canonicaDeclarada = () => m.seo.mock.calls.at(-1)[0].canonical;
 
 /* Gauntlet 261025_0545 (DF-03) · L'host de veres compon i segella el port; la
    pàgina continua veient l'host simulat de dalt. */
@@ -164,8 +168,9 @@ test('si el servidor dona la fitxa, mana el servidor: /socdepoble pinta la fila 
   expect(pobleDe(darrer('Sóc de Poble (servidor)'))).toEqual(['Benilloba']);
   /* Sense l'id remot declarat (IDS_REMOTS_FUNDACIONALS, identitatsSeed.js), la
      fila del servidor no es reconeix per un slug que qualsevol podria
-     registrar: cap URL canònica creuada. */
-  expect(senseCanonica()).toBe(true);
+     registrar: cap URL canònica creuada. La seua és la del seu id. */
+  expect(senseCanonicaDelMestre()).toBe(true);
+  expect(canonicaDeclarada()).toMatch(new RegExp(`/empresa/${UUID_SDP}$`));
 });
 
 test.each([
@@ -191,5 +196,6 @@ test.each([
   const props = darrer(fila.name);
   expect(pobleDe(props)).toEqual([]);
   expect(props.topBarData.authorLocation).toBe('');
-  expect(senseCanonica()).toBe(true);
+  expect(senseCanonicaDelMestre()).toBe(true);
+  expect(canonicaDeclarada()).toMatch(new RegExp(`/(?:empresa|grup)/${UUID_ALCOI}$`));
 });

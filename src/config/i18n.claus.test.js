@@ -730,6 +730,35 @@ const CLAUS = {
     eu: 'Jarraituz gero, Sóc de Poble-ren erabilera-baldintzak eta pribatutasun-politika onartzen dituzu.',
     gl: 'Ao continuar, aceptas as condicións de uso e a política de privacidade de Sóc de Poble.'
   },
+  /* R24 botigues (onada 3) · A3 i B1 (el rescat i l'error de configuració de l'entrada nativa) i E1 (KGA-07). */
+  'section.login.nativa.rescat': {
+    ca: 'Si vas crear el compte amb Google o amb Apple al web i des d’ací no pots entrar amb eixe botó, a «Entrar» toca «Has oblidat la contrasenya?»: et posaràs una contrasenya i podràs entrar amb el correu.',
+    es: 'Si creaste la cuenta con Google o con Apple en la web y desde aquí no puedes entrar con ese botón, en «Entrar» toca «¿Has olvidado la contraseña?»: te pondrás una contraseña y podrás entrar con tu correo.',
+    en: 'If you created your account with Google or Apple on the web and can’t sign in with that button here, go to “Sign in” and tap “Forgot your password?”: you’ll set a password and can then sign in with your email.',
+    eu: 'Kontua webean Google-rekin edo Apple-rekin sortu bazenuen eta hemendik ezin bazara botoi horrekin sartu, «Sartu» atalean sakatu «Pasahitza ahaztu duzu?»: pasahitz bat jarriko duzu eta posta elektronikoarekin sartu ahal izango zara.',
+    gl: 'Se creaches a conta con Google ou con Apple na web e desde aquí non podes entrar con ese botón, en «Entrar» toca «Esqueciches o contrasinal?»: porás un contrasinal e poderás entrar co teu correo.'
+  },
+  'section.login.nativa.introSenseBotons': {
+    ca: 'Entra amb el correu i la contrasenya del teu compte. Si el vas crear amb Google o amb Apple al web, encara no té contrasenya: toca «Has oblidat la contrasenya?» per a posar-li’n una.',
+    es: 'Entra con el correo y la contraseña de tu cuenta. Si la creaste con Google o con Apple en la web, todavía no tiene contraseña: toca «¿Has olvidado la contraseña?» para ponerle una.',
+    en: 'Sign in with your account’s email and password. If you created it with Google or Apple on the web, it has no password yet: tap “Forgot your password?” to set one.',
+    eu: 'Sartu zure kontuaren posta elektronikoarekin eta pasahitzarekin. Webean Google-rekin edo Apple-rekin sortu bazenuen, oraindik ez du pasahitzik: sakatu «Pasahitza ahaztu duzu?» bat jartzeko.',
+    gl: 'Entra co correo e o contrasinal da túa conta. Se a creaches con Google ou con Apple na web, aínda non ten contrasinal: toca «Esqueciches o contrasinal?» para poñerlle un.'
+  },
+  'section.login.nativa.configuracio': {
+    ca: 'Google no reconeix esta instal·lació de l’app: el problema és de la configuració de Sóc de Poble, no del teu compte. Entra amb el correu mentre ho arreglem.',
+    es: 'Google no reconoce esta instalación de la app: el problema es de la configuración de Sóc de Poble, no de tu cuenta. Entra con tu correo mientras lo arreglamos.',
+    en: 'Google doesn’t recognise this installation of the app: the problem is in Sóc de Poble’s setup, not in your account. Sign in with your email while we fix it.',
+    eu: 'Google-k ez du aplikazioaren instalazio hau ezagutzen: arazoa Sóc de Poble-ren konfigurazioan dago, ez zure kontuan. Sartu posta elektronikoarekin konpontzen dugun bitartean.',
+    gl: 'Google non recoñece esta instalación da app: o problema está na configuración de Sóc de Poble, non na túa conta. Entra co teu correo mentres o arranxamos.'
+  },
+  'descarregues.canals.signatura.dadesLocals': {
+    ca: 'Abans de desinstal·lar-la, fes còpia del que només viu en este telèfon: la Facturació (Gestoria › «Còpia del llibre») i el cofre de la Gestoria («Descarrega la còpia xifrada»). Android no en fa cap còpia de seguretat: si desinstal·les l’aplicació sense eixes còpies, es perden per sempre.',
+    es: 'Antes de desinstalarla, haz una copia de lo que solo vive en este teléfono: la Facturación (Gestoría › «Còpia del llibre») y el cofre de la Gestoría («Descarrega la còpia xifrada»). Android no hace ninguna copia de seguridad: si desinstalas la aplicación sin esas copias, se pierden para siempre.',
+    en: 'Before uninstalling it, back up what lives only on this phone: Invoicing (Management › “Còpia del llibre”) and the Management vault (“Descarrega la còpia xifrada”). Android makes no backup of them: uninstalling the app without those copies erases them for good.',
+    eu: 'Desinstalatu aurretik, egin telefono honetan bakarrik dagoenaren kopia: Fakturazioa (Gestoria › «Còpia del llibre») eta Gestoriako kutxa gotorra («Descarrega la còpia xifrada»). Androidek ez du haien babeskopiarik egiten: kopia horiek gabe aplikazioa desinstalatzeak betiko ezabatzen ditu.',
+    gl: 'Antes de desinstalala, fai unha copia do que só vive neste teléfono: a Facturación (Xestoría › «Còpia del llibre») e o cofre da Xestoría («Descarrega la còpia xifrada»). Android non fai ningunha copia de seguridade: se desinstalas a aplicación sen esas copias, pérdense para sempre.'
+  },
   /* Pla 261014_1450 (front C) · El peu del rail amb una entitat activa i la
      línia del compositor que diu qui signa. Les d'eu i gl són proposta a
      revisar per algú que les parle. */

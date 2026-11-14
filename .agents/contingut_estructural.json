@@ -8,10 +8,10 @@
       "data": "2026-11-07"
     },
     "anima": {
-      "sha256": "b9fe30f514828298cc8702a76c240a3d697a92dd89259a52ccc1096a36d2277f",
-      "html": 12641,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
-      "data": "2026-11-12"
+      "sha256": "a23e602152e3a846ab012dd579dfd43965c0c30a8347b647c8e1e2e776d61122",
+      "html": 13266,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "arbres-monumentals": {
       "sha256": "de3ed82953ef4fb08c0defc35118a23f702ee172789166725628b435fc86c914",
@@ -26,16 +26,16 @@
       "data": "2026-11-07"
     },
     "cervell": {
-      "sha256": "e0f9f647a5bb26e3d7e1938ec09eab4e0485e06a730fefb8d88895f79863b3ed",
+      "sha256": "ab8623d080dd0661bfd48b2bea64ef3cdaf52cb645aeac6c1952654897036a93",
       "html": 4179,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "consola": {
-      "sha256": "bad063697c69fd6396d4dd28375b88cc9c9968b7166a4eccb7b400132b6331b3",
-      "html": 5925,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "8d812a106624fc927d26d44a56ec2eebabc42d4b4fb9045fb9a770c9c2dbcd04",
+      "html": 6483,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "constitucio": {
       "sha256": "e74f1b491cb58f4284aeeb71008c65ab86af49a562694551a33deadadb986510",
@@ -44,46 +44,46 @@
       "data": "2026-11-07"
     },
     "descarregues": {
-      "sha256": "3eb4ed7a05f625fd3cdf74ebcd6f4c0d74d9e0e54bd3a8b662f834cd671f16f9",
+      "sha256": "7022d1e0616709e3e4a0af3d59f3a9c9a0d2b76ec8e7572e554c4e8a1ae15912",
       "html": 9904,
-      "aprovat_per": "Mestre Javi (ordre del 10-11: «Fes R16b», arbitrar la feina posterior a R16a perquè producció torne a eixir d'un commit; text revisat per Claude amb verificació adversària per carril, revocable)",
-      "data": "2026-11-10"
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "dispositius": {
-      "sha256": "e2b40b5ae8e2fe0f9abbe4afef41830faf81c1ff43deec7db9dab00494a14d2a",
-      "html": 607,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
-      "data": "2026-11-12"
+      "sha256": "411a021fc0ae529c4f7683642fda52fc8d10e9cfef29f1e64bffdfff6f8e937f",
+      "html": 714,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "disseny": {
-      "sha256": "f7abaf1ffe098bdc27310ec210afd559db1084962ee94214c18791c746e651a8",
-      "html": 4148,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
-      "data": "2026-11-12"
+      "sha256": "6040fd00d6150f9416cdfc6defce880977d340580ff7d364c2d19a46fe19609d",
+      "html": 4846,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "drets-autor": {
-      "sha256": "8b8413172e4c133ae0f60c1577b3c0189a9cf39725f9558f9ca3170c5fd4af37",
-      "html": 14200,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "9020a79830c55c088b6fa867fc1bf7a5f56c91656c3fc28b3e12269902ce767c",
+      "html": 14511,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "f98fe8d822deceff1c7acbcd9ad22508cd35e85bd322248ad148ad8b2f1f29a1",
-      "html": 21948,
-      "aprovat_per": "Mestre Javi (prompt 261113_0214 T1 COMMIT 5: kits R21.1 v2, R21.7-R21.10 i R21.9b, D-C4-1..5, build 5 i WP 1.1.14; integrat per Claude R21, revocable)",
-      "data": "2026-11-13"
+      "sha256": "8092020995cf7a83daa5872f61de824354254554a9d2750d572509389e950d47",
+      "html": 21953,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "fediversity": {
-      "sha256": "63a4e598e03a9f14f634a9640814f0155ea2de6b52db856c6c10234d846a3f9c",
-      "html": 63731,
-      "aprovat_per": "Mestre Javi (prompt 261113_0214 T1 COMMIT 5: kits R21.1 v2, R21.7-R21.10 i R21.9b, D-C4-1..5, build 5 i WP 1.1.14; integrat per Claude R21, revocable)",
-      "data": "2026-11-13"
+      "sha256": "c14146a2a85a2d1c29aa31a56fe82985ec93edd5a48c667999735d0df887eeee",
+      "html": 63771,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "habitatge": {
-      "sha256": "77c25f12150cc07c8bb56b6ebd1f3b5a2d057ac6ec3f02997f47654ce0b94da2",
+      "sha256": "bf9ee48a8ca1eca44eb3e22a053bcc7626b72bd3321b9bf624e690cb3c97463a",
       "html": 2966,
-      "aprovat_per": "Codex · ordre directa AH-22 del Mestre 05-11-2026",
-      "data": "2026-11-05"
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "herbari": {
       "sha256": "72d97776a0be179afc5cf2e4dbe3ddf6713bd43191a85703f8fe756077cc77aa",
@@ -92,40 +92,40 @@
       "data": "2026-11-07"
     },
     "la-iaia-sabuda": {
-      "sha256": "324e7c13f13b4588e2a1ab3dde2a02703d385205202c1e8c4fdf080c3fe3fd92",
-      "html": 307,
-      "aprovat_per": "Mestre Javi (ordre del 10-11: «Fes R16b», arbitrar la feina posterior a R16a perquè producció torne a eixir d'un commit; text revisat per Claude amb verificació adversària per carril, revocable)",
-      "data": "2026-11-10"
+      "sha256": "31c48b07f320daf55b38623eab0f08ef8ea666226e09ed6187e1d3bc128c57c9",
+      "html": 409,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "legal": {
-      "sha256": "0a08fd743c2b4139e322cdd457e489f5dab6003bfe53d93a5d424cb457495b94",
+      "sha256": "fe4aeffdf5cb85ca3064f2872f6a7e2f5c64c26c784326624a4e37645fc96e35",
       "html": 59594,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "f502a3629890bb86cab2e26241edb236295339bd3747502db64c6e3f7ef5a329",
-      "html": 22576,
-      "aprovat_per": "Mestre Javi (prompt 261113_0214 T1 COMMIT 5: kits R21.1 v2, R21.7-R21.10 i R21.9b, D-C4-1..5, build 5 i WP 1.1.14; integrat per Claude R21, revocable)",
-      "data": "2026-11-13"
+      "sha256": "30a61b2864270b77e2abf8830350890f579981970931d032735d3030c1b7a613",
+      "html": 27002,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "notes": {
-      "sha256": "336230c5e5b9c3ce193ba63d75cd66d2d51261e3efad78d6f294af702697f42d",
+      "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",
       "html": 0,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "projecte": {
-      "sha256": "473c40701453480ae661bb4c21dad73adf4dae1003dad3c3042fd3e4babdfcd3",
-      "html": 10672,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "aa2124fd2a2535d6fc792b52b5be446aba18a1a86df306f210ef7f2a9665fa9e",
+      "html": 10677,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "publicar_mapa": {
-      "sha256": "c08c41d84ad5264ebea4a9129f1f0acf76c928e56b2dfa72b2c58d290e45deb0",
+      "sha256": "14420b6cf28a3cf1f93dc0a25e634bba12ac63b92f2377e9fb9ebbb2ed2b8046",
       "html": 1631,
-      "aprovat_per": "Codex · ordre directa AH-22 del Mestre 05-11-2026",
-      "data": "2026-11-05"
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "receptes": {
       "sha256": "2acee564513d0f22332ac828b60602e85c20845550ae0c02c16d890ebe8b01b7",
@@ -134,10 +134,10 @@
       "data": "2026-11-12"
     },
     "roadmap": {
-      "sha256": "ad6c52700476ea5352ac533f441566557c5b4c72449ce58c70c6b13e5382831d",
-      "html": 31391,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "51309768529004965cf344af2f879949434b1929f78855a141f66ca057d404d0",
+      "html": 30699,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "rutes-de-poble": {
       "sha256": "87367fd239f48bf072b6e19fc7e91d980a2a3e82a7575801c7b1a6df1e782a93",
@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "1b7c1382864edf7e491a2e0cd69ecd5c82cc94765e061b3de1a492fe2729c95d",
-      "html": 64648,
-      "aprovat_per": "Mestre Javi (prompt 261113_0214 T1 COMMIT 5: kits R21.1 v2, R21.7-R21.10 i R21.9b, D-C4-1..5, build 5 i WP 1.1.14; integrat per Claude R21, revocable)",
-      "data": "2026-11-13"
+      "sha256": "0e0bd9393b0cdc04aeff55ba2c98704acf62455434afd38e2cfd9ebf850b1d1a",
+      "html": 70787,
+      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "data": "2026-11-14"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

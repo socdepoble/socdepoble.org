@@ -1,6 +1,7 @@
 import { lazy, Suspense, useMemo } from 'react';
 import { renderRichText } from '../../detail/detailRichText.jsx';
 import { BotoVeuIaia } from '../../../components/PedraSeca/molecules/BotoVeuIaia.jsx';
+import { useVeuLecturaPaginaActiva } from '../../../components/universal/veu/VeuLecturaPaginaContext.js';
 import { useUIActionsOpcional } from '../../../app/contexts/UIContext.jsx';
 import { createTranslator } from '../../../config/i18n.js';
 import { cosDeLArticle, cosPerAPintar } from './cosCanonic.js';
@@ -32,14 +33,17 @@ export function textPlaDelCos(html) {
  *  ni l'article ni el visor no pesen a l'entrada. */
 export default function NovesTecnologiesCulturaRuralArticle({ item = null } = {}) {
   const t = useUIActionsOpcional()?.t || T_PER_DEFECTE;
+  const veuPaginaActiva = useVeuLecturaPaginaActiva();
   const cos = cosPerAPintar(cosDeLArticle(item, NOVES_TECNOLOGIES_CULTURA_RURAL_HTML));
   const textDeLaVeu = useMemo(() => [item?.title, item?.entradilla, textPlaDelCos(cos)]
     .filter((tros) => typeof tros === 'string' && tros.trim()).join('. '), [cos, item?.title, item?.entradilla]);
   return (
     <div className="noves-tecnologies-rural">
-      <div className="noves-tecnologies-rural__veu">
-        <BotoVeuIaia text={textDeLaVeu} idioma="ca" privat={false} aria-label={nomDeLaVeu(t, 'publicacio')} />
-      </div>
+      {!veuPaginaActiva ? (
+        <div className="noves-tecnologies-rural__veu">
+          <BotoVeuIaia text={textDeLaVeu} idioma="ca" privat={false} aria-label={nomDeLaVeu(t, 'publicacio')} />
+        </div>
+      ) : null}
       <Suspense fallback={null}><PouDeLaNeuAnatomiaCard /></Suspense>
       {renderRichText(cos)}
     </div>

@@ -4,7 +4,9 @@
  * Contingut sense pàgina ni h1: l'embolcall (la Wiki, només en
  * desenvolupament) hi posa el títol. Cinc passos numerats:
  *   1. Aprovació: l'estat dels dos tractors. Sense el de factures aprovat no
- *      es pot continuar (botó cap al panell de Tractors).
+ *      es pot continuar (en DEV, botó cap al panell de Tractors; fora de DEV,
+ *      Onada R24, CODEX-R24-12: AccioAprovacio, que aprova ací, en este
+ *      navegador, amb la `porta` que passa ContenidorGestoria).
  *   2. Carpeta i trimestre: el selector del sistema o, si el navegador no en
  *      té, un <input type="file" webkitdirectory>. L'anàlisi no ix de
  *      l'ordinador: l'únic pas que en trau res és el correu del pas 5.
@@ -23,7 +25,7 @@
  * «Desenxufa» és sempre visible i demana confirmació: res es guarda.
  *
  * Props: { obteAprovacio, estatTractors: { 'gestoria.factures': { estat,
- * curta }, 'gestoria.correus': { estat, curta } }, onObreTractors, subtle,
+ * curta }, 'gestoria.correus': { estat, curta } }, onObreTractors, porta?, subtle,
  * inflate, entorn, avui, descarrega?, onFactures?: (cable|null) => void } (descarrega: per a les proves; per
  * defecte, Blob i enllaç temporal com a DetallPrivacitat.jsx).
  * El cable (onFactures): { any, t, factures, historial, titular, entregables } o null. Ordre del Mestre,
@@ -39,6 +41,7 @@ import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { DialegConfirmacio } from '../../components/PedraSeca/organismes/Dialeg.jsx';
 import { Taula } from '../../components/PedraSeca/organismes/Taula.jsx';
 import { Camp, CampText, Casella, GrupCamps, Selector } from '../../components/PedraSeca/organismes/formulari.jsx';
+import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../tractors/AprovacioEnLinia.jsx';
 import EnviamentGestoria from './enviament/EnviamentGestoria.jsx';
 import { formatData } from './nucli/dates.js';
 import { formatImport } from './nucli/diners.js';
@@ -617,19 +620,22 @@ function Pas({ numero, titol, estat, refTitol, children }) {
 }
 
 /* L'error es mostra al pas on s'ha produït (`accions`); si eixe pas no es veu, dalt de tot. */
-function ErrorDe({ error, accions, visibles, onTanca, onObreTractors }) {
+function ErrorDe({ error, accions, visibles, onTanca, onObreTractors, porta }) {
   if (!error) return null;
   if (accions ? !accions.includes(error.accio) : visibles.includes(error.accio)) return null;
+  /* L'aprovació que ha fallat: la del correu al seu pas, la del full a la resta. */
+  const tractor = error.accio === 'correu' ? TRACTOR_CORREUS.id : TRACTOR_FACTURES.id;
   return (
     <Alerta to={error.to === 'info' ? 'info' : 'error'} titol={error.titol} onTanca={onTanca}
-      accions={error.aprovacio && onObreTractors ? <Boto varietat="secundari" onClick={onObreTractors}>Obri el panell de Tractors</Boto> : null}>
+      accions={error.aprovacio && onObreTractors
+        ? <AccioAprovacio porta={porta} id={tractor} onObreTractors={onObreTractors} varietat="secundari" /> : null}>
       {error.detall || null}
     </Alerta>
   );
 }
 
 export default function PanellGestoria({
-  obteAprovacio, estatTractors, onObreTractors, subtle, inflate, entorn, avui, descarrega = descarregaPerDefecte, onFactures
+  obteAprovacio, estatTractors, onObreTractors, porta = null, subtle, inflate, entorn, avui, descarrega = descarregaPerDefecte, onFactures
 }) {
   const g = useGestoria({ obteAprovacio, subtle, inflate, entorn, avui });
   const [hui] = useState(() => dataDeAvui(typeof avui === 'function' ? avui() : new Date()) ?? dataDeAvui(new Date()));
@@ -750,7 +756,7 @@ export default function PanellGestoria({
   const visibles = [
     facturesAprovat && 'carpeta', proposta && g.analisi && 'correu', proposta && 'proposta', proposta && 'fitxers'
   ].filter(Boolean);
-  const errors = { error: g.error, visibles, onTanca: g.tancaError, onObreTractors };
+  const errors = { error: g.error, visibles, onTanca: g.tancaError, onObreTractors, porta };
 
   return (
     <div ref={arrel} className="sdp-gestoria-panell">
@@ -775,6 +781,7 @@ export default function PanellGestoria({
                   <span className="sdp-gestoria-panell__tractor-nom">{manifest.nom}</span>
                   <Insignia to={insignia.to}>{insignia.text}</Insignia>
                   {estat?.curta ? <code>{estat.curta}</code> : null}
+                  <RevocaAprovacio porta={porta} id={manifest.id} />
                 </li>
               );
             })}
@@ -783,10 +790,10 @@ export default function PanellGestoria({
             <p>El tractor de factures està aprovat: pots triar la carpeta.</p>
           ) : (
             <Alerta to="avis" viva={false} titol="Cal aprovar el tractor de factures"
-              accions={<Boto varietat="primari" onClick={onObreTractors}>Obri el panell de Tractors</Boto>}>
+              accions={<AccioAprovacio porta={porta} id={TRACTOR_FACTURES.id} onObreTractors={onObreTractors} />}>
               <p>
                 Abans de llegir cap factura, llig la fitxa de «{TRACTOR_FACTURES.nom}» i aprova’n la versió exacta
-                al panell de Tractors. Sense eixa aprovació no es pot continuar.
+                {` ${onSAprova()}`}. Sense eixa aprovació no es pot continuar.
               </p>
             </Alerta>
           )}
@@ -910,8 +917,8 @@ export default function PanellGestoria({
                   </Camp>
                 ) : (
                   <Alerta to="info" viva={false} titol="Cal aprovar el tractor del correu"
-                    accions={<Boto varietat="secundari" onClick={onObreTractors}>Obri el panell de Tractors</Boto>}>
-                    Per a creuar el correu, aprova abans «{TRACTOR_CORREUS.nom}» al panell de Tractors.
+                    accions={<AccioAprovacio porta={porta} id={TRACTOR_CORREUS.id} onObreTractors={onObreTractors} varietat="secundari" />}>
+                    Per a creuar el correu, aprova abans «{TRACTOR_CORREUS.nom}» {onSAprova()}.
                   </Alerta>
                 )}
                 {g.ocupat === 'correu' ? <Carregant etiqueta="Creuant el correu…" /> : null}

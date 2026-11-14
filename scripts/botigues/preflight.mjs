@@ -16,6 +16,11 @@
  * (BOT-A4, 261025): el paquet ha d'eixir del commit de HEAD, amb l'arbre net.
  * B9 · «Avisos push» (davall d'«Arbre», amb el codi 7): connector, aps-environment, reenviament de
  * l'AppDelegate, google-services.json i POST_NOTIFICATIONS; sense connector ni --push no cal res.
+ * R24 botigues (D1, RC-6) · El push natiu només s'anuncia amb --push o amb VITE_SDP_PUSH_NATIU=1 a
+ * .env.natiu o .env.natiu.local (la bandera que l'encén al paquet): el connector sol a package.json
+ * ja no fa obligatori google-services.json, i les peces de push que falten són avisos.
+ * R24 botigues (A2, RC-1) · «Entrada social del paquet» (també codi 7): els clients de Google que porta
+ * dist-natiu/assets/*.js; amb --canal produccio, el que falta és un ✗ (en intern, un avís).
  * --canal produccio exigix SDP_BUILDS_DIR (el registre de pujades) i afig avisos de botiga.
  */
 import fs from 'node:fs';
@@ -26,6 +31,7 @@ import {
   comprovaVariables, gitIgnora, jdkPerAGradle, llegixAjuda, llegixSegell, mateixContingut, mostraCami, plega, problemesDelSegell
 } from './entorn.mjs';
 import { estatDeLesBotigues, liniesDeLEstat } from './estat.mjs';
+import { esquemaInvertitDeGoogleIos } from '../../src/config/publicCredentials.js';
 
 /** L'arrel on viu el script instal·lat: scripts/botigues/ → dos nivells amunt. */
 export const ARREL_DEL_SCRIPT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -145,12 +151,45 @@ function permisosDe(text) {
   }));
 }
 
+/* R24 botigues (D1, RC-6) · La bandera de build que encén el push natiu dins del paquet
+   (src/natiu/avisosPushNatius.js, tooling/vite/banderes-de-capacitat.mjs): només el valor exacte '1'.
+   El build natiu la pren de .env.natiu i de .env.natiu.local (el .local mana; vite.natiu.config.js
+   rebutja les que només vindrien de .env o de .env.local). */
+export const BANDERA_PUSH_NATIU = 'VITE_SDP_PUSH_NATIU';
+const FITXERS_DE_LA_BANDERA = Object.freeze(['.env.natiu', '.env.natiu.local']);
+
+/* El valor (com el llig dotenv) de l'última declaració de `nom` en el text d'un .env, o undefined. */
+function valorDeclarat(text, nom) {
+  let valor;
+  for (const linia of String(text ?? '').split(/\r?\n/)) {
+    const m = /^[ \t]*(?:export[ \t]+)?([\w.-]+)[ \t]*=(.*)$/.exec(linia);
+    if (!m || m[1] !== nom) continue;
+    const cru = m[2].trim();
+    const cometes = /^(["'`])(.*)\1(?:[ \t]+#.*)?$/.exec(cru);
+    valor = cometes ? cometes[2] : cru.replace(/[ \t]+#.*$/, '').trim();
+  }
+  return valor;
+}
+
+/** Si .env.natiu o .env.natiu.local (el .local mana) declaren VITE_SDP_PUSH_NATIU=1. Només llig eixe
+    nom i el compara amb '1': mai en retorna ni n'imprimix cap valor. Un fitxer il·legible no compta. */
+export function banderaPushNatiu(arrel) {
+  let valor;
+  for (const nom of FITXERS_DE_LA_BANDERA) {
+    const declarat = valorDeclarat(lligDe(arrel, nom), BANDERA_PUSH_NATIU);
+    if (declarat !== undefined) valor = declarat;
+  }
+  return valor === '1';
+}
+
 /**
  * L'estat dels avisos push al projecte natiu. Només llig; de google-services.json només diu si hi
- * és, si git l'ignora i si és del paquet de capacitor.config.json, mai cap valor.
+ * és, si git l'ignora i si és del paquet de capacitor.config.json, mai cap valor. `banderaNatiu`:
+ * si .env.natiu* encén el push natiu al paquet (banderaPushNatiu, R24 D1).
  * @returns {{ connector:{paquet:boolean, ios:boolean, android:boolean},
  *   ios:{apsEnvironment:string|null, reenviaRegistre:boolean},
- *   android:{postNotifications:boolean, googleServices:{hiEs:boolean, ignorat:boolean|null, delPaquet:boolean|null}, connectorGoogleServices:boolean} }}
+ *   android:{postNotifications:boolean, googleServices:{hiEs:boolean, ignorat:boolean|null, delPaquet:boolean|null}, connectorGoogleServices:boolean},
+ *   banderaNatiu:boolean }}
  */
 export function estatDelPush(arrel) {
   let paquet = false;
@@ -189,12 +228,20 @@ export function estatDelPush(arrel) {
       postNotifications: declarat && !lleva,
       googleServices,
       connectorGoogleServices: /apply plugin:\s*'com\.google\.gms\.google-services'/.test(gradle)
-    }
+    },
+    banderaNatiu: banderaPushNatiu(arrel)
   };
 }
 
+/** Si esta pujada anuncia el push natiu: --push o la bandera de .env.natiu* (R24 D1). Pura. */
+export const anunciaPushNatiu = (estat, push = false) => Boolean(push) || estat?.banderaNatiu === true;
+
 /**
  * Les línies (✓, ! i ✗) de la família «Avisos push» per a estes plataformes. Pura. `mal` porta els ✗.
+ * R24 botigues (D1) · Amb el connector però sense anunciar el push (ni --push ni la bandera), les
+ * peces que només calen per al push (aps-environment, el reenviament d'APNs, google-services.json i
+ * el connector de Gradle de Google) són avisos; la sincronia del connector, un google-services.json
+ * versionat o d'un altre paquet (el build fallaria) i POST_NOTIFICATIONS continuen sent ✗.
  * @returns {{ linies: string[], mal: string[] }}
  */
 export function liniesDelPush(estat, { push = false, plataformes = [] } = {}) {
@@ -206,34 +253,125 @@ export function liniesDelPush(estat, { push = false, plataformes = [] } = {}) {
   const { connector } = estat;
   const ambIos = plataformes.includes('ios');
   const ambAndroid = plataformes.includes('android');
+  const anunciat = anunciaPushNatiu(estat, push);
+  /* Una peça que només cal per al push: ✗ si s'anuncia; si no, un avís per a quan s'encenga. */
+  const calPerAlPush = anunciat ? falla : (text) => avis(`${text} · cal abans d'encendre el push natiu`);
   if (!(connector.paquet || connector.ios || connector.android)) {
-    if (push) falla(`--push: el connector ${PAQUET_PUSH} no és al projecte (package.json, ios/App/CapApp-SPM/Package.swift ni android/capacitor.settings.gradle); instal·lar-lo és decisió del Mestre (D-WP-7) i després npx cap sync`);
+    if (anunciat) falla(`${push ? '--push' : `${BANDERA_PUSH_NATIU}=1 (.env.natiu*)`}: el connector ${PAQUET_PUSH} no és al projecte (package.json, ios/App/CapApp-SPM/Package.swift ni android/capacitor.settings.gradle); instal·lar-lo és decisió del Mestre (D-WP-7) i després npx cap sync`);
     else be('push: l\'app no porta cap connector d\'avisos remots (B8 en fase N1): ni aps-environment ni FCM no calen per a esta pujada');
     /* D-B9-17 · Un App ID amb Push i el dret és vàlid; si el perfil no el porta, xcodebuild para (8) sense pujar res. */
     if (ambIos && estat.ios.apsEnvironment) avis('ios/App/App/App.entitlements porta aps-environment sense connector: el perfil de distribució ha de tindre Push Notifications; si l\'App ID no la té, l\'arxiu fallarà en signar (eixida 8)');
     return { linies, mal };
   }
-  if (!push) avis('el projecte porta el connector d\'avisos remots: es comprova com amb --push');
+  if (!anunciat) avis(`el projecte porta el connector d'avisos remots, però esta pujada no anuncia push natiu (ni --push ni ${BANDERA_PUSH_NATIU}=1 a .env.natiu o .env.natiu.local): el paquet no el registra (src/natiu/avisosPushNatius.js) i FCM i APNs no es demanen`);
+  else if (!push) avis(`${BANDERA_PUSH_NATIU}=1 a .env.natiu*: es comprova com amb --push`);
   if (!connector.paquet) falla(`el connector d'avisos remots és als projectes natius però no a package.json (${PAQUET_PUSH}): npx cap sync`);
   if (connector.paquet && ambIos && !connector.ios) falla(`${PAQUET_PUSH} és a package.json però no a ios/App/CapApp-SPM/Package.swift: npx cap sync ios`);
   if (connector.paquet && ambAndroid && !connector.android) falla(`${PAQUET_PUSH} és a package.json però no a android/capacitor.settings.gradle: npx cap sync android`);
   if (ambIos) {
     /* A la font s'admeten development i production: Xcode el posa en production en exportar per a
        l'App Store, i puja-ios el comprova dins de l'IPA. */
-    if (!estat.ios.apsEnvironment) falla('ios/App/App/App.entitlements no porta aps-environment: Xcode › Signing & Capabilities › Push Notifications (i la capacitat a l\'App ID)');
+    if (!estat.ios.apsEnvironment) calPerAlPush('ios/App/App/App.entitlements no porta aps-environment: Xcode › Signing & Capabilities › Push Notifications (i la capacitat a l\'App ID)');
     else be(`aps-environment ${estat.ios.apsEnvironment} a App.entitlements (l'IPA de l'App Store l'ha de portar en production: es mira després d'exportar)`);
-    if (!estat.ios.reenviaRegistre) falla('ios/App/App/AppDelegate.swift no reenvia el registre d\'APNs a Capacitor (didRegisterForRemoteNotificationsWithDeviceToken → .capacitorDidRegisterForRemoteNotifications, i el de fallada): l\'esdeveniment registration no arribaria mai');
+    if (!estat.ios.reenviaRegistre) calPerAlPush('ios/App/App/AppDelegate.swift no reenvia el registre d\'APNs a Capacitor (didRegisterForRemoteNotificationsWithDeviceToken → .capacitorDidRegisterForRemoteNotifications, i el de fallada): l\'esdeveniment registration no arribaria mai');
     else be('AppDelegate.swift reenvia el registre d\'APNs a Capacitor');
   }
   if (ambAndroid) {
     const gs = estat.android.googleServices;
-    if (!gs.hiEs) falla('falta android/app/google-services.json (Firebase › configuració del projecte; git l\'ignora)');
+    if (!gs.hiEs) calPerAlPush('falta android/app/google-services.json (Firebase › configuració del projecte; git l\'ignora)');
     else if (gs.ignorat !== true) falla('android/app/google-services.json: git no l\'ignora (o no s\'ha pogut comprovar), i no es versiona');
     else if (!gs.delPaquet) falla('android/app/google-services.json no és del paquet de capacitor.config.json');
     else be('google-services.json del paquet de l\'app, ignorat per git');
-    if (!estat.android.connectorGoogleServices) falla('android/app/build.gradle no aplica com.google.gms.google-services');
+    if (!estat.android.connectorGoogleServices) calPerAlPush('android/app/build.gradle no aplica com.google.gms.google-services');
     if (!estat.android.postNotifications) falla('cap manifest declara android.permission.POST_NOTIFICATIONS (o l\'app el lleva amb tools:node="remove"): Android 13 o més nou no mostraria cap avís');
     else be('POST_NOTIFICATIONS declarat i no llevat');
+  }
+  return { linies, mal };
+}
+
+/* ───────────── R24 botigues · A2 (RC-1, incident 261106) · Entrada social del paquet ─────────────
+   El build 1.0.0+2 va eixir sense cap client de Google: dins del bundle,
+   `clients:{googleWeb:void 0,googleIos:void 0}`. Ni Android ni l'iPhone oferien «Continua amb Google»,
+   i qui havia creat el compte amb Google al web (sense contrasenya) no podia entrar a l'app. El build
+   natiu els admet buits (són opcionals a vite.natiu.config.js): ací es mira el que porta de veres el
+   paquet. src/natiu/entrada.jsx registra l'adaptador amb `clients: { googleWeb, googleIos }` i
+   `appleActiu`; el minificador conserva els noms de les propietats [VERIFICAT 261114 als bundles de
+   l'APK 1.0.0+2 i de l'1.1.12+3]. Els clients són públics, però el preflight no n'imprimix cap. */
+const CLIENT_DE_GOOGLE_AL_PAQUET = /\b\d+-[a-z0-9]+\.apps\.googleusercontent\.com\b/g;
+const CLIENT_DE_GOOGLE = /^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/;
+const LITERAL_MINIFICAT = String.raw`(void 0|undefined|null|"[^"\n]*"|'[^'\n]*'|\x60[^\x60\n]*\x60)`;
+const REGISTRE_DELS_CLIENTS = new RegExp(String.raw`\bclients\s*:\s*\{\s*googleWeb\s*:\s*${LITERAL_MINIFICAT}\s*,\s*googleIos\s*:\s*${LITERAL_MINIFICAT}\s*\}(?:\s*,\s*appleActiu\s*:\s*(!0|!1|true|false))?`);
+
+/* El client d'un literal del registre: només una cadena amb la forma d'un client, si no null. */
+function clientDelLiteral(literal) {
+  const m = /^(["'\x60])\s*(.*?)\s*\1$/.exec(String(literal ?? ''));
+  return m && CLIENT_DE_GOOGLE.test(m[2]) ? m[2] : null;
+}
+
+/**
+ * Els clients de Google (i Apple) que porta el paquet natiu: dist-natiu/assets/*.js. Només llig.
+ * `paquet`: si hi ha dist-natiu/assets/; `registre`: si s'hi troba el registre de l'entrada nativa;
+ * `clients`: tots els clients de Google que hi apareixen, ordenats (per si el registre canvia de forma).
+ * @returns {{ paquet:boolean, registre:boolean, googleWeb:string|null, googleIos:string|null, appleActiu:boolean|null, clients:string[] }}
+ */
+export function entradaSocialDelPaquet(arrel) {
+  const carpeta = path.join(arrel, 'dist-natiu', 'assets');
+  let noms;
+  try { noms = fs.readdirSync(carpeta).filter((nom) => nom.endsWith('.js')).sort(); }
+  catch { return { paquet: false, registre: false, googleWeb: null, googleIos: null, appleActiu: null, clients: [] }; }
+  const clients = new Set();
+  let registre = null;
+  for (const nom of noms) {
+    const text = lligDe(carpeta, nom);
+    if (text === null) continue;
+    for (const [client] of text.matchAll(CLIENT_DE_GOOGLE_AL_PAQUET)) clients.add(client);
+    registre ??= REGISTRE_DELS_CLIENTS.exec(text);
+  }
+  return {
+    paquet: true,
+    registre: Boolean(registre),
+    googleWeb: clientDelLiteral(registre?.[1]),
+    googleIos: clientDelLiteral(registre?.[2]),
+    appleActiu: registre?.[3] ? registre[3] === '!0' || registre[3] === 'true' : null,
+    clients: [...clients].sort()
+  };
+}
+
+/**
+ * Les línies de la família «Entrada social del paquet (dist-natiu)». Pura. A producció, cada peça que
+ * falta és un ✗ (de l'arbre, 7); en intern, un avís. `infoPlist`: el text d'ios/App/App/Info.plist.
+ * Apple apagat a iOS és sempre un avís: si s'encén, ho decidix el Mestre (compte-apple desplegada).
+ * @returns {{ linies: string[], mal: string[] }}
+ */
+export function liniesEntradaSocial(entrada, { plataformes = [], produccio = false, infoPlist = null } = {}) {
+  const linies = [];
+  const mal = [];
+  if (!plataformes.length) return { linies, mal };
+  const be = (text) => linies.push(`  ✓ ${text}`);
+  const avis = (text) => linies.push(`  ! ${text}`);
+  const falta = produccio ? (text) => { linies.push(`  ✗ ${text}`); mal.push(text); } : avis;
+  if (!entrada?.paquet) {
+    avis('no hi ha dist-natiu/assets: no es pot mirar si el paquet porta els clients de Google (npm run build:natiu)');
+    return { linies, mal };
+  }
+  if (!entrada.registre) {
+    falta(`el paquet no porta el registre de l'entrada nativa (clients: { googleWeb, googleIos } de src/natiu/entrada.jsx; ${entrada.clients.length} client(s) de Google solts): no es pot certificar «Continua amb Google»`);
+    return { linies, mal };
+  }
+  if (!entrada.googleWeb) falta('el paquet no porta VITE_NATIU_GOOGLE_WEB_CLIENT_ID: ni Android ni l\'iPhone oferiran «Continua amb Google», i qui va crear el compte amb Google al web no podrà entrar (RC-1, 261106); posa\'l a .env.natiu.local, npm run build:natiu i npx cap sync');
+  else be('el paquet porta el client web de Google (Android i iOS)');
+  if (plataformes.includes('ios')) {
+    if (!entrada.googleIos) {
+      falta('el paquet no porta VITE_NATIU_GOOGLE_IOS_CLIENT_ID: l\'iPhone no oferirà «Continua amb Google»; posa\'l a .env.natiu.local, npm run build:natiu i npx cap sync ios');
+    } else {
+      const esquema = esquemaInvertitDeGoogleIos(entrada.googleIos);
+      if (!esquema || !senseComentarisXml(infoPlist).includes(`<string>${esquema}</string>`)) {
+        falta('ios/App/App/Info.plist no registra l\'esquema invertit del client iOS del paquet (CFBundleURLTypes): GoogleSignIn faria petar l\'app en tocar «Continua amb Google»');
+      } else {
+        be('el paquet porta el client iOS de Google i Info.plist en registra l\'esquema invertit');
+      }
+    }
+    if (entrada.appleActiu === false) avis('el paquet porta Apple apagat (VITE_APPLE_OAUTH_ACTIU): a l\'iPhone no hi haurà cap botó social, ni Apple ni Google (App Store 4.8), només el correu; encendre\'l és del Mestre, amb compte-apple desplegada');
   }
   return { linies, mal };
 }
@@ -367,7 +505,7 @@ const CONSULTES = Object.freeze({ llegixAjuda, jdkPerAGradle });
  * @returns {{ codi:number, linies:string[], valors:Record<string,string>, fastlane:boolean, jdk:{home:string, major:number}|null,
  *   segell:{commit:string, arbreNet:boolean, data:string}|null, push:{anuncia:boolean, estat:object} }} `segell`, el de
  *   dist-natiu/ tal com es llig (val per al rebut només si `codi` és EIXIDA.BE); `push.anuncia`, si l'app anuncia avisos
- *   remots (connector o --push): puja-ios hi lliga l'aps-environment de l'IPA
+ *   remots (--push o VITE_SDP_PUSH_NATIU=1 a .env.natiu*, R24 D1): puja-ios hi lliga l'aps-environment de l'IPA
  */
 export function preflight({ arrel, plataformes, signa = false, env = process.env, consultes = {}, canal = CANALS.INTERN, push = false }) {
   const { llegixAjuda: ajuda, jdkPerAGradle: jdkDe } = { ...CONSULTES, ...consultes };
@@ -455,6 +593,13 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
   const delPush = liniesDelPush(estatPush, { push, plataformes });
   linies.push(...delPush.linies);
   if (delPush.mal.length) familia[EIXIDA.ARBRE] = true;
+  /* R24 botigues (A2) · Els clients de Google que porta el paquet: a producció, de l'arbre (7). */
+  if (plataformes.length) {
+    linies.push('Entrada social del paquet (dist-natiu)');
+    const social = liniesEntradaSocial(entradaSocialDelPaquet(arrel), { plataformes, produccio, infoPlist: lligDe(arrel, 'ios', 'App', 'App', 'Info.plist') });
+    linies.push(...social.linies);
+    if (social.mal.length) familia[EIXIDA.ARBRE] = true;
+  }
   if (produccio) {
     linies.push('Producció (només avisos; mínim API de Play contrastat en l’auditoria O4)');
     for (const text of avisosDeProduccio(arrel, plataformes)) avis(text);
@@ -462,7 +607,8 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
 
   const ordre = [EIXIDA.FITXER, EIXIDA.PROHIBIDA, EIXIDA.FALTA, EIXIDA.EINA, EIXIDA.ARBRE];
   const codi = ordre.find((c) => familia[c]) ?? EIXIDA.BE;
-  const anuncia = Boolean(estatPush.connector.paquet || estatPush.connector.ios || estatPush.connector.android || push);
+  /* R24 botigues (D1) · Abans, el connector a package.json ja «anunciava» el push. */
+  const anuncia = anunciaPushNatiu(estatPush, push);
   return { codi, linies, valors: entorn.codi === EIXIDA.BE ? entorn.valors : {}, fastlane, jdk, segell, push: { anuncia, estat: estatPush } };
 }
 
@@ -480,7 +626,7 @@ function main(argv) {
   if (opcions.ajuda) {
     process.stdout.write(`node scripts/botigues/preflight.mjs ${us.slice(4)}\n`
       + '  --canal intern (per defecte) o produccio: producció exigix SDP_BUILDS_DIR (registre de pujades) i afig avisos de botiga.\n'
-      + '  --push: l\'app anunciarà avisos remots; sense el connector @capacitor/push-notifications, falla.\n'
+      + '  --push: l\'app anunciarà avisos remots (també sense --push si .env.natiu o .env.natiu.local declaren VITE_SDP_PUSH_NATIU=1); sense el connector @capacitor/push-notifications, falla.\n'
       + '  --estat: només l\'estat honest de les botigues (scripts/botigues/estat.mjs), fora de línia, sense eines ni git; llig els .env de build només per saber si VITE_PUSH_VAPID_PUBLICA hi té valor; no en guarda ni n\'imprimix cap.\n');
     return EIXIDA.BE;
   }

@@ -71,6 +71,28 @@ export const opcionsDeLogin = (plataforma, proveidor, nonceXifrat) =>
 const CANCELACIO_TEXT = /AuthorizationError error 1001\b|\bcancell?ed by (?:the )?user\b/i;
 export const esCancelacio = (e) => String(e?.code ?? '') === 'USER_CANCELLED' || CANCELACIO_TEXT.test(String(e?.message ?? ''));
 
+/* R24 botigues (B1, RC-9 i RC-2) · Google no reconeix esta instal·lació: Credential Manager rebutja
+   amb «Google Sign-In failed: [28444] Developer console is not set up correctly.» (i l'API antiga, amb
+   l'estat 10, DEVELOPER_ERROR) quan el paquet i el SHA-1 del certificat que signa l'app no són en cap
+   client OAuth Android del projecte del serverClientId: el cas de Google Play, que torna a signar
+   l'AAB amb la seua clau. No és culpa de la persona ni de la xarxa. */
+const CONFIGURACIO_TEXT = /\b28444\b|\bDEVELOPER_ERROR\b|\bnot set up correctly\b|\[10\]/i;
+const CODIS_PROPIS = new Set(Object.values(CODI_ENTRADA_NATIVA));
+
+/** El codi de l'entrada nativa d'un error del connector: el seu si ja és nostre; si no, CANCELADA,
+    CONFIGURACIO o FALLIDA. Mira el codi i el missatge; no en guarda ni en retorna cap text. Pur. */
+export function classificaErrorNatiu(error) {
+  const codi = error?.code;
+  if (CODIS_PROPIS.has(codi)) return codi;
+  if (esCancelacio(error)) return CODI_ENTRADA_NATIVA.CANCELADA;
+  return CONFIGURACIO_TEXT.test(`${codi ?? ''} ${error?.message ?? ''}`) ? CODI_ENTRADA_NATIVA.CONFIGURACIO : CODI_ENTRADA_NATIVA.FALLIDA;
+}
+const MISSATGE_DEL_CODI = Object.freeze({
+  [CODI_ENTRADA_NATIVA.CANCELADA]: 'Entrada cancel·lada.',
+  [CODI_ENTRADA_NATIVA.CONFIGURACIO]: 'Google no reconeix esta instal·lació de l’app.',
+  [CODI_ENTRADA_NATIVA.FALLIDA]: 'El telèfon no ha pogut completar l’entrada.'
+});
+
 /**
  * La credencial per al port. El nom només d'Apple (no és dins del testimoni); l'accés només de Google (at_hash).
  * T1 (261024; P0-04, App Store 5.1.1(v)) · El codi d'autorització, només d'Apple: amb
@@ -142,10 +164,12 @@ export function creaEntradaSocial({ plataforma, clients = {}, appleActiu = false
         const resposta = await social.login({ provider: proveidor, options: opcionsDeLogin(plataforma, proveidor, nonceXifrat) });
         return credencialDe(proveidor, resposta?.result, nonce);
       } catch (error) {
-        if (error?.code === CODI_ENTRADA_NATIVA.FALLIDA || error?.code === CODI_ENTRADA_NATIVA.CANCELADA) throw error;
-        throw esCancelacio(error)
-          ? errorNatiu(CODI_ENTRADA_NATIVA.CANCELADA, 'Entrada cancel·lada.', error)
-          : errorNatiu(CODI_ENTRADA_NATIVA.FALLIDA, 'El telèfon no ha pogut completar l’entrada.', error);
+        const codi = classificaErrorNatiu(error);
+        /* R24 botigues (B1) · Un sol rastre per fallada (logcat i la consola de Safari): el proveïdor
+           i el codi, mai el missatge del connector, cap testimoni ni cap correu. Tancar el full, cap. */
+        if (codi !== CODI_ENTRADA_NATIVA.CANCELADA) console.warn('[natiu] Entrada', proveidor, codi);
+        if (error?.code === codi) throw error;
+        throw errorNatiu(codi, MISSATGE_DEL_CODI[codi] ?? MISSATGE_DEL_CODI[CODI_ENTRADA_NATIVA.FALLIDA], error);
       }
     },
     /* Sense res carregat, res a oblidar: eixir no carrega el connector. */

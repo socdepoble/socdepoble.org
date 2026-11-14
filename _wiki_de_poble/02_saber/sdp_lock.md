@@ -33,7 +33,7 @@ pertanyen a l'arquitectura offline retirada per [[ADR-2026-08-ONLINE-FIRST]].
 
 **No hi ha bypass d'emergència**. Cal **corregir la causa**, **repetir el diagnòstic** i,
 si l'estat ha canviat, obrir i segellar una **Petorreta nova**. En Autoneteja, una
-restauració usa el **manifest i els hashes exactes** del lot; en Git, el rebut es
+restauració utilitza el **manifest i els hashes exactes** del lot; en Git, el rebut es
 consumix només després de **validar arbre i pare del commit**.
 
 El límit honest continua sent el mateix: un procés amb el mateix usuari pot

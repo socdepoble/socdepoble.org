@@ -1582,20 +1582,132 @@ describe('files d’ajuda per defecte', () => {
     mock.session = { currentUser: { id: '5a5a5a5a-0000-4000-8000-0000000000aa', email: 'socdepoblecom@gmail.com' }, generacio: 1 };
     await muntat();
     expect(value.joEsJavi).toBe(false);
-    expect(value.filServeiTecnic.avisNomesLectura).toBe(AVIS_SENSE);
+    /* Onada R24.2 (R21.2-F01) · Sense correu confirmat és un veí més, i amb
+       l'UUID de Javi declarat al paquet un veí no té conversa de servei
+       tècnic («sense compte»): la fila de Javi obri el directe real. */
+    expect(value.filServeiTecnic).toBeNull();
   });
 
-  it('P1-70 · en remot, un veí amb sessió: la fila sintètica es queda; ?amb= de Javi porta al servei tècnic sense cap RPC', async () => {
+  /* Onada R24.2 (R21.2-F01, decisió del Mestre del 14-11-2026) · Amb l'UUID
+     de Javi declarat al paquet, un veí amb sessió en remot no té conversa de
+     servei tècnic: la fila sintètica es queda fixada fins que hi ha directe, i
+     un ?amb= de Javi (per àlies del padró o per l'UUID) obri el directe real
+     amb l'UUID declarat. El servidor no rep mai un àlies. */
+  it('P1-70 · R24.2 · en remot, un veí amb sessió: la fila sintètica es queda; ?amb= de Javi (àlies o UUID) obri el directe amb l’UUID declarat', async () => {
+    const UUID_JAVI_REAL = 'c7cc745b-2c54-4739-b9c1-add751aac3c4';
     mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
     await muntat();
     expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
-    expect(value.filServeiTecnic).toMatchObject({ id: 'fake-javi', avisNomesLectura: AVIS_SENSE, potEscriure: false });
-    for (const id of ['0001', 'javillinares']) {
+    expect(value.filServeiTecnic).toBeNull();
+    /* L'avís «sense compte» ja no ix enlloc: el compte de Javi està declarat. */
+    expect(JSON.stringify(value.chatThreads)).not.toContain(AVIS_SENSE);
+    for (const id of ['0001', 'javillinares', UUID_JAVI_REAL]) {
+      mock.creaFilDirecte.mockResolvedValueOnce(`directe-${id}`);
       let filId;
+      await act(async () => { filId = await value.creaFil(id); });
+      expect(filId).toBe(`directe-${id}`);
+    }
+    expect(mock.creaFilDirecte.mock.calls.map((c) => c.slice(0, 2))).toEqual([[UUID_JAVI_REAL, null], [UUID_JAVI_REAL, null], [UUID_JAVI_REAL, null]]);
+  });
+
+  /* Onada R24.2 (revisió adversarial) · L'UUID declarat no garantix que el
+     backend d'esta sessió obriga el directe amb Javi: un poble on el seu
+     compte no és membre (SDP-XAT-004) o un directe nou sense el seu
+     consentiment (SDP-XAT-016). Llavors torna la conversa de servei tècnic
+     «sense compte» d'abans, mai un error, i ja no es torna a preguntar. És de
+     la persona i del backend: una altra sessió torna a provar el directe. */
+  it.each(['SDP-XAT-004', 'SDP-XAT-016'])('P1-70 · R24.2 · en remot, el backend rebutja el directe amb l’UUID de Javi (%s): servei tècnic «sense compte», sense cap error ni segona petició', async (code) => {
+    const UUID_JAVI_REAL = 'c7cc745b-2c54-4739-b9c1-add751aac3c4';
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    mock.creaFilDirecte.mockRejectedValueOnce(Object.assign(new Error('Destinatari no disponible'), { code, retriable: false }));
+    const view = render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.filServeiTecnic).toBeNull();
+    let filId;
+    await act(async () => { filId = await value.creaFil('javillinares'); });
+    expect(filId).toBe('fake-javi');
+    expect(mock.creaFilDirecte.mock.calls.map((c) => c.slice(0, 2))).toEqual([[UUID_JAVI_REAL, null]]);
+    expect(mock.loadPerfilPublic).not.toHaveBeenCalled();
+    expect(value.filServeiTecnic).toMatchObject({ id: 'fake-javi', avisNomesLectura: AVIS_SENSE, potEscriure: false });
+    /* Ja no es torna a preguntar: per àlies o per l'UUID, la conversa de servei tècnic. */
+    for (const id of ['0001', UUID_JAVI_REAL]) {
       await act(async () => { filId = await value.creaFil(id); });
       expect(filId).toBe('fake-javi');
     }
-    expect(mock.creaFilDirecte).not.toHaveBeenCalled();
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+    /* Una altra persona (una altra clauPersona) torna a provar el directe. */
+    mock.session = { currentUser: { id: 'B' }, generacio: 2 }; mock.actorKey = 'persona::B';
+    view.rerender(tree(CONFIG));
+    await waitFor(() => expect(value.joId).toBe('B'));
+    expect(value.filServeiTecnic).toBeNull();
+    mock.creaFilDirecte.mockResolvedValueOnce('directe-b-javi');
+    await act(async () => { filId = await value.creaFil('0001'); });
+    expect(filId).toBe('directe-b-javi');
+    expect(mock.creaFilDirecte).toHaveBeenLastCalledWith(UUID_JAVI_REAL, null, expect.anything());
+  });
+
+  it('P1-70 · R24.2 · en remot, una altra fallada del directe amb Javi (la xarxa, o SDP-XAT-003 de qui escriu) es propaga i no amaga el compte declarat', async () => {
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    await muntat();
+    const errors = [
+      Object.assign(new Error('Sense connexió'), { code: 'XARXA', retriable: true }),
+      Object.assign(new Error('Estàs en Mode Foraster: el xat és per a la gent d’este poble. Prova d’eixir i tornar a entrar.'), { code: 'SDP-XAT-003', retriable: false })
+    ];
+    for (const error of errors) {
+      mock.creaFilDirecte.mockRejectedValueOnce(error);
+      let rebut = null;
+      await act(async () => { rebut = await value.creaFil('0001').catch((e) => e); });
+      expect(rebut).toBe(error);
+    }
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(2);
+    expect(value.filServeiTecnic).toBeNull();
+  });
+
+  /* Revisió adversarial (Onada R24.2) · El contracte d'abans de declarar
+     l'UUID, que continua valent per a un paquet sense cap UUID de Javi a
+     IDS_REMOTS_FUNDACIONALS: en remot, un veí amb sessió té la conversa de
+     servei tècnic «sense compte» i un ?amb= de Javi (àlies del padró) hi va
+     sense arribar al port. Mòduls nous (resetModules) amb el padró sense
+     l'UUID (doMock): XatContext, useObriXatPerDefecte i xatsPerDefecte el
+     lligen en avaluar-se. Els tres ajudants exportats que prenen
+     IDS_REMOTS_FUNDACIONALS per defecte el lligen dins del seu mòdul (el
+     doMock no hi arriba): el doble els passa la llista buida. */
+  it('P1-70 · sense UUID de Javi declarat, en remot un veí amb sessió té el servei tècnic «sense compte» i creaFil de Javi no arriba al port', async () => {
+    vi.resetModules();
+    vi.doMock('../../data/identitatsSeed.js', async (importOriginal) => {
+      const original = await importOriginal();
+      const idsRemots = Object.freeze({ ...original.IDS_REMOTS_FUNDACIONALS, [original.PERSONA_PILOT.slug]: Object.freeze([]) });
+      return {
+        ...original,
+        IDS_REMOTS_FUNDACIONALS: idsRemots,
+        esComptePersonaPilot: (objecte, opcions = {}) => original.esComptePersonaPilot(objecte, { idsRemots, ...opcions }),
+        clauFundacional: (perfil, opcions = {}) => original.clauFundacional(perfil, { idsRemots, ...opcions }),
+        fundacionalDeLaClau: (clau, opcions = {}) => original.fundacionalDeLaClau(clau, { idsRemots, ...opcions })
+      };
+    });
+    try {
+      const { XatProvider: ProveidorSenseUuid, useXat: useXatSenseUuid } = await import('./XatContext.jsx');
+      const { ambXatsPerDefecte: ambSenseUuid } = await import('../../data/xatsPerDefecte.js');
+      const { idRemotDeJavi } = await import('./useObriXatPerDefecte.js');
+      const { esComptePersonaPilot } = await import('../../data/identitatsSeed.js');
+      expect(idRemotDeJavi('remote')).toBeNull();
+      expect(esComptePersonaPilot({ id: 'c7cc745b-2c54-4739-b9c1-add751aac3c4' })).toBe(false);
+      let xat;
+      function SondaSenseUuid() { xat = useXatSenseUuid(); return null; }
+      mock.loadFils.mockResolvedValue(ambSenseUuid([fil()]));
+      render(<StrictMode><ProveidorSenseUuid config={CONFIG}><SondaSenseUuid /></ProveidorSenseUuid></StrictMode>);
+      await waitFor(() => expect(xat.status).toBe('ready'));
+      expect(xat.filServeiTecnic).toMatchObject({ id: 'fake-javi', avisNomesLectura: AVIS_SENSE, potEscriure: false });
+      for (const id of ['0001', 'javillinares']) {
+        let filId;
+        await act(async () => { filId = await xat.creaFil(id); });
+        expect(filId).toBe('fake-javi');
+      }
+      expect(mock.creaFilDirecte).not.toHaveBeenCalled();
+    } finally {
+      vi.doUnmock('../../data/identitatsSeed.js');
+      vi.resetModules();
+    }
   });
 
   it('P1-70 · en llavor, un veí amb sessió: cap servei tècnic, creaFil de Javi va al port (el directe de veres)', async () => {

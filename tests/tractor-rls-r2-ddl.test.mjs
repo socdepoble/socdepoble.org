@@ -262,3 +262,15 @@ test('R8 continua en roig sense revocació, o si la revocació no inclou PUBLIC 
     assert.match(result.stdout+result.stderr,/R8/);
   }
 });
+
+/* Onada R24.2 · R1 reconeix les taules temporals de sessió creades al catàleg (20261114060000),
+   i continua rebutjant un insert en una taula que ningú no crea. */
+test('R1 · insert into pg_temp.x d’una taula temporal creada no és cap taula inexistent; una que no es crea, sí',()=>{
+  const temporal=audit('create temporary table if not exists xat_tmp_r242 (id int);\ninsert into pg_temp.xat_tmp_r242 (id) values (1);\n');
+  assert.equal(temporal.status,0,temporal.stdout);
+  const temp=audit('create temp table xat_tmp_r242b (id int);\ninsert into pg_temp.xat_tmp_r242b (id) values (1);\n');
+  assert.equal(temp.status,0,temp.stdout);
+  const fantasma=audit('insert into pg_temp.xat_tmp_ningu (id) values (1);\n');
+  assert.equal(fantasma.status,1,fantasma.stdout);
+  assert.match(fantasma.stdout,/R1.*xat_tmp_ningu/);
+});

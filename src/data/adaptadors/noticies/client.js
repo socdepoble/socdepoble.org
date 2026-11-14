@@ -38,7 +38,10 @@
  * guarda per a tota la sessió de la pàgina una resposta DEFINITIVA:
  *   · 200 del contracte → disponible, i `personals` el que diga el servei;
  *   · 404 que NO és un error del servei (la forma sdp_noticies_*): la funció no
- *     està desplegada → NO disponible.
+ *     està desplegada → NO disponible, amb el motiu 'sense-servei' (R22,
+ *     A-frontissa-federacio-r1-1: no és «cosa d'un moment»). Esta val
+ *     ESPERA_SENSE_SERVEI_MS (10 min), no tota la sessió: el dia que es
+ *     desplegue, una app que no es tanca mai la troba sense recarregar.
  * Qualsevol altra cosa és DE PASSADA (una connexió que cau, la xarxa que no
  * arriba amb el dispositiu en línia, 5 s sense resposta, 5xx, 429, un 404 del
  * servei, un sobre que no casa): val ESPERA_ESTAT_MS (30 s) i, si torna a
@@ -103,6 +106,8 @@ export const TEMPS_ESTAT_MS = 5000;
 export const ESPERA_ESTAT_MS = 30 * 1000;
 /** Quant val una resposta de passada quan la pregunta anterior també havia fallat. */
 export const ESPERA_ESTAT_MAXIMA_MS = 60 * 1000;
+/** R22 (A-frontissa-federacio-r1-1) · Quant val «la funció no està desplegada» (un 404 que no és del servei). */
+export const ESPERA_SENSE_SERVEI_MS = 10 * 60 * 1000;
 /** El text XML més llarg que s'accepta (en caràcters): el servei talla l'origen a 2 MiB. */
 export const MAXIM_XML = 2 * 1024 * 1024;
 /** La resposta JSON més llarga (en bytes): l'XML escapat i els camps del sobre. */
@@ -121,9 +126,10 @@ export const INCRUSTACIO_YOUTUBE = 'https://www.youtube-nocookie.com/embed/';
 /**
  * Els motius que entén el Lector (src/apps/lector/fontNoticies.js · MOTIUS_NOTICIES diu el mateix):
  * 'adreca', una adreça personal que no es llig (cap font contactada); 'personals-off', el servei
- * no llig fonts personals (cap petició).
+ * no llig fonts personals (cap petició). R22 (A-frontissa-federacio-r1-1) · 'sense-servei', la
+ * funció del backend no està desplegada (un 404 que no és del servei): no és cosa d'un moment.
  */
-export const MOTIUS_NOTICIES = Object.freeze(['sense-connexio', 'temps', 'servidor', 'font', 'limit', 'adreca', 'personals-off']);
+export const MOTIUS_NOTICIES = Object.freeze(['sense-connexio', 'temps', 'servidor', 'font', 'limit', 'adreca', 'personals-off', 'sense-servei']);
 
 const PATRO_CAMI = /^\/[a-z0-9_-]+(?:\/[a-z0-9_-]+)*$/;
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
@@ -367,14 +373,17 @@ export function creaServeiNoticies({
           }
           return { estat: SENSE_SERVEI, motiu: fora ? 'sense-connexio' : 'servidor', definitiva: false, fora };
         }
-        if (error.status === 404 && !darrer404DelServei) return { estat: SENSE_SERVEI, motiu: 'servidor', definitiva: true, fora: false };
+        if (error.status === 404 && !darrer404DelServei) {
+          return { estat: SENSE_SERVEI, motiu: 'sense-servei', definitiva: true, caduca: ESPERA_SENSE_SERVEI_MS, fora: false };
+        }
       }
       return { estat: SENSE_PERSONALS, motiu: null, definitiva: false, fora: false };
     }
   }
 
   /* La memòria de l'estat: { promesa, fins } (fins: null mentre la pregunta va de camí, Infinity per
-     a una resposta definitiva, l'instant en què caduca per a una de passada). `estatConegut`: el de
+     a una resposta definitiva, l'instant en què caduca per a una de passada o per a la definitiva
+     que porta `caduca`, la funció sense desplegar). `estatConegut`: el de
      l'última resposta, o null si encara no n'hi ha cap (el llig imatge(), que no fa xarxa). */
   let sondeig = null;
   let fallades = 0;
@@ -388,7 +397,7 @@ export function creaServeiNoticies({
       estatConegut = resultat.estat;
       if (resultat.definitiva) {
         fallades = 0;
-        entrada.fins = Infinity;
+        entrada.fins = resultat.caduca ? ara() + resultat.caduca : Infinity;
       } else if (resultat.fora) {
         /* Fora de línia: no es guarda gens; quan torne la xarxa, es torna a preguntar. */
         sondeig = null;

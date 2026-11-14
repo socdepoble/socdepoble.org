@@ -31,7 +31,7 @@ El relat del protocol, pensat per a reconstruir-ho tot des del paper, és el Vol
 
 ## Mapa vigent
 
-La reconstrucció usa les huit dimensions de `.agents/cervell.json` sobre sis carpetes:
+La reconstrucció utilitza les huit dimensions de `.agents/cervell.json` sobre sis carpetes:
 
 - `01_ser`: identitat i propòsit;
 - `02_saber`: coneixement compartit;
@@ -62,7 +62,7 @@ Una absència prolongada, pèrdua de repositori, ruptura de context o auditoria 
 4. Inventaria evidències amb ruta, hash, rol i motiu; separa fets, inferències i decisions pendents.
 5. Executa auditories en mode lectura i presenta el delta esperat, riscos, proves i reversió.
 6. Si cal escriure, executa el Reflex: `open` amb scopes i operacions mínimes; Petorreta i manifest selectiu al bootstrap reservat; `seal`; verificació del rebut; mutació reversible; comprovació; i consum del rebut.
-7. Per a reconstrucció, purga, restauració o canvis de governança, usa risc alt i obtín una decisió humana explícita.
+7. Per a reconstrucció, purga, restauració o canvis de governança, utilitza risc alt i obtín una decisió humana explícita.
 
 ## Garanties i prohibicions
 

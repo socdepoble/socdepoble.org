@@ -5,6 +5,7 @@ import { gestionaTeclaGraella } from '../../components/universal/workspace/naveg
 import { dataDElement, encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
+import { useSEO } from '../../hooks/useSEO';
 import { objecteDePerfil, rutaConnectarPerfil, rutaDePerfil, rutaXatDePagina } from '../../config/navigation.js';
 import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
 import { ETIQUETA_IA, TEXTOS_FITXA_PERFIL } from './fitxaDePerfil.js';
@@ -83,6 +84,11 @@ export default function ProfileSection({ agents = [] }) {
     t('section.profile.title', reservesCap.titol),
     t('section.profile.subtitle', reservesCap.subtitol)
   );
+  /* P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) · El head del directori diu el que la pàgina
+     ja pinta (el títol i el subtítol de dalt): abans només hi havia la reserva «Perfil». La ruta
+     continua sense indexar (useSEO.js · PRIVATE): el build en prerenderitza l'OpenGraph amb les
+     mateixes claus (tooling/seo/build-social-manifest.mjs · LLISTA_DEL_DIRECTORI). */
+  useSEO({ title: titol, description: subtitol });
 
   return (
     <UniversalPage

@@ -61,10 +61,15 @@ describe('R21 C5 · /versions diu el que fan content.js i storage.js, en les cin
   const METADADES_SEMPRE_NETES = /netes de metadades de càmera|limpias de metadatos de cámara|clean of camera and location|kamera eta kokapen metadaturik|limpas de metadatos de cámara/i;
   /* La promesa de la segona ronda, en cada llengua: no pot tornar mentre la còpia porte res més que el triat. */
   const NETES_DE_TOT_LLEVAT = /netes de tota metadada, llevat|limpias de todo metadato, salvo|clean of all metadata, except|metadatu guztiak kenduta|limpas de todo metadato, agás/i;
+  /* Expectativa actualitzada a propòsit: Onada R23 · la crònica de l'Onada R23 obri /versions, davant de la fita
+     R21 C5 (pageContent.versions.test.js). El bloc C5 ja no és el primer: es busca pel seu títol, que hi ha de ser
+     una sola volta i darrere de la crònica R23. */
   const blocEn = (llengua) => {
     const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
-    expect([llengua, cos.startsWith(`<h3>${INICIS_R21_C5[llengua]}`)]).toEqual([llengua, true]);
-    return cos.slice(0, cos.indexOf('<h3>', 1));
+    const inici = cos.indexOf(`<h3>${INICIS_R21_C5[llengua]}`);
+    expect([llengua, inici > 0, cos.indexOf(`<h3>${INICIS_R21_C5[llengua]}`, inici + 1)]).toEqual([llengua, true, -1]);
+    const fi = cos.indexOf('<h3>', inici + 1);
+    return cos.slice(inici, fi < 0 ? undefined : fi);
   };
 
   /* Onada R22 (honestedat-03), reescrita a la segona ronda (dades-01) · Provat pel comportament, amb el content.js

@@ -119,6 +119,8 @@ Dins del **Mac mini M4** (24 GiB de memòria unificada), el **motor local de pes
 - **`qwen2.5-coder:14b` i `qwen3:8b`**: els motors de **Qwen** per a assistència de codi i autocompletat ràpid (el rol de trinxera de **Copilot**).
 - **`gemma3:12b`, `phi4:14b` i `hermes3:8b`**: la **Quadrilla local** per a síntesi pedagògica, lògica compacta i pluja d'idees sense filtres corporatius.
 
+Quan s'escriu codi, textos públics o articles culturals nous, estes **8 escoles locals** formen un **segon parell d'ulls obligatori** que completa **nou mirades** juntament amb l'agent autor de l'Anell 1 (Gauntlet local), revisant la fidelitat geogràfica i comarcal (**La Torre de les Maçanes = L'Alacantí**), la precisió acústica de les veus, l'honestedat documental i el respecte a la dignitat humana. En el mateix Mac mini M4 treballen també el servei obert de síntesi de veu **Matxa-TTS v2 Multiaccent** (260 MB ONNX, Projecte AINA, connectat en viu a `https://socdepoble.cat/api/v1/node0/veu` amb set veus obertes verificades pel seu to fonamental i marc filològic **NEL-VIVES** de la Universitat d'Alacant, mentre **F5-TTS-MLX** s'estudia al taller per a futures gravacions comunitàries CC BY-SA 4.0) i el vigilant matinal de frescor editorial (`org.socdepoble.node0.frescor-editorial`), que comprova cada dia en **només lectura** que les pàgines públiques i la Wiki estiguen al dia de les últimes entregues.
+
 ### Anell 3 · Cerca Verificada i Documents Llargs
 
 Quan una tasca demana **fonts externes o ingesta documental massiva**, l'equip combina les eines del Mas amb les membres especialistes:

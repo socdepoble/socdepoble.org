@@ -36,6 +36,8 @@ export const TEXT_MOTIU = Object.freeze({
   'sense-connexio': 'Sembla que este dispositiu no té connexió. Quan torne, les notícies arribaran soles.',
   temps: 'Les fonts han tardat massa a contestar. Pot ser la cobertura o que la seua web va carregada.',
   servidor: 'El servei de notícies no respon. Pot ser cosa d’un moment.',
+  /* R22 (A-frontissa-federacio-r1-1) · La funció del backend no està desplegada: no és cosa d'un moment. */
+  'sense-servei': 'El servei de notícies encara no està en marxa. Quan s’active, les notícies arribaran ací.',
   font: 'Les fonts han enviat una cosa que no sabem llegir com a notícies.',
   limit: 'Hem demanat les notícies massa vegades seguides. Espera un moment i torna-ho a provar.',
   adreca: 'El servei de notícies no llig estes adreces (no són públiques o no són segures), i no ha demanat res a cap web.',

@@ -161,6 +161,8 @@ test('SEG-R15b-02 · P7: cap text de la secció ni de PAGE_COPY nomena una perso
   for (const copia of [pagina, ...Object.values(pagina.translations)]) {
     expect(copia.imageAlt?.length).toBeGreaterThan(20);
     expect(JSON.stringify(copia)).not.toMatch(PROHIBIT);
-    expect(copia.html).toMatch(/<h3>[^<]+<\/h3><p>[^<]+<\/p>/);
+    /* Onada R24.2 · Manual Editorial ×5 (Gemini R24, aprovat per la decisió D6 del Mestre): el
+       paràgraf porta negretes d'escaneig; l'estructura h3 + p es manté i no hi entra cap altra etiqueta. */
+    expect(copia.html).toMatch(/<h3>[^<]+<\/h3><p>(?:[^<]|<strong>[^<]+<\/strong>)+<\/p>/);
   }
 });

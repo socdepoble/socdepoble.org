@@ -448,3 +448,10 @@ export const revisaAportacioCultural = asseguraMetode('revisaAportacioCultural')
 /* P0-111 (Onada R18) · Revisions editorials WordPress sincronitzades darrere del port neutral. */
 export const llistaRevisionsEditorialsWp = asseguraMetode('llistaRevisionsEditorialsWp');
 export const desaRevisioEditorialWp = asseguraMetode('desaRevisioEditorialWp');
+
+/* R24 · CODEX-R24-03 · El consens del joc «D'on parles?» (capacitat 'consensIsoglosses'). No és
+   nucli: la targeta pregunta abans si el backend segellat té el mètode i, sense ell, es queda
+   amb la llavor i el dispositiu. */
+export const lligConsensIsoglossesPoble = asseguraMetode('lligConsensIsoglossesPoble');
+export const votaVariantIsoglossaPoble = asseguraMetode('votaVariantIsoglossaPoble');
+export const desaAportacioVeuPoble = asseguraMetode('desaAportacioVeuPoble');

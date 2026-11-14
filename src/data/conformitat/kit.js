@@ -52,6 +52,11 @@ function fallesDeConversa(fil) {
   for (const clau of ['ultimSeq', 'llegitFinsSeq', 'rebutFinsSeq', 'noLlegits']) {
     if (!esEnter(fil[clau])) falles.push(`la conversa ${fil.id} té ${clau} = ${JSON.stringify(fil[clau])}`);
   }
+  /* R24 · xat_entrega (P0-1) · Opcional (un servidor anterior a 20261114061000
+     no el porta), però si hi és, és un cursor enter. */
+  if (fil.rebutPelsAltresFinsSeq !== undefined && !esEnter(fil.rebutPelsAltresFinsSeq)) {
+    falles.push(`la conversa ${fil.id} té rebutPelsAltresFinsSeq = ${JSON.stringify(fil.rebutPelsAltresFinsSeq)}`);
+  }
   if (!Array.isArray(fil.altres)) falles.push(`la conversa ${fil.id} no porta la llista altres`);
   return falles;
 }
@@ -1339,7 +1344,11 @@ export const CASOS = Object.freeze([
   cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', requerix: ['projeccionsOperatives'], titol: 'P0-59: pàgina de referències públiques té cursor explícit', arguments: ctx => [{ audiencia: 'publica', cursor: null, limit: 100 },ctx.config], comprova: v => esObjecte(v) && Array.isArray(v.items) && v.items.every(teId) && (v.cursor === null || esTextNoBuit(v.cursor)) ? [] : ['pàgina de projeccions invàlida'] }),
   cas({ metode: 'loadProjeccionsCataleg', capacitat: 'projeccionsCataleg', requerix: ['projeccionsSenseSessio'], espera: 'rebutja', titol: 'P0-59: cap lectura privada sense sessió', arguments: ctx => [{ audiencia: 'privada' },ctx.config], comprova: rebuigAmbCodi('sense-sessio') }),
   cas({ metode: 'llistaRevisionsEditorialsWp', capacitat: 'revisionsEditorialsWp', requerix: ['compteSenseSessio'], espera: 'rebutja', titol: 'P0-111: llistaRevisionsEditorialsWp sense sessió rebutja abans de mostrar revisions', arguments: ctx => [ctx.config], comprova: rebuigPermisR15 }),
-  cas({ metode: 'desaRevisioEditorialWp', capacitat: 'revisionsEditorialsWp', espera: 'rebutja', titol: 'P0-111: desaRevisioEditorialWp amb entrada malformada rebutja abans de persistir', arguments: ctx => [{ wpId: 0, estat: 'inventat' },ctx.config], comprova: rebuigTipusR15 })
+  cas({ metode: 'desaRevisioEditorialWp', capacitat: 'revisionsEditorialsWp', espera: 'rebutja', titol: 'P0-111: desaRevisioEditorialWp amb entrada malformada rebutja abans de persistir', arguments: ctx => [{ wpId: 0, estat: 'inventat' },ctx.config], comprova: rebuigTipusR15 }),
+  /* R24 · CODEX-R24-03 · Consens del joc «D'on parles?»: rebuig previ, sense cap efecte ni sessió. */
+  cas({ metode: 'lligConsensIsoglossesPoble', capacitat: 'consensIsoglosses', espera: 'rebutja', titol: 'R24: lligConsensIsoglossesPoble amb una pregunta malformada rebutja abans de llegir', arguments: ctx => [{ preguntaId: 'Q01 creïlla!' }, ctx.config], comprova: rebuigTipusR15 }),
+  cas({ metode: 'votaVariantIsoglossaPoble', capacitat: 'consensIsoglosses', espera: 'rebutja', titol: 'R24: votaVariantIsoglossaPoble no accepta una autoria del client', arguments: ctx => [{ preguntaId: 'q01_creilla', variantClau: 'querilla', paraulaEtiqueta: 'Querilla', userId: '00000000-0000-4000-8000-000000000024' }, ctx.config], comprova: rebuigTipusR15 }),
+  cas({ metode: 'desaAportacioVeuPoble', capacitat: 'consensIsoglosses', espera: 'rebutja', titol: 'R24: desaAportacioVeuPoble sense consentiment explícit rebutja abans de persistir', arguments: ctx => [{ tipus: 'variant_isoglossa', paraula: 'Creïlla', pobleComarca: 'Poble de conformitat', consentimentArxiuObert: false, consentimentVersio: 'cc-by-sa-4.0-v1', consentimentAcceptatAt: '2026-11-14T06:00:00Z' }, ctx.config], comprova: rebuigTipusR15 })
 ]);
 
 /**

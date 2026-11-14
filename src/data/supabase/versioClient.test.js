@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    enter ≥ 1 i un enllaç https), null sense la migració, el topall de 5 s i la resta
    d'errors tal qual, perquè qui pregunta decidisca (fail-open). El servidor és un fetch de
    mentida: la clau i l'origen són sintètics. */
-import { versioMinimaClient } from './versioClient.js';
+import { coaccionaVersioViva, versioMinimaClient } from './versioClient.js';
 import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
 
 const ORIGEN = 'https://paquet.supabase.test';
@@ -66,6 +66,16 @@ test('coacció del cos: un mínim que no és enter ≥ 1 no és cap mínim, i un
   /* Els espais dels extrems es lleven, i cap camp de més no passa. */
   servidor.mockResolvedValueOnce(resposta({ versio_minima: 4, enllac: ` ${PLAY} `, plataforma: 'android', missatge: 'hola' }));
   expect(await versioMinimaClient('android', REMOT)).toEqual({ versioMinima: 4, enllac: PLAY });
+  /* R22 · T2 · versio_recomanada viatja només si és enter segur ≥ 1. */
+  expect(coaccionaVersioViva({ versio_minima: 2, versio_recomanada: 6, enllac: PLAY, extra: 1 })).toEqual({
+    versioMinima: 2,
+    versioRecomanada: 6,
+    enllac: PLAY
+  });
+  expect(coaccionaVersioViva({ versio_minima: 2, versio_recomanada: '6', enllac: PLAY })).toEqual({
+    versioMinima: 2,
+    enllac: PLAY
+  });
 });
 
 test('sense la migració (404 o PGRST202): null; un 5xx o la xarxa caiguda: es rebutja tal qual', async () => {

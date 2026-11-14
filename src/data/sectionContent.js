@@ -10,6 +10,7 @@ import { MARKET_ITEMS } from '../sections/mercat/marketContent.js';
 import { MEDIA_ITEMS } from '../sections/multimedia/mediaContent.js';
 import { FEED_POSTS as PUBLICACIONS_DE_MOCK_FEED, elementDelMurDeLaLlavor } from '../sections/mur/feedContent.js';
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_POST } from '../sections/mur/articles/novesTecnologiesCulturaRuralContent.js';
+import { LA_VEU_DE_SOC_DE_POBLE_POST } from '../sections/mur/articles/laVeuDeSocDePobleContent.js';
 import { TOWNS } from '../sections/pobles/townsContent.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 
@@ -19,8 +20,13 @@ import { PAGE_COPY } from '../sections/text/pageContent.js';
    no pesa ni a l'entrada ni a l'arrencada estàtica (build: tros pageContent). Els dos
    adaptadors en mode seed (runtime.js · buildSeedAppData i
    adaptadorLocal.js) llegixen APP_SEED.feedPosts: la tenen tots dos, la
-   primera. */
-const FEED_POSTS = [elementDelMurDeLaLlavor(NOVES_TECNOLOGIES_CULTURA_RURAL_POST), ...PUBLICACIONS_DE_MOCK_FEED];
+   primera.
+   Onada R23 · «La Veu de Sóc de Poble» s'hi incorpora amb el mateix contracte. */
+const FEED_POSTS = [
+  elementDelMurDeLaLlavor(LA_VEU_DE_SOC_DE_POBLE_POST),
+  elementDelMurDeLaLlavor(NOVES_TECNOLOGIES_CULTURA_RURAL_POST),
+  ...PUBLICACIONS_DE_MOCK_FEED
+];
 
 export {
   AGENT_LIST,

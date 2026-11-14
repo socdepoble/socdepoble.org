@@ -22,3 +22,7 @@ export {
   PREFIX_FRAGMENT_COMPARTIDA, enllacLlistaCompartida, exportaLlistaCompra, fusionaLlistaCompartida, importaLlistaCompra,
   serialitzaLlistaCompartida
 } from './comparticio.js';
+/* IDEA-258b (Onada R24) · Precomanda per a la botiga local / de poble, ordenada per seccions i sense marques de gran superfície. */
+export {
+  creaEncarrecBotigaPoble, netejaNomArticleEncarrec, netejaNomLlistaEncarrec
+} from './encarrec.js';

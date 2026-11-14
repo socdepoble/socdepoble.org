@@ -5,7 +5,7 @@
 import { webcrypto } from 'node:crypto';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  creaEntradaSocial, credencialDe, entradaSenseProveidors, esCancelacio, opcionsDInici, opcionsDeLogin, plataformaDelDispositiu,
+  classificaErrorNatiu, creaEntradaSocial, credencialDe, entradaSenseProveidors, esCancelacio, opcionsDInici, opcionsDeLogin, plataformaDelDispositiu,
   proveidorsDe
 } from './entradaSocial.js';
 import { CODI_ENTRADA_NATIVA } from '../config/entradaNativa.js';
@@ -323,5 +323,65 @@ describe('oblida', () => {
     expect(social.logout).toHaveBeenCalledWith({ provider: 'google' });
     social.logout.mockRejectedValueOnce(new Error('clearCredentialState'));
     await expect(adaptador.oblida('google')).resolves.toBeUndefined();
+  });
+});
+
+/* R24 botigues · B1 (RC-9, RC-2) · Credential Manager rebutja amb «Google Sign-In failed: [28444]
+   Developer console is not set up correctly.» quan el SHA-1 de la clau que signa l'app (la de Play
+   App Signing) no és en cap client OAuth Android del projecte. Abans era una FALLIDA més, sense cap
+   rastre: ara té codi propi (CONFIGURACIO) i un sol console.warn de diagnòstic, sense testimonis. */
+describe('B1 · els errors de configuració de Google', () => {
+  const LITERAL_28444 = 'Google Sign-In failed: [28444] Developer console is not set up correctly.';
+
+  test('classificaErrorNatiu: 28444, DEVELOPER_ERROR, «not set up correctly» i [10] són CONFIGURACIO; la resta, FALLIDA; la cancel·lació, CANCELADA', () => {
+    for (const error of [
+      new Error(LITERAL_28444),
+      new Error('com.google.android.gms.common.api.ApiException: 10: DEVELOPER_ERROR'),
+      Object.assign(new Error('Sign in failed'), { code: 'DEVELOPER_ERROR' }),
+      new Error('Google Sign-In failed: [10] '),
+      new Error('The app is not set up correctly for Google Sign-In')
+    ]) expect(classificaErrorNatiu(error), error.message).toBe(CODI_ENTRADA_NATIVA.CONFIGURACIO);
+    for (const error of [
+      new Error('Google Sign-In failed: [16] Account reauth failed.'),
+      new Error('Google Sign-In failed: [100] error'),
+      new Error('284440 bytes'),
+      new Error('The request was cancelled because of a timeout'),
+      null,
+      undefined
+    ]) expect(classificaErrorNatiu(error), String(error?.message)).toBe(CODI_ENTRADA_NATIVA.FALLIDA);
+    expect(classificaErrorNatiu(Object.assign(new Error('x'), { code: 'USER_CANCELLED' }))).toBe(CODI_ENTRADA_NATIVA.CANCELADA);
+    /* Els errors que ja són de l'adaptador conserven el seu codi. */
+    for (const code of Object.values(CODI_ENTRADA_NATIVA)) {
+      expect(classificaErrorNatiu(Object.assign(new Error(LITERAL_28444), { code }))).toBe(code);
+    }
+  });
+
+  test('el literal de Credential Manager: CONFIGURACIO amb la causa, i un sol console.warn amb el proveïdor i el codi, sense cap testimoni', async () => {
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const { social, carregaConnector } = connectorFals();
+      const crua = new Error(LITERAL_28444);
+      social.login.mockRejectedValueOnce(crua);
+      const adaptador = creaEntradaSocial({ plataforma: 'android', clients: CLIENTS, carregaConnector });
+      await expect(adaptador.demana('google')).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.CONFIGURACIO, cause: crua });
+      expect(avis).toHaveBeenCalledTimes(1);
+      expect(avis).toHaveBeenCalledWith('[natiu] Entrada', 'google', CODI_ENTRADA_NATIVA.CONFIGURACIO);
+      const escrit = JSON.stringify(avis.mock.calls);
+      for (const prohibit of [JWT, 'eyJ', '@', WEB, LITERAL_28444, 'acces-google']) expect(escrit).not.toContain(prohibit);
+      /* Una fallada qualsevol també deixa el seu rastre (FALLIDA); tancar el full, cap. */
+      avis.mockClear();
+      social.login.mockRejectedValueOnce(new Error('Network error'));
+      await expect(adaptador.demana('google')).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.FALLIDA });
+      expect(avis.mock.calls).toEqual([['[natiu] Entrada', 'google', CODI_ENTRADA_NATIVA.FALLIDA]]);
+      avis.mockClear();
+      social.login.mockRejectedValueOnce(Object.assign(new Error('The user canceled the sign-in flow.'), { code: 'USER_CANCELLED' }));
+      await expect(adaptador.demana('google')).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.CANCELADA });
+      expect(avis).not.toHaveBeenCalled();
+      /* La credencial bona no escriu res. */
+      await expect(adaptador.demana('google')).resolves.toMatchObject({ testimoni: JWT });
+      expect(avis).not.toHaveBeenCalled();
+    } finally {
+      avis.mockRestore();
+    }
   });
 });

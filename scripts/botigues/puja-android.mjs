@@ -30,6 +30,7 @@
  *
  * [NO VERIFICAT] les opcions de fastlane supply: el 261019 fastlane no és instal·lat en este Mac. El
  * script les busca a l'ajuda abans de pujar i, si en falta alguna, para (eixida 6).
+ * R24 botigues (D2) · Abans de keytool, l'AAB es mira per dins: cap classe de com.facebook (dexDeLAab).
  * Gradle compila amb el JDK que tria el preflight (del JDK_MINIM al JDK_MAXIM, 21-24, a entorn.mjs), passat per JAVA_HOME
  * només al procés de Gradle: el java del PATH d'este Mac és un 17 i Capacitor 8 compila amb Java 21
  * [VERIFICAT 261019].
@@ -119,6 +120,29 @@ export const SEGELL_DE_L_AAB = 'base/assets/public/segell.json';
 export function problemaDeLAab(arrel, aab) {
   return problemaDelPaquet(arrel, llegixDelZip(aab, SEGELL_DE_L_AAB), 'app-release.aab');
 }
+
+/* R24 botigues (D2, RC-7) · Cap classe de com.facebook (el SDK de Meta) als dex del mòdul base de
+   l'AAB: el connector social l'enllaça si socialLogin.facebook.include no és false, i la política diu
+   «No hi ha Píxel de Meta». Un AAB porta els dex a base/dex/classes.dex, classes2.dex… (multidex,
+   seguits); el nom del tipus, «Lcom/facebook/…», és a la taula de cadenes del dex. Es mira abans de
+   keytool i de cap pujada; només llig. Sostre de dex per si un lector no torna mai null. */
+export const SDK_FACEBOOK_DEX = 'Lcom/facebook/';
+const MAX_DEX = 100;
+
+/** Els dex del mòdul base d'un AAB, en ordre, fins al primer que falta: [{ nom, octets }]; [] si no n'hi ha. */
+export function dexDeLAab(aab, { llig = llegixDelZip } = {}) {
+  const dexs = [];
+  for (let n = 1; n <= MAX_DEX; n += 1) {
+    const nom = `base/dex/classes${n === 1 ? '' : n}.dex`;
+    const octets = llig(aab, nom);
+    if (!octets) break;
+    dexs.push({ nom, octets });
+  }
+  return dexs;
+}
+
+/** Els noms dels dex que porten classes de com.facebook. Pura. */
+export const dexAmbFacebook = (dexs = []) => dexs.filter(({ octets }) => Buffer.from(octets).includes(SDK_FACEBOOK_DEX)).map(({ nom }) => nom);
 
 /* BOT-A4 (261025) · El commit és el del segell de dist-natiu/ (el que el preflight ha contrastat
    amb HEAD), no el HEAD d'ara; main només imprimix el rebut quan l'AAB porta eixe segell. */
@@ -216,6 +240,14 @@ export async function main(argv) {
   const deLAab = problemaDeLAab(arrel, pla.aab);
   if (deLAab) return plega(EIXIDA.ARBRE, `${deLAab}: torna a signar-lo després de l'últim cap sync (Android Studio) o fes --compila`);
   process.stdout.write(`✓ l'AAB porta el ${SEGELL.join('/')} del preflight\n`);
+  /* R24 botigues (D2) · El SDK de Meta, abans de keytool i de cap pujada. */
+  const dexs = dexDeLAab(pla.aab);
+  if (!dexs.length) return plega(EIXIDA.ARBRE, 'no s\'ha pogut llegir cap base/dex/classes*.dex de l\'AAB: no es pot comprovar que no porta el SDK de Facebook, i no es puja');
+  const deFacebook = dexAmbFacebook(dexs);
+  if (deFacebook.length) {
+    return plega(EIXIDA.ARBRE, `l'AAB porta classes de com.facebook (${deFacebook.join(', ')}): el SDK de Meta no hi ha de ser. Comprova socialLogin.facebook.include=false a android/gradle.properties i SocialLogin.providers.facebook false a capacitor.config.json, npx cap sync android i torna a signar l'AAB`);
+  }
+  process.stdout.write(`✓ l'AAB no porta cap classe de com.facebook (${dexs.length} dex)\n`);
   /* En producció, l'eixida de keytool (el propietari del certificat) no es pinta: només se'n llig l'empremta. */
   const certificat = await executa(...pla.certificat, { valors, arrel, mostra: false, eco: !produccio });
   const empremta = empremtaDeKeytool(certificat.crua);

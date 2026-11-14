@@ -153,6 +153,10 @@ const TITOL_DEL_SERVIDOR = 'La Torre de les Maçanes';
 const senseSessio = () => context({ joId: null, joNom: null, senseSessio: true });
 
 /* Amb sessió: les converses amb la forma del node (Conversa → mapejaFil). */
+/* Onada R24 · IDEA-260 (a), C2 · Un directe sense cap missatge (ultimSeq 0) ja no
+   es llista fins al primer (unaFilaPerPersona.js, com WhatsApp): els directes
+   d'esta llista porten l'últim missatge que ja deia el seu `ultimAl`. */
+const AMB_UN_MISSATGE = Object.freeze({ ultimText: 'Hola', ultimSeq: 1, llegitFinsSeq: 1 });
 function ambSessio({ titolComunitat = POBLE.nom } = {}) {
   const ara = new Date().toISOString();
   const subjecte = { tipus: 'poble', id: '44444444-4444-4444-8444-444444444444', ruta: `/pobles/${POBLE.id}`, titol: titolComunitat };
@@ -162,11 +166,11 @@ function ambSessio({ titolComunitat = POBLE.nom } = {}) {
     { id: 'g-torre', tipus: 'grup', titol: 'General', comunitatId: 'c-torre', subjecte, rol: 'membre', ultimAl: ara },
     /* P1-70 (261029) · La IAIA es reconeix per id, mai pel nom: sense, la fila de reserva hi posaria la de veres. */
     { id: 'f-iaia', tipus: 'directe', titol: 'IAIA MarIA', imatgeUrl: IAIA_PADRO, ultimAl: ara, altres: [{ id: IAIA_ID, tipus: 'ia', nom: 'IAIA MarIA' }] },
-    { id: 'f-sdp', tipus: 'directe', titol: 'Sóc de Poble', imatgeUrl: LOGO, ultimAl: ara },
+    { id: 'f-sdp', tipus: 'directe', titol: 'Sóc de Poble', imatgeUrl: LOGO, ultimAl: ara, ...AMB_UN_MISSATGE },
     { id: 'g-colla', tipus: 'grup', titol: 'Colla de la Font', imatgeUrl: COLLA, ultimAl: ara },
-    { id: 'f-pepa', tipus: 'directe', titol: 'Pepa', imatgeUrl: GOOGLE, ultimAl: ara },
-    { id: 'f-dada', tipus: 'directe', titol: 'Dada', imatgeUrl: DADA, ultimAl: ara },
-    { id: 'f-maria', tipus: 'directe', titol: 'Maria Pujada', imatgeUrl: PUJADA, ultimAl: ara }
+    { id: 'f-pepa', tipus: 'directe', titol: 'Pepa', imatgeUrl: GOOGLE, ultimAl: ara, ...AMB_UN_MISSATGE },
+    { id: 'f-dada', tipus: 'directe', titol: 'Dada', imatgeUrl: DADA, ultimAl: ara, ...AMB_UN_MISSATGE },
+    { id: 'f-maria', tipus: 'directe', titol: 'Maria Pujada', imatgeUrl: PUJADA, ultimAl: ara, ...AMB_UN_MISSATGE }
   ].map((f) => mapejaFil(f));
   return context({ chatThreads: fils, comunitats: agrupaComunitats(fils) });
 }

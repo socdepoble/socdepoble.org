@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, Check, SquarePen } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { Alerta } from '../PedraSeca';
-import { signaturaEnLiniaDeNota, textosEnLiniaDeNota } from '../../sections/notes/visibilitatNota.js';
+import { omple } from '../../config/moderacio.js';
 
 function useNavegaOpcional() {
   try {
@@ -12,8 +12,42 @@ function useNavegaOpcional() {
   }
 }
 
+function signaturaEnLiniaDeNota(nom = '', t = null) {
+  const net = String(nom ?? '').trim();
+  if (!net) return '';
+  const plantilla = typeof t === 'function'
+    ? t('section.notes.visibilitat.enLinia.signatura', 'Publicaràs com a {nom}.')
+    : 'Publicaràs com a {nom}.';
+  return omple(plantilla, { nom: net });
+}
+
 const CAP = Object.freeze([]);
-const TEXTOS_DEFECTE = textosEnLiniaDeNota();
+const TEXTOS_DEFECTE = Object.freeze({
+  llegenda: 'Visibilitat i publicació de la nota',
+  privada: Object.freeze({
+    etiqueta: '🔒 Esborrany privat (només per a tu)',
+    explicacio: 'Es desa automàticament al teu Bloc de notes i ningú més la pot vore.',
+  }),
+  publica: Object.freeze({
+    etiqueta: '📣 Públic al Mur de poble',
+    explicacio: 'Es publica amb la teua signatura i ix al Mur de poble. Qualsevol persona, també sense compte, en pot llegir la versió anònima filtrada. Les persones membres de poble poden llegir la publicació completa. Sense compte es mostra una versió filtrada: títol, text públic disponible i data, sense fotos, enllaços ni signatura. La versió anònima mai mostra identificadors interns, contacte privat ni ubicació de les fotos.',
+    accio: 'Publicar al Mur',
+    accioIgual: 'Actualitzar al Mur',
+  }),
+  poble: Object.freeze({
+    etiqueta: 'Poble on es publica',
+    ajuda: 'Tens més d’un poble vinculat al teu perfil. Tria a quin poble ix esta publicació.',
+    tria: '— Tria el poble de la publicació —',
+    indeterminat: 'No s’ha pogut verificar en quin poble es va publicar esta nota perquè la publicació queda fora de la finestra carregada. Tria explícitament el poble abans d’actualitzar-la.',
+  }),
+  irreversible: 'Una vegada al Mur, encara no es pot retirar: la podràs actualitzar, però no tornar a fer privada.',
+  reversible: null,
+  retirada: null,
+  avisDrets: null,
+  estatPublicat: 'Publicat',
+  veurePublicacio: 'Veure al Mur',
+  treballant: 'Publicant…',
+});
 
 /**
  * Onada R20 (Bucle 1 · Cas Real Damià Llorens Jordà) · Panell Pedra Seca en

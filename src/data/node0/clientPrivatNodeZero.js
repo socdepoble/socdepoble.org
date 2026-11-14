@@ -80,7 +80,7 @@ function thread(value){
   row(value);const output={id:value.id,tipus:value.tipus??'directe',titol:value.titol??null};
   const fields={altres_noms:'altresNoms',altres:'altres',org_id:'entitatId',entitat_nom:'entitatNom',com_entitat:'comEntitat',imatge_url:'imatgeUrl',
     actualitzat_al:'actualitzatAl',ultim_text:'ultimText',ultim_tipus:'ultimTipus',ultim_al:'ultimAl',ultim_autor_id:'ultimAutorId',ultim_seq:'ultimSeq',
-    llegit_fins_seq:'llegitFinsSeq',rebut_fins_seq:'rebutFinsSeq',llegit_pels_altres_fins_seq:'llegitPelsAltresFinsSeq',no_llegits:'noLlegits',
+    llegit_fins_seq:'llegitFinsSeq',rebut_fins_seq:'rebutFinsSeq',llegit_pels_altres_fins_seq:'llegitPelsAltresFinsSeq',rebut_pels_altres_fins_seq:'rebutPelsAltresFinsSeq',no_llegits:'noLlegits',
     arxivat_al:'arxivatAl',fixat_al:'fixatAl',silenciat_fins_al:'silenciatFinsAl',preferit_al:'preferitAl',no_llegit_manual:'noLlegitManual',comunitat_id:'comunitatId',rol:'rol',participants:'participants',participant:'participant'};
   for(const[key,target]of Object.entries(fields))if(own(value,key))output[target]=value[key];return output;
 }

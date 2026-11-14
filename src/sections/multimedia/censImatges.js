@@ -279,6 +279,9 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/patrimoni/herbari-la-torre-ibanez.webp', 'Herbari de La Torre: les 117 plantes del terme', 'contingut', 'ia', 'la-torre-de-les-macanes'),
   e('/assets/uploads/patrimoni/rutes-de-poble-ibanez.webp', 'Rutes de Poble i camins de ferradura', 'contingut', 'ia', 'la-torre-de-les-macanes'),
   e('/assets/uploads/patrimoni/receptes-ibanez.webp', 'Receptes de la cuina tradicional de les nostres comarques', 'contingut', 'ia', 'muro-d-alcoi'),
+  /* Onada R23 (14-11-2026) · La portada de l'article «La Veu de Sóc de Poble» (/mur/la-veu-de-soc-de-poble,
+     laVeuDeSocDePobleContent.js), vinyeta d'IA; la seua variant social entra per VARIANTS_SOCIALS. */
+  e('/assets/mur/la_veu_de_soc_de_poble_nano_v4.webp', 'La Veu de Sóc de Poble: la iaia, el llaurador i el Destil·lador d’Accents', 'contingut', 'ia', 'la-torre-de-les-macanes'),
 
   /* P0-52 / IDEA-183 (ordres del Mestre del 08-11-2026; R53) · Les imatges de
      l'article del Pou de Neu del Rentonar, al terme de La Torre de les Maçanes:

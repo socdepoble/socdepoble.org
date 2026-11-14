@@ -73,7 +73,9 @@ import { TEXTOS_XIFRATGE } from '../estatXifratgeFil.js';
 import { avisDelBloqueig, nomDelMembre, useCanvisDeClau } from '../useCanvisDeClau.js';
 /* B8C-5 (marató 261101_2143) · Silenciar la conversa: sense bandera (D-B8C-10). */
 import { useSilenciDelFil } from '../useSilenciDelFil.js';
+import { useArxivaDelFil } from '../useArxivaDelFil.js';
 import DialegSilenci from './DialegSilenci.jsx';
+import PanellAdjuntsConversa from './PanellAdjuntsConversa.jsx';
 import { DialegConfirmacio } from '../../../components/PedraSeca/organismes/Dialeg.jsx';
 
 /* P1-12 pas 17 (pla 261101_1246, T7 · S5) · L'estat del xifratge d'esta conversa i el
@@ -329,7 +331,8 @@ export default function Conversa({
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
   moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false,
   carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false, respostaLocalIAIA = respostaDeLaIAIA,
-  senseSessio = false, escrivint = 0, onEscrivint = null, onOblidaSessioIAIA = null
+  senseSessio = false, escrivint = 0, onEscrivint = null, onOblidaSessioIAIA = null,
+  ambContingutCompartit = false, ambArxivar = false, canals = null, onTriaCanal = null
 }) {
   /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
      guarda la de l'últim render confirmat. */
@@ -351,6 +354,10 @@ export default function Conversa({
   const [panellXifratge, setPanellXifratge] = useState(null);
   /* B8C-5 · L'entrada del silenci al menú «⋯» i el seu diàleg (null fora del proveïdor). */
   const silenci = useSilenciDelFil(fil, t, locale);
+  /* Onada R22 · T1 · Arxiu de la conversa i gestor d'adjunts compartits. */
+  const arxiva = useArxivaDelFil(fil, t);
+  const [contingutCompartitObert, setContingutCompartitObert] = useState(false);
+  const obridorContingutRef = useRef(null);
   const [oblitObert, setOblitObert] = useState(null);
   /* La via que el diàleg confirma, fixada en obrir-lo: el títol i el text no
      canvien mentre es tanca, quan ja no queda res per oblidar. */
@@ -1330,6 +1337,7 @@ export default function Conversa({
   useEffect(() => {
     reiniciaArrossegament();
     setVisorGaleria(null);
+    setContingutCompartitObert(false);
   }, [fil?.id, reiniciaArrossegament]);
 
   useEffect(() => {
@@ -1402,12 +1410,22 @@ export default function Conversa({
         escrivint={escrivint}
         onTorna={onBack}
         onTornaAOrigen={onTornaAOrigen}
+        canals={canals}
+        onTriaCanal={onTriaCanal}
         onSeleccionar={() => setModeSeleccio(true)}
         seleccio={modeSeleccio ? { quants: triats.size, onEixir: surtDeSeleccio } : null}
         t={t}
         {...accionsDeLaContrapart}
+        accioContingutCompartit={ambContingutCompartit && !fil?.perDefecte ? {
+          etiqueta: t('section.xat.contingutCompartit.titol', 'Contingut compartit'),
+          onTria: (obridor) => {
+            obridorContingutRef.current = obridor ?? null;
+            setContingutCompartitObert(true);
+          }
+        } : null}
         accioXifratge={accioXifratge}
         accioSilenci={silenci.accio}
+        accioArxiva={ambArxivar ? arxiva.accio : null}
         accioOblit={viaOblit ? {
           etiqueta: textosOblit(viaOblit).accio,
           onTria: (obridor) => {
@@ -1417,6 +1435,17 @@ export default function Conversa({
             setOblitObert(true);
           }
         } : null}
+      />
+      <PanellAdjuntsConversa
+        obert={contingutCompartitObert && !modeSeleccio}
+        onTanca={() => setContingutCompartitObert(false)}
+        obridor={obridorContingutRef.current}
+        messages={messages}
+        configAdjunts={configAdjunts}
+        onVesAlMissatge={vesAlMissatge}
+        onObriImatge={obriImatgeGaleria}
+        locale={locale}
+        t={t}
       />
       <DialegSilenci {...silenci.dialeg} t={t} />
       {oblitObert !== null ? (

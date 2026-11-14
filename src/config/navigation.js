@@ -9,7 +9,9 @@ import {
   esRutaInterna, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina, TIPUS_OBJECTE, tipusDeSeccio
 } from './objecteConnectable.js';
 
-const PAGE_ROUTE_MAP = {
+/* P0-SEO-UNIVERSAL (13-11-2026) · Exportat (només la paraula): el manifest social
+   i la porta de cobertura del Router en lligen les claus, sense copiar-les. */
+export const PAGE_ROUTE_MAP = {
   'el-projecte': '/projecte',
   projecte: '/projecte',
   skills: '/skills',
@@ -38,7 +40,9 @@ const PAGE_ROUTE_MAP = {
   'nodrir-la-iaia': '/page/la-iaia-sabuda',
   /* Ordre del Mestre (R53, 261108) · Una sola publicació completa del pou:
      l'adreça antiga entra a l'article del Mur amb el replace de PageDetailSection. */
-  'anatomia-rural': '/mur/noves-tecnologies-aplicades-a-la-cultura-rural'
+  'anatomia-rural': '/mur/noves-tecnologies-aplicades-a-la-cultura-rural',
+  /* Onada R23 · Àlies directe cap a l'article multimèdia i interactiu «La Veu de Sóc de Poble». */
+  'la-veu-de-soc-de-poble': '/mur/la-veu-de-soc-de-poble'
 };
 const KNOWN_PAGE_SLUGS = new Set(Object.keys(PAGE_ROUTE_MAP));
 

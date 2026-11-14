@@ -34,7 +34,7 @@ El patró històric **Stop–Observe–State–Propose** continua sent útil:
 1. Audita en sec i distingix error real, avís i informació exclosa.
 2. Selecciona només fonts rellevants; no carregues tota la Wiki, actes massives ni Mega-Petorretes.
 3. Classifica l'operació, els targets i el risc.
-4. Per a qualsevol efecte lateral, usa `.agents/PROTOCOL_PETORRETA.md`: `open`, lectura de regles, Petorreta i manifest selectiu al bootstrap, `seal`, rebut, verificació i consum.
+4. Per a qualsevol efecte lateral, utilitza `.agents/PROTOCOL_PETORRETA.md`: `open`, lectura de regles, Petorreta i manifest selectiu al bootstrap, `seal`, rebut, verificació i consum.
 5. En mutacions de dades, exigix snapshot, pla immutable, backup durable, comprovació CAS, escriptura atòmica i verificació posterior.
 6. Si canvia l'estat durant l'operació, falla de manera tancada i recalcula; no declares èxit parcial com a salut perfecta.
 

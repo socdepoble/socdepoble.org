@@ -198,9 +198,26 @@
     "tests/r21-9b-beta-postgres.test.mjs",
     "tests/r22-1-hero-video-url-postgres.test.mjs",
     "tests/r22-0-reconciliacio-deriva-postgres.test.mjs",
+    "tests/r22-2-reconciliacio-deriva-produccio-postgres.test.mjs",
+    "tests/r22-3-sostres-de-volum-postgres.test.mjs",
+    "tests/r22-4-purga-baixes-avis-worker-postgres.test.mjs",
+    "tests/r22-5-buckets-mitjans-i-heretats-postgres.test.mjs",
+    "tests/r24-consens-isoglosses-postgres.test.mjs",
+    "tests/empremta-funcions-postgres.test.mjs",
+    "tests/xat-directe-canonic-r24-postgres.test.mjs",
+    "tests/xat-entrega-r24-postgres.test.mjs",
+    "tests/xat-r24-entrega-precondicions-postgres.test.mjs",
+    "tests/xat-r24-entrega-bots-per-fil-postgres.test.mjs",
+    "tests/xat-r24-directe-marxa-enrere-postgres.test.mjs",
+    "tests/xat-r24-readme-regla-d1.test.mjs",
     "tests/migracions-cataleg-mixt-r21-9b.test.mjs",
     "tooling/menjarIBeure/syncAparadorsVius.test.mjs",
-    "tooling/vite/banderes-de-capacitat.test.mjs"
+    "tooling/vite/banderes-de-capacitat.test.mjs",
+    "tooling/scripts/retencio-assets.test.mjs",
+    "tests/firebase-capcaleres-cache.test.mjs",
+    "tooling/gates/consola-zero-nucli.test.mjs",
+    "tooling/scripts/retencio-assets.postcondicions.test.mjs",
+    "tooling/gates/consola-zero.sense-rutes.test.mjs"
   ],
   "files": [
     {
@@ -1104,6 +1121,16 @@
       "reason": "R9: unavailable local PostgreSQL waits, cancellation reaps children and unsafe authority fails before keys/listen; portable controlled processes."
     },
     {
+      "path": "tests/node0-perimetre-servidor.test.mjs",
+      "suite": "primary",
+      "reason": "Onada R22 (eixa42) · servidor heretat del Node 0: escolta només a loopback, cap Host ni X-Forwarded-Host alié a la redirecció a https ni al manifest de mitjans signat, /api/estat sense túnel ni maquinari, immutable només amb empremta; servidor de veres en loopback efímer i directori temporal."
+    },
+    {
+      "path": "tests/node0-cache-imatges-socials.test.mjs",
+      "suite": "primary",
+      "reason": "P0-SEO-UNIVERSAL · servidor del Node 0: /assets/og/ amb una hora de memòria cau (mai immutable), la resta de /assets/ immutable i un directori prerenderitzat amb el seu head; servidor de veres en loopback efímer i directori temporal."
+    },
+    {
       "path": "tests/node0-r9-static-inbox.test.mjs",
       "suite": "primary",
       "reason": "R9: real static handler returns retryable503/Retry-After without accepting an activity; ephemeral loopback and synthetic temp key only."
@@ -1614,9 +1641,19 @@
       "reason": "P1-61 Fase 2 · productor del manifest social (pàgines, llistes, llavors i Wiki de src/data/wikiManifest.js) amb fixtures temporals i les polítiques del repositori."
     },
     {
+      "path": "tooling/seo/cobertura-router.test.mjs",
+      "suite": "primary",
+      "reason": "P0-SEO-UNIVERSAL · Porta de cobertura social del Router: extractor per AST d'App.jsx i RutaApps.jsx, lleis S1–S9, exempcions amb motiu i mutants (ruta nova sense cobertura, fragment, atribut escampat, fitxer nou amb Routes, productor de perfils desconnectat); cap xarxa."
+    },
+    {
       "path": "tooling/seo/comprova-reproductibilitat.test.mjs",
       "suite": "primary",
       "reason": "P1-23 · comprovador de reproductibilitat sense Nix i coherència de flake.nix: font i recepta contra package.json, la línia de federació executada contra el testScript del mòdul NixOS, regles d'nginx contra activitypub.js, gixy (cap return amb CR/LF), capçaleres de firebase.json, llicència AGPL i, de cap a cap, dues construccions en repositoris git de mkdtemp; cap xarxa."
+    },
+    {
+      "path": "tooling/seo/fonts-veinals.test.mjs",
+      "suite": "primary",
+      "reason": "P0-SEO-UNIVERSAL · fonts veïnals de la projecció pública: directori públic amb huit columnes explícites, sostre que talla, descarts amb motiu i RPC del Mur públic per GET amb cursor de dos camps; fetch simulat, cap xarxa ni credencial real."
     },
     {
       "path": "tooling/seo/genera-federacio.test.mjs",
@@ -1627,6 +1664,21 @@
       "path": "tooling/seo/genera-opendata.test.mjs",
       "suite": "primary",
       "reason": "Generador públic reproduïble i rebuig de camps no publicables."
+    },
+    {
+      "path": "tooling/seo/jpeg-social.test.mjs",
+      "suite": "primary",
+      "reason": "P0-SEO-UNIVERSAL · imatge social d'una foto remota: composició, límits abans de descodificar, escala de qualitat, llista blanca de segments JPEG i, si la màquina té Pillow i sandbox-exec, el convertidor aïllat de veres (metadades fora, alfa sobre blanc, sense xarxa ni escriptura fora del temporal)."
+    },
+    {
+      "path": "tooling/seo/perfils-socials.test.mjs",
+      "suite": "primary",
+      "reason": "P0-SEO-UNIVERSAL · adreces de les fitxes públiques: canònica única i àlies en cada família del Router per slug i per id, i mutants de segrest de targeta (slug amb forma d'UUID, claus de la IAIA i de la persona pilot); pur, sense xarxa."
+    },
+    {
+      "path": "tooling/seo/pla-de-retirada.test.mjs",
+      "suite": "primary",
+      "reason": "P0-SEO-UNIVERSAL · pla de retirada del prerender social per al Node 0: només calcula els fitxers a esborrar i els directoris propis del prerender; directoris temporals, cap xarxa i cap esborrat."
     },
     {
       "path": "tooling/seo/prerender-social.test.mjs",
@@ -1644,6 +1696,11 @@
       "reason": "Ronda 2: regressió determinista del codi instal·lat amb fixtures temporals."
     },
     {
+      "path": "tooling/seo/sentinella-social.test.mjs",
+      "suite": "primary",
+      "reason": "P0-SEO-UNIVERSAL · sentinella de frescor i de retirada del prerender social: només GET, amb un Supabase i dos orígens simulats; codis 0, 3, 4, 5 i 1; cap xarxa ni credencial real."
+    },
+    {
       "path": "tooling/seo/site-policy.test.mjs",
       "suite": "primary",
       "reason": "P1-61 Fase 2 · política HTTP derivada de firebase.json i composició amb el nucli social; fixtures portables."
@@ -1657,6 +1714,11 @@
       "path": "tooling/seo/social-http.test.mjs",
       "suite": "primary",
       "reason": "P1-61 Fase 2 · prova HTTP local del Llibre d’Or amb User-Agent de WhatsApp; genera els artefactes del repositori en una carpeta temporal."
+    },
+    {
+      "path": "tooling/seo/text-veinal.test.mjs",
+      "suite": "primary",
+      "reason": "P0-SEO-UNIVERSAL · text d'un veí abans d'un head estàtic: sense caràcters de format Unicode, detector de contactes amb els vectors del Mur públic (2611122200) i regla de suplantació de nom; pur."
     },
     {
       "path": "tooling/vite/associacio-apps.test.mjs",
@@ -1792,6 +1854,78 @@
       "reason": "R22.0: reconciliació de la deriva de producció (frontera de mitjans_privats, límit de ritme del xat i retirada d'admin_list_users()) sobre PostgreSQL 18.6 real, cap servei remot."
     },
     {
+      "path": "tests/r22-2-reconciliacio-deriva-produccio-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.2: reconciliació de la deriva de producció (propietat, delete_user, xat_envia de 2610081543 amb CHECK de metadades, consentiment etapa A, funcions d'administració de Git, privilegis per defecte i heretades, autoria per disparador, notes.icon i publish_date) amb els residus literals de producció i un rol sense superusuari, sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r22-3-sostres-de-volum-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.3: sostres de volum per compte (user_tags, notes, fusible de mida, organitzacions, xat per hora i Mur amb publica_nota_al_mur i revoca_publicacio_de_nota) sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r22-4-purga-baixes-avis-worker-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.4: purga de baixes amb assaig previ de l'esborrat d'Auth i avís SDP-BAIXA-044 del worker sobre PostgreSQL 18.6 real, cap servei remot ni planificador."
+    },
+    {
+      "path": "tests/r22-5-buckets-mitjans-i-heretats-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.5: límits de mitjans, tancament dels buckets heretats i invariant del bucket públic amb els residus literals de Storage de producció sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r24-consens-isoglosses-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (CODEX-R24-03): el mapatge del port consensIsoglosses (src/data/consensIsoglosses.js) contra la RPC resum_consens_isoglosses_poble i les taules joc_isoglosses_vots_consens i aportacions_veu_poble de les migracions R23, trobades pel contingut, sobre PostgreSQL 18.6 real amb tot el catàleg; cap servei remot."
+    },
+    {
+      "path": "tests/empremta-funcions-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "Onada R22 (dossier R03): porta d'empremta de funcions; md5(prosrc) i capçalera de cada funció d'un bolcat de producció q16 contra l'última definició de Git (catàleg sintètic sobre PostgreSQL 18.6 real), simulació d'una reconciliació, --ref HEAD i codis d'eixida 0, 1 i 2; cap servei remot."
+    },
+    {
+      "path": "tests/xat-directe-canonic-r24-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (IDEA-260 a): un sol directe persona↔persona per parella i poble; clau canònica i índex únic, reconciliació dels duplicats (supervivent més antic, missatges en ordre cronològic amb numeració monòtona, cursors en prefix conservador, adjunts, cua d'avisos, denúncies, lectures i estat repuntats), E2EE i visibilitat a pendents, canal d'entitat intacte, crea_fil_directe per clau i concurrent, permisos tancats a anon i PUBLIC, sobre PostgreSQL 18.6 real; cap servei remot."
+    },
+    {
+      "path": "tests/xat-entrega-r24-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (IDEA-260 b, xat_entrega): rebut d'entrega dels altres a xat_fils_meus (rebut_pels_altres_fins_seq al final), regla D-1 del mínim dels gestors vigents (la de xat_ritme), monotonia, denegacions (foraster, anon, gestor revocat), la IAIA fora del còmput i idempotència sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/xat-r24-entrega-precondicions-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (Gauntlet G-sql-1): 20261114061000 sense 20261113003000 avorta neta amb SDP-XAT-947 (55000) abans de crear cap funció, i xat_fils_meus continua funcionant; catàleg sencer menys R21.9b sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/xat-r24-entrega-bots-per-fil-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (Gauntlet G-sql-4): paritat llista↔bombolla de la regla D-1 (MIN) en tots els estats de participant (eixit, amagat, bot lligat i sense lligam, gestor revocat, entitat, directe, fil propi), bots lligats resolts una vegada per fil (pg_stat_xact_user_functions, sense mesurar temps) i helper tancat a l'API, sobre PostgreSQL 18.6 real; cap servei remot."
+    },
+    {
+      "path": "tests/xat-r24-directe-marxa-enrere-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (Gauntlet G-sql-2): la marxa enrere de 20261114060000 llegida literalment de la capçalera no deixa cap UUID d'un compte suprimit, la reaplicació funciona i una marxa enrere parcial es repara (claus mortes fora, claus vives intactes), sobre PostgreSQL 18.6 real; cap servei remot."
+    },
+    {
+      "path": "tests/xat-r24-readme-regla-d1.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 (Gauntlet G-sql-3): supabase/README.md, 20261114061000 i el comentari de src/data/localXat.js descriuen la mateixa regla D-1 (MIN com xat_ritme, pendent de decisió del Mestre, MAX com a alternativa); prova estàtica."
+    },
+    {
       "path": "tests/migracions-cataleg-mixt-r21-9b.test.mjs",
       "suite": "primary",
       "kind": "node",
@@ -1808,6 +1942,36 @@
       "suite": "primary",
       "kind": "node",
       "reason": "R21.1 v2: banderes de capacitat de build (VITE_SDP_COPUBLICACIO apagada per defecte) sense servei remot."
+    },
+    {
+      "path": "tooling/scripts/retencio-assets.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Consola Zero (P-A): retenció dels recursos amb empremta entre desplegaments de Firebase sobre dist/ i arxius fingits en un mkdtemp; builds sencers o res, sostre, dies, clausura del graf, col·lisions, idempotència, enllaços simbòlics, paritat amb public/sw.js i l'ordre build → arxiva → incorpora → deploy; cap build ni xarxa."
+    },
+    {
+      "path": "tests/firebase-capcaleres-cache.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Consola Zero (P-B): trinquet del contracte de memòria cau de firebase.json avaluat com Hosting (no-cache a l'HTML i a sw.js, immutable només a l'arrel d'/assets amb empremta, cap reescriptura d'/assets) amb mutants que el fan caure; cap xarxa."
+    },
+    {
+      "path": "tooling/gates/consola-zero-nucli.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Consola Zero (P-G): nucli pur de l'arnés (Hosting en local, classificació CDP amb fixtures del 404 de modulepreload «about:client», rutes de consola-zero.rutes.json contra els <Route> de src/app/App.jsx, resum i codis); cap navegador ni xarxa."
+    },
+    {
+      "path": "tooling/scripts/retencio-assets.postcondicions.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Gauntlet Loop ronda 2 (G-client-6, 7 i 8): --retira esborra de dist/assets el tros que una incorpora anterior ja havia copiat, un pool corrupte no deixa cap build a mitges (validació abans de copiar) i --arxiu i --dist han de ser carpetes separades (codi 2); dist/ i arxiu fingits en un mkdtemp, cap build ni xarxa."
+    },
+    {
+      "path": "tooling/gates/consola-zero.sense-rutes.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Gauntlet Loop ronda 2 (G-client-9): Consola Zero no és verd sense cap ruta visitada ni desfasament executat (codi 2), i --escenaris o --rutes buits després del filtre són un error d'ús abans de construir res; fixtures CDP, cap navegador ni xarxa."
     }
   ]
 }

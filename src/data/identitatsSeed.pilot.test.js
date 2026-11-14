@@ -34,8 +34,9 @@ describe('PERSONA_PILOT, la font única canònica', () => {
       bio: AGENTS_MAP.JAVI.role, lema: AGENTS_MAP.JAVI.lema, poble: POBLE_FUNDACIONAL, hero_url: ''
     });
     expect(Object.isFrozen(PERSONA_PILOT)).toBe(true);
-    /* Doctrina: cap UUID remot declarat fins que el Mestre el done. */
-    expect(IDS_REMOTS_FUNDACIONALS[PERSONA_PILOT.slug]).toEqual([]);
+    /* Doctrina: només l'UUID remot que el Mestre ha donat (R24.2, 14-11-2026,
+       R21.2-F01), i cap altre. */
+    expect(IDS_REMOTS_FUNDACIONALS[PERSONA_PILOT.slug]).toEqual(['c7cc745b-2c54-4739-b9c1-add751aac3c4']);
   });
 });
 

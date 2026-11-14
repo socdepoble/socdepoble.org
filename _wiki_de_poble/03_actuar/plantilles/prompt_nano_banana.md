@@ -26,10 +26,10 @@ Aquesta plantilla s'ha d'utilitzar SEMPRE que es demane una **nova vinyeta o il�
    - **La IAIA MarIA:** Iaia valenciana amb mocador al cap, ulleres redones, davantal tradicional i un somriure ple de trellat, governant pantalles, palanques o tauletes connectades a cànters i murs de pedra seca.
    - **Els Apanyadors del Poble (estil *Pepe Gotera* valencià):** Veïns i llauradors amb boina, faixa roja o blava, camisa arromangada o granota d'obra, portant claus angleses gegants, pinzells, plànols o cabassos.
 5. **100% A SANG (ZERO MARCS BLANCS) i Format Quadrat (`1:1`):**
-   - **PROHIBIT usar al prompt les paraules `"comic panel"`, `"comic page"`, `"cover"`, `"frame"` o `"border"`** en positiu, perquè indueixen el model a pintar un marc blanc i una vora negra.
+   - **PROHIBIT utilitzar al prompt les paraules `"comic panel"`, `"comic page"`, `"cover"`, `"frame"` o `"border"`** en positiu, perquè indueixen el model a pintar un marc blanc i una vora negra.
    - Exigir sempre que el cel, les parets de pedra seca i el terra arriben fins al mateix tall dels 4 costats del llenç (`100% full-bleed edge-to-edge, zero white margins, zero panel borders, zero corner signatures`).
 6. **Valencià Castís i Curt en Rètols i Bafarades («Valencià Tá!»):**
-   - Les bafarades i cartells han d'usar **paraules curtes, exactes i en MAJÚSCULES de còmic feta a mà** en valencià per evitar que el generador invente lletres: ex. `«XE, QUIN TRELLAT!»`, `«AÇÒ VA DE CATEGORIA!»`, `«NOVETATS»`, `«MILLORAT»`, `«CORREGIT»`, `«v1.1.10»`.
+   - Les bafarades i cartells han d'utilitzar **paraules curtes, exactes i en MAJÚSCULES de còmic feta a mà** en valencià per evitar que el generador invente lletres: ex. `«XE, QUIN TRELLAT!»`, `«AÇÒ VA DE CATEGORIA!»`, `«NOVETATS»`, `«MILLORAT»`, `«CORREGIT»`, `«v1.1.10»`.
    - **PROHIBIT el signe d'exclamació/interrogació d'obertura castellà (`¡` / `¿`) i onomatopeies flotants en castellà (`¡AYYY!`, `¡CHOFF!`):** En valencià només s'escriu el signe de tancament (`!` / `?`), i es prohibeix afegir text o onomatopeies soltes per les parets que no s'hagen demanat explícitament al prompt.
 
 ## 2. Plantilla Mestra del Prompt (Copia i ompli per a Nano Banana)

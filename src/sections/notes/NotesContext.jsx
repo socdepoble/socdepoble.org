@@ -23,12 +23,12 @@ import { motiuSignaturaDAltri } from './signaturaDAltri.js';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
 import { ErrorIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
-import { ID_NOTA_BENVINGUDA, actorAmbPobleDeLEntitat, autoriaDeLActor, modeDeDadesResolt } from './autoriaNota.js';
+import { ID_NOTA_BENVINGUDA, actorAmbPobleDeLEntitat, autoriaDeLActor, modeDeDadesResolt } from './autoriaDeLActor.js';
 import { llistaDePobles, poblePrincipal, slugDelPoble } from '../pobles/nomsDelPoble.js';
-import { pobleDeConfig } from '../xat/pobleAmfitrio.js';
+import { pobleDeConfig } from '../xat/pobleDeConfig.js';
 import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
 import { cosDeConnexioEditadaPerAlMur } from './connexions.js';
-import { cosDeLExternPerAlMur } from '../connectar/contingutExtern.js';
+import { cosDeLExternPerAlMur } from '../connectar/citaDeLOrigen.js';
 import { CODI_ENTRADA, CODI_ESQUEMA_ABSENT, CODI_PROMOCIO_PUBLICA, esRebuigDeNormes } from '../../data/errorsBackend.js';
 /* P4 (revisió, 261003) · El sanejador del canal viu a netejaCamp.js: la nota
    preparada (notaPreparada.js) en crear-se hi passa pel mateix. */

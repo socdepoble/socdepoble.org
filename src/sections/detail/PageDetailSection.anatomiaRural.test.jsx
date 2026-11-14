@@ -89,7 +89,14 @@ async function comprovaArticleComplet() {
   }
   await waitFor(() => expect(document.querySelectorAll('.pou-neu-card')).toHaveLength(1), { timeout: 10000 });
   expect(document.querySelectorAll('.noves-tecnologies-rural')).toHaveLength(1);
-  expect(document.querySelectorAll('.noves-tecnologies-rural__veu')).toHaveLength(1);
+  /* Expectativa actualitzada a propòsit: IDEA-255 (Onada R23, Llibre Mestre, «Botó
+     universal sota l'entradilla … sense duplicar-lo on ja s'injectava manualment») ·
+     dins de PageFrame la veu única és el marc universal; l'article amaga la seua.
+     IDEA-255 (Onada R23/R24) · Dins PageFrame, el reproductor universal (.sdp-veu-lectura-marc)
+     unifica la veu i evita duplicar .noves-tecnologies-rural__veu: un sol marc, un sol botó. */
+  await waitFor(() => expect(document.querySelectorAll('.sdp-veu-lectura-marc .sdp-boto-veu-iaia')).toHaveLength(1));
+  expect(document.querySelectorAll('.sdp-veu-lectura-marc')).toHaveLength(1);
+  expect(document.querySelectorAll('.noves-tecnologies-rural__veu')).toHaveLength(0);
   expect(document.querySelector('.cms-preview')).toBeNull();
   expect(document.querySelector('section.anatomia')).toBeNull();
   return cos;

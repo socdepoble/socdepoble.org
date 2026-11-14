@@ -422,7 +422,7 @@ function Bombolla({
           {missatge.accioRegistre === true && !meu && !esborrat ? <EnllacARegistre t={t} interactiu={!triable} /> : null}
           <span className="sdp-xat-bombolla__meta">
             {hora ? <time dateTime={missatge.creatAl || undefined}>{hora}</time> : null}
-            {meu && !esborrat ? <MarquesEstat estat={estat} t={t} /> : null}
+            {meu && !esborrat ? <MarquesEstat estat={estat} rebutsConeguts={missatge.rebutsConeguts !== false} t={t} /> : null}
           </span>
           {enError ? (
             <div className="sdp-xat-bombolla__error" role="alert">

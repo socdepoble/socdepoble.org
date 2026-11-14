@@ -36,6 +36,26 @@
  * build): només el bucket públic «mitjans» de Storage
  * (/storage/v1/object/public/mitjans/…, segments nets; la regla d'urlSocialDe),
  * mai un altre bucket, /object/sign/ ni cap altre camí.
+ * P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) · Tota ruta pública del Router té head propi:
+ *   · les fitxes públiques (PerfilPublicSection): la canònica única de cada fitxa
+ *     (rutaPublicaDePerfil: /javillinares, /socdepoble, /rentonar, /iaia, /empresa/<slug>,
+ *     /grup/<slug>) i, com a àlies, la resta de famílies del Router (/perfil, /gent, /empresa,
+ *     /entitats, /ajuntament i /grup, llegides del Router per rutes-del-router.mjs) per slug i
+ *     per id. Les identitats del paquet ixen sempre (sense xarxa); les entitats del directori,
+ *     del snapshot (elements amb sectionId 'perfil', de fonts-veinals.mjs). Mai una persona
+ *     remota: un visitant sense sessió no en pot llegir cap. Les regles són
+ *     perfils-socials.mjs, amb les MATEIXES funcions que el client (metadadesDePerfil.js i
+ *     perfilsDelPaquet.js). Un arbre sense src/app/App.jsx no genera cap ruta de perfil;
+ *   · /perfil (el directori) amb OpenGraph específic SENSE indexar (index:false i
+ *     compartible:true): 'perfil' continua a les dos llistes de rutes sense indexar;
+ *   · les cinc verticals (/mapa, /vehicle, /animalets, /treball i /habitatge), amb el títol i
+ *     la descripció que registra SeccioVertical (TEXTOS_VERTICALS, per AST);
+ *   · els àlies que el Router redirigix a una ruta del manifest (/esdeveniments, /wiki,
+ *     /skills, /ia, /realitat) i els de PAGE_ROUTE_MAP que faltaven (/page/<clau>);
+ *   · una publicació del Mur d'origen veïnal (snapshot amb origen:'veinal') entra SENSE
+ *     indexar i amb la targeta genèrica.
+ * Cada entrada pot portar `schema` (el @type del seu JSON-LD). evidence.origens diu de cada
+ * ruta si és del 'paquet', 'editorial' o 'veinal': el prerender en fa la política de fallada.
  * Retorna {manifest,evidence}; evidence és un rebut LOCAL separat, no publicable.
  */
 import fs from 'node:fs';
@@ -44,6 +64,8 @@ import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {textPla} from '../../src/config/metadadesSocials.js';
+import {esElementDePerfil, rutesDePerfils} from './perfils-socials.mjs';
+import {extrauRutes} from './rutes-del-router.mjs';
 
 const sha = text => createHash('sha256').update(text).digest('hex');
 export const BASE_IMAGE = '/assets/system/ui/og-socdepoble-1200x630.png';
@@ -90,10 +112,15 @@ export const PAGINES_INFORMATIVES = Object.freeze(['publicar_mur', 'publicar_mer
   /* Onada R14 · El receptari «Què dinem?» (Muro, El Comtat, 2019), amb la variant social de la làmina de
      l'olleta murera com a og_image (pageContent.patrimoniR14.js). */
   'receptes']);
+/* P0-SEO-UNIVERSAL (13-11-2026) · /page/node-zero NO entra ací: pageContent.r10.js i
+   pageContent.fediversityR20.js en recomponen l'entradeta en execució, i este productor llig el literal
+   de pageContent.js (AST, sense executar res): el head servit diria una cosa i el del client una altra
+   (ho caça src/config/coberturaSocial.test.js). És una exempció 'pendent' de la Porta de cobertura
+   (tooling/seo/exempcions-socials.mjs) fins que el productor puga llegir el text final. */
 
 /* P0-60 / IDEA-191 · Les adreces /page/<clau> que navigation.js (resolvePageSlugPath) porta a
    una publicació del Mur: l'àlies servix el mateix <head> que la publicació. Llista tancada. */
-export const PAGINES_A_PUBLICACIONS = Object.freeze(['anatomia-rural']);
+export const PAGINES_A_PUBLICACIONS = Object.freeze(['anatomia-rural', 'la-veu-de-soc-de-poble']);
 
 /* P0-60 / IDEA-191 · Les pàgines que pageContent.js afig a PAGE_COPY fora del literal
    (Object.assign): [font, exportació]. */
@@ -120,9 +147,20 @@ export const LLAVORS = Object.freeze([
   ['events', 'src/sections/mur/eventsSeed.js', 'CALENDAR_EVENTS'],
   ['events', 'src/sections/mur/eventsSeed.js', 'FEATURED_EVENTS'],
   ['pobles', 'src/sections/pobles/townsSeed.js', 'MOCK_TOWNS'],
+  ['mur', 'src/sections/mur/articles/laVeuDeSocDePobleContent.js', 'LA_VEU_DE_SOC_DE_POBLE_POST'],
   ['mur', 'src/sections/mur/articles/novesTecnologiesCulturaRuralContent.js', 'NOVES_TECNOLOGIES_CULTURA_RURAL_POST'],
   ['mur', 'src/sections/mur/feedSeed.js', 'MOCK_FEED']
 ].map(entrada => Object.freeze(entrada)));
+/* P0-SEO-UNIVERSAL · El directori /perfil: [ruta, secció que la pinta, títol, descripció], amb les
+   claus del diccionari que ProfileSection passa a encapcalamentDirectoriGent. Sense indexar. */
+export const LLISTA_DEL_DIRECTORI = Object.freeze(['/perfil', 'src/sections/profile/ProfileSection.jsx',
+  Object.freeze(['section.profile.title', 'Gent i Entitats']),
+  Object.freeze(['section.profile.subtitle', 'Directori de persones, entitats i col·lectius d’este poble.'])]);
+/* Les verticals: la secció que les registra i el component que les pinta al Router. */
+export const FONT_DE_VERTICALS = 'src/sections/verticals/SeccioVertical.jsx';
+const COMPONENT_VERTICAL = 'SeccioVertical';
+/* Les fonts del Router (rutes-del-router.mjs) i de les fitxes, a l'evidència. */
+export const FONTS_DEL_ROUTER = Object.freeze(['src/app/App.jsx', 'src/apps/plataforma/RutaApps.jsx']);
 /* Les publicacions del Mur són articles (og:type), com les remotes del snapshot. */
 const TIPUS_DE_LLAVOR = Object.freeze({ mur: 'article' });
 
@@ -161,7 +199,9 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
   })]);
   const POLITIQUES=['tooling/wiki/lib/publication-policy.mjs','src/config/imatgeSocial.js','src/config/metadadesSocials.js',
     'src/config/rutaSocial.js','src/config/navigation.js','src/sections/wiki-de-poble/seoWiki.js','src/sections/wiki-de-poble/parseMarkdown.js',
-    'src/components/universal/editorial.js','src/sections/pobles/nomsDelPoble.js','src/utils/iniciEditorial.js'];
+    'src/components/universal/editorial.js','src/sections/pobles/nomsDelPoble.js','src/utils/iniciEditorial.js',
+    // P0-SEO-UNIVERSAL · Les regles i les dades de les fitxes públiques (les mateixes del client).
+    'src/config/metadadesDePerfil.js','src/sections/profile/perfilsDelPaquet.js','src/data/identitatsSeed.js','src/data/agentsSeed.js'];
   const moduleAt = async rel => import(pathToFileURL(path.join(policyRoot,rel)).href);
   const [{publicMetadata,publicSeoRoute,confinedFile},{CAP_SOCIAL_BASE},{metadadesDePagina,metadadesDeDetall,metadadesDePlugin},{idDeDocumentWiki},{resolvePageSlugPath},
     {atributsPublics,metadadesDeDocumentPublic,metadadesDeDocumentWiki,portadaSocialDeLaWiki}]=await Promise.all(POLITIQUES.slice(0,6).map(moduleAt));
@@ -227,6 +267,17 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
   }
   for(const rel of POLITIQUES) {
     const file=confinedFile(policyRoot,path.join(policyRoot,rel));if(!file)throw new Error(`Mòdul de política absent: ${rel}`);record(file,fs.readFileSync(file),policyRoot);
+  }
+  /* P0-SEO-UNIVERSAL · El Router, llegit del codi (rutes-del-router.mjs), i les regles de les fitxes
+     públiques, les mateixes que crida el client. Un arbre sense App.jsx no té Router: cap ruta de
+     perfil, cap vertical i cap àlies de redirecció. Un Router que no es pot llegir amb seguretat (una
+     forma de ruta desconeguda) és porta roja: no es desplega un lloc amb rutes que el build no veu. */
+  const [navegacio,metadadesPerfil,paquetPerfils]=await Promise.all(['src/config/navigation.js','src/config/metadadesDePerfil.js','src/sections/profile/perfilsDelPaquet.js'].map(moduleAt));
+  let router=null;
+  if(hiEs(FONTS_DEL_ROUTER[0])) {
+    for(const rel of FONTS_DEL_ROUTER)if(hiEs(rel))sourceFile(rel);
+    router=await extrauRutes({root,policyRoot,moduls:{navegacio}});
+    if(router.infraccions.length)throw new Error(`El Router no es pot llegir amb seguretat: ${router.infraccions.map(i=>i.detall).join('; ')}`);
   }
   const PAGE_COPY=staticModule('src/sections/text/pageContent.js').get('PAGE_COPY');
   /* P0-60 / IDEA-191 · pageContent.js hi afig al final, amb Object.assign(PAGE_COPY, …), les pàgines
@@ -329,7 +380,7 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
   }
   const tradueix=([key,fallback])=>(typeof dictionary[key]==='string'&&dictionary[key].trim()?dictionary[key]:fallback);
   const imageOptions={origen:origin,permesos:[]};
-  const routes=Object.create(null),aliases=Object.create(null);
+  const routes=Object.create(null),aliases=Object.create(null),origens=Object.create(null);
   const baseImage=()=>{
     const {alt,type,width,height}=CAP_SOCIAL_BASE.image;
     return {url:new URL(BASE_IMAGE,origin).href,alt,width:Number(width),height:Number(height),type};
@@ -357,11 +408,16 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     if(/^image\/(?:png|jpeg|webp)$/.test(input.type||''))image.type=input.type;
     return image;
   }
-  function add(route,{title,description,image,imageAlt,type='website',own=false}) {
+  /* P0-SEO-UNIVERSAL · `index:false` és OpenGraph específic SENSE indexar: l'entrada porta les dos
+     marques explícites (index:false i compartible:true; social-edge.mjs · esServible). `schema` és el
+     @type del JSON-LD; `origen`, la classe de la ruta per a la política de fallada del prerender. */
+  function add(route,{title,description,image,imageAlt,type='website',own=false,index=true,schema,origen='editorial'}) {
     const key=normalizedKey(route,origin);if(Object.hasOwn(routes,key))throw new Error(`Ruta social duplicada: ${key}`);
     const titol=plainText(title,160),descripcio=plainText(description,300);
     if(!titol||!descripcio)throw new Error(`Metadada social incompleta: ${key}`);
-    routes[key]={title:titol,description:descripcio,image:socialImage(image,imageAlt||titol,{own,route:key}),type,canonical:new URL(key,origin).href,index:true};
+    routes[key]={title:titol,description:descripcio,image:socialImage(image,imageAlt||titol,{own,route:key}),type,canonical:new URL(key,origin).href,
+      ...(index===false?{index:false,compartible:true}:{index:true}),...(schema?{schema}:null)};
+    origens[key]=origen;
   }
   function alias(from,to) {
     from=normalizedKey(from,origin);to=normalizedKey(to,origin);
@@ -445,7 +501,48 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     add('/wikidepoble',{title:portada.title,description:portada.description,image:portada.image??null,own:true});
   }
   for(const [route,,titleKey,descriptionKey] of LLISTES) {
-    if(publicSeoRoute(route))add(route,{title:tradueix(titleKey),description:tradueix(descriptionKey),image:null});
+    if(publicSeoRoute(route))add(route,{title:tradueix(titleKey),description:tradueix(descriptionKey),image:null,schema:'CollectionPage'});
+  }
+  /* P0-SEO-UNIVERSAL · El directori /perfil: el títol i el subtítol que pinta ProfileSection, amb
+     OpenGraph específic i SENSE indexar ('perfil' continua a les dos llistes de rutes sense indexar:
+     el client també hi posa noindex). Només si l'arbre porta la secció. */
+  {
+    const [ruta,font,titol,descripcio]=LLISTA_DEL_DIRECTORI;
+    if(hiEs(font)) {
+      sourceFile(font);
+      add(ruta,{title:tradueix(titol),description:tradueix(descripcio),image:null,index:false,schema:'CollectionPage'});
+    }
+  }
+  /* P0-SEO-UNIVERSAL · Les verticals (/mapa, /vehicle, /animalets, /treball i /habitatge): cada ruta
+     del Router que pinta SeccioVertical, amb el títol (kicker) i la descripció (subtitle) que la
+     secció registra a useSEO: TEXTOS_VERTICALS, llegit de l'AST (el fitxer porta JSX i no s'executa).
+     Una forma no estàtica és porta roja, com als plugins. */
+  if(router&&hiEs(FONT_DE_VERTICALS)) {
+    const programa=parse(fs.readFileSync(sourceFile(FONT_DE_VERTICALS),'utf8'),{sourceType:'module',plugins:['jsx']}).program;
+    const sensePell=n=>{while(n?.type==='CallExpression'&&n.callee.type==='MemberExpression'&&n.callee.object.name==='Object'&&n.callee.property.name==='freeze'&&n.arguments.length===1)n=n.arguments[0];return n;};
+    const text=n=>(n?.type==='StringLiteral'?n.value:n?.type==='TemplateLiteral'&&!n.expressions.length?n.quasis.map(q=>q.value.cooked).join(''):undefined);
+    let taula=null;
+    for(const n of programa.body)if(n.type==='ExportNamedDeclaration'&&n.declaration?.type==='VariableDeclaration')
+      for(const d of n.declaration.declarations)if(d.id.name==='TEXTOS_VERTICALS')taula=sensePell(d.init);
+    if(taula?.type!=='ObjectExpression')throw new Error('TEXTOS_VERTICALS no és un objecte estàtic.');
+    const textos=Object.create(null);
+    for(const p of taula.properties) {
+      const camps=sensePell(p.value);
+      if(p.type!=='ObjectProperty'||p.computed||camps?.type!=='ObjectExpression')throw new Error('Vertical no estàtica.');
+      const parell=nom=>{
+        const valor=sensePell(camps.properties.find(c=>c.type==='ObjectProperty'&&!c.computed&&(c.key.name||c.key.value)===nom)?.value);
+        const [clau,reserva]=valor?.type==='ArrayExpression'&&valor.elements.length===2?valor.elements.map(text):[];
+        if(clau===undefined||reserva===undefined)throw new Error(`Vertical no estàtica: ${nom}.`);
+        return [clau,reserva];
+      };
+      textos[p.key.name||p.key.value]={kicker:parell('kicker'),subtitle:parell('subtitle')};
+    }
+    for(const ruta of router.rutes) {
+      const ambit=ruta.component===COMPONENT_VERTICAL?ruta.props.ambit:null;
+      if(!ambit||/[:*]/.test(ruta.patro)||Object.hasOwn(routes,ruta.patro)||!publicSeoRoute(ruta.patro))continue;
+      if(!Object.hasOwn(textos,ambit))throw new Error(`Vertical sense textos: ${ambit}.`);
+      add(ruta.patro,{title:tradueix(textos[ambit].kicker),description:tradueix(textos[ambit].subtitle),image:null,schema:'CollectionPage'});
+    }
   }
   const deLlavor=new Map();
   for(const [section,rel,name] of LLAVORS) {
@@ -482,11 +579,16 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
   for(const item of publicSnapshot) {
     if(!item||item.visibility!=='public'||item.status!=='published'||!SOCIAL_SECTIONS.has(item.sectionId))continue;
     if(typeof item.id!=='string'||!item.id||item.id.length>160||/[\u0000- /?#\\]/.test(item.id))throw new Error('ID de publicació invàlid.');
+    if(item.origen!==undefined&&item.origen!=='veinal')throw new Error('Origen de publicació invàlid.');
     const route=`/${item.sectionId}/${encodeURIComponent(item.id)}`;
     // QA-H04 · La remota substituïx la llavor del mateix camí, també amb altres majúscules (mai una pàgina, una llista ni la Wiki).
     const plegada=normalizedKey(route,origin).toLowerCase();
-    if(deLlavor.has(plegada)){delete routes[deLlavor.get(plegada)];deLlavor.delete(plegada);}
-    add(route,{title:item.title,description:item.description,image:item.image,imageAlt:item.imageAlt,type:'article',own:strictSnapshot});
+    if(deLlavor.has(plegada)){delete routes[deLlavor.get(plegada)];delete origens[deLlavor.get(plegada)];deLlavor.delete(plegada);}
+    /* P0-SEO-UNIVERSAL (P1) · Una publicació del Mur d'origen veïnal (llig_mur_public) es cou en estàtic i
+       una revocació no hi arriba fins a la release següent: entra SENSE indexar i amb la targeta genèrica
+       (la projecció pública no porta cap imatge). */
+    if(item.origen==='veinal')add(route,{title:item.title,description:item.description,image:null,type:'article',index:false,origen:'veinal'});
+    else add(route,{title:item.title,description:item.description,image:item.image,imageAlt:item.imageAlt,type:'article',own:strictSnapshot});
   }
   if(publicSnapshot.length)sources.set('projection:public-section-submissions',sha(JSON.stringify(publicSnapshot)));
   /* P0-60 / IDEA-191 · /page/<clau> que navigation.js porta a una publicació del Mur: el mateix head
@@ -500,10 +602,55 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     const clau=Object.keys(routes).find(ruta=>ruta.toLowerCase()===normalizedKey(desti,origin).toLowerCase());
     if(clau)alias(`/page/${key}`,clau);
   }
+  /* P0-SEO-UNIVERSAL · Les fitxes públiques: les identitats del paquet (sempre) i les entitats del
+     directori (els elements 'perfil' del snapshot), amb la canònica única de cada una i els seus àlies
+     en cada família del Router, per slug i per id. Mai llança per una dada d'un veí: un camí que es
+     perd ix al rebut (evidence.perfils). Una imatge 'bloquejada' d'una identitat del paquet sí que és
+     porta roja (és editorial); la d'una entitat del directori cau a la targeta genèrica (own:false). */
+  let perfils=null;
+  if(router) {
+    const elements=publicSnapshot.filter(item=>item&&item.sectionId==='perfil'&&item.visibility==='public'&&item.status==='published');
+    for(const element of elements)if(!esElementDePerfil(element,metadadesPerfil.FORMA_UUID))throw new Error('Element de perfil invàlid al snapshot.');
+    const privades=new Set(router.privades);
+    const indexable=ruta=>publicSeoRoute(ruta)&&!privades.has(String(ruta).replace(/^\/+/,'').split(/[/?#]/)[0]);
+    const pla=rutesDePerfils({elements,families:router.families,moduls:{metadades:metadadesPerfil,paquet:paquetPerfils},opcions:imageOptions,indexable});
+    const conflictes=[...pla.conflictes];
+    for(const fitxa of pla.canoniques) {
+      if(Object.hasOwn(routes,fitxa.ruta)||Object.hasOwn(aliases,fitxa.ruta)){conflictes.push({cami:fitxa.ruta,de:fitxa.id,motiu:'el camí ja és d’una altra ruta del manifest'});continue;}
+      const delPaquet=fitxa.origen==='paquet';
+      if(delPaquet)blocked(fitxa.ruta,fitxa.imatge);
+      add(fitxa.ruta,{title:fitxa.title,description:fitxa.description,image:fitxa.image,imageAlt:fitxa.imageAlt,type:'website',own:delPaquet,
+        index:fitxa.index,schema:fitxa.schema,origen:fitxa.origen});
+    }
+    let nAlies=0;
+    for(const [cami,canonica] of pla.alies) {
+      if(!Object.hasOwn(routes,canonica)||Object.hasOwn(routes,cami)||Object.hasOwn(aliases,cami)){conflictes.push({cami,de:canonica,motiu:'àlies sense destí o ja ocupat'});continue;}
+      alias(cami,canonica);nAlies+=1;
+    }
+    perfils={canoniques:pla.canoniques.filter(f=>Object.hasOwn(routes,f.ruta)).map(f=>({ruta:f.ruta,origen:f.origen,id:f.id})),alies:nAlies,conflictes,avisos:pla.avisos};
+    /* Els àlies que el Router redirigix, de manera estàtica, a una ruta del manifest (/esdeveniments a
+       /calendari, /wiki i /skills a /wikidepoble, /ia a /anima, /realitat a /iaia): el mateix head que
+       el destí, amb el seu canonical. Els de sempre (/descarregues, /fediversity, /receptes) ja hi són. */
+    const destiAlManifest=desti=>(Object.hasOwn(routes,desti)?desti:Object.hasOwn(aliases,desti)?aliases[desti]:null);
+    for(const ruta of router.rutes) {
+      const desti=ruta.redireccio?.desti;
+      if(!desti||ruta.condicional||ruta.guarda||/[:*]/.test(ruta.patro)||ruta.patro==='/')continue;
+      const final=destiAlManifest(desti);
+      if(final&&!Object.hasOwn(routes,ruta.patro)&&!Object.hasOwn(aliases,ruta.patro))alias(ruta.patro,final);
+    }
+    /* Les adreces /page/<clau> que navigation.js (PAGE_ROUTE_MAP) porta a una ruta del manifest i que
+       encara no hi eren (/page/el-projecte, /page/ia, /page/privadesa, /page/projecte-fediversity…). */
+    for(const clau of Object.keys(navegacio.PAGE_ROUTE_MAP||{})) {
+      const cami=`/page/${clau}`,final=destiAlManifest(resolvePageSlugPath(clau));
+      if(final&&final!==cami&&!Object.hasOwn(routes,cami)&&!Object.hasOwn(aliases,cami))alias(cami,final);
+    }
+  }
   for(const [file,digest] of sourcePaths)if(sha(fs.readFileSync(file))!==digest)throw new Error('Una font ha canviat durant el build; regenereu el manifest.');
   const manifest={schema:'sdp.social-manifest.v1',origin,routes:Object.fromEntries(Object.entries(routes).sort(([a],[b])=>a.localeCompare(b))),aliases:Object.fromEntries(Object.entries(aliases).sort(([a],[b])=>a.localeCompare(b)))};
   const inputSources=Object.fromEntries([...sources].sort(([a],[b])=>a.localeCompare(b)));
-  const evidence={hashSrc:sha(JSON.stringify(inputSources)),hashManifest:sha(JSON.stringify(manifest)),sources:inputSources};
+  const evidence={hashSrc:sha(JSON.stringify(inputSources)),hashManifest:sha(JSON.stringify(manifest)),sources:inputSources,
+    // P0-SEO-UNIVERSAL · La classe de cada ruta ('paquet', 'editorial' o 'veinal') i el rebut de les fitxes.
+    origens:Object.fromEntries(Object.keys(manifest.routes).map(clau=>[clau,origens[clau]||'editorial'])),...(perfils?{perfils}:null)};
   return {manifest,evidence};
 }
 

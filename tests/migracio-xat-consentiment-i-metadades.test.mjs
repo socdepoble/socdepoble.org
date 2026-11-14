@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { comparaVersions, versioDeFitxer } from '../scripts/supabase/verifica-migracions.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NOM = '2610081543_xat_consentiment_i_metadades.sql';
@@ -18,7 +19,11 @@ const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const llig = (fitxer) => fs.readFileSync(path.join(MIGRACIONS, fitxer), 'utf8');
 const SQL = llig(NOM);
 const CAPCALERA = SQL.slice(0, SQL.indexOf('begin;'));
-const ORDRE = fs.readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql')).sort();
+/* R24 · Catàleg mixt (R21.9b): l'ordre és el cronològic del verificador
+   (aammddhhmm com a 20aammddhhmm00), no l'alfabètic cru, que posaria tota
+   migració de 14 dígits davant de 2610081543. */
+const ORDRE = fs.readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql'))
+  .sort((a, b) => comparaVersions(versioDeFitxer(a), versioDeFitxer(b)) || a.localeCompare(b, 'en'));
 
 /** Talla el SQL en sentències pel `;` de nivell zero, sense comentaris.
  *  Còpia fidel de l'escàner de tests/migracio-xat-de-pagina.test.mjs. */
@@ -239,7 +244,10 @@ const redefinicioFidel = (fitxer) => {
 test('B03 · SDP-XAT-016 és nou: cap altra migració no l’usa, tret de les redefinicions fidels de crea_fil_directe', () => {
   const altres = ORDRE.filter((f) => f !== NOM && llig(f).includes('SDP-XAT-016'));
   assert.deepEqual(altres.map(redefinicioFidel).filter(Boolean), []);
-  assert.deepEqual(altres, ['2611121630_xat_propi.sql'], 'una redefinició nova de crea_fil_directe: revisa-la i afig-la ací');
+  /* R24 · 20261114060000 (IDEA-260 a): la branca de persona busca per la clau
+     canònica; el bloc de consentiment es queda lletra a lletra i al mateix lloc. */
+  assert.deepEqual(altres, ['2611121630_xat_propi.sql', '20261114060000_r24_xat_directe_canonic_i_reconciliacio.sql'],
+    'una redefinició nova de crea_fil_directe: revisa-la i afig-la ací');
   assert.equal(SQL.split("raise exception 'SDP-XAT-016").length, 2);
 });
 

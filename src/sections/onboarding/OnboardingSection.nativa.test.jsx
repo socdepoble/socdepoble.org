@@ -8,7 +8,9 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
   navigate: vi.fn(), toast: vi.fn(), entra: vi.fn(), demana: vi.fn(), oblida: vi.fn(), abandona: vi.fn(), quanLlest: vi.fn(),
-  plataforma: 'web', botons: [], capacitat: true, config: null, t: undefined, enterRemote: vi.fn(), pagina: null
+  plataforma: 'web', botons: [], capacitat: true, config: null, t: undefined, enterRemote: vi.fn(), pagina: null,
+  /* R24 botigues (A3) · La capacitat opcional de recuperar la contrasenya (el port remot la té). */
+  recupera: false
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate }));
 /* Fase D (261020, revisió) · L1 · La doble guarda les props de la capçalera. */
@@ -19,7 +21,8 @@ vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () 
 vi.mock('../../app/contexts/SessionContext', () => ({
   useSession: () => ({
     currentUser: null, registerWithPassword: vi.fn(), loginWithPassword: vi.fn(), loginWithGoogle: vi.fn(),
-    teCapacitat: (nom) => nom === 'entradaAmbToken' && m.capacitat, entraAmbTokenDeProveidor: m.entra
+    teCapacitat: (nom) => (nom === 'entradaAmbToken' && m.capacitat) || (nom === 'recuperacioContrasenya' && m.recupera),
+    entraAmbTokenDeProveidor: m.entra, demanaRecuperacioContrasenya: vi.fn(), definixContrasenyaNova: vi.fn()
   })
 }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIState: () => ({ externalConfig: m.config, t: m.t }) }));
@@ -73,6 +76,7 @@ beforeEach(() => {
   m.demana.mockResolvedValue(CREDENCIAL);
   m.entra.mockResolvedValue({ user: { id: 'U' } });
   m.capacitat = true;
+  m.recupera = false;
   m.config = { dataMode: 'remote', tenantId: TENANT };
   m.t = createTranslator('ca');
   enNatiu('web', []);
@@ -369,5 +373,65 @@ describe('els errors', () => {
     } finally {
       errors.mockRestore();
     }
+  });
+});
+
+/* R24 botigues · A3 (RC-1, incident 261106) · Un compte creat amb Google al web no té contrasenya. Al
+   build 1.0.0+2 (sense cap client de Google) l'app no oferia cap botó i l'error natiu només deia
+   «entra amb el correu»: la persona no tenia cap camí. Ara, amb la recuperació del port, l'error del
+   telèfon i l'explicació d'«Entra al teu compte» sense botons nomenen «Has oblidat la contrasenya?». */
+describe('A3 · el camí de rescat dels comptes només de Google o d’Apple', () => {
+  const RESCAT = 'Has oblidat la contrasenya?';
+  afterEach(() => { window.history.replaceState(null, '', '/'); });
+
+  test('una fallada del telèfon (FALLIDA) apunta a «Has oblidat la contrasenya?» quan el port pot recuperar-la', async () => {
+    m.recupera = true;
+    m.demana.mockRejectedValue(errorNatiu(CODI_ENTRADA_NATIVA.FALLIDA));
+    enNatiu('android', ['google']);
+    await pinta();
+    await act(async () => { fireEvent.click(google()); });
+    const alerta = screen.getByRole('alert');
+    expect(alerta.textContent).toContain('No s’ha pogut completar l’entrada des del telèfon.');
+    expect(alerta.textContent).toContain(`«${RESCAT}»`);
+    expect(alerta.textContent).toMatch(/Si vas crear el compte amb Google o amb Apple al web/);
+  });
+
+  test('sense la recuperació al port, el text de sempre: cap promesa d’un botó que no hi és', async () => {
+    m.demana.mockRejectedValue(errorNatiu(CODI_ENTRADA_NATIVA.FALLIDA));
+    enNatiu('android', ['google']);
+    await pinta();
+    await act(async () => { fireEvent.click(google()); });
+    const text = screen.getByRole('alert').textContent;
+    expect(text).toContain('No s’ha pogut completar l’entrada des del telèfon. Torna-ho a provar o entra amb el correu.');
+    expect(text).not.toContain(RESCAT);
+  });
+
+  test('B1 · CONFIGURACIO (Google no reconeix la instal·lació) té text propi, honest, i el mateix camí de rescat', async () => {
+    m.recupera = true;
+    m.demana.mockRejectedValue(errorNatiu(CODI_ENTRADA_NATIVA.CONFIGURACIO));
+    enNatiu('android', ['google']);
+    await pinta();
+    await act(async () => { fireEvent.click(google()); });
+    const alerta = screen.getByRole('alert');
+    expect(alerta.classList.contains('sdp-alerta--error')).toBe(true);
+    expect(alerta.textContent).toContain('Google no reconeix esta instal·lació de l’app: el problema és de la configuració de Sóc de Poble, no del teu compte.');
+    expect(alerta.textContent).toContain(`«${RESCAT}»`);
+    expect(document.activeElement).toBe(google());
+  });
+
+  test('a l’app sense cap botó social, «Entra al teu compte» explica com posar-li contrasenya, i el botó hi és', async () => {
+    m.recupera = true;
+    window.history.replaceState(null, '', '/registre?mode=entrar');
+    enNatiu('android', []);
+    await pinta();
+    const intro = screen.getByText('Entra amb el correu i la contrasenya del teu compte. Si el vas crear amb Google o amb Apple al web, encara no té contrasenya: toca «Has oblidat la contrasenya?» per a posar-li’n una.');
+    expect(intro.className).toBe('onboarding-card__intro');
+    expect(screen.queryByText(INTRO_WEB)).toBeNull();
+    expect(screen.getByRole('button', { name: RESCAT })).toBeTruthy();
+    cleanup();
+    /* iOS sense Apple encés (cap botó, App Store 4.8): el mateix camí. */
+    enNatiu('ios', []);
+    await pinta();
+    expect(screen.getByText(/encara no té contrasenya: toca «Has oblidat la contrasenya\?» per a posar-li’n una\./).className).toBe('onboarding-card__intro');
   });
 });

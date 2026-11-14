@@ -56,7 +56,11 @@ describe('R54 proposed policy2.6 (0440 NOT applied), append-only; /legal keeps s
   test('/legal serves the sealed2.5; the2.6 lives only in 0440 and is exactly2.5 plus the authorized R54 paragraphs', () => {
     expect(SERVIT).toBe(legalContent.html); expect(SERVIT).toHaveLength(59594); expect(sha(SERVIT)).toBe(SHA_25);
     // Registre de la Frontissa (clau legal) de HEAD: el text servit no ha canviat.
-    expect(sha(JSON.stringify(PAGE_COPY.legal))).toBe('0a08fd743c2b4139e322cdd457e489f5dab6003bfe53d93a5d424cb457495b94');
+    // Expectativa actualitzada a propòsit: Llibre Mestre, Onada R23 (14-11-2026 01:18), «Canvi Global de Categoria a
+    // 💻 Tecnologia i Disseny». És l'única diferència de la clau legal amb el registre: desfet eixe nom curt, l'empremta
+    // torna a ser la registrada. La nova empremta l'aprova el Mestre a la Frontissa (frontissa-contingut.mjs --aprova).
+    const legalAmbElNomDeHEAD = JSON.stringify(PAGE_COPY.legal).replaceAll('💻 Tecnologia i Disseny', '💻 Tecnologia Lliure, Dades Obertes i Disseny');
+    expect(sha(legalAmbElNomDeHEAD)).toBe('0a08fd743c2b4139e322cdd457e489f5dab6003bfe53d93a5d424cb457495b94');
     expect(SERVIT).not.toMatch(/Versió 2\.6/);
     expect(SERVIT.replace(/<\/?strong>/g, '')).toContain('Versió 2.5 · En vigor des del 6 de novembre de 2026.');
     expect(HTML).toHaveLength(61501); expect(sha(HTML)).toBe(HASH);

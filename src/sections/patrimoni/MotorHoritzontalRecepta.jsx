@@ -14,6 +14,17 @@ const racionsValides = valor => Number.isSafeInteger(valor) && valor >= 1 && val
 const lligRacions = valor => valor === '' ? null : Number(valor);
 const euros = (c) => c == null ? 'Pendent' : `${(c / 100).toFixed(2).replace('.', ',')} €`;
 const unitats = ['g', 'kg', 'ml', 'cl', 'l', 'u'].map((valor) => ({ valor, etiqueta: valor }));
+const MARQUES_GRAN_SUPERFICIE = new Set(['mercadona', 'hacendado', 'bosque verde', 'deliplus', 'compy']);
+const PATRO_MARCA_GRAN_SUPERFICIE = /\b(?:Mercadona|Hacendado|Bosque Verde|Deliplus|Compy)\b/gi;
+const marcaVisible = (marca) => {
+  const neta = typeof marca === 'string' ? marca.trim() : '';
+  return neta && !MARQUES_GRAN_SUPERFICIE.has(neta.toLocaleLowerCase('ca')) ? neta : '';
+};
+const nomProducteVisible = (nom) => (
+  typeof nom === 'string'
+    ? nom.replace(PATRO_MARCA_GRAN_SUPERFICIE, '').replace(/\s{2,}/g, ' ').trim()
+    : ''
+);
 
 /** Onada R15 (P1-02) · L'entrada des de /receptes/:slug: la fitxa del llibre i la seua obra. L'adaptació per al
  * càlcul viatja amb el motor, en el tros diferit, i no al de la pàgina pública. */
@@ -52,12 +63,12 @@ export default function MotorHoritzontalRecepta({ recepta }) {
   const actualitza = (index, camp, valor) => setSeleccions((prev) => ({ ...prev, [index]: { ...prev[index], [camp]: valor } }));
   const actualitzaOferta = (index, camp, valor) => setSeleccions((prev) => ({ ...prev, [index]: { ...prev[index], oferta: { ...prev[index]?.oferta, [camp]: valor } } }));
   const actualitzaCompra = (index, camp, valor) => setSeleccions((prev) => ({ ...prev, [index]: { ...prev[index], compraParroquia: { ...prev[index]?.compraParroquia, [camp]: valor } } }));
-  const opcionsProductes = [{ valor: '', etiqueta: 'Tria el producte que usaràs' }, { valor: 'oferta-local', etiqueta: 'Pressupost de La Torre, cooperativa o altre proveïdor' }, ...(catalegParroquiaDisponible() ? [{ valor: 'compra-parroquia', etiqueta: 'Compra històrica de La Parròquia' }] : []), ...productes.filter((p) => `${p.nom} ${p.marca}`.toLocaleLowerCase('ca').includes(cerca.toLocaleLowerCase('ca'))).map((p) => ({ valor: p.id, etiqueta: `${p.nom} · ${p.marca} · ${p.preuUnitari} €/ ${p.unitatPreuUnitari}` }))];
+  const opcionsProductes = [{ valor: '', etiqueta: 'Tria el producte que utilitzaràs' }, { valor: 'oferta-local', etiqueta: 'Pressupost de La Torre, cooperativa o altre proveïdor' }, ...(catalegParroquiaDisponible() ? [{ valor: 'compra-parroquia', etiqueta: 'Compra històrica de La Parròquia' }] : []), ...productes.filter((p) => `${nomProducteVisible(p.nom)} ${marcaVisible(p.marca)}`.toLocaleLowerCase('ca').includes(cerca.toLocaleLowerCase('ca'))).map((p) => ({ valor: p.id, etiqueta: [nomProducteVisible(p.nom), marcaVisible(p.marca), `${p.preuUnitari} €/ ${p.unitatPreuUnitari}`].filter(Boolean).join(' · ') }))];
   return <section aria-label="Escandall i connexions de la recepta">
     <Pila gap={4}>
       <h2>Escandall de la recepta</h2>
-      <p>Tria un producte per a cada ingredient, confirma la quantitat i indica la minva. Els preus de Mercadona són els del full de compra de 2026-10-03.</p>
-      <p>Cost de compra domèstica amb impostos inclosos.{barDisponible && ' Per al marge empresarial usa els escandalls del Bar i confirma la base fiscal de la compra.'}</p>
+      <p>Tria un producte per a cada ingredient, confirma la quantitat i indica la minva. Els preus del catàleg base són orientatius i servixen per a estimar la cistella a la botiga del teu poble.</p>
+      <p>Cost de compra domèstica amb impostos inclosos.{barDisponible && ' Per al marge empresarial utilitza els escandalls del Bar i confirma la base fiscal de la compra.'}</p>
       <p>Indica les racions originals i les que vols preparar abans de calcular. El llibre no les fixa per a totes les receptes.</p>
       {error && <Alerta to="error">{error}</Alerta>}
       <details><summary>Revisa o desglossa els ingredients</summary><Pila gap={3}>
@@ -67,11 +78,11 @@ export default function MotorHoritzontalRecepta({ recepta }) {
       </Pila></details>
       <Camp etiqueta="Racions de la recepta original"><CampText tipus="number" min="1" max="10000" value={racionsBase ?? ''} onChange={(e) => setRacionsBase(lligRacions(e.target.value))} /></Camp>
       <Camp etiqueta="Racions que vols preparar"><CampText tipus="number" min="1" max="10000" value={racions ?? ''} onChange={(e) => setRacions(lligRacions(e.target.value))} /></Camp>
-      <Camp etiqueta="Busca productes al catàleg de Mercadona"><CampText value={cerca} onChange={(e) => setCerca(e.target.value)} /></Camp>
+      <Camp etiqueta="Busca productes al catàleg de rebost"><CampText value={cerca} onChange={(e) => setCerca(e.target.value)} /></Camp>
       {ingredients.map((text, index) => {
         const mesura = mesuraIngredient(text), choice = seleccions[index] || {};
         const selected = productes.find((p) => p.id === choice.producteId);
-        const opts = selected && !opcionsProductes.some((o) => o.valor === selected.id) ? [...opcionsProductes, { valor: selected.id, etiqueta: selected.nom }] : opcionsProductes;
+        const opts = selected && !opcionsProductes.some((o) => o.valor === selected.id) ? [...opcionsProductes, { valor: selected.id, etiqueta: nomProducteVisible(selected.nom) }] : opcionsProductes;
         return <details key={index}><summary>{text} · {euros(resultat?.linies[index]?.costCents)}</summary><Pila gap={3}>
           <Camp etiqueta={`Producte per a ${text}`}><Selector value={choice.producteId || ''} opcions={opts} onChange={(e) => actualitza(index, 'producteId', e.target.value)} /></Camp>
           {mesura.compost && <p>Esta línia ajunta diversos ingredients. Desglossa-la abans de calcular el total.</p>}

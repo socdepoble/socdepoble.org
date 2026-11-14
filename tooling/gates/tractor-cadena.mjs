@@ -71,6 +71,7 @@ const EXCUSES = new Map([
   ['porta:baseline', 'Inicialització: genera baselines de deute. Es corre a mà una vegada, no a cada commit.'],
   ['porta:matrix', 'Consulta de context i encaminament, no validador; l’autoritat es comprova en cada torn.'],
   ['porta:segella:update', 'Mutació manual amb reconciliació explícita i evidència; la cadena executa porta:segella en mode verificació.'],
+  ['porta:consola-zero', 'Arnés pesat (vite build, Firebase Hosting local i navegador headless): es passa abans de cada desplegament web, no a cada commit (Onada R24.2, paquet de desplegament).'],
 ]);
 
 /**

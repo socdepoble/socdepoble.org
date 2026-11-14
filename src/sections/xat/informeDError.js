@@ -22,6 +22,7 @@
  * Pur, llevat de les lectures de l'entorn (`entorn`), que es poden injectar.
  */
 import { CORREU_CONTACTE } from '../../config/contacte.js';
+import { darreraRutaForaDelXat, oblidaRutaForaDelXat, recordaRutaForaDelXat } from './rutaForaDelXat.js';
 
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /* La secció és una paraula de ruta: minúscules, xifres i guionets. */
@@ -62,22 +63,10 @@ export function enllacDeCorreu(informe, assumpte = '', correu = CORREU_DE_RESERV
   return `mailto:${correu}${parts.length ? `?${parts.join('&')}` : ''}`;
 }
 
-/* La darrera ruta de l'app fora del Xat: on era la persona abans d'entrar-hi.
-   La deixa XatContext (AvisadorXat, que viu per damunt de les rutes). Només
-   en memòria, en esta pestanya. */
-let darreraForaDelXat = null;
-const RE_RUTA_XAT = /(^|\/)xat(\/|$)/;
-
-/** Recorda `ruta` si no és del Xat. */
-export function recordaRutaForaDelXat(ruta) {
-  const valor = String(ruta || '');
-  if (valor && !RE_RUTA_XAT.test(valor)) darreraForaDelXat = valor;
-}
-
-/** Per a les proves. */
-export function oblidaRutaForaDelXat() {
-  darreraForaDelXat = null;
-}
+/* Onada R24 · wp_trinquet · La darrera ruta fora del Xat (recordaRutaForaDelXat,
+   oblidaRutaForaDelXat i el seu estat) viu a rutaForaDelXat.js, una fulla que
+   l'arrencada importa sense este mòdul; ací es reexporta amb els mateixos noms. */
+export { oblidaRutaForaDelXat, recordaRutaForaDelXat };
 
 /* El nom, la versió major i el sistema; l'ordre importa: Edge i Samsung
    porten «Chrome», i Chrome porta «Safari». */
@@ -144,7 +133,7 @@ export const PLANTILLA_INFORME = 'Què ha passat: \nOn: \nQuè esperaves: \n\n�
  * L'esborrany de l'informe, en la llengua de la interfície. `rutaActual` és
  * la ruta del Xat on s'ha premut el botó; l'anterior, la que s'ha recordat.
  */
-export function composaInforme({ t, rutaActual, rutaAnterior = darreraForaDelXat, entorn = entornDelNavegador(), versio = versioDelPaquet() } = {}) {
+export function composaInforme({ t, rutaActual, rutaAnterior = darreraRutaForaDelXat(), entorn = entornDelNavegador(), versio = versioDelPaquet() } = {}) {
   const ara = rutaSenseDades(rutaActual);
   const abans = rutaAnterior ? rutaSenseDades(rutaAnterior) : null;
   const plantilla = typeof t === 'function' ? t('section.xat.informe.plantilla', PLANTILLA_INFORME) : PLANTILLA_INFORME;

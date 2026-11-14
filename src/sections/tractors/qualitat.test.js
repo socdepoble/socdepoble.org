@@ -9,10 +9,14 @@ import { describe, expect, test } from 'vitest';
 
 const ARREL = process.cwd();
 const CARRIL = 'src/sections/tractors';
-const CODI = ['registreTractors.js', 'useTractors.js', 'PanellTractors.jsx', 'DialegAprovacio.jsx'].map((f) => `${CARRIL}/${f}`);
+/* Onada R24 (CODEX-R24-12) · També la via en línia de l'aprovació (AprovacioEnLinia.jsx) i els títols de la
+   fitxa (fitxaTractor.js), amb la seua prova de producció. */
+const CODI = [
+  'registreTractors.js', 'useTractors.js', 'PanellTractors.jsx', 'DialegAprovacio.jsx', 'AprovacioEnLinia.jsx', 'fitxaTractor.js'
+].map((f) => `${CARRIL}/${f}`);
 const PROVES = [
   'registreTractors.test.js', 'useTractors.test.jsx', 'PanellTractors.test.jsx', 'PanellTractors.produccio.test.js',
-  'DialegAprovacio.test.jsx', 'qualitat.test.js'
+  'DialegAprovacio.test.jsx', 'AprovacioEnLinia.produccio.test.js', 'fitxaTractor.test.js', 'qualitat.test.js'
 ].map((f) => `${CARRIL}/${f}`);
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 
@@ -98,5 +102,12 @@ describe('higiene del codi', () => {
     const panell = llig(`${CARRIL}/PanellTractors.jsx`);
     const usos = [...panell.matchAll(/dangerouslySetInnerHTML=\{\{ __html: ([^}]+) \}\}/g)].map((m) => m[1]);
     expect(usos).toEqual(['sanitizeHtml(parseMarkdown(rebaixaTitols(triat.fitxa)))']);
+    /* Onada R24 (CODEX-R24-12) · Fora de DEV, el diàleg d'aprovació porta la fitxa sencera, però en elements de
+       React (fitxaTractor.js): cap altre fitxer del carril hi posa HTML. */
+    for (const fitxer of CODI.filter((f) => !f.endsWith('PanellTractors.jsx'))) {
+      const codi = llig(fitxer);
+      expect(codi, fitxer).not.toMatch(/dangerouslySetInnerHTML|\.innerHTML\b/);
+      expect(codi, fitxer).not.toMatch(/from '[^']*(?:parseMarkdown|sanitize)[^']*'/);
+    }
   });
 });

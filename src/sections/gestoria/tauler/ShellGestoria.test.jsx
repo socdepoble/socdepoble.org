@@ -179,8 +179,11 @@ describe('la navegació i els mòduls', () => {
       canviaModul(m.id);
       expect(h1(closca), m.id).toBe(m.titol);
       expect(within(closca).getAllByRole('heading', { level: 2, name: m.subtitol }).length, m.id).toBeGreaterThan(0);
+      /* Onada R24 (A-gestoria-tpv-apps-1, IDEA-244) · Actualitzada a posta: el mòdul que existix porta també la
+         insígnia «En proves · Beta oberta» del Panell de Control (la classe canònica); el que és «en obres», no. */
       expect([...closca.querySelectorAll('.page-title-labels > li')].map((li) => li.textContent), m.id)
-        .toEqual(m.enObres ? ['GESTORIA', 'PANELL INTERN', 'En obres'] : ['GESTORIA', 'PANELL INTERN']);
+        .toEqual(m.enObres ? ['GESTORIA', 'PANELL INTERN', 'En obres'] : ['GESTORIA', 'PANELL INTERN', 'En proves · Beta oberta']);
+      expect(closca.querySelectorAll('.page-title-labels > li.sdp-insignia-beta-oberta'), m.id).toHaveLength(m.enObres ? 0 : 1);
     }
     /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): l'Escàner Local ja existix i deixa d'estar en obres. */
     expect(MODULS_GESTORIA.filter((m) => m.enObres).map((m) => m.id)).toEqual(['facturacio', 'contactes', 'burocracia', 'informes']);
@@ -1247,7 +1250,8 @@ describe('l’Escàner Local', () => {
   test('el mòdul és el panell de l’Escàner, no «en obres»; sense la signatura, «Cal aprovar el tractor» i cap selector', async () => {
     const { closca } = munta({ modulActiu: 'escaner' });
     expect(h1(closca)).toBe('Escàner Local');
-    expect([...closca.querySelectorAll('.page-title-labels > li')].map((li) => li.textContent)).toEqual(['GESTORIA', 'PANELL INTERN']);
+    /* Onada R24 (A-gestoria-tpv-apps-1) · Actualitzada a posta: el mòdul existix i porta la insígnia de les eines en proves. */
+    expect([...closca.querySelectorAll('.page-title-labels > li')].map((li) => li.textContent)).toEqual(['GESTORIA', 'PANELL INTERN', 'En proves · Beta oberta']);
     expect(screen.queryByText('En obres', { selector: 'p' })).toBeNull();
     const avis = (await screen.findByText('Cal aprovar el tractor', {}, { timeout: 3000 })).closest('.sdp-alerta');
     expect(avis.textContent).toMatch(/Gestoria · Escàner Local de la carpeta/);

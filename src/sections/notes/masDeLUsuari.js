@@ -27,8 +27,8 @@
  * pilot: entren a la seua carpeta «Mur». Abans itemsPublicatsDe les saltava i
  * el Bloc de Sóc de Poble no en mostrava cap.
  */
-import { autorDe, esRutaInterna, getSectionItemPath } from '../../config/navigation.js';
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { esRutaInterna, getSectionItemPath } from '../../config/navigation.js';
+import { esAliesDelProjecte, pertanyALActor } from './pertinencaDeLActor.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 import { SECTION_ID_PER_AMBIT } from '../../utils/publicacioUniversal.js';
@@ -76,25 +76,10 @@ export function seccioDeCarpeta(carpeta) {
   return Object.keys(CARPETA_PER_SECCIO).find((seccio) => CARPETA_PER_SECCIO[seccio] === String(carpeta)) ?? null;
 }
 
-/* Grup E (261008) · Els identificadors de l'entitat pilot que porta el seu
-   conjunt d'àlies (identitatsSeed · aliesDeLActor): l'id de la llavor i el
-   slug declarat, que en remot acompanya l'uuid de servidor. Una persona no en
-   rep mai cap (el slug i el padró només són àlies d'una entitat). */
-const ALIES_DEL_PROJECTE = Object.freeze([...new Set([ENTITAT_PILOT_SLUG, ENTITAT_PILOT_ID])]);
-
-/** Si un conjunt d'àlies és el de l'entitat pilot (Sóc de Poble), en llavor o en remot. */
-export const esAliesDelProjecte = (alies) => Boolean(alies?.size) && ALIES_DEL_PROJECTE.some((clau) => alies.has(clau));
-
-/** L'element és de l'actor si qui el signa és un dels seus àlies.
- *  Grup E (261008) · Una pàgina del sistema (isSystem) no porta cap autor:
- *  la signa Sóc de Poble, i només és de l'entitat pilot. Les publicacions dels
- *  veïns no poden dir que ho són (elementDeFilaPublicada en lleva isSystem). */
-export function pertanyALActor(item, alies) {
-  if (!item || !alies || !alies.size) return false;
-  if (item.isSystem) return esAliesDelProjecte(alies);
-  const autor = autorDe(item);
-  return Boolean(autor) && alies.has(autor.id);
-}
+/* Onada R24 · wp_trinquet · esAliesDelProjecte i pertanyALActor viuen a
+   pertinencaDeLActor.js, que l'arrencada importa sense este mòdul; ací es
+   reexporten amb els mateixos noms. */
+export { esAliesDelProjecte, pertanyALActor };
 
 function dataCurta(valor, locale) {
   if (!valor) return '';

@@ -118,7 +118,19 @@ export function mapejaFil(fil, ara = Date.now()) {
     ultimAutorId: fil.ultimAutorId || null,
     ultimSeq,
     llegitFinsSeq,
+    /* R24 · xat_entrega (P0-2) · El rebut PROPI: fins on ha arribat a esta
+       aplicació (filsPerEntregar el compara amb ultimSeq). Mai es pinta com a
+       marca dels altres. */
+    rebutFinsSeq: numero(fil.rebutFinsSeq),
     llegitPelsAltresFinsSeq: numero(fil.llegitPelsAltresFinsSeq),
+    ...(fil.rebutPelsAltresFinsSeq != null ? { rebutPelsAltresFinsSeq: numero(fil.rebutPelsAltresFinsSeq) } : {}),
+    /* R24 · xat_entrega (P0-1, P2-9) · Si el servidor informa de l'entrega
+       (20261114061000). Sense la columna, la marca no diu «encara no ha
+       arribat»: diu que este servidor no ho sap. */
+    rebutsConeguts: fil.rebutPelsAltresFinsSeq != null,
+    /* R24 · xat_entrega (P0-2) · Una conversa amb època E2EE (epocaActual > 0)
+       no s'entrega en segon pla en la v1. */
+    ...(numero(fil.epocaActual) > 0 ? { e2ee: true } : {}),
     noLlegits: esPropi
       ? 0
       : fil.noLlegits != null
@@ -242,18 +254,73 @@ export function derivaEstat(m, llegitPelsAltresFinsSeq, rebutPelsAltresFinsSeq =
  * altres).
  */
 export function estatDeLUltim(fil, joId) {
-  if (!fil || !joId || fil.ultimAutorId !== joId || !fil.ultimSeq) return null;
+  if (!fil || !joId || fil.ultimAutorId == null || String(fil.ultimAutorId) !== String(joId) || !fil.ultimSeq) return null;
   const llegit = fil.esPropi ? Math.max(numero(fil.llegitFinsSeq), numero(fil.ultimSeq)) : fil.llegitPelsAltresFinsSeq;
-  return derivaEstat({ sender: 'me', seq: fil.ultimSeq }, llegit);
+  const rebut = fil.esPropi ? 0 : numero(fil.rebutPelsAltresFinsSeq);
+  return derivaEstat({ sender: 'me', seq: fil.ultimSeq }, llegit, rebut);
 }
 
-/** Missatges del servidor (per `seq`) amb l'estat derivat i, al final, els pendents i fallits. */
-export function combinaMissatges(servidor, pendents, llegitPelsAltresFinsSeq) {
+/** Missatges del servidor (per `seq`) amb l'estat derivat i, al final, els pendents i fallits.
+ *  R24 · xat_entrega (P2-9) · Amb `rebutsConeguts` fals (un servidor que no
+ *  informa de l'entrega), un missatge propi «enviat» ho porta anotat
+ *  (`rebutsConeguts: false`) perquè la marca no diga que encara no ha arribat. */
+export function combinaMissatges(servidor, pendents, llegitPelsAltresFinsSeq, rebutPelsAltresFinsSeq = 0, rebutsConeguts = true) {
   const derivats = (servidor || []).map((m) => {
-    const estat = derivaEstat(m, llegitPelsAltresFinsSeq);
-    return estat === m.estatEnviament ? m : { ...m, estatEnviament: estat };
+    const estat = derivaEstat(m, llegitPelsAltresFinsSeq, rebutPelsAltresFinsSeq);
+    const desconegut = !rebutsConeguts && estat === 'enviat' && m.sender === 'me';
+    if (estat === m.estatEnviament && (m.rebutsConeguts === false) === desconegut) return m;
+    if (desconegut) return { ...m, estatEnviament: estat, rebutsConeguts: false };
+    const nou = { ...m, estatEnviament: estat };
+    delete nou.rebutsConeguts;
+    return nou;
   });
   return pendents && pendents.length ? [...derivats, ...pendents] : derivats;
+}
+
+/* ──────────────── Entrega en segon pla (R24 · xat_entrega, P0-2) ──────────────── */
+
+const RE_UUID_FIL = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Les converses que l'aplicació ha de descarregar en segon pla perquè el
+ * remitent veja ✓✓ gris («ha arribat a l'aplicació»), mai el blau: el rebut
+ * l'escriu carregaMissatges DESPRÉS de rebre els bytes, i la lectura continua
+ * sent de la bombolla visible. Pura.
+ *
+ * Fora: les files d'ajuda (`perDefecte`), els ids que no són UUID (llavor,
+ * fils locals), el fil obert (ja es descarrega), les comunitats (no tenen
+ * missatges), el fil propi, el de visitant (`participant: false`) i, en la v1,
+ * els xifrats d'extrem a extrem (`e2ee`) i, com a WhatsApp, la conversa on
+ * l'últim missatge és d'algú que has bloquejat (`bloquejat(autorId)`): no se
+ * li confirma cap entrega. Només amb novetats: `ultimSeq` per damunt del rebut
+ * propi i del cursor que l'aplicació ja ha descarregat. Per activitat, com a
+ * molt `maxim`.
+ *
+ * R24 · Gauntlet (G-client-1) · `intentats` (un Map per operació, id →
+ * { ultimSeq, finsA }) recorda el que el segon pla ja ha provat: una lectura
+ * acceptada que no arriba a `ultimSeq` (temporals caducats que xat_nous ja no
+ * torna) deixa el fil fora fins que `ultimSeq` canvie; una fallada el deixa
+ * fora fins a `finsA` (retard exponencial). Així cap fil encallat no ocupa
+ * mai cap de les `maxim` places: el filtre va abans del tall.
+ */
+function encaraIntentat(f, intentats, ara) {
+  const intent = intentats?.get?.(f.id);
+  if (!intent) return false;
+  if (Number.isFinite(intent.finsA)) return ara < intent.finsA;
+  return numero(f.ultimSeq) <= numero(intent.ultimSeq);
+}
+
+export function filsPerEntregar(fils, { actiuId = null, cursors = {}, maxim = 5, bloquejat = () => false, intentats = null, ara = Date.now() } = {}) {
+  if (!Array.isArray(fils) || !(maxim > 0)) return [];
+  return fils
+    .filter((f) => f && typeof f.id === 'string' && RE_UUID_FIL.test(f.id) && f.id !== actiuId
+      && !f.perDefecte && !f.esPropi && !f.esComunitat && f.tipus !== 'comunitat'
+      && f.participant !== false && !f.e2ee
+      && !(f.ultimAutorId != null && bloquejat(f.ultimAutorId))
+      && numero(f.ultimSeq) > Math.max(numero(f.rebutFinsSeq), numero(cursors?.[f.id]))
+      && !encaraIntentat(f, intentats, ara))
+    .sort(perActivitat)
+    .slice(0, maxim);
 }
 
 /* ─────────────────────────── No llegits ─────────────────────────── */

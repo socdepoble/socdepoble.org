@@ -163,3 +163,55 @@ test('D6 amb el rellotge avançat: ni la rotació d’una altra pestanya ni torn
     expect(getSessionState().estat).toBe('fora');
   } finally { delete document.visibilityState; }
 });
+
+/* R22 (sospites de xat-fluxos i nucli, Onada R22) · Una renovació que falla per
+   temps o 5xx no té cap transició fora de línia: navigator.onLine continua cert i
+   'online' no arriba mai. Tornar a la pestanya l'ha de tornar a provar. */
+test('R22 · renovació fallida per 5xx amb el JWT caducat: tornar a la pestanya la torna a provar (sense esperar «online»)', async () => {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+  try {
+    vi.useFakeTimers();
+    desaSessio({ access_token: token(A, -10), refresh_token: 'r1', user: { id: A } });
+    m.logout.mockImplementation(tancaCom);
+    m.refresh.mockRejectedValueOnce(new Error('Error de servidor (503)')).mockImplementationOnce(restauraCom('r2'));
+    sincronitza();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(m.logout).toHaveBeenCalledWith(expect.anything(), { abast: 'pestanya' });
+    expect(getSessionState().estat).toBe('fora');
+    expect(registre()?.rt).toBe('r1');
+    document.dispatchEvent(new Event('visibilitychange'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(m.refresh).toHaveBeenCalledTimes(2);
+    expect(getSessionState()).toMatchObject({ estat: 'dins', usuari: { id: A } });
+  } finally { delete document.visibilityState; }
+});
+
+/* R22 · Els tres reintents (1, 2 i 4 s) fallen i el quart temporitzador s'arma a la
+   caducitat. Si llavors el servidor ja respon, ha de renovar, no tancar la pestanya
+   sense provar-ho. */
+test('R22 · el reintent que venç a la caducitat torna a provar la renovació en lloc de tancar la pestanya', async () => {
+  vi.useFakeTimers();
+  desaSessio({ access_token: token(A, 90), refresh_token: 'r1', user: { id: A } });
+  m.logout.mockImplementation(tancaCom);
+  const renovaCom = async () => {
+    await Promise.resolve();
+    desaSessio({ access_token: token(A, 3600), user: { id: A } }, { renovacio: true });
+    window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: { id: A } } }));
+    return true;
+  };
+  m.refresh.mockRejectedValueOnce(new Error('Error de servidor (503)'))
+    .mockRejectedValueOnce(new Error('Error de servidor (503)'))
+    .mockRejectedValueOnce(new Error('Error de servidor (503)'))
+    .mockRejectedValueOnce(new Error('Error de servidor (503)'))
+    .mockImplementationOnce(renovaCom);
+  sincronitza();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(getSessionState().estat).toBe('dins');
+  await vi.advanceTimersByTimeAsync(30_000 + 1_000 + 2_000 + 4_000 + 100);
+  expect(m.refresh).toHaveBeenCalledTimes(4);
+  expect(getSessionState().estat).toBe('dins');
+  await vi.advanceTimersByTimeAsync(60_000);
+  expect(m.refresh).toHaveBeenCalledTimes(5);
+  expect(m.logout).not.toHaveBeenCalled();
+  expect(getSessionState()).toMatchObject({ estat: 'dins', usuari: { id: A } });
+});

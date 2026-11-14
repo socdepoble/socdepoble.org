@@ -9,12 +9,22 @@
  *
  * El pare l'ha de muntar sempre i canviar-li `key` a cada obertura: així el
  * focus torna al botó que l'ha obert i cada obertura comença neta.
+ *
+ * Onada R24 (CODEX-R24-12) · `fitxa` (opcional): el Markdown de la fitxa del
+ * tractor. Al panell de Tractors la fitxa és darrere del diàleg i no cal; fora
+ * de DEV (AprovacioEnLinia.jsx) no hi ha cap panell, i el diàleg la porta
+ * sencera abans de «He llegit la fitxa sencera», amb els títols al nivell i
+ * l'estil del panell (h5 i h6 dins de .sdp-tractors-panell__fitxa). Es pinta
+ * amb elements de React (fitxaTractor.js: cap HTML, cap sanejador), perquè la
+ * closca de la Gestoria també es compila com a mòdul net. Sense `fitxa`, el
+ * DOM de sempre.
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { Dialeg } from '../../components/PedraSeca/organismes/Dialeg.jsx';
 import { Camp, CampText, Casella } from '../../components/PedraSeca/organismes/formulari.jsx';
+import { blocsDeFitxa, trossosEnLinia } from './fitxaTractor.js';
 import { empremtaCurta } from './nucli/empremta.js';
 
 /* ErrorAprovacio.codi (i els de la UI) → què ha passat i què pot fer el Mestre. */
@@ -37,6 +47,45 @@ export function textError(error) {
   return { titol, detall: detall && detall !== titol ? detall : '' };
 }
 
+/* El text d'una línia de la fitxa: negreta i codi com a elements, la resta com a text. */
+function EnLinia({ text }) {
+  return trossosEnLinia(text).map((tros, i) => {
+    if (tros.tipus === 'fort') return <strong key={i}>{tros.text}</strong>;
+    if (tros.tipus === 'codi') return <code key={i}>{tros.text}</code>;
+    return tros.text;
+  });
+}
+
+/* La fitxa sencera. Penja del diàleg com del tractor al panell: «#» és un h5 i la resta, h6. */
+function FitxaDelTractor({ fitxa }) {
+  return (
+    <section className="sdp-tractors-panell__fitxa" aria-label="Fitxa explicativa">
+      {blocsDeFitxa(fitxa).map((bloc, i) => {
+        if (bloc.tipus === 'titol') {
+          const Titol = bloc.nivell <= 1 ? 'h5' : 'h6';
+          return <Titol key={i}><EnLinia text={bloc.text} /></Titol>;
+        }
+        if (bloc.tipus === 'llista') {
+          const Llista = bloc.ordenada ? 'ol' : 'ul';
+          return (
+            <Llista key={i}>
+              {bloc.elements.map((element, j) => (
+                <li key={j}>
+                  <EnLinia text={element.text} />
+                  {element.fills.length ? (
+                    <ul>{element.fills.map((fill, k) => <li key={k}><EnLinia text={fill.text} /></li>)}</ul>
+                  ) : null}
+                </li>
+              ))}
+            </Llista>
+          );
+        }
+        return <p key={i}><EnLinia text={bloc.text} /></p>;
+      })}
+    </section>
+  );
+}
+
 function curtaDe(empremta) {
   try {
     return empremtaCurta(empremta);
@@ -45,7 +94,7 @@ function curtaDe(empremta) {
   }
 }
 
-export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, empremta, webauthn = false }) {
+export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, empremta, webauthn = false, fitxa = null }) {
   const [llegit, setLlegit] = useState(false);
   const [text, setText] = useState('');
   const [ocupat, setOcupat] = useState(null);
@@ -96,6 +145,7 @@ export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, em
   }
 
   const nom = manifest?.nom ?? 'tractor';
+  const ambFitxa = typeof fitxa === 'string' && fitxa.trim() !== '';
 
   return (
     <Dialeg
@@ -106,15 +156,19 @@ export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, em
         ? `Aproves la versió ${manifest?.versio ?? ''} amb l’empremta curta ${curta}. Si canvia una sola línia del codi, del manifest o de la fitxa, l’aprovació deixa de valdre.`
         : 'Esta versió no té empremta: no es pot aprovar.'}
       tancaEnVel={!ocupat}
+      mida={ambFitxa ? 'g' : undefined}
       accions={<Boto varietat="secundari" onClick={() => tanca('boto')} disabled={Boolean(ocupat)}>Cancel·la</Boto>}
     >
       <div className="sdp-tractors-dialeg">
         <p className="sdp-tractors-dialeg__empremta">
           Empremta curta: <strong className="sdp-tractors-dialeg__curta">{curta ?? 'cap'}</strong>
         </p>
+        {ambFitxa ? <FitxaDelTractor fitxa={fitxa} /> : null}
         <Casella
           etiqueta="He llegit la fitxa sencera"
-          ajuda="Què fa, què llig, què escriu, què no fa mai i els seus límits. És al panell, darrere d’este diàleg."
+          ajuda={ambFitxa
+            ? 'Què fa, què llig, què escriu, què no fa mai i els seus límits. És ací dalt, dins d’este diàleg.'
+            : 'Què fa, què llig, què escriu, què no fa mai i els seus límits. És al panell, darrere d’este diàleg.'}
           checked={llegit}
           onChange={(e) => setLlegit(e.target.checked)}
           disabled={Boolean(ocupat)}

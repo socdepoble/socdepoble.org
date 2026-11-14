@@ -83,7 +83,7 @@ Recursos mestres per a forçar la consistència en tot el contingut generat (dis
 
 ### 2. GUIA DE TEXTOS (EL TO DE LA TIA MARIA)
 - **Estil:** Directe, didàctic, honest i sense "fum" comercial.
-- **Vocabulari:** Usa paraules de la terra com "Trellat", "Pedra Seca", "Oli Suau".
+- **Vocabulari:** Utilitza paraules de la terra com "Trellat", "Pedra Seca", "Oli Suau".
 - **Prohibit:** Evitar paraules buides com "revolucionari", "disruptiu" o "solució integral". Parlem de veïns, no de clients.
 
 ### 3. REGLES TÈCNIQUES

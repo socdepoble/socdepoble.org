@@ -15,7 +15,7 @@ Este document explica, no autoritza cap execució. Quan discrepe amb el reposito
 
 - **Implementat:** existeix al codi o a la configuració actual i es pot verificar.
 - **Contracte:** decisió vigent que tot canvi nou ha de respectar.
-- **Futur:** hipòtesi o línia d'investigació; no es pot usar com si ja funcionara.
+- **Futur:** hipòtesi o línia d'investigació; no es pot utilitzar com si ja funcionara.
 
 ## 1. Arquitectura implementada
 
@@ -38,7 +38,7 @@ Contractes de localització del codi:
 2. La configuració transversal viu en `src/config/`.
 3. La lectura i l'escriptura de dades viuen en `src/data/`; les escriptures cap a Sollutia continuen tancades (`ESCRIPTURES_PERMESES` és buida).
 4. L'arquitectura és online-first ([[ADR-2026-08-ONLINE-FIRST]]): Supabase és la font de veritat de les dades compartides, la memòria cau local és opcional i no autoritativa, i un error de xarxa es mostra amb honestedat.
-5. El Baseline 2022 és el sòl de compatibilitat; una API disponible al baseline s'usa directament, sense detecció ni fallback (vegeu `.agents/BASELINE.md`).
+5. El Baseline 2022 és el sòl de compatibilitat; una API disponible al baseline s'utilitza directament, sense detecció ni fallback (vegeu `.agents/BASELINE.md`).
 
 ## 2. Estat de les tecnologies descentralitzades
 

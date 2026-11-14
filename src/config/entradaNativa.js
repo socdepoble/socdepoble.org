@@ -12,6 +12,8 @@
    d'Apple (null amb Google): el backend el pot canviar al servidor per a poder
    revocar l'autorització quan la persona es dona de baixa.
    Errors amb `code`: CANCELADA quan la persona tanca el full; qualsevol altre és FALLIDA.
+   R24 botigues (B1, RC-9) · CONFIGURACIO quan Google rebutja la instal·lació (28444, DEVELOPER_ERROR:
+   el SHA-1 de la clau que signa l'app no és a cap client OAuth Android): la vista en diu un text propi.
    Fase D (261020, revisió) · viu() fals vol dir que ja no l'espera ningú: si el
    full encara no s'ha obert, l'adaptador no l'obri (CANCELADA). Un dispositiu
    natiu sense cap proveïdor també es registra (proveidors: []): la plataforma
@@ -23,7 +25,8 @@ export const CODI_ENTRADA_NATIVA = Object.freeze({
   CANCELADA: 'entrada-nativa-cancelada',
   FALLIDA: 'entrada-nativa-fallida',
   NO_DISPONIBLE: 'entrada-nativa-no-disponible',
-  EN_CURS: 'entrada-nativa-en-curs'
+  EN_CURS: 'entrada-nativa-en-curs',
+  CONFIGURACIO: 'entrada-nativa-configuracio'
 });
 const PLATAFORMES = Object.freeze(['ios', 'android']);
 /* Només l'ordre i la regla de botiga de la plataforma: a iOS, Apple primer i
@@ -126,7 +129,7 @@ export async function demanaCredencialNativa(proveidor, { viu = () => true } = {
     try {
       credencial = await registrat.demana(proveidor, { viu: algunViu });
     } catch (error) {
-      if (esCancelacioNativa(error) || error?.code === CODI_ENTRADA_NATIVA.FALLIDA) throw error;
+      if (esCancelacioNativa(error) || error?.code === CODI_ENTRADA_NATIVA.FALLIDA || error?.code === CODI_ENTRADA_NATIVA.CONFIGURACIO) throw error;
       throw errorNatiu(CODI_ENTRADA_NATIVA.FALLIDA, 'El telèfon no ha pogut completar l’entrada.', error);
     }
     const testimoni = textNet(credencial?.testimoni);

@@ -1,5 +1,11 @@
 import { Especimen } from '../Especimen.jsx';
 import { Alerta, Taula } from '../../../../components/PedraSeca/index.js';
+import {
+  CANON_9_IMATGES_MESTRES_NANO,
+  MAX_REFERENCIES_STYLE_LOCK,
+  MIN_REFERENCIES_STYLE_LOCK,
+  RESOLUCIO_QUADRADA_CANONICA_PX,
+} from '../../../../config/canonImatgesNano.js';
 
 const MARCA = [
   ['sw-primary-500', 'Taronja · fons', /* ALLOW_RAW_COLOR */ '#ff7300', '--sdp-primary-500'],
@@ -90,6 +96,33 @@ export default function EspecimenColor() {
       <h4>Escala Pedra</h4>
       <p>Neutre càlid, mai gris fred. El graó <strong>600</strong> és el sòl per a text secundari: és el primer que arriba a 7:1 sobre blanc.</p>
       <Paleta mostres={PEDRA.map(([n, nom, hex]) => [`sw-pedra-${n}`, `${nom} · ${n}`, hex, `--sdp-pedra-${n}`])} />
+
+      <h4>Cànon d’il·lustració del Nano · Registre A (IDEA-250)</h4>
+      <p>
+        Tota vinyeta nova de còmic costumbrista s’ancora visualment (<strong>Style Lock</strong>) adjuntant entre{' '}
+        <strong>{MIN_REFERENCIES_STYLE_LOCK}</strong> i <strong>{MAX_REFERENCIES_STYLE_LOCK}</strong> referències úniques d’este cànon a{' '}
+        <strong>{RESOLUCIO_QUADRADA_CANONICA_PX} × {RESOLUCIO_QUADRADA_CANONICA_PX} px</strong> (mai generació cega només des de text).
+      </p>
+      <Taula titol="Nou imatges mestres d’ancoratge visual" densa>
+        <thead>
+          <tr>
+            <th scope="col">Identificador</th>
+            <th scope="col">Composició</th>
+            <th scope="col">Recurs públic</th>
+            <th scope="col">Escena canònica</th>
+          </tr>
+        </thead>
+        <tbody>
+          {CANON_9_IMATGES_MESTRES_NANO.map((entrada) => (
+            <tr key={entrada.id}>
+              <td><code>{entrada.id}</code></td>
+              <td>{entrada.composicio}</td>
+              <td><code>{entrada.camiPublic}</code></td>
+              <td>{entrada.descripcioCanonica}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Taula>
     </Especimen>
   );
 }

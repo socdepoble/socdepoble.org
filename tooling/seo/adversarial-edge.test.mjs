@@ -44,7 +44,14 @@ test('títols hostils són text i no creen script ni atributs',async()=>{
   const copy=structuredClone(manifest);copy.routes['/projecte'].title=hostile;copy.routes['/projecte'].description=hostile;
   const body=await(await create({manifest:copy})(request('/projecte'))).text();const document=parse(body);
   assert.equal(document.title,hostile+' | Sóc de Poble');assert.equal(document.querySelector('meta[property="og:description"]').content,hostile);
-  assert.equal(document.querySelectorAll('img').length,0);assert.deepEqual([...document.querySelectorAll('script')].map(x=>x.outerHTML),[...parse(html).querySelectorAll('script')].map(x=>x.outerHTML));
+  assert.equal(document.querySelectorAll('img').length,0);
+  /* P0-SEO-UNIVERSAL (13-11-2026) · Expectativa actualitzada a posta: el head porta ara el JSON-LD de la ruta, un bloc
+     de dades marcat on el títol hostil és text escapat; la resta de scripts són exactament els del shell. */
+  const marcat=s=>s.hasAttribute('data-sdp-ssr');
+  assert.deepEqual([...document.querySelectorAll('script')].filter(s=>!marcat(s)).map(x=>x.outerHTML),[...parse(html).querySelectorAll('script')].map(x=>x.outerHTML));
+  const dades=[...document.querySelectorAll('script')].filter(marcat);
+  assert.equal(dades.length,1);assert.equal(dades[0].getAttribute('type'),'application/ld+json');
+  assert.equal(JSON.parse(dades[0].textContent).headline,hostile);assert.ok(!/[<>&]/.test(dades[0].textContent));
 });
 test('el preparador elimina duplicats, inclosos majúscules i og:image:secure_url; les del lloc, una vegada',()=>{
   const body=html.replace('</head>','<META PROPERTY="OG:TITLE" CONTENT="vell"><meta name="og:title" content="vell2"><meta property="og:image:secure_url" content="https://evil.invalid/x.png"><link rel="alternate canonical" href="https://evil.invalid/"><meta property="og:site_name" content="Duplicat"></head>');

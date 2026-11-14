@@ -41,14 +41,15 @@ export const MAX_ARTICLES_PORT = 2000;
 const METODES = Object.freeze(['llistaFonts', 'llistaArticles', 'article']);
 /* La llista tancada dels motius (la mateixa del servei, src/data/adaptadors/noticies/client.js).
    261024 Lector: 'adreca' (una adreça personal que el servei no llig; cap font contactada) i
-   'personals-off' (el servei no llig fonts personals; cap petició). */
-export const MOTIUS_NOTICIES = Object.freeze(['sense-connexio', 'temps', 'servidor', 'font', 'limit', 'adreca', 'personals-off']);
+   'personals-off' (el servei no llig fonts personals; cap petició). R22 (A-frontissa-federacio-r1-1):
+   'sense-servei' (la funció del backend no està desplegada; no és cosa d'un moment). */
+export const MOTIUS_NOTICIES = Object.freeze(['sense-connexio', 'temps', 'servidor', 'font', 'limit', 'adreca', 'personals-off', 'sense-servei']);
 /* Quan dos motius es repetixen igual (motiuDominant), mana el primer d'esta llista: sense
    connexió no hi ha res més a dir, i el límit diu a la persona que espere. 261024 (Lector final):
    'adreca' i 'personals-off' hi són també, darrere (no són silencis de cap web; el mateix ordre
    de la vista, vistes/Noticies.jsx), perquè motiuDominant els puga tornar: abans, unes caigudes
    que només eren d'eixos dos donaven null. */
-const PRIORITAT = Object.freeze(['sense-connexio', 'limit', 'servidor', 'temps', 'font', 'adreca', 'personals-off']);
+const PRIORITAT = Object.freeze(['sense-connexio', 'sense-servei', 'limit', 'servidor', 'temps', 'font', 'adreca', 'personals-off']);
 const MAX_MISSATGE = 200;
 const SENSE_CAIGUDES = Object.freeze({ caigudes: Object.freeze([]), motiu: null });
 

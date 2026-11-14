@@ -311,3 +311,10 @@ REGISTRE.push({ nom: 'BotoVeuIaia', fitxer: 'PedraSeca/molecules/BotoVeuIaia.jsx
    la recepta: proposta assistida, pendent de validació humana. L'ha feta un altre carril i
    encara no té espècimen a detalls/: «extern» fins que el catàleg la sincronitze; «viu» seria fals. */
 REGISTRE.push({ nom: 'CandidatsAlergens', fitxer: 'PedraSeca/molecules/CandidatsAlergens.jsx', pagina: 'fonaments', estat: 'extern' });
+/* Onada R22 · T2 · Bàner superior suau i no bloquejant quan l'app nativa instal·lada té una
+   versió recomanada superior a VERSIO_CLIENT_NATIU. Espècimen: EspecimenBarraActualitzacioApp
+   (retroalimentacio/barra-actualitzacio-app). */
+REGISTRE.push({ nom: 'BarraActualitzacioRecomanada', fitxer: 'universal/barres/BarraActualitzacioRecomanada.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });
+/* IDEA-255 (Onada R23 · 14-11-2026) · Reproductor flotant universal de veu de PageFrame.
+   Espècimen: EspecimenBarraReproductorVeu (superposicions/barra-reproductor-veu). */
+REGISTRE.push({ nom: 'BarraReproductorVeu', fitxer: 'components/universal/veu/BarraReproductorVeu.jsx', pagina: 'superposicions', estat: 'viu', fora: true });

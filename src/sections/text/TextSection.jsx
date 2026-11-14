@@ -108,7 +108,7 @@ export function CosDeLaPagina({ html }) {
    R16 · `amagaCos`: amb una fitxa oberta al Workspace (HerbariWorkspaceSection i
    BancLlavorsWorkspaceSection), el cos de la pàgina (page.html) no es pinta:
    la fitxa, que arriba com a children, no queda davall del text llarg. */
-export default function TextSection({ page: original, pageKey, accioPrincipal = null, abansIntro = null, onConnect = null, objecte = null, etiquetaFinal = null, amagaCos = false, publicadorsRegistrats = null, children = null }) {
+export default function TextSection({ page: original, pageKey, accioPrincipal = null, abansIntro = null, peuDePagina = null, etiquetaPeuDePagina = null, onConnect = null, objecte = null, etiquetaFinal = null, amagaCos = false, publicadorsRegistrats = null, children = null }) {
   const { t, language = 'ca' } = useUIActions();
   const copublicacio = useContext(CopublicacioDePaginaContext);
   const esPaginaDelContext = copublicacio?.pageKey === pageKey && copublicacio !== null;
@@ -188,6 +188,8 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       llenguaDelContingut={contentLanguage}
       {...(accioPrincipal ? { accioPrincipal } : null)}
       {...(abansIntro ? { abansIntro } : null)}
+      {...(peuDePagina ? { peuDePagina } : null)}
+      {...(etiquetaPeuDePagina ? { etiquetaPeuDePagina } : null)}
       {...(onConnect ? { onConnect } : null)}
       {...(objecte ? { objecte } : null)}
       {...(plaR51 && !plaR51.traduccio ? { traduccio: false } : null)}

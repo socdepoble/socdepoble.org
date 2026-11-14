@@ -360,7 +360,7 @@ Les definicions són les de Google: «recollir» és transmetre dades fora del d
 
 - **NSPrivacyTracking:** `false`, i **NSPrivacyTrackingDomains** buit.
 - **NSPrivacyCollectedDataTypes:** els deu tipus de la secció 7.1, tots vinculats, sense rastreig i amb la finalitat `AppFunctionality`.
-- **NSPrivacyAccessedAPITypes:** `UserDefaults` amb el motiu `CA92.1`. El necessita el connector `@capgo/capacitor-social-login`, que usa `UserDefaults.standard` i no porta manifest propi.
+- **NSPrivacyAccessedAPITypes:** `UserDefaults` amb el motiu `CA92.1`. El necessita el connector `@capgo/capacitor-social-login`, que utilitza `UserDefaults.standard` i no porta manifest propi.
 - **Codi propi de l'App:** el Swift de `ios/App/App/` i de l'extensió Compartir només llig `fileSizeKey`, que no és cap API amb motiu obligatori.
 - **SDK amb manifest propi:** Capacitor i Cordova 8.5.3, GoogleSignIn 9.2.0, AppAuth 2.1.0, GTMAppAuth 5.0.0, GTMSessionFetcher 3.5.0, GoogleUtilities 8.1.5 i Promises 2.4.1. Xcode ajunta els seus manifests amb el de l'App en l'informe de privacitat.
 - **AppCheckCore 11.3.2:** no porta manifest i guarda el seu testimoni de depuració amb `GULUserDefaults`; el motiu `CA92.1` de l'App ho cobrix.
@@ -473,7 +473,7 @@ sips -g pixelWidth -g pixelHeight -g hasAlpha ~/Desktop/sdp-iphone-gran-01-mur.p
 xcrun simctl shutdown booted
 ```
 
-L'**UDID és propi de cada Mac**: la segona línia el trau de la **llista de simuladors instal·lats**, perquè `simctl boot` demana l'UDID, i la resta de comandes usen `booted`. Repetix el mateix canviant el nom del `grep -m1` per «iPhone 18 Pro (» (**pantalla mitjana**) i per «iPad Pro 13-inch (M5) (». Si una **captura no ix exactament** a una **mida acceptada**, ajusta-la i **lleva-li l'alfa**:
+L'**UDID és propi de cada Mac**: la segona línia el trau de la **llista de simuladors instal·lats**, perquè `simctl boot` demana l'UDID, i la resta de comandes utilitzen `booted`. Repetix el mateix canviant el nom del `grep -m1` per «iPhone 18 Pro (» (**pantalla mitjana**) i per «iPad Pro 13-inch (M5) (». Si una **captura no ix exactament** a una **mida acceptada**, ajusta-la i **lleva-li l'alfa**:
 
 ```bash
 sips -z 2868 1320 ~/Desktop/sdp-iphone-gran-01-mur.png --out ~/Desktop/sdp-iphone-gran-01-mur-1320x2868.png

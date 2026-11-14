@@ -19,7 +19,7 @@
  * Model B: ací no hi ha cap crida al backend. El poble és presentació i
  * navegació (configAmfitrio.js): mai `tenantId`.
  */
-import { sanejaEtiqueta, sanejaIdentificador } from '../../config/configAmfitrio.js';
+import { pobleDeConfig } from './pobleDeConfig.js';
 import { nomDeLaGentDelPoble } from '../pobles/nomsDelPoble.js';
 
 const enc = (valor) => encodeURIComponent(String(valor));
@@ -31,12 +31,9 @@ function fitxaDelPoble(poble, towns) {
   return towns.find((town) => town && (String(town.id) === poble.id || (town.slug != null && String(town.slug) === poble.id))) || null;
 }
 
-/** { id, nom } del poble de l'amfitrió, o null si no n'ha declarat cap vàlid. */
-export function pobleDeConfig(externalConfig) {
-  const id = sanejaIdentificador(externalConfig?.poble);
-  if (!id) return null;
-  return { id, nom: sanejaEtiqueta(externalConfig?.nomPoble) || '' };
-}
+/* Onada R24 · wp_trinquet · pobleDeConfig viu a pobleDeConfig.js, que l'arrencada
+   importa sense este mòdul; ací es reexporta amb el mateix nom. */
+export { pobleDeConfig };
 
 /**
  * Gauntlet 261016 (prompt, Bloc 3.6; pla, Onada 1.2) · Ordre del Mestre:

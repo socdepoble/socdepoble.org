@@ -10,9 +10,13 @@
    eixides: qui toca la porta o la UI, toca el tractor, i el Mestre ho ha de
    tornar a mirar. tractors/clausura.test.js comprova que no en falte cap. */
 
+/* Onada R24 (CODEX-R24-12) · AprovacioEnLinia.jsx (fora de DEV, l'aprovació a la mateixa pantalla que demana
+   el tractor) i fitxaTractor.js (els títols de la fitxa que el diàleg hi porta sencera) també són la porta. */
 const PORTA_APROVACIO = [
+  'src/sections/tractors/AprovacioEnLinia.jsx',
   'src/sections/tractors/DialegAprovacio.jsx',
   'src/sections/tractors/PanellTractors.jsx',
+  'src/sections/tractors/fitxaTractor.js',
   'src/sections/tractors/nucli/aprovacio.js',
   'src/sections/tractors/nucli/canonic.js',
   'src/sections/tractors/nucli/empremta.js',
@@ -121,7 +125,9 @@ export const TRACTOR_CORREUS = Object.freeze({
    Tauler, i el model també de l'Històric, que el troba per Tauler.jsx →
    targetesTauler.js. CabinaAvio.jsx no és a les peces de l'Històric: Tauler.jsx
    no la importa. */
+/* Onada R24 (A-gestoria-tpv-apps-1) · La insígnia «En proves · Beta oberta» de les pàgines de la closca. */
 const UI_TAULER = [
+  'src/sections/gestoria/insigniaBetaOberta.js',
   'src/sections/gestoria/tauler/CabinaAvio.jsx',
   'src/sections/gestoria/tauler/ShellGestoria.jsx',
   'src/sections/gestoria/tauler/TargetaTauler.jsx',
@@ -248,6 +254,7 @@ export const TRACTOR_ESCANER = Object.freeze({
    proveïdor, mai el text dels conceptes. */
 const UI_HISTORIC = [
   'src/sections/gestoria/historic/Historic.jsx',
+  'src/sections/gestoria/insigniaBetaOberta.js',
   'src/sections/gestoria/historic/PanellSimulacio.jsx',
   'src/sections/gestoria/historic/useHistoric.js'
 ];
@@ -324,7 +331,8 @@ export const TRACTOR_HISTORIC = Object.freeze({
    clausura (tractors/clausura.test.js). */
 export const UI_IDENTITAT = Object.freeze([
   'src/sections/gestoria/finestreta/Finestreta.jsx',
-  'src/sections/gestoria/finestreta/useFinestreta.js'
+  'src/sections/gestoria/finestreta/useFinestreta.js',
+  'src/sections/gestoria/insigniaBetaOberta.js'
 ]);
 
 export const NUCLI_IDENTITAT = Object.freeze([

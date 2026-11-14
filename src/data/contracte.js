@@ -781,7 +781,31 @@ export const CAPACITATS = Object.freeze({
   /* P0-111 (Onada R18) · Sincronització de l'estat de revisió editorial de les
      entrades importades de WordPress (estat, nota, autoria, destí) darrere del
      port neutral perquè la curadoria no quede aïllada al navegador local. */
-  revisionsEditorialsWp: Object.freeze(['llistaRevisionsEditorialsWp', 'desaRevisioEditorialWp'])
+  revisionsEditorialsWp: Object.freeze(['llistaRevisionsEditorialsWp', 'desaRevisioEditorialWp']),
+  /* R24 · CODEX-R24-03 · El consens col·lectiu del joc «D'on parles?» (JocDonParlesCard.jsx).
+     Opcional i completa: sense ella, la targeta continua en el seu mode local honest (llavor i
+     dispositiu). Validació i mapatge en una sola font, src/data/consensIsoglosses.js; l'autoria
+     surt sempre de la sessió de l'adaptador, mai dels arguments (una clau d'autoria, de moderació
+     o desconeguda és un TypeError abans de cap efecte). Formes:
+       lligConsensIsoglossesPoble({ preguntaId? }, config) → [{ preguntaId, variantClau, paraula,
+         poble|null, comarcaId|null, vots }], una fila per pregunta, variant i comarca (R23-U05,
+         Onada R24.2: qui la consumix suma per variantClau), com a molt 20 per pregunta i 250 en
+         total, ordenades per pregunta, vots (descendent), variant i comarca (la nul·la al final).
+         `poble` només quan almenys dos vots de la fila el comparteixen. Només recomptes
+         agregats: cap identificador personal. `paraula`
+         és sempre el mot de `variantClau` (clauDeMot); un text que no ho és no es pinta.
+       votaVariantIsoglossaPoble({ preguntaId, variantClau, paraulaEtiqueta, poble?, comarcaId?,
+         abastComarcal? }, config) → { preguntaId, variantClau, nou }. Un vot per persona,
+         pregunta i variant: el repetit torna nou: false. Cal sessió (401 'sense-sessio').
+       desaAportacioVeuPoble({ tipus: 'variant_isoglossa', paraula, pobleComarca|poble,
+         preguntaId?, comarcaId?, abastComarcal?, consentimentArxiuObert: true,
+         consentimentVersio: 'cc-by-sa-4.0-v1', consentimentAcceptatAt }, config) →
+         { id, estatModeracio: 'pendent', creatA }. Cal sessió. Una aportació d'àudio
+         (refrany_audio) no és d'esta capacitat: no hi ha transport de mitjans.
+     L'adaptador Supabase la llig dels objectes SQL R23 (RPC resum_consens_isoglosses_poble,
+     taules joc_isoglosses_vots_consens i aportacions_veu_poble) i només l'anuncia amb
+     VITE_SDP_CONSENS_ISOGLOSSES=1; l'adaptador local, del seu magatzem en memòria. */
+  consensIsoglosses: Object.freeze(['lligConsensIsoglossesPoble', 'votaVariantIsoglossaPoble', 'desaAportacioVeuPoble'])
 });
 
 /* Pla 261022_1955 (T1) · El sostre de listPublicOrganizations: una sola font per

@@ -16,7 +16,16 @@
  * d'«Informa d'un error» (desaEsborrany). Eixe estat es pot perdre en la
  * recàrrega. Un clic no pot vetar: el clic d'una navegació és justament el
  * que troba el tros retirat. El veto d'eixe estat és `tePendents`, que
- * l'entrada (registre.js) encara no passa; /versions ho diu així. */
+ * l'entrada (registre.js) encara no passa; /versions ho diu així.
+ * Onada R24 (CODEX-R24-13) · Ara sí: registre.js passa `tePendents` =
+ * hiHaEstatPendent, el registre explícit d'estatsPendents.js, que marquen els
+ * proveïdors que guarden estat en memòria i el netegen quan desapareix (també
+ * en canviar de persona). Hui el marquen els esborranys del Xat
+ * (esborranys.js: l'emoticona deixada en una altra conversa i l'informe
+ * d'«Informa d'un error»). L'historial de la IAIA (IAIALocalProvider) encara
+ * no s'hi marca: una pregunta suggerida de la IAIA es pot perdre. Cap clic no
+ * marca res. La fita R21 C5 de /versions descriu el comportament d'aquella
+ * versió. */
 export const CLAU_RECUPERACIO_CHUNK = 'sdp:chunk-deploy:v1';
 export const FINESTRA_ANTI_BUCLE_MS = 60000;
 export const MAXIM_HTML_DEPLOY = 131072;

@@ -7,7 +7,7 @@ tags:
 ---
 # Índex de Trellat
 
-L’Índex de Trellat (IT) és un marc de conversa per combinar quatre dimensions. No és una telemetria implementada ni una porta de seguretat. Sense fonts, denominadors i període, no es calcula ni s’usa per declarar el sistema saludable.
+L’Índex de Trellat (IT) és un marc de conversa per combinar quatre dimensions. No és una telemetria implementada ni una porta de seguretat. Sense fonts, denominadors i període, no es calcula ni s’utilitza per declarar el sistema saludable.
 
 ## Fórmula de referència
 

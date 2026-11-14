@@ -187,3 +187,23 @@ test('salut mira PostgreSQL real, no només HTTP200; no rebutja en malaltia o xa
   }
 });
 
+
+/* R22 (sospita de frontissa, Opus 5.5) · filaPublica passava crus els camps que acaben en un href:
+   ara reutilitza urlSegura (node0Client.js, R6 Bloc 4). Les imatges i l'HTML no hi entren. */
+test('enllaços del Node 0: només http(s) sense credencials o camí de l’arrel; javascript:, data: i //fora queden buits', async () => {
+  const fila = {
+    id: 'p1', url: 'javascript:alert(1)', href: ' JAVASCRIPT:alert(1)', linkTo: '//fora.example/x', external_url: 'data:text/html,<b>x</b>',
+    source_url: 'https://usuari:clau@fora.example/', canonicalUrl: '/\\fora.example', uri: 'https://mastodont.cat/@poble/1',
+    image_url: 'sdp-media://mitjans/a.webp', content: '<p>Text</p>'
+  };
+  const a = creaAdaptadorNodeZeroHttp({ fetchImpl: async () => json({ feedPosts: [fila, { id: 'p2', url: '/mur/p2', href: 'http://socdepoble.cat/x' }], events: [], marketItems: [] }) });
+  try {
+    const [p1, p2] = (await a.loadMur()).feedPosts;
+    assert.deepEqual({ url: p1.url, href: p1.href, linkTo: p1.linkTo, external_url: p1.external_url, source_url: p1.source_url, canonicalUrl: p1.canonicalUrl },
+      { url: '', href: '', linkTo: '', external_url: '', source_url: '', canonicalUrl: '' });
+    assert.equal(p1.uri, 'https://mastodont.cat/@poble/1');
+    assert.equal(p1.image_url, 'sdp-media://mitjans/a.webp');
+    assert.equal(p1.content, '<p>Text</p>');
+    assert.deepEqual({ url: p2.url, href: p2.href }, { url: '/mur/p2', href: 'http://socdepoble.cat/x' });
+  } finally { a.destroy(); }
+});

@@ -1317,6 +1317,19 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
     'src/components/universal/editorial.js', 'src/sections/connectar/abastConnexio.js']) {
     assert.ok(!modulsDArrencada.has(rel), `${rel}: no viatja a l'arrencada estàtica`);
   }
+  /* Onada R24 · wp_trinquet (SEO-R22-08) · El mateix patró: cada mòdul d'arrencada importa el seu nom
+     d'una fulla nova (trasllat literal, reexportada amb el mateix nom des del mòdul de sempre) i el mòdul
+     sencer queda diferit. L'oblit dels títols de la IAIA (sessionsIAIALocals.js i el seu magatzem
+     d'IndexedDB) és un import() de l'eixida, precarregat després del primer pintat amb una persona dins
+     (SessionContext.jsx). Cap d'estos no fa falta per al primer pintat. */
+  for (const rel of ['src/sections/xat/sessionsIAIALocals.js', 'src/utils/magatzemLocal.js',
+    'src/components/PedraSeca/hooks/useAccions.js', 'src/data/traductor.js', 'src/apps/plataforma/rutesAplicacio.js',
+    'src/sections/connectar/contingutExtern.js', 'src/sections/notes/carpetes.js', 'src/sections/xat/emoticonesXat.js',
+    'src/sections/xat/pobleAmfitrio.js', 'src/sections/notes/masDeLUsuari.js', 'src/sections/mercat/imatgesDeProducte.js',
+    'src/components/PedraSeca/atoms/icones.jsx', 'src/sections/xat/informeDError.js', 'src/sections/notes/autoriaNota.js',
+    'src/components/universal/workspace/seleccioUrl.js', 'src/sections/pobles/fitxaDelPoble.js']) {
+    assert.ok(!modulsDArrencada.has(rel), `${rel}: no viatja a l'arrencada estàtica (R24)`);
+  }
   assert.ok(!chunks.some((chunk) => chunk.moduleIds.map(relDe).includes('src/config/mapaBessonesPublic.js')),
     'el cens de bessones del web propi (main.jsx) no viatja al paquet: PedraSecaEmbed només instal·la el salvavides amb política de mitjans');
   const css = (chunk) => chunk.moduleIds.some((id) => id.includes(`${path.sep}src${path.sep}css${path.sep}index.css`));

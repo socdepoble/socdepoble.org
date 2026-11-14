@@ -30,13 +30,22 @@ tags:
 | Sistema | macOS 27.2, build 26B123; Darwin 27.2.0 | 2026-11-03T15:23:43Z |
 | CPU, una instantània de tot l'amfitrió | 1,11 % usuari, 10,00 % sistema, 88,88 % inactiva | 2026-11-03T15:23:43Z |
 | Càrrega mitjana a 1, 5 i 15 minuts | 1,14 / 1,19 / 1,43 | 2026-11-03T15:23:43Z |
-| Memòria de tot l'amfitrió, eixida de `top` | 23G usada, amb 1950M wired i 278M de compressor; 668M sense usar | 2026-11-03T15:23:43Z |
-| Intercanvi de memòria | `vm.swapusage`: total, usada i lliure 0,00M | 2026-11-03T15:24:45Z |
-| Volum APFS de dades | 482.797.652 KiB totals; 99.964.356 KiB usats (95,33 GiB); 358.070.968 KiB disponibles compartits (341,48 GiB); 22 % segons `df` | 2026-11-03T15:24:45Z |
+| Memòria de tot l'amfitrió, eixida de `top` | 23G ocupada, amb 1950M wired i 278M de compressor; 668M lliures | 2026-11-03T15:23:43Z |
+| Intercanvi de memòria | `vm.swapusage`: total, ocupada i lliure 0,00M | 2026-11-03T15:24:45Z |
+| Volum APFS de dades | 482.797.652 KiB totals; 99.964.356 KiB ocupats (95,33 GiB); 358.070.968 KiB disponibles compartits (341,48 GiB); 22 % segons `df` | 2026-11-03T15:24:45Z |
 
-`vm_stat` declara pàgines de 16.384 bytes: 679.909 actives, 673.898 inactives, 124.774 wired, 17.801 ocupades pel compressor i 36.257 lliures. Les unitats `G` i `M` de la fila de `top` es conserven com les va imprimir l'eina. La memòria usada inclou macOS, altres processos i memòria cau: **no és la RAM que necessita el servei de Sóc de Poble**. CPU i càrrega són una instantània de la màquina, no una prova de concurrència ni un mínim d'allotjament. En APFS els volums compartixen espai; les xifres de `/` i `/System/Volumes/Data` no se sumen.
+`vm_stat` declara pàgines de 16.384 bytes: 679.909 actives, 673.898 inactives, 124.774 wired, 17.801 ocupades pel compressor i 36.257 lliures. Les unitats `G` i `M` de la fila de `top` es conserven com les va imprimir l'eina. La memòria ocupada inclou macOS, altres processos i memòria cau: **no és la RAM que necessita el servei de Sóc de Poble**. CPU i càrrega són una instantània de la màquina, no una prova de concurrència ni un mínim d'allotjament. En APFS els volums compartixen espai; les xifres de `/` i `/System/Volumes/Data` no se sumen.
 
 **Encara no mesurat:** **consum elèctric en watts o kWh** i **mida real de la base de dades de producció**. En este carril no s'ha disposat d'una **sessió SQL no interactiva ja establerta** amb què consultar-la; **no s'han llegit `.env`**, desbloquejat el clauer ni iniciat sessions noves. **No hi ha Nix**, `nix-instantiate` ni `nix-store` en el PATH consultat del Mac de treball ni del Node 0. Docker existix al Mac de treball, però el seu **daemon no està disponible**; **no s'ha arrancat**.
+
+### 1.2 Serveis oberts verificats al Node 0 · 2026-11-14
+
+Sobre el mateix **Mac mini Apple M4** de **La Torre de les Maçanes (L'Alacantí)** s'han posat en marxa i verificat en el taller i al node pilot els serveis següents, mantenint la separació honesta respecte al backend principal de la SPA:
+
+- **Base local `PostgreSQL 17.11`:** instal·lada i activa per a l'API pròpia del Node 0 en proves; l'aplicació web pública continua connectada al **Supabase compartit** de Sóc de Poble.
+- **Síntesi neuronal oberta `Matxa-TTS v2 Multiaccent` en directe:** model lliure de **260 MB ONNX** del **Projecte AINA** (Barcelona Supercomputing Center), servit per `cat.socdepoble.veu-node0.plist` darrere de Caddy a `https://socdepoble.cat/api/v1/node0/veu` amb temps de síntesi inferior a **1 segon** per paràgraf i **set veus obertes verificades** pel seu to fonamental (`F0`): les femenines *Gina* i *Berta*, les masculines *Arnau* i *Lluc*, més *Emma*, *Èlia* i *Olga*. Alimenta el reproductor flotant **«Escolta la IAIA»** i l'article `/mur/la-veu-de-soc-de-poble` (amb fonament filològic **NEL-VIVES**, CENID, Universitat d'Alacant), mentre la transcripció acústica local (`Whisper`) i `F5-TTS-MLX` continuen com a eines d'investigació al taller fins disposar d'enregistraments comunitaris sota llicència CC BY-SA 4.0.
+- **Taller de les 8 escoles locals de revisió:** estes escoles obertes locals revisen els canvis com a segon parell d'ulls a cost zero per consulta; el codi de la SPA no s'hi connecta.
+- **Vigilant diari de frescor editorial (`org.socdepoble.node0.frescor-editorial`):** tasca `launchd` matinal en **només lectura** (`/Users/javi/socdepoble-node0/frescor_editorial/inspector_frescor_editorial_node0.py`) que contrasta les últimes entregues amb les pàgines públiques i la Wiki i genera un informe datat per a revisió humana sense modificar cap fitxer.
 
 ## 2. Web estàtica
 
@@ -109,7 +118,7 @@ El node en **mode `remote`** necessita un **projecte Supabase** amb les **migrac
 
 - **Migracions, inventari històric del 2026-11-01:** 64 fitxers SQL, de `2609080000_initial_schema.sql` a `2610312000_e2ee_lot3_validadors_service_role.sql`. Les noves migracions posteriors no formen part d'este recompte; les files següents d'esquema i funcions també corresponen a eixe tall, sense verificació del remot.
 - **Esquema:** 48 taules creades, en els esquemes `public` i `private`, i 101 sentències `create policy` al llarg de les migracions (el text apareix 102 voltes; una és dins d'un comentari).
-- **Extensions:** `pgcrypto`, que una migració crea. `pg_cron` és opcional: quatre tasques es programen només si ja està activa (`sdp-purga-baixes`, `sdp-purga-paperera-notes`, `sdp-neteja-xat-adjunts` i `sdp-purga-altes-seguiments`). `pg_net` només hi apareix per a dir que no s'usa.
+- **Extensions:** `pgcrypto`, que una migració crea. `pg_cron` és opcional: quatre tasques es programen només si ja està activa (`sdp-purga-baixes`, `sdp-purga-paperera-notes`, `sdp-neteja-xat-adjunts` i `sdp-purga-altes-seguiments`). `pg_net` només hi apareix per a dir que no s'utilitza.
 - **Realtime:** la publicació `supabase_realtime` inclou `public.xat_missatges`.
 - **Funcions, tall actual del 2026-11-03:** cinc entrades `index.ts` a `supabase/functions/`: `compte-apple`, `noticies`, `purga-fitxers`, `ap-inbox-verifica` i `notifica-xat`; més el codi compartit de `_shared`. És un inventari de fonts, no de funcions desplegades. `purga-fitxers` llig la clau de servei i `SDP_CRON_SECRET` de l'entorn de la funció (`Deno.env`); `compte-apple` llig la clau de servei, els cinc secrets d'Apple (els identificadors d'equip, de clau i de client, la clau privada i la clau dels testimonis; els noms exactes són al codi de la funció, perquè el client web no els ha de nomenar mai) i `SDP_CRON_SECRET`.
 - **No mesurat:** la mida de la base de dades de producció. Cal consultar-la al projecte abans de fixar el disc d'un node gran.
@@ -131,7 +140,7 @@ El node en **mode `remote`** necessita un **projecte Supabase** amb les **migrac
 
 La prova de l'instal·lador genera la federació del node de Xixona des de la còpia instal·lada, amb la mateixa ordre que el mòdul NixOS.
 
-- **Coherent:** NodeInfo 2.1, `host-meta`, WebFinger i les regles d'nginx usen l'origen del node, i cap fitxer publicat conté `socdepoble.org`.
+- **Coherent:** NodeInfo 2.1, `host-meta`, WebFinger i les regles d'nginx utilitzen l'origen del node, i cap fitxer publicat conté `socdepoble.org`.
 - **Identitat municipal comprovada:** el generador llig `node-germa.json` i publica un sol actor, Xixona, amb la seua outbox; cap actor de La Torre ni del projecte. La prova D-13 i el build real de FEDI-05 ho comproven.
 - **Reescriptures (FEDI-05):** l'instal·lador reutilitza `reglesFirebaseWebFinger` del generador per a adaptar reescriptures i capçaleres al domini i poble nous. Conserva les altres regles de la release i rebutja una compilació sense la identitat esperada.
 - **Llavor:** la release copia les fotos i les pàgines de La Torre de la demostració.

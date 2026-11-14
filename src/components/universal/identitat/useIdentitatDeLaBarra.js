@@ -39,7 +39,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSessioOpcional } from '../../../app/contexts/SessionContext';
 import { useIdentitatOpcional } from '../../../app/contexts/IdentitatContext.jsx';
-import { useUbicacioApp } from '../../PedraSeca/hooks/useAccions.js';
+/* Onada R24 · wp_trinquet · Del seu mòdul, no de useAccions.js: la barra és de l'arrencada. */
+import { useUbicacioApp } from '../../PedraSeca/hooks/useUbicacioApp.js';
 import { treuBase } from '../../../app/contexts/politicaRouter.js';
 import { esRutaDEntrada, rutaDEntrada } from '../../../config/rutaEntrada.js';
 import { RUTA_PERFIL_PROPI, rutaEspaiDIdentitat } from '../../../config/navigation.js';

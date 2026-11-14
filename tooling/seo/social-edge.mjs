@@ -16,6 +16,13 @@ const escape = value => String(value).replace(/[&<>"']/g, c => ({
 })[c]);
 const bounded = (s, max) => typeof s === 'string' && s.trim().length > 0
   && s.length <= max && !/[\u0000-\u001f\u007f]/u.test(s);
+/* P0-SEO-UNIVERSAL (13-11-2026) · Els @type de schema.org que admet el JSON-LD
+   d'una ruta. Llista tancada: una entrada amb un altre `schema` no es servix. */
+export const SCHEMES = Object.freeze(['WebPage', 'Article', 'CollectionPage', 'Organization', 'Person', 'SoftwareApplication']);
+/** Si una entrada del manifest es pot servir: indexable, o compartible sense indexar (les dos marques explícites). */
+export const esServible = entry => Boolean(entry) && (entry.index === true || (entry.index === false && entry.compartible === true));
+/** Si una entrada servible és d'OpenGraph específic sense indexar. */
+export const esSenseIndexar = entry => Boolean(entry) && entry.index === false && entry.compartible === true;
 
 export function socialAgent(ua = '') {
   // Diagnòstic: mai s'usa com a autorització ni per triar el contingut.
@@ -49,8 +56,14 @@ export function selectMetadata(manifest, input, imageOrigins = []) {
   if (own(manifest.aliases, key)) key = manifest.aliases[key];
   if (typeof key !== 'string' || !own(manifest.routes, key)) return null;
   const entry = manifest.routes[key];
-  if (entry?.index !== true || !bounded(entry.title, 240) || !bounded(entry.description, 800)
-    || !['website', 'article'].includes(entry.type)) return null;
+  /* P0-SEO-UNIVERSAL · L'autoritat pública continua sent explícita: una entrada
+     es servix amb index:true o, per a l'OpenGraph específic SENSE indexar
+     (/perfil, una publicació veïnal del Mur), amb index:false I
+     compartible:true alhora. Un index:false sol (una entrada que ha deixat de
+     ser pública) continua rebutjat, com sempre. `schema`, opcional, de la llista. */
+  if (!esServible(entry) || !bounded(entry.title, 240) || !bounded(entry.description, 800)
+    || !['website', 'article'].includes(entry.type)
+    || (entry.schema !== undefined && !SCHEMES.includes(entry.schema))) return null;
   const canonical = new URL(key, origin).href;
   if (entry.canonical !== canonical) return null;
   let image;
@@ -76,6 +89,16 @@ export function genericImage(origin) {
   return { url: new URL(url, origin).href, alt, type, width: Number(width), height: Number(height) };
 }
 
+/* El JSON-LD d'una ruta, com a text segur per a dins d'un <script> (vegeu renderSocialHead). */
+const ESCAPA_JSON = Object.freeze({ '<': '\\u003c', '>': '\\u003e', '&': '\\u0026', '\u2028': '\\u2028', '\u2029': '\\u2029' });
+export function jsonLdDeRuta(metadata, url, imatge) {
+  const tipus = SCHEMES.includes(metadata.schema) ? metadata.schema : metadata.type === 'article' ? 'Article' : 'WebPage';
+  const dades = { '@context': 'https://schema.org', '@type': tipus, [tipus === 'Article' ? 'headline' : 'name']: metadata.title,
+    description: metadata.description, url, image: imatge };
+  /* Dins d'un <script>, «</script>» tancaria el bloc: <, > i & van escapats (i els separadors de línia de JS). */
+  return JSON.stringify(dades).replace(/[<>&\u2028\u2029]/g, c => ESCAPA_JSON[c]);
+}
+
 /**
  * El <head> social d'una ruta: títol, descripció, og:*, twitter:* i, si cal,
  * og:url i canonical. Sense metadades (una ruta que no és pública), el
@@ -96,6 +119,16 @@ export function genericImage(origin) {
  * og:site_name i og:locale són del lloc: el shell (prepareShell) els conserva
  * sense marca, i ací no es repetixen. Les mides i el MIME de la imatge només
  * hi van si les metadades les porten.
+ * P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026):
+ *   · una entrada compartible sense indexar (index:false i compartible:true):
+ *     OpenGraph específic SENSE indexar. Porta la mateixa meta robots que
+ *     escriu el client per a index:false (seoHead), l'og:url de la seua
+ *     adreça i cap <link rel="canonical">.
+ *   · el JSON-LD propi de la ruta (un <script type="application/ld+json">
+ *     marcat): @type = metadata.schema (de SCHEMES) o, sense, Article o
+ *     WebPage segons l'og:type; name o headline, description, url i image.
+ *     No s'emet amb canonical:false (un fitxer que se servix a més d'una URL)
+ *     ni sense metadades. El WebSite del shell es queda on és.
  */
 export function renderSocialHead(metadata, origin, { marca = ATRIBUT_SSR, canonical = true, ogUrl = null } = {}) {
   const attribute = marca ? ` ${marca}` : '';
@@ -107,7 +140,8 @@ export function renderSocialHead(metadata, origin, { marca = ATRIBUT_SSR, canoni
     `<title${attribute}>${escape(title)}</title>`,
     meta('name', 'description', description)
   ];
-  if (!metadata) tags.push(meta('name', 'robots', 'noindex, nofollow'));
+  const senseIndexar = esSenseIndexar(metadata);
+  if (!metadata || senseIndexar) tags.push(meta('name', 'robots', 'noindex, nofollow'));
   tags.push(
     meta('property', 'og:title', title), meta('property', 'og:description', description),
     meta('property', 'og:type', metadata?.type || CAP_SOCIAL_BASE.ogType),
@@ -122,7 +156,9 @@ export function renderSocialHead(metadata, origin, { marca = ATRIBUT_SSR, canoni
     meta('name', 'twitter:image', image.url), meta('name', 'twitter:image:alt', image.alt)
   );
   if (metadata && canonical !== false && metadata.canonical) {
-    tags.push(meta('property', 'og:url', ogUrl || metadata.canonical), `<link rel="canonical" href="${escape(metadata.canonical)}"${attribute}>`);
+    tags.push(meta('property', 'og:url', ogUrl || metadata.canonical));
+    if (!senseIndexar) tags.push(`<link rel="canonical" href="${escape(metadata.canonical)}"${attribute}>`);
+    tags.push(`<script type="application/ld+json"${attribute}>${jsonLdDeRuta(metadata, metadata.canonical, image.url)}</script>`);
   }
   return tags.join('\n');
 }

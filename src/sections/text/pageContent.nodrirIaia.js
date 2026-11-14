@@ -42,35 +42,35 @@ export const PAGINA_NODRIR_IAIA = {
     image: IMATGE_NODRIR_IAIA,
     imageAlt: 'Vinyeta del portal del Mas de pedra seca amb el sol de matí, l’olivera davant, l’embut i la tremuja de la cultura popular i la IAIA MarIA asseguda amb la cullera de fusta a la mà mentre els veïns porten llibres i rondalles',
     lead: 'Un espai per a compartir memòria oral, lèxic i receptes amb autoria i permisos. Quan estiga actiu, la revisió serà humana, la farà una persona amb rol de curadoria, i aprovar una aportació no la publicarà ni la incorporarà al coneixement de la IAIA.',
-    html: '<h3>Una escola de saviesa compartida</h3><p>Quan el servidor tinga activa la curadoria cultural, les aportacions arribaran a una safata privada i una persona amb rol de curadoria en revisarà l’autoria, els permisos i la qualitat. Mentre no estiga activa, esta pàgina ho indica i no recull cap aportació.</p>',
+    html: '<h3>Una escola de saviesa compartida</h3><p>Quan el servidor tinga activa la <strong>curadoria cultural</strong>, les aportacions arribaran a una <strong>safata privada</strong> i una persona amb <strong>rol de curadoria</strong> en revisarà l’<strong>autoria, els permisos i la qualitat</strong>. Mentre <strong>no estiga activa</strong>, esta pàgina ho indica i <strong>no recull cap aportació</strong>.</p>',
     translations: {
       es: {
         title: 'La IAIA Sabia · El Escritorio bajo el Olivo y la curaduría cultural',
         subtitle: TEXTOS_IAIA_SABUDA.es.subtitol,
         imageAlt: 'Viñeta del portal del Mas de piedra seca con el sol de la mañana, el olivo delante, el embudo y la tolva de la cultura popular y la IAIA MarIA sentada con la cuchara de madera en la mano mientras los vecinos traen libros y rondallas',
         lead: 'Un espacio para compartir memoria oral, léxico y recetas con autoría y permisos. Cuando esté activo, la revisión será humana, la hará una persona con rol de curaduría, y aprobar una aportación no la publicará ni la incorporará al conocimiento de la IAIA.',
-        html: '<h3>Una escuela de sabiduría compartida</h3><p>Cuando el servidor tenga activa la curaduría cultural, las aportaciones llegarán a una bandeja privada y una persona con rol de curaduría revisará su autoría, sus permisos y su calidad. Mientras no esté activa, esta página lo indica y no recoge ninguna aportación.</p>'
+        html: '<h3>Una escuela de sabiduría compartida</h3><p>Cuando el servidor tenga activa la <strong>curaduría cultural</strong>, las aportaciones llegarán a una <strong>bandeja privada</strong> y una persona con <strong>rol de curaduría</strong> revisará su <strong>autoría, sus permisos y su calidad</strong>. Mientras <strong>no esté activa</strong>, esta página lo indica y <strong>no recoge ninguna aportación</strong>.</p>'
       },
       en: {
         title: 'The Wise IAIA · The Desk under the Olive Tree and cultural curation',
         subtitle: TEXTOS_IAIA_SABUDA.en.subtitol,
         imageAlt: 'Cartoon of the dry-stone doorway of El Mas in the morning sun, the olive tree in front, the folk culture hopper and IAIA MarIA sitting with a wooden spoon in hand while neighbours bring books and tales',
         lead: 'A space for sharing oral history, vocabulary and recipes with attribution and permission. Once it is active, review will be done by a person with a curator role, and approving a contribution will not publish it or add it to IAIA’s knowledge.',
-        html: '<h3>A school of shared wisdom</h3><p>Once the server has cultural curation enabled, contributions will enter a private queue and a person with a curator role will check their attribution, permissions and quality. Until then, this page says so and does not collect any contributions.</p>'
+        html: '<h3>A school of shared wisdom</h3><p>Once the server has <strong>cultural curation</strong> enabled, contributions will enter a <strong>private queue</strong> and a person with a <strong>curator role</strong> will check their <strong>attribution, permissions and quality</strong>. <strong>Until then</strong>, this page says so and <strong>does not collect any contributions</strong>.</p>'
       },
       eu: {
         title: 'IAIA Jakintsua · Olibondoaren azpiko Mahaia eta kultura-zaintza',
         subtitle: TEXTOS_IAIA_SABUDA.eu.subtitol,
         imageAlt: 'Harri lehorrezko Mas-eko atariaren bineta goizeko eguzkitan, olibondoa aurrean, herri-kulturaren inbutua eta tolba, eta IAIA MarIA egurrezko koilara eskuan eserita dagoela auzokideek liburuak eta ipuinak dakartzaten bitartean',
         lead: 'Ahozko memoria, hiztegia eta errezetak egiletza eta baimenekin partekatzeko gunea. Aktibatzen denean, berrikuspena pertsona batek egingo du, kultura-arduradun rolarekin, eta ekarpen bat onartzeak ez du argitaratuko, ezta IAIAren jakintzara gehituko ere.',
-        html: '<h3>Jakintza partekatuaren eskola</h3><p>Zerbitzariak kultura-berrikuspena aktibatuta duenean, ekarpenak ilara pribatu batera iritsiko dira, eta kultura-arduradun rola duen pertsona batek haien egiletza, baimenak eta kalitatea berrikusiko ditu. Aktibatuta ez dagoen bitartean, orri honek hala adierazten du eta ez du ekarpenik jasotzen.</p>'
+        html: '<h3>Jakintza partekatuaren eskola</h3><p>Zerbitzariak <strong>kultura-berrikuspena</strong> aktibatuta duenean, ekarpenak <strong>ilara pribatu</strong> batera iritsiko dira, eta <strong>kultura-arduradun rola</strong> duen pertsona batek haien <strong>egiletza, baimenak eta kalitatea</strong> berrikusiko ditu. <strong>Aktibatuta ez dagoen bitartean</strong>, orri honek hala adierazten du eta <strong>ez du ekarpenik jasotzen</strong>.</p>'
       },
       gl: {
         title: 'A IAIA Sabia · O Escritorio baixo a Oliveira e a curadoría cultural',
         subtitle: TEXTOS_IAIA_SABUDA.gl.subtitol,
         imageAlt: 'Viñeta do portal do Mas de pedra seca co sol da mañá, a oliveira diante, o funil e a tremoia da cultura popular e a IAIA MarIA sentada coa culler de madeira na man mentres a veciñanza trae libros e rondallas',
         lead: 'Un espazo para compartir memoria oral, léxico e receitas con autoría e permisos. Cando estea activo, a revisión será humana, farana unha persoa con rol de curadoría, e aprobar unha achega non a publicará nin a incorporará ao coñecemento da IAIA.',
-        html: '<h3>Unha escola de sabedoría compartida</h3><p>Cando o servidor teña activa a curadoría cultural, as achegas chegarán a unha bandexa privada e unha persoa con rol de curadoría revisará a súa autoría, os seus permisos e a súa calidade. Mentres non estea activa, esta páxina indícao e non recolle ningunha achega.</p>'
+        html: '<h3>Unha escola de sabedoría compartida</h3><p>Cando o servidor teña activa a <strong>curadoría cultural</strong>, as achegas chegarán a unha <strong>bandexa privada</strong> e unha persoa con <strong>rol de curadoría</strong> revisará a súa <strong>autoría, os seus permisos e a súa calidade</strong>. Mentres <strong>non estea activa</strong>, esta páxina indícao e <strong>non recolle ningunha achega</strong>.</p>'
       }
     }
   }

@@ -155,7 +155,8 @@ export function BarraBlava({
         ))}
         {traduirVisible && !traduirApagat && menuTraduir?.obert ? (
           <MenuTraduir opcions={menuTraduir.opcions} actual={menuTraduir.actual}
-            onTria={menuTraduir.onTria} onTanca={menuTraduir.onTanca} botoRef={botoTraduir} />
+            onTria={menuTraduir.onTria} onTanca={menuTraduir.onTanca} botoRef={botoTraduir}
+            lecturaVeu={menuTraduir.lecturaVeu ?? null} />
         ) : null}
         {/* Ordre del Mestre (261007) · Inoperatiu (l'editor, T36), Comentar no
             obri cap menú: el clic diu quin botó és. */}

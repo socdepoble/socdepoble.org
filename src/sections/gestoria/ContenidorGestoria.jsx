@@ -5,9 +5,12 @@
  *
  * Connecta useTractors() (l'estat i l'empremta curta dels dos tractors, per
  * al pas 1) i contextAprovacio (l'aprovació vigent, que PanellGestoria demana
- * just abans de cada acció i no memoritza) amb PanellGestoria. «Obri el
- * panell de Tractors» porta a l'ítem de la Wiki on s'aproven, amb el router
+ * just abans de cada acció i no memoritza) amb PanellGestoria. En DEV, «Obri
+ * el panell de Tractors» porta a l'ítem de la Wiki on s'aproven, amb el router
  * propi: la consulta es resol sobre la ruta de l'app, com la resta de la Wiki.
+ * Onada R24 (CODEX-R24-12) · Fora de DEV el panell no existix: PanellGestoria
+ * rep també la `porta` (este useTractors) i hi aprova en este navegador
+ * (tractors/AprovacioEnLinia.jsx), pel mateix camí que el panell.
  *
  * Proves: el magatzem, subtle, el catàleg, l'entorn i el rellotge s'injecten
  * com a PanellTractors (useTractors) i arriben també a contextAprovacio, i
@@ -50,6 +53,7 @@ export default function ContenidorGestoria({
         obteAprovacio={obteAprovacio}
         estatTractors={estatTractors}
         onObreTractors={obreTractors}
+        porta={porta}
         subtle={subtle}
         inflate={inflate}
         entorn={entorn}

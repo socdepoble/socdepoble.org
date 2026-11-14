@@ -15,7 +15,7 @@ cada canal els decidix el Mestre; este document **no els tria**.
 
 ## Context i implementació observada
 
-El client `src/data/traductor.js` usa la RPC/funció de traducció del servidor
+El client `src/data/traductor.js` utilitza la RPC/funció de traducció del servidor
 **quan està configurada**, i `src/data/traductorLliure.js` proporciona el **transport
 alternatiu**. El hook `useTraduccioPagina.js` **coordina els fragments** i la **memòria
 cau** de cada pàgina. L'existència del codi **no acredita un servei remot desplegat**
@@ -35,7 +35,7 @@ l'**abast de les dades** abans d'habilitar-lo en cada canal.
 - `wordpress-plugin/includes/traduccio.php`: la petició DeepL té límit de 15 s.
 
 Estos límits corresponen a peces diferents. No són una garantia de temps de
-resposta del servei remot. Les proves locals usen respostes injectades.
+resposta del servei remot. Les proves locals utilitzen respostes injectades.
 
 ## Proposta pendent
 

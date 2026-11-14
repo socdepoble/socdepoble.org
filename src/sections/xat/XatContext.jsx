@@ -205,6 +205,8 @@ import {
 import { DURADES_SILENCI, finsAlDelSilenci, subjecteDeXat } from '../../data/contracte.js';
 /* B8C-5 (marató 261101_2143) · El silenci de la conversa: les regles pures i el silenci en memòria. */
 import { aplicaSilencisLocals, estatSilenciLocal, potSilenciar, properaCaducitat } from './silenciXat.js';
+/* R22 · T1 · L'arxiu de la conversa: regles pures i arxiu en memòria per sessió (D-B8C-4). */
+import { aplicaArxivatsLocals, estatArxivatLocal, potArxivar } from './arxivaXat.js';
 import {
   ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, esXatPublicDePaginaIAIA,
   filDeMostraDeJavi, missatgesDeMostraDeJavi, senseLaIAIA
@@ -213,7 +215,7 @@ import {
 import { CODI_XAT_PROPI_NO } from './errorsXat.js';
 /* P1-70 (261029) · Qui mira és Javi (el compte acreditat, mai pel nom) i on porta la seua fila en cada mode. */
 import { esComptePersonaPilot } from '../../data/identitatsSeed.js';
-import { rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
+import { idRemotDeJavi, rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
 import useNivellIaia from '../realitat/useNivellIaia.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
@@ -226,7 +228,7 @@ import AvisOblitXat from './components/AvisOblitXat.jsx';
 /* Gauntlet 261017 (WP7b, P2) · De la font, identitat.js: appSeed.js només el
    reexporta, i importar-lo d'allà arrossegava la llavor sencera (PAGE_COPY
    inclosa) al tros d'entrada. La mateixa funció, el mateix valor. */
-import { getDefaultUserId } from '../../data/identitat.js';
+import { getDefaultUserId, sessioRecuperable } from '../../data/identitat.js';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
@@ -245,6 +247,7 @@ import {
   esTextBuitOSolsMarques,
   esperaReintent,
   filsEquivalents,
+  filsPerEntregar,
   fusionaPerSeq,
   generaId,
   interromEnviaments,
@@ -259,8 +262,8 @@ import {
 } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
 import { canviaSessioCompartit, reiniciaDestiCompartit } from '../../config/compartirNatiu.js';
-import { buidaRecents } from './emoticonesXat.js';
-import { recordaRutaForaDelXat } from './informeDError.js';
+import { buidaRecents } from './recentsEmoticones.js';
+import { recordaRutaForaDelXat } from './rutaForaDelXat.js';
 import { recordaOrigenDelXat } from './origenDelXat.js';
 import { clauDia } from './temps.js';
 import {
@@ -289,6 +292,19 @@ function hostReady(signal) {
   // Compartir la importació en el doble muntatge de StrictMode i el sondeig.
   hostPromise ||= import('../../host.js').catch(error => { hostPromise = null; throw error; });
   return hostPromise.then(host => host.quanLlest({ signal }));
+}
+
+/* R24 · Gauntlet (G-client-1) · Retard del segon pla per a un fil que falla. */
+const ESPERA_ENTREGA_BASE_MS = 30000;
+const ESPERA_ENTREGA_MAXIMA_MS = 30 * 60000;
+
+/* R24 · Gauntlet (G-client-2) · El rebut d'entrega (un prefix) només si el
+   tram descarregat toca el rebut que el servidor ja té: cap ✓✓ de missatges
+   que l'aparell no ha baixat. `base` = el seq més baix del tram contigu
+   (baseContiguaRef); sense, cap forat. */
+function rebutSenseForat(base, fil) {
+  if (base == null) return true;
+  return base <= (Number(fil?.rebutFinsSeq) || 0) + 1;
 }
 
 /* Sondeig. La llista, lenta; el fil obert, ràpid sense canal i espaiat amb canal. */
@@ -353,6 +369,15 @@ const esVisitant = (mapa, filId) => mapa[filId]?.participant === false;
    de només lectura de Javi i les files d'ajuda per defecte (que XatSection
    obri per la seua via). No hi ha cap lectura que esperar. */
 const senseLecturaAlPort = (filId) => filId === ID_FIL_DE_MOSTRA_DE_JAVI || esIdPerDefecte(filId);
+
+/* Onada R24.2 (revisió adversarial) · Els rebuigs de crea_fil_directe que
+   diuen que el DESTINATARI no és abastable des d'esta sessió (migració
+   20261114060000, §7): SDP-XAT-004 (no és membre d'este poble o n'ha demanat
+   la baixa) i SDP-XAT-016 (un directe nou sense el seu consentiment RGPD); i
+   DESTINATARI_INVALID, el rebuig d'un id que no és UUID a l'adaptador remot
+   (supabase/xat.js). SDP-XAT-003 no hi és: parla de qui escriu (no consta en
+   este poble) i el seu avís («Mode Foraster») és el que li toca. */
+const REBUIGS_DEL_DESTINATARI = new Set(['DESTINATARI_INVALID', 'SDP-XAT-004', 'SDP-XAT-016']);
 
 /* B04 · L'espera fins al tic següent de la llista després de `fallades`
    fallades seguides. Pura. XatSection la reutilitza per a tornar a obrir un
@@ -493,7 +518,9 @@ const BUIT = {
   reintentaOblitXat: async () => null,
   /* B8C-5 (ARB-08) · Fora del proveïdor no hi ha cap silenci: ni entrada de menú ni canvi. */
   potSilenciarFil: () => false,
-  silenciaFil: async () => ({ estat: 'error', finsAl: null })
+  silenciaFil: async () => ({ estat: 'error', finsAl: null }),
+  potArxivarFil: () => false,
+  arxivaFil: async () => ({ estat: 'error', arxivat: false })
 };
 
 /** Espera `ms` o fins que el senyal s'aborte. Torna `false` si s'ha abortat. */
@@ -688,7 +715,11 @@ export function XatProvider({ children, config }) {
      `generacio` i la config: cada petició nova captura el testimoni nou) i
      `ambit` hi viatja perquè l'efecte de més avall sàpia si el testimoni nou és
      del mateix àmbit de DADES (una renovació) o d'un altre (cal purgar). */
-  const token = useMemo(() => ({ scopeKey, ambit: ambitEstable, config }), [scopeKey, ambitEstable, config]);
+  /* R22 (A-xat-fluxos-r1-2) · `persona` (clauPersona) i `jo` viatgen amb el
+     testimoni perquè la purga sàpia si la sessió s'ha perdut o si torna la
+     mateixa persona (bombollesEnReposRef). */
+  const token = useMemo(() => ({ scopeKey, ambit: ambitEstable, persona: clauPersona, jo: joId, config }),
+    [scopeKey, ambitEstable, clauPersona, joId, config]);
   const tokenActual = useRef(token);
   tokenActual.current = token;
   /* Decisió 1 · L'àmbit de dades del render vigent i si el proveïdor és
@@ -761,6 +792,14 @@ export function XatProvider({ children, config }) {
        · null · sense sessió (o el convidat de la llavor): ni fila ni avís. */
   const [sondaPropi, setSondaPropi] = useState(null);
   const estatSondaPropi = sondaPropi?.clau === clauPersona ? sondaPropi.estat : null;
+  /* Onada R24.2 (revisió adversarial) · L'UUID declarat de Javi no garantix
+     que el backend d'esta sessió l'accepte: un poble on el seu compte no és
+     membre (SDP-XAT-004) o un directe nou sense el seu consentiment
+     (SDP-XAT-016). Quan crea_fil_directe el rebutja així, es recorda per a la
+     persona i el backend (clauPersona, com la sonda del xat propi) i torna la
+     conversa de servei tècnic «sense compte» (P1-70), en lloc d'un error. */
+  const [javiInabastable, setJaviInabastable] = useState(null);
+  const javiRebutjat = javiInabastable === clauPersona;
   const filPropiAlBackend = useMemo(() => fils.some((f) => f?.esPropi), [fils]);
   const xatPropi = !joId || convidat ? null
     : filPropiAlBackend ? 'disponible'
@@ -773,11 +812,12 @@ export function XatProvider({ children, config }) {
      servei tècnic de només lectura amb l'avís «tu mateix» (P1-70), en lloc
      d'una fila que promet un xat que el servidor nega. Per a la resta de
      veïns, filServeiTecnic només s'activa en remot mentre no hi haja UUID
-     declarat a IDS_REMOTS_FUNDACIONALS. */
+     declarat a IDS_REMOTS_FUNDACIONALS, o quan el backend d'esta sessió ha
+     rebutjat el directe amb eixe UUID (javiRebutjat, dalt). */
   const joEsJavi = Boolean(joId && !convidat && quiMiraEsJavi && xatPropi === 'disponible');
   const motiuServeiTecnic = !joId || convidat ? null
     : quiMiraEsJavi ? (joEsJavi ? null : 'tuMateix')
-      : rutaDelXatDeJavi(modeDades) ? null : 'senseCompte';
+      : rutaDelXatDeJavi(modeDades) && !javiRebutjat ? null : 'senseCompte';
   const avisTuMateix = t('section.xat.javi.tuMateix', 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent de poble. Les converses que t’escriguen arribaran a la llista com a directes.');
   const avisSenseCompte = t('section.xat.javi.senseCompte', 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.');
   const filServeiTecnic = useMemo(() => {
@@ -799,6 +839,16 @@ export function XatProvider({ children, config }) {
     if (nou === silencisLocalsRef.current) return;
     silencisLocalsRef.current = nou;
     setSilencisLocals(nou);
+  }, []);
+  /* R22 · T1 · Els arxivats en memòria d'esta sessió (filId → boolean), amb la
+     mateixa garantia de privacitat que silencisLocals (mai en localStorage). */
+  const [arxivatsLocals, setArxivatsLocals] = useState(() => new Map());
+  const arxivatsLocalsRef = useRef(arxivatsLocals);
+  const mutaArxivatsLocals = useCallback((fn) => {
+    const nou = fn(arxivatsLocalsRef.current);
+    if (nou === arxivatsLocalsRef.current) return;
+    arxivatsLocalsRef.current = nou;
+    setArxivatsLocals(nou);
   }, []);
   /* Auditoria 261007 (B) · El dia local («2026-10-07», clauDia) de l'última
      llista que el sondeig ha aplicat. Vegeu carregaFils: un canvi de dia
@@ -824,6 +874,17 @@ export function XatProvider({ children, config }) {
      «Connectar», la cerca global) també passa a l'espera curta. */
   const reprogramaLlistaRef = useRef(null);
   const [filActiu, setFilActiu] = useState(null);
+  /* R24 · xat_entrega (P0-2) · L'entrega en segon pla: el fil obert (ja es
+     descarrega), carregaMissatges (declarada després de carregaFils) i si ja
+     n'hi ha una tanda en marxa (una sola alhora, seqüencial). */
+  const filActiuRef = useRef(null);
+  filActiuRef.current = filActiu;
+  const carregaMissatgesRef = useRef(null);
+  const entregaEnCursRef = useRef(false);
+  /* R24 · Gauntlet (G-client-1) · El que el segon pla ja ha provat en esta
+     operació: id → { ultimSeq, fallades, finsA } (filsPerEntregar). Una
+     operació nova (renovació, àmbit) el buida. */
+  const intentsEntregaRef = useRef({ op: null, perFil: new Map() });
   /* Missatges confirmats pel servidor, per fil, ordenats per seq. */
   const [missatgesPerFil, setMissatgesPerFil] = useState({});
   const missatgesRef = useRef({});
@@ -836,9 +897,22 @@ export function XatProvider({ children, config }) {
      arrere el mouen; una lectura superada tampoc. Sense entrada = càrrega
      completa; 0 = fil carregat i buit. */
   const cursorRef = useRef({});
+  /* R24 · Gauntlet (G-client-2) · El seq més baix del tram CONTIGU descarregat
+     des del cursor cap arrere, quan la càrrega completa ha tornat una pàgina
+     plena (pot quedar un forat entre el rebut i la pàgina). Sense entrada =
+     cap forat: la càrrega completa ha arribat al començament visible. El
+     rebut d'entrega és un prefix («tot fins a N»): no s'envia mentre el tram
+     no toque `rebutFinsSeq + 1` (Codex XAT-03: rebut després dels bytes). */
+  const baseContiguaRef = useRef({});
   /* Bombolles pròpies encara sense seq: pendents i fallides. */
   const [pendentsPerFil, setPendentsPerFil] = useState({});
   const pendentsRef = useRef({});
+  /* R22 (A-xat-fluxos-r1-2) · Les bombolles pròpies sense confirmar d'un àmbit
+     que la sessió ha perdut SENSE eixir (la renovació ha fallat i la pestanya
+     s'ha buidat, però el registre la pot tornar): { ambit, persona, pendents }.
+     Només en memòria. Tornen, en error i amb el mateix id, quan torna el MATEIX
+     àmbit (backend, persona i actor); una altra persona les descarta. */
+  const bombollesEnReposRef = useRef(null);
   /* T63.2 · Fils de pàgina que llegixes sense ser-ne participant (remot), per id. */
   const [visitants, setVisitants] = useState({});
   const visitantsRef = useRef({});
@@ -1026,7 +1100,8 @@ export function XatProvider({ children, config }) {
     const deLaPersona = () => !desmuntat.current && avisosPersonaRef.current.generacio === generacio;
     /* B8C-5 · El silenci en memòria (sense servidor) mana sobre el de la fila. */
     const silenciat = estatSilenciLocal(silencisLocalsRef.current, filId, Date.now()) ?? Boolean(fil?.silenciat);
-    avisadorRef.current?.(nom, filId, { silenciat: silenciat || Boolean(fil?.arxivat), vigent: deLaPersona });
+    const arxivat = estatArxivatLocal(arxivatsLocalsRef.current, filId) ?? Boolean(fil?.arxivat);
+    avisadorRef.current?.(nom, filId, { silenciat: silenciat || arxivat, vigent: deLaPersona });
   }, [joId]);
 
   /* Decisió 1 · Desmuntar tanca l'àmbit: els getters guardats tornen buit i
@@ -1062,14 +1137,31 @@ export function XatProvider({ children, config }) {
          retira (retiraConfirmats). */
       mutaPendents(interromEnviaments);
     } else {
+      /* R22 (A-xat-fluxos-r1-2) · Una renovació fallida amb el JWT ja caducat
+         (sense cobertura) buida la pestanya: el xat veu la persona a null i
+         purgava la bombolla que esperava la xarxa, sense cap avís. Si la sessió
+         s'ha perdut sense eixir (sessioRecuperable: el registre la pot tornar),
+         les bombolles pròpies es guarden en memòria, en error com en una
+         renovació (interromEnviaments), i tornen quan torna el mateix àmbit.
+         Eixir de veres (el registre s'esborra) o una altra persona les obliden. */
+      const propies = previa?.token.jo && !token.jo ? interromEnviaments(pendentsRef.current) : null;
+      if (propies && Object.keys(propies).length && sessioRecuperable()) {
+        bombollesEnReposRef.current = { ambit: previa.token.ambit, persona: previa.token.persona, pendents: propies };
+      } else if (token.jo && bombollesEnReposRef.current?.persona !== token.persona) {
+        bombollesEnReposRef.current = null;
+      }
+      const recuperades = token.jo && bombollesEnReposRef.current?.ambit === token.ambit
+        ? bombollesEnReposRef.current.pendents : null;
+      if (recuperades) bombollesEnReposRef.current = null;
       setFils([]);
       filsRef.current = [];
       diaFilsRef.current = null;
       setMissatgesPerFil({});
       missatgesRef.current = {};
       cursorRef.current = {};
-      setPendentsPerFil({});
-      pendentsRef.current = {};
+      baseContiguaRef.current = {};
+      setPendentsPerFil(recuperades || {});
+      pendentsRef.current = recuperades || {};
       setVisitants({});
       visitantsRef.current = {};
       setPaginacio({});
@@ -1100,6 +1192,7 @@ export function XatProvider({ children, config }) {
       setAvisLlista(null);
       /* B8C-5 · Els silencis en memòria eren de l'àmbit d'abans (la persona, l'actor o el backend). */
       mutaSilencisLocals((mapa) => (mapa.size ? new Map() : mapa));
+      mutaArxivatsLocals((mapa) => (mapa.size ? new Map() : mapa));
       setEstat(joId ? 'loading' : 'ready');
     }
     setTokenEstat(token);
@@ -1107,7 +1200,7 @@ export function XatProvider({ children, config }) {
        l'operació nova si és el mateix àmbit; si no, rep null. */
     previa?.passa(renovacio ? op : null);
     return () => { op.controller.abort(); };
-  }, [token, joId, mutaPendents, mutaSilencisLocals]);
+  }, [token, joId, mutaPendents, mutaSilencisLocals, mutaArxivatsLocals]);
 
   /* ── Llista de fils ──
      Torna true si s'ha aplicat, false si ha fallat (o l'àmbit ja no és el
@@ -1121,6 +1214,48 @@ export function XatProvider({ children, config }) {
      destinataris (useAplicaAbast.js, creaFil en sèrie), el primer missatge
      com a visitant d'un fil de pàgina (executaEnviament) i el «Reintentar»
      de la cerca global (useCercaGlobal.js), que no llig el valor de tornada. */
+  /* R24 · xat_entrega (P0-2) · Entrega en segon pla: després d'aplicar la
+     llista, i només en remot, es descarreguen (seqüencialment, com a molt
+     cinc) les converses amb novetats que l'aplicació encara no té. El rebut
+     l'escriu carregaMissatges DESPRÉS de rebre els bytes (XC-05): ✓✓ gris =
+     «ha arribat a l'aplicació». Mai es marca cap lectura: la lectura
+     continua sent de la bombolla visible (Conversa). No bloqueja la llista. */
+  const entregaEnSegonPla = useCallback((llista, op) => {
+    if (entregaEnCursRef.current) return;
+    if (intentsEntregaRef.current.op !== op) intentsEntregaRef.current = { op, perFil: new Map() };
+    const intents = intentsEntregaRef.current.perFil;
+    const candidats = filsPerEntregar(llista, {
+      actiuId: filActiuRef.current, cursors: cursorRef.current, bloquejat: (id) => bloquejatRef.current(id),
+      intentats: intents, ara: Date.now()
+    });
+    if (!candidats.length) return;
+    entregaEnCursRef.current = true;
+    void (async () => {
+      try {
+        for (const fil of candidats) {
+          if (!vigent(op)) return;
+          if (fil.id === filActiuRef.current || esVisitant(visitantsRef.current, fil.id)) continue;
+          const ok = await carregaMissatgesRef.current?.(fil.id);
+          if (!vigent(op)) return;
+          /* G-client-1 · Arribat a ultimSeq: res a recordar (el cursor ja el
+             trau). Acceptada però curta (caducats): fora fins que ultimSeq
+             canvie. Fallada: fora 30 s, 60 s, 120 s… (sostre 30 min). */
+          const ultimSeq = Number(fil.ultimSeq) || 0;
+          if (ok === true) {
+            if ((cursorRef.current[fil.id] ?? 0) >= ultimSeq) intents.delete(fil.id);
+            else intents.set(fil.id, { ultimSeq });
+          } else if (ok === false) {
+            const fallades = (intents.get(fil.id)?.fallades ?? 0) + 1;
+            const espera = Math.min(ESPERA_ENTREGA_MAXIMA_MS, ESPERA_ENTREGA_BASE_MS * 2 ** (fallades - 1));
+            intents.set(fil.id, { ultimSeq, fallades, finsA: Date.now() + espera });
+          }
+        }
+      } finally {
+        entregaEnCursRef.current = false;
+      }
+    })();
+  }, [vigent]);
+
   const carregaFils = useCallback(async () => {
     const op = captura();
     if (!vigent(op)) return false;
@@ -1177,6 +1312,7 @@ export function XatProvider({ children, config }) {
       if (modeDades === 'remote' && sumaNoLlegits(nous) === 0) confirmaZeroAvisosPush(lecturaAvisos);
       for (const f of nous) avisaSiCal(f.id, f.ultimSeq, f.ultimAutorId, f.name);
       baseAvisosRef.current = true;
+      if (modeDades === 'remote') entregaEnSegonPla(nous, op);
       return true;
     } catch (error) {
       if (!vigent(op)) return false;
@@ -1204,7 +1340,7 @@ export function XatProvider({ children, config }) {
     } finally {
       if (vigent(op) && meua === genFils.current) setEstat('ready');
     }
-  }, [joId, modeDades, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaFils, mutaVisitants]);
+  }, [joId, modeDades, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaFils, mutaVisitants, entregaEnSegonPla]);
 
   /* ── Missatges d'un fil: complet la primera vegada, incremental (despresDeSeq) després ──
      Torna true o false com carregaFils.
@@ -1259,8 +1395,17 @@ export function XatProvider({ children, config }) {
            completa a cada sondeig. */
         const maxim = seqMaxim(nous);
         cursorRef.current[filId] = incremental ? Math.max(desDe, maxim ?? desDe) : (maxim ?? 0);
+        /* G-client-2 · Una càrrega completa amb la pàgina plena pot deixar un
+           forat per davall (120 nous, en torna 71..120): el tram contigu
+           comença al seu seq mínim. Una de no plena ja ha arribat al
+           començament visible. La incremental no hi canvia res. */
+        if (!incremental) {
+          if (nous.length >= LIMIT_PAGINA) baseContiguaRef.current[filId] = seqMinim(nous);
+          else delete baseContiguaRef.current[filId];
+        }
         // XC-05: els bytes ja han arribat; açò no marca cap bombolla com a llegida.
-        if (filId !== ID_FIL_DE_MOSTRA_DE_JAVI && !esVisitant(visitantsRef.current, filId)) {
+        if (filId !== ID_FIL_DE_MOSTRA_DE_JAVI && !esVisitant(visitantsRef.current, filId)
+          && rebutSenseForat(baseContiguaRef.current[filId], filsRef.current.find((f) => f.id === filId))) {
           void rebutsEntregaRef.current.rebut(filId, cursorRef.current[filId], {
             config, signal: op.controller.signal, vigent: () => vigent(op)
           });
@@ -1326,6 +1471,7 @@ export function XatProvider({ children, config }) {
     })();
     return lectura.promesa;
   }, [joId, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaMissatges, mutaPendents, marcaCarregat, posaAvisFil, llevaAvisFil, publicaLectura]);
+  carregaMissatgesRef.current = carregaMissatges;
 
   /* ── Historial cap arrere (XAT-A23): abansDeSeq = el seq mínim carregat ── */
   const carregaMesAntics = useCallback(async (filId) => {
@@ -1350,6 +1496,18 @@ export function XatProvider({ children, config }) {
       if (!vigent(op)) return false;
       const antics = (Array.isArray(bruts) ? bruts : []).map((m) => mapejaMissatge(m, joId));
       mutaMissatges((previs) => ({ ...previs, [filId]: fusionaPerSeq(previs[filId] || [], antics) }));
+      /* G-client-2 · L'historial cap arrere allarga el tram contigu; una pàgina
+         no plena arriba al començament i tanca el forat. Si el tanca, el rebut
+         que faltava ix ara (el cursor no s'ha mogut). */
+      if (baseContiguaRef.current[filId] != null) {
+        if (antics.length < LIMIT_PAGINA) delete baseContiguaRef.current[filId];
+        else baseContiguaRef.current[filId] = Math.min(baseContiguaRef.current[filId], seqMinim(antics) ?? Infinity);
+        const cursor = cursorRef.current[filId];
+        if (Number.isSafeInteger(cursor) && cursor > 0 && !esVisitant(visitantsRef.current, filId)
+          && rebutSenseForat(baseContiguaRef.current[filId], filsRef.current.find((f) => f.id === filId))) {
+          void rebutsEntregaRef.current.rebut(filId, cursor, { config, signal: op.controller.signal, vigent: () => vigent(op) });
+        }
+      }
       /* B09 · El primer èxit reinicia el comptador i lleva l'espera. */
       delete falladesAnticsRef.current[filId];
       setPaginacio((previs) => ({ ...previs, [filId]: { hiHaMes: antics.length >= LIMIT_PAGINA, carregant: false } }));
@@ -1993,7 +2151,13 @@ export function XatProvider({ children, config }) {
     const avisPropiNo = () => traductorRef.current('section.xat.nou.personalNo', "Encara no pots escriure't a tu mateix: este poble no obri el xat personal.");
     if (propi && xatPropi === 'no') throw errorXatPropiNo(avisPropiNo());
     if (!propi && filServeiTecnic && esComptePersonaPilot({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
-    const destinatari = joEsJavi && esComptePersonaPilot({ id: altreUsuariId }) ? joId : altreUsuariId;
+    /* Onada R24.2 (R21.2-F01) · Amb l'UUID de Javi declarat, un ?amb= d'un
+       veí amb un àlies del padró pilot («0001», «javillinares») obri en remot
+       el directe amb el seu compte real: el servidor només rep UUID, mai un
+       àlies. El xat propi (escriure's a un mateix) no es toca. */
+    const pilot = esComptePersonaPilot({ id: altreUsuariId });
+    const uuidDeJavi = pilot && !propi ? idRemotDeJavi(modeDades) : null;
+    const destinatari = joEsJavi && pilot ? joId : (uuidDeJavi || altreUsuariId);
     const alPropi = String(destinatari ?? '') === String(joId);
     const marcaSonda = (estat) => { if (alPropi && vigent(op)) setSondaPropi({ clau: clauPersona, estat }); };
     try {
@@ -2010,6 +2174,14 @@ export function XatProvider({ children, config }) {
         if (alPropi && vigent(op) && error?.code === 'SDP-XAT-002') {
           marcaSonda('no');
           throw errorXatPropiNo(avisPropiNo(), error);
+        }
+        /* Onada R24.2 (revisió adversarial) · El backend d'esta sessió no
+           obri el directe amb l'UUID declarat de Javi: es recorda per a la
+           persona i el backend (javiRebutjat) i va a la conversa de servei
+           tècnic «sense compte», com abans de declarar-lo. Cap altre error. */
+        if (uuidDeJavi && !alPropi && vigent(op) && REBUIGS_DEL_DESTINATARI.has(error?.code)) {
+          setJaviInabastable(clauPersona);
+          return ID_FIL_DE_MOSTRA_DE_JAVI;
         }
         /* El proveïdor decidix el format dels ids. Si rebutja el de la URL,
            un slug d'organització es resol al directori del mateix port i
@@ -2115,8 +2287,8 @@ export function XatProvider({ children, config }) {
      derivacions: arriben a la llista (la pastilla «Silenciada») i també al
      comptador (totalNoLlegits). La mateixa referència si no n'hi ha cap. */
   const filsAmbSilencis = useMemo(
-    () => aplicaSilencisLocals(fils, silencisLocals, araSilenci),
-    [fils, silencisLocals, araSilenci]
+    () => aplicaArxivatsLocals(aplicaSilencisLocals(fils, silencisLocals, araSilenci), arxivatsLocals),
+    [fils, silencisLocals, araSilenci, arxivatsLocals]
   );
   /* El temporitzador del silenci en memòria més pròxim: en caducar, `araSilenci`
      puja i el fil torna a sumar sense recarregar («8 hores» s'acaba sol). Com a
@@ -2195,8 +2367,11 @@ export function XatProvider({ children, config }) {
       const llegitAltres = fil?.esPropi
         ? Math.max(fil.llegitFinsSeq ?? 0, fil.ultimSeq ?? 0, fil.llegitPelsAltresFinsSeq ?? 0)
         : (fil?.llegitPelsAltresFinsSeq ?? 0);
+      const rebutAltres = fil?.esPropi ? 0 : (fil?.rebutPelsAltresFinsSeq ?? 0);
+      /* R24 · xat_entrega (P2-9) · Si el servidor no informa de l'entrega, la marca ho diu. */
+      const rebutsConeguts = !fil || fil.esPropi || fil.rebutsConeguts !== false;
       resultat[id] = anotaMissatgesBloquejats(
-        combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], llegitAltres),
+        combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], llegitAltres, rebutAltres, rebutsConeguts),
         esPersonaBloquejada
       );
     }
@@ -2395,6 +2570,24 @@ export function XatProvider({ children, config }) {
     return { estat: 'local', finsAl };
   }, [potSilenciarFil, config, mutaFils, mutaSilencisLocals]);
 
+  /* ── R22 · T1 · Arxivar o desarxivar una conversa ──
+     potArxivarFil(filId): cert per a un fil propi de la llista (mai actors
+     permanents, comunitats contenidores ni visitants).
+     arxivaFil(filId, arxivar = true) → { estat: 'fet' | 'local' | 'error', arxivat }.
+     Mentre el backend no declare 'arxivaXat', es guarda en memòria per àmbit de
+     sessió ('local', D-B8C-4: res a localStorage) i avisa amb honestedat. */
+  const potArxivarFil = useCallback((filId) => {
+    if (!dins() || typeof filId !== 'string' || senseLecturaAlPort(filId)) return false;
+    return potArxivar(fils.find((f) => f.id === filId));
+  }, [dins, fils]);
+  const arxivaFil = useCallback(async (filId, arxivar = true) => {
+    const fallat = { estat: 'error', arxivat: false };
+    if (!potArxivarFil(filId)) return fallat;
+    const objectiu = Boolean(arxivar);
+    mutaArxivatsLocals((mapa) => new Map(mapa).set(filId, objectiu));
+    return { estat: 'local', arxivat: objectiu };
+  }, [potArxivarFil, mutaArxivatsLocals]);
+
   const value = useMemo(() => ({
     status: visible ? estat : joId ? 'loading' : 'ready',
     error: null,
@@ -2473,12 +2666,15 @@ export function XatProvider({ children, config }) {
     reintentaOblitXat,
     /* B8C-5 · Si el fil es pot silenciar i el silenci (8h, 1setmana, sempre o cap). */
     potSilenciarFil,
-    silenciaFil
+    silenciaFil,
+    /* R22 · T1 · Si el fil es pot arxivar i el canvi d'arxiu. */
+    potArxivarFil,
+    arxivaFil
   }), [visible, joId, joNom, joAvatar, joEsJavi, xatPropi, entitatActiva, estatSessio, usuari?.id, actuaComEntitat, clauPersona, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, filCarregat, avisFil, recarregaFil, tipusAvisFil, llegintFil,
     enviaAmbNormes, sendChatMedia, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
-    modeDades, consumixEntrada, iaiaApagada, filAmagat, oblitXat, oblitXatFallit, reintentaOblitXat, potSilenciarFil, silenciaFil]);
+    modeDades, consumixEntrada, iaiaApagada, filAmagat, oblitXat, oblitXatFallit, reintentaOblitXat, potSilenciarFil, silenciaFil, potArxivarFil, arxivaFil]);
 
   return (
     <XatContext.Provider value={value}>

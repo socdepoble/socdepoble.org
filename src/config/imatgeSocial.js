@@ -319,7 +319,14 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
   /* P0-60 · El logotip circular del Manifest de Poble (1024x891 WebP), portada de la seua
      publicació de llavor del Mur. Variant «contenida», no de cobertura: el segell sencer a
      600 px d'alt, centrat sobre blanc (el seu fons) en 1200x630; JPEG baseline, sense APP1. */
-  '/assets/mur/manifest-de-poble/logo-manifest-de-poble-retallat.webp'
+  '/assets/mur/manifest-de-poble/logo-manifest-de-poble-retallat.webp',
+  /* Onada R23 · Portada Nano Ibáñez/Berlanga de «La Veu de Sóc de Poble» (1600x1600 WebP):
+     variant social JPEG baseline 1200x630 i ≤300 000 B sense APP1 per a WhatsApp i OpenGraph. */
+  '/assets/mur/la_veu_de_soc_de_poble_nano_v4.webp',
+  /* P0-SEO-UNIVERSAL (13-11-2026) · La portada de la fitxa de la IAIA MarIA (/iaia): 1024x1024 i
+     1,3 MB (la bessona .webp, 412 KB, hi arriba per ambVariantSocial). Retall de cobertura amb
+     posicioY 0,35 (la cara i les mans senceres), JPEG baseline, ≤300 000 B, sense APP1. */
+  '/assets/uploads/brain/iaia_maria_avatar.jpg'
 ].map((original) => [original, variantSocialDe(original)])));
 
 /* L'esquema d'una referència ('https', 'sdp-media', 'data'…), en minúscules, o

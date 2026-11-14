@@ -339,6 +339,13 @@ function conversaDe(estat, fil, meu, jo) {
     llegitFinsSeq: meu.llegitFinsSeq,
     rebutFinsSeq: meu.rebutFinsSeq,
     llegitPelsAltresFinsSeq: costat.length ? Math.min(...costat.map((p) => p.llegitFinsSeq)) : 0,
+    /* R24 · xat_entrega (P0-1) · El rebut dels altres, del mateix costat que
+       el llegit, com xat_fils_meus (20261114061000). Diferència del mode
+       local: l'entitat hi és una sola destinatària virtual que avança amb
+       qualsevol gestor (equival al màxim), mentre que el servidor aplica el
+       mínim dels gestors vigents, com xat_ritme (regla D-1, pendent de
+       decisió del Mestre). */
+    rebutPelsAltresFinsSeq: costat.length ? Math.min(...costat.map((p) => p.rebutFinsSeq)) : 0,
     noLlegits: Math.max(0, fil.ultimSeq - Math.max(meu.llegitFinsSeq, meu.buidatFinsSeq)),
     arxivatAl: meu.arxivatAl,
     fixatAl: meu.fixatAl,

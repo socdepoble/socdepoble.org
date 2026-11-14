@@ -6,6 +6,10 @@ import os from "node:os";
 import zlib from "node:zlib";
 
 const PORT = Number(process.env.SDP_NODE_PORT || 3350);
+/* Onada R22 (eixa42) · Només loopback per defecte: el túnel i Caddy hi arriben per 127.0.0.1:3350
+   (tooling/node0/activa-porta-caddy-node0.mjs) i la xarxa local no se'ls pot saltar. Una altra
+   adreça només si l'operador la demana explícitament amb SDP_NODE_HOST. */
+const HOST = process.env.SDP_NODE_HOST || "127.0.0.1";
 const BASE_DIR = process.env.SDP_NODE_BASE_DIR || path.join(os.homedir(), "socdepoble-node0");
 const PUBLIC_DIR = path.join(BASE_DIR, "public");
 const DATA_DIR = path.join(BASE_DIR, "dades");
@@ -28,6 +32,26 @@ const ALLOWED_WEBFINGER_DOMAINS = new Set([
   "localhost",
   "127.0.0.1"
 ]);
+
+/* Onada R22 (eixa42) · Els hosts públics que este node servix de veres. Un Host o un
+   X-Forwarded-Host escrit per qui demana no fa mai de domini: ni a la redirecció a https
+   ni a l'origen del manifest de mitjans que signa la clau Ed25519 del node. Una petició que
+   ha passat per un proxy (porta X-Forwarded-*) no és mai local. */
+const HOSTS_PUBLICS = new Set(["socdepoble.cat", "www.socdepoble.cat", "socdepoble.org", "www.socdepoble.org"]);
+const HOST_PER_DEFECTE = "socdepoble.cat";
+const HOST_LOCAL = /^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d{1,5})?$/;
+
+function hostDeLaPeticio(headers) {
+  const perProxy = ["x-forwarded-host", "x-forwarded-for", "x-forwarded-proto", "cf-connecting-ip"].some((nom) => headers[nom] !== undefined);
+  const cru = String(headers["x-forwarded-host"] || headers.host || "").split(",")[0].trim().toLowerCase();
+  if (!perProxy && HOST_LOCAL.test(cru)) return { hostHeader: cru, isLocalHost: true };
+  const nom = cru.replace(/:\d{1,5}$/, "");
+  return { hostHeader: HOSTS_PUBLICS.has(nom) ? nom : HOST_PER_DEFECTE, isLocalHost: false };
+}
+
+/* El patró de public/sw.js (RECURS_AMB_EMPREMTA): eixida de Rollup a l'arrel de /assets/. Només
+   això és immutable; un fitxer de nom estable (còpia de public/assets) es refresca. */
+const RECURS_AMB_EMPREMTA = /^\/assets\/[^/]+-[A-Za-z0-9_-]{8}\.(js|mjs|css|woff2?)$/;
 
 const WEBFINGER_ACCOUNTS = new Map([
   ["socdepoble", "socdepoble"],
@@ -94,7 +118,6 @@ function capcaleresBase(contentType) {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "X-SDP-Node": "node0-la-torre-mac-mini-m4",
     "X-SDP-Key-SHA256": CLAUS.fingerprint
   };
 }
@@ -110,8 +133,7 @@ function enviaJson(res, status, payload, contentType = "application/json; charse
 }
 
 const server = http.createServer((req, res) => {
-  const hostHeader = String(req.headers["x-forwarded-host"] || req.headers.host || "socdepoble.cat").split(",")[0].trim();
-  const isLocalHost = hostHeader.includes("localhost") || hostHeader.includes("127.0.0.1");
+  const { hostHeader, isLocalHost } = hostDeLaPeticio(req.headers);
   const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
 
   // R5N-02: Redirecció estricta HTTP -> HTTPS quan passa per proxy públic
@@ -209,22 +231,13 @@ const server = http.createServer((req, res) => {
       nomPoble: NODE0_NOM_POBLE,
       municipi: "La Torre de les Maçanes",
       dominiSobira: "https://socdepoble.cat",
-      tunnelId: "2ffa3e6b-60d7-48fe-8ff0-3e720bd7e135",
-      tunnelName: "node0-latorre",
+      // Onada R22 (eixa42) · Sense túnel, maquinari ni uptime: no diuen res al veïnat i sí a qui busca pegats pendents.
       mapaDominis: {
         central: "https://socdepoble.org",
         nodeLocalMac: "https://socdepoble.cat",
         wordpress: "https://gentdelatorre.net",
         llavorHistorica: "https://socdepoble.net",
         redireccionsCom: ["https://socdepoble.com", "https://somdepoble.com"]
-      },
-      maquinari: {
-        model: "Mac mini Apple M4",
-        cpu: os.cpus()[0]?.model || "Apple M4",
-        nuclis: os.cpus().length,
-        ramGb: Math.round(os.totalmem() / (1024 ** 3)),
-        plataforma: `${os.platform()}-${os.arch()}`,
-        uptimeSegons: Math.round(os.uptime())
       },
       fediversity: {
         expedient: "NLnet NGI Fediversity (2026-08-1a6)",
@@ -550,7 +563,11 @@ const server = http.createServer((req, res) => {
   const useGzip = COMPRESSIBLE_EXTS.has(ext) && acceptEncoding.includes("gzip") && stat.size > 256;
 
   let cacheControl = "public, max-age=300";
-  if (pathname.startsWith("/assets/")) {
+  if (pathname.startsWith("/assets/og/")) {
+    // P0-SEO-UNIVERSAL (13-11-2026) · Les imatges socials materialitzades (prerender-social.mjs): una hora,
+    // mai immutables. Són de fitxes de veïns: quan una es retira, la seua imatge ha de deixar de ser servida.
+    cacheControl = "public, max-age=3600";
+  } else if (RECURS_AMB_EMPREMTA.test(pathname)) {
     cacheControl = "public, max-age=31536000, immutable";
   } else if (ext === ".html") {
     cacheControl = "no-cache";
@@ -601,6 +618,6 @@ const server = http.createServer((req, res) => {
   fs.createReadStream(candidate).pipe(res);
 });
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`[Node 0 Sóc de Poble] Escoltant a http://0.0.0.0:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`[Node 0 Sóc de Poble] Escoltant a http://${HOST}:${PORT}`);
 });

@@ -35,7 +35,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 import XatSection from './XatSection';
 import { agrupaComunitats, mapejaFil } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
-import useObriXatPerDefecte, { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_LOCAL_IAIA, RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI, rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
+import useObriXatPerDefecte, { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_LOCAL_IAIA, RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI, idRemotDeJavi, rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
 import { POBLE_PER_DEFECTE, pobleDelXat } from './pobleAmfitrio.js';
 import { CLAU_FILA_DE_SOC_DE_POBLE, RUTA_SOBRE_DE_SOC_DE_POBLE } from './actorsDelXat.js';
 import Compositor from './components/Compositor.jsx';
@@ -490,11 +490,18 @@ describe('la IAIA a localhost (Bloc 3.6.2)', () => {
 });
 
 describe('la fila de Javi Llinares (Bloc 3.6.1)', () => {
-  test('rutaDelXatDeJavi: en llavor i en local, el directe amb el seu id del padró; en remot (o un mode desconegut), cap', () => {
+  /* Onada R24.2 (R21.2-F01, decisió del Mestre del 14-11-2026) · El paquet
+     declara l'UUID del compte de producció de Javi: en remot (o un mode
+     desconegut), el directe amb eixe compte. Sense cap UUID declarat, cap
+     (el cobrix el test P1-70 de davall amb idsRemots). */
+  test('rutaDelXatDeJavi: en llavor i en local, el directe amb el seu id del padró; en remot (o un mode desconegut), el directe amb l’UUID declarat', () => {
     expect(rutaDelXatDeJavi('seed')).toBe('/xat?amb=0001');
     expect(rutaDelXatDeJavi('local')).toBe('/xat?amb=0001');
-    expect(rutaDelXatDeJavi('remote')).toBeNull();
-    expect(rutaDelXatDeJavi(undefined)).toBeNull();
+    expect(rutaDelXatDeJavi('remote')).toBe('/xat?amb=c7cc745b-2c54-4739-b9c1-add751aac3c4');
+    expect(rutaDelXatDeJavi(undefined)).toBe('/xat?amb=c7cc745b-2c54-4739-b9c1-add751aac3c4');
+    expect(idRemotDeJavi('remote')).toBe('c7cc745b-2c54-4739-b9c1-add751aac3c4');
+    expect(idRemotDeJavi('seed')).toBeNull();
+    expect(idRemotDeJavi('remote', { idsRemots: { javillinares: [] } })).toBeNull();
   });
 
   /* P1-70 (261029; decisió de l'orquestrador, a ratificar pel Mestre) · En
@@ -838,9 +845,10 @@ describe('P1-70 · els quatre actors permanents en tots els modes', () => {
     result.current('javi', { modeDades: 'remote' });
     result.current('javi', { modeDades: 'remote', senseSessio: true });
     result.current('javi', { modeDades: 'remote', joEsJavi: true, joId: 'uuid-javi' });
+    /* R24.2 · En remot, un veí amb sessió obri el directe amb l'UUID declarat de Javi. */
     expect(navegacions()).toEqual([
       ['/xat?amb=0001', { replace: true }], ['/xat/fake-javi', { replace: true }],
-      ['/xat/fake-javi', { replace: true }], ['/xat/fake-javi', { replace: true }],
+      ['/xat?amb=c7cc745b-2c54-4739-b9c1-add751aac3c4', { replace: true }], ['/xat/fake-javi', { replace: true }],
       ['/xat?amb=uuid-javi', { replace: true }]
     ]);
     expect(mocks.showToast).not.toHaveBeenCalled();

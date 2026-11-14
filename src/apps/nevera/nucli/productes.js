@@ -21,7 +21,7 @@
  * producte que ix del full no es conserva sol: l'importador n'avisa i cal
  * decidir què passa amb les llistes que el porten.
  */
-export const FONT = Object.freeze({ id: 'mer', nom: 'Mercadona', tall: '2026-10-03' });
+export const FONT = Object.freeze({ id: 'mer', nom: 'Botiga de poble', tall: '2026-10-03' });
 
 export const PRODUCTES = Object.freeze([
   ['mer-salsa-de-tomate-basilico-con-albahaca', 'Salsa de tomate Basilico con albahaca', 'ingredients-especies', 'Hacendado', 'Tarro', 290, 'g', 150],

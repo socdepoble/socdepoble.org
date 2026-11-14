@@ -143,6 +143,26 @@ describe('R21.8 · P0 «WhatsApp Clonat però Millorat»', () => {
     expect(frequents[0].fil_id).toBe('f-personal');
   });
 
+  test('3b. Onada R24 (IDEA-260 a) · una fila plegada representada pel directe personal continua mostrant la píndola de l’entitat: cap canal amagat', () => {
+    const filEntitat = mapejaFil({
+      id: 'f-entitat', tipus: 'directe', titol: 'Anna Valls', comEntitat: true, entitatId: 'org-rentonar', entitatNom: 'El Rentonar',
+      ultimText: 'Tenim oli nou?', ultimAl: '2026-11-12T10:00:00Z', altres: [{ id: 'anna', nom: 'Anna Valls', tipus: 'persona' }], altresNoms: ['Anna Valls']
+    });
+    const filPersonal = mapejaFil({
+      id: 'f-personal', tipus: 'directe', titol: 'Anna Valls', ultimText: 'Ens veiem a la plaça!', ultimAl: '2026-11-12T09:00:00Z',
+      altres: [{ id: 'anna', nom: 'Anna Valls', tipus: 'persona' }], altresNoms: ['Anna Valls']
+    });
+    const { container } = render(
+      <MemoryRouter>
+        <FilaConversa fil={filPersonal} canals={[filEntitat, filPersonal]} onSelect={vi.fn()} locale="ca-ES" t={t} />
+      </MemoryRouter>
+    );
+    const pindoles = [...container.querySelectorAll('.sdp-xat-fila__entitat')];
+    expect(pindoles.map((p) => p.textContent)).toEqual(['Personal', 'El Rentonar']);
+    expect(pindoles[1].querySelector('svg.lucide-building-2')).not.toBeNull();
+    expect(container.querySelector('.sdp-xat-fila__nom').textContent).toBe('Anna Valls, 2 converses: Personal i El Rentonar');
+  });
+
   test('4. Excepció de Javi Llinares: per als veïns es mantenen els 4 actors; per a Javi no es fixa buit però puja amb missatges reals', () => {
     const poble = { clau: 'poble:torre', tipus: 'poble', delPoble: true };
     const reserves = {

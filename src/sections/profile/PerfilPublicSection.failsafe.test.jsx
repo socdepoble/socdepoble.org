@@ -55,6 +55,7 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 }));
 import PerfilPublicSection, { TERMINI_DEL_PERFIL_MS, TERMINI_DEL_REINTENT_MS, perfilDeLaPersonaPilot } from './PerfilPublicSection.jsx';
 import { createTranslator } from '../../config/i18n.js';
+import { SessionContext } from '../../app/contexts/objectesDeContext.js';
 
 const CARREGANT = 'Carregant el perfil…';
 const SENSE_RESPOSTA = 'No s’ha pogut carregar el perfil';
@@ -291,15 +292,20 @@ describe('T9-1 · un `agents` nou no torna a carregar la fitxa', () => {
 });
 
 describe('P4b-3 · «Escriu-li al xat» de la fitxa del paquet de Javi', () => {
-  test('en remot amb sessió el servidor no en coneix el compte: el botó no es pinta', async () => {
+  /* Onada R24.2 (R21.2-F01, decisió del Mestre del 14-11-2026) · El paquet
+     declara l'UUID del compte de producció de Javi: en remot amb sessió, la
+     fitxa del paquet ja en coneix el compte i el botó obri el directe real.
+     Sense UUID declarat (el contracte d'abans), rutaDelXatDeJavi torna null i
+     el botó no es pinta: ho cobrix XatSection.actorsPermanents (P1-70) i,
+     per a la fitxa, l'última prova d'este bloc. */
+  test('en remot amb sessió, amb l’UUID de Javi declarat: el botó obri el directe amb el seu compte real', async () => {
     m.id = 'javillinares';
     m.load.mockResolvedValue(null);
     render(<PerfilPublicSection />);
     await buida();
     expect(h1()).toBe('Javi Llinares');
-    expect(screen.queryByRole('button', { name: 'Escriu-li al xat' })).toBeNull();
-    /* REV-PERF-7 · Sense cap botó, la fila de les accions no es pinta. */
-    expect(document.querySelector('.sdp-alerta__accions--centrades')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Escriu-li al xat' }));
+    expect(m.navigate).toHaveBeenCalledWith('/xat?amb=c7cc745b-2c54-4739-b9c1-add751aac3c4');
   });
 
   test('en remot sense sessió: el seu xat de només lectura, com la seua fila del Xat', async () => {
@@ -329,6 +335,88 @@ describe('P4b-3 · «Escriu-li al xat» de la fitxa del paquet de Javi', () => {
     await buida();
     fireEvent.click(screen.getByRole('button', { name: 'Escriu-li al xat' }));
     expect(m.navigate).toHaveBeenCalledWith(`/xat?amb=${UUID_JAVI}`);
+  });
+
+  /* Onada R24.2 (revisió adversarial) · Amb l'UUID declarat, la fitxa de la
+     persona pilot mirada per ella mateixa (la sessió és el seu compte: l'UUID
+     declarat o el correu acreditat) portava «Escriu-li al xat» cap a
+     /xat?amb=<el seu UUID>, el xat amb ella mateixa. Ara és «a mi mateix»:
+     cap botó i, sense cap botó a la fila, cap fila d'accions (REV-PERF-7). */
+  const UUID_JAVI_REAL = 'c7cc745b-2c54-4739-b9c1-add751aac3c4';
+  const ambSessio = (currentUser, fitxa) => <SessionContext.Provider value={{ currentUser }}>{fitxa}</SessionContext.Provider>;
+  test.each([
+    ['l’UUID declarat', { id: UUID_JAVI_REAL }],
+    ['el correu acreditat', { id: '5a5a5a5a-0000-4000-8000-0000000000aa', email: 'SocDePobleCom@gmail.com', email_confirmed_at: '2026-10-18T10:00:00Z' }]
+  ])('R24.2 · en remot, la persona pilot amb sessió (%s) a /javillinares: cap «Escriu-li al xat» ni fila d’accions', async (_, usuari) => {
+    m.id = 'javillinares';
+    m.load.mockResolvedValue(null);
+    render(ambSessio(usuari, <PerfilPublicSection />));
+    await buida();
+    expect(h1()).toBe('Javi Llinares');
+    expect(screen.queryByRole('button', { name: 'Escriu-li al xat' })).toBeNull();
+    expect(document.querySelector('.sdp-alerta__accions--centrades')).toBeNull();
+    expect(m.navigate).not.toHaveBeenCalled();
+  });
+
+  test('R24.2 · en remot, la persona pilot amb sessió a la fitxa del servidor (/gent/<el seu UUID>): cap directe amb ella mateixa; «Edita la fitxa» es queda', async () => {
+    m.id = UUID_JAVI_REAL;
+    m.load.mockResolvedValue({ ...PERSONA, id: UUID_JAVI_REAL, nom: 'Javi Llinares', propietari: true });
+    render(ambSessio({ id: UUID_JAVI_REAL }, <PerfilPublicSection />));
+    await buida();
+    expect(h1()).toBe('Javi Llinares');
+    expect(screen.queryByRole('button', { name: 'Escriu-li al xat' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Edita la fitxa' }));
+    expect(m.navigate.mock.calls).toEqual([['/el-meu-perfil']]);
+  });
+
+  test('R24.2 · en remot, un veí amb sessió a /javillinares conserva el directe amb el compte real de Javi', async () => {
+    m.id = 'javillinares';
+    m.load.mockResolvedValue(null);
+    render(ambSessio({ id: PERSONA.id }, <PerfilPublicSection />));
+    await buida();
+    fireEvent.click(screen.getByRole('button', { name: 'Escriu-li al xat' }));
+    expect(m.navigate).toHaveBeenCalledWith(`/xat?amb=${UUID_JAVI_REAL}`);
+  });
+
+  /* Revisió adversarial (Onada R24.2) · El contracte d'abans de declarar
+     l'UUID, que continua valent per a un paquet sense cap UUID de Javi a
+     IDS_REMOTS_FUNDACIONALS: en remot amb sessió, rutaDelXatDeJavi torna null,
+     el botó no es pinta i la fila d'accions tampoc (REV-PERF-7). Mòduls nous
+     (resetModules) amb el padró sense l'UUID (doMock); els vi.mock d'este
+     fitxer continuen valent. Els tres ajudants exportats que prenen
+     IDS_REMOTS_FUNDACIONALS per defecte el lligen dins del seu mòdul (el
+     doMock no hi arriba): el doble els passa la llista buida. La sessió va
+     pel SessionContext dels mòduls nous. */
+  test('sense UUID de Javi declarat, en remot amb sessió el botó no es pinta (ni la fila d’accions)', async () => {
+    vi.resetModules();
+    vi.doMock('../../data/identitatsSeed.js', async (importOriginal) => {
+      const original = await importOriginal();
+      const idsRemots = Object.freeze({ ...original.IDS_REMOTS_FUNDACIONALS, [original.PERSONA_PILOT.slug]: Object.freeze([]) });
+      return {
+        ...original,
+        IDS_REMOTS_FUNDACIONALS: idsRemots,
+        esComptePersonaPilot: (objecte, opcions = {}) => original.esComptePersonaPilot(objecte, { idsRemots, ...opcions }),
+        clauFundacional: (perfil, opcions = {}) => original.clauFundacional(perfil, { idsRemots, ...opcions }),
+        fundacionalDeLaClau: (clau, opcions = {}) => original.fundacionalDeLaClau(clau, { idsRemots, ...opcions })
+      };
+    });
+    try {
+      const { default: PerfilSenseUuid } = await import('./PerfilPublicSection.jsx');
+      const { SessionContext: SessioSenseUuid } = await import('../../app/contexts/objectesDeContext.js');
+      const { rutaDelXatDeJavi } = await import('../xat/useObriXatPerDefecte.js');
+      expect(rutaDelXatDeJavi('remote')).toBeNull();
+      m.id = 'javillinares';
+      m.load.mockResolvedValue(null);
+      render(<SessioSenseUuid.Provider value={{ currentUser: { id: PERSONA.id } }}><PerfilSenseUuid /></SessioSenseUuid.Provider>);
+      await buida();
+      expect(h1()).toBe('Javi Llinares');
+      expect(screen.queryByRole('button', { name: 'Escriu-li al xat' })).toBeNull();
+      expect(document.querySelector('.sdp-alerta__accions--centrades')).toBeNull();
+      expect(m.navigate).not.toHaveBeenCalled();
+    } finally {
+      vi.doUnmock('../../data/identitatsSeed.js');
+      vi.resetModules();
+    }
   });
 });
 

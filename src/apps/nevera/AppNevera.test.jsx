@@ -89,40 +89,42 @@ const comencaPer = (text) => (nom) => nom.startsWith(text);
 const davallDe = (boto) => boto.closest('article.sp-card')?.querySelector('.sp-card-text')?.textContent ?? null;
 const titolsDeSeccio = () => detall().getAllByRole('heading', { level: 3 }).map((titol) => titol.textContent);
 
-describe('P0-66 · catàleg complet Mercadona a la seua llista', () => {
-  test('crea i reobri la mateixa llista; els 592 productes són elegibles i no omplin casa automàticament', async () => {
+describe('P0-66 · catàleg complet orientatiu de botiga de poble a la seua llista (zero marca de gran superfície)', () => {
+  test('crea i reobri la mateixa llista; els 592 productes són elegibles, no omplin casa automàticament i mai no mostren Mercadona', async () => {
     const entorn = munta('/app/nevera/llista/casa');
-    const boto = await screen.findByRole('button', { name: 'Obri Mercadona' });
+    const boto = await screen.findByRole('button', { name: 'Catàleg de botiga' });
     fireEvent.click(boto);
     await waitFor(() => expect(desat(entorn.idb)?.llistes).toHaveLength(2));
-    const llista = desat(entorn.idb).llistes.find((l) => l.nom === 'Mercadona');
+    const llista = desat(entorn.idb).llistes.find((l) => l.nom === 'Botiga de poble');
     expect(ubicacio()).toBe(`/app/nevera/llista/${llista.id}`);
-    await screen.findByText(/592 productes\. Preus del tall 2026-10-03/);
+    await screen.findByText(/592 productes habituals de rebost amb preus orientatius de referència \(2026-10-03\)/);
+    expect(document.body.textContent).not.toMatch(/Mercadona|Hacendado|Bosque Verde|Deliplus/i);
     expect(document.querySelectorAll('#app-grid-main [data-element^="mer-"]')).toHaveLength(592);
     expect(desat(entorn.idb).casa).toEqual([]);
     expect(llista.linies).toEqual([]);
     fireEvent.click(botoDetall(PRODUCTE.id, PRODUCTE.nom));
     await waitFor(() => expect(liniesDesades(entorn.idb, llista.id)).toEqual([{ articleId: PRODUCTE.id, especificacio: '' }]));
     expect(liniesDesades(entorn.idb, 'casa')).toEqual([]);
-    fireEvent.click(screen.getByRole('button', { name: 'Obri Mercadona' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Catàleg de botiga' }));
     expect(desat(entorn.idb).llistes).toHaveLength(2);
     expect([...document.querySelectorAll('#app-grid-main img')].every((img) => !img.src.includes('imgix'))).toBe(true);
   }, 20000);
 
   test('la fitxa compara una oferta real introduïda amb les mateixes unitats i dates explícites', async () => {
     const entorn = prepara();
-    const estat = creaLlista(estatInicial(), 'Mercadona');
+    const estat = creaLlista(estatInicial(), 'Botiga de poble');
     await entorn.magatzem.desa(estat);
     munta(`/app/nevera/llista/${estat.darreraLlista}?fitxa=mer-salsa-de-tomate-basilico-con-albahaca`, entorn);
-    await screen.findByRole('group', { name: 'Comparador rural' });
+    await screen.findByRole('group', { name: 'Comparador de comerç local' });
     fireEvent.change(screen.getByRole('textbox', { name: 'Preu de l’oferta local (€)' }), { target: { value: '0,90' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Quantitat de l’oferta' }), { target: { value: '145' } });
     fireEvent.change(screen.getByRole('combobox', { name: 'Unitat de l’oferta' }), { target: { value: 'g' } });
     fireEvent.change(screen.getByLabelText('Data de l’oferta local'), { target: { value: '2026-11-08' } });
-    expect(screen.getByText(/Per a la mateixa quantitat: Mercadona 0,75 €, La Torre \/ Cooperativa 0,90 €/)).toBeTruthy();
+    expect(screen.getByText(/Per a la mateixa quantitat: referència orientativa 0,75 €, La Torre \/ Cooperativa 0,90 €/)).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/Mercadona/i);
     fireEvent.change(screen.getByRole('combobox', { name: 'Unitat de l’oferta' }), { target: { value: 'l' } });
     expect(screen.getByText(/Les unitats no són comparables/)).toBeTruthy();
-    expect(desat(entorn.idb).llistes.find((l) => l.nom === 'Mercadona').linies).toEqual([]);
+    expect(desat(entorn.idb).llistes.find((l) => l.nom === 'Botiga de poble').linies).toEqual([]);
   }, 20000);
 });
 

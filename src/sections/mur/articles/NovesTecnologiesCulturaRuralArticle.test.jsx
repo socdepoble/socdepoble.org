@@ -59,13 +59,17 @@ describe('la primera publicació del Mur', () => {
     expect(POST.slug).toBe(POST.id);
     expect(NOVES_TECNOLOGIES_CULTURA_RURAL_ID).toBe(POST.id);
     expect(POST.title).toBe('Noves tecnologies aplicades a la cultura rural: desmuntant en 3D el Pou de Neu del Rentonar');
-    // R9V-C2-01 · La primera de la llavor, amb la forma de les altres (elementDelMurDeLaLlavor), però no a MOCK_FEED,
-    // que va a l'entrada: la resta de la llavor del Mur és la de sempre.
-    expect(FEED_POSTS[0]).toMatchObject({ ...POST, sectionId: 'mur', important: true, summary: POST.entradilla });
-    expect(FEED_POSTS[0].searchText).toContain('pou de neu del rentonar');
-    expect(FEED_POSTS.slice(1)).toEqual(PUBLICACIONS_DE_MOCK_FEED);
+    // R9V-C2-01 + Onada R23 · En primera línia de la llavor (just darrere de «La Veu de Sóc de Poble»), amb la forma de les
+    // altres (elementDelMurDeLaLlavor), però no a MOCK_FEED, que va a l'entrada: la resta de la llavor del Mur és la de sempre.
+    expect(FEED_POSTS[0].id).toBe('la-veu-de-soc-de-poble');
+    expect(FEED_POSTS[1]).toMatchObject({ ...POST, sectionId: 'mur', important: true, summary: POST.entradilla });
+    expect(FEED_POSTS[1].searchText).toContain('pou de neu del rentonar');
+    expect(FEED_POSTS.slice(2)).toEqual(PUBLICACIONS_DE_MOCK_FEED);
     expect(MOCK_FEED.some((item) => item.id === POST.id)).toBe(false);
-    expect(IMPORTANTS_DEL_MUR[0]).toEqual(['feedPosts', POST.id]);
+    expect(IMPORTANTS_DEL_MUR.slice(0, 2)).toEqual([
+      ['feedPosts', 'la-veu-de-soc-de-poble'],
+      ['feedPosts', POST.id],
+    ]);
     expect(POST).toMatchObject({ author_entity_id: 'socdepoble', author_name: 'Sóc de Poble', poble_id: 'la-torre-de-les-macanes', important: true });
     // P0-49 / IDEA-180 · La data real de la versió nova (07-11-2026, 21:20 CET, hora del commit), no una data de prova ni una
     // data inventada; abans, el naixement del fitxer (06-11-2026, 14:29, R9V-C2-06). Sense publish_date, que manaria
@@ -118,10 +122,14 @@ describe('la primera publicació del Mur', () => {
         moment: momentDeLaTargeta(item, esActeDelCalendari(item) ? acteAEsdeveniment(item) : null)
       })).sort(perMomentDescendent);
       const nostra = ordenades.find(({ item }) => item.id === POST.id).moment;
-      const altres = ordenades.filter(({ item }) => item.id !== POST.id).map(({ moment }) => moment).filter(Number.isFinite);
+      const altres = ordenades
+        .filter(({ item }) => item.id !== POST.id && item.id !== 'la-veu-de-soc-de-poble')
+        .map(({ moment }) => moment)
+        .filter(Number.isFinite);
       expect(altres.length).toBeGreaterThan(5);
       expect(altres.every((moment) => moment < nostra)).toBe(true);
-      expect(ordenades[0].item.id).toBe(POST.id);
+      expect(ordenades[0].item.id).toBe('la-veu-de-soc-de-poble');
+      expect(ordenades[1].item.id).toBe(POST.id);
       expect(nostra).toBeLessThan(ara.getTime());
     }
   });

@@ -12,7 +12,9 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({
   root: '', fora: '', valors: {}, crides: [], preflights: [], fastlane: true, segell: '',
-  codiValidacio: 0, codiPujada: 0, durantValidacio: null, durantPujada: null
+  codiValidacio: 0, codiPujada: 0, durantValidacio: null, durantPujada: null,
+  /* R24 botigues (D2) · Els dex de l'AAB: null és el comportament de sempre (el segell per a qualsevol nom). */
+  dex: null
 }));
 
 vi.mock('../scripts/botigues/preflight.mjs', () => ({
@@ -29,7 +31,7 @@ vi.mock('../scripts/botigues/entorn.mjs', async (original) => {
     llegixAjuda: () => ['--aab', '--track', '--release_status', '--package_name', '--json_key', '--skip_upload_metadata',
       '--skip_upload_images', '--skip_upload_screenshots', '--skip_upload_changelogs', '--validate_only'].join(' '),
     /* El segell de dins de l'AAB és el de dist-natiu/: problemaDeLAab passa. */
-    llegixDelZip: () => Buffer.from(m.segell),
+    llegixDelZip: (_cami, nom) => (m.dex && String(nom).startsWith('base/dex/') ? m.dex(nom) : Buffer.from(m.segell)),
     executa: async (ordre, args, opcions = {}) => {
       m.crides.push([ordre, [...args], { ...opcions }]);
       if (ordre === 'keytool') return { codi: 0, crua: `Propietari: CN=Mestre\nSHA256: ${'AB:'.repeat(31)}AB\n`, eixida: '' };
@@ -46,7 +48,7 @@ vi.mock('../scripts/botigues/entorn.mjs', async (original) => {
 const { EIXIDA } = await import('../scripts/botigues/entorn.mjs');
 /* El nom del registre, escrit: la prova no depén de l'export que comprova (cau per asserció, no per import). */
 const REGISTRE_DE_PUJADES = 'pujades.jsonl';
-const { AAB, PASSOS_DESPRES_PRODUCCIO, main, planAndroid } = await import('../scripts/botigues/puja-android.mjs');
+const { AAB, PASSOS_DESPRES_PRODUCCIO, dexAmbFacebook, dexDeLAab, main, planAndroid } = await import('../scripts/botigues/puja-android.mjs');
 const { VERSIO_CLIENT_NATIU } = await import('../scripts/botigues/versio-client.mjs');
 const BUILD = String(VERSIO_CLIENT_NATIU);
 const OCTETS_AAB = 'AAB de prova signat pel Mestre';
@@ -65,7 +67,7 @@ beforeEach(() => {
   fs.mkdirSync(path.join(m.root, 'android/app'), { recursive: true });
   fs.writeFileSync(path.join(m.root, 'android/app/build.gradle'), `android {\n  defaultConfig {\n    versionCode ${BUILD}\n    versionName "1.0.0"\n  }\n}\n`);
   escriuAab(OCTETS_AAB);
-  Object.assign(m, { crides: [], preflights: [], fastlane: true, codiValidacio: 0, codiPujada: 0, durantValidacio: null, durantPujada: null });
+  Object.assign(m, { crides: [], preflights: [], fastlane: true, codiValidacio: 0, codiPujada: 0, durantValidacio: null, durantPujada: null, dex: null });
   eixida = [];
   errors = [];
   vi.spyOn(process.stdout, 'write').mockImplementation((s) => { eixida.push(String(s)); return true; });
@@ -277,5 +279,50 @@ describe('la pujada a producció', () => {
     expect(errors.join('')).toMatch(/permisos oberts: chmod 600/);
     expect(fs.statSync(cami).mode & 0o777).toBe(0o644);
     expect(registre()).toHaveLength(1);
+  });
+});
+
+/* R24 botigues · D2 (RC-7) · Abans de keytool i de cap pujada, l'AAB es mira per dins: cap classe
+   de com.facebook (el SDK de Meta) als dex del mòdul base. Si n'hi ha, o si no es pot llegir cap dex,
+   no es puja (7). Els dex són sintètics; el zip de veres el prova tests/botigues.test.mjs. */
+describe('R24 · D2 · l’AAB sense el SDK de Facebook', () => {
+  const DEX_NET = Buffer.from('dex\n035\0Landroidx/credentials/CredentialManager;Lee/forgr/capacitor/social/login/GoogleProvider;');
+  const DEX_META = Buffer.from('dex\n035\0Lcom/facebook/FacebookSdk;Lcom/facebook/login/LoginManager;');
+
+  test('dexAmbFacebook (pura): només els dex que porten Lcom/facebook/; el nom del connector no compta', () => {
+    expect(dexAmbFacebook([{ nom: 'base/dex/classes.dex', octets: DEX_NET }, { nom: 'base/dex/classes2.dex', octets: DEX_META }])).toEqual(['base/dex/classes2.dex']);
+    expect(dexAmbFacebook([{ nom: 'base/dex/classes.dex', octets: Buffer.from('ee/forgr/capacitor/social/login/FacebookProvider') }])).toEqual([]);
+    expect(dexAmbFacebook([])).toEqual([]);
+  });
+
+  test('dexDeLAab llig classes.dex, classes2.dex… fins al primer que falta, amb el lector que rep', () => {
+    const llig = vi.fn((_cami, nom) => ({ 'base/dex/classes.dex': DEX_NET, 'base/dex/classes2.dex': DEX_META }[nom] ?? null));
+    expect(dexDeLAab('/fals.aab', { llig }).map((d) => d.nom)).toEqual(['base/dex/classes.dex', 'base/dex/classes2.dex']);
+    expect(llig.mock.calls.map(([, nom]) => nom)).toEqual(['base/dex/classes.dex', 'base/dex/classes2.dex', 'base/dex/classes3.dex']);
+    expect(dexDeLAab('/fals.aab', { llig: () => null })).toEqual([]);
+  });
+
+  test('un AAB amb classes de com.facebook: eixida 7 abans de keytool, sense rebut ni «sí»', async () => {
+    m.dex = (nom) => ({ 'base/dex/classes.dex': DEX_NET, 'base/dex/classes2.dex': DEX_META }[nom] ?? null);
+    expect(await produccio()).toBe(EIXIDA.ARBRE);
+    expect(errors.join('') + text()).toMatch(/l'AAB porta classes de com\.facebook \(base\/dex\/classes2\.dex\)/);
+    expect(errors.join('') + text()).toMatch(/socialLogin\.facebook\.include=false/);
+    expect(crides('keytool')).toEqual([]);
+    expect(text()).not.toContain('REBUT');
+  });
+
+  test('un AAB sense cap dex llegible: eixida 7 (no es pot certificar), sense keytool', async () => {
+    m.dex = () => null;
+    expect(await produccio()).toBe(EIXIDA.ARBRE);
+    expect(errors.join('') + text()).toMatch(/no s'ha pogut llegir cap base\/dex\/classes\*\.dex de l'AAB/);
+    expect(crides('keytool')).toEqual([]);
+  });
+
+  test('un AAB net: ho diu i continua com sempre (keytool i el «sí»)', async () => {
+    m.dex = (nom) => (nom === 'base/dex/classes.dex' ? DEX_NET : null);
+    expect(await produccio()).toBe(EIXIDA.BE);
+    expect(text()).toMatch(/✓ l'AAB no porta cap classe de com\.facebook \(1 dex\)/);
+    expect(crides('keytool')).toHaveLength(1);
+    expect(text()).toContain(`--confirma=produccio:1.0.0+${BUILD}@${SHA12}`);
   });
 });

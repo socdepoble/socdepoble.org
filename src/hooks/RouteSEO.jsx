@@ -22,7 +22,8 @@ const TITLES = { notes: 'Notes', xat: 'Xat', connectar: 'Connectar', registre: '
   perfil: 'Perfil', admin: 'Administració', consola: 'Consola', control: 'Panell de Control', cerca: 'Cerca',
   traduccions: 'Traduccions i llengua', wikidepoble: 'Wiki de Poble', disseny: 'Disseny',
   realitat: 'Realitat', utilitats: 'Panell de Control', 'el-meu-perfil': 'El meu perfil', 'control-xat': 'Control del xat',
-  gent: 'Perfil', empresa: 'Perfil', ajuntament: 'Perfil', grup: 'Perfil', fedivers: 'Nodes i Fedivers', app: 'Apps',
+  /* P0-SEO-UNIVERSAL (13-11-2026) · 'entitats' (/entitats/:id, la sisena família de la fitxa pública) faltava. */
+  gent: 'Perfil', empresa: 'Perfil', entitats: 'Perfil', ajuntament: 'Perfil', grup: 'Perfil', fedivers: 'Nodes i Fedivers', app: 'Apps',
   ...Object.fromEntries([...Object.values(RUTES_CANONIQUES), RUTA_FITXA_IAIA].map((ruta) => [ruta.slice(1), 'Perfil'])) };
 const SENSE_INDEX = new Set(['app']);
 /* Pla 261028_1526 (P1-61, Fase 2) · Un document de la Wiki (/wikidepoble?item=

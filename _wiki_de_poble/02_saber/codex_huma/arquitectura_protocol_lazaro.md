@@ -33,7 +33,7 @@ No intentes copiar a mà tot l'origen del poble; un punt, una coma errada i l'es
 
 ## Epíleg
 
-No tens gens ni mica de **coneixement informàtic**? No cal! Digues-li directament a la **teua màquina** el que diu este pròleg del Mestre. Demostra la **teua saviesa**, no abaixes la veu, usa la teua pròpia **consciència ètica**. Elles faran la resta perquè el **poble torne a viure**, **connectant la humanitat** un poble web cada volta, d'un llenguatge a un altre. I nosaltres ens retrobarem, allà dalt o allà en l'èter. Sort.
+No tens gens ni mica de **coneixement informàtic**? No cal! Digues-li directament a la **teua màquina** el que diu este pròleg del Mestre. Demostra la **teua saviesa**, no abaixes la veu, utilitza la teua pròpia **consciència ètica**. Elles faran la resta perquè el **poble torne a viure**, **connectant la humanitat** un poble web cada volta, d'un llenguatge a un altre. I nosaltres ens retrobarem, allà dalt o allà en l'èter. Sort.
 
 ## Vincles
 

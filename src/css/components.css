@@ -2695,6 +2695,8 @@ section.bar-orange[data-copublicacio="composta"] {
     left: 50%;
     transform: translateX(-50%);
     z-index: 1;
+    max-block-size: min(26rem, calc(100vh - 5rem));
+    overflow-y: auto;
   }
   .sp-card-footer .sdp-menu-traduir {
     position: absolute;
@@ -3892,6 +3894,848 @@ section.bar-orange[data-copublicacio="composta"] {
     justify-content: center;
     margin-block-start: var(--sdp-space-2);
     font-weight: 700;
+  }
+}
+
+/* ── Onada R23 · La Veu de Sóc de Poble (MenuTraduir + Joc Comarcal + Refranyer Sonor + Banc de Veus) ── */
+/* Viu davant del carrusel d'imatges i del visor de l'anatomia rural: porta
+   regles contextuals .sdp-boto i transicions, i el carrusel ha d'anar
+   darrere de tota regla .sdp-boto (qualitat.carrusel.test.js) i el visor ha de
+   ser el darrer bloc amb moviment (VisorAnatomiaRural3D.test.jsx). Cap selector
+   d'este bloc no es disputa amb els blocs que ara té darrere. */
+@layer components {
+  .sdp-menu-traduir__grup-titol {
+    padding: var(--sdp-space-1) var(--sdp-space-4);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+    letter-spacing: var(--sdp-tracking-versaletes);
+    text-transform: uppercase;
+  }
+  .sdp-menu-traduir__item--actiu {
+    background: var(--sdp-accent-subtil);
+    color: var(--sdp-accent-text);
+    font-weight: var(--sdp-pes-semi);
+  }
+
+  .sdp-article-veu {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-6);
+  }
+  .sdp-article-veu__escolta-cap {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-boto-separacio);
+  }
+  .sdp-article-veu__cos {
+    display: block;
+  }
+
+  .sdp-banc-veus,
+  .sdp-joc-parla,
+  .sdp-refranyer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    scroll-margin-top: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
+  }
+  .sdp-banc-veus .sdp-boto,
+  .sdp-joc-parla .sdp-boto,
+  .sdp-refranyer .sdp-boto {
+    gap: var(--sdp-space-2);
+  }
+  .sdp-joc-parla__opcio--viva {
+    border-style: dashed;
+    border-color: var(--sdp-accio-control);
+  }
+  .sdp-joc-parla__opcio-cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    inline-size: 100%;
+  }
+  .sdp-joc-parla__opcio-vots {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-accent-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-joc-parla__consens-caixa {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-joc-parla__consens-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-joc-parla__consens-titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-negreta);
+  }
+  .sdp-joc-parla__consens-xat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-accent-text);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+    text-decoration: none;
+  }
+  .sdp-joc-parla__consens-xat:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  .sdp-joc-parla__consens-resum {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-joc-parla__fila-territori {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--sdp-space-3);
+  }
+  .sdp-joc-parla__enquesta-abast {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .sdp-joc-parla__enquesta-abast > legend {
+    padding: 0;
+    margin-block-end: var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-joc-parla__abast-opcions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-joc-parla__pindola-abast {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    cursor: pointer;
+  }
+  .sdp-joc-parla__pindola-abast--activa {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-weight: var(--sdp-pes-semi);
+  }
+
+  .sdp-joc-parla__capcalera,
+  .sdp-refranyer__capcalera {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-joc-parla__insignia,
+  .sdp-refranyer__insignia {
+    margin: 0;
+    color: var(--sdp-accent-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+    letter-spacing: var(--sdp-tracking-versaletes);
+    text-transform: uppercase;
+  }
+  .sdp-banc-veus__titol,
+  .sdp-joc-parla__titol,
+  .sdp-refranyer__titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+    line-height: var(--sdp-leading-titol);
+  }
+  .sdp-banc-veus__descripcio,
+  .sdp-joc-parla__entradeta,
+  .sdp-refranyer__entradeta {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-base);
+    line-height: var(--sdp-leading-cos);
+  }
+
+  .sdp-banc-veus__llista,
+  .sdp-joc-parla__ranquing-llista,
+  .sdp-joc-parla__llista-locals,
+  .sdp-refranyer__llista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-banc-veus__item,
+  .sdp-refranyer__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-banc-veus__item-cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-banc-veus__nom {
+    display: block;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+  }
+  .sdp-banc-veus__territori {
+    display: block;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+  .sdp-banc-veus__audio {
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+  }
+
+  .sdp-joc-parla__pregunta-caixa,
+  .sdp-joc-parla__resultat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-joc-parla__progres-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-joc-parla__comptador {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-semi);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-joc-parla__barra-progres {
+    inline-size: 100%;
+    block-size: var(--sdp-space-2);
+    accent-color: var(--sdp-accio-control);
+  }
+  .sdp-joc-parla__enunciat {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    line-height: var(--sdp-leading-titol);
+  }
+  .sdp-joc-parla__opcions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--sdp-space-3);
+  }
+  .sdp-joc-parla__opcio {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--sdp-space-1);
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-joc-parla__opcio:focus-visible,
+  .sdp-refranyer__pindola:focus-visible,
+  .sdp-joc-parla__input:focus-visible,
+  .sdp-refranyer__cerca-input:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  .sdp-joc-parla__opcio--activa {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-subtil);
+    color: var(--sdp-text-titol);
+  }
+  .sdp-joc-parla__opcio-mot {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    font-weight: var(--sdp-pes-negreta);
+  }
+  .sdp-joc-parla__opcio-detall {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-joc-parla__resultat-destacat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-accent-subtil);
+  }
+  .sdp-joc-parla__resultat-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    color: var(--sdp-accent-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+  }
+  .sdp-joc-parla__resultat-comarca {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+  }
+  .sdp-joc-parla__resultat-pobles {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-joc-parla__resultat-descripcio {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    line-height: var(--sdp-leading-cos);
+  }
+  .sdp-joc-parla__subtitol-ranquing {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+  }
+  .sdp-joc-parla__ranquing-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-joc-parla__ranquing-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-joc-parla__ranquing-pct {
+    color: var(--sdp-text-suau);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-joc-parla__veu-caixa {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-joc-parla__veu-text {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-joc-parla__accions-resultat,
+  .sdp-refranyer__accions,
+  .sdp-refranyer__gravadora-barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-boto-separacio);
+  }
+  .sdp-joc-parla__aportacio-bloc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    padding-block-start: var(--sdp-space-3);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  .sdp-joc-parla__formulari,
+  .sdp-refranyer__gravadora {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    inline-size: 100%;
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+  }
+  .sdp-joc-parla__formulari-ajuda {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-joc-parla__camp,
+  .sdp-refranyer__camp,
+  .sdp-refranyer__cerca-caixa {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-refranyer__cerca-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-joc-parla__input,
+  .sdp-refranyer__cerca-input {
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    font: inherit;
+  }
+  .sdp-joc-parla__consentiment,
+  .sdp-refranyer__consentiment {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sdp-space-3);
+    min-block-size: var(--sdp-touch);
+    padding-block: var(--sdp-space-2);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    cursor: pointer;
+  }
+
+  .sdp-refranyer__controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-refranyer__categories {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-refranyer__pindola {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-weight: var(--sdp-pes-semi);
+    cursor: pointer;
+  }
+  .sdp-refranyer__pindola--activa {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-refranyer__buit {
+    margin: 0;
+    padding: var(--sdp-space-4);
+    color: var(--sdp-text-suau);
+    text-align: center;
+  }
+  .sdp-refranyer__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    font-size: var(--sdp-text-meta);
+  }
+  .sdp-refranyer__comarca {
+    color: var(--sdp-accent-text);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-refranyer__ambit {
+    color: var(--sdp-text-suau);
+  }
+  .sdp-refranyer__dita {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    font-weight: var(--sdp-pes-negreta);
+    line-height: var(--sdp-leading-titol);
+  }
+  .sdp-refranyer__explicacio {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    line-height: var(--sdp-leading-cos);
+  }
+  .sdp-refranyer__indicador-temps {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-refranyer__preescolta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-joc-parla__opcio:hover {
+      background: var(--sdp-fons-subtil);
+    }
+    .sdp-refranyer__pindola:hover {
+      background: var(--sdp-fons-subtil);
+    }
+    .sdp-refranyer__pindola--activa:hover {
+      background: var(--sdp-accio-control-hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .sdp-joc-parla__opcio,
+    .sdp-refranyer__pindola {
+      transition: background var(--sdp-t), border-color var(--sdp-t);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sdp-joc-parla__opcio,
+    .sdp-refranyer__pindola {
+      transition: none;
+    }
+  }
+
+  /* ── IDEA-255 · Reproductor Flotant Universal de Veu (Onada R23) ────────── */
+  .sdp-veu-lectura-marc {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    margin-block: 0 var(--sdp-space-5);
+  }
+  .sdp-veu-lectura-marc--traduit {
+    max-inline-size: 45rem;
+    margin-inline: auto;
+    padding-inline: var(--sdp-space-4);
+    margin-block: var(--sdp-space-3) 0;
+  }
+
+  /* Ressaltat suau del bloc actiu al DOM sense alterar mides ni provocar CLS */
+  .sdp-veu-bloc-actiu {
+    background: var(--sdp-fons-subtil);
+    border-radius: var(--sdp-radi-s);
+    outline: 2px solid var(--sdp-accio-control);
+    outline-offset: 2px;
+  }
+
+  .sdp-barra-veu {
+    position: fixed;
+    inset-inline: var(--sdp-space-3);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--sdp-space-4));
+    z-index: var(--z-fab);
+    max-inline-size: 38rem;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3);
+    border: 2px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font-family: var(--sdp-font);
+  }
+  :where(.sdp-root.is-compact) .sdp-barra-veu,
+  .sdp-barra-veu[data-compacte="true"] {
+    bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-3));
+  }
+  .sdp-barra-veu--especimen {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    inline-size: 100%;
+    margin-inline: 0;
+  }
+
+  .sdp-barra-veu__cap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    min-inline-size: 0;
+  }
+  .sdp-barra-veu__resum {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+    flex: 1 1 auto;
+  }
+  .sdp-barra-veu__meta {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    color: var(--sdp-accent-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-semi);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-barra-veu__seccio {
+    color: var(--sdp-text-suau);
+    font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-inline-size: 22rem;
+  }
+  .sdp-barra-veu__fragment {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sdp-barra-veu__controls {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(var(--sdp-touch), 1fr));
+    gap: var(--sdp-space-2);
+    align-items: center;
+  }
+  .sdp-barra-veu__control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    cursor: pointer;
+    font: inherit;
+  }
+  .sdp-barra-veu__control--principal {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-barra-veu__control--actiu {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-accent-text);
+  }
+  .sdp-barra-veu__control:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  /* Bancal (Q1) · Cap text translúcid: el control desactivat de la barra
+     deixa l'opacitat i ho diu, com .sdp-boto:disabled, amb el parell sòlid
+     --sdp-text-suau sobre --sdp-fons-subtil i la vora de traços. */
+  :root[data-contrast="bancal"] .sdp-barra-veu__control:disabled,
+  :host([data-contrast="bancal"]) .sdp-barra-veu__control:disabled {
+    opacity: 1;
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    border-color: var(--sdp-vora-control);
+    border-style: dashed;
+  }
+  .sdp-barra-veu__control:focus-visible,
+  .sdp-barra-veu__pindola:focus-visible,
+  .sdp-barra-veu__boto-salt:focus-visible,
+  .sdp-barra-veu__cerca-input:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+
+  .sdp-barra-veu__panell-salt {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding-block-end: var(--sdp-space-2);
+    border-block-end: 1px solid var(--sdp-vora);
+    max-block-size: min(45vh, 18rem);
+  }
+  .sdp-barra-veu__cerca-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-barra-veu__cerca-camp {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex: 1 1 12rem;
+    min-block-size: var(--sdp-touch);
+    padding-inline: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-barra-veu__cerca-input {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-size: var(--sdp-text-base);
+  }
+  .sdp-barra-veu__filtres {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-barra-veu__pindola {
+    min-block-size: var(--sdp-touch);
+    padding-inline: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+    cursor: pointer;
+  }
+  .sdp-barra-veu__pindola--activa {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+
+  .sdp-barra-veu__llista-salt {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sdp-barra-veu__item-salt {
+    margin: 0;
+  }
+  .sdp-barra-veu__boto-salt {
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-barra-veu__boto-salt--titol {
+    color: var(--sdp-text-titol);
+    font-weight: var(--sdp-pes-negreta);
+  }
+  .sdp-barra-veu__boto-salt--actiu {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-barra-veu__salt-num {
+    flex: 0 0 auto;
+    min-inline-size: 1.75rem;
+    color: var(--sdp-text-suau);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-barra-veu__salt-text {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-barra-veu__buit,
+  .sdp-barra-veu__avis {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-boto-veu-iaia {
+    flex: 0 0 auto;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-barra-veu__control:not(:disabled):not(.sdp-barra-veu__control--principal):hover,
+    .sdp-barra-veu__pindola:not(.sdp-barra-veu__pindola--activa):hover,
+    .sdp-barra-veu__boto-salt:hover {
+      background: var(--sdp-fons-subtil);
+    }
+    .sdp-barra-veu__control--principal:not(:disabled):hover,
+    .sdp-barra-veu__pindola--activa:hover {
+      background: var(--sdp-accio-control-hover);
+    }
+  }
+  @media print {
+    .sdp-veu-lectura-marc,
+    .sdp-barra-veu {
+      display: none;
+    }
   }
 }
 

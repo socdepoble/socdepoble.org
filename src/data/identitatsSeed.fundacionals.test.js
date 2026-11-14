@@ -124,10 +124,19 @@ describe('clauFundacional, estricta: només identificadors declarats', () => {
     expect(clauFundacional({ tipus: 'persona', id: AGENTS_MAP.JAVI.id, slug: null })).toBe(PERSONA_PILOT.slug);
   });
 
-  test('en remot, només amb l’id del servidor que declara la llavor; hui no se’n declara cap', () => {
+  test('en remot, només amb l’id del servidor que declara la llavor; hui només el de la persona pilot (R24.2)', () => {
     expect(Object.keys(IDS_REMOTS_FUNDACIONALS)).toEqual(CLAUS_FUNDACIONALS);
     expect(Object.isFrozen(IDS_REMOTS_FUNDACIONALS)).toBe(true);
-    for (const ids of Object.values(IDS_REMOTS_FUNDACIONALS)) expect([Object.isFrozen(ids), ids.length]).toEqual([true, 0]);
+    for (const ids of Object.values(IDS_REMOTS_FUNDACIONALS)) expect(Object.isFrozen(ids)).toBe(true);
+    /* R21.2-F01 · el Mestre declara l'UUID del seu compte de producció (14-11-2026); les entitats, cap. */
+    expect(IDS_REMOTS_FUNDACIONALS[PERSONA_PILOT.slug]).toEqual(['c7cc745b-2c54-4739-b9c1-add751aac3c4']);
+    expect(IDS_REMOTS_FUNDACIONALS[ENTITAT_PILOT_SLUG]).toEqual([]);
+    expect(IDS_REMOTS_FUNDACIONALS[ENTITAT_RENTONAR_SLUG]).toEqual([]);
+    expect(clauFundacional({ tipus: 'persona', id: 'c7cc745b-2c54-4739-b9c1-add751aac3c4', slug: null })).toBe(PERSONA_PILOT.slug);
+    expect(clauFundacional({ tipus: 'persona', id: 'C7CC745B-2C54-4739-B9C1-ADD751AAC3C4', slug: 'un-altre' })).toBe(PERSONA_PILOT.slug);
+    /* L'UUID de la persona no fa d'entitat ni de grup. */
+    expect(clauFundacional({ tipus: 'entitat', id: 'c7cc745b-2c54-4739-b9c1-add751aac3c4', slug: ENTITAT_PILOT_SLUG })).toBeNull();
+    expect(clauFundacional({ tipus: 'grup', id: 'c7cc745b-2c54-4739-b9c1-add751aac3c4', slug: ENTITAT_RENTONAR_SLUG })).toBeNull();
     expect(clauFundacional({ tipus: 'entitat', id: UUID_SDP, slug: ENTITAT_PILOT_SLUG })).toBeNull();
     expect(clauFundacional({ tipus: 'entitat', id: UUID_SDP, slug: ENTITAT_PILOT_SLUG }, { idsRemots: DECLARATS })).toBe(ENTITAT_PILOT_SLUG);
     /* El slug del servidor no hi compta: l'id declarat, encara que no en porte cap o en porte un altre. */

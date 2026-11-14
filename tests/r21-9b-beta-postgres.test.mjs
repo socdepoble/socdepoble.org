@@ -43,7 +43,13 @@ test('R21.9b · Beta, adjunts i estat privat sobre PostgreSQL 18.6 real', { time
     await db.query(plan.bootstrap);
     // Supabase may grant ambient Storage SELECT. Prove RLS, not an absent ACL.
     await db.query('grant select on storage.objects to anon');
-    for (const migration of plan.migrations.filter(m => m.file !== MIGRATION)) {
+    // R24 · 20261114061000 depén de R21.9b i ara avorta neta sense ella
+    // (SDP-XAT-947): no pot formar part d'una base sense R21.9b. Abans s'hi
+    // aplicava trencada i R21.9b tornava a crear xat_fils_meus damunt; les
+    // proves de baix corren, com abans, sobre la xat_fils_meus de R21.9b.
+    const DEPEN_DE_R21_9B = new Set(['20261114061000_r24_xat_rebuts_entrega.sql']);
+    assert.ok([...DEPEN_DE_R21_9B].every(f => plan.migrations.some(m => m.file === f)), 'les dependents de R21.9b són al catàleg');
+    for (const migration of plan.migrations.filter(m => m.file !== MIGRATION && !DEPEN_DE_R21_9B.has(m.file))) {
       await db.query('begin');
       try { await db.query(migration.body); await db.query('commit'); }
       catch (e) { await db.query('rollback'); throw new Error(`baseline ${migration.file}: ${e.message}`, { cause: e }); }

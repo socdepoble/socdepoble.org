@@ -3,8 +3,14 @@
    pròpia, des del botó de la barra negra
    (src/components/universal/BotoInstalaApp.jsx). Pausa de la beta (pla
    261021_2345 §1): App.jsx no munta el botó; la captura continua ací perquè
-   reactivar-lo siga tornar-lo a muntar, i mentrestant el navegador tampoc no
-   oferix la seua instal·lació pròpia.
+   reactivar-lo siga tornar-lo a muntar i encendre OFERTA_PROPIA_ESCRIPTORI.
+   Onada R24 (Consola Zero, P-F) · Mentre la constant és falsa, la captura
+   guarda l'esdeveniment SENSE preventDefault(): el navegador conserva la seua
+   oferta pròpia (a Chrome d'escriptori, la icona d'instal·lar de la barra
+   d'adreces, que preventDefault no amaga; el que sí amaga és la insígnia o
+   mini-barra del mòbil) i la consola deixa d'escriure «Banner not shown:
+   beforeinstallpromptevent.preventDefault() called…» a cada càrrega.
+   prompt() no exigix preventDefault(): Descàrregues l'obri igual.
 
    Chromium (Chrome, Edge, Brave, Opera) dispara «beforeinstallprompt» com a
    molt una volta per càrrega, quan la pàgina complix els criteris
@@ -16,8 +22,9 @@
    la criden: dins d'un amfitrió, quedar-se l'esdeveniment li furtaria la seua
    pròpia instal·lació (estandard_integracio_react, LLEI 3).
 
-   Magatzem pur, sense React: `captura` guarda l'esdeveniment (preventDefault
-   amaga l'oferta pròpia del navegador, que passa a ser el nostre botó), `pot`
+   Magatzem pur, sense React: `captura` guarda l'esdeveniment (amb la pastilla
+   muntada, preventDefault amaga l'oferta pròpia del navegador, que passa a ser
+   el nostre botó), `pot`
    diu si n'hi ha un, `subscriu` avisa els components (useSyncExternalStore a
    src/hooks/useInstalacioApp.js) i `demana` obri el diàleg natiu. Safari i
    Firefox no tenen l'esdeveniment: allí no s'oferix res. Només escriptori:
@@ -40,6 +47,13 @@
    pròpia de Chrome és el camí principal i Descàrregues no hi era muntada.
    Safari dins d'un iframe queda 'incrustat' per a Descàrregues (el motiu
    que torna la captura, el de la pastilla, no canvia). */
+
+/* Onada R24 (P-F) · Cert només quan src/app/App.jsx munta <BotoInstalaApp />
+   a la barra negra: llavors, a l'escriptori, la captura crida preventDefault()
+   i la pastilla substituïx l'oferta pròpia del navegador. Fals durant la pausa
+   de la beta. instalacio.test.js comprova que la constant i App.jsx diuen el
+   mateix. */
+export const OFERTA_PROPIA_ESCRIPTORI = false;
 
 /* Els modes de finestra del manifest que volen dir «ja s'executa instal·lada». */
 export const MODES_D_APP = Object.freeze(['standalone', 'minimal-ui', 'fullscreen', 'window-controls-overlay']);
@@ -159,17 +173,20 @@ export function creaInstalacio() {
    * és mòbil també a la tauleta. Safari dins d'un iframe queda 'incrustat'
    * per a motiuDeLaCaptura; el `motiu` que torna no canvia. Una captura és
    * una càrrega nova: oblida la instal·lació de l'anterior.
+   * R24 (P-F) · `interceptaEscriptori` (per defecte OFERTA_PROPIA_ESCRIPTORI):
+   * només amb el booleà true, i només a l'escriptori, es crida preventDefault.
    */
-  const captura = ({ finestra = globalThis.window, navegador = globalThis.navigator } = {}) => {
+  const captura = ({ finestra = globalThis.window, navegador = globalThis.navigator, interceptaEscriptori = OFERTA_PROPIA_ESCRIPTORI } = {}) => {
     const motiu = motiuPerNoOferir({ finestra, navegador });
     darrerMotiu = motiu === 'sense-suport' && esIncrustada(finestra) ? 'incrustat' : motiu;
     instalada = false;
     if (motiu && motiu !== 'mobil') return { escolta: false, motiu };
     if (anterior) anterior.deixa();
     const mobil = motiu === 'mobil' || (motiu === null && esAndroid(navegador));
+    const intercepta = !mobil && interceptaEscriptori === true;
 
     const enOferir = (e) => {
-      if (!mobil) {
+      if (intercepta) {
         try {
           e.preventDefault();
         } catch { /* un doble sense preventDefault també es guarda */ }

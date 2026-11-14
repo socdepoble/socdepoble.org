@@ -19,7 +19,7 @@ Aquestes plantilles defineixen l'estàndard actual per a generar documents estru
 - [[pla_implementacio|Plantilla de Pla d'Implementació]] (única plantilla de pla, ruta `pla.implementacio`)
 - [[skill|Plantilla per a crear noves Skills d'IA]]
 
-Retirada el 261029: `pla.md` («Planificació Pro», 2026-06-19) i la seua ruta `planificacio`, duplicades per `pla_implementacio`; l'original es conserva íntegre a [[../../90_arxiu_historic/plantilles_retirades_261029/pla|pla històric]]. Els rebuts ja emesos usen la seua instantània immutable.
+Retirada el 261029: `pla.md` («Planificació Pro», 2026-06-19) i la seua ruta `planificacio`, duplicades per `pla_implementacio`; l'original es conserva íntegre a [[../../90_arxiu_historic/plantilles_retirades_261029/pla|pla històric]]. Els rebuts ja emesos utilitzen la seua instantània immutable.
 
 ## Anàlisi i Producte
 - [[prompt_nano_banana|Plantilla Prompt Nano Banana (Multimèdia)]]

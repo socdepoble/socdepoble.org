@@ -6,7 +6,7 @@ description: Inventari verificable del port i requisits d'allotjament Model B
 # API del port neutral i allotjament Model B
 
 **Contrast inicial:** arbre de l'assalt 261101_1246, 2026-11-01. **Recompte actualitzat**
-des de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-12 (R21, co-publicació registrada i revocació durable).
+des de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-14 (R24, consens del joc «D'on parles?»; l'anterior, el 2026-11-12, R21, co-publicació registrada i revocació durable).
 **Esborrany. Inventari de codi**; **no acredita cap nou desplegament** ni l'aprovació d'una ADR.
 Les **signatures i DTO** són a `src/data/contracte.js` i a les **implementacions**;
 la **llista següent** enumera noms.
@@ -48,13 +48,13 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 55 capacitats atòmiques opcionals (`CAPACITATS`)
+## 56 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**127 mètodes addicionals** i **159 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**130 mètodes addicionals** i **162 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
-un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 55 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 56 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
@@ -68,6 +68,7 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `revisionsLlavor` | `loadSeedRevisions`, `desaRevisioSeed` |
 | `revisionsPatrimoni` | `llistaRevisionsPatrimoni`, `desaRevisioPatrimoni`, `esborraRevisioPatrimoni` |
 | `revisionsEditorialsWp` | `llistaRevisionsEditorialsWp`, `desaRevisioEditorialWp` |
+| `consensIsoglosses` | `lligConsensIsoglossesPoble`, `votaVariantIsoglossaPoble`, `desaAportacioVeuPoble` |
 | `sessioExterna` | `adoptaSessioExterna` |
 | `paginacioNotes` | `loadNotesPage` |
 | `paginacioSeccions` | `loadSeccioPage` |
@@ -136,11 +137,17 @@ ni totes les branques possibles de cada mètode.
 
 ### Recompte local vigent (R19) i verificació per correu (R6)
 
-El recompte actual és de **222 casos sobre 159 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+El recompte actual és de **225 casos sobre 162 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
 
-L’adaptador local oferix **47 dels 55 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`. El kit omet **els 25 casos** d’estos grups per **capacitat absent**.
+L’adaptador local oferix **48 dels 56 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`. El kit omet **els 25 casos** d’estos grups per **capacitat absent**.
 
-Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 159 operacions en un servidor remot continua pendent.
+Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 162 operacions en un servidor remot continua pendent.
+
+### Consens del joc «D'on parles?» (R24)
+
+La **capacitat opcional** `consensIsoglosses` (CODEX-R24-03) connecta la targeta del joc amb el port: `lligConsensIsoglossesPoble` llig el **resum agregat** de vots, sense cap identificador personal; `votaVariantIsoglossaPoble` desa **un vot per persona, pregunta i variant** (el repetit torna `nou: false`); `desaAportacioVeuPoble` desa una **variant escrita** pendent de moderació, amb el **consentiment explícit** `cc-by-sa-4.0-v1`. L'**autoria** surt de la **sessió** de l'adaptador; una clau d'autoria, de moderació o desconeguda és un `TypeError` **abans de cap efecte**. La validació i el mapatge viuen a `src/data/consensIsoglosses.js`.
+
+L'**adaptador Supabase** (`src/data/supabase/consensIsoglosses.js`) utilitza la RPC `resum_consens_isoglosses_poble` i les taules `joc_isoglosses_vots_consens` i `aportacions_veu_poble` de les migracions R23, **encara no aplicades**: només l'anuncia amb `VITE_SDP_CONSENS_ISOGLOSSES=1`. L'adaptador local la servix des del **magatzem en memòria** de la instància. El Node 0 **no la declara**. Els tres casos nous del kit comproven el **rebuig previ**; les proves funcionals dels adaptadors i `tests/r24-consens-isoglosses-postgres.test.mjs` cobrixen el mapatge, **sense acreditar aplicació remota**.
 
 ### Co-publicació registrada (R19)
 
@@ -188,7 +195,7 @@ El tall FEDI-23 de la **capacitat opcional** `connexionsPubliques` ampliava el c
 
 La preferència `visibilitatConnexions` és **privada per defecte**. El perfil pot habilitar la **lectura pública** i ocultar vincles individuals. Una **excepció privada** a qualsevol extrem domina; els **perfils privats**, els bloquejos i el representant bloquejat d’una entitat no es projecten. La **consulta pública** és la mateixa per a visitants i propietàries. Les preferències amb vincles editables són una **lectura autoritzada** separada, també a empresa, entitat i poble. El poble es resol explícitament per **id o slug**, sense reservar al tenant actiu.
 
-`inclouPersonaEnEntitat({orgId,personaId,rol})` requerix **autoritat de l’entitat**; només qui ja podia **nomenar administradores** pot assignar `administrador`. `treballador` i `usuari` són **papers funcionals** separats dels permisos de propietat. `solicitaUnirSeAEntitat({orgId,rol})` només registra una **petició pendent**: no crea pertinença ni concedix cap permís. Les comprovacions de servidor usen la **identitat autenticada** i els rols persistits. La **política injectada** del magatzem local només és autoritat local.
+`inclouPersonaEnEntitat({orgId,personaId,rol})` requerix **autoritat de l’entitat**; només qui ja podia **nomenar administradores** pot assignar `administrador`. `treballador` i `usuari` són **papers funcionals** separats dels permisos de propietat. `solicitaUnirSeAEntitat({orgId,rol})` només registra una **petició pendent**: no crea pertinença ni concedix cap permís. Les comprovacions de servidor utilitzen la **identitat autenticada** i els rols persistits. La **política injectada** del magatzem local només és autoritat local.
 
 La Frontissa Sollutia conserva el seu límit GET i el mateix port neutral. La migració de connexions es prepara i assaja localment; la seua disponibilitat remota s’ha de comprovar separadament.
 ### Administració multipoble (FEDI-04)
@@ -228,12 +235,12 @@ requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
 **no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
 real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
 
-L'adaptador local oferix **47 dels 55 grups declarats**; `CAPACITATS_NO_DECLARADES`
+L'adaptador local oferix **48 dels 56 grups declarats**; `CAPACITATS_NO_DECLARADES`
 conté `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu` i `recuperacioCorreu`. `versioMinimaClient` torna honestament `null`, sense transport.
 L'administració multipoble està **denegada per defecte**: requerix el catàleg i
 la política `administracioLocal` injectats en construir la instància. La política
 només autoritza amb `true`, i **no deriva permisos** de rols o MFA del client.
-Lectura, escriptura i historial administratius usen el **tenant explícit**; dades,
+Lectura, escriptura i historial administratius utilitzen el **tenant explícit**; dades,
 versions i historial se separen per tenant i clau. La lectura general continua
 en el poble propi. Les entrades i l'actor es capturen abans d'esperar, i canvis
 de sessió, avortament o destrucció **impedixen mutacions no iniciades**.
@@ -249,7 +256,7 @@ i els límits figuren a `src/data/local/README.md`.
 
 `src/data/adaptadors/sollutia/creaFrontissa.js` **exporta** `creaFrontissa` i
 `ErrorDades`. **Valida HTTPS**, **origen admés**, **rutes, paràmetres i captures**;
-usa GET, credentials omit, redirect error i Accept application/json.
+utilitza GET, credentials omit, redirect error i Accept application/json.
 Cada recurs aporta `timeoutMs`, `maxBytes` i `decode`, que **valida el DTO**.
 Els **codis literals** inclouen `INVALID_ORIGIN`, `INVALID_RESOURCE`,
 `UNKNOWN_RESOURCE`, `INVALID_QUERY`, `CANCELLED`, `TIMEOUT`,

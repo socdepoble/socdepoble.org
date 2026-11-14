@@ -1979,8 +1979,8 @@ export const FACETA_3_CATEGORIES_MARES_IA = Object.freeze([
   {
     "id": "tecnologia-lliure",
     "icona": "💻",
-    "label": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
-    "nomCurt": "Tecnologia Lliure i Dades Obertes",
+    "label": "💻 Tecnologia i Disseny",
+    "nomCurt": "Tecnologia i Disseny",
     "skosNotation": "SDP.F3.06",
     "ranganathanFacet": "Energy + Matter (Infraestructura digital pròpia i Fedivers)",
     "descripcio": "Projecte TIC, digitalització rural, Fedivers, Node 0, documentació tècnica, plànols, vídeos divulgatius i sobirania tecnològica per als municipis menuts.",
@@ -2586,7 +2586,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "tecnologia-lliure",
-    "broaderTermLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "broaderTermLabel": "💻 Tecnologia i Disseny",
     "relatedTerms": [
       "Projecte TIC",
       "Noves Tecnologies",
@@ -2605,7 +2605,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "tecnologia-lliure",
-    "broaderTermLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "broaderTermLabel": "💻 Tecnologia i Disseny",
     "relatedTerms": [
       "Projecte TIC",
       "Noves Tecnologies",
@@ -2883,7 +2883,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 8,
     "description": "",
     "broaderTermId": "tecnologia-lliure",
-    "broaderTermLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "broaderTermLabel": "💻 Tecnologia i Disseny",
     "relatedTerms": [
       "Projecte TIC",
       "Noves Tecnologies",
@@ -3258,7 +3258,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "tecnologia-lliure",
-    "broaderTermLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "broaderTermLabel": "💻 Tecnologia i Disseny",
     "relatedTerms": [
       "Projecte TIC",
       "Noves Tecnologies",
@@ -3277,7 +3277,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 3,
     "description": "",
     "broaderTermId": "tecnologia-lliure",
-    "broaderTermLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "broaderTermLabel": "💻 Tecnologia i Disseny",
     "relatedTerms": [
       "Projecte TIC",
       "Vídeos",
@@ -3445,7 +3445,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "tecnologia-lliure",
-    "broaderTermLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "broaderTermLabel": "💻 Tecnologia i Disseny",
     "relatedTerms": [
       "Projecte TIC",
       "Noves Tecnologies",
@@ -3522,7 +3522,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "Un Projecte pel desenvolupament sostenible i tecnològic en entorns rurals",
     "broaderTermId": "tecnologia-lliure",
-    "broaderTermLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "broaderTermLabel": "💻 Tecnologia i Disseny",
     "relatedTerms": [
       "Projecte TIC",
       "Noves Tecnologies",
@@ -3540,7 +3540,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 7,
     "description": "",
     "broaderTermId": "tecnologia-lliure",
-    "broaderTermLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "broaderTermLabel": "💻 Tecnologia i Disseny",
     "relatedTerms": [
       "Noves Tecnologies",
       "Vídeos",
@@ -3957,7 +3957,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 30,
     "description": "",
     "broaderTermId": "tecnologia-lliure",
-    "broaderTermLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "broaderTermLabel": "💻 Tecnologia i Disseny",
     "relatedTerms": [
       "Projecte TIC",
       "Noves Tecnologies",
@@ -8246,7 +8246,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "Noves Tecnologies"
     ],
@@ -8852,7 +8852,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "Noves Tecnologies",
       "Vídeos"
@@ -11294,7 +11294,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "Projecte TIC",
       "Vídeos"
@@ -11349,7 +11349,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "Gent Sostenible",
       "Projecte TIC"
@@ -11802,7 +11802,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic",
       "Projecte TIC"
@@ -11962,7 +11962,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "Projecte TIC"
     ],
@@ -12016,7 +12016,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "Projecte TIC"
     ],
@@ -12123,7 +12123,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "Projecte TIC",
       "Propostes"
@@ -13036,7 +13036,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "Projecte TIC",
       "Reivindicant"
@@ -14587,7 +14587,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "tecnologia-lliure",
-    "categoriaTematicaProposadaLabel": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
+    "categoriaTematicaProposadaLabel": "💻 Tecnologia i Disseny",
     "etiquetesOriginals": [
       "Plànols"
     ],

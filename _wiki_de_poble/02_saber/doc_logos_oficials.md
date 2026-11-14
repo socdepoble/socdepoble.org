@@ -27,7 +27,7 @@ Cap plantilla ha d'incrustar blocs repetits de logos. Les plantilles han d'enlla
 ## Prohibicions
 
 1. No duplicar logos dins de plantilles.
-2. No usar logos no aprovats.
+2. No utilitzar logos no aprovats.
 3. No deformar proporcions.
 4. No incrustar assets en base64 dins de Markdown.
 5. No inventar paletes fora de [[identitat_visual]] i dels tokens semàntics `--sdp-*` de `src/css/tokens.css`.

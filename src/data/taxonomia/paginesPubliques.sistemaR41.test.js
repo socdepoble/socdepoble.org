@@ -15,7 +15,7 @@ const CATEGORIES={
  'natura-excursions':['🌿 Natura i Patrimoni','🌿 Naturaleza y Patrimonio','🌿 Nature and Heritage','🌿 Natura eta Ondarea','🌿 Natureza e Patrimonio'],
  'patrimoni-cultura':['🎭 Cultura, Música i Llengua','🎭 Cultura, Música y Lengua','🎭 Culture, Music and Language','🎭 Kultura, Musika eta Hizkuntza','🎭 Cultura, Música e Lingua'],
  'comunitat-rural':['🤝 Món Rural','🤝 Mundo Rural','🤝 Rural Communities','🤝 Landa Mundua','🤝 Mundo Rural'],
- 'tecnologia-lliure':['💻 Tecnologia Lliure, Dades Obertes i Disseny','💻 Tecnología Libre, Datos Abiertos y Diseño','💻 Free Technology, Open Data and Design','💻 Teknologia Librea, Datu Irekiak eta Diseinua','💻 Tecnoloxía Libre, Datos Abertos e Deseño']
+ 'tecnologia-lliure':['💻 Tecnologia i Disseny','💻 Tecnología y Diseño','💻 Technology and Design','💻 Teknologia eta Diseinua','💻 Tecnoloxía e Deseño']
 };
 // Frozen 49-tag specification, independent of both implementation tables.
 const TAGS_49=[

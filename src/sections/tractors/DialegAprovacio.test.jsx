@@ -202,3 +202,46 @@ describe('textError', () => {
     expect(textError(null)).toEqual({ titol: 'No s’ha pogut completar l’operació.', detall: '' });
   });
 });
+
+/* Onada R24 (CODEX-R24-12) · Fora de DEV no hi ha panell: el diàleg porta la fitxa sencera (prop `fitxa`), en
+   elements de React i amb l'estil del panell. Sense la prop (el panell de Tractors, en DEV), el DOM de sempre. */
+describe('la fitxa dins del diàleg (fora de DEV)', () => {
+  const FITXA = '# Tractor «Lector de prova»\n\n## Què llig\n\n- La carpeta que **tries**\n- `res més`\n\n<b>no és HTML</b>';
+  function ambFitxa(fitxa) {
+    function Arnes2() {
+      const [obert, setObert] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setObert(true)}>Obri</button>
+          <DialegAprovacio obert={obert} manifest={MANIFEST} empremta={EMPREMTA} fitxa={fitxa}
+            onTanca={() => setObert(false)} onAprova={async () => {}} />
+        </>
+      );
+    }
+    render(<Arnes2 />);
+    return obri().dialeg;
+  }
+
+  test('amb `fitxa`: la regió «Fitxa explicativa», els títols com al panell (h5 i h6), text i no HTML, i l’ajuda diu on és', () => {
+    const dialeg = ambFitxa(FITXA);
+    expect(dialeg.className.split(/\s+/)).toContain('sdp-dialeg--g');
+    const regio = within(dialeg).getByRole('region', { name: 'Fitxa explicativa' });
+    expect(regio.className).toBe('sdp-tractors-panell__fitxa');
+    expect(within(regio).getByRole('heading', { level: 5 }).textContent).toBe('Tractor «Lector de prova»');
+    expect(within(regio).getByRole('heading', { level: 6 }).textContent).toBe('Què llig');
+    expect([...regio.querySelectorAll('ul > li')].map((li) => li.textContent)).toEqual(['La carpeta que tries', 'res més']);
+    expect(regio.querySelector('strong').textContent).toBe('tries');
+    expect(regio.querySelector('code').textContent).toBe('res més');
+    expect(regio.querySelector('b')).toBeNull();
+    expect(regio.textContent).toContain('<b>no és HTML</b>');
+    expect(within(dialeg).getByText('Què fa, què llig, què escriu, què no fa mai i els seus límits. És ací dalt, dins d’este diàleg.')).toBeTruthy();
+  });
+
+  test('sense `fitxa` (el panell de Tractors): cap regió, la mida i l’ajuda de sempre', () => {
+    render(<Arnes />);
+    const { dialeg } = obri();
+    expect(dialeg.className.split(/\s+/)).toContain('sdp-dialeg--m');
+    expect(within(dialeg).queryByRole('region', { name: 'Fitxa explicativa' })).toBeNull();
+    expect(within(dialeg).getByText('Què fa, què llig, què escriu, què no fa mai i els seus límits. És al panell, darrere d’este diàleg.')).toBeTruthy();
+  });
+});

@@ -19,7 +19,7 @@ const SECCIONS = new Set(CATEGORIES.map((categoria) => categoria.id));
 
 describe('la font i la forma de les files', () => {
   test('FONT: id, nom i data de tall', () => {
-    expect(FONT).toEqual({ id: 'mer', nom: 'Mercadona', tall: '2026-10-03' });
+    expect(FONT).toEqual({ id: 'mer', nom: 'Botiga de poble', tall: '2026-10-03' });
     expect(Object.isFrozen(FONT)).toBe(true);
   });
 

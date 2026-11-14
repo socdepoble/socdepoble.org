@@ -192,10 +192,14 @@ export async function renovaAra() {
       S.intents++;
       const delay = S.intents <= 3 ? Math.min(1000 * 2 ** (S.intents - 1), exp ? exp - Date.now() : 8000)
         : (exp ? exp - Date.now() : null);
+      /* R22 (sospita de xat-fluxos i nucli) · El reintent sempre torna a provar
+         la renovació. Abans, el que vencia amb el JWT ja caducat (el quart,
+         armat just a la caducitat) tancava la pestanya sense provar-ho, encara
+         que la xarxa haguera tornat. Si este intent també falla amb el JWT
+         caducat, la branca de dalt tanca la pestanya, com sempre. */
       if (delay !== null) S.temporitzador = setTimeout(() => {
         if (myGen !== S.generacio || myEpoch !== versioSessio) return;
-        if (caducitatJwt() && caducitatJwt() <= Date.now()) void tancaPestanya(config);
-        else void renovaAra();
+        void renovaAra();
       }, Math.max(1, delay));
     } finally {
       if (S.renovacio === entry) S.renovacio = null;
@@ -219,7 +223,14 @@ function gestionaTemporitzador() {
 
 S.sincronitzaActual = sincronitza;
 S.alDespertarActual = () => {
-  if (document.visibilityState !== 'visible' || S.estatActual.estat !== 'dins') return;
+  if (document.visibilityState !== 'visible') return;
+  /* R22 (sospita de xat-fluxos i nucli) · Una renovació que ha fallat sense cap
+     transició fora de línia (temps, 5xx, xarxa feble amb navigator.onLine cert)
+     deixava la pestanya «fora» fins a recarregar: només 'online' o una altra
+     pestanya la tornaven a provar. Tornar a la pestanya també ho prova, amb les
+     mateixes guardes (només una restauració pel registre, mai un bucle D6). */
+  if (S.estatActual.estat === 'fora') { S.tornaAProvarActual?.(); return; }
+  if (S.estatActual.estat !== 'dins') return;
   const exp = caducitatJwt();
   if (exp && exp - Date.now() <= MARGE_RENOVACIO_MS) void renovaAra();
 };

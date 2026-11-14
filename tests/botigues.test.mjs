@@ -661,3 +661,27 @@ test('botigues: el --build ha de ser VERSIO_CLIENT_NATIU, i si no ho és cap puj
   assert.equal(escrit, '', 'cap preflight ni cap pla');
   assert.equal(dit.match(/✗ el --build \d+ no és VERSIO_CLIENT_NATIU/g)?.length, 2);
 });
+
+/* R24 botigues · D2 (RC-7) · L'escaneig de l'AAB amb un zip de veres (el lector de sempre,
+   llegixDelZip): els dex del mòdul base, guardats o amb deflate, i cap classe de com.facebook. */
+test('botigues: dexDeLAab llig els dex d\'un AAB de veres i dexAmbFacebook hi troba Lcom/facebook/', () => {
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-r24-aab-'));
+  try {
+    const aab = path.join(carpeta, 'app-release.aab');
+    fs.writeFileSync(aab, zipDe([
+      ['BundleConfig.pb', Buffer.from('config'), 0],
+      ['base/dex/classes.dex', Buffer.from('dex\n035\0Landroidx/credentials/CredentialManager;'), 8],
+      ['base/dex/classes2.dex', Buffer.from('dex\n035\0Lcom/facebook/login/LoginManager;'), 0],
+      ['base/assets/public/index.html', Buffer.from('<html>app</html>\n'), 8]
+    ]));
+    const dexs = android.dexDeLAab(aab);
+    assert.deepEqual(dexs.map((d) => d.nom), ['base/dex/classes.dex', 'base/dex/classes2.dex']);
+    assert.deepEqual(android.dexAmbFacebook(dexs), ['base/dex/classes2.dex']);
+    const net = path.join(carpeta, 'net.aab');
+    fs.writeFileSync(net, zipDe([['base/dex/classes.dex', Buffer.from('dex\n035\0Lee/forgr/capacitor/social/login/FacebookProvider;'), 8]]));
+    assert.deepEqual(android.dexAmbFacebook(android.dexDeLAab(net)), [], 'el stub del connector (sense com.facebook) no compta');
+    assert.deepEqual(android.dexDeLAab(path.join(carpeta, 'no-hi-es.aab')), []);
+  } finally {
+    fs.rmSync(carpeta, { recursive: true, force: true });
+  }
+});

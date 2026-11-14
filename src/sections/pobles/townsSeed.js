@@ -1,6 +1,6 @@
 import { nomDeLaGent, slugDelPoble } from './nomsDelPoble.js';
 import { DADES_POBLES_APLEC_VIQUIPEDIA } from './poblesAplecViquipedia.js';
-import { fusionaAmbFitxaEditorial } from './fitxaDelPoble.js';
+import { fusionaAmbFitxaEditorial } from './fitxaEditorialDelPoble.js';
 
 export const MOCK_TOWNS = [
   {

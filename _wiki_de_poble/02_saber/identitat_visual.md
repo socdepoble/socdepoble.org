@@ -23,7 +23,7 @@ El sistema visual respon a 4 elements inalterables inspirats en el paisatge medi
 - **Negre Fons (Nit):** La sobrietat, l'escriptura sòlida.
 - **Blanc Paper (Llum):** La calç de la paret, el llenç immaculat.
 
-A la interfície, el **taronja canònic** (`#FF7300`) i el **blau canònic** (`#0984E3`) naixen a `src/config/design-tokens.json` i els components només els usen a través de **tokens semàntics**: el blau és el **color de l'acció** (`--sdp-accio`) i el taronja el de la **identitat de marca** (`--sdp-accent`). El **reglament exacte** és a la skill `sdp-pedra-seca`.
+A la interfície, el **taronja canònic** (`#FF7300`) i el **blau canònic** (`#0984E3`) naixen a `src/config/design-tokens.json` i els components només els utilitzen a través de **tokens semàntics**: el blau és el **color de l'acció** (`--sdp-accio`) i el taronja el de la **identitat de marca** (`--sdp-accent`). El **reglament exacte** és a la skill `sdp-pedra-seca`.
 
 > [!IMPORTANT]
 > És una regla biològica de la marca l'ús exclusiu d'aquests colors en la major i estricta densitat. "No mesclem ciment amb taronges". Alt contrast, contorns evidents, formes robustes.

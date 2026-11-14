@@ -19,8 +19,8 @@ export function useMercadona(necessari) {
 export function AvisCatalegMercadona({ dades, error }) {
   if (error) return <Alerta to="error" titol="No s’ha pogut obrir el catàleg">Recarrega la pàgina per a tornar-ho a provar. La teua llista continua desada.</Alerta>;
   return (
-    <Alerta to="info" viva={false} titol="Catàleg Mercadona">
-      {dades ? `${dades.metadades.productes} productes. Preus del tall ${dades.metadades.tall}; poden haver canviat. Les fotografies s’han conservat com a referència de la font.` : 'Obrint els preus del catàleg…'}
+    <Alerta to="info" viva={false} titol="Catàleg orientatiu de botiga">
+      {dades ? `${dades.metadades.productes} productes habituals de rebost amb preus orientatius de referència (${dades.metadades.tall}) per a preparar la cistella a la botiga del teu poble.` : 'Obrint els preus orientatius del catàleg…'}
     </Alerta>
   );
 }
@@ -48,8 +48,8 @@ export function ComparadorMercadona({ producte }) {
     }
   }
   return (
-    <GrupCamps llegenda="Comparador rural">
-      <p>Mercadona: {euros(producte.preuUnitariCentims)}/{producte.unitatPreuUnitari}, tall {producte.tall}. Introduïx una oferta local del mateix producte per a comparar-ne la mateixa quantitat.</p>
+    <GrupCamps llegenda="Comparador de comerç local">
+      <p>Preu orientatiu de referència: {euros(producte.preuUnitariCentims)}/{producte.unitatPreuUnitari}. Introduïx el preu de la botiga o cooperativa del teu poble per a comparar la mateixa quantitat.</p>
       <Camp etiqueta="Proveïdor local"><CampText value={proveidor} maxLength={80} onChange={(event) => setProveidor(event.target.value)} /></Camp>
       <Camp etiqueta="Preu de l’oferta local (€)"><CampText value={preu} inputMode="decimal" onChange={(event) => setPreu(event.target.value)} /></Camp>
       <Camp etiqueta="Quantitat de l’oferta"><CampText value={quantitat} inputMode="decimal" onChange={(event) => setQuantitat(event.target.value)} /></Camp>
@@ -58,7 +58,7 @@ export function ComparadorMercadona({ producte }) {
       {error ? <p role="status">{error}</p> : null}
       {resultat ? <p role="status">{resultat.estat === 'unitats-incompatibles'
         ? 'Les unitats no són comparables. No convertim pes, volum i unitats sense una equivalència acreditada.'
-        : `Per a la mateixa quantitat: Mercadona ${euros(resultat.costMercadonaCentims)}, ${resultat.proveidor} ${euros(resultat.preuLocalCentims)}. Diferència local menys Mercadona: ${euros(resultat.diferenciaCentims)}. Oferta local del ${resultat.data}; Mercadona del ${resultat.tallMercadona}.`}</p> : null}
+        : `Per a la mateixa quantitat: referència orientativa ${euros(resultat.costMercadonaCentims)}, ${resultat.proveidor} ${euros(resultat.preuLocalCentims)}. Diferència local respecte a la referència: ${euros(resultat.diferenciaCentims)}. Oferta local del ${resultat.data}.`}</p> : null}
     </GrupCamps>
   );
 }

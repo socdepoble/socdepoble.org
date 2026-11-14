@@ -21,8 +21,7 @@
  *     persona (una tauleta compartida no diu què ha triat l'anterior).
  */
 
-/** Quantes recents es recorden: tres files de la graella gran. */
-export const MAXIM_RECENTS = 18;
+import { MAXIM_RECENTS, buidaRecents, codiDe, llegixRecents, recordaRecent } from './recentsEmoticones.js';
 
 /**
  * El text amb `glif` inserit entre `inici` i `fi` (el tros seleccionat se'n
@@ -190,29 +189,7 @@ export const EMOTICONES_DEL_POBLE = Object.freeze([
   })
 ]);
 
-let recents = Object.freeze([]);
-
-/** Les recents ([codi, glif, nom], primer la més nova). */
-export function llegixRecents() {
-  return recents;
-}
-
-/** El codi d'un glif amb la forma del catàleg: «2764 FE0F» per a ❤️. */
-export function codiDe(glif) {
-  return Array.from(String(glif ?? ''), (c) => c.codePointAt(0).toString(16).toUpperCase()).join(' ');
-}
-
-/** Recorda la triada (el que dona la graella: glif i nom) com la més nova; una repetida puja davant. */
-export function recordaRecent(glif, nom) {
-  if (typeof glif !== 'string' || !glif) return recents;
-  recents = Object.freeze([
-    Object.freeze([codiDe(glif), glif, typeof nom === 'string' && nom ? nom : glif]),
-    ...recents.filter(([, altre]) => altre !== glif)
-  ].slice(0, MAXIM_RECENTS));
-  return recents;
-}
-
-/** Oblida les recents (XatContext, quan canvia la persona; i les proves). */
-export function buidaRecents() {
-  recents = Object.freeze([]);
-}
+/* Onada R24 · wp_trinquet · Les recents (MAXIM_RECENTS, llegixRecents, codiDe,
+   recordaRecent, buidaRecents) viuen a recentsEmoticones.js, una fulla que
+   l'arrencada importa sense la graella; ací es reexporten amb els mateixos noms. */
+export { MAXIM_RECENTS, buidaRecents, codiDe, llegixRecents, recordaRecent };

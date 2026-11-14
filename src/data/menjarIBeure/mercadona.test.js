@@ -112,7 +112,7 @@ describe('catàleg Mercadona: va i ix amb la Nevera (VITE_SDP_APP_NEVERA=0)', ()
     vi.stubEnv('DEV', false);
     vi.stubEnv('VITE_SDP_APP_NEVERA', '0');
     const { carregaMercadona: carrega } = await import(/* @vite-ignore */ './mercadona.js?nevera-desendollada');
-    await expect(carrega()).rejects.toThrow('El catàleg de Mercadona no està inclòs en este build.');
+    await expect(carrega()).rejects.toThrow('El catàleg de botiga no està inclòs en este build.');
   });
   test('amb VITE_SDP_APP_NEVERA=1 (el valor antic d’inclusió), fora de DEV, carrega les 592 files', async () => {
     vi.stubEnv('DEV', false);

@@ -282,7 +282,10 @@ describe('preflight: el context de producció i la família «Avisos push»', ()
     expect(amb.linies.indexOf('Avisos push')).toBeGreaterThan(amb.linies.indexOf('Arbre'));
   });
 
-  test.skipIf(SENSE_NATIUS)('l’arbre real (només lectura): connector cablejat i APNs reenviat; FCM absent bloqueja Android amb i sense --push', () => {
+  /* Actualitzada a posta (R24 botigues, D1 · RC-6): el connector a package.json ja no anuncia el push
+     natiu tot sol. FCM absent bloqueja Android amb --push o amb VITE_SDP_PUSH_NATIU=1 a .env.natiu*;
+     sense cap dels dos, google-services.json absent és un avís (l'app no registra cap push). */
+  test.skipIf(SENSE_NATIUS)('l’arbre real (només lectura): connector cablejat i APNs reenviat; FCM absent bloqueja Android quan el push s’anuncia (--push o la bandera)', () => {
     const estat = p.estatDelPush(ARREL);
     expect(estat.connector).toEqual({ paquet: true, ios: true, android: true });
     expect(estat.ios.reenviaRegistre, 'R54: el delegat reenvia registre i fallada d’APNs a Capacitor').toBe(true);
@@ -290,9 +293,12 @@ describe('preflight: el context de producció i la família «Avisos push»', ()
     expect(estat.android.postNotifications).toBe(true);
     expect(estat.android.googleServices.hiEs).toBe(false);
     expect(estat.android.connectorGoogleServices).toBe(true);
+    expect(estat.banderaNatiu).toBe(p.banderaPushNatiu(ARREL));
     for (const push of [false, true]) {
       const result = p.liniesDelPush(estat, { push, plataformes: ['ios', 'android'] });
-      expect(result.mal).toEqual(["falta android/app/google-services.json (Firebase › configuració del projecte; git l'ignora)"]);
+      const anunciat = push || estat.banderaNatiu === true;
+      expect(result.mal).toEqual(anunciat ? ["falta android/app/google-services.json (Firebase › configuració del projecte; git l'ignora)"] : []);
+      if (!anunciat) expect(result.linies.join('\n')).toMatch(/ {2}! falta android\/app\/google-services\.json \(Firebase › configuració del projecte; git l'ignora\) · cal abans d'encendre el push natiu/);
       expect(result.linies.join('\n')).toContain("AppDelegate.swift reenvia el registre d'APNs");
       expect(result.linies.join('\n')).not.toContain("l'app no porta cap connector");
       expect(result.linies.join('\n')).not.toMatch(/--push: el connector .* no és al projecte/);
@@ -362,11 +368,17 @@ describe('preflight: el context de producció i la família «Avisos push»', ()
       '  /* func application(_ a: UIApplication, didFailToRegisterForRemoteNotificationsWithError e: Error) { NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: e) } */',
       '}'
     ].join('\n'));
-    const mira = (plataformes = ['ios', 'android'], push = false) => p.liniesDelPush(p.estatDelPush(arrel), { plataformes, push });
+    /* Actualitzada a posta (R24 botigues, D1): cada peça que falta és un ✗ quan el push s'anuncia
+       (--push, per defecte ací); sense --push ni la bandera, les peces de push són avisos. */
+    const mira = (plataformes = ['ios', 'android'], push = true) => p.liniesDelPush(p.estatDelPush(arrel), { plataformes, push });
+    const sensePush = mira(['ios', 'android'], false);
+    expect(sensePush.mal, sensePush.linies.join('\n')).toEqual([]);
+    expect(sensePush.linies.join('\n')).toMatch(/! el projecte porta el connector d'avisos remots, però esta pujada no anuncia push natiu/);
+    expect(sensePush.linies.filter((l) => l.startsWith('  ! ') && l.endsWith("cal abans d'encendre el push natiu")), sensePush.linies.join('\n')).toHaveLength(3);
     let r = mira();
     expect(r.mal, r.linies.join('\n')).toHaveLength(3);
     expect(r.mal.some((m) => /AppDelegate\.swift no reenvia el registre d'APNs/.test(m)), 'un reenviament comentat no compta (ARB-B9-05)').toBe(true);
-    expect(r.linies.join('\n')).toMatch(/! el projecte porta el connector d'avisos remots/);
+    expect(r.linies.join('\n')).not.toMatch(/esta pujada no anuncia push natiu/);
     expect(p.estatDelPush(arrel).connector).toEqual({ paquet: true, ios: true, android: true });
     expect(mira(['ios'], true).mal.every((m) => !/google-services|POST_NOTIFICATIONS/.test(m)), 'iOS sol no mira Android').toBe(true);
 
@@ -585,4 +597,192 @@ for (const [nom, variables] of [
   escriu(arrel, 'android/variables.gradle', variables);
   expect(p.targetSdkAndroid(arrel)).toBeNull();
   expect(p.avisosDeProduccio(arrel, ['android']).join('\n')).toMatch(/no es pot resoldre.*targetSdkVersion/);
+});
+
+/* ───────────── R24 botigues · A2 (RC-1, incident 261106) i D1 (RC-6) ─────────────
+   A2 · El build 1.0.0+2 va eixir sense cap client de Google (`clients:{googleWeb:void 0,googleIos:void 0}`
+   dins del bundle) i qui havia creat el compte amb Google al web es va quedar fora de l'app. El preflight
+   no mirava el paquet: ara llig els clients del registre minificat de src/natiu/entrada.jsx dins de
+   dist-natiu/assets/*.js i, amb --canal produccio, la falta és un ✗ de l'arbre (7). Clients sintètics.
+   D1 · El push natiu s'anuncia amb --push o amb VITE_SDP_PUSH_NATIU=1 a .env.natiu o .env.natiu.local
+   (el valor exacte que encén src/natiu/avisosPushNatius.js); el connector a package.json sol, no. */
+const WEB_SINTETIC = '123456-websintetic.apps.googleusercontent.com';
+const IOS_SINTETIC = '123456-iossintetic.apps.googleusercontent.com';
+const ESQUEMA_IOS_SINTETIC = 'com.googleusercontent.apps.123456-iossintetic';
+/* La forma real del registre minificat (llegida, emmascarada, als bundles 1.1.12+3 i 1.0.0+2). */
+const bundleAmb = ({ web, ios, apple = '!0' }) => 'function te(e,{googleWeb:t,googleIos:n}={},{appleActiu:i=!1}={}){return[]}'
+  + `try{v1(te,{plataforma:os(),clients:{googleWeb:${web},googleIos:${ios}},appleActiu:${apple}})}catch(i){console.error("[natiu] Entrada nativa no registrada:",i)}`;
+const plistAmb = (esquema) => `<plist><dict><key>CFBundleURLTypes</key><array><dict><key>CFBundleURLSchemes</key><array><string>${esquema}</string></array></dict></array></dict></plist>`;
+
+describe('R24 · A2 · els clients de Google que porta el paquet (dist-natiu/assets/*.js)', () => {
+  test('entradaSocialDelPaquet llig els dos clients i Apple del registre minificat; el build 1.0.0+2 (void 0) no en porta cap', () => {
+    const arrel = temporal('sdp-r24-a2-');
+    expect(p.entradaSocialDelPaquet(arrel)).toEqual({ paquet: false, registre: false, googleWeb: null, googleIos: null, appleActiu: null, clients: [] });
+    escriu(arrel, 'dist-natiu/assets/vendor-x1.js', 'export const x=1;');
+    escriu(arrel, 'dist-natiu/assets/index-AbC123.js', bundleAmb({ web: `"${WEB_SINTETIC}"`, ios: `"${IOS_SINTETIC}"` }));
+    expect(p.entradaSocialDelPaquet(arrel)).toEqual({
+      paquet: true, registre: true, googleWeb: WEB_SINTETIC, googleIos: IOS_SINTETIC, appleActiu: true, clients: [IOS_SINTETIC, WEB_SINTETIC]
+    });
+    escriu(arrel, 'dist-natiu/assets/index-AbC123.js', bundleAmb({ web: 'void 0', ios: 'void 0', apple: '!1' }));
+    expect(p.entradaSocialDelPaquet(arrel)).toEqual({ paquet: true, registre: true, googleWeb: null, googleIos: null, appleActiu: false, clients: [] });
+    /* Només el web (Android): l'iOS buit. Un client dins d'un .map o d'un .css no compta. */
+    escriu(arrel, 'dist-natiu/assets/index-AbC123.js', bundleAmb({ web: `"${WEB_SINTETIC}"`, ios: '""' }));
+    escriu(arrel, 'dist-natiu/assets/index-AbC123.js.map', `"${IOS_SINTETIC}"`);
+    expect(p.entradaSocialDelPaquet(arrel)).toMatchObject({ registre: true, googleWeb: WEB_SINTETIC, googleIos: null, clients: [WEB_SINTETIC] });
+    /* Sense el registre (un refactor que el canvie de forma): es diu, i els clients solts es compten igual. */
+    escriu(arrel, 'dist-natiu/assets/index-AbC123.js', `const a="${WEB_SINTETIC}";`);
+    expect(p.entradaSocialDelPaquet(arrel)).toMatchObject({ paquet: true, registre: false, googleWeb: null, googleIos: null, clients: [WEB_SINTETIC] });
+  });
+
+  test('liniesEntradaSocial: en producció cada client que falta és un ✗; en intern, un avís; cap valor ix mai', () => {
+    const sense = { paquet: true, registre: true, googleWeb: null, googleIos: null, appleActiu: true, clients: [] };
+    const prod = p.liniesEntradaSocial(sense, { plataformes: ['android'], produccio: true });
+    expect(prod.mal).toHaveLength(1);
+    expect(prod.mal[0]).toMatch(/no porta VITE_NATIU_GOOGLE_WEB_CLIENT_ID: ni Android ni l'iPhone oferiran «Continua amb Google»/);
+    expect(prod.linies.join('\n')).toMatch(/ {2}✗ el paquet no porta VITE_NATIU_GOOGLE_WEB_CLIENT_ID/);
+    const intern = p.liniesEntradaSocial(sense, { plataformes: ['android'], produccio: false });
+    expect(intern.mal).toEqual([]);
+    expect(intern.linies.join('\n')).toMatch(/ {2}! el paquet no porta VITE_NATIU_GOOGLE_WEB_CLIENT_ID/);
+    const tot = { paquet: true, registre: true, googleWeb: WEB_SINTETIC, googleIos: IOS_SINTETIC, appleActiu: true, clients: [IOS_SINTETIC, WEB_SINTETIC] };
+    const android = p.liniesEntradaSocial(tot, { plataformes: ['android'], produccio: true });
+    expect(android.mal).toEqual([]);
+    expect(android.linies.join('\n')).toMatch(/ {2}✓ el paquet porta el client web de Google/);
+    /* iOS: el client iOS i el seu esquema invertit a Info.plist (sense comentaris). */
+    expect(p.liniesEntradaSocial(tot, { plataformes: ['ios'], produccio: true, infoPlist: plistAmb(ESQUEMA_IOS_SINTETIC) }).mal).toEqual([]);
+    const senseEsquema = p.liniesEntradaSocial(tot, { plataformes: ['ios'], produccio: true, infoPlist: `<!-- ${plistAmb(ESQUEMA_IOS_SINTETIC)} -->${plistAmb('com.googleusercontent.apps.pendent')}` });
+    expect(senseEsquema.mal).toHaveLength(1);
+    expect(senseEsquema.mal[0]).toMatch(/Info\.plist no registra l'esquema invertit del client iOS del paquet/);
+    const senseIos = p.liniesEntradaSocial({ ...tot, googleIos: null, clients: [WEB_SINTETIC] }, { plataformes: ['ios'], produccio: true, infoPlist: plistAmb(ESQUEMA_IOS_SINTETIC) });
+    expect(senseIos.mal).toHaveLength(1);
+    expect(senseIos.mal[0]).toMatch(/no porta VITE_NATIU_GOOGLE_IOS_CLIENT_ID/);
+    /* Apple apagat a iOS: cap botó social a l'iPhone (4.8); és un avís, mai un ✗ (decisió del Mestre). */
+    const senseApple = p.liniesEntradaSocial({ ...tot, appleActiu: false }, { plataformes: ['ios'], produccio: true, infoPlist: plistAmb(ESQUEMA_IOS_SINTETIC) });
+    expect(senseApple.mal).toEqual([]);
+    expect(senseApple.linies.join('\n')).toMatch(/ {2}! el paquet porta Apple apagat \(VITE_APPLE_OAUTH_ACTIU\): a l'iPhone no hi haurà cap botó social/);
+    /* Sense registre a producció: ✗ (no es pot certificar); sense paquet: només un avís (el ✗ ja és el de dist-natiu/index.html). */
+    expect(p.liniesEntradaSocial({ ...sense, registre: false }, { plataformes: ['android'], produccio: true }).mal[0]).toMatch(/no porta el registre de l'entrada nativa/);
+    const senseDist = p.liniesEntradaSocial({ ...sense, paquet: false, registre: false }, { plataformes: ['android'], produccio: true });
+    expect(senseDist.mal).toEqual([]);
+    expect(senseDist.linies.join('\n')).toMatch(/ {2}! no hi ha dist-natiu\/assets/);
+    expect(p.liniesEntradaSocial(sense, { plataformes: [], produccio: true })).toEqual({ linies: [], mal: [] });
+    for (const r of [prod, intern, android, senseEsquema, senseIos, senseApple]) {
+      for (const valor of [WEB_SINTETIC, IOS_SINTETIC, '123456']) expect(r.linies.join('\n')).not.toContain(valor);
+    }
+  });
+
+  /* Un repositori de mostra d'Android on tota la resta passa: el fitxer d'entorn, les eines fingides,
+     l'arbre net, dist-natiu/ segellat al HEAD i la còpia de cap sync. L'única família que pot fallar
+     és la nova. */
+  const repositoriAndroid = () => {
+    const arrel = temporal('sdp-r24-a2-repo-');
+    git(arrel, 'init', '-q');
+    escriu(arrel, '.gitignore', 'dist-natiu/\nandroid/app/src/main/assets/public/\n');
+    escriu(arrel, 'android/gradlew', '#!/bin/sh\n');
+    git(arrel, 'add', '-A');
+    git(arrel, 'commit', '-q', '--no-verify', '-m', 'mostra');
+    const segell = JSON.stringify({ commit: git(arrel, 'rev-parse', 'HEAD'), arbreNet: true, data: new Date().toISOString() });
+    for (const dir of ['dist-natiu', 'android/app/src/main/assets/public']) {
+      escriu(arrel, `${dir}/index.html`, '<!doctype html>');
+      escriu(arrel, `${dir}/segell.json`, segell);
+    }
+    return arrel;
+  };
+  const entornAndroid = () => {
+    const fora = temporal('sdp-r24-a2-claus-');
+    const json = path.join(fora, 'play.json');
+    fs.writeFileSync(json, 'fals', { mode: 0o600 });
+    fs.chmodSync(json, 0o600);
+    return { SDP_BOTIGUES_ENV: fitxerDEntorn(['SDP_APP_ID=org.socdepoble.app', `SDP_PLAY_JSON_KEY_PATH=${json}`,
+      `SDP_ANDROID_UPLOAD_CERT_SHA256=${'AB'.repeat(32)}`, `SDP_BUILDS_DIR=${temporal('sdp-r24-a2-builds-')}`]) };
+  };
+
+  test.skipIf(SENSE_GIT)('preflight Android: el paquet sense el client web és un ✗ (eixida 7) a producció i un avís en intern; amb el client, net', () => {
+    const arrel = repositoriAndroid();
+    const env = entornAndroid();
+    escriu(arrel, 'dist-natiu/assets/index-AbC123.js', bundleAmb({ web: 'void 0', ios: 'void 0', apple: '!1' }));
+    const prod = p.preflight({ arrel, plataformes: ['android'], env, consultes: FINGIDES, canal: 'produccio' });
+    const textProd = prod.linies.join('\n');
+    expect(prod.codi, textProd).toBe(e.EIXIDA.ARBRE);
+    expect(textProd).toMatch(/Entrada social del paquet \(dist-natiu\)\n {2}✗ el paquet no porta VITE_NATIU_GOOGLE_WEB_CLIENT_ID/);
+    expect(textProd.match(/ {2}✗ /g), 'l’únic ✗ és el del paquet').toHaveLength(1);
+    const intern = p.preflight({ arrel, plataformes: ['android'], env, consultes: FINGIDES });
+    expect(intern.codi, intern.linies.join('\n')).toBe(e.EIXIDA.BE);
+    expect(intern.linies.join('\n')).toMatch(/ {2}! el paquet no porta VITE_NATIU_GOOGLE_WEB_CLIENT_ID/);
+    escriu(arrel, 'dist-natiu/assets/index-AbC123.js', bundleAmb({ web: `"${WEB_SINTETIC}"`, ios: `"${IOS_SINTETIC}"` }));
+    const net = p.preflight({ arrel, plataformes: ['android'], env, consultes: FINGIDES, canal: 'produccio' });
+    expect(net.codi, net.linies.join('\n')).toBe(e.EIXIDA.BE);
+    expect(net.linies.join('\n')).toMatch(/✓ el paquet porta el client web de Google/);
+    for (const r of [prod, intern, net]) expect(r.linies.join('\n')).not.toContain(WEB_SINTETIC);
+  });
+});
+
+describe('R24 · D1 · el push natiu s’anuncia amb --push o amb VITE_SDP_PUSH_NATIU=1 a .env.natiu*', () => {
+  test('banderaPushNatiu: .env.natiu i .env.natiu.local (mana el .local), només el valor exacte 1; .env i .env.local no compten', () => {
+    const arrel = temporal('sdp-r24-d1-');
+    expect(p.banderaPushNatiu(arrel)).toBe(false);
+    escriu(arrel, '.env.local', 'VITE_SDP_PUSH_NATIU=1\n');
+    escriu(arrel, '.env', 'VITE_SDP_PUSH_NATIU=1\n');
+    expect(p.banderaPushNatiu(arrel), 'el build natiu no hereta .env ni .env.local').toBe(false);
+    for (const [text, esperat] of [
+      ['VITE_SDP_PUSH_NATIU=1', true],
+      ['VITE_SDP_PUSH_NATIU=1   ', true],
+      ['export VITE_SDP_PUSH_NATIU="1" # amb FCM i APNs', true],
+      ["VITE_SDP_PUSH_NATIU='1'", true],
+      ['VITE_SDP_PUSH_NATIU=1 # comentari', true],
+      ['VITE_SDP_PUSH_NATIU=true', false],
+      ['VITE_SDP_PUSH_NATIU= 1x', false],
+      ['VITE_SDP_PUSH_NATIU=', false],
+      ['# VITE_SDP_PUSH_NATIU=1', false],
+      ['VITE_SDP_PUSH_NATIU_PROVA=1', false],
+      ['VITE_SDP_PUSH_NATIU=1\nVITE_SDP_PUSH_NATIU=0', false]
+    ]) {
+      escriu(arrel, '.env.natiu', `VITE_SUPABASE_URL=https://exemple.invalid\n${text}\n`);
+      expect(p.banderaPushNatiu(arrel), text).toBe(esperat);
+    }
+    escriu(arrel, '.env.natiu', 'VITE_SDP_PUSH_NATIU=1\n');
+    escriu(arrel, '.env.natiu.local', 'VITE_SDP_PUSH_NATIU=\n');
+    expect(p.banderaPushNatiu(arrel), 'el .local mana').toBe(false);
+    escriu(arrel, '.env.natiu.local', 'VITE_ALTRA=1\n');
+    expect(p.banderaPushNatiu(arrel), 'un .local que no la declara no la tapa').toBe(true);
+  });
+
+  /* Un projecte de mostra amb el connector cablejat i sense google-services.json, com l'arbre real. */
+  const ambConnector = () => {
+    const arrel = temporal('sdp-r24-d1-mostra-');
+    escriu(arrel, 'package.json', JSON.stringify({ dependencies: { '@capacitor/push-notifications': '8.1.3' } }));
+    escriu(arrel, 'capacitor.config.json', JSON.stringify({ appId: 'org.socdepoble.app' }));
+    escriu(arrel, 'android/capacitor.settings.gradle', "include ':capacitor-push-notifications'\n");
+    escriu(arrel, 'android/app/src/main/AndroidManifest.xml', '<manifest><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/></manifest>');
+    escriu(arrel, 'android/app/build.gradle', "try { apply plugin: 'com.google.gms.google-services' } catch (e) {}\n");
+    return arrel;
+  };
+
+  test('amb el connector i sense --push ni bandera: google-services.json absent és un avís i anuncia és fals; amb la bandera, ✗ i anuncia', () => {
+    const arrel = ambConnector();
+    const env = { SDP_BOTIGUES_ENV: fitxerDEntorn(['# sense variables']) };
+    const estat = p.estatDelPush(arrel);
+    expect(estat.banderaNatiu).toBe(false);
+    const sense = p.liniesDelPush(estat, { plataformes: ['android'] });
+    expect(sense.mal, sense.linies.join('\n')).toEqual([]);
+    expect(sense.linies.join('\n')).toMatch(/ {2}! falta android\/app\/google-services\.json .* · cal abans d'encendre el push natiu/);
+    const pre = p.preflight({ arrel, plataformes: ['android'], env, consultes: FINGIDES });
+    expect(pre.push.anuncia).toBe(false);
+    expect(pre.linies.join('\n')).not.toMatch(/✗ falta android\/app\/google-services\.json/);
+    /* --push: com sempre. */
+    expect(p.liniesDelPush(estat, { plataformes: ['android'], push: true }).mal).toEqual(["falta android/app/google-services.json (Firebase › configuració del projecte; git l'ignora)"]);
+    expect(p.preflight({ arrel, plataformes: ['android'], env, consultes: FINGIDES, push: true }).push.anuncia).toBe(true);
+    /* La bandera a .env.natiu.local fa el mateix que --push, sense imprimir-ne cap valor. */
+    escriu(arrel, '.env.natiu.local', 'VITE_SDP_PUSH_NATIU=1\nVITE_NATIU_GOOGLE_WEB_CLIENT_ID=123456-websintetic.apps.googleusercontent.com\n');
+    const ambBandera = p.estatDelPush(arrel);
+    expect(ambBandera.banderaNatiu).toBe(true);
+    expect(p.liniesDelPush(ambBandera, { plataformes: ['android'] }).mal).toEqual(["falta android/app/google-services.json (Firebase › configuració del projecte; git l'ignora)"]);
+    const preBandera = p.preflight({ arrel, plataformes: ['android'], env, consultes: FINGIDES });
+    expect(preBandera.push.anuncia).toBe(true);
+    expect(preBandera.linies.join('\n')).toMatch(/ {2}✗ falta android\/app\/google-services\.json/);
+    expect(preBandera.linies.join('\n')).not.toContain('websintetic');
+    /* Sense connector però amb la bandera: com --push, el connector que falta és un ✗. */
+    const senseConnector = temporal('sdp-r24-d1-sense-');
+    escriu(senseConnector, '.env.natiu', 'VITE_SDP_PUSH_NATIU=1\n');
+    expect(p.liniesDelPush(p.estatDelPush(senseConnector), { plataformes: ['android'] }).mal[0]).toMatch(/el connector @capacitor\/push-notifications no és al projecte/);
+  });
 });

@@ -75,3 +75,21 @@ test('edge adormit: el nucli social amb la política del lloc per a HTML, asset,
   const head=await edge(req('/projecte','HEAD'));assert.equal(head.headers.get('Content-Security-Policy'),csp);assert.equal(head.headers.get('Cache-Control'),'no-store');assert.equal(await head.text(),'');assert.equal(calls.at(-1).method,'GET');
   const options=await edge(req('/assets/x.png','OPTIONS'));assert.equal(options.status,204);assert.equal(options.headers.get('Content-Security-Policy'),csp);assert.equal(options.headers.get('Access-Control-Allow-Headers'),'Range');assert.equal(await options.text(),'');assert.equal(calls.at(-1).method,'OPTIONS');
 });
+
+/* P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) · Les imatges socials materialitzades (dist/assets/og/<hash>.jpg) són de
+   fitxes de veïns: una hora de memòria cau, explícita, i mai la regla d'immutables d'un any (que només casa amb els
+   paquets amb hash de Vite). La regla nova no canvia la política derivada (CSP i CORS). */
+test('firebase.json: /assets/og/** amb «public, max-age=3600», fora de la regla d’immutables',()=>{
+  const regles=configuration.hosting.headers;
+  const og=regles.filter(r=>r.source==='/assets/og/**');
+  assert.equal(og.length,1);
+  assert.deepEqual(og[0].headers,[{key:'Cache-Control',value:'public, max-age=3600'}]);
+  const immutable=regles.find(r=>typeof r.regex==='string'&&r.headers.some(h=>/immutable/.test(h.value)));
+  assert.ok(immutable&&!new RegExp(immutable.regex).test('/assets/og/0123456789abcdef01234567.jpg'));
+  assert.ok(new RegExp(immutable.regex).test('/assets/index-AbCdEf12.js'));
+  // La reescriptura de l'SPA no toca /assets: una imatge retirada dona 404, no l'HTML de l'app.
+  const spa=configuration.hosting.rewrites.at(-1);
+  assert.equal(spa.destination,'/index.html');assert.match(spa.source,/^!\/@\((?:[^)]*\|)?assets(?:\|[^)]*)?\)\/\*\*$/);
+  assert.deepEqual([configuration.hosting.trailingSlash,configuration.hosting.cleanUrls],[false,false]);
+  assert.deepEqual(Object.keys(policy.assets.headers).sort(),['access-control-allow-headers','access-control-allow-origin','access-control-expose-headers']);
+});

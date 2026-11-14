@@ -12,7 +12,6 @@ import {
 } from '../../data/recuperacioPendent.js';
 import { eixDeLaSessio, preparaEixida as preparaEixidaNucli, reprenSessio } from '../../data/autodesament/sessio.js';
 import { enviaNotesDeLUsuari, oblidaNotesDeLUsuari, pendentsNotesDe } from '../../sections/notes/GlobalSaveManager.js';
-import { oblidaTitolsIAIADePersona } from '../../sections/xat/sessionsIAIALocals.js';
 import { entraComAPilot } from '../../data/sessioPilot.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import { oblidaXatEnEixir } from '../../data/xifratXatEixida.js';
@@ -33,6 +32,27 @@ const EMPTY_CONFIG = EMPTY_SESSION_CONFIG;
    opcions) i no llança mai. Ve del mòdul germà sense dependències que el motor
    multimèdia reexporta: el motor sencer no entra al paquet principal. */
 const oblidaCarpetesLocalsEnEixir = () => oblidaTotesLesCarpetesLocals();
+
+/* Onada R24 · wp_trinquet (SEO-R22-08, trinquet de l'arrencada estàtica) · L'oblit
+   dels títols locals de la IAIA es demana sota demanda: el registre
+   (sections/xat/sessionsIAIALocals.js) i el seu magatzem d'IndexedDB
+   (utils/magatzemLocal.js) ja no viatgen a l'arrencada del paquet per una sola
+   funció de l'eixida. La funció és la mateixa i va al mateix lloc de
+   DESPRES_DE_TANCAR: sessio.js l'espera (Promise.all) i un rebuig, també el
+   d'un tros que no arriba, no talla mai l'eixida. Perquè una eixida sense xarxa
+   (un ordinador compartit del poble) no deixe els títols de qui ix, el tros es
+   precarrega després del primer pintat quan hi ha una persona dins
+   (SessionProvider); una càrrega fallida s'oblida i la següent ho torna a provar. */
+let oblitDeTitolsIAIA = null;
+const carregaOblitDeTitolsIAIA = () => {
+  oblitDeTitolsIAIA ??= import('../../sections/xat/sessionsIAIALocals.js').catch((error) => {
+    oblitDeTitolsIAIA = null;
+    throw error;
+  });
+  return oblitDeTitolsIAIA;
+};
+const oblidaTitolsIAIADePersona = (usuariId) => carregaOblitDeTitolsIAIA()
+  .then((modul) => modul.oblidaTitolsIAIADePersona(usuariId));
 
 /* QA-R2-04 (Codex, Ronda 2) · Si l'oblit no ha pogut buidar la base
    ({ ok:false, codi:'OBLIT_CARPETES_PENDENT' }), la biblioteca el deixa
@@ -219,6 +239,13 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
   useEffect(() => {
     if (estat === 'dins' && usuariId != null) reprenSessio(config, usuariId);
   }, [config, estat, usuariId]);
+
+  /* Onada R24 · wp_trinquet · Amb una persona dins, l'oblit dels seus títols de
+     la IAIA ja és a la memòria quan isca (carregaOblitDeTitolsIAIA): després del
+     primer pintat, mai abans. */
+  useEffect(() => {
+    if (estat === 'dins' && usuariId != null) carregaOblitDeTitolsIAIA().catch(() => {});
+  }, [estat, usuariId]);
 
   const backendFuncs = useMemo(() => ({
     teCapacitat,

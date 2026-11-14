@@ -8,7 +8,7 @@ import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useM
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useParams, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
 import { ChevronDown, LayoutGrid, PanelLeftClose } from 'lucide-react';
-import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
+import { IaiaIcon } from '../components/PedraSeca/atoms/IaiaIcon.jsx';
 import { tradueix, useTraductorOpcional } from '../components/PedraSeca/hooks/useTraductorOpcional.js';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
@@ -95,6 +95,9 @@ import { escoltaAvisador, llegixAvisador } from '../services/avisadorPreferencie
 const AvisadorPage = import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? lazyRoute(() => import('../pages/AvisadorPage.jsx')) : null;
 const AvisadorEnSessio = import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? lazyRoute(() => import('../components/salut/AvisadorEnSessio.jsx')) : null;
 import ReceptorCompartit from '../sections/xat/ReceptorCompartit.jsx';
+/* R24 · xat_entrega (P1-4) · El comptador global de no llegits: l'entrada «Xat», el títol i la insígnia. */
+import { AmbNoLlegitsDelXat, ComptadorGlobalXat } from '../sections/xat/ComptadorGlobalXat.jsx';
+import { ProveidorNoLlegitsGlobalsXat } from '../sections/xat/noLlegitsGlobalsXat.js';
 import { ProveidorModeracio } from './contexts/ModeracioContext.jsx';
 /* Fase D (261020, tasca 2) · Els tres diàlegs de la moderació (denúncia,
    bloqueig i normes), que el proveïdor pinta en este ordre. */
@@ -111,6 +114,7 @@ import { useIdentitatDeLaBarra } from '../components/universal/identitat/useIden
 import {
   FranjaAmfitrio, TitolAmfitrio, desaFranjaTancada, etiquetesDeLaFranja, franjaTancadaPer, textDelNode
 } from '../components/universal/MarcaAmfitrio.jsx';
+import { plataformaNativa } from '../config/entradaNativa.js';
 import { estatDeConnexio } from '../components/universal/connexio/estatConnexio.js';
 import { useEnLinia } from '../components/universal/connexio/useEnLinia.js';
 import { sanejaEtiqueta } from '../config/configAmfitrio.js';
@@ -230,14 +234,18 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
     const labels = section.kind === 'gestoria'
       ? { label: section.label, shortLabel: section.shortLabel }
       : getSectionLabels(section.id, language);
-    return (
-      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} transicio className={['nav-item', classeExtra.trim()].filter(Boolean).join(' ')} aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
+    const pinta = (nomAccessible, insignia) => (
+      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} transicio className={['nav-item', classeExtra.trim()].filter(Boolean).join(' ')} aria-label={nomAccessible} onClick={() => { if (isCompact) toggleSidebar(); }}>
         <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
         <span className="nav-item__text">
           {labels.label}
         </span>
+        {insignia}
       </NavLink>
     );
+    return section.id === 'xat'
+      ? <AmbNoLlegitsDelXat key={section.id} etiqueta={labels.label} t={t}>{pinta}</AmbNoLlegitsDelXat>
+      : pinta(labels.label, null);
   };
 
   return (
@@ -732,6 +740,7 @@ function AppShell({ children, mobileNav }) {
             onTanca={tancaFranja}
           />
         ) : null}
+        <BarraActualitzacioDiferida />
 
         {/* Estat del gest de recarregar: el text l'escriu usePullToRefresh
             (buit i transparent en repòs; modules.css, «Lliscar per
@@ -763,6 +772,30 @@ function AppShell({ children, mobileNav }) {
    no es repinta per cap scroll, només este component, i només quan el botó
    apareix o se'n va. */
 const potPujarAlServidor = () => false;
+/* Onada R22 · integració (SEO-R22-08) · La barra d'actualització d'app només
+   existix dins de l'app nativa (a la web, la PWA i el connector el registre
+   és sempre buit i la barra no pintava res). Fora de l'arrencada estàtica: el
+   seu codi i el del registre no viatgen al primer pintat de la web ni del
+   connector (trinquet de tests/standalone-build.test.mjs). A l'app, el tros és
+   local i arriba abans que la resposta de la porta de versió, que és la que
+   publica l'avís; si no carrega, no hi ha barra (és un avís suau). */
+export function BarraActualitzacioDiferida({ importa = importaBarraActualitzacio, plataforma = plataformaNativa }) {
+  const [Barra, setBarra] = useState(null);
+  useEffect(() => {
+    if (plataforma() === 'web') return undefined;
+    let viu = true;
+    Promise.resolve().then(importa).then(
+      (modul) => { if (viu && typeof modul?.default === 'function') setBarra(() => modul.default); },
+      () => {}
+    );
+    return () => { viu = false; };
+  }, [importa, plataforma]);
+  return Barra ? <Barra /> : null;
+}
+function importaBarraActualitzacio() {
+  return import('../components/universal/barres/BarraActualitzacioRecomanada.jsx');
+}
+
 function TornarADalt({ barres }) {
   const potPujar = useSyncExternalStore(barres.subscriu, barres.potPujar, potPujarAlServidor);
   return potPujar ? <BotoTornarADalt onPuja={barres.pujaADalt} /> : null;
@@ -938,9 +971,12 @@ export default function App({ config, targetNode }) {
             Sóc de Poble (la via «En privat» de Comentar) es resol ací, UNA
             vegada per a tota l'app, no una per targeta (xatCorporatiu.js). */}
         <ProveidorXatSocDePoble>
-          <AppShell mobileNav={<MobileNav />}>
-            <AppContent config={stableConfig} targetNode={targetNode} />
-          </AppShell>
+          {/* R24 · xat_entrega (P1-4) · El total de no llegits, de XatProvider a la closca. */}
+          <ProveidorNoLlegitsGlobalsXat>
+            <AppShell mobileNav={<MobileNav />}>
+              <AppContent config={stableConfig} targetNode={targetNode} />
+            </AppShell>
+          </ProveidorNoLlegitsGlobalsXat>
         </ProveidorXatSocDePoble>
       </NotificationProvider>
     </StrictMode>
@@ -980,6 +1016,8 @@ function AppContent({ config, targetNode }) {
                 {/* 261026 (prompt 261026_1615) · El menú «Compartir» del dispositiu
                     i el toc dels avisos del xat porten al Xat (només a l'App). */}
                 <ReceptorCompartit />
+                {/* R24 · G-client-5 · La insígnia de l'app, només si el Mas és l'amo del document. */}
+                <ComptadorGlobalXat amaDelDocument={esAmaDelDocument(config)} />
                 {/* P0-114 · El vigilant, només si el build porta L'Avisador. */}
                 {import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? <AvisadorAjornat config={config} targetNode={targetNode} /> : null}
                 <MultimediaProvider config={config}>
@@ -1291,14 +1329,18 @@ const MobileNav = memo(function MobileNav() {
     const labels = section.kind === 'gestoria'
       ? { label: section.label, shortLabel: section.shortLabel }
       : getSectionLabels(section.id, llenguaDelText);
-    return (
-      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} transicio className="nav-item" aria-label={labels.label}>
+    const pinta = (nomAccessible, insignia) => (
+      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} transicio className="nav-item" aria-label={nomAccessible}>
         <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
         <span className="nav-item__text">
           <strong>{labels.shortLabel}</strong>
         </span>
+        {insignia}
       </NavLink>
     );
+    return section.id === 'xat'
+      ? <AmbNoLlegitsDelXat key={section.id} etiqueta={labels.label} t={t}>{pinta}</AmbNoLlegitsDelXat>
+      : pinta(labels.label, null);
   };
 
   // PS-01 (B7) · La fosa la fa el router (transicioDeVista.js).

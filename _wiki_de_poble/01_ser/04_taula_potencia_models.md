@@ -8,7 +8,7 @@ tags:
 ---
 # Taula de Potència de Models IA
 
-Aquesta taula recull la potència i cost relatiu dels models d'Intel·ligència Artificial usats a Sóc de Poble per garantir que assignem "cada model a la seua tasca", evitant despeses innecessàries i el buidatge sobtat del dipòsit de consum.
+Aquesta taula recull la potència i cost relatiu dels models d'Intel·ligència Artificial utilitzats a Sóc de Poble per garantir que assignem "cada model a la seua tasca", evitant despeses innecessàries i el buidatge sobtat del dipòsit de consum.
 
 ## Família Claude
 

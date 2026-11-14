@@ -49,7 +49,7 @@ Quan hem de reescriure o migrar una plataforma vella cap a la nova, no es fa de 
 **La Regla:** El Patró *Strangler Fig*.
 1. **Quarantena:** Tot el codi que ve del passat es posa fora de l'arrel de producció perquè no contamine.
 2. **Trasplantament:** Extraiem i adaptem únicament la *Lògica* i els *Serveis*.
-3. **Reescriptura Visual:** La vista (JSX / CSS) s'esborra i es reconstruïx peça per peça usant els *UniversalComponents* creats en la Fase 2.
+3. **Reescriptura Visual:** La vista (JSX / CSS) s'esborra i es reconstruïx peça per peça utilitzant els *UniversalComponents* creats en la Fase 2.
 
 ## Fase 5: El Tractor Mestre (La Duana Cega)
 
@@ -57,7 +57,7 @@ Les bones intencions no frenen l'entropia; només els processos mecànics ho fan
 
 **La Regla:** Si el codi trenca el disseny, el codi no es guarda.
 - Instal·la *hooks* pre-commit i linters d'AST (El Tractor Mestre, avui `npm run porta` i el hook de Husky) que rebutgen immediatament el codi si detecten invents manuals de l'IA o del desenvolupador.
-- Està rigorosament prohibit usar valors *hardcoded* (`#FF7300`, `13px`) dins d'un component UI final. Només s'accepten tokens semàntics del *Design System* (`--sdp-accent`, `--sdp-accio`…).
+- Està rigorosament prohibit utilitzar valors *hardcoded* (`#FF7300`, `13px`) dins d'un component UI final. Només s'accepten tokens semàntics del *Design System* (`--sdp-accent`, `--sdp-accio`…).
 
 ---
 

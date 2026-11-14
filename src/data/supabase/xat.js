@@ -41,7 +41,7 @@
  */
 
 import { getClient } from './config.js';
-import { usuariDeSessio, versioSessio } from '../identitat.js';
+import { jwtPerBackend, usuariDeSessio, versioSessio } from '../identitat.js';
 import { despertaXatConfirmat } from './despertaXat.js';
 import { DURADES_SILENCI, finsAlDelSilenci, subjecteDeXat } from '../contracte.js';
 import { CLAU_CANAL_BETA_TESTERS, PREFIX_PER_DEFECTE, ambXatsPerDefecte, vestixLaIAIA } from '../xatsPerDefecte.js';
@@ -101,6 +101,13 @@ async function ambSenyal(query, config) {
 
 const jaNormalitzat = (error) => error instanceof Error && Object.hasOwn(error, 'retriable');
 const errorLocal = (missatge, code, retriable = false) => Object.assign(new Error(missatge), { code, retriable });
+/* R22 (A-xat-fluxos-r1-1) · La sessió desada ha caducat (o el servidor ja no
+   accepta el JWT): la lectura falla i es pot reintentar quan arribe la
+   renovació. El text és el de qualsevol lectura fallida de la llista. */
+const errorSessioCaducada = (causa) => Object.assign(
+  errorLocal('No s’han pogut carregar les converses.', 'SESSIO_CADUCADA', true),
+  causa ? { cause: causa } : {}
+);
 
 /* B03 (migració 2610081543_xat_consentiment_i_metadades.sql) · Els codis SDP
    que arriben a la persona tal qual (XatSection pinta error.message al toast
@@ -288,6 +295,10 @@ const mapejaFil = (f, usuariId = null) => ({
   llegitFinsSeq: numero(f.llegit_fins_seq) ?? 0,
   rebutFinsSeq: numero(f.rebut_fins_seq) ?? 0,
   llegitPelsAltresFinsSeq: numero(f.llegit_pels_altres_fins_seq) ?? 0,
+  /* R24 · xat_entrega (P0-1) · El rebut d'entrega dels altres (20261114061000,
+     columna al final). Un servidor sense la columna no el porta: la propietat
+     queda absent i la interfície no diu res de l'entrega, mai un 0 acreditat. */
+  ...(Object.hasOwn(f, 'rebut_pels_altres_fins_seq') ? { rebutPelsAltresFinsSeq: numero(f.rebut_pels_altres_fins_seq) ?? 0 } : {}),
   noLlegits: numero(f.no_llegits) ?? 0,
   arxivatAl: f.arxivat_al ?? null,
   fixatAl: f.fixat_al ?? null,
@@ -695,17 +706,26 @@ export const loadFils = async (config = {}) => {
     const user = usuariDeSessio();
     /* Visitant anònim sense sessió: no té fils privats al servidor. Evitem la
        crida a xat_fils_meus (que tornaria 401 Unauthorized i embrutaria la consola)
-       i servim directament les converses per defecte de la plataforma. */
-    if (!user?.id) return ambXatsPerDefecte([]);
+       i servim directament les converses per defecte de la plataforma.
+       R22 (A-xat-fluxos-r1-1) · Anònim vol dir sense cap JWT desat per a este
+       backend. Amb el JWT desat però caducat (usuariDeSessio() torna null mentre
+       la renovació vola, p. ex. en despertar el mòbil) no és cap visitant: una
+       llista «bona» amb només les files per defecte buidava el xat i passava la
+       conversa oberta a 404. És una lectura fallida i reintentable: XatContext
+       conserva la llista (B04) i la renovació torna a demanar-la. */
+    if (!user?.id) {
+      if (jwtPerBackend(config)) throw errorSessioCaducada();
+      return ambXatsPerDefecte([]);
+    }
     const supabase = await getClient(config);
     comprovaSenyal(config);
     const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) return [];
     const { data, error, status } = await ambSenyal(supabase.rpc('xat_fils_meus', { p_tenant_id: tenantId }), config);
     if (error) {
-      if (status === 401 || error?.status === 401 || error?.code === '401') {
-        return ambXatsPerDefecte([]);
-      }
+      /* R22 (A-xat-fluxos-r1-1) · Amb sessió, un 401 és un JWT que el servidor
+         ja no accepta, no un visitant: el mateix error reintentable. */
+      if (status === 401 || error?.status === 401 || error?.code === '401') throw errorSessioCaducada(error);
       throw ambEstat(error, status);
     }
     /* Ordre del Mestre (261007) · «Sóc de Poble» i la «IAIA MarIA» són a la

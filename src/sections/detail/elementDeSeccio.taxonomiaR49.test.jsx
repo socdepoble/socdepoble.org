@@ -115,7 +115,13 @@ test('regressions · Manifest conserva labels editorials i Pobles conserva prov�
 });
 
 test('preservació · els425 registres i les dades editorials/personals de l’Aplec són byte-semànticament iguals a R46',()=>{
- expect(hash(ARTICLES_SIMULADOR_IA_425)).toBe('cbcb113b1de18f3522030d8022edfe938c401f76a1e9ba1a416b2e41259a454b');
+ /* Expectativa actualitzada a propòsit: Llibre Mestre, Onada R23 (14-11-2026 01:18), «Canvi Global de
+    Categoria a 💻 Tecnologia i Disseny». És l'única diferència amb R46: desfet eixe nom curt, els 425
+    registres tornen a fer el hash de R46; amb ell, el de hui.
+    Onada R22/R24 · Empremta sincronitzada amb la mare canònica concisa «💻 Tecnologia i Disseny» de vocabulariCanonic.js. */
+ const R46=JSON.parse(JSON.stringify(ARTICLES_SIMULADOR_IA_425).replaceAll('💻 Tecnologia i Disseny','💻 Tecnologia Lliure, Dades Obertes i Disseny'));
+ expect(hash(R46)).toBe('cbcb113b1de18f3522030d8022edfe938c401f76a1e9ba1a416b2e41259a454b');
+ expect(hash(ARTICLES_SIMULADOR_IA_425)).toBe('d94404692f1f39610212c8f49fe841ef445185de8311ee1438b36d4bb1372470');
  const copy={...aplec};delete copy.labels;delete copy.tags;
  expect(hash(copy)).toBe('3b0dc825093e4774313e91f6d7aa12f31bd6a389daa7bf1bd4f6ce1c0e6918a5');
 });

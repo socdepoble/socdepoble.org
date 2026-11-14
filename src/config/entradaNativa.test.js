@@ -36,7 +36,9 @@ describe('sense registrar (la web, la PWA, el connector)', () => {
     const r = await carrega();
     expect(Object.isFrozen(r.CODI_ENTRADA_NATIVA) && Object.isFrozen(r.PROVEIDORS_NATIUS)).toBe(true);
     expect(r.PROVEIDORS_NATIUS).toEqual(['apple', 'google']);
-    expect(new Set(Object.values(r.CODI_ENTRADA_NATIVA)).size).toBe(4);
+    /* Actualitzada a posta (R24 botigues, B1): el cinqué codi, CONFIGURACIO (Google no reconeix la instal·lació). */
+    expect(new Set(Object.values(r.CODI_ENTRADA_NATIVA)).size).toBe(5);
+    expect(r.CODI_ENTRADA_NATIVA.CONFIGURACIO).toBe('entrada-nativa-configuracio');
   });
 });
 
@@ -112,6 +114,15 @@ describe('demanaCredencialNativa', () => {
     await expect(r.demanaCredencialNativa('google')).rejects.toMatchObject({ code: r.CODI_ENTRADA_NATIVA.FALLIDA });
     expect(r.esCancelacioNativa(cancelada) && r.esSilenciNatiu(cancelada)).toBe(true);
     expect(r.esSilenciNatiu(crua)).toBe(false);
+  });
+
+  /* R24 botigues · B1 · La vista diu un text propi per a CONFIGURACIO: el registre no la torna FALLIDA. */
+  test('CONFIGURACIO de l’adaptador passa tal qual (no és FALLIDA ni silenci)', async () => {
+    const r = await carrega();
+    const configuracio = Object.assign(new Error('Google no reconeix esta instal·lació.'), { code: r.CODI_ENTRADA_NATIVA.CONFIGURACIO });
+    r.registraEntradaNativa(adaptador('android', ['google'], { demana: vi.fn().mockRejectedValueOnce(configuracio) }));
+    await expect(r.demanaCredencialNativa('google')).rejects.toBe(configuracio);
+    expect(r.esSilenciNatiu(configuracio)).toBe(false);
   });
 
   /* Fase D (261020, revisió) · EN_CURS ja no és silenci: la vista l'avisa. */

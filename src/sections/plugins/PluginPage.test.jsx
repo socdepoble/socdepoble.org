@@ -330,17 +330,23 @@ describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost 
   test.each(AMB_PRESENTACIO.map((p) => [p.id, p]))('/plugin/%s: el cos de sis blocs, un H3 i el seu paràgraf, entre l’entradilla i l’acció', (id, plugin) => {
     const { container } = munta(`/plugin/${id}`);
     const enObres = plugin.obrir === null;
-    // L'article, de dalt a baix: l'H2 i l'entradilla, el cos, l'avís si està en obres, i el botó.
+    /* Actualitzada a propòsit (IDEA-255, Onada R23): en totes les pàgines de lectura amb prosa,
+       PageFrame pinta el marc universal de lectura en veu alta (.sdp-veu-lectura-marc) sota .page-intro. */
     if (enObres) {
       const fills = [...article(container).children];
-      expect(fills).toHaveLength(4);
-      expect([fills[0].className, fills[1].className, fills[3].className]).toEqual(['page-intro', 'cms-preview', 'sdp-pagina-accio']);
-      expect(fills[2].textContent).toBe('Esta eina encara està en obres.');
+      expect(fills).toHaveLength(5);
+      expect([fills[0].className, fills[1].className, fills[2].className, fills[4].className]).toEqual([
+        'page-intro', 'sdp-veu-lectura-marc', 'cms-preview', 'sdp-pagina-accio'
+      ]);
+      expect(fills[3].textContent).toBe('Esta eina encara està en obres.');
     } else {
-      expect([...article(container).children].map((fill) => fill.className)).toEqual(['page-intro', 'cms-preview', 'sdp-pagina-accio']);
+      expect([...article(container).children].map((fill) => fill.className)).toEqual([
+        'page-intro', 'sdp-veu-lectura-marc', 'cms-preview', 'sdp-pagina-accio'
+      ]);
     }
     const cos = article(container).querySelector(':scope > article.cms-preview');
-    expect(cos.previousElementSibling).toBe(container.querySelector('.page-intro'));
+    expect(cos.previousElementSibling.className).toBe('sdp-veu-lectura-marc');
+    expect(cos.previousElementSibling.previousElementSibling).toBe(container.querySelector('.page-intro'));
     if (!enObres) expect(cos.nextElementSibling).toBe(accio(container));
     // Sis blocs, fills directes: un <h3> i el seu <p>, amb el text literal de la presentació.
     expect([...cos.children].map((fill) => fill.tagName)).toEqual(Array.from({ length: 12 }, (_, index) => (index % 2 ? 'P' : 'H3')));
@@ -397,12 +403,14 @@ describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost 
     expect(accioDeDalt(container)).toBeNull();
     const avis = screen.getByRole('status');
     expect(avis.textContent).toBe(MOTIU.noCompilada);
-    // L'ordre de l'article: entradilla, cos, avís i acció.
+    // L'ordre de l'article: entradilla, marc de lectura en veu alta (IDEA-255), cos, avís i acció.
     const fills = [...article(container).children];
-    expect(fills).toHaveLength(4);
-    expect([fills[0].className, fills[1].className, fills[3].className]).toEqual(['page-intro', 'cms-preview', 'sdp-pagina-accio']);
-    expect(fills[2] === avis || fills[2].contains(avis)).toBe(true);
-    expect(fills[1].querySelectorAll(':scope > p')).toHaveLength(6);
+    expect(fills).toHaveLength(5);
+    expect([fills[0].className, fills[1].className, fills[2].className, fills[4].className]).toEqual([
+      'page-intro', 'sdp-veu-lectura-marc', 'cms-preview', 'sdp-pagina-accio'
+    ]);
+    expect(fills[3] === avis || fills[3].contains(avis)).toBe(true);
+    expect(fills[2].querySelectorAll(':scope > p')).toHaveLength(6);
     // Baix: el camí (qui la pot posar), «Desactiva esta eina» i què fa.
     expect(within(accio(container)).getByText(CAMI.posar)).toBeTruthy();
     expect(within(accio(container)).getByRole('button', { name: DESACTIVA })).toBeTruthy();

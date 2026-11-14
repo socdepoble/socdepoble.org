@@ -34,13 +34,33 @@
  * capçalera de la fitxa (`labels` d'UniversalPage: davall de l'H1, dins del
  * bloc blanc), com la pàgina d'un plugin (PluginPage.jsx). Abans la fitxa
  * només portava la data.
+ *
+ * Onada R23 (P0-SNIPPET-HERO) · Igualada amb les seues germanes de PluginPage:
+ * porta la mateixa imatge Hero en gran de la seua targeta (`snippet_nano_card.webp`)
+ * i portada plegable amb clau `plugin:snippet`.
  */
 import { useId } from 'react';
 import { Download, Puzzle } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
-import { DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET, destiDelSnippet, urlDelSnippet } from './destiSnippet.js';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { clauPortadaDelPlugin } from '../plugins/registrePlugins.js';
+import {
+  DATA_DEL_SNIPPET,
+  ETIQUETES_DEL_SNIPPET,
+  FITXA_SNIPPET,
+  destiDelSnippet,
+  urlDelSnippet
+} from './destiSnippet.js';
+
+export const IMATGE_HERO_SNIPPET = '/assets/nano_cards/snippet_nano_card.webp';
+export const ALT_HERO_SNIPPET = 'Vinyeta d’Ibáñez per al Snippet Curador de Sóc de Poble desant qualsevol web d’un clic al Bloc de notes';
+
+const TEXTOS_PORTADA = Object.freeze({
+  amaga: Object.freeze(['pagina.portada.amaga', 'Amaga la portada']),
+  mostra: Object.freeze(['pagina.portada.mostra', 'Mostra la portada']),
+});
 
 const INSTALLA = 'Instal·la a Chrome';
 const DESCARREGA = 'Descarrega l’extensió';
@@ -101,6 +121,7 @@ function BotoPrincipal({ desti, idAvis }) {
 
 export function FitxaSnippet({ vistaRef }) {
   const id = useId();
+  const t = useTraductorOpcional();
   const desti = destiDelSnippet(urlDelSnippet(), origenDeLApp());
   const passos = desti?.descarrega ? PASSOS_DEL_PAQUET : PASSOS_DE_LA_BOTIGA;
   return (
@@ -110,6 +131,15 @@ export function FitxaSnippet({ vistaRef }) {
       title="Snippet"
       subtitle="Desa qualsevol web d’un clic"
       lead="Una extensió de Chrome que porta a Sóc de Poble la web que estàs llegint."
+      heroImage={IMATGE_HERO_SNIPPET}
+      heroAlt={ALT_HERO_SNIPPET}
+      portadaPlegable={{
+        clau: clauPortadaDelPlugin(FITXA_SNIPPET),
+        etiquetes: {
+          amaga: tradueix(t, TEXTOS_PORTADA.amaga),
+          mostra: tradueix(t, TEXTOS_PORTADA.mostra),
+        },
+      }}
       /* Onada 10 (M4) · La data de la targeta, a la barra taronja. */
       {...dataHoraDeBarra({ creat: DATA_DEL_SNIPPET })}
       /* Onada 11 (D5) · Les etiquetes de la targeta, davall de l'H1. */

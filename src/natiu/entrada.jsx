@@ -41,7 +41,8 @@ import { avisaEnllacDAccesInservible, ofereixAdrecaDeRecuperacio } from '../data
 import { ORIGEN_PUBLIC_PER_DEFECTE, origenPublic } from '../config/origenPublic.js';
 import { creaAvisosNatius } from './avisosNatius.js';
 import { connectaEnrereNatiu } from './enrereNatiu.js';
-import { bloqueigDeVersio } from './versioMinima.js';
+import { publicaActualitzacioRecomanada } from '../config/actualitzacioRecomanada.js';
+import { estatDeVersio } from './versioMinima.js';
 import CalActualitzar from './CalActualitzar.jsx';
 
 const styleNode = document.createElement('style');
@@ -200,9 +201,14 @@ const init = () => {
        L'App no espera la resposta. Fail-open: una arrencada fallida, la
        capacitat absent o qualsevol error deixen l'App com està (versioMinima.js). */
     arrencada
-      .then(() => bloqueigDeVersio({ plataforma: plataformaDelDispositiu(), config: capaDelPaquet() }), () => null)
-      .then((bloqueig) => {
-        if (bloqueig) pintaAmbDiccionari(() => root.render(<CalActualitzar enllac={bloqueig.enllac} amfitrio={idioma ?? null} />), { amfitrio: idioma });
+      .then(() => estatDeVersio({ plataforma: plataformaDelDispositiu(), config: capaDelPaquet() }), () => null)
+      .then((estat) => {
+        if (estat?.estat === 'bloquejada') {
+          publicaActualitzacioRecomanada(null);
+          pintaAmbDiccionari(() => root.render(<CalActualitzar enllac={estat.enllac} amfitrio={idioma ?? null} />), { amfitrio: idioma });
+        } else if (estat?.estat === 'recomanada') {
+          publicaActualitzacioRecomanada(estat);
+        }
       })
       .catch((e) => console.error('[natiu] Porta de versió:', e));
   }

@@ -9,7 +9,7 @@ tags:
 ---
 # 🧠 Anatomia cognitiva (cerebel, cingulat i executiu)
 
-Aquest document usa tres metàfores funcionals per ordenar el treball de l'agent. No li concedix autonomia d'escriptura: qualsevol efecte continua subordinat al Reflex, als scopes i a l'autorització humana.
+Aquest document utilitza tres metàfores funcionals per ordenar el treball de l'agent. No li concedix autonomia d'escriptura: qualsevol efecte continua subordinat al Reflex, als scopes i a l'autorització humana.
 
 > **Visió del Consell d'IAs:** Perquè la IAIA MarIA siga eficient i segura, no pot ser només un processador pla de text. S'estructura en lòbuls funcionals basats en l'anatomia humana. Açò permet delegar la repetició, bloquejar la fricció (perill) i executar amb eficàcia.
 

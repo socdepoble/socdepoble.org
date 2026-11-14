@@ -254,9 +254,18 @@ export const CLAUS_FUNDACIONALS = Object.freeze([PERSONA_PILOT.slug, ENTITAT_PIL
    crea l'organització (un altre poble del node, o un veí que el prenga abans
    que el Mestre). Mentre no se'n declara cap, cap fitxa del servidor no es
    reconeix com una de les tres: ni URL canònica ni poble de reserva. Per a
-   declarar-ne un, el seu UUID a la llista de la seua identitat. */
+   declarar-ne un, el seu UUID a la llista de la seua identitat.
+   Onada R24.2 (R21.2-F01, decisió del Mestre del 14-11-2026 a les 15:48,
+   «Endavant amb les 7 decisions!») · La persona pilot declara l'UUID del seu
+   compte de producció, el que torna `auth.users` (sonda 1 de lectura del
+   SQL Editor, 14-11-2026 15:48). Així cada veí veu «Javi Llinares» una sola
+   vegada al xat (esLaIdentitatDAjuda) i la fila remota amb eixe UUID es
+   reconeix com la persona pilot (clauFundacional: adreça canònica
+   /javillinares). En remot, /javillinares encara pinta la fitxa del paquet:
+   carregar-hi la fila del servidor queda pendent (decisió D-R24.2). Les
+   dues entitats continuen sense cap UUID declarat. */
 export const IDS_REMOTS_FUNDACIONALS = Object.freeze({
-  [PERSONA_PILOT.slug]: Object.freeze([]),
+  [PERSONA_PILOT.slug]: Object.freeze(['c7cc745b-2c54-4739-b9c1-add751aac3c4']),
   [ENTITAT_PILOT_SLUG]: Object.freeze([]),
   [ENTITAT_RENTONAR_SLUG]: Object.freeze([])
 });
@@ -265,8 +274,11 @@ export const IDS_REMOTS_FUNDACIONALS = Object.freeze({
 const TIPUS_DE_KIND = Object.freeze({ company: 'entitat', group: 'grup' });
 
 /* Un UUID del servidor es compara en minúscules: PostgreSQL els torna així i
-   una ruta els pot portar en majúscules. */
-const esIdRemotDe = (clau, id, idsRemots) => Boolean(id)
+   una ruta els pot portar en majúscules.
+   Onada R24 (CA-5 / P1-7) · S'exporta perquè el xat (data/xatsPerDefecte.js ·
+   esLaIdentitatDAjuda) reconega el directe real amb Javi per l'UUID declarat,
+   amb la mateixa regla que la fitxa pública: una sola comparació per a tot el Mas. */
+export const esIdRemotDe = (clau, id, idsRemots) => Boolean(id)
   && (idsRemots?.[clau] || []).some((declarat) => String(declarat).toLowerCase() === String(id).toLowerCase());
 
 /**

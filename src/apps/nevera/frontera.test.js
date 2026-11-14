@@ -60,10 +60,11 @@ describe('el que pot importar', () => {
     expect(PRODUCCIO.length).toBeGreaterThan(10);
     /* Onada 12 (261011; ordres 261011_0130, punt 6) · Els ingredients, el receptari i el recomanador. */
     /* R16-F (261110) · La compartició de la llista de la compra. */
+    /* IDEA-258b (Onada R24) · Precomanda per a la botiga local / de poble. */
     expect(NUCLI).toEqual([
-      `${APP}/nucli/cataleg.js`, `${APP}/nucli/comparticio.js`, `${APP}/nucli/copia.js`, `${APP}/nucli/index.js`,
-      `${APP}/nucli/ingredients.js`, `${APP}/nucli/nevera.js`, `${APP}/nucli/productes.js`, `${APP}/nucli/receptes.js`,
-      `${APP}/nucli/recomanador.js`
+      `${APP}/nucli/cataleg.js`, `${APP}/nucli/comparticio.js`, `${APP}/nucli/copia.js`, `${APP}/nucli/encarrec.js`,
+      `${APP}/nucli/index.js`, `${APP}/nucli/ingredients.js`, `${APP}/nucli/nevera.js`, `${APP}/nucli/productes.js`,
+      `${APP}/nucli/receptes.js`, `${APP}/nucli/recomanador.js`
     ]);
   });
 

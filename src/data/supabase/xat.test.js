@@ -7,9 +7,9 @@ import { XAT_SEED_IDS, XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } fr
 
 /* modePerDefecte fa de política d'execució del host (host.js): és el mode que
    resol una crida sense config, com la baixa que fa XatContext. */
-const mock = vi.hoisted(() => ({ getClient: vi.fn(), user: { id: 'A' }, modePerDefecte: 'remote', epoch: 0 }));
+const mock = vi.hoisted(() => ({ getClient: vi.fn(), user: { id: 'A' }, jwt: null, modePerDefecte: 'remote', epoch: 0 }));
 vi.mock('./config.js', () => ({ getClient: mock.getClient }));
-vi.mock('../identitat.js', () => ({ get versioSessio() { return mock.epoch; }, usuariDeSessio: () => mock.user, getDefaultUserId: () => mock.user?.id || 'convidat-seed' }));
+vi.mock('../identitat.js', () => ({ get versioSessio() { return mock.epoch; }, usuariDeSessio: () => mock.user, jwtPerBackend: () => mock.jwt, getDefaultUserId: () => mock.user?.id || 'convidat-seed' }));
 vi.mock('./runtime.js', () => ({
   getResolvedConfig: config => ({ ...config, runtimeDataMode: config.dataMode || mock.modePerDefecte }),
   generateUUID: () => 'uuid-generat'
@@ -25,7 +25,7 @@ const ALTRE = '00000000-0000-4000-8000-000000000042';
 const SEED = { dataMode: 'seed', tenantId: '00000000-0000-4000-8000-000000000000' };
 let query, client;
 beforeEach(() => {
-  vi.clearAllMocks(); mock.epoch = 0; mock.user = { id: 'A' }; mock.modePerDefecte = 'remote'; reiniciaLocalXat();
+  vi.clearAllMocks(); mock.epoch = 0; mock.user = { id: 'A' }; mock.jwt = null; mock.modePerDefecte = 'remote'; reiniciaLocalXat();
   query = { data: [], error: null, abortSignal: vi.fn().mockReturnThis() };
   client = { rpc: vi.fn().mockReturnValue(query), from: vi.fn().mockReturnValue(query), channel: vi.fn(), removeChannel: vi.fn().mockResolvedValue('ok') };
   mock.getClient.mockResolvedValue(client);
@@ -410,6 +410,22 @@ describe('xats d’ajuda per defecte en remot', () => {
       ['sdp-per-defecte:iaia', 'iaia']
     ]);
     expect(client.rpc).not.toHaveBeenCalled();
+  });
+  /* R22 (A-xat-fluxos-r1-1) · El JWT desat ha caducat i la renovació encara vola:
+     usuariDeSessio() torna null, però no és cap visitant. Abans tornava les dos
+     files per defecte com una lectura bona i el xat es buidava. */
+  it('R22 · amb el JWT desat però caducat no torna cap llista «bona»: SESSIO_CADUCADA reintentable i sense cridar el servidor', async () => {
+    mock.user = null;
+    mock.jwt = 'jwt-caducat';
+    await expect(loadFils(REMOT)).rejects.toMatchObject({ code: 'SESSIO_CADUCADA', retriable: true });
+    expect(client.rpc).not.toHaveBeenCalled();
+  });
+  it('R22 · amb sessió, un 401 de xat_fils_meus és un JWT rebutjat: SESSIO_CADUCADA reintentable, no la llista per defecte', async () => {
+    query.data = null;
+    query.error = { message: 'JWT expired', code: 'PGRST301' };
+    query.status = 401;
+    await expect(loadFils(REMOT)).rejects.toMatchObject({ code: 'SESSIO_CADUCADA', retriable: true });
+    expect(client.rpc).toHaveBeenCalledWith('xat_fils_meus', { p_tenant_id: REMOT.tenantId });
   });
   it('amb el missatge directe real amb l’entitat (xat_fils_meus porta el seu slug), el directe i, a la cua, Javi i la IAIA', async () => {
     query.data = [{ id: 'f-real', tipus: 'directe', titol: null, org_id: UUID_ENTITAT, entitat_nom: 'Sóc de Poble', com_entitat: false,

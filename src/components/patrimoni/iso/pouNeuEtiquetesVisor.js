@@ -47,7 +47,7 @@ export const POU_NEU_ETIQUETES_VISOR = Object.freeze({
     etiqueta: 'Interior navegable del Pou de Neu del Rentonar',
     etiquetaTall: 'El Pou de Neu del Rentonar tallat, vist des de fora',
     ajuda: 'Toca la vista i camina amb W A S D o les fletxes; arrossega per a mirar, o alça i abaixa la mirada amb R i F; Q i E pugen i baixen en vol.',
-    ajudaTactil: 'Arrossega a la part esquerra de la vista per a caminar i a la dreta per a mirar, o usa el coixinet de botons.',
+    ajudaTactil: 'Arrossega a la part esquerra de la vista per a caminar i a la dreta per a mirar, o utilitza el coixinet de botons.',
     ajudaTall: 'Secció A-B: de l’oest a l’est, com la de Segura; C-D: de nord a sud, pel túnel; el quart lleva un quart del pou, com als motors seccionats. L’angle de càmera el fa girar.',
     vora: 'Ací el desnivell és massa gran per a baixar a peu: tria «Vol» o una estació guiada.',
     cameres: 'Estacions guiades', accions: 'Accions de la visita',

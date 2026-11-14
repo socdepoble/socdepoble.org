@@ -22,8 +22,10 @@ const confirmaRacions = () => {
   fireEvent.change(screen.getByLabelText('Racions que vols preparar'), { target: { value: '4' } });
 };
 describe('Real Pedra Seca controls and recipe flow', () => {
-  it('has real product/unit options and a priced line after explicit choices', async () => {
-    munta(); await screen.findByRole('option', { name: /Farina · Prova/ });
+  it('has real product/unit options and a priced line after explicit choices, with zero supermarket chain branding in UI', async () => {
+    const { container } = munta(); await screen.findByRole('option', { name: /Farina · Prova/ });
+    expect(screen.getByLabelText('Busca productes al catàleg de rebost')).toBeTruthy();
+    expect(container.textContent).not.toMatch(/Mercadona|Hacendado|Bosque Verde|Deliplus/i);
     expect(screen.getByRole('option', { name: 'kg' }).value).toBe('kg');
     confirmaRacions();
     fireEvent.change(screen.getByLabelText('Producte per a 100 g de farina'), { target: { value: 'mer-farina' } });

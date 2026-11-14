@@ -107,11 +107,15 @@ describe('la llavor del Mur amb les dates de prova', () => {
        aplicades a la cultura rural» hi entra la primera, com la primera
        publicació del Mur. Abans, com a molt onze.
        P0-51 / IDEA-182 (261108) · Es retira Anatomia rural del Mur i
-       tornem al sostre de dotze, sense canviar la seua pàgina directa. */
-    expect(N).toBeLessThanOrEqual(12);
-    expect(IMPORTANTS_DEL_MUR).toHaveLength(12);
-    expect(IMPORTANTS_DEL_MUR.slice(0, 2).map(clau)).toEqual([
-      'feedPosts:noves-tecnologies-aplicades-a-la-cultura-rural', 'pages:fediversity'
+       tornem al sostre de dotze, sense canviar la seua pàgina directa.
+       Onada R23 (261113) · «La Veu de Sóc de Poble» hi entra la primera
+       davant del Pou de Neu: amb ella en són tretze. */
+    expect(N).toBeLessThanOrEqual(13);
+    expect(IMPORTANTS_DEL_MUR).toHaveLength(13);
+    expect(IMPORTANTS_DEL_MUR.slice(0, 3).map(clau)).toEqual([
+      'feedPosts:la-veu-de-soc-de-poble',
+      'feedPosts:noves-tecnologies-aplicades-a-la-cultura-rural',
+      'pages:fediversity',
     ]);
     expect(IMPORTANTS_DEL_MUR.map(clau)).not.toContain('pages:anatomia-rural');
   });

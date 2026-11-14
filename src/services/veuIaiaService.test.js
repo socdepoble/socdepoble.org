@@ -4,7 +4,9 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   CODI_VEU_AVORTADA,
   CODI_VEU_NO_DISPONIBLE,
+  TEMPS_LIMIT_NODE0_MS,
   atura,
+  desaVeuPreferida,
   estaParlant,
   fixaPuntNode0,
   normalitzaPerVeu,
@@ -190,6 +192,20 @@ describe('veuIaiaService · navegador', () => {
     await parla('  🌱  ');
     expect(synth.speak).not.toHaveBeenCalled();
   });
+
+  test('llig articles llargs (> 8.000 caràcters) sencers fins al final encadenant blocs sense tallar als 4.000 caràcters', async () => {
+    const { parlat } = instalaSintesi([{ lang: 'ca-ES-valencia', name: 'v' }]);
+    const frases = Array.from({ length: 120 }, (_, idx) => `Esta és la frase número ${idx + 1} sobre l’olivera i el Rentonar a La Torre de les Maçanes.`);
+    const articleLlarg = `${frases.join(' ')} Frase final de tancament de l’article.`;
+    expect(articleLlarg.length).toBeGreaterThan(8500);
+
+    await parla(articleLlarg, { idioma: 'ca' });
+    expect(parlat.length).toBeGreaterThanOrEqual(7);
+    const totReproduit = parlat.map((u) => u.text).join(' ');
+    expect(totReproduit).toContain('Esta és la frase número 1');
+    expect(totReproduit).toContain('Frase final de tancament de l’article.');
+    expect(estaParlant()).toBe(false);
+  });
 });
 
 describe('veuIaiaService · Node 0', () => {
@@ -293,10 +309,29 @@ describe('veuIaiaService · Node 0', () => {
     vi.stubGlobal('fetch', fetchFals);
     fixaPuntNode0(PUNT);
     const promesa = parla('Hola');
-    await vi.advanceTimersByTimeAsync(1600);
+    await vi.advanceTimersByTimeAsync(TEMPS_LIMIT_NODE0_MS + 100);
     await promesa;
     expect(parlat).toHaveLength(1);
     expect(parlat[0].text).toBe('Hola.');
+  });
+
+  test('encadena articles llargs pel Node 0 en blocs amb la veu triada (Matxa-TTS v2) i sense caure al navegador', async () => {
+    instalaAudio();
+    const { synth } = instalaSintesi();
+    desaVeuPreferida('arnau_valencia');
+    const fetchFals = vi.fn(async (url, opcions) => (opcions.method === 'GET' ? { ok: true } : respostaAudio()));
+    vi.stubGlobal('fetch', fetchFals);
+    fixaPuntNode0(PUNT);
+
+    const frases = Array.from({ length: 12 }, (_, idx) => `Frase número ${idx + 1} des de La Torre de les Maçanes sobre l’oli d’oliva i el Rentonar.`);
+    await parla(frases.join(' '), { idioma: 'ca' });
+
+    const posts = fetchFals.mock.calls.filter(([, o]) => o.method === 'POST');
+    expect(posts.length).toBeGreaterThanOrEqual(4);
+    for (const [, init] of posts) {
+      expect(JSON.parse(init.body).veu).toBe('arnau_valencia');
+    }
+    expect(synth.speak).not.toHaveBeenCalled();
   });
 
   test('una resposta que no és àudio o un error de xarxa també cauen al navegador', async () => {

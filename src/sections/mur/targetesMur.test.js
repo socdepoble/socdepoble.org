@@ -102,7 +102,7 @@ describe('P0-51 · invariant antiduplicats del Mur i del Calendari', () => {
     ['mateix article amb una consulta i fragment diferents', { id: 'copia', title: 'Un altre títol', mainHref: '/mur/noves-tecnologies-aplicades-a-la-cultura-rural?from=calendari#cos' }],
     ['àlies de l’article amb consulta i fragment diferents', { id: 'copia', title: 'Un altre títol', mainHref: '/page/anatomia-rural?from=calendari#cos' }],
     ['mateix slug amb un altre id', { id: 'copia', title: 'Un altre títol', slug: APP_SEED.feedPosts[0].slug }],
-    ['mateixa font amb paràmetre de seguiment', { id: 'copia', title: 'Un altre títol', source_url: `${APP_SEED.feedPosts[1].source_url}?utm_source=prova#cos` }],
+    ['mateixa font amb paràmetre de seguiment', { id: 'copia', title: 'Un altre títol', source_url: `${APP_SEED.feedPosts.find((post) => post.id === 'manifest-de-poble').source_url}?utm_source=prova#cos` }],
     ['la visibilitat privada tampoc els amaga', { ...APP_SEED.feedPosts[0], id: 'copia', visibility: 'private' }],
     ['la bandera hidden no amaga duplicats', { ...APP_SEED.feedPosts[0], id: 'copia', hidden: true, isPublished: false }]
   ])('la guarda detecta una regressió: %s', (_, copia) => {

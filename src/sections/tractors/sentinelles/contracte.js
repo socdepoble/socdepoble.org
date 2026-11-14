@@ -42,12 +42,15 @@ const CAMPS_AVIS = Object.freeze(['codi', 'severitat', 'missatge', 'font']);
 /* Les fonts que cobrix l'empremta de TOTS els sentinelles: la porta
    d'aprovació sencera, el registre, el panell que els aplica, el contracte
    amb el corredor i les peces comunes (comu.js, que descodifica els fitxers
-   amb csv.js de la Gestoria). Qui toca una d'estes, toca tots els sentinelles. */
+   amb csv.js de la Gestoria). Qui toca una d'estes, toca tots els sentinelles.
+   Onada R24 (CODEX-R24-12) · fitxaTractor.js: els títols de la fitxa, que el
+   diàleg d'aprovació i el panell de Tractors importen. */
 export const FONTS_COMUNES = Object.freeze([
   'src/sections/gestoria/nucli/csv.js',
   'src/sections/tractors/DialegAprovacio.jsx',
   'src/sections/tractors/PanellSentinelles.jsx',
   'src/sections/tractors/PanellTractors.jsx',
+  'src/sections/tractors/fitxaTractor.js',
   'src/sections/tractors/nucli/aprovacio.js',
   'src/sections/tractors/nucli/canonic.js',
   'src/sections/tractors/nucli/empremta.js',

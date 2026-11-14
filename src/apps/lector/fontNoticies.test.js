@@ -95,8 +95,9 @@ describe('el port no es fia de l’adaptador', () => {
     expect('motiu' in await port('inventat').llistaFonts().catch((e) => e)).toBe(false);
     /* Actualitzada a posta (261024 Lector): dos motius nous del servei, 'adreca' (una adreça personal
        que no es llig, cap font contactada; R5-08) i 'personals-off' (el servei no llig personals;
-       R5-01). Els cinc d'abans, igual i en el mateix ordre. */
-    expect(MOTIUS_NOTICIES).toEqual(['sense-connexio', 'temps', 'servidor', 'font', 'limit', 'adreca', 'personals-off']);
+       R5-01). Els cinc d'abans, igual i en el mateix ordre. Actualitzada a posta (R22,
+       A-frontissa-federacio-r1-1): 'sense-servei', la funció del backend sense desplegar. */
+    expect(MOTIUS_NOTICIES).toEqual(['sense-connexio', 'temps', 'servidor', 'font', 'limit', 'adreca', 'personals-off', 'sense-servei']);
   });
 
   test('salut(): sense salut a l’adaptador, cap caiguda; amb, neta i congelada', async () => {

@@ -1154,6 +1154,8 @@ describe('les fonts callades', () => {
      demanat res: correcció R5-08, mai «les fonts han enviat») i les teues quan el servei les té apagades. */
   test.each([
     ['servidor', 'El servei de notícies no respon. Pot ser cosa d’un moment.'],
+    /* R22 (A-frontissa-federacio-r1-1) · La funció sense desplegar: mai «cosa d'un moment». */
+    ['sense-servei', 'El servei de notícies encara no està en marxa. Quan s’active, les notícies arribaran ací.'],
     ['adreca', 'El servei de notícies no llig estes adreces (no són públiques o no són segures), i no ha demanat res a cap web.'],
     ['personals-off', 'Les fonts teues queden guardades en este dispositiu. El servei de notícies encara no les llig: les llegirà quan el servei les active.'],
     ['font', 'Les fonts han enviat una cosa que no sabem llegir com a notícies.'],

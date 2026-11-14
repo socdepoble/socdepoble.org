@@ -16,7 +16,11 @@
  * La pàgina (PaginaApp, amb la boina personal, el rellotge viu i l'ull):
  *   · LA PORTA del tractor 'gestoria.identitat': sense la signatura del
  *     Mestre, «Cal aprovar el tractor» i res més (ni el selector, ni la
- *     fitxa, ni la Finestreta: tot és codi del tractor).
+ *     fitxa, ni la Finestreta: tot és codi del tractor). Onada R24
+ *     (CODEX-R24-12) · Fora de DEV no hi ha panell de Tractors: l'acció de
+ *     l'avís és AccioAprovacio (tractors/AprovacioEnLinia.jsx), que aprova
+ *     ací, en este navegador. La pàgina porta la insígnia «En proves · Beta
+ *     oberta» (insigniaBetaOberta.js, A-gestoria-tpv-apps-1).
  *   · TRIA LA CARPETA arrel de la Gestoria (el selector del sistema, dins del
  *     clic; si no n'hi ha, un <input webkitdirectory>).
  *   · «QUÈ LLEGIRÉ I QUÈ NO»: cada paper de 01_Identitat_Legal i de
@@ -62,9 +66,12 @@ import { Camp, CampText, Casella, Selector } from '../../../components/PedraSeca
 import { PaginaApp } from '../../../components/PedraSeca/organismes/PaginaApp.jsx';
 import { Pestanyes } from '../../../components/PedraSeca/organismes/Pestanyes.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
+import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/AprovacioEnLinia.jsx';
 import { cofreDeLaGestoria, persistenciaDelCofre } from '../cofre/cofre.js';
 import PortaCofre from '../cofre/PortaCofre.jsx';
+import { ETIQUETA_BETA_OBERTA } from '../insigniaBetaOberta.js';
 import { formatImport } from '../nucli/diners.js';
+import { TRACTOR_IDENTITAT } from '../tractors.js';
 import { MOTIUS } from './nucli/filtreDocuments.js';
 import { FORMULARIS, VERIFICAR, omplixFormulari } from './nucli/formularisFinestreta.js';
 import { LIMITS_IDENTITAT } from './nucli/tractorIdentitat.js';
@@ -144,7 +151,8 @@ export const ETIQUETES_TIPUS_PAPER = Object.freeze({
 
 const ETIQUETES = Object.freeze([
   Object.freeze({ text: 'GESTORIA', className: 'sdp-badge-system' }),
-  Object.freeze({ text: 'Identitat i Finestreta', className: 'sdp-badge-category' })
+  Object.freeze({ text: 'Identitat i Finestreta', className: 'sdp-badge-category' }),
+  ETIQUETA_BETA_OBERTA
 ]);
 const ESTATS_TRACTOR = Object.freeze({
   pendent: 'encara no està aprovat',
@@ -376,13 +384,14 @@ const campsOrdenats = (camps, filtre) => Object.entries(camps ?? {}).filter(([, 
 /* La porta del tractor. */
 function PortaIdentitat({ h, onObreTractors }) {
   if (h.porta.carregant) return <Carregant etiqueta="Llegint les aprovacions dels tractors…" />;
-  if (h.aprovat) return null;
+  /* Aprovat: fora de DEV, «Revoca l’aprovació» (en DEV, res: es revoca al panell). */
+  if (h.aprovat) return <RevocaAprovacio porta={h.porta} id={TRACTOR_IDENTITAT.id} />;
   const estat = ESTATS_TRACTOR[h.fila?.estat] ?? ESTATS_TRACTOR.pendent;
   return (
     <Alerta to="avis" titol="Cal aprovar el tractor"
-      accions={<Boto varietat="primari" onClick={onObreTractors}>Obri el panell de Tractors</Boto>}>
+      accions={<AccioAprovacio porta={h.porta} id={TRACTOR_IDENTITAT.id} onObreTractors={onObreTractors} />}>
       {`La Fitxa d’identitat llig els teus papers amb el tractor «Gestoria · Fitxa d’identitat i Finestreta», que ${estat}. `}
-      {'Aprova’l amb la teua signatura al panell de Tractors: sense, cap paper es llig.'}
+      {`Aprova’l amb la teua signatura ${onSAprova()}: sense, cap paper es llig.`}
       {h.porta.error ? ` ${h.porta.error}` : ''}
     </Alerta>
   );

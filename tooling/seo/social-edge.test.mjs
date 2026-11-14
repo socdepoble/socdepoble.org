@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { prepareShell } from './prepare-social-shell.mjs';
-import { createSocialHandler, renderSocialHead, routeKey, selectMetadata, socialAgent } from './social-edge.mjs';
+import { createSocialHandler, esSenseIndexar, esServible, jsonLdDeRuta, renderSocialHead, routeKey, SCHEMES, selectMetadata, socialAgent } from './social-edge.mjs';
 import { ATRIBUT_SSR, CAP_SOCIAL_BASE } from '../../src/config/imatgeSocial.js';
 import { clauSocialDeRuta } from '../../src/config/rutaSocial.js';
 
@@ -36,7 +36,14 @@ test('head sense JS: un únic OG específic, canonical amb item i cos SPA intact
   assert.equal(d.title, "El Llibre d'Or | Sóc de Poble");
   assert.equal(d.querySelector('link[rel="canonical"]').href, origin + wiki);
   assert.equal(d.querySelector('meta[property="og:image:width"]'), null);
-  assert.ok(d.querySelector('#root')); assert.equal(d.querySelector('script').getAttribute('src'), '/assets/app.js');
+  /* P0-SEO-UNIVERSAL (13-11-2026) · Expectativa actualitzada a posta: el head porta ara el JSON-LD
+     propi de la ruta, un bloc de dades marcat (no s'executa); l'únic script amb src és el de l'app. */
+  assert.ok(d.querySelector('#root')); assert.equal(d.querySelector('script[src]').getAttribute('src'), '/assets/app.js');
+  assert.equal(d.querySelectorAll('script[src]').length, 1);
+  const ld = d.querySelectorAll('script[type="application/ld+json"]');
+  assert.equal(ld.length, 1); assert.ok(ld[0].hasAttribute(ATRIBUT_SSR));
+  assert.deepEqual(JSON.parse(ld[0].textContent), { '@context': 'https://schema.org', '@type': 'Article', headline: "El Llibre d'Or",
+    description: 'Història i decisions contrastades de Sóc de Poble.', url: origin + wiki, image: origin + '/assets/book.jpg' });
   assert.equal(response.headers.get('Content-Security-Policy'), "script-src 'self'");
   assert.equal(response.headers.get('Cache-Control'), 'no-store');
   assert.equal(response.headers.get('ETag'), null); assert.equal(response.headers.get('Last-Modified'), null);
@@ -47,7 +54,14 @@ test('quotes, entitats i tancaments de title no executen ni creen nodes', async 
   malicious.routes[wiki].title = '"><script src=https://evil.invalid/x></script></title>';
   malicious.routes[wiki].description = 'A & B " < >';
   const d = new JSDOM(await (await handler({ data: malicious })(get())).text()).window.document;
-  assert.equal(d.querySelectorAll('script').length, 1);
+  // P0-SEO-UNIVERSAL · Un sol script executable (el de l'app); el JSON-LD és un bloc de dades i el títol hostil hi és text.
+  assert.equal(d.querySelectorAll('script:not([type="application/ld+json"])').length, 1);
+  assert.equal(d.querySelectorAll('script[src]').length, 1);
+  const ld = d.querySelectorAll('script[type="application/ld+json"]');
+  assert.equal(ld.length, 1);
+  assert.equal(JSON.parse(ld[0].textContent).headline, malicious.routes[wiki].title);
+  assert.equal(JSON.parse(ld[0].textContent).description, 'A & B " < >');
+  assert.ok(!/[<>&]/.test(ld[0].textContent), 'cap <, > ni & cru dins del bloc');
   assert.equal(d.querySelector('meta[property="og:description"]').content, 'A & B " < >');
   assert.equal(d.title, malicious.routes[wiki].title + ' | Sóc de Poble');
 });
@@ -147,7 +161,9 @@ const nodesDelHead = html => new JSDOM(`<!doctype html><html><head>${html}</head
 test('cada node renderitzat porta data-sdp-ssr, sense og:site_name ni og:locale', () => {
   const metadata = { ...entry(wiki, "El Llibre d'Or"), image: { ...entry(wiki, '').image, type: 'image/png', width: 1200, height: 630 } };
   const nodes = [...nodesDelHead(renderSocialHead(metadata, origin))];
-  assert.equal(nodes.length, 17);
+  // P0-SEO-UNIVERSAL · 17 d'abans i el JSON-LD de la ruta.
+  assert.equal(nodes.length, 18);
+  assert.equal(nodes.filter(n => n.tagName === 'SCRIPT' && n.getAttribute('type') === 'application/ld+json').length, 1);
   for (const node of nodes) assert.ok(node.hasAttribute(ATRIBUT_SSR), node.outerHTML);
   assert.equal(nodes.filter(n => /^og:(site_name|locale)$/.test(n.getAttribute('property') || '')).length, 0);
   assert.equal(nodes.filter(n => n.getAttribute('name') === 'robots').length, 0);
@@ -186,7 +202,8 @@ test('ogUrl canvia només l’og:url: el canonical continua sent el de les metad
   }
   // Escapat com la resta.
   const hostil = renderSocialHead(entry(wiki, 'x'), origin, { ogUrl: `${cami}"><script>alert(1)</script>` });
-  assert.equal([...nodesDelHead(hostil)].filter(n => n.tagName === 'SCRIPT').length, 0);
+  assert.equal([...nodesDelHead(hostil)].filter(n => n.tagName === 'SCRIPT' && n.getAttribute('type') !== 'application/ld+json').length, 0);
+  assert.equal([...nodesDelHead(hostil)].filter(n => n.tagName === 'SCRIPT').length, 1, 'només el JSON-LD de la ruta');
 });
 test('routeKey: la forma de camí és el document; on dona clau, és la del client (clauSocialDeRuta)', () => {
   assert.equal(routeKey(origin + '/wikidepoble/03_llibre_d_or_memoria_episodica'), wiki);
@@ -199,4 +216,49 @@ test('routeKey: la forma de camí és el document; on dona clau, és la del clie
   }
   // On el client cau a la llista, el servidor no dona cap head específic.
   for (const ruta of ['/wikidepoble?item=a&item=b', '/wikidepoble?item=..%2Fx']) assert.equal(routeKey(origin + ruta), null, ruta);
+});
+
+/* P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) · El JSON-LD propi de cada ruta i
+   l'OpenGraph específic sense indexar (/perfil, una publicació veïnal del Mur). */
+test('JSON-LD: un sol bloc marcat amb @type, name o headline, description, url i image; escapat', () => {
+  const ld = html => [...nodesDelHead(html)].filter(n => n.tagName === 'SCRIPT');
+  const fitxa = { ...entry('/empresa/olidelatorre', 'Oli de La Torre'), type: 'website', schema: 'Organization' };
+  const [bloc] = ld(renderSocialHead(fitxa, origin));
+  assert.equal(bloc.getAttribute('type'), 'application/ld+json'); assert.ok(bloc.hasAttribute(ATRIBUT_SSR));
+  assert.deepEqual(JSON.parse(bloc.textContent), { '@context': 'https://schema.org', '@type': 'Organization', name: 'Oli de La Torre',
+    description: fitxa.description, url: origin + '/empresa/olidelatorre', image: origin + '/assets/book.jpg' });
+  // Sense schema: Article per a un article i WebPage per a la resta.
+  assert.equal(JSON.parse(ld(renderSocialHead(entry(wiki, 'Doc'), origin))[0].textContent)['@type'], 'Article');
+  assert.equal(JSON.parse(ld(renderSocialHead({ ...entry('/projecte', 'P'), type: 'website' }, origin))[0].textContent)['@type'], 'WebPage');
+  // Sense canonical ni og:url (un fitxer servit a més d'una URL) i sense metadades, cap JSON-LD.
+  assert.equal(ld(renderSocialHead(entry('/wikidepoble', 'Wiki'), origin, { canonical: false })).length, 0);
+  assert.equal(ld(renderSocialHead(null, origin)).length, 0);
+  // Un títol amb </script> no trenca l'HTML ni crea cap node.
+  const hostil = renderSocialHead({ ...fitxa, title: '</script><script>alert(1)</script><img src=x>', description: 'a & b \u2028 c' }, origin);
+  assert.ok(!hostil.includes('</script><script>'));
+  const nodes = [...nodesDelHead(hostil)];
+  assert.equal(nodes.filter(n => n.tagName === 'SCRIPT').length, 1); assert.equal(nodes.filter(n => n.tagName === 'IMG').length, 0);
+  assert.equal(JSON.parse(nodes.find(n => n.tagName === 'SCRIPT').textContent).name, '</script><script>alert(1)</script><img src=x>');
+  assert.ok(!/[<>&\u2028\u2029]/.test(jsonLdDeRuta({ title: '<&>\u2028', description: 'x', type: 'website' }, origin, origin + '/a.png')));
+  assert.deepEqual([...SCHEMES], ['WebPage', 'Article', 'CollectionPage', 'Organization', 'Person', 'SoftwareApplication']);
+});
+test('OpenGraph sense indexar: meta robots, og:url i cap canonical; només amb les dos marques explícites', () => {
+  const llista = { ...entry('/perfil', 'Gent i Entitats'), type: 'website', index: false, compartible: true, schema: 'CollectionPage' };
+  assert.ok(esServible(llista) && esSenseIndexar(llista));
+  const nodes = [...nodesDelHead(renderSocialHead(llista, origin))];
+  const valor = name => nodes.filter(n => n.getAttribute('property') === name || n.getAttribute('name') === name).map(n => n.getAttribute('content'));
+  assert.deepEqual(valor('robots'), ['noindex, nofollow']);
+  assert.deepEqual(valor('og:url'), [origin + '/perfil']);
+  assert.equal(nodes.filter(n => n.tagName === 'LINK').length, 0);
+  assert.equal(nodes.find(n => n.tagName === 'TITLE').textContent, 'Gent i Entitats | Sóc de Poble');
+  assert.equal(JSON.parse(nodes.find(n => n.tagName === 'SCRIPT').textContent)['@type'], 'CollectionPage');
+  assert.ok(nodes.every(n => n.hasAttribute(ATRIBUT_SSR)));
+  // Al manifest: la parella sencera es servix; un index:false sol (ha deixat de ser pública), mai; un schema fora de la llista, tampoc.
+  const data = structuredClone(manifest); data.routes['/perfil'] = llista;
+  assert.equal(selectMetadata(data, origin + '/perfil').title, 'Gent i Entitats');
+  for (const mutate of [e => { delete e.compartible; }, e => { e.compartible = 'true'; }, e => { e.index = 'false'; }, e => { e.schema = 'Product'; }]) {
+    const copia = structuredClone(data); mutate(copia.routes['/perfil']);
+    assert.equal(selectMetadata(copia, origin + '/perfil'), null);
+  }
+  assert.ok(!esServible({ index: false }) && !esServible(null) && esServible({ index: true }) && !esSenseIndexar({ index: true, compartible: true }));
 });

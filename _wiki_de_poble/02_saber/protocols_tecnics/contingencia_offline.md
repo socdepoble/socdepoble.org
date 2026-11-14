@@ -11,15 +11,15 @@ Este document consolida coneixement útil de les antigues propostes de PWA, CRDT
 
 ## Estat observable
 
-- La PWA usa `vite-plugin-pwa`; `vite.config.js` declara `registerType: 'autoUpdate'` i `src/main.jsx` registra el Service Worker immediatament.
-- La secció de gestoria usa Dexie sobre IndexedDB.
+- La PWA utilitza `vite-plugin-pwa`; `vite.config.js` declara `registerType: 'autoUpdate'` i `src/main.jsx` registra el Service Worker immediatament.
+- La secció de gestoria utilitza Dexie sobre IndexedDB.
 - No s’ha localitzat una implementació activa de Y.js, PowerSync, OPFS, una cua CRDT general, compactació de tombstones o restauració atòmica.
 
 Per tant, «Online-First complet», «sincronització sense conflictes» i «recuperació garantida» encara no són garanties vàlides.
 
 ## 1. App shell i actualitzacions PWA
 
-L’app shell pot usar cache-first per a assets versionats. HTML, API i dades d’usuari necessiten estratègies pròpies; no s’aplica cache-first indiscriminadament.
+L’app shell pot utilitzar cache-first per a assets versionats. HTML, API i dades d’usuari necessiten estratègies pròpies; no s’aplica cache-first indiscriminadament.
 
 Abans de canviar la política actual `autoUpdate`, cal una prova que cobrisca:
 
@@ -42,7 +42,7 @@ Una actualització no pot purgar IndexedDB com a efecte col·lateral. Caché d�
 
 Una cua local futura ha de conservar cada mutació fins a rebre un reconeixement inequívoc del servidor. Errors parcials, taules no suportades i respostes ambigües no poden buidar la cua.
 
-Cada element necessita identificador idempotent, estat, comptador d’intents i error diagnosticable. Els reintents usen backoff, límit i acció manual; una connexió aparent no prova que la sincronització haja acabat.
+Cada element necessita identificador idempotent, estat, comptador d’intents i error diagnosticable. Els reintents utilitzen backoff, límit i acció manual; una connexió aparent no prova que la sincronització haja acabat.
 
 ## 4. Conflictes i CRDT
 

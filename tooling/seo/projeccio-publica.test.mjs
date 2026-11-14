@@ -10,7 +10,9 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {spawnSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
-import {ESCAPADA, entornDelBuild, esPublicada, main, origensDImatge, projeccioPublica, variablesDelBuild} from './projeccio-publica.mjs';
+import {ESCAPADA, entornDelBuild, esPublicada, main, NOM_DEL_REBUT_DE_PROJECCIO, origensDImatge, projeccioPublica, variablesDelBuild} from './projeccio-publica.mjs';
+import {COLUMNES_DIRECTORI, ESCAPADA_DIRECTORI_BUIT, INTERRUPTOR_MUR} from './fonts-veinals.mjs';
+import {detectaConvertidor, pngDeProva} from './jpeg-social.mjs';
 import {buildSocialManifest, llegixSnapshot, MAX_SNAPSHOT} from './build-social-manifest.mjs';
 import {prerenderSocial} from './prerender-social.mjs';
 
@@ -24,6 +26,11 @@ const jwt=role=>[b64({alg:'HS256',typ:'JWT'}),b64({iss:'supabase',ref:'exemple',
 const ANON=jwt('anon');
 const ENTORN=Object.freeze({VITE_SUPABASE_URL:SUPABASE,VITE_SUPABASE_ANON_KEY:ANON,VITE_TENANT_ID:TENANT,VITE_DATA_MODE:'remote'});
 const CAMPS=['sectionId','id','visibility','status','title','description','image','imageAlt'];
+/* P0-SEO-UNIVERSAL (13-11-2026) · Les fitxes del directori porten deu camps; una publicació veïnal del Mur, nou. */
+const CAMPS_DE_PERFIL=['sectionId','id','slug','tipus','visibility','status','title','description','image','imageAlt'];
+const CAMPS_VEINALS=[...CAMPS,'origen'];
+const FORN=Object.freeze({id:'c0c1d2e3-f405-4a16-8b27-c38d49e5a6f7',slug:'forn-de-la-torre',name:'Forn de la Torre',kind:'company',lema:'Pa de llenya cada dia',description:null,logo_url:null,hero_url:null});
+const esPerfil=e=>e.sectionId==='perfil';
 const FOTO=`${SUPABASE}/storage/v1/object/public/mitjans/${TENANT}/aplec.png`;
 
 /* Les dades del poble a app_content, com les servix PostgREST a l'anònim. */
@@ -45,22 +52,43 @@ const DADES=()=>({
 // Fixtures de release: signada/forana no tenen foto; els casos bloquejats es proven a banda.
 const DADES_RELEASE=()=>{const dades=DADES();for(const e of dades.feedPosts)if(['signada','forana'].includes(e.id))delete e.image_url;return dades;};
 const json=(cos,{status=200,tipus='application/json; charset=utf-8'}={})=>new Response(typeof cos==='string'?cos:JSON.stringify(cos),{status,headers:{'content-type':tipus}});
-/* El backend fals: comprova cada petició (columnes, filtre, límit, clau anon) i en guarda la traça. */
-function backend(dades=DADES(),{falla=null}={}) {
+/* El backend fals: comprova cada petició (columnes, filtre, límit, clau anon) i en guarda la traça.
+   P0-SEO-UNIVERSAL (13-11-2026) · També respon al directori públic (organization_directory, amb les huit
+   columnes explícites, la població, l'ordre per antiguitat i la paginació) i a la RPC del Mur públic, per GET. */
+function backend(dades=DADES(),{falla=null,directori=[FORN],mur=[]}={}) {
   const crides=[];
   const fetchImpl=async (href,opcions={})=>{
     const url=new URL(href);crides.push({url,opcions});
     if(falla){const r=falla(url,crides.length);if(r)return typeof r==='function'?r():r;}
-    assert.equal(url.origin,SUPABASE);assert.equal(url.pathname,'/rest/v1/app_content');
-    assert.equal(url.searchParams.get('select'),'key,payload');assert.equal(url.searchParams.get('limit'),'1');
-    assert.equal(url.searchParams.get('tenant_id'),`eq.${TENANT}`);
+    assert.equal(url.origin,SUPABASE);
+    assert.equal(opcions.method,'GET');assert.equal(opcions.body,undefined,'mai un cos: només lectures');
     assert.equal(opcions.headers.apikey,ANON);assert.equal(opcions.headers.Authorization,`Bearer ${ANON}`);
     assert.equal(opcions.redirect,'error');assert.ok(opcions.signal,'amb termini');
+    if(url.pathname==='/rest/v1/organization_directory') {
+      assert.equal(url.searchParams.get('select'),COLUMNES_DIRECTORI.join(','));
+      assert.ok(!/\*|correu|presentacio|town_name|tenant_id,|created_at,/.test(url.searchParams.get('select')),'mai select=* ni columnes de més');
+      assert.equal(url.searchParams.get('tenant_id'),`eq.${TENANT}`);assert.equal(url.searchParams.get('order'),'created_at.asc,id.asc');
+      const limit=Number(url.searchParams.get('limit')),offset=Number(url.searchParams.get('offset'));
+      assert.ok(Number.isInteger(limit)&&limit>=1&&limit<=100&&Number.isInteger(offset)&&offset>=0);
+      return json(directori.slice(offset,offset+limit));
+    }
+    if(url.pathname==='/rest/v1/rpc/llig_mur_public') {
+      assert.equal(url.searchParams.get('p_tenant_id'),TENANT);assert.equal(url.searchParams.get('p_limit'),'200');
+      const [abans,id]=[url.searchParams.get('p_before_created_at'),url.searchParams.get('p_before_id')];
+      assert.equal(abans===null,id===null,'el cursor porta els dos camps o cap');
+      const inici=abans===null?0:mur.findIndex(f=>f.created_at===abans&&f.id===id)+1;
+      assert.ok(abans===null||inici>0,'el cursor és una fila servida');
+      return json(mur.slice(inici,inici+200));
+    }
+    assert.equal(url.pathname,'/rest/v1/app_content');
+    assert.equal(url.searchParams.get('select'),'key,payload');assert.equal(url.searchParams.get('limit'),'1');
+    assert.equal(url.searchParams.get('tenant_id'),`eq.${TENANT}`);
     const clau=url.searchParams.get('key').replace(/^eq\./,'');
     return json(Object.hasOwn(dades,clau)?[{key:clau,payload:dades[clau]}]:[]);
   };
   return {fetchImpl,crides};
 }
+const lesDe=(crides,cami)=>crides.filter(c=>c.url.pathname===cami);
 const sensePausa=async ()=>{};
 const projecta=(extra={})=>projeccioPublica({entorn:entornDelBuild(ENTORN),origin,pausa:sensePausa,...extra});
 function carpeta(t,prefix='sdp-projeccio-') {
@@ -97,10 +125,17 @@ test('les VITE_* del build: loadEnv de Vite sobre els .env del mode, i l’orige
 test('només el que és públic i publicat, amb els huit camps; les fotos privades o d’altri, cap',async ()=>{
   const {fetchImpl,crides}=backend();
   const {snapshot,rebut}=await projecta({fetchImpl});
-  assert.equal(crides.length,3,'una petició per clau');
-  assert.deepEqual(crides.map(c=>c.url.searchParams.get('key')).sort(),['eq.events','eq.feedPosts','eq.marketItems']);
-  assert.deepEqual(snapshot.map(e=>`${e.sectionId}/${e.id}`),['events/7','mercat/samarreta-socdepoble','mur/aplec-2026','mur/forana','mur/signada']);
-  for(const element of snapshot)assert.deepEqual(Object.keys(element),CAMPS);
+  /* P0-SEO-UNIVERSAL (13-11-2026) · Expectativa actualitzada a posta: una petició per clau d'app_content i una al
+     directori públic (abans, tres); cap a la RPC del Mur sense el seu interruptor. */
+  assert.equal(crides.length,4,'una petició per clau i una al directori');
+  assert.deepEqual(lesDe(crides,'/rest/v1/app_content').map(c=>c.url.searchParams.get('key')).sort(),['eq.events','eq.feedPosts','eq.marketItems']);
+  assert.equal(lesDe(crides,'/rest/v1/organization_directory').length,1);assert.equal(lesDe(crides,'/rest/v1/rpc/llig_mur_public').length,0);
+  assert.deepEqual(snapshot.map(e=>`${e.sectionId}/${e.id}`),['events/7','mercat/samarreta-socdepoble','mur/aplec-2026','mur/forana','mur/signada',`perfil/${FORN.id}`]);
+  for(const element of snapshot)assert.deepEqual(Object.keys(element),esPerfil(element)?CAMPS_DE_PERFIL:CAMPS);
+  assert.deepEqual(snapshot.at(-1),{sectionId:'perfil',id:FORN.id,slug:'forn-de-la-torre',tipus:'entitat',visibility:'public',status:'published',
+    title:'Forn de la Torre',description:'Pa de llenya cada dia',image:null,imageAlt:''});
+  assert.equal(rebut.murVeinal,'apagat');
+  assert.deepEqual([rebut.directori.llegides,rebut.directori.publicades,rebut.directori.tallat],[1,1,false]);
   const per=Object.fromEntries(snapshot.map(e=>[e.id,e]));
   assert.deepEqual(per['aplec-2026'],{sectionId:'mur',id:'aplec-2026',visibility:'public',status:'published',title:'Aplec de tardor',
     description:'La festa del poble',image:FOTO,imageAlt:'Aplec de tardor'});
@@ -112,7 +147,7 @@ test('només el que és públic i publicat, amb els huit camps; les fotos privad
   assert.ok(!/NO_EXPORTAR|COS_SENCER|sb_secret|evil[.]example|object\/sign|token=/.test(serial),serial);
   assert.ok(!serial.includes(ANON));
   assert.deepEqual(rebut.seccions.mur,{llegides:9,publicades:3,privades:3,id:2,buides:0,secrets:1,duplicades:0,imatges:{triada:1,bloquejada:2,absent:0}});
-  assert.equal(rebut.publicades,5);assert.match(rebut.sha256,/^[a-f0-9]{64}$/);
+  assert.equal(rebut.publicades,6);assert.match(rebut.sha256,/^[a-f0-9]{64}$/);
   assert.ok(!esPublicada({status:'pendent'})&&!esPublicada({visibility:'members'})&&!esPublicada([])&&esPublicada({status:'publicada'}));
 });
 
@@ -128,7 +163,8 @@ test('guardes: secret a la descripció, status null, altres buckets i ids repeti
     {id:'avatar',title:'Avatar',entradilla:'Un altre bucket',image_url:`${SUPABASE}/storage/v1/object/public/avatars/u1.png`},
     {id:'privats',title:'Privats',entradilla:'El bucket privat',image_url:`${SUPABASE}/storage/v1/object/public/mitjans_privats/u1/dni.webp`}
   ],marketItems:[],events:[]};
-  const {snapshot,rebut}=await projecta({fetchImpl:backend(dades).fetchImpl});
+  const {snapshot:sencer,rebut}=await projecta({fetchImpl:backend(dades).fetchImpl});
+  const snapshot=sencer.filter(e=>!esPerfil(e));
   assert.deepEqual(snapshot.map(e=>e.id),['Aplec','avatar','privats']);
   assert.deepEqual(snapshot.map(e=>e.image),[null,null,null],'cap bucket que no siga mitjans');
   assert.ok(!/NO_EXPORTAR|sb_secret|avatars|mitjans_privats/.test(JSON.stringify(snapshot)));
@@ -149,7 +185,7 @@ test('política de fallada: xarxa, HTTP, JSON i mida rebutgen; un 503 o la xarxa
   await assert.rejects(projecta({fetchImpl:clauDolenta.fetchImpl}),/HTTP 401/);
   assert.equal(clauDolenta.crides.length,1,'un 401 no es reintenta');
   const transitori=backend(DADES(),{falla:(url,n)=>n===1?json('',{status:503}):null});
-  assert.equal((await projecta({fetchImpl:transitori.fetchImpl})).snapshot.length,5);
+  assert.equal((await projecta({fetchImpl:transitori.fetchImpl})).snapshot.length,6);
   for(const [falla,motiu] of [
     [()=>json('<html>',{tipus:'text/html'}),/sense JSON/],
     [()=>json('[{"key":"feedPosts"',{}),/JSON/],
@@ -178,12 +214,17 @@ test('la CLI: escriu el snapshot fora de dist/; si falla, cap fitxer (ni el vell
   const bo={stdout:sortida(),stderr:sortida()};
   assert.equal(await main(['--root',root,'--out',out],{env:{},entorn,fetchImpl:backend(DADES_RELEASE()).fetchImpl,pausa:sensePausa,...bo}),0,bo.stderr.text);
   const escrit=llegixSnapshot(out);
-  assert.equal(escrit.length,5);assert.equal(JSON.parse(bo.stdout.text).publicades,5);
+  assert.equal(escrit.length,6);assert.equal(JSON.parse(bo.stdout.text).publicades,6);
+  // P0-SEO-UNIVERSAL · El rebut de la projecció, en fitxer al costat del snapshot (el prerender l'afig al seu).
+  const rebutFitxer=path.join(path.dirname(out),NOM_DEL_REBUT_DE_PROJECCIO);
+  assert.deepEqual(JSON.parse(fs.readFileSync(rebutFitxer,'utf8')).directori.exclosos,{forma:0,secrets:0,contacteAlNom:0,suplantacio:0,buida:0});
+  assert.ok(!fs.readFileSync(rebutFitxer,'utf8').includes(ANON)&&!fs.readFileSync(rebutFitxer,'utf8').includes(SUPABASE));
   assert.ok(!bo.stdout.text.includes(ANON)&&!bo.stdout.text.includes(SUPABASE),'el rebut no porta ni la clau ni l’URL');
   const mal={stdout:sortida(),stderr:sortida()};
   const fetchImpl=async ()=>{throw new Error(`connexió tallada amb apikey=${ANON}`);};
   assert.equal(await main(['--root',root,'--out',out],{env:{},entorn,fetchImpl,pausa:sensePausa,...mal}),1);
   assert.equal(fs.existsSync(out),false,'el snapshot vell no sobreviu');
+  assert.equal(fs.existsSync(rebutFitxer),false,'el rebut vell tampoc');
   const error=JSON.parse(mal.stderr.text.trim());
   assert.equal(error.valid,false);assert.match(error.error,/\[clau\]/);assert.match(error.ajuda,new RegExp(ESCAPADA));
   assert.ok(!mal.stderr.text.includes(ANON));
@@ -221,14 +262,14 @@ test('la CLI: el vell s’esborra abans de llegir; l’escapada només és «1»
   const {fetchImpl,crides}=backend(DADES_RELEASE());const vist=[];
   const mirant=async (href,opcions)=>{vist.push(fs.existsSync(out));return fetchImpl(href,opcions);};
   assert.equal(await main(['--root',root,'--out',out],{env:{},entorn,fetchImpl:mirant,pausa:sensePausa,stdout:sortida(),stderr:sortida()}),0);
-  assert.deepEqual(vist,[false,false,false],'cap petició amb el snapshot vell al disc');
+  assert.deepEqual(vist,[false,false,false,false],'cap petició amb el snapshot vell al disc');
   for(const valor of ['0','true',' 1']) {
     const b=backend(DADES_RELEASE());
     assert.equal(await main(['--root',root,'--out',out],{env:{[ESCAPADA]:valor},entorn,fetchImpl:b.fetchImpl,pausa:sensePausa,stdout:sortida(),stderr:sortida()}),0,valor);
-    assert.equal(b.crides.length,3,`${ESCAPADA}=${JSON.stringify(valor)} no és l’escapada`);
-    assert.equal(llegixSnapshot(out).length,5,valor);
+    assert.equal(b.crides.length,4,`${ESCAPADA}=${JSON.stringify(valor)} no és l’escapada`);
+    assert.equal(llegixSnapshot(out).length,6,valor);
   }
-  assert.equal(crides.length,3);
+  assert.equal(crides.length,4);
   // node_modules/.cache/sdp-social → dist: el camí escrit no diu dist/, però hi cau.
   fs.mkdirSync(path.join(root,'dist'));fs.mkdirSync(path.join(root,'node_modules','.cache'),{recursive:true});
   fs.symlinkSync(path.join(root,'dist'),path.join(root,'node_modules','.cache','sdp-social'));
@@ -259,6 +300,12 @@ function lloc(t) {
   put('dist/index.html',SHELL);
   return {root,dist:path.join(root,'dist'),put};
 }
+/* P0-SEO-UNIVERSAL · El convertidor fals de la cadena (el de veres, Pillow aïllat, té la seua prova a jpeg-social.test.mjs):
+   un JPEG baseline mínim de 1200x630 amb els segments bàsics. */
+const jpegBaseline=cos=>Buffer.concat([Buffer.from([0xff,0xd8,0xff,0xe0,0x00,0x10]),Buffer.alloc(14),Buffer.from([0xff,0xdb,0x00,0x03,0x00]),
+  Buffer.from([0xff,0xc0,0x00,0x11,0x08,630>>8,630&255,1200>>8,1200&255,0x03]),Buffer.alloc(9),Buffer.from([0xff,0xc4,0x00,0x03,0x00,0xff,0xda,0x00,0x03,0x00]),cos,Buffer.from([0xff,0xd9])]);
+const convertidor={convertix:async bytes=>jpegBaseline(Buffer.from(`fals:${bytes.length}`,'latin1'))};
+const OG=/^https:\/\/socdepoble\.org\/assets\/og\/[a-f0-9]{24}\.jpg$/;
 const imatges=(bytes=png(1200,630),tipus='image/png')=>{
   const crides=[];
   return {crides,fetchImpl:async (href,opcions)=>{crides.push({href,opcions});return new Response(bytes,{status:200,headers:{'content-type':tipus}});}};
@@ -272,14 +319,18 @@ test('cadena de release: la publicació remota té la seua pàgina i la seua pri
   const r={stdout:sortida(),stderr:sortida()};
   assert.equal(await main(['--root',cache,'--out',out],{env:{},entorn,fetchImpl:backend(DADES_RELEASE()).fetchImpl,pausa:sensePausa,...r}),0,r.stderr.text);
   const primer=lloc(t);const fotos=imatges();
-  const rebut=await prerenderSocial({root:primer.root,dist:'dist',origin,policyRoot:projectRoot,JSDOM,publicSnapshot:llegixSnapshot(out),imageOrigins:[SUPABASE],fetchImpl:fotos.fetchImpl});
+  const rebut=await prerenderSocial({root:primer.root,dist:'dist',origin,policyRoot:projectRoot,JSDOM,publicSnapshot:llegixSnapshot(out),imageOrigins:[SUPABASE],fetchImpl:fotos.fetchImpl,convertidor});
   assert.ok(rebut.routesWritten.includes('/mur/aplec-2026'),rebut.routesWritten.join(' '));
-  assert.deepEqual(rebut.remoteImages,[FOTO]);
+  /* P0-SEO-UNIVERSAL (13-11-2026) · Expectativa actualitzada a posta: la foto remota ja no va al <head> amb la URL de
+     Storage; es materialitza a dist/assets/og en JPEG de 1200x630 i el head porta la del propi origen. */
+  assert.equal(rebut.remoteImages.length,1);assert.match(rebut.remoteImages[0],OG);
   assert.deepEqual(fotos.crides.map(c=>[c.href,c.opcions.redirect,c.opcions.method]),[[FOTO,'error','GET']]);
   const aplec=llig(primer.dist,'mur/aplec-2026/index.html');
   assert.equal(aplec.title,'Aplec de tardor | Sóc de Poble');
-  assert.deepEqual(['og:image','og:image:type','og:image:width','og:image:height','og:image:alt'].map(n=>prop(aplec,n)),[FOTO,'image/png','1200','630','Aplec de tardor']);
-  assert.equal(aplec.querySelector('meta[name="twitter:image"]').content,FOTO);
+  assert.deepEqual(['og:image','og:image:type','og:image:width','og:image:height','og:image:alt'].map(n=>prop(aplec,n)),[rebut.remoteImages[0],'image/jpeg','1200','630','Aplec de tardor']);
+  assert.equal(aplec.querySelector('meta[name="twitter:image"]').content,rebut.remoteImages[0]);
+  assert.ok(fs.existsSync(path.join(primer.dist,new URL(rebut.remoteImages[0]).pathname)));
+  assert.ok(!fs.readFileSync(path.join(primer.dist,'mur/aplec-2026/index.html'),'utf8').includes(SUPABASE));
   // La signada i la forana: la targeta genèrica, i cap petició per a elles.
   for(const id of ['signada','forana'])assert.equal(prop(llig(primer.dist,`mur/${id}/index.html`),'og:image'),origin+'/assets/system/ui/og-socdepoble-1200x630.png',id);
   for(const id of ['privada','esborrany','arxivada','amb-secret'])assert.equal(fs.existsSync(path.join(primer.dist,'mur',id)),false,id);
@@ -288,7 +339,8 @@ test('cadena de release: la publicació remota té la seua pàgina i la seua pri
   assert.equal(await main(['--root',cache,'--out',out],{env:{},entorn,fetchImpl:backend(dades).fetchImpl,pausa:sensePausa,stdout:sortida(),stderr:sortida()}),0);
   assert.ok(!llegixSnapshot(out).some(e=>e.id==='aplec-2026'));
   const segon=lloc(t);
-  const rebut2=await prerenderSocial({root:segon.root,dist:'dist',origin,policyRoot:projectRoot,JSDOM,publicSnapshot:llegixSnapshot(out),imageOrigins:[SUPABASE],fetchImpl:imatges().fetchImpl});
+  const rebut2=await prerenderSocial({root:segon.root,dist:'dist',origin,policyRoot:projectRoot,JSDOM,publicSnapshot:llegixSnapshot(out),imageOrigins:[SUPABASE],fetchImpl:imatges().fetchImpl,convertidor});
+  assert.deepEqual(rebut2.remoteImages,[],'la foto de la revocada tampoc es materialitza');
   assert.ok(!rebut2.routesWritten.includes('/mur/aplec-2026'));
   assert.equal(fs.existsSync(path.join(segon.dist,'mur','aplec-2026')),false);
 });
@@ -315,7 +367,7 @@ const passosDeBuildSocial=()=>JSON.parse(fs.readFileSync(path.join(projectRoot,'
 /* Els arguments d'un pas amb els valors de `valors` (--root, --out…) i l'script del projecte. */
 const canvia=(pas,valors)=>pas.slice(1).map((arg,i,args)=>(i>0&&Object.hasOwn(valors,args[i-1])?valors[args[i-1]]:arg)).map(arg=>arg.startsWith('tooling/')?path.join(projectRoot,arg):arg);
 /* L'entorn del procés sense cap VITE_* ni l'escapada. */
-const entornNet=()=>Object.fromEntries(Object.entries(process.env).filter(([clau])=>!clau.startsWith('VITE_')&&clau!==ESCAPADA));
+const entornNet=()=>Object.fromEntries(Object.entries(process.env).filter(([clau])=>!clau.startsWith('VITE_')&&!clau.startsWith('SDP_SOCIAL_')&&clau!==ESCAPADA));
 test('build:social de package.json: projecció i prerender amb el mateix --snapshot; la fallada atura la cadena',async t=>{
   const passos=passosDeBuildSocial();
   assert.equal(passos.length,2,passos.join(' && '));
@@ -350,7 +402,10 @@ test('build:social de package.json: projecció i prerender amb el mateix --snaps
    procés i un fetch fals precarregat (--import) que falla davant de qualsevol
    host o camí que no espera. La foto del bucket públic ha d'arribar a og:image
    per l'origen que la CLI del prerender trau de VITE_SUPABASE_URL. */
-test('build:social de veres amb dades remotes: la primera foto de Storage arriba a og:image; la privada, cap pàgina',async t=>{
+test('build:social de veres amb dades remotes: la primera foto de Storage es materialitza i arriba a og:image; la privada, cap pàgina',async t=>{
+  /* P0-SEO-UNIVERSAL (13-11-2026) · La CLI del prerender convertix la foto amb el convertidor de veres (Pillow
+     aïllat). En una màquina sense ell, la release s'atura a posta (infraestructura): ací, la prova se salta. */
+  try { (await detectaConvertidor()).tanca(); } catch (error) { t.skip(`sense convertidor aïllat en esta màquina: ${error.message}`); return; }
   const tmp=carpeta(t,'sdp-projeccio-real-');
   const log=path.join(tmp,'peticions.log');const mock=path.join(tmp,'fetch-fals.mjs');
   const dades={feedPosts:[
@@ -360,13 +415,19 @@ test('build:social de veres amb dades remotes: la primera foto de Storage arriba
   ],marketItems:[],events:[]};
   fs.writeFileSync(mock,`import fs from 'node:fs';
 const dades=${JSON.stringify(dades)};
-const foto=Buffer.from('${png(1200,630).toString('base64')}','base64');
+const directori=${JSON.stringify([FORN])};
+const foto=Buffer.from('${pngDeProva(1200,630).toString('base64')}','base64');
 globalThis.fetch=async (href,opcions={})=>{
   const url=new URL(href);fs.appendFileSync(${JSON.stringify(log)},url.origin+url.pathname+'\\n');
+  if(opcions.method!=='GET'||opcions.body!==undefined)throw new TypeError('fetch fals: només GET');
   if(url.origin===${JSON.stringify(SUPABASE)}&&url.pathname==='/rest/v1/app_content'){
     if(opcions.headers?.apikey!==${JSON.stringify(ANON)})throw new TypeError('fetch fals: sense la clau anon');
     const clau=url.searchParams.get('key').replace(/^eq[.]/,'');
     return new Response(JSON.stringify(Object.hasOwn(dades,clau)?[{key:clau,payload:dades[clau]}]:[]),{headers:{'content-type':'application/json'}});
+  }
+  if(url.origin===${JSON.stringify(SUPABASE)}&&url.pathname==='/rest/v1/organization_directory'){
+    if(opcions.headers?.apikey!==${JSON.stringify(ANON)}||url.searchParams.get('select')!==${JSON.stringify(COLUMNES_DIRECTORI.join(','))})throw new TypeError('fetch fals: directori mal demanat');
+    return new Response(JSON.stringify(directori),{headers:{'content-type':'application/json'}});
   }
   if(url.href===${JSON.stringify(FOTO)})return new Response(foto,{headers:{'content-type':'image/png'}});
   throw new TypeError('fetch fals: no previst '+url.origin+url.pathname);
@@ -379,18 +440,29 @@ globalThis.fetch=async (href,opcions={})=>{
   // La projecció, amb --root una carpeta sense .env: només les VITE_* del procés.
   const primer=executa(projeccio,{'--root':tmp,'--out':fitxer});
   assert.equal(primer.status,0,primer.stderr);
-  assert.deepEqual(llegixSnapshot(fitxer).map(e=>[e.id,e.image]),[['aplec-2026',FOTO],['avatar',null]]);
+  assert.match(primer.stderr,/el Mur veïnal \(R21\) està apagat/);
+  assert.deepEqual(llegixSnapshot(fitxer).map(e=>[e.id,e.image]),[['aplec-2026',FOTO],['avatar',null],[FORN.id,null]]);
   const segon=executa(prerender,{'--root':projectRoot,'--dist':dist,'--snapshot':fitxer});
   assert.equal(segon.status,0,segon.stderr);
   const rebut=JSON.parse(segon.stdout);
-  assert.deepEqual(rebut.remoteImages,[FOTO]);assert.deepEqual(rebut.warnings.filter(w=>w.includes('supabase')),[]);
+  assert.equal(rebut.remoteImages.length,1);assert.match(rebut.remoteImages[0],OG);
+  assert.ok(!/supabase/.test(segon.stdout),'cap URL remota a l’eixida');
   const aplec=llig(dist,'mur/aplec-2026/index.html');
-  assert.deepEqual(['og:image','og:image:type','og:image:width','og:image:height'].map(n=>prop(aplec,n)),[FOTO,'image/png','1200','630']);
+  assert.deepEqual(['og:image','og:image:type','og:image:width','og:image:height'].map(n=>prop(aplec,n)),[rebut.remoteImages[0],'image/jpeg','1200','630']);
+  // El fitxer de veres: un JPEG de 1200x630 i 300.000 B com a molt, al dist/ que es desplega.
+  const og=fs.readFileSync(path.join(dist,new URL(rebut.remoteImages[0]).pathname));
+  assert.ok(og.length<=300000&&og[0]===0xff&&og[1]===0xd8);
   assert.equal(prop(llig(dist,'mur/avatar/index.html'),'og:image'),origin+'/assets/system/ui/og-socdepoble-1200x630.png');
   assert.equal(fs.existsSync(path.join(dist,'mur','privada')),false);
-  // Tres lectures d'app_content i un sol GET, el de la foto pública: cap a avatars.
+  // La fitxa del directori: la canònica i l'àlies per id, amb el mateix canonical.
+  assert.equal(llig(dist,'empresa/forn-de-la-torre/index.html').title,'Forn de la Torre | Sóc de Poble');
+  assert.equal(llig(dist,`gent/${FORN.id}/index.html`).querySelector('link[rel="canonical"]').href,origin+'/empresa/forn-de-la-torre');
+  // El rebut en fitxer, al costat del snapshot, amb el de la projecció dins.
+  const fitxerRebut=JSON.parse(fs.readFileSync(path.join(tmp,'rebut-social.json'),'utf8'));
+  assert.deepEqual([fitxerRebut.projeccio.directori.publicades,fitxerRebut.lotVeinal.fitxes.map(f=>f.cami)],[1,['/empresa/forn-de-la-torre']]);
+  // Tres lectures d'app_content, una del directori i un sol GET, el de la foto pública: cap a avatars ni a la RPC.
   const peticions=fs.readFileSync(log,'utf8').trim().split('\n');
-  assert.deepEqual(peticions.sort(),[...Array(3).fill(`${SUPABASE}/rest/v1/app_content`),FOTO].sort());
+  assert.deepEqual(peticions.sort(),[...Array(3).fill(`${SUPABASE}/rest/v1/app_content`),`${SUPABASE}/rest/v1/organization_directory`,FOTO].sort());
 });
 
 
@@ -412,5 +484,79 @@ test('cada petició de projecció té el termini contractual de cinc segons',asy
   const terminis=[];
   t.mock.method(AbortSignal,'timeout',ms=>{terminis.push(ms);return new AbortController().signal;});
   await projecta({fetchImpl:backend().fetchImpl});
-  assert.deepEqual(terminis,[5000,5000,5000]);
+  assert.deepEqual(terminis,[5000,5000,5000,5000]);
+});
+
+/* ── P0-SEO-UNIVERSAL (ordre del Mestre, 13-11-2026) · Les fonts veïnals dins del mateix pas ───── */
+const filaMur=(n,extra={})=>({id:`0b0c1d2e-3f40-4a51-8b62-${String(n).padStart(12,'0')}`,tenant_id:TENANT,section_id:'mur',title:`Publicació ${n}`,
+  description:`Text ${n} [contacte omés]`,public_content:'Cos',created_at:`2026-11-12T10:${String(59-(n%60)).padStart(2,'0')}:00+00:00`,updated_at:'2026-11-12T10:00:00+00:00',
+  catalog_font:null,catalog_id:null,catalog_destins:null,destinacio_workspace:null,...extra});
+
+test('el directori buit en mode remot és un error (i esborra el snapshot vell); amb SDP_SOCIAL_DIRECTORI_BUIT=1, ix i avisa',async t=>{
+  await assert.rejects(projecta({fetchImpl:backend(DADES(),{directori:[]}).fetchImpl}),/El directori públic ha tornat 0 entitats/);
+  const {snapshot,rebut}=await projecta({fetchImpl:backend(DADES(),{directori:[]}).fetchImpl,env:{[ESCAPADA_DIRECTORI_BUIT]:'1'}});
+  assert.equal(snapshot.filter(esPerfil).length,0);assert.match(rebut.directori.avis,/cap entitat al directori/);
+  for(const valor of ['0','true',' 1'])await assert.rejects(projecta({fetchImpl:backend(DADES(),{directori:[]}).fetchImpl,env:{[ESCAPADA_DIRECTORI_BUIT]:valor}}),/0 entitats/,valor);
+  // Per la CLI: 1 i cap snapshot (ni el vell); amb l'escapada, 0 i l'avís.
+  const root=carpeta(t);const out=path.join(root,'cache','snapshot.json');const entorn=entornDelBuild(ENTORN);
+  fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,'[{"vell":true}]');
+  const mal={stdout:sortida(),stderr:sortida()};
+  assert.equal(await main(['--root',root,'--out',out],{env:{},entorn,fetchImpl:backend(DADES_RELEASE(),{directori:[]}).fetchImpl,pausa:sensePausa,...mal}),1);
+  assert.equal(fs.existsSync(out),false);assert.match(mal.stderr.text,/0 entitats/);
+  const bo={stdout:sortida(),stderr:sortida()};
+  assert.equal(await main(['--root',root,'--out',out],{env:{[ESCAPADA_DIRECTORI_BUIT]:'1'},entorn,fetchImpl:backend(DADES_RELEASE(),{directori:[]}).fetchImpl,pausa:sensePausa,...bo}),0,bo.stderr.text);
+  assert.match(bo.stderr.text,/AVÍS · projecció pública: directori, SDP_SOCIAL_DIRECTORI_BUIT=1/);
+  // Una fallada del directori (un 401 de la vista) també esborra el snapshot anterior.
+  fs.writeFileSync(out,'[{"vell":true}]');
+  const caigut={stdout:sortida(),stderr:sortida()};
+  const falla=url=>(url.pathname==='/rest/v1/organization_directory'?json({message:'permission denied'},{status:401}):null);
+  assert.equal(await main(['--root',root,'--out',out],{env:{},entorn,fetchImpl:backend(DADES_RELEASE(),{falla}).fetchImpl,pausa:sensePausa,...caigut}),1);
+  assert.equal(fs.existsSync(out),false);assert.match(caigut.stderr.text,/HTTP 401 en llegir el directori públic/);
+});
+
+test('el Mur veïnal: cap petició sense SDP_SOCIAL_MUR_VEINAL=1; encés, nou camps amb origen veïnal, sense multimedia, i app_content mana',async()=>{
+  const mur=[filaMur(1),filaMur(2,{section_id:'multimedia'}),filaMur(3,{section_id:'mercat',title:'Oli nou'}),
+    // El mateix id que una publicació d'app_content (events/7 no és UUID: en fem una d'app_content amb id UUID).
+    filaMur(4,{id:'0b0c1d2e-3f40-4a51-8b62-00000000aaaa'})];
+  const dades=DADES();dades.feedPosts.push({id:'0b0c1d2e-3f40-4a51-8b62-00000000aaaa',title:'La d’app_content',entradilla:'Editorial'});
+  for(const env of [{},{[INTERRUPTOR_MUR]:'0'},{[INTERRUPTOR_MUR]:'true'},{[INTERRUPTOR_MUR]:' 1'}]) {
+    const apagat=backend(dades,{mur});
+    const {snapshot,rebut}=await projecta({fetchImpl:apagat.fetchImpl,env});
+    assert.equal(lesDe(apagat.crides,'/rest/v1/rpc/llig_mur_public').length,0,JSON.stringify(env));
+    assert.equal(rebut.murVeinal,'apagat');assert.ok(!snapshot.some(e=>e.origen));
+  }
+  const b=backend(dades,{mur});
+  const {snapshot,rebut}=await projecta({fetchImpl:b.fetchImpl,env:{[INTERRUPTOR_MUR]:'1'}});
+  assert.equal(b.crides.length,5,'tres claus, el directori i una pàgina de la RPC');
+  assert.equal(lesDe(b.crides,'/rest/v1/rpc/llig_mur_public')[0].opcions.method,'GET');
+  const veinals=snapshot.filter(e=>e.origen==='veinal');
+  assert.deepEqual(veinals.map(e=>`${e.sectionId}/${e.id}`).sort(),[`mercat/${mur[2].id}`,`mur/${mur[0].id}`]);
+  for(const element of veinals) {
+    assert.deepEqual(Object.keys(element),CAMPS_VEINALS);
+    assert.deepEqual([element.image,element.imageAlt,element.visibility,element.status],[null,'','public','published']);
+  }
+  // L'id que ja és d'app_content no es substituïx: continua sent l'editorial, amb huit camps.
+  const editorial=snapshot.find(e=>e.id==='0b0c1d2e-3f40-4a51-8b62-00000000aaaa');
+  assert.deepEqual([editorial.title,Object.keys(editorial)],['La d’app_content',CAMPS]);
+  assert.deepEqual([rebut.murVeinal.llegides,rebut.murVeinal.publicades,rebut.murVeinal.foraDeSeccio,rebut.murVeinal.repetides,rebut.murVeinal.tallat],[4,2,1,1,false]);
+  // Zero files és una llista buida sense error; un 404 PGRST202 (la funció no hi és) és un error.
+  const buit=await projecta({fetchImpl:backend(DADES(),{mur:[]}).fetchImpl,env:{[INTERRUPTOR_MUR]:'1'}});
+  assert.deepEqual([buit.rebut.murVeinal.llegides,buit.snapshot.filter(e=>e.origen).length],[0,0]);
+  const absent=url=>(url.pathname==='/rest/v1/rpc/llig_mur_public'?json({code:'PGRST202',message:'Could not find the function'},{status:404}):null);
+  await assert.rejects(projecta({fetchImpl:backend(DADES(),{falla:absent}).fetchImpl,env:{[INTERRUPTOR_MUR]:'1'}}),/HTTP 404 en llegir el Mur públic/);
+});
+
+test('el Mur veïnal pagina per clau (els dos camps del cursor junts) i es talla a la cinquena pàgina',async()=>{
+  const moltes=Array.from({length:1200},(_,i)=>filaMur(i+1,{created_at:new Date(Date.UTC(2026,10,12,10,0,0)-i*1000).toISOString()}));
+  const b=backend(DADES(),{mur:moltes});
+  const {snapshot,rebut}=await projecta({fetchImpl:b.fetchImpl,env:{[INTERRUPTOR_MUR]:'1'}});
+  const crides=lesDe(b.crides,'/rest/v1/rpc/llig_mur_public');
+  assert.equal(crides.length,5,'la sisena pàgina no es demana');
+  assert.deepEqual(crides.map(c=>[c.url.searchParams.has('p_before_created_at'),c.url.searchParams.has('p_before_id')]),[[false,false],[true,true],[true,true],[true,true],[true,true]]);
+  assert.deepEqual([rebut.murVeinal.llegides,rebut.murVeinal.tallat,snapshot.filter(e=>e.origen==='veinal').length],[1000,true,1000]);
+  assert.match(rebut.murVeinal.avis,/més de 1000 publicacions veïnals/);
+  // Una pàgina de menys de 200 files acaba la lectura.
+  const poques=backend(DADES(),{mur:moltes.slice(0,250)});
+  await projecta({fetchImpl:poques.fetchImpl,env:{[INTERRUPTOR_MUR]:'1'}});
+  assert.equal(lesDe(poques.crides,'/rest/v1/rpc/llig_mur_public').length,2);
 });

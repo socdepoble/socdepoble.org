@@ -121,7 +121,8 @@ import { ORIGENS_BACKEND } from './config/origensSollutia.js';
 import { CONTRACTE_AMFITRIO_V1, tapaRuta } from './config/contracteAmfitrio.js';
 import { CAPA_DE_COMPILACIO, avisaClausDescartades, capaDelPaquet, nomesDeLAmfitrio, separaClausDelPaquet } from './config/capaDelPaquet.js';
 import { llistaApps, subscriu as subscriuApps } from './apps/plataforma/registreApps.js';
-import { sanejaDestinsDeclarats } from './data/traductor.js';
+/* Onada R24 · wp_trinquet · De la fulla dels destins, no del client sencer del Traductor. */
+import { sanejaDestinsDeclarats } from './data/llenguesDeTraduccio.js';
 
 /* ─────────────── Clàusula dels slugs: la ruta a la URL de l'amfitrió ─────────────── */
 

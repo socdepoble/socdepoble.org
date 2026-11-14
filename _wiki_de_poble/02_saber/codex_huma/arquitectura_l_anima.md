@@ -19,7 +19,7 @@ Tot va començar quan ens vam adonar que les **grans xarxes** per on circulaven 
 
 ## La Filosofia del Trellat
 
-Al poble, un llaurador no sembra esperant que una corporació a milers de quilòmetres l'autoritze a collir. El projecte usa **Trellat** per anomenar el sentit comú, la saviesa heretada i l'aplicació pragmàtica de la tecnologia només on resol problemes reals.
+Al poble, un llaurador no sembra esperant que una corporació a milers de quilòmetres l'autoritze a collir. El projecte utilitza **Trellat** per anomenar el sentit comú, la saviesa heretada i l'aplicació pragmàtica de la tecnologia només on resol problemes reals.
 
 L'excés d'abstracció, les dependències efímeres i l'obesitat del programari són l'equivalent a una plaga en la collita. Per això busquem peces simples, directes i reparables.
 

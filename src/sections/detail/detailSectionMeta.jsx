@@ -6,6 +6,7 @@ import { getFirstImage, semblaHtml } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { ManifestDePobleArticle } from '../mur/articles/ManifestDePobleArticle.jsx';
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_ID } from '../mur/articles/novesTecnologiesCulturaRuralContent.js';
+import { LA_VEU_DE_SOC_DE_POBLE_ID } from '../mur/articles/laVeuDeSocDePobleContent.js';
 import { resolRecursPropi, resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
 import { autorDe, objecteDe, rutaDePerfilPublicDAutor, rutaFitxaOrganitzacio, rutaXatDePagina } from '../../config/navigation.js';
 import { Link } from '../../app/contexts/RouterContext.jsx';
@@ -72,6 +73,7 @@ const PanellDeViquipedia = lazyRoute(() => import('../pobles/PanellDeViquipedia.
    visor del pou de neu (IDEA-161: un sol visor, PouDeLaNeuAnatomiaCard): l'article
    i el visor baixen en diferit només en obrir-la, com el visor d'IDEA-109. */
 const NovesTecnologiesCulturaRuralArticle = lazyRoute(() => import('../mur/articles/NovesTecnologiesCulturaRuralArticle.jsx'));
+const LaVeuDeSocDePobleArticle = lazyRoute(() => import('../mur/articles/LaVeuDeSocDePobleArticle.jsx'));
 
 /* T5 · Les imatges del cos (variacions del Mercat, Multimèdia) es resolen en
    pintar-les: incrustat, un '/assets/…' penja del paquet. Sense base, el de
@@ -901,6 +903,12 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
             ? (
               <React.Suspense fallback={<Carregant etiqueta={t('patrimoni.anatomia.carregant', 'S’està carregant el visor…')} />}>
                 <NovesTecnologiesCulturaRuralArticle item={item} />
+              </React.Suspense>
+            )
+          : item.id === LA_VEU_DE_SOC_DE_POBLE_ID
+            ? (
+              <React.Suspense fallback={<Carregant etiqueta={t('patrimoni.veuPoble.carregant', 'S’està carregant la publicació…')} />}>
+                <LaVeuDeSocDePobleArticle item={item} />
               </React.Suspense>
             )
           : item.esImportatWp

@@ -29,7 +29,7 @@ Un control d'un pla no substituïx l'altre.
 L’arquitectura és **online-first** ([[ADR-2026-08-ONLINE-FIRST]]): les **dades compartides i privades** viuen al **Supabase de Sóc de Poble**, protegides per **autenticació de servidor i RLS**, i la memòria cau del navegador és **opcional i no autoritativa**. Si alguna vegada cal guardar al navegador una **dada sensible**, s'ha de protegir amb primitives de Web Crypto adequades al **model d'amenaça**.
 
 - Deriva claus de contrasenya o PIN amb sal aleatòria, paràmetres versionats i un KDF disponible i revisat; `PBKDF2` és un mínim de compatibilitat, no una garantia universal.
-- Usa xifratge autenticat, com AES-GCM, amb un nonce únic per operació.
+- Utilitza xifratge autenticat, com AES-GCM, amb un nonce únic per operació.
 - No guardes claus, PIN, tokens ni material de recuperació en text pla o en logs.
 - La biometria pot desbloquejar una clau protegida per la plataforma; no s'ha de tractar com si fora directament material criptogràfic.
 - Documenta rotació, pèrdua de clau i recuperació abans d'activar el control.

@@ -18,6 +18,8 @@
  * ser dotze: Anatomia rural no es publica com a targeta al Mur ni al
  * Calendari, perquè repetia la portada del pou, i la seua adreça porta a
  * l'article complet (àlies de navigation.js).
+ * Onada R23 (14-11-2026) · tretze: «La Veu de Sóc de Poble» entra la
+ * primera, la publicació més nova (datesDeProvaMur.js).
  * Les quatre pàgines de patrimoni restants porten la data real del copy
  * (06-11-2026). Els tres `ara` fixos són de la setmana del 9 al 15 de
  * novembre: abans del dia 6 eixes pàgines es posarien en el futur.
@@ -117,7 +119,8 @@ test.each([
   const avall = [titolDe(llavor, ['pages', 'drets-autor']), ...IMPORTANTS_HISTORIQUES_DEL_MUR.map(fila => titolDe(llavor, fila)), '2n Aplec pel Territori'];
   expect(titols()).toEqual([...dalt, ...maquinaria, ...tecniques, ...avall]);
   // El pou té una sola targeta: l'article (i /page/anatomia-rural hi porta per l'àlies).
-  expect(IMPORTANTS_DEL_MUR).toHaveLength(12);
+  /* Onada R23 · tretze: «La Veu de Sóc de Poble» n'és la primera (datesDeProvaMur.js). */
+  expect(IMPORTANTS_DEL_MUR).toHaveLength(13);
   expect(titols()[0]).toBe(importants[0]);
   expect(titols().filter((titol) => titol === importants[0])).toHaveLength(1);
   expect(titols()).not.toContain('Anatomia rural');

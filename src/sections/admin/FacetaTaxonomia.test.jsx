@@ -25,7 +25,7 @@ import { CODI_PERSONALITZACIO, MISSATGE_PERSONALITZACIO, errorDePersonalitzacio 
 import { NOMS_ETIQUETES_CANONIQUES_49 } from '../../data/taxonomia/taxonomiaCanonica.js';
 
 /* P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Les de sèrie de la Consola: Sistema + la mare + les etiquetes canòniques. */
-const TECNOLOGIA = '💻 Tecnologia Lliure, Dades Obertes i Disseny';
+const TECNOLOGIA = '💻 Tecnologia i Disseny';
 const ETIQUETES_CONSOLA = [{ text: 'Sistema', className: 'sdp-badge-system' }, { text: TECNOLOGIA, className: 'sdp-badge-category' }, { text: 'Node 0', className: 'sdp-badge-tag' }, { text: 'Documentació', className: 'sdp-badge-tag' }];
 const pageCopyDeSerie = () => Object.fromEntries(SYSTEM_PAGES.map(({ key }) => [key, { ...PAGE_COPY[key], id: key }]));
 const core = (extra = {}) => ({ status: 'ready', pageCopy: pageCopyDeSerie(), personalitzacio: null, refresh: m.refresh, ...extra });
@@ -96,7 +96,7 @@ test('pinta un bloc per pàgina de SYSTEM_PAGES amb les etiquetes actuals (text 
   expect(opcions.map((o) => o.textContent)).toContain('Sistema (blau fosc)');
   /* P0-40 · Les 6 mares al Bloc; fora «Productivitat» i «Tutorial». De sèrie, les 49 canòniques
      d'R34 (ETIQUETES_BASE): si se'n lleva cap o no, ho decidix el Mestre (D-3). Arbitratge R46, Loop 3. */
-  expect(within(seccio('Categories de sèrie del Bloc')).getByText('De sèrie, sempre: Sistema, ⚖️ Defensa del Territori, Ecologia i Reivindicació, 🌾 Recursos Locals, Agricultura i Sobirania, 🌿 Natura i Patrimoni, 🎭 Cultura, Música i Llengua, 🤝 Món Rural, 💻 Tecnologia Lliure, Dades Obertes i Disseny.')).toBeTruthy();
+  expect(within(seccio('Categories de sèrie del Bloc')).getByText('De sèrie, sempre: Sistema, ⚖️ Defensa del Territori, Ecologia i Reivindicació, 🌾 Recursos Locals, Agricultura i Sobirania, 🌿 Natura i Patrimoni, 🎭 Cultura, Música i Llengua, 🤝 Món Rural, 💻 Tecnologia i Disseny.')).toBeTruthy();
   expect(within(seccio('Etiquetes de sèrie del Bloc')).getByText(`De sèrie, sempre: ${NOMS_ETIQUETES_CANONIQUES_49.join(', ')}.`)).toBeTruthy();
   expect(screen.getByText('Encara no hi ha cap versió desada: tot és de sèrie.')).toBeTruthy();
 });

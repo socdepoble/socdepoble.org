@@ -216,9 +216,14 @@ export default function OnboardingSection() {
   const natiuBloquejat = !potEntrarNatiu || (canviDeModePendent && !simulaLocal) || busyStep !== null;
   /* Fase D (261020, revisió) · L2 · Amb els botons natius a la vista, «Entra al
      teu compte» nomena el botó de dalt (Apple o Google), no el Google web. */
+  /* R24 botigues (A3, incident 261106) · Sense cap botó social (un build sense els clients de Google,
+     o l'iPhone sense Apple), un compte nascut amb Google o Apple al web no té contrasenya ni botó:
+     l'explicació diu el camí que sí que hi ha, «Has oblidat la contrasenya?», si el port en té. */
   const introEntradaNativa = proveidorsNatius.length
     ? tr(plataforma === 'ios' ? 'section.login.nativa.introEntradaIos' : 'section.login.nativa.introEntradaAndroid')
-    : null;
+    : (esNatiu && potRecuperar ? tr('section.login.nativa.introSenseBotons') : null);
+  /* R24 botigues (A3) · El mateix camí de rescat darrere d'una fallada del full natiu. */
+  const ambRescatNatiu = (text) => (potRecuperar ? `${text} ${tr('section.login.nativa.rescat')}` : text);
   const [errorNatiu, setErrorNatiu] = useState(null);
   const botonsNatiusRef = useRef({});
   /* Estat i no ref: un full que es tanca de seguida pot no arribar a pintar
@@ -512,10 +517,13 @@ export default function OnboardingSection() {
       if (esSilenciNatiu(err) || err?.name === 'AbortError') return;
       if (err?.code === CODI_ENTRADA_NATIVA.EN_CURS) {
         setErrorNatiu({ to: 'avis', text: tr('section.login.nativa.enCurs') });
+      } else if (err?.code === CODI_ENTRADA_NATIVA.CONFIGURACIO) {
+        /* R24 botigues (B1) · Google no reconeix la instal·lació (SHA-1 de la clau de Play): el problema és nostre. */
+        setErrorNatiu({ to: 'error', text: ambRescatNatiu(tr('section.login.nativa.configuracio')) });
       } else if (err?.code === CODI_ENTRADA_NATIVA.FALLIDA || err?.code === CODI_ENTRADA_NATIVA.NO_DISPONIBLE) {
         setErrorNatiu({
           to: 'error',
-          text: tr(err.code === CODI_ENTRADA_NATIVA.NO_DISPONIBLE ? 'section.login.nativa.noDisponible' : 'section.login.nativa.error')
+          text: err.code === CODI_ENTRADA_NATIVA.NO_DISPONIBLE ? tr('section.login.nativa.noDisponible') : ambRescatNatiu(tr('section.login.nativa.error'))
         });
       } else {
         const codi = codiDEntrada(err);
