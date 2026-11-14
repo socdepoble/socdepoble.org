@@ -32,6 +32,7 @@ import {
 } from './entorn.mjs';
 import { estatDeLesBotigues, liniesDeLEstat } from './estat.mjs';
 import { esquemaInvertitDeGoogleIos } from '../../src/config/publicCredentials.js';
+import { validaConfiguracio as validaAssociacioApps } from '../../tooling/vite/associacio-apps.mjs';
 
 /** L'arrel on viu el script instal·lat: scripts/botigues/ → dos nivells amunt. */
 export const ARREL_DEL_SCRIPT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -376,6 +377,180 @@ export function liniesEntradaSocial(entrada, { plataformes = [], produccio = fal
   return { linies, mal };
 }
 
+/* Les dues úniques claus d'ATS admeses, i totes dues a false: els valors per defecte d'Apple dits en
+   veu alta. Amb NSAllowsArbitraryLoadsInWebContent present (amb qualsevol valor), iOS 10+ ignora
+   NSAllowsArbitraryLoads; per això cap altra clau (NSExceptionDomains, NSAllowsLocalNetworking,
+   NSAllowsArbitraryLoadsForMedia…) no pot entrar al bloc sense que el preflight ho diga. */
+const ATS_FALS = Object.freeze([
+  /<key>NSAllowsArbitraryLoads<\/key>\s*<false\s*\/>/,
+  /<key>NSAllowsArbitraryLoadsInWebContent<\/key>\s*<false\s*\/>/
+]);
+
+/** Els `src` de tots els <certificates> d'un network_security_config (sense comentaris). */
+const fontsDeCertificats = (xml) => [...xml.matchAll(/<certificates\b([^>]*)>/g)]
+  .map(([, atributs]) => /\bsrc="([^"]*)"/.exec(atributs)?.[1] ?? '');
+
+/**
+ * Onada R26 · Llig l'estat real de fortificació nativa i de scripts/botigues/associacio-apps.json
+ * (més l'absència de fitxers d'associació estàtics prohibits a public/). Només lectura; cap valor
+ * secret ix mai. Si un projecte natiu no és en l'arbre (fixtures sintètics), `present` és false.
+ */
+export function seguretatBotigues(arrel) {
+  const infoText = lligDe(arrel, 'ios', 'App', 'App', 'Info.plist');
+  const infoNet = infoText === null ? '' : senseComentarisXml(infoText);
+  const blocsAts = infoNet.match(/<key>NSAppTransportSecurity<\/key>/g) ?? [];
+  const blocAts = /<key>NSAppTransportSecurity<\/key>\s*<dict>([\s\S]*?)<\/dict>/.exec(infoNet)?.[1] ?? '';
+  /* Un dict niat (NSExceptionDomains) talla la captura al primer </dict> i deixa resta: també és ✗. */
+  const restaAts = ATS_FALS.reduce((resta, clau) => resta.replace(clau, ''), blocAts).trim();
+  const atsSegur = blocsAts.length === 1
+    && ATS_FALS.every((clau) => clau.test(blocAts))
+    && restaAts === ''
+    && !/<key>NSAllowsArbitraryLoads<\/key>\s*<true\s*\/>/.test(infoNet);
+
+  const privText = lligDe(arrel, 'ios', 'App', 'App', 'PrivacyInfo.xcprivacy');
+  const privNet = privText === null ? '' : senseComentarisXml(privText);
+  const privacitatSenseRastreig = /<key>NSPrivacyTracking<\/key>\s*<false\s*\/>/.test(privNet);
+  const privacitatCa921 = privNet.includes('NSPrivacyAccessedAPICategoryUserDefaults') && privNet.includes('<string>CA92.1</string>');
+
+  const associacioText = lligDe(arrel, 'scripts', 'botigues', 'associacio-apps.json');
+  let associacioIosValida = false;
+  let associacioIosPendent = false;
+  let associacioAndroidValida = false;
+  let associacioAndroidPendent = false;
+  if (associacioText !== null) {
+    /* Una sola font de veritat: el validador del connector del build web (tooling/vite/associacio-apps.mjs).
+       Si el build web pararia, el preflight no pot dir ✓. Els valors no s'imprimixen mai. */
+    try {
+      const cfg = validaAssociacioApps(JSON.parse(associacioText));
+      associacioAndroidValida = true;
+      associacioAndroidPendent = cfg.android.sha256_cert_fingerprints.length === 0;
+      if (cfg.ios) {
+        associacioIosValida = true;
+        associacioIosPendent = cfg.ios.team_ids.length === 0;
+      }
+    } catch {
+      associacioIosValida = false;
+      associacioAndroidValida = false;
+    }
+  }
+
+  const aasaEstatica = fs.existsSync(path.join(arrel, 'public', '.well-known', 'apple-app-site-association'))
+    || fs.existsSync(path.join(arrel, 'public', 'apple-app-site-association'));
+  const assetlinksEstatic = fs.existsSync(path.join(arrel, 'public', '.well-known', 'assetlinks.json'))
+    || fs.existsSync(path.join(arrel, 'public', 'assetlinks.json'));
+
+  const manifestText = lligDe(arrel, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
+  const manifestNet = manifestText === null ? '' : senseComentarisXml(manifestText);
+  const aplicacio = /<application\b([^>]*)>/.exec(manifestNet)?.[1] ?? '';
+  const allowBackupFals = /\bandroid:allowBackup="false"/.test(aplicacio) && !/\bandroid:allowBackup="true"/.test(manifestNet);
+  const cleartextManifestFals = /\bandroid:usesCleartextTraffic="false"/.test(aplicacio) && !/\bandroid:usesCleartextTraffic="true"/.test(manifestNet);
+  const referenciaNetworkConfig = /\bandroid:networkSecurityConfig="@xml\/network_security_config"/.test(aplicacio);
+
+  const netCfgText = lligDe(arrel, 'android', 'app', 'src', 'main', 'res', 'xml', 'network_security_config.xml');
+  const netCfgNet = netCfgText === null ? '' : senseComentarisXml(netCfgText);
+  const fontsCertificats = fontsDeCertificats(netCfgNet);
+  const networkConfigSegura = netCfgText !== null
+    && /<base-config\s+cleartextTrafficPermitted="false"\s*>/.test(netCfgNet)
+    && !netCfgNet.includes('cleartextTrafficPermitted="true"')
+    && fontsCertificats.length > 0
+    && fontsCertificats.every((font) => font === 'system');
+
+  return {
+    associacioPresent: associacioText !== null,
+    ios: {
+      present: infoText !== null,
+      atsSegur,
+      privacitatPresent: privText !== null,
+      privacitatSenseRastreig,
+      privacitatCa921,
+      aasaEstatica,
+      associacioValida: associacioIosValida,
+      associacioPendent: associacioIosPendent
+    },
+    android: {
+      present: manifestText !== null,
+      allowBackupFals,
+      cleartextManifestFals,
+      referenciaNetworkConfig,
+      networkConfigSegura,
+      assetlinksEstatic,
+      associacioValida: associacioAndroidValida,
+      associacioPendent: associacioAndroidPendent
+    }
+  };
+}
+
+/**
+ * Onada R26 · Genera les línies de verificació de fortificació nativa per a les plataformes demanades.
+ * Qualsevol relaxació d'ATS, de PrivacyInfo, de cleartext/allowBackup, d'associacio-apps.json o un
+ * fitxer estàtic prohibit a public/.well-known és un ✗ (arbre, 7).
+ */
+export function liniesSeguretatBotigues(estat, { plataformes = [], produccio = false } = {}) {
+  const linies = [];
+  const mal = [];
+  const be = (text) => linies.push(`  ✓ ${text}`);
+  const avis = (text) => linies.push(`  ! ${text}`);
+  const errada = (text) => { linies.push(`  ✗ ${text}`); mal.push(text); };
+
+  if (plataformes.includes('ios') && (estat?.ios?.present || estat?.ios?.aasaEstatica || estat?.associacioPresent)) {
+    let iosNet = true;
+    if (estat.ios.present) {
+      if (!estat.ios.atsSegur) {
+        iosNet = false;
+        errada('ios/App/App/Info.plist no blinda NSAppTransportSecurity: un sol bloc amb NSAllowsArbitraryLoads i NSAllowsArbitraryLoadsInWebContent a false i cap altra clau (ni NSExceptionDomains, ni NSAllowsLocalNetworking, ni NSAllowsArbitraryLoadsForMedia)');
+      }
+      if (!estat.ios.privacitatPresent || !estat.ios.privacitatSenseRastreig || !estat.ios.privacitatCa921) {
+        iosNet = false;
+        errada('ios/App/App/PrivacyInfo.xcprivacy falta o no declara NSPrivacyTracking = false i UserDefaults CA92.1');
+      }
+    }
+    if (estat.ios.aasaEstatica) {
+      iosNet = false;
+      errada('public/ porta apple-app-site-association estàtic: només el pot emetre tooling/vite/associacio-apps.mjs amb Team ID real (P0-23)');
+    }
+    if (estat.associacioPresent && !estat.ios.associacioValida) {
+      iosNet = false;
+      errada('scripts/botigues/associacio-apps.json no porta un bloc ios que el connector del build web (tooling/vite/associacio-apps.mjs) accepte per a org.socdepoble.app');
+    }
+    if (iosNet && estat.ios.present) {
+      be('iOS: NSAppTransportSecurity estricte, PrivacyInfo.xcprivacy (CA92.1) i associacio-apps.json verificats');
+    }
+    if (produccio && estat.ios.associacioPendent) {
+      avis('scripts/botigues/associacio-apps.json té ios.team_ids buit: afig el Team ID d\'Apple Developer per a publicar apple-app-site-association');
+    }
+  }
+
+  if (plataformes.includes('android') && (estat?.android?.present || estat?.android?.assetlinksEstatic || estat?.associacioPresent)) {
+    let androidNet = true;
+    if (estat.android.present) {
+      if (!estat.android.allowBackupFals) {
+        androidNet = false;
+        errada('android/app/src/main/AndroidManifest.xml no fixa android:allowBackup="false"');
+      }
+      if (!estat.android.cleartextManifestFals || !estat.android.referenciaNetworkConfig || !estat.android.networkConfigSegura) {
+        androidNet = false;
+        errada('Android permet trànsit HTTP en clar o àncores de confiança que no són les del sistema (CAs d\'usuari o @raw): cal usesCleartextTraffic="false" i @xml/network_security_config estricte, només amb <certificates src="system"/>');
+      }
+    }
+    if (estat.android.assetlinksEstatic) {
+      androidNet = false;
+      errada('public/ porta assetlinks.json estàtic: només el pot emetre tooling/vite/associacio-apps.mjs amb empremtes reals de Play Console (P0-23)');
+    }
+    if (estat.associacioPresent && !estat.android.associacioValida) {
+      androidNet = false;
+      errada('scripts/botigues/associacio-apps.json no és vàlid per a Android org.socdepoble.app (el connector del build web tooling/vite/associacio-apps.mjs el rebutjaria)');
+    }
+    if (androidNet && estat.android.present) {
+      be('Android: allowBackup="false", usesCleartextTraffic="false", network_security_config i associacio-apps.json verificats');
+    }
+    if (produccio && estat.android.associacioPendent) {
+      avis('scripts/botigues/associacio-apps.json té android.sha256_cert_fingerprints buit: copia-hi la clau d\'App Signing de Play Console per a publicar assetlinks.json');
+    }
+  }
+
+  return { linies, mal };
+}
+
 /* Google Play, termini 31-08-2026: API36 per a apps noves/actualitzacions.
    Font contrastada per l'auditoria O4 (02-11-2026):
    https://support.google.com/googleplay/android-developer/answer/11926878
@@ -599,6 +774,12 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
     const social = liniesEntradaSocial(entradaSocialDelPaquet(arrel), { plataformes, produccio, infoPlist: lligDe(arrel, 'ios', 'App', 'App', 'Info.plist') });
     linies.push(...social.linies);
     if (social.mal.length) familia[EIXIDA.ARBRE] = true;
+    const seguretat = liniesSeguretatBotigues(seguretatBotigues(arrel), { plataformes, produccio });
+    if (seguretat.linies.length) {
+      linies.push('Fortificació de seguretat (R26)');
+      linies.push(...seguretat.linies);
+      if (seguretat.mal.length) familia[EIXIDA.ARBRE] = true;
+    }
   }
   if (produccio) {
     linies.push('Producció (només avisos; mínim API de Play contrastat en l’auditoria O4)');

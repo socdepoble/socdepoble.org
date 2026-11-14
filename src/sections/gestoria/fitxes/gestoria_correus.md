@@ -35,7 +35,7 @@ Llig, només en este ordinador, una exportació del teu correu que tu tries i la
 
 ## Com es desenxufa
 
-«Desenxufa» buida la memòria. Revocar l'aprovació al panell de Tractors el bloqueja a l'instant.
+«Desenxufa» buida la memòria. Revocar l'aprovació (fora del servidor de desenvolupament, amb «Revoca l’aprovació» a la mateixa pantalla; al servidor de desenvolupament, al panell de Tractors) el bloqueja a l'instant.
 
 ## L'aprovació
 

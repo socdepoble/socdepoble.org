@@ -48,7 +48,7 @@ Llig, només en este ordinador, els extractes del banc que tu tries (de l'1 de g
 
 ## Com es desenxufa
 
-«Oblida les dades» buida la lectura, deixa anar els fitxers triats i torna a amagar totes les xifres. També cancel·la la lectura activa: el fitxer que ja ha començat acaba, però els seus bytes es descarten i no se'n llig cap més. Bloquejar el cofre (el botó «Bloqueja», 10 minuts sense activitat, 5 amb la pestanya amagada, eixir de la pàgina o d'esta vista) fa el mateix i, a més, buida de la memòria la configuració desxifrada: per a tornar a vore res cal la frase de pas i tornar a triar els extractes. Revocar l'aprovació al panell de Tractors bloqueja les lectures següents.
+«Oblida les dades» buida la lectura, deixa anar els fitxers triats i torna a amagar totes les xifres. També cancel·la la lectura activa: el fitxer que ja ha començat acaba, però els seus bytes es descarten i no se'n llig cap més. Bloquejar el cofre (el botó «Bloqueja», 10 minuts sense activitat, 5 amb la pestanya amagada, eixir de la pàgina o d'esta vista) fa el mateix i, a més, buida de la memòria la configuració desxifrada: per a tornar a vore res cal la frase de pas i tornar a triar els extractes. Revocar l'aprovació (fora del servidor de desenvolupament, amb «Revoca l’aprovació» a la mateixa pantalla; al servidor de desenvolupament, al panell de Tractors) bloqueja les lectures següents.
 
 ## L'aprovació
 

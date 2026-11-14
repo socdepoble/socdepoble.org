@@ -1644,6 +1644,7 @@ export default {
   'section.notes.visibilitat.enLinia.veureAlMur': 'Ver en el Muro',
   'section.notes.visibilitat.enLinia.veureAlMercat': 'Ver en el Mercado',
   'section.notes.visibilitat.enLinia.treballant': 'Publicando…',
+  'section.notes.visibilitat.enLinia.recordatoriEsborrany': 'Esta nota está en 🔒 Borrador privado. Elige «{opcio}» antes de publicarla.',
   'section.notes.carpeta.mur': 'Muro',
   'section.notes.carpeta.mercat': 'Mercado',
   'section.notes.carpeta.pobles': 'Pueblos',

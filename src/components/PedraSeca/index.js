@@ -121,3 +121,5 @@ export { CarruselImatges } from './organismes/CarruselImatges.jsx';
 export { VisorImatges } from './organismes/VisorImatges.jsx';
 
 export { CandidatsAlergens } from './molecules/CandidatsAlergens.jsx';
+
+export { SelectorOpcionsDesplegable } from './molecules/SelectorOpcionsDesplegable.jsx';

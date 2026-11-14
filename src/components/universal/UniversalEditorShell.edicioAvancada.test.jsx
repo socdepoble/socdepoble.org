@@ -32,6 +32,10 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(),
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
 import { ETIQUETA_EDICIO_AVANCADA, UniversalEditorShell } from './UniversalEditorShell.jsx';
+import UniversalToolbar from './UniversalToolbar.jsx';
+import { PanellVisibilitatEnLinia } from './PanellVisibilitatEnLinia.jsx';
+import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
+import '../../../tests/helpers/diccionaris.js';
 import { BotoDretsAutor } from './CopyrightSelector.jsx';
 import { BotoneraClassificacio } from './classificacio/BotoneraClassificacio.jsx';
 import { TEXTOS_LLAVOR } from './textosLlavor.js';
@@ -533,4 +537,117 @@ describe('O4-CLAUDE-1 · la ranura «On es publica?» i la petició d’anar-hi'
     expect(ranura).not.toBeNull();
     expect(ranura.textContent).toContain('Previsualització de la targeta');
   });
+
+  test('Onada R26 · T1 · un sol details.sdp-edicio-avancada integra visibilitatEnLinia abans de boto-tancar, fa scroll suau i recorda l’esborrany', () => {
+    registraSalts();
+    const onTria = vi.fn();
+    function EditorR26() {
+      const [peticio, setPeticio] = useState(null);
+      return (
+        <UniversalEditorShell
+          id="r26-n1"
+          titleHtml="Nota R26"
+          subtitleHtml=""
+          leadHtml=""
+          edicioAvancada
+          posicioEines="davall-entradilla"
+          topBar={(
+            <UniversalToolbar
+              onPublish={() => setPeticio({ nota: 'r26-n1', origen: 'publicar-barra' })}
+              publishLabel={null}
+              publishLabelWide="Publicar al Mur"
+              publishState="pendent"
+            />
+          )}
+          visibilitatEnLinia={(
+            <PanellVisibilitatEnLinia
+              notaId="r26-n1"
+              esPublica={false}
+              estatPublicacio="pendent"
+              onTria={onTria}
+              peticioEnfocament={peticio}
+              onPeticioAtesa={() => setPeticio(null)}
+            />
+          )}
+        >
+          <div className="ProseMirror" data-testid="cos" />
+        </UniversalEditorShell>
+      );
+    }
+    const { container } = render(<EditorR26 />);
+    expect(container.querySelectorAll('details.sdp-edicio-avancada')).toHaveLength(1);
+    const desplegable = container.querySelector('details.sdp-edicio-avancada');
+    expect(desplegable.open).toBe(false);
+    expect(container.querySelector('.sdp-pagina-despres-autoria > .sdp-visibilitat-linia')).toBeNull();
+
+    const cos = desplegable.querySelector('.sdp-edicio-avancada__cos');
+    const fillsCos = fillsAmbRanura(cos);
+    expect(fillsCos.slice(-2)).toEqual([
+      'sdp-edicio-avancada__ambit [visibilitat]',
+      'sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar',
+    ]);
+
+    const botoBarra = container.querySelector('.sdp-editor-tools .sdp-bloc-action--publicar');
+    expect(botoBarra.textContent).toBe('Publicar al Mur');
+
+    fireEvent.click(botoBarra);
+    expect(desplegable.open).toBe(true);
+    expect(saltats).toHaveLength(1);
+    expect(saltats[0][1]).toEqual({ behavior: 'smooth', block: 'start' });
+    expect(onTria).not.toHaveBeenCalled();
+    expect(desplegable.textContent).toContain('Esta nota està en 🔒 Esborrany privat. Tria «📣 Públic al Mur de poble» abans de publicar-la.');
+  });
+
+  test('Onada R26 · T1 · UniversalToolbar mostra publishLabelWide en ample i «Publicar» en compacte (360px), preservant publishLabel === null', () => {
+    const roAbans = globalThis.ResizeObserver;
+    let cbResize = null;
+    globalThis.ResizeObserver = class {
+      constructor(cb) { cbResize = cb; }
+      observe() {}
+      disconnect() {}
+    };
+    try {
+      const { container, rerender } = render(
+        <UniversalToolbar
+          onPublish={vi.fn()}
+          publishLabel={null}
+          publishLabelWide="Publicar al Mur"
+          publishState="pendent"
+        />,
+      );
+      const boto = () => container.querySelector('.sdp-bloc-action');
+      expect(boto().textContent).toBe('Publicar al Mur');
+
+      act(() => { cbResize([{ contentRect: { width: 360 } }]); });
+      expect(container.querySelector('.sdp-editor-tools').getAttribute('data-compact')).toBe('true');
+      expect(boto().textContent).toBe('Publicar');
+
+      act(() => { cbResize([{ contentRect: { width: 960 } }]); });
+      expect(container.querySelector('.sdp-editor-tools').getAttribute('data-compact')).toBe('false');
+      expect(boto().textContent).toBe('Publicar al Mur');
+
+      rerender(
+        <UniversalToolbar
+          onPublish={vi.fn()}
+          publishLabel="Compartir"
+          publishLabelWide="Publicar al Mur"
+          publishState={null}
+        />,
+      );
+      act(() => { cbResize([{ contentRect: { width: 360 } }]); });
+      expect(boto().textContent).toBe('Compartir');
+    } finally {
+      globalThis.ResizeObserver = roAbans;
+    }
+  });
+
+  test.each(SUPPORTED_LANGUAGES.map(({ code }) => code))(
+    'Onada R26 · T1 · clau recordatoriEsborrany traduïda en «%s» amb marcador {opcio}',
+    (codi) => {
+      const t = createTranslator(codi);
+      const plantilla = t('section.notes.visibilitat.enLinia.recordatoriEsborrany');
+      expect(plantilla).toContain('{opcio}');
+      expect(plantilla).toContain('🔒');
+    },
+  );
 });

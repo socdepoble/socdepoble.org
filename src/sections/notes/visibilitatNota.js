@@ -572,6 +572,7 @@ const PARELLS_EN_LINIA = Object.freeze({
   veureAlMur: parellVisibilitat('enLinia.veureAlMur', 'Veure al Mur'),
   veureAlMercat: parellVisibilitat('enLinia.veureAlMercat', 'Veure al Mercat'),
   treballant: parellVisibilitat('enLinia.treballant', 'Publicant…'),
+  recordatoriEsborrany: parellVisibilitat('enLinia.recordatoriEsborrany', 'Esta nota està en 🔒 Esborrany privat. Tria «{opcio}» abans de publicar-la.'),
 });
 
 export function motiuPobleNoDeterminat(t = null) {
@@ -623,5 +624,6 @@ export function textosEnLiniaDeNota({ connexio = false, extern = false, dretsRes
     estatPublicat: text(t, PARELLS_EN_LINIA.estatPublicat),
     veurePublicacio: text(t, esMercat ? PARELLS_EN_LINIA.veureAlMercat : PARELLS_EN_LINIA.veureAlMur),
     treballant: text(t, PARELLS_EN_LINIA.treballant),
+    recordatoriEsborrany: omple(text(t, PARELLS_EN_LINIA.recordatoriEsborrany), { opcio: etiquetaPublica }),
   });
 }

@@ -9,9 +9,9 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import associacioApps, {
-  CONFIGURACIO, ESQUEMA, FITXER_ASSETLINKS, MAXIM_EMPREMTES, PAQUET_ANDROID, RELACIO,
-  comprovaHosting, construeixAssetLinks, fitxersAssociacio, llegixConfiguracio, origenDelBuild,
-  origenExacte, serialitza, validaConfiguracio, validaEmpremta
+  CONFIGURACIO, ESQUEMA, FITXER_AASA, FITXER_ASSETLINKS, MAXIM_EMPREMTES, PAQUET_ANDROID, PAQUET_IOS, RELACIO,
+  comprovaHosting, construeixAppleAppSiteAssociation, construeixAssetLinks, fitxersAssociacio, llegixConfiguracio, origenDelBuild,
+  origenExacte, serialitza, validaCamiIos, validaConfiguracio, validaEmpremta, validaTeamId
 } from './associacio-apps.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -131,4 +131,51 @@ test('l’origen per defecte del build és el de src/config/origenPublic.js', as
   assert.equal(await origenDelBuild({ env: {}, arrel: ARREL }), ORIGEN);
   assert.equal(await origenDelBuild({ env: { VITE_CANONICAL_URL: ' https://gentdelatorre.net/ ' }, arrel: ARREL }), 'https://gentdelatorre.net');
   await assert.rejects(origenDelBuild({ env: { VITE_CANONICAL_URL: 'http://socdepoble.org' }, arrel: ARREL }), TypeError);
+});
+
+test('Onada R26 · Apple App Site Association: emet applinks + webcredentials només amb Team ID real i origen canònic', (t) => {
+  const real = llegixConfiguracio(ARREL);
+  assert.equal(real.ios?.bundle_id, PAQUET_IOS);
+  assert.deepEqual([...(real.ios?.team_ids ?? [])], []);
+  assert.equal(construeixAppleAppSiteAssociation(real, ORIGEN), null);
+
+  for (const dolent of ['TEAM_ID_PENDENT', '0000000000', 'AAAAAAAAAA', 'abc1234567', 'A1B2C3D4E', 'A1B2C3D4E5F', '', null]) {
+    assert.throws(() => validaTeamId(dolent), TypeError, String(dolent));
+  }
+  assert.throws(() => validaCamiIos('mur/*'), TypeError);
+  assert.throws(() => validaCamiIos('/mur/../secret'), TypeError);
+
+  const cfgIos = {
+    ...configuracio([E1]),
+    ios: {
+      bundle_id: PAQUET_IOS,
+      origens: [ORIGEN],
+      team_ids: ['9A8B7C6D5E'],
+      camins: ['/auth/*', '/mur/*', '/notes/*']
+    }
+  };
+  const aasa = construeixAppleAppSiteAssociation(cfgIos, ORIGEN);
+  assert.deepEqual(aasa, {
+    applinks: {
+      details: [{
+        appIDs: ['9A8B7C6D5E.org.socdepoble.app'],
+        components: [{ '/': '/auth/*' }, { '/': '/mur/*' }, { '/': '/notes/*' }]
+      }]
+    },
+    webcredentials: { apps: ['9A8B7C6D5E.org.socdepoble.app'] }
+  });
+  assert.equal(construeixAppleAppSiteAssociation(cfgIos, 'https://gentdelatorre.net'), null);
+
+  const arrel = arrelTemporal(t, { config: cfgIos });
+  assert.deepEqual(fitxersAssociacio({ arrel, origen: ORIGEN }).map(([nom]) => nom), [FITXER_ASSETLINKS, FITXER_AASA]);
+});
+
+test('Onada R26 · el connector, cridat directament sobre la configuració real del repositori (sense vite), no emet cap fitxer d’associació: ni assetlinks.json ni apple-app-site-association', async () => {
+  const real = llegixConfiguracio(ARREL);
+  assert.deepEqual([...real.android.sha256_cert_fingerprints], []);
+  assert.deepEqual([...(real.ios?.team_ids ?? [])], []);
+  for (const env of [{}, { VITE_CANONICAL_URL: ORIGEN }, { VITE_CANONICAL_URL: `${ORIGEN}/` }, { VITE_CANONICAL_URL: 'https://gentdelatorre.net' }]) {
+    assert.deepEqual(await emissions(ARREL, env), [], JSON.stringify(env));
+  }
+  assert.deepEqual(fitxersAssociacio({ arrel: ARREL, origen: ORIGEN }), []);
 });

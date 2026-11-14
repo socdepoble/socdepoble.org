@@ -5,7 +5,8 @@
     "dist", "build", "coverage", ".vite", ".next", ".nuxt", ".cache", ".turbo",
     ".obsidian", ".sdp-paperera", ".quarantena-*",
     "90_historic", "90_arxiu_historic",
-    "bot"
+    "bot",
+    "src/sections/*/fitxes/*.md"
   ],
   "immutables": [],
   "perfils": []

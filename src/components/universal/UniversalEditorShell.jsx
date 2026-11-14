@@ -208,6 +208,11 @@ const SELECTOR_RANURA_AMBIT = '[data-sdp-ranura="ambit"]';
 const movimentReduit = () => typeof window !== 'undefined'
   && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
 
+export function desplacaSuauASeccio(element) {
+  if (!element) return;
+  desplacaASeccio(element, { behavior: movimentReduit() ? 'auto' : 'smooth', block: 'start' });
+}
+
 function AvisosCamps({ avisos, onAccio }) {
   // P1-22 · El traductor abans del return null: l'ordre dels hooks no canvia.
   const t = useTraductorOpcional();
@@ -718,7 +723,7 @@ export function UniversalEditorShell({
       const plegat = ranura.closest('details.sdp-edicio-avancada:not([open])');
       if (plegat) plegat.open = true;
       if (peticioAmbit.enfoca) {
-        desplacaASeccio(ranura, { behavior: movimentReduit() ? 'auto' : 'smooth', block: 'start' });
+        desplacaSuauASeccio(ranura);
         ranura.querySelector('select, input[type="radio"]:checked')?.focus({ preventScroll: true });
       } else {
         /* AH-23 (IDEA-80) · En entrar a publicar (?ambit=... amb enfoca: false),
@@ -885,6 +890,7 @@ export function UniversalEditorShell({
         {classificacio ? <div className="page-title-classificacio">{classificacio}</div> : null}
         {revisioEdicioAvancada ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="revisio">{revisioEdicioAvancada}</div> : null}
         {previsualitzacioTargeta ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="targeta-viva">{previsualitzacioTargeta}</div> : null}
+        {visibilitatEnLinia ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="visibilitat">{visibilitatEnLinia}</div> : null}
         <button
           type="button"
           className="sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar"
@@ -896,6 +902,7 @@ export function UniversalEditorShell({
       </div>
     </details>
   ) : null;
+  const visibilitatFora = edicioAvancada ? null : visibilitatEnLinia;
 
   return (
     <EditorErrorBoundary>
@@ -913,13 +920,15 @@ export function UniversalEditorShell({
                de la closca. */
             /* AH-02 · En repòs, «Editar» va l'últim de la ranura, just damunt
                de l'H1. Amb el panell i el desplegable, les dues primeres
-               posicions no canvien en eixir del repòs: no es remunten. */
-            {...(visibilitatEnLinia || desplegableDalt || botoEditar ? {
+               posicions no canvien en eixir del repòs: no es remunten.
+               Onada R26 · Amb edicioAvancada, visibilitatEnLinia viu dins de
+               details.sdp-edicio-avancada (un sol desplegable a /notes). */
+            {...(visibilitatFora || desplegableDalt || botoEditar ? {
               despresAutoria: botoEditar
-                ? <>{visibilitatEnLinia}{desplegableDalt ? desplegable : null}{botoEditar}</>
-                : (visibilitatEnLinia && desplegableDalt
-                  ? <>{visibilitatEnLinia}{desplegable}</>
-                  : (visibilitatEnLinia || desplegable))
+                ? <>{visibilitatFora}{desplegableDalt ? desplegable : null}{botoEditar}</>
+                : (visibilitatFora && desplegableDalt
+                  ? <>{visibilitatFora}{desplegable}</>
+                  : (visibilitatFora || desplegable))
             } : null)}
             /* T36 · després de ...rest: cap adaptador (Notes, Perfil) ho desfà.
                T7 · Cap avís en línia davall de la barra blava (tampoc d'un

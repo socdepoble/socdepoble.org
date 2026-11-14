@@ -282,6 +282,10 @@ export const CENS_IMATGES = Object.freeze([
   /* Onada R23 (14-11-2026) · La portada de l'article «La Veu de Sóc de Poble» (/mur/la-veu-de-soc-de-poble,
      laVeuDeSocDePobleContent.js), vinyeta d'IA; la seua variant social entra per VARIANTS_SOCIALS. */
   e('/assets/mur/la_veu_de_soc_de_poble_nano_v4.webp', 'La Veu de Sóc de Poble: la iaia, el llaurador i el Destil·lador d’Accents', 'contingut', 'ia', 'la-torre-de-les-macanes'),
+  /* Onada R25 (14-11-2026) · Les dues vinyetes didàctiques d'IA d'«El Farcellet Digital de Sóc de Poble»
+     (/mur/copies-de-seguretat-soc-de-poble, copiesSeguretatSocDePobleContent.js); les variants socials entren per VARIANTS_SOCIALS. */
+  e('/assets/mur/copies_seguretat_farcellet_hero.webp', 'El Farcellet Digital de Sóc de Poble: còpia segura davant del núvol de 15 GB plens', 'contingut', 'ia', 'la-torre-de-les-macanes'),
+  e('/assets/mur/copies_seguretat_quatre_capes.webp', 'Les quatre capes de custòdia de Sóc de Poble i el calaix de casa', 'contingut', 'ia', 'la-torre-de-les-macanes'),
 
   /* P0-52 / IDEA-183 (ordres del Mestre del 08-11-2026; R53) · Les imatges de
      l'article del Pou de Neu del Rentonar, al terme de La Torre de les Maçanes:

@@ -49,7 +49,7 @@ Recorre, només en este ordinador, la carpeta arrel de la Gestoria que tu tries,
 
 ## Com es desenxufa
 
-«Oblida la carpeta» desenxufa la carpeta (cap fitxer es torna a llegir), buida la radiografia i la selecció, i cancel·la l'anàlisi activa. Si el Tauler estava llegint els extractes d'esta carpeta, també cancel·la eixa lectura. Triar una altra carpeta cancel·la l'anàlisi anterior i n'oblida la carpeta. Canviar de mòdul dins de Gestoria conserva la radiografia; tancar la Gestoria l'oblida. El navegador no permet interrompre el fitxer que ja ha començat a llegir: quan acaba, els seus bytes es descarten, no se'n llig cap altre i no es publica cap resultat parcial. Revocar l'aprovació al panell de Tractors bloqueja les anàlisis següents.
+«Oblida la carpeta» desenxufa la carpeta (cap fitxer es torna a llegir), buida la radiografia i la selecció, i cancel·la l'anàlisi activa. Si el Tauler estava llegint els extractes d'esta carpeta, també cancel·la eixa lectura. Triar una altra carpeta cancel·la l'anàlisi anterior i n'oblida la carpeta. Canviar de mòdul dins de Gestoria conserva la radiografia; tancar la Gestoria l'oblida. El navegador no permet interrompre el fitxer que ja ha començat a llegir: quan acaba, els seus bytes es descarten, no se'n llig cap altre i no es publica cap resultat parcial. Revocar l'aprovació (fora del servidor de desenvolupament, amb «Revoca l’aprovació» a la mateixa pantalla; al servidor de desenvolupament, al panell de Tractors) bloqueja les anàlisis següents.
 
 ## L'aprovació
 

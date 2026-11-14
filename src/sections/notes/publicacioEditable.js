@@ -23,6 +23,7 @@ import { MANIFEST_DE_POBLE_HTML } from '../mur/articles/manifestDePobleContent.j
 import { APLEC_2023_HTML } from '../mur/articles/aplec2023Content.js';
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_HTML, NOVES_TECNOLOGIES_CULTURA_RURAL_ID } from '../mur/articles/novesTecnologiesCulturaRuralContent.js';
 import { LA_VEU_DE_SOC_DE_POBLE_HTML, LA_VEU_DE_SOC_DE_POBLE_ID } from '../mur/articles/laVeuDeSocDePobleContent.js';
+import { COPIES_SEGURETAT_SOC_DE_POBLE_HTML, COPIES_SEGURETAT_SOC_DE_POBLE_ID } from '../mur/articles/copiesSeguretatSocDePobleContent.js';
 import { CAMPS_DE_LA_REVISIO } from '../../data/revisionsEditorials.js';
 import { modeDeLaPublicacio } from '../../components/universal/traduccio/modesTraduccioLocals.js';
 
@@ -36,7 +37,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /* IDEA-116 (Onada R9, carril C2) i Onada R23 («La Veu de Sóc de Poble») · amb el mateix contracte. */
 const CANONICS = new Map([['manifest-de-poble', MANIFEST_DE_POBLE_HTML], ['aplec-2023', APLEC_2023_HTML],
   [NOVES_TECNOLOGIES_CULTURA_RURAL_ID, NOVES_TECNOLOGIES_CULTURA_RURAL_HTML],
-  [LA_VEU_DE_SOC_DE_POBLE_ID, LA_VEU_DE_SOC_DE_POBLE_HTML]]);
+  [LA_VEU_DE_SOC_DE_POBLE_ID, LA_VEU_DE_SOC_DE_POBLE_HTML],
+  [COPIES_SEGURETAT_SOC_DE_POBLE_ID, COPIES_SEGURETAT_SOC_DE_POBLE_HTML]]);
 
 const text = (valor) => (typeof valor === 'string' ? valor : '');
 const esRegistre = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);

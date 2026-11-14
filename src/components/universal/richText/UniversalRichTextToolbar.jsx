@@ -16,6 +16,7 @@ export function UniversalRichTextToolbar({
   onPublish,
   publishDisabled,
   publishLabel,
+  publishLabelWide,
   /* R16-T · 'pendent' | 'publicat' | null, de pas cap a UniversalToolbar. */
   publishState,
   publishPopup,
@@ -49,6 +50,7 @@ export function UniversalRichTextToolbar({
       onPublish={onPublish}
       publishDisabled={publishDisabled}
       publishLabel={publishLabel}
+      publishLabelWide={publishLabelWide}
       publishState={publishState}
       publishPopup={publishPopup}
       onDelete={onDelete}

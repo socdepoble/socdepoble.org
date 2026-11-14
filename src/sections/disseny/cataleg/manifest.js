@@ -22,6 +22,7 @@ export const CATALOG_CATEGORIES = [
    ho comprova, i que cap espècimen no se'n queda sense). */
 export const ICONES_ESPECIMENS = Object.freeze({
   fonaments: Object.freeze({
+    'respiracio-botons': '↔️',
     panell: '🎛️', contracte: '📜', color: '🎨', tipografia: '🔤', espaiat: '📏',
     universalcard: '🃏', 'targeta-viva': '✍️', 'controls-barra': '🔘', 'emoticona-barra': '😀',
     avatar: '👤', botonera: '🔗', taula: '🧮', indicador: '📈',
@@ -44,6 +45,7 @@ export const ICONES_ESPECIMENS = Object.freeze({
     'universal-tpv': '🏪', 'llista-comu': '🧺'
   }),
   formularis: Object.freeze({
+    'selector-opcions-desplegable': '📻',
     boto: '🆗', camp: '✏️', opcions: '☑️', pindola: '💊', cerca: '🔍',
     'formulari-complex': '📋', calendari: '📅', 'drets-autor': '©️', classificacio: '🔖',
     rajola: '🀄', 'teclat-numeric': '🔢', 'afegit-rapid': '➕',
@@ -654,3 +656,7 @@ export function rutaEspecimen(itemId) {
   if (!item) return null;
   return `/disseny?${new URLSearchParams({ categoria: item.categoryIds[0], item: item.id })}`;
 }
+
+CATALOG_ITEMS.push(especimen('formularis', 'selector-opcions-desplegable', 'Opcions amb revelació in-situ', 'SelectorOpcionsDesplegable', ['molecula', 'formulari'], 'Tria exclusiva amb explicació adjacent i resum de dues línies, llegible al mòbil.', 'radio conditional reveal disclosure'));
+
+CATALOG_ITEMS.push(especimen('fonaments', 'respiracio-botons', 'Respiració lateral dels botons', 'Coixí lateral i files centrades', ['atom', 'botons'], 'Etiquetes completes, amplària conservada i grups que baixen centrats quan falta espai.', 'padding lateral app store wordpress wrap'));

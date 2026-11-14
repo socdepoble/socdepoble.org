@@ -120,7 +120,7 @@ export const PAGINES_INFORMATIVES = Object.freeze(['publicar_mur', 'publicar_mer
 
 /* P0-60 / IDEA-191 · Les adreces /page/<clau> que navigation.js (resolvePageSlugPath) porta a
    una publicació del Mur: l'àlies servix el mateix <head> que la publicació. Llista tancada. */
-export const PAGINES_A_PUBLICACIONS = Object.freeze(['anatomia-rural', 'la-veu-de-soc-de-poble']);
+export const PAGINES_A_PUBLICACIONS = Object.freeze(['anatomia-rural', 'la-veu-de-soc-de-poble', 'copies-de-seguretat-soc-de-poble']);
 
 /* P0-60 / IDEA-191 · Les pàgines que pageContent.js afig a PAGE_COPY fora del literal
    (Object.assign): [font, exportació]. */
@@ -147,6 +147,7 @@ export const LLAVORS = Object.freeze([
   ['events', 'src/sections/mur/eventsSeed.js', 'CALENDAR_EVENTS'],
   ['events', 'src/sections/mur/eventsSeed.js', 'FEATURED_EVENTS'],
   ['pobles', 'src/sections/pobles/townsSeed.js', 'MOCK_TOWNS'],
+  ['mur', 'src/sections/mur/articles/copiesSeguretatSocDePobleContent.js', 'COPIES_SEGURETAT_SOC_DE_POBLE_POST'],
   ['mur', 'src/sections/mur/articles/laVeuDeSocDePobleContent.js', 'LA_VEU_DE_SOC_DE_POBLE_POST'],
   ['mur', 'src/sections/mur/articles/novesTecnologiesCulturaRuralContent.js', 'NOVES_TECNOLOGIES_CULTURA_RURAL_POST'],
   ['mur', 'src/sections/mur/feedSeed.js', 'MOCK_FEED']

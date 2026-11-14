@@ -3,6 +3,7 @@ import { ArrowUpRight, Check, SquarePen } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { Alerta } from '../PedraSeca';
 import { omple } from '../../config/moderacio.js';
+import { desplacaSuauASeccio } from './UniversalEditorShell.jsx';
 
 function useNavegaOpcional() {
   try {
@@ -47,6 +48,7 @@ const TEXTOS_DEFECTE = Object.freeze({
   estatPublicat: 'Publicat',
   veurePublicacio: 'Veure al Mur',
   treballant: 'Publicant…',
+  recordatoriEsborrany: 'Esta nota està en 🔒 Esborrany privat. Tria «📣 Públic al Mur de poble» abans de publicar-la.',
 });
 
 /**
@@ -96,6 +98,7 @@ export function PanellVisibilitatEnLinia({
   const botoRetiraRef = useRef(null);
   const peticioAtesaRef = useRef(null);
   const cursaRef = useRef(0);
+  const confirmaPublicacioRef = useRef(null);
   /* F03-UI · On ha d'anar el focus després de retirar ('privada', 'retira' o
      'panell'): en una ref, perquè l'efecte el porte quan el DOM ja és el nou
      (el fieldset ja no està desactivat i el botó, si cal, torna a existir). */
@@ -129,6 +132,7 @@ export function PanellVisibilitatEnLinia({
     confirmatAra: false,
     retiradaPendent: null,
     retiradaFeta: false,
+    avisEsborrany: false,
   }));
 
   if (estat.notaId !== notaId) {
@@ -144,6 +148,7 @@ export function PanellVisibilitatEnLinia({
       confirmatAra: false,
       retiradaPendent: null,
       retiradaFeta: false,
+      avisEsborrany: false,
     });
   } else if (estat.esPublica !== esPublica) {
     setEstat((previ) => ({
@@ -157,6 +162,7 @@ export function PanellVisibilitatEnLinia({
          drenar la cua): l'avís de pendent ja no és cert. */
       retiradaPendent: null,
       retiradaFeta: esPublica ? false : previ.retiradaFeta,
+      avisEsborrany: false,
     }));
   }
 
@@ -197,7 +203,9 @@ export function PanellVisibilitatEnLinia({
     const desti = focusPendentRef.current;
     if (!desti) return;
     focusPendentRef.current = null;
-    const element = desti === 'privada' ? radioPrivadaRef.current : (desti === 'retira' ? botoRetiraRef.current : panellRef.current);
+    const element = desti === 'privada'
+      ? radioPrivadaRef.current
+      : (desti === 'publica' ? radioPublicaRef.current : (desti === 'retira' ? botoRetiraRef.current : panellRef.current));
     element?.focus?.({ preventScroll: true });
   });
 
@@ -212,25 +220,67 @@ export function PanellVisibilitatEnLinia({
   useEffect(() => {
     if (!peticioEnfocament || peticioAtesaRef.current === peticioEnfocament) return;
     peticioAtesaRef.current = peticioEnfocament;
-    if (!publicaBloquejada) {
-      setEstat((previ) => (previ.publicaTriada ? previ : { ...previ, publicaTriada: true, error: null }));
-    }
     const panell = panellRef.current;
-    if (typeof panell?.scrollIntoView === 'function') {
-      panell.scrollIntoView({ block: 'nearest' });
+    const plegat = panell?.closest?.('details.sdp-edicio-avancada:not([open])');
+    if (plegat) plegat.open = true;
+    const objectiuScroll = panell?.closest?.('[data-sdp-ranura="visibilitat"]') || panell;
+    desplacaSuauASeccio(objectiuScroll);
+
+    if (peticioEnfocament.origen === 'publicar-barra') {
+      if (!esPublica && !publicaSeleccionada) {
+        if (!publicaBloquejada && radioPublicaRef.current && !radioPublicaRef.current.disabled) {
+          /* Verificació R26 (Claude) · El recordatori és la descripció del
+             ràdio públic (aria-describedby): el focus hi arriba després del
+             pintat que el posa al DOM (focusPendentRef), perquè el lector el
+             diga en enfocar-lo. Sempre un objecte nou: també la segona volta
+             hi ha pintat i el focus torna al ràdio. */
+          focusPendentRef.current = 'publica';
+          setEstat((previ) => ({ ...previ, avisEsborrany: true, error: null }));
+        } else {
+          panell?.focus?.({ preventScroll: true });
+        }
+      } else if (!publicaBloquejada && !ambRetiradaPendent) {
+        if (faltaTriarPoble) {
+          const selectorPoble = panell?.querySelector('select');
+          (selectorPoble || panell)?.focus?.({ preventScroll: true });
+        } else if (alDiaAlMur) {
+          const enllac = panell?.querySelector('.sdp-visibilitat-linia__enllac');
+          (enllac || panell)?.focus?.({ preventScroll: true });
+        } else if (estatPublicacio === 'publicat') {
+          /* Verificació R26 (Claude) · La barra diu «Publicat» (el poble s'ha
+             canviat ací): «Publicat» no publica. El focus va a «Actualitzar
+             al Mur», que és qui ho fa. */
+          const destiActualitza = botoAccioRef.current && !botoAccioRef.current.disabled
+            ? botoAccioRef.current
+            : panell;
+          destiActualitza?.focus?.({ preventScroll: true });
+        } else {
+          /* Verificació R26 (Claude) · Publica directament. El focus va al
+             panell (tabIndex -1), on es diu el resultat: el botó blau es
+             desactiva mentre publica i el focus no s'hi pot quedar. */
+          panell?.focus?.({ preventScroll: true });
+          void confirmaPublicacioRef.current?.();
+        }
+      } else {
+        panell?.focus?.({ preventScroll: true });
+      }
+      onPeticioAtesa?.(peticioEnfocament);
+      return;
     }
+
+    const radioActiu = publicaSeleccionada ? radioPublicaRef.current : radioPrivadaRef.current;
     const desti = (!publicaBloquejada && esPublica && botoAccioRef.current && !botoAccioRef.current.disabled)
       ? botoAccioRef.current
-      : (radioPublicaRef.current && !radioPublicaRef.current.disabled ? radioPublicaRef.current : panell);
+      : (radioActiu && !radioActiu.disabled ? radioActiu : panell);
     desti?.focus?.({ preventScroll: true });
     onPeticioAtesa?.(peticioEnfocament);
-  }, [peticioEnfocament, publicaBloquejada, esPublica, onPeticioAtesa]);
+  }, [peticioEnfocament, publicaBloquejada, esPublica, publicaSeleccionada, ambRetiradaPendent, faltaTriarPoble, alDiaAlMur, estatPublicacio, onPeticioAtesa]);
 
   const canviaVisibilitat = (novaPublica) => {
     if (estat.ocupat || ambRetiradaPendent) return;
     if (novaPublica && publicaBloquejada) return;
     if (!novaPublica && privadaBloquejada) return;
-    setEstat((previ) => ({ ...previ, publicaTriada: novaPublica, error: null, retiradaFeta: false }));
+    setEstat((previ) => ({ ...previ, publicaTriada: novaPublica, error: null, retiradaFeta: false, avisEsborrany: false }));
   };
 
   /* F03-UI · «Retirar del Mur»: onTria(false) només des d'ací, després de la
@@ -277,6 +327,7 @@ export function PanellVisibilitatEnLinia({
       publicaTriada: publicaBloquejada ? previ.publicaTriada : true,
       confirmatAra: false,
       error: null,
+      avisEsborrany: false,
     }));
   };
 
@@ -285,7 +336,7 @@ export function PanellVisibilitatEnLinia({
     if (ambRetiradaPendent) return;
     const cursa = cursaRef.current + 1;
     cursaRef.current = cursa;
-    setEstat((previ) => ({ ...previ, publicaTriada: true, ocupat: true, error: null, retiradaFeta: false }));
+    setEstat((previ) => ({ ...previ, publicaTriada: true, ocupat: true, error: null, retiradaFeta: false, avisEsborrany: false }));
     try {
       const calEnviarPoble = pobles.length > 1 && pobleSeleccionat && (!esPublica || !poblePublicatValid || pobleCanviat);
       const opcions = calEnviarPoble ? { poble: pobleSeleccionat } : undefined;
@@ -313,6 +364,7 @@ export function PanellVisibilitatEnLinia({
       setEstat((previ) => ({ ...previ, ocupat: false, error: missatge, confirmatAra: false }));
     }
   };
+  confirmaPublicacioRef.current = confirmaPublicacio;
 
   const clicaEnllacPublicacio = (event) => {
     if (!rutaPublicada || typeof navega !== 'function') return;
@@ -331,6 +383,8 @@ export function PanellVisibilitatEnLinia({
   const idAjudaPoble = `${idBase}-poble-ajuda`;
   const idDescPrivada = `${idBase}-privada-desc`;
   const idDescPublica = `${idBase}-publica-desc`;
+  const idRecordatori = `${idBase}-recordatori`;
+  const mostraRecordatori = Boolean(estat.avisEsborrany && !publicaSeleccionada && !publicaBloquejada && textos.recordatoriEsborrany);
 
   return (
     <section
@@ -392,7 +446,7 @@ export function PanellVisibilitatEnLinia({
             name={nomGrup}
             checked={publicaSeleccionada}
             disabled={publicaBloquejada}
-            aria-describedby={idDescPublica}
+            aria-describedby={mostraRecordatori ? `${idRecordatori} ${idDescPublica}` : idDescPublica}
             onChange={() => canviaVisibilitat(true)}
           />
           <span className="sdp-visibilitat-linia__opcio-cos">
@@ -426,6 +480,10 @@ export function PanellVisibilitatEnLinia({
 
       {faltaTriarPoble && textos.poble?.indeterminat ? (
         <p className="sdp-visibilitat-linia__avis" role="status">{textos.poble.indeterminat}</p>
+      ) : null}
+
+      {mostraRecordatori ? (
+        <Alerta to="avis"><span id={idRecordatori}>{textos.recordatoriEsborrany}</span></Alerta>
       ) : null}
 
       {/* F03-UI · Abans de publicar: amb la retirada disponible, que es podrà

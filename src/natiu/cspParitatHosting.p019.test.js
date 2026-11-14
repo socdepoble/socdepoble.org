@@ -161,11 +161,13 @@ describe('P0-19 (D10/D12): Paritat estructural de CSP i capçaleres entre fireba
     ]);
   });
 
-  it('manté paritat exacta en X-Content-Type-Options, Referrer-Policy i Permissions-Policy entre firebase.json i vercel.json', () => {
+  it('manté paritat exacta en X-Content-Type-Options, Referrer-Policy, Permissions-Policy i Strict-Transport-Security entre firebase.json i vercel.json', () => {
+    /* Onada R26 · HSTS d'un any només per a l'apex als dos amfitrions (VIG-09); includeSubDomains és decisió del Mestre. */
     const capcaleresSeguretat = {
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(self), microphone=(self), geolocation=(self)',
+      'Strict-Transport-Security': 'max-age=31536000',
     };
 
     for (const [clau, valorEsperat] of Object.entries(capcaleresSeguretat)) {
@@ -178,12 +180,14 @@ describe('P0-19 (D10/D12): Paritat estructural de CSP i capçaleres entre fireba
       'X-Content-Type-Options',
       'Referrer-Policy',
       'Permissions-Policy',
+      'Strict-Transport-Security',
     ]);
     expect(reglaGlobalVercel.headers.map((h) => h.key)).toEqual([
       'Content-Security-Policy',
       'X-Content-Type-Options',
       'Referrer-Policy',
       'Permissions-Policy',
+      'Strict-Transport-Security',
     ]);
   });
 

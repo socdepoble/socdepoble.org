@@ -72,6 +72,39 @@ test('constant prioritza entorn; clau absent o amb CRLF passa al proveïdor lliu
     assert.equal(r.calls[0].headers.Authorization, undefined);
   }
 });
+/* R26 (IDEA-264) · Precedència explícita: una DEEPL_API_KEY definida a wp-config.php mana encara
+   que siga buida (desactiva DeepL, com abans de la Secrets API) i no passa a la variable d'entorn
+   ni a la Secrets API de WordPress 7.2. */
+test('R26 · DEEPL_API_KEY definida i buida desactiva DeepL: cap clau des de l’entorn', options, () => {
+  const r = run({ constants: { DEEPL_API_KEY: '' } });
+  assert.equal(r.responses[0].status, 200);
+  assert.deepEqual(r.calls.map((c) => c.url), [BETA], 'Apertium, encara que l’entorn porte una clau de DeepL');
+  assert.equal(r.calls[0].headers.Authorization, undefined);
+});
+/* R26 (IDEA-264, auditoria Codex R25.2 P2) · L'empremta és un HMAC, no un xifrat: separa cache i
+   pausa per proveïdor, per extrem propi i per credencial. Dos extrems d'Apertium o dues claus de
+   l'extrem lliure mai compartixen entrada, ni la pausa d'una credencial rebutjada passa a la nova;
+   sense extrem ni clau, l'empremta de sempre (la cache ja guardada continua valent). */
+test('R26 · empremta per extrem propi d’Apertium i per credencial de l’extrem lliure: cap àlies de cache ni de pausa', options, () => {
+  const claus = (r) => traduccionsGuardades(r).sort();
+  const apertium = (propi) => run({ key: '', constants: propi ? { SDP_TRADUCCIO_APERTIUM_URL: propi } : {} });
+  const [a, b, cap] = ['https://apertium-a.example/apy/translate', 'https://apertium-b.example/apy/translate', null].map((propi) => claus(apertium(propi)));
+  assert.equal(a.length, 1);
+  assert.notDeepEqual(a, b, 'dos extrems propis no compartixen cache');
+  assert.notDeepEqual(a, cap, 'un extrem propi no hereta la cache dels extrems públics');
+  assert.deepEqual(cap, [nomCache('ES', 'text', 'Bon dia', hmac('sdp-apertium-v1'))], 'sense extrem propi, l’empremta de sempre');
+
+  const lliure = (clau, pas = {}) => run({ key: '', constants: { SDP_TRADUCCIO_URL: LLIURE, ...(clau ? { SDP_TRADUCCIO_URL_CLAU: clau } : {}) }, steps: [{ body: body(['Bon dia'], { desti: 'DE' }), ...pas }] });
+  const [k1, k2, sense] = ['fixture-secret-lliure-1', 'fixture-secret-lliure-2', null].map((clau) => claus(lliure(clau)));
+  assert.equal(k1.length, 1);
+  assert.notDeepEqual(k1, k2, 'una credencial rotada no comparteix cache');
+  assert.notDeepEqual(k1, sense);
+  assert.deepEqual(sense, [nomCache('DE', 'text', 'Bon dia', hmac(`sdp-lliure-v1|${LLIURE}`))], 'sense clau, l’empremta de sempre');
+  const pausa = (clau) => Object.keys(lliure(clau, { fail: { [LLIURE]: 403 } }).cache).filter((k) => k.startsWith('sdp_tr_pause_'));
+  const [p1, p2] = [pausa('fixture-secret-lliure-1'), pausa('fixture-secret-lliure-2')];
+  assert.equal(p1.length, 1);
+  assert.notDeepEqual(p1, p2, 'la pausa d’una clau rebutjada no bloqueja la clau nova');
+});
 /* Cicle 2 · DeepL admet GL i EU com a target_lang (documentació oficial de
    developers.deepl.com, d'ús general des del 8-1-2026): amb clau, hi van tots dos. */
 test('amb DEEPL_API_KEY, GL i EU van a DeepL amb target_lang GL i EU (i DE, com sempre)', options, () => {

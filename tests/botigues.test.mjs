@@ -685,3 +685,139 @@ test('botigues: dexDeLAab llig els dex d\'un AAB de veres i dexAmbFacebook hi tr
     fs.rmSync(carpeta, { recursive: true, force: true });
   }
 });
+
+test('botigues: Onada R26 · seguretatBotigues i liniesSeguretatBotigues certifiquen l\'arbre real i rebutgen relaxacions d\'ATS, cleartext, allowBackup, associacio-apps.json malformat o .well-known estàtic', () => {
+  const real = p.seguretatBotigues(ARREL);
+  assert.equal(real.associacioPresent, true);
+  assert.equal(real.ios.present, true);
+  assert.equal(real.ios.atsSegur, true);
+  assert.equal(real.ios.privacitatSenseRastreig, true);
+  assert.equal(real.ios.privacitatCa921, true);
+  assert.equal(real.ios.aasaEstatica, false);
+  assert.equal(real.ios.associacioValida, true);
+  assert.equal(real.android.present, true);
+  assert.equal(real.android.allowBackupFals, true);
+  assert.equal(real.android.cleartextManifestFals, true);
+  assert.equal(real.android.referenciaNetworkConfig, true);
+  assert.equal(real.android.networkConfigSegura, true);
+  assert.equal(real.android.assetlinksEstatic, false);
+  assert.equal(real.android.associacioValida, true);
+
+  const intern = p.liniesSeguretatBotigues(real, { plataformes: ['ios', 'android'], produccio: false });
+  assert.deepEqual(intern.mal, []);
+  assert.equal(intern.linies.filter((l) => l.startsWith('  ✓ ')).length, 2);
+
+  const prod = p.liniesSeguretatBotigues(real, { plataformes: ['ios', 'android'], produccio: true });
+  assert.deepEqual(prod.mal, []);
+  assert.ok(prod.linies.some((l) => l.includes('ios.team_ids buit')));
+  assert.ok(prod.linies.some((l) => l.includes('android.sha256_cert_fingerprints buit')));
+
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-r26-seguretat-'));
+  try {
+    // Arbre sintètic sense fitxers natius: no genera cap línia ni error.
+    assert.deepEqual(p.liniesSeguretatBotigues(p.seguretatBotigues(carpeta), { plataformes: ['ios', 'android'], produccio: true }), { linies: [], mal: [] });
+
+    // Regressió iOS + Android: ATS relaxat, allowBackup="true", cleartextTrafficPermitted="true", .well-known estàtic prohibit i associacio-apps.json invàlid.
+    fs.mkdirSync(path.join(carpeta, 'ios', 'App', 'App'), { recursive: true });
+    fs.writeFileSync(path.join(carpeta, 'ios', 'App', 'App', 'Info.plist'),
+      '<plist><dict><key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict></dict></plist>');
+    fs.mkdirSync(path.join(carpeta, 'android', 'app', 'src', 'main', 'res', 'xml'), { recursive: true });
+    fs.writeFileSync(path.join(carpeta, 'android', 'app', 'src', 'main', 'AndroidManifest.xml'),
+      '<manifest><application android:allowBackup="true" android:usesCleartextTraffic="true"></application></manifest>');
+    fs.writeFileSync(path.join(carpeta, 'android', 'app', 'src', 'main', 'res', 'xml', 'network_security_config.xml'),
+      '<network-security-config><base-config cleartextTrafficPermitted="true" /></network-security-config>');
+    fs.mkdirSync(path.join(carpeta, 'public', '.well-known'), { recursive: true });
+    fs.writeFileSync(path.join(carpeta, 'public', '.well-known', 'apple-app-site-association'), '{}');
+    fs.writeFileSync(path.join(carpeta, 'public', '.well-known', 'assetlinks.json'), '[]');
+    fs.mkdirSync(path.join(carpeta, 'scripts', 'botigues'), { recursive: true });
+    fs.writeFileSync(path.join(carpeta, 'scripts', 'botigues', 'associacio-apps.json'), '{"esquema":"trencat"}');
+
+    const trencat = p.liniesSeguretatBotigues(p.seguretatBotigues(carpeta), { plataformes: ['ios', 'android'], produccio: true });
+    assert.equal(trencat.mal.length, 8);
+  } finally {
+    fs.rmSync(carpeta, { recursive: true, force: true });
+  }
+});
+
+/* Onada R26 (arbitratge de Claude) · La línia «✓ NSAppTransportSecurity estricte / network_security_config»
+   ha de dir la veritat: el kit només mirava que les dues claus d'ATS foren false i que no hi haguera
+   src="user", i deixava passar excepcions d'ATS, àncores @raw i una associacio-apps.json que el build
+   web rebutjaria. Arbres sintètics fets amb els fitxers reals del repositori, cada un amb UNA relaxació. */
+test('botigues: Onada R26 · seguretatBotigues rebutja excepcions d’ATS, àncores que no són del sistema i una associacio-apps.json que el build web no acceptaria', () => {
+  const REALS = [
+    ['ios', 'App', 'App', 'Info.plist'],
+    ['ios', 'App', 'App', 'PrivacyInfo.xcprivacy'],
+    ['android', 'app', 'src', 'main', 'AndroidManifest.xml'],
+    ['android', 'app', 'src', 'main', 'res', 'xml', 'network_security_config.xml'],
+    ['scripts', 'botigues', 'associacio-apps.json']
+  ];
+  const carpetes = [];
+  const arbre = (rel, muta) => {
+    const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-r26-relaxacio-'));
+    carpetes.push(carpeta);
+    for (const parts of REALS) {
+      fs.mkdirSync(path.join(carpeta, ...parts.slice(0, -1)), { recursive: true });
+      fs.copyFileSync(path.join(ARREL, ...parts), path.join(carpeta, ...parts));
+    }
+    if (rel) {
+      const fitxer = path.join(carpeta, ...rel);
+      fs.writeFileSync(fitxer, muta(fs.readFileSync(fitxer, 'utf8')));
+    }
+    return p.seguretatBotigues(carpeta);
+  };
+  const INFO = ['ios', 'App', 'App', 'Info.plist'];
+  const NSC = ['android', 'app', 'src', 'main', 'res', 'xml', 'network_security_config.xml'];
+  const ASSOCIACIO = ['scripts', 'botigues', 'associacio-apps.json'];
+  const FINAL_ATS = /(<key>NSAllowsArbitraryLoadsInWebContent<\/key>\s*<false\/>)/;
+  const ambAts = (afegit) => (text) => {
+    assert.match(text, FINAL_ATS);
+    return text.replace(FINAL_ATS, `$1\n\t\t${afegit}`);
+  };
+  const json = (canvi) => (text) => { const cfg = JSON.parse(text); canvi(cfg); return JSON.stringify(cfg, null, 2); };
+  try {
+    const net = arbre(null);
+    assert.equal(net.ios.atsSegur, true);
+    assert.equal(net.android.networkConfigSegura, true);
+    assert.equal(net.ios.associacioValida, true);
+    assert.equal(net.android.associacioValida, true);
+    assert.deepEqual(p.liniesSeguretatBotigues(net, { plataformes: ['ios', 'android'], produccio: false }).mal, []);
+
+    const ats = {
+      'NSExceptionDomains amb HTTP en clar': ambAts('<key>NSExceptionDomains</key>\n\t\t<dict>\n\t\t\t<key>exemple.invalid</key>\n\t\t\t<dict>\n\t\t\t\t<key>NSExceptionAllowsInsecureHTTPLoads</key>\n\t\t\t\t<true/>\n\t\t\t</dict>\n\t\t</dict>'),
+      'NSAllowsLocalNetworking': ambAts('<key>NSAllowsLocalNetworking</key>\n\t\t<true/>'),
+      'NSAllowsArbitraryLoadsForMedia': ambAts('<key>NSAllowsArbitraryLoadsForMedia</key>\n\t\t<true/>'),
+      'un segon NSAppTransportSecurity': (text) => text.replace('</dict>\n</plist>', '\t<key>NSAppTransportSecurity</key>\n\t<dict>\n\t\t<key>NSAllowsLocalNetworking</key>\n\t\t<true/>\n\t</dict>\n</dict>\n</plist>')
+    };
+    for (const [nom, muta] of Object.entries(ats)) {
+      const estat = arbre(INFO, muta);
+      assert.equal(estat.ios.atsSegur, false, nom);
+      assert.ok(p.liniesSeguretatBotigues(estat, { plataformes: ['ios'], produccio: false }).mal.length > 0, nom);
+    }
+
+    const ancores = {
+      'una CA pròpia (@raw) per a un domini': (text) => text.replace('</network-security-config>',
+        '    <domain-config>\n        <domain includeSubdomains="true">exemple.invalid</domain>\n        <trust-anchors>\n            <certificates src="@raw/ca_propia" />\n        </trust-anchors>\n    </domain-config>\n</network-security-config>'),
+      'CAs addicionals a la base': (text) => text.replace('<certificates src="system" />', '<certificates src="@raw/extracas" />\n            <certificates src="system" />')
+    };
+    for (const [nom, muta] of Object.entries(ancores)) {
+      const estat = arbre(NSC, muta);
+      assert.equal(estat.android.networkConfigSegura, false, nom);
+      assert.ok(p.liniesSeguretatBotigues(estat, { plataformes: ['android'], produccio: false }).mal.length > 0, nom);
+    }
+
+    const associacio = {
+      'ios.camins amb «..»': [json((cfg) => { cfg.ios.camins = ['/mur/../privat']; }), 'ios'],
+      'ios.team_ids repetit': [json((cfg) => { cfg.ios.team_ids = ['9A8B7C6D5E', '9A8B7C6D5E']; }), 'ios'],
+      'ios.origens en http': [json((cfg) => { cfg.ios.origens = ['http://socdepoble.org']; }), 'ios'],
+      'android.origens en http': [json((cfg) => { cfg.android.origens = ['http://socdepoble.org']; }), 'android'],
+      'clau desconeguda': [json((cfg) => { cfg.android.extra = true; }), 'android']
+    };
+    for (const [nom, [muta, plataforma]] of Object.entries(associacio)) {
+      const estat = arbre(ASSOCIACIO, muta);
+      assert.equal(estat[plataforma].associacioValida, false, nom);
+      assert.ok(p.liniesSeguretatBotigues(estat, { plataformes: [plataforma], produccio: false }).mal.length > 0, nom);
+    }
+  } finally {
+    for (const carpeta of carpetes) fs.rmSync(carpeta, { recursive: true, force: true });
+  }
+});

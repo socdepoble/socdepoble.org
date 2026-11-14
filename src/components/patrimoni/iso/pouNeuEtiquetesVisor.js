@@ -57,6 +57,7 @@ export const POU_NEU_ETIQUETES_VISOR = Object.freeze({
     giraEsq: 'Gira a l’esquerra', giraDreta: 'Gira a la dreta', puja: 'Puja', baixa: 'Baixa',
     mirarAmunt: 'Mira amunt', mirarAvall: 'Mira avall',
     escolta: 'Escolta la IAIA: esta estació',
+    relat: 'Relat de l’estació',
   },
   es: {
     modes: { interior: 'Dentro del pozo', tall: 'Corte seccional', desmuntatge: 'Desmontar en 3D' },
@@ -102,6 +103,7 @@ export const POU_NEU_ETIQUETES_VISOR = Object.freeze({
     giraEsq: 'Gira a la izquierda', giraDreta: 'Gira a la derecha', puja: 'Sube', baixa: 'Baja',
     mirarAmunt: 'Mira arriba', mirarAvall: 'Mira abajo',
     escolta: 'Escucha a la IAIA: esta estación',
+    relat: 'Relato de la estación',
   },
   en: {
     modes: { interior: 'Inside the well', tall: 'Cross-section', desmuntatge: 'Take apart in 3D' },
@@ -147,6 +149,7 @@ export const POU_NEU_ETIQUETES_VISOR = Object.freeze({
     giraEsq: 'Turn left', giraDreta: 'Turn right', puja: 'Up', baixa: 'Down',
     mirarAmunt: 'Look up', mirarAvall: 'Look down',
     escolta: 'Listen to the IAIA: this stop',
+    relat: 'Stop description',
   },
   eu: {
     modes: { interior: 'Putzuaren barruan', tall: 'Sekzio-ebakia', desmuntatge: 'Desmuntatu 3Dn' },
@@ -192,6 +195,7 @@ export const POU_NEU_ETIQUETES_VISOR = Object.freeze({
     giraEsq: 'Biratu ezkerrera', giraDreta: 'Biratu eskuinera', puja: 'Igo', baixa: 'Jaitsi',
     mirarAmunt: 'Begiratu gora', mirarAvall: 'Begiratu behera',
     escolta: 'Entzun IAIA: geltoki hau',
+    relat: 'Geltokiaren azalpena',
   },
   gl: {
     modes: { interior: 'Dentro do pozo', tall: 'Corte seccional', desmuntatge: 'Desmontar en 3D' },
@@ -237,5 +241,6 @@ export const POU_NEU_ETIQUETES_VISOR = Object.freeze({
     giraEsq: 'Xira á esquerda', giraDreta: 'Xira á dereita', puja: 'Sobe', baixa: 'Baixa',
     mirarAmunt: 'Mira arriba', mirarAvall: 'Mira abaixo',
     escolta: 'Escoita a IAIA: esta estación',
+    relat: 'Relato da estación',
   },
 });

@@ -108,11 +108,12 @@ describe('la llavor del Mur amb les dates de prova', () => {
        publicació del Mur. Abans, com a molt onze.
        P0-51 / IDEA-182 (261108) · Es retira Anatomia rural del Mur i
        tornem al sostre de dotze, sense canviar la seua pàgina directa.
-       Onada R23 (261113) · «La Veu de Sóc de Poble» hi entra la primera
-       davant del Pou de Neu: amb ella en són tretze. */
-    expect(N).toBeLessThanOrEqual(13);
-    expect(IMPORTANTS_DEL_MUR).toHaveLength(13);
-    expect(IMPORTANTS_DEL_MUR.slice(0, 3).map(clau)).toEqual([
+       Onada R23 (261113) · «La Veu de Sóc de Poble» hi entra davant del Pou de Neu.
+       Onada R25 (261114) · «El Farcellet Digital de Sóc de Poble» hi entra la primera: amb ella en són catorze. */
+    expect(N).toBeLessThanOrEqual(14);
+    expect(IMPORTANTS_DEL_MUR).toHaveLength(14);
+    expect(IMPORTANTS_DEL_MUR.slice(0, 4).map(clau)).toEqual([
+      'feedPosts:copies-de-seguretat-soc-de-poble',
       'feedPosts:la-veu-de-soc-de-poble',
       'feedPosts:noves-tecnologies-aplicades-a-la-cultura-rural',
       'pages:fediversity',

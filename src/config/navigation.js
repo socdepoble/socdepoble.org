@@ -42,7 +42,9 @@ export const PAGE_ROUTE_MAP = {
      l'adreça antiga entra a l'article del Mur amb el replace de PageDetailSection. */
   'anatomia-rural': '/mur/noves-tecnologies-aplicades-a-la-cultura-rural',
   /* Onada R23 · Àlies directe cap a l'article multimèdia i interactiu «La Veu de Sóc de Poble». */
-  'la-veu-de-soc-de-poble': '/mur/la-veu-de-soc-de-poble'
+  'la-veu-de-soc-de-poble': '/mur/la-veu-de-soc-de-poble',
+  /* Onada R25 · Àlies directe cap a la guia didàctica «El Farcellet Digital de Sóc de Poble». */
+  'copies-de-seguretat-soc-de-poble': '/mur/copies-de-seguretat-soc-de-poble'
 };
 const KNOWN_PAGE_SLUGS = new Set(Object.keys(PAGE_ROUTE_MAP));
 

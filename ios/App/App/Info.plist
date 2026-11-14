@@ -45,6 +45,13 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<false/>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Sóc de Poble necessita accés a la càmera per a fer les fotos i els vídeos que compartixes amb el poble i la foto del teu perfil.</string>
 	<key>NSMicrophoneUsageDescription</key>

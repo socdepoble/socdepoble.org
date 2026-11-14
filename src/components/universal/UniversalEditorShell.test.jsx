@@ -311,7 +311,7 @@ test('AH-02 · en repòs, els tres camps són text i «Editar» (damunt de l’H
   focus.mockRestore();
 });
 
-test('AH-02 · en eixir del repòs, el panell i l’«Edició avançada» de la ranura no es remunten', () => {
+test('AH-02 / R26 · en eixir del repòs, el panell (dins de l’«Edició avançada») i el desplegable de la ranura no es remunten', () => {
   const Pare = () => {
     const [repos, setRepos] = useState(true);
     return (
@@ -324,15 +324,16 @@ test('AH-02 · en eixir del repòs, el panell i l’«Edició avançada» de la 
   const { container, getByRole, getByTestId } = render(<Pare />);
   const panell = getByTestId('panell');
   const desplegable = container.querySelector('details.sdp-edicio-avancada');
+  expect(desplegable.querySelector('[data-sdp-ranura="visibilitat"]').contains(panell)).toBe(true);
   desplegable.open = true;
   expect([...container.querySelector('.sdp-pagina-despres-autoria').children].map((el) => el.className || el.dataset.testid))
-    .toEqual(['panell', 'sdp-edicio-avancada', 'sdp-accions']);
+    .toEqual(['sdp-edicio-avancada', 'sdp-accions']);
   fireEvent.click(getByRole('button', { name: 'Editar' }));
   expect(getByTestId('panell')).toBe(panell);
   expect(container.querySelector('details.sdp-edicio-avancada')).toBe(desplegable);
   expect(desplegable.open).toBe(true);
   expect([...container.querySelector('.sdp-pagina-despres-autoria').children].map((el) => el.className || el.dataset.testid))
-    .toEqual(['panell', 'sdp-edicio-avancada']);
+    .toEqual(['sdp-edicio-avancada']);
 });
 
 /* ── T40–T41 (ordre del Mestre, 260928) · la barra taronja ─────────────── */

@@ -200,7 +200,11 @@ const notaPublicada = (extra = {}) => ({
   isPublished: true, publishedSubmissionId: 'nota-ret-1', revision: 3, contentLoaded: true, ...extra,
 });
 
-const panell = () => screen.getByRole('region', { name: NOM_PANELL });
+const panell = () => {
+  const desplegable = document.querySelector('details.sdp-edicio-avancada:not([open])');
+  if (desplegable) desplegable.open = true;
+  return screen.getByRole('region', { name: NOM_PANELL });
+};
 const radioPrivada = () => within(panell()).getByRole('radio', { name: /Esborrany privat/ });
 const radioPublica = () => within(panell()).getByRole('radio', { name: /Públic al Mur de poble/ });
 
@@ -731,6 +735,8 @@ describe('F03-UI · Retirar del Mur des de /notes', () => {
     mocks.t = createTranslator('es');
     const servidor = new Map([['nota-ret-1', notaPublicada()]]);
     render(<Proveidor servidor={servidor}><NotesProvider><NotaViva id="nota-ret-1" /></NotesProvider></Proveidor>);
+    const desplegableEs = document.querySelector('details.sdp-edicio-avancada:not([open])');
+    if (desplegableEs) desplegableEs.open = true;
     const regio = screen.getByRole('region', { name: mocks.t('section.notes.visibilitat.enLinia.llegenda') });
     fireEvent.click(within(regio).getAllByRole('radio')[0]);
     expect(within(regio).getByText(mocks.t('section.notes.visibilitat.retirada.avis'))).toBeTruthy();

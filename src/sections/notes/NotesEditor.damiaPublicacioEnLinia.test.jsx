@@ -40,7 +40,7 @@ vi.mock('./NotesDataContext', () => ({ useNotesData: () => mocks.useDades() }));
 vi.mock('../../components/universal/richText', () => ({
   useUniversalRichText: () => null,
   useTipTapToolbarAdapter: () => ({ state: {}, exec: {} }),
-  UniversalRichTextToolbar: ({ onPublish, publishState, publishPopup, t }) => (
+  UniversalRichTextToolbar: ({ onPublish, publishLabel, publishLabelWide, publishState, publishPopup, t }) => (
     <div className="sdp-editor-tools">
       <button
         type="button"
@@ -49,7 +49,7 @@ vi.mock('../../components/universal/richText', () => ({
         aria-haspopup={publishPopup || undefined}
         onClick={onPublish}
       >
-        {publishState === 'publicat' ? t('section.notes.published', 'Publicat') : t('section.notes.publish', 'Publicar')}
+        {publishLabel || publishLabelWide || (publishState === 'publicat' ? t('section.notes.published', 'Publicat') : t('section.notes.publish', 'Publicar'))}
       </button>
     </div>
   ),
@@ -115,6 +115,11 @@ import { ErrorPublicacio, motiuPobleNoDeterminat, textosEnLiniaDeNota } from './
 
 const AMBIT = 'ambit-damia-r20';
 const UUID_ACTE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const obriPanell = (nom = 'Visibilitat i publicació de la nota') => {
+  const d = document.querySelector('details.sdp-edicio-avancada:not([open])');
+  if (d) d.open = true;
+  return screen.getByRole('region', { name: nom });
+};
 const Dades = createContext(null);
 mocks.useDades = function useDadesDamia() {
   return useContext(Dades);
@@ -215,13 +220,15 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       </ProveidorDamia>,
     );
 
-    // Zero modals al DOM i la barra no anuncia cap popup de diàleg.
+    // Zero modals al DOM, un sol desplegable «Edició avançada» i doble «Publicar al Mur».
     expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.querySelectorAll('details.sdp-edicio-avancada')).toHaveLength(1);
     const botoBarra = screen.getByTestId('barra-publicar');
     expect(botoBarra.hasAttribute('aria-haspopup')).toBe(false);
     expect(botoBarra.getAttribute('data-publish-state')).toBe('pendent');
+    expect(botoBarra.textContent).toBe('Publicar al Mur');
 
-    const panell = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
+    const panell = obriPanell();
     expect(within(panell).getByText('Publicaràs com a Damià Llorens Jordà.')).toBeTruthy();
 
     const radioPrivat = within(panell).getByRole('radio', { name: /🔒 Esborrany privat \(només per a tu\)/ });
@@ -298,7 +305,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
     const botoActualitzar = within(panell).getByRole('button', { name: 'Actualitzar al Mur' });
     expect(botoActualitzar.className).toContain('sdp-visibilitat-linia__boto--publicar');
 
-    // Segona nota privada atrapada ('nota-damia-1'): amb «Esborrany privat» marcat no dispara res; en marcar «📣 Públic al Mur de poble» (o «Publicar» a la barra), mostra l'avís d'irreversibilitat i publica al seu poble principal!
+    // Segona nota privada atrapada ('nota-damia-1'): amb details.sdp-edicio-avancada plegat, clicar «Publicar al Mur» davall l'entradilla obri el desplegable, enfoca el ràdio públic, manté l'esborrany privat i mostra l'avís recordatoriEsborrany; després de triar «📣 Públic al Mur de poble», clicar qualsevol dels dos botons «Publicar al Mur» publica directament!
     rerender(
       <ProveidorDamia servidor={servidor}>
         <NotesProvider>
@@ -306,13 +313,24 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
         </NotesProvider>
       </ProveidorDamia>,
     );
-    const panellNota1 = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
-    expect(within(panellNota1).getByRole('button', { name: 'Publicar al Mur' }).disabled).toBe(true);
+    const desplegableNota1 = document.querySelector('details.sdp-edicio-avancada');
+    expect(desplegableNota1.open).toBe(false);
     fireEvent.click(screen.getByTestId('barra-publicar'));
-    expect(within(panellNota1).getByRole('radio', { name: /📣 Públic al Mur de poble/ }).checked).toBe(true);
+    expect(desplegableNota1.open).toBe(true);
+    const panellNota1 = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
+    const radioPublicNota1 = within(panellNota1).getByRole('radio', { name: /📣 Públic al Mur de poble/ });
+    expect(radioPublicNota1.checked).toBe(false);
+    expect(document.activeElement).toBe(radioPublicNota1);
+    expect(within(panellNota1).getByText('Esta nota està en 🔒 Esborrany privat. Tria «📣 Públic al Mur de poble» abans de publicar-la.')).toBeTruthy();
+    expect(within(panellNota1).getByRole('button', { name: 'Publicar al Mur' }).disabled).toBe(true);
+    expect(mocks.send).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(radioPublicNota1);
+    expect(radioPublicNota1.checked).toBe(true);
+    expect(within(panellNota1).queryByText(/Esta nota està en 🔒 Esborrany privat/)).toBeNull();
     expect(within(panellNota1).getByText(/Una vegada al Mur, encara no es pot retirar/)).toBeTruthy();
     await act(async () => {
-      fireEvent.click(within(panellNota1).getByRole('button', { name: 'Publicar al Mur' }));
+      fireEvent.click(screen.getByTestId('barra-publicar'));
     });
     await waitFor(() => {
       expect(mocks.send).toHaveBeenCalledTimes(2);
@@ -344,7 +362,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       </ProveidorDamia>,
     );
 
-    const panell1 = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
+    const panell1 = obriPanell();
     fireEvent.change(within(panell1).getByLabelText('Poble on es publica'), { target: { value: 'Xixona' } });
     await act(async () => {
       fireEvent.click(within(panell1).getByRole('button', { name: 'Publicar al Mur' }));
@@ -378,7 +396,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       </ProveidorDamia>,
     );
 
-    const panell2 = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
+    const panell2 = obriPanell();
     const select2 = within(panell2).getByLabelText('Poble on es publica');
     expect(select2.value).toBe('Xixona');
 
@@ -429,7 +447,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       </ProveidorDamia>,
     );
 
-    const panell = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
+    const panell = obriPanell();
     const selectPoble = within(panell).getByLabelText('Poble on es publica');
     expect(selectPoble.value).toBe('');
     expect(within(panell).getByText(/No s’ha pogut verificar en quin poble/)).toBeTruthy();
@@ -484,7 +502,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       </ProveidorDamia>,
     );
 
-    const panell = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
+    const panell = obriPanell();
     const selectPoble = within(panell).getByLabelText('Poble on es publica');
     await waitFor(() => {
       expect(selectPoble.value).toBe('Xixona');
@@ -510,6 +528,8 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       const motiuIndet = motiuPobleNoDeterminat(t);
       expect(textos.privada.etiqueta).toMatch(/^🔒 /);
       expect(textos.publica.etiqueta).toMatch(/^📣 /);
+      expect(textos.recordatoriEsborrany).toContain('🔒');
+      expect(textos.recordatoriEsborrany).toContain(textos.publica.etiqueta);
       expect(textos.estatPublicat.length).toBeGreaterThan(3);
       expect(textos.veurePublicacio.length).toBeGreaterThan(5);
       expect(textos.poble.tria.length).toBeGreaterThan(8);
@@ -530,6 +550,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
         expect(textos.poble.etiqueta).not.toBe(ca.poble.etiqueta);
         expect(textos.poble.tria).not.toBe(ca.poble.tria);
         expect(textos.poble.indeterminat).not.toBe(ca.poble.indeterminat);
+        expect(textos.recordatoriEsborrany).not.toBe(ca.recordatoriEsborrany);
         expect(motiuIndet).not.toBe(motiuPobleNoDeterminat());
       }
     },
@@ -559,7 +580,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       </ProveidorDamia>,
     );
 
-    const panell = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
+    const panell = obriPanell();
     const selectPoble = within(panell).getByLabelText('Poble on es publica');
     expect(selectPoble.value).toBe('Alcoi');
 
@@ -597,7 +618,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       </ProveidorDamia>,
     );
 
-    const panell = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
+    const panell = obriPanell();
     const radioPublic = within(panell).getByRole('radio', { name: /Públic|Compartit/i });
     fireEvent.click(radioPublic);
 

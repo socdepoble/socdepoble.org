@@ -119,8 +119,9 @@ test.each([
   const avall = [titolDe(llavor, ['pages', 'drets-autor']), ...IMPORTANTS_HISTORIQUES_DEL_MUR.map(fila => titolDe(llavor, fila)), '2n Aplec pel Territori'];
   expect(titols()).toEqual([...dalt, ...maquinaria, ...tecniques, ...avall]);
   // El pou té una sola targeta: l'article (i /page/anatomia-rural hi porta per l'àlies).
-  /* Onada R23 · tretze: «La Veu de Sóc de Poble» n'és la primera (datesDeProvaMur.js). */
-  expect(IMPORTANTS_DEL_MUR).toHaveLength(13);
+  /* Onada R23 · tretze: «La Veu de Sóc de Poble». Onada R25 (IDEA-267) · catorze: «El Farcellet Digital
+     de Sóc de Poble» n'és ara la primera (datesDeProvaMur.js, datesDeProvaMur.test.js). */
+  expect(IMPORTANTS_DEL_MUR).toHaveLength(14);
   expect(titols()[0]).toBe(importants[0]);
   expect(titols().filter((titol) => titol === importants[0])).toHaveLength(1);
   expect(titols()).not.toContain('Anatomia rural');

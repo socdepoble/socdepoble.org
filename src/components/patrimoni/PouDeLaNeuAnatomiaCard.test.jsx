@@ -97,6 +97,13 @@ describe('Pou de la Neu · anatomia sòlida i controls accessibles', () => {
       readings.add(values.join('|'));
     }
     expect(readings.size).toBeGreaterThan(4);
+    // POU01 · El detall de peça i la lectura viuen dins del grup d'assemblatges amb l'índex actiu per a la revelació in situ en mòbil, sense cap element enfocable a dins.
+    const grup = container.querySelector('.pou-neu-assemblies');
+    const detall = grup.querySelector('.pou-neu-detall-peca');
+    expect(detall).toBeTruthy();
+    expect(detall.dataset.detallPeca).toBe('desaigue-fusio');
+    expect(grup.dataset.seleccionatIdx).toBe('6');
+    expect(detall.querySelectorAll('button, a, input, select, textarea, [tabindex]')).toHaveLength(0);
   });
 
   test('l’àzimut reprojeta les peces als dos extrems i manté les set seleccions', () => {

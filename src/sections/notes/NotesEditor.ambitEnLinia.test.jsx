@@ -21,8 +21,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../../components/universal/richText', () => ({
   useUniversalRichText: () => null,
   useTipTapToolbarAdapter: () => ({ state: {}, exec: {} }),
-  UniversalRichTextToolbar: ({ onPublish, publishLabel }) => (
-    <div className="sdp-editor-tools"><button type="button" onClick={onPublish}>{publishLabel || 'Publicar'}</button></div>
+  UniversalRichTextToolbar: ({ onPublish, publishLabel, publishLabelWide }) => (
+    <div className="sdp-editor-tools"><button type="button" onClick={onPublish}>{publishLabel || publishLabelWide || 'Publicar'}</button></div>
   ),
   UniversalRichTextContent: () => <div data-testid="cos" />
 }));
@@ -89,7 +89,7 @@ const ranuraAmbit = (container) => container.querySelector('[data-sdp-ranura="am
    de la classificació i abans de tancar (ranura «revisio»): l'ordre del Mestre (capçalera > logotip
    > «On es publica?» > classificació) no canvia. Si la revisora ha de viure a l'edició, ho decidix
    el Mestre. */
-test('dins de l’«Edició avançada», l’ordre exacte: capçalera > logotip > «On es publica?» > classificació > revisora > botó tancar', () => {
+test('dins de l’«Edició avançada», l’ordre exacte: capçalera > logotip > «On es publica?» > classificació > revisora > visibilitat > botó tancar', () => {
   const { container } = render(<CanalAmbitContext.Provider value={CANAL_BUIT}><NotaViva inicial={NOTA} /></CanalAmbitContext.Provider>);
   const cos = desplegable(container).querySelector(':scope > .sdp-edicio-avancada__cos');
   expect(fillsAmbRanura(cos)).toEqual([
@@ -98,6 +98,7 @@ test('dins de l’«Edició avançada», l’ordre exacte: capçalera > logotip 
     'sdp-edicio-avancada__ambit [ambit]',
     'page-title-classificacio',
     'sdp-edicio-avancada__ambit [revisio]',
+    'sdp-edicio-avancada__ambit [visibilitat]',
     'sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar'
   ]);
   expect(cos.querySelector('[data-sdp-ranura="revisio"] [data-sdp-revisor-editorial-node0="true"]')).not.toBeNull();
@@ -226,11 +227,17 @@ test('PUBLICAR amb un valor fora de rang al bloc (Habitacions «60») s’atura 
   fireEvent.change(within(ranura).getByLabelText('Habitacions'), { target: { value: '60' } });
   // La fitxa desada és neta i, per si sola, passaria validaFitxa.
   expect(mocks.setLocal).toHaveBeenLastCalledWith('p', 'fitxa', { ambit: 'habitatge', estat: 'disponible', dades: { modalitat: 'lloguer', preu: '450 €/mes' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Publicar' }));
-  // Onada R20 (Bucle 1 · zero modals flotants a /notes): l'acció enfoca i preselecciona el panell en línia.
+  const barra = container.querySelector('.sdp-editor-tools button');
+  expect(barra.textContent).toBe('Publicar al Mur');
+  fireEvent.click(barra);
+  // Onada R26 (T1 · esborrany privat): obri/enfoca el panell en línia i mostra el recordatori d'esborrany sense publicar a cegues.
   expect(screen.queryByRole('dialog')).toBeNull();
   const panell = screen.getByRole('region', { name: 'Visibilitat i publicació de la nota' });
-  expect(within(panell).getByRole('radio', { name: /Públic al Mur de poble/ }).checked).toBe(true);
+  expect(within(panell).getByText(/Esta nota està en 🔒 Esborrany privat/)).toBeTruthy();
+  const radioPublic = within(panell).getByRole('radio', { name: /Públic al Mur de poble/ });
+  expect(radioPublic.checked).toBe(false);
+  fireEvent.click(radioPublic);
+  expect(radioPublic.checked).toBe(true);
   await act(async () => { fireEvent.click(within(panell).getByRole('button', { name: 'Publicar al Mur' })); });
   expect(within(panell).getByRole('alert').textContent).toBe('La fitxa de «Habitatge» no està completa.');
   // Corregit el valor, la guarda ja no la para per la fitxa.

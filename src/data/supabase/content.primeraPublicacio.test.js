@@ -16,6 +16,7 @@ vi.mock('./xat.js', () => ({ enviaMissatge: vi.fn() }));
 import { loadMur } from './content.js';
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_POST as POST } from '../../sections/mur/articles/novesTecnologiesCulturaRuralContent.js';
 import { LA_VEU_DE_SOC_DE_POBLE_ID } from '../../sections/mur/articles/laVeuDeSocDePobleContent.js';
+import { COPIES_SEGURETAT_SOC_DE_POBLE_ID } from '../../sections/mur/articles/copiesSeguretatSocDePobleContent.js';
 
 const MANIFEST = { id: 'manifest-de-poble', title: 'Manifest de Poble', created_at: '2022-11-17T23:50:00+01:00' };
 const appContent = (feedPosts, versio = 7, events = []) => [{ key: 'feedPosts', payload: feedPosts, version: versio }, { key: 'events', payload: events, version: 2 }];
@@ -36,7 +37,7 @@ describe('loadMur en remot', () => {
   test('amb l’Aplec a l’agenda i sense el Manifest al Mur (com es veu producció el 06-11-2026), també hi entra', async () => {
     servidor.respostes.set('app_content', appContent([{ id: 'una-altra', title: 'Una altra' }], 7, [{ id: 'aplec-2023', title: '2n Aplec pel Territori' }]));
     const { feedPosts } = await loadMur('U', {});
-    expect(feedPosts.map((item) => item.id)).toEqual([LA_VEU_DE_SOC_DE_POBLE_ID, POST.id, 'una-altra']);
+    expect(feedPosts.map((item) => item.id)).toEqual([COPIES_SEGURETAT_SOC_DE_POBLE_ID, LA_VEU_DE_SOC_DE_POBLE_ID, POST.id, 'una-altra']);
   });
 
   test('sense la llavor editorial (un altre poble), no s’hi afig res', async () => {

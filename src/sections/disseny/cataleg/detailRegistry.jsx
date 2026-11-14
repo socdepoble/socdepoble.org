@@ -1,6 +1,8 @@
 import { lazyRoute } from '../../../apps/plataforma/lazyRoute.js';
 
 export const CATALOG_DETAIL_LOADERS = {
+  'fonaments/respiracio-botons': lazyRoute(() => import('./detalls/EspecimenRespiracioBotons.jsx')),
+  'formularis/selector-opcions-desplegable': lazyRoute(() => import('./detalls/EspecimenSelectorOpcionsDesplegable.jsx')),
   'estructura/botigues-sistema': lazyRoute(() => import('./detalls/EspecimenBotiguesSistema.jsx')),
   'estructura/pou-neu-3d': lazyRoute(() => import('./detalls/EspecimenPouNeu3D.jsx')),
   'emoticones/xl': lazyRoute(() => import('./detalls/EspecimenEmojisXL.jsx')),

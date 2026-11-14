@@ -323,6 +323,10 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
   /* Onada R23 · Portada Nano Ibáñez/Berlanga de «La Veu de Sóc de Poble» (1600x1600 WebP):
      variant social JPEG baseline 1200x630 i ≤300 000 B sense APP1 per a WhatsApp i OpenGraph. */
   '/assets/mur/la_veu_de_soc_de_poble_nano_v4.webp',
+  /* Onada R25 · Portada i figura interior Nano Ibáñez/Berlanga d'«El Farcellet Digital de Sóc de Poble»
+     (1600x1600 WebP): variants socials JPEG baseline 1200x630 i ≤300 000 B sense APP1 per a WhatsApp. */
+  '/assets/mur/copies_seguretat_farcellet_hero.webp',
+  '/assets/mur/copies_seguretat_quatre_capes.webp',
   /* P0-SEO-UNIVERSAL (13-11-2026) · La portada de la fitxa de la IAIA MarIA (/iaia): 1024x1024 i
      1,3 MB (la bessona .webp, 412 KB, hi arriba per ambVariantSocial). Retall de cobertura amb
      posicioY 0,35 (la cara i les mans senceres), JPEG baseline, ≤300 000 B, sense APP1. */

@@ -44,7 +44,7 @@ Llig, només en este ordinador, la carpeta de factures que tu tries, et proposa 
 
 ## Com es desenxufa
 
-«Desenxufa» buida la memòria i oblida la carpeta. Revocar l'aprovació al panell de Tractors bloqueja el tractor a l'instant.
+«Desenxufa» buida la memòria i oblida la carpeta. Revocar l'aprovació (fora del servidor de desenvolupament, amb «Revoca l’aprovació» a la mateixa pantalla; al servidor de desenvolupament, al panell de Tractors) bloqueja el tractor a l'instant.
 
 ## L'aprovació
 

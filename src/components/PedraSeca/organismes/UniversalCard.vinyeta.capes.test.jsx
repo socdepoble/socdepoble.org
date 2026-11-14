@@ -91,8 +91,10 @@ test('sense colors crus: espais amb l’escala i 44px amb --sdp-touch-min', () =
       expect(valor, text).toMatch(/^(0|auto|var\(--sdp-space-\d+\))( (0|var\(--sdp-space-\d+\)))?$/);
     }
   }
-  expect(cos).toContain('.sp-card-porta { flex: 1 1 9rem; gap: var(--sdp-space-1); min-height: var(--sdp-touch-min);');
-  expect(cos).toContain('.sp-card-portes { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); }');
+  // Onada R26.2 (ordre del Mestre, 261114 · respiració lateral dels botons): les portes respiren 20 px pels costats,
+  // no s'estiren a 9rem i baixen centrades quan falta espai.
+  expect(cos).toContain('.sp-card-porta { flex: 0 1 auto; gap: var(--sdp-space-1); min-height: var(--sdp-touch-min); padding-inline: var(--sdp-space-5);');
+  expect(cos).toContain('.sp-card-portes { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); justify-content: center; }');
 });
 
 test('cap regla existent canviada: .sp-card, .sp-card-body, .sp-card--action, .sp-card-link-overlay, .sdp-boto i .sdp-card-grid', () => {

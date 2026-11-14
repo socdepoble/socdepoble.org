@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "0e0bd9393b0cdc04aeff55ba2c98704acf62455434afd38e2cfd9ebf850b1d1a",
-      "html": 70787,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
+      "sha256": "e4b37c7cc43f3d2cba9924544652b52bbb8f648a0507c9c8a2686bb517c51a71",
+      "html": 74005,
+      "aprovat_per": "Mestre Javi (R27 261114 23:52: actualitza /versions en 5 llengües amb Onada R26/R27)",
       "data": "2026-11-14"
     },
     "wikidepoble": {

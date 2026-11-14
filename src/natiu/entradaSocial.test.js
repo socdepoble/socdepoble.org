@@ -8,6 +8,7 @@ import {
   classificaErrorNatiu, creaEntradaSocial, credencialDe, entradaSenseProveidors, esCancelacio, opcionsDInici, opcionsDeLogin, plataformaDelDispositiu,
   proveidorsDe
 } from './entradaSocial.js';
+import * as adaptadorSocial from './entradaSocial.js';
 import { CODI_ENTRADA_NATIVA } from '../config/entradaNativa.js';
 import { sha256HexPur } from './resum.js';
 
@@ -383,5 +384,20 @@ describe('B1 · els errors de configuració de Google', () => {
     } finally {
       avis.mockRestore();
     }
+  });
+});
+
+/* Onada R26 (arbitratge de Claude sobre el kit de Gemini) · El flux natiu és id_token + nonce (grant
+   id_token de GoTrue: vegeu la capçalera i «login»). L'App no rep cap URL de retorn ni porta cap
+   code_verifier: el SceneDelegate només reenvia a Capacitor i ningú no escolta appUrlOpen. Un motor
+   PKCE o un validador d'URL de retorn sense consumidor no protegix res i donaria una garantia falsa
+   (el del kit deixava passar ?redirect_to= de GoTrue i «/%09/atacant.example»). Si mai cal, entra
+   amb el seu consumidor real i les seues negatives. */
+describe('R26 · la superfície pública de l’adaptador', () => {
+  test('només exporta el que consumixen natiu/entrada.jsx i estes proves: cap PKCE ni validador d’URL de retorn sense consumidor', () => {
+    expect(Object.keys(adaptadorSocial).sort()).toEqual([
+      'classificaErrorNatiu', 'creaEntradaSocial', 'credencialDe', 'entradaSenseProveidors', 'esCancelacio',
+      'opcionsDInici', 'opcionsDeLogin', 'plataformaDelDispositiu', 'proveidorsDe'
+    ]);
   });
 });

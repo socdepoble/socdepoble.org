@@ -55,7 +55,7 @@ export function useCompactControls() {
   const ref = useRef(null);
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!ref.current || typeof ResizeObserver !== 'function') return;
     const observer = new ResizeObserver(([entry]) => {
       setAmplada(entry.contentRect.width);
     });
@@ -295,8 +295,13 @@ export default function UniversalToolbar({
   onPublish,
   publishDisabled = false,
   /* T5 · una nota connectada no es publica: es compartix. L'etiqueta la
-     decidix l'adaptador del document; sense ella, «Publicar» com sempre. */
+     decidix l'adaptador del document; sense ella, «Publicar» com sempre.
+     Onada R26 · En escriptori/tauleta (!compact), publishLabelWide mostra
+     «Publicar al Mur» / «Actualitzar al Mur» / «Publicat» preservant
+     publishLabel === null i «Publicar» en compacte (360px) o quan el grup
+     de publicació no hi cap sencer en una fila (etiquetaAmplaCap). */
   publishLabel = null,
+  publishLabelWide = null,
   /* R16-T (P0-80 / IDEA-211, ordre del Mestre del 261109) · L'estat del
      document, si l'editor el sap: 'pendent' (blau, «Publicar») o 'publicat'
      (verd, «Publicat»). Sense (null), la pastilla taronja de sempre. Amb
@@ -376,6 +381,16 @@ export default function UniversalToolbar({
      maquetació (o amb la barra amagada) no es mesura res: totes hi caben. */
   const [caben, setCaben] = useState(EINES_PRINCIPALS.length);
   const amplesRef = useRef({});
+  /* Verificació R26 (Claude) · L'etiqueta llarga (publishLabelWide) només si
+     el grup de publicació hi cap sencer al costat de la resta de la fila
+     (les eines de format es pleguen a la segona fila; el grup no): si no,
+     «Publicar», com en compacte, i la barra no passa a dues files. Es mesura
+     abans de pintar i es recorda l'amplària de cada etiqueta llarga, perquè
+     la decisió no vaja i torne quan ja es pinta la curta. */
+  const [etiquetaAmplaCap, setEtiquetaAmplaCap] = useState(true);
+  const amplesEtiquetaRef = useRef({});
+  const grupPublicacioRef = useRef(null);
+  const botoPublicarRef = useRef(null);
   useLayoutEffect(() => {
     const fila = filaRef.current;
     const grup = grupRef.current;
@@ -386,6 +401,41 @@ export default function UniversalToolbar({
     }
     const px = (valor) => parseFloat(valor) || 0;
     const estilFila = getComputedStyle(fila);
+    const publicacio = grupPublicacioRef.current;
+    const boto = botoPublicarRef.current;
+    if (publishLabelWide && !publishLabel && publicacio && boto) {
+      const ampleBoto = boto.getBoundingClientRect().width;
+      if (etiquetaAmplaCap && ampleBoto) amplesEtiquetaRef.current[publishLabelWide] = ampleBoto;
+      const ampleLlarg = amplesEtiquetaRef.current[publishLabelWide];
+      if (!ampleLlarg) {
+        // Una etiqueta llarga encara sense mesurar: es pinta per a mesurar-la.
+        if (!etiquetaAmplaCap) setEtiquetaAmplaCap(true);
+      } else {
+        const estilPublicacio = getComputedStyle(publicacio);
+        let grupSencer = px(estilPublicacio.paddingLeft) + px(estilPublicacio.paddingRight)
+          + px(estilPublicacio.borderLeftWidth) + px(estilPublicacio.borderRightWidth);
+        let fills = 0;
+        for (const fill of publicacio.children) {
+          const ample = fill === boto ? ampleLlarg : fill.getBoundingClientRect().width;
+          if (!ample) continue;
+          grupSencer += ample;
+          fills += 1;
+        }
+        if (fills > 1) grupSencer += (fills - 1) * px(estilPublicacio.columnGap);
+        let resta = px(estilFila.paddingLeft) + px(estilFila.paddingRight) + grupSencer;
+        let peces = 1;
+        for (const fill of fila.children) {
+          if (fill === grup || fill === publicacio) continue;
+          const ample = fill.getBoundingClientRect().width;
+          if (!ample) continue;
+          resta += ample;
+          peces += 1;
+        }
+        resta += (peces - 1) * px(estilFila.columnGap);
+        const cap = resta <= fila.clientWidth;
+        if (cap !== etiquetaAmplaCap) setEtiquetaAmplaCap(cap);
+      }
+    }
     const estilGrup = getComputedStyle(grup);
     let ocupat = px(estilFila.paddingLeft) + px(estilFila.paddingRight);
     let germans = 0;
@@ -410,7 +460,7 @@ export default function UniversalToolbar({
       quantes += 1;
     }
     if (quantes !== caben) setCaben(quantes);
-  }, [compact, amplada, caben, onDelete, onPublish, onProposaCard, publishLabel, publishState, t]);
+  }, [compact, amplada, caben, etiquetaAmplaCap, onDelete, onPublish, onProposaCard, publishLabel, publishLabelWide, publishState, t]);
 
   /* MD (261003) · La mateixa tornada que la fletxa blava quan la closca
      l'oferix (mestre-detall en estret); si no, la d'abans. */
@@ -559,7 +609,7 @@ export default function UniversalToolbar({
         </div>
         {compact ? null : botoAmplia}
 
-        <div className="sdp-editor-tools__group sdp-editor-tools__group--publicacio">
+        <div ref={grupPublicacioRef} className="sdp-editor-tools__group sdp-editor-tools__group--publicacio">
           {compact ? null : botoProposaCard}
           {onDelete && (
             <BlocAction
@@ -570,7 +620,8 @@ export default function UniversalToolbar({
           )}
           {onPublish && (
             <BlocAction
-              label={publishLabel || (publishState === 'publicat' ? t('section.notes.published', 'Publicat') : t('section.notes.publish', 'Publicar'))}
+              ref={botoPublicarRef}
+              label={publishLabel || (!compact && publishLabelWide && etiquetaAmplaCap ? publishLabelWide : (publishState === 'publicat' ? t('section.notes.published', 'Publicat') : t('section.notes.publish', 'Publicar')))}
               className={Object.hasOwn(CLASSE_ESTAT_PUBLICACIO, publishState) ? CLASSE_ESTAT_PUBLICACIO[publishState] : ''}
               disabled={publishDisabled}
               aria-haspopup={publishPopup || undefined}

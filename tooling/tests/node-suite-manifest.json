@@ -1972,6 +1972,41 @@
       "suite": "primary",
       "kind": "node",
       "reason": "R24 Gauntlet Loop ronda 2 (G-client-9): Consola Zero no és verd sense cap ruta visitada ni desfasament executat (codi 2), i --escenaris o --rutes buits després del filtre són un error d'ús abans de construir res; fixtures CDP, cap navegador ni xarxa."
+    },
+    {
+      "path": "tooling/gates/__tests__/porta-perimetre-tellado.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · porta Tellado v1.3: lexer lineal, xarxa de seguretat de signatures, veredicte desconegut/net i negatives R25.2-P01..P03 amb fixtures temporals."
+    },
+    {
+      "path": "tooling/gates/__tests__/r25-2-octet-length-sql.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · contracte estàtic de 20261114171500: sostres = 4 × límit de caràcters R23 i estat NO aplicada al README; sense base de dades."
+    },
+    {
+      "path": "tooling/gates/__tests__/sonda-tellado-5-rutes.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · sonda GET de 5 rutes contra un servidor efímer 127.0.0.1:0: bytes i salts acotats i Retry-After vàlid; cap xarxa externa."
+    },
+    {
+      "path": "tooling/wiki/__tests__/audita-graf-skills.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · auditor del graf de skills: tipus crus com cataleg_skills, noms curts únics o des de l’origen i negatives R25.2-G01/G02."
+    },
+    {
+      "path": "tests/enxufe-secrets-i-abilities.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · Secrets API de WP 7.2 (WP_Secret, absent ≠ error, precedència constant → entorn → API) i abilities amb permís per objecte i esquemes tancats; fixtures PHP estàtiques, sense WordPress real."
+    },
+    {
+      "path": "tooling/brain/__tests__/observatori-rss-mestres.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · Observatori RSS de Mestres (IDEA-265): anàlisi del feed, sedàs i Oblit Saludable amb fetch i lookup injectats; cap xarxa real ni model."
+    },
+    {
+      "path": "tooling/brain/__tests__/observatori-rss-seguretat.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · negatives de seguretat de l’Observatori: SSRF IPv4/IPv6 i adreça fixada al socket, redireccions, bytes i termini, esquema de l’eixida del model i rutes d’escriptura; tot amb dobles locals."
     }
   ]
 }

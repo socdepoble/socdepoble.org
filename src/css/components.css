@@ -125,7 +125,7 @@
     .sdp-boto--perill:hover:not(:disabled) { background: var(--sdp-error-text); }
     .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
   }
-  .sdp-boto--gran { min-height: var(--sdp-alt-accio); padding: 0 var(--sdp-space-8); font-size: var(--sdp-text-base); }
+  .sdp-boto--gran { min-height: var(--sdp-alt-accio); padding: var(--sdp-space-2) var(--sdp-space-8); font-size: var(--sdp-text-base); max-inline-size: 100%; white-space: normal; overflow-wrap: anywhere; }
   .sdp-boto--ple { width: 100%; }
   /* Fase D (261020, tasca 1; ordre del Mestre) · Els botons de marca de l'entrada
      nativa (EntradaNativa.jsx): «Continua amb Apple» (HIG) i «Continua amb Google»
@@ -142,11 +142,9 @@
     border: 1px solid var(--sdp-marca-google-vora);
     background: var(--sdp-marca-google-fons); color: var(--sdp-marca-google-text); font-weight: 500;
   }
-  /* P0-62 bis (08-11-2026; ordre del Mestre) · El botó de marca gran («Disponible a l'App Store» de
-     /page/descarregues i de l'assistent de botigues): 58px d'alt, com les accions de bancal, però amb
-     el farciment lateral curt del distintiu d'Apple, perquè el text i el logotip càpien en una línia
-     dins del bloc del títol d'un mòbil de 375px. */
-  .sdp-boto--marca.sdp-boto--gran { padding-inline: var(--sdp-space-3); }
+  /* R26.2 · L'App Store conserva l'aire lateral del botó gran de WordPress.
+     Si el text no cap, creix en alçada; mai s'aprima el coixí per encaixar-lo. */
+  .sdp-boto--marca.sdp-boto--gran { padding-inline: var(--sdp-space-8); }
   .sdp-boto__logotip { flex: none; }
   .sdp-boto__logotip--apple { block-size: var(--sdp-marca-apple-logotip); inline-size: var(--sdp-marca-apple-logotip); }
   .sdp-boto__logotip--google { block-size: var(--sdp-marca-google-logotip); inline-size: var(--sdp-marca-google-logotip); }
@@ -210,7 +208,7 @@
   .sdp-alerta__cos { flex: 1; min-width: 0; }
   .sdp-alerta__titol { margin: 0 0 var(--sdp-space-1); font-weight: 800; }
   .sdp-alerta__text > :last-child { margin-bottom: 0; }
-  .sdp-alerta__accions { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); margin-top: var(--sdp-space-3); }
+  .sdp-alerta__accions { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); margin-top: var(--sdp-space-3); justify-content: center; }
   .sdp-alerta__accions--centrades { justify-content: center; margin: var(--sdp-space-4) 0 var(--sdp-space-5); }
   .sdp-alerta__tanca {
     flex: none; display: inline-flex; align-items: center; justify-content: center;
@@ -379,7 +377,7 @@
   /* min-height: 0 · sense, el cos no s'encongix per davall del contingut i el marc desborda. */
   .sdp-dialeg__cos { flex: 1 1 auto; min-height: 0; padding: var(--sdp-space-4) var(--sdp-space-6); overflow-y: auto; overscroll-behavior: contain; }
   .sdp-dialeg__peu {
-    display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sdp-space-3);
+    display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sdp-space-3);
     flex-shrink: 0;
     padding: var(--sdp-space-4) var(--sdp-space-6); border-top: 1px solid var(--sdp-vora);
   }
@@ -473,7 +471,7 @@
     .sdp-dialeg:not(.sdp-dialeg--calaix) {
       width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: var(--sdp-radi-g) var(--sdp-radi-g) 0 0;
     }
-    .sdp-dialeg__peu { flex-direction: column-reverse; padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px)); }
+    .sdp-dialeg__peu { flex-direction: column-reverse; padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px)); justify-content: center; }
     .sdp-dialeg__peu .sdp-boto { width: 100%; }
     /* Onada R17 · AH-R17-11 / P0-88 (Sofía Bornay, Android) · Un full
        inferior sense peu acaba en el cos, i l'últim botó del cos («Descarta»
@@ -532,16 +530,18 @@
 
   /* ── PESTANYES ────────────────────────────────────────────────────── */
   .sdp-pestanyes__llista {
-    display: flex; gap: var(--sdp-space-1); overflow-x: auto; scrollbar-width: thin;
+    display: flex; gap: var(--sdp-space-1); overflow-x: visible; scrollbar-width: thin;
     border-bottom: 2px solid var(--sdp-vora);
+    flex-wrap: wrap;
+    justify-content: center;
   }
   /* P1-67 (decisió del Mestre, 261028, pla 261028_1526) · Les pestanyes són
      barres: SemiCondensed 87.5%, com --sdp-font-barra; la mida i el pes, els de sempre. */
   .sdp-pestanyes__pestanya {
     display: inline-flex; align-items: center; gap: var(--sdp-space-2); flex: none;
-    min-height: var(--sdp-touch-min); padding: 0 var(--sdp-space-4); margin-bottom: -2px;
+    min-height: var(--sdp-touch-min); padding: 0 var(--sdp-space-5); margin-bottom: -2px;
     border: 0; border-bottom: 4px solid transparent; background: transparent;
-    color: var(--sdp-text-suau); font: inherit; font-weight: 700; font-stretch: var(--sdp-font-amplada-semi); cursor: pointer;
+    color: var(--sdp-text-suau); font: inherit; font-weight: 700; font-stretch: var(--sdp-font-amplada-semi); cursor: pointer; max-inline-size: 100%; white-space: normal;
   }
   @media (hover: hover) and (pointer: fine) {
     .sdp-pestanyes__pestanya:hover { color: var(--sdp-text-titol); background: var(--sdp-fons-subtil); }
@@ -549,12 +549,10 @@
   .sdp-pestanyes__pestanya[aria-selected="true"] { color: var(--sdp-text-titol); border-bottom-color: var(--sdp-accent-text); }
   .sdp-pestanyes__pestanya:focus-visible, .sdp-pestanyes__panell:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
   .sdp-pestanyes__panell { padding: var(--sdp-space-4) 0; }
-  /* Onada 6 (pàgina del poble) · La barra centrada (Pestanyes centrades):
-     marges automàtics a les puntes. Quan la llista desborda valen 0 i llisca
-     sense tallar la primera pestanya; justify-content: safe center no és del
-     Baseline 2022 (Safari 16). */
-  .sdp-pestanyes--centrades .sdp-pestanyes__pestanya:first-child { margin-inline-start: auto; }
-  .sdp-pestanyes--centrades .sdp-pestanyes__pestanya:last-child { margin-inline-end: auto; }
+  /* R26.2 · La llista fa wrap centrat; els marges automàtics dels extrems
+     descentrarien la primera i l'última fila quan les pestanyes baixen. */
+  .sdp-pestanyes--centrades .sdp-pestanyes__pestanya:first-child { margin-inline-start: 0; }
+  .sdp-pestanyes--centrades .sdp-pestanyes__pestanya:last-child { margin-inline-end: 0; }
   /* La pestanya de sèrie encavalca 2px la vora de la llista (margin-bottom
      -2px): dins d'una llista amb overflow-x: auto, eixos 2px desborden en
      vertical i Chrome hi pinta una barra de desplaçament. Ací la pestanya
@@ -817,7 +815,7 @@
 
 /* Migrat des de legat.css */
 .btn {
-  padding: var(--sdp-space-3) var(--sdp-space-6);
+  padding: var(--sdp-space-3) var(--sdp-space-8);
   border-radius: var(--sdp-radi-boto);
   font-family: var(--sdp-font);
   font-weight: 700;
@@ -828,6 +826,9 @@
   align-items: center;
   gap: var(--sdp-space-2);
   transition: background-color var(--sdp-t), border-color var(--sdp-t), color var(--sdp-t), transform var(--sdp-durada-premut) var(--sdp-corba-eixida);
+  justify-content: center;
+  max-inline-size: 100%;
+  white-space: normal;
 }
 
 /* Fase C (pla 261004_0050, Kowalski) · Fora l'elevació de −1px i les
@@ -869,7 +870,7 @@
 }
 
 .btn-sm {
-  padding: var(--sdp-space-2) var(--sdp-space-4);
+  padding: var(--sdp-space-2) var(--sdp-space-5);
   font-size: var(--sdp-text-meta);
 }
 
@@ -901,7 +902,7 @@
 }
 
 .page-btn {
-  padding: var(--sdp-space-2) var(--sdp-space-4);
+  padding: var(--sdp-space-2) var(--sdp-space-5);
   border: 1px solid var(--sdp-vora);
   border-radius: var(--sdp-radi-s);
   background: var(--sdp-fons-targeta);
@@ -1144,7 +1145,7 @@
 
 .sp-card-label__action {
   border: 0;
-  padding: 0 var(--sdp-space-3);
+  padding: 0 var(--sdp-space-5);
   min-height: var(--sdp-touch);
   /* 48px · LLEI_04_VIDA (sòl tàctil únic des de Q2, 261004) */
   background: transparent;
@@ -1910,8 +1911,8 @@ time.sp-card-calendar-badge:active {
   color: var(--sdp-sobre-accent);
   font-weight: 700;
   border: none;
-  height: var(--sdp-space-12);
-  padding: 0 var(--sdp-space-4);
+  height: auto;
+  padding: 0 var(--sdp-space-5);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1920,7 +1921,9 @@ time.sp-card-calendar-badge:active {
   line-height: var(--sdp-leading-snug);
   cursor: pointer;
   transition: background-color var(--sdp-t);
-  white-space: nowrap;
+  white-space: normal;
+  min-height: var(--sdp-space-12);
+  max-inline-size: 100%;
 }
 
 /* Fase C (pla 261004_0050) · cap hover engrandix: fora l'escala d'1,02.
@@ -1948,7 +1951,7 @@ time.sp-card-calendar-badge:active {
   align-items: center;
   justify-content: center;
   gap: var(--sdp-space-2);
-  padding: var(--sdp-space-2) var(--sdp-space-4);
+  padding: var(--sdp-space-2) var(--sdp-space-5);
   border-radius: var(--sdp-radi-pastilla);
   font-weight: 700;
   font-size: var(--sdp-text-meta);
@@ -2193,7 +2196,7 @@ time.btn-date-time { cursor: default; }
 .btn-connectar:active:not(:disabled) {
   background: var(--sdp-accio-control-hover);
 }
-.btn-date-time { padding-inline: var(--sdp-space-4); }
+.btn-date-time { padding-inline: var(--sdp-space-5); }
 @media (hover: hover) and (pointer: fine) {
   .btn-date-time:hover:not(:disabled) { transform: none; }
 }
@@ -2825,21 +2828,23 @@ section.bar-orange[data-copublicacio="composta"] {
    reparada de més amunt).
      · Les portes: una al costat de l'altra quan caben i, si no, apilades.
        L'ordre és el del DOM: Publicar i Saber-ne més.
-     · La porta: la pell de Boto amb menys coixí lateral i salt de línia
-       permés (llengües llargues, text al 200%), 44px d'alt com a mínim. */
+     · R26.2 · La porta conserva el coixí de Boto i baixa centrada;
+       el text pot fer línies sense comprimir la pell. */
 @layer components {
   .sp-card-portes {
     display: flex;
     flex-wrap: wrap;
     gap: var(--sdp-space-2);
+    justify-content: center;
   }
   .sp-card-porta {
-    flex: 1 1 9rem;
+    flex: 0 1 auto;
     gap: var(--sdp-space-1);
     min-height: var(--sdp-touch-min);
-    padding-inline: var(--sdp-space-1);
+    padding-inline: var(--sdp-space-5);
     text-align: center;
     overflow-wrap: anywhere;
+    max-inline-size: 100%;
   }
 }
 
@@ -3932,6 +3937,12 @@ section.bar-orange[data-copublicacio="composta"] {
   .sdp-article-veu__cos {
     display: block;
   }
+  .sdp-article-veu .aplec-2023__figura img {
+    display: block;
+    max-inline-size: 100%;
+    block-size: auto;
+    margin-inline: auto;
+  }
 
   .sdp-banc-veus,
   .sdp-joc-parla,
@@ -4049,7 +4060,7 @@ section.bar-orange[data-copublicacio="composta"] {
     align-items: center;
     gap: var(--sdp-space-2);
     min-block-size: var(--sdp-touch);
-    padding: 0 var(--sdp-space-3);
+    padding: 0 var(--sdp-space-5);
     border: 1px solid var(--sdp-vora-control);
     border-radius: var(--sdp-radi-boto);
     background: var(--sdp-fons-elevat);
@@ -4093,6 +4104,18 @@ section.bar-orange[data-copublicacio="composta"] {
     margin: 0;
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-base);
+    line-height: var(--sdp-leading-cos);
+  }
+  .sdp-farcellet-sim__resum-proxim {
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border-inline-start: 4px solid var(--sdp-accio);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     line-height: var(--sdp-leading-cos);
   }
 
@@ -4181,7 +4204,7 @@ section.bar-orange[data-copublicacio="composta"] {
     justify-content: center;
     gap: var(--sdp-space-1);
     min-block-size: var(--sdp-touch);
-    padding: var(--sdp-space-3) var(--sdp-space-4);
+    padding: var(--sdp-space-3) var(--sdp-space-8);
     border: 1px solid var(--sdp-vora-control);
     border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-elevat);
@@ -4369,7 +4392,7 @@ section.bar-orange[data-copublicacio="composta"] {
     align-items: center;
     justify-content: center;
     min-block-size: var(--sdp-touch);
-    padding: 0 var(--sdp-space-4);
+    padding: 0 var(--sdp-space-5);
     border: 1px solid var(--sdp-vora-control);
     border-radius: var(--sdp-radi-boto);
     background: var(--sdp-fons-elevat);
@@ -4459,6 +4482,7 @@ section.bar-orange[data-copublicacio="composta"] {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: var(--sdp-space-3);
     margin-block: 0 var(--sdp-space-5);
   }
@@ -4640,10 +4664,11 @@ section.bar-orange[data-copublicacio="composta"] {
     display: inline-flex;
     flex-wrap: wrap;
     gap: var(--sdp-space-1);
+    justify-content: center;
   }
   .sdp-barra-veu__pindola {
     min-block-size: var(--sdp-touch);
-    padding-inline: var(--sdp-space-3);
+    padding-inline: var(--sdp-space-5);
     border: 1px solid var(--sdp-vora-control);
     border-radius: var(--sdp-radi-pastilla);
     background: var(--sdp-fons-targeta);
@@ -4652,6 +4677,7 @@ section.bar-orange[data-copublicacio="composta"] {
     font-size: var(--sdp-text-small);
     font-weight: var(--sdp-pes-semi);
     cursor: pointer;
+    padding-block: 0;
   }
   .sdp-barra-veu__pindola--activa {
     border-color: var(--sdp-accio-control);
@@ -5120,12 +5146,13 @@ section.bar-orange[data-copublicacio="composta"] {
      torna a dir damunt del Perfil). */
   .sdp-visor__fixador {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     margin: 0 0 var(--sdp-space-3);
+    flex-wrap: wrap;
   }
   .sdp-visor__fixar {
     min-block-size: var(--sdp-alt-accio);
-    padding: 0 var(--sdp-space-4);
+    padding: 0 var(--sdp-space-5);
     gap: var(--sdp-space-2);
     border-radius: var(--sdp-radi-pastilla);
   }
@@ -5568,7 +5595,7 @@ section.bar-orange[data-copublicacio="composta"] {
 
   .anatomia__peca-boto {
     min-height: var(--sdp-touch);
-    padding: 0 var(--sdp-space-4);
+    padding: 0 var(--sdp-space-5);
     background: var(--sdp-fons-targeta);
     color: var(--sdp-text-cos);
     border: 1px solid var(--sdp-vora-control);
@@ -5782,7 +5809,12 @@ section.bar-orange[data-copublicacio="composta"] {
   .pou-neu-field__valor { font-variant-numeric: tabular-nums; }
   .pou-neu-field select, .pou-neu-field input { width: 100%; min-height: var(--sdp-touch); accent-color: var(--sdp-accio); }
   .pou-neu-field select { background: var(--sdp-fons-targeta); color: var(--sdp-text-cos); border: 1px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-s); padding: 0.5rem; font: inherit; }
-  .pou-neu-explode, .pou-neu-choice { min-height: var(--sdp-touch); border: 1px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-s); padding: 0.5rem 1rem; background: var(--sdp-fons-targeta); color: var(--sdp-text-cos); font: inherit; cursor: pointer; }
+  .pou-neu-explode, .pou-neu-choice {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch); border: 1px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-s);
+    padding: var(--sdp-space-2) var(--sdp-space-5); background: var(--sdp-fons-targeta); color: var(--sdp-text-cos);
+    font: inherit; text-align: center; cursor: pointer;
+  }
   .pou-neu-explode { background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
   /* A11Y-03 · L'explosió és un commutador de rètol fix: l'estat premut es veu com el de les altres tries. */
   .pou-neu-choice[aria-pressed="true"], .pou-neu-explode[aria-pressed="true"] { background: var(--sdp-accio-subtil); color: var(--sdp-accio-text); border-color: var(--sdp-accio); }
@@ -5793,6 +5825,35 @@ section.bar-orange[data-copublicacio="composta"] {
      pergamí del visor en clar i en fosc (--sdp-accio feia 2,91:1 sobre el pergamí clar). */
   .pou-neu-card :is(button,input,select,summary):focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 3px; }
   .pou-neu-assemblies { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin: 1rem 0; }
+  .pou-neu-detall-peca { flex: 1 0 100%; order: 30; display: grid; gap: var(--sdp-space-2); min-width: 0; text-align: start; }
+  @container (max-width: 38rem) {
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies:not([hidden]) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies [data-pas="-1"] { order: 1; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies [data-idx="0"] { order: 2; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies [data-idx="1"] { order: 4; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies [data-idx="2"] { order: 6; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies [data-idx="3"] { order: 8; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies [data-idx="4"] { order: 10; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies [data-idx="5"] { order: 12; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies [data-idx="6"] { order: 14; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies [data-pas="1"] { order: 20; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies[data-seleccionat-idx="0"] .pou-neu-detall-peca { order: 3; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies[data-seleccionat-idx="1"] .pou-neu-detall-peca { order: 5; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies[data-seleccionat-idx="2"] .pou-neu-detall-peca { order: 7; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies[data-seleccionat-idx="3"] .pou-neu-detall-peca { order: 9; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies[data-seleccionat-idx="4"] .pou-neu-detall-peca { order: 11; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies[data-seleccionat-idx="5"] .pou-neu-detall-peca { order: 13; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-assemblies[data-seleccionat-idx="6"] .pou-neu-detall-peca { order: 15; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-detall-peca {
+      padding: var(--sdp-space-3);
+      border-inline-start: 4px solid var(--sdp-accio);
+      border-radius: var(--sdp-radi-s);
+      background: var(--sdp-fons-subtil);
+    }
+  }
   .pou-neu-choice span { font-variant-numeric: tabular-nums; }
   .pou-neu-hint, .pou-neu-note, .pou-neu-fitxa__nota { font-size: 1rem; line-height: 1.6; color: var(--sdp-text-suau); }
   .pou-neu-readout { display: grid; grid-template-columns: repeat(auto-fit,minmax(8rem,1fr)); gap: 1rem; padding: 1rem 0; border-block: 1px solid var(--sdp-vora); }
@@ -5921,9 +5982,17 @@ section.bar-orange[data-copublicacio="composta"] {
   .pou-neu-interior__avis { color: var(--sdp-text-cos); border-inline-start: 0.25rem solid var(--sdp-accio); padding-inline-start: 0.5rem; }
   .pou-neu-interior__cameres, .pou-neu-interior__accions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
   .pou-neu-interior__relat { display: grid; justify-items: start; gap: 0.5rem; padding-block: 0.75rem; border-block: 1px solid var(--sdp-vora); }
+  .pou-neu-interior__relat-cap { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+  .pou-neu-interior__relat-toggle { display: none; }
   .pou-neu-interior__relat p { margin: 0; line-height: 1.6; }
   .pou-neu-interior__relat .pou-neu-interior__iaia { min-height: var(--sdp-touch); border-width: 1px; border-radius: var(--sdp-radi-s); }
-  @container (max-width: 34rem) { .pou-neu-interior__vista, .pou-neu-interior__reserva { aspect-ratio: 3 / 4; } }
+  @container (max-width: 34rem) {
+    .pou-neu-interior__vista, .pou-neu-interior__reserva { aspect-ratio: 3 / 4; }
+    .pou-neu-card:not(.is-fullscreen):not(:fullscreen) .pou-neu-interior__cameres {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
 
   /* IDEA-160 · Pantalla completa (VH-01, CP-05): la vista és la fila elàstica i el HUD hi va
      damunt, no apilat. La capçalera passa a .sdp-sr-only (JSX); la llegenda, la nota i les
@@ -5935,7 +6004,7 @@ section.bar-orange[data-copublicacio="composta"] {
   }
   :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-card__toolbar { grid-area: eines; flex-wrap: nowrap; }
   :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-modes { flex-wrap: nowrap; }
-  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-choice { flex: 0 0 auto; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-choice { flex: 0 0 auto; padding-inline: var(--sdp-space-5); }
   /* VIS-02 · La figura és un contenidor de mida: l'escenari del desmuntatge hi cap sencer
      (contain) i conserva la proporció 760/720 que comparteixen l'SVG i la capa WebGL. */
   :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-figure {
@@ -5945,7 +6014,11 @@ section.bar-orange[data-copublicacio="composta"] {
   :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-avis-webgl {
     grid-area: figura; z-index: 1; align-self: start; margin: 0; padding: 0.25rem 0.5rem; background: var(--sdp-fons-targeta);
   }
-  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-caption, .pou-neu-description, .pou-neu-readout, .pou-neu-note, .pou-neu-hint, .pou-neu-interior__ajuda, .pou-neu-interior__relat p) { display: none; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-caption, .pou-neu-detall-peca, .pou-neu-description, .pou-neu-readout, .pou-neu-note, .pou-neu-hint, .pou-neu-interior__ajuda, .pou-neu-interior__relat p) { display: none; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__relat-toggle { display: inline-flex; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__relat[data-relat-obert="true"] p {
+    display: block; flex-basis: 100%; font-size: var(--sdp-text-small); line-height: 1.45;
+  }
   :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-stage {
     width: min(100cqw, 100cqh * 760 / 720); height: auto; max-width: 100%; min-height: 0; justify-self: center; align-self: center;
   }
@@ -5982,7 +6055,7 @@ section.bar-orange[data-copublicacio="composta"] {
     :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-etiqueta { display: none; }
     :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-etiqueta-curta { display: inline; }
     :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-card__toolbar, .pou-neu-modes) { gap: 0.25rem; }
-    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-choice { padding-inline: 0.5rem; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-choice { padding-inline: var(--sdp-space-5); }
   }
   /* Telèfon dret: «Amaga» i «Eixir» només amb la icona. */
   @media (max-width: 30rem) {
@@ -6001,6 +6074,11 @@ section.bar-orange[data-copublicacio="composta"] {
       grid-area: auto; z-index: auto; align-self: auto; justify-self: stretch; max-width: none; margin: 0; flex-wrap: wrap;
     }
     :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__accions { flex-direction: row; justify-content: start; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__relat-toggle { display: none; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__relat p { display: block; flex-basis: 100%; font-size: 1rem; line-height: 1.6; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-detall-peca { display: grid; flex-basis: 100%; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-description { display: block; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-readout { display: grid; }
     :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-field { flex: 1 1 9rem; }
     :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-field select { max-width: none; }
   }

@@ -934,6 +934,6 @@ describe('el mode fixat (P1-43)', () => {
     // D-C · cap inset en tant per cent: la franja de dalt es fa per block-size (60%) amb la vora de baix en auto.
     expect(mobil).toMatch(/\.sdp-visor__marc--fixat \.sdp-visor__controls \{ inset-block-end: auto; block-size: 60%; \}/);
     expect(fullModuls).toMatch(/\.sdp-visor \.sdp-boto--secundari\[aria-pressed="true"\] \{ border-color: var\(--sdp-accio-control\); \}/);
-    expect(fullModuls).toMatch(/\.sdp-visor \.sdp-visor__fixar \{ padding: 0 var\(--sdp-space-4\); \}/);
+    expect(fullModuls).toMatch(/\.sdp-visor \.sdp-visor__fixar \{ padding: 0 var\(--sdp-space-5\); \}/);
   });
 });

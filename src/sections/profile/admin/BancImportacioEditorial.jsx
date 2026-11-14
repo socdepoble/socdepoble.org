@@ -7,6 +7,7 @@ import { useSessioOpcional } from '../../../app/contexts/SessionContext.jsx';
 import { useProjeccionsCataleg } from '../../../hooks/useProjeccionsCataleg.js';
 import { esPaginaTrilogiaIMoliWp } from '../../../data/importacio/paginesTrilogiaIMoliWp.js';
 import { rutaWorkspaceWp } from '../../../data/importacio/destinacionsWorkspaceWp.js';
+import { desplacaDinsApp, enfocaSenseSalt } from '../../../utils/desplacamentProxim.js';
 import {
   CASOS_US_EDITORIALS,
   desaRevisioArticleImportatAmbServidor,
@@ -52,7 +53,11 @@ export function BancImportacioEditorial() {
   const [missatgeDestinacio, setMissatgeDestinacio] = useState('');
   const seleccioViva = useRef(null);
   const lecturaXml = useRef(0);
-  useEffect(() => () => { seleccioViva.current = null; lecturaXml.current += 1; }, []);
+  const inspectorRef = useRef(null);
+  const titolInspectorRef = useRef(null);
+  const taulaCapRef = useRef(null);
+  const saltPendentRef = useRef(false);
+  useEffect(() => () => { seleccioViva.current = null; lecturaXml.current += 1; saltPendentRef.current = false; }, []);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const articles = useMemo(() => lligArticlesImportatsAmbRevisio(), [versio]);
@@ -107,11 +112,42 @@ export function BancImportacioEditorial() {
     setVersio((v) => v + 1);
   };
 
-  const seleccionaArticle = (art) => {
+  const esColumnaUnicaMobil = () => (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(max-width: 960px)').matches
+  );
+
+  const saltaAInspector = () => {
+    desplacaDinsApp(inspectorRef.current);
+    enfocaSenseSalt(titolInspectorRef.current || inspectorRef.current);
+  };
+
+  const tornaALaTaula = () => {
+    desplacaDinsApp(taulaCapRef.current);
+    enfocaSenseSalt(taulaCapRef.current);
+  };
+
+  useEffect(() => {
+    if (!saltPendentRef.current || !seleccionat) return;
+    saltPendentRef.current = false;
+    saltaAInspector();
+  }, [seleccionat]);
+
+  const seleccionaArticle = (art, { salta = false } = {}) => {
+    const deuSaltar = salta || esColumnaUnicaMobil();
+    const mateixArticle = seleccionat?.wp_id === art.wp_id;
     setArticleSeleccionatId(art.wp_id);
     setNotaEdicio(art.nota_revisio || '');
     setConfirmacioPublica(false);
     setMissatgeDestinacio('');
+    if (deuSaltar) {
+      if (mateixArticle) {
+        saltaAInspector();
+      } else {
+        saltPendentRef.current = true;
+      }
+    }
   };
 
   const canviaDestinacio = (destinacio) => {
@@ -266,6 +302,24 @@ export function BancImportacioEditorial() {
 
         <div className="sdp-admin-importacio__layout">
           <div className="sdp-admin-taxonomia__table-wrap">
+            {seleccionat && (
+              <div
+                ref={taulaCapRef}
+                tabIndex={-1}
+                className="sdp-admin-importacio__barra-proxima"
+                data-testid="importacio-barra-proxima"
+              >
+                <p>
+                  {'En revisió: '}
+                  <code>{`#${seleccionat.wp_id}`}</code>
+                  {' · '}
+                  <strong>{seleccionat.title}</strong>
+                </p>
+                <Boto varietat="secundari" onClick={saltaAInspector}>
+                  Anar a la fitxa de revisió ↓
+                </Boto>
+              </div>
+            )}
             <table className="sdp-admin-table">
               <thead>
                 <tr>
@@ -321,7 +375,7 @@ export function BancImportacioEditorial() {
                           </Boto>
                           <Boto
                             varietat="fantasma"
-                            onClick={() => seleccionaArticle(art)}
+                            onClick={() => seleccionaArticle(art, { salta: true })}
                           >
                             Inspeccionar
                           </Boto>
@@ -355,8 +409,27 @@ export function BancImportacioEditorial() {
           </div>
 
           {seleccionat && (
-            <aside className="sdp-admin-importacio__inspector" aria-label="Inspector comparatiu d'article importat">
-              <h4>🔍 Fitxa de Revisió · #{seleccionat.wp_id}</h4>
+            <aside
+              ref={inspectorRef}
+              className="sdp-admin-importacio__inspector"
+              aria-label="Inspector comparatiu d'article importat"
+            >
+              <div className="sdp-admin-importacio__inspector-cap">
+                <h4
+                  ref={titolInspectorRef}
+                  tabIndex={-1}
+                  className="sdp-admin-importacio__inspector-titol"
+                >
+                  🔍 Fitxa de Revisió · #{seleccionat.wp_id}
+                </h4>
+                <Boto
+                  varietat="fantasma"
+                  className="sdp-admin-importacio__tornar-llista"
+                  onClick={tornaALaTaula}
+                >
+                  ↑ Tornar a la taula d’articles
+                </Boto>
+              </div>
               <p><strong>{seleccionat.title}</strong></p>
               <div className="sdp-admin-editorial-stack" data-testid="inspector-editorial-importacio">
                 <div className="sdp-admin-editorial-bloc">

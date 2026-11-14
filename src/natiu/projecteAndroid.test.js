@@ -890,6 +890,33 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
       expect(codi).toMatch(/if \(includeFacebook == 'true'\) \{\s*implementation 'com\.facebook\.android:facebook-login:/);
     }
   });
+
+  test('Onada R26 · AndroidManifest i network_security_config prohibixen HTTP en clar, backups en brut i CAs d’usuari, i associacio-apps.json governa assetlinks.json sense fitxers estàtics', () => {
+    const manifest = senseComentarisXml(llig(MAIN, 'AndroidManifest.xml'));
+    const aplicacio = /<application\b([^>]*)>/.exec(manifest)?.[1] ?? '';
+    const attrs = atributs(aplicacio);
+    expect(attrs['android:allowBackup']).toBe('false');
+    expect(attrs['android:fullBackupContent']).toBe('false');
+    expect(attrs['android:dataExtractionRules']).toBe('@xml/data_extraction_rules');
+    expect(attrs['android:usesCleartextTraffic']).toBe('false');
+    expect(attrs['android:networkSecurityConfig']).toBe('@xml/network_security_config');
+
+    const netConfig = senseComentarisXml(llig(MAIN, 'res', 'xml', 'network_security_config.xml'));
+    expect(netConfig).toMatch(/<base-config\s+cleartextTrafficPermitted="false"\s*>/);
+    expect(netConfig).not.toContain('cleartextTrafficPermitted="true"');
+    expect(netConfig).toMatch(/<certificates\s+src="system"\s*\/>/);
+    expect(netConfig).not.toMatch(/src="user"/);
+
+    expect(fs.existsSync(path.join(ARREL, 'public', '.well-known', 'assetlinks.json'))).toBe(false);
+    const associacio = JSON.parse(llig(ARREL, 'scripts', 'botigues', 'associacio-apps.json'));
+    expect(associacio.esquema).toBe('sdp.associacio-apps.v1');
+    expect(associacio.android?.package_name).toBe('org.socdepoble.app');
+    expect(associacio.android?.origens).toEqual(['https://socdepoble.org']);
+    expect(Array.isArray(associacio.android?.sha256_cert_fingerprints)).toBe(true);
+    for (const empremta of associacio.android.sha256_cert_fingerprints) {
+      expect(empremta).toMatch(/^[0-9A-F]{2}(?::[0-9A-F]{2}){31}$/);
+    }
+  });
 });
 
 test.skipIf(HI_HA_PROJECTE)('sense android/app/src/main en este arbre, les proves del projecte d’Android se salten', () => {

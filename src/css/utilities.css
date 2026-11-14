@@ -173,7 +173,7 @@
     min-width: var(--sdp-touch);
     min-height: var(--sdp-touch);
     margin-inline: var(--sdp-space-5);
-    padding: 0 var(--sdp-space-4);
+    padding: 0 var(--sdp-space-5);
     border-radius: var(--sdp-radi-boto);
     background: transparent;
     color: var(--sdp-crom-control-text);

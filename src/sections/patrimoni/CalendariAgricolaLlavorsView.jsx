@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
 import {
   FONTS_BANC_LLAVORS,
   entradesDelCataleg
 } from '../../data/patrimoni/bancLlavors.js';
+import { desplacaDinsApp, enfocaSenseSalt } from '../../utils/desplacamentProxim.js';
 import {
   FASES_CALENDARI,
   NOMS_MESOS_CA,
@@ -48,6 +49,27 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
   const [grupActiu, setGrupActiu] = useState('tots');
   const [faseActiva, setFaseActiva] = useState('totes');
   const [mesActiu, setMesActiu] = useState(0);
+  const llistaResultatsRef = useRef(null);
+  const accionsResumRef = useRef(null);
+
+  const hiHaFiltresActius = grupActiu !== 'tots' || faseActiva !== 'totes' || mesActiu !== 0;
+  const etiquetaGrupActiu = GRUPS_CULTIU.find((g) => g.id === grupActiu)?.etiqueta || GRUPS_CULTIU[0].etiqueta;
+  const etiquetaFaseActiva = faseActiva === 'totes' ? 'Totes les fases' : ETIQUETA_FASE[faseActiva];
+  const etiquetaMesActiu = mesActiu >= 1 && mesActiu <= 12 ? NOMS_MESOS_CA[mesActiu - 1] : 'Tot l’any';
+
+  const saltaAVarietats = () => {
+    desplacaDinsApp(llistaResultatsRef.current);
+    enfocaSenseSalt(llistaResultatsRef.current);
+  };
+
+  const netejaFiltres = () => {
+    setGrupActiu('tots');
+    setFaseActiva('totes');
+    setMesActiu(0);
+    // Sense filtres, «Restablir filtres» desapareix: el focus passa a «Veure varietats», al
+    // mateix grup, i no cau al document (WCAG 2.4.3).
+    enfocaSenseSalt(accionsResumRef.current?.querySelector('button'));
+  };
 
   const fontValenciana = FONTS_BANC_LLAVORS[0];
   const varietatsAmbCalendari = useMemo(() => {
@@ -129,6 +151,31 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
         ))}
       </div>
 
+      <div
+        className="sdp-calendari-agricola__resum-viu"
+        data-testid="calendari-agricola-resum-proxim"
+      >
+        <div className="sdp-calendari-agricola__resum-viu-text">
+          <p role="status">
+            <strong>{`${filtrades.length} de ${varietatsAmbCalendari.length}`}</strong>
+            {' varietats tradicionals actives amb els filtres seleccionats.'}
+          </p>
+          <p className="sdp-calendari-agricola__filtres-actius">
+            {`Filtre actiu: ${etiquetaGrupActiu} · ${etiquetaFaseActiva} · ${etiquetaMesActiu}`}
+          </p>
+        </div>
+        <div ref={accionsResumRef} className="sdp-calendari-agricola__resum-viu-accions">
+          <Boto varietat="secundari" onClick={saltaAVarietats}>
+            {`Veure varietats (${filtrades.length}) ↓`}
+          </Boto>
+          {hiHaFiltresActius ? (
+            <Boto varietat="fantasma" onClick={netejaFiltres}>
+              Restablir filtres
+            </Boto>
+          ) : null}
+        </div>
+      </div>
+
       <div className="sdp-calendari-agricola__mesos" role="group" aria-label="Filtre per mes de l’any">
         <Boto
           varietat={mesActiu === 0 ? 'primari' : 'secundari'}
@@ -152,15 +199,16 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
         })}
       </div>
 
-      <p role="status">
-        <strong>{`${filtrades.length} de ${varietatsAmbCalendari.length}`}</strong>
-        {' varietats tradicionals actives amb els filtres seleccionats.'}
-      </p>
-
-      {filtrades.length === 0 ? (
-        <p>Cap varietat tradicional té activitat registrada amb esta combinació de mes i fase.</p>
-      ) : (
-        <div className="sdp-calendari-agricola__llista">
+      <div
+        ref={llistaResultatsRef}
+        tabIndex={-1}
+        className="sdp-calendari-agricola__resultats"
+        data-testid="calendari-agricola-resultats"
+      >
+        {filtrades.length === 0 ? (
+          <p>Cap varietat tradicional té activitat registrada amb esta combinació de mes i fase.</p>
+        ) : (
+          <div className="sdp-calendari-agricola__llista">
           {filtrades.map(({ entrada, calendari, barra }) => {
             const mesosResum = FASES_CALENDARI.map((fase) => {
               const mesosFase = barra
@@ -199,8 +247,9 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
               </article>
             );
           })}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

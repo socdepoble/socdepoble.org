@@ -84,12 +84,12 @@ const CAMP_DE_DATA = Object.freeze({ pages: 'date', feedPosts: 'created_at', mar
  * (àlies de PAGE_ROUTE_MAP, navigation.js).
  *
  * Onada R23 (14-11-2026 01:18; Llibre Mestre, «Publicació en viu de
- * /mur/la-veu-de-soc-de-poble») · «La Veu de Sóc de Poble» entra la primera,
- * la publicació més nova. Amb ella en són tretze. Si el Mestre la vol amb la
- * seua data real també en la demostració, n'hi ha prou a llevar esta fila i
- * tornar el sostre de la prova a dotze.
+ * /mur/la-veu-de-soc-de-poble») · «La Veu de Sóc de Poble» entra davant del Pou de Neu.
+ * Onada R25 (14-11-2026 17:35; ordre del Mestre, «El Farcellet Digital de Sóc de Poble») ·
+ * «El Farcellet Digital de Sóc de Poble» entra la primera, la publicació més nova. Amb ella en són catorze.
  */
 export const IMPORTANTS_DEL_MUR = Object.freeze([
+  ['feedPosts', 'copies-de-seguretat-soc-de-poble'],
   ['feedPosts', 'la-veu-de-soc-de-poble'],
   ['feedPosts', 'noves-tecnologies-aplicades-a-la-cultura-rural'],
   ['pages', 'fediversity'],

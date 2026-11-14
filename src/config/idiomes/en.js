@@ -1647,6 +1647,7 @@ export default {
   'section.notes.visibilitat.enLinia.veureAlMur': 'View on the Wall',
   'section.notes.visibilitat.enLinia.veureAlMercat': 'View on the Market',
   'section.notes.visibilitat.enLinia.treballant': 'Publishing…',
+  'section.notes.visibilitat.enLinia.recordatoriEsborrany': 'This note is a 🔒 Private draft. Choose “{opcio}” before publishing it.',
   'section.notes.carpeta.mur': 'Wall',
   'section.notes.carpeta.mercat': 'Market',
   'section.notes.carpeta.pobles': 'Towns',

@@ -92,9 +92,14 @@ test('les capçaleres: CSP a tot el lloc, no-cache a l’HTML, CORS als assets i
   expect(csp).toMatch(/script-src 'self';/);
   expect(csp).toMatch(/object-src 'none'/);
   // M-01 · La CSP continua sent la primera; les tres de conformitat, darrere, en este ordre.
+  // Onada R26 (VIG-09 de la porta Tellado) · HSTS d'un any només per a l'apex, la mateixa política que
+  // ja servix Firebase: includeSubDomains i preload afecten els subdominis de SiteGround i són decisió del Mestre.
   expect(regla('**').headers.map((h) => h.key)).toEqual([
-    'Content-Security-Policy', 'X-Content-Type-Options', 'Referrer-Policy', 'Permissions-Policy'
+    'Content-Security-Policy', 'X-Content-Type-Options', 'Referrer-Policy', 'Permissions-Policy', 'Strict-Transport-Security'
   ]);
+  const hsts = regla('**').headers.find((h) => h.key === 'Strict-Transport-Security').value;
+  expect(hsts).toBe('max-age=31536000');
+  expect(hsts).not.toMatch(/includeSubDomains|preload/i);
   expect(regla('!/@(assets|fonts)/**').headers).toEqual([{ key: 'Cache-Control', value: 'no-cache' }]);
   expect(regla('/assets/**').headers.map((h) => h.key)).toEqual([
     'Access-Control-Allow-Origin', 'Access-Control-Expose-Headers', 'Access-Control-Allow-Headers'

@@ -11,6 +11,7 @@ import { MEDIA_ITEMS } from '../sections/multimedia/mediaContent.js';
 import { FEED_POSTS as PUBLICACIONS_DE_MOCK_FEED, elementDelMurDeLaLlavor } from '../sections/mur/feedContent.js';
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_POST } from '../sections/mur/articles/novesTecnologiesCulturaRuralContent.js';
 import { LA_VEU_DE_SOC_DE_POBLE_POST } from '../sections/mur/articles/laVeuDeSocDePobleContent.js';
+import { COPIES_SEGURETAT_SOC_DE_POBLE_POST } from '../sections/mur/articles/copiesSeguretatSocDePobleContent.js';
 import { TOWNS } from '../sections/pobles/townsContent.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 
@@ -21,8 +22,9 @@ import { PAGE_COPY } from '../sections/text/pageContent.js';
    adaptadors en mode seed (runtime.js · buildSeedAppData i
    adaptadorLocal.js) llegixen APP_SEED.feedPosts: la tenen tots dos, la
    primera.
-   Onada R23 · «La Veu de Sóc de Poble» s'hi incorpora amb el mateix contracte. */
+   Onada R23 + Onada R25 · «El Farcellet Digital de Sóc de Poble» i «La Veu de Sóc de Poble» s'hi incorporen amb el mateix contracte. */
 const FEED_POSTS = [
+  elementDelMurDeLaLlavor(COPIES_SEGURETAT_SOC_DE_POBLE_POST),
   elementDelMurDeLaLlavor(LA_VEU_DE_SOC_DE_POBLE_POST),
   elementDelMurDeLaLlavor(NOVES_TECNOLOGIES_CULTURA_RURAL_POST),
   ...PUBLICACIONS_DE_MOCK_FEED

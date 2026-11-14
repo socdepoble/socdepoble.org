@@ -1672,6 +1672,7 @@ export default {
   'section.notes.visibilitat.enLinia.veureAlMur': 'Veure al Mur',
   'section.notes.visibilitat.enLinia.veureAlMercat': 'Veure al Mercat',
   'section.notes.visibilitat.enLinia.treballant': 'Publicant…',
+  'section.notes.visibilitat.enLinia.recordatoriEsborrany': 'Esta nota està en 🔒 Esborrany privat. Tria «{opcio}» abans de publicar-la.',
   'section.notes.carpeta.mur': 'Mur',
   'section.notes.carpeta.mercat': 'Mercat',
   'section.notes.carpeta.pobles': 'Pobles',

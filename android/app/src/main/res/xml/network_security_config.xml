@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Onada R26 · Fortificació de xarxa d'Android: zero trànsit HTTP en clar i
+     només certificats del sistema operatiu (sense CAs d'usuari en producció). -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

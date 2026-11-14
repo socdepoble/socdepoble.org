@@ -297,6 +297,15 @@ describe('PouNeuInterior · HUD accessible', () => {
     const estacions = within(ranura).getByRole('group', { name: t.cameres });
     expect(within(estacions).getAllByRole('button')).toHaveLength(6);
     expect(within(estacions).getByRole('button', { name: /^01 / })).toBeTruthy();
+    // POU04 · El relat va immediatament darrere de les estacions guiades i inclou commutador accessible per a pantalla completa.
+    expect(estacions.nextElementSibling?.classList.contains('pou-neu-interior__relat')).toBe(true);
+    const relatBox = estacions.nextElementSibling;
+    const toggleRelat = relatBox.querySelector('[data-relat-toggle]');
+    expect(toggleRelat.getAttribute('aria-pressed')).toBe('false');
+    expect(relatBox.dataset.relatObert).toBe('false');
+    fireEvent.click(toggleRelat);
+    expect(toggleRelat.getAttribute('aria-pressed')).toBe('true');
+    expect(relatBox.dataset.relatObert).toBe('true');
     ranura.remove();
   });
 

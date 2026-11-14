@@ -15,7 +15,14 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: manifest.js, detailRegistry.jsx, registre.js i EspecimenBarraReproductorVeu.jsx, 2026-11-14T02:55:00+01:00,
+ * Darrera posada al dia: EspecimenRespiracioBotons.jsx, EspecimenSelectorOpcionsDesplegable.jsx i EspecimenBoto.jsx, 2026-11-14T23:09:55+01:00,
+ * Onada R26.3 (ordre del Mestre del 14-11-2026, revisió de Gemini §1.B): el botó de l'App Store de
+ * l'espècimen de respiració és l'àtom Boto amb la prop nova marca="apple" (EspecimenBoto.jsx en documenta
+ * la fila); el contracte del selector documenta resum com Array<ReactNode>, sense tall ni title, el ràdio
+ * marcat a 3:1 o més sobre la píndola activa i píndola i detall en una sola caixa.
+ * Versió anterior: SelectorOpcionsDesplegable i espècimens R26.2, 2026-11-14T20:45:33+01:00,
+ * revelació adjacent i resum compacte accessible.
+ * Versió anterior: manifest.js, detailRegistry.jsx, registre.js i EspecimenBarraReproductorVeu.jsx, 2026-11-14T02:55:00+01:00,
  * Onada R23 (IDEA-255, 14-11-2026): BarraReproductorVeu i EspecimenBarraReproductorVeu (superposicions/barra-reproductor-veu),
  * el mini-reproductor flotant universal de veu que PageFrame munta en diferit sota l'entradilla de totes les pàgines de lectura.
  * Versió anterior: manifest.js i EspecimenXat.jsx, 2026-11-12T23:04:01+01:00,
@@ -350,4 +357,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-14T02:55:00+01:00';
+export const VERSIO_CATALEG = '2026-11-14T23:09:55+01:00';

@@ -328,24 +328,24 @@ export default function PouDeLaNeuAnatomiaCard({ language, noWebgl = false, init
         </div> : null}
       </div>
       {!iso3d && estat === 'hui' ? <p id={`${id}-coberta-hui`} className="pou-neu-hint">{ti.cobertaHui}</p> : null}
-      {iso3d ? <>
-        <p className="pou-neu-hint">{t.hint}</p>
-        <div className="pou-neu-assemblies" role="group" aria-label={t.assemblies}>
-          <button type="button" className="pou-neu-choice" data-pas="-1" aria-label={ti.anterior} onClick={() => mou(-1)}><span aria-hidden="true">←</span> <span className="pou-neu-etiqueta">{ti.anterior}</span></button>
-          {IDS.map((assembly, at) => {
-            const num = String(at + 1).padStart(2, '0');
-            return <button key={assembly} type="button" className="pou-neu-choice" data-assembly-select={assembly} aria-pressed={selected === assembly} aria-label={`${num} ${t.names[at]}`} onClick={() => setSelected(assembly)}>
-              <span aria-hidden="true">{num}</span> <span className="pou-neu-etiqueta">{t.names[at]}</span>
-            </button>;
-          })}
-          <button type="button" className="pou-neu-choice" data-pas="1" aria-label={ti.seguent} onClick={() => mou(1)}><span className="pou-neu-etiqueta">{ti.seguent}</span> <span aria-hidden="true">→</span></button>
+      <p className="pou-neu-hint" hidden={!iso3d}>{t.hint}</p>
+      <div className="pou-neu-assemblies" role="group" aria-label={t.assemblies} data-seleccionat-idx={index} hidden={!iso3d}>
+        <button type="button" className="pou-neu-choice" data-pas="-1" aria-label={ti.anterior} onClick={() => mou(-1)}><span aria-hidden="true">←</span> <span className="pou-neu-etiqueta">{ti.anterior}</span></button>
+        {IDS.map((assembly, at) => {
+          const num = String(at + 1).padStart(2, '0');
+          return <button key={assembly} type="button" className="pou-neu-choice" data-assembly-select={assembly} data-idx={at} aria-pressed={selected === assembly} aria-label={`${num} ${t.names[at]}`} onClick={() => setSelected(assembly)}>
+            <span aria-hidden="true">{num}</span> <span className="pou-neu-etiqueta">{t.names[at]}</span>
+          </button>;
+        })}
+        <button type="button" className="pou-neu-choice" data-pas="1" aria-label={ti.seguent} onClick={() => mou(1)}><span className="pou-neu-etiqueta">{ti.seguent}</span> <span aria-hidden="true">→</span></button>
+        <div className="pou-neu-detall-peca" data-detall-peca={selected}>
+          <div className="pou-neu-description" aria-live="polite"><strong>{t.names[index]}</strong><p>{t.descriptions[index]}</p></div>
+          <dl className="pou-neu-readout" data-readout="" aria-live="polite" aria-atomic="true">
+            {Object.entries(values).map(([key, value]) => <div key={key}><dt>{t[key]}</dt><dd data-metric={key} ref={key === 'z' ? zRef : undefined}>{numberOf(value, lang, key === 'z' ? 2 : key === 'density' ? 0 : 1)} {unit[key]}</dd></div>)}
+          </dl>
         </div>
-      </> : null}
+      </div>
     </div>
-    <div className="pou-neu-description" hidden={!iso3d} aria-live="polite"><strong>{t.names[index]}</strong><p>{t.descriptions[index]}</p></div>
-    <dl className="pou-neu-readout" hidden={!iso3d} data-readout="" aria-live="polite" aria-atomic="true">
-      {Object.entries(values).map(([key, value]) => <div key={key}><dt>{t[key]}</dt><dd data-metric={key} ref={key === 'z' ? zRef : undefined}>{numberOf(value, lang, key === 'z' ? 2 : key === 'density' ? 0 : 1)} {unit[key]}</dd></div>)}
-    </dl>
     <details className="pou-neu-fitxa" data-fitxa-segura="" hidden={isFullscreen}>
       <summary>{ti.fitxa}</summary>
       <dl>

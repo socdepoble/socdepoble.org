@@ -810,6 +810,22 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
       expect(ignorat(rel), rel).toBe(false);
     }
   });
+
+  test('Onada R26 · Info.plist blinda App Transport Security (zero trànsit arbitrari) i associacio-apps.json governa apple-app-site-association sense fitxers estàtics', () => {
+    const info = llegixPlist(llig(APP, 'Info.plist'));
+    expect(info.NSAppTransportSecurity).toEqual({
+      NSAllowsArbitraryLoads: false,
+      NSAllowsArbitraryLoadsInWebContent: false
+    });
+    expect(fs.existsSync(path.join(ARREL, 'public', '.well-known', 'apple-app-site-association'))).toBe(false);
+    const associacio = JSON.parse(llig(ARREL, 'scripts', 'botigues', 'associacio-apps.json'));
+    expect(associacio.esquema).toBe('sdp.associacio-apps.v1');
+    expect(associacio.ios?.bundle_id).toBe('org.socdepoble.app');
+    expect(associacio.ios?.origens).toEqual(['https://socdepoble.org']);
+    expect(Array.isArray(associacio.ios?.team_ids)).toBe(true);
+    for (const equip of associacio.ios.team_ids) expect(equip).toMatch(/^[A-Z0-9]{10}$/);
+    expect(associacio.ios?.camins).toEqual(expect.arrayContaining(['/auth/*', '/mur/*', '/notes/*']));
+  });
 });
 
 /* D-C2 PWA (pla 261029_1605, Bloc C.2; 261029) · Les icones de la PWA (les PNG

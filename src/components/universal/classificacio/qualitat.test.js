@@ -128,19 +128,20 @@ describe('Pedra Seca', () => {
     });
   });
 
-  /* T7B-R2 · Un valor llarg s'escurça amb punts suspensius. El text-overflow
-     només s'aplica a l'element que retalla el seu propi text: el del valor,
-     que a més ha de poder encongir-se dins de la píndola (min-width: 0). */
-  test('el valor llarg d’una píndola s’escurça amb punts suspensius (T7B-R2)', () => {
+  /* T7B-R2, revisat per l'Onada R26.2 (ordre del Mestre del 261114, respiració lateral dels botons) ·
+     Un valor llarg ja no s'escurça amb punts suspensius: la píndola baixa en diverses línies i el valor es
+     llig sencer, sense perdre la identitat de botó. Continua podent encongir-se dins de la píndola
+     (min-width: 0). Si el Mestre vol tornar als punts suspensius, és esta prova i la regla de modules.css. */
+  test('el valor llarg d’una píndola es llig sencer en diverses línies (T7B-R2, revisat R26.2)', () => {
     const net = blocT7().replace(/\/\*[\s\S]*?\*\//g, '');
     const regla = net.match(/\.sdp-classificacio-pindola__text\s*\{([^}]*)\}/);
     expect(regla, 'regla .sdp-classificacio-pindola__text').toBeTruthy();
     const declaracions = Object.fromEntries(regla[1].split(';').map((d) => d.split(':').map((t) => t.trim())).filter(([p, v]) => p && v));
     expect(declaracions).toMatchObject({
       'min-width': '0',
-      overflow: 'hidden',
-      'text-overflow': 'ellipsis',
-      'white-space': 'nowrap'
+      overflow: 'visible',
+      'text-overflow': 'clip',
+      'white-space': 'normal'
     });
   });
 

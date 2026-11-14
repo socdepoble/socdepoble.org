@@ -53,8 +53,13 @@
  *                     els detalls» i la seua finestra, des del readme.txt local
  *                     (T5.1, ordre del Mestre 261029);
  *   salut.php         proves de Salut del lloc;
+ *   secrets-wp72.php  les claus opcionals de traducció, amb una sola
+ *                     precedència: constant, variable d'entorn i Secrets API de
+ *                     WordPress 7.2+ (IDEA-264); mai en text pla a wp_options;
  *   traduccio.php     servei de traducció: Apertium sense clau per defecte,
  *                     DeepL si hi ha clau (clau només al servidor);
+ *   abilities-mcp.php tres abilities de només lectura per a l'Abilities API i
+ *                     MCP de WordPress 6.9+ (IDEA-262); abans, no registra res;
  *   actualitzador.php canal propi d'actualitzacions signat. Amb
  *                     idioma-local.php i languages/, és el que l'empaquetador
  *                     lleva de la variant per al directori de WordPress.org,
@@ -150,9 +155,11 @@ require_once __DIR__ . '/includes/copies.php';
 require_once __DIR__ . '/includes/manifest.php';
 require_once __DIR__ . '/includes/marcatge.php';
 require_once __DIR__ . '/includes/seo.php';
+require_once __DIR__ . '/includes/secrets-wp72.php';
 require_once __DIR__ . '/includes/traduccio.php';
 require_once __DIR__ . '/includes/ajustos.php';
 require_once __DIR__ . '/includes/salut.php';
+require_once __DIR__ . '/includes/abilities-mcp.php';
 
 /* Una còpia activa només en un lloc secundari no es carrega a l'administració
    de xarxa i la guarda de dalt no la veu: el refús de l'activació de xarxa és

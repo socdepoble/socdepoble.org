@@ -101,3 +101,50 @@ test('la lectura comprova els bytes reals i mostra una fallada llegible', async 
   await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('8 MiB'));
   expect(screen.queryByText(/processat amb èxit/)).toBeNull();
 });
+
+test('CENS02 · en columna única (<960px) o amb Inspeccionar, porta la vista i el focus a l’inspector dins de .sdp-root sense moure l’amfitrió', async () => {
+  const scrollHost = vi.fn();
+  const scrollApp = vi.fn();
+  const prevMatchMedia = window.matchMedia;
+  window.matchMedia = vi.fn((q) => ({
+    media: q,
+    matches: q.includes('max-width: 960px'),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }));
+
+  const host = document.createElement('div');
+  host.style.overflowY = 'auto';
+  Object.defineProperty(host, 'scrollHeight', { value: 3000, configurable: true });
+  Object.defineProperty(host, 'clientHeight', { value: 600, configurable: true });
+  host.scrollTo = scrollHost;
+
+  const sdpRoot = document.createElement('div');
+  sdpRoot.className = 'sdp-root';
+  const contenidorApp = document.createElement('div');
+  contenidorApp.style.overflowY = 'auto';
+  Object.defineProperty(contenidorApp, 'scrollHeight', { value: 2400, configurable: true });
+  Object.defineProperty(contenidorApp, 'clientHeight', { value: 600, configurable: true });
+  contenidorApp.scrollTo = scrollApp;
+
+  sdpRoot.appendChild(contenidorApp);
+  host.appendChild(sdpRoot);
+  document.body.appendChild(host);
+
+  try {
+    render(<BancImportacioEditorial />, { container: contenidorApp });
+    seleccionaArbres();
+    await waitFor(() => {
+      expect(document.activeElement?.textContent).toContain('Fitxa de Revisió · #619');
+    });
+    expect(scrollApp).toHaveBeenCalled();
+    expect(scrollHost).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /Tornar a la taula d’articles/ }));
+    expect(document.activeElement?.getAttribute('data-testid')).toBe('importacio-barra-proxima');
+    expect(scrollHost).not.toHaveBeenCalled();
+  } finally {
+    window.matchMedia = prevMatchMedia;
+    host.remove();
+  }
+});

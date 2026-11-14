@@ -318,3 +318,7 @@ REGISTRE.push({ nom: 'BarraActualitzacioRecomanada', fitxer: 'universal/barres/B
 /* IDEA-255 (Onada R23 · 14-11-2026) · Reproductor flotant universal de veu de PageFrame.
    Espècimen: EspecimenBarraReproductorVeu (superposicions/barra-reproductor-veu). */
 REGISTRE.push({ nom: 'BarraReproductorVeu', fitxer: 'components/universal/veu/BarraReproductorVeu.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
+/* Onada R26.2/R26.3 (Codex 2115 + Gemini R26.3, fusió Claude R27 · 15-11-2026) · Tria exclusiva amb explicació
+   adjacent i resum de dues línies. Espècimen: EspecimenSelectorOpcionsDesplegable
+   (formularis/selector-opcions-desplegable). */
+REGISTRE.push({ nom: 'SelectorOpcionsDesplegable', fitxer: 'PedraSeca/molecules/SelectorOpcionsDesplegable.jsx', pagina: 'formularis', estat: 'viu' });

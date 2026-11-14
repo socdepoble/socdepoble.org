@@ -147,9 +147,12 @@ test('cap funció del plugin es crida sense definir ni es definix dues vegades',
     'socdepoble_enxufe_config', 'socdepoble_enxufe_ruta_a_url',                            // filtres públics
     'socdepoble_enxufe_seo',                                                                 // filtre públic (Onada 11, 261010, tasca 7): OpenGraph de la ruta
     'socdepoble_enxufe_idioma',                                                              // filtre públic (pla 261028_1526, TE-05): la llengua opt-in
-    'socdepoble_enxufe_canal', 'socdepoble_enxufe_paquet',                                  // opció i proves de Salut
+    'socdepoble_enxufe_canal', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets',      // opció i proves de Salut
     'socdepoble_enxufe_comprova',                                                            // acció i nonce
-    'socdepoble_enxufe_http', 'socdepoble_enxufe_url', 'socdepoble_enxufe_temporal', 'socdepoble_enxufe_arrel', 'socdepoble_enxufe_bloqueig' // codis d'error
+    'socdepoble_enxufe_http', 'socdepoble_enxufe_url', 'socdepoble_enxufe_temporal', 'socdepoble_enxufe_arrel', 'socdepoble_enxufe_bloqueig', // codis d'error
+    'socdepoble_enxufe_secret_invalid', 'socdepoble_enxufe_secret_no_disponible', 'socdepoble_enxufe_secret_error', // codis d'error WP 7.2 Secrets API
+    'socdepoble_enxufe_secret_permis', 'socdepoble_enxufe_secret_illegible',                 // R26: el nucli no comprova capacitats i un secret il·legible no es reemplaça
+    'socdepoble_enxufe_permis_lectura', 'socdepoble_enxufe_post_inexistent', 'socdepoble_enxufe_entrada_buida'      // codis d'error Abilities MCP
   ]);
   const orfes = [];
   for (const [rel, text] of Object.entries(textDe)) {
@@ -404,33 +407,37 @@ const FUNCIONS_WP = {
   do_settings_sections: '2.7', esc_attr: '2.8', esc_html: '2.8', esc_html__: '2.8', esc_html_e: '2.8', esc_url: '2.8',
   esc_url_raw: '2.8', get_block_wrapper_attributes: '5.6', get_blog_option: '3.0',
   get_bloginfo: '0.71', get_file_data: '2.9', get_main_site_id: '4.9', get_user_locale: '4.7', get_locale: '0.71', get_option: '1.5', get_page_template_slug: '3.4',
-  get_permalink: '1.0', get_queried_object: '3.1', get_queried_object_id: '3.1', get_site_option: '2.8',
+  get_permalink: '1.0', get_post: '1.5.1', get_posts: '1.2', get_queried_object: '3.1', get_queried_object_id: '3.1', get_site_option: '2.8',
   get_site_transient: '2.9', get_sites: '4.6', get_transient: '2.8', has_block: '5.0', has_shortcode: '3.6',
   have_posts: '1.5', home_url: '3.0', is_locale_switched: '4.7', is_multisite: '3.0', is_page: '1.5', is_php_version_compatible: '5.2',
-  is_singular: '1.5', is_wp_error: '2.1', is_wp_version_compatible: '5.2',
-  language_attributes: '2.1', load_plugin_textdomain: '1.5', plugin_basename: '1.5', plugin_dir_path: '2.8',
+  is_robots: '2.1', is_singular: '1.5', is_wp_error: '2.1', is_wp_version_compatible: '5.2',
+  language_attributes: '2.1', load_plugin_textdomain: '1.5',
+  mb_substr: '3.2', // R26: de mbstring; sense l'extensió, el compat.php del nucli la definix des de la 3.2
+  nocache_headers: '2.0', plugin_basename: '1.5', plugin_dir_path: '2.8',
   plugins_url: '2.6', register_activation_hook: '2.0', register_block_template: '6.7',
   register_block_type: '5.8', // 5.0; amb la ruta de block.json com a primer paràmetre, 5.8
   register_rest_route: '4.4',
   register_setting: '4.7', // 2.7; amb l'array d'arguments (sanitize_callback, default), 4.7
   remove_filter: '1.2', rest_url: '4.4', restore_current_blog: '3.0', sanitize_text_field: '2.9', sanitize_title: '1.0',
   network_admin_url: '3.0', // T5.1 (261029): l'enllaç «Mostra els detalls» de la fila, el del nucli (en xarxa, plugin-install.php redirigix a l'administració de xarxa)
-  set_transient: '2.8', settings_fields: '2.7', shortcode_atts: '2.5', submit_button: '3.1', switch_to_blog: '3.0',
+  set_transient: '2.8', settings_fields: '2.7', shortcode_atts: '2.5', status_header: '2.0', submit_button: '3.1', switch_to_blog: '3.0',
   the_content: '0.71', the_post: '1.5', trailingslashit: '1.2', untrailingslashit: '2.2', update_option: '1.0',
   update_site_option: '2.8', wp_add_inline_script: '4.5', wp_add_inline_style: '3.3', wp_body_open: '5.2',
   wp_cache_delete: '2.0', wp_date: '5.3', wp_delete_file: '4.2', wp_die: '2.0.4', wp_enqueue_script: '2.1',
-  wp_enqueue_style: '2.6', wp_footer: '1.5.1', wp_generate_uuid4: '4.7', wp_get_environment_type: '5.5',
-  wp_head: '1.2', wp_print_inline_script_tag: '5.7', wp_json_encode: '4.1', wp_kses: '1.0', wp_kses_post: '2.9', wp_nonce_field: '2.0.4',
+  wp_enqueue_style: '2.6', wp_footer: '1.5.1', wp_generate_uuid4: '4.7', wp_get_environment_type: '5.5', wp_get_nocache_headers: '2.8', wp_get_secret: '7.2',
+  wp_head: '1.2', wp_is_secrets_api_available: '7.2', wp_print_inline_script_tag: '5.7', wp_json_encode: '4.1', wp_kses: '1.0', wp_kses_post: '2.9', wp_nonce_field: '2.0.4',
   wp_parse_url: '4.7', // 4.4; amb el paràmetre $component (PHP_URL_HOST), 4.7
+  wp_register_ability: '6.9', wp_register_ability_category: '6.9',
   wp_register_script: '2.1', wp_register_style: '2.6', wp_remote_post: '2.7', wp_remote_retrieve_body: '2.7',
-  wp_remote_retrieve_response_code: '2.7', wp_safe_redirect: '2.3', wp_safe_remote_get: '3.6', wp_salt: '2.5',
-  wp_set_script_translations: '5.0', wp_tempnam: '2.6', wp_unslash: '3.6'
+  wp_remote_retrieve_response_code: '2.7', wp_safe_redirect: '2.3', wp_safe_remote_get: '3.6', wp_salt: '2.5', wp_secrets_provider_is_writable: '7.2',
+  wp_set_script_translations: '5.0', wp_set_secret: '7.2', wp_tempnam: '2.6', wp_unslash: '3.6'
 };
-const CLASSES_WP = { WP_Error: '2.1', WP_Filesystem_Base: '2.5', WP_REST_Response: '4.4' };
-// De $wpdb, WP_REST_Request, WP_Error i WP_Filesystem_Base.
+const CLASSES_WP = { WP_Error: '2.1', WP_Filesystem_Base: '2.5', WP_REST_Response: '4.4', WP_Secret: '7.2' };
+// De $wpdb, WP_REST_Request, WP_Error, WP_Filesystem_Base i WP_Secret.
 const METODES_WP = {
-  esc_like: '4.0', get_body: '4.4', get_error_message: '2.1', get_header: '4.4', get_json_params: '4.4',
-  get_var: '0.71', is_file: '2.5', is_json_content_type: '5.6', prepare: '2.3', query: '0.71'
+  esc_like: '4.0', get_body: '4.4', get_error_message: '2.1', get_header: '4.4', get_json_params: '4.4', get_route: '4.4',
+  get_var: '0.71', is_file: '2.5', is_json_content_type: '5.6', prepare: '2.3', query: '0.71',
+  reveal: { des_de: '7.2', inert: 'només es crida sobre un WP_Secret (instanceof, darrere de class_exists), que abans de la 7.2 no existix' }
 };
 // Els que el plugin enganxa o aplica; els dinàmics, amb el nom del nucli: {$…} és la part variable.
 const GANXOS_WP = {
@@ -443,9 +450,12 @@ const GANXOS_WP = {
   plugin_locale: '3.0', // el de load_plugin_textdomain, que la reserva de idioma-local.php també aplica
   plugin_row_meta: '2.8', // T5.1 (261029): «Mostra els detalls» a la fila d'Extensions, també sense slug al transient
   plugins_api: '2.7', pre_get_document_title: '4.4',
-  rest_api_init: '4.4', script_loader_tag: '4.1', site_status_tests: '5.2', template_include: '3.0',
+  rest_api_init: '4.4', rest_pre_dispatch: '4.4', script_loader_tag: '4.1', site_status_tests: '5.2', template_include: '3.0', template_redirect: '1.5',
   theme_page_templates: '3.9', 'update_plugins_{$hostname}': '5.8', upgrader_pre_download: '3.7',
-  upgrader_source_selection: '2.8', wp: '2.1', wp_head: '1.2',
+  upgrader_source_selection: '2.8', wp: '2.1',
+  wp_abilities_api_categories_init: { des_de: '6.9', inert: 'abans de la 6.9 ningú no dispara el registre de categories d\'abilities MCP' },
+  wp_abilities_api_init: { des_de: '6.9', inert: 'abans de la 6.9 ningú no dispara el registre d\'abilities MCP' },
+  wp_head: '1.2',
   wp_preload_resources: { des_de: '6.1', inert: 'abans de la 6.1 ningú no hi demana preloads, i no hi ha res a llevar' }
 };
 // D'altres plugins, cadascun dins de la guarda del seu plugin (seo.php).
@@ -496,10 +506,10 @@ const PHP_INTERN = new Set([
   'array_diff', 'array_filter', 'array_key_exists', 'array_keys', 'array_map', 'array_merge', 'array_slice', 'array_unique', 'array_unshift',
   'array_values', 'array_search', 'basename', 'class_exists', 'clearstatcache', 'constant', 'count', 'define', 'defined', 'dirname', 'explode',
   'file_exists', 'file_get_contents', 'filemtime', 'filesize', 'filter_var', 'function_exists', 'get_class', 'getenv', 'gmdate',
-  'hash_equals', 'hash_file', 'hash_hmac', 'hex2bin', 'html_entity_decode', 'implode', 'in_array', 'is_array', 'is_int',
-  'is_link', 'is_object', 'is_readable', 'is_scalar', 'is_string', 'json_decode', 'ksort', 'ltrim', 'max', 'ob_get_clean',
+  'hash_equals', 'hash_file', 'hash_hmac', 'header', 'headers_sent', 'hex2bin', 'html_entity_decode', 'implode', 'in_array', 'intval', 'is_array', 'is_int',
+  'is_link', 'is_numeric', 'is_object', 'is_readable', 'is_scalar', 'is_string', 'json_decode', 'ksort', 'ltrim', 'max', 'method_exists', 'min', 'ob_get_clean',
   'ob_start', 'preg_match', 'preg_match_all', 'preg_replace', 'preg_replace_callback', 'preg_split', 'printf', 'range', 'rawurlencode',
-  'sodium_crypto_sign_verify_detached', 'sprintf', 'str_replace', 'strlen', 'strpos', 'strtolower', 'strtr', 'substr', 'time', 'trim',
+  'sodium_crypto_sign_verify_detached', 'sprintf', 'str_replace', 'strip_tags', 'strlen', 'strpos', 'strtolower', 'strtotime', 'strtr', 'substr', 'time', 'trim',
   'urldecode', 'version_compare'
 ]);
 const CLASSES_PHP = new Set(['ZipArchive', 'stdClass']);
@@ -1125,7 +1135,19 @@ test('readme a «Mostra els detalls», plantilla de blocs i getenv protegit', ()
     assert.ok(major > solDirectori[0] || (major === solDirectori[0] && minor >= solDirectori[1]), `el directori exigix la ${solDirectori.join('.')} i el readme parla de la ${major}.${minor}`);
   }
 
-  assert.match(cosDe('includes/traduccio.php', 'socdepoble_enxufe_deepl_clau'), /function_exists\( 'getenv' \) \? getenv\( 'DEEPL_API_KEY' \)/, 'getenv pot estar a disable_functions');
+  /* R26 · La precedència constant → entorn → Secrets API viu en un sol lloc (secrets-wp72.php) i
+     la clau de DeepL hi passa: la guarda de getenv es comprova allà, i cap getenv sense guarda. */
+  assert.match(cosDe('includes/traduccio.php', 'socdepoble_enxufe_deepl_clau'), /return socdepoble_enxufe_llig_clau\( 'deepl' \);/, 'la clau de DeepL passa per la precedència única');
+  assert.match(llig('includes/secrets-wp72.php'), /'deepl'\s*=> array\( 'DEEPL_API_KEY', 'socdepoble\/deepl-api-key' \)/, 'DEEPL_API_KEY i el seu nom a la Secrets API');
+  assert.match(cosDe('includes/secrets-wp72.php', 'socdepoble_enxufe_resol_secret'), /function_exists\( 'getenv' \) \? getenv\( \$nom_constant \)/, 'getenv pot estar a disable_functions');
+  let cridesGetenv = 0;
+  for (const rel of PHP) {
+    const crides = [...nomesCodi(llig(rel)).matchAll(/\bgetenv\(/g)].length;
+    const guardades = [...nomesCodi(llig(rel)).matchAll(/function_exists\( '' \) \? getenv\(/g)].length;
+    assert.equal(crides, guardades, `${rel}: getenv sense function_exists al davant`);
+    cridesGetenv += crides;
+  }
+  assert.ok(cridesGetenv >= 1, 'la variable d\'entorn continua sent el segon origen');
 });
 
 /* T5.1 (ordre del Mestre, 261029, captures de gentdelatorre.net) · Sense intèrpret, la forma:

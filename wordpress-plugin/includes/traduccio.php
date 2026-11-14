@@ -11,16 +11,27 @@
 
 defined( 'ABSPATH' ) || exit;
 
-/** Constant de wp-config.php abans que la variable d'entorn del procés PHP.
- *  Un allotjament pot posar getenv a disable_functions: en PHP 8 la funció
- *  deixa d'existir i cridar-la llança Error a cada pàgina amb l'App. */
+require_once __DIR__ . '/secrets-wp72.php';
+
+/** La clau de DeepL amb la precedència única de secrets-wp72.php: la constant
+ *  de wp-config.php mana si està definida (buida o amb un salt de línia
+ *  desactiva DeepL, com sempre), després la variable d'entorn del procés PHP
+ *  (getenv protegida: un allotjament la pot posar a disable_functions i en
+ *  PHP 8 cridar-la llançaria Error a cada pàgina amb l'App) i, en tercer lloc,
+ *  la Secrets API xifrada de WordPress 7.2+ (IDEA-264). */
 function socdepoble_enxufe_deepl_clau() {
-	if ( defined( 'DEEPL_API_KEY' ) ) {
-		$clau = constant( 'DEEPL_API_KEY' );
-	} else {
-		$clau = function_exists( 'getenv' ) ? getenv( 'DEEPL_API_KEY' ) : false;
+	return socdepoble_enxufe_llig_clau( 'deepl' );
+}
+
+/** Nom públic del motor actiu per a diagnòstic MCP i Salut, sense cap clau. */
+function socdepoble_enxufe_traduccio_proveidor_actiu() {
+	if ( '' !== socdepoble_enxufe_deepl_clau() ) {
+		return 'deepl';
 	}
-	return is_string( $clau ) && ! preg_match( '/[\r\n]/', $clau ) ? trim( $clau ) : '';
+	if ( '' !== socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_URL' ) ) {
+		return 'motor_propi';
+	}
+	return 'apertium';
 }
 
 function socdepoble_enxufe_traduccio_error( $codi, $estat ) {
@@ -122,19 +133,23 @@ function socdepoble_enxufe_traduccio_proveidor( $desti ) {
 			'nom' => 'apertium',
 			'parell' => $motors[ $desti ][0],
 			'extrems' => '' !== $propi ? array( $propi ) : $motors[ $desti ][1],
-			'empremta' => hash_hmac( 'sha256', 'sdp-apertium-v1', wp_salt( 'auth' ) ),
+			'empremta' => hash_hmac( 'sha256', 'sdp-apertium-v1' . ( '' !== $propi ? '|' . $propi : '' ), wp_salt( 'auth' ) ),
 		);
 	}
 	$url = socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_URL' );
 	if ( '' === $url ) {
 		return socdepoble_enxufe_traduccio_error( 'sense_clau', 503 );
 	}
-	$clau = defined( 'SDP_TRADUCCIO_URL_CLAU' ) ? constant( 'SDP_TRADUCCIO_URL_CLAU' ) : '';
+	$clau_neta = socdepoble_enxufe_llig_clau( 'traduccio_url' );
 	return array(
 		'nom' => 'lliure',
 		'url' => $url,
-		'clau' => is_string( $clau ) && ! preg_match( '/[\r\n]/', $clau ) ? trim( $clau ) : '',
-		'empremta' => hash_hmac( 'sha256', 'sdp-lliure-v1|' . $url, wp_salt( 'auth' ) ),
+		'clau' => $clau_neta,
+		'empremta' => hash_hmac(
+			'sha256',
+			'sdp-lliure-v1|' . $url . ( '' !== $clau_neta ? '|' . hash_hmac( 'sha256', $clau_neta, 'sdp-lliure-cred-v1' ) : '' ),
+			wp_salt( 'auth' )
+		),
 	);
 }
 

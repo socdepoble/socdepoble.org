@@ -29,7 +29,7 @@ export default function EspecimenBotoVeuIaia() {
         'Deixar privat per defecte a false amb text de l’usuari: eixiria del dispositiu.',
         'Fer servir la veu com a única via d’accés al contingut: el text ha de ser sempre visible.'
       ]}>
-      <p><BotoVeuIaia text="Esta és la veu de la IAIA." idioma="ca" /></p>
+      <div className="sdp-accions"><BotoVeuIaia text="Esta és la veu de la IAIA." idioma="ca" /></div>
     </Especimen>
   );
 }

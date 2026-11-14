@@ -258,7 +258,7 @@ export const CLAUS_FUNDACIONALS = Object.freeze([PERSONA_PILOT.slug, ENTITAT_PIL
    Onada R24.2 (R21.2-F01, decisió del Mestre del 14-11-2026 a les 15:48,
    «Endavant amb les 7 decisions!») · La persona pilot declara l'UUID del seu
    compte de producció, el que torna `auth.users` (sonda 1 de lectura del
-   SQL Editor, 14-11-2026 15:48). Així cada veí veu «Javi Llinares» una sola
+   SQL Editor, 14-11-2026 15:48). Així cada veí veu la persona pilot una sola
    vegada al xat (esLaIdentitatDAjuda) i la fila remota amb eixe UUID es
    reconeix com la persona pilot (clauFundacional: adreça canònica
    /javillinares). En remot, /javillinares encara pinta la fitxa del paquet:

@@ -1,9 +1,7 @@
 /**
- * Pestanyes (WAI-ARIA tabs) · Onada 6 (pàgina del poble): la variant
- * centrada (`centrades`, modificador sdp-pestanyes--centrades). Centrada amb
- * marges automàtics a les puntes de la llista: quan desborda valen 0 i la
- * primera pestanya no es talla (justify-content: safe center no és del
- * Baseline 2022). Sense la prop, el DOM de sempre.
+ * Pestanyes (WAI-ARIA tabs) · R26.2: coixí lateral conservat i files
+ * centrades amb wrap. El modificador centrades conserva el mateix DOM i
+ * evita els marges automàtics dels extrems quan hi ha diverses files.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -32,9 +30,9 @@ describe('la variant centrada', () => {
     expect(container.firstElementChild.className).toBe('sdp-pestanyes sdp-pestanyes--centrades propia');
   });
 
-  test('el CSS centra amb marges automàtics a la primera i a l’última pestanya, mai amb safe center', () => {
-    expect(CSS).toContain('.sdp-pestanyes--centrades .sdp-pestanyes__pestanya:first-child { margin-inline-start: auto; }');
-    expect(CSS).toContain('.sdp-pestanyes--centrades .sdp-pestanyes__pestanya:last-child { margin-inline-end: auto; }');
+  test('el CSS centra les files amb wrap i neutralitza els marges dels extrems', () => {
+    expect(CSS).toContain('.sdp-pestanyes--centrades .sdp-pestanyes__pestanya:first-child { margin-inline-start: 0; }');
+    expect(CSS).toContain('.sdp-pestanyes--centrades .sdp-pestanyes__pestanya:last-child { margin-inline-end: 0; }');
     expect(CSS).not.toMatch(/justify-content:\s*safe/);
     /* La pestanya centrada no encavalca la vora (margin-bottom -2px de
        sèrie): dins d'overflow-x: auto, eixos 2px desbordaven en vertical i

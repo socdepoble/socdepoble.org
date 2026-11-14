@@ -684,7 +684,15 @@ export function DocumentEditor({ adapter, onToast }) {
   const obreVisibilitat = useCallback(() => {
     if (!document) return;
     if (visibilitatEnLinia) {
-      setPeticioVisibilitat({ nota: document.id });
+      setPeticioVisibilitat({ nota: document.id, origen: 'barra-taronja' });
+      return;
+    }
+    setVisibilitatDe(document.id);
+  }, [document, visibilitatEnLinia]);
+  const publicaDesDeBarra = useCallback(() => {
+    if (!document) return;
+    if (visibilitatEnLinia) {
+      setPeticioVisibilitat({ nota: document.id, origen: 'publicar-barra' });
       return;
     }
     setVisibilitatDe(document.id);
@@ -1214,6 +1222,14 @@ export function DocumentEditor({ adapter, onToast }) {
     ? 'pendent'
     : (publicacioAlDia === null ? null : 'publicat');
   const estatPublicacio = publishLabel ? null : estatPublicacioEnLinia;
+  const textosEnLinia = visibilitatEnLinia ? visibilitat?.textosEnLinia : null;
+  const etiquetaPublicarAmpla = !publishLabel && textosEnLinia
+    ? (estatPublicacio === 'publicat'
+      ? (textosEnLinia.estatPublicat || null)
+      : (esPublica
+        ? (textosEnLinia.publica?.accioIgual || textosEnLinia.publica?.accio || null)
+        : (textosEnLinia.publica?.accio || null)))
+    : null;
 
   const topBar = (
     <UniversalRichTextToolbar
@@ -1223,9 +1239,10 @@ export function DocumentEditor({ adapter, onToast }) {
       state={enRepos ? ESTAT_BUIT : state}
       exec={enRepos ? EXEC_BUIT : exec}
       {...(enRepos ? { motiuEnLectura: t('editor.eines.enRepos', 'En lectura: prem «Editar» per a escriure i donar format al text.') } : null)}
-      onPublish={obreVisibilitat}
+      onPublish={publicaDesDeBarra}
       publishPopup={visibilitatEnLinia ? null : 'dialog'}
       publishLabel={publishLabel}
+      publishLabelWide={etiquetaPublicarAmpla}
       publishState={estatPublicacio}
       onDelete={deleteDocument ? esborra : undefined}
       /* IDEA-41 · Sense motor, cap clau nova: la barra de sempre.

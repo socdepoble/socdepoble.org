@@ -1656,6 +1656,7 @@ export default {
   'section.notes.visibilitat.enLinia.veureAlMur': 'Ikusi Horman',
   'section.notes.visibilitat.enLinia.veureAlMercat': 'Ikusi Merkatuan',
   'section.notes.visibilitat.enLinia.treballant': 'Argitaratzen…',
+  'section.notes.visibilitat.enLinia.recordatoriEsborrany': 'Ohar hau 🔒 Zirriborro pribatua da. Hautatu «{opcio}» argitaratu aurretik.',
   'section.notes.carpeta.mur': 'Horma',
   'section.notes.carpeta.mercat': 'Merkatua',
   'section.notes.carpeta.pobles': 'Herriak',

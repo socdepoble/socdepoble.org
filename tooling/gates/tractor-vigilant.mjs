@@ -8,10 +8,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
+// Un sol lexer i unes mateixes regles que la porta Tellado (R25.2-P01/P03, IDEA-266).
+import { defectesPermisosWp, faviconsRasterValids, mancancesManteniment503, netejaComentarisLineal, teGuardaAbspathAmbEixida, trobaSecretsWp } from './porta-perimetre-tellado.mjs';
 export const readOnly = true;
 const SENSIBLE = /(?:^|\/)(?:\.env[^/]*|\.git[^/]*|debug\.log|error_log|phpinfo\.php|wp-config[^/]*\.php)$|\.(?:sql(?:\.gz)?|bak|old|orig|swp)$/i;
 const EXECUTABLE = /\.(php[0-9]?|phtml|phar|sh|py|pl|cgi)$/i;
-const NOU = new Set(['VIG-01','VIG-02','VIG-03','VIG-04','VIG-05','VIG-06','VB1','VB2','VB3','VB9','VB10','VC2']);
+const NOU = new Set(['VIG-01','VIG-02','VIG-03','VIG-04','VIG-05','VIG-06','VIG-07','VIG-08','VIG-09','VIG-10','VB1','VB2','VB3','VB9','VB10','VC2']);
 const ORIGEN = 'Vigilant Tellado: perímetre estàtic adaptat a Sóc de Poble';
 function fitxers(root, rel, incidencies) {
   const abs=path.join(root,rel);if(!fs.existsSync(abs)) return null;
@@ -34,6 +36,8 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
     for(const part of parts) {cursor=path.join(cursor,part);if(!fs.existsSync(cursor)||fs.lstatSync(cursor).isSymbolicLink()) return null;}
     if(!fs.statSync(cursor).isFile() || fs.statSync(cursor).size>8*1024*1024) return null;
     return fs.readFileSync(cursor,'utf8'); };
+  const lligBuffer=rel=>{const t=llig(rel);return t===null?null:fs.readFileSync(path.join(root,rel));};
+  const netPhp=new Map();const net=p=>{if(!netPhp.has(p))netPhp.set(p,netejaComentarisLineal(llig(p)||'','.php'));return netPhp.get(p);};
   const exposats=['public','dist','dist-natiu','wordpress-plugin/dist','wordpress-plugin/builds/directori'];
   const presents=exposats.map(p=>fitxers(root,p,enllacos)).filter(Boolean), tots=presents.flat();
   for(const [id,filtra] of [['VIG-01',p=>SENSIBLE.test(p)],['VIG-02',p=>(p.startsWith('public/assets/')||p.startsWith('wordpress-plugin/dist/')||p.startsWith('wordpress-plugin/builds/directori/dist/'))&&EXECUTABLE.test(p)]]) {
@@ -64,10 +68,16 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   anota('VIG-05','mitjana',mixt.length?'falla':fonts.length?'ok':'no-mesurat',mixt,'Revisar URL no locals. Els espais de noms estàndard estan exempts.');
   const html=llig('index.html');const externs=[...php,...(html===null?[]:['index.html'])].filter(p=>/(?:src|href)\s*=\s*['"]https:\/\/(?:fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com|cdn\.jsdelivr\.net)/i.test(llig(p)||''));
   anota('VIG-06','alta',externs.length?'falla':html!==null?'ok':'no-mesurat',externs,'Comprovar declaració External services abans d’autoritzar el recurs.');
-  const senseGuarda=php.filter(p=>!/(?:defined\s*\(\s*['"]ABSPATH['"]\s*\)|!\s*defined\s*\(\s*['"]ABSPATH['"]\s*\))/.test(llig(p)||''));
+  const mantFitxers=[...php,...(['wp-content/maintenance.php','public/maintenance.php'].filter(p=>llig(p)!==null))].filter(p=>/(?:^|\/)(?:maintenance\.php|[^/]*manteniment[^/]*503[^/]*\.php)$/i.test(p));
+  const mantMales=mantFitxers.filter(p=>mancancesManteniment503(net(p)).length>0);
+  anota('VIG-07','alta',mantMales.length?'falla':mantFitxers.length?'ok':'no-mesurat',mantMales.length?mantMales:mantFitxers,' Tot manteniment PHP ha d’emetre 503, Retry-After, no-store/nocache_headers i respectar robots.txt.');
+  const secretsPla=php.filter(p=>trobaSecretsWp(net(p)).length>0);
+  anota('VIG-08','critica',secretsPla.length?'falla':php.length?'ok':'no-mesurat',secretsPla,'Prohibit persistir secrets en clar a wp_options o exposar WP_SECRETS_KEY / _wp_secret_.');
+  const senseGuarda=php.filter(p=>!teGuardaAbspathAmbEixida(p,net(p)));
   anota('VA1','alta',senseGuarda.length?'falla':php.length?'ok':'no-mesurat',senseGuarda,'Afegir i provar la guarda d’accés directe.');
-  const rest=php.filter(p=>/register_rest_route\s*\(/.test(llig(p)||''));
-  const sensePermis=rest.filter(p=>!/permission_callback/.test(llig(p)||'')||/permission_callback['"]?\s*=>\s*['"]__return_true/.test(llig(p)||''));
+  // Crida per crida i endpoint per endpoint (R25.2-P03): cap ruta hereta el permís d'una veïna.
+  const rest=php.filter(p=>/register_rest_route\s*\(/.test(net(p)));
+  const sensePermis=rest.filter(p=>defectesPermisosWp(net(p)).some(d=>d.nomCrida==='register_rest_route'));
   anota('VA2','alta',sensePermis.length?'falla':php.length?'ok':'no-mesurat',sensePermis,'Revisar cada ruta REST i el seu permís; comprovació lèxica, no prova semàntica.');
   const proxy=php.filter(p=>/HTTP_(?:X_FORWARDED_FOR|CF_CONNECTING_IP|X_REAL_IP)/.test(llig(p)||''));
   anota('VA3','alta',proxy.length?'falla':php.length?'ok':'no-mesurat',proxy,'Documentar i validar la llista de proxies de confiança.');
@@ -76,6 +86,12 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
     const ok=hosting?.headers?.some(r=>r.source==='**'&&r.headers?.some(h=>h.key.toLowerCase()===nom.toLowerCase()&&patro.test(h.value)));
     anota(id,'alta',!hosting?'no-mesurat':ok?'ok':'falla',hosting?['firebase.json']:[],'Capçaleres estàtiques; l’allotjament en viu encara no està mesurat.');
   }
+  // Mateix llindar que la porta Tellado: max-age >= 31536000 (un any). includeSubDomains no s'exigix (decisió R26 de l'integrador).
+  const hstsOk=hosting?.headers?.some(r=>r.source==='**'&&r.headers?.some(h=>h.key.toLowerCase()==='strict-transport-security'&&Number((/\bmax-age\s*=\s*(\d+)/i.exec(h.value)||[])[1]||0)>=31536000));
+  anota('VIG-09','alta',!hosting?'no-mesurat':hstsOk?'ok':'falla',hosting?['firebase.json']:[],'Incloure Strict-Transport-Security (max-age>=31536000) junt amb nosniff, Referrer-Policy i Permissions-Policy.');
+  // Dimensions reals del fitxer, quadrat >= 48x48 (guia de Google Search); cap múltiple de 48 ni confiança en `sizes`.
+  const faviconsRaster=html===null?[]:faviconsRasterValids(root,{llegeix:lligBuffer})||[];
+  anota('VIG-10','mitjana',html===null?'no-mesurat':faviconsRaster.length?'ok':'falla',html===null?[]:['index.html',...faviconsRaster.map(f=>`public${f.href}`)],'Declarar un favicon raster .png/.ico quadrat >= 48x48 real a index.html per a Google Search (no només .svg).');
   anota('VB9','baixa',html===null?'no-mesurat':/Content-Security-Policy/.test(html)?'ok':'falla',html===null?[]:['index.html'],'La CSP final de producció es valida sobre el build.');
   const maps=tots.filter(p=>/\.map$/.test(p));anota('VB10','baixa',maps.length?'falla':tots.some(p=>p.startsWith('dist/'))?'ok':'no-mesurat',maps,'Revisar mapes de fonts publicats.');
   const dies=[ara,new Date(ara.getTime()-86400000)].map(d=>`${String(d.getFullYear()).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`);

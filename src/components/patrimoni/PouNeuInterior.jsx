@@ -177,6 +177,7 @@ export default function PouNeuInterior({ t, lang = 'ca', mode = 'interior', esta
   const [visita, setVisita] = useState(false);
   const [avis, setAvis] = useState('');
   const [persona, setPersona] = useState('primera');
+  const [relatObertFs, setRelatObertFs] = useState(false);
   const [ajudaTactil] = useState(tactil);
   // CP-15a · L'estat viu per al bucle es copia després de cada render, mai durant.
   const viu = useRef({ mode, estat, coberta, tall, desplacament, ambCotes, persona, actual, t, onSuport });
@@ -485,16 +486,28 @@ export default function PouNeuInterior({ t, lang = 'ca', mode = 'interior', esta
         </button>;
       })}
     </div>
+    <div className="pou-neu-interior__relat" data-relat-obert={String(relatObertFs)} aria-live="polite">
+      <div className="pou-neu-interior__relat-cap">
+        <strong>{r.nomsCameres[actual]}</strong>
+        <button
+          type="button"
+          className="pou-neu-choice pou-neu-interior__relat-toggle"
+          data-relat-toggle=""
+          aria-pressed={relatObertFs}
+          aria-label={t.relat}
+          onClick={() => { setRelatObertFs((v) => !v); marca(); }}
+        >
+          <span aria-hidden="true">¶</span> <span className="pou-neu-etiqueta">{t.relat}</span>
+        </button>
+      </div>
+      <p>{r.relats[actual]}</p>
+      <BotoVeuIaia className="pou-neu-interior__iaia" text={`${r.nomsCameres[actual]}. ${r.relats[actual]}`} idioma={lang} privat={false} aria-label={t.escolta} />
+    </div>
     <div className="pou-neu-interior__accions" role="group" aria-label={t.accions}>
       {boto(t.visita, visita ? '⏸' : '▶', visita, () => setVisita((v) => !v), { disabled: movimentReduit, 'aria-describedby': movimentReduit ? `${id}-reduida` : undefined })}
       {boto(t.vol, '🕊', vol, () => { setDesplacament(vol ? 'peu' : 'vol'); setAvis(''); marca(); })}
       {boto(t.terceraPersona, '👤', persona === 'tercera', () => { setPersona((p) => (p === 'tercera' ? 'primera' : 'tercera')); marca(); })}
       {boto(t.cotes, '📐', ambCotes, () => setAmbCotes((v) => !v))}
-    </div>
-    <div className="pou-neu-interior__relat" aria-live="polite">
-      <strong>{r.nomsCameres[actual]}</strong>
-      <p>{r.relats[actual]}</p>
-      <BotoVeuIaia className="pou-neu-interior__iaia" text={`${r.nomsCameres[actual]}. ${r.relats[actual]}`} idioma={lang} privat={false} aria-label={t.escolta} />
     </div>
     {movimentReduit ? <span id={`${id}-reduida`} hidden>{t.visitaReduida}</span> : null}
   </> : null;

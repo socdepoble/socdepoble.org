@@ -65,12 +65,15 @@ test('T3 · retallador senzill: una fila de píndoles; en mòbil, el peu en una 
   const net = senseComentaris(MODULS);
   const visor = '.sdp-enquadrament--formes .sdp-enquadrament__visor-caixa > .sdp-enquadrament__visor';
   expect(declaracions(MODULS, visor)).toBe('max-height: max(10rem, min(45vh, 22rem, calc(100vh - 32rem)));');
-  expect(declaracions(MODULS, '.sdp-enquadrament__format-pindola')).toMatch(/padding: var\(--sdp-space-1\) var\(--sdp-space-2\);/);
+  // Onada R26.2 (ordre del Mestre, 261114 · respiració lateral dels botons): 20 px laterals, el mínim textual.
+  expect(declaracions(MODULS, '.sdp-enquadrament__format-pindola')).toMatch(/padding: var\(--sdp-space-1\) var\(--sdp-space-5\);/);
   const peu = net.indexOf('.sdp-enquadrament__dialeg--senzill .sdp-dialeg__peu {');
   expect(peu).toBeGreaterThan(-1);
   const inici = net.lastIndexOf('@media (max-width: 720px)', peu);
   expect(inici).toBeGreaterThan(-1);
   const bloc = net.slice(inici, net.indexOf('\n  }\n', peu));
-  expect(bloc).toContain('.sdp-enquadrament__dialeg--senzill .sdp-dialeg__peu { flex-direction: row; flex-wrap: wrap; gap: var(--sdp-space-2); }');
+  // Onada R26.2 (ordre del Mestre, 261114): el peu baixa centrat i els seus botons respiren 20 px pels costats.
+  expect(bloc).toContain('.sdp-enquadrament__dialeg--senzill .sdp-dialeg__peu { flex-direction: row; flex-wrap: wrap; gap: var(--sdp-space-2); justify-content: center; }');
+  expect(bloc).toContain('.sdp-enquadrament__dialeg--senzill .sdp-dialeg__peu .sdp-boto { width: auto; flex: 0 1 auto; padding-inline: var(--sdp-space-5); }');
   expect(bloc).toContain('max-height: max(10rem, min(45vh, 22rem, calc(100vh - 39rem)));');
 });

@@ -74,7 +74,7 @@ La fitxa tampoc té on guardar un IBAN, una dada de salut, el codi segur de veri
 
 ## Com es desenxufa
 
-«Oblida la carpeta» desenxufa la carpeta, buida la taula, la lectura i les propostes, revoca les adreces dels papers comprovats i torna a amagar els valors; els confirmats es queden a la fitxa. També cancel·la la lectura activa: el paper que ja ha començat acaba, però els seus bytes es descarten i no se’n llig cap més. Bloquejar el cofre (el botó «Bloqueja», 10 minuts sense activitat, 5 amb la pestanya amagada, eixir de la pàgina o d’esta vista) fa el mateix i, a més, buida de la memòria la fitxa desxifrada. Revocar l’aprovació al panell de Tractors bloqueja les lectures següents.
+«Oblida la carpeta» desenxufa la carpeta, buida la taula, la lectura i les propostes, revoca les adreces dels papers comprovats i torna a amagar els valors; els confirmats es queden a la fitxa. També cancel·la la lectura activa: el paper que ja ha començat acaba, però els seus bytes es descarten i no se’n llig cap més. Bloquejar el cofre (el botó «Bloqueja», 10 minuts sense activitat, 5 amb la pestanya amagada, eixir de la pàgina o d’esta vista) fa el mateix i, a més, buida de la memòria la fitxa desxifrada. Revocar l’aprovació (fora del servidor de desenvolupament, amb «Revoca l’aprovació» a la mateixa pantalla; al servidor de desenvolupament, al panell de Tractors) bloqueja les lectures següents.
 
 ## L’aprovació
 

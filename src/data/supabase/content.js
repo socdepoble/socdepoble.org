@@ -17,6 +17,7 @@ import { CURSOS_PEDRA_EN_SEC_2026_EVENT } from '../../sections/mur/eventsSeed.js
    diferit (la llavor, appSeed.js, ja la porta), mai l'entrada. */
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_POST } from '../../sections/mur/articles/novesTecnologiesCulturaRuralContent.js';
 import { LA_VEU_DE_SOC_DE_POBLE_POST } from '../../sections/mur/articles/laVeuDeSocDePobleContent.js';
+import { COPIES_SEGURETAT_SOC_DE_POBLE_POST } from '../../sections/mur/articles/copiesSeguretatSocDePobleContent.js';
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La personalització del
    poble (taxonomia i estil) viatja dins de loadCoreContent com a camp
    ADDITIU i opcional: en remot, de les files d'app_content; en seed o local,
@@ -322,7 +323,7 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
     const ambLlavorDestacada = key === 'events' && baseAppContent.some((item) => item?.id === 'aplec-2023')
       ? mergeById([CURSOS_PEDRA_EN_SEC_2026_EVENT], baseAppContent)
       : key === 'feedPosts' && llavorEditorial
-        ? mergeById([LA_VEU_DE_SOC_DE_POBLE_POST, NOVES_TECNOLOGIES_CULTURA_RURAL_POST], baseAppContent)
+        ? mergeById([COPIES_SEGURETAT_SOC_DE_POBLE_POST, LA_VEU_DE_SOC_DE_POBLE_POST, NOVES_TECNOLOGIES_CULTURA_RURAL_POST], baseAppContent)
         : baseAppContent;
     return [key, mergeById(
       ambLlavorDestacada,

@@ -28,6 +28,12 @@ function socdepoble_enxufe_proves_salut( $proves ) {
 			'test'  => 'socdepoble_enxufe_prova_canal',
 		);
 	}
+	if ( is_wp_version_compatible( '7.2' ) || function_exists( 'wp_get_secret' ) || defined( 'WP_SECRETS_KEY' ) ) {
+		$proves['direct']['socdepoble_enxufe_secrets'] = array(
+			'label' => __( 'Sóc de Poble encrypted secrets (WP 7.2+)', 'socdepoble' ),
+			'test'  => 'socdepoble_enxufe_prova_secrets_wp72',
+		);
+	}
 	return $proves;
 }
 add_filter( 'site_status_tests', 'socdepoble_enxufe_proves_salut' );
@@ -144,5 +150,94 @@ function socdepoble_enxufe_prova_paquet() {
 		'good',
 		__( 'The Sóc de Poble package is ready', 'socdepoble' ),
 		__( 'The bundle, its manifest and its sealed data node are consistent with this site.', 'socdepoble' )
+	);
+}
+
+/**
+ * Avís didàctic per a WordPress 7.2+ sobre WP_SECRETS_KEY i la no-rotació amb
+ * SALTs, amb l'estat real (IDEA-264). Només diu l'estat: mai el valor, el nom
+ * del proveïdor de secrets ni el missatge cru d'un WP_Error. No reescriu cap
+ * secret ni genera cap clau: un secret il·legible es recupera restaurant la
+ * WP_SECRETS_KEY d'abans, no desant-ne un altre damunt.
+ *
+ * Cada causa té el seu text: sense la Secrets API al nucli (abans de la 7.2)
+ * la constant encara no té cap ús; una WP_SECRETS_KEY definida que l'API no
+ * pot fer servir; un secret que no es pot desxifrar; un secret llegible amb
+ * un valor invàlid (la clau no n'és la causa); l'API desactivada, dient el
+ * motor que de veres tradueix; i l'API disponible amb la constant o amb el
+ * keyring de l'amfitrió.
+ *
+ * @return array
+ */
+function socdepoble_enxufe_prova_secrets_wp72() {
+	$prova = 'socdepoble_enxufe_secrets';
+	if ( ! function_exists( 'wp_get_secret' ) ) {
+		return socdepoble_enxufe_resultat_salut(
+			$prova,
+			'good',
+			__( 'Encrypted secrets arrive with WordPress 7.2', 'socdepoble' ),
+			__( 'This WordPress version does not have the secrets API yet. Sóc de Poble reads its optional keys from wp-config.php constants or environment variables and never stores them in plain text in the database.', 'socdepoble' )
+		);
+	}
+	$disponible = socdepoble_enxufe_secrets_wp72_disponible();
+	if ( ! $disponible && socdepoble_enxufe_secrets_wp72_clau_activa() ) {
+		return socdepoble_enxufe_resultat_salut(
+			$prova,
+			'recommended',
+			__( 'WP_SECRETS_KEY is defined but the WordPress secrets API cannot use it', 'socdepoble' ),
+			__( 'Optional Sóc de Poble keys stored as encrypted secrets stay unused, and translation falls back to free Apertium where it is supported. Restore the WP_SECRETS_KEY that was in use before; do not generate a new one over secrets that cannot be read.', 'socdepoble' )
+		);
+	}
+	foreach ( socdepoble_enxufe_secrets_wp72_claus() as $parell ) {
+		$estat = socdepoble_enxufe_estat_secret( $parell[0], $parell[1] );
+		if ( 'secrets_api' !== $estat['origen'] ) {
+			continue;
+		}
+		if ( 'error' === $estat['estat'] ) {
+			return socdepoble_enxufe_resultat_salut(
+				$prova,
+				'recommended',
+				__( 'A stored Sóc de Poble secret cannot be read', 'socdepoble' ),
+				__( 'An optional Sóc de Poble key is stored with the WordPress secrets API but cannot be decrypted right now. Translation falls back to free Apertium where it is supported. Restore the WP_SECRETS_KEY that encrypted it and do not save a new key over the existing one.', 'socdepoble' )
+			);
+		}
+		if ( 'invalida' === $estat['estat'] ) {
+			return socdepoble_enxufe_resultat_salut(
+				$prova,
+				'recommended',
+				__( 'A stored Sóc de Poble secret has an unusable value', 'socdepoble' ),
+				__( 'An optional Sóc de Poble key stored with the WordPress secrets API is empty or contains a line break, so it is ignored. Save it again as a single line. WP_SECRETS_KEY is not the cause.', 'socdepoble' )
+			);
+		}
+	}
+	if ( ! $disponible ) {
+		if ( 'apertium' !== socdepoble_enxufe_traduccio_proveidor_actiu() ) {
+			return socdepoble_enxufe_resultat_salut(
+				$prova,
+				'good',
+				__( 'Sóc de Poble reads its optional keys from wp-config.php or the environment', 'socdepoble' ),
+				__( 'WP_SECRETS_KEY is not defined in wp-config.php, so encrypted secrets are disabled. The optional keys in use come from wp-config.php constants or environment variables, never from plain-text options in the database.', 'socdepoble' )
+			);
+		}
+		return socdepoble_enxufe_resultat_salut(
+			$prova,
+			'good',
+			__( 'Sóc de Poble uses free Apertium translation without stored secrets', 'socdepoble' ),
+			__( 'WP_SECRETS_KEY is not defined in wp-config.php, so optional encrypted keys are disabled and translation runs safely on free Apertium without saving plain-text keys in the database.', 'socdepoble' )
+		);
+	}
+	if ( ! socdepoble_enxufe_secrets_wp72_clau_activa() ) {
+		return socdepoble_enxufe_resultat_salut(
+			$prova,
+			'good',
+			__( 'WordPress 7.2 encrypted secrets are active for Sóc de Poble', 'socdepoble' ),
+			__( 'The WordPress secrets API is available through the secrets provider set up by the host, without WP_SECRETS_KEY in wp-config.php. The host keeps the encryption key: ask how it is backed up, and never replace it over secrets that cannot be read.', 'socdepoble' )
+		);
+	}
+	return socdepoble_enxufe_resultat_salut(
+		$prova,
+		'good',
+		__( 'WordPress 7.2 encrypted secrets are active for Sóc de Poble', 'socdepoble' ),
+		__( 'WP_SECRETS_KEY is active in wp-config.php. Back up this key separately and never rotate WP_SECRETS_KEY when rotating session SALTs, or stored encrypted secrets will become unreadable and fall back to Apertium.', 'socdepoble' )
 	);
 }

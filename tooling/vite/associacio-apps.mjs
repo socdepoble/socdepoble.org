@@ -21,11 +21,17 @@
  *     ServingConfig.appAssociation), fora del repositori: si n'hi ha empremtes i
  *     firebase.json no diu "NONE", el build para.
  *
+ * Onada R26 · Igual per a iOS: /.well-known/apple-app-site-association (applinks +
+ * webcredentials) NOMÉS amb un Team ID real a ios.team_ids i NOMÉS per a un dels
+ * ios.origens; sense Team ID no s'emet res.
+ *
  * L'App no declara hui cap intent-filter amb android:autoVerify (AndroidManifest.xml)
- * ni cap domini associat d'iOS (App.entitlements): publicar el fitxer no canvia
- * res fins que el manifest ho declare i l'App sàpia obrir l'enllaç rebut. El
- * fitxer d'Apple (apple-app-site-association) queda fora: no hi ha
- * com.apple.developer.associated-domains.
+ * ni cap domini associat d'iOS (App.entitlements no porta
+ * com.apple.developer.associated-domains), i cap codi no escolta appUrlOpen:
+ * publicar els fitxers no canvia res fins que el manifest i els drets ho declaren
+ * i l'App sàpia obrir l'enllaç rebut. Els ios.camins són una política del Mestre,
+ * no un fet: abans d'activar els Universal Links cal revisar-los (p. ex. /auth/*
+ * inclou els retorns web /auth/callback.html i /auth/calendari-google.html).
  *
  * Forma del fitxer (developer.android.com, «Verify Android App Links»):
  *   [{ "relation": ["delegate_permission/common.handle_all_urls"],
@@ -41,14 +47,21 @@ import { pathToFileURL } from 'node:url';
 
 export const CONFIGURACIO = 'scripts/botigues/associacio-apps.json';
 export const FITXER_ASSETLINKS = '.well-known/assetlinks.json';
+export const FITXER_AASA = '.well-known/apple-app-site-association';
 export const ESQUEMA = 'sdp.associacio-apps.v1';
 export const PAQUET_ANDROID = 'org.socdepoble.app';
+export const PAQUET_IOS = 'org.socdepoble.app';
 export const RELACIO = 'delegate_permission/common.handle_all_urls';
 export const MAXIM_EMPREMTES = 4;
+export const MAXIM_EQUIPS_IOS = 4;
+export const MAXIM_CAMINS_IOS = 32;
 /* 32 octets en hexadecimal majúscul separats per dos punts: la forma que mostra Play Console. */
 const EMPREMTA = /^[0-9A-F]{2}(?::[0-9A-F]{2}){31}$/;
-const CLAUS_ARREL = Object.freeze(['$comentari', 'esquema', 'android']);
+/* Apple Team ID: exactament 10 caràcters alfanumèrics en majúscula (Apple Developer › Membership). */
+const TEAM_ID_APPLE = /^[A-Z0-9]{10}$/;
+const CLAUS_ARREL = Object.freeze(['$comentari', 'esquema', 'android', 'ios']);
 const CLAUS_ANDROID = Object.freeze(['package_name', 'origens', 'sha256_cert_fingerprints']);
+const CLAUS_IOS = Object.freeze(['bundle_id', 'origens', 'team_ids', 'camins']);
 const ORIGEN_PER_DEFECTE = 'src/config/origenPublic.js';
 
 const esObjectePla = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
@@ -82,6 +95,61 @@ export function validaEmpremta(valor) {
   return valor;
 }
 
+/**
+ * Un Apple Team ID real de 10 caràcters alfanumèrics en majúscula, o TypeError.
+ * Rebutja minúscules, longituds diferents i farciments (0000000000, AAAAAAAAAA…).
+ */
+export function validaTeamId(valor) {
+  if (typeof valor !== 'string' || !TEAM_ID_APPLE.test(valor)) {
+    throw new TypeError('Team ID d\'Apple no vàlid: 10 caràcters alfanumèrics en MAJÚSCULA (Apple Developer › Membership).');
+  }
+  if ([...valor].every((caracter) => caracter === valor[0])) {
+    throw new TypeError(`Team ID de farciment rebutjat: ${valor}`);
+  }
+  return valor;
+}
+
+/** Ruta d'Universal Links vàlida (comença per «/», sense espais, control ni «..»). */
+export function validaCamiIos(valor) {
+  if (typeof valor !== 'string' || !valor.startsWith('/') || valor.length > 120 || /\s|\.\.|\/\//.test(valor)) {
+    throw new TypeError(`Camí d'Universal Links no vàlid: ${String(valor).slice(0, 120)}`);
+  }
+  for (let i = 0; i < valor.length; i += 1) {
+    const codi = valor.charCodeAt(i);
+    if (codi <= 0x1f || codi === 0x7f) throw new TypeError('Camí d\'Universal Links amb caràcters de control.');
+  }
+  return valor;
+}
+
+function validaIos(ios) {
+  if (ios === undefined) return null;
+  if (!esObjectePla(ios)) throw new TypeError(`${CONFIGURACIO} › ios ha de ser un objecte JSON.`);
+  nomesClaus(ios, CLAUS_IOS, `${CONFIGURACIO} › ios`);
+  if (ios.bundle_id !== PAQUET_IOS) {
+    throw new TypeError(`${CONFIGURACIO} › ios.bundle_id ha de ser ${PAQUET_IOS} (capacitor.config.json i project.pbxproj).`);
+  }
+  if (!Array.isArray(ios.origens) || ios.origens.length === 0) throw new TypeError(`${CONFIGURACIO} › ios.origens: cal almenys un origen.`);
+  const origens = ios.origens.map(origenExacte);
+  if (new Set(origens).size !== origens.length) throw new TypeError(`${CONFIGURACIO} › ios.origens: origen repetit.`);
+  const equips = ios.team_ids;
+  if (!Array.isArray(equips)) throw new TypeError(`${CONFIGURACIO} › ios.team_ids ha de ser una llista (buida si encara no n'hi ha).`);
+  if (equips.length > MAXIM_EQUIPS_IOS) throw new TypeError(`${CONFIGURACIO} › ios.team_ids: com a molt ${MAXIM_EQUIPS_IOS}.`);
+  equips.forEach(validaTeamId);
+  if (new Set(equips).size !== equips.length) throw new TypeError(`${CONFIGURACIO} › ios.team_ids: Team ID repetit.`);
+  const camins = ios.camins;
+  if (!Array.isArray(camins) || camins.length === 0 || camins.length > MAXIM_CAMINS_IOS) {
+    throw new TypeError(`${CONFIGURACIO} › ios.camins: cal entre 1 i ${MAXIM_CAMINS_IOS} camins.`);
+  }
+  camins.forEach(validaCamiIos);
+  if (new Set(camins).size !== camins.length) throw new TypeError(`${CONFIGURACIO} › ios.camins: camí repetit.`);
+  return Object.freeze({
+    bundle_id: PAQUET_IOS,
+    origens: Object.freeze(origens),
+    team_ids: Object.freeze([...equips]),
+    camins: Object.freeze([...camins])
+  });
+}
+
 /** La configuració validada i congelada. Llança TypeError si no és exactament la forma esperada. */
 export function validaConfiguracio(configuracio) {
   if (!esObjectePla(configuracio)) throw new TypeError(`${CONFIGURACIO}: ha de ser un objecte JSON.`);
@@ -101,9 +169,11 @@ export function validaConfiguracio(configuracio) {
   if (empremtes.length > MAXIM_EMPREMTES) throw new TypeError(`${CONFIGURACIO} › android.sha256_cert_fingerprints: com a molt ${MAXIM_EMPREMTES}.`);
   empremtes.forEach(validaEmpremta);
   if (new Set(empremtes).size !== empremtes.length) throw new TypeError(`${CONFIGURACIO} › android.sha256_cert_fingerprints: empremta repetida.`);
+  const ios = validaIos(configuracio.ios);
   return Object.freeze({
     esquema: ESQUEMA,
-    android: Object.freeze({ package_name: PAQUET_ANDROID, origens: Object.freeze(origens), sha256_cert_fingerprints: Object.freeze([...empremtes]) })
+    android: Object.freeze({ package_name: PAQUET_ANDROID, origens: Object.freeze(origens), sha256_cert_fingerprints: Object.freeze([...empremtes]) }),
+    ...(ios ? { ios } : {})
   });
 }
 
@@ -133,6 +203,26 @@ export function construeixAssetLinks(configuracio, origen) {
   }];
 }
 
+/**
+ * L'objecte Apple App Site Association (applinks + webcredentials) per a `origen`,
+ * o null si no hi ha cap Team ID d'Apple configurat o l'origen no pertany a `ios.origens`.
+ */
+export function construeixAppleAppSiteAssociation(configuracio, origen) {
+  const { ios } = validaConfiguracio(configuracio);
+  if (!ios || ios.team_ids.length === 0) return null;
+  if (!ios.origens.includes(origenExacte(origen))) return null;
+  const appIDs = ios.team_ids.map((teamId) => `${teamId}.${ios.bundle_id}`);
+  return {
+    applinks: {
+      details: [{
+        appIDs,
+        components: ios.camins.map((cami) => ({ '/': cami }))
+      }]
+    },
+    webcredentials: { apps: [...appIDs] }
+  };
+}
+
 /** El text del fitxer: JSON amb dos espais i salt de línia final (estable entre builds). */
 export const serialitza = (declaracions) => `${JSON.stringify(declaracions, null, 2)}\n`;
 
@@ -155,10 +245,14 @@ export async function origenDelBuild({ env = {}, arrel }) {
 
 /** [[fileName, text]] del que el build ha d'emetre per a `origen` (buit si res). */
 export function fitxersAssociacio({ arrel, origen }) {
-  const declaracions = construeixAssetLinks(llegixConfiguracio(arrel), origen);
-  if (!declaracions) return [];
-  comprovaHosting(arrel);
-  return [[FITXER_ASSETLINKS, serialitza(declaracions)]];
+  const config = llegixConfiguracio(arrel);
+  const sortides = [];
+  const assetLinks = construeixAssetLinks(config, origen);
+  if (assetLinks) sortides.push([FITXER_ASSETLINKS, serialitza(assetLinks)]);
+  const aasa = construeixAppleAppSiteAssociation(config, origen);
+  if (aasa) sortides.push([FITXER_AASA, serialitza(aasa)]);
+  if (sortides.length) comprovaHosting(arrel);
+  return sortides;
 }
 
 export default function associacioApps({ arrel } = {}) {
