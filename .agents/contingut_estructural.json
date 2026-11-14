@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "e4b37c7cc43f3d2cba9924544652b52bbb8f648a0507c9c8a2686bb517c51a71",
+      "sha256": "2a5050c9fd56479c0b35dae72ffd977f05e602e1c69730ed53f3e8b93fea151a",
       "html": 74005,
-      "aprovat_per": "Mestre Javi (R27 261114 23:52: actualitza /versions en 5 llengües amb Onada R26/R27)",
+      "aprovat_per": "Mestre Javi (R27 261114 23:52: /versions en 5 llengües; connector 1.1.15 al repositori)",
       "data": "2026-11-14"
     },
     "wikidepoble": {

@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.14
+Stable tag: 1.1.15
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,12 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.15 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de les Onades R26 i R27 de Sóc de Poble: l'article «El Farcellet Digital» al Mur, l'edició avançada en un desplegable al Bloc de Notes i un selector d'opcions més llegible al mòbil.
+* **Claus de traducció més protegides:** les claus opcionals de DeepL i del motor propi de traducció es lligen amb una sola precedència: primer la constant de `wp-config.php`, després la variable d'entorn i, en tercer lloc, els secrets xifrats de WordPress 7.2 quan el lloc els té disponibles. El connector no desa cap clau en text pla a la base de dades.
+* **Salut del lloc:** l'eina «Salut del lloc» de WordPress diu si els secrets xifrats estan disponibles i avisa si una clau desada no es pot llegir, sense mostrar-ne mai el valor.
+* **Habilitats de només lectura:** a WordPress 6.9 o posterior, el connector registra habilitats de lectura i de previsualització a l'Abilities API, amb esquemes tancats i el permís de lectura comprovat sobre cada contingut. Cap no escriu ni publica res, i cap no es marca com a pública per a un adaptador MCP.
+
 = 1.1.14 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi més recent de la versió 1.2.0 de Sóc de Poble, el que explica la seua pàgina «Versions».
 * **Mur i xat:** qui no té compte o no és membre d'este poble veu una lectura mínima del Mur, sense imatges ni autoria; els membres el veuen sencer. Denunciar i Bloquejar des d'una publicació no revelen l'autor a qui no és membre d'este poble. El xat accepta imatges enganxades o arrossegades i les mostra en un visor amb zoom.
@@ -220,6 +226,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.15 =
+Visor al dia amb «El Farcellet Digital» i el Bloc de Notes més clar; claus de traducció també des dels secrets xifrats de WordPress 7.2 i habilitats de només lectura per a l'Abilities API.
 
 = 1.1.14 =
 Visor al dia amb la versió 1.2.0 més recent de Sóc de Poble: Mur amb lectura mínima per a qui no és membre d'este poble i imatges enganxades al xat. La lectura mínima i les notes al Mur requerixen migracions noves del servidor de Sóc de Poble.

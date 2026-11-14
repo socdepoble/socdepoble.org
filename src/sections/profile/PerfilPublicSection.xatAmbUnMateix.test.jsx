@@ -13,9 +13,12 @@
  *   · un membre amb rol 'member' (el servidor li obri el directe);
  *   · una IA, encara que en siga propietari («Parla amb…»: en llavor, qui té
  *     sessió mana a Sóc de Poble i és propietari de la IAIA, localPerfils.js);
- *   · la persona pilot quan el seu id és el del padró o l'UUID declarat:
- *     XatContext.creaFil la porta a la conversa de servei tècnic (P1-70), per
- *     id i mai pel slug.
+ *   · la persona pilot quan el seu id és el del padró o l'UUID declarat (per
+ *     id i mai pel slug). Des de l'Onada R24.2, amb l'UUID declarat a
+ *     IDS_REMOTS_FUNDACIONALS, XatContext.creaFil obri en remot el directe amb
+ *     el compte real de Javi i només va a la conversa de servei tècnic (P1-70)
+ *     si el servidor rebutja eixe destinatari. Estes proves fixen el botó i
+ *     la ruta de la fitxa; el destí final del fil és cosa de XatContext.
  */
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
@@ -210,8 +213,10 @@ test('xat-flux-04 · la fitxa pròpia del paquet de la persona pilot conserva la
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDelXatDeJavi('seed'));
 });
 
-/* P1-70 · Amb l'UUID del compte de la persona pilot declarat, XatContext.creaFil
-   porta el seu ?amb= a la conversa de servei tècnic: cap SDP-XAT-002. */
+/* P1-70 i Onada R24.2 · Amb l'UUID del compte de la persona pilot declarat, la
+   fitxa conserva el botó i porta a /xat?amb=<UUID>: XatContext.creaFil hi obri
+   el directe amb el compte real (o la conversa de servei tècnic si el servidor
+   el rebutja), mai un SDP-XAT-002. */
 test('xat-flux-04 · en remot, la fitxa pròpia de la persona pilot amb l’UUID declarat conserva el botó (servei tècnic, P1-70)', async () => {
   mocks.pilotDeclarat = UUID_JAVI;
   mocks.id = UUID_JAVI;
