@@ -1216,7 +1216,7 @@ export default {
   'section.login.benvinguda.perfilPrivat': 'Profil pribatua',
   'section.login.benvinguda.rgpdSegur': 'DBEO segurua',
   'section.login.benvinguda.beta': 'Ongi etorri Sóc de Poble-ren Betara',
-  'section.login.benvinguda.text': 'Sarbidea {segur} da eta zure datuak legeak babesten ditu (DBEO 05 Legea). Probak egiten ari garenez, eskertuko dizugu edozein arazo aurkitzen baduzu jakinaraztea, batez ere mugikorrean. Berrikuntzen berri emango dizugu!',
+  'section.login.benvinguda.text': 'Sarbidea {segur} da eta zure datuak Datuak Babesteko Europako Erregelamenduak (DBEO) babesten ditu. Probak egiten ari garenez, eskertuko dizugu edozein arazo aurkitzen baduzu jakinaraztea, batez ere mugikorrean. Berrikuntzen berri emango dizugu!',
   'section.login.benvinguda.segur': 'guztiz segurua',
   'section.login.benvinguda.compteCreat': 'Kontua sortu da. Ongi etorri Masera.',
   'section.login.benvinguda.deNou': 'Ongi etorri berriro Masera!',

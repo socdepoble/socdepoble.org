@@ -1228,7 +1228,7 @@ export default {
   'section.login.benvinguda.perfilPrivat': 'Perfil privat',
   'section.login.benvinguda.rgpdSegur': 'RGPD Segur',
   'section.login.benvinguda.beta': 'Benvinguda a la Beta de Sóc de Poble',
-  'section.login.benvinguda.text': "L'accés és {segur} i les teues dades estan protegides per llei (RGPD Llei 05). Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!",
+  'section.login.benvinguda.text': "L'accés és {segur} i les teues dades estan protegides pel Reglament europeu de protecció de dades (RGPD). Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!",
   'section.login.benvinguda.segur': 'totalment segur',
   'section.login.benvinguda.compteCreat': 'Compte creat. Benvinguda al Mas.',
   'section.login.benvinguda.deNou': 'Benvingut de nou al Mas!',

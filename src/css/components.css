@@ -307,14 +307,18 @@
   .sdp-casella__ajuda { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
 
   .sdp-interruptor { display: flex; align-items: center; justify-content: space-between; gap: var(--sdp-space-4); min-height: var(--sdp-touch-min); }
-  .sdp-interruptor__etiqueta { font-weight: 700; color: var(--sdp-text-titol); }
+  /* Onada R28 · Passada d'empatia (/app a 360 px) · Amb una etiqueta llarga, el control s'encongia: el carril baixava a
+     14–27 px i el botonet queia damunt de «Sí». L'etiqueta parteix línia i el control conserva la seua mida. */
+  .sdp-interruptor__etiqueta { flex: 1 1 auto; min-width: 0; font-weight: 700; color: var(--sdp-text-titol); }
   .sdp-interruptor__control {
+    flex-shrink: 0;
     display: inline-flex; align-items: center; gap: var(--sdp-space-2);
     min-height: var(--sdp-touch-min); padding: 0 var(--sdp-space-2);
     border: 0; background: transparent; color: var(--sdp-text-titol); font: inherit; font-weight: 700; cursor: pointer;
   }
   .sdp-interruptor__control:focus-visible { outline: 3px solid var(--sdp-focus); border-radius: var(--sdp-radi-pastilla); }
   .sdp-interruptor__carril {
+    flex-shrink: 0;
     position: relative; width: 52px; height: 30px; border-radius: var(--sdp-radi-pastilla);
     background: var(--sdp-fons-subtil); border: 2px solid var(--sdp-vora-control); transition: background var(--sdp-t);
   }

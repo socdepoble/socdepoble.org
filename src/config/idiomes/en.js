@@ -1207,7 +1207,7 @@ export default {
   'section.login.benvinguda.perfilPrivat': 'Private profile',
   'section.login.benvinguda.rgpdSegur': 'GDPR safe',
   'section.login.benvinguda.beta': 'Welcome to the Sóc de Poble Beta',
-  'section.login.benvinguda.text': 'Access is {segur} and your data is protected by law (GDPR Law 05). As we are still testing, we would be grateful if you let us know about any problem you find, especially on mobile. We will keep you up to date with what is new!',
+  'section.login.benvinguda.text': 'Access is {segur} and your data is protected by the EU General Data Protection Regulation (GDPR). As we are still testing, we would be grateful if you let us know about any problem you find, especially on mobile. We will keep you up to date with what is new!',
   'section.login.benvinguda.segur': 'completely secure',
   'section.login.benvinguda.compteCreat': 'Account created. Welcome to the Mas.',
   'section.login.benvinguda.deNou': 'Welcome back to the Mas!',

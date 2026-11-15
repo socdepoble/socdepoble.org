@@ -7,7 +7,7 @@ export default function NotFoundPage() {
   
   useSEO({
     title: '404 - No Trobat',
-    description: 'La pàgina que cerques no existeix o ha estat moguda.',
+    description: 'La pàgina que cerques no existix o ha estat moguda.',
     index: false
   });
 
@@ -15,7 +15,7 @@ export default function NotFoundPage() {
     <UniversalPage
       title="Ací no hi ha res"
       subtitle="Error 404"
-      lead="La pàgina que busques no existeix o ha canviat de lloc."
+      lead="La pàgina que busques no existix o ha canviat de lloc."
       labels={['404', 'No trobat']}
     >
       <div className="sdp-404-cos">

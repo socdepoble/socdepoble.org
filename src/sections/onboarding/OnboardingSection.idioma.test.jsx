@@ -313,7 +313,7 @@ describe('pantalla · la llengua triada', () => {
     expect(screen.getAllByRole('heading').map((h) => h.textContent))
       .toEqual(['Benvinguda al Mas Electrònic', 'Benvinguda a la Beta de Sóc de Poble', 'Accés ràpid amb Google', 'Crea el teu compte']);
     const benvinguda = document.querySelector('.onboarding-card__intro--espaiada');
-    expect(benvinguda.innerHTML).toBe('L\'accés és <strong>totalment segur</strong> i les teues dades estan protegides per llei (RGPD Llei 05). '
+    expect(benvinguda.innerHTML).toBe('L\'accés és <strong>totalment segur</strong> i les teues dades estan protegides pel Reglament europeu de protecció de dades (RGPD). '
       + 'Com que estem en proves, t\'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!');
     for (const etiqueta of ['Nom i cognoms', 'Correu electrònic', 'Contrasenya', 'Confirmar contrasenya']) expect(screen.getByLabelText(etiqueta)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Mostra la contrasenya' })).toBeTruthy();

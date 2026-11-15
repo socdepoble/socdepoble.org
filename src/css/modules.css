@@ -5108,6 +5108,12 @@ details[open] summary.accordion-header svg:last-child {
   :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista {
     padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   }
+  /* Onada R28 · Passada d'empatia (/xat a 768 px) · La portada del Xat (.sdp-xat-buit) també fa scroll davall de la
+     barra mòbil: l'últim paràgraf quedava tapat 38 px. La mateixa reserva que la llista i la conversa. */
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-buit {
+    padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-4));
+  }
   /* Onada R28 · Amb el teclat d'iOS obert (data-sdp-teclat-vv), el teclat ja
      tapa la franja del Home Indicator: el compositor del Xat s'enganxa
      netament a la vora superior del teclat sense forat. (El kit de Gemini hi

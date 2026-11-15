@@ -605,7 +605,7 @@ export default function OnboardingSection() {
   const [abansAdreca, despresAdreca] = tr('section.login.google.adreca', 'Si no s’obri, copia l’adreça: {adreca}').split('{adreca}');
   /* Fase D (261020, tasca 1; decisió D2) · A l'app nativa, la benvinguda va
      davall del formulari: els botons d'Apple i Google, a la vista sense desplaçar. */
-  const [abansSegur, despresSegur] = tr('section.login.benvinguda.text', "L'accés és {segur} i les teues dades estan protegides per llei (RGPD Llei 05). Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!").split('{segur}');
+  const [abansSegur, despresSegur] = tr('section.login.benvinguda.text', "L'accés és {segur} i les teues dades estan protegides pel Reglament europeu de protecció de dades (RGPD). Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!").split('{segur}');
   const benvinguda = (
     <div className="onboarding-benvinguda">
       <h3>{tr('section.login.benvinguda.beta', 'Benvinguda a la Beta de Sóc de Poble')}</h3>
