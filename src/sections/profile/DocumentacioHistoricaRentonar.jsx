@@ -89,7 +89,8 @@ export default function DocumentacioHistoricaRentonar() {
         <div id="panel-rentonar-historia" role="tabpanel" aria-labelledby="tab-rentonar-historia">
           <div className="sdp-subtargeta">
             <h3>Fitxa registral i institucional pública</h3>
-            <dl>
+            {/* Onada R29 · Encaix local de la fitxa a mòbil (modules.css). */}
+            <dl className="sdp-rentonar-doc__fitxa">
               <dt>Denominació estatutària</dt>
               <dd>{FITXA_REGISTRAL_RENTONAR.denominacioOficial}</dd>
               <dt>Denominació fundacional (1994)</dt>

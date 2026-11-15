@@ -1,22 +1,16 @@
 {
   "css-de-seccio": {
-    "max": 3,
+    "max": 4,
     "identitats": [
+      "css-de-seccio|src/apps/plataforma/apps.css|src/apps/plataforma/apps.css",
       "css-de-seccio|src/components/layout/AppGridShell.css|src/components/layout/AppGridShell.css",
       "css-de-seccio|src/sections/mur/MapaFotografic.css|src/sections/mur/MapaFotografic.css",
       "css-de-seccio|src/sections/profile/PerfilShell.css|src/sections/profile/PerfilShell.css"
     ]
   },
   "classe-forastera": {
-    "max": 22,
+    "max": 15,
     "identitats": [
-      "classe-forastera|src/app/App.jsx|app-brand__mark",
-      "classe-forastera|src/app/App.jsx|mobile-logo",
-      "classe-forastera|src/app/App.jsx|pull-to-refresh-indicator",
-      "classe-forastera|src/app/App.jsx|sdp-app-loading",
-      "classe-forastera|src/app/App.jsx|sdp-spinner",
-      "classe-forastera|src/app/App.jsx|sdp-spinner--large",
-      "classe-forastera|src/app/App.jsx|sr-only-focusable",
       "classe-forastera|src/app/guards/RequireAuth.jsx|sdp-route-loading-screen",
       "classe-forastera|src/components/ErrorBoundary.jsx|alert",
       "classe-forastera|src/components/PedraSeca/atoms/Divisor.jsx|sdp-divisor--amb-text",

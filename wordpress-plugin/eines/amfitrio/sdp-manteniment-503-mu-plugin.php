@@ -178,6 +178,21 @@ function socdepoble_enxufe_manteniment_503_ruta_rest_exempta( $ruta ) {
 }
 
 /**
+ * Onada R29 · L'atribut lang de la pàgina 503: la llengua en què ix el text.
+ * Sense traducció, el títol queda en l'anglés d'origen («en»); amb traducció,
+ * és la del locale efectiu (ca_valencia → ca-valencia), escapada.
+ *
+ * @param string $titol Títol tal com ix de la traducció.
+ * @return string
+ */
+function socdepoble_enxufe_manteniment_503_lang( $titol ) {
+	if ( 'Scheduled maintenance in progress' === $titol ) {
+		return 'en';
+	}
+	return esc_attr( str_replace( '_', '-', (string) determine_locale() ) );
+}
+
+/**
  * Construeix el document HTML estètic i accessible de manteniment 503.
  *
  * @param int $retry_after Segons estimats per a tornar-ho a provar.
@@ -194,7 +209,7 @@ function socdepoble_enxufe_manteniment_503_html( $retry_after ) {
 	);
 
 	return "<!doctype html>\n"
-		. '<html lang="ca"><head><meta charset="utf-8">'
+		. '<html lang="' . socdepoble_enxufe_manteniment_503_lang( $titol ) . '"><head><meta charset="utf-8">'
 		. '<meta name="viewport" content="width=device-width,initial-scale=1">'
 		. '<meta name="robots" content="noindex,noarchive">'
 		. '<title>' . $titol . ' · Sóc de Poble</title>'

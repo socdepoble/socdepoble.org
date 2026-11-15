@@ -42,8 +42,9 @@ ${vincles.map((v) => `- ${v}`).join('\n')}
 /** Corpus mínim; torna les fallades F9 per document (només els documents amb fallades).
     Onada R28 · Amb `git`, el corpus és un repositori: `gitignore` s'hi escriu (i s'afig a l'índex si
     `versiona`, com a l'arbre preparat del hook), `exclou` va a .git/info/exclude i cada camí d'`esborrats`
-    s'escriu, s'afig a l'índex amb -f i s'esborra del disc (versionat i absent). */
-function f9(t, fitxers, { git = false, gitignore = null, versiona = true, exclou = null, esborrats = [] } = {}) {
+    s'escriu, s'afig a l'índex amb -f i s'esborra del disc (versionat i absent).
+    Onada R29 · Cada camí de `versionats` (ja escrit a `fitxers`) s'afig a l'índex amb -f i es queda al disc. */
+function f9(t, fitxers, { git = false, gitignore = null, versiona = true, exclou = null, esborrats = [], versionats = [] } = {}) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-f9-arxiu-')));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const put = (rel, text) => {
@@ -62,6 +63,7 @@ function f9(t, fitxers, { git = false, gitignore = null, versiona = true, exclou
     if (gitignore !== null) put('.gitignore', gitignore);
     if (gitignore !== null && versiona) ordreGit('add', '--', '.gitignore');
     if (exclou !== null) put('.git/info/exclude', exclou);
+    for (const rel of versionats) ordreGit('add', '-f', '--', rel);
     for (const rel of esborrats) {
       put(rel, nota);
       ordreGit('add', '-f', '--', rel);
@@ -202,4 +204,38 @@ test('negatiu: amb la regla, la caixa, la forma de l’arxiu, els esborrats vers
     '../90_arxiu_historic/esborrada: unresolved',
     '../02_saber/absent: unresolved',
   ]);
+});
+
+/* Onada R29 · R28-REG-03 · Amb l'arxiu local al disc (el de la màquina que arxiva: porta alguna nota que
+   Git no versiona), el seu llistat mana: un nom que no hi és (una errada, o una carpeta de sessió que no
+   existix) és F9 encara que el .gitignore versionat ignore la carpeta. Git decidix quan l'arxiu falta sencer
+   (el cas positiu d'ací dalt) o quan només porta notes versionades: l'arbre preparat del hook i un clon net
+   el materialitzen des de l'índex, i l'arxiu de veres té notes versionades d'abans de D-R27-4. */
+const ARXIVATS_AMB_ERRADA = [
+  '[[00_index]]',
+  '[[../90_arxiu_historic/b|b]]', // és al disc: val
+  '[[../90_arxiu_historic/bb|bb]]', // errada de nom: no és al llistat
+  '[[../90_arxiu_historic/261116_Sessio/c|c]]', // carpeta de sessió absent
+];
+const F9_ERRADA = ['../90_arxiu_historic/bb: unresolved', '../90_arxiu_historic/261116_Sessio/c: unresolved'];
+const LOCAL = B.replace(/b\.md$/, '261101_Prova/local.md'); // arxivada en esta màquina, fora de l'índex
+
+test('negatiu: amb l’arxiu local al disc i la regla versionada, un nom que no hi és continua sent F9', (t) => {
+  const per = f9(t, { [A]: doc('A', ARXIVATS_AMB_ERRADA), [B]: nota }, { git: true, gitignore: REGLA_ARXIU });
+  assert.deepEqual(per[A], F9_ERRADA);
+  assert.equal(per.status, 1);
+});
+
+test('negatiu: un arxiu mixt (notes versionades i alguna de local) també és local: l’errada és F9', (t) => {
+  const per = f9(t, { [A]: doc('A', ARXIVATS_AMB_ERRADA), [B]: nota, [LOCAL]: nota }, { git: true, gitignore: REGLA_ARXIU, versionats: [B] });
+  assert.deepEqual(per[A], F9_ERRADA);
+});
+
+test('positiu: l’arbre preparat del hook porta l’arxiu només amb notes versionades; la nota nova absent no és F9', (t) => {
+  const vincles = [...ARXIVATS_ABSENTS, '[[../90_arxiu_historic/nova|nova]]']; // b és al disc (versionada); nova i c, absents
+  // Un .DS_Store de Finder (mai a l'índex) no fa local l'arxiu: no és cap nota.
+  const finder = B.replace(/b\.md$/, '.DS_Store');
+  const per = f9(t, { [A]: doc('A', vincles), [B]: nota, [finder]: '' }, { git: true, gitignore: REGLA_ARXIU, versionats: [B] });
+  assert.deepEqual(per[A], undefined);
+  assert.equal(per.status, 0, 'el commit amb el vincle reescrit per Olivera passa el hook');
 });

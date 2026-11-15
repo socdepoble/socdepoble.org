@@ -171,7 +171,7 @@ describe('la closca del Bloc', () => {
     expect(etiquetes().categories).toBe('FOLDERS');
     m.t = createTranslator('gl');
     rerender(<MemoryRouter rutaInicial="/notes"><NotesSection /></MemoryRouter>);
-    expect(etiquetes()).toEqual({ categories: 'CARPETAS', items: 'NOTAS', create: 'CREAR NOTA', search: 'Buscar notas', empty: 'Non hai notas.' });
+    expect(etiquetes()).toEqual({ categories: 'CARTAFOLES', items: 'NOTAS', create: 'CREAR NOTA', search: 'Buscar notas', empty: 'Non hai notas.' });
     expect(grups()).toEqual([null, 'CATEGORÍAS', 'ETIQUETAS']);
     expect(carpetes()[0]).toEqual(['f-mur', 'Muro']);
   });

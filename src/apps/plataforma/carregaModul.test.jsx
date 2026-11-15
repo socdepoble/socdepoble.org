@@ -231,6 +231,32 @@ describe('carregaCos · el que no passa (LazyRouteError, mai una recàrrega)', (
     const carregador = creaCarregadorDeModuls({ importaNucli: importaNucliDeProva });
     await expect(carregador.carregaCos({ id: 'prova', origen: 'interna' })).rejects.toBeInstanceOf(LazyRouteError);
   });
+
+  /* Onada R29 · R29-RUT-06 · La via de recuperació de la capçalera («retirant i tornant a registrar el
+     mòdul») ha de tornar a demanar el nucli: abans, el primer rebuig quedava guardat per sempre i cap
+     mòdul no s'obria fins a recarregar. */
+  test('un nucli que no arriba una vegada es torna a demanar després d’oblida, i el mòdul s’obri', async () => {
+    const importaNucli = vi.fn()
+      .mockImplementationOnce(() => Promise.reject(new TypeError('Failed to fetch dynamically imported module')))
+      .mockImplementation(importaNucliDeProva);
+    const carregador = creaCarregadorDeModuls({ importaNucli });
+    const manifest = manifestDe();
+    const primera = carregador.carregaCos(manifest);
+    const error = await primera.then(() => null, (motiu) => motiu);
+    expect(error).toBeInstanceOf(LazyRouteError);
+    expect(scriptsDelModul()).toEqual([]);
+    expect(carregador.nucli()).toBeNull();
+
+    carregador.oblida('llibreta');
+    const segona = carregador.carregaCos(manifest);
+    /* Amb el rebuig guardat, la segona càrrega es rebutjava a l'acte sense injectar res. */
+    const script = await Promise.race([scriptInjectat(), segona.then(() => 'resolta', () => 'rebutjada')]);
+    expect(script).not.toBe('rebutjada');
+    expect(importaNucli).toHaveBeenCalledTimes(2);
+    expect(carregador.nucli()).toBe(NUCLI_DE_PROVA);
+    expect(executaComSiFora(script, () => carregador.lliuraCos('llibreta', () => CosDeProva))).toBe(true);
+    await expect(segona).resolves.toEqual({ default: CosDeProva });
+  });
 });
 
 describe('lliuraCos · només el script injectat, i només per a un id que es carrega', () => {

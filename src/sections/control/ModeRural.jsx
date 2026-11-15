@@ -13,6 +13,9 @@ import { creaSessioRural, lligJsonRural } from '../../data/sessioRural.js';
 import { TEXTOS_MODE_RURAL as TX } from './textosModeRural.js';
 
 const MAX_FITXER = 4 * 1024 * 1024;
+/* Onada R29 · PF-03 · Amb el motor OPFS, el pany del magatzem embolica l'error de la carpeta en
+   SDP-RURAL-OPFS i el conserva a `cause`: la quota de la carpeta es busca a l'error i a la causa. */
+const esQuotaDeCarpeta = e => e?.code === 'RURAL_CRDT_VAULT_QUOTA' || e?.cause?.code === 'RURAL_CRDT_VAULT_QUOTA';
 /* control-06 (revisió del Panell, 261104) · L'error porta un codi i executa()
    el pinta traduït (TX.fitxerGran); el missatge és la reserva. */
 async function textDeFitxer(fitxer) {
@@ -106,7 +109,9 @@ function ModeRuralDins({ abast, municipi, nomVisible, potEntrar, onBack, fabrica
         setErrorDelDialeg(desDelDialeg);
         setError(e.name === 'AbortError' ? tr('sessioCanviada') : e.code === 'RURAL_DIARI_PLE' ? tr('diariPle') : e.code === 'SDP-RURAL-GENERACIO' ? tr('canviGeneracio')
           : e.code === 'RURAL_FITXER_GRAN' ? tr('fitxerGran')
-          : e.code === 'SDP-RURAL-OPFS-COMMIT-DESCONEGUT' ? tr('crdtCommitDesconegut') : typeof e.code === 'string' && e.code.includes('QUOTA') ? tr('crdtQuota')
+          : e.code === 'SDP-RURAL-OPFS-COMMIT-DESCONEGUT' ? tr('crdtCommitDesconegut')
+          /* Onada R29 · PF-03 · La quota de la carpeta té missatge propi: consolidar el diari no l'allibera. */
+          : esQuotaDeCarpeta(e) ? tr('crdtCarpetaQuota') : typeof e.code === 'string' && e.code.includes('QUOTA') ? tr('crdtQuota')
             : e.message === e.code && typeof e.code === 'string' && e.code.startsWith('RURAL_CRDT_') ? tr('crdtInvalid') : e.message || String(e));
       }
     }

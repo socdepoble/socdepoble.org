@@ -104,6 +104,24 @@ describe('AH-R17-10 · Documentació històrica, estatutària i model d’acta d
     expect(printSpy).toHaveBeenCalledTimes(1);
   });
 
+  /* Onada R29 (DECISIÓ-R29-02, 8a) · La fitxa registral porta la seua classe local: amb
+     el :where(dl) global sol, a 360px els valors eixien de la caixa i quedaven tallats. */
+  test('la fitxa registral de la pestanya «Història i Registre» porta l’encaix local de mòbil', () => {
+    render(
+      <MemoryRouter>
+        <DocumentacioHistoricaRentonar />
+      </MemoryRouter>
+    );
+
+    const panell = screen.getByRole('tabpanel');
+    expect(panell.id).toBe('panel-rentonar-historia');
+    const fitxes = panell.querySelectorAll('dl');
+    expect(fitxes).toHaveLength(1);
+    expect(fitxes[0].classList.contains('sdp-rentonar-doc__fitxa')).toBe(true);
+    expect(fitxes[0].querySelectorAll(':scope > dt')).toHaveLength(7);
+    expect(fitxes[0].querySelectorAll(':scope > dd')).toHaveLength(7);
+  });
+
   test('FitxaPublica de Rentonar carrega el dossier històric lazy i mostra l’atribució CC BY-NC-SA 4.0', async () => {
     preparaMatchMedia();
     const perfilRentonar = perfilFundacionalDelPaquet('rentonar');

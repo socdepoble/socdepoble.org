@@ -35,7 +35,9 @@ export function Camp({ etiqueta, ajuda, error, obligatori = false, className, ch
      seu botó. Els altres controls no la lligen i el seu DOM no canvia. */
   return (
     <CampCtx.Provider value={{ id, descritPer, invalid: Boolean(error), obligatori, etiqueta }}>
-      <div className={uneix('sdp-camp', error && 'sdp-camp--error', className)}>
+      {/* Onada R29 · Segona passada (SQLP-05) · Sense el modificador d'error del camp: cap regla no el pintava
+          (l'error el marca aria-invalid al control), i la porta del vocabulari el comptava com a classe forastera. */}
+      <div className={uneix('sdp-camp', className)}>
         <label className="sdp-camp__etiqueta" htmlFor={id}>
           {etiqueta}
           {obligatori ? <span className="sdp-camp__obligatori"> (obligatori)</span> : null}

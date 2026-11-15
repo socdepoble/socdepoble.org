@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { Component, lazy } from 'react';
 
 // L'entrada web pròpia injecta esta capacitat; els mòduls no importen PWA.
 let recuperaErrorChunkDeploy = () => false;
@@ -33,6 +33,35 @@ function rebuigDeCarrega(error, rebutja = () => {}) {
 
 export function lazyRoute(importa) {
   return lazy(() => Promise.resolve().then(importa).catch(error => rebuigDeCarrega(error)));
+}
+
+/* Onada R29 · R29-RUT-04 · La barrera d'un tros ACCESSORI (un tauler, un
+   aparador, la barra de veu): si el seu import no arriba (LazyRouteError), es
+   pinta `fallback` (per defecte, res) i la pàgina que ja es veia es queda;
+   `onFalla` avisa el propietari una sola vegada. Qualsevol altre error puja
+   com sempre. Sense reintent: el rebuig queda a la memòria de React i només
+   el cura recarregar, que és cosa de la barrera de la ruta o de qui navega
+   (precedents: BarreraDelPanellDelPoble i BarreraDelDocumentDestacat). */
+export class BarreraDelTrosAccessori extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  componentDidCatch(error) {
+    if (esErrorLazy(error)) this.props.onFalla?.(error);
+  }
+
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    if (!esErrorLazy(error)) throw error;
+    return this.props.fallback ?? null;
+  }
 }
 
 /** A lazy view whose owner may ask again on a new intent (a different key),

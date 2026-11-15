@@ -1,7 +1,7 @@
 import { Component, StrictMode, Suspense, useMemo } from 'react';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { configuraRecuperacioLazy, ESPERA_TRANSICIO_DEPLOY_MS, esErrorLazy, LazyRouteError, lazyRouteRenovable } from './lazyRoute.js';
+import { BarreraDelTrosAccessori, configuraRecuperacioLazy, ESPERA_TRANSICIO_DEPLOY_MS, esErrorLazy, LazyRouteError, lazyRoute, lazyRouteRenovable } from './lazyRoute.js';
 
 /* Pla 261028_1526 (P1-55, GN-R01) · lazyRouteRenovable: el propietari d'una
    vista diferida (la columna dreta d'una comunitat al Xat) la torna a demanar
@@ -222,4 +222,38 @@ test('una navegació cancel·lada no deixa Suspense pendent per sempre ni torna 
   expect(screen.getByText('espera')).toBeTruthy();
   await act(async () => { await vi.advanceTimersByTimeAsync(ESPERA_TRANSICIO_DEPLOY_MS); });
   expect(screen.getByText('buida A')).toBeTruthy(); expect(importa).toHaveBeenCalledTimes(1);
+});
+
+/* Onada R29 · R29-RUT-04 · BarreraDelTrosAccessori: un tros accessori que no arriba es queda dins de la
+   seua barrera (el fallback, per defecte res) i la pàgina que ja es veia continua; el propietari ho sap
+   una vegada. Un error que no és d'import puja com sempre. */
+test('BarreraDelTrosAccessori · el tros accessori que no arriba no tomba la pàgina', async () => {
+  const onFalla = vi.fn();
+  const Accessori = lazyRoute(carregador(['falla']));
+  render(
+    <BarreraDeFora>
+      <p>text de la pàgina</p>
+      <BarreraDelTrosAccessori onFalla={onFalla}>
+        <Suspense fallback={<p>espera</p>}><Accessori clau="tauler" /></Suspense>
+      </BarreraDelTrosAccessori>
+    </BarreraDeFora>
+  );
+  await act(async () => { await new Promise((resol) => { setTimeout(resol, 0); }); });
+  expect(screen.getByText('text de la pàgina')).toBeTruthy();
+  expect(screen.queryByText('espera')).toBeNull();
+  expect(screen.queryByText(/de fora/)).toBeNull();
+  expect(onFalla).toHaveBeenCalledTimes(1);
+  expect(onFalla.mock.calls[0][0]).toBeInstanceOf(LazyRouteError);
+});
+
+test('BarreraDelTrosAccessori · pinta el fallback donat i deixa pujar qualsevol altre error', async () => {
+  const Accessori = lazyRoute(carregador(['falla']));
+  render(<BarreraDelTrosAccessori fallback={<p>sense tauler</p>}><Suspense fallback={null}><Accessori clau="x" /></Suspense></BarreraDelTrosAccessori>);
+  expect(await screen.findByText('sense tauler')).toBeTruthy();
+  cleanup();
+
+  function Trencat() { throw new Error('render trencat'); }
+  render(<BarreraDeFora><BarreraDelTrosAccessori fallback={<p>sense tauler</p>}><Trencat /></BarreraDelTrosAccessori></BarreraDeFora>);
+  expect(screen.getByText('de fora: render trencat')).toBeTruthy();
+  expect(screen.queryByText('sense tauler')).toBeNull();
 });

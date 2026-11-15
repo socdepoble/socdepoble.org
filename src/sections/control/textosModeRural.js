@@ -74,6 +74,9 @@ export const TEXTOS_MODE_RURAL = Object.freeze({
   dependenciesPendents: text("dependenciesPendents", "Falten operacions predecessores. Conserva una còpia i importa els fitxers de canvis que falten."),
   crdtInvalid: text("crdtInvalid", "No s’ha pogut aplicar el canvi compartit. Comprova les dades i conserva una còpia abans de continuar."),
   crdtQuota: text("crdtQuota", "L’historial o el diari han arribat al límit. Prepara una còpia; consolidar el diari conserva tota la història."),
+  /* Onada R29 · PF-03 · La quota de la carpeta (RURAL_CRDT_VAULT_QUOTA) no es resol consolidant el diari:
+     la carpeta no s'esborra mai. Les notes són al dispositiu; una carpeta nova i buida torna a sincronitzar. */
+  crdtCarpetaQuota: text("crdtCarpetaQuota", "La carpeta ha crescut massa per a sincronitzar-la: passa de 1.000 fitxers o de 4 MB. Les notes continuen guardades en este dispositiu. Per a continuar, tria una carpeta nova i buida o prepara una còpia de les notes."),
   crdtCommitDesconegut: text("crdtCommitDesconegut", "El navegador encara no ha confirmat l’escriptura. Actualitza les notes per a comprovar l’estat abans de repetir el canvi."),
   /* control-06 (revisió del Panell, 261104) · Abans, un Error escrit a mà a ModeRural.jsx. */
   fitxerGran: text("fitxerGran", "Tria un fitxer JSON de fins a 4 MB."),

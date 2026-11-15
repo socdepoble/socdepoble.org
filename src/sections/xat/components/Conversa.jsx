@@ -35,7 +35,8 @@
  *   · L'esborrany es desa quan la persona escriu, no en muntar (#3).
  *   · «Baixa al final»: el salt suau no es desfà a mitjan animació (#5), i
  *     el focus va al camp només en ample; en estret o sense camp, a la
- *     llista (#6, #9).
+ *     llista (#6, #9). Onada R29 · NAT-02 · En un dispositiu tàctil ample
+ *     (un iPad), també a la llista.
  *   · La llista no és una regió en viu: una regió germana anuncia només els
  *     nous d'altres que entren pel final (#11). La cita porta el focus a
  *     l'original (#12).
@@ -52,6 +53,7 @@ import { AlertTriangle, FileText, ImagePlus } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext.jsx';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
+import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import CapcaleraConversa from './CapcaleraConversa.jsx';
 import Bombolla from './Bombolla.jsx';
 import SeparadorDia from './SeparadorDia.jsx';
@@ -1041,8 +1043,11 @@ export default function Conversa({
     /* El botó desapareix i el focus no es pot perdre. En ample va al camp;
        en estret no, perquè obriria el teclat del mòbil damunt del final que
        volies llegir (#6), i sense camp (Avisos de només lectura, Retall)
-       cauria a <body> (#9): en tots dos casos, a la llista. */
-    if (!estret && campRef.current) campRef.current.focus();
+       cauria a <body> (#9): en tots dos casos, a la llista.
+       Onada R29 · NAT-02 · Una tauleta (un iPad) és tàctil i passa de 720 px: no és «estret», però el
+       teclat en pantalla també tapa el final. Es mira també el punter (CONSULTA_TACTIL, com el Compositor). */
+    const tactil = Boolean(globalThis.matchMedia?.(CONSULTA_TACTIL)?.matches);
+    if (!estret && !tactil && campRef.current) campRef.current.focus();
     else ol.focus({ preventScroll: true });
   };
 

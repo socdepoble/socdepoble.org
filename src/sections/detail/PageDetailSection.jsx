@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Navigate, useParams } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
@@ -17,7 +17,7 @@ import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { destiDePagina } from '../control/destinsControl.js';
 import { InstalaLaPwa, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
 import { PAGINA_DE_LA_PASTILLA, pastillaDeVersio } from './pastillaDeVersio.js';
-import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { usePublicadorsBarraRecurs } from '../../hooks/usePublicadorsBarraRecurs.js';
 import { CopublicacioDePaginaContext } from './CopublicacioDePaginaContext.js';
 
@@ -28,17 +28,21 @@ const PublicarMapaExempleShowcase = lazyRoute(() => import('./PublicarMapaShowca
    /page/fediversity ja no n'és cap: és una UniversalPage normal (TextSection), ampla i seguida, amb
    l'aparador al final per la branca comuna de més avall (Llei de Sistematització, sense excepcions per slug).
    Els cinc rols i la portabilitat ja els pinta AparadorFediversity; /page/fediversity/<fitxa> dona 404. */
+/* Onada R29 · R29-RUT-01 i R29-RUT-04 · Tot tros d'esta pàgina passa per lazyRoute (LazyRouteError i la
+   recuperació de l'entrada web). El que és la pàgina (els catàlegs i les consultes) cau a la barrera de la
+   ruta, amb «Recarrega l’aplicació»; un accessori (l'aparador, la guia, el panell de traspàs, la targeta
+   del WhatsApp) va dins de BarreraDelTrosAccessori i, si no arriba, la pàgina es queda sense ell. */
 const WORKSPACES_PATRIMONI = {
-  herbari: lazy(() => import('../patrimoni/HerbariWorkspaceSection.jsx')),
-  'banc-de-llavors': lazy(() => import('../patrimoni/BancLlavorsWorkspaceSection.jsx')),
-  'arbres-monumentals': lazy(() => import('../patrimoni/NaturaPatrimoniWorkspaceSection.jsx')),
-  receptes: lazy(() => import('../patrimoni/ReceptesWorkspaceSection.jsx'))
+  herbari: lazyRoute(() => import('../patrimoni/HerbariWorkspaceSection.jsx')),
+  'banc-de-llavors': lazyRoute(() => import('../patrimoni/BancLlavorsWorkspaceSection.jsx')),
+  'arbres-monumentals': lazyRoute(() => import('../patrimoni/NaturaPatrimoniWorkspaceSection.jsx')),
+  receptes: lazyRoute(() => import('../patrimoni/ReceptesWorkspaceSection.jsx'))
 };
-const NodrirLaIaiaSection = lazy(() => import('../patrimoni/NodrirLaIaiaSection.jsx'));
-const PaginesImportadesSection = lazy(() => import('../text/PaginesImportadesSection.jsx'));
-const AparadorFediversity=lazy(()=>import('../text/AparadorFediversity.jsx'));
-const PanellTraspasPublicacioInline = lazy(() => import('../admin/PanellTraspasPublicacioInline.jsx'));
-const GuiaCanalsActualitzacio = lazy(() => import('./GuiaCanalsActualitzacio.jsx'));
+const NodrirLaIaiaSection = lazyRoute(() => import('../patrimoni/NodrirLaIaiaSection.jsx'));
+const PaginesImportadesSection = lazyRoute(() => import('../text/PaginesImportadesSection.jsx'));
+const AparadorFediversity = lazyRoute(() => import('../text/AparadorFediversity.jsx'));
+const PanellTraspasPublicacioInline = lazyRoute(() => import('../admin/PanellTraspasPublicacioInline.jsx'));
+const GuiaCanalsActualitzacio = lazyRoute(() => import('./GuiaCanalsActualitzacio.jsx'));
 
 function ControlCopublicacioDeCataleg({ recursId, enActualitzar }) {
   const sessio = useSessioOpcional();
@@ -56,13 +60,15 @@ function ControlCopublicacioDeCataleg({ recursId, enActualitzar }) {
         </Boto>
       </div>
       {obert ? (
-        <Suspense fallback={null}>
-          <PanellTraspasPublicacioInline
-            recursTipusInicial="pagina"
-            recursIdInicial={recursId}
-            onRespostaAutoritativa={enActualitzar}
-          />
-        </Suspense>
+        <BarreraDelTrosAccessori>
+          <Suspense fallback={null}>
+            <PanellTraspasPublicacioInline
+              recursTipusInicial="pagina"
+              recursIdInicial={recursId}
+              onRespostaAutoritativa={enActualitzar}
+            />
+          </Suspense>
+        </BarreraDelTrosAccessori>
       ) : null}
     </>
   );
@@ -87,15 +93,15 @@ function PaginaPatrimoniCopublicable({ Workspace, slug, itemSlug, page, accioPri
    Hermes + Node 0 i del mapa honest del saber. Va en un chunk lazy i només a /page/node-zero, la pàgina
    del Node 0, davant de l'aparador de Fediversity. El text de PAGE_COPY no canvia. */
 const PAGINA_DEL_WHATSAPP_DE_LA_IAIA = 'node-zero';
-const IaiaWhatsappCard = lazy(() => import('../../components/patrimoni/IaiaWhatsappCard.jsx'));
+const IaiaWhatsappCard = lazyRoute(() => import('../../components/patrimoni/IaiaWhatsappCard.jsx'));
 /* Onada R9 (carril C5; IDEA-112, IDEA-113 i IDEA-115) · Les consultes de patrimoni, cadascuna en un chunk lazy:
    només es baixen a la seua pàgina, davall del text breu de PAGE_COPY (com l'herbari).
    Onada R14 · /page/receptes, el receptari «Què dinem?»: la llista de les receptes del llibre (les dades,
    src/data/patrimoni/queDinem.js, van dins del seu tros i no arriben a l'entrada). */
 const SECCIONS_DE_PATRIMONI = {
-  'banc-de-llavors': lazy(() => import('../patrimoni/BancLlavorsSection.jsx')),
-  'rutes-de-poble': lazy(() => import('../patrimoni/RutesDePobleSection.jsx')),
-  receptes: lazy(() => import('../patrimoni/ReceptesQueDinemSection.jsx'))
+  'banc-de-llavors': lazyRoute(() => import('../patrimoni/BancLlavorsSection.jsx')),
+  'rutes-de-poble': lazyRoute(() => import('../patrimoni/RutesDePobleSection.jsx')),
+  receptes: lazyRoute(() => import('../patrimoni/ReceptesQueDinemSection.jsx'))
 };
 
 /* IDEA-109 + IDEA-143 · El visor d'Anatomia Rural és un chunk lazy: només es
@@ -111,7 +117,7 @@ const SECCIONS_DE_PATRIMONI = {
    (la redirecció va abans); es conserva perquè tornar enrere siga llevar
    només aquella línia de PAGE_ROUTE_MAP. */
 const PAGINA_DEL_VISOR = 'anatomia-rural';
-const PouDeLaNeuAnatomiaCard = lazy(() => import('../../components/patrimoni/PouDeLaNeuAnatomiaCard.jsx'));
+const PouDeLaNeuAnatomiaCard = lazyRoute(() => import('../../components/patrimoni/PouDeLaNeuAnatomiaCard.jsx'));
 
 /* El text de càrrega del visor, en la llengua de la interfície (i18n); fora de
    l'app, la reserva en valencià. */
@@ -254,7 +260,7 @@ export default function PageDetailSection() {
         </>
       );
     }
-    else if(['fediversity','node-zero'].includes(slug))alFinal=<>{slug === PAGINA_DEL_WHATSAPP_DE_LA_IAIA ? <Suspense fallback={null}><IaiaWhatsappCard /></Suspense> : null}<Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;
+    else if(['fediversity','node-zero'].includes(slug))alFinal=<>{slug === PAGINA_DEL_WHATSAPP_DE_LA_IAIA ? <BarreraDelTrosAccessori><Suspense fallback={null}><IaiaWhatsappCard /></Suspense></BarreraDelTrosAccessori> : null}<BarreraDelTrosAccessori><Suspense fallback={null}><AparadorFediversity/></Suspense></BarreraDelTrosAccessori>{alFinal}</>;
     const abansIntro = slug === PAGINA_PUBLICAR_MAPA
       ? <Suspense fallback={null}><PublicarMapaMapaShowcase /></Suspense>
       : null;
@@ -264,7 +270,7 @@ export default function PageDetailSection() {
        qualsevol altra pàgina, cap prop: les etiquetes de sempre. */
     const pastilla = slug === PAGINA_DE_LA_PASTILLA ? (t) => pastillaDeVersio(slug, t) : null;
     const peuDescarregues = slug === 'descarregues'
-      ? <Suspense fallback={null}><GuiaCanalsActualitzacio /></Suspense>
+      ? <BarreraDelTrosAccessori><Suspense fallback={null}><GuiaCanalsActualitzacio /></Suspense></BarreraDelTrosAccessori>
       : null;
     return (
       <TextSection

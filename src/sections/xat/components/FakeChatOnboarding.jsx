@@ -64,9 +64,16 @@
  * IDEA-133 (Onada R10, ordre del Mestre del 261106, B2-01) · La bombolla de
  * simulació (section.xat.fake.reply) porta `accioRegistre`: Bombolla hi
  * afig, davall del literal (intacte) i dins de la bombolla, l'enllaç «Entra o
- * registra’t ara →» cap a /registre. Només esta bombolla: ni la IAIA, ni els
- * Avisos, ni el fil de Javi. El camp no ve mai del servidor (mapejaMissatge
- * no el copia), i la ruta i el text són fixos a Bombolla.
+ * registra’t ara →» cap a /registre. El camp no ve mai del servidor
+ * (mapejaMissatge no el copia), i la ruta i el text són fixos a Bombolla.
+ *
+ * Onada R29 · DECISIÓ-R29-02.7 (ordre del Mestre, més nova que B2-01, en
+ * substituïx expressament l'abast «Només esta bombolla») · La invitació
+ * inicial de la IAIA (m2, section.xat.fake.iaia2: «Si t'agrada el que veus,
+ * registra't…») també porta `accioRegistre`: demana registrar-se i ara hi dona
+ * el camí, el mateix enllaç de Bombolla. Les respostes de la IAIA (la trobada,
+ * la de sempre i la d'un error) continuen sense (B2V-01), i ni els Avisos ni el
+ * fil de Javi no en porten. Amb la IAIA apagada el fil no hi és.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XatContext } from '../XatContext.jsx';
@@ -163,7 +170,8 @@ function MostraDelXat({ originalContext, children, respostaIAIA = respostaDeLaIA
       /* Gauntlet 261022_0225 (crítica Claude) · La salutació del Mestre, en
          la llengua de la interfície com la bombolla de davall. */
       { id: 'm1', seq: 1, text: t('section.xat.iaia.salutacio', BENVINGUDA_IAIA), sender: 'other', author: IAIA.nom, is_ai: true, creatAl: ara },
-      { id: 'm2', seq: 2, text: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!"), sender: 'other', author: IAIA.nom, is_ai: true, creatAl: ara }
+      /* Onada R29 · DECISIÓ-R29-02.7 · La invitació porta el camí a /registre (l'enllaç de Bombolla). */
+      { id: 'm2', seq: 2, text: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!"), sender: 'other', author: IAIA.nom, is_ai: true, accioRegistre: true, creatAl: ara }
     ],
     /* Gauntlet 261016_1530 · La benvinguda de sempre, ara als Avisos de la comunitat. */
     [`${ID_COMUNITAT_SDP}-avisos`]: [

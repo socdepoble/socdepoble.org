@@ -10,13 +10,16 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { propsDePaginaDeText } from './paginaDeText.js';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
 
-import { lazy, Suspense, useContext, useMemo } from 'react';
+import { Suspense, useContext, useMemo } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { localitzaPagina } from './pageContent.r10.js';
 import { planTraduccioPagina } from './planTraduccioPagina.js';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
-const AparadorFediversity=lazy(()=>import('./AparadorFediversity.jsx'));
-const ConsolaIncrustada=lazy(()=>import('../consola/ConsolaSection.jsx').then((m)=>({default:m.ConsolaIncrustada})));
+import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+/* Onada R29 · R29-RUT-01 i R29-RUT-04 · Dos accessoris de la pàgina: amb lazyRoute i, en pintar-los,
+   dins de BarreraDelTrosAccessori. Si el tros no arriba, el text de la pàgina es queda sense ells. */
+const AparadorFediversity = lazyRoute(() => import('./AparadorFediversity.jsx'));
+const ConsolaIncrustada = lazyRoute(() => import('../consola/ConsolaSection.jsx').then((m) => ({ default: m.ConsolaIncrustada })));
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -198,8 +201,8 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
         <Alerta to="avis">{t('section.text.traduccioR51Error', 'Esta pàgina no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}</Alerta>
       ) : null}
       {!amagaCos && <CosDeLaPagina html={page.html} />}
-      {pageKey==='fedivers'&&<Suspense fallback={null}><AparadorFediversity language={language}/></Suspense>}
-      {pageKey==='node-zero'&&<Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense>}
+      {pageKey==='fedivers'&&<BarreraDelTrosAccessori><Suspense fallback={null}><AparadorFediversity language={language}/></Suspense></BarreraDelTrosAccessori>}
+      {pageKey==='node-zero'&&<BarreraDelTrosAccessori><Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense></BarreraDelTrosAccessori>}
       {children}
     </UniversalPage>
   );

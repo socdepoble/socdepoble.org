@@ -257,7 +257,12 @@ function FormulariDesa({ t, abast, contingut, locale, natiu, navegador, motor })
     setErrors({});
     setEstat({ tipus: 'ocupat' });
     try {
-      const { text } = await motor.exporta({ usuariId: abast.usuariId, tenantId: abast.tenantId, fils, missatges, contrasenya });
+      /* Onada R29 · R29-E2EE-03 · Amb la vista que no té cada fil sencer des de la seq 1, els punts de
+         partida de contingutDeLaCopia: el motor la declara «parcial» i no promet cap seq que no porta. */
+      const desDeSeqPerFil = contingut?.desDeSeqPerFil && typeof contingut.desDeSeqPerFil === 'object' ? contingut.desDeSeqPerFil : null;
+      const { text } = await motor.exporta({
+        usuariId: abast.usuariId, tenantId: abast.tenantId, fils, missatges, contrasenya, ...(desDeSeqPerFil ? { desDeSeqPerFil } : {})
+      });
       if (!viu.current) return;
       setContrasenya('');
       setRepeticio('');
@@ -584,8 +589,8 @@ function FormulariComprova({ t, abast, locale, motor }) {
 
 /**
  * `accio`: 'desa' o 'comprova'. `abast`: { usuariId, tenantId } o null (sense
- * compte: només l'avís). `contingut`: { fils, missatges, filsAmbMissatges } de
- * contingutDeLaCopia (només per a 'desa'). `natiu`: dins de l'app de
+ * compte: només l'avís). `contingut`: { fils, missatges, filsAmbMissatges,
+ * desDeSeqPerFil } de contingutDeLaCopia (només per a 'desa'). `natiu`: dins de l'app de
  * Capacitor. `cripto`: el WebCrypto del navegador (sense, només l'avís).
  * `motor`: el de veres per defecte.
  */

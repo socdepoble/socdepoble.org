@@ -30,7 +30,9 @@
  *     les comunitats (contenidors sense missatges), els fils de visitant
  *     (`participant: false`: encara no hi ets) i els que tenen un id que el
  *     motor no admetria. Amb la IAIA apagada, els seus xats ja no són a la
- *     llista (senseLaIAIA) i tampoc no hi van.
+ *     llista (senseLaIAIA) i tampoc no hi van. Onada R29 · R29-E2EE-01 · Ni
+ *     les converses locals amb la IAIA (`filLocalIAIA`): no són cap fil del
+ *     servidor i no ixen d'este navegador.
  *   · Missatges: els que la vista té carregats de cada fil en esta sessió
  *     (getThreadMessages: pàgines de 50, LIMIT_PAGINA, i els nous que arriben
  *     o que l'entrega en segon pla descarrega), només els confirmats pel
@@ -39,7 +41,9 @@
  *     missatgesDeMostraDeJavi, no en porta): ni els pendents ni els fallits,
  *     ni els esborrats (la vista no en guarda la data), ni els d'una persona
  *     bloquejada (la vista no en té el text). Una seq repetida dins d'un fil
- *     es queda amb la primera.
+ *     es queda amb la primera. Onada R29 · R29-E2EE-02 · Ni un missatge
+ *     xifrat que este dispositiu no ha pogut obrir (`seguretat.verificat`
+ *     no és cert): no en té el text.
  *   · Cap reserva de la vista com si fora una dada: el títol només quan la
  *     vista no l'ha pogut inventar (vegeu titolDelServidor), i el nom de
  *     l'autor mai és la reserva «Veí» de mapejaMissatge.
@@ -195,10 +199,13 @@ function nomesDefinits(objecte) {
   return Object.fromEntries(Object.entries(objecte).filter(([, valor]) => valor !== undefined));
 }
 
-/** Cert si el fil de la vista entra a la còpia. */
+/** Cert si el fil de la vista entra a la còpia. Onada R29 · R29-E2EE-01 · Ni
+ *  les converses locals amb la IAIA (IAIALocalProvider: `filLocalIAIA`, també
+ *  el fil «iaia-local» i cada sessió «iaia-local-…»): no són cap fil del
+ *  servidor i les preguntes no ixen d'este navegador. */
 export function filEntraALaCopia(fil) {
   return Boolean(fil) && esIdAdmes(fil.id) && fil.id !== ID_FIL_DE_MOSTRA_DE_JAVI && !fil.perDefecte
-    && fil.tipus !== 'comunitat' && fil.participant !== false;
+    && fil.tipus !== 'comunitat' && fil.participant !== false && !fil.filLocalIAIA && !fil.sessioLocalIAIA;
 }
 
 /* Les reserves amb què la vista omple el títol d'un fil que no en porta:
@@ -265,13 +272,19 @@ export function dtoDeFil(fil, { joAvatar = null } = {}) {
   });
 }
 
+/* Onada R29 · R29-E2EE-02 · Un missatge xifrat que este dispositiu no ha pogut
+   obrir (manipulat, sense clau, d'una època desconeguda, amb una clau nova
+   sense confirmar): el pipeline el tanca amb `text: null` i la seua seguretat,
+   i a la còpia no hi va com un missatge buit legítim. */
+const esXifratTancat = (missatge) => missatge.seguretat?.xifrat === true && missatge.seguretat.verificat !== true;
+
 /** Cert si la bombolla de la vista entra a la còpia del fil `filId` (vegeu
  *  la capçalera): una de mapejaMissatge porta el `threadId` del seu fil. */
 export function missatgeEntraALaCopia(missatge, filId) {
   return Boolean(missatge) && esIdAdmes(missatge.id) && esEnter(missatge.seq) && missatge.seq >= 1
     && typeof missatge.threadId === 'string' && missatge.threadId === filId
     && missatge.estatEnviament !== 'pendent' && missatge.estatEnviament !== 'error'
-    && !missatge.esborrat && !missatge.esborratAl && !missatge.bloquejat;
+    && !missatge.esborrat && !missatge.esborratAl && !missatge.bloquejat && !esXifratTancat(missatge);
 }
 
 /* La reserva de mapejaMissatge per a un autor sense nom: no és cap nom. */
@@ -301,21 +314,50 @@ export function dtoDeMissatge(missatge, filId, joNom = null) {
   });
 }
 
+/* Onada R29 · R29-E2EE-03 · Les seq que la vista té carregades d'un fil (també
+   les que no entren a la còpia: un esborrat o un bloquejat són a la cadena del
+   servidor igual). La seq del servidor és de cada fil i correlativa des de 1. */
+function seqsCarregades(bombolles, filId) {
+  const seqs = new Set();
+  let primera = Infinity;
+  let ultima = 0;
+  for (const missatge of Array.isArray(bombolles) ? bombolles : CAP) {
+    if (!missatge || missatge.threadId !== filId || !esEnter(missatge.seq) || missatge.seq < 1) continue;
+    seqs.add(missatge.seq);
+    if (missatge.seq < primera) primera = missatge.seq;
+    if (missatge.seq > ultima) ultima = missatge.seq;
+  }
+  return seqs.size ? { primera, ultima, mida: seqs.size } : null;
+}
+
 /**
- * El que aniria a la còpia ara mateix: { fils, missatges, filsAmbMissatges },
- * en la forma del DTO. `getThreadMessages(filId)` és el de XatContext; `joNom`
- * i `joAvatar`, els de la persona.
+ * El que aniria a la còpia ara mateix: { fils, missatges, filsAmbMissatges,
+ * desDeSeqPerFil }, en la forma del DTO. `getThreadMessages(filId)` és el de
+ * XatContext; `joNom` i `joAvatar`, els de la persona.
+ * Onada R29 · R29-E2EE-03 · La vista sol tindre només els últims missatges
+ * d'una conversa (pàgines de 50). Una còpia sense cursors el motor la declara
+ * «complet»: diria que cobrix cada fil des de la seq 1 i una incremental que
+ * en partira saltaria per sempre les anteriors. Si algun fil no té carregat
+ * tot el tram de l'1 a la seua última seq, `desDeSeqPerFil` porta el punt de
+ * partida de cada fil (la seq anterior a la primera carregada; 0 si no n'hi
+ * ha cap) i el motor la declara «parcial», que no pot ser la base de cap
+ * incremental. Si tots el tenen sencer, null: la còpia és completa de veres.
  */
 export function contingutDeLaCopia({ chatThreads = CAP, getThreadMessages = null, joNom = null, joAvatar = null } = {}) {
   const fils = [];
   const missatges = [];
   const vistos = new Set();
+  const desDe = {};
+  let senseForat = true;
   let filsAmbMissatges = 0;
   for (const fil of Array.isArray(chatThreads) ? chatThreads : CAP) {
     if (!filEntraALaCopia(fil) || vistos.has(fil.id)) continue;
     vistos.add(fil.id);
     fils.push(dtoDeFil(fil, { joAvatar }));
     const bombolles = typeof getThreadMessages === 'function' ? getThreadMessages(fil.id) : CAP;
+    const carregades = seqsCarregades(bombolles, fil.id);
+    desDe[fil.id] = carregades ? carregades.primera - 1 : 0;
+    if (carregades && (carregades.primera !== 1 || carregades.mida !== carregades.ultima)) senseForat = false;
     const ids = new Set();
     const seqs = new Set();
     let algun = false;
@@ -328,7 +370,7 @@ export function contingutDeLaCopia({ chatThreads = CAP, getThreadMessages = null
     }
     if (algun) filsAmbMissatges += 1;
   }
-  return { fils, missatges, filsAmbMissatges };
+  return { fils, missatges, filsAmbMissatges, desDeSeqPerFil: senseForat ? null : desDe };
 }
 
 /* ── La contrasenya ──────────────────────────────────────────────────── */

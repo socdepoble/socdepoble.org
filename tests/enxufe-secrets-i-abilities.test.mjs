@@ -408,6 +408,22 @@ test('R26 · 503: en desactivar torna el 200/404 normal sense cap comprovació i
   assert.deepEqual(actiu, { status: 503, nocache: true, cos_503: true });
 });
 
+/* Onada R29 (wp-503-lang) · El lang diu la llengua en què ix el text (WCAG 3.1.1): l'anglés
+   d'origen sense traducció i el locale efectiu, escapat, quan n'hi ha. */
+test('Onada R29 · 503: lang="en" sense traducció i el locale del lloc (ca_valencia → ca-valencia) amb traducció, escapat', { skip: !PHP_BIN && 'PHP CLI no disponible' }, () => {
+  const { html } = executaCasPhp('manteniment_503_llengua');
+  const lang = (doc) => /<html lang="([^"]*)">/.exec(doc)?.[1];
+  assert.equal(lang(html.en_us), 'en');
+  assert.equal(lang(html.es_sense_trad), 'en', 'sense traducció el text és anglés, encara que el lloc siga es_ES');
+  assert.match(html.es_sense_trad, /<h1>Scheduled maintenance in progress<\/h1>/);
+  assert.equal(lang(html.ca_traduit), 'ca');
+  assert.match(html.ca_traduit, /<h1>Manteniment tècnic programat en curs<\/h1>/);
+  assert.equal(lang(html.valencia), 'ca-valencia');
+  assert.equal(lang(html.locale_hostil), 'ca&quot;&gt;&lt;script&gt;x&lt;/script&gt;', 'el locale filtrat ix escapat dins de l\'atribut');
+  assert.doesNotMatch(html.locale_hostil, /<script>/);
+  assert.doesNotMatch(llig(MU_PLUGIN), /<html lang="ca">/, 'cap lang fix');
+});
+
 test('R26 · 503: cap purga global per petició, cap escriptura i l\'exemple d\'amfitrió no viatja al ZIP del connector', () => {
   const mu = llig(MU_PLUGIN);
   assert.doesNotMatch(mu, /\b(?:wp_cache_flush|flush_rewrite_rules|wp_cache_delete|delete_transient|delete_option|update_option|add_option|set_transient|\$wpdb)\b/, 'el mu-plugin només respon');

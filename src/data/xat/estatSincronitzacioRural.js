@@ -860,6 +860,11 @@ export function creaCuaSincronitzacioRural({
   }
 
   async function purgaAmbit(ambit) {
+    // Desactiva l’àmbit que ix abans d’esperar el disc. Una entrada nova amb
+    // la mateixa clau durant l’espera ja pertany a una altra partició viva.
+    if (ambitActiu === ambit) {
+      ambitActiu = null;
+    }
     if (Object.hasOwn(particions, ambit)) {
       particions[ambit].clear();
       delete particions[ambit];
@@ -867,9 +872,6 @@ export function creaCuaSincronitzacioRural({
     }
     if (adaptadorPersistencia && typeof adaptadorPersistencia.esborra === 'function') {
       await adaptadorPersistencia.esborra(ambit);
-    }
-    if (ambitActiu === ambit) {
-      ambitActiu = null;
     }
   }
 

@@ -209,6 +209,28 @@ describe('Desa una còpia xifrada', () => {
     expect(dades).not.toMatch(/"(accessToken|refreshToken|sender|estatEnviament|searchText)"/);
   });
 
+  /* Onada R29 · R29-E2EE-03 · La vista només té les últimes d'una conversa llarga: la còpia no es pot
+     declarar «complet» (diria que cobrix des de la seq 1). Abans la pàgina no passava cap cursor. */
+  test('Onada R29 · amb només els últims missatges d’una conversa, la còpia ix «parcial», amb el seu punt de partida i totes les converses', async () => {
+    const ultims = [98, 99, 100].map((seq) => mapejaMissatge({
+      id: `a0000000-0000-4000-8000-${String(seq).padStart(12, '0')}`, filId: FIL_ROSA, seq, usuariId: ROSA, autorNom: 'Rosa', text: `missatge ${seq}`, creatAl: '2026-11-14T10:00:00.000Z'
+    }, JO));
+    const contingut = contingutDeLaCopia({ chatThreads: FILS_DE_LA_VISTA, getThreadMessages: (id) => (id === FIL_ROSA ? ultims : getThreadMessages(id)), joNom: 'Javi' });
+    const desa = desaDeProva();
+    const exporta = vi.fn(MOTOR_COPIA.exporta);
+    render(<CosCopiaSeguretatXat accio="desa" abast={ABAST} contingut={contingut} motor={{ ...MOTOR_COPIA, exporta, desa }} />);
+    expect(screen.getByText('Converses: 2 · Missatges: 4')).toBeTruthy();
+    fireEvent.click(await preparaLaCopia());
+    expect(exporta.mock.calls[0][0].desDeSeqPerFil).toEqual({ [FIL_ROSA]: 97, [FIL_GRUP]: 0 });
+    expect(await within(regioViva()).findByText(/Ha començat la descàrrega de l’arxiu socdepoble-xat-parcial-\d{8}-\d{4}\.sdpbackup/, {}, ESPERA)).toBeTruthy();
+    const [text] = desa.mock.calls[0];
+    expect(await descriuCopiaSeguretatXat(text)).toMatchObject({ mode: 'parcial', xifrada: true });
+    const resultat = await importaCopiaSeguretatXat(text, { usuariIdEsperat: JO, tenantIdEsperat: TENANT, contrasenya: CONTRASENYA });
+    expect(resultat.fils).toHaveLength(2);
+    expect(resultat.manifest.cursors.desDeSeqPerFil).toEqual({ [FIL_ROSA]: 97, [FIL_GRUP]: 0 });
+    expect(resultat.missatges.map((m) => m.seq).sort((a, b) => a - b)).toEqual([1, 98, 99, 100]);
+  });
+
   test('cancel·lar el selector ho diu, no es dona per desada i es pot tornar a provar sense tornar a xifrar', async () => {
     const desa = vi.fn()
       .mockResolvedValueOnce({ metode: 'selector-fitxers', nomArxiu: 'x.sdpbackup', lliurat: false, motiu: 'cancellat' })

@@ -1,5 +1,8 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { escaneja } from '../../../tooling/gates/tractor-vocabulari.mjs';
 import { RouterContext } from '../../app/contexts/objectesDeContext.js';
 import {
   PREGUNTES_ISOGLOSSES,
@@ -277,4 +280,86 @@ describe('JocDonParlesCard · Fase 2 (IDEA-252 + IDEA-257)', () => {
     expect(puntsAlcoia).toBeCloseTo(4.8, 3);
     expect(puntsAlacanti).toBeCloseTo(1.2, 3);
   });
+});
+
+/* Onada R29 · R29-CV-03 · El joc calla la seua locució en desmuntar-se i en canviar de pregunta,
+   i no toca la veu d'una altra peça. */
+describe('Onada R29 · veu del joc «D’on parles?»', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    vi.clearAllMocks();
+    backendMock.lligConsensIsoglossesPoble.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  const avortada = () => Object.assign(new Error('Locució aturada.'), { codi: 'VEU_AVORTADA' });
+
+  it('R29-CV-03 · desmuntar el joc mentre llig la pregunta atura la veu', async () => {
+    parlaMock.mockImplementationOnce(() => new Promise(() => {}));
+    const { unmount } = render(<JocDonParlesCard />);
+    fireEvent.click(screen.getByRole('button', { name: /Escoltar paraules/i }));
+    await waitFor(() => expect(parlaMock).toHaveBeenCalledTimes(1));
+    expect(aturaMock).not.toHaveBeenCalled();
+    unmount();
+    expect(aturaMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('R29-CV-03 · avançar de pregunta mentre llig atura la veu i el botó torna a «Escoltar paraules»', async () => {
+    parlaMock.mockImplementationOnce(() => new Promise(() => {}));
+    render(<JocDonParlesCard />);
+    fireEvent.click(screen.getByRole('button', { name: /Escoltar paraules/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Atura$/i }).getAttribute('aria-pressed')).toBe('true'));
+
+    fireEvent.click(screen.getByRole('button', { name: /Querilla/i }));
+    expect(screen.getByText('Paraula 2 de 12')).toBeTruthy();
+    expect(aturaMock).toHaveBeenCalledTimes(1);
+    const boto = screen.getByRole('button', { name: /Escoltar paraules/i });
+    expect(boto.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('R29-CV-03 · sense locució pròpia, desmuntar o avançar no calla la veu d’una altra peça', async () => {
+    const { unmount } = render(<JocDonParlesCard />);
+    fireEvent.click(screen.getByRole('button', { name: /Querilla/i }));
+    expect(screen.getByText('Paraula 2 de 12')).toBeTruthy();
+    unmount();
+    expect(aturaMock).not.toHaveBeenCalled();
+  });
+
+  it('R29-CV-03 · una locució del joc que talla una altra peça torna el botó a «Escoltar paraules»', async () => {
+    let rebutja;
+    parlaMock.mockImplementationOnce(() => new Promise((_, no) => { rebutja = no; }));
+    const { unmount } = render(<JocDonParlesCard />);
+    fireEvent.click(screen.getByRole('button', { name: /Escoltar paraules/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Atura$/i })).toBeTruthy());
+    await act(async () => { rebutja(avortada()); });
+    expect(screen.getByRole('button', { name: /Escoltar paraules/i }).getAttribute('aria-pressed')).toBe('false');
+    unmount();
+    expect(aturaMock).not.toHaveBeenCalled();
+  });
+});
+
+/* Onada R29 · R29-02-2 · La regla del modificador de variant viva era morta (la base, darrere a
+   la mateixa capa, la trepitjava): fora del full i fora del JSX alhora, o la porta del vocabulari para. */
+describe('Onada R29 · R29-02-2 · opcions vives sense modificador mort', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('el full diferit ja no declara el modificador i les opcions vives pinten la classe base', () => {
+    const full = readFileSync(path.join(process.cwd(), 'src/css/diferit-joc-parla.css'), 'utf8');
+    expect(full).not.toMatch(/opcio--viva/);
+    render(<JocDonParlesCard />);
+    const querilla = screen.getByRole('button', { name: /Querilla/i });
+    expect(querilla.className).toBe('sdp-joc-parla__opcio');
+  });
+
+  it('porta del vocabulari: JocDonParlesCard.jsx no té cap classe forastera', () => {
+    const { infraccions, vocab } = escaneja();
+    expect(vocab.has('sdp-joc-parla__opcio')).toBe(true);
+    const propies = infraccions.filter((i) => i.fitxer.split(path.sep).join('/') === 'src/components/patrimoni/JocDonParlesCard.jsx');
+    expect(propies.map((i) => `${i.linia} [${i.regla}] ${i.token}`)).toEqual([]);
+  }, 120000);
 });

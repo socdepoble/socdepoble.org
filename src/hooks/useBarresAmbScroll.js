@@ -40,6 +40,10 @@ import { useEffect, useState } from 'react';
  *   · en canviar de ruta (clauRuta), que reinicia l'estat.
  * Amb un peu ancorat a baix dins del <main> (CLASSES_PEU_ANCORAT), la barra
  * inferior no se'n va mai («dalt», mai «totes»): el peu en reserva l'alçada.
+ * Onada R29 · Tampoc amb el reproductor de veu obert (ATRIBUT_VEU_OBERTA a
+ * l'arrel): la lectura i «Bloc següent» desplacen el visor, i la barra de veu,
+ * que descansa damunt de la inferior, no ha de baixar 72 px sota el dit. Si
+ * s'obri amb «totes» ja escrit, passa a «dalt» en el mateix moment.
  *
  * Torna un controlador estable per al botó «Tornar a dalt»: { subscriu,
  * potPujar, pujaADalt }, per a useSyncExternalStore. potPujar és cert quan
@@ -85,6 +89,8 @@ export const FRACCIO_VISOR = 0.5;
    si la barra se'n va, i el botó hi cauria damunt. Els espècimens del
    catàleg van en marcs (.sdp-especimen) i no compten. */
 export const CLASSES_PEU_ANCORAT = Object.freeze(['sdp-drets__peu', 'sdp-xat-compositor', 'sdp-xat-fitxa-comunitat__peu']);
+/* Onada R29 · La marca que BarraReproductorVeu posa a l'arrel mentre és oberta. */
+export const ATRIBUT_VEU_OBERTA = 'data-sdp-veu-oberta';
 const SELECTOR_ESPECIMEN = '.sdp-especimen';
 
 const SELECTOR_MENU_OBERT = SELECTOR_BARRES.split(', ').map((barra) => `${barra} [aria-expanded="true"]`).join(', ');
@@ -224,7 +230,9 @@ export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta, compac
     };
 
     const escriu = (valor) => {
-      if (valor === escrit) return;
+      /* Onada R29 · Kit lot_10 de Codex (punt quirúrgic, despatx MARIA-1745) · La memòria local no substituïx el
+         DOM: si un altre escriptor ha canviat l'atribut, el valor es torna a escriure. */
+      if (valor === escrit && (arrel.getAttribute(ATRIBUT_BARRES) || '') === (valor || '')) return;
       escrit = valor;
       if (valor) arrel.setAttribute(ATRIBUT_BARRES, valor);
       else arrel.removeAttribute(ATRIBUT_BARRES);
@@ -252,6 +260,9 @@ export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta, compac
        cada fotograma no recorre el <main>. */
     const peus = CLASSES_PEU_ANCORAT.map((classe) => visor.getElementsByClassName(classe));
     const hiHaPeuAncorat = () => peus.some((llista) => Array.prototype.some.call(llista, (peu) => !peu.closest(SELECTOR_ESPECIMEN)));
+    /* Onada R29 · La barra de veu viu al portal de l'arrel, no dins del <main>:
+       hiHaPeuAncorat no la veu, però també necessita la barra inferior. */
+    const veuOberta = () => arrel.getAttribute(ATRIBUT_VEU_OBERTA) === 'true';
 
     /* Bloc 3.10 · Fora del compacte (tauleta horitzontal, pantalla curta) la
        graella pot portar columnes que fan scroll cadascuna, i l'atribut mou
@@ -324,7 +335,7 @@ export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta, compac
       if (estat.amagades && retingudes()) estat = { ...estat, amagades: false, acumulat: 0 };
       // Fora del compacte no hi ha barra inferior: mai «totes».
       escriu(estat.amagades
-        ? (compacte && arribaAlFons(element, registre) && !hiHaPeuAncorat() ? BARRES_TOTES : BARRES_DALT)
+        ? (compacte && arribaAlFons(element, registre) && !hiHaPeuAncorat() && !veuOberta() ? BARRES_TOTES : BARRES_DALT)
         : null);
       magatzem.posa(!estat.amagades && potPujar(element, pos));
     };
@@ -390,10 +401,19 @@ export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta, compac
       visor.focus?.({ preventScroll: true });
     });
 
+    /* Onada R29 · El reproductor que s'obri amb la barra inferior ja amagada
+       («totes») la torna: la barra de veu naix al seu lloc i no puja al
+       primer scroll. */
+    const vigiaVeu = typeof MutationObserver === 'function'
+      ? new MutationObserver(() => { if (escrit === BARRES_TOTES && veuOberta()) escriu(BARRES_DALT); })
+      : null;
+    vigiaVeu?.observe(arrel, { attributes: true, attributeFilter: [ATRIBUT_VEU_OBERTA] });
+
     arrel.addEventListener('scroll', enScroll, { capture: true, passive: true });
     arrel.addEventListener('focusin', enFocus);
 
     return () => {
+      vigiaVeu?.disconnect();
       arrel.removeEventListener('scroll', enScroll, { capture: true });
       arrel.removeEventListener('focusin', enFocus);
       if (programat && marc != null) cancelaMarc(marc);

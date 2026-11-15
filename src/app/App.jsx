@@ -32,7 +32,7 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
 import { ATRIBUT_CONTRAST, CONTRAST_BANCAL, arrelDePresentacio, reclamaAtribut } from '../config/theme';
 import { esAmaDelDocument } from '../apps/plataforma/interruptors.js';
-import { lazyRoute } from '../apps/plataforma/lazyRoute.js';
+import { BarreraDelTrosAccessori, lazyRoute } from '../apps/plataforma/lazyRoute.js';
 import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 export { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
@@ -953,9 +953,11 @@ function TextRouteContingut({ pageKey, pageCopy, status, copiaLocal }) {
   return (
     <TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal} objecte={objecte}>
       {/* Transparència Radical: el comptador es mostra on s'explica la privacitat.
-          Suspense propi perquè el tauler no torne a tapar el text mentre arriba. */}
-      {pageKey === 'legal' ? <Suspense fallback={null}><TaulerTelemetria /></Suspense> : null}
-      {pageKey === 'versions' ? <Suspense fallback={null}><CroniquesFites261104 /></Suspense> : null}
+          Suspense propi perquè el tauler no torne a tapar el text mentre arriba.
+          Onada R29 · R29-RUT-04 · I barrera pròpia: si el tros no arriba, el text es queda sense el tauler
+          (o sense les cròniques) en lloc de desaparéixer darrere de l'avís de la ruta. */}
+      {pageKey === 'legal' ? <BarreraDelTrosAccessori><Suspense fallback={null}><TaulerTelemetria /></Suspense></BarreraDelTrosAccessori> : null}
+      {pageKey === 'versions' ? <BarreraDelTrosAccessori><Suspense fallback={null}><CroniquesFites261104 /></Suspense></BarreraDelTrosAccessori> : null}
       {accioDeTextAlFinal(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} lloc="baix" /> : null}
     </TextSection>
   );
@@ -994,8 +996,13 @@ function AvisadorAjornat({ config, targetNode }) {
   const escolta = useCallback((avisa) => escoltaAvisador(avisadorClau, avisa), [avisadorClau]);
   const llig = useCallback(() => llegixAvisador(avisadorClau)?.actiu === true, [avisadorClau]);
   const actiu = useSyncExternalStore(escolta, llig);
+  const enLinia = useEnLinia();
+  /* Onada R29 · R29-RUT-02 · La barrera rep la config de l'amfitrió i la connexió, com la de la ruta: a
+     socdepoble.org (ama del document) un tros que no arriba oferix «Recarrega l’aplicació» en lloc de
+     «Torna a obrir el mòdul des de la pàgina que l’allotja». La clau la reinicia en canviar de compte, i
+     resetKey és una etiqueta fixa: l'incident s'anota com a «avisador», mai amb la clau del compte. */
   return actiu ? (
-    <RouteErrorBoundary>
+    <RouteErrorBoundary key={avisadorClau} resetKey="avisador" externalConfig={config} enLinia={enLinia}>
       <Suspense fallback={null}>
         <AvisadorEnSessio key={avisadorClau} clau={avisadorClau} config={config} targetNode={targetNode} />
       </Suspense>
@@ -1076,8 +1083,10 @@ function AppDataLoader() {
       <RouteSEO />
       <RouteTelemetria />
       {/* FRO-04 · La barrera es reinicia sola en canviar de ruta: una secció
-          que ha petat no segresta la navegació cap a les altres. */}
-      <RouteErrorBoundary resetKey={location.pathname} externalConfig={externalConfig} enLinia={enLinia}>
+          que ha petat no segresta la navegació cap a les altres.
+          Onada R29 · R29-RUT-03 · També en canviar només la consulta: de /control?fitxa=… a /control.
+          (useLocation dona `search` sense «?»; la barrera anota la secció amb el tram d'abans del «?».) */}
+      <RouteErrorBoundary resetKey={`${location.pathname}?${location.search}`} externalConfig={externalConfig} enLinia={enLinia}>
         <AppRoutes />
       </RouteErrorBoundary>
     </>

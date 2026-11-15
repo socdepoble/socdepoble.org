@@ -533,7 +533,9 @@ export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signa
     vigent(); if (handle?.kind !== 'file') continue;
     if (typeof nom !== 'string') throw errorCrdtVault('RURAL_CRDT_VAULT_FORMAT', 'Nom de fitxer no textual.');
     if (nom.startsWith(PREFIX_BATCH_CRDT)) {
-      if (++fitxers > 1000 || !/^\.sdp-crdt-[a-f0-9]{64}\.json$/.test(nom)) throw errorCrdtVault('RURAL_CRDT_VAULT_FORMAT', 'Nom de batch CRDT invàlid.');
+      /* Onada R29 · PF-03: el fitxer 1.001 és quota, no corrupció; abans, si era un batch, eixia «Nom de batch CRDT invàlid.». */
+      if (++fitxers > 1000) throw errorCrdtVault('RURAL_CRDT_VAULT_QUOTA', 'La carpeta supera els 1.000 fitxers de notes i batches.');
+      if (!/^\.sdp-crdt-[a-f0-9]{64}\.json$/.test(nom)) throw errorCrdtVault('RURAL_CRDT_VAULT_FORMAT', 'Nom de batch CRDT invàlid.');
       const text = await llig(handle); let batch;
       try { batch = copiaJsonRural(JSON.parse(text), MAX_BYTES_CRDT_VAULT); } catch { throw errorCrdtVault('RURAL_CRDT_VAULT_FORMAT', 'Batch CRDT invàlid.'); }
       if (Object.keys(batch).sort().join('|') !== ['crdt', 'schema', 'sha256'].join('|') || batch.schema !== ESQUEMA_BATCH_CRDT_VAULT

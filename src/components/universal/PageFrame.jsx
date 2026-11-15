@@ -1,7 +1,7 @@
 import { desplacaASeccio, destiDelSalt, dinsDeLEncastat } from '../../utils/desplacamentApp.js';
 export { desplacaASeccio } from '../../utils/desplacamentApp.js';
 import { resolveAsset } from '../../config/assetResolver';
-import { lazy, Suspense, useCallback, useEffect, useId, useLayoutEffect, useMemo, useState, useRef } from 'react';
+import { Suspense, useCallback, useEffect, useId, useLayoutEffect, useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from '../../app/contexts/RouterContext';
 import { Camera, Image as ImageIcon, LoaderCircle, Trash2 } from 'lucide-react';
@@ -27,7 +27,12 @@ import { omple } from '../../config/moderacio.js';
 import { VeuLecturaPaginaContext } from './veu/VeuLecturaPaginaContext.js';
 import { teProsaDeLectura } from './veu/deteccioLecturaVeu.js';
 
-const BarraReproductorVeuLazy = lazy(() => import('./veu/BarraReproductorVeu.jsx'));
+import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+
+/* Onada R29 · R29-RUT-01 i R29-RUT-04 · La barra de veu és un accessori de la pàgina: amb lazyRoute i
+   dins de BarreraDelTrosAccessori. Si el tros no arriba, el reproductor es tanca (el botó torna a l'estat
+   de repòs) i la pàgina es queda; abans, el TypeError del lazy nu tombava la ruta sencera. */
+const BarraReproductorVeuLazy = lazyRoute(() => import('./veu/BarraReproductorVeu.jsx'));
 const PARELL_ESCOLTA_VEU = Object.freeze(['common.veuIaiaEscolta', '🔊 Escolta la IAIA']);
 const RE_EMOJI_INICIAL_VEU = /^\p{Extended_Pictographic}️?\s*/u;
 
@@ -1369,21 +1374,23 @@ export function PageFrame({
         contentRef={traduida ? traduccioRef : containerRef} capcaleraRef={capcaleraRef}
         idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} onSeccio={traduida || seccioALaUrl === false ? null : escriuSeccioUrl} />
       {reproductorVeuObert && teLecturaVeu ? (
-        <Suspense fallback={null}>
-          <BarraReproductorVeuLazy
-            oberta={reproductorVeuObert}
-            capcaleraRef={capcaleraRef}
-            cosRef={traduida ? traduccioRef : containerRef}
-            idioma={idiomaVeuLectura}
-            privat={!ambTraductor}
-            fontSo={fontSo}
-            botoActivadorRef={botoVeuLecturaRef}
-            invocadorRef={invocadorVeuRef}
-            seguixLectura={seguixLecturaVeu}
-            onTanca={tancaReproductorVeu}
-            onCanviEstat={setEstatVeu}
-          />
-        </Suspense>
+        <BarreraDelTrosAccessori onFalla={tancaReproductorVeu}>
+          <Suspense fallback={null}>
+            <BarraReproductorVeuLazy
+              oberta={reproductorVeuObert}
+              capcaleraRef={capcaleraRef}
+              cosRef={traduida ? traduccioRef : containerRef}
+              idioma={idiomaVeuLectura}
+              privat={!ambTraductor}
+              fontSo={fontSo}
+              botoActivadorRef={botoVeuLecturaRef}
+              invocadorRef={invocadorVeuRef}
+              seguixLectura={seguixLecturaVeu}
+              onTanca={tancaReproductorVeu}
+              onCanviEstat={setEstatVeu}
+            />
+          </Suspense>
+        </BarreraDelTrosAccessori>
       ) : null}
     </>
   );

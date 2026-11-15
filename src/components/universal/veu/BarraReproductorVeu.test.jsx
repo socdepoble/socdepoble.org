@@ -16,6 +16,9 @@ import { useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import '../../../../tests/helpers/diccionaris.js';
+import { UIActionsContext } from '../../../app/contexts/objectesDeContext.js';
+import { SUPPORTED_LANGUAGES, createTranslator } from '../../../config/i18n.js';
 import { RouterProvider } from '../../../app/contexts/RouterContext.jsx';
 import { PageFrame } from '../PageFrame.jsx';
 import { BarraReproductorVeu } from './BarraReproductorVeu.jsx';
@@ -389,12 +392,26 @@ describe('IDEA-255 · Reproductor Flotant Universal de Veu (PageFrame + BarraRep
     expect(screen.getByText('Crònica matinal de la Muntanya')).toBeTruthy();
     await waitFor(() => expect(playSpy).toHaveBeenCalled());
 
-    fireEvent.click(screen.getByRole('button', { name: /Bloc següent/i }));
+    /* Onada R29 · R29-02-05 · Contracte canviat a propòsit: en mode àudio els controls parlen de pistes,
+       no de blocs ni de lectura (el mode lectura conserva «Bloc següent» i «Pausa la lectura»). */
+    expect(screen.queryByRole('button', { name: /Bloc següent/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /Pista anterior/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Pista següent/i }));
     await waitFor(() => expect(screen.getByText('Pista 2 de 2')).toBeTruthy());
     expect(screen.getByText('El temps i el camp')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /Pausa la lectura/i }));
+    expect(screen.queryByRole('button', { name: /Pausa la lectura/i })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Pausa l’àudio/i }));
     expect(pauseSpy).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /Escolta l’àudio/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Llista de pistes i cerca/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Copiar el text de la pista/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Tancar el reproductor de so/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Llista de pistes i cerca/i }));
+    expect(screen.getByPlaceholderText('Cerca una pista…')).toBeTruthy();
+    expect(screen.getByLabelText('Cerca entre les pistes')).toBeTruthy();
+    fireEvent.change(screen.getByPlaceholderText('Cerca una pista…'), { target: { value: 'cap pista amb este nom' } });
+    expect(screen.getByText('Cap pista coincidix amb la cerca.')).toBeTruthy();
 
     playSpy.mockRestore();
     pauseSpy.mockRestore();
@@ -633,16 +650,17 @@ describe('R28 · esmenes al Reproductor Universal de So (IDEA-268)', () => {
       expect(screen.getByText('Pista 1 de 2')).toBeTruthy();
       await waitFor(() => expect(playSpy).toHaveBeenCalled());
 
-      fireEvent.click(screen.getByRole('button', { name: /Bloc següent/i }));
+      /* Onada R29 · R29-02-05 · En mode àudio els controls parlen de pistes (contracte canviat a propòsit). */
+      fireEvent.click(screen.getByRole('button', { name: /Pista següent/i }));
       await waitFor(() => expect(screen.getByText('Pista 2 de 2')).toBeTruthy());
-      fireEvent.click(screen.getByRole('button', { name: /Pausa la lectura/i }));
-      expect(screen.getByRole('button', { name: /Continua la lectura/i })).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /Pausa l’àudio/i }));
+      expect(screen.getByRole('button', { name: /Escolta l’àudio/i })).toBeTruthy();
 
       playSpy.mockClear();
       rerender(<MuntatgeRadio idioma="es" fontSo={fontA} />);
       await act(async () => {});
       expect(screen.getByText('Pista 2 de 2')).toBeTruthy();
-      expect(screen.getByRole('button', { name: /Continua la lectura/i })).toBeTruthy();
+      expect(screen.getByRole('button', { name: /Escolta l’àudio/i })).toBeTruthy();
       expect(playSpy).not.toHaveBeenCalled();
 
       /* Onada R28 · Un objecte nou amb el mateix contingut (el literal que un pare crea a cada render)
@@ -806,5 +824,121 @@ describe('Onada R28 · revisió adversarial del Reproductor Universal de So', ()
     expect(screen.getByRole('complementary', { name: /Reproductor de lectura en veu alta/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Pausa la lectura/i })).toBeTruthy();
     expect(serveiVeu.atura.mock.calls.length).toBe(crides);
+  });
+
+  /* Onada R29 · R29-02-05 (kit Gemini lot_02, adaptat) · Les cinc llengües, no només la reserva en valencià.
+     La barra marca data-sdp-veu-oberta però no escriu data-sdp-barres: l'únic que l'escriu és
+     useBarresAmbScroll, que passa de «totes» a «dalt» quan veu la marca (useBarresAmbScroll.test.jsx).
+     Dos escriptors desquadrarien la memòria «escrit» del hook. */
+  test('Onada R29 · en mode àudio usa les claus dedicades *Audio en les cinc llengües i no escriu data-sdp-barres', async () => {
+    const playSpy = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
+    const pauseSpy = vi.spyOn(window.HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const font = {
+      tipus: 'audio',
+      titolEmissio: 'Ràdio R29',
+      pistes: [
+        { id: 'r1', titol: 'Pista 1', text: 'Descripció pista 1', src: '/assets/audio/veus_node0/mostra_08_arnau_valencia.wav' },
+        { id: 'r2', titol: 'Pista 2', text: 'Descripció pista 2', src: '/assets/audio/veus_node0/mostra_07_gina_valencia.wav' },
+      ],
+    };
+    try {
+      for (const { code } of SUPPORTED_LANGUAGES) {
+        const tr = createTranslator(code);
+        function MuntatgeIdioma() {
+          const cosRef = useRef(null);
+          return (
+            <UIActionsContext.Provider value={{ t: tr }}>
+              <div className="sdp-root is-compact" data-sdp-barres="totes" data-testid={`arrel-${code}`}>
+                <article ref={cosRef}><p>Prova</p></article>
+                <BarraReproductorVeu oberta cosRef={cosRef} idioma={code} fontSo={font} />
+              </div>
+            </UIActionsContext.Provider>
+          );
+        }
+        render(<MuntatgeIdioma />);
+        const arrel = screen.getByTestId(`arrel-${code}`);
+        expect(arrel.getAttribute('data-sdp-veu-oberta')).toBe('true');
+        expect(arrel.getAttribute('data-sdp-barres')).toBe('totes');
+
+        expect(screen.getByRole('button', { name: tr('veu.reproductor.anteriorAudio') })).toBeTruthy();
+        expect(screen.getByRole('button', { name: tr('veu.reproductor.seguentAudio') })).toBeTruthy();
+        expect(screen.getByRole('button', { name: tr('veu.reproductor.pausaAudio') })).toBeTruthy();
+        expect(screen.getByRole('button', { name: tr('veu.reproductor.copiaAudio') })).toBeTruthy();
+        expect(screen.getByRole('button', { name: tr('veu.reproductor.tancaAudio') })).toBeTruthy();
+
+        const botoPistes = screen.getByRole('button', { name: tr('veu.reproductor.apartatsAudio') });
+        fireEvent.click(botoPistes);
+        const campCerca = screen.getByPlaceholderText(tr('veu.reproductor.cercaPlaceholderAudio'));
+        expect(screen.getByLabelText(tr('veu.reproductor.cercaEtiquetaAudio'))).toBe(campCerca);
+        fireEvent.change(campCerca, { target: { value: 'cap-coincidencia-zzz' } });
+        expect(screen.getByText(tr('veu.reproductor.senseResultatsAudio'))).toBeTruthy();
+        cleanup();
+      }
+    } finally {
+      playSpy.mockRestore();
+      pauseSpy.mockRestore();
+    }
+  });
+});
+
+/* ── Onada R29 · propietat de la locució de la barra ───────────────────── */
+
+const BLOCS_ESPECIMEN = Object.freeze([
+  Object.freeze({ index: 0, id: 'r29-0', etiqueta: 'h1', esTitol: true, seccioTitol: 'Prova', resumCurt: 'Primer bloc', text: 'Primer bloc.', element: null }),
+  Object.freeze({ index: 1, id: 'r29-1', etiqueta: 'p', esTitol: false, seccioTitol: 'Prova', resumCurt: 'Segon bloc', text: 'Segon bloc.', element: null }),
+]);
+
+const avortadaPerUnaAltraPeca = () => Object.assign(new Error('Locució aturada.'), { codi: serveiVeu.CODI_VEU_AVORTADA });
+
+describe('Onada R29 · la barra només calla la veu que és seua', () => {
+  test('R29-CV-05 · tancar la barra pausada per una altra peça no talla la veu d’eixa peça', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    render(<PaginaLecturaMostra />);
+    fireEvent.click(await screen.findByRole('button', { name: /Escolta la IAIA/i }));
+    await waitFor(() => expect(cua.pendents.length).toBe(1));
+
+    /* Una altra peça (el Refranyer) comença a parlar: el servei rebutja la locució de la barra. */
+    await act(async () => { cua.pendents[0].reject(avortadaPerUnaAltraPeca()); });
+    await waitFor(() => expect(screen.getByRole('button', { name: /Continua la lectura/i })).toBeTruthy());
+
+    const crides = serveiVeu.atura.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: /Tancar el reproductor de veu/i }));
+    await waitFor(() => {
+      expect(screen.queryByRole('complementary', { name: /Reproductor de lectura en veu alta/i })).toBeNull();
+    });
+    expect(serveiVeu.atura.mock.calls.length).toBe(crides);
+  });
+
+  test('R29-CV-05 · tancar la barra mentre llig continua aturant la seua veu', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    render(<PaginaLecturaMostra />);
+    fireEvent.click(await screen.findByRole('button', { name: /Escolta la IAIA/i }));
+    await waitFor(() => expect(cua.pendents.length).toBe(1));
+
+    const crides = serveiVeu.atura.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: /Tancar el reproductor de veu/i }));
+    expect(serveiVeu.atura.mock.calls.length).toBeGreaterThan(crides);
+    await waitFor(() => {
+      expect(screen.queryByRole('complementary', { name: /Reproductor de lectura en veu alta/i })).toBeNull();
+    });
+  });
+
+  test('R29-CV-04 · l’espècimen de /disseny que llig calla la seua veu en desmuntar-se', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    const { unmount } = render(<BarraReproductorVeu oberta mostraEspecimen blocsMostra={BLOCS_ESPECIMEN} />);
+    fireEvent.click(screen.getByRole('button', { name: /Continua la lectura/i }));
+    await waitFor(() => expect(cua.pendents.length).toBe(1));
+    const crides = serveiVeu.atura.mock.calls.length;
+    unmount();
+    expect(serveiVeu.atura.mock.calls.length).toBeGreaterThan(crides);
+  });
+
+  test('R29-CV-04 · l’espècimen que no llig no calla cap altra veu en desmuntar-se', () => {
+    const { unmount } = render(<BarraReproductorVeu oberta mostraEspecimen blocsMostra={BLOCS_ESPECIMEN} />);
+    unmount();
+    expect(serveiVeu.atura).not.toHaveBeenCalled();
   });
 });

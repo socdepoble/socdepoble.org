@@ -191,7 +191,7 @@ import {
   LogOut,
   MessageSquare
 } from 'lucide-react';
-import { Suspense, lazy, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -211,8 +211,11 @@ import { ESPAIS_PLUGINS, PLUGINS, TEXTOS_ESPAIS_PLUGINS, etiquetesAmbEstat, plug
 import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
 import { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
 import { RUTA_COMPTE } from '../../config/rutaEntrada.js';
-const ModeRural = lazy(() => import('./ModeRural.jsx'));
-const FitxaOpenData = lazy(() => import('./FitxaOpenData.jsx'));
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+/* Onada R29 · R29-RUT-01 · Amb lazyRoute: un tros que no arriba dona LazyRouteError i la barrera de la
+   ruta oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
+const ModeRural = lazyRoute(() => import('./ModeRural.jsx'));
+const FitxaOpenData = lazyRoute(() => import('./FitxaOpenData.jsx'));
 
 /* P5 · Una targeta de doble acció: la UniversalCard de sempre amb el
    contingut de la seua pàgina i les dues portes. Sense il·lustració, la

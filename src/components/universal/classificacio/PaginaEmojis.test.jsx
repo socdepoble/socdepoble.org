@@ -2,6 +2,7 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { PaginaEmojis } from './PaginaEmojis.jsx';
+import { AmbitCapesEnrere } from '../../PedraSeca/hooks/useCapaEnrere.js';
 
 afterEach(cleanup);
 
@@ -120,5 +121,37 @@ describe('PaginaEmojis', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Llevar emoticona' })).toBeTruthy();
+  });
+
+  /* Onada R29 · R29-CV-07 · Dins de <soc-de-poble> (un shadow root per instància, amb el seu àmbit de capes,
+     com PedraSecaEmbed), un Escape premut en un camp de l'amfitrió o dins d'una altra instància no tanca la
+     pàgina; el premut dins del seu arbre, sí. */
+  test('encastada, només la tanca un Escape premut dins del seu shadow root', () => {
+    const escape = () => new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true, composed: true });
+    render(<><input aria-label="Cerca del tema" /><div data-testid="amfitrio-1" /><div data-testid="amfitrio-2" /></>);
+    const instancia = (testId) => {
+      const host = screen.getByTestId(testId);
+      const lloc = document.createElement('div');
+      /* Onada R29 · Segona passada (RUT-R29-01): tancat, com el crea PedraSecaEmbed. */
+      host.attachShadow({ mode: 'closed' }).append(lloc);
+      const onTornar = vi.fn();
+      render(
+        <AmbitCapesEnrere.Provider value={host}>
+          <PaginaEmojis carregaCataleg={catalegSintetic} onTornar={onTornar} onTria={vi.fn()} />
+        </AmbitCapesEnrere.Provider>,
+        { container: lloc }
+      );
+      return { lloc, onTornar };
+    };
+    const primera = instancia('amfitrio-1');
+    const segona = instancia('amfitrio-2');
+
+    screen.getByRole('textbox', { name: 'Cerca del tema' }).dispatchEvent(escape());
+    expect(primera.onTornar).not.toHaveBeenCalled();
+    expect(segona.onTornar).not.toHaveBeenCalled();
+
+    primera.lloc.querySelector('button').dispatchEvent(escape());
+    expect(primera.onTornar).toHaveBeenCalledTimes(1);
+    expect(segona.onTornar).not.toHaveBeenCalled();
   });
 });

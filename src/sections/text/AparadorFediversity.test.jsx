@@ -2,7 +2,7 @@ import {describe,it,expect,vi,afterEach} from 'vitest';
 import {act,render as renderReact,screen,fireEvent,cleanup} from '@testing-library/react';
 import { MemoryRouter } from '../../app/contexts/RouterContext.jsx';
 import AparadorFediversity from './AparadorFediversity.jsx';
-import {aplicaAparadorR20,APARADOR_R20_TEXTS} from './pageContent.fediversityR20.js';
+import {aplicaAparadorR20,APARADOR_R20_TEXTS,htmlAparadorR20} from './pageContent.fediversityR20.js';
 import {PAGE_COPY} from './pageContent.js';
 import {localitzaPagina} from './pageContent.r10.js';
 import {FEDIVERSITY_ACTORS,FEDIVERSITY_ARCHITECTURE_TEXTS,FEDIVERSITY_CONTRACT_COUNTS} from './fediversityArchitectureR11.js';
@@ -112,6 +112,23 @@ describe('Aparador verificable R20',()=>{
   expect([batec.length,emergencies.length]).toEqual([1,1]);
   expect(batec[0].querySelector('a').getAttribute('href')).toBe('/page/avisador');
   for(const targeta of [batec[0],emergencies[0]])expect(privat.compareDocumentPosition(targeta)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+ });
+ /* Onada R29 · R29-02-6d · El nom propi del producte no es traduïx: l'enllaç diu «L’Avisador · Batec de Vida» en les
+    cinc llengües, com el títol i el subtítol de /page/avisador (en anglés, amb la glossa de page.avisador.subtitol). */
+ const BATEC_LITERAL={ca:'L’Avisador · Batec de Vida',es:'L’Avisador · Batec de Vida',en:'L’Avisador · Batec de Vida (Heartbeat of Life)',eu:'L’Avisador · Batec de Vida',gl:'L’Avisador · Batec de Vida'};
+ it.each(Object.keys(APARADOR_R20_TEXTS))('%s · R29-02-6d · l’enllaç a /page/avisador diu el nom propi literal',language=>{
+  const {container}=render(<AparadorFediversity language={language}/>);
+  const enllac=container.querySelector('[data-sdp-batec-vida="true"] a');
+  expect([enllac.getAttribute('href'),enllac.textContent]).toEqual(['/page/avisador',BATEC_LITERAL[language]]);
+  expect(enllac.textContent.startsWith('L’Avisador · Batec de Vida')).toBe(true);
+ });
+ /* Onada R29 · R29-02-6c · En basc, «0 Nodoa», com a la resta de pàgines en basc. */
+ it('eu · R29-02-6c · la línia del Node 0 diu «0 Nodoa», no «Node 0»',()=>{
+  const {node,status}=APARADOR_R20_TEXTS.eu;
+  expect([node,status].filter(text=>/Node 0/.test(text))).toEqual([]);
+  expect(node.startsWith('Komunitateko 0 Nodoa · Mac mini M4:')).toBe(true);
+  expect(status).toBe('Egiaztatu 0 Nodoaren API publikoa');
+  expect(htmlAparadorR20('eu')).toContain('Komunitateko 0 Nodoa · Mac mini M4:');
  });
  it('resposta tardana no reapareix després d’esborrar la prova',async()=>{
   let resume;const carrega=()=>new Promise(resolve=>{resume=resolve;});

@@ -489,6 +489,7 @@ describe('la ruta /page/anatomia-rural', () => {
     expect(detall).not.toMatch(/import\(['"][^'"]*VisorAnatomiaRural3D\.jsx['"]\)/);
     expect(detall).not.toMatch(/^import .*VisorAnatomiaRural3D/m);
     expect(detall).not.toMatch(/<VisorAnatomiaRural3D\b/);
-    expect(detall).toMatch(/lazy\(\(\) => import\('\.\.\/\.\.\/components\/patrimoni\/PouDeLaNeuAnatomiaCard\.jsx'\)\)/);
+    /* Onada R29 · R29-RUT-01 · Ara amb lazyRoute (LazyRouteError i «Recarrega l’aplicació»): continua sent un tros a part. */
+    expect(detall).toMatch(/lazyRoute\(\(\) => import\('\.\.\/\.\.\/components\/patrimoni\/PouDeLaNeuAnatomiaCard\.jsx'\)\)/);
   });
 });

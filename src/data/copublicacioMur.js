@@ -1,5 +1,6 @@
 /* Diari de retirada: només identificadors, cap cos ni credencial. Els ACK es
-   conserven; els errors, inclosos 403/404, conserven la voluntat i el retard.
+   conserven (Onada R29 · PF-04: fins a LIMIT_DIARI files; després es purguen els
+   més vells); els errors, inclosos 403/404, conserven la voluntat i el retard.
    Gauntlet R22 (dades-02, notes-02) · Una sola excepció, que no és cap
    rebuig sinó l'absència d'objecte: una fila de nota SENSE acte (publicacioId
    null, les que encuaven les versions anteriors per a notes mai publicades)
@@ -14,6 +15,9 @@ const error = text => Object.assign(new Error(text), { codi: 'MUR_REVOCACIO_PERS
 const canvi = () => new DOMException('La identitat o el backend han canviat.', 'AbortError');
 /* Els codis estructurats (runtime.request els llig del missatge) que, per a una nota sense acte, volen dir «res a retirar». */
 const SENSE_ACTE = new Set(['SDP-MUR-REVISION', 'SDP-MUR-OWNER']);
+/* Onada R29 · PF-04 · Files del diari per dispositiu, i quines compten per al límit (les que encara s'han d'enviar). */
+const LIMIT_DIARI = 4096;
+const esViva = r => Boolean(r.pending || r.rejected);
 const abastDe = value => {
   if (!value || ['backend', 'tenant', 'user'].some(k => typeof value[k] !== 'string' || !value[k] || value[k].length > 2048)) throw error('Falta l’àmbit de la revocació persistent.');
   return JSON.stringify([value.backend, value.tenant, value.user]);
@@ -58,8 +62,18 @@ export function creaCuaRevocacionsMur({ indexedDB = globalThis.indexedDB, obteAb
             nextRetryAt: options.reintentaRebutjada ? 0 : row.nextRetryAt ?? 0 });
           return done();
         }
-        const count = store.count(); count.onsuccess = () => { try {
-          check(d.scope); if (count.result >= 4096) throw error('El diari de retirada està ple.');
+        /* Onada R29 · PF-04: el límit compta només les retirades vives (pendents o rebutjades).
+           Els ACK, que no s'esborraven mai, bloquejaven tota retirada nova a partir de 4.096.
+           Per a no créixer sense fi, en la mateixa transacció es purguen els ACK més vells (de
+           qualsevol àmbit) fins a tornar a LIMIT_DIARI files; la resta continua de làpida local
+           per a estaRetirada. El servidor és qui mana: el trigger d'anti-resurrecció
+           (SDP-MUR-REVOKED) rebutja igual un UUID retirat que ja no tinga làpida ací. */
+        const totes = store.getAll(); totes.onsuccess = () => { try {
+          check(d.scope);
+          const files = totes.result;
+          if (files.filter(esViva).length >= LIMIT_DIARI) throw error('El diari de retirada està ple.');
+          const confirmades = files.filter(r => !esViva(r)).sort((a, b) => (a.confirmadaAl ?? 0) - (b.confirmadaAl ?? 0));
+          for (const vella of confirmades.slice(0, Math.max(0, files.length + 1 - LIMIT_DIARI))) store.delete(vella.key);
           store.add({ ...d, pending: true, attempt: 0, nextRetryAt: 0 });
         } catch(e) { abort(e); } };
       } catch(e) { abort(e); } };
@@ -107,7 +121,8 @@ export function creaCuaRevocacionsMur({ indexedDB = globalThis.indexedDB, obteAb
             nextRetryAt: failure ? ara() + Math.min(300000, 1000 * 2 ** Math.min(row.attempt - 1, 9)) : 0 };
           // Persist structured status only, never a provider message/body.
           if (failure) next.lastStatus = Number.isInteger(failure.status) ? failure.status : null;
-          else delete next.lastStatus;
+          // Onada R29 · PF-04: l'hora de l'ACK ordena la purga (primer els més vells).
+          else { delete next.lastStatus; next.confirmadaAl = ara(); }
           store.put(next); done(true);
         } catch(e) { abort(e); } };
       });

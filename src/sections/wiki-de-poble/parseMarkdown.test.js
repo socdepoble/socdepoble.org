@@ -6,6 +6,7 @@ import {
   parseMarkdown,
   parseMarkdownEnLinia,
   extreuEditorial,
+  substituixEnllacos,
 } from './parseMarkdown.js';
 import { marcaDeTaula, sanitizeHtml } from '../../utils/sanitize.js';
 
@@ -494,5 +495,74 @@ describe('parseMarkdownEnLinia', () => {
   it('sense text no hi ha res', () => {
     expect(parseMarkdownEnLinia('')).toBe('');
     expect(parseMarkdownEnLinia(null)).toBe('');
+  });
+});
+
+/* Onada R29 · SEG-R29-03: els enllaços es buscaven amb regex que, per cada
+   «[a](» sense tancar, recorrien el text fins al final (O(n²)). Les regex
+   d'abans són l'oracle de les proves d'equivalència, amb entrades curtes. */
+describe('parseMarkdown · enllaços en temps lineal (Onada R29 · SEG-R29-03)', () => {
+  const ENLLAC_ABANS = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const ENLLAC_PLA_ABANS = /!?\[([^\]]*)\]\([^)]*\)/g;
+  const comAbans = (text) => text.replace(ENLLAC_ABANS, '<a href="$2">$1</a>');
+  const comAbansPla = (text) => text.replace(ENLLAC_PLA_ABANS, '$1');
+  const enllac = (text, adreca) => `<a href="${adreca}">${text}</a>`;
+  const pla = (text) => text;
+
+  it('128 KB de «[a](» sense tancar es convertixen en un instant, al cos i al títol', { timeout: 60000 }, () => {
+    const md = '[a]('.repeat(32 * 1024);
+    let inici = performance.now();
+    parseMarkdown(md, { entradilla: false });
+    expect(performance.now() - inici).toBeLessThan(250);
+    inici = performance.now();
+    expect(extreuEditorial(`# ${md}`).titol).toBe(md);
+    expect(performance.now() - inici).toBeLessThan(250);
+  });
+
+  it('temps lineal: 512 KB, el topall d’una nota feta d’un fitxer local', () => {
+    const inici = performance.now();
+    const obert = '[a]('.repeat(128 * 1024);
+    expect(substituixEnllacos(obert, enllac)).toBe(obert);
+    const claudators = `${'['.repeat(256 * 1024)}${'](x'.repeat(64 * 1024)}`;
+    expect(substituixEnllacos(claudators, enllac)).toBe(claudators);
+    expect(substituixEnllacos(`${'['.repeat(512 * 1024)}a](x)`, enllac)).toBe(`<a href="x">${'['.repeat(512 * 1024 - 1)}a</a>`);
+    const imatges = '![a]('.repeat(100 * 1024);
+    expect(substituixEnllacos(imatges, pla, { buits: true, imatge: true })).toBe(imatges);
+    expect(substituixEnllacos('![a](b)'.repeat(70 * 1024), pla, { buits: true, imatge: true })).toBe('a'.repeat(70 * 1024));
+    expect(performance.now() - inici).toBeLessThan(500);
+  });
+
+  it('el mateix resultat que les regex d’abans en enllaços reals', () => {
+    const casos = [
+      '[enllaç](?item=x)',
+      'Llig [la guia](https://socdepoble.org/wiki?item=a) i [el mapa](/mapa).',
+      '[x](javascript:alert(1))',
+      '[[a](b)',
+      '[a]() i [](b) i [a] (b)',
+      '![alt](/img.png) i !![doble](/x.png)',
+      '[sense tancar](https://exemple.org i res més',
+      'Preu $1 [a]($2)'
+    ];
+    for (const text of casos) {
+      expect(substituixEnllacos(text, enllac)).toBe(comAbans(text));
+      expect(substituixEnllacos(text, pla, { buits: true, imatge: true })).toBe(comAbansPla(text));
+    }
+  });
+
+  it('el mateix resultat que les regex d’abans en 20.000 textos a l’atzar', () => {
+    const PECES = ['[', '[', ']', ']', '(', '(', ')', ')', '!', 'a', ' ', '\n', '[a](', '](', '![', '[]', '()', '$1'];
+    let llavor = 0x1badf00d;
+    const atzar = (n) => {
+      llavor = (Math.imul(llavor, 1103515245) + 12345) >>> 0;
+      return (llavor >>> 8) % n;
+    };
+    const diferents = [];
+    for (let i = 0; i < 20000; i += 1) {
+      let text = '';
+      for (let k = atzar(14); k >= 0; k -= 1) text += PECES[atzar(PECES.length)];
+      if (substituixEnllacos(text, enllac) !== comAbans(text)
+        || substituixEnllacos(text, pla, { buits: true, imatge: true }) !== comAbansPla(text)) diferents.push(text);
+    }
+    expect(diferents).toEqual([]);
   });
 });

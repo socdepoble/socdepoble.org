@@ -17,6 +17,8 @@ DO $guard$ BEGIN
  -- D-R27-3 (R28) fixa el catàleg complet exacte de 112: R21-R26 (cd0b3a4ef..3d16007e2)
  -- el van fer créixer de 86 a 111 sense pin i R28 hi afig 20261115030000.
  -- Cada migració nova, o cada canvi en els bytes d'una migració, necessita un pin exacte nou.
+ -- Onada R29 hi afig 20261115170000 (quotes, RLS i consens): el pin del catàleg complet passa a 113 i
+ -- el de 112 deixa de valer, com el de 111 a la R28 (el Node 0 l'haurà d'aplicar abans d'instal·lar POSSE).
  -- A count alone cannot prove a migration identity or its source bytes.
  OR NOT EXISTS(
  SELECT 1 FROM(VALUES
@@ -31,7 +33,7 @@ DO $guard$ BEGIN
 (85,'c068a25593a05717070adc14f32d9d4c95762d15f3bb3facd7b622c10224ee5b'),
 (85,'33070384775ba945ca7a464fda17c9cafb450f954fa96585eba1097cc96f857e'),
 (86,'2dee56621a634f1699b2124a19f35923c82686e18a0b9e2a4fa5c7b762ea2eab'),
-(112,'542397eda905b620188f17be580e988c34558b306071a5a675a9368ca6c15485')
+(113,'e28b0846ee2c1f345d80fb3b0441b7a9e3fee9711ca6dee5e40841d96f49a7c5')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

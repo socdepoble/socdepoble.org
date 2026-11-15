@@ -4,7 +4,9 @@
  *
  * Sobre el Dialeg de Pedra Seca (<dialog> natiu: capa superior, trampa de
  * focus, Escape i retorn del focus al «+» que l'ha obert). De dalt a baix:
- *   · el cercador, amb el focus posat, i el ⊗ que l'esborra;
+ *   · el cercador, amb el focus posat (Onada R29 · NAT-01: només amb teclat
+ *     físic; en un dispositiu tàctil no, perquè faria pujar el teclat), i el
+ *     ⊗ que l'esborra;
  *   · la targeta «Nou grup» · «Nova comunitat»: cap RPC en crea cap, i per
  *     això obrin, DINS del diàleg, un panell honest que diu d'on naixen (una
  *     Pàgina Universal i «Comentar») amb el camí al Mur i a Pobles;
@@ -45,6 +47,14 @@ import { fitxes as fitxesDeConsulta, plega } from '../../search/indexCerca.js';
 import CaraXat from './CaraXat.jsx';
 import FilaPersona from './FilaPersona.jsx';
 import { contactesDAjuda, esContacteDeLaIAIA, senseContacteDeLaIAIA } from '../contactesAjuda.js';
+import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
+
+/* Onada R29 · NAT-01 · El punter principal és un dit: la mateixa consulta que FullAjustos (07878998f)
+   i les barres amb scroll. */
+function esDispositiuTactil() {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia(CONSULTA_TACTIL).matches === true;
+}
 
 const CAP = Object.freeze([]);
 const idDe = (membre) => String(membre?.usuari_id ?? membre?.usuariId ?? '');
@@ -76,7 +86,11 @@ export default function DialegNovaConversa(props) {
   /* El focus al cercador, no a la creu. Els efectes del pare corren després
      dels del fill: quan arriba este, el Dialeg ja ha cridat showModal() i el
      camp ja es pot enfocar (abans, dins d'un <dialog> tancat, no). */
-  useEffect(() => { if (obert) campRef.current?.focus(); }, [obert]);
+  /* Onada R29 · NAT-01 · En un dispositiu tàctil, enfocar el cercador en obrir fa pujar el teclat en
+     pantalla damunt de la llista de contactes, i el primer toc cau en una tecla. Allí el focus es queda
+     on el posa el Dialeg, com a FullAjustos; amb teclat físic, al cercador com abans. */
+  const tactil = esDispositiuTactil();
+  useEffect(() => { if (obert && !tactil) campRef.current?.focus(); }, [obert, tactil]);
   return (
     <Dialeg
       obert={obert}
@@ -85,7 +99,7 @@ export default function DialegNovaConversa(props) {
       mida="s"
       className="sdp-xat-dialeg"
     >
-      {obert ? <Contingut {...props} campRef={campRef} /> : null}
+      {obert ? <Contingut {...props} campRef={campRef} tactil={tactil} /> : null}
     </Dialeg>
   );
 }
@@ -93,7 +107,7 @@ export default function DialegNovaConversa(props) {
 function Contingut({
   t, cercaMembres, contactesFrequents = CAP, joId = null, joNom = null, joAvatar = null, filPersonal = null, xatPropi = 'no',
   onTriaMembre, obrintAmb = null, onObriFil, onVes, campRef, errorObrir = null, senseSessio = false, tornar,
-  senseIAIA = false, teSessionsIAIA = false
+  senseIAIA = false, teSessionsIAIA = false, tactil = false
 }) {
   const [terme, setTerme] = useState('');
   const [perId, setPerId] = useState(() => new Map());
@@ -104,12 +118,22 @@ function Contingut({
   const [panell, setPanell] = useState(null);
   const [avisPersonal, setAvisPersonal] = useState(false);
   const panellRef = useRef(null);
+  /* Onada R29 · NAT-01 · El panell d'on es torna, i els dos botons que l'obrin (es tornen a muntar en
+     tornar: no es pot guardar el node del clic). */
+  const panellPrevi = useRef(null);
+  const botoGrupRef = useRef(null);
+  const botoComunitatRef = useRef(null);
 
-  /* En obrir el panell honest, el focus hi entra; en tornar, al cercador. */
+  /* En obrir el panell honest, el focus hi entra; en tornar, al cercador.
+     Onada R29 · NAT-01 · En tàctil, ni en obrir ni en tornar: el cercador faria pujar el teclat. En
+     tornar, el focus va al botó que havia obert el panell; en obrir, es queda on el posa el Dialeg. */
   useEffect(() => {
+    const previ = panellPrevi.current;
+    panellPrevi.current = panell;
     if (panell) panellRef.current?.focus();
-    else campRef.current?.focus();
-  }, [panell, campRef]);
+    else if (!tactil) campRef.current?.focus();
+    else if (previ) (previ === 'grup' ? botoGrupRef : botoComunitatRef).current?.focus();
+  }, [panell, campRef, tactil]);
 
   /* El padró: tot en obrir i, amb un terme, també el que torna el servidor
      per a eixe terme (un poble de més de 100 persones). Es fusiona per id. */
@@ -235,6 +259,7 @@ function Contingut({
             type="search"
             name="xatNouContacte"
             autoComplete="off"
+            data-sdp-focus-inicial={tactil ? undefined : true}
             value={terme}
             placeholder={etiquetaCerca}
             onChange={(e) => setTerme(e.target.value)}
@@ -267,13 +292,13 @@ function Contingut({
       {!cercant ? (
         <ul className="sdp-xat-llista sdp-xat-targeta">
           <li>
-            <button type="button" className="sdp-xat-opcio-accio" onClick={() => setPanell('grup')}>
+            <button type="button" className="sdp-xat-opcio-accio" ref={botoGrupRef} onClick={() => setPanell('grup')}>
               <Users size={24} aria-hidden="true" focusable="false" />
               <span>{t('section.xat.nou.grup', 'Nou grup')}</span>
             </button>
           </li>
           <li>
-            <button type="button" className="sdp-xat-opcio-accio" onClick={() => setPanell('comunitat')}>
+            <button type="button" className="sdp-xat-opcio-accio" ref={botoComunitatRef} onClick={() => setPanell('comunitat')}>
               <UsersRound size={24} aria-hidden="true" focusable="false" />
               <span>{t('section.xat.nou.comunitat', 'Nova comunitat')}</span>
             </button>

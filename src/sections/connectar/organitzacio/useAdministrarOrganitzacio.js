@@ -110,11 +110,14 @@ export function useAdministrarOrganitzacio(orgId, { config = {}, ambRevisio = tr
   useEffect(() => {
     if (!id || teMembership || !ambDirectori) return undefined;
     let viu = true;
+    /* Onada R29 · Canviar d'organització (o desmuntar) avorta la lectura
+       vella, com useFitxaDeConnexio: cap petició òrfena en una xarxa lenta. */
+    const controlador = new AbortController();
     Promise.resolve()
-      .then(() => loadPerfilPublic(id, configRef.current))
+      .then(() => loadPerfilPublic(id, { ...configRef.current, signal: controlador.signal }))
       .then((perfil) => { if (viu) setFitxa({ clau: id, nom: nomDeLaFitxa(perfil) }); })
       .catch(() => { if (viu) setFitxa({ clau: id, nom: null }); });
-    return () => { viu = false; };
+    return () => { viu = false; controlador.abort(); };
   }, [id, teMembership, ambDirectori]);
 
   const connecta = useCallback(async (justificacio = '') => {

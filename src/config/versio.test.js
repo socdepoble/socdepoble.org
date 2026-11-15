@@ -50,7 +50,8 @@ describe('la versió canònica', () => {
        Onada R21 (COMMIT 5): la 1.2.0 passa al build 5 (VERSIO_CLIENT_NATIU 5) perquè cap número pujat a una botiga es
        reutilitze, i el connector del repositori, a la 1.1.14.
        Onada R28 (Lot C4, pla 261115_0135): versió unificada 1.2.1 amb el build 6 (VERSIO_CLIENT_NATIU 6). */
-    expect(versioCanonica()).toBe('v1.2.1');
+    /* Onada R29 (DECISIÓ-R29-01): versió unificada 1.2.2 amb el build 7 (VERSIO_CLIENT_NATIU 7). */
+    expect(versioCanonica()).toBe('v1.2.2');
   });
 
   test('la forma: «vX.Y.Z» o «vX.Y.Z (build aammdd)»; un segell que no és aammdd no s’hi posa', () => {

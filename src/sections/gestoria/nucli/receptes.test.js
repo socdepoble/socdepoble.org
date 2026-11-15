@@ -3,7 +3,7 @@
    anglés; els CIF de prova es calculen ací mateix (cap identificador real de
    persona). Els NIF d'empreses del catàleg són dades públiques. */
 import { describe, expect, test } from 'vitest';
-import { detectaProveidor, extreuCamps, nifsRecurrents } from './receptes.js';
+import { detectaProveidor, extreuCamps, nifsRecurrents, retallaImportsFinals } from './receptes.js';
 
 /* Control de CIF a la manera de l'Agència Tributària, independent del mòdul. */
 function controlCif(xifres) {
@@ -848,5 +848,70 @@ describe('nifsRecurrents', () => {
     expect(nifsRecurrents([])).toEqual([]);
     expect(nifsRecurrents(null)).toEqual([]);
     expect(nifsRecurrents(['', 'sense NIF'])).toEqual([]);
+  });
+});
+
+/* Onada R29 · SEG-R29-01: els imports del final del concepte es retallaven amb una regex exponencial
+   (ReDoS). La regex d'abans és l'oracle de les proves d'equivalència, sempre amb entrades curtes. */
+describe('retallaImportsFinals (Onada R29 · SEG-R29-01)', () => {
+  const ABANS = /(?:\s+[-−]?(?:€\s?)?\d[\d.,]*\s?(?:€|eur|%|uds?\.?|x)?)+\s*$/i;
+
+  test('24 «1 €» acabats en signe davall d’un «Concepto» buit no congelen la Gestoria', { timeout: 30000 }, () => {
+    extreuCamps('Concepto\nX 1 €'); // escalfament: el primer extreuCamps prepara el catàleg
+    const inici = performance.now();
+    extreuCamps(`Concepto\nX ${'1 € '.repeat(24)}!`);
+    expect(performance.now() - inici).toBeLessThan(250);
+  });
+
+  test('temps lineal: una línia de 20.000 trams', () => {
+    const inici = performance.now();
+    const penjada = `X ${'1 € '.repeat(20000)}!`;
+    expect(retallaImportsFinals(penjada)).toBe(penjada);
+    expect(retallaImportsFinals(`Servei ${'1 € '.repeat(20000)}`)).toBe('Servei');
+    expect(performance.now() - inici).toBeLessThan(250);
+  });
+
+  test('el mateix resultat que la regex d’abans en conceptes reals', () => {
+    const casos = {
+      'Llibres de text 1 € 2 € 3 €': 'Llibres de text',
+      'Servei web 10€ 20€': 'Servei web',
+      'Servei web 1 € -2': 'Servei web',
+      'Servei web 2 x 3,00 €': 'Servei web',
+      'Material 5 uds. 12,50 €': 'Material',
+      'Pack 2 x 3,00 € 6,00 €': 'Pack',
+      'Quota -€ 5': 'Quota',
+      'Concepte 10 EUR': 'Concepte',
+      'Hosting plan 1 100.00 21% 121.00': 'Hosting plan',
+      'Rayos X': 'Rayos X',
+      'Import €': 'Import €',
+      '12': '12'
+    };
+    for (const [text, esperat] of Object.entries(casos)) {
+      expect(text.replace(ABANS, '')).toBe(esperat);
+      expect(retallaImportsFinals(text)).toBe(esperat);
+    }
+  });
+
+  test('el mateix resultat que la regex d’abans en 20.000 línies a l’atzar (espais de tota mena inclosos)', () => {
+    const PECES = [' ', ' ', '  ', '\t', '\u00a0', '\n', '1', '2,5', '10.000,00', '.', ',', '€', '-', '−', 'eur', 'EUR', 'e', 'u', 'r',
+      '%', 'ud', 'uds', 'UDS.', 's', 'd', 'x', 'X', 'Rayos', '!'];
+    let llavor = 0x5eed1234;
+    const atzar = (n) => {
+      llavor = (Math.imul(llavor, 1103515245) + 12345) >>> 0;
+      return (llavor >>> 8) % n;
+    };
+    const diferents = [];
+    for (let i = 0; i < 20000; i += 1) {
+      let text = '';
+      for (let k = atzar(10); k >= 0; k -= 1) text += PECES[atzar(PECES.length)];
+      if (retallaImportsFinals(text) !== text.replace(ABANS, '')) diferents.push(text);
+    }
+    expect(diferents).toEqual([]);
+  });
+
+  test('extreuCamps: el concepte de la línia següent perd els imports, igual que abans', () => {
+    expect(extreuCamps('Concepto\nLlibres de text 1 € 2 € 3 €').descripcio).toBe('Llibres de text');
+    expect(extreuCamps('Concepto\nServei web 10€ 20€').descripcio).toBe('Servei web');
+    expect(extreuCamps('Concepto\nRayos X').descripcio).toBe('Rayos X');
   });
 });

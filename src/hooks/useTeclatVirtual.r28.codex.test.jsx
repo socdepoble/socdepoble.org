@@ -97,3 +97,24 @@ test('rotar sense focus reinicia repòs i no inventa teclat', () => {
   const ui = view(); resize(375, { inner: true, width: 667 });
   act(() => ui.input.focus()); tick(); expect(ui.root.hasAttribute(ATRIBUT_TECLAT)).toBe(false);
 });
+/* Onada R29 · R29-HOOKS-02 · En Android el WebView s'encongix amb el teclat:
+   girar (o canviar d'amplada) amb el teclat obert prenia l'alçada encongida com
+   a repòs, l'oclusió quedava a 0 i nav.mobile-nav tornava damunt del camp. */
+test('R29 · Android: girar amb el teclat obert conserva «obert»; tancar-lo fixa el repòs real i reobrir-lo torna', () => {
+  const ui = view(); act(() => ui.input.focus()); tick();
+  resize(480, { inner: true }); expect(ui.root.getAttribute(ATRIBUT_TECLAT)).toBe('obert');
+  resize(160, { inner: true, width: 800 });
+  expect(document.activeElement).toBe(ui.input);
+  expect(ui.root.getAttribute(ATRIBUT_TECLAT)).toBe('obert');
+  resize(360, { inner: true }); expect(ui.root.hasAttribute(ATRIBUT_TECLAT)).toBe(false);
+  resize(160, { inner: true }); expect(ui.root.getAttribute(ATRIBUT_TECLAT)).toBe('obert');
+});
+test('R29 · Android: el gir en dos fotogrames (inset vell i definitiu) també conserva «obert»', () => {
+  const ui = view(); act(() => ui.input.focus()); tick();
+  resize(480, { inner: true });
+  resize(100, { inner: true, width: 800 }); expect(ui.root.getAttribute(ATRIBUT_TECLAT)).toBe('obert');
+  resize(160, { inner: true }); expect(ui.root.getAttribute(ATRIBUT_TECLAT)).toBe('obert');
+  // Blur i teclat tancat (resize sense camp): el repòs real torna a manar.
+  act(() => ui.input.blur()); tick(); resize(360, { inner: true });
+  act(() => ui.input.focus()); tick(); expect(ui.root.hasAttribute(ATRIBUT_TECLAT)).toBe(false);
+});

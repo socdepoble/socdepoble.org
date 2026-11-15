@@ -110,6 +110,10 @@ export function useTeclatVirtual(arrelRef, amaDelDocument = true) {
     let revisaRepos = false;
     let ultimAmple = window.innerWidth || 0;
     let alcadaRepos = window.innerHeight || 0;
+    /* Onada R29 · Repòs pres amb el teclat obert (vegeu el canvi d'amplada) i
+       l'alçada més baixa vista des de llavors. */
+    let reposProvisional = false;
+    let altMinimaProvisional = 0;
 
     const neteja = () => {
       cancelAnimationFrame(rafRevelacio);
@@ -129,6 +133,14 @@ export function useTeclatVirtual(arrelRef, amaDelDocument = true) {
       if (Math.abs(ampleActual - ultimAmple) > 48) {
         ultimAmple = ampleActual;
         alcadaRepos = altActual;
+        /* Onada R29 · En Android el WebView s'encongix amb el teclat: girar,
+           desplegar un plegable o moure el divisor de la pantalla dividida amb
+           el teclat obert dona una alçada encongida, no la de repòs. És
+           provisional fins que l'alçada torna a pujar el llindar (el teclat es
+           tanca); mentrestant es conserva «obert». iOS (oclusió de
+           visualViewport) no hi entra. */
+        reposProvisional = arrel.getAttribute(ATRIBUT_TECLAT) === 'obert' && !arrel.hasAttribute(ATRIBUT_TECLAT_VV);
+        altMinimaProvisional = altActual;
       }
 
       /* Amb zoom de pinça actiu (WCAG 1.4.4), mai toquem l'alçada de la closca. */
@@ -146,6 +158,8 @@ export function useTeclatVirtual(arrelRef, amaDelDocument = true) {
            en un simple focusout: pot precedir el focus d'un altre camp mentre
            el teclat encara és obert. */
         if (reposPotCanviar || altActual > alcadaRepos) alcadaRepos = altActual;
+        // Onada R29 · Un resize sense camp fixa el repòs real.
+        if (reposPotCanviar) reposProvisional = false;
         neteja();
         return;
       }
@@ -161,7 +175,18 @@ export function useTeclatVirtual(arrelRef, amaDelDocument = true) {
       const altDisseny = arrel.parentElement?.clientHeight || (altActual + (vv?.offsetTop || 0));
       const oclusioVv = vv ? Math.max(0, Math.round(altDisseny - vv.height)) : 0;
       const esMobilOTactil = arrel.classList.contains('is-compact') || arrel.hasAttribute('data-sdp-tactil');
-      const caigudaLayout = esMobilOTactil ? Math.max(0, Math.round(alcadaRepos - altActual)) : 0;
+      let caigudaLayout = esMobilOTactil ? Math.max(0, Math.round(alcadaRepos - altActual)) : 0;
+      if (reposProvisional) {
+        altMinimaProvisional = Math.min(altMinimaProvisional, altActual);
+        if (altActual - altMinimaProvisional >= LLINDAR_LAYOUT_OBRI) {
+          /* Onada R29 · El teclat s'ha tancat amb el camp enfocat: esta és l'alçada de repòs. */
+          reposProvisional = false;
+          alcadaRepos = altActual;
+          caigudaLayout = 0;
+        } else if (esMobilOTactil) {
+          caigudaLayout = Math.max(caigudaLayout, LLINDAR_LAYOUT_OBRI);
+        }
+      }
 
       const teclatObert = oclusioVv >= LLINDAR_OCLUSIO_OBRI || caigudaLayout >= LLINDAR_LAYOUT_OBRI;
       if (!teclatObert) {

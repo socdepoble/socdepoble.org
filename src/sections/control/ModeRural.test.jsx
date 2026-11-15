@@ -356,3 +356,21 @@ test('control-04 · un error anterior no entra a la confirmació d’esborrat: e
   expect(within(dialeg).queryByRole('alert')).toBeNull();
   expect(screen.getAllByRole('alert')).toEqual([anterior]);
 });
+
+/* Onada R29 · PF-03 · Una carpeta de versions que passa de 1.000 fitxers no es resol
+   consolidant el diari (la carpeta no s'esborra mai): el missatge ho diu i proposa una
+   carpeta nova i buida. Abans eixia el genèric crdtQuota, que aconsellava consolidar. */
+test('R29 · PF-03 · la quota de la carpeta CRDT té missatge propi i allibera el control', async () => {
+  const { fabrica: opfs } = fabricaOpfs();
+  const carpeta = new CarpetaFalsa('vault');
+  for (let i = 0; i < 1000; i++) carpeta.afig(`nota-${i}.md`, 'x');
+  carpeta.afig(`.sdp-crdt-${'a'.repeat(64)}.json`, '{}');
+  vi.stubGlobal('showDirectoryPicker', async () => carpeta);
+  render(<ModeRural fabrica={opfs} onBack={() => {}} />);
+  await activaOpfs();
+  fireEvent.click(screen.getByRole('button', { name: 'Sincronitzar una carpeta' }));
+  const alerta = await screen.findByRole('alert');
+  expect(alerta.textContent).toBe(TEXTOS_MODE_RURAL.crdtCarpetaQuota[1]);
+  expect(alerta.textContent).not.toBe(TEXTOS_MODE_RURAL.crdtQuota[1]);
+  expect(screen.getByRole('button', { name: 'Sincronitzar una carpeta' }).disabled).toBe(false);
+});

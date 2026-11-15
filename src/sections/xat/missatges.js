@@ -145,9 +145,23 @@ export function mapejaFil(fil, ara = Date.now()) {
   };
 }
 
+/* Onada R29 · R29-E2EE-02 · L'estat explícit d'un missatge xifrat que torna el
+   pipeline (xifratXatPipeline: { xifrat, verificat, codi, … }), només amb els
+   seus camps coneguts (booleans i el codi): ni el sobre ni cap clau. Sense
+   seguretat, cap camp nou a la bombolla. */
+const BOOLEANS_SEGURETAT = Object.freeze(['xifrat', 'verificat', 'clauAntiga', 'firmada', 'propi']);
+function seguretatDe(seguretat) {
+  if (!seguretat || typeof seguretat !== 'object' || Array.isArray(seguretat)) return null;
+  const neta = {};
+  for (const camp of BOOLEANS_SEGURETAT) if (typeof seguretat[camp] === 'boolean') neta[camp] = seguretat[camp];
+  if (typeof seguretat.codi === 'string' && seguretat.codi) neta.codi = seguretat.codi;
+  return Object.keys(neta).length ? Object.freeze(neta) : null;
+}
+
 /** Del `Missatge` del backend a la bombolla. `joId` decidix el costat. */
 export function mapejaMissatge(m, joId) {
   const meu = Boolean(joId) && m.usuariId === joId;
+  const seguretat = seguretatDe(m.seguretat);
   return {
     id: m.id,
     threadId: m.filId,
@@ -165,7 +179,8 @@ export function mapejaMissatge(m, joId) {
     esborrat: Boolean(m.esborratAl),
     metadades: m.metadades || {},
     estatEnviament: 'enviat',
-    error: null
+    error: null,
+    ...(seguretat ? { seguretat } : {})
   };
 }
 

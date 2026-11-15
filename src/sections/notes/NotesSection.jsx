@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { NotebookPen, Folder, SmilePlus } from 'lucide-react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
@@ -43,8 +43,11 @@ import {
 import { CanalAmbitContext } from '../../components/universal/ambits/canalAmbit.js';
 import { carpetaDeLAmbit } from '../../components/universal/ambits/carpetaAmbit.js';
 import { AMBITS } from '../../utils/publicacioUniversal.js';
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 
-const ImportacioPaginaWpNotes = lazy(() => import('./ImportacioPaginaWpNotes.jsx'));
+/* Onada R29 · R29-RUT-01 · Amb lazyRoute: un tros que no arriba dona LazyRouteError i la barrera de la
+   ruta oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
+const ImportacioPaginaWpNotes = lazyRoute(() => import('./ImportacioPaginaWpNotes.jsx'));
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber.
    B3 · P1-22 (marató 261101_2143) · Els rètols, en parells [clau, reserva]

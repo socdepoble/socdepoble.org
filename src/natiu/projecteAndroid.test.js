@@ -40,6 +40,7 @@ const HI_HA_PROJECTE = fs.existsSync(path.join(MAIN, 'AndroidManifest.xml'));
 const llig = (...trossos) => fs.readFileSync(path.join(...trossos), 'utf8');
 /* Els noms dels paquets es componen a trossos, com a projecteIos.test.js. */
 const AVISOS_LOCALS = ['@capa', 'citor/local-notifications'].join('');
+const AVISOS_PUSH = ['@capa', 'citor/push-notifications'].join('');
 /* Pla 261028_1526 · copia rep el que queda del sostre de la compartició (P1-33) i l'època de l'intent (P1-31). */
 const COPIA = 'private JSObject copia(Uri uri, String mime, String extensio, long restant, long sessioAlRebre)';
 /* P1-31 · La comprovació de l'època dins de processa: si ha canviat, fora les còpies fetes i plega. */
@@ -251,16 +252,39 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
   /* 261026 (prompt 261026_1615, revisió) · Si Android mata el procés, la tasca
      restaurada torna a lliurar l'intent d'origen (el SEND, o el toc d'un avís)
      al final de BridgeActivity.onCreate: la marca i l'extra de l'avís s'han de
-     llevar ABANS, o el lot o l'avís s'obririen dues vegades. */
-  test('MainActivity: restaurada (savedInstanceState != null), marca l’intent consumit i lleva LocalNotificationId abans de super.onCreate', () => {
+     llevar ABANS, o el lot o l'avís s'obririen dues vegades.
+     Onada R29 (NAT-03) · També reoberta des de «Recents» (Android 7-11 acaba
+     l'activitat amb l'Arrere a l'arrel i Recents torna a lliurar l'intent amb
+     FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY), i també l'extra del push de FCM. */
+  test('MainActivity: restaurada o reoberta des de Recents, marca l’intent consumit i lleva els extres de l’avís local i del push abans de super.onCreate', () => {
     const codi = senseComentarisJava(llig(JAVA, 'MainActivity.java'));
-    const onCreate = cosDelMetode(codi, 'protected void onCreate(Bundle savedInstanceState)');
-    const restaurada = onCreate.indexOf('if (savedInstanceState != null');
-    expect(restaurada, 'falta el cas de l’activitat restaurada').toBeGreaterThanOrEqual(0);
-    const bloc = cosDelMetode(onCreate.slice(restaurada), 'if (savedInstanceState != null');
-    expect(bloc).toMatch(/getIntent\(\)\.putExtra\(CompartirNatiuPlugin\.MARCA_CONSUMIT, true\);/);
-    const extraDelAvis = /getIntent\(\)\.removeExtra\("([^"]+)"\);/.exec(bloc)?.[1];
+    const constant = (nom) => new RegExp(`static final String ${nom} = "([^"]+)";`).exec(codi)?.[1];
+    const extraDelAvis = constant('EXTRA_AVIS_LOCAL');
+    const extraDelPush = constant('EXTRA_AVIS_PUSH');
     expect(extraDelAvis).toBe('LocalNotificationId');
+    expect(extraDelPush).toBe('google.message_id');
+
+    // Els dos casos en què l'intent ja es va atendre: restaurada i oberta des de Recents.
+    const jaAtes = cosDelMetode(codi, 'static boolean intentJaAtes(Intent intent, Bundle savedInstanceState)');
+    const retorns = [...jaAtes.matchAll(/return ([^;]+);/g)].map(([, valor]) => valor);
+    expect(jaAtes).toMatch(/^\s*if \(intent == null\) return false;/);
+    expect(retorns).toHaveLength(2);
+    expect(retorns[1].split('||').map((condicio) => condicio.replace(/\s+/g, ' ').trim()).sort()).toEqual([
+      '(intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0',
+      'savedInstanceState != null'
+    ]);
+
+    const onCreate = cosDelMetode(codi, 'protected void onCreate(Bundle savedInstanceState)');
+    const condicio = 'if (intentJaAtes(getIntent(), savedInstanceState))';
+    const restaurada = onCreate.indexOf(condicio);
+    expect(restaurada, 'falta el cas de l’intent ja atés').toBeGreaterThanOrEqual(0);
+    expect(onCreate.match(/intentJaAtes\(/g)).toHaveLength(1);
+    const bloc = cosDelMetode(onCreate.slice(restaurada), condicio);
+    expect(bloc.split(';').map((ordre) => ordre.trim()).filter(Boolean).sort()).toEqual([
+      'getIntent().putExtra(CompartirNatiuPlugin.MARCA_CONSUMIT, true)',
+      'getIntent().removeExtra(EXTRA_AVIS_LOCAL)',
+      'getIntent().removeExtra(EXTRA_AVIS_PUSH)'
+    ]);
     const fiDelBloc = onCreate.indexOf(bloc, restaurada) + bloc.length;
     expect(codi.match(/super\.onCreate\(/g)).toHaveLength(1);
     expect(onCreate.indexOf('super.onCreate(savedInstanceState);')).toBeGreaterThan(fiDelBloc);
@@ -279,6 +303,13 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
       const claus = fs.readdirSync(fontsAvisos, { recursive: true }).filter((rel) => /\.(?:kt|java)$/.test(rel))
         .flatMap((rel) => [...fs.readFileSync(path.join(fontsAvisos, rel), 'utf8').matchAll(/NOTIFICATION_INTENT_KEY\s*=\s*"([^"]+)"/g)].map((m) => m[1]));
       expect(claus).toEqual([extraDelAvis]);
+    }
+    // Onada R29 · I l'extra del push és el que mira el paquet de push en handleOnNewIntent.
+    const fontsPush = path.join(ARREL, 'node_modules', ...AVISOS_PUSH.split('/'), 'android', 'src');
+    if (fs.existsSync(fontsPush)) {
+      const claus = fs.readdirSync(fontsPush, { recursive: true }).filter((rel) => /\.(?:kt|java)$/.test(rel))
+        .flatMap((rel) => [...fs.readFileSync(path.join(fontsPush, rel), 'utf8').matchAll(/\.containsKey\("([^"]+)"\)/g)].map((m) => m[1]));
+      expect(claus).toEqual([extraDelPush]);
     }
   });
 
@@ -809,7 +840,7 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     const sanejat = onCreate.indexOf('setIntent(senseExtresIllegibles(getIntent()));');
     expect(sanejat, 'falta setIntent(senseExtresIllegibles(getIntent()))').toBeGreaterThanOrEqual(0);
     expect(onCreate.slice(0, sanejat)).not.toMatch(/getIntent\(\)/);
-    expect(sanejat).toBeLessThan(onCreate.indexOf('if (savedInstanceState != null'));
+    expect(sanejat).toBeLessThan(onCreate.indexOf('if (intentJaAtes(getIntent(), savedInstanceState))'));
     expect(sanejat).toBeLessThan(onCreate.indexOf('super.onCreate(savedInstanceState);'));
 
     expect(codi).toMatch(/@Override\s+protected void onNewIntent\(Intent intent\)\s*\{/);

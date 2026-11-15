@@ -72,7 +72,7 @@ export function creaCarregadorDeModuls({
 
   const asseguraNucli = () => {
     if (!promesaNucli) {
-      promesaNucli = Promise.resolve().then(importaNucli).then((modul) => {
+      const intent = Promise.resolve().then(importaNucli).then((modul) => {
         const rebut = modul && modul.NUCLI;
         if (!rebut || !Object.isFrozen(rebut) || rebut.versio !== VERSIO_NUCLI) {
           throw new Error(`El nucli dels mòduls no és el ${VERSIO_NUCLI} congelat.`);
@@ -80,6 +80,11 @@ export function creaCarregadorDeModuls({
         nucli = rebut;
         return rebut;
       });
+      promesaNucli = intent;
+      /* Onada R29 · R29-RUT-06 · Un nucli rebutjat no es guarda: qui el demane després (un mòdul
+         retirat i tornat a registrar, o un altre mòdul) el torna a demanar. Qui ja esperava este
+         intent rep el mateix rebuig; un intent més nou no s'esborra. */
+      intent.catch(() => { if (promesaNucli === intent) promesaNucli = null; });
     }
     return promesaNucli;
   };

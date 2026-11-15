@@ -23,7 +23,8 @@
  *    sempre (per defecte) o targetes (?vista=graella, push com els filtres;
  *    targetaDeResultat.js), amb les mateixes dades i el mateix enllaç.
  */
-import { Fragment, Suspense, lazy, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { LayoutGrid, List, Search } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import {
@@ -423,7 +424,9 @@ function CercaClassica() {
    cerca en tres columnes (EspaiCerca.jsx, carregat a part: el tros de /cerca
    no creix). Sense el mode, la /cerca de sempre (D-4: cap enllaç visible,
    cap ruta nova). */
-const EspaiCerca = lazy(() => import('./EspaiCerca.jsx'));
+/* Onada R29 · R29-RUT-01 · Amb lazyRoute: un tros que no arriba dona LazyRouteError i la barrera de la
+   ruta oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
+const EspaiCerca = lazyRoute(() => import('./EspaiCerca.jsx'));
 
 export default function SearchSection() {
   const { t } = useUIActions();

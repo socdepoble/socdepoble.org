@@ -180,6 +180,35 @@ test('IDEA-130 · detectaGapsWiki troba pàgines sense ## Vincles, rutes src/ in
   }
 });
 
+test('R29 · el recompte de l’Escriptori no llig les zones protegides i conserva les actes operatives', (t) => {
+  const tmpDir = creaArbreWikiSintetic();
+  const escriptori = path.join(tmpDir, '_wiki_de_poble', NOM_ESCRIPTORI);
+  const protegits = ['01_produccio', '02_investigacio_ia'].map((nom) => {
+    const fitxer = path.join(escriptori, nom, 'subcarpeta', 'corpus.md');
+    fs.mkdirSync(path.dirname(fitxer), { recursive: true });
+    fs.writeFileSync(fitxer, '# Corpus protegit sintètic\n[DISCOVERY]\n');
+    return fitxer;
+  });
+  const operatiu = path.join(escriptori, 'auditories', 'acta.md');
+  fs.mkdirSync(path.dirname(operatiu), { recursive: true });
+  fs.writeFileSync(operatiu, '# Acta operativa sintètica\n[DISCOVERY]\n');
+
+  const llig = fs.readFileSync;
+  const llegits = [];
+  t.mock.method(fs, 'readFileSync', (fitxer, ...opcions) => {
+    llegits.push(String(fitxer));
+    return llig(fitxer, ...opcions);
+  });
+  try {
+    const gaps = detectaGapsWiki({ arrel: tmpDir });
+    assert.deepEqual(protegits.filter((fitxer) => llegits.includes(fitxer)), []);
+    assert.ok(llegits.includes(operatiu), 'les actes operatives continuen dins del recompte');
+    assert.equal(gaps.recompteSkillForgeActes.DISCOVERY, 1);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 test('K3 (R10) · --diff: un valor que comença per «-» no arriba mai a git', () => {
   const crides = [];
   const executa = (...args) => {

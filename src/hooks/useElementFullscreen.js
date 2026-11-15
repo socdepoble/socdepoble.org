@@ -10,7 +10,11 @@ const desaDesplacaments = (element) => {
 
 /** Els controls on pot anar el focus amb Tab dins de l'element (visibles i actius). */
 const TABULABLES = 'button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,a[href],[tabindex="0"]';
-const controlsDe = (element) => [...element.querySelectorAll(TABULABLES)].filter((node) => node.getClientRects().length);
+const controlsDe = (element) => [...element.querySelectorAll(TABULABLES)].filter((node) =>
+  !(Number(node.getAttribute('tabindex')) < 0)
+  && !node.matches(':disabled')
+  && !node.closest('[hidden], [inert], [aria-hidden="true"], dialog:not([open])')
+  && node.getClientRects().length);
 /** Els atributs que la contenció posa a l'element mentre és a pantalla completa (i restaura en eixir). */
 const ATRIBUTS_MODALS = [['tabindex', '-1'], ['role', 'dialog'], ['aria-modal', 'true']];
 /** V2C-01 · L'element que l'arrel de l'element té a pantalla completa. Dins d'un shadow root

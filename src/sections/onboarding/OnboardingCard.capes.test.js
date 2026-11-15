@@ -29,3 +29,12 @@ test('l’alerta i el correu de les targetes d’accés (UniversalCard variant o
   expect(moduls).toContain(REGLA);
   expect(blocDe(moduls, '@layer components {', REGLA)).toContain(REGLA);
 });
+
+/* Onada R29 (DECISIÓ-R29-02, 8b) · .sp-card--onboarding centra el text (components.css)
+   i l'Alerta l'heretava: la icona, a l'inici; el text, centrat. Mesurat a /registre amb
+   Chrome headless: el text passa a l'inici i la targeta, l'alerta i el botó no es mouen. */
+const REGLA_ALERTA = '.sp-card--onboarding .sdp-alerta { text-align: start; }';
+test('el text de l’Alerta d’una targeta d’accés comença a l’inici, com la seua icona, dins de @layer components', () => {
+  expect(moduls).toContain(REGLA_ALERTA);
+  expect(blocDe(moduls, '@layer components {', REGLA_ALERTA)).toContain(REGLA_ALERTA);
+});

@@ -23,7 +23,7 @@ import {
   AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, MISSATGE_AUTOMATIC_DE_JAVI, filDeMostraDeJavi, missatgesDeMostraDeJavi, vestixLaIAIA,
 } from '../../data/xatsPerDefecte.js';
 import {
-  TEXTOS_COPIA, abastDeLaCopia, contingutDeLaCopia, contrasenyaProuLlarga, criptoDisponible, dtoDeFil, dtoDeMissatge, errorDeLaCopia,
+  TEXTOS_COPIA, abastDeLaCopia, contingutDeLaCopia, contrasenyaProuLlarga, criptoDisponible, dtoDeFil, dtoDeMissatge, errorDeLaCopia, filEntraALaCopia,
   formataData, missatgeEntraALaCopia, resumDeLaCopia, textAmb, titolDelServidor,
 } from './copiaSeguretatXat.js';
 import { mapejaFil, mapejaMissatge } from './missatges.js';
@@ -417,6 +417,90 @@ describe('els textos de la còpia en les cinc llengües', () => {
         if (llengua !== 'ca') expect([clau, llengua, diccionari[clau] === CA[clau]]).toEqual([clau, llengua, false]);
       }
     }
+  });
+});
+
+describe('Onada R29 · la còpia no porta el que no és del servidor ni promet el que no porta', () => {
+  test('R29-E2EE-01 · les converses locals amb la IAIA (la forma d’IAIALocalProvider) no hi entren', () => {
+    const iaiaLocal = {
+      id: 'iaia-local', tipus: 'iaia', name: 'IAIA MarIA', title: 'IAIA MarIA', filLocalIAIA: true, sessioLocalIAIA: false, potEscriure: true,
+      noLlegits: 0, ultimSeq: 0, llegitFinsSeq: 0, participants: [], altres: [], ultimText: null, ultimAl: null
+    };
+    const sessio = {
+      ...iaiaLocal, id: 'iaia-local-5b6c7d8e-9f00-4a1b-8c2d-3e4f5a6b7c8d', sessioLocalIAIA: true, name: 'el meu pin del banc', title: 'el meu pin del banc',
+      ultimText: 'El meu PIN és 4321 i el telèfon 600 11 22 33, què en faig?', ultimAl: '2026-11-15T09:00:00.000Z'
+    };
+    const delaSessio = [{ id: 'q-1', threadId: sessio.id, seq: 1, text: sessio.ultimText, sender: 'me', estatEnviament: 'enviat' }];
+    expect([filEntraALaCopia(iaiaLocal), filEntraALaCopia(sessio), filEntraALaCopia(filRosa)]).toEqual([false, false, true]);
+    const contingut = contingutDeLaCopia({
+      chatThreads: [iaiaLocal, sessio, filRosa], getThreadMessages: (id) => (id === sessio.id ? delaSessio : getThreadMessages(id)), joNom: 'Javi'
+    });
+    expect(contingut.fils.map((f) => f.id)).toEqual([FIL_ROSA]);
+    expect(contingut.filsAmbMissatges).toBe(1);
+    const text = JSON.stringify(contingut);
+    for (const rastre of ['4321', '600 11 22 33', 'iaia-local']) expect([rastre, text.includes(rastre)]).toEqual([rastre, false]);
+  });
+
+  test('R29-E2EE-02 · un missatge xifrat que no s’obri no entra a la còpia com un missatge buit; un d’obert, sí', () => {
+    const tancat = mapejaMissatge({
+      id: 'e3f40516-a7b8-4c9d-8e0f-1a2b3c4d5e6f', filId: FIL_ROSA, seq: 5, usuariId: ROSA, autorNom: 'Rosa', text: null,
+      creatAl: '2026-11-14T14:00:00.000Z', seguretat: { xifrat: true, verificat: false, codi: 'xifrat-manipulat' }
+    }, JO);
+    const obert = mapejaMissatge({
+      id: 'f4051627-b8c9-4dae-9f10-2b3c4d5e6f70', filId: FIL_ROSA, seq: 6, usuariId: ROSA, autorNom: 'Rosa', text: 'Xifrat i obert',
+      creatAl: '2026-11-14T14:01:00.000Z', seguretat: { xifrat: true, verificat: true, firmada: true, clauAntiga: false }
+    }, JO);
+    expect(missatgeEntraALaCopia(tancat, FIL_ROSA)).toBe(false);
+    expect(missatgeEntraALaCopia({ ...tancat, seguretat: { xifrat: true, codi: 'claus-bloquejades' } }, FIL_ROSA)).toBe(false);
+    expect(missatgeEntraALaCopia(obert, FIL_ROSA)).toBe(true);
+    const { missatges } = contingutDeLaCopia({
+      chatThreads: [filRosa], getThreadMessages: () => [...MISSATGES[FIL_ROSA], tancat, obert], joNom: 'Javi'
+    });
+    expect(missatges.map((m) => [m.seq, m.text])).toEqual([[1, 'Bon dia, Rosa!'], [2, 'Fins demà'], [6, 'Xifrat i obert']]);
+  });
+
+  /* La vista d'una conversa llarga: només la pàgina de les 50 últimes (951–1000). */
+  const finestra = (filId, des, fins) => Array.from({ length: fins - des + 1 }, (_, i) => bombolla(
+    `a0000000-0000-4000-8000-${String(des + i).padStart(12, '0')}`, filId, des + i, ROSA, `missatge ${des + i}`, '2026-11-14T10:00:00.000Z'
+  ));
+  const FIL_BUIT = '5a0b6ea3-0b71-4e83-8c6f-000000000001';
+  const filBuit = mapejaFil({ id: FIL_BUIT, tipus: 'directe', altresNoms: ['Pepa'], ultimText: 'Ja ho parlarem', ultimSeq: 40 });
+
+  test('R29-E2EE-03 · amb tots els fils carregats des de la seq 1, cap cursor: la còpia és completa de veres', () => {
+    const { desDeSeqPerFil } = contingutDeLaCopia({ chatThreads: [filRosa, filGrup, filBuit], getThreadMessages, joNom: 'Javi' });
+    expect(desDeSeqPerFil).toBeNull();
+  });
+
+  test('R29-E2EE-03 · amb només les 50 últimes d’un fil, la còpia es declara parcial, conserva totes les converses i no pot fer de base', async () => {
+    const perFil = { [FIL_ROSA]: finestra(FIL_ROSA, 951, 1000), [FIL_GRUP]: MISSATGES[FIL_GRUP] };
+    const contingut = contingutDeLaCopia({ chatThreads: [filRosa, filGrup, filBuit], getThreadMessages: (id) => perFil[id] || [], joNom: 'Javi' });
+    expect(contingut.desDeSeqPerFil).toEqual({ [FIL_ROSA]: 950, [FIL_GRUP]: 0, [FIL_BUIT]: 0 });
+    const { text, rebut } = await exportaCopiaSeguretatXatAmbRebut({
+      ...ABAST, fils: contingut.fils, missatges: contingut.missatges, desDeSeqPerFil: contingut.desDeSeqPerFil, permetSenseXifrar: true
+    });
+    /* Abans: mode «complet» i ultimSeqPerFil {rosa: 1000} sense cap punt de partida (seq 1–950 promeses i absents). */
+    expect(rebut.mode).toBe('parcial');
+    const sobre = JSON.parse(text);
+    expect(sobre.pla.manifest.cursors.desDeSeqPerFil).toEqual({ [FIL_ROSA]: 950, [FIL_GRUP]: 0, [FIL_BUIT]: 0 });
+    expect(sobre.pla.manifest.cursors.ultimSeqPerFil).toEqual({ [FIL_ROSA]: 1000, [FIL_GRUP]: 1, [FIL_BUIT]: 0 });
+    /* La conversa sense cap missatge carregat hi continua anant (el text desaAbast ho promet). */
+    expect(sobre.pla.dades.fils.map((f) => f.id).sort()).toEqual([FIL_ROSA, FIL_GRUP, FIL_BUIT].sort());
+    expect(sobre.pla.dades.missatges).toHaveLength(51);
+    /* La comprovació l'obri sencera. */
+    const resultat = await importaCopiaSeguretatXat(text, { usuariIdEsperat: JO, tenantIdEsperat: TENANT, permetSenseXifrar: true });
+    expect(resultat.fils).toHaveLength(3);
+    expect(resultat.missatges).toHaveLength(51);
+    /* Cap incremental no la pot prendre com a completa: les seq 1–950 no queden cobertes per cap còpia. */
+    await expect(exportaCopiaSeguretatXatAmbRebut({ ...ABAST, fils: contingut.fils, missatges: [], base: rebut, permetSenseXifrar: true }))
+      .rejects.toMatchObject({ codi: CODI_CADENA_DIVERGENT, motiu: 'base-parcial' });
+  });
+
+  test('R29-E2EE-03 · un forat al mig de les seq carregades (o un fil que no comença per la 1) també la fa parcial', () => {
+    const ambForat = [...finestra(FIL_ROSA, 1, 50), ...finestra(FIL_ROSA, 120, 130)];
+    expect(contingutDeLaCopia({ chatThreads: [filRosa], getThreadMessages: () => ambForat }).desDeSeqPerFil).toEqual({ [FIL_ROSA]: 0 });
+    expect(contingutDeLaCopia({ chatThreads: [filRosa], getThreadMessages: () => finestra(FIL_ROSA, 2, 3) }).desDeSeqPerFil).toEqual({ [FIL_ROSA]: 1 });
+    /* Un esborrat o un bloquejat carregats són a la cadena del servidor: no fan cap forat. */
+    expect(contingutDeLaCopia({ chatThreads: [filRosa], getThreadMessages }).desDeSeqPerFil).toBeNull();
   });
 });
 

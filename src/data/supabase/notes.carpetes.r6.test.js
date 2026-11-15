@@ -52,7 +52,9 @@ test('creaCarpetaNotes envia només el nom net i el tenant; l’id el dona el se
   await expect(creaCarpetaNotes({ nom: '  Festes ' }, config)).resolves.toEqual({ ...FESTES, parentId: null });
   const [ruta, , opcions] = mocks.request.mock.calls[0];
   expect(ruta).toBe('/rest/v1/rpc/crea_carpeta_notes');
-  expect(JSON.parse(opcions.body)).toEqual({ p_nom: 'Festes', p_tenant_id: config.tenantId });
+  /* Onada R29 · PF-01: request() codifica el cos; ací ha d'arribar l'objecte, mai una cadena JSON
+     (el JSON.parse d'abans consagrava la doble codificació). */
+  expect(opcions.body).toEqual({ p_nom: 'Festes', p_tenant_id: config.tenantId });
 });
 
 test('un nom buit o amb control es rebutja abans de la xarxa', async () => {

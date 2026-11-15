@@ -97,6 +97,50 @@ test('R56 · scroll intern de taula/xat/diàleg no substituïx la posició de ru
   go('/page/control'); go(-1); expect(view('a').scrollTop).toBe(1800);
 });
 
+/* Onada R29 · R29-HOOKS-01 · VoiceOver, TalkBack o NVDA desplacen el visor
+   sense wheel/touchstart/pointerdown/keydown dins del <main>: la restauració no
+   s'acabava mai i cada mutació o càrrega el tornava a la posició restaurada. */
+const senseGest = (node, top) => act(() => { node.scrollTop = top; fireEvent.scroll(node); });
+const espera = ms => act(() => new Promise(resolve => setTimeout(resolve, ms)));
+
+test('R29 · un desplaçament sense gest (lector de pantalla) acaba la restauració: una mutació posterior no el desfà', async () => {
+  mount(); go('/page/control'); expect(content('a').scrollTop).toBe(0);
+  senseGest(content('a'), 900);
+  act(() => api.a.setReady(false)); await espera(40);
+  expect(content('a').scrollTop).toBe(900);
+  content('a').dispatchEvent(new Event('load')); await espera(40);
+  expect(content('a').scrollTop).toBe(900);
+});
+
+test('R29 · un desplaçament sense gest es desa: el POP hi torna, no a la posició restaurada', async () => {
+  mount(); go('/page/control');
+  senseGest(content('a'), 900); await espera(40);
+  go('/page/altra'); expect(content('a').scrollTop).toBe(0);
+  go(-1); await espera(40);
+  expect(content('a').scrollTop).toBe(900);
+});
+
+test('R29 · el retall del navegador quan el contingut minva no acaba la restauració POP', async () => {
+  mount(); scroll(view('a'), 2150); go('/page/control'); go(-1);
+  expect(view('a').scrollTop).toBe(2150);
+  // L'esquelet torna: el contingut minva, el navegador retalla i envia scroll.
+  act(() => api.a.setReady(false));
+  senseGest(view('a'), view('a').scrollTop); expect(view('a').scrollTop).toBe(0);
+  await espera(40);
+  act(() => api.a.setReady(true));
+  await waitFor(() => expect(view('a').scrollTop).toBe(2150));
+});
+
+test('R29 · l’ancoratge del scroll (contingut de dalt que creix) no acaba la restauració POP', async () => {
+  mount(); scroll(view('a'), 2150); go('/page/control'); go(-1);
+  expect(view('a').scrollTop).toBe(2150);
+  // Una imatge de dalt carrega: el contingut creix i el navegador ancora +300 px.
+  view('a').dataset.alt = '6300';
+  senseGest(view('a'), 2450);
+  screen.getByTestId('a-inner').dispatchEvent(new Event('load')); await espera(40);
+  expect(view('a').scrollTop).toBe(2150);
+});
+
 test('R56 · dues instàncies MemoryRouter tenen mapes i contenidors independents', () => {
   render(<><MemoryRouter rutaInicial="/mur"><Shell id="a" /></MemoryRouter><MemoryRouter rutaInicial="/mur"><Shell id="b" /></MemoryRouter></>);
   scroll(view('a'), 1111); scroll(view('b'), 2222);

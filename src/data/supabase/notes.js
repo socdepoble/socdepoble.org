@@ -46,7 +46,10 @@ export async function creaCarpetaNotes(input, config = {}) {
   }
   if (!hasSupabaseConfig) throw new Error('No es pot crear la carpeta sense connexió.');
   validateScope(tenantId);
-  const row = await request('/rest/v1/rpc/crea_carpeta_notes', config, { method: 'POST', body: JSON.stringify({ p_nom: nom, p_tenant_id: tenantId }) });
+  /* Onada R29 · PF-01: el cos va com a objecte; request() ja el codifica. Una cadena JSON
+     arribava doblement codificada, PostgREST no hi veia p_nom ni p_tenant_id (404 PGRST202)
+     i carpetesCreades desava la carpeta només al navegador, sense avisar. */
+  const row = await request('/rest/v1/rpc/crea_carpeta_notes', config, { method: 'POST', body: { p_nom: nom, p_tenant_id: tenantId } });
   return carpetaDeFila(Array.isArray(row) ? row[0] : row);
 }
 

@@ -460,6 +460,47 @@ function taulaRetallada(totes, valors, text) {
   return [];
 }
 
+/* Onada R29 · SEG-R29-01: els imports del final d'un concepte fora, en temps lineal. Fa el mateix que
+   text.replace(/(?:\s+[-−]?(?:€\s?)?\d[\d.,]*\s?(?:€|eur|%|uds?\.?|x)?)+\s*$/i, ''), que era exponencial:
+   un « €» podia ser la unitat d'un tram o el prefix del següent, i una línia de 26 «1 €» acabada en
+   lletra o signe penjava la pestanya. Ara un autòmat recorre el text una vegada, de dreta a esquerra: cada camp
+   diu si la resta del text, des d'eixe punt de l'expressió, arriba al final. El tall és la primera
+   posició des d'on un tram arriba al final, la mateixa que trobava el replace. */
+const ESPAI = /\s/;
+const UNITATS_SOLES = new Set(['€', '%', 'x', 'X']);
+const CAP_ESTAT = Object.freeze({});
+
+export function retallaImportsFinals(text) {
+  let s = CAP_ESTAT; // els estats de la posició següent
+  let tall = -1;
+  for (let p = text.length; p >= 0; p -= 1) {
+    const c = p < text.length ? text[p] : '';
+    const espai = c !== '' && ESPAI.test(c);
+    const xifra = c >= '0' && c <= '9';
+    const a = {};
+    a.cua = c === '' || (espai && s.cua); // \s*$
+    a.tram = espai && s.espais; // l'espai obligatori d'un tram
+    a.fiTram = a.tram || a.cua; // un altre tram o la cua
+    a.punt = (c === '.' && s.fiTram) || a.fiTram; // uds?\.?
+    a.esse = ((c === 's' || c === 'S') && s.punt) || a.punt;
+    a.de = (c === 'd' || c === 'D') && s.esse;
+    a.erre = (c === 'r' || c === 'R') && s.fiTram; // eur
+    a.u = (c === 'u' || c === 'U') && s.erre;
+    a.unitat = a.fiTram || (UNITATS_SOLES.has(c) && s.fiTram)
+      || ((c === 'e' || c === 'E') && s.u) || ((c === 'u' || c === 'U') && s.de);
+    a.espaiUnitat = (espai && s.unitat) || a.unitat;
+    a.xifres = ((xifra || c === '.' || c === ',') && s.xifres) || a.espaiUnitat;
+    a.xifra = xifra && s.xifres;
+    a.espaiEuro = (espai && s.xifra) || a.xifra;
+    a.euro = (c === '€' && s.espaiEuro) || a.xifra;
+    a.signe = ((c === '-' || c === '−') && s.euro) || a.euro;
+    a.espais = (espai && s.espais) || a.signe;
+    if (a.tram) tall = p;
+    s = a;
+  }
+  return tall === -1 ? text : text.slice(0, tall);
+}
+
 /* Valors d'una línia de taula davall d'una capçalera d'etiquetes, per posició:
    només si hi ha tants valors com columnes (o, si no hi ha cap tipus a la
    línia, com columnes sense la del tipus), o si en falten i la lectura es
@@ -496,7 +537,7 @@ function assignaSeguent(l, seg, i, c, opcions) {
      client: es retalla, i el client d'esta línia passa davant del text que la capçalera porta enganxat. */
   const text = testimoni ? `${seg.orig.slice(0, testimoni.inici)} ${seg.orig.slice(testimoni.fi)}`.replace(/ {2,}/g, ' ') : seg.orig;
   for (const e of l.ets.filter((x) => CAMPS_TEXT.has(x.camp))) {
-    const t = e.camp === 'descripcio' ? netejaText(text.replace(/(?:\s+[-−]?(?:€\s?)?\d[\d.,]*\s?(?:€|eur|%|uds?\.?|x)?)+\s*$/i, '')) : netejaText(text);
+    const t = e.camp === 'descripcio' ? netejaText(retallaImportsFinals(text)) : netejaText(text);
     if (lletres(t) >= 3) afig(e, t, testimoni && e.camp !== 'descripcio' ? { preferent: true } : {});
   }
 }

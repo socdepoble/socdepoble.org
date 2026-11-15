@@ -444,14 +444,19 @@ test('sense sessió, a l’aterratge, una sola parella d’accés al peu del cos
 
 /* P1-54 · Cap rastre de l'accés: ni la parella, ni «Descarrega l'App», ni el
    peu, ni el cos amb peu; i, com sempre (XAT-4), cap «Registra't» ni cap
-   enllaç cru a /registre. */
-function capAcces() {
+   enllaç cru a /registre. Onada R29 · DECISIÓ-R29-02.7 · L'únic camí a
+   /registre dins d'una conversa de mostra és el de la invitació de la IAIA
+   (m2), dins de la seua bombolla (EnllacARegistre de Bombolla): no és cap
+   botó d'accés ni és al compositor ni al peu. */
+function capAcces({ invitacioDeLaIAIA = false } = {}) {
   expect(document.querySelectorAll('.sdp-xat-acces')).toHaveLength(0);
   expect(document.querySelectorAll('.sdp-xat-llista__peu--acces')).toHaveLength(0);
   expect(document.querySelectorAll('.sdp-xat-cos--amb-peu')).toHaveLength(0);
   expect(screen.queryAllByRole('button', { name: /^(Connectar-se|Registrar-se|Descarrega l'App)$/ })).toEqual([]);
   expect(screen.queryByRole('link', { name: "Registra't" })).toBeNull();
-  expect(document.querySelector('a[href^="/registre"]')).toBeNull();
+  const aRegistre = [...document.querySelectorAll('a[href^="/registre"]')];
+  expect(aRegistre.filter((a) => !a.closest('.sdp-xat-bombolla'))).toEqual([]);
+  expect(aRegistre.map((a) => a.textContent)).toEqual(invitacioDeLaIAIA ? ['Entra o registra’t ara →'] : []);
 }
 
 /* P1-54 · Dins d'una conversa (Javi Llinares, la IAIA, un canal d'una
@@ -462,7 +467,7 @@ test.each(['fake-javi', 'fake-iaia', 'fake-poble-avisos'])('sense sessió, dins 
   munta(senseSessio());
   expect(document.querySelector('.sdp-xat-conversa')).toBeTruthy();
   expect(llista()).toBeTruthy();
-  capAcces();
+  capAcces({ invitacioDeLaIAIA: filId === 'fake-iaia' });
 });
 
 /* P1-54 · Les rutes de pas tampoc no són l'aterratge: «Escriu-li» (?amb=),
@@ -502,7 +507,7 @@ test.each([
   mocks.params = new URLSearchParams(consulta);
   const xat = senseSessio();
   const { rerender } = munta(xat);
-  capAcces();
+  capAcces({ invitacioDeLaIAIA: filId === 'fake-iaia' });
   mocks.threadId = null;
   mocks.params = new URLSearchParams();
   rerender(<XatContext.Provider value={xat}><XatSection /></XatContext.Provider>);

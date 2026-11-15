@@ -64,7 +64,8 @@ import { CAMINS } from '../lib/arrel.mjs';
    carpeta de sessió (`--sessio aammdd_Nom` de la porta Olivera, un sol segment). Només es
    llisten noms (com document-corpus.mjs): no se n'obri cap. No compta com a nota viva.
    Onada R28 · Una nota absent del disc també val si Git la ignora per una regla versionada
-   (arxiuIgnoratPerGit, ací baix); qualsevol altre vincle absent continua sent F9. */
+   (arxiuIgnoratPerGit, ací baix); qualsevol altre vincle absent continua sent F9.
+   Onada R29 · R28-REG-03 · Git només decidix quan l'arxiu del disc no és el local (arxiuEsLocal). */
 const ARXIU_HISTORIC = `${CAMINS.arxiuHistoric}/`;
 const SESSIO_ARXIU = /^\d{6}_[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*$/;
 const nomsArxivats = new Map();
@@ -140,7 +141,52 @@ function esNotaArxivada(target, relPath) {
   // Onada R28 · Si a l'arxiu hi ha la mateixa nota amb una altra caixa, és un error de caixa: F9, encara que Git ignore el camí.
   const nomBaix = nom.toLowerCase();
   if ([...noms].some((n) => n.toLowerCase() === nomBaix)) return false;
+  // Onada R29 · R28-REG-03 · Si l'arxiu del disc és el local (porta notes que Git no versiona), mana el seu
+  // llistat: un nom que no hi és (una errada) és F9 encara que Git ignore el camí.
+  if (arxiuEsLocal()) return false;
   return arxiuIgnoratPerGit(cami);
+}
+
+/* Onada R29 · R28-REG-03 · Quan mana el llistat del disc. L'arxiu té notes versionades d'abans de D-R27-4,
+   així que l'arbre preparat del hook (read-tree de l'índex) i un clon net també porten la carpeta, però només
+   amb eixes notes: ací una nota arxivada després falta i ha de decidir Git (arxiuIgnoratPerGit). L'arxiu és
+   local (el de la màquina que arxiva, i el seu llistat mana) si hi ha alguna nota, de primer nivell o d'una
+   carpeta de sessió, que no és a l'índex. Si la carpeta no existix (ENOENT), no és local. Sense Git, amb un
+   error de Git o de lectura (permisos, un fitxer amb eixe nom), mana el disc: el vincle absent és F9. */
+const nfc = (s) => s.normalize('NFC');
+// Només notes (.md, sense els fitxers ocults com el .DS_Store de Finder, que mai no van a l'índex).
+const esNota = (e) => e.isFile() && !e.name.startsWith('.') && /\.md$/i.test(e.name);
+function notesArxiuAlDisc() {
+  const arrelArxiu = path.join(ARREL, ARXIU_HISTORIC);
+  let entrades;
+  try { entrades = fs.readdirSync(arrelArxiu, { withFileTypes: true }); }
+  catch (e) { if (e?.code === 'ENOENT') return null; throw e; }
+  const camins = [];
+  for (const e of entrades) {
+    if (esNota(e)) camins.push(`${ARXIU_HISTORIC}${e.name}`);
+    else if (e.isDirectory() && SESSIO_ARXIU.test(e.name)) {
+      for (const f of fs.readdirSync(path.join(arrelArxiu, e.name), { withFileTypes: true })) {
+        if (esNota(f)) camins.push(`${ARXIU_HISTORIC}${e.name}/${f.name}`);
+      }
+    }
+  }
+  return camins;
+}
+let arxiuLocal = null;
+function arxiuEsLocal() {
+  if (arxiuLocal === null) {
+    try {
+      const alDisc = notesArxiuAlDisc();
+      if (alDisc === null) arxiuLocal = false;
+      else if (!esArrelGit()) arxiuLocal = true;
+      else {
+        const r = git(['--literal-pathspecs', 'ls-files', '-z', '--', ARXIU_HISTORIC]);
+        const versionades = new Set(r.status === 0 ? r.stdout.split('\0').filter(Boolean).map(nfc) : []);
+        arxiuLocal = r.status !== 0 || alDisc.some((cami) => !versionades.has(nfc(cami)));
+      }
+    } catch { arxiuLocal = true; }
+  }
+  return arxiuLocal;
 }
 
 function validaVincles(doc, resolver) {

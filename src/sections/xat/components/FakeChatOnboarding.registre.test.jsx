@@ -6,7 +6,10 @@
    dades (FakeChatOnboarding) i la vista (Bombolla) es proven juntes: la
    bombolla que es pinta és la que torna el context de mostra.
    Gauntlet R10 (B2V-01) · La resposta local de la IAIA (la trobada, la de
-   sempre i la d'un error) no porta mai la marca ni l'enllaç a /registre. */
+   sempre i la d'un error) no porta mai la marca ni l'enllaç a /registre.
+   Onada R29 · DECISIÓ-R29-02.7 (ordre del Mestre, substituïx l'abast de B2-01) ·
+   La invitació inicial de la IAIA (m2) també porta l'enllaç; cap altra
+   bombolla de la mostra (ni els Avisos, ni Javi, ni les respostes de la IAIA). */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { useContext } from 'react';
@@ -65,11 +68,35 @@ const pintaBombolla = (missatge, props = {}) => render(
 test('B2-01 · la resposta simulada porta la marca de l’enllaç; el text literal no canvia', async () => {
   const resposta = await respostaSimulada();
   expect(resposta).toMatchObject({ sender: 'other', text: LITERAL, accioRegistre: true });
-  /* Cap altra bombolla de la mostra la porta: ni la benvinguda dels Avisos, ni la IAIA, ni Javi. */
+  /* Onada R29 · DECISIÓ-R29-02.7 · De les bombolles de partida, només la invitació de la IAIA (m2) la
+     porta: ni la seua salutació, ni la benvinguda dels Avisos, ni Javi. */
+  const AMB_MARCA = { 'fake-iaia': ['m2'] };
   render(<FakeChatOnboarding originalContext={{ senseSessio: true, comunitats: [] }}><Espia /></FakeChatOnboarding>);
   for (const fil of xat.chatThreads) {
-    expect([fil.id, xat.getThreadMessages(fil.id).some((m) => m.accioRegistre)]).toEqual([fil.id, false]);
+    const ambMarca = xat.getThreadMessages(fil.id).filter((m) => m.accioRegistre === true).map((m) => m.id);
+    expect([fil.id, ambMarca]).toEqual([fil.id, AMB_MARCA[fil.id] || []]);
   }
+});
+
+test('Onada R29 · DECISIÓ-R29-02.7 · la invitació de la IAIA porta, dins de la bombolla i davall del literal intacte, l’enllaç a /registre', () => {
+  render(<FakeChatOnboarding originalContext={{ senseSessio: true, comunitats: [] }}><Espia /></FakeChatOnboarding>);
+  const invitacio = xat.getThreadMessages('fake-iaia').find((m) => m.id === 'm2');
+  expect(invitacio).toMatchObject({ sender: 'other', is_ai: true, accioRegistre: true, text: "Si t'agrada el que veus, registra't per a entrar al xat de veritat!" });
+  /* La salutació de la IAIA (m1), no. */
+  expect(xat.getThreadMessages('fake-iaia').find((m) => m.id === 'm1')).not.toHaveProperty('accioRegistre');
+  cleanup();
+  const { container } = pintaBombolla(invitacio);
+  const bombolla = container.querySelector('.sdp-xat-bombolla');
+  const paragrafs = [...bombolla.querySelectorAll('p.sdp-xat-bombolla__text')];
+  expect(paragrafs.map((p) => p.textContent)).toEqual(["Si t'agrada el que veus, registra't per a entrar al xat de veritat!", ENLLAC.ca]);
+  const enllac = within(bombolla).getByRole('link', { name: 'Entra o registra’t ara' });
+  expect(enllac.getAttribute('href')).toBe('/registre');
+  fireEvent.click(enllac);
+  expect(ruta).toBe('/registre');
+  cleanup();
+  /* Amb la IAIA apagada, el seu fil (i la invitació) no hi és. */
+  render(<FakeChatOnboarding originalContext={{ senseSessio: true, comunitats: [], iaiaApagada: true }}><Espia /></FakeChatOnboarding>);
+  expect(xat.chatThreads.some((f) => f.id === 'fake-iaia')).toBe(false);
 });
 
 test('B2V-01 · la resposta de la IAIA (trobada, la de sempre o després d’un error) no porta la marca ni cap enllaç a /registre', async () => {
@@ -98,8 +125,9 @@ test('B2V-01 · la resposta de la IAIA (trobada, la de sempre o després d’un 
     [IAIA_ID, true, RESPOSTA_IAIA],
     [IAIA_ID, true, RESPOSTA_IAIA]
   ]);
-  /* Ni cap temporitzador ha afegit la bombolla de simulació al fil de la IAIA. */
-  expect(xat.getThreadMessages('fake-iaia').some((m) => m.accioRegistre)).toBe(false);
+  /* Ni cap temporitzador ha afegit la bombolla de simulació al fil de la IAIA: només la invitació
+     inicial (m2, Onada R29 · DECISIÓ-R29-02.7) porta la marca, cap resposta. */
+  expect(xat.getThreadMessages('fake-iaia').filter((m) => m.accioRegistre).map((m) => m.id)).toEqual(['m2']);
   cleanup();
   for (const missatge of delaIAIA) {
     expect(missatge).not.toHaveProperty('accioRegistre');

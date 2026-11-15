@@ -11,6 +11,7 @@
  * Google Play, igual que en valencià, promet «l'enllaç a la botiga», no un botó.
  * canalsDeBotiga.test.js passa la guarda B9 de botiga tancada sobre cada llengua.
  */
+/* Onada R29 · R29-02-6b · En basc, el connector de WordPress és «konektorea», com a la resta de pàgines. */
 export const TRADUCCIONS_DESCARREGUES = Object.freeze({
   es: {
     title: 'Descargas y Aplicaciones',
@@ -220,9 +221,9 @@ export const TRADUCCIONS_DESCARREGUES = Object.freeze({
       <p>Gaur egun, ordenagailuan, aplikazioa <strong>web instalagarria</strong> da, eta dagoeneko badabil <strong>Windows</strong>, <strong>Mac</strong> eta <strong>Linux</strong> sistemetan. Oraindik ez dago sistema hauetarako deskargatzeko <strong>programa bereizirik</strong>: <strong>etorkizunerako</strong> pentsatutako bidea da, eta prest dagoenean hemen agertuko da.</p>
 
       <h3>Zure herriko webgunean, WordPressekin</h3>
-      <p>Zure udalak, elkarteak edo kolektiboak dagoeneko <strong>WordPress</strong> webgune bat badu, <strong>ez dago aldatu beharrik</strong>: Sóc de Pobleren <strong>lokailuak</strong> aplikazioa <strong>orri</strong> batean txertatzen du <strong>kode labur</strong> batekin edo editoreko <strong>bloke</strong> batekin, Gent de la Torreren webguneak egiten duen bezala.</p>
+      <p>Zure udalak, elkarteak edo kolektiboak dagoeneko <strong>WordPress</strong> webgune bat badu, <strong>ez dago aldatu beharrik</strong>: Sóc de Pobleren <strong>konektoreak</strong> aplikazioa <strong>orri</strong> batean txertatzen du <strong>kode labur</strong> batekin edo editoreko <strong>bloke</strong> batekin, Gent de la Torreren webguneak egiten duen bezala.</p>
       <h4>WordPress.org</h4>
-      <p>Sóc de Pobleren lokailu ofiziala, «socdepoble» izenekoa, <strong>publikoa</strong> da jada <strong>WordPress.org</strong> direktorio ofizialean, <strong>1.1.12 bertsioan</strong>: <a href="https://wordpress.org/plugins/socdepoble/" target="_blank" rel="noopener noreferrer">wordpress.org/plugins/socdepoble</a>. Edozein udalek, elkartek edo kolektibok bere WordPress paneletik <strong>bilatu</strong>, <strong>instalatu</strong> eta <strong>aktibatu</strong> dezake.</p>
+      <p>Sóc de Pobleren konektore ofiziala, «socdepoble» izenekoa, <strong>publikoa</strong> da jada <strong>WordPress.org</strong> direktorio ofizialean, <strong>1.1.12 bertsioan</strong>: <a href="https://wordpress.org/plugins/socdepoble/" target="_blank" rel="noopener noreferrer">wordpress.org/plugins/socdepoble</a>. Edozein udalek, elkartek edo kolektibok bere WordPress paneletik <strong>bilatu</strong>, <strong>instalatu</strong> eta <strong>aktibatu</strong> dezake.</p>
       <p>Aplikazioa orri batean jartzeko <strong>nahikoa</strong> da <code>[socdepoble_app poble="la-torre-de-les-macanes"]</code> <strong>kode laburra</strong> erabiltzea, herriaren <strong>identifikatzailearekin</strong> (adibide honetan, La Torre de les Maçanes), eta orriaren <strong>Txantiloia laukian</strong> «Sóc de Poble · full screen» <strong>txantiloia</strong> hautatzea. Hori da <strong>gentdelatorre.net</strong> webguneak dagoeneko egiten duena.</p>
 
       <h3>Nola dabil barrutik: gaur eta bihar</h3>

@@ -349,7 +349,7 @@ export function PanellNodesFediversResiliencia() {
           <Insignia to="neutre">Mirall 3-2-1 Xifrat (age)</Insignia>
         </div>
         <p>
-          Tauler de comandament de la sobirania d’infraestructura per a l’auditoria de{' '}
+          Tauler de comandament de l’autonomia d’infraestructura per a l’auditoria de{' '}
           <strong>NLnet NGI Fediversity</strong>: parella de nodes germans (<code>socdepoble.org</code> en núvol +{' '}
           <code>socdepoble.cat</code> Node 0 Domèstic sobre PostgreSQL <code>17.11</code>), federació real amb{' '}
           <code>@depoble@mastodont.cat</code> i còpia de seguretat 3-2-1 xifrada amb <code>age</code>.

@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test } from 'vitest';
+import { fullsArrencada } from '../../tooling/gates/tractor-vocabulari.mjs';
 
 /* Gauntlet f6 (31-10-2026) · Dos ordres del Mestre del 30-10-2026 al prompt
    2208 (T3.1), per al tauler públic de /legal (TaulerTelemetria.jsx):
@@ -121,7 +122,8 @@ test('00:20 · full dedicat: taulers.css, darrere de modules.css i dins de @laye
   for (const regla of TAULERS) expect(regla.pares[0], regla.prelud).toBe('@layer components');
   expect(MODULS.filter((r) => r.prelud.includes('sdp-quadre'))).toEqual([]);
   // La porta del vocabulari el compta com a full canònic: les seues classes són declarades.
-  expect(llig('tooling/gates/tractor-vocabulari.mjs')).toMatch(/FULLS_CANONICS = \[[^\]]*'src\/css\/taulers\.css'/);
+  // Onada R29 · vocab-abast-apps · La porta ja no porta una llista a mà: llig la cadena d'@import d'index.css.
+  expect(fullsArrencada(process.cwd()).fulls).toContain('src/css/taulers.css');
 });
 
 test('00:20 · només tokens semàntics: cap hex, cap rgb, cap primitiva, cap ombra', () => {

@@ -172,7 +172,13 @@ function ultimaClau(rows) {
 export async function appendChatMessages(messages, config = {}) {
   const result = [];
   for (const message of Array.isArray(messages) ? messages : []) {
-    result.push(await enviaMissatge(message.threadId ?? message.filId, message.text, config));
+    /* Onada R29 · PF-02: l'id de qui crida viatja com a p_id (xat_envia és idempotent per
+       p_id), igual que a l'adaptador local i al decorador E2EE: reenviar la mateixa llista no
+       duplica. Sense id, normalitzaCos en genera un de nou, com abans.
+       Segona passada (DADES-R29-02): només viatja un id amb forma d'UUID (la columna p_id és uuid); un altre id
+       no arriba al servidor com a 22P02 opac i el missatge s'envia amb un UUID nou, com abans de R29. */
+    const id = UUID.test(String(message.id ?? '')) ? message.id : undefined;
+    result.push(await enviaMissatge(message.threadId ?? message.filId, { id, text: message.text }, config));
   }
   return result;
 }

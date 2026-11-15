@@ -74,6 +74,10 @@ export default function ReceptesWorkspaceSection({ page, accioPrincipal, childre
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const model = useMemo(() => ({
     status: 'ready',
+    /* Onada R29 · R29-02-1b · El receptari és estàtic i complet: una ?fitxa= que no hi és mostra
+       «L’element no és accessible o ja no existix.» (sense cap reserva, per canAutoSelect), no un error
+       de càrrega amb un Reintentar inútil. Una referència publicada que arribe després s'obri sola. */
+    itemsComplete: true,
     canAutoSelect: () => false,
     categories: [
       {

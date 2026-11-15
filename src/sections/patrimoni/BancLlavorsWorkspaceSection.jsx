@@ -109,6 +109,9 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
   const cataleg = useLaminesBotaniquesNode0(llibreActiu === 'llavors');
   const model = useMemo(() => ({
     status: 'ready',
+    /* Onada R29 · R29-02-1b · Les entrades són estàtiques (la làmina del Node 0 només hi afig la imatge):
+       una ?fitxa= que no hi és mostra l'estat net de «no accessible», no un error amb Reintentar. */
+    itemsComplete: true,
     canAutoSelect: () => false,
     categories: FONTS_BANC_LLAVORS.map((font) => ({
       id: font.id,

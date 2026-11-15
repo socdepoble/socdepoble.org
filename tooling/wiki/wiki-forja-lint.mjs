@@ -13,7 +13,8 @@
  *    - Recompte d'etiquetes `skill-forge` (`[DECISION]`, `[SEQUENCE]`, `[CORRECTION]`,
  *      `[DEADEND]`, `[CONVENTION]`, `[DISCOVERY]`, `[CHECKPOINT]`) a `10_actes/` i `04_escriptori/`.
  *
- * Respecta `AGENTS.md` §5: MAI llig `_wiki_de_poble/90_arxiu_historic/`.
+ * Respecta `AGENTS.md` §5 i el contracte de `wiki-propagar-veritat`: no llig
+ * `90_arxiu_historic/` ni les zones `01_produccio/` i `02_investigacio_ia/` de l'Escriptori.
  *
  * K3 (Onada R10) · Abast tancat:
  *  - Els noms de la Wiki i de l'Escriptori ixen de la SSOT (`lib/project_paths.mjs`).
@@ -64,21 +65,23 @@ export const ETQ_SKILL_FORGE = Object.freeze([
 ]);
 
 const CARPETES_PROHIBIDES = new Set(['90_arxiu_historic', '.git', 'node_modules']);
+const CARPETES_ESCRIPTORI_PROTEGIDES = ['01_produccio', '02_investigacio_ia'];
 
 /**
- * Llista recursivament tots els fitxers `.md` dins d'un directori excloent `90_arxiu_historic`.
+ * Llista Markdown sense l'arxiu històric ni les exclusions addicionals del corpus.
  * @param {string} dirAbs
+ * @param {string[]} [exclou]
  * @returns {string[]}
  */
-export function llistaMarkdownSegur(dirAbs) {
+export function llistaMarkdownSegur(dirAbs, exclou = []) {
   if (!fs.existsSync(dirAbs)) return [];
   const resultat = [];
   const entrades = fs.readdirSync(dirAbs, { withFileTypes: true });
   for (const entrada of entrades) {
-    if (CARPETES_PROHIBIDES.has(entrada.name)) continue;
+    if (CARPETES_PROHIBIDES.has(entrada.name) || exclou.includes(entrada.name)) continue;
     const rutaCompleta = path.join(dirAbs, entrada.name);
     if (entrada.isDirectory()) {
-      resultat.push(...llistaMarkdownSegur(rutaCompleta));
+      resultat.push(...llistaMarkdownSegur(rutaCompleta, exclou));
     } else if (entrada.isFile() && entrada.name.endsWith('.md')) {
       resultat.push(rutaCompleta);
     }
@@ -238,7 +241,7 @@ export function detectaGapsWiki({ arrel }) {
 
   const docsActesIEscriptori = [
     ...llistaMarkdownSegur(path.join(wikiAbs, '10_actes')),
-    ...llistaMarkdownSegur(path.join(wikiAbs, NOM_ESCRIPTORI)),
+    ...llistaMarkdownSegur(path.join(wikiAbs, NOM_ESCRIPTORI), CARPETES_ESCRIPTORI_PROTEGIDES),
   ];
 
   for (const docAbs of docsActesIEscriptori) {

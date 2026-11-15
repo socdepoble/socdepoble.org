@@ -43,3 +43,17 @@ test('fallada d’un writer concurrent no esborra el batch que l’altre ja ha c
  const results=await Promise.allSettled([vault.sincronitzaCrdtAmbDirectoryHandle(root,{crdt:g}),vault.sincronitzaCrdtAmbDirectoryHandle(root,{crdt:g})]);
  assert.equal(results.filter(x=>x.status==='fulfilled').length,1);const batches=[...root.fills.keys()].filter(n=>n.startsWith('.sdp-crdt-'));assert.equal(batches.length,1);assert.ok(JSON.parse(textFals(root,batches[0])).crdt.ops.length);
 });
+
+/* Onada R29 · PF-03 · El fitxer 1.001 és quota encara que siga un batch: abans eixia
+   RURAL_CRDT_VAULT_FORMAT («Nom de batch CRDT invàlid.») i la persona veia corrupció. */
+test('R29 · PF-03 · més de 1.000 fitxers és QUOTA tant si el 1.001 és un batch com si és un Markdown',async()=>{
+ const batch=`.sdp-crdt-${'a'.repeat(64)}.json`;
+ for(const darrer of [batch,'nota-darrera.md']){
+  const root=new CarpetaFalsa('vault');for(let i=0;i<1000;i++)root.afig(`nota-${i}.md`,'x');root.afig(darrer,'{}');
+  await assert.rejects(vault.sincronitzaCrdtAmbDirectoryHandle(root,{crdt:empty()}),e=>e.code==='RURAL_CRDT_VAULT_QUOTA');
+ }
+});
+test('R29 · PF-03 · dins de la quota, un nom de batch invàlid continua sent FORMAT',async()=>{
+ const root=new CarpetaFalsa('vault');root.afig('.sdp-crdt-curt.json','{}');
+ await assert.rejects(vault.sincronitzaCrdtAmbDirectoryHandle(root,{crdt:empty()}),e=>e.code==='RURAL_CRDT_VAULT_FORMAT');
+});

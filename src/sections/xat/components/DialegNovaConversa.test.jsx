@@ -155,6 +155,65 @@ test('«Nou grup» i «Nova comunitat» obrin dins del diàleg el panell honest,
   expect(within(dialeg).getByText(/naixen d'una Pàgina Universal/)).toBeTruthy();
 });
 
+/* Onada R29 · NAT-01 · El mateix patró que FullAjustos (07878998f): en un dispositiu tàctil el cercador
+   no és el focus inicial, perquè faria pujar el teclat damunt dels contactes. */
+const CONSULTA_TACTIL = '(hover: none) and (pointer: coarse)';
+function ambPunter(tactil, cos) {
+  const original = window.matchMedia;
+  window.matchMedia = vi.fn((consulta) => ({
+    matches: tactil && consulta === CONSULTA_TACTIL, media: consulta,
+    addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}
+  }));
+  return Promise.resolve().then(cos).finally(() => { window.matchMedia = original; });
+}
+function ArnesTancada() {
+  const [obert, setObert] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setObert(true)}>Obri</button>
+      <DialegNovaConversa {...props} obert={obert} onTanca={() => setObert(false)} />
+    </>
+  );
+}
+async function obriAmbUnToc() {
+  render(<ArnesTancada />);
+  const obri = screen.getByRole('button', { name: 'Obri' });
+  obri.focus();
+  fireEvent.click(obri);
+  const dialeg = screen.getByRole('dialog', { name: 'Nova conversa' });
+  await waitFor(() => expect(within(dialeg).getByRole('heading', { name: 'I' })).toBeTruthy());
+  return dialeg;
+}
+
+test('Onada R29 · NAT-01 · en un dispositiu tàctil el diàleg s’obri sense enfocar el cercador, i tornar del panell no el torna a enfocar', () => ambPunter(true, async () => {
+  const dialeg = await obriAmbUnToc();
+  expect(window.matchMedia).toHaveBeenCalledWith(CONSULTA_TACTIL);
+  const camp = within(dialeg).getByRole('searchbox', { name: 'Nom del contacte' });
+  expect(document.activeElement).not.toBe(camp);
+  expect(camp.hasAttribute('data-sdp-focus-inicial')).toBe(false);
+  /* «Nou grup» → «Tornar»: el focus torna al botó que l'havia obert, no al cercador. */
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Nou grup' }));
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Tornar' }));
+  expect(document.activeElement).toBe(within(dialeg).getByRole('button', { name: 'Nou grup' }));
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Nova comunitat' }));
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Tornar' }));
+  expect(document.activeElement).toBe(within(dialeg).getByRole('button', { name: 'Nova comunitat' }));
+  /* El cercador continua a mà: tocar-lo l'enfoca. */
+  const cercador = within(dialeg).getByRole('searchbox');
+  cercador.focus();
+  expect(document.activeElement).toBe(cercador);
+}));
+
+test('Onada R29 · NAT-01 · amb teclat físic, igual que abans: el cercador és el focus inicial del Dialeg i torna a ser-ho en eixir del panell', () => ambPunter(false, async () => {
+  const dialeg = await obriAmbUnToc();
+  const camp = within(dialeg).getByRole('searchbox', { name: 'Nom del contacte' });
+  expect(document.activeElement).toBe(camp);
+  expect(camp.hasAttribute('data-sdp-focus-inicial')).toBe(true);
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Nou grup' }));
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Tornar' }));
+  expect(document.activeElement).toBe(within(dialeg).getByRole('searchbox'));
+}));
+
 test('R21.4-UI · escriure’s a un mateix: sense fil personal crida onTriaMembre amb joId; amb filPersonal l’obri; sense sessió no s’oferix', async () => {
   let dialeg = await obert();
   fireEvent.click(within(dialeg).getByRole('button', { name: /Javi Llinares \(Tu\)/ }));

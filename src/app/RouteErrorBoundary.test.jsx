@@ -207,3 +207,42 @@ test('un canvi de connexió no pren el focus d’un control fora del panell', as
   vista.rerender(tree(false));
   expect(document.activeElement).toBe(exterior);
 });
+
+/* Onada R29 · R29-RUT-03 · La clau de la barrera de ruta porta ara la consulta (App.jsx): la secció
+   anotada és el tram d'abans del «?», mai la consulta ni la fitxa. I una consulta nova reinicia la vista. */
+test('R29 · amb la consulta a la clau, l’incident porta només la secció', async () => {
+  _reiniciaAutocuracio();
+  render(view(lazyRoute(unavailable), { resetKey: '/control?fitxa=mode-rural' }));
+  await screen.findByRole('alert');
+  expect(rastre()).toEqual([['tros', 'control', 'fallback']]);
+  expect(JSON.stringify(incidents())).not.toContain('mode-rural');
+  cleanup();
+  _reiniciaAutocuracio();
+  render(<RouteErrorBoundary resetKey="/?q=privat" mostraDetall={false}><Trencada /></RouteErrorBoundary>);
+  expect(rastre()).toEqual([['ruta', 'inici', 'fallback']]);
+});
+
+test('R29 · tornar a la mateixa ruta sense consulta torna a pintar la vista sana', () => {
+  function Vista({ fitxa }) { if (fitxa) throw Error('fitxa trencada'); return <p>Panell sa</p>; }
+  const arbre = (fitxa) => <RouteErrorBoundary resetKey={`/control?${fitxa ? `fitxa=${fitxa}` : ''}`} mostraDetall={false}><Vista fitxa={fitxa} /></RouteErrorBoundary>;
+  const vista = render(arbre('mode-rural'));
+  expect(screen.getByRole('alert')).toBeTruthy();
+  vista.rerender(arbre(''));
+  expect(screen.getByText('Panell sa')).toBeTruthy();
+});
+
+/* Onada R29 · R29-RUT-05 · Amb `prenElFocus` (els diàlegs de moderació, que només naixen d'un gest), el
+   focus va al títol de l'avís encara que el gest l'haja deixat en un botó. Sense, el control es conserva. */
+test.each([[true, 'el títol de l’avís'], [false, 'el botó del gest']])('R29 · prenElFocus=%s deixa el focus a %s', async (prenElFocus) => {
+  const tree = (obert) => <>
+    <button type="button">Denunciar</button>
+    {obert ? view(lazyRoute(unavailable), { prenElFocus }) : null}
+  </>;
+  const vista = render(tree(false));
+  const gest = screen.getByRole('button', { name: 'Denunciar' });
+  gest.focus();
+  vista.rerender(tree(true));
+  await screen.findByRole('alert');
+  const titol = screen.getByRole('heading', { level: 2, name: 'Hi ha hagut un problema' });
+  expect(document.activeElement).toBe(prenElFocus ? titol : gest);
+});

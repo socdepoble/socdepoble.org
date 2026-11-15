@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-11-14T22:16:31.634Z",
-  "hash": "d9730bd7fb3e19e3de28d363f7edd9c2ef66d385aeb8c42ef71930e556d566fb",
+  "timestamp": "2026-11-15T15:27:40.849Z",
+  "hash": "69a56dabc7505d998988a821af6ed55503d0af3d53dcff24675a2f742a3169eb",
   "filesCount": 44,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "ca38909728894660eef000009e085ab8286a9d38b9bde16d11e055bc18595659",
     ".agents/skills/core-automillora/SKILL.md": "6674224e4792b151d357499ff99998469bafe40c4bfd78b8169acf6912af2e7a",
-    ".agents/skills/core-calibratge-visual-nano/SKILL.md": "64a90df7842381162426edd6b281cb6c9554fd4498baca258ae71d47413af7fe",
+    ".agents/skills/core-calibratge-visual-nano/SKILL.md": "9d8fe194bacf51caa5c7ede538ba68d50e43944e2c36916d0ab3cb7a5cb4bba9",
     ".agents/skills/core-comprensio-reflexiva/SKILL.md": "68107c64b2190f2ec60d8fe7a09273f7f50cf748b54bb6fbc0acf7c06784cfc1",
     ".agents/skills/core-consell-i-colmena/SKILL.md": "1cc9d40a959191f659b3f4b3901da8b141345afa4fc954ff1dff597a076e258b",
     ".agents/skills/core-context-panic/SKILL.md": "c570055041fd84a0071fd2b8b8af78d350b95870f8f1f44e54b74454cf220500",
@@ -48,5 +48,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "763f5f7c69406da008f196e4f944fa063d1cd404b8a12016e31fdd164e46b8bb",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "40d6bd46a45395327f51535581dddacfeaa7f1b1269cc37ab97aebf904e69947"
   },
-  "transaction": "15140bff-112c-4ef6-b10c-00c69a032c7d"
+  "transaction": "00d5c9ff-39aa-4e0f-b342-b6351f168a69"
 }

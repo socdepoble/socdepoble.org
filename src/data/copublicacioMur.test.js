@@ -114,3 +114,47 @@ describe('R22 · una nota sense acte que el servidor no pot retirar no queda pen
     expect(rows(s.indexedDB)[0]).toMatchObject({ pending: true });
   });
 });
+
+/* Onada R29 · PF-04 · Els ACK no s'esborraven mai i el límit els comptava: a partir de 4.096
+   retirades confirmades en un dispositiu, cap retirada nova no arribava al servidor. Ara el
+   límit compta només les vives i, en la mateixa transacció, es purguen els ACK més vells. */
+describe('R29 · PF-04 · el diari de retirades no es tapona amb ACK', () => {
+  const SCOPE = JSON.stringify([A.backend, A.tenant, A.user]);
+  const idDe = i => `55000000-0000-4000-8000-${String(i).padStart(12, '0')}`;
+  const fila = (i, extra) => ({ key: JSON.stringify([SCOPE, idDe(i), 'publicacio', null]), scope: SCOPE, id: idDe(i), tipus: 'publicacio',
+    revision: null, publicacioId: null, attempt: 1, nextRetryAt: 0, ...extra });
+  async function omple(indexedDB, files) {
+    const db = await new Promise((resolve, reject) => { const r = indexedDB.open('sdp-copublicacio-mur-r21', 2);
+      r.onupgradeneeded = () => r.result.createObjectStore('revocacions', { keyPath: 'key' }); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+    await new Promise((resolve, reject) => { const tx = db.transaction('revocacions', 'readwrite'), store = tx.objectStore('revocacions');
+      tx.oncomplete = resolve; tx.onabort = () => reject(tx.error); for (const f of files) store.put(f); });
+    db.close();
+  }
+  it('amb 4.096 ACK, una retirada nova s’encua i es purga l’ACK més vell (primer els sense hora)', async () => {
+    const s = setup();
+    /* 4.095 ACK amb hora i un d'abans de R29 sense confirmadaAl (el més vell de tots). */
+    await omple(s.indexedDB, [fila(0, { pending: false, rejected: false }),
+      ...Array.from({ length: 4095 }, (_, i) => fila(i + 1, { pending: false, rejected: false, confirmadaAl: 1000 + i }))]);
+    await s.q.encua(ID);
+    const totes = rows(s.indexedDB);
+    expect(totes).toHaveLength(4096);
+    expect(totes.some(r => r.id === idDe(0))).toBe(false);
+    expect(await s.q.estaRetirada(idDe(1))).toBe(true);
+    expect(await s.q.estat(ID)).toEqual({ pendent: true, seguentIntent: 0 });
+    await s.q.encua(ID.replace(/1$/, '2'));
+    expect(rows(s.indexedDB)).toHaveLength(4096);
+    expect(await s.q.estaRetirada(idDe(1))).toBe(false);
+    expect(await s.q.estaRetirada(idDe(2))).toBe(true);
+  });
+  it('l’ACK guarda la seua hora per a ordenar la purga', async () => {
+    const s = setup(); await s.q.encua(ID); await s.q.drena();
+    expect(rows(s.indexedDB)[0]).toMatchObject({ pending: false, confirmadaAl: 10000 });
+  });
+  it('amb 4.096 retirades vives el diari continua ple i no en perd cap', async () => {
+    const s = setup();
+    await omple(s.indexedDB, Array.from({ length: 4096 }, (_, i) => fila(i, i % 2 ? { pending: true } : { pending: false, rejected: true })));
+    await expect(s.q.encua(ID)).rejects.toMatchObject({ codi: 'MUR_REVOCACIO_PERSISTENCIA', message: 'El diari de retirada està ple.' });
+    expect(rows(s.indexedDB)).toHaveLength(4096);
+    expect(rows(s.indexedDB).some(r => r.id === ID)).toBe(false);
+  });
+});

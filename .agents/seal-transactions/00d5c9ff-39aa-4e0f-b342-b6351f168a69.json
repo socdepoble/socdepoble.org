@@ -1,0 +1,17 @@
+{
+  "id": "00d5c9ff-39aa-4e0f-b342-b6351f168a69",
+  "session": "c5fd8458-a50a-411d-8fbf-cc2379c973aa",
+  "operationId": "r29-skill-nano-1794756459748",
+  "claim": "c5fd8458-a50a-411d-8fbf-cc2379c973aa:governance-write",
+  "planHash": "21895c66647348575ba690994c76640df9b8675dfc260711576096d5445ea144",
+  "beforeSeal": "0806f56e0f89a2a2df210763349585c3868c18890d59be56114fc142e2f5d9a0",
+  "files": [
+    {
+      "path": ".agents/skills/core-calibratge-visual-nano/SKILL.md",
+      "before": "64a90df7842381162426edd6b281cb6c9554fd4498baca258ae71d47413af7fe",
+      "after": "9d8fe194bacf51caa5c7ede538ba68d50e43944e2c36916d0ab3cb7a5cb4bba9"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "69a56dabc7505d998988a821af6ed55503d0af3d53dcff24675a2f742a3169eb"
+}

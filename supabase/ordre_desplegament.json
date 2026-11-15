@@ -326,6 +326,13 @@
         "20261115030000"
       ],
       "font": "README, vinyeta de 20261115030000 (R28: l'embolcall de 2611070600 torna a crear exporta_les_meues_dades sense veu_del_poble)"
+    },
+    {
+      "si": "20261114023000",
+      "llavors": [
+        "20261115170000"
+      ],
+      "font": "README, vinyeta de 20261115170000 (R29: 20261114023000 torna a crear resum_consens_isoglosses_poble sense la llista tancada de preguntes ni el filtre de l'etiqueta)"
     }
   ]
 }

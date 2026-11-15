@@ -180,6 +180,37 @@ describe('veuIaiaService · navegador', () => {
     await expect(promesa).rejects.toMatchObject({ codi: CODI_VEU_AVORTADA });
   });
 
+  /* Onada R29 · R29-CV-04 · L'espècimen de /disseny només avorta el signal en desmuntar-se: la
+     síntesi del navegador també ha de callar, no només la promesa. */
+  test('R29-CV-04 · avortar el signal de la locució vigent crida speechSynthesis.cancel()', async () => {
+    const { synth } = instalaSintesi(undefined, { alParlar: () => {} });
+    const control = new AbortController();
+    const promesa = parla('Hola', { signal: control.signal });
+    promesa.catch(() => {});
+    await vi.waitFor(() => expect(synth.speak).toHaveBeenCalled());
+    const cancelsAbans = synth.cancel.mock.calls.length;
+    control.abort();
+    expect(synth.cancel.mock.calls.length).toBeGreaterThan(cancelsAbans);
+    expect(estaParlant()).toBe(false);
+    await expect(promesa).rejects.toMatchObject({ codi: CODI_VEU_AVORTADA });
+  });
+
+  test('R29-CV-04 · avortar el signal d’una locució ja substituïda no talla la nova', async () => {
+    const { synth } = instalaSintesi(undefined, { alParlar: () => {} });
+    const control = new AbortController();
+    const vella = parla('Hola', { signal: control.signal });
+    vella.catch(() => {});
+    await vi.waitFor(() => expect(synth.speak).toHaveBeenCalledTimes(1));
+    const nova = parla('Adéu');
+    nova.catch(() => {});
+    const cancelsAbans = synth.cancel.mock.calls.length;
+    control.abort();
+    expect(synth.cancel.mock.calls.length).toBe(cancelsAbans);
+    expect(estaParlant()).toBe(true);
+    await expect(vella).rejects.toMatchObject({ codi: CODI_VEU_AVORTADA });
+    atura();
+  });
+
   test('un error de la síntesi és VEU_NO_DISPONIBLE; interrupted és VEU_AVORTADA', async () => {
     instalaSintesi(undefined, { alParlar: (e) => queueMicrotask(() => e.onerror({ error: 'synthesis-failed' })) });
     await expect(parla('Hola')).rejects.toMatchObject({ codi: CODI_VEU_NO_DISPONIBLE });

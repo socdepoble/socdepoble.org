@@ -77,7 +77,7 @@ Esta secció delimita els tres registres gràfics del projecte i documenta els p
 
 ### 3.2 Anti-exemple descartat per deriva d'estil
 
-- **Evidència arxivada:** la captura `_wiki_de_poble/04_escriptori/01_produccio/261113_captura_mestre/261113_2134_antiexemple_rebutjat_la_veu_nano_v3.jpg` i l'històric de *La caldera de descàrregues* mostren què passa quan es genera sense ancoratge visual.
+- **Evidència:** el 13-11-2026 el Mestre va rebutjar la tirada v3 de *La veu* del Nano, generada sense ancoratge visual. La captura és de la zona humana i no es versiona; els motius de rebuig del punt següent en són la descripció canònica i basten per a aplicar la regla.
 - **Motius de rebuig:** interior fosc tipus soterrani, roba moderna anglosaxona (peto texà i cabell anime), quatre figures estàtiques mirant a càmera, robots de llanda americans, icones clip-art flotants i somriures beatífics de fullet religiós.
 
 ## 4. Calibratge amb el Mestre i govern d'actius

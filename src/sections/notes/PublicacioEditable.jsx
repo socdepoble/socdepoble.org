@@ -66,8 +66,11 @@ export function PublicacioEditable({ item }) {
   const alDia = estat.clau === inicial.id ? estat.nota === estat.alMur : true;
   const viva = useRef(nota);
   viva.current = nota;
-  /* La nota adoptada ({ id, revision, lligada }): un reintent no en crea cap altra. */
-  const adoptada = useRef(null);
+  /* La nota adoptada ({ id, revision, lligada }): un reintent no en crea cap altra.
+     Onada R29 · R29-CV-02 · Per publicació (la clau és l'id de la publicació oberta): la instància es
+     reutilitza en triar-ne una altra, i una adopció a mitges d'A (creada però no lligada) no pot
+     lligar-se mai a B ni sobreescriure's amb el seu contingut. Tornar a A la recupera. */
+  const adoptades = useRef(new Map());
 
   const escriu = useCallback((id, camp, valor) => {
     if (String(id) !== viva.current.id) return;
@@ -128,19 +131,23 @@ export function PublicacioEditable({ item }) {
     const rebuig = base?.rebuigDePublicacio?.(actual);
     if (rebuig) throw rebuig;
     const { creacio, lligam } = campsDeLAdopcio(actual);
-    if (!adoptada.current) {
+    const clauAdopcio = inicial.id;
+    let adoptada = adoptades.current.get(clauAdopcio) ?? null;
+    if (!adoptada) {
       const creada = await base.creaNota({ ...creacio, id: nouIdDeNota() });
-      adoptada.current = { id: String(creada.id), revision: creada.revision ?? 0, lligada: false };
+      adoptada = { id: String(creada.id), revision: creada.revision ?? 0, lligada: false };
+      adoptades.current.set(clauAdopcio, adoptada);
     }
-    if (!adoptada.current.lligada) {
-      const { id, revision } = adoptada.current;
+    if (!adoptada.lligada) {
+      const { id, revision } = adoptada;
       const desada = await base.updateNote(id, lligam, revision);
-      adoptada.current = { id, revision: desada?.revision ?? revision + 1, lligada: true };
+      adoptada = { id, revision: desada?.revision ?? revision + 1, lligada: true };
+      adoptades.current.set(clauAdopcio, adoptada);
       /* La cua de desat ha de partir de la revisió lligada, encara que la
          llista viva no porte la nota fins a la pintada següent. */
-      if (base.scopeKey) bgSaveManager.setRevision(base.scopeKey, id, adoptada.current.revision);
+      if (base.scopeKey) bgSaveManager.setRevision(base.scopeKey, id, adoptada.revision);
     }
-    const { id, revision } = adoptada.current;
+    const { id, revision } = adoptada;
     /* La publicació virtual ja ix del Bloc: la selecció passa a la nota. */
     setParams(escriuSeleccio(params, { item: id }, CLAUS_BLOC), { replace: true });
     const payloadNota = { ...actual, id, revision, publishedSubmissionId: actual.publishedSubmissionId, isPublished: true };

@@ -143,3 +143,53 @@ describe('Onada R28 · La Veu, apartat 5: qui obri la barra i què fa el menú T
     expect(LA_VEU_DE_SOC_DE_POBLE_COPY.eu.html).not.toMatch(/erreproduzitzaile/);
   });
 });
+
+/* Onada R29 · R29-02-6a/6b · El contracte del nom del reproductor valia només per a La Veu: /versions,
+   /page/node-zero i /disseny deien «erreproduzitzaile» (la persona que reproduïx), i /page/descarregues
+   deia «lokailu» (la conjunció gramatical) per al connector de WordPress. Ara es mira tot PAGE_COPY en basc. */
+const textDeLaPagina = (pagina) => [pagina.title, pagina.subtitle, pagina.lead, pagina.html].join(' ');
+
+describe('Onada R29 · Calcs del basc a totes les pàgines de PAGE_COPY', () => {
+  test('eu · cap pàgina diu «erreproduzitzaile» ni «lokailu»', () => {
+    const calcs = Object.entries(PAGE_COPY)
+      .filter(([, pagina]) => /erreproduzitzaile|lokailu/i.test(textDeLaPagina(localitzaPagina(pagina, 'eu'))))
+      .map(([clau]) => clau);
+    expect(calcs).toEqual([]);
+  });
+
+  test('eu · el reproductor de /versions, /page/node-zero i /disseny és «erreproduzigailu», i el connector de /page/descarregues, «konektore»', () => {
+    for (const clau of ['versions', 'node-zero', 'disseny']) {
+      expect([clau, /erreproduzigailu/.test(textDeLaPagina(localitzaPagina(PAGE_COPY[clau], 'eu')))]).toEqual([clau, true]);
+    }
+    const descarregues = textDeLaPagina(localitzaPagina(PAGE_COPY.descarregues, 'eu'));
+    expect(descarregues).toContain('<strong>konektoreak</strong>');
+    expect(descarregues).toContain('Sóc de Pobleren konektore ofiziala');
+  });
+});
+
+/* Onada R29 · VOC-R29-04 · «el Mas» és la plataforma i mai s'escriu «masia». En castellà, «masía» només
+   queda per a un lloc físic del camp que el valencià anomena «mas» (punt 1 del Mode Rural: «al bancal, a la
+   serra o al mas»). La llista és tancada: una aparició nova als diccionaris o a PAGE_COPY fa fallar la prova. */
+const MASIA = /(?<!\p{L})mas(?:ia|ía|ies|ías)(?!\p{L})/iu;
+const MASIA_LLOC_FISIC = ['es · section.control.rural.punt1'];
+
+describe('Onada R29 · VOC-R29-04 · «masia» només per a un lloc físic de la llista tancada', () => {
+  test('cap «masia» ni «masía» als cinc diccionaris ni a PAGE_COPY fora de la llista', () => {
+    const trobades = [];
+    for (const [lang, dic] of Object.entries(DICCIONARIS)) {
+      for (const [clau, valor] of Object.entries(dic)) {
+        if (typeof valor === 'string' && MASIA.test(valor)) trobades.push(`${lang} · ${clau}`);
+      }
+    }
+    for (const [clau, pagina] of Object.entries(PAGE_COPY)) {
+      for (const lang of LLENGUES) {
+        if (MASIA.test(JSON.stringify(localitzaPagina(pagina, lang)))) trobades.push(`PAGE_COPY · ${clau} · ${lang}`);
+      }
+    }
+    expect(trobades).toEqual(MASIA_LLOC_FISIC);
+  });
+
+  test('el punt 1 del Mode Rural parla del mas físic en valencià', () => {
+    expect(CA['section.control.rural.punt1']).toMatch(/a la serra o al mas /);
+  });
+});

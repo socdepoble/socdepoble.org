@@ -178,6 +178,9 @@ export default function DesignSection() {
   const portada = copyDeLaPortada(pageCopy, language);
   const model = useMemo(() => ({
     status: 'ready',
+    /* Onada R29 · R29-02-1 · El catàleg és estàtic i complet (CATALOG_ITEMS i la portada): un ?item= que
+       no hi és es reconcilia amb la fitxa de reserva de la categoria, no amb un error de càrrega. */
+    itemsComplete: true,
     categories: CATALOG_CATEGORIES,
     items: [
       {

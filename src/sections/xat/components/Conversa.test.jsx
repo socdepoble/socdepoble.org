@@ -226,7 +226,9 @@ describe('scroll i «Baixa al final»', () => {
     ['amb menys moviment, salt sec', true, 'auto'],
     ['sense, desplaçament suau', false, 'smooth']
   ])('prémer «Baixa al final» baixa al fons (%s), buida el recompte i deixa el focus al camp', (_, reduit, behavior) => {
-    window.matchMedia = vi.fn(() => ({ matches: reduit }));
+    /* Onada R29 · NAT-02 · Només la consulta del moviment reduït: «Baixa al final» també pregunta pel
+       punter (CONSULTA_TACTIL), i un ratolí no és un dit. */
+    window.matchMedia = vi.fn((consulta) => ({ matches: reduit && consulta === '(prefers-reduced-motion: reduce)' }));
     HTMLElement.prototype.scrollTo = vi.fn();
     const missatges = [m('1', 1, 'other')];
     const { repinta } = pinta({ messages: missatges });

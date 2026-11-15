@@ -207,6 +207,36 @@ describe('PublicacioDetall · una publicació pròpia del Mur s’obri a l’edi
     expect(ids[0]).toEqual(ids[1]);
   });
 
+  /* Onada R29 · R29-CV-02 · La instància es reutilitza en triar una altra publicació (el detall no porta
+     key). Una adopció a mitges d'A (creaNota bé, updateNote falla) no es pot lligar a B ni sobreescriure's
+     amb el seu contingut; tornar a A la reprén sense crear-ne cap altra. */
+  test('una adopció a mitges d’una publicació no passa a una altra, i tornar-hi la reprén', async () => {
+    const UUID_B = '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
+    const FILA_B = { ...FILA_MUR, id: UUID_B, title: 'Fira del Mel', content: '<p>La fira.</p>' };
+    const arbre = (fila) => <NotesContext.Provider value={base}><PublicacioDetall item={publicacioComANota(fila, 'mur')} /></NotesContext.Provider>;
+    const { rerender } = render(arbre(FILA_MUR));
+    act(() => { mocks.vist.ctx.setLocalNoteField(mocks.vist.nota.id, 'title', 'Festa major editada'); });
+    base.updateNote.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    await act(async () => { await expect(mocks.vist.ctx.publishNote(mocks.vist.nota)).rejects.toThrow('Failed to fetch'); });
+    const notaDA = base.creaNota.mock.calls[0][0].id;
+
+    rerender(arbre(FILA_B));
+    expect(mocks.vist.nota.id).toBe(`publicacio:mur:${UUID_B}`);
+    await act(async () => { await mocks.vist.ctx.publishNote(mocks.vist.nota); });
+    expect(base.creaNota).toHaveBeenCalledTimes(2);
+    const notaDB = base.creaNota.mock.calls[1][0].id;
+    expect(notaDB).not.toBe(notaDA);
+    expect(base.updateNote.mock.calls[1]).toEqual([notaDB, expect.objectContaining({ publishedSubmissionId: UUID_B }), 0]);
+    expect(base.publishNote.mock.calls[0][0]).toMatchObject({ id: notaDB, title: 'Fira del Mel', publishedSubmissionId: UUID_B });
+    expect(base.updateNote.mock.calls.filter(([id]) => id === notaDA)).toHaveLength(1);
+
+    rerender(arbre(FILA_MUR));
+    await act(async () => { await mocks.vist.ctx.publishNote(mocks.vist.nota); });
+    expect(base.creaNota).toHaveBeenCalledTimes(2);
+    expect(base.updateNote.mock.calls[2]).toEqual([notaDA, expect.objectContaining({ publishedSubmissionId: UUID_FILA }), 0]);
+    expect(base.publishNote.mock.calls[1][0]).toMatchObject({ id: notaDA, publishedSubmissionId: UUID_FILA });
+  });
+
   test('el Manifest (llavor, sense UUID): «Actualitzar al Mur» desa una revisió i el Mur i la pàgina la pinten', async () => {
     pinta(MANIFEST);
     expect(mocks.vist.nota.content).toBe(MANIFEST_DE_POBLE_HTML);

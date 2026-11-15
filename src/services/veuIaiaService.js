@@ -434,7 +434,13 @@ export async function parla(text, { idioma = 'ca', privat = false, signal, veu }
   };
   activa = entrada;
   notificaEstat();
-  signal?.addEventListener('abort', entrada.cancela, { once: true });
+  /* Onada R29 · R29-CV-04 · Avortar amb el signal calla també la síntesi del navegador (atura() fa
+     el cancel()) si la locució encara és la vigent; si ja n'hi ha una altra, només rebutja la seua. */
+  const enAvortar = () => {
+    if (activa === entrada) atura();
+    else entrada.cancela();
+  };
+  signal?.addEventListener('abort', enAvortar, { once: true });
   const registra = (cancela) => { cancelaActual = cancela; };
   const avortadaSiCal = () => {
     if (control.signal.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
@@ -454,7 +460,7 @@ export async function parla(text, { idioma = 'ca', privat = false, signal, veu }
     avortadaSiCal();
     await parlaPerNavegador(net, llengua, control.signal, registra, veuTriada);
   } finally {
-    signal?.removeEventListener('abort', entrada.cancela);
+    signal?.removeEventListener('abort', enAvortar);
     if (activa === entrada) {
       activa = null;
       notificaEstat();

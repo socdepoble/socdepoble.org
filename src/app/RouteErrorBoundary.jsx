@@ -22,9 +22,14 @@ export class RouteErrorBoundary extends Component {
     /* Onada 12 (261011; ordres 261011_0130, punt 7) · Rastre local de la
        caiguda: el tipus i la secció (el primer tram de la ruta, mai la fitxa
        ni el missatge de l'error). */
+    /* Onada R29 · R29-RUT-03 · La clau de la ruta porta ara la consulta: la secció és el tram d'abans
+       del «?» (o del «#»), mai la consulta. */
     registraIncident(esErrorLazy(error) ? 'tros' : 'ruta',
-      String(this.props.resetKey ?? '').split('/').filter(Boolean)[0] || 'inici', 'fallback');
-    if (document.activeElement === document.body) this.titolRef.current?.focus();
+      String(this.props.resetKey ?? '').split(/[?#]/)[0].split('/').filter(Boolean)[0] || 'inici', 'fallback');
+    /* Onada R29 · R29-RUT-05 · `prenElFocus`: una barrera que només es munta per un gest de la persona
+       (els diàlegs de moderació) porta el focus a l'avís encara que el gest l'haja deixat en un botó;
+       focus() també el porta a la vista. */
+    if (this.props.prenElFocus || document.activeElement === document.body) this.titolRef.current?.focus();
   }
   getSnapshotBeforeUpdate() {
     return this.reintentRef.current === document.activeElement;

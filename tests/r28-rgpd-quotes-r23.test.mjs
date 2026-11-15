@@ -66,6 +66,10 @@ if (!modulePath || !fs.existsSync(modulePath)) {
   const DEPENDENCIES_R28 = ['2611070600', '20261114000100', '20261113233000', '20261114023000', '20261114171500'];
   const R23 = ['20261113233000', '20261114023000', '20261114171500'];
   const SQL_R28 = captures.get(R28)?.sql;
+  /* Onada R29 · La 20261115170000 va darrere de la R28 al catàleg i toca les mateixes taules: R28 es prova
+     sobre el catàleg que la precedix, no sobre les migracions que hi van darrere. */
+  const ABANS_R28 = files.slice(0, files.indexOf(R28));
+  const DESPRES_R28 = files.slice(files.indexOf(R28) + 1);
 
   /* Els mateixos substituts d'infraestructura que tests/administracio-multipoble-postgres.test.mjs. */
   const bootstrap = "CREATE ROLE anon NOLOGIN;\nCREATE ROLE authenticated NOLOGIN;\nCREATE ROLE service_role NOLOGIN BYPASSRLS;\nCREATE SCHEMA auth;\nCREATE TABLE auth.users(id uuid PRIMARY KEY,email text,raw_user_meta_data jsonb NOT NULL DEFAULT '{}');\nCREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;\nGRANT USAGE ON SCHEMA auth TO anon,authenticated,service_role;\nGRANT EXECUTE ON FUNCTION auth.uid() TO anon,authenticated,service_role;\nCREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$SELECT coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb,'{}'::jsonb)$$;\nCREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$SELECT coalesce(nullif(current_setting('request.jwt.claim.role',true),''),'authenticated')$$;\nCREATE TABLE auth.sessions(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE);\nALTER TABLE auth.users ADD COLUMN banned_until timestamptz;\nALTER TABLE auth.users ADD COLUMN email_confirmed_at timestamptz;\nCREATE SCHEMA storage;\nCREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);\nCREATE TABLE storage.objects(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),bucket_id text REFERENCES storage.buckets(id),name text,owner uuid,owner_id text,metadata jsonb,version text,created_at timestamptz DEFAULT now(),UNIQUE(bucket_id,name));\nALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;\nCREATE FUNCTION storage.foldername(name text) RETURNS text[] LANGUAGE sql IMMUTABLE AS $$SELECT (string_to_array(name,'/'))[1:array_length(string_to_array(name,'/'),1)-1]$$;\nCREATE FUNCTION storage.operation() RETURNS text LANGUAGE sql STABLE AS $$SELECT current_setting('storage.operation',true)$$;\nGRANT USAGE ON SCHEMA storage TO anon,authenticated,service_role;\nGRANT SELECT,INSERT,UPDATE,DELETE ON storage.objects TO authenticated;\nCREATE SCHEMA realtime;\nCREATE TABLE realtime.messages(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,extension text,topic text,payload jsonb);\nALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY;\nCREATE FUNCTION realtime.topic() RETURNS text LANGUAGE sql STABLE AS $$SELECT current_setting('realtime.topic',true)$$;\n";
@@ -169,7 +173,7 @@ if (!modulePath || !fs.existsSync(modulePath)) {
 
     before(async () => {
       assert.ok(SQL_R28, `la migració ${R28} és al catàleg`);
-      ({ db, errors: errorsCataleg } = await creaBase(files.filter(f => f !== R28)));
+      ({ db, errors: errorsCataleg } = await creaBase(ABANS_R28));
       assert.deepEqual(errorsCataleg, [], 'No validar R28 sobre un catàleg incomplet');
       /* Camps reals de GoTrue que l'exportació llig i la fixture mínima no porta. */
       await db.exec('ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(); ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS last_sign_in_at timestamptz');
@@ -206,10 +210,12 @@ if (!modulePath || !fs.existsSync(modulePath)) {
       assert.equal(sha(fs.readFileSync(path.join(ROOT, 'supabase/ordre_desplegament.json'))), sha(ordreBytes), 'L’ordre declarat ha canviat durant l’assaig.');
     });
 
-    test('el catàleg complet s’aplica en l’ordre del verificador i R28 hi va l’última, darrere de les seues dependències', t => {
+    test('el catàleg anterior s’aplica en l’ordre del verificador i R28 hi va darrere, també de les seues dependències', t => {
       t.diagnostic(`catàleg: ${files.length} migracions (${versions.filter(v => v.length === 10).length} de 10 xifres i ${versions.filter(v => v.length === 14).length} de 14)`);
       assert.deepEqual(errorsCataleg, []);
-      assert.equal(files.at(-1), R28);
+      assert.ok(ABANS_R28.length > 0 && files.includes(R28));
+      /* Onada R29 · Darrere de R28 només hi ha migracions més noves (la 20261115170000). */
+      for (const f of DESPRES_R28) assert.ok(comparaVersions(versioDeFitxer(f), '20261115030000') > 0, f);
       for (const v of DEPENDENCIES_R28) {
         assert.ok(files.findIndex(f => f.startsWith(v + '_')) >= 0, `dependència present: ${v}`);
         assert.ok(dependencies.get('20261115030000').includes(v), `capçalera: depén de ${v}`);
@@ -373,7 +379,7 @@ if (!modulePath || !fs.existsSync(modulePath)) {
     });
 
     test('precondició: sense les taules R23, R28 avorta neta (SDP-R28-002) i no canvia res', async t => {
-      const { db: sense, errors } = await creaBase(files.filter(f => f !== R28 && !R23.some(v => f.startsWith(v + '_'))));
+      const { db: sense, errors } = await creaBase(ABANS_R28.filter(f => !R23.some(v => f.startsWith(v + '_'))));
       try {
         assert.deepEqual(errors, []);
         const exportaVell = await md5Funcio(sense, 'public.exporta_les_meues_dades()');
@@ -426,7 +432,7 @@ if (!modulePath || !fs.existsSync(modulePath)) {
         (el ROLLBACK d'aplicaR28). Després no hi ha cap disparador R28, l'RPC és la de 2611070600 i la preparació
         tampoc no hi és. */
     async function precondicio(prepara, codi, prefix) {
-      const { db: base, errors } = await creaBase(files.filter(f => f !== R28));
+      const { db: base, errors } = await creaBase(ABANS_R28);
       try {
         assert.deepEqual(errors, []);
         const exportaVell = await md5Funcio(base, 'public.exporta_les_meues_dades()');

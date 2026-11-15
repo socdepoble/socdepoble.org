@@ -131,13 +131,45 @@ function netejaTitol(text) {
   return trobat ? trobat[1] + (trobat[2] || '') : sense.replace(/[ \t]+$/, '');
 }
 
+/* Onada R29 · SEG-R29-03: els enllaços «[text](adreça)» en temps lineal. Fa el
+   mateix que text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, …) (amb `buits`, [^\]]* i
+   [^)]*; amb `imatge`, el «!» de davant entra al tros), però cada «]» i cada «)»
+   es busca una sola vegada: amb la regex, cada «[a](» sense tancar recorria el
+   text fins al final, i 512 KB d'una nota local tardaven prop d'un minut.
+   pinta(text, adreça) torna el que ocupa el lloc de l'enllaç. */
+export function substituixEnllacos(text, pinta, { buits = false, imatge = false } = {}) {
+  let eixida = '';
+  let copiat = 0; // fins on s'ha copiat el text
+  let tanca = -1; // la primera «]» darrere de l'últim «[» consultat
+  let parentesi = -1; // la primera «)» darrere de l'últim «(» consultat
+  let i = text.indexOf('[');
+  while (i !== -1) {
+    if (tanca <= i) tanca = text.indexOf(']', i + 1);
+    if (tanca === -1) break; // cap «]» més: cap enllaç més
+    const obri = tanca + 1;
+    if ((buits || tanca > i + 1) && text[obri] === '(') {
+      if (parentesi <= obri) parentesi = text.indexOf(')', obri + 1);
+      if (parentesi === -1) break; // cap «)» més: cap enllaç més
+      if (buits || parentesi > obri + 1) {
+        const inici = imatge && i > copiat && text[i - 1] === '!' ? i - 1 : i;
+        eixida += text.slice(copiat, inici) + pinta(text.slice(i + 1, tanca), text.slice(obri + 1, parentesi));
+        copiat = parentesi + 1;
+        i = text.indexOf('[', copiat);
+        continue;
+      }
+    }
+    i = text.indexOf('[', i + 1);
+  }
+  return copiat === 0 ? text : eixida + text.slice(copiat);
+}
+
 /* Format en línia, compartit pel cos i per l'entradilla. El contingut de
    negreta i cursiva no pot començar ni acabar en espai ni en asterisc. */
 function formatEnLinia(html) {
-  return html
+  const formatat = html
     .replace(/\*\*([^\s*](?:(?:(?!\*\*)[^\n])*?[^\s*])?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^\s*](?:[^*\n]*[^\s*])?)\*/g, '<em>$1</em>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>');
+    .replace(/\*([^\s*](?:[^*\n]*[^\s*])?)\*/g, '<em>$1</em>');
+  return substituixEnllacos(formatat, (text, adreca) => `<a href="${adreca}">${text}</a>`);
 }
 
 /* O7 · Els salts tous no trenquen strong ni em, però només dins d'un paràgraf
@@ -444,11 +476,12 @@ export function parseMarkdownEnLinia(md) {
 /* Títol del Markdown com a text pla: l'H1 de la pàgina és text de React, i
    un «**» o un «[x](y)» s'hi veurien tal qual. */
 function textPla(md) {
-  return llevaPuntFinal(md
+  // Onada R29 · SEG-R29-03: els enllaços i les imatges, en temps lineal (substituixEnllacos).
+  const senseEnllacos = substituixEnllacos(md
     .replace(/[ \t]+#+[ \t]*$/, '')
     .replace(/<[^>]*>/g, '')
-    .replace(/`([^`\n]+)`/g, '$1')
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/`([^`\n]+)`/g, '$1'), (text) => text, { buits: true, imatge: true });
+  return llevaPuntFinal(senseEnllacos
     .replace(/(\*\*|__)(\S(?:[^\n]*?\S)?)\1/g, '$2')
     .replace(/\*(\S(?:[^*\n]*?\S)?)\*/g, '$1')
     .replace(/(^|[\s(])_(\S(?:[^_\n]*?\S)?)_(?=$|[\s).,;:!?])/g, '$1$2')

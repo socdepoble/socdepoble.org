@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams, useRouter } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
@@ -36,6 +36,7 @@ import { destiDeMultimedia } from '../multimedia/rutesMultimedia.js';
 import { primeraImatgeSocial } from '../../config/imatgeSocial.js';
 import { origenPublic } from '../../config/origenPublic.js';
 import { capaDelPaquet } from '../../config/capaDelPaquet.js';
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 
 /* Fase D (261020, tasca 2; pla 261020_1300) · Les seccions on la barra
    taronja del detall porta «Més opcions» (denunciar i bloquejar): el
@@ -81,7 +82,9 @@ function useSessioSegura() {
    directe, no la llista de /page/receptes), amb el seu useSEO i el seu «no trobat». No passa per
    buildDetailSectionMeta: les receptes no són contingut de la gent ni de cap proveïdor. */
 const SECCIO_DE_RECEPTES = 'receptes';
-const ReceptaDetailSection = lazy(() => import('../patrimoni/ReceptaDetailSection.jsx'));
+/* Onada R29 · R29-RUT-01 · Amb lazyRoute: si el tros no arriba, la barrera de la ruta rep un
+   LazyRouteError i oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
+const ReceptaDetailSection = lazyRoute(() => import('../patrimoni/ReceptaDetailSection.jsx'));
 function DetallDeRecepta() {
   const { t } = useUIActions();
   return (

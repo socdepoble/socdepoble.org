@@ -290,6 +290,19 @@ describe('«Baixa al final» i el focus', () => {
     expect(document.activeElement).toBe(camp());
   });
 
+  /* Onada R29 · NAT-02 · Un iPad en vertical (744–834 px) és «mitja» o «ample», no «estret». */
+  test('NAT-02 · en una tauleta tàctil ampla (iPad) el focus va a la llista i no al camp: el teclat en pantalla no tapa el final', () => {
+    window.matchMedia = vi.fn((consulta) => ({ matches: consulta === '(hover: none) and (pointer: coarse)', media: consulta, addEventListener() {}, removeEventListener() {} }));
+    for (const mida of ['ample', 'mitja']) {
+      pinta({ mida, messages: [m('1', 1, 'other')] });
+      pujaA(100);
+      fireEvent.click(botoBaixar());
+      expect([mida, document.activeElement === llista(), document.activeElement === camp()]).toEqual([mida, true, false]);
+      cleanup();
+    }
+    expect(window.matchMedia).toHaveBeenCalledWith('(hover: none) and (pointer: coarse)');
+  });
+
   test('#9 · als Avisos de només lectura (sense camp) el focus va a la llista i no es perd a <body>', () => {
     pinta({ fil: { id: 'a-1', tipus: 'canal', name: 'Avisos', llegitFinsSeq: 100 }, messages: [m('1', 1, 'other')] });
     pujaA(100);

@@ -37,10 +37,19 @@ export function PaginaEmojis({
      P0-24b (Onada R21) · L'escolta és a la finestra: un Escape que una capa de
      damunt ja ha consumit (un desplegable, les opcions de la barra) o que és
      d'una capa de damunt (un diàleg, que el rep després del keydown) no és
-     seu. Abans tancava la pàgina sota el diàleg, o les dues capes alhora. */
+     seu. Abans tancava la pàgina sota el diàleg, o les dues capes alhora.
+     L'escolta continua a la finestra (l'última de la bombolla, que ja veu el
+     defaultPrevented de les capes de damunt); l'origen el filtra el camí. */
   useEffect(() => {
     const escoltaTecles = (e) => {
       if (e.key !== 'Escape' || e.defaultPrevented || teCapaDamunt()) return;
+      /* Onada R29 · R29-CV-07 · Encastada (<soc-de-poble>), la pàgina viu dins d'un shadow root: només
+         és seu un Escape premut dins d'eixe arbre, no el d'un camp de l'amfitrió ni el d'una altra
+         instància. Al document propi (la SPA), l'arrel és el document i res no canvia. Es compara amb
+         l'amfitrió i no amb el ShadowRoot: <soc-de-poble> el crea tancat (mode 'closed'), i des de window
+         el camí compost no mostra mai l'arrel tancada, però sí el seu amfitrió. */
+      const ambit = arrel.current?.getRootNode?.();
+      if (ambit?.host && typeof e.composedPath === 'function' && !e.composedPath().includes(ambit.host)) return;
       e.preventDefault();
       onTornar?.();
     };

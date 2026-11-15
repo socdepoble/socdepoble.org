@@ -55,14 +55,21 @@ class SDP_Peticio_REST {
 function is_wp_error( $thing ) {
 	return $thing instanceof WP_Error;
 }
+/* Onada R29 · Les traduccions i el locale efectiu del cas ($GLOBALS); sense res, l'anglés d'origen. */
 function __( $text, $domain = 'default' ) {
-	return $text;
+	return $GLOBALS['sdp_test_traduccions'][ $text ] ?? $text;
 }
 function esc_html__( $text, $domain = 'default' ) {
-	return htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
+	return htmlspecialchars( __( $text, $domain ), ENT_QUOTES, 'UTF-8' );
 }
 function esc_html( $text ) {
 	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+}
+function esc_attr( $text ) {
+	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+}
+function determine_locale() {
+	return $GLOBALS['sdp_test_locale'] ?? 'en_US';
 }
 function esc_url( $url ) {
 	return (string) $url;
@@ -670,6 +677,28 @@ if ( 'manteniment_dates' === $cas ) {
 			'fins'             => $fins,
 		)
 	);
+	exit( 0 );
+}
+
+/* Onada R29 · El lang de la pàgina 503 segons el locale del lloc i si el text ix traduït. */
+if ( 'manteniment_503_llengua' === $cas ) {
+	define( 'SDP_MODE_MANTENIMENT_FINS', time() + 900 );
+	require_once $arrel_wp . '/eines/amfitrio/sdp-manteniment-503-mu-plugin.php';
+	$catala = array( 'Scheduled maintenance in progress' => 'Manteniment tècnic programat en curs' );
+	$casos  = array(
+		'en_us'          => array( 'en_US', array() ),
+		'es_sense_trad'  => array( 'es_ES', array() ),
+		'ca_traduit'     => array( 'ca', $catala ),
+		'valencia'       => array( 'ca_valencia', $catala ),
+		'locale_hostil'  => array( 'ca"><script>x</script>', $catala ),
+	);
+	$html = array();
+	foreach ( $casos as $nom => list( $locale, $traduccions ) ) {
+		$GLOBALS['sdp_test_locale']      = $locale;
+		$GLOBALS['sdp_test_traduccions'] = $traduccions;
+		$html[ $nom ]                    = socdepoble_enxufe_manteniment_503_html( 900 );
+	}
+	echo json_encode( array( 'html' => $html ) );
 	exit( 0 );
 }
 

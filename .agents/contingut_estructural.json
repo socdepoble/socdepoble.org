@@ -44,9 +44,9 @@
       "data": "2026-11-07"
     },
     "descarregues": {
-      "sha256": "124959fa0b44abce3ccb1b6a5e23306792296fcec3b176e7edd59ab55cea3ec6",
+      "sha256": "eaabe17bdb30b847fb0414b8c3639a3b231a25670deb66e5511d9d3fd0f8732c",
       "html": 9904,
-      "aprovat_per": "Mestre Javi (R28 261115 01:31-01:37: integració del Kit R27 de Gemini, pla 261115_0135 §1)",
+      "aprovat_per": "Claude R29 G11 261115 17:04 (DECISIÓ-R29-02.6, pla R29 aprovat pel Mestre): calcs del basc R29-02-6a/6b, només text eu; divergència verificada com a única",
       "data": "2026-11-15"
     },
     "dispositius": {
@@ -56,10 +56,10 @@
       "data": "2026-11-14"
     },
     "disseny": {
-      "sha256": "6040fd00d6150f9416cdfc6defce880977d340580ff7d364c2d19a46fe19609d",
+      "sha256": "bb2ac8cb21a8150ed107804d8bb2cbe9c4f5c3c99559620aaa40a67d210e2053",
       "html": 4846,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "aprovat_per": "Claude R29 G11 261115 17:04 (DECISIÓ-R29-02.6, pla R29 aprovat pel Mestre): calcs del basc R29-02-6a/6b, només text eu; divergència verificada com a única",
+      "data": "2026-11-15"
     },
     "drets-autor": {
       "sha256": "9020a79830c55c088b6fa867fc1bf7a5f56c91656c3fc28b3e12269902ce767c",
@@ -104,9 +104,9 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "8ccd6cd933570e3a97b65887e32e47ff419e22b3faf4e508bfc6dcffb2ec6fa0",
+      "sha256": "78216db5117ad29a39897d12f5f498516c3ca9b532c2a32749c7deaa9871ab90",
       "html": 27344,
-      "aprovat_per": "Mestre Javi (R28 261115 01:31-01:37: integració del Kit R27 de Gemini, pla 261115_0135 §1)",
+      "aprovat_per": "Claude R29 G11 261115 17:04 (DECISIÓ-R29-02.6, pla R29 aprovat pel Mestre): calcs del basc R29-02-6a/6b, només text eu; divergència verificada com a única",
       "data": "2026-11-15"
     },
     "notes": {
@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "3fd8b6dfa1cdaf9c62fa60e3b8162559f5c765f8e426c27b966750e6fce5eda0",
-      "html": 76958,
-      "aprovat_per": "Claude R28 261115 06:25 (pla 261115_0135, Lot C4, DESPATX-MARIA-0317): crònica R28 de /versions en 5 llengües i versió 1.2.1 (build 6)",
+      "sha256": "770f53e7c9fba3b5ea1439cda088b8fb2a62c1cfd2f3528178031e63386f925e",
+      "html": 80087,
+      "aprovat_per": "Claude R29 261115 17:56 (DECISIÓ-R29-01): crònica R29 sense l'afirmació dels missatges duplicats (Llei 0, segona passada TXT-R29-01)",
       "data": "2026-11-15"
     },
     "wikidepoble": {

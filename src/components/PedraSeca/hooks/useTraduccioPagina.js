@@ -84,6 +84,15 @@ function useRouterLlegible() {
   }
 }
 
+/* Onada R29 · R29-CV-06 · La consulta sense ?seccio= (CLAUS_SELECCIO.seccio de seleccioUrl.js; literal
+   per no portar eixe mòdul al graf de l'arrencada). */
+function consultaSenseSeccio(params) {
+  if (!params) return '';
+  const copia = new URLSearchParams(params);
+  copia.delete('seccio');
+  return copia.toString();
+}
+
 function textDeBlocTraduit(bloc) {
   if (!bloc || typeof bloc !== 'object') return '';
   if (typeof bloc.text === 'string' && bloc.text.trim()) return bloc.text.trim();
@@ -117,12 +126,17 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
   const clauPagina = JSON.stringify([
     router?.currentPath ?? '', router?.searchParams ? String(router.searchParams) : '', textTitol
   ]);
+  /* Onada R29 · R29-CV-06 · L'Índex escriu ?seccio= dins de la mateixa pàgina: no és un canvi
+     de pàgina i no ha d'aturar la lectura en veu alta. La clau de la veu no el compta. */
+  const clauVeu = JSON.stringify([
+    router?.currentPath ?? '', consultaSenseSeccio(router?.searchParams), textTitol
+  ]);
 
   const [estat, setEstat] = useState(ORIGINAL);
   const [menuObert, setMenuObert] = useState(false);
   const [veuActual, setVeuActual] = useState(() => llegeixVeuPreferida());
   const [parlantPagina, setParlantPagina] = useState(false);
-  const vidaRef = useRef({ peticio: 0, control: null, serveiVeu: null, escoltant: false });
+  const vidaRef = useRef({ peticio: 0, control: null, serveiVeu: null, escoltant: false, lectura: null });
 
   useEffect(() => subscriuVeuPreferida(setVeuActual), []);
 
@@ -130,21 +144,27 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
     const vida = vidaRef.current;
     setEstat((abans) => (abans.clau === clauPagina ? abans : ORIGINAL));
     setMenuObert(false);
+    return () => {
+      vida.peticio += 1;
+      vida.control?.abort();
+      vida.control = null;
+    };
+  }, [clauPagina]);
+
+  useEffect(() => {
+    const vida = vidaRef.current;
     if (vida.escoltant) {
       vida.escoltant = false;
       vida.serveiVeu?.atura?.();
       setParlantPagina(false);
     }
     return () => {
-      vida.peticio += 1;
-      vida.control?.abort();
-      vida.control = null;
       if (vida.escoltant) {
         vida.escoltant = false;
         vida.serveiVeu?.atura?.();
       }
     };
-  }, [clauPagina]);
+  }, [clauVeu]);
 
   const vigent = estat.clau === clauPagina ? estat : ORIGINAL;
   const llenguaInterficie = typeof ui?.llenguaDelText === 'string' && ui.llenguaDelText ? ui.llenguaDelText : null;
@@ -188,15 +208,22 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
       return;
     }
     const privat = arrelTraduccioPrivada(cosRef?.current);
+    /* Onada R29 · R29-CV-01 · Testimoni de crida: en canviar de veu, la locució nova comença
+       abans que la vella es rebutge, i el finally de la vella no ha de trepitjar l'estat de la nova. */
+    const jo = {};
+    vida.lectura = jo;
     vida.escoltant = true;
     setParlantPagina(true);
     try {
       await modul.parla(text, { idioma, privat, veu: veuForcada });
     } catch (err) {
-      if (err?.codi !== 'VEU_AVORTADA') avisa(PARELLS_AVIS_TRADUCCIO.errorVeu);
+      if (vida.lectura === jo && err?.codi !== 'VEU_AVORTADA') avisa(PARELLS_AVIS_TRADUCCIO.errorVeu);
     } finally {
-      vida.escoltant = false;
-      setParlantPagina(false);
+      if (vida.lectura === jo) {
+        vida.lectura = null;
+        vida.escoltant = false;
+        setParlantPagina(false);
+      }
     }
   }, [avisa, cosRef, recullTextPerVeu]);
 

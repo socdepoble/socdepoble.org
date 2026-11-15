@@ -139,7 +139,8 @@ test('sense la capacitat no crida res i ho diu; sense sessió porta a entrar', (
 test('el nom ve del directori; si no n’hi ha (o no és una organització) es diu «esta organització»', async () => {
   const vista = render(<BlocAdministrarOrganitzacio orgId="o-1" config={{}} />);
   expect(await screen.findByText('Vols administrar Forn de la Torre?')).toBeTruthy();
-  expect(m.perfil).toHaveBeenCalledWith('o-1', {});
+  /* Actualitzada a posta (Onada R29 · R29-HOOKS-03): la lectura porta el signal que l'avorta. */
+  expect(m.perfil).toHaveBeenCalledWith('o-1', { signal: expect.any(AbortSignal) });
   vista.unmount();
   for (const resposta of [() => Promise.resolve(null), () => Promise.resolve({ tipus: 'persona', nom: 'Ajuntament fals' }), () => Promise.reject(new Error('xarxa'))]) {
     m.perfil.mockImplementationOnce(resposta);
@@ -156,6 +157,30 @@ test('el nom ve del directori; si no n’hi ha (o no és una organització) es d
   render(<BlocAdministrarOrganitzacio orgId="o-3" config={{}} />);
   expect(await screen.findByText('Vols administrar esta organització?')).toBeTruthy();
   expect(m.perfil).not.toHaveBeenCalled();
+});
+
+/* Onada R29 · R29-HOOKS-03 · La fitxa pública depén de l'organització de la
+   ruta: canviar-ne (o desmuntar) avorta la lectura vella, i el que arriba tard
+   no es pinta. */
+test('canviar d’organització o desmuntar avorta la lectura de la fitxa pública', async () => {
+  const signals = [];
+  const tardanes = [];
+  m.perfil.mockImplementation((idOrg, config) => {
+    signals.push(config.signal);
+    return new Promise((resolve) => { tardanes.push(() => resolve({ tipus: 'entitat', id: idOrg, nom: `Fitxa ${idOrg}` })); });
+  });
+  const vista = render(<BlocAdministrarOrganitzacio orgId="o-1" config={{}} />);
+  await waitFor(() => expect(signals).toHaveLength(1));
+  expect(signals[0].aborted).toBe(false);
+  vista.rerender(<BlocAdministrarOrganitzacio orgId="o-2" config={{}} />);
+  await waitFor(() => expect(signals).toHaveLength(2));
+  expect(signals[0].aborted).toBe(true);
+  expect(signals[1].aborted).toBe(false);
+  // La resposta vella que arriba tard no es pinta a o-2.
+  await act(async () => { tardanes[0](); });
+  expect(vista.container.textContent).not.toContain('Fitxa o-1');
+  vista.unmount();
+  expect(signals[1].aborted).toBe(true);
 });
 
 /* T43b-2 · llegir no és enviar: comprovant sense formulari, i cada error diu el que ha passat. */

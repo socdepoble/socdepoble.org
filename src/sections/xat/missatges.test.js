@@ -224,6 +224,26 @@ describe('mapejaMissatge', () => {
     expect(altre.is_ai).toBe(true);
     expect(altre.seq).toBeNull();
   });
+
+  /* Onada R29 · R29-E2EE-02 · La forma exacta que torna el decorador E2EE per a
+     un missatge que no s'obri (xifratXatPipeline: filaTancada). */
+  it('R29-E2EE-02 · conserva l’estat explícit d’un missatge xifrat que no s’obri, només amb els seus camps', () => {
+    const tancat = mapejaMissatge({
+      id: 'c', filId: 'f', usuariId: 'ella', seq: 7, text: null, xifrat: { ct: 'sobre opac' },
+      seguretat: { xifrat: true, verificat: false, codi: 'xifrat-manipulat', material: 'opac', sobre: { ct: 'x' } }
+    }, 'jo');
+    expect(tancat.text).toBe('');
+    expect(tancat.seguretat).toEqual({ xifrat: true, verificat: false, codi: 'xifrat-manipulat' });
+    expect(Object.isFrozen(tancat.seguretat)).toBe(true);
+    /* El sobre xifrat no passa mai a la bombolla. */
+    expect(tancat).not.toHaveProperty('xifrat');
+    const obert = mapejaMissatge({ id: 'd', filId: 'f', usuariId: 'jo', seq: 8, text: 'hola', seguretat: { xifrat: true, verificat: true, propi: true } }, 'jo');
+    expect(obert.seguretat).toEqual({ xifrat: true, verificat: true, propi: true });
+    /* Sense seguretat (o amb una que no és un objecte), la bombolla no porta cap camp nou. */
+    for (const seguretat of [undefined, null, 'xifrat', [], {}]) {
+      expect(mapejaMissatge({ id: 'e', filId: 'f', usuariId: 'ella', seq: 9, text: 'bon dia', seguretat }, 'jo')).not.toHaveProperty('seguretat');
+    }
+  });
 });
 
 describe('fusionaPerSeq', () => {

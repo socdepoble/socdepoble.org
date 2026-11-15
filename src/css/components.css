@@ -993,7 +993,9 @@
 /* Onada R28 · Les categories llargues dins de UniversalCard (p. ex. a 360px en /mur)
    s'embolcallen dins de la caixa sense desbordar, mentre les curtes conserven 28px.
    :where(.sp-card-body) manté l'especificitat en (0,2,0) perquè les regles posteriors
-   de --amb-accio, --enllac i .sdp-insignia-beta-oberta continuen manant sense canvis. */
+   de --amb-accio, --enllac i .sdp-insignia-beta-oberta continuen manant sense canvis.
+   Onada R29 · Sense padding-block: la línia de 22,4px més 4+4px deixava les curtes a
+   30,4px, la beta a 31px i el li enllaçat a 36px. El min-height ja dona els 28px. */
 :where(.sp-card-body) > .sp-card-labels {
   max-inline-size: 100%;
   min-inline-size: 0;
@@ -1003,7 +1005,6 @@
   min-inline-size: 0;
   height: auto;
   min-height: var(--sdp-alt-pastilla);
-  padding-block: var(--sdp-space-1);
   white-space: normal;
   overflow-wrap: break-word;
   text-align: center;
@@ -1047,7 +1048,11 @@
    hereta el color AAA de la insígnia (9,44 a 1 sobre sdp-badge-system en comptes d'1,11 a 1
    del color d'enllaç de base.css), evita el coixí doble tant amb --enllac com sense
    (/pobles, /page/descarregues, /mur) i conserva la diana tàctil de 48px cap amunt
-   sense usar cap pseudoclasse relacional. */
+   sense usar cap pseudoclasse relacional.
+   Onada R29 · El marge negatiu deixa el contingut del li 32px més curt que l'enllaç: amb
+   el max-inline-size: 100% de .page-title-labels i de .sp-card-body, l'enllaç quedava
+   32px més estret que el seu text i es partia en dues o tres línies. El màxim recupera
+   eixos 32px; amb --enllac, sense marge negatiu, el màxim torna a ser el 100%. */
 .sp-card-label.sp-card-label--enllac {
   padding: 0;
 }
@@ -1056,6 +1061,7 @@
 .sp-card-label--enllac > .sp-card-label {
   position: relative;
   margin-inline: calc(var(--sdp-space-4) * -1);
+  max-inline-size: calc(100% + 2 * var(--sdp-space-4));
   padding: 0 var(--sdp-space-4);
   border-radius: inherit;
   color: inherit;
@@ -1065,6 +1071,7 @@
 .sp-card-label--enllac > a.sp-card-label,
 .sp-card-label--enllac > .sp-card-label {
   margin-inline: 0;
+  max-inline-size: 100%;
 }
 
 .sp-card-label > a.sp-card-label::after,

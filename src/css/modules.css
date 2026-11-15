@@ -948,6 +948,10 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
    cos passava de la targeta i camps i alerta tocaven la vora. Només estos dos
    continguts partixen on calga; la resta de la targeta no canvia. */
 .sp-card--onboarding :is(.sdp-alerta, strong) { overflow-wrap: anywhere; }
+/* Onada R29 · La targeta d'accés centra el text (components.css) i l'Alerta ho heretava:
+   la icona anava a l'inici i el text, centrat. Ara el text de l'Alerta també comença a
+   l'inici; la targeta, la resta del cos i els botons de l'Alerta no es mouen. */
+.sp-card--onboarding .sdp-alerta { text-align: start; }
 /* Fase D (261020, tasca 1) · Els botons d'Apple i Google de l'app nativa
    (EntradaNativa.jsx), un davall de l'altre a tota l'amplària de la targeta,
    com el Google web. Els 12px de separació passen del mínim d'Apple (1/10 de l'alt). */
@@ -16741,6 +16745,30 @@ details[open] summary.accordion-header svg:last-child {
     border-radius: 0;
     background: var(--sdp-fons-targeta);
     min-width: 0;
+  }
+
+  /* Onada R29 · La fitxa registral de /rentonar (DocumentacioHistoricaRentonar.jsx).
+     La regla global :where(dl) de sdp.css (max-content 1fr) feia la columna dels noms
+     de 243px i, per davall de 476px de pantalla, els valors eixien de la caixa, que els
+     tallava. L'encaix és local i no toca la regla global: la columna dels noms pot
+     encongir fins a la seua paraula més llarga (on ja hi cabia, no canvia cap píxel) i,
+     fins a 30rem, la fitxa passa a una sola columna, com .sdp-admin-dl. */
+  .sdp-rentonar-doc__fitxa {
+    grid-template-columns: minmax(min-content, max-content) 1fr;
+  }
+
+  @media (max-width: 30rem) {
+    .sdp-rentonar-doc__fitxa {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sdp-rentonar-doc__fitxa > dd {
+      overflow-wrap: anywhere;
+    }
+
+    .sdp-rentonar-doc__fitxa > dd + dt {
+      margin-block-start: var(--sdp-space-2);
+    }
   }
 
   .sdp-arbre-delta {

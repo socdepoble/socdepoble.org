@@ -53,7 +53,9 @@ export const SECTIONS = [
   { id: 'animalets', path: '/animalets', label: 'Animalets', shortLabel: 'Animals', icon: PawPrint, kind: 'vertical' },
   { id: 'treball', path: '/treball', label: 'Treball', shortLabel: 'Treball', icon: Briefcase, kind: 'vertical' },
   { id: 'habitatge', path: '/habitatge', label: 'Habitatge', shortLabel: 'Habitatge', icon: House, kind: 'vertical' },
-  { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup', ...Object.values(RUTES_CANONIQUES), RUTA_FITXA_IAIA] },
+  /* Onada R29 · R29-RUT-07 · /entitats/:id (l'àlies que emeten les connexions d'una entitat, App.jsx)
+     pinta la mateixa fitxa que /empresa/:id: també encén Pobles (contracte T27). */
+  { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/entitats', '/ajuntament', '/grup', ...Object.values(RUTES_CANONIQUES), RUTA_FITXA_IAIA] },
   { id: 'calendari', path: '/calendari', label: 'Calendari', shortLabel: 'Calendari', icon: CalendarDays, kind: 'agenda' },
   { id: 'multimedia', path: '/multimedia', label: 'Multimèdia', shortLabel: 'Media', icon: GalleryVerticalEnd, kind: 'multimedia' },
   { id: 'dispositius', path: '/dispositius', label: 'Dispositius', shortLabel: 'P2P', icon: Wifi, kind: 'infra', pageKey: 'dispositius' },

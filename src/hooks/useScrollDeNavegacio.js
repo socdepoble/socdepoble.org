@@ -50,6 +50,8 @@ export function useScrollDeNavegacio({ contentRef, pathname, search = '', hash =
       if (!current || current.clau == null || !current.pathname) return;
       const node = desplacadorDeNavegacio(content);
       if (event && event.target !== content && event.target !== node) return;
+      // Onada R29 · Un desplaçament aliè acaba la restauració: es desa el real.
+      if (pendent.current?.alie()) pendent.current.atura();
       if (event && pendent.current) return;
       const top = pendent.current?.top ?? node?.scrollTop;
       if (Number.isFinite(top)) posicions.current.set(current.clau, Math.max(0, top));
@@ -81,12 +83,28 @@ export function useScrollDeNavegacio({ contentRef, pathname, search = '', hash =
       else aplica();
     };
     const mides = typeof ResizeObserver === 'function' ? new ResizeObserver(programa) : null;
+    /* Onada R29 · VoiceOver, TalkBack o NVDA desplacen el visor sense cap
+       gest dins del <main>. Un moviment respecte del que va escriure aplica()
+       amb la mateixa geometria és aliè i acaba la restauració. Si la geometria
+       ha canviat, el moviment és del navegador (retall en minvar el contingut
+       o ancoratge del scroll) i la restauració continua. */
+    let escrit = null;
+    const geometria = node => ({ node, valor: node.scrollTop, alt: node.scrollHeight, vista: node.clientHeight });
+    const alie = () => {
+      const node = desplacadorDeNavegacio(content);
+      if (!escrit || escrit.node !== node || Math.abs(node.scrollTop - escrit.valor) <= 1) return false;
+      if (node.scrollHeight === escrit.alt && node.clientHeight === escrit.vista) return true;
+      escrit = geometria(node);
+      return false;
+    };
     const aplica = () => {
       marc = null;
       if (cancelat || !content.isConnected) return;
+      if (alie()) { atura(); return; }
       const node = desplacadorDeNavegacio(content);
       if (node !== content && content.scrollTop !== 0) posa(content, 0);
       if (node.scrollTop !== top) posa(node, top);
+      escrit = geometria(node);
       // Els fills de mida natural reflectixen scrollHeight encara que el
       // viewport contained no canvie de mida quan arriba text o una imatge.
       const vius = new Set([content, node, ...node.children]);
@@ -103,7 +121,7 @@ export function useScrollDeNavegacio({ contentRef, pathname, search = '', hash =
       for (const event of ['load', 'error', 'loadedmetadata']) content.removeEventListener(event, programa, true);
       if (pendent.current?.atura === atura) pendent.current = null;
     };
-    pendent.current = { top, atura };
+    pendent.current = { top, atura, alie };
     for (const gest of GESTOS) gestos.addEventListener(gest, atura, { capture: true, passive: true });
     for (const event of ['load', 'error', 'loadedmetadata']) content.addEventListener(event, programa, true);
     mutacions?.observe(content, { childList: true, subtree: true, characterData: true });

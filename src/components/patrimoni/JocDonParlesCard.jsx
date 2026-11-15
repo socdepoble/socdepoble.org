@@ -128,6 +128,10 @@ export function JocDonParlesCard() {
   const [veuAplicadaAvis, setVeuAplicadaAvis] = useState(false);
   const [comptadorVots, setComptadorVots] = useState(0);
   const [escoltantPregunta, setEscoltantPregunta] = useState(false);
+  /* Onada R29 · R29-CV-03 · El servei de veu carregat i el testimoni de la locució pròpia:
+     atura() és global i el joc només ha de callar la seua veu, no la d'una altra peça. */
+  const serveiVeuRef = useRef(null);
+  const veuPropiaRef = useRef(null);
   const [resumRemot, setResumRemot] = useState([]);
 
   const [mostrarFormulari, setMostrarFormulari] = useState(false);
@@ -143,6 +147,19 @@ export function JocDonParlesCard() {
   const [aportacionsLocals, setAportacionsLocals] = useState(() => llegeixAportacionsIsoglossesLocals());
 
   useEffect(() => subscriuVeuPreferida(setVeuActiva), []);
+
+  /* Onada R29 · R29-CV-03 · En desmuntar-se (canvi de ruta), el joc calla la seua locució. */
+  useEffect(() => () => {
+    if (veuPropiaRef.current) serveiVeuRef.current?.atura?.();
+  }, []);
+
+  /* Onada R29 · R29-CV-03 · En canviar de pregunta o acabar, la veu no continua llegint l'anterior. */
+  useEffect(() => {
+    if (!veuPropiaRef.current) return;
+    veuPropiaRef.current = null;
+    serveiVeuRef.current?.atura?.();
+    setEscoltantPregunta(false);
+  }, [pasActual, finalitzat]);
 
   useEffect(() => {
     let actiu = true;
@@ -289,9 +306,12 @@ export function JocDonParlesCard() {
   };
 
   const escoltaPreguntaActual = async () => {
+    const jo = {};
     try {
       const modul = await import('../../services/veuIaiaService.js');
+      serveiVeuRef.current = modul;
       if (escoltantPregunta) {
+        veuPropiaRef.current = null;
         modul.atura();
         setEscoltantPregunta(false);
         return;
@@ -301,6 +321,7 @@ export function JocDonParlesCard() {
         ...preguntaActual.opcions.map((o) => o.etiqueta),
         ...opcionsVivesActuals.map((v) => v.etiqueta),
       ].join(', ');
+      veuPropiaRef.current = jo;
       setEscoltantPregunta(true);
       await modul.parla(`${enunciat} ${mots}.`, {
         idioma: 'ca',
@@ -310,7 +331,11 @@ export function JocDonParlesCard() {
     } catch {
       /* Ignora avortaments o absència de síntesi en proves */
     } finally {
-      setEscoltantPregunta(false);
+      /* Onada R29 · R29-CV-03 · Només la crida vigent torna el botó a «Escoltar paraules». */
+      if (veuPropiaRef.current === jo) {
+        veuPropiaRef.current = null;
+        setEscoltantPregunta(false);
+      }
     }
   };
 
@@ -342,13 +367,19 @@ export function JocDonParlesCard() {
     if (desada !== VEU_AUTO_NAVEGADOR) {
       try {
         const modul = await import('../../services/veuIaiaService.js');
+        serveiVeuRef.current = modul;
         const veuObj = VEUS_TERRITORIALS.find((v) => v.id === desada);
         const nom = veuObj ? tradueix(t, [veuObj.clauNom, veuObj.reservaNom]).replace('·', ',') : desada;
-        modul.parla(`Veu activada: ${nom}. Ja pots escoltar la pàgina i els refranys amb esta veu.`, {
+        /* Onada R29 · R29-CV-03 · També és veu del joc: calla si el joc es desmunta. */
+        const jo = {};
+        veuPropiaRef.current = jo;
+        Promise.resolve(modul.parla(`Veu activada: ${nom}. Ja pots escoltar la pàgina i els refranys amb esta veu.`, {
           idioma: 'ca',
           privat: false,
           veu: desada,
-        }).catch(() => {});
+        })).catch(() => {}).finally(() => {
+          if (veuPropiaRef.current === jo) veuPropiaRef.current = null;
+        });
       } catch {
         /* Ignorat en proves sense xarxa */
       }
@@ -536,6 +567,8 @@ export function JocDonParlesCard() {
               );
             })}
 
+            {/* Onada R29 · R29-02-2 · Sense modificador de variant viva: la seua regla no guanyava mai
+                (la base va darrere a la mateixa capa) i la vora ja era la de les opcions canòniques. */}
             {opcionsVivesActuals.map((viva) => {
               const seleccionada = respostes[preguntaActual.id] === viva.id;
               return (
@@ -543,7 +576,7 @@ export function JocDonParlesCard() {
                   key={viva.id}
                   type="button"
                   aria-pressed={seleccionada}
-                  className={seleccionada ? 'sdp-joc-parla__opcio sdp-joc-parla__opcio--viva sdp-joc-parla__opcio--activa' : 'sdp-joc-parla__opcio sdp-joc-parla__opcio--viva'}
+                  className={seleccionada ? 'sdp-joc-parla__opcio sdp-joc-parla__opcio--activa' : 'sdp-joc-parla__opcio'}
                   onClick={() => seleccionaOpcio(viva.id)}
                 >
                   <span className="sdp-joc-parla__opcio-cap">

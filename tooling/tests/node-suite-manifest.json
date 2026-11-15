@@ -218,7 +218,9 @@
     "tooling/gates/consola-zero-nucli.test.mjs",
     "tooling/scripts/retencio-assets.postcondicions.test.mjs",
     "tooling/gates/consola-zero.sense-rutes.test.mjs",
-    "tests/r28-rgpd-quotes-r23.test.mjs"
+    "tests/r28-rgpd-quotes-r23.test.mjs",
+    "tests/r29-quotes-rls-i-consens.test.mjs",
+    "tests/r29-esquemes-json-contractes.test.mjs"
   ],
   "files": [
     {
@@ -1557,6 +1559,11 @@
       "reason": "Ronda 2: regressió determinista del codi instal·lat amb fixtures temporals."
     },
     {
+      "path": "tests/tractor-vocabulari-diferits.test.mjs",
+      "suite": "primary",
+      "reason": "Onada R29 (css-diferit-04, vocab-comentaris, vocab-abast-apps): la porta de vocabulari sobre arbres fingits temporals (classe diferida orfe, clau creuada, herència tancada, comentaris CSS, src/apps i cadena d'@import d'index.css) i sobre el worktree."
+    },
+    {
       "path": "tests/uuid-editorial-authorship-boundary-r19.test.mjs",
       "suite": "primary",
       "reason": "R19: boundary regression for UUID editorial review; owner RLS and entity signature CHECK remain intact, with explicit PostgreSQL WASM fixture."
@@ -2024,6 +2031,18 @@
       "suite": "primary",
       "kind": "postgres",
       "reason": "R28 (D-R24.2-5 i D-R24.2-6): exportació RGPD de les files R23 pròpies (veu_del_poble) amb les seccions de 2611070600 intactes i quotes d'escriptura per persona a aportacions i vots (60/h, 500/24 h, 2000 vives, vot repetit fora, autoria aliena per la RLS, servidor exempt), sense GRANT ni política nova, idempotència i precondició SDP-R28-002; catàleg complet sobre PGlite local explícit; sense el mòdul declara omissió, no SQL certificat."
+    },
+    {
+      "path": "tests/r29-quotes-rls-i-consens.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R29 (SQL-R29-01..04 i 06): migració 20261115170000, NO aplicada a producció; RLS a les taules privades de R24, sostres per compte a aportacions culturals i revisions de patrimoni, consens d'isoglosses que un sol compte no pot buidar, normes UGC i pertinença a les taules R23, idempotència; catàleg complet sobre PGlite local explícit; sense el mòdul declara omissió, no SQL certificat."
+    },
+    {
+      "path": "tests/r29-esquemes-json-contractes.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R29 (kit lot_05 de Codex): paritat de validació JSON de mesures de patrimoni entre el port neutral i el catàleg PostgreSQL complet: tipus primitius, Unicode, claus reservades i límits de camps, text i nombres; PGlite local explícit, sense serveis remots ni concessions noves."
     }
   ]
 }

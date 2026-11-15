@@ -6,6 +6,21 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
 
+    /* Onada R29 · Els extres amb què els connectors tornen a obrir un avís tocat:
+       el local (NOTIFICATION_INTENT_KEY) i el push de FCM. */
+    static final String EXTRA_AVIS_LOCAL = "LocalNotificationId";
+    static final String EXTRA_AVIS_PUSH = "google.message_id";
+
+    /* Onada R29 · L'intent de l'arrencada ja es va atendre si l'activitat es
+       restaura (Android va matar el procés) o si s'obri des de «Recents»: en
+       Android 7-11 l'Arrere a l'arrel acaba l'activitat, i Recents torna a
+       lliurar l'intent amb què va nàixer la tasca. */
+    static boolean intentJaAtes(Intent intent, Bundle savedInstanceState) {
+        if (intent == null) return false;
+        return savedInstanceState != null
+            || (intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
+    }
+
     /* L'activitat és exportada: un intent amb un Parcelable desconegut fa petar el
        desempaquetat del Bundle quan el primer connector en llig un extra
        (Android 7-12). Si no es pot llegir, l'intent continua sense extres. */
@@ -43,9 +58,11 @@ public class MainActivity extends BridgeActivity {
         // Revisió 261026 · Restaurada després que Android matara el procés, la
         // tasca torna a lliurar l'intent amb què va nàixer (el SEND o el toc
         // d'un avís): ja es va atendre, i no ha de tornar a obrir res.
-        if (savedInstanceState != null && getIntent() != null) {
+        // Onada R29 · També reoberta des de «Recents», i també el toc d'un push.
+        if (intentJaAtes(getIntent(), savedInstanceState)) {
             getIntent().putExtra(CompartirNatiuPlugin.MARCA_CONSUMIT, true);
-            getIntent().removeExtra("LocalNotificationId");
+            getIntent().removeExtra(EXTRA_AVIS_LOCAL);
+            getIntent().removeExtra(EXTRA_AVIS_PUSH);
         }
         super.onCreate(savedInstanceState);
     }

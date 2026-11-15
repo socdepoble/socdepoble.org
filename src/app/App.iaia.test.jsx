@@ -190,10 +190,11 @@ describe('/anima · el botó «Anar al xat» dins del bloc de l’H1 i al final 
       fireEvent.click(boto);
       await waitFor(() => expect(window.location.pathname).toBe(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA), ESPERA);
       expect(window.location.search).toBe('');
-      /* La conversa oberta és la de mostra: les dues bombolles de la IAIA del xat de mostra. */
+      /* La conversa oberta és la de mostra: les dues bombolles de la IAIA del xat de mostra.
+         Onada R29 · DECISIÓ-R29-02.7 · Davall de la invitació, dins de la seua bombolla, el camí a /registre. */
       await waitFor(() => {
         const bombolles = [...document.querySelectorAll('.sdp-xat-bombolla__text')].map((bombolla) => bombolla.textContent);
-        expect(bombolles).toEqual([BENVINGUDA_IAIA, t('section.xat.fake.iaia2')]);
+        expect(bombolles).toEqual([BENVINGUDA_IAIA, t('section.xat.fake.iaia2'), t('section.xat.fake.registre')]);
       }, ESPERA);
       expect(window.location.pathname).not.toBe('/registre');
       expect(document.body.textContent).not.toContain('Ací no hi ha res');

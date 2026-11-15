@@ -1098,8 +1098,12 @@ export async function exportaCopiaSeguretatXatAmbRebut({
   const idsMissatgesActius = new Set(missatgesFiltrats.map((m) => m.id));
   const idsFilsActius = new Set(missatgesFiltrats.map((m) => m.filId));
   const mode = baseNeta ? 'incremental' : (teTallSeq || tallDesDeMs !== null ? 'parcial' : 'complet');
+  /* Onada R29 · R29-E2EE-03 · Una parcial amb cursors per fil conserva també el fil que porta cursor
+     declarat i cap missatge nou (la conversa de la vista sense cap missatge carregat): el seu cursor ja
+     viatja a ultimSeqPerFil i el fil és dins de l'abast que la còpia declara. */
+  const ambCursorDeclarat = (f) => mode === 'parcial' && tePerFil && Object.hasOwn(cursorsInicials, f.id);
   const filsFiltrats = filsEntrada
-    .filter((f) => mode === 'complet' || idsFilsActius.has(f.id))
+    .filter((f) => mode === 'complet' || idsFilsActius.has(f.id) || ambCursorDeclarat(f))
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
   const adjuntsAmbHash = [];
@@ -1878,6 +1882,26 @@ const campsOferta = (o) => ({
   expiraAtMs: o.expiraAtMs, sdpOffer: o.sdpOffer, clauPublicaEfimeraJwk: o.clauPublicaEfimeraJwk,
 });
 
+/* Els missatges QR són dades planes. Captura els camps i la JWK abans de
+   qualsevol espera: una mutació del caller no pot canviar la transcripció
+   validada, la sessió consumida ni la resposta. Cap accessor s’executa. */
+function copiaObjecteQr(valor) {
+  if (!esObjectePla(valor)) return valor;
+  const descriptors = Object.getOwnPropertyDescriptors(valor);
+  if (Object.getOwnPropertySymbols(valor).length || Object.values(descriptors).some(d => !Object.hasOwn(d, 'value') || !d.enumerable)) {
+    throw creaErrorTipificat(CODI_QR_INVALID, 'esquema', 'El missatge QR ha de contindre només dades planes.');
+  }
+  return Object.fromEntries(Object.entries(descriptors).map(([clau, d]) => [clau, d.value]));
+}
+
+function instantaniaMissatgeQr(valor) {
+  const copia = copiaObjecteQr(valor);
+  if (esObjectePla(copia) && Object.hasOwn(copia, 'clauPublicaEfimeraJwk')) {
+    copia.clauPublicaEfimeraJwk = copiaObjecteQr(copia.clauPublicaEfimeraJwk);
+  }
+  return copia;
+}
+
 /** Una parella ECDH P-256 efímera (privada no extraïble) i la seua JWK pública. */
 export async function generaParellaEfimeraTraspas({ cripto = globalThis.crypto } = {}) {
   exigixCripto(cripto);
@@ -1907,7 +1931,8 @@ export async function creaOfertaTraspasLocalQr({
   const uid = exigixAmbit(usuariId, 'usuariId', CODI_QR_INVALID);
   const tid = exigixAmbit(tenantId, 'tenantId', CODI_QR_INVALID);
   exigixSdp(sdpOffer, 'l’oferta SDP');
-  exigixJwkEfimera(clauPublicaEfimeraJwk);
+  const publica = copiaObjecteQr(clauPublicaEfimeraJwk);
+  exigixJwkEfimera(publica);
   if (!Number.isSafeInteger(araMs) || araMs < 0) throw creaErrorTipificat(CODI_QR_INVALID, 'rellotge', 'Rellotge invàlid.');
   const durada = Math.max(TTL_QR_MIN_MS, Math.min(TTL_QR_MAX_MS, Number.isSafeInteger(ttlMs) ? ttlMs : TTL_QR_MAX_MS));
   const oferta = {
@@ -1922,7 +1947,7 @@ export async function creaOfertaTraspasLocalQr({
     creatAtMs: araMs,
     expiraAtMs: araMs + durada,
     sdpOffer,
-    clauPublicaEfimeraJwk: { ...clauPublicaEfimeraJwk },
+    clauPublicaEfimeraJwk: publica,
   };
   // Integritat de la transcripció del QR (no és autenticació: el SAS ho és).
   return { ...oferta, empremtaSha256: await sha256Hex(cripto, codifica(canonic(campsOferta(oferta)))) };
@@ -1944,6 +1969,7 @@ function analitzaOferta(ofertaCrua) {
   } catch {
     throw creaErrorTipificat(CODI_QR_INVALID, 'json', 'Codi QR malformat.');
   }
+  oferta = instantaniaMissatgeQr(oferta);
   if (!esObjectePla(oferta) || oferta.esquema !== ESQUEMA_SDP_QR_P2P || oferta.versio !== VERSIO_SDP_QR_P2P
     || oferta.tipus !== 'oferta' || clausOrdenades(oferta) !== CLAUS_OFERTA) {
     throw creaErrorTipificat(CODI_QR_INVALID, 'esquema', 'Codi QR d’emparellament desconegut.');
@@ -1992,8 +2018,13 @@ export async function validaOfertaTraspasLocalQr(ofertaCrua, {
   exigixSdp(oferta.sdpOffer, 'l’oferta SDP');
   exigixJwkEfimera(oferta.clauPublicaEfimeraJwk);
   const empremta = await sha256Hex(cripto, codifica(canonic(campsOferta(oferta))));
-  if (!comparacioTempsConstant(empremta, oferta.empremtaSha256)) {
+  if (typeof oferta.empremtaSha256 !== 'string' || !comparacioTempsConstant(empremta, oferta.empremtaSha256)) {
     throw creaErrorTipificat(CODI_QR_INVALID, 'empremta', 'L’empremta del QR no verifica.');
+  }
+  // La verificació és asíncrona: una altra validació pot haver consumit el
+  // mateix QR durant el digest. La comprovació i l’alta són un sol pas síncron.
+  if (registre.has(oferta.sessioId)) {
+    throw creaErrorTipificat(CODI_QR_INVALID, 'reutilitzat', 'Aquest codi QR d’un sol ús ja ha sigut consumit.');
   }
   registre.add(oferta.sessioId, expiraAtMs);
   return { ok: true, sessioId: oferta.sessioId, modeDispositiu: oferta.modeDispositiu, expiraAtMs };
@@ -2013,11 +2044,12 @@ export async function creaRespostaTraspasLocalQr(ofertaCrua, {
   cripto = globalThis.crypto,
 } = {}) {
   const oferta = analitzaOferta(ofertaCrua);
+  const publica = copiaObjecteQr(clauPublicaEfimeraJwk);
   await validaOfertaTraspasLocalQr(oferta, { usuariIdEsperat: usuariId, tenantIdEsperat: tenantId, araMs, sessionsConsumides, cripto });
   const dtlsResposta = exigixSdp(sdpAnswer, 'la resposta SDP');
-  exigixJwkEfimera(clauPublicaEfimeraJwk);
+  exigixJwkEfimera(publica);
   if (dtlsResposta === empremtaDtlsDe(oferta.sdpOffer)
-    || canonic(clauPublicaEfimeraJwk) === canonic(oferta.clauPublicaEfimeraJwk)) {
+    || canonic(publica) === canonic(oferta.clauPublicaEfimeraJwk)) {
     throw creaErrorTipificat(CODI_QR_INVALID, 'reflexio', 'La resposta no pot reutilitzar la clau ni l’empremta DTLS de l’oferta.');
   }
   return {
@@ -2030,7 +2062,7 @@ export async function creaRespostaTraspasLocalQr(ofertaCrua, {
     tenantId: oferta.tenantId,
     creatAtMs: araMs,
     sdpAnswer,
-    clauPublicaEfimeraJwk: { ...clauPublicaEfimeraJwk },
+    clauPublicaEfimeraJwk: publica,
     empremtaOferta: oferta.empremtaSha256,
   };
 }
@@ -2067,13 +2099,15 @@ export async function derivaSasTraspasLocalQr({
   } catch {
     throw creaErrorTipificat(CODI_QR_INVALID, 'json', 'Resposta de traspàs malformada.');
   }
+  resposta = instantaniaMissatgeQr(resposta);
   if (!esObjectePla(resposta) || resposta.esquema !== ESQUEMA_SDP_QR_P2P || resposta.versio !== VERSIO_SDP_QR_P2P
     || resposta.tipus !== 'resposta' || clausOrdenades(resposta) !== CLAUS_RESPOSTA) {
     throw creaErrorTipificat(CODI_QR_INVALID, 'esquema', 'Resposta de traspàs desconeguda.');
   }
   exigixId128(resposta.nonce, 'nonce');
   const empremtaOferta = await sha256Hex(cripto, codifica(canonic(campsOferta(oferta))));
-  if (!comparacioTempsConstant(empremtaOferta, oferta.empremtaSha256)
+  if (typeof oferta.empremtaSha256 !== 'string' || typeof resposta.empremtaOferta !== 'string'
+    || !comparacioTempsConstant(empremtaOferta, oferta.empremtaSha256)
     || !comparacioTempsConstant(resposta.empremtaOferta, oferta.empremtaSha256)
     || resposta.sessioId !== oferta.sessioId) {
     throw creaErrorTipificat(CODI_QR_INVALID, 'sessio', 'La resposta no correspon a esta oferta.');

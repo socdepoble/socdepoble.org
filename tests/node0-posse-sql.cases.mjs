@@ -30,8 +30,8 @@ const PERFILS=[
  {migracions:85,exclou:['2611091500',...POST_R15],fonts:[FONT_POLITICA_2_6_ABANS_A2]},
  {migracions:85,exclou:['2611080440',...POST_R15],fonts:[]},
  {migracions:86,exclou:POST_R15,fonts:[FONT_POLITICA_2_6_ABANS_A2]},
- // Catàleg complet actual (R28): cap exclusió ni cap font històrica.
- {migracions:112,exclou:[],fonts:[]},
+ // Catàleg complet actual (R29): cap exclusió ni cap font històrica.
+ {migracions:113,exclou:[],fonts:[]},
 ];
 const catalogues=PERFILS.map(({exclou,fonts})=>aplicaFontsHistoriques(CATALEG.filter(m=>!exclou.includes(m.version)),fonts));
 const PINS=[...sqlPosse.match(/-- POSSE_MIGRATION_PINS_BEGIN\n([\s\S]*?)\n-- POSSE_MIGRATION_PINS_END/)[1].matchAll(/\((\d+),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>`${count}:${hash}`);
@@ -62,17 +62,19 @@ test('R23 counts without exact source identity proof never establish readiness',
  for(const state of[{...base,migrationLedgerSha256:undefined},{...base,migrationLedgerSha256:'0'.repeat(64)},ready(wrong),ready(unknown),ready(unknownVersion),{...base,migrations:75},{...base,migrations:77},{...base,migrations:78},{...base,migrations:79},{...base,migrations:80},{...base,migrations:81},{...ready(catalogues[3]),migrationLedgerSha256:ledgerHash(catalogues[2])}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
  for(const change of[{ownerStable:false},{tablesPrivate:false},{sourceInstalled:false},{remoteInstalled:false},{functionHashes:{}}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>({...base,...change})}}),/posse_schema_drift/);
  // Amb els bytes actuals de 2611080440 (A2, 776f77186) les composicions R54-85 i R15-86 no són
- // cap registre fixat; i el pin 111 obsolet (ea68491ba, sense 20261115030000) ja no s'accepta.
+ // cap registre fixat; i els pins obsolets 111 (ea68491ba, sense 20261115030000) i 112 (R28, sense
+ // 20261115170000 de l'Onada R29) ja no s'accepten.
  const historics=PERFILS.filter(p=>p.fonts.length);assert.equal(historics.length,2);
  for(const {exclou} of historics)await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>ready(CATALEG.filter(m=>!exclou.includes(m.version)))}}),/posse_schema_drift/);
  await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>({...base,migrations:111,migrationLedgerSha256:'834e9473ddbdea38b02d8b59ccd268c0811dfdcf65fbcb407edf720e0f4f5233'})}}),/posse_schema_drift/);
+ await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>({...base,migrations:112,migrationLedgerSha256:'542397eda905b620188f17be580e988c34558b306071a5a675a9368ca6c15485'})}}),/posse_schema_drift/);
 });
 test('R39 POSSE hashes use the PostgreSQL core without a pgcrypto schema assumption',()=>{
  assert.doesNotMatch(sqlPosse,/\b(?:public\.)?digest\(/);
  assert.equal([...sqlPosse.matchAll(/pg_catalog\.sha256\(convert_to\(/g)].length,8);
 });
 test('POSSE PostgreSQL installs all ten exact pinned profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
- assert.equal(PERFILS.length,10,'deu perfils fixats: 76..81, els dos 85, 86 i el complet actual 112');
+ assert.equal(PERFILS.length,10,'deu perfils fixats: 76..81, els dos 85, 86 i el complet actual 113');
  for(const [index,{exclou,fonts}] of PERFILS.entries()){
   const f=await creaFixturePosse({exclou,fonts});
   try{

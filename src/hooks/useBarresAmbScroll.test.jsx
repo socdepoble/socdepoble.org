@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { useRef, useSyncExternalStore } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
-  ALCADA_MAXIMA_CURTA, ATRIBUT_BARRES, ATRIBUT_TACTIL, BARRES_DALT, BARRES_TOTES, CLASSES_PEU_ANCORAT, CONSULTA_TACTIL, ESTAT_INICIAL,
+  ALCADA_MAXIMA_CURTA, ATRIBUT_BARRES, ATRIBUT_TACTIL, ATRIBUT_VEU_OBERTA, BARRES_DALT, BARRES_TOTES, CLASSES_PEU_ANCORAT, CONSULTA_TACTIL, ESTAT_INICIAL,
   FRACCIO_VISOR, esPantallaCurta, seguentEstat, useArrelTactil, useBarresAmbScroll
 } from './useBarresAmbScroll.js';
 
@@ -456,6 +456,42 @@ describe('useBarresAmbScroll · amb un peu ancorat a baix', () => {
     expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_TOTES);
     recorre(visor, [1190, 1170]);
     expect(capsa.barres.potPujar()).toBe(true);
+  });
+});
+
+/* Onada R29 · R29-02-09 · El desplaçament de la lectura i de «Bloc següent»
+   comptava com a scroll de la persona: escrivia «totes», nav.mobile-nav se
+   n'anava i la barra de veu baixava 72 px sota el dit. Amb el reproductor
+   obert (data-sdp-veu-oberta a l'arrel), «dalt» i mai «totes». */
+describe('useBarresAmbScroll · amb el reproductor de veu obert', () => {
+  test('la barra inferior es queda («dalt», mai «totes»); tancat el reproductor, torna «totes»', () => {
+    const { arrel, visor } = munta();
+    expect(ATRIBUT_VEU_OBERTA).toBe('data-sdp-veu-oberta');
+    arrel.setAttribute(ATRIBUT_VEU_OBERTA, 'true');
+    recorre(visor, BAIXA);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+    // Les barres de dalt continuen acompanyant el scroll: pujant tornen.
+    recorre(visor, [1190, 1170]);
+    expect(arrel.hasAttribute(ATRIBUT_BARRES)).toBe(false);
+    recorre(visor, [1300, 1400]);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+    // Control: sense reproductor, el mateix gest les amaga totes.
+    arrel.removeAttribute(ATRIBUT_VEU_OBERTA);
+    recorre(visor, [1500, 1600]);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_TOTES);
+  });
+
+  test('si el reproductor s’obri amb «totes» ja escrit, passa a «dalt» en el mateix moment', async () => {
+    const { arrel, visor } = munta();
+    recorre(visor, BAIXA);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_TOTES);
+    await act(async () => { arrel.setAttribute(ATRIBUT_VEU_OBERTA, 'true'); });
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+    // Tancar-lo no torna «totes» tot sol: ho decidix el scroll següent.
+    await act(async () => { arrel.removeAttribute(ATRIBUT_VEU_OBERTA); });
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+    recorre(visor, [1300, 1400]);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_TOTES);
   });
 });
 

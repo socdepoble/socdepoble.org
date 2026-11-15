@@ -2,10 +2,6 @@
    l'arrencada del paquet de WordPress i s'adopten a l'arrel on es munta la peça (src/config/fullDiferit.js).
    NO s'importa des d'index.css. Origen: components.css. */
 @layer components {
-  .sdp-joc-parla__opcio--viva {
-    border-style: dashed;
-    border-color: var(--sdp-accio-control);
-  }
   .sdp-joc-parla__opcio-cap {
     display: flex;
     flex-wrap: wrap;

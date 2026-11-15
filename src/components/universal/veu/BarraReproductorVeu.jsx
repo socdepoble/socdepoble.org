@@ -65,6 +65,25 @@ const TEXTOS = Object.freeze({
   buit: ['veu.reproductor.buit', 'Esta pàgina no té cap paràgraf disponible per a llegir en veu alta.'],
 });
 
+/* Onada R29 · R29-02-05 · Amb una font d'àudio (fontSo 'audio') els controls parlen de pistes,
+   no de blocs ni de lectura. La resta de textos són els mateixos que en mode lectura. */
+const TEXTOS_AUDIO = Object.freeze({
+  ...TEXTOS,
+  anterior: ['veu.reproductor.anteriorAudio', 'Pista anterior'],
+  seguent: ['veu.reproductor.seguentAudio', 'Pista següent'],
+  pausa: ['veu.reproductor.pausaAudio', 'Pausa l’àudio'],
+  continua: ['veu.reproductor.continuaAudio', 'Escolta l’àudio'],
+  tornaEscoltar: ['veu.reproductor.tornaEscoltarAudio', 'Torna a escoltar des de la primera pista'],
+  apartats: ['veu.reproductor.apartatsAudio', 'Llista de pistes i cerca'],
+  cercaPlaceholder: ['veu.reproductor.cercaPlaceholderAudio', 'Cerca una pista…'],
+  cercaEtiqueta: ['veu.reproductor.cercaEtiquetaAudio', 'Cerca entre les pistes'],
+  senseResultats: ['veu.reproductor.senseResultatsAudio', 'Cap pista coincidix amb la cerca.'],
+  copia: ['veu.reproductor.copiaAudio', 'Copiar el text de la pista'],
+  copiat: ['veu.reproductor.copiatAudio', 'Text de la pista copiat al porta-retalls.'],
+  errorCopia: ['veu.reproductor.errorCopiaAudio', 'No s’ha pogut copiar el text de la pista.'],
+  tanca: ['veu.reproductor.tancaAudio', 'Tancar el reproductor de so'],
+});
+
 function formatPosicio(plantilla, actual, total) {
   return String(plantilla || 'Bloc {actual} de {total}')
     .replace('{actual}', String(actual))
@@ -144,6 +163,7 @@ export function BarraReproductorVeu({
   // eslint-disable-next-line react-hooks/exhaustive-deps -- es recalcula només quan canvia la signatura del contingut
   const pistesFontSo = useMemo(() => normalitzaPistesFontSo(fontSo), [signaturaFontSo]);
   const esFontAudio = Boolean(fontSo?.tipus === 'audio' && pistesFontSo?.some((p) => Boolean(p.srcAudio)));
+  const textos = esFontAudio ? TEXTOS_AUDIO : TEXTOS;
 
   const [destiPortal, setDestiPortal] = useState(null);
   const [compacte, setCompacte] = useState(false);
@@ -160,12 +180,18 @@ export function BarraReproductorVeu({
   const [cicleCua, setCicleCua] = useState(0);
 
   const sessioIdRef = useRef(0);
+  /* Onada R29 · R29-CV-05 · Testimoni de la locució que la barra té en curs (null si no en té cap,
+     o si una altra peça l'ha tallada): tancar o desmuntar només aturen la veu si és de la barra. */
+  const veuPropiaRef = useRef(null);
   const indexRef = useRef(0);
   const blocsRef = useRef(blocs);
   const estatRef = useRef(estat);
   const obertaRef = useRef(oberta);
   const ressaltatDomRef = useRef(null);
   const timerCopiatRef = useRef(null);
+  /* Onada R29 · R29-UI-01 · La còpia pot continuar al sistema després de tancar la barra. Només
+     l'última petició de la sessió vigent pot publicar estat o crear un timer. */
+  const copiaIdRef = useRef(0);
   /* En ref i no en les dependències del motor: canviar-lo no ha de reiniciar el bloc que sona. */
   const seguixLecturaRef = useRef(seguixLectura);
 
@@ -309,7 +335,11 @@ export function BarraReproductorVeu({
   useEffect(() => {
     if (!oberta) {
       sessioIdRef.current += 1;
-      serveiVeu.atura();
+      copiaIdRef.current += 1;
+      clearTimeout(timerCopiatRef.current);
+      setCopiatRecent(false);
+      setMissatgeEstat('');
+      if (veuPropiaRef.current) serveiVeu.atura();
       if (audioFontRef.current) {
         try { audioFontRef.current.pause(); } catch { /* ignorat */ }
       }
@@ -345,16 +375,18 @@ export function BarraReproductorVeu({
     }
   }, [oberta, idioma, capcaleraRef, cosRef, pistesFontSo, blocsMostra, mostraEspecimen, t]);
 
-  /* Neteja garantida en desmuntar. */
+  /* Neteja garantida en desmuntar. Onada R29 · R29-CV-04/05 · Només calla la veu si és de la barra
+     (també a l'espècimen, que abans només avortava la promesa i el bloc continuava sonant). */
   useEffect(() => () => {
     sessioIdRef.current += 1;
+    copiaIdRef.current += 1;
     clearTimeout(timerCopiatRef.current);
-    if (!mostraEspecimen) serveiVeu.atura();
+    if (veuPropiaRef.current) serveiVeu.atura();
     if (audioFontRef.current) {
       try { audioFontRef.current.pause(); } catch { /* ignorat */ }
     }
     ressaltatDomRef.current = marcaBlocActiuDom(ressaltatDomRef.current, null);
-  }, [mostraEspecimen]);
+  }, []);
 
   /* Ressaltat suau del bloc actiu al DOM mentre el reproductor és obert en mode lectura. */
   useEffect(() => {
@@ -455,6 +487,8 @@ export function BarraReproductorVeu({
         if (!mostraEspecimen && bloc?.element) {
           ressaltatDomRef.current = marcaBlocActiuDom(ressaltatDomRef.current, bloc.element);
         }
+        const jo = {};
+        veuPropiaRef.current = jo;
         try {
           await serveiVeu.parla(bloc.text, {
             idioma: idioma || 'ca',
@@ -462,7 +496,9 @@ export function BarraReproductorVeu({
             veu: clauVeuActiva || undefined,
             signal: control.signal,
           });
+          if (veuPropiaRef.current === jo) veuPropiaRef.current = null;
         } catch (err) {
+          if (veuPropiaRef.current === jo) veuPropiaRef.current = null;
           if (sessioIdRef.current !== idSessio || control.signal.aborted) {
             return;
           }
@@ -547,6 +583,7 @@ export function BarraReproductorVeu({
   const copiaFragmentActual = useCallback(async () => {
     const bloc = blocsRef.current[indexRef.current];
     if (!bloc?.text) return;
+    const idCopia = ++copiaIdRef.current;
     clearTimeout(timerCopiatRef.current);
     try {
       if (globalThis.navigator?.clipboard?.writeText) {
@@ -554,22 +591,28 @@ export function BarraReproductorVeu({
       } else {
         throw new Error('Clipboard no disponible');
       }
+      if (idCopia !== copiaIdRef.current || !obertaRef.current) return;
       setCopiatRecent(true);
-      setMissatgeEstat(tradueix(t, TEXTOS.copiat));
+      setMissatgeEstat(tradueix(t, textos.copiat));
       timerCopiatRef.current = setTimeout(() => {
         setCopiatRecent(false);
       }, 2200);
     } catch {
+      if (idCopia !== copiaIdRef.current || !obertaRef.current) return;
       setCopiatRecent(false);
-      setMissatgeEstat(tradueix(t, TEXTOS.errorCopia));
+      setMissatgeEstat(tradueix(t, textos.errorCopia));
     }
-  }, [t]);
+  }, [t, textos]);
 
   const tancaReproductor = useCallback(() => {
     const arrelDoc = barraRef.current?.getRootNode?.() || globalThis.document;
     const focusDins = Boolean(barraRef.current && arrelDoc?.activeElement && barraRef.current.contains(arrelDoc.activeElement));
     sessioIdRef.current += 1;
-    serveiVeu.atura();
+    copiaIdRef.current += 1;
+    clearTimeout(timerCopiatRef.current);
+    setCopiatRecent(false);
+    /* Onada R29 · R29-CV-05 · Pausada per una altra peça (el Refranyer, el joc), tancar la barra no talla eixa veu. */
+    if (veuPropiaRef.current) serveiVeu.atura();
     if (audioFontRef.current) {
       try { audioFontRef.current.pause(); } catch { /* ignorat */ }
     }
@@ -628,10 +671,10 @@ export function BarraReproductorVeu({
       : formatPosicio(tradueix(t, esFontAudio ? TEXTOS.posicioAudio : TEXTOS.posicio), indexActual + 1, total))
     : '';
   const etiquetaPlay = parlant
-    ? tradueix(t, TEXTOS.pausa)
+    ? tradueix(t, textos.pausa)
     : estat === 'acabat'
-      ? tradueix(t, TEXTOS.tornaEscoltar)
-      : tradueix(t, TEXTOS.continua);
+      ? tradueix(t, textos.tornaEscoltar)
+      : tradueix(t, textos.continua);
 
   const contingut = (
     <aside
@@ -652,7 +695,7 @@ export function BarraReproductorVeu({
         <div id={idPanellSalt} className="sdp-barra-veu__panell-salt">
           <div className="sdp-barra-veu__cerca-fila">
             <label htmlFor={`${idBase}-cerca`} className="sr-only">
-              {tradueix(t, TEXTOS.cercaEtiqueta)}
+              {tradueix(t, textos.cercaEtiqueta)}
             </label>
             <div className="sdp-barra-veu__cerca-camp">
               <Search size={18} aria-hidden="true" focusable="false" />
@@ -662,11 +705,11 @@ export function BarraReproductorVeu({
                 className="sdp-barra-veu__cerca-input"
                 value={cercaText}
                 onChange={(ev) => setCercaText(ev.target.value)}
-                placeholder={tradueix(t, TEXTOS.cercaPlaceholder)}
+                placeholder={tradueix(t, textos.cercaPlaceholder)}
               />
             </div>
             {!esFontAudio ? (
-              <div className="sdp-barra-veu__filtres" role="group" aria-label={tradueix(t, TEXTOS.apartats)}>
+              <div className="sdp-barra-veu__filtres" role="group" aria-label={tradueix(t, textos.apartats)}>
                 <button
                   type="button"
                   className={filtreSalt === 'tots' ? 'sdp-barra-veu__pindola sdp-barra-veu__pindola--activa' : 'sdp-barra-veu__pindola'}
@@ -688,7 +731,7 @@ export function BarraReproductorVeu({
           </div>
 
           {blocsFiltrats.length === 0 ? (
-            <p className="sdp-barra-veu__buit">{tradueix(t, TEXTOS.senseResultats)}</p>
+            <p className="sdp-barra-veu__buit">{tradueix(t, textos.senseResultats)}</p>
           ) : (
             <ul className="sdp-barra-veu__llista-salt">
               {blocsFiltrats.map((bloc) => {
@@ -741,7 +784,7 @@ export function BarraReproductorVeu({
             aria-expanded={panellSaltObert}
             /* Onada R28 · veu-editorial-10 · Només apunta al panell quan és al DOM (es munta en obrir-lo). */
             aria-controls={panellSaltObert ? idPanellSalt : undefined}
-            aria-label={tradueix(t, TEXTOS.apartats)}
+            aria-label={tradueix(t, textos.apartats)}
             onClick={() => setPanellSaltObert((v) => !v)}
           >
             <ListOrdered size={20} aria-hidden="true" focusable="false" />
@@ -753,7 +796,7 @@ export function BarraReproductorVeu({
         <button
           type="button"
           className="sdp-barra-veu__control"
-          aria-label={tradueix(t, TEXTOS.anterior)}
+          aria-label={tradueix(t, textos.anterior)}
           disabled={total === 0 || indexActual <= 0}
           onClick={() => saltaABloc(indexActual - 1)}
         >
@@ -777,7 +820,7 @@ export function BarraReproductorVeu({
         <button
           type="button"
           className="sdp-barra-veu__control"
-          aria-label={tradueix(t, TEXTOS.seguent)}
+          aria-label={tradueix(t, textos.seguent)}
           disabled={total === 0 || indexActual >= total - 1}
           onClick={() => saltaABloc(indexActual + 1)}
         >
@@ -787,7 +830,7 @@ export function BarraReproductorVeu({
         <button
           type="button"
           className={copiatRecent ? 'sdp-barra-veu__control sdp-barra-veu__control--actiu' : 'sdp-barra-veu__control'}
-          aria-label={tradueix(t, TEXTOS.copia)}
+          aria-label={tradueix(t, textos.copia)}
           disabled={!blocActiu}
           onClick={copiaFragmentActual}
         >
@@ -801,7 +844,7 @@ export function BarraReproductorVeu({
         <button
           type="button"
           className="sdp-barra-veu__control"
-          aria-label={tradueix(t, TEXTOS.tanca)}
+          aria-label={tradueix(t, textos.tanca)}
           onClick={tancaReproductor}
         >
           <X size={20} aria-hidden="true" focusable="false" />

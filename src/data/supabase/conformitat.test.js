@@ -616,6 +616,22 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
     }
   });
 
+  /* Onada R29 · PF-02 · Un reintent de la mateixa llista (p. ex. després d'un TimeoutError en
+     què el servidor ja havia desat) no duplica: l'id de qui crida viatja com a p_id i el doble,
+     com xat_envia, és idempotent per p_id. Abans, cada crida en generava un d'aleatori. */
+  test('PF-02 · appendChatMessages conserva l’id: reenviar la mateixa llista no duplica', async () => {
+    configuraBackendSessio(CONFIG_REMOT);
+    expect(desaSessio({ access_token: JWT, user: { id: PERSONA, email: 'conformitat@poble.invalid' } })).toBe(true);
+    const id = '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
+    const llista = [{ filId: FIL, id, text: 'Reintent sense duplicar' }];
+    const [primer] = await adaptador.appendChatMessages(llista, CONFIG_REMOT);
+    const [segon] = await adaptador.appendChatMessages(llista, CONFIG_REMOT);
+    expect(primer.id).toBe(id);
+    expect(segon).toMatchObject({ id, seq: primer.seq });
+    expect(estat.missatges.filter((m) => m.cos === 'Reintent sense duplicar')).toHaveLength(1);
+    expect(estat.rutesDesconegudes).toEqual([]);
+  });
+
   test('logout remot amb sessió activa l’esborra; el mutant no-op queda refutat', async () => {
     const c = CASOS.find(cas => cas.metode === 'logout');
     const prova = async candidat => {

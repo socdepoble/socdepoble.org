@@ -68,8 +68,9 @@ test('R19 UUID editorial boundary: real owner RLS, entity signature CHECK and ex
       assert.match(wrapper,/_editorialClau/);assert.match(wrapper,/FILA_DE_SECCIO\[seccio\]/);
       // El recompte segueix el catàleg complet: R15 (688f4c2a5, 7bdd232b4: 85/86), R21-R26
       // (cd0b3a4ef, a7235a1c9, d44363319, 2c04c1e9c, a599251d3, 259f800d1, 3d16007e2: 111) i R28 STEP R2
-      // (20261115030000, encara sense commit: 112). Les subproves d'esta frontera s'executen amb tot este catàleg aplicat.
-      assert.equal((await f.pg.query("SELECT count(*)::integer AS n FROM node0.schema_migrations")).rows[0].n,112,'R11 adds per-seed revisions (and R13-C7 the session counts, R15-R28 the full112 catalogue) without granting access to UUID submissions');
+      // (20261115030000: 112) i Onada R29 (20261115170000, encara sense commit: 113). Les subproves d'esta frontera
+      // s'executen amb tot este catàleg aplicat.
+      assert.equal((await f.pg.query("SELECT count(*)::integer AS n FROM node0.schema_migrations")).rows[0].n,113,'R11 adds per-seed revisions (and R13-C7 the session counts, R15-R29 the full113 catalogue) without granting access to UUID submissions');
     });
   }finally{await f.close();}
 });
