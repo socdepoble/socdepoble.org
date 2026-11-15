@@ -30,6 +30,7 @@
    vista que demana la pantalla sencera no té barra inferior que reservar.
    Viu ací, fora de capa com el token: una regla en capa no el sobreescriu. */
 .sdp-root[data-sdp-immersiu] { --sdp-alt-nav-mobil: 0px; }
+.sdp-root[data-sdp-teclat="obert"] { --sdp-alt-nav-mobil: 0px; }
 
 :root, :host, .sdp-root {
   /* Defaults traslladats dels components sense alterar els valors. */
@@ -573,6 +574,11 @@
   --sdp-crom-scroll-pista:      rgba(0, 0, 0, 0.15);
   --sdp-crom-scroll-puny:       rgba(0, 0, 0, 0.21);
   --sdp-crom-scroll-puny-viu:   rgba(0, 0, 0, 0.35);
+  /* Onada R28 · Vel fosc de .btn-date-time sobre la barra taronja i el verd del
+     Lector: text blanc en AAA (7,96 a 1 en repòs, 9,77 a 1 en hover i 11,90 a 1 en prémer). */
+  --sdp-crom-pastilla-data:       rgba(0, 0, 0, 0.48);
+  --sdp-crom-pastilla-data-hover: rgba(0, 0, 0, 0.56);
+  --sdp-crom-pastilla-data-viu:   rgba(0, 0, 0, 0.64);
   --sdp-crom-ombra:             0 18px 44px rgba(14, 13, 12, 0.16);
   /* Ordre del Mestre (261024, 14:40; correcció R5-09, 261024 Lector) · El fons
      del títol de la barra del Lector, i de cap altra app: el verd de Sóc de

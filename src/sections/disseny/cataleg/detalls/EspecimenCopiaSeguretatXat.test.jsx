@@ -4,7 +4,9 @@
    ni UIProvider), cada mostra es diu mostra i cap no promet restaurar; i el
    motor de veres no corre mai: ací se substituïx per uns que fallen si algú
    els crida, i tots els camins de les mostres (desar, compartir, l'error, la
-   comprovació bona, la clau incorrecta i l'altre compte) acaben sense tocar-lo. */
+   comprovació bona, la clau incorrecta i l'altre compte) acaben sense tocar-lo.
+   Onada R28 · El nom d'arxiu de la mostra és el que fa nomArxiuCopiaSeguretatXat
+   (pura, no prohibida), i hi ha mostres sense missatges i sense WebCrypto. */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import {
@@ -88,8 +90,18 @@ test('es munta sol, cada mostra es diu mostra, diu que el motor és de mostra i 
     expect(text).toMatch(/encara no és possible/);
   }
   const titols = [...container.querySelectorAll('.sdp-especimen__viu > h4')].map((h) => h.textContent);
-  expect(titols).toHaveLength(10);
+  expect(titols).toHaveLength(12);
   expect(titols.every((titol) => titol.startsWith('Mostra · '))).toBe(true);
+  /* Onada R28 (copia-xat-03 i 04) · Les converses sense cap missatge carregat
+     avisen abans del formulari; sense WebCrypto, cap formulari. */
+  const senseMissatges = mostra('Converses sense cap missatge carregat');
+  expect(within(senseMissatges).getByText('Converses: 3 · Missatges: 0')).toBeTruthy();
+  expect(within(senseMissatges).getByText(/^Encara no s’ha carregat cap missatge\. La còpia només portaria la llista de converses/)).toBeTruthy();
+  expect(within(senseMissatges).getByLabelText('Contrasenya de la còpia')).toBeTruthy();
+  const senseCripto = mostra('El navegador no deixa xifrar');
+  expect(within(senseCripto).getByText(/^Este navegador no deixa xifrar en esta pàgina\./)).toBeTruthy();
+  expect(within(senseCripto).queryByLabelText('Contrasenya de la còpia')).toBeNull();
+  expect(within(senseCripto).queryByRole('button')).toBeNull();
   /* Les mostres sense tocar res: el recompte, el buit, l'app sense full de compartir i sense compte. */
   expect(within(mostra('Al navegador (es pot tocar)')).getByText('Converses: 3 · Missatges: 47')).toBeTruthy();
   expect(within(mostra('Cap conversa carregada')).getByText('Este dispositiu encara no té cap conversa carregada: no hi ha res per a copiar.')).toBeTruthy();
@@ -109,7 +121,8 @@ test('Desa al navegador: prepara la còpia i el pas 2 diu el text de l’app, am
   const boto = await within(caixa).findByRole('button', { name: 'Desa l’arxiu' });
   expect(within(caixa).getByText('Còpia xifrada preparada')).toBeTruthy();
   fireEvent.click(boto);
-  expect(await within(caixa).findByText(/^Ha començat la descàrrega de l’arxiu socdepoble-xat-20261115-0230\.sdpbackup\./)).toBeTruthy();
+  /* Onada R28 · copia-xat-07 · El nom que fa nomArxiuCopiaSeguretatXat, amb el mode («complet»). */
+  expect(await within(caixa).findByText(/^Ha començat la descàrrega de l’arxiu socdepoble-xat-complet-20261115-0230\.sdpbackup\./)).toBeTruthy();
   /* La nota de davall diu el que el motor de mostra ha fet de veres. */
   expect(caixa.nextElementSibling.textContent).toMatch(/no desa ni descarrega cap arxiu/);
   capCridaAlMotorDeVeres();

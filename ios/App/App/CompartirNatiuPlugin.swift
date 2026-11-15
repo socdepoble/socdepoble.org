@@ -2,6 +2,49 @@ import Capacitor
 import Foundation
 import UIKit
 
+/// L'època es captura abans d'encolar treball. El tall i la publicació són
+/// atòmics entre el fil del connector i el principal; cap lot antic pot tornar
+/// a omplir la retenció de Capacitor després que el tall l'haja buidada.
+private final class BarreraSessioCompartit {
+    struct Entrada {
+        let generacio: UInt64
+        let rebutMs: Int64
+    }
+
+    private let cadenat = NSLock()
+    private var generacio: UInt64 = 0
+
+    func prenEntrada(araMs: Int64 = Int64(Date().timeIntervalSince1970 * 1000)) -> Entrada {
+        cadenat.lock()
+        defer { cadenat.unlock() }
+        return Entrada(generacio: generacio, rebutMs: araMs)
+    }
+
+    func esVigent(_ entrada: Entrada) -> Bool {
+        cadenat.lock()
+        defer { cadenat.unlock() }
+        return entrada.generacio == generacio
+    }
+
+    @discardableResult
+    func siVigent(_ entrada: Entrada, _ publica: () -> Void) -> Bool {
+        cadenat.lock()
+        defer { cadenat.unlock() }
+        guard entrada.generacio == generacio else { return false }
+        publica()
+        return true
+    }
+
+    @discardableResult
+    func talla(_ buidaRetencio: () -> Void) -> UInt64 {
+        cadenat.lock()
+        defer { cadenat.unlock() }
+        generacio &+= 1
+        buidaRetencio()
+        return generacio
+    }
+}
+
 /// Receptor del menú «Compartir» d'iOS (ordre del Mestre, 261026). L'extensió
 /// (Compartir/ShareViewController.swift) deixa cada lot a l'App Group amb el
 /// manifest escrit l'últim; ací, cada vegada que l'App torna a primer pla, els
@@ -34,10 +77,12 @@ public class CompartirNatiuPlugin: CAPPlugin, CAPBridgedPlugin {
     private static let maxFitxers = 10
 
     private let cua = DispatchQueue(label: "org.socdepoble.app.compartir")
+    private let barrera = BarreraSessioCompartit()
 
     override public func load() {
         // La primera passada també porta les còpies que encara no s'han enviat.
-        cua.async { [weak self] in self?.recull(intent: 0, ambRestes: true) }
+        let entrada = barrera.prenEntrada()
+        cua.async { [weak self] in self?.recull(intent: 0, ambRestes: true, entrada: entrada) }
         NotificationCenter.default.addObserver(self, selector: #selector(revisa), name: UIApplication.didBecomeActiveNotification, object: nil)
         CFNotificationCenterAddObserver(
             CFNotificationCenterGetDarwinNotifyCenter(),
@@ -73,28 +118,37 @@ public class CompartirNatiuPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func tallaSessio(_ call: CAPPluginCall) {
+        // Els mètodes de Capacitor (també addListener/sendRetainedArguments)
+        // passen pel mateix executor serial. Buidem el nostre esdeveniment
+        // abans de resoldre; el lock també exclou un notify del fil principal.
+        let generacioNativa = barrera.talla {
+            retainedEventArguments?.removeObject(forKey: Self.esdeveniment)
+        }
         cua.async {
             let fm = FileManager.default
             try? fm.removeItem(at: Self.carpetaLocal())
             if let contenidor = fm.containerURL(forSecurityApplicationGroupIdentifier: Self.grup) {
                 try? fm.removeItem(at: contenidor.appendingPathComponent("compartits", isDirectory: true))
             }
-            call.resolve(["tallat": true])
+            call.resolve(["tallat": true, "generacioNativa": String(generacioNativa)])
         }
     }
 
     @objc private func revisa() {
-        cua.async { [weak self] in self?.recull(intent: 0) }
+        let entrada = barrera.prenEntrada()
+        cua.async { [weak self] in self?.recull(intent: 0, entrada: entrada) }
     }
 
     /// L'extensió pot estar acabant d'escriure quan l'App torna: un lot incomplet
     /// i recent es torna a mirar tres vegades, cada segon i mig. Revisió 261026 ·
     /// Tots els lots complets d'una passada (diverses comparticions abans d'obrir
     /// l'App) van junts en un sol lliurament: el web en guarda un de pendent.
-    private func recull(intent: Int, ambRestes: Bool = false) {
+    private func recull(intent: Int, ambRestes: Bool = false, entrada: BarreraSessioCompartit.Entrada) {
+        guard barrera.esVigent(entrada) else { return }
         let fm = FileManager.default
         let ara = Int64(Date().timeIntervalSince1970 * 1000)
         var junts = Lliurament()
+        junts.entrada = entrada
         if ambRestes { afigRestes(a: &junts, ara: ara) }
         guard let contenidor = fm.containerURL(forSecurityApplicationGroupIdentifier: Self.grup) else { lliura(junts); return }
         let arrel = contenidor.appendingPathComponent("compartits", isDirectory: true)
@@ -113,11 +167,12 @@ public class CompartirNatiuPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         lliura(junts)
         if hiHaRecent && intent < 3 {
-            cua.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.recull(intent: intent + 1) }
+            cua.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.recull(intent: intent + 1, entrada: entrada) }
         }
     }
 
     private struct Lliurament {
+        var entrada: BarreraSessioCompartit.Entrada?
         var fitxers: [[String: Any]] = []
         var textos: [String] = []
         var rebutjats = 0
@@ -171,11 +226,17 @@ public class CompartirNatiuPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func lliura(_ junts: Lliurament) {
+        guard let entrada = junts.entrada else { return }
         let text = String(junts.textos.joined(separator: "\n\n").prefix(Self.maxCaracters))
         if junts.fitxers.isEmpty && text.isEmpty && junts.rebutjats == 0 { return }
-        let dades: [String: Any] = ["fitxers": junts.fitxers, "text": text, "assumpte": "", "rebutjats": junts.rebutjats]
+        // L'hora original també tanca la finestra que ja havia passat a toJs
+        // abans del tall natiu però encara no havia arribat al registre JS.
+        let dades: [String: Any] = ["fitxers": junts.fitxers, "text": text, "assumpte": "", "rebutjats": junts.rebutjats, "rebutMs": entrada.rebutMs, "caducaAmbSessio": true, "generacioNativa": String(entrada.generacio)]
         DispatchQueue.main.async { [weak self] in
-            self?.notifyListeners(Self.esdeveniment, data: dades, retainUntilConsumed: true)
+            guard let self else { return }
+            self.barrera.siVigent(entrada) {
+                self.notifyListeners(Self.esdeveniment, data: dades, retainUntilConsumed: true)
+            }
         }
     }
 

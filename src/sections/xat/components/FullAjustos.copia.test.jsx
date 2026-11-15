@@ -5,15 +5,19 @@
    tornar, la cerca que les troba, i sense `PaginaCopia` (el catàleg) l'avís
    honest en lloc de cap formulari. FullAjustos hi passa la pàgina en diferit
    i, muntada de veres dins de ClosCaXat, la pàgina diferida comprova una còpia
-   amb el motor de veres. jsdom no té showModal: el Dialeg hi posa `open`. */
+   amb el motor de veres. jsdom no té showModal: el Dialeg hi posa `open`.
+   Onada R28 · copia-xat-01 · Amb lazyRouteRenovable i una barrera pròpia: si
+   el tros no arriba, l'avís es queda dins del full amb «Torna-ho a provar». */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { Component } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { lazyRouteRenovable } from '../../../apps/plataforma/lazyRoute.js';
 import { delVal, getVal, setVal } from '../../../config/storage.js';
 import { exportaCopiaSeguretatXat } from '../../../data/xat/copiaSeguretatPortatil.js';
 import ClosCaXat, { BotoObriRail, CLAU_RAIL } from './ClosCaXat.jsx';
-import { CosAjustos } from './FullAjustos.jsx';
+import { CosAjustos, paginaDiferidaRenovable } from './FullAjustos.jsx';
 import PanellInicialMobil from './PanellInicialMobil.jsx';
 
 const JO = '0b6a1f5e-6a2c-4f3e-9d1a-2b3c4d5e6f70';
@@ -100,9 +104,98 @@ test('sense PaginaCopia (fora del xat, el catàleg) no hi ha cap formulari: nom�
 
 test('FullAjustos carrega la pàgina de la còpia en diferit: el motor no entra al tros de /xat per un import estàtic', () => {
   const font = readFileSync(path.join(process.cwd(), 'src/sections/xat/components/FullAjustos.jsx'), 'utf8');
-  expect(font).toMatch(/lazy\(\(\) => import\('\.\/PaginaCopiaSeguretatXat\.jsx'\)\)/);
+  /* Onada R28 · copia-xat-01 · Amb lazyRoute (LazyRouteError i la recuperació
+     de l'entrada web), mai amb el lazy nu de React. */
+  expect(font).toMatch(/lazyRoute(Renovable)?\(\(\) => import\('\.\/PaginaCopiaSeguretatXat\.jsx'\)\)/);
+  expect(font).not.toMatch(/(?<![\w.])lazy\(/);
+  expect(font).not.toMatch(/^import[^;]*\blazy\b[^;]*from 'react'/m);
   expect(font).not.toMatch(/^import[^;]*PaginaCopiaSeguretatXat/m);
   expect(font).not.toMatch(/^import[^;]*copiaSeguretatPortatil/m);
+  expect(font).not.toMatch(/^import[^;]*copiaSeguretatXat/m);
+});
+
+/* Onada R28 · copia-xat-01 · Un tros que no arriba (sense connexió, o un
+   desplegament nou) es queda dins del full, amb «Torna-ho a provar»; cap altre
+   error s'hi amaga. La pàgina diferida es fa amb la mateixa fàbrica que
+   FullAjustos (paginaDiferidaRenovable i lazyRouteRenovable). */
+const PILA_DESA = [{ id: 'arrel', origen: null }, { id: 'xats', origen: 'xats' }, { id: 'copia', origen: 'xats-copia' }, { id: 'copia-desa', origen: 'copia-desa' }];
+
+/* Els errors que React i jsdom informen quan una barrera para un render: són
+   els esperats, i no s'han de pintar a l'eixida de la prova. */
+function callaErrorsEsperats() {
+  const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const calla = (event) => event.preventDefault();
+  window.addEventListener('error', calla);
+  return () => {
+    window.removeEventListener('error', calla);
+    errors.mockRestore();
+  };
+}
+
+class BarreraDeProva extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() { return this.state.error ? <p data-testid="barrera-de-fora">{String(this.state.error.message)}</p> : this.props.children; }
+}
+
+test('si el tros de la còpia no arriba: l’avís dins del full, sense bucle, i «Torna-ho a provar» el torna a demanar', async () => {
+  const importa = vi.fn()
+    .mockRejectedValueOnce(new TypeError('Failed to fetch dynamically imported module'))
+    .mockResolvedValue({ default: PaginaDeProva });
+  const PaginaCopia = paginaDiferidaRenovable(lazyRouteRenovable(importa));
+  const restaura = callaErrorsEsperats();
+  try {
+    render(<BarreraDeProva><CosAjustos t={t} pilaInicial={PILA_DESA} PaginaCopia={PaginaCopia} /></BarreraDeProva>);
+    const avis = await screen.findByRole('alert');
+    expect(avis.textContent).toContain('No s’ha pogut obrir esta pàgina. Comprova que tens connexió i torna-ho a provar.');
+    /* Dins del full: el títol de la pàgina i el ‹ hi són, i la barrera de fora no ha vist res. */
+    expect(titol()).toBe('Desa una còpia xifrada');
+    expect(screen.getByRole('button', { name: 'Torna a Còpia de seguretat' })).toBeTruthy();
+    expect(screen.queryByTestId('barrera-de-fora')).toBeNull();
+    /* Mai en bucle: el rebuig no torna a demanar el tros tot sol. */
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(importa).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(within(avis).getByRole('button', { name: 'Torna-ho a provar' }));
+    expect((await screen.findByTestId('pagina-copia')).textContent).toBe('accio:desa');
+    expect(importa).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('alert')).toBeNull();
+    /* El focus, al ‹ de la pàgina, com en entrar-hi. */
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Torna a Còpia de seguretat' }));
+  } finally {
+    restaura();
+  }
+});
+
+test('tornar a entrar a la pàgina després d’una fallada també és una intenció nova', async () => {
+  const importa = vi.fn()
+    .mockRejectedValueOnce(new TypeError('Failed to fetch dynamically imported module'))
+    .mockResolvedValue({ default: PaginaDeProva });
+  const PaginaCopia = paginaDiferidaRenovable(lazyRouteRenovable(importa));
+  const restaura = callaErrorsEsperats();
+  try {
+    render(<CosAjustos t={t} pilaInicial={PILA_DESA} PaginaCopia={PaginaCopia} />);
+    await screen.findByRole('alert');
+    fireEvent.click(screen.getByRole('button', { name: 'Torna a Còpia de seguretat' }));
+    fireEvent.click(fila('Desa una còpia xifrada'));
+    expect((await screen.findByTestId('pagina-copia')).textContent).toBe('accio:desa');
+    expect(importa).toHaveBeenCalledTimes(2);
+  } finally {
+    restaura();
+  }
+});
+
+test('qualsevol altre error de la pàgina de la còpia no s’amaga: puja a la barrera de fora', async () => {
+  function PaginaQueFalla() { throw new Error('una fallada que no és de càrrega'); }
+  const PaginaCopia = paginaDiferidaRenovable(lazyRouteRenovable(async () => ({ default: PaginaQueFalla })));
+  const restaura = callaErrorsEsperats();
+  try {
+    render(<BarreraDeProva><CosAjustos t={t} pilaInicial={PILA_DESA} PaginaCopia={PaginaCopia} /></BarreraDeProva>);
+    expect((await screen.findByTestId('barrera-de-fora')).textContent).toBe('una fallada que no és de càrrega');
+    expect(screen.queryByText(/No s’ha pogut obrir esta pàgina/)).toBeNull();
+  } finally {
+    restaura();
+  }
 });
 
 test('dins de ClosCaXat: Tu › Xats › Còpia de seguretat › Comprova una còpia carrega la pàgina diferida i comprova de veres', async () => {

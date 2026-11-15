@@ -20,6 +20,7 @@ import { RouterProvider } from '../../../app/contexts/RouterContext.jsx';
 import { PageFrame } from '../PageFrame.jsx';
 import { BarraReproductorVeu } from './BarraReproductorVeu.jsx';
 import { CLASSE_BLOC_VEU_ACTIU, extreuBlocsLecturaVeu } from './lectorPaginaVeu.js';
+import { useVeuLecturaPaginaActiva } from './VeuLecturaPaginaContext.js';
 import { FONT_SO_RADIO_MOSTRA } from '../../../sections/disseny/cataleg/detalls/EspecimenBarraReproductorVeu.jsx';
 import { LA_VEU_DE_SOC_DE_POBLE_POST, LA_VEU_DE_SOC_DE_POBLE_RUTA } from '../../../sections/mur/articles/laVeuDeSocDePobleContent.js';
 import { LaVeuDeSocDePobleArticle } from '../../../sections/mur/articles/LaVeuDeSocDePobleArticle.jsx';
@@ -59,7 +60,7 @@ function creaPausaControlada() {
   return { impl, pendents };
 }
 
-function PaginaLecturaMostra({ onCanviaCopyright }) {
+function PaginaLecturaMostra({ onCanviaCopyright, fills = null }) {
   return (
     <RouterProvider initialPath="/page/node-zero">
       <div className="sdp-root">
@@ -80,6 +81,7 @@ function PaginaLecturaMostra({ onCanviaCopyright }) {
           <div data-sdp-no-locutar="">
             <p>Text exclòs expressament de la locució.</p>
           </div>
+          {fills}
         </PageFrame>
       </div>
     </RouterProvider>
@@ -666,5 +668,143 @@ describe('R28 · esmenes al Reproductor Universal de So (IDEA-268)', () => {
       playSpy.mockRestore();
       pauseSpy.mockRestore();
     }
+  });
+});
+
+/* ── Onada R28 · Revisió adversarial del grup «veu» (veu-editorial-03, 04, 05, 06 i 10) ───────── */
+
+/* Llig el context de la veu que PageFrame dona als fills, com ho faria una peça de l'article. */
+function SondaContextVeu() {
+  const ctx = useVeuLecturaPaginaActiva();
+  return (
+    <div data-sdp-no-locutar="">
+      <span data-testid="sonda-veu">{`${Boolean(ctx?.reproductorObert)}|${Boolean(ctx?.parlant)}`}</span>
+    </div>
+  );
+}
+
+describe('Onada R28 · revisió adversarial del Reproductor Universal de So', () => {
+  test('veu-editorial-03 · una locució aliena que avorta la de la barra la deixa en pausa al mateix bloc, no en «parlant» muda', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    render(<PaginaLecturaMostra />);
+    const botoEscolta = await screen.findByRole('button', { name: /Escolta la IAIA/i });
+    fireEvent.click(botoEscolta);
+    await waitFor(() => expect(cua.pendents.length).toBe(1));
+    await waitFor(() => expect(botoEscolta.className).toContain('sdp-boto--primari'));
+
+    /* El que fa veuIaiaService.atura() quan una altra peça (el Refranyer, el joc o el menú Traduir)
+       comença a parlar: rebutja la promesa en curs amb VEU_AVORTADA sense tocar el senyal de la barra. */
+    expect(cua.pendents[0].opcions.signal.aborted).toBe(false);
+    await act(async () => {
+      const err = new Error('Locució aturada.');
+      err.codi = serveiVeu.CODI_VEU_AVORTADA;
+      cua.pendents[0].reject(err);
+    });
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /Continua la lectura/i })).toBeTruthy());
+    expect(screen.queryByRole('button', { name: /Pausa la lectura/i })).toBeNull();
+    expect(screen.getByText('Bloc 1 de 7')).toBeTruthy();
+    expect(botoEscolta.className).toContain('sdp-boto--secundari');
+    expect(cua.pendents).toHaveLength(1);
+
+    /* Continua reprén el mateix bloc, com després d'una pausa pròpia. */
+    fireEvent.click(screen.getByRole('button', { name: /Continua la lectura/i }));
+    await waitFor(() => expect(cua.pendents.length).toBe(2));
+    expect(cua.pendents[1].text).toBe('Node 0 · El cervell i la veu al poble');
+  });
+
+  test('veu-editorial-05 · tancar amb el botó de dalt no deixa cap «parlant» caducat ni al botó ni al context', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    render(<PaginaLecturaMostra fills={<SondaContextVeu />} />);
+    const botoEscolta = await screen.findByRole('button', { name: /Escolta la IAIA/i });
+    const sonda = screen.getByTestId('sonda-veu');
+    expect(sonda.textContent).toBe('false|false');
+
+    fireEvent.click(botoEscolta);
+    await screen.findByRole('complementary', { name: /Reproductor de lectura en veu alta/i });
+    await waitFor(() => expect(cua.pendents.length).toBe(1));
+    await waitFor(() => expect(sonda.textContent).toBe('true|true'));
+    expect(botoEscolta.className).toContain('sdp-boto--primari');
+    expect(botoEscolta.getAttribute('aria-pressed')).toBe('true');
+
+    fireEvent.click(botoEscolta);
+    await waitFor(() => {
+      expect(screen.queryByRole('complementary', { name: /Reproductor de lectura en veu alta/i })).toBeNull();
+    });
+    expect(botoEscolta.getAttribute('aria-pressed')).toBe('false');
+    expect(botoEscolta.className).toContain('sdp-boto--secundari');
+    expect(botoEscolta.className).not.toContain('sdp-boto--primari');
+    expect(sonda.textContent).toBe('false|false');
+    expect(serveiVeu.atura).toHaveBeenCalled();
+  });
+
+  test('veu-editorial-04 · PageFrame marca el seu contenidor per a la reserva d’alçada només mentre la barra és oberta', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    const { container } = render(<PaginaLecturaMostra />);
+    const pagina = container.querySelector('.sdp-universal-page-container');
+    expect(pagina.hasAttribute('data-sdp-veu-reserva')).toBe(false);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Escolta la IAIA/i }));
+    await screen.findByRole('complementary', { name: /Reproductor de lectura en veu alta/i });
+    expect(pagina.getAttribute('data-sdp-veu-reserva')).toBe('true');
+    expect(container.querySelector('.sdp-root').getAttribute('data-sdp-veu-oberta')).toBe('true');
+
+    fireEvent.click(screen.getByRole('button', { name: /Tancar el reproductor de veu/i }));
+    await waitFor(() => expect(pagina.hasAttribute('data-sdp-veu-reserva')).toBe(false));
+  });
+
+  test('veu-editorial-06 · triar un apartat al panell torna el focus al botó «Apartats i cerca al text», no al body', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    render(<PaginaLecturaMostra />);
+    fireEvent.click(await screen.findByRole('button', { name: /Escolta la IAIA/i }));
+    await waitFor(() => expect(cua.pendents.length).toBe(1));
+
+    const botoApartats = screen.getByRole('button', { name: /Apartats i cerca al text/i });
+    fireEvent.click(botoApartats);
+    const item = screen.getByRole('button', { name: /Segon apartat/i });
+    item.focus();
+    expect(document.activeElement).toBe(item);
+    fireEvent.click(item);
+
+    await waitFor(() => expect(screen.getByText('Bloc 6 de 7')).toBeTruthy());
+    expect(item.isConnected).toBe(false);
+    expect(document.activeElement).toBe(botoApartats);
+    expect(botoApartats.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  test('veu-editorial-10 · aria-controls només apunta a un panell que existix i Escape el tanca i torna el focus al seu botó', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    render(<PaginaLecturaMostra />);
+    fireEvent.click(await screen.findByRole('button', { name: /Escolta la IAIA/i }));
+    await waitFor(() => expect(cua.pendents.length).toBe(1));
+
+    const botoApartats = screen.getByRole('button', { name: /Apartats i cerca al text/i });
+    expect(botoApartats.getAttribute('aria-expanded')).toBe('false');
+    expect(botoApartats.hasAttribute('aria-controls')).toBe(false);
+
+    fireEvent.click(botoApartats);
+    const idPanell = botoApartats.getAttribute('aria-controls');
+    expect(idPanell).toBeTruthy();
+    expect(document.getElementById(idPanell)).not.toBeNull();
+
+    const cerca = screen.getByPlaceholderText(/Cerca una paraula o apartat/i);
+    cerca.focus();
+    fireEvent.keyDown(cerca, { key: 'Escape' });
+    expect(document.getElementById(idPanell)).toBeNull();
+    expect(botoApartats.getAttribute('aria-expanded')).toBe('false');
+    expect(botoApartats.hasAttribute('aria-controls')).toBe(false);
+    expect(document.activeElement).toBe(botoApartats);
+
+    /* Amb el panell tancat, Escape no tanca la barra ni para la lectura. */
+    const crides = serveiVeu.atura.mock.calls.length;
+    fireEvent.keyDown(botoApartats, { key: 'Escape' });
+    expect(screen.getByRole('complementary', { name: /Reproductor de lectura en veu alta/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Pausa la lectura/i })).toBeTruthy();
+    expect(serveiVeu.atura.mock.calls.length).toBe(crides);
   });
 });

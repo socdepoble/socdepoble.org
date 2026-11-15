@@ -303,7 +303,7 @@ test('Q3 · barra blava, peu de targeta i CONNECTAR: cap transform; el premut é
     .map(on);
   expect(dolentes).toEqual([]);
   expect(declaracions(reglesDe('.btn-connectar:active:not(:disabled)')[0].cos)).toEqual([['background', 'var(--sdp-accio-control-hover)']]);
-  expect(declaracions(reglesDe('button.btn-date-time:active:not(:disabled)')[0].cos)).toEqual([['background', 'var(--sdp-crom-scroll-puny-viu)']]);
+  expect(declaracions(reglesDe('button.btn-date-time:active:not(:disabled)')[0].cos)).toEqual([['background', 'var(--sdp-crom-pastilla-data-viu)']]);
   /* El blau del premut de CONNECTAR porta el blanc a AAA en clar i en fosc. */
   for (const tema of [TEMES.clar, TEMES.fosc]) expect(contrast(tema, '--sdp-sobre-accio', '--sdp-accio-control-hover')).toBeGreaterThanOrEqual(7);
 });

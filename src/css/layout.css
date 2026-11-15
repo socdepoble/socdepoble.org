@@ -1056,12 +1056,12 @@ nav.mobile-nav { display: none; }
    blanca inclosos (T51). Ací en quedava una còpia que aquella capa ja
    anul·lava declaració per declaració. */
 
-/* Tinta blanca que no s'invertix (--sdp-sobre-color), com ja pintava el #ffffff
-   que hi havia (canvi sense autor al torn de 260924; decisió pendent del Mestre).
-   Avís de contrast: blanc sobre el taronja amb vel fa 3,69:1, per davall de l'AA
-   per a text normal; --sdp-sobre-accent (pedra-900) el complia. */
+/* Onada R28 · Tinta blanca que no s'invertix (--sdp-sobre-color) sobre el vel
+   fosc dedicat (--sdp-crom-pastilla-data): damunt del taronja de la barra i de
+   les targetes fa 7,96 a 1 (AAA >= 7 per a text normal de 14px) i damunt del
+   verd del Lector supera 12 a 1 en clar, fosc i Bancal. */
 .btn-date-time {
-  background: var(--sdp-crom-scroll-pista);
+  background: var(--sdp-crom-pastilla-data);
   color: var(--sdp-sobre-color);
   font-weight: 700;
   border: none;
@@ -1084,7 +1084,7 @@ nav.mobile-nav { display: none; }
    (família de barra, cap transform). Només el fons, i només amb ratolí. */
 @media (hover: hover) and (pointer: fine) {
   .btn-date-time:hover {
-    background: var(--sdp-crom-scroll-puny);
+    background: var(--sdp-crom-pastilla-data-hover);
   }
 }
 
@@ -1276,5 +1276,28 @@ nav.mobile-nav { display: none; }
     bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-3));
     right: calc(var(--sdp-space-3) + (100% - var(--sdp-space-3) * 2) / 10 - var(--sdp-touch) / 2);
     z-index: var(--z-fab);
+  }
+
+  /* Onada R28 · Teclat virtual natiu (iOS WKWebView + Android Edge-to-Edge):
+     quan useTeclatVirtual detecta un camp d'escriptura actiu amb teclat obert,
+     amaga nav.mobile-nav i el botó flotant, ajusta l'alçada a visualViewport en iOS
+     i retira la reserva del Home Indicator ja cobert pel teclat. */
+  .sdp-root[data-sdp-teclat="obert"] {
+    align-self: flex-start;
+    height: var(--teclat-vv-alt, 100%);
+    max-height: var(--teclat-vv-alt, 100%);
+  }
+  .sdp-root.is-compact[data-sdp-teclat="obert"] > nav.mobile-nav,
+  .sdp-root.is-compact[data-sdp-teclat="obert"] > .sdp-tornar-dalt {
+    display: none;
+  }
+  :where(.sdp-root.is-compact[data-sdp-teclat-vv]) .app-main__content {
+    padding-bottom: 0;
+    scroll-padding-bottom: var(--sdp-space-4);
+  }
+  :where(.sdp-root.is-compact[data-sdp-teclat-vv]) .app-main__content > .sdp-universal-page-container--contained {
+    bottom: 0;
+    padding-bottom: 0;
+    transition: none;
   }
 }

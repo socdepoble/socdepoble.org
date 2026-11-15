@@ -54,6 +54,39 @@
     margin-inline: 0;
   }
 
+  /* Onada R28 · veu-editorial-04 · Reserva d'alçada amb la barra oberta. La barra és fixa i tapava
+     el final de la pàgina (l'últim paràgraf, el peu dels drets): PageFrame marca el seu contenidor
+     amb data-sdp-veu-reserva mentre la barra és oberta, i el contenidor afig al final un bloc buit
+     de l'alçada que la barra ocupa per damunt de la reserva que el scroller ja té. Un pseudoelement
+     i no un padding: suma a qualsevol scroller (el visor .app-main__content en mode «page», el
+     contenidor mateix en mode «contained», el detall del Workspace) sense trepitjar els coixins de
+     la barra inferior que ja hi posen layout.css i modules.css. La distància és la de la barra:
+     en escriptori, zona segura + --barra-veu-alcada + --sdp-space-4 (el visor no reserva res); en
+     compacte, --barra-veu-alcada + --sdp-space-3, perquè la reserva de nav.mobile-nav (amb la zona
+     segura) ja la posa el scroller. --barra-veu-alcada la mesura BarraReproductorVeu.jsx a .sdp-root. */
+  .sdp-universal-page-container[data-sdp-veu-reserva="true"]::after {
+    content: "";
+    display: block;
+    flex: none;
+    block-size: calc(env(safe-area-inset-bottom, 0px) + var(--barra-veu-alcada, 0px) + var(--sdp-space-4));
+  }
+  :where(.sdp-root.is-compact) .sdp-universal-page-container[data-sdp-veu-reserva="true"]::after {
+    block-size: calc(var(--barra-veu-alcada, 0px) + var(--sdp-space-3));
+  }
+  /* El focus que es mou amb el teclat (i els salts natius) tampoc no queda davall de la barra: el
+     mateix marge al scroll-padding-bottom dels dos scrollers de PageFrame, amb el --sdp-space-4 de
+     respir que ja deixa layout.css damunt de la barra inferior. */
+  .sdp-root[data-sdp-veu-oberta="true"] .app-main__content,
+  .sdp-root[data-sdp-veu-oberta="true"] .sdp-universal-page-container--contained {
+    scroll-padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--barra-veu-alcada, 0px) + var(--sdp-space-4) + var(--sdp-space-4));
+  }
+  .sdp-root.is-compact[data-sdp-veu-oberta="true"] .app-main__content {
+    scroll-padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--barra-veu-alcada, 0px) + var(--sdp-space-3) + var(--sdp-space-4));
+  }
+  .sdp-root.is-compact[data-sdp-veu-oberta="true"] .sdp-universal-page-container--contained {
+    scroll-padding-bottom: calc(var(--barra-veu-alcada, 0px) + var(--sdp-space-3) + var(--sdp-space-4));
+  }
+
   .sdp-barra-veu__cap {
     display: flex;
     align-items: center;
@@ -284,5 +317,7 @@
 @layer components {
   @media print {
     .sdp-barra-veu { display: none; }
+    /* Onada R28 · veu-editorial-04 · Sense barra en paper, tampoc no hi ha reserva. */
+    .sdp-universal-page-container[data-sdp-veu-reserva="true"]::after { display: none; }
   }
 }

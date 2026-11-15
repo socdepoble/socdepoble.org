@@ -6,17 +6,25 @@
    paraules de la gent. Verificació X2: cap reserva de la vista (els noms
    units, 'Conversa', el nom i la foto del fil propi, «Veí») viatja com a
    dada, i ni el xat de mostra amb Javi ni cap bombolla sintètica hi entren. */
+import { webcrypto } from 'node:crypto';
 import { describe, expect, test } from 'vitest';
 import { backendScope } from '../../config/backendConfig.js';
+import CA from '../../config/idiomes/ca.js';
+import ES from '../../config/idiomes/es.js';
+import EN from '../../config/idiomes/en.js';
+import EU from '../../config/idiomes/eu.js';
+import GL from '../../config/idiomes/gl.js';
 import {
   CODI_ARXIU_NO_DESAT, CODI_BASE_ABSENT, CODI_CADENA_DIVERGENT, CODI_CLAU_FEBLE, CODI_CLAU_INCORRECTA, CODI_COPIA_CORRUPTA,
   CODI_DEGRADACIO, CODI_IDENTITAT_DIVERGENT, CODI_LIMIT_SUPERAT, CODI_MATERIAL_SENSIBLE, CODI_NONCE_REPETIT,
   exportaCopiaSeguretatXat, exportaCopiaSeguretatXatAmbRebut, importaCopiaSeguretatXat,
 } from '../../data/xat/copiaSeguretatPortatil.js';
-import { ID_FIL_DE_MOSTRA_DE_JAVI, MISSATGE_AUTOMATIC_DE_JAVI, filDeMostraDeJavi, missatgesDeMostraDeJavi } from '../../data/xatsPerDefecte.js';
 import {
-  TEXTOS_COPIA, abastDeLaCopia, contingutDeLaCopia, contrasenyaProuLlarga, dtoDeFil, dtoDeMissatge, errorDeLaCopia, formataData,
-  missatgeEntraALaCopia, resumDeLaCopia, textAmb, titolDelServidor,
+  AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, MISSATGE_AUTOMATIC_DE_JAVI, filDeMostraDeJavi, missatgesDeMostraDeJavi, vestixLaIAIA,
+} from '../../data/xatsPerDefecte.js';
+import {
+  TEXTOS_COPIA, abastDeLaCopia, contingutDeLaCopia, contrasenyaProuLlarga, criptoDisponible, dtoDeFil, dtoDeMissatge, errorDeLaCopia,
+  formataData, missatgeEntraALaCopia, resumDeLaCopia, textAmb, titolDelServidor,
 } from './copiaSeguretatXat.js';
 import { mapejaFil, mapejaMissatge } from './missatges.js';
 
@@ -145,6 +153,45 @@ describe('contingutDeLaCopia', () => {
     expect(error.codi).toBe(CODI_MATERIAL_SENSIBLE);
     expect(errorDeLaCopia(error, undefined, 'desa')).toEqual({ camp: null, text: textAmb(TEXTOS_COPIA.errorMaterial) });
   });
+
+  /* Onada R28 · revisió · Des del kit R28 de Codex, un JSON serialitzat de més
+     de 64 KiB a les metadades fa fallar la còpia: la persona no llig que la
+     còpia és «massa gran», perquè no ho és. */
+  test('un JSON niat massa gran a les metadades: la persona llig que hi ha dades que la còpia no admet', async () => {
+    const ambJsonGran = { ...MISSATGES[FIL_GRUP][0], metadades: { gran: '{"a":1}'.repeat(20_000) } };
+    const contingut = contingutDeLaCopia({ chatThreads: [filGrup], getThreadMessages: () => [ambJsonGran] });
+    const error = await exportaCopiaSeguretatXatAmbRebut({ ...ABAST, ...contingut, contrasenya: CONTRASENYA }).catch((e) => e);
+    expect(error).toMatchObject({ codi: CODI_LIMIT_SUPERAT, motiu: 'json-niat-massa-gran' });
+    expect(errorDeLaCopia(error, undefined, 'desa')).toEqual({ camp: null, text: textAmb(TEXTOS_COPIA.errorDades) });
+  });
+
+  /* Onada R28 · copia-xat-02 · El nom que un altre veí s'ha posat (altres[].nom,
+     el full_name del seu perfil) i el títol del subjecte són text de la gent:
+     pel camí de veres (la vista, dtoDeFil i el motor) la còpia es fa i torna
+     sencera. Abans, «Bearer Pepa» deixava sense còpia tothom que parlava amb ella. */
+  test('cap fals positiu pel camí de veres: un veí que es diu «Bearer Pepa» i un subjecte «Bearer de la Torre» no impedixen la còpia', async () => {
+    const PEPA = '2f8c3d71-8c4e-4b50-9f3c-4d5e6f708193';
+    const filAmbPepa = mapejaFil({
+      id: FIL_ROSA, tipus: 'directe', altresNoms: ['Bearer Pepa'],
+      altres: [{ id: PEPA, nom: 'Bearer Pepa', tipus: 'persona', avatar: null }],
+      subjecte: { tipus: 'pagina', id: 'pagina-1', titol: 'Bearer de la Torre' }, ultimSeq: 1
+    });
+    const contingut = contingutDeLaCopia({ chatThreads: [filAmbPepa], getThreadMessages: () => [MISSATGES[FIL_ROSA][0]], joNom: 'Javi' });
+    expect(contingut.fils[0].altres).toEqual([{ id: PEPA, nom: 'Bearer Pepa', tipus: 'persona', avatar: null }]);
+    expect(contingut.fils[0].subjecte).toEqual({ tipus: 'pagina', id: 'pagina-1', titol: 'Bearer de la Torre' });
+    const { text } = await exportaCopiaSeguretatXatAmbRebut({ ...ABAST, fils: contingut.fils, missatges: contingut.missatges, contrasenya: CONTRASENYA });
+    const resultat = await importaCopiaSeguretatXat(text, { usuariIdEsperat: JO, tenantIdEsperat: TENANT, contrasenya: CONTRASENYA });
+    expect(resultat.fils[0].altres[0].nom).toBe('Bearer Pepa');
+    expect(resultat.fils[0].subjecte.titol).toBe('Bearer de la Torre');
+    expect(resultat.missatges).toHaveLength(1);
+  });
+
+  test('pel mateix camí, un secret en un altre camp d’altres continua fent fallar la còpia', async () => {
+    const filAmbSecret = mapejaFil({ id: FIL_ROSA, tipus: 'directe', altres: [{ id: ROSA, nom: 'Rosa', tipus: 'persona', avatar: `Bearer ${'x'.repeat(12)}` }] });
+    const contingut = contingutDeLaCopia({ chatThreads: [filAmbSecret], getThreadMessages: () => [] });
+    const error = await exportaCopiaSeguretatXatAmbRebut({ ...ABAST, ...contingut, contrasenya: CONTRASENYA }).catch((e) => e);
+    expect(error).toMatchObject({ codi: CODI_MATERIAL_SENSIBLE, cami: 'fils[0].altres[0].avatar' });
+  });
 });
 
 /* X2 (verificació del carril .sdpbackup) · Cap reserva de la vista no viatja
@@ -183,6 +230,21 @@ describe('fidelitat de les dades: res de les reserves de la vista ni de les most
     expect(dtoDeFil(ambFoto, { joAvatar: JO_AVATAR }).imatgeUrl).toBe('https://exemple.supabase.co/storage/v1/object/public/avatars/fil.webp');
     /* En un fil que no és propi, la foto és la del servidor encara que coincidisca. */
     expect(dtoDeFil({ ...filGrup, avatar_url: JO_AVATAR }, { joAvatar: JO_AVATAR }).imatgeUrl).toBe(JO_AVATAR);
+  });
+
+  /* Onada R28 · copia-xat-05 · vestixLaIAIA (supabase/xat.js) tapa el títol i la
+     imatge del servidor al xat de la IAIA: eixa presentació no hi va com a dada. */
+  test('el títol vestit de la IAIA («IAIA MarIA») i la seua cara no hi van com a dada del servidor; el mateix títol en un altre fil, sí', () => {
+    const { nom, avatar } = AJUDA_PER_CLAU.iaia;
+    const vestit = mapejaFil(vestixLaIAIA({ id: FIL_GRUP, tipus: 'iaia', titol: 'L’ànima de la iaia', imatgeUrl: 'https://exemple.supabase.co/storage/v1/object/public/avatars/fil.webp' }));
+    expect([vestit.title, vestit.avatar_url]).toEqual([nom, avatar]);
+    expect(titolDelServidor(vestit)).toBeUndefined();
+    const dto = dtoDeFil(vestit);
+    expect(Object.hasOwn(dto, 'titol')).toBe(false);
+    expect(Object.hasOwn(dto, 'imatgeUrl')).toBe(false);
+    /* Un grup qualsevol que el servidor titula igual (i amb la mateixa imatge) no és el xat de la IAIA: hi va tal qual. */
+    const altre = mapejaFil({ id: FIL_GRUP, tipus: 'grup', titol: nom, imatgeUrl: avatar });
+    expect(dtoDeFil(altre)).toMatchObject({ titol: nom, imatgeUrl: avatar });
   });
 
   test('l’autor sense nom (la reserva «Veí») i el «Jo» sense el nom de la persona no hi van com a nom', () => {
@@ -283,10 +345,78 @@ describe('errorDeLaCopia', () => {
     expect(comprova(error(CODI_LIMIT_SUPERAT))).toEqual({ camp: 'arxiu', text: text(TEXTOS_COPIA.errorArxiuMassaGran) });
   });
 
+  /* Onada R28 · copia-xat-04 · Els errors que reintentar no arregla tenen text propi. */
+  test('sense WebCrypto (SENSE_CRIPTO), i en desar amb dades que el motor no admet, cap text promet que reintentar ho arregle', () => {
+    const senseCripto = Object.assign(new Error('intern'), { codi: 'SENSE_CRIPTO' });
+    for (const operacio of ['desa', 'comprova']) {
+      expect(errorDeLaCopia(senseCripto, undefined, operacio)).toEqual({ camp: null, text: text(TEXTOS_COPIA.errorSenseCripto) });
+    }
+    expect(errorDeLaCopia(error(CODI_COPIA_CORRUPTA, 'id'), undefined, 'desa')).toEqual({ camp: null, text: text(TEXTOS_COPIA.errorDades) });
+    expect(errorDeLaCopia(error(CODI_IDENTITAT_DIVERGENT, 'ambit'), undefined, 'desa')).toEqual({ camp: null, text: text(TEXTOS_COPIA.errorDades) });
+    /* Onada R28 · revisió · Un camp massa niat o un JSON niat massa gran no és una còpia massa gran. */
+    for (const motiu of ['json-niat-massa-gran', 'profunditat']) {
+      expect(errorDeLaCopia(error(CODI_LIMIT_SUPERAT, motiu), undefined, 'desa')).toEqual({ camp: null, text: text(TEXTOS_COPIA.errorDades) });
+    }
+    expect(errorDeLaCopia(error(CODI_LIMIT_SUPERAT, 'arxiu-massa-gran'), undefined, 'desa')).toEqual({ camp: null, text: text(TEXTOS_COPIA.errorCopiaMassaGran) });
+    for (const parell of [TEXTOS_COPIA.errorSenseCripto, TEXTOS_COPIA.errorDades]) {
+      expect(text(parell)).not.toMatch(/Torna-ho a provar/);
+    }
+    /* En comprovar, els mateixos codis continuen dient-se al camp de l'arxiu. */
+    expect(errorDeLaCopia(error(CODI_COPIA_CORRUPTA), undefined, 'comprova')).toEqual({ camp: 'arxiu', text: text(TEXTOS_COPIA.errorCorrupta) });
+    expect(errorDeLaCopia(error(CODI_IDENTITAT_DIVERGENT), undefined, 'comprova')).toEqual({ camp: 'arxiu', text: text(TEXTOS_COPIA.errorAltreCompte) });
+  });
+
+  test('el motor de veres sense WebCrypto llança SENSE_CRIPTO, i la persona llig el text propi', async () => {
+    const contingut = contingutDeLaCopia({ chatThreads: [filGrup], getThreadMessages });
+    const error = await exportaCopiaSeguretatXatAmbRebut({ ...ABAST, ...contingut, contrasenya: CONTRASENYA, cripto: {} }).catch((e) => e);
+    expect(error.codi).toBe('SENSE_CRIPTO');
+    expect(errorDeLaCopia(error, undefined, 'desa').text).toBe(text(TEXTOS_COPIA.errorSenseCripto));
+  });
+
   test('tradueix i omple els marcadors sense interpretar $', () => {
     const t = (clau, reserva) => (clau === 'section.xat.copia.error.curta' ? 'Al menos {n} caracteres ($&).' : reserva);
     expect(errorDeLaCopia(error(CODI_CLAU_FEBLE, 'contrasenya-curta'), t).text).toBe('Al menos 12 caracteres ($&).');
     expect(textAmb(TEXTOS_COPIA.comprovaArxiuTriat, undefined, { nom: 'a$&b.sdpbackup' })).toBe('Arxiu triat: a$&b.sdpbackup');
+  });
+});
+
+describe('criptoDisponible', () => {
+  test('la mateixa regla que el motor: WebCrypto complet, sí; sense subtle o sense getRandomValues, no', () => {
+    expect(criptoDisponible(webcrypto)).toBe(true);
+    expect(criptoDisponible(null)).toBe(false);
+    expect(criptoDisponible({})).toBe(false);
+    expect(criptoDisponible({ subtle: webcrypto.subtle })).toBe(false);
+    expect(criptoDisponible({ getRandomValues: () => {}, subtle: { digest: () => {} } })).toBe(false);
+  });
+});
+
+/* Onada R28 · Els textos de la còpia, en les cinc llengües: cada clau
+   section.xat.copia.* de TEXTOS_COPIA té valor propi a cada diccionari, el
+   valencià és la reserva del codi i tots porten els mateixos marcadors. */
+describe('els textos de la còpia en les cinc llengües', () => {
+  const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+  const marcadors = (text) => [...String(text).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+  const PROPIS = Object.entries(TEXTOS_COPIA).filter(([, [clau]]) => clau.startsWith('section.xat.copia.'));
+
+  test('cada clau és als cinc diccionaris, amb els marcadors de la reserva', () => {
+    expect(PROPIS.length).toBeGreaterThan(50);
+    for (const [nom, [clau, reserva]] of PROPIS) {
+      expect([nom, CA[clau]]).toEqual([nom, reserva]);
+      for (const [llengua, diccionari] of Object.entries(DICCIONARIS)) {
+        expect([nom, llengua, typeof diccionari[clau] === 'string' && diccionari[clau].trim() !== '']).toEqual([nom, llengua, true]);
+        expect([nom, llengua, marcadors(diccionari[clau])]).toEqual([nom, llengua, marcadors(reserva)]);
+      }
+    }
+  });
+
+  test('les claus noves de l’Onada R28 no es queden en valencià en cap altra llengua', () => {
+    const NOVES = ['section.xat.copia.desa.abast', 'section.xat.copia.desa.senseMissatges', 'section.xat.copia.desa.ambMissatges',
+      'section.xat.copia.error.senseCripto', 'section.xat.copia.error.dades', 'section.xat.copia.noCarrega'];
+    for (const clau of NOVES) {
+      for (const [llengua, diccionari] of Object.entries(DICCIONARIS)) {
+        if (llengua !== 'ca') expect([clau, llengua, diccionari[clau] === CA[clau]]).toEqual([clau, llengua, false]);
+      }
+    }
   });
 });
 

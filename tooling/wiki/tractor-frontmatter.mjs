@@ -52,7 +52,7 @@ import fs from 'node:fs';
 import { isDocumentArchive, isVerifiedPublicApiResource } from '../lib/document-corpus.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { liveMarkdown, extractLinks, buildResolver, resolveLink, safeDecode } from './core/parse.mjs';
 import { CAMINS } from '../lib/arrel.mjs';
@@ -62,10 +62,64 @@ import { CAMINS } from '../lib/arrel.mjs';
    eixe vincle tornava «unresolved». Ara és vàlid si porta, des de la carpeta del document,
    a una nota de l'arxiu que existix amb la caixa exacta, de primer nivell o dins d'una
    carpeta de sessió (`--sessio aammdd_Nom` de la porta Olivera, un sol segment). Només es
-   llisten noms (com document-corpus.mjs): no se n'obri cap. No compta com a nota viva. */
+   llisten noms (com document-corpus.mjs): no se n'obri cap. No compta com a nota viva.
+   Onada R28 · Una nota absent del disc també val si Git la ignora per una regla versionada
+   (arxiuIgnoratPerGit, ací baix); qualsevol altre vincle absent continua sent F9. */
 const ARXIU_HISTORIC = `${CAMINS.arxiuHistoric}/`;
 const SESSIO_ARXIU = /^\d{6}_[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*$/;
 const nomsArxivats = new Map();
+
+/* Onada R28 · sql-node0-integritat-01 · Des de D-R27-4, el .gitignore versionat ignora la carpeta
+   de l'arxiu històric (CAMINS.arxiuHistoric): la nota que la porta Olivera arxiva ja no entra a l'índex,
+   i falta a l'arbre preparat del hook (git-staged.mjs el fa amb read-tree) i a qualsevol clon net,
+   mentre el document viu porta el vincle reescrit cap a ella. Una nota absent del disc es dona per
+   arxivada NOMÉS si Git la ignora (`check-ignore --no-index`) per una regla no negada d'un
+   .gitignore versionat, ARREL és el nivell superior del seu repositori i el camí no és a l'índex
+   (versionat i absent és un esborrat). Mateix criteri que esLocal de tooling/gates/tractor-doctrina.mjs:
+   sense Git, amb error, amb exclusions personals o amb .git/info/exclude, continua sent F9. */
+const ENTORN_GIT = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+const git = (args, input) => spawnSync('git', args, { cwd: ARREL, env: ENTORN_GIT, encoding: 'utf8', timeout: 10_000, input });
+let arrelGitPropia = null;
+const esArrelGit = () => {
+  if (arrelGitPropia === null) {
+    const r = git(['rev-parse', '--show-toplevel']);
+    try { arrelGitPropia = r.status === 0 && fs.realpathSync(r.stdout.replace(/\n$/, '')) === fs.realpathSync(ARREL); }
+    catch { arrelGitPropia = false; }
+  }
+  return arrelGitPropia;
+};
+// --literal-pathspecs: cap glob del camí s'expandix. Torna null si Git falla.
+const esVersionat = (cami) => {
+  const r = git(['--literal-pathspecs', 'ls-files', '-z', '--', cami]);
+  return r.status === 0 ? r.stdout !== '' : null;
+};
+const fontsAcceptades = new Map();
+const esFontVersionada = (font) => {
+  if (!fontsAcceptades.has(font)) {
+    const gitignore = font === '.gitignore' || font.endsWith('/.gitignore');
+    fontsAcceptades.set(font, gitignore && esVersionat(font) === true);
+  }
+  return fontsAcceptades.get(font);
+};
+const ignoratsArxiu = new Map();
+function arxiuIgnoratPerGit(cami) {
+  if (!ignoratsArxiu.has(cami)) {
+    let ignorat = false;
+    if (!cami.includes('\0') && esArrelGit() && esVersionat(cami) === false) {
+      // Exit 1 = cap regla; 128 = error (fail-closed). Amb -v -n, cada registre és font, línia, patró i camí.
+      const r = git(['-c', 'core.excludesFile=/dev/null', 'check-ignore', '--no-index', '--stdin', '-z', '-v', '-n'], `${cami}\0`);
+      const camps = r.status === 0 ? r.stdout.split('\0') : [];
+      for (let i = 0; i + 3 < camps.length; i += 4) {
+        const [font, , patro] = camps.slice(i, i + 3);
+        // Amb -v, una negació («!x») també casa, però vol dir que NO s'ignora.
+        if (patro && !patro.startsWith('!') && esFontVersionada(font)) { ignorat = true; break; }
+      }
+    }
+    ignoratsArxiu.set(cami, ignorat);
+  }
+  return ignoratsArxiu.get(cami);
+}
+
 function esNotaArxivada(target, relPath) {
   const t = safeDecode(target).trim();
   if (!/(^|\/)90_arxiu_historic\//.test(t)) return false;
@@ -80,7 +134,13 @@ function esNotaArxivada(target, relPath) {
         .filter((e) => e.isFile()).map((e) => e.name)));
     } catch { nomsArxivats.set(carpeta, new Set()); }
   }
-  return nomsArxivats.get(carpeta).has(parts[parts.length - 1]);
+  const noms = nomsArxivats.get(carpeta);
+  const nom = parts[parts.length - 1];
+  if (noms.has(nom)) return true;
+  // Onada R28 · Si a l'arxiu hi ha la mateixa nota amb una altra caixa, és un error de caixa: F9, encara que Git ignore el camí.
+  const nomBaix = nom.toLowerCase();
+  if ([...noms].some((n) => n.toLowerCase() === nomBaix)) return false;
+  return arxiuIgnoratPerGit(cami);
 }
 
 function validaVincles(doc, resolver) {
@@ -118,7 +178,7 @@ function validaVincles(doc, resolver) {
     if (r.status === 'resolved' && r.doc.relPath !== doc.relPath) {
       valids++;
     } else if (r.status === 'unresolved' && esNotaArxivada(links[0].target, doc.relPath)) {
-      // Vincle històric a una nota arxivada existent: no és error ni compta com a nota viva.
+      // Vincle històric a una nota arxivada (al disc o, absent, ignorada per un .gitignore versionat): no és error ni compta com a nota viva.
     } else {
       errors.push(`${links[0].target}: ${r.status === 'resolved' ? 'autoreferència' : r.status}`);
     }

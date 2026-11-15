@@ -986,6 +986,25 @@
   overflow-wrap: anywhere;
 }
 
+/* Onada R28 · Les categories llargues dins de UniversalCard (p. ex. a 360px en /mur)
+   s'embolcallen dins de la caixa sense desbordar, mentre les curtes conserven 28px.
+   :where(.sp-card-body) manté l'especificitat en (0,2,0) perquè les regles posteriors
+   de --amb-accio, --enllac i .sdp-insignia-beta-oberta continuen manant sense canvis. */
+:where(.sp-card-body) > .sp-card-labels {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+:where(.sp-card-body) > .sp-card-labels .sp-card-label {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  height: auto;
+  min-height: var(--sdp-alt-pastilla);
+  padding-block: var(--sdp-space-1);
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: center;
+}
+
 .sp-card-label.sp-card-label--amb-accio {
   padding: 0;
 }
@@ -1020,18 +1039,31 @@
    separa. Allargada per dalt i per baix, com --amb-accio, el copyright en
    tapava els 12px de baix i l'etiqueta només rebia el clic en 36px. Damunt
    hi ha el text o el títol, sense cap control. */
+/* Onada R28 · Tota etiqueta enllaçada (<li class="sp-card-label ..."><a class="sp-card-label">)
+   hereta el color AAA de la insígnia (9,44 a 1 sobre sdp-badge-system en comptes d'1,11 a 1
+   del color d'enllaç de base.css), evita el coixí doble tant amb --enllac com sense
+   (/pobles, /page/descarregues, /mur) i conserva la diana tàctil de 48px cap amunt
+   sense usar cap pseudoclasse relacional. */
 .sp-card-label.sp-card-label--enllac {
   padding: 0;
 }
 
+.sp-card-label > a.sp-card-label,
 .sp-card-label--enllac > .sp-card-label {
   position: relative;
+  margin-inline: calc(var(--sdp-space-4) * -1);
   padding: 0 var(--sdp-space-4);
   border-radius: inherit;
   color: inherit;
   text-decoration: none;
 }
 
+.sp-card-label--enllac > a.sp-card-label,
+.sp-card-label--enllac > .sp-card-label {
+  margin-inline: 0;
+}
+
+.sp-card-label > a.sp-card-label::after,
 .sp-card-label--enllac > .sp-card-label::after {
   content: '';
   position: absolute;
@@ -1040,6 +1072,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .sp-card-label > a.sp-card-label:hover,
   .sp-card-label--enllac > .sp-card-label:hover {
     text-decoration: underline;
   }
@@ -2106,7 +2139,7 @@ time.btn-date-time { cursor: default; }
    respon) s'enfosquix en prémer: el vel negre més dens de la barra. El text
    blanc hi guanya contrast, no en perd. */
 button.btn-date-time:active:not(:disabled) {
-  background: var(--sdp-crom-scroll-puny-viu);
+  background: var(--sdp-crom-pastilla-data-viu);
 }
 
 .sp-card-action:disabled,
@@ -3637,9 +3670,23 @@ section.bar-orange[data-copublicacio="composta"] {
       border-color: var(--sdp-accio-control-hover);
     }
   }
-  .sdp-visibilitat-linia__boto--publicat {
+  /* MarIA 0317 · Confirmació d'estat: conserva la caixa, sense la pell ni
+     els efectes hover/active de .sdp-boto (l'acció és l'enllaç del costat). */
+  .sdp-visibilitat-linia__estat-publicat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-5);
+    border: 2px solid var(--sdp-exit-control);
+    border-radius: var(--sdp-radi-boto);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
     background: var(--sdp-exit-control);
-    border-color: var(--sdp-exit-control);
     color: var(--sdp-sobre-color);
     cursor: default;
   }

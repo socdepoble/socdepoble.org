@@ -60,13 +60,16 @@ const PRIMITIVES_PERMESES = ['aBase64url', 'deBase64url', 'errorAmbCodi'];
 const PERMESOS_APP = /[\\/]data[\\/](xifratXatCripto|xifratXatServei|xifratXatEixida)\.js$/;
 /* Onada R28 (Lot C3) · El motor de la còpia `.sdpbackup` (no és el xifratge del xat: PBKDF2 + AES-GCM d'un arxiu
    que la persona guarda) entra al graf de producció amb la pàgina «Còpia de seguretat» dels Ajustos del Xat, i
-   només per un tros mandrós. Les primitives que hi porta són les que importa i res més; la resta del graf continua
+   només per un tros mandrós. Les primitives que hi deixen codi són les de PRIMITIVES_COPIA i res més; la resta del graf continua
    tancada a PRIMITIVES_PERMESES (es compila amb el motor de còpia fora). */
 const MOTOR_COPIA = /[\\/]data[\\/]xat[\\/]copiaSeguretatPortatil\.js$/;
+/* Onada R28 · Exactament les 13 exportacions de xifratXatCripto.js que el graf sencer de main.jsx renderitza de
+   veres a més de PRIMITIVES_PERMESES (renderedExports, build de producció del 15-11-2026 a les 05:35). Les de DH i
+   HKDF que el motor importa (generaParellaDh, secretDh, derivaBitsHkdf, importaClauHkdf, infoHkdf, exportaPublica,
+   jwkDePublica i publicaDeJwk) no hi arriben: Rollup les descarta. Si el motor en comença a usar una, la prova cau.
+   La prova la fa servir com a llista de permeses: cau si n'entra una de fora, no si en deixa d'eixir alguna. */
 const PRIMITIVES_COPIA = [
-  'BYTES_ETIQUETA', 'BYTES_IV', 'aBase64url', 'aleatori', 'deBase64url', 'derivaBitsHkdf', 'desxifraAesGcm', 'exigixCripto',
-  'exportaPublica', 'generaParellaDh', 'importaClauHkdf', 'infoHkdf', 'jwkDePublica', 'kekPbkdf2', 'midaPadme', 'publicaDeJwk',
-  'secretDh', 'sha256', 'xifraAesGcm',
+  'BYTES_ETIQUETA', 'BYTES_IV', 'aleatori', 'desxifraAesGcm', 'exigixCripto', 'kekPbkdf2', 'midaPadme', 'sha256', 'xifraAesGcm',
   /* Les constants que kekPbkdf2 usa per dins (la sal de 16 bytes i els límits d'iteracions del PBKDF2). */
   'BYTES_SAL', 'ITERACIONS_KDF', 'MAX_ITERACIONS', 'MIN_ITERACIONS_PROVES'
 ];

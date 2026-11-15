@@ -17,6 +17,8 @@
 --       sense les taules R23 o les columnes poble, comarca_id i abast_comarcal,
 --       i SDP-R28-003 sense la base privada de l'exportació o si qui aplica no
 --       és la propietària de la base i de l'RPC (la base només l'executa ella).
+--       Un rol sense USAGE a l'esquema private avorta abans, amb 42501, i
+--       tampoc no canvia res (tests/r28-rgpd-quotes-r23.test.mjs).
 --   1 · public.aportacions_veu_poble: disparador BEFORE INSERT
 --       aportacions_veu_poble_limita_ritme → private.aportacions_veu_poble_limita_ritme().
 --   2 · public.joc_isoglosses_vots_consens: disparador BEFORE INSERT

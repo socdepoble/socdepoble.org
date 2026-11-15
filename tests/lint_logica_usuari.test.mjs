@@ -290,9 +290,15 @@ const NO_ES_CLASSE = /^(sdp-xat-rail|sdp-root|page-title-logo-personalitzat)$|^s
 /* R28 · Un prefix de plantilla (`toc-level-${h.level}` deixa «toc-level-»)
    no és cap classe: compta com a declarat si algun full declara una classe
    que hi comença (.toc-level-1 … .toc-level-6, modules.css). Un prefix sense
-   cap classe de la família continua sent una òrfena. */
+   cap classe de la família continua sent una òrfena.
+   Onada R28 · sql-node0-integritat-04 · Només per als prefixos d'esta llista
+   explícita: amb la regla oberta a tot token acabat en «-» o «_», un
+   `sdp-${tipus}` (que deixa «sdp-») o un `sdp-targeta--${variant}` sense regla
+   passaven perquè existix algun membre de l'espai de noms. Un prefix nou s'hi
+   afig a mà, amb la família que el declara. */
+const PREFIXOS_PLANTILLA = new Set(['toc-level-']);
 const esDeclarada = (classe, declarades) => declarades.has(classe)
-  || (/[-_]$/.test(classe) && [...declarades].some((d) => d.length > classe.length && d.startsWith(classe)));
+  || (PREFIXOS_PLANTILLA.has(classe) && [...declarades].some((d) => d.length > classe.length && d.startsWith(classe)));
 
 function classesOrfes(fitxers) {
   const usades = classesUsadesAlJsx(fitxers);
@@ -309,6 +315,16 @@ function classesOrfes(fitxers) {
    les dos era una regla perduda: la primera és un ganxo (NO_ES_CLASSE) i la
    segona, el prefix d'una família declarada (esDeclarada). */
 const JSX_HERETAT = new Set(['src/components/universal/PageFrame.jsx']);
+
+test('Onada R28 · només els prefixos de plantilla declarats valen com a família; l’espai de noms sol és una òrfena', () => {
+  assert.equal(esDeclarada('toc-level-', classesDeclaradesAlCss(CSS_RESOLUCIO)), true, 'toc-level- té la família .toc-level-1 … .toc-level-6');
+  // Fulls sintètics: cada prefix té membres de la família, però cap no és a PREFIXOS_PLANTILLA.
+  const declarades = new Set(['toc-level-1', 'sdp-targeta', 'sdp-targeta--destacada', 'app-grid', 'sp-card', 'cs-fila', 'zzz-a']);
+  assert.equal(esDeclarada('toc-level-', declarades), true);
+  for (const prefix of ['sdp-', 'app-', 'sp-', 'cs-', 'sdp-targeta--', 'zzz-']) {
+    assert.equal(esDeclarada(prefix, declarades), false, `${prefix} no és a PREFIXOS_PLANTILLA`);
+  }
+});
 
 test('tota classe usada al JSX nou existix als fulls canònics', () => {
   assert.deepEqual(classesOrfes(JSX_NOU.filter((f) => !JSX_HERETAT.has(f))), []);

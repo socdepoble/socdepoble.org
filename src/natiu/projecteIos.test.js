@@ -599,14 +599,14 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
     expect(receptor.match(purgaLocal) ?? []).toHaveLength(1);
     expect(cosDe(receptor, '@objc func tallaSessio(').match(purgaLocal) ?? []).toHaveLength(1);
     expect(receptor).not.toMatch(/\bremoveItem\(atPath:/);
-    expect(carrega).toMatch(/\bcua\.async \{ \[weak self\] in self\?\.recull\(intent: 0, ambRestes: true\) \}/);
+    expect(carrega).toMatch(/\bcua\.async \{ \[weak self\] in self\?\.recull\(intent: 0, ambRestes: true, entrada: entrada\) \}/);
     expect(receptor.match(/\bambRestes: true\b/g)).toHaveLength(1);
-    expect(receptor).toMatch(/private func recull\(intent: Int, ambRestes: Bool = false\)/);
-    expect(cosDe(receptor, '@objc private func revisa()')).toMatch(/self\?\.recull\(intent: 0\)/);
+    expect(receptor).toMatch(/private func recull\(intent: Int, ambRestes: Bool = false, entrada: BarreraSessioCompartit\.Entrada\)/);
+    expect(cosDe(receptor, '@objc private func revisa()')).toMatch(/self\?\.recull\(intent: 0, entrada: entrada\)/);
     expect(cosDe(receptor, '@objc private func revisa()')).not.toContain('ambRestes');
 
     const recull = cosDe(receptor, 'private func recull(');
-    expect(recull).toMatch(/self\?\.recull\(intent: intent \+ 1\)/);
+    expect(recull).toMatch(/self\?\.recull\(intent: intent \+ 1, entrada: entrada\)/);
     const restes = recull.indexOf('if ambRestes { afigRestes(a: &junts, ara: ara) }');
     expect(restes, 'les restes, a la primera passada').toBeGreaterThan(recull.indexOf('var junts = Lliurament()'));
     // Abans de mirar l'App Group: sense grup, les restes locals ixen igual.
@@ -624,7 +624,8 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
     expect(receptor).toMatch(/CAPPluginMethod\(name: "tallaSessio", returnType: CAPPluginReturnPromise\)/);
     const talla = cosDe(receptor, '@objc func tallaSessio(');
     expect(talla, 'falta tallaSessio').not.toBe('');
-    expect(talla).toMatch(/^\s*cua\.async \{/);
+    expect(talla.indexOf('barrera.talla {')).toBeLessThan(talla.indexOf('cua.async {'));
+    expect(talla).toContain('retainedEventArguments?.removeObject(forKey: Self.esdeveniment)');
     expect(talla).toMatch(/\bremoveItem\(at:\s*Self\.carpetaLocal\(\)\s*\)/);
     expect(talla).toMatch(/containerURL\(forSecurityApplicationGroupIdentifier: Self\.grup\)/);
     expect(talla).toMatch(/appendingPathComponent\("compartits", isDirectory: true\)/);

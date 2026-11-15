@@ -384,5 +384,77 @@ if (!modulePath || !fs.existsSync(modulePath)) {
         t.diagnostic('SDP-R28-002 abans de crear cap funció ni disparador');
       } finally { await sense.close(); }
     });
+
+    /* Onada R28 · sql-node0-integritat-05 · Les branques que la capçalera de la migració dona per provades:
+       null i {"error": SQLSTATE} a l'exportació, i les precondicions SDP-R28-001 i SDP-R28-003. */
+
+    /** Exporta com `who` dins d'una transacció que sempre es desfà: `preparacio` (DDL) corre abans com a propietària. */
+    async function exportaDinsDeRollback(who, preparacio) {
+      await db.exec('BEGIN');
+      try {
+        await db.exec(preparacio);
+        await db.query("SELECT set_config('request.jwt.claim.sub',$1,true), set_config('request.jwt.claim.role','authenticated',true), set_config('request.jwt.claims',$2,true)",
+          [who, JSON.stringify({ sub: who, role: 'authenticated', aal: 'aal1' })]);
+        await db.exec('SET LOCAL ROLE authenticated');
+        return (await db.query('SELECT public.exporta_les_meues_dades() AS e')).rows[0].e;
+      } finally { await db.exec('ROLLBACK'); }
+    }
+    /** Separa el que ha de ser idèntic (tot menys generat_al i veu_del_poble) de veu_del_poble. */
+    const parts = ({ generat_al, veu_del_poble, ...resta }) => { assert.ok(generat_al); return { resta, veu: veu_del_poble }; };
+
+    test('exportació: sense la taula de vots (marxa enrere de R23), vots_isoglosses és null i la resta queda igual', async () => {
+      const abansDrop = parts(await exporta(db, ANNA));
+      assert.ok(abansDrop.veu.vots_isoglosses.length > 0, 'ANNA té vots propis');
+      const sense = parts(await exportaDinsDeRollback(ANNA, 'DROP TABLE public.joc_isoglosses_vots_consens CASCADE'));
+      assert.equal(sense.veu.vots_isoglosses, null, 'null: la taula no hi és');
+      assert.deepEqual(sense.veu.aportacions, abansDrop.veu.aportacions);
+      assert.deepEqual(sense.resta, abansDrop.resta, 'les seccions anteriors no canvien');
+      assert.deepEqual(parts(await exporta(db, ANNA)).veu, abansDrop.veu, 'el ROLLBACK torna la taula');
+    });
+
+    test('exportació: amb una columna reanomenada, aportacions és {"error":"42703"} i la resta queda igual', async () => {
+      const abansRename = parts(await exporta(db, ANNA));
+      assert.ok(abansRename.veu.aportacions.length > 0, 'ANNA té aportacions pròpies');
+      const canviada = parts(await exportaDinsDeRollback(ANNA, 'ALTER TABLE public.aportacions_veu_poble RENAME COLUMN poble TO poble_x'));
+      assert.deepEqual(canviada.veu.aportacions, { error: '42703' }, 'l’esquema no casa: undefined_column');
+      assert.deepEqual(canviada.veu.vots_isoglosses, abansRename.veu.vots_isoglosses);
+      assert.deepEqual(canviada.resta, abansRename.resta, 'les seccions anteriors no canvien');
+      assert.deepEqual(parts(await exporta(db, ANNA)).veu, abansRename.veu, 'el ROLLBACK torna la columna');
+    });
+
+    /** Una base amb tot el catàleg menys R28; `prepara` corre dins d'una transacció que R28, en avortar, desfà
+        (el ROLLBACK d'aplicaR28). Després no hi ha cap disparador R28, l'RPC és la de 2611070600 i la preparació
+        tampoc no hi és. */
+    async function precondicio(prepara, codi, prefix) {
+      const { db: base, errors } = await creaBase(files.filter(f => f !== R28));
+      try {
+        assert.deepEqual(errors, []);
+        const exportaVell = await md5Funcio(base, 'public.exporta_les_meues_dades()');
+        const baseVella = await md5Funcio(base, 'private.exporta_les_meues_dades_base_r33()');
+        await base.exec('BEGIN');
+        await base.exec(prepara);
+        await assert.rejects(aplicaR28(base), error(codi, prefix));
+        assert.equal((await base.query('SELECT current_user AS u')).rows[0].u, 'postgres', 'el ROLLBACK torna el rol');
+        assert.equal((await base.query("SELECT count(*)::int AS n FROM pg_roles WHERE rolname='altra'")).rows[0].n, 0, 'cap rol de prova queda');
+        assert.equal(await md5Funcio(base, 'public.exporta_les_meues_dades()'), exportaVell);
+        assert.equal(await md5Funcio(base, 'private.exporta_les_meues_dades_base_r33()'), baseVella);
+        assert.notEqual(await md5Funcio(base, 'private.peticio_de_servidor()'), null, 'la preparació també s’ha desfet');
+        assert.equal(await md5Funcio(base, 'private.aportacions_veu_poble_limita_ritme()'), null);
+        assert.equal(await md5Funcio(base, 'private.joc_isoglosses_vots_limita_ritme()'), null);
+      } finally { await base.close(); }
+    }
+
+    test('precondició: sense private.peticio_de_servidor(), R28 avorta neta (SDP-R28-001) i no canvia res', async () => {
+      await precondicio('DROP FUNCTION private.peticio_de_servidor()', '55000', 'SDP-R28-001');
+    });
+
+    test('precondició: si qui aplica no és la propietària de la base i de l’RPC, o falta la base, R28 avorta neta (SDP-R28-003; sense USAGE a private, 42501 abans)', async t => {
+      /* Un rol sense USAGE a private ni tan sols arriba a SDP-R28-003: to_regprocedure('private.…') ja cau amb 42501
+         a la primera precondició. També avorta abans de tocar res. */
+      await precondicio('CREATE ROLE altra NOLOGIN; SET ROLE altra', '42501', 'permission denied for schema private');
+      await precondicio('CREATE ROLE altra NOLOGIN; GRANT USAGE ON SCHEMA private TO altra; SET ROLE altra', '55000', 'SDP-R28-003');
+      await precondicio('DROP FUNCTION private.exporta_les_meues_dades_base_r33()', '55000', 'SDP-R28-003');
+      t.diagnostic('rol sense USAGE a private: 42501; amb USAGE i sense ser la propietària, o sense la base: SDP-R28-003');
+    });
   });
 }

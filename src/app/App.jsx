@@ -2,6 +2,7 @@ import { RouteSEO } from '../hooks/RouteSEO';
 import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import { ATRIBUT_CURTA, esPantallaCurta, useArrelTactil, useBarresAmbScroll } from '../hooks/useBarresAmbScroll.js';
+import { useTeclatVirtual } from '../hooks/useTeclatVirtual.js';
 import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
 import { useScrollDeNavegacio } from '../hooks/useScrollDeNavegacio.js';
 import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState, useSyncExternalStore } from 'react';
@@ -489,6 +490,7 @@ function AppShell({ children, mobileNav }) {
      barra inferior ni botó. En un escriptori amb ratolí i alçada de sobra no
      hi ha escolta, ni atribut, ni botó. */
   const tactil = useArrelTactil(rootRef);
+  useTeclatVirtual(rootRef, esAmaDelDocument(externalConfig));
   const barres = useBarresAmbScroll({
     arrelRef: rootRef,
     visorRef: mainRef,

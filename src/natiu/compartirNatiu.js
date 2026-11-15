@@ -95,10 +95,35 @@ export function creaReceptorCompartit({
   const avortaLectures = () => { for (const control of [...enVol]) control.abort(); enVol.clear(); };
   let tancat = false;
   let oient = null;
-  /* El natiu primer (l'ordre que veu el connector: tallaSessio i després
-     allibera), i després les lectures. A iOS el connector encara no en té: la
-     crida es rebutja i no passa res. */
-  const tallaSessio = () => { demana('tallaSessio', {}); avortaLectures(); };
+  // UInt64 canònic, com String(entrada.generacio) a Swift; cap coerció de dades.
+  const generacioDe = (valor) => typeof valor === 'string' && /^(?:0|[1-9][0-9]{0,19})$/.test(valor)
+    && (valor.length < 20 || valor <= '18446744073709551615') ? valor : null;
+  let numeroTall = 0;
+  let tallPendent = false;
+  let generacioConfirmada = null;
+  const generacioVigent = (dades) => {
+    if (dades?.caducaAmbSessio !== true) return true; // Android/legacy.
+    const origen = generacioDe(dades?.generacioNativa);
+    return origen !== null && !tallPendent
+      && (numeroTall === 0 || origen === generacioConfirmada);
+  };
+  /* El tall es tanca en JS abans de demanar-lo al natiu. Només l'ACK del
+     darrer tall pot tornar a obrir el protocol iOS; un ACK vell no el reobri.
+     Sense ACK vàlid, el protocol nou falla tancat. Android/legacy conserva
+     la seua època/termini i no necessita esta dada nova. */
+  const tallaSessio = () => {
+    const tall = ++numeroTall;
+    tallPendent = true;
+    generacioConfirmada = null;
+    const confirma = (resposta) => {
+      if (tancat || tall !== numeroTall) return;
+      generacioConfirmada = generacioDe(resposta?.generacioNativa);
+      tallPendent = false;
+    };
+    Promise.resolve().then(() => pont.nativePromise?.(CONNECTOR_COMPARTIR, 'tallaSessio', {}))
+      .then(confirma).catch(() => confirma(null));
+    avortaLectures();
+  };
   /* La promesa, o un rebuig en avortar-se el senyal: un llegix que no
      l'escolta tampoc reté la cua. El rebuig tardà de l'original ja té amo. */
   const fins = (promesa, senyal) => {
@@ -132,7 +157,7 @@ export function creaReceptorCompartit({
        llegides i les que quedaven, `resta`) i el lot s'acaba ací. Amb el
        receptor tancat (tanca) també s'acaba, però les còpies no s'alliberen:
        el natiu les torna a anunciar en arrencar. */
-    const caducat = () => tancat || sessioAra() !== epoca;
+    const caducat = () => tancat || sessioAra() !== epoca || !generacioVigent(dades);
     const abandona = (resta) => {
       if (!tancat) allibera([...sobrants, ...rutesDelsFitxers, ...resta.map(rutaDe).filter(Boolean)]);
     };
@@ -184,8 +209,16 @@ export function creaReceptorCompartit({
     }
     // L'hora de l'intent natiu (Android): el registre la compara amb l'últim canvi de sessió.
     const rebutMs = typeof dades?.rebutMs === 'number' && Number.isFinite(dades.rebutMs) ? dades.rebutMs : undefined;
+    // iOS pot haver passat un avís retingut a l'IPC abans del tall: no té
+    // termini màxim. La marca nova conserva la semàntica dels connectors antics.
+    const caducaAmbSessio = dades?.caducaAmbSessio === true;
+    // Marca interna: es calcula ací, mai es copia d'un camp del payload.
+    const sessioNativaValidada = caducaAmbSessio && generacioVigent(dades);
+    if (caducat()) { abandona([]); return; }
     // El registre no l'ha pres (d'abans d'un canvi de sessió, o buit): la finestra tampoc el veu.
-    if (lliura({ fitxers, rutes: rutesDelsFitxers, text, rebutjats, sessio: epoca, rebutMs }) === null) return;
+    if (lliura({ fitxers, rutes: rutesDelsFitxers, text, rebutjats, sessio: epoca, rebutMs,
+      ...(caducaAmbSessio ? { caducaAmbSessio: true, sessioNativaValidada } : {}) }) === null) return;
+    if (caducat()) return;
     try {
       finestra.dispatchEvent?.(new finestra.CustomEvent(ESDEVENIMENT_FINESTRA, {
         detail: { imatgeUri: urls[0] ?? null, imatgesUri: urls, text, rebutjats }

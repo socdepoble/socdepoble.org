@@ -12,14 +12,15 @@
  * res, no llig cap arxiu, no desa ni descarrega res i no obri cap full de
  * compartir. Cap mostra no passa pel motor de veres (copiaSeguretatPortatil.js)
  * ni llig les converses de qui mira: d'eixe mòdul només n'ixen els codis
- * d'error, que són constants. Els avisos de cada mostra són els que diria
- * l'app, i la nota de davall diu el que el motor de mostra ha fet de veres.
- * Restaurar una còpia dins de l'app encara no és possible, i cap mostra ho
- * insinua.
+ * d'error, que són constants, i el nom de l'arxiu (nomArxiuCopiaSeguretatXat,
+ * pura: no xifra, no llig ni desa res). Els avisos de cada mostra són els que
+ * diria l'app, i la nota de davall diu el que el motor de mostra ha fet de
+ * veres. Restaurar una còpia dins de l'app encara no és possible, i cap mostra
+ * ho insinua.
  */
 import { Especimen } from '../Especimen.jsx';
 import { CosCopiaSeguretatXat } from '../../../xat/components/PaginaCopiaSeguretatXat.jsx';
-import { CODI_CLAU_INCORRECTA, CODI_LIMIT_SUPERAT } from '../../../../data/xat/copiaSeguretatPortatil.js';
+import { CODI_CLAU_INCORRECTA, CODI_LIMIT_SUPERAT, nomArxiuCopiaSeguretatXat } from '../../../../data/xat/copiaSeguretatPortatil.js';
 
 /* Traductor mínim: les alternatives ja són el text en valencià. */
 const t = (_clau, alternativa) => alternativa;
@@ -40,9 +41,13 @@ const MISSATGES_MOSTRA = Object.freeze(Array.from({ length: 47 }, (_, i) => Obje
 })));
 const CONTINGUT_MOSTRA = Object.freeze({ fils: FILS_MOSTRA, missatges: MISSATGES_MOSTRA, filsAmbMissatges: FILS_MOSTRA.length });
 const CONTINGUT_BUIT = Object.freeze({ fils: Object.freeze([]), missatges: Object.freeze([]), filsAmbMissatges: 0 });
+/* Onada R28 · copia-xat-03 · Converses a la llista, cap missatge carregat. */
+const CONTINGUT_SENSE_MISSATGES = Object.freeze({ fils: FILS_MOSTRA, missatges: Object.freeze([]), filsAmbMissatges: 0 });
 
-/* El nom amb la forma de nomArxiuCopiaSeguretatXat; cap arxiu no el porta. */
-const NOM_ARXIU_MOSTRA = 'socdepoble-xat-20261115-0230.sdpbackup';
+/* Onada R28 · copia-xat-07 · El nom el fa nomArxiuCopiaSeguretatXat, com
+   desaArxiuCopiaSeguretatXat: sempre amb el mode de la còpia («complet»).
+   Cap arxiu no el porta. */
+const NOM_ARXIU_MOSTRA = nomArxiuCopiaSeguretatXat({ data: new Date(Date.UTC(2026, 10, 15, 2, 30)), mode: 'complet' });
 
 /* El que tornaria importa d'una còpia bona: el resum de la mostra és inventat. */
 const RESULTAT_MOSTRA = Object.freeze({
@@ -75,8 +80,9 @@ const MOTOR_MASSA_GRAN = motorDeMostra({ errorExporta: CODI_LIMIT_SUPERAT });
 const MOTOR_CLAU_INCORRECTA = motorDeMostra({ errorImporta: CODI_CLAU_INCORRECTA });
 const MOTOR_ALTRE_COMPTE = motorDeMostra({ capcalera: { xifrada: true, usuariId: 'mostra-altra-persona', tenantId: ABAST_MOSTRA.tenantId } });
 
-/* Dins de l'app, la pàgina només mira que el full de compartir hi siga
-   (share i canShare): el motor de mostra no el crida mai. */
+/* Dins de l'app, la pàgina mira que el full de compartir hi siga (share) i
+   pregunta a canShare si admet un arxiu .sdpbackup: ací sempre diu que sí, i
+   el motor de mostra no crida mai share. */
 const NAVEGADOR_AMB_FULL = Object.freeze({ share: () => Promise.resolve(), canShare: () => true });
 const NAVEGADOR_SENSE_FULL = Object.freeze({});
 
@@ -95,14 +101,15 @@ export default function EspecimenCopiaSeguretatXat() {
   return (
     <>
       <Especimen id="xat-copia-desa" nom="CosCopiaSeguretatXat · Desa" fitxer="src/sections/xat/components/PaginaCopiaSeguretatXat.jsx"
-        descripcio="Ajustos › Xats › Còpia de seguretat › «Desa una còpia xifrada». A l’app, la pàgina diu què hi va i quant (les converses de la llista i només els missatges que este dispositiu ha carregat en esta sessió, sense fotos, àudios ni vídeos), demana la contrasenya dues vegades (12 caràcters com a mínim) i, en dos passos, xifra la còpia amb el motor de veres (data/xat/copiaSeguretatPortatil.js: PBKDF2 de 600.000 iteracions i AES-256-GCM) i la desa en un arxiu .sdpbackup: a la web, amb el selector de fitxers o la descàrrega; dins de l’app del mòbil, només amb el full de compartir. Ací és el cos de producció amb dades inventades i un motor de mostra: no xifra res, no desa ni descarrega cap arxiu i no llig cap conversa de qui mira. Escriu-hi una contrasenya de prova: el navegador o el gestor de contrasenyes pot oferir-se a guardar-la. Restaurar una còpia dins de l’app encara no és possible."
+        descripcio="Ajustos › Xats › Còpia de seguretat › «Desa una còpia xifrada». A l’app, la pàgina diu què hi va i quant (totes les converses on participes i només els missatges que este dispositiu ha carregat en esta sessió, sense fotos, àudios ni vídeos), demana la contrasenya dues vegades (12 caràcters com a mínim) i, en dos passos, xifra la còpia amb el motor de veres (data/xat/copiaSeguretatPortatil.js: PBKDF2 de 600.000 iteracions i AES-256-GCM) i la desa en un arxiu .sdpbackup: a la web, amb el selector de fitxers o la descàrrega; dins de l’app del mòbil, només amb el full de compartir. Ací és el cos de producció amb dades inventades i un motor de mostra: no xifra res, no desa ni descarrega cap arxiu i no llig cap conversa de qui mira. Escriu-hi una contrasenya de prova: el navegador o el gestor de contrasenyes pot oferir-se a guardar-la. Restaurar una còpia dins de l’app encara no és possible."
         contracte={[
           ['accio', '\'desa\' | \'comprova\'', '\'desa\'', 'Quina de les dos pàgines: desar una còpia xifrada o comprovar-ne una.'],
           ['abast', '{ usuariId, tenantId } | null', 'null', 'L’àmbit de la còpia (abastDeLaCopia, xat/copiaSeguretatXat.js): la persona i el poble. Sense, només l’avís «Entra al xat amb el teu compte…».'],
-          ['contingut', '{ fils, missatges }', 'null', 'El que aniria a la còpia (contingutDeLaCopia), en la forma que el motor admet; només per a «desa». La pàgina en pinta el recompte.'],
+          ['contingut', '{ fils, missatges, filsAmbMissatges }', 'null', 'El que aniria a la còpia (contingutDeLaCopia), en la forma que el motor admet; només per a «desa». La pàgina en pinta el recompte, diu en quantes converses hi ha missatges si no és en totes, i avisa si no n’hi ha cap.'],
           ['locale', 'string', '\'ca-ES\'', 'La llengua dels nombres i de les dates.'],
           ['natiu', 'boolean', 'false', 'Dins de l’app de Capacitor: només el full de compartir, i el botó del pas 2 diu «Comparteix l’arxiu».'],
-          ['navegador', '{ share?, canShare? }', 'globalThis.navigator', 'Dins de l’app, sense share i canShare, la pàgina diu que no pot desar l’arxiu abans de demanar res.'],
+          ['navegador', '{ share?, canShare? }', 'globalThis.navigator', 'Dins de l’app, sense share, o si canShare diu que no admet un arxiu .sdpbackup, la pàgina diu que no pot desar l’arxiu abans de demanar res.'],
+          ['cripto', 'Crypto | null', 'globalThis.crypto', 'El WebCrypto del navegador (criptoDisponible, la regla del motor). Sense (fora d’un context segur), cap formulari: només l’avís.'],
           ['motor', '{ exporta, desa, llegix, descriu, importa }', 'MOTOR_COPIA', 'El motor de veres (data/xat/copiaSeguretatPortatil.js). Les proves i este catàleg en passen un de mostra.'],
           ['t', '(clau, reserva) => string', 'reserva', 'El traductor de l’app (section.xat.copia.*); fora, el valencià.']
         ]}
@@ -140,6 +147,12 @@ export default function EspecimenCopiaSeguretatXat() {
         </Mostra>
         <Mostra titol="Cap conversa carregada">
           <CosCopiaSeguretatXat accio="desa" t={t} abast={ABAST_MOSTRA} contingut={CONTINGUT_BUIT} motor={MOTOR_DESCARREGA} />
+        </Mostra>
+        <Mostra titol="Converses sense cap missatge carregat">
+          <CosCopiaSeguretatXat accio="desa" t={t} abast={ABAST_MOSTRA} contingut={CONTINGUT_SENSE_MISSATGES} motor={MOTOR_DESCARREGA} />
+        </Mostra>
+        <Mostra titol="El navegador no deixa xifrar">
+          <CosCopiaSeguretatXat accio="desa" t={t} abast={ABAST_MOSTRA} contingut={CONTINGUT_MOSTRA} cripto={null} motor={MOTOR_DESCARREGA} />
         </Mostra>
         <Mostra titol="Dins de l’app, sense full de compartir">
           <CosCopiaSeguretatXat accio="desa" t={t} abast={ABAST_MOSTRA} contingut={CONTINGUT_MOSTRA} natiu navegador={NAVEGADOR_SENSE_FULL} motor={MOTOR_DESCARREGA} />

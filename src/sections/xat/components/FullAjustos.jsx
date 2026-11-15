@@ -46,12 +46,13 @@
  *     el port, de manera transitiva, per CaraXat. ClosCaXat el munta una sola
  *     vegada, dins de la closca.
  */
-import { Suspense, lazy, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Component, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownUp, BellDot, Check, ChevronLeft, ChevronRight, CircleQuestionMark, CircleX, Heart, KeyRound,
   Lock, MessageCircle, Palette, RefreshCw, Search, Star, X
 } from 'lucide-react';
-import { Dialeg } from '../../../components/PedraSeca/index.js';
+import { Alerta, Boto, Dialeg } from '../../../components/PedraSeca/index.js';
+import { esErrorLazy, lazyRouteRenovable } from '../../../apps/plataforma/lazyRoute.js';
 import CaraXat from './CaraXat.jsx';
 import { caraDeComunitat } from '../caraDeSocDePoble.js';
 import { AvatarResolt } from '../../../components/universal/identitat/AvatarResolt.jsx';
@@ -76,8 +77,30 @@ const noop = () => {};
 
 /* Onada R28 (Lot C3) · La còpia `.sdpbackup`, en diferit: el motor no entra al
    tros de /xat fins que la persona obri «Desa una còpia xifrada» o «Comprova
-   una còpia». Mentre arriba, el Suspense de baix diu «Treballant…» (role="status"). */
-const PaginaCopiaSeguretatXat = lazy(() => import('./PaginaCopiaSeguretatXat.jsx'));
+   una còpia». Mentre arriba, el Suspense de baix diu «Treballant…» (role="status").
+   Onada R28 · copia-xat-01 · Amb lazyRouteRenovable (apps/plataforma/lazyRoute.js)
+   i no amb el lazy nu de React: un tros que no arriba (connexió rural, o un
+   desplegament nou que ja no té el vell) arriba com a LazyRouteError, amb la
+   recuperació de l'entrada web, i una intenció nova (cada entrada a la pàgina i
+   cada «Torna-ho a provar») el torna a demanar, mai en bucle. La barrera de la
+   còpia (BarreraDeLaCopia, baix) el para dins del full. */
+const paginaCopiaRenovable = lazyRouteRenovable(() => import('./PaginaCopiaSeguretatXat.jsx'));
+
+/**
+ * La pàgina diferida d'un `renovable` (lazyRouteRenovable) per a la intenció
+ * `intent` que li dona CosAjustos (PaginaCopiaProtegida). La intenció ve de
+ * fora del Suspense: dins, un muntatge que espera el tros es pot refer, i una
+ * clau nova a cada refeta tornaria a demanar-lo en bucle. Exportada perquè
+ * les proves en munten una amb un altre `renovable`.
+ */
+export function paginaDiferidaRenovable(renovable) {
+  return function PaginaDiferida({ intent = '', ...props }) {
+    const Vista = useMemo(() => renovable.vigent(intent), [intent]);
+    return <Vista {...props} />;
+  };
+}
+
+const PaginaCopiaSeguretatXat = paginaDiferidaRenovable(paginaCopiaRenovable);
 const enc = (valor) => encodeURIComponent(String(valor));
 
 /* Els noms de lucide del model (ajustosXat.js), com IconaFiltre a la cerca. */
@@ -271,7 +294,9 @@ function FilaEixidaAmbSessio({ fila, etiqueta }) {
  * null si no se sap) tria la nota que diu on porta «Privacitat». `avisos`
  * (B8C-6, null per defecte) és l'estat dels avisos d'este dispositiu.
  * `PaginaCopia` (Onada R28, Lot C3; un component, null per defecte) pinta les
- * dos pàgines de la còpia `.sdpbackup` (ESPECIALS_COPIA) amb { accio, t }.
+ * dos pàgines de la còpia `.sdpbackup` (ESPECIALS_COPIA) amb { accio, t,
+ * intent }: `intent` canvia a cada entrada a la pàgina i a cada «Torna-ho a
+ * provar» (copia-xat-01, PaginaCopiaProtegida), i qui no és diferit l'ignora.
  */
 export function CosAjustos({
   t, campRef = null, pilaInicial = ARREL, joId = null, joNom = null, joAvatar = null, preferits = CAP, correu = null,
@@ -381,9 +406,7 @@ export function CosAjustos({
      catàleg, fora del xat) no hi ha cap còpia a fer, i ho diu. */
   else if (Object.hasOwn(ESPECIALS_COPIA, pagina.especial ?? '')) {
     cos = PaginaCopia ? (
-      <Suspense fallback={<p className="sdp-xat-ajustos__nota" role="status">{t('common.treballant', 'Treballant…')}</p>}>
-        <PaginaCopia accio={ESPECIALS_COPIA[pagina.especial]} t={t} />
-      </Suspense>
+      <PaginaCopiaProtegida PaginaCopia={PaginaCopia} accio={ESPECIALS_COPIA[pagina.especial]} t={t} capRef={capRef} />
     ) : <p className="sdp-xat-ajustos__nota">{t('section.xat.copia.senseCompte', 'Entra al xat amb el teu compte per a fer o comprovar una còpia.')}</p>;
   }
   else if (pagina.construccio) cos = <PaginaEnConstruccio construccio={pagina.construccio} t={t} />;
@@ -484,6 +507,51 @@ export function CosAjustos({
         {cos}
       </div>
     </div>
+  );
+}
+
+/* Onada R28 · copia-xat-01 · Si el tros de la còpia no arriba, l'avís es queda
+   dins del full i el xat, amb la conversa que hi havia oberta, no cau fins a
+   RouteErrorBoundary. Qualsevol altre error puja (el mateix patró que
+   BarreraDelDocumentDestacat, XatSection.jsx). */
+class BarreraDeLaCopia extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (!this.state.error) return this.props.children;
+    if (!esErrorLazy(this.state.error)) throw this.state.error;
+    return this.props.fallback;
+  }
+}
+
+/* L'avís, amb «Torna-ho a provar». Frases curtes i sense tecnicismes. */
+function AvisCopiaNoCarregada({ t, onReintenta }) {
+  return (
+    <Alerta to="error" accions={<Boto varietat="secundari" onClick={onReintenta}>{t('common.reintenta', 'Torna-ho a provar')}</Boto>}>
+      <p>{t('section.xat.copia.noCarrega', 'No s’ha pogut obrir esta pàgina. Comprova que tens connexió i torna-ho a provar.')}</p>
+    </Alerta>
+  );
+}
+
+/* La pàgina de la còpia, dins de la barrera i del Suspense. Es munta amb la
+   pàgina (la clau del cos és la pàgina): cada entrada és una intenció nova
+   (useId), i cada «Torna-ho a provar» també (`reintent`, que a més remunta la
+   barrera). La intenció es calcula ací, fora del Suspense (vegeu
+   paginaDiferidaRenovable). En reintentar, el focus va al ‹ de la pàgina, com
+   en entrar-hi: el botó de l'avís desapareix. */
+function PaginaCopiaProtegida({ PaginaCopia, accio, t, capRef }) {
+  const entrada = useId();
+  const [reintent, setReintent] = useState(0);
+  const reintenta = () => {
+    capRef?.current?.focus();
+    setReintent((n) => n + 1);
+  };
+  return (
+    <BarreraDeLaCopia key={reintent} fallback={<AvisCopiaNoCarregada t={t} onReintenta={reintenta} />}>
+      <Suspense fallback={<p className="sdp-xat-ajustos__nota" role="status">{t('common.treballant', 'Treballant…')}</p>}>
+        <PaginaCopia accio={accio} t={t} intent={`${entrada}#${reintent}`} />
+      </Suspense>
+    </BarreraDeLaCopia>
   );
 }
 

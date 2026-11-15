@@ -520,7 +520,7 @@ export function PanellVisibilitatEnLinia({
       <div className="sdp-visibilitat-linia__accions">
         {alDiaAlMur ? (
           <span
-            className="sdp-boto sdp-visibilitat-linia__boto sdp-visibilitat-linia__boto--publicat"
+            className="sdp-visibilitat-linia__estat-publicat"
             role="status"
             aria-live="polite"
           >

@@ -22,6 +22,10 @@
  *     desplaçar la pàgina).
  *   · Contracte desacoplat `fontSo` (`tipus: 'lectura' | 'audio'`) llest per a
  *     connectar pistes i emissions en directe de Ràdio de Poble sense duplicar UI.
+ *   · Onada R28 · Una locució aliena (el Refranyer, el joc o l'opció del menú
+ *     Traduir) que avorta la de la barra la deixa en pausa al mateix bloc. Triar
+ *     un apartat o prémer Escape dins del panell «Apartats» el tanca i torna el
+ *     focus al seu botó; `aria-controls` només apunta al panell quan existix.
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 /* Onada R28 · D-R27-1 (opció b) · L'estil de la peça no viatja a l'arrencada: s'adopta en pintar-se. */
@@ -125,6 +129,8 @@ export function BarraReproductorVeu({
   const idBase = useId();
   const idPanellSalt = `${idBase}-salt`;
   const barraRef = useRef(null);
+  /* Onada R28 · veu-editorial-06/10 · El botó «Apartats i cerca al text», on torna el focus en tancar el panell. */
+  const botoApartatsRef = useRef(null);
   useFullDiferit(barraRef, 'barra-veu', cssBarraVeu);
   const audioFontRef = useRef(null);
   const pistaAudioCarregadaRef = useRef('');
@@ -457,7 +463,15 @@ export function BarraReproductorVeu({
             signal: control.signal,
           });
         } catch (err) {
-          if (sessioIdRef.current !== idSessio || control.signal.aborted || err?.codi === serveiVeu.CODI_VEU_AVORTADA) {
+          if (sessioIdRef.current !== idSessio || control.signal.aborted) {
+            return;
+          }
+          /* Onada R28 · veu-editorial-03 · Cada avortament propi (pausa, salt, tancar, desmuntar o
+             la neteja d'este efecte) ja canvia la sessió o avorta el control. Un VEU_AVORTADA que
+             arriba igualment ve d'un atura() alié (una altra peça de la pàgina ha començat a
+             parlar): la barra queda en pausa al mateix bloc, no en «parlant» muda. */
+          if (err?.codi === serveiVeu.CODI_VEU_AVORTADA) {
+            setEstat('pausat');
             return;
           }
           setEstat('error');
@@ -518,6 +532,9 @@ export function BarraReproductorVeu({
     setMissatgeEstat('');
     if (tancaSelector) {
       setPanellSaltObert(false);
+      /* Onada R28 · veu-editorial-06 · El botó de l'apartat triat desapareix amb el panell: el focus
+         torna al botó «Apartats i cerca al text», sense lluitar amb el desplaçament suau. */
+      botoApartatsRef.current?.focus?.({ preventScroll: true });
     }
     const element = blocsRef.current[desti]?.element;
     if (!mostraEspecimen && element) {
@@ -578,6 +595,15 @@ export function BarraReproductorVeu({
     }
   }, [onTanca, botoActivadorRef, invocadorRef]);
 
+  /* Onada R28 · veu-editorial-10 · Escape dins de la barra tanca el panell «Apartats» i torna el
+     focus al seu botó. Amb el panell tancat no fa res: la barra no és cap diàleg i continua sonant. */
+  const tancaPanellAmbEscape = useCallback((ev) => {
+    if (ev.key !== 'Escape' || !panellSaltObert) return;
+    ev.stopPropagation();
+    setPanellSaltObert(false);
+    botoApartatsRef.current?.focus?.({ preventScroll: true });
+  }, [panellSaltObert]);
+
   const blocsFiltrats = useMemo(() => {
     const q = cercaText.trim().toLowerCase();
     return blocs.filter((bloc) => {
@@ -616,6 +642,7 @@ export function BarraReproductorVeu({
       data-sdp-no-locutar=""
       translate="no"
       aria-label={etiquetaRegio}
+      onKeyDown={tancaPanellAmbEscape}
     >
       {esFontAudio ? (
         <audio ref={audioFontRef} preload="none" hidden />
@@ -708,10 +735,12 @@ export function BarraReproductorVeu({
         </div>
         {total > 0 ? (
           <button
+            ref={botoApartatsRef}
             type="button"
             className={panellSaltObert ? 'sdp-barra-veu__control sdp-barra-veu__control--actiu' : 'sdp-barra-veu__control'}
             aria-expanded={panellSaltObert}
-            aria-controls={idPanellSalt}
+            /* Onada R28 · veu-editorial-10 · Només apunta al panell quan és al DOM (es munta en obrir-lo). */
+            aria-controls={panellSaltObert ? idPanellSalt : undefined}
             aria-label={tradueix(t, TEXTOS.apartats)}
             onClick={() => setPanellSaltObert((v) => !v)}
           >

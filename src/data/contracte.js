@@ -834,8 +834,10 @@ export const LIMIT_DADES_OBERTES = 5000;
    bloquejaria ella mateixa.
    Onada R21 (COMMIT 5) · La v1.2.0 passa del build 4 al 5: cap número que ja
    s'haja pujat a una botiga es reutilitza. MARKETING_VERSION i versionName
-   continuen dient 1.2.0. */
-export const VERSIO_CLIENT_NATIU = 5;
+   continuen dient 1.2.0.
+   Onada R28 (Lot C4, pla 261115_0135) · Versió unificada 1.2.1 amb el build 6: MARKETING_VERSION, versionName i
+   package.json diuen 1.2.1, i el build puja del 5 al 6 perquè cap número ja pujat a una botiga es reutilitze. */
+export const VERSIO_CLIENT_NATIU = 6;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

@@ -137,12 +137,15 @@ export const llistaRevisionsEditorialsWp = ambRevisionsWp ? revisionsWpAmbServid
 export const desaRevisioEditorialWp = ambRevisionsWp ? revisionsWpAmbServidor.desaRevisioEditorialWp : undefined;
 
 /* R24 · CODEX-R24-03 · Capacitat 'consensIsoglosses' del joc «D'on parles?» (consensIsoglosses.js).
-   Els seus objectes SQL (la RPC resum_consens_isoglosses_poble i les taules
-   joc_isoglosses_vots_consens i aportacions_veu_poble, de les migracions R23) encara NO són a
-   producció: com curadoriaCultural, l'adaptador només anuncia la capacitat amb
-   VITE_SDP_CONSENS_ISOGLOSSES=1, que s'encén després d'aplicar-les. Apagada, les tres valen
-   undefined: el port la tracta com a absent (teCapacitat fals, cap petició ni cap 404) i la
-   targeta continua en el seu mode local honest. Sempre les tres juntes. */
+   Onada R28 · Els seus objectes SQL (la RPC resum_consens_isoglosses_poble i les taules
+   joc_isoglosses_vots_consens i aportacions_veu_poble, de les migracions R23 20261113233000 i
+   20261114023000) ja són a producció: els va aplicar el Mestre el 14-11-2026 (5/5 true,
+   supabase/README.md). La bandera VITE_SDP_CONSENS_ISOGLOSSES continua apagada per decisió, no
+   per absència: l'etiqueta i la clau d'una variant nova no passen per moderació, i encendre-la
+   és decisió del Mestre (les quotes R28 de 20261115030000 tampoc no hi són aplicades). Com
+   curadoriaCultural, l'adaptador només anuncia la capacitat amb VITE_SDP_CONSENS_ISOGLOSSES=1.
+   Apagada, les tres valen undefined: el port la tracta com a absent (teCapacitat fals, cap
+   petició ni cap 404) i la targeta continua en el seu mode local honest. Sempre les tres juntes. */
 import * as consensAmbServidor from './consensIsoglosses.js';
 const ambConsens = import.meta.env.VITE_SDP_CONSENS_ISOGLOSSES === '1';
 export const lligConsensIsoglossesPoble = ambConsens ? consensAmbServidor.lligConsensIsoglossesPoble : undefined;

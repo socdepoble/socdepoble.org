@@ -847,6 +847,16 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/natiu-cua-android.test.mjs",
+      "suite": "primary",
+      "reason": "R28-NAT-02: compila i executa el helper Java de retenció real amb JDK, època capturada, flush, tall i1000executors antics; fitxers temporals privats, cap xarxa ni emulador. Sense JDK el salt no acredita Android."
+    },
+    {
+      "path": "tests/natiu-cua-ios.test.mjs",
+      "suite": "primary",
+      "reason": "R28-NAT-01: compila i executa la barrera Swift de producció amb Foundation, retenció llarga i concurrència; fitxers temporals privats i cap xarxa. macOS/Xcode explícits; en altres plataformes el salt no certifica iOS."
+    },
+    {
       "path": "tests/nixos-credentials.test.mjs",
       "suite": "primary",
       "reason": "R15.2: credencial systemd amb ACL exacta del UID, executable fixat al store i descriptor estable; permisos de grup/altres, symlink i curses rebutjats."

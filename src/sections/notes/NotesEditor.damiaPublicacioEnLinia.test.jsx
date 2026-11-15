@@ -288,7 +288,9 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
 
     expect(screen.getByTestId('barra-publicar').getAttribute('data-publish-state')).toBe('publicat');
     expect(screen.getByTestId('barra-publicar').textContent).toBe('Publicat');
-    const estatVerd = panell.querySelector('.sdp-visibilitat-linia__boto--publicat');
+    /* Onada R28 (RESPOSTA-MARIA-0317, kit de Codex lot05) · «Publicat» és un distintiu d'estat verd
+       (.sdp-visibilitat-linia__estat-publicat), sense la pell ni els efectes de .sdp-boto. */
+    const estatVerd = panell.querySelector('.sdp-visibilitat-linia__estat-publicat');
     expect(estatVerd).not.toBeNull();
     expect(estatVerd.getAttribute('role')).toBe('status');
     expect(estatVerd.textContent).toContain('Publicat');
@@ -627,7 +629,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       fireEvent.click(botoCompartir);
     });
     await waitFor(() => expect(mocks.send).toHaveBeenCalledTimes(1));
-    expect(panell.querySelector('.sdp-visibilitat-linia__boto--publicat')?.textContent).toContain('Publicat');
+    expect(panell.querySelector('.sdp-visibilitat-linia__estat-publicat')?.textContent).toContain('Publicat');
 
     await act(async () => {
       notesCtx.setLocalNoteField('damia-externa', 'title', 'Retall extern revisat');
@@ -655,7 +657,7 @@ describe('Onada R20 · Bucle 1 · Cas Damià Llorens Jordà (UX en línia 0 moda
       fireEvent.click(botoPublicar);
     });
 
-    expect(panell.querySelector('.sdp-visibilitat-linia__boto--publicat')?.textContent).toContain('Publicat');
+    expect(panell.querySelector('.sdp-visibilitat-linia__estat-publicat')?.textContent).toContain('Publicat');
     expect(within(panell).getByRole('link', { name: 'Veure al Mur' }).getAttribute('href')).toBe('/mur');
 
     const botoPlegar = screen.getByRole('button', { name: 'Plegar panell en línia' });

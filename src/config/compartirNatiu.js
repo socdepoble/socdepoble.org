@@ -99,14 +99,18 @@ function allibera(fitxers) {
 /**
  * El pont natiu hi deixa un lot. Sense cap fitxer ni text, només es guarda si
  * hi ha rebutjats, perquè el Xat diga que no s'ha pogut rebre.
- * @param {{ fitxers?: Blob[], rutes?: (string|null)[], text?: string, rebutjats?: number, sessio?: number, rebutMs?: number }} lot
+ * @param {{ fitxers?: Blob[], rutes?: (string|null)[], text?: string, rebutjats?: number, sessio?: number, rebutMs?: number, caducaAmbSessio?: boolean, sessioNativaValidada?: boolean }} lot
  *   `rutes`, alineades amb `fitxers`: la còpia nativa de cadascun. `sessio`
  *   (sessioCompartit() quan el pont el va rebre) i `rebutMs` (l'hora de
  *   l'intent natiu): si són d'abans de l'últim canvi de sessió, el lot no entra
  *   (`rebutMs`, si és d'una còpia que encara podia estar en vol: EN_VOL_MS).
+ *   iOS marca `caducaAmbSessio`: també caduca un avís antic ja retingut a l'IPC,
+ *   sense límit d'edat. Un empat de mil·lisegon és ambigu i es descarta.
+ *   El receptor pot acreditar `sessioNativaValidada` després de l'ACK causal:
+ *   llavors no depenem del rellotge; la sessió JS encara ha de ser l'actual.
  * @returns {number|null} l'id del lot, o null si no hi havia res
  */
-export function lliuraCompartit({ fitxers = [], rutes = [], text = '', rebutjats = 0, sessio: sessioDelLot, rebutMs } = {}) {
+export function lliuraCompartit({ fitxers = [], rutes = [], text = '', rebutjats = 0, sessio: sessioDelLot, rebutMs, caducaAmbSessio = false, sessioNativaValidada = false } = {}) {
   const llista = Array.isArray(fitxers) ? fitxers : [];
   llista.forEach((fitxer, i) => {
     const ruta = Array.isArray(rutes) ? rutes[i] : null;
@@ -114,7 +118,12 @@ export function lliuraCompartit({ fitxers = [], rutes = [], text = '', rebutjats
   });
   /* P1-31 · Llegit o copiat en una sessió que ja no és: fora, amb les seues
      còpies, sense avisar ningú ni tocar el lot pendent. */
-  const copiatAbans = Number.isFinite(rebutMs) && rebutMs < tallSessioMs && tallSessioMs - rebutMs <= EN_VOL_MS;
+  // Només el receptor construïx esta marca després de validar l'ACK natiu i
+  // la generació del payload. L'època JS encara es comprova ací baix.
+  const causalValidat = caducaAmbSessio === true && sessioNativaValidada === true;
+  const copiatAbans = causalValidat ? false : caducaAmbSessio === true
+    ? !Number.isFinite(rebutMs) || rebutMs <= tallSessioMs
+    : Number.isFinite(rebutMs) && rebutMs < tallSessioMs && tallSessioMs - rebutMs <= EN_VOL_MS;
   if ((sessioDelLot !== undefined && sessioDelLot !== sessio) || copiatAbans) {
     allibera(llista.filter(esFitxer));
     return null;

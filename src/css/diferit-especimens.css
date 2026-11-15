@@ -100,13 +100,13 @@
   .sdp-especimen__redimensiona > .sdp-especimen__caixa { border: 0; border-radius: 0; }
   /* Dos fons diferents, com al gestor: la vora (transparent fins al hover o el focus) queda entre ells. */
   .sdp-especimen__redimensiona > .sdp-especimen__caixa:first-child { background: var(--sdp-fons-subtil); }
-/* T53 · Catàleg (EspecimenControlsBarra): les mostres de la barra blava.
-   Sense contenidor propi, el coixí i la separació consultarien l'ample de
-   la pàgina de Disseny i no el de la mostra (a PageFrame, el pare fa el
-   mateix ample que la barra). La mostra estreta, de 28rem, cau dins de la
-   franja 401–474 on el llindar vell deixava sobreeixir CONNECTAR. */
-.sdp-especimen__barres--contenidor { container-type: inline-size; }
-.sdp-especimen__barres--estreta { inline-size: min(100%, 28rem); }
+  /* T53 · Catàleg (EspecimenControlsBarra): les mostres de la barra blava.
+     Sense contenidor propi, el coixí i la separació consultarien l'ample de
+     la pàgina de Disseny i no el de la mostra (a PageFrame, el pare fa el
+     mateix ample que la barra). La mostra estreta, de 28rem, cau dins de la
+     franja 401–474 on el llindar vell deixava sobreeixir CONNECTAR. */
+  .sdp-especimen__barres--contenidor { container-type: inline-size; }
+  .sdp-especimen__barres--estreta { inline-size: min(100%, 28rem); }
   /* L'espècimen del catàleg: una columna d'editor simulada, amb alçada fixa. */
   .sdp-especimen__columna {
     display: flex;
@@ -115,4 +115,5 @@
     overflow: hidden;
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-m);
-  } }
+  }
+}

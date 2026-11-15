@@ -3,8 +3,8 @@
  * (src/data/xat/copiaSeguretatPortatil.js) per a la pàgina «Còpia de
  * seguretat» dels Ajustos del Xat (Onada R28, pla 261115_0135, Lot C3).
  *
- * Sense React ni xarxa. El motor no es toca: ací només es decidix QUÈ li
- * arriba i COM es diu a la persona el que torna.
+ * Sense React ni xarxa. Este mòdul no canvia el motor: ací només es decidix
+ * QUÈ li arriba i COM es diu a la persona el que torna.
  *
  * ── Què entra a la còpia (Llei 0: el que este dispositiu té, i res més) ──
  * El xat no guarda cap DTO cru: XatContext només té els fils i les bombolles
@@ -18,7 +18,13 @@
  * del fil; nul en un directe bloquejat), noLlegits (comptat amb les seq; 0 al xat
  * personal i als bloquejats), el tipus «directe» per defecte i subjecte.titol, que
  * filsAmbLaGentDelPoble reescriu amb el nom de la gent del poble.
- *   · Fils: tots els de la llista (chatThreads) menys les files d'ajuda que
+ * Onada R28 · copia-xat-05 · El xat de la IAIA la vista el vestix (vestixLaIAIA,
+ * cridada a supabase/xat.js): el títol «IAIA MarIA» i la seua cara en lloc dels
+ * del servidor. Eixe títol i eixa imatge no hi van (titolDelServidor, dtoDeFil).
+ *   · Fils: tots els de chatThreads, que no són les files que pinta la llista
+ *     (la llista amaga els arxivats, els de dins de les comunitats, el xat
+ *     públic de la pàgina de la IAIA i els directes sense missatges, i la
+ *     còpia sí que els porta; el text desaAbast ho diu), menys les files d'ajuda que
  *     sintetitza el backend (`perDefecte`), el xat de mostra de només lectura
  *     amb Javi (`fake-javi`, filDeMostraDeJavi: no és cap fil del servidor),
  *     les comunitats (contenidors sense missatges), els fils de visitant
@@ -62,8 +68,9 @@ import {
   CODI_MATERIAL_SENSIBLE,
   CODI_NONCE_REPETIT,
   MIN_CARACTERS_CONTRASENYA,
+  teCriptoPerALaCopia,
 } from '../../data/xat/copiaSeguretatPortatil.js';
-import { ID_FIL_DE_MOSTRA_DE_JAVI } from '../../data/xatsPerDefecte.js';
+import { AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
 
 const CAP = Object.freeze([]);
 const RESERVA = (_clau, reserva) => reserva;
@@ -78,8 +85,14 @@ export const TEXTOS_COPIA = Object.freeze({
   ullRepetida: ['section.xat.copia.contrasenya.ullRepetida', 'Mostra la contrasenya repetida'],
   usuari: ['section.xat.copia.usuari', 'Còpia del xat de Sóc de Poble'],
   recompte: ['section.xat.copia.recompte', 'Converses: {fils} · Missatges: {missatges}'],
-  desaAbast: ['section.xat.copia.desa.abast', 'Hi van les converses de la llista i només els missatges que este dispositiu ha carregat en esta sessió: en obrir una conversa se’n carreguen els 50 últims, i 50 més cada vegada que en carregues de més antics; l’app també pot descarregar sola els nous d’algunes converses. Una conversa de la qual no s’ha carregat cap missatge (normalment, una que no has obert en esta sessió) hi va sense missatges: només amb els noms i l’últim missatge de la llista. No hi van les fotos, els àudios, els vídeos, els missatges que encara no s’han enviat, els esborrats ni els de persones que has bloquejat, ni els xats de la IAIA si la tens apagada.'],
+  /* Onada R28 · copia-xat-05 · El que fa filEntraALaCopia, no el que pinta la
+     llista: les converses on participes (també les que la llista amaga), i no
+     les de visitant. Frases curtes (copia-xat-03). */
+  desaAbast: ['section.xat.copia.desa.abast', 'Hi van totes les converses on participes: també les arxivades, les de dins de les comunitats i les que encara no tenen cap missatge. Per això el recompte pot no coincidir amb les files de la llista. De cada conversa hi van només els missatges que este dispositiu ha carregat en esta sessió. En obrir una conversa se’n carreguen els 50 últims, i 50 més cada vegada que en carregues de més antics. L’app també pot descarregar sola els nous d’algunes converses. Una conversa de la qual no s’ha carregat cap missatge (normalment, una que no has obert en esta sessió) hi va sense missatges: només amb els noms i l’últim missatge de la llista. No hi van les fotos, els àudios, els vídeos, els missatges que encara no s’han enviat, els esborrats ni els de persones que has bloquejat. Tampoc no hi van els xats de pàgines que només has llegit, ni els xats de la IAIA si la tens apagada.'],
   desaBuit: ['section.xat.copia.desa.buit', 'Este dispositiu encara no té cap conversa carregada: no hi ha res per a copiar.'],
+  /* Onada R28 · copia-xat-03 · Converses sí, però cap missatge carregat. */
+  desaSenseMissatges: ['section.xat.copia.desa.senseMissatges', 'Encara no s’ha carregat cap missatge. La còpia només portaria la llista de converses, amb els noms i l’últim missatge de cada una. Obri les converses que vols guardar i torna ací.'],
+  desaAmbMissatges: ['section.xat.copia.desa.ambMissatges', 'Converses amb missatges carregats: {amb} de {fils}'],
   desaPrepara: ['section.xat.copia.desa.prepara', 'Prepara la còpia'],
   desaPreparant: ['section.xat.copia.desa.preparant', 'Xifrant la còpia… Pot tardar uns segons.'],
   desaFetTitol: ['section.xat.copia.desa.fet.titol', 'Còpia xifrada preparada'],
@@ -117,6 +130,9 @@ export const TEXTOS_COPIA = Object.freeze({
   errorMaterial: ['section.xat.copia.error.material', 'No s’ha fet la còpia: hi ha dades que no poden eixir d’este dispositiu. No s’ha desat res.'],
   errorAtzar: ['section.xat.copia.error.atzar', 'Este dispositiu no ha donat prou atzar per a xifrar: no s’ha fet cap còpia. Torna-ho a provar.'],
   errorNoDesat: ['section.xat.copia.error.noDesat', 'No s’ha pogut desar l’arxiu en este dispositiu. No s’ha guardat res.'],
+  /* Onada R28 · copia-xat-04 · Dos errors que reintentar no arregla. */
+  errorSenseCripto: ['section.xat.copia.error.senseCripto', 'Este navegador no deixa xifrar en esta pàgina. Sense xifrar no es pot fer ni comprovar cap còpia. Sol passar quan l’adreça no comença per https: obri Sóc de Poble en una adreça segura.'],
+  errorDades: ['section.xat.copia.error.dades', 'No s’ha pogut fer la còpia: algunes dades d’este dispositiu tenen una forma que la còpia no admet. No s’ha desat res.'],
   errorGeneric: ['section.xat.copia.error.generic', 'No s’ha pogut fer. Torna-ho a provar.'],
 });
 
@@ -197,11 +213,14 @@ const TITOL_DE_RESERVA = 'Conversa';
  * una de les reserves (vegeu dalt) no es pot distingir d'un títol de veres
  * que diga el mateix, i no hi va: un camp absent és més honest que una dada
  * inventada. El fil propi mai: la vista sempre hi posa la seua reserva.
+ * Onada R28 · copia-xat-05 · Ni el títol amb què vestixLaIAIA tapa el del
+ * servidor al xat de la IAIA («IAIA MarIA»).
  */
 export function titolDelServidor(fil) {
   if (!fil || fil.esPropi) return undefined;
   const titol = textONull(fil.title) ?? textONull(fil.name);
   if (!titol || !titol.trim() || titol === TITOL_DE_RESERVA) return undefined;
+  if (titol === AJUDA_PER_CLAU.iaia.nom && esXatDeLaIAIA(fil)) return undefined;
   const altresNoms = Array.isArray(fil.altresNoms) ? fil.altresNoms : CAP;
   if (altresNoms.length && titol === altresNoms.join(', ')) return undefined;
   return titol;
@@ -209,10 +228,12 @@ export function titolDelServidor(fil) {
 
 /** El Fil de la vista (mapejaFil) en la forma del DTO que admet el motor.
  *  `joAvatar`: la foto de la persona, que la vista posa al fil propi quan el
- *  servidor no n'hi dona cap; eixa reserva no hi va. */
+ *  servidor no n'hi dona cap; eixa reserva no hi va. Onada R28 · copia-xat-05 ·
+ *  Tampoc la cara de la IAIA que vestixLaIAIA posa al seu xat. */
 export function dtoDeFil(fil, { joAvatar = null } = {}) {
   const imatge = textONull(fil.avatar_url);
-  const imatgeDeReserva = Boolean(fil.esPropi) && imatge !== null && imatge === textONull(joAvatar);
+  const imatgeDeReserva = imatge !== null && ((Boolean(fil.esPropi) && imatge === textONull(joAvatar))
+    || (imatge === AJUDA_PER_CLAU.iaia.avatar && esXatDeLaIAIA(fil)));
   return nomesDefinits({
     id: fil.id,
     ...(fil.canalBetaTesters === true && fil.canalClau === 'beta_testers' ? { canalClau: 'beta_testers', canalBetaTesters: true } : {}),
@@ -319,6 +340,20 @@ export function contrasenyaProuLlarga(contrasenya) {
 
 export { MIN_CARACTERS_CONTRASENYA };
 
+/* ── El xifratge del navegador ───────────────────────────────────────── */
+
+/* El codi d'exigixCripto (data/xifratXatCripto.js) quan falta WebCrypto. */
+const CODI_SENSE_CRIPTO = 'SENSE_CRIPTO';
+
+/** Onada R28 · copia-xat-04 · Cert si `cripto` té el WebCrypto que el motor
+ *  demana: la mateixa regla que exigixCripto, que el motor crida en exportar,
+ *  descriure i importar (teCriptoPerALaCopia, del motor). Fora d'un context
+ *  segur (un WordPress servit per http) no hi és, i reintentar no ho arregla:
+ *  la pàgina ho diu abans. */
+export function criptoDisponible(cripto = globalThis.crypto) {
+  return teCriptoPerALaCopia(cripto);
+}
+
 /* ── Els errors del motor, en paraules de la gent ─────────────────────── */
 
 /**
@@ -326,12 +361,16 @@ export { MIN_CARACTERS_CONTRASENYA };
  * ('contrasenya', 'arxiu' o null, a l'avís general de la pàgina). `operacio`
  * és 'desa' o 'comprova'; `natiu`, si és l'app de Capacitor (sense cap
  * mecanisme per a desar, l'avís ho diu de l'app, i només allí). Cap missatge
- * intern del motor arriba a la persona.
+ * intern del motor arriba a la persona. Onada R28 · copia-xat-04 · El text
+ * genèric («Torna-ho a provar») només queda per al que no se sap: sense
+ * WebCrypto, o amb dades que el motor no admet en desar, reintentar no ho
+ * arregla, i el text no ho promet.
  */
 export function errorDeLaCopia(error, t = RESERVA, operacio = 'desa', { natiu = false } = {}) {
   const codi = error?.codi;
   const motiu = error?.motiu;
   const n = { n: MIN_CARACTERS_CONTRASENYA };
+  if (codi === CODI_SENSE_CRIPTO) return { camp: null, text: textAmb(TEXTOS_COPIA.errorSenseCripto, t) };
   if (codi === CODI_CLAU_FEBLE) {
     if (motiu === 'contrasenya-curta') return { camp: 'contrasenya', text: textAmb(TEXTOS_COPIA.errorCurta, t, n) };
     return { camp: operacio === 'comprova' ? 'arxiu' : null, text: textAmb(TEXTOS_COPIA.errorFormat, t) };
@@ -339,6 +378,12 @@ export function errorDeLaCopia(error, t = RESERVA, operacio = 'desa', { natiu = 
   if (codi === CODI_CLAU_INCORRECTA) {
     const parell = motiu === 'contrasenya-absent' ? TEXTOS_COPIA.errorBuida : TEXTOS_COPIA.errorIncorrecta;
     return { camp: 'contrasenya', text: textAmb(parell, t) };
+  }
+  /* Onada R28 · revisió · En desar, un valor massa niat o un JSON serialitzat
+     massa gran per a inspeccionar (kit R28 de Codex, json-niat-massa-gran) és
+     un camp amb una forma que el motor no admet, no una còpia massa gran. */
+  if (codi === CODI_LIMIT_SUPERAT && operacio === 'desa' && (motiu === 'json-niat-massa-gran' || motiu === 'profunditat')) {
+    return { camp: null, text: textAmb(TEXTOS_COPIA.errorDades, t) };
   }
   if (codi === CODI_LIMIT_SUPERAT) {
     return operacio === 'comprova'
@@ -350,6 +395,12 @@ export function errorDeLaCopia(error, t = RESERVA, operacio = 'desa', { natiu = 
   }
   if (codi === CODI_NONCE_REPETIT && operacio === 'desa') return { camp: null, text: textAmb(TEXTOS_COPIA.errorAtzar, t) };
   if (codi === CODI_MATERIAL_SENSIBLE && operacio === 'desa') return { camp: null, text: textAmb(TEXTOS_COPIA.errorMaterial, t) };
+  /* En desar, una còpia «corrupta» o un àmbit divergent volen dir que les dades
+     d'este dispositiu (un id, un valor, el compte o el poble) no tenen la forma
+     que el motor admet. */
+  if ((codi === CODI_COPIA_CORRUPTA || codi === CODI_IDENTITAT_DIVERGENT) && operacio === 'desa') {
+    return { camp: null, text: textAmb(TEXTOS_COPIA.errorDades, t) };
+  }
   if (operacio === 'comprova') {
     if (codi === CODI_IDENTITAT_DIVERGENT) return { camp: 'arxiu', text: textAmb(TEXTOS_COPIA.errorAltreCompte, t) };
     if (codi === CODI_DEGRADACIO) return { camp: 'arxiu', text: textAmb(TEXTOS_COPIA.errorFormat, t) };

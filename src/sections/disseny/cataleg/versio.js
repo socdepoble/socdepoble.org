@@ -15,7 +15,13 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: detalls/EspecimenCopiaSeguretatXat.jsx, manifest.js i detailRegistry.jsx, 2026-11-15T03:45:24+01:00,
+ * Darrera posada al dia: detalls/EspecimenCopiaSeguretatXat.jsx i manifest.js, 2026-11-15T05:37:27+01:00,
+ * Onada R28 (pla 261115_0135; correccions de la revisió adversarial de Claude, troballes copia-xat-03, copia-xat-04,
+ * copia-xat-07 i veu-editorial-07): l'espècimen de la «Còpia de seguretat» del Xat mostra el nom d'arxiu que produïx
+ * nomArxiuCopiaSeguretatXat, l'avís de quan no hi ha cap missatge carregat i el d'un navegador que no pot xifrar
+ * (prop nova `cripto` al contracte); manifest.js diu el que fa el salt de paràgraf del reproductor de veu (la lectura
+ * es reprén des del bloc triat) i que la barra seu a baix de la pantalla, centrada sobre el panell de lectura.
+ * Versió anterior: detalls/EspecimenCopiaSeguretatXat.jsx, manifest.js i detailRegistry.jsx, 2026-11-15T03:45:24+01:00,
  * Onada R28 (pla 261115_0135, Lot C3; skill sdp-clon-whatsapp §4.4, «Primer l'espècimen»): l'espècimen nou de les
  * dos pàgines «Còpia de seguretat» dels Ajustos del Xat (superposicions/xat-copia-seguretat, 💾), «Desa una còpia
  * xifrada» i «Comprova una còpia», amb el cos de producció CosCopiaSeguretatXat, dades inventades i un motor de
@@ -374,4 +380,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-15T03:45:24+01:00';
+export const VERSIO_CATALEG = '2026-11-15T05:37:27+01:00';

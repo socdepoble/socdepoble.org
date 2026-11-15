@@ -636,7 +636,7 @@ export default function OnboardingSection() {
                 accions={<>
                   <Boto varietat="secundari" carregant={sondant} onClick={sondaIEntra}>{tr('common.reintenta', 'Torna-ho a provar')}</Boto>
                   {(modeDades === 'local' || modeDades === 'seed') && !pilotDisponible ? (
-                    <Boto varietat="terciari" onClick={() => setSimulaLocal(true)}>{tr('section.login.servidor.forcaLocal', 'Forçar entrada local (Mock)')}</Boto>
+                    <Boto varietat="fantasma" onClick={() => setSimulaLocal(true)}>{tr('section.login.servidor.forcaLocal', 'Forçar entrada local (Mock)')}</Boto>
                   ) : null}
                 </>}
               >

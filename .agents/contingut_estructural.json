@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "2a5050c9fd56479c0b35dae72ffd977f05e602e1c69730ed53f3e8b93fea151a",
-      "html": 74005,
-      "aprovat_per": "Mestre Javi (R27 261114 23:52: /versions en 5 llengües; connector 1.1.15 al repositori)",
-      "data": "2026-11-14"
+      "sha256": "3fd8b6dfa1cdaf9c62fa60e3b8162559f5c765f8e426c27b966750e6fce5eda0",
+      "html": 76958,
+      "aprovat_per": "Claude R28 261115 06:25 (pla 261115_0135, Lot C4, DESPATX-MARIA-0317): crònica R28 de /versions en 5 llengües i versió 1.2.1 (build 6)",
+      "data": "2026-11-15"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

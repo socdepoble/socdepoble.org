@@ -856,23 +856,35 @@ export function PageFrame({
     invocadorVeuRef.current = null;
   }, []);
 
+  /* Onada R28 · veu-editorial-05 · Tancar amb el botó de dalt passa pel mateix camí que l'aspa de
+     la barra (tancaReproductorVeu): la barra es desmunta sense avisar onCanviEstat, i l'estat
+     «parlant» d'abans no es pot quedar ni al botó ni al context. */
   const premBotoVeuLectura = useCallback(() => {
+    if (reproductorVeuObert) {
+      tancaReproductorVeu();
+      return;
+    }
     invocadorVeuRef.current = null;
     setSeguixLecturaVeu(true);
-    setReproductorVeuObert((obert) => !obert);
-  }, []);
+    setReproductorVeuObert(true);
+  }, [reproductorVeuObert, tancaReproductorVeu]);
+
+  /* Onada R28 · veu-editorial-05 · «Parlant» només mentre la barra és oberta i pintada: cap
+     estat caducat d'una barra ja desmuntada arriba al botó ni als fills. */
+  const veuParlant = reproductorVeuObert && teLecturaVeu && Boolean(estatVeu.parlant);
+  const classeBotoVeu = veuParlant ? 'sdp-boto sdp-boto--primari sdp-boto-veu-iaia' : 'sdp-boto sdp-boto--secundari sdp-boto-veu-iaia';
 
   const valorContextVeu = useMemo(() => {
     if (enEdicioVeu) return false;
     return {
       activa: true,
       reproductorObert: reproductorVeuObert,
-      parlant: Boolean(estatVeu.parlant),
+      parlant: veuParlant,
       obriReproductor: obriReproductorVeu,
       tancaReproductor: tancaReproductorVeu,
       alternaReproductor: premBotoVeuLectura,
     };
-  }, [enEdicioVeu, reproductorVeuObert, estatVeu.parlant, obriReproductorVeu, tancaReproductorVeu, premBotoVeuLectura]);
+  }, [enEdicioVeu, reproductorVeuObert, veuParlant, obriReproductorVeu, tancaReproductorVeu, premBotoVeuLectura]);
 
   const etiquetaVeuTraduida = String(tradueix(tAvis, PARELL_ESCOLTA_VEU));
   const etiquetaEscoltaVeu = etiquetaVeuTraduida.replace(RE_EMOJI_INICIAL_VEU, '') || etiquetaVeuTraduida;
@@ -1094,7 +1106,13 @@ export function PageFrame({
 
   return (
     <>
-      <div className={['sdp-universal-page-container', `sdp-universal-page-container--${layout}`, senseBlava, className].filter(Boolean).join(' ')}>
+      {/* Onada R28 · veu-editorial-04 · Amb la barra de veu oberta, el contenidor reserva al final
+          l'alçada de la barra (diferit-barra-veu.css): el final de la pàgina es pot desplaçar a la
+          vista per damunt d'ella, faça scroll el visor o el contenidor mateix. Tancada, el DOM és el de sempre. */}
+      <div
+        className={['sdp-universal-page-container', `sdp-universal-page-container--${layout}`, senseBlava, className].filter(Boolean).join(' ')}
+        data-sdp-veu-reserva={reproductorVeuObert && teLecturaVeu ? 'true' : undefined}
+      >
       {/* T51 · Les dues barres de color són components propis (barres/): el
           catàleg pinta les de veres. PageFrame hi posa useAccions i les dades. */}
       {showBlueBar && (
@@ -1290,7 +1308,7 @@ export function PageFrame({
             <button
               ref={botoVeuLecturaRef}
               type="button"
-              className={estatVeu.parlant ? 'sdp-boto sdp-boto--primari sdp-boto-veu-iaia' : 'sdp-boto sdp-boto--secundari sdp-boto-veu-iaia'}
+              className={classeBotoVeu}
               aria-pressed={reproductorVeuObert}
               onClick={premBotoVeuLectura}
             >
@@ -1310,7 +1328,7 @@ export function PageFrame({
           <button
             ref={botoVeuLecturaRef}
             type="button"
-            className={estatVeu.parlant ? 'sdp-boto sdp-boto--primari sdp-boto-veu-iaia' : 'sdp-boto sdp-boto--secundari sdp-boto-veu-iaia'}
+            className={classeBotoVeu}
             aria-pressed={reproductorVeuObert}
             onClick={premBotoVeuLectura}
           >

@@ -8,8 +8,11 @@
        (el full de compartir hi té una activació d'usuari emulada); l'arxiu té
        la capçalera de la sessió (descriuCopiaSeguretatXat) i torna a obrir-se
        sencer i sense cap secret; la credencial de la còpia porta un usuari
-       propi i new-password; dins de l'app sense full de compartir, ho diu
-       abans de demanar res.
+       propi i new-password; dins de l'app sense full de compartir, o amb un
+       full que no admet un arxiu .sdpbackup (canShare, Onada R28 ·
+       copia-xat-06), ho diu abans de demanar res; sense cap missatge
+       carregat, un avís abans del formulari (copia-xat-03); sense WebCrypto,
+       cap formulari (copia-xat-04).
      · Comprova: valida en memòria sense magatzem ni aplicaImportacio i sense
        cap funció de XatContext que escriga, i diu converses, missatges i
        dates; la clau incorrecta, l'arxiu d'un altre compte, el fet malbé o el
@@ -20,7 +23,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import '../../../../tests/helpers/diccionaris.js';
 import { createTranslator } from '../../../config/i18n.js';
 import {
-  desaArxiuCopiaSeguretatXat, descriuCopiaSeguretatXat, exportaCopiaSeguretatXat, importaCopiaSeguretatXat,
+  MIME_SDP_BACKUP, desaArxiuCopiaSeguretatXat, descriuCopiaSeguretatXat, exportaCopiaSeguretatXat, importaCopiaSeguretatXat,
 } from '../../../data/xat/copiaSeguretatPortatil.js';
 import { contingutDeLaCopia } from '../copiaSeguretatXat.js';
 import { mapejaFil, mapejaMissatge } from '../missatges.js';
@@ -98,13 +101,22 @@ async function preparaLaCopia(nomBoto = 'Desa l’arxiu') {
 describe('Desa una còpia xifrada', () => {
   test('diu què hi va i quant, abans de demanar res', () => {
     render(<CosCopiaSeguretatXat accio="desa" abast={ABAST} contingut={CONTINGUT} />);
-    const abast = screen.getByText(/^Hi van les converses de la llista i només els missatges que este dispositiu ha carregat en esta sessió/).textContent;
-    /* Llei 0: pàgines de 50, les converses sense cap missatge carregat i el que no hi va. */
+    /* Onada R28 · copia-xat-05 · Llei 0: el que fa filEntraALaCopia, no el que
+       pinta la llista (les converses on participes, també les que la llista
+       amaga; cap de visitant). */
+    const abast = screen.getByText(/^Hi van totes les converses on participes: també les arxivades, les de dins de les comunitats i les que encara no tenen cap missatge\./).textContent;
+    expect(abast).toMatch(/Per això el recompte pot no coincidir amb les files de la llista\./);
+    /* Pàgines de 50, les converses sense cap missatge carregat i el que no hi va. */
+    expect(abast).toMatch(/De cada conversa hi van només els missatges que este dispositiu ha carregat en esta sessió\./);
     expect(abast).toMatch(/els 50 últims, i 50 més cada vegada que en carregues de més antics/);
-    expect(abast).toMatch(/l’app també pot descarregar sola els nous d’algunes converses/);
+    expect(abast).toMatch(/L’app també pot descarregar sola els nous d’algunes converses/);
     expect(abast).toMatch(/normalment, una que no has obert en esta sessió\) hi va sense missatges/);
-    expect(abast).toMatch(/No hi van les fotos, els àudios, els vídeos, els missatges que encara no s’han enviat, els esborrats ni els de persones que has bloquejat, ni els xats de la IAIA si la tens apagada\./);
+    expect(abast).toMatch(/No hi van les fotos, els àudios, els vídeos, els missatges que encara no s’han enviat, els esborrats ni els de persones que has bloquejat\./);
+    expect(abast).toMatch(/Tampoc no hi van els xats de pàgines que només has llegit, ni els xats de la IAIA si la tens apagada\.$/);
     expect(screen.getByText('Converses: 2 · Missatges: 3')).toBeTruthy();
+    /* Totes dues converses tenen missatges: cap recompte de més ni cap avís. */
+    expect(screen.queryByText(/^Converses amb missatges carregats/)).toBeNull();
+    expect(screen.queryByText(/^Encara no s’ha carregat cap missatge/)).toBeNull();
     expect(screen.getByText(/Almenys 12 caràcters/)).toBeTruthy();
     /* Cap botó de desar abans de preparar la còpia. */
     expect(screen.queryByRole('button', { name: 'Desa l’arxiu' })).toBeNull();
@@ -266,14 +278,84 @@ describe('Desa una còpia xifrada', () => {
     }
   });
 
-  test('dins de l’app amb full de compartir que no admet l’arxiu: cap descàrrega per enllaç, l’avís honest', async () => {
+  /* Onada R28 · copia-xat-06 · canShare es pregunta en muntar, amb un arxiu
+     .sdpbackup buit del mateix tipus que el motor compartirà: si no l'admet,
+     l'avís ix ABANS de demanar la contrasenya i de xifrar. */
+  test('dins de l’app amb full de compartir que no admet l’arxiu: l’avís honest abans de demanar la contrasenya, sense xifrar ni compartir res', () => {
     const navegador = { share: vi.fn(), canShare: vi.fn(() => false) };
-    const desa = desaDeProva();
+    const exporta = vi.fn();
+    const desa = vi.fn();
+    render(<CosCopiaSeguretatXat accio="desa" abast={ABAST} contingut={CONTINGUT} natiu navegador={navegador} motor={{ ...MOTOR_COPIA, exporta, desa }} />);
+    expect(screen.getByText(/En l’app d’este mòbil no es pot desar l’arxiu de la còpia/)).toBeTruthy();
+    expect(screen.queryByLabelText('Contrasenya de la còpia')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Prepara la còpia' })).toBeNull();
+    expect(navegador.canShare).toHaveBeenCalled();
+    const [{ files }] = navegador.canShare.mock.calls[0];
+    expect(files).toHaveLength(1);
+    expect(files[0]).toBeInstanceOf(File);
+    expect(files[0].name).toMatch(/\.sdpbackup$/);
+    expect(files[0].type).toBe(MIME_SDP_BACKUP);
+    expect(files[0].size).toBe(0);
+    expect(exporta).not.toHaveBeenCalled();
+    expect(desa).not.toHaveBeenCalled();
+    expect(navegador.share).not.toHaveBeenCalled();
+  });
+
+  test('dins de l’app, un canShare que falla en preguntar es pren per un no', () => {
+    const navegador = { share: vi.fn(), canShare: vi.fn(() => { throw new TypeError('no'); }) };
+    render(<CosCopiaSeguretatXat accio="desa" abast={ABAST} contingut={CONTINGUT} natiu navegador={navegador} />);
+    expect(screen.getByText(/En l’app d’este mòbil no es pot desar l’arxiu de la còpia/)).toBeTruthy();
+    expect(screen.queryByLabelText('Contrasenya de la còpia')).toBeNull();
+  });
+
+  /* Onada R28 · revisió · La pregunta de l'entrada no ho garantix tot: un full
+     que admet l'arxiu buit i no la còpia de veres (per la mida, per exemple)
+     continua acabant en l'avís honest, sense cap descàrrega per enllaç. */
+  test('dins de l’app, si el full admet l’arxiu buit però no la còpia de veres: cap descàrrega per enllaç, l’avís honest', async () => {
+    const navegador = { share: vi.fn(), canShare: vi.fn(({ files }) => files[0].size === 0) };
+    const desa = vi.fn((text, opcions) => desaArxiuCopiaSeguretatXat(text, { finestra: {}, navegador, ...opcions }));
     render(<CosCopiaSeguretatXat accio="desa" abast={ABAST} contingut={CONTINGUT} natiu navegador={navegador} motor={{ ...MOTOR_COPIA, desa }} />);
     fireEvent.click(await preparaLaCopia('Comparteix l’arxiu'));
     expect(await screen.findByText(/En l’app d’este mòbil no es pot desar l’arxiu de la còpia/, {}, ESPERA)).toBeTruthy();
     expect(desa.mock.calls[0][1]).toEqual({ prefereixCompartir: true, documentDom: null });
+    expect(navegador.canShare.mock.calls.some(([{ files }]) => files[0].size > 0)).toBe(true);
     expect(navegador.share).not.toHaveBeenCalled();
+  });
+
+  /* Onada R28 · copia-xat-03 · Les converses hi són, però cap missatge carregat. */
+  test('amb converses però cap missatge carregat, un avís curt ho diu abans del formulari, que continua actiu', () => {
+    const contingut = contingutDeLaCopia({ chatThreads: FILS_DE_LA_VISTA, getThreadMessages: () => [], joNom: 'Javi' });
+    expect(contingut).toMatchObject({ missatges: [], filsAmbMissatges: 0 });
+    render(<CosCopiaSeguretatXat accio="desa" abast={ABAST} contingut={contingut} />);
+    expect(screen.getByText('Converses: 2 · Missatges: 0')).toBeTruthy();
+    const avis = screen.getByText('Encara no s’ha carregat cap missatge. La còpia només portaria la llista de converses, amb els noms i l’últim missatge de cada una. Obri les converses que vols guardar i torna ací.');
+    const formulari = document.querySelector('form');
+    /* Abans del formulari. */
+    expect(avis.compareDocumentPosition(formulari) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(camp('Contrasenya de la còpia')).toBeTruthy();
+    expect(screen.queryByText(/^Converses amb missatges carregats/)).toBeNull();
+  });
+
+  test('amb missatges només en algunes converses, el recompte diu en quantes (filsAmbMissatges)', () => {
+    const contingut = contingutDeLaCopia({ chatThreads: FILS_DE_LA_VISTA, getThreadMessages: (id) => (id === FIL_GRUP ? MISSATGES_DE_LA_VISTA[FIL_GRUP] : []), joNom: 'Javi' });
+    expect(contingut.filsAmbMissatges).toBe(1);
+    render(<CosCopiaSeguretatXat accio="desa" abast={ABAST} contingut={contingut} />);
+    expect(screen.getByText('Converses: 2 · Missatges: 1')).toBeTruthy();
+    expect(screen.getByText('Converses amb missatges carregats: 1 de 2')).toBeTruthy();
+    expect(screen.queryByText(/^Encara no s’ha carregat cap missatge/)).toBeNull();
+  });
+
+  /* Onada R28 · copia-xat-04 · Sense WebCrypto (fora d'un context segur) el
+     motor fallaria cada vegada: l'avís en lloc del formulari. */
+  test('sense WebCrypto, cap formulari ni cap crida al motor: l’avís que no promet que reintentar ho arregle', () => {
+    const exporta = vi.fn();
+    render(<CosCopiaSeguretatXat accio="desa" abast={ABAST} contingut={CONTINGUT} cripto={{}} motor={{ ...MOTOR_COPIA, exporta }} />);
+    const avis = screen.getByText(/^Este navegador no deixa xifrar en esta pàgina\./);
+    expect(avis.textContent).toMatch(/obri Sóc de Poble en una adreça segura\.$/);
+    expect(avis.textContent).not.toMatch(/Torna-ho a provar/);
+    expect(screen.queryByLabelText('Contrasenya de la còpia')).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(exporta).not.toHaveBeenCalled();
   });
 
   test('sense cap conversa carregada no hi ha res per a copiar; sense compte, cap formulari', () => {
@@ -325,6 +407,15 @@ describe('Comprova una còpia', () => {
     const [, opcions] = importa.mock.calls[0];
     expect(Object.keys(opcions).sort()).toEqual(['contrasenya', 'tenantIdEsperat', 'usuariIdEsperat']);
     expect(camp('Contrasenya de la còpia').value).toBe('');
+  });
+
+  /* Onada R28 · copia-xat-04 · descriu i importa també necessiten WebCrypto. */
+  test('sense WebCrypto, ni el camp de l’arxiu: l’avís, abans de triar res', () => {
+    const llegix = vi.fn();
+    render(<CosCopiaSeguretatXat accio="comprova" abast={ABAST} cripto={null} motor={{ ...MOTOR_COPIA, llegix }} />);
+    expect(screen.getByText(/^Este navegador no deixa xifrar en esta pàgina\. Sense xifrar no es pot fer ni comprovar cap còpia\./)).toBeTruthy();
+    expect(screen.queryByLabelText('Arxiu de la còpia')).toBeNull();
+    expect(llegix).not.toHaveBeenCalled();
   });
 
   test('la mateixa credencial a banda: usuari propi i current-password', () => {

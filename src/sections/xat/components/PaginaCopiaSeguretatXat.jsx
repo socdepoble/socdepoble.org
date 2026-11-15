@@ -20,8 +20,13 @@
  *          de fitxers o la descàrrega; dins de l'app nativa, només el full de
  *          compartir, perquè la descàrrega per enllaç del WebView no avisa si
  *          no ha desat res. Es pot tornar a prémer (després de cancel·lar, per
- *          exemple) sense tornar a xifrar. Sense full de compartir, la pàgina
- *          ho diu abans de demanar res.
+ *          exemple) sense tornar a xifrar. Sense full de compartir, o amb un
+ *          full que no admet un arxiu .sdpbackup (Onada R28 · copia-xat-06:
+ *          canShare es pregunta en muntar, amb un arxiu buit), la pàgina ho
+ *          diu abans de demanar res.
+ *       Onada R28 · copia-xat-03 · Amb converses però cap missatge carregat,
+ *       un avís ho diu abans del formulari; i si només n'hi ha en algunes, el
+ *       recompte diu en quantes (filsAmbMissatges).
  *   · «Comprova una còpia» (accio 'comprova'): tria l'arxiu, en llig la
  *     capçalera (descriuCopiaSeguretatXat: cap desxifrat, només la forma i
  *     l'àmbit) i, amb la contrasenya, importaCopiaSeguretatXat la desxifra i
@@ -52,10 +57,15 @@
  *
  * Dos peces:
  *   · CosCopiaSeguretatXat: tot per props (àmbit, contingut, llengua, si és
- *     l'app nativa i el motor), per a les proves.
+ *     l'app nativa, el WebCrypto i el motor), per a les proves.
  *   · PaginaCopiaSeguretatXat (per defecte): llig useXat() i useUIState() i
- *     munta el cos. FullAjustos la carrega en diferit (lazy): el motor no
- *     entra al tros de /xat fins que la persona obri la pàgina.
+ *     munta el cos. FullAjustos la carrega en diferit (lazyRouteRenovable, amb
+ *     una barrera pròpia si el tros no arriba): el motor no entra al tros de
+ *     /xat fins que la persona obri la pàgina.
+ *
+ * Onada R28 · copia-xat-04 · Sense WebCrypto (fora d'un context segur, com un
+ * WordPress servit per http) el motor no pot xifrar ni obrir cap còpia: les
+ * dos pàgines ho diuen en lloc dels formularis, abans de demanar res.
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CircleAlert, FileUp } from 'lucide-react';
@@ -65,6 +75,8 @@ import { esAppNativa } from '../../../config/origenPublic.js';
 import {
   CODI_DEGRADACIO,
   CODI_IDENTITAT_DIVERGENT,
+  EXTENSIO_SDP_BACKUP,
+  MIME_SDP_BACKUP,
   descriuCopiaSeguretatXat,
   desaArxiuCopiaSeguretatXat,
   exportaCopiaSeguretatXatAmbRebut,
@@ -73,7 +85,7 @@ import {
 } from '../../../data/xat/copiaSeguretatPortatil.js';
 import { useXat } from '../XatContext';
 import {
-  MIN_CARACTERS_CONTRASENYA, TEXTOS_COPIA, abastDeLaCopia, contingutDeLaCopia, contrasenyaProuLlarga, errorDeLaCopia,
+  MIN_CARACTERS_CONTRASENYA, TEXTOS_COPIA, abastDeLaCopia, contingutDeLaCopia, contrasenyaProuLlarga, criptoDisponible, errorDeLaCopia,
   formataData, formataNombre, resumDeLaCopia, textAmb,
 } from '../copiaSeguretatXat.js';
 
@@ -190,8 +202,28 @@ function FormulariDesa({ t, abast, contingut, locale, natiu, navegador, motor })
   const fils = contingut?.fils ?? CAP;
   const missatges = contingut?.missatges ?? CAP;
   const buit = fils.length === 0;
-  /* Dins de l'app nativa només hi ha el full de compartir (vegeu la capçalera). */
-  const potDesar = !natiu || (typeof navegador?.share === 'function' && typeof navegador?.canShare === 'function');
+  /* Onada R28 · copia-xat-03 · Converses sí, missatges cap: l'avís abans del
+     formulari. Si només n'hi ha en algunes converses, el recompte diu en quantes. */
+  const senseMissatges = !buit && missatges.length === 0;
+  const filsAmbMissatges = Number.isSafeInteger(contingut?.filsAmbMissatges) ? contingut.filsAmbMissatges : null;
+  const ambMissatgesEnAlgunes = filsAmbMissatges !== null && missatges.length > 0 && filsAmbMissatges < fils.length;
+  /* Dins de l'app nativa només hi ha el full de compartir (vegeu la capçalera).
+     Onada R28 · copia-xat-06 · No n'hi ha prou que existisca: es pregunta a
+     canShare, abans de demanar la contrasenya i de xifrar, si admet un arxiu
+     .sdpbackup (el mateix tipus que desaArxiuCopiaSeguretatXat li donarà).
+     canShare no demana cap activació d'usuari, i l'arxiu de la pregunta és buit
+     i no es comparteix mai. */
+  const potCompartirArxiu = useMemo(() => {
+    const ConstructorFitxer = globalThis.File;
+    if (!natiu || typeof navegador?.share !== 'function' || typeof navegador?.canShare !== 'function'
+      || typeof ConstructorFitxer !== 'function') return false;
+    try {
+      return navegador.canShare({ files: [new ConstructorFitxer([''], `copia${EXTENSIO_SDP_BACKUP}`, { type: MIME_SDP_BACKUP })] }) === true;
+    } catch {
+      return false;
+    }
+  }, [natiu, navegador]);
+  const potDesar = !natiu || potCompartirArxiu;
   const etiquetaArxiu = textAmb(natiu ? TEXTOS_COPIA.desaComparteix : TEXTOS_COPIA.desaArxiu, t);
 
   /* El focus que demana l'última operació, quan el botó ja torna a estar actiu. */
@@ -303,6 +335,11 @@ function FormulariDesa({ t, abast, contingut, locale, natiu, navegador, motor })
         <p className="sdp-xat-ajustos__nota">
           {textAmb(TEXTOS_COPIA.recompte, t, { fils: formataNombre(fils.length, locale), missatges: formataNombre(missatges.length, locale) })}
         </p>
+        {ambMissatgesEnAlgunes ? (
+          <p className="sdp-xat-ajustos__nota">
+            {textAmb(TEXTOS_COPIA.desaAmbMissatges, t, { amb: formataNombre(filsAmbMissatges, locale), fils: formataNombre(fils.length, locale) })}
+          </p>
+        ) : null}
       </div>
       {buit && !preparada ? (
         <div className="sdp-xat-ajustos__grup">
@@ -311,6 +348,9 @@ function FormulariDesa({ t, abast, contingut, locale, natiu, navegador, motor })
       ) : null}
       {!buit && !potDesar ? (
         <Alerta to="info" viva={false}><p>{textAmb(TEXTOS_COPIA.desaNatiu, t)}</p></Alerta>
+      ) : null}
+      {senseMissatges && potDesar && !preparada ? (
+        <Alerta to="info" viva={false}><p>{textAmb(TEXTOS_COPIA.desaSenseMissatges, t)}</p></Alerta>
       ) : null}
       {!buit && potDesar && !preparada ? (
         <form ref={formulari} className="sdp-xat-ajustos__grup" noValidate onSubmit={prepara}>
@@ -544,13 +584,14 @@ function FormulariComprova({ t, abast, locale, motor }) {
 
 /**
  * `accio`: 'desa' o 'comprova'. `abast`: { usuariId, tenantId } o null (sense
- * compte: només l'avís). `contingut`: { fils, missatges } de contingutDeLaCopia
- * (només per a 'desa'). `natiu`: dins de l'app de Capacitor. `motor`: el de
- * veres per defecte.
+ * compte: només l'avís). `contingut`: { fils, missatges, filsAmbMissatges } de
+ * contingutDeLaCopia (només per a 'desa'). `natiu`: dins de l'app de
+ * Capacitor. `cripto`: el WebCrypto del navegador (sense, només l'avís).
+ * `motor`: el de veres per defecte.
  */
 export function CosCopiaSeguretatXat({
   accio = 'desa', t = RESERVA, abast = null, contingut = null, locale = 'ca-ES', natiu = false,
-  navegador = globalThis.navigator, motor = MOTOR_COPIA,
+  navegador = globalThis.navigator, cripto = globalThis.crypto, motor = MOTOR_COPIA,
 }) {
   if (!abast) {
     return (
@@ -558,6 +599,11 @@ export function CosCopiaSeguretatXat({
         <p className="sdp-xat-ajustos__nota">{textAmb(TEXTOS_COPIA.senseCompte, t)}</p>
       </div>
     );
+  }
+  /* Onada R28 · copia-xat-04 · Abans de demanar res: sense WebCrypto, cap
+     formulari, perquè el motor fallaria cada vegada (SENSE_CRIPTO). */
+  if (!criptoDisponible(cripto)) {
+    return <Alerta to="info" viva={false}><p>{textAmb(TEXTOS_COPIA.errorSenseCripto, t)}</p></Alerta>;
   }
   if (accio === 'comprova') return <FormulariComprova t={t} abast={abast} locale={locale} motor={motor} />;
   return <FormulariDesa t={t} abast={abast} contingut={contingut} locale={locale} natiu={natiu} navegador={navegador} motor={motor} />;

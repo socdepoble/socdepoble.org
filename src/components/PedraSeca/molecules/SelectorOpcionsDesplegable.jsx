@@ -66,7 +66,7 @@ export function SelectorOpcionsDesplegable({
       {resum.length ? <div className="sdp-selector-opcions__resum" role={resumViu ? 'status' : undefined}
         aria-live={resumViu ? 'polite' : undefined} aria-atomic={resumViu ? 'true' : undefined}
         aria-label={resumTitol}>
-        {/* R26.3 · Cap title: en mòbil el dit no el pot obrir. El text sencer es veu (modules.css). */}
+        {/* R26.3 · Cap title: en mòbil el dit no el pot obrir. El text sencer es veu (src/css/diferit-selector-opcions.css). */}
         {resum.slice(0, 2).map((linia, i) => <span key={i}>{linia}</span>)}
       </div> : null}
     </fieldset>

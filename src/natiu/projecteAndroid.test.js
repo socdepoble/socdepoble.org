@@ -287,13 +287,17 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(codi).toMatch(/@CapacitorPlugin\(name = "CompartirNatiu"\)\s*public class CompartirNatiuPlugin extends Plugin\b/);
     expect(CONNECTOR_COMPARTIR).toBe('CompartirNatiu');
     expect(/static final String ESDEVENIMENT = "([^"]+)";/.exec(codi)?.[1]).toBe(ESDEVENIMENT_COMPARTIT);
-    /* El tercer argument reté l'avís fins que el web s'hi subscriu (arrencada en fred).
-       Gauntlet 261026_1615 (Codex C1615-03) · Ara n'hi ha dos (la compartició nova i
-       les restes d'abans), i tots dos, retinguts i al fil dels connectors. */
+    /* R28: retenció pròpia invalidable; el SDK no rep cap retain=true. */
     const avisos = codi.match(/notifyListeners\([^)]*\)/g) ?? [];
     expect(avisos).toHaveLength(2);
-    for (const avis of avisos) expect(avis).toBe('notifyListeners(ESDEVENIMENT, dades, true)');
-    expect(codi.match(/getBridge\(\)\.execute\(\(\) -> notifyListeners\(ESDEVENIMENT, dades, true\)\);/g)).toHaveLength(avisos.length);
+    expect(avisos.sort()).toEqual(['notifyListeners(ESDEVENIMENT, actual, false)', 'notifyListeners(ESDEVENIMENT, dades, false)']);
+    expect(codi.match(/getBridge\(\)\.execute\(\(\) -> publicaOConserva\(dades, sessioAlRebre\)\);/g)).toHaveLength(2);
+    expect(codi).toMatch(/@PluginMethod\(returnType = PluginMethod\.RETURN_NONE\)\s+public void addListener\(PluginCall call\)/);
+    const oient = cosDelMetode(codi, 'public void addListener(PluginCall call)');
+    expect(oient.indexOf('super.addListener(call);')).toBeLessThan(oient.indexOf('retencio.drena('));
+    expect(oient).toContain('ESDEVENIMENT.equals(call.getString("eventName"))');
+    expect(codi).not.toContain('retainedEventArguments');
+    expect(codi).not.toContain('removeAllListeners(');
   });
 
   test('CompartirNatiuPlugin: només content:// d’altres apps; mai file:// ni el proveïdor propi', () => {
@@ -351,7 +355,7 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(nouIntent).toMatch(/\bgetCharSequenceExtra\(Intent\.EXTRA_SUBJECT\)/);
     expect(codi).not.toMatch(/\bgetStringExtra\(Intent\.EXTRA_(?:TEXT|SUBJECT)\)/);
     const processa = cosDelMetode(codi, 'private void processa(');
-    expect(processa).toMatch(/getBridge\(\)\.execute\(\(\) -> notifyListeners\(ESDEVENIMENT, dades, true\)\);/);
+    expect(processa).toMatch(/getBridge\(\)\.execute\(\(\) -> publicaOConserva\(dades, sessioAlRebre\)\);/);
   });
 
   test('CompartirNatiuPlugin: llista blanca jpeg, png, webp i gif; 10 fitxers i 20 MB, com l’adaptador de JS', () => {
@@ -635,7 +639,7 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(processa.match(/\bif \(copiador\.isShutdown\(\)\) return;/g)).toHaveLength(2);
     const bucle = cosDelMetode(processa.slice(processa.indexOf('for (Uri uri : uris) {')), 'for (Uri uri : uris)');
     expect(bucle).toMatch(/^\s*if \(copiador\.isShutdown\(\)\) return;/);
-    const avis = processa.indexOf('getBridge().execute(() -> notifyListeners(ESDEVENIMENT, dades, true));');
+    const avis = processa.indexOf('getBridge().execute(() -> publicaOConserva(dades, sessioAlRebre));');
     const ultim = processa.lastIndexOf('if (copiador.isShutdown()) return;');
     expect(avis).toBeGreaterThan(ultim);
     expect(ultim).toBeGreaterThan(processa.indexOf(bucle) + bucle.length);
@@ -648,7 +652,7 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
      següent. L'hora de l'intent es pren al fil principal, abans de l'encàrrec,
      i viatja a l'esdeveniment; el web (lliuraCompartit) la compara amb l'últim
      canvi de sessió. Les restes de load() no la porten (llavors no hi ha cap tall). */
-  test('CompartirNatiuPlugin: handleOnNewIntent pren rebutMs abans del copiador i processa l’envia com a «rebutMs»; anunciaPendents no', () => {
+  test('CompartirNatiuPlugin: hora i generació originals viatgen abans de l’executor, també a les restes', () => {
     const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
     const nouIntent = cosDelMetode(codi, 'protected void handleOnNewIntent(Intent intent)');
     const hora = nouIntent.search(/\bfinal long rebutMs = System\.currentTimeMillis\(\);/);
@@ -658,8 +662,14 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(codi).toMatch(/private void processa\(List<Uri> uris, String text, String assumpte, String tipus, long rebutMs, long sessioAlRebre\)/);
     const processa = cosDelMetode(codi, 'private void processa(');
     expect(processa.match(/\bdades\.put\("rebutMs", rebutMs\);/g)).toHaveLength(1);
-    expect(processa.indexOf('dades.put("rebutMs", rebutMs);')).toBeLessThan(processa.indexOf('notifyListeners('));
-    expect(cosDelMetode(codi, 'private void anunciaPendents()')).not.toMatch(/rebutMs/);
+    expect(processa.indexOf('dades.put("rebutMs", rebutMs);')).toBeLessThan(processa.indexOf('publicaOConserva('));
+    const restes = cosDelMetode(codi, 'private void anunciaPendents()');
+    for (const cos of [processa, restes]) {
+      expect(cos).toContain('dades.put("caducaAmbSessio", true);');
+      expect(cos).toContain('dades.put("generacioNativa", Long.toString(sessioAlRebre));');
+      expect(cos).toContain('dades.put("rebutMs", rebutMs);');
+    }
+    expect(restes.indexOf('final long sessioAlRebre = sessio.get();')).toBeLessThan(restes.indexOf('carpeta().listFiles()'));
   });
 
   /* Pla 261028_1526 (Bloc D, P1-31) · El tall de sessió del web vivia només a
@@ -712,7 +722,7 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     // processa: a cada volta i just abans d'avisar, després de mirar si el connector és tancat.
     const processa = cosDelMetode(codi, 'private void processa(');
     expect(processa.match(new RegExp(TALLADA.source, 'g'))).toHaveLength(2);
-    const avis = processa.indexOf('getBridge().execute(() -> notifyListeners(ESDEVENIMENT, dades, true));');
+    const avis = processa.indexOf('getBridge().execute(() -> publicaOConserva(dades, sessioAlRebre));');
     const ultima = processa.search(new RegExp(`${TALLADA.source}(?![\\s\\S]*${TALLADA.source})`));
     expect(ultima).toBeGreaterThan(processa.lastIndexOf('if (copiador.isShutdown()) return;'));
     expect(ultima).toBeLessThan(avis);
@@ -725,7 +735,9 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(cosDelMetode(codi, 'private static void esborra(JSArray fitxers)'))
       .toMatch(/JSONObject (\w+) = fitxers\.optJSONObject\(i\);[\s\S]*if \(\1 != null\) new File\(\1\.optString\("ruta", ""\)\)\.delete\(\);/);
     // El web el demana pel mateix nom (natiu/compartirNatiu.js).
-    expect(llig(ARREL, 'src', 'natiu', 'compartirNatiu.js')).toMatch(/\bdemana\('tallaSessio', \{\}\)/);
+    expect(llig(ARREL, 'src', 'natiu', 'compartirNatiu.js')).toContain("pont.nativePromise?.(CONNECTOR_COMPARTIR, 'tallaSessio', {})");
+    expect(talla).toContain('retencio.buida();');
+    expect(talla).toContain('resposta.put("generacioNativa", Long.toString(nova));');
   });
 
   /* Gauntlet 261026_1615 (Codex C1615-04) · Cada URI text/plain podia sumar 10.000
@@ -772,12 +784,13 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
     const anuncia = cosDelMetode(codi, 'private void anunciaPendents()');
     expect(anuncia).toContain('carpeta().listFiles()');
-    expect(anuncia).toMatch(/getBridge\(\)\.execute\(\(\) -> notifyListeners\(ESDEVENIMENT, dades, true\)\);/);
-    expect(anuncia.match(/\bnotifyListeners\(/g)).toHaveLength(1);
+    expect(anuncia).toMatch(/getBridge\(\)\.execute\(\(\) -> publicaOConserva\(dades, sessioAlRebre\)\);/);
+    expect(anuncia.match(/\bpublicaOConserva\(/g)).toHaveLength(1);
+    expect(anuncia).toContain('if (sessio.get() != sessioAlRebre) { esborra(fitxers); return; }');
     // El que no és un fitxer d'imatge coneguda, o passa del sostre, s'esborra en lloc d'anunciar-se.
     // P1-31 · I la que no porta l'època d'ara al nom (d'una altra sessió, o d'abans de les èpoques).
     expect(anuncia).toMatch(/if \(!(\w+)\.isFile\(\) \|\| mime == null \|\| !nom\.startsWith\(prefix\) \|\| fitxers\.length\(\) >= MAX_FITXERS\) \{\s*\1\.delete\(\);\s*continue;\s*\}/);
-    const prefix = anuncia.search(/\bString prefix = prefixDe\(sessio\.get\(\)\);/);
+    const prefix = anuncia.search(/\bString prefix = prefixDe\(sessioAlRebre\);/);
     expect(prefix, 'el prefix de l’època d’ara').toBeGreaterThanOrEqual(0);
     expect(prefix).toBeLessThan(anuncia.indexOf('for (File resta : restes)'));
     expect(anuncia).toMatch(/String mime = mimeDeLExtensio\(extensio\);/);

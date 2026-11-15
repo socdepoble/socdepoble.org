@@ -345,6 +345,48 @@ describe('GBK02 · cap credencial ni clau privada, amb els noms reals del projec
     expect(res.missatges).toEqual([missatge]);
   });
 
+  /* Onada R28 · copia-xat-02 · El nom d'una altra persona (altres[*].nom, el
+     full_name d'un altre veí) i el títol del subjecte (subjecte.titol) són text
+     de la gent, com el títol del fil: un «Bearer …» o un text amb forma de JWT
+     que algú s'ha posat de nom no deixa sense còpia qui hi parla. */
+  const JWT_NOM = ['eyJhbG', 'ciOi', 'J9'].join('.');
+  const PEM_PRIVADA = ['-----BEGIN', 'PRIVATE', 'KEY-----'].join(' ');
+
+  it('cap fals positiu: el nom d’una altra persona i el títol del subjecte amb forma de «Bearer» o de JWT es conserven, en exportar i en importar', async () => {
+    const fil = {
+      id: 'f1', titol: 'Forn de la plaça',
+      altres: [{ id: 'u2', nom: 'Bearer Pepa', tipus: 'persona', avatar: null }, { id: 'u3', nom: JWT_NOM, tipus: 'persona' }],
+      subjecte: { tipus: 'pagina', id: 'p1', ruta: '/p1', titol: 'Bearer de la Torre' },
+    };
+    const text = await exportaCopiaSeguretatXat({ ...ambitXifrat, fils: [fil], missatges: [msg('m1', 'f1', 1)] });
+    const res = await importaCopiaSeguretatXat(text, opcionsImport());
+    expect(res.fils).toEqual([fil]);
+  });
+
+  it('el text lliure niat només allibera eixos dos camps de text: dins d’altres i de subjecte, i a les metadades, la resta de l’heurística continua', async () => {
+    const casos = [
+      ['altres[0].nom amb una JWK privada', { altres: [{ id: 'u2', nom: privEd }] }],
+      ['altres[0].nom amb un objecte que porta un JWT', { altres: [{ id: 'u2', nom: { valor: JWT_NOM } }] }],
+      ['altres[0].avatar amb un «Bearer»', { altres: [{ id: 'u2', nom: 'Pepa', avatar: 'Bearer opac' }] }],
+      ['altres[0].clau amb una clau PEM privada', { altres: [{ id: 'u2', nom: 'Pepa', clau: PEM_PRIVADA }] }],
+      ['altres[0].perfil amb un nom de credencial', { altres: [{ id: 'u2', nom: 'Pepa', perfil: { accessToken: 'opac' } }] }],
+      ['altres[0] amb la credencial nativa', { altres: [{ id: 'u2', ...credencialNativa(), nom: 'Pepa' }] }],
+      ['altres sense llista: el nom no és el d’un element', { altres: { nom: 'Bearer opac' } }],
+      /* Onada R28 · revisió · `'*'` és cada element d'una LLISTA: en un objecte, una clau «*» és una clau més. */
+      ['altres sense llista amb una clau «*»: no és cap element', { altres: { '*': { nom: 'Bearer opac' } } }],
+      ['subjecte.ruta amb un JWT', { subjecte: { tipus: 'pagina', id: 'p1', titol: 'Pàgina', ruta: JWT_NOM } }],
+      ['subjecte.titol amb una JWK privada', { subjecte: { tipus: 'pagina', id: 'p1', titol: privEc } }],
+      ['subjecte.nom amb un «Bearer» (no és el títol)', { subjecte: { tipus: 'pagina', id: 'p1', nom: 'Bearer opac' } }],
+      ['subjecte.titol amb un secret de Supabase dins d’un objecte', { subjecte: { tipus: 'pagina', id: 'p1', titol: { valor: SECRET_SUPABASE } } }],
+    ];
+    for (const [cas, extra] of casos) {
+      await expect(pla(base({ fils: [{ id: 'f1', ...extra }] })), cas).rejects.toEqual(rebutja(CODI_MATERIAL_SENSIBLE, 'material-sensible'));
+    }
+    /* Un missatge no té eixos camps niats: a les seues metadades, el mateix nom és material. */
+    await expect(pla(base({ missatges: [msg('m1', 'f1', 1, undefined, { metadades: { altres: [{ nom: 'Bearer opac' }] } })] })))
+      .rejects.toEqual(rebutja(CODI_MATERIAL_SENSIBLE, 'material-sensible'));
+  });
+
   it('importar: un text xifrat fabricat amb secrets a dins es rebutja abans de cridar aplicaImportacio', async () => {
     const text = await exportaCopiaSeguretatXat({ ...ambitXifrat, fils: [{ id: 'f1', altres: [{ id: 'u2', nom: 'Pepa' }] }], missatges: [msg('m1', 'f1', 1)] });
     // Control: la mateixa forja amb una JWK pública i text lliure s'importa i crida el callback una sola vegada.
@@ -405,7 +447,12 @@ describe('GBK03 · el que l’exportació accepta, la importació ho obri', () =
       msg('m1', 'f1', 1, undefined, { text: 'A'.repeat(2_000_000) }),
       msg('m2', 'f1', 2, undefined, {
         text: 'Sóc de Poble! '.repeat(100_000),
-        metadades: { resum: 'x'.repeat(300_000), gran: '{"a":1}'.repeat(20_000), petit: '{"a":1}'.repeat(5_000) },
+        /* Onada R28 · `gran` ja no té forma de JSON: des del kit R28 de Codex
+           (copiaSeguretatPortatil.r28.jsonNiat.test.js), un JSON serialitzat de
+           més de 64 KiB no es pot inspeccionar i es rebutja tancat (ho comprova
+           el final d'esta prova). Una cadena llarga i repetitiva que no és JSON
+           continua passant sencera. */
+        metadades: { resum: 'x'.repeat(300_000), gran: 'a:1;'.repeat(35_000), petit: '{"a":1}'.repeat(5_000) },
       }),
     ];
     const text = await exportaCopiaSeguretatXat({ ...ambitXifrat, fils: fils('f1'), missatges });
@@ -417,6 +464,9 @@ describe('GBK03 · el que l’exportació accepta, la importació ho obri', () =
     expect(aplica).toHaveBeenCalledTimes(1);
     // També des dels bytes, tal com els torna llegixArxiuCopiaSeguretatXat.
     await expect(importaCopiaSeguretatXat(codifica(text), opcionsImport())).resolves.toMatchObject({ autenticada: true });
+    // Onada R28 · La mateixa mida amb forma de JSON (la `gran` d'abans) falla tancat, sense cap còpia.
+    await expect(pla({ fils: fils('f1'), missatges: [msg('m1', 'f1', 1, undefined, { metadades: { gran: '{"a":1}'.repeat(20_000) } })] }))
+      .rejects.toEqual(rebutja(CODI_LIMIT_SUPERAT, 'json-niat-massa-gran'));
   }, 60_000);
 });
 

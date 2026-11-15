@@ -490,7 +490,8 @@ CATALOG_ITEMS.push(
     'La BarraTaronja amb avatar compost quadrangular d’estil grup de xat quan dos o més comptes registrats co-publiquen un recurs, la guarda contra actors no registrats i el panell inline d’1 clic per a superadmin.',
     'barra taronja copublicacio traspas autoria avatar compost mosaic entitats registrades superadmin inline PanellTraspasPublicacioInline AvatarCompostPublicadors'),
   especimen('superposicions', 'barra-reproductor-veu', 'Reproductor universal de so', 'universal/veu/BarraReproductorVeu.jsx', ['organisme', 'veu', 'accessibilitat'],
-    'El reproductor flotant universal de so que PageFrame obri centrat sota el panell de lectura actiu (mòbil i escriptori) en prémer «Escolta la IAIA»: navega per paràgrafs sense perdre la pausa, ressalta el text actiu i admet fonts d’àudio (fontSo) per a la futura Ràdio de Poble.',
+    /* Onada R28 · veu-editorial-07 · Diu el que fa el salt: saltar de bloc o d'apartat torna a llegir des d'allí. */
+    'El reproductor flotant universal de so que PageFrame obri a baix, centrat sobre el panell de lectura actiu (mòbil i escriptori), en prémer «Escolta la IAIA»: pausa i continua al mateix bloc, salta al bloc anterior, al següent o a un apartat i reprén la lectura des d’allí, ressalta el text actiu i admet fonts d’àudio (fontSo) per a la futura Ràdio de Poble.',
     'veu iaia escolta reproductor universal so radio poble flotant barra centrat pausa continua apartats cerca copiar fragment pageframe matxa node0')
 );
 

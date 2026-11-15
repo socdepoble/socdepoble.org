@@ -5108,6 +5108,18 @@ details[open] summary.accordion-header svg:last-child {
   :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista {
     padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   }
+  /* Onada R28 · Amb el teclat d'iOS obert (data-sdp-teclat-vv), el teclat ja
+     tapa la franja del Home Indicator: el compositor del Xat s'enganxa
+     netament a la vora superior del teclat sense forat. (El kit de Gemini hi
+     portava també el detall del Workspace, però la seua reserva és fora de
+     capa, més amunt d'este full, i guanya sempre: el selector no tenia cap
+     efecte i la prova UniversalWorkspace.reserva.capes.test.js en vol una
+     sola regla. Amb el teclat obert, --sdp-alt-nav-mobil ja hi val 0px.) */
+  :where(.sdp-root.is-compact[data-sdp-teclat-vv]) .app-grid-shell .sdp-xat-conversa,
+  :where(.sdp-root.is-compact[data-sdp-teclat-vv]) .app-grid-shell .sdp-xat-llista {
+    padding-bottom: 0;
+    scroll-padding-bottom: var(--sdp-space-4);
+  }
 }
 
 /* ═══ XAT · ONADA 3 (T63.2, T67, T68, T69) ═══════════════════════════════
@@ -11252,6 +11264,18 @@ details[open] summary.accordion-header svg:last-child {
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-g);
     text-align: start;
+  }
+  /* Onada R28 · Amb display: flex al <details>, WebKit (iOS 16/17 WKWebView) no
+     oculta els germans del <summary> i Chromium hi reserva una caixa estreta
+     fora de mida a 360px. Tancat, l'arbre no es pinta ni ocupa espai. */
+  .sdp-xarxa-pobles__desplegable:not([open]) > .sdp-xarxa-pobles__arbre {
+    display: none;
+  }
+  /* Onada R28 · Trencament segur d'URLs i identificadors llargs dins de la prosa
+     de TextSection (.cms-preview i .content-wrapper) a 360px-393px sense tocar
+     base.css (prosaRutesLlargues.capes.test.js) ni encongir les taules amb scroll. */
+  :where(.cms-preview, .content-wrapper) :where(a, code) {
+    overflow-wrap: break-word;
   }
 }
 

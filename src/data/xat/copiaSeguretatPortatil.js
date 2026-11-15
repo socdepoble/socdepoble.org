@@ -23,6 +23,7 @@
  *   creaRespostaTraspasLocalQr / derivaSasTraspasLocalQr / creaComprovadorSas
  *   generaParellaEfimeraTraspas
  *   nomArxiuCopiaSeguretatXat / desaArxiuCopiaSeguretatXat / llegixArxiuCopiaSeguretatXat
+ *   teCriptoPerALaCopia(cripto)                  → boolean (Onada R28: hi ha WebCrypto?)
  *   i les constants i codis `CODI_*` (cada error porta `codi` i `motiu`).
  *
  * ── Entrada (ronda 2 del Gauntlet R26 i consolidació R26) ──────────────
@@ -36,7 +37,9 @@
  *     heurística de valor (JWT, «Bearer», clau privada PEM o DER, secret de
  *     Supabase, JWK privada reconeguda per l'estructura amb o sense `kty`,
  *     també la RSA, credencial nativa, Push, també dins d'un JSON
- *     serialitzat), menys al text lliure de la gent. Una JWK pública passa.
+ *     serialitzat), menys al text lliure de la gent (Onada R28: també el
+ *     nom de cada altra persona, `altres[*].nom`, i el títol del subjecte,
+ *     `subjecte.titol`, del fil). Una JWK pública passa.
  *   · Un missatge el fil del qual no és a `fils` fa fallar la còpia (mai es
  *     perd en silenci), i el mapa de cursors conserva cada fil amb missatges.
  *   · La data del missatge és `creatAl` (o l'àlies `createdAt`; tots dos
@@ -217,6 +220,21 @@ const CAMPS_MISSATGE = new Set([
    l'app. L'heurística de valor no s'hi aplica, perquè un missatge que diu un
    JWT no ha de deixar mai sense còpia la persona que l'ha escrit. */
 const CAMPS_TEXT_LLIURE = new Set(['text', 'ultimText', 'titol', 'autorNom', 'entitatNom', 'altresNoms']);
+/* Onada R28 · copia-xat-02 · El text de la gent també viu dins de dos objectes
+   lliures del fil: el nom de cada altra persona o entitat (`altres[*].nom`, que
+   ve de profiles.full_name o d'organizations.name i l'escriu un altre veí, de
+   120 caràcters com a molt) i el títol del subjecte (`subjecte.titol`, el d'una
+   pàgina o d'una entitat). «Bearer Pepa» hi és un nom, no un testimoni: sense
+   això, el nom d'un veí deixava sense còpia tothom que hi parla. Només el VALOR
+   DE TEXT d'eixos camps se salta l'heurística de valor, com els de primer nivell
+   de CAMPS_TEXT_LLIURE. Dins d'`altres` i de `subjecte` continuen els noms
+   prohibits, les JWK privades, la credencial nativa, Push i l'heurística de
+   valor de tots els altres camps; i un `nom` o un `titol` que no és text, també
+   la passa. `'*'` és cada element d'una llista. Només per a l'àmbit 'fil'. */
+const CAMPS_TEXT_LLIURE_NIAT_FIL = Object.freeze({
+  altres: Object.freeze({ '*': new Set(['nom']) }),
+  subjecte: new Set(['titol']),
+});
 /* Noms de camp que mai poden viatjar en una còpia, a qualsevol profunditat:
    segona capa, darrere de la llista blanca, per als objectes lliures
    (metadades, altres, subjecte). Es comparen normalitzats (nomNormalitzat):
@@ -504,7 +522,12 @@ function inspeccionaCadena(text, ruta) {
     || esDerClauPrivada(net)) {
     throw errorMaterial(ruta);
   }
-  if ((net.startsWith('{') || net.startsWith('[')) && net.length <= MAX_BYTES_JSON_NIAT) {
+  if (net.startsWith('{') || net.startsWith('[')) {
+    // Un JSON massa gran per a inspeccionar no és text opac segur: podria
+    // amagar el mateix material privat que rebutgem en un JSON menut.
+    if (net.length > MAX_BYTES_JSON_NIAT) {
+      throw creaErrorTipificat(CODI_LIMIT_SUPERAT, 'json-niat-massa-gran', `JSON serialitzat massa gran per a inspeccionar (${ruta}).`);
+    }
     try {
       return JSON.parse(net);
     } catch {
@@ -522,11 +545,14 @@ function inspeccionaCadena(text, ruta) {
    sol és dada patrimonial), subscripció Push, i l'heurística de valor de les
    cadenes (també dins d'un JSON serialitzat). També la profunditat i
    `__proto__`. Iteratiu (sense pila). Els camps de primer nivell de
-   `textLliure` no passen per l'heurística de valor. */
-function exigixRegistreNet(registre, cami, { textLliure = null } = {}) {
-  const pendents = [[registre, cami, 1, false]];
+   `textLliure` no passen per l'heurística de valor. Onada R28 · Tampoc els
+   camps de text niats que diu `textLliureNiat` (un mapa clau → mapa niat, o
+   el Set dels camps de text d'un objecte; `'*'`, cada element d'una llista):
+   vegeu CAMPS_TEXT_LLIURE_NIAT_FIL. */
+function exigixRegistreNet(registre, cami, { textLliure = null, textLliureNiat = null } = {}) {
+  const pendents = [[registre, cami, 1, false, textLliureNiat]];
   while (pendents.length) {
-    const [valor, ruta, profunditat, lliure] = pendents.pop();
+    const [valor, ruta, profunditat, lliure, esquema] = pendents.pop();
     if (typeof valor === 'string') {
       if (!lliure) {
         const niat = inspeccionaCadena(valor, ruta);
@@ -539,7 +565,9 @@ function exigixRegistreNet(registre, cami, { textLliure = null } = {}) {
       throw creaErrorTipificat(CODI_LIMIT_SUPERAT, 'profunditat', `Registre massa niat (${ruta}).`);
     }
     if (Array.isArray(valor)) {
-      valor.forEach((v, i) => pendents.push([v, `${ruta}[${i}]`, profunditat + 1, lliure]));
+      /* `esquema`: la part de textLliureNiat que toca a este valor (o null). */
+      const esquemaElement = esquema && !(esquema instanceof Set) && Object.hasOwn(esquema, '*') ? esquema['*'] : null;
+      valor.forEach((v, i) => pendents.push([v, `${ruta}[${i}]`, profunditat + 1, lliure, esquemaElement]));
       continue;
     }
     const claus = Object.keys(valor);
@@ -559,8 +587,13 @@ function exigixRegistreNet(registre, cami, { textLliure = null } = {}) {
       if (esNomProhibit(nom) || (profunditat > 1 && esNomCredencialGeneric(nom) && potPortarSecret(valor[clau]))) {
         throw errorMaterial(`${ruta}.${clau}`);
       }
-      const filla = profunditat === 1 && textLliure ? textLliure.has(clau) : lliure;
-      pendents.push([valor[clau], `${ruta}.${clau}`, profunditat + 1, filla]);
+      let filla = profunditat === 1 && textLliure ? textLliure.has(clau) : lliure;
+      let esquemaFill = null;
+      if (esquema instanceof Set) filla = filla || (esquema.has(clau) && typeof valor[clau] === 'string');
+      /* Onada R28 · revisió · `'*'` només val per als elements d'una llista: en
+         un objecte, una clau «*» no hereta l'esquema dels elements. */
+      else if (esquema && clau !== '*' && Object.hasOwn(esquema, clau)) esquemaFill = esquema[clau];
+      pendents.push([valor[clau], `${ruta}.${clau}`, profunditat + 1, filla, esquemaFill]);
     }
   }
 }
@@ -579,7 +612,10 @@ function exigixCampsAdmesos(registre, camps, cami) {
 const AMBITS_REGISTRE = Object.freeze({ fil: CAMPS_FIL, missatge: CAMPS_MISSATGE });
 
 function exigixRegistreDelModel(registre, ambit, cami) {
-  exigixRegistreNet(registre, cami, { textLliure: CAMPS_TEXT_LLIURE });
+  exigixRegistreNet(registre, cami, {
+    textLliure: CAMPS_TEXT_LLIURE,
+    textLliureNiat: ambit === 'fil' ? CAMPS_TEXT_LLIURE_NIAT_FIL : null,
+  });
   exigixCampsAdmesos(registre, AMBITS_REGISTRE[ambit], cami);
 }
 
@@ -931,6 +967,22 @@ function preparaClauProcedencia(estatClaus) {
   b64urlABytes(estatClaus.kid, 16, 'kid');
   if (!esCursor(estatClaus.comptador)) throw creaErrorTipificat(CODI_COPIA_CORRUPTA, 'comptador', 'Comptador de llibreta invàlid.');
   return { kid: estatClaus.kid, comptador: estatClaus.comptador };
+}
+
+/**
+ * Onada R28 · copia-xat-04 · Cert si `cripto` té el WebCrypto que este motor
+ * exigix (exigixCripto) per a exportar, descriure i importar. Fora d'un
+ * context segur no hi és, i reintentar no ho arregla: la interfície ho pot dir
+ * abans de demanar res. Viu ací perquè exigixCripto només entre al paquet amb
+ * el motor (el trinquet de index.e2eeApagat.produccio.test.js).
+ */
+export function teCriptoPerALaCopia(cripto = globalThis.crypto) {
+  try {
+    exigixCripto(cripto);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**

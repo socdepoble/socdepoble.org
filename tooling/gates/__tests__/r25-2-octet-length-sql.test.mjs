@@ -84,10 +84,12 @@ test('R26 · cada sostre d\'octets és exactament 4 × el límit de caràcters R
   assert.equal(sostres.get('refranys_poble.explicacio_i18n'), 4096);
 });
 
-test('R26 · supabase/README.md llista 20261114171500 com a NO aplicada, l\'aplica el Mestre', () => {
+/* Onada R28 · El Mestre la va aplicar a producció el 14-11-2026 (5/5 true, captura 261114_2339): la fila ho diu. */
+test('R28 · supabase/README.md llista 20261114171500 com a aplicada a producció pel Mestre el 14-11-2026', () => {
   const readme = fs.readFileSync(path.join(ARREL, 'supabase/README.md'), 'utf8');
   assert.match(readme, /^- `migrations\/20261114171500_r25_2_r23_octet_length_bounds\.sql`$/m);
   const fila = readme.split('\n').find((l) => l.includes('`20261114171500_r25_2_r23_octet_length_bounds.sql`') && l.startsWith('|'));
   assert.ok(fila, 'Falta la fila de la taula canònica');
-  assert.match(fila, /\*\*NO aplicada: [^*]*l'aplica el Mestre\*\*/);
+  assert.match(fila, /\| Aplicada a producció el 14-11-2026 pel Mestre \(5\/5 true, captura 261114_2339\) \|/);
+  assert.doesNotMatch(fila, /NO aplicada/);
 });

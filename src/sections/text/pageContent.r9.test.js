@@ -202,7 +202,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada R23 · La crònica de l'Onada R23 obri /versions, davant de la fita R21 C5.
     // Onada R24 · La crònica de l'Onada R24 obri /versions, davant de la crònica R23.
     // Onades R26 i R27 · La crònica de les Onades R26 i R27 obri /versions, davant de la crònica R24.
-    expect([...versions.querySelectorAll('h3')].slice(0, 12).map((h3) => h3.textContent)).toEqual([
+    // Onada R28 · La crònica de l'Onada R28 obri /versions, davant de la crònica R26 i R27.
+    expect([...versions.querySelectorAll('h3')].slice(0, 13).map((h3) => h3.textContent)).toEqual([
+      '15 de novembre de 2026, matí · Onada R28 · Una còpia xifrada del Xat, el reproductor de so centrat i més contrast i espai per a escriure al mòbil',
       '15 de novembre de 2026, matinada · Onades R26 i R27 · El Farcellet Digital al Mur, una edició més clara al Bloc de Notes i més seguretat a les aplicacions i al connector',
       '14 de novembre de 2026, matinada · Onada R24 · Manual editorial a les pàgines públiques, precomanda per a la botiga local i reforç dels jocs de veu',
       '14 de novembre de 2026 · Onada R23 · La veu oberta del Node 0, el reproductor flotant universal, el joc «D’on parles?» i la frescor editorial',

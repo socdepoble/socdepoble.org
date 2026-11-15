@@ -46,6 +46,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.LongSupplier;
 import org.json.JSONObject;
 
 /**
@@ -111,6 +113,32 @@ public class CompartirNatiuPlugin extends Plugin {
 
     // L'època de la sessió (P1-31): la llig load() i només la puja tallaSessio.
     private final AtomicLong sessio = new AtomicLong();
+    private final RetencioSessio<JSObject> retencio = new RetencioSessio<>(sessio::get, this::descartaRetencio);
+
+    // Només el fil serial de Bridge: publica, talla i addListener hi arriben
+    // pel mateix executor. No es toca la retenció privada ni listeners del SDK.
+    static final class RetencioSessio<T> {
+        private static final class Lot<T> {
+            final T dades;
+            final long epoca;
+            Lot(T dades, long epoca) { this.dades = dades; this.epoca = epoca; }
+        }
+        private final LongSupplier actual;
+        private final Consumer<T> descarta;
+        private final List<Lot<T>> pendents = new ArrayList<>();
+        RetencioSessio(LongSupplier actual, Consumer<T> descarta) { this.actual = actual; this.descarta = descarta; }
+        void publica(T dades, long epoca, boolean hiHaOients, Consumer<T> emet) {
+            if (actual.getAsLong() != epoca) { descarta.accept(dades); return; }
+            if (hiHaOients) emet.accept(dades);
+            else pendents.add(new Lot<>(dades, epoca));
+        }
+        void drena(Consumer<T> emet) {
+            List<Lot<T>> lots = new ArrayList<>(pendents);
+            pendents.clear();
+            for (Lot<T> lot : lots) publica(lot.dades, lot.epoca, true, emet);
+        }
+        void buida() { pendents.clear(); }
+    }
 
     private final ExecutorService copiador = new ThreadPoolExecutor(
         0, MAX_COMPARTICIONS_ALHORA, 30, TimeUnit.SECONDS, new SynchronousQueue<>(), CompartirNatiuPlugin::filDeFons);
@@ -229,6 +257,7 @@ public class CompartirNatiuPlugin extends Plugin {
     @PluginMethod
     public void tallaSessio(PluginCall call) {
         long nova = sessio.incrementAndGet();
+        retencio.buida();
         //noinspection ApplySharedPref
         preferencies().edit().putLong(CLAU_SESSIO, nova).commit();
         String prefix = prefixDe(nova);
@@ -241,7 +270,28 @@ public class CompartirNatiuPlugin extends Plugin {
         }
         JSObject resposta = new JSObject();
         resposta.put("esborrats", esborrats);
+        resposta.put("generacioNativa", Long.toString(nova));
         call.resolve(resposta);
+    }
+
+    @Override
+    @PluginMethod(returnType = PluginMethod.RETURN_NONE)
+    public void addListener(PluginCall call) {
+        super.addListener(call);
+        if (ESDEVENIMENT.equals(call.getString("eventName"))) {
+            retencio.drena(dades -> super.notifyListeners(ESDEVENIMENT, dades, false));
+        }
+    }
+
+    private void descartaRetencio(JSObject dades) {
+        Object fitxers = dades.opt("fitxers");
+        if (fitxers instanceof JSArray) esborra((JSArray) fitxers);
+    }
+
+    private void publicaOConserva(JSObject dades, long epoca) {
+        if (copiador.isShutdown()) { descartaRetencio(dades); return; }
+        retencio.publica(dades, epoca, hasListeners(ESDEVENIMENT),
+            actual -> super.notifyListeners(ESDEVENIMENT, actual, false));
     }
 
     private List<Uri> recullUris(Intent intent) {
@@ -331,6 +381,8 @@ public class CompartirNatiuPlugin extends Plugin {
         dades.put("assumpte", assumpte);
         dades.put("rebutjats", rebutjats);
         dades.put("rebutMs", rebutMs);
+        dades.put("caducaAmbSessio", true);
+        dades.put("generacioNativa", Long.toString(sessioAlRebre));
         // Destruït mentre es copiava: cap avís a un pont mort (les còpies tornaran en arrencar).
         if (copiador.isShutdown()) return;
         // Tallada mentre es copiava: el lot ja no és de ningú.
@@ -340,7 +392,7 @@ public class CompartirNatiuPlugin extends Plugin {
         }
         // Al fil dels connectors, on també corre addListener: els mapes de
         // Plugin no estan sincronitzats.
-        getBridge().execute(() -> notifyListeners(ESDEVENIMENT, dades, true));
+        getBridge().execute(() -> publicaOConserva(dades, sessioAlRebre));
     }
 
     /** Només content:// d'altres apps. Mai file:// ni el nostre FileProvider. */
@@ -503,13 +555,16 @@ public class CompartirNatiuPlugin extends Plugin {
     /* Les còpies que encara són a compartits/ (cap enviament ni descart les ha
        alliberades) tornen al web com un lot, en el mateix ordre que el natiu. */
     private void anunciaPendents() {
+        final long sessioAlRebre = sessio.get();
+        final long rebutMs = System.currentTimeMillis();
         File[] restes = carpeta().listFiles();
         if (restes == null || restes.length == 0) return;
         java.util.Arrays.sort(restes, (a, b) -> Long.compare(a.lastModified(), b.lastModified()));
         // P1-31 · Una resta d'una altra època (o sense, d'abans d'haver-ne) no és de la sessió d'ara: fora.
-        String prefix = prefixDe(sessio.get());
+        String prefix = prefixDe(sessioAlRebre);
         JSArray fitxers = new JSArray();
         for (File resta : restes) {
+            if (sessio.get() != sessioAlRebre) { esborra(fitxers); return; }
             String nom = resta.getName();
             String extensio = nom.substring(nom.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
             String mime = mimeDeLExtensio(extensio);
@@ -531,7 +586,10 @@ public class CompartirNatiuPlugin extends Plugin {
         dades.put("text", "");
         dades.put("assumpte", "");
         dades.put("rebutjats", 0);
-        getBridge().execute(() -> notifyListeners(ESDEVENIMENT, dades, true));
+        dades.put("rebutMs", rebutMs);
+        dades.put("caducaAmbSessio", true);
+        dades.put("generacioNativa", Long.toString(sessioAlRebre));
+        getBridge().execute(() -> publicaOConserva(dades, sessioAlRebre));
     }
 
     private static String mimeDeLExtensio(String extensio) {
