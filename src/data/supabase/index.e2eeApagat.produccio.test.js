@@ -42,6 +42,7 @@ const APP = 'src/main.jsx';
 const HOST = 'src/host.js';
 const TRANSPORT = /[\\/]data[\\/]supabase[\\/]xatXifrat\.js$/;
 const ES_HOST = /[\\/]src[\\/]host\.js$/;
+const ES_MAIN = /[\\/]src[\\/]main\.jsx$/;
 const LABORATORI_UI = /[\\/]profile[\\/]ProvaXifratXat\.jsx$/;
 const BANDERA = /[\\/]config[\\/]xifratXat\.js$/;
 const APAGADA = 'export const E2EE_ACTIU_PER_DEFECTE = false;';
@@ -92,7 +93,7 @@ const SOSTRE_BLOB = /MAXIM_BLOB_ADJUNT(?:\$\d+)? = (?:2e7|20_?000_?000);/;
 /* Bolca o no: un import absolut o relatiu és nostre (dins); un paquet de npm, fora. */
 const esPaquet = (id, importador) => Boolean(importador) && !id.startsWith('.') && !path.isAbsolute(id) && !id.startsWith('\0');
 
-async function compila({ entrada = ADAPTADOR, sonda = false, encesa = false, uiFora = false, copiaFora = false } = {}) {
+async function compila({ entrada = ADAPTADOR, sonda = false, encesa = false, uiFora = false, copiaFora = false, sondaCopiaEstatica = false } = {}) {
   const abans = process.env.NODE_ENV;
   process.env.NODE_ENV = 'production';
   let sondejat = false;
@@ -107,6 +108,11 @@ async function compila({ entrada = ADAPTADOR, sonda = false, encesa = false, uiF
         name: 'sonda-adaptador-e2ee',
         enforce: 'pre',
         transform(codi, id) {
+          if (sondaCopiaEstatica && ES_MAIN.test(id)) {
+            sondejat = true;
+            // No basta un import nu: usem el lligam perquè Rollup no el descarte.
+            return `import { exportaCopiaSeguretatXat as sondaCopiaInicial } from './data/xat/copiaSeguretatPortatil.js';\nglobalThis.__sdpSondaCopiaInicial = sondaCopiaInicial;\n${codi}`;
+          }
           if (encesa && BANDERA.test(id)) {
             if (!codi.includes(APAGADA)) throw new Error('La sonda no troba la bandera apagada a config/xifratXat.js.');
             sondejat = true;
@@ -130,7 +136,7 @@ async function compila({ entrada = ADAPTADOR, sonda = false, encesa = false, uiF
           || (copiaFora && Boolean(importador) && /(?:^|[\\/])copiaSeguretatPortatil\.js$/.test(id)) }
       }
     });
-    if ((sonda || encesa) && !sondejat) throw new Error(`La sonda no ha trobat el seu fitxer al graf de ${entrada}.`);
+    if ((sonda || encesa || sondaCopiaEstatica) && !sondejat) throw new Error(`La sonda no ha trobat el seu fitxer al graf de ${entrada}.`);
     const trossos = (Array.isArray(resultat) ? resultat : [resultat]).flatMap((r) => r.output).filter((o) => o.type === 'chunk');
     /* Mòdul → bytes de codi que deixa al paquet (0 si Rollup l'ha descartat sencer). */
     const moduls = new Map();
@@ -145,7 +151,22 @@ async function compila({ entrada = ADAPTADOR, sonda = false, encesa = false, uiF
     /* Els trossos que porten codi del motor de còpia, i si algun és el d'entrada. */
     const trossosCopia = trossos.filter((t) => Object.entries(t.modules).some(([id, m]) => MOTOR_COPIA.test(id) && m.renderedLength > 0))
       .map((t) => ({ nom: t.fileName, entrada: t.isEntry }));
-    return { codi: trossos.map((o) => o.code).join('\n'), moduls, exportsPrimitives: [...exportsPrimitives].sort(), trossosCopia };
+    /* Una façana d'entrada pot importar estàticament un tros amb isEntry=false.
+       El motor només és mandrós si queda fora de TOTA la clausura d'imports
+       estàtics; dynamicImports no formen part de l'arrencada. */
+    const perNom = new Map(trossos.map((t) => [t.fileName, t]));
+    const inicials = new Set();
+    const pendents = trossos.filter((t) => t.isEntry).map((t) => t.fileName);
+    while (pendents.length) {
+      const nom = pendents.pop();
+      if (inicials.has(nom)) continue;
+      inicials.add(nom);
+      for (const importat of perNom.get(nom)?.imports ?? []) {
+        if (perNom.has(importat)) pendents.push(importat);
+      }
+    }
+    const copiaInicial = trossosCopia.filter((t) => inicials.has(t.nom)).map((t) => t.nom);
+    return { codi: trossos.map((o) => o.code).join('\n'), moduls, exportsPrimitives: [...exportsPrimitives].sort(), trossosCopia, copiaInicial };
   } finally {
     if (abans === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = abans;
@@ -206,14 +227,21 @@ describe('el paquet de producció, amb la bandera apagada, no porta el motor ni 
   }, 60000);
 
   test('Onada R28 · graf sencer (main.jsx): el motor de la còpia `.sdpbackup` hi entra només per un tros mandrós, amb les seues primitives i cap rastre del protocol', async () => {
-    const { codi, moduls, exportsPrimitives, trossosCopia } = await compila({ entrada: APP });
+    const { codi, moduls, exportsPrimitives, trossosCopia, copiaInicial } = await compila({ entrada: APP });
     expect(ambCodi(moduls, MOTOR_COPIA)).toEqual(['src/data/xat/copiaSeguretatPortatil.js']);
     expect(trossosCopia.length).toBeGreaterThan(0);
     expect(trossosCopia.filter((t) => t.entrada)).toEqual([]);
+    expect(copiaInicial, 'el motor de còpia queda fora de tots els imports estàtics de l’entrada').toEqual([]);
     expect(ambCodi(moduls, XIFRATGE).filter((id) => !PERMESOS_APP.test(id))).toEqual([]);
     expect(fora(exportsPrimitives, [...PRIMITIVES_PERMESES, ...PRIMITIVES_COPIA])).toEqual([]);
     expect(magies(codi)).toEqual([]);
     expect(trobats(codi, RASTRES)).toEqual([]);
+  }, 60000);
+
+  test('control positiu: un import estàtic utilitzat de la còpia es detecta encara que Rollup cree una façana d’entrada', async () => {
+    const { moduls, copiaInicial } = await compila({ entrada: APP, sondaCopiaEstatica: true });
+    expect(ambCodi(moduls, MOTOR_COPIA)).toEqual(['src/data/xat/copiaSeguretatPortatil.js']);
+    expect(copiaInicial.length, 'la sonda fa el motor accessible per imports estàtics des de l’entrada').toBeGreaterThan(0);
   }, 60000);
 
   test('control positiu: amb la bandera encesa, el graf de host.js porta el decorador, el motor, el protocol i els formats', async () => {
