@@ -126,6 +126,120 @@ describe('Onada R28 · useTeclatVirtual (iOS WKWebView + Android Edge-to-Edge)',
     unmount();
   });
 
+  test('iOS 27 real (iPhone 18 Pro): WebKit desplaça el visor (offsetTop) i retalla innerHeight; la closca es retalla igualment i el document torna a dalt', () => {
+    /* Mesures preses amb el Web Inspector al simulador: el visor visual baixa a 478 px, s'ha desplaçat
+       396 px i innerHeight mostra 478 px (874 − 396); en tornar a dalt, innerHeight torna a 874. */
+    const vv = creaVisualViewportMock({ height: 874, offsetTop: 0, scale: 1 });
+    Object.defineProperty(window, 'visualViewport', { configurable: true, writable: true, value: vv });
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 402 });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: 874 });
+    const scrollYOriginal = Object.getOwnPropertyDescriptor(window, 'scrollY');
+    Object.defineProperty(window, 'scrollY', { configurable: true, writable: true, value: 0 });
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => { window.scrollY = 0; });
+
+    try {
+      const contenidor = document.getElementById('root');
+      const { getByTestId, unmount } = render(<ArrelDeProva />, { container: contenidor });
+      const arrel = getByTestId('arrel');
+      const camp = getByTestId('camp');
+
+      act(() => {
+        camp.focus();
+        window.innerHeight = 478;
+        window.scrollY = 396;
+        vv.height = 478;
+        vv.offsetTop = 396;
+        vv.dispara('resize');
+      });
+
+      expect(arrel.getAttribute(ATRIBUT_TECLAT)).toBe('obert');
+      expect(arrel.hasAttribute(ATRIBUT_TECLAT_VV)).toBe(true);
+      expect(arrel.style.getPropertyValue(VAR_VV_ALT)).toBe('478px');
+      expect(scrollTo).toHaveBeenCalledWith(0, 0);
+
+      /* Després del retorn a dalt, WebKit torna innerHeight a 874 i offsetTop a 0: l'estat es manté. */
+      act(() => {
+        window.innerHeight = 874;
+        vv.offsetTop = 0;
+        vv.dispara('scroll');
+      });
+      expect(arrel.hasAttribute(ATRIBUT_TECLAT_VV)).toBe(true);
+      expect(arrel.style.getPropertyValue(VAR_VV_ALT)).toBe('478px');
+      unmount();
+    } finally {
+      if (scrollYOriginal) Object.defineProperty(window, 'scrollY', scrollYOriginal);
+    }
+  });
+
+  test('iOS 27 real: l’avís de scroll que arriba amb offsetTop 0 i innerHeight encara retallat no desfà el retall (el contenidor de l’arrel mana)', () => {
+    /* La carrera observada al simulador: després de scrollTo(0, 0), WebKit avisa amb offsetTop 0 i
+       innerHeight encara a 478. El contenidor de l'arrel continua a 874 (el teclat d'iOS no l'encongix). */
+    const vv = creaVisualViewportMock({ height: 874, offsetTop: 0, scale: 1 });
+    Object.defineProperty(window, 'visualViewport', { configurable: true, writable: true, value: vv });
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 402 });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: 874 });
+    const contenidor = document.getElementById('root');
+    Object.defineProperty(contenidor, 'clientHeight', { configurable: true, get: () => 874 });
+    const scrollYOriginal = Object.getOwnPropertyDescriptor(window, 'scrollY');
+    Object.defineProperty(window, 'scrollY', { configurable: true, writable: true, value: 0 });
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => { window.scrollY = 0; });
+
+    try {
+      const { getByTestId, unmount } = render(<ArrelDeProva />, { container: contenidor });
+      const arrel = getByTestId('arrel');
+      const camp = getByTestId('camp');
+
+      act(() => {
+        camp.focus();
+        window.innerHeight = 478;
+        vv.height = 478;
+        vv.offsetTop = 0;
+        vv.dispara('scroll');
+      });
+
+      expect(arrel.getAttribute(ATRIBUT_TECLAT)).toBe('obert');
+      expect(arrel.hasAttribute(ATRIBUT_TECLAT_VV)).toBe(true);
+      expect(arrel.style.getPropertyValue(VAR_VV_ALT)).toBe('478px');
+      unmount();
+    } finally {
+      if (scrollYOriginal) Object.defineProperty(window, 'scrollY', scrollYOriginal);
+    }
+  });
+
+  test('Notes: amb el teclat obert, el cursor d’un editor ric llarg queda a la vista dins del seu visor', () => {
+    const vv = creaVisualViewportMock({ height: 852, offsetTop: 0, scale: 1 });
+    Object.defineProperty(window, 'visualViewport', { configurable: true, writable: true, value: vv });
+
+    const contenidor = document.getElementById('root');
+    const { getByTestId, unmount } = render(<ArrelDeProva />, { container: contenidor });
+    const visor = getByTestId('visor');
+    const editor = getByTestId('editor');
+    editor.tabIndex = 0;
+    editor.appendChild(document.createTextNode('text de la nota'));
+    visor.style.overflowY = 'auto';
+    Object.defineProperty(visor, 'scrollHeight', { configurable: true, value: 4000 });
+    Object.defineProperty(visor, 'clientHeight', { configurable: true, value: 400 });
+    visor.getBoundingClientRect = () => ({ top: 126, bottom: 516, height: 390, left: 0, right: 393, width: 393 });
+    editor.getBoundingClientRect = () => ({ top: -900, bottom: 3000, height: 3900, left: 0, right: 393, width: 393 });
+    vi.spyOn(window, 'getSelection').mockReturnValue({
+      rangeCount: 1,
+      getRangeAt: () => ({
+        endContainer: editor.firstChild,
+        getClientRects: () => [{ top: 700, bottom: 724, height: 24 }],
+      }),
+    });
+
+    act(() => {
+      editor.focus();
+      vv.height = 516;
+      vv.dispara('resize');
+    });
+
+    /* 724 + 16 de marge − 516 de vora inferior del visor = 224 px de desplaçament intern. */
+    expect(visor.scrollTop).toBe(224);
+    unmount();
+  });
+
   test('Android Edge-to-Edge: si baixa innerHeight >= 120px amb un camp enfocat, amaga nav.mobile-nav sense forçar --teclat-vv-alt', () => {
     const vv = creaVisualViewportMock({ height: 800, offsetTop: 0, scale: 1 });
     Object.defineProperty(window, 'visualViewport', { configurable: true, writable: true, value: vv });

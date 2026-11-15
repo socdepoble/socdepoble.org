@@ -71,6 +71,13 @@ import { PRESETS_AMPLARIA, presetDeMides } from '../amplariaColumnes.js';
 import { TEXTOS_CONSTRUCCIO, textosDeVista } from './VistaEnConstruccio.jsx';
 import PaginaNotificacions from './PaginaNotificacions.jsx';
 import { useControlAvisosPush } from '../useAvisosPushXat.js';
+import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
+
+/* Onada R28 · El punter principal és un dit (la mateixa consulta que les barres amb scroll). */
+function esDispositiuTactil() {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia(CONSULTA_TACTIL).matches === true;
+}
 
 const CAP = Object.freeze([]);
 const noop = () => {};
@@ -156,7 +163,11 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
   /* El focus al cercador, no a la X. Els efectes del pare corren després
      dels del fill: quan arriba este, el Dialeg ja ha obert el <dialog> i el
      camp ja es pot enfocar (el mateix que DialegNovaConversa). */
-  useEffect(() => { if (obert) campRef.current?.focus(); }, [obert]);
+  /* Onada R28 · Prova real a l'iPhone: en un dispositiu tàctil, enfocar el cercador en obrir fa pujar el
+     teclat en pantalla damunt de mitja llista d'ajustos, i el primer toc cau en una tecla. Allí el focus
+     es queda on el posa el Dialeg (showModal), com a les apps de missatgeria; amb teclat físic, al cercador. */
+  const tactil = esDispositiuTactil();
+  useEffect(() => { if (obert && !tactil) campRef.current?.focus(); }, [obert, tactil]);
 
   /* En tancar-lo sense navegar, el Dialeg ja ha tornat el focus a qui
      l'havia obert. Si no ha pogut (fora d'ample, el «Tu» és dins del rail
@@ -196,6 +207,7 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
         <CosAjustos
           t={t}
           campRef={campRef}
+          focusAlCercador={!tactil}
           joId={joId}
           joNom={joNom}
           joAvatar={joAvatar}
@@ -297,9 +309,11 @@ function FilaEixidaAmbSessio({ fila, etiqueta }) {
  * dos pàgines de la còpia `.sdpbackup` (ESPECIALS_COPIA) amb { accio, t,
  * intent }: `intent` canvia a cada entrada a la pàgina i a cada «Torna-ho a
  * provar» (copia-xat-01, PaginaCopiaProtegida), i qui no és diferit l'ignora.
+ * `focusAlCercador` (Onada R28, cert per defecte) marca el cercador com a
+ * focus inicial del Dialeg; en un dispositiu tàctil FullAjustos el posa a fals.
  */
 export function CosAjustos({
-  t, campRef = null, pilaInicial = ARREL, joId = null, joNom = null, joAvatar = null, preferits = CAP, correu = null,
+  t, campRef = null, focusAlCercador = true, pilaInicial = ARREL, joId = null, joNom = null, joAvatar = null, preferits = CAP, correu = null,
   ambSessio = false, ambPrivacitat = null, avisos = null, FilaEixida = null, PaginaCopia = null, tema = null, contrast = null, llengua = null, amplaria = null, mides = null,
   onTema = noop, onContrast = noop, onLlengua = noop, onAmplaria = noop, onVes = noop, onObriConversa = noop, onTanca = noop
 }) {
@@ -478,7 +492,7 @@ export function CosAjustos({
                 type="search"
                 name="xatAjustosCerca"
                 autoComplete="off"
-                data-sdp-focus-inicial
+                data-sdp-focus-inicial={focusAlCercador || undefined}
                 value={terme}
                 placeholder={etiquetaCerca}
                 onChange={(e) => setTerme(e.target.value)}

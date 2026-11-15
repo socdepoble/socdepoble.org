@@ -142,6 +142,31 @@ test('«Tu» al peu del rail obri el full amb el focus al cercador; la X el tanc
   expect(document.activeElement).toBe(within(rail()).getByRole('button', { name: 'Tu: ajustos' }));
 });
 
+test('Onada R28 · en un dispositiu tàctil (iPhone) el full s’obri sense enfocar el cercador: el teclat en pantalla no tapa els ajustos', () => {
+  const matchMediaOriginal = window.matchMedia;
+  window.matchMedia = vi.fn((consulta) => ({
+    matches: consulta === '(hover: none) and (pointer: coarse)',
+    media: consulta,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {}
+  }));
+  try {
+    pinta();
+    obriDesDelPeu();
+    expect(titol()).toBe('Ajustos');
+    const cercador = within(full()).getByRole('searchbox', { name: 'Cerca als ajustos' });
+    expect(document.activeElement).not.toBe(cercador);
+    expect(window.matchMedia).toHaveBeenCalledWith('(hover: none) and (pointer: coarse)');
+    /* El cercador continua a mà: tocar-lo l'enfoca. */
+    cercador.focus();
+    expect(document.activeElement).toBe(cercador);
+  } finally {
+    window.matchMedia = matchMediaOriginal;
+  }
+});
+
 test('amb el rail plegat, l’avatar del peu obri el full', () => {
   pinta({ railObert: false });
   const avatar = within(rail()).getByRole('button', { name: 'Tu: ajustos' });

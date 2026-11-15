@@ -64,13 +64,27 @@ function contenidorDesplacable(inici, arrel) {
   return null;
 }
 
+/* Onada R28 · Prova real a l'iPhone · En un editor ric llarg (.ProseMirror) el marc fa milers de píxels:
+   el que ha de quedar a la vista és el cursor. Sense selecció dins del camp, no es mou res. */
+function rectDelCursor(camp) {
+  const seleccio = typeof window.getSelection === 'function' ? window.getSelection() : null;
+  if (!seleccio || !seleccio.rangeCount) return null;
+  const rang = seleccio.getRangeAt(0);
+  if (!rang || !camp.contains(rang.endContainer)) return null;
+  const rects = typeof rang.getClientRects === 'function' ? rang.getClientRects() : null;
+  const rect = rects && rects.length ? rects[rects.length - 1]
+    : (typeof rang.getBoundingClientRect === 'function' ? rang.getBoundingClientRect() : null);
+  if (!rect || (rect.top === 0 && rect.bottom === 0)) return null;
+  return rect;
+}
+
 function revelaCampDinsDelVisor(camp, arrel) {
   if (!camp || typeof camp.getBoundingClientRect !== 'function') return;
-  /* En un editor ric llarg (.ProseMirror), no fem saltar el document sencer pel marc exterior. */
-  if (camp.classList?.contains('ProseMirror') || camp.getAttribute?.('contenteditable') === 'true') return;
+  const esEditorRic = camp.classList?.contains('ProseMirror') || camp.getAttribute?.('contenteditable') === 'true';
   const visor = contenidorDesplacable(camp, arrel);
   if (!visor) return;
-  const rectCamp = camp.getBoundingClientRect();
+  const rectCamp = esEditorRic ? rectDelCursor(camp) : camp.getBoundingClientRect();
+  if (!rectCamp) return;
   const rectVisor = visor.getBoundingClientRect();
   if (rectVisor.height <= 0) return;
   const excésBaix = rectCamp.bottom + MARGE_REVELACIO_PX - rectVisor.bottom;
@@ -136,7 +150,16 @@ export function useTeclatVirtual(arrelRef, amaDelDocument = true) {
         return;
       }
 
-      const oclusioVv = vv ? Math.max(0, Math.round(altActual - (vv.height + (vv.offsetTop || 0)))) : 0;
+      /* Onada R28 · Prova real a l'iPhone (iOS 27, WKWebView): en enfocar un camp baix, WebKit desplaça el
+         visor visual (offsetTop 396 px) i retalla innerHeight just eixa quantitat (874 → 478), de manera que
+         innerHeight − (vv.height + offsetTop) donava 0 i el document sencer pujava davall de la Dynamic Island.
+         I just després del retorn a dalt, WebKit avisa amb offsetTop 0 i innerHeight encara a 478: tampoc
+         innerHeight servix de referència. L'alçada de disseny és la del contenidor de l'arrel (el nostre arbre,
+         no el document amfitrió), que el teclat d'iOS no encongix; en Android el WebView s'encongix sencer,
+         el contenidor també, l'oclusió és 0 i actua caigudaLayout. Sense contenidor mesurable (jsdom, ombra),
+         innerHeight + offsetTop. */
+      const altDisseny = arrel.parentElement?.clientHeight || (altActual + (vv?.offsetTop || 0));
+      const oclusioVv = vv ? Math.max(0, Math.round(altDisseny - vv.height)) : 0;
       const esMobilOTactil = arrel.classList.contains('is-compact') || arrel.hasAttribute('data-sdp-tactil');
       const caigudaLayout = esMobilOTactil ? Math.max(0, Math.round(alcadaRepos - altActual)) : 0;
 
