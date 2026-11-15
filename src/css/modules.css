@@ -7776,15 +7776,6 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-drets .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
     .sdp-drets .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
   }
-  /* L'espècimen del catàleg: una columna d'editor simulada, amb alçada fixa. */
-  .sdp-especimen__columna {
-    display: flex;
-    flex-direction: column;
-    block-size: 40rem;
-    overflow: hidden;
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-  }
 }
 
 /* T40 i T41 · finestra de la barra taronja: data de publicació i visibilitat */
@@ -17286,65 +17277,6 @@ details[open] summary.accordion-header svg:last-child {
 }
 /* ═══ FI DEL BLOC ONADA R22 ═══ */
 
-/* ═══ BLOC ONADA R26.2 · SelectorOpcionsDesplegable (Codex, 261114_2115) ═══
-   Molècula de Pedra Seca (src/components/PedraSeca/molecules/SelectorOpcionsDesplegable.jsx):
-   ràdios natius amb l'explicació davall del seu títol i un resum de dues frases. Viu ací, com
-   la resta de blocs de peces (tractor-vocabulari, ordre del Mestre del 261030), dins de
-   `@layer components` i sense cap .sdp-boto.
-   Onada R26.3 (ordre del Mestre del 14-11-2026, revisió de Gemini §1.B): (1) el resum ja no es
-   talla: sense nowrap ni el·lipsi ni title, que el dit no pot obrir; cada frase fa les línies que
-   calga (WCAG 1.4.10). (2) El ràdio de la píndola activa es pinta amb el color del text sobre
-   acció: el blau del ràdio sobre el blau del fons feia menys de 3:1 (WCAG 1.4.11). (3) Píndola i
-   detall comparteixen la mateixa caixa i l'eix d'inici, també a partir de 40rem. */
-@layer components {
-  .sdp-selector-opcions {
-    container-type: inline-size;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    color: var(--sdp-text-cos);
-  }
-  .sdp-selector-opcions legend { padding: 0; margin-block-end: var(--sdp-space-3); text-align: start; font-weight: 700; }
-  .sdp-selector-opcions__llista { display: grid; gap: var(--sdp-space-2); }
-  .sdp-selector-opcions__opcio { display: flex; flex-direction: column; align-items: stretch; box-sizing: border-box; inline-size: 100%; min-inline-size: 0; }
-  .sdp-selector-opcions__tria {
-    display: flex; align-items: center; justify-content: center; gap: var(--sdp-space-2);
-    margin: 0; box-sizing: border-box; max-inline-size: 100%; min-block-size: var(--sdp-touch);
-    padding: var(--sdp-space-3) var(--sdp-space-8);
-    border: 2px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-boto);
-    background: var(--sdp-fons-targeta); color: var(--sdp-text-cos);
-    font-weight: 700; font-size: var(--sdp-text-small); line-height: 1.4;
-    cursor: pointer;
-  }
-  .sdp-selector-opcions__tria > span { min-inline-size: 0; overflow-wrap: anywhere; text-align: start; }
-  .sdp-selector-opcions__tria input { flex: 0 0 auto; margin: 0; accent-color: var(--sdp-accio-control); }
-  .sdp-selector-opcions__tria[data-actiu="true"] { border-color: var(--sdp-accio-control); background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
-  .sdp-selector-opcions__tria[data-actiu="true"] input { accent-color: var(--sdp-sobre-accio); }
-  .sdp-selector-opcions__tria:focus-within { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
-  /* P2 de Codex R26.4 · Una opció inhabilitada mai no porta el fons blau d'activa: amb el text de desactivat
-     sobre --sdp-accio-control donava ~1,01:1. Ara, activa o no, va sobre el fons subtil amb el text de
-     desactivat (el mateix to que --sdp-text-suau) i la vora de control, sense opacitat. Els controls
-     inactius queden fora de l'exigència de contrast de WCAG 1.4.3; ací es manté llegible igualment. */
-  .sdp-selector-opcions__tria[data-inhabilitada="true"],
-  .sdp-selector-opcions__tria[data-inhabilitada="true"][data-actiu="true"] {
-    cursor: not-allowed; border-color: var(--sdp-vora-control); background: var(--sdp-fons-subtil); color: var(--sdp-text-desactivat);
-  }
-  .sdp-selector-opcions__tria[data-inhabilitada="true"] input { accent-color: var(--sdp-text-desactivat); }
-  .sdp-selector-opcions__detall {
-    box-sizing: border-box; inline-size: 100%; padding: var(--sdp-space-3) var(--sdp-space-4);
-    text-align: start; line-height: 1.6; overflow-wrap: anywhere;
-    border-inline-start: var(--sdp-space-1) solid var(--sdp-accio-control);
-  }
-  .sdp-selector-opcions__detall[hidden] { display: none; }
-  .sdp-selector-opcions__detall > :first-child { margin-block-start: 0; }
-  .sdp-selector-opcions__detall > :last-child { margin-block-end: 0; }
-  .sdp-selector-opcions__resum { display: flex; flex-wrap: wrap; margin-block-start: var(--sdp-space-4); text-align: start; min-inline-size: 0; }
-  .sdp-selector-opcions__resum > span { flex: 1 1 100%; min-inline-size: 0; overflow-wrap: anywhere; line-height: 1.6; }
-  @container (min-width: 40rem) {
-    .sdp-selector-opcions__opcio { max-inline-size: 36rem; }
-    .sdp-selector-opcions__detall { padding-inline: var(--sdp-space-6); }
-  }
-}
-/* ═══ FI DEL BLOC ONADA R26.2 ═══ */
+/* ═══ BLOC ONADA R26.2 · SelectorOpcionsDesplegable · ara a src/css/diferit-selector-opcions.css ═══
+   Onada R28 · D-R27-1, opció (b) aprovada pel Mestre: el bloc (amb les correccions R26.3) ix de l'arrencada
+   del paquet de WordPress i el selector l'adopta en muntar-se (src/config/fullDiferit.js). */

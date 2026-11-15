@@ -16,85 +16,87 @@ triggers_on:
   - estil comic
   - estil cyberpunk
   - humor gamberro
-version: 1.0.0
+version: 2.0.0
 contracte.llig:
   - _wiki_de_poble/02_saber/identitat_visual.md
   - .agents/skills/core-identitat-visual/SKILL.md
+  - public/assets/ui/plugins/disseny_vinyeta.jpg
+  - public/assets/nano_cards/snippet_nano_card.jpg
 contracte.escriu:
   - _wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md
 ---
 
-# Calibratge Visual i Enginyeria de Prompts del Nano
+# Calibratge visual i enginyeria de prompts del Nano
 
-Aquesta skill ensenya a les Intel·ligències Artificials com escriure prompts visuals consistents, memorables i amb vertader sentit de l'humor amb l'eina d'imatge disponible en el client (el Nano quan hi estiga connectat). El nom d'una eina d'una altra sessió no acredita que el client actual la tinga.
+Esta skill defineix el procediment obligatori perquè les IAs generen il·lustracions consistents, divertides i fidels a l'univers gràfic de Sóc de Poble. S'aplica abans d'invocar qualsevol motor d'imatge del client, com el subagent `image-generator` o les eines del Nano. L'objectiu és mantindre sempre el mateix dibuixant, el mateix poble i el mateix humor costumista.
 
-## 1. La Llei Suprema de l'Humor i el Gag (Anti-Testimonis de Jehovà)
+## 1. Ancoratge multi-imatge amb el cànon de les nou mestres
 
-L'humor NO s'aconsegueix dibuixant un món de color de rosa on tothom somriu beatament com en un fullet religiós («imatges idíl·liques d'abuelitos feliços mirant un mòbil»). Això genera rebuig i AI slop corporatiu.
+Esta secció fixa el bloqueig d'estil amb imatges de referència perquè cap vinyeta nova parega d'un altre poble o d'un altre estudi d'animació.
 
-El vertader humor valencià, costumista, gamberro i berlanguiano neix de:
-1. **La Contraposició d'Extrems Incompatibles:** Barrejar la més alta sofisticació tecnològica o electrònica (servidors, núvols, xips, xarxes neuronals) amb la ruralitat més arcaica i terrenal (calderes de coure de fer botifarra, forques de palla, una mànega de regar, un pot d'oli d'oliva o un tractor vell fumejant).
-2. **La Hipèrbole i la Màquina Impossible (L'Estil Professor Bacteri / Ibáñez):** Aparells estrambòtics d'inventor foll plens de vàlvules de ràdio antigues, engranatges desiguals, xemeneies de ferro rovellat, cables multicolors que degoten i brollen elements absurds (ex: una caldera de llenya bullint un cervell electrònic que solta xips amb potetes).
-3. **El Detall Absurd en Primer Pla:** Un gosset rosegant un xip electrònic amb cables com si fóra un os de pernil, una gallina covant un ratolí d'ordinador, o un uelo afegint sal a una caldera de circuits.
-4. **La Psicologia dels Personatges: La Naturalitat en l'Absurd (Berlanga + Ibáñez):**
-   - **PROHIBICIÓ DE CARES DE «SUSTO» FORÇADES:** Un uelo amb cara de terror o sorpresa exagerada de meme i una iaia desconnectada fumant en pipa no tenen cap gràcia, són impostats i no comuniquen res.
-   - **La Clau Còmica de Berlanga i Ibáñez:** L'autèntic gag neix del contrast entre la monstruositat de la màquina i la **plena naturalitat o quotidianitat dels personatges**. Els personatges no estan espantats de la màquina: estan treballant-hi o vivint-la amb la mateixa normalitat amb què farien sabó a la caldera, escaldarien ametlles o collirien olives.
-   - **Actituds Canòniques:** Un llaurador comprovant amb un rellotge de butxaca o tastant amb una cullera de fusta si el cervell electrònic ja està "al punt de cocció"; un uelo afinant un engranatge amb un setrill d'oli d'oliva com qui greixa la sénia; les gallines menjant xips com si foren grans de dacsa. L'absurd és la màquina; l'humor és la calma i la serietat rural amb què la gent del poble la fa anar.
+### 1.1 Procediment obligatori d'ancoratge visual
 
-## 2. El Tríptic d'Estils Consistents de Sóc de Poble
+1. Prohibix la generació cega només des de text en el Registre A: invocar el motor sense referències visuals trenca el traç i deriva cap al clip-art anglosaxó.
+2. Selecciona entre tres i quatre imatges mestres de la subsecció 1.2 que compartisquen composició amb l'escena sol·licitada (carrer coral, aparell mecànic o primer pla).
+3. Passa les rutes absolutes d'estes imatges com a referències (`ImagePaths`) al subagent `image-generator` juntament amb el prompt descriptiu.
+4. Exigix al prompt conservar exactament el mateix gruix de plumilla negra, trames manuals (`crosshatching`), paleta d'aquarel·la càlida i fisonomia del cànon adjunt.
+5. Verifica sobre la imatge generada les sis invariants de la secció 2 abans d'entregar-la al Mestre; si pareix un altre dibuixant, descarta-la i regenera-la.
 
-Sóc de Poble no utilitza un sol registre gràfic per a tot. Disposa de tres grans famílies visuals canòniques que cal preservar segons el context:
+### 1.2 Els nou arxius mestres del cànon en alta resolució
 
-### Registre A: Còmic Gamberro (Escola Bruguera + Berlanga)
-- **Ús:** Vinyetes de targetes d'acció, campanyes ciutadanes, explicacions didàctiques i gags del Mur.
-- **Tècnica i Traç:** Dibuix a tinta de tebeo tradicional (estil Editorial Bruguera dels anys 70-80). **Prohibit el traç hiperdigital o excessivament acabat/renderitzat**. Ha de respirar artesania de paper, línia de tinta imperfecta i color pla tipus gouache sobre paper càlid.
-- **La Fisonomia Naïf dels Personatges (La Clau Ibáñez):**
-  * **Zero Realisme Humà:** Mai dibuixar cares humanes anatòmicament dures o hiperdetallades (poden transmetre agressivitat, duresa o maldat sense voler).
-  * **El punt Naïf i Innocent:** Nassos de patata ben grossos i arrodonits (bulbous potato nose típic d'Ibáñez), ulls de dibuix animat senzills amb pupil·la negra expressiva, somriures tendres i entranyables d'il·lusió o sorpresa innocent.
-  * **Els Animals:** Dibuixats amb l'esperit de Bruguera (nas negre de botó, ulls vius, expressió simpàtica i trapella).
-- **Enquadrament:** *Full bleed* (a sang, sense vores blanques exteriors ni marcs de vinyeta), acció principal centrada per a resistir retalls quadrats.
-- **Regla d'or:** Zero banderes de cap classe, zero text / speech bubbles.
+- `public/assets/ui/plugins/disseny_vinyeta.jpg`: mur web de pedra seca en construcció estil *13, Rue del Percebe*, arquitecte amb llacet, obrers cisellant pestanyes i iaia amb carretó al sol.
+- `public/assets/nano_cards/snippet_nano_card.jpg`: màquina gegant *TISORES RELLAMP* de fusta i ferro tallant el diari davant l'alqueria, amb gallines volant, ruc i tarongers.
+- `public/assets/nano_cards/vehicle_nano_card.jpg`: *SEAT 600* taronja carregat fins al sostre per un camí de terra entre marges de pedra seca, oliveres i la iaia dalt amb un gall.
+- `public/assets/nano_cards/govern_certificacio_nano_card.jpg`: el Mestre amb boina i faixa roja segellant papers al carrer assolellat davant dos robotets quadrats de xapa amb bombeta al cap.
+- `public/assets/ui/plugins/cervell_vinyeta.jpg`: cervell metàl·lic gegant reblonat sobre erugues de tractor dalt d'un cadafal a la plaça del poble, amb llauradors debatent i una cabra.
+- `public/assets/nano_cards/calendari_nano_card.jpg`: *CALENDARI AGRÍCOLA GEGANT* de fusta clavat a la façana exterior, amb llaurador en faixa i espardenyes agafant-se el cap mentre li vola la boina.
+- `public/assets/ui/plugins/bascula_vinyeta.jpg`: pati assolellat de la cooperativa amb bàscula mecànica de `487 kg`, llauradors amb pantalons apedaçats rient i iaia anotant a la llibreta.
+- `public/assets/nano_cards/metriques_nano_card.jpg`: panell de fusta amb manòmetres rurals clavat entre tarongers i oliveres, bicicleta vella i dos uelos amb boina i faixa gratant-se el cap.
+- `public/assets/nano_cards/drets_autor_comic.jpg`: iaia brugueriana amb monyo, nas de patata i cullera de fusta defensant la cassola d'arròs al carrer davant un inspector amb gavardina.
 
-### Registre B: Cyberpunk Rural de Pedra Seca
-- **Ús:** Imatges conceptuals de maquinària, arquitectura termodinàmica, intel·ligència artificial forense i la Consola.
-- **Tècnica:** Contrast d'alt impacte entre silici, vàlvules, coure, fusta de roure i pedra seca. Maquinària tecnològica que sembla forjada en una ferreria de muntanya o un laboratori secret de la Serra de Mariola o la Serrella.
+## 2. Les sis invariants morfològiques del còmic de poble
 
-### Registre C: Fotografia Panoràmica Realista (El Mas i la Serra)
-- **Ús:** Portades institucionals, fons de pantalla panoràmics i capçaleres de poble.
-- **Tècnica:** Fotografia nítida, llum daurada mediterrània, composició cinematogràfica de pobles de muntanya valencians, bancals d'oliveres i ametllers, i cels nets.
+Tota vinyeta del Registre A ha de complir simultàniament estes sis condicions observables sobre el llenç retornat.
 
-## 3. Protocol de Calibratge i Feedback Humà (Escala 1 a 10)
+- **Escenari exterior mediterrani assolellat:** totes les escenes passen a l'aire lliure, a ple sol, entre places empedrades, façanes d'ocre i pedra seca, teulades àrabs, tarongers i oliveres. Prohibides les habitacions fosques o tancades; taules i panells es trauen sempre al carrer o al bancal.
+- **Anatomia brugueriana i vestimenta valenciana:** proporció rabassuda (`1:3.5`), nassos redons de patata, ulls ovals expressius i zero realisme anatòmic. Indumentària rural autèntica: boina negra, faixa roja o negra, camisa arremangada, jupetí, pantalons apedaçats, espardenyes de veta i mocador o monyo amb davantal; prohibits petos texans americans i pentinats anime.
+- **Acció cinètica teatral i psicologia viva:** cada personatge executa una acció física clara (cisellar, segellar, córrer, assenyalar, gratar-se el cap o volar-li la boina). Prohibida la posa estàtica frontal de foto escolar, el somriure dental d'anunci en primer pla i qualsevol caricatura lletja o desdentada.
+- **Enginyeria de fusta, ferro colat i robotets de bombeta:** artefactes monumentals de fusta, ferro rovellat, cordes i manòmetres estil Professor Bacteri, o xicotets aprenents quadrats de xapa reblonada amb bombeta incandescent al cap. Prohibits els robots humanoides de llanda dels anys cinquanta i les icones flotants.
+- **Traç de plumilla negra, trames i aquarel·la a sang:** línia de tinta negra amb gruix orgànic, trames manuals (`crosshatching`) i color càlid d'aquarel·la i gouache sota cel blau net. Composició *full bleed* sense marcs blancs exteriors, acció centrada, zero banderes i exportació quadrada a `1600x1600 px`.
+- **Rètols físics integrats i valencià impecable:** per defecte s'aplica zero text si l'encàrrec no en demana. Quan el gag requerix un rètol, es pinta sobre fusta o xapa amb una a tres paraules en valencià normatiu impecable (com `TISORES RELLAMP` o `DESTIL·LADOR DE CARAJILLO`), sense bafarades invasives.
 
-Per millorar contínuament la consistència dels prompts:
-1. Entrega la imatge segons el brief; la qualificació és opcional i no bloqueja una generació ja autoritzada. Si el Mestre dona una puntuació o comentari, conserva l'evidència concreta.
-2. Si el Mestre indica punts de millora (ex: «massa idíl·lica», «manca d'humor», «el color és massa fosc»), la IA extreu el patró i n'actualitza aquesta skill i el Llibre Mestre.
-3. Conserva la traçabilitat de les versions al destí autoritzat. No publiques automàticament una prova dins de public/ ni substituïsques un recurs oficial; la incorporació al producte seguix el carril i l'ordre vigents.
+## 3. Selecció de registre i control d'anti-exemples
 
-### Cas d'Estudi Real: «La Caldera de Descàrregues»
-- **Error 1 (Falsa Felicitat Asèptica):** Un grup de gent somrient beatament com en un fullet religiós («estil Testimonis de Jehovà»). Rebutjat per manca d'humor i AI slop.
-- **Error 2 (Caricatura Desconnectada i Idiomes Aliens):** Un uelo amb cara de terror de meme i una iaia fumant en pipa amb bafarades en castellà/italià i marc de vinyeta. Rebutjat: no té gràcia, trenca la regla de llengua i la regla de treballar a sang (*full bleed*).
-- **Aprovat Canònic (Narrativa Còmica Absurda Coherent):** Caldera de coure bullint sobre llenya un cervell mecànic que expulsa xips amb potetes cap a cabassos; l'uelo sosté un xip brillant entre els dits mirant-lo de prop amb fascinació («flipant»); la iaia empunya una lupa enorme examinant un cervellet com si fóra una llavor rara; el gosset rosega un xip amb cables a terra; zero text, zero marcs, 100% *full bleed*. La història té sentit, és gamberra i ruralment autèntica.
+Esta secció delimita els tres registres gràfics del projecte i documenta els patrons descartats pel Mestre.
+
+### 3.1 Els tres registres visuals del sistema
+
+- **Registre A (Còmic gamberro Bruguera i Berlanga):** vinyetes de plugins, targetes de la Consola, campanyes del Mur i explicacions didàctiques; seguix obligatòriament les seccions 1 i 2.
+- **Registre B (Cyberpunk rural de pedra seca):** maquinària conceptual d'alt contrast on conviuen silici, vàlvules, coure i marges de pedra seca de la muntanya alacantina.
+- **Registre C (Fotografia panoràmica realista):** portades institucionals i paisatges nítids amb llum daurada mediterrània, bancals d'oliveres i pobles de muntanya.
+
+### 3.2 Anti-exemple descartat per deriva d'estil
+
+- **Evidència arxivada:** la captura `_wiki_de_poble/04_escriptori/01_produccio/261113_captura_mestre/261113_2134_antiexemple_rebutjat_la_veu_nano_v3.jpg` i l'històric de *La caldera de descàrregues* mostren què passa quan es genera sense ancoratge visual.
+- **Motius de rebuig:** interior fosc tipus soterrani, roba moderna anglosaxona (peto texà i cabell anime), quatre figures estàtiques mirant a càmera, robots de llanda americans, icones clip-art flotants i somriures beatífics de fullet religiós.
+
+## 4. Calibratge amb el Mestre i govern d'actius
+
+Seguix estos passos després de cada generació per conservar la traçabilitat i l'aprenentatge del sistema.
+
+1. Entrega la proposta visual segons el registre del brief i indica quines imatges mestres has passat en `ImagePaths`.
+2. Si el Mestre assenyala una desviació d'estil, incorpora la regla concreta en esta skill i en `[[03_llibre_mestre_tasques_i_idees]]` abans de repetir la tirada.
+3. Guarda les proves al directori d'investigació o d'escriptori autoritzat; no sobreescrigues cap recurs de `public/` fora del carril d'integració vigent.
+4. Registra la validació d'humor, traç i fidelitat al cànon com a revisió visual humana, mai com un verd mecànic de porta.
 
 ## Lliçons del Mestre
 
-- **261030** | **El Punt Gamberro i Inconformista d'Ibáñez contra el «Mundo Feliz»**:
-  - Prohibides les màquines simètriques, netes i polides («màquina professional») i els traços vectorials suaus de conte infantil («Mundo Feliz»).
-  - Exigir sempre traç de plumilla brugueriana amb trames de tinta (crosshatching), asimetria caòtica, xapes apedaçades amb reblons tortes, taques de greix/sutge i invents esbojarrats estil Professor Bacteri («FUM-O-MÀTIC», manòmetres tortes amb «HUMOR / VI / FUM / TEMPS», palanques «CALORET / PAELLA / REBUIG», onomatopeies en valencià «XOFF! / BROOOM! / FIUM!»).
-  - Actitud gamberra i canalla als personatges (ex: la IAIA amb ulleres negres gegants de soldador, l'apanyador amb una clau anglesa descomunal més gran que el seu tors) i horror vacui ciber-rural (gats ficats enmig dels engranatges, gossos rosegant microxips amb cables i potetes).
-  - **Invariància de la bellesa de dibuix animat (zero cares desencaixades o lletges):** Les cares dels personatges mai es deformen fent-se lletges, grotesques, mellades o «descuajaringadas» (ni tan sols quan riuen, s'enfaden o se sorprenen). Queden prohibides al prompt paraules trampa com «inventora boja / mad scientist / manic grin» que deformen la boca. Els rostres mantenen sempre la mateixa bellesa gràfica, netedat de línia i simpatia de dibuix animat clàssic.
-  - **Algorisme de la satisfacció naïf i despreocupada:** L'humor valencià i berlanguiano de Sóc de Poble naix del contrast entre una situació/màquina extremadament gamberra, caòtica i ciber-rural (plumilla brugueriana, «FUM-O-MÀTIC» apedaçat, gats als engranatges, gossos amb microxips) i uns personatges que viuen eixa situació des de dins amb una felicitat vivaç, naïf, amable i despreocupada (cara de satisfacció tranquil·la per la faena feta, sense adonar-se de l'absurd que els envolta i sense caure mai en la posa passiva o beatífica dels «Testimonis de Jehovà»).
-- **261105** | **Prohibició de les «Dentadures Colgate» en Primer Pla, Psicologia Diferenciada d'Humor Valencià i Resolució `1600 × 1600 px`**:
-  - **Zero dentadures d'anunci en primer pla:** Els personatges principals en primer pla **NO han d'aparéixer tots rient amb fileres de dents blanques perfectes i iguals** («es veu més el somriure de dents que la cara»). En un segon o tercer pla (com el veí del balcó amb la paella) un somriure obert es tolera perquè és menut, però en primer pla destrossa l'expressió de tebeo i genera efecte «món feliç forçat».
-  - **Psicologia individual i autocrítica valenciana (Ibáñez + Berlanga):** En els tebeos de *Mortadelo y Filemón* i en l'humor valencià (que és autocrític, socarró i absurd sense fer mal), cada personatge té el seu propi món interior i una expressió psicològica diferent amb la boca tancada o en mitja rialla: l'uelo convençut explicant la seua teoria amb mitja rialla d'orgull a llavis tancats; la iaia mirant-lo de reüll amb una cella alçada i mitja rialla escèptica de «este home ja s'està embolicant i no s'assabenta»; el jove despistat gratant-se el cap pensant que l'altre no s'entera de res.
-  - **Resolució nítida `1600 × 1600 px`:** Les vinyetes quadrades de plugins i portades (`public/assets/ui/plugins/*.webp`) s'exporten a **`1600 × 1600 px`** (qualitat alta i enfocament de línia de tinta) per evitar qualsevol pixelació en pantalles retina o quan s'amplia la fitxa.
-
-## Abast del calibratge
-
-Tria primer el registre A, B o C que demana el brief. «Zero text» és el valor inicial d'una il·lustració sense text demanat; les onomatopeies i cartells de la lliçó 261030 només s'apliquen quan eixe brief els requerix. Un mateix prompt no pot exigir zero text i cartells alhora.
-
-El criteri visual es revisa sobre la imatge retornada i el retall real. Els tractors d'actius i paquets poden comprovar referències, format i ubicació; no validen l'humor, la bellesa o l'aprovació del Mestre. Registra estos criteris com a revisió visual, sense atribuir-los un verd mecànic.
+- **261030** | **El punt gamberro d'Ibáñez contra el món feliç**: Prohibides les màquines polides i els traços suaus de conte infantil. Cal plumilla brugueriana amb `crosshatching`, asimetria caòtica d'inventor rural, animals enredant entre cables i rostres de dibuix animat amables, sense deformacions lletges ni mellades.
+- **261105** | **Zero dentadures d'anunci i resolució `1600x1600 px`**: Cap personatge en primer pla ha de mostrar fileres de dents blanques d'anunci; cada figura expressa la seua psicologia socarrona amb gest propi. Les vinyetes quadrades s'exporten a `1600x1600 px`.
+- **261113** | **Cànon de les nou mestres i bloqueig d'estil multi-imatge**: Generar només des de text canvia de poble i de pel·lícula de dibuixos. Tota vinyeta nova s'ancora passant tres o quatre imatges mestres de `public/` en `ImagePaths`, sempre a ple sol exterior, amb vestimenta valenciana tradicional i acció cinètica.
 
 ## Vincles
+
 - [[00_INDEX_SKILLS]]
 - [[core-identitat-visual/SKILL]]
 - [[03_llibre_mestre_tasques_i_idees]]

@@ -171,7 +171,11 @@ const JS_ARBRE_COMPARTIT = [
    fulls canònics de src/css (components.css declara les utilitats compartides,
    com sdp-nomes-lector o sdp-especimen__fila). */
 const CSS_CANONIC = ['src/css/modules.css', 'src/css/sdp.css', 'src/css/layout.css', 'src/components/layout/AppGridShell.css'];
-const CSS_RESOLUCIO = [...CSS_CANONIC, 'src/css/components.css', 'src/css/utilities.css', 'src/css/base.css'];
+/* Onada R28 · D-R27-1 (opció b) · Els fulls diferits `src/css/diferit-*.css` també són canònics:
+   cada component els adopta amb useFullDiferit (src/config/fullDiferit.js). */
+const CSS_DIFERITS = fs.readdirSync(path.join(ARREL, 'src/css'))
+  .filter((nom) => /^diferit-[a-z0-9-]+\.css$/.test(nom)).sort().map((nom) => `src/css/${nom}`);
+const CSS_RESOLUCIO = [...CSS_CANONIC, 'src/css/components.css', 'src/css/utilities.css', 'src/css/base.css', ...CSS_DIFERITS];
 const CSS_TOKENS = ['src/css/tokens.css', 'src/css/design-tokens.css'];
 const TEXT_TORN = [
   ...JS_TORN,

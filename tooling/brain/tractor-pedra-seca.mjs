@@ -442,7 +442,6 @@ const EXCEPCIONS_ORFE = {
      XatContext no s'aplica en este commit. Cada excepció es retira quan el mòdul es cablege o s'esborre. */
   'src/data/xat/serveiXat.js': 'servei del Xat amb reintent JWT i llinatge de sessió (Kit R25/R25.2 de Gemini, R25.2-X01/X02): sense consumidor fins al cablejat de XatContext; el cobrix src/data/xat/__tests__/serveiXat.jwtRetry.test.js · Onada R26, pendent del Mestre',
   'src/data/xat/estatSincronitzacioRural.js': 'estat de sincronització rural del Xat (Kit R25/R25.2 de Gemini, R25.2-X03/X04): sense consumidor fins al cablejat de XatContext; el cobrix src/data/xat/estatSincronitzacioRural.test.js · Onada R26, pendent del Mestre',
-  'src/data/xat/copiaSeguretatPortatil.js': 'motor de la còpia portàtil .sdpbackup (Kit R25.2 de Gemini, IDEA-267): sense pantalla d’exportació ni de restauració; el cobrixen les proves de src/data/xat/__tests__/copiaSeguretatPortatil*.test.* · Onada R26, pendent del Mestre'
 };
 /* Decisió del Mestre (30-10-2026) · Una fixture (dins de __fixtures__/) que una
    prova importa és part de la prova, amb el criteri de la línia de les proves.

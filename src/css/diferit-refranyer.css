@@ -1,0 +1,97 @@
+/* Full diferit (Onada R28 · D-R27-1, opció b aprovada pel Mestre): les regles de .sdp-refranyer ixen de
+   l'arrencada del paquet de WordPress i s'adopten a l'arrel on es munta la peça (src/config/fullDiferit.js).
+   NO s'importa des d'index.css. Origen: components.css. */
+@layer components {
+  .sdp-refranyer__cerca-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+  }
+
+  .sdp-refranyer__controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-refranyer__categories {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-refranyer__pindola {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-weight: var(--sdp-pes-semi);
+    cursor: pointer;
+  }
+  .sdp-refranyer__pindola--activa {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-refranyer__buit {
+    margin: 0;
+    padding: var(--sdp-space-4);
+    color: var(--sdp-text-suau);
+    text-align: center;
+  }
+  .sdp-refranyer__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    font-size: var(--sdp-text-meta);
+  }
+  .sdp-refranyer__comarca {
+    color: var(--sdp-accent-text);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-refranyer__ambit {
+    color: var(--sdp-text-suau);
+  }
+  .sdp-refranyer__dita {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    font-weight: var(--sdp-pes-negreta);
+    line-height: var(--sdp-leading-titol);
+  }
+  .sdp-refranyer__explicacio {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    line-height: var(--sdp-leading-cos);
+  }
+  .sdp-refranyer__indicador-temps {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-refranyer__preescolta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-refranyer__pindola:hover {
+      background: var(--sdp-fons-subtil);
+    }
+    .sdp-refranyer__pindola--activa:hover {
+      background: var(--sdp-accio-control-hover);
+    }
+  }
+}

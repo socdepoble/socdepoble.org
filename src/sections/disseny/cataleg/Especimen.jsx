@@ -3,10 +3,18 @@
  * Ordre fix, perquè una IA o una persona trobe sempre el mateix al mateix lloc:
  *   nom + fitxer · per a què serveix · ESPÈCIMEN VIU (el component real,
  *   mai una maqueta HTML) · contracte (props) · accessibilitat · fes / no facis.
+ * Onada R28 · D-R27-1 (opció b) · L'estil de la fitxa (diferit-especimens.css) no viatja a l'arrencada:
+ *   s'adopta a l'arrel on es munta el primer espècimen (useFullDiferit, abans del primer pintat).
  */
+import { useRef } from 'react';
+import { useFullDiferit } from '../../../config/fullDiferit.js';
+import cssEspecimens from '../../../css/diferit-especimens.css?inline';
+
 export function Especimen({ id, nom, fitxer, children, descripcio, contracte = [], a11y = [], fes = [], noFacis = [] }) {
+  const arrel = useRef(null);
+  useFullDiferit(arrel, 'especimens', cssEspecimens);
   return (
-    <section className="sdp-especimen" id={id} aria-labelledby={`${id}-nom`}>
+    <section ref={arrel} className="sdp-especimen" id={id} aria-labelledby={`${id}-nom`}>
       <header className="sdp-especimen__cap">
         <h3 id={`${id}-nom`} className="sdp-especimen__nom">{nom}</h3>
         {fitxer ? <code className="sdp-especimen__fitxer">{fitxer}</code> : null}

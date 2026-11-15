@@ -158,8 +158,11 @@ test('conserva els antecedents i admet la correctora explícita de federació', 
   /* Actualitzada a posta (assalt 261101, P2-09): la 2611011800 posa el contracte v1 a una funció privada. */
   const contracte = '2611011800_contracte_exportacio_federacio_v1.sql';
   /* R43 · SQL80 conserva la base canònica privada i afig el wrapper d'exportació
-     de seed_revisions pròpies; la llista continua tancada als cinc SQL explícits. */
-  expect(amb).toEqual([F1, NOM, correctora, contracte, '2611070600_seed_revisions.sql']);
+     de seed_revisions pròpies.
+     Actualitzada a posta (R28, D-R24.2-5): la 20261115030000 torna a crear l'embolcall
+     de 2611070600 amb veu_del_poble. El nom de 14 xifres va primer en l'ordre de
+     sort(); la llista continua tancada, ara als sis SQL explícits. */
+  expect(amb).toEqual(['20261115030000_r28_rgpd_exportacio_i_quotes_r23.sql', F1, NOM, correctora, contracte, '2611070600_seed_revisions.sql']);
   const nou = llig(correctora);
   expect(nou).toContain('SDP-FED-ESQUEMA-NO-ADMES');
   expect(nou).not.toContain("c.column_name not in ('id', 'tenant_id')");

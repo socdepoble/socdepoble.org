@@ -1,21 +1,35 @@
 /**
- * BarraReproductorVeu.jsx · IDEA-255 (Onada R23 · 14-11-2026) · Mini-Reproductor
- * Flotant Universal de Veu per a totes les pàgines de lectura de PageFrame.
+ * BarraReproductorVeu.jsx · IDEA-255 (Onada R23) + IDEA-268 (Onada R27 · 15-11-2026) ·
+ * Reproductor Flotant Universal de So per a totes les pàgines de lectura de
+ * PageFrame i preparat per a emissions d'àudio com la futura Ràdio de Poble.
  *
  * Disseny 100% Pedra Seca:
- *   · Zero inline styles; 100% tokens semàntics de Capa 2 i objectius >= 48px.
- *   · Muntat a la capa superior (`capaDeDalt`) per compatibilitat tant amb l'SPA
- *     com amb l'arrel ombra tancada `<soc-de-poble>` (LLEI_06).
- *   · En vista compacta (`.sdp-root.is-compact`), flota damunt de `nav.mobile-nav`
- *     amb `--sdp-alt-nav-mobil`; en escriptori, centrat a la part inferior.
- *   · Pausa / Continua conserva exactament l'`indexActual` (`[0..N-1]`) perquè
- *     la lectura mai reinicie des de zero ni es pengen les pauses del navegador.
- *   · Selector / cercador ràpid per apartats i text amb salt immediat, ressaltat
- *     suau del paràgraf actiu sense CLS, «Copiar fragment» i «Tancar».
+ *   · Zero objectes style inline; 100% tokens semàntics de Capa 2 i objectius >= 48px.
+ *   · Muntat dins de `.sdp-root` (o `capaDeDalt` de reserva) per compatibilitat
+ *     completa amb l'SPA i amb l'arrel ombra tancada `<soc-de-poble>` (LLEI_06).
+ *   · Centrat geomètric mil·limètric sobre el panell de lectura actiu tant en
+ *     mòbil (`.sdp-root.is-compact`, damunt de `nav.mobile-nav` i coordinat amb
+ *     `.sdp-tornar-dalt` via `data-sdp-veu-oberta`) com en escriptori amb barra
+ *     lateral oberta, tancada o espais multicolumna (`--barra-veu-inici` i
+ *     `--barra-veu-fi` mesurats amb ResizeObserver). Són propietats locals
+ *     calculades en temps d'execució, no tokens: per això no porten el prefix
+ *     `--sdp-`, que només declara src/css/tokens.css (com `--cal-*` al Calendari).
+ *   · Pausa / Continua conserva exactament l'`indexActual` (`[0..N-1]`) i, en
+ *     fonts d'àudio (`fontSo`), l'instant de reproducció de la pista activa.
+ *   · `seguixLectura={false}` (obertura des del Banc de Veus) no desplaça la
+ *     pàgina quan la lectura passa al bloc següent, i `invocadorRef` és el
+ *     control on torna el focus en tancar (si no, el disparador de dalt, sense
+ *     desplaçar la pàgina).
+ *   · Contracte desacoplat `fontSo` (`tipus: 'lectura' | 'audio'`) llest per a
+ *     connectar pistes i emissions en directe de Ràdio de Poble sense duplicar UI.
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+/* Onada R28 · D-R27-1 (opció b) · L'estil de la peça no viatja a l'arrencada: s'adopta en pintar-se. */
+import { useFullDiferit } from '../../../config/fullDiferit.js';
+import cssBarraVeu from '../../../css/diferit-barra-veu.css?inline';
 import { createPortal } from 'react-dom';
-import { Check, Copy, ListOrdered, Pause, Play, Search, SkipBack, SkipForward, Volume2, X } from 'lucide-react';
+import { Check, Copy, ListOrdered, Pause, Play, Radio, Search, SkipBack, SkipForward, Volume2, X } from 'lucide-react';
+import { resolveAsset } from '../../../config/assetResolver.js';
 import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 import { capaDeDalt, desplacaASeccio } from '../PageFrame.jsx';
 import { extreuBlocsLecturaVeu, marcaBlocActiuDom } from './lectorPaginaVeu.js';
@@ -23,6 +37,7 @@ import * as serveiVeu from '../../../services/veuIaiaService.js';
 
 const TEXTOS = Object.freeze({
   regio: ['veu.reproductor.regio', 'Reproductor de lectura en veu alta'],
+  regioAudio: ['veu.reproductor.regioAudio', 'Reproductor universal de so'],
   anterior: ['veu.reproductor.anterior', 'Bloc anterior'],
   seguent: ['veu.reproductor.seguent', 'Bloc següent'],
   pausa: ['veu.reproductor.pausa', 'Pausa la lectura'],
@@ -39,7 +54,10 @@ const TEXTOS = Object.freeze({
   errorCopia: ['veu.reproductor.errorCopia', 'No s’ha pogut copiar el fragment.'],
   tanca: ['veu.reproductor.tanca', 'Tancar el reproductor de veu'],
   posicio: ['veu.reproductor.posicio', 'Bloc {actual} de {total}'],
+  posicioAudio: ['veu.reproductor.posicioAudio', 'Pista {actual} de {total}'],
+  enDirecte: ['veu.reproductor.enDirecte', 'Ràdio de Poble · En directe'],
   senseVeu: ['veu.reproductor.senseVeu', 'Este navegador no pot llegir la pàgina en veu alta ara mateix.'],
+  senseAudio: ['veu.reproductor.senseAudio', 'No s’ha pogut reproduir esta pista d’àudio ara mateix.'],
   buit: ['veu.reproductor.buit', 'Esta pàgina no té cap paràgraf disponible per a llegir en veu alta.'],
 });
 
@@ -49,9 +67,40 @@ function formatPosicio(plantilla, actual, total) {
     .replace('{total}', String(total));
 }
 
-function esVistaCompacta(arrelAncora) {
-  const sdpRoot = arrelAncora?.closest?.('.sdp-root') || globalThis.document?.querySelector?.('.sdp-root');
-  return Boolean(sdpRoot?.classList?.contains?.('is-compact'));
+function trobaSdpRoot(ancora) {
+  return ancora?.closest?.('.sdp-root') || globalThis.document?.querySelector?.('.sdp-root') || null;
+}
+
+function destiDelReproductor(ancora) {
+  return trobaSdpRoot(ancora) || capaDeDalt(ancora);
+}
+
+function esVistaCompacta(ancora) {
+  return Boolean(trobaSdpRoot(ancora)?.classList?.contains?.('is-compact'));
+}
+
+function normalitzaPistesFontSo(fontSo) {
+  if (!fontSo || !Array.isArray(fontSo.pistes) || fontSo.pistes.length === 0) return null;
+  const emissio = typeof fontSo.titolEmissio === 'string' ? fontSo.titolEmissio.trim() : '';
+  return fontSo.pistes
+    .filter((p) => p && (typeof p.titol === 'string' || typeof p.text === 'string'))
+    .map((pista, idx) => {
+      const titol = String(pista.titol || pista.text || `Pista ${idx + 1}`).trim();
+      const subtitol = String(pista.subtitol || emissio || '').trim();
+      const text = String(pista.text || titol).trim();
+      const srcAudio = typeof pista.src === 'string' && pista.src.trim() ? resolveAsset(pista.src.trim()) : null;
+      return {
+        index: idx,
+        id: String(pista.id || `pista-${idx}`),
+        etiqueta: srcAudio ? 'audio' : 'p',
+        esTitol: Boolean(pista.esCapitol),
+        seccioTitol: subtitol,
+        resumCurt: titol,
+        text,
+        srcAudio,
+        element: null,
+      };
+    });
 }
 
 export function BarraReproductorVeu({
@@ -60,7 +109,12 @@ export function BarraReproductorVeu({
   cosRef = null,
   idioma = 'ca',
   privat = false,
+  fontSo = null,
   botoActivadorRef = null,
+  /* Control que ha obert el reproductor (p. ex. «Tria esta veu»): hi torna el focus en tancar. */
+  invocadorRef = null,
+  /* Amb false, l'avanç automàtic de bloc no desplaça la pàgina (la persona es queda on és). */
+  seguixLectura = true,
   onTanca = null,
   onCanviEstat = null,
   /* Per a l'espècimen del catàleg Pedra Seca (/disseny): es pinta al flux sense portal ni auto-reproducció forçada. */
@@ -71,10 +125,23 @@ export function BarraReproductorVeu({
   const idBase = useId();
   const idPanellSalt = `${idBase}-salt`;
   const barraRef = useRef(null);
+  useFullDiferit(barraRef, 'barra-veu', cssBarraVeu);
+  const audioFontRef = useRef(null);
+  const pistaAudioCarregadaRef = useRef('');
+
+  /* Onada R28 (revisió adversarial, P3) · Les pistes es memoritzen pel contingut, no per la identitat de l'objecte:
+     un pare que passe fontSo com a literal nou a cada render no ha de tornar la Ràdio a la pista 1. */
+  const signaturaFontSo = useMemo(() => {
+    const pistes = normalitzaPistesFontSo(fontSo);
+    return pistes ? JSON.stringify([fontSo?.tipus, fontSo?.enDirecte, pistes.map((p) => [p.id, p.resumCurt, p.seccioTitol, p.text, p.srcAudio, p.esTitol])]) : '';
+  }, [fontSo]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- es recalcula només quan canvia la signatura del contingut
+  const pistesFontSo = useMemo(() => normalitzaPistesFontSo(fontSo), [signaturaFontSo]);
+  const esFontAudio = Boolean(fontSo?.tipus === 'audio' && pistesFontSo?.some((p) => Boolean(p.srcAudio)));
 
   const [destiPortal, setDestiPortal] = useState(null);
   const [compacte, setCompacte] = useState(false);
-  const [blocs, setBlocs] = useState(() => (Array.isArray(blocsMostra) ? blocsMostra : []));
+  const [blocs, setBlocs] = useState(() => (pistesFontSo || (Array.isArray(blocsMostra) ? blocsMostra : [])));
   const [indexActual, setIndexActual] = useState(0);
   /* 'parlant' | 'pausat' | 'acabat' | 'error' */
   const [estat, setEstat] = useState(() => (mostraEspecimen ? 'pausat' : 'parlant'));
@@ -90,52 +157,168 @@ export function BarraReproductorVeu({
   const indexRef = useRef(0);
   const blocsRef = useRef(blocs);
   const estatRef = useRef(estat);
+  const obertaRef = useRef(oberta);
   const ressaltatDomRef = useRef(null);
   const timerCopiatRef = useRef(null);
+  /* En ref i no en les dependències del motor: canviar-lo no ha de reiniciar el bloc que sona. */
+  const seguixLecturaRef = useRef(seguixLectura);
 
   blocsRef.current = blocs;
   indexRef.current = indexActual;
   estatRef.current = estat;
+  obertaRef.current = oberta;
+  seguixLecturaRef.current = seguixLectura;
 
   useEffect(() => {
-    onCanviEstat?.({ oberta, parlant: oberta && estat === 'parlant', estat, indexActual, total: blocs.length });
-  }, [oberta, estat, indexActual, blocs.length, onCanviEstat]);
+    onCanviEstat?.({
+      oberta,
+      parlant: oberta && estat === 'parlant',
+      estat,
+      indexActual,
+      total: blocs.length,
+      tipusFont: esFontAudio ? 'audio' : 'lectura',
+    });
+  }, [oberta, estat, indexActual, blocs.length, esFontAudio, onCanviEstat]);
 
-  /* Observa `.sdp-root.is-compact` perquè la barra portalitzada sàpia sempre si `nav.mobile-nav` és present. */
+  /* Portal dins `.sdp-root` (o `capaDeDalt`) i marca `data-sdp-veu-oberta` per a no xocar amb `.sdp-tornar-dalt`. */
   useLayoutEffect(() => {
     if (!oberta || mostraEspecimen) {
       setDestiPortal(null);
       return undefined;
     }
     const ancora = cosRef?.current || capcaleraRef?.current || botoActivadorRef?.current || null;
-    setDestiPortal(capaDeDalt(ancora));
-    const sdpRoot = ancora?.closest?.('.sdp-root') || globalThis.document?.querySelector?.('.sdp-root');
+    const desti = destiDelReproductor(ancora);
+    setDestiPortal(desti);
+    const sdpRoot = trobaSdpRoot(ancora);
+    if (sdpRoot) {
+      sdpRoot.setAttribute('data-sdp-veu-oberta', 'true');
+    }
     const actualitzaCompacte = () => setCompacte(esVistaCompacta(ancora));
     actualitzaCompacte();
-    if (!sdpRoot || typeof MutationObserver !== 'function') return undefined;
-    const obs = new MutationObserver(actualitzaCompacte);
-    obs.observe(sdpRoot, { attributes: true, attributeFilter: ['class', 'data-sdp-immersiu'] });
-    return () => obs.disconnect();
+    let obs = null;
+    if (sdpRoot && typeof MutationObserver === 'function') {
+      obs = new MutationObserver(actualitzaCompacte);
+      obs.observe(sdpRoot, { attributes: true, attributeFilter: ['class', 'data-sdp-immersiu', 'data-sdp-barres'] });
+    }
+    return () => {
+      obs?.disconnect();
+      if (sdpRoot) {
+        sdpRoot.removeAttribute('data-sdp-veu-oberta');
+      }
+    };
   }, [oberta, mostraEspecimen, cosRef, capcaleraRef, botoActivadorRef]);
+
+  /* IDEA-268 · Centrat geomètric mil·limètric respecte del panell de lectura actiu
+     (escriptori amb barra lateral oberta/tancada, Workspace de 3 columnes i mòbil). */
+  useLayoutEffect(() => {
+    if (!oberta || mostraEspecimen || !destiPortal) return undefined;
+    const ancora = cosRef?.current || capcaleraRef?.current || botoActivadorRef?.current || null;
+    const panell = ancora?.closest?.('.sdp-universal-page-container, .sdp-workspace-detail, .app-main__content, main.app-main') || null;
+    const sdpRoot = trobaSdpRoot(ancora);
+    const sidebar = sdpRoot?.querySelector?.('nav.app-sidebar') || null;
+
+    const actualitzaGeometria = () => {
+      const barraEl = barraRef.current;
+      if (!barraEl || typeof destiPortal.getBoundingClientRect !== 'function') return;
+      const rBarra = barraEl.getBoundingClientRect();
+      if (sdpRoot && rBarra.height > 0) {
+        sdpRoot.style.setProperty('--barra-veu-alcada', `${Math.ceil(rBarra.height)}px`);
+      }
+      if (!panell || typeof panell.getBoundingClientRect !== 'function') {
+        barraEl.style.removeProperty('--barra-veu-inici');
+        barraEl.style.removeProperty('--barra-veu-fi');
+        return;
+      }
+      const rArrel = destiPortal.getBoundingClientRect();
+      const rPanell = panell.getBoundingClientRect();
+      if (rArrel.width <= 0 || rPanell.width <= 0) return;
+      const inici = Math.max(0, Math.round(rPanell.left - rArrel.left));
+      const fi = Math.max(0, Math.round(rArrel.right - rPanell.right));
+      barraEl.style.setProperty('--barra-veu-inici', `${inici}px`);
+      barraEl.style.setProperty('--barra-veu-fi', `${fi}px`);
+    };
+
+    actualitzaGeometria();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(actualitzaGeometria) : null;
+    if (ro) {
+      ro.observe(destiPortal);
+      if (barraRef.current) ro.observe(barraRef.current);
+      if (panell) ro.observe(panell);
+      if (sidebar) ro.observe(sidebar);
+    }
+    let mo = null;
+    if (sdpRoot && typeof MutationObserver === 'function') {
+      mo = new MutationObserver(actualitzaGeometria);
+      mo.observe(sdpRoot, { attributes: true, attributeFilter: ['class'] });
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', actualitzaGeometria, { passive: true });
+    }
+    return () => {
+      ro?.disconnect();
+      mo?.disconnect();
+      if (sdpRoot) {
+        sdpRoot.style.removeProperty('--barra-veu-alcada');
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', actualitzaGeometria);
+      }
+    };
+  }, [oberta, mostraEspecimen, destiPortal, cosRef, capcaleraRef, botoActivadorRef]);
+
+  /* Represa única (Play i canvi de veu en calent): si la lectura ja havia acabat
+     torna al bloc 0, i sempre neteja l'avís d'estat anterior (error o copiat). */
+  const reprenLectura = useCallback(() => {
+    if (estatRef.current === 'acabat') {
+      indexRef.current = 0;
+      pistaAudioCarregadaRef.current = '';
+      setIndexActual(0);
+    }
+    setMissatgeEstat('');
+    setEstat('parlant');
+  }, []);
 
   /* Subscripció a canvis de veu preferida (MenuTraduir o banc de veus): actualitza en calent sense perdre el bloc! */
   useEffect(() => serveiVeu.subscriuVeuPreferida((novaVeu) => {
     setClauVeuActiva(novaVeu);
-  }), []);
+    if (!mostraEspecimen && !esFontAudio && obertaRef.current && blocsRef.current.length > 0 && estatRef.current !== 'parlant') {
+      reprenLectura();
+    }
+  }), [mostraEspecimen, esFontAudio, reprenLectura]);
 
-  /* Re-indexa els blocs quan s'obri el reproductor o quan canvia l'idioma/vista traduïda. */
+  /* Pistes d'una font d'àudio: només es tornen a carregar (i a sonar des de la
+     primera) quan s'obri el reproductor o quan canvien les pistes mateixes, mai
+     per un canvi d'idioma, de traductor o de cos de la pàgina. */
+  useEffect(() => {
+    if (!oberta || !pistesFontSo) return;
+    setBlocs(pistesFontSo);
+    setIndexActual(0);
+    indexRef.current = 0;
+    pistaAudioCarregadaRef.current = '';
+    setMissatgeEstat('');
+    if (!mostraEspecimen) setEstat('parlant');
+  }, [oberta, pistesFontSo, mostraEspecimen]);
+
+  /* Re-indexa els blocs de lectura quan s'obri el reproductor o quan canvia l'idioma/vista traduïda. */
   useEffect(() => {
     if (!oberta) {
       sessioIdRef.current += 1;
       serveiVeu.atura();
+      if (audioFontRef.current) {
+        try { audioFontRef.current.pause(); } catch { /* ignorat */ }
+      }
+      pistaAudioCarregadaRef.current = '';
       ressaltatDomRef.current = marcaBlocActiuDom(ressaltatDomRef.current, null);
       setPanellSaltObert(false);
       setCercaText('');
       return;
     }
+    /* La font d'àudio la governa l'efecte de les pistes, d'ací dalt. */
+    if (pistesFontSo) return;
     if (Array.isArray(blocsMostra)) {
       setBlocs(blocsMostra);
       setIndexActual(0);
+      indexRef.current = 0;
       return;
     }
     const extrets = extreuBlocsLecturaVeu({
@@ -154,29 +337,100 @@ export function BarraReproductorVeu({
     if (!mostraEspecimen) {
       setEstat('parlant');
     }
-  }, [oberta, idioma, capcaleraRef, cosRef, blocsMostra, mostraEspecimen, t]);
+  }, [oberta, idioma, capcaleraRef, cosRef, pistesFontSo, blocsMostra, mostraEspecimen, t]);
 
   /* Neteja garantida en desmuntar. */
   useEffect(() => () => {
     sessioIdRef.current += 1;
     clearTimeout(timerCopiatRef.current);
     if (!mostraEspecimen) serveiVeu.atura();
+    if (audioFontRef.current) {
+      try { audioFontRef.current.pause(); } catch { /* ignorat */ }
+    }
     ressaltatDomRef.current = marcaBlocActiuDom(ressaltatDomRef.current, null);
   }, [mostraEspecimen]);
 
-  /* Ressaltat suau del bloc actiu al DOM mientras el reproductor és obert. */
+  /* Ressaltat suau del bloc actiu al DOM mentre el reproductor és obert en mode lectura. */
   useEffect(() => {
-    if (!oberta || mostraEspecimen || blocs.length === 0) {
+    if (!oberta || mostraEspecimen || esFontAudio || blocs.length === 0) {
       ressaltatDomRef.current = marcaBlocActiuDom(ressaltatDomRef.current, null);
       return;
     }
     const actual = blocs[indexActual]?.element || null;
     ressaltatDomRef.current = marcaBlocActiuDom(ressaltatDomRef.current, actual);
-  }, [oberta, mostraEspecimen, blocs, indexActual]);
+  }, [oberta, mostraEspecimen, esFontAudio, blocs, indexActual]);
 
-  /* Motor seqüencial determinista: quan `estat === 'parlant'`, llig des d'`indexRef.current` fins al final. */
+  /* Motor d'àudio dedicat quan `fontSo.tipus === 'audio'` (Ràdio de Poble / pistes d'àudio). */
   useEffect(() => {
-    if (!oberta || estat !== 'parlant' || blocs.length === 0) return undefined;
+    if (!oberta || !esFontAudio || blocs.length === 0) return undefined;
+    const elAudio = audioFontRef.current;
+    if (!elAudio) return undefined;
+
+    if (estat !== 'parlant') {
+      try { elAudio.pause(); } catch { /* ignorat */ }
+      return undefined;
+    }
+
+    let i = indexRef.current;
+    if (i < 0 || i >= blocs.length) {
+      i = 0;
+      indexRef.current = 0;
+      setIndexActual(0);
+    }
+    const pista = blocs[i];
+    if (!pista?.srcAudio) {
+      setEstat('error');
+      setMissatgeEstat(tradueix(t, TEXTOS.senseAudio));
+      return undefined;
+    }
+
+    if (pistaAudioCarregadaRef.current !== pista.srcAudio) {
+      elAudio.src = pista.srcAudio;
+      pistaAudioCarregadaRef.current = pista.srcAudio;
+    }
+
+    let cancelat = false;
+    const onEnded = () => {
+      if (cancelat) return;
+      const seguent = indexRef.current + 1;
+      if (seguent < blocsRef.current.length) {
+        indexRef.current = seguent;
+        pistaAudioCarregadaRef.current = '';
+        setIndexActual(seguent);
+        setCicleCua((n) => n + 1);
+      } else {
+        setEstat('acabat');
+      }
+    };
+    const onError = () => {
+      if (cancelat) return;
+      setEstat('error');
+      setMissatgeEstat(tradueix(t, TEXTOS.senseAudio));
+    };
+
+    elAudio.addEventListener('ended', onEnded);
+    elAudio.addEventListener('error', onError);
+
+    const promesa = elAudio.play?.();
+    if (promesa && typeof promesa.catch === 'function') {
+      promesa.catch(() => {
+        if (!cancelat) {
+          setEstat('error');
+          setMissatgeEstat(tradueix(t, TEXTOS.senseAudio));
+        }
+      });
+    }
+
+    return () => {
+      cancelat = true;
+      elAudio.removeEventListener('ended', onEnded);
+      elAudio.removeEventListener('error', onError);
+    };
+  }, [oberta, esFontAudio, destiPortal, estat, cicleCua, blocs, t]);
+
+  /* Motor seqüencial determinista de lectura de blocs [0..N-1] quan no és una font d'àudio externa. */
+  useEffect(() => {
+    if (!oberta || esFontAudio || estat !== 'parlant' || blocs.length === 0) return undefined;
     const idSessio = sessioIdRef.current + 1;
     sessioIdRef.current = idSessio;
     const control = new AbortController();
@@ -212,7 +466,7 @@ export function BarraReproductorVeu({
         }
         if (sessioIdRef.current !== idSessio || control.signal.aborted) return;
         i += 1;
-        if (i < blocs.length && !mostraEspecimen && blocs[i]?.element) {
+        if (i < blocs.length && !mostraEspecimen && seguixLecturaRef.current && blocs[i]?.element) {
           desplacaASeccio(blocs[i].element, { behavior: 'smooth', block: 'start' });
         }
       }
@@ -225,30 +479,40 @@ export function BarraReproductorVeu({
     return () => {
       control.abort();
     };
-  }, [oberta, estat, cicleCua, blocs, idioma, privat, clauVeuActiva, mostraEspecimen, t]);
+  }, [oberta, esFontAudio, estat, cicleCua, blocs, idioma, privat, clauVeuActiva, mostraEspecimen, t]);
 
   const alternaPausaContinua = useCallback(() => {
     if (blocsRef.current.length === 0) return;
     setMissatgeEstat('');
     if (estatRef.current === 'parlant') {
       sessioIdRef.current += 1;
-      serveiVeu.atura();
+      if (esFontAudio) {
+        try { audioFontRef.current?.pause(); } catch { /* ignorat */ }
+      } else {
+        serveiVeu.atura();
+      }
       setEstat('pausat');
       return;
     }
-    if (estatRef.current === 'acabat') {
-      indexRef.current = 0;
-      setIndexActual(0);
-    }
-    setEstat('parlant');
-  }, []);
+    reprenLectura();
+  }, [esFontAudio, reprenLectura]);
 
   const saltaABloc = useCallback((nouIndex, { tancaSelector = false } = {}) => {
     const total = blocsRef.current.length;
     if (total === 0) return;
     const desti = Math.min(Math.max(0, nouIndex), total - 1);
     sessioIdRef.current += 1;
-    serveiVeu.atura();
+    if (esFontAudio) {
+      try {
+        if (audioFontRef.current) {
+          audioFontRef.current.pause();
+          audioFontRef.current.currentTime = 0;
+        }
+      } catch { /* ignorat */ }
+      pistaAudioCarregadaRef.current = '';
+    } else {
+      serveiVeu.atura();
+    }
     indexRef.current = desti;
     setIndexActual(desti);
     setMissatgeEstat('');
@@ -259,10 +523,9 @@ export function BarraReproductorVeu({
     if (!mostraEspecimen && element) {
       desplacaASeccio(element, { behavior: 'smooth', block: 'start' });
     }
-    /* Incrementem `cicleCua` explícitament per re-disparar el motor seqüencial sense dependre de `queueMicrotask` ni del batching de React. */
     setCicleCua((n) => n + 1);
     setEstat('parlant');
-  }, [mostraEspecimen]);
+  }, [esFontAudio, mostraEspecimen]);
 
   const copiaFragmentActual = useCallback(async () => {
     const bloc = blocsRef.current[indexRef.current];
@@ -290,16 +553,30 @@ export function BarraReproductorVeu({
     const focusDins = Boolean(barraRef.current && arrelDoc?.activeElement && barraRef.current.contains(arrelDoc.activeElement));
     sessioIdRef.current += 1;
     serveiVeu.atura();
+    if (audioFontRef.current) {
+      try { audioFontRef.current.pause(); } catch { /* ignorat */ }
+    }
+    pistaAudioCarregadaRef.current = '';
     ressaltatDomRef.current = marcaBlocActiuDom(ressaltatDomRef.current, null);
     setPanellSaltObert(false);
     setCercaText('');
+    /* El destí del focus es pren ABANS d'onTanca, que pot reiniciar la ref de
+       l'invocador. Primer el control que va obrir la barra (on és la persona);
+       si ja no és al document, el disparador de dalt sense desplaçar la pàgina. */
+    const invocador = invocadorRef?.current || null;
+    const tornaAInvocador = Boolean(invocador?.isConnected && typeof invocador.focus === 'function');
+    const desti = tornaAInvocador ? invocador : botoActivadorRef?.current || null;
     onTanca?.();
-    if (focusDins && botoActivadorRef?.current) {
+    if (focusDins && desti) {
       queueMicrotask(() => {
-        botoActivadorRef.current?.focus?.();
+        if (tornaAInvocador) {
+          desti.focus?.();
+        } else {
+          desti.focus?.({ preventScroll: true });
+        }
       });
     }
-  }, [onTanca, botoActivadorRef]);
+  }, [onTanca, botoActivadorRef, invocadorRef]);
 
   const blocsFiltrats = useMemo(() => {
     const q = cercaText.trim().toLowerCase();
@@ -316,8 +593,13 @@ export function BarraReproductorVeu({
   const total = blocs.length;
   const blocActiu = blocs[indexActual] || null;
   const parlant = estat === 'parlant';
+  const etiquetaRegio = esFontAudio
+    ? (fontSo?.titolEmissio || tradueix(t, TEXTOS.regioAudio))
+    : tradueix(t, TEXTOS.regio);
   const etiquetaPosicio = total > 0
-    ? formatPosicio(tradueix(t, TEXTOS.posicio), indexActual + 1, total)
+    ? (esFontAudio && fontSo?.enDirecte
+      ? tradueix(t, TEXTOS.enDirecte)
+      : formatPosicio(tradueix(t, esFontAudio ? TEXTOS.posicioAudio : TEXTOS.posicio), indexActual + 1, total))
     : '';
   const etiquetaPlay = parlant
     ? tradueix(t, TEXTOS.pausa)
@@ -330,10 +612,15 @@ export function BarraReproductorVeu({
       ref={barraRef}
       className={mostraEspecimen ? 'sdp-barra-veu sdp-barra-veu--especimen' : 'sdp-barra-veu'}
       data-compacte={!mostraEspecimen && compacte ? 'true' : undefined}
+      data-font-so={esFontAudio ? 'audio' : 'lectura'}
       data-sdp-no-locutar=""
       translate="no"
-      aria-label={tradueix(t, TEXTOS.regio)}
+      aria-label={etiquetaRegio}
     >
+      {esFontAudio ? (
+        <audio ref={audioFontRef} preload="none" hidden />
+      ) : null}
+
       {panellSaltObert && total > 0 ? (
         <div id={idPanellSalt} className="sdp-barra-veu__panell-salt">
           <div className="sdp-barra-veu__cerca-fila">
@@ -351,24 +638,26 @@ export function BarraReproductorVeu({
                 placeholder={tradueix(t, TEXTOS.cercaPlaceholder)}
               />
             </div>
-            <div className="sdp-barra-veu__filtres" role="group" aria-label={tradueix(t, TEXTOS.apartats)}>
-              <button
-                type="button"
-                className={filtreSalt === 'tots' ? 'sdp-barra-veu__pindola sdp-barra-veu__pindola--activa' : 'sdp-barra-veu__pindola'}
-                aria-pressed={filtreSalt === 'tots'}
-                onClick={() => setFiltreSalt('tots')}
-              >
-                {tradueix(t, TEXTOS.totsElsBlocs)}
-              </button>
-              <button
-                type="button"
-                className={filtreSalt === 'titols' ? 'sdp-barra-veu__pindola sdp-barra-veu__pindola--activa' : 'sdp-barra-veu__pindola'}
-                aria-pressed={filtreSalt === 'titols'}
-                onClick={() => setFiltreSalt('titols')}
-              >
-                {tradueix(t, TEXTOS.nomesTitols)}
-              </button>
-            </div>
+            {!esFontAudio ? (
+              <div className="sdp-barra-veu__filtres" role="group" aria-label={tradueix(t, TEXTOS.apartats)}>
+                <button
+                  type="button"
+                  className={filtreSalt === 'tots' ? 'sdp-barra-veu__pindola sdp-barra-veu__pindola--activa' : 'sdp-barra-veu__pindola'}
+                  aria-pressed={filtreSalt === 'tots'}
+                  onClick={() => setFiltreSalt('tots')}
+                >
+                  {tradueix(t, TEXTOS.totsElsBlocs)}
+                </button>
+                <button
+                  type="button"
+                  className={filtreSalt === 'titols' ? 'sdp-barra-veu__pindola sdp-barra-veu__pindola--activa' : 'sdp-barra-veu__pindola'}
+                  aria-pressed={filtreSalt === 'titols'}
+                  onClick={() => setFiltreSalt('titols')}
+                >
+                  {tradueix(t, TEXTOS.nomesTitols)}
+                </button>
+              </div>
+            ) : null}
           </div>
 
           {blocsFiltrats.length === 0 ? (
@@ -403,7 +692,11 @@ export function BarraReproductorVeu({
       <div className="sdp-barra-veu__cap">
         <div className="sdp-barra-veu__resum">
           <span className="sdp-barra-veu__meta">
-            <Volume2 size={16} aria-hidden="true" focusable="false" />
+            {esFontAudio ? (
+              <Radio size={16} aria-hidden="true" focusable="false" />
+            ) : (
+              <Volume2 size={16} aria-hidden="true" focusable="false" />
+            )}
             <span>{etiquetaPosicio}</span>
             {blocActiu?.seccioTitol ? (
               <span className="sdp-barra-veu__seccio">· {blocActiu.seccioTitol}</span>

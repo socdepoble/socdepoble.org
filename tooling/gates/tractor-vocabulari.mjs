@@ -45,7 +45,14 @@ const FULLS_CANONICS = [
   'src/css/components.css',
   'src/css/utilities.css', 'src/css/wiki.css',
   /* Ordre del Mestre (31-10-2026, prompt 2208, T3.1) · el Quadre de Comandament. */
-  'src/css/taulers.css'
+  'src/css/taulers.css',
+  /* Onada R28 · D-R27-1, opció (b) aprovada pel Mestre (pla 261115_0135 §1) · fulls diferits: són vocabulari
+     canònic, però no entren a index.css; la peça que els usa els adopta en muntar-se (src/config/fullDiferit.js). */
+  'src/css/diferit-selector-opcions.css',
+  'src/css/diferit-especimens.css',
+  'src/css/diferit-barra-veu.css',
+  'src/css/diferit-joc-parla.css',
+  'src/css/diferit-refranyer.css'
 ];
 
 /**

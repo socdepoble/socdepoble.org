@@ -58,6 +58,18 @@ const PRIMITIVES_PERMESES = ['aBase64url', 'deBase64url', 'errorAmbCodi'];
 /* Al graf de producció, a més de les primitives: el canal lateral dels serveis (un WeakMap) i
    l'oblit en eixir de la sessió (guardat per la bandera, no importa el motor). */
 const PERMESOS_APP = /[\\/]data[\\/](xifratXatCripto|xifratXatServei|xifratXatEixida)\.js$/;
+/* Onada R28 (Lot C3) · El motor de la còpia `.sdpbackup` (no és el xifratge del xat: PBKDF2 + AES-GCM d'un arxiu
+   que la persona guarda) entra al graf de producció amb la pàgina «Còpia de seguretat» dels Ajustos del Xat, i
+   només per un tros mandrós. Les primitives que hi porta són les que importa i res més; la resta del graf continua
+   tancada a PRIMITIVES_PERMESES (es compila amb el motor de còpia fora). */
+const MOTOR_COPIA = /[\\/]data[\\/]xat[\\/]copiaSeguretatPortatil\.js$/;
+const PRIMITIVES_COPIA = [
+  'BYTES_ETIQUETA', 'BYTES_IV', 'aBase64url', 'aleatori', 'deBase64url', 'derivaBitsHkdf', 'desxifraAesGcm', 'exigixCripto',
+  'exportaPublica', 'generaParellaDh', 'importaClauHkdf', 'infoHkdf', 'jwkDePublica', 'kekPbkdf2', 'midaPadme', 'publicaDeJwk',
+  'secretDh', 'sha256', 'xifraAesGcm',
+  /* Les constants que kekPbkdf2 usa per dins (la sal de 16 bytes i els límits d'iteracions del PBKDF2). */
+  'BYTES_SAL', 'ITERACIONS_KDF', 'MAX_ITERACIONS', 'MIN_ITERACIONS_PROVES'
+];
 const MAGIES = /["'`]SDP[A-Z]["'`]/g;
 /* La importació de les dues constants del mòdul neutral, que la sonda reescriu. */
 const IMPORT_NEUTRAL = /import \{([^}]*)\} from '\.\.\/xatMultimedia\.js';/;
@@ -77,7 +89,7 @@ const SOSTRE_BLOB = /MAXIM_BLOB_ADJUNT(?:\$\d+)? = (?:2e7|20_?000_?000);/;
 /* Bolca o no: un import absolut o relatiu és nostre (dins); un paquet de npm, fora. */
 const esPaquet = (id, importador) => Boolean(importador) && !id.startsWith('.') && !path.isAbsolute(id) && !id.startsWith('\0');
 
-async function compila({ entrada = ADAPTADOR, sonda = false, encesa = false, uiFora = false } = {}) {
+async function compila({ entrada = ADAPTADOR, sonda = false, encesa = false, uiFora = false, copiaFora = false } = {}) {
   const abans = process.env.NODE_ENV;
   process.env.NODE_ENV = 'production';
   let sondejat = false;
@@ -111,7 +123,8 @@ async function compila({ entrada = ADAPTADOR, sonda = false, encesa = false, uiF
         write: false,
         minify: false,
         lib: { entry: path.join(ARREL, entrada), formats: ['es'], fileName: 'sonda' },
-        rollupOptions: { external: (id, importador) => esPaquet(id, importador) || (uiFora && Boolean(importador) && UI.test(id)) }
+        rollupOptions: { external: (id, importador) => esPaquet(id, importador) || (uiFora && Boolean(importador) && UI.test(id))
+          || (copiaFora && Boolean(importador) && /(?:^|[\\/])copiaSeguretatPortatil\.js$/.test(id)) }
       }
     });
     if ((sonda || encesa) && !sondejat) throw new Error(`La sonda no ha trobat el seu fitxer al graf de ${entrada}.`);
@@ -126,7 +139,10 @@ async function compila({ entrada = ADAPTADOR, sonda = false, encesa = false, uiF
         if (PRIMITIVES.test(id)) for (const nom of m.renderedExports) exportsPrimitives.add(nom);
       }
     }
-    return { codi: trossos.map((o) => o.code).join('\n'), moduls, exportsPrimitives: [...exportsPrimitives].sort() };
+    /* Els trossos que porten codi del motor de còpia, i si algun és el d'entrada. */
+    const trossosCopia = trossos.filter((t) => Object.entries(t.modules).some(([id, m]) => MOTOR_COPIA.test(id) && m.renderedLength > 0))
+      .map((t) => ({ nom: t.fileName, entrada: t.isEntry }));
+    return { codi: trossos.map((o) => o.code).join('\n'), moduls, exportsPrimitives: [...exportsPrimitives].sort(), trossosCopia };
   } finally {
     if (abans === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = abans;
@@ -173,7 +189,8 @@ describe('el paquet de producció, amb la bandera apagada, no porta el motor ni 
   }, 60000);
 
   test('graf de producció (main.jsx): només les peces neutrals del xifratge hi deixen codi; cap màgia ni rastre', async () => {
-    const { codi, moduls, exportsPrimitives } = await compila({ entrada: APP });
+    /* Onada R28 · Amb el motor de la còpia `.sdpbackup` fora: el trinquet de les primitives continua sent el de B2e. */
+    const { codi, moduls, exportsPrimitives } = await compila({ entrada: APP, copiaFora: true });
     /* La prova local de FEDI-07 és DEV: ni tan sols la seua UI entra al paquet. */
     expect(ambCodi(moduls, LABORATORI_UI)).toEqual([]);
     expect(ambCodi(moduls, XIFRATGE).filter((id) => !PERMESOS_APP.test(id))).toEqual([]);
@@ -183,6 +200,17 @@ describe('el paquet de producció, amb la bandera apagada, no porta el motor ni 
     /* Control de no buidor: l'amfitrió i el transport de l'adaptador (import dinàmic) hi són. */
     expect(ambCodi(moduls, ES_HOST)).toEqual([HOST]);
     expect(ambCodi(moduls, TRANSPORT)).toEqual(['src/data/supabase/xatXifrat.js']);
+  }, 60000);
+
+  test('Onada R28 · graf sencer (main.jsx): el motor de la còpia `.sdpbackup` hi entra només per un tros mandrós, amb les seues primitives i cap rastre del protocol', async () => {
+    const { codi, moduls, exportsPrimitives, trossosCopia } = await compila({ entrada: APP });
+    expect(ambCodi(moduls, MOTOR_COPIA)).toEqual(['src/data/xat/copiaSeguretatPortatil.js']);
+    expect(trossosCopia.length).toBeGreaterThan(0);
+    expect(trossosCopia.filter((t) => t.entrada)).toEqual([]);
+    expect(ambCodi(moduls, XIFRATGE).filter((id) => !PERMESOS_APP.test(id))).toEqual([]);
+    expect(fora(exportsPrimitives, [...PRIMITIVES_PERMESES, ...PRIMITIVES_COPIA])).toEqual([]);
+    expect(magies(codi)).toEqual([]);
+    expect(trobats(codi, RASTRES)).toEqual([]);
   }, 60000);
 
   test('control positiu: amb la bandera encesa, el graf de host.js porta el decorador, el motor, el protocol i els formats', async () => {

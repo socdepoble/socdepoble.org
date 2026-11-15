@@ -28,7 +28,16 @@ describe('La Veu de Sóc de Poble · vocabulari canònic, OpenGraph, Node 0 a la
 
     expect(corpus).not.toMatch(/\bdel poble\b/i);
     expect(corpus).not.toMatch(/\bdels pobles\b/i);
-    expect(corpus).not.toMatch(/sobir[aà]|sobirania|soberan[oaí]|sovereign/i);
+    expect(corpus).not.toMatch(/sobir[aà]|sobirania|soberan[oaí]|sovereign|burujabe/i);
+
+    for (const lang of ['ca', 'es', 'en', 'eu', 'gl']) {
+      const trad = LA_VEU_DE_SOC_DE_POBLE_COPY[lang];
+      expect(trad, `Falta traducció ${lang}`).toBeTruthy();
+      const h3s = [...trad.html.matchAll(/<h3>/g)];
+      expect(h3s, `Paritat 6 seccions H3 en ${lang}`).toHaveLength(6);
+      expect(trad.html).toContain('data-sdp-targeta="pagina:node-zero"');
+      expect(trad.html).toContain('https://socdepoble.cat/api/v1/node0/veu');
+    }
   });
 
   test('resol l’àlies /page/la-veu-de-soc-de-poble i servix la variant JPEG baseline 1200x630 per a WhatsApp', () => {

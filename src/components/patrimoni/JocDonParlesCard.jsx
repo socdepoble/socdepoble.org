@@ -24,6 +24,9 @@ import {
   Volume2,
 } from 'lucide-react';
 import { Boto } from '../PedraSeca/atoms/Boto.jsx';
+/* Onada R28 · D-R27-1 (opció b) · L'estil de la peça no viatja a l'arrencada: s'adopta en pintar-se. */
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssJocParla from '../../css/diferit-joc-parla.css?inline';
 import { Alerta } from '../PedraSeca/molecules/Alerta.jsx';
 import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
 import { desplacaASeccio } from '../universal/PageFrame.jsx';
@@ -112,6 +115,7 @@ export function JocDonParlesCard() {
   const idioma = useIdiomaActiu();
   const idBase = useId();
   const seccioJocRef = useRef(null);
+  useFullDiferit(seccioJocRef, 'joc-parla', cssJocParla);
   const [peticioScroll, setPeticioScroll] = useState(null);
   const peticioScrollAtesaRef = useRef(null);
 

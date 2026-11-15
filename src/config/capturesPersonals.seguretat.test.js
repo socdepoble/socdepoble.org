@@ -44,8 +44,12 @@ describe('Captures amb dades personals de tercers fora del repositori (P0 R15)',
     for (const cami of [...CAPTURES_261106, ...futures]) {
       expect(spawnSync('git', ['check-ignore', '--no-index', '-q', cami]).status, cami).toBe(0);
     }
-    // Control: les regles no s'enduen captures de treball sense dades personals.
-    expect(spawnSync('git', ['check-ignore', '--no-index', '-q', `${DIR}/261106_1559_captura_pagina_versions_v110_pendent_sincronitzar_v120.png`]).status).toBe(1);
+    /* Control anterior: les cinc regles no s'enduien captures de treball sense dades personals.
+       Onada R28 · D-R27-4 (aprovat pel Mestre el 15-11-2026 a les 01:37) · Ara tota la zona humana 01_produccio/
+       queda fora de Git: també una captura de treball nova hi és ignorada. Les cinc regles personals es mantenen
+       per a la resta de la Wiki (control: una captura de treball fora de 01_produccio/ no s'ignora). */
+    expect(spawnSync('git', ['check-ignore', '--no-index', '-q', `${DIR}/261106_1559_captura_pagina_versions_v110_pendent_sincronitzar_v120.png`]).status).toBe(0);
+    expect(spawnSync('git', ['check-ignore', '--no-index', '-q', '_wiki_de_poble/04_escriptori/261201_0900_captura_pagina_versions.png']).status).toBe(1);
   });
 
   test('cap captura personal no és alhora a l’índex i al disc: si hi és, git rm --cached abans del commit', (context) => {

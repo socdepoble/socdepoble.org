@@ -1,0 +1,272 @@
+/* Full diferit (Onada R28 · D-R27-1, opció b aprovada pel Mestre): les regles de .sdp-joc-parla ixen de
+   l'arrencada del paquet de WordPress i s'adopten a l'arrel on es munta la peça (src/config/fullDiferit.js).
+   NO s'importa des d'index.css. Origen: components.css. */
+@layer components {
+  .sdp-joc-parla__opcio--viva {
+    border-style: dashed;
+    border-color: var(--sdp-accio-control);
+  }
+  .sdp-joc-parla__opcio-cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    inline-size: 100%;
+  }
+  .sdp-joc-parla__opcio-vots {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-accent-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-joc-parla__consens-caixa {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-joc-parla__consens-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-joc-parla__consens-titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-negreta);
+  }
+  .sdp-joc-parla__consens-xat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-accent-text);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+    text-decoration: none;
+  }
+  .sdp-joc-parla__consens-xat:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  .sdp-joc-parla__consens-resum {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-joc-parla__fila-territori {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--sdp-space-3);
+  }
+  .sdp-joc-parla__enquesta-abast {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .sdp-joc-parla__enquesta-abast > legend {
+    padding: 0;
+    margin-block-end: var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-joc-parla__abast-opcions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-joc-parla__pindola-abast {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    cursor: pointer;
+  }
+  .sdp-joc-parla__pindola-abast--activa {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-weight: var(--sdp-pes-semi);
+  }
+
+  .sdp-joc-parla__pregunta-caixa,
+  .sdp-joc-parla__resultat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-joc-parla__progres-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-joc-parla__comptador {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-semi);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-joc-parla__barra-progres {
+    inline-size: 100%;
+    block-size: var(--sdp-space-2);
+    accent-color: var(--sdp-accio-control);
+  }
+  .sdp-joc-parla__enunciat {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    line-height: var(--sdp-leading-titol);
+  }
+  .sdp-joc-parla__opcions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--sdp-space-3);
+  }
+  .sdp-joc-parla__opcio {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--sdp-space-1);
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-3) var(--sdp-space-8);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-joc-parla__opcio--activa {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-subtil);
+    color: var(--sdp-text-titol);
+  }
+  .sdp-joc-parla__opcio-mot {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    font-weight: var(--sdp-pes-negreta);
+  }
+  .sdp-joc-parla__opcio-detall {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-joc-parla__resultat-destacat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-accent-subtil);
+  }
+  .sdp-joc-parla__resultat-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    color: var(--sdp-accent-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+  }
+  .sdp-joc-parla__resultat-comarca {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+  }
+  .sdp-joc-parla__resultat-pobles {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-joc-parla__resultat-descripcio {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    line-height: var(--sdp-leading-cos);
+  }
+  .sdp-joc-parla__subtitol-ranquing {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+  }
+  .sdp-joc-parla__ranquing-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-joc-parla__ranquing-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-joc-parla__ranquing-pct {
+    color: var(--sdp-text-suau);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-joc-parla__veu-caixa {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-joc-parla__veu-text {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-joc-parla__aportacio-bloc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    padding-block-start: var(--sdp-space-3);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  .sdp-joc-parla__formulari-ajuda {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-joc-parla__opcio:hover {
+      background: var(--sdp-fons-subtil);
+    }
+  }
+}

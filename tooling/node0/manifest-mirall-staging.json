@@ -3,11 +3,11 @@
   "files": [
     {
       "path": "src/components/universal/drets/llicencies.js",
-      "sha256": "5c7bf12460a1d98e4e9e9d105f842a8e902a029be3d5d1487d60940247a4cd3b"
+      "sha256": "1146776bdc76dc14cdb3181fac6f5f3dff8a6b91ecaf2d7be74bf4082d8dd125"
     },
     {
       "path": "src/components/universal/workspace/seleccioUrl.js",
-      "sha256": "6fbb1872324262845553322d516e06043ca20d3a35765ad9b67f46ee21d5565e"
+      "sha256": "ae625863d198971cf71d335d0a7cbebd9d08e7faa9cda500c5a1945bc0c12468"
     },
     {
       "path": "src/config/contrast.js",
@@ -19,7 +19,7 @@
     },
     {
       "path": "src/config/systemPages.js",
-      "sha256": "e5fd34a4c7cf92137b30e5d4870fb215d350a8d3ea2786dbdd1e58d4e731c671"
+      "sha256": "0e69b45e30e1f8b460fba70247f8d55f8d7a81b1e7ab7133a092a229c60d28d9"
     },
     {
       "path": "src/data/activitypub.js",
@@ -27,7 +27,7 @@
     },
     {
       "path": "src/data/contracte.js",
-      "sha256": "f5772bb2c7df82de1b857fcae6f06e3863610bfe582c38a3d6a3d178bf537c42"
+      "sha256": "dfe085b8a560b2420a559e2d9d440b033cbd19deda66498228b4247c82c612b4"
     },
     {
       "path": "src/data/dadesObertesLot.js",
@@ -35,7 +35,7 @@
     },
     {
       "path": "src/data/exportaMunicipiOpenData.js",
-      "sha256": "ad59e8eef02d36c5a8ac413289e71e06e55d29c71a54ddb1c6cd33803620d4fa"
+      "sha256": "d77cb301c4de3260423a20a705f136c3bd82f9c777f8e783193014cae3ca14cf"
     },
     {
       "path": "src/data/importaMunicipiOpenData.js",
@@ -63,11 +63,11 @@
     },
     {
       "path": "src/sections/pobles/nomsDelPoble.js",
-      "sha256": "0238811e6f42e610048106cb5189b08b351c366f02de1264e74ad25dc8c45d93"
+      "sha256": "92e11198e3bee58a294f37597873541dee3860915c9b5e6e2dd9a8e851057505"
     },
     {
       "path": "src/sections/pobles/townsSeed.js",
-      "sha256": "5d697f50cace7079b5bf805a86a3305bc51acb5e4f22471831b11d5751b156c7"
+      "sha256": "7857d76ba6bec05e1d079b5a55755bcdfb66cdd89429739d476b770d2b68ae99"
     },
     {
       "path": "src/utils/calendari.js",

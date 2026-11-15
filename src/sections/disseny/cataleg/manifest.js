@@ -73,7 +73,9 @@ export const ICONES_ESPECIMENS = Object.freeze({
     'visor-imatges': '📸',
     /* Pla 261101_1246 (T7 · S7) · el xifratge per conversa i «Persones de confiança» (maqueta). */
     'xat-seguretat': '🔐',
-    /* IDEA-255 (Onada R23 · 14-11-2026) · el reproductor flotant universal de veu de PageFrame. */
+    /* Onada R28 (pla 261115_0135, Lot C3) · les dos pàgines de la còpia de seguretat del Xat. */
+    'xat-copia-seguretat': '💾',
+    /* IDEA-255 (Onada R23 · 14-11-2026) + IDEA-268 (Onada R27 · 15-11-2026) · reproductor universal de so centrat i preparat per a Ràdio de Poble. */
     'barra-reproductor-veu': '🎧'
   }),
   inventari: Object.freeze({ global: '🗃️' }),
@@ -343,6 +345,11 @@ const SUPERPOSICIONS = [
   especimen('superposicions', 'xat-seguretat', 'Xat · Xifratge i número de seguretat', 'CosSeguretatXat · CosPersonesConfianca · AvisClauCanviada (P1-12, IDEA-48)', ['organisme', 'xat', 'dialeg', 'maqueta'],
     'Maqueta, encara no activa: el xifratge d’extrem a extrem del xat va darrere d’una bandera apagada i el xat, avui, no és xifrat. Quan s’encenga, cada conversa dirà què passa amb els seus missatges i, en un xat privat entre dues persones, el número de seguretat per a comparar i marcar com a verificat; i Privacitat i dades dirà quants contactes verificats tens per a les persones de confiança.',
     'xifratge numero seguretat verificat persones confianca recuperacio e2ee extrem a extrem'),
+  /* Onada R28 (pla 261115_0135, Lot C3; sdp-clon-whatsapp §4.4) · la còpia `.sdpbackup` dels Ajustos
+     del Xat, amb un motor de mostra al catàleg. */
+  especimen('superposicions', 'xat-copia-seguretat', 'Xat · Còpia de seguretat', 'CosCopiaSeguretatXat · PaginaCopiaSeguretatXat (Onada R28, Lot C3)', ['organisme', 'xat', 'formulari'],
+    'Les dos pàgines de «Còpia de seguretat» dels Ajustos del Xat: desar una còpia xifrada amb una contrasenya que tries tu, en un arxiu .sdpbackup, i comprovar-ne una en este dispositiu sense escriure res. Restaurar una còpia dins de l’app encara no és possible. Al catàleg, el motor és de mostra: no xifra res i no llig ni desa cap arxiu.',
+    'copia seguretat backup sdpbackup xifrada contrasenya desa comprova arxiu compartir descarrega restaurar'),
   /* T41 (ordre del Mestre, 260928) · pública o privada, amb avís. */
   especimen('superposicions', 'visibilitat', 'Selector de visibilitat', 'Pública o privada, amb avís (T41)', ['superposicio', 'visibilitat', 'publicar'],
     'La bola del món de la barra taronja i PUBLICAR obrin esta finestra, que explica les dues eixides i demana confirmació.',
@@ -482,9 +489,9 @@ CATALOG_ITEMS.push(
   especimen('formularis', 'traspas-copublicacio', 'Traspàs i co-publicació', 'Co-publicació registrada i traspàs en línia d’1 clic', ['organisme', 'autoria', 'copublicacio'],
     'La BarraTaronja amb avatar compost quadrangular d’estil grup de xat quan dos o més comptes registrats co-publiquen un recurs, la guarda contra actors no registrats i el panell inline d’1 clic per a superadmin.',
     'barra taronja copublicacio traspas autoria avatar compost mosaic entitats registrades superadmin inline PanellTraspasPublicacioInline AvatarCompostPublicadors'),
-  especimen('superposicions', 'barra-reproductor-veu', 'Reproductor flotant de veu', 'universal/veu/BarraReproductorVeu.jsx', ['organisme', 'veu', 'accessibilitat'],
-    'El mini-reproductor flotant que PageFrame obri en prémer «Escolta la IAIA» sota l’entradilla: avança o retrocedix per paràgrafs, pausa i continua al mateix bloc, salta per apartats o cerca al text, ressalta el paràgraf actiu i en copia el fragment.',
-    'veu iaia escolta reproductor flotant barra pausa continua apartats cerca copiar fragment pageframe matxa node0')
+  especimen('superposicions', 'barra-reproductor-veu', 'Reproductor universal de so', 'universal/veu/BarraReproductorVeu.jsx', ['organisme', 'veu', 'accessibilitat'],
+    'El reproductor flotant universal de so que PageFrame obri centrat sota el panell de lectura actiu (mòbil i escriptori) en prémer «Escolta la IAIA»: navega per paràgrafs sense perdre la pausa, ressalta el text actiu i admet fonts d’àudio (fontSo) per a la futura Ràdio de Poble.',
+    'veu iaia escolta reproductor universal so radio poble flotant barra centrat pausa continua apartats cerca copiar fragment pageframe matxa node0')
 );
 
 /* T52 (ordre del Mestre, 260928: «que quede clar quin és l'element universal
@@ -537,7 +544,7 @@ export const ARBRE_UNIVERSAL = Object.freeze([
   { id: 'barres', nom: 'BarraBlava i BarraTaronja', fitxer: 'src/components/universal/barres/', pare: 'page', item: 'fonaments-controls-barra',
     rol: 'header.bar-blue i section.bar-orange: components propis que PageFrame munta (T51), fets amb IconButton, ActionControl i DateTimeControl.' },
   { id: 'barra-veu', nom: 'BarraReproductorVeu', fitxer: 'src/components/universal/veu/BarraReproductorVeu.jsx', pare: 'page', item: 'superposicions-barra-reproductor-veu',
-    rol: 'El mini-reproductor flotant universal que PageFrame carrega en diferit quan es prem «Escolta la IAIA» sota .page-intro en una pàgina de lectura.' },
+    rol: 'El reproductor flotant universal de so que PageFrame carrega centrat sobre el panell de lectura en mòbil i escriptori (lectura per blocs i contracte fontSo per a Ràdio de Poble).' },
   { id: 'emoticona-barra', nom: 'EmoticonaBarra', fitxer: 'src/components/universal/EmoticonaBarra.jsx', pare: 'barres', item: 'fonaments-emoticona-barra',
     rol: 'L’espai central de la barra taronja: en edició, el botó d’emoticona (la ploma blanca mentre no n’hi ha cap); en lectura, l’emoticona triada o res.',
     consumidors: ['UniversalCard (la caputxa, només amb emoticona triada)'] },

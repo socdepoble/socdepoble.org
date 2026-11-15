@@ -1,0 +1,17 @@
+{
+  "id": "3d8a5d5e-2aaa-4376-80ac-a1ac0d34e610",
+  "session": "66c65010-2bf8-46c0-9d14-66ebe56bd26c",
+  "operationId": "r16b-retira-publica-tot-261110",
+  "claim": "66c65010-2bf8-46c0-9d14-66ebe56bd26c:governance-write",
+  "planHash": "a9603c35e65b3aa1e65e60e5179b3ea8c09c4a14a561ce2259b185c354655a2b",
+  "beforeSeal": "8549590f02ad01ace38f4d8c52b9e4e02e64bb69b65e7d19a3a3575dd924d389",
+  "files": [
+    {
+      "path": "scripts/botigues/publica-tot.mjs",
+      "before": "43d9f28dfa0613497f882b0a2461c082ac7f83d0d97070c1a4acfbc6ff8e7df9",
+      "after": "24a0dfcc04cbc4497a3b05d101b572573626bf8263b9f7a38c77dd13c91c2fc8"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "b82b647eaa853d3067884beee78ad73373272975893cdf3eafad92a41af35313"
+}

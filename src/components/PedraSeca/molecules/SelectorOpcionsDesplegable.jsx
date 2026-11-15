@@ -1,14 +1,19 @@
 import { useId, useLayoutEffect, useRef } from 'react';
 import { desplacaASeccio, destiDelSalt } from '../../../utils/desplacamentApp.js';
+import { useFullDiferit } from '../../../config/fullDiferit.js';
+/* Onada R28 · D-R27-1 (opció b) · L'estil del selector no viatja a l'arrencada: s'adopta en muntar-se. */
+import cssSelector from '../../../css/diferit-selector-opcions.css?inline';
 
 /** Tria exclusiva nativa + explicació adjacent. No fa peticions ni canvia de pàgina.
  *  `resum`: Array<ReactNode>; es pinten les dues primeres frases, senceres i sense tall. */
 export function SelectorOpcionsDesplegable({
-  llegenda, opcions, valor, onCanvi, resum = [], resumTitol, disabled = false,
+  llegenda, opcions, valor, onCanvi, resum = [], resumTitol, disabled = false, resumViu = true,
 }) {
   const grup = useId();
   const files = useRef(new Map());
   const pendent = useRef(null);
+  const arrel = useRef(null);
+  useFullDiferit(arrel, 'selector-opcions', cssSelector);
 
   useLayoutEffect(() => {
     if (pendent.current !== valor) return;
@@ -33,7 +38,7 @@ export function SelectorOpcionsDesplegable({
   }, [valor]);
 
   return (
-    <fieldset className="sdp-selector-opcions" disabled={disabled}>
+    <fieldset ref={arrel} className="sdp-selector-opcions" disabled={disabled}>
       <legend>{llegenda}</legend>
       <div className="sdp-selector-opcions__llista">
         {opcions.map((opcio, i) => {
@@ -56,7 +61,10 @@ export function SelectorOpcionsDesplegable({
           );
         })}
       </div>
-      {resum.length ? <div className="sdp-selector-opcions__resum" role="status" aria-live="polite" aria-atomic="true"
+      {/* Onada R28 · resumViu={false} quan la pàgina ja té la seua regió viva per al mateix recompte
+          (el simulador del Farcellet): un sol anunci per canvi. */}
+      {resum.length ? <div className="sdp-selector-opcions__resum" role={resumViu ? 'status' : undefined}
+        aria-live={resumViu ? 'polite' : undefined} aria-atomic={resumViu ? 'true' : undefined}
         aria-label={resumTitol}>
         {/* R26.3 · Cap title: en mòbil el dit no el pot obrir. El text sencer es veu (modules.css). */}
         {resum.slice(0, 2).map((linia, i) => <span key={i}>{linia}</span>)}

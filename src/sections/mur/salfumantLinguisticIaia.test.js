@@ -32,15 +32,21 @@ function llistaFitxersCodi(dirRel) {
 const RE_IAIA_SOBIRANA = new RegExp(
   [
     '(?:IAIA|WhatsApp\\s+de\\s+la\\s+IAIA)\\s+(?:[A-Za-zÀ-ÿ0-9·-]+\\s+){0,2}(?:sobir',
-    'an?[ae]?s?|soberan[oa]s?|sovereign)',
+    'an?[ae]?s?|soberan[oa]s?|sovereign|burujabe[a-z]*)',
     '|(?:sobir',
-    'an?[ae]?s?|soberan[oa]s?|sovereign)\\s+(?:de\\s+la\\s+)?IAIA',
+    'an?[ae]?s?|soberan[oa]s?|sovereign|burujabe[a-z]*)\\s+(?:de\\s+la\\s+)?IAIA',
   ].join(''),
   'i',
 );
 
 const RE_MIRALL_SOBIRA_NODE0 = new RegExp(
-  ['Mirall\\s+Sobir', 'à\\s+Node\\s+0'].join(''),
+  [
+    'Mirall\\s+Sobir',
+    'à\\s+Node\\s+0',
+    '|Node\\s+0\\s+(?:Sobir[aà]|Soberano|Burujabe[a-z]*)',
+    '|Sovereign\\s+Node\\s+0',
+    '|Magatzem\\s+sobir[aà]',
+  ].join(''),
   'i',
 );
 

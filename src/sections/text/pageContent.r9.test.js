@@ -654,7 +654,9 @@ describe('Onada R23 · /page/node-zero obri amb la guia divulgativa del 14 de no
   test.each(LLENGUES)('%s · les 8 escoles locals (9 mirades), Matxa-TTS v2 en viu, NEL-VIVES, PostgreSQL 17.11 i el cron de frescor editorial', (llengua) => {
     const body = doc(pagina('node-zero', llengua).html).body;
     const primerH3 = body.querySelector('h3');
-    expect(primerH3?.textContent).toMatch(/R1–R23/);
+    /* Onada R27 (kit de Gemini, IDEA-268 i frescor post-SQL) · La guia s'ha posat al dia el 15-11-2026
+       amb les Onades R1–R27; la resta de fets de la guia es continuen exigint igual. */
+    expect(primerH3?.textContent).toMatch(/R1–R27/);
     const obertura = seccio(body, primerH3.textContent).map((n) => n.textContent).join(' ');
     expect(obertura).toContain('La Torre de les Maçanes');
     expect(obertura).toContain('L’Alacantí');

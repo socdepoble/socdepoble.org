@@ -120,7 +120,10 @@ const CSS_TORN = [
 const CSS_RESOLUCIO = [
   'src/css/modules.css', 'src/css/sdp.css', 'src/css/layout.css', 'src/css/components.css',
   'src/css/utilities.css', 'src/css/base.css', 'src/components/layout/AppGridShell.css',
-  'src/sections/profile/PerfilShell.css'
+  'src/sections/profile/PerfilShell.css',
+  /* Onada R28 · D-R27-1 (opció b) · Fulls diferits adoptats amb useFullDiferit. */
+  ...fs.readdirSync(path.join(ARREL, 'src/css'))
+    .filter((nom) => /^diferit-[a-z0-9-]+\.css$/.test(nom)).sort().map((nom) => `src/css/${nom}`)
 ];
 const CSS_TOKENS = ['src/css/tokens.css', 'src/css/design-tokens.css'];
 const TEXT_TORN = [
@@ -277,21 +280,34 @@ function classesDeclaradesAlCss(fitxers) {
   return declarades;
 }
 
-/* Prefixos que no són classes CSS sinó claus, rutes o identificadors. */
-const NO_ES_CLASSE = /^(sdp-xat-rail|sdp-root)$|^sdp:|^app-grid-(list|main|sidebar)$|^sp-card-(label|action)$/;
+/* Prefixos que no són classes CSS sinó claus, rutes o identificadors.
+   R28 · page-title-logo-personalitzat és el ganxo de la ranura del logotip de
+   PageFrame: cap full el pinta, però el busquen UniversalEditorShell.jsx
+   (DESTINS_FOCUS.logoImage), PerfilEditor.jsx (DESTI_FOCUS_RANURA) i les proves
+   de PageFrame, d'UniversalEditorShell i del Perfil. */
+const NO_ES_CLASSE = /^(sdp-xat-rail|sdp-root|page-title-logo-personalitzat)$|^sdp:|^app-grid-(list|main|sidebar)$|^sp-card-(label|action)$/;
+
+/* R28 · Un prefix de plantilla (`toc-level-${h.level}` deixa «toc-level-»)
+   no és cap classe: compta com a declarat si algun full declara una classe
+   que hi comença (.toc-level-1 … .toc-level-6, modules.css). Un prefix sense
+   cap classe de la família continua sent una òrfena. */
+const esDeclarada = (classe, declarades) => declarades.has(classe)
+  || (/[-_]$/.test(classe) && [...declarades].some((d) => d.length > classe.length && d.startsWith(classe)));
 
 function classesOrfes(fitxers) {
   const usades = classesUsadesAlJsx(fitxers);
   const declarades = classesDeclaradesAlCss(CSS_RESOLUCIO);
   return [...usades.entries()]
-    .filter(([c]) => !declarades.has(c) && !NO_ES_CLASSE.test(c))
+    .filter(([c]) => !esDeclarada(c, declarades) && !NO_ES_CLASSE.test(c))
     .map(([c, fitxers]) => `${c} (${[...fitxers].map((f) => path.basename(f)).join(', ')})`)
     .sort();
 }
 
-/* PageFrame porta dos classes òrfenes anteriors al torn (page-title-logo-
+/* PageFrame portava dos classes òrfenes anteriors al torn (page-title-logo-
    personalitzat i el prefix toc-level-): es mostren com a diagnòstic, sense
-   tombar la bateria, perquè qui en tinga la propietat les veja. */
+   tombar la bateria, perquè qui en tinga la propietat les veja. R28 · Cap de
+   les dos era una regla perduda: la primera és un ganxo (NO_ES_CLASSE) i la
+   segona, el prefix d'una família declarada (esDeclarada). */
 const JSX_HERETAT = new Set(['src/components/universal/PageFrame.jsx']);
 
 test('tota classe usada al JSX nou existix als fulls canònics', () => {

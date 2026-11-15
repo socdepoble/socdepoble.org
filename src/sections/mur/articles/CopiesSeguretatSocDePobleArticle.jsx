@@ -51,8 +51,7 @@ const TEXTOS_SIMULADOR = Object.freeze({
     resumProxim: '{n}/5 àmbits actius · ~{mida} MB estimats ({mode}) · Càlcul didàctic',
     modeCurtIncremental: 'incremental',
     modeCurtComplet: 'complet',
-    etiquetaInclos: 'Inclòs al farcellet',
-    etiquetaOpcional: 'Toca per a incloure',
+    etiquetaInclou: 'Inclou al farcellet',
     ambits: Object.freeze({
       xat: { nom: 'Converses i notes de veu del Xat', detall: 'Missatges al segon · xifratge i 3 claus d’amistat en preparació' },
       notes: { nom: 'Tots els teus Blocs de Notes', detall: 'Apunts privats, receptes familiars, llistes i esborranys' },
@@ -92,8 +91,7 @@ const TEXTOS_SIMULADOR = Object.freeze({
     resumProxim: '{n}/5 ámbitos activos · ~{mida} MB estimados ({mode}) · Cálculo didáctico',
     modeCurtIncremental: 'incremental',
     modeCurtComplet: 'completo',
-    etiquetaInclos: 'Incluido en la copia',
-    etiquetaOpcional: 'Pulsa para incluir',
+    etiquetaInclou: 'Incluir en la copia',
     ambits: Object.freeze({
       xat: { nom: 'Conversaciones y notas de voz del Chat', detall: 'Mensajes al segundo · cifrado y 3 llaves amigas en preparación' },
       notes: { nom: 'Todos tus Blocs de Notas', detall: 'Apuntes privados, recetas familiares, listas y borradores' },
@@ -133,8 +131,7 @@ const TEXTOS_SIMULADOR = Object.freeze({
     resumProxim: '{n}/5 active modules · ~{mida} MB est. ({mode}) · Educational estimate',
     modeCurtIncremental: 'incremental',
     modeCurtComplet: 'full',
-    etiquetaInclos: 'Included',
-    etiquetaOpcional: 'Tap to include',
+    etiquetaInclou: 'Include in the bundle',
     ambits: Object.freeze({
       xat: { nom: 'Chat conversations and voice notes', detall: 'Per-second sync · encryption and 3-friend recovery in preparation' },
       notes: { nom: 'All your private Notebooks', detall: 'Personal notes, family recipes, lists, and drafts' },
@@ -174,8 +171,7 @@ const TEXTOS_SIMULADOR = Object.freeze({
     resumProxim: '5etik {n} atal aktibo · ~{mida} MB ({mode}) · Kalkulu didaktikoa',
     modeCurtIncremental: 'inkrementala',
     modeCurtComplet: 'osoa',
-    etiquetaInclos: 'Barne',
-    etiquetaOpcional: 'Gehitu',
+    etiquetaInclou: 'Sartu fardeltxoan',
     ambits: Object.freeze({
       xat: { nom: 'Txateko elkarrizketak eta ahots-oharrak', detall: 'Berehalako sinkronizazioa · zifratzea eta 3 lagunen giltzak prestatzen' },
       notes: { nom: 'Zure Ohar-blok guztiak', detall: 'Ohar pribatuak, errezetak, zerrendak eta zirriborroak' },
@@ -215,8 +211,7 @@ const TEXTOS_SIMULADOR = Object.freeze({
     resumProxim: '{n}/5 bloques activos · ~{mida} MB estimados ({mode}) · Cálculo didáctico',
     modeCurtIncremental: 'incremental',
     modeCurtComplet: 'completo',
-    etiquetaInclos: 'Incluído',
-    etiquetaOpcional: 'Toca para incluír',
+    etiquetaInclou: 'Incluír no fardelo',
     ambits: Object.freeze({
       xat: { nom: 'Conversas e notas de voz do Chat', detall: 'Mensaxes ao segundo · cifrado e 3 chaves amigas en preparación' },
       notes: { nom: 'Todos os teus Blocs de Notas', detall: 'Apuntamentos privados, receitas familiares, listas e borradores' },
@@ -370,7 +365,8 @@ export function CopiesSeguretatSocDePobleArticle({ item = {} }) {
         </p>
 
         {/* ART02 (Onada R26.3, ordre del Mestre del 14-11-2026) · Els dos presets diuen el seu
-            estat amb aria-pressed booleà. El commutador de mode no en porta: canvia d'etiqueta, i
+            estat amb aria-pressed booleà. Onada R28 · Els commutadors de cada àmbit també: rètol estable
+            («Inclou al farcellet») i aria-pressed, amb el check i la variant primària com a senyal visual. El commutador de mode no en porta: canvia d'etiqueta, i
             WAI-ARIA no admet un rètol que canvia i un aria-pressed alhora (el rètol ja és l'estat). */}
         <div className="sdp-article-veu__escolta-cap">
           <Boto
@@ -429,7 +425,7 @@ export function CopiesSeguretatSocDePobleArticle({ item = {} }) {
                     onClick={() => commutaAmbit(ambit.id)}
                   >
                     {actiu ? <Check size={16} aria-hidden="true" focusable="false" /> : null}
-                    <span>{actiu ? textosSim.etiquetaInclos : textosSim.etiquetaOpcional}</span>
+                    <span>{textosSim.etiquetaInclou}</span>
                   </Boto>
                 </div>
               </li>
@@ -447,6 +443,7 @@ export function CopiesSeguretatSocDePobleArticle({ item = {} }) {
           valor={destiTriat}
           onCanvi={setDestiTriat}
           resumTitol={textosSim.resumTitol}
+          resumViu={false}
           resum={[
             `${resumCurt.destins[CLAU_DESTINS.indexOf(destiTriat)]} · ${resumCurt.modes[incremental ? 1 : 0]}`,
             `${seleccionats.size}/5 ${resumCurt.blocs} · ≈${midaSimuladaMb} MB`,

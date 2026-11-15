@@ -42,16 +42,17 @@ if (!modulePath || !fs.existsSync(modulePath)) {
   const ROOT = process.cwd(),
     MIG = 'supabase/migrations';
   const sha = bytes => createHash('sha256').update(bytes).digest('hex');
-  const { capcalera, dependenciesDeclarades, llegixOrdre, ordena } = await import(pathToFileURL(path.join(ROOT, 'scripts/supabase/verifica-migracions.mjs')).href);
+  const { capcalera, comparaVersions, dependenciesDeclarades, llegixOrdre, ordena, versioDeFitxer } = await import(pathToFileURL(path.join(ROOT, 'scripts/supabase/verifica-migracions.mjs')).href);
   const ordrePath = path.join(ROOT, 'supabase/ordre_desplegament.json');
   const ordreBytes = fs.readFileSync(ordrePath);
-  const inventari = fs.readdirSync(path.join(ROOT, MIG)).filter(f => /^\d{10}_.+\.sql$/.test(f)).sort();
-  const versions = inventari.map(f => f.slice(0, 10));
+  // Des de d44363319 (R21.9b) el catàleg barreja aammddhhmm i YYYYMMDDhhmmss: un sol rellotge, el del verificador.
+  const inventari = fs.readdirSync(path.join(ROOT, MIG)).filter(f => /^(?:\d{10}|\d{14})_.+\.sql$/.test(f)).sort();
+  const versions = inventari.map(versioDeFitxer);
   assert.equal(new Set(versions).size, versions.length, 'No s’admeten versions SQL duplicades.');
   const ordreDeclarat = llegixOrdre(ordreBytes.toString('utf8'), new Set(versions));
   const dependencies = new Map(inventari.map(file => {
-    const versio = file.slice(0, 10);
-    return [versio, dependenciesDeclarades(capcalera(fs.readFileSync(path.join(ROOT, MIG, file), 'utf8')), versio).filter(d => d.versio < versio).map(d => d.versio)];
+    const versio = versioDeFitxer(file);
+    return [versio, dependenciesDeclarades(capcalera(fs.readFileSync(path.join(ROOT, MIG, file), 'utf8')), versio).filter(d => comparaVersions(d.versio, versio) < 0).map(d => d.versio)];
   }));
   const pla = ordena({ versions, dependencies, restriccions: ordreDeclarat.restriccions, portes: ordreDeclarat.portes });
   assert.deepEqual(pla.errors, [], 'No s’executa SQL amb un ordre inconsistent.');

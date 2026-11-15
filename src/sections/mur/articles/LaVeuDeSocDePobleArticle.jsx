@@ -93,7 +93,7 @@ export function LaVeuDeSocDePobleArticle({ item = {} }) {
   );
   const nomVeuActiva = tradueix(tOpc, [veuActivaObj.clauNom, veuActivaObj.reservaNom]);
 
-  const triaVeuAmbRespostaAudible = async (veu) => {
+  const triaVeuAmbRespostaAudible = async (veu, botoTria = null) => {
     /* Pausa qualsevol mostra estàtica del banc per evitar solapaments */
     const llista = bancVeusRef.current;
     if (llista) {
@@ -104,6 +104,16 @@ export function LaVeuDeSocDePobleArticle({ item = {} }) {
 
     const desada = desaVeuPreferida(veu.id);
     setVeuPreferida(desada);
+
+    /* IDEA-268 · Dins de PageFrame (mòbil i escriptori), triar una veu al banc
+       obri sempre el Reproductor Universal de So a la part inferior perquè la
+       persona puga pausar, avançar per apartats o tancar sense so «invisible».
+       Sense seguir la lectura amb el scroll: la persona es queda al banc de
+       veus, i en tancar la barra el focus torna a este mateix botó. */
+    if (veuPaginaActiva && typeof veuPaginaActiva === 'object' && typeof veuPaginaActiva.obriReproductor === 'function') {
+      veuPaginaActiva.obriReproductor({ invocador: botoTria, seguixLectura: false });
+      return;
+    }
 
     try {
       const modul = await import('../../../services/veuIaiaService.js');
@@ -179,7 +189,7 @@ export function LaVeuDeSocDePobleArticle({ item = {} }) {
                   <Boto
                     varietat={triada ? 'primari' : 'secundari'}
                     aria-pressed={triada}
-                    onClick={() => triaVeuAmbRespostaAudible(veu)}
+                    onClick={(ev) => triaVeuAmbRespostaAudible(veu, ev.currentTarget)}
                   >
                     {triada ? <Check size={16} aria-hidden="true" focusable="false" /> : null}
                     <span>

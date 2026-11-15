@@ -41,6 +41,7 @@ Un encàrrec autònom no obliga a crear un cron. Si el Mestre demana vigilància
 3. Quan s'emeta l'informe final, s'assolisca el termini o s'ordene la parada, desconvoca la mateixa onada amb `node tooling/gates/guarda-nocturna.mjs --aturar --onada NOM --motiu MOTIU` pel canal autoritzat.
 4. Cancel·la les recurrències pròpies amb l'eina real del client, acaba processos i allibera subagents. Verifica la cancel·lació i registra qualsevol recurs que no s'haja pogut tancar. No atures serveis compartits aliens.
 5. Cap frase de «100% verd» en un informe substituïx proves executades, la desconvocatòria explícita o el TTL.
+6. **Cron d'Auto-Despertar de 15–20 Minuts per a Totes les IAs i Mode amb el Mestre Present:** Tant en mode autònom com amb el Mestre present, cada IA (`Gemini`, `Codex`, `Claude`, `Node 0`) disposa d'un cicle de revisió de `15 a 20 minuts` sobre el Pla d'Implementació i `.agents/ESTAT.md` perquè MarIA analitze l'última resposta, redacte el següent encàrrec tenint en compte el treball entregat i l'agent el llija i l'execute sense quedar-se parat; quan el Mestre està present, MarIA li ho informa com un membre més de l'equip.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

@@ -20,11 +20,12 @@ const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
 const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 const TOKENS = llig('src/css/tokens.css');
 const CANON = llig('src/css/design-tokens.css');
-const MODULES = llig('src/css/modules.css');
-
-const INICI = MODULES.indexOf('/* ═══ BLOC ONADA R26.2 · SelectorOpcionsDesplegable');
-const FI = MODULES.indexOf('/* ═══ FI DEL BLOC ONADA R26.2 ═══ */', INICI);
-const BLOC = senseComentaris(MODULES.slice(INICI, FI));
+/* Onada R28 · D-R27-1 (opció b) · El bloc R26.2 viu ara al full diferit, sencer i dins de @layer components;
+   modules.css només en conserva la nota. Les assercions no canvien. */
+const DIFERIT = llig('src/css/diferit-selector-opcions.css');
+const INICI = DIFERIT.indexOf('@layer components');
+const FI = DIFERIT.length;
+const BLOC = senseComentaris(DIFERIT.slice(INICI, FI));
 
 /** Regles fulla: { selectors, decl, pares } (pares: els preludis dels blocs que la contenen). */
 function regles(css) {
@@ -97,7 +98,7 @@ const ratio = (a, b) => {
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 };
 
-describe('SelectorOpcionsDesplegable · bloc R26.2 de modules.css amb les correccions R26.3', () => {
+describe('SelectorOpcionsDesplegable · bloc R26.2 (full diferit, abans a modules.css) amb les correccions R26.3', () => {
   test('el bloc existix i viu dins de @layer components', () => {
     expect(INICI).toBeGreaterThan(-1);
     expect(FI).toBeGreaterThan(INICI);

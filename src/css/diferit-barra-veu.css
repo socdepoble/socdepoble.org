@@ -1,0 +1,288 @@
+/* Full diferit (Onada R28 · D-R27-1, opció b aprovada pel Mestre): les regles de .sdp-barra-veu ixen de
+   l'arrencada del paquet de WordPress i s'adopten a l'arrel on es munta la peça (src/config/fullDiferit.js).
+   NO s'importa des d'index.css. Origen: components.css. */
+@layer components {
+
+  /* IDEA-268 · --barra-veu-inici, --barra-veu-fi i --barra-veu-alcada són
+     propietats locals que BarraReproductorVeu.jsx mesura en temps d'execució
+     (ResizeObserver sobre el panell de lectura), no tokens: per això no porten
+     el prefix --sdp-, reservat a tokens.css (precedent: --cal-* del Calendari).
+     La mesura és de vores físiques (getBoundingClientRect().left i .right), i
+     per això s'apliquen a left i right: en les cinc llengües (totes d'esquerra
+     a dreta) és el mateix píxel que inset-inline, i l'espai de la reixeta
+     continua sent el token --sdp-space-3. */
+  .sdp-barra-veu {
+    --barra-veu-inici: 0px;
+    --barra-veu-fi: 0px;
+    position: fixed;
+    left: calc(var(--barra-veu-inici) + var(--sdp-space-3));
+    right: calc(var(--barra-veu-fi) + var(--sdp-space-3));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--sdp-space-4));
+    z-index: var(--z-fab);
+    max-inline-size: 38rem;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3);
+    border: 2px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font-family: var(--sdp-font);
+  }
+  /* IDEA-268 · Reserva CSS immediata de la barra lateral negra en escriptori
+     abans de la mesura fina de ResizeObserver sobre el panell de lectura. */
+  .sdp-root:not(.is-compact):not(.sidebar-closed) > .sdp-barra-veu {
+    --barra-veu-inici: var(--sdp-col-sidebar);
+  }
+  :where(.sdp-root.is-compact) .sdp-barra-veu,
+  .sdp-barra-veu[data-compacte="true"] {
+    bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-3));
+  }
+  /* Quan useBarresAmbScroll oculta nav.mobile-nav ("totes"), la barra acompanya
+     fins a baix. Especificitat (0,4,0): ha de guanyar la regla de damunt,
+     `.sdp-barra-veu[data-compacte="true"]` (0,2,0), que la vista compacta posa sempre. */
+  .sdp-root.is-compact[data-sdp-barres="totes"] > .sdp-barra-veu {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--sdp-space-3));
+  }
+  .sdp-barra-veu--especimen {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    inline-size: 100%;
+    margin-inline: 0;
+  }
+
+  .sdp-barra-veu__cap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    min-inline-size: 0;
+  }
+  .sdp-barra-veu__resum {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+    flex: 1 1 auto;
+  }
+  .sdp-barra-veu__meta {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    color: var(--sdp-accent-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-semi);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-barra-veu__seccio {
+    color: var(--sdp-text-suau);
+    font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-inline-size: 22rem;
+  }
+  .sdp-barra-veu__fragment {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sdp-barra-veu__controls {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(var(--sdp-touch), 1fr));
+    gap: var(--sdp-space-2);
+    align-items: center;
+  }
+  .sdp-barra-veu__control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    cursor: pointer;
+    font: inherit;
+  }
+  .sdp-barra-veu__control--principal {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-barra-veu__control--actiu {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-accent-text);
+  }
+  .sdp-barra-veu__control:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  /* Bancal (Q1) · Cap text translúcid: el control desactivat de la barra
+     deixa l'opacitat i ho diu, com .sdp-boto:disabled, amb el parell sòlid
+     --sdp-text-suau sobre --sdp-fons-subtil i la vora de traços. */
+  :root[data-contrast="bancal"] .sdp-barra-veu__control:disabled,
+  :host([data-contrast="bancal"]) .sdp-barra-veu__control:disabled {
+    opacity: 1;
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    border-color: var(--sdp-vora-control);
+    border-style: dashed;
+  }
+  .sdp-barra-veu__control:focus-visible,
+  .sdp-barra-veu__pindola:focus-visible,
+  .sdp-barra-veu__boto-salt:focus-visible,
+  .sdp-barra-veu__cerca-input:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+
+  .sdp-barra-veu__panell-salt {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding-block-end: var(--sdp-space-2);
+    border-block-end: 1px solid var(--sdp-vora);
+    max-block-size: min(45vh, 18rem);
+  }
+  .sdp-barra-veu__cerca-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-barra-veu__cerca-camp {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex: 1 1 12rem;
+    min-block-size: var(--sdp-touch);
+    padding-inline: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-barra-veu__cerca-input {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-size: var(--sdp-text-base);
+  }
+  .sdp-barra-veu__filtres {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-1);
+    justify-content: center;
+  }
+  .sdp-barra-veu__pindola {
+    min-block-size: var(--sdp-touch);
+    padding-inline: var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+    cursor: pointer;
+    padding-block: 0;
+  }
+  .sdp-barra-veu__pindola--activa {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+
+  .sdp-barra-veu__llista-salt {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sdp-barra-veu__item-salt {
+    margin: 0;
+  }
+  .sdp-barra-veu__boto-salt {
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-barra-veu__boto-salt--titol {
+    color: var(--sdp-text-titol);
+    font-weight: var(--sdp-pes-negreta);
+  }
+  .sdp-barra-veu__boto-salt--actiu {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-weight: var(--sdp-pes-semi);
+  }
+  .sdp-barra-veu__salt-num {
+    flex: 0 0 auto;
+    min-inline-size: 1.75rem;
+    color: var(--sdp-text-suau);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-barra-veu__salt-text {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-barra-veu__buit,
+  .sdp-barra-veu__avis {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-barra-veu__control:not(:disabled):not(.sdp-barra-veu__control--principal):hover,
+    .sdp-barra-veu__pindola:not(.sdp-barra-veu__pindola--activa):hover,
+    .sdp-barra-veu__boto-salt:hover {
+      background: var(--sdp-fons-subtil);
+    }
+    .sdp-barra-veu__control--principal:not(:disabled):hover,
+    .sdp-barra-veu__pindola--activa:hover {
+      background: var(--sdp-accio-control-hover);
+    }
+  }
+}
+/* Llei del Píxel · A index.css, la regla d'impressió `.sdp-veu-lectura-marc, .sdp-barra-veu { display: none }`
+   anava darrere de `.sdp-barra-veu { display: flex }` i l'amagava en paper. Este full s'adopta després de tota la
+   capa components, així que la mateixa regla es repetix ací per a conservar-ho. */
+@layer components {
+  @media print {
+    .sdp-barra-veu { display: none; }
+  }
+}

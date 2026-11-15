@@ -8,6 +8,9 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Download, Mic, Search, Square, Volume2 } from 'lucide-react';
 import { Boto } from '../PedraSeca/atoms/Boto.jsx';
+/* Onada R28 · D-R27-1 (opció b) · L'estil de la peça no viatja a l'arrencada: s'adopta en pintar-se. */
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssRefranyer from '../../css/diferit-refranyer.css?inline';
 import { Alerta } from '../PedraSeca/molecules/Alerta.jsx';
 import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
 import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
@@ -46,6 +49,8 @@ function extensioDeMime(mime) {
 }
 
 export function RefranyerSonorCard() {
+  const arrelRefranyer = useRef(null);
+  useFullDiferit(arrelRefranyer, 'refranyer', cssRefranyer);
   const t = useTraductorOpcional();
   const idioma = useIdiomaActiu();
   const idBase = useId();
@@ -321,6 +326,7 @@ export function RefranyerSonorCard() {
 
   return (
     <section
+      ref={arrelRefranyer}
       className="sdp-subtargeta sdp-refranyer"
       aria-labelledby={`${idBase}-titol`}
       data-sdp-no-locutar=""

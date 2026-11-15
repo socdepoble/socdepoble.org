@@ -49,6 +49,9 @@ export const RUTES_AJUSTOS = Object.freeze({
 /** La pàgina de dalt de la pila. */
 export const ARREL_AJUSTOS = 'arrel';
 
+/** Onada R28 (Lot C3) · Les pàgines especials de la còpia i l'acció que pinten. */
+export const ESPECIALS_COPIA = Object.freeze({ 'copia-desa': 'desa', 'copia-comprova': 'comprova' });
+
 /* La llengua pròpia primer i la resta en l'ordre de la configuració, com a
    /traduccions (TranslationsSection). El nom de cada llengua es diu en la
    seua forma de la configuració i no es traduïx: és el que la persona busca. */
@@ -175,8 +178,42 @@ export const PAGINES_AJUSTOS = Object.freeze({
       Object.freeze({ id: 'pendents', files: Object.freeze([
         fila('xats-temporals', 'pagina', 'section.xat.control.temporals.titol', 'Missatges temporals', { pagina: 'temporals' }),
         fila('xats-multimedia', 'ruta', 'section.xat.control.multimedia.titol', 'Multimèdia, enllaços i documents', { ruta: RUTES_AJUSTOS.multimedia })
+      ]) }),
+      /* Onada R28 (pla 261115_0135, Lot C3) · La còpia del xat, al peu de
+         «Xats», com a les apps de missatgeria. */
+      Object.freeze({ id: 'copia', files: Object.freeze([
+        fila('xats-copia', 'pagina', 'section.xat.copia.titol', 'Còpia de seguretat', { pagina: 'copia' })
       ]) })
     ])
+  }),
+
+  /* Onada R28 (pla 261115_0135, Lot C3) · Les dos accions reals de la còpia
+     `.sdpbackup` (motor src/data/xat/copiaSeguretatPortatil.js): desar-ne una
+     de xifrada i comprovar-ne una, sense restaurar res. Les dos pàgines són
+     especials (ESPECIALS_COPIA): les pinta PaginaCopiaSeguretatXat. */
+  copia: Object.freeze({
+    id: 'copia',
+    titol: ['section.xat.copia.titol', 'Còpia de seguretat'],
+    grups: Object.freeze([
+      Object.freeze({
+        id: 'copia-accions',
+        nota: ['section.xat.copia.nota', 'Una còpia xifrada amb una contrasenya que tries tu, en un arxiu .sdpbackup: hi van les converses i els missatges que este dispositiu ha carregat, sense fotos, àudios ni vídeos. Restaurar-la dins de l’app encara no és possible.'],
+        files: Object.freeze([
+          fila('copia-desa', 'pagina', 'section.xat.copia.desa.titol', 'Desa una còpia xifrada', { pagina: 'copia-desa' }),
+          fila('copia-comprova', 'pagina', 'section.xat.copia.comprova.titol', 'Comprova una còpia', { pagina: 'copia-comprova' })
+        ])
+      })
+    ])
+  }),
+  'copia-desa': Object.freeze({
+    id: 'copia-desa',
+    titol: ['section.xat.copia.desa.titol', 'Desa una còpia xifrada'],
+    especial: 'copia-desa'
+  }),
+  'copia-comprova': Object.freeze({
+    id: 'copia-comprova',
+    titol: ['section.xat.copia.comprova.titol', 'Comprova una còpia'],
+    especial: 'copia-comprova'
   }),
 
   /* Una sola pàgina d'Aparença, dos portes (l'arrel i Xats): el tema, el

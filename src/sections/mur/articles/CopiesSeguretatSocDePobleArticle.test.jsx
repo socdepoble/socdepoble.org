@@ -52,6 +52,24 @@ describe('El Farcellet Digital de Sóc de Poble · vocabulari canònic, OpenGrap
     );
   });
 
+  /* Onada R28 · Commutadors d'àmbit amb rètol estable (WAI-ARIA APG) i un sol anunci viu al simulador. */
+  test('cada àmbit té un rètol estable amb aria-pressed, i només el resum pròxim és regió viva', () => {
+    const { container } = render(
+      <RouterProvider initialPath={COPIES_SEGURETAT_SOC_DE_POBLE_RUTA}>
+        <CopiesSeguretatSocDePobleArticle item={COPIES_SEGURETAT_SOC_DE_POBLE_POST} />
+      </RouterProvider>
+    );
+    const commutadors = screen.getAllByRole('button', { name: 'Inclou al farcellet' });
+    expect(commutadors).toHaveLength(5);
+    const primer = commutadors[0];
+    const abans = primer.getAttribute('aria-pressed');
+    fireEvent.click(primer);
+    expect(primer.getAttribute('aria-pressed')).not.toBe(abans);
+    expect(primer.textContent).toBe('Inclou al farcellet');
+    expect(container.querySelectorAll('[role="status"]')).toHaveLength(1);
+    expect(container.querySelector('.sdp-selector-opcions__resum').hasAttribute('aria-live')).toBe(false);
+  });
+
   test('pinta l’article sense cap h1 ni taula de prosa intrusa al cos, i permet alternar Només el Xat i Tot Sóc de Poble complet', () => {
     const { container } = render(
       <RouterProvider initialPath={COPIES_SEGURETAT_SOC_DE_POBLE_RUTA}>
@@ -126,5 +144,28 @@ describe('El Farcellet Digital de Sóc de Poble · vocabulari canònic, OpenGrap
     }
     // Cinc llengües, cinc redaccions: cap llengua cau a la reserva valenciana.
     expect(resums.size).toBe(5);
+  });
+
+  /* Onada R28 (verificació X2) · La còpia del xat ja té pantalla: l'article diu on
+     és i què fa (desar i comprovar les converses carregades), i que restaurar dins
+     de l'app encara no es pot i els adjunts no hi van. Ja no diu que no té botó. */
+  test('Llei 0 en les 5 llengües: la còpia .sdpbackup del xat es desa i es comprova a Ajustos › Xats, sense restaurar ni adjunts', () => {
+    const VERITAT = {
+      ca: ['Ajustos › Xats › «Còpia de seguretat»', 'Restaurar-la dins de l’aplicació encara no és possible', 'fotos, els àudios i els vídeos no hi van', 'que este dispositiu ha carregat'],
+      es: ['Ajustes › Chats › «Copia de seguridad»', 'Restaurarla dentro de la aplicación todavía no es posible', 'fotos, los audios y los vídeos no se incluyen', 'que este dispositivo ha cargado'],
+      en: ['Settings › Chats › “Chat backup”', 'Restoring it inside the app is not possible yet', 'photos, voice notes, and videos are not included', 'this device has loaded'],
+      eu: ['Ezarpenak › Txatak › «Babeskopia»', 'Oraindik ezin da aplikazioaren barruan leheneratu', 'argazkiak, audioak eta bideoak ez dira sartzen', 'gailu honek kargatu dituen'],
+      gl: ['Axustes › Chats › «Copia de seguridade»', 'Aínda non é posible restaurala dentro da aplicación', 'as fotos, os audios e os vídeos non se inclúen', 'que este dispositivo cargou'],
+    };
+    const SENSE_BOTO = /cap botó|sense pantalla d’exportació|no tiene botón|no button in the app|ez du botoirik|non ten botón/i;
+    for (const [lang, frases] of Object.entries(VERITAT)) {
+      const html = COPIES_SEGURETAT_SOC_DE_POBLE_COPY[lang].html;
+      for (const frase of frases) expect([lang, frase, html.includes(frase)]).toEqual([lang, frase, true]);
+      expect(html, lang).not.toMatch(SENSE_BOTO);
+      expect(html, lang).toContain('<a href="/xat">');
+      // La resta de la Llei 0 es conserva: el simulador és una maqueta i l'E2EE continua apagat.
+      expect(html, lang).toMatch(/maqueta didàctica|maqueta didáctica|teaching mock-up|maketa didaktiko|maqueta didáctica/);
+      expect(html, lang).toMatch(/apagats|apagado|not switched on yet|itzalita|aínda apagado/);
+    }
   });
 });

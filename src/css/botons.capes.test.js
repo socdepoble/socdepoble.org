@@ -145,7 +145,9 @@ describe('R26.2 · respiració lateral sense comprimir per encaixar', () => {
 
   test('les famílies amb text superen 2× el coixí vertical', () => {
     const famílies = {
-      'src/css/components.css': ['.sdp-boto', '.btn', '.btn-sm', '.page-btn', '.pill', '.sdp-joc-parla__opcio'],
+      'src/css/components.css': ['.sdp-boto', '.btn', '.btn-sm', '.page-btn', '.pill'],
+      /* Onada R28 · D-R27-1 (opció b) · El joc «D'on parles?» porta el seu full diferit. */
+      'src/css/diferit-joc-parla.css': ['.sdp-joc-parla__opcio'],
       'src/css/modules.css': ['.search-filters button', '.sdp-classificacio-botonera > .sdp-boto',
         '.sdp-enquadrament__format-pindola', '.sdp-tpv__accio', '.sdp-xat-iaia-accio', '.sdp-btn',
         '.sdp-directori-filtres__boto', '.sdp-workspace-llibres__tab']
@@ -294,7 +296,9 @@ test('R26.2 · les accions de text del visor Xat conserven20 i les icones mòbil
 
 test('R26.2 · l’excepció de BotoVeuIaia no s’estén als filtres del reproductor', () => {
   const full = llig('src/css/components.css');
+  /* Onada R28 · D-R27-1 (opció b) · Les regles del reproductor viuen al seu full diferit. */
+  const barra = llig('src/css/diferit-barra-veu.css');
   expect(coixi(full, '.sdp-boto')).toEqual({ bloc: 8, lateral: 20 });
-  expect(coixi(full, '.sdp-barra-veu__pindola')).toEqual({ bloc: 0, lateral: 20 });
-  expect(valor(full, '.sdp-barra-veu__filtres', 'justify-content')).toBe('center');
+  expect(coixi(barra, '.sdp-barra-veu__pindola')).toEqual({ bloc: 0, lateral: 20 });
+  expect(valor(barra, '.sdp-barra-veu__filtres', 'justify-content')).toBe('center');
 });

@@ -90,3 +90,18 @@ test('P2-09 · filtra files alienes colades per inferència d’UUID a federacio
     posts: [{ id: 'P1', author_id: 'A', content: 'Bon dia poble' }]
   });
 });
+
+/* R28 (D-R24.2-5) · La migració 20261115030000 afig veu_del_poble: les aportacions i els vots
+   R23 que la persona ha escrit, ja filtrats al servidor. L'adaptador no la retalla ni la
+   reescriu, i les altres claus continuen igual. Null en una subclau vol dir que la taula no hi és. */
+test('R28 · veu_del_poble arriba tal qual, també amb una taula absent (null)', async () => {
+  const veu_del_poble = {
+    aportacions: [{ id: 'AP1', tipus: 'variant_isoglossa', refrany_id: null, pregunta_id: 'q01_creilla', text_aportat: 'Creïlla de secà',
+      poble_comarca: 'La Torre de les Maçanes · L’Alacantí', poble: 'La Torre de les Maçanes', comarca_id: 'alacanti', abast_comarcal: 'nomes_poble',
+      audio_storage_path: null, audio_mime: null, durada_segons: null, mida_bytes: null, consentiment_arxiu_obert: true,
+      consentiment_versio: 'cc-by-sa-4.0-v1', consentiment_acceptat_at: '2026-11-15T01:00:00Z', estat_moderacio: 'pendent', created_at: '2026-11-15T01:00:01Z' }],
+    vots_isoglosses: null
+  };
+  m.rpc.mockResolvedValueOnce({ ...structuredClone(AMPLIADA), seed_revisions: [], veu_del_poble: structuredClone(veu_del_poble) });
+  expect(await exportaLesMeuesDades()).toEqual({ ...AMPLIADA, seed_revisions: [], veu_del_poble });
+});

@@ -39,7 +39,7 @@ export function BarraApp({ app, isCompact = false, isDesktopSidebarClosed = fals
     <>
       <button type="button" className="brand sdp-unstyled-btn" aria-label={`Obrir o tancar menú ${titol}`}
         aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
-        <BrandMark className="app-brand__mark" />
+        <BrandMark />
       </button>
 
       <div className="sidebar-control-row">

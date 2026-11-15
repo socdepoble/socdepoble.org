@@ -46,7 +46,7 @@
  *     el port, de manera transitiva, per CaraXat. ClosCaXat el munta una sola
  *     vegada, dins de la closca.
  */
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   ArrowDownUp, BellDot, Check, ChevronLeft, ChevronRight, CircleQuestionMark, CircleX, Heart, KeyRound,
   Lock, MessageCircle, Palette, RefreshCw, Search, Star, X
@@ -64,7 +64,7 @@ import { useXat } from '../XatContext';
 import { useCaraDelPoble } from '../usePobleAmfitrio.js';
 import { filsAmbCaraDelPoble } from '../pobleAmfitrio.js';
 import {
-  ARREL_AJUSTOS, OPCIONS_TEMA, RUTES_AJUSTOS, cercaAjustos, etiquetaDeFila, paginaAjustos, pilaDeResultat, textDe
+  ARREL_AJUSTOS, ESPECIALS_COPIA, OPCIONS_TEMA, RUTES_AJUSTOS, cercaAjustos, etiquetaDeFila, paginaAjustos, pilaDeResultat, textDe
 } from '../ajustosXat.js';
 import { PRESETS_AMPLARIA, presetDeMides } from '../amplariaColumnes.js';
 import { TEXTOS_CONSTRUCCIO, textosDeVista } from './VistaEnConstruccio.jsx';
@@ -73,6 +73,11 @@ import { useControlAvisosPush } from '../useAvisosPushXat.js';
 
 const CAP = Object.freeze([]);
 const noop = () => {};
+
+/* Onada R28 (Lot C3) · La còpia `.sdpbackup`, en diferit: el motor no entra al
+   tros de /xat fins que la persona obri «Desa una còpia xifrada» o «Comprova
+   una còpia». Mentre arriba, el Suspense de baix diu «Treballant…» (role="status"). */
+const PaginaCopiaSeguretatXat = lazy(() => import('./PaginaCopiaSeguretatXat.jsx'));
 const enc = (valor) => encodeURIComponent(String(valor));
 
 /* Els noms de lucide del model (ajustosXat.js), com IconaFiltre a la cerca. */
@@ -189,6 +194,7 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
           onVes={ves}
           onObriConversa={obriConversa}
           onTanca={() => onTanca('boto')}
+          PaginaCopia={PaginaCopiaSeguretatXat}
         />
       ) : null}
     </Dialeg>
@@ -264,10 +270,12 @@ function FilaEixidaAmbSessio({ fila, etiqueta }) {
  * hi ha sessió; sense, el grup no hi és. `ambPrivacitat` (true, false o
  * null si no se sap) tria la nota que diu on porta «Privacitat». `avisos`
  * (B8C-6, null per defecte) és l'estat dels avisos d'este dispositiu.
+ * `PaginaCopia` (Onada R28, Lot C3; un component, null per defecte) pinta les
+ * dos pàgines de la còpia `.sdpbackup` (ESPECIALS_COPIA) amb { accio, t }.
  */
 export function CosAjustos({
   t, campRef = null, pilaInicial = ARREL, joId = null, joNom = null, joAvatar = null, preferits = CAP, correu = null,
-  ambSessio = false, ambPrivacitat = null, avisos = null, FilaEixida = null, tema = null, contrast = null, llengua = null, amplaria = null, mides = null,
+  ambSessio = false, ambPrivacitat = null, avisos = null, FilaEixida = null, PaginaCopia = null, tema = null, contrast = null, llengua = null, amplaria = null, mides = null,
   onTema = noop, onContrast = noop, onLlengua = noop, onAmplaria = noop, onVes = noop, onObriConversa = noop, onTanca = noop
 }) {
   const [pila, setPila] = useState(() => (Array.isArray(pilaInicial) && pilaInicial.length ? pilaInicial : ARREL));
@@ -369,6 +377,15 @@ export function CosAjustos({
      interruptor, nota d'iOS o un avís honest d'entorn sense configurar
      (sense-clau, sense-config, sense-connector), munta PaginaNotificacions. */
   else if (pagina.id === 'notificacions' && (avisos?.oferit || avisos?.nomesNota || avisos?.avisEntorn)) cos = <PaginaNotificacions avisos={avisos} t={t} />;
+  /* Onada R28 (Lot C3) · Les dos pàgines de la còpia. Sense `PaginaCopia` (el
+     catàleg, fora del xat) no hi ha cap còpia a fer, i ho diu. */
+  else if (Object.hasOwn(ESPECIALS_COPIA, pagina.especial ?? '')) {
+    cos = PaginaCopia ? (
+      <Suspense fallback={<p className="sdp-xat-ajustos__nota" role="status">{t('common.treballant', 'Treballant…')}</p>}>
+        <PaginaCopia accio={ESPECIALS_COPIA[pagina.especial]} t={t} />
+      </Suspense>
+    ) : <p className="sdp-xat-ajustos__nota">{t('section.xat.copia.senseCompte', 'Entra al xat amb el teu compte per a fer o comprovar una còpia.')}</p>;
+  }
   else if (pagina.construccio) cos = <PaginaEnConstruccio construccio={pagina.construccio} t={t} />;
   else {
     cos = (

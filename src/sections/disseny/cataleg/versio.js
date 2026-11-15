@@ -15,7 +15,24 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenRespiracioBotons.jsx, EspecimenSelectorOpcionsDesplegable.jsx i EspecimenBoto.jsx, 2026-11-14T23:09:55+01:00,
+ * Darrera posada al dia: detalls/EspecimenCopiaSeguretatXat.jsx, manifest.js i detailRegistry.jsx, 2026-11-15T03:45:24+01:00,
+ * Onada R28 (pla 261115_0135, Lot C3; skill sdp-clon-whatsapp §4.4, «Primer l'espècimen»): l'espècimen nou de les
+ * dos pàgines «Còpia de seguretat» dels Ajustos del Xat (superposicions/xat-copia-seguretat, 💾), «Desa una còpia
+ * xifrada» i «Comprova una còpia», amb el cos de producció CosCopiaSeguretatXat, dades inventades i un motor de
+ * mostra que no xifra res, no llig ni desa cap arxiu i no obri cap full de compartir: cap mostra no passa pel motor
+ * de veres (copiaSeguretatPortatil.js) ni llig les converses de qui mira. Les dues descripcions, el no facis de Desa
+ * i el fes de Comprova diuen que restaurar dins de l'app encara no és possible. La pàgina ja estava cablejada a FullAjustos:
+ * l'espècimen arriba després, no abans com demana la regla.
+ * Versió anterior: Especimen.jsx, manifest.js, registre.js i detalls/EspecimenBarraReproductorVeu.jsx, 2026-11-15T02:21:28+01:00,
+ * Onada R28 (ordre del Mestre del 15-11-2026: IDEA-268 i D-R27-1, integració del kit R27 de Gemini amb la revisió
+ * adversarial de Claude): BarraReproductorVeu es consolida com a reproductor universal de so, centrat sobre el
+ * panell de lectura actiu en mòbil (damunt de nav.mobile-nav, sense tapar el botó ↑) i en escriptori amb barra
+ * lateral (--barra-veu-inici i --barra-veu-fi, propietats locals mesurades amb ResizeObserver), amb el contracte
+ * fontSo (tipus 'lectura' | 'audio') preparat per a la futura Ràdio de Poble i pistes de mostra reals del Node 0;
+ * Especimen.jsx adopta el full diferit diferit-especimens.css en muntar-se (D-R27-1, opció b); registre.js hi porta
+ * el SelectorOpcionsDesplegable de R26.2/R26.3 (fusió de Claude R27). El botó de Google Play de l'espècimen de
+ * respiració que proposava el kit no hi entra: era un logotip redibuixat a mà, i el distintiu oficial serà un recurs.
+ * Versió anterior: EspecimenRespiracioBotons.jsx, EspecimenSelectorOpcionsDesplegable.jsx i EspecimenBoto.jsx, 2026-11-14T23:09:55+01:00,
  * Onada R26.3 (ordre del Mestre del 14-11-2026, revisió de Gemini §1.B): el botó de l'App Store de
  * l'espècimen de respiració és l'àtom Boto amb la prop nova marca="apple" (EspecimenBoto.jsx en documenta
  * la fila); el contracte del selector documenta resum com Array<ReactNode>, sense tall ni title, el ràdio
@@ -357,4 +374,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-14T23:09:55+01:00';
+export const VERSIO_CATALEG = '2026-11-15T03:45:24+01:00';

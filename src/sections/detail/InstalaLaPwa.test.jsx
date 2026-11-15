@@ -158,8 +158,10 @@ describe('les ranures de botiga', () => {
     const enllacos = ranura().querySelectorAll('a');
     expect(enllacos).toHaveLength(1);
     // B9 · Una botiga d'apps diu on és l'app («Disponible a Google Play»), no només el nom.
+    // R28 · Sense logotip redibuixat: el distintiu oficial de Google Play, quan arribe, serà un recurs, no un SVG fet a mà.
     expect([enllacos[0].getAttribute('href'), enllacos[0].className, enllacos[0].textContent])
       .toEqual([PLAY, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'Disponible a Google Play']);
+    expect(enllacos[0].querySelector('svg')).toBeNull();
     expect(enllacos[0].parentElement.className).toBe('sdp-accions');
     expect(ranura().querySelectorAll('button')).toHaveLength(0);
   });

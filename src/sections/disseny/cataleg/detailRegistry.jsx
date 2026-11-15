@@ -31,6 +31,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'superposicions/xat-ajustos': lazyRoute(() => import('./detalls/EspecimenXatAjustos.jsx')),
   /* Pla 261101_1246 (T7 · S7) · el xifratge per conversa i «Persones de confiança» (maqueta). */
   'superposicions/xat-seguretat': lazyRoute(() => import('./detalls/EspecimenXatSeguretat.jsx')),
+  /* Onada R28 (pla 261115_0135, Lot C3) · la còpia de seguretat del Xat, amb un motor de mostra. */
+  'superposicions/xat-copia-seguretat': lazyRoute(() => import('./detalls/EspecimenCopiaSeguretatXat.jsx')),
   'navegacio/xat-rail': lazyRoute(() => import('./detalls/EspecimenXatRail.jsx')),
   'fonaments/cerca-filtres': lazyRoute(() => import('./detalls/EspecimenCercaFiltres.jsx')),
   'fonaments/tasques-fitxers': lazyRoute(() => import('./detalls/EspecimenTasquesFitxers.jsx')),

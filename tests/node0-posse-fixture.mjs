@@ -6,10 +6,27 @@ import {randomUUID,createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {creaAuthNodeZero,hashSessioNodeZero,NODE0_AUTH_TENANT} from '../tooling/node0/auth-node0.mjs';
 import {creaBackendPrivatNodeZero} from '../tooling/node0/backend-node0.mjs';
-import {creaPlaMigracions,preparaHidratacio,generaSql,ROOT} from '../tooling/node0/hidrata-postgres-node0.mjs';
+import {creaPlaMigracions,preparaHidratacio,generaSql,cosMigracio,ROOT} from '../tooling/node0/hidrata-postgres-node0.mjs';
 import {creaRepositoriPosse} from '../tooling/node0/posse/repositori-posse.mjs';
 const H='1'.repeat(64),ARTICLE='2'.repeat(64),PASS='Disposable POSSE fixture 2026 952!';
-export async function creaFixturePosse({modulePath=process.env.SDP_PGLITE_MODULE,exclou=[]}={}){
+// D-R27-3 opció (a): bytes històrics genuïns de 2611080440 abans de l'esmena A2
+// (776f77186^ = 2bd56146a, els mateixos que va introduir R15 a 688f4c2a5). Només els
+// perfils R54-85 i R15-86 els usen; el catàleg viu conserva els bytes actuals.
+export const FONT_POLITICA_2_6_ABANS_A2=Object.freeze({version:'2611080440',file:'2611080440_politica_privacitat_2_6.sql',sha256:'3e6c094dae03d575dcbcfba4e8cb86ffeab1453d101c344e862a7b8eb9f4603c',path:new URL('./fixtures/posse/politica-privacitat-2-6.abans-a2-776f77186.sql',import.meta.url)});
+/** Substituïx la font d'una versió del catàleg pels seus bytes històrics: falla si la
+ * versió o el nom no hi són, o si els bytes no tenen l'empremta declarada. */
+export function aplicaFontsHistoriques(migrations,fonts=[]){
+ const result=[...migrations];
+ for(const font of fonts){
+  const index=result.findIndex(m=>m.version===font.version);
+  if(index<0||result[index].file!==font.file)throw Error('posse_fixture_historical_source_missing');
+  const bytes=fs.readFileSync(font.path),sha256=createHash('sha256').update(bytes).digest('hex');
+  if(sha256!==font.sha256)throw Error('posse_fixture_historical_source_drift');
+  const sql=bytes.toString('utf8');result[index]={...result[index],sha256,sql,body:cosMigracio(sql)};
+ }
+ return result;
+}
+export async function creaFixturePosse({modulePath=process.env.SDP_PGLITE_MODULE,exclou=[],fonts=[]}={}){
  if(!modulePath)throw Error('SDP_PGLITE_MODULE explicit disposable module required');
  const moduleURL=modulePath.startsWith('file:')?new URL(modulePath):pathToFileURL(path.resolve(modulePath));
  const {PGlite}=await import(moduleURL.href),{pgcrypto}=await import(new URL('./contrib/pgcrypto.js',moduleURL));
@@ -26,6 +43,8 @@ export async function creaFixturePosse({modulePath=process.env.SDP_PGLITE_MODULE
   const plan=creaPlaMigracions();
   // Versions left out to build an earlier reviewed ledger (tests/node0-posse-sql.cases.mjs).
   if(exclou.length)plan.migrations=plan.migrations.filter(m=>!exclou.includes(m.version));
+  // Fonts històriques d'un perfil fixat (p. ex. 2611080440 abans d'A2); cap altra versió canvia.
+  if(fonts.length)plan.migrations=aplicaFontsHistoriques(plan.migrations,fonts);
   await pg.exec(generaSql(plan,await preparaHidratacio(),{advisoryLock:false}));
   for(const name of ['auth-node0.sql','backend-node0.sql','posse/posse-ledger.sql'])await pg.exec(fs.readFileSync(path.join(ROOT,'tooling/node0',name),'utf8'));
   const deliveries=[],auth=creaAuthNodeZero({db,rateSecret:Buffer.alloc(32,0x47),mailTransport:async m=>deliveries.push(m)}),backend=creaBackendPrivatNodeZero({db,tenantId:NODE0_AUTH_TENANT});

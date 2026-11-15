@@ -259,9 +259,10 @@
     {
       "si": "2611011800",
       "llavors": [
-        "2611070600"
+        "2611070600",
+        "20261115030000"
       ],
-      "font": "README, vinyeta de 2611070600"
+      "font": "README, vinyetes de 2611070600 i de 20261115030000 (R28: després de tornar a aplicar 2611070600, l'exportació torna a portar les dades R23)"
     },
     {
       "si": "2610311800",
@@ -318,6 +319,13 @@
         "20261114000100"
       ],
       "font": "README, vinyeta de 20261114000100 (R03: membres_del_poble de 2610081543)"
+    },
+    {
+      "si": "2611070600",
+      "llavors": [
+        "20261115030000"
+      ],
+      "font": "README, vinyeta de 20261115030000 (R28: l'embolcall de 2611070600 torna a crear exporta_les_meues_dades sense veu_del_poble)"
     }
   ]
 }

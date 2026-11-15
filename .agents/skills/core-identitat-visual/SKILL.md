@@ -3,6 +3,7 @@ type: skill
 status: actiu
 description: Tractor (Skill) obligatori abans de generar cap imatge, recurs gràfic o disseny visual per a Sóc de Poble. Protegeix l'estil Bruguera/Berlanga.
 name: core-identitat-visual
+version: 2.0.0
 tags:
   - identitat
   - disseny
@@ -15,34 +16,45 @@ triggers_on:
   - bàner
 contracte.llig:
   - _wiki_de_poble/02_saber/identitat_visual.md
+  - .agents/skills/core-calibratge-visual-nano/SKILL.md
   - src/css/index.css
 contracte.escriu:
   - _wiki_de_poble/02_saber/identitat_visual.md
 ---
-# Tractor d'Identitat Visual i Generació d'Imatges (Estil Nano)
 
-Si se't demana generar una imatge, una portada, un bàner o qualsevol recurs gràfic per a Sóc de Poble, **atura't i segueix aquestes regles**.
+# Tractor d'identitat visual i generació d'imatges
 
-## 1. Prohibició d'Inventar Estils
-Està **completament prohibit** generar imatges amb estils genèrics d'IA, minimalisme asèptic, art conceptual corporatiu o renderitzacions 3D ("plàstic"). Sóc de Poble té una identitat gràfica arrelada al món rural valencià, a l'alt contrast i a l'austeritat de la Pedra Seca.
+Esta skill és la barrera obligatòria abans de generar qualsevol il·lustració, portada, bàner o recurs gràfic per a Sóc de Poble. S'aplica a totes les IAs amb eines de creació d'imatge i remet al calibratge operatiu de `[[core-calibratge-visual-nano/SKILL]]`. Protegix la coherència de l'escola Bruguera i Berlanga i l'austeritat de Pedra Seca.
 
-## 2. El Prompt Mestre "Nano" (Escola Bruguera + Berlanga)
-Per a una il·lustració narrativa Bruguera/Berlanga, usa el concepte següent amb l'eina d'imatge disponible. Per a fotografia o Cyberpunk Rural, tria el registre corresponent de `core-calibratge-visual-nano`; esta secció no obliga a convertir qualsevol recurs gràfic en una vinyeta:
-- **Format i enquadrament:** per a una escena completa, prioritza formats lleugers com WebP al producte. Una petició explícita de transparència o d'un retall conserva eixe requisit; no el descarten per defecte les preferències de format. **Completament prohibit incloure marcs blancs de vinyeta o vores exteriors blanques de còmic**: la il·lustració ha d'ocupar tot el llenç a sang (*full bleed*).
-- **Tècnica:** Dibuix a tinta, còmic clàssic valencià estil Francisco Ibáñez (Escola Bruguera). Imatge a sang assegurant un marge de seguretat perquè l'escena respire cap enfora. Colors plans tipus gouache, límit CMYK d'alta definició de Pedra Seca.
-- **PROHIBICIÓ TOTAL DE BANDERES (Regla d'Or):** Està **terminantment prohibit incloure banderes de cap classe** (nacionals, autonòmiques, locals, oficials o inventades) penjades de balcons, finestres, pals o cartells, per tal d'evitar qualsevol polèmica identitària o política. Sóc de Poble és un espai per a tot el veïnat, sense banderes de cap tipus (llevat que el Mestre ho demane de forma expressa i per escrit).
-- **To / Humor (Prohibició d'Estil "Testimonis de Jehovà"):** Prohibides taxativament les estampes idíl·liques i asèptiques («abuelitos feliços somrient beatament com en un pamflet religiós»). L'humor valencià i berlanguiano autèntic és **gamberro, absurd, exagerat i mordaç**. El gag naix de la **contraposició d'extrems** (alta tecnologia vs entorn rural primitiu) i de les **màquines impossibles d'inventor foll estil Professor Bacteri d'Ibáñez** (ex: una caldera de coure bullint sobre llenya un cervell electrònic que trau xips per una mànega, o un gosset rosegant un xip com un os).
-- **Entorn:** Alqueries, tallers rústics, corrals, places de poble, bancals, agricultura, tractors vells, mules, murs de pedra seca, ferralla mecànica i engranatges absurds.
-- **Personatges:** Agricultors, fadrins, veïnes i iaies valencianes (amb davantal o jupetí de treball). Amb naturalitat quotidiana dins de la situació absurda, segons el calibratge vigent; no forces cares de terror o sorpresa de meme. Mantín cares amables i recognoscibles. Prohibit l'ús d'estereotips basats en lletgesa, "buenos y malos", o defectes físics: **RES DE DENTADURES MELLADES, SENSE DENTS O DESAGRADABLES**. L'humor ha de vindre de la situació absurda i del gag gamberro, no de caricaturitzar negativament a la gent del poble. **SEMPRE AMB IGUALTAT DE GÈNERE**: grups mixts d'hòmens i dones en equilibri. En una escena coral que ho admeta, els detalls de criatures i animals poden reforçar el gag; no els afegisques a una imatge tècnica, un retrat o un recurs que el brief no els requerisca.
-- **Composició i Retall:** Horror vacui (tot ple de detalls absurds i comboi). Si el format és rectangular, **l'acció principal ha de passar estrictament al centre**. Açò permet que si l'app retalla la imatge en format quadrat per a una targeta, l'escena principal no es perda.
-- **Text i Ortografia:** Prohibit incloure text genèric o inventat per farcir. "Zero Text Rule" tret que es demane expressament per l'escena. En cas d'haver de generar text en cartells o elements, l'ortografia en valencià ha de ser **100% IMPECABLE**. Està totalment prohibit generar faltes d'ortografia (com posar accents tancats on van oberts, ex. "MÁQUINA" en lloc de "MÀQUINA"). Només es permetran llicències ortogràfiques en onomatopeies o interjeccions típiques de còmic (ex. "Xè!", "Nyas!").
+## 1. Prohibicions absolutes d'estil
 
-## 3. Recursos Oficials (Logos i Bàners per a Repositoris)
-Si el que necessites és material corporatiu oficial (com el bàner per al repositori de WordPress, icones, o la targeta OpenGraph), **NO ELS GENERES AMB IA**. 
-El projecte ja disposa de recursos gràfics propis dissenyats a mà al directori d'assets (com l'arxiu `og-socdepoble-1200x630.png` que es veu al vídeo del Mestre, o els logos oficials SVG). 
-Si et falta un d'aquests recursos, **demana'l al Mestre**. Ell te'l prepararà. No t'inventes imatges corporatives.
+Cap recurs visual nou pot trencar estes fronteres d'identitat del projecte.
 
-*Nota de referència: Tota la teoria estesa i canònica d'aquest comportament visual està arxivada a `_wiki_de_poble/02_saber/identitat_visual.md`.*
+- Queda prohibit generar imatges amb estils genèrics d'IA, minimalisme corporatiu, clip-art editorial anglosaxó o renderitzacions plàstiques en 3D.
+- Queda prohibit generar vinyetes narratives sense adjuntar entre tres i quatre imatges mestres aprovades de `public/` com a referència visual (`ImagePaths`).
+- Queda prohibit incloure banderes de qualsevol classe (nacionals, autonòmiques, locals o inventades) en balcons, finestres, pals o cartells, tret d'ordre escrita del Mestre.
+- Queden prohibides les estampes idíl·liques de fullet religiós, les cares desdentades o lletges i les dentadures blanques d'anunci en primer pla.
+
+## 2. Invariants mestres per a les vinyetes del Nano
+
+Quan el brief demana una vinyeta narrativa Bruguera i Berlanga (Registre A), aplica conjuntament estes condicions juntament amb `[[core-calibratge-visual-nano/SKILL]]`.
+
+- **Ancoratge multi-referència obligatori:** passa sempre de tres a quatre originals del cànon (`disseny_vinyeta.jpg`, `snippet_nano_card.jpg`, `vehicle_nano_card.jpg`, `govern_certificacio_nano_card.jpg`, `cervell_vinyeta.jpg`, `calendari_nano_card.jpg`, `bascula_vinyeta.jpg`, `metriques_nano_card.jpg` o `drets_autor_comic.jpg`) en `ImagePaths`.
+- **Exterior valencià assolellat i format a sang:** escenes 100% a l'aire lliure entre places de poble, pedra seca, tarongers i oliveres, sense habitacions fosques, ocupant tot el llenç (*full bleed*) sense marcs blancs i a `1600x1600 px` en format quadrat.
+- **Traç de plumilla i aquarel·la càlida:** dibuix a tinta negra amb trames manuals (`crosshatching`), proporcions rabassudes d'Ibáñez (`1:3.5`), nassos redons de patata i colors càlids de gouache i aquarel·la.
+- **Vestimenta tradicional i igualtat:** grups mixtos equilibrats d'hòmens i dones amb boina, faixa, camisa arremangada, jupetí, pantalons apedaçats, espardenyes de veta i mocador o davantal, sense petos americans ni pentinats anime.
+- **Acció cinètica i enginys d'inventor:** personatges en moviment teatral amb màquines monumentals de fusta i ferro colat estil Professor Bacteri o robotets quadrats amb bombeta al cap, centrant l'acció principal per resistir retalls quadrats.
+- **Zero text per defecte i valencià normatiu:** sense text ni bafarades si el brief no ho demana; quan cal un rètol pintat sobre fusta o xapa, s'escriu d'una a tres paraules en valencià 100% impecable.
+
+## 3. Recursos corporatius oficials
+
+Seguix estos passos quan la tasca requerisca logotips, icones d'aplicació o bàners institucionals.
+
+1. No generes mai amb IA logotips, icones del sistema, bàners del connector de WordPress ni targetes OpenGraph corporatives.
+2. Reutilitza exclusivament els actius oficials dissenyats a mà del repositori (com `og-socdepoble-1200x630.png` i els logos SVG).
+3. Si falta un recurs corporatiu oficial, atura't i demana'l al Mestre abans d'inventar cap substitut.
 
 ## Vincles
+
 - [[00_INDEX_SKILLS]]
+- [[core-calibratge-visual-nano/SKILL]]

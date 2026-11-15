@@ -656,63 +656,6 @@
   @keyframes sdp-pista-aparicio {
     from { opacity: 0; transform: translateX(-50%) scale(var(--sdp-escala-aparicio)); }
   }
-
-  /* IDEA-26 (ordre directa del Mestre, 261025) · Erradicació de la línia
-     divisòria invasiva (border-top): el ritme de les fitxes el dona l'espaiat
-     vertical noble de Pedra Seca, sense línies que trenquen el disseny ni
-     envaeixin l'espai damunt de l'H3. */
-  .sdp-especimen { margin-bottom: var(--sdp-space-8); }
-  .sdp-especimen__cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sdp-space-3); margin-bottom: var(--sdp-space-4); }
-  /* La taula del contracte es desplaça dins de la seua caixa quan la columna
-     és estreta: els noms no es parteixen i la pàgina no corre de costat. */
-  .sdp-especimen__contracte { overflow-x: auto; overscroll-behavior-inline: contain; }
-  .sdp-especimen__contracte:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
-  /* La caixa és l'única que es desplaça, també en mòbil (on sdp.css fa de
-     cada taula nua el seu propi desplaçament). El nom d'una prop, a la
-     primera columna, és un identificador: no es parteix mai (observació del
-     Mestre del 261025). */
-  .sdp-especimen__contracte :where(table) { display: table; overflow: visible; }
-  .sdp-especimen__contracte :where(td:first-child > code:not([class])) { white-space: nowrap; }
-  .sdp-especimen__nom { margin: 0; }
-  /* IDEA-26 (àudio del Mestre de 01:47, 261025) · La ruta del fitxer és una
-     píndola de codi, la mateixa del <code> en línia (sdp.css), no text
-     monoespai solt. Les rutes llargues tallen per on calga. */
-  .sdp-especimen__fitxer {
-    padding: 0 var(--sdp-space-2);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-s);
-    background: var(--sdp-fons-subtil);
-    color: var(--sdp-text-titol);
-    font-family: var(--sdp-font-mono);
-    font-size: var(--sdp-text-meta);
-    overflow-wrap: anywhere;
-  }
-  /* IDEA-26 (àudio del Mestre 04:29, 261025) · Erradicació del filet puntejat
-     (dashed): el component viu reposa sobre una superfície noble de targeta
-     (fons blanquet pur en clar, vora sòlida subtil), mai un quadre decoratiu
-     amb línies puntejades que sembla una alerta o una gàbia provisional. */
-  .sdp-especimen__viu {
-    margin-block: var(--sdp-space-4);
-    padding: var(--sdp-space-6);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-targeta);
-  }
-  /* IDEA-26 (261025) · La caixa de mostra és un escenari: les files de
-     controls van centrades, i dues peces seguides (fila, mostra o paràgraf)
-     ja no es toquen a 0px. */
-  .sdp-especimen__fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sdp-space-3); }
-  .sdp-especimen__fila + :is(.sdp-especimen__fila, .sdp-especimen__mostra, p) { margin-block-start: var(--sdp-space-4); }
-  /* Barres de color mostrades com a espècimen: mai sticky dins del catàleg. */
-  .sdp-especimen__barres { margin-bottom: var(--sdp-space-4); border-radius: var(--sdp-radi-s); overflow: hidden; }
-  .sdp-especimen__barres > .bar-blue,
-  .sdp-especimen__barres > .bar-orange { position: static; z-index: auto; }
-  .sdp-especimen__icones > span { display: inline-flex; padding: var(--sdp-space-2); color: var(--sdp-accio-text); }
-  .sdp-especimen__regles { display: grid; gap: var(--sdp-space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
-  .sdp-especimen__fes, .sdp-especimen__no { padding: var(--sdp-space-4); border-radius: var(--sdp-radi-s); border-inline-start: 6px solid; }
-  .sdp-especimen__fes { border-color: var(--sdp-exit); background: var(--sdp-exit-fons); color: var(--sdp-exit-text); }
-  .sdp-especimen__no { border-color: var(--sdp-error); background: var(--sdp-error-fons); color: var(--sdp-error-text); }
-  .sdp-especimen__fes > :last-child, .sdp-especimen__no > :last-child { margin-bottom: 0; }
   .sdp-anatomia { display: grid; gap: 2px; min-height: 16rem; border: 2px solid var(--sdp-vora-forta); border-radius: var(--sdp-radi-s); overflow: hidden;
     grid-template: "lat sup" auto "lat fin" 1fr / minmax(6rem, 22%) 1fr; background: var(--sdp-vora-forta); }
   .sdp-anatomia > * { display: flex; align-items: center; justify-content: center; padding: var(--sdp-space-3); text-align: center; font-weight: 700; }
@@ -735,47 +678,6 @@
   .sdp-arbre__rol { display: block; color: var(--sdp-text-suau); }
   .sdp-arbre__relacio { color: var(--sdp-text-titol); }
   .sdp-arbre code { overflow-wrap: anywhere; }
-  /* T52b · Targetes de mostra (TargetaViva, UniversalCard plana) a l'ample que
-     tenia la targeta viva a l'aside de l'editor (retirat al Bloc 3.4 del
-     Gauntlet, 261016); en una columna estreta, a tot l'ample. */
-  .sdp-especimen__targetes {
-    display: grid; gap: var(--sdp-space-6); align-items: start; margin-bottom: var(--sdp-space-4);
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
-  }
-  .sdp-especimen__figura { margin: 0; }
-  .sdp-especimen__figura > figcaption { margin-bottom: var(--sdp-space-2); color: var(--sdp-text-suau); }
-  /* T52 · Mostres dels espècimens nous. Cada mostra aïlla el seu apilament
-     (isolation): la barra d'eines i el redimensionador porten z-index propis
-     que no han de pujar damunt de les barres fixes de la pàgina. */
-  .sdp-especimen__mostra { isolation: isolate; margin-bottom: var(--sdp-space-4); }
-  .sdp-especimen__mostra--estreta { inline-size: min(100%, 28rem); }
-  /* Mostra que ha de veure's sencera encara que la columna siga estreta: es desplaça. */
-  .sdp-especimen__mostra--ampla { overflow-x: auto; }
-  /* Doble classe: la peça mostrada sol dur min-width: 0 propi (.sdp-editor-tools, a modules.css, que va després). */
-  .sdp-especimen__mostra.sdp-especimen__mostra--ampla > * { min-inline-size: 36rem; }
-  .sdp-especimen__mostra--ampla:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
-  .sdp-especimen__mostra--columna { inline-size: min(100%, 20rem); }
-  .sdp-especimen__mostra--carril { inline-size: 3.5rem; block-size: 16rem; }
-  .sdp-especimen__caixa {
-    padding: var(--sdp-space-3); border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-s);
-    background: var(--sdp-fons-targeta); color: var(--sdp-text-cos);
-  }
-  .sdp-especimen__farciment { padding: var(--sdp-space-4); }
-  .sdp-especimen__llista-neta { margin: 0; padding: 0; list-style: none; }
-  .sdp-especimen__papers { display: grid; gap: var(--sdp-space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
-  .sdp-especimen__paper {
-    display: block; inline-size: 100%; block-size: 24rem; border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-s); background: var(--sdp-fons-targeta);
-  }
-  /* L'amplada de la primera columna la posa una ref (--cataleg-mostra-ample, local com
-     --app-grid-col-sidebar, no és cap token), mai un style en JSX. */
-  .sdp-especimen__redimensiona {
-    display: grid; grid-template-columns: var(--cataleg-mostra-ample, 12rem) 0 minmax(0, 1fr); min-block-size: 8rem;
-    border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-s); overflow: hidden;
-  }
-  .sdp-especimen__redimensiona > .sdp-especimen__caixa { border: 0; border-radius: 0; }
-  /* Dos fons diferents, com al gestor: la vora (transparent fins al hover o el focus) queda entre ells. */
-  .sdp-especimen__redimensiona > .sdp-especimen__caixa:first-child { background: var(--sdp-fons-subtil); }
 
   /* Fuga reparada (260912): este bloc vivia FORA de @layer components, i el
      CSS sense capa guanya a TOTES les capes, `utilities` inclosa. Funcionava
@@ -2334,13 +2236,6 @@ header.bar-blue { container-type: inline-size; }
     .app-grid-shell[data-llista="rail"] .bar-blue .bar-blue-left__endavant { display: none; }
   }
 }
-/* T53 · Catàleg (EspecimenControlsBarra): les mostres de la barra blava.
-   Sense contenidor propi, el coixí i la separació consultarien l'ample de
-   la pàgina de Disseny i no el de la mostra (a PageFrame, el pare fa el
-   mateix ample que la barra). La mostra estreta, de 28rem, cau dins de la
-   franja 401–474 on el llindar vell deixava sobreeixir CONNECTAR. */
-.sdp-especimen__barres--contenidor { container-type: inline-size; }
-.sdp-especimen__barres--estreta { inline-size: min(100%, 28rem); }
 /* T51 (ordre del Mestre, 260928) · La barra taronja, com la blava (T37), és
    una graella de tres columnes: autoria · espai central (EmoticonaBarra) ·
    accions i data. Mana sobre el `display: flex` de layout.css perquè esta
@@ -3962,118 +3857,6 @@ section.bar-orange[data-copublicacio="composta"] {
   .sdp-refranyer .sdp-boto {
     gap: var(--sdp-space-2);
   }
-  .sdp-joc-parla__opcio--viva {
-    border-style: dashed;
-    border-color: var(--sdp-accio-control);
-  }
-  .sdp-joc-parla__opcio-cap {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-2);
-    inline-size: 100%;
-  }
-  .sdp-joc-parla__opcio-vots {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sdp-space-1);
-    padding: var(--sdp-space-1) var(--sdp-space-2);
-    border-radius: var(--sdp-radi-boto);
-    background: var(--sdp-fons-subtil);
-    color: var(--sdp-accent-text);
-    font-size: var(--sdp-text-meta);
-    font-weight: var(--sdp-pes-semi);
-  }
-  .sdp-joc-parla__consens-caixa {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-2);
-    padding: var(--sdp-space-3) var(--sdp-space-4);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-subtil);
-  }
-  .sdp-joc-parla__consens-fila {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-2);
-  }
-  .sdp-joc-parla__consens-titol {
-    margin: 0;
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-small);
-    font-weight: var(--sdp-pes-negreta);
-  }
-  .sdp-joc-parla__consens-xat {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    min-block-size: var(--sdp-touch);
-    padding: 0 var(--sdp-space-3);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-boto);
-    background: var(--sdp-fons-elevat);
-    color: var(--sdp-accent-text);
-    font-size: var(--sdp-text-small);
-    font-weight: var(--sdp-pes-semi);
-    text-decoration: none;
-  }
-  .sdp-joc-parla__consens-xat:focus-visible {
-    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
-    outline-offset: var(--sdp-focus-separacio);
-  }
-  .sdp-joc-parla__consens-resum {
-    margin: 0;
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-small);
-  }
-  .sdp-joc-parla__fila-territori {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--sdp-space-3);
-  }
-  .sdp-joc-parla__enquesta-abast {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-2);
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-  .sdp-joc-parla__enquesta-abast > legend {
-    padding: 0;
-    margin-block-end: var(--sdp-space-2);
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-small);
-    font-weight: var(--sdp-pes-semi);
-  }
-  .sdp-joc-parla__abast-opcions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sdp-space-2);
-  }
-  .sdp-joc-parla__pindola-abast {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    min-block-size: var(--sdp-touch);
-    padding: 0 var(--sdp-space-5);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-boto);
-    background: var(--sdp-fons-elevat);
-    color: var(--sdp-text-cos);
-    font-size: var(--sdp-text-small);
-    cursor: pointer;
-  }
-  .sdp-joc-parla__pindola-abast--activa {
-    border-color: var(--sdp-accio-control);
-    background: var(--sdp-fons-subtil);
-    color: var(--sdp-text-titol);
-    font-weight: var(--sdp-pes-semi);
-  }
 
   .sdp-joc-parla__capcalera,
   .sdp-refranyer__capcalera {
@@ -4161,149 +3944,12 @@ section.bar-orange[data-copublicacio="composta"] {
     inline-size: 100%;
     min-block-size: var(--sdp-touch);
   }
-
-  .sdp-joc-parla__pregunta-caixa,
-  .sdp-joc-parla__resultat {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-4);
-  }
-  .sdp-joc-parla__progres-fila {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-3);
-  }
-  .sdp-joc-parla__comptador {
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
-    font-weight: var(--sdp-pes-semi);
-    font-variant-numeric: tabular-nums;
-  }
-  .sdp-joc-parla__barra-progres {
-    inline-size: 100%;
-    block-size: var(--sdp-space-2);
-    accent-color: var(--sdp-accio-control);
-  }
-  .sdp-joc-parla__enunciat {
-    margin: 0;
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-h5);
-    line-height: var(--sdp-leading-titol);
-  }
-  .sdp-joc-parla__opcions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: var(--sdp-space-3);
-  }
-  .sdp-joc-parla__opcio {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: var(--sdp-space-1);
-    min-block-size: var(--sdp-touch);
-    padding: var(--sdp-space-3) var(--sdp-space-8);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-elevat);
-    color: var(--sdp-text-cos);
-    font: inherit;
-    text-align: start;
-    cursor: pointer;
-  }
   .sdp-joc-parla__opcio:focus-visible,
   .sdp-refranyer__pindola:focus-visible,
   .sdp-joc-parla__input:focus-visible,
   .sdp-refranyer__cerca-input:focus-visible {
     outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
     outline-offset: var(--sdp-focus-separacio);
-  }
-  .sdp-joc-parla__opcio--activa {
-    border-color: var(--sdp-accio-control);
-    background: var(--sdp-accio-subtil);
-    color: var(--sdp-text-titol);
-  }
-  .sdp-joc-parla__opcio-mot {
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-base);
-    font-weight: var(--sdp-pes-negreta);
-  }
-  .sdp-joc-parla__opcio-detall {
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
-  }
-
-  .sdp-joc-parla__resultat-destacat {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-2);
-    padding: var(--sdp-space-4);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-accent-subtil);
-  }
-  .sdp-joc-parla__resultat-etiqueta {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    margin: 0;
-    color: var(--sdp-accent-text);
-    font-size: var(--sdp-text-meta);
-    font-weight: var(--sdp-pes-negreta);
-  }
-  .sdp-joc-parla__resultat-comarca {
-    margin: 0;
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-h4);
-  }
-  .sdp-joc-parla__resultat-pobles {
-    margin: 0;
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-small);
-    font-weight: var(--sdp-pes-semi);
-  }
-  .sdp-joc-parla__resultat-descripcio {
-    margin: 0;
-    color: var(--sdp-text-cos);
-    line-height: var(--sdp-leading-cos);
-  }
-  .sdp-joc-parla__subtitol-ranquing {
-    margin: 0;
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-base);
-  }
-  .sdp-joc-parla__ranquing-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-1);
-  }
-  .sdp-joc-parla__ranquing-fila {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-2);
-  }
-  .sdp-joc-parla__ranquing-pct {
-    color: var(--sdp-text-suau);
-    font-variant-numeric: tabular-nums;
-  }
-  .sdp-joc-parla__veu-caixa {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-3);
-    padding: var(--sdp-space-3) var(--sdp-space-4);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-subtil);
-  }
-  .sdp-joc-parla__veu-text {
-    margin: 0;
-    color: var(--sdp-text-cos);
-    font-weight: var(--sdp-pes-semi);
   }
   .sdp-joc-parla__accions-resultat,
   .sdp-refranyer__accions,
@@ -4313,14 +3959,6 @@ section.bar-orange[data-copublicacio="composta"] {
     align-items: center;
     justify-content: center;
     gap: var(--sdp-boto-separacio);
-  }
-  .sdp-joc-parla__aportacio-bloc {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--sdp-space-3);
-    padding-block-start: var(--sdp-space-3);
-    border-block-start: 1px solid var(--sdp-vora);
   }
   .sdp-joc-parla__formulari,
   .sdp-refranyer__gravadora {
@@ -4333,25 +3971,12 @@ section.bar-orange[data-copublicacio="composta"] {
     border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-elevat);
   }
-  .sdp-joc-parla__formulari-ajuda {
-    margin: 0;
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-small);
-  }
   .sdp-joc-parla__camp,
   .sdp-refranyer__camp,
   .sdp-refranyer__cerca-caixa {
     display: flex;
     flex-direction: column;
     gap: var(--sdp-space-1);
-  }
-  .sdp-refranyer__cerca-label {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-small);
-    font-weight: var(--sdp-pes-semi);
   }
   .sdp-joc-parla__input,
   .sdp-refranyer__cerca-input {
@@ -4374,94 +3999,6 @@ section.bar-orange[data-copublicacio="composta"] {
     color: var(--sdp-text-cos);
     font-size: var(--sdp-text-small);
     cursor: pointer;
-  }
-
-  .sdp-refranyer__controls {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-3);
-  }
-  .sdp-refranyer__categories {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--sdp-space-2);
-  }
-  .sdp-refranyer__pindola {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-block-size: var(--sdp-touch);
-    padding: 0 var(--sdp-space-5);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-boto);
-    background: var(--sdp-fons-elevat);
-    color: var(--sdp-text-cos);
-    font: inherit;
-    font-weight: var(--sdp-pes-semi);
-    cursor: pointer;
-  }
-  .sdp-refranyer__pindola--activa {
-    border-color: var(--sdp-accio-control);
-    background: var(--sdp-accio-control);
-    color: var(--sdp-sobre-accio);
-  }
-  .sdp-refranyer__buit {
-    margin: 0;
-    padding: var(--sdp-space-4);
-    color: var(--sdp-text-suau);
-    text-align: center;
-  }
-  .sdp-refranyer__meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-2);
-    font-size: var(--sdp-text-meta);
-  }
-  .sdp-refranyer__comarca {
-    color: var(--sdp-accent-text);
-    font-weight: var(--sdp-pes-semi);
-  }
-  .sdp-refranyer__ambit {
-    color: var(--sdp-text-suau);
-  }
-  .sdp-refranyer__dita {
-    margin: 0;
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-h5);
-    font-weight: var(--sdp-pes-negreta);
-    line-height: var(--sdp-leading-titol);
-  }
-  .sdp-refranyer__explicacio {
-    margin: 0;
-    color: var(--sdp-text-cos);
-    line-height: var(--sdp-leading-cos);
-  }
-  .sdp-refranyer__indicador-temps {
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-small);
-    font-variant-numeric: tabular-nums;
-  }
-  .sdp-refranyer__preescolta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-3);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .sdp-joc-parla__opcio:hover {
-      background: var(--sdp-fons-subtil);
-    }
-    .sdp-refranyer__pindola:hover {
-      background: var(--sdp-fons-subtil);
-    }
-    .sdp-refranyer__pindola--activa:hover {
-      background: var(--sdp-accio-control-hover);
-    }
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -4500,262 +4037,12 @@ section.bar-orange[data-copublicacio="composta"] {
     outline: 2px solid var(--sdp-accio-control);
     outline-offset: 2px;
   }
-
-  .sdp-barra-veu {
-    position: fixed;
-    inset-inline: var(--sdp-space-3);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--sdp-space-4));
-    z-index: var(--z-fab);
-    max-inline-size: 38rem;
-    margin-inline: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-2);
-    padding: var(--sdp-space-3);
-    border: 2px solid var(--sdp-vora-forta);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-elevat);
-    color: var(--sdp-text-cos);
-    font-family: var(--sdp-font);
-  }
-  :where(.sdp-root.is-compact) .sdp-barra-veu,
-  .sdp-barra-veu[data-compacte="true"] {
-    bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-3));
-  }
-  .sdp-barra-veu--especimen {
-    position: static;
-    inset: auto;
-    z-index: auto;
-    inline-size: 100%;
-    margin-inline: 0;
-  }
-
-  .sdp-barra-veu__cap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-2);
-    min-inline-size: 0;
-  }
-  .sdp-barra-veu__resum {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-1);
-    min-inline-size: 0;
-    flex: 1 1 auto;
-  }
-  .sdp-barra-veu__meta {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    color: var(--sdp-accent-text);
-    font-size: var(--sdp-text-meta);
-    font-weight: var(--sdp-pes-semi);
-    font-variant-numeric: tabular-nums;
-  }
-  .sdp-barra-veu__seccio {
-    color: var(--sdp-text-suau);
-    font-weight: 400;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-inline-size: 22rem;
-  }
-  .sdp-barra-veu__fragment {
-    margin: 0;
-    color: var(--sdp-text-cos);
-    font-size: var(--sdp-text-small);
-    line-height: 1.4;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .sdp-barra-veu__controls {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(var(--sdp-touch), 1fr));
-    gap: var(--sdp-space-2);
-    align-items: center;
-  }
-  .sdp-barra-veu__control {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-inline-size: var(--sdp-touch);
-    min-block-size: var(--sdp-touch);
-    padding: 0 var(--sdp-space-2);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-s);
-    background: var(--sdp-fons-targeta);
-    color: var(--sdp-text-titol);
-    cursor: pointer;
-    font: inherit;
-  }
-  .sdp-barra-veu__control--principal {
-    border-color: var(--sdp-accio-control);
-    background: var(--sdp-accio-control);
-    color: var(--sdp-sobre-accio);
-  }
-  .sdp-barra-veu__control--actiu {
-    border-color: var(--sdp-accio-control);
-    background: var(--sdp-fons-subtil);
-    color: var(--sdp-accent-text);
-  }
-  .sdp-barra-veu__control:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-  /* Bancal (Q1) · Cap text translúcid: el control desactivat de la barra
-     deixa l'opacitat i ho diu, com .sdp-boto:disabled, amb el parell sòlid
-     --sdp-text-suau sobre --sdp-fons-subtil i la vora de traços. */
-  :root[data-contrast="bancal"] .sdp-barra-veu__control:disabled,
-  :host([data-contrast="bancal"]) .sdp-barra-veu__control:disabled {
-    opacity: 1;
-    background: var(--sdp-fons-subtil);
-    color: var(--sdp-text-suau);
-    border-color: var(--sdp-vora-control);
-    border-style: dashed;
-  }
-  .sdp-barra-veu__control:focus-visible,
-  .sdp-barra-veu__pindola:focus-visible,
-  .sdp-barra-veu__boto-salt:focus-visible,
-  .sdp-barra-veu__cerca-input:focus-visible {
-    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
-    outline-offset: var(--sdp-focus-separacio);
-  }
-
-  .sdp-barra-veu__panell-salt {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-2);
-    padding-block-end: var(--sdp-space-2);
-    border-block-end: 1px solid var(--sdp-vora);
-    max-block-size: min(45vh, 18rem);
-  }
-  .sdp-barra-veu__cerca-fila {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--sdp-space-2);
-  }
-  .sdp-barra-veu__cerca-camp {
-    display: flex;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    flex: 1 1 12rem;
-    min-block-size: var(--sdp-touch);
-    padding-inline: var(--sdp-space-3);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-s);
-    background: var(--sdp-fons-targeta);
-    color: var(--sdp-text-cos);
-  }
-  .sdp-barra-veu__cerca-input {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-    border: 0;
-    background: transparent;
-    color: var(--sdp-text-cos);
-    font: inherit;
-    font-size: var(--sdp-text-base);
-  }
-  .sdp-barra-veu__filtres {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: var(--sdp-space-1);
-    justify-content: center;
-  }
-  .sdp-barra-veu__pindola {
-    min-block-size: var(--sdp-touch);
-    padding-inline: var(--sdp-space-5);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-pastilla);
-    background: var(--sdp-fons-targeta);
-    color: var(--sdp-text-cos);
-    font: inherit;
-    font-size: var(--sdp-text-small);
-    font-weight: var(--sdp-pes-semi);
-    cursor: pointer;
-    padding-block: 0;
-  }
-  .sdp-barra-veu__pindola--activa {
-    border-color: var(--sdp-accio-control);
-    background: var(--sdp-accio-control);
-    color: var(--sdp-sobre-accio);
-  }
-
-  .sdp-barra-veu__llista-salt {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-1);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  .sdp-barra-veu__item-salt {
-    margin: 0;
-  }
-  .sdp-barra-veu__boto-salt {
-    inline-size: 100%;
-    min-block-size: var(--sdp-touch);
-    display: flex;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    padding: var(--sdp-space-2) var(--sdp-space-3);
-    border: 1px solid transparent;
-    border-radius: var(--sdp-radi-s);
-    background: transparent;
-    color: var(--sdp-text-cos);
-    font: inherit;
-    font-size: var(--sdp-text-small);
-    text-align: start;
-    cursor: pointer;
-  }
-  .sdp-barra-veu__boto-salt--titol {
-    color: var(--sdp-text-titol);
-    font-weight: var(--sdp-pes-negreta);
-  }
-  .sdp-barra-veu__boto-salt--actiu {
-    border-color: var(--sdp-accio-control);
-    background: var(--sdp-fons-subtil);
-    color: var(--sdp-text-titol);
-    font-weight: var(--sdp-pes-semi);
-  }
-  .sdp-barra-veu__salt-num {
-    flex: 0 0 auto;
-    min-inline-size: 1.75rem;
-    color: var(--sdp-text-suau);
-    font-variant-numeric: tabular-nums;
-  }
-  .sdp-barra-veu__salt-text {
-    min-inline-size: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .sdp-barra-veu__buit,
-  .sdp-barra-veu__avis {
-    margin: 0;
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-small);
+  /* Evita tota col·lisió amb el botó flotant «Tornar a dalt» (↑) en mòbil quan el reproductor és obert. */
+  .sdp-root.is-compact[data-sdp-veu-oberta="true"] > .sdp-tornar-dalt {
+    bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--barra-veu-alcada, 0px) + var(--sdp-space-5));
   }
   .sdp-boto-veu-iaia {
     flex: 0 0 auto;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .sdp-barra-veu__control:not(:disabled):not(.sdp-barra-veu__control--principal):hover,
-    .sdp-barra-veu__pindola:not(.sdp-barra-veu__pindola--activa):hover,
-    .sdp-barra-veu__boto-salt:hover {
-      background: var(--sdp-fons-subtil);
-    }
-    .sdp-barra-veu__control--principal:not(:disabled):hover,
-    .sdp-barra-veu__pindola--activa:hover {
-      background: var(--sdp-accio-control-hover);
-    }
   }
   @media print {
     .sdp-veu-lectura-marc,

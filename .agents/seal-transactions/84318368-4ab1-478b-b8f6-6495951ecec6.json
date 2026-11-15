@@ -1,0 +1,22 @@
+{
+  "id": "84318368-4ab1-478b-b8f6-6495951ecec6",
+  "session": "1c7feab4-f51d-4465-ba07-8aaff1dcb806",
+  "operationId": "r16b-protegits-viu-261110",
+  "claim": "1c7feab4-f51d-4465-ba07-8aaff1dcb806:governance-write",
+  "planHash": "f46edc7eed0c1b94e765cc3bf6bd9cd00969be174f8c18b1923d8ae2ed8c7aa3",
+  "beforeSeal": "c3f9ae376ded6e2b0d77c257faf01614b300fcf61fcc97081f2c7fcce620901f",
+  "files": [
+    {
+      "path": "package-lock.json",
+      "before": "6a5a547677505212521d67e051c5273ee2d26baff636dcc44d5e0f61217994fb",
+      "after": "81b55fba73adced493da5ca25427c5bd3b0dbc50578f2c894a5a5777e083e684"
+    },
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "3685341cd3d23d4e6c506c935420c5f1be556e21072fe709b3eaa7d9495a5a17",
+      "after": "ea14dbeeb52ef94f7161ed7938752729457bcea1ce46fc52f0c2b31da2191a31"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "b82b647eaa853d3067884beee78ad73373272975893cdf3eafad92a41af35313"
+}

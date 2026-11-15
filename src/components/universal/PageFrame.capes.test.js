@@ -8,6 +8,8 @@ const net = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
 const components = net('src/css/components.css');
 const moduls = net('src/css/modules.css');
+/* Onada R28 · D-R27-1 (opció b) · Les regles de les mostres del catàleg viuen al full diferit dels espècimens. */
+const especimens = net('src/css/diferit-especimens.css');
 
 /* El bloc que obri `obertura` (comptant claus) i conté `regla`. Es proven
    totes les obertures: n'hi ha més d'una `@container (max-width: 400px)`. */
@@ -103,8 +105,9 @@ test('261004 · el pas compacte de la barra blava és a 367px de barra: sense se
 });
 
 test('T53 · les mostres del catàleg tenen contenidor propi i l’estreta fa 28rem', () => {
-  expect(components).toContain('.sdp-especimen__barres--contenidor { container-type: inline-size; }');
-  expect(components).toContain('.sdp-especimen__barres--estreta { inline-size: min(100%, 28rem); }');
+  expect(especimens).toContain('.sdp-especimen__barres--contenidor { container-type: inline-size; }');
+  expect(especimens).toContain('.sdp-especimen__barres--estreta { inline-size: min(100%, 28rem); }');
+  expect(components).not.toContain('.sdp-especimen__barres--contenidor');
 });
 
 /* T38 (260928: en mòbil i en columna estreta la barra taronja de pàgina no

@@ -44,10 +44,10 @@
       "data": "2026-11-07"
     },
     "descarregues": {
-      "sha256": "7022d1e0616709e3e4a0af3d59f3a9c9a0d2b76ec8e7572e554c4e8a1ae15912",
+      "sha256": "124959fa0b44abce3ccb1b6a5e23306792296fcec3b176e7edd59ab55cea3ec6",
       "html": 9904,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "aprovat_per": "Mestre Javi (R28 261115 01:31-01:37: integració del Kit R27 de Gemini, pla 261115_0135 §1)",
+      "data": "2026-11-15"
     },
     "dispositius": {
       "sha256": "411a021fc0ae529c4f7683642fda52fc8d10e9cfef29f1e64bffdfff6f8e937f",
@@ -104,10 +104,10 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "30a61b2864270b77e2abf8830350890f579981970931d032735d3030c1b7a613",
-      "html": 27002,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "sha256": "8ccd6cd933570e3a97b65887e32e47ff419e22b3faf4e508bfc6dcffb2ec6fa0",
+      "html": 27344,
+      "aprovat_per": "Mestre Javi (R28 261115 01:31-01:37: integració del Kit R27 de Gemini, pla 261115_0135 §1)",
+      "data": "2026-11-15"
     },
     "notes": {
       "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",

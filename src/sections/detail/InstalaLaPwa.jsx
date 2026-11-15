@@ -64,8 +64,15 @@ import { LogotipApple } from '../onboarding/LogotipsDeMarca.jsx';
 export const PAGINA_D_INSTALACIO = 'descarregues';
 
 /* L'H4 de PAGE_COPY.descarregues amb les instruccions de cada navegador. El
-   sanejador lleva els `id`: la guia el troba pel text. */
+   sanejador lleva els `id`: la guia el troba pel text en qualsevol de les 5 llengües. */
 export const TITOL_INSTRUCCIONS = "Com s'instal·la des del navegador";
+const TITOLS_INSTRUCCIONS = new Set([
+  TITOL_INSTRUCCIONS,
+  'Cómo se instala desde el navegador',
+  'How to install from your browser',
+  'Nola instalatzen da nabigatzailetik',
+  'Como se instala desde o navegador',
+]);
 
 /* Motius de la captura (motiuPerNoOferir) que diuen que la finestra no és de
    l'entrada pròpia, o que no s'hi pot instal·lar res: cap captura (paquet
@@ -194,7 +201,7 @@ function titolDInstruccions(node) {
   try {
     const arrel = node?.getRootNode?.() || globalThis.document;
     for (const titol of arrel?.querySelectorAll?.('.cms-preview h4') ?? []) {
-      if (titol.textContent.trim() === TITOL_INSTRUCCIONS && !titol.closest('[hidden]')) return titol;
+      if (TITOLS_INSTRUCCIONS.has(titol.textContent.trim()) && !titol.closest('[hidden]')) return titol;
     }
   } catch { /* sense document no hi ha on anar */ }
   return null;

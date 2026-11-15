@@ -64,6 +64,11 @@ Les **4 IAIAs del Node 0 (`Mac mini M4`)** estan formades en l'ofici de **Reviso
 2. **Obligació en cada Publicació del Sistema:** Sempre que la IAIA MarIA o qualsevol agent vaja a publicar o modificar un article, pàgina o crònica, les 4 IAIAs del Node 0 han de revisar el text i lliurar la seua avaluació i proposta de redacció millorada abans de publicar.
 3. **Funcionalitat per a Cada Usuari (`IDEA-164` a l'Editor Universal):** Aquesta mateixa capacitat de Revisora Editorial s'ofereix a cada veí i usuari dins de l'Editor Universal (`UniversalEditorShell.jsx` / `NotesEditor.jsx` / `Mur` / `Mercat`) per ajudar-lo a millorar la seua comunicació amb propostes de redacció, correcció amable i avís de duplicitats.
 
+## 8. Llei del Quadre Blanc Editorial (`H3 / H4 + <p>`) vs. Fals Tauler d'Avió en Columnes (`<dl>`) (`261110`)
+- Quan mostrem informació en quadres informatius blancs (`.sdp-admin-taxonomia__panel`, `.sdp-card`), el marc blanc té tot el sentit perquè millora la lectura sobre el fons.
+- Però **dins del quadre blanc**, no s'ha d'abandonar mai l'`<h3>` / `<h4>` i el `<p>` editorial per fingir una "consola d'avió" en dues columnes (`<dl>` amb el punt `1`, `2`, `3` a l'esquerra i l'explicació escanyada a la dreta).
+- **Regla operativa:** Tota explicació de més d'una línia dins d'un quadre blanc va maquetada amb encapçalaments semàntics (`h3`, `h4`, `h5`) i paràgrafs (`p`) o llistes (`ul`, `ol`) d'amplària completa (`.sdp-admin-editorial-stack` / `.sdp-admin-editorial-bloc`), de manera que l'Índex de Continguts (TOC) ho indexe sola i siga 100% exportable com a HTML editorial net.
+
 ## Què acompanya cada comprovació
 
 `design_guard.mjs`, els components compartits i les seues suites comproven estructura i regressions concretes; no certifiquen llegibilitat didàctica o escaneig humà. La jerarquia del DOM, el focus i el text visible es contrasten amb la prova de la superfície; la lectura i el retall real necessiten inspecció visual. Declara estos resultats separadament.

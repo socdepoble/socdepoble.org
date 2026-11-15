@@ -59,6 +59,7 @@ Quan la persona assenyale una fallada, repetisca una correcció o demane neteja 
 1. Repassa l’objectiu, l’evidència i les 5 fases del Mètode MIT abans d’editar.
 2. Analitza la persistència del Mestre, etiqueta la lliçó (`[CORRECTION]`, `[DEADEND]`, `[SEQUENCE]`, `[CONVENTION]`, `[DISCOVERY]`) i converteix-la en una "Detecció de Patró".
 3. Proposa i executa amb criteris de Mimetisme Empàtic i Llei 0 (Sinceritat Radical).
+4. **Llei «Javi = Pepito en Lectura Pública» i «Zero Finestres Flotants Injustificades» (`[CONVENTION]` · `R16-AA5` / `R16-AA8`):** En les vistes públiques de lectura, el superadmin veu la mateixa pàgina neta que qualsevol veí; i la configuració de l'espai de treball (`⚙️`) dels catàlegs s'obri integrada a tota l'amplària de la Columna 3 (`ajustosEnDetall`) amb botó `«← Tornar a ...»` de `58px` a dalt i a baix.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

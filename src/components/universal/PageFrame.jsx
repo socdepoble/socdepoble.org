@@ -1,7 +1,7 @@
 import { desplacaASeccio, destiDelSalt, dinsDeLEncastat } from '../../utils/desplacamentApp.js';
 export { desplacaASeccio } from '../../utils/desplacamentApp.js';
 import { resolveAsset } from '../../config/assetResolver';
-import { lazy, Suspense, useCallback, useEffect, useId, useLayoutEffect, useState, useRef } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useId, useLayoutEffect, useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from '../../app/contexts/RouterContext';
 import { Camera, Image as ImageIcon, LoaderCircle, Trash2 } from 'lucide-react';
@@ -702,11 +702,14 @@ export function PageFrame({
      l'editor. Sense la prop (lectura, connexions, l'estat buit), l'enllaç de
      sempre a la pàgina «Drets d'autor». */
   onCanviaCopyright,
-  /* IDEA-255 (Onada R23) · `veuLectura`: en totes les pàgines de lectura amb
-     prosa real (excloent mode edició, `chrome="none"` i `veuLectura={false}`)
-     pinta el botó «🔊 Escolta la IAIA» sota l'entradilla (.page-intro) i obri
-     en diferit el Mini-Reproductor Flotant Universal (BarraReproductorVeu). */
+  /* IDEA-255 (Onada R23) + IDEA-268 (Onada R27) · `veuLectura` i `fontSo`: en
+     totes les pàgines de lectura amb prosa real (o amb una `fontSo` explícita
+     com futura Ràdio de Poble), excloent mode edició, `chrome="none"` i
+     `veuLectura={false}`, pinta el botó sota l'entradilla (.page-intro) i obri
+     el Reproductor Universal de So (`BarraReproductorVeu`) centrat sobre el
+     panell de lectura tant en mòbil com en escriptori. */
   veuLectura = true,
+  fontSo = null,
   children,
   className = '',
   LinkComponent = 'a' // To decouple from React Router's Link
@@ -725,6 +728,10 @@ export function PageFrame({
   const [teLecturaVeu, setTeLecturaVeu] = useState(false);
   const [reproductorVeuObert, setReproductorVeuObert] = useState(false);
   const [estatVeu, setEstatVeu] = useState({ oberta: false, parlant: false });
+  /* IDEA-268 · Qui ha obert el reproductor des de dins de l'article (p. ex.
+     «Tria esta veu») i si la lectura ha de seguir el bloc amb el scroll. */
+  const invocadorVeuRef = useRef(null);
+  const [seguixLecturaVeu, setSeguixLecturaVeu] = useState(true);
 
   /* Traductor de Poble (ordre del Mestre, 260930 · via B) · L'estat de la
      traducció d'esta pàgina. La font és sempre l'article original
@@ -814,7 +821,7 @@ export function PageFrame({
       return undefined;
     }
     const comprova = () => {
-      const disponible = teProsaDeLectura(cosNode, { enEdicio: enEdicioVeu });
+      const disponible = Boolean(fontSo) || teProsaDeLectura(cosNode, { enEdicio: enEdicioVeu });
       setTeLecturaVeu((abans) => (abans === disponible ? abans : disponible));
     };
     comprova();
@@ -822,16 +829,50 @@ export function PageFrame({
     const obs = new MutationObserver(comprova);
     obs.observe(cosNode, { childList: true, subtree: true });
     return () => obs.disconnect();
-  }, [enEdicioVeu, children, title]);
+  }, [enEdicioVeu, children, title, fontSo]);
+
+  /* IDEA-268 · Precarrega el tros del reproductor quan la pàgina té lectura o
+     font sonora disponible perquè en tocar el botó en mòbil s'òbriga a l'instant. */
+  useEffect(() => {
+    if (!teLecturaVeu || enEdicioVeu) return;
+    import('./veu/BarraReproductorVeu.jsx').catch(() => {});
+  }, [teLecturaVeu, enEdicioVeu]);
+
+  /* `obriReproductor({ invocador, seguixLectura })` des del context: el focus
+     torna a `invocador` en tancar i, amb `seguixLectura: false`, l'avanç de
+     bloc no s'emporta la persona lluny d'on és. Sense opcions (o amb un
+     esdeveniment com a argument), es comporta com el botó de dalt. */
+  const obriReproductorVeu = useCallback((opcions) => {
+    const valides = opcions && typeof opcions === 'object' && !('nativeEvent' in opcions) ? opcions : {};
+    const invocador = valides.invocador;
+    invocadorVeuRef.current = invocador && typeof invocador.focus === 'function' ? invocador : null;
+    setSeguixLecturaVeu(valides.seguixLectura !== false);
+    setReproductorVeuObert(true);
+  }, []);
 
   const tancaReproductorVeu = useCallback(() => {
     setReproductorVeuObert(false);
     setEstatVeu({ oberta: false, parlant: false });
+    invocadorVeuRef.current = null;
   }, []);
 
   const premBotoVeuLectura = useCallback(() => {
+    invocadorVeuRef.current = null;
+    setSeguixLecturaVeu(true);
     setReproductorVeuObert((obert) => !obert);
   }, []);
+
+  const valorContextVeu = useMemo(() => {
+    if (enEdicioVeu) return false;
+    return {
+      activa: true,
+      reproductorObert: reproductorVeuObert,
+      parlant: Boolean(estatVeu.parlant),
+      obriReproductor: obriReproductorVeu,
+      tancaReproductor: tancaReproductorVeu,
+      alternaReproductor: premBotoVeuLectura,
+    };
+  }, [enEdicioVeu, reproductorVeuObert, estatVeu.parlant, obriReproductorVeu, tancaReproductorVeu, premBotoVeuLectura]);
 
   const etiquetaVeuTraduida = String(tradueix(tAvis, PARELL_ESCOLTA_VEU));
   const etiquetaEscoltaVeu = etiquetaVeuTraduida.replace(RE_EMOJI_INICIAL_VEU, '') || etiquetaVeuTraduida;
@@ -1258,7 +1299,7 @@ export function PageFrame({
             </button>
           </div>
         ) : null}
-        <VeuLecturaPaginaContext.Provider value={!enEdicioVeu}>
+        <VeuLecturaPaginaContext.Provider value={valorContextVeu}>
           <LlenguaDelContingut.Provider value={langDelContingut}>
             {children}
           </LlenguaDelContingut.Provider>
@@ -1317,7 +1358,10 @@ export function PageFrame({
             cosRef={traduida ? traduccioRef : containerRef}
             idioma={idiomaVeuLectura}
             privat={!ambTraductor}
+            fontSo={fontSo}
             botoActivadorRef={botoVeuLecturaRef}
+            invocadorRef={invocadorVeuRef}
+            seguixLectura={seguixLecturaVeu}
             onTanca={tancaReproductorVeu}
             onCanviEstat={setEstatVeu}
           />

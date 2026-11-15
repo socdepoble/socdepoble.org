@@ -114,13 +114,14 @@ if (!modulePath || !fs.existsSync(modulePath)) {
 } else {
   const { PGlite } = await import(moduleURL.href);
   const { pgcrypto } = await import(new URL('./contrib/pgcrypto.js', moduleURL));
-  const { capcalera, dependenciesDeclarades, llegixOrdre, ordena } = await import(pathToFileURL(path.join(ARREL, 'scripts/supabase/verifica-migracions.mjs')).href);
+  const { capcalera, comparaVersions, dependenciesDeclarades, llegixOrdre, ordena, versioDeFitxer } = await import(pathToFileURL(path.join(ARREL, 'scripts/supabase/verifica-migracions.mjs')).href);
   const MIG = path.join(ARREL, 'supabase/migrations');
-  const inventari = fs.readdirSync(MIG).filter((f) => /^\d{10}_.+\.sql$/.test(f)).sort();
-  const versions = inventari.map((f) => f.slice(0, 10));
+  /* Les dues convencions del catàleg (aammddhhmm i, des de d44363319 · R21.9b, YYYYMMDDhhmmss), com el verificador. */
+  const inventari = fs.readdirSync(MIG).filter((f) => versioDeFitxer(f) && f.endsWith('.sql')).sort();
+  const versions = inventari.map(versioDeFitxer).sort(comparaVersions);
   const ordre = llegixOrdre(fs.readFileSync(path.join(ARREL, 'supabase/ordre_desplegament.json'), 'utf8'), new Set(versions));
-  const dependencies = new Map(inventari.map((f) => [f.slice(0, 10),
-    dependenciesDeclarades(capcalera(fs.readFileSync(path.join(MIG, f), 'utf8')), f.slice(0, 10)).filter((d) => d.versio < f.slice(0, 10)).map((d) => d.versio)]));
+  const dependencies = new Map(inventari.map((f) => [versioDeFitxer(f),
+    dependenciesDeclarades(capcalera(fs.readFileSync(path.join(MIG, f), 'utf8')), versioDeFitxer(f)).filter((d) => comparaVersions(d.versio, versioDeFitxer(f)) < 0).map((d) => d.versio)]));
   const pla = ordena({ versions, dependencies, restriccions: ordre.restriccions, portes: ordre.portes });
   assert.deepEqual(pla.errors, []);
   const fitxers = pla.ordre.filter((p) => p.tipus === 'migracio').map((p) => inventari.find((f) => f.startsWith(`${p.id}_`)));

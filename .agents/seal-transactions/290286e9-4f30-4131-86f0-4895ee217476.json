@@ -1,0 +1,22 @@
+{
+  "id": "290286e9-4f30-4131-86f0-4895ee217476",
+  "session": "df86990d-90ca-4839-8082-040b0b493ccc",
+  "operationId": "olivera-taula-optima-261114",
+  "claim": "df86990d-90ca-4839-8082-040b0b493ccc:governance-write",
+  "planHash": "5a50c40bde9cc855dac747e695ee14adee1a3450cbd8d130479a0883a2c80ce5",
+  "beforeSeal": "cf45eabca5c1100beceb0d29e9ad5f22aa641d59eb586cae3913ef196f92e7a7",
+  "files": [
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "13138da56d3a75d3755540d503eb3871e4129c6f825859a641489e09ec3e2dfe",
+      "after": "fa72ec8731e82cce768e581052e672f45af9f2644ef9ca2b843bdd4b2647f489"
+    },
+    {
+      "path": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "before": "1e5d9584e1e4665fbbdc0e259977bdb2f0afadc80f35cc551a04623331f740c4",
+      "after": "f13c0ddae313a320cbac78b4a5c91e651f88f45c022be2b26a557b70e0ea350e"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d9730bd7fb3e19e3de28d363f7edd9c2ef66d385aeb8c42ef71930e556d566fb"
+}

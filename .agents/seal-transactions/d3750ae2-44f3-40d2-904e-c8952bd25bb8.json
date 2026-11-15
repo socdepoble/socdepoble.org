@@ -1,0 +1,17 @@
+{
+  "id": "d3750ae2-44f3-40d2-904e-c8952bd25bb8",
+  "session": "891a03de-18ff-46ff-996a-bff681f08353",
+  "operationId": "r21-a2-politica-2-6-mur-public-verifica-r15",
+  "claim": "891a03de-18ff-46ff-996a-bff681f08353:governance-write",
+  "planHash": "6ee6730ad005e9e5bf540381f0167a998953bdecb5254ed8a0d4fdc9cb2d0504",
+  "beforeSeal": "ebb1338668fb89cfa1df990ad31afa371a50d27a1d911cedeb15f10f741b52a8",
+  "files": [
+    {
+      "path": "scripts/supabase/verifica_migracions_r15.sql",
+      "before": "f0bc1be5fb78148eb8d69072a9fac884b443ea435fd1588433a3b3c377a068ce",
+      "after": "d8f72bce79939c15874d4d1f5920d1036678d4bd53db6b3f9dd2a638bfbf6928"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "a2194d82bf29e8eecf173fb4c9b53e8f345503110e28cf53160381bd4c73dd05"
+}

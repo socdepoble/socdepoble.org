@@ -1,13 +1,14 @@
 /**
- * EspecimenBarraReproductorVeu.jsx — IDEA-255 (Onada R23 · 14-11-2026) · El
- * Mini-Reproductor Flotant Universal de Veu (`BarraReproductorVeu.jsx`) que
- * PageFrame munta quan la persona lectora prem «🔊 Escolta la IAIA» sota
- * l'entradilla (.page-intro). Pedra Seca §9: l'espècimen és el component real
- * en mode de mostra inline (`mostraEspecimen`), sense portal al viewport.
+ * EspecimenBarraReproductorVeu.jsx — IDEA-255 (Onada R23 · 14-11-2026) +
+ * IDEA-268 (Onada R27 · 15-11-2026) · Reproductor Flotant Universal de So
+ * (`BarraReproductorVeu.jsx`) de PageFrame, centrat geomètricament sobre el
+ * panell de lectura actiu tant en mòbil com en escriptori i preparat amb
+ * `fontSo` desacoplada per a la futura Ràdio de Poble.
  */
 import { Especimen } from '../Especimen.jsx';
 import { Llinatge } from '../Llinatge.jsx';
 import { BarraReproductorVeu } from '../../../../components/universal/veu/BarraReproductorVeu.jsx';
+import { VEUS_TERRITORIALS } from '../../../../services/veusTerritorials.js';
 
 const BLOCS_MOSTRA = Object.freeze([
   Object.freeze({
@@ -52,38 +53,71 @@ const BLOCS_MOSTRA = Object.freeze([
   }),
 ]);
 
+/* Les pistes de mostra són les gravacions reals del Banc de Veus
+   (public/assets/audio/veus_node0/), preses del catàleg tancat de veus
+   perquè la ruta no es puga desfasar del fitxer que existix. */
+const mostraDeLaVeu = (id) => VEUS_TERRITORIALS.find((veu) => veu.id === id)?.mostraAsset || null;
+
+export const FONT_SO_RADIO_MOSTRA = Object.freeze({
+  tipus: 'audio',
+  titolEmissio: 'Ràdio de Poble · Mostra de contracte sonor',
+  enDirecte: false,
+  pistes: Object.freeze([
+    Object.freeze({
+      id: 'radio-mostra-1',
+      titol: 'Veu valenciana d’estudi · Arnau (Matxa-TTS v2)',
+      subtitol: 'Mostra sonora · Ràdio de Poble (en preparació)',
+      src: mostraDeLaVeu('arnau_valencia'),
+      text: 'Arnau · Mostra oberta per al futur canal de Ràdio de Poble.',
+    }),
+    Object.freeze({
+      id: 'radio-mostra-2',
+      titol: 'Veu valenciana d’estudi · Gina (Matxa-TTS v2)',
+      subtitol: 'Mostra sonora · Ràdio de Poble (en preparació)',
+      src: mostraDeLaVeu('gina_valencia'),
+      text: 'Gina · Mostra oberta per al futur canal de Ràdio de Poble.',
+    }),
+  ]),
+});
+
 export default function EspecimenBarraReproductorVeu() {
   return (
     <>
       <Llinatge id="barra-veu" />
       <Especimen
         id="barra-reproductor-veu"
-        nom="BarraReproductorVeu"
+        nom="BarraReproductorVeu · Reproductor universal de so"
         fitxer="src/components/universal/veu/BarraReproductorVeu.jsx"
-        descripcio="El mini-reproductor flotant universal que apareix a la part inferior de la pantalla quan es prem «🔊 Escolta la IAIA» sota l’entradilla de qualsevol pàgina de lectura de PageFrame. Indexa la pàgina en blocs navegables [0..N-1], conserva sempre el paràgraf exacte en fer Pausa / Continua, permet saltar o buscar ràpidament per apartats i text, ressalta suaument el paràgraf actiu sense desplaçar la maqueta (zero CLS), copia el fragment i es tanca amb l’aspa."
+        descripcio="El reproductor flotant universal de so que apareix centrat a la part inferior del panell de lectura actiu (tant en mòbil com en escriptori amb barra lateral o espais multicolumna) quan es prem «🔊 Escolta la IAIA» o es tria una veu al Banc de Veus. En mode lectura indexa la pàgina en blocs navegables [0..N-1], conserva el paràgraf exacte en fer Pausa / Continua, ressalta el paràgraf actiu sense CLS i copia el fragment; amb la prop opcional fontSo reprodueix pistes o emissions d’àudio, deixant preparada la peça per a la futura Ràdio de Poble."
         contracte={[
           ['oberta', 'boolean', 'false', 'Si el reproductor està actiu. Tancat, no pinta cap node.'],
-          ['capcaleraRef', 'RefObject<HTMLElement>', 'null', 'Referència a header.page-title per incloure l’H1 com a bloc 0.'],
-          ['cosRef', 'RefObject<HTMLElement>', 'null', 'Referència a l’article visible (original o traduït) d’on s’extrauen els blocs.'],
+          ['capcaleraRef', 'RefObject<HTMLElement>', 'null', 'Referència a header.page-title per incloure l’H1 com a bloc 0 en lectura.'],
+          ['cosRef', 'RefObject<HTMLElement>', 'null', 'Referència a l’article visible d’on s’extrauen els blocs i es mesura el centre del panell.'],
           ['idioma', 'string', "'ca'", 'Codi de llengua de lectura (original o llengua traduïda).'],
           ['privat', 'boolean', 'false', 'Amb true (notes privades o pàgines sense traducció externa) la veu no ix mai del dispositiu.'],
-          ['onTanca', 'function', 'null', 'Atura la locució, neteja el ressaltat i tanca la barra, tornant el focus al disparador si cal.'],
+          ['fontSo', '{ tipus, titolEmissio?, enDirecte?, pistes } | null', 'null', 'Contracte desacoplat de so: null per a lectura de pàgina per blocs; objecte amb tipus="audio" i pistes [{ id, titol, subtitol?, src }] per a àudio o futura Ràdio de Poble.'],
+          ['invocadorRef', 'RefObject<HTMLElement>', 'null', 'Control que ha obert la barra des de dins de l’article (p. ex. «Tria esta veu»): en tancar, el focus hi torna; sense invocador, torna al disparador de dalt sense desplaçar la pàgina.'],
+          ['seguixLectura', 'boolean', 'true', 'Amb false (obertura des del Banc de Veus), l’avanç automàtic de bloc no desplaça la pàgina i la persona es queda on és.'],
+          ['onTanca', 'function', 'null', 'Atura el so, neteja el ressaltat i tanca la barra, tornant el focus al disparador si cal.'],
         ]}
         a11y={[
-          'Tots els controls (Anterior, Pausa/Continua, Següent, Apartats i cerca, Copiar fragment i Tancar) són <button type="button"> natius amb objectiu tàctil mínim --sdp-touch (48px) i nom accessible explícit.',
-          'Pausa i Continua operen sobre l’índex de bloc exacte en memòria, evitant els bloquejos de speechSynthesis.pause() en navegadors mòbils.',
-          'En tancar amb ✕ mentre el focus és dins de la barra, el focus torna netament al botó «Escolta la IAIA» de PageFrame.',
+          'Tots els controls (Anterior, Pausa/Continua, Següent, Apartats i cerca, Copiar fragment i Tancar) són <button type="button"> natius centrats amb objectiu tàctil mínim --sdp-touch (48px) i nom accessible explícit.',
+          'En mòbil (.sdp-root.is-compact), el portal es munta dins de .sdp-root damunt de nav.mobile-nav i marca data-sdp-veu-oberta="true" per alçar el botó flotant «Tornar a dalt» (↑) sense solapaments.',
+          'En escriptori i vistes multicolumna, ResizeObserver alinea les propietats locals --barra-veu-inici i --barra-veu-fi al panell de lectura actiu perquè la barra quede centrada al mil·límetre.',
         ]}
         fes={[
-          'Muntar-la en diferit des de PageFrame a la capa superior (capaDeDalt) perquè funcione igual a l’SPA i dins de <soc-de-poble> (LLEI_06).',
-          'Marcar amb data-sdp-no-locutar="" els jocs interactius, formularis o bancs de mostres que no formen part de la lectura lineal.',
+          'Muntar-la des de PageFrame dins de .sdp-root perquè funcione igual a l’SPA mòbil/escriptori i dins de <soc-de-poble> (LLEI_06).',
+          'Reutilitzar la mateixa peça amb fontSo={ tipus: "audio", pistes } quan es connecten emissions de Ràdio de Poble o pòdcasts rurals, sense crear un segon reproductor divergent.',
         ]}
         noFacis={[
           'Posar-la en mode edició (TipTap / ProseMirror) ni deixar privat={false} en pàgines privades.',
-          'Reiniciar la lectura al bloc 0 quan la persona només vol fer una pausa i continuar.',
+          'Ancorar-la a 100vw ignorant la barra lateral d’escriptori o deixar que tape nav.mobile-nav o el botó ↑ en mòbil.',
         ]}
       >
+        <h4>Mode 1 · Lectura per blocs d’articles i pàgines (Matxa-TTS v2 / IAIA)</h4>
         <BarraReproductorVeu oberta mostraEspecimen blocsMostra={BLOCS_MOSTRA} />
+        <h4>Mode 2 · Contracte d’àudio preparat per a Ràdio de Poble (fontSo)</h4>
+        <BarraReproductorVeu oberta mostraEspecimen fontSo={FONT_SO_RADIO_MOSTRA} />
       </Especimen>
     </>
   );

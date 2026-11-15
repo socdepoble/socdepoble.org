@@ -1,0 +1,54 @@
+/* Full diferit (Onada R28 · D-R27-1, opció b aprovada pel Mestre): les regles de .sdp-selector-opcions ixen de
+   l'arrencada del paquet de WordPress i s'adopten a l'arrel on es munta la peça (src/config/fullDiferit.js).
+   NO s'importa des d'index.css. Origen: modules.css. */
+@layer components {
+  .sdp-selector-opcions {
+    container-type: inline-size;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--sdp-text-cos);
+  }
+  .sdp-selector-opcions legend { padding: 0; margin-block-end: var(--sdp-space-3); text-align: start; font-weight: 700; }
+  .sdp-selector-opcions__llista { display: grid; gap: var(--sdp-space-2); }
+  .sdp-selector-opcions__opcio { display: flex; flex-direction: column; align-items: stretch; box-sizing: border-box; inline-size: 100%; min-inline-size: 0; }
+  .sdp-selector-opcions__tria {
+    display: flex; align-items: center; justify-content: center; gap: var(--sdp-space-2);
+    margin: 0; box-sizing: border-box; max-inline-size: 100%; min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-3) var(--sdp-space-8);
+    border: 2px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-targeta); color: var(--sdp-text-cos);
+    font-weight: 700; font-size: var(--sdp-text-small); line-height: 1.4;
+    cursor: pointer;
+  }
+  .sdp-selector-opcions__tria > span { min-inline-size: 0; overflow-wrap: anywhere; text-align: start; }
+  .sdp-selector-opcions__tria input { flex: 0 0 auto; margin: 0; accent-color: var(--sdp-accio-control); }
+  .sdp-selector-opcions__tria[data-actiu="true"] { border-color: var(--sdp-accio-control); background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
+  .sdp-selector-opcions__tria[data-actiu="true"] input { accent-color: var(--sdp-sobre-accio); }
+  .sdp-selector-opcions__tria:focus-within { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  /* P2 de Codex R26.4 · Una opció inhabilitada mai no porta el fons blau d'activa: amb el text de desactivat
+     sobre --sdp-accio-control donava ~1,01:1. Ara, activa o no, va sobre el fons subtil amb el text de
+     desactivat (el mateix to que --sdp-text-suau) i la vora de control, sense opacitat. Els controls
+     inactius queden fora de l'exigència de contrast de WCAG 1.4.3; ací es manté llegible igualment. */
+  .sdp-selector-opcions__tria[data-inhabilitada="true"],
+  .sdp-selector-opcions__tria[data-inhabilitada="true"][data-actiu="true"] {
+    cursor: not-allowed; border-color: var(--sdp-vora-control); background: var(--sdp-fons-subtil); color: var(--sdp-text-desactivat);
+  }
+  .sdp-selector-opcions__tria[data-inhabilitada="true"] input { accent-color: var(--sdp-text-desactivat); }
+  .sdp-selector-opcions__detall {
+    box-sizing: border-box; inline-size: 100%; padding: var(--sdp-space-3) var(--sdp-space-4);
+    text-align: start; line-height: 1.6; overflow-wrap: anywhere;
+    border-inline-start: var(--sdp-space-1) solid var(--sdp-accio-control);
+  }
+  .sdp-selector-opcions__detall[hidden] { display: none; }
+  .sdp-selector-opcions__detall > :first-child { margin-block-start: 0; }
+  .sdp-selector-opcions__detall > :last-child { margin-block-end: 0; }
+  .sdp-selector-opcions__resum { display: flex; flex-wrap: wrap; margin-block-start: var(--sdp-space-4); text-align: start; min-inline-size: 0; }
+  .sdp-selector-opcions__resum > span { flex: 1 1 100%; min-inline-size: 0; overflow-wrap: anywhere; line-height: 1.6; }
+  @container (min-width: 40rem) {
+    .sdp-selector-opcions__opcio { max-inline-size: 36rem; }
+    .sdp-selector-opcions__detall { padding-inline: var(--sdp-space-6); }
+  }
+}

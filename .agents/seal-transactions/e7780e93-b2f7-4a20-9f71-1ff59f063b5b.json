@@ -1,0 +1,17 @@
+{
+  "id": "e7780e93-b2f7-4a20-9f71-1ff59f063b5b",
+  "session": "80b4a4a1-9aaa-4095-8efb-006c8dc3b83a",
+  "operationId": "r16b-estat-retirada-261110",
+  "claim": "80b4a4a1-9aaa-4095-8efb-006c8dc3b83a:governance-write",
+  "planHash": "38099adf8b25bf698a6711a039456d49c8a713441c1f31d468bd729471c7a46d",
+  "beforeSeal": "4175e2e541383edb6e49f7a387d3a1ef5cda54b2051b02396bcb6215e30a2a26",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "d5ed90ff815e4629e904e3b631fdb189341fe4704cb21dca3ec1f931533e424e",
+      "after": "ef8b7ba60bcf1a8672bd7095ec8fbf4a33f2d033394123551e95917c9fc5f7b2"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "b82b647eaa853d3067884beee78ad73373272975893cdf3eafad92a41af35313"
+}

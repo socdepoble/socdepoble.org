@@ -65,11 +65,19 @@ else{
         const denied=await append({sectionId:'mur',title:'Foreign entity fixture',actor:{tipus:'entitat',id:organization.id},payload:{}},bob);assert.ok([400,403].includes(denied.status),JSON.stringify({denied,lastError}));
         assert.equal(await scalar("SELECT count(*)::int FROM public.section_submissions WHERE title='Foreign entity fixture'"),0);
       });
-      await t.test('read policy is member-only; anonymous access is zero or denied, removed member sees no rows',async()=>{
-        const member=await call('loadSeccioPage',{sectionId:'mur'},charlie);assert.equal(member.status,200,JSON.stringify({member,lastError}));assert.ok(member.body.rows.some(row=>row.id===published.id));
+      await t.test('read policy is member-only; anonymous access is zero or denied, removed member sees no member rows',async()=>{
+        const member=await call('loadSeccioPage',{sectionId:'mur'},charlie);assert.equal(member.status,200,JSON.stringify({member,lastError}));assert.equal(member.body.lectura,'membre');assert.ok(member.body.rows.some(row=>row.id===published.id&&row.owner_user_id===alice.id));
         try{const result=await pg.exec('BEGIN; SET LOCAL ROLE anon; SELECT count(*)::int AS n FROM public.section_submissions; COMMIT;');assert.equal(result.find(v=>v.rows?.length).rows[0].n,0);}catch(error){await pg.exec('ROLLBACK; RESET ROLE;');assert.equal(error.code,'42501');}
         await pg.query('DELETE FROM public.town_memberships WHERE town_id=$1 AND user_id=$2',[tenant,charlie.id]);
-        const removed=await call('loadSeccioPage',{sectionId:'mur'},charlie);assert.equal(removed.status,200,JSON.stringify({removed,lastError}));assert.deepEqual(removed.body.rows,[]);
+        // R21.1 v2 (d44363319, 2611122200 llig_mur_membres): outside the padró the operation degrades to the
+        // scalar public DTO (mur-membres-actes-v2-postgres.test.mjs), never member rows, owner, entity or payload.
+        const removed=await call('loadSeccioPage',{sectionId:'mur'},charlie);assert.equal(removed.status,200,JSON.stringify({removed,lastError}));assert.equal(removed.body.lectura,'public');
+        for(const row of removed.body.rows)assert.deepEqual(Object.keys(row).sort(),['catalog_destins','catalog_font','catalog_id','created_at','description','destinacio_workspace','id','public_content','section_id','tenant_id','title','updated_at']);
+        assert.doesNotMatch(JSON.stringify(removed.body),/owner_user_id|author_org_id|payload|Veí\/na/);
+        await pg.exec('BEGIN');
+        try{await pg.query("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claims',$2,true)",[charlie.id,JSON.stringify({sub:charlie.id,role:'authenticated'})]);await pg.exec('SET LOCAL ROLE authenticated');
+          assert.equal((await pg.query('SELECT count(*)::int AS n FROM public.section_submissions')).rows[0].n,0);await pg.exec('COMMIT');}
+        catch(error){await pg.exec('ROLLBACK; RESET ROLE;');throw error;}
       });
       await t.test('tuple cursor preserves microseconds, limits50 and completes without gaps or duplicates',async()=>{
         await pg.query("INSERT INTO public.section_submissions(id,tenant_id,owner_user_id,section_id,title,payload,created_at) SELECT md5('r5-publication-page-'||i)::uuid,$1,$2,'events','Page fixture '||i,jsonb_build_object('sequence',i),timestamptz '2026-11-04 12:00:00.123400+00'+i*interval '1 microsecond' FROM generate_series(1,51)i",[tenant,alice.id]);

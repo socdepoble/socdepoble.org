@@ -53,3 +53,15 @@ test('el resum pinta les dues primeres frases senceres, sense title', () => {
   expect([...estat.children].map((fill)=>fill.textContent)).toEqual([text,'Segona línia']);
   expect(estat.querySelector('[title]')).toBeNull();
 });
+
+/* Onada R28 · Un sol anunci: amb resumViu={false} el resum es veu igual, però no és regió viva
+   (la pàgina ja en té una per al mateix recompte, com el simulador del Farcellet). */
+test('resumViu={false}: el resum es pinta sencer però no és cap role=status ni aria-live', () => {
+  const { container } = render(<SelectorOpcionsDesplegable llegenda="Destí" opcions={opcions} valor="a" onCanvi={() => {}}
+    resumTitol="Resum" resum={['Destí: a', 'Només simulació']} resumViu={false} />);
+  const resum = container.querySelector('.sdp-selector-opcions__resum');
+  expect(resum.textContent).toContain('Destí: a');
+  expect(resum.hasAttribute('role')).toBe(false);
+  expect(resum.hasAttribute('aria-live')).toBe(false);
+  expect(screen.queryByRole('status')).toBeNull();
+});

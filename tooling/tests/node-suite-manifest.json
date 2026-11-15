@@ -217,7 +217,8 @@
     "tests/firebase-capcaleres-cache.test.mjs",
     "tooling/gates/consola-zero-nucli.test.mjs",
     "tooling/scripts/retencio-assets.postcondicions.test.mjs",
-    "tooling/gates/consola-zero.sense-rutes.test.mjs"
+    "tooling/gates/consola-zero.sense-rutes.test.mjs",
+    "tests/r28-rgpd-quotes-r23.test.mjs"
   ],
   "files": [
     {
@@ -2007,6 +2008,12 @@
       "path": "tooling/brain/__tests__/observatori-rss-seguretat.test.mjs",
       "suite": "primary",
       "reason": "R26 · negatives de seguretat de l’Observatori: SSRF IPv4/IPv6 i adreça fixada al socket, redireccions, bytes i termini, esquema de l’eixida del model i rutes d’escriptura; tot amb dobles locals."
+    },
+    {
+      "path": "tests/r28-rgpd-quotes-r23.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R28 (D-R24.2-5 i D-R24.2-6): exportació RGPD de les files R23 pròpies (veu_del_poble) amb les seccions de 2611070600 intactes i quotes d'escriptura per persona a aportacions i vots (60/h, 500/24 h, 2000 vives, vot repetit fora, autoria aliena per la RLS, servidor exempt), sense GRANT ni política nova, idempotència i precondició SDP-R28-002; catàleg complet sobre PGlite local explícit; sense el mòdul declara omissió, no SQL certificat."
     }
   ]
 }

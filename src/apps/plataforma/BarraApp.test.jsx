@@ -213,7 +213,9 @@ describe('dins d’una app', () => {
     const { nav } = muntaBarra('/app/prova/caixa');
     expect(nav.querySelectorAll('[style]')).toHaveLength(0);
     expect(nav.querySelectorAll('iframe, script')).toHaveLength(0);
-    /* L'única imatge és la marca de Sóc de Poble (BrandMark), com a la seua barra. */
-    expect([...nav.querySelectorAll('img')].map((img) => img.className)).toEqual(['app-brand__mark']);
+    /* L'única imatge és la marca de Sóc de Poble (BrandMark), com a la seua barra:
+       sense cap classe pròpia (R28: .app-brand__mark no tenia regla; la mida la
+       dona .brand img de layout.css, a les dues barres). */
+    expect([...nav.querySelectorAll('img')].map((img) => [img.getAttribute('alt'), img.className])).toEqual([['Sóc de Poble', '']]);
   });
 });

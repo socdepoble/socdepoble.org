@@ -10,12 +10,17 @@
  *     viu, ressaltat suau (.sdp-veu-bloc-actiu), Copiar fragment, Tancar amb
  *     retorn de focus, vista compacta (is-compact) i portal en ShadowRoot tancat.
  */
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { RouterProvider } from '../../../app/contexts/RouterContext.jsx';
 import { PageFrame } from '../PageFrame.jsx';
+import { BarraReproductorVeu } from './BarraReproductorVeu.jsx';
 import { CLASSE_BLOC_VEU_ACTIU, extreuBlocsLecturaVeu } from './lectorPaginaVeu.js';
+import { FONT_SO_RADIO_MOSTRA } from '../../../sections/disseny/cataleg/detalls/EspecimenBarraReproductorVeu.jsx';
 import { LA_VEU_DE_SOC_DE_POBLE_POST, LA_VEU_DE_SOC_DE_POBLE_RUTA } from '../../../sections/mur/articles/laVeuDeSocDePobleContent.js';
 import { LaVeuDeSocDePobleArticle } from '../../../sections/mur/articles/LaVeuDeSocDePobleArticle.jsx';
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_POST, NOVES_TECNOLOGIES_CULTURA_RURAL_RUTA } from '../../../sections/mur/articles/novesTecnologiesCulturaRuralContent.js';
@@ -291,5 +296,375 @@ describe('IDEA-255 · Reproductor Flotant Universal de Veu (PageFrame + BarraRep
       arrel.unmount();
     });
     amfitrio.remove();
+  });
+
+  test('IDEA-268 · en mòbil marca data-sdp-veu-oberta="true" i «Tria esta veu» obri sempre el reproductor inferior', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+
+    const { container } = render(
+      <RouterProvider initialPath={LA_VEU_DE_SOC_DE_POBLE_RUTA}>
+        <div className="sdp-root is-compact">
+          <PageFrame
+            title={LA_VEU_DE_SOC_DE_POBLE_POST.title}
+            subtitle={LA_VEU_DE_SOC_DE_POBLE_POST.post_subtitle}
+            lead={LA_VEU_DE_SOC_DE_POBLE_POST.summary}
+          >
+            <LaVeuDeSocDePobleArticle item={LA_VEU_DE_SOC_DE_POBLE_POST} />
+          </PageFrame>
+        </div>
+      </RouterProvider>
+    );
+
+    const sdpRoot = container.querySelector('.sdp-root');
+    expect(sdpRoot.getAttribute('data-sdp-veu-oberta')).toBeNull();
+
+    const botonsTriaVeu = await screen.findAllByRole('button', { name: /Tria esta veu|Veu preferida/i });
+    fireEvent.click(botonsTriaVeu[0]);
+
+    const barra = await screen.findByRole('complementary', { name: /Reproductor de lectura en veu alta/i });
+    expect(sdpRoot.contains(barra)).toBe(true);
+    expect(barra.getAttribute('data-compacte')).toBe('true');
+    expect(sdpRoot.getAttribute('data-sdp-veu-oberta')).toBe('true');
+
+    fireEvent.click(screen.getByRole('button', { name: /Tancar el reproductor de veu/i }));
+    await waitFor(() => {
+      expect(sdpRoot.getAttribute('data-sdp-veu-oberta')).toBeNull();
+    });
+  });
+
+  test('IDEA-268 · centra geomètricament la barra sobre el panell de lectura actiu (sidebar 260px) i admet fontSo d’àudio per a Ràdio de Poble', async () => {
+    const playSpy = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
+    const pauseSpy = vi.spyOn(window.HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+
+    const fontRadio = {
+      tipus: 'audio',
+      titolEmissio: 'Ràdio de Poble · Emissió de prova',
+      pistes: [
+        { id: 'p1', titol: 'Crònica matinal de la Muntanya', subtitol: 'Ràdio de Poble', src: '/assets/audio/veus_node0/mostra_08_arnau_valencia.wav' },
+        { id: 'p2', titol: 'El temps i el camp', subtitol: 'Ràdio de Poble', src: '/assets/audio/veus_node0/mostra_07_gina_valencia.wav' },
+      ],
+    };
+
+    const { container } = render(
+      <RouterProvider initialPath="/page/node-zero">
+        <div className="sdp-root">
+          <nav className="app-sidebar" aria-label="Menú lateral" />
+          <main className="app-main">
+            <PageFrame
+              title="Ràdio de Poble"
+              subtitle="Emissió comunitària"
+              lead="Canal sonor compartit del projecte."
+              fontSo={fontRadio}
+            >
+              <p>Contingut sonor obert preparat per a la futura emissora comunitària.</p>
+            </PageFrame>
+          </main>
+        </div>
+      </RouterProvider>
+    );
+
+    const sdpRoot = container.querySelector('.sdp-root');
+    const panell = container.querySelector('.sdp-universal-page-container');
+    vi.spyOn(sdpRoot, 'getBoundingClientRect').mockReturnValue({
+      left: 0, right: 1440, top: 0, bottom: 900, width: 1440, height: 900, x: 0, y: 0, toJSON: () => {},
+    });
+    vi.spyOn(panell, 'getBoundingClientRect').mockReturnValue({
+      left: 260, right: 1440, top: 0, bottom: 900, width: 1180, height: 900, x: 260, y: 0, toJSON: () => {},
+    });
+
+    const botoEscolta = await screen.findByRole('button', { name: /Escolta la IAIA/i });
+    fireEvent.click(botoEscolta);
+
+    const barra = await screen.findByRole('complementary', { name: /Ràdio de Poble · Emissió de prova/i });
+    expect(barra.getAttribute('data-font-so')).toBe('audio');
+    /* Contracte canviat a propòsit (R28): les propietats mesurades en temps
+       d'execució són locals (--barra-veu-*), no tokens --sdp-* de tokens.css. */
+    expect(barra.style.getPropertyValue('--barra-veu-inici')).toBe('260px');
+    expect(barra.style.getPropertyValue('--barra-veu-fi')).toBe('0px');
+    expect(barra.style.getPropertyValue('--sdp-barra-veu-inici')).toBe('');
+    expect(screen.getByText('Pista 1 de 2')).toBeTruthy();
+    expect(screen.getByText('Crònica matinal de la Muntanya')).toBeTruthy();
+    await waitFor(() => expect(playSpy).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByRole('button', { name: /Bloc següent/i }));
+    await waitFor(() => expect(screen.getByText('Pista 2 de 2')).toBeTruthy());
+    expect(screen.getByText('El temps i el camp')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Pausa la lectura/i }));
+    expect(pauseSpy).toHaveBeenCalled();
+
+    playSpy.mockRestore();
+    pauseSpy.mockRestore();
+  });
+});
+
+/* ── R28 · Esmenes a IDEA-268 (Kit R27) ───────────────────────────────── */
+
+const llegixCss = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+
+/** Regles fulla { selectors, cos } d'un full (sense blocs niats dins del cos). */
+function reglesFulla(css) {
+  return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, prelud, cos]) => ({
+    selectors: prelud.split(',').map((sel) => sel.trim().replace(/\s+/g, ' ')).filter(Boolean),
+    cos: cos.replace(/\s+/g, ' ').trim(),
+  }));
+}
+
+/** Especificitat [ids, classes + atributs + pseudoclasses] d'un selector simple; :where() compta 0. */
+function especificitat(selector) {
+  const net = selector.replace(/:where\([^()]*\)/g, '');
+  const atributs = (net.match(/\[[^\]]*\]/g) || []).length;
+  const senseAtributs = net.replace(/\[[^\]]*\]/g, '');
+  const classes = (senseAtributs.match(/\.[A-Za-z_-][\w-]*/g) || []).length;
+  const pseudo = (senseAtributs.match(/:(?!:)[a-z-]+/g) || []).length;
+  const ids = (senseAtributs.match(/#[A-Za-z_-][\w-]*/g) || []).length;
+  return [ids, classes + atributs + pseudo];
+}
+const guanya = ([a1, b1], [a2, b2]) => a1 > a2 || (a1 === a2 && b1 > b2);
+
+function MuntatgeRadio({ idioma, fontSo }) {
+  const cosRef = useRef(null);
+  return (
+    <div className="sdp-root">
+      <article ref={cosRef}><p>Cos de prova de la Ràdio de Poble.</p></article>
+      <BarraReproductorVeu oberta cosRef={cosRef} idioma={idioma} fontSo={fontSo} />
+    </div>
+  );
+}
+
+describe('R28 · esmenes al Reproductor Universal de So (IDEA-268)', () => {
+  test('CSS · amb nav.mobile-nav amagada («totes») la regla de baixar la barra guanya a [data-compacte="true"]', () => {
+    const regles = reglesFulla(llegixCss('src/css/diferit-barra-veu.css') + llegixCss('src/css/components.css'));
+    const compacte = '.sdp-barra-veu[data-compacte="true"]';
+    expect(regles.some((r) => r.selectors.includes(compacte))).toBe(true);
+
+    const totes = regles.flatMap((r) => r.selectors
+      .filter((sel) => sel.includes('data-sdp-barres="totes"') && /\.sdp-barra-veu(?![\w-])/.test(sel))
+      .map((sel) => ({ sel, cos: r.cos })));
+    expect(totes.length).toBeGreaterThan(0);
+    for (const { sel, cos } of totes) {
+      expect(guanya(especificitat(sel), especificitat(compacte)), `${sel} ha de superar ${compacte}`).toBe(true);
+      expect(cos).toMatch(/bottom:/);
+      expect(cos).not.toMatch(/--sdp-alt-nav-mobil/);
+    }
+  });
+
+  test('CSS · les propietats mesurades per JS són locals (--barra-veu-*), sense fallback literal ni ombra afegida', () => {
+    const css = llegixCss('src/css/diferit-barra-veu.css') + llegixCss('src/css/components.css');
+    expect(css).not.toMatch(/--sdp-barra-veu-/);
+    const regles = reglesFulla(css);
+    const tornarDalt = regles.find((r) => r.selectors.some((sel) => sel.includes('[data-sdp-veu-oberta="true"]') && sel.includes('.sdp-tornar-dalt')));
+    expect(tornarDalt?.cos).toContain('var(--barra-veu-alcada, 0px)');
+    const barra = regles.find((r) => r.selectors.includes('.sdp-barra-veu'));
+    expect(barra?.cos).toContain('var(--barra-veu-inici)');
+    expect(barra?.cos).not.toMatch(/box-shadow/);
+  });
+
+  test('Espècimen · les pistes de mostra de Ràdio de Poble apunten a fitxers que existixen a public/', () => {
+    expect(FONT_SO_RADIO_MOSTRA.pistes.length).toBeGreaterThan(0);
+    for (const pista of FONT_SO_RADIO_MOSTRA.pistes) {
+      expect(pista.src, pista.id).toMatch(/^\/assets\/audio\//);
+      expect(existsSync(resolve(process.cwd(), 'public', pista.src.slice(1))), pista.src).toBe(true);
+    }
+  });
+
+  test('canviar de veu en calent després d’un error neteja l’avís i torna a provar el mateix bloc', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    const oients = new Set();
+    serveiVeu.subscriuVeuPreferida.mockImplementation((oient) => {
+      oients.add(oient);
+      return () => oients.delete(oient);
+    });
+    try {
+      render(<PaginaLecturaMostra />);
+      fireEvent.click(await screen.findByRole('button', { name: /Escolta la IAIA/i }));
+      await waitFor(() => expect(cua.pendents.length).toBe(1));
+
+      await act(async () => {
+        cua.pendents[0].reject(new Error('Síntesi no disponible'));
+      });
+      const avis = 'Este navegador no pot llegir la pàgina en veu alta ara mateix.';
+      await waitFor(() => expect(screen.getByText(avis)).toBeTruthy());
+
+      await act(async () => {
+        for (const oient of oients) oient('arnau_valencia');
+      });
+      await waitFor(() => expect(cua.pendents.length).toBe(2));
+      expect(screen.queryByText(avis)).toBeNull();
+      expect(cua.pendents[1].text).toBe('Node 0 · El cervell i la veu al poble');
+      expect(cua.pendents[1].opcions.veu).toBe('arnau_valencia');
+      expect(screen.getByRole('button', { name: /Pausa la lectura/i })).toBeTruthy();
+    } finally {
+      serveiVeu.subscriuVeuPreferida.mockImplementation(() => () => {});
+    }
+  });
+
+  test('canviar de veu en calent quan la lectura ja ha acabat torna a començar pel bloc 0, com el Play', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    const oients = new Set();
+    serveiVeu.subscriuVeuPreferida.mockImplementation((oient) => {
+      oients.add(oient);
+      return () => oients.delete(oient);
+    });
+    try {
+      render(<PaginaLecturaMostra />);
+      fireEvent.click(await screen.findByRole('button', { name: /Escolta la IAIA/i }));
+      for (let i = 0; i < 7; i += 1) {
+        await waitFor(() => expect(cua.pendents.length).toBe(i + 1));
+        await act(async () => {
+          cua.pendents[i].resolve({ canal: 'local' });
+        });
+      }
+      await waitFor(() => expect(screen.getByRole('button', { name: /Torna a escoltar des del principi/i })).toBeTruthy());
+      expect(screen.getByText('Bloc 7 de 7')).toBeTruthy();
+
+      await act(async () => {
+        for (const oient of oients) oient('gina_valencia');
+      });
+      await waitFor(() => expect(cua.pendents.length).toBe(8));
+      expect(cua.pendents[7].text).toBe('Node 0 · El cervell i la veu al poble');
+      expect(screen.getByText('Bloc 1 de 7')).toBeTruthy();
+    } finally {
+      serveiVeu.subscriuVeuPreferida.mockImplementation(() => () => {});
+    }
+  });
+
+  test('«Tria esta veu» no s’emporta la persona amb el scroll i, en tancar, el focus torna al mateix botó del banc', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    const scrollIntoView = vi.fn();
+    const teniaScroll = Object.prototype.hasOwnProperty.call(Element.prototype, 'scrollIntoView');
+    const scrollAbans = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      render(
+        <RouterProvider initialPath={LA_VEU_DE_SOC_DE_POBLE_RUTA}>
+          <div className="sdp-root">
+            <PageFrame
+              title={LA_VEU_DE_SOC_DE_POBLE_POST.title}
+              subtitle={LA_VEU_DE_SOC_DE_POBLE_POST.post_subtitle}
+              lead={LA_VEU_DE_SOC_DE_POBLE_POST.summary}
+            >
+              <LaVeuDeSocDePobleArticle item={LA_VEU_DE_SOC_DE_POBLE_POST} />
+            </PageFrame>
+          </div>
+        </RouterProvider>
+      );
+
+      const botoEscolta = await screen.findByRole('button', { name: /Escolta la IAIA/i });
+      const focusDalt = vi.spyOn(botoEscolta, 'focus');
+      const botonsTria = await screen.findAllByRole('button', { name: /Tria esta veu|Veu preferida/i });
+      const botoTria = botonsTria[1];
+      fireEvent.click(botoTria);
+
+      await screen.findByRole('complementary', { name: /Reproductor de lectura en veu alta/i });
+      await waitFor(() => expect(cua.pendents.length).toBe(1));
+      scrollIntoView.mockClear();
+      await act(async () => {
+        cua.pendents[0].resolve({ canal: 'local' });
+      });
+      await waitFor(() => expect(cua.pendents.length).toBe(2));
+      expect(scrollIntoView).not.toHaveBeenCalled();
+
+      const botoTanca = screen.getByRole('button', { name: /Tancar el reproductor de veu/i });
+      botoTanca.focus();
+      fireEvent.click(botoTanca);
+      await waitFor(() => {
+        expect(screen.queryByRole('complementary', { name: /Reproductor de lectura en veu alta/i })).toBeNull();
+      });
+      await waitFor(() => expect(document.activeElement).toBe(botoTria));
+      expect(focusDalt).not.toHaveBeenCalled();
+    } finally {
+      if (teniaScroll) Element.prototype.scrollIntoView = scrollAbans;
+      else delete Element.prototype.scrollIntoView;
+    }
+  });
+
+  test('obert des del botó de dalt, la lectura seguix el bloc i en tancar el focus hi torna sense desplaçar la pàgina', async () => {
+    const cua = creaPausaControlada();
+    serveiVeu.parla.mockImplementation(cua.impl);
+    const scrollIntoView = vi.fn();
+    const teniaScroll = Object.prototype.hasOwnProperty.call(Element.prototype, 'scrollIntoView');
+    const scrollAbans = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      render(<PaginaLecturaMostra />);
+      const botoEscolta = await screen.findByRole('button', { name: /Escolta la IAIA/i });
+      fireEvent.click(botoEscolta);
+      await waitFor(() => expect(cua.pendents.length).toBe(1));
+      scrollIntoView.mockClear();
+      await act(async () => {
+        cua.pendents[0].resolve({ canal: 'local' });
+      });
+      await waitFor(() => expect(cua.pendents.length).toBe(2));
+      expect(scrollIntoView).toHaveBeenCalled();
+
+      const focusDalt = vi.spyOn(botoEscolta, 'focus');
+      const botoTanca = screen.getByRole('button', { name: /Tancar el reproductor de veu/i });
+      botoTanca.focus();
+      fireEvent.click(botoTanca);
+      await waitFor(() => expect(focusDalt).toHaveBeenCalledWith({ preventScroll: true }));
+      expect(document.activeElement).toBe(botoEscolta);
+    } finally {
+      if (teniaScroll) Element.prototype.scrollIntoView = scrollAbans;
+      else delete Element.prototype.scrollIntoView;
+    }
+  });
+
+  test('font d’àudio · canviar d’idioma no torna a la pista 1 ni força el Play; canviar les pistes sí que reinicia', async () => {
+    const playSpy = vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
+    const pauseSpy = vi.spyOn(window.HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const fontA = {
+      tipus: 'audio',
+      titolEmissio: 'Ràdio de Poble · Prova d’idioma',
+      pistes: [
+        { id: 'a1', titol: 'Pista Arnau', src: '/assets/audio/veus_node0/mostra_08_arnau_valencia.wav' },
+        { id: 'a2', titol: 'Pista Gina', src: '/assets/audio/veus_node0/mostra_07_gina_valencia.wav' },
+      ],
+    };
+    try {
+      const { rerender } = render(<MuntatgeRadio idioma="ca" fontSo={fontA} />);
+      await screen.findByRole('complementary', { name: /Ràdio de Poble · Prova d’idioma/i });
+      expect(screen.getByText('Pista 1 de 2')).toBeTruthy();
+      await waitFor(() => expect(playSpy).toHaveBeenCalled());
+
+      fireEvent.click(screen.getByRole('button', { name: /Bloc següent/i }));
+      await waitFor(() => expect(screen.getByText('Pista 2 de 2')).toBeTruthy());
+      fireEvent.click(screen.getByRole('button', { name: /Pausa la lectura/i }));
+      expect(screen.getByRole('button', { name: /Continua la lectura/i })).toBeTruthy();
+
+      playSpy.mockClear();
+      rerender(<MuntatgeRadio idioma="es" fontSo={fontA} />);
+      await act(async () => {});
+      expect(screen.getByText('Pista 2 de 2')).toBeTruthy();
+      expect(screen.getByRole('button', { name: /Continua la lectura/i })).toBeTruthy();
+      expect(playSpy).not.toHaveBeenCalled();
+
+      /* Onada R28 · Un objecte nou amb el mateix contingut (el literal que un pare crea a cada render)
+         no torna a la pista 1 ni força el Play. */
+      rerender(<MuntatgeRadio idioma="es" fontSo={{ ...fontA, pistes: fontA.pistes.map((p) => ({ ...p })) }} />);
+      await act(async () => {});
+      expect(screen.getByText('Pista 2 de 2')).toBeTruthy();
+      expect(playSpy).not.toHaveBeenCalled();
+
+      const fontB = {
+        ...fontA,
+        pistes: [
+          { id: 'b1', titol: 'Pista Lluc', src: '/assets/audio/veus_node0/mostra_06_lluc_valencia.wav' },
+          { id: 'b2', titol: 'Pista Berta', src: '/assets/audio/veus_node0/mostra_09_berta_valencia.wav' },
+          { id: 'b3', titol: 'Pista Emma', src: '/assets/audio/veus_node0/mostra_05_emma_occidental.wav' },
+        ],
+      };
+      rerender(<MuntatgeRadio idioma="es" fontSo={fontB} />);
+      await waitFor(() => expect(screen.getByText('Pista 1 de 3')).toBeTruthy());
+      expect(screen.getByText('Pista Lluc')).toBeTruthy();
+      await waitFor(() => expect(playSpy).toHaveBeenCalled());
+    } finally {
+      playSpy.mockRestore();
+      pauseSpy.mockRestore();
+    }
   });
 });

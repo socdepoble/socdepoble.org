@@ -205,11 +205,15 @@ const NOMS_CLOSCA = Object.freeze({
 });
 
 function RouteFallback() {
-  /* La Suspense pot pintar-lo abans que hi haja traductor: la reserva. */
+  /* La Suspense pot pintar-lo abans que hi haja traductor: la reserva.
+     R28 (Llei del Píxel) · Cap full ha declarat mai .sdp-app-loading ni
+     .sdp-spinner(--large): el gir no ha pintat cap píxel des que va entrar
+     (271d4a64e, 260918). Queda la regió viva amb el text per al lector, que
+     és el que es veu (res) i el que s'anuncia. Un indicador visible és un
+     redisseny: demana ordre del Mestre. */
   const t = useTraductorOpcional();
   return (
-    <div className="sdp-app-loading" role="status" aria-live="polite">
-      <div className="sdp-spinner sdp-spinner--large" />
+    <div role="status" aria-live="polite">
       <span className="sr-only">{tradueix(t, NOMS_CLOSCA.carregaRuta)}</span>
     </div>
   );
@@ -251,7 +255,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
   return (
     <>
         <button type="button" className="brand sdp-unstyled-btn" aria-label={nom(NOMS_CLOSCA.obrirTancarMenu)} aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
-          <BrandMark className="app-brand__mark" />
+          <BrandMark />
         </button>
 
         {/* Rètol curt (Mestre, 260926): «PANELL DE CONTROL» era la fila més ampla
@@ -685,7 +689,7 @@ function AppShell({ children, mobileNav }) {
     <ProveidorModeImmersiu value={demanaImmersiu}>
     <div className={`sdp-root ${isCompact ? 'is-compact' : ''} ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef}
       data-sdp-immersiu={immersiu ? '' : undefined} onClick={interceptaEnllacos ? alClicarEnllac : undefined}>
-      <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">{tradueix(t, NOMS_CLOSCA.saltaContingut)}</a>
+      <a href="#main-content" className="sr-only sdp-skip-link">{tradueix(t, NOMS_CLOSCA.saltaContingut)}</a>
       
       {isCompact ? (
         <Dialeg 
@@ -747,7 +751,7 @@ function AppShell({ children, mobileNav }) {
             recarregar»). També encastat a <soc-de-poble> (261004). */}
         <div
           ref={indicatorRef}
-          className="pull-to-refresh-indicator sdp-ptr-indicator"
+          className="sdp-ptr-indicator"
           role="status"
           aria-live="polite"
         />
@@ -837,7 +841,7 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
     <header className="bar-black">
       {nomPoble ? <TitolAmfitrio nomPoble={nomPoble} /> : null}
       <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label={tradueix(t, NOMS_CLOSCA.obrirMenu)} aria-expanded={menuObert ? 'true' : 'false'} aria-controls="app-sidebar" onClick={() => onToggleSidebar?.()}>
-        <BrandMark variant="light" className="mobile-logo" />
+        <BrandMark variant="light" />
       </button>
 
       <div className="right-icons">

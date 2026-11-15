@@ -16,6 +16,7 @@
 import { describe, expect, test } from 'vitest';
 import { CANALS_DE_BOTIGA, FRASES_DE_BOTIGA_TANCADA, FRASES_DE_PROVES, canalsOberts, frasesCaducades, urlDeCanal } from './canalsDeBotiga.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { localitzaPagina } from '../sections/text/pageContent.r10.js';
 
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
 const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
@@ -366,5 +367,86 @@ describe('frasesCaducades', () => {
        tancada. El dia que s'òbriga de veres, esta línia se'n va amb el text. */
     const ambPlay = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'google-play' ? { ...canal, url: PLAY } : canal));
     expect(frases(frasesCaducades([lead, subtitle, html], canalsOberts(ambPlay)))).toEqual(['google-play: no està publicada per a tothom']);
+  });
+
+  /* R28 (carril B, Llei 0) · La mateixa guarda sobre les quatre traduccions de /page/descarregues
+     (localitzaPagina sobre pageContent.descarreguesR27.js). FRASES_DE_BOTIGA_TANCADA és en valencià:
+     en una altra llengua només hi mosseguen les frases neutres (TestFlight, beta). Per això cada llengua
+     porta ací les seues frases de botiga tancada i de proves, amb la mateixa forma que les del mòdul
+     (regex sense quantificadors). Hui cada traducció diu, com el valencià, que Google Play encara no és
+     publicada i que no hi ha APK públic: el dia que el Mestre òbriga eixos canals, la prova cau en cada
+     llengua i diu quina frase sobra. */
+  const FRASES_TRADUIDES = Object.freeze({
+    es: Object.freeze({
+      'google-play': [/pruebas internas/i, /no está publicada/i, /equipo de pruebas/i],
+      'app-store': [/TestFlight/i, /todavía no está en el App Store/i, /enlace público de pruebas/i, /grupo de trabajo interno/i],
+      'apk-directe': [/no hay APK público/i, /Cuando esté disponible/i],
+      proves: [/\bbeta\b/i, /\ben pruebas\b/i, /en qué punto están las pruebas/i]
+    }),
+    en: Object.freeze({
+      'google-play': [/internal testing/i, /not yet published/i, /testing team/i],
+      'app-store': [/TestFlight/i, /not yet on the App Store/i, /public testing link/i, /internal working group/i],
+      'apk-directe': [/no public APK/i, /When one is released/i],
+      proves: [/\bbeta\b/i, /\bin testing\b/i, /where testing stands/i]
+    }),
+    eu: Object.freeze({
+      'google-play': [/barne-prob/i, /ez dago guztiontzat argitaratuta/i, /proba-talde/i],
+      'app-store': [/TestFlight/i, /oraindik ez dago App Store-n/i, /proba-lotura publiko/i, /barne-lan talde/i],
+      'apk-directe': [/ez dago APK publikorik/i, /Prest dagoenean, lotura ofiziala/i],
+      proves: [/\bbeta\b/i, /\bprobetan\b/i, /proben egoera/i]
+    }),
+    gl: Object.freeze({
+      'google-play': [/probas internas/i, /non está publicada/i, /equipo de probas/i],
+      'app-store': [/TestFlight/i, /aínda non está na App Store/i, /ligazón pública de probas/i, /grupo de traballo interno/i],
+      'apk-directe': [/non hai APK público/i, /Cando o haxa, a ligazón/i],
+      proves: [/\bbeta\b/i, /\ben probas\b/i, /en que punto están as probas/i]
+    })
+  });
+  /* El text pla de la prova: cada «<…>» passa a un espai (per trossos, lineal) i els espais es pleguen.
+     Les traduccions no porten entitats (la prova ho comprova), així que no cal llegir-les. */
+  const textPlaTraduit = (textos) => textos
+    .map((text) => (typeof text === 'string' ? text : '').split('<').map((tros, i) => (i === 0 ? tros : tros.slice(tros.indexOf('>') + 1))).join(' '))
+    .join(' ')
+    .replace(/\s+/g, ' ');
+  /* Com frasesCaducades, amb les frases de la llengua: les de cada canal obert i, amb una botiga d'apps oberta, les de proves. */
+  const frasesTraduides = (lang, textos, oberts) => {
+    const text = textPlaTraduit(textos);
+    const ids = new Set(oberts.map((canal) => canal.id));
+    const { proves, ...botigues } = FRASES_TRADUIDES[lang];
+    const trobades = [];
+    for (const [id, llista] of Object.entries(botigues)) {
+      if (ids.has(id)) for (const frase of llista) if (frase.test(text)) trobades.push(`${id}: ${frase.source}`);
+    }
+    const apps = [...ids].filter((id) => id === 'google-play' || id === 'app-store');
+    if (apps.length) for (const frase of proves) if (frase.test(text)) trobades.push(`${apps.join('+')}: ${frase.source}`);
+    return trobades;
+  };
+
+  test('R28 · les frases traduïdes tenen les mateixes ranures que les del mòdul i cap quantificador obert', () => {
+    for (const [lang, llistes] of Object.entries(FRASES_TRADUIDES)) {
+      expect([lang, Object.keys(llistes).filter((id) => id !== 'proves')]).toEqual([lang, ['google-play', 'app-store', 'apk-directe']]);
+      for (const re of Object.values(llistes).flat()) expect([lang, re.source, /[*+?{]/.test(re.source)]).toEqual([lang, re.source, false]);
+    }
+  });
+
+  test.each(['es', 'en', 'eu', 'gl'])('R28 · %s · /page/descarregues traduïda no diu res caducat per als canals oberts i encara diu que Google Play i l’APK són tancats', (lang) => {
+    const pagina = localitzaPagina(PAGE_COPY.descarregues, lang);
+    // La traducció de veres, no el valencià de reserva.
+    expect(pagina.contentLanguage).toBe(lang);
+    expect(pagina.html).not.toBe(PAGE_COPY.descarregues.html);
+    const { lead, subtitle, html } = pagina;
+    const textos = [lead, subtitle, html];
+    expect(textPlaTraduit(textos)).not.toMatch(/&#|&[a-z]{2,8};/i);
+    // Els canals oberts de veres (App Store i WordPress.org): ni les frases neutres del mòdul ni les de la llengua.
+    expect(frasesCaducades(textos, canalsOberts())).toEqual([]);
+    expect(frasesTraduides(lang, textos, canalsOberts())).toEqual([]);
+    expect(frasesTraduides(lang, textos, STORE_OBERT)).toEqual([]);
+    // Google Play obert en una còpia de CANALS_DE_BOTIGA: cau per la frase de «encara no publicada», i només per eixa.
+    const ambPlay = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'google-play' ? { ...canal, url: PLAY } : canal));
+    expect(frasesTraduides(lang, textos, canalsOberts(ambPlay))).toEqual([`google-play: ${FRASES_TRADUIDES[lang]['google-play'][1].source}`]);
+    // L'APK obert en una còpia: cau per les dues frases de «no hi ha APK públic».
+    const ambApk = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'apk-directe' ? { ...canal, url: APK } : canal));
+    expect(frasesTraduides(lang, textos, canalsOberts(ambApk)))
+      .toEqual(FRASES_TRADUIDES[lang]['apk-directe'].map((frase) => `apk-directe: ${frase.source}`));
   });
 });

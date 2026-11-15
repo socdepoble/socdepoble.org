@@ -1,0 +1,17 @@
+{
+  "id": "15140bff-112c-4ef6-b10c-00c69a032c7d",
+  "session": "eefacb83-1685-4e33-bb4b-3a60956ec24a",
+  "operationId": "olivera-b10-boundary-261114",
+  "claim": "eefacb83-1685-4e33-bb4b-3a60956ec24a:governance-write",
+  "planHash": "619e19ecc3e2eb2e7b46e82d5398ca9c20fab41e50277171b8a902ec804a83d9",
+  "beforeSeal": "05939098daf0d59ea8d9043385048dd44b151afbb36ff6554a2b207e9153c8ba",
+  "files": [
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "fa72ec8731e82cce768e581052e672f45af9f2644ef9ca2b843bdd4b2647f489",
+      "after": "98ee50d6cccef5847dbdefbc0894089c553304d4ea3267a1a4a46f5ab187be8b"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d9730bd7fb3e19e3de28d363f7edd9c2ef66d385aeb8c42ef71930e556d566fb"
+}
