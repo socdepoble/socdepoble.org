@@ -11,6 +11,9 @@ contracte.llig:
   - _wiki_de_poble/03_actuar/plantilles
 contracte.escriu:
   - _wiki_de_poble/02_saber/doc_governanca.md
+motors:
+  - tooling/gates/porta-taxonomia.mjs
+  - tooling/wiki/document.mjs
 ---
 
 # Tractor Documental: Taxonomia Estricta (Fusible)

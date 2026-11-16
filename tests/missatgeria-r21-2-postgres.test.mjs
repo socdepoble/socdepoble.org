@@ -273,6 +273,15 @@ test('R21.2 · missatgeria i rebuts sobre PostgreSQL 18.6 real, sense xarxa exte
       const dir=join(temp,'keys'),inputs=join(temp,'inputs.env');
       const prior=(await db.query("select valor from private.ajustos where clau='push_xat_actiu'")).rows[0]?.valor;
       try {
+        // El tram anterior conserva la fotografia històrica R21.2. El stage
+        // actual inclou R31 i necessita la primitiva Auth que GoTrue aporta
+        // en producció; el domini i les ACL continuen sent les migracions
+        // reals, sense afeblir el guard d'activació ni afegir GRANTs locals.
+        await db.query(`create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id) on delete cascade);
+          create or replace function auth.jwt() returns jsonb language sql stable as $$
+            select jsonb_build_object('sub',auth.uid(),'role',auth.role(),'aal','aal1',
+              'session_id',nullif(current_setting('request.jwt.claim.session_id',true),''));
+          $$;`);
         generateVapid(dir,'mailto:postgres-fixture@example.invalid');
         writeFileSync(inputs,`SDP_CRON_SECRET=${'x'.repeat(48)}\n`,{mode:0o600});
         const prepared=stage({root:fileURLToPath(new URL('..',import.meta.url)),dir,inputs,channels:['web']});
@@ -292,8 +301,25 @@ test('R21.2 · missatgeria i rebuts sobre PostgreSQL 18.6 real, sense xarxa exte
           has_function_privilege('authenticated','public.xat_push_desperta_v2(uuid,uuid)','execute') as client_wakes,
           has_function_privilege('anon','public.xat_push_desperta_v2(uuid,uuid)','execute') as anon_wakes,
           has_function_privilege('authenticated','public.xat_ritme(uuid)','execute') as member_polls,
-          has_function_privilege('anon','public.xat_ritme(uuid)','execute') as anon_polls`)).rows[0];
-        assert.deepEqual(acl,{wake_present:true,wrong_signature_absent:true,worker_wakes:true,client_wakes:false,anon_wakes:false,member_polls:true,anon_polls:false});
+          has_function_privilege('anon','public.xat_ritme(uuid)','execute') as anon_polls,
+          has_column_privilege('authenticated','public.xat_dispositius_push','sessio_id','select') as client_reads_session,
+          has_column_privilege('authenticated','public.xat_dispositius_push','adreca','select') as client_reads_endpoint,
+          has_function_privilege('authenticated','private.xat_push_vincula_sessio_r31()','execute') as client_calls_binding`)).rows[0];
+        assert.deepEqual(acl,{wake_present:true,wrong_signature_absent:true,worker_wakes:true,client_wakes:false,anon_wakes:false,member_polls:true,anon_polls:false,client_reads_session:false,client_reads_endpoint:false,client_calls_binding:false});
+        const session='44000000-0000-4000-8000-000000000022';
+        const endpoint='https://fcm.googleapis.com/fcm/send/synthetic-r31-postgres';
+        await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[session,BOB]);
+        const register=()=>asActor(db,BOB,async c=>{
+          await c.query("select set_config('request.jwt.claim.session_id',$1,true)",[session]);
+          return c.query("select public.xat_push_desa('web',$1,null,'ca',true)",[endpoint]);
+        });
+        await register();
+        assert.deepEqual((await db.query('select usuari_id,sessio_id from public.xat_dispositius_push')).rows,[{usuari_id:BOB,sessio_id:session}]);
+        assert.deepEqual((await asActor(db,ALICE,c=>c.query('select id from public.xat_dispositius_push'))).rows,[]);
+        await assert.rejects(asActor(db,BOB,c=>c.query('select adreca,sessio_id from public.xat_dispositius_push')),error=>error.code==='42501');
+        await db.query('delete from auth.sessions where id=$1',[session]);
+        assert.equal((await db.query('select count(*)::int as n from public.xat_dispositius_push')).rows[0].n,0);
+        await assert.rejects(register(),sdpError('SDP-PUSH-013'));
       } finally {
         if(prior===undefined) await db.query("delete from private.ajustos where clau='push_xat_actiu'");
         else await db.query("update private.ajustos set valor=$1 where clau='push_xat_actiu'",[prior]);

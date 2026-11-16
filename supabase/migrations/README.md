@@ -195,13 +195,30 @@ El catàleg operatiu i l’ordre complet es mantenen a [../README.md](../README.
 
 Després del catàleg base de 113 migracions, s’afig:
 
-1. [20261115230000_r30_revisions_editorials_cas.sql](20261115230000_r30_revisions_editorials_cas.sql): versió esperada opaca en curadoria WordPress, curadoria AAL2 amb denegació davant NULL i signatura anterior de creació exclusiva. Reaplicar-la si s’ha tornat a executar 2611110455. **NO aplicada: l’aplica el Mestre.** El client d’R30 desa igual sense ella (signatura de sempre, sense guarda).
+1. [20261115230000_r30_revisions_editorials_cas.sql](20261115230000_r30_revisions_editorials_cas.sql): versió esperada opaca en curadoria WordPress, curadoria AAL2 amb denegació davant NULL i signatura anterior de creació exclusiva. Reaplicar-la si s’ha tornat a executar 2611110455. **Aplicada a producció** pel Mestre el 16-11-2026, després de la 2611110455 (`pas1_wp_cas_ok = true`, captura `261116_1503` del receptari SQL R30/R31). El client d’R30 desa igual sense ella (signatura de sempre, sense guarda).
 
-S’ha assajat localment amb PGlite 0.3.16 (PostgreSQL 17.5 WASM), inclosa l’aplicació sobre el catàleg complet i la reaplicació idempotent. No s’ha executat sobre Supabase remot. Les proves de dos escriptors validen precondicions i reintents; PGlite serialitza les peticions i no equival a dues connexions PostgreSQL físiques simultànies.
+S’ha assajat localment amb PGlite 0.3.16 (PostgreSQL 17.5 WASM), inclosa l’aplicació sobre el catàleg complet i la reaplicació idempotent. L’aplicació a producció consta al receptari SQL R30/R31 del Mestre; cap prova local l’acredita. Les proves de dos escriptors validen precondicions i reintents; PGlite serialitza les peticions i no equival a dues connexions PostgreSQL físiques simultànies.
 
 Les altres dues migracions del kit R30 de Codex (CAS de `section_submissions` i migració de carpetes locals amb àlies) no formen part del catàleg: la primera trencaria la republicació de les projeccions del catàleg i la segona no té cap client que la use (PF-01 puja les carpetes amb `crea_carpeta_notes`).
 
 El pin POSSE del catàleg complet passa de 113 a 114; els altres nou pins es conserven.
+
+## R31 · Push per sessió i SECURITY DEFINER amb path buit (catàleg de 116 migracions)
+
+Integrades a l’Onada R32 des dels kits R31 de Codex, damunt del catàleg R30 de 114 migracions. Les dues van darrere de tot el catàleg i en este ordre (`ordre_desplegament.json`):
+
+1. [20261116031000_r31_push_sessio_i_revocacio.sql](20261116031000_r31_push_sessio_i_revocacio.sql): depén de `2611080431`. Vincula cada registre Push a la sessió Auth del JWT (`auth.sessions`, FK `ON DELETE CASCADE`), revoca les files sense sessió demostrable i rebutja el JWT d’una sessió tancada. Assaig: `tests/r31-push-sessio-postgres.test.mjs` amb PGlite explícit.
+2. [20261116040000_r31_definer_search_path.sql](20261116040000_r31_definer_search_path.sql): va després de `20261116031000`. La capçalera i el kit l’anomenen ADD118 i diuen «catàleg complet117» perquè el kit comptava les `20261115231000` i `20261115233000`, que no formen part d’este catàleg (R30 les va rebutjar): ací és la 116. El contracte de projecte exigix path buit: 29 funcions vigents deixen els paths públics explícits anteriors. No són 29 exploits acreditats: PostgreSQL admet esquemes de confiança amb `pg_temp` al final segons [CREATE FUNCTION](https://www.postgresql.org/docs/current/sql-createfunction.html). El nou contracte usa dependències de negoci qualificades i dos cossos corregits per a qualificar els catàlegs, perquè un path buit encara pot buscar relacions temporals implícitament.
+
+La `20261116040000` és transaccional, conserva signatures/OID/propietari/ACL/RLS, i comprova hashes del cos conegut o de la seua postimatge abans de qualsevol DDL. El verificador E2EE conserva tots els checks d'ACL, RLS, triggers, columnes i bucket, amb l'expectativa actual de path buit. Qualsevol redefinició no auditada avorta; no s'aplica un `ALTER` cec a una funció desconeguda. Assaig: `tests/r31-definer-search-path.test.mjs` amb PGlite explícit, catàleg complet i ombres `pg_temp`.
+
+**Totes dues, aplicades a producció** pel Mestre el 16-11-2026 (`pas2_push_sessio_ok = true` i 29/29 funcions amb `search_path` buit; captura `261116_1503` del receptari SQL R30/R31, amb els mateixos bytes que Git). Cap prova local acredita eixa aplicació. Queden pendents, i ho diuen la taula canònica i les vinyetes de [../README.md](../README.md):
+
+- les 7 funcions `SECURITY DEFINER` heretades a producció fora de Git, sense path buit (captura `261116_1508`), per a l’Onada R33;
+- un conflicte d’evidència sobre `2611121630_xat_propi.sql`: el receptari del 16-11 la dona pendent de rebase sobre la `xat_fils_meus` de `20261114061000` per una sonda (`public.obri_fil_propi()`) que cap migració de Git crea, però el registre SQL del T2 la dona aplicada el 13-11-2026 (pas 4, SHA-256 igual al de Git), abans que R24. No s’ha de tornar a aplicar; el Mestre ho ha de confirmar amb una sonda vàlida (`private.xat_propi_integritat()` o `public.xat_fils.propi_usuari_id`);
+- les claus Push VAPID/FCM/APNs i la prova en aparells físics, sense verificar.
+
+El pin POSSE del catàleg complet passa de 114 a 116 (`34ddc81c…`), recalculat des dels bytes del catàleg real; el de 114 i els altres nou pins es conserven. Els perfils del kit R30/R31 amb les dues migracions rebutjades (116 `21a3cfc3…`, 117 i 118) no s’accepten.
 
 ## Vincles
 

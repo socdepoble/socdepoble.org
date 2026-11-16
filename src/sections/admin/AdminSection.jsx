@@ -115,6 +115,7 @@ function AdminSidebar({ activeTab, setActiveTab }) {
 
       <div className="notes-column__body no-padding sdp-scrollable" role="navigation" aria-label="Menú d'administració">
         <button
+          type="button"
           className={`univ-manager-facet-item ${activeTab === 'dashboard' ? 'univ-manager-facet-item--active' : ''}`}
           onClick={() => {
             setActiveTab('dashboard');
@@ -124,7 +125,8 @@ function AdminSidebar({ activeTab, setActiveTab }) {
           <ServerCog size={18} aria-hidden="true" />
           <span>Panell General</span>
         </button>
-        <button 
+        <button
+          type="button"
           className={`univ-manager-facet-item ${activeTab === 'usuaris' ? 'univ-manager-facet-item--active' : ''}`}
           onClick={() => setActiveTab('usuaris')}
         >
@@ -132,6 +134,7 @@ function AdminSidebar({ activeTab, setActiveTab }) {
           <span>Usuaris</span>
         </button>
         <button
+          type="button"
           className={`univ-manager-facet-item ${activeTab === 'entitats' ? 'univ-manager-facet-item--active' : ''}`}
           onClick={() => setActiveTab('entitats')}
         >

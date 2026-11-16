@@ -6,13 +6,19 @@
    El rellotge és injectable (`ara`) i els ACK es passen com a dades.
    Correccions de l'àrbitre (Onada R30 · d1): (7) capacitat de la carpeta, (8) maduresa de la
    superació d'una projecció, ordre ACK/commit de la sessió, relectura de projeccions, pressupost
-   de temps, ACK implausibles i fallada de l'ACK. */
+   de temps, ACK implausibles i fallada de l'ACK.
+   Onada R32 · fusió amb la frontera causal de Codex R30.2 (D-R30-1) i correcció de l'àrbitre: (9) la carpeta
+   no porta mai ACK, fronteres ni certificats (un certificat aliè no s'aplica i el seu lot no ix mai), la
+   supressió hi viatja com a operació ordinària i cap instantània consolida payload retirat, tampoc en la
+   mateixa passada; (10) un Markdown d'una nota retirada es conserva intacte i no torna a les operacions;
+   l'ACK local de la sessió no és ACK remot. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import * as vault from '../src/data/sincronitzadorCarpetaLocal.js';
 import { creaSessioRural } from '../src/data/sessioRural.js';
-import { estatCrdtRuralBuit, canviaCrdtRural, fusionaCrdtRural, projectaCrdtRural, baseNotaCrdtRural } from '../src/data/crdtRural.js';
+import { estatCrdtRuralBuit, canviaCrdtRural, fusionaCrdtRural, projectaCrdtRural, baseNotaCrdtRural,
+  preparaSincronitzacioCrdtRural, registraAckCrdtRural, compactaCrdtRural, RETENCIO_TOMBSTONES_RURAL_MS } from '../src/data/crdtRural.js';
 import { canonitzaJsonJcs, sha256Hex } from '../src/data/federacio/portabilitatFediversity.js';
 import { CarpetaFalsa, textFals } from './helpers/carpetaLocalFalsa.js';
 import { creaBloquejosOpfsFalsos } from './helpers/bloquejosOpfsFalsos.js';
@@ -674,4 +680,227 @@ test('sessió · esborrar l’espai rural esborra també els ACK de carpeta', as
   assert.deepEqual(r.sincronitzacio.compactacio, { instantania: null, batchesRetirats: 0, projeccionsRetirades: 0, error: null, errorAck: null });
   assert.deepEqual(instantaniaCarpeta(carpeta), abans);
   assert.deepEqual(r.notes.map(n => n.content), ['abcd']);
+});
+
+/* Onada R32 · Fusió de la PF-03 viva (ACK LOCAL de carpeta i compactació sense pèrdua) amb la frontera causal
+   de Codex R30.2 (ACK remot explícit i certificat de retirada permanent), segons D-R30-1. Correcció de l'àrbitre
+   R32: el certificat és del dispositiu que l'ha fet amb el seu ACK remot. La carpeta només transporta operacions
+   (també la supressió), i un Markdown d'una nota retirada no torna mai a les operacions. */
+const AUTORITAT_REMOTA = 'https://replica.example';
+function confirmaRemot(s, ms, requestId) {
+  const p = preparaSincronitzacioCrdtRural(s, requestId);
+  return registraAckCrdtRural(s, p, { schema: 'sdp.rural.remote-ack.v1', requestId, sha256: p.sha256, frontera: p.frontera,
+    autoritat: AUTORITAT_REMOTA, confirmatEl: iso(ms), ack_remot_confirmat: true }, AUTORITAT_REMOTA);
+}
+const retiraAmbAckRemot = s => compactaCrdtRural(confirmaRemot(confirmaRemot(s, T0, 'primer'), T0 + RETENCIO_TOMBSTONES_RURAL_MS + 1, 'segon'));
+const lotsAmbMetadades = root => noms(root).filter(esBatch).filter(nom => JSON.parse(textFals(root, nom)).crdt.sincronitzacio !== undefined);
+const ambPayloadDe = (root, id) => noms(root).filter(esBatch).filter(nom => JSON.parse(textFals(root, nom)).crdt.ops.some(op => op.id === id && op.insert.text));
+/* «x» es crea i s'elimina; «y» i «z» viuen. Cada pas se sincronitza: 4 lots ordinaris i les seues projeccions. */
+async function historiaAmbRetirada(root) {
+  let s = estatCrdtRuralBuit(), comptador = 0;
+  const estats = [];
+  const pas = async (id, opcions) => {
+    s = fusionaCrdtRural(s, canviaCrdtRural(baseNotaCrdtRural(s, id), { id, replica: 'A', comptador: ++comptador, ...opcions }));
+    s = (await sync(root, s)).crdt; estats.push(s);
+  };
+  await pas('x', { nota: nota('payload retirable '.repeat(20), 'X') });
+  await pas('x', { elimina: true });
+  await pas('y', { nota: nota('viva y', 'Y') });
+  await pas('z', { nota: nota('viva z', 'Z') });
+  return { s, estats };
+}
+
+test('R32 · D-R30-1: la carpeta no rep mai ACK, fronteres ni certificats, i un lot aliè que en porta no acredita res', async () => {
+  const root = new CarpetaFalsa('vault');
+  const compactat = retiraAmbAckRemot((await historiaAmbRetirada(root)).s);
+  assert.ok(compactat.sincronitzacio.acks.length > 0 && compactat.sincronitzacio.fronteres.length === 1);
+  assert.deepEqual(compactat.sincronitzacio.retirades.map(x => x.id), ['x']);
+  const r = await sync(root, compactat);
+  assert.equal(r.batchesCreats, 0, 'la supressió ja era a la carpeta: no hi ha res nou');
+  assert.deepEqual(lotsAmbMetadades(root), []);
+  // El certificat i els ACK remots del resultat són els del dispositiu (crdt local), no de la carpeta.
+  assert.equal(canon(r.crdt.sincronitzacio), canon(compactat.sincronitzacio));
+  // Un lot aliè amb ACK, fronteres i certificat no acredita res: només se'n lligen les operacions.
+  const aliena = new CarpetaFalsa('aliena');
+  aliena.afig(nomLot(compactat), textLot(compactat));
+  const llegit = await sync(aliena, estatCrdtRuralBuit());
+  assert.equal(llegit.crdt.sincronitzacio, undefined);
+  assert.deepEqual(projectaCrdtRural(llegit.crdt).notes.map(n => n.id).sort(), ['y', 'z']);
+});
+
+test('R32 · un certificat aliè a la carpeta no purga ni amaga cap nota viva, i el lot que el porta no ix mai', async () => {
+  let s = estatCrdtRuralBuit();
+  s = fusionaCrdtRural(s, canviaCrdtRural(estatCrdtRuralBuit(), { id: 'x', replica: 'A', comptador: 1, nota: nota('text que no es pot perdre', 'X') }));
+  s = fusionaCrdtRural(s, canviaCrdtRural(estatCrdtRuralBuit(), { id: 'y', replica: 'A', comptador: 2, nota: nota('viva y', 'Y') }));
+  const root = new CarpetaFalsa('vault');
+  await sync(root, s);
+  // Un altre escriptor de la carpeta, amb una còpia de les operacions, fabrica una supressió i rebuts inventats.
+  const fals = retiraAmbAckRemot(fusionaCrdtRural(s, canviaCrdtRural(baseNotaCrdtRural(s, 'x'), { id: 'x', replica: 'atacant', comptador: 1, elimina: true })));
+  assert.deepEqual(fals.sincronitzacio.retirades.map(r => r.id), ['x']);
+  const certificat = { schema: fals.schema, ops: [], sincronitzacio: { acks: [], retirades: fals.sincronitzacio.retirades, fronteres: [] } };
+  root.afig(nomLot(certificat), textLot(certificat));
+  const r = await sync(root, s);
+  assert.deepEqual(projectaCrdtRural(r.crdt).notes.map(n => [n.id, n.content]), [['x', 'text que no es pot perdre'], ['y', 'viva y']]);
+  assert.equal(r.crdt.sincronitzacio, undefined);
+  assert.deepEqual(r.reconciliacionsCarpeta, []);
+  // Un dispositiu nou tampoc l'hereta.
+  assert.deepEqual(projectaCrdtRural((await sync(root, estatCrdtRuralBuit())).crdt).notes.map(n => n.id), ['x', 'y']);
+  // El lot del certificat no té cap operació, i el lot ordinari el cobrix: amb tots els ACK madurs, no es retira.
+  const c = await sync(root, r.crdt, { acks: ackTots(noms(root), T0), ara: () => T0 + NOVANTA + 1 });
+  assert.equal(c.compactacio.error, null);
+  assert.deepEqual(c.compactacio.batchesRetirats, []);
+  assert.ok(root.fills.has(nomLot(certificat)));
+});
+
+test('R32 · (9) en la mateixa passada en què la retirada arriba a la carpeta, cap instantània nova porta payload retirat', async () => {
+  const root = new CarpetaFalsa('vault');
+  const { s } = await historiaAmbRetirada(root);
+  const lots = noms(root).filter(esBatch), ambPayload = ambPayloadDe(root, 'x'), abans = noms(root);
+  const ambX = lots.filter(n => JSON.parse(textFals(root, n)).crdt.ops.some(op => op.id === 'x'));
+  assert.equal(lots.length, 4);
+  assert.equal(ambPayload.length, 1);
+  assert.equal(ambX.length, 2);
+  // Una sola passada: la retirada és nova per a la carpeta i tots els ACK locals ja són madurs.
+  const c = await sync(root, retiraAmbAckRemot(s), { acks: ackTots(abans, T0), ara: () => T0 + NOVANTA + 1 });
+  assert.equal(c.compactacio.error, null);
+  assert.ok(c.compactacio.instantania);
+  // S'unixen només els lots de «y» i «z». Els dos lots de «x» (creació i supressió) es conserven.
+  assert.deepEqual([...c.compactacio.batchesRetirats].sort(), lots.filter(n => !ambX.includes(n)).sort());
+  assert.equal(JSON.parse(textFals(root, c.compactacio.instantania)).crdt.ops.some(op => op.id === 'x'), false);
+  for (const nom of ambX) assert.ok(root.fills.has(nom));
+  // Cap fitxer escrit en esta passada conté el payload retirat.
+  assert.deepEqual(noms(root).filter(n => textFals(root, n).includes('payload retirable')).filter(n => !abans.includes(n)), []);
+});
+
+test('R32 · (9) la compactació conserva els lots amb payload retirat i ningú no torna a veure viva «x»', async () => {
+  const root = new CarpetaFalsa('vault');
+  const { s, estats } = await historiaAmbRetirada(root);
+  const lotsOrdinaris = noms(root).filter(esBatch);
+  const ambX = lotsOrdinaris.filter(nom => JSON.parse(textFals(root, nom)).crdt.ops.some(op => op.id === 'x'));
+  assert.equal(ambX.length, 2);
+  const r = await sync(root, retiraAmbAckRemot(s));
+  const estatAbans = estatCarpeta(root);
+  const c = await sync(root, r.crdt, { acks: ackTots(noms(root), T0), ara: () => T0 + NOVANTA + 1 });
+  assert.equal(c.compactacio.error, null);
+  assert.ok(c.compactacio.instantania);
+  assert.deepEqual([...c.compactacio.batchesRetirats].sort(), lotsOrdinaris.filter(n => !ambX.includes(n)).sort());
+  for (const nom of ambX) assert.ok(root.fills.has(nom), 'el payload retirat només el pot llevar compactaCrdtRural');
+  assert.equal(canon(estatCarpeta(root)), canon(estatAbans));
+  // Un dispositiu nou veu «x» eliminada (el payload continua a la carpeta), mai viva i sense cap certificat aliè.
+  const nova = await sync(root, estatCrdtRuralBuit());
+  assert.equal(nova.crdt.sincronitzacio, undefined);
+  assert.deepEqual(projectaCrdtRural(nova.crdt).notes.map(n => n.id).sort(), ['y', 'z']);
+  assert.deepEqual(projectaCrdtRural(nova.crdt).esborrades.map(n => n.id), ['x']);
+  // Una rèplica d'abans d'eliminar «x» tampoc la ressuscita, i el dispositiu que l'ha retirada no la recupera.
+  assert.deepEqual(projectaCrdtRural(estats[0]).notes.map(n => n.id), ['x']);
+  assert.deepEqual(projectaCrdtRural((await sync(root, estats[0])).crdt).notes.map(n => n.id).sort(), ['y', 'z']);
+  assert.equal((await sync(root, c.crdt)).crdt.ops.some(op => op.id === 'x'), false);
+  // Idempotent: la passada següent, amb els mateixos ACK, no toca res.
+  const abans = instantaniaCarpeta(root);
+  const c2 = await sync(root, c.crdt, { acks: ackTots(noms(root), T0), ara: () => T0 + NOVANTA + 1 });
+  assert.deepEqual([c2.compactacio.instantania, c2.compactacio.batchesRetirats, c2.compactacio.error], [null, [], null]);
+  assert.deepEqual(instantaniaCarpeta(root), abans);
+});
+
+test('R32 · una nota eliminada i retirada abans d’arribar a la carpeta hi arriba com a supressió ordinària: ningú la veu viva', async () => {
+  const root = new CarpetaFalsa('vault');
+  let s = estatCrdtRuralBuit();
+  s = fusionaCrdtRural(s, canviaCrdtRural(estatCrdtRuralBuit(), { id: 'x', replica: 'A', comptador: 1, nota: nota('payload retirable', 'X') }));
+  s = fusionaCrdtRural(s, canviaCrdtRural(estatCrdtRuralBuit(), { id: 'y', replica: 'A', comptador: 2, nota: nota('viva y', 'Y') }));
+  const vella = (await sync(root, s)).crdt;
+  s = fusionaCrdtRural(s, canviaCrdtRural(baseNotaCrdtRural(s, 'x'), { id: 'x', replica: 'A', comptador: 3, elimina: true }));
+  const lotsAbans = noms(root).filter(esBatch);
+  const retirat = retiraAmbAckRemot(s);
+  // En la mateixa passada arriba una nota viva nova, «w».
+  const r = await sync(root, fusionaCrdtRural(retirat, canviaCrdtRural(estatCrdtRuralBuit(), { id: 'w', replica: 'A', comptador: 4, nota: nota('viva w', 'W') })));
+  assert.equal(r.batchesCreats, 2);
+  const nous = noms(root).filter(esBatch).filter(n => !lotsAbans.includes(n)).map(n => JSON.parse(textFals(root, n)).crdt);
+  assert.equal(nous.some(lot => lot.sincronitzacio !== undefined), false);
+  // La supressió va sola en el seu lot: la nota viva nova queda en un lot ordinari, compactable.
+  assert.deepEqual(nous.map(lot => lot.ops.map(op => [op.id, op.elimina, op.insert.text])).sort(), [[['w', false, 'viva w']], [['x', true, '']]]);
+  // Un dispositiu nou i una rèplica antiga veuen «x» eliminada, sense dependències pendents.
+  const nova = await sync(root, estatCrdtRuralBuit());
+  assert.deepEqual(projectaCrdtRural(nova.crdt).notes.map(n => n.id), ['w', 'y']);
+  assert.deepEqual(projectaCrdtRural(nova.crdt).esborrades.map(n => n.id), ['x']);
+  assert.equal(projectaCrdtRural(nova.crdt).pendents, 0);
+  assert.deepEqual(projectaCrdtRural((await sync(root, vella)).crdt).notes.map(n => n.id), ['w', 'y']);
+  // Idempotent: la supressió no es reescriu.
+  const abans = instantaniaCarpeta(root);
+  assert.equal((await sync(root, r.crdt)).batchesCreats, 0);
+  assert.deepEqual(instantaniaCarpeta(root), abans);
+  // En una carpeta que no ha vist mai «x», la supressió no s'hi escriu: hi quedaria pendent per sempre.
+  const buida = new CarpetaFalsa('buida');
+  await sync(buida, r.crdt);
+  assert.deepEqual(noms(buida).filter(esBatch).map(n => JSON.parse(textFals(buida, n)).crdt.ops.map(op => op.id)), [['y', 'w']]);
+});
+
+test('R32 · (10) un Markdown antic d’una nota retirada es conserva intacte, es declara pendent i no torna a les operacions', async () => {
+  const root = new CarpetaFalsa('vault');
+  const { s } = await historiaAmbRetirada(root);
+  const mdX = noms(root).filter(n => n.endsWith('.md') && textFals(root, n).includes('payload retirable'));
+  assert.equal(mdX.length, 1);
+  const bytesAbans = textFals(root, mdX[0]);
+  const r = await sync(root, retiraAmbAckRemot(s));
+  assert.deepEqual(r.reconciliacionsCarpeta, mdX);
+  assert.equal(r.incorporacionsSenseBase, 0);
+  assert.equal(r.crdt.ops.some(op => op.id === 'x'), false, 'el payload retirat no torna a les operacions');
+  assert.equal(projectaCrdtRural(r.crdt).pendents, 0);
+  assert.equal(textFals(root, mdX[0]), bytesAbans);
+  const r2 = await sync(root, r.crdt);
+  assert.deepEqual([r2.incorporacionsSenseBase, r2.batchesCreats, r2.reconciliacionsCarpeta], [0, 0, mdX]);
+  assert.equal(canon(r2.crdt), canon(r.crdt));
+  // Tampoc no es retira amb un ACK local madur: sense payload no es pot provar que no porte una edició externa.
+  const c = await sync(root, r.crdt, { acks: ackTots(noms(root), T0), ara: () => T0 + NOVANTA + 1 });
+  assert.equal(c.compactacio.projeccionsRetirades.includes(mdX[0]), false);
+  assert.equal(textFals(root, mdX[0]), bytesAbans);
+});
+
+test('R32 · (10) una nota retirada gran o amb moltes projeccions no bloqueja la carpeta ni torna a la quota', async () => {
+  const root = new CarpetaFalsa('vault');
+  let s = estatCrdtRuralBuit(), comptador = 0;
+  const pas = async (id, opcions) => {
+    s = fusionaCrdtRural(s, canviaCrdtRural(baseNotaCrdtRural(s, id), { id, replica: 'A', comptador: ++comptador, ...opcions }));
+    s = (await sync(root, s)).crdt;
+  };
+  // 30.000 caràcters en dues operacions: una sola operació no en pot portar més de 20.000.
+  await pas('x', { nota: nota('a'.repeat(15000), 'X') });
+  await pas('x', { nota: nota('a'.repeat(15000) + 'b'.repeat(15000), 'X') });
+  // 14.000 caràcters i 7 edicions: 8 projeccions que sumen més dels 100.000 caràcters de la quota CRDT.
+  const cos = 'p'.repeat(14000);
+  await pas('p', { nota: nota(cos, 'P') });
+  for (let i = 1; i <= 7; i++) await pas('p', { nota: nota(cos + i, 'P') });
+  await pas('x', { elimina: true });
+  await pas('p', { elimina: true });
+  const mds = noms(root).filter(n => n.endsWith('.md'));
+  assert.equal(mds.length, 10);
+  const r = await sync(root, retiraAmbAckRemot(s));
+  assert.deepEqual(r.crdt.ops, []);
+  assert.deepEqual(r.crdt.sincronitzacio.retirades.map(x => x.id), ['p', 'x']);
+  assert.deepEqual(r.reconciliacionsCarpeta, mds);
+  const r2 = await sync(root, r.crdt);
+  assert.deepEqual([r2.batchesCreats, r2.reconciliacionsCarpeta], [0, mds]);
+});
+
+test('sessió · R32 · D-R30-1: l’ACK local de carpeta compacta la carpeta, però no és ACK remot ni retira cap payload', async t => {
+  const rellotge = { ara: T0 }, da = opcionsSessio(rellotge), carpeta = new CarpetaFalsa('compartida');
+  const s = await obri(t, da.opcions);
+  const id = (await s.desaNota({ title: 'Temporal', content: 'abc' })).notes[0].id;
+  await s.sincronitzaCarpeta(carpeta);
+  await s.eliminaNota({ id, base: (await s.preparaEdicio(id)).base });
+  await s.sincronitzaCarpeta(carpeta);
+  await s.desaNota({ title: 'Viva', content: 'xyz' });
+  await s.sincronitzaCarpeta(carpeta);
+  rellotge.ara = T0 + NOVANTA + DIA;
+  const r = await s.sincronitzaCarpeta(carpeta);
+  assert.equal(r.sincronitzacio.compactacio.error, null);
+  assert.equal(r.sincronitzacio.compactacio.batchesRetirats, 3);
+  assert.equal(r.sincronitzacioRemota, undefined, 'cap ACK local s’etiqueta com a remot');
+  assert.equal(estatOpfs(fitxerOpfs(da.root).text, CLAU_ACKS).schema, 'sdp.rural.crdt-vault-acks.v1');
+  await assert.rejects(s.sincronitzaRemot(), { code: 'RURAL_CRDT_REMOTE_REQUIRED' });
+  await s.consolidaDiari();
+  const paquet = await s.exportaVault();
+  assert.equal(paquet.crdt.sincronitzacio, undefined);
+  assert.equal(paquet.crdt.ops.filter(op => op.id === id).length, 2, 'el payload i el tombstone continuen');
+  assert.ok(paquet.crdt.ops.some(op => op.id === id && op.elimina === true));
+  assert.deepEqual((await s.estat()).notes.map(n => n.content), ['xyz']);
 });

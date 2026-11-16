@@ -19,6 +19,8 @@ contracte.llig:
   - .agents/skills/core-higiene-escriptori/SKILL.md
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
+motors:
+  - tooling/gates/porta-olivera.mjs
 ---
 # Identitat IAIA MarIA
 

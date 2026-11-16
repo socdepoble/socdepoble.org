@@ -510,6 +510,16 @@ function verificaBatchCrdt(text, nom) {
     || batch.sha256 !== nom.slice(PREFIX_BATCH_CRDT.length, -5) || batch.sha256 !== sha256Hex(canonitzaJsonJcs(batch.crdt))) throw errorCrdtVault('RURAL_CRDT_VAULT_HASH', 'La integritat del batch CRDT no coincidix.');
   return normalitzaCrdtRural(batch.crdt);
 }
+/* Onada R32 · PF-03 · D-R30-1 · Un lot de carpeta no acredita cap ACK remot (FEDI-02) ni cap retirada. Un
+   certificat de retirada només el fa el mateix dispositiu (compactaCrdtRural amb el seu ACK remot de més de
+   90 dies). Un certificat escrit per un altre a la carpeta no es pot verificar: aplicar-lo purgaria en silenci
+   el payload d'una nota, fins i tot d'una viva (correcció de l'àrbitre R32). Per això, de cada lot només se'n
+   lligen les operacions. El lot que porta metadades de sincronització es marca perquè la compactació no el
+   retire mai: no esborrem el que no podem verificar. */
+function lligLotCarpeta(text, nom) {
+  const crdt = verificaBatchCrdt(text, nom);
+  return { crdt: { schema: crdt.schema, ops: crdt.ops }, ambMetadades: crdt.sincronitzacio !== undefined };
+}
 function markdownCrdt(nota, crdt) {
   const heads = frontieraNotaCrdtRural(crdt, nota.id);
   const camps = { id: nota.id, title: nota.title, slug: nota.slug, folderId: nota.folderId, tags: nota.tags,
@@ -557,7 +567,9 @@ const contingutNotaCrdt = nota => ({ title: nota.title, content: nota.content, s
  * ACK d'una entrada = el sincronitzador l'ha llegida o escrita i verificada en
  * esta carpeta i les seues operacions han quedat confirmades al magatzem durable
  * del dispositiu (sessioRural.js l'anota DESPRÉS del commit local, amb la seua
- * hora). No hi ha cap servidor ni ACK de xarxa en el Mode Rural (FEDI-02).
+ * hora). És un ACK LOCAL: no és cap ACK de xarxa ni s'etiqueta com a remot
+ * (FEDI-02, D-R30-1); l'únic ACK remot és el del transport explícit de
+ * sessioRural.sincronitzaRemot (crdtRural.js), sense cap endpoint públic encara.
  * Invariants: (1) sense ACK no es compacta; (2) amb ACK de 90 dies o menys
  * tampoc; (3) cap operació ni tombstone s'esborra: els batches madurs s'unixen
  * en una instantània (un batch més, amb la unió exacta de les seues operacions)
@@ -570,7 +582,16 @@ const contingutNotaCrdt = nota => ({ title: nota.title, content: nota.content, s
  * i amb almenys la meitat del marge d'abans per als canvis nous;
  * (8) una projecció superada només ix quan l'edició o l'eliminació que l'ha
  * superada també té un ACK de més de 90 dies (no compta el primer ACK de la
- * projecció). Sense `acks` no es compacta res (camí anterior intacte). */
+ * projecció). Sense `acks` no es compacta res (camí anterior intacte).
+ * (9) Onada R32 · certificats causals (kit Codex R30.2, D-R30-1, correcció de
+ * l'àrbitre): el certificat de retirada és del dispositiu que l'ha fet amb el
+ * seu ACK remot i no viatja mai per la carpeta. Per la carpeta hi viatja la
+ * supressió, com una operació ordinària. Un lot aliè amb metadades no s'aplica
+ * i no ix mai. Cap lot amb payload que el dispositiu ja ha retirat entra en una
+ * instantània, tampoc en la mateixa passada en què la retirada arriba a la
+ * carpeta: retirar payload és exclusiu de compactaCrdtRural amb ACK remot.
+ * (10) Un Markdown d'una nota retirada no torna mai a les operacions ni a la
+ * quota. Es conserva intacte a la carpeta i es declara a `reconciliacionsCarpeta`. */
 export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signal, isScopeActive = () => true, acks = null, ara = Date.now,
   cronometre = rellotgeMonotonic, pressupostMs = PRESSUPOST_COMPACTACIO_CRDT_VAULT_MS } = {}) {
   const vigent = () => { if (signal?.aborted || isScopeActive() !== true) throw Object.assign(errorCrdtVault('RURAL_CRDT_CANCEL', 'Sincronització CRDT cancel·lada.'), { name: 'AbortError' }); };
@@ -585,7 +606,7 @@ export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signa
   const araMs = acks === null ? NaN : Number(ara()), llindar = araMs - MS_COMPACTACIO_CRDT_VAULT;
   const madura = nom => Number.isFinite(llindar) && Object.hasOwn(acks, nom) && esAckPlausibleCrdtVault(acks[nom], araMs) && Date.parse(acks[nom]) < llindar;
   let folder = estatCrdtRuralBuit(), lectures = 0, incorporacionsSenseBase = 0, batchesCreats = 0;
-  const markdowns = [], batchesLlegits = new Map();
+  const markdowns = [], batchesLlegits = new Map(), lotsAmbMetadades = new Set(), reconciliacionsCarpeta = [];
   /* La compactació té un pressupost de lectura propi: no pot fer fallar la sincronització. `mides`
      guarda els bytes de cada lot i Markdown present (llegit o escrit en esta passada), per a (7). */
   const lecturaSync = { bytes: 0 }, lecturaCompactacio = { bytes: 0 }, mides = new Map();
@@ -606,8 +627,9 @@ export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signa
       /* Onada R29 · PF-03: el fitxer 1.001 és quota, no corrupció; abans, si era un batch, eixia «Nom de batch CRDT invàlid.». */
       if (++fitxers > 1000) throw errorCrdtVault('RURAL_CRDT_VAULT_QUOTA', 'La carpeta supera els 1.000 fitxers de notes i batches.');
       if (!NOM_BATCH_CRDT.test(nom)) throw errorCrdtVault('RURAL_CRDT_VAULT_FORMAT', 'Nom de batch CRDT invàlid.');
-      const crdtBatch = verificaBatchCrdt(await llig(handle, lecturaSync, nom), nom);
+      const { crdt: crdtBatch, ambMetadades } = lligLotCarpeta(await llig(handle, lecturaSync, nom), nom);
       batchesLlegits.set(nom, crdtBatch);
+      if (ambMetadades) lotsAmbMetadades.add(nom);
       folder = fusionaCrdtRural(folder, crdtBatch);
     } else if (nom.endsWith('.md') && !nom.startsWith('.')) {
       if (++fitxers > 1000) throw errorCrdtVault('RURAL_CRDT_VAULT_QUOTA', 'La carpeta supera els 1.000 fitxers de notes i batches.');
@@ -621,6 +643,15 @@ export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signa
   const analisiMd = new Map();
   for (const { nom, text } of markdowns) {
     const parsed = parsejaMarkdownCrdt(text, nom), id = parsed.nota.id;
+    if (merged.sincronitzacio?.retirades.some(r => r.id === id)) {
+      /* Onada R32 · (10) Correcció de l'àrbitre. La nota l'ha retirada este dispositiu (només hi ha els seus
+         certificats). Sense el payload no es pot saber si el Markdown és una projecció antiga sense editar o
+         porta una edició externa. El fitxer es conserva intacte (la compactació no el retira mai) i es declara
+         pendent. No es rematerialitza com a operació: tornaria el payload retirat a la quota i, amb més de
+         20.000 caràcters, bloquejaria la carpeta per sempre (RURAL_CRDT_INVALID o RURAL_CRDT_QUOTA). A més, en
+         un altre dispositiu sense el certificat seria una arrel viva nova, i la nota ressuscitaria. */
+      reconciliacionsCarpeta.push(nom); continue;
+    }
     const base = parsed.heads === null ? estatCrdtRuralBuit() : baseCausalNotaCrdtRural(merged, id, parsed.heads);
     const prevista = projectaCrdtRural(base).notes.find(n => n.id === id);
     if (acks !== null && parsed.heads !== null && NOM_PROJECCIO_CRDT.test(nom) && madura(nom)) {
@@ -661,14 +692,32 @@ export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signa
     }
   }
   const existents = new Set(folder.ops.map(dotCrdt));
-  const delta = normalitzaCrdtRural({ schema: ESQUEMA_CRDT_RURAL, ops: merged.ops.filter(op => !existents.has(dotCrdt(op))) });
-  let nomDelta = null;
-  if (delta.ops.length) {
-    const sha256 = sha256Hex(canonitzaJsonJcs(delta));
-    const text = JSON.stringify({ schema: ESQUEMA_BATCH_CRDT_VAULT, crdt: delta, sha256 }, null, 2);
-    nomDelta = `${PREFIX_BATCH_CRDT}${sha256}.json`;
-    if (await escriuImmut(nomDelta, text, true)) batchesCreats++;
+  async function escriuLot(ops) {
+    const lot = normalitzaCrdtRural({ schema: ESQUEMA_CRDT_RURAL, ops });
+    const sha256 = sha256Hex(canonitzaJsonJcs(lot));
+    const nom = `${PREFIX_BATCH_CRDT}${sha256}.json`;
+    if (await escriuImmut(nom, JSON.stringify({ schema: ESQUEMA_BATCH_CRDT_VAULT, crdt: lot, sha256 }, null, 2), true)) batchesCreats++;
+    return nom;
   }
+  /* Onada R32 · PF-03 · D-R30-1 · La carpeta és un canal local: hi viatgen només operacions. No hi viatgen
+     mai ACK, fronteres ni certificats de retirada. Així, els clients 1.2.3 o anteriors, que tenen un esquema
+     estricte, continuen llegint la carpeta. */
+  const delta = merged.ops.filter(op => !existents.has(dotCrdt(op)));
+  const nomDelta = delta.length ? await escriuLot(delta) : null;
+  /* La supressió d'una nota que este dispositiu ha retirat (sense payload, `insert.text` buit) sí que viatja,
+     com una operació ordinària, quan tots els seus pares ja són a la carpeta. Així, cap altre dispositiu veu
+     viva una nota que s'ha eliminat i retirat abans d'arribar a la carpeta. Va en un lot a part: el lot conté
+     un DOT retirat i no es consolidarà mai (9). Si el poséssem amb el delta, les operacions vives noves
+     quedarien atrapades amb ell. */
+  const candidates = (merged.sincronitzacio?.retirades ?? []).flatMap(r => r.supressions), disponibles = new Set(existents), supressions = [];
+  for (let canvi = true; canvi;) {
+    canvi = false;
+    for (const op of candidates) {
+      if (disponibles.has(dotCrdt(op)) || !op.parents.every(p => disponibles.has(p))) continue;
+      disponibles.add(dotCrdt(op)); supressions.push(op); canvi = true;
+    }
+  }
+  const nomSupressions = supressions.length ? await escriuLot(supressions) : null;
   const projeccions = [], frontieres = new Map();
   for (const nota of projectaCrdtRural(merged).notes) {
     const heads = frontieraNotaCrdtRural(merged, nota.id), nom = nomProjeccioCrdt(nota.id, heads);
@@ -687,6 +736,15 @@ export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signa
     try {
       aTemps();
       const lots = [...batchesLlegits.keys()].sort(), opsDe = nom => batchesLlegits.get(nom).ops;
+      /* Onada R32 · (9) Un lot aliè amb metadades de sincronització és permanent: no es retira mai ni s'unix
+         en cap instantània. Tampoc s'unix un lot amb un DOT que este dispositiu ja ha retirat. Retirar payload
+         és decisió exclusiva de compactaCrdtRural amb ACK remot, mai d'esta compactació. Correcció de l'àrbitre:
+         els DOT retirats es lligen de `merged`, és a dir, dels certificats propis, i no de la carpeta. Així el
+         contracte també es complix en la passada en què la retirada arriba a la carpeta, i cap instantània nova
+         no porta payload retirat. Un lot així pot fer de contenidor, perquè no ix mai. */
+      const dotsRetirats = new Set((merged.sincronitzacio?.retirades ?? []).flatMap(r => r.dots.map(d => d.dot)));
+      const ambCertificat = nom => lotsAmbMetadades.has(nom);
+      const ambPayloadRetirat = nom => opsDe(nom).some(op => dotsRetirats.has(dotCrdt(op)));
       // Índex DOT → lots. La fusió de la llista ja ha rebutjat qualsevol DOT amb dos continguts
       // (RURAL_CRDT_DOT_EQUIVOCATION): ací, el mateix DOT és la mateixa operació.
       const lotsDe = new Map();
@@ -729,13 +787,13 @@ export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signa
       // després de rellegir del disc el lot maximal que el conté; no s'escriu res nou.
       for (const lot of lots) {
         if (lotsRetirats >= MAX_LOTS_RETIRATS_CRDT_VAULT) break;
-        if (maximals.has(lot) || !madura(lot)) continue;
+        if (maximals.has(lot) || !madura(lot) || ambCertificat(lot)) continue;
         const contenidor = cobertsPer.get(lot).filter(x => maximals.has(x))
           .reduce((millor, x) => (millor === null || precedeix(x, millor) ? x : millor), null);
         if (contenidor === null) continue;
         if (!resultat.contenidors.includes(contenidor)) {
           aTemps();
-          const relleguda = verificaBatchCrdt(await llig(await dirHandle.getFileHandle(contenidor, { create: false }), lecturaCompactacio, contenidor), contenidor);
+          const relleguda = lligLotCarpeta(await llig(await dirHandle.getFileHandle(contenidor, { create: false }), lecturaCompactacio, contenidor), contenidor).crdt;
           if (canonitzaJsonJcs(relleguda) !== canonitzaJsonJcs(batchesLlegits.get(contenidor))) throw errorCrdtVault('RURAL_CRDT_VAULT_COMPACT_VERIFY', 'El lot que en conté uns altres ha canviat a la carpeta.');
           resultat.contenidors.push(contenidor);
         }
@@ -743,7 +801,8 @@ export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signa
       }
       // Pas 2 · Els lots madurs que cap altre no cobrix s'unixen en una instantània nova: la unió es fa
       // d'un sol cop (filtrant `folder`, ja fusionat i validat), sense cap fusió per lot.
-      const restants = lots.filter(l => maximals.has(l) && madura(l)).slice(0, MAX_LOTS_RETIRATS_CRDT_VAULT - lotsRetirats);
+      const restants = lots.filter(l => maximals.has(l) && madura(l) && !ambCertificat(l) && !ambPayloadRetirat(l))
+        .slice(0, MAX_LOTS_RETIRATS_CRDT_VAULT - lotsRetirats);
       if (restants.length >= 2) {
         // (7) Bytes que llegirà la passada següent sense cap canvi nou: cada lot i Markdown present, més la
         // segona lectura de cada projecció vigent (escriuImmut la rellig). La instantània hi ha de cabre sencera.
@@ -801,7 +860,8 @@ export async function sincronitzaCrdtAmbDirectoryHandle(dirHandle, { crdt, signa
   const compactacio = acks === null ? null : await compacta();
   const retirats = new Set([...(compactacio?.batchesRetirats ?? []), ...(compactacio?.projeccionsRetirades ?? [])]);
   /* Entrades presents i verificades en esta passada: candidates a ACK quan el dispositiu confirme el commit local. */
-  const confirmats = [...new Set([...batchesLlegits.keys(), ...(nomDelta ? [nomDelta] : []), ...(compactacio?.instantania ? [compactacio.instantania] : []),
+  const confirmats = [...new Set([...batchesLlegits.keys(), ...(nomDelta ? [nomDelta] : []), ...(nomSupressions ? [nomSupressions] : []),
+    ...(compactacio?.instantania ? [compactacio.instantania] : []),
     ...projeccions, ...markdowns.map(m => m.nom)])].filter(nom => esEntradaAckCrdtVault(nom) && !retirats.has(nom)).sort();
-  vigent(); return { crdt: merged, batchesCreats, projeccions, incorporacionsSenseBase, confirmats, compactacio };
+  vigent(); return { crdt: merged, batchesCreats, projeccions, incorporacionsSenseBase, reconciliacionsCarpeta: reconciliacionsCarpeta.sort(), confirmats, compactacio };
 }

@@ -20,7 +20,7 @@ import { FileAudio, Image, Link2, ListTodo, MessageSquare, Video, X } from 'luci
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { teCapacitat, urlAdjuntXat } from '../../../data/backendPort.js';
 import { marcaTemps } from '../../search/indexCerca.js';
-import { autorDeCita } from '../conversa.js';
+import { autorDeCita, esXifratTancat } from '../conversa.js';
 import { segmentaEnllacos } from '../enllacos.js';
 import { etiquetaLlista } from '../temps.js';
 import EnllacSegur from './EnllacSegur.jsx';
@@ -30,6 +30,9 @@ export const PESTANYES_ADJUNTS_CONVERSA = Object.freeze(['media', 'enllacos', 'a
 function esMissatgeCompartit(m) {
   if (!m || typeof m !== 'object') return false;
   if (m.esborrat || m.esborratAl || m.bloquejat || m.tipus === 'sistema') return false;
+  /* R32 (Gemini R30.2, invariant de la bombolla, la galeria i el retall) · Un missatge xifrat
+     que este aparell no ha pogut obrir no aporta cap metadada verificada: no obri res al panell. */
+  if (esXifratTancat(m)) return false;
   if (m.estatEnviament === 'error') return false;
   if (m.estatEnviament === 'pendent' && m.seq == null) return false;
   return true;

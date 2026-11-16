@@ -128,14 +128,24 @@ test('public overlays contain only client keys and flags; drift never overwritte
   assert.equal(preflight({ ...f, channels: ['web'] }).ok, false);
   assert.throws(() => generateVapid(f.dir, 'mailto:push@example.org'), /overlay_drift/);
 });
-test('staging uses three exact reviewed migrations, separate explicit activation, rejects replay drift', t => {
+test('staging inclou la revocació R31 amb bytes exactes, activació separada i rebuig de deriva', t => {
   const f = lab(t);
   assert.equal(stage({ ...f, channels: ['web'] }).ok, true);
   const p = path.join(f.dir, 'staged/schema.sql');
+  assert.ok(MIGRACIONS.includes('20261116031000_r31_push_sessio_i_revocacio.sql'));
+  assert.ok(MIGRACIONS.indexOf('2611080431_xat_push_leases.sql') < MIGRACIONS.indexOf('20261116031000_r31_push_sessio_i_revocacio.sql'));
   assert.equal(fs.readFileSync(p, 'utf8'), MIGRACIONS.map(n => fs.readFileSync(path.join(root, 'supabase/migrations', n), 'utf8')).join('\n'));
   assert.match(fs.readFileSync(path.join(f.dir, 'staged/activa.sql'), 'utf8'), /push_schema_incomplete/);
   fs.appendFileSync(p, '-- drift');
   assert.throws(() => stage({ ...f, channels: ['web'] }), /stage_drift/);
+});
+test('un desplegament antic sense la migració R31 no es pot preparar per activar Push', t => {
+  const f = nativeFixture(t);
+  fs.unlinkSync(path.join(f.root, 'supabase/migrations/20261116031000_r31_push_sessio_i_revocacio.sql'));
+  const report = stage(f);
+  assert.equal(report.ok, false);
+  assert.ok(report.issues.includes('migration_missing'));
+  assert.equal(fs.existsSync(path.join(f.dir, 'staged')), false);
 });
 test('plan performs no work, pins remote domain and leaves JWT on relay', () => {
   const plan = deploymentPlan('a'.repeat(20)).join('\n');

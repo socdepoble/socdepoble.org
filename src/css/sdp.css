@@ -82,9 +82,6 @@
   .sdp-taula--identificadors :where(td:nth-child(-n + 2)) {
     min-inline-size: 12ch;
   }
-  .sdp-taula--plana :where(tbody tr:nth-child(even)) {
-    background: transparent;
-  }
 
   /* ── FORMULARIS ────────────────────────────────────────────────── */
   :where(fieldset) {

@@ -441,7 +441,7 @@ export function TableOfContentsDrawer({
       >
         <div className="toc-header">
           <h2 id="toc-title">{tradueix(t, TEXTOS_INDEX.titol)}</h2>
-          <button className="toc-close-btn" onClick={onClose} aria-label={tradueix(t, TEXTOS_INDEX.tanca)}>
+          <button type="button" className="toc-close-btn" onClick={onClose} aria-label={tradueix(t, TEXTOS_INDEX.tanca)}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -456,6 +456,7 @@ export function TableOfContentsDrawer({
               {headings.map((h, idx) => (
                 <li key={idx} className={`toc-item toc-level-${h.level}`}>
                   <button
+                    type="button"
                     lang={h.lang}
                     onClick={() => {
                       desplacaASeccio(h.element, { behavior: 'smooth', block: 'start' });

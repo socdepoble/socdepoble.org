@@ -40,12 +40,17 @@ const TOKENS_CSS = [
   ''
 ].join('\n');
 
-/** SKILL.md sintètica amb el frontmatter mínim d'inventari(). llig/escriu = null → la clau no hi és. */
-function skill(id, cos, { llig = ['docs/llig.md'], escriu = ['docs/escriu'] } = {}) {
+const RE_NODE_FIXTURE = /\bnode\s+(?:\.\/)?((?:tooling|scripts|\.agents)\/[A-Za-z0-9_./-]+\.(?:mjs|cjs|js))\b/g;
+
+/** SKILL.md sintètica amb el frontmatter mínim d'inventari(). llig/escriu/motors = null → la clau no hi és. */
+function skill(id, cos, { llig = ['docs/llig.md'], escriu = ['docs/escriu'], motors = 'auto' } = {}) {
+  const autoMotors = [...new Set([...String(cos).matchAll(RE_NODE_FIXTURE)].map((m) => m[1]))];
+  const motorsResolts = motors === 'auto' ? (autoMotors.length ? autoMotors : null) : motors;
   const llista = (clau, valors) => (valors === null ? [] : [`${clau}:`, ...valors.map((p) => `  - ${p}`)]);
   return [
     '---', `name: ${id}`, 'type: skill', 'status: actiu', `description: Skill sintètica ${id}.`,
-    'triggers_on:', `  - ${id}`, ...llista('contracte.llig', llig), ...llista('contracte.escriu', escriu), '---',
+    'triggers_on:', `  - ${id}`, ...llista('contracte.llig', llig), ...llista('contracte.escriu', escriu),
+    ...llista('motors', motorsResolts), '---',
     '', `# ${id}`, '', cos, '', '## Vincles', '- [[00_INDEX_SKILLS]]', ''
   ].join('\n');
 }
@@ -474,4 +479,30 @@ test('R29 · els filtres de camins del diff no amplien permisos sobre les fonts'
     assert.equal(propagacio.escriu.some(cobrix), false, `cap escriptura sobre ${font}`);
   }
   assert.deepEqual(propagacio.avisos, []);
+});
+
+test('F2: motors al frontmatter classifica procediment_amb_motor encara que el cos no invoque node, i bloqueja desfasaments', (t) => {
+  const { root, cas } = fixture(t);
+  cas('sdp-motor-declarat', 'Skill amb motor declarat al frontmatter.', { motors: ['tooling/gates/porta.mjs'] });
+  cas('sdp-motor-no-declarat', 'Executa `node tooling/gates/porta.mjs`.', { motors: null });
+  cas('sdp-motor-buit', 'Cos net.', { motors: [] });
+  cas('sdp-motor-inexistent', 'Cos net.', { motors: ['tooling/gates/no_existeix.mjs'] });
+  const r = audita(root);
+  const decl = r.skills.find((s) => s.id === 'sdp-motor-declarat');
+  assert.equal(decl.classe, 'procediment_amb_motor');
+  assert.deepEqual(decl.motors, ['tooling/gates/porta.mjs']);
+  assert.deepEqual(detalls(r, 'sdp-motor-declarat'), []);
+  assert.deepEqual(detalls(r, 'sdp-motor-no-declarat'), ['F2 motor executat al cos sense declarar a motors: tooling/gates/porta.mjs']);
+  assert.deepEqual(detalls(r, 'sdp-motor-buit'), ['F2 motors absent o buit']);
+  assert.deepEqual(detalls(r, 'sdp-motor-inexistent'), ['F2 motor absent tooling/gates/no_existeix.mjs']);
+});
+
+test('arbre real (C): cens canònic R30.2 de 19 skills procediment_amb_motor i 24 procediment sense scripts buits', () => {
+  const arrel = arrelSegura();
+  const r = auditaSkills(arrel);
+  const ambMotor = r.skills.filter((s) => s.classe === 'procediment_amb_motor').map((s) => s.id);
+  const cognitives = r.skills.filter((s) => s.classe === 'procediment').map((s) => s.id);
+  assert.equal(ambMotor.length, 19);
+  assert.equal(cognitives.length, 24);
+  assert.ok(ambMotor.includes('wiki-propagar-veritat'));
 });

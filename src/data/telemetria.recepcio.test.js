@@ -19,6 +19,7 @@ const FETCH_NATIU = globalThis.fetch;
 
 let servidor;
 let port;
+let restauraEntorn;
 /* Cada petició rebuda: mètode, camí, capçaleres i cos. */
 const rebudes = [];
 /* Com respon el servidor: el codi i, si n'hi ha, una porta que cal obrir abans de respondre. */
@@ -36,17 +37,37 @@ beforeAll(async () => {
       resposta.end('{}');
     });
   });
-  await new Promise((fet) => servidor.listen(0, '127.0.0.1', fet));
+  await new Promise((fet, falla) => {
+    servidor.once('error', falla);
+    servidor.listen(0, '127.0.0.1', () => {
+      servidor.off('error', falla);
+      fet();
+    });
+  });
   port = servidor.address().port;
 });
 
 afterAll(async () => {
   window.fetch = FETCH_NATIU;
-  servidor.closeAllConnections?.();
-  await new Promise((fet) => servidor.close(fet));
+  servidor?.closeAllConnections?.();
+  if (servidor?.listening) await new Promise((fet, falla) => servidor.close((error) => error ? falla(error) : fet()));
 });
 
 beforeEach(() => {
+  /* Cada prova restaura també els valors previs: es pot executar junt amb
+     altres suites sense deixar title, fetch, opt-out ni globals de l'embed. */
+  const globals = ['fetch', 'umami', '__SDP_EMBEDDED__'].map((nom) => [nom, Object.getOwnPropertyDescriptor(window, nom)]);
+  const titol = document.title;
+  const apagada = window.localStorage.getItem(CLAU_APAGADA);
+  restauraEntorn = () => {
+    for (const [nom, descriptor] of globals) {
+      if (descriptor) Object.defineProperty(window, nom, descriptor);
+      else delete window[nom];
+    }
+    document.title = titol;
+    if (apagada === null) window.localStorage.removeItem(CLAU_APAGADA);
+    else window.localStorage.setItem(CLAU_APAGADA, apagada);
+  };
   _reiniciaTelemetria();
   rebudes.length = 0;
   Object.assign(mode, { codi: 200, porta: null });
@@ -57,7 +78,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete window.__SDP_EMBEDDED__;
+  _reiniciaTelemetria();
+  restauraEntorn?.();
 });
 
 const cfgDe = (p) => configTelemetria({ VITE_UMAMI_WEBSITE_ID: ID, VITE_UMAMI_HOST: `http://127.0.0.1:${p}` });
@@ -66,14 +88,15 @@ const cfgDe = (p) => configTelemetria({ VITE_UMAMI_WEBSITE_ID: ID, VITE_UMAMI_HO
 function escoltaEstats() {
   const estats = [];
   let avisa = () => {};
+  let temps;
   const escolta = (e) => { estats.push(e.detail.verificacio); avisa(); };
   window.addEventListener(ESDEVENIMENT_DOM, escolta);
   const final = (ms = 5000) => new Promise((fet, falla) => {
-    const temps = setTimeout(() => falla(new Error(`cap estat final en ${ms} ms: ${estats.join(', ')}`)), ms);
+    temps = setTimeout(() => falla(new Error(`cap estat final en ${ms} ms: ${estats.join(', ')}`)), ms);
     avisa = () => { if (['acceptat', 'fallat', 'no_comprovat'].includes(estats.at(-1))) { clearTimeout(temps); fet(estats.at(-1)); } };
     avisa();
   });
-  return { estats, final, para: () => window.removeEventListener(ESDEVENIMENT_DOM, escolta) };
+  return { estats, final, para: () => { clearTimeout(temps); window.removeEventListener(ESDEVENIMENT_DOM, escolta); } };
 }
 
 describe('P2-14 · recepció HTTP verificada amb un servidor propi', () => {
@@ -96,7 +119,7 @@ describe('P2-14 · recepció HTTP verificada amb un servidor propi', () => {
       expect(darrersEnviaments()[0].verificacio).toBe('intent');
       obri();
       expect(await final()).toBe('acceptat');
-    } finally { para(); }
+    } finally { obri(); para(); }
 
     expect(estats).toEqual(['intent', 'acceptat']);
     expect(darrersEnviaments()).toHaveLength(1);
@@ -137,7 +160,10 @@ describe('P2-14 · recepció HTTP verificada amb un servidor propi', () => {
   test('connexió refusada (servidor tancat): «fallat», sense trencar res', async () => {
     // Un port que acaba de quedar lliure: ningú hi escolta.
     const tancat = http.createServer();
-    await new Promise((fet) => tancat.listen(0, '127.0.0.1', fet));
+    await new Promise((fet, falla) => {
+      tancat.once('error', falla);
+      tancat.listen(0, '127.0.0.1', () => { tancat.off('error', falla); fet(); });
+    });
     const portTancat = tancat.address().port;
     await new Promise((fet) => tancat.close(fet));
 

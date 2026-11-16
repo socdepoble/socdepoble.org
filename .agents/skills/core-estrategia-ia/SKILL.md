@@ -11,6 +11,8 @@ contracte.llig:
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
   - _wiki_de_poble/10_metriques/consum_ia.csv
+motors:
+  - tooling/brain/tracker_consum.mjs
 ---
 
 # ESTRATÈGIA DE CONSUM IA (Motor de Consum)

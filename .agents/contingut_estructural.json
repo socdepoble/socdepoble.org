@@ -68,16 +68,16 @@
       "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "8092020995cf7a83daa5872f61de824354254554a9d2750d572509389e950d47",
-      "html": 21953,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "sha256": "ced125f87ef91a2afcee6d1d7a8ad95995d2970e937aa79aa1d7b71519aefe11",
+      "html": 21948,
+      "aprovat_per": "gemini-r31",
+      "data": "2026-11-16"
     },
     "fediversity": {
-      "sha256": "c14146a2a85a2d1c29aa31a56fe82985ec93edd5a48c667999735d0df887eeee",
-      "html": 63771,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "sha256": "8457420b23d84341ec2742501b36697af05ac36b44d1b0f138770a12aea58a68",
+      "html": 63766,
+      "aprovat_per": "gemini-r31",
+      "data": "2026-11-16"
     },
     "habitatge": {
       "sha256": "bf9ee48a8ca1eca44eb3e22a053bcc7626b72bd3321b9bf624e690cb3c97463a",
@@ -104,10 +104,10 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "78216db5117ad29a39897d12f5f498516c3ca9b532c2a32749c7deaa9871ab90",
-      "html": 27344,
-      "aprovat_per": "Claude R29 G11 261115 17:04 (DECISIÓ-R29-02.6, pla R29 aprovat pel Mestre): calcs del basc R29-02-6a/6b, només text eu; divergència verificada com a única",
-      "data": "2026-11-15"
+      "sha256": "81ca4854ec3f4f1e6fea3170c63458c0f7ab7638559ed4876f8ab2fc2f2ebb97",
+      "html": 27348,
+      "aprovat_per": "gemini-r31",
+      "data": "2026-11-16"
     },
     "notes": {
       "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",
@@ -116,10 +116,10 @@
       "data": "2026-11-14"
     },
     "projecte": {
-      "sha256": "aa2124fd2a2535d6fc792b52b5be446aba18a1a86df306f210ef7f2a9665fa9e",
-      "html": 10677,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "sha256": "580f77f52b067d37dadff6c25ef7000346661c6ab7bf5a3bf36c8615b6a9e78b",
+      "html": 10845,
+      "aprovat_per": "gemini-r31",
+      "data": "2026-11-16"
     },
     "publicar_mapa": {
       "sha256": "14420b6cf28a3cf1f93dc0a25e634bba12ac63b92f2377e9fb9ebbb2ed2b8046",
@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "8ab88836c9b1758119d2fd47fba6fd31c59e314d91dac717565ec7dca160e6ef",
-      "html": 84597,
-      "aprovat_per": "Claude R30 261116 (Llei 0: les tres migracions aplicades el 15-11 a les 23.11, acta 261116_0103)",
+      "sha256": "25509423b65898351241fc8fcc5e36bab8be0eaa6cdaf17f19b445748e6954d6",
+      "html": 89076,
+      "aprovat_per": "Claude R32 261116 (crònica v1.2.4 build 9 i correcció Llei 0 de l'entrada R30, dins del pla R32 aprovat pel Mestre a les 14:32; pendent de lectura humana)",
       "data": "2026-11-16"
     },
     "wikidepoble": {

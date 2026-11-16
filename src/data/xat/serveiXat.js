@@ -490,7 +490,7 @@ function escoltaCanvisSessioPerDefecte(avisa) {
  */
 export function creaServeiXat({
   enviaMissatge = enviaMissatgePort,
-  refreshSession = refrescaSessioPort,
+  refreshSession = (...args) => refrescaSessioPort(...args),
   obteContextSessio = obteContextSessioPerDefecte,
   obteActorOrgId = null,
   escoltaCanvisSessio = escoltaCanvisSessioPerDefecte,
@@ -978,12 +978,10 @@ export function creaServeiXat({
       if (!resposta || typeof resposta !== 'object' || Array.isArray(resposta)) {
         return resposta;
       }
-      const idResolt = typeof resposta.id === 'string' && resposta.id.trim()
-        ? resposta.id
-        : payloadCongelat.id;
       return {
         ...resposta,
-        id: idResolt,
+        // client_msg_id identifica la petició. L'id del servidor només pot
+        // vindre del seu ACK: sintetitzar-lo amagaria un contracte incomplet.
         client_msg_id: payloadCongelat.client_msg_id,
       };
     };

@@ -117,5 +117,11 @@ export function ambReservaDelPaquet(clau, perfilDelServidor = null) {
   if (ia && (!perfil || esOrganitzacio(perfil))) perfil = ia;
   const delPaquet = perfilFundacionalDelPaquet(clau);
   if (delPaquet && (!perfil || (delPaquet.tipus === 'persona' && perfil.tipus !== 'persona'))) perfil = delPaquet;
+  /* D-R24.2-3 · La fila autoritzada conserva UUID, camps buits explícits,
+     dates i permisos remots. La reserva només aporta camps absents a una
+     fitxa sencera: una fitxa mínima privada no s'amplia amb dades del paquet. */
+  else if (delPaquet && perfil.tipus === delPaquet.tipus && (perfil.publicat === true || perfil.propietari === true)) {
+    perfil = { ...delPaquet, ...perfil };
+  }
   return perfil;
 }

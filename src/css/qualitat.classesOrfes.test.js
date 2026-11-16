@@ -246,7 +246,8 @@ const INSTANTANIA = new Set([
      Bancal). Gauntlet 261017 (Bloc 0.1) · `.sdp-editor-tools__actions` ja
      és fora: les seues quatre regles, amb els selectors vius que les
      compartien intactes. */
-  'app-sidebar-nav-footer', 'sdp-chat-bubble-meta'
+  /* Onada R31 · Extirpats els dos últims fragments orfes (.app-sidebar-nav-footer
+     i .sdp-chat-bubble-meta). Només queda la classe del runtime de ProseMirror. */
 ]);
 
 describe('classes òrfenes dels fulls modules, components i layout', () => {
@@ -303,5 +304,24 @@ describe('classes òrfenes dels fulls modules, components i layout', () => {
     console.log(linies.join('\n'));
     const noves = ORFES.filter((c) => !INSTANTANIA.has(c));
     expect(noves, 'classes noves al CSS sense cap consumidor al repositori').toEqual([]);
+  });
+
+  /* Onada R32 · Revers de la poda R31: el menú de barra (slash.js) i l'adreça
+     d'una imatge enllaçada (SdpImageNodeView.jsx) componen les classes en temps
+     d'execució (`${CLASSE}__titol`), i una cerca per nom sencer no les veu. La
+     poda les havia llevat com a mortes i l'editor perdia l'estil (Llei del Píxel).
+     Cada sufix BEM compost sobre la constant ha de tindre regla en algun full de src. */
+  test('les classes que l’editor compon en temps d’execució conserven la seua regla', () => {
+    const compostes = [
+      ['src/components/universal/richText/extensions/slash.js', 'CLASSE', 'src/components/universal/richText/extensions/slash.js'],
+      ['src/components/universal/richText/extensions/SdpImageNodeView.jsx', 'CLASSE_ENLLAC_IMATGE', 'src/components/universal/richText/extensions/enllacImatge.js']
+    ].flatMap(([consumidor, constant, origen]) => {
+      const base = readFileSync(path.join(ARREL, origen), 'utf8').match(new RegExp(`const ${constant} = ['"]([\\w-]+)['"]`))?.[1];
+      expect(base, `${origen}: ${constant}`).toBeTruthy();
+      const text = readFileSync(path.join(ARREL, consumidor), 'utf8');
+      return [...text.matchAll(new RegExp(`\\$\\{${constant}\\}(__[\\w-]+)`, 'g'))].map((m) => `${base}${m[1]}`);
+    });
+    expect(new Set(compostes)).toEqual(new Set(['sdp-slash-menu__buit', 'sdp-slash-menu__opcio', 'sdp-slash-menu__opcio--activa', 'sdp-slash-menu__titol', 'sdp-slash-menu__ajuda', 'sdp-image-link__adreca']));
+    expect(compostes.filter((classe) => !CLASSES_DE_SRC.has(classe)), 'classes compostes sense regla').toEqual([]);
   });
 });

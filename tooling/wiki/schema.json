@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://socdepoble.org/schemas/wiki-frontmatter-v2.1.json",
-  "title": "Frontmatter can\u00f2nic de la Wiki de S\u00f3c de Poble",
-  "description": "\u00danica font mec\u00e0nica de veritat per a les metadades Markdown de la Wiki.",
-  "$comment": "S'aplica a contingut propi; mirrors i vendors conserven el seu contracte i s\u00f3n immutables.",
+  "title": "Frontmatter canònic de la Wiki de Sóc de Poble",
+  "description": "Única font mecànica de veritat per a les metadades Markdown de la Wiki.",
+  "$comment": "S'aplica a contingut propi; mirrors i vendors conserven el seu contracte i són immutables.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -161,6 +161,16 @@
         "pattern": "^(?!.*90_arxiu_historic)\\S+$"
       },
       "uniqueItems": true
+    },
+    "motors": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?:tooling|scripts|\\.agents)/[A-Za-z0-9_./-]+\\.(?:mjs|cjs|js)$"
+      }
     }
   }
 }

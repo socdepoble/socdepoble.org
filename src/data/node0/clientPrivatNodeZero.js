@@ -294,6 +294,7 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
   if(publications)adapter.appendSectionSubmissionNetworkOnly=async(submission,options={})=>{
     const captured=actor(),input=dataCopy(submission);
     if(!plain(input)||!PUBLISH_SECTIONS.has(input.sectionId)||input.id!==undefined&&!UUID.test(input.id))throw fail('NODE0_PUBLICACIO_INVALIDA');
+    if(own(input,'expectedUpdatedAt'))throw fail('NODE0_PUBLICACIO_INVALIDA');
     if(own(input,'noteId')&&(!UUID.test(input.noteId??'')||!UUID.test(input.operationId??'')||!Number.isSafeInteger(input.expectedNoteRevision)||input.expectedNoteRevision<1))throw invalid();
     const id=input.id??globalThis.crypto.randomUUID();
     if(!plain(input.payload??{})||new TextEncoder().encode(JSON.stringify(input.payload??{})).byteLength>128*1024)throw fail('NODE0_PUBLICACIO_MASSA_GRAN');

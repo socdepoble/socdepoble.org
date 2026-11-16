@@ -21,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { fixture, validDoc, writeDoc, relay } from './helpers/documental.mjs';
 import { arxiva, arxivables } from '../tooling/gates/porta-olivera.mjs';
-import { planificaArxiu, reescriuEnllacos, desfesSubstitucions, documentsAuditats, hashBytes, fallidesF9 } from '../tooling/documental/arxiu-enllacos.mjs';
+import { planificaArxiu, reescriuEnllacos, desfesSubstitucions, documentsAuditats, hashBytes, fallidesF9, liniaVersiona } from '../tooling/documental/arxiu-enllacos.mjs';
 import { ambTornsArxiu, openTurn, bindPlan, sealTurn, checkTurn, validateDocument, inventory, readTurn } from '../tooling/documental/turns.mjs';
 import { checkDocuments } from '../tooling/gates/porta-documents.mjs';
 import { VerificadorSCC } from '../tooling/gates/verificador-scc.mjs';
@@ -203,7 +203,14 @@ test('T3 · el torn tancat del rebut propi rep només files[D] nou, amb rastre r
   const p = porta(root, ['--arxiva', '--nom', X]);
   assert.equal(p.status, 0, p.stderr + p.stdout);
   assert.match(p.stdout, /esmena de verification\.files/);
-  assert.match(p.stdout, /Versiona junts: .*\.agents\/runtime\/turns\//);
+  // R32 · D-R30-15: els torns són locals; «Versiona junts» llista només documents i índex, i el torn tocat ix a banda.
+  const versiona = p.stdout.match(/^\[Porta Olivera\] Versiona junts: (.*)\.$/m);
+  assert.ok(versiona, p.stdout);
+  assert.ok(versiona[1].split(', ').includes(d.file), versiona[1]);
+  assert.doesNotMatch(versiona[1], /\.agents\/runtime\/turns\//, 'cap registre de torn a «Versiona junts»');
+  const locals = p.stdout.match(/^\[Porta Olivera\] Registres de torn actualitzats \(locals, D-R30-15; no es versionen\): (.*)\.$/m);
+  assert.ok(locals, p.stdout);
+  assert.ok(locals[1].split(', ').includes(`.agents/runtime/turns/${C}.json`), locals[1]);
 
   const despres = llig(root, d.file);
   assert.notEqual(despres, d.content);
@@ -900,4 +907,22 @@ test('T15 · paritat Doctrina: les línies que el pla atura són exactament les 
   const d = doctrina(root);
   assert.equal(d.status, 1);
   assert.deepEqual(d.absents.map((a) => a.split(' ')[0]).sort(), atura);
+});
+
+/* ── R32 · D-R30-15: «Versiona junts» mai no inclou registres de torn ─────────── */
+
+test('R32 · liniaVersiona: els documents i l’índex es versionen junts; els torns tocats ixen en una línia a banda, locals', () => {
+  const A = `${DESK}/250101_1000_auditoria_a.md`, B = `${ACTES}/250101_1001_acta_b.md`;
+  const T1 = 'torn_00000000-0000-4000-8000-000000000001', T2 = 'torn_00000000-0000-4000-8000-000000000002';
+  const locals = '[Porta Olivera] Registres de torn actualitzats (locals, D-R30-15; no es versionen): ';
+  assert.equal(liniaVersiona({}, { reescrits: [], index: false, torns: [] }), null);
+  assert.equal(liniaVersiona({}, {}), null);
+  assert.equal(liniaVersiona({}, { reescrits: [A, B, A], index: true }), `[Porta Olivera] Versiona junts: ${A}, ${B}, ${INDEX}.`);
+  assert.equal(liniaVersiona({}, { reescrits: [], index: false, torns: [{ id: T1 }, { id: T1 }] }), `${locals}.agents/runtime/turns/${T1}.json.`);
+  const dues = liniaVersiona({}, { reescrits: [A], index: true, torns: [{ id: T1, estat: 'closed' }, { id: T2, estat: 'opened' }] }).split('\n');
+  assert.deepEqual(dues, [
+    `[Porta Olivera] Versiona junts: ${A}, ${INDEX}.`,
+    `${locals}.agents/runtime/turns/${T1}.json, .agents/runtime/turns/${T2}.json.`,
+  ]);
+  assert.doesNotMatch(dues[0], /runtime\/turns/);
 });

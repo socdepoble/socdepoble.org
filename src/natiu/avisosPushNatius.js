@@ -6,6 +6,7 @@ import { cicleAvisosPush } from './cicleAvisosPush.js';
 import { memoriaConsentimentPush } from './consentimentPush.js';
 
 export const CONNECTOR_PUSH = 'PushNotifications';
+export const CONNECTOR_CICLE_PUSH_ANDROID = 'CiclePushNatiu';
 
 /* Sanejament R15 (B3 · P1-03, R15A-NAT-01) · Sense google-services.json, register() i
    unregister() del connector criden FirebaseMessaging.getInstance() sense FirebaseApp i
@@ -27,6 +28,8 @@ export const ESTAT_PUSH_NATIU = Object.freeze({
 
 /** Quant s'espera, com a molt, el testimoni del registre (l'esdeveniment 'registration'). */
 export const TOPALL_TESTIMONI_MS = 15000;
+// Mateix límit de l'eixida del registre neutre; el test R31 en prova paritat.
+export const TOPALL_BAIXA_NATIVA_MS = 2500;
 
 /* L'esdeveniment del connector quan la persona toca un avís. */
 const TOC_DEL_CONNECTOR = 'pushNotificationActionPerformed';
@@ -38,6 +41,7 @@ const PREGUNTABLES = new Set(['prompt', 'prompt-with-rationale']);
 /* Un connector per nucli: el registre de Capacitor és global i un segon
    registerPlugin del mateix nom avisa a la consola. */
 const CONNECTORS = new WeakMap();
+const CICLES_ANDROID = new WeakMap();
 
 /* El nucli de @capacitor/core, el de per defecte. */
 const nucliPerDefecte = () => ({ Capacitor, registerPlugin });
@@ -54,6 +58,18 @@ function connectorDe(nucli) {
   } catch {
     return null;
   }
+}
+
+// Android8.1.3 resol unregister abans de la Task Firebase. El plugin local
+// resol només després de getToken/deleteToken reals i els serialitza també
+// si Android recrea l'Activity en el mateix procés. Cap fallback al pont vell.
+function cicleAndroidDe(nucli) {
+  try {
+    if (!nucli.Capacitor.isPluginAvailable(CONNECTOR_CICLE_PUSH_ANDROID)) return null;
+    const registra = nucli.registerPlugin;
+    if (!CICLES_ANDROID.has(registra)) CICLES_ANDROID.set(registra, registra(CONNECTOR_CICLE_PUSH_ANDROID));
+    return CICLES_ANDROID.get(registra) || null;
+  } catch { return null; }
 }
 
 /* El permís de rebre avisos com el diu el pont ('granted', 'denied',
@@ -75,7 +91,7 @@ function plataformaDe(nucli) {
 /* Registra l'aparell al servei de push i torna el testimoni ('registration'),
    o null si falla ('registrationError', un rebuig) o no arriba dins del
    topall. Els oients es lleven sempre. El testimoni no s'escriu enlloc. */
-function testimoniDelRegistre(push, topallMs) {
+function testimoniDelRegistre(push, topallMs, senyal) {
   return new Promise((resol) => {
     const oients = [];
     let rellotge = null;
@@ -84,11 +100,15 @@ function testimoniDelRegistre(push, topallMs) {
       if (acabat) return;
       acabat = true;
       clearTimeout(rellotge);
+      senyal?.removeEventListener('abort', cancella);
       for (const oient of oients) {
         Promise.resolve(oient).then((mansa) => (mansa && typeof mansa.remove === 'function' ? mansa.remove() : undefined)).catch(() => {});
       }
       resol(typeof testimoni === 'string' && testimoni ? testimoni : null);
     };
+    const cancella = () => acaba(null);
+    senyal?.addEventListener('abort', cancella, { once: true });
+    if (senyal?.aborted) { acaba(null); return; }
     const escolta = (nom, funcio) => {
       const oient = push.addListener(nom, funcio);
       oients.push(oient);
@@ -102,8 +122,47 @@ function testimoniDelRegistre(push, topallMs) {
       acaba(null);
       return;
     }
-    Promise.resolve().then(() => push.register()).catch(() => acaba(null));
+    // El pont pot instal·lar els oients asíncronament: no registrem fins
+    // que els dos estiguen preparats. Un rebuig o un timeout no ha de deixar
+    // arrancar un registre tardà sense ningú que reculla el testimoni.
+    Promise.all(oients).then(() => {
+      if (!acabat) return push.register();
+      return undefined;
+    }).catch(() => acaba(null));
   });
+}
+
+// El resultat pertany a esta crida getToken, no a un esdeveniment Android
+// retingut d'una sessió anterior. Expirar o avortar JS no acaba la Task: la
+// cua nativa continua ocupada i un deleteToken posterior l'ha d'esperar.
+function testimoniDeTask(cicle, topallMs, senyal) {
+  return new Promise(resolve => {
+    let acabat = false;
+    let timer;
+    const acaba = dada => {
+      if (acabat) return;
+      acabat = true;
+      clearTimeout(timer);
+      senyal?.removeEventListener('abort', cancella);
+      resolve(typeof dada?.value === 'string' && dada.value ? dada.value : null);
+    };
+    const cancella = () => acaba(null);
+    senyal?.addEventListener('abort', cancella, { once: true });
+    if (senyal?.aborted) { acaba(null); return; }
+    timer = setTimeout(() => acaba(null), topallMs);
+    try { Promise.resolve(cicle.register()).then(acaba, cancella); }
+    catch { acaba(null); }
+  });
+}
+
+/* El pont no admet cancel·lació d'un unregister ja enviat. El caller no
+   espera indefinidament i l'adaptador refusa un registre nou fins que el
+   treball vell haja acabat: cap resposta tardana no pot afectar B. */
+function limitaBaixa(promesa, ms) {
+  const limit = Number.isFinite(ms) && ms >= 0 ? ms : TOPALL_BAIXA_NATIVA_MS;
+  let timer;
+  return Promise.race([promesa, new Promise(resolve => { timer = setTimeout(() => resolve(false), limit); })])
+    .finally(() => clearTimeout(timer));
 }
 
 /**
@@ -122,7 +181,9 @@ export function motiuPushNatiu(opcions = {}) {
     const nucli = opcions && opcions.nucli !== undefined ? opcions.nucli : nucliPerDefecte();
     const pont = nucli && nucli.Capacitor;
     if (!pont || typeof pont.isPluginAvailable !== 'function' || typeof nucli.registerPlugin !== 'function') return ESTAT_PUSH_NATIU.SENSE_CONNECTOR;
-    return pont.isPluginAvailable(CONNECTOR_PUSH) ? null : ESTAT_PUSH_NATIU.SENSE_CONNECTOR;
+    if (!pont.isPluginAvailable(CONNECTOR_PUSH)) return ESTAT_PUSH_NATIU.SENSE_CONNECTOR;
+    if (plataformaDe(nucli) === 'android' && !pont.isPluginAvailable(CONNECTOR_CICLE_PUSH_ANDROID)) return ESTAT_PUSH_NATIU.SENSE_CONNECTOR;
+    return null;
   } catch {
     return ESTAT_PUSH_NATIU.SENSE_CONNECTOR;
   }
@@ -141,7 +202,7 @@ export function motiuPushNatiu(opcions = {}) {
  *   desactiva(opcions?: { retira?: (dades: { testimoni: string, plataforma: (string|null) }) => Promise<unknown> }) => Promise<{ estat: string }>,
  *   escoltaToc(fn: (dades: {}) => void) => () => void }}
  */
-export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, topallMs = TOPALL_TESTIMONI_MS, canal = null } = {}) {
+export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, topallMs = TOPALL_TESTIMONI_MS, limitBaixaMs = TOPALL_BAIXA_NATIVA_MS, canal = null } = {}) {
   /* Sanejament R15 (B3) · Sense la bandera de build, l'adaptador ni tan sols mira el pont. */
   if (!pushNatiuConfigurat()) return adaptadorSenseConfig();
   /* Sanejament R15 (B3 · P1-03) · Cert des que esta obertura de l'App ha demanat register()
@@ -161,11 +222,15 @@ export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, t
      de qui acaba d'activar. Cap baixa, ni la que falla, el deixa cert: després
      d'una baixa, l'App mai diu «actiu» a una altra persona. */
   let registrat = false;
+  let generacio = 0;
+  let controlRegistre = null;
+  let baixaPont = null;
   return {
     /** L'estat sense preguntar res ni registrar res. Mai llança. */
     async estat() {
       const push = connectorDe(nucli);
       if (!push) return { estat: ESTAT_PUSH_NATIU.SENSE_CONNECTOR };
+      if (plataformaDe(nucli) === 'android' && !cicleAndroidDe(nucli)) return { estat: ESTAT_PUSH_NATIU.SENSE_CONNECTOR };
       try {
         const permis = textDelPermis(await push.checkPermissions());
         if (permis === 'denied') return { estat: ESTAT_PUSH_NATIU.DENEGAT };
@@ -183,64 +248,91 @@ export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, t
      * mana sobre el de la construcció. Mai llança.
      */
     async activa(opcions = {}) {
+      if (baixaPont) return { estat: ESTAT_PUSH_NATIU.ERROR };
+      const gen = ++generacio;
+      controlRegistre?.abort();
+      const control = new AbortController();
+      controlRegistre = control;
       const desaAra = opcions && typeof opcions.desa === 'function' ? opcions.desa : desa;
       const push = connectorDe(nucli);
       if (!push) return { estat: ESTAT_PUSH_NATIU.SENSE_CONNECTOR };
+      const android = plataformaDe(nucli) === 'android';
+      const cicle = android ? cicleAndroidDe(nucli) : null;
+      if (android && !cicle) return { estat: ESTAT_PUSH_NATIU.SENSE_CONNECTOR };
       try {
         let permis = textDelPermis(await push.checkPermissions());
+        if (gen !== generacio) return { estat: ESTAT_PUSH_NATIU.INACTIU };
         if (permis === 'denied') return { estat: ESTAT_PUSH_NATIU.DENEGAT };
         if (typeof desaAra !== 'function') return { estat: ESTAT_PUSH_NATIU.SENSE_SERVIDOR };
         if (PREGUNTABLES.has(permis) && opcions.gest !== false) permis = textDelPermis(await push.requestPermissions());
+        if (gen !== generacio) return { estat: ESTAT_PUSH_NATIU.INACTIU };
         if (permis !== 'granted') return { estat: ESTAT_PUSH_NATIU.DENEGAT };
         registreDemanat = true;
-        const testimoni = await testimoniDelRegistre(push, topallMs);
+        const testimoni = android ? await testimoniDeTask(cicle, topallMs, control.signal) : await testimoniDelRegistre(push, topallMs, control.signal);
+        if (gen !== generacio) return { estat: ESTAT_PUSH_NATIU.INACTIU };
         if (!testimoni) return { estat: ESTAT_PUSH_NATIU.ERROR };
         await desaAra({ testimoni, plataforma: plataformaDe(nucli) });
+        if (gen !== generacio) return { estat: ESTAT_PUSH_NATIU.INACTIU };
         testimoniDesat = testimoni;
         registrat = true;
         return { estat: ESTAT_PUSH_NATIU.ACTIU };
       } catch {
         return { estat: ESTAT_PUSH_NATIU.ERROR };
+      } finally {
+        if (controlRegistre === control) controlRegistre = null;
       }
     },
     /**
      * La baixa, NOMÉS si el pont té el connector (si no, 'sense-connector' i
-     * cap crida): primer unregister, que mata el testimoni; després lleva els
-     * avisos ja mostrats (a Android és cancelAll: tots els de l'App, que avui
-     * són tots del Xat, com fa ja netejaAvisos d'avisosNatius.js); i, de
-     * cortesia, retira({ testimoni, plataforma }) al servidor si este
+     * cap crida): unregister, neteja dels avisos mostrats i retirada remota
+     * arranquen independentment. Un pont natiu penjat no pot impedir que
+     * la sessió encara vàlida revoque el registre al servidor. Es passa
+     * retira({ testimoni, plataforma }) al servidor si este
      * adaptador coneix el testimoni. Torna inactiu, o error si unregister
      * falla (el testimoni continua viu; la retirada es fa igual). Mai llança
      * i mai torna el connector.
      */
     async desactiva(opcions = {}) {
+      const gen = ++generacio;
+      controlRegistre?.abort();
+      controlRegistre = null;
       const push = connectorDe(nucli);
       if (!push) return { estat: ESTAT_PUSH_NATIU.SENSE_CONNECTOR };
       registrat = false;
       // Sanejament R15 (B3 · P1-03): res registrat en esta obertura, cap testimoni ni opt-in desat → cap crida nativa.
       if (!registreDemanat && !testimoniDesat && opcions?.ambOptIn !== true) return { estat: ESTAT_PUSH_NATIU.INACTIU };
       const retira = opcions && typeof opcions.retira === 'function' ? opcions.retira : null;
-      let desfet = true;
-      try {
-        await push.unregister();
-        registreDemanat = false;
-      } catch {
-        desfet = false;
-      }
-      try {
-        await push.removeAllDeliveredNotifications();
-      } catch {
-        /* res a llevar */
-      }
       const testimoni = testimoniDesat;
-      if (testimoni && retira) {
+      const desfesNatiu = async () => {
+        try {
+          if (plataformaDe(nucli) === 'android') {
+            const cicle = cicleAndroidDe(nucli);
+            if (!cicle) return false;
+            await cicle.unregister();
+          } else await push.unregister();
+          registreDemanat = false;
+          return true;
+        } catch { return false; }
+      };
+      const netejaMostrats = async () => {
+        try { await push.removeAllDeliveredNotifications(); } catch { /* res a llevar */ }
+      };
+      const retiraRemot = async () => {
+        if (!testimoni || !retira) return;
         try {
           await retira({ testimoni, plataforma: plataformaDe(nucli) });
-          if (testimoniDesat === testimoni) testimoniDesat = null;
+          if (gen === generacio && testimoniDesat === testimoni) testimoniDesat = null;
         } catch {
           /* de cortesia: es podrà tornar a provar */
         }
+      };
+      if (!baixaPont) {
+        const feina = Promise.all([desfesNatiu(), netejaMostrats()])
+          .then(([desfet]) => desfet)
+          .finally(() => { if (baixaPont === feina) baixaPont = null; });
+        baixaPont = feina;
       }
+      const [desfet] = await Promise.all([limitaBaixa(baixaPont, limitBaixaMs), limitaBaixa(retiraRemot(), limitBaixaMs)]);
       return { estat: desfet ? ESTAT_PUSH_NATIU.INACTIU : ESTAT_PUSH_NATIU.ERROR };
     },
     /**
@@ -277,9 +369,21 @@ export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, t
       const push = connectorDe(nucli);
       if (!push || typeof fn !== 'function') return () => {};
       let viu = true;
-      const oient = Promise.resolve(push.addListener('registration', d => {
-        if (typeof d?.value === 'string' && d.value) registreDemanat = true; // un testimoni viu d'esta obertura
-        if (viu) Promise.resolve(fn({ testimoni: d?.value, plataforma: plataformaDe(nucli) })).catch(() => {});
+      const android = plataformaDe(nucli) === 'android';
+      const oient = Promise.resolve(push.addListener('registration', async d => {
+        const gen = generacio;
+        let testimoni = d?.value;
+        if (android) {
+          if (!viu || baixaPont || !registrat) return;
+          const cicle = cicleAndroidDe(nucli);
+          if (!cicle) return;
+          // El token de l'event pot ser retingut o anterior a una baixa.
+          // És només un senyal: verificar el token vigent dins de la cua SDK.
+          testimoni = await testimoniDeTask(cicle, topallMs);
+        }
+        if (!viu || gen !== generacio || (android && (baixaPont || !registrat)) || typeof testimoni !== 'string' || !testimoni) return;
+        registreDemanat = true;
+        try { Promise.resolve(fn({ testimoni, plataforma: plataformaDe(nucli) })).catch(() => {}); } catch { /* el consumidor no tomba el pont */ }
       }));
       oient.catch(() => {});
       return () => { viu = false; oient.then(m => m?.remove()).catch(() => {}); };

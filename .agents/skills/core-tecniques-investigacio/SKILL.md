@@ -19,6 +19,8 @@ contracte.llig:
   - _wiki_de_poble/00_index.md
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
+motors:
+  - tooling/gates/certifica-enllacos.mjs
 ---
 
 # Tècniques d'Investigació, Autòpsia i Quàdruple Tècnica (`MIT + EGM + REA + Craft`)

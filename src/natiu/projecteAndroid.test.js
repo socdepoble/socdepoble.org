@@ -236,17 +236,17 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(permisos.some((p) => p['android:name'] === 'android.permission.POST_NOTIFICATIONS' && p['tools:node'] === 'remove')).toBe(false);
   });
 
-  /* P0-24 (G2120-07, marató 261101_2143) · El segon connector propi, el de l'Arrere. */
-  test('MainActivity: registra CompartirNatiuPlugin i EnrereNatiuPlugin abans de super.onCreate', () => {
+  /* P0-24 · Arrere; R31 · el tercer connector espera les Tasks reals de Firebase. */
+  test('MainActivity: registra CompartirNatiuPlugin, EnrereNatiuPlugin i CiclePushNatiuPlugin abans de super.onCreate', () => {
     const codi = senseComentarisJava(llig(JAVA, 'MainActivity.java'));
     const onCreate = cosDelMetode(codi, 'protected void onCreate(Bundle savedInstanceState)');
     const pont = onCreate.indexOf('super.onCreate(savedInstanceState);');
-    for (const connector of ['CompartirNatiuPlugin', 'EnrereNatiuPlugin']) {
+    for (const connector of ['CompartirNatiuPlugin', 'EnrereNatiuPlugin', 'CiclePushNatiuPlugin']) {
       const registre = onCreate.indexOf(`registerPlugin(${connector}.class);`);
       expect(registre, connector).toBeGreaterThanOrEqual(0);
       expect(pont, connector).toBeGreaterThan(registre);
     }
-    expect(codi.match(/registerPlugin\(/g)).toHaveLength(2);
+    expect(codi.match(/registerPlugin\(/g)).toHaveLength(3);
   });
 
   /* 261026 (prompt 261026_1615, revisió) · Si Android mata el procés, la tasca

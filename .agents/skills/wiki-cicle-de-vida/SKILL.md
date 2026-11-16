@@ -20,6 +20,9 @@ contracte.llig:
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
   - _wiki_de_poble/10_actes
+motors:
+  - tooling/gates/obrir_torn.mjs
+  - tooling/gates/tancament.mjs
 ---
 # Cicle de vida documental
 
@@ -31,7 +34,7 @@ contracte.escriu:
 6. Per a una promoció autoritzada, conserva el contingut i registra `document.mjs handoff --turn-id ID --file ORIGEN --to DESTI` després del moviment. El torn ha d’estar obert. La història tancada es conserva tal com es va segellar; l’única esmena admesa és la que registra `porta-olivera.mjs --arxiva` quan reapunta cap a l’arxiu un enllaç d’un document de torn tancat: comprova la preimatge, actualitza `verification.files` d’eixe document sense tocar la data ni les comprovacions del segell i deixa el rastre `archive-links` al registre del torn. Les actes noves es creen només a `10_actes/`. Els rebuts històrics conserven les destinacions de la seua instantània. Els noms nous són minúscules.
 7. Aplica la «Transició d’onada» d’ací baix. Actualitza el bloc ESTAT_ACTUAL d’ESTAT amb objectiu, següent acció, bloquejos, proves i responsable per rol. Afig el torn i els resultats al LEDGER. Conserva documents actius ancorats; no buides l’Escriptori.
 8. Executa `node tooling/gates/tancament.mjs --check --turn-id ID`. És lectura. `--close --turn-id ID` segella el LEDGER dins de l’operació i repeteix comprovacions abans de persistir `closed`; si falla, no declara tancament.
-9. Quan l'encàrrec incloga versionar, prepara documents, `.agents/runtime/turns/*.json` i `.agents/runtime/contracts/*.json` junts (els enllaços de `.claude/skills/` són locals i no es versionen). No versionis locks ni punters locals. El pre-commit continua bloquejant quan hi ha errors.
+9. Quan l'encàrrec incloga versionar, prepara els documents i `.agents/runtime/contracts/*.json` junts. Els registres de torn (`.agents/runtime/turns/`) són estat local de la màquina que els obri i no es versionen (D-R30-15): les portes del hook els lligen del disc. Els enllaços de `.claude/skills/` també són locals. No versionis locks ni punters locals. El pre-commit continua bloquejant quan hi ha errors.
 10. **Títol Termodinàmic del xat.** En tancar una sessió d’Antigravity, MarIA lliura un únic Títol Termodinàmic per a anomenar el xat d’Antigravity que es tanca: una sola línia dins d’un bloc de codi, amb el format `aammdd_hhmm_tema`, de 70 caràcters com a màxim, amb la data i l’hora que torna `date` en el moment del tancament ([[core-temps-termodinamic/SKILL|core-temps-termodinamic]]), en minúscules, sense accents i amb guions baixos (AGENTS §2). El títol del xat de cada altra IA (Claude, Codex, Gemini o el Consell) va integrat dins del mateix bloc de prompt que el Mestre copia al xat d’eixa IA, a la primera línia del bloc: `Títol del xat: aammdd_hhmm_tema`. És el bloc de xat, no el fitxer del prompt a l’Escriptori, que continua començant pel frontmatter. Així el lliurament de tancament porta un sol títol solt, el del xat d’Antigravity.
 
 Un subcarril que lliura un kit no tanca tota l'onada ni ha de crear una acta nova per cada canvi: deixa el checkpoint i el destí acordats. En còpia aïllada, no falsifiques rebuts o una línia base per compensar canvis aliens de l'arbre viu. Si el tancament estricte detecta canvis concurrents fora d'abast, declara la causa i deixa la resolució a l'integrador.

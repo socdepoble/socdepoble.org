@@ -21,12 +21,9 @@ import { ESTAT_PROVES, PLUGINS, TEXTOS_BETA_OBERTA, appDelPlugin } from '../../s
 import { iconaDe } from './iconesApp.js';
 import { rutaDeApp, titolDe } from './manifestApp.js';
 import { useApagaApp, useApps } from './PlataformaContext.jsx';
+import { TEXTOS_PORTAL_APPS, etiquetaEstatApp, textosPortalApps } from './textosPortalApps.js';
 
-export const ETIQUETA_ESTAT = Object.freeze({
-  available: 'Disponible',
-  disabled: 'Apagada',
-  unavailable: 'No disponible'
-});
+export const ETIQUETA_ESTAT = TEXTOS_PORTAL_APPS.ca.estat;
 
 const TO_ESTAT = Object.freeze({ available: 'exit', disabled: 'neutre', unavailable: 'avis' });
 
@@ -89,6 +86,7 @@ export function textDelMotiu(motiu, t = RESERVA) {
 
 function FitxaApp({ app, idioma, llenguaInterficie, onApaga }) {
   const { t } = useUIActions();
+  const tx = textosPortalApps(llenguaInterficie);
   const { manifest, estat, motiu, personaPotApagar } = app;
   const Icona = iconaDe(manifest.icona);
   const titol = titolDe(manifest.titol, idioma);
@@ -103,20 +101,21 @@ function FitxaApp({ app, idioma, llenguaInterficie, onApaga }) {
       <div className="sdp-app-fitxa__cos">
         <h2 className="sdp-app-fitxa__titol">{titol}</h2>
         <p className="sdp-app-fitxa__estat">
-          <Insignia to={TO_ESTAT[estat]}>{ETIQUETA_ESTAT[estat]}</Insignia>
+          <Insignia to={TO_ESTAT[estat]}>{etiquetaEstatApp(estat, llenguaInterficie)}</Insignia>
           {enProves ? <>{' '}<span className="sdp-insignia-beta-oberta">{textBetaOberta(llenguaInterficie)}</span></> : null}
         </p>
         {motiu ? <p className="sdp-app-fitxa__motiu">{textDelMotiu(motiu, t)}</p> : null}
       </div>
       <div className="sdp-app-fitxa__accions">
         <Interruptor
-          etiqueta={`Vull vore ${titol}`}
+          etiqueta={tx.vullVore.replace('{titol}', () => titol)}
           actiu={encesa}
           desactivat={!personaPotApagar}
           onCanvi={(actiu) => onApaga(manifest.id, !actiu)}
+          textosEstat={{ si: t('section.comu.si', 'Sí'), no: t('section.comu.no', 'No') }}
         />
         {estat === 'available'
-          ? <Link to={rutaDeApp(manifest.id, manifest.entradaPerDefecte)} className="sdp-boto sdp-boto--primari">Obri</Link>
+          ? <Link to={rutaDeApp(manifest.id, manifest.entradaPerDefecte)} className="sdp-boto sdp-boto--primari">{tx.obri}</Link>
           : null}
       </div>
     </li>
@@ -139,20 +138,21 @@ export function PortalApps({ esSuperadmin = false }) {
   const apps = useApps();
   const apaga = useApagaApp();
   const navigate = useNavigate();
-  /* Fase D (261020, tasca 4.1) · L1 · Els títols seguixen la llengua del text, no la demanada. */
+  /* Fase D (261020, tasca 4.1) · L1 · Els títols i textos seguixen la llengua del text carregada. */
   const { language, llenguaDelText = language } = useUIState();
+  const tx = textosPortalApps(llenguaDelText);
   return (
     <PaginaApp
-      title="Apps"
-      lead="Eines del poble que s’enxufen i es desenxufen. El node decidix quines porta; tu, quines vols vore."
+      title={tx.titol}
+      lead={tx.entradeta}
       onBack={() => navigate(-1)}
     >
       <div className="sdp-app-portal">
         {esSuperadmin ? (
           <section className="sdp-app-portal__testers" aria-labelledby="sdp-app-portal-testers-titol">
-            <h2 id="sdp-app-portal-testers-titol" className="sdp-app-portal__testers-titol">Gestió de verificadors i botigues</h2>
+            <h2 id="sdp-app-portal-testers-titol" className="sdp-app-portal__testers-titol">{tx.testersTitol}</h2>
             <p className="sdp-app-portal__testers-text">
-              Accés directe per a l’administració del grup obert de Google Groups, el programa de proves d’Android i les botigues oficials.
+              {tx.testersCos}
             </p>
             <div className="sdp-app-portal__testers-accions">
               <a
@@ -161,7 +161,7 @@ export function PortalApps({ esSuperadmin = false }) {
                 rel="noopener noreferrer"
                 className="sdp-boto sdp-boto--primari"
               >
-                Grup Google Groups (socdepoble-testers)
+                {tx.testersGrup}
               </a>
               {URL_PROVES_PLAY ? (
                 <a
@@ -170,7 +170,7 @@ export function PortalApps({ esSuperadmin = false }) {
                   rel="noopener noreferrer"
                   className="sdp-boto sdp-boto--secundari"
                 >
-                  Proves a Google Play
+                  {tx.testersPlay}
                 </a>
               ) : null}
               {URL_APP_STORE ? (
@@ -180,21 +180,21 @@ export function PortalApps({ esSuperadmin = false }) {
                   rel="noopener noreferrer"
                   className="sdp-boto sdp-boto--secundari"
                 >
-                  App Store (iOS)
+                  {tx.testersAppStore}
                 </a>
               ) : null}
               <Link to="/admin" className="sdp-boto sdp-boto--secundari">
-                Tauler de botigues (/admin)
+                {tx.testersAdmin}
               </Link>
             </div>
           </section>
         ) : null}
         {apps.length === 0 ? (
-          <EstatBuit titol="Encara no hi ha cap app">Quan este node en porte alguna, la voràs ací.</EstatBuit>
+          <EstatBuit titol={tx.buitTitol}>{tx.buitCos}</EstatBuit>
         ) : (
           <ul className="sdp-app-portal__llista">
             {apps.map((app) => (
-              <FitxaApp key={app.manifest.id} app={app} idioma={llenguaDelText} llenguaInterficie={language} onApaga={apaga} />
+              <FitxaApp key={app.manifest.id} app={app} idioma={llenguaDelText} llenguaInterficie={llenguaDelText} onApaga={apaga} />
             ))}
           </ul>
         )}

@@ -347,7 +347,7 @@ test('T40 · sense onPublishDateChange la data és el <time> de sempre; amb, un 
   expect(pastilla.tagName).toBe('BUTTON');
   expect(pastilla.getAttribute('aria-haspopup')).toBe('dialog');
   // T51 · Sense data triada, la d'ara: la de l'última edició (10:00 01/01/26) no hi entra.
-  expect(pastilla.textContent).toBe('10:0728/09/26');
+  expect(pastilla.textContent).toBe('10:07 28/09/26');
   act(() => { fireEvent.click(pastilla); });
   const dialeg = getByRole('dialog', { name: 'Data de publicació' });
   act(() => { fireEvent.click(dialeg.querySelector('.sdp-calendari__dia')); });
@@ -475,7 +475,7 @@ test('T51 · sense data al document (el Perfil), la pastilla porta la data i l�
 test('T51 · amb la data d’última edició del document (formatted*), la pastilla diu la d’ara, amb el seu dateTime', () => ambAra(() => {
   const { container } = closca({ formattedTime: '09:37', formattedDate: '02/01/26' });
   const pastilla = container.querySelector('.bar-orange .btn-date-time');
-  expect(pastilla.textContent).toBe('10:0728/09/26');
+  expect(pastilla.textContent).toBe('10:07 28/09/26');
   expect(pastilla.getAttribute('datetime')).toBe('2026-09-28T10:07');
   expect(container.querySelector('.bar-orange').textContent).not.toContain('02/01/26');
 }));
@@ -485,7 +485,7 @@ test('T51 · sense calendari (DateTimeControl), una data de publicació triada m
   const { container } = closca({ formattedTime: '09:37', formattedDate: '02/01/26', publishDate: publicacio });
   const pastilla = container.querySelector('.bar-orange .btn-date-time');
   expect(pastilla.tagName).toBe('TIME');
-  expect(pastilla.textContent).toBe('18:3003/10/26');
+  expect(pastilla.textContent).toBe('18:30 03/10/26');
   expect(pastilla.getAttribute('datetime')).toBe('2026-10-03T18:30');
 }));
 
@@ -493,8 +493,8 @@ test('T51 · amb el calendari i sense data (la còpia del Foraster), la pastilla
   const { container } = closca({ publishDate: null, onPublishDateChange: vi.fn() });
   const pastilla = container.querySelector('.bar-orange .btn-date-time');
   expect(pastilla.tagName).toBe('BUTTON');
-  expect(pastilla.textContent).toBe('10:0728/09/26');
-  expect(pastilla.getAttribute('aria-label')).toContain('ara es mostra la data i l’hora d’ara (10:07 28/09/26)');
+  expect(pastilla.textContent).toBe('10:07 28/09/26');
+  expect(pastilla.getAttribute('aria-label')).toContain('ara es mostra la data i l’hora d’ara — 10:07 28/09/26');
 }));
 
 test('A3 · el text i les imatges pròpies es conserven', () => {

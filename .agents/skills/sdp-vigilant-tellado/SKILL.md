@@ -37,6 +37,8 @@ contracte.llig:
   - wordpress-plugin/builds
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
+motors:
+  - tooling/gates/tractor-vigilant.mjs
 ---
 # Vigilant Tellado: perímetre estàtic
 

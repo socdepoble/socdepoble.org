@@ -8,7 +8,8 @@ import { pathToFileURL } from 'node:url';
 export const MIGRACIONS = Object.freeze([
   '2611020417_xat_avisos_push.sql',
   '2611080431_xat_push_leases.sql',
-  '2611080432_xat_lliurament_i_presencia.sql'
+  '2611080432_xat_lliurament_i_presencia.sql',
+  '20261116031000_r31_push_sessio_i_revocacio.sql'
 ]);
 const fail = code => { throw Object.assign(new Error(code), { safeCode: code }); };
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
@@ -205,7 +206,7 @@ export function stage(options) {
   const files = { 'edge.secrets.env': secretText };
   // No blind db push. Exact migration bytes only, preserving their transactions.
   files['schema.sql'] = MIGRACIONS.map(n => read(path.join(options.root, 'supabase/migrations', n))).join('\n');
-  files['activa.sql'] = "begin;\nset local lock_timeout='5s';\nset local statement_timeout='15s';\ndo $$ begin\nif to_regprocedure('public.xat_push_desperta_v2(uuid,uuid)') is null or to_regprocedure('public.xat_ritme(uuid)') is null then raise exception 'push_schema_incomplete'; end if;\nend $$;\ninsert into private.ajustos(clau,valor) values ('push_xat_actiu','si') on conflict(clau) do update set valor=excluded.valor;\ncommit;\n";
+  files['activa.sql'] = "begin;\nset local lock_timeout='5s';\nset local statement_timeout='15s';\ndo $$ begin\nif to_regprocedure('public.xat_push_desperta_v2(uuid,uuid)') is null or to_regprocedure('public.xat_ritme(uuid)') is null or not exists(select 1 from pg_catalog.pg_constraint where conrelid='public.xat_dispositius_push'::regclass and conname='xat_dispositius_push_sessio_fk' and confrelid='auth.sessions'::regclass and confdeltype='c' and convalidated) or not exists(select 1 from pg_catalog.pg_trigger where tgrelid='public.xat_dispositius_push'::regclass and tgname='xat_push_vincula_sessio_r31' and tgenabled<>'D') then raise exception 'push_schema_incomplete'; end if;\nend $$;\ninsert into private.ajustos(clau,valor) values ('push_xat_actiu','si') on conflict(clau) do update set valor=excluded.valor;\ncommit;\n";
   if (fs.existsSync(out)) {
     privateDir(out);
     if (Object.keys(files).some(name => read(path.join(out, name), { privateFile: true }) !== files[name])) fail('stage_drift');

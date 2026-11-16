@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { STORAGE_PREFIX } from '../../../config/storage.js';
-import { CLAU_CARPETES_CREADES, _reiniciaCarpetesCreades, desaCarpetaCreada } from './carpetesCreades.js';
+import { CLAU_CARPETES_CREADES, _reiniciaCarpetesCreades, carpetesCreades, creaCarpetaCreada, desaCarpetaCreada } from './carpetesCreades.js';
 import {
   CLAU_CARPETES_MIGRADES, _reiniciaMigracioCarpetes, carpetesPendentsDeMigrar, migraCarpetesLocals,
   normalitzaCarpetesMigrades, registraReplica, repliquesAmagades, repliquesDeCarpetes, senseRepliques,
@@ -426,5 +426,119 @@ describe('casos empeltats del kit de Codex', () => {
     expect(carpetesPendentsDeMigrar(AMBIT).map((c) => c.id)).toEqual(['f-hort']);
     expect(carpetesPendentsDeMigrar(ALTRE_AMBIT).map((c) => c.id)).toEqual(['f-b']);
     expect(repliquesDeCarpetes(AMBIT)).toEqual([{ local: 'f-festes', remot: servidor.carpetes.get('festes').id }]);
+  });
+});
+
+/* Onada R32 · Invariants R31 traslladats (Codex R31 lot_03 · P2-T3, rebut p2_t3_namespace_fix_receipt.json)
+   a la PF-01 viva. El kit els provava sobre migraCarpetesCreades (la PF-01 de Codex R30, rebutjada:
+   RPC migra_carpeta_notes i reescriptura d'ids); ací es proven sobre el contracte viu: pujada pel
+   nom (crea_carpeta_notes), registre de rèpliques a banda i cap id local reescrit mai. */
+describe('Onada R32 · invariants R31 de carpetes (espai de noms, ACK i llegat ambigu)', () => {
+  const UUID = '32100000-0000-4000-8000-000000000005';
+  const AMBIGUA = 'identificador-reservat-sense-prova-remota';
+  const COLISIO = 'ack-amb-id-d-una-altra-carpeta';
+
+  test.each([UUID, 'Mur', 'Notes', 'Tot'])('una alta nova amb el nom reservat «%s» pren f-carpeta-* i es puja pel nom fins a l’ACK', async (nom) => {
+    const creada = await creaCarpetaCreada(AMBIT, nom);
+    expect(creada).toEqual({ id: `f-carpeta-${nom.toLowerCase()}`, nom, nova: true, desti: 'navegador' });
+    expect(carpetesPendentsDeMigrar(AMBIT)).toEqual([{ id: creada.id, nom }]);
+    const abans = cruLocal();
+    const servidor = creaServidor();
+    const port = creaPort(servidor);
+    await expect(migraCarpetesLocals(abast(), PERSONA, { port })).resolves.toEqual({ estat: 'fet', migrades: 1, pendents: 0, noMigrables: 0 });
+    expect(port.creaCarpetaNotes.mock.calls).toEqual([[{ nom }, CONFIG]]);
+    expect(repliquesDeCarpetes(AMBIT)).toEqual([{ local: creada.id, remot: servidor.carpetes.get(nom.toLowerCase()).id }]);
+    /* Cap id reescrit: la carpeta local i el seu storage queden com eren. */
+    expect(cruLocal()).toBe(abans);
+    expect(carpetesCreades(AMBIT)).toEqual([{ id: creada.id, nom }]);
+  });
+
+  test('el llegat ambigu (id reservat igual a l’slug del nom) queda pendent amb diagnòstic, sense xarxa ni cap id tocat', async () => {
+    desaCarpetaCreada(AMBIT, { id: `f-${UUID}`, nom: UUID });
+    desaCarpetaCreada(AMBIT, { id: 'f-mur', nom: 'Mur' });
+    /* Una carpeta nascuda al servidor (R12) té un id reservat però no és el del seu nom: es queda com està. */
+    desaCarpetaCreada(AMBIT, { id: DEL_SERVIDOR, nom: 'Fira' });
+    const abans = cruLocal();
+    const port = creaPort(creaServidor());
+    await expect(migraCarpetesLocals(abast(), PERSONA, { port })).resolves.toEqual({ estat: 'pendent', migrades: 0, pendents: 2, noMigrables: 0,
+      ambigues: [{ id: `f-${UUID}`, motiu: AMBIGUA }, { id: 'f-mur', motiu: AMBIGUA }] });
+    expect(port.teCapacitat).not.toHaveBeenCalled();
+    expect(port.creaCarpetaNotes).not.toHaveBeenCalled();
+    expect(cruLocal()).toBe(abans);
+    expect(localStorage.getItem(CLAU_REGISTRE)).toBeNull();
+    _reiniciaCarpetesCreades();
+    expect(carpetesCreades(AMBIT).map((c) => c.id)).toEqual([`f-${UUID}`, 'f-mur', DEL_SERVIDOR]);
+  });
+
+  test('amb llegat ambigu i carpetes normals, puja les normals i el diagnòstic continua en l’estat final', async () => {
+    sembra('Festes');
+    desaCarpetaCreada(AMBIT, { id: 'f-mur', nom: 'Mur' });
+    const servidor = creaServidor();
+    const port = creaPort(servidor);
+    await expect(migraCarpetesLocals(abast(), PERSONA, { port })).resolves.toEqual({ estat: 'pendent', migrades: 1, pendents: 1, noMigrables: 0,
+      ambigues: [{ id: 'f-mur', motiu: AMBIGUA }] });
+    expect(port.creaCarpetaNotes.mock.calls).toEqual([[{ nom: 'Festes' }, CONFIG]]);
+    expect([...servidor.carpetes.keys()]).toEqual(['festes']);
+  });
+
+  test('un ACK amb un nom divergent no apunta cap rèplica ni toca la carpeta local', async () => {
+    sembra('Festes');
+    const abans = cruLocal();
+    const port = creaPort(creaServidor());
+    port.creaCarpetaNotes.mockResolvedValueOnce({ id: DEL_SERVIDOR, nom: 'Comptabilitat privada', parentId: null });
+    await expect(migraCarpetesLocals(abast(), PERSONA, { port })).resolves.toEqual({ estat: 'pendent', migrades: 0, pendents: 1, noMigrables: 0 });
+    expect(repliquesDeCarpetes(AMBIT)).toEqual([]);
+    expect(cruLocal()).toBe(abans);
+  });
+
+  test('un ACK cap a una carpeta de l’àmbit amb un altre nom no s’apunta: no l’amagaria del Bloc', async () => {
+    sembra('Festes');
+    desaCarpetaCreada(AMBIT, { id: DEL_SERVIDOR, nom: 'Documents' });
+    const abans = cruLocal();
+    const port = creaPort(creaServidor());
+    port.creaCarpetaNotes.mockResolvedValueOnce({ id: DEL_SERVIDOR, nom: 'Festes', parentId: null });
+    await expect(migraCarpetesLocals(abast(), PERSONA, { port })).resolves.toEqual({ estat: 'pendent', migrades: 0, pendents: 1, noMigrables: 0,
+      colisions: [{ id: 'f-festes', remot: DEL_SERVIDOR, motiu: COLISIO }] });
+    expect(repliquesDeCarpetes(AMBIT)).toEqual([]);
+    expect(cruLocal()).toBe(abans);
+    /* «Documents» continua a la columna: cap rèplica apuntada l'amaga. */
+    const carpetes = [...NOTE_FOLDERS_SEED, { id: DEL_SERVIDOR, nom: 'Documents', parentId: null }];
+    expect(senseRepliques(carpetes, repliquesAmagades(repliquesDeCarpetes(AMBIT), carpetesCreades(AMBIT), []))).toBe(carpetes);
+  });
+
+  test('un ACK que repetix la rèplica ja apuntada d’una altra carpeta amb un altre nom no ajunta dues carpetes en una', async () => {
+    sembra('Festes', 'Hort');
+    const port = creaPort(creaServidor());
+    /* Un adaptador que fa d'eco del nom i torna sempre el mateix id. */
+    port.creaCarpetaNotes.mockImplementation(async ({ nom }) => ({ id: DEL_SERVIDOR, nom, parentId: null }));
+    await expect(migraCarpetesLocals(abast(), PERSONA, { port })).resolves.toEqual({ estat: 'pendent', migrades: 1, pendents: 1, noMigrables: 0,
+      colisions: [{ id: 'f-hort', remot: DEL_SERVIDOR, motiu: COLISIO }] });
+    expect(repliquesDeCarpetes(AMBIT)).toEqual([{ local: 'f-festes', remot: DEL_SERVIDOR }]);
+    expect(carpetesPendentsDeMigrar(AMBIT).map((c) => c.id)).toEqual(['f-hort']);
+  });
+
+  test('un nom equivalent en caixa i en normalització Unicode (NFD) és el mateix ACK; dos noms distints, dues rèpliques', async () => {
+    sembra('Festes');
+    desaCarpetaCreada(AMBIT, { id: 'f-festes-2', nom: 'Fèstes' });
+    const ALTRA_REMOTA = 'f-1f0e0d0c-0b0a-4908-8706-050403020100';
+    const port = creaPort(creaServidor());
+    port.creaCarpetaNotes.mockImplementation(async ({ nom }) => (nom === 'Festes'
+      ? { id: DEL_SERVIDOR, nom: 'FESTES', parentId: null }
+      : { id: ALTRA_REMOTA, nom: 'FÈSTES', parentId: null }));
+    await expect(migraCarpetesLocals(abast(), PERSONA, { port })).resolves.toEqual({ estat: 'fet', migrades: 2, pendents: 0, noMigrables: 0 });
+    expect(repliquesDeCarpetes(AMBIT)).toEqual([{ local: 'f-festes', remot: DEL_SERVIDOR }, { local: 'f-festes-2', remot: ALTRA_REMOTA }]);
+  });
+
+  test('una cancel·lació del port (AbortError) para la pujada, no rebutja i ho conserva tot per al pròxim inici', async () => {
+    sembra('Festes', 'Hort');
+    const abans = cruLocal();
+    const servidor = creaServidor();
+    const port = creaPort(servidor);
+    port.creaCarpetaNotes.mockRejectedValueOnce(new DOMException('Operació cancel·lada.', 'AbortError'));
+    await expect(migraCarpetesLocals(abast(1), PERSONA, { port })).resolves.toEqual({ estat: 'pendent', migrades: 0, pendents: 2, noMigrables: 0 });
+    expect(port.creaCarpetaNotes).toHaveBeenCalledTimes(1);
+    expect(repliquesDeCarpetes(AMBIT)).toEqual([]);
+    expect(cruLocal()).toBe(abans);
+    await expect(migraCarpetesLocals(abast(2), PERSONA, { port })).resolves.toEqual({ estat: 'fet', migrades: 2, pendents: 0, noMigrables: 0 });
   });
 });

@@ -187,33 +187,61 @@ function nomsPresents(text) {
 {
   const LLEI = 'C4 · Xifra contradictòria';
   // En valencià «nou» és alhora 9 i «nou/nova», i «deu» és 10 i «deu».
-  // Per això la xifra NOMÉS compta si va enganxada a un substantiu del
-  // Consell. Una porta amb falsos positius s'ignora, i una porta ignorada
-  // no és una porta.
-  const LLETRES = { huit: 8, nou: 9, deu: 10, onze: 11, dotze: 12, tretze: 13, catorze: 14 };
+  // Per això la xifra exigix un substantiu plural i una afirmació explícita
+  // sobre el CONJUNT. Quatre IAs locals o nou revisores no són el cens global.
+  // El vincle es comprova per ocurrència: una línia pot descriure un subconjunt
+  // correcte i, alhora, declarar un total contradictori que cal detectar.
+  const LLETRES = { zero: 0, un: 1, una: 1, dos: 2, dues: 2, tres: 3, quatre: 4, cinc: 5, sis: 6, set: 7, huit: 8, vuit: 8, nou: 9, deu: 10, onze: 11, dotze: 12, tretze: 13, catorze: 14, quinze: 15, setze: 16, disset: 17, divuit: 18, dènou: 19, dinou: 19, vint: 20 };
   // Sempre en PLURAL: en valencià «nou model» és «un model nou», no «nou models».
   // Exigir el plural elimina el fals positiu sense perdre cap cas real.
-  const SUBSTANTIU = '(IAs|intel·ligències|models|proveïdors|proveidors|petorretes|ties|germanes)';
+  const SUBSTANTIU = '(?:IAs|intel·ligències|models|proveïdors|proveidors|petorretes|ties|germanes|membres)';
+  const NUMERO = `(?:\\d{1,3}|${Object.keys(LLETRES).join('|')})`;
+  const CONJUNT = String.raw`(?:(?:el\s+)?(?:consell|cens)|(?:l['’]|el\s+)(?:equip|conjunt)\s+(?:complet|sencer|total))`;
+  const DEL_CONJUNT = String.raw`(?:del\s+(?:consell|cens|conjunt)(?:\s+(?:complet|sencer|total))?|de\s+(?:tot\s+)?l['’]equip\s+(?:complet|sencer|total))`;
+  // «Consell de quatre IAs» també pot designar una convocatòria concreta;
+  // la preposició sola no declara el recompte del conjunt permanent.
+  const COMPUT = String.raw`(?:té|te|compta\s+amb|consta\s+de|està\s+format\s+per|esta\s+format\s+per|reuneix|inclou|agrupa|són|son|sumen)`;
+  const QUALIFICADOR = String.raw`(?:(?:només|nomes|exactament|actualment|hui|avui|encara|les|els|un\s+total\s+de|en\s+total)\s+)*`;
+  const PREFIX_GLOBAL = new RegExp(`\\b${CONJUNT}\\s*(?::|=)?\\s*${QUALIFICADOR}(?:${COMPUT}\\s+)?${QUALIFICADOR}$`, 'i');
+  const SUFIX_GLOBAL = new RegExp(`^\\s*(?:,\\s*)?(?:(?:actives|actius)\\s+)?(?:${DEL_CONJUNT}|en\\s+total)\\b`, 'i');
+  const TOTES = /\b(?:totes\s+les|la\s+totalitat\s+de\s+les)\s*$/i;
+  const SUBCONJUNT = /^\s*(?:locals?|revisores?|revisors?|convocades?|del\s+(?:torn|carril|lot|gauntlet))\b/i;
+  const TOTAL_EXPLICIT = /\b(?:en\s+total|un\s+total\s+de)\b/i;
+  const TOTAL_DESPRES_SUBCONJUNT = /^\s*(?:locals?|revisores?|revisors?|convocades?)\s+en\s+total\b/i;
+  const SUBJECTE_GLOBAL = `(?:totes\\s+les\\s+${SUBSTANTIU}(?:\\s+actives)?|(?:les|els)\\s+${SUBSTANTIU}\\s+${DEL_CONJUNT})`;
+  const INVERTIT = new RegExp(`\\b${SUBJECTE_GLOBAL}\\s*(?::|=|són|son|sumen)\\s*${QUALIFICADOR}(${NUMERO})\\b`, 'gi');
+
+  function recomptesGlobals(linia) {
+    // El format Markdown no canvia el significat del recompte.
+    const text = linia.replace(/[`*_]/g, '');
+    const trobats = new Map();
+    for (const m of text.matchAll(new RegExp(`\\b(${NUMERO})\\s+${SUBSTANTIU}\\b`, 'gi'))) {
+      const abans = text.slice(0, m.index);
+      const despres = text.slice(m.index + m[0].length);
+      const prefix = PREFIX_GLOBAL.exec(abans)?.[0];
+      const prefixTotal = prefix && (!SUBCONJUNT.test(despres)
+        || TOTAL_EXPLICIT.test(prefix) || TOTAL_DESPRES_SUBCONJUNT.test(despres));
+      if (prefixTotal || SUFIX_GLOBAL.test(despres)
+          || TOTES.test(abans) && !SUBCONJUNT.test(despres)) {
+        trobats.set(m.index, { literal: m[0], valor: LLETRES[m[1].toLowerCase()] ?? Number(m[1]) });
+      }
+    }
+    for (const m of text.matchAll(INVERTIT)) {
+      const literal = m[1];
+      trobats.set(m.index + m[0].lastIndexOf(literal), { literal, valor: LLETRES[literal.toLowerCase()] ?? Number(literal) });
+    }
+    return [...trobats.values()];
+  }
   let net = true;
   for (const rel of DOCS) {
     if (rel.replace(/\\/g, '/') === CENS) continue;
     const linies = readFileSync(R(rel), 'utf8').split('\n');
     linies.forEach((l, i) => {
-      // Xifra en lletra, enganxada al substantiu
-      for (const [mot, val] of Object.entries(LLETRES)) {
-        const re = new RegExp(`\\b${mot}\\s+${SUBSTANTIU}`, 'i');
-        if (!re.test(l) || val === N) continue;
+      for (const recompte of recomptesGlobals(l)) {
+        if (recompte.valor === N) continue;
         net = false;
         falla(LLEI, rel, i + 1,
-          `Diu «${mot}» (${val}) però el cens en té ${N}. → ${l.trim().slice(0, 88)}`);
-      }
-      // Xifra en dígit, enganxada al substantiu
-      for (const m of l.matchAll(new RegExp(`\\b(\\d{1,2})\\s+${SUBSTANTIU}`, 'gi'))) {
-        const val = Number(m[1]);
-        if (val === N) continue;
-        net = false;
-        falla(LLEI, rel, i + 1,
-          `Diu «${m[0]}» però el cens en té ${N}. → ${l.trim().slice(0, 88)}`);
+          `Diu «${recompte.literal}» però el cens en té ${N}. → ${l.trim().slice(0, 88)}`);
       }
     });
   }

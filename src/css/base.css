@@ -324,31 +324,8 @@ article.content-wrapper {
 
 
 
-section.design-block { margin-bottom: var(--sdp-space-16); }
-/* En .design-block la tipografia flueix PURA: hereta TOTES les regles globals.
-   Només centrem el flux i distingim els títols d'índex del manual. */
-
-/* Títols d'índex de cada secció del manual: un graó per davall de l'h3.
-   Abans clamp() només amb vw (no creixia amb el zoom, WCAG 1.4.4). */
-section.design-block > h3:first-of-type,
-section.design-block > h3:first-child {
-  text-align: left;
-  margin-left: 0;
-  margin-right: 0;
-  max-width: none;
-  font-size: var(--sdp-fluid-h4);
-}
-
 .page-intro {
   margin-bottom: 24px;
-}
-
-section.design-block > p:first-of-type {
-  text-align: left;
-  max-width: none;
-  margin-left: 0;
-  color: var(--sdp-text-suau);
-  margin-bottom: 28px;
 }
 
 /* Paleta de mostres */
@@ -387,11 +364,6 @@ section.design-block > p:first-of-type {
   color: var(--sdp-text-suau);
   overflow-x: auto;
 }
-
-/* Espaiat */
-.spacing-item { display: flex; align-items: center; gap: var(--sdp-space-4); margin-bottom: var(--sdp-space-3); }
-.spacing-bar { width: var(--mida, var(--sdp-space-4)); height: var(--sdp-space-4); background: var(--sdp-accent); border-radius: var(--sdp-space-1); flex: none; }
-.spacing-label { font-family: var(--sdp-font-mono); font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
 
 /* Grid demo */
 .grid-preview { display: flex; gap: var(--sdp-space-4); }

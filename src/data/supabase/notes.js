@@ -16,8 +16,12 @@ async function carpetesPrivades(config, ownerUserId) {
   try {
     const folders = [];
     let after = '';
-    for (;;) {
+    // 32 × 500: límit de treball per càrrega, sense pintar un catàleg parcial
+    // com si fóra complet quan un servidor envia pàgines indefinidament.
+    for (let pagina = 0; pagina < 32; pagina += 1) {
+      if (config.signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
       const rows = await request(`/rest/v1/note_folders?select=id,nom&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(ownerUserId)}&order=id.asc&limit=500${after ? `&id=gt.${encodeURIComponent(after)}` : ''}`, config, { signal: config.signal });
+      if (config.signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
       if (!Array.isArray(rows) || rows.length > 500) throw new TypeError('Resposta de carpetes invàlida.');
       const page = rows.map(carpetaDeFila);
       for (const folder of page) {
@@ -27,6 +31,7 @@ async function carpetesPrivades(config, ownerUserId) {
       }
       if (rows.length < 500) return [...NOTE_FOLDERS_SEED, ...folders];
     }
+    throw new Error('S’ha arribat al límit de pàgines de carpetes; cal acotar la consulta.');
   } catch (error) {
     // Un servidor anterior a R12 continua llegint Notes; no fingix crear carpetes.
     /* B4-S1 · ErrorSupabase no porta `code`: PostgREST respon 404 amb PGRST205
@@ -195,7 +200,7 @@ export async function loadNotesPage({ ownerUserId = getDefaultUserId(), cursor =
   if (range && rows.length && Number(range[1]) + 1 !== rows.length) throw new Error('Rang de Notes inconsistent.');
   if (total !== null && total < rows.length) throw new Error('Total de Notes inconsistent.');
   const complete = rows.length === 0 || total === rows.length;
-  return { notes: rows.map(summary), noteFolders: await carpetesPrivades(config, ownerUserId), complete,
+  return { notes: rows.map(summary), noteFolders: await carpetesPrivades({ ...config, signal: signal || config.signal }, ownerUserId), complete,
     nextCursor: complete ? null : JSON.stringify([tenantId, ownerUserId, rows.at(-1).id]) };
 }
 

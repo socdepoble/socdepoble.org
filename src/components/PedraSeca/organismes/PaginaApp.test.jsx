@@ -241,12 +241,12 @@ describe('el rellotge viu de la barra taronja', () => {
     const accions = accionsDe(pinta({ rellotgeViu: true, rellotge }));
     expect(fillsDe(accions).map(([etiqueta]) => etiqueta)).toEqual(['TIME', 'TIME']);
     expect(accions.firstElementChild.getAttribute('datetime')).toBe(NOTICIA.dateTime);
-    expect(accions.firstElementChild.textContent).toBe('09:3004/10/26');
+    expect(accions.firstElementChild.textContent).toBe('09:30 04/10/26');
     const darrer = accions.lastElementChild;
     expect(darrer.className).toBe('btn-date-time');
     expect(darrer.getAttribute('aria-label')).toBe(RELLOTGE);
     expect(darrer.getAttribute('datetime')).toBe('2026-10-13T09:59');
-    expect(darrer.textContent).toBe('09:5913/10/26');
+    expect(darrer.textContent).toBe('09:59 13/10/26');
   });
 
   test('amb barActions: les accions, en el seu ordre, i el rellotge a l’extrem dret', () => {

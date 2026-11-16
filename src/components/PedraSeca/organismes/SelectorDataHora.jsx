@@ -267,7 +267,8 @@ export function SelectorDataHora({
      la nomena per veu l'encerte; després, la data llarga amb el dia. */
   const nom = triada
     ? omple(tradueix(t, ["editor.data.triada", "{visible}. {etiqueta}: {data}. Canviar-la"]), { visible, etiqueta, data: dataLlarga(triada, locale) })
-    : omple(tradueix(t, ["editor.data.senseTriar", "{etiqueta}: sense triar; ara es mostra {reserva} ({visible}). Triar-la"]), { etiqueta, reserva: queEsLaReserva, visible });
+    : omple(tradueix(t, ["editor.data.senseTriar", "{etiqueta}: sense triar; ara es mostra {reserva} ({visible}). Triar-la"]), { etiqueta, reserva: queEsLaReserva, visible })
+      .replace(`(${visible})`, `— ${visible}`);
   const futura = Boolean(triada && avisFutur && triada.getTime() > avui.getTime());
   /* R51 · Sota l'«Hora», la zona IANA i el desfasament de l'instant que es
      mostra (el triat o, sense, el d'ara): és la descripció del camp d'hora. */
@@ -279,6 +280,7 @@ export function SelectorDataHora({
       <button ref={disparadorRef} type="button" className="btn-date-time" aria-haspopup="dialog" aria-expanded={obert}
         aria-label={nom} title={nom} onClick={() => setObert(true)}>
         {mostra.time ? <span>{mostra.time}</span> : null}
+        {mostra.time && mostra.date ? ' ' : null}
         {mostra.date ? <span>{mostra.date}</span> : null}
       </button>
       <Dialeg obert={obert} onTanca={() => setObert(false)} titol={etiqueta} descripcio={descripcioVigent}

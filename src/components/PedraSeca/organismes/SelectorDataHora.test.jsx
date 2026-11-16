@@ -32,9 +32,9 @@ test('la pastilla és un botó .btn-date-time que obri la finestra de la barra',
   /* Sense data triada, la pastilla diu la reserva i el nom ho explica.
      Correcció W3A D3 · Sense etiqueta pròpia, la reserva és «la data i l'hora
      d'ara»: el nom mai parla de l'última edició, que la regla prohibix. */
-  expect(boto.textContent).toBe('10:0728/09/26');
+  expect(boto.textContent).toBe('10:07 28/09/26');
   expect(boto.getAttribute('aria-label')).toContain('sense triar');
-  expect(boto.getAttribute('aria-label')).toContain(`ara es mostra ${ETIQUETA_RESERVA_ARA} (10:07 28/09/26)`);
+  expect(boto.getAttribute('aria-label')).toContain(`ara es mostra ${ETIQUETA_RESERVA_ARA} — 10:07 28/09/26`);
   expect(boto.getAttribute('aria-label')).not.toContain('última edició');
   obri();
   const dialeg = screen.getByRole('dialog', { name: 'Data de publicació' });
@@ -49,7 +49,7 @@ test('sense valor ni reserva, la pastilla diu la data i l’hora d’ara, i el n
   expect(textVisible(pastilla())).toBe('10:07 28/09/26');
   expect(pastilla().textContent).not.toContain('Data');
   expect(pastilla().getAttribute('aria-label')).toContain('sense triar');
-  expect(pastilla().getAttribute('aria-label')).toContain('la data i l’hora d’ara (10:07 28/09/26)');
+  expect(pastilla().getAttribute('aria-label')).toContain('la data i l’hora d’ara — 10:07 28/09/26');
   cleanup();
   // Una reserva sense cap text compta com a absent.
   render(<Controlat reserva={{ time: '', date: '' }} />);
@@ -72,7 +72,7 @@ test('T51 · amb una data triada, la pastilla la mostra en hora local; un dia so
 /* Correcció W3A D3 · Una etiqueta de reserva pròpia es respecta tal qual. */
 test('D3 · amb etiquetaReserva, el nom anomena la reserva amb eixe text', () => {
   render(<Controlat reserva={{ time: '09:00', date: '01/10/26' }} etiquetaReserva="la data prevista de l’acte" />);
-  expect(pastilla().getAttribute('aria-label')).toContain('ara es mostra la data prevista de l’acte (09:00 01/10/26)');
+  expect(pastilla().getAttribute('aria-label')).toContain('ara es mostra la data prevista de l’acte — 09:00 01/10/26');
 });
 
 /* Correcció W3A D4 · La tria i la pastilla ixen del MATEIX lector

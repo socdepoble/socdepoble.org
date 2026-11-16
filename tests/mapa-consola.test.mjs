@@ -319,8 +319,10 @@ test('portes 261026: porta-documents i run-portes --diagnostic mesuren conformit
   // Ronda 2 (IDEA-13) · el Tractor Vigilant és un pas readOnly de run-portes.mjs; Onades 1-3, la Higiene de paquets;
   // R21.6, la Lògica universal (només llig src/sections i src/apps; no escriu ni llança processos); R22 (P0-SEO-UNIVERSAL,
   // 13-11-2026), la Porta Cobertura Social (llig el Router i construïx el manifest social en memòria: sense xarxa ni escriptura).
+  // R31 incorpora Coherència editorial viva com a pas de lectura real; el
+  // denominador del diagnòstic l'ha de comptar sense convertir-lo en N/A.
   assert.deepEqual(PASSOS_DIAGNOSTIC.map((pas) => pas.nom), ['Contracte de plantilles', 'Autoritat i arrencada', 'Segell de skills',
-    'Integritat del LEDGER', 'Contracte documental', 'Higiene de paquets', 'Tractor Vigilant', 'Lògica universal', 'Porta Cobertura Social'],
+    'Integritat del LEDGER', 'Contracte documental', 'Higiene de paquets', 'Tractor Vigilant', 'Lògica universal', 'Porta Cobertura Social', 'Coherència editorial viva'],
   'els passos readOnly de run-portes.mjs');
   assert.equal(fonts.cadenaPortes.total, PASSOS_DIAGNOSTIC.length, 'els passos readOnly de run-portes.mjs');
   const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });

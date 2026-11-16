@@ -153,7 +153,7 @@ test('la llista d\'exclusions és curta, congelada i no toca els recursos de l\'
   // Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · i les icones de 192 i 512 que només llig eixe manifest.
   // O3-GEMINI-1 (261102) · _headers i _redirects: regles del domini per a Netlify/Cloudflare.
   assert.deepEqual([...PROPIS_DEL_LLOC.arrel].sort(), ['_headers', '_redirects', 'auth', 'enxufe', 'icona-app-192.png', 'icona-app-512.png',
-    'manifest.webmanifest', 'robots.txt', 'sitemap.xml', 'sw.js']);
+    'llms.txt', 'manifest.webmanifest', 'robots.txt', 'sitemap.xml', 'sw.js']);
   for (const rel of ['rag-index.json', 'slugIndex.json', 'assets', 'fonts', 'components']) {
     assert.ok(!PROPIS_DEL_LLOC.arrel.includes(rel), rel);
   }

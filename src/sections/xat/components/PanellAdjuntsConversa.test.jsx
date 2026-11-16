@@ -63,6 +63,19 @@ describe('extrauContingutConversa (pura)', () => {
     expect(resultat.altres.map((x) => x.missatgeId)).toEqual(['llista-1', 'veu-1']);
     expect(resultat.altres[1].duradaSegons).toBe(14);
   });
+
+  test('R32 · un missatge xifrat que este aparell no ha pogut obrir no obri res al panell (invariant de Gemini R30.2)', () => {
+    const tancat = (id, extra) => ({ id, seq: 9, sender: 'other', author: 'Pepa', creatAl: '2026-11-16T10:00:00.000Z', seguretat: { xifrat: true, verificat: false }, ...extra });
+    const resultat = extrauContingutConversa([
+      tancat('xt-img', { tipus: 'imatge', metadades: { adjunt: { id: 'adj-forjat', url: 'https://socdepoble.org/forjat.jpg' } } }),
+      tancat('xt-llista', { tipus: 'llista_comu', metadades: { llista: { titol: 'Llista secreta' } } }),
+      tancat('xt-text', { tipus: 'text', text: 'https://socdepoble.org/amagat' }),
+      { id: 'bo', seq: 10, sender: 'me', tipus: 'imatge', creatAl: '2026-11-16T11:00:00.000Z', seguretat: { xifrat: true, verificat: true }, metadades: { adjunt: { id: 'adj-bo', url: 'https://socdepoble.org/bo.jpg' } } }
+    ], tReserva);
+    expect(resultat.media.map((x) => x.missatgeId)).toEqual(['bo']);
+    expect(resultat.enllacos).toEqual([]);
+    expect(resultat.altres).toEqual([]);
+  });
 });
 
 describe('PanellAdjuntsConversa · pestanyes WAI-ARIA, salt al missatge i Escape', () => {

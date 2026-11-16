@@ -1,0 +1,37 @@
+# Sóc de Poble
+
+> Infraestructura digital comunitària, pública i lliure per als pobles rurals valencians i l'ecosistema europeu de béns comuns digitals.
+
+Sóc de Poble connecta el veïnat, els comerços i productors locals, les associacions culturals i els ajuntaments en una sola interfície accessible basada en el sistema de disseny **Pedra Seca** (alt contrast AAA / Mode Bancal al Sol, tipografia Noto Sans autoallotjada i components universals).
+
+## Arquitectura i governança tècnica
+
+- **Codi lliure i auditable:** Programari publicat sota llicència **GNU AGPL-3.0** i contingut editorial comunitari sota **CC BY-NC-SA 4.0**.
+- **Llei de l'Enxufabilitat (Model B):** El frontend s'empaqueta també com a Web Component estàndard (`<soc-de-poble>`) integrable en amfitrions municipals com Sollutia o WordPress sense cedir l'esquema ni les dades comunitàries, que viuen darrere del port neutral `src/data/backendPort.js`.
+- **Privadesa i honestedat criptogràfica:** El xifratge d'extrem a extrem de les converses privades entre dos membres és al codi amb les seues proves, amb separació explícita entre absència de clau local i fallada d'integritat, però continua apagat per una bandera compilada: el Xat publicat encara no xifra les converses d'extrem a extrem.
+- **Federació oberta i Dades Obertes:** Publicació estàtica ActivityPub de lectura (fase 1) i paquet municipal obert en JSON-LD, JSON, iCalendar i Markdown.
+- **5 llengües actives:** Valencià (`ca`), castellà (`es`), anglés (`en`), basc (`eu`) i gallec (`gl`).
+
+## Pàgines públiques principals
+
+- [El Projecte Sóc de Poble](https://socdepoble.org/projecte): Visió, governança comunitària, arquitectura cívica i model operatiu per als municipis rurals.
+- [Mur del Poble](https://socdepoble.org/mur): Actualitat municipal, cròniques, bans i publicacions verificades de la comunitat.
+- [Mercat Rural](https://socdepoble.org/mercat): Aparador de productors, cooperatives i comerços de proximitat.
+- [Pobles Connectats](https://socdepoble.org/pobles): Directori de municipis i fitxa pilot de La Torre de les Maçanes.
+- [Calendari Comunitari](https://socdepoble.org/calendari): Agenda pública d'actes culturals, mercats i festes populars.
+- [Receptari i Patrimoni](https://socdepoble.org/receptes): Memòria gastronòmica i patrimoni oral documentat.
+- [Wiki de Poble](https://socdepoble.org/wikidepoble): Documentació viva d'arquitectura, protocols tècnics i actes de treball.
+- [Sistema de Disseny Pedra Seca](https://socdepoble.org/disseny): Catàleg interactiu d'àtoms, organismes, tokens cromàtics i contractes d'accessibilitat.
+- [Versions del Sistema](https://socdepoble.org/versions): Historial verificable de llançaments i millores en les 5 llengües.
+- [Candidatura NLnet · NGI Fediversity i Federació Oberta](https://socdepoble.org/fediversity): Resolució de la candidatura 2026-08-1a6, que no va passar la primera selecció i no ha rebut finançament, i estat real de la federació ActivityPub, NodeInfo 2.1 i portabilitat municipal.
+- [Descàrregues i Codi Lliure](https://socdepoble.org/descarregues): Paquets instal·lables, verificació criptogràfica SHA-256 i connector WordPress.
+- [Avís Legal i Privacitat](https://socdepoble.org/legal): Condicions d'ús, protecció de dades (RGPD) i drets del veïnat.
+
+## Recursos estructurats per a agents i federació
+
+- [Agent Resource Discovery Manifest](https://socdepoble.org/.well-known/ard.json): Índex estructurat ARD dels recursos públics legibles per màquina.
+- [Manifest de Dades Obertes Municipals](https://socdepoble.org/opendata/manifest.json): Inventari amb tipus MIME i sumes SHA-256 dels conjunts de dades obertes.
+- [Municipi en JSON-LD](https://socdepoble.org/opendata/municipi.jsonld): Fitxa semàntica Schema.org del municipi pilot (La Torre de les Maçanes).
+- [Agenda Pública en JSON-LD](https://socdepoble.org/opendata/agenda.jsonld): Esdeveniments municipals estructurats per a consulta directa.
+- [Actor ActivityPub Institucional](https://socdepoble.org/ap/actors/socdepoble.json): Perfil públic ActivityStreams 2.0 del projecte.
+- [NodeInfo 2.1](https://socdepoble.org/nodeinfo/2.1.json): Metadades tècniques estàndard del node federat.

@@ -40,7 +40,14 @@
  *     mòdul continua sense importar res.
  */
 
-export const NOM_BD_ARXIUS_LOCALS = 'socdepoble_arxius_locals_v1';
+import {
+  NOM_BD_ARXIUS_LOCALS,
+  configuraMarcaOblitCarpetesLocals,
+  esOblitCarpetaPendent as esPendent,
+  marcaOblitCarpetaPendent as marcaPendent
+} from './marcaOblitCarpetesLocals.js';
+
+export { NOM_BD_ARXIUS_LOCALS, configuraMarcaOblitCarpetesLocals };
 export const VERSIO_BD_ARXIUS_LOCALS = 1;
 export const STORE_CARPETES_LOCALS = 'carpetes';
 export const MAX_CARPETES_RECORDADES = 12;
@@ -278,40 +285,8 @@ const configDe = (opcions) => {
 /* QA-R2-03 · Cada oblit de totes (no els reintents) n'incrementa l'època en començar. */
 const epoquesOblit = new Map();
 const epocaOblit = (nom) => epoquesOblit.get(nom) ?? 0;
-/* QA-R2-04 · Les bases que no s'han pogut buidar, i el reintent en curs de cada una. */
-const oblitsPendents = new Set();
+/* QA-R2-04 · El reintent en curs de cada base pendent (la marca compartida viu a marcaOblitCarpetesLocals.js). */
 const reintentsOblit = new Map();
-/* La marca que sobreviu a una recàrrega: { llig, desa, esborra }, síncrones i
-   injectades des de fora. Només per a la base de l'app (el nom per defecte). */
-let marcaPersistent = null;
-
-const ambMarca = (nom, accio) => {
-  if (nom !== NOM_BD_ARXIUS_LOCALS || !marcaPersistent) return undefined;
-  try {
-    return accio(marcaPersistent);
-  } catch {
-    return undefined;
-  }
-};
-const esPendent = (nom) => oblitsPendents.has(nom) || ambMarca(nom, (marca) => marca.llig?.()) === true;
-function marcaPendent(nom, pendent) {
-  if (pendent) {
-    oblitsPendents.add(nom);
-    ambMarca(nom, (marca) => marca.desa?.());
-  } else {
-    oblitsPendents.delete(nom);
-    ambMarca(nom, (marca) => marca.esborra?.());
-  }
-}
-
-/**
- * QA-R2-04 · Registra la marca persistent de l'oblit pendent (o la lleva amb
- * null): { llig: () => boolean, desa: () => void, esborra: () => void }.
- * SessionContext hi posa la capa de preferències de src/config/storage.js.
- */
-export function configuraMarcaOblitCarpetesLocals(marca) {
-  marcaPersistent = marca && typeof marca === 'object' ? marca : null;
-}
 
 /** QA-R2-04 · Cert si l'oblit de les carpetes d'esta base (opcions com les de la biblioteca) encara no s'ha confirmat. */
 export function oblitCarpetesLocalsPendent(opcions) {

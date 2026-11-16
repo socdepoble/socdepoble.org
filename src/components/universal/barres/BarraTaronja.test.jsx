@@ -62,7 +62,7 @@ test('la data: amb hora i data es pinta la pastilla (botó si té onDateTime, <t
   const onDateTime = vi.fn();
   const boto = barra({ time: '10:00', date: '28/09/26', dateTime: '2026-09-28T10:00', onDateTime }).querySelector('.bar-actions .btn-date-time');
   expect(boto.tagName).toBe('BUTTON');
-  expect(boto.textContent).toBe('10:0028/09/26');
+  expect(boto.textContent).toBe('10:00 28/09/26');
   act(() => { fireEvent.click(boto); });
   expect(onDateTime).toHaveBeenCalledTimes(1);
   cleanup();
@@ -74,7 +74,7 @@ test('la data: amb hora i data es pinta la pastilla (botó si té onDateTime, <t
 test('barActions mana sobre la pastilla per defecte (qui el passa hi posa la seua)', () => {
   const accions = barra({ time: '10:00', barActions: <DateTimeControl time="11:11" date="01/01/26" /> }).querySelector('.bar-actions');
   expect(accions.querySelectorAll('.btn-date-time')).toHaveLength(1);
-  expect(accions.textContent).toBe('11:1101/01/26');
+  expect(accions.textContent).toBe('11:11 01/01/26');
 });
 
 /* T51 · Totes les icones de la barra (pin, món, cadenat, ploma, glif de

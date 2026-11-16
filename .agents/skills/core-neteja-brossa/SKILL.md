@@ -14,6 +14,8 @@ contracte.llig:
 contracte.escriu:
   - .sdp-paperera
   - _wiki_de_poble/04_escriptori
+motors:
+  - tooling/higiene/neteja_brossa_arrel.mjs
 ---
 # Tractor de Neteja d'Arrels
 

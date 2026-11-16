@@ -41,14 +41,14 @@ describe('la pastilla viva', () => {
     const { container } = render(<RellotgeViu />);
     const pastilla = () => container.querySelector('time');
     act(() => { vi.advanceTimersByTime(29999); });
-    expect(pastilla().textContent).toBe('09:5913/10/26');
+    expect(pastilla().textContent).toBe('09:59 13/10/26');
     act(() => { vi.advanceTimersByTime(1); });
-    expect(pastilla().textContent).toBe('10:0013/10/26');
+    expect(pastilla().textContent).toBe('10:00 13/10/26');
     expect(pastilla().getAttribute('aria-label')).toBe('Data i hora d’ara: 10:00 del 13/10/26');
     expect(pastilla().getAttribute('datetime')).toBe('2026-10-13T10:00');
     /* Fins a mitjanit: de 10:00 a 00:00 de l'endemà, 14 hores. */
     act(() => { vi.advanceTimersByTime(14 * 60 * 60000); });
-    expect(pastilla().textContent).toBe('00:0014/10/26');
+    expect(pastilla().textContent).toBe('00:00 14/10/26');
     expect(vi.getTimerCount()).toBe(1);
   });
 
@@ -63,7 +63,7 @@ describe('la pastilla viva', () => {
     const ms = new Date(2026, 0, 2, 7, 5, 0).getTime();
     const { container } = render(<RellotgeViu rellotge={() => ms} />);
     const pastilla = container.querySelector('time');
-    expect(pastilla.textContent).toBe('07:0502/01/26');
+    expect(pastilla.textContent).toBe('07:05 02/01/26');
     expect(pastilla.getAttribute('datetime')).toBe('2026-01-02T07:05');
   });
 

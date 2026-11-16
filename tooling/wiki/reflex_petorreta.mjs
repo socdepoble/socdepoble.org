@@ -25,7 +25,8 @@ import {
   randomUUID,
   timingSafeEqual,
 } from 'node:crypto';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
+import { StringDecoder } from 'node:string_decoder';
 import { promisify } from 'node:util';
 import { isUtf8 } from 'node:buffer';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
@@ -470,6 +471,29 @@ async function gitBuffer(args) {
     if (error.code === 'ENOENT') throw new Error('Git no està disponible.');
     throw new Error(`Git ha fallat (${args.join(' ')}): ${error.message}`);
   }
+}
+
+/**
+ * R32 · D-R30-15 · El SHA-256 del diff preparat, calculat en flux. És el mateix valor que
+ * `sha256(await git(diff))`: execFile amb encoding 'utf8' descodifica amb StringDecoder i el hash es fa
+ * sobre el text. En flux no hi ha sostre de memòria: un commit que retira de l'índex centenars de
+ * registres (git rm --cached dels torns locals) ja no topa amb el maxBuffer de 16 MiB.
+ */
+export function gitDiffSha256(args, cwd = PROJECT_DIR) {
+  return new Promise((resolve, reject) => {
+    const child = spawn('git', ['-C', cwd, ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const hash = createHash('sha256');
+    const decoder = new StringDecoder('utf8');
+    let stderr = '';
+    child.stdout.on('data', (chunk) => hash.update(decoder.write(chunk)));
+    child.stderr.on('data', (chunk) => { if (stderr.length < 65536) stderr += chunk; });
+    child.on('error', (error) => reject(error.code === 'ENOENT' ? new Error('Git no està disponible.') : error));
+    child.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`Git ha fallat (${args.join(' ')}): ${stderr.trim() || `exit ${code}`}`));
+      hash.update(decoder.end());
+      return resolve(hash.digest('hex'));
+    });
+  });
 }
 
 async function gitState() {
@@ -1199,7 +1223,7 @@ const stagedChangesDigest = (changes) => sha256(JSON.stringify(stable(changes)))
 async function currentPendingTree() {
   const before = await stagedIndexChanges();
   const treeBefore = (await git(['write-tree'])).trim();
-  const diff = await git(['diff', '--cached', '--binary', '--no-ext-diff', '--no-renames']);
+  const diffSha256 = await gitDiffSha256(['diff', '--cached', '--binary', '--no-ext-diff', '--no-renames']);
   const after = await stagedIndexChanges();
   const treeAfter = (await git(['write-tree'])).trim();
   if (treeBefore !== treeAfter || stagedChangesDigest(before) !== stagedChangesDigest(after)) {
@@ -1207,7 +1231,7 @@ async function currentPendingTree() {
   }
   return {
     tree: treeAfter,
-    diffSha256: sha256(diff),
+    diffSha256,
     stagedChanges: after,
     stagedPaths: after.map((entry) => entry.path),
   };

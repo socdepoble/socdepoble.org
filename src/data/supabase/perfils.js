@@ -51,6 +51,7 @@ import { MISSATGES_TITULAR, errorDeTitular, titularDelContracte } from '../contr
 import { llistaBloquejos } from './moderacio.js';
 import { emojiSol } from '../../utils/emoji.js';
 import { corresponPerfilAcreditat, esTipusIdAcreditat } from '../copublicacio.js';
+import { fundacionalDeLaClau, IDS_REMOTS_FUNDACIONALS, PERSONA_PILOT } from '../identitatsSeed.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MODES_LOCALS = new Set(['seed', 'local']);
@@ -106,7 +107,7 @@ export function perfilDePersona(fila, usuari) {
   const heroVideo = text(fila.hero_video_url);
   return {
     tipus: 'persona', id: fila.id, slug: null, nom: text(fila.full_name), avatar: text(fila.avatar_url),
-    hero: text(fila.hero_url), ...(heroVideo ? { heroVideo } : null), lema: text(fila.lema), bio: text(fila.bio), presentacioHtml: text(fila.presentacio_html),
+    hero: text(fila.hero_url ?? fila.cover_url), ...(heroVideo ? { heroVideo } : null), lema: text(fila.lema), bio: text(fila.bio), presentacioHtml: text(fila.presentacio_html),
     poble: text(fila.town_name), esIA: false, publicat: Boolean(fila.is_public),
     propietari: Boolean(usuari?.id) && fila.id === usuari.id, copyright: text(fila.copyright),
     creat: dataCrua(fila.created_at), modificat: dataCrua(fila.updated_at),
@@ -200,6 +201,14 @@ async function llegixPerfilRemot(clau, tenantId, config) {
   const { tipusIdAcreditat } = config;
   const filtreSlug = `slug=eq.${encodeURIComponent(clau)}${tenantId ? `&tenant_id=eq.${encodeURIComponent(tenantId)}` : ''}`;
   try {
+    /* D-R24.2-3 · Un àlies declarat de la persona fundacional nomena el seu
+       compte remot, no un slug d'organització. La inversa UUID → ruta neta
+       continua en clauFundacional. Cap nom, username o correu resol identitat.
+       personaRemota conserva sessió, RLS/RPC i visibilitat; sense fila, null. */
+    if (!tipusIdAcreditat && fundacionalDeLaClau(clau) === PERSONA_PILOT.slug) {
+      const id = UUID.test(clau) ? clau : IDS_REMOTS_FUNDACIONALS[PERSONA_PILOT.slug][0];
+      return id && UUID.test(id) ? await personaRemota(id.toLowerCase(), config) : null;
+    }
     if (!UUID.test(clau)) return await organitzacioRemota(filtreSlug, config);
     const id = clau.toLowerCase();
     if (tipusIdAcreditat === 'persona') {

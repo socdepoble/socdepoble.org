@@ -6,12 +6,14 @@
    pinten com sempre. La forma del missatge és la de mapejaMissatge per a la
    fila tancada del pipeline (missatges.test.js, R29-E2EE-02). */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import '../../../../tests/helpers/diccionaris.js';
 import { MemoryRouter } from '../../../app/contexts/RouterContext.jsx';
 import Bombolla from './Bombolla.jsx';
 import { createTranslator } from '../../../config/i18n.js';
 import { mapejaMissatge } from '../missatges.js';
+import { CODIS_INTEGRITAT_E2EE, causaMissatgeXifratTancat, esXifratTancat, imatgesDeLaGaleria, textDeCita, textMissatgeXifratTancat } from '../conversa.js';
+import { construeixRetall } from '../retall.js';
 
 afterEach(cleanup);
 
@@ -139,5 +141,106 @@ describe('R29-E2EE-02 · el que s’obri es pinta com sempre', () => {
     const { container } = pinta(mapejaMissatge({ id: 'm-pla', filId: 'f-1', usuariId: 'pepa', seq: 9, text: '' }, 'jo'), 'ca');
     expect(screen.queryByText(TEXTOS.ca)).toBeNull();
     expect(container.querySelector('.sdp-xat-bombolla__text--esborrat')).toBeNull();
+  });
+});
+
+/* Onada R32 · Fusió semàntica del kit Gemini R30.2 (R30-C3-E2EE-CAUSA-01) i de la conciliació de Codex
+   R31 sobre R29-E2EE-02. La separació causal entra com a classificació interna; el text visible continua
+   sent el de la decisió del Mestre: «en un altre dispositiu» només amb els codis reals de clau absent
+   al dispositiu, i el text neutre per a la integritat i la resta (cap tercer text sense ordre). */
+const SENSE_CLAU = ['epoca-desconeguda', 'sense-epoca', 'epoca-saltada', 'sense-context', 'claus-bloquejades'];
+/* `clau-absent` (el codi del kit, que no emet cap productor) i `clau-absent-del-contacte` (la clau del
+   contacte, CODI_MOTOR.clauAbsent) no són la clau d'este aparell; els tres últims, els estructurals de
+   la conciliació de Codex R31. */
+const NO_DISPONIBLE = ['clau-absent', 'clau-absent-del-contacte', 'clau-nova-sense-confirmar', 'sobre-absent',
+  'firma-invalida', 'kid-no-quadra', 'repeticio', 'etiqueta-invalida', 'longitud-invalida', 'sobre-invalid', ''];
+const RESTA_DE_DISPOSITIU = /altre dispositiu|otro dispositivo|another device|beste gailu|noutro dispositivo/i;
+
+describe('Onada R32 · separació causal (Gemini R30.2) i conciliació (Codex R31) dins de R29-E2EE-02', () => {
+  const amb = (codi, extra = {}) => ({
+    id: `m-${codi || 'buit'}`, seq: 1, sender: 'other', author: 'Pep', text: `RESIDU_${codi || 'BUIT'}`,
+    creatAl: '2026-11-16T00:10:00Z', seguretat: codi ? { xifrat: true, verificat: false, codi } : { xifrat: true, verificat: false }, ...extra
+  });
+
+  test.each(Object.keys(TEXTOS))('%s · tres famílies, dos textos visibles, cap codi ni cap resta del text', (llengua) => {
+    const t = createTranslator(llengua);
+    for (const codi of SENSE_CLAU) {
+      expect(causaMissatgeXifratTancat(amb(codi))).toBe('clau-absent');
+      expect(textMissatgeXifratTancat(amb(codi), t)).toBe(TEXTOS[llengua]);
+      expect(textDeCita(amb(codi), t)).toBe(TEXTOS[llengua]);
+    }
+    for (const codi of CODIS_INTEGRITAT_E2EE) {
+      expect(causaMissatgeXifratTancat(amb(codi))).toBe('integritat');
+      const text = textMissatgeXifratTancat(amb(codi), t);
+      expect(text).toBe(NO_OBERT[llengua]);
+      expect(text).not.toMatch(RESTA_DE_DISPOSITIU);
+      expect(text).not.toContain(codi);
+      expect(textDeCita(amb(codi), t)).toBe(NO_OBERT[llengua]);
+    }
+    for (const codi of NO_DISPONIBLE) {
+      expect(causaMissatgeXifratTancat(amb(codi))).toBe('no-disponible');
+      const text = textMissatgeXifratTancat(amb(codi), t);
+      expect(text).toBe(NO_OBERT[llengua]);
+      expect(text).not.toMatch(RESTA_DE_DISPOSITIU);
+      if (codi) expect(text).not.toContain(codi);
+      expect(text).not.toContain('RESIDU_');
+    }
+    /* Un xifrat obert no té família ni text serè. */
+    expect(causaMissatgeXifratTancat({ seguretat: { xifrat: true, verificat: true } })).toBeNull();
+    expect(textMissatgeXifratTancat({ text: 'Bon dia', seguretat: { xifrat: true, verificat: true } }, t)).toBe('');
+  });
+
+  test('una fallada d’integritat amb metadades forjades: ni text, ni foto, ni llista, ni registre, ni «Copia el text», ni codi', () => {
+    const onCopia = vi.fn();
+    const { container } = pinta({
+      ...amb('xifrat-manipulat'), tipus: 'imatge', text: 'TEXT_FILTRAT_PROHIBIT', accioRegistre: true,
+      metadades: {
+        adjunt: { id: 'adj-1', cami: 'mitjans/privat.jpg', mime: 'image/jpeg' },
+        llista: { id: 'll-1', titol: 'Llista secreta', elements: [{ id: 'e1', text: 'Oli', fet: false }] }
+      }
+    }, 'ca', { onCopia });
+    expect(screen.getByText(NO_OBERT.ca)).not.toBeNull();
+    for (const prohibit of ['TEXT_FILTRAT_PROHIBIT', 'xifrat-manipulat', 'Llista secreta', 'Entra o registra']) {
+      expect(container.textContent).not.toContain(prohibit);
+    }
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('a[href*="registre"]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Opcions del missatge' }));
+    expect(screen.queryByRole('menuitem', { name: 'Copia el text' })).toBeNull();
+    expect(screen.getByRole('menuitem', { name: 'Respon' })).not.toBeNull();
+    expect(onCopia).not.toHaveBeenCalled();
+  });
+
+  test('la galeria deixa fora el xifrat tancat; el retall el marca amb el text serè de la seua causa', () => {
+    const t = createTranslator('es');
+    const missatges = [
+      { id: 'img-oberta', seq: 1, sender: 'other', author: 'Pep', tipus: 'imatge', text: 'Foto bona', metadades: { adjunt: { id: 'a1' } }, seguretat: { xifrat: true, verificat: true } },
+      { ...amb('farciment-invalid'), id: 'img-manipulada', seq: 2, tipus: 'imatge', text: 'SECRET_MANIPULAT', metadades: { adjunt: { id: 'a2' } } },
+      { ...amb('epoca-desconeguda'), id: 'txt-altre-aparell', seq: 3, sender: 'me', author: 'Jo', text: 'SECRET_CLAU_ABSENT' }
+    ];
+    expect(missatges.map(esXifratTancat)).toEqual([false, true, true]);
+    expect(imatgesDeLaGaleria(missatges, { t }).map((x) => x.id)).toEqual(['img-oberta']);
+    const { content } = construeixRetall({ fil: { name: 'Plaça' }, missatges: [missatges[1], missatges[2]], locale: 'es-ES', t });
+    expect(content).toContain(`<em>${NO_OBERT.es}</em>`);
+    expect(content).toContain(`<em>${TEXTOS.es}</em>`);
+    for (const prohibit of ['SECRET_MANIPULAT', 'SECRET_CLAU_ABSENT', 'farciment-invalid', 'epoca-desconeguda']) {
+      expect(content).not.toContain(prohibit);
+    }
+  });
+
+  test('una fila tancada que diu ser l’esborrany de la IAIA no en fa cap esborrany amb text sense verificar', () => {
+    const fila = { ...amb('xifrat-manipulat'), esEsborranyIAIA: true, titolEsborrany: 'Títol forjat', text: 'COS_FORJAT' };
+    const { title, content } = construeixRetall({ fil: { name: 'IAIA' }, missatges: [fila], t: createTranslator('ca') });
+    expect(title).not.toContain('Títol forjat');
+    expect(content).toContain(`<em>${NO_OBERT.ca}</em>`);
+    expect(content).not.toContain('COS_FORJAT');
+  });
+
+  test('un xifrat tancat i esborrat: la cita buida de l’esborrat al retall, mai el text sense verificar', () => {
+    const fila = { ...amb('epoca-desconeguda'), esborratAl: '2026-11-16T00:20:00Z', text: 'RESTA_ESBORRADA' };
+    const { content } = construeixRetall({ fil: { name: 'Plaça' }, missatges: [fila], t: createTranslator('ca') });
+    expect(content).toContain('<blockquote>');
+    expect(content).not.toContain('RESTA_ESBORRADA');
+    expect(content).not.toContain('<em>Missatge xifrat');
   });
 });

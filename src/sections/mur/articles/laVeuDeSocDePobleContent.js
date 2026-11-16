@@ -101,7 +101,7 @@ export const LA_VEU_DE_SOC_DE_POBLE_HTML = [
   '<ul>',
   '<li><strong>Matxa-TTS v2 Multiaccent (Projecte AINA · Barcelona Supercomputing Center i alVoCat):</strong> hem descarregat al Node 0 este motor neuronal obert en format <strong>ONNX (260 MB)</strong> amb llicència lliure per a usos no comercials. En les proves acústiques verificades sobre el xip M4 genera <strong>9 segons de veu nítida en tot just 1,3 segons</strong> (factor de temps real <code>0,15</code>), amb quatre veus valencianes d’estudi verificades per freqüència fonamental (dues femenines, <em>Gina</em> i <em>Berta</em>, i dues masculines, <em>Arnau</em> i <em>Lluc</em>) al costat de la nord-occidental (<em>Emma</em>), la central (<em>Èlia</em>) i la balear (<em>Olga</em>).</li>',
   '<li><strong>Corpus orals NEL-VIVES del centre CENID (Universitat d’Alacant) i criteris de l’AVL:</strong> ens recolzem en els recursos oberts d’investigació lingüística impulsats des d’Alacant i en la normativa valenciana de l’Acadèmia Valenciana de la Llengua per a cuidar el timbre de les vocals obertes, les sibilants sonores, les caigudes naturals i el vocabulari meridional que els motors genèrics solen ignorar.</li>',
-  '<li><strong>Whisper i laboratori d’adaptació acústica sobre Apple Silicon (F5-TTS-MLX):</strong> al costat del sintetitzador, hem instal·lat al Mac mini les eines obertes de transcripció i alineació fonètica que ens permetran anar afinant progressivament les variants dialectals de cada territori a mesura que reunim mostres orals cedides amb permís explícit.</li>',
+  '<li><strong>Whisper i laboratori d’adaptació acústica sobre el xip Apple M4 (F5-TTS-MLX):</strong> al costat del sintetitzador, hem instal·lat al Mac mini les eines obertes de transcripció i alineació fonètica que ens permetran anar afinant progressivament les variants dialectals de cada territori a mesura que reunim mostres orals cedides amb permís explícit.</li>',
   '</ul>',
 
   '<h3>4. La intel·ligència tradicional ensenyant a la intel·ligència artificial (i per què cap veu d’estudi parla encara com a La Torre)</h3>',
@@ -151,7 +151,7 @@ export const LA_VEU_DE_SOC_DE_POBLE_TRADUCCIONS = Object.freeze({
       '<ul>',
       '<li><strong>Matxa-TTS v2 Multiaccent (Proyecto AINA · Barcelona Supercomputing Center y alVoCat):</strong> motor neuronal abierto en formato <strong>ONNX (260 MB)</strong> que en nuestro chip M4 genera <strong>9 segundos de voz nítida en apenas 1,3 segundos</strong> (factor <code>0,15</code>), con cuatro voces valencianas de estudio verificadas por frecuencia fundamental (<em>Gina</em>, <em>Berta</em>, <em>Arnau</em> y <em>Lluc</em>) junto a la noroccidental (<em>Emma</em>), la central (<em>Èlia</em>) y la balear (<em>Olga</em>).</li>',
       '<li><strong>Corpus orales NEL-VIVES del centro CENID (Universidad de Alicante) y criterios de la AVL:</strong> apoyo filológico y fonético abierto para cuidar las vocales abiertas, las sibilantes sonoras y el vocabulario meridional.</li>',
-      '<li><strong>Whisper y laboratorio de adaptación acústica sobre Apple Silicon (F5-TTS-MLX):</strong> herramientas abiertas instaladas en el Mac mini para transcribir y afinar progresivamente las variantes comarcales con muestras cedidas con permiso explícito.</li>',
+      '<li><strong>Whisper y laboratorio de adaptación acústica sobre el chip Apple M4 (F5-TTS-MLX):</strong> herramientas abiertas instaladas en el Mac mini para transcribir y afinar progresivamente las variantes comarcales con muestras cedidas con permiso explícito.</li>',
       '</ul>',
 
       '<h3>4. La inteligencia tradicional enseñando a la IA (y por qué ninguna voz de estudio habla aún como en La Torre)</h3>',
@@ -194,7 +194,7 @@ export const LA_VEU_DE_SOC_DE_POBLE_TRADUCCIONS = Object.freeze({
       '<ul>',
       '<li><strong>Matxa-TTS v2 Multiaccent (Projecte AINA · Barcelona Supercomputing Center &amp; alVoCat):</strong> an open <strong>260 MB ONNX</strong> neural engine generating <strong>9 seconds of crisp speech in just 1.3 seconds</strong> on our M4 chip (real-time factor <code>0.15</code>), across four pitch-verified Valencian studio voices (<em>Gina</em>, <em>Berta</em>, <em>Arnau</em>, and <em>Lluc</em>) alongside North-Western (<em>Emma</em>), Central (<em>Èlia</em>), and Balearic (<em>Olga</em>).</li>',
       '<li><strong>CENID NEL-VIVES oral corpora (University of Alicante) and AVL standards:</strong> open linguistic research from Alicante caring for open vowels, voiced sibilants, and southern vocabulary ignored by generic engines.</li>',
-      '<li><strong>Whisper and Apple Silicon acoustic adaptation lab (F5-TTS-MLX):</strong> open transcription and phonetic alignment tools installed on the Mac mini to progressively refine county accents from explicitly contributed samples.</li>',
+      '<li><strong>Whisper and Apple M4 acoustic adaptation lab (F5-TTS-MLX):</strong> open transcription and phonetic alignment tools installed on the Mac mini to progressively refine county accents from explicitly contributed samples.</li>',
       '</ul>',
 
       '<h3>4. Traditional village intelligence teaching AI (and why studio voices do not yet sound like La Torre)</h3>',
@@ -237,7 +237,7 @@ export const LA_VEU_DE_SOC_DE_POBLE_TRADUCCIONS = Object.freeze({
       '<ul>',
       '<li><strong>Matxa-TTS v2 Multiaccent (AINA Proiektua · Barcelona Supercomputing Center eta alVoCat):</strong> <strong>ONNX (260 MB)</strong> motor neuronal irekia, gure M4 txipean <strong>9 segundoko ahots garbia 1,3 segundotan</strong> sortzen duena (<code>0,15</code> faktorea), oinarrizko maiztasunaz egiaztatutako lau ahots valentziarrekin (<em>Gina</em>, <em>Berta</em>, <em>Arnau</em> eta <em>Lluc</em>), ipar-mendebaldekoarekin (<em>Emma</em>), erdialdekoarekin (<em>Èlia</em>) eta balearrarekin (<em>Olga</em>).</li>',
       '<li><strong>CENID zentroko NEL-VIVES ahozko corpusak (Alacanteko Unibertsitatea) eta AVL irizpideak:</strong> hegoaldeko bokal irekiak, txistukari ozenak eta tokiko hiztegia zaintzeko ikerketa-oinarri irekia.</li>',
-      '<li><strong>Whisper eta Apple Silicon gaineko egokitzapen akustikoko laborategia (F5-TTS-MLX):</strong> baimen esplizituz lagatako ahozko laginekin eskualde-aldaerak fintzeko tresna irekiak.</li>',
+      '<li><strong>Whisper eta Apple M4 txiparen gaineko egokitzapen akustikoko laborategia (F5-TTS-MLX):</strong> baimen esplizituz lagatako ahozko laginekin eskualde-aldaerak fintzeko tresna irekiak.</li>',
       '</ul>',
 
       '<h3>4. Jakintza tradizionala adimen artifizialari irakasten (eta zergatik estudioko ahotsek ez duten oraindik La Torren bezala hitz egiten)</h3>',
@@ -280,7 +280,7 @@ export const LA_VEU_DE_SOC_DE_POBLE_TRADUCCIONS = Object.freeze({
       '<ul>',
       '<li><strong>Matxa-TTS v2 Multiaccent (Proxecto AINA · Barcelona Supercomputing Center e alVoCat):</strong> motor neuronal aberto en formato <strong>ONNX (260 MB)</strong> que no noso chip M4 xera <strong>9 segundos de voz nítida en apenas 1,3 segundos</strong> (factor <code>0,15</code>), con catro voces valencianas de estudo verificadas por frecuencia fundamental (<em>Gina</em>, <em>Berta</em>, <em>Arnau</em> e <em>Lluc</em>) xunto á noroccidental (<em>Emma</em>), á central (<em>Èlia</em>) e á balear (<em>Olga</em>).</li>',
       '<li><strong>Corpus orais NEL-VIVES do centro CENID (Universidade de Alacant) e criterios da AVL:</strong> apoio filolóxico e fonético aberto para coidar as vogais abertas, as sibilantes sonoras e o vocabulario meridional.</li>',
-      '<li><strong>Whisper e laboratorio de adaptación acústica sobre Apple Silicon (F5-TTS-MLX):</strong> ferramentas abertas instaladas no Mac mini para transcribir e afinar progresivamente as variantes comarcais con mostras cedidas con permiso explícito.</li>',
+      '<li><strong>Whisper e laboratorio de adaptación acústica sobre o chip Apple M4 (F5-TTS-MLX):</strong> ferramentas abertas instaladas no Mac mini para transcribir e afinar progresivamente as variantes comarcais con mostras cedidas con permiso explícito.</li>',
       '</ul>',
 
       '<h3>4. A intelixencia tradicional ensinando á IA (e por que ningunha voz de estudo fala aínda como en La Torre)</h3>',

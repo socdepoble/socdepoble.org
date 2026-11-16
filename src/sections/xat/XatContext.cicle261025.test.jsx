@@ -65,7 +65,7 @@ let maxEnVol;
 /* navigator.onLine fingit (XC-03); es restaura després de cada prova. */
 let espiaLinia = null;
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   servidor = [msg(1)];
   latenciaMs = 0;
   callbackCanal = null;
@@ -99,6 +99,7 @@ async function obert() {
   await waitFor(() => expect(value.status).toBe('ready'));
   vi.useFakeTimers();
   act(() => value.obriFil('fil-A'));
+  await act(async () => { await vi.dynamicImportSettled(); });
   await pas(0);
   expect(seqs()).toEqual([1]);
   expect(typeof callbackCanal).toBe('function');
@@ -399,7 +400,7 @@ describe('ordre d’enviament (MISSED P2) · el mateix fil, en l’ordre en què
     expect(value.chatMessages.map((m) => `${m.text}:${m.seq ?? m.estatEnviament}`)).toEqual(['t1:1', 'A:2', 'B:3']);
   });
 
-  it('una cua buida ix en el mateix tic, un altre fil no espera i el reintent manual també fa cua', async () => {
+  it('una cua buida inicia el transport asíncron, un altre fil no espera i el reintent manual també fa cua', async () => {
     await obert();
     mock.enviaMissatge.mockRejectedValueOnce(Object.assign(new Error('no'), { retriable: false }));
     await act(async () => { await value.sendChatMessage({ id: 'fil-A' }, 'fallit'); });
@@ -408,10 +409,12 @@ describe('ordre d’enviament (MISSED P2) · el mateix fil, en l’ordre en què
     const lent = deferred();
     mock.enviaMissatge.mockReturnValueOnce(lent.promise);
     act(() => { value.sendChatMessage({ id: 'fil-A' }, 'lent'); });
-    /* La cua del fil era buida: l'enviament ix en el mateix tic. */
+    await pas(0);
+    /* La cua buida inicia el servei sense esperar una resposta de xarxa. */
     expect(mock.enviaMissatge).toHaveBeenCalledTimes(2);
     mock.enviaMissatge.mockImplementation(async (_, cos) => ({ ...msg(3, 'A'), id: cos.id, text: cos.text }));
     act(() => { value.sendChatMessage({ id: 'fil-B' }, 'altre fil'); });
+    await pas(0);
     /* Un altre fil no espera la cua de fil-A. */
     expect(mock.enviaMissatge).toHaveBeenCalledTimes(3);
     act(() => { value.reintenta(fallit.id); });

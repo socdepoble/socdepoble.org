@@ -1,211 +1,102 @@
-/** Proves del generador d'una sola ordre (laboratori 260927_1310_reflex_maria).
- *
- *  Fixen la conducta que va fallar el 260927 amb el prompt 1250: petorreta i pla
- *  escrits a mà, sense rebut, amb caselles marcades en fals i cognoms diferents.
- *  Quan el generador s'instal·le a tooling/wiki, la primera ruta de CANDIDATS
- *  deixarà d'existir i la prova carregarà la instal·lada.
- */
-import { test } from 'node:test';
+/** R31: cobertura del successor context → create → check del generador
+ * experimental retirat. Cap generador històric es reinstal·la. */
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
-import { fixture } from './helpers/documental.mjs';
-import { validateDocument } from '../tooling/documental/turns.mjs';
-import { writeIndexedDraft } from '../tooling/documental/draft-write.mjs';
-import { inspeccionaText } from '../tooling/gates/porta-plantilla-viva.mjs';
-import { checkOlivera, avui } from '../tooling/gates/porta-olivera.mjs';
+import { fixture, REPO } from './helpers/documental.mjs';
+import { openTurn, readTurn, deliverContext, validateDocument, activeReceipts, bindPlan } from '../tooling/documental/turns.mjs';
+import { createDraft } from '../tooling/wiki/document.mjs';
+import { avui, vius, checkTaula } from '../tooling/gates/porta-olivera.mjs';
 
-const CANDIDATS = [
-  '../_wiki_de_poble/04_escriptori/02_investigacio_ia/260927_1310_reflex_maria/wiki/petorreta.mjs',
-  '../tooling/wiki/petorreta.mjs'
-];
-const modul = CANDIDATS.find((p) => fs.existsSync(new URL(p, import.meta.url)));
-const { generaPetorreta, normalitza, segell } = await import(modul);
-
-const DESK = '_wiki_de_poble/04_escriptori';
-const LOCK = '.agents/runtime/document-create.lock';
-// Hora fixa: una execució que creua la mitjanit no pot canviar el dia a mitja prova.
-const ARA = new Date(2026, 8, 27, 13, 10);
-const OPCIONS = Object.freeze({ actor: 'maria', per: 'claude,codex', cognom: 'perfil_empresa', titol: 'Perfil d’empresa', descripcio: 'Auditoria i execució del perfil d’empresa per a Claude i Codex' });
-
-/** Arrel de proves amb el contracte real i el marcador que exigix lib/arrel. */
-function mas(t) {
-  const root = fixture(t);
-  fs.writeFileSync(path.join(root, '.agents/AGENTS.md'), '# BIOS de proves\n');
-  return fs.realpathSync(root);
+const DESK = '_wiki_de_poble/04_escriptori', DAY = avui(), INDEX = `${DESK}/00_index_escriptori.md`;
+const nom = categoria => `${DESK}/${DAY}_1310_${categoria}_generador.md`;
+const opts = (route = 'auditoria', file = nom('auditoria')) => ({ route, file, title: 'Circuit documental R31', description: 'Fixture del circuit explícit i de les seues negatives', actor: 'agent-de-prova' });
+const completa = raw => raw.replaceAll('[pendent]', 'Contingut sintètic comprovat.');
+const read = (root, rel) => fs.readFileSync(path.join(root, rel), 'utf8');
+function setup(t) {
+  const root = fs.realpathSync(fixture(t));
+  fs.writeFileSync(path.join(root, '.agents/AGENTS.md'), '# Arrel sintètica de prova\n');
+  const turn = openTurn(root, { actor: 'prova', scope: 'documents' });
+  return { root, turn };
 }
-const torns = (root) => {
-  const dir = path.join(root, '.agents/runtime/turns');
-  return fs.existsSync(dir) ? fs.readdirSync(dir).filter((n) => n.endsWith('.json')) : [];
-};
-const docs = (root) => fs.readdirSync(path.join(root, DESK)).filter((n) => /^\d{6}_\d{4}_/.test(n)).sort();
-const llig = (root, rel) => fs.readFileSync(path.join(root, rel), 'utf8');
-const seccio0 = (raw) => /^## 0\. Abans de generar[^\n]*\n([\s\S]*?)(?=^## )/m.exec(raw)?.[1] ?? null;
+const cli = (root, ...args) => spawnSync(process.execPath, [path.join(REPO, 'tooling/wiki/document.mjs'), ...args, '--arrel', root], { cwd: root, encoding: 'utf8' });
 
-test('Escriptori net: pla i petorreta amb la mateixa HHMM, secció 0 calculada i només [pendent] per omplir', (t) => {
-  const root = mas(t);
-  const r = generaPetorreta(root, OPCIONS, { ara: ARA });
-  assert.equal(r.valid, true, r.errorsEstructurals.join('\n'));
-  assert.deepEqual(r.errorsEstructurals, []);
-
-  const pla = r.fitxers.pla.ruta, prompt = r.fitxers.petorreta.ruta;
-  assert.equal(r.segell, '260927_1310');
-  assert.equal(pla, `${DESK}/260927_1310_pla_implementacio_perfil_empresa.md`);
-  assert.equal(prompt, `${DESK}/260927_1310_prompt_perfil_empresa.md`);
-  assert.deepEqual(docs(root), [path.basename(pla), path.basename(prompt)].sort());
-
-  const raw = llig(root, prompt);
-  const s0 = seccio0(raw);
-  assert.ok(s0, 'la petorreta porta la secció 0');
-  assert.equal((s0.match(/^- \[x\] /gm) || []).length, 3, 'tres fets comprovats');
-  assert.doesNotMatch(s0, /^[ \t]*[-*+][ \t]+\[[ \t]\]/m, 'cap casella buida');
-  assert.match(s0, /\*\*Rebut obtingut\*\* per a este fitxer: `sdp:torn_/);
-  assert.match(s0, /\(2026-09-27 13:10 \(hora local\), torn `torn_/, 'la mateixa hora que el nom del fitxer');
-  assert.match(raw, /^\| Destinatari \| claude, codex \|$/m);
-  assert.match(llig(root, pla), /^\*\*Estat del Pla:\*\* en elaboració$/m);
-
-  // Tots els errors de `document.mjs check` són seccions o files encara [pendent], i ho diu l'eixida.
-  assert.deepEqual(r.fitxers.petorreta.pendents, { seccions: ['Instrucció del torn', 'Tasques', 'Riscos'], registre: ['Model IA', 'Tokens consumits'] });
-  assert.deepEqual(r.fitxers.pla.pendents, { seccions: ['Canvis proposats', 'Verificació', 'Riscos'], registre: ['Model IA', 'Tokens consumits'] });
-  for (const f of Object.values(r.fitxers)) {
-    const esperats = [...f.pendents.seccions.map((s) => `Secció absent o pendent: ${s}`), ...f.pendents.registre.map((k) => `Registre: falta ${k}`)];
-    assert.deepEqual(validateDocument(root, llig(root, f.ruta), f.ruta, { closed: true }).sort(), esperats.sort(), f.ruta);
-    assert.deepEqual(inspeccionaText(root, f.ruta, llig(root, f.ruta)).errors, [], `estructura de ${f.ruta}`);
-  }
-  assert.deepEqual(r.validacio, [pla, prompt].map((rel) => `node tooling/wiki/document.mjs check --file ${rel}`));
-
-  // La porta Olivera instal·lada accepta la petorreta tal com naix: taula neta, pla d'avui i cap casella buida.
-  assert.deepEqual(checkOlivera(root, { contingut: raw, dia: avui(ARA) }).errors, []);
-
-  // Un sol torn, d'abast documental, amb un rebut per fitxer i la ruta que toca.
-  assert.equal(torns(root).length, 1);
-  const turn = JSON.parse(llig(root, `.agents/runtime/turns/${r.turn_id}.json`));
-  assert.equal(r.caducitat, turn.expiresAt);
-  assert.match(r.seguent.at(-1), /el torn caduca 24 h després d'obrir-se.*document\.mjs plan --turn-id torn_/);
-  assert.equal(turn.scope, 'documents');
-  assert.equal(turn.actor, 'maria');
-  assert.deepEqual(Object.values(turn.receipts).map((x) => [x.route, x.file]).sort(), [['pla.implementacio', pla], ['prompt.local', prompt]].sort());
-  assert.deepEqual(turn.ownedPaths, [pla, prompt], 'en arbre compartit, el torn només respon dels seus');
-
-  // Omplir només els [pendent] deixa els dos documents vàlids.
-  for (const rel of [pla, prompt]) {
-    const ple = llig(root, rel).replaceAll('[pendent]', 'Contingut comprovat amb evidència.');
-    assert.deepEqual(validateDocument(root, ple, rel, { closed: true }), [], rel);
-  }
+test('context entrega plantilla; create consolida rebut i àncora; el pendent encara falla check', t => {
+  const { root, turn } = setup(t), o = opts(), context = deliverContext(root, turn.turn_id, o);
+  assert.ok(context.template.includes('## Registre'));
+  assert.equal(fs.existsSync(path.join(root, o.file)), false);
+  const result = createDraft(root, turn.turn_id, o), raw = read(root, o.file);
+  assert.notEqual(result.reflex, context.reflex);
+  const receipt = readTurn(root, turn.turn_id).receipts[result.reflex.split(':').at(-1)];
+  assert.deepEqual([receipt.file, receipt.creation.state], [o.file, 'committed']);
+  assert.match(raw, /Propietari \| agent-de-prova/);
+  assert.ok(vius(root).has(path.basename(o.file, '.md')));
+  assert.match(validateDocument(root, raw, o.file).join('\n'), /pendent/);
+  const done = completa(raw); fs.writeFileSync(path.join(root, o.file), done);
+  assert.deepEqual(validateDocument(root, done, o.file), []);
 });
 
-test('Escriptori brut: error clar abans d’obrir torn o crear cap fitxer', (t) => {
-  const root = mas(t);
-  fs.writeFileSync(path.join(root, DESK, '260101_0900_prompt_vell.md'), '# vell\n');
-  assert.throws(() => generaPetorreta(root, OPCIONS, { ara: ARA }), /Escriptori brut: 1 document\(s\).*260101_0900_prompt_vell\.md.*No s'ha obert cap torn/s);
-  assert.deepEqual(torns(root), []);
-  assert.deepEqual(docs(root), ['260101_0900_prompt_vell.md']);
+test('pla i prompt compartixen HHMM, amb pla vinculat i dos documents ancorats sense sobreescriptura', t => {
+  const { root, turn } = setup(t), plan = opts('pla.implementacio', nom('pla_implementacio'));
+  createDraft(root, turn.turn_id, plan); fs.writeFileSync(path.join(root, plan.file), completa(read(root, plan.file)));
+  bindPlan(root, turn.turn_id, plan.file);
+  const before = read(root, plan.file), prompt = opts('prompt.local', nom('prompt'));
+  createDraft(root, turn.turn_id, prompt);
+  assert.equal(path.basename(plan.file).slice(0, 11), path.basename(prompt.file).slice(0, 11));
+  assert.equal(read(root, plan.file), before);
+  assert.equal(readTurn(root, turn.turn_id).plan.file, plan.file);
+  for (const file of [plan.file, prompt.file]) assert.ok(read(root, INDEX).includes(`[[${path.basename(file, '.md')}]]`));
+  assert.equal(checkTaula(root).valid, true);
 });
 
-test('cognom que no és un slug: error abans de tocar res', (t) => {
-  const root = mas(t);
-  for (const cognom of ['Perfil Empresa', 'perfil-empresa', 'perfíl', '_perfil', 'perfil__empresa', '', undefined, 'x'.repeat(61)]) {
-    assert.throws(() => generaPetorreta(root, { ...OPCIONS, cognom }), /--cognom: .* no és un slug/, String(cognom));
-  }
-  assert.deepEqual(torns(root), []);
-  assert.deepEqual(docs(root), []);
+test('destí existent, nom invàlid i zona humana fallen abans de crear cap rebut fantasma', t => {
+  const { root, turn } = setup(t), file = nom('auditoria');
+  fs.writeFileSync(path.join(root, file), 'contingut humà preexistent');
+  const before = readTurn(root, turn.turn_id);
+  assert.throws(() => createDraft(root, turn.turn_id, opts('auditoria', file)), /EEXIST/);
+  assert.equal(read(root, file), 'contingut humà preexistent');
+  for (const other of [`${DESK}/sense_data.md`, `${DESK}/01_produccio/${DAY}_1310_auditoria_humana.md`]) assert.throws(() => deliverContext(root, turn.turn_id, opts('auditoria', other)), /invàlid|no autoritzat/);
+  assert.deepEqual(readTurn(root, turn.turn_id), before);
 });
 
-test('destinataris, actor, títol, descripció i telemetria es validen', () => {
-  assert.deepEqual(normalitza(OPCIONS).per, ['claude', 'codex']);
-  assert.deepEqual(normalitza({ ...OPCIONS, per: ' Codex , codex ' }).per, ['codex']);
-  assert.throws(() => normalitza({ ...OPCIONS, per: 'gemini' }), /--per: «gemini» no val/);
-  assert.throws(() => normalitza({ ...OPCIONS, per: true }), /--per/);
-  assert.throws(() => normalitza({ ...OPCIONS, actor: 'IAIA MarIA' }), /--actor/);
-  assert.throws(() => normalitza({ ...OPCIONS, titol: 'dues\nlínies' }), /--titol/);
-  assert.throws(() => normalitza({ ...OPCIONS, descripcio: 'massa curt' }), /--descripcio: .*en té 10/);
-  assert.throws(() => normalitza({ ...OPCIONS, descripcio: 'x'.repeat(221) }), /--descripcio/);
-  assert.throws(() => normalitza({ ...OPCIONS, model: true }), /--model/);
-  assert.throws(() => normalitza({ ...OPCIONS, tokens: '10 | 20' }), /--tokens/);
-  assert.equal(segell(new Date(2026, 8, 27, 9, 5)), '260927_0905');
+test('taula bruta denega context i create de convocatòria sense tocar índex ni rebuts', t => {
+  const { root, turn } = setup(t); fs.writeFileSync(path.join(root, DESK, '250101_0900_auditoria_consumida.md'), '# Consumida\n');
+  const before = readTurn(root, turn.turn_id), index = read(root, INDEX), o = opts('prompt.local', nom('prompt'));
+  assert.throws(() => deliverContext(root, turn.turn_id, o), /Escriptori brut/);
+  assert.throws(() => createDraft(root, turn.turn_id, o), /Escriptori brut/);
+  assert.deepEqual(readTurn(root, turn.turn_id), before);
+  assert.equal(read(root, INDEX), index); assert.equal(fs.existsSync(path.join(root, o.file)), false);
 });
 
-test('un destí que ja existix no obri torn: cap rebut fantasma', (t) => {
-  const root = mas(t);
-  fs.writeFileSync(path.join(root, DESK, '260927_1310_prompt_perfil_empresa.md'), '# ja hi era\n');
-  assert.throws(() => generaPetorreta(root, OPCIONS, { ara: ARA }), /260927_1310_prompt_perfil_empresa\.md: ja existix.*No s'ha obert cap torn/);
-  assert.deepEqual(torns(root), []);
-  assert.deepEqual(docs(root), ['260927_1310_prompt_perfil_empresa.md']);
+test('lock ocupat deixa fallada explícita i absent, cap rebut actiu ni draft parcial', t => {
+  const { root, turn } = setup(t), o = opts(), lock = path.join(root, '.agents/runtime/document-create.lock');
+  fs.writeFileSync(lock, 'lock d’un altre autor'); const index = read(root, INDEX);
+  assert.throws(() => createDraft(root, turn.turn_id, o), /EEXIST/);
+  const state = readTurn(root, turn.turn_id), receipts = Object.values(state.receipts);
+  assert.equal(receipts.length, 1, 'la fallada conserva rastre auditable');
+  assert.deepEqual([receipts[0].creation.state, receipts[0].creation.absent], ['failed', true]);
+  assert.deepEqual(activeReceipts(state), []); assert.equal(fs.existsSync(path.join(root, o.file)), false);
+  assert.equal(read(root, INDEX), index); assert.equal(fs.readFileSync(lock, 'utf8'), 'lock d’un altre autor');
 });
 
-test('lock orfe de writeIndexedDraft: error abans d’obrir torn, cap rebut fantasma', (t) => {
-  const root = mas(t);
-  fs.mkdirSync(path.join(root, '.agents/runtime'), { recursive: true });
-  fs.writeFileSync(path.join(root, LOCK), '');
-  assert.throws(() => generaPetorreta(root, OPCIONS, { ara: ARA, espera: 0 }), /document-create\.lock ocupat.*No s'ha obert cap torn/);
-  assert.deepEqual(torns(root), []);
-  assert.deepEqual(docs(root), []);
+test('metadades invàlides no escriuen; el reintent correcte té rebut nou consolidat', t => {
+  const { root, turn } = setup(t), o = opts();
+  assert.throws(() => createDraft(root, turn.turn_id, { ...o, description: 'x' }));
+  assert.equal(fs.existsSync(path.join(root, o.file)), false); assert.deepEqual(activeReceipts(readTurn(root, turn.turn_id)), []);
+  const result = createDraft(root, turn.turn_id, o), receipts = readTurn(root, turn.turn_id).receipts;
+  assert.equal(Object.values(receipts).filter(r => r.creation.state === 'failed').length, 1);
+  assert.equal(receipts[result.reflex.split(':').at(-1)].creation.state, 'committed');
 });
 
-test('lock passatger a mitja escriptura: reintenta amb el mateix rebut i acaba vàlid', (t) => {
-  const root = mas(t);
-  let intents = 0;
-  // Un altre agent agafa el lock just quan toca escriure la petorreta, i l'allibera al tercer intent.
-  const escriu = (arrel, file, raw) => {
-    if (file.endsWith('_prompt_perfil_empresa.md')) {
-      intents += 1;
-      if (intents === 1) fs.writeFileSync(path.join(root, LOCK), '');
-      if (intents === 3) fs.rmSync(path.join(root, LOCK));
-    }
-    return writeIndexedDraft(arrel, file, raw);
-  };
-  const r = generaPetorreta(root, OPCIONS, { ara: ARA, espera: 0, escriu });
-  assert.equal(r.valid, true, r.errorsEstructurals.join('\n'));
-  assert.equal(intents, 3);
-  const turn = JSON.parse(llig(root, `.agents/runtime/turns/${r.turn_id}.json`));
-  assert.equal(Object.keys(turn.receipts).length, 2, 'un rebut per document, no un per intent');
-  assert.equal(r.fitxers.petorreta.reflex.split(':')[2], Object.values(turn.receipts).find((x) => x.route === 'prompt.local').id);
-  assert.equal(fs.existsSync(path.join(root, LOCK)), false);
-});
-
-test('lock que no s’allibera: l’error diu rebut fantasma i torn inservible', (t) => {
-  const root = mas(t);
-  let intents = 0;
-  const escriu = (arrel, file, raw) => {
-    if (file.endsWith('_prompt_perfil_empresa.md')) { intents += 1; fs.writeFileSync(path.join(root, LOCK), ''); }
-    return writeIndexedDraft(arrel, file, raw);
-  };
-  assert.throws(() => generaPetorreta(root, OPCIONS, { ara: ARA, espera: 0, reintents: 3, escriu }),
-    /No s'ha pogut crear .*260927_1310_prompt_perfil_empresa\.md.*Rebut fantasma: el torn torn_\S+ té el rebut sdp:torn_.*torn inservible, no el reutilitzes\..*El pla .*260927_1310_pla_implementacio_perfil_empresa\.md sí que s'ha creat/s);
-  assert.equal(intents, 3, 'reintents acotats');
-  assert.deepEqual(docs(root), ['260927_1310_pla_implementacio_perfil_empresa.md']);
-  assert.equal(torns(root).length, 1);
-});
-
-test('model i tokens declarats omplin el Registre dels dos documents', (t) => {
-  const root = mas(t);
-  const r = generaPetorreta(root, { ...OPCIONS, model: 'Gemini 3 Pro', tokens: 'no exposat' }, { ara: ARA });
-  for (const f of Object.values(r.fitxers)) {
-    assert.deepEqual(f.pendents.registre, [], f.ruta);
-    assert.match(llig(root, f.ruta), /^\| Model IA \| Gemini 3 Pro \|$/m);
-    assert.match(llig(root, f.ruta), /^\| Tokens consumits \| no exposat \|$/m);
-  }
-});
-
-test('CLI: una sola ordre amb JSON a l’eixida, i exit 1 amb l’Escriptori brut', (t) => {
-  const root = mas(t);
-  const cli = fileURLToPath(new URL(modul, import.meta.url));
-  const args = ['--arrel', root, '--actor', 'maria', '--per', 'claude', '--cognom', 'prova_cli', '--titol', 'Prova de la CLI', '--descripcio', 'Petorreta generada per la CLI de proves'];
-  const bo = spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
-  assert.equal(bo.status, 0, bo.stderr);
-  const r = JSON.parse(bo.stdout);
-  assert.equal(r.valid, true);
-  assert.match(r.turn_id, /^torn_/);
-  assert.deepEqual(r.destinataris, ['claude']);
-  // La CLI usa el rellotge real: es compara amb el segell que ella mateixa declara, no amb un avui() posterior.
-  assert.match(r.segell, /^\d{6}_\d{4}$/);
-  assert.equal(r.fitxers.petorreta.ruta, `${DESK}/${r.segell}_prompt_prova_cli.md`);
-
-  fs.writeFileSync(path.join(root, DESK, '260101_0900_auditoria_vella.md'), '# vella\n');
-  const brut = spawnSync(process.execPath, [cli, ...args.map((a) => (a === 'prova_cli' ? 'prova_cli_dos' : a))], { encoding: 'utf8' });
-  assert.equal(brut.status, 1);
-  assert.equal(JSON.parse(brut.stderr).valid, false);
-  assert.match(JSON.parse(brut.stderr).error, /Escriptori brut/);
+test('CLI real context/create/check: JSON, roig al pendent i verd després de completar', t => {
+  const { root, turn } = setup(t), o = opts(), common = ['--turn-id', turn.turn_id, '--route', o.route, '--file', o.file];
+  const context = cli(root, 'context', ...common); assert.equal(context.status, 0, context.stderr);
+  assert.match(JSON.parse(context.stdout).template, /## Registre/);
+  const create = cli(root, 'create', ...common, '--title', o.title, '--description', o.description); assert.equal(create.status, 0, create.stderr);
+  assert.equal(JSON.parse(create.stdout).file, o.file); assert.equal(cli(root, 'check', '--file', o.file).status, 1);
+  fs.writeFileSync(path.join(root, o.file), completa(read(root, o.file)));
+  const check = cli(root, 'check', '--file', o.file); assert.equal(check.status, 0, check.stderr);
+  assert.deepEqual(JSON.parse(check.stdout), { valid: true, errors: [] });
 });

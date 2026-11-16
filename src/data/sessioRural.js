@@ -1,9 +1,17 @@
-/** FEDI-02 · Serveis de dispositiu opt-in; cap ACK ni publicació remota. */
+/** FEDI-02 · Serveis de dispositiu opt-in. PF-03 separa persistència local
+ * d'ACK remot: només un transport remot explícit pot confirmar una captura.
+ * Onada R32 · D-R30-1: l'ACK de carpeta (registraAcksCarpeta) és del dispositiu i
+ * només programa la compactació sense pèrdua dels fitxers de la carpeta; mai
+ * s'etiqueta ni s'usa com a ACK remot ni autoritza compactaCrdtRural. Encara no hi
+ * ha cap endpoint remot públic configurat: `transportCrdtRemot` és opt-in. Un
+ * certificat de retirada només el fa este dispositiu amb el seu ACK remot; un
+ * certificat que arriba d'una còpia o de la carpeta no s'aplica mai. */
 import { creaMagatzemAtomicRural, creaPersistenciaLocalRural, copiaJsonRural, normalitzaAbastRural } from './persistenciaLocalRural.js';
 import { creaCuaOperacionsOffline, verifyOfflineQueueChain } from './cuaOperacionsOffline.js';
 import { consolidaOperacionsEmergencia, normalitzaOperacioEmergencia, exportaDeltaEmergenciaRural, importaDeltaEmergenciaRural } from './pontEmergenciaRural.js';
 import { calculaPlaSincronitzacioVault, exportaPaquetVaultFallback, importaPaquetVaultFallback, sincronitzaAmbDirectoryHandle, sincronitzaCrdtAmbDirectoryHandle, esEntradaAckCrdtVault, esAckPlausibleCrdtVault } from './sincronitzadorCarpetaLocal.js';
-import { estatCrdtRuralBuit, normalitzaCrdtRural, fusionaCrdtRural, projectaCrdtRural, baseNotaCrdtRural, canviaCrdtRural } from './crdtRural.js';
+import { estatCrdtRuralBuit, normalitzaCrdtRural, fusionaCrdtRural, projectaCrdtRural, baseNotaCrdtRural, canviaCrdtRural,
+  preparaSincronitzacioCrdtRural, registraAckCrdtRural, compactaCrdtRural } from './crdtRural.js';
 import { canonitzaJsonJcs, sha256Hex, codificaBase58Btc } from './federacio/portabilitatFediversity.js';
 
 const MAX_FITXER = 4 * 1024 * 1024;
@@ -11,7 +19,7 @@ const DISPOSITIU = 'mode-rural:dispositiu';
 const COLLECCIONS = 'colleccions';
 const CLAU_CRDT = 'mode-rural:crdt';
 const ESQUEMA_CRDT_PERSISTIT = 'sdp.rural.crdt-state.v1';
-/* Onada R30 · PF-03 · ACK de les entrades de carpeta CRDT (nom → primera confirmació ISO).
+/* Onada R30 · PF-03 · ACK LOCAL de les entrades de carpeta CRDT (nom → primera confirmació ISO).
    Perdre'n un només endarrerix una compactació: mai la fa insegura. El registre viu al mateix
    fitxer OPFS atòmic que l'estat CRDT: cada entrada ocupa uns 110 B i la fita (una carpeta
    plena, 1.000 fitxers, més un marge per a una altra) el deixa en uns 130 KB dels 4 MB. */
@@ -41,7 +49,8 @@ async function clausDeDispositiu(crypto) {
 }
 
 export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = globalThis.crypto, ara = Date.now,
-  maxOperacionsCua = 1000, maxBytesCua = MAX_FITXER, onInvalidada = () => {}, onCanvi = () => {}, comprovaAbast = () => {}, BroadcastChannel = globalThis.BroadcastChannel, crdt = null, ...motor } = {}) {
+  maxOperacionsCua = 1000, maxBytesCua = MAX_FITXER, onInvalidada = () => {}, onCanvi = () => {}, comprovaAbast = () => {}, BroadcastChannel = globalThis.BroadcastChannel,
+  crdt = null, transportCrdtRemot = null, ...motor } = {}) {
   const abast = normalitzaAbastRural(abastEntrada);
   if (typeof municipi !== 'string' || !municipi.trim() || !crypto?.randomUUID || !crypto?.subtle || typeof onInvalidada !== 'function' || typeof onCanvi !== 'function' || typeof comprovaAbast !== 'function') throw new Error('Falten el poble o WebCrypto per al mode rural.');
   if (crdt !== null && typeof crdt !== 'boolean') throw new Error('El mode CRDT ha de ser explícit.');
@@ -135,7 +144,7 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
     return state;
   }
   function colsAmbCrdt(cols, data) {
-    const projected = projectaCrdtRural(data), ids = new Set(data.ops.map(op => op.id));
+    const projected = projectaCrdtRural(data), ids = new Set([...data.ops.map(op => op.id), ...(data.sincronitzacio?.retirades.map(r => r.id) ?? [])]);
     const alertes = new Map(cols.bans.filter(op => !ids.has(op.entitatId)).map(privada).map(op => [op.sha256Operacio, op]));
     for (const nota of projected.notes) { const alerta = alertaDe(nota); alertes.set(alerta.sha256Operacio, alerta); }
     return { ...cols, notes: projected.notes, bans: [...alertes.values()] };
@@ -170,7 +179,9 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
   }
   function estatDe(s) {
     return { notes: s.cols.notes, bans: s.cols.bans, ...(usaCrdt ? { crdt: true, motor: motor.motor ?? 'indexeddb',
-      notesEsborrades: projectaCrdtRural(s.crdt).esborrades, dependenciesPendents: projectaCrdtRural(s.crdt).pendents } : {}), pendents: s.pending.entries.length, sequenciaCua: s.pending.nextSeq - 1,
+      notesEsborrades: projectaCrdtRural(s.crdt).esborrades, dependenciesPendents: projectaCrdtRural(s.crdt).pendents,
+      ...(s.crdt.sincronitzacio ? { sincronitzacioRemota: copiaJsonRural(s.crdt.sincronitzacio, MAX_FITXER),
+        reconciliacionsPendents: projectaCrdtRural(s.crdt).reconciliacions ?? [] } : {}) } : {}), pendents: s.pending.entries.length, sequenciaCua: s.pending.nextSeq - 1,
       cadenaValida: true, bytesCua: bytes(s.pending), limitBytesCua: maxBytesCua, limitOperacionsCua: maxOperacionsCua };
   }
   async function estat() { return estatDe(await captura()); }
@@ -250,6 +261,14 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
     if (value.schema !== ESQUEMA_PAQUET_CRDT_RURAL || Object.keys(value).sort().join('|') !== ['crdt', 'createdAt', 'schema', 'sha256'].join('|')
       || typeof value.createdAt !== 'string' || value.sha256 !== sha256Hex(canonitzaJsonJcs(value.crdt))) throw errorRural('RURAL_CRDT_PACKAGE_REQUIRED', 'Cal un paquet CRDT rural amb integritat vàlida.');
     const incoming = normalitzaCrdtRural(value.crdt);
+    // Una còpia local aporta operacions, mai credencials ni prova autenticada
+    // d'ACK. La rèplica receptora ha de confirmar amb el seu propi adaptador
+    // remot abans d'autoritzar una compactació nova.
+    /* Onada R32 · D-R30-1 · Correcció de l'àrbitre: tampoc s'hi accepta cap certificat de retirada. Ni un
+       paquet ni la carpeta (sincronitzaCarpeta passa per ací) poden provar l'ACK remot ni els 90 dies. Un
+       certificat inventat purgava per sempre, i sense cap avís, el payload d'una nota viva. Els certificats
+       propis del dispositiu no es perden: viuen a l'estat local i la fusió els conserva. */
+    if (incoming.sincronitzacio) incoming.sincronitzacio = { acks: [], retirades: [], fronteres: [] };
     for (let intent = 0; intent < 8; intent++) {
       const snap = await captura(), data = fusionaCrdtRural(snap.crdt, incoming), cols = colsAmbCrdt(snap.cols, data);
       if (canonitzaJsonJcs(data) === canonitzaJsonJcs(snap.crdt)) return estat();
@@ -338,6 +357,7 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
         catch (e) { errorAck = typeof e?.code === 'string' ? e.code : typeof e?.name === 'string' ? e.name : 'RURAL_CRDT_VAULT_ACK'; }
         const c = plan.compactacio;
         return { ...actual, sincronitzacio: { batchesCreats: plan.batchesCreats, projeccions: plan.projeccions.length, incorporacionsSenseBase: plan.incorporacionsSenseBase,
+          reconciliacionsCarpeta: plan.reconciliacionsCarpeta.length,
           compactacio: { instantania: c.instantania, batchesRetirats: c.batchesRetirats.length, projeccionsRetirades: c.projeccionsRetirades.length, error: c.error, errorAck } } };
       }
       throw errorRural('RURAL_CONFLICTE', 'La cua canvia contínuament; torna a sincronitzar la carpeta.');
@@ -355,6 +375,27 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
       privateKeyJwk: parell.privateKeyJwk, verificationMethod: parell.idClau });
     await comprovaGeneracio(); return { delta, publicKeyJwk: parell.publicKeyJwk };
   }
+  async function sincronitzaRemot(transport = transportCrdtRemot) {
+    exigeixCrdt();
+    if (!transport || transport.tipus !== 'remot' || typeof transport.envia !== 'function' || typeof transport.autoritat !== 'string') {
+      throw errorRural('RURAL_CRDT_REMOTE_REQUIRED', 'Cal un transport remot explícit; la carpeta local no confirma cap ACK remot.');
+    }
+    const autoritat = transport.autoritat, envia = transport.envia.bind(transport);
+    const inicial = await captura(), peticio = preparaSincronitzacioCrdtRural(inicial.crdt, crypto.randomUUID());
+    const rebut = await envia(copiaJsonRural(peticio, MAX_FITXER), { signal: controller.signal });
+    vigent();
+    for (let intent = 0; intent < 8; intent++) {
+      const snap = await captura(), data = registraAckCrdtRural(snap.crdt, peticio, rebut, autoritat), cols = colsAmbCrdt(snap.cols, data);
+      const canviat = await store.actualitzaLot([DISPOSITIU, COLLECCIONS, CLAU_CRDT, snap.qkey], states => {
+        if ((states[snap.qkey]?.revision ?? 0) !== (snap.raw[snap.qkey]?.revision ?? 0)
+          || (states[CLAU_CRDT]?.revision ?? 0) !== (snap.raw[CLAU_CRDT]?.revision ?? 0)
+          || (states[COLLECCIONS]?.revision ?? 0) !== (snap.raw[COLLECCIONS]?.revision ?? 0)) return { next: {}, value: false };
+        return { next: { [CLAU_CRDT]: estatCrdtAmb(states[CLAU_CRDT], data), [COLLECCIONS]: persistencia.estatAmbColleccions(states[COLLECCIONS], cols) }, value: true };
+      }, config);
+      if (canviat) { notificaCanvi(); return estat(); }
+    }
+    throw errorRural('RURAL_CONFLICTE', 'La captura ha canviat; torna a confirmar la sincronització remota.');
+  }
   async function importaDelta(entrada, publicKeyJwk) {
     if (!publicKeyJwk || Object.hasOwn(publicKeyJwk, 'd')) throw new Error('Cal aportar només la clau pública de confiança de l’emissor.');
     const delta = typeof entrada === 'string' ? lligJsonRural(entrada) : copiaJsonRural(entrada, MAX_FITXER);
@@ -366,7 +407,9 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
   }
   async function consolidaDiari() {
     const snap = await captura();
-    const cols = { ...snap.cols, notes: snap.cols.notes.map(n => ({ ...n, _ruralQueueNode: snap.pending.nodeId, _ruralQueueSeq: snap.pending.nextSeq - 1 })) };
+    const data = usaCrdt ? compactaCrdtRural(snap.crdt) : null;
+    const baseCols = usaCrdt ? colsAmbCrdt(snap.cols, data) : snap.cols;
+    const cols = { ...baseCols, notes: baseCols.notes.map(n => ({ ...n, _ruralQueueNode: snap.pending.nodeId, _ruralQueueSeq: snap.pending.nextSeq - 1 })) };
     const nouId = crypto.randomUUID();
     const confirmat = await store.actualitzaLot([DISPOSITIU, COLLECCIONS, snap.qkey, ...(usaCrdt ? [CLAU_CRDT] : [])], states => {
       if ((states[snap.qkey]?.revision || 0) !== (snap.raw[snap.qkey]?.revision || 0)
@@ -374,7 +417,7 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
         || usaCrdt && (states[CLAU_CRDT]?.revision ?? 0) !== (snap.raw[CLAU_CRDT]?.revision ?? 0)) throw errorRural('RURAL_CONFLICTE', 'Les notes han canviat; torna a consolidar el diari.');
       const d = { revision: states[DISPOSITIU].revision + 1, id: nouId, checkpoint: { nodeId: snap.pending.nodeId, seq: snap.pending.nextSeq - 1,
         tailHash: snap.cadena.tailHash, tipus: 'copia-local', creatEl: new Date(ara()).toISOString() } };
-      return { next: { [DISPOSITIU]: d, [COLLECCIONS]: persistencia.estatAmbColleccions(states[COLLECCIONS], cols), [snap.qkey]: null, ...(usaCrdt ? { [CLAU_CRDT]: estatCrdtAmb(states[CLAU_CRDT], snap.crdt) } : {}) }, value: d };
+      return { next: { [DISPOSITIU]: d, [COLLECCIONS]: persistencia.estatAmbColleccions(states[COLLECCIONS], cols), [snap.qkey]: null, ...(usaCrdt ? { [CLAU_CRDT]: estatCrdtAmb(states[CLAU_CRDT], data) } : {}) }, value: d };
     }, config);
     vigent(); obriMotors(confirmat); notificaGeneracio();
     return estat();
@@ -387,5 +430,5 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
     notificaGeneracio(); close(); return true;
   }
   function close() { if (!obert) return; obert = false; controller.abort(); claus = null; canal?.close(); canal = null; tancaMotors(); }
-  return Object.freeze({ estat, desaNota, preparaEdicio, editaNota, eliminaNota, exportaVault, importaVault, sincronitzaCarpeta, exportaDelta, importaDelta, consolidaDiari, esborraTot, close });
+  return Object.freeze({ estat, desaNota, preparaEdicio, editaNota, eliminaNota, exportaVault, importaVault, sincronitzaCarpeta, sincronitzaRemot, exportaDelta, importaDelta, consolidaDiari, esborraTot, close });
 }

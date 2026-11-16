@@ -799,7 +799,8 @@ test('Gauntlet 261016 · Onada 1.5: /gent/javi-llinares és la persona pilot en 
   const convidat = render(<PerfilPublicSection agents={[]} />);
   await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
   expect(convidat.container.querySelector('section.bar-orange .sp-card-avatar').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
-  expect(etiquetesDelTitol(convidat.container)).toEqual([AGENTS_MAP.JAVI.town_name]);
+  /* R30.2 · El poble ja és l'H2: cap etiqueta repetida a la capçalera. */
+  expect(etiquetesDelTitol(convidat.container)).toEqual([]);
   expect(dretsDelTitol(convidat.container)).toBeNull();
   /* Gauntlet 261022_0225 (Tasca 2) · La fitxa autèntica també en llavor: H2 el
      poble, l'entradilla oficial i cap presentació (ni la vella). */
@@ -813,7 +814,7 @@ test('Gauntlet 261016 · Onada 1.5: /gent/javi-llinares és la persona pilot en 
   await screen.findByRole('heading', { level: 1, name: 'Javi Pilot' });
   /* Expectativa actualitzada a propòsit: P1-68 (2610282100). La fitxa pròpia
      i publicada porta el seu @usuari (localPerfils: el de la persona pilot). */
-  expect(etiquetesDelTitol(ambSessio.container)).toEqual(['La Torre de les Maçanes', `@${PERSONA_PILOT.slug}`, 'La teua fitxa']);
+  expect(etiquetesDelTitol(ambSessio.container)).toEqual([`@${PERSONA_PILOT.slug}`, 'La teua fitxa']);
   expect(dretsDelTitol(ambSessio.container)).toBeNull();
   cleanup();
   mocks.config = { dataMode: 'remote' };
@@ -821,7 +822,7 @@ test('Gauntlet 261016 · Onada 1.5: /gent/javi-llinares és la persona pilot en 
   const remot = render(<PerfilPublicSection agents={[]} />);
   await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
   expect(remot.container.querySelector('section.bar-orange .sp-card-avatar').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
-  expect(etiquetesDelTitol(remot.container)).toEqual([AGENTS_MAP.JAVI.town_name]);
+  expect(etiquetesDelTitol(remot.container)).toEqual([]);
   expect(dretsDelTitol(remot.container)).toBeNull();
   expect(screen.queryByRole('button', { name: 'Edita la fitxa' })).toBeNull();
 });

@@ -8,9 +8,11 @@
        «automatically created from the apps that exist in the Firebase project»),
        fora del repositori. Amb NONE, «these paths will result in a 404 unless
        caught with a Rewrite»: el fitxer, si n'hi ha, és el que emet el build;
-     · cap fitxer d'associació estàtic a public/ (ni carpeta public/.well-known):
+     · cap fitxer d'associació estàtic a public/ ni a public/.well-known/:
        l'únic que el pot publicar és el generador del build
-       (tooling/vite/associacio-apps.mjs), i només amb empremtes reals;
+       (tooling/vite/associacio-apps.mjs), i només amb empremtes reals.
+       R31 només admet .well-known/ard.json, descoberta de recursos públics,
+       sense associar el domini a cap app; cap altre fitxer estàtic hi entra;
      · l'App no reclama cap enllaç web: cap intent-filter amb android:autoVerify
        ni cap esquema http(s) a AndroidManifest.xml, i cap domini associat a
        App.entitlements. Per a obrir enllaços de socdepoble.org dins de l'App
@@ -54,10 +56,18 @@ test('firebase.json: appAssociation NONE, i cap capçalera ni reescriptura per a
   }
 });
 
-test('cap fitxer d’associació estàtic: ni public/.well-known ni apple-app-site-association a public/', () => {
-  expect(fs.existsSync(path.join(ARREL, 'public', '.well-known'))).toBe(false);
-  expect(fs.existsSync(path.join(ARREL, 'public', 'apple-app-site-association'))).toBe(false);
-  expect(fs.existsSync(path.join(ARREL, 'public', 'assetlinks.json'))).toBe(false);
+test('cap fitxer d’associació estàtic als dos llocs; .well-known només conté el fitxer de descoberta ard.json', () => {
+  const directori = path.join(ARREL, 'public', '.well-known');
+  expect(fs.lstatSync(directori).isDirectory()).toBe(true);
+  expect(fs.readdirSync(directori).sort()).toEqual(['ard.json']);
+  expect(fs.lstatSync(path.join(directori, 'ard.json')).isFile()).toBe(true);
+  for (const prefix of ['public', 'public/.well-known']) {
+    const noms = fs.readdirSync(path.join(ARREL, prefix));
+    for (const nom of ['apple-app-site-association', 'assetlinks.json']) {
+      expect(noms, prefix).not.toContain(nom);
+      expect(fs.existsSync(path.join(ARREL, prefix, nom)), `${prefix}/${nom}`).toBe(false);
+    }
+  }
 });
 
 test('AndroidManifest.xml: cap App Link declarat (ni autoVerify ni esquema http/https)', () => {

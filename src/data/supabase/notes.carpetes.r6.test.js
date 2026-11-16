@@ -12,7 +12,7 @@ vi.mock('./runtime.js', () => ({
   buildSeedAppData: vi.fn(),
   ErrorSupabase: class extends Error { constructor(message, status) { super(message); this.status = status; } }
 }));
-import { creaCarpetaNotes, loadNotes } from './notes.js';
+import { creaCarpetaNotes, loadNotes, loadNotesPage } from './notes.js';
 import { NOTE_FOLDERS_SEED } from '../appSeed.js';
 
 const config = { tenantId: '33333333-3333-4333-8333-333333333333' };
@@ -61,4 +61,48 @@ test('un nom buit o amb control es rebutja abans de la xarxa', async () => {
   await expect(creaCarpetaNotes({ nom: '   ' }, config)).rejects.toThrow(TypeError);
   await expect(creaCarpetaNotes({ nom: 'Fes\u0007tes' }, config)).rejects.toThrow(TypeError);
   expect(mocks.request).not.toHaveBeenCalled();
+});
+
+const paginaCarpetes = (pagina, quantitat = 500) => Array.from({ length: quantitat }, (_, posicio) => ({
+  id: `f-${(pagina * 500 + posicio + 1).toString(16).padStart(8, '0')}-0b0a-4908-8706-050403020100`, nom: `Carpeta ${pagina * 500 + posicio + 1}`
+}));
+
+test('R31 · un servidor que sempre avança té pressupost finit i mai retorna una llista truncada', async () => {
+  let pagines = 0;
+  mocks.request.mockImplementation(async ruta => String(ruta).startsWith('/rest/v1/note_folders')
+    ? pagines < 33 ? paginaCarpetes(pagines++) : [] : []);
+  const resultat = await loadNotes(mocks.user.id, config).then(() => null, error => error.message);
+  expect(resultat).toContain('límit de pàgines de carpetes');
+  expect(pagines).toBe(32);
+});
+
+test('R31 · una lectura legítima de més de 500 carpetes conserva totes les files', async () => {
+  let pagines = 0;
+  mocks.request.mockImplementation(async ruta => String(ruta).startsWith('/rest/v1/note_folders')
+    ? paginaCarpetes(pagines++, pagines === 1 ? 500 : 2) : []);
+  const { noteFolders } = await loadNotes(mocks.user.id, config);
+  expect(noteFolders).toHaveLength(NOTE_FOLDERS_SEED.length + 502);
+  expect(pagines).toBe(2);
+});
+
+test('R31 · cancel·lació en rebre una pàgina de carpetes no deixa començar-ne una altra', async () => {
+  const control = new AbortController();
+  let pagines = 0;
+  mocks.request.mockImplementation(async ruta => {
+    if (!String(ruta).startsWith('/rest/v1/note_folders')) return [];
+    pagines += 1;
+    if (pagines === 1) { control.abort(); return paginaCarpetes(0); }
+    return [];
+  });
+  const resultat = await loadNotes(mocks.user.id, { ...config, signal: control.signal }).then(() => null, error => error.name);
+  expect(resultat).toBe('AbortError');
+  expect(pagines).toBe(1);
+});
+
+test('R31 · el senyal públic de loadNotesPage talla també la segona fase de carpetes', async () => {
+  const control = new AbortController();
+  mocks.request.mockImplementation(async () => { control.abort(); return []; });
+  const resultat = await loadNotesPage({ ownerUserId: mocks.user.id, signal: control.signal }, config).then(() => null, error => error.name);
+  expect(resultat).toBe('AbortError');
+  expect(mocks.request).toHaveBeenCalledOnce();
 });

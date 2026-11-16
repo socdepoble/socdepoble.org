@@ -65,6 +65,7 @@ export const passos = [
   { nom: 'Porta Sanejador Auth', cmd: 'node', args: ['tooling/gates/saneja-callback.mjs'], script: 'porta:sanejador' },
   { nom: 'Tractor Cognitiu', cmd: 'node', args: ['tooling/wiki/tractor-cognitiu.mjs', '--arrel=.'], script: 'porta:cognitiu' },
   { nom: 'Porta Cens', cmd: 'node', args: ['tooling/gates/tractor-cens.mjs'], script: 'porta:cens' },
+  { nom: 'Coherència editorial viva', cmd: 'node', args: ['tooling/gates/tractor-coherencia-editorial-viva.mjs'], script: 'porta:coherencia-editorial', readOnly: true },
   { nom: 'Porta Consell', cmd: 'node', args: ['tooling/gates/tractor-consell.mjs'], script: 'porta:consell' },
   { nom: 'Porta Registre', cmd: 'node', args: ['tooling/gates/tractor-registre.mjs'], script: 'porta:registre' },
 

@@ -43,8 +43,10 @@ test('les identitats del paquet sense remot: les quatre adreces netes amb la dad
 });
 
 test('amb la fila remota de l’id declarat, l’adreça neta porta la dada del servidor (com a l’app); la llavor, només de reserva', () => {
-  const r = pla([fitxa(PILOT, 'socdepoble', 'Sóc de Poble del servidor'), fitxa(RENTONAR, 'rentonar', 'El Rentonar')]);
+  const imatge = 'https://socdepoble.org/assets/portada-remota.webp';
+  const r = pla([{...fitxa(PILOT, 'socdepoble', 'Sóc de Poble del servidor'), image: imatge, imageAlt: 'Portada remota acreditada'}, fitxa(RENTONAR, 'rentonar', 'El Rentonar')]);
   assert.deepEqual([canonica(r, '/socdepoble').title, canonica(r, '/socdepoble').origen], ['Sóc de Poble del servidor', 'veinal']);
+  assert.deepEqual([canonica(r, '/socdepoble').description, canonica(r, '/socdepoble').image, canonica(r, '/socdepoble').imageAlt], ['Lema de Sóc de Poble del servidor', imatge, 'Portada remota acreditada']);
   assert.deepEqual([canonica(r, '/rentonar').title, canonica(r, '/rentonar').origen], ['El Rentonar', 'veinal']);
   assert.equal(destiDe(r, `/empresa/${PILOT}`), '/socdepoble');
   assert.equal(destiDe(r, '/empresa/soc-de-poble_official'), '/socdepoble');

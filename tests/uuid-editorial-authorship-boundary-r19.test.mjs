@@ -3,9 +3,35 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {creaFixturePosse} from './node0-posse-fixture.mjs';
+import {creaPlaMigracions} from '../tooling/node0/hidrata-postgres-node0.mjs';
+import {capcalera,comparaVersions,dependenciesDeclarades} from '../scripts/supabase/verifica-migracions.mjs';
 const enabled=Boolean(process.env.SDP_PGLITE_MODULE);
+const migrations=creaPlaMigracions().migrations;
+const sha=text=>createHash('sha256').update(text).digest('hex');
+const byVersion=(a,b)=>a.version<b.version?-1:a.version>b.version?1:0;
+const identity=rows=>[...rows].sort(byVersion).map(({version,file,sha256})=>({version,file,sha256}));
+
+/** El catàleg que ha executat la fixture: identitat completa i ordre del
+ * pla, amb el prefix R29 fixat. Una onada posterior amplia el sufix; no
+ * convertix el recompte113 històric en el recompte perpetu del producte. */
+function comprovaCataleg(rows,sources=migrations){
+  assert.deepEqual(identity(rows),identity(sources),'el registre aplicat ha de conservar cada versió, fitxer i hash del pla complet');
+  const historic=sources.filter(m=>comparaVersions(m.version,'20261115170000')<=0);
+  assert.equal(historic.length,113,'cap font històrica R29 es perd ni es duplica');
+  assert.equal(historic.at(-1)?.version,'20261115170000','R29 continua al final del prefix històric');
+  assert.deepEqual(sources.slice(0,historic.length),historic,'cap migració posterior precedix el prefix R29');
+  const ledger=identity(historic).map(m=>`${m.version}\t${m.file}\t${m.sha256}`).join('\n');
+  assert.equal(sha(ledger),'e28b0846ee2c1f345d80fb3b0441b7a9e3fee9711ca6dee5e40841d96f49a7c5','identitat exacta del catàleg històric R29');
+  const positions=new Map(sources.map((m,i)=>[m.version,i]));
+  for(const source of sources){
+    for(const dependency of dependenciesDeclarades(capcalera(source.sql),source.version)){
+      assert.ok(positions.has(dependency.versio),`dependència present: ${dependency.versio}`);
+      assert.ok(positions.get(dependency.versio)<positions.get(source.version),`dependència anterior: ${dependency.versio} -> ${source.version}`);
+    }
+  }
+}
 
 test('R19 UUID editorial boundary: real owner RLS, entity signature CHECK and existing editorial CAS',{skip:!enabled&&'Explicit local PGlite module required; no SQL claim without execution'},async t=>{
   const f=await creaFixturePosse();let source;
@@ -66,11 +92,20 @@ test('R19 UUID editorial boundary: real owner RLS, entity signature CHECK and ex
       assert.equal(columns.includes('revision'),false);
       const wrapper=fs.readFileSync(new URL('../src/data/revisionsEditorials.js',import.meta.url),'utf8');
       assert.match(wrapper,/_editorialClau/);assert.match(wrapper,/FILA_DE_SECCIO\[seccio\]/);
-      // El recompte segueix el catàleg complet: R15 (688f4c2a5, 7bdd232b4: 85/86), R21-R26
-      // (cd0b3a4ef, a7235a1c9, d44363319, 2c04c1e9c, a599251d3, 259f800d1, 3d16007e2: 111) i R28 STEP R2
-      // (20261115030000: 112), Onada R29 (20261115170000: 113) i Onada R30 (20261115230000, encara sense
-      // commit: 114). Les subproves d'esta frontera s'executen amb tot este catàleg aplicat.
-      assert.equal((await f.pg.query("SELECT count(*)::integer AS n FROM node0.schema_migrations")).rows[0].n,114,'R11 adds per-seed revisions (and R13-C7 the session counts, R15-R30 the full114 catalogue) without granting access to UUID submissions');
+      const rows=(await f.pg.query('SELECT version,file,sha256 FROM node0.schema_migrations ORDER BY version COLLATE "C"')).rows;
+      comprovaCataleg(rows);
+      assert.throws(()=>comprovaCataleg(rows.slice(1)),/registre aplicat/,'una migració absent no passa per tindre un recompte pròxim');
+      assert.throws(()=>comprovaCataleg(rows.map((row,i)=>i?row:{...row,sha256:'0'.repeat(64)})),/registre aplicat/,'els bytes executats són part del contracte');
+      assert.throws(()=>comprovaCataleg([...rows,{version:'99999999999999',file:'desconeguda.sql',sha256:'0'.repeat(64)}]),/registre aplicat/,'cap versió desconeguda');
+      const r29=migrations.find(m=>m.version==='20261115170000');
+      assert.throws(()=>comprovaCataleg(rows,[r29,...migrations.filter(m=>m!==r29)]),/final del prefix/,'un pla reordenat amb els mateixos hashes no passa');
+      // Onada R32 · El recompte fix (113 a R29, 114 a R30 amb 20261115230000) deixa pas a la identitat
+      // del pla complet. Llei 0: la R30 aplicada a Producció hi és, i les dues migracions de Codex R30
+      // rebutjades (CAS de publicacions i PF-01) no; tampoc la seua RPC CAS de section_submissions.
+      const aplicades=new Set(rows.map(row=>row.version));
+      assert.ok(aplicades.has('20261115230000'),'la R30 de revisions editorials forma part del catàleg executat');
+      for(const rebutjada of ['20261115231000','20261115233000'])assert.equal(aplicades.has(rebutjada),false,`la migració rebutjada ${rebutjada} no entra al catàleg`);
+      assert.equal((await f.pg.query("SELECT to_regprocedure('public.actualitza_publicacio_amb_versio(uuid,uuid,text,jsonb,timestamptz)') AS rpc")).rows[0].rpc,null,'cap RPC CAS de publicacions a l’esquema viu');
     });
   }finally{await f.close();}
 });

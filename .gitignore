@@ -21,6 +21,12 @@ _build/
 !.env.example
 _wiki_de_poble/.obsidian/workspace*.json
 _wiki_de_poble/.obsidian/cache/
+# Onada R32 · D-R30-16 (aprovada pel Mestre el 16-11-2026 a les 14:32) · Preferències visuals de qui obri
+# Obsidian: són de la màquina, no del repositori. Ignorar no desversiona: ixen de l'índex amb
+# `git rm --cached` i es queden al disc. graph.json continua versionat: és el contracte del graf de la
+# Porta Reflex (tooling/wiki/reflex_petorreta.mjs i wiki-baseline.lock.json).
+/_wiki_de_poble/.obsidian/app.json
+/_wiki_de_poble/.obsidian/appearance.json
 .iaia_auth/
 .wwebjs_auth/
 *.stale-*
@@ -33,7 +39,7 @@ var/
 .agents/skills_index.json
 .agents/runtime/segell.log
 
-# Evidència documental durable; només locks i punters locals queden fora.
+# Locks i punters locals del runtime: mai a Git (els registres de torn tampoc; vegeu R32 · D-R30-15 més avall).
 .agents/runtime/*.lock
 .agents/runtime/turns/*.lock
 .agents/runtime/turns/*.tmp
@@ -117,11 +123,11 @@ edge.secrets.env
 /.agents/runtime/antigravity-hook.log
 
 # R10: version only direct lifecycle receipts; all other runtime is local.
+# Onada R32 · D-R30-15 (aprovada pel Mestre el 16-11-2026 a les 14:32) · Els registres de torn
+# (.agents/runtime/turns/) també són estat local de la màquina: ixen de l'índex amb `git rm --cached`
+# i es queden intactes al disc. Les instantànies de contracte que citen els rebuts continuen versionades.
 /.agents/runtime/*
-!/.agents/runtime/turns/
 !/.agents/runtime/contracts/
-/.agents/runtime/turns/*
-!/.agents/runtime/turns/*.json
 /.agents/runtime/contracts/*
 !/.agents/runtime/contracts/*.json
 

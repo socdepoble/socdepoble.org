@@ -436,12 +436,6 @@ const EXCEPCIONS_ORFE = {
   'src/components/patrimoni/anatomiaRuralGeometria.js': 'geometria del visor general d’Anatomia Rural: només la importa VisorAnatomiaRural3D.jsx, despenjat · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
   'src/data/patrimoni/anatomiaRural.js': 'dades del visor general d’Anatomia Rural: només les importa VisorAnatomiaRural3D.jsx, despenjat (i les proves del Pou i de l’article del Mur) · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
   'src/data/revisionsEditorialsWpMemoria.js': 'adaptador en memòria del kit de conformitat per a les revisions editorials de WordPress (P0-111, R18)',
-  /* Onada R26 (14-11-2026, arbitratge de Claude sobre el Kit R25.2 de Gemini i l'auditoria de Codex
-     R25.2) · Biblioteques del Xat que entren sense consumidor de producció: l'auditoria de Codex
-     (261114_1737, R25.2-X02) mana corregir el candidat abans del cablejat, i el pegat opcional de
-     XatContext no s'aplica en este commit. Cada excepció es retira quan el mòdul es cablege o s'esborre. */
-  'src/data/xat/serveiXat.js': 'servei del Xat amb reintent JWT i llinatge de sessió (Kit R25/R25.2 de Gemini, R25.2-X01/X02): sense consumidor fins al cablejat de XatContext; el cobrix src/data/xat/__tests__/serveiXat.jwtRetry.test.js · Onada R26, pendent del Mestre',
-  'src/data/xat/estatSincronitzacioRural.js': 'estat de sincronització rural del Xat (Kit R25/R25.2 de Gemini, R25.2-X03/X04): sense consumidor fins al cablejat de XatContext; el cobrix src/data/xat/estatSincronitzacioRural.test.js · Onada R26, pendent del Mestre',
 };
 /* Decisió del Mestre (30-10-2026) · Una fixture (dins de __fixtures__/) que una
    prova importa és part de la prova, amb el criteri de la línia de les proves.

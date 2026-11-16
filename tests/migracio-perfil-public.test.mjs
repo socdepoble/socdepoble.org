@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse } from '@babel/parser';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SQL = fs.readFileSync(path.join(ARREL, 'supabase/migrations/2610021520_perfil_public.sql'), 'utf8');
@@ -178,11 +179,53 @@ function columnesDeLaVigent() {
   return taula[1].split(',').map((c) => c.trim().split(/\s+/)[0].toLowerCase());
 }
 
+/* perfilDePersona també traduïx la fila pròpia de profiles. L'àlies de
+   lectura cover_url de R30.2 només és opcional en el fallback nullish de
+   hero_url; no amplia el contracte de perfil_public. Es recorre la funció
+   sencera, sense una finestra de bytes que puga ocultar lectures noves. */
+function columnesObligatoriesDelClient(codi) {
+  const ast = parse(codi, { sourceType: 'module' });
+  const perfil = ast.program.body.map((node) => node.type === 'ExportNamedDeclaration' ? node.declaration : node)
+    .find((node) => node?.type === 'FunctionDeclaration' && node.id?.name === 'perfilDePersona');
+  assert.ok(perfil, 'falta perfilDePersona al client');
+  const llegides = new Set();
+  const esColumna = (node, nom) => node?.type === 'MemberExpression' && !node.computed
+    && node.object?.type === 'Identifier' && node.object.name === 'fila'
+    && node.property?.type === 'Identifier' && node.property.name === nom;
+  const visita = (node, pare = null) => {
+    if (!node || typeof node !== 'object') return;
+    if (['MemberExpression', 'OptionalMemberExpression'].includes(node.type)
+      && node.object?.type === 'Identifier' && node.object.name === 'fila') {
+      const columna = node.computed ? node.property?.type === 'StringLiteral' && node.property.value : node.property?.name;
+      assert.equal(typeof columna, 'string', 'una lectura dinàmica de fila no acredita el contracte de la RPC');
+      const aliasOpcional = esColumna(node, 'cover_url') && pare?.type === 'LogicalExpression'
+        && pare.operator === '??' && pare.right === node && esColumna(pare.left, 'hero_url');
+      if (!aliasOpcional) llegides.add(columna);
+    }
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) for (const child of value) visita(child, node);
+      else if (value && typeof value === 'object') visita(value, node);
+    }
+  };
+  visita(perfil.body);
+  return llegides;
+}
+
+test('el detector llig tota la funció i només eximix l’àlies nullish explícit de hero_url', () => {
+  const consumidor = (cos) => `export function perfilDePersona(fila) { ${cos} }`;
+  assert.deepEqual([...columnesObligatoriesDelClient(consumidor('return fila.hero_url ?? fila.cover_url;'))], ['hero_url']);
+  for (const expressio of ['fila.cover_url', 'fila.hero_url || fila.cover_url', 'fila.cover_url ?? fila.hero_url', 'fila.hero_url ?? fila.email', 'fila["email"]']) {
+    const llegides = columnesObligatoriesDelClient(consumidor(`return ${expressio};`));
+    assert.ok([...llegides].some((nom) => !columnesDeLaVigent().includes(nom)), expressio);
+  }
+  assert.ok(columnesObligatoriesDelClient(consumidor(`${'void 1;'.repeat(200)} return fila.email;`)).has('email'), 'una lectura després de 1200 bytes també es contrasta');
+  assert.throws(() => columnesObligatoriesDelClient(consumidor('return fila[clau];')), /lectura dinàmica/);
+});
+
 test('el client la crida amb p_id i llig columnes que la RPC vigent torna', () => {
   /* R21 · Des de Codex R19 R2 la crida viu a personaRemota(id, config), amb el paràmetre anomenat `id`. */
   assert.match(CLIENT, /rpc\('perfil_public', \{ p_id: (?:clau|id) \}/);
-  const llegides = new Set([...CLIENT.slice(CLIENT.indexOf('export function perfilDePersona'))
-    .slice(0, 1200).matchAll(/fila\.(\w+)/g)].map((m) => m[1]));
+  const llegides = columnesObligatoriesDelClient(CLIENT);
   const tornades = new Set(columnesDeLaVigent());
   assert.deepEqual(columnesDeLaVigent().slice(0, columnesDeRetorn().length), columnesDeRetorn(), 'la vigent conserva les columnes de 2610021520 en ordre');
   const fora = [...llegides].filter((c) => !tornades.has(c));

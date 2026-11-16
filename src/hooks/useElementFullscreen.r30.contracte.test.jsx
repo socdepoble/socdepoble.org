@@ -32,6 +32,10 @@ test('descarta visibilitat hidden/collapse, display none en ancestres i subarbre
   screen.getByTestId('ocult').style.visibility = 'hidden';
   screen.getByTestId('collapsat').style.visibility = 'collapse';
   screen.getByTestId('sense-caixa').style.display = 'none';
+  /* Onada R32 · Precondicions del DOM (delta R31): sense elles la prova passaria en buit. */
+  expect(getComputedStyle(screen.getByTestId('ocult')).visibility).toBe('hidden');
+  expect(getComputedStyle(screen.getByTestId('collapsat')).visibility).toBe('collapse');
+  expect(getComputedStyle(screen.getByTestId('sense-caixa')).display).toBe('none');
   fireEvent.click(screen.getByText('Obri'));
   expect(document.activeElement).toBe(screen.getByText('Vigent'));
   tab(document.activeElement, true); expect(document.activeElement).toBe(screen.getByText('Vigent'));

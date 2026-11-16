@@ -69,3 +69,28 @@ test('la Petorreta i el manifest passarien el seal del Reflex', { skip }, async 
   assert.deepEqual(sensibles(text), []);
   assert.deepEqual(sensibles(fs.readFileSync(path.join(ARREL, PLA_DOC), 'utf8')), []);
 });
+
+/* R32 · D-R30-15 · La lease del commit es lliga al SHA-256 del diff preparat. Calculat en flux (gitDiffSha256)
+   és el mateix valor que sha256(execFile utf8), i un diff de més de 16 MiB (git rm --cached de centenars de
+   registres de torn) ja no topa amb el maxBuffer. */
+test('R32 · gitDiffSha256 en flux: mateix hash que el diff en memòria i sense sostre de 16 MiB', async (t) => {
+  const { execFileSync } = await import('node:child_process');
+  const os = await import('node:os');
+  const { gitDiffSha256 } = await import(pathToFileURL(path.join(ARREL, 'tooling/wiki/reflex_petorreta.mjs')).href);
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-r32-diff-flux-')));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const g = (...a) => execFileSync('git', ['-C', dir, ...a], { encoding: 'utf8', maxBuffer: 256 << 20, env: { ...process.env, GIT_AUTHOR_NAME: 'r32', GIT_AUTHOR_EMAIL: 'r32@local.invalid', GIT_COMMITTER_NAME: 'r32', GIT_COMMITTER_EMAIL: 'r32@local.invalid' } });
+  g('init', '-q');
+  // Text multibyte partit entre trossos del flux, una seqüència UTF-8 invàlida i un fitxer binari.
+  const linia = 'Sóc de Poble · àèéíïòóúüç · 🌾 '.repeat(64) + '\n';
+  fs.writeFileSync(path.join(dir, 'gran.txt'), linia.repeat(Math.ceil((17 << 20) / Buffer.byteLength(linia))));
+  fs.writeFileSync(path.join(dir, 'invalid.txt'), Buffer.from([0x61, 0xc3, 0x28, 0x62, 0x0a]));
+  fs.writeFileSync(path.join(dir, 'binari.bin'), Buffer.from(Array.from({ length: 4096 }, (_, i) => (i * 37) % 256)));
+  g('add', '-A'); g('commit', '-q', '-m', 'base');
+  g('rm', '-q', '--cached', 'gran.txt', 'invalid.txt', 'binari.bin');
+  const args = ['diff', '--cached', '--binary', '--no-ext-diff', '--no-renames'];
+  const enMemoria = createHash('sha256').update(g(...args)).digest('hex');
+  assert.ok(Buffer.byteLength(g(...args)) > 16 * 1024 * 1024);
+  assert.equal(await gitDiffSha256(args, dir), enMemoria);
+  await assert.rejects(gitDiffSha256(['diff', '--opcio-que-no-existix'], dir), /Git ha fallat/);
+});

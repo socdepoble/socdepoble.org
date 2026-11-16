@@ -26,6 +26,9 @@ contracte.escriu:
   - _wiki_de_poble/03_actuar/plantilles
   - _wiki_de_poble/04_escriptori
   - _wiki_de_poble/10_actes
+motors:
+  - tooling/gates/porta-olivera.mjs
+  - tooling/wiki/document.mjs
 ---
 # Acte Reflex i Procés d'Auditories (Antigament "Petorretes")
 

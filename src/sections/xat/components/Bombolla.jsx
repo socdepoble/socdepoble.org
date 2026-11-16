@@ -78,6 +78,11 @@
  * (cursiva i --sdp-text-suau, zero CSS nou). No és cap error: ni role="alert"
  * ni codi tècnic, i el text no és seu, de manera que «Copia el text» no hi
  * apareix. L'autor, l'hora, «Respon» i la moderació continuen com sempre.
+ * Per integritat, una clau nova sense confirmar o un codi desconegut, el text
+ * neutre «No s’ha pogut obrir este missatge xifrat» (textXifratTancat).
+ * Onada R32 (invariant del kit Gemini R30.2) · Cap metadada que el pipeline no
+ * ha verificat obri res: ni adjunt, ni llista d'«El Comú», ni l'enllaç a
+ * registre.
  */
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Ban, CheckCircle2, Circle, Copy, Flag, MoreVertical, Reply } from 'lucide-react';
@@ -432,7 +437,7 @@ function Bombolla({
                i els números al seu lloc); la làpida és text de la interfície. */
             <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} interactiu={!triable} /></p>
           )}
-          {missatge.accioRegistre === true && !meu && !esborrat ? <EnllacARegistre t={t} interactiu={!triable} /> : null}
+          {missatge.accioRegistre === true && !meu && !esborrat && !tancat ? <EnllacARegistre t={t} interactiu={!triable} /> : null}
           <span className="sdp-xat-bombolla__meta">
             {hora ? <time dateTime={missatge.creatAl || undefined}>{hora}</time> : null}
             {meu && !esborrat ? <MarquesEstat estat={estat} rebutsConeguts={missatge.rebutsConeguts !== false} t={t} /> : null}

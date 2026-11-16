@@ -100,7 +100,7 @@ describe('el catàleg la nomena', () => {
     expect(posicio).toBeGreaterThan(readme.indexOf('- `migrations/20261113003000_r21_9b_canal_beta_testers_i_sync_aparadors.sql`'));
     expect(posicio).toBeLessThan(readme.indexOf('- `seed.sql`'));
     const entrada = readme.slice(posicio).split('\n\n').slice(0, 2).join('\n\n');
-    expect(entrada).toMatch(/\*\*NO aplicada: l'aplica el Mestre\.\*\*/);
+    expect(entrada).toMatch(/\*\*Aplicada a producció\*\* el 13-11-2026 al T2 \(pas 11a/);
     expect(entrada).toContain('tests/r22-1-hero-video-url-postgres.test.mjs');
     expect(readme).toContain(`| 101 | \`20261113060000\` | \`${NOM}\` |`);
   });

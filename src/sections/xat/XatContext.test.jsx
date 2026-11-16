@@ -23,6 +23,7 @@ vi.mock('../../data/backendPort.js', () => mock);
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const message = (text, id = 'm-A', extra = {}) => ({ id, filId: 'fil-A', usuariId: 'A', text, seq: 1, creatAl: '2026-09-24T10:00:00Z', ...extra });
+const payloadCanonic = (id, text, respostaA = null) => ({ id, client_msg_id: id, text, tipus: 'text', respostaA, metadades: {} });
 const fil = (extra = {}) => ({ id: 'fil-A', titol: 'A', altresNoms: [], ultimSeq: 2, llegitFinsSeq: 0, llegitPelsAltresFinsSeq: 0, noLlegits: 2, ultimAutorId: 'X', ultimAl: '2026-09-24T10:00:00Z', ...extra });
 let value, snapshots;
 function Probe() {
@@ -39,7 +40,7 @@ async function open(config = { backendId: 'supabase', tenantId: '00000000-0000-0
   return { ...view, config };
 }
 beforeEach(() => {
-  vi.clearAllMocks(); snapshots = []; mock.pathname = '/xat';
+  vi.resetAllMocks(); snapshots = []; mock.pathname = '/xat';
   mock.session = { currentUser: { id: 'A' }, generacio: 1 }; mock.actorKey = 'persona::A'; mock.identitats = undefined; mock.actor = undefined;
   mock.loadFils.mockResolvedValue([fil()]);
   mock.loadMissatges.mockResolvedValue([message('secret-A')]);
@@ -341,7 +342,7 @@ describe('enviament fiable (F0)', () => {
     expect(pendent.estatEnviament).toBe('pendent');
     expect(pendent.seq).toBeNull();
     expect(pendent.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-    expect(mock.enviaMissatge).toHaveBeenCalledWith('fil-A', { id: pendent.id, text: 'hola' }, expect.objectContaining({ tenantId: '00000000-0000-0000-0000-00000000000a' }));
+    await waitFor(() => expect(mock.enviaMissatge).toHaveBeenCalledWith('fil-A', payloadCanonic(pendent.id, 'hola'), expect.objectContaining({ tenantId: '00000000-0000-0000-0000-00000000000a' })));
     let resultat;
     await act(async () => { late.resolve(message('hola', pendent.id, { seq: 3 })); resultat = await promesa; });
     expect(resultat).toHaveLength(1);
@@ -512,26 +513,26 @@ describe('Decisió 1 · la conversa sobreviu a la renovació del JWT', () => {
     let resultat;
     await act(async () => { resultat = await value.reintenta(fallit.id); });
     expect(mock.enviaMissatge).toHaveBeenCalledTimes(2);
-    expect(mock.enviaMissatge.mock.calls[1][1]).toEqual({ id: fallit.id, text: 'Demà a les 8 al bancal' });
+    expect(mock.enviaMissatge.mock.calls[1][1]).toEqual(payloadCanonic(fallit.id, 'Demà a les 8 al bancal'));
     expect(mock.enviaMissatge.mock.calls[1][2].signal.aborted).toBe(false);
     expect(resultat[0]).toMatchObject({ id: fallit.id, seq: 7 });
     expect(value.getThreadMessages('fil-A').filter((m) => m.id === fallit.id))
       .toEqual([expect.objectContaining({ estatEnviament: 'enviat', seq: 7 })]);
   });
 
-  it('un enviament en vol quan es renova passa a error sense desaparéixer ni un render i es reintenta amb el mateix id', async () => {
+  it('un enviament en vol seguix el relleu sense desaparéixer ni reenviar-se, i una fallada real permet reintent amb el mateix id', async () => {
     const view = await open();
     const enVol = deferred(); mock.enviaMissatge.mockReturnValueOnce(enVol.promise);
     let promesa;
     act(() => { promesa = value.sendChatMessage({ id: 'fil-A' }, 'just ara'); });
     const id = value.getThreadMessages('fil-A').at(-1).id;
+    await waitFor(() => expect(mock.enviaMissatge).toHaveBeenCalledTimes(1));
     const senyal = mock.enviaMissatge.mock.calls[0][2].signal;
     snapshots = []; renova(view);
-    expect(senyal.aborted).toBe(true);
+    expect(senyal.aborted).toBe(false);
     expect(snapshots.length).toBeGreaterThan(0);
     expect(snapshots.every((s) => s.chatMessages.some((m) => m.id === id && m.text === 'just ara'))).toBe(true);
-    /* error: null → la bombolla diu el «No s'ha enviat» traduït de sempre. */
-    expect(value.getThreadMessages('fil-A').find((m) => m.id === id)).toMatchObject({ estatEnviament: 'error', text: 'just ara', error: null });
+    expect(value.getThreadMessages('fil-A').find((m) => m.id === id)).toMatchObject({ estatEnviament: 'pendent', text: 'just ara', error: null });
     await act(async () => { enVol.reject(avortat()); expect(await promesa).toEqual([]); });
     expect(value.getThreadMessages('fil-A').find((m) => m.id === id).estatEnviament).toBe('error');
     mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { seq: 3 }));
@@ -567,7 +568,7 @@ describe('Decisió 1 · la conversa sobreviu a la renovació del JWT', () => {
     mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { seq: 3 }));
     await act(async () => { await value.reintenta(id); });
     expect(mock.enviaMissatge).toHaveBeenCalledTimes(2);
-    expect(mock.enviaMissatge.mock.calls[1][1]).toEqual({ id, text: 'esperant' });
+    expect(mock.enviaMissatge.mock.calls[1][1]).toEqual(payloadCanonic(id, 'esperant'));
     expect(mock.enviaMissatge.mock.calls[1][2].signal.aborted).toBe(false);
     expect(value.getThreadMessages('fil-A').filter((m) => m.id === id))
       .toEqual([expect.objectContaining({ estatEnviament: 'enviat', seq: 3 })]);
@@ -577,6 +578,7 @@ describe('Decisió 1 · la conversa sobreviu a la renovació del JWT', () => {
     const view = await open();
     const enVol = deferred(); mock.enviaMissatge.mockReturnValueOnce(enVol.promise);
     act(() => { value.sendChatMessage({ id: 'fil-A' }, 'ja hi era'); });
+    await waitFor(() => expect(mock.enviaMissatge).toHaveBeenCalledTimes(1));
     const id = value.getThreadMessages('fil-A').at(-1).id;
     mock.loadMissatges.mockResolvedValue([message('ja hi era', id, { seq: 2 })]);
     renova(view);
@@ -781,7 +783,8 @@ describe('Decisió 1 · la conversa sobreviu a la renovació del JWT', () => {
     act(() => { promesa = guardat.sendChatMessage({ id: 'fil-A' }, 'enllaç'); });
     const bombolla = value.getThreadMessages('fil-A').at(-1);
     expect(bombolla).toMatchObject({ text: 'enllaç', estatEnviament: 'pendent' });
-    expect(mock.enviaMissatge.mock.calls[0][1]).toEqual({ id: bombolla.id, text: 'enllaç' });
+    await waitFor(() => expect(mock.enviaMissatge).toHaveBeenCalledTimes(1));
+    expect(mock.enviaMissatge.mock.calls[0][1]).toEqual(payloadCanonic(bombolla.id, 'enllaç'));
     expect(mock.enviaMissatge.mock.calls[0][2].signal.aborted).toBe(false);
     let enviats;
     await act(async () => { enVol.resolve(message('enllaç', bombolla.id, { seq: 3 })); enviats = await promesa; });
@@ -1251,7 +1254,7 @@ describe('xat de pàgina i comunitats (T63.2, T67)', () => {
     expect(value.getThreadMessages('g-1').find(m => m.id === fallit.id).estatEnviament).toBe('error');
     mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { filId: 'g-1', seq: 4 }));
     await act(async () => { await value.reintenta(fallit.id); });
-    expect(mock.enviaMissatge.mock.calls.at(-1)).toEqual(['g-1', { id: fallit.id, text: 'Hola' }, expect.objectContaining({ visitant: true })]);
+    expect(mock.enviaMissatge.mock.calls.at(-1)).toEqual(['g-1', payloadCanonic(fallit.id, 'Hola'), expect.objectContaining({ visitant: true })]);
     expect(value.getThreadMessages('g-1').filter(m => m.id === fallit.id)).toEqual([expect.objectContaining({ estatEnviament: 'enviat' })]);
   });
 

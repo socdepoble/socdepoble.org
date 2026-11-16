@@ -21,6 +21,11 @@ contracte.llig:
 contracte.escriu:
   - src/css/index.css
   - src/components/layout/AppGridShell.jsx
+motors:
+  - tooling/gates/01_porta_pedra_seca_58px.mjs
+  - tooling/gates/design_guard.mjs
+  - tooling/gates/tractor-cromatic.mjs
+  - tooling/gates/tractor-tokens.mjs
 ---
 # 🪨 Pedra Seca 2.0: El Reglament Matemàtic
 

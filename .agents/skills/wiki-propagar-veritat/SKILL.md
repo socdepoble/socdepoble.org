@@ -19,6 +19,8 @@ contracte.escriu:
   - AGENTS.md
   - _wiki_de_poble/02_saber
   - .agents/protocolledge.json
+motors:
+  - tooling/wiki/wiki-forja-lint.mjs
 ---
 # Propagar una decisió aprovada
 

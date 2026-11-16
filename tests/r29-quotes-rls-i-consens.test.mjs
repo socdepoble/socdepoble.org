@@ -251,12 +251,38 @@ if (!modulePath || !fs.existsSync(modulePath)) {
       assert.equal(sha(fs.readFileSync(path.join(ROOT, 'supabase/ordre_desplegament.json'))), sha(ordreBytes), 'L’ordre declarat ha canviat durant l’assaig.');
     });
 
-    test('el catàleg anterior s’aplica en l’ordre del verificador i R29 hi va darrere, també de les seues dependències', t => {
+    test('el catàleg anterior s’aplica en l’ordre del verificador i R29 hi va darrere, també de les seues dependències, amb el prefix històric intacte', t => {
       t.diagnostic(`catàleg: ${files.length} migracions (${versions.filter(v => v.length === 10).length} de 10 xifres i ${versions.filter(v => v.length === 14).length} de 14)`);
       assert.deepEqual(errorsCataleg, []);
       assert.ok(ABANS_R29.length > 0 && files.includes(R29));
-      /* Onada R30 · Darrere de R29 només hi ha migracions més noves (la 20261115230000). */
+      /* Onada R30 · Darrere de R29 només hi ha migracions més noves (20261115230000 i, des de R31, 20261116031000
+         i 20261116040000). */
       for (const f of DESPRES_R29) assert.ok(comparaVersions(versioDeFitxer(f), '20261115170000') > 0, f);
+      /* R31 (kit de Codex, fusionat a R32) · R29 tanca el seu catàleg històric, no el de totes les onades futures.
+         El registre de 113 fonts (versió TAB fitxer TAB sha256, ordre binari de versions, salt de línia entre files)
+         és el del pin 113 de POSSE, que R30 ja no accepta per a instal·lar: ací només acredita que cap font
+         històrica R29 canvia ni es perd. No es recalcula per a fer passar una migració històrica canviada. */
+      const binari = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+      const comprovaHistoric = (llista, fonts = captures) => {
+        const posicio = llista.indexOf(R29);
+        assert.ok(posicio >= 0, 'R29 ha de continuar al catàleg');
+        const historic = llista.filter(file => comparaVersions(versioDeFitxer(file), '20261115170000') <= 0);
+        assert.equal(historic.length, 113, 'cap font històrica R29 es perd ni es duplica');
+        assert.equal(historic.at(-1), R29, 'R29 continua darrere del seu prefix històric');
+        assert.deepEqual(llista.slice(0, historic.length), historic, 'cap migració posterior precedix el prefix R29');
+        const registre = [...historic].sort((a, b) => binari(versioDeFitxer(a), versioDeFitxer(b)))
+          .map(file => `${versioDeFitxer(file)}\t${file}\t${fonts.get(file).sha256}`).join('\n');
+        assert.equal(sha(registre), 'e28b0846ee2c1f345d80fb3b0441b7a9e3fee9711ca6dee5e40841d96f49a7c5', 'identitat exacta del catàleg històric R29');
+        assert.equal(fonts.get(R29).sha256, 'fb78512fa6a33e31a1e670d62248c78ab16458576973d93b0af6e82333e393f9', 'font històrica R29 intacta');
+        for (const v of DEPENDENCIES_R29) assert.ok(llista.findIndex(file => file.startsWith(v + '_')) < posicio, `dependència abans de R29: ${v}`);
+      };
+      comprovaHistoric(files);
+      assert.deepEqual([...ABANS_R29, R29], files.slice(0, 113), 'el catàleg on s’assaja R29 és exactament el seu prefix històric');
+      assert.throws(() => comprovaHistoric(files.filter(file => file !== R29)), /R29 ha de continuar/);
+      assert.throws(() => comprovaHistoric([R29, ...files.filter(file => file !== R29)]), /darrere del seu prefix/);
+      const fontsAlterades = new Map(captures);
+      fontsAlterades.set(R29, { ...captures.get(R29), sha256: '0'.repeat(64) });
+      assert.throws(() => comprovaHistoric(files, fontsAlterades), /identitat exacta/);
       for (const v of DEPENDENCIES_R29) {
         assert.ok(files.findIndex(f => f.startsWith(v + '_')) >= 0, `dependència present: ${v}`);
         assert.ok(dependencies.get('20261115170000').includes(v), `capçalera: depén de ${v}`);

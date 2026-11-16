@@ -299,7 +299,7 @@ test('R1 · Onada 10 · als dos espais, l’única xifra és la pastilla de la d
       const esperada = pastillaDelRegistre(plugin);
       expect([plugin.id, pastilla.matches('header.sp-card-header .sp-card-meta > button.btn-date-time')]).toEqual([plugin.id, true]);
       expect([plugin.id, [...pastilla.querySelectorAll('span')].map((s) => s.textContent)]).toEqual([plugin.id, esperada]);
-      expect([plugin.id, pastilla.textContent]).toEqual([plugin.id, esperada.join('')]);
+      expect([plugin.id, pastilla.textContent]).toEqual([plugin.id, esperada.join(' ')]);
       /* El seu nom accessible només diu eixa mateixa data (i on porta). */
       expect([plugin.id, pastilla.getAttribute('aria-label').startsWith(`${esperada.join(' ')} · `)]).toEqual([plugin.id, true]);
       expect([plugin.id, /\d/.test(pastilla.getAttribute('aria-label').slice(esperada.join(' ').length))]).toEqual([plugin.id, false]);

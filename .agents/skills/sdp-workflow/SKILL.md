@@ -22,6 +22,10 @@ contracte.llig:
   - tooling/brain/fronteres-skills.mjs
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
+motors:
+  - tooling/brain/fronteres-skills.mjs
+  - tooling/gates/certifica-enllacos.mjs
+  - tooling/gates/kit-carril.mjs
 ---
 # ⚙️ Workflow de Sóc de Poble (Alta Definició)
 

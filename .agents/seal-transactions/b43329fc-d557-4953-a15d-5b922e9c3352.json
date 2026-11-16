@@ -1,0 +1,17 @@
+{
+  "id": "b43329fc-d557-4953-a15d-5b922e9c3352",
+  "session": "116a391a-2bef-4013-9b37-697798ca3b15",
+  "operationId": "r32-d-r30-15-116a391a",
+  "claim": "116a391a-2bef-4013-9b37-697798ca3b15:governance-write",
+  "planHash": "03d6a772bc9f5a35b1836e19b3fc42c8b31b217e50da29dceaa9869a8797686a",
+  "beforeSeal": "1ff3f12a28a7408b369cf9c5055f688c6d85541ffbf9f271822ea00d6d2e496a",
+  "files": [
+    {
+      "path": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "before": "0aedb7fdfb01737a465eaea5e5ad05136d0022cb8050c415749ef7608b100e02",
+      "after": "6941498da0d788cb2c97aa7aaa8477268046c95520c9426c8687fc390464c73a"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "cd41977203fc4e5cbc72ea88903f4832cf4fd257c487d7eafa593522fcbd51ad"
+}

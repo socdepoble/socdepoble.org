@@ -25,6 +25,10 @@ afterEach(() => { expect(xarxa).not.toHaveBeenCalled(); vi.unstubAllGlobals(); }
 const vehicle = () => projeccioPayload({ title: 'CONTROL viatge', content: 'CONTROL', ambit: 'vehicle', estat: 'disponible', dades: { modalitat: 'busque_lloc', lloc_eixida: 'Origen', lloc_arribada: 'Destí', data_eixida: '2026-11-12' } });
 const publica = (payload = vehicle(), extra = {}) => api.appendSectionSubmissionNetworkOnly({ id: ID, sectionId: 'mur', payload, ...extra });
 
+test('R32 · expectedUpdatedAt (CAS de publicacions encara sense RPC al servidor) no es descarta en silenci: no-disponible', async () => {
+  await expect(publica(vehicle(), { expectedUpdatedAt: PRIMER })).rejects.toMatchObject({ code: 'no-disponible' });
+});
+
 test('R56 · republicar conserva created_at i l’ordre editorial sense publish_date', async () => {
   await publica();
   now = SEGON;

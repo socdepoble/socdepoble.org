@@ -51,6 +51,7 @@ export function DateTimeControl({ time, date, dateTime, label, onClick }) {
   const content = (
     <>
       {time && <span>{time}</span>}
+      {time && date ? ' ' : null}
       {date && <span>{date}</span>}
     </>
   );

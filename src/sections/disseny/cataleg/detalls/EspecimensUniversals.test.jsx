@@ -293,7 +293,7 @@ describe('EspecimenControlsBarra', () => {
     expect(edicio.querySelector('.lucide-cloud-upload')).not.toBeNull();
     expect(edicio.querySelector('.lucide-feather')).not.toBeNull();
     const pastilla = within(edicio).getByRole('button', { name: /^Data de publicació/ });
-    expect(pastilla.textContent).toBe('14:3703/10/26');
+    expect(pastilla.textContent).toBe('14:37 03/10/26');
     expect(arrel.querySelector('section[aria-label="Autoria i data (espècimen, lectura)"] .lucide-feather')).toBeNull();
   });
 
@@ -422,7 +422,7 @@ describe('EspecimenEmoticonaBarra', () => {
     pinta(EspecimenEmoticonaBarra);
     for (const nom of ['edició sense emoticona', 'edició amb emoticona']) {
       const pastilla = within(barra(nom)).getByRole('button', { name: /^Data de publicació: sense triar/ });
-      expect(pastilla.textContent, nom).toBe('14:3703/10/26');
+      expect(pastilla.textContent, nom).toBe('14:37 03/10/26');
       expect(barra(nom).textContent, nom).not.toContain('25/04/26');
     }
     for (const nom of ['lectura sense emoticona', 'lectura amb emoticona']) {
@@ -449,7 +449,7 @@ describe('Barres d’edició dels especímens · la data d’ara i la ploma', ()
     for (const estat of ['pendent', 'error', 'desat', 'net']) {
       const barra = screen.getByRole('region', { name: `Autoria i data (espècimen, ${estat})` });
       expect(within(barra).getByRole('button', { name: 'Triar l’emoticona del document' }).querySelector('.lucide-feather'), estat).not.toBeNull();
-      expect(within(barra).getByRole('button', { name: /^Data de publicació: sense triar/ }).textContent, estat).toBe('14:3703/10/26');
+      expect(within(barra).getByRole('button', { name: /^Data de publicació: sense triar/ }).textContent, estat).toBe('14:37 03/10/26');
       expect(barra.textContent, estat).not.toContain('25/04/26');
     }
   });
@@ -478,7 +478,7 @@ describe('Barres d’edició dels especímens · la data d’ara i la ploma', ()
     pinta(EspecimenCalendari);
     const barra = screen.getByRole('region', { name: 'Autoria i data (espècimen)' });
     expect(within(barra).getByRole('button', { name: 'Triar l’emoticona del document' }).querySelector('.lucide-feather')).not.toBeNull();
-    expect(within(barra).getByRole('button', { name: /^Data de publicació: sense triar/ }).textContent).toBe('14:3703/10/26');
+    expect(within(barra).getByRole('button', { name: /^Data de publicació: sense triar/ }).textContent).toBe('14:37 03/10/26');
   });
 });
 
@@ -574,9 +574,9 @@ describe('EspecimenTargetaViva', () => {
     ambAra();
     const arrel = pinta(EspecimenTargetaViva);
     const [sense, amb, fitxa] = arrel.querySelectorAll('article.sdp-targeta-viva-carta');
-    expect(sense.querySelector('.btn-date-time').textContent).toBe('14:3703/10/26');
-    expect(amb.querySelector('.btn-date-time').textContent).toBe('09:0012/10/26');
-    expect(fitxa.querySelector('.btn-date-time').textContent).toBe('14:3703/10/26');
+    expect(sense.querySelector('.btn-date-time').textContent).toBe('14:37 03/10/26');
+    expect(amb.querySelector('.btn-date-time').textContent).toBe('09:00 12/10/26');
+    expect(fitxa.querySelector('.btn-date-time').textContent).toBe('14:37 03/10/26');
   });
 
   /* T50 · Bloc 3.4 (261016) · La «dreta» de la decisió ja no es munta: el

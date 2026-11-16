@@ -48,7 +48,10 @@ function Sonda() {
   value = x; aplica = a.aplica; envia = e;
   return null;
 }
-const pas = async (ms) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms); }); };
+/* R32 · Des de R30.2 l'enviament carrega el tros diferit cablejatXatRural.js amb un import()
+   real, que el rellotge fals no fa avançar: cada pas espera també els imports dinàmics en curs
+   (vi.dynamicImportSettled), perquè el pressupost de 60 s siga temps del xat i no de Vite. */
+const pas = async (ms) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms); await vi.dynamicImportSettled(); }); };
 /* Avança el rellotge a passos d'1 s fins que la promesa acaba, com a molt `maxim` ms. */
 async function finsQueAcabe(promesa, maxim = 60_000) {
   let acabat = false;

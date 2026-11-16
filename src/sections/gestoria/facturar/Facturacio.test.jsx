@@ -38,7 +38,10 @@ const perClau = ([a], [b]) => (a < b ? -1 : a > b ? 1 : 0);
    havia escrit. Cap operació d'esborrar ni de reescriure: no n'hi ha. */
 function creaIdbFals() {
   const bases = new Map();
-  const despres = (fn) => setTimeout(fn, 0);
+  /* R30.2 · L'IDB de prova conserva callbacks asíncrons i transaccions
+     serialitzades sense una cadena de timers de 0 ms dependent de la càrrega
+     dels altres workers. No modifica els timers ni els límits del producte. */
+  const despres = (fn) => queueMicrotask(fn);
   function creaTransaccio(base, mode) {
     const tx = { error: null };
     let pendents = 0;

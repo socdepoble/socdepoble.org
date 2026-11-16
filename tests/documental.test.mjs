@@ -82,3 +82,71 @@ test('expire-close històric amb hashes coincidents no acredita verificació; el
   git(root, 'add', '.');
   assert.equal(checkDocuments(root, { staged: true }).valid, true);
 });
+
+/* R32 · D-R30-15: els registres de torn són locals (.gitignore) i no viatgen amb l'índex ni amb el commit.
+   porta-documents --staged/--base llig el registre de l'índex o de HEAD si encara hi és versionat (històric) i,
+   si no, del disc de la màquina que el va obrir; si no és enlloc, falla tancat amb «Registre de torn absent». */
+const IGNORA_TORNS = '/.agents/runtime/*\n!/.agents/runtime/contracts/\n/.agents/runtime/contracts/*\n!/.agents/runtime/contracts/*.json\n';
+const ENV_GIT = { ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))), GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' };
+const gitNet = (root, ...args) => execFileSync('git', ['-c', 'user.name=Prova', '-c', 'user.email=prova@example.invalid', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', ...args], { cwd: root, encoding: 'utf8', env: ENV_GIT });
+function tancatLocal(t) {
+  const { root, d, plan } = planned(t);
+  sealTurn(root, d.turn.turn_id, ok, { close: true });
+  fs.writeFileSync(path.join(root, '.gitignore'), IGNORA_TORNS);
+  fs.writeFileSync(path.join(root, '.agents/AGENTS.md'), '# Marcador d’arrel de la prova\n'); // la CLI exigix el marcador (arrel.mjs)
+  const rel = `.agents/runtime/turns/${d.turn.turn_id}.json`, record = path.join(root, rel);
+  const tancat = fs.readFileSync(record, 'utf8'), obert = JSON.stringify({ ...JSON.parse(tancat), state: 'verified' });
+  gitNet(root, 'init', '-q');
+  return { root, d, plan, rel, record, tancat, obert };
+}
+const absent = (errors, file, rel) => errors.some(e => e.startsWith(`${file}: Registre de torn absent: ${rel}. `));
+
+test('D-R30-15 · --staged: registre tancat només al disc valida; sense registre, «Registre de torn absent»; obert, falla', t => {
+  const { root, d, plan, rel, record, obert } = tancatLocal(t);
+  gitNet(root, 'add', '.');
+  assert.equal(gitNet(root, 'ls-files', '--', '.agents/runtime/turns'), '', 'els torns no entren a l’índex');
+  assert.notEqual(gitNet(root, 'ls-files', '--', '.agents/runtime/contracts'), '', 'les instantànies de contracte sí');
+  const r = checkDocuments(root, { staged: true });
+  assert.deepEqual(r.errors, []); assert.equal(r.valid, true); assert.equal(r.checked, 3);
+  fs.renameSync(record, `${record}.fora`);
+  const sense = checkDocuments(root, { staged: true });
+  assert.equal(sense.valid, false);
+  for (const file of [d.file, plan.file]) assert.ok(absent(sense.errors, file, rel), sense.errors.join('\n'));
+  fs.renameSync(`${record}.fora`, record); fs.writeFileSync(record, obert);
+  assert.match(checkDocuments(root, { staged: true }).errors.join(), /rebut del torn tancat/);
+});
+
+test('D-R30-15 · --staged: un registre encara versionat a l’índex mana sobre el del disc, en els dos sentits', t => {
+  const { root, rel, record, tancat, obert } = tancatLocal(t);
+  gitNet(root, 'add', '.'); gitNet(root, 'add', '-f', '--', rel);
+  assert.equal(gitNet(root, 'ls-files', '--', rel).trim(), rel);
+  fs.writeFileSync(record, '{');
+  assert.deepEqual(checkDocuments(root, { staged: true }).errors, [], 'índex tancat, disc il·legible: guanya l’índex');
+  fs.writeFileSync(record, obert); gitNet(root, 'add', '-f', '--', rel); fs.writeFileSync(record, tancat);
+  const r = checkDocuments(root, { staged: true });
+  assert.equal(r.valid, false, 'índex obert, disc tancat: guanya l’índex i falla tancat');
+  assert.match(r.errors.join(), /rebut del torn tancat/);
+});
+
+test('D-R30-15 · --base: HEAD mana sobre el disc; sense registre a HEAD ni al disc, la CLI ix amb 1 i «Registre de torn absent»', t => {
+  const { root, d, rel, record, tancat, obert } = tancatLocal(t);
+  gitNet(root, 'add', '.gitignore'); gitNet(root, 'commit', '-qm', 'base');
+  const base = gitNet(root, 'rev-parse', 'HEAD').trim();
+  gitNet(root, 'add', '.'); gitNet(root, 'commit', '-qm', 'documents');
+  assert.equal(gitNet(root, 'ls-tree', '-r', '--name-only', 'HEAD', '--', '.agents/runtime/turns'), '');
+  const r = checkDocuments(root, { base });
+  assert.deepEqual(r.errors, []); assert.equal(r.valid, true); assert.equal(r.checked, 3);
+
+  fs.unlinkSync(record);
+  const cli = spawnSync(process.execPath, [path.join(REPO, 'tooling/gates/porta-documents.mjs'), '--base', base, '--arrel', root], { cwd: root, encoding: 'utf8', env: ENV_GIT, timeout: 60000 });
+  assert.equal(cli.status, 1, cli.stderr);
+  const eixida = JSON.parse(cli.stdout);
+  assert.equal(eixida.valid, false); assert.ok(absent(eixida.errors, d.file, rel), eixida.errors.join('\n'));
+
+  // Un registre històric encara versionat a HEAD es llig del commit, no del disc.
+  fs.writeFileSync(record, tancat); gitNet(root, 'add', '-f', '--', rel); gitNet(root, 'commit', '-qm', 'historic');
+  fs.writeFileSync(record, '{');
+  assert.deepEqual(checkDocuments(root, { base }).errors, [], 'HEAD tancat, disc il·legible: guanya HEAD');
+  fs.writeFileSync(record, obert); gitNet(root, 'add', '-f', '--', rel); gitNet(root, 'commit', '-qm', 'historic obert'); fs.writeFileSync(record, tancat);
+  assert.match(checkDocuments(root, { base }).errors.join(), /rebut del torn tancat/, 'HEAD obert, disc tancat: guanya HEAD');
+});

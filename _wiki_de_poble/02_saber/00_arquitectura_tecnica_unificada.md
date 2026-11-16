@@ -46,9 +46,9 @@ La descentralització, el P2P i la resiliència rural formen part de la històri
 
 | Capacitat | Estat en esta baseline | Condició per reobrir-la |
 |---|---|---|
-| Persistència local amb Dexie o IndexedDB | Retirada per l'ADR-2026-08 | ADR nova que substituïsca l'online-first |
+| Sincronització offline general amb Dexie | Retirada per l'ADR-2026-08 (l'IndexedDB d'apps del dispositiu i cofre local seguix [[ADR-2026-10-APPS-DEL-DISPOSITIU]] i [[ADR-2026-13-BYOP-XIFRAT-LOCAL]]) | ADR nova que substituïsca l'online-first |
 | Supabase amb fallback local (mode híbrid) | Retirat; Supabase és l'única font de veritat | ADR nova que substituïsca l'online-first |
-| PWA/Workbox i service workers | Retirats; els ja instal·lats es desregistren en la transició | ADR nova que substituïsca l'online-first |
+| PWA offline amb Workbox | Retirada per l'ADR-2026-08; l'app-shell instal·lable actual (`public/sw.js` i `manifest.webmanifest`) seguix [[ADR-2026-10-APPS-DEL-DISPOSITIU]] | ADR nova que substituïsca l'online-first |
 | Y.js o un altre CRDT | Recerca; cap garantia de reconciliació | ADR, prototip, proves de convergència i límits de GC |
 | WebRTC/P2P remot | Recerca | Signaling, identitat, xifratge, NAT i proves multi-dispositiu |
 | OPFS | Recerca | Cas d'ús online-first, compatibilitat Safari 16 i migració |

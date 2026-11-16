@@ -15,7 +15,9 @@ import { enviaNotesDeLUsuari, oblidaNotesDeLUsuari, pendentsNotesDe } from '../.
 import { entraComAPilot } from '../../data/sessioPilot.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import { oblidaXatEnEixir } from '../../data/xifratXatEixida.js';
-import { configuraMarcaOblitCarpetesLocals, oblidaTotesLesCarpetesLocals } from '../../sections/multimedia/bibliotecaCarpetesLocals.js';
+import {
+  NOM_BD_ARXIUS_LOCALS, configuraMarcaOblitCarpetesLocals, marcaOblitCarpetaPendent
+} from '../../sections/multimedia/marcaOblitCarpetesLocals.js';
 import { registraEixidaDeVeres } from '../../data/expulsioAmfitrio.js';
 import { delVal, getVal, setVal } from '../../config/storage.js';
 import {
@@ -29,9 +31,58 @@ const EMPTY_CONFIG = EMPTY_SESSION_CONFIG;
    navegador) són del perfil, no de la persona. Eixir de veres les oblida totes,
    com els esborranys de Notes: després de tancar i només si ha anat bé. No
    rep cap argument (sessio.js passa usuariId i la biblioteca el prendria per
-   opcions) i no llança mai. Ve del mòdul germà sense dependències que el motor
-   multimèdia reexporta: el motor sencer no entra al paquet principal. */
-const oblidaCarpetesLocalsEnEixir = () => oblidaTotesLesCarpetesLocals();
+   opcions). */
+/* Onada R30.2 · Oxigen del paquet d'arrencada: la biblioteca d'IndexedDB de
+   carpetes locals (bibliotecaCarpetesLocals.js) es carrega sota demanda amb
+   import() i es precarrega després del primer pintat quan hi ha sessió viva,
+   igual que sessionsIAIALocals.js. Una càrrega fallida s'oblida i la següent
+   ho torna a provar. */
+let oblitDeCarpetesLocals = null;
+const carregaOblitDeCarpetesLocals = () => {
+  oblitDeCarpetesLocals ??= import('../../sections/multimedia/bibliotecaCarpetesLocals.js').catch((error) => {
+    oblitDeCarpetesLocals = null;
+    throw error;
+  });
+  return oblitDeCarpetesLocals;
+};
+/* Onada R32 (Gauntlet final, QA-R2-04 i QA-A01b) · Des de R30.2 l'oblit de
+   l'eixida pot rebutjar: el tros de la biblioteca pot no arribar (una xarxa
+   rural que cau en la precàrrega i en eixir, o un desplegament que deixa en
+   404 el tros vell). sessio.js s'empassaria el rebuig i l'eixida acabaria bé
+   sense oblidar res ni deixar cap marca, i la persona següent veuria les
+   carpetes de qui ha eixit. Davant de qualsevol rebuig d'esta crida (el del
+   tros o un d'inesperat de la biblioteca), i només ací, a l'eixida de veres
+   (la precàrrega fallida no marca res: no bloqueja el Gestor de qui és dins):
+     · la marca d'oblit pendent es posa des del mòdul lleuger, que ja és a
+       l'entrada i no importa res; és la persistent de QA-R2-04 (més avall), i
+       quan el tros arribe la biblioteca torna a provar el clear() abans de
+       llistar res;
+     · l'avís de l'oblit, que fa la biblioteca, ix pel mateix canal cap a les
+       altres pestanyes: un Gestor muntat en una germana es buida igual que
+       amb l'oblit bo. En esta, sense el tros, no n'hi ha cap de muntat.
+   Torna la forma de la biblioteca ({ ok:false, codi:'OBLIT_CARPETES_PENDENT' }),
+   encara que l'eixida no la llig. Ni la marca ni l'avís no llancen. */
+/* El canal és CANAL_OBLIT de bibliotecaCarpetesLocals.js, que no s'importa
+   perquè és del tros diferit. SessionContext.carpetesLocals.trosNoArriba
+   .seguretat.test.jsx el fixa amb l'escoltador real de la biblioteca: si el
+   nom canvia allà, la prova cau. */
+const CANAL_OBLIT_CARPETES = 'sdp-arxius-locals-oblit';
+const avisaOblitDeCarpetesAAltresPestanyes = () => {
+  try {
+    const canal = new BroadcastChannel(CANAL_OBLIT_CARPETES);
+    canal.postMessage({ origen: 'eixida-sense-tros' });
+    canal.close();
+  } catch {
+    /* sense BroadcastChannel: només hi ha esta pestanya */
+  }
+};
+const oblidaCarpetesLocalsEnEixir = () => carregaOblitDeCarpetesLocals()
+  .then((modul) => modul.oblidaTotesLesCarpetesLocals())
+  .catch(() => {
+    marcaOblitCarpetaPendent(NOM_BD_ARXIUS_LOCALS, true);
+    avisaOblitDeCarpetesAAltresPestanyes();
+    return { ok: false, codi: 'OBLIT_CARPETES_PENDENT' };
+  });
 
 /* Onada R24 · wp_trinquet (SEO-R22-08, trinquet de l'arrencada estàtica) · L'oblit
    dels títols locals de la IAIA es demana sota demanda: el registre
@@ -63,7 +114,8 @@ const oblidaTitolsIAIADePersona = (usuariId) => carregaOblitDeTitolsIAIA()
    reintent bo, també després de tancar el navegador: amb un permís
    persistent, la carpeta s'obriria sola en tornar. Es registra en carregar
    el mòdul: l'eixida sempre passa per ací i el Gestor l'importa abans de
-   muntar-se. La biblioteca continua sense importar res. */
+   muntar-se. La marca viu al mòdul lleuger (marcaOblitCarpetesLocals.js),
+   que és l'únic que importa la biblioteca. */
 const CLAU_OBLIT_CARPETES_PENDENT = 'arxius-locals-oblit-pendent';
 configuraMarcaOblitCarpetesLocals({
   llig: () => getVal(CLAU_OBLIT_CARPETES_PENDENT, false) === true,
@@ -242,9 +294,14 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
 
   /* Onada R24 · wp_trinquet · Amb una persona dins, l'oblit dels seus títols de
      la IAIA ja és a la memòria quan isca (carregaOblitDeTitolsIAIA): després del
-     primer pintat, mai abans. */
+     primer pintat, mai abans. Onada R30.2 · També el de les carpetes locals.
+     Onada R32 · Una precàrrega fallida no posa cap marca d'oblit: només
+     l'eixida de veres (oblidaCarpetesLocalsEnEixir). */
   useEffect(() => {
-    if (estat === 'dins' && usuariId != null) carregaOblitDeTitolsIAIA().catch(() => {});
+    if (estat === 'dins' && usuariId != null) {
+      carregaOblitDeTitolsIAIA().catch(() => {});
+      carregaOblitDeCarpetesLocals().catch(() => {});
+    }
   }, [estat, usuariId]);
 
   const backendFuncs = useMemo(() => ({

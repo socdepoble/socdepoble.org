@@ -26,6 +26,8 @@ contracte.escriu:
   - src/sections/text
   - src/sections/multimedia/censImatges.js
   - public/assets
+motors:
+  - tooling/seo/tria-imatge-seo.mjs
 ---
 # 📰 Importació i Transformació Editorial · Pedra Seca (`sdp-importacio-editorial`)
 

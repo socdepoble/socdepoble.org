@@ -9,41 +9,12 @@
      son utilitats — son components d'una seccio, amb 5–8 declaracions.
      Vivint a `utilities` cap regla de `components` les podia corregir
      mai sense !important. Ara van a `components`, on toca.
-     Comprovat que el canvi es neutre: l'unic selector que xoca amb un
-     altre fitxer es .xat-empty (legat.css, capa `legacy`), i
-     `components` continua guanyant a `legacy`. La resta son noms unics.
+     Onada R31: extirpades les 9 regles legacy .xat-* i .sdp-icon--1em
+     sense cap consumidor al repositori.
    ==================================================================== */
 
 /* ── Components d'una seccio que vivien a `utilities` per error ───── */
 @layer components {
-
-  /* XatSection.jsx */
-  .xat-scroll-area {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background: var(--sdp-fons-app);
-  }
-  .xat-header-info { flex: 1; }
-  .xat-header-subtitle { opacity: 0.8; display: block; }
-  .xat-divider {
-    margin: var(--sdp-space-1) 0;
-    border: none;
-    border-top: 1px solid var(--sdp-vora-control);
-  }
-  .xat-empty {
-    text-align: center;
-    margin: auto;
-    padding: var(--sdp-space-4);
-    border-radius: var(--sdp-radi-s);
-  }
-  .xat-bubble-wrapper { display: flex; align-items: center; }
-  .xat-bubble-wrapper--block { display: block; align-items: initial; }
-  .xat-bubble-content { flex: 1; min-width: 0; }
-  .xat-sender-name { margin-bottom: var(--sdp-space-1); }
 
   /* UniversalPage.jsx · la variant la compon el JSX:
      `sdp-universal-page-container--${layout}`. No la llevem encara que
@@ -226,11 +197,6 @@
   }
   :where(.sdp-root.is-compact) .sdp-top-bar-btn--instal .sdp-top-bar-btn__rotul {
     display: none;
-  }
-
-  .sdp-icon--1em {
-    width: 1em;
-    height: 1em;
   }
 
   .sdp-bloc .sdp-editor-document > .sdp-universal-page-container--contained > .bar-blue,

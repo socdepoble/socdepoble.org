@@ -21,9 +21,16 @@
  * Res que puga créixer: AMBITS_MAXIMS àmbits i CARPETES_MAXIMES carpetes per
  * àmbit; els mapes no tenen prototip. Si l'escriptura falla (mode privat,
  * quota), la carpeta val igual en esta càrrega.
+ *
+ * Onada R32 · Invariant R31 (Codex R31 lot_03 · P2-T3) · Un id nou del
+ * navegador no ocupa mai l'espai reservat: ni el dels ids de servidor
+ * (f-<uuid>) ni el de les carpetes de sèrie (f-mur, f-notes…). Un nom que hi
+ * cauria pren f-carpeta-<slug> (esIdReservat, slugBaseDeCarpeta). Els noms no
+ * canvien, i les carpetes que ja hi ha no es reescriuen mai.
  */
 import { useSyncExternalStore } from 'react';
 import { STORAGE_PREFIX, getVal, setVal } from '../../../config/storage.js';
+import { NOTE_FOLDERS_SEED } from '../../../data/carpetesSeed.js';
 
 export const CLAU_CARPETES_CREADES = 'classificacio-carpetes-creades';
 export const AMBIT_COMU = 'comu';
@@ -35,6 +42,10 @@ const LLARGADA_MAXIMA_SLUG = 80;
 const LLARGADA_MAXIMA_ID = 100;
 const LLARGADA_MAXIMA_AMBIT = 200;
 const PATRO_ID = /^f-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+/* L'id que posa el servidor (note_folders: 'f-' || gen_random_uuid()), el mateix patró que
+   carpetaDeFila (src/data/carpetesNotes.js) i migracioCarpetesLocals.js; i els de sèrie. */
+const ID_DE_SERVIDOR = /^f-[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/;
+const IDS_DE_SERIE = new Set(NOTE_FOLDERS_SEED.map((carpeta) => carpeta.id));
 const CAP = Object.freeze([]);
 
 const mapaBuit = () => Object.create(null);
@@ -50,8 +61,11 @@ export function clauDeNom(nom) {
   return netejaNom(nom).toLocaleLowerCase('ca');
 }
 
-/** L'slug base d'un nom (sense accents ni signes): «Fèstes» i «Festes» donen el mateix, f-festes. */
-export function slugBaseDeCarpeta(nom) {
+/** Un id de l'espai reservat: el d'una carpeta de servidor (f-<uuid>) o el d'una de sèrie. */
+export const esIdReservat = (id) => typeof id === 'string' && (ID_DE_SERVIDOR.test(id) || IDS_DE_SERIE.has(id));
+
+/** L'slug d'un nom tal qual (sense accents ni signes): «Fèstes» i «Festes» donen el mateix, f-festes. */
+export function slugDelNom(nom) {
   const base = netejaNom(nom)
     .toLowerCase()
     .normalize('NFD')
@@ -61,6 +75,15 @@ export function slugBaseDeCarpeta(nom) {
     .slice(0, LLARGADA_MAXIMA_SLUG)
     .replace(/-+$/g, '');
   return `f-${base || 'carpeta'}`;
+}
+
+/**
+ * L'slug base d'una carpeta nova: el del nom, fora de l'espai reservat. «Mur» dona
+ * f-carpeta-mur i un nom que és un UUID dona f-carpeta-<uuid>; la resta, com sempre.
+ */
+export function slugBaseDeCarpeta(nom) {
+  const slug = slugDelNom(nom);
+  return esIdReservat(slug) ? `f-carpeta-${slug.slice(2)}` : slug;
 }
 
 /**
@@ -77,7 +100,8 @@ export function resolCarpeta(nom, existents = CAP) {
   const base = slugBaseDeCarpeta(net);
   const presos = new Set(llista.filter(Boolean).map((c) => String(c.id)));
   let id = base;
-  for (let n = 2; presos.has(id); n += 1) id = `${base}-${n}`;
+  /* Onada R32 · R31 · Cap sufix no torna a entrar a l'espai reservat. */
+  for (let n = 2; presos.has(id) || esIdReservat(id); n += 1) id = `${base}-${n}`;
   return { id, nom: net.slice(0, LLARGADA_MAXIMA_NOM), nova: true };
 }
 

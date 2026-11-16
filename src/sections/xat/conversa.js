@@ -12,6 +12,18 @@
  */
 import { clauDia } from './temps.js';
 import { senseMarquesDeNegreta } from './negreta.js';
+import {
+  CAUSA_XIFRAT_TANCAT, CODIS_INTEGRITAT_E2EE, CODIS_SENSE_CLAU_AL_DISPOSITIU, TEXT_XIFRAT_NO_OBERT, TEXT_XIFRAT_TANCAT,
+  causaMissatgeXifratTancat, esXifratTancat, textMissatgeXifratTancat, textXifratTancat
+} from './missatgeXifratHonest.js';
+
+/* Onada R32 · El missatge xifrat tancat (R29-E2EE-02 + separació causal de Gemini R30.2 + conciliació
+   de Codex R31) viu a missatgeXifratHonest.js; ací es reexporta perquè la bombolla, la cita i les
+   proves de sempre el continuen trobant a conversa.js. */
+export {
+  CAUSA_XIFRAT_TANCAT, CODIS_INTEGRITAT_E2EE, CODIS_SENSE_CLAU_AL_DISPOSITIU, TEXT_XIFRAT_NO_OBERT, TEXT_XIFRAT_TANCAT,
+  causaMissatgeXifratTancat, esXifratTancat, textMissatgeXifratTancat, textXifratTancat
+};
 
 /**
  * Distància al fons, en px, per davall de la qual ja «eres a baix»: 2rem
@@ -109,10 +121,12 @@ export function caraDAutor(msg, fil, cares) {
  * Les fotos de la conversa per al visor (VisorGaleriaXat): les imatges no
  * esborrades ni bloquejades amb adjunt. Cada una porta l'autor, la seua cara
  * (caraDAutor) i la llavor del color (llavorDAutor), mai l'usuariId.
+ * Onada R32 (invariant del kit Gemini R30.2) · Ni un xifrat que este aparell
+ * no ha pogut obrir: les seues metadades no les ha verificat el pipeline.
  */
 export function imatgesDeLaGaleria(messages, { t, fil = null, cares = null } = {}) {
   return (messages || [])
-    .filter((m) => m && !m.esborrat && !m.esborratAl && !m.bloquejat && m.tipus === 'imatge' && m.metadades?.adjunt?.id && m.id != null)
+    .filter((m) => m && !m.esborrat && !m.esborratAl && !m.bloquejat && !esXifratTancat(m) && m.tipus === 'imatge' && m.metadades?.adjunt?.id && m.id != null)
     .map((m) => {
       const autor = m.sender === 'me'
         ? (m.author || m.author_name || t('section.xat.tu', 'Tu'))
@@ -317,27 +331,8 @@ export function autorDeCita(msg, t) {
    i la seua seguretat ({ xifrat: true, verificat: false, codi }), i
    mapejaMissatge en conserva l'estat. La interfície en diu un text serè, el
    mateix a la bombolla, a la cita, a la barra de resposta i a l'anunci en viu,
-   i mai el codi tècnic. El predicat és el de la còpia (copiaSeguretatXat.js). */
-export const TEXT_XIFRAT_TANCAT = Object.freeze(['section.xat.xifratge.tancat', 'Missatge xifrat d’extrem a extrem en un altre dispositiu']);
-/* Onada R30 · R29-E2EE-02 · El text de la decisió només és cert quan a este dispositiu li falta la
-   clau: el motor no té context per al fil o no coneix l'època del missatge. Un missatge que no
-   s'obri per integritat (firma, manipulació, repetició, autor fora de l'equip) o per una clau nova
-   sense confirmar no és «d'un altre dispositiu»: diu, igual de serè i sense cap codi, que no s'ha
-   pogut obrir. Un codi desconegut pren també el text neutre, que sempre és cert. */
-export const TEXT_XIFRAT_NO_OBERT = Object.freeze(['section.xat.xifratge.noObert', 'No s’ha pogut obrir este missatge xifrat']);
-export const CODIS_SENSE_CLAU_AL_DISPOSITIU = Object.freeze(new Set([
-  'epoca-desconeguda', 'sense-epoca', 'epoca-saltada', 'sense-context', 'claus-bloquejades'
-]));
-
-/** Cert si el missatge és xifrat i este dispositiu no l'ha pogut obrir. */
-export function esXifratTancat(msg) {
-  return msg?.seguretat?.xifrat === true && msg.seguretat.verificat !== true;
-}
-
-/** La parella [clau, reserva] del text serè d'un missatge xifrat tancat, segons el motiu. */
-export function textXifratTancat(msg) {
-  return CODIS_SENSE_CLAU_AL_DISPOSITIU.has(msg?.seguretat?.codi) ? TEXT_XIFRAT_TANCAT : TEXT_XIFRAT_NO_OBERT;
-}
+   i mai el codi tècnic: «en un altre dispositiu» només quan a este li falta la
+   clau, i el text neutre per a la resta (missatgeXifratHonest.js). */
 
 /**
  * El text del missatge citat: «Missatge amagat» si és d'algú que has

@@ -12,7 +12,7 @@ import { useMur } from '../mur/MurContext.jsx';
 import { IDENTITAT_DE_RESERVA, useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
-import { fotosDeLAgenda, fotosDelMercat, fotosDelMur, fotosDelsPobles, fusionaMitjans } from './mediaContent.js';
+import { fotosDeLAgenda, fotosDelMercat, fotosDelMur, fotosDelsPobles, fusionaMitjans } from './fotosVives.js';
 import { agrupaPerMes } from './cronologia.js';
 
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';

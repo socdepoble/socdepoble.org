@@ -1,6 +1,6 @@
 {
   "name": "socdepoble-react",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "sideEffects": [
@@ -26,6 +26,7 @@
     "tancar": "node tooling/gates/tancament.mjs",
     "porta:consell": "node tooling/gates/tractor-consell.mjs",
     "porta:cens": "node tooling/gates/tractor-cens.mjs",
+    "porta:coherencia-editorial": "node tooling/gates/tractor-coherencia-editorial-viva.mjs",
     "porta:rutes": "node tooling/gates/tractor-rutes.mjs",
     "porta:rutes-web": "node tooling/gates/tractor-rutes-web.mjs",
     "porta:cobertura-social": "node tooling/gates/tractor-cobertura-social.mjs",

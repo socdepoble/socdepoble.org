@@ -205,14 +205,21 @@ function documentDeProva(root, { ruta = 'prompt.local', nom }) {
   return { file, content, route: lliurament.route };
 }
 
+function nomDelContext(route) {
+  const nom = route.seccions.find(seccio => /^Context(?:\s|$)/.test(seccio) && typeof route.fixedBlocks?.[seccio] === 'string');
+  assert.ok(nom, 'la ruta ha de declarar un bloc fix de context');
+  return nom;
+}
+
 function contextResumit({ content, route }) {
-  const bloc = route.fixedBlocks.Context;
+  const bloc = route.fixedBlocks[nomDelContext(route)];
   assert.equal(content.split(bloc).length, 2, 'el bloc Context ha d’aparéixer una sola vegada');
   return content.replace(bloc, () => 'Llegiu AGENTS.md abans de començar.');
 }
 
 function senseContext({ content, route }) {
-  const bloc = `\n\n<!-- SDP:SECTION ${route.sectionIds.Context} -->\n## Context\n\n${route.fixedBlocks.Context}`;
+  const nom = nomDelContext(route);
+  const bloc = `\n\n<!-- SDP:SECTION ${route.sectionIds[nom]} -->\n## ${nom}\n\n${route.fixedBlocks[nom]}`;
   assert.ok(content.includes(bloc), 'la secció Context de l’esborrany té la forma de draft()');
   return content.replace(bloc, () => '');
 }
@@ -266,11 +273,11 @@ test('hook pegat: bloqueja el prompt amb el Context mutilat i deixa passar el co
 
   const resumit = compara('Context resumit en una línia', escriptura(doc.file, contextResumit(doc)), root);
   assert.equal(resumit.pegat.code, 2);
-  assert.ok(resumit.viva.some((e) => e.includes('bloc normatiu alterat: «Context»')), resumit.pegat.errors.join('\n'));
+  assert.ok(resumit.viva.some((e) => e.includes(`bloc normatiu alterat: «${nomDelContext(doc.route)}»`)), resumit.pegat.errors.join('\n'));
 
   const absent = compara('Sense la secció Context', escriptura(doc.file, senseContext(doc)), root);
   assert.equal(absent.pegat.code, 2);
-  assert.ok(absent.viva.some((e) => e.includes('secció absent: «## Context»')), absent.pegat.errors.join('\n'));
+  assert.ok(absent.viva.some((e) => e.includes(`secció absent: «## ${nomDelContext(doc.route)}»`)), absent.pegat.errors.join('\n'));
 });
 
 test('hook pegat: el que afig al hook actual (seccions, Edit i ruta del rebut)', (t) => {
@@ -332,7 +339,7 @@ test('pre-commit --staged: la porta jutja els bytes de l’índex, no els del di
   const complet = porta('complet'), fable = porta('fable');
   escriu(`\nÍndex mutilat, disc net · amb el pegat de l'índex: exit ${complet.status} · només el del laboratori: exit ${fable.status}`);
   assert.equal(complet.status, 1, complet.stderr);
-  assert.ok(complet.informe?.informes?.[0]?.errors.some((e) => e.includes('bloc normatiu alterat: «Context»')));
+  assert.ok(complet.informe?.informes?.[0]?.errors.some((e) => e.includes(`bloc normatiu alterat: «${nomDelContext(doc.route)}»`)));
 });
 
 /* ── 4. ESLint ────────────────────────────────────────────────────────────── */

@@ -17,6 +17,8 @@ contracte.llig:
   - _wiki_de_poble/10_actes
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
+motors:
+  - tooling/gates/porta-taxonomia.mjs
 ---
 
 # Llei del Temps Termodinàmic (Causalitat Documental)

@@ -101,6 +101,7 @@ export const PROPIS_DEL_LLOC = Object.freeze({
   /* Només a l'arrel de public/: a una altra fondària són recursos qualsevol. */
   arrel: Object.freeze([
     'robots.txt',  // del domini socdepoble.org: l'amfitrió té el seu
+    'llms.txt',    // guia d'agents del domini socdepoble.org, no de l'amfitrió
     'sitemap.xml', // rutes de socdepoble.org, no de l'amfitrió
     'auth',        // relé OAuth: només es servix des de auth.socdepoble.org
     'enxufe',      // canal de releases (stable.json i la signatura): és el

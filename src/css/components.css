@@ -1884,12 +1884,6 @@ time.sp-card-calendar-badge:active {
   background: var(--sdp-accent);
 }
 
-.btn-taronja-fort.btn-taronja-fort--icon {
-  padding: 0;
-  width: var(--sdp-space-12);
-  border-radius: 50%;
-}
-
 
 
 .pill {
@@ -1981,22 +1975,8 @@ a.pill:active {
   cursor: pointer;
 }
 
-.btn-icon svg,
-.btn-publish svg {
+.btn-icon svg {
   flex: none;
-}
-
-.btn-publish {
-  background: var(--sdp-accio-control);
-  color: var(--sdp-sobre-accio);
-  font-weight: 700;
-  padding: var(--sdp-space-2) var(--sdp-space-5);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn-publish:hover {
-    background: var(--sdp-accio-hover);
-  }
 }
 
 /* ═══ CONTROLS DE BARRA · LLEI DE PEDRA SECA ═════════════════════════

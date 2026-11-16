@@ -28,6 +28,18 @@
       "font": "README R54; capçalera0431"
     },
     {
+      "abans": "2611080431",
+      "despres": "20261116031000",
+      "motiu": "R31 vincula el registre push lease-v2 a una sessió Auth real i el revoca en logout.",
+      "font": "README, vinyeta de 20261116031000; capçalera de 20261116031000"
+    },
+    {
+      "abans": "20261116031000",
+      "despres": "20261116040000",
+      "motiu": "R31 (ADD118 al kit de Codex) audita tot el catàleg anterior, fins a la 20261116031000, i fixa el search_path buit de les 29 funcions SECURITY DEFINER vigents, sense mutar SQL històric; sense les 20261115231000 i 20261115233000 rebutjades a R30, és la migració 116 i no la 118 del kit.",
+      "font": "README, vinyeta de 20261116040000; capçalera de 20261116040000"
+    },
+    {
       "abans": "2611080430",
       "despres": "2611080432",
       "motiu": "El kit compost exclou el bot dels mínims humans mitjançant el registre privat IAIA.",

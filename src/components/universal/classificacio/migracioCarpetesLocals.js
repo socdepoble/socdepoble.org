@@ -29,14 +29,27 @@
  * Notes, Connectar, el detall de la connexió i l'assignació d'emojis. Cap no
  * ensenya la rèplica com una opció nova, i cap nota no s'hi pot moure des
  * d'este dispositiu (dues «Festes» al Bloc).
+ * Onada R32 · Invariants R31 traslladats (Codex R31 lot_03 · P2-T3), sense la RPC ni la
+ * reescriptura d'ids de la PF-01 de Codex R30 (rebutjada):
+ * - Llegat ambigu: una carpeta local amb un id reservat (f-<uuid> o de sèrie) que és
+ *   l'slug del seu nom va nàixer al navegador abans de la reserva de carpetesCreades.js.
+ *   Sense prova remota no es puja ni es reescriu: queda pendent amb diagnòstic (`ambigues`).
+ * - ACK per col·lisió: un ACK que apunta a una carpeta coneguda amb un altre nom no és la
+ *   rèplica d'esta (colisiona).
  */
 import { useMemo, useSyncExternalStore } from 'react';
 import { STORAGE_PREFIX, getVal, setVal } from '../../../config/storage.js';
 import { NOTE_FOLDERS_SEED } from '../../../data/carpetesSeed.js';
 import { nomDeCarpetaValid } from '../../../data/carpetesNotes.js';
-import { AMBITS_MAXIMS, CARPETES_MAXIMES, ambitDeCarpetes, carpetesCreades, clauDeNom, useCarpetesCreades } from './carpetesCreades.js';
+import {
+  AMBITS_MAXIMS, CARPETES_MAXIMES, ambitDeCarpetes, carpetesCreades, clauDeNom, esIdReservat, slugDelNom, useCarpetesCreades
+} from './carpetesCreades.js';
 
 export const CLAU_CARPETES_MIGRADES = 'classificacio-carpetes-migrades';
+/** El motiu del diagnòstic d'una carpeta del llegat ambigu (el mateix literal que el kit R31). */
+export const MOTIU_AMBIGUA = 'identificador-reservat-sense-prova-remota';
+/** El motiu del diagnòstic d'un ACK que xoca amb una carpeta coneguda d'un altre nom. */
+export const MOTIU_COLISIO = 'ack-amb-id-d-una-altra-carpeta';
 const VERSIO = 1;
 const LLARGADA_MAXIMA_ID = 100;
 const LLARGADA_MAXIMA_AMBIT = 200;
@@ -140,6 +153,18 @@ export function carpetesPendentsDeMigrar(ambit) {
     && !IDS_DE_SERIE.has(carpeta.id) && !migrades.has(carpeta.id));
 }
 
+/**
+ * Onada R32 · R31 · El llegat ambigu de l'àmbit: les carpetes locals amb un id reservat que és
+ * l'slug del seu nom («Mur» → f-mur, un nom UUID → f-<uuid>), nascudes al navegador abans de la
+ * reserva. La forma de l'id no prova que siguen remotes ni de sèrie, i les notes que hi apunten no
+ * es poden distingir: no es pugen ni es reescriuen. Una de servidor (R12) té un id que no és el del
+ * seu nom i no hi entra.
+ */
+export function carpetesAmbiguesDeMigrar(ambit) {
+  return carpetesCreades(ambit).filter((carpeta) => esIdReservat(carpeta.id) && carpeta.id === slugDelNom(carpeta.nom))
+    .map((carpeta) => Object.freeze({ id: carpeta.id, motiu: MOTIU_AMBIGUA }));
+}
+
 /* L'ACK: la carpeta que torna el port porta l'id que posa el servidor (f-<uuid>, com
    carpetaDeFila), que no és l'id local, i el mateix nom (el servidor conserva el que
    ja tenia si només canvia la caixa).
@@ -148,6 +173,20 @@ export function carpetesPendentsDeMigrar(ambit) {
    (esEntradaValida), en un sol lloc. */
 const esAck = (resposta, carpeta) => esObjecte(resposta) && esEntradaValida({ local: carpeta.id, remot: resposta.id })
   && typeof resposta.nom === 'string' && clauNfc(resposta.nom) === clauNfc(carpeta.nom);
+
+/* Onada R32 · R31 (guarda d'ACK per col·lisió) · Un ACK que apunta a una carpeta que ja coneixem
+   amb un altre nom no és la rèplica d'esta: ni una carpeta de l'àmbit amb eixe id (la rèplica
+   apuntada l'amagaria del Bloc, repliquesAmagades), ni la rèplica ja apuntada d'una altra carpeta
+   local (dues carpetes en una). Només compta la divergència provada; el registre es torna a
+   llegir (una altra pestanya pot haver-hi apuntat mentrestant). */
+function colisiona(ambit, carpeta, remot) {
+  const clau = clauNfc(carpeta.nom);
+  const locals = carpetesCreades(ambit);
+  const divergix = (id) => locals.some((c) => c.id === id && clauNfc(c.nom) !== clau);
+  if (divergix(remot)) return true;
+  cache = null;
+  return repliquesDeCarpetes(ambit).some((r) => r.remot === remot && r.local !== carpeta.id && divergix(r.local));
+}
 
 /* Pre-validació local amb la mateixa regla de l'adaptador: un nom que el port
    rebutjaria (caràcters de control) no ix cap a la xarxa ni para les altres. */
@@ -166,6 +205,21 @@ const enCurs = new Map();
 const intentades = new Set();
 const omes = (motiu) => Object.freeze({ estat: 'omes', motiu, migrades: 0, pendents: 0, noMigrables: 0 });
 
+/* Onada R32 · R31 · L'estat de l'àmbit en acabar (o en parar): `pendents` són les que falten per
+   pujar més les ambigües, que també són pendents però no ixen mai cap a la xarxa sense una decisió
+   humana; `ambigues` (només si n'hi ha) en porta el diagnòstic. `colisions` (només si n'hi ha) diu
+   quins ACK d'esta pujada s'han descartat per col·lisió: la carpeta continua pendent i no es perd
+   en silenci que el port ha tornat l'id d'una altra carpeta. */
+function resum(ambit, estat, migrades, colisions = CAP) {
+  const ambigues = carpetesAmbiguesDeMigrar(ambit);
+  const pendents = carpetesPendentsDeMigrar(ambit).length + ambigues.length;
+  return Object.freeze({
+    estat: estat ?? (pendents ? 'pendent' : 'fet'), migrades, pendents, noMigrables: quantesNoMigrables(ambit),
+    ...(ambigues.length ? { ambigues: Object.freeze(ambigues) } : {}),
+    ...(colisions.length ? { colisions: Object.freeze([...colisions]) } : {})
+  });
+}
+
 /**
  * Puja les carpetes locals pendents de l'àmbit de Notes, una vegada per entrada
  * de sessió i pestanya. No rebutja mai.
@@ -177,7 +231,10 @@ const omes = (motiu) => Object.freeze({ estat: 'omes', motiu, migrades: 0, pende
  * format \p{Cf}, com la unió ZWJ d'un emoji compost o el guionet tou). Continuen sent
  * pendents (també compten en `pendents`) i la carpeta local es queda; canviar-ne el nom és
  * una decisió humana. Es compta sobre l'estat final, com `pendents`, també si la pujada para.
- * @returns {Promise<{ estat: 'omes'|'res'|'fet'|'pendent'|'interromput', motiu?: string, migrades: number, pendents: number, noMigrables: number }>}
+ * Onada R32 · R31 · `ambigues` (només si n'hi ha) diu quines carpetes del llegat ambigu queden
+ * pendents sense eixir cap a la xarxa (carpetesAmbiguesDeMigrar); també compten en `pendents`.
+ * `colisions` (només si n'hi ha) diu quins ACK d'esta pujada s'han descartat per col·lisió.
+ * @returns {Promise<{ estat: 'omes'|'res'|'fet'|'pendent'|'interromput', motiu?: string, migrades: number, pendents: number, noMigrables: number, ambigues?: Array<{ id: string, motiu: string }>, colisions?: Array<{ id: string, remot: string, motiu: string }> }>}
  */
 export function migraCarpetesLocals({ scopeKey, entrada = null, config } = {}, usuariId, { port = null } = {}) {
   const ambit = scopeKey;
@@ -186,13 +243,17 @@ export function migraCarpetesLocals({ scopeKey, entrada = null, config } = {}, u
   if (!esAmbitValid(ambit) || typeof usuariId !== 'string' || !usuariId || !ambit.includes(usuariId)) return Promise.resolve(omes('sense-sessio'));
   if (!esObjecte(config) || MODES_DEL_NAVEGADOR.has(config.dataMode)) return Promise.resolve(omes('sense-sessio'));
   if (enCurs.has(ambit)) return enCurs.get(ambit);
-  if (!carpetesPendentsDeMigrar(ambit).length) return Promise.resolve(Object.freeze({ estat: 'res', migrades: 0, pendents: 0, noMigrables: 0 }));
+  /* Res per pujar: «res», o només el llegat ambigu, que es diagnostica sense tocar el port. */
+  if (!carpetesPendentsDeMigrar(ambit).length) {
+    return Promise.resolve(carpetesAmbiguesDeMigrar(ambit).length ? resum(ambit, 'pendent', 0)
+      : Object.freeze({ estat: 'res', migrades: 0, pendents: 0, noMigrables: 0 }));
+  }
   /* Una vegada per entrada: el que falla es torna a provar en el pròxim inici, no en cada càrrega del Bloc. */
   const intent = `${ambit}\u0000${entrada}`;
   if (entrada !== null && intentades.has(intent)) return Promise.resolve(omes('ja-intentada'));
   intentades.add(intent);
   const feina = puja(ambit, config, usuariId, port)
-    .catch(() => Object.freeze({ estat: 'pendent', migrades: 0, pendents: carpetesPendentsDeMigrar(ambit).length, noMigrables: quantesNoMigrables(ambit) }))
+    .catch(() => resum(ambit, 'pendent', 0))
     .finally(() => enCurs.delete(ambit));
   enCurs.set(ambit, feina);
   return feina;
@@ -216,10 +277,11 @@ async function puja(ambit, config, usuariId, portDonat) {
   /* Sense la capacitat, o amb un adaptador que no escriu al servidor, cap ACK seria de veres. */
   if (!remot) return omes('sense-capacitat');
   let migrades = 0;
+  const colisions = [];
   for (const carpeta of carpetesPendentsDeMigrar(ambit)) {
     /* Una sessió que canvia a mitges (eixir, un altre compte) para la pujada:
        les carpetes d'un àmbit mai van al compte d'una altra persona. */
-    if (!mateixaPersona()) return Object.freeze({ estat: 'interromput', migrades, pendents: carpetesPendentsDeMigrar(ambit).length, noMigrables: quantesNoMigrables(ambit) });
+    if (!mateixaPersona()) return resum(ambit, 'interromput', migrades, colisions);
     /* Una altra pestanya l'ha pujada mentrestant. */
     if (!carpetesPendentsDeMigrar(ambit).some((c) => c.id === carpeta.id)) continue;
     const nom = nomPujable(carpeta.nom);
@@ -231,10 +293,14 @@ async function puja(ambit, config, usuariId, portDonat) {
       /* Xarxa, servidor sense la migració, permís: es conserva tot i es para fins al pròxim inici. */
       break;
     }
-    if (esAck(resposta, carpeta) && registraReplica(ambit, { local: carpeta.id, remot: resposta.id })) migrades += 1;
+    if (!esAck(resposta, carpeta)) continue;
+    if (colisiona(ambit, carpeta, resposta.id)) {
+      colisions.push(Object.freeze({ id: carpeta.id, remot: resposta.id, motiu: MOTIU_COLISIO }));
+      continue;
+    }
+    if (registraReplica(ambit, { local: carpeta.id, remot: resposta.id })) migrades += 1;
   }
-  const pendents = carpetesPendentsDeMigrar(ambit).length;
-  return Object.freeze({ estat: pendents ? 'pendent' : 'fet', migrades, pendents, noMigrables: quantesNoMigrables(ambit) });
+  return resum(ambit, undefined, migrades, colisions);
 }
 
 /**

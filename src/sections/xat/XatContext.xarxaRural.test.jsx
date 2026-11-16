@@ -66,6 +66,7 @@ async function ambLlistaCarregada() {
   expect(value.chatThreads.map((f) => f.id)).toEqual(['fil-A']);
   vi.useFakeTimers();
   act(() => value.obriFil('fil-A'));
+  await act(async () => { await vi.dynamicImportSettled(); });
   await pas(0);
   expect(value.chatMessages.map((m) => m.text)).toEqual(['Bon dia']);
   return vista;

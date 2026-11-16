@@ -2,25 +2,6 @@
    Estils interns del Gestor de Perfils i Ajustos
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ── Capçalera de columna ── */
-.perfil-columna-capcalera {
-  display: flex;
-  align-items: center;
-  gap: var(--sdp-space-2);
-  height: var(--sdp-alt-accio);
-  min-height: var(--sdp-alt-accio);
-  padding: 0 var(--sdp-space-4);
-  background: var(--sdp-fons-superficie);
-  border-bottom: 1px solid var(--sdp-vora);
-}
-
-.perfil-columna-titol {
-  font-size: var(--sdp-text-meta);
-  font-weight: 600;
-  color: var(--sdp-text-suau);
-  margin: 0;
-}
-
 /* ── Selector d'identitat: el canviador de compte ── */
 .perfil-identitat {
   display: flex;
@@ -49,17 +30,6 @@
 .perfil-identitat[aria-current="true"] {
   border-left-color: var(--sdp-accio);
   background: var(--sdp-accio-subtil);
-}
-
-.perfil-identitat-nom {
-  display: block;
-  font-weight: 600;
-}
-
-.perfil-identitat-rol {
-  display: block;
-  font-size: var(--sdp-text-meta);
-  color: var(--sdp-text-suau);
 }
 
 
@@ -253,36 +223,6 @@
   text-align: center;
   font-size: var(--sdp-text-small);
   color: var(--sdp-text-suau);
-}
-
-/* ── Formularis del Detall (Trellat) ── */
-.form-trellat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sdp-space-4);
-  max-width: 100%;
-}
-
-.form-trellat label {
-  font-weight: 600;
-  color: var(--sdp-text-titol);
-}
-
-.input-trellat {
-  width: 100%;
-  min-height: var(--sdp-touch);
-  padding: var(--sdp-space-3);
-  border: 1px solid var(--sdp-vora-control);
-  border-radius: var(--sdp-radi-s);
-  background: var(--sdp-fons-app);
-  color: var(--sdp-text-cos);
-  font-family: inherit;
-  font-size: 1rem;
-}
-
-.input-trellat:focus {
-  outline: 2px solid var(--sdp-focus);
-  border-color: var(--sdp-focus);
 }
 
 /* ── Botons del Perfil ──

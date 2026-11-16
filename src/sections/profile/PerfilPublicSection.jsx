@@ -304,10 +304,11 @@ export function usePerfilPublic(agentId, { agents = AGENTS_BUITS, tipusIdAcredit
          Revisió adversarial del Gauntlet 261016 (encàrrec C; pla aprovat,
          Onada 1 punt 5, «Paritat total entre local i producció»; prompt, Bloc
          3.5.1, les rutes canòniques dels beta-testers) · EXCEPCIÓ A D12,
-         revocable per Direcció Tècnica: en remot el servidor no resol cap
-         persona per àlies (supabase/perfils.js només en busca per UUID, i
-         perfil_public exigix sessió), i /javillinares, /gent/0001 i
+         revocable per Direcció Tècnica: /javillinares, /gent/0001 i
          /gent/javi-llinares donaven «Perfil no trobat», amb sessió i sense.
+         R30.2 (D-R24.2-3) · L'adaptador traduïx ara els àlies declarats al
+         UUID remot abans de llegir profiles/perfil_public; la RPC continua
+         exigint sessió i respectant la visibilitat de la fila.
          Per a les tres identitats que controla el Mestre (Javi Llinares, Sóc
          de Poble i Rentonar), i NOMÉS per a elles, la fitxa cau al paquet
          (perfilFundacionalDelPaquet) quan el servidor no la dona: la clau
@@ -635,7 +636,9 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
     ? perfil.usuari : '';
   const etiquetes = [
     ...(etiquetaDelTipus ? [{ text: etiquetaDelTipus, className: perfil.esIA ? 'sdp-badge-accent' : 'sdp-badge-system' }] : []),
-    ...(poble ? [{ text: poble, className: 'sdp-badge-category' }] : []),
+    /* D-R24.2-3 · El municipi que ja és el subtítol no es repetix en una
+       etiqueta de la mateixa capçalera. La ubicació de la barra es conserva. */
+    ...(poble && poble.trim() !== String(perfil.bio || '').trim() ? [{ text: poble, className: 'sdp-badge-category' }] : []),
     ...(usuari ? [{ text: `@${usuari}`, className: 'sdp-badge-tag' }] : []),
     ...(perfil.propietari ? [{ text: t('section.perfil.public.teua', 'La teua fitxa'), className: 'sdp-badge-tag' }] : [])
   ];

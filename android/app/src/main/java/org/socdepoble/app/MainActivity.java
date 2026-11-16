@@ -53,6 +53,9 @@ public class MainActivity extends BridgeActivity {
         // abans de tornar arrere, i deixa el gest predictiu al sistema quan no
         // hi ha res a fer (EnrereNatiuPlugin.java n'és l'únic amo).
         registerPlugin(EnrereNatiuPlugin.class);
+        // R31: getToken/deleteToken han d'acabar abans de resoldre el pont.
+        // PushNotifications continua atenent permisos, canals, avisos i toc.
+        registerPlugin(CiclePushNatiuPlugin.class);
         // Gauntlet 261026_1615 (Codex C1615-05) · Abans que cap connector llija els extres.
         setIntent(senseExtresIllegibles(getIntent()));
         // Revisió 261026 · Restaurada després que Android matara el procés, la

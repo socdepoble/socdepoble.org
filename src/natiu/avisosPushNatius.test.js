@@ -20,7 +20,7 @@ const simulat = vi.hoisted(() => ({
 vi.mock('@capacitor/core', () => ({ Capacitor: simulat.Capacitor, registerPlugin: simulat.registerPlugin }));
 
 const {
-  CONNECTOR_PUSH, ESTAT_PUSH_NATIU, TOPALL_TESTIMONI_MS, creaAvisosPushNatius, motiuPushNatiu, adaptadorPushNatiuPerAlRegistre
+  CONNECTOR_PUSH, CONNECTOR_CICLE_PUSH_ANDROID, ESTAT_PUSH_NATIU, TOPALL_TESTIMONI_MS, creaAvisosPushNatius, motiuPushNatiu, adaptadorPushNatiuPerAlRegistre
 } = await import('./avisosPushNatius.js');
 
 const ARREL = process.cwd();
@@ -31,7 +31,8 @@ const TOC = 'pushNotificationActionPerformed';
 /** Un connector com el de Capacitor: els mètodes que coneixem i, per a la resta
  *  (també `then`), una crida que no contesta mai. */
 function connectorFals({
-  permis = 'prompt', resposta = 'granted', testimoni = TESTIMONI, errorDeRegistre = false, registreFalla = false, unregisterFalla = false, netejaFalla = false
+  permis = 'prompt', resposta = 'granted', testimoni = TESTIMONI, errorDeRegistre = false, registreFalla = false, unregisterFalla = false, netejaFalla = false,
+  contracteIos = false
 } = {}) {
   const oients = new Map();
   const manses = [];
@@ -50,10 +51,26 @@ function connectorFals({
     requestPermissions: vi.fn(async () => ({ receive: resposta })),
     register: vi.fn(async () => {
       if (registreFalla) throw new Error('no');
-      setTimeout(() => {
-        if (errorDeRegistre) oients.get('registrationError')?.({ error: 'SERVICE_NOT_AVAILABLE' });
-        else if (testimoni !== null) oients.get('registration')?.({ value: testimoni });
-      }, 0);
+      /* Reforç R32 · Amb `contracteIos`, com el PushNotifications oficial
+         d'iOS: register() resol de seguida i sense valor, i el testimoni o
+         l'error arriben NOMÉS per l'esdeveniment. */
+      if (contracteIos) {
+        setTimeout(() => {
+          if (errorDeRegistre) oients.get('registrationError')?.({ error: 'SERVICE_NOT_AVAILABLE' });
+          else if (testimoni !== null) oients.get('registration')?.({ value: testimoni });
+        }, 0);
+        return undefined;
+      }
+      // El pont local Android resol amb la Task, i iOS conserva l'event.
+      return new Promise((resolve, reject) => setTimeout(() => {
+        if (errorDeRegistre) {
+          oients.get('registrationError')?.({ error: 'SERVICE_NOT_AVAILABLE' });
+          reject(new Error('SERVICE_NOT_AVAILABLE'));
+        } else if (testimoni !== null) {
+          oients.get('registration')?.({ value: testimoni });
+          resolve({ value: testimoni });
+        }
+      }, 0));
     }),
     addListener: vi.fn((nom, funcio) => {
       oients.set(nom, funcio);
@@ -77,8 +94,8 @@ function nucliFals({ disponible = true, connector = connectorFals(), plataforma 
   return {
     connector,
     nucli: {
-      Capacitor: { isPluginAvailable: vi.fn((nom) => disponible && nom === CONNECTOR_PUSH), getPlatform: vi.fn(() => plataforma) },
-      registerPlugin: vi.fn(() => connector.proxy)
+      Capacitor: { isPluginAvailable: vi.fn((nom) => disponible && (nom === CONNECTOR_PUSH || (plataforma === 'android' && nom === CONNECTOR_CICLE_PUSH_ANDROID))), getPlatform: vi.fn(() => plataforma) },
+      registerPlugin: vi.fn(nom => nom === CONNECTOR_CICLE_PUSH_ANDROID ? { register: connector.metodes.register, unregister: connector.metodes.unregister } : connector.proxy)
     }
   };
 }
@@ -207,13 +224,28 @@ describe('amb el connector', () => {
   });
 
   test('un error de registre, un register que falla, un testimoni que no arriba (topall) o el servidor que falla: error, sense llançar', async () => {
-    for (const opcions of [{ errorDeRegistre: true }, { registreFalla: true }, { testimoni: null }, { testimoni: '' }]) {
-      const { nucli, connector } = nucliFals({ connector: connectorFals(opcions) });
-      const desa = vi.fn(async () => {});
-      expect(await creaAvisosPushNatius({ nucli, desa, topallMs: 20 }).activa(), JSON.stringify(opcions)).toEqual({ estat: ESTAT_PUSH_NATIU.ERROR });
-      expect(desa).not.toHaveBeenCalled();
-      await new Promise((resol) => { setTimeout(resol, 0); });
-      for (const mansa of connector.manses) expect(mansa.remove).toHaveBeenCalledTimes(1);
+    /* Reforç R32 · Des de R31, Android pren el testimoni de la Task del pont
+       propi, sense oients, i el bucle de les manses quedava buit: ningú no
+       vigilava que iOS llevara els dos oients en un error. Ara es recorren les
+       dues plataformes (iOS amb el contracte oficial, on l'error només arriba
+       per l'esdeveniment, i amb un pont que avisa i rebutja alhora) i es compta
+       quants oients s'han instal·lat abans de comprovar que es lleven una vegada. */
+    const variants = [
+      { plataforma: 'ios', contracteIos: true, oients: 2 },
+      { plataforma: 'ios', contracteIos: false, oients: 2 },
+      { plataforma: 'android', contracteIos: false, oients: 0 }
+    ];
+    for (const { plataforma, contracteIos, oients } of variants) {
+      for (const opcions of [{ errorDeRegistre: true }, { registreFalla: true }, { testimoni: null }, { testimoni: '' }]) {
+        const cas = `${plataforma} contracteIos=${contracteIos} ${JSON.stringify(opcions)}`;
+        const { nucli, connector } = nucliFals({ plataforma, connector: connectorFals({ ...opcions, contracteIos }) });
+        const desa = vi.fn(async () => {});
+        expect(await creaAvisosPushNatius({ nucli, desa, topallMs: 20 }).activa(), cas).toEqual({ estat: ESTAT_PUSH_NATIU.ERROR });
+        expect(desa, cas).not.toHaveBeenCalled();
+        await new Promise((resol) => { setTimeout(resol, 0); });
+        expect(connector.manses, cas).toHaveLength(oients);
+        for (const mansa of connector.manses) expect(mansa.remove, cas).toHaveBeenCalledTimes(1);
+      }
     }
     const { nucli } = nucliFals();
     expect(await creaAvisosPushNatius({ nucli, desa: vi.fn(async () => { throw new Error('500'); }) }).activa()).toEqual({ estat: ESTAT_PUSH_NATIU.ERROR });
@@ -232,15 +264,16 @@ describe('amb el connector', () => {
     expect(connector.desconeguts).toEqual([]);
   });
 
-  test('registerPlugin una sola vegada per nucli, encara que hi haja dos adaptadors o moltes crides', async () => {
+  test('registerPlugin una sola vegada per connector i nucli, amb dos adaptadors o moltes crides', async () => {
     const { nucli } = nucliFals();
     const u = creaAvisosPushNatius({ nucli, desa: vi.fn(async () => {}) });
     const dos = creaAvisosPushNatius({ nucli });
     await u.estat();
     await u.activa();
     await dos.estat();
-    expect(nucli.registerPlugin).toHaveBeenCalledTimes(1);
+    expect(nucli.registerPlugin).toHaveBeenCalledTimes(2);
     expect(nucli.registerPlugin).toHaveBeenCalledWith(CONNECTOR_PUSH);
+    expect(nucli.registerPlugin).toHaveBeenCalledWith(CONNECTOR_CICLE_PUSH_ANDROID);
   });
 
   test('el testimoni no ix per la consola', async () => {

@@ -42,7 +42,7 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
   const [state, setState] = useState({ scopeKey: null, projeccions: NONE, estat: 'carregant', error: null, persistent: false });
   const connexioActual = useRef(null);
   const creaConnexio = useMemo(() => () => {
-    const checkSession = capturaSessio(), remote = { rows: [], ok: false }, active = new Set();
+    const checkSession = capturaSessio(), remote = { rows: [], ok: false }, active = new Map();
     let closed = false, queue = [], preparation = null;
     const controller = new AbortController();
     const check = () => { checkSession(); if (closed || viu.current !== scopeKey || controller.signal.aborted) throw new DOMException('Sessió canviada.', 'AbortError'); };
@@ -67,8 +67,13 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
       setState({ scopeKey, projeccions: [...rows.values()], persistent: service?.persistent === true,
         estat: queue.some(registreProjeccioPendent) ? 'pendent' : error ? 'error' : 'sincronitzat', error: error ?? null });
     };
-    const update = async error => {
+    const update = async (error, acknowledged = false) => {
       if (service) { const next = await service.llista(); check(); queue = next; }
+      // Un ACK conserva l'overlay fins a una lectura iniciada després seu.
+      // Infinity identifica una tria que encara està en vol o pendent.
+      if (acknowledged) for (const row of queue) {
+        if (!registreProjeccioPendent(row) && active.get(row.clau) === Infinity) active.set(row.clau, lectura);
+      }
       publishState(error);
     };
     const loadAudience = async audiencia => {
@@ -91,16 +96,39 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
     let lectura = 0;
     const llegeixRemot = async () => {
       const torn = ++lectura;
+      const cobertes = new Map([...active].filter(([, ack]) => ack < torn));
       const rows = await Promise.all([loadAudience('publica'), ...(autoritzat ? [loadAudience('privada')] : [])]);
       check();
       if (torn !== lectura) return;
-      remote.rows = rows.flat(); remote.ok = true; publishState(null);
+      const nextRows = rows.flat();
+      if (service && escriptura) {
+        /* Onada R32 (Gauntlet del Carril 1) · L'adopció de versions és
+           comptabilitat local (dorment mentre D-R32-PUB-1 continue pendent: el
+           servei no toca el magatzem i torna false). La lectura remota és de
+           xarxa, com al viu: una fallada del magatzem local (NO_DISPONIBLE quan
+           la base ja oberta deixa de respondre, quota) no amaga les files
+           fresques del servidor ni la marca com a error. Es conserva la cua
+           anterior; desa, sync i el listener, que sí que necessiten el
+           magatzem, ja informen de la fallada. Un canvi de sessió o el
+           tancament (AbortError) es propaguen sempre. */
+        const actorOrg = identitat.actor?.tipus === 'entitat' ? identitat.actor.id : null;
+        try {
+          if (await service.adoptaVersionsRemotes(nextRows.filter(row => (row.authorOrgId ?? null) === actorOrg))) { check(); queue = await service.llista(); }
+        } catch (error) { if (error?.name === 'AbortError') throw error; }
+        check();
+        if (torn !== lectura) return;
+      }
+      for (const [key, ack] of cobertes) {
+        if (active.get(key) === ack && !queue.some(row => row.clau === key && registreProjeccioPendent(row))) active.delete(key);
+      }
+      remote.rows = nextRows;
+      remote.ok = true; publishState(null);
     };
     const sync = async () => {
       check(); if (!service) throw configurationError ?? errorProjeccioCataleg('sense-permis');
       try {
         if (!capacitat) throw errorProjeccioCataleg('no-disponible');
-        await service.sincronitza(); check(); await update(null);
+        await service.sincronitza(); check(); await update(null, true);
       }
       catch (cause) {
         const error = Object.assign(errorProjeccioCataleg(cause?.codi ?? cause?.code ?? 'sincronitzacio-error', cause),
@@ -116,7 +144,7 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
         preparation = (async () => {
           try {
             if (configurationError) throw configurationError;
-            if (service) { await service.prepara(); queue = await service.llista(); check(); for (const row of queue) if (registreProjeccioPendent(row)) active.add(row.clau); }
+            if (service) { await service.prepara(); queue = await service.llista(); check(); for (const row of queue) if (registreProjeccioPendent(row)) active.set(row.clau, Infinity); }
             publishState(null);
             if (capacitat) await llegeixRemot();
             if (service && escriptura && queue.some(registreProjeccioPendent)) await sync();
@@ -127,7 +155,7 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
       async desa(font, destins) {
         await this.prepara(); check();
         if (!service || !escriptura) throw configurationError ?? errorProjeccioCataleg('sense-permis');
-        const row = await service.desa(font, destins); check(); active.add(clauFontCataleg(font)); await update(null);
+        const row = await service.desa(font, destins); check(); active.set(clauFontCataleg(font), Infinity); await update(null);
         await sync(); return row;
       },
       sync,

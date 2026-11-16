@@ -46,6 +46,11 @@ test('private publication composition uses the existing DOM mapper and preserves
     assert.match(wire.payload.content,/<p>Safe text<\/p>/);assert.doesNotMatch(wire.payload.content,/<script|onerror=/i);
     assert.equal(state.privateCalls[0].config.expectedActor,A);
   });
+  await t.test('R32 · expectedUpdatedAt (CAS de publicacions sense RPC al servidor) is refused, never silently dropped into a blind upsert',async()=>{
+    const {state,client}=await fixture();
+    await assert.rejects(client.adapter.appendSectionSubmissionNetworkOnly({id:ID,sectionId:'mur',title:'Fixture',expectedUpdatedAt:TIME,payload:{content:'<p>x</p>'}}),error=>error.codi==='NODE0_PUBLICACIO_INVALIDA');
+    assert.equal(state.privateCalls.length,0);
+  });
   await t.test('loadMur merges only three authenticated pages with the public seed, preserving a microsecond cursor',async()=>{
     const {state,client}=await fixture();
     state.sections.mur={lectura:'membre',rows:[{id:ID,section_id:'mur',owner_user_id:A,author_org_id:null,title:'Persisted',created_at:TIME,updated_at:TIME,payload:{content:'<p>Saved</p>',ownerUserId:B,author_org_id:B,isSystem:true}}],complete:false,nextCursor:{createdAt:TIME,id:ID}};

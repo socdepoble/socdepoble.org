@@ -70,9 +70,11 @@ Esta peça de la Consola respon a una pregunta: **quines skills tenim de veres i
 
 La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista derivada. L'índex és una còpia regenerable i pot quedar ranci: el 24-09 ho estava.
 
-## Cens vigent (261104)
+## Cens vigent (261116)
 
 Font executiva: les carpetes de `.agents/skills/`. `tooling/brain/cataleg_skills.mjs --check` comprova el catàleg; el segell i els miralls tenen comprovacions pròpies. El prefix d’un nom no equival a la marca `core: true` del frontmatter.
+
+De les 43 skills actives, 19 enllacen scripts motors propis (`scripts/` o `tooling/`) i 24 són procedimentals o de governança cognitiva.
 
 | Mesura | Valor |
 | --- | --- |

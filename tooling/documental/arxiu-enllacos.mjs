@@ -23,6 +23,10 @@
  *      es reescriu a cegues: el missatge nomena el document i la línia. L'índex de l'Escriptori
  *      es jutja amb el text que en deixa `despenja`; els camins de la Doctrina, normalitzats
  *      com `path.join` (`./…`, `x/../…`). El deute F9 que el viu ja portava no atura.
+ *    · D-R30-14 (261116): el camí reescrit apunta a l'arxiu, que no es versiona (D-R27-4). L'SCC el
+ *      dona per vàlid mentre el destí existix al disc local, també des de l'arbre preparat del hook,
+ *      on mira l'arxiu de l'arrel viva acreditada per procedència (verificador-scc.mjs, arrelVivaDelHook).
+ *      Per això el pla no versiona res de l'arxiu: només reescriu els enllaços dels vius.
  *
  *  L'arxiu històric no s'obri mai: del destí només es comprova que no existix.
  *  No importa `porta-olivera.mjs`: la porta el carrega amb `import()` només per a --arxiva.
@@ -35,7 +39,7 @@ import { resolveDocumentLink } from '../lib/document-links.mjs';
 import { VerificadorSCC } from '../gates/verificador-scc.mjs';
 import { splitFrontmatter, parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
 import { sha, json, parseDocument, checkSchema, validateSchema, receiptPattern, turnPattern, humanZone } from './core.mjs';
-import { readTurn, isActiveReceipt } from './turns.mjs';
+import { readTurn, isActiveReceipt, inventariInicial } from './turns.mjs';
 
 /** Els mateixos extractors que `extractDocumentLinks`: el que veu l'SCC és el que es reescriu. */
 const WIKI = /\[\[([^\]]+)\]\]/g;
@@ -681,7 +685,14 @@ export async function planificaArxiu(arrel, { bruts = [], carpeta = CAMINS.arxiu
     }
     const plaMogut = moviments.find((m) => m.rel === t.plan?.file);
     if (plaMogut && plaMogut.rebut?.torn !== t.turn_id) avisos.push(`${plaMogut.rel} és el pla vinculat del torn obert ${t.turn_id}: després del trasllat, el seu tancament demanarà un pla nou.`);
-    const rels = moviments.filter((m) => (Object.hasOwn(t.initial, m.rel) || (t.ownedPaths || []).includes(m.rel)) && !(t.relocated || []).includes(m.rel)).map((m) => m.rel);
+    // R32 · D-R30-15: l'inventari inicial pot ser compacte (commit base + diferències); es pregunta a
+    // inventariInicial(), mai a les claus del descriptor. Si no es pot reconstruir, s'atura sense moure res.
+    let inicial = {};
+    if (moviments.length) {
+      try { inicial = inventariInicial(arrel, t); }
+      catch (error) { aturades.push(`Torn obert ${t.turn_id}: el seu inventari inicial no es pot reconstruir (${error.message}); sense saber si veia els documents moguts no se'n pot decidir el relleu.`); continue; }
+    }
+    const rels = moviments.filter((m) => (Object.hasOwn(inicial, m.rel) || (t.ownedPaths || []).includes(m.rel)) && !(t.relocated || []).includes(m.rel)).map((m) => m.rel);
     if (rels.length) relocated.push({ id: t.turn_id, rels });
   }
 
@@ -727,10 +738,16 @@ export function textPla(pla, { sec = false } = {}) {
   return l;
 }
 
-/** Què s'ha de versionar junts després d'un arxivat amb efectes. */
+/** Què s'ha de versionar junts després d'un arxivat amb efectes, i quins registres de torn han canviat.
+ *  R32 · D-R30-15: els registres de torn són estat local (.gitignore) i no viatgen amb el commit; el hook
+ *  els llig del disc (git-staged.mjs, copiaTornsLocals). Per això ixen en una línia a banda i mai dins de
+ *  «Versiona junts»: un `git add` amb un camí ignorat ix amb 1 i atura la cadena, i amb -f es tornarien a
+ *  versionar en contra de la decisió. Torna null si no hi ha res a dir; si no, una o dues línies (\n). */
 export function liniaVersiona(pla, resultat) {
   const docs = [...new Set([...(resultat.reescrits || []), ...(resultat.index ? [CAMINS.indexEscriptori] : [])])];
-  const torns = (resultat.torns || []).map((x) => `${TORNS}/${x.id}.json`);
-  if (!docs.length && !torns.length) return null;
-  return `[Porta Olivera] Versiona junts: ${[...docs, ...torns].join(', ')}.`;
+  const torns = [...new Set((resultat.torns || []).map((x) => `${TORNS}/${x.id}.json`))];
+  const linies = [];
+  if (docs.length) linies.push(`[Porta Olivera] Versiona junts: ${docs.join(', ')}.`);
+  if (torns.length) linies.push(`[Porta Olivera] Registres de torn actualitzats (locals, D-R30-15; no es versionen): ${torns.join(', ')}.`);
+  return linies.length ? linies.join('\n') : null;
 }

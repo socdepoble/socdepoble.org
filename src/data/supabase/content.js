@@ -189,6 +189,17 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
   if (MODES_LOCALS.has(runtimeDataMode)) {
     throw ambCodi(new Error('En mode de proves no es publica al servidor.'), CODI_ENTRADA.MODE_LOCAL);
   }
+  /* Onada R32 · D-R32-PUB-1 (pendent del Mestre) · Una escriptura amb versió
+     (`expectedUpdatedAt`, l'opció A de publicacions de Codex R31) necessita el
+     CAS de section_submissions de la migració 20261115231000, rebutjada a R30:
+     no és al repositori ni a Producció, i este esquema no té cap RPC que el
+     complisca. No es degrada mai a l'upsert de davall (seria sobreescriure
+     sense comprovar la versió que la crida volia protegir): es rebutja abans
+     de cap petició, amb el codi d'esquema absent. */
+  if (submission && Object.hasOwn(submission, 'expectedUpdatedAt')) {
+    throw Object.assign(new Error('El servidor encara no té l’edició de publicacions amb versió: no s’ha publicat res.'),
+      { codi: CODI_ESQUEMA_ABSENT });
+  }
   if (!hasSupabaseConfig) throw new Error('No es pot escriure publicació sense connexió al servidor.');
   if (!tenantId) throw new Error('Poble no configurat.');
   const sessionGuard = capturaSessio();
@@ -241,10 +252,19 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
         || receipt.publicada_revision < 1 || receipt.publicada_revision > receipt.nota_revision || typeof receipt.replay !== 'boolean') throw new TypeError('Rebut atòmic de publicació invàlid.');
     return receipt;
   }
-  await request('/rest/v1/section_submissions?on_conflict=id', config, { method: 'POST',
+  const desades = await request('/rest/v1/section_submissions?on_conflict=id', config, { method: 'POST',
     headers: { Prefer: 'return=representation,resolution=merge-duplicates' }, body: [fila] });
   sessionGuard();
-  return stored;
+  /* Onada R32 (Codex R31 lot_01, part que val amb l'esquema viu) · La versió
+     del servidor torna amb la fila que ja demanava `return=representation`:
+     updated_at, el text exacte de PostgREST (fins als microsegons, sense passar
+     per Date). Només l'acredita una fila única amb el mateix id i un instant
+     estricte; si no, el retorn és el d'abans, sense versió, mai una inventada.
+     És informació per a qui publica: cap escriptura la torna a enviar
+     (D-R32-PUB-1, dalt). */
+  const desada = Array.isArray(desades) && desades.length === 1 ? desades[0] : null;
+  return desada?.id === id && typeof desada.updated_at === 'string' && INSTANT.test(desada.updated_at)
+    && Number.isFinite(Date.parse(desada.updated_at)) ? { ...stored, updatedAt: desada.updated_at } : stored;
 }
 /* Onada 11 (261010) · Les claus d'app_content que demana loadCoreContent. */
 const CLAUS_CORE = ['towns', 'agents', ...CLAUS_PERSONALITZACIO].join(',');

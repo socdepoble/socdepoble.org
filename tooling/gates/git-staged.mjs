@@ -66,6 +66,25 @@ export function executaValidadors(dir, env, {run = runChecked, origen = path.joi
   enllacaDependencies(origen, path.join(dir,'node_modules'));
   for (const {cmd,args,pas} of PASSOS_HOOK) run(cmd,args,dir,env,tempsDelPas(pas,env));
 }
+/** R32 · D-R30-15: els registres de torn són locals i no viatgen a l'índex. Les portes de l'arbre preparat
+    (porta-documents --staged, tancament --check, Olivera) els lligen del disc, com abans lligien els versionats:
+    se'n copia el magatzem local (ignorat per .gitignore, fora de l'índex i de l'instantani de fonts). Només
+    registres regulars sense hardlinks; un registre que l'arbre preparat ja porte (històric versionat) no es trepitja. */
+export function copiaTornsLocals(origen, desti) {
+  const font = path.join(origen, '.agents/runtime/turns'), dest = path.join(desti, '.agents/runtime/turns');
+  if (!fs.existsSync(font)) return 0;
+  fs.mkdirSync(dest, {recursive:true, mode:0o700});
+  let copiats = 0;
+  for (const nom of fs.readdirSync(font).sort()) {
+    if (!/^torn_[0-9a-f-]+\.json$/.test(nom) || fs.existsSync(path.join(dest, nom))) continue;
+    const stat = fs.lstatSync(path.join(font, nom));
+    if (!stat.isFile() || stat.nlink !== 1) continue;
+    fs.copyFileSync(path.join(font, nom), path.join(dest, nom), fs.constants.COPYFILE_EXCL | fs.constants.COPYFILE_FICLONE);
+    fs.chmodSync(path.join(dest, nom), 0o600);
+    copiats += 1;
+  }
+  return copiats;
+}
 export function snapshotPreparedFiles(root, env) {
   const files=runChecked('git',['ls-files','-z'],root,env).split('\0').filter(Boolean).sort();
   return sha(JSON.stringify(files.map(file=>{
@@ -89,6 +108,7 @@ export async function verifyPreparedTree(receiptPath) {
     fs.writeFileSync(path.join(dir,'.git/objects/info/alternates'),path.resolve(PROJECT_DIR,objects)+'\n');
     runChecked('git',['update-ref','HEAD',(await pendingTreeForReceipt(receiptPath)).headBeforeCommit],dir,env);
     runChecked('git',['read-tree',prepared.tree],dir,env);
+    copiaTornsLocals(PROJECT_DIR, dir);
     // L'instantani només mira l'índex (git ls-files): node_modules no hi és mai (.gitignore).
     const before = snapshotPreparedFiles(dir,env);
     executaValidadors(dir,env);

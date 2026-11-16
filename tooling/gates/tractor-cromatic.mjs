@@ -211,7 +211,7 @@ if (actiu('C2')) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   C3 · MANDAT PEDRA SECA — text ≥ 7:1
+   C3 · MANDAT PEDRA SECA — text ≥ 7:1 en tots 4 contextos de tema
    ══════════════════════════════════════════════════════════════════ */
 const MANDAT = {
   '--sdp-text-titol': 7,
@@ -221,26 +221,103 @@ const MANDAT = {
   '--sdp-accent-text': 4.5,
 };
 
+function senseComentarisLiniaPerLinia(css) {
+  let net = '';
+  let i = 0;
+  while (i < css.length) {
+    const obri = css.indexOf('/*', i);
+    if (obri === -1) { net += css.slice(i); break; }
+    net += css.slice(i, obri);
+    const tanca = css.indexOf('*/', obri + 2);
+    const fragment = tanca === -1 ? css.slice(obri) : css.slice(obri, tanca + 2);
+    net += fragment.replace(/[^\n]/g, ' ');
+    if (tanca === -1) break;
+    i = tanca + 2;
+  }
+  return net;
+}
+
+function extreuBlocsTematics(css) {
+  const ls = senseComentarisLiniaPerLinia(css).split('\n');
+  const blocs = { dark: new Map(), bancal: new Map(), darkBancal: new Map(), linia: new Map() };
+  let capcalera = '';
+  let destinacio = null;
+  let prof = 0;
+  ls.forEach((l, idx) => {
+    if (!destinacio) {
+      if (!l.includes('{')) {
+        capcalera = l.trim() ? `${capcalera} ${l.trim()}`.trim() : '';
+        return;
+      }
+      const abansClau = `${capcalera} ${l.slice(0, l.indexOf('{'))}`.trim();
+      capcalera = '';
+      const esDark = abansClau.includes('data-theme="dark"');
+      const esBancal = abansClau.includes('data-contrast="bancal"');
+      if (esDark && esBancal) destinacio = 'darkBancal';
+      else if (esDark) destinacio = 'dark';
+      else if (esBancal) destinacio = 'bancal';
+      else return;
+      prof = 0;
+    }
+    for (const m of l.matchAll(/(--[\w-]+)\s*:\s*([^;}]+)/g)) {
+      blocs[destinacio].set(m[1], m[2].trim());
+      blocs.linia.set(`${destinacio}:${m[1]}`, { fitxer: FONT, linia: idx + 1 });
+    }
+    prof += (l.match(/\{/g) || []).length - (l.match(/\}/g) || []).length;
+    if (prof <= 0) destinacio = null;
+  });
+  return blocs;
+}
+
+function resolAmbMapa(mapa, v, prof = 0) {
+  if (prof > 16 || v == null) return v;
+  const m = /^var\(\s*(--[\w-]+)\s*\)$/.exec(String(v).trim());
+  return m ? resolAmbMapa(mapa, mapa.get(m[1]), prof + 1) : String(v).trim();
+}
+
 if (actiu('C3')) {
   let net = true;
-  for (const [tok, min] of Object.entries(MANDAT)) {
-    const c = color(tok);
-    if (!c) {
-      net = false;
-      falla('C3 · Mandat Pedra Seca', FONT, `\`${tok}\` no es resol a cap color.`);
-      continue;
-    }
-    const r = contrast(c, rgb('#ffffff'));
-    if (r < min - 1e-9) {
-      net = false;
-      const on = LINIA.get(tok) || { fitxer: FONT, linia: '?' };
-      falla('C3 · Mandat Pedra Seca', `${on.fitxer}:${on.linia}`,
-        `\`${tok}\` = ${resol(DEF.get(tok))} dona ${r.toFixed(2)}:1 sobre blanc; ` +
-        `el mandat n'exigix ${min}:1. Usuari de 55–80 anys, cataractes, ` +
-        `sol de migdia, iPad A10. Ací AA no és un aprovat.`);
+  const blocs = extreuBlocsTematics(cssFont);
+  const contextos = [
+    { id: 'clar', etiqueta: 'tema clar', mapa: DEF, bancal: false },
+    { id: 'dark', etiqueta: 'tema fosc', mapa: new Map([...DEF, ...blocs.dark]), bancal: false },
+    { id: 'bancal', etiqueta: 'mode bancal clar', mapa: new Map([...DEF, ...blocs.bancal]), bancal: true },
+    { id: 'darkBancal', etiqueta: 'mode bancal fosc', mapa: new Map([...DEF, ...blocs.dark, ...blocs.bancal, ...blocs.darkBancal]), bancal: true },
+  ];
+  const superficies = ['--sdp-fons-targeta', '--sdp-fons-app'];
+  for (const ctx of contextos) {
+    for (const supTok of superficies) {
+      const supHex = resolAmbMapa(ctx.mapa, ctx.mapa.get(supTok));
+      const supRgb = rgb(supHex);
+      if (!supRgb) {
+        net = false;
+        falla('C3 · Mandat Pedra Seca', FONT, `\`${supTok}\` (${ctx.etiqueta}) no es resol a cap color.`);
+        continue;
+      }
+      for (const [tok, minBase] of Object.entries(MANDAT)) {
+        const min = ctx.bancal ? Math.max(7, minBase) : minBase;
+        const valResolt = resolAmbMapa(ctx.mapa, ctx.mapa.get(tok));
+        const c = rgb(valResolt);
+        if (!c) {
+          net = false;
+          falla('C3 · Mandat Pedra Seca', FONT, `\`${tok}\` (${ctx.etiqueta}) no es resol a cap color.`);
+          continue;
+        }
+        const r = contrast(c, supRgb);
+        if (r < min - 1e-9) {
+          net = false;
+          const on = blocs.linia.get(`${ctx.id}:${tok}`)
+            || (ctx.id === 'darkBancal' ? blocs.linia.get(`bancal:${tok}`) || blocs.linia.get(`dark:${tok}`) : null)
+            || LINIA.get(tok) || { fitxer: FONT, linia: '?' };
+          falla('C3 · Mandat Pedra Seca', `${on.fitxer}:${on.linia}`,
+            `\`${tok}\` = ${valResolt} en ${ctx.etiqueta} dona ${r.toFixed(2)}:1 sobre \`${supTok}\` (${supHex}); ` +
+            `el mandat n'exigix ${min}:1. Usuari de 55–80 anys, cataractes, ` +
+            `sol de migdia, iPad A10. Ací AA no és un aprovat.`);
+        }
+      }
     }
   }
-  if (net) OK.push('C3 · Mandat Pedra Seca (text AAA)');
+  if (net) OK.push('C3 · Mandat Pedra Seca (text AAA en 4 temes × 2 superfícies)');
 }
 
 /* ══════════════════════════════════════════════════════════════════

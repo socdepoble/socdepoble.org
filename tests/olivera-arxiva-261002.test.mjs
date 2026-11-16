@@ -59,15 +59,13 @@ function transaccio(prefix = OPERACIO) {
  * 261002, que no exporta `ancoresDe`, sobre un draft-write.mjs que l'importa: el corredor petava
  * en carregar. Superat, salta sencer i no munta l'arbre. Sense eixa transacció, comprova com fins ara.
  * L'O13 (noms `planificacio_*`) no el supera el 0055, que no el va prendre (LLEGIU §4): el reprén el
- * paquet 261009_1245_onada7_claude (paranyDelNom). La seua prova salta només mentre eixe paquet hi
- * siga o l'haja aplicat; si no, ix roja i ho diu.
+ * paquet 261009_1245_onada7_claude (paranyDelNom). R31 porta el cas O13 a les portes
+ * instal·lades de taxonomia i plantilla viva: no depén que el laboratori continue al disc.
  */
 const SUPERACIO = (() => {
   const t = transaccio('sdp-olivera-ancores-261006-');
   return t && t.files.some((f) => f.path === 'tooling/gates/porta-olivera.mjs') ? t : null;
 })();
-const ONADA7_LAB = path.join(REPO, '_wiki_de_poble/04_escriptori/02_investigacio_ia/261009_1245_onada7_claude/prepara-pla.mjs');
-const ONADA7_OPERACIO = 'sdp-onada7-taxonomia-261009-';
 
 /** Fitxers d'un directori, recursiu, amb camí relatiu posix. El `.DS_Store` del Finder no compta. */
 function fitxersDe(dir, rel = '') {
@@ -125,9 +123,7 @@ const hook = await importa('tooling/gates/antigravity-hook.mjs');
 const torns = await importa('tooling/documental/turns.mjs');
 const nucli = await importa('tooling/documental/core.mjs');
 const local = await importa('tooling/gates/hooks-local.mjs');
-const viva = await importa('tooling/gates/porta-plantilla-viva.mjs');
 const context = await importa('tooling/brain/context-local.mjs');
-const documentCli = await importa('tooling/wiki/document.mjs');
 const ajuda = await importa('tests/helpers/documental.mjs');
 const pla = !SUPERACIO && !TRANSACCIO && HI_HA_LAB ? await import(pathToFileURL(path.join(LAB, 'prepara-pla.mjs')).href) : null;
 const PORTA = BASE ? path.join(BASE, 'tooling/gates/porta-olivera.mjs') : null;
@@ -135,15 +131,7 @@ const HOOK = BASE ? path.join(BASE, 'tooling/gates/antigravity-hook.mjs') : null
 const DIA = olivera ? olivera.avui() : '000000';
 
 /** `nomesFonts`: la prova només llig el laboratori (ESLint, guardes), no cap arbre. `o13`: la del parany. */
-function salta(t, { nomesLab = false, nomesFonts = false, o13 = false } = {}) {
-  if (SUPERACIO && o13) {
-    const aplicat = transaccio(ONADA7_OPERACIO);
-    assert.ok(aplicat || fs.existsSync(ONADA7_LAB), 'O13 no el pren el 261006_0055 i cap paquet el reprén: el laboratori 261009_1245_onada7_claude no hi és ni té transacció');
-    t.skip(aplicat
-      ? `O13: el va aplicar el paquet de l'Onada 7 (transacció ${aplicat.id}, ${aplicat.operationId})`
-      : 'O13 no el pren el 261006_0055 (LLEGIU §4): el reprén el paquet 261009_1245_onada7_claude, pendent d’aplicar (tests/laboratori-onada7-261009.test.js)');
-    return true;
-  }
+function salta(t, { nomesLab = false, nomesFonts = false } = {}) {
   if (SUPERACIO) { t.skip(`paquet superat pel 261006_0055 (transacció ${SUPERACIO.id}, ${SUPERACIO.operationId}): el laboratori ja no mana`); return true; }
   if (nomesFonts) { if (!HI_HA_LAB) t.skip('laboratori absent'); return !HI_HA_LAB; }
   if (!BASE) { t.skip('laboratori 261002_1745_olivera_arxiva_claude absent i paquet sense transacció'); return true; }
@@ -729,25 +717,31 @@ test('D11 invertit: editar una petorreta ja nascuda no la bloqueja un document n
 
 /* ── 9. Plantilla viva: noms parany i el prefix al missatge ───────────────── */
 
-test('O13 invertit: un nom planificacio_* es vigila, i el missatge diu el prefix pla_implementacio_ en lloc de la id de la ruta', (t) => {
-  if (salta(t, { o13: true })) return;
-  assert.equal(viva.vigilat(`${DIA}_1635_planificacio_claude.md`), true);
-  assert.equal(viva.vigilat(`${DIA}_0310_visio_arquitectonica_expansio.md`), false);
-  assert.match(viva.suggeriment(`${DIA}_1635_planificacio_claude.md`), /«planificacio» és l'identificador d'una ruta, no una categoria: el nom ha de començar per «aammdd_hhmm_pla_implementacio_…» o «aammdd_hhmm_pla_…»/);
-
-  const root = fixture(t);
-  const turn = torns.openTurn(root, { scope: 'documents', actor: 'prova' });
+test('O13 R31: la taxonomia viva rebutja planificacio i les dos categories de pla usen la ruta canònica', async (t) => {
+  // El laboratori de l'Onada 7 ja no és el productor. S'exercixen les portes
+  // instal·lades, també quan la resta d'este corredor històric està superada.
+  const [vivaActual, tornsActuals, cliActual, ajudaActual, taxonomia, oliveraActual] = await Promise.all([
+    import('../tooling/gates/porta-plantilla-viva.mjs'), import('../tooling/documental/turns.mjs'),
+    import('../tooling/wiki/document.mjs'), import('./helpers/documental.mjs'),
+    import('../tooling/gates/porta-taxonomia.mjs'), import('../tooling/gates/porta-olivera.mjs')
+  ]);
+  const dia = oliveraActual.avui(), config = taxonomia.carregaConfig(REPO);
+  const invalid = taxonomia.analitzaNom(`${dia}_1635_planificacio_claude.md`, config);
+  assert.equal(invalid.valid, false);
+  assert.ok(invalid.errors.some(error => error.llei === 'T3'), 'un id de ruta no és una categoria');
+  const root = ajudaActual.fixture(t);
+  const turn = tornsActuals.openTurn(root, { scope: 'documents', actor: 'prova' });
   const escriu = (file) => {
-    const delivery = torns.deliverContext(root, turn.turn_id, { route: 'pla.implementacio', file });
-    const content = documentCli.draft(delivery, { title: 'Pla de prova', description: 'Pla per a provar els noms parany' }).replaceAll('[pendent]', 'Verificat.');
-    return viva.inspeccionaText(root, file, content).errors;
+    const delivery = tornsActuals.deliverContext(root, turn.turn_id, { route: 'pla.implementacio', file });
+    const content = cliActual.draft(delivery, { title: 'Pla de prova', description: 'Pla per a provar els noms parany' }).replaceAll('[pendent]', 'Verificat.');
+    return vivaActual.inspeccionaText(root, file, content).errors;
   };
-  const parany = escriu(`${DESK}/260922_1635_planificacio_claude.md`);
-  assert.ok(parany.some((e) => e === 'nom: «planificacio» és l\'identificador d\'una ruta, no una categoria: per a la ruta «pla.implementacio» el nom ha de començar per «aammdd_hhmm_pla_implementacio_…»'), parany.join('\n'));
-  const pla = escriu(`${DESK}/260922_1636_pla_claude.md`);
-  assert.ok(pla.some((e) => e === 'ruta: el rebut és de la ruta «pla.implementacio», i un nom «pla_…» és de la ruta «planificacio». Per a «pla.implementacio» el nom ha de començar per «aammdd_hhmm_pla_implementacio_…»'), pla.join('\n'));
-  assert.ok(![...parany, ...pla].some((e) => /el nom demana/.test(e)), 'cap missatge nomena la ruta com si fóra una categoria');
-  assert.deepEqual(escriu(`${DESK}/260922_1637_pla_implementacio_claude.md`), [], 'el nom bo passa');
+  const parany = escriu(`${DESK}/${dia}_1635_planificacio_claude.md`);
+  assert.ok(parany.some(error => error.startsWith('ruta:')), 'la porta documental tampoc accepta un rebut de pla amb nom alié');
+  for (const categoria of ['pla', 'pla_implementacio']) {
+    assert.equal(taxonomia.analitzaNom(`${dia}_1637_${categoria}_claude.md`, config).valid, true);
+    assert.deepEqual(escriu(`${DESK}/${dia}_1637_${categoria}_claude.md`), [], categoria);
+  }
 });
 
 /* ── 10. En una còpia de tooling/ amb el paquet ───────────────────────────── */
@@ -982,13 +976,17 @@ test('OLIV-R5: --arxiva, amb --sec o sense, no diu «Res a arxivar» ni ix amb 0
   assert.match(senseIndex.stderr, /00_index_escriptori\.md/);
 });
 
-test('OLIV-R6: cap prova d’este corredor passa en verd sense mirar res: totes comencen amb la guarda que salta', (t) => {
+test('OLIV-R6: les proves històriques porten guarda; O13 exercix directament les portes instal·lades', (t) => {
   if (salta(t, { nomesFonts: true })) return;
   const font = llig(fileURLToPath(import.meta.url));
   const proves = font.split(/^test\(/m).slice(1);
   assert.ok(proves.length >= 30, `${proves.length} proves`);
   const guarda = /^'(?:[^'\\]|\\.)*',\s*(?:\{[^}]*\},\s*)?(?:async\s+)?\(t\)\s*=>\s*\{\s*\n\s*if \((?:salta\(t\b|!HI_HA_LAB\))/;
-  const senseGuarda = proves.filter((p) => !guarda.test(p)).map((p) => p.slice(0, 90));
+  const vigents = proves.filter(p => p.startsWith("'O13 R31:"));
+  assert.equal(vigents.length, 1, 'només O13 s’ha portat en este corredor');
+  assert.match(vigents[0], /taxonomia\.analitzaNom\(/);
+  assert.match(vigents[0], /vivaActual\.inspeccionaText\(/);
+  const senseGuarda = proves.filter(p => !vigents.includes(p) && !guarda.test(p)).map((p) => p.slice(0, 90));
   assert.deepEqual(senseGuarda, []);
 });
 

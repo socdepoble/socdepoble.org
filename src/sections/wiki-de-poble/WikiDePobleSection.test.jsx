@@ -186,7 +186,7 @@ test('portada: logo, píndoles pròpies, copyright, entradilla i la data de PAGE
   expect(arrel.querySelector('.page-title-copyright').textContent).toBe(COPYRIGHT_SDP);
   expect(arrel.querySelector('.page-intro p.lead').textContent).toBe(page.lead);
   expect(arrel.querySelector('.hero-image img').getAttribute('alt')).toBe(page.imageAlt);
-  expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(page.date)}${formatDate(page.date)}`);
+  expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(page.date)} ${formatDate(page.date)}`);
 });
 
 /* T43 (ordre del Mestre, 260928) · la portada es connecta com a pàgina (abans
@@ -216,7 +216,7 @@ test('Consola incrustada: capçalera amb logo, píndoles, copyright i la data de
       ['ia', 'sdp-badge-tag']
     ]);
     expect(arrel.querySelector('.page-title-copyright').textContent).toBe(COPYRIGHT_SDP);
-    expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(consola.date)}${formatDate(consola.date)}`);
+    expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(consola.date)} ${formatDate(consola.date)}`);
   };
   capcalera();
   // És l'única prova del fitxer que obri la Consola: el tros encara no hi és.

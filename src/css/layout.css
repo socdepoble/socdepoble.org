@@ -642,12 +642,6 @@ nav.mobile-nav { display: none; }
     padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Vel fosc darrere del calaix (bloqueja i tanca en clicar fora) */
-  .sdp-root.is-compact.has-sidebar-open::after {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
   /* El logo actua com a botó (sense hamburguesa addicional) */
   :where(.sdp-root.is-compact) .mobile-logo-wrapper { display: flex; align-items: center; justify-content: flex-start; padding-left: var(--sdp-space-4) !important; }
 

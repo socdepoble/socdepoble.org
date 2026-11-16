@@ -9,6 +9,7 @@
  * blob: de HTML/SVG/JS i la frontera del mòdul. Entra al precommit pel nom.
  */
 import { readFileSync } from 'node:fs';
+import { parse } from '@babel/parser';
 import { describe, expect, test } from 'vitest';
 import {
   CarpetaFalsa,
@@ -708,6 +709,37 @@ describe('contracte i frontera', () => {
   const llegix = (nom) => readFileSync(new URL(`./${nom}`, import.meta.url), 'utf8');
   const FONTS = ['motorMultimediaLocal.js', 'bibliotecaCarpetesLocals.js', 'suggerimentPobleLocal.js'];
   const t = (...trossos) => trossos.join('');
+  const importacionsDe = (font) => {
+    const fonts = [];
+    const visita = (node) => {
+      if (!node || typeof node !== 'object') return;
+      if (['ImportDeclaration', 'ExportAllDeclaration', 'ExportNamedDeclaration'].includes(node.type) && node.source) fonts.push(node.source.value);
+      if (node.type === 'ImportExpression') fonts.push(node.source.type === 'StringLiteral' ? node.source.value : '#dinamic');
+      if (node.type === 'CallExpression' && node.callee.type === 'Import') fonts.push(node.arguments[0]?.type === 'StringLiteral' ? node.arguments[0].value : '#dinamic');
+      if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'require') fonts.push('#require');
+      for (const value of Object.values(node)) {
+        if (Array.isArray(value)) value.forEach(visita);
+        else if (value && typeof value === 'object') visita(value);
+      }
+    };
+    visita(parse(font, { sourceType: 'module' }));
+    return fonts;
+  };
+  const marcadorPur = (font) => {
+    const prohibits = new Set(['fetch', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'localStorage', 'sessionStorage', 'indexedDB', 'navigator', 'window', 'document', 'globalThis', 'process', 'console', 'eval', 'Function']);
+    let valid = importacionsDe(font).length === 0;
+    const visita = (node) => {
+      if (!node || typeof node !== 'object') return;
+      if (node.type === 'Identifier' && prohibits.has(node.name)) valid = false;
+      if (node.type === 'MetaProperty') valid = false;
+      for (const value of Object.values(node)) {
+        if (Array.isArray(value)) value.forEach(visita);
+        else if (value && typeof value === 'object') visita(value);
+      }
+    };
+    visita(parse(font, { sourceType: 'module' }));
+    return valid;
+  };
 
   test('cada codi que llança el motor és a CODIS_ERROR_ARXIU_LOCAL, i cada codi de la llista es fa servir', () => {
     const font = llegix('motorMultimediaLocal.js');
@@ -729,7 +761,22 @@ describe('contracte i frontera', () => {
       expect(especificadors.filter((e) => new RegExp(t('gest', 'oria|trac', 'tors')).test(e))).toEqual([]);
       for (const patro of prohibits) expect(font.includes(patro), `${nom}: ${patro}`).toBe(false);
     }
-    expect(llegix('bibliotecaCarpetesLocals.js')).not.toMatch(/^import\s/m);
+    // R30.2 compartix només la marca d'oblit amb SessionContext i ajorna IDB.
+    // L'extracció no obri la frontera a altres imports ni a efectes transitius.
+    expect(importacionsDe(llegix('bibliotecaCarpetesLocals.js'))).toEqual(['./marcaOblitCarpetesLocals.js']);
+    expect(marcadorPur(llegix('marcaOblitCarpetesLocals.js'))).toBe(true);
+  });
+
+  test('R31: la frontera inclou imports dinàmics, reexports i el helper transitiu, sense confondre comentaris amb codi', () => {
+    expect(importacionsDe("// import x from './privat.js'\nexport const text = 'import( SDK )';")).toEqual([]);
+    for (const font of ["import './privat.js';", "export * from './privat.js';", "export { x } from './privat.js';", "import('./privat.js');", 'import(destinatari);', "require('sdk');"]) {
+      expect(importacionsDe(font).length).toBeGreaterThan(0);
+      expect(marcadorPur(font)).toBe(false);
+    }
+    for (const font of ['fetch("https://fora.invalid")', 'const alias = globalThis; alias.fetch("/")', 'localStorage.getItem("privat")', 'new WebSocket("wss://fora.invalid")', 'import.meta.env']) {
+      expect(marcadorPur(font)).toBe(false);
+    }
+    expect(marcadorPur("// fetch, localStorage\nexport const text = 'fetch'; export const marca = new Set();")).toBe(true);
   });
 
   test('cap removeEntry amb recursive al codi del motor', () => {

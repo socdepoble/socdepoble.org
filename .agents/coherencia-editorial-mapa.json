@@ -1,0 +1,183 @@
+{
+  "schema": "sdp.coherencia-editorial-viva.v1",
+  "skillCanonica": "core-coherencia-editorial-viva",
+  "descripcio": "Mapa declaratiu i executable que vincula dominis de codi, versions, censos i lèxic de Llei 0 amb les pàgines públiques (5 llengües) i la Wiki viva de Sóc de Poble.",
+  "llengues": ["ca", "es", "en", "eu", "gl"],
+  "versions": {
+    "packageJson": "package.json",
+    "versioVivaJson": "public/versio-viva.json",
+    "androidBuildGradle": "android/app/build.gradle",
+    "iosProjectPbxproj": "ios/App/App.xcodeproj/project.pbxproj",
+    "contracteNatiu": "src/data/contracte.js",
+    "versionsPage": "src/sections/text/pageContent.js"
+  },
+  "invariantsCens": {
+    "consellJson": ".agents/consell.json",
+    "wikiEquipIa": "_wiki_de_poble/01_ser/03_equip_ia.md",
+    "skillsDir": ".agents/skills",
+    "wikiFullDeRuta": "_wiki_de_poble/02_saber/00_full_de_ruta.md",
+    "wikiInventariSkills": "_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md",
+    "wikiArquitecturaUnificada": "_wiki_de_poble/02_saber/00_arquitectura_tecnica_unificada.md",
+    "escolesNode0": 8,
+    "escolesNode0Patrons": {
+      "ca": "(?<![\\p{L}\\p{N}])(\\p{L}+|\\d+)\\s+escoles\\s+locals(?!\\p{L})",
+      "es": "(?<![\\p{L}\\p{N}])(\\p{L}+|\\d+)\\s+escuelas\\s+locales(?!\\p{L})",
+      "en": "(?<![\\p{L}\\p{N}])(\\p{L}+|\\d+)\\s+local\\s+(?:review\\s+|Node\\s*0\\s+)?schools(?!\\p{L})",
+      "eu": "(?<![\\p{L}\\p{N}])(\\p{L}+|\\d+)\\s+eskola\\s+lokal",
+      "gl": "(?<![\\p{L}\\p{N}])(\\p{L}+|\\d+)\\s+escolas\\s+locais(?!\\p{L})"
+    }
+  },
+  "paginesMultilingues": [
+    "descarregues",
+    "disseny",
+    "node-zero",
+    "fediversity",
+    "fedivers",
+    "habitatge",
+    "treball",
+    "publicar_mapa",
+    "anatomia-rural",
+    "versions",
+    "anima"
+  ],
+  "lexicProhibit": [
+    {
+      "id": "LEX-01",
+      "patro": "\\bIAIA\\s+(?:sobirana|soberana|sovereign|burujabea?)\\b",
+      "motiu": "Llei 0: la IAIA no es proclama «sobirana»; es descriu pel seu motor real."
+    },
+    {
+      "id": "LEX-02",
+      "patro": "\\bWhatsApp\\s+(?:sobir[àa]|soberano|sovereign|burujabea?)\\b",
+      "motiu": "Llei 0: el Xat és missatgeria comunitària; el xifratge d'extrem a extrem és al codi però apagat per bandera compilada (E2EE_ACTIU_PER_DEFECTE = false). Mai «WhatsApp sobirà»."
+    },
+    {
+      "id": "LEX-03",
+      "patro": "\\bNode\\s*0\\s+(?:sobir[àa]|soberano|burujabea?)\\b|\\bSovereign\\s+Node\\s*0\\b|\\bMagatzem\\s+sobir[àa]\\b",
+      "motiu": "Llei 0: el Node 0 és un servidor comunitari pilot (Mac mini M4), no «Node 0 sobirà»."
+    },
+    {
+      "id": "LEX-04",
+      "patro": "\\bApple\\s+Silicon\\b",
+      "motiu": "Llei 0: evitar marquisme promocional «Apple Silicon»; dir «xip Apple M4» o «processador ARM local»."
+    },
+    {
+      "id": "LEX-05",
+      "patro": "\\bcategoria\\s+Pilar\\b",
+      "motiu": "Taxonomia vigent: la categoria «Pilar» fou retirada."
+    }
+  ],
+  "dominisPropagacio": [
+    {
+      "id": "versio_i_botigues",
+      "descripcio": "Canvis de versió semàntica, build natiu o estat de botigues/WordPress",
+      "fontsCodi": [
+        "package.json",
+        "public/versio-viva.json",
+        "android/app/build.gradle",
+        "ios/App/App.xcodeproj/project.pbxproj",
+        "wordpress-plugin/socdepoble-enxufe.php",
+        "src/config/canalsDeBotiga.js"
+      ],
+      "destinsEditorials": [
+        "src/sections/text/pageContent.js",
+        "src/sections/text/pageContent.r10.js",
+        "src/sections/text/pageContent.descarreguesR27.js",
+        "_wiki_de_poble/02_saber/architecture/guia_publicacio_app_store_i_google_play.md"
+      ]
+    },
+    {
+      "id": "node0_maquinari_i_veu",
+      "descripcio": "Canvis al servidor Node 0, models locals Ollama o síntesi de veu Matxa-TTS",
+      "fontsCodi": [
+        "scripts/node0/",
+        "src/data/node0/",
+        "src/services/veuNode0.js",
+        "src/services/veuIaiaService.js",
+        "src/services/veusTerritorials.js",
+        "src/components/universal/veu/"
+      ],
+      "destinsEditorials": [
+        "src/sections/text/pageContent.js",
+        "src/sections/text/pageContent.r10.js",
+        "src/sections/mur/articles/laVeuDeSocDePobleContent.js",
+        "_wiki_de_poble/01_ser/agents_equip_ia.md",
+        "_wiki_de_poble/02_saber/architecture/perfil_minim_allotjament_node_municipal.md"
+      ]
+    },
+    {
+      "id": "federacio_opendata_i_agents",
+      "descripcio": "Canvis en ActivityPub, WebFinger, NodeInfo, OpenData municipal o descoberta ARD/llms.txt",
+      "fontsCodi": [
+        "src/data/activitypub.js",
+        "src/data/federacio/",
+        "src/data/exportaMunicipiOpenData.js",
+        "tooling/vite/federacio-iaia.mjs",
+        "public/llms.txt",
+        "public/.well-known/ard.json"
+      ],
+      "destinsEditorials": [
+        "src/sections/text/pageContent.js",
+        "src/sections/text/pageContent.r10.js",
+        "src/sections/text/pageContent.fediversityR20.js",
+        "public/llms.txt",
+        "public/.well-known/ard.json"
+      ]
+    },
+    {
+      "id": "port_neutral_i_arquitectura",
+      "descripcio": "Canvis al contracte del port neutral backendPort.js, capacitats o plataforma d'apps",
+      "fontsCodi": [
+        "src/data/contracte.js",
+        "src/data/backendPort.js",
+        "src/apps/plataforma/"
+      ],
+      "destinsEditorials": [
+        "src/sections/text/pageContent.r10.js",
+        "_wiki_de_poble/02_saber/00_arquitectura_tecnica_unificada.md",
+        "_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md"
+      ]
+    },
+    {
+      "id": "equip_ia_skills_i_portes",
+      "descripcio": "Canvis al cens del Consell, catàleg d'skills o portes mecàniques del sistema",
+      "fontsCodi": [
+        ".agents/consell.json",
+        ".agents/skills/",
+        "tooling/gates/"
+      ],
+      "destinsEditorials": [
+        "src/sections/text/pageContent.r10.js",
+        "_wiki_de_poble/01_ser/03_equip_ia.md",
+        "_wiki_de_poble/01_ser/agents_equip_ia.md",
+        "_wiki_de_poble/02_saber/00_full_de_ruta.md",
+        "_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md"
+      ]
+    },
+    {
+      "id": "xat_push_i_privacitat",
+      "descripcio": "Canvis en xifratge E2EE, avisos push o tractament de dades personals",
+      "fontsCodi": [
+        "src/sections/xat/missatgeXifratHonest.js",
+        "src/config/xifratXat.js",
+        "src/data/xifratXatActivacio.js",
+        "src/data/xifratXatOptin.js",
+        "src/config/avisosPushXat.js",
+        "src/config/motorAvisosPushXat.js",
+        "src/natiu/avisosPushNatius.js",
+        "src/natiu/cicleAvisosPush.js",
+        "src/natiu/consentimentPush.js",
+        "supabase/functions/notifica-xat/",
+        "supabase/functions/notifica-xat-desperta/"
+      ],
+      "destinsEditorials": [
+        "src/sections/text/legalContent.js",
+        "src/sections/text/pageContent.js",
+        "src/sections/text/pageContent.r10.js",
+        "src/sections/mur/articles/laVeuDeSocDePobleContent.js",
+        "public/llms.txt",
+        "_wiki_de_poble/02_saber/00_full_de_ruta.md"
+      ]
+    }
+  ]
+}

@@ -52,7 +52,7 @@ const textos = () => mock.enviaMissatge.mock.calls.map(([, cos]) => cos.text);
 let espiaLinia = null;
 const senseXarxa = () => { espiaLinia = vi.spyOn(window.navigator, 'onLine', 'get').mockReturnValue(false); return espiaLinia; };
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   renders = 0;
   mock.session = { currentUser: { id: 'A' }, generacio: 1 };
   mock.actorKey = 'persona::A';
@@ -72,6 +72,7 @@ async function obert() {
   await waitFor(() => expect(value.status).toBe('ready'));
   vi.useFakeTimers();
   act(() => value.obriFil('fil-A'));
+  await act(async () => { await vi.dynamicImportSettled(); });
   await pas(0);
   expect(value.filCarregat('fil-A')).toBe(true);
   return vista;

@@ -3,10 +3,13 @@ import { CAMINS } from '../lib/arrel.mjs';
 import { checkTaula, checkConvocatoria } from '../gates/porta-olivera.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import crypto, { randomUUID } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { DESK, canonical, inside, relativePath, humanZone, hashFile, sha, json, turnPattern, receiptPattern,
   exemptDeRebut, loadContract, saveContract, readContract, resolveRoute, parseDocument, anchored, validateSchema, validateSections, validateRegister } from './core.mjs';
 
+// Onada R32 · D-R30-15 (aprovada pel Mestre el 16-11-2026 a les 14:32): els registres de torn són
+// estat local de la màquina (fora de Git) i els nous desen l'inventari compacte; els antics es lligen igual.
 const STORE = '.agents/runtime/turns';
 function recordPath(root, id) {
   if (!turnPattern.test(id)) throw new Error('Identificador de torn invàlid');
@@ -14,30 +17,222 @@ function recordPath(root, id) {
   if (!inside(canonical(root), canonical(target))) throw new Error('Registre fora del repositori');
   return target;
 }
-export function inventory(root, {files=[]} = {}) {
-  const out = {};
-  const skip = new Set(['node_modules', '.git', 'dist', '90_arxiu_historic', '.obsidian', 'runtime', '__pycache__']);
+
+/* ── Inventari del torn ──────────────────────────────────────────────────────────────────────
+   Què observen openTurn i checkTurn: cada entrada (directori o fitxer de l'arrel) es recorre
+   sencera excepte els noms omesos; els exclosos no compten mai. Les tres llistes queden gravades
+   al descriptor compacte de cada torn nou: un canvi ací no altera la reconstrucció dels torns ja oberts. */
+const ENTRADES_INVENTARI = Object.freeze(['src', 'tooling', 'scripts', 'tests', '.agents', '.codex', '.claude', '.github', '.husky', CAMINS.wiki,
+  'package.json', 'package-lock.json', 'AGENTS.md', 'CLAUDE.md', 'vite.config.js', '.gitignore']);
+const OMESOS_INVENTARI = Object.freeze(['node_modules', '.git', 'dist', '90_arxiu_historic', '.obsidian', 'runtime', '__pycache__']);
+const EXCLOSOS_INVENTARI = Object.freeze(['.agents/TORN_ACTIU.json']);
+/** `turn.initial` compacte: commit base de Git + diferències de l'arbre observat respecte d'eixe commit. */
+export const FORMAT_INVENTARI_INICIAL = 'sdp.inventari.delta-git.v1';
+/** `turn.verification.inventari`: certificat de l'inventari del segell, reconstruïble des de l'inicial. */
+export const FORMAT_INVENTARI_VERIFICAT = 'sdp.inventari.delta-inicial.v1';
+const OID = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+const HASH = /^[0-9a-f]{64}$/;
+const LOT_BLOBS = 16 * 1024 * 1024;
+
+const ordenat = map => Object.fromEntries(Object.keys(map).sort().map(rel => [rel, map[rel]]));
+/** Empremta d'un inventari independent de l'ordre de les claus. */
+const empremta = map => sha(JSON.stringify(Object.keys(map).sort().map(rel => [rel, map[rel]])));
+const oidBlob = (bytes, algorisme) => crypto.createHash(algorisme).update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+const algorismeDe = oid => (oid.length === 64 ? 'sha256' : 'sha1');
+
+/** Observació física de l'inventari. Amb `oid` també calcula l'identificador de blob de Git de cada entrada. */
+function observa(root, { files = [], oid = null } = {}) {
+  const out = new Map();
+  const skip = new Set(OMESOS_INVENTARI);
+  const entrada = (bytes, kind, hash) => (oid ? { hash, kind, oid: oidBlob(bytes, oid) } : { hash, kind });
   function walk(rel) {
     const file = path.join(root, rel);
     if (!fs.existsSync(file)) return;
     const stat = fs.lstatSync(file);
-    if (stat.isSymbolicLink()) { out[rel] = sha(`symlink:${fs.readlinkSync(file)}`); return; }
+    if (stat.isSymbolicLink()) { const desti = fs.readlinkSync(file); out.set(rel, entrada(Buffer.from(desti), 'symlink', sha(`symlink:${desti}`))); return; }
     if (stat.isDirectory()) {
       for (const e of fs.readdirSync(file).sort()) if (!skip.has(e)) walk(`${rel}/${e}`);
-    } else if (stat.isFile()) out[rel] = hashFile(file);
+    } else if (stat.isFile()) { const bytes = fs.readFileSync(file); out.set(rel, entrada(bytes, 'file', sha(bytes))); }
   }
-  for (const rel of ['src', 'tooling', 'scripts', 'tests', '.agents', '.codex', '.claude', '.github', '.husky', CAMINS.wiki,
-    'package.json', 'package-lock.json', 'AGENTS.md', 'CLAUDE.md', 'vite.config.js', '.gitignore']) walk(rel);
+  for (const rel of ENTRADES_INVENTARI) walk(rel);
   for (const file of files) {
-    const rel=relativePath(root,file);
-    if(fs.existsSync(path.join(root,rel))) out[rel]=hashFile(path.join(root,rel));
+    const rel = relativePath(root, file);
+    if (fs.existsSync(path.join(root, rel))) { const bytes = fs.readFileSync(path.join(root, rel)); out.set(rel, entrada(bytes, 'file', sha(bytes))); }
   }
-  delete out['.agents/TORN_ACTIU.json'];
+  for (const rel of EXCLOSOS_INVENTARI) out.delete(rel);
   return out;
+}
+const hashes = observat => Object.fromEntries([...observat].map(([rel, o]) => [rel, o.hash]));
+export function inventory(root, {files=[]} = {}) {
+  return hashes(observa(root, { files }));
 }
 export function changes(before, after) {
   return [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(p => before[p] !== after[p]).sort();
 }
+
+/* Git només en lectura (rev-parse, ls-tree, cat-file), sense variables GIT_* heretades d'un hook. */
+function gitLectura(root, args, input, maxBuffer = LOT_BLOBS * 4) {
+  const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+  const r = spawnSync('git', ['-c', 'core.fsmonitor=false', ...args], { cwd: root, input, maxBuffer, timeout: 60000,
+    env: { ...env, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0' } });
+  return r.error || r.status !== 0 ? null : r.stdout;
+}
+/** Commit base per a un inventari compacte, o el motiu (esperat) pel qual no n'hi ha. */
+function baseGit(root) {
+  const top = gitLectura(root, ['rev-parse', '--show-toplevel']);
+  if (!top) return { motiu: 'sense repositori Git' };
+  let mateixa = false;
+  try { mateixa = fs.realpathSync.native(top.toString('utf8').trim()) === fs.realpathSync.native(root); } catch { mateixa = false; }
+  if (!mateixa) return { motiu: "l'arrel no és el nivell superior del repositori" };
+  const base = gitLectura(root, ['rev-parse', '--verify', '--quiet', 'HEAD^{commit}'])?.toString('utf8').trim();
+  if (!base || !OID.test(base)) return { motiu: 'repositori sense HEAD' };
+  return { base, algorisme: algorismeDe(base) };
+}
+function predicatInventari({ arrels, omesos, exclosos }) {
+  const skip = new Set(omesos), fora = new Set(exclosos);
+  return rel => {
+    if (fora.has(rel)) return false;
+    const arrel = arrels.find(e => rel === e || rel.startsWith(`${e}/`));
+    return arrel !== undefined && !rel.slice(arrel.length + 1).split('/').some(part => skip.has(part));
+  };
+}
+/** Blobs del commit base dins de l'inventari: ruta → {oid, kind}. */
+function entradesBase(root, d) {
+  const raw = gitLectura(root, ['ls-tree', '-r', '-z', '--full-tree', d.base]);
+  if (raw === null) throw new Error(`Inventari inicial compacte no reconstruïble: el commit base ${d.base.slice(0, 12)} no és llegible en este repositori`);
+  const dins = predicatInventari(d), out = new Map();
+  for (const registre of raw.toString('utf8').split('\0')) {
+    if (!registre) continue;
+    const m = /^([0-7]{6}) ([a-z]+) ([0-9a-f]{40,64})\t([\s\S]+)$/.exec(registre);
+    if (!m) throw new Error('Inventari inicial compacte: resposta inesperada de git ls-tree');
+    if (m[2] === 'blob' && dins(m[4])) out.set(m[4], { oid: m[3], kind: m[1] === '120000' ? 'symlink' : 'file' });
+  }
+  return out;
+}
+/** sha256 dels blobs indicats, per lots acotats; els enllaços simbòlics es resumixen com a l'observació. */
+function hashesDeBlobs(root, oids, symlinks) {
+  const unics = [...new Set(oids)], out = new Map();
+  if (!unics.length) return out;
+  const mides = gitLectura(root, ['cat-file', '--batch-check=%(objectname) %(objecttype) %(objectsize)'], Buffer.from(`${unics.join('\n')}\n`));
+  const linies = mides?.toString('ascii').trimEnd().split('\n') || [];
+  if (linies.length !== unics.length) throw new Error('Inventari inicial compacte: el commit base té blobs absents');
+  const mida = new Map(linies.map((linia, i) => {
+    const m = /^([0-9a-f]{40,64}) blob (\d+)$/.exec(linia);
+    if (!m || m[1] !== unics[i]) throw new Error('Inventari inicial compacte: blob absent o no regular al commit base');
+    return [m[1], Number(m[2])];
+  }));
+  const llegeix = lot => {
+    // Un blob més gran que el lot va sol: el buffer s'ajusta a la mida declarada, no al revés.
+    const declarat = lot.reduce((suma, oid) => suma + mida.get(oid) + 160, 1024);
+    const raw = gitLectura(root, ['cat-file', '--batch'], Buffer.from(`${lot.join('\n')}\n`), Math.max(declarat, LOT_BLOBS * 4));
+    if (raw === null) throw new Error('Inventari inicial compacte: git cat-file ha fallat');
+    let cursor = 0;
+    for (const oid of lot) {
+      const fi = raw.indexOf(10, cursor);
+      if (fi < 0 || raw.subarray(cursor, fi).toString('ascii') !== `${oid} blob ${mida.get(oid)}`) throw new Error('Inventari inicial compacte: resposta inesperada de git cat-file');
+      const bytes = raw.subarray(fi + 1, fi + 1 + mida.get(oid));
+      out.set(oid, { file: sha(bytes), symlink: symlinks.has(oid) ? sha(`symlink:${bytes.toString('utf8')}`) : null });
+      cursor = fi + 1 + mida.get(oid) + 1;
+    }
+  };
+  let lot = [], bytes = 0;
+  for (const oid of unics) {
+    if (lot.length && bytes + mida.get(oid) > LOT_BLOBS) { llegeix(lot); lot = []; bytes = 0; }
+    lot.push(oid); bytes += mida.get(oid);
+  }
+  if (lot.length) llegeix(lot);
+  return out;
+}
+/** Inventari complet a partir del descriptor. Les rutes que encara casen amb el commit base prenen
+    el hash de l'observació actual; la resta es llig del blob. L'empremta ho certifica tot o res. */
+function reconstrueix(root, d, observat) {
+  const out = {}, pendents = [];
+  for (const [rel, b] of entradesBase(root, d)) {
+    if (Object.hasOwn(d.diferencies, rel)) continue;
+    const o = observat.get(rel);
+    if (o && o.oid === b.oid && o.kind === b.kind) out[rel] = o.hash;
+    else pendents.push([rel, b]);
+  }
+  const blobs = hashesDeBlobs(root, pendents.map(([, b]) => b.oid), new Set(pendents.filter(([, b]) => b.kind === 'symlink').map(([, b]) => b.oid)));
+  for (const [rel, b] of pendents) out[rel] = blobs.get(b.oid)[b.kind];
+  for (const [rel, hash] of Object.entries(d.diferencies)) if (hash !== null) out[rel] = hash;
+  const resultat = ordenat(out);
+  if (Object.keys(resultat).length !== d.fitxers || empremta(resultat) !== d.sha256) {
+    throw new Error(`Inventari inicial compacte no reconstruïble: l'empremta no casa amb el commit base ${d.base.slice(0, 12)}`);
+  }
+  return resultat;
+}
+/** Inventari inicial d'un torn nou: compacte si l'arrel és un repositori amb HEAD; si no (còpia aïllada,
+    fixture sense Git), el mapa complet de sempre. Una fallada inesperada també desa el complet, amb avís. */
+function inventariInicialNou(root) {
+  const git = baseGit(root);
+  const observat = observa(root, { oid: git.algorisme ?? null });
+  const complet = hashes(observat);
+  if (!git.base) return complet;
+  try {
+    const d = { format: FORMAT_INVENTARI_INICIAL, base: git.base, arrels: [...ENTRADES_INVENTARI], omesos: [...OMESOS_INVENTARI], exclosos: [...EXCLOSOS_INVENTARI] };
+    const base = entradesBase(root, d), diferencies = {};
+    for (const [rel, o] of observat) { const b = base.get(rel); if (!b || b.oid !== o.oid || b.kind !== o.kind) diferencies[rel] = o.hash; }
+    for (const rel of base.keys()) if (!observat.has(rel)) diferencies[rel] = null;
+    const descriptor = { ...d, fitxers: Object.keys(complet).length, sha256: empremta(complet), diferencies: ordenat(diferencies) };
+    reconstrueix(root, descriptor, observat); // autocomprovació: amb la mateixa observació no llig cap blob
+    return descriptor;
+  } catch (error) {
+    process.emitWarning(`Inventari del torn desat complet: ${error.message}`, { code: 'SDP_INVENTARI_COMPACTE' });
+    return complet;
+  }
+}
+const esCompacte = initial => Object.hasOwn(initial, 'format');
+function validaInventariInicial(d) {
+  const llista = v => Array.isArray(v) && v.every(x => typeof x === 'string' && x && !x.split('/').includes('..'));
+  const valors = d.diferencies && typeof d.diferencies === 'object' && !Array.isArray(d.diferencies)
+    && Object.values(d.diferencies).every(v => v === null || (typeof v === 'string' && HASH.test(v)));
+  if (d.format !== FORMAT_INVENTARI_INICIAL || typeof d.base !== 'string' || !OID.test(d.base) || !llista(d.arrels) || !llista(d.omesos)
+    || !llista(d.exclosos) || !Number.isSafeInteger(d.fitxers) || d.fitxers < 0 || !HASH.test(d.sha256 || '') || !valors) {
+    throw new Error('Inventari inicial del torn invàlid');
+  }
+}
+const MEMORIA_INICIAL = new Map();
+/** Inventari inicial complet d'un torn, siga quin siga el format del registre (llegat o compacte).
+    `observat` és opcional: checkTurn hi passa l'observació que ja ha fet. */
+export function inventariInicial(root, turn, { observat = null } = {}) {
+  const d = turn.initial;
+  if (!esCompacte(d)) return d;
+  validaInventariInicial(d);
+  const clau = `${canonical(root)}\0${d.base}\0${d.sha256}`;
+  if (!MEMORIA_INICIAL.has(clau)) {
+    MEMORIA_INICIAL.set(clau, Object.freeze(reconstrueix(root, d, observat || observa(root, { oid: algorismeDe(d.base) }))));
+    if (MEMORIA_INICIAL.size > 8) MEMORIA_INICIAL.delete(MEMORIA_INICIAL.keys().next().value);
+  }
+  return MEMORIA_INICIAL.get(clau);
+}
+/** El segell desa els fitxers que el torn ha de poder acreditar (rebuts actius, pla i canvis respecte de
+    l'inicial) i el certificat de l'inventari complet; els consumidors de verification.files no canvien. */
+function verificacioCompacta(turn, initial, after) {
+  const rellevants = new Set([...activeReceipts(turn).map(r => r.file), ...(turn.plan?.file ? [turn.plan.file] : [])]);
+  const files = {};
+  for (const rel of Object.keys(after).sort()) if (rellevants.has(rel) || after[rel] !== initial[rel]) files[rel] = after[rel];
+  const absents = Object.keys(initial).filter(rel => !Object.hasOwn(after, rel)).sort();
+  return { files, inventari: { format: FORMAT_INVENTARI_VERIFICAT, fitxers: Object.keys(after).length, sha256: empremta(after), absents } };
+}
+/** Inventari complet del segell. Llegat: verification.files tal qual. Compacte: inicial + fitxers − absents,
+    amb les esmenes d'archive-links desfetes només per a comprovar l'empremta del segell. */
+export function inventariVerificat(root, turn) {
+  const v = turn.verification;
+  if (!v?.files) return null;
+  if (!v.inventari) return v.files;
+  const c = v.inventari;
+  if (c.format !== FORMAT_INVENTARI_VERIFICAT || !Array.isArray(c.absents) || !Number.isSafeInteger(c.fitxers) || !HASH.test(c.sha256 || '')) throw new Error('Inventari verificat del torn invàlid');
+  const out = { ...inventariInicial(root, turn), ...v.files };
+  for (const rel of c.absents) delete out[rel];
+  const segell = { ...out };
+  for (const ev of [...turn.history].reverse()) {
+    if (ev?.action === 'archive-links' && typeof ev.file === 'string' && segell[ev.file] === ev.toHash) segell[ev.file] = ev.fromHash;
+  }
+  if (Object.keys(segell).length !== c.fitxers || empremta(segell) !== c.sha256) throw new Error('Inventari verificat del torn no reconstruïble: l\'empremta del segell no casa');
+  return ordenat(out);
+}
+
 export function readTurn(root, id, { closed = false, expired = false, now = Date.now() } = {}) {
   const turn = json(recordPath(root, id));
   if (turn.turn_id !== id || turn.schema !== 'sdp.turn.v1' || !['opened', 'context_loaded', 'planned', 'verified', 'closed'].includes(turn.state)) throw new Error('Registre de torn invàlid');
@@ -46,6 +241,8 @@ export function readTurn(root, id, { closed = false, expired = false, now = Date
   if (!Number.isFinite(expiry)) throw new Error('Caducitat de torn invàlida');
   if (!expired && turn.state !== 'closed' && expiry <= now) throw new Error('Torn caducat');
   if (!turn.receipts || typeof turn.receipts !== 'object' || Array.isArray(turn.receipts) || !turn.initial || typeof turn.initial !== 'object' || Array.isArray(turn.initial) || !Array.isArray(turn.history)) throw new Error('Registre de torn incomplet');
+  // Un inventari llegat és un mapa de rutes; el compacte porta `format`, i un format desconegut no es llig.
+  if (esCompacte(turn.initial)) validaInventariInicial(turn.initial);
   return turn;
 }
 function atomic(file, value) {
@@ -79,7 +276,7 @@ export function openTurn(root, { actor = 'agent-local', scope = 'code' } = {}) {
   const now = new Date().toISOString();
   const turn = {schema:'sdp.turn.v1', turn_id, actor, scope, state:'opened', revision:0,
     createdAt:now, updatedAt:now, expiresAt:new Date(Date.now()+86400000).toISOString(),
-    contractHash:contract.hash, humanInventoryVersion:1, initial:inventory(root), receipts:{}, plan:null, verification:null,
+    contractHash:contract.hash, humanInventoryVersion:1, initial:inventariInicialNou(root), receipts:{}, plan:null, verification:null,
     history:[{state:'opened', action:'open', at:now}]};
   const file = recordPath(root, turn_id);
   fs.mkdirSync(path.dirname(file), {recursive:true});
@@ -250,7 +447,9 @@ export function checkTurn(root, id, {turn:provided} = {}) {
   if (!turn.plan || !fs.existsSync(path.join(root,turn.plan.file)) || hashFile(path.join(root, turn.plan.file)) !== turn.plan.hash) errors.push(`Pla absent o modificat: ${turn.plan?.file || '(sense pla)'}`);
   if (!['planned', 'verified'].includes(turn.state)) errors.push('El torn encara no està planificat');
   const receipts = activeReceipts(turn);
-  const current = inventory(root,{files:receipts.map(r=>r.file)}), changed = changes(turn.initial, current);
+  // Una sola observació serveix per a l'estat actual i, si el registre és compacte, per a reconstruir l'inicial.
+  const observat = observa(root,{files:receipts.map(r=>r.file), oid:esCompacte(turn.initial) && typeof turn.initial.base === 'string' ? algorismeDe(turn.initial.base) : null});
+  const current = hashes(observat), initial = inventariInicial(root, turn, {observat}), changed = changes(initial, current);
   // Explicit ownership avoids importing another agent's documents into this turn.
   // Human-zone and scope checks still use the complete repository delta.
   const owned = turn.ownedPaths ? new Set([...turn.ownedPaths,...receipts.map(r=>r.file)]) : null;
@@ -258,9 +457,9 @@ export function checkTurn(root, id, {turn:provided} = {}) {
     ...receipts.map(r => r.file)]);
   if (turn.scope === 'documents' && changed.some(p => /^(src|tooling|scripts|tests)\//.test(p) || /^package(?:-lock)?\.json$/.test(p))) errors.push('Canvis de codi fora de l’abast documental');
   for (const p of ['.agents/ESTAT.md', '.agents/LEDGER.md']) {
-    if (current[p] === turn.initial[p] || !fs.readFileSync(path.join(root,p),'utf8').includes(id)) errors.push(`${p}: falta el relleu d’aquest torn`);
+    if (current[p] === initial[p] || !fs.readFileSync(path.join(root,p),'utf8').includes(id)) errors.push(`${p}: falta el relleu d’aquest torn`);
   }
-  const humanBefore=turn.humanBaseline?.files || (turn.humanInventoryVersion===1 ? Object.fromEntries(Object.entries(turn.initial).filter(([p])=>humanZone(p))) : null);
+  const humanBefore=turn.humanBaseline?.files || (turn.humanInventoryVersion===1 ? Object.fromEntries(Object.entries(initial).filter(([p])=>humanZone(p))) : null);
   if(!humanBefore) errors.push('Vigilància humana sense inventari inicial; cal una migració explícita observada');
   else for(const file of changes(humanBefore,Object.fromEntries(Object.entries(current).filter(([p])=>humanZone(p))))) errors.push(`Zona humana modificada: ${file}`);
   // Una creació fallida no exigix un document absent; el seu reflex no pot
@@ -286,7 +485,7 @@ export function checkTurn(root, id, {turn:provided} = {}) {
     errors.push(...validateDocument(root,raw,file,{readRecord:otherId=>otherId===id?turn:readTurn(root,otherId,{closed:true})}).map(e=>`${file}: ${e}`));
     if (file !== `${DESK}/00_index_escriptori.md` && !anchored(index,file)) errors.push(`Document sense àncora: ${file}`);
   }
-  return {valid:errors.length===0, errors, current, changed, turn};
+  return {valid:errors.length===0, errors, current, changed, turn, initial};
 }
 export function sealTurn(root, id, runChecks, {close = false} = {}) {
   return mutateTurn(root, id, turn => {
@@ -296,7 +495,7 @@ export function sealTurn(root, id, runChecks, {close = false} = {}) {
     if (!result.valid) throw new Error(result.errors.join('\n'));
     const after = inventory(root,{files:activeReceipts(turn).map(r=>r.file)});
     if (changes(checked.current,after).length) throw new Error('La comprovació ha modificat fitxers o hi ha escriptura concurrent');
-    turn.verification = {at:new Date().toISOString(), files:after, checks:result.checks};
+    turn.verification = {at:new Date().toISOString(), ...verificacioCompacta(turn, checked.initial, after), checks:result.checks};
     move(turn,'verified','verify');
     if (close) move(turn,'closed','close');
     return {valid:true, turn_id:id, state:turn.state, checks:result.checks};

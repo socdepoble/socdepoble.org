@@ -1,0 +1,76 @@
+{
+  "entries": [
+    {
+      "identifier": "urn:air:socdepoble.org:docs:llms-guide",
+      "displayName": "Guia pública Sóc de Poble per a agents (llms.txt)",
+      "description": "Índex estructurat en Markdown de les rutes públiques, arquitectura Pedra Seca, llicències lliures i recursos oberts de Sóc de Poble.",
+      "type": "text/markdown",
+      "url": "https://socdepoble.org/llms.txt",
+      "version": "1.2.4",
+      "capabilities": [
+        "documentation",
+        "site-navigation",
+        "civic-architecture"
+      ],
+      "tags": [
+        "rural",
+        "valencia",
+        "open-source",
+        "pedra-seca",
+        "agpl-3.0"
+      ],
+      "representativeQueries": [
+        "Què és Sóc de Poble i quina arquitectura utilitza?",
+        "Quines pàgines públiques i serveis municipals ofereix socdepoble.org?",
+        "Com funciona el Web Component enxufable de Sóc de Poble?"
+      ]
+    },
+    {
+      "identifier": "urn:air:socdepoble.org:opendata:municipi-catalog",
+      "displayName": "Catàleg de Dades Obertes Municipals de Sóc de Poble",
+      "description": "Manifest JSON amb sumes SHA-256 i enllaços directes als conjunts JSON-LD d’entitats, notícies, agenda i patrimoni municipal.",
+      "type": "application/json",
+      "url": "https://socdepoble.org/opendata/manifest.json",
+      "version": "1.2.4",
+      "capabilities": [
+        "open-data",
+        "municipal-directory",
+        "public-events"
+      ],
+      "tags": [
+        "opendata",
+        "json-ld",
+        "la-torre-de-les-macanes",
+        "schema-org"
+      ],
+      "representativeQueries": [
+        "Quines dades obertes municipals publica Sóc de Poble?",
+        "On puc consultar l’agenda i el directori municipal en format JSON-LD?",
+        "Com es verifica la integritat SHA-256 del paquet de dades obertes?"
+      ]
+    },
+    {
+      "identifier": "urn:air:socdepoble.org:fediversity:activitypub-actor",
+      "displayName": "Actor Federat ActivityPub de Sóc de Poble",
+      "description": "Document públic ActivityStreams 2.0 de lectura per a descobrir el node federat, l’outbox pública i WebFinger municipal.",
+      "type": "application/activity+json",
+      "url": "https://socdepoble.org/ap/actors/socdepoble.json",
+      "version": "1.2.4",
+      "capabilities": [
+        "activitypub-read",
+        "webfinger-discovery",
+        "fediverse-outbox"
+      ],
+      "tags": [
+        "activitypub",
+        "fediversity",
+        "webfinger"
+      ],
+      "representativeQueries": [
+        "Quin és l’actor ActivityPub públic de Sóc de Poble?",
+        "Com es descobreix La Torre de les Maçanes des del Fedivers?",
+        "Quin estat té la federació ActivityPub en Sóc de Poble?"
+      ]
+    }
+  ]
+}

@@ -26,9 +26,17 @@ export function checkDocuments(root,{staged=false,base=null,all=false}={}) {
   files=[...new Set(files)].filter(file=>protectedPath(root,file)&&!humanZone(file));
   const read=file=>staged?git(root,['show',`:${file}`]):base?git(root,['show',`HEAD:${file}`]):fs.readFileSync(path.join(root,file),'utf8');
   const errors=[];
+  // R32 · D-R30-15: els registres de torn són locals i ja no viatgen amb el commit. Un registre encara
+  // versionat (històric) es llig de l'índex o del commit; si no hi és, el de la màquina que el va obrir.
+  const versionat=rel=>split(staged?git(root,['ls-files','-z','--',rel]):git(root,['ls-tree','-z','--name-only','HEAD','--',rel])).length>0;
   const readRecord=id=>{
-    const turn=JSON.parse(read(`.agents/runtime/turns/${id}.json`));
-    if(turn.turn_id!==id||turn.schema!=='sdp.turn.v1'||turn.state!=='closed'||!turn.verification?.files) throw new Error('Cal versionar el rebut del torn tancat amb el document');
+    const rel=`.agents/runtime/turns/${id}.json`, local=path.join(root,rel);
+    let raw;
+    if(versionat(rel)) raw=read(rel);
+    else if(fs.existsSync(local)) raw=fs.readFileSync(local,'utf8');
+    else throw new Error(`Registre de torn absent: ${rel}. Els torns són locals (D-R30-15): valida el document a la màquina que el va obrir.`);
+    const turn=JSON.parse(raw);
+    if(turn.turn_id!==id||turn.schema!=='sdp.turn.v1'||turn.state!=='closed'||!turn.verification?.files) throw new Error('Cal el rebut del torn tancat i segellat');
     return turn;
   };
   // Staging a different contract from the worktree must never validate against the wrong rules.

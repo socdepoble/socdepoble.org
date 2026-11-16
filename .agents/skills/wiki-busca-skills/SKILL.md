@@ -17,6 +17,9 @@ contracte.llig:
 contracte.escriu:
   - .agents/skills
   - .agents/manifest.yaml
+motors:
+  - tooling/brain/cataleg_skills.mjs
+  - tooling/brain/fronteres-skills.mjs
 ---
 
 # L'Explorador de Skills (El Caçador)

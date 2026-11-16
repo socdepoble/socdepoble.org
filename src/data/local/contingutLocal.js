@@ -272,7 +272,7 @@ export function creaContingutLocal(e) {
          entre Notes persistents i el Mur en memòria. Un descriptor atòmic
          mai es degrada a l’upsert legacy: tampoc una consulta pot escriure. */
       if (submission && (typeof submission === 'object' || typeof submission === 'function')
-          && ['noteId', 'operationId', 'expectedNoteRevision', 'consulta'].some(key => key in submission)) {
+          && ['noteId', 'operationId', 'expectedNoteRevision', 'consulta', 'expectedUpdatedAt'].some(key => key in submission)) {
         throw Object.assign(new Error('Este node local no oferix publicació atòmica de notes.'), { code: 'no-disponible' });
       }
       const ownerUserId = e.usuari()?.id;

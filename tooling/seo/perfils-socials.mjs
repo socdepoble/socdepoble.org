@@ -87,7 +87,13 @@ export function rutesDePerfils({elements = [], families = [], moduls, opcions = 
     const element = FORMA_UUID.test(clau) ? perId.get(clau.toLowerCase()) : perSlug.get(clau);
     const remot = element ? perfilDe(element) : null;
     const perfil = paquet.ambReservaDelPaquet(clau, remot);
-    return perfil ? {perfil, element: perfil === remot ? element : null} : null;
+    /* R30.2 fusiona els camps absents d'una identitat fundacional amb la
+       reserva i pot tornar un objecte nou. La procedència depén de la
+       identitat acreditada (id i tipus), mai de la referència d'objecte.
+       Si la reserva substituïx una organització que ha pres la clau d'una
+       persona/IA, el tipus no coincidix i no s'accepten els seus mitjans. */
+    const conservaRemot = remot && perfil?.id === remot.id && perfil.tipus === remot.tipus;
+    return perfil ? {perfil, element: conservaRemot ? element : null} : null;
   };
 
   /* La canònica d'una fitxa: es declara una vegada, i el seu camí queda assignat a ella mateixa. */

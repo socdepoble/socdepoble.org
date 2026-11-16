@@ -6,10 +6,11 @@
  * sense muntar mig arbre de components.
  *
  * SENSE DEPENDÈNCIES NOVES. Només `sanitize.js`, que ja és al projecte, i el
- * predicat i el text del missatge xifrat tancat de `conversa.js` (Onada R30).
+ * predicat i el text del missatge xifrat tancat (Onada R30), que des de
+ * l'Onada R32 viuen a `missatgeXifratHonest.js` (conversa.js els reexporta).
  */
 import { sanitizeHtml, netejaText } from '../../utils/sanitize.js';
-import { esXifratTancat, textXifratTancat } from './conversa.js';
+import { esXifratTancat, textXifratTancat } from './missatgeXifratHonest.js';
 
 const ESCAPADES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
@@ -60,7 +61,9 @@ function horaDe(missatge, locale) {
    és un document per a llegir, i ometre'l en silenci li canviaria la tria a la persona. */
 function cosDelMissatge(missatge, t) {
   const esborrat = Boolean(missatge.esborrat) || Boolean(missatge.esborratAl);
-  if (!esborrat && esXifratTancat(missatge)) {
+  if (esXifratTancat(missatge)) {
+    /* Onada R32 · Un xifrat tancat i esborrat: la cita buida de l'esborrat, mai un text sense verificar. */
+    if (esborrat) return '';
     const [clau, reserva] = textXifratTancat(missatge);
     return `<em>${escapa(typeof t === 'function' ? t(clau, reserva) : reserva)}</em>`;
   }
@@ -81,7 +84,10 @@ export function construeixRetall({ fil, missatges, locale = 'ca-ES', t = null })
   const nomFil = fil?.name || fil?.title || 'Conversa';
   const quants = missatges.length;
 
-  if (quants === 1 && missatges[0]?.esEsborranyIAIA === true) {
+  /* Onada R32 (invariant del kit Gemini R30.2) · L'esborrany de la IAIA és local i en clar. Si una
+     fila que diu ser-ho arriba xifrada i tancada, no se'n fa cap esborrany amb un text sense verificar:
+     va pel camí de sempre, marcada amb el text serè (cosDelMissatge). */
+  if (quants === 1 && missatges[0]?.esEsborranyIAIA === true && !esXifratTancat(missatges[0])) {
     const esborrany = missatges[0];
     const title = netejaText(escapa(esborrany.titolEsborrany || nomFil), 120);
     const paragrafs = String(esborrany.text ?? esborrany.content ?? '')

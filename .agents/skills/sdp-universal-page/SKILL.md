@@ -25,6 +25,8 @@ contracte.llig:
   - src/sections/pobles/PoblesSection.jsx
 contracte.escriu:
   - src/components/universal/UniversalPage.jsx
+motors:
+  - tooling/gates/certifica-enllacos.mjs
 ---
 
 # SKILL: UniversalPage — Anatomia i Comportament

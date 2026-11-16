@@ -51,6 +51,16 @@ test('P1-d · «Fèstes» i «Festes» tenen ids diferents; el mateix nom (caixa
   expect(resolCarpeta('   ', SERIE)).toBeNull();
 });
 
+test('R31 P2 · reserva UUID i sèrie sense alterar noms, reutilització ni col·lisions locals', () => {
+  const uuid = '32100000-0000-4000-8000-000000000005';
+  expect(resolCarpeta(uuid)).toEqual({ id: `f-carpeta-${uuid}`, nom: uuid, nova: true });
+  expect(resolCarpeta('Mur')).toEqual({ id: 'f-carpeta-mur', nom: 'Mur', nova: true });
+  expect(resolCarpeta('Mur', SERIE)).toEqual({ id: 'f-mur', nom: 'Mur', nova: false });
+  expect(resolCarpeta('Múr', [{ id: 'f-carpeta-mur', nom: 'Mur' }])).toEqual({ id: 'f-carpeta-mur-2', nom: 'Múr', nova: true });
+  expect(resolCarpeta('x'.repeat(150)).id.length).toBeLessThanOrEqual(100);
+  expect(resolCarpeta('x'.repeat(150)).nom).toHaveLength(80);
+});
+
 test('P1-d · la carpeta creada a la botonera persistix, torna després de recarregar i no es duplica', async () => {
   const onCanviaCarpeta = vi.fn();
   pinta({ onCanviaCarpeta });

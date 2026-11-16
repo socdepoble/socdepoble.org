@@ -213,7 +213,11 @@ const DIFERITS = [
      diccionari valencià, que és un tros d'arrencada propi i no compta en l'entrada). */
   'src/data/patrimoni/queDinem.js', 'src/data/menjarIBeure/alergensQueDinem.js',
   'src/sections/patrimoni/ReceptesQueDinemSection.jsx', 'src/sections/patrimoni/ReceptaDetailSection.jsx',
-  'src/sections/patrimoni/cercaReceptes.js', 'src/sections/patrimoni/CreditsQueDinem.jsx', 'src/sections/text/pageContent.patrimoniR14.js'
+  'src/sections/patrimoni/cercaReceptes.js', 'src/sections/patrimoni/CreditsQueDinem.jsx', 'src/sections/text/pageContent.patrimoniR14.js',
+  /* Onada R30.2 · Oxigen del paquet de WordPress: la biblioteca d'IndexedDB de carpetes locals
+     i la llavor de mitjans (mediaContent.js → poblesAplecViquipedia.js) es carreguen amb import(). */
+  'src/sections/multimedia/bibliotecaCarpetesLocals.js',
+  'src/sections/multimedia/mediaContent.js'
 ];
 const PAQUETS_DIFERITS = ['@tiptap/core', '@tiptap/react', '@tiptap/starter-kit', 'leaflet', '@supabase/supabase-js'];
 

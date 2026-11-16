@@ -9,7 +9,7 @@ import path from 'node:path';
 import {createRequire, syncBuiltinESMExports} from 'node:module';
 import {parse} from 'acorn';
 import {auditaSkills} from '../tooling/brain/fronteres-skills.mjs';
-import {enllacaDependencies, executaValidadors, PASSOS_HOOK, runChecked, tempsDelPas, TEMPS_PAS_MS} from '../tooling/gates/git-staged.mjs';
+import {copiaTornsLocals, enllacaDependencies, executaValidadors, PASSOS_HOOK, runChecked, tempsDelPas, TEMPS_PAS_MS} from '../tooling/gates/git-staged.mjs';
 
 function temporal(t, prefix = 'sdp deps ') {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), prefix)));
@@ -226,6 +226,105 @@ test('verifyPreparedTree delega en executaValidadors i no té cap camí propi ca
   for (const prohibit of ['symlinkSync', 'enllacaDependencies', 'PASSOS_HOOK', 'tempsDelPas']) {
     assert.ok(!noms.includes(prohibit), `${prohibit} no pot aparéixer dins de verifyPreparedTree`);
   }
+});
+
+/* R32 · D-R30-15: els registres de torn són locals (.gitignore) i no viatgen a l'índex. Sense la còpia, el
+   primer commit d'un document amb rebut d'un torn nou es bloqueja a porta-documents --staged («Registre de torn
+   absent»). copiaTornsLocals només copia registres regulars amb nom de torn, amb 0600, i mai no trepitja el que
+   l'arbre preparat ja porta (un registre històric encara versionat, materialitzat des de l'índex). */
+const torn = (n) => `torn_00000000-0000-4000-8000-${String(n).padStart(12, '0')}.json`;
+function magatzemViu(base) {
+  const origen = path.join(base, 'viu'), font = path.join(origen, '.agents/runtime/turns'), fora = path.join(base, 'fora');
+  fs.mkdirSync(font, {recursive: true});
+  fs.mkdirSync(fora);
+  const posa = (rel, text) => { fs.writeFileSync(path.join(font, rel), text); fs.chmodSync(path.join(font, rel), 0o644); };
+  posa(torn(1), '{"torn":1}');
+  posa(torn(2), '{"torn":2,"on":"disc"}');
+  // Noms que no són registres de torn: locks, temporals, majúscules, ocults i altres fitxers.
+  for (const alie of [`${torn(1)}.lock`, `${torn(1)}.tmp`, 'torn_ABC.json', `.${torn(3)}`, 'notes.txt', 'torn_.json.bak']) posa(alie, 'alie');
+  // Un directori amb nom de registre, un symlink i un hardlink cap a fora del magatzem.
+  fs.mkdirSync(path.join(font, torn(4)));
+  fs.writeFileSync(path.join(fora, 'secret.json'), '{"fora":true}');
+  fs.symlinkSync(path.join(fora, 'secret.json'), path.join(font, torn(5)));
+  fs.writeFileSync(path.join(fora, 'dur.json'), '{"dur":true}');
+  fs.linkSync(path.join(fora, 'dur.json'), path.join(font, torn(6)));
+  return {origen, font};
+}
+
+test('copiaTornsLocals: registres regulars amb 0600; salta noms aliens, directoris, symlinks i hardlinks; no trepitja el materialitzat', (t) => {
+  const base = temporal(t);
+  const {origen, font} = magatzemViu(base);
+  const desti = path.join(base, 'preparat'), dest = path.join(desti, '.agents/runtime/turns');
+  // L'arbre preparat ja porta el registre 2, versionat (històric) i materialitzat des de l'índex.
+  fs.mkdirSync(dest, {recursive: true});
+  fs.writeFileSync(path.join(dest, torn(2)), '{"torn":2,"on":"index"}');
+  fs.chmodSync(path.join(dest, torn(2)), 0o644);
+
+  assert.equal(copiaTornsLocals(origen, desti), 1);
+  assert.deepEqual(fs.readdirSync(dest).sort(), [torn(1), torn(2)]);
+  const copiat = fs.lstatSync(path.join(dest, torn(1)));
+  assert.ok(copiat.isFile() && !copiat.isSymbolicLink() && copiat.nlink === 1);
+  assert.equal(copiat.mode & 0o777, 0o600);
+  assert.equal(fs.readFileSync(path.join(dest, torn(1)), 'utf8'), '{"torn":1}');
+  assert.equal(fs.readFileSync(path.join(dest, torn(2)), 'utf8'), '{"torn":2,"on":"index"}', 'l’índex mana: el registre materialitzat no es trepitja');
+  assert.equal(fs.lstatSync(path.join(dest, torn(2))).mode & 0o777, 0o644);
+  // L'origen no es toca.
+  assert.equal(fs.lstatSync(path.join(font, torn(1))).mode & 0o777, 0o644);
+  assert.equal(fs.readFileSync(path.join(font, torn(2)), 'utf8'), '{"torn":2,"on":"disc"}');
+  // Idempotent: una segona passada no copia ni trepitja res.
+  assert.equal(copiaTornsLocals(origen, desti), 0);
+  assert.equal(fs.readFileSync(path.join(dest, torn(2)), 'utf8'), '{"torn":2,"on":"index"}');
+});
+
+test('copiaTornsLocals: destí sense magatzem rep un directori 0700; sense magatzem d’origen no crea res', (t) => {
+  const base = temporal(t);
+  const {origen} = magatzemViu(base);
+  const desti = path.join(base, 'preparat');
+  fs.mkdirSync(desti, {mode: 0o700});
+  assert.equal(copiaTornsLocals(origen, desti), 2);
+  const dir = fs.lstatSync(path.join(desti, '.agents/runtime/turns'));
+  assert.ok(dir.isDirectory() && !dir.isSymbolicLink());
+  assert.equal(dir.mode & 0o777, 0o700);
+  assert.deepEqual(fs.readdirSync(path.join(desti, '.agents/runtime/turns')).sort(), [torn(1), torn(2)]);
+  for (const nom of [torn(1), torn(2)]) assert.equal(fs.lstatSync(path.join(desti, '.agents/runtime/turns', nom)).mode & 0o777, 0o600);
+
+  const buit = path.join(base, 'sense-torns'), altre = path.join(base, 'preparat-buit');
+  fs.mkdirSync(buit); fs.mkdirSync(altre);
+  assert.equal(copiaTornsLocals(buit, altre), 0);
+  assert.deepEqual(fs.readdirSync(altre), [], 'sense origen no es crea cap .agents a l’arbre preparat');
+});
+
+/* La crida ha d'anar després de `git read-tree` (l'arbre preparat ja ha materialitzat els registres històrics,
+   que no es trepitgen) i abans de l'instantani i dels validadors, sense condició, amb l'arrel viva com a origen. */
+test('verifyPreparedTree copia els torns locals entre git read-tree i snapshotPreparedFiles, sense condició', () => {
+  const font = fs.readFileSync(new URL('../tooling/gates/git-staged.mjs', import.meta.url), 'utf8');
+  const ast = parse(font, {ecmaVersion: 'latest', sourceType: 'module'});
+  const decl = ast.body.find((n) => n.type === 'ExportNamedDeclaration' && n.declaration?.id?.name === 'verifyPreparedTree');
+  assert.ok(decl, 'verifyPreparedTree exportada');
+  const crides = [];
+  (function recorre(node) {
+    if (Array.isArray(node)) return node.forEach(recorre);
+    if (!node || typeof node.type !== 'string') return;
+    if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'copiaTornsLocals') crides.push(node);
+    for (const [clau, valor] of Object.entries(node)) if (clau !== 'type' && valor && typeof valor === 'object') recorre(valor);
+  })(decl.declaration.body);
+  assert.equal(crides.length, 1, 'una sola crida a copiaTornsLocals');
+  assert.deepEqual(crides[0].arguments.map((a) => a.type === 'Identifier' ? a.name : a.type), ['PROJECT_DIR', 'dir'], 'de l’arrel viva cap a l’arbre preparat');
+
+  const intent = decl.declaration.body.body.find((n) => n.type === 'TryStatement');
+  assert.ok(intent, 'el cos de verifyPreparedTree té el try de l’arbre temporal');
+  const cos = intent.block.body;
+  const crida = (stmt) => stmt.type === 'ExpressionStatement' ? stmt.expression : stmt.type === 'VariableDeclaration' && stmt.declarations.length === 1 ? stmt.declarations[0].init : null;
+  const nom = (stmt) => { const c = crida(stmt); return c?.type === 'CallExpression' && c.callee.type === 'Identifier' ? c.callee.name : null; };
+  const readTree = cos.findIndex((stmt) => nom(stmt) === 'runChecked' && crida(stmt).arguments[1]?.type === 'ArrayExpression' && crida(stmt).arguments[1].elements[0]?.value === 'read-tree');
+  const copia = cos.findIndex((stmt) => stmt.type === 'ExpressionStatement' && nom(stmt) === 'copiaTornsLocals');
+  const instantani = cos.findIndex((stmt) => nom(stmt) === 'snapshotPreparedFiles');
+  const validadors = cos.findIndex((stmt) => nom(stmt) === 'executaValidadors');
+  assert.ok(readTree >= 0, 'git read-tree al mateix bloc');
+  assert.ok(copia >= 0, 'copiaTornsLocals és una sentència directa del bloc, no dins d’una condició');
+  assert.ok(instantani >= 0 && validadors >= 0);
+  assert.ok(readTree < copia, 'després de git read-tree');
+  assert.ok(copia < instantani && instantani < validadors, 'abans de l’instantani i dels validadors');
 });
 
 /* Runtime exclòs del Git: només l'arrel canònica buida, mai els cossos de paperera o credencials. */

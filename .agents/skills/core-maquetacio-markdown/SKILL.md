@@ -26,6 +26,10 @@ contracte.llig:
 contracte.escriu:
   - _wiki_de_poble
   - .agents/skills
+motors:
+  - tooling/brain/cataleg_skills.mjs
+  - tooling/gates/tractor-registre.mjs
+  - tooling/wiki/tractor-frontmatter.mjs
 ---
 # Maquetació de Markdown
 

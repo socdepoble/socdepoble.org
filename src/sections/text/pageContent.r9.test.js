@@ -55,7 +55,7 @@ import { contingutNoTraduible } from '../../data/traductor.js';
 import { ATLES_OPERATIU } from '../../data/iaiaLocal.js';
 import { CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES } from '../../config/connexionsPubliques.js';
 import { AVISOS_PUSH_XAT_ACTIUS } from '../../config/avisosPushXat.js';
-import { passos } from '../../../tooling/gates/run-portes.mjs';
+import { passos, seleccionaPassos } from '../../../tooling/gates/run-portes.mjs';
 
 const ARREL = path.resolve(import.meta.dirname, '../../..');
 const llegix = (rel) => readFileSync(path.join(ARREL, rel), 'utf8');
@@ -205,7 +205,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada R28 · La crònica de l'Onada R28 obri /versions, davant de la crònica R26 i R27.
     // Onada R29 · La crònica de l'Onada R29 obri /versions, davant de la crònica R28.
     // Onada R30 · La crònica de l'Onada R30 obri /versions, davant de la crònica R29.
-    expect([...versions.querySelectorAll('h3')].slice(0, 15).map((h3) => h3.textContent)).toEqual([
+    // Onada R32 · La crònica de l'Onada R32 obri /versions, davant de la crònica R30.
+    expect([...versions.querySelectorAll('h3')].slice(0, 16).map((h3) => h3.textContent)).toEqual([
+      '16 de novembre de 2026, vesprada · Onada R32 · Missatges del Xat que no cauen en error en renovar la sessió, carpetes del Bloc de Notes que no es confonen i més seguretat al servidor compartit',
       '16 de novembre de 2026, matinada · Onada R30 · Les carpetes antigues del Bloc de Notes al servidor, una carpeta del Mode rural que es compacta sola i dos tocs que ja no compten doble',
       '15 de novembre de 2026, tarda · Onada R29 · El teclat del mòbil al seu lloc, un reproductor de so que no es mou i carpetes del Bloc de Notes que arriben al servidor',
       '15 de novembre de 2026, matí · Onada R28 · Una còpia xifrada del Xat, el reproductor de so centrat i més contrast i espai per a escriure al mòbil',
@@ -576,10 +578,35 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
   });
 
   test('les peces que sostenen les xifres', () => {
-    // El cens del 14-11-2026: 60 portes (totes les que no són bateries de proves; la 60a, Porta Cobertura Social, del
-    // P0-SEO-UNIVERSAL; cens repetit per la revisió adversària R22). Si en canvia el nombre, cal
-    // tornar a passar el cens i reescriure la xifra i la data en les 5 llengües.
-    expect(passos.filter((pas) => !pas.prova)).toHaveLength(60);
+    // R32 · «Les 60 portes del cens (run-portes --cens, 14-11-2026)» és una instantània
+    // datada. Aquell dia (259f800d1, i igual a bdefec55a) el cens declarava 60 portes en
+    // total: 59 de lectura i la Porta Build, que --cens omet per potMutar. Gemini R31 hi
+    // afig la Coherència editorial viva: ara en són 61 de declarades i 60 de lectura.
+    // La xifra coincidix, però el conjunt d'avui no és el del 14-11: el que acredita el
+    // text és el tall reconstruït traient les portes posteriors a eixa data. Una porta
+    // nova trenca esta prova i obliga a renovar xifra i data en les cinc llengües.
+    const POSTERIORS_AL_TALL_14_11 = ['porta:coherencia-editorial']; // Gemini R31, 16-11-2026
+    const cens = seleccionaPassos({ cens: true });
+    const declarades = passos.filter((pas) => !pas.prova);
+    const ambMutacions = seleccionaPassos({ cens: true, ambMutacions: true });
+    const proves = passos.filter((pas) => pas.prova);
+    const tall14_11 = declarades.filter((pas) => !POSTERIORS_AL_TALL_14_11.includes(pas.script));
+    expect(declarades.length - tall14_11.length).toBe(POSTERIORS_AL_TALL_14_11.length);
+    expect(tall14_11).toHaveLength(60);
+    expect(tall14_11).toContainEqual(expect.objectContaining({ nom: 'Porta Build', potMutar: true }));
+    expect(cens).toHaveLength(60);
+    expect(declarades).toHaveLength(61);
+    expect(ambMutacions).toHaveLength(61);
+    expect(ambMutacions).toEqual(declarades);
+    expect(declarades.filter((pas) => !cens.includes(pas))).toEqual([
+      expect.objectContaining({ nom: 'Porta Build', potMutar: true }),
+    ]);
+    expect(proves).toHaveLength(4);
+    expect(proves.map((pas) => pas.nom)).toEqual([
+      'Proves del contracte documental', 'Contracte de teclat per superfícies', 'Proves NodeJS', 'Proves',
+    ]);
+    expect(cens.filter((pas) => pas.prova)).toEqual([]);
+    expect(ambMutacions.filter((pas) => pas.prova)).toEqual([]);
     // L'índex local és l'Atles operatiu més les fitxes dels pobles de la llavor; la Wiki arriba per import().
     expect(ATLES_OPERATIU.length).toBe(25);
     expect(llegix('src/data/iaiaLocal.js')).toContain('...ATLES_OPERATIU.map(documentDeLAtles), ...MOCK_TOWNS.map(documentDelPoble)');

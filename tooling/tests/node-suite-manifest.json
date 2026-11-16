@@ -221,7 +221,19 @@
     "tooling/gates/consola-zero.sense-rutes.test.mjs",
     "tests/r28-rgpd-quotes-r23.test.mjs",
     "tests/r29-quotes-rls-i-consens.test.mjs",
-    "tests/r29-esquemes-json-contractes.test.mjs"
+    "tests/r29-esquemes-json-contractes.test.mjs",
+    "tests/r30-2-pf03-ack-crdt.test.mjs",
+    "tests/tractor-cromatic-temes.test.mjs",
+    "tests/r31-reconciliacio-e2ee.test.mjs",
+    "tests/tractor-cens-context.test.mjs",
+    "tests/r31-push-sessio-postgres.test.mjs",
+    "tests/r31-push-android-task.test.mjs",
+    "tests/r31-definer-search-path.test.mjs",
+    "tests/tractor-coherencia-editorial-viva.test.mjs",
+    "tests/agentic-browsing-ard-llms.test.mjs",
+    "tests/usabilitat-botons-r31.test.mjs",
+    "tests/d-r30-14-enllacos-arxiu-historic.test.mjs",
+    "tests/torns-inventari-compacte-r32.test.mjs"
   ],
   "files": [
     {
@@ -1485,11 +1497,6 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
-      "path": "tests/tractor-autosanacio.test.mjs",
-      "suite": "laboratory",
-      "reason": "CANDIDATS prioritza el prototip de laboratori 260924 abans de qualsevol instal·lació permanent; corredor de prototip, no del producte actual."
-    },
-    {
       "path": "tests/tractor-crom.test.mjs",
       "suite": "primary",
       "reason": "Ordre del Mestre (T15, 260930; 30-10-2026) · Porta Crom K4 rectangle pur: nav.app-sidebar .nav-item i .sidebar-control-btn amb border-radius 0 i mai width: 100%; el mutant de la pastilla, una cantonada arrodonida, una .nav-item més específica sense app-sidebar (.sdp-root .nav-item.active) i la base absent cauen; només la .nav-item nua i exacta (barra mòbil) fora d'abast; fulls CSS temporals."
@@ -1550,11 +1557,6 @@
       "reason": "Ordre del Mestre (30-10-2026) · Porta Rutes R1 amb frontera esquerra: l'arxiu fred germà no és un literal de la Wiki i un literal real (també darrere de «../» o de «/») encara cau; fixtures temporals sense línia base."
     },
     {
-      "path": "tests/tractor-sinapsis.test.mjs",
-      "suite": "laboratory",
-      "reason": "CANDIDATS prioritza el prototip de laboratori 260924 abans de qualsevol instal·lació permanent; corredor de prototip, no del producte actual."
-    },
-    {
       "path": "tests/tractor-tokens-prosa.test.mjs",
       "suite": "primary",
       "reason": "Revisió adversarial de la Ronda 1 (31-10-2026) · Porta Tokens, T3: la prosa que la interfície pinta no declara cap token, i un srcDoc, un dangerouslySetInnerHTML, un cssText o una plantilla hi continuen comptant; arbres sintètics a mkdtemp, cap xarxa."
@@ -1607,7 +1609,7 @@
     {
       "path": "tooling/gates/guarda-nocturna.test.mjs",
       "suite": "primary",
-      "reason": "Guàrdia amb desconvocatòria explícita acotada a l’onada i TTL, amb fixtures temporals i compatibilitat legacy."
+      "reason": "Guàrdia amb desconvocatòria explícita acotada a l’onada i TTL, amb fixtures temporals i compatibilitat legacy. R32 (Node 0 R31): amb fitxer d'estat, una evidència només compta si mtime > inici; inici invàlid o estat il·legible fallen tancats; sense els SHA fixos d'octubre."
     },
     {
       "path": "tooling/gates/pressupost-paquet.test.mjs",
@@ -2077,6 +2079,72 @@
       "suite": "laboratory",
       "kind": "postgres",
       "reason": "R30 P1-79 · revisió independent de la precondició AAL2 davant claims nuls amb PGlite local explícit. Cap connexió ni sessió remota."
+    },
+    {
+      "path": "tests/agentic-browsing-ard-llms.test.mjs",
+      "suite": "primary",
+      "reason": "R31 (IDEA-275 · lot_02 Gemini): validació determinista de public/llms.txt, public/.well-known/ard.json (URNs urn:air:socdepoble.org i representativeQueries) i llistes blanques de build."
+    },
+    {
+      "path": "tests/d-r30-14-enllacos-arxiu-historic.test.mjs",
+      "suite": "primary",
+      "reason": "R32 · D-R30-14: enllaços de documents vius cap a 90_arxiu_historic vàlids només si el destí existix al disc real del repositori; inventats, fora de l'arrel o absents continuen rebutjats, també dins de l'arbre preparat del hook."
+    },
+    {
+      "path": "tests/r30-2-pf03-ack-crdt.test.mjs",
+      "suite": "primary",
+      "reason": "R30.2/PF-03: ACK remot explícit per captura i DOT, retenció estricta de 90 dies amb rellotge remot, certificat causal permanent, convergència de rèpliques antigues i preservació d'edicions pendents; fixtures portables sense xarxa."
+    },
+    {
+      "path": "tests/r30-carpetes-locals-pglite.test.mjs",
+      "suite": "laboratory",
+      "kind": "postgres",
+      "reason": "R30 PF-01 viva + invariants R31 (Onada R32): prova SQL amb PGlite local explícit via SDP_PGLITE_MODULE contra crea_carpeta_notes (2611051930); el test refusa executar-se sense motor. Sense serveis remots ni la migració rebutjada 20261115233000."
+    },
+    {
+      "path": "tests/r31-definer-search-path.test.mjs",
+      "suite": "primary",
+      "reason": "R31 (ADD118 al kit; migració 116 d'este catàleg): definers amb path buit, ACL preservades, idempotència, deriva i taules temporals adversàries en PGlite."
+    },
+    {
+      "path": "tests/r31-push-android-task.test.mjs",
+      "suite": "primary",
+      "reason": "R31 Passada2: Task Firebase real serialitzada en el pont Android propi; compilació del Java de producció i intercalacions de registre/baixa."
+    },
+    {
+      "path": "tests/r31-push-sessio-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R31: RLS de dispositius Push, revocació de sessió i canvi de compte sobre PGlite real."
+    },
+    {
+      "path": "tests/r31-reconciliacio-e2ee.test.mjs",
+      "suite": "primary",
+      "reason": "R31+R32: conciliació causal E2EE fusionada amb R29-E2EE-02; textos llegits dels cinc diccionaris."
+    },
+    {
+      "path": "tests/torns-inventari-compacte-r32.test.mjs",
+      "suite": "primary",
+      "reason": "R32 · D-R30-15/16: inventari compacte dels torns (commit base + diferències), lectura dels torns llegats, arxivat --arxiva amb torns compactes, i .gitignore de torns i preferències locals d'Obsidian."
+    },
+    {
+      "path": "tests/tractor-cens-context.test.mjs",
+      "suite": "primary",
+      "reason": "R31: cens global del Consell amb context, quantificadors de subconjunt i contraexemples mixtos."
+    },
+    {
+      "path": "tests/tractor-coherencia-editorial-viva.test.mjs",
+      "suite": "primary",
+      "reason": "R31 (IDEA-273 · lot_01 Gemini): validació de les 6 lleis CEV-1..CEV-6 de tractor-coherencia-editorial-viva.mjs, paritat 5 llengües, cens i propagació per dominis."
+    },
+    {
+      "path": "tests/tractor-cromatic-temes.test.mjs",
+      "suite": "primary",
+      "reason": "R31: cobertura cromàtica multi-tema incorporada per Gemini R30.2 i protegida en CI."
+    },
+    {
+      "path": "tests/usabilitat-botons-r31.test.mjs",
+      "suite": "primary",
+      "reason": "R31 (IDEA-275/276 · lot_03 Gemini): contracte AST/JSX de type explícit en <button>, WCAG 2.5.3 Label in Name en controls de data/hora, <dialog> natiu i les 4 rutes d'entitat."
     }
   ]
 }

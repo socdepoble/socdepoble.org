@@ -245,7 +245,6 @@ import {
   creaAgrupadorMarques,
   esSilenciat,
   esTextBuitOSolsMarques,
-  esperaReintent,
   filsEquivalents,
   filsPerEntregar,
   fusionaPerSeq,
@@ -293,6 +292,9 @@ function hostReady(signal) {
   hostPromise ||= import('../../host.js').catch(error => { hostPromise = null; throw error; });
   return hostPromise.then(host => host.quanLlest({ signal }));
 }
+/* R32 (xat_tros_paralel) · Una lectura bona espera el tros rural com a molt
+   este sostre: un tros lent o penjat no la deixa sense pintar. */
+const SOSTRE_TROS_RURAL_MS = 400;
 
 /* R24 · Gauntlet (G-client-1) · Retard del segon pla per a un fil que falla. */
 const ESPERA_ENTREGA_BASE_MS = 30000;
@@ -523,44 +525,18 @@ const BUIT = {
   arxivaFil: async () => ({ estat: 'error', arxivat: false })
 };
 
-/** Espera `ms` o fins que el senyal s'aborte. Torna `false` si s'ha abortat. */
-function espera(ms, signal) {
-  return new Promise((resolve) => {
-    if (signal?.aborted) { resolve(false); return; }
-    let temporitzador = null;
-    const alAbortar = () => { clearTimeout(temporitzador); resolve(false); };
-    temporitzador = setTimeout(() => {
-      signal?.removeEventListener('abort', alAbortar);
-      resolve(true);
-    }, ms);
-    signal?.addEventListener('abort', alAbortar, { once: true });
-  });
-}
-
-/* Gauntlet 261025_0545 (XC-03) · El navegador diu que no hi ha xarxa. Només
-   val el `false`: un `true` no garantix res, i llavors manen els reintents.
-   Sense finestra no hi ha cap event que esperar: també manen els reintents. */
-const senseXarxa = () => typeof window !== 'undefined' && typeof navigator !== 'undefined' && navigator.onLine === false;
-
-/** Gauntlet 261025_0545 (XC-03) · Espera que torne la xarxa ('online') o que
- *  la pàgina torne a la vista. Torna `false` si el senyal s'avorta. */
-function esperaXarxa(signal) {
-  return new Promise((resolve) => {
-    if (signal?.aborted) { resolve(false); return; }
-    const acaba = (valor) => {
-      window.removeEventListener('online', alTornar);
-      document.removeEventListener('visibilitychange', alVeure);
-      signal?.removeEventListener('abort', alAbortar);
-      resolve(valor);
-    };
-    const alTornar = () => acaba(true);
-    const alVeure = () => { if (!document.hidden) acaba(true); };
-    const alAbortar = () => acaba(false);
-    window.addEventListener('online', alTornar);
-    document.addEventListener('visibilitychange', alVeure);
-    signal?.addEventListener('abort', alAbortar, { once: true });
-  });
-}
+/* R32 · El tros diferit del cablejat rural (cablejatXatRural.js) no ha
+   arribat: una pestanya d'abans d'un desplegament el demana a un hash
+   retirat, o no hi ha xarxa. */
+const CODI_TROS_NO_CARREGAT = 'XAT_TROS_NO_CARREGAT';
+/* R32 · El vocabulari del servei i de la màquina rural (EVIDENCIA_SERVIDOR_*,
+   ID_SERVIDOR_DIVERGENT, SESSIO_CANVIADA, SERVEI_TANCAT i el del tros) és
+   un `codi` en majúscules sense `code` del port, amb un text per a qui
+   programa i sense traduir. La bombolla en diu el «No s'ha enviat» de sempre
+   (error null, com interromEnviaments); el codi es queda a codiError. Els
+   codis SDP del port (`code`) i els del xifrat (en minúscules) porten text
+   per a la persona i no hi entren. */
+const esErrorTecnicDelXat = (error) => !error?.code && /^[A-Z]+(?:_[A-Z]+)+$/.test(String(error?.codi ?? ''));
 
 /**
  * Avís dins de l'app (XAT-J01). Viu en un component propi perquè els seus
@@ -718,8 +694,8 @@ export function XatProvider({ children, config }) {
   /* R22 (A-xat-fluxos-r1-2) · `persona` (clauPersona) i `jo` viatgen amb el
      testimoni perquè la purga sàpia si la sessió s'ha perdut o si torna la
      mateixa persona (bombollesEnReposRef). */
-  const token = useMemo(() => ({ scopeKey, ambit: ambitEstable, persona: clauPersona, jo: joId, config }),
-    [scopeKey, ambitEstable, clauPersona, joId, config]);
+  const token = useMemo(() => ({ scopeKey, ambit: ambitEstable, persona: clauPersona, jo: joId, actor: entitatId, config }),
+    [scopeKey, ambitEstable, clauPersona, joId, entitatId, config]);
   const tokenActual = useRef(token);
   tokenActual.current = token;
   /* Decisió 1 · L'àmbit de dades del render vigent i si el proveïdor és
@@ -729,6 +705,41 @@ export function XatProvider({ children, config }) {
   ambitActual.current = ambitEstable;
   const desmuntat = useRef(false);
   const operacio = useRef(null);
+  /* R30.2 · El transport i les transicions rurals es carreguen quan hi ha
+     enviament; el primer pintat no importa el servei JWT ni la màquina.
+     R32 · Si el tros no arriba, l'error porta CODI_TROS_NO_CARREGAT i no és
+     reintentable: la lectura continua sense projecció (com abans de R30.2)
+     i la bombolla diu «No s'ha enviat»; «Torna-ho a provar» el torna a demanar. */
+  const cablejatRural = useRef(null);
+  /* R32 (xat_tros_paralel) · Una lectura s'ha pintat sense el cablejat (el tros
+     no havia arribat dins del sostre, o havia fallat). Quan arribe, versioRural
+     força una derivació nova: missatgesDerivats no veu la ref. */
+  const pintatSenseRural = useRef(false);
+  const [versioRural, setVersioRural] = useState(0);
+  const carregaRural = useCallback(async () => {
+    let creaCablejatXatRural;
+    try {
+      /* Dins del try també la desestructuració: si un oient de
+         vite:preloadError fa preventDefault, l'import resol a undefined. */
+      ({ creaCablejatXatRural } = await import('./cablejatXatRural.js'));
+    } catch (cause) {
+      /* El missatge és el codi: mai no es pinta (esErrorTecnicDelXat). */
+      throw Object.assign(new Error(CODI_TROS_NO_CARREGAT, { cause }), { codi: CODI_TROS_NO_CARREGAT, retriable: false });
+    }
+    if (desmuntat.current) return null;
+    if (!cablejatRural.current) {
+      cablejatRural.current = creaCablejatXatRural({
+        obteToken: () => tokenActual.current,
+        obteOperacio: () => desmuntat.current ? null : operacio.current,
+        enviaMissatge,
+      });
+      if (pintatSenseRural.current) {
+        pintatSenseRural.current = false;
+        setVersioRural((v) => v + 1);
+      }
+    }
+    return cablejatRural.current;
+  }, []);
   const [tokenEstat, setTokenEstat] = useState(null);
   const captura = useCallback(() => {
     const op = operacio.current;
@@ -1112,6 +1123,8 @@ export function XatProvider({ children, config }) {
     return () => {
       desmuntat.current = true;
       operacio.current?.passa(null);
+      cablejatRural.current?.tanca();
+      cablejatRural.current = null;
     };
   }, []);
 
@@ -1129,13 +1142,14 @@ export function XatProvider({ children, config }) {
     const renovacio = previa?.token.ambit === token.ambit;
     const op = novaOperacio(token, renovacio ? previa.llinatge : {});
     operacio.current = op;
+    cablejatRural.current?.revalida();
     opDelToken.current.set(token, op);
     if (renovacio) {
-      /* Els enviaments en vol eren de l'operació que s'acaba d'avortar: la
-         bombolla es queda, en error, i «Torna-ho a provar» la reenvia amb el
-         mateix id. Si el servidor ja l'havia rebuda, la lectura següent la
-         retira (retiraConfirmats). */
-      mutaPendents(interromEnviaments);
+      /* R30.2 · El servei seguix els transports en vol del mateix llinatge:
+         la bombolla continua pendent i l'ACK arriba a l'operació vigent.
+         Les esperes de reintent sense transport s'interrompen com abans;
+         el reintent manual conserva id i retiraConfirmats evita duplicats. */
+      mutaPendents((previs) => cablejatRural.current?.interromp(previs) ?? interromEnviaments(previs));
     } else {
       /* R22 (A-xat-fluxos-r1-2) · Una renovació fallida amb el JWT ja caducat
          (sense cobertura) buida la pestanya: el xat veu la persona a null i
@@ -1379,6 +1393,11 @@ export function XatProvider({ children, config }) {
          màxim del magatzem: el missatge propi confirmat no el mou. */
       const desDe = cursorRef.current[filId] ?? null;
       const incremental = desDe != null;
+      /* R32 (xat_tros_paralel) · El tros rural vola en paral·lel amb la lectura.
+         Si el navegador sap que no hi ha xarxa (navigator.onLine fals), no es
+         demana fins que hi ha una lectura bona, com abans: el navegador pot
+         recordar un import() fallit fins que es recarrega la pàgina. */
+      const rural = globalThis.navigator?.onLine === false ? null : carregaRural().catch(() => null);
       try {
         await hostReady(op.controller.signal);
         if (!vigent(op)) return { ok: false, plena: false };
@@ -1388,6 +1407,18 @@ export function XatProvider({ children, config }) {
         if (esVisitant(visitantsRef.current, filId)) opcions.visitant = true;
         const bruts = await loadMissatges(filId, opcions);
         if (!vigent(op)) return { ok: false, plena: false };
+        /* R32 · La projecció rural arriba, si pot, abans del primer pintat;
+           una lectura bona es pinta igualment encara que el tros no arribe
+           (XC-03/B04): sense cablejat, els combinats tal qual.
+           R32 (xat_tros_paralel) · Ni lent ni penjat: com a molt el sostre. Si
+           venç, es pinta sense projecció i el tros, quan arriba, la porta.
+           Cap de les dues promeses rebutja: el rellotge es para en acabar. */
+        let rellotge;
+        await Promise.race([rural ?? carregaRural().catch(() => null),
+          new Promise((resolve) => { rellotge = setTimeout(resolve, SOSTRE_TROS_RURAL_MS); })]);
+        clearTimeout(rellotge);
+        if (!vigent(op)) return { ok: false, plena: false };
+        if (!cablejatRural.current) pintatSenseRural.current = true;
         const nous = (Array.isArray(bruts) ? bruts : []).map((m) => mapejaMissatge(m, joId));
         /* Auditoria 261007 (B) · Només una lectura acceptada avança el cursor, i
            mai cap arrere. Una càrrega completa sense cap missatge el deixa a 0
@@ -1470,7 +1501,7 @@ export function XatProvider({ children, config }) {
       }
     })();
     return lectura.promesa;
-  }, [joId, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaMissatges, mutaPendents, marcaCarregat, posaAvisFil, llevaAvisFil, publicaLectura]);
+  }, [joId, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaMissatges, mutaPendents, marcaCarregat, posaAvisFil, llevaAvisFil, publicaLectura, carregaRural]);
   carregaMissatgesRef.current = carregaMissatges;
 
   /* ── Historial cap arrere (XAT-A23): abansDeSeq = el seq mínim carregat ── */
@@ -1741,7 +1772,7 @@ export function XatProvider({ children, config }) {
      Gauntlet 261025_0545 (D2) · `esperaLaXarxa` fals (Connectar): sense
      xarxa, els reintents de sempre en lloc de l'espera de XC-03. */
   const executaEnviament = useCallback(async (filId, id, cos, respostaA = null, esperaLaXarxa = true) => {
-    const op = captura();
+    let op = captura();
     if (!vigent(op)) return [];
     /* Una resposta porta l'id del missatge citat; el port ja l'accepta
        (enviaMissatge(filId, { id, text, respostaA })). Sense resposta, el cos
@@ -1750,6 +1781,7 @@ export function XatProvider({ children, config }) {
     /* Integració 261024 (Codex C-02) · Un rebuig per les normes (SDP-MOD-428)
        torna a obrir la porta UNA sola vegada per enviament. */
     let normesReobertes = false;
+    let rural = null;
     /* Gauntlet 261025_0545 (XC-03) · `intent` només puja amb un reintent que
        gasta (els de sempre i el de les normes), no amb l'espera de la xarxa. */
     let intent = 0;
@@ -1759,8 +1791,16 @@ export function XatProvider({ children, config }) {
         const visitant = esVisitant(visitantsRef.current, filId);
         const opcions = { ...config, signal: op.controller.signal };
         if (visitant) opcions.visitant = true;
-        const desat = await enviaMissatge(filId, entrada, opcions);
+        rural = await carregaRural();
         if (!vigent(op)) return [];
+        const resultat = await rural.envia(op, filId, entrada, opcions);
+        op = resultat.op;
+        const desat = resultat.desat;
+        if (!vigent(op)) return [];
+        /* R32 · F7 · El motor E2EE l'ha desat a la safata del dispositiu (claus
+           bloquejades): no hi ha seq ni ✓, i tampoc cap error. La bombolla es
+           queda 'pendent' (cua_local) i no es reintenta: la safata és del motor. */
+        if (resultat.encuat) return [];
         if (visitant) {
           mutaVisitants((previs) => (previs[filId] ? { ...previs, [filId]: { ...previs[filId], participant: true } } : previs));
           carregaFils();
@@ -1777,6 +1817,8 @@ export function XatProvider({ children, config }) {
         mutaFils((previs) => previs.map((f) => (f.id === filId ? actualitzaFilAmbMissatge(f, definitiu) : f)));
         return [definitiu];
       } catch (error) {
+        const actual = operacio.current;
+        if (actual?.llinatge === op.llinatge && actual.token === tokenActual.current) op = actual;
         if (!vigent(op)) return [];
         /* Gauntlet 261025_0545 (XC-03) · Sense xarxa (el navegador ho diu),
            una fallada de xarxa no gasta cap reintent: abans, els tres
@@ -1790,7 +1832,7 @@ export function XatProvider({ children, config }) {
            camí de sempre. Una renovació talla l'espera com talla els
            reintents (interromEnviaments: la bombolla passa a error). El text
            només viu en memòria: desar-lo al dispositiu és decisió del Mestre. */
-        if (error?.retriable && esperaLaXarxa && senseXarxa()) {
+        if (error?.retriable && esperaLaXarxa && rural?.senseXarxa()) {
           /* Gauntlet 261025_0545 (D2) · Els de programa encuats darrere ho
              saben ara (encuaEnviament): no esperaran la xarxa amb esta. */
           const esperes = esperesXarxaRef.current.get(filId) || { esperen: 0, oients: new Set() };
@@ -1799,7 +1841,7 @@ export function XatProvider({ children, config }) {
           for (const oient of [...esperes.oients]) oient();
           let seguir;
           try {
-            seguir = await esperaXarxa(op.controller.signal);
+            seguir = await rural.esperaXarxa(op.controller.signal);
           } finally {
             esperes.esperen -= 1;
             if (!esperes.esperen && !esperes.oients.size && esperesXarxaRef.current.get(filId) === esperes) {
@@ -1810,7 +1852,7 @@ export function XatProvider({ children, config }) {
           continue;
         }
         if (error?.retriable && intent < MAX_REINTENTS) {
-          const seguir = await espera(esperaReintent(intent), op.controller.signal);
+          const seguir = await rural.esperaReintent(intent, op.controller.signal);
           intent += 1;
           if (!seguir || !vigent(op)) return [];
           continue;
@@ -1835,20 +1877,23 @@ export function XatProvider({ children, config }) {
            la interfície els codis SDP que té traduïts (errorsXat.js). */
         mutaPendents((previs) => actualitzaPendent(previs, id, {
           estatEnviament: 'error',
-          error: perNormes ? tradueix(traductorRef.current, TEXTOS_MODERACIO.calAcceptar) : error?.message || 'No s\'ha enviat.',
-          codiError: perNormes ? CODI_NORMES_SERVIDOR : error?.code || null
+          error: perNormes ? tradueix(traductorRef.current, TEXTOS_MODERACIO.calAcceptar)
+            : esErrorTecnicDelXat(error) ? null : error?.message || 'No s\'ha enviat.',
+          codiError: perNormes ? CODI_NORMES_SERVIDOR : error?.code || error?.codi || null
         }));
         return [];
       }
     }
-  }, [joId, config, captura, vigent, mutaFils, mutaMissatges, mutaPendents, mutaVisitants, carregaFils]);
+  }, [joId, config, captura, vigent, mutaFils, mutaMissatges, mutaPendents, mutaVisitants, carregaFils, carregaRural]);
 
   /* Gauntlet 261025_0545 (MISSED P2, ordre d'enviament) · Els enviaments d'un
      mateix fil, en l'ordre en què s'escriuen: cada un espera que l'anterior
      acabe (enviat, en error o tallat). Abans anaven en paral·lel i, si el
      primer esperava un reintent, el segon el passava davant i el servidor el
-     numerava abans: tothom els veia al revés. Amb la cua buida ix en el mateix
-     tic (la bombolla i la crida, com sempre); un altre fil no espera. */
+     numerava abans: tothom els veia al revés. Amb la cua buida, la bombolla
+     ix en el mateix tic i la crida, en arribar el tros diferit del cablejat
+     rural (R30.2; R32: si no arriba, la bombolla queda en error); un altre fil
+     no espera. */
   /* Gauntlet 261025_0545 (D2) · `abandona` (els de programa, que no esperen
      la xarxa): si el fil té, o arriba a tindre mentre este espera el torn, un
      enviament que espera la xarxa (XC-03), este no s'hi queda ni el passa
@@ -2370,13 +2415,16 @@ export function XatProvider({ children, config }) {
       const rebutAltres = fil?.esPropi ? 0 : (fil?.rebutPelsAltresFinsSeq ?? 0);
       /* R24 · xat_entrega (P2-9) · Si el servidor no informa de l'entrega, la marca ho diu. */
       const rebutsConeguts = !fil || fil.esPropi || fil.rebutsConeguts !== false;
+      const combinats = combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], llegitAltres, rebutAltres, rebutsConeguts);
       resultat[id] = anotaMissatgesBloquejats(
-        combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], llegitAltres, rebutAltres, rebutsConeguts),
+        cablejatRural.current?.projecta(combinats, fil) ?? combinats,
         esPersonaBloquejada
       );
     }
     return resultat;
-  }, [missatgesPerFil, pendentsPerFil, filsVisibles, esPersonaBloquejada]);
+    /* R32 (xat_tros_paralel) · versioRural: el cablejat de la ref ha arribat. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missatgesPerFil, pendentsPerFil, filsVisibles, esPersonaBloquejada, versioRural]);
 
   /* Decisió 1 del Mestre (261007) · El que es VEU penja de l'àmbit de dades,
      no del testimoni d'operació. Amb un àmbit nou, res no es veu fins que la

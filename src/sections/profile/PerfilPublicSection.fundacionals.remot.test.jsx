@@ -4,10 +4,9 @@
  * producció, les fitxes de les tres identitats del Mestre amb l'adaptador de
  * Supabase DE VERES (supabase/perfils.js; només el transport, runtime.js, és
  * simulat). Abans /javillinares, /gent/0001 i /gent/javi-llinares donaven
- * «Perfil no trobat» amb noindex, amb sessió i sense: el servidor no resol
- * cap persona per àlies, i la prova d'abans (canonica.test) simulava un
- * loadPerfilPublic que tornava la persona, una resposta que l'adaptador no
- * pot donar.
+ * «Perfil no trobat» amb noindex, amb sessió i sense. D-R24.2-3 (R30.2)
+ * resol ara els àlies declarats al UUID remot; la reserva només entra quan
+ * el servidor no dona la fitxa autoritzada o quan no hi ha sessió.
  *   · La reserva del paquet val NOMÉS per a les tres identitats, per un
  *     identificador declarat a la llavor (mai pel nom ni pel slug que torne
  *     el servidor), i només quan el servidor no en dona la fitxa.
@@ -23,7 +22,7 @@ const m = vi.hoisted(() => ({
   usuari: null, tenant: '33333333-3c3c-4000-8000-000000000000', directori: () => [], request: vi.fn(), rpc: vi.fn(),
   renders: [], seo: vi.fn(), navigate: vi.fn(), id: 'ruta',
   t: (_, alternativa) => alternativa, identitat: { memberships: [], actor: null, setActor: vi.fn() },
-  ui: { externalConfig: { dataMode: 'remote' } }
+  ui: { externalConfig: { dataMode: 'remote' } }, ambCos: false, ambConnexions: false, connexions: vi.fn()
 }));
 /* Gauntlet 261025_0545 (DF-03) · La resta de runtime.js és la de veres perquè
    l'adaptador sencer es puga carregar (auth.js hi registra el refresc en
@@ -41,7 +40,8 @@ vi.mock('../../data/supabase/runtime.js', async (importOriginal) => ({
    porta getters que el port no admet: el mock en fa la còpia plana. */
 vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   ...await importOriginal(),
-  teCapacitat: (capacitat) => capacitat === 'directori'
+  teCapacitat: (capacitat) => capacitat === 'directori' || (m.ambConnexions && capacitat === 'connexionsPubliques'),
+  connexionsPubliquesDe: (...args) => m.connexions(...args)
 }));
 vi.mock('../../PedraSecaEmbed.jsx', () => ({ defineCustomElement: vi.fn() }));
 vi.mock('../../data/supabase/index.js', async (importOriginal) => ({ ...await importOriginal() }));
@@ -60,13 +60,13 @@ vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: (props) => {
     m.renders.push(props);
-    return <header className="page-title"><h1>{props.title}</h1></header>;
+    return <><header className="page-title"><h1>{props.title}</h1></header>{m.ambCos ? props.children : null}</>;
   }
 }));
 import PerfilPublicSection from './PerfilPublicSection.jsx';
 import { oblidaEntitatDelProjecte } from '../../config/navigation.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
-import { PERSONA_PILOT, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
+import { IDS_REMOTS_FUNDACIONALS, PERSONA_PILOT, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
 
 const SESSIO = Object.freeze({ id: '7a7a7a7a-1b1b-4c4c-8d8d-9e9e9e9e9e9e' });
 const UUID_VEI = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
@@ -98,6 +98,9 @@ beforeEach(() => {
   m.renders = [];
   m.usuari = null;
   m.id = 'ruta';
+  m.ambCos = false;
+  m.ambConnexions = false;
+  m.connexions.mockResolvedValue([]);
   m.directori = () => [];
   m.request.mockImplementation(async (ruta) => {
     if (ruta.startsWith('/rest/v1/organization_directory')) return m.directori(ruta);
@@ -118,11 +121,14 @@ describe.each([['sense sessió', null], ['amb sessió', SESSIO]])('remot, %s', (
     m.usuari = usuari;
     render(<PerfilPublicSection id={clau} />);
     await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
-    /* L'adaptador de veres ha preguntat al servidor, i el servidor no la coneix. */
-    expect(consultesAlDirectori().length).toBeGreaterThan(0);
-    expect(m.rpc).not.toHaveBeenCalled();
+    /* R30.2 · La persona no es consulta mai com un slug d'organització.
+       Amb sessió, perfil_public rep l'UUID declarat i en esta fixture és buit. */
+    expect(consultesAlDirectori().some(ruta => ruta.includes(`slug=eq.${clau}&`))).toBe(false);
+    if (usuari) expect(m.rpc).toHaveBeenCalledWith('perfil_public', { p_id: IDS_REMOTS_FUNDACIONALS.javillinares[0] }, expect.any(Object), expect.any(Object));
+    else expect(m.rpc).not.toHaveBeenCalled();
     const props = darrer(AGENTS_MAP.JAVI.name);
-    expect(pobleDe(props)).toEqual([POBLE_FUNDACIONAL]);
+    /* R30.2 · El mateix municipi ja és el subtítol de la capçalera. */
+    expect(pobleDe(props)).toEqual([]);
     /* Gauntlet 261022_0225 (Tasca 2) · La fitxa autèntica, la mateixa que dona
        el servidor: H2 el seu poble, l'entradilla oficial i res de la vella. */
     expect([props.title, props.subtitle, props.lead]).toEqual([AGENTS_MAP.JAVI.name, POBLE_FUNDACIONAL, ENTRADILLA_DE_JAVI]);
@@ -157,6 +163,50 @@ describe.each([['sense sessió', null], ['amb sessió', SESSIO]])('remot, %s', (
       cleanup();
     }
   });
+});
+
+test('D-R24.2-3 · /javillinares mostra avatar/portada vigents i consulta les connexions amb el UUID remot', async () => {
+  const id = IDS_REMOTS_FUNDACIONALS.javillinares[0];
+  m.usuari = SESSIO;
+  m.ambCos = true;
+  m.ambConnexions = true;
+  m.rpc.mockResolvedValue([{ id, full_name: 'Perfil remot vigent', avatar_url: '/assets/avatar-vigent.webp',
+    hero_url: '/assets/portada-vigent.webp', bio: 'Biografia vigent', lema: 'Lema vigent', town_name: 'Poble vigent', is_public: true }]);
+  m.connexions.mockResolvedValue([{ tipus: 'entitat', id: UUID_SDP, nom: 'Connexió vigent' }]);
+  render(<PerfilPublicSection id="javillinares" />);
+  expect(await screen.findByRole('link', { name: 'Connexió vigent' })).toBeTruthy();
+  const props = darrer('Perfil remot vigent');
+  expect(props).toMatchObject({ heroImage: '/assets/portada-vigent.webp', subtitle: 'Biografia vigent', lead: 'Lema vigent' });
+  expect(props.topBarData.authorAvatar).toBe('/assets/avatar-vigent.webp');
+  expect(m.connexions).toHaveBeenCalledWith({ tipus: 'persona', id }, expect.any(Object));
+  expect(m.seo).toHaveBeenLastCalledWith(expect.objectContaining({ canonical: 'https://socdepoble.org/javillinares' }));
+});
+
+test('D-R24.2-3 · la fitxa pròpia remota manté el propietari i les dades de profiles', async () => {
+  const id = IDS_REMOTS_FUNDACIONALS.javillinares[0];
+  m.usuari = { id };
+  m.request.mockImplementation(async ruta => ruta.startsWith('/rest/v1/profiles')
+    ? [{ id, full_name: 'Fitxa pròpia vigent', hero_url: '/assets/propia.webp', town_name: POBLE_FUNDACIONAL, is_public: true }]
+    : []);
+  render(<PerfilPublicSection id="javillinares" />);
+  await screen.findByRole('heading', { level: 1, name: 'Fitxa pròpia vigent' });
+  expect(darrer('Fitxa pròpia vigent').heroImage).toBe('/assets/propia.webp');
+  expect(darrer('Fitxa pròpia vigent').labels.map(fila => fila.text)).toContain('La teua fitxa');
+  expect(m.rpc).not.toHaveBeenCalled();
+});
+
+test('D-R24.2-3 · un error de xarxa conserva la reserva del paquet sense inventar dades remotes', async () => {
+  m.usuari = SESSIO;
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    m.rpc.mockRejectedValue(Object.assign(new Error('Sense xarxa'), { status: 0 }));
+    render(<PerfilPublicSection id="javillinares" />);
+    await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
+    const props = darrer(AGENTS_MAP.JAVI.name);
+    expect(props.heroImage).toBeUndefined();
+    expect(props.topBarData.authorAvatar).toBe(PERSONA_PILOT.avatar);
+    expect(props.labels.map(fila => fila.text)).not.toContain('La teua fitxa');
+  } finally { warn.mockRestore(); }
 });
 
 test('si el servidor dona la fitxa, mana el servidor: /socdepoble pinta la fila del servidor, amb el seu poble', async () => {
