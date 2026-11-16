@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "51d88547d66580305d765f179139c6abc9c7d2e5cb4909c8f257b4bb8c648c37",
-      "html": 84429,
-      "aprovat_per": "Claude R30 261116 (ordre del Mestre 261115 22:58: versió 1.2.3/8 i crònica R30 en 5 llengües)",
+      "sha256": "8ab88836c9b1758119d2fd47fba6fd31c59e314d91dac717565ec7dca160e6ef",
+      "html": 84597,
+      "aprovat_per": "Claude R30 261116 (Llei 0: les tres migracions aplicades el 15-11 a les 23.11, acta 261116_0103)",
       "data": "2026-11-16"
     },
     "wikidepoble": {

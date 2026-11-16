@@ -2339,7 +2339,8 @@ describe('Onada R29 · Crònica d’obertura en les cinc llengües amb el teclat
    el text del missatge xifrat tancat, el TPV del Bar, la Gestoria i els permisos que l'app ja no declara (NAT-04,
    sense nomenar cap plataforma: 2.3.10). Llei 0: el xifratge d'extrem a extrem continua apagat i la crònica ho diu;
    la 1.2.3 (build 8) és la del repositori i la crònica no diu res de les botigues; el connector publicat continua en
-   la 1.1.12; les tres migracions no s'han aplicat al servidor compartit; el Rebost Domèstic no hi canvia. */
+   la 1.1.12; les tres migracions ja s'han aplicat al servidor compartit (acta 261116_0103) i la 20261115230000
+   encara no; el Rebost Domèstic no hi canvia. */
 describe('Onada R30 · Crònica d’obertura en les cinc llengües amb les carpetes del Bloc de Notes, el Mode rural, el TPV del Bar i Llei 0', () => {
   const PREFIXOS_R30 = {
     ca: ['Millora', 'Millora', 'Correcció', 'Correcció', 'Correcció'],
@@ -2350,7 +2351,10 @@ describe('Onada R30 · Crònica d’obertura en les cinc llengües amb les carpe
   };
   const DICCIONARIS_R30 = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
   const MIGRACIONS_R30 = ['20261114000100', '20261115030000', '20261115170000'];
-  const NO_APLICADES = { ca: 'encara no s’han aplicat', es: 'todavía no se han aplicado', en: 'have not yet been applied', eu: 'oraindik ez dira aplikatu', gl: 'aínda non se aplicaron' };
+  /* Onada R30 · Llei 0 · Les tres es van aplicar a producció el 15-11-2026 a les 23.11 (acta 261116_0103); la
+     20261115230000 del control de versions de les revisions de WordPress encara no. */
+  const JA_APLICADES = { ca: 'ja s’han aplicat', es: 'ya se han aplicado', en: 'have already been applied', eu: 'jada aplikatu dira', gl: 'xa se aplicaron' };
+  const NO_APLICADA_R30 = { ca: 'encara no s’ha aplicat', es: 'todavía no se ha aplicado', en: 'has not yet been applied', eu: 'oraindik ez da aplikatu', gl: 'aínda non se aplicou' };
   const XIFRATGE_APAGAT = { ca: 'xifratge d’extrem a extrem continua apagat', es: 'cifrado de extremo a extremo sigue apagado', en: 'end-to-end encryption stays switched off',
     eu: 'muturretik muturrerako zifratzea itzalita dago oraindik', gl: 'cifrado de extremo a extremo segue apagado' };
   const NOTES_ON_ERES = { ca: 'les notes continuen on eren', es: 'las notas siguen donde estaban', en: 'notes stay where they were', eu: 'oharrak lehen zeuden lekuan daude', gl: 'as notas seguen onde estaban' };
@@ -2386,7 +2390,10 @@ describe('Onada R30 · Crònica d’obertura en les cinc llengües amb les carpe
       for (const migracio of MIGRACIONS_R30) expect(pla, `${llengua} · ${migracio}`).toContain(migracio);
       expect(pla).toContain(PAQUET.version);
       expect(pla).toContain(CONNECTOR_PUBLICAT);
-      expect(pla, llengua).toContain(NO_APLICADES[llengua]);
+      expect(pla, llengua).toContain(JA_APLICADES[llengua]);
+      expect(pla, llengua).toContain('20261115230000');
+      expect(pla, llengua).toContain(NO_APLICADA_R30[llengua]);
+      expect(pla, llengua).not.toMatch(/encara no s’han aplicat|todavía no se han aplicado|have not yet been applied|oraindik ez dira aplikatu|aínda non se aplicaron/);
       expect(pla, llengua).toContain(XIFRATGE_APAGAT[llengua]);
       expect(pla, llengua).toContain(NOTES_ON_ERES[llengua]);
       const segmentador = new Intl.Segmenter(llengua, { granularity: 'word' });
