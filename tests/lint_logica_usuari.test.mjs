@@ -281,11 +281,10 @@ function classesDeclaradesAlCss(fitxers) {
 }
 
 /* Prefixos que no són classes CSS sinó claus, rutes o identificadors.
-   R28 · page-title-logo-personalitzat és el ganxo de la ranura del logotip de
-   PageFrame: cap full el pinta, però el busquen UniversalEditorShell.jsx
-   (DESTINS_FOCUS.logoImage), PerfilEditor.jsx (DESTI_FOCUS_RANURA) i les proves
-   de PageFrame, d'UniversalEditorShell i del Perfil. */
-const NO_ES_CLASSE = /^(sdp-xat-rail|sdp-root|page-title-logo-personalitzat)$|^sdp:|^app-grid-(list|main|sidebar)$|^sp-card-(label|action)$/;
+   Onada R30 · T3-VOC · page-title-logo-personalitzat (ganxo de R28 sense cap
+   estil) ja no és una classe: la ranura del logotip de PageFrame es diu amb
+   data-sdp-ranura="logotip-personalitzat", i ja no cal excepció. */
+const NO_ES_CLASSE = /^(sdp-xat-rail|sdp-root)$|^sdp:|^app-grid-(list|main|sidebar)$|^sp-card-(label|action)$/;
 
 /* R28 · Un prefix de plantilla (`toc-level-${h.level}` deixa «toc-level-»)
    no és cap classe: compta com a declarat si algun full declara una classe
@@ -312,8 +311,8 @@ function classesOrfes(fitxers) {
 /* PageFrame portava dos classes òrfenes anteriors al torn (page-title-logo-
    personalitzat i el prefix toc-level-): es mostren com a diagnòstic, sense
    tombar la bateria, perquè qui en tinga la propietat les veja. R28 · Cap de
-   les dos era una regla perduda: la primera és un ganxo (NO_ES_CLASSE) i la
-   segona, el prefix d'una família declarada (esDeclarada). */
+   les dos era una regla perduda: la primera era un ganxo (des de R30, un atribut
+   data-sdp-ranura) i la segona, el prefix d'una família declarada (esDeclarada). */
 const JSX_HERETAT = new Set(['src/components/universal/PageFrame.jsx']);
 
 test('Onada R28 · només els prefixos de plantilla declarats valen com a família; l’espai de noms sol és una òrfena', () => {

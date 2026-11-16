@@ -86,13 +86,55 @@ const DIU_TARGETA = /TARJETA|TARGETA|CREDIT CARD|MASTERCARD|\bVISA\b/;
 /* El número de targeta emmascarat, amb les formes que escriuen els bancs: «432112******9876», «****9876»,
    «XXXX-XXXX-XXXX-1234» i «4532 **** **** 1234» (el principi també identifica el banc: se'n va sencer). */
 const GRUP_OCULT = '(?:[*•]{4}|[xX]{4})';
-const NUMERO_TARGETA = new RegExp([
+const FORMES_TARGETA = [
   '\\d{4,6}[*xX•]{2,}[\\s-]?\\d{2,4}',
   `\\d{4}(?:[\\s-]?${GRUP_OCULT}){2,3}[\\s-]?\\d{2,4}`,
   `${GRUP_OCULT}(?:[\\s-]?${GRUP_OCULT}){1,3}[\\s-]?\\d{2,4}`,
   '[*•]{4,}[\\s-]?\\d{2,4}',
   '[xX]{6,}[\\s-]?\\d{2,4}'
-].join('|'), 'g');
+];
+/* Onada R30 · A6-RX3 · Abans, una sola expressió global amb les cinc formes: les
+   dues últimes («****9876», «XXXXXX1234») es tornaven a provar des de cada
+   caràcter d'una tira llarga d'asteriscs o d'equis sense xifres darrere i la
+   recorrien sencera cada vegada (temps quadràtic en el concepte d'un CSV). Si una
+   d'eixes dues casava a mitjan tira, també casava des del principi de la tira, que
+   es prova abans: a mitjan tira no tapava mai res. Ara cada posició es prova a
+   soles (mode «y») i, a mitjan tira, sense la forma que la recorreria: tapa
+   exactament el mateix, en l'ordre de sempre (linealitat.test.js). Sense mirar
+   arrere (?<…): la Gestoria es queda dins del Baseline (qualitat.test.js). */
+const TARGETA_A_LINICI = new RegExp(FORMES_TARGETA.join('|'), 'y');
+const TARGETA_DARRERE_ASTERISC = new RegExp(FORMES_TARGETA.filter((_, k) => k !== 3).join('|'), 'y');
+const TARGETA_DARRERE_EQUIS = new RegExp(FORMES_TARGETA.filter((_, k) => k !== 4).join('|'), 'y');
+/* Onada R30 · A6-RX3 · Cap forma no comença fora d'una xifra, un asterisc, un punt
+   volat o una equis: d'una posició es salta d'una vegada a la pròxima d'eixes, en
+   lloc de provar caràcter a caràcter (un concepte sense màscares anava unes 12
+   vegades més lent que l'expressió d'abans). Les posicions saltades no podien
+   casar mai: tapa el mateix. */
+const INICI_TARGETA = /[\d*•xX]/g;
+
+/* El text amb cada número de targeta emmascarat canviat per `substitut`, d'esquerra a dreta i sense encavalcar-se. */
+function tapaTargetes(text, substitut) {
+  let eixida = '';
+  let copiat = 0;
+  let i = 0;
+  while (i < text.length) {
+    INICI_TARGETA.lastIndex = i;
+    if (INICI_TARGETA.exec(text) === null) break;
+    i = INICI_TARGETA.lastIndex - 1;
+    const davant = text[i - 1];
+    const forma = davant === '*' || davant === '•' ? TARGETA_DARRERE_ASTERISC
+      : davant === 'x' || davant === 'X' ? TARGETA_DARRERE_EQUIS : TARGETA_A_LINICI;
+    forma.lastIndex = i;
+    if (forma.test(text)) {
+      eixida += text.slice(copiat, i) + substitut;
+      copiat = forma.lastIndex;
+      i = copiat;
+    } else {
+      i += 1;
+    }
+  }
+  return eixida + text.slice(copiat);
+}
 /* Un número de targeta sencer: de 13 a 19 xifres, amb espais o guions o sense. Només es tapa si passa Luhn. */
 const NUMERO_LLARG = /(?:\d[ -]?){12,18}\d/g;
 /* Un compte en format IBAN: dues lletres, dos dígits de control i de 10 a 30 caràcters més, en grups o seguits. */
@@ -268,8 +310,7 @@ function passaLuhn(xifres) {
 /* El concepte en una línia, sense números de targeta ni de compte: l'emmascarat se'n va, i d'un número de
    targeta sencer (si passa Luhn) o d'un IBAN només en queden les quatre últimes xifres. */
 function concepteNet(text) {
-  return String(text ?? '')
-    .replace(NUMERO_TARGETA, ' ')
+  return tapaTargetes(String(text ?? ''), ' ')
     .replace(COMPTE_IBAN, (tot) => {
       const junt = tot.replace(/ /g, '');
       return esCompte(junt) ? `${TAPAT}${junt.slice(-4)}` : tot;

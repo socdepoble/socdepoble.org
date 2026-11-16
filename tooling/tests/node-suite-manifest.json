@@ -157,6 +157,7 @@
     "tests/sessio-rural-crdt-opfs.test.mjs",
     "tests/sessio-rural-privadesa.test.mjs",
     "tests/sincronitzador-carpeta-local.test.mjs",
+    "tests/sincronitzador-crdt-compactacio.test.mjs",
     "tests/sincronitzador-crdt-vault.test.mjs",
     "tests/sistema_nervios.test.mjs",
     "tests/standalone-build.test.mjs",
@@ -1404,6 +1405,11 @@
       "reason": "O9 (Gemini): vault local Markdown + JSON-LD amb reconciliació SHA-256 i degradació sense File System Access API."
     },
     {
+      "path": "tests/sincronitzador-crdt-compactacio.test.mjs",
+      "suite": "primary",
+      "reason": "Onada R30 · PF-03: compactació de la carpeta CRDT del Mode Rural només amb ACK confirmat i més de 90 dies; tombstones i estat materialitzat idèntics, idempotència, ordre segur davant tall i determinisme."
+    },
+    {
       "path": "tests/sincronitzador-crdt-vault.test.mjs",
       "suite": "primary",
       "reason": "FEDI-15: intercanvi de batches CRDT i Markdown amb base causal, versions immutables, Unicode i preservació del batch confirmat per un writer concurrent quan un altre falla."
@@ -2043,6 +2049,34 @@
       "suite": "primary",
       "kind": "postgres",
       "reason": "R29 (kit lot_05 de Codex): paritat de validació JSON de mesures de patrimoni entre el port neutral i el catàleg PostgreSQL complet: tipus primitius, Unicode, claus reservades i límits de camps, text i nombres; PGlite local explícit, sense serveis remots ni concessions noves."
+    },
+    {
+      "path": "tests/tractor-tokens-multilinia.r29.test.mjs",
+      "suite": "primary",
+      "reason": "R29 (kit lot_13 de Codex): Porta Tokens T1–T5 sobre declaracions i usos multilínia de var(--sdp-*), fallbacks buits o niats i declaracions comentades; arbres sintètics a mkdtemp, cap xarxa."
+    },
+    {
+      "path": "tests/tancament-titol-xat.test.mjs",
+      "suite": "primary",
+      "reason": "R30: camp informatiu chat_title_suggestion de tancament.mjs (aammdd_hhmm_rXX_slug ≤ 70 caràcters) derivat de l'última Acta Marmota; determinista, només fitxers regulars, null sense actes; arbres sintètics a mkdtemp."
+    },
+    {
+      "path": "tests/r30-editorial-cas.test.mjs",
+      "suite": "laboratory",
+      "kind": "postgres",
+      "reason": "R30 P1-79 (kit lot_01 de Codex): CAS de la curadoria WordPress (20261115230000) sobre 2611110455 amb PGlite local explícit via SDP_PGLITE_MODULE; el test refusa executar-se sense motor. Dos escriptors, signatura antiga només de creació i sense sessió; cap servei remot."
+    },
+    {
+      "path": "tests/r30-editorial-cas-cataleg.test.mjs",
+      "suite": "laboratory",
+      "kind": "postgres",
+      "reason": "R30 P1-79 (kit lot_01 de Codex): catàleg complet en l'ordre del pla més la reaplicació de 20261115230000 amb PGlite local explícit; WP CAS sense bypass (signatura antiga, taula directa, AAL1/NULL, compte aliè) i publicació de Notes amb replay. Cap servei remot."
+    },
+    {
+      "path": "tests/r30-independent-cas-aal-null.test.mjs",
+      "suite": "laboratory",
+      "kind": "postgres",
+      "reason": "R30 P1-79 · revisió independent de la precondició AAL2 davant claims nuls amb PGlite local explícit. Cap connexió ni sessió remota."
     }
   ]
 }

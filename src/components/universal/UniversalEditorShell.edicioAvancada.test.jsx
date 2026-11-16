@@ -70,7 +70,7 @@ test('sense la prop: el DOM de sempre (la ranura davall del títol, el copyright
   const capcalera = container.querySelector('header.page-title');
   expect(capcalera.querySelector('.page-title-classificacio .sdp-classificacio-botonera')).not.toBeNull();
   expect(capcalera.querySelector('p.page-title-copyright > button[data-sdp-drets]')).not.toBeNull();
-  expect(capcalera.querySelector('.page-title-logo-personalitzat button').textContent).toContain('Editar logotip');
+  expect(capcalera.querySelector('[data-sdp-ranura="logotip-personalitzat"] button').textContent).toContain('Editar logotip');
   expect(container.querySelector('.hero-image.hero-image--buit button').textContent).toContain('Editar capçalera');
   expect(fills(container.querySelector('article.content-wrapper'))).toEqual(['page-intro', 'sdp-editor-eines', 'ProseMirror']);
   expect(container.querySelector('.editor-title-input').dataset.placeholder).toBe(TEXTOS_LLAVOR.titol);

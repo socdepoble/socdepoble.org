@@ -257,7 +257,9 @@ describe('a) la ranura de l’editor mana sobre tot', () => {
     const ranura = { logoComponent: <button type="button">Editar logotip</button> };
     for (const extra of [{}, { logoEntitat: { clar: '/assets/forn.png' } }, { senseLogo: true }]) {
       const { container, unmount } = render(<PageFrame chrome="context" title="Nota" topBarData={ranura} {...extra} />);
-      expect(fills(capcalera(container)), JSON.stringify(Object.keys(extra))).toEqual(['DIV.page-title-logo-personalitzat', 'H1.']);
+      /* Onada R30 · T3-VOC · La ranura es diu amb data-sdp-ranura, no amb una classe sense estil. */
+      expect(fills(capcalera(container)), JSON.stringify(Object.keys(extra))).toEqual(['DIV.', 'H1.']);
+      expect(capcalera(container).firstElementChild.getAttribute('data-sdp-ranura')).toBe('logotip-personalitzat');
       expect(container.querySelector('img.page-title-logo')).toBeNull();
       unmount();
     }

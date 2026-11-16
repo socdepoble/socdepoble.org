@@ -739,8 +739,10 @@ export default function DetallAjust({
       );
     }
 
+    /* Onada R30 · T3-VOC · Fora sdp-form i sdp-camp__check (la casella, davall):
+       cap full no les estilava (classes foranes). El DOM pintat és el mateix. */
     return (
-      <form onSubmit={handleSubmit} className="sdp-form">
+      <form onSubmit={handleSubmit}>
         <div className="sdp-camp">
           <label className="sdp-camp__etiqueta" htmlFor={`ajust-${ajust.id}`}>
             {tipus === 'boolean'
@@ -769,7 +771,7 @@ export default function DetallAjust({
           ) : tipus === 'boolean' ? (
             /* El nom de la casella és estable («Perfil públic»): l'estat que es
                pinta al costat canvia, i com a nom faria dir «Privat, no marcada». */
-            <label className="sdp-camp__check">
+            <label>
               <input
                 type="checkbox"
                 id={`ajust-${ajust.id}`}

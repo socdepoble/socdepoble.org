@@ -760,7 +760,7 @@ const FORMA_NONCE = /^[\x21-\x7e]{16,256}$/;
 /* El nom de reserva de private.nom_d_alta (2609261500): Apple no en posa mai al testimoni. */
 const NOM_DE_RESERVA_DEL_SERVIDOR = 'Veí/na';
 const TOPALL_NOM_MS = 5000;
-const CARACTERS_FORA = /[\p{Cc}‪-‮⁦-⁩]/gu;
+const CARACTERS_FORA = /[\p{Cc}\u202A-\u202E\u2066-\u2069]/gu;
 const rebutjaToken = () => ambCodi(new Error(MISSATGE_ENTRADA[CODI_ENTRADA.TOKEN_REBUTJAT]), CODI_ENTRADA.TOKEN_REBUTJAT);
 /* Com left(…, 120) de SQL: punts de codi, mai mitja parella subrogada. Fora els
    caràcters de control i els de direcció (bidi), que farien fallar o enganyarien el PATCH. */

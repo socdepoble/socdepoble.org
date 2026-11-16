@@ -45,7 +45,7 @@ test('captura valors primitius i rebutja getters, autoritat client i caràcters 
     { mesures: { dada: 2 ** 53 } }, { mesures: { constructor: 'x' } }, { mesures: { 'clau\r': true } },
     { mesures: Object.fromEntries(Array.from({ length: 33 }, (_, i) => [`m${i}`, i])) }
   ]) expect(() => capturaEdicioRevisioPatrimoni(entrada(canvi))).toThrow(TypeError);
-  expect(capturaEdicioRevisioPatrimoni(entrada({ estatConservacio: ' Bo﻿', mesures: { etiqueta: '🌳'.repeat(160) } })))
+  expect(capturaEdicioRevisioPatrimoni(entrada({ estatConservacio: ' Bo\uFEFF', mesures: { etiqueta: '🌳'.repeat(160) } })))
     .toMatchObject({ estatConservacio: 'Bo' });
 });
 

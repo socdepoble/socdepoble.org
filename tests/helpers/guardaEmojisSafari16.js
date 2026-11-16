@@ -39,7 +39,7 @@ const INDICADOR_REGIONAL = /\p{Regional_Indicator}/u;
 export function defecteSafari16(glif) {
   if (typeof glif !== 'string' || !emojiSol(glif)) return 'no és un sol emoji';
   if (!RGI.has(glif)) return 'no és un emoji RGI complet (falta el selector U+FE0F?)';
-  if (glif.includes('‍')) return 'és una seqüència ZWJ';
+  if (glif.includes('\u200D')) return 'és una seqüència ZWJ';
   if (INDICADOR_REGIONAL.test(glif)) return 'és una bandera';
   if (posteriorA13(glif)) return 'és posterior a Unicode 13';
   return null;

@@ -195,7 +195,7 @@ describe('T66 · l’emoticona (icon)', () => {
     expect([...familia].length).toBeLessThanOrEqual(MAXIM_EMOTICONA);
     expect(valorPerDesar('persona', 'icon', familia).valor).toBe(familia);
     // Una cadena ZWJ abusiva que el segmentador veu com un sol grafema.
-    const abusiva = Array.from({ length: 9 }, () => '👩').join('‍');
+    const abusiva = Array.from({ length: 9 }, () => '👩').join('\u200D');
     expect([...abusiva].length).toBe(17);
     let error;
     try { valorPerDesar('persona', 'icon', abusiva); } catch (e) { error = e; }

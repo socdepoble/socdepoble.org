@@ -8,26 +8,6 @@
       "css-de-seccio|src/sections/profile/PerfilShell.css|src/sections/profile/PerfilShell.css"
     ]
   },
-  "classe-forastera": {
-    "max": 15,
-    "identitats": [
-      "classe-forastera|src/app/guards/RequireAuth.jsx|sdp-route-loading-screen",
-      "classe-forastera|src/components/ErrorBoundary.jsx|alert",
-      "classe-forastera|src/components/PedraSeca/atoms/Divisor.jsx|sdp-divisor--amb-text",
-      "classe-forastera|src/components/PedraSeca/atoms/Divisor.jsx|sdp-divisor__text",
-      "classe-forastera|src/components/universal/PageFrame.jsx|page-title-logo-personalitzat",
-      "classe-forastera|src/components/universal/UniversalEditorShell.jsx|sdp-estat",
-      "classe-forastera|src/components/universal/UniversalEditorShell.jsx|sdp-estat--error",
-      "classe-forastera|src/components/universal/UniversalEditorShell.jsx|sdp-estat__contenidor",
-      "classe-forastera|src/components/universal/UniversalEditorShell.jsx|sdp-estat__descripcio",
-      "classe-forastera|src/components/universal/UniversalEditorShell.jsx|sdp-estat__titol",
-      "classe-forastera|src/components/universal/workspace/SlotErrorBoundary.jsx|sdp-pre-wrap",
-      "classe-forastera|src/components/universal/workspace/SlotErrorBoundary.jsx|sdp-slot-error",
-      "classe-forastera|src/components/universal/workspace/SlotErrorBoundary.jsx|section-title",
-      "classe-forastera|src/sections/profile/DetallAjust.jsx|sdp-camp__check",
-      "classe-forastera|src/sections/profile/DetallAjust.jsx|sdp-form"
-    ]
-  },
   "classe-opaca": {
     "max": 6,
     "identitats": [

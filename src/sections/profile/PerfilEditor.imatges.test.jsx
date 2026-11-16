@@ -126,7 +126,7 @@ const ranuraAvancada = () => desplegable()?.querySelector('[data-sdp-ranura="log
 /* Damunt de l'H1 de la persona ja no hi ha res d'imatge: ni l'avatar redó, ni
    les seues píndoles, ni la ranura. */
 const capcaleraNeta = () => {
-  expect(capcalera().querySelector('.page-title-avatar, .page-title-avatar-accions, .page-title-logo-personalitzat')).toBeNull();
+  expect(capcalera().querySelector('.page-title-avatar, .page-title-avatar-accions, [data-sdp-ranura="logotip-personalitzat"]')).toBeNull();
 };
 const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
 /* Els noms dels botons d'imatge de tota la fitxa, en l'ordre del document. */
@@ -278,7 +278,7 @@ describe('els botons', () => {
     obriEdicioAvancada();
     expect(botonsImatge()).toEqual(['Capçalera']);
     expect(ranuraAvancada()).toBeNull();
-    expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+    expect(capcalera().querySelector('[data-sdp-ranura="logotip-personalitzat"]')).toBeNull();
   });
 
   test('en lectura (un membre sense permís, una baixa en curs): cap botó d’imatge ni cap selector', () => {

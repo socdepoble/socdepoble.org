@@ -17,6 +17,8 @@ contracte.llig:
 contracte.escriu:
   - _wiki_de_poble/00_index.md
   - AGENTS.md
+  - _wiki_de_poble/02_saber
+  - .agents/protocolledge.json
 ---
 # Propagar una decisió aprovada
 
@@ -45,7 +47,8 @@ Si hi ha treball concurrent sobre un fitxer, coordina la propietat i torna a lle
 3. Repetix la cerca dins de la mateixa superfície i executa les comprovacions corresponents al canvi. Declara els rastres pendents amb la seua ruta i motiu; zero coincidències no acredita coherència semàntica completa.
 4. Si la decisió afecta plantilles, rutes o metadades, reconcilia `.agents/protocolledge.json` i els seus consumidors dins de l’abast autoritzat. La creació i el rebut documental continuen en `wiki-documentacio-i-reflex`; no dupliques eixe circuit ací.
 5. **Sincronització diferencial per Git i detecció de *Gaps* (`tooling/wiki/wiki-forja-lint.mjs`, adaptat de `juanitourquiza/shipframe`, MIT):**
-   - Quan es consolida un commit d’onada que modifica superfícies amb impacte documental (`src/data/**`, `supabase/migrations/**`, `src/config/**`, `.agents/skills/**`), inspecciona el `git log <last-hash>..HEAD --name-status` per identificar quines pàgines de `_wiki_de_poble/02_saber/` han d’ampliar-se (sense reescriure-les de zero).
+   - Obtín els camins afectats del commit d’onada amb `git log <last-hash>..HEAD --name-status`. Els patrons `src/data/**`, `supabase/migrations/**`, `src/config/**` i `.agents/skills/**` són filtres d’eixa llista; no autoritzen obrir ni editar les fonts.
+   - Revisa les pàgines afectades de `_wiki_de_poble/02_saber/` i amplia únicament les incloses en l’encàrrec, sense reescriure-les de zero.
    - Quan s’ingereix un corpus nou a `04_escriptori/01_produccio/` o `_cultura_de_poble/` (intocable en cru), vincula’l des d’una pàgina pont o índex de `_wiki_de_poble/02_saber/` i revisa si hi ha *Gaps* (conceptes estructurals repetits en actes o auditories que encara no tenen pàgina canònica pròpia a `02_saber/`).
 
 ## Vincles

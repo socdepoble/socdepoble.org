@@ -62,6 +62,12 @@
       "despres": "20261114000300",
       "motiu": "Sense el desbloqueig de la propietat de R22.2, la purga d’una propietària falla igualment; la purga no es programa abans.",
       "font": "README R22.4 i Nota d'auditoria §17; capçalera de 20261114000300"
+    },
+    {
+      "abans": "20261115170000",
+      "despres": "20261115230000",
+      "motiu": "La base R30 inclou el catàleg R29 abans de canviar la revisió editorial.",
+      "font": "README R30; vinyeta de 20261115230000 (CAS de la curadoria WordPress)"
     }
   ],
   "portes": [
@@ -333,6 +339,13 @@
         "20261115170000"
       ],
       "font": "README, vinyeta de 20261115170000 (R29: 20261114023000 torna a crear resum_consens_isoglosses_poble sense la llista tancada de preguntes ni el filtre de l'etiqueta)"
+    },
+    {
+      "si": "2611110455",
+      "llavors": [
+        "20261115230000"
+      ],
+      "font": "README R30: 2611110455 restaura la signatura antiga amb upsert cec; reaplicar la guarda CAS."
     }
   ]
 }

@@ -287,10 +287,10 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
     const { container } = render(<PerfilShell />);
     expect(imatges(container)).toEqual({ llista: FOTO_SESSIO, barra: FOTO_SESSIO, editor: FOTO_SESSIO });
     const capcalera = detall(container).querySelector('.sdp-editor-document header.page-title');
-    expect(capcalera.querySelector('.page-title-logo-personalitzat, .page-title-avatar, img')).toBeNull();
+    expect(capcalera.querySelector('[data-sdp-ranura="logotip-personalitzat"], .page-title-avatar, img')).toBeNull();
     expect(capcalera.firstElementChild.tagName).toBe('H1');
     const avancada = obriEdicioAvancada(container);
-    expect(avancada.querySelector('.page-title-logo-personalitzat, [data-sdp-ranura="logotip"]')).toBeNull();
+    expect(avancada.querySelector('[data-sdp-ranura="logotip-personalitzat"], [data-sdp-ranura="logotip"]')).toBeNull();
     const identitat = avancada.querySelector('.sdp-edicio-avancada__identitat');
     /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · Expectativa
        actualitzada a propòsit: sota el cercle no queda cap píndola; el cercle

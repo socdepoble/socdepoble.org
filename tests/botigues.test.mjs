@@ -702,10 +702,15 @@ test('botigues: Onada R26 · seguretatBotigues i liniesSeguretatBotigues certifi
   assert.equal(real.android.networkConfigSegura, true);
   assert.equal(real.android.assetlinksEstatic, false);
   assert.equal(real.android.associacioValida, true);
+  /* Onada R30 · NAT-04 · L'app real lleva els quatre permisos d'identitat i cap no queda declarat. */
+  assert.deepEqual(real.android.identitat.permisos.map(({ nom, llevat, queden }) => [nom, llevat, queden]),
+    p.PERMISOS_D_IDENTITAT.map((nom) => [nom, true, []]));
 
   const intern = p.liniesSeguretatBotigues(real, { plataformes: ['ios', 'android'], produccio: false });
   assert.deepEqual(intern.mal, []);
-  assert.equal(intern.linies.filter((l) => l.startsWith('  ✓ ')).length, 2);
+  /* iOS, Android (R26) i Android (R30 · NAT-04). */
+  assert.equal(intern.linies.filter((l) => l.startsWith('  ✓ ')).length, 3);
+  assert.ok(intern.linies.some((l) => l.startsWith('  ✓ Android: android/app/src/main/AndroidManifest.xml lleva USE_BIOMETRIC, USE_FINGERPRINT, USE_CREDENTIALS i GET_ACCOUNTS amb tools:node="remove"')));
 
   const prod = p.liniesSeguretatBotigues(real, { plataformes: ['ios', 'android'], produccio: true });
   assert.deepEqual(prod.mal, []);
@@ -733,7 +738,9 @@ test('botigues: Onada R26 · seguretatBotigues i liniesSeguretatBotigues certifi
     fs.writeFileSync(path.join(carpeta, 'scripts', 'botigues', 'associacio-apps.json'), '{"esquema":"trencat"}');
 
     const trencat = p.liniesSeguretatBotigues(p.seguretatBotigues(carpeta), { plataformes: ['ios', 'android'], produccio: true });
-    assert.equal(trencat.mal.length, 8);
+    /* Les 8 d'R26 i, des d'Onada R30 (NAT-04), una més: el manifest no lleva cap permís d'identitat. */
+    assert.equal(trencat.mal.length, 9);
+    assert.match(trencat.mal.at(-1), /^Android: android\/app\/src\/main\/AndroidManifest\.xml no lleva USE_BIOMETRIC, USE_FINGERPRINT, USE_CREDENTIALS i GET_ACCOUNTS amb tools:node="remove"/);
   } finally {
     fs.rmSync(carpeta, { recursive: true, force: true });
   }
@@ -817,6 +824,82 @@ test('botigues: Onada R26 · seguretatBotigues rebutja excepcions d’ATS, ànco
       assert.equal(estat[plataforma].associacioValida, false, nom);
       assert.ok(p.liniesSeguretatBotigues(estat, { plataformes: [plataforma], produccio: false }).mal.length > 0, nom);
     }
+  } finally {
+    for (const carpeta of carpetes) fs.rmSync(carpeta, { recursive: true, force: true });
+  }
+});
+
+/* Onada R30 · NAT-04 (pla R30 §4, decisió tancada per MarIA) · Cap permís d'identitat ni de biometria a
+   Android. Arbres sintètics a mkdtemp amb el manifest real de l'app i un connector fingit que declara
+   USE_CREDENTIALS com @capgo/capacitor-social-login: el que queda declarat sense llevar i el que l'app no
+   lleva (els AAR no es veuen) són ✗; el micròfon de les notes de veu no hi entra. */
+test('botigues: Onada R30 · NAT-04 · permisosDIdentitatAndroid i liniesPermisosDIdentitat paren tot permís d\'identitat o de biometria que quede declarat', () => {
+  const MANIFEST = ['android', 'app', 'src', 'main', 'AndroidManifest.xml'];
+  const SOCIAL = 'node_modules/@capgo/capacitor-social-login/android/src/main/AndroidManifest.xml';
+  const real = fs.readFileSync(path.join(ARREL, ...MANIFEST), 'utf8');
+  const LLEVA = /\n[ \t]*<uses-permission android:name="android\.permission\.(?:USE_BIOMETRIC|USE_FINGERPRINT|USE_CREDENTIALS|GET_ACCOUNTS)" tools:node="remove" \/>/g;
+  assert.equal(real.match(LLEVA)?.length, 4, 'el manifest real lleva els quatre, un per línia');
+  assert.deepEqual(p.PERMISOS_D_IDENTITAT, ['android.permission.USE_BIOMETRIC', 'android.permission.USE_FINGERPRINT', 'android.permission.USE_CREDENTIALS', 'android.permission.GET_ACCOUNTS']);
+  for (const nom of ['INTERNET', 'POST_NOTIFICATIONS', 'RECORD_AUDIO', 'MODIFY_AUDIO_SETTINGS']) assert.ok(!p.PERMISOS_D_IDENTITAT.includes(`android.permission.${nom}`), nom);
+  const carpetes = [];
+  const arbre = ({ manifest = real, social = '<manifest><uses-permission android:name="android.permission.USE_CREDENTIALS" />\n<uses-permission android:name="android.permission.INTERNET"/></manifest>' } = {}) => {
+    const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-r30-nat04-'));
+    carpetes.push(carpeta);
+    const escriu = (rel, text) => {
+      fs.mkdirSync(path.dirname(path.join(carpeta, rel)), { recursive: true });
+      fs.writeFileSync(path.join(carpeta, rel), text);
+    };
+    if (manifest !== null) escriu(MANIFEST.join('/'), manifest);
+    escriu('android/capacitor.settings.gradle', "include ':capgo-capacitor-social-login'\nproject(':capgo-capacitor-social-login').projectDir = new File('../node_modules/@capgo/capacitor-social-login/android')\n"
+      + "// project(':comentat').projectDir = new File('../node_modules/comentat/android')\n");
+    if (social !== null) escriu(SOCIAL, social);
+    escriu('node_modules/comentat/android/src/main/AndroidManifest.xml', '<manifest><uses-permission android:name="android.permission.GET_ACCOUNTS"/></manifest>');
+    return carpeta;
+  };
+  const mira = (carpeta) => p.liniesPermisosDIdentitat(p.permisosDIdentitatAndroid(carpeta));
+  try {
+    /* Net: el connector declara USE_CREDENTIALS, l'app el lleva, i el connector comentat no compta. */
+    const net = p.permisosDIdentitatAndroid(arbre());
+    assert.equal(net.connectors, 1);
+    assert.deepEqual(net.permisos.map(({ llevat, queden }) => [llevat, queden.length]), [[true, 0], [true, 0], [true, 0], [true, 0]]);
+    const liniesNet = p.liniesPermisosDIdentitat(net);
+    assert.deepEqual(liniesNet.mal, []);
+    assert.deepEqual(liniesNet.linies, ['  ✓ Android: android/app/src/main/AndroidManifest.xml lleva USE_BIOMETRIC, USE_FINGERPRINT, USE_CREDENTIALS i GET_ACCOUNTS amb tools:node="remove", i ni l\'app ni l\'únic manifest de connectors no en deixen cap sense llevar (NAT-04: cap permís d\'identitat ni de biometria)']);
+
+    /* El manifest d'abans d'R30 (sense les quatre línies): USE_CREDENTIALS queda declarat pel connector, i els altres tres no es lleven. */
+    const abans = mira(arbre({ manifest: real.replace(LLEVA, '') }));
+    assert.deepEqual(abans.mal, [
+      'Android: USE_CREDENTIALS queda declarat a node_modules/@capgo/capacitor-social-login/android/src/main/AndroidManifest.xml: NAT-04 (pla R30 §4) no admet cap permís d\'identitat ni de biometria; posa <uses-permission android:name="android.permission.USE_CREDENTIALS" tools:node="remove" /> a android/app/src/main/AndroidManifest.xml',
+      'Android: android/app/src/main/AndroidManifest.xml no lleva USE_BIOMETRIC, USE_FINGERPRINT i GET_ACCOUNTS amb tools:node="remove": cap manifest de l\'arbre no els declara, però una biblioteca (AAR) els pot afegir al manifest fusionat sense que el preflight ho veja (androidx.biometric, que porta androidx.credentials del connector social, hi afig USE_BIOMETRIC i USE_FINGERPRINT); NAT-04, pla R30 §4'
+    ]);
+    assert.deepEqual(abans.linies, abans.mal.map((text) => `  ✗ ${text}`), 'cap ✓ quan hi ha un ✗');
+
+    /* Una sola línia de llevar comentada ja no compta; el singular del missatge. */
+    const comentat = mira(arbre({ manifest: real.replace(/(<uses-permission android:name="android\.permission\.GET_ACCOUNTS" tools:node="remove" \/>)/, '<!-- $1 -->') }));
+    assert.deepEqual(comentat.mal, ['Android: android/app/src/main/AndroidManifest.xml no lleva GET_ACCOUNTS amb tools:node="remove": cap manifest de l\'arbre no el declara, però una biblioteca (AAR) el pot afegir al manifest fusionat sense que el preflight ho veja (androidx.biometric, que porta androidx.credentials del connector social, hi afig USE_BIOMETRIC i USE_FINGERPRINT); NAT-04, pla R30 §4']);
+
+    /* L'app que el declara ella mateixa (amb cometes simples) queda declarada encara que també el lleve. */
+    const propi = mira(arbre({ manifest: real.replace('</manifest>', "    <uses-permission android:name = 'android.permission.USE_BIOMETRIC' />\n</manifest>") }));
+    assert.deepEqual(propi.mal, ['Android: USE_BIOMETRIC queda declarat a android/app/src/main/AndroidManifest.xml: NAT-04 (pla R30 §4) no admet cap permís d\'identitat ni de biometria; lleva\'n la declaració de android/app/src/main/AndroidManifest.xml']);
+
+    /* Un <uses-permission-sdk-23> d'un connector no el lleva el <uses-permission> de l'app: cal un element del mateix tipus. */
+    const sdk23 = '<manifest><uses-permission-sdk-23 android:name=\'android.permission.USE_FINGERPRINT\'/></manifest>';
+    assert.deepEqual(mira(arbre({ social: sdk23 })).mal, ['Android: USE_FINGERPRINT queda declarat a node_modules/@capgo/capacitor-social-login/android/src/main/AndroidManifest.xml (uses-permission-sdk-23): NAT-04 (pla R30 §4) no admet cap permís d\'identitat ni de biometria; posa <uses-permission-sdk-23 android:name="android.permission.USE_FINGERPRINT" tools:node="remove" /> a android/app/src/main/AndroidManifest.xml']);
+    const llevaSdk23 = real.replace('</manifest>', '    <uses-permission-sdk-23 android:name="android.permission.USE_FINGERPRINT" tools:node="remove" />\n</manifest>');
+    assert.deepEqual(mira(arbre({ manifest: llevaSdk23, social: sdk23 })).mal, []);
+
+    /* Un connector que lleva ell mateix el permís no el declara; sense cap connector, el ✓ ho diu. */
+    assert.deepEqual(mira(arbre({ social: '<manifest xmlns:tools="t"><uses-permission android:name="android.permission.USE_CREDENTIALS" tools:node="remove"/></manifest>' })).mal, []);
+    const senseConnectors = arbre({ social: null });
+    fs.rmSync(path.join(senseConnectors, 'android', 'capacitor.settings.gradle'));
+    assert.match(mira(senseConnectors).linies[0], /^ {2}✓ .*i l'app no en deixa cap sense llevar \(cap manifest de connectors a android\/capacitor\.settings\.gradle\)/);
+
+    /* Sense manifest de l'app (arbre sintètic): cap línia. Dins de la família R26, el ✗ fa fallar la seguretat d'Android. */
+    assert.equal(p.permisosDIdentitatAndroid(arbre({ manifest: null })), null);
+    assert.deepEqual(p.liniesPermisosDIdentitat(null), { linies: [], mal: [] });
+    const familia = p.liniesSeguretatBotigues(p.seguretatBotigues(arbre({ manifest: real.replace(LLEVA, '') })), { plataformes: ['android'], produccio: false });
+    assert.equal(familia.mal.filter((text) => text.includes('NAT-04')).length, 2);
+    assert.deepEqual(p.liniesSeguretatBotigues(p.seguretatBotigues(arbre({ manifest: real.replace(LLEVA, '') })), { plataformes: ['ios'], produccio: false }).mal, [], 'només amb Android');
   } finally {
     for (const carpeta of carpetes) fs.rmSync(carpeta, { recursive: true, force: true });
   }

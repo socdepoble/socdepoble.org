@@ -701,7 +701,7 @@ describe('urlSocialDe: només el que pot baixar un rastrejador sense sessió', (
       '/\\fora.example/x.jpg',
       '/assets/x\t.jpg',
       '/assets/x\u0000.jpg',
-      '/assets/x​.jpg',
+      '/assets/x\u200B.jpg',
       'https://usuari:clau@socdepoble.org/assets/x.jpg',
       '/assets/uploads/x.svg',
       '/assets/uploads/x.SVG?v=1',

@@ -76,7 +76,7 @@ describe('arrel', () => {
 describe('titolDeDocument', () => {
   test('la capçalera «# Títol» en text pla, sense punt final; sense capçalera, el del manifest', () => {
     expect(titolDeDocument(doc('a', '# La **pedra** [seca](?item=x).\n\nCos'))).toBe('La pedra seca');
-    expect(titolDeDocument(doc('b', '﻿\n\n# Amb BOM\r\nCos'))).toBe('Amb BOM');
+    expect(titolDeDocument(doc('b', '\uFEFF\n\n# Amb BOM\r\nCos'))).toBe('Amb BOM');
     expect(titolDeDocument(doc('c', 'Cos sense capçalera\n# Tard', { title: 'Títol del manifest' }))).toBe('Títol del manifest');
     expect(titolDeDocument({ id: 'nomes-id' })).toBe('nomes-id');
   });

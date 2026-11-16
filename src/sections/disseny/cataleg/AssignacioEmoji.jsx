@@ -48,6 +48,7 @@ import { SECTIONS } from '../../../config/sections.js';
 import { COVER_PAGE_KEYS, SYSTEM_PAGES } from '../../../config/systemPages.js';
 import { emojiSol } from '../../../utils/emoji.js';
 import { useNotes } from '../../notes/NotesContext.jsx';
+import { useCarpetesDelBlocVisibles } from '../../../components/universal/classificacio/migracioCarpetesLocals.js';
 import { PAGE_COPY } from '../../text/pageContent.js';
 import { maquinariaALaVista } from '../../wiki-de-poble/maquinaria.js';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './manifest.js';
@@ -156,7 +157,9 @@ export function AssignacioEmoji({ emoji, nom, onFet }) {
 
   const notes = bloc?.notes ?? CAP;
   const hiHaBloc = Boolean(bloc);
-  const carpetesDelBloc = bloc?.noteFolders;
+  /* Onada R30 · PF-01 (àrbitre) · Les carpetes que pinta la columna del Bloc: sense la rèplica
+     remota d'una carpeta local migrada (cap destí nou amb el mateix nom). */
+  const carpetesDelBloc = useCarpetesDelBlocVisibles(bloc?.noteFolders, notes, bloc?.scopeKey);
   /* Gauntlet 261016 (Bloc 3.4) · El grup de la Wiki és la Wiki que veu qui
      mira: la Maquinària de la IAIA (i la Consola), només en desenvolupament o
      per a qui és superadmin, la mateixa regla de la Wiki (maquinaria.js). */

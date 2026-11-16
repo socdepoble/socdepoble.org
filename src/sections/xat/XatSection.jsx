@@ -1451,7 +1451,8 @@ function XatWorkspace({ origen = null }) {
       navigate(rutaDEntrada({ tornar: rutaAmbConsulta(pathname, params) }));
       return;
     }
-    const retall = construeixRetall({ fil: activeThread, missatges: triats, locale });
+    /* Onada R30 · R29-E2EE-02 · El traductor, perquè un xifrat tancat de la tria diga el seu text serè en la llengua de la interfície. */
+    const retall = construeixRetall({ fil: activeThread, missatges: triats, locale, t });
     try {
       const nota = await creaNota(retall);
       if (!mounted.current) return;

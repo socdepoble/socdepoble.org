@@ -110,11 +110,13 @@ export const DURADA_AVIS_ACCIONS = 5000;
    el marcatge és el de sempre. */
 function EstatErrorEditor() {
   const t = useTraductorOpcional();
+  /* Onada R30 · T3-VOC · Fora les cinc sdp-estat*: cap full no les estilava
+     (classes foranes). L'estructura es queda; el seu estil és deute de disseny. */
   return (
-    <div className="sdp-estat sdp-estat--error">
-      <div className="sdp-estat__contenidor">
-        <h3 className="sdp-estat__titol">{tradueix(t, TEXTOS_CLOSCA.errorTitol)}</h3>
-        <p className="sdp-estat__descripcio">{tradueix(t, TEXTOS_CLOSCA.errorDescripcio)}</p>
+    <div>
+      <div>
+        <h3>{tradueix(t, TEXTOS_CLOSCA.errorTitol)}</h3>
+        <p>{tradueix(t, TEXTOS_CLOSCA.errorDescripcio)}</p>
       </div>
     </div>
   );
@@ -178,7 +180,9 @@ const CAMPS_AMB_AVIS = Object.keys(PARELLS_CAMP);
    focus). Sense el desplegable, els selectors de sempre casen primer.
    Cicle 3 del Gauntlet (261030, VD) · Les ranures de la capçalera i del
    logotip del desplegable s'apunten amb data-sdp-ranura, no amb una classe:
-   són ganxos de focus sense cap estil (tractor-vocabulari, V1). */
+   són ganxos de focus sense cap estil (tractor-vocabulari, V1).
+   Onada R30 · T3-VOC · El mateix per a la ranura del logotip de PageFrame:
+   data-sdp-ranura="logotip-personalitzat" en lloc de la classe page-title-logo-personalitzat. */
 const DESTINS_FOCUS = Object.freeze({
   title: '.editor-title-input',
   subtitle: '.editor-subtitle-input',
@@ -188,7 +192,7 @@ const DESTINS_FOCUS = Object.freeze({
   heroVideo: '.hero-image [role="button"], .hero-image button:not(:disabled), [data-sdp-ranura="capcalera"] [role="button"], [data-sdp-ranura="capcalera"] button:not(:disabled)',
   /* Encàrrec d'harmonització (261018) · L'avatar redó del Perfil també viu dins
      del desplegable (.sdp-edicio-avancada__identitat). */
-  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia, .sdp-edicio-avancada__identitat .page-title-avatar--canvia, [data-sdp-ranura="logotip"] [role="button"], [data-sdp-ranura="logotip"] button:not(:disabled)',
+  logoImage: '[data-sdp-ranura="logotip-personalitzat"] [role="button"], [data-sdp-ranura="logotip-personalitzat"] button:not(:disabled), .page-title .page-title-avatar--canvia, .sdp-edicio-avancada__identitat .page-title-avatar--canvia, [data-sdp-ranura="logotip"] [role="button"], [data-sdp-ranura="logotip"] button:not(:disabled)',
   logoImageDark: '[data-sdp-ranura="logotip-fosc"] button:not(:disabled), [data-sdp-ranura="logotip-fosc"] [role="button"]',
   copyright: '[data-sdp-drets]',
   icon: '.bar-orange > button.sdp-emoticona-barra--boto, .sdp-edicio-avancada .sdp-classificacio-botonera > button:last-child',

@@ -136,7 +136,7 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
   const [menuObert, setMenuObert] = useState(false);
   const [veuActual, setVeuActual] = useState(() => llegeixVeuPreferida());
   const [parlantPagina, setParlantPagina] = useState(false);
-  const vidaRef = useRef({ peticio: 0, control: null, serveiVeu: null, escoltant: false, lectura: null });
+  const vidaRef = useRef({ peticio: 0, control: null, serveiVeu: null, escoltant: false, lectura: null, generacioVeu: 0 });
 
   useEffect(() => subscriuVeuPreferida(setVeuActual), []);
 
@@ -156,9 +156,11 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
     if (vida.escoltant) {
       vida.escoltant = false;
       vida.serveiVeu?.atura?.();
-      setParlantPagina(false);
     }
+    setParlantPagina(false);
     return () => {
+      vida.generacioVeu += 1;
+      vida.lectura = null;
       if (vida.escoltant) {
         vida.escoltant = false;
         vida.serveiVeu?.atura?.();
@@ -186,13 +188,16 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
 
   const alternaLecturaVeu = useCallback(async (veuForcada = undefined) => {
     const vida = vidaRef.current;
+    const generacio = vida.generacioVeu;
     let modul = vida.serveiVeu;
     if (!modul) {
       try {
         modul = await import('../../../services/veuIaiaService.js');
+        // La importació pot acabar després de canviar de pàgina o desmuntar-la.
+        if (generacio !== vida.generacioVeu) return;
         vida.serveiVeu = modul;
       } catch {
-        avisa(PARELLS_AVIS_TRADUCCIO.errorVeu);
+        if (generacio === vida.generacioVeu) avisa(PARELLS_AVIS_TRADUCCIO.errorVeu);
         return;
       }
     }

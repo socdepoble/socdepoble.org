@@ -156,8 +156,13 @@ export const PROVEIDORS = Object.freeze([
     nota: 'A la UE pot facturar OpenAI Ireland o OpenAI LLC: revisa la factura.' }),
   proveidor({ clau: 'google-gemini', nom: 'Google Gemini', categoria: 'ia', pais: 'IE',
     patrons: [/\bGEMINI\b/, /\bAI\s+STUDIO\b/, /\bVERTEX\s*AI\b/, /\bNOTEBOOKLM\b/] }),
+  /* Onada R30 · A6-RX4 · Les dues paraules, en qualsevol ordre: les mirades avant
+     s'ancoren a l'inici de cada línia (^ amb «m»). Sense àncora es tornaven a
+     provar des de cada caràcter i cada una recorria el text sencer (temps
+     quadràtic: un concepte de 16.000 caràcters tardava segons). «.» no passa de
+     línia i «^» amb «m» comença on comença cada línia: casen els mateixos textos. */
   proveidor({ clau: 'github-copilot', nom: 'GitHub Copilot', categoria: 'ia', pais: 'US',
-    patrons: [/(?=.*\bGITHUB\b)(?=.*\bCOPILOT\b)/] }),
+    patrons: [/^(?=.*\bGITHUB\b)(?=.*\bCOPILOT\b)/m] }),
   proveidor({ clau: 'microsoft-copilot', nom: 'Microsoft Copilot', categoria: 'ia', pais: 'IE', patrons: [/\bCOPILOT\b/] }),
   proveidor({ clau: 'perplexity', nom: 'Perplexity', categoria: 'ia', pais: 'US', patrons: [/\bPERPLEXITY\b/] }),
   proveidor({ clau: 'mistral', nom: 'Mistral AI', categoria: 'ia', pais: 'FR', patrons: [/\bMISTRAL\s*AI\b/], febles: [/\bMISTRAL\b/] }),
@@ -203,7 +208,7 @@ export const PROVEIDORS = Object.freeze([
 
   // ── Programari i subscripcions ──
   proveidor({ clau: 'google-workspace', nom: 'Google Workspace', categoria: 'programari', pais: 'IE',
-    patrons: [/(?=.*\bGOOGLE\b)(?=.*\bWORKSPACE\b)/, /\bG\s*SUITE\b/] }),
+    patrons: [/^(?=.*\bGOOGLE\b)(?=.*\bWORKSPACE\b)/m, /\bG\s*SUITE\b/] }),
   proveidor({ clau: 'microsoft-365', nom: 'Microsoft 365', categoria: 'programari', pais: 'IE',
     patrons: [/\bMICROSOFT\s*365\b/, /\bOFFICE\s*365\b/, /\bM365\b/] }),
   proveidor({ clau: 'github', nom: 'GitHub', categoria: 'programari', pais: 'US', cataleg: 'github', patrons: [/\bGITHUB\b/] }),

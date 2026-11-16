@@ -3175,6 +3175,9 @@ export default {
   'section.xat.xifratge.senseClauValida': "No valid security key",
   'section.xat.xifratge.clauRetirada': "This device cannot find any valid security key for {nom} that can be confirmed. This happens when someone loses their device and their phrase, or if someone has got in the middle. Until there is a valid one, you cannot write here. Talk to {nom} to find out what happened.",
   'section.xat.xifratge.clauPropiaRetirada': "This device cannot find any active key for your account: neither its own nor any other. Someone may have got in the middle. For your safety, you cannot write. If it was not you, let us know.",
+  /* Onada R30 · R29-E2EE-02 · el missatge xifrat que este dispositiu no ha pogut obrir */
+  'section.xat.xifratge.tancat': "End-to-end encrypted message on another device",
+  'section.xat.xifratge.noObert': "This encrypted message could not be opened",
   /* O4-CLAUDE-3 · D-18 (a): avís i confirmació del retall a Notes d’una conversa xifrada */
   'section.xat.xifratge.retall.avis': "The note will be saved on the server without end-to-end encryption.",
   'section.xat.xifratge.retall.guarda': "Save",
@@ -3684,7 +3687,7 @@ export default {
   'section.control.rural.eliminaNota': "Delete note",
   'section.control.rural.eliminaNotaAjuda': "The version you opened will be deleted. An unobserved concurrent edit will be preserved. History remains until you erase the whole space.",
   'section.control.rural.eliminaConfirma': "Delete this note",
-  'section.control.rural.carpetaCrdtAjuda': "The folder keeps immutable change files and Markdown versions. You can edit a Markdown file; its causal base allows the change to be merged. Older versions are not overwritten.",
+  'section.control.rural.carpetaCrdtAjuda': "The folder keeps change files and Markdown versions that are never overwritten. You can edit a Markdown file; its causal base allows the change to be merged. 90 days after they are confirmed, old unedited files are consolidated without losing any change.",
   'section.control.rural.carpetaSenseBase': "Older notes without a causal base were added as independent versions. Review the merged texts.",
   'section.control.rural.dependenciesPendents': "Predecessor operations are missing. Keep a backup and import the missing change files.",
   'section.control.rural.crdtInvalid': "The shared change could not be applied. Check the data and keep a backup before continuing.",

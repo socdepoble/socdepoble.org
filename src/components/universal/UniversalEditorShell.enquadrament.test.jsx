@@ -190,7 +190,7 @@ test('T46 · mentre la capçalera es desa, ni un altre enquadrament ni un altre 
    (ImageUploaderUI): mentre puja, «Editar logotip» desactivat, l'ajuda ho diu i
    un altre fitxer no es processa. Abans, el segon trepitjava el primer. La
    capçalera no es bloqueja: cada control, la seua pujada. */
-const inputLogo = (container) => container.querySelector('.page-title-logo-personalitzat input[type="file"]');
+const inputLogo = (container) => container.querySelector('[data-sdp-ranura="logotip-personalitzat"] input[type="file"]');
 const triaLogo = async (container, fitxer) => {
   await act(async () => { fireEvent.change(inputLogo(container), { target: { files: [fitxer] } }); });
 };
@@ -202,7 +202,7 @@ test('ordre E · mentre el logotip es desa, cap altre fitxer; en acabar, tot tor
   await triaLogo(vista.container, foto());
   const editar = vista.getByRole('button', { name: 'Editar logotip' });
   expect(editar.disabled).toBe(true);
-  expect(vista.container.querySelector('.page-title-logo-personalitzat .sdp-camp__ajuda').textContent).toMatch(/Encara s’està desant la imatge/);
+  expect(vista.container.querySelector('[data-sdp-ranura="logotip-personalitzat"] .sdp-camp__ajuda').textContent).toMatch(/Encara s’està desant la imatge/);
   // La capçalera no puja: el seu botó continua viu.
   expect(vista.getByRole('button', { name: 'Editar capçalera' }).disabled).toBe(false);
   await triaLogo(vista.container, foto());

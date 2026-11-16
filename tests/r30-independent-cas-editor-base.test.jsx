@@ -1,0 +1,24 @@
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, expect, test, vi } from 'vitest';
+const m = vi.hoisted(() => ({ list: vi.fn(), save: vi.fn() }));
+vi.mock('../src/data/backendPort.js', () => ({ teCapacitat: () => true, llistaRevisionsEditorialsWp: (...a) => m.list(...a), desaRevisioEditorialWp: (...a) => m.save(...a) }));
+vi.mock('../src/app/contexts/RouterContext.jsx', () => ({ Link: ({ to, children, ...p }) => <a href={to} {...p}>{children}</a> }));
+vi.mock('../src/app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => null }));
+vi.mock('../src/hooks/useProjeccionsCataleg.js', () => ({ useProjeccionsCataleg: () => ({ autoritzat: false }) }));
+import BancImportacioEditorial from '../src/sections/profile/admin/BancImportacioEditorial.jsx';
+import { CLAU_STORAGE_REVISIO_WP } from '../src/utils/revisioEditorialWp.js';
+afterEach(() => { cleanup(); localStorage.clear(); });
+test('revisió independent: la versió esperada és la llegida per l’editora abans d’escriure, no una sincronització tardana', async () => {
+ const first='2026-11-15T22:00:00.000001Z',second='2026-11-15T22:00:00.000002Z';
+ localStorage.setItem(CLAU_STORAGE_REVISIO_WP,JSON.stringify({estats:{619:'aprovat'},anotacions:{619:'Text base antic'},destinacions:{},versions:{619:first},pendents:{}}));
+ let resolve; m.list.mockImplementation(()=>new Promise(r=>{resolve=r;}));m.save.mockResolvedValue({wpId:619,actualitzatA:'2026-11-15T22:00:00.000003Z'});
+ render(<BancImportacioEditorial />);
+ await waitFor(()=>expect(resolve).toBeTypeOf("function"));
+ fireEvent.change(screen.getByRole('textbox',{name:/Cerca per títol/}),{target:{value:'619'}});
+ fireEvent.click(screen.getByRole('row',{name:/619.*Catàleg d’Arbres/}));
+ fireEvent.change(screen.getByLabelText(/Anotacions del Mestre/),{target:{value:'La meua edició sobre v1'}});
+ await act(async()=>{resolve([{wpId:619,estat:'aprovat',nota:'Text canviat per altra editora',actualitzatA:second}]);});
+ fireEvent.click(screen.getByRole('button',{name:/Aprovar i desar nota/}));
+ await waitFor(()=>expect(m.save).toHaveBeenCalledOnce());
+ expect(m.save.mock.calls[0][0].actualitzatEsperat).toBe(first);
+});

@@ -15,6 +15,8 @@ import {
   subscriuRevisionsEditorials,
   versioRevisionsEditorials
 } from './revisionsEditorials.js';
+import * as revisions from './revisionsEditorials.js';
+import * as delNavegador from './revisionsEditorialsDelNavegador.js';
 
 const CLAU = `${STORAGE_PREFIX}publicacions.revisions.v1`;
 const MANIFEST = { id: 'manifest-de-poble', title: 'Manifest de Poble', post_subtitle: 'Una veu', entradilla: 'Resum', content: 'Text pla vell', image_url: '/assets/m.webp' };
@@ -104,5 +106,42 @@ describe('revisionsEditorials', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota'); });
     expect(desaRevisioEditorial('mur', 'x', { content: '<p>En memòria</p>' })).toBe(true);
     expect(revisioEditorial('mur', 'x').content).toBe('<p>En memòria</p>');
+  });
+});
+
+/* Onada R30 · A4 (marge del sostre d'arrencada WordPress) · La meitat del navegador viu a
+   revisionsEditorialsDelNavegador.js (trasllat literal) i MurContext la llig d'allí. L'API del mòdul de
+   sempre no canvia: els mateixos 13 noms, i els del navegador són les MATEIXES funcions de la fulla (un
+   sol estat, uns sols oients). Els noms interns de la fulla no s'hi reexporten. */
+describe('revisionsEditorials · la fulla del navegador (R30 · A4)', () => {
+  const PUBLICS_DE_LA_FULLA = ['CAMPS_DE_LA_REVISIO', 'desaRevisioEditorial', 'oblidaRevisioEditorial', 'revisaElement', 'revisaLlista',
+    'revisioEditorial', 'subscriuRevisionsEditorials', 'versioRevisionsEditorials'];
+
+  test('el mòdul de sempre exporta exactament els noms d’abans', () => {
+    expect(Object.keys(revisions).sort()).toEqual([...PUBLICS_DE_LA_FULLA, '_reiniciaRevisionsEditorialsPerAProves',
+      'avisDeLaRevisioEditorial', 'desaRevisioEditorialAmbServidor', 'migraRevisionsEditorialsAlServidor', 'rebutjadaPelServidor'].sort());
+  });
+
+  test('cada nom del navegador és la mateixa vinculació que la fulla, i els interns no ixen', () => {
+    for (const nom of PUBLICS_DE_LA_FULLA) expect(revisions[nom], nom).toBe(delNavegador[nom]);
+    for (const intern of ['versioValida', 'normalitzaClau', 'carregaMapa', 'persisteixMapa', 'notifica', 'igual', '_buidaRevisionsDelNavegadorPerAProves']) {
+      expect(typeof delNavegador[intern], intern).toBe('function');
+      expect(Object.hasOwn(revisions, intern), intern).toBe(false);
+    }
+  });
+
+  test('un sol estat: el que desa el mòdul de sempre el veu qui llig la fulla, i el reinici de proves buida els dos', () => {
+    const versio = delNavegador.versioRevisionsEditorials();
+    const oient = vi.fn();
+    const deixa = delNavegador.subscriuRevisionsEditorials(oient);
+    expect(desaRevisioEditorial('mur', 'manifest-de-poble', { title: 'Des del mòdul de sempre' })).toBe(true);
+    expect(oient).toHaveBeenCalledTimes(1);
+    expect(delNavegador.versioRevisionsEditorials()).toBe(versio + 1);
+    expect(delNavegador.revisaLlista([MANIFEST], 'mur')[0].title).toBe('Des del mòdul de sempre');
+    _reiniciaRevisionsEditorialsPerAProves();
+    expect(oient).toHaveBeenCalledTimes(2);
+    expect(delNavegador.revisioEditorial('mur', 'manifest-de-poble')).toBeNull();
+    expect(JSON.parse(window.localStorage.getItem(CLAU))).toEqual({});
+    deixa();
   });
 });

@@ -66,6 +66,7 @@ import { etiquetaObjecte } from '../connectar/abastConnexio.js';
 import { useNotes } from './NotesContext.jsx';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
 import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, nomDeCarpeta } from './carpetes.js';
+import { useCarpetesDelBlocVisibles } from '../../components/universal/classificacio/migracioCarpetesLocals.js';
 import { bloqueigDeNota, publicaAmbMotiu, textosDeNota } from './visibilitatNota.js';
 import { autoriaDeLActor } from './autoriaNota.js';
 import { objecteDeConnexio, rutaSegura, senseParagrafHeretat, signaturaDeCaiguda } from './connexions.js';
@@ -89,9 +90,12 @@ export function ConnexioDetall({ nota }) {
   /* P1-22 (marató 261101_2143) · Els textos del selector en la llengua de l'app. */
   const textosMur = useMemo(() => textosDeNota({ connexio: true, t }), [t]);
   const {
-    noteFolders, setLocalNoteField, mouNota, esborraNota, compartirNota, potEsborrar = false, config,
+    noteFolders, notes, scopeKey, setLocalNoteField, mouNota, esborraNota, compartirNota, potEsborrar = false, config,
     potRetirarDelMur = false
   } = useNotes() || {};
+  /* Onada R30 · PF-01 (àrbitre) · Sense la rèplica remota d'una carpeta local migrada, com la
+     columna del Bloc: el diàleg de carpeta no hi ofereix cap opció nova. */
+  const carpetesVisibles = useCarpetesDelBlocVisibles(noteFolders, notes, scopeKey);
   /* T71 · el resolvedor únic: element d'una secció o pàgina de text. */
   const { section, item, page, pageKey, estat, targeta } = useOriginalDeConnexio(origen);
   const [dialeg, setDialeg] = useState(null); // 'carpeta' | 'esborrar' | 'mur' | null
@@ -121,7 +125,7 @@ export function ConnexioDetall({ nota }) {
 
   /* Carpeta: les del Bloc (amb la Safata d’Entrada sempre present), pel mateix
      canal que la resta de camps de la nota (setLocalNoteField desa i pinta). */
-  const carpetes = carpetesDelBloc(noteFolders).map((carpeta) => ({ id: String(carpeta.id), nom: nomDeCarpeta(carpeta, t) }));
+  const carpetes = carpetesDelBloc(carpetesVisibles).map((carpeta) => ({ id: String(carpeta.id), nom: nomDeCarpeta(carpeta, t) }));
   const carpetaId = String(nota?.folderId ?? CARPETA_CONNECTATS);
   const nomCarpeta = carpetes.find((carpeta) => carpeta.id === carpetaId)?.nom || NOM_CARPETA_CONNECTATS;
   const potMoure = Boolean(nota?.id && setLocalNoteField);

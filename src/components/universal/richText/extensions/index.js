@@ -10,6 +10,7 @@ import {
 import { PRECISIONS, PRECISIO_PER_DEFECTE_PUBLICACIO, geolocalitzacio } from '../../enquadrament/geolocalitzacio.js';
 import { FORMAT_JPEG, FORMAT_WEBP, netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
 import { fotoDelBucketPublic } from '../../../../utils/mitjaOpac.js';
+import { capaDeDalt } from '../../PageFrame.jsx';
 import { netejaHtmlEnganxat } from './imatgesEnganxades.js';
 import { EnganxatDeText, netejaFormatEnganxat } from './enganxatNet.js';
 import { markdownAHtml, paragrafsDeText, semblaMarkdown } from '../markdownEnganxat.js';
@@ -179,8 +180,12 @@ const SdpImage = Image.extend({
   }
 });
 
-/** Obri el selector de fitxers i resol amb el File, o null si s'anul·la. */
-function triaFitxer(accept = 'image/*') {
+/** Obri el selector de fitxers i resol amb el File, o null si s'anul·la.
+ *  Onada R30 · A2-LLEI06 · L'input amagat penja de la capa de dalt de l'editor (`node`, el seu DOM),
+ *  per la porta única del <body> (PageFrame.capaDeDalt): a la SPA i a l'app nativa, el <body> de
+ *  sempre; encastat, la .sdp-root de l'arrel ombra, mai el <body> de la pàgina amfitriona (LLEI_06).
+ *  Sense node (un editor fals de les proves), el <body>, com abans. */
+function triaFitxer(accept = 'image/*', node = null) {
   return new Promise((resolve) => {
     if (typeof document === 'undefined') return resolve(null);
 
@@ -189,7 +194,7 @@ function triaFitxer(accept = 'image/*') {
     input.accept = accept;
     input.style.position = 'fixed';
     input.style.left = '-9999px';
-    document.body.appendChild(input);
+    capaDeDalt(node).appendChild(input);
 
     let resolt = false;
     const acaba = (fitxer) => {
@@ -404,7 +409,7 @@ export function creaOrdres({
       executa: async ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run();
 
-        const original = await triaFitxer();
+        const original = await triaFitxer('image/*', editor.view?.dom);
         if (!original) return;
         /* El mateix avís que la capçalera per a un fitxer que no és una imatge
            (validaFitxerImatge). Sense límit de pes: el cos no en tenia cap i

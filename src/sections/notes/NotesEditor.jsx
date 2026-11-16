@@ -33,6 +33,7 @@ import {
 import { llistaDePobles, slugDelPoble } from '../pobles/nomsDelPoble.js';
 import { nomDeCarpeta } from './carpetes.js';
 import { carpetesCreades, creaCarpetaCreada, useCarpetesCreades } from '../../components/universal/classificacio/carpetesCreades.js';
+import { useCarpetesDelBlocVisibles } from '../../components/universal/classificacio/migracioCarpetesLocals.js';
 import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, modeDeDadesResolt, signaturaDeNota } from './autoriaNota.js';
@@ -383,8 +384,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   /* Onada R6 · Bloc 2 (P1-d) · Les carpetes creades en línia persistixen per àmbit
      (scopeKey) i tornen en recarregar: cap nota no apunta a una carpeta fantasma. */
   const carpetesLocals = useCarpetesCreades(scopeKey);
+  /* Onada R30 · PF-01 · Com a la columna del Bloc: la rèplica remota d'una carpeta local
+     migrada, sense cap nota que hi apunte, no és una segona opció amb el mateix nom. Es filtra
+     abans de la reserva de sèrie, com carpetesDelBloc: la llista queda com abans de migrar. */
+  const carpetesDelServidor = useCarpetesDelBlocVisibles(noteFolders, notes, scopeKey);
   const carpetes = useMemo(() => {
-    const llista = noteFolders?.length ? noteFolders : NOTE_FOLDERS_SEED;
+    const llista = carpetesDelServidor?.length ? carpetesDelServidor : NOTE_FOLDERS_SEED;
     /* P1-22 · El nom de sèrie en la llengua de l'app (nomDeCarpeta); l'id és el que es desa. */
     const base = llista.filter((f) => String(f.id) !== 'f-tot').map((f) => ({
       id: String(f.id), nom: nomDeCarpeta(f, t), parentId: f.parentId == null ? null : String(f.parentId)
@@ -392,7 +397,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     const extres = carpetesLocals.filter((extra) => !base.some((c) => c.id === extra.id))
       .map((extra) => ({ id: extra.id, nom: extra.nom, parentId: null }));
     return [...base, ...extres];
-  }, [noteFolders, t, carpetesLocals]);
+  }, [carpetesDelServidor, t, carpetesLocals]);
   const classificacio = useMemo(() => (notaEnEdicio ? classificacioDe(notaEnEdicio) : null), [notaEnEdicio]);
   const carpetaId = String(notaEnEdicio?.folderId ?? CARPETA_PER_DEFECTE);
   /* IDEA-61 (T0) · La fitxa d'àmbit de la nota ({ ambit, estat, dades } net,

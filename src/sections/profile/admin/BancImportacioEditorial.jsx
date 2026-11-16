@@ -1,3 +1,4 @@
+import { consultaRevisioEditorialWp, llegeixEstatRevisioEditorial } from '../../../utils/revisioEditorialWp.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
@@ -46,18 +47,24 @@ export function BancImportacioEditorial() {
   const [pagina, setPagina] = useState(1);
   const [articleSeleccionatId, setArticleSeleccionatId] = useState(null);
   const [notaEdicio, setNotaEdicio] = useState('');
+  const [revisant, setRevisant] = useState(false);
+  const [conflicteRevisio, setConflicteRevisio] = useState(null);
+  const [avisRevisio, setAvisRevisio] = useState('');
   const [resultatXml, setResultatXml] = useState(null);
   const [errorXml, setErrorXml] = useState('');
   const [confirmacioPublica, setConfirmacioPublica] = useState(false);
   const [publicant, setPublicant] = useState(false);
   const [missatgeDestinacio, setMissatgeDestinacio] = useState('');
   const seleccioViva = useRef(null);
+  const revisioEnVol = useRef(false);
+  const muntat = useRef(true);
+  const baseEdicio = useRef(null);
   const lecturaXml = useRef(0);
   const inspectorRef = useRef(null);
   const titolInspectorRef = useRef(null);
   const taulaCapRef = useRef(null);
   const saltPendentRef = useRef(false);
-  useEffect(() => () => { seleccioViva.current = null; lecturaXml.current += 1; saltPendentRef.current = false; }, []);
+  useEffect(() => { muntat.current = true; return () => { muntat.current = false; seleccioViva.current = null; lecturaXml.current += 1; saltPendentRef.current = false; }; }, []);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const articles = useMemo(() => lligArticlesImportatsAmbRevisio(), [versio]);
@@ -101,15 +108,45 @@ export function BancImportacioEditorial() {
   );
   seleccioViva.current = seleccionat ? `${seleccionat.wp_id}:${seleccionat.destinacio_workspace}` : null;
 
-  const canviaEstatArticle = (wpId, estat, nota = undefined) => {
+  const canviaEstatArticle = async (wpId, estat, nota = undefined, actualitzatEsperat = undefined) => {
+    if (revisioEnVol.current) return;
+    revisioEnVol.current = true;
+    const clauPendent = seleccioViva.current;
     const item = articles.find((a) => a.wp_id === wpId);
-    void desaRevisioArticleImportatAmbServidor(wpId, {
-      estat,
-      ...(nota !== undefined ? { nota } : {}),
+    setRevisant(true); setAvisRevisio('');
+    const token = actualitzatEsperat === undefined && baseEdicio.current?.id === wpId
+      ? baseEdicio.current.token : actualitzatEsperat;
+    const resultat = await desaRevisioArticleImportatAmbServidor(wpId, {
+      estat, nota: nota ?? item?.nota_revisio ?? '',
       autoria: item?.author || undefined,
       desti: item?.destinacio_workspace || item?.verticalProposada || undefined
-    });
-    setVersio((v) => v + 1);
+    }, { actualitzatEsperat: token });
+    revisioEnVol.current = false;
+    if (muntat.current) setRevisant(false);
+    if (muntat.current && seleccioViva.current === clauPendent) {
+      setVersio(v => v + 1);
+      if (resultat.conflicte) {
+        setConflicteRevisio({ wpId, estat, nota: nota ?? item?.nota_revisio ?? '', llegida: false });
+        setAvisRevisio('Una altra revisió ha canviat al servidor. La teua nota continua desada en este navegador.');
+      } else {
+        setConflicteRevisio(null);
+        if (resultat.remot) baseEdicio.current = { id: wpId, token: resultat.fila?.actualitzatA };
+        setAvisRevisio(resultat.remot ? 'Revisió confirmada pel servidor.' : 'Revisió desada només en este navegador.');
+      }
+    }
+  };
+
+  const revisaConflicte = async () => {
+    if (!conflicteRevisio || revisioEnVol.current) return;
+    revisioEnVol.current = true;
+    const clauPendent = seleccioViva.current;
+    const pendent = conflicteRevisio;
+    setRevisant(true);
+    try {
+      const remota = await consultaRevisioEditorialWp(pendent.wpId);
+      if (muntat.current && seleccioViva.current === clauPendent) setConflicteRevisio({ ...pendent, llegida: true, remota });
+    } catch { if (muntat.current && seleccioViva.current === clauPendent) setAvisRevisio('No s’ha pogut llegir la revisió del servidor. La teua nota es conserva.'); }
+    finally { revisioEnVol.current = false; if (muntat.current) setRevisant(false); }
   };
 
   const esColumnaUnicaMobil = () => (
@@ -137,7 +174,9 @@ export function BancImportacioEditorial() {
   const seleccionaArticle = (art, { salta = false } = {}) => {
     const deuSaltar = salta || esColumnaUnicaMobil();
     const mateixArticle = seleccionat?.wp_id === art.wp_id;
+    baseEdicio.current = { id: art.wp_id, token: llegeixEstatRevisioEditorial().versions?.[String(art.wp_id)] ?? null };
     setArticleSeleccionatId(art.wp_id);
+    setConflicteRevisio(null); setAvisRevisio('');
     setNotaEdicio(art.nota_revisio || '');
     setConfirmacioPublica(false);
     setMissatgeDestinacio('');
@@ -195,6 +234,15 @@ export function BancImportacioEditorial() {
 
   return (
     <article className="sdp-admin-importacio" aria-label="Importació i Revisió Editorial de WordPress i Blogger">
+      {avisRevisio && <p role="status">{avisRevisio}</p>}
+      {conflicteRevisio && <div role="alert">
+        <p>Conflicte de revisió de l’article #{conflicteRevisio.wpId}.</p>
+        {!conflicteRevisio.llegida ? <Boto disabled={revisant} onClick={revisaConflicte}>Revisa la versió del servidor</Boto> : <>
+          <p>Nota del servidor: {conflicteRevisio.remota?.nota || 'Sense nota'}</p>
+          <p>La teua nota: {conflicteRevisio.nota}</p>
+          <Boto disabled={revisant} onClick={() => canviaEstatArticle(conflicteRevisio.wpId, conflicteRevisio.estat, conflicteRevisio.nota, conflicteRevisio.remota?.actualitzatA ?? null)}>Reintenta amb la nota conservada</Boto>
+        </>}
+      </div>}
       <header className="sdp-admin-taxonomia__header">
         <div className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">Motor Universal WordPress + Blogger</Insignia>
@@ -369,7 +417,7 @@ export function BancImportacioEditorial() {
                           </Link>
                           <Boto
                             varietat={art.estat_revisio === 'aprovat' ? 'primari' : 'secundari'}
-                            onClick={() => canviaEstatArticle(art.wp_id, 'aprovat')}
+                            disabled={revisant || !!conflicteRevisio} onClick={() => canviaEstatArticle(art.wp_id, 'aprovat')}
                           >
                             Aprovar
                           </Boto>
@@ -489,7 +537,10 @@ export function BancImportacioEditorial() {
                   id="nota-revisio-admin"
                   rows={3}
                   value={notaEdicio}
-                  onChange={(e) => setNotaEdicio(e.target.value)}
+                  onChange={(e) => {
+                    if (baseEdicio.current?.id !== seleccionat.wp_id) baseEdicio.current = { id: seleccionat.wp_id, token: llegeixEstatRevisioEditorial().versions?.[String(seleccionat.wp_id)] ?? null };
+                    setNotaEdicio(e.target.value);
+                  }}
                   placeholder="Anota què cal polir d'aquest article (ex. revisar galeria, separar en dos articles, millorar subtítol)..."
                 />
                 <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat">
@@ -498,19 +549,19 @@ export function BancImportacioEditorial() {
                   </Link>
                   <Boto
                     varietat="primari"
-                    onClick={() => canviaEstatArticle(seleccionat.wp_id, 'aprovat', notaEdicio)}
+                    disabled={revisant || !!conflicteRevisio} onClick={() => canviaEstatArticle(seleccionat.wp_id, 'aprovat', notaEdicio)}
                   >
                     ✅ Aprovar i desar nota
                   </Boto>
                   <Boto
                     varietat="secundari"
-                    onClick={() => canviaEstatArticle(seleccionat.wp_id, 'amb_observacions', notaEdicio)}
+                    disabled={revisant || !!conflicteRevisio} onClick={() => canviaEstatArticle(seleccionat.wp_id, 'amb_observacions', notaEdicio)}
                   >
                     📝 Marcar amb observacions
                   </Boto>
                   <Boto
                     varietat="fantasma"
-                    onClick={() => canviaEstatArticle(seleccionat.wp_id, 'pendent_admin', notaEdicio)}
+                    disabled={revisant || !!conflicteRevisio} onClick={() => canviaEstatArticle(seleccionat.wp_id, 'pendent_admin', notaEdicio)}
                   >
                     ⏳ Tornar a pendent
                   </Boto>

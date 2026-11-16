@@ -58,13 +58,16 @@ export class SlotErrorBoundary extends Component {
       return fallback({ error, reinicia: this.reinicia });
     }
 
+    /* Onada R30 · T3-VOC · Fora sdp-slot-error, section-title i sdp-pre-wrap: cap
+       full no les estilava (classes foranes). El div i el pre conserven la classe
+       canònica, i el pre no passa a pre:not([class]). */
     return (
-      <div className="sdp-buit sdp-slot-error" role="alert">
-        <h2 className="section-title">☠️ El {domini} s'ha esfondrat</h2>
+      <div className="sdp-buit" role="alert">
+        <h2>☠️ El {domini} s'ha esfondrat</h2>
         <p className="perfil-detall-buit">
           ATENCIÓ: S'ha produït un error fatal intern en aquest panell.
         </p>
-        <pre className="sdp-camp__ajuda sdp-pre-wrap">
+        <pre className="sdp-camp__ajuda">
           {String(error?.message ?? error)}
         </pre>
         <button type="button" className="sdp-boto" onClick={this.reinicia}>

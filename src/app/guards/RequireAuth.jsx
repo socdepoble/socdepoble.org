@@ -4,10 +4,12 @@ import { Navigate, useLocation } from '../contexts/RouterContext';
 import { useSession, ESTAT } from '../contexts/SessionContext';
 import { RUTA_ENTRADA, rutaDEntrada } from '../../config/rutaEntrada.js';
 
-/** Pantalla d'espera. Mai cap redirecció mentre l'estat és 'comprovant'. */
+/** Pantalla d'espera. Mai cap redirecció mentre l'estat és 'comprovant'.
+ *  Onada R30 · T3-VOC · Sense la classe sdp-route-loading-screen: cap full no
+ *  l'estilava (classe forastera). El DOM pintat és el mateix. */
 function Comprovant() {
   return (
-    <div className="sdp-route-loading-screen" role="status" aria-live="polite">
+    <div role="status" aria-live="polite">
       <span className="sr-only">Comprovant la sessió…</span>
     </div>
   );

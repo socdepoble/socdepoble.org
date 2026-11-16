@@ -29,201 +29,23 @@
  * l'entrada guarda `servidor: { versio }` i deixa de solapar-se quan el lector
  * ja porta eixa versió o una de més nova (`_editorialVersio`).
  */
-import { STORAGE_PREFIX, getVal, setVal } from '../config/storage.js';
 import { backendScope } from '../config/backendConfig.js';
 import { capturaSessio } from './identitat.js';
 import { capturaRevisioSeed } from './seedRevisions.js';
+/* Onada R30 · A4 · La meitat del navegador (el registre, els oients i el solapament) viu a
+   revisionsEditorialsDelNavegador.js, una fulla que l'arrencada del paquet importa sense
+   arrossegar l'escriptura al servidor ni seedRevisions.js. Ací se'n reexporta cada nom públic, amb
+   el mateix nom, i se n'usen els interns: el codi de baix és el de sempre. */
+import {
+  CAMPS_DE_LA_REVISIO, _buidaRevisionsDelNavegadorPerAProves, carregaMapa, desaRevisioEditorial, igual, normalitzaClau,
+  notifica, oblidaRevisioEditorial, persisteixMapa, revisaElement, revisaLlista, revisioEditorial,
+  subscriuRevisionsEditorials, versioRevisionsEditorials, versioValida
+} from './revisionsEditorialsDelNavegador.js';
 
-const CLAU_STORAGE = 'publicacions.revisions.v1';
-const SECCIONS_VALIDES = Object.freeze(new Set(['mur', 'events']));
-/* Camp de la nota → claus de l'element, en l'ordre de lectura. */
-const CLAUS_DE_L_ELEMENT = Object.freeze({
-  title: Object.freeze(['title', 'name']),
-  subtitle: Object.freeze(['post_subtitle', 'subtitle']),
-  lead: Object.freeze(['entradilla', 'lead', 'summary']),
-  content: Object.freeze(['content']),
-  heroImage: Object.freeze(['image_url', 'image']),
-  logoImage: Object.freeze(['logo_image']),
-  copyright: Object.freeze(['copyright']),
-  icon: Object.freeze(['icon']),
-  publishDate: Object.freeze(['publish_date']),
-  tags: Object.freeze(['tags'])
-});
-export const CAMPS_DE_LA_REVISIO = Object.freeze(Object.keys(CLAUS_DE_L_ELEMENT));
-const MAX_COS = 600000;
-const MAX_TEXT = 4000;
-const MAX_ETIQUETES = 50;
-
-let versio = 0;
-const oients = new Set();
-let cacheMem = null;
-let escoltaStorage = null;
-
-const versioValida = (valor) => Number.isSafeInteger(valor) && valor > 0;
-
-function normalitzaClau(seccio, id) {
-  const s = String(seccio || '').trim().toLowerCase();
-  const i = id == null ? '' : String(id).trim();
-  if (!SECCIONS_VALIDES.has(s) || !i) return null;
-  return `${s}:${i}`;
-}
-
-/* Només els camps coneguts, del tipus esperat i amb topall: el storage és de la persona, no de confiança. */
-function campsValids(camps) {
-  if (!camps || typeof camps !== 'object' || Array.isArray(camps)) return null;
-  const nets = {};
-  for (const camp of CAMPS_DE_LA_REVISIO) {
-    if (!Object.prototype.hasOwnProperty.call(camps, camp)) continue;
-    const valor = camps[camp];
-    if (camp === 'tags') {
-      if (Array.isArray(valor)) {
-        nets.tags = valor.filter((etiqueta) => typeof etiqueta === 'string' && etiqueta.length <= 80).slice(0, MAX_ETIQUETES);
-      }
-    } else if (camp === 'publishDate' && valor === null) {
-      nets.publishDate = null;
-    } else if (typeof valor === 'string' && valor.length <= (camp === 'content' ? MAX_COS : MAX_TEXT)) {
-      nets[camp] = valor;
-    }
-  }
-  return Object.keys(nets).length ? Object.freeze(nets) : null;
-}
-
-function carregaMapa() {
-  if (cacheMem) return cacheMem;
-  const mapa = new Map();
-  try {
-    const desat = getVal(CLAU_STORAGE, null);
-    if (desat && typeof desat === 'object' && !Array.isArray(desat)) {
-      for (const [clau, entrada] of Object.entries(desat)) {
-        const [seccio, ...resta] = String(clau).split(':');
-        const normal = normalitzaClau(seccio, resta.join(':'));
-        const camps = normal === clau ? campsValids(entrada?.camps) : null;
-        if (camps) {
-          const servidor = versioValida(entrada?.servidor?.versio) ? Object.freeze({ versio: entrada.servidor.versio,
-            ...(entrada.servidor.tipus === 'seed' ? { tipus: 'seed', fontVersio: entrada.servidor.fontVersio } : {}) }) : null;
-          mapa.set(clau, Object.freeze({ camps, desadaEl: typeof entrada.desadaEl === 'string' ? entrada.desadaEl : null, ...(servidor ? { servidor } : null) }));
-        }
-      }
-    }
-  } catch {
-    /* sense storage disponible */
-  }
-  cacheMem = mapa;
-  return cacheMem;
-}
-
-function persisteixMapa(mapa) {
-  try {
-    setVal(CLAU_STORAGE, Object.fromEntries(mapa));
-  } catch {
-    /* sense storage disponible: la revisió viu en memòria fins a la recàrrega */
-  }
-}
-
-function notifica() {
-  versio += 1;
-  for (const fn of oients) {
-    try { fn(); } catch { /* ignora error d'oient */ }
-  }
-}
-
-/* Una altra pestanya ha desat o esborrat: es torna a llegir el storage. */
-function enCanviDeStorage(event) {
-  if (event?.key != null && event.key !== STORAGE_PREFIX + CLAU_STORAGE) return;
-  cacheMem = null;
-  notifica();
-}
-
-export function subscriuRevisionsEditorials(callback) {
-  oients.add(callback);
-  if (!escoltaStorage && typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
-    escoltaStorage = enCanviDeStorage;
-    window.addEventListener('storage', escoltaStorage);
-  }
-  return () => {
-    oients.delete(callback);
-    if (!oients.size && escoltaStorage && typeof window !== 'undefined') {
-      window.removeEventListener('storage', escoltaStorage);
-      escoltaStorage = null;
-    }
-  };
-}
-
-export function versioRevisionsEditorials() {
-  return versio;
-}
-
-/** Els camps revisats d'un element ({ title, content, … }) o null. */
-export function revisioEditorial(seccio, id) {
-  const clau = normalitzaClau(seccio, id);
-  return clau ? carregaMapa().get(clau)?.camps || null : null;
-}
-
-/** Desa (fusionant amb la revisió anterior) els camps d'una revisió. Torna false si no n'accepta cap. */
-export function desaRevisioEditorial(seccio, id, camps) {
-  const clau = normalitzaClau(seccio, id);
-  const nous = clau ? campsValids(camps) : null;
-  if (!nous) return false;
-  const mapa = carregaMapa();
-  const fusionats = Object.freeze({ ...(mapa.get(clau)?.camps || {}), ...nous });
-  mapa.set(clau, Object.freeze({ camps: fusionats, desadaEl: new Date().toISOString() }));
-  persisteixMapa(mapa);
-  notifica();
-  return true;
-}
-
-export function oblidaRevisioEditorial(seccio, id) {
-  const clau = normalitzaClau(seccio, id);
-  const mapa = carregaMapa();
-  if (!clau || !mapa.has(clau)) return false;
-  mapa.delete(clau);
-  persisteixMapa(mapa);
-  notifica();
-  return true;
-}
-
-const clauDeDesti = (element, claus) => claus.find((clau) => {
-  const valor = element[clau];
-  return typeof valor === 'string' ? valor !== '' : valor != null;
-}) || claus[0];
-
-const igual = (a, b) => (Array.isArray(a) && Array.isArray(b)
-  ? a.length === b.length && a.every((valor, index) => valor === b[index])
-  : a === b);
-
-/** L'element amb la seua revisió al damunt (un objecte nou) o el MATEIX element
- *  si no en té o ja la porta (aplicar-la dos voltes no canvia la identitat). */
-export function revisaElement(seccio, element) {
-  if (!element || typeof element !== 'object' || element.id == null) return element;
-  const clau = normalitzaClau(seccio, element.id);
-  const entrada = clau ? carregaMapa().get(clau) : null;
-  const camps = entrada?.camps || null;
-  if (!camps) return element;
-  /* R12 · El servidor ja l'ha acceptada i el lector porta eixa versió (o una de
-     posterior, d'una altra mà): mana la fila, no la còpia del navegador. */
-  const versioDelServidor = entrada.servidor?.tipus === 'seed' ? element._seedRevisioVersio : element._editorialVersio;
-  if (entrada.servidor?.tipus === 'seed' && versioValida(entrada.servidor.fontVersio)
-    && versioValida(element._seedFontVersio || element._editorialVersio)
-    && entrada.servidor.fontVersio !== (element._seedFontVersio || element._editorialVersio)) return element;
-  if (entrada.servidor && versioValida(versioDelServidor) && versioDelServidor >= entrada.servidor.versio) return element;
-  const canvis = Object.entries(camps)
-    .map(([camp, valor]) => [clauDeDesti(element, CLAUS_DE_L_ELEMENT[camp]), valor])
-    .filter(([clau, valor]) => !igual(element[clau], valor));
-  if (!canvis.length) return element;
-  const revisat = { ...element };
-  for (const [clau, valor] of canvis) revisat[clau] = Array.isArray(valor) ? [...valor] : valor;
-  return revisat;
-}
-
-/** La llista amb les revisions al damunt; la MATEIXA llista si cap element en té. */
-export function revisaLlista(llista, seccio) {
-  if (!Array.isArray(llista) || !llista.length) return llista || [];
-  const mapa = carregaMapa();
-  const s = String(seccio || '').trim().toLowerCase();
-  if (!mapa.size || !SECCIONS_VALIDES.has(s)) return llista;
-  if (!llista.some((element) => element?.id != null && mapa.has(`${s}:${String(element.id)}`))) return llista;
-  return llista.map((element) => revisaElement(s, element));
-}
+export {
+  CAMPS_DE_LA_REVISIO, desaRevisioEditorial, oblidaRevisioEditorial, revisaElement, revisaLlista, revisioEditorial,
+  subscriuRevisionsEditorials, versioRevisionsEditorials
+};
 
 /* ── R12 · Escriptura al servidor pel port (capacitat `edicioEditorial`) ── */
 
@@ -407,7 +229,5 @@ export function avisDeLaRevisioEditorial(resultat, t = null) {
 export function _reiniciaRevisionsEditorialsPerAProves() {
   versionsConfirmades.clear();
   enVol.clear();
-  cacheMem = new Map();
-  persisteixMapa(cacheMem);
-  notifica();
+  _buidaRevisionsDelNavegadorPerAProves();
 }

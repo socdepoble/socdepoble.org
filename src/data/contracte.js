@@ -837,8 +837,9 @@ export const LIMIT_DADES_OBERTES = 5000;
    continuen dient 1.2.0.
    Onada R28 (Lot C4, pla 261115_0135) · Versió unificada 1.2.1 amb el build 6: MARKETING_VERSION, versionName i
    package.json diuen 1.2.1, i el build puja del 5 al 6 perquè cap número ja pujat a una botiga es reutilitze.
-   Onada R29 (DECISIÓ-R29-01, pla 261115_1514) · Versió unificada 1.2.2 amb el build 7, pel mateix motiu. */
-export const VERSIO_CLIENT_NATIU = 7;
+   Onada R29 (DECISIÓ-R29-01, pla 261115_1514) · Versió unificada 1.2.2 amb el build 7, pel mateix motiu.
+   Onada R30 (pla 261115_2242) · Versió unificada 1.2.3 amb el build 8: és la primera que puja a TestFlight. */
+export const VERSIO_CLIENT_NATIU = 8;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

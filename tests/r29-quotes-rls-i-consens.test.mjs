@@ -79,7 +79,10 @@ if (!modulePath || !fs.existsSync(modulePath)) {
   const DEPENDENCIES_R29 = ['2610241400', '20261114000100', '20261113233000', '20261114023000', '2611091500', '2611110110', '20261114060000'];
   const R23 = ['20261113233000', '20261114023000', '20261114171500', '20261115030000'];
   const SQL_R29 = captures.get(R29)?.sql;
-  const ABANS_R29 = files.filter(f => f !== R29);
+  /* Onada R30 · La 20261115230000 (CAS de la curadoria WordPress) va darrere de la R29 al catàleg: R29 es
+     prova sobre el catàleg que la precedix, no sobre les migracions que hi van darrere (com la R28 a la R29). */
+  const ABANS_R29 = files.slice(0, files.indexOf(R29));
+  const DESPRES_R29 = files.slice(files.indexOf(R29) + 1);
 
   /* Els mateixos substituts d'infraestructura que tests/r28-rgpd-quotes-r23.test.mjs. */
   const bootstrap = "CREATE ROLE anon NOLOGIN;\nCREATE ROLE authenticated NOLOGIN;\nCREATE ROLE service_role NOLOGIN BYPASSRLS;\nCREATE SCHEMA auth;\nCREATE TABLE auth.users(id uuid PRIMARY KEY,email text,raw_user_meta_data jsonb NOT NULL DEFAULT '{}');\nCREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;\nGRANT USAGE ON SCHEMA auth TO anon,authenticated,service_role;\nGRANT EXECUTE ON FUNCTION auth.uid() TO anon,authenticated,service_role;\nCREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$SELECT coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb,'{}'::jsonb)$$;\nCREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$SELECT coalesce(nullif(current_setting('request.jwt.claim.role',true),''),'authenticated')$$;\nCREATE TABLE auth.sessions(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE);\nALTER TABLE auth.users ADD COLUMN banned_until timestamptz;\nALTER TABLE auth.users ADD COLUMN email_confirmed_at timestamptz;\nCREATE SCHEMA storage;\nCREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);\nCREATE TABLE storage.objects(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),bucket_id text REFERENCES storage.buckets(id),name text,owner uuid,owner_id text,metadata jsonb,version text,created_at timestamptz DEFAULT now(),UNIQUE(bucket_id,name));\nALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;\nCREATE FUNCTION storage.foldername(name text) RETURNS text[] LANGUAGE sql IMMUTABLE AS $$SELECT (string_to_array(name,'/'))[1:array_length(string_to_array(name,'/'),1)-1]$$;\nCREATE FUNCTION storage.operation() RETURNS text LANGUAGE sql STABLE AS $$SELECT current_setting('storage.operation',true)$$;\nGRANT USAGE ON SCHEMA storage TO anon,authenticated,service_role;\nGRANT SELECT,INSERT,UPDATE,DELETE ON storage.objects TO authenticated;\nCREATE SCHEMA realtime;\nCREATE TABLE realtime.messages(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,extension text,topic text,payload jsonb);\nALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY;\nCREATE FUNCTION realtime.topic() RETURNS text LANGUAGE sql STABLE AS $$SELECT current_setting('realtime.topic',true)$$;\n";
@@ -248,10 +251,12 @@ if (!modulePath || !fs.existsSync(modulePath)) {
       assert.equal(sha(fs.readFileSync(path.join(ROOT, 'supabase/ordre_desplegament.json'))), sha(ordreBytes), 'L’ordre declarat ha canviat durant l’assaig.');
     });
 
-    test('el catàleg complet s’aplica en l’ordre del verificador i R29 hi va l’última, darrere de les seues dependències', t => {
+    test('el catàleg anterior s’aplica en l’ordre del verificador i R29 hi va darrere, també de les seues dependències', t => {
       t.diagnostic(`catàleg: ${files.length} migracions (${versions.filter(v => v.length === 10).length} de 10 xifres i ${versions.filter(v => v.length === 14).length} de 14)`);
       assert.deepEqual(errorsCataleg, []);
-      assert.equal(files.at(-1), R29);
+      assert.ok(ABANS_R29.length > 0 && files.includes(R29));
+      /* Onada R30 · Darrere de R29 només hi ha migracions més noves (la 20261115230000). */
+      for (const f of DESPRES_R29) assert.ok(comparaVersions(versioDeFitxer(f), '20261115170000') > 0, f);
       for (const v of DEPENDENCIES_R29) {
         assert.ok(files.findIndex(f => f.startsWith(v + '_')) >= 0, `dependència present: ${v}`);
         assert.ok(dependencies.get('20261115170000').includes(v), `capçalera: depén de ${v}`);

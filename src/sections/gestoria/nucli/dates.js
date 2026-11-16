@@ -54,10 +54,16 @@ const BUIDES = new Set([
   'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'mon', 'tue', 'tues', 'wed', 'thu', 'thur', 'thurs', 'fri', 'sat', 'sun'
 ]);
 
-/* Qualsevol espai Unicode que no siga l'espai, el tabulador o un salt de
-   línia (espais durs i prims inclosos). Classe negada: cap caràcter
-   invisible literal al codi font (ESLint no-irregular-whitespace). */
-const ESPAIS_DURS = /[^\S\n\r\t ]/g;
+/* Onada R30 · A6-RX1 · Cada tira de blancs (espais durs i prims inclosos) es
+   queda en un espai abans de llegir la data. Abans només es canviaven els blancs
+   estranys per un espai, i HORA_FINAL, que pot començar en qualsevol blanc,
+   tornava a recórrer la tira sencera des de cada un (temps quadràtic: «1»,
+   40.000 espais i «1», de 2 a 9 s segons la càrrega de la màquina). Cap pas de
+   la lectura no distingix un blanc d'una tira de blancs (\s, \s+, \s*, trim i
+   split per blancs), i les dates que es lligen són les mateixes
+   (linealitat.test.js). Sense mirar arrere (?<…): la Gestoria es queda dins del
+   Baseline (qualitat.test.js). */
+const BLANCS = /\s+/g;
 const HORA_FINAL = /(?:t|\s+)\d{1,2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?\s*(?:z|[-+]\d{2}:?\d{2}|h)?$/;
 const ISO = /^(\d{4})([-/.])(\d{1,2})\2(\d{1,2})$/;
 const NUMERICA = /^(\d{1,2})([-/.])(\d{1,2})\2(\d{2}|\d{4})$/;
@@ -113,7 +119,7 @@ function dataTextual(s) {
 export function parseData(text) {
   if (esDataValida(text)) return { a: text.a, m: text.m, d: text.d };
   if (typeof text !== 'string') return null;
-  const s = senseAccents(text).toLowerCase().replace(ESPAIS_DURS, ' ').trim().replace(HORA_FINAL, '').trim();
+  const s = senseAccents(text).toLowerCase().replace(BLANCS, ' ').trim().replace(HORA_FINAL, '').trim();
   if (s === '') return null;
   let r = ISO.exec(s);
   if (r) return crea(Number(r[1]), Number(r[3]), Number(r[4]));

@@ -166,8 +166,8 @@ describe('calculaEmpremta', () => {
 
 describe('normalitzaText', () => {
   test('lleva el BOM inicial i converteix CRLF', () => {
-    expect(normalitzaText('﻿a\r\nb\r\n')).toBe('a\nb\n');
-    expect(normalitzaText('a﻿b')).toBe('a﻿b');
+    expect(normalitzaText('\uFEFFa\r\nb\r\n')).toBe('a\nb\n');
+    expect(normalitzaText('a\uFEFFb')).toBe('a\uFEFFb');
   });
 });
 

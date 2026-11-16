@@ -69,13 +69,17 @@ export const TEXTOS_MODE_RURAL = Object.freeze({
   eliminaNota: text("eliminaNota", "Eliminar nota"),
   eliminaNotaAjuda: text("eliminaNotaAjuda", "S’elimina la versió que has obert. Una edició concurrent encara no observada es conservarà. L’historial es manté fins que esborres tot l’espai."),
   eliminaConfirma: text("eliminaConfirma", "Elimina aquesta nota"),
-  carpetaCrdtAjuda: text("carpetaCrdtAjuda", "La carpeta conserva fitxers de canvis i versions Markdown immutables. Pots editar un Markdown; la seua base causal permet unir el canvi. Les versions antigues no es sobreescriuen."),
+  /* Onada R30 · PF-03 · La carpeta ja no conserva per sempre les versions antigues: passats 90 dies des de l'ACK,
+     els fitxers antics sense editar es consoliden (cap canvi ni tombstone es perd). Res no se sobreescriu. */
+  carpetaCrdtAjuda: text("carpetaCrdtAjuda", "La carpeta guarda fitxers de canvis i versions Markdown que no se sobreescriuen. Pots editar un Markdown; la seua base causal permet unir el canvi. Passats 90 dies des que es confirmen, els fitxers antics sense editar es consoliden sense perdre cap canvi."),
   carpetaSenseBase: text("carpetaSenseBase", "S’han incorporat notes antigues sense base causal com a versions independents. Revisa els textos units."),
   dependenciesPendents: text("dependenciesPendents", "Falten operacions predecessores. Conserva una còpia i importa els fitxers de canvis que falten."),
   crdtInvalid: text("crdtInvalid", "No s’ha pogut aplicar el canvi compartit. Comprova les dades i conserva una còpia abans de continuar."),
   crdtQuota: text("crdtQuota", "L’historial o el diari han arribat al límit. Prepara una còpia; consolidar el diari conserva tota la història."),
   /* Onada R29 · PF-03 · La quota de la carpeta (RURAL_CRDT_VAULT_QUOTA) no es resol consolidant el diari:
-     la carpeta no s'esborra mai. Les notes són al dispositiu; una carpeta nova i buida torna a sincronitzar. */
+     la carpeta no es buida mai (Onada R30 · PF-03: la compactació només consolida entrades madures, sense
+     perdre cap operació, i mai la fa passar de la quota). Les notes són al dispositiu; una carpeta nova i
+     buida torna a sincronitzar. */
   crdtCarpetaQuota: text("crdtCarpetaQuota", "La carpeta ha crescut massa per a sincronitzar-la: passa de 1.000 fitxers o de 4 MB. Les notes continuen guardades en este dispositiu. Per a continuar, tria una carpeta nova i buida o prepara una còpia de les notes."),
   crdtCommitDesconegut: text("crdtCommitDesconegut", "El navegador encara no ha confirmat l’escriptura. Actualitza les notes per a comprovar l’estat abans de repetir el canvi."),
   /* control-06 (revisió del Panell, 261104) · Abans, un Error escrit a mà a ModeRural.jsx. */

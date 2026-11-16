@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "770f53e7c9fba3b5ea1439cda088b8fb2a62c1cfd2f3528178031e63386f925e",
-      "html": 80087,
-      "aprovat_per": "Claude R29 261115 17:56 (DECISIÓ-R29-01): crònica R29 sense l'afirmació dels missatges duplicats (Llei 0, segona passada TXT-R29-01)",
-      "data": "2026-11-15"
+      "sha256": "51d88547d66580305d765f179139c6abc9c7d2e5cb4909c8f257b4bb8c648c37",
+      "html": 84429,
+      "aprovat_per": "Claude R30 261116 (ordre del Mestre 261115 22:58: versió 1.2.3/8 i crònica R30 en 5 llengües)",
+      "data": "2026-11-16"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

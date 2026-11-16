@@ -80,7 +80,10 @@ function hexDe(b) {
 const esBlanc = (c) => c === 32 || c === 10 || c === 13 || c === 9 || c === 12 || c === 0;
 const DELIMITADORS = new Set([37, 40, 41, 47, 60, 62, 91, 93, 123, 125]);
 const esRegular = (c) => !Number.isNaN(c) && !esBlanc(c) && !DELIMITADORS.has(c);
-const NUMERO = /^[+-]?(?:\d+\.?\d*|\.\d+)$/;
+/* Onada R30 · A6-RX6 · «\d+\.?\d*» partia una tira de xifres entre \d+ i \d* de
+   totes les maneres possibles (temps quadràtic amb un mot de milers de xifres i
+   una lletra al final). «\d+(?:\.\d*)?» és el mateix llenguatge, sense dubte. */
+const NUMERO = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/;
 /* Paraules clau que tanquen un objecte: un diccionari mal tancat no les travessa. */
 const ATURADES = new Set(['obj', 'endobj', 'stream', 'endstream', 'xref', 'trailer']);
 
@@ -121,21 +124,68 @@ class PressupostEsgotat extends Error {
 
 const esPressupostEsgotat = (e) => e instanceof PressupostEsgotat;
 
+/* Onada R30 · A6-RX8 · La memòria dels comentaris de la primera passada (vegeu
+   Lexer.saltaBlancs): l'últim tram de blancs i comentaris saltat. Des de qualsevol
+   «%» de [desde, fins) se salta fins a `fins` amb el mateix límit `fi`: un «%» de
+   dins d'un comentari del tram du a la mateixa fi de línia que el comentari, i
+   d'allí el salt és el mateix. -1 vol dir «encara res». */
+const memoriaDeBlancs = () => ({ desde: -1, fins: -1, fi: -1 });
+
 class Lexer {
-  constructor(s, p = 0, fi = s.length) {
+  constructor(s, p = 0, fi = s.length, memoria = null) {
     this.s = s;
     this.p = p;
     this.fi = Math.min(fi, s.length);
+    this.memoria = memoria;
   }
 
   saltaBlancs() {
-    const { s } = this;
+    const { s, memoria } = this;
+    /* Onada R30 · A6-RX8 · Mirar endavant «N G R» salta els comentaris de darrere
+       del G i després es desfà; la cerca d'objectes continua des del G i troba els
+       «N G obj» escrits dins d'eixos comentaris. Cada un tornava a saltar la resta
+       dels comentaris, fins a la fi de la línia o del tram (temps quadràtic: «1 0
+       obj 5 6 %» × 20.000, 260 kB, 16 s). Amb `memoria` (només la primera
+       passada), un «%» del tram ja saltat va directe a on acabava el salt, sense
+       canviar on para: `fins` tal qual si parava en un token (abans del límit `fi`)
+       i, si parava en el límit, només per a un límit igual o més curt. */
+    let desde = -1;
     while (this.p < this.fi) {
       const c = s.charCodeAt(this.p);
       if (esBlanc(c)) this.p += 1;
       else if (c === 37) {
+        if (memoria && memoria.desde <= this.p && this.p < memoria.fins && (memoria.fins < memoria.fi || this.fi <= memoria.fi)) {
+          this.p = Math.min(memoria.fins, this.fi);
+          break;
+        }
+        if (desde < 0) desde = this.p;
         while (this.p < this.fi && s.charCodeAt(this.p) !== 10 && s.charCodeAt(this.p) !== 13) this.p += 1;
       } else break;
+    }
+    if (memoria && desde >= 0) {
+      if (memoria.fins !== this.p || memoria.fi !== this.fi) {
+        memoria.fins = this.p;
+        memoria.fi = this.fi;
+        memoria.desde = desde;
+      } else if (desde < memoria.desde) memoria.desde = desde;
+    }
+  }
+
+  /* Onada R30 · A6-RX7 · Cert si el token que llegiria `seguent` és una cadena
+     («(…)» o «<…>» d'hexa), sense llegir-ne el contingut. Salta el mateix que
+     `seguent` abans del token (blancs, comentaris, «)» i «>» solts) i deixa `p` on
+     comença. Per a mirar endavant on una cadena no pot servir mai («N G R»):
+     llegir-la sencera per a desfer-ho després tornava a recórrer una cadena
+     oberta per a cada objecte que hi havia dins (temps quadràtic). */
+  cadenaDavant() {
+    const { s } = this;
+    for (;;) {
+      this.saltaBlancs();
+      if (this.p >= this.fi) return false;
+      const c = s.charCodeAt(this.p);
+      const seguentCar = s.charCodeAt(this.p + 1);
+      if (c === 41 || (c === 62 && seguentCar !== 62)) this.p += 1;
+      else return c === 40 || (c === 60 && seguentCar !== 60);
     }
   }
 
@@ -287,10 +337,12 @@ function valor(lx, tok, refs, profunditat = 0) {
   switch (tok.t) {
     case 'num': {
       if (refs && Number.isInteger(tok.v) && tok.v >= 0) {
+        /* Onada R30 · A6-RX7 · Una cadena no és ni el G ni la R de «N G R»: no
+           es llig per a mirar endavant (vegeu Lexer.cadenaDavant). */
         const desa = lx.p;
-        const gen = lx.seguent();
+        const gen = lx.cadenaDavant() ? null : lx.seguent();
         if (gen?.t === 'num' && Number.isInteger(gen.v)) {
-          const r = lx.seguent();
+          const r = lx.cadenaDavant() ? null : lx.seguent();
           if (r?.t === 'kw' && r.v === 'R') return new Ref(tok.v, gen.v);
         }
         lx.p = desa;
@@ -396,6 +448,28 @@ function ascii85(dades) {
     eixida.push(...buida(grup).slice(0, n - 1));
   }
   return Uint8Array.from(eixida);
+}
+
+/* Onada R30 · A6-RX6 · Els objectes «N G obj». Abans, una sola expressió global,
+   /(\d+)\s+(\d+)\s+obj\b/g, que es tornava a provar des de cada xifra d'una tira
+   llarga de xifres i la recorria sencera cada vegada (temps quadràtic: 200.000
+   xifres seguides, desenes de segons). Des d'una xifra de mitjan tira casa el
+   mateix que des de la primera: la mateixa expressió es prova on toca continuar
+   (mode «y») i, si no hi casa, només on comença una tira de xifres (darrere de
+   qualsevol \D). Troba els mateixos objectes, en el mateix ordre
+   (linealitat.test.js). Sense mirar arrere (?<…): la Gestoria es queda dins del
+   Baseline (qualitat.test.js). */
+const OBJECTE_ACI = /(\d+)\s+(\d+)\s+obj\b/y;
+const OBJECTE_SEGUENT = /\D(\d+)\s+(\d+)\s+obj\b/g;
+
+/** El primer «N G obj» que comença a `des` o després: { num, pos, fi } (fi, darrere d'«obj»), o null. */
+function objecteDes(s, des) {
+  OBJECTE_ACI.lastIndex = des;
+  const aci = OBJECTE_ACI.exec(s);
+  if (aci) return { num: Number(aci[1]), pos: des, fi: OBJECTE_ACI.lastIndex };
+  OBJECTE_SEGUENT.lastIndex = des;
+  const despres = OBJECTE_SEGUENT.exec(s);
+  return despres ? { num: Number(despres[1]), pos: despres.index + 1, fi: OBJECTE_SEGUENT.lastIndex } : null;
 }
 
 /* Marca «endstream» just darrere de la posició p (amb blancs entre mig), o -1. */
@@ -713,24 +787,33 @@ class LectorPdf {
   /* Recorre el fitxer sencer: objectes indirectes, fluxos i tràilers. */
   primeraPassada() {
     const { s } = this;
-    const reObj = /(\d+)\s+(\d+)\s+obj\b/g;
-    let m;
-    while ((m = reObj.exec(s)) !== null) {
-      const num = Number(m[1]);
-      const pos = m.index;
-      const endobj = s.indexOf('endobj', reObj.lastIndex);
-      const lx = new Lexer(s, reObj.lastIndex, endobj < 0 ? s.length : endobj);
+    let des = 0;
+    let o;
+    /* Onada R30 · A6-RX6 · El primer «endobj» des de `fi`, que es torna a buscar
+       només quan l'objecte ja l'ha passat. Abans es buscava de nou per a cada
+       objecte i, sense cap «endobj» (o amb un de molt llunyà), cada cerca recorria
+       la resta del fitxer: temps quadràtic («1 0 obj e » × 80.000, 781 kB: 22,6 s).
+       `fi` sempre creix (`des` no es queda mai darrere del `fi` d'abans), així que
+       el desat continua sent el primer des de `fi`: troba el mateix
+       (linealitat.test.js). -2 vol dir «encara no buscat»; -1, «no n'hi ha». */
+    let endobj = -2;
+    const memoria = memoriaDeBlancs();
+    while ((o = objecteDes(s, des)) !== null) {
+      const { num, pos, fi } = o;
+      if (endobj !== -1 && endobj < fi) endobj = s.indexOf('endobj', fi);
+      const lx = new Lexer(s, fi, endobj < 0 ? s.length : endobj, memoria);
       let v = valor(lx, lx.seguent(), true);
       lx.saltaBlancs();
-      let seguent = Math.max(lx.p, reObj.lastIndex);
+      let seguent = Math.max(lx.p, fi);
       if (s.startsWith('stream', lx.p)) {
         v = this.flux(v instanceof Map ? v : new Map(), lx.p + 6, pos);
         seguent = v.seguent;
       }
       if (num <= MAX_NUM_OBJECTE) this.objectes.set(num, { pos, valor: v });
       if (v instanceof Flux && v.dict.get('Type') === 'XRef') this.trailers.push({ pos, dict: v.dict });
-      reObj.lastIndex = seguent;
+      des = seguent;
     }
+    let m;
     const reTrailer = /trailer\s*<</g;
     while ((m = reTrailer.exec(s)) !== null) {
       const lx = new Lexer(s, m.index + 7);
@@ -1304,3 +1387,8 @@ export async function extreuTextPdf(bytes, { inflate = inflateDisponible(), pres
   }
   return { pagines, text: pagines.join('\n\n'), xifrat, id, avisos: [...avisos] };
 }
+
+/** Utilitat per a proves (Onada R30 · A6-RX6 i A6-RX7): les peces de la primera passada, perquè
+    linealitat.test.js hi confronte, sencera, la primera passada d'abans. Cap mòdul de producció
+    les fa servir. */
+export const _intern = Object.freeze({ NUMERO, ATURADES, MAX_PROFUNDITAT, MAX_NUM_OBJECTE, Flux, Lexer, LectorPdf, objecteDes });

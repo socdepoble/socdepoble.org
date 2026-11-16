@@ -289,8 +289,11 @@ describe('en anglés', () => {
   test('el fons d’error, quan un fill llança', () => {
     enAngles();
     const { container } = pintaAmbError();
-    expect(container.querySelector('.sdp-estat__titol').textContent).toBe('The editor has failed');
-    expect(container.querySelector('.sdp-estat__descripcio').textContent).toBe(E('error.descripcio'));
+    /* Onada R30 · T3-VOC · Sense les classes sdp-estat* (cap full no les estilava):
+       el fons d'error es troba per l'estructura, que no canvia. */
+    expect(container.querySelector('h3').textContent).toBe('The editor has failed');
+    expect(container.querySelector('h3 + p').textContent).toBe(E('error.descripcio'));
+    expect(container.querySelectorAll('[class]')).toHaveLength(0);
   });
 });
 
@@ -346,8 +349,8 @@ describe('sense traductor, el valencià de sempre; en valencià, el mateix DOM',
 
   test('fora de l’App, el fons d’error de sempre', () => {
     const { container } = pintaAmbError();
-    expect(container.querySelector('.sdp-estat__titol').textContent).toBe("L'editor ha fallat");
-    expect(container.querySelector('.sdp-estat__descripcio').textContent)
+    expect(container.querySelector('h3').textContent).toBe("L'editor ha fallat");
+    expect(container.querySelector('h3 + p').textContent)
       .toBe("S'ha produït un error inesperat dins del motor d'edició. Torna a carregar la pàgina per a continuar.");
   });
 

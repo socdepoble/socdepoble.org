@@ -11,11 +11,11 @@ const TOFU = 20.28;
 const AMPLES = new Map([
   [EMOJI_DE_REFERENCIA, 32],
   ['\u{1FFFD}', TOFU],
-  ['\u{1F600}‍\u{1F600}', 64],
+  ['\u{1F600}\u200D\u{1F600}', 64],
   ['\u{1FAF9}', TOFU], // 🫹 (Unicode 18, sense glif)
   ['\u{1FAF9}\u{1F3FB}', TOFU + 32], // 🫹🏻: tofu més la mostra de color de pell
-  ['\u{1F9D1}‍\u{1F9D1}‍\u{1F9D2}', 32], // 🧑‍🧑‍🧒: un sol glif
-  ['\u{1F426}‍\u{1F525}', 64], // 🐦‍🔥 en un sistema que no el porta: dos glifs
+  ['\u{1F9D1}\u200D\u{1F9D1}\u200D\u{1F9D2}', 32], // 🧑‍🧑‍🧒: un sol glif
+  ['\u{1F426}\u200D\u{1F525}', 64], // 🐦‍🔥 en un sistema que no el porta: dos glifs
   ['♀️', 32], // ♀️: el test de color el tombava; l'amplada, no
   ['\u{1F1EA}\u{1F1F8}', 36] // 🇪🇸 una mica més ample: dins del marge
 ]);
@@ -27,8 +27,8 @@ describe('creaDetectorDePintat', () => {
     expect(typeof pinta).toBe('function');
     expect(pinta('\u{1FAF9}')).toBe(false);
     expect(pinta('\u{1FAF9}\u{1F3FB}')).toBe(false);
-    expect(pinta('\u{1F426}‍\u{1F525}')).toBe(false);
-    expect(pinta('\u{1F9D1}‍\u{1F9D1}‍\u{1F9D2}')).toBe(true);
+    expect(pinta('\u{1F426}\u200D\u{1F525}')).toBe(false);
+    expect(pinta('\u{1F9D1}\u200D\u{1F9D1}\u200D\u{1F9D2}')).toBe(true);
     expect(pinta('♀️')).toBe(true);
     expect(pinta('\u{1F1EA}\u{1F1F8}')).toBe(true);
     expect(pinta('\u{1F345}')).toBe(true);
@@ -50,7 +50,7 @@ describe('creaDetectorDePintat', () => {
   test('es comprova a si mateix: sense mesura fiable, cap detector (només mana emojiSol)', () => {
     expect(creaDetectorDePintat(null)).toBeNull();
     expect(creaDetectorDePintat(() => 32)).toBeNull(); // mesura constant (soroll, canvas mut): el tofu fa com un emoji
-    expect(creaDetectorDePintat((t) => (t === '\u{1F600}‍\u{1F600}' ? 32 : mesuraDeChrome(t)))).toBeNull(); // el parell no es veu partit
+    expect(creaDetectorDePintat((t) => (t === '\u{1F600}\u200D\u{1F600}' ? 32 : mesuraDeChrome(t)))).toBeNull(); // el parell no es veu partit
     expect(creaDetectorDePintat((t) => (t === '\u{1FFFD}' ? 30 : mesuraDeChrome(t)))).toBeNull(); // el tofu dins del marge
     expect(creaDetectorDePintat(() => 0)).toBeNull();
     expect(creaDetectorDePintat(() => Number.NaN)).toBeNull();

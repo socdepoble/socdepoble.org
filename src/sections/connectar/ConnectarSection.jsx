@@ -112,6 +112,7 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotesData } from '../notes/NotesDataContext';
 import { useXat } from '../xat/XatContext.jsx';
 import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta, nomDeCarpeta } from '../notes/carpetes.js';
+import { useCarpetesDelBlocVisibles } from '../../components/universal/classificacio/migracioCarpetesLocals.js';
 import { autorDe, esRutaInterna, getSectionItemPath, objecteDe, objecteDePerfil, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { CLAUS_FUNDACIONALS, ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, aliesDeLActor, esComptePersonaPilot } from '../../data/identitatsSeed.js';
@@ -503,7 +504,7 @@ function ConnectarElementIntern() {
 
   const { currentUser } = useSession();
   const { actor, identitats } = useIdentitat();
-  const { noteFolders, notes, creaNota, canCreate, config, status: estatBloc, error: errorBloc, refresh: recarregaBloc } = useNotesData();
+  const { noteFolders, notes, scopeKey, creaNota, canCreate, config, status: estatBloc, error: errorBloc, refresh: recarregaBloc } = useNotesData();
   const { chatThreads, cercaMembres, status: statusXat, avis: avisXat } = useXat();
   const { aplica } = useAplicaAbast();
 
@@ -639,7 +640,11 @@ function ConnectarElementIntern() {
   const [resum, setResum] = useState(null);
   const resumRef = useRef(null);
 
-  const displayFolders = carpetesDelBloc(noteFolders);
+  /* Onada R30 · PF-01 (àrbitre) · Les carpetes del Bloc sense la rèplica remota d'una carpeta
+     local migrada (el mateix filtre que la columna de Notes): cap opció nova a «On arriba», i
+     cap connexió no la partix en dues «Festes» al Bloc d'este dispositiu. */
+  const carpetesVisibles = useCarpetesDelBlocVisibles(noteFolders, notes, scopeKey);
+  const displayFolders = carpetesDelBloc(carpetesVisibles);
   /* Onada 11 · Les categories de sèrie, ampliades per la taxonomia del poble si n'hi ha. */
   const { personalitzacio } = useCoreContent();
   const categoriesDeSerie = categoriesBase(personalitzacio?.taxonomia?.payload);

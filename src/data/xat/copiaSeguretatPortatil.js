@@ -192,7 +192,7 @@ const FORMA_HEX_SHA256 = /^[0-9a-f]{64}$/;
    comproven a part (re-codificat idèntic). */
 const FORMA_B64 = /^[A-Za-z0-9+/]*={0,2}$/;
 const FORMA_MIME = /^[a-z0-9][a-z0-9!#$&^_.+-]*\/[a-z0-9][a-z0-9!#$&^_.+-]*$/;
-const CONTROLS_I_BIDI = /[\u0000-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/;
+const CONTROLS_I_BIDI = /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/;
 const FORMA_EMPREMTA_DTLS = /^a=fingerprint:sha-256 ((?:[0-9A-Fa-f]{2}:){31}[0-9A-Fa-f]{2})\s*$/gim;
 const MAX_BYTES_SDP = 16 * 1024;
 const MAX_BYTES_AMBIT = 256;

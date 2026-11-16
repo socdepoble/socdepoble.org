@@ -714,6 +714,44 @@ describe('R24 · A2 · els clients de Google que porta el paquet (dist-natiu/ass
     expect(net.linies.join('\n')).toMatch(/✓ el paquet porta el client web de Google/);
     for (const r of [prod, intern, net]) expect(r.linies.join('\n')).not.toContain(WEB_SINTETIC);
   });
+
+  /* Onada R30 · NAT-04 (pla R30 §4) · El preflight sencer, en un repositori de mostra net i segellat amb
+     el manifest i el network_security_config reals de l'app i un connector social fingit que declara
+     USE_CREDENTIALS: amb les quatre línies de llevar, net (0); sense, l'única família que falla és
+     l'arbre (7), pels dos ✗ de NAT-04 dins de «Fortificació de seguretat (R26)». */
+  const MANIFEST_REAL = path.join(ARREL, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
+  const NSC_REAL = path.join(ARREL, 'android', 'app', 'src', 'main', 'res', 'xml', 'network_security_config.xml');
+  test.skipIf(SENSE_GIT || !fs.existsSync(MANIFEST_REAL) || !fs.existsSync(NSC_REAL))('R30 · NAT-04 · preflight Android: un permís d’identitat o de biometria que queda declarat fa eixir amb 7; el manifest real, net', () => {
+    const LLEVA = /\n[ \t]*<uses-permission android:name="android\.permission\.(?:USE_BIOMETRIC|USE_FINGERPRINT|USE_CREDENTIALS|GET_ACCOUNTS)" tools:node="remove" \/>/g;
+    const real = fs.readFileSync(MANIFEST_REAL, 'utf8');
+    expect(real.match(LLEVA)).toHaveLength(4);
+    const env = entornAndroid();
+    const ambManifest = (manifest) => {
+      const arrel = repositoriAndroid();
+      fs.appendFileSync(path.join(arrel, '.gitignore'), 'node_modules/\n');
+      escriu(arrel, 'android/app/src/main/AndroidManifest.xml', manifest);
+      escriu(arrel, 'android/app/src/main/res/xml/network_security_config.xml', fs.readFileSync(NSC_REAL, 'utf8'));
+      escriu(arrel, 'android/capacitor.settings.gradle', "include ':capgo-capacitor-social-login'\nproject(':capgo-capacitor-social-login').projectDir = new File('../node_modules/@capgo/capacitor-social-login/android')\n");
+      escriu(arrel, 'node_modules/@capgo/capacitor-social-login/android/src/main/AndroidManifest.xml', '<manifest><uses-permission android:name="android.permission.USE_CREDENTIALS" /></manifest>');
+      git(arrel, 'add', '-A');
+      git(arrel, 'commit', '-q', '--no-verify', '-m', 'nat-04');
+      const segell = JSON.stringify({ commit: git(arrel, 'rev-parse', 'HEAD'), arbreNet: true, data: new Date().toISOString() });
+      for (const dir of ['dist-natiu', 'android/app/src/main/assets/public']) escriu(arrel, `${dir}/segell.json`, segell);
+      return p.preflight({ arrel, plataformes: ['android'], env, consultes: FINGIDES });
+    };
+    const net = ambManifest(real);
+    const textNet = net.linies.join('\n');
+    expect(net.codi, textNet).toBe(e.EIXIDA.BE);
+    expect(textNet).toMatch(/Fortificació de seguretat \(R26\)\n {2}✓ Android: allowBackup="false"[^\n]*\n {2}✓ Android: android\/app\/src\/main\/AndroidManifest\.xml lleva USE_BIOMETRIC, USE_FINGERPRINT, USE_CREDENTIALS i GET_ACCOUNTS amb tools:node="remove", i ni l'app ni l'únic manifest de connectors no en deixen cap sense llevar/);
+    const abans = ambManifest(real.replace(LLEVA, ''));
+    const textAbans = abans.linies.join('\n');
+    expect(abans.codi, textAbans).toBe(e.EIXIDA.ARBRE);
+    const errades = textAbans.match(/^ {2}✗ .*$/gm);
+    expect(errades, 'els únics ✗ són els de NAT-04').toHaveLength(2);
+    expect(errades[0]).toMatch(/^ {2}✗ Android: USE_CREDENTIALS queda declarat a node_modules\/@capgo\/capacitor-social-login\/android\/src\/main\/AndroidManifest\.xml: NAT-04/);
+    expect(errades[1]).toMatch(/^ {2}✗ Android: android\/app\/src\/main\/AndroidManifest\.xml no lleva USE_BIOMETRIC, USE_FINGERPRINT i GET_ACCOUNTS amb tools:node="remove"/);
+    expect(textAbans).toMatch(/ {2}✓ Android: allowBackup="false"/);
+  });
 });
 
 describe('R24 · D1 · el push natiu s’anuncia amb --push o amb VITE_SDP_PUSH_NATIU=1 a .env.natiu*', () => {

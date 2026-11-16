@@ -101,7 +101,7 @@ const liniesFont = cssFont.split('\n');
 /* Els tokens de la capa 0 existixen de veres: T1 no els pot cridar fantasmes. */
 const CANON = new Set();
 if (existsSync(R(FONT_CANON))) {
-  for (const m of readFileSync(R(FONT_CANON), 'utf8').matchAll(/(--sdp-[\w-]+)\s*:/g)) {
+  for (const m of senseComentaris(readFileSync(R(FONT_CANON), 'utf8'), FONT_CANON).matchAll(/(--sdp-[\w-]+)\s*:/g)) {
     CANON.add(m[1]);
   }
 }
@@ -128,15 +128,25 @@ const liniesTema = new Set();
 }
 
 const DEFINITS = new Set(CANON);
-liniesFont.forEach((l, i) => {
-  if (!liniesTema.has(i + 1)) return;
-  for (const m of l.matchAll(/(--[\w-]+)\s*:/g)) DEFINITS.add(m[1]);
-});
+for (const { match: m, linia } of coincidenciesAmbLinia(senseComentaris(cssFont, FONT_TOKENS), /(--[\w-]+)\s*:/g)) {
+  if (liniesTema.has(linia)) DEFINITS.add(m[1]);
+}
 
 /* Els tokens d'escala z viuen al mateix bloc però amb prefix `--z-`. */
 for (const m of cssFont.matchAll(/(--z-[\w-]+)\s*:/g)) DEFINITS.add(m[1]);
 
 const FITXERS = arbre('src');
+
+/* El CSS pot separar var(), el nom i el delimitador amb salts de línia.
+   Escaneja la font completa sense perdre les línies originals del diagnòstic. */
+function* coincidenciesAmbLinia(codi, patro) {
+  let cursor = 0;
+  let linia = 1;
+  for (const match of codi.matchAll(patro)) {
+    while (cursor < match.index) if (codi[cursor++] === '\n') linia++;
+    yield { match, linia };
+  }
+}
 
 /* ══════════════════════════════════════════════════════════════════
    T1 · CAP var(--sdp-*) SENSE DEFINICIÓ
@@ -145,15 +155,14 @@ if (actiu('T1 · Token inexistent')) {
   const LLEI = 'T1 · Token inexistent';
   let net = true;
   for (const rel of FITXERS) {
-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
-      for (const m of l.matchAll(/var\(\s*(--(?:sdp|z)-[\w-]+)\s*[,)]/g)) {
-        const t = m[1];
-        if (DEFINITS.has(t)) continue;
-        net = false;
-        falla(LLEI, rel, i + 1,
-          `\`${t}\` no es declara enlloc. Sense fallback el navegador anul·la la declaració sencera: el component no es degrada, desapareix.`);
-      }
-    });
+    const codi = senseComentaris(readFileSync(R(rel), 'utf8'), rel);
+    for (const { match: m, linia } of coincidenciesAmbLinia(codi, /var\(\s*(--(?:sdp|z)-[\w-]+)\s*[,)]/g)) {
+      const t = m[1];
+      if (DEFINITS.has(t)) continue;
+      net = false;
+      falla(LLEI, rel, linia,
+        `\`${t}\` no es declara enlloc. Sense fallback el navegador anul·la la declaració sencera: el component no es degrada, desapareix.`);
+    }
   }
   if (net) passa(LLEI);
 }
@@ -165,13 +174,14 @@ if (actiu('T2 · Fallback prohibit')) {
   const LLEI = 'T2 · Fallback prohibit';
   let net = true;
   for (const rel of FITXERS) {
-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
-      for (const m of l.matchAll(/var\(\s*(--sdp-[\w-]+)\s*,\s*([^)]+)\)/g)) {
-        net = false;
-        falla(LLEI, rel, i + 1,
-          `\`var(${m[1]}, ${m[2].trim().slice(0, 24)})\`: el fallback és una còpia privada del sistema de disseny. Si el token existix, sobra; si no existix, l'has d'afegir al tema.`);
-      }
-    });
+    const codi = senseComentaris(readFileSync(R(rel), 'utf8'), rel);
+    // La coma ja declara el fallback, també si és buit o conté var() niats.
+    // No recorre tot el valor cercant un parèntesi final per a cada coincidència.
+    for (const { match: m, linia } of coincidenciesAmbLinia(codi, /var\(\s*(--sdp-[\w-]+)\s*,/g)) {
+      net = false;
+      falla(LLEI, rel, linia,
+        `\`var(${m[1]}, …)\`: el fallback és una còpia privada del sistema de disseny. Si el token existix, sobra; si no existix, l'has d'afegir al tema.`);
+    }
   }
   if (net) passa(LLEI);
 }
@@ -235,22 +245,18 @@ if (actiu('T3 · Font única')) {
     const esFont = norm3 === FONT_TOKENS;
     const brut = readFileSync(R(rel), 'utf8');
     let pintat = null;   // els rangs del text pintat, només si cal
-    let inici = 0;
-    senseComentaris(brut, rel).split('\n').forEach((l, i) => {
-      const iniciLinia = inici;
-      inici += l.length + 1;
-      for (const m of l.matchAll(/(--sdp-[\w-]+)\s*:/g)) {
-        if (esFont && liniesTema.has(i + 1)) continue;
+    const codi = senseComentaris(brut, rel);
+    for (const { match: m, linia } of coincidenciesAmbLinia(codi, /(--sdp-[\w-]+)\s*:/g)) {
+        if (esFont && liniesTema.has(linia)) continue;
         if (JS_FAMILIA.test(norm3)) {
           pintat ??= rangsDeTextPintat(brut);
-          const on = iniciLinia + m.index;
+          const on = m.index;
           if (pintat.some(([a, b]) => on >= a && on < b)) continue;
         }
         net = false;
-        falla(LLEI, rel, i + 1,
+        falla(LLEI, rel, linia,
           `\`${m[1]}\` es declara fora dels blocs de tema de ${FONT_TOKENS}. Dues definicions són dos sistemes de disseny.`);
-      }
-    });
+    }
   }
   if (net) passa(LLEI);
 }
@@ -264,14 +270,13 @@ if (actiu('T4 · Dos capes')) {
   for (const rel of FITXERS) {
     const norm = rel.replace(/\\/g, '/');
     if (EXEMPTS_T4.has(norm)) continue;
-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
-      for (const m of l.matchAll(/var\(\s*(--sdp-[\w-]+)\s*[,)]/g)) {
+    const codi = senseComentaris(readFileSync(R(rel), 'utf8'), rel);
+    for (const { match: m, linia } of coincidenciesAmbLinia(codi, /var\(\s*(--sdp-[\w-]+)\s*[,)]/g)) {
         if (!PRIMITIVA.test(m[1])) continue;
         net = false;
-        falla(LLEI, rel, i + 1,
+        falla(LLEI, rel, linia,
           `\`${m[1]}\` és una primitiva. Un component cita semàntics (--sdp-text-*, --sdp-fons-*, --sdp-accio-*…), mai l'escala crua: la primitiva no canvia amb el tema fosc.`);
-      }
-    });
+    }
   }
   if (net) passa(LLEI);
 }
@@ -287,15 +292,14 @@ if (actiu('T5 · Capa 0 intocable')) {
   for (const rel of FITXERS) {
     const norm = rel.replace(/\\/g, '/');
     if (norm === FONT_TOKENS || norm === FONT_CANON) continue;
-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
-      for (const m of l.matchAll(/var\(\s*(--sdp-canon-[\w-]+)\s*[,)]/g)) {
+    const codi = senseComentaris(readFileSync(R(rel), 'utf8'), rel);
+    for (const { match: m, linia } of coincidenciesAmbLinia(codi, /var\(\s*(--sdp-canon-[\w-]+)\s*[,)]/g)) {
         net = false;
-        falla(LLEI, rel, i + 1,
+        falla(LLEI, rel, linia,
           `\`${m[1]}\` és capa 0: una constant de marca, no un color d'interfície. ` +
           `Només la rampa d'${FONT_TOKENS} la pot ancorar. Un component que la cita ` +
           `no es mou amb el tema fosc ni amb l'alt contrast.`);
-      }
-    });
+    }
   }
   if (net) passa(LLEI);
 }

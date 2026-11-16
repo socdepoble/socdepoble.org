@@ -3175,6 +3175,9 @@ export default {
   'section.xat.xifratge.senseClauValida': "Sin ninguna clave de seguridad válida",
   'section.xat.xifratge.clauRetirada': "Este dispositivo no encuentra ninguna clave de seguridad válida de {nom} que se pueda confirmar. Pasa cuando alguien pierde el dispositivo y la frase, o si alguien se ha metido por medio. Hasta que haya una válida, no se puede escribir. Habla con {nom} para saber qué ha pasado.",
   'section.xat.xifratge.clauPropiaRetirada': "Este dispositivo no encuentra ninguna clave activa de tu cuenta: ni la suya ni ninguna otra. Puede que alguien se haya metido por medio. Por seguridad, no se puede escribir. Si no has sido tú, avísanos.",
+  /* Onada R30 · R29-E2EE-02 · el missatge xifrat que este dispositiu no ha pogut obrir */
+  'section.xat.xifratge.tancat': "Mensaje cifrado de extremo a extremo en otro dispositivo",
+  'section.xat.xifratge.noObert': "No se ha podido abrir este mensaje cifrado",
   /* O4-CLAUDE-3 · D-18 (a): avís i confirmació del retall a Notes d’una conversa xifrada */
   'section.xat.xifratge.retall.avis': "La nota se guardará en el servidor sin cifrado de extremo a extremo.",
   'section.xat.xifratge.retall.guarda': "Guardar",
@@ -3684,7 +3687,7 @@ export default {
   'section.control.rural.eliminaNota': "Eliminar nota",
   'section.control.rural.eliminaNotaAjuda': "Se elimina la versión que has abierto. Una edición concurrente aún no observada se conservará. El historial se mantiene hasta que borres todo el espacio.",
   'section.control.rural.eliminaConfirma': "Elimina esta nota",
-  'section.control.rural.carpetaCrdtAjuda': "La carpeta conserva archivos de cambios y versiones Markdown inmutables. Puedes editar un Markdown; su base causal permite unir el cambio. Las versiones antiguas no se sobrescriben.",
+  'section.control.rural.carpetaCrdtAjuda': "La carpeta guarda archivos de cambios y versiones Markdown que no se sobrescriben. Puedes editar un Markdown; su base causal permite unir el cambio. Pasados 90 días desde su confirmación, los archivos antiguos sin editar se consolidan sin perder ningún cambio.",
   'section.control.rural.carpetaSenseBase': "Se han incorporado notas antiguas sin base causal como versiones independientes. Revisa los textos unidos.",
   'section.control.rural.dependenciesPendents': "Faltan operaciones predecesoras. Conserva una copia e importa los archivos de cambios que faltan.",
   'section.control.rural.crdtInvalid': "No se ha podido aplicar el cambio compartido. Comprueba los datos y conserva una copia antes de continuar.",

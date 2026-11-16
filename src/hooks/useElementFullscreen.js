@@ -8,13 +8,57 @@ const desaDesplacaments = (element) => {
   return desats;
 };
 
-/** Els controls on pot anar el focus amb Tab dins de l'element (visibles i actius). */
-const TABULABLES = 'button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,a[href],[tabindex="0"]';
-const controlsDe = (element) => [...element.querySelectorAll(TABULABLES)].filter((node) =>
-  !(Number(node.getAttribute('tabindex')) < 0)
-  && !node.matches(':disabled')
-  && !node.closest('[hidden], [inert], [aria-hidden="true"], dialog:not([open])')
-  && node.getClientRects().length);
+/** El pare compost travessa el host del Web Component, també quan l'arrel pròpia és tancada. */
+const pareCompost = node => node?.assignedSlot ?? node?.parentElement ?? node?.getRootNode?.().host ?? null;
+const dinsDe = (element, node) => {
+  for (let actual = node; actual; actual = pareCompost(actual)) if (actual === element) return true;
+  return false;
+};
+const disponible = node => {
+  if (!node?.isConnected || node.matches(':disabled')) return false;
+  for (let actual = node; actual; actual = pareCompost(actual)) {
+    if (actual.matches('[hidden],[inert],[aria-hidden="true"],dialog:not([open])')
+      || getComputedStyle(actual).display === 'none') return false;
+  }
+  return !['hidden', 'collapse'].includes(getComputedStyle(node).visibility);
+};
+const actiuDe = arrel => {
+  let actiu = arrel.activeElement;
+  while (actiu?.shadowRoot?.activeElement) actiu = actiu.shadowRoot.activeElement;
+  return actiu;
+};
+/** Controls visibles en ordre de tabulació: positius primer, empat en ordre compost. */
+const TABULABLES = 'button,input,select,textarea,summary,a[href],[tabindex],[contenteditable],audio[controls],video[controls],iframe,object,embed';
+const tabulable = node => {
+  if (node.matches('input[type="hidden"]')) return false;
+  if (node.hasAttribute('tabindex')) return node.tabIndex >= 0;
+  if (node.hasAttribute('contenteditable') && !['false', 'inherit'].includes(node.getAttribute('contenteditable').toLowerCase())) {
+    // Només l'arrel d'edició entra en Tab; un editor niat requerix tabindex explícit.
+    for (let pare = pareCompost(node); pare; pare = pareCompost(pare)) {
+      if (pare.hasAttribute('contenteditable')) return pare.getAttribute('contenteditable').toLowerCase() === 'false';
+    }
+    return true;
+  }
+  return node.tabIndex >= 0;
+};
+const controlsDe = element => {
+  const controls = [];
+  const visita = node => {
+    if (node !== element && node.matches(TABULABLES) && tabulable(node)
+      && disponible(node) && node.getClientRects().length) controls.push(node);
+    const fills = node.localName === 'slot' && node.assignedElements?.().length
+      ? node.assignedElements({ flatten: true }) : (node.shadowRoot ?? node).children;
+    for (const fill of fills) visita(fill);
+  };
+  visita(element);
+  // Un grup de ràdios és un únic punt de Tab; les fletxes les gestiona el navegador.
+  return controls.filter(node => {
+    if (!node.matches('input[type="radio"]') || !node.name) return true;
+    const grup = controls.filter(c => c.matches('input[type="radio"]') && c.name === node.name
+      && c.form === node.form && c.getRootNode() === node.getRootNode());
+    return node === (grup.find(c => c.checked) ?? grup[0]);
+  }).sort((a, b) => (a.tabIndex || Infinity) - (b.tabIndex || Infinity));
+};
 /** Els atributs que la contenció posa a l'element mentre és a pantalla completa (i restaura en eixir). */
 const ATRIBUTS_MODALS = [['tabindex', '-1'], ['role', 'dialog'], ['aria-modal', 'true']];
 /** V2C-01 · L'element que l'arrel de l'element té a pantalla completa. Dins d'un shadow root
@@ -79,7 +123,6 @@ export function useElementFullscreen() {
         if (pare.scrollLeft !== esquerra) pare.scrollLeft = esquerra;
       }
       restoreScroll.current = [];
-      restoreFocus.current?.focus();
     };
   }, [fallback]);
   useEffect(() => {
@@ -90,33 +133,46 @@ export function useElementFullscreen() {
         · l'element és enfocable (tabindex -1) i modal per als lectors (role dialog + aria-modal):
           un clic en una zona sense control (la vista, el fons) deixa el focus dins;
         · Tab i Maj+Tab giren dins: del darrer al primer, del primer al darrer, i si el focus és
-          a l'element mateix o fora, al primer (o al darrer amb Maj+Tab);
+          a l'element mateix o fora, al primer (o al darrer amb Maj+Tab). Onada R30 · FOCUS-01 ·
+          l'ordre és el del navegador (tabindex positiu primer, després l'ordre compost, que
+          travessa shadow roots oberts i slots) i el focus de l'activador torna en eixir, també
+          de la pantalla completa nativa;
         · si el focus ix (focusout cap a fora, o cap a enlloc perquè el control s'ha amagat),
           torna al primer control. L'arrel és la de l'element (el document o el shadow root
           tancat de <soc-de-poble>), i el seu activeElement diu on és el focus de veritat. */
     const element = elementRef.current;
     if (!element) return undefined;
     const arrel = element.getRootNode?.() ?? document;
-    const dins = (node) => Boolean(node) && (node === element || element.contains(node));
+    const dins = node => dinsDe(element, node);
     const abans = ATRIBUTS_MODALS.map(([nom]) => [nom, element.getAttribute(nom)]);
     for (const [nom, valor] of ATRIBUTS_MODALS) element.setAttribute(nom, valor);
-    const entra = () => (controlsDe(element)[0] ?? element).focus();
+    const entra = () => { if (disponible(element)) (controlsDe(element)[0] ?? element).focus(); };
     const gira = (event) => {
       if (event.key !== 'Tab' || event.altKey || event.ctrlKey || event.metaKey) return;
       const controls = controlsDe(element);
-      const actiu = arrel.activeElement;
-      const primer = controls[0], darrer = controls.at(-1);
-      if (!primer) { event.preventDefault(); element.focus(); return; }
-      if (!dins(actiu) || actiu === element) { event.preventDefault(); (event.shiftKey ? darrer : primer).focus(); }
-      else if (event.shiftKey && actiu === primer) { event.preventDefault(); darrer.focus(); }
-      else if (!event.shiftKey && actiu === darrer) { event.preventDefault(); primer.focus(); }
+      if (!disponible(element)) return;
+      const actiu = event.composedPath?.()[0] ?? actiuDe(arrel);
+      event.preventDefault();
+      if (!controls.length) { element.focus(); return; }
+      /* Onada R30 · FOCUS-02 · Tab ara el mou sempre el hook (no només als extrems). Si el
+         navegador refusa el focus d'un candidat que el filtre no ha sabut descartar, es prova el
+         següent: Tab no es queda mai encallat en un control (WCAG 2.1.2). */
+      const index = controls.indexOf(actiu);
+      const pas = event.shiftKey ? -1 : 1;
+      const inici = index < 0 ? (event.shiftKey ? 0 : controls.length - 1) : index;
+      for (let salt = 1; salt <= controls.length; salt += 1) {
+        const candidat = controls[(((inici + pas * salt) % controls.length) + controls.length) % controls.length];
+        candidat.focus();
+        if (actiuDe(arrel) === candidat) return;
+      }
+      element.focus();
     };
     /* Es mira quan el canvi de focus ha acabat. Si la finestra sencera ha perdut el focus (canvi
        d'aplicació), el control continua actiu a l'arrel i no es toca. */
     let revisio = 0;
     const revisa = () => {
       clearTimeout(revisio);
-      revisio = setTimeout(() => { revisio = 0; if (!dins(arrel.activeElement)) entra(); }, 0);
+      revisio = setTimeout(() => { revisio = 0; if (!dins(actiuDe(arrel))) entra(); }, 0);
     };
     // El focus ix de l'element (cap a fora o cap a enlloc)…
     const vigila = (event) => { if (!dins(event.relatedTarget)) revisa(); };
@@ -126,7 +182,7 @@ export function useElementFullscreen() {
     element.addEventListener('focusout', vigila);
     document.addEventListener('focusin', vigilaPagina);
     // En entrar, si el focus no és dins (Safari no enfoca el botó amb el clic), passa al primer control.
-    if (!dins(arrel.activeElement)) entra();
+    if (!dins(actiuDe(arrel))) entra();
     return () => {
       clearTimeout(revisio);
       arrel.removeEventListener('keydown', gira);
@@ -135,6 +191,8 @@ export function useElementFullscreen() {
       for (const [nom, valor] of abans) {
         if (valor === null) element.removeAttribute(nom); else element.setAttribute(nom, valor);
       }
+      if (restoreFocus.current && disponible(restoreFocus.current)) restoreFocus.current.focus();
+      restoreFocus.current = null;
     };
   }, [isFullscreen]);
   const toggleFullscreen = useCallback(async () => {
@@ -147,7 +205,7 @@ export function useElementFullscreen() {
       if (enPantallaCompleta(element)) {
         await document.exitFullscreen();
       } else {
-        restoreFocus.current = (element.getRootNode?.() ?? document).activeElement;
+        restoreFocus.current = actiuDe(element.getRootNode?.() ?? document);
         restoreScroll.current = desaDesplacaments(element);
         if (typeof element.requestFullscreen !== 'function') {
           setFallback(true);

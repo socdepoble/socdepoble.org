@@ -64,6 +64,9 @@ export function llegeixEstatRevisioEditorial(storage) {
     return {
       estats: parsed?.estats && typeof parsed.estats === 'object' ? parsed.estats : {},
       anotacions: parsed?.anotacions && typeof parsed.anotacions === 'object' ? parsed.anotacions : {},
+      versions: parsed?.versions && typeof parsed.versions === 'object' ? parsed.versions : {},
+      pendents: parsed?.pendents && typeof parsed.pendents === 'object' ? parsed.pendents
+        : Object.fromEntries(Object.keys({ ...parsed?.estats, ...parsed?.anotacions }).map(id => [id, true])),
       destinacions: Object.fromEntries(Object.entries(parsed?.destinacions || {}).filter(([id, valor]) =>
         /^[1-9][0-9]{0,9}$/.test(id) && destinacioWorkspaceWp(valor, null) !== null)),
     };
@@ -90,6 +93,8 @@ export function desaRevisioArticleImportat(wpId, { estat, nota } = {}, storage) 
     estats: { ...actual.estats, ...(estat ? { [clau]: estat } : {}) },
     anotacions: { ...actual.anotacions, ...(nota !== undefined ? { [clau]: nota } : {}) },
     destinacions: actual.destinacions,
+    versions: actual.versions || {},
+    pendents: { ...actual.pendents, [clau]: true },
   };
   desaEstatRevisioEditorial(nouEstat, storage);
   return nouEstat;
@@ -125,13 +130,33 @@ export async function sincronitzaRevisionsEditorialsWpAmbServidor({ storage, con
     const actual = llegeixEstatRevisioEditorial(storage);
     const estats = { ...actual.estats };
     const anotacions = { ...actual.anotacions };
+    const versions = { ...actual.versions };
+    const pendents = { ...actual.pendents };
     for (const fila of files) {
       const id = String(fila?.wpId ?? '').trim();
       if (!id) continue;
+      /* Onada R30 · P1-79 (àrbitre) · Una pendent que el servidor ja té igual (estat i nota) està
+         confirmada: es deixa de protegir i se n'adopta la versió. Sense això, les anotacions
+         d'abans de R30 (totes pendents en llegir-les) no tornarien a veure mai els canvis d'una
+         altra editora, i hui sí que els veuen. Una pendent distinta es conserva com fins ara. */
+      if (pendents[id]) {
+        if (fila.estat !== actual.estats[id] || fila.nota !== (actual.anotacions[id] ?? '')) continue;
+        delete pendents[id];
+      }
+      if (typeof fila.actualitzatA === 'string') versions[id] = fila.actualitzatA;
       if (ESTATS_REVISIO_WP_VALIDS.includes(fila.estat)) estats[id] = fila.estat;
       if (typeof fila.nota === 'string') anotacions[id] = fila.nota;
     }
-    const fusionat = { estats, anotacions, destinacions: actual.destinacions };
+    /* Onada R30 · P1-79 (àrbitre) · Amb la llista sencera, una versió d'una fila que el servidor ja
+       no té no pot ser la base del CAS: s'oblida (l'esborrany es queda) i el desament següent crea.
+       Sense això, el mode local, que guarda les revisions en memòria, veuria un conflicte fals
+       després de cada recàrrega. La RPC en torna com a molt 1000 (2611110455): amb 1000 la llista
+       pot estar tallada i no s'oblida res. */
+    if (files.length < 1000) {
+      const remotes = new Set(files.map((fila) => String(fila?.wpId ?? '').trim()));
+      for (const id of Object.keys(versions)) if (!remotes.has(id)) delete versions[id];
+    }
+    const fusionat = { ...actual, estats, anotacions, versions, pendents, destinacions: actual.destinacions };
     desaEstatRevisioEditorial(fusionat, storage);
     return { sincronitzat: true, estat: fusionat, totalRemot: files.length };
   } catch {
@@ -142,8 +167,10 @@ export async function sincronitzaRevisionsEditorialsWpAmbServidor({ storage, con
 export async function desaRevisioArticleImportatAmbServidor(
   wpId,
   { estat, nota = '', autoria = null, desti = null } = {},
-  { storage, config = {} } = {}
+  { storage, config = {}, actualitzatEsperat } = {}
 ) {
+  const abans = llegeixEstatRevisioEditorial(storage);
+  const esperat = actualitzatEsperat === undefined ? abans.versions?.[String(wpId)] ?? null : actualitzatEsperat;
   const local = desaRevisioArticleImportat(wpId, { estat, nota }, storage);
   try {
     const port = await import('../data/backendPort.js');
@@ -153,6 +180,7 @@ export async function desaRevisioArticleImportatAmbServidor(
     const desada = await port.desaRevisioEditorialWp(
       {
         wpId: Number(wpId),
+        actualitzatEsperat: esperat,
         estat,
         nota: typeof nota === 'string' ? nota : '',
         ...(typeof autoria === 'string' && autoria.trim() ? { autoria: autoria.trim() } : {}),
@@ -160,10 +188,23 @@ export async function desaRevisioArticleImportatAmbServidor(
       },
       config
     );
-    return { remot: true, fila: desada, estat: local };
-  } catch {
-    return { remot: false, estat: local };
+    const actual = llegeixEstatRevisioEditorial(storage);
+    const id = String(wpId);
+    const pendents = { ...actual.pendents };
+    if (actual.estats[id] === estat && actual.anotacions[id] === nota) delete pendents[id];
+    const confirmat = { ...actual, versions: { ...actual.versions, [id]: desada.actualitzatA }, pendents };
+    desaEstatRevisioEditorial(confirmat, storage);
+    return { remot: true, fila: desada, estat: confirmat };
+  } catch (error) {
+    return { remot: false, estat: local, conflicte: error?.code === 'conflicte-versio', motiu: error?.code || 'no-disponible' };
   }
+}
+
+/** Llig la versió per comparar-la; no adopta ni esborra l’esborrany local. */
+export async function consultaRevisioEditorialWp(wpId, config = {}) {
+  const port = await import('../data/backendPort.js');
+  const files = await port.llistaRevisionsEditorialsWp(config);
+  return files.find(f => f.wpId === Number(wpId)) || null;
 }
 
 /* B3-4 (Onada R6, Bloc 3) · Les insígnies i els casos d'ús editorials són

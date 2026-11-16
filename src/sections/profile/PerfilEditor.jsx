@@ -201,8 +201,9 @@ export const resumEdicioAvancadaDe = (mena, t = null) => {
   return tradueix(t, T.resumAgent);
 };
 /* Cicle 3 del Gauntlet (261030, VD) · La ranura del desplegable es diu amb
-   data-sdp-ranura (UniversalEditorShell): era una classe sense estil. */
-const DESTI_FOCUS_RANURA = '.sdp-editor-document [data-sdp-ranura="logotip"] button:not(:disabled), .sdp-editor-document .page-title-logo-personalitzat button:not(:disabled)';
+   data-sdp-ranura (UniversalEditorShell): era una classe sense estil.
+   Onada R30 · T3-VOC · La de la capçalera de PageFrame, també (logotip-personalitzat). */
+const DESTI_FOCUS_RANURA = '.sdp-editor-document [data-sdp-ranura="logotip"] button:not(:disabled), .sdp-editor-document [data-sdp-ranura="logotip-personalitzat"] button:not(:disabled)';
 
 /* L'arrel on buscar-los: la del control que ha obert el diàleg, mentre és al
    DOM (dins del Web Component, el seu shadow root, que és tancat i cap

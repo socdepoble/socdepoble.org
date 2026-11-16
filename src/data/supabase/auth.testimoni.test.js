@@ -231,7 +231,7 @@ describe('el nom d’Apple, només la primera vegada', () => {
     expect(/[\uD800-\uDBFF]$/.test(desat)).toBe(false);
 
     vi.clearAllMocks();
-    await entraAmbTokenDeProveidor('apple', apple({ nom: 'Na‮ Maria\u0007\n  Ferrer' }), CONFIG);
+    await entraAmbTokenDeProveidor('apple', apple({ nom: 'Na\u202E Maria\u0007\n  Ferrer' }), CONFIG);
     expect(request.mock.calls.find(([, , o]) => o?.method === 'PATCH')[2].body.full_name).toBe('Na Maria Ferrer');
   });
 });

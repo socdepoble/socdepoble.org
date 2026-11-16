@@ -23,7 +23,7 @@ import { textNumero } from '../nucli/cobrament.js';
 import { retornatPerLinia } from '../nucli/tiquet.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { AvisDeLaColumna, AvisOperacio, AvisSessio, Columna, NoTrobat, Preparat } from './comu.jsx';
-import { esTornaTpv, useVes } from './punt.js';
+import { esTornaTpv, useUnaVegada, useVes } from './punt.js';
 import { NotaClient, TaulaIva } from './NotaClient.jsx';
 import { TEXTOS_LINIES_BAR, euros, horaCurta, liniesVestides, nomOrigen, textLinies } from './vestits.js';
 
@@ -124,6 +124,7 @@ function Retorn({ params }) {
   const [seleccio, setSeleccio] = useState({});
   const [motiu, setMotiu] = useState('');
   const [metode, setMetode] = useState('efectiu');
+  const [, unaVegada] = useUnaVegada();
   const tiquet = tiquets.find((t) => t.id === params.tiquet && t.tipus === 'venda') || null;
   if (!tiquet) return <NoTrobat text="Només es retorna d’un tiquet de venda del torn obert." torna={{ etiqueta: 'Ves als tiquets', trams: ['tiquets'] }} />;
   const retornat = retornatPerLinia(tiquet.id, tiquets);
@@ -134,10 +135,12 @@ function Retorn({ params }) {
     return { ...actual, [linia.id]: Math.min(queden(original), Math.max(0, (actual[linia.id] || 0) + pas)) };
   });
   const triades = Object.entries(seleccio).filter(([, q]) => q > 0).map(([liniaId, quantitat]) => ({ liniaId, quantitat }));
-  const retorna = async () => {
+  /* Onada R30 · R30-BAR-01 · Una devolució per gest (useUnaVegada, com els pagaments de BAR-R5):
+     dos tocs seguits en feien dues del mateix tiquet, i el calaix en tornava el doble. */
+  const retorna = () => unaVegada(async () => {
     const r = await accions.retorna(tiquet.id, triades, { motiu, metode });
     if (r.ok) ves('tiquets', r.valor.id);
-  };
+  });
   return (
     <Columna titol={`Retorn de la ${textNumero(tiquet.numero)}`} torna={{ etiqueta: 'Torna al tiquet', trams: ['tiquets', tiquet.id] }}>
       <AvisOperacio />

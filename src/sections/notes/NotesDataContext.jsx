@@ -367,6 +367,12 @@ export function NotesDataProvider({ children, config }) {
           return;
         }
 
+        /* Onada R30 · PF-01 · Amb una persona dins, les carpetes creades abans de PF-01 (només al
+           navegador) es pugen pel port, una vegada per entrada i sense esperar-les: el mòdul
+           arriba sota demanda (fora de l'arrencada), comprova la sessió real i el mode remot, i
+           cap error talla la càrrega ni avisa. */
+        if (ownerId === getCurrentUser()?.id) import('../../components/universal/classificacio/migracioCarpetesLocals.js').then((m) => m.migraCarpetesLocals(token, ownerId)).catch(() => {});
+
         drafts = await getDraftsForScope(scopeKey);
         if (!isCurrent()) return;
         await recorre();

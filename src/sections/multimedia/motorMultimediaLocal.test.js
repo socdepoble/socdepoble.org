@@ -451,7 +451,7 @@ describe('text', () => {
     ['  a   b  ', 'a b.md'],
     ['a\u0000b\u0007c', 'abc.md'],
     ['café', 'café.md'],
-    ['foto‮gnp.exe', 'fotognp.exe.md'],
+    ['foto\u202Egnp.exe', 'fotognp.exe.md'],
     ['a/b\\c:d*e?f"g<h>i|j', 'a-b-c-d-e-f-g-h-i-j.md'],
     ['---...nom...', 'nom.md'],
     ['', 'nota-20261029-1705.md']

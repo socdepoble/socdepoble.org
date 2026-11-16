@@ -11,9 +11,12 @@ export function Divisor({ text = null, variant = 'basic', className }) {
 
   if (!text) return <hr className={classes} />;
 
+  /* Onada R30 · T3-VOC · Sense sdp-divisor--amb-text ni sdp-divisor__text: cap
+     full no les estilava (classes foranes). La variant amb text la diu el div
+     amb role="separator"; el seu estil propi és deute de disseny, no d'ací. */
   return (
-    <div className={`${classes} sdp-divisor--amb-text`} role="separator">
-      <span className="sdp-divisor__text">{text}</span>
+    <div className={classes} role="separator">
+      <span>{text}</span>
     </div>
   );
 }

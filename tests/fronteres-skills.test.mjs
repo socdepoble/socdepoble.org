@@ -456,3 +456,22 @@ test('DEUTE_ACCEPTAT: cada entrada recalcula la seua empremta i nomena el seu pe
   }
   assert.ok(Object.isFrozen(DEUTE_ACCEPTAT));
 });
+
+
+test('R29 · propagació declara les pàgines i metadades que reconcilia', () => {
+  const r = auditaSkills(arrelSegura());
+  const propagacio = r.skills.find((s) => s.id === 'wiki-propagar-veritat');
+  assert.ok(propagacio.escriu.includes('_wiki_de_poble/02_saber'));
+  assert.ok(propagacio.escriu.includes('.agents/protocolledge.json'));
+});
+
+test('R29 · els filtres de camins del diff no amplien permisos sobre les fonts', () => {
+  const r = auditaSkills(arrelSegura());
+  const propagacio = r.skills.find((s) => s.id === 'wiki-propagar-veritat');
+  for (const font of ['src/data', 'supabase/migrations', 'src/config', '.agents/skills']) {
+    const cobrix = (ruta) => ruta === font || font.startsWith(`${ruta}/`);
+    assert.equal(propagacio.llig.some(cobrix), false, `cap lectura recursiva nova de ${font}`);
+    assert.equal(propagacio.escriu.some(cobrix), false, `cap escriptura sobre ${font}`);
+  }
+  assert.deepEqual(propagacio.avisos, []);
+});

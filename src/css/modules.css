@@ -13257,6 +13257,20 @@ details[open] summary.accordion-header svg:last-child {
     min-block-size: 0;
     block-size: 100%;
   }
+  /* Onada R30 · CONTRAST-MARC-01 · En les micro-apps (ClosaAplicacio) la columna esquerra munta
+     MarcColumna damunt del Grafit 700 de la navegació (AppGridShell.css): el cos no té superfície
+     pròpia i, en tema clar, el text nu de Pedra Seca hi queia a 1,00:1 (paràgraf), 1,73:1
+     (etiqueta de camp) i 1,23:1 (estat del fitxer, «Carregant…»). Només canvia el color d'eixe
+     text, al del crom (11,20:1 i 7,81:1): el fons, les peces amb superfície pròpia (alertes,
+     diàlegs, botons, controls, targetes) i el tema fosc, que ja passava de 7:1, queden igual. */
+  :root:not([data-theme="dark"]) .app-grid-column--left > .sdp-marc-columna > .sdp-marc-columna__cos :is(p:not([class]), .sdp-camp__etiqueta):not(:is(.sdp-alerta, dialog) *),
+  :host(:not([data-theme="dark"])) .app-grid-column--left > .sdp-marc-columna > .sdp-marc-columna__cos :is(p:not([class]), .sdp-camp__etiqueta):not(:is(.sdp-alerta, dialog) *) {
+    color: var(--sdp-crom-text);
+  }
+  :root:not([data-theme="dark"]) .app-grid-column--left > .sdp-marc-columna > .sdp-marc-columna__cos :is(.sdp-camp-fitxer__estat, .sdp-carregant):not(:is(.sdp-alerta, dialog) *),
+  :host(:not([data-theme="dark"])) .app-grid-column--left > .sdp-marc-columna > .sdp-marc-columna__cos :is(.sdp-camp-fitxer__estat, .sdp-carregant):not(:is(.sdp-alerta, dialog) *) {
+    color: var(--sdp-crom-text-secundari);
+  }
   .sdp-marc-columna__cap { position: relative; z-index: 1; flex: none; }
   .sdp-marc-columna__eines {
     position: relative;

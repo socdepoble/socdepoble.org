@@ -23,7 +23,7 @@ import { esDescartable } from '../nucli/comanda.js';
 import { resumTorn } from '../nucli/torn.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { AvisBase, AvisDeLaColumna, AvisOperacio, Columna, Preparat } from './comu.jsx';
-import { useVes } from './punt.js';
+import { useUnaVegada, useVes } from './punt.js';
 import { euros, horaCurta, nomOrigen } from './vestits.js';
 
 const NOMS_INCIDENCIA = Object.freeze({
@@ -164,13 +164,16 @@ function Moviments() {
   const [tipus, setTipus] = useState('entrada');
   const [importCents, setImport] = useState(0);
   const [motiu, setMotiu] = useState('');
-  const afig = async () => {
+  /* Onada R30 · R30-BAR-02 · Un moviment per gest (useUnaVegada, com els pagaments de BAR-R5): dos
+     tocs seguits n'anotaven dos d'iguals i l'efectiu esperat de l'arqueig n'eixia mal. */
+  const [, unaVegada] = useUnaVegada();
+  const afig = () => unaVegada(async () => {
     const r = await accions.moviment({ tipus, importCents, motiu });
     if (r.ok) {
       setImport(0);
       setMotiu('');
     }
-  };
+  });
   const peu = (
     <Pila gap={2}>
       <AvisOperacio />

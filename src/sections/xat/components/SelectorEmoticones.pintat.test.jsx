@@ -9,7 +9,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 
 vi.mock('../../../utils/emojiPintable.js', async (importOriginal) => {
   const real = await importOriginal();
-  const AMPLES = new Map([['\u{1FFFD}', 20.28], ['\u{1F600}‍\u{1F600}', 64], ['\u{1F33D}', 20.28], ['\u{1F426}‍\u{1F525}', 64]]);
+  const AMPLES = new Map([['\u{1FFFD}', 20.28], ['\u{1F600}\u200D\u{1F600}', 64], ['\u{1F33D}', 20.28], ['\u{1F426}\u200D\u{1F525}', 64]]);
   const detector = real.creaDetectorDePintat((text) => AMPLES.get(text) ?? 32);
   return { ...real, detectorDePintat: () => detector };
 });
@@ -22,7 +22,7 @@ afterEach(() => { cleanup(); buidaRecents(); });
 const t = (_, alternativa) => alternativa;
 const GRUPS = Object.freeze([
   { id: 'menjar-beguda', nom: 'Menjar i beguda', emojis: [['1F345', '🍅', 'tomato'], ['1F33D', '🌽', 'ear of corn (tofu en este sistema)']] },
-  { id: 'animals-natura', nom: 'Animals sintètics', emojis: [['1F426 200D 1F525', '\u{1F426}‍\u{1F525}', 'phoenix (partit)']] }
+  { id: 'animals-natura', nom: 'Animals sintètics', emojis: [['1F426 200D 1F525', '\u{1F426}\u200D\u{1F525}', 'phoenix (partit)']] }
 ]);
 
 test('P1-06 · fora el tofu i les seqüències partides; una família que es queda buida no porta pestanya', async () => {

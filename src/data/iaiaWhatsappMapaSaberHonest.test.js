@@ -91,6 +91,40 @@ describe('IDEA-171 · Mapa Honest del Saber de la IAIA MarIA en WhatsApp (Hermes
     },
   );
 
+  /* Onada R30 · R29-D9 (kit Gemini lot_02, arbitrat per Claude) · El nom propi del producte no es traduïx, com a
+     l'enllaç d'AparadorFediversity (R29-02-6d) i al títol i subtítol de /page/avisador: «L’Avisador · Batec de
+     Vida» en les cinc llengües, i en anglés amb la glossa «(Heartbeat of Life)» darrere, literal. En valencià,
+     enmig de frase, l'article va en minúscula com al Panell («Obrir l’Avisador»): la resta de llengües el
+     conserven com a part del nom, com els seus diccionaris («Activa L’Avisador»). */
+  const NOM_PROPI = 'Avisador · Batec de Vida';
+  const AMB_ARTICLE = /(?:^|[^\p{L}])[Ll]’Avisador · Batec de Vida/u;
+  const TRADUCCIONS_VELLES = /Latido de Vida|Bizi Taupada|Latexo de Vida/;
+
+  test.each(LANGS)('%s · R29-D9 · el domini 06 diu el nom propi «L’Avisador · Batec de Vida» sense traduir-lo', (lang) => {
+    const batec = IAIA_WHATSAPP_MAPA_SABER_TEXTS[lang].domains[5];
+    expect(batec.id).toBe('batec-de-vida-i-emergencies-offline');
+    for (const [camp, text] of Object.entries({ title: batec.title, sampleQuestion: batec.sampleQuestion, sampleReply: batec.sampleReply })) {
+      expect([lang, camp, AMB_ARTICLE.test(text)]).toEqual([lang, camp, true]);
+      expect([lang, camp, TRADUCCIONS_VELLES.test(text)]).toEqual([lang, camp, false]);
+      /* En anglés, la glossa sempre darrere del nom literal i mai en lloc seu. */
+      if (lang === 'en') {
+        expect([camp, text.includes('L’Avisador · Batec de Vida (Heartbeat of Life)')]).toEqual([camp, true]);
+        expect([camp, text.replaceAll('(Heartbeat of Life)', '').includes('Heartbeat')]).toEqual([camp, false]);
+      }
+    }
+    /* La resposta que torna el simulador porta el mateix nom. */
+    const r = simulaRespostaHonestaIaiaWhatsapp({ dominiId: 'batec-de-vida-i-emergencies-offline', idioma: lang });
+    expect([lang, r.resposta.includes(NOM_PROPI), r.preguntaEfectiva.includes(NOM_PROPI)]).toEqual([lang, true, true]);
+  });
+
+  test('R29-D9 · cap traducció vella del nom en cap camp de cap llengua, i el valencià l’apostrofa en minúscula enmig de frase', () => {
+    expect(TOT).not.toMatch(TRADUCCIONS_VELLES);
+    expect(IAIA_WHATSAPP_MAPA_SABER_TEXTS.ca.domains[5].sampleQuestion).toContain('de l’Avisador · Batec de Vida');
+    for (const lang of ['es', 'en', 'eu', 'gl']) {
+      expect([lang, IAIA_WHATSAPP_MAPA_SABER_TEXTS[lang].domains[5].sampleQuestion.includes('L’Avisador · Batec de Vida')]).toEqual([lang, true]);
+    }
+  });
+
   test('simulaRespostaHonestaIaiaWhatsapp: verificat només per a la pregunta de mostra d’un domini amb fonts; humilitat [DISCOVERY] per a la resta', () => {
     const ok = simulaRespostaHonestaIaiaWhatsapp({
       dominiId: 'pou-de-neu-rentonar',

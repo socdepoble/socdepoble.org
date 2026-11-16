@@ -189,6 +189,20 @@ node --test tests/mur-membres-actes-v2-postgres.test.mjs
 
 La suite usa PostgreSQL 18.6 real, migracions de negoci íntegres i dos connexions per als contraexemples de concurrència; la fixture només modela primitives de plataforma Auth/Storage. Exercita també el SQL generat pel backend Node 0 per a lectura i publicació/consulta de rebut. No acredita GoTrue, PostgREST, cookie Node 0, desplegament, descàrrega HTTP real de Storage ni purga física. Els recomptes i hashes literals es conserven amb les evidències del kit.
 
+## R30 · CAS de la curadoria WordPress i catàleg de 114 migracions
+
+El catàleg operatiu i l’ordre complet es mantenen a [../README.md](../README.md) i [../ordre_desplegament.json](../ordre_desplegament.json). Este índex conserva les notes històriques anteriors; no certifica per si sol l’estat remot.
+
+Després del catàleg base de 113 migracions, s’afig:
+
+1. [20261115230000_r30_revisions_editorials_cas.sql](20261115230000_r30_revisions_editorials_cas.sql): versió esperada opaca en curadoria WordPress, curadoria AAL2 amb denegació davant NULL i signatura anterior de creació exclusiva. Reaplicar-la si s’ha tornat a executar 2611110455. **NO aplicada: l’aplica el Mestre.** El client d’R30 desa igual sense ella (signatura de sempre, sense guarda).
+
+S’ha assajat localment amb PGlite 0.3.16 (PostgreSQL 17.5 WASM), inclosa l’aplicació sobre el catàleg complet i la reaplicació idempotent. No s’ha executat sobre Supabase remot. Les proves de dos escriptors validen precondicions i reintents; PGlite serialitza les peticions i no equival a dues connexions PostgreSQL físiques simultànies.
+
+Les altres dues migracions del kit R30 de Codex (CAS de `section_submissions` i migració de carpetes locals amb àlies) no formen part del catàleg: la primera trencaria la republicació de les projeccions del catàleg i la segona no té cap client que la use (PF-01 puja les carpetes amb `crea_carpeta_notes`).
+
+El pin POSSE del catàleg complet passa de 113 a 114; els altres nou pins es conserven.
+
 ## Vincles
 
 - [[00_index]]

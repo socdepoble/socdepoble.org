@@ -34,7 +34,22 @@ export function NotificationProvider({ children, targetNode }) {
     };
   }, []);
 
-  const portalTarget = targetNode || (typeof document !== 'undefined' ? document.body : null);
+  /* Onada R30 · A2-LLEI06 · L'avís va al node que declara l'entrada (targetNode: el #root de la SPA i
+     de l'app nativa, l'arrel ombra tancada de <soc-de-poble>); les tres entrades de producció en passen
+     sempre un, i ahí res no canvia. Sense node declarat (les proves, un proveïdor muntat a soles), l'avís
+     es pinta al seu lloc dins de l'arbre de React en compte de penjar-se del <body> del document: la UI
+     no toca el document amfitrió (LLEI_06). */
+  const avis = toast ? (
+    <div className="sdp-toast-container">
+      <AvisadorEfimer
+        key={toast.id}
+        missatge={toast.missatge}
+        tipus={toast.tipus}
+        durada={toast.durada}
+        onClose={closeToast}
+      />
+    </div>
+  ) : null;
 
   /* Auditoria 261007 (B) · Un valor estable: `{ showToast }` en línia era un
      objecte nou a cada setToast (en mostrar un avís i en tancar-lo) i tornava a
@@ -45,18 +60,7 @@ export function NotificationProvider({ children, targetNode }) {
   return (
     <NotificationContext.Provider value={valor}>
       {children}
-      {toast && portalTarget && createPortal(
-        <div className="sdp-toast-container">
-          <AvisadorEfimer 
-            key={toast.id}
-            missatge={toast.missatge}
-            tipus={toast.tipus}
-            durada={toast.durada}
-            onClose={closeToast}
-          />
-        </div>,
-        portalTarget
-      )}
+      {avis && (targetNode ? createPortal(avis, targetNode) : avis)}
     </NotificationContext.Provider>
   );
 }

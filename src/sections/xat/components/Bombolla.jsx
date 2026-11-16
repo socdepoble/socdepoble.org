@@ -70,6 +70,14 @@
  * (aria-hidden) i el nom de l'enllaç és el text. En el mode de selecció no és
  * interactiu, com la resta d'enllaços (EnllacQuiet). Sense el camp, el DOM de
  * sempre.
+ *
+ * Onada R30 · R29-E2EE-02 (decisió tancada, pla R30 §4) · Un missatge xifrat
+ * que este dispositiu no ha pogut obrir (esXifratTancat, conversa.js) ja no
+ * es pinta buit: diu «Missatge xifrat d’extrem a extrem en un altre
+ * dispositiu» en la llengua de la interfície, amb les classes de la làpida
+ * (cursiva i --sdp-text-suau, zero CSS nou). No és cap error: ni role="alert"
+ * ni codi tècnic, i el text no és seu, de manera que «Copia el text» no hi
+ * apareix. L'autor, l'hora, «Respon» i la moderació continuen com sempre.
  */
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Ban, CheckCircle2, Circle, Copy, Flag, MoreVertical, Reply } from 'lucide-react';
@@ -91,7 +99,7 @@ import CaraXat from './CaraXat.jsx';
 import { toDeLlavor } from '../../../components/PedraSeca/atoms/Avatar.jsx';
 import { mouFocusDelMenu } from './Compositor.jsx';
 import { llistaDeMissatge } from '../llistaComu.js';
-import { llavorDAutor } from '../conversa.js';
+import { esXifratTancat, llavorDAutor, textXifratTancat } from '../conversa.js';
 import { RUTA_ENTRADA } from '../../../config/rutaEntrada.js';
 
 const CLASSES_COLOR_AUTOR = Object.freeze([
@@ -220,7 +228,10 @@ function Bombolla({
   const esborrat = Boolean(missatge.esborrat) || Boolean(missatge.esborratAl);
   const estat = missatge.estatEnviament || 'enviat';
   const enError = estat === 'error';
-  const text = missatge.text ?? missatge.content ?? '';
+  /* Onada R30 · R29-E2EE-02 · Xifrat i sense obrir en este dispositiu: el text
+     serè, i cap cos que pintar ni copiar (el pipeline ja el deixa nul). */
+  const tancat = !esborrat && esXifratTancat(missatge);
+  const text = tancat ? '' : missatge.text ?? missatge.content ?? '';
   const triat = Boolean(seleccio?.triat);
   /* Només es respon a un missatge que el servidor ja té: amb id, ni pendent
      ni en error, i mai a una làpida (T1). */
@@ -328,7 +339,7 @@ function Bombolla({
      mode de selecció: els seus enllaços a la Wiki de Poble s'obrin a l'app. */
   const rutesDeLaWiki = !meu && !triable && Boolean(missatge.is_ai) && esIAIA(missatge.usuariId);
   /* Fase E (tasca 3) · La llista viva d'«El Comú», si el missatge en porta una de llegible. */
-  const llistaComu = esborrat ? null : llistaDeMissatge(missatge);
+  const llistaComu = esborrat || tancat ? null : llistaDeMissatge(missatge);
 
   const propsSeleccio = triable ? {
     role: 'checkbox',
@@ -389,6 +400,8 @@ function Bombolla({
             <p className="sdp-xat-bombolla__text sdp-xat-bombolla__text--esborrat">
               {t('section.xat.missatge.esborrat', "S'ha esborrat este missatge")}
             </p>
+          ) : tancat ? (
+            <p className="sdp-xat-bombolla__text sdp-xat-bombolla__text--esborrat">{t(...textXifratTancat(missatge))}</p>
           ) : llistaComu ? (
             <TargetaLlistaComu llista={llistaComu} actor={actorLlista} interactiva={!triable} onMuta={onMutaLlista} />
           ) : ['imatge', 'video', 'veu'].includes(missatge.tipus) && missatge.metadades?.adjunt?.id ? (

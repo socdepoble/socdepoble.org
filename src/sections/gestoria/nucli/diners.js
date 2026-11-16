@@ -29,7 +29,11 @@
 const ESPAIS_DURS = /[^\S\n\r\t ]/g;
 const SIGNE = /^([-+−])\s*/;
 const MONEDA_DAVANT = /^(?:€|eur)\s*/i;
-const MONEDA_DARRERE = /\s*(?:€|eur)$/i;
+/* Onada R30 · A6-RX2 · La moneda del final es busca sola i els blancs de davant
+   se'n van amb trimEnd (el mateix joc de blancs que \s). Abans, «\s*(?:€|eur)$»
+   es tornava a provar des de cada blanc d'una tira llarga i la recorria sencera
+   cada vegada (temps quadràtic). Trau exactament el mateix (linealitat.test.js). */
+const MONEDA_DARRERE = /(?:€|eur)$/i;
 const MILERS_PUNT = /^\d{1,3}(?:\.\d{3})+$/;
 const MILERS_COMA = /^\d{1,3}(?:,\d{3})+$/;
 const MILERS_ESPAI = /^\d{1,3}(?: \d{3})+(?:[.,]\d+)?$/;
@@ -73,7 +77,8 @@ export function parseImport(text) {
     negatiu = true;
     s = s.slice(1, -1).trim();
   }
-  s = s.replace(MONEDA_DARRERE, '');
+  const moneda = MONEDA_DARRERE.exec(s);
+  if (moneda) s = s.slice(0, moneda.index).trimEnd();
   let signe = SIGNE.exec(s);
   if (signe) s = s.slice(signe[0].length);
   s = s.replace(MONEDA_DAVANT, '');
@@ -86,7 +91,11 @@ export function parseImport(text) {
     if (!MILERS_ESPAI.test(s)) return null;
     s = s.split(' ').join('');
   }
-  if (!/^[\d.,]*\d[\d.,]*$/.test(s)) return null;
+  /* Onada R30 · A6-RX2 · Xifres, punts i comes, amb una xifra almenys. Abans,
+     «[\d.,]*\d[\d.,]*» provava cada xifra com la «primera» i tornava a recórrer
+     la resta (quadràtic amb «1111…x»); ara la primera xifra és la primera de
+     veres. Mateix llenguatge. */
+  if (!/^[.,]*\d[\d.,]*$/.test(s)) return null;
   const parts = separaParts(s);
   if (!parts) return null;
   const { enter, decimals, ambSeparador } = parts;

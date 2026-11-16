@@ -267,7 +267,7 @@ describe('GBK02 · cap credencial ni clau privada, amb els noms reals del projec
     ['privateKeyJwk', 'opac'], ['private_key_jwk', 'opac'], ['private-key-jwk', 'opac'], ['privateKeyJwk', privEd],
     ['privateKeyPem', 'opac'], ['clauPrivadaB64', 'opac'],
     ['accessToken', { token: 'opac' }], ['accessToken', 'opac'], ['access_token', 'opac'], ['access-token', 'opac'], ['ACCESS_TOKEN', 'opac'],
-    ['ACCESS.TOKEN', 'opac'], ['access​Token', 'opac'], ['ａｃｃｅｓｓＴｏｋｅｎ', 'opac'],
+    ['ACCESS.TOKEN', 'opac'], ['access\u200BToken', 'opac'], ['ａｃｃｅｓｓＴｏｋｅｎ', 'opac'],
     ['idToken', 'opac'], ['id_token', 'opac'], ['id-token', 'opac'], ['ID_TOKEN', 'opac'],
     ['refreshToken', 'opac'], ['refresh_token', 'opac'], ['refresh-token', 'opac'],
     ['token', 'opac'], ['Token', 'opac'], ['TOKEN', 'opac'], ['token', { valor: 'opac' }], ['pushToken', 'opac'], ['token_acces', 'opac'],
@@ -616,7 +616,7 @@ describe('auxiliars d’arxiu: Web Share (Files.app), File System Access, descà
     const textPla = await exportaCopiaSeguretatXat({ ...ambitPla, fils: fils('f1'), missatges: [msg('m1', 'f1', 1)] });
     await expect(desaArxiuCopiaSeguretatXat(textPla, { finestra: null, navegador: null, ...d.opcions })).rejects.toEqual(rebutja(CODI_CLAU_FEBLE, 'sense-xifrar'));
     await expect(desaArxiuCopiaSeguretatXat('hola', { finestra: null, navegador: null, ...d.opcions })).rejects.toEqual(rebutja(CODI_COPIA_CORRUPTA, 'json'));
-    for (const nomArxiu of ['../../etc/copia', 'carpeta/copia', '.amagada', 'nom‮amb-bidi']) {
+    for (const nomArxiu of ['../../etc/copia', 'carpeta/copia', '.amagada', 'nom\u202Eamb-bidi']) {
       await expect(desaArxiuCopiaSeguretatXat(textXifrat, { finestra: null, navegador: null, nomArxiu, ...d.opcions })).rejects.toEqual(rebutja(CODI_ARXIU_NO_DESAT, 'nom-arxiu'));
     }
     expect(d.ancora.click).not.toHaveBeenCalled();

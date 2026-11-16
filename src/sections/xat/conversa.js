@@ -312,16 +312,45 @@ export function autorDeCita(msg, t) {
   return msg?.author || msg?.author_name || t('section.xat.vei', 'Veí');
 }
 
+/* Onada R30 · R29-E2EE-02 (decisió tancada, pla R30 §4) · Un missatge xifrat
+   que este dispositiu no ha pogut obrir: el pipeline el tanca amb `text: null`
+   i la seua seguretat ({ xifrat: true, verificat: false, codi }), i
+   mapejaMissatge en conserva l'estat. La interfície en diu un text serè, el
+   mateix a la bombolla, a la cita, a la barra de resposta i a l'anunci en viu,
+   i mai el codi tècnic. El predicat és el de la còpia (copiaSeguretatXat.js). */
+export const TEXT_XIFRAT_TANCAT = Object.freeze(['section.xat.xifratge.tancat', 'Missatge xifrat d’extrem a extrem en un altre dispositiu']);
+/* Onada R30 · R29-E2EE-02 · El text de la decisió només és cert quan a este dispositiu li falta la
+   clau: el motor no té context per al fil o no coneix l'època del missatge. Un missatge que no
+   s'obri per integritat (firma, manipulació, repetició, autor fora de l'equip) o per una clau nova
+   sense confirmar no és «d'un altre dispositiu»: diu, igual de serè i sense cap codi, que no s'ha
+   pogut obrir. Un codi desconegut pren també el text neutre, que sempre és cert. */
+export const TEXT_XIFRAT_NO_OBERT = Object.freeze(['section.xat.xifratge.noObert', 'No s’ha pogut obrir este missatge xifrat']);
+export const CODIS_SENSE_CLAU_AL_DISPOSITIU = Object.freeze(new Set([
+  'epoca-desconeguda', 'sense-epoca', 'epoca-saltada', 'sense-context', 'claus-bloquejades'
+]));
+
+/** Cert si el missatge és xifrat i este dispositiu no l'ha pogut obrir. */
+export function esXifratTancat(msg) {
+  return msg?.seguretat?.xifrat === true && msg.seguretat.verificat !== true;
+}
+
+/** La parella [clau, reserva] del text serè d'un missatge xifrat tancat, segons el motiu. */
+export function textXifratTancat(msg) {
+  return CODIS_SENSE_CLAU_AL_DISPOSITIU.has(msg?.seguretat?.codi) ? TEXT_XIFRAT_TANCAT : TEXT_XIFRAT_NO_OBERT;
+}
+
 /**
  * El text del missatge citat: «Missatge amagat» si és d'algú que has
  * bloquejat (Fase D, 261020, tasca 2: XatContext l'anota sense text), la
  * làpida si s'ha esborrat, i el text si no. IDEA-53 (pla 261029_1605, Bloc
  * B) · Sense les marques de la negreta: la cita, la barra de resposta i
  * l'anunci en viu (el lector no diu «asterisc»). La resta, tal qual.
+ * Onada R30 · R29-E2EE-02 · Un missatge xifrat que no s'obri, el text serè.
  */
 export function textDeCita(msg, t) {
   if (msg?.bloquejat) return t('section.moderacio.bloquejat.previa', 'Missatge amagat');
   if (msg?.esborrat || msg?.esborratAl) return t('section.xat.missatge.esborrat', "S'ha esborrat este missatge");
+  if (esXifratTancat(msg)) return t(...textXifratTancat(msg));
   return senseMarquesDeNegreta(String(msg?.text ?? msg?.content ?? '')) || textDAdjunt(msg?.tipus, t);
 }
 

@@ -128,7 +128,7 @@ function obriEdicioAvancada() {
   fireEvent.click(desplegable().querySelector('summary'));
   expect(desplegable().open).toBe(true);
   // Damunt de l'H1 ja no hi ha ni l'avatar redó ni la ranura.
-  expect(capcalera().querySelector('.page-title-avatar, .page-title-logo-personalitzat')).toBeNull();
+  expect(capcalera().querySelector('.page-title-avatar, [data-sdp-ranura="logotip-personalitzat"]')).toBeNull();
 }
 
 /* Clica el control amb el focus damunt, com a la finestra de veres, tria la

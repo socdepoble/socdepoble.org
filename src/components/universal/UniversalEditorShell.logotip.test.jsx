@@ -18,7 +18,7 @@ const closca = (props = {}) => render(
     <div data-testid="cos" />
   </UniversalEditorShell>
 );
-const ranura = (container) => container.querySelector('header.page-title .page-title-logo-personalitzat');
+const ranura = (container) => container.querySelector('header.page-title [data-sdp-ranura="logotip-personalitzat"]');
 
 test('ordre E · sense onLogoEdit, la ranura de sempre: «Editar logotip» obri el selector de fitxers', () => {
   const { container, getByRole } = closca();

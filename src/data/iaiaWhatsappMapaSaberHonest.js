@@ -15,7 +15,11 @@
  *  03 patrimoni: anatomiaRural.js, herbariLaTorre117.js, bancLlavors.js, arbresMonumentals.js, rutesDePoble.js.
  *  04 calendari: src/utils/temporada/dades.js diu ell mateix «NO VERIFICAT»: domini en preparació.
  *  05 història: rutesDePoble.js («Itineraris per La Torre de les Maçanes», 2021).
- *  06 Batec de Vida: IDEA-123/124, pendent d'integració: domini en preparació, no avisa ningú.
+ *  06 L’Avisador · Batec de Vida: IDEA-123/124, pendent d'integració: domini en preparació, no avisa ningú.
+ *     Onada R30 · R29-D9 · El nom propi del producte no es traduïx, com a l'enllaç d'AparadorFediversity i a
+ *     /page/avisador: «L’Avisador · Batec de Vida» en les cinc llengües; en anglés, amb la glossa «(Heartbeat
+ *     of Life)» darrere. En valencià l'article s'apostrofa en minúscula enmig de frase, com al Panell
+ *     («Obrir l’Avisador»). Que el domini el presente com a idea no activa és la decisió 9 del Mestre (R29).
  *  07 Fediversity: PDF d'arquitectura de juliol de 2025 (actors p. 1, tecnologies pp. 2–3 i 7, portabilitat p. 5).
  * Ni la IP de LAN ni camins del servidor: esta dada arriba al paquet públic.
  * Tampoc l'adreça local del servei de models: viu només al pont de tooling/node0, perquè el codi de
@@ -141,13 +145,13 @@ export const IAIA_WHATSAPP_MAPA_SABER_TEXTS = Object.freeze({
       {
         id: 'batec-de-vida-i-emergencies-offline',
         num: '06',
-        title: 'Batec de Vida (IDEA-123/124, en preparació)',
+        title: 'L’Avisador · Batec de Vida (IDEA-123/124, en preparació)',
         sources: 'Proposta de les IDEA-123/124, pendent d’integració.',
         summary:
           'Encara no actiu: és una proposta d’acompanyament per a gent major que viu sola. Ara mateix no avisa ningú.',
-        sampleQuestion: 'Com funciona l’alerta de 6 hores del Batec de Vida per als majors?',
+        sampleQuestion: 'Com funciona l’alerta de 6 hores de l’Avisador · Batec de Vida per als majors?',
         sampleReply:
-          'El Batec de Vida encara no està actiu: és una idea en preparació i ara mateix no avisa ningú. Si et preocupa algú, no esperes cap avís automàtic: telefona-li o passa per sa casa, i si és urgent crida al 112.',
+          'L’Avisador · Batec de Vida encara no està actiu: és una idea en preparació i ara mateix no avisa ningú. Si et preocupa algú, no esperes cap avís automàtic: telefona-li o passa per sa casa, i si és urgent crida al 112.',
       },
       {
         id: 'arquitectura-fediversity-node0',
@@ -257,13 +261,13 @@ export const IAIA_WHATSAPP_MAPA_SABER_TEXTS = Object.freeze({
       {
         id: 'batec-de-vida-i-emergencies-offline',
         num: '06',
-        title: 'Latido de Vida (IDEA-123/124, en preparación)',
+        title: 'L’Avisador · Batec de Vida (IDEA-123/124, en preparación)',
         sources: 'Propuesta de las IDEA-123/124, pendiente de integración.',
         summary:
           'Aún no activo: es una propuesta de acompañamiento para personas mayores que viven solas. Ahora mismo no avisa a nadie.',
-        sampleQuestion: '¿Cómo funciona la alerta de 6 horas del Latido de Vida para mayores?',
+        sampleQuestion: '¿Cómo funciona la alerta de 6 horas de L’Avisador · Batec de Vida para mayores?',
         sampleReply:
-          'El Latido de Vida aún no está activo: es una idea en preparación y ahora mismo no avisa a nadie. Si te preocupa alguien, no esperes ningún aviso automático: llámale o pasa por su casa, y si es urgente llama al 112.',
+          'L’Avisador · Batec de Vida aún no está activo: es una idea en preparación y ahora mismo no avisa a nadie. Si te preocupa alguien, no esperes ningún aviso automático: llámale o pasa por su casa, y si es urgente llama al 112.',
       },
       {
         id: 'arquitectura-fediversity-node0',
@@ -373,13 +377,13 @@ export const IAIA_WHATSAPP_MAPA_SABER_TEXTS = Object.freeze({
       {
         id: 'batec-de-vida-i-emergencies-offline',
         num: '06',
-        title: 'Heartbeat of Life (IDEA-123/124, in preparation)',
+        title: 'L’Avisador · Batec de Vida (Heartbeat of Life), IDEA-123/124, in preparation',
         sources: 'Proposal IDEA-123/124, pending integration.',
         summary:
           'Not active yet: it is a proposed support service for older people living alone. Right now it does not alert anyone.',
-        sampleQuestion: 'How does the 6-hour Heartbeat of Life alert work for elders?',
+        sampleQuestion: 'How does the 6-hour alert of L’Avisador · Batec de Vida (Heartbeat of Life) work for elders?',
         sampleReply:
-          'Heartbeat of Life is not active yet: it is an idea in preparation and right now it does not alert anyone. If you are worried about someone, do not wait for an automatic alert: call them or visit them, and in an emergency call 112.',
+          'L’Avisador · Batec de Vida (Heartbeat of Life) is not active yet: it is an idea in preparation and right now it does not alert anyone. If you are worried about someone, do not wait for an automatic alert: call them or visit them, and in an emergency call 112.',
       },
       {
         id: 'arquitectura-fediversity-node0',
@@ -489,13 +493,13 @@ export const IAIA_WHATSAPP_MAPA_SABER_TEXTS = Object.freeze({
       {
         id: 'batec-de-vida-i-emergencies-offline',
         num: '06',
-        title: 'Bizi Taupada (IDEA-123/124, prestatzen)',
+        title: 'L’Avisador · Batec de Vida (IDEA-123/124, prestatzen)',
         sources: 'IDEA-123/124 proposamena, integratzeke.',
         summary:
           'Oraindik ez dago martxan: bakarrik bizi diren adinekoei laguntzeko proposamen bat da. Oraingoz ez dio inori abisatzen.',
-        sampleQuestion: 'Nola funtzionatzen du adinekoentzako Bizi Taupadaren 6 orduko alertak?',
+        sampleQuestion: 'Nola funtzionatzen du adinekoentzako L’Avisador · Batec de Vida-ren 6 orduko alertak?',
         sampleReply:
-          'Bizi Taupada oraindik ez dago martxan: prestatzen ari den ideia bat da, eta oraingoz ez dio inori abisatzen. Norbaitez kezkatuta bazaude, ez itxaron abisu automatikorik: deitu iezaiozu edo joan haren etxera, eta larrialdi bat bada, deitu 112ra.',
+          'L’Avisador · Batec de Vida oraindik ez dago martxan: prestatzen ari den ideia bat da, eta oraingoz ez dio inori abisatzen. Norbaitez kezkatuta bazaude, ez itxaron abisu automatikorik: deitu iezaiozu edo joan haren etxera, eta larrialdi bat bada, deitu 112ra.',
       },
       {
         id: 'arquitectura-fediversity-node0',
@@ -605,13 +609,13 @@ export const IAIA_WHATSAPP_MAPA_SABER_TEXTS = Object.freeze({
       {
         id: 'batec-de-vida-i-emergencies-offline',
         num: '06',
-        title: 'Latexo de Vida (IDEA-123/124, en preparación)',
+        title: 'L’Avisador · Batec de Vida (IDEA-123/124, en preparación)',
         sources: 'Proposta das IDEA-123/124, pendente de integración.',
         summary:
           'Aínda non activo: é unha proposta de acompañamento para persoas maiores que viven soas. Agora mesmo non avisa a ninguén.',
-        sampleQuestion: 'Como funciona a alerta de 6 horas do Latexo de Vida para maiores?',
+        sampleQuestion: 'Como funciona a alerta de 6 horas de L’Avisador · Batec de Vida para maiores?',
         sampleReply:
-          'O Latexo de Vida aínda non está activo: é unha idea en preparación e agora mesmo non avisa a ninguén. Se che preocupa alguén, non agardes ningún aviso automático: chámao ou pasa pola súa casa, e se é urxente chama ao 112.',
+          'L’Avisador · Batec de Vida aínda non está activo: é unha idea en preparación e agora mesmo non avisa a ninguén. Se che preocupa alguén, non agardes ningún aviso automático: chámao ou pasa pola súa casa, e se é urxente chama ao 112.',
       },
       {
         id: 'arquitectura-fediversity-node0',

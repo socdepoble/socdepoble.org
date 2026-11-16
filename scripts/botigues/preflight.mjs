@@ -22,6 +22,8 @@
  * R24 botigues (A2, RC-1) · «Entrada social del paquet» (també codi 7): els clients de Google que porta
  * dist-natiu/assets/*.js; amb --canal produccio, el que falta és un ✗ (en intern, un avís).
  * --canal produccio exigix SDP_BUILDS_DIR (el registre de pujades) i afig avisos de botiga.
+ * Onada R30 · NAT-04 · Dins de «Fortificació de seguretat (R26)» (codi 7): cap permís d'identitat ni de
+ * biometria (PERMISOS_D_IDENTITAT) declarat a l'app o als connectors sense llevar, i l'app els lleva tots.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -144,12 +146,96 @@ function manifestsDeConnectors(arrel) {
     .filter((manifest) => fs.existsSync(manifest));
 }
 
-/* Les etiquetes <uses-permission …> d'un manifest, sense comentaris: el nom i si l'app el lleva. */
+/* Les etiquetes <uses-permission …> (i <uses-permission-sdk-23 …>) d'un manifest, sense comentaris:
+   l'element, el nom i si el manifest el lleva.
+   Onada R30 · NAT-04 · També amb cometes simples i espais al voltant de l'«=»: és XML vàlid. */
 function permisosDe(text) {
-  return [...senseComentarisXml(text).matchAll(/<uses-permission\b[^>]*>/g)].map(([etiqueta]) => ({
-    nom: /android:name="([^"]*)"/.exec(etiqueta)?.[1] ?? null,
-    lleva: /tools:node="remove"/.test(etiqueta)
+  return [...senseComentarisXml(text).matchAll(/<(uses-permission(?:-sdk-23)?)\b[^>]*>/g)].map(([etiqueta, element]) => ({
+    element,
+    nom: /android:name\s*=\s*(["'])(.*?)\1/.exec(etiqueta)?.[2] ?? null,
+    lleva: /tools:node\s*=\s*(["'])remove\1/.test(etiqueta)
   }));
+}
+
+/* ───────────── Onada R30 · NAT-04 (pla R30 §4) · Cap permís d'identitat ni de biometria ─────────────
+   Decisió tancada per MarIA: el conjunt mínim de permisos d'Android es conserva estricte, sense els
+   permisos d'identitat que hereta l'entrada amb Google. El manifest fusionat de release de l'1.0.0
+   (build 2, android/app/build del 261102) portava USE_CREDENTIALS (el declara
+   @capgo/capacitor-social-login) i USE_BIOMETRIC i USE_FINGERPRINT (androidx.biometric 1.1.0, que
+   porta androidx.credentials 1.5.0). L'app els lleva amb tools:node="remove", i GET_ACCOUNTS també. RECORD_AUDIO i MODIFY_AUDIO_SETTINGS són de les notes de
+   veu del xat: no són d'identitat i no entren ací. */
+export const PERMISOS_D_IDENTITAT = Object.freeze([
+  'android.permission.USE_BIOMETRIC',
+  'android.permission.USE_FINGERPRINT',
+  'android.permission.USE_CREDENTIALS',
+  'android.permission.GET_ACCOUNTS'
+]);
+const MANIFEST_DE_L_APP = Object.freeze(['android', 'app', 'src', 'main', 'AndroidManifest.xml']);
+const nomCurt = (nom) => nom.replace(/^android\.permission\./, '');
+const llista = (noms) => (noms.length < 2 ? noms.join('') : `${noms.slice(0, -1).join(', ')} i ${noms.at(-1)}`);
+
+/**
+ * Onada R30 · NAT-04 · Els permisos de PERMISOS_D_IDENTITAT a l'app i als manifests dels connectors
+ * (android/capacitor.settings.gradle). Només llig; null si no hi ha manifest de l'app. Per a cada permís:
+ * `llevat`, si l'app el lleva amb <uses-permission … tools:node="remove">; `queden`, els manifests que
+ * el declaren sense que ningú el lleve (el que l'app mateixa declara sempre hi compta, i un
+ * <uses-permission-sdk-23> només el lleva un element del mateix tipus). Els AAR de Maven no es veuen:
+ * per això l'app els ha de llevar tots encara que cap manifest de l'arbre no els declare.
+ * @returns {{ connectors:number, permisos:{nom:string, llevat:boolean, queden:{cami:string, element:string}[]}[] }|null}
+ */
+export function permisosDIdentitatAndroid(arrel) {
+  const text = lligDe(arrel, ...MANIFEST_DE_L_APP);
+  if (text === null) return null;
+  const app = MANIFEST_DE_L_APP.join('/');
+  const delApp = permisosDe(text);
+  const connectors = manifestsDeConnectors(arrel).map((manifest) => ({
+    cami: path.relative(arrel, manifest).split(path.sep).join('/'),
+    permisos: permisosDe(lligDe(manifest))
+  }));
+  const permisos = PERMISOS_D_IDENTITAT.map((nom) => {
+    const llevats = new Set(delApp.filter((p) => p.nom === nom && p.lleva).map((p) => p.element));
+    const queden = [{ cami: app, permisos: delApp }, ...connectors]
+      .flatMap(({ cami, permisos: declarats }) => declarats.filter((p) => p.nom === nom && !p.lleva).map(({ element }) => ({ cami, element })))
+      .filter(({ cami, element }) => cami === app || !llevats.has(element));
+    return { nom, llevat: llevats.has('uses-permission'), queden };
+  });
+  return { connectors: connectors.length, permisos };
+}
+
+/**
+ * Onada R30 · NAT-04 · Les línies dels permisos d'identitat (dins de «Fortificació de seguretat»). Pura.
+ * Un permís que queda declarat és un ✗ per permís; els que l'app no lleva, un ✗ per a tots.
+ * @returns {{ linies: string[], mal: string[] }}
+ */
+export function liniesPermisosDIdentitat(identitat) {
+  const linies = [];
+  const mal = [];
+  if (!identitat?.permisos?.length) return { linies, mal };
+  const app = MANIFEST_DE_L_APP.join('/');
+  const errada = (text) => { linies.push(`  ✗ ${text}`); mal.push(text); };
+  const queden = identitat.permisos.filter((p) => p.queden.length);
+  for (const { nom, queden: fonts } of queden) {
+    const on = fonts.map(({ cami, element }) => (element === 'uses-permission' ? cami : `${cami} (${element})`));
+    const delApp = fonts.some(({ cami }) => cami === app);
+    const elements = [...new Set(fonts.filter(({ cami }) => cami !== app).map(({ element }) => element))];
+    const lleva = elements.map((element) => `<${element} android:name="${nom}" tools:node="remove" />`);
+    errada(`Android: ${nomCurt(nom)} queda declarat a ${on.join(', ')}: NAT-04 (pla R30 §4) no admet cap permís d'identitat ni de biometria; ${[
+      ...(delApp ? [`lleva'n la declaració de ${app}`] : []),
+      ...(lleva.length ? [`posa ${lleva.join(' i ')} a ${app}`] : [])
+    ].join(' i ')}`);
+  }
+  const senseLlevar = identitat.permisos.filter((p) => !p.queden.length && !p.llevat).map((p) => nomCurt(p.nom));
+  if (senseLlevar.length) {
+    const pronom = senseLlevar.length > 1 ? 'els' : 'el';
+    errada(`Android: ${app} no lleva ${llista(senseLlevar)} amb tools:node="remove": cap manifest de l'arbre no ${pronom} declara, però una biblioteca (AAR) ${pronom} pot afegir al manifest fusionat sense que el preflight ho veja (androidx.biometric, que porta androidx.credentials del connector social, hi afig USE_BIOMETRIC i USE_FINGERPRINT); NAT-04, pla R30 §4`);
+  }
+  if (!mal.length) {
+    const n = identitat.connectors;
+    const cap = n === 0 ? 'l\'app no en deixa cap sense llevar (cap manifest de connectors a android/capacitor.settings.gradle)'
+      : `ni l'app ni ${n === 1 ? 'l\'únic manifest' : `els ${n} manifests`} de connectors no en deixen cap sense llevar`;
+    linies.push(`  ✓ Android: ${app} lleva ${llista(identitat.permisos.map((p) => nomCurt(p.nom)))} amb tools:node="remove", i ${cap} (NAT-04: cap permís d'identitat ni de biometria)`);
+  }
+  return { linies, mal };
 }
 
 /* R24 botigues (D1, RC-6) · La bandera de build que encén el push natiu dins del paquet
@@ -475,7 +561,9 @@ export function seguretatBotigues(arrel) {
       networkConfigSegura,
       assetlinksEstatic,
       associacioValida: associacioAndroidValida,
-      associacioPendent: associacioAndroidPendent
+      associacioPendent: associacioAndroidPendent,
+      /* Onada R30 · NAT-04 · null sense manifest de l'app (fixtures sintètics). */
+      identitat: permisosDIdentitatAndroid(arrel)
     }
   };
 }
@@ -542,6 +630,12 @@ export function liniesSeguretatBotigues(estat, { plataformes = [], produccio = f
     }
     if (androidNet && estat.android.present) {
       be('Android: allowBackup="false", usesCleartextTraffic="false", network_security_config i associacio-apps.json verificats');
+    }
+    /* Onada R30 · NAT-04 · Línia pròpia: no toca el ✓ d'R26 de dalt. */
+    if (estat.android.present) {
+      const identitat = liniesPermisosDIdentitat(estat.android.identitat);
+      linies.push(...identitat.linies);
+      mal.push(...identitat.mal);
     }
     if (produccio && estat.android.associacioPendent) {
       avis('scripts/botigues/associacio-apps.json té android.sha256_cert_fingerprints buit: copia-hi la clau d\'App Signing de Play Console per a publicar assetlinks.json');

@@ -122,7 +122,7 @@ describe('categories', () => {
   });
 
   test('un nom amb controls de direcció del text es pinta amb «�» (cap extensió falsejada)', () => {
-    const index = indexaArbreLocal({ sal: SAL, carpetes: ['noms‮rars'], elements: [el('noms‮rars/RTL_‮gnp.md')] });
+    const index = indexaArbreLocal({ sal: SAL, carpetes: ['noms\u202Erars'], elements: [el('noms\u202Erars/RTL_\u202Egnp.md')] });
     const categories = construeixCategoriesMultimedia({ grupsMes: [], index, textos: TEXTOS });
     expect(categories.at(-1).label).toBe('noms�rars');
   });

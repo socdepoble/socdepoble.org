@@ -1330,6 +1330,15 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
     'src/components/universal/workspace/seleccioUrl.js', 'src/sections/pobles/fitxaDelPoble.js']) {
     assert.ok(!modulsDArrencada.has(rel), `${rel}: no viatja a l'arrencada estàtica (R24)`);
   }
+  /* Onada R30 · A4 (marge del sostre d'arrencada) · El mateix patró: MurContext llig revisaLlista,
+     subscriuRevisionsEditorials i versioRevisionsEditorials de la fulla revisionsEditorialsDelNavegador.js
+     (trasllat literal, reexportada amb els mateixos noms des de revisionsEditorials.js), i l'escriptura al
+     servidor, amb seedRevisions.js, queda diferida. Mesura del build real (261115): arrencada estàtica de
+     1.736.997 B a 1.728.861 B (−8.136 B). La fulla sí que hi és: el Mur la llig al primer pintat. */
+  for (const rel of ['src/data/revisionsEditorials.js', 'src/data/seedRevisions.js']) {
+    assert.ok(!modulsDArrencada.has(rel), `${rel}: no viatja a l'arrencada estàtica (R30)`);
+  }
+  assert.ok(modulsDArrencada.has('src/data/revisionsEditorialsDelNavegador.js'), 'la fulla del navegador viatja a l\'arrencada (R30)');
   assert.ok(!chunks.some((chunk) => chunk.moduleIds.map(relDe).includes('src/config/mapaBessonesPublic.js')),
     'el cens de bessones del web propi (main.jsx) no viatja al paquet: PedraSecaEmbed només instal·la el salvavides amb política de mitjans');
   const css = (chunk) => chunk.moduleIds.some((id) => id.includes(`${path.sep}src${path.sep}css${path.sep}index.css`));

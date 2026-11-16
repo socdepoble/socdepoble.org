@@ -74,6 +74,52 @@ describe('ordre E · l’ordre «/» Imatge avisa pel canal de la capçalera', (
     expect(cadena.setImage).toHaveBeenCalledWith({ src: CURT, alt: 'gran.jpg' });
   });
 
+  /* Onada R30 · A2-LLEI06 · L'input amagat del selector penja de la capa de dalt de l'editor
+     (PageFrame.capaDeDalt): encastat, la .sdp-root de l'arrel ombra; a la SPA, el <body> de sempre. */
+  function triaIRecordaElPare(fitxer, pares) {
+    vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function tria() {
+      pares.push(this.parentNode);
+      Object.defineProperty(this, 'files', { value: [fitxer], configurable: true });
+      this.dispatchEvent(new Event('change'));
+    });
+  }
+
+  test('encastat, l’input penja de la .sdp-root de l’arrel ombra i mai del <body> de l’amfitrió', async () => {
+    const host = document.createElement('soc-de-poble');
+    document.body.appendChild(host);
+    const ombra = host.attachShadow({ mode: 'open' });
+    const arrel = document.createElement('div');
+    arrel.className = 'sdp-root';
+    const dom = document.createElement('div');
+    arrel.appendChild(dom);
+    ombra.appendChild(arrel);
+    const pares = [];
+    triaIRecordaElPare(foto(), pares);
+    const { editor, cadena } = editorFals();
+    editor.view = { dom };
+    await ordreImatge({}).executa({ editor, range: { from: 1, to: 2 } });
+    expect(pares).toHaveLength(1);
+    expect(pares[0]).toBe(arrel);
+    expect(cadena.setImage).toHaveBeenCalledWith({ src: CURT, alt: 'arbre.jpg' });
+    // Triat el fitxer, l'input se'n va.
+    expect(ombra.querySelector('input[type="file"]')).toBeNull();
+    expect(document.body.querySelector('input[type="file"]')).toBeNull();
+    host.remove();
+  });
+
+  test('a la SPA, fora de l’encastat, l’input penja del <body> de sempre', async () => {
+    const dom = document.createElement('div');
+    document.body.appendChild(dom);
+    const pares = [];
+    triaIRecordaElPare(foto(), pares);
+    const { editor } = editorFals();
+    editor.view = { dom };
+    await ordreImatge({}).executa({ editor, range: { from: 1, to: 2 } });
+    expect(pares).toHaveLength(1);
+    expect(pares[0]).toBe(document.body);
+    dom.remove();
+  });
+
   test('sense onToast, el de sempre: cap avís per a un fitxer que no és imatge i un console.warn per al rebuig', async () => {
     const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
     triaRa(foto('application/pdf', 'nota.pdf'));

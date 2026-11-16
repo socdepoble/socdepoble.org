@@ -220,7 +220,7 @@ test('R22.3 · sostres de volum per compte sobre PostgreSQL 18.6 real', { timeou
       const crea = (slug, nom) => actor(db, R, "select (public.create_organization($1,'company',$2,$3)->>'id') as id", [TOWN, nom, slug]);
       const disfressats = [
         ['r22-3-u-guionet', 'Ajunta­ment de la Prova'],
-        ['r22-3-u-zwsp', 'Poli​cia Local'],
+        ['r22-3-u-zwsp', 'Poli\u200Bcia Local'],
         ['r22-3-u-nfd', 'Policía Local'],
         ['r22-3-u-nbsp', 'Guardia Civil del Poble'],
         ['r22-3-u-doble', 'Casa de  la Vila'],
@@ -287,7 +287,7 @@ test('R22.3 · sostres de volum per compte sobre PostgreSQL 18.6 real', { timeou
         ['r24-dorg-r-jutjat', 'El Jutjat de Pau'],
         ['r24-dorg-r-ample', 'Ｌａ Ｇｅｎｅｒａｌｉｔａｔ'],
         ['r24-dorg-r-ciril', 'L’Аjuntament de la Prova'],
-        ['r24-dorg-r-zwsp', 'La Poli​cia Local'],
+        ['r24-dorg-r-zwsp', 'La Poli\u200Bcia Local'],
         ['r24-dorg-r-guionet', 'El Consis­tori Nou'],
         ['ajuntament-de-la-prova', 'Forn Nou'],
         ['l-ajuntament-nou', 'Forn Nou']

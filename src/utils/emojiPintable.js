@@ -29,7 +29,7 @@ export const EMOJI_DE_REFERENCIA = '\u{1F600}';
 /* Un no-caràcter: cap tipus de lletra no el porta, sempre és tofu. */
 const TOFU_DE_REFERENCIA = '\u{1FFFD}';
 /* Una seqüència que no és RGI: sempre es pinta en dos glifs. */
-const PARELL_PARTIT = '\u{1F600}‍\u{1F600}';
+const PARELL_PARTIT = '\u{1F600}\u200D\u{1F600}';
 /* Tolerància de l'amplada d'un glif d'emoji respecte del de referència. */
 const MARGE = 0.25;
 const CAP = Object.freeze([]);

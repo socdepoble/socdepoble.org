@@ -19,6 +19,8 @@ DO $guard$ BEGIN
  -- Cada migració nova, o cada canvi en els bytes d'una migració, necessita un pin exacte nou.
  -- Onada R29 hi afig 20261115170000 (quotes, RLS i consens): el pin del catàleg complet passa a 113 i
  -- el de 112 deixa de valer, com el de 111 a la R28 (el Node 0 l'haurà d'aplicar abans d'instal·lar POSSE).
+ -- Onada R30 hi afig 20261115230000 (CAS de la curadoria WordPress): el pin del catàleg complet passa a 114
+ -- i el de 113 deixa de valer.
  -- A count alone cannot prove a migration identity or its source bytes.
  OR NOT EXISTS(
  SELECT 1 FROM(VALUES
@@ -33,7 +35,7 @@ DO $guard$ BEGIN
 (85,'c068a25593a05717070adc14f32d9d4c95762d15f3bb3facd7b622c10224ee5b'),
 (85,'33070384775ba945ca7a464fda17c9cafb450f954fa96585eba1097cc96f857e'),
 (86,'2dee56621a634f1699b2124a19f35923c82686e18a0b9e2a4fa5c7b762ea2eab'),
-(113,'e28b0846ee2c1f345d80fb3b0441b7a9e3fee9711ca6dee5e40841d96f49a7c5')
+(114,'9072d6ee39c18ff2156573d2cbf0fa6a815b1e5c4fd3a3073fd158beac3d1fd5')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

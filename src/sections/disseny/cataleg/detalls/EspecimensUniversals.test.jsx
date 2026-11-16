@@ -224,7 +224,9 @@ describe('EspecimenDivisor', () => {
   it('el Divisor real (hr i amb text) i el redimensionador que es mou amb el teclat', () => {
     const arrel = pinta(EspecimenDivisor);
     expect(arrel.querySelector('hr.sdp-divisor')).not.toBeNull();
-    expect(arrel.querySelector('.sdp-divisor--amb-text').getAttribute('role')).toBe('separator');
+    /* Onada R30 · T3-VOC · La variant amb text és el div.sdp-divisor (sense la classe forastera --amb-text). */
+    expect(arrel.querySelector('div.sdp-divisor').getAttribute('role')).toBe('separator');
+    expect(arrel.querySelector('div.sdp-divisor').textContent).toBe('O bé');
     const vora = screen.getByRole('separator', { name: 'Redimensionar la columna de mostra' });
     expect(vora.getAttribute('aria-valuenow')).toBe('192');
     fireEvent.keyDown(vora, { key: 'ArrowRight' });

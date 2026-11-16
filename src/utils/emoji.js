@@ -18,7 +18,7 @@ export const EMOTICONA_PER_DEFECTE = '🪶';
 const PRESENTACIO_EMOJI = /\p{Emoji_Presentation}|️/u;
 /* El mateix criteri sense segmentador, sobre la seqüència inicial sencera
    (bandera, ZWJ, to de pell, tecla): tallada, pintaria mig emoji («🇪»). */
-const SEQUENCIA_EMOJI = /^(?:\p{Regional_Indicator}{2}|(?:\p{Emoji_Presentation}|\p{Emoji}️)\p{Emoji_Modifier}?(?:‍(?:\p{Emoji_Presentation}|\p{Emoji}️?)\p{Emoji_Modifier}?)*⃣?)/u;
+const SEQUENCIA_EMOJI = /^(?:\p{Regional_Indicator}{2}|(?:\p{Emoji_Presentation}|\p{Emoji}️)\p{Emoji_Modifier}?(?:\u200D(?:\p{Emoji_Presentation}|\p{Emoji}️?)\p{Emoji_Modifier}?)*⃣?)/u;
 
 /* Un sol segmentador per a tota l'aplicació: el rail i les fitxes el
    consulten per cada document a cada pintat. */

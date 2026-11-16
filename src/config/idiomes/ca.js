@@ -3250,6 +3250,9 @@ export default {
   'section.xat.xifratge.senseClauValida': "Sense cap clau de seguretat vàlida",
   'section.xat.xifratge.clauRetirada': "Este aparell no troba cap clau de seguretat vàlida de {nom} que es puga confirmar. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Fins que n’hi haja una de vàlida, no s’hi pot escriure. Parla amb {nom} per a saber què ha passat.",
   'section.xat.xifratge.clauPropiaRetirada': "Este aparell no troba cap clau activa del teu compte: ni la seua ni cap altra. Pot ser que algú s’haja posat pel mig. Per seguretat, no s’hi pot escriure. Si no has sigut tu, avisa’ns.",
+  /* Onada R30 · R29-E2EE-02 · el missatge xifrat que este dispositiu no ha pogut obrir */
+  'section.xat.xifratge.tancat': "Missatge xifrat d’extrem a extrem en un altre dispositiu",
+  'section.xat.xifratge.noObert': "No s’ha pogut obrir este missatge xifrat",
   /* O4-CLAUDE-3 · D-18 (a): avís i confirmació del retall a Notes d’una conversa xifrada */
   'section.xat.xifratge.retall.avis': "La nota es guardarà al servidor sense xifratge d’extrem a extrem.",
   'section.xat.xifratge.retall.guarda': "Guardar",
@@ -3759,7 +3762,7 @@ export default {
   'section.control.rural.eliminaNota': "Eliminar nota",
   'section.control.rural.eliminaNotaAjuda': "S’elimina la versió que has obert. Una edició concurrent encara no observada es conservarà. L’historial es manté fins que esborres tot l’espai.",
   'section.control.rural.eliminaConfirma': "Elimina aquesta nota",
-  'section.control.rural.carpetaCrdtAjuda': "La carpeta conserva fitxers de canvis i versions Markdown immutables. Pots editar un Markdown; la seua base causal permet unir el canvi. Les versions antigues no es sobreescriuen.",
+  'section.control.rural.carpetaCrdtAjuda': "La carpeta guarda fitxers de canvis i versions Markdown que no se sobreescriuen. Pots editar un Markdown; la seua base causal permet unir el canvi. Passats 90 dies des que es confirmen, els fitxers antics sense editar es consoliden sense perdre cap canvi.",
   'section.control.rural.carpetaSenseBase': "S’han incorporat notes antigues sense base causal com a versions independents. Revisa els textos units.",
   'section.control.rural.dependenciesPendents': "Falten operacions predecessores. Conserva una còpia i importa els fitxers de canvis que falten.",
   'section.control.rural.crdtInvalid': "No s’ha pogut aplicar el canvi compartit. Comprova les dades i conserva una còpia abans de continuar.",

@@ -1201,8 +1201,11 @@ export function PageFrame({
       {hasHeader && (
         <header className={classesTitol} ref={capcaleraRef}>
           {accioPrincipal && accioPrincipalDalt ? <div className="page-title-accio page-title-accio--dalt">{accioPrincipal}</div> : null}
+          {/* Onada R30 · T3-VOC · La ranura del logotip es diu amb data-sdp-ranura: la
+              classe page-title-logo-personalitzat no tenia cap estil (classe forastera);
+              hi apunten DESTINS_FOCUS (UniversalEditorShell) i DESTI_FOCUS_RANURA (Perfil). */}
           {logoDeLaRanura ? (
-            <div className="page-title-logo-personalitzat">
+            <div data-sdp-ranura="logotip-personalitzat">
               {logoDeLaRanura}
             </div>
           ) : logoAutomatic ? (

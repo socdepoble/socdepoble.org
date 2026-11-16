@@ -5,9 +5,11 @@
  * transformació pura, sense React ni estat. Ací es pot llegir, raonar i provar
  * sense muntar mig arbre de components.
  *
- * SENSE DEPENDÈNCIES NOVES. Només `sanitize.js`, que ja és al projecte.
+ * SENSE DEPENDÈNCIES NOVES. Només `sanitize.js`, que ja és al projecte, i el
+ * predicat i el text del missatge xifrat tancat de `conversa.js` (Onada R30).
  */
 import { sanitizeHtml, netejaText } from '../../utils/sanitize.js';
+import { esXifratTancat, textXifratTancat } from './conversa.js';
 
 const ESCAPADES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
@@ -48,6 +50,23 @@ function horaDe(missatge, locale) {
   });
 }
 
+/* Onada R30 · R29-E2EE-02 (retall cap al Bloc de Notes; kit Gemini lot_01, arbitrat per Claude) · Un
+   missatge xifrat que este dispositiu no ha pogut obrir no té cap text: abans, la nota en guardava una
+   cita buida, sense dir per què. Ara el missatge triat es conserva al seu lloc (el recompte de la
+   capçalera continua sent el de la tria) però MARCAT: el text serè de la bombolla, el mateix segons la
+   causa (textXifratTancat: «en un altre dispositiu» només quan hi falta la clau), en cursiva com la
+   làpida de la bombolla i mai com a paraules de l'autor ni amb el codi tècnic. Un esborrat mana, com a
+   Bombolla.jsx. La còpia de seguretat el deixa fora perquè és una dada que es pot restaurar; una nota
+   és un document per a llegir, i ometre'l en silenci li canviaria la tria a la persona. */
+function cosDelMissatge(missatge, t) {
+  const esborrat = Boolean(missatge.esborrat) || Boolean(missatge.esborratAl);
+  if (!esborrat && esXifratTancat(missatge)) {
+    const [clau, reserva] = textXifratTancat(missatge);
+    return `<em>${escapa(typeof t === 'function' ? t(clau, reserva) : reserva)}</em>`;
+  }
+  return escapa(missatge.text ?? missatge.content ?? '').replace(/\n/g, '<br />');
+}
+
 /**
  * Construïx la nota a partir dels missatges triats.
  *
@@ -55,9 +74,10 @@ function horaDe(missatge, locale) {
  * @param {object}   opcions.fil        Fil actiu (per al títol).
  * @param {object[]} opcions.missatges  Missatges triats, JA en ordre cronològic.
  * @param {string}   opcions.locale     'ca-ES' o 'es-ES'.
+ * @param {Function} [opcions.t]        Traductor: només per al text serè d'un xifrat tancat.
  * @returns {{title: string, folderId: string, content: string}}
  */
-export function construeixRetall({ fil, missatges, locale = 'ca-ES' }) {
+export function construeixRetall({ fil, missatges, locale = 'ca-ES', t = null }) {
   const nomFil = fil?.name || fil?.title || 'Conversa';
   const quants = missatges.length;
 
@@ -87,7 +107,7 @@ export function construeixRetall({ fil, missatges, locale = 'ca-ES' }) {
 
   const cos = missatges.map((m) => {
     const hora = horaDe(m, locale);
-    const text = escapa(m.text ?? m.content ?? '').replace(/\n/g, '<br />');
+    const text = cosDelMissatge(m, t);
     const signatura = hora ? `${escapa(autorDe(m))} · ${escapa(hora)}` : escapa(autorDe(m));
     return `<blockquote><p><strong>${signatura}</strong><br />${text}</p></blockquote>`;
   }).join('\n');

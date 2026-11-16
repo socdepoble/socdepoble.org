@@ -41,13 +41,17 @@ export function creaRevisionsEditorialsWpLocal(usuari, ara = () => new Date().to
       }
       comprovaSenyal(config);
       exigeixSessio();
+      const anterior = files.get(entrada.wpId);
+      if (entrada.actualitzatEsperat != null && (typeof entrada.actualitzatEsperat !== 'string' || !Number.isFinite(Date.parse(entrada.actualitzatEsperat)))) throw new TypeError('Versió editorial esperada invàlida.');
+      if ((anterior?.actualitzatA ?? null) !== (entrada.actualitzatEsperat ?? null)) throw Object.assign(new Error('La revisió ha canviat.'), { code: 'conflicte-versio' });
+      const instant = Math.max(Date.parse(String(ara())), anterior ? Date.parse(anterior.actualitzatA) + 1 : 0);
       const fila = Object.freeze({
         wpId: entrada.wpId,
         estat: entrada.estat,
         nota: entrada.nota ?? '',
         autoria: entrada.autoria ? entrada.autoria.trim() : 'Sóc de Poble',
         desti: entrada.desti ?? 'mur',
-        actualitzatA: String(ara())
+        actualitzatA: new Date(instant).toISOString()
       });
       files.set(fila.wpId, fila);
       return { ...fila };

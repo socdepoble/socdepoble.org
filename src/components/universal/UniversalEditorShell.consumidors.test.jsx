@@ -37,7 +37,7 @@ const arbre = (props = {}) => (
   </UniversalEditorShell>
 );
 const closca = (props) => render(arbre(props));
-const ranura = (container) => container.querySelector('header.page-title .page-title-logo-personalitzat');
+const ranura = (container) => container.querySelector('header.page-title [data-sdp-ranura="logotip-personalitzat"]');
 const hero = (container) => container.querySelector('.hero-image');
 const fills = (element) => [...element.children].map((e) => `${e.tagName}.${e.className}`);
 /* L'ajuda d'un botó d'imatge: la línia .sdp-camp__ajuda del seu mateix camp. */
@@ -340,7 +340,7 @@ describe('aria-describedby · la línia d’ajuda lligada al botó que tria la i
     for (const imatges of [{}, { heroImage: '/assets/h.webp', logoImage: '/assets/l.webp' }]) {
       const { container, unmount } = closca({ ...imatges, ajudaAmbImatge: AJUDA });
       if (imatges.heroImage) fireEvent.click(container.querySelector('img.sdp-hero__imatge'));
-      expect(container.querySelectorAll('.hero-image [aria-describedby], .page-title-logo-personalitzat [aria-describedby], .sdp-camp__ajuda[id]')).toHaveLength(0);
+      expect(container.querySelectorAll('.hero-image [aria-describedby], [data-sdp-ranura="logotip-personalitzat"] [aria-describedby], .sdp-camp__ajuda[id]')).toHaveLength(0);
       unmount();
     }
   });

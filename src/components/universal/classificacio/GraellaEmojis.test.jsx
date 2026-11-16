@@ -350,11 +350,11 @@ test('sense textNoReconegut, onTria rep el glif tal qual i no hi ha cap avís', 
    del banc de Chrome 156 a macOS (261030): un emoji, 32; el tofu, 20,28. */
 test('P1-06 · el que el navegador no sap pintar (tofu, seqüència partida) no es pinta; una família buida desapareix', async () => {
   const onTria = vi.fn();
-  const AMPLES = new Map([['\u{1FFFD}', 20.28], ['\u{1F600}‍\u{1F600}', 64], ['\u{1FAF9}', 20.28], ['\u{1FAF9}\u{1F3FB}', 52.28], ['\u{1F426}‍\u{1F525}', 64], ['\u{1F6D9}', 20.28]]);
+  const AMPLES = new Map([['\u{1FFFD}', 20.28], ['\u{1F600}\u200D\u{1F600}', 64], ['\u{1FAF9}', 20.28], ['\u{1FAF9}\u{1F3FB}', 52.28], ['\u{1F426}\u200D\u{1F525}', 64], ['\u{1F6D9}', 20.28]]);
   const potPintar = creaDetectorDePintat((text) => AMPLES.get(text) ?? 32);
   const grups = [
     { id: 'mans', nom: 'Mans', emojis: [['1FAF9', '\u{1FAF9}', 'leftwards pushing hand nou'], ['1F44B', '👋', 'waving hand'], ['1FAF9 1F3FB', '\u{1FAF9}\u{1F3FB}', 'nou: to clar']] },
-    { id: 'aus', nom: 'Aus', emojis: [['1F426 200D 1F525', '\u{1F426}‍\u{1F525}', 'phoenix']] },
+    { id: 'aus', nom: 'Aus', emojis: [['1F426 200D 1F525', '\u{1F426}\u200D\u{1F525}', 'phoenix']] },
     { id: 'llocs', nom: 'Llocs', emojis: [['1F345', '🍅', 'tomato']] }
   ];
   render(<GraellaEmojis carregaCataleg={cataleg(grups)} onTria={onTria} potPintar={potPintar} />);

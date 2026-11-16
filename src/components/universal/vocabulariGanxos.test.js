@@ -75,3 +75,70 @@ describe('V1 · classe-forastera: els quatre ganxos sense estil ja no són class
     expect(perfil).toContain('.sdp-editor-document [data-sdp-ranura="logotip"] button:not(:disabled)');
   });
 });
+
+/* Onada R30 · T3-VOC · Les quinze classes foranes que quedaven (línia base
+   .agents/deute/.vocabulari-deute.json, V1, a la base d'R30). Cap no tenia regla en
+   cap full de src/ (tampoc a public/, index.html ni wordpress-plugin/):
+     · catorze eren mortes i se'n van (els elements es queden igual);
+     · page-title-logo-personalitzat era un ganxo de focus i de proves: ara és
+       data-sdp-ranura="logotip-personalitzat", com les ranures del desplegable.
+   Llei del Píxel: una classe sense cap regla no pinta res. Els únics selectors que
+   miren l'atribut class sense nomenar-ne cap (:not([class]), [class=""]) són de
+   prosa (article.content-wrapper, .sdp-prose) o d'img/a/code/pre; cap element
+   tocat no hi entra (vegeu l'informe a1_classes_foranes). */
+const RETIRADES_R30 = Object.freeze([
+  { fitxer: 'src/app/guards/RequireAuth.jsx', classe: 'sdp-route-loading-screen' },
+  { fitxer: 'src/components/ErrorBoundary.jsx', classe: 'alert' },
+  { fitxer: 'src/components/PedraSeca/atoms/Divisor.jsx', classe: 'sdp-divisor--amb-text' },
+  { fitxer: 'src/components/PedraSeca/atoms/Divisor.jsx', classe: 'sdp-divisor__text' },
+  { fitxer: 'src/components/universal/PageFrame.jsx', classe: 'page-title-logo-personalitzat' },
+  { fitxer: 'src/components/universal/UniversalEditorShell.jsx', classe: 'sdp-estat' },
+  { fitxer: 'src/components/universal/UniversalEditorShell.jsx', classe: 'sdp-estat--error' },
+  { fitxer: 'src/components/universal/UniversalEditorShell.jsx', classe: 'sdp-estat__contenidor' },
+  { fitxer: 'src/components/universal/UniversalEditorShell.jsx', classe: 'sdp-estat__descripcio' },
+  { fitxer: 'src/components/universal/UniversalEditorShell.jsx', classe: 'sdp-estat__titol' },
+  { fitxer: 'src/components/universal/workspace/SlotErrorBoundary.jsx', classe: 'sdp-pre-wrap' },
+  { fitxer: 'src/components/universal/workspace/SlotErrorBoundary.jsx', classe: 'sdp-slot-error' },
+  { fitxer: 'src/components/universal/workspace/SlotErrorBoundary.jsx', classe: 'section-title' },
+  { fitxer: 'src/sections/profile/DetallAjust.jsx', classe: 'sdp-camp__check' },
+  { fitxer: 'src/sections/profile/DetallAjust.jsx', classe: 'sdp-form' }
+]);
+
+describe('Onada R30 · V1 · classe-forastera: les quinze classes sense regla ja no hi són', () => {
+  let escaneig;
+  beforeAll(() => { escaneig = escaneja(); }, 120000);
+  const id = ({ fitxer, classe }) => `classe-forastera|${fitxer}|${classe}`;
+
+  test('la porta de veres no en troba cap, i la línia base ja no n\'admet cap', () => {
+    expect(escaneig.vocab.size).toBeGreaterThan(1000);
+    const trobades = new Set(escaneig.infraccions
+      .filter((i) => i.regla === 'classe-forastera')
+      .map((i) => `classe-forastera|${normalitza(i.fitxer)}|${i.token}`));
+    expect(RETIRADES_R30.map(id).filter((x) => trobades.has(x))).toEqual([]);
+    const deute = JSON.parse(readFileSync(path.join(ARREL, '.agents/deute/.vocabulari-deute.json'), 'utf8'));
+    const admeses = new Set(deute['classe-forastera']?.identitats ?? []);
+    expect(RETIRADES_R30.map(id).filter((x) => admeses.has(x))).toEqual([]);
+  });
+
+  test('cap full de src/ pinta cap de les quinze (Llei del Píxel)', () => {
+    const css = fullsCss().map((f) => senseComentaris(readFileSync(path.join(ARREL, f), 'utf8'))).join('\n');
+    for (const { classe } of RETIRADES_R30) {
+      expect(css, classe).not.toMatch(new RegExp(`\\.${classe.replace(/-/g, '\\-')}(?![\\w-])`));
+    }
+  });
+
+  test('cap fitxer tocat no torna a escriure la classe, i la ranura del logotip de PageFrame porta el ganxo nou', () => {
+    for (const { fitxer, classe } of RETIRADES_R30) {
+      const codi = readFileSync(path.join(ARREL, fitxer), 'utf8');
+      expect(codi, `${fitxer} · ${classe}`).not.toMatch(new RegExp(`className=[^>]*["'\` ]${classe.replace(/-/g, '\\-')}["'\` ]`));
+    }
+    const marc = readFileSync(path.join(ARREL, 'src/components/universal/PageFrame.jsx'), 'utf8');
+    expect(marc).toContain('<div data-sdp-ranura="logotip-personalitzat">');
+    const closca = readFileSync(path.join(ARREL, 'src/components/universal/UniversalEditorShell.jsx'), 'utf8');
+    expect(closca.match(/\[data-sdp-ranura="logotip-personalitzat"\]/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(closca).not.toContain('.page-title-logo-personalitzat');
+    const perfil = readFileSync(path.join(ARREL, 'src/sections/profile/PerfilEditor.jsx'), 'utf8');
+    expect(perfil).toContain('.sdp-editor-document [data-sdp-ranura="logotip-personalitzat"] button:not(:disabled)');
+    expect(perfil).not.toContain('.page-title-logo-personalitzat');
+  });
+});

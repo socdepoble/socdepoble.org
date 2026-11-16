@@ -115,13 +115,22 @@ const clauDeNumero = (num) => fitxesDe(num).join('');
 const esCitable = (clau) => clau.length >= (/^\d+$/.test(clau) ? LLARGARIA_MINIMA_NUMERO_XIFRES : LLARGARIA_MINIMA_NUMERO);
 const nomesXifres = (fitxa) => /^\d+$/.test(fitxa);
 
+/* Una lletra A-Z o una xifra (el que pot formar una fitxa). */
+const esDeFitxa = (codi) => (codi >= 65 && codi <= 90) || (codi >= 48 && codi <= 57);
+
 /* Les fitxes del text i, per a cada una, si va enganxada a l'anterior per un signe (guió, barra o punt)
    sense cap espai: en «2099-07-15» el 15 hi va; en «Q27 0815 15/07», no. */
 function tallaText(text) {
   const net = senseAccents(text).toUpperCase();
   const fitxes = [];
   const enganxades = [];
-  for (const [, separador, fitxa] of net.matchAll(/([^A-Z0-9]*)([A-Z0-9]+)/g)) {
+  /* Onada R30 · A6-RX5 · La cua de signes sense cap fitxa darrere no entra mai en cap
+     coincidència i es lleva abans: l'expressió la tornava a recórrer sencera des de
+     cada signe (temps quadràtic: dues cues de 40.000 signes, d'1,6 a 6,5 s). Les
+     coincidències i les seues posicions són les mateixes (linealitat.test.js). */
+  let fi = net.length;
+  while (fi > 0 && !esDeFitxa(net.charCodeAt(fi - 1))) fi -= 1;
+  for (const [, separador, fitxa] of net.slice(0, fi).matchAll(/([^A-Z0-9]*)([A-Z0-9]+)/g)) {
     enganxades.push(fitxes.length > 0 && !/\s/.test(separador));
     fitxes.push(fitxa);
   }

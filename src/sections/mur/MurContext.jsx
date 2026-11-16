@@ -19,7 +19,9 @@ import {
   subscriuPublicacionsEsborrades,
   versioPublicacionsEsborrades
 } from '../../data/publicacionsEsborrades.js';
-import { revisaLlista, subscriuRevisionsEditorials, versioRevisionsEditorials } from '../../data/revisionsEditorials.js';
+/* Onada R30 · A4 · De la fulla del navegador (els mateixos noms que reexporta revisionsEditorials.js):
+   l'escriptura al servidor i seedRevisions.js no viatgen a l'arrencada del paquet. */
+import { revisaLlista, subscriuRevisionsEditorials, versioRevisionsEditorials } from '../../data/revisionsEditorialsDelNavegador.js';
 import { portaMarcaProjeccioCataleg } from '../../data/marcaProjeccioCataleg.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';

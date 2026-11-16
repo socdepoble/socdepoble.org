@@ -11,6 +11,7 @@ import {
 } from '../../../components/PedraSeca/index.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { AvisOperacio } from './comu.jsx';
+import { useUnaVegada } from './punt.js';
 import { detallDeLinia, euros } from './vestits.js';
 import { brutLinia, totalLinia } from '../nucli/linia.js';
 
@@ -29,7 +30,13 @@ function Formulari({ comanda, linia, onFet }) {
   const [valor, setValor] = useState(0);
   const [motiu, setMotiu] = useState('');
   const [aAnullar, setAAnullar] = useState(linia.quantitat);
-  const fet = (resultat) => resultat.then((r) => { if (r.ok) onFet(); });
+  /* Onada R30 · R30-BAR-03 · Una operació per gest (useUnaVegada, com els pagaments de BAR-R5): dos
+     tocs seguits a «Anul·la» unes unitats d'una línia marxada n'anul·laven el doble. */
+  const [, unaVegada] = useUnaVegada();
+  const fet = (operacio) => unaVegada(async () => {
+    const r = await operacio();
+    if (r.ok) onFet();
+  });
   const campMotiu = (
     <Camp etiqueta="Motiu" ajuda="Queda al tancament del torn." obligatori>
       <CampText value={motiu} maxLength={80} onChange={(event) => setMotiu(event.target.value)} />
@@ -43,8 +50,8 @@ function Formulari({ comanda, linia, onFet }) {
       {accio === 'quantitat' ? (
         <>
           <TeclatNumeric mode="quantitat" etiqueta="Unitats" valor={quantitat} onCanvi={setQuantitat} maxim={999}
-            onAccepta={(q) => fet(accions.canviaQuantitat(comanda.id, linia.id, q))} textAccepta="Desa la quantitat" />
-          <Boto varietat="perill" onClick={() => fet(accions.canviaQuantitat(comanda.id, linia.id, 0))}>Lleva la línia</Boto>
+            onAccepta={(q) => fet(() => accions.canviaQuantitat(comanda.id, linia.id, q))} textAccepta="Desa la quantitat" />
+          <Boto varietat="perill" onClick={() => fet(() => accions.canviaQuantitat(comanda.id, linia.id, 0))}>Lleva la línia</Boto>
         </>
       ) : null}
       {accio === 'nota' ? (
@@ -52,7 +59,7 @@ function Formulari({ comanda, linia, onFet }) {
           <Camp etiqueta="Nota per a la barra o la cuina">
             <AreaText files={2} maxLength={80} value={nota} onChange={(event) => setNota(event.target.value)} />
           </Camp>
-          <Boto varietat="primari" onClick={() => fet(accions.canviaNota(comanda.id, linia.id, nota))}>Desa la nota</Boto>
+          <Boto varietat="primari" onClick={() => fet(() => accions.canviaNota(comanda.id, linia.id, nota))}>Desa la nota</Boto>
         </>
       ) : null}
       {accio === 'descompte' ? (
@@ -63,8 +70,8 @@ function Formulari({ comanda, linia, onFet }) {
             etiqueta={tipus === 'percent' ? 'Percentatge' : 'Import del descompte'} valor={valor} onCanvi={setValor} />
           {campMotiu}
           <Fila gap={2}>
-            <Boto varietat="primari" disabled={valor < 1} onClick={() => fet(accions.descompte(comanda.id, linia.id, { tipus, valor, motiu }))}>Aplica el descompte</Boto>
-            {linia.descompte ? <Boto onClick={() => fet(accions.descompte(comanda.id, linia.id, null))}>Lleva el descompte</Boto> : null}
+            <Boto varietat="primari" disabled={valor < 1} onClick={() => fet(() => accions.descompte(comanda.id, linia.id, { tipus, valor, motiu }))}>Aplica el descompte</Boto>
+            {linia.descompte ? <Boto onClick={() => fet(() => accions.descompte(comanda.id, linia.id, null))}>Lleva el descompte</Boto> : null}
           </Fila>
         </>
       ) : null}
@@ -72,7 +79,7 @@ function Formulari({ comanda, linia, onFet }) {
         <>
           <p>{`La línia passa a 0 i queda com a convidada (${euros(brutLinia(linia))}).`}</p>
           {campMotiu}
-          <Boto varietat="primari" onClick={() => fet(accions.convida(comanda.id, linia.id, motiu))}>Convida</Boto>
+          <Boto varietat="primari" onClick={() => fet(() => accions.convida(comanda.id, linia.id, motiu))}>Convida</Boto>
         </>
       ) : null}
       {accio === 'anulla' ? (
@@ -80,7 +87,7 @@ function Formulari({ comanda, linia, onFet }) {
           <TeclatNumeric mode="quantitat" etiqueta="Unitats a anul·lar" valor={aAnullar} onCanvi={setAAnullar} maxim={linia.quantitat} />
           {campMotiu}
           <Boto varietat="perill" disabled={aAnullar < 1}
-            onClick={() => fet(accions.anulla(comanda.id, linia.id, { motiu, quantitat: aAnullar }))}>Anul·la</Boto>
+            onClick={() => fet(() => accions.anulla(comanda.id, linia.id, { motiu, quantitat: aAnullar }))}>Anul·la</Boto>
         </>
       ) : null}
     </Pila>

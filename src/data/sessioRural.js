@@ -2,7 +2,7 @@
 import { creaMagatzemAtomicRural, creaPersistenciaLocalRural, copiaJsonRural, normalitzaAbastRural } from './persistenciaLocalRural.js';
 import { creaCuaOperacionsOffline, verifyOfflineQueueChain } from './cuaOperacionsOffline.js';
 import { consolidaOperacionsEmergencia, normalitzaOperacioEmergencia, exportaDeltaEmergenciaRural, importaDeltaEmergenciaRural } from './pontEmergenciaRural.js';
-import { calculaPlaSincronitzacioVault, exportaPaquetVaultFallback, importaPaquetVaultFallback, sincronitzaAmbDirectoryHandle, sincronitzaCrdtAmbDirectoryHandle } from './sincronitzadorCarpetaLocal.js';
+import { calculaPlaSincronitzacioVault, exportaPaquetVaultFallback, importaPaquetVaultFallback, sincronitzaAmbDirectoryHandle, sincronitzaCrdtAmbDirectoryHandle, esEntradaAckCrdtVault, esAckPlausibleCrdtVault } from './sincronitzadorCarpetaLocal.js';
 import { estatCrdtRuralBuit, normalitzaCrdtRural, fusionaCrdtRural, projectaCrdtRural, baseNotaCrdtRural, canviaCrdtRural } from './crdtRural.js';
 import { canonitzaJsonJcs, sha256Hex, codificaBase58Btc } from './federacio/portabilitatFediversity.js';
 
@@ -11,6 +11,13 @@ const DISPOSITIU = 'mode-rural:dispositiu';
 const COLLECCIONS = 'colleccions';
 const CLAU_CRDT = 'mode-rural:crdt';
 const ESQUEMA_CRDT_PERSISTIT = 'sdp.rural.crdt-state.v1';
+/* Onada R30 · PF-03 · ACK de les entrades de carpeta CRDT (nom → primera confirmació ISO).
+   Perdre'n un només endarrerix una compactació: mai la fa insegura. El registre viu al mateix
+   fitxer OPFS atòmic que l'estat CRDT: cada entrada ocupa uns 110 B i la fita (una carpeta
+   plena, 1.000 fitxers, més un marge per a una altra) el deixa en uns 130 KB dels 4 MB. */
+const CLAU_ACKS_CARPETA = 'mode-rural:crdt-carpeta-acks';
+const ESQUEMA_ACKS_CARPETA = 'sdp.rural.crdt-vault-acks.v1';
+const MAX_ACKS_CARPETA = 1200;
 export const ESQUEMA_PAQUET_CRDT_RURAL = 'sdp.rural.crdt-bundle.v1';
 const AUTOR_LOCAL = 'Dispositiu local';
 const errorRural = (code, message) => Object.assign(new Error(message), { code });
@@ -281,6 +288,32 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
     vigent(); await desaFusioNotes(pla.notesResultants, snap.pending.nextSeq - 1, snap.pending.nodeId);
     return estat();
   }
+  /* Un ACK anterior a l'època del sincronitzador o posterior a ara (rellotge mal posat quan es va
+     anotar) no compta: cau del registre i la confirmació següent el torna a anotar amb l'hora d'ara. */
+  function acksCarpetaDe(raw, araMs) {
+    const acks = Object.create(null);
+    if (raw?.schema !== ESQUEMA_ACKS_CARPETA || !raw.acks || typeof raw.acks !== 'object' || Array.isArray(raw.acks)) return acks;
+    for (const [nom, marca] of Object.entries(raw.acks)) if (esEntradaAckCrdtVault(nom) && esAckPlausibleCrdtVault(marca, araMs)) acks[nom] = marca;
+    return acks;
+  }
+  /* Onada R30 · PF-03 · L'ACK s'anota DESPRÉS del commit local (importaCrdt): una entrada
+     llegida o escrita en una sincronització que no ha arribat al magatzem no en té. Es conserva
+     la primera hora; les retirades ixen. Si cal retallar, primer les entrades d'esta carpeta i
+     després les més antigues: una confirmació perduda només torna a començar els 90 dies. */
+  function registraAcksCarpeta(plan) {
+    const araMs = Number(ara()), marca = new Date(araMs).toISOString(), presents = new Set(plan.confirmats);
+    const retirades = [...(plan.compactacio?.batchesRetirats ?? []), ...(plan.compactacio?.projeccionsRetirades ?? [])];
+    return store.actualitzaLot([CLAU_ACKS_CARPETA], states => {
+      const anterior = states[CLAU_ACKS_CARPETA], acks = acksCarpetaDe(anterior, araMs);
+      for (const nom of retirades) delete acks[nom];
+      for (const nom of presents) if (esEntradaAckCrdtVault(nom) && !Object.hasOwn(acks, nom)) acks[nom] = marca;
+      const ordenades = Object.entries(acks).sort(([a, x], [b, y]) => (presents.has(b) - presents.has(a)) || (x < y ? -1 : x > y ? 1 : a < b ? -1 : a > b ? 1 : 0));
+      const nous = Object.fromEntries(ordenades.slice(0, MAX_ACKS_CARPETA));
+      // Sense cap ACK nou ni cap retirada no es reescriu el magatzem.
+      if (anterior?.schema === ESQUEMA_ACKS_CARPETA && canonitzaJsonJcs(nous) === canonitzaJsonJcs(anterior.acks)) return { next: {}, value: false };
+      return { next: { [CLAU_ACKS_CARPETA]: { revision: (anterior?.revision ?? 0) + 1, schema: ESQUEMA_ACKS_CARPETA, acks: nous } }, value: true };
+    }, config);
+  }
   async function sincronitzaCarpeta(handle) {
     if (usaCrdt) {
       if (motor.motor !== 'opfs') throw errorRural('RURAL_CRDT_OPFS_REQUIRED', 'La carpeta CRDT compartida requerix el perfil OPFS amb Web Locks.');
@@ -288,17 +321,24 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
         const snap = await captura();
         // El mateix pany que usa el purge manté este export abans o després
         // de la purga, mai enmig. El callback no reentra al store.
-        const plan = await store.ambPany([DISPOSITIU, COLLECCIONS, CLAU_CRDT, snap.qkey], async (states, signal) => {
+        const plan = await store.ambPany([DISPOSITIU, COLLECCIONS, CLAU_CRDT, snap.qkey, CLAU_ACKS_CARPETA], async (states, signal) => {
           if ((states[snap.qkey]?.revision ?? 0) !== (snap.raw[snap.qkey]?.revision ?? 0)
             || (states[CLAU_CRDT]?.revision ?? 0) !== (snap.raw[CLAU_CRDT]?.revision ?? 0)
             || (states[COLLECCIONS]?.revision ?? 0) !== (snap.raw[COLLECCIONS]?.revision ?? 0)) return { retry: true };
-          const result = await sincronitzaCrdtAmbDirectoryHandle(handle, { crdt: snap.crdt, signal, isScopeActive: abastActiu });
+          const result = await sincronitzaCrdtAmbDirectoryHandle(handle, { crdt: snap.crdt, signal, isScopeActive: abastActiu, acks: acksCarpetaDe(states[CLAU_ACKS_CARPETA], Number(ara())), ara });
           return { retry: false, ...result };
         }, config);
         if (plan.retry) continue;
         const paquet = { schema: ESQUEMA_PAQUET_CRDT_RURAL, createdAt: new Date(ara()).toISOString(), crdt: plan.crdt, sha256: sha256Hex(canonitzaJsonJcs(plan.crdt)) };
         const actual = await importaCrdt(paquet);
-        return { ...actual, sincronitzacio: { batchesCreats: plan.batchesCreats, projeccions: plan.projeccions.length, incorporacionsSenseBase: plan.incorporacionsSenseBase } };
+        /* Onada R30 · PF-03 · La sincronització ja està confirmada (carpeta i magatzem): una fallada en
+           anotar l'ACK només endarrerix la compactació i es declara a `errorAck`, sense rebutjar. */
+        let errorAck = null;
+        try { await registraAcksCarpeta(plan); }
+        catch (e) { errorAck = typeof e?.code === 'string' ? e.code : typeof e?.name === 'string' ? e.name : 'RURAL_CRDT_VAULT_ACK'; }
+        const c = plan.compactacio;
+        return { ...actual, sincronitzacio: { batchesCreats: plan.batchesCreats, projeccions: plan.projeccions.length, incorporacionsSenseBase: plan.incorporacionsSenseBase,
+          compactacio: { instantania: c.instantania, batchesRetirats: c.batchesRetirats.length, projeccionsRetirades: c.projeccionsRetirades.length, error: c.error, errorAck } } };
       }
       throw errorRural('RURAL_CONFLICTE', 'La cua canvia contínuament; torna a sincronitzar la carpeta.');
     }
@@ -341,8 +381,8 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
   }
   async function esborraTot() {
     vigent(); const qkey = keyCua();
-    await store.actualitzaLot([DISPOSITIU, COLLECCIONS, qkey, ...(usaCrdt ? [CLAU_CRDT] : [])], states => ({ next: {
-      [DISPOSITIU]: { revision: states[DISPOSITIU].revision + 1, id: crypto.randomUUID() }, [COLLECCIONS]: null, [qkey]: null, ...(usaCrdt ? { [CLAU_CRDT]: null } : {})
+    await store.actualitzaLot([DISPOSITIU, COLLECCIONS, qkey, ...(usaCrdt ? [CLAU_CRDT, CLAU_ACKS_CARPETA] : [])], states => ({ next: {
+      [DISPOSITIU]: { revision: states[DISPOSITIU].revision + 1, id: crypto.randomUUID() }, [COLLECCIONS]: null, [qkey]: null, ...(usaCrdt ? { [CLAU_CRDT]: null, [CLAU_ACKS_CARPETA]: null } : {})
     }, value: true }), config);
     notificaGeneracio(); close(); return true;
   }

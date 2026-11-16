@@ -495,7 +495,7 @@ describe.skipIf(!PHP)('seo.php amb PHP real (fixture sense WordPress)', () => {
   });
 
   test('D-19 · forma estricta del paràmetre: el valor ja ha de ser la ruta sanejada; el que caldria corregir es rebutja sencer', () => {
-    for (const sdp of [' /mur', '/mur ', '\n/mur', '/mur#comentaris', '/mur?dia=2#x', '#/mur', '/mur ', '/mur﻿', '', '/%2e%2e/mur', '/mur/%2E']) {
+    for (const sdp of [' /mur', '/mur ', '\n/mur', '/mur#comentaris', '/mur?dia=2#x', '#/mur', '/mur ', '/mur\uFEFF', '', '/%2e%2e/mur', '/mur/%2E']) {
       const r = executa({ filtre: true, get: { sdp } });
       expect(r.ruta, JSON.stringify(sdp)).toBe('');
       expect(r.fila).toBeNull();

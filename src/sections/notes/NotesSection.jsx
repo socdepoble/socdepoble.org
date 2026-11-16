@@ -21,6 +21,7 @@ import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { modeDeDadesResolt } from './autoriaNota.js';
 import { iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
 import { useCarpetesCreades } from '../../components/universal/classificacio/carpetesCreades.js';
+import { useCarpetesDelBlocVisibles } from '../../components/universal/classificacio/migracioCarpetesLocals.js';
 import { LLAVORS_NOTA, esLlavorDeNota } from './llavorNota.js';
 import { ID_NOTA_BENVINGUDA, KIND_TUTORIAL, NOTA_TUTORIAL, itemTutorial, portaLaNotaTutorial, tutorialRetirada } from './notaTutorial.js';
 import { escriuSeleccio, llegixSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
@@ -457,12 +458,15 @@ function NotesSectionBase() {
      que es pinta: l'id és el que es desa i la llavor no es toca). */
   /* Onada R6 · Bloc 2 (P1-d) · Les carpetes creades en línia (per àmbit) també a la primera columna. */
   const carpetesLocals = useCarpetesCreades(scopeKey);
+  /* Onada R30 · PF-01 · La rèplica remota d'una carpeta local migrada, mentre cap nota no hi
+     apunta, no es pinta al costat de la local: la columna es queda igual (Llei del Píxel). */
+  const carpetesDelServidor = useCarpetesDelBlocVisibles(noteFolders, notes, scopeKey);
   const carpetes = useMemo(() => {
-    const base = opcionsDeCarpetes(noteFolders, t);
+    const base = opcionsDeCarpetes(carpetesDelServidor, t);
     const extres = carpetesLocals.filter((extra) => !base.some((c) => c.id === String(extra.id)))
       .map((extra) => ({ id: String(extra.id), nom: extra.nom, parentId: null }));
     return extres.length ? [...base, ...extres] : base;
-  }, [noteFolders, t, carpetesLocals]);
+  }, [carpetesDelServidor, t, carpetesLocals]);
   /* Totes les entrades de la navegació (carpetes, categories i etiquetes):
      la nota preparada hi pertany (itemPreparadaBase) i, des de la revisió de
      F4 (R6c), són les que l'espai de treball reconeix en una ?carpeta=. */

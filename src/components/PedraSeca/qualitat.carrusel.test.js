@@ -427,7 +427,8 @@ describe('la porta del vocabulari (tooling/gates/tractor-vocabulari.mjs), la de 
   test('V1, V2 i V3: cap infracció nova als fitxers propis (el full vell inclòs), i tota classe del carrusel és al vocabulari de la porta', () => {
     /* Sonda: la porta llig el vocabulari i escaneja el JSX (troba deute conegut). */
     expect(escaneig.vocab.size).toBeGreaterThan(1000);
-    expect(escaneig.infraccions.some((i) => i.regla === 'classe-forastera' && admesa(i))).toBe(true);
+    /* Onada R30 · T3-VOC · V1 ja és a zero: la sonda accepta el deute admés del JSX (V1 o V2). */
+    expect(escaneig.infraccions.some((i) => /^classe-(forastera|opaca)$/.test(i.regla) && admesa(i))).toBe(true);
     expect([...new Set(classesNomenades(llig(COMPONENT)))].filter((c) => !escaneig.vocab.has(c))).toEqual([]);
     expect(noves.filter((i) => [...CODI_PROPI, FULL_ANTIC].includes(i.fitxer)).map(identitat)).toEqual([]);
   });

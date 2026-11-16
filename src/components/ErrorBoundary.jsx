@@ -21,8 +21,10 @@ export class ErrorBoundary extends React.Component {
          dades de la persona: en pantalla, només en DEV (o amb mostraDetall),
          el mateix criteri que RouteErrorBoundary. */
       const detall = this.props.mostraDetall ?? Boolean(import.meta.env.DEV);
+      /* Onada R30 · T3-VOC · Sense la classe «alert»: cap full no l'estilava
+         (classe forastera) i l'arrel no té cap avantpassat de prosa. */
       return (
-        <div className="alert">
+        <div>
           <h2>No s'ha pogut carregar Sóc de Poble</h2>
           <p>Torna a carregar la pàgina. Si continua, avisa l'administrador del lloc.</p>
           {detall ? <pre>{this.state.error?.toString()}</pre> : null}

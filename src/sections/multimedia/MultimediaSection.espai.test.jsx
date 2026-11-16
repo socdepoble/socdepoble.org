@@ -870,21 +870,21 @@ describe('privadesa: ?seccio= i noms', () => {
   });
 
   test('un nom amb U+202E es pinta amb «�» a la Columna 2 i a l’H1 (cap extensió falsejada)', async () => {
-    const { bib } = ambVolum({}, { 'RTL_‮gnp.md': '# Truc\n' });
+    const { bib } = ambVolum({}, { 'RTL_\u202Egnp.md': '# Truc\n' });
     munta('/multimedia', { magatzemCarpetes: bib, entorn: entorn() });
     fireEvent.click(await arbre().findByRole('button', { name: 'Carpeta local · Volums muntats' }));
     const fila = await waitFor(() => llista().getByRole('button', { name: (n) => n.startsWith('RTL_�gnp.md') }));
-    expect(fila.textContent).not.toContain('‮');
+    expect(fila.textContent).not.toContain('\u202E');
     act(() => fila.click());
     await waitFor(() => expect(detall().getByRole('heading', { level: 1, name: 'RTL_�gnp.md' })).toBeTruthy());
-    expect(columna('app-grid-main').textContent).not.toContain('‮');
+    expect(columna('app-grid-main').textContent).not.toContain('\u202E');
     /* Es pot llegir, però el Mas no el mou, ni el reanomena ni l'esborra: cap operació. */
     expect(detall().queryByRole('button', { name: 'Moure' })).toBeNull();
     expect(detall().queryByRole('button', { name: 'Eliminar del disc' })).toBeNull();
   });
 
   test('una carpeta amb un caràcter invisible al nom es pot obrir, però sense «Accions de carpeta»', async () => {
-    const { bib } = ambVolum({}, { 'noms‮rars': { 'a.md': '# A\n' } });
+    const { bib } = ambVolum({}, { 'noms\u202Erars': { 'a.md': '# A\n' } });
     munta('/multimedia', { magatzemCarpetes: bib, entorn: entorn() });
     fireEvent.click(await arbre().findByRole('button', { name: 'Carpeta local · Volums muntats' }));
     fireEvent.click(await arbre().findByRole('button', { name: 'noms�rars' }));

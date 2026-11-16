@@ -74,7 +74,7 @@ const titol = () => within(capcalera()).getByRole('heading', { level: 1 });
 const abansDe = (el, despres) => Boolean(el.compareDocumentPosition(despres) & Node.DOCUMENT_POSITION_FOLLOWING);
 /* Onada 4 (retallador senzill, 261008) · Els selectors de la fitxa
    (useImatgeDeFitxa), germans de l'editor; el de la ranura de la closca
-   (dins de .page-title-logo-personalitzat) ja no s'obri. */
+   (dins de [data-sdp-ranura="logotip-personalitzat"]) ja no s'obri. */
 const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
 /* Encàrrec d'harmonització (261018, ordre del Mestre: «la gestió d'imatges va
    dins d'Edició avançada») · En edició, la ranura de la closca, l'avatar redó i
@@ -99,7 +99,7 @@ const BOTONS_IMATGE = /^(Logotip|Avatar|Editar logotip|Canvia la teua imatge)$/;
 test('Onada 4 · una organització que no és la pilot: «Logotip» dins d’«Edició avançada», que obri el selector del logotip (cap diàleg intermedi)', () => {
   render(<PerfilEditor identitat={org('owner')} />);
   // Damunt de l'H1, cap ranura: la fitxa neta per a escriure.
-  expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+  expect(capcalera().querySelector('[data-sdp-ranura="logotip-personalitzat"]')).toBeNull();
   expect(within(capcalera()).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
   const details = obriEdicioAvancada();
   expect(details.querySelector('.sdp-edicio-avancada__titol').textContent).toBe('Edició avançada de la fitxa');
@@ -134,7 +134,7 @@ test('Onada 4 · una organització que no és la pilot: «Logotip» dins d’«E
 test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d’«Edició avançada» i res damunt de l’H1; el clic obri el retall de la imatge que ja hi ha', async () => {
   render(<PerfilEditor identitat={ambAvatar} />);
   expect(capcalera().querySelector('.page-title-avatar')).toBeNull();
-  expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+  expect(capcalera().querySelector('[data-sdp-ranura="logotip-personalitzat"]')).toBeNull();
   expect(capcalera().querySelector('img.page-title-logo')).toBeNull();
   expect(abansDe(barraTaronja(), desplegable())).toBe(true);
   expect(abansDe(desplegable(), titol())).toBe(true);
@@ -173,7 +173,7 @@ test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d
    (P1-58: després de la capçalera), que obri el mateix selector de l'avatar. */
 test('Onada 4 · una persona sense avatar: el cercle buit dins d’«Edició avançada», que obri el selector de l’avatar; «Capçalera», el seu', () => {
   render(<PerfilEditor identitat={jo} />);
-  expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+  expect(capcalera().querySelector('[data-sdp-ranura="logotip-personalitzat"]')).toBeNull();
   expect(within(capcalera()).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
   const details = obriEdicioAvancada();
   const boto = within(details).getByRole('button', { name: 'Posa un avatar' });
@@ -198,7 +198,7 @@ test('ordre E · l’entitat pilot: el logotip fix de Sóc de Poble damunt de l�
   const logos = capcalera().querySelectorAll('img.page-title-logo');
   expect([...logos].map((img) => img.className)).toEqual(['page-title-logo light-only', 'page-title-logo dark-only']);
   expect(abansDe(logos[0], titol())).toBe(true);
-  expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+  expect(capcalera().querySelector('[data-sdp-ranura="logotip-personalitzat"]')).toBeNull();
   expect(within(capcalera()).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
   /* Encàrrec d'harmonització (261018) · Tampoc cap ranura dins d'«Edició
      avançada», on ara viuria: només «Capçalera». */
@@ -220,7 +220,7 @@ test('Auditoria 261007 · l’entitat pilot amb un id UUID i el slug declarat: c
   const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
   expect(rutaDAutoria({ tipus: 'entitat', id: uuid })).toBe(`/empresa/${uuid}`);
   render(<PerfilEditor identitat={org('owner', { id: uuid, nom: 'Sóc de Poble', dades: { slug: ENTITAT_PILOT_SLUG } })} />);
-  expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+  expect(capcalera().querySelector('[data-sdp-ranura="logotip-personalitzat"]')).toBeNull();
   expect(capcalera().querySelector('input[type="file"]')).toBeNull();
   expect(within(capcalera()).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
   const logos = capcalera().querySelectorAll('img.page-title-logo');

@@ -654,7 +654,7 @@ describe('QA-A03 · la versió esperada d’un text es comprova dins de la cua, 
   });
 });
 
-const INVISIBLES = Object.freeze(['\u0000', '\u0007', '\u001f', '\u007f', '\u0085', '\u009f', '‪', '‮', '⁦', '⁩', '‏', '؜']);
+const INVISIBLES = Object.freeze(['\u0000', '\u0007', '\u001f', '\u007f', '\u0085', '\u009f', '\u202a', '\u202e', '\u2066', '\u2069', '\u200f', '\u061c']);
 
 describe('QA-A05 · cap ruta que canvia el disc porta invisibles; llegir-les i obrir-les, sí', () => {
   test.each(INVISIBLES.map((c) => [c.codePointAt(0).toString(16).padStart(4, '0').toUpperCase(), c]))('U+%s', async (_, c) => {

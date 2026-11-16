@@ -36,7 +36,7 @@ const escapa = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const tessela = (nom) => screen.getByRole('button', { name: new RegExp(`^${escapa(nom)}`) });
 const detall = (nom) => screen.findByRole('region', { name: nom });
 const indexDe = (dir, op, ruta) => dir.registre.findIndex(([o, r]) => o === op && (ruta === undefined || r === ruta));
-const BOM = '﻿';
+const BOM = '\uFEFF';
 
 describe('editor de text', () => {
   const ambNotes = (opcions = {}, extres = {}) => new CarpetaFalsa('_multimedia_de_poble', {

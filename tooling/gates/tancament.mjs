@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { esMain } from '../lib/arrel.mjs';
+import { CAMINS, esMain } from '../lib/arrel.mjs';
 /** --check (default) is read-only. --verify/--close are explicit state mutations. */
+import fs from 'node:fs';
 import path from 'node:path';
 import {withSignedLedger} from '../documental/ledger.mjs';
 import { spawnSync } from 'node:child_process';
@@ -32,6 +33,31 @@ export async function environmentChecks(root,scope='documents',{turnId=null}={})
   errors.push(...scc.errors.map(e=>`${e.code}: ${e.message} ${(e.affected_files||[]).join(', ')}`));
   return {valid:!errors.length,checks,errors};
 }
+// R30 · Títol Termodinàmic suggerit (camp informatiu, mai bloquejant): `aammdd_hhmm_rXX_slug_curt`,
+// derivat només del nom de l'última Acta Marmota de 10_actes. Mateix directori, mateix títol.
+export const ACTES_MARMOTA=CAMINS.actes;
+export const LLARGARIA_TITOL_XAT=70;
+const ACTA_MARMOTA=/^(\d{6})_(\d{4})_acta_marmota_([a-z0-9_]+)\.md$/;
+const PARAULES_DE_FARCIT=new Set(['acta','marmota','onada','i','de','del','dels','la','el','les','els','a','al','als','amb','per','en','d','l']);
+export function titolXatDesDeActa(nom) {
+  const m=ACTA_MARMOTA.exec(nom);
+  if(!m) return null;
+  const paraules=m[3].split('_').filter(Boolean);
+  const onada=paraules.find((p)=>/^r\d{1,3}$/.test(p));
+  let titol=[m[1],m[2],...(onada?[onada]:[])].join('_');
+  for(const p of paraules) {
+    if(p===onada||PARAULES_DE_FARCIT.has(p)) continue;
+    if(titol.length+1+p.length>LLARGARIA_TITOL_XAT) break;
+    titol+=`_${p}`;
+  }
+  return titol;
+}
+export function suggereixTitolXat(root) {
+  let entrades;
+  try { entrades=fs.readdirSync(path.join(root,ACTES_MARMOTA),{withFileTypes:true}); } catch { return null; }
+  const actes=entrades.filter((e)=>e.isFile()&&ACTA_MARMOTA.test(e.name)).map((e)=>e.name).sort();
+  return actes.length?titolXatDesDeActa(actes[actes.length-1]):null;
+}
 export async function checkClosure(root,id) {
   const before=inventory(root);
   const turnCheck=id?checkTurn(root,id):checkDocuments(root);
@@ -59,7 +85,7 @@ async function main() {
   return result;
   };
   const result=o.close ? await withSignedLedger(root,execute) : await execute();
-  console.log(JSON.stringify(result,null,2));
+  console.log(JSON.stringify({...result,chat_title_suggestion:suggereixTitolXat(root)},null,2));
   process.exitCode=result.valid?0:1;
 }
 if(esMain(import.meta.url)) {

@@ -14,9 +14,10 @@
  *     n'hi ha cap en cru).
  *  La llista de fitxers es va derivar de `git status --short` el 260929 (M i ??
  *  amb extensió .js/.jsx/.mjs sota src/ i tests/, i vite.standalone.config.js);
- *  src/data/wikiManifest.js queda fora perquè és generat. Una prova de
- *  diagnòstic torna a mirar git i avisa, sense tombar la bateria, si l'arbre
- *  porta fitxers d'este abast que la llista no nomena.
+ *  src/data/wikiManifest.js queda fora perquè és generat. Onada R30 ·
+ *  A3-ENX-01 · L'escombrada de caràcters val també per a tot l'abast (amb una
+ *  sola excepció, l'unidor dels emojis); la prova de diagnòstic que mirava git
+ *  i avisava de tot fitxer tocat fora de la llista, net o no, s'ha retirat.
  *  Cap import relatiu: tot es resol des de l'arrel del repositori. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -141,42 +142,30 @@ test('tots els fitxers del torn existixen i cap és generat', () => {
   assert.equal(new Set(JS_TORN).size, JS_TORN.length, 'la llista porta duplicats');
 });
 
-/* Diagnòstic: l'arbre de treball, ara. Un fitxer de l'abast que git veu tocat i
-   la llista no nomena es mostra en TODO (visible, sense tombar la bateria): en
-   un torn posterior pot ser feina d'un altre actor. Sense git, es salta. */
+/* L'abast del torn: els .js/.jsx/.mjs de src/ i tests/, i
+   vite.standalone.config.js, sense el manifest generat. Onada R30 · A3-ENX-01 ·
+   L'escombrada de caràcters el recorre sencer (al final del fitxer). Abans, una
+   prova de diagnòstic hi posava en TODO tot fitxer que git veia tocat i la llista
+   no nomenava: soroll de qualsevol torn posterior, sense cap criteri. */
 const DINS_DE_LABAST = (ruta) => (/^(src|tests)\/.+\.(js|jsx|mjs)$/.test(ruta) || ruta === 'vite.standalone.config.js') && !GENERATS.has(ruta);
+const DIRECTORIS_FORA = new Set(['node_modules', 'dist', 'dist-natiu', 'coverage', '.git', 'android', 'ios']);
 
-function tocatsSegonsGit() {
-  let eixida;
-  try {
-    eixida = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: ARREL, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-  } catch {
-    return null;
-  }
-  const rutes = [];
-  for (const linia of eixida.split('\n')) {
-    if (linia.length < 4) continue;
-    const estat = linia.slice(0, 2);
-    if (estat.includes('D')) continue;
-    let ruta = linia.slice(3);
-    if (ruta.includes(' -> ')) ruta = ruta.split(' -> ').pop();
-    if (ruta.startsWith('"') && ruta.endsWith('"')) ruta = ruta.slice(1, -1);
-    rutes.push(ruta);
-  }
-  return rutes;
+/** Tots els fitxers de l'abast que hi ha al disc (també els que git encara no
+ *  coneix), en camins relatius a l'arrel i ordenats. */
+function fitxersDeLAbast() {
+  const eixida = existix('vite.standalone.config.js') ? ['vite.standalone.config.js'] : [];
+  const camina = (dir) => {
+    if (!existix(dir)) return;
+    for (const e of fs.readdirSync(path.join(ARREL, dir), { withFileTypes: true })) {
+      const ruta = `${dir}/${e.name}`;
+      if (e.isDirectory()) { if (!DIRECTORIS_FORA.has(e.name)) camina(ruta); }
+      else if (e.isFile() && DINS_DE_LABAST(ruta)) eixida.push(ruta);
+    }
+  };
+  camina('src');
+  camina('tests');
+  return eixida.sort();
 }
-
-test('la llista del torn cobrix tot el que git veu tocat dins de l’abast (diagnòstic)', (t) => {
-  const tocats = tocatsSegonsGit();
-  if (tocats === null) { t.skip('git no disponible'); return; }
-  const llista = new Set(JS_TORN);
-  const sense = tocats.filter(DINS_DE_LABAST).filter((f) => !llista.has(f)).sort();
-  if (sense.length) {
-    t.todo(`${sense.length} fitxer(s) de l’abast tocats a l’arbre i fora de la llista del torn`);
-    for (const f of sense) t.diagnostic(f);
-  }
-  assert.deepEqual(sense, []);
-});
 
 /* ─────────────────────────────── ESLint ─────────────────────────────── */
 
@@ -441,4 +430,137 @@ test('cap fitxer del torn porta en cru caràcters de control, invisibles ni bidi
     for (const t of vetatsDe(llig(f))) trobats.push(`${f}:${t.linia}:${t.columna} ${hex(t.cp)}`);
   }
   assert.deepEqual(trobats, []);
+});
+
+/* ─────────────────────── L'abast sencer, no sols el torn ─────────────────────── */
+
+/* Onada R30 · A3-ENX-01 · El torn ad8ad186 es va tancar el 261001 i la seua
+   llista és congelada. El diagnòstic que hi havia ací posava en TODO tot fitxer
+   de l'abast que git veia tocat i la llista no nomenava: cada torn posterior amb
+   l'arbre brut hi apareixia sencer (117 fitxers a R29, 119 en la rèplica de
+   l'arbre de R29), nets o no, i la xifra es llegia com a deute de l'enxufe.
+   N'eren zero: només era una llista vella contra git. El criteri de la llista
+   que encara no cobria ningú és este, i ara val per a tot l'abast: cap fitxer
+   porta en cru caràcters de control, invisibles ni bidi (Trojan Source,
+   CVE-2021-42574). On calen, s'escriuen com a escapament \uXXXX dins de la
+   cadena o del regex: el valor és el mateix i la revisió els veu (17 fitxers
+   reescrits així el 261115, amb l'AST idèntic). L'única excepció és l'unidor
+   U+200D quan enganxa una seqüència d'emoji (la família, les professions): entre
+   dos pictogrames, o darrere d'un to de pell o del selector U+FE0F, és contingut.
+   Fora d'eixe context, un U+200D parteix un identificador en dos d'invisibles
+   (`esAdmin` i `esAdmin` + U+200D són dues variables: CVE-2021-42694), i entre dos
+   escapaments (`\u{1F600}` + U+200D + `\u{1F600}`) la revisió no el veu; s'escriu
+   com a \u200D, com ja feia src/services/veuIaiaService.js (set fitxers més
+   s'hi han posat el 261116, amb l'AST idèntic). Pel mateix motiu, un selector
+   de variació (U+FE00–U+FE0F) no pot anar enganxat a una lletra d'identificador
+   ni a una xifra que no fa tecla (1 + U+FE0F + U+20E3, la tecla u, sí que és
+   contingut); darrere d'un emoji, ho és. Límit conegut: U+2139, el signe
+   d'informació, és pictograma i lletra alhora, i es deixa passar. La llista del
+   torn, dalt, no en té cap.
+   Onada R30 · A3-ENX-01 (segon àrbitre, P2) · L'unidor i el selector no són
+   els únics invisibles que caben dins d'un identificador: també hi caben la
+   resta de punts de codi que són alhora Default_Ignorable_Code_Point i
+   ID_Continue. El més conegut és el farcit Hangul U+3164, que és ID_Start i fa
+   sencera una variable invisible (`const { a, ` + U+3164 + ` } = req.query`,
+   la porta del darrere que va publicar Certitude el 2021). Amb ell, U+115F,
+   U+1160 i U+FFA0, el CGJ U+034F, les vocals inherents khmer U+17B4 i U+17B5,
+   els selectors mongols U+180B–U+180D i U+180F, i el suplement de selectors
+   U+E0100–U+E01EF. Fins ara passaven. No n'hi ha cap a l'arbre, i on calguen
+   s'escriuen com a escapament. El conjunt es llig de les propietats Unicode
+   del motor, i la prova del detector el fixa: si una versió d'Unicode el
+   canvia, ho diu.
+   ESLint amb zero avisos sobre tot l'abast ja és la porta «Linter» de
+   run-portes.mjs (npm run lint), i no es duplica ací. */
+const UNIDOR = 0x200D;
+const UNIDOR_D_EMOJI = /(?<=[\p{Extended_Pictographic}\p{Emoji_Modifier}\uFE0F])\u200D(?=[\p{Extended_Pictographic}\p{Emoji_Component}])/gu;
+const SELECTOR_EN_IDENTIFICADOR = /(?<=[\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Pc}$])(?<!\u2139)[\uFE00-\uFE0F]|(?<=[0-9])[\uFE00-\uFE0F](?!\u20E3)/gu;
+/* Els que ja miren RE_VETAT (U+200B–U+200F) i el selector amb context
+   (U+FE00–U+FE0F) en queden fora. */
+const INVISIBLE_D_IDENTIFICADOR = /(?![\u200B-\u200F])(?![\uFE00-\uFE0F])(?=\p{ID_Continue})\p{Default_Ignorable_Code_Point}/gu;
+
+/** Els caràcters vetats de l'abast: els de la llista del torn, menys l'unidor
+ *  quan és d'una seqüència d'emoji, més el selector de variació enganxat a un
+ *  identificador i la resta d'invisibles que caben dins d'un identificador. */
+function vetatsDeLAbast(text) {
+  return text.split('\n').flatMap((linia, i) => {
+    const unidorsDEmoji = new Set([...linia.matchAll(UNIDOR_D_EMOJI)].map((m) => m.index));
+    const vetats = [...linia.matchAll(RE_VETAT)].filter((m) => !(m[0].codePointAt(0) === UNIDOR && unidorsDEmoji.has(m.index)));
+    return [...vetats, ...linia.matchAll(SELECTOR_EN_IDENTIFICADOR), ...linia.matchAll(INVISIBLE_D_IDENTIFICADOR)]
+      .sort((a, b) => a.index - b.index)
+      .map((m) => ({ linia: i + 1, columna: m.index + 1, cp: m[0].codePointAt(0) }));
+  });
+}
+
+test('l’unidor U+200D només passa dins d’una seqüència d’emoji, i el selector de variació no s’enganxa a cap identificador', () => {
+  const cps = (text) => vetatsDeLAbast(text).map((t) => hex(t.cp));
+  const ZWJ = '\u200D';
+  const VS16 = '\uFE0F';
+  /* Contingut: la família, la pagesa amb to de pell, l'ull dins del bocadillo
+     (VS16 + ZWJ), la bandera de l'arc de Sant Martí, el pèl roig (component),
+     la tecla u i el signe d'informació. */
+  for (const emoji of [
+    `\u{1F468}${ZWJ}\u{1F469}${ZWJ}\u{1F467}`,
+    `\u{1F469}\u{1F3FD}${ZWJ}\u{1F33E}`,
+    `\u{1F441}${VS16}${ZWJ}\u{1F5E8}${VS16}`,
+    `\u{1F3F3}${VS16}${ZWJ}\u{1F308}`,
+    `\u{1F9D1}${ZWJ}\u{1F9B0}`,
+    `1${VS16}\u20E3`,
+    `\u2139${VS16}`,
+    `\u2764${VS16}`
+  ]) assert.deepEqual(cps(`const e = '${emoji}';`), [], [...emoji].map((c) => hex(c.codePointAt(0))).join(' '));
+  /* Identificadors invisibles i unidors que la revisió no veu. */
+  assert.deepEqual(cps(`export const esAdmin = false; export const esAdmin${ZWJ} = true;`), ['U+200D']);
+  assert.deepEqual(cps(`const parell = '\\u{1F600}${ZWJ}\\u{1F600}';`), ['U+200D'], 'entre dos escapaments');
+  assert.deepEqual(cps(`a${ZWJ}${ZWJ}\u{1F600}`), ['U+200D', 'U+200D']);
+  assert.deepEqual(cps(`\u{1F600}${ZWJ}${ZWJ}\u{1F600}`), ['U+200D'], 'el segon unidor no va darrere de cap pictograma');
+  assert.deepEqual(cps(`export const esAdmin${VS16} = true;`), ['U+FE0F']);
+  assert.deepEqual(cps(`let x_\uFE0E = 1, d1${VS16} = 2, és${VS16} = 3;`), ['U+FE0E', 'U+FE0F', 'U+FE0F']);
+  assert.deepEqual(cps(`x${car(0x200B)}y`), ['U+200B'], 'la resta de vetats, com abans');
+});
+
+/* Onada R30 · A3-ENX-01 (segon àrbitre, P2) · Els invisibles que caben dins
+   d'un identificador, més enllà de l'unidor i del selector. */
+const RANGS_INVISIBLES_D_IDENTIFICADOR = Object.freeze([
+  [0x034F, 0x034F],
+  [0x115F, 0x1160],
+  [0x17B4, 0x17B5],
+  [0x180B, 0x180D],
+  [0x180F, 0x180F],
+  [0x3164, 0x3164],
+  [0xFFA0, 0xFFA0],
+  [0xE0100, 0xE01EF]
+]);
+
+test('cap invisible que càpia dins d’un identificador passa, i el conjunt és el que diuen les propietats Unicode', () => {
+  const cps = (text) => vetatsDeLAbast(text).map((t) => hex(t.cp));
+  const HANGUL = car(0x3164);
+  /* La porta del darrere: una variable que no es veu, sola o enganxada. */
+  assert.deepEqual(cps(`const { timeout, ${HANGUL} } = req.query;`), ['U+3164']);
+  assert.deepEqual(cps(`export const esAdmin${HANGUL} = true;`), ['U+3164']);
+  for (const [a, b] of RANGS_INVISIBLES_D_IDENTIFICADOR) {
+    for (const cp of new Set([a, b])) assert.deepEqual(cps(`x${car(cp)} = 1`), [hex(cp)], `${hex(cp)} no s’ha detectat`);
+  }
+  /* Les veïnes visibles passen. */
+  for (const cp of [0x034E, 0x0350, 0x115E, 0x1161, 0x17B3, 0x17B6, 0x180A, 0x1810, 0x3163, 0x3165, 0xFF9F, 0xFFA1]) {
+    assert.deepEqual(cps(`x${car(cp)}y`), [], `${hex(cp)} no hauria de ser vetat`);
+  }
+  /* El conjunt sencer, llegit del motor: Default_Ignorable_Code_Point i
+     ID_Continue, fora de l'unidor, del ZWNJ i dels selectors. */
+  const delMotor = [];
+  const fixats = RANGS_INVISIBLES_D_IDENTIFICADOR.flatMap(([a, b]) => Array.from({ length: b - a + 1 }, (_, k) => a + k));
+  for (let cp = 0; cp <= 0x10FFFF; cp += 1) {
+    if (cp >= 0xD800 && cp <= 0xDFFF) continue;
+    if (/(?=\p{ID_Continue})\p{Default_Ignorable_Code_Point}/u.test(car(cp)) && !(cp >= 0x200B && cp <= 0x200F) && !(cp >= 0xFE00 && cp <= 0xFE0F)) delMotor.push(cp);
+  }
+  assert.deepEqual(delMotor.map(hex), fixats.map(hex), `Unicode ${process.versions.unicode} ha canviat el conjunt: revisa RANGS_INVISIBLES_D_IDENTIFICADOR`);
+});
+
+test('cap fitxer de l’abast (src/, tests/, vite.standalone.config.js) porta en cru caràcters de control, invisibles ni bidi, llevat de l’unidor d’una seqüència d’emoji', () => {
+  const fitxers = fitxersDeLAbast();
+  assert.ok(fitxers.length > JS_TORN.length, `l’abast té ${fitxers.length} fitxers: menys que la llista del torn`);
+  const trobats = [];
+  for (const f of fitxers) {
+    for (const t of vetatsDeLAbast(llig(f))) trobats.push(`${f}:${t.linia}:${t.columna} ${hex(t.cp)}`);
+  }
+  assert.deepEqual(trobats, [], 'escriu-los com a escapament \\uXXXX dins de la cadena o del regex: el valor és el mateix');
 });

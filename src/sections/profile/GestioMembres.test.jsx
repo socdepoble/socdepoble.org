@@ -429,21 +429,23 @@ const TESTS_UI_GRUP_C = Object.freeze([
 
 test('qualitat · cap classe forastera ni opaca nova als fitxers de la interfície del grup C (els nous, cap ni una)', () => {
   const { infraccions, vocab } = escaneja();
-  /* El deute admés (identitat regla|fitxer|token) és d'abans: DetallAjust ja duia
-     sdp-form i sdp-camp__check. El que no hi és, és nou i no s'admet. */
+  /* El deute admés (identitat regla|fitxer|token) és d'abans. El que no hi és, és
+     nou i no s'admet. Onada R30 · T3-VOC · DetallAjust ja no du sdp-form ni
+     sdp-camp__check (classes foranes sense cap regla): la línia base no les admet. */
   const DEUTE = JSON.parse(readFileSync(path.join(process.cwd(), '.agents/deute/.vocabulari-deute.json'), 'utf8'));
   const admesa = (i) => (DEUTE[i.regla]?.identitats ?? []).includes(`${i.regla}|${i.fitxer}|${i.token}`);
   const propies = infraccions.filter((i) => CENS_UI_GRUP_C.includes(i.fitxer.split(path.sep).join('/')));
   expect(propies.filter((i) => !admesa(i)).map((i) => `${i.fitxer}:${i.linia} [${i.regla}] ${i.token}`)).toEqual([]);
   const NOUS = ['src/sections/profile/GestioMembres.jsx', 'src/sections/profile/membresModel.js'];
   expect(propies.filter((i) => NOUS.includes(i.fitxer.split(path.sep).join('/')))).toEqual([]);
-  // El selector nou de DetallAjust no afig cap ús més de la classe forastera de sempre.
-  expect(propies.filter((i) => i.token === 'sdp-form')).toHaveLength(1);
+  // Onada R30 · T3-VOC · Cap classe forastera als fitxers del grup C (DetallAjust inclòs).
+  expect(propies.filter((i) => i.regla === 'classe-forastera')).toEqual([]);
   // Sonda: la porta ha llegit el vocabulari (hi són les classes que pinta GestioMembres) i escaneja el JSX.
   expect(vocab.size).toBeGreaterThan(1000);
   for (const classe of ['sdp-text-exit', 'sdp-camp__error', 'sdp-buit', 'sdp-alerta__accions']) expect(vocab.has(classe), classe).toBe(true);
   expect(vocab.has('classe-que-no-existix')).toBe(false);
-  expect(infraccions.some((i) => i.regla === 'classe-forastera')).toBe(true);
+  /* Onada R30 · T3-VOC · V1 ja és a zero: la sonda és el deute admés del JSX (V2, classe-opaca). */
+  expect(infraccions.some((i) => /^classe-(forastera|opaca)$/.test(i.regla) && admesa(i))).toBe(true);
 }, 120000);
 
 test('qualitat · ESLint sense cap missatge als fitxers de la interfície del grup C (i les seues proves)', async () => {

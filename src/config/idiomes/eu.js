@@ -3192,6 +3192,9 @@ export default {
   'section.xat.xifratge.senseClauValida': "Baliozko segurtasun-gakorik gabe",
   'section.xat.xifratge.clauRetirada': "Gailu honek ez du aurkitzen {nom}(r)en baliozko segurtasun-gakorik, berresteko modukorik. Norbaitek gailua eta esaldia galtzen dituenean gertatzen da, edo norbait tartean sartu bada. Baliozko bat egon arte, ezin da idatzi. Hitz egin {nom}(r)ekin zer gertatu den jakiteko.",
   'section.xat.xifratge.clauPropiaRetirada': "Gailu honek ez du zure kontuko gako aktiborik aurkitzen: ez berea, ez beste bat. Baliteke norbait tartean sartu izana. Segurtasunagatik, ezin da idatzi. Zu izan ez bazara, jakinarazi iezaguzu.",
+  /* Onada R30 · R29-E2EE-02 · el missatge xifrat que este dispositiu no ha pogut obrir */
+  'section.xat.xifratge.tancat': "Beste gailu batean muturretik muturrera zifratutako mezua",
+  'section.xat.xifratge.noObert': "Ezin izan da zifratutako mezu hau ireki",
   /* O4-CLAUDE-3 · D-18 (a): avís i confirmació del retall a Notes d’una conversa xifrada */
   'section.xat.xifratge.retall.avis': "Oharra zerbitzarian gordeko da, muturretik muturrerako zifratzerik gabe.",
   'section.xat.xifratge.retall.guarda': "Gorde",
@@ -3701,7 +3704,7 @@ export default {
   'section.control.rural.eliminaNota': "Ezabatu oharra",
   'section.control.rural.eliminaNotaAjuda': "Ireki duzun bertsioa ezabatuko da. Oraindik ikusi gabeko aldibereko edizioa gordeko da. Historia mantenduko da espazio osoa ezabatu arte.",
   'section.control.rural.eliminaConfirma': "Ezabatu ohar hau",
-  'section.control.rural.carpetaCrdtAjuda': "Karpetak aldaketa fitxategi eta Markdown bertsio aldaezinak gordetzen ditu. Markdown fitxategi bat edita dezakezu; haren kausazko oinarriak aldaketa batzea ahalbidetzen du. Bertsio zaharrak ez dira gainidazten.",
+  'section.control.rural.carpetaCrdtAjuda': "Karpetak aldaketa-fitxategiak eta gainidazten ez diren Markdown bertsioak gordetzen ditu. Markdown fitxategi bat edita dezakezu; haren kausazko oinarriak aldaketa batzea ahalbidetzen du. Berretsi eta 90 egun igarotakoan, editatu gabeko fitxategi zaharrak bateratu egiten dira, inolako aldaketarik galdu gabe.",
   'section.control.rural.carpetaSenseBase': "Kausazko oinarririk gabeko ohar zaharrak bertsio independente gisa gehitu dira. Berrikusi batutako testuak.",
   'section.control.rural.dependenciesPendents': "Aurreko eragiketak falta dira. Gorde kopia bat eta inportatu falta diren aldaketa fitxategiak.",
   'section.control.rural.crdtInvalid': "Ezin izan da aldaketa partekatua aplikatu. Egiaztatu datuak eta gorde kopia bat jarraitu aurretik.",

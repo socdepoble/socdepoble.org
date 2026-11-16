@@ -174,7 +174,9 @@ describe('va després de les vies del logotip: amb logotip, cap avatar', () => {
 
   test('la ranura de l’editor mana sobre tot', () => {
     const { container } = render(<PageFrame {...PEPA} topBarData={{ logoComponent: <span>Logotip</span> }} avatarAutor={AVATAR} />);
-    expect(fills(capcalera(container))).toEqual(['DIV.page-title-logo-personalitzat', 'H1.']);
+    /* Onada R30 · T3-VOC · La ranura es diu amb data-sdp-ranura, no amb una classe sense estil. */
+    expect(fills(capcalera(container))).toEqual(['DIV.', 'H1.']);
+    expect(capcalera(container).firstElementChild.getAttribute('data-sdp-ranura')).toBe('logotip-personalitzat');
   });
 
   test('senseLogo === true també el lleva (la mateixa excepció de capçalera)', () => {

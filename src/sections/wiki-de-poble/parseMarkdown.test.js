@@ -358,7 +358,7 @@ describe('extreuEditorial', () => {
   });
 
   it('línies en blanc inicials, CRLF i BOM', () => {
-    expect(extreuEditorial('﻿\r\n\r\n# Títol\r\n\r\nPrimera línia\r\nsegona línia\r\n\r\nCos')).toEqual({
+    expect(extreuEditorial('\uFEFF\r\n\r\n# Títol\r\n\r\nPrimera línia\r\nsegona línia\r\n\r\nCos')).toEqual({
       titol: 'Títol',
       entradilla: 'Primera línia segona línia',
       cos: 'Cos'

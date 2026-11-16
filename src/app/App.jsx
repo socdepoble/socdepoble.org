@@ -650,12 +650,16 @@ function AppShell({ children, mobileNav }) {
      amb l'arrel del mòdul, així que el lloc no canvia. W4-12 · s'alinea el
      defecte que comparteix amb el contrast: reclamaAtribut (theme.js) torna
      a l'element el data-theme que tenia quan l'app es desmunta, i dues
-     instàncies sobre el mateix element no es barallen. */
+     instàncies sobre el mateix element no es barallen.
+     Onada R30 · A2-LLEI06 · El lloc el diu la política d'arrel de theme.js
+     (arrelDePresentacio), el propietari autoritzat del document: dins d'un
+     ShadowRoot, l'amfitrió; fora, l'<html> del document de l'app. El tema hi
+     passa amaDelDocument: true perquè, a diferència del contrast i de la
+     llengua, va sempre a l'<html> fora d'un ShadowRoot (el lloc de sempre).
+     El mateix element que abans; App.jsx ja no toca el document (LLEI_06). */
   useEffect(() => {
     if (!mainRef.current) return undefined;
-    const rootNode = mainRef.current.getRootNode();
-    const element = rootNode instanceof ShadowRoot ? rootNode.host : document.documentElement;
-    return reclamaAtribut(element, 'data-theme', themeMode || 'light');
+    return reclamaAtribut(arrelDePresentacio(mainRef.current, { amaDelDocument: true }), 'data-theme', themeMode || 'light');
   }, [themeMode]);
 
   /* D6 · Mode Bancal (Q1 del Mestre, 261004) · W4-12 (auditoria de Codex,

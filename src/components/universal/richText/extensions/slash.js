@@ -1,5 +1,6 @@
 import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
+import { capaDeDalt } from '../../PageFrame.jsx';
 
 const CLASSE = 'sdp-slash-menu';
 
@@ -17,14 +18,20 @@ const CLASSE = 'sdp-slash-menu';
  * position: fixed i coordenades de coordsAtPos. Es demana l'arrel a
  * l'editor mateix (getRootNode) en compte de buscar l'etiqueta pel
  * document: així funciona igual encapsulat que solt.
+ *
+ * Onada R30 · A2-LLEI06 · Fora d'un shadow root i sense cap .sdp-root al
+ * document, la caixa va a la capa de dalt de l'editor per la porta única del
+ * <body> (PageFrame.capaDeDalt): fora de l'encastat, el <body> de sempre.
+ * El mateix contenidor que abans en tots els casos (LLEI_06).
  */
 function contenidorDe(editor) {
-  const arrel = editor?.view?.dom?.getRootNode?.();
+  const dom = editor?.view?.dom;
+  const arrel = dom?.getRootNode?.();
   if (arrel && arrel.host) {
     return arrel.querySelector('.sdp-root') || arrel;
   }
   if (typeof document === 'undefined') return null;
-  return document.querySelector('.sdp-root') || document.body;
+  return document.querySelector('.sdp-root') || capaDeDalt(dom);
 }
 
 /**
