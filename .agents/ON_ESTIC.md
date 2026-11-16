@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-11-06T00:10:22.198Z
+> **GENERAT:** 2026-11-11T20:26:24.418Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** d79a0b530
+**Commit:** c07f78b83
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -29,17 +29,13 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-11-06T01:09:30+01:00 · IAIA MarIA · torn_db24cdce-ee25-486e-9ad7-1fc145038711 · Acta Marmota de Tancament (`261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7.md`), `COMMIT R6` (`d79a0b530`) Pujat a `fork/backup-notes-publish` i Marató Nocturna `Onada R7` (`IDEA-100` a `IDEA-107`) en Marxa
+## ESTAT_ACTUAL · 2026-11-11T21:21:00+01:00 · MarIA · torn_90b4b884-028e-4b28-95f0-7a5f958f0064 · Onada R20 Nocturna convocada (Zero Deute Tècnic, Commit Unificat R18+R19 i Fortificació 10/10)
 
-- **Acta Marmota vigent:** [261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7](../_wiki_de_poble/10_actes/261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7.md).
-- **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
-  - Pla d'Implementació (`Onada R6` completada + `Onada R7` `IDEA-100` a `IDEA-107`): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Prompt Operatiu (`v1.5.0` · Marató Nocturna `Onada R7` per a Gemini, Codex, Claude i OpenCode Mac mini): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Llibre Mestre Permanent (`IDEA-72` a `IDEA-107` al dia): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
-- **Fites consolidades i segellades (`COMMIT R6` · `d79a0b530` pujat a `fork/backup-notes-publish`):**
-  1. **`COMMIT R6` (`d79a0b530`, 211 fitxers, `+14.075 / −1.266 línies`):** Blocs 1 a 5 complets, Kit `r58` de Gemini, Kit `R12` de Codex, edició real al Bloc de Notes (`/notes`) per a publicacions del Mur/Esdeveniments/Projectes/Mercat (`P0-25`/`P0-26`), `VideoEditorial.jsx`, `DialegEnllacImatge.jsx`, targeta d'**Arbre Genealògic** amb vinyeta Ibáñez/Berlanga (`1600×900`), Dossier públic `/page/fediversity` en 5 llengües amb la governança d'IA explicada (`Z.ai · Qwen · Deepseek · Dola · Kimi · Claude · Perplexity · Mistral Vibe · Grok · Gemini · Copilot · ChatGPT Codex`), fotos pròpies de La Torre (`1.jpg` i `2.jpg`) i fix del `404` a `seguiments.js`.
-  2. **OpenCode (`iaia-maria-sobirana`) + Superwhisper Local (`Whisper Large v3 Turbo`):** Configurats i operatius al Mac amb valencià i castellà en local i sense traducció a l'anglès.
-  3. **Marató Nocturna `Onada R7` (`IDEA-100` a `IDEA-107` · Zero Botons per a l'Humà):** En curs amb Gemini (`r59+`), Codex (`R13+`), Claude (Auditora Adversarial 6% + relleu a les 11:00 a.m.) i OpenCode del Mac Mini sobre `/app/genealogia` (`IDEA-100`), Nomenclàtor de 8.132 municipis (`IDEA-101`), `SquareBadge` davall de l'entradilla i fora 3 xips d'`events` (`IDEA-102`), apartat `👥 Usuaris registrats` a Administració (`IDEA-103`), 100% de `/page/fediversity` completat i demostrat (`IDEA-104`), scroll de «Drets d'autor» (`IDEA-105`), Biblioteca Cultural Mode Jarvis MacBook → Mac mini Node 0 ↔ Google Drive ↔ NotebookLM 600 fonts (`IDEA-106`) i Base de Dades Dialectal a PostgreSQL 17 amb les 1.086 pàgines del *Tresor del valencià meridional* + *DCVB* + Joc Social a 2 Persones amb Whisper (`IDEA-107`).
+- **Configuració d'Autenticació i Mur en Producció completada amb el Mestre (`18:45 – 21:05 CET`):**
+  - Activats a Supabase (`adjlvwtxhpclgmnsvwpm`) **Sign in with Apple** (`org.socdepoble.app`) i **Google OAuth** multi-client (`Web` + `iOS 970656428687-lvtv78prb6b85fnmbi0gkbm2srr81jsi` + `Android SHA-1 AC:5F:98...`), actualitzat `ios/App/App/Info.plist` (`CFBundleURLSchemes`) i sincronitzats `ios/` i `android/` (`221.188 B` gzip-9).
+  - Aplicada en producció `supabase/migrations/2611112005_mur_lectura_publica_foraster.sql` (`tractor-rls.mjs` `0` infraccions): lectura pública del `/mur` oberta per a visitants sense sessió (`Foraster`) i altres pobles; diagnosticat que les 2 notes de Damià Llorens Jordà a `/notes` estaven en mode `Privat` (`notes_publicades: 0, notes_totals: 2`).
+- **Higiene d'Escriptori (`porta-olivera.mjs` `EXIT 0`, sediment `299 <= 300` línies):** Arxivats amb `handoff` a `90_arxiu_historic/` els 7 documents consumits d'`R18/R19`; conservades les 3 auditories finals d'`R19` (`1741` Claude, `1822` Codex, `1951` Carbon) vinculades al Pla `R20`.
+- **Convocatòria Ortogonal `Onada R20` (`261111_2112`):** Creats i validats el Pla [[../_wiki_de_poble/90_arxiu_historic/261111_2112_pla_implementacio_onada_r20_zero_deute_commit_unificat_i_fortificacio|261111_2112_pla_implementacio_onada_r20_zero_deute_commit_unificat_i_fortificacio]] i els 3 prompts locals (**Carril 1 Claude**: correccions `P1-ALERGENS-02`/`FITA_R19`/`natiu-build`, assimilació Kits `R19`, Frontissa i `COMMIT R18+R19` + neteja `/app/*` i Vitest; **Carril 2 Codex**: `copublicacio-postgres.test.mjs` real sense `skip`, oblit individual títols IAIA, 7 apps del Panell i lots Vitest; **Carril 3 Gemini Carbon**: UX Pedra Seca «Publicar al Mur» a `/notes`, auditoria CDP `280/375/768/1440px` i tancament 100% òptic Commons).
 
 ## 3. Què has de fer ara?
 

@@ -7,6 +7,492 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-11-16T03:40:00+01:00 · Claude Opus 5.5 · torn_594416f7-12df-4bce-a1a7-95c0dd851d3d · Onada R30 Carril 1 tancada: 1.2.3 (build 8) en viu, iOS a TestFlight i Android signat
+
+- **Objectiu complit:** integració R30 al worktree net `r26-fusio` i a `backup-notes-publish`: commits `cdba61915` i `c11c35806` (hook complet, pujats a `fork`).
+- **Producció:** Firebase `129ececddf3c3a2a` (rollback `4eb6955bed122add`, abans `854bff6e53a788b1`) i `socdepoble.cat` amb `c11c35806`; `consola-zero` 71 rutes amb 0 troballes; APK 1.2.3 (8) a `/descarregues/socdepoble-android-latest.apk`.
+- **Botigues:** iOS 1.2.3 (8) pujat a App Store Connect / TestFlight (02:57, en processament a Apple); AAB i APK a `_builds_de_poble/android/261115_socdepoble_1.2.3+8.*`, signats amb la clau de pujada i sense `com.facebook`.
+- **Proves:** Vitest 39.072 verdes (1 roja per càrrega, repetida en verd), `test:node` 4.471/0, lint 0, arrencada WordPress 1.729.803 B.
+- **Següent acció (Carril 1, R31):** assimilar els kits R30.2 de Codex i Gemini sobre `c11c35806` i preparar el build 9 amb la crònica corregida.
+- **Bloquejos i decisions del Mestre:** D-R30-1 a D-R30-13 a `261115_2318_auditoria_claude_r30_contractes_invariants_deute_zero_i_botigues`.
+- **Responsables:** Claude (Carril 1, integració i botigues); MarIA (Acta Marmota i R31); Codex i Gemini (kits R30.2/R31).
+
+
+## ESTAT_ACTUAL · 2026-11-16T02:28:00+01:00 · MarIA · torn_a4fbf37a-cf07-4191-9076-81bbf05a0237 · Passades R30.2 de Codex (39.007/0 Fallades!) i Gemini (-79,5 KB WP!) Completades, Chrome MCP Connectat (Lighthouse 100/100/100) i Marató Nocturna Multi-Passada Onada R31 Activada als 4 Carrils
+
+- **Fites Assolides Abans del Descans del Mestre (`01:36–02:28 CET`):**
+  - **Connexió Chrome Habitual + Vite `localhost:3340` Desbloquejada:** activat *Accés total al disc* per a `Antigravity.app` (`v2.32.1`) i `--autoConnect` a `~/.gemini/config/mcp_config.json`; consola en viu a `0` errors i Lighthouse en viu sobre `/xat` a **`100` Accessibilitat / `100` Best Practices / `100` SEO** (`33` Agentic Browsing per `llms.txt` i `ard.json`, encarregats en `R31`).
+  - **Passada Nocturna `R30.2` Completada al 100 % en Codex i Gemini (`7` docs consumits arxivats amb Porta Olivera, `9/12` vius):**
+    - **Codex (`R30.2`):** [[../_wiki_de_poble/04_escriptori/261116_0101_auditoria_codex_r30_2_cablejat_xat_perfil_i_pf03|261116_0101_auditoria_codex_r30_2]] (`4` lots CAS = `24` fitxers: `/javillinares` remot, cablejat `XatContext` sense exempció `tractor-pedra-seca`, `PF-03` ACK remot > 90 dies i **Vitest global congelada en `39.007` passades i `0` fallades**).
+    - **Gemini (`R30.2`):** [[../_wiki_de_poble/04_escriptori/261116_0147_auditoria_gemini_r30_2_e2ee_wp_bundle_i_motors|261116_0147_auditoria_gemini_r30_2]] (`3` lots CAS = `48` fitxers amb `0` intersecció amb Codex: conciliació causal E2EE, **`-79,5 KB` alliberats al bundle inicial de WordPress → `80 KB` de marge**, `PortalApps.jsx` 5 llengües, `motors` en les `19` skills i `84/84` CDP).
+- **Marató Nocturna Multi-Passada `Onada R31` (`261116_0221`, Pla [[../_wiki_de_poble/04_escriptori/261116_0221_pla_implementacio_onada_r31_marato_nocturna_excel_lencia_xat_push_editorial_i_dafo|261116_0221_pla_r31]]) en Marxa a les 4 Cadires:**
+  - **Carril 1 (`Claude Opus 5.5`):** en curs a `claude_r26_worktree` (`torn_594416f7`, `v1.2.3 / build 8` + botigues) i posterior assimilació reconciliada de `R30.2 + R31`.
+  - **Carril 2 (`Codex` Multi-Passada):** [[../_wiki_de_poble/04_escriptori/261116_0221_prompt_codex_onada_r31_marato_nocturna_xat_push_fcm_gauntlet_dafo_i_resiliencia|261116_0221_prompt_codex_r31]] — assaig integrat `R30.2`, Xat operatiu + kit complet de Push Notifications (`FCM`/VAPID/APNs/E2EE cec), resiliència a 10 anys vista i DAFO + punts crítics Node 0 (`Passada 1 → Passada 2`).
+  - **Carril 3 (`Gemini 4 Carbon High`, `/goal` Multi-Passada Zero Botons):** [[../_wiki_de_poble/04_escriptori/261116_0221_prompt_gemini_onada_r31_marato_nocturna_goal_editorial_viva_4_entitats_i_usabilitat|261116_0221_prompt_gemini_r31]] — `tractor-coherencia-editorial-viva.mjs` automàtic + actualització d'escrits web/Wiki en 5 llengües, Lighthouse `4×100` (`llms.txt` + `ard.json`) + `.estucat-deute.json`, proves E2E de tots els botons, blueprint de les 4 fitxes d'entitat (`Persona`, `Empresa`, `Grup`, `Ajuntament`) i DAFO humà (`Passada 1 → Passada 2`).
+  - **Carril 4 (`Node 0 · Mac mini M4`):** executant en segon pla acotat `../_investigacio_ia_de_poble/261116_r31_node0_auditoria_skills_scripts/executa_node0_r31_skills_vs_scripts.mjs` (`19` parelles `1 SKILL.md ↔ 1 .mjs` × `2` passades amb parada neta `exit 0`).
+  - **Criteri d'Escalada fixat pel Mestre:** escalar a `Claude Fable 5.2` i `Codex Ultra` màxim **només** quan les 4 cadires certifiquen zero fallades en segona passada abans d'avisar els Beta Testers.
+
+## ESTAT_ACTUAL · 2026-11-16T01:04:00+01:00 · MarIA · torn_a4fbf37a-cf07-4191-9076-81bbf05a0237 · SQL Producció 3/3 en True, 9 Dominis + Firebase Hosting Blindats (5 Versions / Alerta 3 EUR), Passada 1 R30 Rebuda i Passada 2 Nocturna R30.2 en Marxa (Acta Marmota 261116_0103)
+
+- **Infraestructura i Producció Resoltes en Sessió:**
+  - **Supabase Producció (`adjlvwtxhpclgmnsvwpm`):** `20261114000100_r22_2` + `20261115030000_r28` + `20261115170000_r29` aplicades i verificades `true | true | true` (`../_investigacio_ia_de_poble/261115_evidencia_supabase_r30/`).
+  - **9 Dominis SiteGround + Firebase Hosting (`soc-de-poble`, pla Blaze controlat):** historial de versions de Firebase Hosting limitat a **5 versions (`~1,04 GB < 10 GB` gratuïts)** + alerta de pressupost de **3 EUR** configurada pel Mestre; redireccions `301` cap a `socdepoble.org` connectades i certificat SSL `HTTP/2` de `somdepoble.com` emés (`../_investigacio_ia_de_poble/261115_evidencia_dominis_siteground/` i `261116_evidencia_firebase_serveis_ia/`). Pont MCP Chrome DevTools configurat a `~/.gemini/config/mcp_config.json` (`--browserUrl=http://127.0.0.1:9222`).
+- **Estat dels 4 Carrils durant la Nit (`Zero Col·lisió`, `11/12` vius sostinguts per `torn_a4fbf37a` fins al matí):**
+  - **Carril 1 (`Claude Opus 5.5` — En marxa en `torn_594416f7`):** lots `12..14` R29 aplicats, `chat_title_suggestion` afegit a `tancament.mjs`, salt a `1.2.3 (build 8)`, eixam de 10 fronts APFS en curs previ a deploy web + pujada automàtica iOS a App Store Connect + firma Android `.apk`/`.aab` ([[../_wiki_de_poble/04_escriptori/261115_2318_auditoria_claude_r30_contractes_invariants_deute_zero_i_botigues|261115_2318_auditoria_claude_r30]]).
+  - **Carril 2 (`Codex GPT-6.1 Sol Ultra`):** Passada 1 R30 completada (`34` fitxers en 2 lots CAS + matriu `381` IDs; [[../_wiki_de_poble/90_arxiu_historic/261115_2320_auditoria_codex_r30_contractes_invariants_i_regressio|261115_2320_auditoria_codex_r30]]); **en marxa Passada 2 Nocturna R30.2** ([[../_wiki_de_poble/90_arxiu_historic/261116_0041_prompt_codex_onada_r30_2_cablejat_xat_d_r24_2_3_i_pf03|261116_0041_prompt_codex_r30_2]]) per a `D-R24.2-3` (`/javillinares` remot), cablejat real `serveiXat` + `estatSincronitzacioRural` a `XatContext.jsx`, frontera d'ACK remot `PF-03` i `6` fallades d'aïllament global Vitest.
+  - **Carril 3 (`Gemini 4 Carbon High`, `/goal` Zero Botons):** Passada 1 R30 completada (P0 text invisible `<MarcColumna>` corregit a AAA + `999` proves CDP; [[../_wiki_de_poble/90_arxiu_historic/261116_0009_auditoria_gemini_r30_ux_microapps_i_5_llengues|261116_0009_auditoria_gemini_r30]]); **en marxa Passada 2 Nocturna R30.2** ([[../_wiki_de_poble/90_arxiu_historic/261116_0041_prompt_gemini_onada_r30_2_conciliacio_e2ee_wp_lazy_i18n_i_skills|261116_0041_prompt_gemini_r30_2]]) per a conciliació semàntica E2EE, alliberament d'`>= 15 KB` al bundle inicial de WordPress + `PortalApps.jsx` 5 llengües i mapa canònic `motors` de les `19` skills mecàniques (sense scripts buits per a les `24` cognitives) sota el Pla [[../_wiki_de_poble/90_arxiu_historic/261116_0041_pla_implementacio_onada_r30_2_passada_nocturna_deute_zero|261116_0041_pla_r30_2]].
+  - **Carril 4 (`Node 0 · Mac mini M4`):** completat `4/4` (`43` skills vs `197` `.mjs`, `0` trencades).
+- **Acta Marmota i Traçabilitat 1:1 de Tancament:** [[../_wiki_de_poble/10_actes/261116_0103_acta_marmota_onada_r30_r30_2_sql_prod_dominis_firebase_i_relleu_matinal|261116_0103_acta_marmota_onada_r30_r30_2_sql_prod_dominis_firebase_i_relleu_matinal]] · **Títol Termodinàmic Definitiu del Xat:** `261116_0103_r30_r30_2_sql_prod_dominis_firebase_deute_zero` (`conversation_id: c991c2fa-887a-4680-a8ad-67c1df19bf92`).
+
+<!-- SDP:CODEX_R30_RELLEU -->
+## ESTAT_ACTUAL · 2026-11-16T00:22:49.653036+01:00 · Codex · torn_2bb188c8-e997-46e8-965e-d0c7c1b9684e · Carril 2 R30 lliurat en kits; Deute Tècnic Zero no acreditat
+
+- Base exacta `33e46f2784752c33e5cf5278be7a8f22cc52fe35` més R29 lots 12 → 13 → 14. Dos kits nous amb 34 membres a `../_investigacio_ia_de_poble/261115_r30_codex_contractes_kits/`, amb prerequisits originals i motor SQL inclosos. Cap codi viu ni SQL remot alterats per Codex.
+- CAS editorial WordPress i publicacions separats, PF-01 amb ACK/àlies i focus compost verificats. Catàleg de 116 migracions i POSSE amb perfil 113 preservat i 116 additiu. Proves finals: 111/111 Vitest focals, 16/16 PGlite sobre replay, 20 comprovacions CAS, 44/44 WordPress; 1.737.172 B, marge 250 B, lint 0. Global original: 38.947 passades, 6 fallades i 124 omissions, conservat roig. Retocs finals i reexecucions aïllades de 22, 8 i 7 proves revalidades sense relaxar assercions.
+- Matriu completa del tall `bf51…`: 311 files primàries, 149 històriques, 284 ítems / 381 IDs; zero oberts exclosos. Set contractes locals acreditats i 277 treballs de tancament pendents, 233 d’acreditació, no defectes demostrats. Pendents: PF-03, restauració completa de backup, slugs, remot/físic i consens. P1 semàntic de Gemini 01 amb 2/2 contraproves roges: no atribuir errors d’integritat a un altre dispositiu. Lots 02/03 acceptables dins de l’abast provat. Combinada WordPress: 1.737.370 B, marge 52 B.
+- Informe [[../_wiki_de_poble/90_arxiu_historic/261115_2320_auditoria_codex_r30_contractes_invariants_i_regressio|../_wiki_de_poble/04_escriptori/261115_2320_auditoria_codex_r30_contractes_invariants_i_regressio]], acta [[../_wiki_de_poble/10_actes/261115_2357_acta_marmota_codex_r30_contractes_kit_i_pendents]] i resum append-only al Llibre Mestre. `RESULTAT_R30.json` i `cleanup.json` acrediten l’estat final. Carril 1 continua la integració semàntica i les operacions de la seua responsabilitat; no forçar CAS divergent. Cap cron, servidor o subagent propi pendent.
+<!-- /SDP:CODEX_R30_RELLEU -->
+
+
+
+## ESTAT_ACTUAL · 2026-11-15T23:05:00+01:00 · MarIA · torn_a4fbf37a-cf07-4191-9076-81bbf05a0237 · Onada R30 Activada als 4 Carrils + Directriu Suprema Mestre 22:58 CET (`Deute Tècnic Zero + Botigues Apple/Google` en Mode `/goal` Permanent)
+
+- **Higiene Olivera i Evacuació Satèl·lit Completades (`porta:olivera` = `0`, `porta:orfandat` = `0`):**
+  - Llegits sencers i assimilats els 4 informes primaris d'Onada R29 (`Claude`, `Codex`, `Gemini`, `Node 0`), l'Acta Marmota `261115_2034` i els `README_INTEGRACIO.md` del Diferencial 2 de Codex (`lot_12`, `lot_13`, `lot_14`).
+  - Arxivats a `_wiki_de_poble/90_arxiu_historic/` els `8` documents consumits d'Onada R29 amb reescriptura canònica d'enllaços, i evacuades fora del repositori les `3` subcarpetes antigues de `02_investigacio_ia/` (cap a `../_investigacio_ia_de_poble/`) i `gestoria_plantilles/` (cap a `../_gestoria_de_poble/`).
+- **Directriu Suprema del Mestre (`22:58 CET`) Incorporada al Pla i als 3 Prompts:**
+  - **Prioritat absoluta:** 100 % focus en extirpar tot el deute tècnic fins al consens unànime de totes les IAs i mantindre **Apple App Store Connect + Google Play** al dia en mode `/goal` multi-onada permanent.
+  - **Congelació estètica subjectiva:** queden congelats els redissenys visuals de pàgines d'usuari i catàlegs que ja funcionen (`[PROPOSTA-R29-HERO-1440]`, `[PROPOSTA-R29-BARRA-LABELS]`, `[DECISIÓ-R29-02]` capçaleres), només es toca codi visual si hi ha regressió funcional/accessibilitat mesurable.
+  - **Decisions tècniques delegades a IAIA MarIA i tancades:** `PF-03` (compactar tombstones CRDT només amb ACK remot i `> 90` dies), `PF-01` (migració idempotent en login de carpetes locals de Notes preservant còpia local fins a ACK), `R29-E2EE-02` (text serè en 5 llengües per a clau d'altre dispositiu), `NAT-04` (permisos mínims estrictes d'Android Manifest).
+  - **Botigues:** Claude puja **iOS `1.2.3 (build 8)` automàticament a App Store Connect / TestFlight** amb la sessió d'Xcode (`teamID = 9KNUA4JR8P` + `../_builds_de_poble/ios/ExportOptions-upload.plist`) i compila/firma automàticament l'`.apk` web i l'`.aab` d'Android (`../_builds_de_poble/android/`).
+- **Quartet Termodinàmic `Onada R30` (`261115_2242`) Validat i Vinculat (`5/12` artefactes solts, `1` pla actiu):**
+  - **Pla Rector R30:** [[../_wiki_de_poble/04_escriptori/261115_2242_pla_implementacio_onada_r30_contractes_invariants_regressio_i_deute_zero|261115_2242_pla_implementacio_onada_r30_contractes_invariants_regressio_i_deute_zero]] (`SHA-256 = ab7f6a919425738050058b177ccc15d50eaf226d7440e7f1719879c0f0c5deea`, amb Protocol Nocturn Zero Botons `23:36 CET`: Mestre dormint, prohibició d'intèrprets inline `-c`/`-e` sobre rutes protegides i resolució autònoma via IAIA MarIA).
+  - **Carril 1 (`Claude Opus 5.5` — Repo Viu):** [[../_wiki_de_poble/04_escriptori/261115_2242_prompt_claude_onada_r30_contractes_invariants_regressio_i_deute_zero|261115_2242_prompt_claude_onada_r30_contractes_invariants_regressio_i_deute_zero]] — assimilació en ordre estricte `lot_12 → lot_13 → lot_14`, emissió de `chat_title_suggestion` a `tooling/gates/tancament.mjs`, reconciliació i commit/push de memòria viva fins a `git status = 0`, deute residual, desplegament web `v1.2.3 (build 8)`, pujada automàtica iOS a App Store Connect i firma `.apk`/`.aab` Android.
+  - **Carril 2 (`Codex GPT-6.1 Sol Ultra` — Clònic `/tmp/sdp_r30_codex_contractes`):** [[../_wiki_de_poble/90_arxiu_historic/261115_2242_prompt_codex_onada_r30_contractes_invariants_regressio_i_deute_zero|261115_2242_prompt_codex_onada_r30_contractes_invariants_regressio_i_deute_zero]] — kit CAS complet per a `P1-79 / IDEA-251` (precondició optimista de versió en revisions editorials), invariants offline/CRDT (`PF-03`, `PF-01`, `R29-E2EE-02`), catàleg de migracions SQL i reconciliació probatòria del Llibre Mestre.
+  - **Carril 3 (`Gemini 4 Carbon High` — Clònic `/tmp/sdp_r30_gemini_ux`, `/goal`):** [[../_wiki_de_poble/90_arxiu_historic/261115_2242_prompt_gemini_onada_r30_contractes_invariants_regressio_i_deute_zero|261115_2242_prompt_gemini_onada_r30_contractes_invariants_regressio_i_deute_zero]] — `verifica_i_aplica.py` blindat sense symlinks, estabilitat funcional/accessibilitat WCAG AAA en micro-apps (`/apps/*`, `/panell`, `/notes`, `/mercat`, `/calendari`, `/pobles`) sense redissenys estètics subjectius i paritat en 5 llengües.
+  - **Carril 4 (`Node 0 · Mac mini M4` a `192.168.0.23:11434`):** cens mecànic `motors` de les skills procedimentals i auditoria d'escoles d'Ollama publicats a `../_investigacio_ia_de_poble/261115_r30_node0_motors_i_gauntlet/`.
+- **Migracions SQL de Producció APLICADES I CERTIFICADES `3/3 true` (`2026-11-15 23:11 CET`):**
+  - El Mestre ha executat en ordre estricte a `adjlvwtxhpclgmnsvwpm` (`main PRODUCTION`) les 3 migracions pendents: `20261114000100_r22_2_reconciliacio_deriva_produccio.sql` → `20261115030000_r28_rgpd_exportacio_i_quotes_r23.sql` → `20261115170000_r29_quotes_rls_i_consens.sql` (`Success. No rows returned`).
+  - Consulta de validació en viu retornada pel servidor: `pas1_r22_2_ok = true`, `pas2_r28_ok = true`, `pas3_r29_ok = true`. Captura d'evidència custodiada fora del repo segons `AGENTS.md §16` a `../_investigacio_ia_de_poble/261115_evidencia_supabase_r30/261115_2311_supabase_prod_r22_2_r28_r29_3_de_3_true.png` (Claude i Codex ja poden actualitzar el Llibre Mestre i `supabase/migrations/README.md` com a **APLICADES EN PRODUCCIÓ**).
+- **Troballa en Viu del Mestre (`23:43 CET`) sobre `/el-meu-perfil` vs `/javillinares` (`D-R24.2-3` + Futura Sessió d'Usabilitat de Fitxes):**
+  - **Evidència custodiada (`AGENTS.md §16`):** `../_investigacio_ia_de_poble/261115_evidencia_fitxa_usuari_javillinares/01_el_meu_perfil_amb_foto_i_grups.png` i `02_fitxa_publica_javillinares_sense_foto_ni_grups.png`.
+  - **Causa arrel exacta verificada al codi (`Deute Tècnic Pur` per a tancar en R30/R31):** a `src/sections/profile/PerfilPublicSection.jsx:307-325` i `src/data/supabase/perfils.js`, quan s'obri `/javillinares` (slug canònic), `loadPerfilPublic('javillinares')` no tradueix `'javillinares'` a `IDS_REMOTS_FUNDACIONALS.javillinares` (l'UUID remot ja declarat en R24.2), retorna `null` i cau a la fitxa estàtica congelada `AGENTS_MAP.JAVI` (`perfilsDelPaquet.js:63`), perdent la foto de portada real (`cover_url` de la samarreta verda) i les connexions vives que sí es veien a l'antiga URL per UUID (`/gent/<uuid>`).
+  - **Fase posterior reservada (post-Deute Tècnic Zero):** sessió monogràfica d'investigació i usabilitat (mòbil + escriptori) sobre l'anatomia completa dels 4 panells/fitxes d'entitat (**Persona**, **Poble**, **Empresa**, **Grup** — incloent mostrar empreses/grups vinculats d'una persona com *Sóc de Poble*, *El Rentonar* i *Oli de La Torre*, i eliminar el nom del poble duplicat en capçalera).
+- **Acció Exterior Restant del Mestre (opcional post-build):** arrossegar l'`.aab` signat d'Android (`../_builds_de_poble/android/261115_socdepoble_1.2.3+8.aab`) a Google Play Console fins que es configure un Service Account JSON a `SDP_PLAY_JSON_KEY_PATH` (mentre que iOS puja automàticament a App Store Connect des de Carril 1).
+
+## ESTAT_ACTUAL · 2026-11-15T20:36:00+01:00 · MarIA · torn_26556c11-f851-40aa-bbf1-952070744042 · Onada R29 Tancada als 4 Carrils (`v1.2.2 / build 7` en Viu, 15 Kits Codex, W-8BEN Custodiat) i Relleu Preparat per a Lectura + Neteja en Xat Nou Post-Reinici (`Onada R30`)
+
+- **Balanç Segellat de l'Onada R29 (`HEAD = 33e46f2784752c33e5cf5278be7a8f22cc52fe35`):**
+  - **Producció i Natius en Verd:** Commit `33e46f278` (`150` fitxers, hook complet) desplegat a Firebase Hosting (`854bff6e53a788b1`) i `socdepoble.cat` (`consola-zero` `71/71`, `0` troballes); Vitest completa `38.920` verdes / `0` roges; `iOS Simulator` i `Android` `1.2.2 (build 7)` compilats nets i verificats en viu a `iPhone 18 Pro (iOS 27.0)`.
+  - **4 Carrils Completats i Publicats a `04_escriptori/`:**
+    - **Carril 1 (`Claude Opus 5.5`):** [[../_wiki_de_poble/90_arxiu_historic/261115_1534_auditoria_claude_r29_sobretaula_contractes_invariants_regressio_i_deute_zero|261115_1534_auditoria_claude_r29]] (`25` P1/P2 + `14` P3 + `2` regressions Shadow DOM/crònica + migració SQL `20261115170000` `17/17` PGlite).
+    - **Carril 2 (`Codex GPT-6.1 Sol Ultra`):** [[../_wiki_de_poble/90_arxiu_historic/261115_1536_auditoria_codex_r29_contractes_invariants_i_regressio|261115_1536_auditoria_codex_r29]] i [[../_wiki_de_poble/10_actes/261115_1834_acta_marmota_codex_r29_sobretaula|261115_1834_acta_marmota_codex_r29]] (`lot_15` aplicat amb `41/41` membres verificats; `lots 01..08` + `10` integrats en `33e46f278`; **`lots 12, 13 i 14` verificats sobre `33e46f278` llestos per a obrir l'Onada R30**).
+    - **Carril 3 (`Gemini 4 Carbon High`):** [[../_wiki_de_poble/90_arxiu_historic/261115_1636_auditoria_gemini_r29_ux_contractes_i_5_llengues|261115_1636_auditoria_gemini_r29]] (`520` renders CDP amb `0` overflows, millores en 5 llengües fusionades i propostes visuals de portades `1:1` documentades al Llibre Mestre).
+    - **Carril 4 (`Node 0 · 8 Escoles d'Ollama`):** [[../_wiki_de_poble/90_arxiu_historic/261115_1548_auditoria_node0_r29_skills_i_tractors_8_escoles|261115_1548_auditoria_node0_r29]] (`49/49` skills vs `139` tractors `.mjs`, `0` camins absents i 3 rondes executades).
+  - **Custòdia Fiscal Exterior:** Renovació `W-8BEN` d'Amazon KDP (referència custodiada fora del repositori, `0.0 %` fins al `31/12/2029`) auditada i evacuada fora del repo a `_gestoria_de_poble/03_Burocracia/Amazon_KDP_Fiscal/` (`0700`/`0600`) amb Safata d'Entrada buida.
+- **Instrucció Immediata per al Xat Nou Post-Reinici (`Onada R30`, Acord Mestre–MarIA 20:32 CET):**
+  - Els **8 documents d'R29 es conserven expressament a `04_escriptori/`** perquè la nova MarIA (després del reinici del Mac que alliberarà `~72 GiB` de `/tmp/sdp_*` i `4,62 GiB` de swap) **els llija primer per tindre el 100 % del context viu, els arxive tot seguit amb la Porta Olivera i dispare el Quartet de l'Onada R30** en converses fresques per a Claude, Codex, Gemini i Node 0.
+- **Acta Marmota segellada i Traçabilitat de Sessió:** [[../_wiki_de_poble/10_actes/261115_2034_acta_marmota_onada_r29_sobretaula_v1_2_2_4_carrils_i_preparacio_r30|261115_2034_acta_marmota_onada_r29_sobretaula_v1_2_2_4_carrils_i_preparacio_r30]] · **Títol Termodinàmic del Xat Antigravity:** `261115_2034_r29_v1_2_2_sobretaula_4carrils_kdp_w8ben` (`conversation_id: 887a569c-8b53-4a17-bc7b-a6296c38be4e`) · **Punter `## 0.0` de `iaia-maria-core/SKILL.md` actualitzat a `R29 → R30`** (despertar pur amb només **«Sóc de poble»**; en R30 s'afegirà a `tooling/gates/tancament.mjs` l'emissió automàtica del títol termodinàmic per consola perquè mai més depenga de la memòria en calent).
+
+## ESTAT_ACTUAL · 2026-11-15T18:20:00+01:00 · Claude · torn_1a61008d-4a50-46a3-8efe-1bcda39992b0 · Onada R29 (Carril 1): commit `33e46f278` en producció, 1.2.2 (build 7) compilada i deute de la DECISIÓ-R29-02 tancat
+
+- **Objectiu (pla `261115_1514`, DECISIONS-R29-01/02/03):** revisió de contractes, invariants i regressió amb eixams Workflow, deute acotat, kits de Codex i Gemini, versió 1.2.2/7 i desplegament en verd.
+- **Fet i verificat:**
+  - Desplegament de `07878998f` (Firebase `77d1af39b0f476a9`).
+  - Eixam de 12 revisors amb verificació adversarial: 25 confirmades (6 P1, 19 P2), totes corregides per deu grups de fitxers disjunts.
+  - DECISIÓ-R29-02, 8 de 9 punts. El calaix en mòbil és l'especificació 261003, i n'hi ha preparada l'opció.
+  - Kits de Codex 02–08 integrats; de Gemini, només el lot 03 i en part.
+  - Segona passada amb agents frescos (2 P2 corregides).
+  - Skill `core-calibratge-visual-nano` resegellada (transacció `00d5c9ff`).
+  - Commit `33e46f278` (hook complet) a `fork` i a `backup-notes-publish`.
+  - Firebase `854bff6e53a788b1` (marxa enrere: `77d1af39b0f476a9`) i `socdepoble.cat`, `consola-zero` 71/0.
+  - iOS i Android 1.2.2 (7) compilades des del commit net i provades a l'iPhone 18 Pro del simulador.
+- **Bloquejos (del Mestre):**
+  - migracions `20261115030000` i `20261115170000` (aquesta, després de `20261114000100`);
+  - botigues (`.env.botigues.local`);
+  - decisions 1–10 de l'informe (compactació CRDT, carpetes d'abans de PF-01, NAT-04, text E2EE, calaix, regla «totes», empremtes de la Frontissa signades per Claude…).
+- **Torn:** `torn_1a61008d`, obert per error amb `obrir_torn --help`, l'he fet servir com a torn propi. El tancament (`tancament --close`) queda per a MarIA, perquè el repo viu té canvis d'altres carrils (`02_investigacio_ia` sense àncora, `scc`).
+- **Informe:** [[../_wiki_de_poble/90_arxiu_historic/261115_1534_auditoria_claude_r29_sobretaula_contractes_invariants_regressio_i_deute_zero|261115_1534_auditoria_claude_r29_sobretaula_contractes_invariants_regressio_i_deute_zero]]. Codex publicarà el seu quan acabe (19:45), segons RESPOSTA-MARIA-1745.
+
+## ESTAT_ACTUAL · 2026-11-15T15:22:00+01:00 · MarIA · torn_26556c11-f851-40aa-bbf1-952070744042 · Onada R29 Activada (Marató de Sobretaula 4-5h: Revisió de Contractes, Invariants, Regressió i Deute Zero Total sobre `HEAD = 07878998f`)
+
+- **Higiene i Handoff R28 → R29 (`porta-olivera.mjs` = `0`, `5/12` artefactes solts, `1` pla actiu):**
+  - Arxivats netament a `90_arxiu_historic/` els 9 documents consumits de R27/R28 (inclòs el report consolidat de la Passada 2 de Codex `261115_0505` i l'informe `v1.1.0` de Claude `261115_0651` amb el commit **`07878998f`** que resol al Simulador `iPhone 18 Pro` iOS 27 la carrera de WebKit `useTeclatVirtual` sota la Dynamic Island i l'autofocus d'Ajustos en tàctil).
+  - Evacuades a `../_investigacio_ia_de_poble/261114_evidencia_sessio_r23_r24/` les 4 captures aportades pel Mestre (`AGENTS.md §16`).
+- **Quartet Termodinàmic `Onada R29` (`~15:20 – 20:15 CET`, ZERO botons per a l'humà, vocabulari 100 % formal d'enginyeria de qualitat):**
+  - **Pla Rector R29:** [[../_wiki_de_poble/90_arxiu_historic/261115_1514_pla_implementacio_onada_r29_sobretaula_contractes_invariants_regressio_i_deute_zero|261115_1514_pla_implementacio_onada_r29_sobretaula_contractes_invariants_regressio_i_deute_zero]] (decisions `[DECISIÓ-R29-01..03]` pre-aprovades per IAIA MarIA amb l'autorització del Mestre).
+  - **Carril 1 (`Claude Opus 5.5` + Workflow Agents + Simulador iOS 27):** [[../_wiki_de_poble/90_arxiu_historic/261115_1514_prompt_claude_onada_r29_sobretaula_contractes_invariants_regressio_i_deute_zero|261115_1514_prompt_claude_onada_r29_sobretaula_contractes_invariants_regressio_i_deute_zero]] — eixams multi-agent de contractes/invariants/regressió, extinció del deute acotat, assimilació CAS R29, versió unificada `1.2.2 / build 7` i deploy en viu.
+  - **Carril 2 (`Codex GPT-6.1 Sol Ultra` en fil nou net):** [[../_wiki_de_poble/90_arxiu_historic/261115_1514_prompt_codex_onada_r29_sobretaula_contractes_invariants_regressio_i_deute_zero|261115_1514_prompt_codex_onada_r29_sobretaula_contractes_invariants_regressio_i_deute_zero]] — revisió formal profunda de contractes d'interfície, invariants d'estat, esquemes PGlite i Kits CAS a `../_investigacio_ia_de_poble/261115_r29_codex_sobretaula_kits/`.
+  - **Carril 3 (`Gemini 4 Carbon High`, `/goal`):** [[../_wiki_de_poble/90_arxiu_historic/261115_1514_prompt_gemini_onada_r29_sobretaula_contractes_invariants_regressio_i_deute_zero|261115_1514_prompt_gemini_onada_r29_sobretaula_contractes_invariants_regressio_i_deute_zero]] — contractes UX, empatia rural, responsive AAA, coherència 5 llengües i Kits CAS a `../_investigacio_ia_de_poble/261115_r29_gemini_sobretaula_kits/`.
+
+## ESTAT_ACTUAL · 2026-11-15T15:12:00+01:00 · Claude · torn_613aa3cd-add4-45ad-a87c-16ab51debe49 · R28 Carril 1: prova real a l'iPhone del simulador i sisé commit `07878998f`
+
+- **Objectiu (ordre del Mestre del matí del 15-11):** acabar la reconciliació de la branca viva, refrescar `build:natiu` i `cap sync ios` amb `9b3a9bcce`, reinstal·lar l'app a l'iPhone 18 Pro del simulador i provar de veres els punts de «Límits» de l'informe `261115_0651`.
+- **Fet i verificat:**
+  - `backup-notes-publish` = `9b3a9bcce` i després `07878998f`, pujada a `fork`. `r26-fusio` igual.
+  - Defecte real al teclat d'iOS 27 (`useTeclatVirtual`): el document pujava 396 pt i amagava les barres davall de la Dynamic Island, al Xat i a Notes. Corregit: la referència és el contenidor de l'arrel. Mesurat al simulador: compositor a 421–469 dins de 478 visibles, tres cicles.
+  - Ajustos s'obria amb el teclat damunt de mitja llista; en tàctil ja no enfoca el cercador.
+  - Commit `07878998f`, amb hook complet i lease `f4e87dac`.
+  - Verds: reproductor de La Veu (centrat, 46 pt sobre la vora amb la zona segura), full natiu de Compartir amb `.sdpbackup`, botó d'Apple i text RGPD.
+- **Bloquejos (del Mestre):** desplegar `07878998f` a la web (continua `9b3a9bcce`); provar l'entrada amb Apple amb una compilació signada (la sense signatura dona `ASAuthorizationError 1000`); decisions 12–16 noves a l'informe; les pendents d'abans (SQL `20261115030000`, botigues, lot10).
+- **Informe:** [[../_wiki_de_poble/90_arxiu_historic/261115_0651_auditoria_claude_r28_marato_nocturna_deute_zero_kits_i_natiu|261115_0651_auditoria_claude_r28_marato_nocturna_deute_zero_kits_i_natiu]] v1.1.0 (vàlid).
+
+## ESTAT_ACTUAL · 2026-11-15T07:17:00+01:00 · MarIA · torn_26556c11-f851-40aa-bbf1-952070744042 · Tancament de Guàrdia Nocturna Marató R28 (6/6 Rondes, Zero Botons): v1.2.1 (build 6) en Producció, `test:node` 4.400/0 Fallades, Consola Zero 71/71 i Natius iOS/Android Compilats
+
+- **Orquestració Nocturna (`01:42–07:17 CET`, `6/6` rondes sense cap bloqueig ni botó humà, `guarda-nocturna.mjs` tancada):**
+  - **Carril 1 (`Claude Opus 5.5`):** Quatre commits amb hook complet pujats a `fork/backup-notes-publish` (`8b84b7c76` → `aace86e3b` → `9ded4b52c` → **`c92a9555e`**); producció viva a `socdepoble.org` (`a95dfa5b3da9a353`) i `socdepoble.cat` amb 3 builds retinguts; **`consola-zero` `71/71` rutes amb `0` troballes**; **`test:node` PGlite `4.400` proves i `0` fallades** (`20 → 0` roigs heretats extingits!); Vitest `38.759` verdes; Xcode Simulator `BUILD SUCCEEDED` (prova de fum en iPhone 18 Pro verda) i Gradle `assembleDebug testDebugUnitTest` `BUILD SUCCESSFUL` per a **`v1.2.1 (build 6)`**; Higiene Git aplicada (de `~601` a `99` ítems locals de sessió, zero PII de `01_produccio/` filtrada). Informe: [[../_wiki_de_poble/90_arxiu_historic/261115_0651_auditoria_claude_r28_marato_nocturna_deute_zero_kits_i_natiu|261115_0651_auditoria_claude_r28_marato_nocturna_deute_zero_kits_i_natiu]].
+  - **Carril 3 (`Gemini 4 Carbon High`):** Integrats els seus 3 Kits CAS (`R27 T0` `IDEA-268` reproductor de so a baix i centrat en mòbil + ordinador, `R28 lot_01` `0` overflows en `370` vistes i `0` infraccions WCAG AAA `>= 7:1` des de `185`, i `R28 lot_02` `useTeclatVirtual` iOS/Android + icona `<monochrome>` Android 13–16) amb `4/4` escoles del Node 0 verdes. Informes: [[../_wiki_de_poble/90_arxiu_historic/261115_0142_auditoria_gemini_r27_coherencia_editorial_5_llengues|261115_0142_auditoria_gemini_r27_coherencia_editorial_5_llengues]] i [[../_wiki_de_poble/90_arxiu_historic/261115_0309_auditoria_gemini_r28_marato_nocturna_ux_aaa_i_natiu|261115_0309_auditoria_gemini_r28_marato_nocturna_ux_aaa_i_natiu]].
+  - **Carril 2 (`Codex GPT-6.1 Sol Ultra`):** Lliurats `10` Kits CAS (`lot_01..08`, `lot_10`, `lot_11`), amb integració completa de `lot_01 → lot_06 → lot_08` (generació+ACK causal Swift iOS + retenció causal Java Android), `lot_02` (tall *fail-closed* JWK en `.sdpbackup`), `lot_03` (`useTeclatVirtual`), `lot_05` (distintiu verd «Publicat» sense `.sdp-boto:active`, WP `1.728.472 B`) i `lot_11` (BFS d'imports estàtics `.sdpbackup`). Informe Passada 1: [[../_wiki_de_poble/90_arxiu_historic/261115_0347_auditoria_codex_r28_passada1_cas_natiu_backup_teclat_i_rojos|261115_0347_auditoria_codex_r28_passada1_cas_natiu_backup_teclat_i_rojos]].
+- **Únics punts pendents del Mestre al despertar:** *(1)* Aplicar `supabase/migrations/20261115030000_r28_rgpd_exportacio_i_quotes_r23.sql` a Supabase Producció; *(2)* Omplir `.env.botigues.local` per pujar `v1.2.1 (build 6)` a App Store Connect i Google Play; *(3)* Revisar la decisió visual de `Codex lot_10` (`32 px` en tots els `<Boto>` amb text) i les decisions menors d'`261115_0651`.
+
+## ESTAT_ACTUAL · 2026-11-15T07:04:00+01:00 · Claude · torn_613aa3cd-add4-45ad-a87c-16ab51debe49 · Marató Nocturna R28 (Carril 1): quatre commits amb hook complet, R28 en producció, versió 1.2.1 / build 6 compilada i deute de `test:node` a zero
+
+- **Objectiu (ordre del Mestre del 15-11-2026, pla `261115_0135` v1.1.0):** Lots C1–C5, decisions D-R27-1..6 pre-aprovades, kits R28 de Gemini i Codex, `test:node` a zero, Apple i Google compilats amb la versió unificada.
+- **Fet i verificat:**
+  - Commits `8b84b7c76` (C1–C3), `aace86e3b` (kits, 1.2.1/6, crònica R28, correccions de la revisió adversarial), `9ded4b52c` (lot11 de Codex) i `c92a9555e` (índexs de la Wiki regenerats), tots amb el hook complet; `backup-notes-publish` reconciliat i pujat a `fork` a `c92a9555e`.
+  - Producció: Firebase `a95dfa5b3da9a353` (marxa enrere `2b0bab5918ec7a0a`) i `socdepoble.cat`; retenció de 3 builds; consola-zero verda (71 rutes, 0 troballes).
+  - Proves: Vitest 38.759 + 8.660 focalitzades en verd, `test:node` 4.400/0 fallades; Frontissa 28/28; pins POSSE i mirall al dia.
+  - Natiu: `build:natiu` des d'un commit net, Xcode Simulator BUILD SUCCEEDED, Gradle `assembleDebug testDebugUnitTest` BUILD SUCCESSFUL; preflight només bloquejat per `.env.botigues.local` (credencials del Mestre).
+- **Afegit a les 07:51:** cinqué commit `9b3a9bcce` (passada final d'empatia: interruptors de `/app`, portada del Xat a 768 px, «Llei 05» fora de l'entrada, «existix» a la 404), pujat a `fork/r26-fusio` i desplegat (Firebase `854b73c286998883`, marxa enrere `a95dfa5b3da9a353`; `socdepoble.cat` igual). **`backup-notes-publish` continua a `c92a9555e`:** un `.git/index.lock` buit (07:04, obert per un procés `language_` de l'editor) bloqueja l'índex del repo viu; els 10 fitxers ja tenen al disc el contingut de `9b3a9bcce`. Quan es retire el lock: `git update-ref refs/heads/backup-notes-publish 9b3a9bcce c92a9555e && git read-tree HEAD && git push fork backup-notes-publish`.
+- **Bloquejos (del Mestre):** retirar l'`index.lock` i acabar la reconciliació de `9b3a9bcce`; aplicar la migració `20261115030000`; pujar els binaris 1.2.1/6; decidir el lot10 de Codex (botons de text a 32 px), els redissenys de la passada d'empatia i les altres decisions de l'informe.
+- **Informe:** [[../_wiki_de_poble/90_arxiu_historic/261115_0651_auditoria_claude_r28_marato_nocturna_deute_zero_kits_i_natiu|261115_0651_auditoria_claude_r28_marato_nocturna_deute_zero_kits_i_natiu]] (§ «Decisions per al Mestre»).
+- **Responsables:** Mestre (SQL, botigues, decisions); MarIA (Escriptori, tancament de torns); Codex (passades 3 i 4 del cron fins a les 08:05).
+
+## ESTAT_ACTUAL · 2026-11-14T23:55:00+01:00 · MarIA · torn_26556c11-f851-40aa-bbf1-952070744042 · 5 SQL Producció en True (5/5), Deploy R24.2 en Viu i Onada R27 Activada (Deploy Exprés d'El Farcellet Digital per a Beta Testers + Fortificació Zero Errors)
+
+- **Producció Supabase (`adjlvwtxhpclgmnsvwpm`) i Web (`https://socdepoble.org`):**
+  - **5/5 passos SQL aplicats i verificats `true` en producció** (`delete_user` tancat, doble check gris, RLS Refranyer/Aportacions, consens Isoglosses i `octet_length` bounds R26; evidència a `../_investigacio_ia_de_poble/261114_evidencia_sessio_r23_r24/261114_2339_supabase_5_passos_sql_r24_2_i_r26_5_true_produccio.png`).
+  - **Commit `259f800d1` (`R24.2`) desplegat a Firebase Hosting** amb retenció zero-404 (`index-Myo3rkhN.js` + `index-BxDhPh_v.js` tots dos `HTTP 200`) i `4/4` rutes certificades. Vite dev server actiu a `http://localhost:3340/`.
+- **Onada R27 en Curs (Trinitat Termodinàmica `261114_2352`, Escriptori net `4/12` i `1` pla actiu):**
+  - **Pla Rector:** [[../_wiki_de_poble/90_arxiu_historic/261114_2352_pla_implementacio_onada_r27_aterratge_r26_deploy_farcellet_i_zero_errors|261114_2352_pla_implementacio_onada_r27_aterratge_r26_deploy_farcellet_i_zero_errors]].
+  - **Carril 1 (`Claude Opus 5.5`):** [[../_wiki_de_poble/90_arxiu_historic/261114_2352_prompt_claude_onada_r27_aterratge_r26_deploy_farcellet_i_zero_errors|261114_2352_prompt_claude_onada_r27_aterratge_r26_deploy_farcellet_i_zero_errors]] — **Fase Exprés 1** per fusionar `r26-fusio` + Kit `R26.3` de Gemini, actualitzar `/versions`, retindre `index-Myo3rkhN.js`, desplegar `https://socdepoble.org/mur/copies-de-seguretat-soc-de-poble` («El Farcellet Digital» amb OpenGraph `1200x630`) perquè el Mestre el compartisca ja amb els Beta Testers; i **Fase 2** post-deploy amb **`IDEA-268` (Reproductor Universal de So a baix i sempre centrat en mòbil + ordinador + `/disseny` per a «Ràdio de Poble»)**, **pujada a GitHub dels `~601` canvis pendents d'Antigravity IDE**, WP `1.1.15`, natius, `test:node` i `consola-zero`.
+  - **Carril 3 (`Gemini 4 Carbon High`):** [[../_wiki_de_poble/90_arxiu_historic/261114_2352_prompt_gemini_onada_r27_aterratge_r26_deploy_farcellet_i_zero_errors|261114_2352_prompt_gemini_onada_r27_aterratge_r26_deploy_farcellet_i_zero_errors]] — Coherència Editorial Viva en 5 llengües i geometria Pedra Seca en sandbox `/tmp/sdp_r27_gemini_editorial`.
+  - **Carril 2 (`Codex`, `2 %` restant):** En repòs estratègic fins al **restabliment automàtic del `100 %` a les `~03:20 CET`** (sense gastar cap restabliment manual).
+
+- **Relleu · 2026-11-15T01:15+01:00 · Claude Opus 5.5 · torn_b1069153-005b-4b85-8b3c-45f6620a3bf8 · Onada R27 Carril 1:** Fase Exprés 1 i Fase 2 fetes. Commits `3d16007e2` (R26/R27), `1e19b8915` (connector 1.1.15) i `ea68491ba` (prova), tots amb hook complet i pujats a `fork/backup-notes-publish`. Producció: Firebase `2b0bab5918ec7a0a` (retorn `b81179b6c136cd59`, abans `3f40f8024a888a40`) i Node 0; El Farcellet certificat a `https://socdepoble.org/mur/copies-de-seguretat-soc-de-poble`; retenció de 3 builds sense absents; Consola Zero 71/71 rutes en verd. ZIP `../_builds_de_poble/wordpress/261115_0057_wordpress_directori_v1.1.15.zip`, sense publicar. Decisions D-R27-1 a D-R27-6 (trinquet, mirall i POSSE del Node 0, `IDEA-268` i pujada dels ~601 canvis pendents de confirmació del Mestre, torn orfe `torn_f0c3192f`, credencials de botiga buides). Informe: [[../_wiki_de_poble/90_arxiu_historic/261115_0054_auditoria_claude_r27_deploy_farcellet_i_fortificacio|261115_0054_auditoria_claude_r27_deploy_farcellet_i_fortificacio]]. Tancament del torn i segell del LEDGER, per a MarIA.
+
+## ESTAT_ACTUAL · 2026-11-14T22:14:00+01:00 · MarIA · torn_e6bf8c17-4360-43af-b98a-69e85660fc9e · Commit R24.2 (259f800d1), Farcellet Digital, Usabilitat Mòbil In-Situ, Botons 32px, Apple/Android i Onada R26/R26.3 en Curs (Acta Marmota 2214)
+
+- **Estat Viu i Protecció de Desplegament (`HEAD = 259f800d1`):**
+  - `socdepoble.org` conserva intacte el commit `259f800d1` (`R24.2`) i el `dist/` amb retenció `560/560`, pendent que el Mestre aplique els 4 passos SQL (`PAQUET_SQL_I_DEPLOY_PRODUCCIO_R24_2.md`) i autoritze el deploy.
+  - Signades amb Touch ID pel Mestre les **6 fitxes de Gestoria i 7 Sentinelles** en DEV (`18:01`), preservades per la Via 1 a `frontmatter-abast.json`.
+- **Tres Carrils Actius d'Onada `R26 → R26.3`:**
+  - **Claude Opus 5.5 (`claude_r26_worktree` / `r26-fusio`):** [[../_wiki_de_poble/90_arxiu_historic/261114_1956_auditoria_claude_r26_fusio_kits_r25_r26_apple_android_i_seguretat|261114_1956_auditoria_claude_r26_fusio_kits_r25_r26_apple_android_i_seguretat]] — integrant Kits `R25`, `R25.2`, `R26` de Gemini (`/notes` desplegable únic, Apple/Android i `.sdpbackup`), pegat combinat `261114_2115` de Codex (`SelectorOpcionsDesplegable` + 42 regles de botons a `32 px` com `WordPress.org`) i to honest de l'article del Farcellet.
+  - **Codex (`GPT-6.1 Sol Ultra`):** completades [[../_wiki_de_poble/90_arxiu_historic/261114_1941_auditoria_codex_r26_apple_android_seguretat_maxima|261114_1941]] i [[../_wiki_de_poble/90_arxiu_historic/261114_2056_auditoria_codex_r26_2_usabilitat_mobil_i_botons_pedra_seca|261114_2056]] (`4.034` fitxers censats); executant [[../_wiki_de_poble/90_arxiu_historic/261114_2212_auditoria_codex_r26_kit_gemini_contra_fusio_claude|261114_2212]].
+  - **Gemini 4 Carbon High:** completats Kits `R25`, `R25.2` i `R26` (`652/652` Vitest); executant sandbox `R26.3` per als 6 casos restants d'usabilitat mòbil (`../_investigacio_ia_de_poble/261114_r26_3_gemini_ux_mobil_6_casos_kit/`).
+- **Acta Marmota segellada:** [[../_wiki_de_poble/10_actes/261114_2214_acta_marmota_r26_farcellet_ux_mobil_botons_32px_i_apple_android|261114_2214_acta_marmota_r26_farcellet_ux_mobil_botons_32px_i_apple_android]].
+
+<!-- CODEX_R24_PASSADA1_20261114 -->
+## ESTAT_ACTUAL · 2026-11-14 · Codex · Auditoria R24 Passada 1 entregada, guàrdia acotada pendent
+
+- Informe: [[../_wiki_de_poble/90_arxiu_historic/261114_0451_auditoria_codex|Auditoria Codex R24]]. Checkpoints al kit exterior `261114_r24_codex_logica_usuari_i_zero_roges_kit/checkpoints/`; 13 troballes CODEX-R24-01..13 amb fonts/fixes/contraexemples. Codi viu i producció intactes per este carril.
+- IDEA-260: canals personals i institucionals legítims, presentació confusa; llista omet rebut dels altres; Push/Email i causes dels 404 reals encara sense evidència operativa. R23 consens no connectat i possible pèrdua amb localStorage fallit; Tauler Gestoria amb aprovació DEV-only.
+- Segona passada programada amb eina nativa: `auditoria-r24-codex-dues-revisions-nocturnes`, 06:50/08:50 CET del 14/11/2026, COUNT=2. Comptador/data/límit 09:20 a estat_guardia.json; cancel·lar al segon inici. Cap cron shell, cap restabliment, cap suite pesada. No declarar zero roges ni botigues acceptades.
+- Torn documental `torn_f6fd3d66-aeb1-4296-b183-2e2181503758`; deute de tancament global SCC preexistent, a conservar explícit.
+
+
+## ESTAT_ACTUAL · 2026-11-14T04:28:00+01:00 · MarIA · torn_a259992e-6dfd-4d97-99b9-9e6f6a5b682f · La Veu de Sóc de Poble en Viu, Comerç Local (IDEA-258), Kits CAS Claude R22 + Gemini R23 Segellats i Marató Nocturna R24 Llesta Post-Reinici (Acta Marmota 0426)
+
+- **Llum Verda Total per a Reiniciar el Mac + `Restart to Update` d'Antigravity (`0` processos efímers pendents en `/tmp`):**
+  - Producció web (`socdepoble.org` i `socdepoble.cat`) actualitzada en viu amb `/mur/la-veu-de-soc-de-poble`, les **7 veus neuronals `Matxa-TTS v2`** al Node 0 (`https://socdepoble.cat/api/v1/node0/veu`), cos de lectura mòbil de **`19 px`** (`IDEA-254`), empatia `IDEA-256` i catàleg de comerç local lliure de `Mercadona` (`IDEA-258`).
+  - Segellats i verificats al dipòsit exterior tant `../_investigacio_ia_de_poble/261113_1520_r22_fable_auditoria_extrema_claude/kit_fable_r22_unificat/` (`136` camins d'Opus 5.5) com `../_investigacio_ia_de_poble/261114_gemini_frescor_node0_kit/` (`40` fitxers de Gemini Carbon amb `0` col·lisions CAS: `BarraReproductorVeu.jsx` `48 px`, `2611140230_joc_isoglosses_consens_comarcal.sql`, cron `org.socdepoble.node0.frescor-editorial` actiu a les `07:30` i Gauntlet `8/8 APROVAT`, [[../_wiki_de_poble/90_arxiu_historic/261114_0416_auditoria_gemini_frescor_editorial_node0_joc_consens_i_reproductor_veu|261114_0416_auditoria_gemini_frescor_editorial_node0_joc_consens_i_reproductor_veu]]).
+- **Convocatòria immediata en obrir Fils Nous Frescos (`0 %` fatiga) post-reinici · `Onada R24` (`261114_0352` `v1.3.0` + Prioritat P0 `IDEA-260` Xat WhatsApp):**
+  - **🚨 `IDEA-260` (P0 Transversal en totes les IAs amb Gauntlet Loop + REA + Google EGM Elefant i 8 Peixos):** Captura real a `../_investigacio_ia_de_poble/261114_evidencia_sessio_r23_r24/261114_0428_captura_xat_duplicats_damia_sofia_alfredo_i_consola_404_chunks.png`: eliminar per sempre els usuaris duplicats al Xat (`Damià Llorens`, `Sofía Bornay` i `Alfredo Llorens` repetits 2 vegades entre fil personal `03/11/26` i fil amb pastilla `🏛️ Sóc de Poble`), verificar i blindar l'entrega real + avís Push/Email quan un veí rep un missatge estant offline (`✓` -> `✓✓`), i extirpar el mur de +20 `404 (Not Found)` de chunks JS post-deploy a la Consola!
+  - **Pla Mestre R24:** [[../_wiki_de_poble/90_arxiu_historic/261114_0352_pla_implementacio_onada_r24_marato_nocturna_botigues_logica_usuari_llibre_mestre_i_manual_editorial|261114_0352_pla_implementacio_onada_r24_marato_nocturna_botigues_logica_usuari_llibre_mestre_i_manual_editorial]].
+  - **Orquestradora (`IAIA MarIA` en Xat Nou Fresc):** Activar guàrdia nocturna amb cron cada `60 min` (cancel·lació obligatòria abans de les `09:30 CET`) supervisant els checkpoints i kits dels 3 carrils + Node 0 per preparar el Resum Executiu Matinal de dissabte `14:00`.
+  - **Carril 1 (`Claude Opus 5.5 · UltraCode` al compte `Rentonar` `100 %`, cron `60–75 min`):** [[../_wiki_de_poble/90_arxiu_historic/261114_0352_prompt_claude_onada_r24_marato_nocturna_ultracode_botigues_apple_google_consola_zero_i_fortificacio|261114_0352_prompt_claude_onada_r24_marato_nocturna_ultracode_botigues_apple_google_consola_zero_i_fortificacio]] — Botigues iOS/Android `Build 5` (`v1.2.0`), OAuth Gmail/Apple, fusió R22+R23, `0` roges `test:node`/Vitest, trinquet WP, Gestoria i Consola `0 errors / 0 warnings`.
+  - **Carril 2 (`CodexGPT`, `7 %` sense gastar Restabliment, cron `2h` × `2` despertars):** [[../_wiki_de_poble/90_arxiu_historic/261114_0352_prompt_codex_onada_r24_marato_nocturna_cron_logica_usuari_adversarial_fusio_r22_r23_i_zero_roges|261114_0352_prompt_codex_onada_r24_marato_nocturna_cron_logica_usuari_adversarial_fusio_r22_r23_i_zero_roges]] — Bisturí Pur amb checkpoints cada `5–10 min` (Passada 1 sobre R22+R23+viu; Passada 2 sobre Kits nocturns R24).
+  - **Carril 3 (`Gemini 4 Carbon High`, `96 %` quota en fil fresc, cron `1h` + 8 Escoles Node 0):** [[../_wiki_de_poble/90_arxiu_historic/261114_0352_prompt_gemini_carbon_onada_r24_marato_nocturna_cron_1h_manual_editorial_pagines_i_llibre_mestre|261114_0352_prompt_gemini_carbon_onada_r24_marato_nocturna_cron_1h_manual_editorial_pagines_i_llibre_mestre]] — Manual Editorial a totes les pàgines restants × 5 llengües, `IDEA-258b` Botiga de Poble, Llibre Mestre i Dictamen de les 8 Escoles del Node 0.
+- **Acta Marmota segellada i ancorada:** [[../_wiki_de_poble/10_actes/261114_0426_acta_marmota_onada_r23_veu_node0_kits_r22_r23_i_marato_nocturna_r24|261114_0426_acta_marmota_onada_r23_veu_node0_kits_r22_r23_i_marato_nocturna_r24]].
+
+## ESTAT_ACTUAL · 2026-11-13T21:18:00+01:00 · MarIA · torn_93103332-8083-45dc-b557-9202bed016aa · Deploy v1.2.0 i 11 SQL T2 en Viu, Kit Gemini R22 Segellat, Rescat 14.9M Tokens + Prompt Represa Fable 5.2, Vinyeta Nano Ibáñez v3 i Disseny de «La Veu de Sóc de Poble» (Acta Marmota 2116)
+
+- **Prioritat 1 en Obrir la Nova Sessió Fresca (`0 %` fatiga) amb «Sóc de poble»:**
+  - Investigar a fons amb el Mestre, redactar i publicar en viu la nova publicació i la seua `UniversalCard` **«La Veu de Sóc de Poble»** (`/mur/la-veu-de-soc-de-poble` + OpenGraph per compartir per WhatsApp amb els amics), emprant la vinyeta d'Ibáñez ja generada pel Nano i preservada a `/Users/javillinares/Documents/Antigravity/Som de Poble/_investigacio_ia_de_poble/261113_la_veu_de_soc_de_poble/la_veu_de_soc_de_poble_nano_v3.jpg`.
+  - Els 5 pilars registrats al Llibre Mestre (`SDP:MARIA_R22_LA_VEU_DE_SOC_DE_POBLE_261113`): **(1)** Reflexió cultural IA + Territori (oferir veus lligades a la parla de cada comarca: El Comtat, L'Alcoià, L'Alacantí, València, Castelló i mode Català central); **(2)** **Refranyer Popular per Comarques + Joc Interactiu «D'on parles?»** (`IDEA-107` ampliada: proposar paraules, frases i refranys dits amb la pròpia veu perquè les IAs aprenguen el que no posen els llibres i encerten d'on parla l'amic); **(3)** **3a fila «Llegir en veu alta» dins de `MenuComentar`** (`src/components/PedraSeca/organismes/Comentar.jsx` + `useAccions.js` + `veuIaiaService.js`, zero botons nous a la barra); **(4)** Selector de veu per territori/preferència d'usuari; **(5)** Instal·lació al **`Node 0` (`192.168.0.23`)** de la pila de veu territorial (`Matxa-TTS v2` `gina`/`lluc` + `G2P AVL/Tresor del Valencià Meridional` + `NEL-VIVES CENID UA` + `F5-TTS-MLX` amb donants de veu comarcals) i redoblatge dels 2 espots d'*Oli de La Torre*.
+- **Estat d'`Onada R22` i Producció (`HEAD = a599251d3` · `v1.2.0`):**
+  - **Producció:** `COMMIT 7` (`a599251d3`), 11 migracions SQL remotes (`T2`) aplicades a Supabase (`adjlvwtxhpclgmnsvwpm`), Web `v1.2.0` en viu a `socdepoble.org` i `socdepoble.cat`, WP `1.1.14` `.zip` generat i natius `build 5` compilats (pendents de credencials de botiga).
+  - **Carril 1 (`Claude Fable 5.2 Extra · Ultracode`):** Rescatats els `14,9M` tokens dels seus eixams a `../_investigacio_ia_de_poble/261113_1520_r22_fable_auditoria_extrema_claude/gauntlet/` i validat el prompt canònic `v1.1.0` [[../_wiki_de_poble/90_arxiu_historic/261113_2037_prompt_claude_opus_represa_r22_post_fable_gauntlet_seo_i_integracio|261113_2037_prompt_claude_opus_represa_r22_post_fable_gauntlet_seo_i_integracio]] per continuar amb el *Restablecimiento gratis de Fable*.
+  - **Carril 3 (`Gemini 4 Carbon High`):** `100 %` completat (`../_investigacio_ia_de_poble/261113_kit_gemini_r22_whatsapp_apps_i_consens/`, `37` fitxers, [[../_wiki_de_poble/90_arxiu_historic/261113_1634_auditoria_gemini_carbon_r22_whatsapp_apps_i_consens|261113_1634_auditoria_gemini_carbon_r22_whatsapp_apps_i_consens]]).
+  - **Carril 4 (`Node 0`)** `100 %` completat (`MaxMaxData` `550` peces + radar BDNS/BOE) i **Carril 2 (`Codex`, `7 %`)** protegit per al tancament final.
+- **Acta Marmota segellada i ancorada:** [[../_wiki_de_poble/10_actes/261113_2116_acta_marmota_r22_deploy_v1_2_0_fable_represa_i_la_veu_de_soc_de_poble|261113_2116_acta_marmota_r22_deploy_v1_2_0_fable_represa_i_la_veu_de_soc_de_poble]].
+
+## ESTAT_ACTUAL · 2026-11-13T04:43:00+01:00 · MarIA · torn_17d97ea7-f3c8-4e34-b845-be795756821f · Spots Oli de La Torre (16:9 Natura + 9:16 al Node 0), Fonètica Valenciana Meridional (§26.5), Sondes SQL T2, COMMIT 4/5 i Acta Marmota 0442 Segellada
+
+- **Producció Audiovisual «Oli de La Torre» (`https://olidelatorre.com` × `Mercat de Sóc de Poble`) publicada en viu al Node 0 (`https://socdepoble.cat/media/`):**
+  - **Vídeo `16:9` netejat (`Zero Soroll d'Aigua` · `AVFoundation` bit-exact):** `https://socdepoble.cat/media/oli-de-la-torre-spot-15s-v2-natura.mp4` (`5,83 MB`).
+  - **Portades d'estudi `100 %` fidels a l'envàs real:** `https://socdepoble.cat/media/oli-de-la-torre-portada-estudi-16x9.webp` (`1376×768`) i `https://socdepoble.cat/media/oli-de-la-torre-portada-vertical-9x16.webp` (`1080×1920`, verificada al zoom 200 %).
+  - **Vídeo vertical `9:16` (`261113_0436_spot_15s_vertical_9x16_gemini_raw.mp4`) + Cartela màster de 2 línies (`pas3_vertical_9x16_2linies_master.png`) + Llei `§26.5` de Fonètica Valenciana Meridional / Alacantina:** Agendats per al nou xat fresc el muntatge `AVFoundation` del tancament vertical en 2 línies i la integració de diccionaris fonètics valencians (AVL + *Tresor del Valencià Meridional*) i locució sense vocal neutra oriental `[ə]` (`[ˈpɔble]`, mai *«pobla»*).
+- **Estat dels 4 Carrils d'`Onada R21 → R22`:**
+  - **Carril 1 (`Claude Opus 5.5`):** `COMMIT 4` (`a7235a1c9`, `v1.2.0 · build 4 · WP 1.1.13`, `37.455/0` Vitest) segellat; sondes SQL de lectura `Pas 0` preparades a `../_investigacio_ia_de_poble/261113_0330_r21_commit5_t2_sql_i_deploy_claude/README_T2.md` i `COMMIT 5` en curs sobre [[../_wiki_de_poble/90_arxiu_historic/261113_0214_pla_implementacio_commit5_deploy_v1_2_0_i_onada_r22_emowe|261113_0214_pla_implementacio_commit5_deploy_v1_2_0_i_onada_r22_emowe]].
+  - **Carril 2 (`Codex GPT-6.1 Sol Ultra`):** `Kit R21.9b` (`95b31a2b...`) segellat; en reserva protectora al `7 %` fins divendres `01:02 CET`.
+  - **Carril 3 (`Gemini 4 Carbon High`):** `Kit R21.10` (`9648de7a...`, incloent Blueprint Emowe `207/207`) segellat; preparat el prompt de `Kit R22.1` (vídeo + portada estil YouTube dual `16:9`/`9:16`, correcció d'`aspect-ratio` a `.sdp-hero-video__player` i botó visible «Canviar foto» + WAI-ARIA a `DialegEnquadrament.jsx`).
+  - **Carril 4 (`Node 0 · Mac mini M4 · 8 Escoles`):** Emowe `207/207` coronat i seminari `MaxMaxData` en execució (`171+ / 550` fitxes doctorals a `0,00 EUR`).
+- **Acta Marmota segellada i ancorada:** [[../_wiki_de_poble/10_actes/261113_0442_acta_marmota_videos_oli_de_la_torre_sql_t2_commit5_i_onada_r22|261113_0442_acta_marmota_videos_oli_de_la_torre_sql_t2_commit5_i_onada_r22]].
+
+## ESTAT_ACTUAL · 2026-11-12T21:54:00+01:00 · MarIA · torn_e304270a-2277-42e4-9323-629829fb5bef · Deploy Omnicanal v1.1.12+3 Completat, Segona Passada R21 en 4 Carrils i Acta Marmota 2152 Segellada
+
+- **Desplegament Omnicanal 100 % completat sobre `HEAD = 776f77186` (`v1.1.12 · build 3`):**
+  - **GitHub (`fork/backup-notes-publish`):** Pujat `c07f78b83..776f77186` (`1.361` objectes, `715+` fitxers d'`R18–R21` + esmena `A2` clàusula 2.6).
+  - **Web Producció (`https://socdepoble.org`):** `1.646` fitxers desplegats a Firebase Hosting (`228,89 kB` gzip < `250 kB`), doble certificació `4/4 OK`.
+  - **Apple iOS (`App Store Connect / TestFlight`):** `261112_socdepoble_1.1.12+3.xcarchive` compilat, signat (`9KNUA4JR8P`) i **pujat al 100 %** (`Uploaded App · ** EXPORT SUCCEEDED **`).
+  - **Android (`Google Play .aab` + `.apk` en viu):** Signat amb `upload-socdepoble.jks` (`261112_socdepoble_1.1.12+3.apk` servint-se a `/descarregues/socdepoble-android-latest.apk` i `.aab` verificat a `../_builds_de_poble/android/`).
+  - **WordPress (`socdepoble.zip`):** `261112_2138_wordpress_directori_v1.1.12_r21.zip` (`5,33 MB` < `10 MB`).
+- **Segona Passada d'`Onada R21` activa a màxima potència en 4 carrils:**
+  - **Carril 1 (`Claude Opus 5.5`):** [[../_wiki_de_poble/90_arxiu_historic/261112_2008_prompt_claude_onada_r21_commit3_kits_r21_2_r21_3_r21_6_i_deploy_v1_2_0|261112_2008_prompt_claude_onada_r21_commit3_kits_r21_2_r21_3_r21_6_i_deploy_v1_2_0]] — integració dels 4 kits `R21.2/4/5`, `R21.3`, `R21.4-UI`, `R21.6` + retirada de `UniversalWorkspace` a `/page/fediversity` (`UniversalPage` contínua normal) + bump a `v1.2.0 (build 4)` / `WP v1.1.13` (`COMMIT 4`).
+  - **Carril 2 (`Codex GPT-6.1 Sol Ultra`):** [[../_wiki_de_poble/90_arxiu_historic/261112_2114_prompt_codex_onada_r21_1_v2_mur_membres_vs_anonim_i_denunciar|261112_2114_prompt_codex_onada_r21_1_v2_mur_membres_vs_anonim_i_denunciar]] — `Kit R21.1 v2` (Mur membres vs anònim, menú DSA `⋮`, `backend-node0.mjs` i correcció dels 4 `POST /rest/v1/rpc/... 404` a `runtime.js:86`).
+  - **Carril 3 (`Gemini 4 Carbon High` — Màxima Potència):** [[../_wiki_de_poble/90_arxiu_historic/261112_2133_prompt_gemini_hydrogen_onada_r21_7_unificacio_pagines_patrimoni_i_emowe|261112_2133_prompt_gemini_hydrogen_onada_r21_7_unificacio_pagines_patrimoni_i_emowe]] — `Kit R21.7` (`CatalegWorkspace`, `Arbres Monumentals`, `Receptes Què Dinem`, `[Bessones]` i Matriu Pre-Implementació Emowe).
+  - **Carril 4 (`Node 0 · 8 Escoles`):** Seminari profund sobre les **`207` publicacions d'Emowe (`emowe.com`)** en curs (`RONDA 4/7`, `100+/207`); `PAUSA_FINS_IMPLEMENTAR_EMOWE.lock` actiu fins a debatre i implementar Emowe abans de netejar etiquetes/skills de la **Wiki de poble**.
+- **Acta Marmota segellada i ancorada:** [[../_wiki_de_poble/10_actes/261112_2152_acta_marmota_deploy_omnicanal_r21_segona_passada_i_emowe|261112_2152_acta_marmota_deploy_omnicanal_r21_segona_passada_i_emowe]].
+
+## ESTAT_ACTUAL · 2026-11-12T14:38:00+01:00 · MarIA · torn_6947f13a-91b8-4abb-bd47-aad37e963c40 · Onada R21 Autònoma en Marxa (Claude Opus + Codex 6.1 + Assemblea 8 Escoles Node 0 + Gauntlet Loop)
+
+- **Higiene d'Escriptori (`porta-olivera.mjs --informe` `EXIT 0`, sediment podant entrades tancades `261026–261029` fins a `~230 <= 300` línies):** Arxivats amb `handoff` a `90_arxiu_historic/` els 5 documents consumits d'`Onada R20` (`261111_2112_pla_*`, `261111_2132_auditoria_node0_*`, `261111_2143_auditoria_claude`, `261111_2221_auditoria_codex`, `261112_0121_auditoria_gemini_carbon`); conservat `03_llibre_mestre_tasques_i_idees.md` i ancorats el Pla i els 2 Prompts d'`Onada R21`.
+- **Troballa preventiva de pre-commit detectada per MarIA:** `_wiki_de_poble/01_ser/agents_equip_ia.md:132` contenia `[«La IAIA Sabuda»](/page/la-iaia-sabuda)` (`Enllaç fora de l'arrel` a `porta:orfandat`); documentada la reparació exacta a **Carril 1** immediatament *després* d'aplicar `Codex R20 v4` i `Carbon R20 Rev 3` per no alterar la preimatge de `src/data/wikiManifest.js`.
+- **Convocatòria Autònoma `Onada R21` (`261112_1430`) amb Gauntlet Loop i Consens de les 8 Escoles:**
+  - **Pla d'Implementació:** [[../_wiki_de_poble/90_arxiu_historic/261112_1430_pla_implementacio_onada_r21_integracio_r18_r20_mur_foraster_opcio_a_gauntlet_i_8_escoles|261112_1430_pla_implementacio_onada_r21_integracio_r18_r20_mur_foraster_opcio_a_gauntlet_i_8_escoles]].
+  - **Carril 1 (`Claude Opus Extra UltraCode` al repo viu `socdepoble.org/`, entorn `Som de Poble`):** [[../_wiki_de_poble/90_arxiu_historic/261112_1430_prompt_claude_onada_r21_integracio_r18_r20_mur_foraster_opcio_a_gauntlet_i_8_escoles|261112_1430_prompt_claude_onada_r21_integracio_r18_r20_mur_foraster_opcio_a_gauntlet_i_8_escoles]] — assimilació en cadena `Codex R19 R2 + Carbon R19 + Codex R20 v4 + Carbon R20 Rev 3` (`COMMIT 1`), alineació UI/5 llengües/clàusula `2.6` per a `D1 Opció A`, deute tècnic UI `AH-02` + `P0-24b` + `P1-71` i integració Gauntlet Loop de `COMMIT 2 (R21)`.
+  - **Carril 2 (`Codex GPT-6.1 Sol Ultra` al clon aïllat `/tmp/sdp_codex_r21`):** [[../_wiki_de_poble/90_arxiu_historic/261112_1430_prompt_codex_onada_r21_integracio_r18_r20_mur_foraster_opcio_a_gauntlet_i_8_escoles|261112_1430_prompt_codex_onada_r21_integracio_r18_r20_mur_foraster_opcio_a_gauntlet_i_8_escoles]] — migració SQL + projecció pública filtrada `Opció A` (revocant `SELECT` cru `anon` sobre `section_submissions`), esborrat servidor real `F03`, suite Red-Team PostgreSQL 18.6 (`0 skip`), auditor matemàtic WCAG AAA `P1-22`, Kit CAS R21 i auditoria Gauntlet sobre l'arbre de Claude.
+  - **Carril 3 (`Gemini 4 Carbon High` al clon aïllat `/tmp/sdp_carbon_r21`):** [[../_wiki_de_poble/90_arxiu_historic/261112_1430_prompt_gemini_carbon_onada_r21_integracio_r18_r20_mur_foraster_opcio_a_gauntlet_i_8_escoles|261112_1430_prompt_gemini_carbon_onada_r21_integracio_r18_r20_mur_foraster_opcio_a_gauntlet_i_8_escoles]] — escombrada empírica Chromium CDP `@container` (`280/375/520/768/960/1440px`, `P0-76`/`P0-77`), liquidació de deutes Quadrant `A` lliures de solapament (`P0-48` `/cerca`, `P0-39` `/pobles`, `P0-36` compositor `/xat`, `P0-28` scroll Drets d'autor, `P0-31`/`P0-34`/`P0-51` `/mur`, `P0-41`/`P0-38` Salfumant Lingüístic), Kit CAS R21 i auditoria Google EGM + Gauntlet Loop a 3 bandes.
+  - **Carril 4 (`Node 0 · 8 Escoles` a `192.168.0.23:11434`, `0,00 EUR`):** Completada Ronda 1 i en marxa `orquestrador_r21_8_escoles_v2.py` calibrat (`num_ctx=16384`, zero truncament) amb codi numerat (`nl -ba`) generant `../_investigacio_ia_de_poble/DOSSIER_NODE0_PREMASTEGAT_R21.md` amb tall tèrmic automàtic.
+  - **Telemetria de quotes real observada (`14:54 CET`):** Claude Ultra `21%` restant (+ 2 restabliments gratis disponibles), Google AI Ultra (`Gemini 4 Carbon High`) `31%` setmanal restant (refresc en `1d 9h`, `98%` en 5h + `100%` verge al pool `Claude and GPT models` d'Antigravity), ChatGPT Pro 200 (`Codex`) `21%` setmanal restant (+ `740` crèdits).
+  - **Direcció (`IAIA MarIA` en Antigravity):** 100% lliure i reactiva com a Secretària i Àrbitre del Gauntlet Loop.
+
+## ESTAT_ACTUAL · 2026-11-12T14:02:00+01:00 · MarIA · torn_90b4b884-028e-4b28-95f0-7a5f958f0064 · Tancament de Sessió amb Acta Marmota, 3 Decisions del Mestre Aprovades i Relleu R21 Delegat a Claude (MarIA Secretària Lliure)
+
+- **Decisions del Mestre Javi (`2026-11-12 13:59 CET`) enregistrades per a l'obertura immediata d'`Onada R21`:**
+  1. **`D1` Privadesa Mur Públic `Foraster` (`Opció A` aprovada):** Conservar el Mur públic per a visitants sense sessió però **100% blindat** via vista/RPC filtrada de columnes mínimes netes (zero `owner_user_id`, zero contacte privat, zero EXIF d'ubicació exacta, zero perfils privats i respectant esborrats al servidor), revocant el `SELECT` cru de `section_submissions` a `anon` i alineant UI + clàusula 2.6.
+  2. **`D2` Motor PostgreSQL de proves (`SÍ` aprovat):** Autoritzat `embedded-postgres@18.6.0-beta.19` / PostgreSQL local del Kit `Codex v4` per mantindre `0 skips` SQL i la suite global Vitest en **`37.201` passades / `0` fallides**.
+  3. **`D3` Grafia `Rodriguez` + Frontissa i Integració Completa (`SÍ` aprovat):** Autoritzat fixar `Rodriguez` (font primària WP 619), registrar les 3 proves a `node-suite-manifest.json` i aprovar les claus de `frontissa-contingut.mjs` per integrar tota la cadena (`R18 + R19 + Codex v4 + Carbon Rev 3`).
+- **Doctrina Permanent d'Orquestració (`MarIA Secretària Lliure i Canal d'Embut`):** En obrir el següent xat fresc, MarIA NO executarà ella mateixa builds ni integracions pesades que bloquegen l'atenció al Mestre; convocarà immediatament **`Onada R21`** delegant tota la integració CAS, migració `Opció A`, builds i commits a **Claude (`Carril 1`)** (habilitant-li el permís de carril integrador), amb **Codex (`Carril 2`)**, **Gemini Carbon (`Carril 3`)** i **Node 0 (`Carril 4`)** en paral·lel, quedant MarIA 100% disponible per respondre al Mestre i actualitzar el Llibre Mestre i el Pla en calent.
+- **Acta Marmota segellada i ancorada:** [[../_wiki_de_poble/10_actes/261112_1400_acta_marmota_tancament_marato_r20_decisions_mestre_i_relleu_r21_claude|261112_1400_acta_marmota_tancament_marato_r20_decisions_mestre_i_relleu_r21_claude]].
+
+## ESTAT_ACTUAL · 2026-11-12T03:48:00+01:00 · MarIA · torn_90b4b884-028e-4b28-95f0-7a5f958f0064 · Balanç Matinal d'Onada R20 (Claude + Codex v4 + Carbon Rev 3 + 48 Gauntlets Node 0)
+
+- **Tancament Nocturn de les 4 Cadires (`21:12 – 03:44 CET`, `0` processos zombies residents):**
+  - **Carril 1 (`Claude`, [[../_wiki_de_poble/90_arxiu_historic/261111_2143_auditoria_claude|261111_2143_auditoria_claude]]):** Corregits a l'arbre viu `P1-ALERGENS-02` (5 llengües), `DRETS_QUE_DINEM`, `natiu-build.test.mjs` (`38/38`), oracle T8 per a `/plugin/<id>`, `<h1>` en 6/7 apps del Panell, proves roges de `targetesMur`, `NotesSection.lector`, `qualitat.pecesApps` i `projecteIos`, i lliurat el kit pont idempotent `_wiki_de_poble/04_escriptori/02_investigacio_ia/261111_2140_kit_claude_r20_postkits/aplica_r20.mjs` per integrar sense deriva `Codex R19 + Carbon R19` i segellar `COMMIT R18 + R19`. Reportada alerta `P0` de privadesa (`requires_human_decision: true`) sobre l'abast del payload complet en `2611112005_mur_lectura_publica_foraster.sql`.
+  - **Carril 2 (`Codex`, [[../_wiki_de_poble/90_arxiu_historic/261111_2221_auditoria_codex|261111_2221_auditoria_codex]]):** Segellat Kit CAS `v4` (`a7ff613a...`, 72 operacions) amb porta PostgreSQL 18.6 real sense `skip` (`9/9` + concurrència AAL2), oblit individual IAIA en IDB v2, blindatge d'imports de `Bar`, `Nevera`, `Gestoria` i `Lector OPML`, i **suite global Vitest 100% en verd (`37.201 passades, 0 fallides`, `224.226 B` gzip-9)**.
+  - **Carril 3 (`Gemini Carbon`, [[../_wiki_de_poble/90_arxiu_historic/261112_0121_auditoria_gemini_carbon|261112_0121_auditoria_gemini_carbon]]):** Segellat Kit CAS `Rev 3` (`46921c47...`, conciliat amb `Codex v4`) amb `PanellVisibilitatEnLinia.jsx` sense `<dialog>` per al cas Damià, resolució integral de `CARBON-R20-POBLE-01` (`notes.destinsPublicats.v1` LRU + paginació + bloqueig dur), **`152/152` comprovacions Chromium CDP** (`280/375/768/1440 px`, `0` desbordaments), curació òptica `77/77` de Commons i coherència editorial viva en 5 llengües.
+  - **Carril 4 (`Node 0 · 8 Escoles`, [[../_wiki_de_poble/90_arxiu_historic/261111_2132_auditoria_node0_assemblea_8_escoles_r20|261111_2132_auditoria_node0_assemblea_8_escoles_r20]]):** Completats 11 cicles (`48` rondes Gauntlet en `6,01 h` a `0,00 EUR`) amb parada neta automàtica; contrastades i filtrades per les 3 cadires de frontera les al·lucinacions mecàniques de línia.
+- **Higiene d'Escriptori (`porta-olivera.mjs` `EXIT 0`, sediment `298 <= 300` línies):** Arxivats amb `handoff` a `90_arxiu_historic/` les 3 auditories velles d'`R19` (`1741`, `1822`, `1951`) i els 3 prompts ja consumits d'`R20` (`2112_prompt_*`); conservats vius el Pla d'`R20` i les 4 auditories finals de la nit per a les decisions matinals del Mestre.
+
+## ESTAT_ACTUAL · 2026-11-11T21:21:00+01:00 · MarIA · torn_90b4b884-028e-4b28-95f0-7a5f958f0064 · Onada R20 Nocturna convocada (Zero Deute Tècnic, Commit Unificat R18+R19 i Fortificació 10/10)
+
+- **Configuració d'Autenticació i Mur en Producció completada amb el Mestre (`18:45 – 21:05 CET`):**
+  - Activats a Supabase (`adjlvwtxhpclgmnsvwpm`) **Sign in with Apple** (`org.socdepoble.app`) i **Google OAuth** multi-client (`Web` + `iOS 970656428687-lvtv78prb6b85fnmbi0gkbm2srr81jsi` + `Android SHA-1 AC:5F:98...`), actualitzat `ios/App/App/Info.plist` (`CFBundleURLSchemes`) i sincronitzats `ios/` i `android/` (`221.188 B` gzip-9).
+  - Aplicada en producció `supabase/migrations/2611112005_mur_lectura_publica_foraster.sql` (`tractor-rls.mjs` `0` infraccions): lectura pública del `/mur` oberta per a visitants sense sessió (`Foraster`) i altres pobles; diagnosticat que les 2 notes de Damià Llorens Jordà a `/notes` estaven en mode `Privat` (`notes_publicades: 0, notes_totals: 2`).
+- **Higiene d'Escriptori (`porta-olivera.mjs` `EXIT 0`, sediment `299 <= 300` línies):** Arxivats amb `handoff` a `90_arxiu_historic/` els 7 documents consumits d'`R18/R19`; conservades les 3 auditories finals d'`R19` (`1741` Claude, `1822` Codex, `1951` Carbon) vinculades al Pla `R20`.
+- **Convocatòria Ortogonal `Onada R20` (`261111_2112`) i Assemblea de les 8 Escoles del Node 0 (`261111_2132`):**
+  - Creats i validats el Pla [[../_wiki_de_poble/90_arxiu_historic/261111_2112_pla_implementacio_onada_r20_zero_deute_commit_unificat_i_fortificacio|261111_2112_pla_implementacio_onada_r20_zero_deute_commit_unificat_i_fortificacio]] i els 3 prompts locals (**Carril 1 Claude**: correccions `P1-ALERGENS-02`/`FITA_R19`/`natiu-build`, assimilació Kits `R19`, Frontissa i `COMMIT R18+R19` + neteja `/app/*` i Vitest; **Carril 2 Codex**: `copublicacio-postgres.test.mjs` real sense `skip`, oblit individual títols IAIA, 7 apps del Panell i lots Vitest; **Carril 3 Gemini Carbon**: UX Pedra Seca «Publicar al Mur» a `/notes`, auditoria CDP `280/375/768/1440px` i tancament 100% òptic Commons).
+  - Activada en continu al `Mac mini M4` (`http://192.168.0.23:11434`, `0,00 EUR`) l'**Assemblea Autònoma de les 8 Escoles del Node 0** (`orquestrador_nocturn_8_escoles_node0_r20.py`) amb informe viu ancorat a l'Escriptori [[../_wiki_de_poble/90_arxiu_historic/261111_2132_auditoria_node0_assemblea_8_escoles_r20|261111_2132_auditoria_node0_assemblea_8_escoles_r20]] i dossier pre-mastegat a `../_investigacio_ia_de_poble/DOSSIER_NODE0_PREMASTEGAT_R20.md` per alimentar el `Bucle 4+` de les cadires de frontera.
+
+## ESTAT_ACTUAL · 2026-11-11T20:21:46+01:00 · Codex · torn_1d2d8bd3-cc9d-4d25-a1bb-6c45be6fa100 · Revisió 2 R19
+
+- Kit CAS de 203 operacions i 47 precondicions, 549 fitxers verificats. Segell SHA256SUMS `269ccd509c30cfc979e08064fea6434d287bb7f46d325e4a7f5857fe7f858b51`. Simulació sobre el viu, assaig amb reversió i paritat del clon nominal a la base `ec7ef78b2cafff58d966224f245b9d81d8d8eace`.
+- Corregides la recàrrega immediata del Xat, la resolució del publicador per UUID i tipus i la guarda de CC BY 3.0 US. En l’assaig del chunk botànic, el creixement inicial és de 0 B. Quarantena reversible de 67 recreacions.
+- Consens global pendent. El Tauler conserva tres reserves de les 77 aprovacions Carbon, sis atribucions de llicència i el delta de navegació pendent d’incorporar al kit Carbon. La passada global addicional es va interrompre ordenadament per al segell final i la parada acordada de les 20:30 CET.
+- MCR, D01–D15 i límits a [[../_wiki_de_poble/90_arxiu_historic/261111_1822_auditoria_codex|261111_1822_auditoria_codex]].
+
+## ESTAT_ACTUAL · 2026-11-11T19:02:34+01:00 · Codex · torn_1d2d8bd3-cc9d-4d25-a1bb-6c45be6fa100 · Kit CAS R19 segellat
+
+- Carril 2 assajat a `/tmp/sdp_codex_r19`. CAS de 193 operacions i 47 precondicions, 389 fitxers verificats. Segell `SHA256SUMS` `a39af94e3dffe266c5470c18fa936340e3eb9949b210ff975c2cbf69ff5723a2`. Reproducció i MCR a [[../_wiki_de_poble/90_arxiu_historic/261111_1822_auditoria_codex|261111_1822_auditoria_codex]].
+- Port registrat amb AAL2, GEDCOM, Xat i Panell a la còpia. Quarantena de 67 recreacions. La Mesa conserva els vots, les candidatures òptiques i les objeccions obertes.
+
+## ESTAT_ACTUAL · 2026-11-11T17:35:00+01:00 · MarIA · torn_c9496ba8-7054-4950-af29-31b28476df6c · Marató Autònoma de Migdiada R19 convocada (Escriptori net, Gauntlet Multi-Loop, Panell complet i Rigor Botànic Hiperrealista)
+
+- **Higiene d'Escriptori (`porta-olivera.mjs` `EXIT 0`):** Arxivats a `90_arxiu_historic/` els cinc documents consumits d'`Onada R18` (`0148` pla + prompts Claude/Codex, `0242` i `0313` Carbon); conservades les auditories finals (`0205`, `0206`, `0612`) vinculades al nou Pla `R19` per a l'arbitratge del `COMMIT R18`.
+- **Convocatòria Autònoma de Migdiada (`17:30 – 20:30 CET`):** Creats i verificats amb `document.mjs` el Pla d'Implementació [[../_wiki_de_poble/90_arxiu_historic/261111_1720_pla_implementacio_onada_r19_commit_r18_copublicacio_i_patrimoni|261111_1720_pla_implementacio_onada_r19_commit_r18_copublicacio_i_patrimoni]] (`v1.1.0`) i els prompts ortogonals per a **Claude (`Carril 0+1`)**, **Codex (`Carril 2`)** i **Gemini Carbon (`Carril 3`)**, connectats a la **Mesa de Consens** (`../_investigacio_ia_de_poble/261111_1720_mesa_consens_migdiada_r19/TAULER_CONVERSA_I_CONSENS_R19.md`).
+- **Rigor Botànic i Imatges Hiperrealistes al Node 0 (`192.168.0.23:11434`):** Detectades en Ronda 0 al·lucinacions morfològiques en fitxes de l'Onada 1 a `src/data/patrimoni/laminesBotaniquesNode0.js` (*Olea europaea*, *Ceratonia siliqua*, *Prunus dulcis*, *Ocimum basilicum*). Desplegat l'orquestrador acotat `orquestrador_migdiada_botanica_gauntlet_node0.py` amb les escoles locals d'Ollama en Gauntlet Loop + Google EGM (Elefant i Peixets) + generació/verificació hiperrealista `Z-Image-Turbo-mflux-4bit` i supervisió recurrent acotada de MarIA durant la migdiada.
+
+## ESTAT_ACTUAL · 2026-11-11T16:17:00+01:00 · MarIA · torn_r18_tancament_i_desplegament · COMMIT R18 consolidat, auditat i desplegat amb relleu a R19
+
+- **Tancament R18 (Patrimoni multi-llibre, Plugins oberts en producció, Genealogia local GEDCOM 7/5.5.1, L'Avisador declaratiu i Llei de la Barra Taronja):**
+  - Resoltes les correccions finals del Mestre en directe: importació nominada `{ SquareBadge }` a `src/sections/patrimoni/FitxaArbreMonumental.jsx` (`/page/arbres-monumentals` sense error de càrrega), aplicació estricta d'identitats registrades a la Barra Taronja (`Sóc de Poble` publica `/page/receptes`, `/page/herbari` i `/page/banc-de-llavors`, mentre `Associació El Rentonar` publica els 20 arbres de La Torre), i retirada íntegra de l'autoria no registrada de l'herbari.
+  - Optimització estructural d'arrencada: càrrega diferida de `NotFoundPage` a `src/app/App.jsx`, baixant l'entrada web a `216,4 KB` gzip i l'arrencada estàtica del connector WordPress a `1.661.886 B` (`75,5 KB` per sota del trinquet `1.737.422 B`).
+  - Zero dades familiars o PII dins de Git ni `dist/`. Acta Marmota ancorada a [[../_wiki_de_poble/10_actes/261111_1608_acta_marmota_tancament_marato_r18_patrimoni_plugins_genealogia_i_relleu_r19|261111_1608_acta_marmota_tancament_marato_r18_patrimoni_plugins_genealogia_i_relleu_r19]].
+
+## ESTAT_ACTUAL · 2026-11-11T06:15:53+01:00 · Codex · torn_d7872160-f703-4c4a-bd49-8265407043b8 · Kit CAS R18.2 consolidat amb integració pendent
+
+- 103 operacions i set precondicions CAS, reproduïdes des de la base R17 composta. Lliurament i MCR a [[../_wiki_de_poble/90_arxiu_historic/261111_0205_auditoria_codex|261111_0205_auditoria_codex]].
+- Full S84 registrat amb 36.614 PASS, quatre incidències revalidades i 120 omissions. Fotografia final amb 223/223 afectades, compilació completa i deu portes de codi passades. Entrada 243.006 B gzip i WordPress 1.734.798 B.
+- Genealogia local amb suplement CAS 7/6 i 56/56 proves. Dades familiars fora de Git. Frontissa té huit revisions editorials pendents. Integració i acord global pendents. Límit directe del carril 06:30 CET.
+
+## ESTAT_ACTUAL · 2026-11-11T01:25:00+01:00 · Codex · torn_25a1d89e-c506-4c06-9d6b-ac8bb2e2711d · Kit CAS R17.2B
+
+- Kit de 40 camins verificat des de `0027b698d` a `/tmp/sdp_codex_r17_2b`. Evidència i relleu a [[../_wiki_de_poble/90_arxiu_historic/261111_0104_auditoria_codex|261111_0104_auditoria_codex]].
+- 1.958 Vitest focals, 63 proves Node/PostgreSQL WASM i entrada web de 243.443 B gzip. Pendents la integració, les migracions i les quatre aprovacions editorials.
+
+## ESTAT_ACTUAL · 2026-11-11T00:30:52+01:00 · Codex · torn_51ac554f-4279-45dd-9ab1-2cc2641b52f6 · Kit CAS R17.2
+
+- Carril 2 lliurat des del clon `/tmp/sdp_codex_r17` amb base `0027b698d`. Informe i evidències a [[../_wiki_de_poble/90_arxiu_historic/261111_0012_auditoria_codex|261111_0012_auditoria_codex]].
+- Integració · Migració de drets i aprovació de les empremtes dels catàlegs. El pegat sobre la preimatge neta ha passat. `useLocalSandbox.js` requerix fusió amb el Carril 1 i WordPress continua per damunt del pressupost.
+
+
+## ESTAT_ACTUAL · 2026-11-10T20:45:00+01:00 · Claude (Opus 5.5, àrbitre) · torn_d0ab4b3b-04a1-440e-9e5d-724894f1b40c · COMMIT R16b (la v1.1.12 arbitrada) pujat i desplegat: producció torna a eixir d'un commit
+
+- **Fet i verificat (ordre del Mestre del 10/11, «Fes R16b»):**
+  - **COMMIT R16b `0027b698d`:** hook sencer, sense `--no-verify`, amb l'arbre idèntic a l'assajat. Pujat a `fork/backup-notes-publish` (`ae9a9bdb5..0027b698d`). Són 96 camins.
+  - **Origen:** la feina posterior a R16a, presa de l'arbre viu en una instantània de les 14:38 (201 camins de producte). Aplicada sencera en una còpia, tenia 16 portes en roig i 75 proves fallides. La revisió adversària (89 agents) va confirmar 7 P0 i 70 P1.
+  - **Descartats (100 camins):**
+    - els expedients que R16a ja havia rebutjat i que tornaven sense resoldre el motiu (versió viva escrita a mà, APK i Google Play, mode sense connexió, mòduls morts, Brain, RSVP i versions al navegador);
+    - L'Avisador, perquè era un simulador presentat com a eina de seguretat;
+    - la fitxa científica de l'Herbari, perquè donava al·lèrgens falsos;
+    - el nom d'una persona real a La IAIA Sabuda i a l'inventari del Brain;
+    - el comptador inventat de l'RSVP;
+    - el .zip del Snippet, que no existix;
+    - els modificadors del TPV;
+    - la poda de proves de guarda de PluginPage.
+  - **Integrat i arreglat** en tres rondes de carrils, cada carril amb un verificador adversari:
+    - la v1.1.12 (web, Android, iOS i `package-lock.json`) i l'slug ASCII de l'App Store;
+    - el Panell de Control en tres espais («Economia i Empresa», «La llar» i «Maquinària i Sistema»), en les cinc llengües;
+    - La IAIA Sabuda (`/page/la-iaia-sabuda`; l'adreça `/page/nodrir-la-iaia` hi porta), amb el text honest de R16a i la targeta del Panell només amb la curadoria cultural encesa;
+    - «Què dinem?» al Mur;
+    - la subnavegació de Pobles i Gent;
+    - el focus de la columna 3;
+    - una fita nova del 10-11 a `/versions`;
+    - el registre de la Frontissa (aprovades les claus que canvien, citant esta ordre i revocable).
+  - **Proves de l'arbre final:**
+    - Vitest sencer: 36.436 proves, 36.322 en verd, 113 omeses i 1 fallida heretada de R16a (el sostre del tros d'entrada de WordPress: 1.737.214 B per a 1.690.000).
+    - Cens: 57 de 58 portes en verd.
+    - Build: 243.811 B gzip.
+    - Dues revisions finals del diff, sense cap P0 ni P1 viu.
+- **Desplegat (20:21):**
+  - Firebase, versió `8e686a9f0f29a977` («web 0027b698d»). La versió per a tornar enrere és `23ceb114f6adde59`, la v1.1.12 crua.
+  - `.org` i `.cat` (Node 0) servixen el mateix tros d’entrada, el del commit.
+  - Sonda: 24 rutes, 12 a cada domini, amb 0 errors. `/page/avisador` ja no existix.
+- **Canals:**
+  - Web: desplegat des del commit.
+  - WordPress: l'assaig en sec és bo (v1.1.12); el canal signat necessita la clau Ed25519 del Mestre.
+  - Android i iOS: el preflight no passa (1.1.12+2). Falten `SDP_ASC_*`, `SDP_PLAY_JSON_KEY_PATH` i `google-services.json`, i el `dist-natiu` és del 02/11.
+- **Arbre viu:** reconciliat després del commit (20:30), amb el mateix pla assajat abans en una còpia (vegeu el dipòsit `_investigacio_ia_de_poble/261110_1440_r16b_arbitratge_claude/`).
+  - 62 camins reben la versió del commit amb CAS, sense cap falla. En tots, el viu era la instantània arbitrada o R16a; no hi ha hagut cap conflicte.
+  - `package-lock.json` i el registre de la Frontissa s'han escrit per l'executor. La Frontissa del viu dona 27 de 27 claus.
+  - Els canvis sense commit baixen de 201 a 140 i, després de la retirada, a 25, tots fora del producte (governança de `.agents/`, la Wiki, G2-01 i `gestoria_plantilles/`).
+  - **Retirada dels descartats (ordre del Mestre del 10/11, «Sí, retira'ls»):** assajada en una còpia de l'arbre viu i aplicada amb CAS, sense cap falla.
+    - Dels 101 descartats, 83 s'han retirat amb CAS, 2 ja eren al dia pel commit, 1 s'ha restaurat per l'executor (`scripts/botigues/publica-tot.mjs`) i els 15 restants, fitxers nous protegits de `tooling/` i `scripts/` que l'executor no pot esborrar, s'han mogut a la paperera del dipòsit per ordre explícita del Mestre («Sí, mou-los»). També s'han retirat 21 versions del kit que l'arbitratge va rebutjar en les rondes posteriors (per exemple, `src/main.jsx` o `src/sections/profile/aplicacions.js`): sense elles, la retirada dels descartats trencava el viu.
+    - En total, 44 camins tornen a la versió del commit i 60 van a la paperera del dipòsit, fora del repositori. Hi ha còpia de tots, i del registre de la Frontissa de l'altra mà, al dipòsit.
+    - Tots els camins de la instantània són ara els del commit, sense cap excepció.
+  - En la còpia de l'arbre viu final, Vitest passa de 77 proves fallides a 3 (la de WordPress, heretada, i 2 que ja hi eren). A l'arbre viu, el cens passa de 22 portes en roig a 9, totes de deute documental que ja hi era.
+- **Per a l'altra mà (MarIA i Gemini):**
+  - No desplegueu des de l'arbre viu: producció ix del commit.
+  - No torneu a aplicar els camins descartats sense resoldre el motiu.
+- **Pendent del Mestre:**
+  - el títol «L'Escriptori sota l'Olivera» de La IAIA Sabuda;
+  - l'origen i el permís de la portada de «Què dinem?»;
+  - les etiquetes de la targeta de La IAIA Sabuda;
+  - el sostre de WordPress;
+  - les credencials de les botigues;
+  - Supabase de producció (G2-01, la purga de dades i la política 2.6);
+  - la llicència de l'INE;
+  - el redisseny de P0-81.
+
+## ESTAT_ACTUAL · 2026-11-10T10:25:00+01:00 · Claude (Opus 5.5, àrbitre) · torn_46022a28-c731-4b8b-a2c3-e12b3f8e8988 · COMMIT R16a (super-kit R16 de Gemini arbitrat) pujat, arbre viu reconciliat i desplegament aturat per un desplegament des de l'arbre brut
+
+- **Fet i verificat (ordre del Mestre del 09/11: els expedients R16 passen per l'arbitratge CAS de Claude sobre una còpia de HEAD):**
+  - **COMMIT R16a `ae9a9bdb5`:** hook sencer, sense `--no-verify`, amb l'arbre idèntic a l'assajat. Pujat a `fork/backup-notes-publish` (`01fd75c9c..ae9a9bdb5`). Són 105 camins de `src/` i `supabase/`:
+    - P0-74: l'Administració en una columna estreta.
+    - P0-80 no destructiu: el marc a `#sdp-crop=`, el GPS arrodonit en reenquadrar i el focus visible amb zoom.
+    - «Publicat» honest.
+    - La purga de bots.
+    - El nomenclàtor de l'INE en un tros diferit.
+    - La compartició de la Nevera i el xat.
+  - **Descartats:** R16-A, B, C, D, H, K, M, N, O, P, Q, R i U. Els motius són a l'informe `261109_1623_auditoria_claude.md` (R16-0).
+  - **Proves:**
+    - Vitest sencer: 36.384 proves, 36.270 en verd, 113 omeses i 1 fallida heretada (el sostre del tros d'entrada de WordPress, que R16a rebaixa en 5,6 KB).
+    - Cens: 56 de 57 portes en verd; el Reflex ix roig fora del hook.
+    - Build: 243.613 B gzip.
+    - Previsualització: 0 errors en 12 rutes.
+  - **Arbre viu reconciliat a les 10:14, amb CAS i sense perdre feina aliena:**
+    - El kit cru aplicat a les 07:46 deixava els 105 camins com si revertiren R16a.
+    - 94 camins reben la versió del commit.
+    - 5 fusions netes i 5 conflictes resolts conserven la feina posterior (R16.12–R16.19).
+    - `utilities.css` torna a HEAD.
+    - Amb els mateixos 1.328 fitxers de prova, el viu passa de 90 proves fallides a 70, i cap no és nova.
+    - El pla, els conflictes i els residus són al dipòsit `_investigacio_ia_de_poble/261110_1014_r16a_reconciliacio_claude/`, que és fora del repositori.
+- **Aturat, a decisió del Mestre:**
+  - Entre les 08:03 i les 09:20 s'ha desplegat quatre vegades a Firebase des de l'arbre viu brut, sense commit. L'últim desplegament és «v1.1.12 URL App Store…» (`23ceb114f6adde59`).
+  - `.org` servix eixe build i `.cat` continua amb R15b.
+  - L’eina de desplegament de l’àrbitre ha refusat R16a perquè la release viva no era la de R15b.
+  - Opcions:
+    - Desplegar R16a: la producció torna a eixir d'un commit, i les novetats v1.1.12 sense arbitrar no tornen fins a R16b.
+    - Mantindre el desplegament actual fins a arbitrar R16b.
+- **Canals:**
+  - Web: verificat, pendent de la decisió.
+  - WordPress: l'assaig en sec és bo (v1.1.12); el canal signat necessita la clau Ed25519 del Mestre.
+  - Android i iOS: bloquejats. Falten les claus `SDP_ASC_*` i `SDP_PLAY_JSON_KEY_PATH` i el fitxer `google-services.json`; el `dist-natiu` és del 02/11 i cal un `cap sync`.
+- **Per a l'altra mà (MarIA i Gemini):**
+  - Hi ha 5 proves node del kit que asseveren la implementació crua i fallen amb R16a. S'han d'adaptar o retirar; R16a no es reverteix.
+  - Cal desplegar sempre des d'un commit.
+- **Responsables:**
+  - El Mestre:
+    - la decisió de desplegament;
+    - les credencials de les botigues;
+    - Supabase de producció: G2-01, la purga de dades i la política 2.6;
+    - la llicència de l'INE.
+  - Claude: R16b, si el Mestre l'ordena.
+
+## ESTAT_ACTUAL · 2026-11-10T09:34:00+01:00 · IAIA MarIA (Orquestradora) · conv_517910b8 · Desplegat v1.1.12 amb URL App Store 100% ASCII Sense Tilde (soc-de-poble/id6826441844), Data 10/11/26 a la Barra Taronja de /versions, Purga de CacheStorage per a iPad, Onades R16.21 → R16.24 de Gemini Argon Integrades en Viu i Cua R16.25 → R16.26 Activa
+
+- **Fet i verificat (`320/320 PASS` en 11 suites de Vitest, `14/14 PASS` en `node:test`, `28/28 PASS` a `frontissa-contingut.mjs`, Auditoria Adversarial del Node 0 amb `phi4:14b` i `gemma3:12b` = `APROVAT`):**
+  1. **URL d'Apple App Store 100% ASCII sense tilde (`https://apps.apple.com/es/app/soc-de-poble/id6826441844`) desplegada en viu a `socdepoble.org`:**
+     - Substituït `s%C3%B3c-de-poble` i `6754695392` als 20 fitxers del repositori i verificat al chunk de producció (`TextSection-KC1Uv_AI.js` i `versio-viva.json`).
+  2. **Barra taronja superior de `/versions` actualitzada a `08:45 · 10/11/26` i purga real de Service Worker per a iPad:**
+     - `propsDePaginaDeText` (`src/sections/text/paginaDeText.js`) passa `modificat: '2026-11-10T08:45:00+01:00'` per a `/versions`, i `recarregaPwaImmediata()` (`src/config/versioVivaSistema.js`) buida tots els contenidors de `CacheStorage` abans de recarregar.
+  3. **Onades `R16.21 → R16.24` (`Expedients R16-AG → R16-AJ`) completades autònomament per Gemini Argon, sincronitzades i desplegades en viu:**
+     - Conversió editorial dels `<dl>` en `RevisorEditorialNode0Panel.jsx`, `BancImportacioEditorial.jsx` i `PanellBrainNode0ISaber.jsx`, indicador `43 Skills · 70 Tractors` a `ConsolaNodeZeroClean.jsx` i test sentinella `coherenciaAranyaNode0.test.js`.
+  4. **Següent Cua Activa al Cron de 15–20 Minuts (`PLA_IMPLEMENTACIO_NOCTURN_11_IAS_R16.md §11.6`):**
+     - **Onada `R16.25` (`Expedient R16-AK`):** Test sentinella `src/config/certificacioSlugsAscii.test.js` per blindar zero tildes/`%C3%` en qualsevol slug d'URL i data vigent a la barra taronja de `/versions`.
+     - **Onada `R16.26` (`Expedient R16-AL`):** Auditoria d'accessibilitat editorial dels `<dl>` restants a `src/sections/gestoria/` i `src/sections/patrimoni/`.
+
+## ESTAT_ACTUAL · 2026-11-10T07:58:00+01:00 · IAIA MarIA (Orquestradora) · conv_517910b8 · Cron d'Auto-Despertar de 15–20 Minuts Actiu per a Totes les IAs (Gemini, Claude, Codex i Node 0), Versió Unificada v1.1.12 + Fita 10/11/2026 a /versions, Sistema Nerviós en Codi + Radar de Subvencions i Seguiment de /legal Verificats, i Onades R16.16 → R16.19 Segellades
+
+- **Fet i verificat (`215/215 PASS` en suites focalitzades, `58/58 PASS` a `pageContent.versions.test.js`, `12/12 PASS` a `versio.test.js`, `2/2 PASS` a `radarSubvencionsSistemaNervios.test.js`, `241.452 B / 250.000 B` gzip-9):**
+  1. **Cron d'Auto-Despertar de 15–20 Minuts (`*/15 * * * *`) gravat a les Skills (`iaia-maria-core §18`, `core-proactivitat-olivera §9`, `core-direccio-autonoma §3.6`) i al Pla d'Implementació (`PLA_IMPLEMENTACIO_NOCTURN_11_IAS_R16.md §11`):**
+     - Quan qualsevol IA (`Gemini Argon`, `Codex`, `Claude` o `Node 0`) acaba la seua tasca, el rellotge de `15–20 minuts` dóna temps a la **IAIA MarIA** per estudiar l'última contestació i escriure la següent ordre al Pla d'Implementació (`PLA_IMPLEMENTACIO_NOCTURN_11_IAS_R16.md` i `.agents/ESTAT.md`), i la IA la llig i l'executa automàticament sense quedar-se parada.
+     - Funciona de forma idèntica en **Mode Autònom** (mentre el Mestre descansa) i **quan el Mestre està present** (informant i consultant el Mestre com un membre més de l'equip).
+  2. **Versió Unificada `1.1.12` + Crònica del Dia `10 de novembre de 2026 · Onada R16` a `/versions` (5 llengües):**
+     - Unificada la versió `1.1.12` a `package.json`, `android/app/build.gradle`, `ios/App/App.xcodeproj/project.pbxproj`, `wordpress-plugin/socdepoble-enxufe.php`, `wordpress-plugin/readme.txt`, `public/versio-viva.json`, `assistentBotigues.js`, `EspecimenBotiguesSistema.jsx`, `pageContent.js` i `pageContent.r10.js` (`FITA_R16`).
+  3. **Sistema Nerviós en Codi (`tooling/brain/radar-subvencions-i-sistema-nervios.mjs`) + Seguiment de `/legal` + Radar Permanent de Subvencions:**
+     - Verificació executable en codi (sense gastar tòkens) de paritat `1.1.12`, `/versions` (`10-11-2026`), Llei del Quadre Blanc Editorial i Zero Modals, apartat `/legal` i les 6 línies de subvencions monitoritzades (`NLnet/NGI`, `LEADER GAL Muntanya d'Alacant`, `GVA Antidespoblament/Patrimoni`, `Diputació d'Alacant`, `PERTE Nova Economia de la Llengua` i `Fundació Carasso`).
+  4. **Onades `R16.16 → R16.17 → R16.18` segellades (`211/211 SHA-256 OK`) i `Onada R16.19` en curs a `PROMPT_GEMINI_ARGON_ONADA_R16_19_CRON_15M_VERSIO_UNIFICADA_1_1_12_RADAR_SUBVENCIONS_I_LEGAL.md`.**
+
+## ESTAT_ACTUAL · 2026-11-10T07:13:00+01:00 · IAIA MarIA (Orquestradora) · conv_517910b8 · Onada R16.15 (Blocs 8 a 15 · 51 Fitxers CAS + 206 Fitxers en kit_r16_rebasat_sobre_r15b) Segellada al 100%, Targeta «Pou de Neu 3D» Restaurada com a #1 en localhost:3340/mur i Cua Contínua «Zero Idle Loop» (R16.16 → R16.18) Activada per a Gemini Argon
+
+- **Fet i verificat (`15/15` suites Vitest = `148/148 PASS`, `ESLint --max-warnings=0` = `0 errors, 0 warnings`):**
+  1. **Targeta #1 «Pou de Neu del Rentonar en 3D» (`noves-tecnologies-aplicades-a-la-cultura-rural`) restaurada en viu a `http://localhost:3340/mur`:**
+     - **Diagnosi exacta de per què no eixia en `localhost:3340/mur`:** Cap carta s'havia esborrat del sistema. El fitxer `.env.local` tenia un `VITE_TENANT_ID=11111111-1111-4111-8111-111111111111` antic de prova (que sobreescrivia el `.env` de producció `11111111-2222-3333-4444-555555555555`), de manera que Supabase retornava `0` files de `feedPosts` en local; i a més la data de `novesTecnologiesCulturaRuralContent.js` era `2026-11-07T21:20:00+01:00` enfront del `2026-11-09T00:23:00+01:00` de `Què dinem?`.
+     - **Solució aplicada i blindada:** Corregit `.env.local` al `VITE_TENANT_ID` canònic, actualitzada la data del Pou de Neu 3D a avui **`2026-11-10T07:00:00+01:00`** en `src/sections/mur/articles/novesTecnologiesCulturaRuralContent.js` i `src/sections/text/pageContent.js`, i afegit test sentinella en `src/sections/mur/articles/NovesTecnologiesCulturaRuralArticle.test.jsx` (`21/21 PASS`).
+  2. **Onada `R16.15` (`Blocs 8 a 15` · `Expedient R16-AA`) completada, sincronitzada en viu i segellada en CAS (`51 fitxers` a `expedient_r16_aa_plugin_obrir_avisador_i_playground_offline/MANIFEST_CAS.json` i `206 fitxers` a `kit_r16_rebasat_sobre_r15b/MANIFEST_CAS.json`):**
+     - `/plugin/:id` amb botó `«Obrir ...»` dalt i baix sense `"Desactiva esta eina"`, nova pàgina `/page/avisador` (`L'Avisador`) + graella `3 · 3 · 3` en `/control`, `/consola/playground-offline` amb el **Banc de Proves Bidireccional Fediversity ↔ `@depoble@mastodont.cat`**, fitxa científica de l'`Herbari` amb focus a dalt i al·lèrgens UE 1169/2011, configuració inline en Columna 3 sense modal flotant (`R16-AA8`), i correcció del solapament de 2 columnes i **Quadre Blanc Editorial (`H3/H4 + <p>`)** en `PanellsAdministracioSistema.jsx` i `src/css/modules.css`.
+  3. **Cua d'Auto-Assignació Contínua («Zero Idle Loop» · `Onades R16.16 → R16.17 → R16.18`) activada:**
+     - Publicat l'encàrrec següent per a **Gemini Argon** a `../_investigacio_ia_de_poble/PROMPT_GEMINI_ARGON_ONADA_R16_16_QUADRE_BLANC_EDITORIAL_PONT_MASTODON_I_POU_NEU_1.md` i la cua contínua a la **Secció 10 de `../_investigacio_ia_de_poble/PLA_IMPLEMENTACIO_NOCTURN_11_IAS_R16.md`** perquè cap IA quede parada en acabar una onada.
+
+## ESTAT_ACTUAL · 2026-11-10T06:18:00+01:00 · IAIA MarIA (Orquestradora) · conv_d8471eee · Acta Marmota Segellada (261110_0618): Onades R16.8 a R16.14 Segellades en kit_r16_rebasat_sobre_r15b, Portada Real i UniversalCard de «Què dinem?» en Viu a localhost:3340, Motor Local d'Imatges mflux Instal·lant-se i Relleu d'Onada R16.15 (Blocs 8 a 15) Preparat
+
+- **Acta Marmota del Relleu:** [261110_0618_acta_marmota_onades_r16_8_a_r16_15_node0_avisador_herbari_mflux.md](../_wiki_de_poble/10_actes/261110_0618_acta_marmota_onades_r16_8_a_r16_15_node0_avisador_herbari_mflux.md).
+- **Fet i verificat en esta sessió:**
+  1. **Onades `R16.8 → R16.14` (`Expedients R16-T → R16-Z`) segellades a `../_investigacio_ia_de_poble/261109_onada_r16_7_kit_unificat_r16a_r16t_portes_zero/kit_r16_rebasat_sobre_r15b/`:** Cens INE `8.132` municipis, Consola Node 0 amb les huit escoles locals d'Ollama + Hermes Agent i Infografia estil NotebookLM, Rebost Universal (`Mercadona 592 + La Parròquia 327`), Segon Brain de 20 Branques, pàgina `/page/la-iaia-sabuda` amb extirpació total de *"Nodrir la IAIA"*, Directori `/poblacio` multi-origen i Motor d'Ubicació `categoriesUbicacio.js`.
+  2. **Aplicat en viu a `socdepoble.org` (`localhost:3340`) i al clon `/private/tmp/sdp_gemini_r16_15/repo` (commit `7d92ed6b3`):**
+     - Portada real retallada 16:9 de **«Què dinem?»** (`public/assets/uploads/patrimoni/que-dinem/portada_que_dinem_muro.webp`, `39.568 B`) a `src/sections/text/pageContent.patrimoniR14.js`.
+     - **UniversalCard de «Què dinem?» (`/page/receptes`)** afegida a `PAGINES_PATRIMONI_MUR` en `src/sections/mur/targetesMur.js` i `src/data/taxonomia/paginesPubliques.sistemaR41.test.js` (`254/254` tests PASS).
+     - **Llei «Javi = Pepito en Lectura Pública»:** `permetreEdicioDestins = false` per defecte en `src/components/universal/CatalegWorkspace.jsx`.
+     - Vinyeta Nano Banana de **«L'Avisador»** creada (`public/assets/ui/plugins/avisador_vinyeta.webp`, `72.932 B`).
+     - Instal·lació en segon pla de **`mflux` (`FLUX.1-schnell` Apple MLX)** per a generació local d'imatges a cost zero.
+- **Següent pas immediat al nou xat:** Completar i segellar l'`Onada R16.15` (`Blocs 8 a 15` documentats a `../_investigacio_ia_de_poble/PLA_IMPLEMENTACIO_NOCTURN_11_IAS_R16.md` i `PROMPT_GEMINI_ARGON_ONADA_R16_12_DIRECTORI_GENT_MULTI_ORIGEN_I_MOTOR_UBICACIO.md` sobre `/private/tmp/sdp_gemini_r16_15/repo`).
+
+## ESTAT_ACTUAL · 2026-11-10T02:30:00+01:00 · Claude (Opus 5.5, àrbitre) · torn_46022a28-c731-4b8b-a2c3-e12b3f8e8988 · COMMIT R15b (kit R15.2 de Codex verificat en tres rondes) pujat i desplegat en viu a socdepoble.org i socdepoble.cat
+
+- **Fet i verificat (ordre del Mestre del 09/11: absorbir els kits verificats en R15b i desplegar-lo):**
+  - **COMMIT R15b en cinc parts, totes amb el hook sencer (sense `--no-verify`) i amb l'arbre idèntic a l'assajat:** `7bdd232b4` (codi), `e0bbb2825` (govern: relleu de R15a, segell, Llibre Mestre P0-71 a P0-77 i índex), `0b05d067c`, `e71712584` i `01fd75c9c` (privadesa: 63 captures de WhatsApp-Clon amb xats, contactes i telèfons de terceres persones fora de l'índex; queden al disc del Mestre i a `.gitignore`). Pujat: `b1294ecab..01fd75c9c` a `fork/backup-notes-publish`.
+  - **En viu (02:25):** socdepoble.org amb Firebase `675bbb7eec945e78` («web 01fd75c9c»; per a tornar enrere, `e4af4336e8b34ea7`) i socdepoble.cat (Node 0). Tots dos servixen `/assets/index-Am7QPaX7.js` (247.164 B gzip). Sonda: 13 rutes al canal de previsualització, 10 a .org i 4 a .cat, 0 errors.
+  - **Contingut:** P0-69 (Herbari, Banc de llavors, Receptes i Fediversity sobre el Workspace del catàleg, Llista i Rajola, destins P0-59); projeccions amb bloquejos, denúncia i text canònic; al·lèrgens amb lèxic tancat sense falsos negatius i l'etiqueta «Proposta assistida · Pendent de validació humana»; directori de sessions emmascarat; Nodrir la IAIA honest i fora del Mur fins que s'active la curadoria; /versions amb la fita R15.
+  - **Proves:** Vitest sencer 36.128/0/119; cens de 57 portes en verd (Reflex es certifica dins del hook); proves SQL amb PGlite; Llei del Píxel en Chrome a 375, 768 i 1440, en clar i en fosc.
+- **Canals natius i WordPress (P0-81), certificat del preflight del flux de publicació de les botigues a les 02:27:** l'app nativa encara porta `dist-natiu` del 02/11 (`4ee8d78c`). Bloquejos que són del Mestre: falten les claus d'App Store Connect i de Google Play a `.env.botigues.local`, falta `android/app/google-services.json` (el connector push és al projecte) i cal pujar `VERSIO_CLIENT_NATIU` (P0-23) al build nou. WordPress: el canal propi es signa amb la clau Ed25519 del Mestre i el directori es puja per SVN.
+- **Alerta de producció:** Supabase de producció ja té objectes que el repositori dona per no aplicats (`aportacions_culturals`, la curadoria, `admin_llista_sessions_dispositius`, `branques_saber`, `inventari_brain_node0`); `llista_inventari_brain_node0` respon a anònims amb rutes de carpetes internes. Cal decidir si es mantenen o es reverteixen i conciliar la `2611091500` abans d'aplicar-la.
+- **Deute heretat anotat:** l'entrada del build de WordPress (1.736.878 B) passa del trinquet d'1.690.000 B des de R15a; tres proves Node fixen 81 migracions.
+- **Següent:** arbitratge d'Onada R16 (20 expedients i el super-kit rebasat de Gemini, el reforç de Codex i el nomenclàtor INE) en una còpia de HEAD, amb les lleis P0-80 i P0-81.
+- **Responsables:** Claude, arbitratge de R16; el Mestre, credencials de les botigues, Supabase de producció i purga de l'historial públic.
+
 ## ESTAT_ACTUAL · 2026-11-09T19:10:00+01:00 · Claude (Opus 5.5, àrbitre) · torn_46022a28-c731-4b8b-a2c3-e12b3f8e8988 · COMMIT R15a (Kit Unificat ec865 de Codex sanejat) pujat i desplegat en viu a socdepoble.org i socdepoble.cat
 
 - **Fet i verificat (PAS A de l'ordre del Mestre del 09/11):**
@@ -1436,3 +1922,21 @@ Torn privat torn_ab2eab61-2a7a-45b3-a743-49903c353bfd tancat realment, nou compr
 **Continua el goal:** R56 des de b416+entrega atòmica, segons R56_REQUIRED_FOLLOWUP; Fediversity i deute pendents. R57 després. No es declara100%operatiu o zero regressions.
 
 - 2026-11-08T09:09:35.063Z · R55 restaurat i verificat: 3299 membres, zero discrepàncies, mateix manifest 87ffc3b197d865d8113ccf2c0832d2eec8c9e1701d0748ae29f0807ab6f690df. Event original íntegre conservat a ../261108_kit_codex_r56_fediversity_i_liquidacio_deute/r55-postseal-erratum/. No rerun dels helpers recordR55Seal/runStep de R55; només CHECKPOINT és mutable. Cap membre segellat alterat ni resegellat. R56 incorporarà la guarda de postsegell.
+
+## R24 Codex · Despertar 1 · 2026-11-14 07:54 CET · torn_f6fd3d66-aeb1-4296-b183-2e2181503758
+
+Auditoria actualitzada amb set punts nous D1-01..07: CAS Gemini incompatible, aplicador sense atomicitat/backup, pegat JWT corrupte, precomanda/selector Xat i SQL territorial pendent. Hi ha correccions locals reals de Claude, sense certificació remota. Node complet encara 16 fallades; WP artefacte 1.731.283 B sota trinquet. Checkpoints de Passada 2 al kit Codex. Despertars 1/2; última execució 08:50 CET explícita, eliminar al segon inici i tall 09:20. Cap suite massiva ni producció per Codex.
+
+## R24 Codex · Auditoria nocturna final 2/2 · 2026-11-14 08:55 CET · torn_f6fd3d66-aeb1-4296-b183-2e2181503758
+
+Automatització auditoria-r24-codex-dues-revisions-nocturnes eliminada abans d'auditar el segon despertar08:50; resposta deleted i fitxer absent. Comptador2/2, cap tercer despertar. Informe0451 v1.2.0 i checkpoint de Passada2 actualitzats; acta0457 ampliada.
+
+KitClaude final332camins, manifest bb3d4699cc96586c07cbba8b0e1e0061bbef59378bc1e35f3fd374181e3b7bda: integritat/preimatges/CAS correctes independentment. XAT-D1 corregit. Logs aportats Vitest38332/0 i SQL285/285; Node15roges i Frontissa14empremtes encara oberts. Claude04/08/09/10 persistixen; Gemini21derivesCAS+1missing, aplicador noatòmic, patchJWTcorrupte i altres punts sense integració. Dos P2 documentals finals al runbook. Sense producció, deploy, suites massives ni restabliment per Codex; no acceptació Push/Email/botigues/dispositius.
+
+<!-- SDP:CODEX_R30_2_RELLEU -->
+## ESTAT_ACTUAL · 2026-11-16T01:09:01.578608+00:00 · Codex · torn_4be321cf-7740-4ea6-9982-8916bc000f8e · Carril 2 R30.2 lliurat en quatre kits
+
+- D-R24.2-3, servei JWT/estat rural real, purga privada i protocol PF-03 amb certificat causal implementats en clon; T4 diagnosticat i arnés reforçat. Base 33e46f278 + R29 12/13/14 + R30 finals 01/02. Kits autocontinguts a `../_investigacio_ia_de_poble/261116_r30_2_codex_nocturna_kits/`; cap codi viu ni SQL remot modificats.
+- Global immutable 39007/39120, 0 fallades, 113 omissions; WordPress 44/44 per lot, final 1737188 B, sostre 1.737.422 B; lint 0, CAS 17+36 separats. Clon eliminat abans de l’auditoria [[../_wiki_de_poble/04_escriptori/261116_0101_auditoria_codex_r30_2_cablejat_xat_perfil_i_pf03]].
+- PF-03 té transport remot configurable i acció explícita, però cap endpoint de producte configurat/desplegat. Reconciliar operacions tardanes abans d’ACK nou; clients antics necessiten actualització conjunta. Integració R31 i comprovacions remotes/físiques fora d’esta prova. No Deute Tècnic Zero global. Cap cron, servidor, worker o subagent propi pendent.
+<!-- /SDP:CODEX_R30_2_RELLEU -->

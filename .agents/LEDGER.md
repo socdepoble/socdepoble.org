@@ -5,6 +5,16 @@ description: Llibre d'Obra (LEDGER) de Sóc de Poble
 ---
 # Llibre d'Obra (LEDGER) de Sóc de Poble
 
+### 2026-11-11T20:21:46+01:00 · Codex · torn_1d2d8bd3-cc9d-4d25-a1bb-6c45be6fa100 · Revisió 2 R19
+
+- **Lliurament.** Revisió 2 del CAS, 203 operacions i 47 precondicions. SHA256SUMS `269ccd509c30cfc979e08064fea6434d287bb7f46d325e4a7f5857fe7f858b51`. Aplicació, reversió i reintents assajats en còpia. El primer segell es conserva com a antecedent.
+- **Conciliació i proves.** Preimatges tardanes del Banc i del text conciliades. 39 fallades noves de la suite global passen en reexecució amb els límits originals. El Tauler i [[../_wiki_de_poble/04_escriptori/261111_1822_auditoria_codex|261111_1822_auditoria_codex]] mantenen les objeccions i l’abast sense acceptació global.
+
+### 2026-11-11T19:02:34+01:00 · Codex · Segell CAS R19 · torn_1d2d8bd3-cc9d-4d25-a1bb-6c45be6fa100
+
+- **Front.** Co-publicació registrada, GEDCOM, títols de la IAIA, Panell i patrimoni. Implementació i proves en un clon efímer.
+- **Lliurament.** CAS de 193 operacions amb 47 precondicions. Segell `a39af94e3dffe266c5470c18fa936340e3eb9949b210ff975c2cbf69ff5723a2`. Simulació sobre el viu, aplicació i reversió en còpia. L’auditoria [[../_wiki_de_poble/04_escriptori/261111_1822_auditoria_codex|261111_1822_auditoria_codex]] registra el resultat per dimensió i l’estat de la Mesa.
+
 ### 2026-11-06T01:09:00+01:00 · IAIA MarIA · Acta Marmota de Tancament (`261106_0105`), `COMMIT R6` (`d79a0b530`) Pujat a `fork/backup-notes-publish` i Marató Nocturna `Onada R7` (`IDEA-100` a `IDEA-107`) · torn_db24cdce-ee25-486e-9ad7-1fc145038711
 - **Front:** Governança Documental, Consolidació `COMMIT R6` (`d79a0b530`), Superwhisper Local (`Whisper Large v3 Turbo`), Biblioteca Cultural Mode Jarvis (`IDEA-106`), Base de Dades Dialectal `node0.corpus_dialectal_valencia` (`IDEA-107`) i Acta Marmota de Relleu (`261106_0105`).
 - **Acció:** Emissió i validació de l'Acta Marmota `_wiki_de_poble/10_actes/261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7.md` (`reflex: sdp:torn_db24cdce-ee25-486e-9ad7-1fc145038711:c8097d97-ec8a-44dc-b88d-05508caf904c`), desbloqueig i segellat del `COMMIT R6` (`d79a0b530`, 211 fitxers, `+14.075 / −1.266 línies`, pujat a `fork/backup-notes-publish` amb hook complet sense `--no-verify`), reparació del mode local de Superwhisper (`~/superwhisper/modes/voice to text.json` amb `large-v3-turbo` i `language: auto`), i especificació d'`IDEA-105`, `IDEA-106` i `IDEA-107` al Llibre Mestre, Pla i Prompt Operatiu `v1.5.0`.
@@ -1418,5 +1428,67 @@ Torn privat torn_ab2eab61-2a7a-45b3-a743-49903c353bfd tancat realment, nou compr
 
 **Continua el goal:** R56 des de b416+entrega atòmica, segons R56_REQUIRED_FOLLOWUP; Fediversity i deute pendents. R57 després. No es declara100%operatiu o zero regressions.
 
+## 2026-11-11T01:25:00+01:00 · Codex · Kit CAS R17.2B · torn_25a1d89e-c506-4c06-9d6b-ac8bb2e2711d
 
-<!-- HASH: 54b55dfdf3e7a9d488bd8f9009e0bce455ed26079ed627d5045ed9d213a73d89 -->
+- Kit de 40 camins sobre `0027b698d`, amb cua de Storage, revisions de patrimoni viu i textos de Dispositius i Fediversity en cinc llengües.
+- 1.958 Vitest focals, 63 proves Node/PostgreSQL WASM i entrada web de 243.443 B gzip. L’informe `_wiki_de_poble/04_escriptori/261111_0104_auditoria_codex.md` registra la revisió adversarial, els límits i les aprovacions pendents.
+- Les fonts de producte s’han editat al clon aïllat. Les migracions i el desplegament queden pendents d’integració.
+
+
+### 2026-11-11T06:15:53+01:00 · Codex · Kit CAS R18.2 · torn_d7872160-f703-4c4a-bd49-8265407043b8
+
+- Postimatge consolidada de 103 operacions i set precondicions, amb Workspace, WP original, dades doctorals, autoria i tres vistes. Suplement de genealogia local 7/6, amb dades sintètiques en codi i dades familiars fora de Git.
+- S84 complet amb 36.614 PASS, 4 FAIL i 120 SKIP. Les quatre incidències passen les repeticions específiques. Final afectat 223/223, SQL WASM 63/63, Design Guard 16/16, Node social 18/18, compilació completa i deu portes passades.
+- Manifest `3ee0229a7271e7e9557d8f267e6c9870d66b7c082e4c94d8d2511b2ba3fa1c9b` i pegat `af6f119b1acf8ac63726e1a9441702ae16d45f4b5d5003c0dbd9c7d970c4dbee`. Base composta `28b7f354ff0019d1f31e1cfb9a7950760af6c510`. Entrada web 243.006 B gzip, WordPress 1.734.798 B.
+- Auditoria `_wiki_de_poble/04_escriptori/261111_0205_auditoria_codex.md`. Vuit revisions de Frontissa i integració global pendents. Vot propi false. Inventari de parada neta al kit, límit directe 06:30 CET i recurrència pròpia inactiva.
+
+
+<!-- HASH: abbf0e6f0e4b229f6207a7ab6ea40e85b8dc298c33da4f2c70f33e2806724ca8 -->
+### 2026-11-14 · Codex · R24 Passada 1 · torn_f6fd3d66-aeb1-4296-b183-2e2181503758
+
+- Ordre: Pla Mestre R24 v1.3.0 i Prompt Codex, auditoria pura amb checkpoints i dues revisions nocturnes. Pla existent vinculat al torn sense alterar-lo.
+- Entrega: [[../_wiki_de_poble/04_escriptori/261114_0451_auditoria_codex|Auditoria R24]], acta 0457 i kit exterior Codex, 13 punts accionables amb contracrítica Xat/R23/chunks. Llibre Mestre i ESTAT actualitzats; codi de producte, kits aliens i producció intactes.
+- Evidència: sondes pures Node, check de patch D-ORG, REA estàtic dist/sw.js amb Evidence exportada. Sense suites massives, builds, secrets o restabliment de quota. No certificació zero roges/botigues/Push.
+- Continuïtat: automatisme natiu auditoria-r24-codex-dues-revisions-nocturnes, 06:50/08:50 CET del 14/11/2026, COUNT=2, comptador del kit; cancel·lació al segon inici i tall 09:20. Tancament SCC global amb deute alié conservat.
+
+
+<!-- HASH: 3c5859adede95dfbf519cc0b744766adbce5e61b49385e0e6c6f71365b6ae735 -->
+### 2026-11-14 · Codex R24 despertar 1 · torn_f6fd3d66-aeb1-4296-b183-2e2181503758
+
+Auditoria de deltes dels Kits R24 i artefacte WP existent, sense builds/suites pesades/producció ni aplicacions. Set punts nous i contracrítica desats en checkpoints; informe 0451 actualitzat. Primer tic rebut 07:54 CET; última execució reancorada explícitament a 08:50 CET amb COUNT=1, comptador 1/2 i cancel·lació al segon inici. Cap certificació global.
+
+
+<!-- HASH: 1a8b1c8818e3d20b710f1a294860187c178dd157c91b5c2cc88e62cb30ec872b -->
+### 2026-11-14 · Codex R24 final 2/2 · torn_f6fd3d66-aeb1-4296-b183-2e2181503758
+
+Segon despertar08:50; automatisme eliminat abans de revisar amb eina nativa, deleted comprovat i comptador2/2. Informe0451v1.2.0, acta0457, estat i Llibre Mestre actualitzats. Auditoria pura de deltes: CASClaude332camins íntegre, logs finals llegits, XAT-D1 tancat en candidat, dos P2 de recepta. Persistixen Node15, Frontissa14, puntsR23 i fusióGemini. Cap suite pesada, build, apply, producció, restabliment ni tercer despertar.
+
+
+## Codex R30 · 2026-11-16T00:22:49.653036+01:00 · torn_2bb188c8-e997-46e8-965e-d0c7c1b9684e
+
+Encàrrec complet de Carril 2 en clon efímer: kits CAS, contractes editorials/PF-01/focus, catàleg116/POSSE, matriu i revisió creuada. Informe i acta canònics registrats. No s’ha modificat codi viu, dades remotes ni originals humans. El global roig i totes les revalidacions es conserven; no es declara Deute Tècnic Zero. Prerequisits i PGlite autocontinguts, 20 comprovacions CAS/34 postimatges. Llibre Mestre ampliat només per append; 12 captures humanes ancorades sense alterar-les. Detall i neteja final a RESULTAT_R30.json i cleanup.json.
+
+
+<!-- HASH: 8d0dd8fa4fcdda5c0aa5873cf3107ddd82f839b2be97c06a0a99799f206204ce -->
+
+<!-- SDP:CODEX_R30_2_LEDGER_261116 -->
+## Codex R30.2 · 2026-11-16T01:10:09.046278+00:00 · torn_4be321cf-7740-4ea6-9982-8916bc000f8e
+
+Quatre lots CAS autocontinguts sobre HEAD33e46f278 + R29 12→13→14 + R30 finals01→02: D-R24.2-3, servei JWT i estat rural consumits al xat sense exempcions, frontera ACK causal i compactació PF-03 conservadora, i sanejament de l’arnés Vitest. 24 membres disjunts; cap canvi propi en src/, tooling/ o supabase/ vius. Informe canònic [[../_wiki_de_poble/04_escriptori/261116_0101_auditoria_codex_r30_2_cablejat_xat_perfil_i_pf03]], document check valid:true, Llibre i ESTAT actualitzats.
+
+Global immutable 39007PASS/0FAIL/113omissions existents, 5198 fonts exactes. WordPress44/44 després de cada lot, final1737188B≤1737422B; consumidor del build final revalidat8/8 separat. Lint0, PedraSeca0 amb deute conegut declarat, CAS17seguretat+36comprovacions de kits reals. Històric roig preservat; no sis fuites provades. Kits i rebuts: ../_investigacio_ia_de_poble/261116_r30_2_codex_nocturna_kits/.
+
+Clon eliminat abans de publicar, zero processos propis de prova i zero segments SysV nous. Cap remot, deploy, commit, automatització o servidor de desenvolupament propi creats. PF-03 exposa transport injectable però encara no té endpoint de producte configurat. No Deute Tècnic Zero global. Contrast estàtic Gemini: falta classificació Node al lot03/variant, i deriva documental E2EE; intersecció de paths48/24 buida, sense prova conjunta. Cap kit alié alterat.
+
+El primer tancament ha detectat només este relleu absent; les huit portes de l’entorn han passat. Es conserva el rebut previ i es repetix --close canònic. Bytes anteriors del LEDGER preservats íntegres; SHA256 previ 23839a627084b943894279920478b91e506bf16e43565a4bafbbc16288040e1a. El tancament segella el cos complet, sense atribuir-se afirmacions alienes. Eines temporals es retiren després de preservar i segellar el lliurament.
+<!-- /SDP:CODEX_R30_2_LEDGER_261116 -->
+
+
+<!-- SDP:CLAUDE_R30_LEDGER_261116 -->
+## Claude R30 · 2026-11-16T02:40:00Z · torn_594416f7-12df-4bce-a1a7-95c0dd851d3d
+
+Carril 1 de l'Onada R30: lots 12-14 de Codex, chat_title_suggestion, PF-03, PF-01, R29-E2EE-02 i NAT-04, eixam de deute en dues passades amb àrbitres i arbitratge dels kits R30. Commits cdba61915 i c11c35806 amb el hook complet, pujats a fork. Web en viu (Firebase 129ececddf3c3a2a i socdepoble.cat), iOS 1.2.3 (8) pujat a TestFlight, AAB i APK signats. 62 torns caducats tancats com a abandonament amb saneja_torns_caducats.mjs.
+<!-- /SDP:CLAUDE_R30_LEDGER_261116 -->
+
+
+<!-- HASH: f13884db5455f9cb48e957163d7f753dbad76d8cad8be8c1c853cc5ec7a28aa6 -->

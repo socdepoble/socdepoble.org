@@ -35,3 +35,4 @@ Data,IA,Model,Limit,Mètrica,Valor(%),Sessió/Activitat,Cost(USD)
 2026-11-10 22:33,Codex,ChatGPT Pro 200,Semanal,Restant,40,"Baseline t0 R17 (refresc en 4d 3h + 749 credits saldo)",0.0
 2026-11-11 00:40,Gemini,Gemini 4 Carbon High (Google AI Ultra),Sessio_Gauntlet_R17.3,Observat_Fisic,pendent_ui,"Kit R17.3 complet (90m · 996 steps · 737 tools · 8.28MB transcript · base t0 53% sem / 98% 5h · Overages OFF)",0.0
 2026-11-11 01:45,Gemini,Gemini 4 Carbon High (Google AI Ultra),Sessio_Gauntlet_R18.3,Observat_Fisic,pendent_ui,"Kit R18.3 + Gauntlet R17.2/R17.2B/P0-108 complet (~396 steps · ~1.72MB tram R18.3; total sessio 1392 steps · 10.0MB transcript · Overages OFF)",0.0
+2026-11-14 17:56,Codex,GPT-6.1 Sol Ultra,Semanal,Restant,5,"Onada R25.2 completada (9m13s, -1%); 749 credits llestos per a Onada R26 sense usar Restablecimiento completo",0.0

@@ -80,6 +80,8 @@
  *    porta-olivera.mjs --arxiva --nom F [--nom G] [--sessio aammdd_Nom] [--reapunta] [--torn ID] [--sec]
  *                                           # mou artefactes de torn concrets (qualsevol extensió), també d'avui;
  *                                           # --sec mostra també el pla d'enllaços i de torns, i ix amb 1 si s'aturaria
+ *    porta-olivera.mjs --arxiva --onades-anteriors [--sessio aammdd_Nom] [--reapunta] [--torn ID] [--sec]
+ *                                           # mou tots els artefactes de torn anteriors a l'últim pla_implementacio (respectant Mestre i consumidors de l'onada actual)
  *    porta-olivera.mjs --repara [--sec]     # reapunta les àncores fantasma amb destí únic
  *    porta-olivera.mjs --renomena VELL --a NOU [--sec]
  *                                           # reanomena un document solt i reescriu les seues àncores
@@ -119,6 +121,8 @@ const MARGE_RELLEU = 10 * 60 * 1000;
 export const BANDERA_FASE = `${CAMINS.agents}/olivera-fase.json`;
 /** Línies de l'índex a partir de les quals el sediment ix com a avís. És una mètrica: mai bloqueja. */
 export const LLINDAR_SEDIMENT = 300;
+/** Sostre òptim d'artefactes regulars visibles al primer nivell de l'Escriptori (sense l'índex). */
+export const LLINDAR_TAULA_OPTIMA = 12;
 
 /** Categories de treball d'un torn: naixen, servixen i se'n van a l'arxiu. */
 export const TRANSITORIES = /^(prompt|macro_prompt|micro_prompt|petorreta|auditoria|informe|implementacio|bundle|macro_bundle|micro_bundle|pla|acta|tasques|solucio)$/;
@@ -713,6 +717,56 @@ export function sediment(arrel = arrelPerDefecte(), { llindar = LLINDAR_SEDIMENT
 }
 
 /**
+ * Condicions òptimes de treball del primer nivell de l'Escriptori (261114): controla que la taula
+ * no acumule desenes d'artefactes ni plans d'onades solapades mentre els rebuts de torn de 24 hores
+ * continuen vigents. Identifica també els artefactes transitoris anteriors a l'últim pla_implementacio
+ * que no tenen cap retenció explícita del Mestre ni cap consumidor de l'onada actual.
+ */
+export function taulaOptima(arrel = arrelPerDefecte(), { llindar = LLINDAR_TAULA_OPTIMA, dia = avui() } = {}) {
+  const solts = fitxersSolts(arrel).filter((d) => d.nom !== '00_index_escriptori.md');
+  const plans = inventari(arrel)
+    .filter((d) => /^pla_implementacio(?:_|$)/.test(d.resta))
+    .sort((a, b) => (`${a.data}_${a.hora}` < `${b.data}_${b.hora}` ? -1 : `${a.data}_${a.hora}` > `${b.data}_${b.hora}` ? 1 : a.nom.localeCompare(b.nom)));
+  const ultimPla = plans.at(-1) ?? null;
+  const clauUltim = ultimPla ? `${ultimPla.data}_${ultimPla.hora}` : null;
+  const declarats = ultimPla ? perNomDe(arrel) : new Map();
+  const protegitEnOnadaActual = (nom) => {
+    const motius = (declarats.get(nom) ?? []).flatMap((x) => x.motius);
+    for (const m of motius) {
+      if (m.tipus === 'mestre' && m.data <= dia && m.motiu.length >= 3) return true;
+      if (m.tipus === 'consumidor') {
+        const sostingut = m.consumidors.some((c) => {
+          if (!c.nom || c.nom === nom) return false;
+          const parsed = NOM_ARTEFACTE.exec(c.nom);
+          if (!parsed) return true;
+          return `${parsed[1]}_${parsed[2]}` >= clauUltim;
+        });
+        if (sostingut) return true;
+      }
+    }
+    return false;
+  };
+  const anteriors = ultimPla
+    ? artefactes(arrel).filter((d) => TRANSITORIES.test(d.categoria) && `${d.data}_${d.hora}` < clauUltim && !protegitEnOnadaActual(d.nom))
+    : [];
+  const avisos = [];
+  if (solts.length > llindar) {
+    avisos.push(`Condicions òptimes de treball: ${solts.length} artefactes solts a l'Escriptori (sostre òptim ${llindar}). Arxiva les onades precedents ja destil·lades amb: ${VIA_PORTA} --arxiva --onades-anteriors --sec (o --nom FITXER)`);
+  }
+  if (plans.length > 1) {
+    avisos.push(`Onades solapades a la taula: ${plans.length} plans d'implementació (${plans.map((p) => senseMd(p.nom)).join(', ')})${anteriors.length ? ` i ${anteriors.length} artefacte(s) d'onades precedents` : ''}. Arxiva l'onada precedent amb: ${VIA_PORTA} --arxiva --onades-anteriors --sec`);
+  }
+  return {
+    solts: solts.length,
+    llindar,
+    plans: plans.map((p) => p.nom),
+    ultimPla: ultimPla ? ultimPla.nom : null,
+    anteriors,
+    avisos,
+  };
+}
+
+/**
  * Convocatòria v4: el que ha de ser cert abans de convocar una IA. Sense `fitxer`, la
  * taula: àncores repetides i vida justificada de cada declarat viu. Amb una petorreta,
  * també la trinitat i el pla complet i, amb el `contingut`, la secció 0. En fase
@@ -723,7 +777,7 @@ export function checkConvocatoria(arrel = arrelPerDefecte(), { fitxer = null, co
   const bandera = faseConvocatoria(arrel);
   // Un cridador pot demanar «bloqueig» (proves, tancament estricte); un «avis» no afluixa una bandera en «bloqueig».
   const f = bandera.fase === 'bloqueig' || fase === 'bloqueig' ? 'bloqueig' : 'avis';
-  if (errorsEstructura(arrel).length) return { valid: true, fase: f, errors: [], avisos: [], troballes: [], vida: [], trinitat: null, sediment: null };
+  if (errorsEstructura(arrel).length) return { valid: true, fase: f, errors: [], avisos: [], troballes: [], vida: [], trinitat: null, sediment: null, taulaOptima: null };
   const troballes = [];
   const avisos = [];
   if (bandera.error) troballes.push({ codi: 'CONV-00', nom: null, missatge: bandera.error });
@@ -756,9 +810,11 @@ export function checkConvocatoria(arrel = arrelPerDefecte(), { fitxer = null, co
 
   const sed = sediment(arrel);
   for (const a of sed.avisos) avisos.push(`[CONV-07] Sediment de l'índex: ${a}.`);
+  const optima = taulaOptima(arrel, { dia });
+  for (const a of optima.avisos) avisos.push(`[CONV-09] ${a}.`);
   const text = (t) => `[${t.codi}] ${t.missatge}`;
   const errors = f === 'bloqueig' ? troballes.map(text) : [];
-  return { valid: errors.length === 0, fase: f, errors, avisos: [...(f === 'avis' ? troballes.map(text) : []), ...avisos], troballes, vida, trinitat: tri, sediment: sed };
+  return { valid: errors.length === 0, fase: f, errors, avisos: [...(f === 'avis' ? troballes.map(text) : []), ...avisos], troballes, vida, trinitat: tri, sediment: sed, taulaOptima: optima };
 }
 
 /** Escriptori net de la fase: checkTaula més la convocatòria de la taula (sense petorreta). Per a l'informe, el hook i el tancament. */
@@ -1019,11 +1075,13 @@ function nomSolt(cru, bandera) {
  * dolent atura el lot sencer: subcarpetes, noms que no són a la taula i categories
  * que no són de torn ni de producció o avaluació.
  */
-export function arxivables(arrel = arrelPerDefecte(), { noms = [], dia = avui() } = {}) {
+export function arxivables(arrel = arrelPerDefecte(), { noms = [], dia = avui(), onadesAnteriors = false } = {}) {
   // Fins i tot una simulació o un lot buit ha comprovat la seua estructura.
   // No convertir una còpia buida/índex absent en «Res a arxivar» amb èxit.
   const errors = errorsEstructura(arrel);
   if (errors.length) throw new Error(errors.join('\n'));
+  if (noms.length && onadesAnteriors) throw new Error('--nom i --onades-anteriors no es combinen: tria noms concrets o les onades precedents');
+  if (onadesAnteriors) return taulaOptima(arrel, { dia }).anteriors;
   if (!noms.length) return ranci(arrel, dia);
   const arts = artefactes(arrel);
   const presents = new Set(arts.map(a => a.nom));
@@ -1272,9 +1330,9 @@ function arxivaAmbEnllacos(arrel, bruts, carpeta, { reapunta, enllacos }) {
 /** Trasllat a l'arxiu. Amb `sec` només respon què faria: cap fitxer mogut ni índex tocat.
  *  Sense `enllacos`, el camí de sempre; amb `enllacos = { pla, ambTorns, reescriu, hash }`
  *  (la línia d'ordres), el camí transaccional que reapunta els enllaços dels vius. */
-export function arxiva(arrel = arrelPerDefecte(), { noms = [], sec = false, dia = avui(), sessio = null, reapunta = false, enllacos = null } = {}) {
+export function arxiva(arrel = arrelPerDefecte(), { noms = [], sec = false, dia = avui(), sessio = null, reapunta = false, onadesAnteriors = false, enllacos = null } = {}) {
   if (sessio !== null && !SESSIO.test(String(sessio))) throw new Error(`--sessio ${sessio}: ha de ser aammdd_Nom, un sol segment dins de ${ARXIU}/`);
-  const bruts = arxivables(arrel, { noms, dia });
+  const bruts = arxivables(arrel, { noms, dia, onadesAnteriors });
   if (!bruts.length) return { moguts: [], index: false, sec };
   const carpeta = sessio ? `${ARXIU}/${sessio}` : ARXIU;
   comprovaCarpeta(arrel, carpeta);
@@ -1433,11 +1491,11 @@ export function renomena(arrel = arrelPerDefecte(), { vell, nou, sec = false } =
 
 /* ── CLI ──────────────────────────────────────────────────────────────────── */
 
-const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--sessio aammdd_Nom] [--reapunta] [--torn ID] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec] | --tancament [--torn ID]';
+const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--onades-anteriors] [--sessio aammdd_Nom] [--reapunta] [--torn ID] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec] | --tancament [--torn ID]';
 
 /** Banderes de la línia d'ordres. Una bandera desconeguda no es llig com a informe: falla. */
 function opcions(argv) {
-  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, sessio: null, noms: [], tancament: false, torn: null };
+  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, onadesAnteriors: false, sessio: null, noms: [], tancament: false, torn: null };
   const valor = (i, nom, que) => {
     const a = argv[i];
     const v = a === nom ? argv[i + 1] : a.slice(nom.length + 1);
@@ -1456,6 +1514,7 @@ function opcions(argv) {
     else if (amb('--torn')) { una(o.torn, '--torn'); o.torn = valor(i, '--torn', "l'identificador del torn"); if (a === '--torn') i++; }
     else if (a === '--sec') o.sec = true;
     else if (a === '--reapunta') o.reapunta = true;
+    else if (a === '--onades-anteriors') o.onadesAnteriors = true;
     else if (amb('--nom')) { o.noms.push(valor(i, '--nom', "el nom d'un document")); if (a === '--nom') i++; }
     else if (amb('--sessio')) { una(o.sessio, '--sessio'); o.sessio = valor(i, '--sessio', 'el nom de la carpeta de sessió (aammdd_Nom)'); if (a === '--sessio') i++; }
     else if (amb('--renomena')) { una(o.renomena, '--renomena'); o.renomena = valor(i, '--renomena', 'el nom actual del document'); if (a === '--renomena') i++; }
@@ -1465,8 +1524,9 @@ function opcions(argv) {
   if ([o.informe, o.hook, o.arxiva, o.repara, o.renomena !== null, o.tancament].filter(Boolean).length > 1) throw new Error(`Tria un sol mode. ${US}`);
   if (o.torn !== null && !o.tancament && !o.arxiva) throw new Error(`--torn només val amb --tancament o --arxiva. ${US}`);
   const mal = 'només valen amb --arxiva; --sec també amb --repara i --renomena';
-  if ((o.noms.length || o.sessio !== null || o.reapunta) && !o.arxiva) throw new Error(`--nom, --sessio, --reapunta i --sec ${mal}. ${US}`);
-  if (o.sec && !o.arxiva && !o.repara && o.renomena === null) throw new Error(`--nom, --sessio, --reapunta i --sec ${mal}. ${US}`);
+  if ((o.noms.length || o.onadesAnteriors || o.sessio !== null || o.reapunta) && !o.arxiva) throw new Error(`--nom, --onades-anteriors, --sessio, --reapunta i --sec ${mal}. ${US}`);
+  if (o.noms.length && o.onadesAnteriors) throw new Error(`--nom i --onades-anteriors no es combinen. ${US}`);
+  if (o.sec && !o.arxiva && !o.repara && o.renomena === null) throw new Error(`--nom, --onades-anteriors, --sessio, --reapunta i --sec ${mal}. ${US}`);
   if ((o.renomena === null) !== (o.a === null)) throw new Error(`--renomena i --a van junts: --renomena VELL --a NOU. ${US}`);
   return o;
 }
@@ -1508,6 +1568,10 @@ function informe(arrel, dia = avui()) {
   for (const v of conv.vida) console.log(`   ${v.valid ? '🌿' : '🍂'} ${senseMd(v.nom)} ← ${v.motiu}`);
   for (const e of conv.errors) console.log(`❌ ${e}`);
   for (const a of conv.avisos) console.log(`⚠️ ${a}`);
+  if (conv.taulaOptima && !conv.taulaOptima.avisos.length) {
+    const opt = conv.taulaOptima;
+    console.log(`✅ Condicions òptimes de treball: ${opt.solts}/${opt.llindar} artefactes solts · ${opt.plans.length} pla(ns) actiu(s)${opt.anteriors.length ? ` (${opt.anteriors.length} anterior(s) a ${senseMd(opt.ultimPla)}: usa --arxiva --onades-anteriors --sec)` : ''}.`);
+  }
   if (conv.sediment) console.log(`ℹ️ Sediment de l'índex: ${conv.sediment.linies} línies, ${conv.sediment.bytes} B, ${conv.sediment.seccionsBuides.length} secció(ns) buides${conv.sediment.fixAutomatic ? ", bloc «Fix Automàtic d'Àncores»" : ''}.`);
   return checkTaula(arrel, { dia }).valid && conv.valid ? 0 : 1;
 }
@@ -1517,8 +1581,8 @@ async function main(argv = process.argv.slice(2)) {
   const arrel = arrelPerDefecte();
 
   if (o.arxiva) {
-    // Les validacions de sempre (sessió, estructura, noms) abans de carregar el planificador.
-    const sim = arxiva(arrel, { noms: o.noms, sec: true, sessio: o.sessio, reapunta: o.reapunta });
+    // Les validacions de sempre (sessió, estructura, noms, onades anteriors) abans de carregar el planificador.
+    const sim = arxiva(arrel, { noms: o.noms, onadesAnteriors: o.onadesAnteriors, sec: true, sessio: o.sessio, reapunta: o.reapunta });
     if (!sim.moguts.length) {
       if (o.sec) console.log('[Porta Olivera] Simulació (--sec): no es mou cap fitxer ni es toca l’índex.');
       console.log('[Porta Olivera] Res a arxivar.');
@@ -1528,7 +1592,7 @@ async function main(argv = process.argv.slice(2)) {
     // B1 · 261101: el pla d'enllaços i de torns, sobre el disc d'abans i amb el resolutor de l'SCC.
     const { planificaArxiu, textPla, plaAmbEfectes, liniaVersiona, reescriuEnllacos, hashBytes } = await import('../documental/arxiu-enllacos.mjs');
     const carpeta = o.sessio ? `${ARXIU}/${o.sessio}` : ARXIU;
-    const pla = await planificaArxiu(arrel, { bruts: arxivables(arrel, { noms: o.noms }), carpeta, reapunta: o.reapunta, torn: o.torn });
+    const pla = await planificaArxiu(arrel, { bruts: arxivables(arrel, { noms: o.noms, onadesAnteriors: o.onadesAnteriors }), carpeta, reapunta: o.reapunta, torn: o.torn });
     if (o.sec) {
       console.log('[Porta Olivera] Simulació (--sec): no es mou cap fitxer ni es toca l’índex.');
       for (const m of sim.moguts) console.log(`   · ${m.nom} → ${path.posix.dirname(m.desti)}/ (${m.nota})`);
@@ -1538,7 +1602,7 @@ async function main(argv = process.argv.slice(2)) {
     }
     if (pla.aturades.length) throw new Error(`[Porta Olivera] No s'ha mogut res: l'arxivat s'atura abans de tocar cap fitxer.\n${textPla(pla).join('\n')}`);
     const { ambTornsArxiu } = await import('../documental/turns.mjs');
-    const r = arxiva(arrel, { noms: o.noms, sessio: o.sessio, reapunta: o.reapunta, enllacos: { pla, ambTorns: ambTornsArxiu, reescriu: reescriuEnllacos, hash: hashBytes } });
+    const r = arxiva(arrel, { noms: o.noms, onadesAnteriors: o.onadesAnteriors, sessio: o.sessio, reapunta: o.reapunta, enllacos: { pla, ambTorns: ambTornsArxiu, reescriu: reescriuEnllacos, hash: hashBytes } });
     for (const m of r.moguts) console.log(`   · ${m.nom} → ${path.posix.dirname(m.desti)}/ (${m.nota})`);
     if (r.index) console.log(`   · ${INDEX} actualitzat.`);
     for (const m of r.moguts.filter(x => x.nota === 'mogut' && x.nom.endsWith('.md'))) {

@@ -3,10 +3,10 @@
   "turn_id": "torn_46022a28-c731-4b8b-a2c3-e12b3f8e8988",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
-  "revision": 8,
+  "state": "closed",
+  "revision": 10,
   "createdAt": "2026-11-09T15:22:52.903Z",
-  "updatedAt": "2026-11-09T15:24:11.625Z",
+  "updatedAt": "2026-11-16T02:07:00.673Z",
   "expiresAt": "2026-11-10T15:22:52.903Z",
   "contractHash": "991dd78cf520045e1a0a0144bc2a0efc35d43623f2ebc4d04bb99b623fdd45e5",
   "humanInventoryVersion": 1,
@@ -5553,7 +5553,7 @@
   },
   "plan": {
     "file": "_wiki_de_poble/04_escriptori/261109_1623_pla_implementacio_onada_r15_sanejament_kit_codex_workspace_universal_i_iaia.md",
-    "hash": "a897d0dedb5b46f612b7fceb7eeef2a7bd065152a80f202dc1367e98ad7cdda9"
+    "hash": "f575374ffe2715b3cd9d9a0cb34e9124996ce9a192dd6654ec7b2d133acdfccf"
   },
   "verification": null,
   "history": [
@@ -5637,10 +5637,26 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-11-09T15:24:11.624Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-10T01:30:48.084Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-11-16T02:07:00.673Z"
     }
   ],
   "relocated": [
     "_wiki_de_poble/04_escriptori/261108_1559_auditoria_claude.md",
     "_wiki_de_poble/04_escriptori/261108_1559_pla_implementacio_onada_r13_smart_paste_i_kits_codex_gemini.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-11-16T02:07:00.673Z",
+    "previousState": "planned"
+  }
 }
