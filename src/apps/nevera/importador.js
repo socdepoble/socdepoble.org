@@ -112,7 +112,9 @@ export function nombreEs(text) {
 /** «1,50 €» → 150: el preu en cèntims, sense coma flotant; el que no és un preu, null. */
 export function centimsEs(text) {
   const parts = netejaText(text, 40).match(PREU_ES);
-  return parts ? Number(parts[1].replace(/\./g, '')) * 100 + Number((parts[2] || '').padEnd(2, '0')) : null;
+  if (!parts) return null;
+  const cents = Number(parts[1].replace(/\./g, '')) * 100 + Number((parts[2] || '').padEnd(2, '0'));
+  return Number.isSafeInteger(cents) ? cents : null;
 }
 
 /** Un slug per a la URL: sense accents, en minúscules, amb guionets. */

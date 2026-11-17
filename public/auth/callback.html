@@ -102,7 +102,12 @@
     if (!o) return false;
     var u;
     try { u = new URL(o); } catch(e) { return false; }
+    /* Un origen és només esquema, host i port: mai credencials, un camí,
+       consulta ni fragment que puguen convertir la tornada en un redirector. */
+    if (o !== u.origin || u.username || u.password) return false;
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
     if (u.protocol !== 'https:' && u.hostname !== 'localhost') return false;
+    if (u.hostname !== 'localhost' && u.port) return false;
     
     var h = u.hostname;
     if (h === 'socdepoble.org') return true;
@@ -128,6 +133,9 @@
     if (!camiValid) path = '/';
   }
   var errProveidor = params.get('error_description') || params.get('error');
+  /* Fins i tot un origen rebutjat pot haver portat un codi: fora de
+     l'historial abans de mostrar cap error o passar-lo a l'opener. */
+  window.history.replaceState(window.history.state, '', window.location.pathname);
 
   function mostraError(titol, cos, urlTornar) {
     document.getElementById('esperant').hidden = true;

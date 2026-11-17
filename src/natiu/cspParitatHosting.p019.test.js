@@ -146,7 +146,8 @@ describe('P0-19 (D10/D12): Paritat estructural de CSP i capçaleres entre fireba
     const nativa = politicaEstrica(natiu.csp);
     expect(nativa['media-src']).toEqual(fontsMediaRequerides);
     expect(nativa['img-src']).toEqual(fontsMediaRequerides);
-    expect(nativa['connect-src']).toEqual(["'self'", 'data:', 'https://backend.socdepoble.test', 'wss://backend.socdepoble.test']);
+    // R32.3 · I l'origen públic, on l'App llig el manifest de versió (/.well-known/ard.json).
+    expect(nativa['connect-src']).toEqual(["'self'", 'data:', 'https://backend.socdepoble.test', 'wss://backend.socdepoble.test', 'https://socdepoble.org']);
     expect(natiu.html).toContain(`content="${natiu.csp}">`);
   });
 

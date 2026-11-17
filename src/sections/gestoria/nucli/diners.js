@@ -130,11 +130,13 @@ export function formatImport(cents, { simbol = true } = {}) {
  * @returns {{ total: number, incomplet: boolean }}
  */
 export function sumaImports(llista) {
-  let total = 0;
+  let acumulat = 0n;
   let incomplet = false;
   for (const valor of llista ?? []) {
-    if (Number.isSafeInteger(valor)) total += valor;
+    if (Number.isSafeInteger(valor)) acumulat += BigInt(valor);
     else incomplet = true;
   }
+  const total = Number(acumulat);
+  if (!Number.isSafeInteger(total)) throw new RangeError('La suma dels imports és massa gran per a representar-la en cèntims segurs.');
   return { total, incomplet };
 }

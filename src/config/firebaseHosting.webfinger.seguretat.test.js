@@ -70,10 +70,15 @@ test('firebase.json: les reescriptures i capçaleres de WebFinger són exactamen
   const regles = reglesFirebaseWebFinger(await preparaFederacio({ arrel: ARREL, origen: ORIGEN }));
   assert.deepEqual(hosting.rewrites.slice(0, -1), regles.rewrites);
   assert.equal(hosting.rewrites.at(-1).destination, '/index.html');
-  // Totes les regles de .well-known: les del generador i, a més, només la de NodeInfo (cap regla de capçaleres de més, ni de CORS).
+  /* Totes les regles de .well-known: les del generador i, a més, només la de NodeInfo i (R32.3) el CORS de
+     lectura de /.well-known/ard.json, el manifest de versió que llig l'App nativa des de capacitor://localhost
+     i https://localhost (cap altra regla de capçaleres de més, ni de CORS). */
   const wellKnown = hosting.headers.filter((r) => (r.source ?? r.regex).includes('well-known'));
-  assert.deepEqual(wellKnown.filter((r) => r.source !== '/.well-known/nodeinfo'), regles.headers);
-  assert.equal(wellKnown.length, regles.headers.length + 1);
+  const foraDelGenerador = new Set(['/.well-known/nodeinfo', '/.well-known/ard.json']);
+  assert.deepEqual(wellKnown.filter((r) => !foraDelGenerador.has(r.source)), regles.headers);
+  assert.equal(wellKnown.length, regles.headers.length + foraDelGenerador.size);
+  assert.deepEqual(wellKnown.filter((r) => r.source === '/.well-known/ard.json'),
+    [{ source: '/.well-known/ard.json', headers: [{ key: 'Access-Control-Allow-Origin', value: '*' }] }]);
   const posicio = (regla) => hosting.headers.findIndex((r) => JSON.stringify(r) === JSON.stringify(regla));
   for (const regla of regles.headers) assert.ok(posicio(regla) >= 0, JSON.stringify(regla));
   assert.ok(regles.headers.every((regla) => posicio(regla) < hosting.headers.findIndex((r) => r.source === '/ap/**')));

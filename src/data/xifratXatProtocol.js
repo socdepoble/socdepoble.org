@@ -899,17 +899,24 @@ export async function xifraAdjunt(cripto, { fil, adjunt, emissor, bytes, mime, d
   if (classe === undefined) throw falla('mime');
   if (!esBytes(bytes) || bytes.length < 1 || bytes.length > MAXIM_CLAR_ADJUNT[classe]) throw falla('mida');
   const fk = aleatori(cripto, BYTES_CLAU);
-  const clauFk = await pas(importaClauHkdf(cripto, fk));
-  const kenc = await pas(derivaClauAesHkdf(cripto, clauFk, uuid16(adjunt), infoClauAdjunt(fil), ['encrypt']));
-  const aad = construeixAadAdjunt({ fil, adjunt, emissor });
-  const farcit = farcixPadme(bytes);
+  let farcit = null;
+  let lliurada = false;
   try {
+    const clauFk = await pas(importaClauHkdf(cripto, fk));
+    const kenc = await pas(derivaClauAesHkdf(cripto, clauFk, uuid16(adjunt), infoClauAdjunt(fil), ['encrypt']));
+    const aad = construeixAadAdjunt({ fil, adjunt, emissor });
+    farcit = farcixPadme(bytes);
     const { iv, xifrat } = await pas(xifraAesGcm(cripto, kenc, { dades: farcit, aad }));
     const blob = ajunta(iv, xifrat);
     const h = await pas(sha256(cripto, blob));
-    return Object.freeze({ blob, a: Object.freeze({ id: adjunt, c: classe, m: mime, b: bytes.length, d: durada, k: fk, h }) });
+    const resultat = Object.freeze({ blob, a: Object.freeze({ id: adjunt, c: classe, m: mime, b: bytes.length, d: durada, k: fk, h }) });
+    lliurada = true;
+    return resultat;
   } finally {
-    farcit.fill(0);
+    farcit?.fill(0);
+    /* Qui rep `a` neteja la FK després d'embolcallar-la. Si una primitiva
+       falla o l'àmbit canvia abans del retorn, ningú més no la pot netejar. */
+    if (!lliurada) fk.fill(0);
   }
 }
 

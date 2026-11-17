@@ -63,7 +63,7 @@ export function suggerimentsEfectiu(pendentCents) {
   if (!esCents(pendentCents) || pendentCents <= 0) return [];
   const valors = new Set([pendentCents]);
   for (const pas of PASSOS_EFECTIU) valors.add(sostre(pendentCents, pas) * pas);
-  return [...valors].sort((a, b) => a - b).slice(0, MAX_SUGGERIMENTS);
+  return [...valors].filter(esCents).sort((a, b) => a - b).slice(0, MAX_SUGGERIMENTS);
 }
 
 /**

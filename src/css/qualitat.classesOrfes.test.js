@@ -12,8 +12,11 @@
        `sdp-x__${nom}` fan vives totes les classes amb eixe prefix fins al
        '--' o al '__' (també 'sdp-x__' + nom).
      · Exclusions del recorregut: laboratoris ocults .rN/.sdp-*, node_modules, .git, dist, wordpress-plugin/
-       dist, _wiki_de_poble/90_arxiu_historic (AGENTS §5), var, .sdp-* i
-       este mateix fitxer (la instantània de baix nomena les òrfenes).
+       dist, _wiki_de_poble/90_arxiu_historic (AGENTS §5), var, .sdp-*, les
+       eixides compilades natives (dist-natiu, les builds de Gradle i Xcode, la còpia
+       public d'android i d'ios) i este mateix fitxer (la instantània de baix
+       nomena les òrfenes). Un fitxer que nomena la meitat de les classes
+       declarades és un full compilat: la prova ho diu en roig, no el compta.
    La prova passa sempre, llevat d'una asserció: la llista d'òrfenes no pot
    CRÉIXER respecte de la instantània (INSTANTANIA) que es deixa ací després
    de la neteja. Una classe nova al CSS sense cap consumidor l'engrandix i
@@ -26,10 +29,27 @@ import { describe, expect, test } from 'vitest';
 
 const ARREL = process.cwd();
 /* 31-10-2026 (ordre del Mestre, prompt 2208, T3.1) · i taulers.css, el Quadre de Comandament. */
-const FULLS = ['src/css/modules.css', 'src/css/components.css', 'src/css/layout.css', 'src/css/taulers.css'];
+/* ARBITRATGE EGM-02 (R32.2) · i els fulls diferits (src/css/diferit-*.css, Onada R28,
+   D-R27-1), que el cens no veia: el de la salut del dispositiu (Gemini R32, lot 03)
+   hi entra amb 0 òrfenes. Es llegixen del disc: un full diferit nou hi entra sol. */
+const FULLS = ['src/css/modules.css', 'src/css/components.css', 'src/css/layout.css', 'src/css/taulers.css',
+  ...readdirSync(path.join(ARREL, 'src/css')).filter((nom) => /^diferit-[\w-]+\.css$/.test(nom)).sort().map((nom) => `src/css/${nom}`)];
 const PROPI = 'src/css/qualitat.classesOrfes.test.js';
 const DIRS_EXCLOSOS = new Set(['node_modules', '.git', 'dist', 'var']);
-const RUTES_EXCLOSES = new Set(['wordpress-plugin/dist', '_wiki_de_poble/90_arxiu_historic']);
+/* ARBITRATGE EGM-02 (R32.2) · Les eixides compilades que Git ignora (dist-natiu, la
+   còpia que Capacitor deixa a android i a ios, i la build de Gradle) porten els
+   fulls dins d'un tros de JS (estils-<hash>.js): hi apareixen totes les classes
+   declarades i l'informe quedava cec (0 òrfenes) en qualsevol arbre amb una
+   compilació nativa, el viu inclòs. La prova roja de .sdp-btn--primari i
+   --secundari només es veia en un clon sense compilacions. No són consumidors.
+   R32.3 (Peixos Daurats, P3) · La llista és la de les eixides natives del .gitignore (línies 94-106):
+   també la build de Gradle de l'arrel d'android (els informes HTML nomenen classes com accordion-header
+   i en salvaven òrfenes en silenci) i les de Xcode (ios/App/build, ios/DerivedData). */
+const RUTES_EXCLOSES = new Set([
+  'wordpress-plugin/dist', '_wiki_de_poble/90_arxiu_historic',
+  'dist-natiu', 'android/app/build', 'android/app/src/main/assets/public', 'ios/App/App/public',
+  'android/build', 'android/capacitor-cordova-android-plugins/build', 'ios/App/build', 'ios/DerivedData'
+]);
 /* Els .css del recorregut només servixen per al revers (classes del JSX sense
    regla): del corpus de consumidors, FITXERS els deixa fora. */
 const EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.html', '.htm', '.php', '.md', '.json', '.svg', '.txt', '.yml', '.yaml', '.xml', '.css']);
@@ -155,8 +175,15 @@ const TOT = nouIndex();
 const SENSE_PROVES = nouIndex();
 const RECORREGUT = recorre(ARREL);
 const FITXERS = RECORREGUT.filter((rel) => path.extname(rel) !== '.css');
+/* ARBITRATGE EGM-02 (R32.2) · Fail-closed contra la ceguesa: cap fitxer escrit a
+   mà nomena la meitat de les classes declarades; un que ho fa és un full
+   compilat (una eixida nova sense excloure). No s'indexa i l'informe falla. */
+const LLINDAR_FULL_COMPILAT = Math.ceil(DECLARADES.size / 2);
+const FULLS_COMPILATS = [];
 for (const rel of FITXERS) {
   const text = readFileSync(path.join(ARREL, rel), 'utf8');
+  const nomenades = new Set((text.match(TOKEN) || []).filter((t) => DECLARADES.has(t))).size;
+  if (nomenades >= LLINDAR_FULL_COMPILAT) { FULLS_COMPILATS.push(`${rel} (${nomenades} classes)`); continue; }
   const esCodi = CODI.has(path.extname(rel));
   indexa(text, esCodi, TOT);
   if (!esProva(rel)) indexa(text, esCodi, SENSE_PROVES);
@@ -286,6 +313,7 @@ describe('classes òrfenes dels fulls modules, components i layout', () => {
   test('informe: la llista d’òrfenes no creix respecte de la instantània', () => {
     expect(FITXERS.length).toBeGreaterThan(1000);
     expect(DECLARADES.size).toBeGreaterThan(1000);
+    expect(FULLS_COMPILATS, 'fulls compilats al corpus de consumidors: l’informe quedaria cec; afegiu-ne la carpeta a RUTES_EXCLOSES').toEqual([]);
     const linies = [
       `CLASSES DECLARADES: ${DECLARADES.size} · FITXERS LLEGITS: ${FITXERS.length}`,
       `ÒRFENES (${ORFES.length}):`,

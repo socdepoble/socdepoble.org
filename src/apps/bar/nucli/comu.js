@@ -41,14 +41,19 @@ export function mitjaAmunt(numerador, denominador) {
     throw new RangeError('mitjaAmunt només treballa amb enters i un denominador positiu.');
   }
   const signe = numerador < 0 ? -1 : 1;
-  const absolut = Math.abs(numerador);
-  const resultat = Math.floor((absolut * 2 + denominador) / (denominador * 2));
+  const absolut = BigInt(Math.abs(numerador));
+  const divisor = BigInt(denominador);
+  const resultat = Number((absolut * 2n + divisor) / (divisor * 2n));
   return resultat === 0 ? 0 : signe * resultat;
 }
 
 /** Divisió entera arrodonida cap amunt (per a enters no negatius). */
 export function sostre(numerador, denominador) {
-  return Math.floor((numerador + denominador - 1) / denominador);
+  if (!esCents(numerador) || numerador < 0 || !esCents(denominador) || denominador <= 0) {
+    throw new RangeError('sostre només treballa amb enters no negatius i un denominador positiu.');
+  }
+  const divisor = BigInt(denominador);
+  return Number((BigInt(numerador) + divisor - 1n) / divisor);
 }
 
 /** Text net d'una persona (nota, motiu, àlies): retallat i amb un màxim; null si és buit. */
@@ -76,7 +81,13 @@ export function congela(valor) {
 
 /** Suma de cèntims d'una llista amb una funció d'import. */
 export function suma(llista, importDe) {
-  let total = 0;
-  for (const element of llista) total += importDe(element);
-  return total;
+  let total = 0n;
+  for (const element of llista) {
+    const valor = importDe(element);
+    if (!esCents(valor)) throw errorBar('IMPORT', 'Els imports han de ser enters de cèntims segurs.');
+    total += BigInt(valor);
+  }
+  const resultat = Number(total);
+  if (!esCents(resultat)) throw errorBar('IMPORT', 'La suma dels imports és massa gran.');
+  return resultat;
 }

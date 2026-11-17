@@ -240,7 +240,8 @@ describe('les peces', () => {
   test('centimsEs: cèntims exactes, sense coma flotant', () => {
     expect([centimsEs('1,50 €'), centimsEs('0,95 €'), centimsEs('15,57 €'), centimsEs('19,30 €'), centimsEs('1.234,50 €'), centimsEs('2,5'), centimsEs('3 €')])
       .toEqual([150, 95, 1557, 1930, 123450, 250, 300]);
-    for (const brossa of ['', 'gratis', '1,505 €', '€', null]) expect(centimsEs(brossa), String(brossa)).toBeNull();
+    const importGegant = Array(6).fill('999').join('.') + ',99 €';
+    for (const brossa of ['', 'gratis', '1,505 €', '€', null, importGegant]) expect(centimsEs(brossa), String(brossa)).toBeNull();
   });
 
   test('slug: sense accents, minúscules i guionets', () => {

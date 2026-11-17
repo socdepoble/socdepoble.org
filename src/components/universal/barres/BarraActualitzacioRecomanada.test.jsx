@@ -11,7 +11,10 @@ vi.mock('../../../app/contexts/UIContext', () => ({
 }));
 
 import CA from '../../../config/idiomes/ca.js';
+import EN from '../../../config/idiomes/en.js';
 import ES from '../../../config/idiomes/es.js';
+import EU from '../../../config/idiomes/eu.js';
+import GL from '../../../config/idiomes/gl.js';
 import {
   ENLLAC_ANDROID_MARKET,
   ENLLAC_ANDROID_PLAY,
@@ -157,4 +160,58 @@ describe('actualitzacioRecomanada i BarraActualitzacioRecomanada', () => {
     fireEvent.click(screen.getByRole('button', { name: `${ES['natiu.actualitzacioRecomanada.mesTard']} · ${ES['natiu.actualitzacioRecomanada.tanca']}` }));
     expect(container.firstChild).toBeNull();
   });
+});
+
+/* Onada R32.3 (ordre del Mestre, 16-11-2026 22:09) · L'avís automàtic de versió nova
+   (natiu/actualitzacioAppNativa.js) es pinta en esta mateixa barra: en les 5 llengües, amb el
+   botó d'un toc de cada plataforma. Les claus són les de sempre (cap de nova). */
+describe('R32.3 · l’avís en les 5 llengües i el botó d’un toc per plataforma', () => {
+  const LLENGUES = Object.freeze([['ca', CA], ['es', ES], ['en', EN], ['eu', EU], ['gl', GL]]);
+  const CLAUS = Object.freeze(['regio', 'titol', 'detallIos', 'detallAndroid', 'accioIos', 'accioAndroid', 'mesTard', 'tanca']);
+  const AVISOS = Object.freeze({
+    android: { plataforma: 'android', versioRecomanada: 10, enllac: ENLLAC_ANDROID_PLAY, marketUrl: ENLLAC_ANDROID_MARKET },
+    ios: { plataforma: 'ios', versioRecomanada: 10, enllac: ENLLAC_IOS_APP_STORE, marketUrl: null }
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  test.each(LLENGUES)('%s · totes les claus de la barra tenen traducció pròpia', (llengua, diccionari) => {
+    for (const clau of CLAUS) {
+      const text = diccionari[`natiu.actualitzacioRecomanada.${clau}`];
+      expect(typeof text === 'string' && text.trim().length > 0, `${llengua} · ${clau}`).toBe(true);
+      if (llengua !== 'ca') expect(text, `${llengua} · ${clau}`).not.toBe(CA[`natiu.actualitzacioRecomanada.${clau}`]);
+    }
+  });
+
+  test.each(LLENGUES.flatMap(([llengua, diccionari]) => [['android', llengua, diccionari], ['ios', llengua, diccionari]]))(
+    '%s · %s · regió, títol, detall i botó en la llengua de l’App; el toc obri la botiga de la plataforma',
+    async (plataforma, _llengua, diccionari) => {
+      vi.useFakeTimers();
+      const obertes = [];
+      vi.spyOn(window, 'open').mockImplementation((url) => { obertes.push(url); return null; });
+      ui.t = (clau, reserva) => diccionari[clau] ?? reserva;
+      publicaActualitzacioRecomanada(AVISOS[plataforma]);
+      render(<BarraActualitzacioRecomanada />);
+      const sufix = plataforma === 'ios' ? 'Ios' : 'Android';
+      const regio = screen.getByRole('region', { name: diccionari['natiu.actualitzacioRecomanada.regio'] });
+      expect(regio.getAttribute('data-plataforma')).toBe(plataforma);
+      expect(regio.textContent).toContain(diccionari['natiu.actualitzacioRecomanada.titol']);
+      expect(regio.textContent).toContain(diccionari[`natiu.actualitzacioRecomanada.detall${sufix}`]);
+      fireEvent.click(screen.getByRole('button', { name: diccionari[`natiu.actualitzacioRecomanada.accio${sufix}`] }));
+      expect(obertes).toEqual([plataforma === 'ios' ? ENLLAC_IOS_APP_STORE : ENLLAC_ANDROID_MARKET]);
+      // jsdom no passa mai a segon pla: a Android, passada l'espera, la reserva https de Google Play.
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(obertes).toEqual(plataforma === 'ios' ? [ENLLAC_IOS_APP_STORE] : [ENLLAC_ANDROID_MARKET, ENLLAC_ANDROID_PLAY]);
+      // L'ajornament per versió de sempre: «Més tard» l'amaga per a esta versió.
+      fireEvent.click(screen.getByRole('button', {
+        name: `${diccionari['natiu.actualitzacioRecomanada.mesTard']} · ${diccionari['natiu.actualitzacioRecomanada.tanca']}`
+      }));
+      expect(screen.queryByRole('region')).toBeNull();
+      publicaActualitzacioRecomanada(AVISOS[plataforma]);
+      expect(llegixActualitzacioRecomanada()).toBeNull();
+    }
+  );
 });

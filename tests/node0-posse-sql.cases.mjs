@@ -32,6 +32,9 @@ const PINS_KIT_REBUTJATS=[
  [117,'8a0bc6de5f863ca386de0e654213a7b2ba57f07eda78a521029734f389346090'],
  [118,'69234edd70c404eb771f544a581b77f4192c39c1c81333d3785d1cf06b6de8d0'],
 ];
+// Onada R32.2: el complet de 116 d'R32 (fins a 20261116040000) també es conserva com a perfil històric; les tres R32
+// (20261116170000, 20261116170100 i 20261116170200, NO aplicades a Producció) en queden fora.
+const POST_R31=CATALEG.filter(m=>comparaVersions(m.version,'20261116040000')>0).map(m=>m.version);
 // HistoricalR54, currentR15-A3 (only2.6 deferred), and fullsourceR15 are three
 // separate exact ledgers. No historical source hash is regenerated or replaced.
 // R54-85 i R15-86 inclouen 2611080440, reescrita per l'esmena A2 (776f77186): els seus pins
@@ -43,8 +46,10 @@ const PERFILS=[
  {migracions:86,exclou:POST_R15,fonts:[FONT_POLITICA_2_6_ABANS_A2]},
  // R30: el complet de 114 es conserva (pin 9072d6ee…); R32 hi afig el complet real, sense repintar-lo.
  {migracions:114,exclou:POST_R30,fonts:[]},
- // Catàleg complet actual (R32: 114 d'R30 + R31 Push i definers): cap exclusió ni cap font històrica.
- {migracions:116,exclou:[],fonts:[]},
+ // R32: el complet de 116 (114 + R31 Push i definers) es conserva (pin 34ddc81c…); R32.2 hi afig el complet real.
+ {migracions:116,exclou:POST_R31,fonts:[]},
+ // Catàleg complet actual (R32.2: 116 + les tres R32, NO aplicades a Producció): cap exclusió ni font històrica.
+ {migracions:119,exclou:[],fonts:[]},
 ];
 const catalogues=PERFILS.map(({exclou,fonts})=>aplicaFontsHistoriques(CATALEG.filter(m=>!exclou.includes(m.version)),fonts));
 const PINS=[...sqlPosse.match(/-- POSSE_MIGRATION_PINS_BEGIN\n([\s\S]*?)\n-- POSSE_MIGRATION_PINS_END/)[1].matchAll(/\((\d+),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>`${count}:${hash}`);
@@ -64,7 +69,7 @@ test('POSSE accepts exact source ledgers derived from the complete migration cat
  }
  assert.notEqual(ledgerHash(catalogues[6]),ledgerHash(catalogues[7]));
  // Cada pin del SQL el prova exactament un perfil reproduït, i cap perfil queda sense pin.
- assert.equal(PINS.length,11);
+ assert.equal(PINS.length,12);
  assert.deepEqual(catalogues.map(rows=>`${rows.length}:${ledgerHash(rows)}`).sort(),[...PINS].sort());
  for(const rows of catalogues){let calls=0;assert.equal(await verificaEsquemaPosseNodeZero({db:{async query(sql,options){calls++;assert.equal(sql,'SELECT node0_posse.readiness();');assert.equal(options.privateValues,true);return ready(rows);}}}),true);assert.equal(calls,1);}
 });
@@ -102,14 +107,26 @@ test('R39 POSSE hashes use the PostgreSQL core without a pgcrypto schema assumpt
  assert.doesNotMatch(sqlPosse,/\b(?:public\.)?digest\(/);
  assert.equal([...sqlPosse.matchAll(/pg_catalog\.sha256\(convert_to\(/g)].length,8);
 });
-test('POSSE PostgreSQL installs all eleven exact pinned profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
- assert.equal(PERFILS.length,11,'onze perfils fixats: 76..81, els dos 85, 86, el 114 d’R30 i el complet actual 116');
+test('POSSE PostgreSQL installs all twelve exact pinned profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
+ assert.equal(PERFILS.length,12,'dotze perfils fixats: 76..81, els dos 85, 86, el 114 d’R30, el 116 d’R31 i el complet actual 119');
  for(const [index,{exclou,fonts}] of PERFILS.entries()){
   const f=await creaFixturePosse({exclou,fonts});
   try{
    const version=(await f.pg.query('SELECT version() AS version')).rows[0].version;t.diagnostic(`PGlite: ${version}`);
    const expected=catalogues[index],saved=(await f.pg.query('SELECT version,file,sha256 FROM node0.schema_migrations ORDER BY version COLLATE "C"')).rows;
    assert.deepEqual(saved,expected.map(({version,file,sha256})=>({version,file,sha256})).sort((a,b)=>a.version<b.version?-1:1));
+   if(!exclou.length){
+    // Prova PostgreSQL sobre el catàleg reconciliat real, no només el pin.
+    const pending=(await f.pg.query(`SELECT n.nspname,p.proname,p.proconfig FROM pg_catalog.pg_proc p
+     JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace WHERE p.prosecdef AND n.nspname IN ('public','private')
+     AND NOT coalesce(p.proconfig @> ARRAY['search_path=""']::text[],false)
+     AND NOT coalesce(p.proconfig @> ARRAY['search_path=']::text[],false)`)).rows;
+    assert.deepEqual(pending,[],'cap definer públic/privat pendent després de les 119 fonts');
+    const e2ee=(await f.pg.query('SELECT public.xat_verifica_prerequisits_e2ee() AS contracte')).rows[0].contracte;
+    assert.equal(e2ee.preparat_sql,true);assert.deepEqual(e2ee.faltants,[]);
+    const push=(await f.pg.query("SELECT pg_get_constraintdef(oid) AS definicio FROM pg_constraint WHERE conname='xat_dispositius_push_sessio_fk'")).rows;
+    assert.equal(push.length,1);assert.match(push[0].definicio,/FOREIGN KEY \(sessio_id\) REFERENCES auth.sessions\(id\) ON DELETE CASCADE/);
+   }
    assert.equal(await verificaEsquemaPosseNodeZero({db:f.db}),true);
    const before=(await f.pg.query('SELECT node0_posse.readiness() AS ready')).rows[0].ready;
    await f.pg.exec('CREATE SCHEMA extensions;ALTER EXTENSION pgcrypto SET SCHEMA extensions');

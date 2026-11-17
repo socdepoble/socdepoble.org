@@ -444,3 +444,71 @@ test('els Ajustos mostren la foto pròpia i la descarten quan la persona ja no e
   expect(perfil().querySelector('img')).toBeNull();
   expect(perfil().textContent).toContain('JL');
 });
+
+/* ARBITRATGE de l'Elefant (R32, Ronda 3 · Ronda #9 del Node 0) · Navegar de
+   pressa entre subpàgines (endavant, enrere, dos nivells i fins a la pàgina
+   diferida de la còpia) i tancar amb Escape: el focus torna al disparador
+   original, mai al <body>, i no se'n va quan s'assenten les tasques pendents.
+   Abast honest (Peixos Daurats R32.2, P3): Escape desmunta el full, i un tros
+   que arribe després ja no hi pot pintar ni enfocar; si una prova anterior ja
+   l'ha resolt, la pàgina es pinta en sincronia. El cas «el tros arriba amb el
+   full obert» no és d'estes proves. */
+function navegaDePressa() {
+  fireEvent.click(fila('Aparença'));
+  fireEvent.click(within(full()).getByRole('button', { name: 'Torna a Ajustos' }));
+  fireEvent.click(fila('Xats'));
+  fireEvent.click(fila('Amplària de les columnes'));
+  fireEvent.click(within(full()).getByRole('button', { name: 'Torna a Xats' }));
+  fireEvent.click(fila('Còpia de seguretat'));
+  fireEvent.click(fila('Desa una còpia xifrada'));
+  expect(titol()).toBe('Desa una còpia xifrada');
+  expect(document.activeElement).toBe(within(full()).getByRole('button', { name: 'Torna a Còpia de seguretat' }));
+}
+const escape = () => act(() => { full().dispatchEvent(new Event('cancel', { cancelable: true })); });
+const deixaAssentar = () => act(async () => { await new Promise((resol) => { setTimeout(resol, 50); }); });
+
+test('ARBITRATGE R3: després de navegar de pressa entre subpàgines, Escape torna el focus al disparador original', async () => {
+  pinta();
+  const tu = obriDesDelPeu();
+  navegaDePressa();
+  escape();
+  expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
+  expect(document.activeElement).toBe(tu);
+  expect(document.activeElement).not.toBe(document.body);
+  await deixaAssentar();
+  expect(document.activeElement).toBe(tu);
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+test('ARBITRATGE R3: en estret (el disparador queda dins del rail tancat), Escape després de navegar porta el focus al botó que obri el rail', async () => {
+  mocks.amplada = 375;
+  pinta();
+  const closca = document.querySelector('.app-grid-shell');
+  await waitFor(() => expect(closca.getAttribute('data-panell')).toBe('middle'));
+  fireEvent.click(document.querySelector('.sdp-xat-obri-rail'));
+  obriDesDelPeu();
+  expect(closca.getAttribute('data-panell')).toBe('middle');
+  navegaDePressa();
+  escape();
+  expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
+  expect(document.activeElement).toBe(document.querySelector('.sdp-xat-obri-rail'));
+  await deixaAssentar();
+  expect(document.activeElement).toBe(document.querySelector('.sdp-xat-obri-rail'));
+});
+
+/* Safari (macOS i iOS) no enfoca un botó en fer-hi clic: el Dialeg obri amb
+   el focus al <body> i no té cap disparador on tornar. Després de navegar de
+   pressa i d'Escape, la closca (onRetornFocus) el porta a «Tu», no al <body>. */
+test('ARBITRATGE R3: obert amb un clic que no enfoca (Safari), Escape després de navegar porta el focus a «Tu», no al <body>', async () => {
+  pinta();
+  document.activeElement?.blur?.();
+  expect(document.activeElement).toBe(document.body);
+  const tu = within(rail()).getByRole('button', { name: 'Tu: ajustos' });
+  fireEvent.click(tu);
+  navegaDePressa();
+  escape();
+  expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
+  expect(document.activeElement).toBe(tu);
+  await deixaAssentar();
+  expect(document.activeElement).toBe(tu);
+});

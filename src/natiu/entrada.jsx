@@ -43,6 +43,7 @@ import { creaAvisosNatius } from './avisosNatius.js';
 import { connectaEnrereNatiu } from './enrereNatiu.js';
 import { publicaActualitzacioRecomanada } from '../config/actualitzacioRecomanada.js';
 import { estatDeVersio } from './versioMinima.js';
+import { iniciaActualitzacioAppNativa } from './actualitzacioAppNativa.js';
 import CalActualitzar from './CalActualitzar.jsx';
 
 const styleNode = document.createElement('style');
@@ -211,6 +212,13 @@ const init = () => {
         }
       })
       .catch((e) => console.error('[natiu] Porta de versió:', e));
+
+    /* Onada R32.3 (ordre del Mestre, 16-11-2026 22:09) · L'avís automàtic de versió nova: en
+       arrencar i a cada tornada a primer pla, el manifest de socdepoble.org
+       (/.well-known/ard.json) contra el build i la versió d'este paquet. Publica a la mateixa
+       barra d'actualització; fail-silent i inert fora d'Android i iOS o sense permís de la CSP
+       (actualitzacioAppNativa.js). Mai tomba l'arrencada. */
+    iniciaActualitzacioAppNativa({ plataforma: plataformaDelDispositiu(), publica: publicaActualitzacioRecomanada });
   }
 };
 

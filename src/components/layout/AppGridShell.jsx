@@ -187,6 +187,7 @@ export default function AppGridShell({
      detall. Els panells flotants i el vel queden per a «estret» (fins a
      720 inclòs, decisió 1 del Mestre de 30-10-2026 ~15:00). */
   columnesFixes = false,
+  duesColumnesEstret = false,
   'aria-label': ariaLabel = 'Graella de l\'aplicació',
   className = '',
 }) {
@@ -427,7 +428,7 @@ export default function AppGridShell({
     setVal('sdp-grid-widths', nextState);
   }, []);
 
-  const tancada = columnesTancades(mida, panellObert);
+  const tancada = columnesTancades(mida, panellObert, { duesColumnesEstret });
 
   /* P6 · Si la llista té desplegador en esta mida i si ara es pinta en
      rail. En «ample» mana el plegat de sempre (has-middle-collapsed). En
@@ -470,7 +471,7 @@ export default function AppGridShell({
     }
     if (!page || !actiu || !page.contains(actiu)) return;
     /* La mateixa regla que pinta inert. */
-    const tancades = columnesTancades(mida, panellObert);
+    const tancades = columnesTancades(mida, panellObert, { duesColumnesEstret });
     const seccions = { left: leftRef, middle: middleRef, right: rightRef };
     /* P6 · El rail d'estret es tanca amb qualsevol panell obert: si el focus
        hi era (el menú o la lupa del rail), tampoc no s'hi pot quedar. */
@@ -483,7 +484,7 @@ export default function AppGridShell({
     const obridor = [...page.querySelectorAll(`[data-obri-columna][aria-controls~="${columna.id}"]`)].find(esAlAbast);
     if (obridor) obridor.focus({ preventScroll: true });
     else actiu.blur();
-  }, [mida, panellObert]);
+  }, [mida, panellObert, duesColumnesEstret]);
 
   /* MD · En estret, cada panell assentat és el nivell on és la persona:
      es recorda d'on es ve (tornaDelDetall) i se n'avisa (onPanell). Amb un
@@ -555,10 +556,11 @@ export default function AppGridShell({
     obriPanell,
     tornaDelDetall,
     llistaPlegable,
+    duesColumnesEstret,
     nodeRail: ambRailEstret ? nodeRail : null,
     columnWidths,
     applyPreset
-  }), [mida, mesurada, panellObert, demanaPanell, columnWidths, tancaPanells, obriPanell, tornaDelDetall, llistaPlegable, ambRailEstret, nodeRail, applyPreset]);
+  }), [mida, mesurada, panellObert, demanaPanell, columnWidths, tancaPanells, obriPanell, tornaDelDetall, llistaPlegable, duesColumnesEstret, ambRailEstret, nodeRail, applyPreset]);
 
   return (
     <AppGridContext.Provider value={ctxValue}>
@@ -570,6 +572,7 @@ export default function AppGridShell({
           className="app-grid-shell"
           data-layout={mida}
           data-panell={panellObert || ''}
+          data-dues-columnes={mida === 'estret' && duesColumnesEstret ? 'true' : undefined}
           data-llista={ambRailEstret ? 'rail' : undefined}
           aria-label={ariaLabel}
         >

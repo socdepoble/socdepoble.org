@@ -24,13 +24,18 @@
  * --canal produccio exigix SDP_BUILDS_DIR (el registre de pujades) i afig avisos de botiga.
  * Onada R30 · NAT-04 · Dins de «Fortificació de seguretat (R26)» (codi 7): cap permís d'identitat ni de
  * biometria (PERMISOS_D_IDENTITAT) declarat a l'app o als connectors sense llevar, i l'app els lleva tots.
+ * Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Android ja no busca fastlane: la pujada a Google Play
+ * és el client REST de Node de puja-android.mjs. Ací només es mira, sense imprimir-ne res, que
+ * SDP_PLAY_JSON_KEY_PATH tinga la forma d'una clau de compte de servei (analitzaClauPlay); si no la té,
+ * és un avís (compilar i verificar no la necessiten) i la pujada (--confirma) para amb l'eixida 5.
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   CANALS, EIXIDA, JDK_MAXIM, JDK_MINIM, SEGELL, analitzaArguments, arbreNet, arrelDelRepositori, carregaEntorn, commitDeHead,
-  comprovaVariables, gitIgnora, jdkPerAGradle, llegixAjuda, llegixSegell, mateixContingut, mostraCami, plega, problemesDelSegell
+  comprovaVariables, gitIgnora, jdkPerAGradle, llegixAjuda, llegixSegell, mateixContingut, mostraCami, plega, problemesDelSegell, rutaDe
 } from './entorn.mjs';
 import { estatDeLesBotigues, liniesDeLEstat } from './estat.mjs';
 import { esquemaInvertitDeGoogleIos } from '../../src/config/publicCredentials.js';
@@ -39,12 +44,75 @@ import { validaConfiguracio as validaAssociacioApps } from '../../tooling/vite/a
 /** L'arrel on viu el script instal·lat: scripts/botigues/ → dos nivells amunt. */
 export const ARREL_DEL_SCRIPT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-/* Les eines de cada plataforma i com es comprova que hi són. fastlane és opcional (Android
-   sense fastlane imprimix els passos per a fer-ho a mà). */
+/* Les eines de cada plataforma i com es comprova que hi són. La pujada a Google Play no en
+   necessita cap: és el client REST de Node de puja-android.mjs (R32.3, sense fastlane ni Ruby). */
 const EINES = Object.freeze({
   ios: [['xcodebuild', ['-version']], ['xcrun', ['altool', '--help']], ['codesign', ['-h']], ['plutil', ['-help']]],
   android: [['keytool', ['-help']]]
 });
+
+/* R32.3 · La clau del compte de servei de Google Play (SDP_PLAY_JSON_KEY_PATH), per al client REST
+   de puja-android.mjs. És un secret: es llig per RUTA i cap missatge en porta cap tros (tampoc el
+   de JSON.parse, que en citaria). El «token_uri» del JSON no es fa servir: el token es demana
+   sempre a l'adreça fixa de Google (puja-android.mjs, PLAY_API). La clau privada queda dins d'un
+   camp privat de ClauPlay: ni JSON.stringify ni util.inspect la poden mostrar. */
+export const MIDA_MAXIMA_CLAU_PLAY = 64 * 1024;
+const BITS_MINIMS_CLAU_PLAY = 2048;
+
+class ClauPlay {
+  #email;
+  #clau;
+  #kid;
+  constructor(email, clau, kid) {
+    this.#email = email;
+    this.#clau = clau;
+    this.#kid = kid;
+  }
+  /** El client_email (iss del JWT). Mai s'imprimix. */
+  get email() { return this.#email; }
+  /** El private_key_id (kid de la capçalera del JWT), o null. */
+  get kid() { return this.#kid; }
+  /** La signatura RS256 (RSASSA-PKCS1-v1_5 amb SHA-256) de `dades`. */
+  signa(dades) { return crypto.sign('RSA-SHA256', Buffer.from(String(dades)), this.#clau); }
+  toJSON() { return '[ClauPlay]'; }
+  [Symbol.for('nodejs.util.inspect.custom')]() { return '[ClauPlay]'; }
+}
+
+/**
+ * El text d'un JSON de compte de servei de Google, analitzat sense imprimir-ne res.
+ * @returns {{ valida: boolean, problema: string|null, clau: ClauPlay|null }}
+ */
+export function analitzaClauPlay(text) {
+  const no = (problema) => ({ valida: false, problema, clau: null });
+  let dades;
+  try { dades = JSON.parse(String(text ?? '')); } catch { return no('no és un JSON (el contingut no es mostra)'); }
+  if (!dades || typeof dades !== 'object' || Array.isArray(dades)) return no('no és un objecte JSON');
+  if (dades.type !== 'service_account') return no('no és la clau d\'un compte de servei («type» no és «service_account»)');
+  const email = typeof dades.client_email === 'string' ? dades.client_email.trim() : '';
+  if (email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return no('falta «client_email» o no és una adreça');
+  if (typeof dades.private_key !== 'string' || !dades.private_key.includes('-----BEGIN PRIVATE KEY-----')) {
+    return no('falta «private_key» en PEM PKCS#8');
+  }
+  let clau;
+  try { clau = crypto.createPrivateKey({ key: dades.private_key, format: 'pem' }); } catch { return no('«private_key» no es pot llegir com a clau privada'); }
+  if (clau.asymmetricKeyType !== 'rsa') return no('«private_key» no és una clau RSA (Google demana JWT RS256)');
+  if ((clau.asymmetricKeyDetails?.modulusLength ?? 0) < BITS_MINIMS_CLAU_PLAY) return no(`«private_key» té menys de ${BITS_MINIMS_CLAU_PLAY} bits`);
+  const kid = typeof dades.private_key_id === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(dades.private_key_id) ? dades.private_key_id : null;
+  return { valida: true, problema: null, clau: new ClauPlay(email, clau, kid) };
+}
+
+/** La clau del fitxer `cami` (la ruta de SDP_PLAY_JSON_KEY_PATH), amb un sostre de mida. Mai llança. */
+export function llegixClauPlay(cami) {
+  const no = (problema) => ({ valida: false, problema, clau: null });
+  let estat;
+  try { estat = fs.statSync(cami); } catch { return no('el fitxer no existix o no es pot llegir'); }
+  if (!estat.isFile()) return no('no és un fitxer');
+  if (estat.size > MIDA_MAXIMA_CLAU_PLAY) return no(`fa més de ${MIDA_MAXIMA_CLAU_PLAY / 1024} KB: no és una clau de compte de servei`);
+  let text;
+  try { text = fs.readFileSync(cami, 'utf8'); } catch { return no('no es pot llegir'); }
+  if (Buffer.byteLength(text) > MIDA_MAXIMA_CLAU_PLAY) return no(`fa més de ${MIDA_MAXIMA_CLAU_PLAY / 1024} KB: no és una clau de compte de servei`);
+  return analitzaClauPlay(text);
+}
 
 /** El projecte iOS: l'espai de treball si n'hi ha (CocoaPods), si no el projecte (SPM, Capacitor 8).
     [VERIFICAT 261019: la plantilla ios-spm-template de @capacitor/cli 8.5.3 porta App/App.xcodeproj i
@@ -758,20 +826,20 @@ export function avisosDeProduccio(arrel, plataformes = []) {
     const objectiu = targetSdkAndroid(arrel);
     if (objectiu === null) avisos.push('no es pot resoldre el targetSdkVersion efectiu de android/app/build.gradle: cal contrastar la configuració i el manifest final de l’AAB');
     else if (objectiu < TARGET_SDK_PLAY_MINIM) avisos.push(`targetSdkVersion ${objectiu} és més baix que ${TARGET_SDK_PLAY_MINIM}: Play pot rebutjar l'AAB`);
-    avisos.push('un compte personal de Play Console només publica a producció després de la prova tancada (12 provadors durant 14 dies, P0-23) o amb un compte d\'organització (D-B9-2): sense eixe accés, --validate_only pararà amb l\'eixida 8 i no es pujarà res');
+    avisos.push('un compte personal de Play Console només publica a producció després de la prova tancada (12 provadors durant 14 dies, P0-23) o amb un compte d\'organització (D-B9-2): sense eixe accés, edits.validate pararà amb l\'eixida 8 i no es publicarà res');
   }
   return avisos;
 }
 
 /* Les dues consultes a eines de fora que fa el preflight. Les proves les canvien per unes de
-   fingides, perquè la suite no arranque cap eina (ni fastlane, ni keytool, ni cap JDK). */
+   fingides, perquè la suite no arranque cap eina (ni keytool ni cap JDK). */
 const CONSULTES = Object.freeze({ llegixAjuda, jdkPerAGradle });
 
 /**
  * Totes les comprovacions d'una o dues plataformes. No llança i no imprimix valors.
  * @param {{ arrel: string, plataformes: ('ios'|'android')[], signa?: boolean, env?: object, consultes?: object,
  *   canal?: 'intern'|'produccio', push?: boolean }} opcions
- * @returns {{ codi:number, linies:string[], valors:Record<string,string>, fastlane:boolean, jdk:{home:string, major:number}|null,
+ * @returns {{ codi:number, linies:string[], valors:Record<string,string>, play:{clau:'valida'|'invalida'}|null, jdk:{home:string, major:number}|null,
  *   segell:{commit:string, arbreNet:boolean, data:string}|null, push:{anuncia:boolean, estat:object} }} `segell`, el de
  *   dist-natiu/ tal com es llig (val per al rebut només si `codi` és EIXIDA.BE); `push.anuncia`, si l'app anuncia avisos
  *   remots (--push o VITE_SDP_PUSH_NATIU=1 a .env.natiu*, R24 D1): puja-ios hi lliga l'aps-environment de l'IPA
@@ -807,10 +875,17 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
     if (ajuda(ordre, args) === null) mal(EIXIDA.EINA, `no es troba ${ordre}`);
     else be(ordre);
   }
-  const fastlane = plataformes.includes('android') && ajuda('fastlane', ['--version']) !== null;
+  /* R32.3 · Google Play: el client REST de Node (cap eina). La forma de la clau, sense cap valor; si
+     no la té, és un avís: compilar i verificar no la necessiten, i --confirma para amb l'eixida 5. */
+  let play = null;
   if (plataformes.includes('android')) {
-    if (fastlane) be('fastlane (pujada per API a Google Play)');
-    else avis('no hi ha fastlane: la pujada a Google Play es farà a mà (el script imprimirà els passos)');
+    be('Google Play: pujada per l\'API REST v3 (androidpublisher) amb Node, sense fastlane');
+    if (entorn.codi === EIXIDA.BE && String(entorn.valors.SDP_PLAY_JSON_KEY_PATH ?? '').trim()) {
+      const clau = llegixClauPlay(rutaDe(arrel, entorn.valors, 'SDP_PLAY_JSON_KEY_PATH'));
+      play = { clau: clau.valida ? 'valida' : 'invalida' };
+      if (clau.valida) be('SDP_PLAY_JSON_KEY_PATH té la forma d\'una clau de compte de servei (RSA)');
+      else avis(`SDP_PLAY_JSON_KEY_PATH: ${clau.problema}; la pujada (--confirma) pararà amb l'eixida 5 (guia de 3 passos a la capçalera de puja-android.mjs)`);
+    }
   }
   /* Gradle només corre amb --compila (--signa ací): sense eixe JDK, només és un avís. */
   const jdk = plataformes.includes('android') ? jdkDe({ env }) : null;
@@ -884,7 +959,7 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
   const codi = ordre.find((c) => familia[c]) ?? EIXIDA.BE;
   /* R24 botigues (D1) · Abans, el connector a package.json ja «anunciava» el push. */
   const anuncia = anunciaPushNatiu(estatPush, push);
-  return { codi, linies, valors: entorn.codi === EIXIDA.BE ? entorn.valors : {}, fastlane, jdk, segell, push: { anuncia, estat: estatPush } };
+  return { codi, linies, valors: entorn.codi === EIXIDA.BE ? entorn.valors : {}, play, jdk, segell, push: { anuncia, estat: estatPush } };
 }
 
 /** L'arrel del repositori, si és la del script. */

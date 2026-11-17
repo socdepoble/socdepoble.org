@@ -203,10 +203,11 @@ export function minimsDeGraella(amplada, plegades = {}, minims = {}, sols = mini
  * navegació en rail fix en «mitja») només la passava el Workspace, que amb
  * les columnes fixes ja no hi arriba: s'ha retirat.
  */
-export function columnesTancades(mida, panell) {
+export function columnesTancades(mida, panell, { duesColumnesEstret = false } = {}) {
+  const llistaAmbNavegacio = duesColumnesEstret && panell === 'left';
   return {
     left: mida !== 'ample' && panell !== 'left',
-    middle: mida === 'estret' && panell !== 'middle',
+    middle: mida === 'estret' && panell !== 'middle' && !llistaAmbNavegacio,
     right: mida === 'estret' && panell !== null
   };
 }

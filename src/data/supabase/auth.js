@@ -826,10 +826,12 @@ function traduixErrorDeToken(error) {
    d'Apple torna el nom desat a cada entrada i mai ha de trepitjar un nom editat.
    updateProfile emet el seu sdp:auth-change (identitat.js): no canvia la versió
    de la sessió i no avorta l'intent. */
-async function desaNomDePrimeraVegada(nom, usuari, config) {
+async function desaNomDePrimeraVegada(nom, usuari, config, current) {
   try {
+    current();
     if (nomPropi(usuari?.user_metadata?.full_name)) return false;
     const fitxa = await getProfile(config);
+    current();
     if (!fitxa || fitxa.reserva || nomPropi(fitxa.full_name)) return false;
     await updateProfile({ full_name: nom }, config);
     return true;
@@ -854,9 +856,14 @@ export async function entraAmbTokenDeProveidor(proveidor, credencial = {}, confi
       emetCanvi(null);
       throw new Error('No s’ha pogut desar la sessió. Comprova l’emmagatzematge del navegador.');
     }
+    /* La guarda de l'intent és d'abans de desaSessio, que crea una entrada
+       nova. El nom d'Apple espera xarxa: des d'ací, la captura pertany a la
+       sessió acabada de desar, també si la mateixa persona torna a entrar. */
+    const current = capturaSessio();
     resetClient();
     if (codi) custodiaCodiApple(codi, config);   // T1 (261024): ni s'espera ni fa fallar l'entrada
-    if (nom) await esperaAmbTopall(desaNomDePrimeraVegada(nom, result.user, config), TOPALL_NOM_MS);
+    if (nom) await esperaAmbTopall(desaNomDePrimeraVegada(nom, result.user, config, current), TOPALL_NOM_MS);
+    current();
     const user = getCurrentUser() ?? result.user;
     emetCanvi(user);
     completaAlta(config);

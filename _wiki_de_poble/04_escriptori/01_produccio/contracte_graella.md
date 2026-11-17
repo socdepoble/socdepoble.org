@@ -27,6 +27,7 @@ Punts de tall (breakpoints): 720px, 900px i 1023px (`PUNTS_DE_TALL` de `src/comp
 | `onPanell` | Notifica panell assentat |
 | `railEstret` | Rail esquerre fix en estret |
 | `columnesFixes` | Fora de mòbil (més de 720px), les tres columnes queden fixes a la graella i redimensionables amb els dos separadors, mai com a calaix flotant; el vel i els panells flotants només en estret. L'usa l'UniversalWorkspace (ordre del Mestre 261030) |
+| `duesColumnesEstret` | En estret (≤720px), manté obertes de costat la navegació (9fr) i el llistat (11fr) quan el panell actiu és l'esquerre |
 | `aria-label` | Etiqueta accessible |
 | `className` | Classes addicionals |
 

@@ -840,8 +840,10 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada R29 (DECISIÓ-R29-01, pla 261115_1514) · Versió unificada 1.2.2 amb el build 7, pel mateix motiu.
    Onada R30 (pla 261115_2242) · Versió unificada 1.2.3 amb el build 8: és la primera que puja a TestFlight.
    Onada R32 (pla 261116_0644) · Versió unificada 1.2.4 amb el build 9: porta el pont natiu CiclePushNatiu
-   d'Android, i per això l'APK i l'AAB 1.2.4+9 són obligatoris abans d'obrir el canal Push d'Android. */
-export const VERSIO_CLIENT_NATIU = 9;
+   d'Android, i per això l'APK i l'AAB 1.2.4+9 són obligatoris abans d'obrir el canal Push d'Android.
+   Onada R32.3 (ordre del Mestre 16-11-2026 22:09) · Versió unificada 1.2.5 amb el build 10: és la primera que porta
+   l'avís automàtic de versió nova (src/natiu/actualitzacioAppNativa.js), i s'ha d'instal·lar una vegada a mà. */
+export const VERSIO_CLIENT_NATIU = 10;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

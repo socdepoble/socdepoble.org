@@ -1,14 +1,62 @@
 /**
- * scripts/botigues/puja-android.mjs — AAB de publicació, verificació de la signatura i pujada a la
- * prova interna de Google Play (RUNBOOK_BOTIGUES_IA.txt, A4-A5). 261003.
+ * scripts/botigues/puja-android.mjs — AAB de publicació, verificació de la signatura i pujada a
+ * Google Play (RUNBOOK_BOTIGUES_IA.txt, A4-A5). 261003.
  *
  * Instal·lat el 261019 (Fase C) des de nous/botigues/puja-android.mjs.txt del laboratori
- * 261003_1330_empaquetat_mobil_claude. Proves: tests/botigues.test.mjs i, per al canal de
- * producció (B9, marató 261101_2143), tests/botigues.produccio.android.test.js.
+ * 261003_1330_empaquetat_mobil_claude. Proves: tests/botigues.test.mjs, per al canal de
+ * producció (B9, marató 261101_2143) tests/botigues.produccio.android.test.js, i per al client de
+ * l'API de Google Play (R32.3) tests/botigues-play-api-rest.test.mjs.
  *
  *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7                     en sec
  *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --compila           bundleRelease i verificació
  *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --confirma=1.0.0+7  verifica i PUJA (esborrany intern)
+ *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --desplega --confirma=1.0.0+7
+ *                                                                  verifica, PUJA i DESPLEGA a la prova interna
+ *   node scripts/botigues/puja-android.mjs --comprova-play         prova la clau i els permisos sense publicar res
+ *
+ * Onada R32.3 (P0, ordre del Mestre 261116 22:09: «les actualitzacions han de ser completament
+ * automàtiques i en tot el sistema») · La pujada ja no depén de fastlane supply, que no era
+ * instal·lat en este Mac: Google Play no rebia cap AAB. Ara és un client HTTPS de Node pur
+ * (cap dependència) per a la Google Play Developer API v3 (androidpublisher):
+ *   1. un JWT RS256 signat amb node:crypto amb el client_email i la private_key del JSON del compte
+ *      de servei (SDP_PLAY_JSON_KEY_PATH, per RUTA), canviat per un token d'accés a
+ *      https://oauth2.googleapis.com/token (grant_type urn:ietf:params:oauth:grant-type:jwt-bearer,
+ *      scope https://www.googleapis.com/auth/androidpublisher);
+ *   2. edits.insert → edits.bundles.upload (l'AAB en streaming, uploadType=media,
+ *      application/octet-stream; el sha256 dels octets enviats i el que torna Google han de ser el
+ *      de l'AAB verificat) → edits.tracks.update (pista internal o production, versionCodes i
+ *      status) → edits.validate → edits.commit. Si res falla abans del commit, l'edició s'esborra
+ *      (edits.delete) i a Google Play no canvia res.
+ * Els errors HTTP ixen amb un missatge net (cap token, asserció, clau ni compte de servei), cada
+ * petició té temps màxim i només els 5xx i els errors de xarxa es reintenten (3 intents, espera
+ * exponencial). El commit MAI es reintenta (no és idempotent): un 2xx és fet, un 4xx és un «no» net,
+ * i qualsevol altra resposta es contrasta amb Play (edits.get i una edició de lectura amb
+ * edits.tracks.get); si Play no ho pot dir, l'estat és DESCONEGUT (eixida 11, EIXIDA_PLAY_DESCONEGUT),
+ * l'edició no s'esborra i ningú ho ha de repetir sense mirar Play Console (Gauntlet R32.3, Elefant).
+ * Les adreces de Google són fixes: només una opció explícita de les proves
+ * (main(argv, { play: { endpoints } })) les canvia, i només a https o a un http de
+ * 127.0.0.1/localhost. Cap variable d'entorn les toca.
+ *
+ * El contracte de pista i estat és el de sempre (D-B9-3): el llançament és un ESBORRANY (draft); a
+ * producció mai completed ni per fases, i «Envia a revisió» és del Mestre (P9). Única excepció,
+ * opcional i explícita: --desplega a la prova interna (status completed), perquè els provadors de la
+ * pista interna reben l'actualització de Google Play sense cap clic a Play Console. Si Play encara
+ * té l'app en esborrany, només admet llançaments draft: Play ho diu i el script ho explica.
+ *
+ * GUIA DE 3 PASSOS PER AL MESTRE · SDP_PLAY_JSON_KEY_PATH [NO VERIFICATS els noms exactes dels menús]:
+ *   1. Descarrega el JSON del compte de servei amb permisos de llançament. Al projecte de Google
+ *      Cloud lligat a Play Console: activa «Google Play Android Developer API», crea un compte de
+ *      servei i, a «Claus › Afig una clau › JSON», descarrega'n la clau (un sol fitxer .json). A
+ *      Play Console › Usuaris i permisos, convida el client_email d'eixe compte amb accés a Sóc de
+ *      Poble i els permisos de llançament a les pistes de prova (i a producció, si cal). El JSON és
+ *      un secret: mai al repositori, al xat ni a cap IA.
+ *   2. Desa'l FORA del repositori amb mode 600:
+ *        mkdir -p ~/claus-socdepoble && mv ~/Downloads/<nom-de-la-clau>.json ~/claus-socdepoble/play-compte-servei.json
+ *        chmod 600 ~/claus-socdepoble/play-compte-servei.json
+ *   3. Apunta-hi SDP_PLAY_JSON_KEY_PATH a .env.botigues.local (que també és chmod 600):
+ *        SDP_PLAY_JSON_KEY_PATH=~/claus-socdepoble/play-compte-servei.json
+ *      i comprova-ho sense publicar res (token, edits.insert i edits.delete):
+ *        node scripts/botigues/puja-android.mjs --comprova-play
  *
  * B9 · --canal produccio deixa l'AAB en ESBORRANY a la pista production (mai completed ni per fases:
  * «Envia a revisió» és del Mestre, P9). El «sí» va lligat al canal i al binari:
@@ -23,45 +71,574 @@
  * Mestre decidix que la signe el script, --compila llig la keystore per RUTA i les dues
  * contrasenyes del fitxer d'entorn, i les passa NOMÉS a l'entorn del procés de Gradle (amb
  * --no-daemon, perquè cap dimoni se les quede); mai a la línia d'ordres ni a la pantalla.
- * La pujada va per fastlane supply amb el JSON del compte de servei per RUTA; sense fastlane,
- * el script imprimix els passos per a fer-la a mà. No hi ha cap signatura JWT feta a mà.
- * Només --confirma=VERSIO+BUILD puja, i deixa la versió en ESBORRANY a la pista interna:
- * promoure-la o publicar-la és del Mestre (RUNBOOK P9).
- *
- * [NO VERIFICAT] les opcions de fastlane supply: el 261019 fastlane no és instal·lat en este Mac. El
- * script les busca a l'ajuda abans de pujar i, si en falta alguna, para (eixida 6).
+ * Només --confirma=VERSIO+BUILD puja.
  * R24 botigues (D2) · Abans de keytool, l'AAB es mira per dins: cap classe de com.facebook (dexDeLAab).
  * Gradle compila amb el JDK que tria el preflight (del JDK_MINIM al JDK_MAXIM, 21-24, a entorn.mjs), passat per JAVA_HOME
  * només al procés de Gradle: el java del PATH d'este Mac és un 17 i Capacitor 8 compila amb Java 21
  * [VERIFICAT 261019].
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
+import http from 'node:http';
+import https from 'node:https';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  BUILD, CANALS, EIXIDA, SEGELL, VERSIO, analitzaArguments, analitzaConfirmacio, apuntaPujada, avisDelRegistre, confirmacioEsperada,
-  empremtaDeKeytool, guardaDelRegistre, REBUTS, executa, llegixAjuda, llegixDelZip, mostraCami, mostraOrdre, normalitzaEmpremta,
-  opcionsQueFalten, plega, problemaDelPaquet, rutaDe, sha256DeFitxer, versioDeGradle
+  BUILD, CANALS, EIXIDA, SEGELL, VERSIO, analitzaArguments, analitzaConfirmacio, apuntaPujada, avisDelRegistre, carregaEntorn,
+  comprovaVariables, confirmacioEsperada, emmascara, empremtaDeKeytool, guardaDelRegistre, REBUTS, executa, llegixDelZip, mostraCami,
+  mostraOrdre, normalitzaEmpremta, plega, problemaDelPaquet, rutaDe, sha256DeFitxer, versioDeGradle
 } from './entorn.mjs';
-import { arrelComprovada, preflight } from './preflight.mjs';
+import { arrelComprovada, llegixClauPlay, preflight } from './preflight.mjs';
 
 import { problemaDeVersioClient } from './versio-client.mjs';
 
-const ADMESOS = Object.freeze({ versio: true, build: true, compila: false, confirma: true, canal: true, push: false, ajuda: false });
-const US = 'Ús: --versio X.Y.Z --build N [--canal intern|produccio] [--push] [--compila] [--confirma=X.Y.Z+N | --confirma=produccio:X.Y.Z+N@<sha12>]';
+const ADMESOS = Object.freeze({
+  versio: true, build: true, compila: false, confirma: true, canal: true, push: false, desplega: false, 'comprova-play': false, ajuda: false
+});
+const US = 'Ús: --versio X.Y.Z --build N [--canal intern|produccio] [--push] [--desplega] [--compila] [--confirma=X.Y.Z+N | --confirma=produccio:X.Y.Z+N@<sha12>] · o --comprova-play';
 export const AAB = Object.freeze(['android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab']);
-export const OPCIONS_SUPPLY = Object.freeze(['--aab', '--track', '--release_status', '--package_name', '--json_key',
-  '--skip_upload_metadata', '--skip_upload_images', '--skip_upload_screenshots', '--skip_upload_changelogs', '--validate_only']);
+
+/* ───────────────── R32.3 · Client REST de la Google Play Developer API v3 ───────────────── */
+
+/** Les adreces de Google. Fixes: cap variable d'entorn les canvia (endpointsDePlay). */
+export const PLAY_API = Object.freeze({
+  token: 'https://oauth2.googleapis.com/token',
+  api: 'https://androidpublisher.googleapis.com/androidpublisher/v3',
+  pujada: 'https://androidpublisher.googleapis.com/upload/androidpublisher/v3'
+});
+export const ABAST_PLAY = 'https://www.googleapis.com/auth/androidpublisher';
+export const CONCESSIO_JWT = 'urn:ietf:params:oauth:grant-type:jwt-bearer';
+/** La pista de Play de cada canal (CANALS d'entorn.mjs). */
+export const PISTES = Object.freeze({ [CANALS.INTERN]: 'internal', [CANALS.PRODUCCIO]: 'production' });
+/** L'status del llançament: draft sempre, completed només amb --desplega a la prova interna. */
+export const ESTATS_PLAY = Object.freeze({ ESBORRANY: 'draft', DESPLEGAT: 'completed' });
+/** Temps màxim de cada petició (ms): les de JSON i la pujada de l'AAB (~107 MB el 261116). */
+export const TEMPS_PLAY = Object.freeze({ peticio: 60_000, pujada: 20 * 60_000 });
+/** Intents totals (amb l'espera inicial, que es duplica a cada intent) per a 5xx i errors de xarxa. */
+export const REINTENTS_PLAY = Object.freeze({ intents: 3, esperaMs: 2_000 });
+
+const DURADA_JWT_S = 3600;
+const MAX_RESPOSTA = 1024 * 1024;
+const MAX_TEXT_ERROR = 300;
+const AGENT_HTTP = 'socdepoble-botigues/1.0 (Node.js)';
+const PAQUET = /^[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+$/;
+const ID_EDICIO = /^[A-Za-z0-9_-]{1,200}$/;
+const SHA256 = /^[0-9a-f]{64}$/;
+const AMFITRIONS_LOCALS = new Set(['127.0.0.1', 'localhost', '[::1]']);
+const COMMIT_SENSE_REVISIO = /set the query parameter changesNotSentForReview to true/i;
+
+/** Un error del client de Play. `tipus`: clau, us, endpoint, xarxa, temps, http, resposta o verificacio. */
+export class ErrorPlay extends Error {
+  constructor(missatge, { tipus = 'http', operacio = null, estat = null, detall = null, consell = null } = {}) {
+    super(missatge);
+    this.name = 'ErrorPlay';
+    this.tipus = tipus;
+    this.operacio = operacio;
+    this.estat = estat;
+    this.detall = detall;
+    this.consell = consell;
+  }
+}
+
+/**
+ * Un text que pot portar secrets (el d'una resposta d'error), net: sense els `secrets` coneguts
+ * (token, asserció, compte de servei, kid), sense cap clau PEM, JWT, token ya29, Bearer ni compte de
+ * servei, sense caràcters de control (ni seqüències de terminal) i d'una línia de 300 caràcters com a molt.
+ */
+export function netejaText(text, secrets = []) {
+  let net = String(text ?? '');
+  for (const secret of secrets) {
+    if (typeof secret === 'string' && secret.length >= 6) net = net.split(secret).join('<secret>');
+  }
+  net = net
+    .replace(/-----BEGIN [A-Z ]+-----[\s\S]*?(?:-----END [A-Z ]+-----|$)/g, '<clau>')
+    .replace(/\beyJ[\w-]{2,}\.[\w-]{2,}\.[\w-]*/g, '<jwt>')
+    .replace(/\bya29\.[\w.-]+/g, '<token>')
+    .replace(/\bBearer\s+[\w.~+/=-]+/gi, 'Bearer <token>')
+    .replace(/[^\s@"'<>()]+@[^\s@"'<>()]+\.iam\.gserviceaccount\.com/gi, '<compte de servei>')
+    .replace(/\p{Cc}+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return net.length > MAX_TEXT_ERROR ? `${net.slice(0, MAX_TEXT_ERROR)}…` : net;
+}
+
+/**
+ * Les adreces que farà servir el client: PLAY_API, o les de les proves si arriben per opció
+ * explícita. Les de proves han de ser les tres, https o http només de 127.0.0.1/localhost, sense
+ * credencials, consulta ni fragment.
+ */
+export function endpointsDePlay(endpoints = null) {
+  if (endpoints === null || endpoints === undefined) return PLAY_API;
+  const fets = {};
+  for (const nom of Object.keys(PLAY_API)) {
+    let url;
+    try { url = new URL(String(endpoints[nom])); } catch { throw new ErrorPlay(`l'adreça ${nom} de Google Play no és una URL`, { tipus: 'endpoint' }); }
+    const local = url.protocol === 'http:' && AMFITRIONS_LOCALS.has(url.hostname);
+    if (url.protocol !== 'https:' && !local) throw new ErrorPlay(`l'adreça ${nom} ha de ser https (o http de 127.0.0.1/localhost per a les proves)`, { tipus: 'endpoint' });
+    if (url.username || url.password || url.search || url.hash) throw new ErrorPlay(`l'adreça ${nom} no pot portar credencials, consulta ni fragment`, { tipus: 'endpoint' });
+    fets[nom] = url.href.replace(/\/+$/, '');
+  }
+  return Object.freeze(fets);
+}
+
+/** L'asserció JWT RS256 que es canvia per un token d'accés (RFC 7523): iss, scope, aud, iat i exp (+1 h). */
+export function signaAssercio(clau, { ara = Date.now(), aud = PLAY_API.token } = {}) {
+  const b64 = (text) => Buffer.from(text).toString('base64url');
+  const iat = Math.floor(ara / 1000);
+  const capcalera = { alg: 'RS256', typ: 'JWT', ...(clau.kid ? { kid: clau.kid } : {}) };
+  const reclams = { iss: clau.email, scope: ABAST_PLAY, aud, iat, exp: iat + DURADA_JWT_S };
+  const signat = `${b64(JSON.stringify(capcalera))}.${b64(JSON.stringify(reclams))}`;
+  return `${signat}.${clau.signa(signat).toString('base64url')}`;
+}
+
+const esperaReal = (ms) => new Promise((resol) => { setTimeout(resol, ms); });
+
+const errorDeXarxa = (error, operacio) => {
+  const codi = /^[A-Z][A-Z0-9_]{1,40}$/.test(String(error?.code ?? '')) ? error.code : 'desconegut';
+  return new ErrorPlay(`${operacio}: error de xarxa (${codi})`, { tipus: 'xarxa', operacio });
+};
+
+/* Una petició HTTP(S) sense agent compartit, amb temps màxim i resposta fitada. Amb `fitxer`, el cos
+   és el fitxer en streaming (exactament `mida` octets) i se'n calcula el sha256 del que s'envia.
+   Torna { estat, text, enviats, sha256Enviat }; els errors de xarxa i de temps són ErrorPlay. */
+function peticioHttp({ metode, url, capcaleres = {}, cos = null, fitxer = null, tempsMs, operacio }) {
+  return new Promise((resol, rebutja) => {
+    const desti = new URL(url);
+    const modul = desti.protocol === 'https:' ? https : http;
+    const cap = { 'User-Agent': AGENT_HTTP, Accept: 'application/json', ...capcaleres };
+    cap['Content-Length'] = String(fitxer ? fitxer.mida : (cos === null ? 0 : Buffer.byteLength(cos)));
+    let acabat = false;
+    let rellotge = null;
+    let flux = null;
+    let hash = null;
+    let enviats = 0;
+    let sha256Enviat = null;
+    const fi = (accio, valor) => {
+      if (acabat) return;
+      acabat = true;
+      clearTimeout(rellotge);
+      if (flux) flux.destroy();
+      accio(valor);
+    };
+    let req;
+    try {
+      req = modul.request(desti, { method: metode, headers: cap, agent: false }, (res) => {
+        const trossos = [];
+        let rebuts = 0;
+        res.on('data', (tros) => {
+          rebuts += tros.length;
+          if (rebuts > MAX_RESPOSTA) {
+            fi(rebutja, new ErrorPlay(`${operacio}: la resposta passa d'1 MB`, { tipus: 'resposta', operacio, estat: res.statusCode }));
+            res.destroy();
+            return;
+          }
+          trossos.push(tros);
+        });
+        res.on('end', () => fi(resol, { estat: res.statusCode, text: Buffer.concat(trossos).toString('utf8'), enviats, sha256Enviat }));
+        res.on('error', (error) => fi(rebutja, errorDeXarxa(error, operacio)));
+        res.on('close', () => { if (!res.complete) fi(rebutja, errorDeXarxa({ code: 'ECONNRESET' }, operacio)); });
+      });
+    } catch (error) {
+      rebutja(errorDeXarxa(error, operacio));
+      return;
+    }
+    rellotge = setTimeout(() => {
+      const error = new ErrorPlay(`${operacio}: sense resposta en ${Math.max(1, Math.round(tempsMs / 1000))} s`, { tipus: 'temps', operacio });
+      fi(rebutja, error);
+      req.destroy(error);
+    }, tempsMs);
+    req.on('error', (error) => fi(rebutja, error instanceof ErrorPlay ? error : errorDeXarxa(error, operacio)));
+    if (!fitxer) {
+      req.end(cos === null ? undefined : cos);
+      return;
+    }
+    hash = crypto.createHash('sha256');
+    flux = fs.createReadStream(fitxer.cami, { start: 0, end: fitxer.mida - 1 });
+    flux.on('data', (tros) => {
+      if (sha256Enviat !== null) return;
+      hash.update(tros);
+      enviats += tros.length;
+    });
+    flux.on('end', () => {
+      if (sha256Enviat === null) sha256Enviat = hash.digest('hex');
+      /* Un AAB que s'ha escurçat mentre es llegia deixaria el servidor esperant octets fins al temps
+         màxim de la pujada: es talla ací, sense commit. */
+      if (enviats !== fitxer.mida) {
+        const error = new ErrorPlay(`${operacio}: l'AAB ha canviat de mida durant la pujada: no es confirma res`, { tipus: 'verificacio', operacio });
+        fi(rebutja, error);
+        req.destroy(error);
+      }
+    });
+    flux.on('error', () => {
+      const error = new ErrorPlay(`${operacio}: no es pot llegir l'AAB`, { tipus: 'verificacio', operacio });
+      fi(rebutja, error);
+      req.destroy(error);
+    });
+    flux.pipe(req);
+  });
+}
+
+/* Una pista per a cada fallada coneguda de l'API. */
+function consellDe(operacio, estat, detall) {
+  const text = String(detall ?? '');
+  if (operacio === 'token') return estat >= 500 ? null : 'la clau del compte de servei no és vàlida o està revocada, o el rellotge del Mac va desfasat (guia de 3 passos de puja-android.mjs, pas 1)';
+  if (/has not been used|is disabled|SERVICE_DISABLED|accessNotConfigured/i.test(text)) {
+    return 'activa «Google Play Android Developer API» al projecte de Google Cloud del compte de servei (guia de 3 passos, pas 1)';
+  }
+  if (/draft app|status draft/i.test(text)) return 'Play encara té l\'app en esborrany i només admet llançaments draft: torna-ho a fer sense --desplega';
+  if (/version ?code|already been used/i.test(text)) {
+    return 'este versionCode ja és a Google Play: si una pujada anterior va acabar amb l\'estat DESCONEGUT (eixida 11), ja hi és (mira Play Console i apunta-la al registre); si no, puja el build següent';
+  }
+  if (estat === 401 || estat === 403) return 'el compte de servei no té permisos per a esta app: Play Console › Usuaris i permisos (guia de 3 passos, pas 1; RUNBOOK H-G4)';
+  if (operacio === 'edits.insert' && estat === 404) return 'Play no troba el paquet: si és el PRIMER AAB d\'esta app, s\'ha de pujar a mà (RUNBOOK H-G5)';
+  return null;
+}
+
+/* L'error d'una resposta no 2xx, amb el missatge de Google net (cos JSON d'API o d'OAuth). */
+function errorHttp(resposta, operacio, secrets) {
+  let missatge = '';
+  try {
+    const cos = JSON.parse(resposta.text);
+    if (cos?.error && typeof cos.error === 'object') missatge = [cos.error.status, cos.error.message].filter((p) => typeof p === 'string' && p).join(': ');
+    else if (typeof cos?.error === 'string') missatge = [cos.error, cos.error_description].filter((p) => typeof p === 'string' && p).join(': ');
+  } catch {
+    missatge = resposta.text;
+  }
+  const detall = netejaText(missatge, secrets);
+  return new ErrorPlay(`${operacio}: HTTP ${resposta.estat}${detall ? ` · ${detall}` : ''}`, {
+    tipus: 'http', operacio, estat: resposta.estat, detall, consell: consellDe(operacio, resposta.estat, detall)
+  });
+}
+
+function jsonDe(resposta, operacio) {
+  if (!resposta.text) return {};
+  try {
+    const cos = JSON.parse(resposta.text);
+    if (cos && typeof cos === 'object' && !Array.isArray(cos)) return cos;
+  } catch { /* cau a l'error de baix */ }
+  throw new ErrorPlay(`${operacio}: la resposta de Google no és un objecte JSON`, { tipus: 'resposta', operacio, estat: resposta.estat });
+}
+
+/* Reintents acotats: només un 5xx, i (si es demana) un error de xarxa o de temps. Cap 4xx. */
+async function ambReintents(fes, { intents, esperaMs, espera, reintentaXarxa = true, reintentaTemps = true }) {
+  for (let intent = 1; ; intent += 1) {
+    try {
+      return await fes();
+    } catch (error) {
+      const reintentable = error instanceof ErrorPlay && ((error.tipus === 'http' && error.estat >= 500)
+        || (reintentaXarxa && error.tipus === 'xarxa') || (reintentaTemps && error.tipus === 'temps'));
+      if (!reintentable || intent >= intents) throw error;
+      await espera(esperaMs * 2 ** (intent - 1));
+    }
+  }
+}
+
+/** L'eixida de puja-android.mjs quan l'estat del commit a Google Play és DESCONEGUT (ni fet ni no fet):
+    cap persona ni automatisme l'ha de tornar a provar sense mirar abans Play Console. */
+export const EIXIDA_PLAY_DESCONEGUT = 11;
+
+const esCorrecte = (estat) => estat >= 200 && estat < 300;
+const STATUS_PLAY = /^[A-Za-z]{1,40}$/;
+
+/* La clau del compte de servei, sense mirar-ne res més que la forma (preflight.mjs, ClauPlay). */
+function comprovaClau(clau) {
+  if (!clau || typeof clau.signa !== 'function' || typeof clau.email !== 'string' || !clau.email) {
+    throw new ErrorPlay('falta la clau del compte de servei (SDP_PLAY_JSON_KEY_PATH)', { tipus: 'clau' });
+  }
+}
+
+/* Una sessió de l'API: el token d'accés (l'asserció JWT RS256, un sol ús per execució) i les crides
+   autoritzades. `crida` té temps màxim, reintents acotats i torna el JSON; `peticio` és una sola
+   petició crua, sense reintents. Cap secret ix d'ací: tots van a `secrets`, que netejaText tapa. */
+async function obriSessio({ clau, ep, limit, opcionsReintent, ara, registra }) {
+  const secrets = [clau.email, clau.kid];
+  const assercio = signaAssercio(clau, { ara: ara(), aud: ep.token });
+  secrets.push(assercio);
+  const cosToken = await ambReintents(async () => {
+    const resposta = await peticioHttp({
+      metode: 'POST', url: ep.token, capcaleres: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      cos: new URLSearchParams({ grant_type: CONCESSIO_JWT, assertion: assercio }).toString(), tempsMs: limit.peticio, operacio: 'token'
+    });
+    if (!esCorrecte(resposta.estat)) throw errorHttp(resposta, 'token', secrets);
+    return jsonDe(resposta, 'token');
+  }, opcionsReintent);
+  const token = typeof cosToken.access_token === 'string' ? cosToken.access_token : '';
+  if (!token || token.length > 8192 || /[\s\p{Cc}]/u.test(token)
+      || (cosToken.token_type !== undefined && !/^bearer$/i.test(String(cosToken.token_type)))) {
+    throw new ErrorPlay('token: Google no ha tornat cap token Bearer', { tipus: 'resposta', operacio: 'token' });
+  }
+  secrets.push(token);
+  registra('  ✓ token OAuth de Google (JWT RS256, abast androidpublisher)');
+
+  const autoritzacio = { Authorization: `Bearer ${token}` };
+  const crida = (operacio, { metode = 'POST', url, cos, reintentaXarxa = true, reintentaTemps = true }) => ambReintents(async () => {
+    const resposta = await peticioHttp({
+      metode, url, capcaleres: { ...autoritzacio, ...(cos === undefined ? {} : { 'Content-Type': 'application/json; charset=utf-8' }) },
+      cos: cos === undefined ? null : JSON.stringify(cos), tempsMs: limit.peticio, operacio
+    });
+    if (!esCorrecte(resposta.estat)) throw errorHttp(resposta, operacio, secrets);
+    return jsonDe(resposta, operacio);
+  }, { ...opcionsReintent, reintentaXarxa, reintentaTemps });
+  const peticio = (operacio, { metode = 'POST', url, tempsMs = limit.peticio }) => peticioHttp({ metode, url, capcaleres: autoritzacio, tempsMs, operacio });
+  return { ep, limit, secrets, autoritzacio, crida, peticio, edicions: (paquet) => `${ep.api}/applications/${encodeURIComponent(paquet)}/edits` };
+}
+
+/* On és el versionCode `build` a cada pista de `pistes`, amb una edició nova NOMÉS de lectura
+   (edits.insert → edits.tracks.get → edits.delete; mai cap commit). Torna [{ pista, status }], buida si
+   no hi és; una pista que Play no coneix (404) no té cap llançament. Llança ErrorPlay si Google no respon. */
+async function llancamentsDe(sessio, { paquet, build, pistes }) {
+  const edicions = sessio.edicions(paquet);
+  const lectura = await sessio.crida('edits.insert', { url: edicions, cos: {} });
+  const id = typeof lectura.id === 'string' ? lectura.id : '';
+  if (!ID_EDICIO.test(id)) throw new ErrorPlay('edits.insert: Google no ha tornat cap identificador d\'edició', { tipus: 'resposta', operacio: 'edits.insert' });
+  const urlLectura = `${edicions}/${encodeURIComponent(id)}`;
+  try {
+    const trobats = [];
+    for (const pista of pistes) {
+      let track;
+      try {
+        track = await sessio.crida('edits.tracks.get', { metode: 'GET', url: `${urlLectura}/tracks/${encodeURIComponent(pista)}` });
+      } catch (error) {
+        if (error instanceof ErrorPlay && error.tipus === 'http' && error.estat === 404) continue;
+        throw error;
+      }
+      for (const llancament of Array.isArray(track.releases) ? track.releases : []) {
+        const codis = Array.isArray(llancament?.versionCodes) ? llancament.versionCodes.map(String) : [];
+        if (codis.includes(String(build))) {
+          trobats.push({ pista, status: STATUS_PLAY.test(String(llancament.status ?? '')) ? String(llancament.status) : 'desconegut' });
+        }
+      }
+    }
+    return trobats;
+  } finally {
+    try { await sessio.peticio('edits.delete', { metode: 'DELETE', url: urlLectura, tempsMs: Math.min(sessio.limit.peticio, 30_000) }); } catch { /* una edició de lectura caduca sola */ }
+  }
+}
+
+/**
+ * On és el versionCode `build` a Google Play (per defecte, a les pistes internal i production):
+ * [{ pista, status }] amb l'status de cada llançament que el porta (draft, inProgress, halted o
+ * completed), o una llista buida. Només lectura: token → edits.insert → edits.tracks.get →
+ * edits.delete, mai cap commit. publica-tot.mjs --sincronitza-ard ho pregunta abans d'anunciar un
+ * build a l'App (src/natiu/actualitzacioAppNativa.js). Llança ErrorPlay; cap missatge porta cap secret.
+ */
+export async function consultaLlancament({
+  clau, paquet, build, pistes = Object.values(PISTES), endpoints = null, temps = TEMPS_PLAY, reintents = REINTENTS_PLAY,
+  espera = esperaReal, ara = Date.now, registra = () => {}
+} = {}) {
+  const ep = endpointsDePlay(endpoints);
+  comprovaClau(clau);
+  if (!PAQUET.test(String(paquet ?? ''))) throw new ErrorPlay('SDP_APP_ID no té la forma d\'un paquet d\'Android', { tipus: 'us' });
+  if (!BUILD.test(String(build ?? ''))) throw new ErrorPlay('falta el versionCode', { tipus: 'us' });
+  if (!Array.isArray(pistes) || !pistes.length || pistes.some((pista) => !Object.values(PISTES).includes(pista))) {
+    throw new ErrorPlay('pista desconeguda', { tipus: 'us' });
+  }
+  const sessio = await obriSessio({
+    clau, ep, limit: { ...TEMPS_PLAY, ...temps }, opcionsReintent: { ...REINTENTS_PLAY, ...reintents, espera }, ara, registra
+  });
+  return llancamentsDe(sessio, { paquet, build, pistes });
+}
+
+/* Un commit que no ha tornat ni un 2xx ni un «no» net (4xx) de Google: l'estat és a l'aire. */
+const commitAmbigu = (error) => !(error instanceof ErrorPlay && error.tipus === 'http' && error.estat >= 400 && error.estat < 500);
+
+/* Després d'un commit ambigu, què diu Google Play, sense tornar-lo a enviar: el versionCode a la
+   pista (confirmat), l'edició encara oberta (oberta: no ha entrat), ni una cosa ni l'altra
+   (no-confirmat) o cap resposta (desconegut). */
+async function estatDelCommit(sessio, { urlEdicio, paquet, build, pista }) {
+  let oberta;
+  try {
+    const resposta = await sessio.peticio('edits.get', { metode: 'GET', url: urlEdicio });
+    if (esCorrecte(resposta.estat)) oberta = true;
+    else if ([400, 404, 410].includes(resposta.estat)) oberta = false;
+    else return { estat: 'desconegut' };
+  } catch {
+    return { estat: 'desconegut' };
+  }
+  let trobats;
+  try { trobats = await llancamentsDe(sessio, { paquet, build, pistes: [pista] }); } catch { return { estat: 'desconegut' }; }
+  if (trobats.length) return { estat: 'confirmat', status: trobats[0].status };
+  return { estat: oberta ? 'oberta' : 'no-confirmat' };
+}
+
+const consellDesconegut = (pista, build) => `mira Play Console › pista ${pista}: si hi ha el versionCode ${build}, la pujada ja està feta (apunta-la a SDP_BUILDS_DIR/pujades.jsonl i no la repetisques); si no hi és, torna-ho a provar`;
+
+/**
+ * Puja l'AAB `aab` (de sha256 `sha256` i versionCode `build`) a la pista `pista` de Google Play amb
+ * l'status `estat`, per l'API REST v3: token → edits.insert → edits.bundles.upload → edits.tracks.update
+ * → edits.validate → edits.commit. Sense commit, l'edició s'esborra. Amb `nomesComprova`, només
+ * token, edits.insert i edits.delete. Llança ErrorPlay; cap missatge porta cap secret.
+ * El commit no és idempotent: s'envia una sola vegada. Si no torna ni un 2xx ni un 4xx net, es
+ * pregunta a Play si ha entrat (estatDelCommit): confirmat (verificatDespres), no confirmat (error
+ * normal) o DESCONEGUT (ErrorPlay de tipus «desconegut», sense esborrar l'edició).
+ * @returns {Promise<{ comprovat: boolean, pujat: boolean, versionCode?: number, sha256Google?: string|null,
+ *   pista?: string, estat?: string, senseRevisio?: boolean, verificatDespres?: boolean, statusPlay?: string }>}
+ */
+export async function pujaAPlay({
+  clau, paquet, aab = null, sha256 = null, build = null, nomVersio = null,
+  pista = PISTES[CANALS.INTERN], estat = ESTATS_PLAY.ESBORRANY, nomesComprova = false,
+  endpoints = null, temps = TEMPS_PLAY, reintents = REINTENTS_PLAY, espera = esperaReal, ara = Date.now,
+  registra = (text) => process.stdout.write(`${text}\n`)
+} = {}) {
+  const ep = endpointsDePlay(endpoints);
+  comprovaClau(clau);
+  if (!PAQUET.test(String(paquet ?? ''))) throw new ErrorPlay('SDP_APP_ID no té la forma d\'un paquet d\'Android', { tipus: 'us' });
+  if (!nomesComprova) {
+    if (!Object.values(PISTES).includes(pista)) throw new ErrorPlay(`pista desconeguda: ${netejaText(pista)}`, { tipus: 'us' });
+    if (!Object.values(ESTATS_PLAY).includes(estat)) throw new ErrorPlay(`status desconegut: ${netejaText(estat)}`, { tipus: 'us' });
+    if (pista === PISTES[CANALS.PRODUCCIO] && estat !== ESTATS_PLAY.ESBORRANY) {
+      throw new ErrorPlay('a producció el llançament és sempre un esborrany: «Envia a revisió» és del Mestre (D-B9-3, P9)', { tipus: 'us' });
+    }
+    if (!SHA256.test(String(sha256 ?? '')) || !BUILD.test(String(build ?? '')) || !aab) {
+      throw new ErrorPlay('falten l\'AAB, el seu sha256 o el versionCode', { tipus: 'us' });
+    }
+  }
+  const limit = { ...TEMPS_PLAY, ...temps };
+
+  // 1. El token d'accés.
+  const sessio = await obriSessio({ clau, ep, limit, opcionsReintent: { ...REINTENTS_PLAY, ...reintents, espera }, ara, registra });
+  const { crida, autoritzacio, secrets } = sessio;
+
+  // 2. L'edició.
+  const edicions = sessio.edicions(paquet);
+  const edicio = await crida('edits.insert', { url: edicions, cos: {} });
+  const id = typeof edicio.id === 'string' ? edicio.id : '';
+  if (!ID_EDICIO.test(id)) throw new ErrorPlay('edits.insert: Google no ha tornat cap identificador d\'edició', { tipus: 'resposta', operacio: 'edits.insert' });
+  registra('  ✓ edits.insert: edició oberta');
+  const urlEdicio = `${edicions}/${encodeURIComponent(id)}`;
+
+  let confirmada = false;
+  let commitIntentat = false;
+  let estatDesconegut = false;
+  let edicioTancada = false;
+  try {
+    if (nomesComprova) return { comprovat: true, pujat: false };
+
+    // 3. L'AAB en streaming: el que s'envia i el que ha rebut Google han de ser l'AAB verificat.
+    let mida;
+    try { mida = fs.statSync(aab).size; } catch { throw new ErrorPlay('edits.bundles.upload: no es pot llegir l\'AAB', { tipus: 'verificacio', operacio: 'edits.bundles.upload' }); }
+    if (!mida) throw new ErrorPlay('edits.bundles.upload: l\'AAB és buit', { tipus: 'verificacio', operacio: 'edits.bundles.upload' });
+    const urlPujada = `${ep.pujada}/applications/${encodeURIComponent(paquet)}/edits/${encodeURIComponent(id)}/bundles?uploadType=media`;
+    const pujada = await ambReintents(async () => {
+      const resposta = await peticioHttp({
+        metode: 'POST', url: urlPujada, capcaleres: { ...autoritzacio, 'Content-Type': 'application/octet-stream' },
+        fitxer: { cami: aab, mida }, tempsMs: limit.pujada, operacio: 'edits.bundles.upload'
+      });
+      if (!esCorrecte(resposta.estat)) throw errorHttp(resposta, 'edits.bundles.upload', secrets);
+      return { resposta, bundle: jsonDe(resposta, 'edits.bundles.upload') };
+    }, { ...REINTENTS_PLAY, ...reintents, espera, reintentaTemps: false });
+    if (pujada.resposta.enviats !== mida || pujada.resposta.sha256Enviat !== sha256) {
+      throw new ErrorPlay('edits.bundles.upload: l\'AAB ha canviat durant la pujada (el que s\'ha enviat no és l\'AAB verificat): no es confirma res',
+        { tipus: 'verificacio', operacio: 'edits.bundles.upload' });
+    }
+    const sha256Google = typeof pujada.bundle.sha256 === 'string' ? pujada.bundle.sha256.toLowerCase() : null;
+    if (sha256Google !== null && sha256Google !== sha256) {
+      throw new ErrorPlay('edits.bundles.upload: Google ha rebut un AAB amb un altre sha256: no es confirma res', { tipus: 'verificacio', operacio: 'edits.bundles.upload' });
+    }
+    if (String(pujada.bundle.versionCode ?? '') !== String(build)) {
+      throw new ErrorPlay(`edits.bundles.upload: Google llig el versionCode ${netejaText(String(pujada.bundle.versionCode ?? 'cap')).slice(0, 20)}, no ${build}: no es confirma res`,
+        { tipus: 'verificacio', operacio: 'edits.bundles.upload' });
+    }
+    registra(`  ✓ edits.bundles.upload: versionCode ${build}; ${sha256Google ? 'el sha256 que ha rebut Google' : 'el sha256 del que s\'ha enviat (Google no el torna)'} és el de l'AAB`);
+
+    // 4. La pista, la validació i el commit.
+    const llancament = { name: String(nomVersio ?? build).slice(0, 50), versionCodes: [String(build)], status: estat };
+    await crida('edits.tracks.update', { metode: 'PUT', url: `${urlEdicio}/tracks/${encodeURIComponent(pista)}`, cos: { track: pista, releases: [llancament] } });
+    registra(`  ✓ edits.tracks.update: pista ${pista}, status ${estat}, versionCode ${build}`);
+    await crida('edits.validate', { url: `${urlEdicio}:validate` });
+    registra('  ✓ edits.validate: Google accepta l\'edició');
+
+    /* edits.commit no és idempotent: UN sol intent, mai cap reintent. Un 2xx és confirmat (el cos no
+       compta) i un 4xx és un «no» net de Google. Qualsevol altra cosa (un 5xx, la xarxa, el temps, una
+       resposta que no s'entén) deixa l'estat a l'aire: es pregunta a Play i, si no ho pot dir, l'estat
+       és DESCONEGUT; llavors ni es diu «no s'ha publicat res», ni s'esborra l'edició, ni es repetix. */
+    const confirma = async (url) => {
+      let resposta;
+      try {
+        resposta = await sessio.peticio('edits.commit', { metode: 'POST', url });
+      } catch (error) {
+        if (error instanceof ErrorPlay && error.tipus === 'resposta' && esCorrecte(error.estat)) return;
+        if (error instanceof ErrorPlay && error.tipus === 'resposta' && error.estat >= 400 && error.estat < 500) {
+          throw new ErrorPlay(`edits.commit: HTTP ${error.estat}`, { tipus: 'http', operacio: 'edits.commit', estat: error.estat });
+        }
+        throw error;
+      }
+      if (!esCorrecte(resposta.estat)) throw errorHttp(resposta, 'edits.commit', secrets);
+    };
+    let senseRevisio = false;
+    commitIntentat = true;
+    try {
+      try {
+        await confirma(`${urlEdicio}:commit`);
+      } catch (error) {
+        if (!(error instanceof ErrorPlay && error.tipus === 'http' && error.estat === 400 && COMMIT_SENSE_REVISIO.test(error.detall ?? ''))) throw error;
+        registra('  ! edits.commit: Google demana changesNotSentForReview=true; es confirma sense enviar res a revisió');
+        await confirma(`${urlEdicio}:commit?changesNotSentForReview=true`);
+        senseRevisio = true;
+      }
+    } catch (error) {
+      if (!commitAmbigu(error)) throw error;
+      const motiu = error instanceof ErrorPlay ? error.message : 'edits.commit: error inesperat';
+      registra(`  ! ${motiu}: es pregunta a Google Play si el commit ha entrat, sense tornar-lo a enviar`);
+      const comprovacio = await estatDelCommit(sessio, { urlEdicio, paquet, build, pista });
+      const dades = { operacio: 'edits.commit', estat: error?.estat ?? null, detall: error?.detall ?? null };
+      if (comprovacio.estat === 'confirmat') {
+        confirmada = true;
+        registra(`  ✓ edits.commit: Google Play ja té el versionCode ${build} a la pista ${pista} (status ${comprovacio.status}): confirmat`);
+        return { comprovat: true, pujat: true, versionCode: Number(build), sha256Google, pista, estat, senseRevisio, verificatDespres: true, statusPlay: comprovacio.status };
+      }
+      /* L'edició encara oberta: s'esborra ara, i només un DELETE 2xx tanca la qüestió (si el commit
+         entrara mentrestant, el DELETE ja no ho podria fer i l'estat seria desconegut). */
+      let tancada = comprovacio.estat === 'no-confirmat';
+      if (comprovacio.estat === 'oberta') {
+        try {
+          tancada = esCorrecte((await sessio.peticio('edits.delete', { metode: 'DELETE', url: urlEdicio, tempsMs: Math.min(limit.peticio, 30_000) })).estat);
+        } catch { tancada = false; }
+        if (tancada) registra('  · edits.delete: l\'edició s\'ha esborrat; a Google Play no ha canviat res');
+      }
+      if (tancada) {
+        edicioTancada = true;
+        const com = comprovacio.estat === 'oberta' ? 'l\'edició continuava oberta (ara esborrada)' : 'l\'edició ja no hi és';
+        throw new ErrorPlay(`${motiu} · Google Play diu que ${com} i que la pista ${pista} no té el versionCode ${build}: no s'ha publicat res`, {
+          tipus: error instanceof ErrorPlay ? error.tipus : 'xarxa', ...dades, consell: 'torna-ho a provar amb el mateix «sí»: este build no s\'ha publicat'
+        });
+      }
+      estatDesconegut = true;
+      throw new ErrorPlay(`${motiu} · l'estat del commit és DESCONEGUT: Google Play no ha pogut dir si ha entrat`, {
+        tipus: 'desconegut', ...dades, consell: consellDesconegut(pista, build)
+      });
+    }
+    confirmada = true;
+    registra('  ✓ edits.commit: confirmat a Google Play');
+    return { comprovat: true, pujat: true, versionCode: Number(build), sha256Google, pista, estat, senseRevisio };
+  } finally {
+    if (estatDesconegut) {
+      registra('  ! edits.commit: estat DESCONEGUT; l\'edició no s\'esborra (si no s\'ha confirmat, caduca sola): mira Play Console abans de tornar-ho a provar');
+    } else if (!confirmada && !edicioTancada) {
+      /* Abans del commit, una edició que no s'esborra caduca sola i no publica res; després d'un
+         commit, un DELETE que no torna 2xx no diu res de cert: mira Play Console. */
+      const despresDelCommit = `l'edició ja no hi era: mira Play Console › pista ${pista} abans de tornar-ho a provar`;
+      try {
+        const resposta = await sessio.peticio('edits.delete', { metode: 'DELETE', url: urlEdicio, tempsMs: Math.min(limit.peticio, 30_000) });
+        if (esCorrecte(resposta.estat)) registra('  · edits.delete: l\'edició s\'ha esborrat; a Google Play no ha canviat res');
+        else registra(`  ! edits.delete: HTTP ${resposta.estat}; ${commitIntentat ? despresDelCommit : 'una edició sense confirmar caduca sola i no publica res'}`);
+      } catch {
+        registra(`  ! edits.delete: sense resposta; ${commitIntentat ? despresDelCommit : 'una edició sense confirmar caduca sola i no publica res'}`);
+      }
+    }
+  }
+}
+
+/* ─────────────────────────────── El pla ─────────────────────────────── */
 
 /** El pla d'A4-A5 per a un canal (intern per defecte). Pur: no toca el disc. B9 · La pista és
-    production o internal segons el canal, i el llançament és SEMPRE un esborrany (D-B9-3). */
-export function planAndroid({ arrel, valors, canal = CANALS.INTERN }) {
+    production o internal segons el canal, i el llançament és un esborrany (D-B9-3); --desplega
+    (R32.3) només el desplega a la prova interna. */
+export function planAndroid({ arrel, valors, canal = CANALS.INTERN, desplega = false }) {
   const aab = path.join(arrel, ...AAB);
-  const pista = canal === CANALS.PRODUCCIO ? 'production' : 'internal';
-  const supply = (nomesValida) => ['fastlane', ['supply', '--aab', aab, '--track', pista, '--release_status', 'draft',
-    '--package_name', valors.SDP_APP_ID.trim(), '--json_key', rutaDe(arrel, valors, 'SDP_PLAY_JSON_KEY_PATH'),
-    '--skip_upload_metadata', 'true', '--skip_upload_images', 'true', '--skip_upload_screenshots', 'true',
-    '--skip_upload_changelogs', 'true', '--validate_only', nomesValida ? 'true' : 'false']];
+  const produccio = canal === CANALS.PRODUCCIO;
+  const pista = produccio ? PISTES[CANALS.PRODUCCIO] : PISTES[CANALS.INTERN];
+  const estat = desplega && !produccio ? ESTATS_PLAY.DESPLEGAT : ESTATS_PLAY.ESBORRANY;
   // Les quatre variables les llig la signingConfig de release d'android/app/build.gradle (LLEGIU.txt §4).
   const entornDeSignatura = () => ({
     SDP_ANDROID_KEYSTORE_PATH: rutaDe(arrel, valors, 'SDP_ANDROID_KEYSTORE_PATH'),
@@ -72,15 +649,20 @@ export function planAndroid({ arrel, valors, canal = CANALS.INTERN }) {
   return {
     aab,
     pista,
+    estat,
     compila: [path.join(arrel, 'android', 'gradlew'), ['--no-daemon', 'bundleRelease']],
     entornDeSignatura,
     // Tot el que rep el procés de Gradle a més del seu entorn: el JDK que ha triat el preflight i la signatura.
     entornDeGradle: (jdkHome) => ({ JAVA_HOME: jdkHome, ...entornDeSignatura() }),
     certificat: ['keytool', ['-printcert', '-jarfile', aab]],
-    valida: supply(true),
-    puja: supply(false),
-    entornFastlane: { FASTLANE_SKIP_UPDATE_CHECK: '1', FASTLANE_OPT_OUT_USAGE: '1' }
+    api: { paquet: String(valors.SDP_APP_ID ?? '').trim(), clau: rutaDe(arrel, valors, 'SDP_PLAY_JSON_KEY_PATH') }
   };
+}
+
+/** La pujada del pla en una línia, emmascarada (cap valor del fitxer d'entorn). */
+export function mostraPlaApi(pla, valors = {}, arrel = null) {
+  return emmascara(`API REST de Google Play v3 (Node, sense fastlane): token OAuth (JWT RS256 amb ${pla.api.clau}) → edits.insert (${pla.api.paquet})`
+    + ` → edits.bundles.upload (app-release.aab en streaming) → edits.tracks.update (pista ${pla.pista}, estat ${pla.estat}) → edits.validate → edits.commit`, valors, arrel);
 }
 
 export const PASSOS_A_MA = Object.freeze([
@@ -91,7 +673,7 @@ export const PASSOS_A_MA = Object.freeze([
   'Si és el PRIMER AAB d\'esta app, l\'API no el pot crear: este pas a mà és obligatori (RUNBOOK H-G5).'
 ]);
 
-/* B9 · Producció a mà (sense fastlane) i després d'una pujada feta: sempre un esborrany, i
+/* B9 · Producció a mà (si l'API no pot) i després d'una pujada feta: sempre un esborrany, i
    «Envia a revisió» és del Mestre (P9). Cap desplegament per fases. */
 export const PASSOS_A_MA_PRODUCCIO = Object.freeze([
   'Play Console › Sóc de Poble › Test and release › Production › Create new release [NO VERIFICAT el camí].',
@@ -106,6 +688,11 @@ export const PASSOS_DESPRES_PRODUCCIO = Object.freeze([
   'Revisa les notes, els països i la fitxa de la botiga.',
   '«Envia a revisió»: ho fa el Mestre (RUNBOOK P9). El script no publica ni fa cap desplegament per fases.'
 ]);
+
+/* La pista de producció quan Play diu que no (validar, la pista o el commit). */
+const CONSELL_PRODUCCIO = 'Un compte personal sense accés a producció necessita la prova tancada de 12 provadors × 14 dies (P0-23) o un compte d\'organització (D-B9-2); si no, permisos del compte de servei (RUNBOOK H-G4) o primer AAB (H-G5)';
+/* Una línia per a quan falta la clau: on és la guia. */
+const GUIA_CLAU_PLAY = 'guia de 3 passos a la capçalera de scripts/botigues/puja-android.mjs: JSON del compte de servei amb permisos de llançament, fora del repositori amb chmod 600, i SDP_PLAY_JSON_KEY_PATH a .env.botigues.local';
 
 /** Una llista de passos numerada, amb VERSIO i BUILD posats. */
 const enumera = (passos, versio, build) => passos.map((p, i) => `  ${i + 1}. ${p}`).join('\n').replace(/VERSIO/g, versio).replace(/BUILD/g, build);
@@ -146,24 +733,77 @@ export const dexAmbFacebook = (dexs = []) => dexs.filter(({ octets }) => Buffer.
 
 /* BOT-A4 (261025) · El commit és el del segell de dist-natiu/ (el que el preflight ha contrastat
    amb HEAD), no el HEAD d'ara; main només imprimix el rebut quan l'AAB porta eixe segell. */
-export function rebut({ segell, versio, build, aab, pujat, canal = CANALS.INTERN, sha256 = null }) {
+export function rebut({ segell, versio, build, aab, pujat, canal = CANALS.INTERN, sha256 = null, estat = ESTATS_PLAY.ESBORRANY }) {
   /* B9 · main passa el sha256 de l'AAB verificat; sense, es calcula com abans. En producció, el
      rebut porta també el «sí» exacte per a este AAB. */
   const empremta = sha256 ?? (fs.existsSync(aab) ? sha256DeFitxer(aab) : null);
   const produccio = canal === CANALS.PRODUCCIO;
+  const comFa = estat === ESTATS_PLAY.DESPLEGAT && !produccio ? 'desplegat' : 'esborrany';
   return ['', `REBUT (per a ${REBUTS}/AAMMDD_HHMM_pujada_android.txt; cap secret, cap adreça):`,
     `  commit: ${segell?.commit ?? 'desconegut'} (el de ${SEGELL.join('/')}, que porta l'AAB)`, `  versio: ${versio}  build (versionCode): ${build}`,
     `  sha256 de l'AAB: ${empremta ?? 'sense AAB'}`, `  canal: ${canal}`, `  hora: ${new Date().toISOString()}`,
-    `  pujat a Google Play (esborrany, ${produccio ? 'pista production' : 'pista interna'}): ${pujat ? 'sí' : 'no'}`,
+    `  pujat a Google Play (${comFa}, ${produccio ? 'pista production' : 'pista interna'}): ${pujat ? 'sí' : 'no'}`,
     ...(produccio && empremta && !pujat ? [`  «sí» per a pujar ESTE AAB: --canal produccio --confirma=${confirmacioEsperada(versio, build, { canal, sha256: empremta })}`] : []),
     '  qui ha dit «sí»: (ho escriu qui executa)', ''].join('\n');
 }
 
-export async function main(argv) {
+/* Les opcions del client que només les proves passen (main(argv, { play })). */
+const opcionsDeProves = (play = {}) => ({ endpoints: play.endpoints ?? null, temps: play.temps, reintents: play.reintents, espera: play.espera, ara: play.ara });
+
+/* Un ErrorPlay (o qualsevol error del client) com a eixida del script: net i emmascarat. Si Play
+   no coneix el paquet (primer AAB, H-G5), els passos a mà. */
+function plegaDePlay(error, { valors = {}, arrel = null, produccio = false, versio = null, build = null } = {}) {
+  const neta = (text) => emmascara(netejaText(text), valors, arrel);
+  if (!(error instanceof ErrorPlay)) return plega(EIXIDA.EXTERNA, `Google Play: error inesperat del client (${neta(error?.message ?? error)})`);
+  const codi = { verificacio: EIXIDA.VERIFICACIO, clau: EIXIDA.FALTA, us: EIXIDA.US, endpoint: EIXIDA.US, desconegut: EIXIDA_PLAY_DESCONEGUT }[error.tipus] ?? EIXIDA.EXTERNA;
+  const passos = ['edits.tracks.update', 'edits.validate', 'edits.commit'];
+  const consells = [
+    error.consell,
+    produccio && error.tipus === 'http' && error.estat < 500 && passos.includes(error.operacio) ? CONSELL_PRODUCCIO : null,
+    error.operacio === 'edits.insert' && error.estat === 404 && versio && build
+      ? `passos a mà:\n${enumera(produccio ? PASSOS_A_MA_PRODUCCIO : PASSOS_A_MA, versio, build)}` : null
+  ].filter(Boolean);
+  return plega(codi, `Google Play: ${neta(error.message)}`, consells.map((consell) => emmascara(consell, valors, arrel)));
+}
+
+/* --comprova-play · La guia, pas 3: la clau, els permisos i el paquet, sense publicar res. */
+async function comprovaPlay({ env, play }) {
+  const arrel = arrelComprovada();
+  if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l\'arrel del repositori on viu este script');
+  const entorn = carregaEntorn({ arrel, env });
+  if (entorn.codi !== EIXIDA.BE) return plega(entorn.codi, 'El fitxer d\'entorn no deixa seguir:', entorn.problemes);
+  const { valors } = entorn;
+  const variables = comprovaVariables({ arrel, valors, contextos: ['android'] });
+  if (variables.codi !== EIXIDA.BE) return plega(variables.codi, 'Falten variables o fitxers d\'Android:', variables.problemes);
+  const clau = llegixClauPlay(rutaDe(arrel, valors, 'SDP_PLAY_JSON_KEY_PATH'));
+  if (!clau.valida) return plega(EIXIDA.FALTA, `SDP_PLAY_JSON_KEY_PATH: ${clau.problema}`, [GUIA_CLAU_PLAY]);
+  process.stdout.write('Google Play (API REST v3): comprovació de la clau, sense publicar res\n');
+  try {
+    await (play.pujaAPlay ?? pujaAPlay)({
+      ...opcionsDeProves(play), nomesComprova: true, clau: clau.clau, paquet: String(valors.SDP_APP_ID).trim(),
+      registra: (text) => process.stdout.write(`${emmascara(text, valors, arrel)}\n`)
+    });
+  } catch (error) {
+    return plegaDePlay(error, { valors, arrel });
+  }
+  process.stdout.write('✓ La clau, els permisos i el paquet responen: --confirma ja pot pujar l\'AAB a Google Play.\n');
+  return EIXIDA.BE;
+}
+
+/**
+ * @param {string[]} argv
+ * @param {{ env?: object, play?: { pujaAPlay?: Function, endpoints?: object, temps?: object, reintents?: object, espera?: Function, ara?: Function } }} [dependencies]
+ *   Només per a les proves: el client de Play (o les seues adreces locals) i l'entorn de --comprova-play.
+ */
+export async function main(argv, { env = process.env, play = {} } = {}) {
   const { opcions, errors } = analitzaArguments(argv, ADMESOS);
   if (opcions.ajuda) {
     process.stdout.write(`node scripts/botigues/puja-android.mjs ${US.slice(4)}\n`);
     return EIXIDA.BE;
+  }
+  if (opcions['comprova-play']) {
+    if (errors.length || Object.keys(opcions).length > 1) return plega(EIXIDA.US, '--comprova-play va sol', errors);
+    return comprovaPlay({ env, play });
   }
   const { versio, build } = opcions;
   if (errors.length || !VERSIO.test(versio ?? '') || !BUILD.test(build ?? '')) {
@@ -174,6 +814,9 @@ export async function main(argv) {
   const canal = opcions.canal ?? CANALS.INTERN;
   if (!Object.values(CANALS).includes(canal)) return plega(EIXIDA.US, `--canal ha de ser ${Object.values(CANALS).join(' o ')}`);
   const produccio = canal === CANALS.PRODUCCIO;
+  if (produccio && opcions.desplega) {
+    return plega(EIXIDA.US, '--desplega només val per a la prova interna: a producció el llançament és sempre un ESBORRANY i «Envia a revisió» és del Mestre (P9)');
+  }
   if (produccio && opcions.compila && opcions.confirma !== undefined) {
     return plega(EIXIDA.US, 'en producció, primer el rebut amb el sha256 (en sec si signes tu a Android Studio, o --compila); el «sí» va en una altra execució');
   }
@@ -207,15 +850,16 @@ export async function main(argv) {
     return plega(EIXIDA.ARBRE, `android/app/build.gradle diu versionName ${deGradle.versio} i versionCode ${deGradle.build}, no ${versio} i ${build} (RUNBOOK A1)`);
   }
 
-  const pla = planAndroid({ arrel, valors, canal });
+  const pla = planAndroid({ arrel, valors, canal, desplega: Boolean(opcions.desplega) });
+  const desplegat = pla.estat === ESTATS_PLAY.DESPLEGAT;
   process.stdout.write(['', 'PLA (cada valor del fitxer d\'entorn es mostra com a <NOM>):',
-    produccio ? `  P  canal produccio: pista ${pla.pista}, sempre en esborrany (--track ${pla.pista} --release_status draft); «Envia a revisió» és del Mestre (P9)` : '',
+    produccio ? `  P  canal produccio: pista ${pla.pista}, sempre en esborrany (estat ${pla.estat}); «Envia a revisió» és del Mestre (P9)` : '',
+    desplegat ? `  D  --desplega: la pista ${pla.pista} queda DESPLEGADA (estat ${pla.estat}): els provadors interns reben l'actualització de Google Play sense cap clic` : '',
     opcions.compila
       ? `  A4 JAVA_HOME=${mostraOrdre(mostraCami(arrel, pre.jdk.home), [], valors, arrel)} SDP_ANDROID_KEYSTORE_PATH SDP_ANDROID_KEY_ALIAS SDP_ANDROID_KEYSTORE_PASSWORD SDP_ANDROID_KEY_PASSWORD (només a l'entorn de Gradle) ${mostraOrdre(...pla.compila, valors, arrel)}`
       : '  A4 (el Mestre signa l\'AAB: Android Studio › Generate Signed Bundle, o el seu gradlew; o bé --compila)',
     `  V  ${mostraOrdre(...pla.certificat, valors, arrel)} → SHA-256 = <SDP_ANDROID_UPLOAD_CERT_SHA256>`,
-    pre.fastlane ? `  A5 ${mostraOrdre(...pla.valida, valors, arrel)}` : '  A5 sense fastlane: pujada a mà (els passos ixen en confirmar)',
-    pre.fastlane ? `  A5 ${mostraOrdre(...pla.puja, valors, arrel)}` : '', ''].filter((l, i, tot) => l || i === tot.length - 1).join('\n'));
+    `  A5 ${mostraPlaApi(pla, valors, arrel)}`, ''].filter((l, i, tot) => l || i === tot.length - 1).join('\n'));
 
   const enSec = !opcions.compila && opcions.confirma === undefined;
   if (enSec && !produccio) {
@@ -260,46 +904,46 @@ export async function main(argv) {
   // B9 · El sha256 de l'AAB verificat: el rebut el diu, i el «sí» de producció hi va lligat (D-B9-7).
   const sha256 = sha256DeFitxer(pla.aab);
   if (opcions.confirma === undefined) {
-    process.stdout.write(rebut({ segell: pre.segell, versio, build, aab: pla.aab, pujat: false, canal, sha256 }));
+    process.stdout.write(rebut({ segell: pre.segell, versio, build, aab: pla.aab, pujat: false, canal, sha256, estat: pla.estat }));
     return EIXIDA.BE;
   }
   if (produccio && sha256.slice(0, 12) !== confirmacio.sha12) {
     return plega(EIXIDA.CONFIRMACIO, `l'AAB d'ara no és el del «sí»: el seu sha256 comença per ${sha256.slice(0, 12)}, no per ${confirmacio.sha12}; torna a executar l'ordre en sec per al rebut d'este AAB`);
   }
 
-  if (!pre.fastlane) {
-    process.stdout.write(`\nNo hi ha fastlane: la pujada la fa el Mestre a mà.\n${enumera(produccio ? PASSOS_A_MA_PRODUCCIO : PASSOS_A_MA, versio, build)}\n`);
-    process.stdout.write(rebut({ segell: pre.segell, versio, build, aab: pla.aab, pujat: false, canal, sha256 }));
-    return EIXIDA.EINA;
+  /* R32.3 · La clau del compte de servei, per RUTA, i la pujada per l'API REST. El client compara el
+     sha256 dels octets que envia i el que torna Google amb este sha256: si l'AAB canvia durant la
+     pujada, l'edició s'esborra sense commit (eixida 9) i no s'apunta res. */
+  const clau = llegixClauPlay(pla.api.clau);
+  if (!clau.valida) return plega(EIXIDA.FALTA, `SDP_PLAY_JSON_KEY_PATH: ${clau.problema}: no es puja res`, [GUIA_CLAU_PLAY]);
+  process.stdout.write(`\nGoogle Play (API REST v3, sense fastlane): pista ${pla.pista}, estat ${pla.estat}\n`);
+  let pujada;
+  try {
+    pujada = await (play.pujaAPlay ?? pujaAPlay)({
+      ...opcionsDeProves(play), clau: clau.clau, paquet: pla.api.paquet, aab: pla.aab, sha256, build, nomVersio: `${versio} (${build})`,
+      pista: pla.pista, estat: pla.estat, registra: (text) => process.stdout.write(`${emmascara(text, valors, arrel)}\n`)
+    });
+  } catch (error) {
+    return plegaDePlay(error, { valors, arrel, produccio, versio, build });
   }
-  const falten = opcionsQueFalten(llegixAjuda('fastlane', ['supply', '--help']), OPCIONS_SUPPLY);
-  if (falten.length) {
-    return plega(EIXIDA.EINA, 'fastlane supply no té les opcions del pla (Fusible: consulta la documentació oficial i esmena el script):', falten);
-  }
-  if ((await executa(...pla.valida, { cwd: arrel, valors, arrel, entornExtra: pla.entornFastlane })).codi !== 0) {
-    return plega(EIXIDA.EXTERNA, produccio
-      ? 'fastlane supply --validate_only (pista production) ha fallat: no es puja res. Un compte personal sense accés a producció necessita la prova tancada de 12 provadors × 14 dies (P0-23) o un compte d\'organització (D-B9-2); si no, permisos del compte de servei (RUNBOOK H-G4) o primer AAB (H-G5)'
-      : 'fastlane supply --validate_only ha fallat: no es puja res (permisos del compte de servei? RUNBOOK H-G4; primer AAB? H-G5)');
-  }
-  /* B9 · En producció, l'AAB ha de continuar sent el del «sí» abans i després de pujar-lo (la idea
-     de la còpia fixada del kit de Codex, aquí només com a comprovació). */
-  const intacte = () => !produccio || sha256DeFitxer(pla.aab) === sha256;
-  if (!intacte()) return plega(EIXIDA.VERIFICACIO, 'l\'AAB ha canviat després de validar-lo: no es puja res');
-  if ((await executa(...pla.puja, { cwd: arrel, valors, arrel, entornExtra: pla.entornFastlane })).codi !== 0) {
-    return plega(EIXIDA.EXTERNA, 'fastlane supply ha fallat');
-  }
-  if (!intacte()) {
-    return plega(EIXIDA.VERIFICACIO, 'l\'AAB ha canviat durant la pujada: cap rebut ni registre; el Mestre mira a Play Console quin AAB ha arribat');
-  }
+  if (!pujada?.pujat) return plega(EIXIDA.EXTERNA, 'Google Play: el client no confirma la pujada: cap rebut ni registre; el Mestre mira Play Console');
   // B9 · La pujada s'apunta al registre DESPRÉS de fer-se (mai abans).
   if (registre.carpeta) {
     const avis = avisDelRegistre(apuntaPujada(registre.carpeta, { plataforma: 'android', canal, versio, build, sha256, commit: pre.segell?.commit ?? null, data: new Date().toISOString() }));
     if (avis) process.stderr.write(`avís: ${avis}\n`);
   }
+  if (pujada.verificatDespres) {
+    process.stdout.write(`! El commit no va tornar una resposta neta, però Google Play ja té el versionCode ${build} a la pista ${pla.pista} (status ${pujada.statusPlay ?? 'desconegut'}): la pujada està feta i s'apunta.\n`);
+  }
+  if (pujada.senseRevisio) {
+    process.stdout.write('! Google Play ha demanat changesNotSentForReview: els canvis queden sense enviar a revisió; enviar-los és del Mestre a Play Console (P9).\n');
+  }
   process.stdout.write(produccio
     ? `✓ pujat com a ESBORRANY a la pista production. Enviar-lo a revisió és del Mestre (RUNBOOK P9):\n${enumera(PASSOS_DESPRES_PRODUCCIO, versio, build)}\n`
-    : '✓ pujat com a ESBORRANY a la prova interna. Revisar-lo i desplegar-lo és del Mestre (RUNBOOK P9).\n');
-  process.stdout.write(rebut({ segell: pre.segell, versio, build, aab: pla.aab, pujat: true, canal, sha256 }));
+    : (desplegat
+      ? '✓ pujat i DESPLEGAT a la prova interna: els provadors interns reben l\'actualització de Google Play sense cap clic a Play Console.\n'
+      : '✓ pujat com a ESBORRANY a la prova interna. Revisar-lo i desplegar-lo és del Mestre (RUNBOOK P9), o --desplega ho fa en la pujada.\n'));
+  process.stdout.write(rebut({ segell: pre.segell, versio, build, aab: pla.aab, pujat: true, canal, sha256, estat: pla.estat }));
   return EIXIDA.BE;
 }
 

@@ -1,4 +1,5 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataDeFila, diaIso } from '../../components/universal/editorial.js';
 import { Alerta, AreaText, Boto, Camp, DialegConfirmacio } from '../../components/PedraSeca';
@@ -26,11 +27,11 @@ import { omple } from '../../config/moderacio.js';
 import { avaluaRetencioPublicacio } from '../../utils/politicaRetencioIFiltresUsuari.js';
 /* T7 · IDEA-48 (pla 261101_1246) · «Persones de confiança», darrere de la bandera E2EE: apagada, Rollup plega la constant i el bloc no entra al paquet. */
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
-const BlocPersonesConfianca = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./BlocPersonesConfianca.jsx')) : null;
-const PortabilitatFederada = lazy(() => import('./PortabilitatFederada.jsx'));
+const BlocPersonesConfianca = E2EE_ACTIU_PER_DEFECTE ? lazyRoute(() => import('./BlocPersonesConfianca.jsx')) : null;
+const PortabilitatFederada = lazyRoute(() => import('./PortabilitatFederada.jsx'));
 /* FEDI-07 · Mostra efímera només en desenvolupament: la condició ha de
    envoltar també l'import perquè el motor no entre al graf de producció. */
-const ProvaXifratXat = import.meta.env.DEV ? lazy(() => import('./ProvaXifratXat.jsx')) : null;
+const ProvaXifratXat = import.meta.env.DEV ? lazyRoute(() => import('./ProvaXifratXat.jsx')) : null;
 
 /* ═══════════════════════════════════════════════════════════════════
    PRIVACITAT I DADES · els drets de la persona sobre el que guardem
@@ -773,11 +774,17 @@ export function DetallPrivacitat({
         {ambCompte ? (
           <BlocBaixa config={config} onSessioTancada={tancaSessio} onPerfilCanviat={onPerfilCanviat} />
         ) : null}
-        {BlocPersonesConfianca ? <Suspense fallback={null}><BlocPersonesConfianca /></Suspense> : null}
-        <Suspense fallback={null}>
-          <PortabilitatFederada scopeKey={`${backendScope(config)}::${identitat.id}`} />
-          {ProvaXifratXat ? <ProvaXifratXat key={`${backendScope(config)}::${identitat.id}`} /> : null}
-        </Suspense>
+        {BlocPersonesConfianca ? (
+          <BarreraDelTrosAccessori>
+            <Suspense fallback={null}><BlocPersonesConfianca /></Suspense>
+          </BarreraDelTrosAccessori>
+        ) : null}
+        <BarreraDelTrosAccessori>
+          <Suspense fallback={null}>
+            <PortabilitatFederada scopeKey={`${backendScope(config)}::${identitat.id}`} />
+            {ProvaXifratXat ? <ProvaXifratXat key={`${backendScope(config)}::${identitat.id}`} /> : null}
+          </Suspense>
+        </BarreraDelTrosAccessori>
         {!ambCompte && !ambConsentiment && !ambBloquejos ? (
           <p className="perfil-compte__text">{tradueix(t, TEXTOS_PAGINA.buit)}</p>
         ) : null}

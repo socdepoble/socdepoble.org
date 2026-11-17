@@ -35,6 +35,10 @@ function comprovaCataleg(rows,sources=migrations){
 
 test('R19 UUID editorial boundary: real owner RLS, entity signature CHECK and existing editorial CAS',{skip:!enabled&&'Explicit local PGlite module required; no SQL claim without execution'},async t=>{
   const f=await creaFixturePosse();let source;
+  const canonical=creaPlaMigracions().migrations.map(({version,file,sha256})=>({version,file,sha256}))
+    .sort((a,b)=>Buffer.compare(Buffer.from(a.version),Buffer.from(b.version)));
+  const ledger=async()=> (await f.pg.query('SELECT version,file,sha256 FROM node0.schema_migrations ORDER BY version COLLATE "C"')).rows;
+  const assertCanonicalLedger=async()=> assert.deepEqual(await ledger(),canonical,'the UUID boundary must run against every exact current SQL source');
   const snapshot=async()=> (await f.pg.query('SELECT id,tenant_id,section_id,owner_user_id,author_org_id,title,description,payload,created_at,updated_at FROM public.section_submissions WHERE id=$1',[source.id])).rows[0];
   const as=async(user,{role='authenticated',aal='aal2'}={},sql,params=[])=>{
     await f.pg.exec('BEGIN');
@@ -106,6 +110,29 @@ test('R19 UUID editorial boundary: real owner RLS, entity signature CHECK and ex
       assert.ok(aplicades.has('20261115230000'),'la R30 de revisions editorials forma part del catàleg executat');
       for(const rebutjada of ['20261115231000','20261115233000'])assert.equal(aplicades.has(rebutjada),false,`la migració rebutjada ${rebutjada} no entra al catàleg`);
       assert.equal((await f.pg.query("SELECT to_regprocedure('public.actualitza_publicacio_amb_versio(uuid,uuid,text,jsonb,timestamptz)') AS rpc")).rows[0].rpc,null,'cap RPC CAS de publicacions a l’esquema viu');
+      // Onada R32.2 · També es fixa el registre real executat (no només la còpia JS) i el prefix R30 de 114.
+      await assertCanonicalLedger();
+      // El prefix històric R30 conserva la seua identitat encara que el catàleg
+      // actual incorpore R31/R32 o una migració posterior revisada.
+      const historical=canonical.filter(row=>comparaVersions(row.version,'20261115230000')<=0);
+      const hash=createHash('sha256').update(historical.map(({version,file,sha256})=>`${version}\t${file}\t${sha256}`).join('\n')).digest('hex');
+      assert.equal(historical.length,114);
+      assert.equal(hash,'9072d6ee39c18ff2156573d2cbf0fa6a815b1e5c4fd3a3073fd158beac3d1fd5');
+    });
+    await t.test('catalogue proof refuses a missing source, changed executed hash or unknown version independently of the count',async()=>{
+      const first=canonical[0];
+      for(const [sql,values] of [
+        ['DELETE FROM node0.schema_migrations WHERE version=$1',[first.version]],
+        ["UPDATE node0.schema_migrations SET sha256=repeat('0',64) WHERE version=$1",[first.version]],
+        ["UPDATE node0.schema_migrations SET version='9999999999' WHERE version=$1",[first.version]]
+      ]){
+        await f.pg.exec('BEGIN');
+        try{
+          await f.pg.query(sql,values);
+          await assert.rejects(assertCanonicalLedger(),error=>error.code==='ERR_ASSERTION');
+        }finally{await f.pg.exec('ROLLBACK');}
+        await assertCanonicalLedger();
+      }
     });
   }finally{await f.close();}
 });

@@ -73,14 +73,18 @@ describe('sense les props noves, el DOM de sempre', () => {
      nova): els fills i els atributs de cada element de la ranura i de la
      capçalera, sense imatge i amb imatge, en repòs. Cap id, cap
      aria-describedby, cap disabled ni cap línia nova. */
-  test('el DOM d’abans, literal: fills i atributs de la ranura i de la capçalera (Notes, sense les props noves)', () => {
+  test('el DOM d’abans, amb la correcció accessible R32.2 del selector: fills i atributs de Notes', () => {
     const atributs = (el) => [...el.attributes].map((a) => a.name).sort();
     const sense = closca();
     for (const marc of [hero(sense.container), ranura(sense.container)]) {
       const camp = marc.firstElementChild;
       expect(fills(marc)).toEqual(['DIV.sdp-alerta__accions sdp-camp sdp-camp--centrat']);
       expect(fills(camp)).toEqual(['INPUT.sdp-nomes-lector', 'BUTTON.sdp-boto sdp-boto--secundari', 'P.sdp-camp__ajuda']);
-      expect(atributs(camp.children[0])).toEqual(['accept', 'class', 'type']);
+      // R32.2: l'input anterior era anònim i enfocable. La forma visual es
+      // conserva; el nom i la delegació de Tab al botó són obligatoris.
+      expect(atributs(camp.children[0])).toEqual(['accept', 'aria-label', 'class', 'tabindex', 'type']);
+      expect(camp.children[0].getAttribute('tabindex')).toBe('-1');
+      expect(camp.children[0].getAttribute('aria-label')).toBe(camp.children[1].textContent.trim());
       expect(atributs(camp.children[1])).toEqual(['class', 'type']);
       expect(atributs(camp.children[2])).toEqual(['class']);
       expect(camp.children[2].textContent).toBe("Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.");

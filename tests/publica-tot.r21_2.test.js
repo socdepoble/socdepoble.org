@@ -99,6 +99,16 @@ describe('R21.2 publica-tot native delegation', () => {
       expect.objectContaining({ mostra: false, eco: false }));
     expect(fixture.ios).not.toHaveBeenCalled();
   });
+  /* Elefant R32.3 · Amb el client REST de Google Play, un «sí» fabricat pel corredor pujaria de veres:
+     el pas d'Android sense --sec no executa res i diu l'ordre que el Mestre llança a la terminal. */
+  test('the non-dry Jarvis Android step never fabricates the Mestre confirmation', async () => {
+    expect(await main(['--notes', 'fixture', '--canals', 'android'])).toBe(EIXIDA.EXTERNA);
+    expect(fixture.external).not.toHaveBeenCalled();
+    expect(fixture.android).not.toHaveBeenCalled();
+    const linies = process.stdout.write.mock.calls.map(([text]) => String(text));
+    expect(linies.some((text) => text.includes('"pas":"android","estat":"error"') && text.includes('el «sí» és del Mestre'))).toBe(true);
+    expect(linies.some((text) => text.includes('enviats'))).toBe(false);
+  });
   test('JSON mode cannot be silently ignored by a real action', async () => {
     expect(await main([...base, '--plataforma', 'ios', '--compila', '--json'])).toBe(EIXIDA.US);
     expect(fixture.ios).not.toHaveBeenCalled();

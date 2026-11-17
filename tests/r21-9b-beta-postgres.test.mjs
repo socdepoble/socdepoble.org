@@ -43,13 +43,15 @@ test('R21.9b · Beta, adjunts i estat privat sobre PostgreSQL 18.6 real', { time
     await db.query(plan.bootstrap);
     // Supabase may grant ambient Storage SELECT. Prove RLS, not an absent ACL.
     await db.query('grant select on storage.objects to anon');
-    // R24 · 20261114061000 depén de R21.9b i ara avorta neta sense ella
-    // (SDP-XAT-947): no pot formar part d'una base sense R21.9b. Abans s'hi
-    // aplicava trencada i R21.9b tornava a crear xat_fils_meus damunt; les
-    // proves de baix corren, com abans, sobre la xat_fils_meus de R21.9b.
+    // Fixture històric R21.9b: el prefix del pla verificat anterior a la
+    // migració sota prova, mai les revisions R22/R24/R32 posteriors. Llevar
+    // una dependent concreta no definix una cronologia i acaba incorporant
+    // migracions futures que exigixen precisament la signatura que falta.
+    const posicio = plan.migrations.findIndex(m => m.file === MIGRATION);
+    assert.ok(posicio > 0, 'R21.9b té un prefix històric al pla verificat');
     const DEPEN_DE_R21_9B = new Set(['20261114061000_r24_xat_rebuts_entrega.sql']);
     assert.ok([...DEPEN_DE_R21_9B].every(f => plan.migrations.some(m => m.file === f)), 'les dependents de R21.9b són al catàleg');
-    for (const migration of plan.migrations.filter(m => m.file !== MIGRATION && !DEPEN_DE_R21_9B.has(m.file))) {
+    for (const migration of plan.migrations.slice(0, posicio)) {
       await db.query('begin');
       try { await db.query(migration.body); await db.query('commit'); }
       catch (e) { await db.query('rollback'); throw new Error(`baseline ${migration.file}: ${e.message}`, { cause: e }); }
@@ -475,7 +477,7 @@ test('R21.9b · Beta, adjunts i estat privat sobre PostgreSQL 18.6 real', { time
       }
     });
     t.diagnostic(JSON.stringify({ schema: 'sdp.r21-9b.pg-evidence.v1', server_version_num: version.n,
-      catalogue_migrations: plan.migrations.length, baseline_mode: BASELINE, remote_mutations: 0,
+      catalogue_migrations: plan.migrations.length, baseline_migrations: posicio, baseline_mode: BASELINE, remote_mutations: 0,
       limits: { image_bytes: 2000000, encrypted_bytes: 20000000 }, decoded_image_bytes_tested: false }));
   } finally { await cluster.close(); }
 });

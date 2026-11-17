@@ -290,6 +290,18 @@ test('relé: un origen que només s’assembla al nostre no rep res', () => {
   expect(document.getElementById('error').hidden).toBe(false);
 });
 
+test.each([
+  'https://socdepoble.org/cami', 'https://socdepoble.org?next=https://alie.example',
+  'https://socdepoble.org#fragment', 'https://usuari:secret@socdepoble.org',
+  'https://socdepoble.org:444', 'https://socdepoble.org/', 'ftp://localhost:3340'
+])('R32 · el relé rebutja un origen no canònic %s i lleva el codi de l’historial', (destinacio) => {
+  const opener = { postMessage: vi.fn() };
+  executaRele(`?code=sentinella-privada&sdp_origin=${encodeURIComponent(destinacio)}`, opener);
+  expect(opener.postMessage).not.toHaveBeenCalled();
+  expect(window.location.search).toBe('');
+  expect(document.getElementById('error').hidden).toBe(false);
+});
+
 
 test('un retorn PKCE no envia el verificador a un altre backend', async () => {
   returning();

@@ -226,6 +226,63 @@
   visibility: hidden;
 }
 
+/* MÒBIL · DUES COLUMNES VISIBLES (ordre del Mestre, 261116: al Perfil mòbil la
+   columna de PERFIL s'estreny perquè APARTATS es veja oberta al seu costat des
+   de l'entrada i es puguen triar totes dues sense amagar la segona columna).
+   R32.3 · Sense el vel fosc (.app-grid-backdrop z-index 25 tapava middle z-index 20
+   i impedia qualsevol toc real sobre els apartats), amb junta de crom entre les
+   dues columnes, coixí compacte per a títols i acció primària sense desbordament
+   (inclòs euskera «ERAKUNDE BERRIA» a 360px) i divisor net al rail entre controls
+   d'obertura/cerca i glifs dels apartats. */
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-content {
+  grid-template-columns: minmax(0, 9fr) minmax(0, 11fr);
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-column--left {
+  grid-column: 1;
+  width: 100%;
+  max-width: none;
+  box-shadow: none;
+  border-inline-end: 1px solid var(--sdp-crom-vora);
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-column--middle {
+  grid-column: 2;
+  z-index: 30;
+  width: 100%;
+  max-width: none;
+  box-shadow: none;
+  transform: translateX(0);
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-column--right {
+  grid-column: 1 / -1;
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-backdrop {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-col-header {
+  gap: var(--sdp-space-1);
+  padding-inline: var(--sdp-space-3);
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-col-header__titol {
+  font-size: var(--sdp-text-meta);
+  font-weight: 700;
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-col-header--dark-intens > .app-grid-col-header__accions:last-child {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-col-header__accio {
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+  padding-inline: var(--sdp-space-2);
+  font-size: var(--sdp-text-meta);
+  line-height: 1.15;
+  white-space: normal;
+  text-align: center;
+}
+
 /* COLORS DE FONS */
 .app-grid-page .app-grid-column--left {
   background: var(--app-grid-bg-esquerra);

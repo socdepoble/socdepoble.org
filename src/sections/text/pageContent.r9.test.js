@@ -206,7 +206,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada R29 · La crònica de l'Onada R29 obri /versions, davant de la crònica R28.
     // Onada R30 · La crònica de l'Onada R30 obri /versions, davant de la crònica R29.
     // Onada R32 · La crònica de l'Onada R32 obri /versions, davant de la crònica R30.
-    expect([...versions.querySelectorAll('h3')].slice(0, 16).map((h3) => h3.textContent)).toEqual([
+    // Onada R32.3 · La crònica de l'Onada R32.3 obri /versions, davant de la crònica R32.
+    expect([...versions.querySelectorAll('h3')].slice(0, 17).map((h3) => h3.textContent)).toEqual([
+      '17 de novembre de 2026, matinada · Onada R32.3 · Les aplicacions avisen soles d’una versió nova, el Perfil en dues columnes al mòbil i una eixida de la sessió més sòlida',
       '16 de novembre de 2026, vesprada · Onada R32 · Missatges del Xat que no cauen en error en renovar la sessió, carpetes del Bloc de Notes que no es confonen i més seguretat al servidor compartit',
       '16 de novembre de 2026, matinada · Onada R30 · Les carpetes antigues del Bloc de Notes al servidor, una carpeta del Mode rural que es compacta sola i dos tocs que ja no compten doble',
       '15 de novembre de 2026, tarda · Onada R29 · El teclat del mòbil al seu lloc, un reproductor de so que no es mou i carpetes del Bloc de Notes que arriben al servidor',

@@ -4,7 +4,8 @@
    (42883: private.xat_reconcilia_beta_testers(uuid) no existix), perquè el cos
    PL/pgSQL no es valida en CREATE FUNCTION. Ara ha d'avortar neta, abans de
    tocar res, amb SDP-XAT-947 (55000), com SDP-XAT-941 a 20261114060000.
-   Catàleg sencer menys 20261113003000, com tests/r21-9b-beta-postgres.
+   Prefix històric anterior a 20261114061000 menys 20261113003000. Cap
+   migració posterior entra en este fixture deliberadament incomplet.
    PostgreSQL 18.6 local i descartable; cap servei remot. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -23,9 +24,11 @@ test('R24 · 20261114061000 sense 20261113003000 avorta neta (SDP-XAT-947) i la 
   try {
     const plan = creaPlaMigracions();
     assert.ok(plan.migrations.some(m => m.file === R219B), 'el catàleg conté 20261113003000');
+    const posicio = plan.migrations.findIndex(m => m.file === ENTREGA);
+    assert.ok(posicio > plan.migrations.findIndex(m => m.file === R219B), 'R24 seguix R21.9b al pla verificat');
     await db.query(plan.bootstrap);
-    for (const m of plan.migrations) {
-      if (m.file === R219B || m.file === ENTREGA) continue;
+    for (const m of plan.migrations.slice(0, posicio)) {
+      if (m.file === R219B) continue;
       await db.query('begin'); await db.query(m.body); await db.query('commit');
     }
     await db.query("insert into public.towns(id,slug,name) values($1,'r24-pre','Poble sintètic')", [TOWN]);

@@ -7,19 +7,21 @@ import { SessionContext } from './objectesDeContext.js';
 import { EMPTY_SESSION_CONFIG, ESTAT_SESSIO } from './sessionContextIntern.js';
 import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations, comprovaServidor, demanaRecuperacioContrasenya, definixContrasenyaNova, entraAmbTokenDeProveidor, getCurrentUser } from '../../data/backendPort.js';
 import { getSessionState, subscribeSession, setSessionConfig, renovaAra } from '../../data/sessionService.js';
+import { CLAU_USUARI, capturaSessio } from '../../data/identitat.js';
 import {
   escoltaRecuperacioPendent, estatEnllacDeRecuperacio, oblidaEnllacDeRecuperacio, oblidaRecuperacioPendent, recuperacioPendentPer
 } from '../../data/recuperacioPendent.js';
-import { eixDeLaSessio, preparaEixida as preparaEixidaNucli, reprenSessio } from '../../data/autodesament/sessio.js';
+import { eixDeLaSessio, oblidaSessio, preparaEixida as preparaEixidaNucli, reprenSessio } from '../../data/autodesament/sessio.js';
 import { enviaNotesDeLUsuari, oblidaNotesDeLUsuari, pendentsNotesDe } from '../../sections/notes/GlobalSaveManager.js';
 import { entraComAPilot } from '../../data/sessioPilot.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import { oblidaXatEnEixir } from '../../data/xifratXatEixida.js';
 import {
-  NOM_BD_ARXIUS_LOCALS, configuraMarcaOblitCarpetesLocals, marcaOblitCarpetaPendent
+  NOM_BD_ARXIUS_LOCALS, configuraMarcaOblitCarpetesLocals, creaCarregadorOblitCarpetesLocals, esOblitCarpetaPendent,
+  marcaOblitCarpetaPendent
 } from '../../sections/multimedia/marcaOblitCarpetesLocals.js';
 import { registraEixidaDeVeres } from '../../data/expulsioAmfitrio.js';
-import { delVal, getVal, setVal } from '../../config/storage.js';
+import { delVal, getEfimer, getVal, setVal } from '../../config/storage.js';
 import {
   baixaAvisosPushEnEixir, baixaLocalAvisosPushEnEntrar, oblidaAvisosPushEnEixir, reprenAvisosPushTrasEixidaFallida
 } from '../../config/avisosPushXat.js';
@@ -36,15 +38,17 @@ const EMPTY_CONFIG = EMPTY_SESSION_CONFIG;
    carpetes locals (bibliotecaCarpetesLocals.js) es carrega sota demanda amb
    import() i es precarrega després del primer pintat quan hi ha sessió viva,
    igual que sessionsIAIALocals.js. Una càrrega fallida s'oblida i la següent
-   ho torna a provar. */
-let oblitDeCarpetesLocals = null;
-const carregaOblitDeCarpetesLocals = () => {
-  oblitDeCarpetesLocals ??= import('../../sections/multimedia/bibliotecaCarpetesLocals.js').catch((error) => {
-    oblitDeCarpetesLocals = null;
-    throw error;
-  });
-  return oblitDeCarpetesLocals;
-};
+   ho torna a provar.
+   Onada R32.2 (lot_05 i lot_02 de Codex R32) · El carregador viu al mòdul
+   lleuger (creaCarregadorOblitCarpetesLocals). L'oblit de l'eixida hi posa la
+   marca d'oblit pendent ABANS d'esperar el tros, no només quan el tros falla:
+   una pestanya que es tanca mentre el tros arriba ja deixa la marca
+   persistent, i la biblioteca, quan arribe, no llista res de l'anterior fins
+   que un clear() va bé. La precàrrega continua sense marcar res. */
+const carregadorOblitCarpetesLocals = creaCarregadorOblitCarpetesLocals(
+  () => import('../../sections/multimedia/bibliotecaCarpetesLocals.js')
+);
+const carregaOblitDeCarpetesLocals = () => carregadorOblitCarpetesLocals.carrega();
 /* Onada R32 (Gauntlet final, QA-R2-04 i QA-A01b) · Des de R30.2 l'oblit de
    l'eixida pot rebutjar: el tros de la biblioteca pot no arribar (una xarxa
    rural que cau en la precàrrega i en eixir, o un desplegament que deixa en
@@ -53,7 +57,8 @@ const carregaOblitDeCarpetesLocals = () => {
    carpetes de qui ha eixit. Davant de qualsevol rebuig d'esta crida (el del
    tros o un d'inesperat de la biblioteca), i només ací, a l'eixida de veres
    (la precàrrega fallida no marca res: no bloqueja el Gestor de qui és dins):
-     · la marca d'oblit pendent es posa des del mòdul lleuger, que ja és a
+     · la marca d'oblit pendent, que el carregador ja ha posat abans
+       d'esperar (R32.2), es torna a posar des del mòdul lleuger, que ja és a
        l'entrada i no importa res; és la persistent de QA-R2-04 (més avall), i
        quan el tros arribe la biblioteca torna a provar el clear() abans de
        llistar res;
@@ -76,8 +81,7 @@ const avisaOblitDeCarpetesAAltresPestanyes = () => {
     /* sense BroadcastChannel: només hi ha esta pestanya */
   }
 };
-const oblidaCarpetesLocalsEnEixir = () => carregaOblitDeCarpetesLocals()
-  .then((modul) => modul.oblidaTotesLesCarpetesLocals())
+const oblidaCarpetesLocalsEnEixir = () => carregadorOblitCarpetesLocals.oblidaTotesLesCarpetesLocals()
   .catch(() => {
     marcaOblitCarpetaPendent(NOM_BD_ARXIUS_LOCALS, true);
     avisaOblitDeCarpetesAAltresPestanyes();
@@ -102,8 +106,51 @@ const carregaOblitDeTitolsIAIA = () => {
   });
   return oblitDeTitolsIAIA;
 };
-const oblidaTitolsIAIADePersona = (usuariId) => carregaOblitDeTitolsIAIA()
-  .then((modul) => modul.oblidaTitolsIAIADePersona(usuariId));
+/* Onada R32.2 (ARBITRATGE-EGM-03, Peixos del Node 0) · Quan el tros no
+   arribava en eixir, l'oblit rebutjava abans de posar cap marca: sessio.js
+   només ho avisava a la consola i els títols de qui ix es quedaven a
+   l'IndexedDB d'un ordinador compartit, sense cap reintent. Ara, ABANS de cap
+   espera i sense llançar:
+     · es posa la marca d'oblit pendent del mateix registre (el
+       PREFIX_OBLIT_PENDENT de sessionsIAIALocals.js, la que oblidaPersona posa
+       i lleva): lligEstat i desaPrimerTitol ja la respecten i tornen a provar
+       l'oblit abans de llegir o d'escriure res d'eixa persona;
+     · la persona entra a una llista curta de la capa de preferències (només
+       identificadors, com eixa marca) perquè la pròxima arrencada ho torne a
+       provar després del primer pintat, siga qui siga qui entre
+       (reprenOblitsPendents, més avall). La llista guarda les últimes
+       MAXIM_TITOLS_IAIA_PER_REINTENTAR persones; la marca del registre de les
+       que en isquen continua posada.
+   L'oblit bo d'ací lleva totes dues; el que el registre acaba pel seu compte
+   només lleva la marca, i la persona ix de la llista en la pròxima arrencada
+   sense tornar a oblidar res (reprenOblitsPendents). El rebuig continua arribant a sessio.js, que
+   l'avisa, i no talla l'eixida. SessionContext.oblitsPendents.seguretat
+   .test.jsx fixa el prefix amb el registre real: si el nom canvia allà, la
+   prova cau. */
+const PREFIX_OBLIT_TITOLS_IAIA = 'iaia-titols-oblit-pendent:';
+const CLAU_TITOLS_IAIA_PER_REINTENTAR = 'iaia-titols-oblit-reintent';
+const MAXIM_TITOLS_IAIA_PER_REINTENTAR = 16;
+const titolsIAIAPerReintentar = () => {
+  const llista = getVal(CLAU_TITOLS_IAIA_PER_REINTENTAR, []);
+  return Array.isArray(llista) ? [...new Set(llista.filter((id) => typeof id === 'string' && id !== ''))] : [];
+};
+const anotaTitolsIAIAPerReintentar = (persona) => {
+  setVal(PREFIX_OBLIT_TITOLS_IAIA + persona, true);
+  const llista = [...titolsIAIAPerReintentar().filter((id) => id !== persona), persona];
+  setVal(CLAU_TITOLS_IAIA_PER_REINTENTAR, llista.slice(-MAXIM_TITOLS_IAIA_PER_REINTENTAR));
+};
+const llevaTitolsIAIAPerReintentar = (persona) => {
+  const resta = titolsIAIAPerReintentar().filter((id) => id !== persona);
+  if (resta.length) setVal(CLAU_TITOLS_IAIA_PER_REINTENTAR, resta);
+  else delVal(CLAU_TITOLS_IAIA_PER_REINTENTAR);
+};
+const oblidaTitolsIAIADePersona = (usuariId) => {
+  const persona = String(usuariId);
+  if (persona !== '') anotaTitolsIAIAPerReintentar(persona);
+  return carregaOblitDeTitolsIAIA()
+    .then((modul) => modul.oblidaTitolsIAIADePersona(persona))
+    .then(() => { llevaTitolsIAIAPerReintentar(persona); });
+};
 
 /* QA-R2-04 (Codex, Ronda 2) · Si l'oblit no ha pogut buidar la base
    ({ ok:false, codi:'OBLIT_CARPETES_PENDENT' }), la biblioteca el deixa
@@ -122,6 +169,52 @@ configuraMarcaOblitCarpetesLocals({
   desa: () => setVal(CLAU_OBLIT_CARPETES_PENDENT, true),
   esborra: () => delVal(CLAU_OBLIT_CARPETES_PENDENT)
 });
+
+/* Onada R32.2 (ARBITRATGE-EGM-03) · La pròxima arrencada torna a provar els
+   oblits que una eixida no va poder acabar: una sola vegada per càrrega del
+   mòdul, després del primer pintat (SessionProvider) i amb qui siga dins o
+   sense ningú. Primer els títols IAIA de cada persona de la llista, un rere
+   l'altre; després les carpetes locals, si la seua marca continua posada (la
+   biblioteca també ho tornaria a provar abans de llistar res, però així les
+   dades de qui va eixir no esperen que algú òbriga el Gestor). Sense res
+   pendent, cap import(). Una fallada deixa les marques per a la pròxima, no
+   tomba res i ho diu a la consola (sense cap identificador de persona); no hi
+   ha avís a les altres pestanyes, que no han vist cap eixida.
+   Onada R32.2 (Peixos sobre EGM-03) · La font de veritat de cada persona és
+   la marca del registre, no la llista: el registre real (lligEstat →
+   oblidaPersona) pot acabar l'oblit pel seu compte quan la persona torna a
+   entrar i obri la IAIA, i només lleva la seua marca. Una persona de la
+   llista sense marca ja té l'oblit confirmat i ix de la llista sense tornar a
+   oblidar res: si no, la recàrrega següent esborraria els títols NOUS de la
+   seua sessió viva. Es mira en el moment de cada intent, dins de la cadena. */
+const avisaOblitPendent = (que, motiu) => {
+  console.warn(`[sessio] L'oblit pendent ${que} no s'ha pogut acabar: es tornarà a provar en la pròxima arrencada.`,
+    motiu?.message || motiu?.codi || motiu);
+};
+const titolsIAIAEncaraPendents = (persona) => getVal(PREFIX_OBLIT_TITOLS_IAIA + persona, false) === true;
+let oblitsPendentsRepresos = false;
+const reprenOblitsPendents = () => {
+  if (oblitsPendentsRepresos) return;
+  oblitsPendentsRepresos = true;
+  const persones = titolsIAIAPerReintentar();
+  persones.reduce(
+    (cadena, persona) => cadena.then(() => {
+      if (!titolsIAIAEncaraPendents(persona)) {
+        llevaTitolsIAIAPerReintentar(persona);
+        return undefined;
+      }
+      return oblidaTitolsIAIADePersona(persona)
+        .catch((error) => avisaOblitPendent('dels títols de la IAIA', error));
+    }),
+    Promise.resolve()
+  );
+  if (esOblitCarpetaPendent(NOM_BD_ARXIUS_LOCALS)) {
+    carregadorOblitCarpetesLocals.oblidaTotesLesCarpetesLocals().then(
+      (resultat) => { if (resultat?.ok !== true) avisaOblitPendent('de les carpetes locals', resultat); },
+      (error) => avisaOblitPendent('de les carpetes locals', error)
+    );
+  }
+};
 
 /* T47 (correcció de la revisió C02, 260928) · Els gestors d'esborranys que no
    són la cua del nucli entren a l'eixida des d'ací (src/data no importa de
@@ -222,9 +315,56 @@ const teCapacitatSegura = (nom) => {
    opcions. */
 const baixaPushEnEixir = () => baixaAvisosPushEnEixir();
 const oblitPushEnEixir = () => oblidaAvisosPushEnEixir();
+/* Onada R32.2 (lot_02 de Codex i Peixos) · L'intent final de sincronitzar
+   espera xarxa (fins a LIMIT_EIXIDA_MS) i, mentrestant, la sessió de la
+   pestanya pot canviar: capturaSessio() ho detecta (canvia generacioEntrada).
+   La guarda només ha de protegir una sessió NOVA, no callar l'oblit de qui ix:
+     · la pestanya s'ha buidat i no hi ha ningú (una renovació que rep 400/401
+       fa tancaPestanya; reconciliaAmbRegistre quan una altra pestanya canvia
+       de compte; un segon clic a «Tancar sessió»): no hi ha cap sessió nova a
+       revocar, i l'eixida continua com sempre, amb `tanca` (idempotent sobre
+       una pestanya buida: sense JWT no revoca res i el registre d'un altre
+       compte es queda) i tots els oblits de DESPRES_DE_TANCAR;
+     · hi ha una entrada nova (una altra persona, o l'amfitrió que injecta la
+       sessió de qui ve just després d'expulsar): no es crida `tanca` (ni el
+       logout ni la baixa tocarien la sessió nova). Si qui ha entrat NO és qui
+       ix, abans de rebutjar s'obliden igualment, en este dispositiu, les
+       dades locals de qui ix (la cua i Notes del seu àmbit, les carpetes
+       locals del perfil, els seus títols de la IAIA i, amb E2EE, el seu xat,
+       que conserva l'àmbit fixat d'un altre). Si és la mateixa persona, les
+       seues dades són de qui és dins i es queden.
+   El discriminador és l'actor cru de la pestanya, el mateix que compara
+   capturaSessio(), no getCurrentUser() (que exigix un JWT no caducat). */
+const actorDeLaPestanya = () => getEfimer(CLAU_USUARI, null)?.id ?? null;
+const oblitLocalSegur = (funcio, ...args) => {
+  try {
+    return Promise.resolve(funcio(...args)).catch((error) => {
+      console.warn('[sessio] Oblit local de qui ix:', error?.message || error);
+    });
+  } catch (error) {
+    console.warn('[sessio] Oblit local de qui ix:', error?.message || error);
+    return Promise.resolve();
+  }
+};
+const oblidaLocalDeQuiIx = async ({ config, usuariId, opcionsXat }) => {
+  await oblitLocalSegur(oblidaSessio, config, usuariId);
+  await Promise.all(despresDeTancarAmb(config, opcionsXat).map((funcio) => oblitLocalSegur(funcio, usuariId)));
+};
 function eixidaDeVeres({ config, usuariId, tanca, opcionsXat }) {
+  const current = capturaSessio();
   let tancada = false;
   const tancaIAnota = async () => {
+    try {
+      current();
+    } catch (error) {
+      const actor = actorDeLaPestanya();
+      if (actor != null) {
+        if (usuariId != null && String(actor) !== String(usuariId)) {
+          await oblidaLocalDeQuiIx({ config, usuariId, opcionsXat });
+        }
+        throw error;
+      }
+    }
     const resultat = await tanca();
     tancada = true;
     return resultat;
@@ -303,6 +443,10 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
       carregaOblitDeCarpetesLocals().catch(() => {});
     }
   }, [estat, usuariId]);
+
+  /* Onada R32.2 (ARBITRATGE-EGM-03) · Els oblits que una eixida anterior no
+     va poder acabar es tornen a provar després del primer pintat. */
+  useEffect(() => { reprenOblitsPendents(); }, []);
 
   const backendFuncs = useMemo(() => ({
     teCapacitat,

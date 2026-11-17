@@ -25,6 +25,11 @@ DO $guard$ BEGIN
  -- 20261116040000 (search_path buit de 29 SECURITY DEFINER): el catàleg complet real passa a 116 i el 114
  -- d'R30 es conserva. Les 20261115231000 i 20261115233000 del kit R30 no són al catàleg: els perfils del kit
  -- que les porten (116 21a3cfc3, 117 8a0bc6de i 118 69234edd) no s'accepten; el 116 d'ací és un altre registre.
+ -- Onada R32.2 hi afig les tres R32 (20261116170000, 20261116170100 i 20261116170200, NO aplicades a Producció):
+ -- el catàleg complet real passa a 119 (4c315103, recalculat després que 20261116170000 substituïra l'ALTER
+ -- dinàmic per set ALTER FUNCTION literals) i es conserven el 114 d'R30 i el 116 d'R32. Cap perfil de 117 no
+ -- s'accepta (ni l'experimental del kit R32 ni el catàleg sense les dues R31): ordre_desplegament.json posa
+ -- 20261116040000 abans de 20261116170000 i de 20261116170200.
  -- A count alone cannot prove a migration identity or its source bytes.
  OR NOT EXISTS(
  SELECT 1 FROM(VALUES
@@ -40,7 +45,8 @@ DO $guard$ BEGIN
 (85,'33070384775ba945ca7a464fda17c9cafb450f954fa96585eba1097cc96f857e'),
 (86,'2dee56621a634f1699b2124a19f35923c82686e18a0b9e2a4fa5c7b762ea2eab'),
 (114,'9072d6ee39c18ff2156573d2cbf0fa6a815b1e5c4fd3a3073fd158beac3d1fd5'),
-(116,'34ddc81cbf6670272e99603f985db38f85663f93b901e5ea3b212552b556d589')
+(116,'34ddc81cbf6670272e99603f985db38f85663f93b901e5ea3b212552b556d589'),
+(119,'4c3151035be4784842fba08d88e59425a22ed3d89e64016c8dd99c81f08774b2')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

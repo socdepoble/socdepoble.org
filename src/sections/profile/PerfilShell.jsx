@@ -1,5 +1,5 @@
 import { RequireAuth } from '../../app/guards/RequireAuth.jsx';
-import { Suspense, lazy, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Eye, Lock, SlidersHorizontal, UserRound } from 'lucide-react';
 import { useContent } from '../../components/universal/ContentProvider';
 import { useUI } from '../../app/contexts/UIContext';
@@ -7,7 +7,8 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
 import { Link, useLocation, useSearchParams } from '../../app/contexts/RouterContext';
 import { rutaCanonicaDePerfil } from '../../config/navigation.js';
-import { Boto } from '../../components/PedraSeca/index.js';
+import { Alerta, Boto } from '../../components/PedraSeca/index.js';
+import { BarreraDelTrosAccessori, lazyRouteRenovable } from '../../apps/plataforma/lazyRoute.js';
 import { DefaultItemCard, UniversalWorkspace } from '../../components/universal/workspace';
 import { useDocumentViu } from '../../components/universal/TargetaViva.jsx';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -39,13 +40,18 @@ import { documentDeFitxa, fitxaPublicada, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { avatarDeLaFitxa, potEditarFitxa, rutaDeFitxaPublica } from './fitxaDePerfil.js';
 import { textosDeFitxa } from './visibilitatFitxa.js';
-/* P1-f (Onada R6 · Bloc 2) · El Laboratori i el Banc porten el tesaurus sencer: només es carreguen en obrir-los. */
-const LaboratoriTaxonomiaDoctoral = lazy(() => import('./admin/LaboratoriTaxonomiaDoctoral.jsx'));
-const BancImportacioEditorial = lazy(() => import('./admin/BancImportacioEditorial.jsx'));
+import { registraIncident } from '../../utils/autocuracio.js';
+/* P1-f (Onada R6 · Bloc 2) i Onada R32 · Els panells pesants d'administració i la pàgina de l'agent es carreguen
+   amb lazyRouteRenovable dins d'una barrera local: una fallada de xarxa queda acotada a l'apartat sense tombar
+   la resta del Perfil i oferix un reintent real en cada nova intenció (sense el fals reintent del lazy nu). */
+const laboratoriTaxonomiaRenovable = lazyRouteRenovable(() => import('./admin/LaboratoriTaxonomiaDoctoral.jsx'));
+const bancImportacioRenovable = lazyRouteRenovable(() => import('./admin/BancImportacioEditorial.jsx'));
 /* R13-C7 (ordre del Mestre, 08-11-2026) · «👥 Usuaris, Dispositius i Botigues»: el panell i les seues dades, diferits. */
-const PanellUsuarisDispositiusBotigues = lazy(() => import('./admin/PanellUsuarisDispositiusBotigues.jsx'));
+const panellUsuarisRenovable = lazyRouteRenovable(() => import('./admin/PanellUsuarisDispositiusBotigues.jsx'));
 
-const PaginaDeLAgent = lazy(() => import('./PerfilPublicSection.jsx').then((modul) => ({ default: modul.PaginaDeLAgent })));
+const paginaDeLAgentRenovable = lazyRouteRenovable(
+  () => import('./PerfilPublicSection.jsx').then((modul) => ({ default: modul.PaginaDeLAgent })),
+);
 
 export { ID_ADMINISTRACIO_SISTEMA, itemsDAdministracioSistema, itemsDePerfil };
 
@@ -62,7 +68,50 @@ export const TEXTOS_PERFIL_SHELL = Object.freeze({
   orgCreadaToast: p('orgCreadaToast', '«{nom}» ja és al teu perfil.'),
   carregant: p('carregant', 'Carregant el teu perfil…'),
   reintenta: p('reintenta', 'Tornar a provar'),
+  /* Onada R32.2 · El text de la barrera del tros que no arriba és el comú de xarxa, que ja és als cinc
+     diccionaris (Mur, Connectar): cap clau nova sense traducció (i18n.usades, Llei del Píxel). */
+  panellNoCarrega: Object.freeze(['error.xarxa', 'Revisa la connexió i torna-ho a provar.']),
 });
+
+/* Onada R32.2 · Peixos Daurats (2 × P2) · La barrera només es queda el tros que NO ARRIBA (`nomesTransport`):
+   és l'únic cas on «Revisa la connexió» i el reintent són honestos. Un tros que arriba i peta en avaluar-se
+   (TDZ entre trossos, exportació que falta, throw al nivell superior) puja amb la causa crua al límit del
+   detall (SlotErrorBoundary), que l'anota i el mostra tal com feia el viu amb el lazy nu. La fallada de
+   transport deixa rastre local «tros» amb l'etiqueta del panell (`on`, del codi; mai el missatge).
+   `resetKey` (Codex R32.2, G07): un altre `renovable` és un altre propietari i no hereta la barrera. */
+export function PanellDiferitDelPerfil({ renovable, propsPanell = null, on = 'perfil-panell' }) {
+  const t = useTraductorOpcional();
+  const entrada = useId();
+  const [reintent, setReintent] = useState(0);
+  const intent = `${entrada}#${reintent}`;
+  const Vista = useMemo(() => renovable.vigent(intent), [renovable, intent]);
+  const fallback = (
+    <Alerta
+      to="error"
+      accions={(
+        <Boto varietat="secundari" onClick={() => setReintent((n) => n + 1)}>
+          {tradueix(t, TEXTOS_PERFIL_SHELL.reintenta)}
+        </Boto>
+      )}
+    >
+      <p>{tradueix(t, TEXTOS_PERFIL_SHELL.panellNoCarrega)}</p>
+    </Alerta>
+  );
+  return (
+    <BarreraDelTrosAccessori key={reintent} resetKey={renovable} fallback={fallback} nomesTransport
+      onFalla={() => registraIncident('tros', on, 'fallback')}>
+      <Suspense fallback={null}>
+        <Vista {...(propsPanell || {})} />
+      </Suspense>
+    </BarreraDelTrosAccessori>
+  );
+}
+
+/* Onada R32.2 · Els tres panells d'administració conserven el seu nom al detall (el contracte de la
+   bancada, detailSectionMeta.revisioImportat): cadascun és el seu tros renovable dins de la barrera. */
+const LaboratoriTaxonomiaDoctoral = () => <PanellDiferitDelPerfil renovable={laboratoriTaxonomiaRenovable} on="perfil-taxonomia" />;
+const BancImportacioEditorial = () => <PanellDiferitDelPerfil renovable={bancImportacioRenovable} on="perfil-importacio" />;
+const PanellUsuarisDispositiusBotigues = () => <PanellDiferitDelPerfil renovable={panellUsuarisRenovable} on="perfil-usuaris" />;
 const ICONES = { categories: UserRound, items: SlidersHorizontal };
 
 /* AH-02 · A la columna central d'APARTATS del Perfil, totes les files (actives
@@ -251,13 +300,13 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
     const vista = item?.data?.vista;
     /* Onada R6 · Bloc 2 (P1-b) · Un apartat «admin-*» que arribe sense superadmin no es pinta. */
     if (typeof vista === 'string' && vista.startsWith('admin-') && !superadminAdmin) return null;
-    if (vista === 'admin-taxonomia') return <DetallAdministracio item={item}><Suspense fallback={null}><LaboratoriTaxonomiaDoctoral /></Suspense></DetallAdministracio>;
-    if (vista === 'admin-importacio') return <DetallAdministracio item={item}><Suspense fallback={null}><BancImportacioEditorial /></Suspense></DetallAdministracio>;
+    if (vista === 'admin-taxonomia') return <DetallAdministracio item={item}><LaboratoriTaxonomiaDoctoral /></DetallAdministracio>;
+    if (vista === 'admin-importacio') return <DetallAdministracio item={item}><BancImportacioEditorial /></DetallAdministracio>;
     if (vista === 'admin-crom') return <DetallAdministracio item={item}><PanellCromIntegrat /></DetallAdministracio>;
     if (vista === 'admin-vistes-columnes') return <DetallAdministracio item={item}><PanellAjustosVistesColumnes navigationGroups={grupsNavegacio} /></DetallAdministracio>;
     if (vista === 'admin-nodes-fedivers') return <DetallAdministracio item={item}><PanellNodesFediversResiliencia /></DetallAdministracio>;
     if (vista === 'admin-empaquetats') return <DetallAdministracio item={item}><PanellEmpaquetatsDesplegament /></DetallAdministracio>;
-    if (vista === 'admin-usuaris-i-dispositius') return <DetallAdministracio item={item}><Suspense fallback={null}><PanellUsuarisDispositiusBotigues /></Suspense></DetallAdministracio>;
+    if (vista === 'admin-usuaris-i-dispositius') return <DetallAdministracio item={item}><PanellUsuarisDispositiusBotigues /></DetallAdministracio>;
     if (vista === 'aplicacio') {
       const aplicacio = aplicacions.find((a) => a.id === item.data.aplicacioId);
       return aplicacio ? <DetallAplicacio key={aplicacio.id} aplicacio={aplicacio} /> : null;
@@ -280,9 +329,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
        l'agent, la de /iaia: per a la IAIA, amb el Selector de Realitat al peu. */
     if (vista === 'pagina') {
       return ambFitxaPublica(
-        <Suspense fallback={null}>
-          <PaginaDeLAgent key={identitat.id} identitat={identitat} />
-        </Suspense>,
+        <PanellDiferitDelPerfil key={identitat.id} renovable={paginaDeLAgentRenovable} propsPanell={{ identitat }} on="perfil-pagina" />,
       );
     }
     /* Ordre del Mestre (261008) · la vista A4, la portada i la targeta, fora de l'editor. */
@@ -391,6 +438,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
            nivell on era (nivellMestreDetall.js).
            P0-63 (261108) · Amb ?vista=compte, també el detall: «El compte». */
         mestreDetall={{ clau: 'perfil', element: vista ? `${PARAM_VISTA}=${vista}` : preferidaRuta }}
+        duesColumnesEstret={true}
         labels={etiquetesWorkspace}
         icons={ICONES}
         tagFilter={false}

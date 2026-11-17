@@ -145,6 +145,15 @@
         ]
       },
       {
+        "source": "/.well-known/ard.json",
+        "headers": [
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      },
+      {
         "source": "/nodeinfo/2.1.json",
         "headers": [
           {

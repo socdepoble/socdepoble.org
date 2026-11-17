@@ -31,14 +31,13 @@ const FITXERS_DE_RUTA = [
   'src/sections/text/TextSection.jsx',
   'src/sections/control/ControlSection.jsx',
   'src/sections/notes/NotesSection.jsx',
+  'src/sections/profile/DetallPrivacitat.jsx',
   'src/components/universal/PageFrame.jsx',
 ];
 
-/* Excepcions justificades: el lazy nu queda dins d'una barrera local que ja el conté. */
-const EXCEPCIONS = {
-  'src/sections/profile/PerfilShell.jsx': 'els trossos de renderDetail viuen dins del SlotErrorBoundary del detall '
-    + '(UniversalWorkspace): la fallada queda a la columna; un lazyRoute la pujaria a la ruta sencera.',
-};
+/* Excepcions justificades: el lazy nu queda dins d'una barrera local que ja el conté.
+   Onada R32 · T1 · PerfilShell.jsx passa a lazyRouteRenovable + BarreraDelTrosAccessori (zero excepcions). */
+const EXCEPCIONS = {};
 
 describe('R29-RUT-01 · trossos de ruta amb lazyRoute', () => {
   test.each(FITXERS_DE_RUTA)('%s no usa el lazy nu de React', (fitxer) => {
@@ -54,6 +53,14 @@ describe('R29-RUT-01 · trossos de ruta amb lazyRoute', () => {
       expect(motiu.length).toBeGreaterThan(40);
       expect(FITXERS_DE_RUTA).not.toContain(fitxer);
     }
+  });
+
+  test('R32 · PerfilShell carrega els panells diferits amb lazyRouteRenovable i BarreraDelTrosAccessori, mai lazy nu', () => {
+    const font = llig('src/sections/profile/PerfilShell.jsx');
+    expect(font).not.toMatch(LAZY_NU);
+    expect(font).not.toMatch(LAZY_IMPORTAT);
+    expect(font).toMatch(/\blazyRouteRenovable\(\(\) => import\(/);
+    expect(font).toContain('<BarreraDelTrosAccessori');
   });
 });
 
@@ -89,6 +96,7 @@ describe('R29-RUT-04 · accessoris dins de BarreraDelTrosAccessori', () => {
   test.each([
     ['src/sections/detail/PageDetailSection.jsx', ['<GuiaCanalsActualitzacio />', '<AparadorFediversity/>', '<IaiaWhatsappCard />', '<PanellTraspasPublicacioInline']],
     ['src/sections/text/TextSection.jsx', ['<AparadorFediversity language={language}/>', '<ConsolaIncrustada/>']],
+    ['src/sections/profile/DetallPrivacitat.jsx', ['<BlocPersonesConfianca />', '<PortabilitatFederada ', '<ProvaXifratXat ']],
     ['src/components/universal/PageFrame.jsx', ['<BarraReproductorVeuLazy']],
   ])('%s', (fitxer, accessoris) => {
     const font = llig(fitxer);

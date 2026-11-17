@@ -43,6 +43,7 @@ const abastInvalid = () => Object.assign(new TypeError('Cal el tenant explícit 
 function configuraMultipoble(config) {
   const tenantExplicit = config.tenantId ?? config.tenant_id;
   if (tenantExplicit !== undefined && !UUID.test(tenantExplicit)) throw abastInvalid();
+  if (config.tenantId !== undefined && config.tenant_id !== undefined && config.tenantId !== config.tenant_id) throw abastInvalid();
   const resolt = getResolvedConfig(config);
   if (resolt.runtimeDataMode !== 'remote' || !resolt.hasSupabaseConfig) {
     throw Object.assign(new Error('La gestió multipoble requerix un servidor configurat.'), { code: 'no-disponible' });

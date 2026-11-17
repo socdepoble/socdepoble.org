@@ -9,8 +9,9 @@
    fitxa s’obri des de dalt…»). L'ordre de les proves importa: la primera
    visita de cada botó és la primera càrrega del seu mòdul diferit.
 
-   control-06 · Els textos d'interfície del Panell passen per t(): els dos h2
-   de baix i les seues entradetes i els dos botons d'acció (els textos
+   control-06 · Els textos globals del Panell passen per t(); el giny diferit
+   real resol el seu catàleg local en ca/es/en/eu/gl. Es comproven tots els h2,
+   entradetes i botons dels dos contractes (els textos
    d'espera de les fitxes diferides, a ControlSection.espera.test.jsx: un
    mòdul diferit ja carregat no torna a esperar, i cal un fitxer net). La reserva és el text d'abans, lletra a
    lletra: en valencià no canvia cap píxel. «L’empresa» i «La llar» venen del
@@ -19,12 +20,14 @@
    Router propi en memòria; se substituïxen la UniversalPage, l'eixida segura,
    el toast, l'i18n i les dues fitxes diferides (una vista mínima amb el seu
    .content-wrapper i el botó de tornar), com a ControlSection.test.jsx. */
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
-import { ESPAIS_PLUGINS } from '../plugins/registrePlugins.js';
+import { ESPAIS_PLUGINS, TEXTOS_ESPAIS_PLUGINS } from '../plugins/registrePlugins.js';
+import { SUPPORTED_LANGUAGES } from '../../config/i18n.js';
+import { IDIOMES_SALUT_DISPOSITIU, TEXTOS_SALUT_DISPOSITIU } from './textosSalutDispositiuJarvis.js';
 
-const estat = vi.hoisted(() => ({ traductor: null, demanades: [] }));
+const estat = vi.hoisted(() => ({ traductor: null, demanades: [], language: 'ca' }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({
   useToast: () => ({ showToast: vi.fn() })
 }));
@@ -34,6 +37,7 @@ vi.mock('../../app/contexts/UIContext', () => ({
       estat.demanades.push([clau, reserva]);
       return estat.traductor ? estat.traductor(clau, reserva) : reserva;
     },
+    language: estat.language,
     resolveAsset: (valor) => valor
   }),
   useUIState: () => ({ externalConfig: { dataMode: 'seed' } })
@@ -112,6 +116,7 @@ function pinta(ruta = '/control') {
 beforeEach(() => {
   estat.traductor = null;
   estat.demanades = [];
+  estat.language = 'ca';
 });
 afterEach(cleanup);
 
@@ -185,17 +190,44 @@ const TEXTOS_PANELL = [
 ];
 const marca = (clau) => `⟦${clau}⟧`;
 
-test('control-06 · cap h2, entradeta ni botó d’acció del Panell queda sense clau (fora dels espais del registre)', () => {
+/* Contractes complementaris: les claus globals conserven el marcador de
+   t(); el giny diferit real resol un catàleg local en la llengua de UIActions.
+   Només eixe únic node queda fora del marcador: tot el seu text d'interfície
+   comprovat ací ha de coincidir exactament amb el catàleg real, sense reserves
+   literals afegides a la prova. La llista explícita impedix perdre llengües. */
+const IDIOMES_CONTROL = ['ca', 'es', 'en', 'eu', 'gl'];
+test.each(IDIOMES_CONTROL)('control-06 · h2, entradetes i accions globals amb clau i giny real del catàleg local en %s', async (idioma) => {
+  expect(SUPPORTED_LANGUAGES.map(({ code }) => code)).toEqual(IDIOMES_CONTROL);
+  expect(IDIOMES_SALUT_DISPOSITIU).toEqual(IDIOMES_CONTROL);
+  expect(Object.keys(TEXTOS_SALUT_DISPOSITIU)).toEqual(IDIOMES_CONTROL);
+  estat.language = idioma;
   estat.traductor = marca;
   pinta();
-  const titolsDelsEspais = new Set(ESPAIS_PLUGINS.map((espai) => espai.titol));
+  const ginys = await screen.findAllByTestId('giny-salut-dispositiu-jarvis');
+  expect(ginys).toHaveLength(1);
+  const [giny] = ginys;
+  const tx = TEXTOS_SALUT_DISPOSITIU[idioma];
+  expect(Object.hasOwn(TEXTOS_SALUT_DISPOSITIU, idioma)).toBe(true);
+  expect([...giny.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([tx.titolSeccio]);
+  expect([...giny.querySelectorAll('p.lead')].map((p) => p.textContent)).toEqual([tx.entradetaSeccio]);
+  const botonsLocals = () => within(giny).getAllByRole('button').map((b) => b.textContent.trim());
+  const botoPrincipal = () => giny.dataset.estatUi === 'error' ? tx.botoReintentar : tx.botoAlliberar;
+  expect(botonsLocals()).toEqual([tx.botoRevisar, botoPrincipal()]);
+  fireEvent.click(within(giny).getByRole('button', { name: tx.botoRevisar }));
+  expect(within(giny).getByRole('button', { name: tx.botoTancarRevisio }).getAttribute('aria-expanded')).toBe('true');
+  expect(botonsLocals()).toEqual([tx.botoTancarRevisio, botoPrincipal()]);
+
+  const espais = ESPAIS_PLUGINS.map((espai) => TEXTOS_ESPAIS_PLUGINS[idioma]?.[espai.id] ?? espai);
+  const titolsDelsEspais = new Set(espais.map((espai) => espai.titol));
   const h2 = [...document.querySelectorAll('.content-wrapper h2')]
+    .filter((h) => !giny.contains(h))
     .map((h) => h.textContent)
     .filter((text) => !titolsDelsEspais.has(text));
   expect(h2.length).toBeGreaterThan(0);
   expect(h2.filter((text) => !/^⟦.+⟧$/.test(text))).toEqual([]);
-  const entradetesDelsEspais = new Set(ESPAIS_PLUGINS.map((espai) => espai.entradeta));
+  const entradetesDelsEspais = new Set(espais.map((espai) => espai.entradeta));
   const leads = [...document.querySelectorAll('.content-wrapper section > p.lead')]
+    .filter((p) => !giny.contains(p))
     .map((p) => p.textContent)
     .filter((text) => !entradetesDelsEspais.has(text));
   expect(leads.length).toBeGreaterThan(0);

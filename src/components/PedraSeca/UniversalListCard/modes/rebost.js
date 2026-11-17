@@ -150,19 +150,31 @@ export function costDesplacamentDe(desplacament) {
   return Number.isSafeInteger(cents) && cents <= 100_000 ? cents || 0 : null;
 }
 
+/* Onada R32.2 · Un preu del comparador és un número enter dins del marge de preuDe. Una cadena no hi
+   compta (com abans de R32): «1e2» o «1.0» passarien preuDe i BigInt els rebutjaria amb un SyntaxError
+   que tombaria la targeta sencera del Rebost. Passat el filtre, el valor cru ja és eixe enter. */
+const preuComparable = (valor) => (typeof valor === 'number' ? preuDe(valor) : null);
+
 /** El comparador Poble · Gran superfície dels articles que falten i tenen els dos preus, o null. */
 export function comparadorDe(llista) {
   const amb = llista.elementsComu.filter((e) => e.capaMode.estat === 'falta'
-    && Number.isSafeInteger(e.capaMode.preuPobleCents) && Number.isSafeInteger(e.capaMode.preuGranSuperficieCents));
+    && preuComparable(e.capaMode.preuPobleCents) !== null && preuComparable(e.capaMode.preuGranSuperficieCents) !== null);
   if (amb.length === 0) return null;
   let pobleCents = 0;
   let granCents = 0;
   let sensePreu = 0;
   for (const e of amb) {
     const q = quantitatEnUnitatDePreu(e.capaMode.especificacio, e.capaMode.unitatPreu ?? 'u');
-    if (q === null) { sensePreu += 1; continue; }
-    pobleCents += Math.round(q * e.capaMode.preuPobleCents);
-    granCents += Math.round(q * e.capaMode.preuGranSuperficieCents);
+    /* quantitatEn ja fixa tres decimals: el producte es calcula amb les
+       mil·lèsimes enteres perquè 0,145 kg × 100 c són 14,5 c, mai 14,499… . */
+    const mil = q === null ? null : Math.round(q * 1000);
+    if (!Number.isSafeInteger(mil) || mil < 0) { sensePreu += 1; continue; }
+    const importDe = (preu) => Number((BigInt(mil) * BigInt(preu) + 500n) / 1000n);
+    const poble = importDe(e.capaMode.preuPobleCents), gran = importDe(e.capaMode.preuGranSuperficieCents);
+    if (!Number.isSafeInteger(poble) || !Number.isSafeInteger(gran)) { sensePreu += 1; continue; }
+    pobleCents += poble;
+    granCents += gran;
+    if (!Number.isSafeInteger(pobleCents) || !Number.isSafeInteger(granCents)) return null;
   }
   /* Cap article amb una quantitat que es puga posar en la unitat del preu: res a comparar. */
   if (amb.length === sensePreu) return null;
@@ -170,6 +182,7 @@ export function comparadorDe(llista) {
   const desplacamentCents = enterEntre(llista.configMode?.costDesplacamentCents, 0, 100_000)
     ?? costDesplacamentDe(llista.configMode?.desplacament) ?? 0;
   const totalGranCents = granCents + desplacamentCents;
+  if (!Number.isSafeInteger(totalGranCents)) return null;
   return { articles: amb.length - sensePreu, sensePreu, pobleCents, granCents, desplacamentCents, totalGranCents, estalviCents: totalGranCents - pobleCents };
 }
 

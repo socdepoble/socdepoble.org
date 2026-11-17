@@ -313,3 +313,22 @@ describe('els rebuigs sense petició', () => {
     altra.finish();
   });
 });
+
+describe('R32 · l’entrada nativa conserva la persona després del bescanvi', () => {
+  test.each(['B', 'A'])('si arriba una entrada nova de %s mentre es consulta el nom, l’anterior no anuncia ni completa la nova sessió', async (id) => {
+    const perfil = promesaOberta();
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    ambRutes({ [PERFIL]: () => perfil.promesa });
+    const feina = entraAmbTokenDeProveidor('apple', apple({ nom: 'Nom només d’A' }), CONFIG);
+    const resultat = feina.then(value => ({ value }), error => ({ error }));
+    await vi.waitFor(() => expect(m.ordre).toContain(PERFIL));
+    m.epoch++;
+    m.user = { id, user_metadata: {} };
+    perfil.resol([{ id: 'A', full_name: 'Veí/na' }]);
+    expect(await resultat).toMatchObject({ error: { name: 'AbortError' } });
+    expect(request.mock.calls.filter(([, , o]) => ['PATCH', 'PUT'].includes(o?.method))).toEqual([]);
+    expect(esdeveniments).toEqual([]);
+    expect(m.ordre).not.toContain('rpc completa_la_meua_alta');
+    avis.mockRestore();
+  });
+});

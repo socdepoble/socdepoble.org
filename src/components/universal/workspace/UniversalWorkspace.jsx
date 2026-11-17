@@ -1,6 +1,6 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo, useRef, useState, useEffect, useSyncExternalStore, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Settings, SlidersHorizontal, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ, Folder, FileText, ArrowLeft } from 'lucide-react';
+import { Search, Settings, SlidersHorizontal, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ, Folder, FileText, ArrowLeft, PanelLeftOpen } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn, { TextosDeLaColumna } from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
@@ -656,6 +656,7 @@ export function UniversalWorkspace({
   inclouDescendents = false,
   compacte = false,
   mestreDetall = false,
+  duesColumnesEstret = false,
   tornaDeLaLlista = null,
   idEspai,
   accionsLlista = CAP,
@@ -794,6 +795,7 @@ export function UniversalWorkspace({
         amagades={amagades}
         vigilaAmagada={vigilaAmagada}
         mestreDetall={ambMestreDetall}
+        duesColumnesEstret={duesColumnesEstret}
         panellEstret={panellEstret}
         onPanell={recordaPanell}
         tornaDeLaLlista={ambMestreDetall ? tornaDeLaLlista : null}
@@ -826,7 +828,7 @@ export function UniversalWorkspace({
 }
 
 function WorkspaceFrame({
-  columnesRef, compacte, espai, grups, amagades, vigilaAmagada, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
+  columnesRef, compacte, espai, grups, amagades, vigilaAmagada, mestreDetall, duesColumnesEstret = false, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
   labels, icons, tagFilter, collapsibleNavigation, sortable, canCreate, onRetry, listClassName, detailClassName, className,
   /* etiquetaEspai: sense valor per defecte (B3 · P1-22). L'únic que la crida,
      UniversalWorkspace, sempre li passa la traduïda de TEXT_ESPAI_DE_TREBALL. */
@@ -926,8 +928,9 @@ function WorkspaceFrame({
       middleCollapsed={workspace.state.collapsed.middle}
       /* MD · Sense l'activació, null: la closca d'abans. */
       panellEstret={mestreDetall ? panellEstret : null}
-      tornaEstret={mestreDetall ? 'middle' : null}
+      tornaEstret={mestreDetall ? (duesColumnesEstret ? 'left' : 'middle') : null}
       onPanell={mestreDetall ? onPanell : null}
+      duesColumnesEstret={duesColumnesEstret}
       /* P6 (ordre del Mestre, 261003) · La llista té desplegador en
          pantalles xicotetes: en «estret», amb el mestre-detall (sense, estret
          és com abans) o en mode compacte (vegeu davall).
@@ -1047,7 +1050,7 @@ function CategoryColumn({
   peuNavegacio = null, amagaRodaAjustos = false, onOpenSettingsInline = null
 }) {
   const { state, status, selectCategory, toggleColumn } = useWorkspace();
-  const { mida, setPanellObert, tancaPanells } = useAppGrid();
+  const { mida, panellObert, setPanellObert, tancaPanells, obriPanell, duesColumnesEstret } = useAppGrid();
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [expandedFolders, setExpandedFolders] = useState(new Set());
 
@@ -1223,8 +1226,9 @@ function CategoryColumn({
      capçalera no ha de plegar res (cap aria-expanded que no controle res). */
   const headerGroup = grupsVisibles.find((group) => !group.label) || null;
   const isGroupOpen = (id) => !collapsedGroups[id];
-  const commutadorEstret = (mestreDetall && mida === 'estret' && (Boolean(icon) || grupsVisibles.length > 0))
-    || (mida !== 'ample' && Boolean(icon));
+  const vistaDuesColumnes = duesColumnesEstret && mida === 'estret' && panellObert === 'left';
+  const commutadorEstret = !vistaDuesColumnes && ((mestreDetall && mida === 'estret' && (Boolean(icon) || grupsVisibles.length > 0))
+    || (mida !== 'ample' && Boolean(icon)));
 
   /* El plegat d'«ample» (collapsed.left), la decisió de la persona.
      Decisió 4 del Mestre (30-10-2026 ~15:00) · El rail fix de «mitja»
@@ -1283,7 +1287,7 @@ function CategoryColumn({
        branca de «mitja», que també duia el focus a la llista, no s'executava
        mai i s'ha retirat. */
     if (mida === 'estret') {
-      setPanellObert('middle');
+      if (!(duesColumnesEstret && panellObert === 'left')) setPanellObert('middle');
       focusAfterLayout(focusTarget);
     } else {
       tancaPanells();
@@ -1308,6 +1312,10 @@ function CategoryColumn({
     }
     if (state.activeCategoryId === categoryId) {
       if (mestreDetall && mida === 'estret') {
+        if (duesColumnesEstret && panellObert === 'left') {
+          toggleFolder(key);
+          return;
+        }
         openFolder(key);
         setPanellObert('middle');
         focusAfterLayout(focusTarget);
@@ -1448,6 +1456,10 @@ function CategoryColumn({
              Decisió 4 del Mestre (30-10-2026 ~15:00) · El rail fix de
              «mitja» on tornava, amb el focus a l'Expandir, s'ha retirat. */
           if (mida !== 'ample') {
+            if (mida === 'estret' && duesColumnesEstret) {
+              obriPanell('middle');
+              return;
+            }
             tancaPanells();
             return;
           }
@@ -1630,7 +1642,7 @@ function ItemListColumn({
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
     toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag, setSort
   } = useWorkspace();
-  const { mida, panellObert, setPanellObert, tancaPanells, obriPanell, llistaPlegable, nodeRail } = useAppGrid();
+  const { mida, panellObert, setPanellObert, tancaPanells, obriPanell, llistaPlegable, duesColumnesEstret, nodeRail } = useAppGrid();
   /* MD · En estret, amb el mestre-detall, l'obridor de la navegació l'obri
      al primer toc (toggleColumn commuta el rail d'«ample» i només obria en
      un toc de cada dos), du el focus a la carpeta activa i es declara obridor
@@ -1666,13 +1678,16 @@ function ItemListColumn({
      rail s'ha retirat i el Workspace ja no passa per «mitja»: en «estret» la
      carpeta sempre es quedava (la llista oberta tapa el rail i n'és l'única
      porta), i en «ample» no n'hi ha cap. */
-  const obridorNavegacio = obridorEstret || (mida !== 'ample' && Boolean(categoryIcon));
+  const vistaDuesColumnes = duesColumnesEstret && mida === 'estret' && panellObert === 'left';
+  const obridorNavegacio = !vistaDuesColumnes && (obridorEstret || (mida !== 'ample' && Boolean(categoryIcon)));
   /* P6 (revisió) · L'obridor declara aria-expanded: amb el panell obert, el
      torna a tancar. En «mitja» el panell de la navegació no tapa la llista i
      l'obridor continua a l'abast del teclat; abans no feia res i el panell
      només es tancava triant una carpeta. En estret, amb el panell obert,
      l'obridor és inert: res no canvia. */
-  const commutaNavegacio = () => (panellObert === 'left' ? tancaPanells() : obriPanell('left'));
+  const commutaNavegacio = () => (panellObert === 'left'
+    ? (mida === 'estret' && duesColumnesEstret ? setPanellObert('middle') : tancaPanells())
+    : obriPanell('left'));
   /* P6 (revisió) · La lupa del rail d'estret porta el focus al camp de cerca.
      autoFocus només actua quan el camp naix: amb la cerca ja oberta (el camp
      continua muntat dins de la llista tancada), el focus es quedava a la
@@ -1899,6 +1914,7 @@ function ItemListColumn({
      la llista (el de la fletxa ←), no el rail d'«ample». En mitja i en
      ample, el plegat de sempre. */
   const enEstret = mida === 'estret' && llistaPlegable;
+  const railDuesColumnes = enEstret && duesColumnesEstret;
   const accionsDeCerca = (desDelRail) => [{
     id: 'search',
     etiqueta: labels.search,
@@ -1906,9 +1922,10 @@ function ItemListColumn({
     onAcciona: () => {
       /* El camp de cerca porta autoFocus: en estret el panell s'obri sense
          moure el focus (setPanellObert, no obriPanell) i el camp el rep
-         també si ja era obert (cercaDemanada). */
+         també si ja era obert (cercaDemanada). En duesColumnesEstret obri el
+         tauler aparellat ('left') perquè les dues columnes seguisquen visibles. */
       if (desDelRail && enEstret) {
-        setPanellObert('middle');
+        setPanellObert(duesColumnesEstret ? 'left' : 'middle');
         setCercaDemanada((n) => n + 1);
       } else if (desDelRail) toggleColumn('middle');
       openSearch();
@@ -1926,14 +1943,18 @@ function ItemListColumn({
      és visible al costat: amb les columnes fixes (columnesFixes), fora
      d'«estret» la navegació és a la graella, desplegada o en el seu rail, i
      llistaPlegable és false; en «estret» la navegació és un panell tancat i
-     esta carpeta n'és la porta. */
+     esta carpeta n'és la porta.
+     R32.3 · En duesColumnesEstret, obrir des del rail torna directament a la
+     vista aparellada de dues columnes (PERFIL + APARTATS) amb PanelLeftOpen
+     ([>|], parella simètrica del [|<] que les plega) i sense apilar un segon
+     botó d'identitat que es confonia amb el glif de «La fitxa». */
   const pintaRail = () => (
     <AppGridColumn
       variant="collapsed"
       esDark="intens"
-      titol={labels.items}
-      icona={icon || FileText}
-      startActions={obridorDelRail ? [{
+      titol={railDuesColumnes ? labels.categories : labels.items}
+      icona={railDuesColumnes ? PanelLeftOpen : (icon || FileText)}
+      startActions={obridorDelRail && !railDuesColumnes ? [{
         id: 'obri-navegacio',
         etiqueta: labels.categories,
         icona: categoryIcon || Folder,
@@ -1946,10 +1967,10 @@ function ItemListColumn({
       expandBtnRef={expandBtnRef}
       expandObridor={enEstret}
       /* Corrector del Gauntlet (30-10-2026) · Sempre: com a la navegació. */
-      controls="app-grid-list"
+      controls={railDuesColumnes ? 'app-grid-sidebar app-grid-list' : 'app-grid-list'}
       onReplega={() => {
         if (enEstret) {
-          obriPanell('middle');
+          obriPanell(duesColumnesEstret ? 'left' : 'middle');
           return;
         }
         toggleColumn('middle');
@@ -2132,6 +2153,18 @@ function ItemListColumn({
           ) : null}
         </div>
       ) : null}
+
+      {vistaDuesColumnes && state.activeCategoryId !== ALL_CATEGORY_ID && categoryById.has(String(state.activeCategoryId)) ? (() => {
+        const activa = categoryById.get(String(state.activeCategoryId));
+        return (
+          <div className="sdp-workspace-context-actiu" data-testid="workspace-active-context">
+            <span className="sdp-workspace-context-actiu__icona" aria-hidden="true">
+              <NavGlyph glyph={glifDeclarat(activa, groupById.get(activa.groupId))} size={18} />
+            </span>
+            <span className="sdp-workspace-context-actiu__nom">{nomDe(activa)}</span>
+          </div>
+        );
+      })() : null}
 
       {/* Gauntlet R22 (ronda 4) · El modificador --llista dona el scroll suau només a la Columna 2 (modules.css). */}
       <div className="sdp-workspace-column__body sdp-workspace-column__body--llista">

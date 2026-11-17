@@ -49,6 +49,8 @@ import { LAMINES_BOTANIQUES_NODE0, obteLaminaBotanicaNode0 } from '../../data/pa
 import { ESTAT_PROVES, PLUGINS, TEXTOS_BETA_OBERTA } from '../plugins/registrePlugins.js';
 // Onada R30 · Els 90 dies de la compactació de la carpeta del Mode rural (PF-03), els del codi.
 import { DIES_COMPACTACIO_CRDT_VAULT } from '../../data/sincronitzadorCarpetaLocal.js';
+// Onada R32.3 · El títol de l'apartat «Salut de l'aparell i espai local» del Panell de Control, el del giny.
+import { TEXTOS_SALUT_DISPOSITIU } from '../control/textosSalutDispositiuJarvis.js';
 // T8 · D-12: la capçalera es contrasta amb package.json i amb la capçalera del connector.
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -216,6 +218,16 @@ const INICIS_R32 = {
   eu: '2026ko azaroaren 16a, arratsaldea · R32 olatua',
   gl: '16 de novembro de 2026, tarde · Onda R32'
 };
+/* Onada R32.3 · La crònica de l'Onada R32.3 (versió 1.2.5, build 10) obri /versions, davant de la crònica R32. */
+const TITOL_FITA_R32_3 = '17 de novembre de 2026, matinada · Onada R32.3 · Les aplicacions avisen soles d’una versió nova, el Perfil en dues columnes al mòbil i una eixida de la sessió més sòlida';
+const fitaR32_3Bloc = blocDe(TITOL_FITA_R32_3);
+const INICIS_R32_3 = {
+  ca: '17 de novembre de 2026, matinada · Onada R32.3',
+  es: '17 de noviembre de 2026, madrugada · Oleada R32.3',
+  en: '17 November 2026, early morning · Wave R32.3',
+  eu: '2026ko azaroaren 17a, goizaldea · R32.3 olatua',
+  gl: '17 de novembro de 2026, madrugada · Onda R32.3'
+};
 
 /* Onada R20 (Llei 0) · La crònica R19 no ven les làmines generades com a fotos: diu la quarantena reversible de les
    67 recreacions sintètiques, els 24 estudis morfològics corregits i el mòdul diferit de 0 B, en les cinc llengües. */
@@ -282,7 +294,9 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
   test('els títols de les entregues, amb numeració pròpia i de la més nova a la més vella', () => {
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
     expect(titols).toEqual([
-      // Onada R32 · La crònica de l'Onada R32 obri la pàgina, davant de R30, sense cap número vX.Y.Z al títol.
+      // Onada R32.3 · La crònica de l'Onada R32.3 obri la pàgina, davant de R32, sense cap número vX.Y.Z al títol.
+      TITOL_FITA_R32_3,
+      // Onada R32 · La crònica de l'Onada R32 va darrere de R32.3, davant de R30, sense cap número vX.Y.Z al títol.
       TITOL_FITA_R32,
       // Onada R30 · La crònica de l'Onada R30 va darrere de R32, davant de R29, sense cap número vX.Y.Z al títol.
       TITOL_FITA_R30,
@@ -344,7 +358,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
     // Onada R29 · I la crònica R29: vint-i-una en total.
     // Onada R30 · I la crònica R30: vint-i-dues en total.
     // Onada R32 · I la crònica R32: vint-i-tres en total.
-    expect(entregues).toHaveLength(23);
+    // Onada R32.3 · I la crònica R32.3: vint-i-quatre en total.
+    expect(entregues).toHaveLength(24);
     for (const entrega of entregues) {
       const titol = entrega.match(/^<h3>([^<]+)<\/h3>/)[1];
       expect(entrega, titol).toMatch(/^<h3>[^<]+<\/h3>\n {6}<p>/);
@@ -413,7 +428,7 @@ describe('Onada 6 · cada paràgraf de /versions es llig en diagonal', () => {
 describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
   const pla = text(entrega110);
 
-  test('és la primera entrada numerada del 3 de novembre, amb el títol literal, i la versió unificada d’ara és 1.2.4', () => {
+  test('és la primera entrada numerada del 3 de novembre, amb el títol literal, i la versió unificada d’ara és 1.2.5', () => {
     expect(html.indexOf('<h3>')).toBeLessThan(html.indexOf(`<h3>${TITOL_110}</h3>`));
     expect(html.slice(0, html.indexOf(`<h3>${TITOL_110}</h3>`))).toContain('v1.2.0 · suplement pendent d’integració');
     /* Onada R21 · La versió unificada passa de la 1.1.12 (R16) a la 1.2.0: la fita R21 ho explica.
@@ -421,7 +436,8 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
     /* Onada R29 · I de la 1.2.1 a la 1.2.2: la crònica R29 ho explica. */
     /* Onada R30 · I de la 1.2.2 a la 1.2.3: la crònica R30 ho explica. */
     /* Onada R32 · I de la 1.2.3 a la 1.2.4: la crònica R32 ho explica. */
-    expect(PAQUET.version).toBe('1.2.4');
+    /* Onada R32.3 · I de la 1.2.4 a la 1.2.5: la crònica R32.3 ho explica. */
+    expect(PAQUET.version).toBe('1.2.5');
     expect(TITOL_110).toContain('· v1.1.0 (');
     /* Gauntlet O6 (VER-02/VER-03) · El connector del títol és el publicat a WordPress.org, que no pot ser més nou
        que el del repositori (la capçalera del connector). Onada R21 · El repositori ja porta la 1.1.13 i el títol
@@ -443,15 +459,16 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
   /* Onada R28 (Lot C4) · Les apps passen a la 1.2.1 amb el build 6 (la crònica R28). */
   /* Onada R30 · I a la 1.2.3 amb el build 8 (la crònica R30), el mateix número que VERSIO_CLIENT_NATIU. */
   /* Onada R32 · I a la 1.2.4 amb el build 9 (la crònica R32), el mateix número que VERSIO_CLIENT_NATIU. */
-  test('la versió de les apps d’ara és la 1.2.4, unificada amb package.json, i l’entrada conserva el build d’aquell dia, el 2', () => {
+  /* Onada R32.3 · I a la 1.2.5 amb el build 10 (la crònica R32.3), el mateix número que VERSIO_CLIENT_NATIU. */
+  test('la versió de les apps d’ara és la 1.2.5, unificada amb package.json, i l’entrada conserva el build d’aquell dia, el 2', () => {
     const gradle = llegix('android/app/build.gradle');
     const pbx = llegix('ios/App/App.xcodeproj/project.pbxproj');
-    expect(gradle).toMatch(/versionName "1\.2\.4"/);
-    expect([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1])).toEqual(expect.arrayContaining(['1.2.4']));
-    expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.2.4']));
+    expect(gradle).toMatch(/versionName "1\.2\.5"/);
+    expect([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1])).toEqual(expect.arrayContaining(['1.2.5']));
+    expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.2.5']));
     const build = gradle.match(/versionCode (\d+)/)[1];
     expect(new Set([...pbx.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)].map((m) => m[1]))).toEqual(new Set([build]));
-    expect(build).toBe('9');
+    expect(build).toBe('10');
     expect(String(VERSIO_CLIENT_NATIU)).toBe(build);
     expect(pla).toContain('el número de build de les apps, el 2, no canvia');
   });
@@ -592,7 +609,8 @@ describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de nov
     // Onada R29 · La crònica R29, una posició més.
     // Onada R30 · La crònica R30, una posició més.
     // Onada R32 · La crònica R32, una posició més.
-    expect(titols[19]).toMatch(/^1 de novembre de 2026 · v/);
+    // Onada R32.3 · La crònica R32.3, una posició més.
+    expect(titols[20]).toMatch(/^1 de novembre de 2026 · v/);
     expect(entrega261101).toMatch(/^<h3>1 de novembre de 2026 · v1\.0\.3 \(build pendent de desplegar\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
     expect(titolsH4(entrega261101)).toEqual([
       'Novetat · Connector a WordPress.org (wordpress.org/plugins/socdepoble)', 'Novetat · Alertes municipals al Mur',
@@ -741,7 +759,8 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
     // Onada R29 · La crònica R29, una posició més.
     // Onada R30 · La crònica R30, una posició més.
     // Onada R32 · La crònica R32, una posició més.
-    expect(titols[18]).toMatch(/^1 de novembre de 2026, tarda · /);
+    // Onada R32.3 · La crònica R32.3, una posició més.
+    expect(titols[19]).toMatch(/^1 de novembre de 2026, tarda · /);
     expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda · v1\.0\.4 \(build pendent de desplegar\) · Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>\n {6}<p>/);
     expect(titolsH4(entregaAssalt).map((t) => t.split(' · ')[0])).toEqual([
       ...Array(6).fill('Novetat'), ...Array(12).fill('Millora'), ...Array(3).fill('Correcció')
@@ -804,10 +823,12 @@ describe('P0-62 · /versions s’obri amb la fita de l’App Store', () => {
     // Onada R29 · La crònica R29 obri la pàgina, davant de la crònica R28.
     // Onada R30 · La crònica R30 obri la pàgina, davant de la crònica R29.
     // Onada R32 · La crònica R32 obri la pàgina, davant de la crònica R30.
+    // Onada R32.3 · La crònica R32.3 obri la pàgina, davant de la crònica R32.
     const cos = html.trimStart();
-    expect(cos.startsWith(`<h3>${TITOL_FITA_R32}</h3>`)).toBe(true);
-    expect(cos.slice(fitaR32Bloc.length).startsWith(`<h3>${TITOL_FITA_R30}</h3>`)).toBe(true);
-    const r29 = fitaR32Bloc.length + fitaR30Bloc.length;
+    expect(cos.startsWith(`<h3>${TITOL_FITA_R32_3}</h3>`)).toBe(true);
+    expect(cos.slice(fitaR32_3Bloc.length).startsWith(`<h3>${TITOL_FITA_R32}</h3>`)).toBe(true);
+    expect(cos.slice(fitaR32_3Bloc.length + fitaR32Bloc.length).startsWith(`<h3>${TITOL_FITA_R30}</h3>`)).toBe(true);
+    const r29 = fitaR32_3Bloc.length + fitaR32Bloc.length + fitaR30Bloc.length;
     expect(cos.slice(r29).startsWith(`<h3>${TITOL_FITA_R29}</h3>`)).toBe(true);
     expect(cos.slice(r29 + fitaR29Bloc.length).startsWith(`<h3>${TITOL_FITA_R28}</h3>`)).toBe(true);
     expect(cos.slice(r29 + fitaR29Bloc.length + fitaR28Bloc.length).startsWith(`<h3>${TITOL_FITA_R26}</h3>`)).toBe(true);
@@ -860,11 +881,13 @@ describe('P0-62 · /versions s’obri amb la fita de l’App Store', () => {
       // Onada R29 · La crònica R29 obri la pàgina, davant de la R28 i de la R26 i R27: es compta des de la R24.
       // Onada R30 · La crònica R30 obri la pàgina, davant de la R29, la R28 i la R26 i R27: es compta des de la R24.
       // Onada R32 · La crònica R32 obri la pàgina, davant de la R30: es continua comptant des de la R24.
-      const h3R30 = cos.indexOf('<h3>', 4);
+      // Onada R32.3 · La crònica R32.3 obri la pàgina, davant de la R32: la R24 passa a la setena posició.
+      const h3R32 = cos.indexOf('<h3>', 4);
+      const h3R30 = cos.indexOf('<h3>', h3R32 + 4);
       const segonaH3 = cos.indexOf('<h3>', h3R30 + 4);
       const terceraH3 = cos.indexOf('<h3>', segonaH3 + 4);
-      expect([llengua, cos.startsWith(`<h3>${INICIS_R32[llengua]}`), cos.startsWith(`<h3>${INICIS_R30[llengua]}`, h3R30), cos.startsWith(`<h3>${INICIS_R29[llengua]}`, segonaH3), cos.startsWith(`<h3>${INICIS_R28[llengua]}`, terceraH3), cos.startsWith(`<h3>${INICIS_R26[llengua]}`, cos.indexOf('<h3>', terceraH3 + 4))]).toEqual([llengua, true, true, true, true, true]);
-      const h3 = [...cos.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]).slice(5);
+      expect([llengua, cos.startsWith(`<h3>${INICIS_R32_3[llengua]}`), cos.startsWith(`<h3>${INICIS_R32[llengua]}`, h3R32), cos.startsWith(`<h3>${INICIS_R30[llengua]}`, h3R30), cos.startsWith(`<h3>${INICIS_R29[llengua]}`, segonaH3), cos.startsWith(`<h3>${INICIS_R28[llengua]}`, terceraH3), cos.startsWith(`<h3>${INICIS_R26[llengua]}`, cos.indexOf('<h3>', terceraH3 + 4))]).toEqual([llengua, true, true, true, true, true, true]);
+      const h3 = [...cos.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]).slice(6);
       expect([llengua, h3[0].startsWith(INICIS_R24[llengua])]).toEqual([llengua, true]);
       expect([llengua, h3[1].startsWith(INICIS_R23[llengua]), h3[2].startsWith(INICIS_R21_C5[llengua]), h3[3].startsWith(INICIS_R21[llengua]), h3[4].startsWith(INICIS_R20[llengua]), h3[5].startsWith(INICIS_R19[llengua]), h3[6].startsWith(r18), h3[7].startsWith(r16), h3[8].startsWith(r15), h3[9].startsWith(cronica), h3[10].startsWith(fita), h3[11].startsWith(seguent)]).toEqual([llengua, true, true, true, true, true, true, true, true, true, true, true]);
       const hrefs = (des, fins) => [...cos.slice(des, fins).matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
@@ -900,9 +923,11 @@ describe('Encàrrec R13+R14 · /versions s’obri amb la crònica de les Onades 
   test('és la quarta entrada, darrere de la crònica R17+R18 i de les fites R16 i R15, amb el format de les entregues i tres apartats amb el prefix de novetat de cada llengua', () => {
     // Onada R30 · La crònica R30 obri la pàgina, davant de la R29.
     // Onada R32 · La crònica R32 obri la pàgina, davant de la R30.
-    const r30 = fitaR32Bloc.length;
+    // Onada R32.3 · La crònica R32.3 obri la pàgina, davant de la R32.
+    const r30 = fitaR32_3Bloc.length + fitaR32Bloc.length;
     const preC5 = r30 + fitaR30Bloc.length + fitaR29Bloc.length + fitaR28Bloc.length + fitaR26Bloc.length + fitaR24Bloc.length + fitaR23Bloc.length;
-    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_R32}</h3>`)).toBe(true);
+    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_R32_3}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR32_3Bloc.length).startsWith(`<h3>${TITOL_FITA_R32}</h3>`)).toBe(true);
     expect(html.trimStart().slice(r30).startsWith(`<h3>${TITOL_FITA_R30}</h3>`)).toBe(true);
     expect(html.trimStart().slice(r30 + fitaR30Bloc.length).startsWith(`<h3>${TITOL_FITA_R29}</h3>`)).toBe(true);
     expect(html.trimStart().slice(r30 + fitaR30Bloc.length + fitaR29Bloc.length).startsWith(`<h3>${TITOL_FITA_R28}</h3>`)).toBe(true);
@@ -1006,7 +1031,7 @@ describe('R15b · /versions porta la fita R15, darrere de la fita R16', () => {
   };
 
   test('és la tercera entrada, darrere de la crònica R17+R18 i de la fita R16, amb el format de les entregues i tres novetats en cada llengua', () => {
-    expect(html.trimStart().slice(fitaR32Bloc.length + fitaR30Bloc.length + fitaR29Bloc.length + fitaR28Bloc.length + fitaR26Bloc.length + fitaR24Bloc.length + fitaR23Bloc.length + fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR32_3Bloc.length + fitaR32Bloc.length + fitaR30Bloc.length + fitaR29Bloc.length + fitaR28Bloc.length + fitaR26Bloc.length + fitaR24Bloc.length + fitaR23Bloc.length + fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
     expect(titolsH4(fitaR15)).toEqual(['Novetat · El Workspace dels catàlegs', 'Novetat · Al·lèrgens de les receptes', 'Novetat · Usuaris, dispositius i Nodrir la IAIA']);
     expect(TITOL_FITA_R15).not.toMatch(/ · v\d+\.\d+\.\d+/);
     for (const llengua of LLENGUES) {
@@ -1112,8 +1137,8 @@ describe('R16b · /versions s’obri amb la fita R16, la de la versió 1.1.12', 
   const apartatEn = (llengua, index) => apartats(blocEn(llengua))[index];
 
   test('és la quarta entrada, darrere de les cròniques R20, R19 i R17+R18 i davant de la fita R15, amb el format de les entregues i quatre novetats en cada llengua', () => {
-    expect(html.trimStart().slice(fitaR32Bloc.length + fitaR30Bloc.length + fitaR29Bloc.length + fitaR28Bloc.length + fitaR26Bloc.length + fitaR24Bloc.length + fitaR23Bloc.length + fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length).startsWith(`<h3>${TITOL_FITA_R16}</h3>`)).toBe(true);
-    expect(html.trimStart().slice(fitaR32Bloc.length + fitaR30Bloc.length + fitaR29Bloc.length + fitaR28Bloc.length + fitaR26Bloc.length + fitaR24Bloc.length + fitaR23Bloc.length + fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR32_3Bloc.length + fitaR32Bloc.length + fitaR30Bloc.length + fitaR29Bloc.length + fitaR28Bloc.length + fitaR26Bloc.length + fitaR24Bloc.length + fitaR23Bloc.length + fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length).startsWith(`<h3>${TITOL_FITA_R16}</h3>`)).toBe(true);
+    expect(html.trimStart().slice(fitaR32_3Bloc.length + fitaR32Bloc.length + fitaR30Bloc.length + fitaR29Bloc.length + fitaR28Bloc.length + fitaR26Bloc.length + fitaR24Bloc.length + fitaR23Bloc.length + fitaR21C5.length + fitaR21.length + fitaR20.length + fitaR19.length + fitaR18.length + fitaR16.length).startsWith(`<h3>${TITOL_FITA_R15}</h3>`)).toBe(true);
     expect(titolsH4(fitaR16)).toEqual([
       'Novetat · El Panell de Control, en tres espais', 'Novetat · La IAIA Sabuda', 'Novetat · «Què dinem?» al Mur',
       'Novetat · La subnavegació de Pobles i Gent'
@@ -1486,9 +1511,10 @@ describe('R20 · /versions conserva la crònica de l’Onada R20 en les cinc lle
       // Onada R24 · La crònica R24 va davant de la R23 i obri la pàgina.
       // Onada R30 · Ara l'obri la crònica R30.
       // Onada R32 · Ara l'obri la crònica R32.
+      // Onada R32.3 · Ara l'obri la crònica R32.3.
       const iniciR21 = cos.indexOf(`<h3>${INICIS_R21[llengua]}`);
       const fiR21 = cos.indexOf('<h3>', iniciR21 + 1);
-      expect([llengua, cos.startsWith(`<h3>${INICIS_R32[llengua]}`), iniciR21 > 0, fiR21 === inici, cos.startsWith(`<h3>${INICIS_R19[llengua]}`, inici + bloc.length)]).toEqual([llengua, true, true, true, true]);
+      expect([llengua, cos.startsWith(`<h3>${INICIS_R32_3[llengua]}`), iniciR21 > 0, fiR21 === inici, cos.startsWith(`<h3>${INICIS_R19[llengua]}`, inici + bloc.length)]).toEqual([llengua, true, true, true, true]);
       expect([llengua, bloc]).toEqual([llengua, expect.stringMatching(/^<h3>[^<]+<\/h3>\n {6}<p>/)]);
       expect([llengua, titolsH4(bloc).map((t) => t.split(' · ')[0])]).toEqual([llengua, PREFIXOS[llengua]]);
       expect([llengua, bloc.endsWith('</p>\n\n      ')]).toEqual([llengua, true]);
@@ -1583,7 +1609,8 @@ describe('R21 · /versions porta la fita R21, la de la versió 1.2.0, darrere de
       const fiC5 = cos.indexOf('<h3>', iniciC5 + 1);
       // Onada R30 · La crònica R30 obri la pàgina.
       // Onada R32 · Ara l'obri la crònica R32.
-      expect([llengua, cos.startsWith(`<h3>${INICIS_R32[llengua]}`), inici === fiC5, cos.startsWith(`<h3>${INICIS_R20[llengua]}`, inici + bloc.length)]).toEqual([llengua, true, true, true]);
+      // Onada R32.3 · Ara l'obri la crònica R32.3.
+      expect([llengua, cos.startsWith(`<h3>${INICIS_R32_3[llengua]}`), inici === fiC5, cos.startsWith(`<h3>${INICIS_R20[llengua]}`, inici + bloc.length)]).toEqual([llengua, true, true, true]);
       expect([llengua, bloc]).toEqual([llengua, expect.stringMatching(/^<h3>[^<]+<\/h3>\n {6}<p>[\s\S]*?<\/p>\n {6}<p>[\s\S]*?<\/p>\n {6}<p>[\s\S]*?<\/p>\n {6}<h4>/)]);
       expect([llengua, titolsH4(bloc).map((t) => t.split(' · ')[0])]).toEqual([llengua, PREFIXOS[llengua]]);
       expect([llengua, apartats(bloc).length]).toEqual([llengua, 5]);
@@ -2140,11 +2167,13 @@ describe('Onada R24 · Crònica d’obertura en les cinc llengües amb manual ed
       // Onada R30 · La R30 obri la pàgina, la R29, la R28 i la R26 i R27 la seguixen: la R24 és la cinquena.
       const inici = cos.indexOf(`<h3>${iniciTitol}`);
       // Onada R32 · La R32 obri la pàgina i la R30 la seguix: la R24 és la sisena.
-      const h3R30 = cos.indexOf('<h3>', 4);
+      // Onada R32.3 · La R32.3 obri la pàgina i la R32 la seguix: la R24 és la setena.
+      const h3R32 = cos.indexOf('<h3>', 4);
+      const h3R30 = cos.indexOf('<h3>', h3R32 + 4);
       const h3R29 = cos.indexOf('<h3>', h3R30 + 4);
       const h3R28 = cos.indexOf('<h3>', h3R29 + 4);
       const h3R26 = cos.indexOf('<h3>', h3R28 + 4);
-      expect(cos.startsWith(`<h3>${INICIS_R32[llengua]}`) && cos.startsWith(`<h3>${INICIS_R30[llengua]}`, h3R30) && cos.startsWith(`<h3>${INICIS_R29[llengua]}`, h3R29) && cos.startsWith(`<h3>${INICIS_R28[llengua]}`, h3R28) && cos.startsWith(`<h3>${INICIS_R26[llengua]}`, h3R26) && inici === cos.indexOf('<h3>', h3R26 + 4), llengua).toBe(true);
+      expect(cos.startsWith(`<h3>${INICIS_R32_3[llengua]}`) && cos.startsWith(`<h3>${INICIS_R32[llengua]}`, h3R32) && cos.startsWith(`<h3>${INICIS_R30[llengua]}`, h3R30) && cos.startsWith(`<h3>${INICIS_R29[llengua]}`, h3R29) && cos.startsWith(`<h3>${INICIS_R28[llengua]}`, h3R28) && cos.startsWith(`<h3>${INICIS_R26[llengua]}`, h3R26) && inici === cos.indexOf('<h3>', h3R26 + 4), llengua).toBe(true);
       const seguent = cos.indexOf('<h3>', inici + 4);
       const bloc = cos.slice(inici, seguent);
       expect(cos.startsWith(`<h3>${INICIS_R23[llengua]}`, seguent), llengua).toBe(true);
@@ -2186,7 +2215,7 @@ describe('Onades R26 i R27 · Crònica d’obertura en les cinc llengües amb el
     gl: ['Novidade', 'Mellora', 'Corrección']
   };
   const SENSE_BOTO = { ca: 'no té cap botó', es: 'no tiene ningún botón', en: 'no button', eu: 'ez du botoirik', gl: 'non ten ningún botón' };
-  test('va darrere de la R32, la R30, la R29 i la R28 i davant de la R24 en ca, es, en, eu i gl, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
+  test('va darrere de la R32.3, la R32, la R30, la R29 i la R28 i davant de la R24 en ca, es, en, eu i gl, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
     expect(TITOL_FITA_R26).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(interns(fitaR26Bloc)).toContain('/mur/copies-de-seguretat-soc-de-poble');
     expect(interns(fitaR26Bloc).every(rutaExistix)).toBe(true);
@@ -2196,11 +2225,13 @@ describe('Onades R26 i R27 · Crònica d’obertura en les cinc llengües amb el
       // Onada R29 · La crònica R29 obri la pàgina i la R28 la seguix: la R26 i R27 és la tercera.
       // Onada R30 · La crònica R30 obri la pàgina, i la R29 i la R28 la seguixen: la R26 i R27 és la quarta.
       // Onada R32 · La crònica R32 obri la pàgina i la R30 la seguix: la R26 i R27 és la cinquena.
-      const iniciR30 = cos.indexOf('<h3>', 4);
+      // Onada R32.3 · La crònica R32.3 obri la pàgina i la R32 la seguix: la R26 i R27 és la sisena.
+      const iniciR32 = cos.indexOf('<h3>', 4);
+      const iniciR30 = cos.indexOf('<h3>', iniciR32 + 4);
       const iniciR29 = cos.indexOf('<h3>', iniciR30 + 4);
       const iniciR28 = cos.indexOf('<h3>', iniciR29 + 4);
       const iniciR26 = cos.indexOf('<h3>', iniciR28 + 4);
-      expect(cos.startsWith(`<h3>${INICIS_R32[llengua]}`) && cos.startsWith(`<h3>${INICIS_R30[llengua]}`, iniciR30) && cos.startsWith(`<h3>${INICIS_R29[llengua]}`, iniciR29) && cos.startsWith(`<h3>${INICIS_R28[llengua]}`, iniciR28) && cos.startsWith(`<h3>${iniciTitol}`, iniciR26), llengua).toBe(true);
+      expect(cos.startsWith(`<h3>${INICIS_R32_3[llengua]}`) && cos.startsWith(`<h3>${INICIS_R32[llengua]}`, iniciR32) && cos.startsWith(`<h3>${INICIS_R30[llengua]}`, iniciR30) && cos.startsWith(`<h3>${INICIS_R29[llengua]}`, iniciR29) && cos.startsWith(`<h3>${INICIS_R28[llengua]}`, iniciR28) && cos.startsWith(`<h3>${iniciTitol}`, iniciR26), llengua).toBe(true);
       const seguent = cos.indexOf('<h3>', iniciR26 + 4);
       const bloc = cos.slice(iniciR26, seguent);
       expect(cos.startsWith(`<h3>${INICIS_R24[llengua]}`, seguent), llengua).toBe(true);
@@ -2261,7 +2292,7 @@ describe('Onada R28 · Crònica d’obertura en les cinc llengües amb la còpia
   };
   const SENSE_RESTAURAR = { ca: 'no és possible', es: 'no es posible', en: 'not possible yet', eu: 'ez da posible oraindik', gl: 'non é posible' };
   const NO_BOTIGUES = { ca: 'no publicada a les botigues', es: 'no publicada en las tiendas', en: 'not yet published in the stores', eu: 'dendetan argitaratu gabe', gl: 'non publicada nas tendas' };
-  test('va darrere de la R32, la R30 i la R29 i davant de la R26 i R27 en ca, es, en, eu i gl, sense vX.Y.Z al títol, amb densitat de negretes i rutes vives', () => {
+  test('va darrere de la R32.3, la R32, la R30 i la R29 i davant de la R26 i R27 en ca, es, en, eu i gl, sense vX.Y.Z al títol, amb densitat de negretes i rutes vives', () => {
     expect(TITOL_FITA_R28).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(interns(fitaR28Bloc)).toContain('/xat');
     expect(interns(fitaR28Bloc).every(rutaExistix)).toBe(true);
@@ -2270,10 +2301,12 @@ describe('Onada R28 · Crònica d’obertura en les cinc llengües amb la còpia
       // Onada R29 · La crònica R29 obri la pàgina; la R28 va just darrere.
       // Onada R30 · La crònica R30 obri la pàgina i la R29 la seguix: la R28 és la tercera.
       // Onada R32 · La crònica R32 obri la pàgina i la R30 la seguix: la R28 és la quarta.
-      const iniciR30 = cos.indexOf('<h3>', 4);
+      // Onada R32.3 · La crònica R32.3 obri la pàgina i la R32 la seguix: la R28 és la cinquena.
+      const iniciR32 = cos.indexOf('<h3>', 4);
+      const iniciR30 = cos.indexOf('<h3>', iniciR32 + 4);
       const iniciR29 = cos.indexOf('<h3>', iniciR30 + 4);
       const iniciR28 = cos.indexOf('<h3>', iniciR29 + 4);
-      expect(cos.startsWith(`<h3>${INICIS_R32[llengua]}`) && cos.startsWith(`<h3>${INICIS_R30[llengua]}`, iniciR30) && cos.startsWith(`<h3>${INICIS_R29[llengua]}`, iniciR29) && cos.startsWith(`<h3>${iniciTitol}`, iniciR28), llengua).toBe(true);
+      expect(cos.startsWith(`<h3>${INICIS_R32_3[llengua]}`) && cos.startsWith(`<h3>${INICIS_R32[llengua]}`, iniciR32) && cos.startsWith(`<h3>${INICIS_R30[llengua]}`, iniciR30) && cos.startsWith(`<h3>${INICIS_R29[llengua]}`, iniciR29) && cos.startsWith(`<h3>${iniciTitol}`, iniciR28), llengua).toBe(true);
       const seguent = cos.indexOf('<h3>', iniciR28 + 4);
       const bloc = cos.slice(iniciR28, seguent);
       expect(cos.startsWith(`<h3>${INICIS_R26[llengua]}`, seguent), llengua).toBe(true);
@@ -2320,7 +2353,7 @@ describe('Onada R29 · Crònica d’obertura en les cinc llengües amb el teclat
   const NO_BOTIGUES = { ca: 'no publicada a les botigues', es: 'no publicada en las tiendas', en: 'not yet published in the stores', eu: 'dendetan argitaratu gabe', gl: 'non publicada nas tendas' };
   const NO_APLICADA = { ca: 'encara no s’ha aplicat', es: 'todavía no se ha aplicado', en: 'has not yet been applied', eu: 'oraindik ez da aplikatu', gl: 'aínda non se aplicou' };
   const CARPETES_DABANS = { ca: 'continuen només en este navegador', es: 'siguen solo en este navegador', en: 'are still only in this browser', eu: 'nabigatzaile honetan bakarrik daude oraindik', gl: 'seguen só neste navegador' };
-  test('va darrere de la R32 i la R30 i davant de la R28 en ca, es, en, eu i gl, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i Llei 0', () => {
+  test('va darrere de la R32.3, la R32 i la R30 i davant de la R28 en ca, es, en, eu i gl, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i Llei 0', () => {
     expect(TITOL_FITA_R29).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(interns(fitaR29Bloc)).toEqual(expect.arrayContaining(['/xat', '/notes']));
     expect(interns(fitaR29Bloc).every(rutaExistix)).toBe(true);
@@ -2329,9 +2362,11 @@ describe('Onada R29 · Crònica d’obertura en les cinc llengües amb el teclat
       // Onada R30 · La crònica R30 obri la pàgina; la R29 va just darrere. La R29 és història: la 1.2.2 i les
       // carpetes «només en este navegador» eren certes aquell dia, i la R30 conta que ara pugen al servidor.
       // Onada R32 · La crònica R32 obri la pàgina i la R30 la seguix: la R29 és la tercera.
-      const iniciR30 = cos.indexOf('<h3>', 4);
+      // Onada R32.3 · La crònica R32.3 obri la pàgina i la R32 la seguix: la R29 és la quarta.
+      const iniciR32 = cos.indexOf('<h3>', 4);
+      const iniciR30 = cos.indexOf('<h3>', iniciR32 + 4);
       const iniciR29 = cos.indexOf('<h3>', iniciR30 + 4);
-      expect(cos.startsWith(`<h3>${INICIS_R32[llengua]}`) && cos.startsWith(`<h3>${INICIS_R30[llengua]}`, iniciR30) && cos.startsWith(`<h3>${iniciTitol}`, iniciR29), llengua).toBe(true);
+      expect(cos.startsWith(`<h3>${INICIS_R32_3[llengua]}`) && cos.startsWith(`<h3>${INICIS_R32[llengua]}`, iniciR32) && cos.startsWith(`<h3>${INICIS_R30[llengua]}`, iniciR30) && cos.startsWith(`<h3>${iniciTitol}`, iniciR29), llengua).toBe(true);
       const seguent = cos.indexOf('<h3>', iniciR29 + 4);
       const bloc = cos.slice(iniciR29, seguent);
       expect(cos.startsWith(`<h3>${INICIS_R28[llengua]}`, seguent), llengua).toBe(true);
@@ -2401,14 +2436,16 @@ describe('Onada R30 · Crònica d’obertura en les cinc llengües amb les carpe
     eu: 'muturretik muturrerako zifratzea itzalita dago oraindik', gl: 'cifrado de extremo a extremo segue apagado' };
   const NOTES_ON_ERES = { ca: 'les notes continuen on eren', es: 'las notas siguen donde estaban', en: 'notes stay where they were', eu: 'oharrak lehen zeuden lekuan daude', gl: 'as notas seguen onde estaban' };
   const cometes = (llengua, frase) => (llengua === 'en' ? `“${frase}”` : `«${frase}»`);
-  /* Onada R32 · La crònica R32 obri la pàgina: la R30 és la segona. */
+  /* Onada R32 · La crònica R32 obri la pàgina: la R30 és la segona.
+     Onada R32.3 · La crònica R32.3 obri la pàgina i la R32 la seguix: la R30 és la tercera. */
+  const iniciDeR30 = (cos) => cos.indexOf('<h3>', cos.indexOf('<h3>', 4) + 4);
   const blocR30 = (llengua) => {
     const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
-    const inici = cos.indexOf('<h3>', 4);
+    const inici = iniciDeR30(cos);
     return cos.slice(inici, cos.indexOf('<h3>', inici + 4));
   };
 
-  test('va darrere de la R32 i davant de la R29 en ca, es, en, eu i gl, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
+  test('va darrere de la R32.3 i la R32 i davant de la R29 en ca, es, en, eu i gl, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
     expect(TITOL_FITA_R30).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(interns(fitaR30Bloc)).toEqual(expect.arrayContaining(['/xat', '/notes', '/control?fitxa=mode-rural']));
     expect(interns(fitaR30Bloc).every(rutaExistix)).toBe(true);
@@ -2416,8 +2453,9 @@ describe('Onada R30 · Crònica d’obertura en les cinc llengües amb les carpe
     expect(llegix('src/sections/control/ControlSection.jsx')).toContain("const FITXA_MODE_RURAL = 'mode-rural';");
     for (const [llengua, iniciTitol] of Object.entries(INICIS_R30)) {
       const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
-      const iniciR30 = cos.indexOf('<h3>', 4);
-      expect(cos.startsWith(`<h3>${INICIS_R32[llengua]}`) && cos.startsWith(`<h3>${iniciTitol}`, iniciR30), llengua).toBe(true);
+      const iniciR30 = iniciDeR30(cos);
+      expect(cos.startsWith(`<h3>${INICIS_R32_3[llengua]}`) && cos.startsWith(`<h3>${INICIS_R32[llengua]}`, cos.indexOf('<h3>', 4))
+        && cos.startsWith(`<h3>${iniciTitol}`, iniciR30), llengua).toBe(true);
       const bloc = blocR30(llengua);
       expect(cos.startsWith(`<h3>${INICIS_R29[llengua]}`, iniciR30 + bloc.length), llengua).toBe(true);
       expect(interns(bloc), llengua).toEqual(interns(fitaR30Bloc));
@@ -2434,6 +2472,7 @@ describe('Onada R30 · Crònica d’obertura en les cinc llengües amb les carpe
       expect(pla, llengua).not.toMatch(/Rebost/);
       for (const migracio of MIGRACIONS_R30) expect(pla, `${llengua} · ${migracio}`).toContain(migracio);
       // Onada R32 · La R30 és història: la versió d'aquell dia era la 1.2.3 (build 8); la d'ara, 1.2.4, la diu la R32.
+      // Onada R32.3 · I la d'ara, 1.2.5, la diu la R32.3.
       expect(pla, llengua).toMatch(/1\.2\.3 \(build 8\)|1\.2\.3 bertsiora \(8\. builda\)/);
       expect(pla).not.toContain(PAQUET.version);
       expect(pla).toContain(CONNECTOR_PUBLICAT);
@@ -2522,10 +2561,11 @@ describe('Onada R32 · Crònica d’obertura en les cinc llengües amb el Xat, l
   /* Les cinc migracions que el Mestre va aplicar al servidor compartit el 16-11-2026 (receptari
      261116_sql_produccio_r30_r31, captura 15.03; supabase/migrations/README.md, seccions R30 i R31). */
   const MIGRACIONS_R32 = ['2611110455', '20261115230000', '2611110110', '20261116031000', '20261116040000'];
+  /* Onada R32.3 · La R32 és història: la versió d'aquell dia era la 1.2.4 (build 9), i es fixa literal (abans es
+     derivava de package.json i de VERSIO_CLIENT_NATIU); la d'ara, 1.2.5 (build 10), la diu la R32.3. */
   const VERSIO_R32 = {
-    ca: `versió ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, es: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`,
-    en: `version ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, eu: `${PAQUET.version} bertsiora (${VERSIO_CLIENT_NATIU}. builda)`,
-    gl: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`
+    ca: 'versió 1.2.4 (build 9)', es: 'versión 1.2.4 (build 9)', en: 'version 1.2.4 (build 9)', eu: '1.2.4 bertsiora (9. builda)',
+    gl: 'versión 1.2.4 (build 9)'
   };
   const XIFRATGE_APAGAT_R32 = { ca: 'xifratge d’extrem a extrem continua apagat', es: 'cifrado de extremo a extremo sigue apagado', en: 'encryption stays switched off',
     eu: 'zifratzea itzalita dago oraindik', gl: 'cifrado de extremo a extremo segue apagado' };
@@ -2547,22 +2587,27 @@ describe('Onada R32 · Crònica d’obertura en les cinc llengües amb el Xat, l
      hora (l'aria-label ja separava l'hora i la data abans de la R32). */
   const PROMESA_COLISIO = /s’amaga ni dues|se oculta ni dos|is hidden and no two|ez da karpetarik ezkutatzen|se agocha nin dous/i;
   const LECTORS_DE_PANTALLA = /lectors de pantalla|lectores de pantalla|screen readers?|pantaila-irakurgailu/i;
+  /* Onada R32.3 · La crònica R32.3 obri la pàgina: la R32 és la segona. */
   const blocR32 = (llengua) => {
     const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
-    return cos.slice(0, cos.indexOf('<h3>', 4));
+    const inici = cos.indexOf('<h3>', 4);
+    return cos.slice(inici, cos.indexOf('<h3>', inici + 4));
   };
 
-  test('obri /versions en ca, es, en, eu i gl, davant de la R30, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
+  test('va darrere de la R32.3 i davant de la R30 en ca, es, en, eu i gl, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
     expect(TITOL_FITA_R32).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(interns(fitaR32Bloc)).toEqual(expect.arrayContaining(['/xat', '/notes', '/control?fitxa=mode-rural']));
     expect(interns(fitaR32Bloc).every(rutaExistix)).toBe(true);
     for (const [llengua, iniciTitol] of Object.entries(INICIS_R32)) {
       const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
-      expect(cos.startsWith(`<h3>${iniciTitol}`), llengua).toBe(true);
+      // Onada R32.3 · La R32.3 obri la pàgina i la R32 la seguix.
+      const iniciR32 = cos.indexOf('<h3>', 4);
+      expect(cos.startsWith(`<h3>${INICIS_R32_3[llengua]}`) && cos.startsWith(`<h3>${iniciTitol}`, iniciR32), llengua).toBe(true);
       const bloc = blocR32(llengua);
-      // L'ordre de /versions: R32 → R30 → R29 → R28.
-      const iniciR29 = cos.indexOf('<h3>', bloc.length + 4);
-      expect(cos.startsWith(`<h3>${INICIS_R30[llengua]}`, bloc.length) && cos.startsWith(`<h3>${INICIS_R29[llengua]}`, iniciR29)
+      // L'ordre de /versions: R32.3 → R32 → R30 → R29 → R28.
+      const iniciR30 = iniciR32 + bloc.length;
+      const iniciR29 = cos.indexOf('<h3>', iniciR30 + 4);
+      expect(cos.startsWith(`<h3>${INICIS_R30[llengua]}`, iniciR30) && cos.startsWith(`<h3>${INICIS_R29[llengua]}`, iniciR29)
         && cos.startsWith(`<h3>${INICIS_R28[llengua]}`, cos.indexOf('<h3>', iniciR29 + 4)), llengua).toBe(true);
       expect(interns(bloc), llengua).toEqual(interns(fitaR32Bloc));
       expect(titolsH4(bloc).map((t) => t.split(' · ')[0])).toEqual(PREFIXOS_R32[llengua]);
@@ -2578,6 +2623,8 @@ describe('Onada R32 · Crònica d’obertura en les cinc llengües amb el Xat, l
       // Llei 0 · Cap jerga tècnica ni cap promesa de puntuació o d'avisos a zero.
       expect(/\bCAS\b|\bRPC\b|\bDOT\b|search_path|SECURITY DEFINER|\bACK\b|\bE2EE\b|\bCRDT\b|Lighthouse|\b100\s*\/\s*100\b|zero avisos|cero avisos|zero warnings/i.test(pla), llengua).toBe(false);
       expect(pla, llengua).toContain(VERSIO_R32[llengua]);
+      // Onada R32.3 · La versió d'ara (1.2.5) no és la de la R32: la diu la R32.3.
+      expect(pla).not.toContain(PAQUET.version);
       expect(pla).toContain(CONNECTOR_PUBLICAT);
       expect(pla).not.toContain('1.2.3');
       for (const migracio of MIGRACIONS_R32) expect(pla, `${llengua} · ${migracio}`).toContain(migracio);
@@ -2610,9 +2657,10 @@ describe('Onada R32 · Crònica d’obertura en les cinc llengües amb el Xat, l
   });
 
   test('Llei 0 · cada fet té el seu consumidor a l’arbre: versió, migracions, Xat, carpetes, guia, estils, Mode rural i avisos apagats', () => {
-    // La versió i el build de la crònica són els del codi.
-    expect(PAQUET.version).toBe('1.2.4');
-    expect(VERSIO_CLIENT_NATIU).toBe(9);
+    // La versió i el build de la crònica eren els del codi aquell dia (1.2.4, build 9). Onada R32.3 · Ara el codi
+    // ja és més nou (la R32.3 diu la 1.2.5 amb el build 10), i la R32 no pot ser posterior a la d'ara.
+    expect(noMesNova('1.2.4', PAQUET.version) && PAQUET.version !== '1.2.4').toBe(true);
+    expect(VERSIO_CLIENT_NATIU).toBeGreaterThan(9);
     // El xifratge d'extrem a extrem continua apagat: el dia que s'encenga, la crònica s'ha de tornar a escriure.
     expect(E2EE_ACTIU_PER_DEFECTE).toBe(false);
     const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations'));
@@ -2654,5 +2702,229 @@ describe('Onada R32 · Crònica d’obertura en les cinc llengües amb el Xat, l
     const sincronitzador = llegix('src/data/sincronitzadorCarpetaLocal.js');
     expect(sincronitzador).toContain('seu ACK remot i no viatja mai per la carpeta');
     expect(sincronitzador).toContain('Es conserva intacte a la carpeta');
+  });
+});
+
+/* Onada R32.3 · Crònica d'obertura en les cinc llengües de la versió 1.2.5 (build 10) del repositori (ordre T5 R32.3 del
+   Mestre de 16-11-2026 22:09), amb el que ha aterrat de veres: l'avís automàtic de versió nova de les aplicacions, el
+   Perfil en dues columnes al mòbil, l'eixida de la sessió que torna a provar l'oblit i no tanca la sessió d'una altra
+   persona, els apartats d'administració amb «Tornar a provar», l'àlies ?data= del Calendari, el giny d'espai del Panell
+   de Control, els cèntims del Rebost d'El Comú, el nom accessible del selector de fitxers i l'alta i la baixa dels
+   avisos del Xat. Llei 0: la 1.2.5 és la del repositori i encara no és a les botigues; una de les dues espera la clau
+   del compte de servei, i la crònica no en nomena cap plataforma ni cap canal de proves (2.3.10: perAppNativa.test.js
+   fixa que de /versions només se'n va l'apartat de la v1.1.0); les aplicacions instal·lades s'han d'actualitzar una
+   vegada a mà i l'avís no s'ha provat en un telèfon real; el manifest no promet cap build que el codi no tinga; els
+   avisos del Xat no s'han provat en aparells reals i no hi ha cap paraula de Push; cap espai alliberat (la neteja no
+   esborra res); les tres migracions R32 no estan aplicades; el connector publicat continua en la 1.1.12; la crònica no
+   parla del xifratge; cap promesa de Lighthouse, AAA ni zero avisos. */
+describe('Onada R32.3 · Crònica d’obertura en les cinc llengües amb l’avís de versió nova, el Perfil en dues columnes, l’eixida de la sessió i Llei 0', () => {
+  const PREFIXOS_R32_3 = {
+    ca: ['Novetat', 'Millora', 'Millora', 'Correcció', 'Correcció', 'Correcció'],
+    es: ['Novedad', 'Mejora', 'Mejora', 'Corrección', 'Corrección', 'Corrección'],
+    en: ['New', 'Improvement', 'Improvement', 'Fix', 'Fix', 'Fix'],
+    eu: ['Berritasuna', 'Hobekuntza', 'Hobekuntza', 'Zuzenketa', 'Zuzenketa', 'Zuzenketa'],
+    gl: ['Novidade', 'Mellora', 'Mellora', 'Corrección', 'Corrección', 'Corrección']
+  };
+  const DICCIONARIS_R32_3 = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+  /* Les tres migracions R32, al repositori i NO aplicades (supabase/README.md, files 117 a 119). */
+  const MIGRACIONS_R32_3 = ['20261116170000', '20261116170100', '20261116170200'];
+  const VERSIO_R32_3 = {
+    ca: `versió ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, es: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`,
+    en: `version ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, eu: `${PAQUET.version} bertsiora (${VERSIO_CLIENT_NATIU}. builda)`,
+    gl: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`
+  };
+  const NO_BOTIGUES_R32_3 = { ca: 'encara no publicada a les botigues', es: 'todavía no publicada en las tiendas', en: 'not yet published in the stores',
+    eu: 'oraindik dendetan argitaratu gabe', gl: 'aínda non publicada nas tendas' };
+  /* Llei 0 · Una de les dues botigues encara no té el build 10: falta la clau del compte de servei. Es diu sense nomenar
+     la plataforma (2.3.10). */
+  const CLAU_PENDENT_R32_3 = { ca: 'encara espera la clau del compte de servei', es: 'todavía espera la clave de la cuenta de servicio',
+    en: 'is still waiting for the service account key', eu: 'zerbitzu-kontuaren gakoa itxaroten du oraindik', gl: 'aínda espera a chave da conta de servizo' };
+  const NO_APLICADES_R32_3 = { ca: 'encara no s’han aplicat', es: 'todavía no se han aplicado', en: 'have not yet been applied',
+    eu: 'oraindik ez dira aplikatu', gl: 'aínda non se aplicaron' };
+  const JA_APLICADES_R32_3 = /ja s’han aplicat|ya se han aplicado|have already been applied|jada aplikatu dira|xa se aplicaron/i;
+  /* Llei 0 · L'avís de versió nova: la primera versió que el porta, les instal·lades s'actualitzen una vegada a mà i no
+     s'ha provat en un telèfon real. */
+  const UNA_VEGADA_A_MA = { ca: 'una vegada a mà', es: 'una vez a mano', en: 'once by hand', eu: 'behin eskuz', gl: 'unha vez a man' };
+  const AVIS_NO_PROVAT = { ca: 'no s’ha provat en un telèfon real', es: 'no se ha probado en un teléfono real', en: 'not yet been tested on a real phone',
+    eu: 'ez da oraindik probatu benetako telefono batean', gl: 'non se probou nun teléfono real' };
+  const AVISOS_XAT_NO_PROVATS = { ca: 'no s’han provat en aparells reals', es: 'no se han probado en aparatos reales', en: 'not yet been tested on real devices',
+    eu: 'ez dira oraindik probatu benetako gailuetan', gl: 'non se probaron en aparellos reais' };
+  const NO_ESBORRA = { ca: 'no esborra res', es: 'no borra nada', en: 'deletes nothing', eu: 'ez du ezer ezabatzen', gl: 'non borra nada' };
+  /* Corrector R32.3 · Llei 0 · L'espai del giny és l'estimació de l'origen (navigator.storage.estimate), que pot incloure
+     dades de l'amfitrió (notaHonestaNavegador): la crònica diu «estimació» i «este lloc web», no «l'espai de Sóc de Poble». */
+  const ESTIMACIO_ESPAI_R32_3 = { ca: 'estimació de l’espai que ocupa este lloc web en este navegador',
+    es: 'estimación del espacio que ocupa este sitio web en este navegador', en: 'estimate of the storage this website uses in this browser',
+    eu: 'webgune honek nabigatzaile honetan hartzen duen lekuaren estimazioa', gl: 'estimación do espazo que ocupa este sitio web neste navegador' };
+  /* Corrector R32.3 · La primera migració R32 conserva les set funcions i les blinda (supabase/README.md: «conserva totes
+     les funcions»): «blinda», no «tanca», i les cinc llengües diuen el mateix. La segona és la del xat propi, amb el nom
+     de la crònica R21 («El xat propi», «Your own chat»). */
+  const MIGRACIONS_NOMS_R32_3 = {
+    ca: ['la que blinda les set funcions antigues', 'la del xat propi'], es: ['la que blinda las siete funciones antiguas', 'la del chat propio'],
+    en: ['the one that tightens the seven older functions', 'the one for your own chat'],
+    eu: ['zazpi funtzio zaharrak blindatzen dituena', 'txat propioarena'], gl: ['a que blinda as sete funcións antigas', 'a do chat propio']
+  };
+  /* Corrector R32.3 · Les formes que el corrector ha retirat: la migració que «tanca» les funcions, el fil «del Xat», l'espai
+     «de Sóc de Poble» i, en basc, el recíproc amb auxiliar intransitiu i el «saiatu» sense objecte. */
+  const FRASES_CORREGIDES_R32_3 = /tanca les set|cierra las siete|ixten dituena|pecha as sete|Chat’s own thread|fil propi del Xat|hilo propio del Chat|fío propio do Chat|Txataren hari|ocupa Sóc de Poble|Sóc de Poble takes up|Sóc de Poble-k zenbat|ez dira jada elkar|berriro saiatzen da/i;
+  /* Llei 0 · Cap promesa que no siga certa al repositori: ni que l'avís ja arribe a tots els telèfons, ni que la 1.2.5
+     ja siga a cap botiga, ni espai alliberat. */
+  const PROMESES_FALSES_R32_3 = /tots els telèfons|todos los teléfonos|every phone|all phones|telefono guztietara|todos os teléfonos|ja publicada|ya publicada|already published|argitaratuta dago|xa publicada|alliberat|liberado|freed|askatu|liberou/i;
+  /* Corrector R32.3 · TRV-02 · Llei 0 · Els noms de la columna PERFIL tenen -webkit-line-clamp: 3 (modules.css): un nom
+     que no hi cap es continua tallant. La crònica diu el límit, «fins a tres línies abans de tallar-se», amb el mateix
+     sentit en les cinc llengües. */
+  const NOMS_PERFIL_R32_3 = { ca: 'Els noms ocupen fins a tres línies abans de tallar-se',
+    es: 'Los nombres ocupan hasta tres líneas antes de cortarse', en: 'Names take up to three lines before they are cut off',
+    eu: 'Izenek gehienez hiru lerro hartzen dituzte moztu aurretik', gl: 'Os nomes ocupan ata tres liñas antes de cortarse' };
+  /* I la forma absoluta que el corrector ha retirat no hi torna en cap llengua. */
+  const NOMS_SENSE_TALL_R32_3 = /no es tallen|no se tallen|no se cortan|non se cortan|no longer cut|never cut|are not cut|aren’t cut|aren't cut|ez dira (?:jada )?mozten|ez da (?:jada )?mozten|sencers|enteros|in full|osorik|enteiros/i;
+  const cometes =(llengua, frase) => (llengua === 'en' ? `“${frase}”` : `«${frase}»`);
+  const blocR32_3 = (llengua) => {
+    const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+    return cos.slice(0, cos.indexOf('<h3>', 4));
+  };
+
+  test('obri /versions en ca, es, en, eu i gl, davant de la R32, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
+    expect(TITOL_FITA_R32_3).not.toMatch(/ · v\d+\.\d+\.\d+/);
+    expect(interns(fitaR32_3Bloc)).toEqual(expect.arrayContaining(['/el-meu-perfil', '/control', '/calendari', '/xat']));
+    expect(interns(fitaR32_3Bloc).every(rutaExistix)).toBe(true);
+    for (const [llengua, iniciTitol] of Object.entries(INICIS_R32_3)) {
+      const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+      expect(cos.startsWith(`<h3>${iniciTitol}`), llengua).toBe(true);
+      const bloc = blocR32_3(llengua);
+      // L'ordre de /versions: R32.3 → R32 → R30.
+      expect(cos.startsWith(`<h3>${INICIS_R32[llengua]}`, bloc.length)
+        && cos.startsWith(`<h3>${INICIS_R30[llengua]}`, cos.indexOf('<h3>', bloc.length + 4)), llengua).toBe(true);
+      expect(interns(bloc), llengua).toEqual(interns(fitaR32_3Bloc));
+      expect(titolsH4(bloc).map((t) => t.split(' · ')[0])).toEqual(PREFIXOS_R32_3[llengua]);
+      expect(bloc.match(/[^\s>]<a |<\/a>[^\s,.:]/g), llengua).toBeNull();
+      const pla = text(bloc);
+      // 2.3.10 · Cap altra plataforma mòbil, cap botiga nomenada ni cap canal de proves.
+      expect(PLATAFORMA_ALIENA.test(pla), llengua).toBe(false);
+      expect(/Google|Apple|App Store|iPhone|iPad|TestFlight|Android|\bPlay\b|\bAPK\b|\bAAB\b|F-Droid/i.test(pla), llengua).toBe(false);
+      expect(/\bdesplegad[ae]s?\b|\bdesplegat|en producció|en producción|in production|\bactivad[ao]\b|\bactivat\b|aviat|pròximament|properament|IDEA-\d|P\d-\d|D-R\d|torn_|mas[i]a|sobir/i.test(pla), llengua).toBe(false);
+      expect(/\bdel poble\b|\bdel pueblo\b|\bdo pobo\b/i.test(pla), llengua).toBe(false);
+      // Llei 0 · Cap jerga tècnica, cap paraula de Push i cap promesa de puntuació o d'avisos a zero.
+      expect(/\bCAS\b|\bRPC\b|search_path|SECURITY DEFINER|\bACK\b|\bE2EE\b|\bCRDT\b|\bPush\b|\bFCM\b|\bAPNs\b|\bVAPID\b|Lighthouse|\bAAA\b|\b100\s*\/\s*100\b|zero avisos|cero avisos|zero warnings/i.test(pla), llengua).toBe(false);
+      // Llei 0 · La crònica no parla del xifratge d'extrem a extrem (continua apagat; el diu la R32).
+      expect(/xifra|cifrad|encrypt|zifra/i.test(pla), llengua).toBe(false);
+      expect(PROMESES_FALSES_R32_3.test(pla), llengua).toBe(false);
+      // La versió i el build del repositori, encara no a les botigues, i la clau que falta per a una d'elles.
+      expect(pla, llengua).toContain(VERSIO_R32_3[llengua]);
+      expect(pla).not.toContain('1.2.4');
+      expect(pla, llengua).toContain(NO_BOTIGUES_R32_3[llengua]);
+      expect(pla, llengua).toContain(CLAU_PENDENT_R32_3[llengua]);
+      expect(pla).toContain(CONNECTOR_PUBLICAT);
+      for (const migracio of MIGRACIONS_R32_3) expect(pla, `${llengua} · ${migracio}`).toContain(migracio);
+      expect(pla, llengua).toContain(NO_APLICADES_R32_3[llengua]);
+      expect(JA_APLICADES_R32_3.test(pla), llengua).toBe(false);
+      expect(pla, llengua).toContain(UNA_VEGADA_A_MA[llengua]);
+      expect(pla, llengua).toContain(AVIS_NO_PROVAT[llengua]);
+      expect(pla, llengua).toContain(AVISOS_XAT_NO_PROVATS[llengua]);
+      expect(pla, llengua).toContain(NO_ESBORRA[llengua]);
+      // Corrector R32.3 · L'espai és una estimació del lloc web; la primera migració blinda i la segona és la del xat propi.
+      expect(pla, llengua).toContain(ESTIMACIO_ESPAI_R32_3[llengua]);
+      for (const nom of MIGRACIONS_NOMS_R32_3[llengua]) expect(pla, `${llengua} · ${nom}`).toContain(nom);
+      expect(FRASES_CORREGIDES_R32_3.test(pla), llengua).toBe(false);
+      // Corrector R32.3 · TRV-02 · Els noms del Perfil mòbil: el límit de tres línies, mai «ja no es tallen».
+      expect(pla, llengua).toContain(NOMS_PERFIL_R32_3[llengua]);
+      expect(NOMS_SENSE_TALL_R32_3.test(pla), llengua).toBe(false);
+      expect(pla).toContain('?data=');
+      expect(pla).toContain('?date=');
+      // Els noms que es veuen a la pantalla són els dels diccionaris i del giny, en cada llengua.
+      const diccionari = DICCIONARIS_R32_3[llengua];
+      for (const clau of ['section.perfil.shell.categories', 'section.perfil.shell.items', 'section.perfil.shell.reintenta']) {
+        expect(diccionari[clau], `${llengua} · ${clau}`).toBeTruthy();
+        expect(pla, `${llengua} · ${clau}`).toContain(cometes(llengua, diccionari[clau]));
+      }
+      expect(pla, llengua).toContain(cometes(llengua, TEXTOS_SALUT_DISPOSITIU[llengua].titolSeccio));
+      const segmentador = new Intl.Segmenter(llengua, { granularity: 'word' });
+      const paragrafsDelBloc = [...bloc.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+      expect(paragrafsDelBloc).toHaveLength(8);
+      for (const p of paragrafsDelBloc) {
+        const w = [...segmentador.segment(p.replace(/<[^>]+>/g, ''))].filter((s) => s.isWordLike).length;
+        const n = (p.match(/<strong>/g) ?? []).length;
+        const [min, max] = w >= 40 ? [6, 8] : w >= 25 ? [5, 7] : w >= 12 ? [2, 4] : [1, 3];
+        expect(n >= min && n <= max, `${llengua}: ${n} negretes per a ${w} paraules (${min}–${max})`).toBe(true);
+      }
+      expect(bloc, llengua).not.toMatch(/<h([34])>(?:(?!<\/h\1>)[\s\S])*<strong>/);
+      expect(bloc, llengua).not.toMatch(/<code>(?:(?!<\/code>)[\s\S])*<strong>/);
+    }
+  });
+
+  test('Llei 0 · cada fet té el seu consumidor a l’arbre: versió, avís de versió nova, Perfil, eixida, administració, Calendari, espai, Rebost, editor, avisos, migracions i clau', () => {
+    // La versió i el build de la crònica són els del codi.
+    expect(PAQUET.version).toBe('1.2.5');
+    expect(VERSIO_CLIENT_NATIU).toBe(10);
+    // L'avís de versió nova: el detector natiu llig el manifest públic i el pinta la barra de sempre.
+    const detector = llegix('src/natiu/actualitzacioAppNativa.js');
+    expect(detector).toContain('export const URL_MANIFEST_VERSIO = `${ORIGEN_PUBLIC_PER_DEFECTE}/.well-known/ard.json`;');
+    expect(detector).toContain("export const CAMP_BUILD = Object.freeze({ android: 'androidBuild', ios: 'iosBuild' });");
+    expect(llegix('src/natiu/entrada.jsx')).toContain('iniciaActualitzacioAppNativa({');
+    expect(RUTES).toContain('BarraActualitzacioRecomanada');
+    for (const [llengua, diccionari] of Object.entries(DICCIONARIS_R32_3)) expect(diccionari['natiu.actualitzacioRecomanada.titol'], llengua).toBeTruthy();
+    // Llei 0 · El manifest mai promet un build que el codi no té (androidBuild i iosBuild, al sòl verificable fins que
+    // el Mestre confirme el de cada botiga), i la versió és la del paquet.
+    const ard = JSON.parse(llegix('public/.well-known/ard.json'));
+    expect(ard.version).toBe(PAQUET.version);
+    for (const camp of ['androidBuild', 'iosBuild']) {
+      expect(Number.isInteger(ard[camp]) && ard[camp] >= 1 && ard[camp] <= VERSIO_CLIENT_NATIU, camp).toBe(true);
+    }
+    // El Perfil en dues columnes al mòbil, sense el vel fosc, amb el parell de botons i la banda de qui són els apartats.
+    expect(llegix('src/sections/profile/PerfilShell.jsx')).toContain('duesColumnesEstret={true}');
+    expect(llegix('src/components/layout/graella.js')).toContain('duesColumnesEstret');
+    expect(llegix('src/components/layout/AppGridShell.css')).toContain('[data-dues-columnes="true"][data-panell="left"] .app-grid-backdrop');
+    const workspace = llegix('src/components/universal/workspace/UniversalWorkspace.jsx');
+    expect(workspace).toContain('sdp-workspace-context-actiu');
+    expect(workspace).toContain('PanelLeftOpen');
+    // Corrector R32.3 · TRV-02 · «Fins a tres línies abans de tallar-se»: la regla de dues columnes deixa els noms de
+    // PERFIL en tres línies, i la regla base hi posa l'overflow amagat i els punts suspensius.
+    const modulsCss = llegix('src/css/modules.css');
+    const regla = (selector) => {
+      const inici = modulsCss.indexOf(`${selector} {`);
+      expect(inici, selector).toBeGreaterThanOrEqual(0);
+      return modulsCss.slice(inici, modulsCss.indexOf('}', inici));
+    };
+    const nomsPerfil = regla('.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-workspace-groups .sdp-workspace-nav-item__label');
+    expect(nomsPerfil).toContain('-webkit-line-clamp: 3;');
+    expect(nomsPerfil).toContain('\n  line-clamp: 3;');
+    expect(regla('\n.sdp-workspace-nav-item__label')).toContain('text-overflow: ellipsis;');
+    // L'eixida de la sessió: l'oblit marcat abans d'esperar, i cap revocació de la sessió d'una altra persona.
+    const sessio = llegix('src/app/contexts/SessionContext.jsx');
+    expect(sessio).toContain('capturaSessio');
+    expect(sessio).toContain("const PREFIX_OBLIT_TITOLS_IAIA = 'iaia-titols-oblit-pendent:';");
+    expect(llegix('src/sections/multimedia/marcaOblitCarpetesLocals.js')).toContain('export function creaCarregadorOblitCarpetesLocals');
+    expect(llegix('src/app/contexts/SessionContext.eixidaSessioNovaR32.test.jsx')).toContain('una altra persona entra durant la sincronització final: no es revoca la seua sessió');
+    // Els apartats d'administració: la barrera només es queda el tros que no arriba, amb el reintent.
+    const perfil = llegix('src/sections/profile/PerfilShell.jsx');
+    expect(perfil).toContain("reintenta: p('reintenta', 'Tornar a provar')");
+    expect(perfil).toContain('nomesTransport');
+    // El Calendari: l'àlies ?data= de ?date=.
+    expect(llegix('src/sections/calendari/useEstatCalendari.js')).toContain('const date = dateCanonic ?? dataAlias;');
+    // L'espai del navegador al Panell de Control, sense cap productor que permeta esborrar res.
+    expect(llegix('src/sections/control/ControlSection.jsx')).toContain('<GinySalutDispositiuJarvis idioma={idioma} />');
+    const salut = llegix('src/data/salutEmmagatzematgeDispositiu.js');
+    expect(salut).toContain('No such producer is wired in production yet: default manifest is empty and deletion is disabled.');
+    // Corrector R32.3 · L'espai és l'estimació de l'origen, i el giny avisa que pot incloure dades de l'amfitrió.
+    expect(salut).toContain('await navegador.storage.estimate()');
+    expect(TEXTOS_SALUT_DISPOSITIU.ca.notaHonestaNavegador).toContain('l’estimació de l’espai que utilitza este lloc web');
+    expect(TEXTOS_SALUT_DISPOSITIU.ca.notaHonestaNavegador).toContain('pot incloure dades de l’amfitrió');
+    // Els cèntims del Rebost, amb mil·lèsimes enteres; el nom accessible del selector de fitxers de l'editor.
+    expect(llegix('src/components/PedraSeca/UniversalListCard/modes/rebost.js')).toContain('(BigInt(mil) * BigInt(preu) + 500n) / 1000n');
+    expect(llegix('src/components/universal/UniversalEditorShell.jsx')).toContain('aria-label={editLabel}');
+    // L'alta i la baixa dels avisos del Xat sense carreres (proves de codi, no d'aparells).
+    expect(llegix('src/natiu/avisosPushNatius.r322.test.js')).toContain('A activa → baixa → B activa');
+    // Les tres migracions R32: al repositori i NO aplicades.
+    const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations'));
+    const readme = llegix('supabase/README.md');
+    for (const migracio of MIGRACIONS_R32_3) {
+      expect(migracions.some((f) => f.startsWith(`${migracio}_`)), migracio).toBe(true);
+      expect(readme, migracio).toMatch(new RegExp(`\\| \`${migracio}\` \\| [^|]+ \\| \\*\\*NO aplicada`));
+    }
+    // Corrector R32.3 · La primera conserva les set funcions i les blinda; la segona és la del xat propi (self).
+    expect(readme).toContain('La migració **conserva totes les funcions**');
+    expect(llegix('supabase/migrations/20261116170000_r32_fossils_search_path.sql')).toContain('No function, trigger, row, ACL or ownership is deleted.');
+    expect(llegix('supabase/migrations/20261116170100_r32_xat_propi_rebase_r24.sql')).toContain('Additive 2611121630 rebase onto R24: self schema');
+    // La pujada automàtica que espera la clau del compte de servei.
+    expect(llegix('scripts/botigues/puja-android.mjs')).toContain('falta la clau del compte de servei (SDP_PLAY_JSON_KEY_PATH)');
   });
 });

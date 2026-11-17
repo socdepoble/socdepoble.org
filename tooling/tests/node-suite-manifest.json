@@ -233,7 +233,13 @@
     "tests/agentic-browsing-ard-llms.test.mjs",
     "tests/usabilitat-botons-r31.test.mjs",
     "tests/d-r30-14-enllacos-arxiu-historic.test.mjs",
-    "tests/torns-inventari-compacte-r32.test.mjs"
+    "tests/torns-inventari-compacte-r32.test.mjs",
+    "tests/r32-baixa-sessions-pglite.test.mjs",
+    "tests/r32-fossils-i-xat-rebase-pglite.test.mjs",
+    "tests/r32-posse-cataleg.test.mjs",
+    "tests/sentinella-jarvis-r32.test.mjs",
+    "tests/tractor-rls-r1-literals.test.mjs",
+    "tests/botigues-play-api-rest.test.mjs"
   ],
   "files": [
     {
@@ -2145,6 +2151,36 @@
       "path": "tests/usabilitat-botons-r31.test.mjs",
       "suite": "primary",
       "reason": "R31 (IDEA-275/276 · lot_03 Gemini): contracte AST/JSX de type explícit en <button>, WCAG 2.5.3 Label in Name en controls de data/hora, <dialog> natiu i les 4 rutes d'entitat."
+    },
+    {
+      "path": "tests/r32-baixa-sessions-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
+    },
+    {
+      "path": "tests/r32-fossils-i-xat-rebase-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
+    },
+    {
+      "path": "tests/r32-posse-cataleg.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
+    },
+    {
+      "path": "tests/sentinella-jarvis-r32.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
+    },
+    {
+      "path": "tests/tractor-rls-r1-literals.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
+    },
+    {
+      "path": "tests/botigues-play-api-rest.test.mjs",
+      "suite": "primary",
+      "reason": "Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Client REST de la Google Play Developer API v3 de scripts/botigues/puja-android.mjs (sense fastlane, commit d'un sol intent amb verificació de l'estat a Play i eixida 11 si és desconegut), consultaLlancament de només lectura, clau del compte de servei de preflight.mjs, APK públic verificat amb apksigner i --sincronitza-ard de publica-tot.mjs contra un Google Play local amb estat (127.0.0.1). Clau RSA generada al vol, mkdtemp, cap xarxa de fora."
     }
   ]
 }

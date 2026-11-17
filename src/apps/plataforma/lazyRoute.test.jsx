@@ -1,7 +1,7 @@
 import { Component, StrictMode, Suspense, useMemo } from 'react';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { BarreraDelTrosAccessori, configuraRecuperacioLazy, ESPERA_TRANSICIO_DEPLOY_MS, esErrorLazy, LazyRouteError, lazyRoute, lazyRouteRenovable } from './lazyRoute.js';
+import { _reiniciaTransicioDeDocument, BarreraDelTrosAccessori, configuraRecuperacioLazy, enTransicioDeDocument, ESPERA_TRANSICIO_DEPLOY_MS, esErrorLazy, esFalladaDeTransport, LazyRouteError, lazyRoute, lazyRouteRenovable, marcaTransicioDeDocument } from './lazyRoute.js';
 
 /* Pla 261028_1526 (P1-55, GN-R01) · lazyRouteRenovable: el propietari d'una
    vista diferida (la columna dreta d'una comunitat al Xat) la torna a demanar
@@ -11,7 +11,7 @@ import { BarreraDelTrosAccessori, configuraRecuperacioLazy, ESPERA_TRANSICIO_DEP
    seu «cap falso reintent» és a RouteErrorBoundary.test.jsx. */
 
 beforeEach(() => { vi.spyOn(console, 'error').mockImplementation(() => {}); });
-afterEach(() => { cleanup(); configuraRecuperacioLazy(null); vi.useRealTimers(); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); configuraRecuperacioLazy(null); _reiniciaTransicioDeDocument(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 const noArriba = () => new TypeError('Failed to fetch dynamically imported module');
 const Viva = ({ clau }) => <p>viva {clau}</p>;
@@ -256,4 +256,97 @@ test('BarreraDelTrosAccessori · pinta el fallback donat i deixa pujar qualsevol
   render(<BarreraDeFora><BarreraDelTrosAccessori fallback={<p>sense tauler</p>}><Trencat /></BarreraDelTrosAccessori></BarreraDeFora>);
   expect(screen.getByText('de fora: render trencat')).toBeTruthy();
   expect(screen.queryByText('sense tauler')).toBeNull();
+});
+
+test('R32 · transició de document (reload/beforeunload) no flaixeja la barrera immediatament i restaura si es cancel·la', async () => {
+  vi.useFakeTimers();
+  marcaTransicioDeDocument(Date.now());
+  expect(enTransicioDeDocument(Date.now())).toBe(true);
+  const importa = carregador(['falla']);
+  const Vista = lazyRoute(importa);
+  render(
+    <Barrera fallback={<p>barrera</p>}>
+      <Suspense fallback={<p>esperant recàrrega</p>}><Vista /></Suspense>
+    </Barrera>
+  );
+  await act(async () => { await Promise.resolve(); });
+  expect(screen.getByText('esperant recàrrega')).toBeTruthy();
+  expect(screen.queryByText('barrera')).toBeNull();
+  await act(async () => { await vi.advanceTimersByTimeAsync(ESPERA_TRANSICIO_DEPLOY_MS); });
+  expect(screen.getByText('barrera')).toBeTruthy();
+  expect(importa).toHaveBeenCalledTimes(1);
+});
+
+test('R32 · pageshow des del bfcache reinicia la marca de transició de document', () => {
+  marcaTransicioDeDocument(Date.now());
+  expect(enTransicioDeDocument(Date.now())).toBe(true);
+  const event = new Event('pageshow');
+  Object.defineProperty(event, 'persisted', { value: true });
+  window.dispatchEvent(event);
+  expect(enTransicioDeDocument(Date.now())).toBe(false);
+});
+
+/* Onada R32.2 · Peixos Daurats (P2, PerfilShell) · Un tros que no arriba ≠ un tros que arriba i peta en
+   avaluar-se. Els patrons són els de classificaErrorChunkDeploy (Chromium, Firefox, WebKit, MIME, CSS de
+   precàrrega); un SyntaxError sense MIME és codi, i el classificador mai llança. */
+test('R32.2 · esFalladaDeTransport distingix el tros que no arriba del que arriba i peta', () => {
+  for (const missatge of [
+    'Failed to fetch dynamically imported module: https://socdepoble.org/assets/a.js',
+    'error loading dynamically imported module: https://socdepoble.org/assets/a.js',
+    'Importing a module script failed.',
+    'Unable to preload CSS for /assets/a.css',
+    'Failed to load module script: Expected a JavaScript module script but the server responded with a MIME type of "text/html".',
+    'Loading chunk 7 failed.',
+  ]) {
+    expect(esFalladaDeTransport(new LazyRouteError(new TypeError(missatge))), missatge).toBe(true);
+    expect(esFalladaDeTransport(new TypeError(missatge)), missatge).toBe(true);
+  }
+  for (const causa of [
+    new ReferenceError("Cannot access 'X' before initialization"),
+    new TypeError("Cannot read properties of undefined (reading 'camp')"),
+    new SyntaxError("The requested module './x.js' does not provide an export named 'y'"),
+    new SyntaxError("Unexpected token '<'"),
+    new Error('qualsevol cosa'), undefined, null, 'cadena', { message: 7 },
+  ]) {
+    expect(esFalladaDeTransport(new LazyRouteError(causa)), String(causa?.message ?? causa)).toBe(false);
+  }
+  const hostil = new LazyRouteError(new Proxy({}, { get() { throw new Error('getter hostil'); } }));
+  expect(esFalladaDeTransport(hostil)).toBe(false);
+  const a = new Error('a'); const b = new Error('b', { cause: a }); a.cause = b;
+  expect(esFalladaDeTransport(a)).toBe(false);
+  expect(esFalladaDeTransport(new LazyRouteError('x'.repeat(5000) + ' failed to fetch dynamically imported module'))).toBe(false);
+});
+
+test('R32.2 · BarreraDelTrosAccessori nomesTransport: el tros que arriba i peta puja cru i sense onFalla; el que no arriba es queda', async () => {
+  const onFalla = vi.fn();
+  const causa = new ReferenceError("Cannot access 'X' before initialization");
+  const Peta = lazyRoute(() => Promise.reject(causa));
+  render(
+    <BarreraDeFora>
+      <BarreraDelTrosAccessori nomesTransport onFalla={onFalla} fallback={<p>sense tauler</p>}>
+        <Suspense fallback={null}><Peta /></Suspense>
+      </BarreraDelTrosAccessori>
+    </BarreraDeFora>
+  );
+  expect(await screen.findByText(`de fora: ${causa.message}`)).toBeTruthy();
+  expect(screen.queryByText('sense tauler')).toBeNull();
+  expect(onFalla).not.toHaveBeenCalled();
+  cleanup();
+
+  const NoArriba = lazyRoute(carregador(['falla']));
+  render(
+    <BarreraDeFora>
+      <BarreraDelTrosAccessori nomesTransport onFalla={onFalla} fallback={<p>sense tauler</p>}>
+        <Suspense fallback={null}><NoArriba /></Suspense>
+      </BarreraDelTrosAccessori>
+    </BarreraDeFora>
+  );
+  expect(await screen.findByText('sense tauler')).toBeTruthy();
+  expect(onFalla).toHaveBeenCalledTimes(1);
+  cleanup();
+
+  /* Sense la prop, el contracte R29 no canvia: qualsevol LazyRouteError es queda a la barrera. */
+  const PetaR29 = lazyRoute(() => Promise.reject(new ReferenceError('tdz')));
+  render(<BarreraDelTrosAccessori fallback={<p>sense tauler R29</p>}><Suspense fallback={null}><PetaR29 /></Suspense></BarreraDelTrosAccessori>);
+  expect(await screen.findByText('sense tauler R29')).toBeTruthy();
 });

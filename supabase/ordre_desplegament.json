@@ -80,6 +80,42 @@
       "despres": "20261115230000",
       "motiu": "La base R30 inclou el catàleg R29 abans de canviar la revisió editorial.",
       "font": "README R30; vinyeta de 20261115230000 (CAS de la curadoria WordPress)"
+    },
+    {
+      "abans": "20261114000100",
+      "despres": "20261116170000",
+      "motiu": "R32 (NO aplicada): els fòssils heretats es blinden després de les revocacions de R22.2, amb backup íntegre i pins de cos. Abans, el Mestre exporta amb snippets/r32_7_fossils_sonda.sql el DDL, els disparadors i l'ACL dels 7 fòssils: tres hashes del receptari R30/R31 no coincidixen amb les fixtures.",
+      "font": "README R32; capçalera de 20261116170000"
+    },
+    {
+      "abans": "20261114061000",
+      "despres": "20261116170100",
+      "motiu": "R32 (NO aplicada): rebase additiu del fil propi després de la signatura R24; mai reaplicar 2611121630 damunt de R24 (avorta amb 42P13). A Producció no cal: 2611121630 hi és des del T2 del 13-11-2026, abans de R24.",
+      "font": "README R32; capçalera de 20261116170100"
+    },
+    {
+      "abans": "20261114000100",
+      "despres": "20261116170200",
+      "motiu": "R32 (NO aplicada): baixa atòmica després de revocacions i retirada delete_user R22.2; font/configuració pinades. Abans, el Mestre exporta pg_get_functiondef de demana_baixa(text) i cancela_baixa().",
+      "font": "README R32; capçalera de 20261116170200"
+    },
+    {
+      "abans": "20261115170000",
+      "despres": "20261116031000",
+      "motiu": "R31 darrere de la base R29",
+      "font": "README R31/R32; fonts originals CAS R31 verificades"
+    },
+    {
+      "abans": "20261116040000",
+      "despres": "20261116170000",
+      "motiu": "R32 fòssils després del hardening canònic R31",
+      "font": "README R31/R32; fonts originals CAS R31 verificades"
+    },
+    {
+      "abans": "20261116040000",
+      "despres": "20261116170200",
+      "motiu": "R32 baixa després de les definicions canòniques R31",
+      "font": "README R31/R32; fonts originals CAS R31 verificades"
     }
   ],
   "portes": [

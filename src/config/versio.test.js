@@ -52,8 +52,9 @@ describe('la versió canònica', () => {
        Onada R28 (Lot C4, pla 261115_0135): versió unificada 1.2.1 amb el build 6 (VERSIO_CLIENT_NATIU 6). */
     /* Onada R29 (DECISIÓ-R29-01): versió unificada 1.2.2 amb el build 7 (VERSIO_CLIENT_NATIU 7).
        Onada R30 (pla 261115_2242): versió unificada 1.2.3 amb el build 8 (VERSIO_CLIENT_NATIU 8).
-       Onada R32 (pla 261116_0644): versió unificada 1.2.4 amb el build 9 (VERSIO_CLIENT_NATIU 9). */
-    expect(versioCanonica()).toBe('v1.2.4');
+       Onada R32 (pla 261116_0644): versió unificada 1.2.4 amb el build 9 (VERSIO_CLIENT_NATIU 9).
+       Onada R32.3 (ordre del Mestre 16-11-2026 22:09): versió unificada 1.2.5 amb el build 10 (VERSIO_CLIENT_NATIU 10). */
+    expect(versioCanonica()).toBe('v1.2.5');
   });
 
   test('la forma: «vX.Y.Z» o «vX.Y.Z (build aammdd)»; un segell que no és aammdd no s’hi posa', () => {

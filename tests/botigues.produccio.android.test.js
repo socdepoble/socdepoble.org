@@ -2,44 +2,44 @@
 /* B9 (marató 261101_2143, spec B9-BOTIGUES §3.1.3 i §3.1.6.2) · puja-android.mjs amb --canal produccio:
    guardes abans de tocar res, pista production SEMPRE en esborrany, «sí» lligat al canal i al sha256 de
    l'AAB, verificació en sec quan el Mestre ja ha signat l'AAB (ARB-B9-04), registre de pujades després
-   de la pujada i el canal intern com sempre. Cap eina real: el preflight i executa (keytool, fastlane)
-   són simulats; l'AAB, el registre i build.gradle són fitxers de veres en carpetes temporals. */
-import { createHash } from 'node:crypto';
+   de la pujada i el canal intern com sempre. Cap eina real: el preflight i executa (keytool) són
+   simulats; l'AAB, el registre, build.gradle i la clau del compte de servei (RSA generada al vol)
+   són fitxers de veres en carpetes temporals.
+   R32.3 · La pujada és el client REST de Google Play (sense fastlane): main rep un client fingit
+   (main(argv, { play: { pujaAPlay } })) que apunta cada crida; una prova fa el camí sencer amb el
+   client de veres contra un servidor HTTP local. El client a fons: tests/botigues-play-api-rest.test.mjs. */
+import { createHash, generateKeyPairSync } from 'node:crypto';
 import fs from 'node:fs';
+import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({
-  root: '', fora: '', valors: {}, crides: [], preflights: [], fastlane: true, segell: '',
-  codiValidacio: 0, codiPujada: 0, durantValidacio: null, durantPujada: null,
+  root: '', fora: '', valors: {}, crides: [], preflights: [], segell: '',
+  /* R32.3 · El client fingit de Google Play: les crides, l'error que ha de llançar i què passa durant la pujada. */
+  play: [], errorPlay: null, durantPujada: null, senseRevisio: false, verificatDespres: false,
   /* R24 botigues (D2) · Els dex de l'AAB: null és el comportament de sempre (el segell per a qualsevol nom). */
   dex: null
 }));
 
-vi.mock('../scripts/botigues/preflight.mjs', () => ({
+vi.mock('../scripts/botigues/preflight.mjs', async (original) => ({
+  ...(await original()),
   arrelComprovada: () => m.root,
   preflight: (opcions) => {
     m.preflights.push(opcions);
-    return { codi: 0, linies: [], valors: m.valors, fastlane: m.fastlane, jdk: { home: '/jdk/fals', major: 21 }, segell: { commit: 'b'.repeat(40) }, push: { anuncia: false, estat: {} } };
+    return { codi: 0, linies: [], valors: m.valors, play: { clau: 'valida' }, jdk: { home: '/jdk/fals', major: 21 }, segell: { commit: 'b'.repeat(40) }, push: { anuncia: false, estat: {} } };
   }
 }));
 vi.mock('../scripts/botigues/entorn.mjs', async (original) => {
   const real = await original();
   return {
     ...real,
-    llegixAjuda: () => ['--aab', '--track', '--release_status', '--package_name', '--json_key', '--skip_upload_metadata',
-      '--skip_upload_images', '--skip_upload_screenshots', '--skip_upload_changelogs', '--validate_only'].join(' '),
     /* El segell de dins de l'AAB és el de dist-natiu/: problemaDeLAab passa. */
     llegixDelZip: (_cami, nom) => (m.dex && String(nom).startsWith('base/dex/') ? m.dex(nom) : Buffer.from(m.segell)),
     executa: async (ordre, args, opcions = {}) => {
       m.crides.push([ordre, [...args], { ...opcions }]);
       if (ordre === 'keytool') return { codi: 0, crua: `Propietari: CN=Mestre\nSHA256: ${'AB:'.repeat(31)}AB\n`, eixida: '' };
-      if (ordre === 'fastlane') {
-        if (args.at(-1) === 'true') { m.durantValidacio?.(); return { codi: m.codiValidacio, crua: '', eixida: '' }; }
-        m.durantPujada?.();
-        return { codi: m.codiPujada, crua: '', eixida: '' };
-      }
       return { codi: 0, crua: '', eixida: '' };
     }
   };
@@ -48,12 +48,27 @@ vi.mock('../scripts/botigues/entorn.mjs', async (original) => {
 const { EIXIDA } = await import('../scripts/botigues/entorn.mjs');
 /* El nom del registre, escrit: la prova no depén de l'export que comprova (cau per asserció, no per import). */
 const REGISTRE_DE_PUJADES = 'pujades.jsonl';
-const { AAB, PASSOS_DESPRES_PRODUCCIO, dexAmbFacebook, dexDeLAab, main, planAndroid } = await import('../scripts/botigues/puja-android.mjs');
+const { AAB, EIXIDA_PLAY_DESCONEGUT, ErrorPlay, PASSOS_DESPRES_PRODUCCIO, dexAmbFacebook, dexDeLAab, main: mainReal, planAndroid } = await import('../scripts/botigues/puja-android.mjs');
 const { VERSIO_CLIENT_NATIU } = await import('../scripts/botigues/versio-client.mjs');
 const BUILD = String(VERSIO_CLIENT_NATIU);
 const OCTETS_AAB = 'AAB de prova signat pel Mestre';
 const sha256 = (text) => createHash('sha256').update(text).digest('hex');
 const SHA12 = sha256(OCTETS_AAB).slice(0, 12);
+/* R32.3 · Una clau de compte de servei de proves: RSA generada al vol, mai cap clau de veres. */
+const { privateKey: CLAU_PRIVADA } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const PEM_PROVES = CLAU_PRIVADA.export({ type: 'pkcs8', format: 'pem' });
+const COMPTE_PROVES = 'robot-proves@sdp-proves.iam.gserviceaccount.com';
+const JSON_CLAU = JSON.stringify({ type: 'service_account', client_email: COMPTE_PROVES, private_key_id: 'a1b2c3d4e5f6', private_key: PEM_PROVES });
+
+/* El client fingit: apunta les opcions i fa el que diga la prova. */
+async function clientFingit(opcions) {
+  m.play.push(opcions);
+  m.durantPujada?.();
+  if (m.errorPlay) throw m.errorPlay;
+  return { comprovat: true, pujat: true, versionCode: Number(opcions.build), sha256Google: opcions.sha256, pista: opcions.pista, estat: opcions.estat, senseRevisio: m.senseRevisio,
+    ...(m.verificatDespres ? { verificatDespres: true, statusPlay: opcions.estat } : {}) };
+}
+const main = (argv, dependencies = { play: { pujaAPlay: clientFingit } }) => mainReal(argv, dependencies);
 
 let eixida;
 let errors;
@@ -61,13 +76,14 @@ beforeEach(() => {
   m.root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-b9-android-')));
   m.fora = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-b9-android-builds-')));
   m.valors = { SDP_APP_ID: 'org.socdepoble.app', SDP_PLAY_JSON_KEY_PATH: path.join(m.fora, 'play.json'), SDP_ANDROID_UPLOAD_CERT_SHA256: 'AB'.repeat(32), SDP_BUILDS_DIR: m.fora };
+  fs.writeFileSync(m.valors.SDP_PLAY_JSON_KEY_PATH, JSON_CLAU, { mode: 0o600 });
   m.segell = JSON.stringify({ commit: 'b'.repeat(40), arbreNet: true, data: '2026-11-01T12:00:00Z' });
   fs.mkdirSync(path.join(m.root, 'dist-natiu'));
   fs.writeFileSync(path.join(m.root, 'dist-natiu/segell.json'), m.segell);
   fs.mkdirSync(path.join(m.root, 'android/app'), { recursive: true });
   fs.writeFileSync(path.join(m.root, 'android/app/build.gradle'), `android {\n  defaultConfig {\n    versionCode ${BUILD}\n    versionName "1.0.0"\n  }\n}\n`);
   escriuAab(OCTETS_AAB);
-  Object.assign(m, { crides: [], preflights: [], fastlane: true, codiValidacio: 0, codiPujada: 0, durantValidacio: null, durantPujada: null, dex: null });
+  Object.assign(m, { crides: [], preflights: [], play: [], errorPlay: null, durantPujada: null, senseRevisio: false, verificatDespres: false, dex: null });
   eixida = [];
   errors = [];
   vi.spyOn(process.stdout, 'write').mockImplementation((s) => { eixida.push(String(s)); return true; });
@@ -115,14 +131,14 @@ describe('guardes abans de tocar res', () => {
     expect(m.crides).toEqual([]);
   });
 
-  test('un sha12 que no és el de l’AAB: eixida 10, i fastlane no es crida mai', async () => {
+  test('un sha12 que no és el de l’AAB: eixida 10, i Google Play no es crida mai', async () => {
     expect(await produccio(`--confirma=produccio:1.0.0+${BUILD}@ffffffffffff`)).toBe(EIXIDA.CONFIRMACIO);
     expect(errors.join('')).toMatch(new RegExp(`comença per ${SHA12}, no per ffffffffffff`));
-    expect(crides('fastlane')).toEqual([]);
+    expect(m.play).toEqual([]);
     expect(registre()).toEqual([]);
   });
 
-  test('el build ja és a la prova interna: eixida 7 amb «promou-lo», abans de keytool i de fastlane', async () => {
+  test('el build ja és a la prova interna: eixida 7 amb «promou-lo», abans de keytool i de Google Play', async () => {
     fs.writeFileSync(path.join(m.fora, REGISTRE_DE_PUJADES), `${JSON.stringify({ plataforma: 'android', canal: 'intern', versio: '1.0.0', build: BUILD, data: '2026-11-02T00:00:00Z' })}\n`, { mode: 0o600 });
     expect(await produccio(`--confirma=produccio:1.0.0+${BUILD}@${SHA12}`)).toBe(EIXIDA.ARBRE);
     expect(errors.join('')).toMatch(/promou-lo des de Play Console/);
@@ -140,34 +156,40 @@ describe('guardes abans de tocar res', () => {
     await produccio('--push');
     expect(m.preflights[0]).toMatchObject({ canal: 'produccio', push: true, plataformes: ['android'] });
   });
+
+  test('R32.3 · --desplega a producció: eixida 2 abans de tot (a producció sempre és un esborrany)', async () => {
+    expect(await produccio('--desplega', `--confirma=produccio:1.0.0+${BUILD}@${SHA12}`)).toBe(EIXIDA.US);
+    expect(errors.join('')).toMatch(/--desplega només val per a la prova interna/);
+    expect(m.preflights).toEqual([]);
+    expect(m.crides).toEqual([]);
+    expect(m.play).toEqual([]);
+  });
 });
 
 describe('pista production, sempre en esborrany', () => {
-  test('el pla: production i draft a producció, internal i draft per defecte; mai completed, inProgress ni desplegament per fases', () => {
-    const pla = planAndroid({ arrel: m.root, valors: m.valors, canal: 'produccio' });
-    const intern = planAndroid({ arrel: m.root, valors: m.valors });
-    for (const [args, pista] of [[pla.valida[1], 'production'], [pla.puja[1], 'production'], [intern.valida[1], 'internal'], [intern.puja[1], 'internal']]) {
-      expect(args[args.indexOf('--track') + 1]).toBe(pista);
-      expect(args[args.indexOf('--release_status') + 1]).toBe('draft');
-      expect(args.join(' ')).not.toMatch(/completed|inProgress|halted|--rollout/);
-    }
+  test('el pla: production i draft a producció (també amb desplega), internal i draft per defecte; completed només a la prova interna amb desplega', () => {
+    expect(planAndroid({ arrel: m.root, valors: m.valors, canal: 'produccio' })).toMatchObject({ pista: 'production', estat: 'draft' });
+    expect(planAndroid({ arrel: m.root, valors: m.valors, canal: 'produccio', desplega: true })).toMatchObject({ pista: 'production', estat: 'draft' });
+    expect(planAndroid({ arrel: m.root, valors: m.valors })).toMatchObject({ pista: 'internal', estat: 'draft' });
+    expect(planAndroid({ arrel: m.root, valors: m.valors, desplega: true })).toMatchObject({ pista: 'internal', estat: 'completed' });
   });
 
-  test('en sec a producció amb fastlane: el pla diu --track production --release_status draft, i res no diu completed', async () => {
+  test('en sec a producció: el pla diu pista production, estat draft (API REST, sense fastlane), i res no diu completed', async () => {
     fs.rmSync(path.join(m.root, ...AAB));
     expect(await produccio()).toBe(EIXIDA.BE);
-    expect(text()).toMatch(/--track production --release_status draft/);
-    expect(text()).not.toMatch(/completed/);
+    expect(text()).toMatch(/edits\.tracks\.update \(pista production, estat draft\)/);
+    expect(text()).toMatch(/API REST de Google Play v3 \(Node, sense fastlane\)/);
+    expect(text()).not.toMatch(/completed|fastlane supply/);
   });
 });
 
 describe('en sec a producció (ARB-B9-04)', () => {
-  test('amb l’AAB signat pel Mestre: verifica en local i dona el «sí» exacte amb el sha12 de veres, sense fastlane; keytool sense eco', async () => {
+  test('amb l’AAB signat pel Mestre: verifica en local i dona el «sí» exacte amb el sha12 de veres, sense Google Play; keytool sense eco', async () => {
     expect(await produccio()).toBe(EIXIDA.BE);
     expect(text()).toContain(`--confirma=produccio:1.0.0+${BUILD}@${SHA12}`);
     expect(text()).toContain(`sha256 de l'AAB: ${sha256(OCTETS_AAB)}`);
     expect(text()).toMatch(/pujat a Google Play \(esborrany, pista production\): no/);
-    expect(crides('fastlane')).toEqual([]);
+    expect(m.play).toEqual([]);
     expect(crides('keytool')).toHaveLength(1);
     expect(crides('keytool')[0][2]).toMatchObject({ mostra: false, eco: false });
     expect(registre(), 'en sec no s’apunta res').toEqual([]);
@@ -195,32 +217,46 @@ describe('el canal intern no canvia', () => {
     expect(m.preflights[0]).toMatchObject({ canal: 'intern', push: false });
     expect(text()).toContain(`--confirma=1.0.0+${BUILD}\n`);
     expect(text()).not.toMatch(/produccio|production/);
-    expect(text()).toMatch(/--track internal --release_status draft/);
+    expect(text()).toMatch(/edits\.tracks\.update \(pista internal, estat draft\)/);
     expect(m.crides).toEqual([]);
+    expect(m.play).toEqual([]);
   });
 
   test('pujada interna: esborrany a internal, apuntada al registre com a intern, i keytool amb l’eco de sempre', async () => {
     expect(await main(['--versio', '1.0.0', '--build', BUILD, `--confirma=1.0.0+${BUILD}`])).toBe(EIXIDA.BE);
-    expect(crides('fastlane')).toHaveLength(2);
+    expect(m.play).toHaveLength(1);
+    expect(m.play[0]).toMatchObject({ pista: 'internal', estat: 'draft', paquet: 'org.socdepoble.app', build: BUILD, sha256: sha256(OCTETS_AAB), aab: path.join(m.root, ...AAB), nomVersio: `1.0.0 (${BUILD})` });
+    expect(m.play[0].clau.email, 'la clau ix del fitxer de SDP_PLAY_JSON_KEY_PATH').toBe(COMPTE_PROVES);
     expect(crides('keytool')[0][2].eco).not.toBe(false);
     expect(registre()).toEqual([expect.objectContaining({ plataforma: 'android', canal: 'intern', versio: '1.0.0', build: BUILD, sha256: sha256(OCTETS_AAB) })]);
     expect(text()).toMatch(/pujat com a ESBORRANY a la prova interna/);
+    expect(text()).toMatch(/pujat a Google Play \(esborrany, pista interna\): sí/);
+  });
+
+  test('R32.3 · --desplega a la prova interna: status completed, i el text i el rebut diuen DESPLEGAT', async () => {
+    expect(await main(['--versio', '1.0.0', '--build', BUILD, '--desplega', `--confirma=1.0.0+${BUILD}`])).toBe(EIXIDA.BE);
+    expect(m.play).toHaveLength(1);
+    expect(m.play[0]).toMatchObject({ pista: 'internal', estat: 'completed' });
+    expect(text()).toMatch(/--desplega: la pista internal queda DESPLEGADA/);
+    expect(text()).toMatch(/pujat i DESPLEGAT a la prova interna/);
+    expect(text()).toMatch(/pujat a Google Play \(desplegat, pista interna\): sí/);
+    expect(registre()).toHaveLength(1);
+  });
+
+  test('R32.3 · Play demana changesNotSentForReview: es diu que enviar-ho a revisió és del Mestre', async () => {
+    m.senseRevisio = true;
+    expect(await main(['--versio', '1.0.0', '--build', BUILD, `--confirma=1.0.0+${BUILD}`])).toBe(EIXIDA.BE);
+    expect(text()).toMatch(/changesNotSentForReview: els canvis queden sense enviar a revisió/);
   });
 });
 
 describe('la pujada a producció', () => {
   const si = () => `--confirma=produccio:1.0.0+${BUILD}@${SHA12}`;
 
-  test('camí bo: valida i puja a production en esborrany, apunta la pujada DESPRÉS i dona els passos del Mestre', async () => {
+  test('camí bo: puja a production en esborrany per l’API REST, apunta la pujada DESPRÉS i dona els passos del Mestre', async () => {
     expect(await produccio(si())).toBe(EIXIDA.BE);
-    expect(crides('fastlane')).toHaveLength(2);
-    const [valida, puja] = crides('fastlane');
-    expect(valida[1].at(-1)).toBe('true');
-    expect(puja[1].at(-1)).toBe('false');
-    for (const [, args] of [valida, puja]) {
-      expect(args[args.indexOf('--track') + 1]).toBe('production');
-      expect(args[args.indexOf('--release_status') + 1]).toBe('draft');
-    }
+    expect(m.play).toHaveLength(1);
+    expect(m.play[0]).toMatchObject({ pista: 'production', estat: 'draft', build: BUILD, sha256: sha256(OCTETS_AAB) });
     expect(registre()).toEqual([{ plataforma: 'android', canal: 'produccio', versio: '1.0.0', build: BUILD, sha256: sha256(OCTETS_AAB), commit: 'b'.repeat(40), data: expect.any(String) }]);
     expect(fs.statSync(path.join(m.fora, REGISTRE_DE_PUJADES)).mode & 0o777).toBe(0o600);
     expect(text()).toMatch(/pujat com a ESBORRANY a la pista production/);
@@ -230,44 +266,67 @@ describe('la pujada a producció', () => {
     expect(text()).not.toMatch(/«sí» per a pujar ESTE AAB/);
   });
 
-  test('si fastlane falla en pujar, el registre no s’apunta (l’apunt va després de la pujada)', async () => {
-    m.codiPujada = 1;
+  test('si Play falla en confirmar (5xx), el registre no s’apunta (l’apunt va després de la pujada)', async () => {
+    m.errorPlay = new ErrorPlay('edits.commit: HTTP 503 · UNAVAILABLE', { tipus: 'http', operacio: 'edits.commit', estat: 503 });
     expect(await produccio(si())).toBe(EIXIDA.EXTERNA);
     expect(registre()).toEqual([]);
+    expect(text()).not.toMatch(/REBUT|pujat com a ESBORRANY/);
   });
 
-  test('si --validate_only falla: no es puja res, cap registre, i el missatge diu la prova tancada de Play', async () => {
-    m.codiValidacio = 1;
+  /* Elefant R32.3 · Un commit d'estat DESCONEGUT (ni fet ni no fet): eixida pròpia 11, cap registre ni
+     rebut de pujat, i el consell de mirar Play Console abans de repetir-ho. */
+  test('si l’estat del commit és desconegut: eixida 11, cap registre ni rebut, i el consell de Play Console', async () => {
+    m.errorPlay = new ErrorPlay('edits.commit: HTTP 502 · l\'estat del commit és DESCONEGUT: Google Play no ha pogut dir si ha entrat',
+      { tipus: 'desconegut', operacio: 'edits.commit', estat: 502, consell: `mira Play Console › pista production: si hi ha el versionCode ${BUILD}, la pujada ja està feta` });
+    expect(await produccio(si())).toBe(EIXIDA_PLAY_DESCONEGUT);
+    expect(EIXIDA_PLAY_DESCONEGUT).toBe(11);
+    expect(registre()).toEqual([]);
+    expect(text()).not.toMatch(/REBUT|pujat com a ESBORRANY/);
+    expect(errors.join('')).toMatch(/DESCONEGUT[\s\S]*mira Play Console › pista production/);
+  });
+
+  test('si Play confirma el commit després d’una resposta ambigua: el registre s’apunta i ho diu', async () => {
+    m.verificatDespres = true;
+    expect(await produccio(si())).toBe(EIXIDA.BE);
+    expect(registre()).toEqual([expect.objectContaining({ plataforma: 'android', canal: 'produccio', build: BUILD })]);
+    expect(text()).toMatch(new RegExp(`El commit no va tornar una resposta neta, però Google Play ja té el versionCode ${BUILD} a la pista production \\(status draft\\)`));
+  });
+
+  test('si edits.validate falla a producció: res publicat, cap registre, i el missatge diu la prova tancada de Play', async () => {
+    m.errorPlay = new ErrorPlay('edits.validate: HTTP 403 · PERMISSION_DENIED: no access', { tipus: 'http', operacio: 'edits.validate', estat: 403 });
     expect(await produccio(si())).toBe(EIXIDA.EXTERNA);
-    expect(crides('fastlane')).toHaveLength(1);
+    expect(m.play).toHaveLength(1);
     expect(registre()).toEqual([]);
     expect(errors.join('')).toMatch(/prova tancada de 12 provadors × 14 dies \(P0-23\)/);
   });
 
-  test('si l’AAB canvia durant --validate_only, no es puja (eixida 9)', async () => {
-    m.durantValidacio = () => escriuAab('un altre AAB');
-    expect(await produccio(si())).toBe(EIXIDA.VERIFICACIO);
-    expect(crides('fastlane')).toHaveLength(1);
-    expect(registre()).toEqual([]);
-  });
-
-  /* ARB-N05-02 (A1) · fastlane torna 0, però l'AAB d'ara ja no és el del «sí»: no se sap quin ha arribat. */
+  /* ARB-N05-02 (A1) · El client compara el sha256 dels octets enviats i el de Google amb el del «sí»:
+     si l'AAB canvia durant la pujada, l'edició no es confirma (ErrorPlay de verificació). */
   test('si l’AAB canvia durant la pujada: eixida 9, cap registre ni rebut de pujat', async () => {
     m.durantPujada = () => escriuAab('un altre AAB');
+    m.errorPlay = new ErrorPlay('edits.bundles.upload: l\'AAB ha canviat durant la pujada (el que s\'ha enviat no és l\'AAB verificat): no es confirma res', { tipus: 'verificacio', operacio: 'edits.bundles.upload' });
     expect(await produccio(si())).toBe(EIXIDA.VERIFICACIO);
-    expect(crides('fastlane')).toHaveLength(2);
+    expect(m.play).toHaveLength(1);
     expect(errors.join('')).toMatch(/l'AAB ha canviat durant la pujada/);
     expect(registre()).toEqual([]);
     expect(text()).not.toMatch(/REBUT|pujat com a ESBORRANY/);
   });
 
-  test('sense fastlane: eixida 6, els passos a mà de producció (esborrany, prova tancada) i cap registre', async () => {
-    m.fastlane = false;
-    expect(await produccio(si())).toBe(EIXIDA.EINA);
-    expect(text()).toMatch(/Test and release › Production › Create new release/);
-    expect(text()).toMatch(/Desar com a ESBORRANY/);
-    expect(text()).toMatch(/prova tancada de 12 provadors durant 14 dies \(P0-23\)/);
-    expect(crides('fastlane')).toEqual([]);
+  test('Play no coneix el paquet (primer AAB): eixida 8, els passos a mà de producció (esborrany, prova tancada) i cap registre', async () => {
+    m.errorPlay = new ErrorPlay('edits.insert: HTTP 404 · NOT_FOUND: Package not found', { tipus: 'http', operacio: 'edits.insert', estat: 404, consell: 'Play no troba el paquet' });
+    expect(await produccio(si())).toBe(EIXIDA.EXTERNA);
+    expect(errors.join('')).toMatch(/Test and release › Production › Create new release/);
+    expect(errors.join('')).toMatch(/Desar com a ESBORRANY/);
+    expect(errors.join('')).toMatch(/prova tancada de 12 provadors durant 14 dies \(P0-23\)/);
+    expect(registre()).toEqual([]);
+  });
+
+  test('R32.3 · sense una clau de compte de servei vàlida: eixida 5 abans de Play, cap registre i cap tros del fitxer a l’eixida', async () => {
+    fs.writeFileSync(m.valors.SDP_PLAY_JSON_KEY_PATH, '{"type":"service_account","client_email":"secret-del-fitxer@x.iam.gserviceaccount.com","private_key":"trencada');
+    expect(await produccio(si())).toBe(EIXIDA.FALTA);
+    expect(errors.join('')).toMatch(/SDP_PLAY_JSON_KEY_PATH: no és un JSON .*guia de 3 passos/s);
+    expect(errors.join('') + text()).not.toMatch(/secret-del-fitxer|trencada/);
+    expect(m.play).toEqual([]);
     expect(registre()).toEqual([]);
   });
 
@@ -324,5 +383,51 @@ describe('R24 · D2 · l’AAB sense el SDK de Facebook', () => {
     expect(text()).toMatch(/✓ l'AAB no porta cap classe de com\.facebook \(1 dex\)/);
     expect(crides('keytool')).toHaveLength(1);
     expect(text()).toContain(`--confirma=produccio:1.0.0+${BUILD}@${SHA12}`);
+  });
+});
+
+/* R32.3 · El camí sencer amb el client de veres contra un Google Play local (http://127.0.0.1): cap
+   crida a Google. L'adreça de proves només hi arriba per l'opció explícita de main. */
+/* Per parts: la porta de literals secrets (literals-secrets-node0) no hi ha de vore cap credencial. */
+const TOKEN_PROVES = 'ya29.' + 'TEST_ONLY_TOKEN_LOCAL';
+
+describe('R32.3 · main amb el client REST de veres i un Google Play local', () => {
+  test('puja l’AAB en streaming, la pista i el commit arriben al servidor, el registre s’apunta i cap secret ix', async () => {
+    const vist = { rutes: [], cos: null, pista: null };
+    const servidor = http.createServer((req, res) => {
+      const trossos = [];
+      req.on('data', (tros) => trossos.push(tros));
+      req.on('end', () => {
+        const cos = Buffer.concat(trossos);
+        const ruta = `${req.method} ${req.url}`;
+        vist.rutes.push(ruta);
+        const json = (dades) => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(dades)); };
+        if (req.url === '/token') return json({ access_token: TOKEN_PROVES, token_type: 'Bearer', expires_in: 3599 });
+        if (req.headers.authorization !== `Bearer ${TOKEN_PROVES}`) { res.writeHead(401); return res.end('{}'); }
+        if (ruta.endsWith('/bundles?uploadType=media')) {
+          vist.cos = cos;
+          return json({ versionCode: Number(BUILD), sha256: createHash('sha256').update(cos).digest('hex') });
+        }
+        if (req.method === 'PUT') { vist.pista = JSON.parse(cos.toString('utf8')); return json(vist.pista); }
+        return json({ id: 'e1' });
+      });
+    });
+    await new Promise((resol) => { servidor.listen(0, '127.0.0.1', resol); });
+    const base = `http://127.0.0.1:${servidor.address().port}`;
+    try {
+      const codi = await mainReal(['--versio', '1.0.0', '--build', BUILD, `--confirma=1.0.0+${BUILD}`],
+        { play: { endpoints: { token: `${base}/token`, api: `${base}/api`, pujada: `${base}/pujada` }, espera: async () => {} } });
+      expect(codi, errors.join('')).toBe(EIXIDA.BE);
+      const edicio = '/api/applications/org.socdepoble.app/edits';
+      expect(vist.rutes).toEqual(['POST /token', `POST ${edicio}`, 'POST /pujada/applications/org.socdepoble.app/edits/e1/bundles?uploadType=media',
+        `PUT ${edicio}/e1/tracks/internal`, `POST ${edicio}/e1:validate`, `POST ${edicio}/e1:commit`]);
+      expect(vist.cos.toString('utf8')).toBe(OCTETS_AAB);
+      expect(vist.pista).toEqual({ track: 'internal', releases: [{ name: `1.0.0 (${BUILD})`, versionCodes: [BUILD], status: 'draft' }] });
+      expect(registre()).toEqual([expect.objectContaining({ canal: 'intern', build: BUILD, sha256: sha256(OCTETS_AAB) })]);
+      expect(text()).toMatch(/✓ edits\.commit: confirmat a Google Play/);
+      expect(text() + errors.join('')).not.toMatch(/TEST_ONLY_TOKEN_LOCAL|robot-proves|a1b2c3d4e5f6|PRIVATE KEY/);
+    } finally {
+      await new Promise((resol) => { servidor.close(resol); });
+    }
   });
 });

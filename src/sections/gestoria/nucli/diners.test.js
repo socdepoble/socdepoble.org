@@ -129,6 +129,14 @@ describe('formatImport', () => {
 });
 
 describe('sumaImports', () => {
+  test('l’acumulació conserva els cèntims amb cancel·lacions i rebutja el desbordament final', () => {
+    const maxim = Number.MAX_SAFE_INTEGER;
+    expect(sumaImports([maxim, 2, -2])).toEqual({ total: maxim, incomplet: false });
+    expect(sumaImports([-maxim, -2, 2, null])).toEqual({ total: -maxim, incomplet: true });
+    expect(() => sumaImports([maxim, 1])).toThrow(RangeError);
+    expect(() => sumaImports([-maxim, -1])).toThrow(RangeError);
+  });
+
   test('suma els coneguts i avisa dels desconeguts', () => {
     expect(sumaImports([100, null, 250])).toEqual({ total: 350, incomplet: true });
     expect(sumaImports([100, 250, -50])).toEqual({ total: 300, incomplet: false });

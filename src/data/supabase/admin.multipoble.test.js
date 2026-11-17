@@ -37,6 +37,12 @@ test('inputs malformats rebutgen amb codi neutral abans de qualsevol RPC (casos 
   }
   expect(m.rpc).not.toHaveBeenCalled();
 });
+test('dos àlies de tenant contradictoris es rebutgen abans de cap RPC', async () => {
+  for (const metode of [adminLlistaPobles, adminLligPersonalitzacio]) {
+    await expect(metode({ tenantId: A, tenant_id: B })).rejects.toMatchObject({ code: 'abast-invalid' });
+  }
+  expect(m.rpc).not.toHaveBeenCalled();
+});
 test('els quatre casos neutrals passen contra l’adaptador remot amb doble de RPC autoritzada', async () => {
   const ctx = contextDeConformitat({ config: { tenantId: A }, adminMultipobleAutoritzat: true, tenantAdministrat: B });
   const adaptador = { adminLlistaPobles, adminLligPersonalitzacio };

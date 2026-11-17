@@ -1,4 +1,5 @@
 import { delEfimer, delVal, getEfimer, getVal, setEfimer, setVal } from './storage.js';
+import { marcaTransicioDeDocument } from '../apps/plataforma/lazyRoute.js';
 
 const CLAU = 'data-mode-choice';
 /* Encàrrec 261018_1220 · L'elecció de proves, per pestanya (capa efímera). */
@@ -61,9 +62,14 @@ export function resolveDataMode(config = {}) {
   return snapshots.get(node) ? 'remote' : requested;
 }
 
+const RECARREGA_DOCUMENT = () => {
+  marcaTransicioDeDocument();
+  window.location.reload();
+};
+
 /** L'entrada real reinicia el muntatge i, per tant, el handshake de sessió.
  * No migra comptes, converses ni tokens del pilot al servidor. */
-export function enterRemoteMode(config = {}, reload = () => window.location.reload()) {
+export function enterRemoteMode(config = {}, reload = RECARREGA_DOCUMENT) {
   resolveDataMode(config);
   /* Encàrrec 261018_1220 · Entrar al servidor deixa el mode de proves d'esta pestanya. */
   try { delEfimer(`${CLAU_PROVES}:${nodeKey(config)}`); } catch { /* sense capa efímera */ }
@@ -88,7 +94,7 @@ export function eleccioRemotaActiva(config = {}) {
 
 /** Torna al mode que demana el paquet: esborra l'elecció d'este node i
  * recarrega. Com enterRemoteMode, no migra ni revoca comptes ni tokens. */
-export function exitRemoteMode(config = {}, reload = () => window.location.reload()) {
+export function exitRemoteMode(config = {}, reload = RECARREGA_DOCUMENT) {
   if (!delVal(`${CLAU}:${nodeKey(config)}`)) {
     throw new Error('No s’ha pogut esborrar l’elecció. Permet l’emmagatzematge del navegador i torna a provar.');
   }
@@ -101,7 +107,7 @@ export function exitRemoteMode(config = {}, reload = () => window.location.reloa
  * enterRemoteMode, no migra ni revoca comptes ni tokens; la sessió remota d'esta
  * pestanya no passa al mode de proves (identitat.js · configuraBackendSessio
  * buida l'àmbit en canviar de mode). */
-export function enterTestMode(config = {}, reload = () => window.location.reload()) {
+export function enterTestMode(config = {}, reload = RECARREGA_DOCUMENT) {
   if (import.meta.env.DEV !== true) {
     throw new Error('El mode de proves només es pot triar en desenvolupament.');
   }

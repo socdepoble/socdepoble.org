@@ -1182,10 +1182,10 @@ function ImageUploaderUI({
 
   return (
     <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
-      <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={handler.fileInputRef} onChange={changeHandler} className="sdp-nomes-lector" />
+      <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={handler.fileInputRef} onChange={changeHandler} className="sdp-nomes-lector" tabIndex={-1} aria-label={editLabel} />
       <button ref={botoRef} type="button" className="sdp-boto sdp-boto--secundari" disabled={pujant} aria-describedby={idAjuda}
         onClick={() => (onEdit ? onEdit({ acaba: handler.cancelEdit }) : handler.fileInputRef.current?.click())}>
-        <ImageIcon size={16} /> {editLabel}
+        <ImageIcon size={16} aria-hidden="true" /> {editLabel}
       </button>
       <p id={idAjuda} className={classeAjuda}>{uploadText}</p>
       {image && (

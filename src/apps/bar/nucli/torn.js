@@ -88,8 +88,8 @@ function afig(mapa, clau, canvi) {
     ...actual,
     ...canvi.dades,
     unitats: actual.unitats + canvi.unitats,
-    importCents: actual.importCents + canvi.importCents,
-    costCents: actual.costCents + (canvi.costCents ?? 0),
+    importCents: suma([actual.importCents, canvi.importCents], n => n),
+    costCents: suma([actual.costCents, canvi.costCents ?? 0], n => n),
     ambCost: actual.ambCost && canvi.costCents !== null
   });
 }
@@ -107,7 +107,7 @@ export function resumTorn(torn, tiquets = [], obertes = [], { categories = [] } 
   const devolucions = delTorn.filter((t) => t.tipus === 'devolucio');
   const perMetode = (llista) => {
     const resultat = { efectiu: 0, targeta: 0, altre: 0 };
-    for (const t of llista) for (const p of t.pagaments) resultat[p.metode] += Math.abs(p.importCents);
+    for (const t of llista) for (const p of t.pagaments) resultat[p.metode] = suma([resultat[p.metode], Math.abs(p.importCents)], n => n);
     return resultat;
   };
   const vendesPerMetode = perMetode(vendes);
@@ -167,7 +167,7 @@ export function resumTorn(torn, tiquets = [], obertes = [], { categories = [] } 
     convidadesCents: suma(vendes, (t) => t.totals.convidadesCents),
     entradesCents,
     eixidesCents,
-    efectiuEsperatCents: torn.fonsInicialCents + vendesPerMetode.efectiu - retornatPerMetode.efectiu + entradesCents - eixidesCents,
+    efectiuEsperatCents: suma([torn.fonsInicialCents, vendesPerMetode.efectiu, -retornatPerMetode.efectiu, entradesCents, -eixidesCents], n => n),
     comandesObertes: obertes.length,
     obertesCents: suma(obertes, (c) => totals(c).totalCents),
     perCategoria: [...perCategoria.entries()]
@@ -201,7 +201,7 @@ export function tancaTorn(torn, { arqueig: comptat, resum, traspas, obertes = []
     tancatA: ara,
     tancatPer: aliesNet(per, torn.obertPer),
     arqueig: { perDenominacio: { ...comptat.perDenominacio }, totalCents: totalComptat },
-    diferenciaCaixaCents: totalComptat - resum.efectiuEsperatCents,
+    diferenciaCaixaCents: suma([totalComptat, -resum.efectiuEsperatCents], n => n),
     resum,
     traspas
   }));

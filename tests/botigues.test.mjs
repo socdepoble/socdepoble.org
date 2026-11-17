@@ -7,8 +7,9 @@
    que després es va retirar. En instal·lar-les: el pla d'altool segueix l'altool d'Xcode 27.1,
    projecteIos es prova en una carpeta temporal (l'arbre real tindrà ios/ quan es faça cap add ios)
    i hi ha una prova nova per al JDK de Gradle.
-   Cap prova compila, signa ni puja res, ni crida xcodebuild, altool, gradle, keytool ni fastlane
-   (el preflight rep consultes fingides): només peces pures, fitxers temporals fora del
+   Cap prova compila, signa ni puja res, ni crida xcodebuild, altool, gradle ni keytool
+   (el preflight rep consultes fingides); la pujada a Google Play és un client REST de Node, sense
+   fastlane (R32.3), i el seu client es prova contra un servidor local a tests/botigues-play-api-rest.test.mjs: només peces pures, fitxers temporals fora del
    repositori, git de només lectura (i un repositori de mostra en una carpeta temporal, per al
    paquet caducat de BOT-A4), zips fets per la prova, processos fills de Node, JDK fingits
    (scripts /bin/sh) i, en macOS, «/usr/libexec/java_home -v 21».
@@ -151,14 +152,17 @@ test('botigues: plans emmascarats, contrasenyes només a l\'entorn del fill, i e
   assert.equal(pla.entornAltool, undefined, 'cap API_PRIVATE_KEYS_DIR: la clau va per --p8-file-path');
   assert.equal(e.mostraOrdre(pla.plist, [], valors), '<SDP_BUILDS_DIR>/sdp-ios-1.0.0-7/ExportOptions.plist');
   const pa = android.planAndroid({ arrel: ARREL, valors });
-  const args = [...pa.compila[1], ...pa.certificat[1], ...pa.valida[1], ...pa.puja[1]].join(' ');
+  const args = [...pa.compila[1], ...pa.certificat[1]].join(' ');
   for (const secret of ['TEST_ONLY_KEYSTORE_PASSWORD', 'contrasenya-clau']) assert.ok(!args.includes(secret), 'cap contrasenya a la línia d\'ordres');
   assert.equal(pa.entornDeSignatura().SDP_ANDROID_KEYSTORE_PASSWORD, 'TEST_ONLY_KEYSTORE_PASSWORD');
   assert.deepEqual(pa.entornDeGradle('/jdk/21'), { JAVA_HOME: '/jdk/21', ...pa.entornDeSignatura() }, 'Gradle rep el JDK del preflight per JAVA_HOME');
   assert.deepEqual(pa.compila[1], ['--no-daemon', 'bundleRelease']);
-  assert.ok(pa.valida[1].includes('--validate_only') && pa.valida[1].at(-1) === 'true' && pa.puja[1].at(-1) === 'false');
-  assert.ok(pa.puja[1].join(' ').includes('--track internal --release_status draft'));
-  assert.match(e.mostraOrdre(...pa.puja, valors), /--package_name <SDP_APP_ID> --json_key <SDP_PLAY_JSON_KEY_PATH>/);
+  // R32.3 · La pujada és l'API REST de Google Play (cap fastlane): pista internal i esborrany per defecte.
+  assert.deepEqual([pa.pista, pa.estat], ['internal', 'draft']);
+  assert.equal(pa.valida, undefined, 'cap ordre de fastlane al pla');
+  const api = android.mostraPlaApi(pa, valors);
+  assert.match(api, /token OAuth \(JWT RS256 amb <SDP_PLAY_JSON_KEY_PATH>\) → edits\.insert \(<SDP_APP_ID>\) → edits\.bundles\.upload .* → edits\.tracks\.update \(pista internal, estat draft\) → edits\.validate → edits\.commit/);
+  assert.ok(!/fastlane supply|--json_key|org\.socdepoble\.app|\/claus\//.test(api), 'cap fastlane ni cap valor al pla');
   // executa: el fill rep la contrasenya per l'entorn, i el que imprimix ix emmascarat.
   const { codi, eixida } = await e.executa(process.execPath, ['-e', 'console.log("pas:" + process.env.SDP_ANDROID_KEY_PASSWORD); console.error(process.env.SDP_ANDROID_KEY_PASSWORD)'],
     { valors, entornExtra: { SDP_ANDROID_KEY_PASSWORD: valors.SDP_ANDROID_KEY_PASSWORD }, mostra: false });
@@ -182,12 +186,12 @@ test('botigues: la màscara tapa les rutes amb ~ i les relatives tal com les reb
   const pla = ios.planIos({ arrel: ARREL, valors, versio: '1.0.0', build: '7', projecte: { opcio: '-project', cami: path.join(ARREL, 'ios/App/App.xcodeproj') } });
   const pa = android.planAndroid({ arrel: ARREL, valors });
   const ipa = path.join(pla.exportacio, 'App.ipa');
-  const mostrat = [pla.arxiva, pla.exporta, pla.valida(ipa), pla.puja(ipa), pa.puja].map((ordre) => e.mostraOrdre(...ordre, valors, ARREL)).join('\n');
+  const mostrat = [...[pla.arxiva, pla.exporta, pla.valida(ipa), pla.puja(ipa)].map((ordre) => e.mostraOrdre(...ordre, valors, ARREL)), android.mostraPlaApi(pa, valors, ARREL)].join('\n');
   for (const fuita of fuites) assert.ok(!mostrat.includes(fuita), fuita);
   assert.ok(!mostrat.includes(path.join(os.homedir(), 'sdp-')), 'cap ruta desplegada de la carpeta de l\'usuari');
   assert.match(mostrat, /-archivePath '?<SDP_BUILDS_DIR>\/sdp-ios-1\.0\.0-7\/App\.xcarchive'? /);
   assert.match(mostrat, /-authenticationKeyPath '?<SDP_ASC_KEY_PATH>'? /);
-  assert.match(mostrat, /--json_key '?<SDP_PLAY_JSON_KEY_PATH>'? /);
+  assert.match(mostrat, /JWT RS256 amb <SDP_PLAY_JSON_KEY_PATH>\)/, 'la ruta relativa de la clau, resolta des de l\'arrel, ix tapada');
   assert.equal(e.mostraOrdre(pla.plist, [], valors, ARREL).replace(/'/g, ''), '<SDP_BUILDS_DIR>/sdp-ios-1.0.0-7/ExportOptions.plist');
   // Sense l'arrel, el ~ també es desplega; i el Key ID es tapa dins del nom de la clau, vinga d'on vinga la ruta.
   assert.equal(e.emmascara(`${path.join(os.homedir(), 'sdp-b')}/x`, valors), '<SDP_BUILDS_DIR>/x');

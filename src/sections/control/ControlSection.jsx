@@ -211,11 +211,13 @@ import { ESPAIS_PLUGINS, PLUGINS, TEXTOS_ESPAIS_PLUGINS, etiquetesAmbEstat, plug
 import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
 import { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
 import { RUTA_COMPTE } from '../../config/rutaEntrada.js';
-import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 /* Onada R29 · R29-RUT-01 · Amb lazyRoute: un tros que no arriba dona LazyRouteError i la barrera de la
    ruta oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
 const ModeRural = lazyRoute(() => import('./ModeRural.jsx'));
 const FitxaOpenData = lazyRoute(() => import('./FitxaOpenData.jsx'));
+/* Onada R32 · IDEA-278 · Giny Bento de Salut de l'Aparell i Emmagatzematge Local (diferit, 0 B a l'entrada WP). */
+const GinySalutDispositiuJarvis = lazyRoute(() => import('./GinySalutDispositiuJarvis.jsx'));
 
 /* P5 · Una targeta de doble acció: la UniversalCard de sempre amb el
    contingut de la seua pàgina i les dues portes. Sense il·lustració, la
@@ -624,6 +626,12 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
             )}
           </div>
         </section>
+
+        <BarreraDelTrosAccessori>
+          <Suspense fallback={null}>
+            <GinySalutDispositiuJarvis idioma={idioma} />
+          </Suspense>
+        </BarreraDelTrosAccessori>
 
         <div className="sdp-control-actions">
           {/* control-03 (261104) · Com la targeta del Snippet, els dos botons

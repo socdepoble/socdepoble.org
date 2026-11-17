@@ -22,15 +22,23 @@ import {
 
 export function useEstatCalendari({ obertura = null, avui }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [vista, setmana, date, mes, any] = ['vista', 'setmana', 'date', 'mes', 'any'].map((clau) => searchParams.get(clau));
+  const [vista, setmana, dateCanonic, dataAlias, mes, any] = [
+    'vista', 'setmana', 'date', 'data', 'mes', 'any'
+  ].map((clau) => searchParams.get(clau));
+  const date = dateCanonic ?? dataAlias;
+  const teAliasData = dataAlias !== null;
   const estat = useMemo(
     () => estatDeLaUrl({ vista, setmana, date, mes, any }, { obertura, avui }),
     [vista, setmana, date, mes, any, obertura, avui]
   );
   // Un estat que no canvia (la vista que ja es veu, un dia que no existix) no escriu res.
+  // Si la URL d'entrada portava l'àlies `?data=`, la següent escriptura neteja `data` i consolida `?date=`.
   const escriu = useCallback((nou) => {
-    if (nou !== estat) setSearchParams(paramsDeLEstat(nou), { replace: true });
-  }, [estat, setSearchParams]);
+    if (nou !== estat) {
+      const params = paramsDeLEstat(nou);
+      setSearchParams(teAliasData ? { ...params, data: null } : params, { replace: true });
+    }
+  }, [estat, setSearchParams, teAliasData]);
   return {
     estat,
     navega: (direccio) => escriu(navegaDes(estat, direccio, avui)),

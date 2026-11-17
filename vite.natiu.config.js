@@ -60,7 +60,13 @@ const errorDeFormaGoogle = (clau) => `${clau} no té la forma d’un client OAut
    backend segellat. worker-src 'none': dins de l'app no hi ha cap worker.
    Gauntlet 261022_0225 (crítica Claude, MEDIA-2) · media-src, amb la mateixa
    amplària que img-src: sense, les notes de veu i els vídeos del xat (URL
-   signades https del Storage) heretaven default-src i no sonaven mai. */
+   signades https del Storage) heretaven default-src i no sonaven mai.
+   Onada R32.3 (ordre del Mestre, 16-11-2026 22:09) · connect-src porta també l'origen públic,
+   ORIGEN_MANIFEST_VERSIO: l'App hi llig el manifest de versió /.well-known/ard.json en arrencar i
+   en tornar a primer pla (src/natiu/actualitzacioAppNativa.js). Només eixe origen, sense comodins;
+   és ORIGEN_PUBLIC_PER_DEFECTE de src/config/origenPublic.js (tests/natiu-build.test.mjs els lliga),
+   escrit ací perquè esta configuració només importa fulles pures. */
+export const ORIGEN_MANIFEST_VERSIO = 'https://socdepoble.org';
 
 /** L'origen públic del backend, o un error: https, sense ruta i fora de la xarxa local. */
 function origenPublic(origenBackend) {
@@ -81,7 +87,7 @@ export function cspNativa(origenBackend) {
     "default-src 'self' data: blob:",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
-    `connect-src 'self' data: ${url.origin} wss://${url.host}`,
+    `connect-src 'self' data: ${url.origin} wss://${url.host} ${ORIGEN_MANIFEST_VERSIO}`,
     "img-src 'self' data: blob: https:",
     "media-src 'self' data: blob: https:",
     "font-src 'self' data:",

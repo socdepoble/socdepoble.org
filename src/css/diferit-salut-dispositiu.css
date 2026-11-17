@@ -1,0 +1,384 @@
+/* Full diferit (Onada R32 · IDEA-278 · Salut del Dispositiu i Emmagatzematge Local):
+   les regles de .sdp-salut-dispositiu no viatgen a l'arrencada del paquet de WordPress
+   (0 B al tros d'entrada i a index.css) i s'adopten a l'arrel on es munta la peça
+   (document o shadow root de <soc-de-poble>) via src/config/fullDiferit.js. */
+@layer components {
+  .sdp-salut-dispositiu {
+    container-type: inline-size;
+    display: grid;
+    gap: var(--sdp-space-4);
+    min-inline-size: 0;
+    margin-block-start: var(--sdp-space-12);
+    color: var(--sdp-text-cos);
+    font-family: var(--sdp-font);
+  }
+
+  .sdp-salut-dispositiu__graella {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-4);
+    min-inline-size: 0;
+  }
+
+  @container (min-width: 46rem) {
+    .sdp-salut-dispositiu__graella {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: stretch;
+    }
+  }
+
+  .sdp-salut-dispositiu__targeta {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--sdp-space-4);
+    min-inline-size: 0;
+    padding: var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-g);
+    background-color: var(--sdp-fons-targeta);
+  }
+
+  .sdp-salut-dispositiu__bloc-superior {
+    display: grid;
+    gap: var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+
+  .sdp-salut-dispositiu__capcalera-targeta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2) var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+
+  .sdp-salut-dispositiu__titol-targeta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-inline-size: 0;
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    font-weight: var(--sdp-pes-negreta);
+    line-height: var(--sdp-leading-titol);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-salut-dispositiu__insignia {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    background-color: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+    line-height: var(--sdp-leading-titol);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-salut-dispositiu__insignia[data-to="sa"] {
+    background-color: var(--sdp-exit-fons);
+    color: var(--sdp-exit-text);
+  }
+
+  .sdp-salut-dispositiu__insignia[data-to="avis"] {
+    background-color: var(--sdp-avis-fons);
+    color: var(--sdp-avis-text);
+  }
+
+  .sdp-salut-dispositiu__insignia[data-to="critic"] {
+    background-color: var(--sdp-error-fons);
+    color: var(--sdp-error-text);
+  }
+
+  .sdp-salut-dispositiu__insignia[data-to="protegit"] {
+    background-color: var(--sdp-info-fons);
+    color: var(--sdp-info-text);
+  }
+
+  .sdp-salut-dispositiu__lectura-gran {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+    font-weight: var(--sdp-pes-extra);
+    line-height: var(--sdp-leading-titol);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-salut-dispositiu__text {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-base);
+    line-height: var(--sdp-leading-cos);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-salut-dispositiu__meta {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-cos);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  /* Barra nativa <progress>: regles -webkit- i -moz- estrictament separades
+     perquè cap motor invalide el selector sencer. */
+  .sdp-salut-dispositiu__progres {
+    display: block;
+    inline-size: 100%;
+    block-size: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background-color: var(--sdp-fons-subtil);
+    overflow: hidden;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .sdp-salut-dispositiu__progres::-webkit-progress-bar {
+    background-color: var(--sdp-fons-subtil);
+    border-radius: var(--sdp-radi-pastilla);
+  }
+
+  .sdp-salut-dispositiu__progres::-webkit-progress-value {
+    background-color: var(--sdp-accio-control);
+    border-radius: var(--sdp-radi-pastilla);
+    transition: inline-size var(--sdp-t);
+  }
+
+  .sdp-salut-dispositiu__progres::-moz-progress-bar {
+    background-color: var(--sdp-accio-control);
+    border-radius: var(--sdp-radi-pastilla);
+  }
+
+  .sdp-salut-dispositiu__progres[data-nivell="avis"]::-webkit-progress-value {
+    background-color: var(--sdp-avis);
+  }
+
+  .sdp-salut-dispositiu__progres[data-nivell="avis"]::-moz-progress-bar {
+    background-color: var(--sdp-avis);
+  }
+
+  .sdp-salut-dispositiu__progres[data-nivell="critic"]::-webkit-progress-value {
+    background-color: var(--sdp-error);
+  }
+
+  .sdp-salut-dispositiu__progres[data-nivell="critic"]::-moz-progress-bar {
+    background-color: var(--sdp-error);
+  }
+
+  .sdp-salut-dispositiu__compartiments {
+    display: grid;
+    gap: var(--sdp-space-3);
+    margin: 0;
+    min-inline-size: 0;
+  }
+
+  .sdp-salut-dispositiu__compartiment {
+    display: grid;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background-color: var(--sdp-fons-subtil);
+  }
+
+  .sdp-salut-dispositiu__compartiment > dt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-negreta);
+    line-height: var(--sdp-leading-titol);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-salut-dispositiu__compartiment > dd {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-cos);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-salut-dispositiu__fila-revisio {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+
+  .sdp-salut-dispositiu__boto-revisar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    min-inline-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background-color: var(--sdp-fons-elevat);
+    color: var(--sdp-text-titol);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-negreta);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-salut-dispositiu__boto-revisar:hover {
+      background-color: var(--sdp-fons-subtil);
+      border-color: var(--sdp-vora-forta);
+    }
+  }
+
+  .sdp-salut-dispositiu__boto-revisar:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+
+  .sdp-salut-dispositiu__detall {
+    display: grid;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background-color: var(--sdp-fons-elevat);
+    list-style: none;
+  }
+
+  .sdp-salut-dispositiu__detall[hidden] {
+    display: none;
+  }
+
+  .sdp-salut-dispositiu__item-detall {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sdp-space-1) var(--sdp-space-3);
+    margin: 0;
+    padding-block: var(--sdp-space-1);
+    border-block-end: 1px solid var(--sdp-vora);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-salut-dispositiu__item-detall:last-child {
+    border-block-end: 0;
+  }
+
+  .sdp-salut-dispositiu__guia {
+    display: grid;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background-color: var(--sdp-avis-fons);
+    color: var(--sdp-avis-text);
+  }
+
+  .sdp-salut-dispositiu__guia-llista {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+  }
+
+  /* Acció principal sempre centrada al mig i amb respiració lateral generosa */
+  .sdp-salut-dispositiu__accio-principal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+    padding-block-start: var(--sdp-space-2);
+    padding-inline: var(--sdp-space-4);
+  }
+
+  .sdp-salut-dispositiu__boto-principal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    min-inline-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+    max-inline-size: 100%;
+    padding: var(--sdp-space-3) var(--sdp-space-6);
+    border: 2px solid var(--sdp-accio-control);
+    border-radius: var(--sdp-radi-boto);
+    background-color: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-negreta);
+    line-height: var(--sdp-leading-titol);
+    text-align: center;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-salut-dispositiu__boto-principal:hover:not(:disabled) {
+      background-color: var(--sdp-accio-control-hover);
+      border-color: var(--sdp-accio-control-hover);
+    }
+  }
+
+  .sdp-salut-dispositiu__boto-principal:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+
+  .sdp-salut-dispositiu__boto-principal:disabled {
+    border-color: var(--sdp-vora-control);
+    background-color: var(--sdp-fons-subtil);
+    color: var(--sdp-text-desactivat);
+    cursor: not-allowed;
+  }
+
+  .sdp-salut-dispositiu__avis {
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background-color: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-cos);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-salut-dispositiu__avis[data-to="exit"] {
+    background-color: var(--sdp-exit-fons);
+    color: var(--sdp-exit-text);
+  }
+
+  .sdp-salut-dispositiu__avis[data-to="avis"] {
+    background-color: var(--sdp-avis-fons);
+    color: var(--sdp-avis-text);
+  }
+
+  .sdp-salut-dispositiu__avis[data-to="error"] {
+    background-color: var(--sdp-error-fons);
+    color: var(--sdp-error-text);
+  }
+
+  .sdp-salut-dispositiu__anunci:empty {
+    display: none;
+  }
+}

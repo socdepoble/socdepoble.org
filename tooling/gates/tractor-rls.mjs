@@ -8,67 +8,113 @@ import { capcalera, comparaVersions, dependenciesDeclarades, llegixOrdre, ordena
  * Respecta '…', "…", $$…$$ / $tag$…$tag$ i els comentaris de bloc imbricats.
  * Sense això, `[\s\S]*?` travessa el `;` i acusa la taula equivocada.
  * ────────────────────────────────────────────────────────────────────────── */
+// PostgreSQL admet bytes no ASCII en els identificadors dels tags dollar,
+// inclosos els caràcters Unicode representats per parelles UTF-16 en JS.
+const RE_CONT_IDENT_SQL = /[a-zA-Z0-9_$\u0080-\uFFFF]/;
+const RE_TAG_DOLLAR_SQL = /^(?:\$[a-zA-Z_\u0080-\uFFFF][a-zA-Z0-9_\u0080-\uFFFF]*\$|\$\$)/;
+/* R32.2 · Dos regles més de scan.l que canviaven la partició: `--` acaba en
+ * `\n` o en `\r` (newline = [\n\r]), i una cadena seguida d'espai amb almenys
+ * un salt i una altra `'` és el MATEIX literal (quotecontinue), en el mode del
+ * primer tram: un E'…' continuat continua sent escapable. Sense la primera, un
+ * `\r` amagava la resta de la línia; sense la segona, el `\'` del tram continuat
+ * tancava una cadena que PostgreSQL no tanca. PGlite 17 aplicava en tots dos
+ * casos un DISABLE ROW LEVEL SECURITY que el tractor no veia. R32.3 · La
+ * continuació es fusiona al buffer com un sol literal en tots els modes: així
+ * tokensDeFuncio rep sencer el cos `AS 'begin '\n'…'` (PGlite 17: prosrc
+ * conté els dos trams) i R1 no en perd el segon. */
+const esSalt = c => c === '\n' || c === '\r';
+/* whitespace_with_newline seguit de `'` (scan.l, PostgreSQL 17): espais
+ * horitzontals [ \t\f\v] i comentaris `--`, almenys un salt, i després
+ * qualsevol espai o comentari `--` acabat en salt. Torna la posició de la `'`
+ * o -1. Cada tram d'espai es recorre com a molt dues vegades: cost lineal. */
+function continuacioCadena(sql, j) {
+  const n = sql.length;
+  let salt = false;
+  while (j < n) {
+    const c = sql[j];
+    if (esSalt(c)) { salt = true; j++; } else if (c === ' ' || c === '\t' || c === '\f' || c === '\v') j++;
+    else if (c === '-' && sql[j + 1] === '-') { while (j < n && !esSalt(sql[j])) j++; } else break;
+  }
+  return salt && sql[j] === "'" ? j : -1;
+}
 function segmentsSql(sql, separador = ';') {
   const fora = [];
+  // R32.2: errors lèxics explícits, mai un EOF convertit en SQL acreditat.
+  fora.errors = [];
+  const incomplet = (tipus, offset) => fora.errors.push({ tipus, offset });
   let buf = '';
   let i = 0;
   const n = sql.length;
-  let profunditat = 0;
+  let profunditat = 0, parentesi = -1;
 
   while (i < n) {
     const c = sql[i];
     const d = sql[i + 1];
 
-    if (c === '-' && d === '-') {                 // comentari de línia
-      while (i < n && sql[i] !== '\n') i++;
+    if (c === '-' && d === '-') {                 // comentari de línia, fins a \n o \r
+      while (i < n && !esSalt(sql[i])) i++;
       continue;
     }
     if (c === '/' && d === '*') {                 // comentari de bloc, imbricable
+      const inici = i;
       let prof = 1; i += 2;
       while (i < n && prof > 0) {
         if (sql[i] === '/' && sql[i + 1] === '*') { prof++; i += 2; continue; }
         if (sql[i] === '*' && sql[i + 1] === '/') { prof--; i += 2; continue; }
         i++;
       }
+      if (prof > 0) incomplet('unclosedBlockComment', inici);
       buf += ' ';
       continue;
     }
     if (c === "'") {                              // cadena literal
-      const escapable = i > 0 && /[eE]/.test(sql[i - 1]) && (i < 2 || !/[a-zA-Z0-9_$]/.test(sql[i - 2]));
+      const inici = i;
+      let tancada = false;
+      // `àe'…'` no és un E'…': la lletra no ASCII forma part de l'identificador.
+      const escapable = i > 0 && /[eE]/.test(sql[i - 1]) && (i < 2 || !RE_CONT_IDENT_SQL.test(sql[i - 2]));
       buf += c; i++;
       while (i < n) {
         // PostgreSQL E'…' permet \': no tanca la cadena ni fa executable
         // un ALTER TABLE escrit dins del text literal.
         if (escapable && sql[i] === '\\' && i + 1 < n) { buf += sql.slice(i, i + 2); i += 2; continue; }
         if (sql[i] === "'" && sql[i + 1] === "'") { buf += "''"; i += 2; continue; }
+        if (sql[i] === "'") {
+          const continua = continuacioCadena(sql, i + 1);
+          if (continua >= 0) { i = continua + 1; continue; }
+          buf += "'"; i++; tancada = true; break;
+        }
         buf += sql[i];
-        if (sql[i] === "'") { i++; break; }
         i++;
       }
+      if (!tancada) incomplet('unclosedSingleQuote', inici);
       continue;
     }
     if (c === '"') {                              // identificador entre cometes
+      const inici = i;
+      let tancada = false;
       buf += c; i++;
       while (i < n) {
         if (sql[i] === '"' && sql[i + 1] === '"') { buf += '""'; i += 2; continue; }
         buf += sql[i];
-        if (sql[i] === '"') { i++; break; }
+        if (sql[i] === '"') { i++; tancada = true; break; }
         i++;
       }
+      if (!tancada) incomplet('unclosedDoubleQuote', inici);
       continue;
     }
-    if (c === '$' && (i === 0 || !/[a-zA-Z0-9_$]/.test(sql[i - 1]))) { // mai dins d'un identificador
-      const m = /^\$[a-zA-Z_][a-zA-Z0-9_]*\$|^\$\$/.exec(sql.slice(i));
+    if (c === '$' && (i === 0 || !RE_CONT_IDENT_SQL.test(sql[i - 1]))) { // mai dins d'un identificador
+      const m = RE_TAG_DOLLAR_SQL.exec(sql.slice(i));
       if (m) {
         const tanca = m[0];
         const fi = sql.indexOf(tanca, i + tanca.length);
+        if (fi === -1) incomplet('unclosedDollarQuote', i);
         const tall = fi === -1 ? n : fi + tanca.length;
         buf += sql.slice(i, tall);
         i = tall;
         continue;
       }
     }
-    if (c === '(') profunditat++;
+    if (c === '(' && profunditat++ === 0) parentesi = i;
     if (c === ')') profunditat = Math.max(0, profunditat - 1);
     if (c === separador && profunditat === 0) {    // només separadors de nivell zero
       if (buf.trim()) fora.push(buf);
@@ -79,6 +125,9 @@ function segmentsSql(sql, separador = ';') {
     buf += c;
     i++;
   }
+  // R32.3 · Un `(` obert a EOF fonia totes les sentències següents en una de
+  // sola que cap regla no reconeixia (PostgreSQL rebutja el fitxer).
+  if (profunditat > 0) incomplet('unclosedParenthesis', parentesi);
   if (buf.trim()) fora.push(buf);
   return fora;
 }
@@ -103,7 +152,11 @@ function tokensDeFuncio(statement) {
   const add = (kind, value) => tokens.push({ kind, value, depth, offset: i });
   while (i < statement.length) {
     const c = statement[i];
-    if (/\s/.test(c)) { i++; continue; }
+    // R32.3 · Només l'espai de PostgreSQL (scan.l: [ \t\n\r\f\v]). El \s de JS
+    // inclou U+00A0, U+FEFF…, que per a PostgreSQL són lletres d'identificador:
+    // amb `execute \u00a0on;` el tractor veia el privilegi EXECUTE ON i PGlite 17
+    // executava la variable `\u00a0on` (DISABLE aplicat, porta ✅ sense avís).
+    if (c === ' ' || c === '\t' || c === '\n' || c === '\r' || c === '\f' || c === '\v') { i++; continue; }
     const prefix = /^(?:[eEnN]|[uU]&)(?=')/.exec(statement.slice(i));
     if (c === "'" || prefix) {
       const escaped = prefix?.[0].toLowerCase() === 'e';
@@ -118,6 +171,8 @@ function tokensDeFuncio(statement) {
       }
       valid &&= closed;
       add('literal', value);
+      tokens.at(-1).escaped = escaped;
+      tokens.at(-1).encoded = prefix?.[0].toLowerCase() === 'u&';
       continue;
     }
     if (c === '"') {
@@ -132,8 +187,8 @@ function tokensDeFuncio(statement) {
       add('identifier', value);
       continue;
     }
-    if (c === '$') {
-      const tag = /^(?:\$[a-zA-Z_][a-zA-Z0-9_]*\$|\$\$)/.exec(statement.slice(i));
+    if (c === '$' && (i === 0 || !RE_CONT_IDENT_SQL.test(statement[i - 1]))) {
+      const tag = RE_TAG_DOLLAR_SQL.exec(statement.slice(i));
       if (tag) {
         const start = i + tag[0].length, end = statement.indexOf(tag[0], start);
         valid &&= end >= 0;
@@ -142,14 +197,232 @@ function tokensDeFuncio(statement) {
         continue;
       }
     }
-    const word = /^[a-zA-Z_][a-zA-Z0-9_$]*/.exec(statement.slice(i));
-    if (word) { add('word', word[0].toLowerCase()); i += word[0].length; continue; }
+    // R32.2 · Com a PostgreSQL (UTF-8), les lletres no ASCII són part de la
+    // paraula i només es plega la caixa ASCII: `àe'…'` és la paraula àe i un
+    // literal estàndard, i `Àf` i `àf` són identitats distintes.
+    const word = /^[a-zA-Z_\u0080-\uFFFF][a-zA-Z0-9_$\u0080-\uFFFF]*/.exec(statement.slice(i));
+    if (word) { add('word', word[0].replace(/[A-Z]+/g, tram => tram.toLowerCase())); i += word[0].length; continue; }
     if (c === ')') { depth--; if (depth < 0) valid = false; }
     add('symbol', c);
     if (c === '(') depth++;
     i++;
   }
   return { tokens, valid: valid && depth === 0 };
+}
+
+// DO [LANGUAGE nom] cos [LANGUAGE nom]: el nom pot ser word, identifier
+// o literal. Consumir la clàusula abans de buscar el cos evita executar el
+// text «plpgsql» i deixar sense llegir el codi real. Una forma opaca no es
+// reinterpreta com SQL dinàmic admissible.
+function cosDeDo(tokens) {
+  if (!paraula(tokens[0], 'do')) return null;
+  let body = null, language = 'plpgsql', declarada = false;
+  let valid = tokens.every(token => token.depth === 0);
+  for (let i = 1; i < tokens.length;) {
+    const token = tokens[i];
+    if (paraula(token, 'language') && !declarada) {
+      const nom = tokens[i + 1];
+      if (!nom || !['word', 'identifier', 'literal'].includes(nom.kind)
+        || nom.encoded || nom.escaped && nom.value.includes('\\')) { valid = false; break; }
+      language = nom.value; declarada = true; i += 2;
+    } else if (token.kind === 'literal' && !body) {
+      body = token; i++;
+    } else { valid = false; break; }
+  }
+  return { body, language, valid: valid && body !== null };
+}
+
+/* R1 usa el mateix lexer, però descendix només als cossos executables de
+ * DO i CREATE FUNCTION/PROCEDURE en SQL/PLpgSQL. Un literal de VALUES,
+ * replace() o EXECUTE és dades, no un INSERT demostrat. El SQL dinàmic
+ * queda explícitament sense certificar; no s'endevina el seu resultat.
+ * R32.2 · Cada nivell passa pel lexer tancat: una construcció oberta al fitxer
+ * o dins d'un cos executable torna a `errors` (R0). El sostre de 32 nivells
+ * fita el cost a 33 passades lineals de la mida; R32.3 · passar-lo també és R0
+ * (abans era informació amb exit 0, i PGlite 17 executa el cos 33). `EXECUTE ON` és
+ * el privilegi de GRANT/REVOKE (ON és reservada: mai una expressió d'EXECUTE
+ * dinàmic; `\u00a0on` és un altre identificador, vegeu tokensDeFuncio). `function`
+ * i `procedure` NO són reservades: són noms vàlids de variable PL/pgSQL
+ * (PGlite 17 executa `execute function;`), i només excusen l'EXECUTE dins
+ * d'una capçalera CREATE [OR REPLACE|CONSTRAINT|EVENT] TRIGGER.
+ * Cada CREATE (o ALTER VIEW|TABLE) a profunditat 0 d'una sentència dels cossos
+ * (nivell ≥ 1) es torna a `ddl` amb el seu tros, fins al DDL següent, i el
+ * tipus de cos (`do` o `funcio`): R3 i R4 també els jutgen (R2 continua sent DDL
+ * de nivell superior per decisió, vegeu el bucle principal). */
+function codiExecutableR1(sql, { nivell = 0, dins = null, sentencia = null, ddl = [] } = {}) {
+  const resultat = [], desconeguts = new Set();
+  const statements = sentencies(sql);
+  const errors = statements.errors.map(error => ({ ...error, nivell }));
+  if (nivell > 32) return { codi: '', desconeguts: [], errors: [...errors, { tipus: 'nestingLimit', nivell }], ddl };
+  statements.forEach((statement, posicio) => {
+    const { tokens, valid } = tokensDeFuncio(statement);
+    const s = nivell === 0 ? posicio : sentencia;
+    if (!valid) desconeguts.add('tokens SQL incomplets o no suportats');
+    let capTrigger = -1;
+    for (let k = 1; k < tokens.length && capTrigger < 0; k++) {
+      if (paraula(tokens[k], 'trigger') && ['create', 'replace', 'constraint', 'event'].some(clau => paraula(tokens[k - 1], clau))) capTrigger = k;
+    }
+    if (tokens.some((token, index) => paraula(token, 'execute') && !(paraula(tokens[index + 1], 'on')
+      || capTrigger >= 0 && capTrigger < index && (paraula(tokens[index + 1], 'function') || paraula(tokens[index + 1], 'procedure'))))) {
+      desconeguts.add('EXECUTE dinàmic: destí i efectes no acreditats');
+    }
+    if (nivell > 0) {
+      // R32.3 · Tots els DDL de la sentència, no el primer alter/create: en
+      // PL/pgSQL `alter` no és reservada, i una etiqueta <<alter>> o una variable
+      // alter davant del CREATE POLICY/VIEW el feien invisible (PGlite 17: política
+      // `true` i vista definer creades, porta ✅). CREATE és reservada (sempre una
+      // ordre); ALTER només compta davant de VIEW|TABLE, i un rol `to alter` no
+      // talla la política. Cada tros acaba al DDL següent: cost lineal.
+      let inici = -1;
+      for (let k = 0; k <= tokens.length; k++) {
+        const token = tokens[k];
+        if (k < tokens.length && !(token.depth === 0 && (paraula(token, 'create')
+          || paraula(token, 'alter') && (paraula(tokens[k + 1], 'view') || paraula(tokens[k + 1], 'table'))))) continue;
+        if (inici >= 0) ddl.push({ tros: statement.slice(tokens[inici].offset, token?.offset), nivell, dins });
+        inici = k;
+      }
+    }
+    const cos = cosExecutableR1(tokens);
+    if (cos?.tipus === 'do' && !cos.valid) desconeguts.add('capçalera DO no suportada');
+    const plans = tokens.filter(token => token.kind !== 'literal');
+    resultat.push(plans.map((token, index) => {
+      const valor = token.kind === 'identifier' ? `"${token.value.replaceAll('"', '""')}"` : token.value;
+      const junt = token.value === '.' || plans[index - 1]?.value === '.';
+      return `${index && !junt ? ' ' : ''}${valor}`;
+    }).join(''));
+    const body = cos?.body;
+    const opac = body?.encoded || body?.escaped && body.value.includes('\\');
+    const descendix = body && !opac && cos.valid && ['sql', 'plpgsql'].includes(cos.language);
+    const mode = modeLexicR0(tokens, descendix ? body : null);
+    if (mode) errors.push({ tipus: 'standardConformingStrings', forma: mode, nivell, sentencia: s });
+    if (opac) desconeguts.add('cos amb escapaments no interpretats');
+    else if (descendix) {
+      const nested = codiExecutableR1(body.value, { nivell: nivell + 1, dins: dins === 'funcio' || cos.tipus === 'funcio' ? 'funcio' : 'do', sentencia: s, ddl });
+      resultat.push(nested.codi);
+      for (const desconegut of nested.desconeguts) desconeguts.add(desconegut);
+      for (const error of nested.errors) errors.push(error);
+    } else if (body) desconeguts.add('llenguatge de cos no suportat per R1');
+  });
+  return { codi: resultat.join('\n'), desconeguts: [...desconeguts], errors, ddl };
+}
+
+/* R32.2 · Dins d'un cos PL/pgSQL el DO o el CREATE FUNCTION|PROCEDURE no sempre
+ * encapçala la sentència: el precedixen `begin`, `then`, `loop`, una etiqueta…
+ * Es busca el primer constructor a profunditat 0 on siga. Un `do` sense literal
+ * ni LANGUAGE darrere (ON CONFLICT DO NOTHING/UPDATE) no és un bloc, i el DO es
+ * valida amb cosDeDo des d'eixe punt. Una passada lineal pels tokens. */
+function cosExecutableR1(tokens) {
+  for (let k = 0; k < tokens.length; k++) {
+    const token = tokens[k];
+    if (token.depth !== 0 || token.kind !== 'word') continue;
+    if (token.value === 'do') {
+      if (tokens[k + 1]?.kind !== 'literal' && !paraula(tokens[k + 1], 'language')) continue;
+      return { ...cosDeDo(tokens.slice(k)), tipus: 'do' };
+    }
+    if (token.value !== 'create') continue;
+    let j = k + 1;
+    if (paraula(tokens[j], 'or') && paraula(tokens[j + 1], 'replace')) j += 2;
+    if (!paraula(tokens[j], 'function') && !paraula(tokens[j], 'procedure')) continue;
+    let body = null, language = null;
+    for (let m = j + 1; m < tokens.length; m++) {
+      const candidat = tokens[m];
+      if (candidat.depth !== 0) continue;
+      if (language === null && paraula(candidat, 'language')) language = tokens[m + 1]?.value ?? null;
+      if (body === null && candidat.kind === 'literal' && paraula(tokens[m - 1], 'as')) body = candidat;
+    }
+    return { body, language, valid: true, tipus: 'funcio' };
+  }
+  return null;
+}
+
+/* R0 · El lexer suposa standard_conforming_strings = on, el valor de Supabase.
+ * Amb off, PostgreSQL llig \' dins de '…' com una cometa escapada i la partició
+ * divergix: PGlite 17 aplicava a la migració següent un DISABLE ROW LEVEL
+ * SECURITY que el tractor veia dins d'un literal. Només s'admet fixar-lo a
+ * on/true (SET, ALTER ROLE|DATABASE|SYSTEM … SET o l'opció d'una rutina); un
+ * altre valor, un RESET, un nom U&"…" o el nom dins d'un literal (set_config,
+ * pg_settings, SQL dinàmic) fallen tancats. SHOW és lectura. backslash_quote no
+ * hi entra: amb el mode on només decidix si PostgreSQL accepta o rebutja \',
+ * mai on acaba la cadena (PGlite 17: mateixa partició amb off).
+ * R32.3 · Pel mecanisme i no només pel nom, a tots els nivells que el tractor
+ * llig com a codi (fitxer, DO i cossos SQL/PLpgSQL). PGlite 17 posa off amb
+ * `set_config('standard_' || 'conforming_strings', …)` dins d'una funció
+ * cridada, `update pg_settings … where name like 'standard%'` (també amb àlies,
+ * IN, una regla o una vista sobre pg_settings), U&"set\005fconfig"(…),
+ * U&"pg\005fsettings", un EXECUTE literal i `language internal as
+ * 'set_config_by_name'`. Per això: set_config només amb un primer argument que
+ * siga un literal pur; pg_settings només en UPDATE … SET setting = <literal>
+ * WHERE name = <literal pur> fins al final de la sentència; cap identificador
+ * U&"…"; i cap literal de dades (SQL dinàmic, cos no interpretat) que
+ * anomene pg_settings o set_config. El SQL dinàmic concatenat continua sent
+ * detection-unknown (R1). */
+const RE_SCS = /standard_conforming_strings|pg_settings|set_config/i;
+const NOM_GUC_PUR = /^[a-z0-9_.]+$/i;
+function updatePurPgSettings(tokens, k) {
+  let u = k;
+  if (simbol(tokens[u - 1], '.') && identificador(tokens[u - 2]) && tokens[u - 2].value === 'pg_catalog') u -= 2;
+  if (paraula(tokens[u - 1], 'only')) u--;
+  const columna = tokens[k + 2], nom = tokens[k + 6], literal = tokens[k + 8];
+  return tokens.length === k + 9 && paraula(tokens[u - 1], 'update') && paraula(tokens[k + 1], 'set')
+    && identificador(columna) && columna.value === 'setting' && simbol(tokens[k + 3], '=') && tokens[k + 4].kind === 'literal'
+    && paraula(tokens[k + 5], 'where') && identificador(nom) && nom.value === 'name' && simbol(tokens[k + 7], '=')
+    && literal.kind === 'literal' && NOM_GUC_PUR.test(literal.value);
+}
+function modeLexicR0(tokens, cosRellegit) {
+  for (let k = 0; k < tokens.length; k++) {
+    const token = tokens[k];
+    if (token.kind === 'literal') {
+      if (token !== cosRellegit && RE_SCS.test(token.value)) return 'el nom standard_conforming_strings, pg_settings o set_config dins d\'un literal (SQL dinàmic o cos no interpretat)';
+      continue;
+    }
+    const previ = tokens[k - 1];
+    const set = paraula(previ, 'set') || (paraula(previ, 'session') || paraula(previ, 'local')) && paraula(tokens[k - 2], 'set');
+    if ((set || paraula(previ, 'reset')) && paraula(token, 'u') && tokens[k + 1]?.value === '&') return 'un nom U&"…" no interpretat';
+    if (paraula(token, 'u') && simbol(tokens[k + 1], '&') && tokens[k + 2]?.kind === 'identifier') return 'un identificador U&"…" no interpretat (pot ser set_config o pg_settings)';
+    if (identificador(token) && token.value === 'set_config' && !(simbol(tokens[k + 1], '(') && tokens[k + 2]?.kind === 'literal'
+      && NOM_GUC_PUR.test(tokens[k + 2].value) && (simbol(tokens[k + 3], ',') || simbol(tokens[k + 3], ')')))) {
+      return 'set_config sense un nom de paràmetre literal pur (concatenació, variable o referència)';
+    }
+    if (identificador(token) && token.value === 'pg_settings' && !updatePurPgSettings(tokens, k)) {
+      return 'pg_settings fora de la forma UPDATE … SET setting = <literal> WHERE name = <literal pur>';
+    }
+    if (!identificador(token) || token.value.toLowerCase() !== 'standard_conforming_strings') continue;
+    if (paraula(previ, 'reset')) return 'RESET (torna al valor per defecte del rol o de la base)';
+    if (!set) continue;
+    const [operador, valor, seguent] = [tokens[k + 1], tokens[k + 2], tokens[k + 3]];
+    const assigna = operador?.kind === 'symbol' && operador.value === '=' || paraula(operador, 'to');
+    const on = paraula(valor, 'on') || paraula(valor, 'true') || valor?.kind === 'literal' && ['on', 'true'].includes(valor.value.toLowerCase());
+    if (!(assigna && on && (!seguent || seguent.kind === 'word'))) return 'un SET a un valor que no és on';
+  }
+  return null;
+}
+
+/* R0 · LEXER-OBERT: la posició és la del fitxer (línia i columna 1-based) quan
+ * l'error és de nivell superior; dins d'un cos executable, el text del cos ja
+ * no té comentaris i només s'indica el nivell. Els salts de línia es compten
+ * com a PostgreSQL: \r\n, \r o \n. */
+const CONSTRUCCIONS_R0 = {
+  unclosedBlockComment: 'el comentari de bloc /* no es tanca',
+  unclosedSingleQuote: "la cadena '…' no es tanca",
+  unclosedDoubleQuote: 'l\'identificador "…" no es tanca',
+  unclosedDollarQuote: 'el literal $…$ no es tanca',
+  unclosedParenthesis: 'el parèntesi ( no es tanca',
+};
+function motiuR0(content, error) {
+  if (error.tipus === 'nestingLimit') {
+    return `nestingLimit dins d'un cos executable (nivell ${error.nivell}): més de 32 cossos DO/funció imbricats; el tractor no els avalua i no acredita el fitxer.`;
+  }
+  if (error.tipus === 'standardConformingStrings') {
+    const on = error.nivell ? `dins d'un cos executable (nivell ${error.nivell}, sentència ${error.sentencia + 1})` : `(sentència ${error.sentencia + 1})`;
+    return `standardConformingStrings ${on}: standard_conforming_strings amb ${error.forma}. El lexer suposa on (Supabase); amb off, PostgreSQL llig \\' dins de '…' com una cometa escapada i executa text que el tractor veu com a literal. Només s'admet SET … = on.`;
+  }
+  let on = `dins d'un cos executable (nivell ${error.nivell})`;
+  if (error.nivell === 0) {
+    const abans = content.slice(0, error.offset);
+    const salts = abans.match(/\r\n|\r|\n/g)?.length ?? 0;
+    on = `(línia ${salts + 1}, columna ${error.offset - Math.max(abans.lastIndexOf('\n'), abans.lastIndexOf('\r'))})`;
+  }
+  return `${error.tipus} ${on}: ${CONSTRUCCIONS_R0[error.tipus]} abans del final ${error.nivell ? 'del cos' : 'del fitxer'}; el lexer s'empassaria la resta sense avaluar-la. PostgreSQL el rebutja: tanca'l o retalla el fitxer.`;
 }
 
 const OPCIONS_FUNCIO = new Set(['language', 'transform', 'window', 'immutable', 'stable', 'volatile', 'leakproof', 'not',
@@ -424,6 +697,48 @@ function sqlDinamicR6(text) {
   return motius;
 }
 
+/* R32.2 · El literal exterior d'un DO PL/pgSQL és codi, no una cadena
+ * EXECUTE. Només admetem dins d'eixe codi un ALTER FUNCTION qualificat,
+ * amb signatura resolta i una única opció SET search_path buit. Les formes
+ * neutrals SET SCHEMA i RENAME TO de HEAD continuen admeses, qualificades
+ * i amb un únic identificador; tampoc s'apliquen al catàleg. És una
+ * comprovació de l'operació, MAI una esmena del catàleg: una branca pot no
+ * executar-se i no retira cap definer insegura coneguda. Els literals de
+ * dins continuen passant pel detector dinàmic conservador original. */
+function motiusCosDoR6(cos) {
+  const motius = new Set(), literals = [];
+  for (const segment of sentencies(cos)) {
+    const { tokens, valid } = tokensDeFuncio(segment);
+    if (!valid) motius.add('Cos DO amb tokens no suportats: no s’acredita el DDL de rutina.');
+    literals.push(...tokens.filter(token => token.kind === 'literal').map(token => token.value));
+    if (tokens.some((token, i) => paraula(token, 'do') && (tokens[i + 1]?.kind === 'literal'
+      || paraula(tokens[i + 1], 'language')))) motius.add('DO imbricat fora del subconjunt estàtic: no s’acredita el DDL de rutina.');
+    for (let i = 0; i < tokens.length; i++) {
+      let j = i + 1;
+      const verb = tokens[i];
+      if (!['create', 'alter', 'drop'].some(value => paraula(verb, value))) continue;
+      if (paraula(verb, 'create') && paraula(tokens[j], 'or') && paraula(tokens[j + 1], 'replace')) j += 2;
+      if (!RUTINES.has(tokens[j]?.value) || tokens[j]?.kind !== 'word') continue;
+      const alter = paraula(verb, 'alter') && paraula(tokens[j], 'function')
+        ? capcaleraFuncio(segment.slice(verb.offset), 'alter') : null;
+      const header = alter?.header ?? [];
+      const identitatResoluta = alter?.valid && alter.qualificat && !alter.omitted && alter.key !== null && !alter.bodyStandard;
+      const neutral = identitatResoluta && header.length === 3 && identificador(header[2])
+        && (paraula(header[0], 'set') && paraula(header[1], 'schema') || paraula(header[0], 'rename') && paraula(header[1], 'to'));
+      const pur = alter?.valid && alter.qualificat && !alter.omitted && alter.key !== null && !alter.bodyStandard
+        && header.length === 4 && paraula(header[0], 'set') && identificador(header[1]) && header[1].value === 'search_path'
+        && (header[2]?.kind === 'symbol' && header[2].value === '=' || paraula(header[2], 'to'))
+        && header[3]?.kind === 'literal' && header[3].value === '' && configuracioPath(header).segur;
+      if (!pur && !neutral) motius.add('DDL de rutina dins DO fora del subconjunt: només ALTER FUNCTION qualificat amb signatura resolta i SET search_path buit pur, SET SCHEMA o RENAME TO neutrals.');
+      // Una segona operació abans del mateix separador ja faria el primer
+      // ALTER no pur. Un sol parse per segment evita cost quadràtic.
+      break;
+    }
+  }
+  for (const motiu of sqlDinamicR6(literals.join('\n'))) motius.add(motiu);
+  return motius;
+}
+
 function estatFuncionsR6(statement, file, estat, posicio) {
   // La resolució amb un search_path de sessió arbitrari queda fora del
   // subconjunt: podria canviar tant l'esquema implícit com un tipus shadowed.
@@ -450,7 +765,14 @@ function estatFuncionsR6(statement, file, estat, posicio) {
     falla('R6', file, 'search_path de sessió dins d\'un bloc DO no suportat per a resoldre identitats; cal SQL qualificat i verificació PostgreSQL.');
   }
   // R32 · P2 (c): SQL dinàmic amb DEFINER o search_path de rutina.
-  for (const motiu of sqlDinamicR6(tots.filter(token => token.kind === 'literal').map(token => token.value).join('\n'))) falla('R6', file, motiu);
+  const literals = tots.filter(token => token.kind === 'literal');
+  const doBody = cosDeDo(session);
+  const bodyDo = doBody?.body;
+  if (doBody) {
+    if (!doBody.valid || doBody.language !== 'plpgsql') falla('R6', file, 'Capçalera o llenguatge DO fora del subconjunt PL/pgSQL: no s’acredita el DDL de rutina.');
+    else if (bodyDo.encoded || bodyDo.escaped && bodyDo.value.includes('\\')) falla('R6', file, 'Cos DO amb escapaments no interpretats: no s’acredita el DDL de rutina.');
+    else for (const motiu of motiusCosDoR6(bodyDo.value)) falla('R6', file, motiu);
+  } else for (const motiu of sqlDinamicR6(literals.map(token => token.value).join('\n'))) falla('R6', file, motiu);
   const create = capcaleraFuncio(statement);
   if (create) {
     const definer = create.header.some((token, index) => paraula(token, 'security') && paraula(create.header[index + 1], 'definer'));
@@ -558,11 +880,16 @@ function estatFuncionsR6(statement, file, estat, posicio) {
   }
 }
 
-const SQL_IDENTIFIER = String.raw`(?:"(?:[^"]|"")+"|[a-zA-Z_][a-zA-Z0-9_$]*)`;
+/* R32.2 · Els noms no quoted admeten lletres no ASCII, com el lexer i com
+ * PostgreSQL: amb la classe ASCII, `create table public.sessió` no casava i
+ * la taula quedava invisible per a R2 (PGlite 17: creada sense RLS, porta ✅).
+ * Només es plega la caixa ASCII: en UTF-8, downcase_identifier deixa intactes
+ * els bytes alts (PGlite 17: SESSIÓ → sessiÓ). */
+const SQL_IDENTIFIER = String.raw`(?:"(?:[^"]|"")+"|[a-zA-Z_\u0080-\uFFFF][a-zA-Z0-9_$\u0080-\uFFFF]*)`;
 const RE_SQL_RELATION = new RegExp(`^\\s*(${SQL_IDENTIFIER})(?:\\s*\\.\\s*(${SQL_IDENTIFIER}))?(?=\\s|\\(|[,*]|$)`);
 const sqlIdentifier = (raw) => raw.startsWith('"')
   ? raw.slice(1, -1).replace(/""/g, '"')
-  : raw.toLowerCase();
+  : raw.replace(/[A-Z]+/g, tram => tram.toLowerCase());
 
 /** CREATE i ALTER compartixen la caixa i els escapaments dels identificadors. */
 function sqlRelation(text) {
@@ -596,6 +923,18 @@ function creacioTaula(statement) {
   const prefix=/^\s*create\s+(?:unlogged\s+)?table\s+(if\s+not\s+exists\s+)?/i.exec(statement);
   const relation=prefix&&sqlRelation(statement.slice(prefix[0].length));
   return relation ? {...relation,ifNotExists:!!prefix[1]} : null;
+}
+
+/* R32.2 · CREATE/ALTER TABLE amb un nom que sqlRelation no entén (U&"…",
+ * per exemple, que PGlite 17 crea igual) no pot callar: la taula quedaria fora
+ * de l'estat R2. Falla tancat amb el nom de l'ordre. */
+function relacioNoReconeguda(statement) {
+  for (const [regex, ordre] of [[/^\s*create\s+(?:unlogged\s+)?table\s+(?:if\s+not\s+exists\s+)?/i, 'CREATE TABLE'],
+    [/^\s*alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?/i, 'ALTER TABLE']]) {
+    const prefix = regex.exec(statement);
+    if (prefix && !sqlRelation(statement.slice(prefix[0].length))) return ordre;
+  }
+  return null;
 }
 
 function taulesRetirades(statement) {
@@ -640,7 +979,6 @@ function canvisDeRelacio(statement) {
 /* R3 · exempcions declarades. Contingut públic per disseny, no dades de persones. */
 const R3_EXEMPTES = new Set(['towns', 'app_content']);
 
-const RE_POLITICA = /^\s*create\s+policy\s+(?:if\s+not\s+exists\s+)?(?:"([^"]+)"|([a-zA-Z0-9_]+))\s+on\s+(?:(?:public|storage|private|realtime)\s*\.\s*)?([a-zA-Z0-9_]+)/i;
 // Taula gestionada pel servei, verificada al catàleg abans d'aplicar la política.
 // No s'exempta l'esquema: qualsevol altra realtime.* continua requerint DDL.
 const TAULES_DEL_SERVEI = new Set(['realtime.messages']);
@@ -648,6 +986,129 @@ const TAULES_DEL_SERVEI = new Set(['realtime.messages']);
 const TAULES_TRIGGER_DEL_SERVEI = new Set(['auth.users']);
 const RE_USING_TRUE = /\busing\s*\(\s*true\s*\)/i;
 const RE_CHECK_TRUE = /\bwith\s+check\s*\(\s*true\s*\)/i;
+
+/* R32.2 · R3 i R4 per tokens, sense literals ni comentaris.
+ * R3: a més de la grafia `using (true)`, una expressió USING/WITH CHECK
+ * trivialment certa és una política oberta (PGlite 17 desa `((true))`,
+ * 't'::bool i CAST(true AS boolean) com `true`, i `1=1` com `(1 = 1)`):
+ * parèntesis redundants, un disjunt cert dins d'un OR de nivell superior,
+ * NOT false i una igualtat de constants. És un subconjunt, no un demostrador.
+ * El nom i la taula es lligen dels tokens: amb la regex de capçalera, `on "t"`
+ * no casava (la política oberta no s'avaluava) i `on towns.secret` heretava
+ * l'exempció de public.towns (PGlite 17: política `true` en tots dos, porta ✅).
+ * R4: security_invoker es llig de la clàusula WITH (…) de la capçalera, abans
+ * d'AS, i no d'un literal o d'un àlies; CREATE RECURSIVE|TEMP VIEW i un nom
+ * entre cometes també hi entren, i un ALTER VIEW|TABLE … SET (security_invoker
+ * = false) o RESET (security_invoker) falla tancat (PGlite 17: reloptions
+ * security_invoker=false). Recorreguts lineals amb un sostre de 32 nivells. */
+const VALORS_CERTS = new Set(['t', 'tr', 'tru', 'true', 'y', 'ye', 'yes', 'on', '1']);
+const simbol = (token, valor) => token?.kind === 'symbol' && token.value === valor;
+const esBoolea = token => paraula(token, 'bool') || paraula(token, 'boolean');
+const constantCerta = token => paraula(token, 'true') || token?.kind === 'literal' && VALORS_CERTS.has(token.value.trim().toLowerCase());
+function parelles(tokens) {
+  const parella = new Int32Array(tokens.length).fill(-1), pila = [];
+  tokens.forEach((token, k) => {
+    if (simbol(token, '(')) pila.push(k);
+    else if (simbol(token, ')') && pila.length) { const obri = pila.pop(); parella[obri] = k; parella[k] = obri; }
+  });
+  return parella;
+}
+function disjuntCert(tokens, a, b) {
+  const t = tokens[a];
+  if (b - a === 1) return constantCerta(t);
+  if (b - a === 2 && paraula(t, 'not')) return paraula(tokens[a + 1], 'false');
+  if (b - a === 4 && simbol(tokens[a + 1], ':') && simbol(tokens[a + 2], ':') && esBoolea(tokens[a + 3])) return constantCerta(t);
+  if (b - a === 6 && paraula(t, 'cast') && simbol(tokens[a + 1], '(') && paraula(tokens[a + 3], 'as') && esBoolea(tokens[a + 4]) && simbol(tokens[a + 5], ')')) return constantCerta(tokens[a + 2]);
+  // Igualtat de constants (1 = 1, 'a' = 'a'): cap paraula ni identificador als costats.
+  for (let k = a + 1; k < b - 1; k++) {
+    if (!simbol(tokens[k], '=') || tokens[k].depth !== t.depth || ['<', '>', '!'].some(v => simbol(tokens[k - 1], v)) || simbol(tokens[k + 1], '>')) continue;
+    if (b - k - 1 !== k - a) return false;
+    for (let m = 0; m < k - a; m++) {
+      const [x, y] = [tokens[a + m], tokens[k + 1 + m]];
+      if (!['symbol', 'literal'].includes(x.kind) || x.kind !== y.kind || x.value !== y.value) return false;
+    }
+    return true;
+  }
+  return false;
+}
+function expressioCerta(tokens, a, b, parella, prof = 0) {
+  while (b - a >= 2 && simbol(tokens[a], '(') && parella[a] === b - 1) { a++; b--; }
+  if (a >= b || prof > 32) return false;
+  let inici = a;
+  for (let k = a; k < b; k++) {
+    if (!paraula(tokens[k], 'or') || tokens[k].depth !== tokens[a].depth) continue;
+    if (expressioCerta(tokens, inici, k, parella, prof + 1)) return true;
+    inici = k + 1;
+  }
+  return inici === a ? disjuntCert(tokens, a, b) : expressioCerta(tokens, inici, b, parella, prof + 1);
+}
+function clausulaCerta(tokens, parella, clau) {
+  for (let k = 0; k < tokens.length - 1; k++) {
+    if (tokens[k].depth !== 0 || !simbol(tokens[k + 1], '(')) continue;
+    const es = clau === 'using' ? paraula(tokens[k], 'using') : paraula(tokens[k], 'check') && paraula(tokens[k - 1], 'with');
+    if (es && parella[k + 1] > k + 1 && expressioCerta(tokens, k + 2, parella[k + 1], parella)) return true;
+  }
+  return false;
+}
+function avaluaR3(st, file, exempt, on = '') {
+  if (exempt || !/^\s*create\s+policy\b/i.test(st)) return;
+  const { tokens } = tokensDeFuncio(st);
+  const k = paraula(tokens[2], 'if') ? 5 : 2;
+  const sobre = tokens.findIndex((token, index) => index > k && token.depth === 0 && paraula(token, 'on'));
+  const qualificada = sobre >= 0 && simbol(tokens[sobre + 2], '.');
+  const esquema = qualificada ? tokens[sobre + 1]?.value : null;
+  const taula = (sobre < 0 ? null : tokens[sobre + (qualificada ? 3 : 1)]?.value) ?? '?';
+  // L'exempció és la de public.towns i public.app_content, no la d'un esquema homònim.
+  if (R3_EXEMPTES.has(taula) && (esquema === null || esquema === 'public')) return;
+  const nom = tokens[k]?.value ?? '?';
+  const parella = parelles(tokens);
+  for (const [clau, regex, text] of [['using', RE_USING_TRUE, 'using (true)'], ['check', RE_CHECK_TRUE, 'with check (true)']]) {
+    const literal = regex.test(st);
+    if (literal || clausulaCerta(tokens, parella, clau)) falla('R3', file, `${text} en política "${nom}" sobre ${taula}${literal ? '' : ' (expressió trivialment certa)'}${on}`);
+  }
+}
+const RE_CREA_VISTA = /^\s*create\s+(?:or\s+replace\s+)?(?:(?:temp|temporary)\s+)?(?:recursive\s+)?view\s+/i;
+// Valor de security_invoker a la llista `( nom [= valor], … )` que obri tokens[obri]: 'cert', 'no' o null.
+function securityInvoker(tokens, obri) {
+  const d = tokens[obri].depth;
+  let estat = null;
+  for (let k = obri + 1; k < tokens.length; k++) {
+    const token = tokens[k];
+    if (token.depth === d && simbol(token, ')')) break;
+    if (token.depth !== d + 1 || !identificador(token) || token.value.toLowerCase() !== 'security_invoker'
+      || !(simbol(tokens[k - 1], '(') || simbol(tokens[k - 1], ','))) continue;
+    const [operador, valor, despres] = [tokens[k + 1], tokens[k + 2], tokens[k + 3]];
+    if (simbol(operador, ',') || simbol(operador, ')')) { estat = 'cert'; continue; }
+    const cert = simbol(operador, '=') && (constantCerta(valor) || paraula(valor, 'on') || paraula(valor, 'yes') || simbol(valor, '1'))
+      && (simbol(despres, ',') || simbol(despres, ')'));
+    estat = cert ? 'cert' : 'no';
+  }
+  return estat;
+}
+function avaluaR4(st, file, on = '') {
+  const crea = RE_CREA_VISTA.exec(st);
+  if (crea) {
+    const nom = sqlRelation(st.slice(crea[0].length))?.table ?? '?';
+    views.add(nom.toLowerCase());
+    const { tokens } = tokensDeFuncio(st);
+    const as = tokens.findIndex(token => token.depth === 0 && paraula(token, 'as'));
+    let invoker = null;
+    for (let k = 0; k < (as < 0 ? tokens.length : as) - 1; k++) {
+      if (tokens[k].depth === 0 && paraula(tokens[k], 'with') && simbol(tokens[k + 1], '(')) invoker = securityInvoker(tokens, k + 1);
+    }
+    if (invoker !== 'cert') falla('R4', file, `La vista ${nom} no porta security_invoker = true${on}`);
+    return;
+  }
+  if (!/^\s*alter\s+(?:view|table)\s/i.test(st)) return;
+  const { tokens } = tokensDeFuncio(st);
+  for (let k = 0; k < tokens.length - 1; k++) {
+    if (tokens[k].depth !== 0 || !simbol(tokens[k + 1], '(') || !paraula(tokens[k], 'set') && !paraula(tokens[k], 'reset')) continue;
+    const invoker = securityInvoker(tokens, k + 1);
+    if (invoker && (paraula(tokens[k], 'reset') || invoker !== 'cert')) {
+      falla('R4', file, `${tokens[k].value.toUpperCase()} (security_invoker …) deixa la vista ${sqlRelation(st.replace(/^\s*alter\s+(?:view|table)\s+(?:if\s+exists\s+)?(?:only\s+)?/i, ''))?.table ?? '?'} sense security_invoker = true${on}`);
+    }
+  }
+}
 
 const sqlDir = 'supabase';
 let infr = [];
@@ -705,6 +1166,17 @@ function ordreFontsSql(files) {
 }
 const fonts = ordreFontsSql(scanFiles(sqlDir));
 const files = [...fonts.base, ...fonts.posteriors];
+// R32.2 · R0 i R1 · Cada font passa una sola vegada pel lexer tancat i pel codi
+// executable R1 ABANS d'avaluar cap sentència: una construcció oberta a EOF (al
+// fitxer o dins d'un cos DO/funció) és una violació explícita, no un silenci.
+// La resta de regles continuen avaluant el fitxer: R0 no en retira cap.
+const fontsR1 = new Map();
+for (const file of files) {
+  const content = fs.readFileSync(file, 'utf8');
+  const font = codiExecutableR1(content);
+  fontsR1.set(file, font);
+  for (const error of font.errors) falla('R0', file, motiuR0(content, error));
+}
 const posteriors = new Set(fonts.posteriors);
 // Estat FINAL del catàleg: només les migracions (o tot, en un fixture pla).
 // Cap fitxer posterior hi escriu; cadascun treballa sobre una còpia pròpia.
@@ -875,18 +1347,22 @@ function revocacionsR8(content) {
 
 for (const file of files) {
   const content = fs.readFileSync(file, 'utf8');
-  
+  // R1 (Codex R32 lot_08) · Només el codi executable acredita una taula: un
+  // CREATE TABLE dins d'un literal o d'un comentari no existix per a PostgreSQL.
+  const executableR1 = fontsR1.get(file).codi;
+
   // Extract tables created
   /* Onada R24.2 · També les taules temporals de sessió (create temp[orary] table):
      un insert into pg_temp.x d'una taula temporal creada al mateix catàleg no és cap
      taula inexistent. R2 no les toca (no tenen RLS: viuen només dins de la sessió). */
   const createTableRegex = /create (?:temp(?:orary)? )?table (?:if not exists )?(?:[a-zA-Z0-9_]+\.)?([a-zA-Z0-9_]+)/gi;
   let match;
-  while ((match = createTableRegex.exec(content)) !== null) {
+  while ((match = createTableRegex.exec(executableR1)) !== null) {
     tables.add(match[1]);
   }
   // R32 · ronda 2 · Noms de tipus i dominis de l'arbre: ombregen un tipus intern
-  // homònim quan la ruta real posa el seu esquema davant de pg_catalog.
+  // homònim quan la ruta real posa el seu esquema davant de pg_catalog. Sobre les
+  // sentències del fitxer: el codi R1 no porta `;` i en seria una de sola.
   for (const statement of sentencies(content)) {
     const tipus = RE_CREA_TIPUS.exec(statement);
     const relacio = tipus && sqlRelation(statement.slice(tipus[0].length));
@@ -896,12 +1372,13 @@ for (const file of files) {
 
 for (const file of files) {
   const content = fs.readFileSync(file, 'utf8');
+  const executableR1 = fontsR1.get(file).codi;
 
   // R1: TAULA-FANTASMA
   // Cap create policy / create trigger / insert into sobre una taula no creada
   const createPolicyRegex = /create policy (?:if not exists )?(?:"[^"]+"|'[a-zA-Z0-9_]+'|[a-zA-Z0-9_]+)\s+on\s+(?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)(?:\s+for\s+(select|insert|update|delete|all))?/gi;
   let match;
-  while ((match = createPolicyRegex.exec(content)) !== null) {
+  while ((match = createPolicyRegex.exec(executableR1)) !== null) {
     const schema = match[1] || 'public';
     const table = match[2];
     const action = (match[3] || 'all').toLowerCase();
@@ -911,7 +1388,7 @@ for (const file of files) {
     }
   }
 
-  for (const trigger of triggersR1(content)) {
+  for (const trigger of triggersR1(executableR1)) {
     const schema = trigger.schema || 'public';
     const table = trigger.table;
     const taula = `${schema}.${table}`;
@@ -922,7 +1399,7 @@ for (const file of files) {
   }
 
   const insertRegex = /insert into (?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/gi;
-  while ((match = insertRegex.exec(content)) !== null) {
+  while ((match = insertRegex.exec(executableR1)) !== null) {
     const schema = match[1] || 'public';
     const table = match[2];
     if (schema !== 'storage' && schema !== 'auth' && schema !== 'private' && table !== 'auth' && !tables.has(table)) {
@@ -941,9 +1418,20 @@ for (const file of files) {
 
   // R2: RLS-ABSENT. CREATE normal reinicia l'estat; IF NOT EXISTS conserva
   // l'existent conegut. DROP el retira i cada acció ALTER s'aplica en ordre.
+  // R2 és DDL de nivell superior: els cossos DO i de funció en queden fora per
+  // decisió (tests/tractor-rls-r2-ddl.test.mjs, «el control final no interpreta
+  // … cossos de funcions com un DISABLE»). R32.2 · Un CREATE/ALTER TABLE amb un
+  // nom de relació que no s'entén falla tancat, i també un CREATE SCHEMA amb
+  // elements (PGlite 17: `create schema s create table s.x(…)` crea la taula
+  // sense RLS dins de la mateixa ordre, invisible per a R2).
   const statements=sentencies(content);
   const criadesAlFitxer=new Set();
   for(const statement of statements) {
+    const noReconeguda=relacioNoReconeguda(statement);
+    if(noReconeguda)falla('R2',file,`${noReconeguda} amb un nom de relació que el tractor no reconeix: no se n'acredita la RLS; usa un nom pla o entre cometes dobles.`);
+    if(/^\s*create\s+schema\b/i.test(statement)&&tokensDeFuncio(statement).tokens.some((token,k)=>k>1&&token.depth===0&&paraula(token,'create'))) {
+      falla('R2',file,'CREATE SCHEMA amb elements (CREATE TABLE, VIEW… dins de la mateixa ordre): R2 no els avalua; crea cada objecte amb una ordre de nivell superior.');
+    }
     const created=creacioTaula(statement);
     if(created) {
       const key=JSON.stringify([created.schema,created.table]);
@@ -990,35 +1478,22 @@ for (const file of files) {
     }
   }
 
-  // R3: USING-TRUE — una política per sentència, comentaris fora, sense travessar el `;`.
+  // R3: USING-TRUE i R4: VISTA-DEFINER — una sentència cada vegada, comentaris
+  // fora, sense travessar el `;`; també les dels cossos executables (R32.2).
   const isLegacyExempt = file.includes('2609110600_perfil_avatar_i_permisos.sql');
-  for (const st of sentencies(content)) {
-    const cap = RE_POLITICA.exec(st);
-    if (!cap) continue;
-    const nom = cap[1] ?? cap[2];
-    const taula = cap[3];
-    if (R3_EXEMPTES.has(taula)) continue;
-    if (!isLegacyExempt && RE_USING_TRUE.test(st)) {
-      falla('R3', file, `using (true) en política "${nom}" sobre ${taula}`);
-    }
-    if (!isLegacyExempt && RE_CHECK_TRUE.test(st)) {
-      falla('R3', file, `with check (true) en política "${nom}" sobre ${taula}`);
-    }
+  for (const st of statements) {
+    avaluaR3(st, file, isLegacyExempt);
+    avaluaR4(st, file);
   }
-
-  // R4: VISTA-DEFINER — sobre sentències sense comentaris per evitar falsos positius en comentaris (-- create view només...)
-  for (const st of sentencies(content)) {
-    const viewMatch = /^\s*create\s+(?:or\s+replace\s+)?view\s+(?:public\.)?([a-zA-Z0-9_]+)/i.exec(st);
-    if (!viewMatch) continue;
-    const viewName = viewMatch[1];
-    views.add(viewName);
-    if (!st.toLowerCase().includes('security_invoker = true') && !st.toLowerCase().includes('security_invoker=true')) {
-      falla('R4', file, `La vista ${viewName} no porta security_invoker = true`);
-    }
+  for (const niu of fontsR1.get(file).ddl) {
+    const lloc = ` (dins d'un cos executable ${niu.dins === 'funcio' ? 'de funció' : 'DO'}, nivell ${niu.nivell})`;
+    avaluaR3(niu.tros, file, isLegacyExempt, lloc);
+    avaluaR4(niu.tros, file, lloc);
   }
 
   // R5: GRANT-ORFE
-  for (const grant of grantsR5(content)) grants.push({ ...grant, file });
+  // R32.2 · El nom no quoted es plega com PostgreSQL, igual que les polítiques R1.
+  for (const grant of grantsR5(content)) grants.push({ ...grant, table: grant.table.toLowerCase(), file });
 
   // R6: només opcions reals de CREATE FUNCTION, sense text de cos o arguments.
   statements.forEach((statement, posicio) => estatFuncionsR6(statement, file, estatDefiner, posicio));
@@ -1094,6 +1569,12 @@ for (const g of grants) {
 }
 
 
+for (const [file, font] of fontsR1) {
+  for (const desconegut of font.desconeguts) {
+    console.log(`ℹ [R1 detection-unknown] ${file}: ${desconegut}; no és una prova de seguretat del SQL dinàmic.`);
+  }
+}
+
 if (infr.length > 0) {
   console.log(`\n❌ [RLS] Trobades ${infr.length} infraccions de seguretat.`);
   for (const i of infr) {
@@ -1101,5 +1582,7 @@ if (infr.length > 0) {
   }
   process.exit(1);
 } else {
-  console.log(`\n✅ [RLS] Cap infracció estàtica detectada (sobre ${files.length} fitxers sql; no executa SQL dinàmic ni comprova permisos remots).`);
+  const incertes = [...fontsR1.values()].filter(font => font.desconeguts.length).length;
+  if (incertes) console.log(`\nℹ [RLS] Cap infracció estàtica detectada sobre ${files.length} fitxers sql; R1 detection-unknown en ${incertes} fonts. El SQL dinàmic no queda acreditat ni es comproven permisos remots.`);
+  else console.log(`\n✅ [RLS] Cap infracció estàtica detectada (sobre ${files.length} fitxers sql; no executa SQL dinàmic ni comprova permisos remots).`);
 }

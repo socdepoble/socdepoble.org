@@ -4,7 +4,7 @@
    directament. Els detalls i el context del Perfil són dobles: ací es prova
    la closca. Dades sintètiques. */
 import React from 'react';
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({ perfil: null, params: new URLSearchParams() }));
@@ -62,11 +62,55 @@ const panell = (c) => c.querySelector('.app-grid-shell').dataset.panell;
 const obertes = (c) => ['#app-grid-sidebar', '#app-grid-list', '#app-grid-main']
   .filter((id) => c.querySelector(id).getAttribute('aria-hidden') !== 'true');
 
-test('MD · /el-meu-perfil a 375 px: primer PERFIL, sola', () => {
+test('MD · /el-meu-perfil a 375 px: obri simultàniament PERFIL estreta i APARTATS al costat, amb pont d’identitat activa i icones sense duplicitat', () => {
   const { container } = render(<PerfilShell />);
-  expect([container.querySelector('.app-grid-shell').dataset.layout, panell(container)]).toEqual(['estret', 'left']);
-  expect(obertes(container)).toEqual(['#app-grid-sidebar']);
-  expect(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'Pep' })).toBeTruthy();
+  const shell = container.querySelector('.app-grid-shell');
+  const sidebar = container.querySelector('#app-grid-sidebar');
+  const llista = container.querySelector('#app-grid-list');
+  expect([shell.dataset.layout, panell(container), shell.dataset.duesColumnes]).toEqual(['estret', 'left', 'true']);
+  expect(obertes(container)).toEqual(['#app-grid-sidebar', '#app-grid-list']);
+  expect(within(sidebar).getByRole('button', { name: 'Pep' })).toBeTruthy();
+  expect(within(llista).getByRole('button', { name: /La fitxa/i })).toBeTruthy();
+
+  /* R32.3 · Cap botó [|<] visible al mig de la pantalla a PERFIL (queda d-desktop-only
+     i sense botó d'icona esquerra) ni segon obridor PERFIL a APARTATS. */
+  expect(within(sidebar).queryByRole('button', { name: 'Plegar la columna PERFIL' })).toBeNull();
+  expect(within(sidebar).getByRole('button', { name: 'Replegar PERFIL' }).classList.contains('d-desktop-only')).toBe(true);
+  expect(llista.querySelector('[aria-controls="app-grid-sidebar"]')).toBeNull();
+  expect(within(llista).getByRole('button', { name: 'Replegar APARTATS' }).classList.contains('d-desktop-only')).toBe(false);
+
+  /* R32.3 · Pont contextual d'identitat activa: canvia en temps real en triar una organització. */
+  expect(llista.querySelector('[data-testid="workspace-active-context"]')?.textContent).toBe('Pep');
+  fireEvent.click(within(sidebar).getByRole('button', { name: 'Forn' }));
+  expect(obertes(container)).toEqual(['#app-grid-sidebar', '#app-grid-list']);
+  expect(llista.querySelector('[data-testid="workspace-active-context"]')?.textContent).toBe('Forn');
+});
+
+test('MD · R32.3 · des del detall amb rail de 56 px, el botó superior [>|] i la lupa reobrin sempre les dues columnes sense tercer estat fantasma', () => {
+  const { container } = render(<PerfilShell />);
+  const llista = container.querySelector('#app-grid-list');
+  fireEvent.click(within(llista).getByRole('button', { name: /La fitxa/i }));
+  expect(panell(container)).toBe('');
+  expect(obertes(container)).toEqual(['#app-grid-main']);
+
+  const rail = container.querySelector('#app-grid-rail');
+  expect(rail.getAttribute('aria-hidden')).toBeNull();
+  const expandir = within(rail).getByRole('button', { name: 'Expandir PERFIL' });
+  expect(expandir.getAttribute('aria-controls')).toBe('app-grid-sidebar app-grid-list');
+  expect(expandir.querySelector('svg.lucide-panel-left-open')).not.toBeNull();
+  /* Cap segon botó d'obrir PERFIL apilat davall que xoque amb el glif de «La fitxa». */
+  expect(within(rail).queryByRole('button', { name: 'PERFIL' })).toBeNull();
+
+  fireEvent.click(expandir);
+  expect(panell(container)).toBe('left');
+  expect(obertes(container)).toEqual(['#app-grid-sidebar', '#app-grid-list']);
+
+  /* Replegar amb el [|<] únic d'APARTATS torna al detall, i la lupa del rail reobri també les 2 columnes. */
+  fireEvent.click(within(llista).getByRole('button', { name: 'Replegar APARTATS' }));
+  expect(obertes(container)).toEqual(['#app-grid-main']);
+  fireEvent.click(within(rail).getByRole('button', { name: 'Cercar apartats' }));
+  expect(panell(container)).toBe('left');
+  expect(obertes(container)).toEqual(['#app-grid-sidebar', '#app-grid-list']);
 });
 
 test('MD · amb ?organitzacio= («Edita la fitxa de…») la fitxa s’obri directament', () => {
@@ -79,7 +123,7 @@ test('MD · amb ?organitzacio= («Edita la fitxa de…») la fitxa s’obri dire
 
 test.each(['vista=compte', 'apartat=compte'])('el compte %s es veu en canviar la consulta amb el Perfil mòbil ja muntat', (consulta) => {
   const { container, rerender } = render(<PerfilShell />);
-  expect(obertes(container)).toEqual(['#app-grid-sidebar']);
+  expect(obertes(container)).toEqual(['#app-grid-sidebar', '#app-grid-list']);
   m.params = new URLSearchParams(consulta);
   rerender(<PerfilShell />);
   expect(obertes(container)).toEqual(['#app-grid-main']);

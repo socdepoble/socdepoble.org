@@ -26,7 +26,8 @@ import configNatiu, {
   politicaDeMitjansNativa,
   politicaDeMitjansNativaDelReceptari,
   segellNatiuPlugin,
-  transformaIndexNatiu
+  transformaIndexNatiu,
+  ORIGEN_MANIFEST_VERSIO
 } from '../vite.natiu.config.js';
 import { PROPIS_DEL_LLOC, esHostLocal, politicaDeMitjans, recursosDelPlugin } from '../vite.standalone.config.js';
 import { bessonaDe } from '../src/config/politicaDeMitjans.js';
@@ -34,6 +35,8 @@ import { esquemaInvertitDeGoogleIos } from '../src/config/publicCredentials.js';
 import { SEGELL } from '../scripts/botigues/entorn.mjs';
 import { trossDArrencada } from '../tooling/vite/trossos-arrencada.mjs';
 import { mesura } from '../tooling/gates/pressupost-paquet.mjs';
+import { ORIGEN_PUBLIC_PER_DEFECTE } from '../src/config/origenPublic.js';
+import { URL_MANIFEST_VERSIO } from '../src/natiu/actualitzacioAppNativa.js';
 
 /* El build de l'app nativa (ARQUITECTURA.txt §4.4 i §5, 261003) es prova amb
    FIXTURES, com tests/standalone-build.test.mjs: les peces pures sobre
@@ -147,7 +150,11 @@ test('transformaIndexNatiu sobre l\'index.html real: entrada nativa, CSP del §4
 
   const d = directives(cspDe(html));
   assert.deepEqual(Object.keys(d).sort(), ['base-uri', 'connect-src', 'default-src', 'font-src', 'frame-src', 'img-src', 'media-src', 'object-src', 'script-src', 'style-src', 'worker-src']);
-  assert.deepEqual(d['connect-src'], ["'self'", 'data:', ORIGEN, WSS], 'data: per a les tres pujades amb fetch(dataUrl), i només el backend');
+  assert.deepEqual(d['connect-src'], ["'self'", 'data:', ORIGEN, WSS, ORIGEN_MANIFEST_VERSIO],
+    'data: per a les tres pujades amb fetch(dataUrl), el backend i (R32.3) el manifest de versió de socdepoble.org');
+  // R32.3 · L'origen del manifest és l'origen públic i és on el detector de l'App el llig.
+  assert.equal(ORIGEN_MANIFEST_VERSIO, ORIGEN_PUBLIC_PER_DEFECTE);
+  assert.equal(new URL(URL_MANIFEST_VERSIO).origin, ORIGEN_MANIFEST_VERSIO);
   assert.deepEqual(d['worker-src'], ["'none'"]);
   assert.deepEqual(d['script-src'], ["'self'"]);
   assert.deepEqual(d['style-src'], ["'self'", "'unsafe-inline'"]);
@@ -224,7 +231,7 @@ test('origenBackend: només un origen https públic i exacte', () => {
   assert.throws(() => transformaIndexNatiu(INDEX), /origenBackend/);
   // Amb port: el wss porta el mateix host i port.
   assert.deepEqual(directives(cspNativa('https://node.example.org:8443'))['connect-src'],
-    ["'self'", 'data:', 'https://node.example.org:8443', 'wss://node.example.org:8443']);
+    ["'self'", 'data:', 'https://node.example.org:8443', 'wss://node.example.org:8443', ORIGEN_MANIFEST_VERSIO]);
 });
 
 /* ─────────────────────────── errorsEntornNatiu ─────────────────────────── */
@@ -438,7 +445,7 @@ test('la config: dist-natiu buidat, es2022, mode natiu, base /, sense copyPublic
     assert.equal(segell.length, 1, 'BOT-A4: el build segella dist-natiu/');
     assert.equal(segell[0].apply, 'build');
     const html = index[0].transformIndexHtml.handler(INDEX);
-    assert.deepEqual(directives(cspDe(html))['connect-src'], ["'self'", 'data:', ORIGEN, WSS], 'el backend de VITE_SUPABASE_URL');
+    assert.deepEqual(directives(cspDe(html))['connect-src'], ["'self'", 'data:', ORIGEN, WSS, ORIGEN_MANIFEST_VERSIO], 'el backend de VITE_SUPABASE_URL');
     // La previsualització de dist-natiu/ també val.
     assert.equal(configNatiu({ mode: MODE_NATIU, command: 'serve', isPreview: true }).build.outDir, 'dist-natiu');
   });
@@ -468,7 +475,7 @@ test('la config llig els .env com Vite: un .env.local de desenvolupament fa fall
   ambEntornNatiu({}, () => {
     const cfg = configNatiu({ mode: MODE_NATIU, command: 'build' });
     const index = cfg.plugins.flat(Infinity).find((p) => p && p.name === 'sdp-index-natiu');
-    assert.deepEqual(directives(cspDe(index.transformIndexHtml.handler(INDEX)))['connect-src'], ["'self'", 'data:', ORIGEN, WSS]);
+    assert.deepEqual(directives(cspDe(index.transformIndexHtml.handler(INDEX)))['connect-src'], ["'self'", 'data:', ORIGEN, WSS, ORIGEN_MANIFEST_VERSIO]);
   }, { ...desenvolupament, '.env.natiu.local': `VITE_SUPABASE_URL=${ORIGEN}\nVITE_SUPABASE_ANON_KEY=${CLAU}\nVITE_TENANT_ID=${TENANT}\n` });
 });
 
@@ -844,7 +851,9 @@ test('eixida real de dist-natiu/: sense worker, manifest ni servidor del lloc, i
   }
   const d = directives(cspDe(html));
   assert.deepEqual(d['worker-src'], ["'none'"]);
-  const origens = d['connect-src'].filter((font) => font.startsWith('https://'));
+  // R32.3 · A més del backend, només l'origen públic (el manifest de versió de l'App), l'últim.
+  assert.equal(d['connect-src'].at(-1), ORIGEN_MANIFEST_VERSIO);
+  const origens = d['connect-src'].filter((font) => font.startsWith('https://') && font !== ORIGEN_MANIFEST_VERSIO);
   assert.equal(origens.length, 1, 'un sol backend a connect-src');
   assert.equal(esHostLocal(new URL(origens[0]).hostname), false);
   // El backend de la CSP és el que el bundle porta segellat (les dues coses ixen de VITE_SUPABASE_URL).

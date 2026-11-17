@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "25509423b65898351241fc8fcc5e36bab8be0eaa6cdaf17f19b445748e6954d6",
-      "html": 89076,
-      "aprovat_per": "Claude R32 261116 (crònica v1.2.4 build 9 i correcció Llei 0 de l'entrada R30, dins del pla R32 aprovat pel Mestre a les 14:32; pendent de lectura humana)",
-      "data": "2026-11-16"
+      "sha256": "8edbbd6292266b5f48f540b91cddfa4dfc20452f60f84272bafa4ec5a4ad301c",
+      "html": 93420,
+      "aprovat_per": "Claude R32.3 261117 (crònica v1.2.5 build 10, correcció Llei 0 dels noms del Perfil mòbil, dins de l'ordre T5 R32.3 del Mestre de 16-11-2026 22:09; pendent de lectura humana)",
+      "data": "2026-11-17"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

@@ -228,8 +228,18 @@ async function baixa(url, usuari, config, midaEsperada) {
   const control = new AbortController();
   const temps = setTimeout(() => control.abort(new DOMException('Temps esgotat.', 'TimeoutError')), tempsLimitPujada(midaEsperada ?? MAXIM_BLOB_ADJUNT));
   const avorta = () => control.abort(new DOMException('Operació cancel·lada.', 'AbortError'));
+  const canviaSessio = () => { if (usuariDeSessio()?.id !== usuari) avorta(); };
   config.signal?.addEventListener?.('abort', avorta, { once: true });
+  globalThis.window?.addEventListener('sdp:auth-change', canviaSessio);
+  const sostre = midaEsperada ?? MAXIM_BLOB_ADJUNT;
+  const parts = [];
+  let reader;
+  const comprova = () => {
+    vigent(usuari, config);
+    if (control.signal.aborted) throw control.signal.reason;
+  };
   try {
+    comprova();
     let resposta;
     try { resposta = await fetch(url, { method: 'GET', redirect: 'error', signal: control.signal }); }
     catch (error) {
@@ -237,14 +247,42 @@ async function baixa(url, usuari, config, midaEsperada) {
       throw tradueix(error);
     }
     if (!resposta.ok) throw tradueix(Object.assign(new Error(`No hem pogut baixar el fitxer: ${resposta.status}`), { status: resposta.status }));
-    const declarada = Number(resposta.headers?.get?.('content-length'));
-    if (midaEsperada !== null && Number.isSafeInteger(declarada) && declarada !== midaEsperada) throw errorAdjuntXat('obrir', { codi: 'adjunt-incoherent' });
-    const bytes = new Uint8Array(await resposta.arrayBuffer());
-    if (bytes.length > MAXIM_BLOB_ADJUNT || (midaEsperada !== null && bytes.length !== midaEsperada)) throw errorAdjuntXat('obrir', { codi: 'adjunt-incoherent' });
+    comprova();
+    const cap = resposta.headers?.get?.('content-length');
+    if (cap != null && (!/^\d+$/.test(cap) || !Number.isSafeInteger(Number(cap)) || Number(cap) > sostre
+      || (midaEsperada !== null && Number(cap) !== midaEsperada))) throw errorAdjuntXat('obrir', { codi: 'adjunt-incoherent' });
+    /* Content-Length pot faltar (transferència en chunks) o mentir. Es
+       limita durant la lectura; arrayBuffer() reservaria tot el cos abans
+       de comprovar-lo. Sense reader no es pot garantir el sostre. */
+    if (typeof resposta.body?.getReader !== 'function') throw errorAdjuntXat('obrir', { codi: 'adjunt-incoherent' });
+    reader = resposta.body.getReader();
+    let total = 0;
+    for (;;) {
+      const { value, done } = await reader.read();
+      comprova();
+      if (done) break;
+      if (!esBytes(value) || value.length > sostre - total) throw errorAdjuntXat('obrir', { codi: 'adjunt-incoherent' });
+      parts.push(value);
+      total += value.length;
+    }
+    if (midaEsperada !== null && total !== midaEsperada) throw errorAdjuntXat('obrir', { codi: 'adjunt-incoherent' });
+    const bytes = new Uint8Array(total);
+    let pos = 0;
+    for (const part of parts) { bytes.set(part, pos); pos += part.length; }
     return bytes;
+  } catch (error) {
+    control.abort();
+    if (reader) {
+      try { await reader.cancel(); } catch { /* el transport ja està avortat */ }
+    }
+    if (error?.name === 'TimeoutError') throw errorAdjuntXat('temps-esgotat', { name: 'TimeoutError', cause: error });
+    throw tradueix(error);
   } finally {
+    for (const part of parts) part.fill(0);
+    reader?.releaseLock?.();
     clearTimeout(temps);
     config.signal?.removeEventListener?.('abort', avorta);
+    globalThis.window?.removeEventListener('sdp:auth-change', canviaSessio);
   }
 }
 
@@ -253,6 +291,9 @@ export async function bytesAdjuntXat(id, { midaEsperada = null, ...config } = {}
   const usuari = context(config);
   vigent(usuari, config);
   if (!UUID.test(id)) throw errorAdjuntXat('no-disponible');
+  if (midaEsperada !== null && (!Number.isSafeInteger(midaEsperada) || midaEsperada < 64 || midaEsperada > MAXIM_BLOB_ADJUNT)) {
+    throw errorAdjuntXat('obrir', { codi: 'adjunt-incoherent' });
+  }
   const fila = primera(await crida('xat_llegix_adjunt', { p_id: id }, config));
   vigent(usuari, config);
   if (fila?.ruta !== id) throw errorAdjuntXat('no-disponible');

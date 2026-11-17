@@ -213,6 +213,61 @@
   }
 }
 
+/* R32.3 · Mòbil dues columnes (duesColumnesEstret): quan PERFIL (9fr) i APARTATS (11fr)
+   conviuen de costat en ≤720px, la miniatura quadrada passa a var(--sdp-alt-accio) (58px)
+   estirada a tota l'alçada de la fila i el coixí lateral de text s'ajusta a 12px perquè
+   cap títol d'apartat es trenque a mitja paraula («Multim / èdia») a 360px. */
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-gestor-fitxa {
+  min-height: var(--sdp-alt-accio);
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-gestor-fitxa__media {
+  flex: 0 0 var(--sdp-alt-accio);
+  width: var(--sdp-alt-accio);
+  height: auto;
+  min-height: var(--sdp-alt-accio);
+  align-self: stretch;
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-fitxa-emoji-xl {
+  font-size: calc(var(--sdp-alt-accio) * 11 / 16);
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-gestor-fitxa__text {
+  padding: var(--sdp-space-2) var(--sdp-space-3);
+}
+
+/* R32.3 · Pont visual d'identitat activa a dalt d'APARTATS (duesColumnesEstret):
+   connecta per color i marcador la persona o organització triada a l'esquerra amb
+   els seus apartats de la dreta («Esquerra = Qui soc · Dreta = Els seus Apartats»). */
+.sdp-workspace-context-actiu {
+  display: flex;
+  align-items: center;
+  gap: var(--sdp-space-2);
+  padding: var(--sdp-space-2) var(--sdp-space-3);
+  background: var(--sdp-accio-subtil);
+  border-inline-start: 3px solid var(--sdp-accio);
+  border-bottom: 1px solid var(--sdp-vora);
+  color: var(--sdp-text-titol);
+  font-size: var(--sdp-text-small);
+  font-weight: 700;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+.sdp-workspace-context-actiu__icona {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: inherit;
+}
+.sdp-workspace-context-actiu__nom {
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: break-word;
+}
+
 /* ── AppGridColumn overrides ── */
 .app-grid-col-header__plegable {
   flex: 1 1 auto;
@@ -510,6 +565,34 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   /* La columna és crom (fosca en els dos temes): l'anell de focus és el de la closca. */
   outline: 2px solid var(--sdp-crom-focus);
   outline-offset: -2px;
+}
+
+/* R32.3 · En mòbil dues columnes (duesColumnesEstret), les entrades de PERFIL
+   (162px a 360px) retiren l'espaiador buit de 44px de subcarpetes inexistents i
+   admeten fins a 2 línies netes perquè noms com «Javi Llinares», «Sóc de Poble»
+   o «🛡️ Administració del sistema» es lligen sencers sense mutilar-se en «...». */
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-workspace-folder-toggle-spacer {
+  display: none;
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-workspace-groups .sdp-workspace-nav-item {
+  gap: var(--sdp-space-2);
+  padding-inline: var(--sdp-space-3);
+  font-size: var(--sdp-text-meta);
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-workspace-groups .sdp-workspace-nav-item__label {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow-wrap: break-word;
+  line-height: 1.25;
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-workspace-group-heading > .sdp-workspace-nav-item {
+  font-size: var(--sdp-text-meta);
+}
+.app-grid-shell[data-layout="estret"][data-dues-columnes="true"] .app-grid-rail .app-grid-col-header--collapsed > .sdp-workspace-rail {
+  border-top: 1px solid var(--sdp-crom-vora);
 }
 
 .sdp-workspace-detail {

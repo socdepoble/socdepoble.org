@@ -300,7 +300,7 @@ test('estatConsentiment tardà no arriba a la sessió següent', async () => {
 
 test('revocaConsentiment envia el tipus i no torna res', async () => {
   expect(await revocaConsentiment(' analitica ')).toBeUndefined();
-  expect(m.rpc).toHaveBeenCalledWith('revoca_consentiment', { p_tipus: 'analitica' }, expect.any(Object));
+  expect(m.rpc).toHaveBeenCalledWith('revoca_consentiment', { p_tipus: 'analitica' }, expect.any(Object), { signal: undefined });
 });
 test('revocaConsentiment sense tipus rebutja sense cridar cap RPC', async () => {
   await expect(revocaConsentiment('  ')).rejects.toThrow('quin consentiment');
@@ -343,7 +343,7 @@ for (const [nom, crida, rpcNom, cos, resposta] of OPERACIONS_COMPTE) {
     await crida(config);
     expect(m.rpc).toHaveBeenCalledTimes(1);
     expect(m.rpc.mock.calls[0].slice(0,3)).toEqual([rpcNom, cos, config]);
-    if (['estatBaixa','estatConsentiment'].includes(nom)) expect(m.rpc.mock.calls[0][3]).toEqual({ signal: controller.signal });
+    if (nom !== 'exportaLesMeuesDades') expect(m.rpc.mock.calls[0][3]).toEqual({ signal: controller.signal });
   });
   test('[REGRESSIO R2CF-01] '+nom+' remot no amaga un error real del servidor', async () => {
     const error = Object.assign(new Error('Supabase rebutja la sessió'), { status: 401 });

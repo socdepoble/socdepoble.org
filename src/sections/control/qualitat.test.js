@@ -31,6 +31,10 @@ const CONTROL = [
   'src/sections/control/destiSnippet.test.js',
   'src/sections/control/FitxaSnippet.jsx',
   'src/sections/control/FitxaSnippet.test.jsx',
+  'src/sections/control/textosSalutDispositiuJarvis.js',
+  'src/sections/control/GinySalutDispositiuJarvis.jsx',
+  'src/sections/control/GinySalutDispositiuJarvis.test.jsx',
+  'src/sections/control/GinySalutDispositiuJarvis.r322.test.jsx',
   'src/sections/control/qualitat.test.js'
 ];
 const PANELL = 'src/sections/control/ControlSection.jsx';

@@ -146,7 +146,7 @@ export async function demanaBaixa(opcions = {}, config = {}) {
   const motiu = typeof opcions?.motiu === 'string' && opcions.motiu.trim() ? opcions.motiu.trim() : null;
   await revocaAppleAbansDeLaBaixa(capturat, sessio);
   current();   // una revocació tardana d'A no demana mai la baixa de B
-  const r = fila(await rpc('demana_baixa', { p_motiu: motiu }, capturat));
+  const r = fila(await rpc('demana_baixa', { p_motiu: motiu }, capturat, { signal: capturat.signal }));
   current();   // la resposta d'A no tanca mai la sessió de B
   const demanadaAl = textONull(r?.demanada_al);
   if (!demanadaAl) throw new Error('El servidor no ha confirmat la baixa.');
@@ -164,7 +164,7 @@ export async function cancelaBaixa(config = {}) {
   const capturat = { ...config };
   const { current } = await sessioDelCompte(capturat);
   current();   // D-01: la microtasca després de l'await no arriba mai a cap efecte
-  const r = fila(await rpc('cancela_baixa', {}, capturat));
+  const r = fila(await rpc('cancela_baixa', {}, capturat, { signal: capturat.signal }));
   current();
   if (r?.cancelada !== true) throw new Error('El servidor no ha confirmat la cancel·lació de la baixa.');
   return { ...SENSE_BAIXA };
@@ -197,6 +197,6 @@ export async function revocaConsentiment(tipus, config = {}) {
   const capturat = { ...config };
   const { current } = await sessioDelCompte(capturat);
   current();   // D-01: la microtasca després de l'await no arriba mai a cap efecte
-  await rpc('revoca_consentiment', { p_tipus: tipus.trim() }, capturat);
+  await rpc('revoca_consentiment', { p_tipus: tipus.trim() }, capturat, { signal: capturat.signal });
   current();
 }

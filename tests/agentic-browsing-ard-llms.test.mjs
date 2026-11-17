@@ -161,7 +161,12 @@ test('public/.well-known/ard.json descriu cada recurs amb el seu format real i c
   assert.deepEqual(rebutjos, [], 'ard.json només pot anunciar rutes públiques de https://socdepoble.org');
   comprovaTextSenseEndpointsInterns(ardText, 'ard.json');
 
-  assert.deepEqual(Object.keys(ard), ['entries'], 'L’arrel ARD sols ha d’exposar entries (sense collections ni camps extra)');
+  /* R32.3 · A més d'entries, l'arrel porta el manifest de versió que llig l'App nativa
+     (src/natiu/actualitzacioAppNativa.js): version, androidBuild i iosBuild. L'ARD ignora els
+     membres d'arrel que no són entries (validador de Lighthouse: «Top-level members ignored by
+     ARD (transport-defined)», sense avís); collections continua prohibit (sí que en dona avís). */
+  assert.deepEqual(Object.keys(ard).sort(), ['androidBuild', 'entries', 'iosBuild', 'version'],
+    'L’arrel ARD sols exposa entries i el manifest de versió de l’App (sense collections ni més camps)');
   assert.ok(Array.isArray(ard.entries) && ard.entries.length >= 2);
 
   const ids = new Set();
@@ -212,6 +217,54 @@ test('public/.well-known/ard.json descriu cada recurs amb el seu format real i c
   assert.equal(TIPUS.ap.split(';')[0], TIPUS_AP);
   // La guia Markdown pública no declara el contracte d'una Skill executable.
   assert.match(fs.readFileSync(path.join(ARREL, 'public/llms.txt'), 'utf8'), /^# Sóc de Poble\n/);
+});
+
+/* R32.3 (ordre del Mestre, 16-11-2026 22:09) · El manifest de versió de l'App. version és la de
+   package.json, com cada entrada; androidBuild i iosBuild són el darrer build JA DISPONIBLE al canal
+   que obri la barra (mai el compilat ni un de més alt que VERSIO_CLIENT_NATIU: la barra prometria una
+   versió que la botiga no dona). L'App el llig en arrencar i en tornar a primer pla, entre orígens:
+   firebase.json li posa Access-Control-Allow-Origin, sense Content-Type propi. */
+test('R32.3 · ard.json porta el manifest de versió de l’App, coherent amb package.json i VERSIO_CLIENT_NATIU', async () => {
+  const ard = JSON.parse(fs.readFileSync(path.join(ARREL, 'public/.well-known/ard.json'), 'utf8'));
+  const paquet = JSON.parse(fs.readFileSync(path.join(ARREL, 'package.json'), 'utf8'));
+  const { VERSIO_CLIENT_NATIU } = await import('../src/data/contracte.js');
+  assert.equal(ard.version, paquet.version, 'version és la de package.json');
+  assert.ok(ard.entries.every((entry) => entry.version === ard.version), 'Cada entrada declara la mateixa versió');
+  for (const camp of ['androidBuild', 'iosBuild']) {
+    assert.ok(Number.isSafeInteger(ard[camp]) && ard[camp] >= 1, `${camp} és un enter positiu`);
+    assert.ok(ard[camp] <= VERSIO_CLIENT_NATIU, `${camp} (${ard[camp]}) no supera VERSIO_CLIENT_NATIU (${VERSIO_CLIENT_NATIU})`);
+  }
+});
+
+/* R32.3 (Elefant) · «Llegible des de Capacitor» són dues portes i les dues han de ser obertes: la
+   capçalera CORS del hosting i la CSP de la closca nativa. La segona es prova contra la CSP REAL
+   (cspNativa de vite.natiu.config.js, la que escriu la meta de dist-natiu/index.html) i la porta REAL
+   del detector (connexioPermesaPerCsp): amb una CSP que no deixa connectar amb socdepoble.org, el
+   detector queda inert en silenci (cap fetch, cap avís) i les proves del detector, amb una CSP
+   sintètica, no ho veurien. */
+test('R32.3 · /.well-known/ard.json és llegible des de Capacitor: CORS del hosting, la CSP REAL de la closca i cap reescriptura de l’SPA', async () => {
+  const { hosting } = JSON.parse(fs.readFileSync(path.join(ARREL, 'firebase.json'), 'utf8'));
+  const regles = hosting.headers.filter((r) => r.source === '/.well-known/ard.json');
+  assert.deepEqual(regles, [{ source: '/.well-known/ard.json', headers: [{ key: 'Access-Control-Allow-Origin', value: '*' }] }]);
+
+  const { cspNativa } = await import('../vite.natiu.config.js');
+  const { connexioPermesaPerCsp, URL_MANIFEST_VERSIO } = await import('../src/natiu/actualitzacioAppNativa.js');
+  assert.equal(URL_MANIFEST_VERSIO, `${ORIGEN_PUBLIC}/.well-known/ard.json`);
+  for (const backend of ['https://abcdefghijklmnopqrst.supabase.co', 'https://node.example.org:8443']) {
+    const csp = cspNativa(backend);
+    const closca = { querySelectorAll: () => [{ getAttribute: (nom) => ({ 'http-equiv': 'Content-Security-Policy', content: csp }[nom] ?? null) }] };
+    assert.equal(connexioPermesaPerCsp(URL_MANIFEST_VERSIO, closca), true,
+      `la CSP nativa ha de deixar connectar amb ${ORIGEN_PUBLIC} (connect-src: ${csp.split(';').find((d) => d.trim().startsWith('connect-src'))?.trim()})`);
+  }
+
+  /* Firebase servix abans el fitxer estàtic que cap reescriptura, però la de l'SPA (la darrera) també
+     l'ha d'excloure de manera explícita: una font negada «!/@(…)/**» amb .well-known com a alternativa
+     sencera. Una font que el cobrix («/.well-known/**») o que només l'anomena no val. */
+  const espa = hosting.rewrites.at(-1);
+  assert.equal(espa.destination, '/index.html');
+  const negada = /^!\/@\(([^()]+)\)\/\*\*$/.exec(String(espa.source ?? ''));
+  assert.ok(negada, `la reescriptura de l'SPA ha de ser una font negada «!/@(…)/**» (és ${JSON.stringify(espa.source)})`);
+  assert.ok(negada[1].split('|').includes('.well-known'), 'la negació inclou .well-known com a alternativa sencera');
 });
 
 test('Llei 0 · llms.txt i ARD no presenten com a viva cap candidatura NLnet ni cap fons on Sóc de Poble no ha concorregut', async () => {

@@ -3,6 +3,7 @@ import { ambDescartats, creaColumnesOpcionals } from './columnesOpcionals.js';
 import { normalitzaContacte, normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
 import { LIMIT_DIRECTORI_ENTITATS, destinatariaDeTransferencia, errorDeMembre, membreDOrganitzacio } from '../contracte.js';
 import { esPobleImpossible, pobleDOrganitzacio, pobleDelFiltre } from '../pobleOrganitzacio.js';
+import { capturaSessio, entradaSessio } from '../identitat.js';
 
 let columnesOpcionalsOrg = creaColumnesOpcionals('l’organització', { hero_video_url: 'hero_video_url' });
 
@@ -24,11 +25,39 @@ export async function listMyOrganizations(config = {}) {
   const rows = await request('/rest/v1/rpc/list_my_organizations', config, { method: 'POST', body: { p_tenant_id: tenantId } });
   return Array.isArray(rows) ? rows : [];
 }
+/* La mateixa entrada i el mateix servidor han de governar cada reintent.
+   Una renovació legítima conserva capturaSessio; una reentrada, un altre
+   actor o un canvi de backend/tenant cancel·la la cadena abans del següent
+   efecte, també dins dels reintents de columnes d'updateOrganization. */
+function capturaOperacioOrganitzacio(config) {
+  const vigilaEntrada = capturaSessio();
+  const actor = getCurrentUser()?.id;
+  const signal = config.signal;
+  const clauBackend = () => {
+    const c = getResolvedConfig(config);
+    return JSON.stringify([c.supabaseUrl || '', c.supabaseAnonKey || '', c.tenantId ?? null,
+      c.runtimeDataMode, c.hasSupabaseConfig]);
+  };
+  const backend = clauBackend();
+  const vigila = () => {
+    vigilaEntrada();
+    if (signal?.aborted || config.signal !== signal || getCurrentUser()?.id !== actor || clauBackend() !== backend) {
+      throw new DOMException('La sessió o el servidor han canviat, o l’operació s’ha cancel·lat.', 'AbortError');
+    }
+  };
+  return { actor, vigila };
+}
+
 export async function createOrganization(organization, config = {}) {
+  const { actor, vigila } = capturaOperacioOrganitzacio(config);
+  vigila();
   if (esModeLocal(config)) throw new Error('Inicia sessió des del formulari d’entrada abans de crear una organització al servidor.');
   const { tenantId, hasSupabaseConfig } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('No es pot crear una organització sense connexió al servidor.');
   if (!getCurrentUser()?.id) throw new Error('Cal iniciar sessió per crear una organització.');
+  /* El reintent pertany a l'entrada i al servidor que han creat la fila:
+     una altra persona o poble no hereta el permís local de completar-la. */
+  const clauAlta = (id) => JSON.stringify([getResolvedConfig(config).supabaseUrl || '', tenantId, actor, entradaSessio(), id]);
   /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Tota entitat creada ha
      de portar el seu poble») · Sense poble, cap crida al servidor. */
   const poble = pobleDOrganitzacio(organization?.town_name);
@@ -45,13 +74,15 @@ export async function createOrganization(organization, config = {}) {
      MATEIXA fila sense dir-ho (2609281500, `if found`), i el PATCH de davall
      li canviava el poble. La resposta no distingix una fila nova d'una que ja
      hi era (les mateixes columnes, cap town_name): es mira ABANS de crear. */
-  const previa = await organitzacioDelSlug(body.p_slug, tenantId, config);
+  const previa = await organitzacioDelSlug(body.p_slug, tenantId, config, vigila);
+  vigila();
   let rows;
   try {
-    rows = await request('/rest/v1/rpc/create_organization', config, { method: 'POST', body });
+    rows = await request('/rest/v1/rpc/create_organization', config, { method: 'POST', body, signal: config.signal });
   } catch (error) {
     throw errorDeCreacio(error);
   }
+  vigila();
   const creada = Array.isArray(rows) ? rows[0] : rows;
   /* Ací coneixem el tenant efectivament enviat després de resoldre àlies i
      configuració del host. PostgreSQL retorna els UUID en minúscules. */
@@ -68,7 +99,7 @@ export async function createOrganization(organization, config = {}) {
      poder desar el poble, no es toca: amb el mateix poble és el reintent
      idempotent de sempre; amb un altre, o sense cap (una fila d'abans de
      l'obligació, potser d'un altre poble), l'error diu quina és. */
-  if (previa && String(previa.id) === creada.id && !ALTES_SENSE_POBLE.has(creada.id)) {
+  if (previa && String(previa.id) === creada.id && !ALTES_SENSE_POBLE.has(clauAlta(creada.id))) {
     const seu = typeof previa.town_name === 'string' ? previa.town_name.trim() : '';
     if (seu && seu === poble) return { ...creada, town_name: seu };
     throw errorAmbCodi(jaExistix(String(body.p_slug ?? '').trim().toLowerCase(), seu), 'JA-EXISTIX');
@@ -91,11 +122,13 @@ export async function createOrganization(organization, config = {}) {
   try {
     desada = await updateOrganization(creada.id, { town_name: poble }, config);
   } catch (error) {
-    ALTES_SENSE_POBLE.add(creada.id);
     if (esCancel(error)) throw error;
+    vigila();
+    ALTES_SENSE_POBLE.add(clauAlta(creada.id));
     throw errorAmbCodi(motiuDelPobleNoDesat(error), 'POBLE-NO-DESAT', error);
   }
-  ALTES_SENSE_POBLE.delete(creada.id);
+  vigila();
+  ALTES_SENSE_POBLE.delete(clauAlta(creada.id));
   return { ...creada, town_name: typeof desada?.town_name === 'string' ? desada.town_name : poble };
 }
 
@@ -111,16 +144,19 @@ const ALTES_SENSE_POBLE = new Set();
    { id, town_name }. El slug, com el normalitza la RPC (lower(btrim)). Si el
    servidor encara no té la columna town_name (2610081401), es torna a llegir
    sense ella i es recorda (la memòria de T47, columnesSelectAbsents). */
-async function organitzacioDelSlug(slug, tenantId, config) {
+async function organitzacioDelSlug(slug, tenantId, config, vigila) {
   const net = String(slug ?? '').trim().toLowerCase();
   if (!net) return null;
   const filtre = `slug=eq.${encodeURIComponent(net)}${tenantId ? `&tenant_id=eq.${encodeURIComponent(tenantId)}` : ''}`;
   for (;;) {
     const columnes = ['id', 'town_name'].filter((columna) => !columnesSelectAbsents.has(columna)).join(',');
     try {
+      vigila();
       const files = await request(`/rest/v1/organizations?select=${columnes}&${filtre}&limit=1`, config, { signal: config.signal });
+      vigila();
       return Array.isArray(files) && files[0]?.id != null ? files[0] : null;
     } catch (error) {
+      vigila();
       if (columnaAbsentDelSelect(error) !== 'town_name' || columnesSelectAbsents.has('town_name')) throw error;
       columnesSelectAbsents.add('town_name');
     }
@@ -288,6 +324,8 @@ export function reiniciaMemoriaDirectori() {
 }
 
 export async function updateOrganization(id, updates, config = {}) {
+  const { vigila } = capturaOperacioOrganitzacio(config);
+  vigila();
   const payload = {};
   const camps = { name: 'name', slug: 'slug', description: 'description', kind: 'kind',
     parentOrganizationId: 'parent_organization_id', lema: 'lema', logo_url: 'logo_url',
@@ -295,7 +333,13 @@ export async function updateOrganization(id, updates, config = {}) {
     hero_video_url: 'hero_video_url', copyright: 'copyright', town_name: 'town_name' };
   for (const [origen, desti] of Object.entries(camps)) if (updates?.[origen] !== undefined) payload[desti] = updates[origen];
   if (!Object.keys(payload).length) throw new Error('Cap camp de l’organització per desar.');
-  if (esModeLocal(config)) return (await perfilsLocals()).updateOrganization(id, payload);
+  if (esModeLocal(config)) {
+    const perfils = await perfilsLocals();
+    vigila();
+    const fila = await perfils.updateOrganization(id, payload);
+    vigila();
+    return fila;
+  }
   /* Com updateProfile: una imatge incrustada no es desa mai a la fila (hero_url
      la rebutjaria el CHECK amb 23514; logo_url no en té cap i s'inflaria). */
   if (getResolvedConfig(config).runtimeDataMode !== 'seed'
@@ -304,11 +348,15 @@ export async function updateOrganization(id, updates, config = {}) {
   }
   const columnesOrg = COLUMNES_ORG.split(',');
   const { resultat: rows, descartats } = await columnesOpcionalsOrg.envia(payload, async (cosNet) => {
-    const opcions = { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: cosNet };
+    const opcions = { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: cosNet, signal: config.signal };
     for (;;) {
       try {
-        return await request(`/rest/v1/organizations?id=eq.${encodeURIComponent(id)}&select=${selectOrg()}`, config, opcions);
+        vigila();
+        const files = await request(`/rest/v1/organizations?id=eq.${encodeURIComponent(id)}&select=${selectOrg()}`, config, opcions);
+        vigila();
+        return files;
       } catch (error) {
+        vigila();
         const columna = columnaAbsentDelSelect(error);
         const nomesDelSelect = columna && columnesOrg.includes(columna) && !Object.hasOwn(cosNet, columna)
           && !columnesSelectAbsents.has(columna);
@@ -317,6 +365,7 @@ export async function updateOrganization(id, updates, config = {}) {
       }
     }
   });
+  vigila();
   if (!rows?.[0]) throw new Error("No s'ha pogut actualitzar l'organització.");
   const filaConfirmada = Object.hasOwn(payload, 'hero_video_url')
     && !descartats.includes('hero_video_url')
