@@ -1,9 +1,16 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { publicaAdjuntXat, quotaXat, urlAdjuntXat } from './xatMultimedia.js';
 import { ERRORS_ADJUNT_XAT, MISSATGE_QUOTA_XAT, tempsLimitPujada } from '../xatMultimedia.js';
-const m = vi.hoisted(() => ({ rpc: vi.fn(), request: vi.fn(), user: null }));
-vi.mock('./runtime.js', () => ({ rpc: m.rpc, request: m.request, getResolvedConfig: (c) => ({ runtimeDataMode: c.dataMode || 'remote', supabaseUrl: 'https://node.test', supabaseAnonKey: 'publica' }) }));
-vi.mock('../identitat.js', () => ({ usuariDeSessio: () => m.user, jwtPerBackend: () => m.user ? 'sessio-test' : null }));
+const m = vi.hoisted(() => ({ rpc: vi.fn(), request: vi.fn(), user: null, entrada: 1, jwt: 'sessio-test' }));
+vi.mock('./runtime.js', () => ({ rpc: m.rpc, request: m.request, getResolvedConfig: (c) => ({ runtimeDataMode: c.dataMode || 'remote', supabaseUrl: c.backendUrl || 'https://node.test', supabaseAnonKey: 'publica' }) }));
+vi.mock('../identitat.js', () => ({
+  usuariDeSessio: () => m.user, jwtPerBackend: () => m.jwt, entradaSessio: () => m.entrada,
+  capturaSessio: () => {
+    const entrada = m.entrada;
+    const id = m.user?.id;
+    return () => { if (entrada !== m.entrada || (m.user && m.user.id !== id)) throw new DOMException('La sessió ha canviat.', 'AbortError'); };
+  },
+}));
 const JO = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';
 const FIL = '00000000-0000-4000-8000-000000000003';
@@ -15,7 +22,7 @@ const entrada = () => ({ id: ID, fitxer: new Blob(['foto'], { type: 'image/webp'
 const deferred = () => { let resolve; const promise = new Promise((r) => { resolve = r; }); return { resolve, promise }; };
 const signada = (id, token = 'temporal') => ({ signedURL: `/object/sign/xat_adjunts/${id}?token=${token}` });
 beforeEach(() => {
-  vi.clearAllMocks(); m.user = { id: JO };
+  vi.clearAllMocks(); m.request.mockReset(); m.user = { id: JO }; m.entrada = 1; m.jwt = 'sessio-test';
   m.rpc.mockImplementation(async (nom, params) => {
     if (nom === 'xat_reserva_adjunt') return { ruta: RUTA, pujat: false };
     if (nom === 'xat_publica_adjunt') return { id: ID, seq: 1, tipus: 'imatge', usuari_id: JO, cos: 'Foto' };
@@ -304,4 +311,71 @@ test('R22 · renova i descarrega: una signatura nova, amb download, i la desada 
     .resolves.toBe(`https://node.test/storage/v1/object/sign/xat_adjunts/${id}?token=b&download=foto.webp`);
   await expect(urlAdjuntXat(id)).resolves.toBe(`https://node.test/storage/v1/object/sign/xat_adjunts/${id}?token=b`);
   expect(m.request).toHaveBeenCalledTimes(2);
+});
+
+test('R32.6 · un 401 de Storage és sessió caducada i no reenvia ni publica a cegues', async () => {
+  fetch.mockResolvedValueOnce({ ok: false, status: 401, text: async () => '{"message":"JWT expired"}' });
+  await expect(publicaAdjuntXat(FIL, entrada())).rejects.toMatchObject({ code: 'sessio-caducada', status: 401 });
+  expect(fetch).toHaveBeenCalledOnce();
+  expect(m.rpc.mock.calls.map(([nom]) => nom)).toEqual(['xat_reserva_adjunt', 'xat_cancella_reserva']);
+});
+
+test('R32.6 · caducar el JWT després de pujar conserva un error visible i no publica', async () => {
+  fetch.mockImplementationOnce(async () => { m.user = null; return { ok: true, status: 200 }; });
+  await expect(publicaAdjuntXat(FIL, entrada())).rejects.toMatchObject({ code: 'sessio-caducada' });
+  expect(m.rpc.mock.calls.map(([nom]) => nom)).toEqual(['xat_reserva_adjunt']);
+});
+
+test('R32.6 · perdre el JWT sense canviar d’entrada també té error visible', async () => {
+  fetch.mockImplementationOnce(async () => { m.jwt = null; return { ok: true, status: 200 }; });
+  await expect(publicaAdjuntXat(FIL, entrada())).rejects.toMatchObject({ code: 'sessio-caducada', status: 401 });
+  expect(m.rpc.mock.calls.map(([nom]) => nom)).toEqual(['xat_reserva_adjunt']);
+});
+
+test.each([true, [1], '1.0', ' 1 '])('R32.6 · seq falsa %j no és ACK de Storage', async (seq) => {
+  m.rpc.mockImplementation(async (nom) => nom === 'xat_reserva_adjunt' ? { ruta: RUTA, pujat: true } : { id: ID, seq, tipus: 'imatge' });
+  await expect(publicaAdjuntXat(FIL, entrada())).rejects.toMatchObject({ code: 'sense-confirmacio' });
+});
+
+test('R32.6 · logout i login del mateix UUID durant la reserva no continua', async () => {
+  const tard = deferred(); m.rpc.mockReturnValueOnce(tard.promise);
+  const resultat = publicaAdjuntXat(FIL, entrada());
+  m.entrada += 2;
+  tard.resolve({ ruta: RUTA, pujat: false });
+  await expect(resultat).rejects.toMatchObject({ name: 'AbortError' });
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+test('R32.6 · el peu es captura abans de reservar i no canvia a mitja pujada', async () => {
+  const adjunt = { ...entrada(), text: 'Primer peu' };
+  const tard = deferred(); m.rpc.mockReturnValueOnce(tard.promise);
+  const resultat = publicaAdjuntXat(FIL, adjunt);
+  adjunt.text = 'Canvi posterior';
+  tard.resolve({ ruta: RUTA, pujat: false });
+  await resultat;
+  expect(m.rpc.mock.calls.find(([nom]) => nom === 'xat_publica_adjunt')[1].p_text).toBe('Primer peu');
+});
+
+test('R32.6 · una reserva que no es pot alliberar conserva la causa secundària', async () => {
+  fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+  m.rpc.mockImplementationOnce(async () => ({ ruta: RUTA, pujat: false }))
+    .mockRejectedValueOnce(new Error('Alliberament fallit'));
+  await expect(publicaAdjuntXat(FIL, entrada())).rejects.toMatchObject({ code: 'xarxa', errorAlliberament: expect.any(Error) });
+});
+
+test('R32.6 · la signatura no passa entre backends ni entre entrades del mateix UUID', async () => {
+  const id = idNou();
+  m.request.mockResolvedValueOnce(signada(id, 'a')).mockResolvedValueOnce(signada(id, 'b')).mockResolvedValueOnce(signada(id, 'c'));
+  await expect(urlAdjuntXat(id, { backendUrl: 'https://primer.test' })).resolves.toMatch(/^https:\/\/primer.test/);
+  await expect(urlAdjuntXat(id, { backendUrl: 'https://segon.test' })).resolves.toMatch(/^https:\/\/segon.test.*token=b$/);
+  m.entrada += 2;
+  await expect(urlAdjuntXat(id, { backendUrl: 'https://segon.test' })).resolves.toMatch(/token=c$/);
+  expect(m.rpc).toHaveBeenCalledTimes(3);
+});
+
+test('R32.6 · un senyal avortat no hereta una signatura de la cau', async () => {
+  const id = idNou(); m.request.mockResolvedValueOnce(signada(id));
+  await urlAdjuntXat(id);
+  const controller = new AbortController(); controller.abort();
+  await expect(urlAdjuntXat(id, { signal: controller.signal })).rejects.toMatchObject({ name: 'AbortError' });
 });

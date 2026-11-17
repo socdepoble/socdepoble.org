@@ -11,7 +11,7 @@ import {creaPostgres} from '../postgres-node0.mjs';
 const schema=fs.readFileSync(new URL('./posse-ledger.sql',import.meta.url),'utf8');
 // Single pin source shared with direct SQL installation; never accept just a count.
 const migrationPins=schema.match(/-- POSSE_MIGRATION_PINS_BEGIN\n([\s\S]*?)\n-- POSSE_MIGRATION_PINS_END/)?.[1];
-const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79|80|81|85|86|114|116|119|120),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
+const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79|80|81|85|86|114|116|119|120|121),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
 // Two reviewed85 compositions exist (R54 and R15-A3). Preserve exact pair
 // identity instead of silently overwriting one hash in a count-keyed object.
 const expectedMigrationLedgers=new Set(migrationPairs.map(([count,hash])=>`${count}:${hash}`));
@@ -23,7 +23,10 @@ const expectedMigrationLedgers=new Set(migrationPairs.map(([count,hash])=>`${cou
 // 20261115233000 (116 21a3cfc3, 117 i 118) no hi són: eixes migracions no formen part del catàleg.
 // Onada R32.4: es conserven el 114, el 116 i el 119, i s'afig el 120 amb 20261117150000 (la pàgina
 // /page/sistema-nervios al registre de copublicació, NO aplicada); tretze parells exactes i dotze recomptes distints.
-if(migrationPairs.length!==13||expectedMigrationLedgers.size!==13||new Set(migrationPairs.map(([count])=>count)).size!==12)throw Error('posse_migration_pins_missing');
+// Onada v1.2.7 (kit R32.5 de Codex): es conserven el 119 i el 120 d'R32.4, i s'afig el 121 amb 20261117140000 (safata
+// i revisió LSSI cautelar, NO aplicada); catorze parells exactes i tretze recomptes distints. El 120 del kit R32.5
+// (els 119 més 20261117140000, sense 20261117150000) no és cap catàleg publicat i no hi és.
+if(migrationPairs.length!==14||expectedMigrationLedgers.size!==14||new Set(migrationPairs.map(([count])=>count)).size!==13)throw Error('posse_migration_pins_missing');
 const FUNCTION_NAMES=['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'];
 const expectedFunctionHashes=Object.fromEntries(FUNCTION_NAMES.map(name=>{
   const start=schema.indexOf(`CREATE OR REPLACE FUNCTION node0_posse.${name}(`),body=schema.indexOf('AS $f$',start),end=schema.indexOf('$f$;',body+6);

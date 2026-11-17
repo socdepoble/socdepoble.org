@@ -554,6 +554,16 @@ export const CAPACITATS = Object.freeze({
     'bloquejaAutor',
     'desbloquejaAutor'
   ]),
+  /* R32.5 P0-114 · Opcional. Reutilitza denuncies i la quota SQL de moderacio.
+     registraDenunciaPublica({publicacioId:UUID,motiu,detall?},config) → rebut.
+     adminSafataDenuncies({estat='pendent',limit=50},config) → files (1..100).
+     adminRevisaDenuncia({id,decisio,justificacio,estatEsperat='pendent'},config)
+       → {id,estat,repetida}. Decisions: revisada/desestimada/retirada cautelar.
+     Les dues operacions administratives exigixen superadmin actiu + aal2 al
+     servidor. Sense simulació local, sense esborrat ni retirada per votació. */
+  moderacioLssi: Object.freeze([
+    'registraDenunciaPublica', 'adminSafataDenuncies', 'adminRevisaDenuncia'
+  ]),
   /* Fase D (261020, tasca 2) · Les normes de convivència, acceptades abans
      de la primera publicació (Play UGC; App Store 1.2, tolerància zero).
      Opcional: sense ella la interfície ho recorda només en este dispositiu.
@@ -844,8 +854,10 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada R32.3 (ordre del Mestre 16-11-2026 22:09) · Versió unificada 1.2.5 amb el build 10: és la primera que porta
    l'avís automàtic de versió nova (src/natiu/actualitzacioAppNativa.js), i s'ha d'instal·lar una vegada a mà.
    Onada v1.2.6 (ordre del Mestre 17-11-2026) · Versió unificada 1.2.6 amb el build 11: integra R32.4 (Codex i Gemini)
-   i és la primera que ja pot rebre l'avís automàtic des d'una App 1.2.5 (10) instal·lada. */
-export const VERSIO_CLIENT_NATIU = 11;
+   i és la primera que ja pot rebre l'avís automàtic des d'una App 1.2.5 (10) instal·lada.
+   Onada v1.2.7 (ordre del Mestre 17-11-2026, tarda) · Versió unificada 1.2.7 amb el build 12: integra R32.5 i R32.6 i
+   P0-123 (avís d'un toc per a TestFlight, APK directe i PWA); els mòbils amb el build 11 o anterior l'instal·len a mà. */
+export const VERSIO_CLIENT_NATIU = 12;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

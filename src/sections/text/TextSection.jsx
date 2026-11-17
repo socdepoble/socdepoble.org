@@ -38,6 +38,9 @@ import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
 /* Pla 261027_0845 (Guarda Nocturna), T1-06 · el text de les pàgines dins de
    l'app nativa, sense cap altra plataforma mòbil (regla 2.3.10 de l'App Store). */
 import { htmlPerAppNativa, paginaPerAppNativa } from './perAppNativa.js';
+/* Onada v1.2.7 · P0-123 · A /versions, la línia «Instal·lada al dispositiu · Última publicada» (fora de
+   PAGE_COPY: la Frontissa de la pàgina no canvia). */
+import LiniaVersioInstallada from '../../components/universal/LiniaVersioInstallada.jsx';
 
 /* Les etiquetes públiques localitzades declaren la seua llengua; les altres
    hereten la del contingut. Traduir una píndola no traduïx el cos. */
@@ -200,6 +203,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       {plaR51?.tipus === 'error' ? (
         <Alerta to="avis">{t('section.text.traduccioR51Error', 'Esta pàgina no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}</Alerta>
       ) : null}
+      {pageKey === 'versions' ? <LiniaVersioInstallada llengua={language} /> : null}
       {!amagaCos && <CosDeLaPagina html={page.html} />}
       {pageKey==='fedivers'&&<BarreraDelTrosAccessori><Suspense fallback={null}><AparadorFediversity language={language}/></Suspense></BarreraDelTrosAccessori>}
       {pageKey==='node-zero'&&<BarreraDelTrosAccessori><Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense></BarreraDelTrosAccessori>}

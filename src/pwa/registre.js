@@ -303,6 +303,24 @@ export function escoltaAvisosDelWorker({ navegador = globalThis.navigator, fines
 }
 
 /**
+ * Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · L'avís d'una
+ * versió web més nova (pwa/actualitzacioWeb.js), per import() i un cop la
+ * pàgina ha carregat: només on es registra el worker (producció, l'entrada
+ * pròpia, HTTPS, al nivell de dalt i fora de l'App nativa). El worker en espera
+ * el prepara este fitxer, l'únic que el pot nomenar, abans de recarregar.
+ * Mai llança. Torna la promesa del detector (o null).
+ */
+export function arrencaActualitzacioWeb({ navegador, finestra, importa = () => import('./actualitzacioWeb.js') } = {}) {
+  return Promise.resolve()
+    .then(importa)
+    .then((modul) => modul.iniciaActualitzacioWeb({
+      finestra,
+      preparaWorker: ({ vigent }) => actualitzaWorkerPerDeploy({ navegador, finestra, vigent })
+    }))
+    .catch(() => null);
+}
+
+/**
  * Registra /sw.js amb abast / quan la pàgina ha acabat de carregar, per no
  * competir amb la primera pintada. No llança mai: torna
  * { registrat: true, registre } o { registrat: false, motiu[, error] }.
@@ -313,7 +331,8 @@ export function escoltaAvisosDelWorker({ navegador = globalThis.navigator, fines
 export function registraServiceWorker({
   produccio = import.meta.env.PROD,
   navegador = globalThis.navigator,
-  finestra = globalThis.window
+  finestra = globalThis.window,
+  avisWeb = arrencaActualitzacioWeb
 } = {}) {
   // La recuperació de chunks no necessita suport SW. Manté, però, la mateixa
   // frontera de producció, document propi, HTTPS i exclusió de Capacitor.
@@ -343,7 +362,11 @@ export function registraServiceWorker({
   const registra = () => Promise.resolve()
     .then(() => navegador.serviceWorker.register(RUTA_DEL_SW, { scope: ABAST_DEL_SW }))
     .then((registre) => ({ registrat: true, registre }))
-    .catch((error) => ({ registrat: false, motiu: 'error', error }));
+    .catch((error) => ({ registrat: false, motiu: 'error', error }))
+    .finally(() => {
+      // v1.2.7 · P0-123 · L'avís de la versió web nova, també si el registre ha fallat.
+      try { if (typeof avisWeb === 'function') avisWeb({ navegador, finestra }); } catch { /* sense avís, la pàgina continua */ }
+    });
 
   if (finestra.document?.readyState === 'complete') return registra();
   return new Promise((resol) => {

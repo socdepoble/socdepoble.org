@@ -67,7 +67,8 @@ const comArticle = (linia, textosEstat) => {
 
 export function ColumnaColleccio({
   titol = 'Col·lecció', linies = [], forma = 'linies', resum = null,
-  onTria, onEdita, onResta, onSuma, onLleva, textosLinies, peu = null, primer, tram, textos, avis = null
+  onTria, onEdita, onResta, onSuma, onLleva, textosLinies, peu = null, primer, tram, textos, avis = null,
+  ometDataNoIndicada = false
 }) {
   const t = { ...TEXTOS_COLLECCIO, ...textos };
   const { mida, idioma } = useClosaAplicacio();
@@ -89,6 +90,7 @@ export function ColumnaColleccio({
       {forma === 'targetes' ? (
         <TargetesArticles
           idioma={idioma}
+          ometDataNoIndicada={ometDataNoIndicada}
           elements={llista.map((linia) => ({
             /* Ordre del Mestre, 261004 (integració final, F04) · El subtítol i l'entradeta que l'app
                vestix a la línia (linia.subtitol, linia.entradeta), com al catàleg. */
@@ -97,7 +99,10 @@ export function ColumnaColleccio({
               icona: linia.icona,
               autoria: linia.autoria,
               subtitol: linia.subtitol,
-              entradeta: linia.entradeta
+              entradeta: linia.entradeta,
+              date: linia.date ?? linia.data,
+              dataCaducitat: linia.dataCaducitat ?? linia.caducitat,
+              created_at: linia.created_at ?? linia.createdAt
             }
           }))}
           etiqueta={titol}

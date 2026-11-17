@@ -278,7 +278,10 @@ describe('àrea única (Unica)', () => {
     const area = screen.getByRole('region', { name: 'La Prova' });
     expect(area).toBe(regio());
     expect(area.className).toBe('sdp-app-unica');
-    expect(area.parentElement.classList.contains('sdp-app-contenidor')).toBe(true);
+    /* Onada R32.5 · El contingut de l'app va dins de .sdp-app-contenidor__cos (RutaApps.jsx): l'àrea
+       d'inset absolut s'hi ancora i la banda beta opcional queda damunt, sense solapar-s'hi. */
+    expect(area.parentElement.classList.contains('sdp-app-contenidor__cos')).toBe(true);
+    expect(area.parentElement.parentElement.classList.contains('sdp-app-contenidor')).toBe(true);
     expect(within(area).getByText('Àrea 2026-10-02')).toBeTruthy();
     expect(closca()).toBeNull();
     expect(document.querySelector('.app-grid-page')).toBeNull();

@@ -56,14 +56,17 @@ describe('Pedra Seca i Shadow DOM', () => {
   const inici = moduls.indexOf('/* ═══ BLOC AdjuntXat · ');
   const fi = moduls.indexOf('/* ═══ FI DEL BLOC AdjuntXat ═══ */');
   const css = inici >= 0 && fi > inici ? moduls.slice(inici, fi) : '';
-  const canonics = [css, moduls, llig('src/css/components.css')].join('\n');
+  /* R32.6 (P0-119) · D-R27-1 (opció b) · Les regles del reproductor de veu (.sdp-xat-veu*) són al full
+     diferit src/css/diferit-xat-veu.css, que AdjuntXat.jsx adopta a l'arrel on es pinta (fullDiferit.js). */
+  const diferitVeu = llig('src/css/diferit-xat-veu.css');
+  const canonics = [css, moduls, llig('src/css/components.css'), diferitVeu].join('\n');
   test('cada classe del JSX és declarada', () => {
     const classes = new Set(FONTS.flatMap((f) => [...llig(f).matchAll(/className="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/))).filter(Boolean));
     const orfes = [...classes].filter((c) => !new RegExp(`\\.${c.replace(/[-_]/g, '\\$&')}(?![\\w-])`).test(canonics));
     expect(orfes).toEqual([]);
   });
   test('cap color en brut ni estil en línia', () => {
-    expect(css.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/);
+    for (const full of [css, diferitVeu]) expect(full.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/);
     for (const f of FONTS) expect(llig(f)).not.toMatch(/\sstyle=\{|import\s+[^;]*\.css['"]/);
   });
   test('el full viatja dins del CSS compartit que la SPA i l’encastat injecten', () => {
@@ -75,6 +78,14 @@ describe('Pedra Seca i Shadow DOM', () => {
     expect(llig('src/css/index.css')).not.toMatch(/AdjuntXat\.css/);
     expect(existsSync(resolve(process.cwd(), 'src/sections/xat/components/AdjuntXat.css'))).toBe(false);
     expect(css.replace(/\/\*[\s\S]*?\*\//g, '').trimStart().startsWith('@layer components')).toBe(true);
+  });
+  test('R32.6 · el full diferit del reproductor de veu: dins de @layer components, fora de l’arrencada i adoptat per les dues vistes', () => {
+    expect(diferitVeu.replace(/\/\*[\s\S]*?\*\//g, '').trim()).toMatch(/^@layer components \{[\s\S]*\}$/);
+    expect(llig('src/css/index.css')).not.toMatch(/diferit-xat-veu/);
+    expect(css).not.toMatch(/\.sdp-xat-veu[\w-]*\s*[,{]/);
+    const font = llig('src/sections/xat/components/AdjuntXat.jsx');
+    expect(font).toMatch(/^import cssXatVeu from '\.\.\/\.\.\/\.\.\/css\/diferit-xat-veu\.css\?inline';$/m);
+    expect(font.match(/useFullDiferit\((?:arrel|caixa), 'xat-veu', cssXatVeu\);/g)).toHaveLength(2);
   });
 });
 

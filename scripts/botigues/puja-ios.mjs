@@ -386,7 +386,9 @@ export async function main(argv) {
     }
     process.stdout.write(produccio
       ? `✓ pujat. Per a publicar-la, el Mestre (RUNBOOK P9 i S6), sense cap grup de proves:\n${enumera(PASSOS_REVISIO_IOS, versio, build)}\n`
-      : '✓ pujat. App Store Connect el processa uns minuts; la prova i l\'enviament a revisió són del Mestre (RUNBOOK P9).\n');
+      : '✓ pujat. App Store Connect el processa uns minuts; la prova i l\'enviament a revisió són del Mestre (RUNBOOK P9).\n'
+        /* v1.2.7 · P0-123 · Perquè les Apps de TestFlight reben l'avís d'un toc: el registre ja porta la pujada. */
+        + `  Perquè les Apps de TestFlight ho sàpien: node scripts/botigues/publica-tot.mjs --sincronitza-proves --versio ${versio} --build-testflight ${build} i el desplegament web següent.\n`);
     process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, sha256: empremta, pujat: true, canal }));
     return EIXIDA.BE;
   } finally {

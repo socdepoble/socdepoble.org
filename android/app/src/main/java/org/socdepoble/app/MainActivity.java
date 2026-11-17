@@ -56,6 +56,9 @@ public class MainActivity extends BridgeActivity {
         // R31: getToken/deleteToken han d'acabar abans de resoldre el pont.
         // PushNotifications continua atenent permisos, canals, avisos i toc.
         registerPlugin(CiclePushNatiuPlugin.class);
+        // Onada v1.2.7 · P0-123 · D'on ve l'App (Google Play o instal·lació
+        // directa): l'avís d'actualització obri el canal que toca.
+        registerPlugin(OrigenInstallacioPlugin.class);
         // Gauntlet 261026_1615 (Codex C1615-05) · Abans que cap connector llija els extres.
         setIntent(senseExtresIllegibles(getIntent()));
         // Revisió 261026 · Restaurada després que Android matara el procés, la

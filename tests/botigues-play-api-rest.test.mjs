@@ -955,7 +955,9 @@ test('R32.3 · Elefant · sincronitzaManifestVersio: version i el build de cada 
   assert.deepEqual(Object.keys(nou).filter((k) => ['version', 'androidBuild', 'iosBuild'].includes(k)).length, 3);
   assert.ok(Object.keys(nou).indexOf('entries') > Object.keys(nou).indexOf('iosBuild'), 'les claus de versió van davant de les entrades');
   assert.ok(nou.entries.length > 0 && nou.entries.every((entrada) => entrada.version === seguent));
-  const sense = (dades) => ({ ...dades, version: undefined, androidBuild: undefined, iosBuild: undefined, entries: dades.entries.map((x) => ({ ...x, version: undefined })) });
+  // v1.2.7 · P0-123 · latestBuild el recalcula l'escriptor: el més alt de tots els builds.
+  assert.equal(nou.latestBuild, Math.max(...['androidBuild', 'iosBuild', 'testflightIosBuild', 'apkDirectBuild'].map((k) => nou[k]).filter(Number.isSafeInteger)));
+  const sense = (dades) => ({ ...dades, version: undefined, androidBuild: undefined, iosBuild: undefined, latestBuild: undefined, entries: dades.entries.map((x) => ({ ...x, version: undefined })) });
   assert.deepEqual(sense(nou), sense(original), 'la resta del manifest és la mateixa');
   assert.equal(sincronitza(text, { versio: seguent, androidBuild: bA, iosBuild: bI }), text, 'idempotent');
 
@@ -974,7 +976,7 @@ test('R32.3 · Elefant · sincronitzaManifestVersio: version i el build de cada 
   assert.throws(() => sincronitza('no', { versio: posterior, androidBuild: bA }), /no és JSON/);
   // Un manifest sense cap clau de versió les rep davant de tot.
   const pelat = sincronitza('{"entries":[{"version":"0.1.0"}]}', { versio: '1.0.0', androidBuild: 2, iosBuild: 3 });
-  assert.equal(pelat, '{\n  "version": "1.0.0",\n  "androidBuild": 2,\n  "iosBuild": 3,\n  "entries": [\n    {\n      "version": "1.0.0"\n    }\n  ]\n}\n');
+  assert.equal(pelat, '{\n  "version": "1.0.0",\n  "androidBuild": 2,\n  "iosBuild": 3,\n  "latestBuild": 3,\n  "entries": [\n    {\n      "version": "1.0.0"\n    }\n  ]\n}\n');
 
   /* Elefant (contraexemple del Peix security_reviewer, part B) · Un build teclejat massa alt ja no entra
      (sostre), i si mai entrara, --corregeix-ard el desfà; sense, la monotonia el protegix. */
@@ -1059,8 +1061,12 @@ test('R32.3 · publica-tot: --publica-apk i --sincronitza-ard van sols, mai junt
   }
   const resum = publica.resumOmnicanal(ARREL, { versio: '1.2.5', build: '10', plataforma: 'android', env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') } });
   assert.deepEqual(resum.passos.map((pas) => pas.ordre.split(' --versio')[0]), [
-    'node scripts/botigues/publica-tot.mjs', 'node scripts/botigues/puja-android.mjs', 'node scripts/botigues/publica-tot.mjs --publica-apk'
+    'node scripts/botigues/publica-tot.mjs', 'node scripts/botigues/puja-android.mjs', 'node scripts/botigues/publica-tot.mjs --publica-apk',
+    // v1.2.7 · P0-123 · I l'anunci de l'APK publicat a les Apps d'instal·lació directa.
+    'node scripts/botigues/publica-tot.mjs --sincronitza-proves'
   ]);
+  assert.match(resum.passos[3].ordre, /--sincronitza-proves --versio 1\.2\.5 --build-apk 10$/);
+  assert.match(resum.passos[3].accio, /ABANS de l'rsync de dist\/ al Node 0 i de firebase deploy/);
   assert.match(resum.passos[1].accio, /API REST v3 \(pista internal, esborrany/);
   // Onada v1.2.6 · L'APK el servix el Node 0: l'ordre que el publica va abans de l'rsync de dist/, no de firebase deploy.
   assert.match(resum.passos[2].accio, /entre «npm run build» \(que buida dist\/\) i l'rsync de dist\/ al Node 0 \(socdepoble\.cat\)/);

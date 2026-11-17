@@ -228,7 +228,7 @@ import AvisOblitXat from './components/AvisOblitXat.jsx';
 /* Gauntlet 261017 (WP7b, P2) · De la font, identitat.js: appSeed.js només el
    reexporta, i importar-lo d'allà arrossegava la llavor sencera (PAGE_COPY
    inclosa) al tros d'entrada. La mateixa funció, el mateix valor. */
-import { getDefaultUserId, sessioRecuperable } from '../../data/identitat.js';
+import { capturaSessio, getDefaultUserId, sessioRecuperable } from '../../data/identitat.js';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
@@ -2024,33 +2024,85 @@ export function XatProvider({ children, config }) {
       throw new Error('No pots enviar fitxers en esta conversa.');
     }
     if (!teCapacitat('xatMultimedia')) throw new Error('Este node encara no permet enviar adjunts.');
+    const sessioVigent = capturaSessio();
     const moderacio = moderacioRef.current;
     if (typeof moderacio?.asseguraNormes === 'function' && !(await moderacio.asseguraNormes())) {
       throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
     }
-    if (!vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
+    sessioVigent();
+    const actual = operacio.current;
+    if (!vigent(actual) || actual.llinatge !== op.llinatge || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
     const controller = new AbortController();
-    const avorta = () => controller.abort();
+    let vigilada = actual;
+    let acabada = false;
+    const avorta = () => controller.abort(new DOMException('La sessió ha canviat o l’enviament s’ha cancel·lat.', 'AbortError'));
+    const asseguraVigent = () => {
+      sessioVigent();
+      const actual = operacio.current;
+      if (controller.signal.aborted || !vigent(actual) || actual.llinatge !== op.llinatge) {
+        throw controller.signal.reason ?? new DOMException('La sessió ha canviat.', 'AbortError');
+      }
+    };
+    /* El transport té un senyal estable. Una renovació només canvia qui rep
+       l'ACK; mai no torna a publicar un adjunt amb resultat encara incert. */
+    const segueixRelleu = () => {
+      const anterior = vigilada;
+      anterior.controller.signal.removeEventListener('abort', segueixRelleu);
+      relleuViu(anterior).then((nova) => {
+        if (acabada) return;
+        sessioVigent();
+        if (!vigent(nova) || nova.llinatge !== op.llinatge) { avorta(); return; }
+        vigilada = nova;
+        nova.controller.signal.addEventListener('abort', segueixRelleu, { once: true });
+        if (nova.controller.signal.aborted) segueixRelleu();
+      }).catch(avorta);
+    };
+    const revalidaSessio = () => { try { asseguraVigent(); } catch { avorta(); } };
     signal?.addEventListener('abort', avorta, { once: true });
-    op.controller.signal.addEventListener('abort', avorta, { once: true });
+    vigilada.controller.signal.addEventListener('abort', segueixRelleu, { once: true });
+    globalThis.window?.addEventListener('sdp:auth-change', revalidaSessio);
     let desat;
     /* Integració 261024 (Codex C-02) · Un rebuig per les normes (SDP-MOD-428,
        a la causa de l'error de l'adjunt) torna a obrir la porta UNA vegada; si
        les accepta, es publica de nou amb el mateix id (la reserva ja pujada no
        es torna a pujar); si les declina, l'AbortError de sempre. */
-    const publica = () => publicaAdjuntXat(complet.id, adjunt, { ...config, signal: controller.signal, onProgres });
+    const publica = () => {
+      asseguraVigent();
+      const enVol = publicaAdjuntXat(complet.id, adjunt, { ...config, signal: controller.signal, onProgres });
+      // També liquida la UI si un port ignora l'abort; el resultat tardà es consumix.
+      return new Promise((resol, rebutja) => {
+        const cancel = () => rebutja(controller.signal.reason);
+        if (controller.signal.aborted) cancel();
+        else controller.signal.addEventListener('abort', cancel, { once: true });
+        Promise.resolve(enVol).then(
+          (valor) => { controller.signal.removeEventListener('abort', cancel); resol(valor); },
+          (error) => { controller.signal.removeEventListener('abort', cancel); rebutja(error); },
+        );
+      });
+    };
     try {
       try { desat = await publica(); }
       catch (error) {
         if (!esRebuigDeNormes(error) || typeof moderacio?.asseguraNormes !== 'function') throw error;
         const acceptades = await moderacio.asseguraNormes({ rebutjades: true });
-        if (!vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
+        asseguraVigent();
         if (acceptades !== true) throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
         desat = await publica();
       }
     }
-    finally { signal?.removeEventListener('abort', avorta); op.controller.signal.removeEventListener('abort', avorta); }
-    if (!vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
+    finally {
+      acabada = true;
+      signal?.removeEventListener('abort', avorta);
+      vigilada.controller.signal.removeEventListener('abort', segueixRelleu);
+      globalThis.window?.removeEventListener('sdp:auth-change', revalidaSessio);
+    }
+    asseguraVigent();
+    const seq = typeof desat?.seq === 'number' ? desat.seq : typeof desat?.seq === 'string' && /^[1-9]\d*$/.test(desat.seq) ? Number(desat.seq) : NaN;
+    if (!desat || desat.encuat === true || desat.id !== adjunt?.id || desat.filId !== complet.id
+      || !Number.isSafeInteger(seq) || seq <= 0 || desat.tipus !== adjunt.tipus) {
+      // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
+      throw (await import('../../data/xatMultimedia.js')).errorAdjuntXat('sense-confirmacio');
+    }
     const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
     mutaMissatges((previs) => ({ ...previs, [complet.id]: fusionaPerSeq(previs[complet.id] || [], [definitiu]) }));
     mutaFils((previs) => previs.map((f) => f.id === complet.id ? actualitzaFilAmbMissatge(f, definitiu) : f));

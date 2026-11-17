@@ -63,7 +63,7 @@ export const ICONES_ESPECIMENS = Object.freeze({
   retroalimentacio: Object.freeze({
     alerta: '⚠️', insignia: '📛', buit: '📭', carrega: '⏳', progres: '🔋',
     'estat-desament': '☁️', 'resum-connexio': '👀', connexio: '🟢',
-    'barra-actualitzacio-app': '🔄'
+    'barra-actualitzacio-app': '🔄', 'banda-beta-micro-app': '🧪'
   }),
   superposicions: Object.freeze({
     dialeg: '🪟', confirmacio: '❓', calaix: '🗄️', 'pantalla-completa': '📺', pista: '💡',
@@ -668,3 +668,5 @@ export function rutaEspecimen(itemId) {
 CATALOG_ITEMS.push(especimen('formularis', 'selector-opcions-desplegable', 'Opcions amb revelació in-situ', 'SelectorOpcionsDesplegable', ['molecula', 'formulari'], 'Tria exclusiva amb explicació adjacent i resum de dues línies, llegible al mòbil.', 'radio conditional reveal disclosure'));
 
 CATALOG_ITEMS.push(especimen('fonaments', 'respiracio-botons', 'Respiració lateral dels botons', 'Coixí lateral i files centrades', ['atom', 'botons'], 'Etiquetes completes, amplària conservada i grups que baixen centrats quan falta espai.', 'padding lateral app store wordpress wrap'));
+
+CATALOG_ITEMS.push(especimen('retroalimentacio', 'banda-beta-micro-app', 'Banda de fase beta (micro-apps)', 'BandaBetaMicroApp', ['molecula', 'avis', 'beta'], 'Franja superior serena en 5 llengües per a les micro-apps en proves: recorda que són eines d’autoorganització personal i que no s’han d’utilitzar per a producció crítica ni com a facturació oficial Verifactu.', 'beta proves verifactu gestoria bar nevera salut genealogia lector avisador microapp'));

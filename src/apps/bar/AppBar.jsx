@@ -10,15 +10,18 @@
  * Les dades viuen en este dispositiu (IndexedDB) i no se sincronitzen. No és
  * cap sistema de facturació: la nota diu «Nota de consum · no és factura».
  * `magatzem`, `rellotge` i `atzar` només els passen les proves.
+ *
+ * Onada R32.5 · Els separadors de la closca seguixen l'idioma actiu (ca, es, en, eu, gl).
  */
-import { ClosaAplicacio } from '../plataforma/index.js';
+import { ClosaAplicacio, useApp } from '../plataforma/index.js';
 import { ProveidorBar } from './estat/ProveidorBar.jsx';
-import { RUTES_BAR, TITOLS_BAR } from './rutesBar.js';
+import { RUTES_BAR, titolsBar } from './rutesBar.js';
 
 export default function AppBar({ magatzem, rellotge, atzar }) {
+  const { idioma = 'ca' } = useApp();
   return (
     <ProveidorBar magatzem={magatzem} rellotge={rellotge} atzar={atzar}>
-      <ClosaAplicacio rutes={RUTES_BAR} titols={TITOLS_BAR} />
+      <ClosaAplicacio rutes={RUTES_BAR} titols={titolsBar(idioma)} />
     </ProveidorBar>
   );
 }

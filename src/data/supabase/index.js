@@ -13,6 +13,7 @@ export { revocaPublicacioMur, drenaRevocacionsMur, encuaRevocacioNotaMur, destro
 export * from './organizations.js';
 export * from './auth.js';
 export * from './notes.js';
+export { registraDenunciaPublica, adminSafataDenuncies, adminRevisaDenuncia } from './lssi.js';
 export * from './xat.js';
 /* Sanejament R15 (B2 · P1-01, R15-REG-05, Q-06) · El ritme del xat (RPC xat_ritme i
    xat_presencia, migracions 2611080430/0431/0432) i la IAIA amb servidor (funció

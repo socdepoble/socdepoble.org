@@ -296,7 +296,9 @@ describe('en desenvolupament, una app pròpia', () => {
     expect(ubicacio()).toBe('/app/gestoria/facturacio');
     expect(container.querySelectorAll('h1')).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Facturació');
-    expect(screen.getByRole('heading', { level: 2, name: 'Factures i llibre Veri*Factu, també sense connexió' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: 'Esborranys de factures i registre encadenat local, també sense connexió' })).toBeTruthy();
+    expect(container.textContent).not.toMatch(/Veri\*Factu/);
+    expect(container.querySelector('[data-sdp-banda-beta]')).not.toBeNull();
     expect(pindoles(container)).toEqual(['GESTORIA', 'Facturació']);
     expect(screen.queryByText('Doble de la closca')).toBeNull();
     expect(container.querySelector('.sdp-wiki-workspace')).toBeNull();

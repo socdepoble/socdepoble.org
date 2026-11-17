@@ -4,6 +4,9 @@ import { teCapacitat, urlAdjuntXat } from '../../../data/backendPort.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../../config/xifratXat.js';
 import { textDErrorAdjunt } from '../adjuntLocal.js';
+/* R32.6 (P0-119) · D-R27-1 (opció b) · L'estil del reproductor de veu no viatja a l'arrencada: s'adopta en pintar-se. */
+import { useFullDiferit } from '../../../config/fullDiferit.js';
+import cssXatVeu from '../../../css/diferit-xat-veu.css?inline';
 
 /* QA-C01 (Gauntlet 261029_1858) · Retenció dels blob: desxifrats que es pinten
    o sonen. Amb el xat xifrat, el registre LRU (data/xatMultimediaXifrat.js) no
@@ -65,6 +68,56 @@ export const traductorAdjunt = (t) => (typeof t === 'function' ? t : enValencia)
 export function tempsDeVeu(ms, arrodonix = Math.floor) {
   const segons = Math.max(0, arrodonix((Number(ms) || 0) / 1000));
   return `${Math.floor(segons / 60)}:${String(segons % 60).padStart(2, '0')}`;
+}
+
+const CLASSES_ONA_PENDENT = Object.freeze([
+  'sdp-xat-veu__barra sdp-xat-veu__barra--1',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--2',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--3',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--4',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--5',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--6',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--7',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--8'
+]);
+
+const CLASSES_ONA_ACTIVA = Object.freeze([
+  'sdp-xat-veu__barra sdp-xat-veu__barra--activa sdp-xat-veu__barra--1',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--activa sdp-xat-veu__barra--2',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--activa sdp-xat-veu__barra--3',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--activa sdp-xat-veu__barra--4',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--activa sdp-xat-veu__barra--5',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--activa sdp-xat-veu__barra--6',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--activa sdp-xat-veu__barra--7',
+  'sdp-xat-veu__barra sdp-xat-veu__barra--activa sdp-xat-veu__barra--8'
+]);
+
+export const TOTAL_BARRES_ONA_VEU = 24;
+
+/**
+ * R32.6 (P0-119) · Perfil determinista d'ona de veu (nivells 0..7) derivat de
+ * la clau de la nota. Cap Math.random ni cap style= en línia: cada nivell té
+ * la seua classe estàtica en Pedra Seca.
+ */
+export function barresDOnaDeVeu(llavor = 'veu', quants = TOTAL_BARRES_ONA_VEU) {
+  const total = Math.max(8, Math.min(48, Number(quants) || TOTAL_BARRES_ONA_VEU));
+  const text = String(llavor || 'veu');
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const barres = [];
+  for (let i = 0; i < total; i += 1) {
+    h ^= (i + 1) * 2654435761;
+    h = Math.imul(h ^ (h >>> 15), 2246822507);
+    const soroll = (h >>> 0) % 100;
+    const pos = total > 1 ? i / (total - 1) : 0.5;
+    const envolcall = Math.sin(Math.PI * Math.min(1, Math.max(0.08, pos)));
+    const cru = Math.round((0.28 + 0.72 * envolcall) * (1.2 + (soroll / 100) * 6.3));
+    barres.push(Math.max(0, Math.min(7, cru)));
+  }
+  return barres;
 }
 
 /* XAT-08 i l'omissió del verificador (261025) · Les notes de veu, com a
@@ -133,8 +186,10 @@ export function ReproductorVeu({ interactiu = true, ...props }) {
 
 function VeuQuieta({ duradaMs = null, t }) {
   const total = Number.isFinite(duradaMs) && duradaMs > 0 ? duradaMs : 0;
+  const arrel = useRef(null);
+  useFullDiferit(arrel, 'xat-veu', cssXatVeu);
   return (
-    <p className="sdp-xat-veu sdp-xat-veu--quieta">
+    <p ref={arrel} className="sdp-xat-veu sdp-xat-veu--quieta">
       <Mic size={20} aria-hidden="true" focusable="false" />
       <span>{t('section.xat.adjunts.veu', 'Missatge de veu')}</span>
       <span className="sdp-xat-veu__temps">{tempsDeVeu(total, Math.round)}</span>
@@ -143,6 +198,8 @@ function VeuQuieta({ duradaMs = null, t }) {
 }
 
 function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = 'ca-ES', t }) {
+  const caixa = useRef(null);
+  useFullDiferit(caixa, 'xat-veu', cssXatVeu);
   const audio = useRef(null);
   const viu = useRef(true);
   const volSonar = useRef(false);
@@ -275,14 +332,15 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
   const textPosicio = t('section.xat.adjunts.temps', '{posicio} de {durada}')
     .replace('{posicio}', tempsDeVeu(posMs)).replace('{durada}', textTotal);
   const enMarxa = sona || carregant;
-  /* XAT-08 · Amb la pastilla, la fila de 16rem ha de cabre en un mòbil de
-     320px: el temps passa a un sol número, com a WhatsApp (on va mentre sona
-     o s'ha parat a mitges; la durada en tornar a començar). Més estreta, la
-     pastilla baixa de línia (el CSS). En repòs, la fila de sempre. Un cop
-     premuda, la pastilla no se'n va (ni amb l'error): el focus no es perd. */
+  const barres = useMemo(() => barresDOnaDeVeu(memoria || `d:${duradaMs ?? 0}`), [memoria, duradaMs]);
+  const ratiProgres = total > 0 ? Math.min(1, Math.max(0, posMs / total)) : 0;
+  /* XAT-08 + R32.6 (P0-119) · Reproductor estil WhatsApp en Pedra Seca: ona
+     visual determinista sincronitzada amb l'<input type="range"> accessible,
+     durada tabular a sota i pastilla de velocitat compacta amb diana tàctil
+     completa sense xafar el segell horari de la bombolla. */
   const textTemps = !usada ? `${tempsDeVeu(posMs)} / ${textTotal}` : enMarxa || posMs > 0 ? tempsDeVeu(posMs) : textTotal;
   return (
-    <div className="sdp-xat-veu-caixa">
+    <div ref={caixa} className="sdp-xat-veu-caixa">
       <div className={usada ? 'sdp-xat-veu sdp-xat-veu--velocitat' : 'sdp-xat-veu'} role="group" aria-label={etiqueta}>
         <button
           type="button"
@@ -291,26 +349,47 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
           aria-label={enMarxa ? t('section.xat.adjunts.pausa', 'Pausa el missatge de veu') : t('section.xat.adjunts.reprodueix', 'Reprodueix el missatge de veu')}
           aria-busy={carregant || undefined}
         >
-          {enMarxa ? <Pause size={20} aria-hidden="true" focusable="false" /> : <Play size={20} aria-hidden="true" focusable="false" />}
+          {enMarxa ? (
+            <Pause size={20} fill="currentColor" aria-hidden="true" focusable="false" />
+          ) : (
+            <Play size={20} fill="currentColor" className="sdp-xat-veu__icona-play" aria-hidden="true" focusable="false" />
+          )}
         </button>
-        <input
-          type="range"
-          className="sdp-xat-veu__posicio"
-          min="0"
-          max={Math.max(total, 1) / 1000}
-          step="0.1"
-          value={Math.min(posMs, total) / 1000}
-          disabled={!teFont || !total}
-          aria-label={t('section.xat.adjunts.posicio', 'Posició del missatge de veu')}
-          aria-valuetext={textPosicio}
-          onChange={(e) => {
-            const segons = Number(e.target.value);
-            if (audio.current) audio.current.currentTime = segons;
-            posicio.current = segons;
-            setPosMs(segons * 1000);
-          }}
-        />
-        <span className="sdp-xat-veu__temps">{textTemps}</span>
+        <div className="sdp-xat-veu__cos">
+          <div className="sdp-xat-veu__pista">
+            <span className="sdp-xat-veu__ona" aria-hidden="true">
+              {barres.map((nivell, idx) => (
+                <span
+                  key={idx}
+                  className={ratiProgres > 0 && (idx + 0.5) / barres.length <= ratiProgres
+                    ? CLASSES_ONA_ACTIVA[nivell]
+                    : CLASSES_ONA_PENDENT[nivell]}
+                />
+              ))}
+            </span>
+            <input
+              type="range"
+              className="sdp-xat-veu__posicio"
+              min="0"
+              max={Math.max(total, 1) / 1000}
+              step="0.1"
+              value={Math.min(posMs, total) / 1000}
+              disabled={!teFont || !total}
+              aria-label={t('section.xat.adjunts.posicio', 'Posició del missatge de veu')}
+              aria-valuetext={textPosicio}
+              onChange={(e) => {
+                const segons = Number(e.target.value);
+                if (audio.current) audio.current.currentTime = segons;
+                posicio.current = segons;
+                setPosMs(segons * 1000);
+              }}
+            />
+          </div>
+          <div className="sdp-xat-veu__peu">
+            <Mic size={13} className="sdp-xat-veu__mic" aria-hidden="true" focusable="false" />
+            <span className="sdp-xat-veu__temps">{textTemps}</span>
+          </div>
+        </div>
         {usada ? (
           <button
             type="button"
@@ -318,7 +397,7 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
             onClick={seguentVelocitat}
             aria-label={t('section.xat.adjunts.velocitat', 'Velocitat de reproducció: {velocitat}').replace('{velocitat}', textVelocitat)}
           >
-            {textVelocitat}
+            <span className="sdp-xat-veu__velocitat-pindola">{textVelocitat}</span>
           </button>
         ) : null}
         <audio

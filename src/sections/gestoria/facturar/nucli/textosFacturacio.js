@@ -1,0 +1,135 @@
+/**
+ * textosFacturacio.js · Onada R32.5 (P0-112)
+ *
+ * Textos purs en les 5 llengües oficials (ca, es, en, eu, gl) per a la
+ * pantalla de Facturació (Facturacio.jsx). Mòdul 100% pur (zero React, zero DOM)
+ * d'acord amb qualitatFacturacio.test.js.
+ */
+
+export const TEXTOS_FACTURACIO = Object.freeze({
+  ca: Object.freeze({
+    memoriaTitol: 'Este llibre és de proves',
+    memoriaText: 'Es perd en tancar la pestanya: no emetes res de veres ací.',
+    esborratTitol: 'El navegador podria esborrar el llibre',
+    tornaDemanar: 'Torna-ho a demanar',
+    denegadaText: 'No ha acceptat guardar-lo de manera permanent: si li falta espai, el pot esborrar. ',
+    senseApiText: 'Este navegador no deixa demanar que el guarde de manera permanent. ',
+    copiaConsell: 'Fes còpia del llibre (pas 5) cada dia que factures.',
+    obrint: 'Obrint el llibre de factures…',
+    errorTitol: 'Ací no es pot facturar',
+    errorDefecte: 'El llibre de factures no s’ha pogut obrir.',
+    errorPrivada: 'Si estàs en una finestra privada, obri la Gestoria en una de normal: el llibre necessita quedar-se guardat.',
+    barraIntro: 'Factura des d’este ordinador, amb connexió o sense. Les factures i les dades de l’empresa es guarden en este navegador, i no ixen d’ací.',
+    noEsborrara: 'El navegador no l’esborrarà',
+    detallsResum: 'Detalls tècnics (cadena local i AEAT — no Verifactu)',
+    detallsCadena: 'Cada esborrany de factura entra al registre local encadenat a l’anterior, i la cadena es torna a verificar cada vegada que obris esta pantalla.',
+    detallsAvis: 'L’enviament a l’AEAT encara no està fet: este registre en proves no és cap sistema Verifactu homologat.',
+    pas1: 'Les dades de l’empresa',
+    pas2: 'Les factures d’abans',
+    pas3: 'Factura nova',
+    aturada: 'Aturada',
+    pas4: 'El llibre de factures',
+    pas5: 'Còpia del llibre'
+  }),
+  es: Object.freeze({
+    memoriaTitol: 'Este libro es de pruebas',
+    memoriaText: 'Se pierde al cerrar la pestaña: no emitas nada real aquí.',
+    esborratTitol: 'El navegador podría borrar el libro',
+    tornaDemanar: 'Volver a pedirlo',
+    denegadaText: 'No ha aceptado guardarlo de forma permanente: si le falta espacio, puede borrarlo. ',
+    senseApiText: 'Este navegador no permite pedir almacenamiento permanente. ',
+    copiaConsell: 'Haz copia del libro (paso 5) cada día que factures.',
+    obrint: 'Abriendo el libro de facturas…',
+    errorTitol: 'Aquí no se puede facturar',
+    errorDefecte: 'No se ha podido abrir el libro de facturas.',
+    errorPrivada: 'Si estás en una ventana privada, abre la Gestoría en una normal: el libro necesita quedarse guardado.',
+    barraIntro: 'Registra borradores desde este ordenador, con o sin conexión. Las facturas y los datos de la empresa se guardan en este navegador y no salen de aquí.',
+    noEsborrara: 'El navegador no lo borrará',
+    detallsResum: 'Detalles técnicos (cadena local y AEAT — no Verifactu)',
+    detallsCadena: 'Cada borrador de factura entra en el registro local encadenado al anterior, y la cadena vuelve a verificarse cada vez que abres esta pantalla.',
+    detallsAvis: 'El envío a la AEAT todavía no está hecho: este registro en pruebas no es ningún sistema Verifactu homologado.',
+    pas1: 'Los datos de la empresa',
+    pas2: 'Las facturas anteriores',
+    pas3: 'Factura nueva',
+    aturada: 'Detenida',
+    pas4: 'El libro de facturas',
+    pas5: 'Copia del libro'
+  }),
+  en: Object.freeze({
+    memoriaTitol: 'This ledger is for testing only',
+    memoriaText: 'It disappears when you close the tab: do not issue real records here.',
+    esborratTitol: 'The browser might clear this ledger',
+    tornaDemanar: 'Ask again',
+    denegadaText: 'Permanent storage was not granted: if storage runs low, the browser may clear it. ',
+    senseApiText: 'This browser does not support requesting permanent storage. ',
+    copiaConsell: 'Back up the ledger (step 5) every day you record invoices.',
+    obrint: 'Opening invoice ledger…',
+    errorTitol: 'Invoicing is unavailable here',
+    errorDefecte: 'The invoice ledger could not be opened.',
+    errorPrivada: 'If you are in a private window, open Bookkeeping in a regular window so the ledger can be saved.',
+    barraIntro: 'Draft invoices from this computer, online or offline. Invoices and company details stay in this browser and never leave your device.',
+    noEsborrara: 'Persistent in browser',
+    detallsResum: 'Technical details (local chain and AEAT — not Verifactu)',
+    detallsCadena: 'Each invoice draft enters the local ledger chained to the previous one, and the chain is re-verified every time you open this screen.',
+    detallsAvis: 'Submission to the Spanish Tax Agency (AEAT) is not implemented yet: this beta ledger is not a certified Verifactu system.',
+    pas1: 'Company details',
+    pas2: 'Previous invoices',
+    pas3: 'New invoice',
+    aturada: 'Halted',
+    pas4: 'Invoice ledger',
+    pas5: 'Ledger backup'
+  }),
+  eu: Object.freeze({
+    memoriaTitol: 'Liburu hau probetarako da',
+    memoriaText: 'Fitxa ixtean galtzen da: ez jaulki ezer benetakorik hemen.',
+    esborratTitol: 'Nabigatzaileak liburua ezaba dezake',
+    tornaDemanar: 'Eskatu berriro',
+    denegadaText: 'Ez du onartu modu iraunkorrean gordetzea: lekurik gabe geratzen bada, ezaba dezake. ',
+    senseApiText: 'Nabigatzaile honek ez du biltegiratze iraunkorra eskatzen uzten. ',
+    copiaConsell: 'Egin liburuaren kopia (5. urratsa) fakturatzen duzun egun bakoitzean.',
+    obrint: 'Faktura-liburua irekitzen…',
+    errorTitol: 'Hemen ezin da fakturatu',
+    errorDefecte: 'Ezin izan da faktura-liburua ireki.',
+    errorPrivada: 'Leiho pribatu batean bazaude, ireki Gestoria leiho arrunt batean: liburuak gordeta geratu behar du.',
+    barraIntro: 'Prestatu zirriborroak ordenagailu honetatik, konexioarekin edo gabe. Fakturak eta enpresaren datuak nabigatzaile honetan gordetzen dira eta ez dira hemendik ateratzen.',
+    noEsborrara: 'Nabigatzaileak ez du ezabatuko',
+    detallsResum: 'Xehetasun teknikoak (tokiko katea eta AEAT — ez Verifactu)',
+    detallsCadena: 'Faktura-zirriborro bakoitza aurrekoari kateatuta sartzen da tokiko erregistroan, eta katea pantaila hau irekitzen duzun bakoitzean egiaztatzen da.',
+    detallsAvis: 'AEATera bidaltzea oraindik ez dago eginda: probetako erregistro hau ez da Verifactu sistema homologatu bat.',
+    pas1: 'Enpresaren datuak',
+    pas2: 'Aurreko fakturak',
+    pas3: 'Faktura berria',
+    aturada: 'Geldituta',
+    pas4: 'Faktura-liburua',
+    pas5: 'Liburuaren kopia'
+  }),
+  gl: Object.freeze({
+    memoriaTitol: 'Este libro é de probas',
+    memoriaText: 'Pérdese ao pechar a lapela: non emitas nada real aquí.',
+    esborratTitol: 'O navegador podería borrar o libro',
+    tornaDemanar: 'Volvelo pedir',
+    denegadaText: 'Non aceptou gardalo de xeito permanente: se lle falta espazo, pode borralo. ',
+    senseApiText: 'Este navegador non permite pedir almacenamento permanente. ',
+    copiaConsell: 'Fai copia do libro (paso 5) cada día que factures.',
+    obrint: 'Abrindo o libro de facturas…',
+    errorTitol: 'Aquí non se pode facturar',
+    errorDefecte: 'Non se puido abrir o libro de facturas.',
+    errorPrivada: 'Se estás nunha xanela privada, abre a Xestoría nunha normal: o libro precisa quedar gardado.',
+    barraIntro: 'Prepara borradores desde este ordenador, con ou sen conexión. As facturas e os datos da empresa gárdanse neste navegador e non saen de aquí.',
+    noEsborrara: 'O navegador non o borrará',
+    detallsResum: 'Detalles técnicos (cadea local e AEAT — non Verifactu)',
+    detallsCadena: 'Cada borrador de factura entra no rexistro local encadeado ao anterior, e a cadea vólvese verificar cada vez que abres esta pantalla.',
+    detallsAvis: 'O envío á AEAT aínda non está feito: este rexistro en probas non é ningún sistema Verifactu homologado.',
+    pas1: 'Os datos da empresa',
+    pas2: 'As facturas anteriores',
+    pas3: 'Factura nova',
+    aturada: 'Detida',
+    pas4: 'O libro de facturas',
+    pas5: 'Copia do libro'
+  })
+});
+
+export function textosFacturacio(idioma) {
+  const codi = String(idioma || 'ca').toLowerCase().split('-')[0];
+  return Object.hasOwn(TEXTOS_FACTURACIO, codi) ? TEXTOS_FACTURACIO[codi] : TEXTOS_FACTURACIO.ca;
+}

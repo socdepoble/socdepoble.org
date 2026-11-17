@@ -34,7 +34,7 @@ test('si el navegador no sap fer WebP, la foto ix en JPEG', async () => {
 });
 test('una foto mai no es puja en PNG', async () => {
   const comprimeix = vi.fn().mockResolvedValue('data:image/png;base64,YWJj');
-  await expect(preparaAdjunt(new Blob(['x'], { type: 'image/png' }), { comprimeix })).rejects.toMatchObject({ code: 'foto' });
+  await expect(preparaAdjunt(new Blob(['x'], { type: 'image/png' }), { comprimeix })).rejects.toMatchObject({ code: 'foto-codificacio' });
   expect(() => validaAdjuntXat({ fitxer: new Blob(['x'], { type: 'image/png' }), tipus: 'imatge' })).toThrow();
 });
 test('la quota té 20.000.000 bytes exactes, sense confondre MB i MiB', () => {

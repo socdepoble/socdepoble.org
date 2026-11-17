@@ -1285,6 +1285,7 @@ export default function Conversa({
           onMutaLlista={onMutaLlista}
           onObriImatge={obriImatgeGaleria}
           caraAutor={caraDAutor(msg, fil, caresFil)}
+          entitatId={fil?.entitatId || null}
         />
       );
       if (!accionsIAIANode) return bombollaNode;
@@ -1313,6 +1314,20 @@ export default function Conversa({
       : null,
     nomContrapart: contrapart.autor?.nom || ''
   } : null;
+
+  const contrapartReservaCapcalera = useMemo(() => {
+    if (contrapart?.id != null) return { tipus: contrapart.tipus || 'persona', id: contrapart.id };
+    if (!fil || esGrup || fil.subjecte || fil.esPropi || fil.comEntitat || fil.entitatId) return null;
+    const ids = new Map();
+    for (const m of messages || []) {
+      if (!m || m.sender === 'me' || m.tipus === 'sistema' || m.comEntitat || m.usuariId == null) continue;
+      const clau = String(m.usuariId);
+      if (clau) ids.set(clau, m.is_ai ? 'ia' : 'persona');
+    }
+    if (ids.size !== 1) return null;
+    const [[id, tipus]] = ids.entries();
+    return { tipus, id };
+  }, [contrapart, fil, esGrup, messages]);
 
   /* P1-12 pas 17 (T7 · S5) · Només amb la bandera encesa: l'entrada del menú i el diàleg. */
   const accioXifratge = E2EE_ACTIU_PER_DEFECTE && xifratge.visible
@@ -1417,6 +1432,7 @@ export default function Conversa({
         onTornaAOrigen={onTornaAOrigen}
         canals={canals}
         onTriaCanal={onTriaCanal}
+        contrapartReserva={contrapartReservaCapcalera}
         onSeleccionar={() => setModeSeleccio(true)}
         seleccio={modeSeleccio ? { quants: triats.size, onEixir: surtDeSeleccio } : null}
         t={t}

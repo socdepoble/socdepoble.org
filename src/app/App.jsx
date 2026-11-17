@@ -788,17 +788,20 @@ const potPujarAlServidor = () => false;
    seu codi i el del registre no viatgen al primer pintat de la web ni del
    connector (trinquet de tests/standalone-build.test.mjs). A l'app, el tros és
    local i arriba abans que la resposta de la porta de versió, que és la que
-   publica l'avís; si no carrega, no hi ha barra (és un avís suau). */
+   publica l'avís; si no carrega, no hi ha barra (és un avís suau).
+   v1.2.7 · P0-123 · A la web, el tros només es demana quan la PWA avisa d'una
+   versió nova (src/pwa/actualitzacioWeb.js, l'esdeveniment d'este nom). */
 export function BarraActualitzacioDiferida({ importa = importaBarraActualitzacio, plataforma = plataformaNativa }) {
   const [Barra, setBarra] = useState(null);
   useEffect(() => {
-    if (plataforma() === 'web') return undefined;
     let viu = true;
-    Promise.resolve().then(importa).then(
+    const carrega = () => Promise.resolve().then(importa).then(
       (modul) => { if (viu && typeof modul?.default === 'function') setBarra(() => modul.default); },
       () => {}
     );
-    return () => { viu = false; };
+    if (plataforma() !== 'web') carrega();
+    else window.addEventListener('sdp:actualitzacio-web', carrega, { once: true });
+    return () => { viu = false; window.removeEventListener('sdp:actualitzacio-web', carrega); };
   }, [importa, plataforma]);
   return Barra ? <Barra /> : null;
 }

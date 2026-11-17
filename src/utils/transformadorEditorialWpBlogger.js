@@ -72,6 +72,38 @@ const HOSTS_VIDEO_SEGURS = new Set([
 
 export const LIMIT_BYTES_IMPORTACIO_EDITORIAL = 8 * 1024 * 1024;
 
+const ENTITATS_XML = Object.freeze({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" });
+const ENTITATS_HTML_EDITORIALS = Object.freeze({
+  ...ENTITATS_XML, nbsp: '\u00a0', laquo: '«', raquo: '»', lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”',
+  ndash: '–', mdash: '—', hellip: '…', bull: '•', middot: '·', copy: '©', reg: '®', trade: '™', euro: '€',
+  Agrave: 'À', Aacute: 'Á', Acirc: 'Â', Atilde: 'Ã', Auml: 'Ä', Aring: 'Å', AElig: 'Æ', Ccedil: 'Ç',
+  Egrave: 'È', Eacute: 'É', Ecirc: 'Ê', Euml: 'Ë', Igrave: 'Ì', Iacute: 'Í', Icirc: 'Î', Iuml: 'Ï',
+  Ntilde: 'Ñ', Ograve: 'Ò', Oacute: 'Ó', Ocirc: 'Ô', Otilde: 'Õ', Ouml: 'Ö', Oslash: 'Ø',
+  Ugrave: 'Ù', Uacute: 'Ú', Ucirc: 'Û', Uuml: 'Ü', Yacute: 'Ý', szlig: 'ß',
+  agrave: 'à', aacute: 'á', acirc: 'â', atilde: 'ã', auml: 'ä', aring: 'å', aelig: 'æ', ccedil: 'ç',
+  egrave: 'è', eacute: 'é', ecirc: 'ê', euml: 'ë', igrave: 'ì', iacute: 'í', icirc: 'î', iuml: 'ï',
+  ntilde: 'ñ', ograve: 'ò', oacute: 'ó', ocirc: 'ô', otilde: 'õ', ouml: 'ö', oslash: 'ø',
+  ugrave: 'ù', uacute: 'ú', ucirc: 'û', uuml: 'ü', yacute: 'ý', yuml: 'ÿ',
+});
+
+/** Una sola capa XML: mai desescapar l'HTML que ja viu dins de CDATA. */
+function desescapaEntitatsEditorials(text, entitats) {
+  return text.replace(/&(#x[0-9a-fA-F]{1,8}|#[0-9]{1,8}|[A-Za-z]{2,16});/g, (original, clau) => {
+    if (!clau.startsWith('#')) return Object.hasOwn(entitats, clau) ? entitats[clau] : original;
+    const punt = clau[1] === 'x' ? Number.parseInt(clau.slice(2), 16) : Number(clau.slice(1));
+    return punt > 0 && punt <= 0x10ffff && !(punt >= 0xd800 && punt <= 0xdfff)
+      ? String.fromCodePoint(punt) : '\ufffd';
+  });
+}
+
+function desescapaXmlEditorial(text) { return desescapaEntitatsEditorials(text, ENTITATS_XML); }
+
+function titolEditorial(text) {
+  // Vocabulari editorial explícit i numèriques, sense DOM ni descodificació
+  // recursiva. Les entitats fora del vocabulari es conserven íntegres.
+  return desescapaEntitatsEditorials(text.replace(/<[^>]*>/g, ''), ENTITATS_HTML_EDITORIALS).trim();
+}
+
 function textImportable(valor) {
   if (typeof valor !== 'string' || valor.length > LIMIT_BYTES_IMPORTACIO_EDITORIAL
     || new TextEncoder().encode(valor).byteLength > LIMIT_BYTES_IMPORTACIO_EDITORIAL) {
@@ -80,8 +112,11 @@ function textImportable(valor) {
   return valor;
 }
 
-function atributsEditorials(text) {
+function atributsEditorials(text, rangs = null) {
   const atributs = Object.create(null);
+  const anota = (clau, inici, fi) => {
+    if (rangs) (rangs[clau] ??= []).push({ inici, fi });
+  };
   let cursor = 0;
   while (cursor < text.length) {
     while (cursor < text.length && /[\s/]/u.test(text[cursor])) cursor += 1;
@@ -89,15 +124,22 @@ function atributsEditorials(text) {
     while (cursor < text.length && !/[\s=]/u.test(text[cursor])) cursor += 1;
     const clau = text.slice(inici, cursor).toLowerCase();
     while (cursor < text.length && /\s/u.test(text[cursor])) cursor += 1;
-    if (text[cursor] !== '=') continue;
+    if (text[cursor] !== '=') { anota(clau, inici, cursor); continue; }
     cursor += 1;
     while (cursor < text.length && /\s/u.test(text[cursor])) cursor += 1;
     const cometa = text[cursor];
-    if (cometa !== '"' && cometa !== "'") { cursor += 1; continue; }
+    if (cometa !== '"' && cometa !== "'") {
+      const iniciValor = cursor;
+      while (cursor < text.length && !/\s/u.test(text[cursor])) cursor += 1;
+      if (!Object.hasOwn(atributs, clau)) atributs[clau] = desescapaXmlEditorial(text.slice(iniciValor, cursor));
+      anota(clau, inici, cursor);
+      continue;
+    }
     const fi = text.indexOf(cometa, cursor + 1);
     if (fi === -1) break;
-    if (!Object.hasOwn(atributs, clau)) atributs[clau] = text.slice(cursor + 1, fi);
+    if (!Object.hasOwn(atributs, clau)) atributs[clau] = desescapaXmlEditorial(text.slice(cursor + 1, fi));
     cursor = fi + 1;
+    anota(clau, inici, cursor);
   }
   return atributs;
 }
@@ -124,15 +166,24 @@ function tancamentEditorial(text, minuscules, tancament, des) {
 function* elementsEditorials(text, nom, nomesObertura = false) {
   // Els noms de les etiquetes són ASCII. El contingut conserva els seus índexs Unicode.
   const minuscules = text.replace(/[A-Z]/g, caracter => caracter.toLowerCase());
-  const iniciEtiqueta = '<' + nom;
-  const tancament = '</' + nom + '>';
+  const iniciEtiqueta = '<' + nom.toLowerCase();
+  const tancament = '</' + nom.toLowerCase() + '>';
   let cursor = 0;
   for (;;) {
-    const inici = minuscules.indexOf(iniciEtiqueta, cursor);
+    const inici = minuscules.indexOf('<', cursor);
     if (inici === -1) return;
+    // Comentaris i CDATA són text XML, no contenidors d'entrades. Recórrer
+    // cada '<' una vegada evita cercar la resta del document per cada ítem.
+    if (text.startsWith('<!--', inici) || text.startsWith('<![CDATA[', inici)) {
+      const cdata = text.startsWith('<![CDATA[', inici);
+      const final = text.indexOf(cdata ? ']]>' : '-->', inici + (cdata ? 9 : 4));
+      if (final === -1) return;
+      cursor = final + 3;
+      continue;
+    }
     const des = inici + iniciEtiqueta.length;
-    if (des < text.length && !/[\s/>]/u.test(text[des])) { cursor = des; continue; }
-    let fiObertura = des;
+    const coincideix = minuscules.startsWith(iniciEtiqueta, inici) && (des >= text.length || /[\s/>]/u.test(text[des]));
+    let fiObertura = inici + 1;
     let cometa = null;
     while (fiObertura < text.length) {
       const caracter = text[fiObertura];
@@ -142,12 +193,14 @@ function* elementsEditorials(text, nom, nomesObertura = false) {
       fiObertura += 1;
     }
     if (fiObertura === text.length) return;
+    if (!coincideix) { cursor = fiObertura + 1; continue; }
     const rawAtributs = text.slice(des, fiObertura);
     const autoconclos = rawAtributs.trimEnd().endsWith('/');
     const fiCos = nomesObertura || autoconclos ? fiObertura + 1 : tancamentEditorial(text, minuscules, tancament, fiObertura + 1);
     if (fiCos === -1) return;
     const fi = nomesObertura || autoconclos ? fiObertura + 1 : fiCos + tancament.length;
-    yield { inici, fi, atributs: atributsEditorials(rawAtributs),
+    const rangsAtributs = Object.create(null);
+    yield { inici, fi, atributs: atributsEditorials(rawAtributs, rangsAtributs), rangsAtributs, iniciAtributs: des,
       contingut: nomesObertura || autoconclos ? '' : text.slice(fiObertura + 1, fiCos) };
     cursor = fi;
   }
@@ -155,7 +208,7 @@ function* elementsEditorials(text, nom, nomesObertura = false) {
 
 function textElementEditorial(contingut) {
   const text = contingut.trim();
-  return text.startsWith('<![CDATA[') && text.endsWith(']]>') ? text.slice(9, -3).trim() : text;
+  return text.startsWith('<![CDATA[') && text.endsWith(']]>') ? text.slice(9, -3).trim() : desescapaXmlEditorial(text);
 }
 
 function primerTextEditorial(text, nom) {
@@ -198,6 +251,54 @@ function parsejaUrlExternaSegura(rawUrl) {
   }
 }
 
+/** Classes Pedra Seca i dimensions originals, sense estirar una miniatura.
+ * No descodifica el cos HTML: &lt;script&gt; ha de continuar sent text.
+ * Els wrappers Blogger continuen portant el seu peu, enllaç i ordre original.
+ */
+function conservaMiniaturesEditorials(html) {
+  const trossos = [];
+  let cursor = 0;
+  // Blogger situa sovint float a l'enllaç que obri la fotografia gran.
+  // Dos recorreguts cap avant, sense buscar de nou tot el document per imatge.
+  const enllacos = [...elementsEditorials(html, 'a')];
+  let indexEnllac = 0;
+  for (const img of elementsEditorials(html, 'img', true)) {
+    const { atributs } = img;
+    const classes = (atributs.class || '').split(/\s+/u).filter(Boolean);
+    const natiu = atributs.align?.toLowerCase();
+    while (indexEnllac < enllacos.length && enllacos[indexEnllac].fi <= img.inici) indexEnllac += 1;
+    const pare = enllacos[indexEnllac];
+    const estilPare = pare && pare.inici < img.inici && pare.fi >= img.fi ? pare.atributs.style || '' : '';
+    const patroFloat = /(?:^|;)\s*float\s*:\s*(left|right)\b/i;
+    const flotant = (patroFloat.exec(atributs.style || '') || patroFloat.exec(estilPare))?.[1]?.toLowerCase();
+    const alineacio = classes.includes('alignleft') || natiu === 'left' || flotant === 'left' ? 'esquerra'
+      : classes.includes('alignright') || natiu === 'right' || flotant === 'right' ? 'dreta'
+        : classes.includes('aligncenter') || natiu === 'center' ? 'centre' : null;
+    const miniatura = /^[1-9][0-9]{0,2}$/.test(atributs.width || '') && Number(atributs.width) <= 400;
+    if ((!alineacio && !miniatura) || classes.includes('sdp-media-mida-propia')) continue;
+    classes.push('sdp-media-mida-propia');
+    if (alineacio) classes.push(`sdp-media-${alineacio}`);
+    // Conservem tots els atributs originals (alt, dimensions, srcset i lazyload).
+    // Només substituïm class per una serialització escapada i afegim align
+    // quan WP només havia guardat una classe i el consumidor no té CSS de WP.
+    // No reserialitzem atributs aliens: una entitat HTML com &agrave; no
+    // pertany al vocabulari XML i no s'ha de convertir en &amp;agrave;.
+    let original = html.slice(img.inici, img.fi);
+    // Els rangs provenen del tokenizer de cometes: «class='…'» dins d'un
+    // alt/title és text editorial, mai un atribut que puguem reemplaçar.
+    for (const rang of [...(img.rangsAtributs.class || [])].reverse()) {
+      original = original.slice(0, img.iniciAtributs + rang.inici - img.inici)
+        + original.slice(img.iniciAtributs + rang.fi - img.inici);
+    }
+    const align = !atributs.align && alineacio && alineacio !== 'centre' ? ` align="${alineacio === 'esquerra' ? 'left' : 'right'}"` : '';
+    const imatge = original.replace(/^<img\b/i, `<img class="${escapaAtributHtml(classes.join(' '))}"${align}`);
+    trossos.push(html.slice(cursor, img.inici), alineacio ? `<span class="sdp-media-${alineacio}">${imatge}</span>` : imatge);
+    cursor = img.fi;
+  }
+  trossos.push(html.slice(cursor));
+  return trossos.join('');
+}
+
 /**
  * Transforma un fragment HTML de WordPress o Blogger a HTML net Pedra Seca
  * i detecta tots els casos d'ús editorials presents.
@@ -207,7 +308,7 @@ export function transformaHtmlEditorialPedraSeca(rawHtml = '', meta = {}) {
   const casosUs = new Set(Array.isArray(meta.casosUsInicials) ? meta.casosUsInicials : []);
 
   // 1. Eliminar comentaris de blocs Gutenberg <!-- wp:... --> i <!-- /wp:... -->
-  let net = llevaComentarisGutenberg(htmlOriginal);
+  let net = conservaMiniaturesEditorials(llevaComentarisGutenberg(htmlOriginal));
 
   // 2. Detectar galeries i múltiples imatges
   const imgMatches = [...elementsEditorials(net, 'img', true)].filter(img => Boolean(img.atributs.src || img.atributs['data-src']));
@@ -284,7 +385,7 @@ export function transformaHtmlEditorialPedraSeca(rawHtml = '', meta = {}) {
  * Transforma un objecte JSON procedent de la WP REST API (/wp-json/wp/v2/posts o pages).
  */
 export function transformaPostWpRestApi(wpItem = {}) {
-  const title = typeof wpItem.title === 'object' ? wpItem.title?.rendered || '' : String(wpItem.title || '');
+  const title = titolEditorial(typeof wpItem.title === 'object' ? wpItem.title?.rendered || '' : String(wpItem.title || ''));
   const contentRaw = typeof wpItem.content === 'object' ? wpItem.content?.rendered || '' : String(wpItem.content || '');
   const slug = String(wpItem.slug || '').trim();
   const link = String(wpItem.link || `https://socdepoble.net/${slug}/`);
@@ -300,7 +401,10 @@ export function transformaPostWpRestApi(wpItem = {}) {
     fontOrigen: 'wp-rest-api',
     slug,
     title,
-    date: wpItem.date || new Date().toISOString(),
+    // La importació no inventa la data actual si l'original no la conté.
+    date: typeof wpItem.date === 'string' ? wpItem.date : '',
+    dataPublicacioOriginal: typeof wpItem.date === 'string' ? wpItem.date : '',
+    date_gmt: typeof wpItem.date_gmt === 'string' ? wpItem.date_gmt : '',
     linkOriginal: link,
     rutaDestiCanonica: resolRutaInternaSocDePobleNet(link) || `/mur/${slug}`,
     htmlNet: transformacio.htmlNet,
@@ -322,11 +426,13 @@ export function parsejaWordPressWxrXml(xmlText = '', { destinacio_workspace } = 
   for (const item of elementsEditorials(xmlText, 'item')) {
     const block = item.contingut;
     const extract = tag => primerTextEditorial(block, tag);
-    const title = extract('title');
+    const title = titolEditorial(extract('title'));
     const link = extract('link');
     const slug = extract('wp:post_name') || link.split('/').filter(Boolean).pop() || 'sense-slug';
     const postType = extract('wp:post_type') || 'post';
-    const pubDate = extract('wp:post_date') || extract('pubDate');
+    const dataLocal = extract('wp:post_date');
+    const dataGmt = extract('wp:post_date_gmt');
+    const pubDate = extract('pubDate') || dataLocal;
     const contentRaw = extract('content:encoded');
 
     const categories = [];
@@ -349,6 +455,9 @@ export function parsejaWordPressWxrXml(xmlText = '', { destinacio_workspace } = 
       slug,
       title,
       date: pubDate,
+      dataPublicacioOriginal: pubDate,
+      date_gmt: dataGmt,
+      dataLocalOriginal: dataLocal,
       linkOriginal: link,
       rutaDestiCanonica: resolRutaInternaSocDePobleNet(link) || (postType === 'page' ? `/page/${slug}` : `/mur/${slug}`),
       poblesDetectats: categories.filter((c) => c !== 'Xarxa de Pobles'),
@@ -379,18 +488,22 @@ export function parsejaBloggerAtomXml(xmlText = '', { destinacio_workspace } = {
       continue;
     }
     const extract = tag => primerTextEditorial(block, tag);
-    const title = extract('title');
-    const published = extract('published') || extract('updated');
-    const contentRaw = extract('content')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&amp;/g, '&');
+    const titolAtom = elementsEditorials(block, 'title').next().value;
+    const titolText = titolAtom ? textElementEditorial(titolAtom.contingut) : '';
+    const title = titolAtom?.atributs.type === 'html' || titolAtom?.atributs.type === 'xhtml'
+      ? titolEditorial(titolText) : titolText;
+    const dataPublicada = extract('published');
+    const dataActualitzada = extract('updated');
+    const published = dataPublicada || dataActualitzada;
+    const contingutAtom = elementsEditorials(block, 'content').next().value;
+    const contingutText = contingutAtom ? textElementEditorial(contingutAtom.contingut) : '';
+    const contentRaw = contingutAtom?.atributs.type === 'text' ? escapaAtributHtml(contingutText) : contingutText;
 
     const altLink = [...elementsEditorials(block, 'link', true)].find(link => link.atributs.rel === 'alternate');
     const linkOriginal = altLink?.atributs.href || '';
-    const rawSlug = linkOriginal
-      ? linkOriginal.split('/').filter(Boolean).pop()?.replace(/\.html$/i, '')
+    const urlOriginal = parsejaUrlExternaSegura(linkOriginal);
+    const rawSlug = urlOriginal
+      ? urlOriginal.pathname.split('/').filter(Boolean).pop()?.replace(/\.html$/i, '')
       : title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const slug = rawSlug || 'blogger-entry';
 
@@ -410,6 +523,8 @@ export function parsejaBloggerAtomXml(xmlText = '', { destinacio_workspace } = {
       slug,
       title,
       date: published,
+      dataPublicacioOriginal: dataPublicada,
+      dataActualitzacioOriginal: dataActualitzada,
       linkOriginal,
       rutaDestiCanonica: `/mur/${slug}`,
       etiquetes: labels,

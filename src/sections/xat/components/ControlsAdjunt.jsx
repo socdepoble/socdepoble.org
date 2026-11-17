@@ -27,7 +27,7 @@ import useCompartitPendent from '../useCompartitPendent.js';
 import { alliberaFitxerCompartit, prenFitxerCompartit, tornaFitxerCompartit } from '../../../config/compartirNatiu.js';
 
 const PORT = { quotaXat, teCapacitat, descartaAdjuntXat };
-const ACCEPTA_GALERIA = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/quicktime';
+const ACCEPTA_GALERIA = 'image/jpeg,image/jpg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif,.avif,video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov';
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-10) · Sense la capacitat o sense
    la migració, el xat es veu com abans: cap panell ni cap alerta. */
 const SENSE_PANELL = new Set(['sense-capacitat', 'SDP-XAT-001']);
@@ -72,16 +72,19 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const [pujant, setPujant] = useState(false);
   // null sense enviament; { fraccio: null } fins al primer byte; { fraccio: 0..1 }.
   const [progres, setProgres] = useState(null);
-  /* 261026 (prompt 261026_1615, tasca 2) · El peu de la foto o del vídeo que
-     arriba del menú «Compartir»: el port ja el porta al servidor
-     (publicaAdjuntXat, p_text). Les notes de veu no en porten, i una foto
-     triada ací tampoc (el compositor fa com sempre; estendre-ho és decisió
-     del Mestre). */
+  /* El peu propi de «Compartir» es conserva; en enviar una foto o un vídeo
+     s'hi suma el camp principal. Les notes de veu no porten peu. */
   const [peu, setPeu] = useState('');
   const [deCompartir, setDeCompartir] = useState(false);
   const selector = useRef(null);
   const selectorCamera = useRef(null);
   const operacio = useRef(null);
+  const revisioContext = useRef(0);
+  const lecturaQuotaRef = useRef(0);
+  // La guarda és síncrona: dos gestos abans del següent render només envien una volta.
+  const pujadaRef = useRef(null);
+  // Canviar de fil pot tornar un Compartir al lot; «Cancel·la» el descarta.
+  const cancelladesRef = useRef(new WeakSet());
   const gravadora = useRef(null);
   const viu = useRef(true);
   const contenidor = useRef(null);
@@ -107,23 +110,31 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     return () => { viu.current = false; operacio.current?.abort(); gravadora.current?.cancella(); };
   }, []);
   useEffect(() => {
-    const controller = new AbortController();
+    revisioContext.current += 1;
+    lecturaQuotaRef.current += 1;
     operacio.current?.abort(); gravadora.current?.cancella(); gravadora.current = null;
-    operacio.current = null;
+    operacio.current = null; pujadaRef.current = null;
     setPreparat(null); setGravant(false); setOcupat(null); setPujant(false); setProgres(null); setError(null); setPeu(''); setDeCompartir(false);
     /* P1-66 · L'error de la quota es queda fins que arriba una lectura nova:
        «Torna-ho a provar» (al menú del +) no fa desaparéixer el + ni li pren
        el focus mentre es torna a llegir. */
     setQuota(quotesDe(servei).get(clauQuota) ?? null);
+    return () => { operacio.current?.abort(); gravadora.current?.cancella(); tornaEnMa(); prenentRef.current = null; };
+  }, [servei, clauQuota, fil.id, actiu]);
+  /* Una renovació del testimoni o un reintent de quota no cancel·la el fitxer
+     preparat ni una pujada. Només el canvi de context de dalt ho fa. */
+  useEffect(() => {
+    const controller = new AbortController();
     if (!actiu || !servei.teCapacitat('xatMultimedia')) return undefined;
+    const lectura = ++lecturaQuotaRef.current;
     servei.quotaXat({ ...externalConfig, signal: controller.signal })
-      .then((q) => { if (!controller.signal.aborted) { quotesDe(servei).set(clauQuota, q); setQuota(q); setErrorQuota(null); } })
+      .then((q) => { if (!controller.signal.aborted && lecturaQuotaRef.current === lectura) { quotesDe(servei).set(clauQuota, q); setQuota(q); setErrorQuota(null); } })
       .catch((e) => {
-        if (controller.signal.aborted || e?.name === 'AbortError') return;
+        if (controller.signal.aborted || e?.name === 'AbortError' || lecturaQuotaRef.current !== lectura) return;
         if (SENSE_PANELL.has(String(e?.code ?? ''))) quotesDe(servei).delete(clauQuota);
         setErrorQuota(e);
       });
-    return () => { controller.abort(); operacio.current?.abort(); gravadora.current?.cancella(); tornaEnMa(); prenentRef.current = null; };
+    return () => controller.abort();
   }, [servei, externalConfig, clauQuota, fil.id, intentQuota, actiu]);
   /* XAT-07 · El rellotge de la gravació, des que el micròfon ja grava. Compta
      segons sencers: amb el mateix segon, React no torna a pintar. */
@@ -180,19 +191,30 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const refrescaQuota = async (signal) => {
     /* MEDIA-12 · La quota es torna a llegir a banda: si falla, l'enviament o
        el descart que ja s'han fet no es converteixen en un error. */
+    const revisio = revisioContext.current;
+    const lectura = ++lecturaQuotaRef.current;
     try {
       const actual = await servei.quotaXat({ ...externalConfig, signal });
-      if (viu.current && !signal.aborted) { quotesDe(servei).set(clauQuota, actual); setQuota(actual); }
-    } catch { /* La quota anterior continua; el servidor decidix. */ }
+      if (viu.current && !signal.aborted && revisioContext.current === revisio && lecturaQuotaRef.current === lectura) {
+        quotesDe(servei).set(clauQuota, actual); setQuota(actual); setErrorQuota(null);
+      }
+    } catch (e) {
+      // La quota anterior continua; el menú permet reintentar esta lectura.
+      if (viu.current && !signal.aborted && e?.name !== 'AbortError' && revisioContext.current === revisio && lecturaQuotaRef.current === lectura) setErrorQuota(e);
+    }
   };
   const descarta = () => {
     // «Cancel·la» és la persona qui no el vol: la còpia compartida se'n va.
+    if (operacio.current) cancelladesRef.current.add(operacio.current);
     alliberaEnMa();
     operacio.current?.abort(); gravadora.current?.cancella(); gravadora.current = null;
-    setPreparat(null); setGravant(false); setOcupat(null); setProgres(null); setError(null); setPeu(''); setDeCompartir(false);
+    pujadaRef.current = null;
+    setPreparat(null); setGravant(false); setOcupat(null); setPujant(false); setProgres(null); setError(null); setPeu(''); setDeCompartir(false);
   };
   const descartaPendent = async (id) => {
+    if (pujadaRef.current) return;
     const controller = new AbortController(); operacio.current = controller;
+    pujadaRef.current = controller;
     setPujant(true); setError(null);
     let descartat = false;
     try {
@@ -200,7 +222,10 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
       descartat = true;
       if (viu.current && !controller.signal.aborted && preparat?.id === id) setPreparat(null);
     } catch (e) { if (viu.current && !controller.signal.aborted) setError(e); }
-    finally { if (viu.current && operacio.current === controller) setPujant(false); }
+    finally {
+      if (pujadaRef.current === controller) pujadaRef.current = null;
+      if (viu.current && operacio.current === controller) setPujant(false);
+    }
     if (descartat && viu.current && !controller.signal.aborted) await refrescaQuota(controller.signal);
   };
   const accepta = (adjunt) => {
@@ -211,7 +236,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
      (la conversa s'ha tancat o s'ha cancel·lat) o 'ocupada' (no s'ha començat).
      El menú «Compartir» ho necessita per a saber si el fitxer torna al lot. */
   const tria = async (fitxer, { ambPeu = false } = {}) => {
-    if (!fitxer || pujant || ocupat) return 'ocupada';
+    if (!fitxer || pujadaRef.current || pujant || ocupat) return 'ocupada';
     operacio.current?.abort();
     const controller = new AbortController(); operacio.current = controller;
     origen.current = 'tria';
@@ -284,7 +309,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   }, [compartit, quota, preparat, ocupat, pujant, gravant, fil.id, usuariId, actiu]);
 
   const grava = async () => {
-    if (pujant || ocupat) return;
+    if (pujadaRef.current || pujant || ocupat) return;
     // G2120-01 · La nota de veu que sonava calla abans d'obrir el micròfon.
     callaVeuActiva();
     const controller = new AbortController(); operacio.current = controller;
@@ -300,9 +325,16 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     } catch (e) { if (viu.current && !controller.signal.aborted) setError(e); }
     finally { if (viu.current && operacio.current === controller) { setOcupat(null); setGravant(false); gravadora.current = null; } }
   };
-  const envia = async () => {
-    if (!preparat || pujant) return;
+  const envia = async ({ text: textPrincipal = '' } = {}) => {
+    if (!preparat || pujadaRef.current || pujant) return null;
+    const principal = preparat.tipus === 'veu' ? '' : String(textPrincipal);
+    const text = preparat.tipus === 'veu' ? '' : [deCompartir ? peu.trim() : '', principal.trim()].filter(Boolean).join('\n\n');
+    if (text.length > LIMIT_TEXT) {
+      setError(new Error(t('section.xat.adjunts.peuMassaLlarg', 'El text del fitxer no pot passar de {max} caràcters. Reduïx-lo abans d’enviar.').replace('{max}', String(LIMIT_TEXT))));
+      return null;
+    }
     const controller = new AbortController(); operacio.current = controller;
+    pujadaRef.current = controller;
     setPujant(true); setError(null); setProgres({ fraccio: null });
     /* XAT-03 · El port informa dels bytes que ja han eixit. Només compta el
        d'esta pujada: una de cancel·lada o d'un altre fil ja no pinta res. */
@@ -314,35 +346,46 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     enMaRef.current = null;
     enviantRef.current = compartitEnviat;
     let enviat = false;
+    let confirmacio = null;
     try {
-      const text = preparat.tipus === 'veu' || !deCompartir ? '' : peu.trim();
       const resultat = await onEnvia(fil, text ? { ...preparat, text } : preparat, { signal: controller.signal, onProgres });
       if (!Array.isArray(resultat) || !resultat.length) throw errorAdjuntXat('sense-confirmacio');
       enviat = true;
       // Enviat: la còpia nativa ja sobra (també si la conversa s'ha tancat mentre pujava).
       if (compartitEnviat) alliberaFitxerCompartit(compartitEnviat);
-      if (viu.current && !controller.signal.aborted) { setPreparat(null); setPeu(''); setDeCompartir(false); }
+      if (viu.current && !controller.signal.aborted && operacio.current === controller) {
+        /* L'ID és idempotent: un reintent pot confirmar un peu anterior si
+           es va perdre l'ACK. Només el text autoritatiu acredita el principal. */
+        const textConfirmat = resultat[0]?.text;
+        const coincideix = typeof textConfirmat === 'string' && textConfirmat === text;
+        confirmacio = { enviat: true, textPrincipalInclos: coincideix && principal.trim() ? principal : null };
+        if (deCompartir && peu.trim() && textConfirmat !== undefined && String(textConfirmat ?? '') !== text) textOrfeRef.current?.(peu);
+        setPreparat(null); setPeu(''); setDeCompartir(false);
+      }
     } catch (e) {
       // La previsualització i el mateix ID continuen disponibles per a reintentar.
       // ADV-MEDIA-7 · Un AbortError (les normes rebutjades, la sessió que canvia) calla, com al compositor.
       if (viu.current && !controller.signal.aborted && e?.name !== 'AbortError') setError(e);
     } finally {
+      if (pujadaRef.current === controller) pujadaRef.current = null;
       if (viu.current && operacio.current === controller) { setPujant(false); setProgres(null); }
       if (enviantRef.current === compartitEnviat) enviantRef.current = null;
       /* No enviat: si el compositor encara hi és, el torna a tindre (es pot
          reintentar); si s'ha tancat, torna al lot. */
       if (compartitEnviat && !enviat) {
-        if (viu.current && !controller.signal.aborted) enMaRef.current = compartitEnviat;
+        if (cancelladesRef.current.has(controller)) alliberaFitxerCompartit(compartitEnviat);
+        else if (viu.current && !controller.signal.aborted && operacio.current === controller) enMaRef.current = compartitEnviat;
         else tornaFitxerCompartit(compartitEnviat);
       }
     }
     // La quota inclou reserves i reintents: sempre tornem a llegir-la.
-    if (!viu.current) return;
-    if (!controller.signal.aborted) await refrescaQuota(controller.signal);
+    if (!viu.current) return null;
+    if (!controller.signal.aborted) void refrescaQuota(controller.signal);
     /* ADV-MEDIA-13 · Cancel·la durant la pujada: si Storage ja tenia l'objecte,
        la reserva queda pendent. En acabar es torna a llegir perquè aparega
        «Descarta el fitxer pendent». Un canvi de fil o de sessió la llig ell. */
-    else if (operacio.current === controller) await refrescaQuota(new AbortController().signal);
+    else if (operacio.current === controller) void refrescaQuota(new AbortController().signal);
+    return confirmacio;
   };
 
   /* P1-66 · Sense capacitat, sense la migració (MEDIA-10) o sense cap lectura
@@ -404,7 +447,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
           <input type="text" name="xatPeuAdjunt" autoComplete="off" maxLength={LIMIT_TEXT} value={peu} disabled={pujant}
             placeholder={t('section.xat.adjunts.peuPlaceholder', 'Afig un text…')}
             onChange={(e) => setPeu(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent?.isComposing) { e.preventDefault(); envia(); } }} />
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent?.isComposing) { e.preventDefault(); botons.primari.current?.click(); } }} />
         </label>
       ) : null}
       {avisUbicacio ? <p className="sdp-xat-adjunts__avis" id={idAvis}>{t('section.xat.adjunts.videoUbicacio', 'Este vídeo s’envia tal com és: si el mòbil hi va guardar la ubicació, qui el reba la podrà vore.')}</p> : null}
@@ -421,8 +464,8 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     </div>
   );
   /* P1-66 · El botó redó de la barra, per prioritat: Atura mentre grava,
-     Envia el fitxer amb un de preparat (encara que hi haja text: el text es
-     queda al camp), Grava àudio amb el camp buit, i si no, el d'enviar text
+     Envia el fitxer amb un de preparat (el principal és el peu de foto/vídeo),
+     Grava àudio amb el camp buit, i si no, el d'enviar text
      del Compositor. Els noms accessibles són els de sempre. */
   const primari = gravant
     ? { clau: 'atura', etiqueta: t('section.xat.adjunts.atura', 'Atura la gravació'), icona: Square, onClick: () => gravadora.current?.atura() }
@@ -434,18 +477,20 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   /* El menú del +: només el que funciona (decisió del Mestre, 261028). Sense
      quota llegida, només «Torna-ho a provar»; la quota i el micròfon que no
      hi és, al peu, discrets. */
+  const reintentaQuota = { id: 'reintenta', etiqueta: t('section.xat.missatge.reintenta', 'Torna-ho a provar'), icona: RefreshCw, onTria: () => setIntentQuota((n) => n + 1) };
   const opcions = quota ? [
     { id: 'fotos', etiqueta: t('section.xat.adjunts.fotos', 'Fotos i vídeos'), icona: ImagePlus, onTria: () => selector.current?.click() },
-    ...(tactil ? [{ id: 'camera', etiqueta: t('section.xat.adjunts.camera', 'Càmera'), icona: Camera, onTria: () => selectorCamera.current?.click() }] : [])
-  ] : [
-    { id: 'reintenta', etiqueta: t('section.xat.missatge.reintenta', 'Torna-ho a provar'), icona: RefreshCw, onTria: () => setIntentQuota((n) => n + 1) }
-  ];
+    ...(tactil ? [{ id: 'camera', etiqueta: t('section.xat.adjunts.camera', 'Càmera'), icona: Camera, onTria: () => selectorCamera.current?.click() }] : []),
+    ...(errorQuota ? [reintentaQuota] : [])
+  ] : [reintentaQuota];
   const peuMenu = [
     quota ? t('section.xat.adjunts.quota', '{usats} de {limit} MB del xat').replace('{usats}', mb(quota.usats)).replace('{limit}', mb(quota.limit, 0))
       : t('section.xat.adjunts.quotaIllegible', 'No hem pogut llegir l’espai que et queda per a fitxers.'),
+    quota && errorQuota ? t('section.xat.adjunts.quotaIllegible', 'No hem pogut llegir l’espai que et queda per a fitxers.') : null,
     quota && !potGravar ? t('section.xat.adjunts.senseGravacio', 'Este navegador no permet gravar àudio.') : null
   ].filter(Boolean);
   const adjunts = {
+    clauContext: JSON.stringify([clauQuota, fil.id]),
     etiqueta: t('section.xat.adjunts.menu', 'Adjunta'),
     etiquetaMenu: t('section.xat.adjunts.grup', 'Adjunts del xat'),
     refBoto: botons.adjunta,

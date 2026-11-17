@@ -1,6 +1,7 @@
 /* IDEA-36 (assalt 261101, T7 · S3) · Les captures de pantalla (PNG) del xat
    es pugen a 2048 px de costat llarg i, si no caben en el sostre de la imatge
-   (2.000.000 B), a 1600 i a 1200; les fotos, a 1200 com sempre. Sempre
+   (2.000.000 B), a 1600 i a 1200; després, amb menys qualitat i costat.
+   Les fotos comencen a 1200. Sempre
    recodificades (WebP, o JPEG si WebKit no fa WebP), sense EXIF, i mai en PNG. */
 import { describe, expect, test, vi } from 'vitest';
 import { COSTATS_CAPTURA, COSTAT_FOTO, esCapturaDePantalla, preparaAdjunt } from './adjuntLocal.js';
@@ -41,11 +42,11 @@ describe('una captura (PNG)', () => {
     expect(a.fitxer.size).toBe(PETITA);
   });
 
-  test('el sostre és inclusiu: 2.000.000 B exactes a 2048 hi caben', async () => {
-    const comprimeix = compressor({ 2048: MAXIM_ADJUNT_XAT.imatge });
+  test('el client deixa marge: 2.000.000 B exactes encara es redueixen', async () => {
+    const comprimeix = compressor({ 2048: MAXIM_ADJUNT_XAT.imatge, 1600: PETITA });
     const a = await preparaAdjunt(captura(), { comprimeix });
-    expect(crides(comprimeix)).toEqual([[2048, 'image/webp']]);
-    expect(a.fitxer.size).toBe(MAXIM_ADJUNT_XAT.imatge);
+    expect(crides(comprimeix)).toEqual([[2048, 'image/webp'], [1600, 'image/webp']]);
+    expect(a.fitxer.size).toBe(PETITA);
   });
 
   test('si a 2048 passa dels 2 MB, prova 1600; si encara en passa, 1200', async () => {
@@ -58,11 +59,14 @@ describe('una captura (PNG)', () => {
     expect(crides(a1200)).toEqual([[2048, 'image/webp'], [1600, 'image/webp'], [1200, 'image/webp']]);
   });
 
-  test('si ni a 1200 hi cap, es queda el de 1200 (validaAdjuntXat dirà que no) i no hi ha cap quart intent', async () => {
-    const comprimeix = compressor({ 2048: GRAN, 1600: GRAN, 1200: GRAN });
+  test('si ni a 1200 hi cap, continua abaixant qualitat i costat sense tornar un blob invàlid', async () => {
+    const comprimeix = compressor({ 2048: GRAN, 1600: GRAN, 1200: GRAN, 960: PETITA });
     const a = await preparaAdjunt(captura(), { comprimeix });
-    expect(comprimeix).toHaveBeenCalledTimes(3);
-    expect(a.fitxer.size).toBe(GRAN);
+    expect(comprimeix).toHaveBeenCalledTimes(6);
+    expect(a.fitxer.size).toBe(PETITA);
+    expect(comprimeix.mock.calls.map(([, o]) => [o.maxSize, o.quality])).toEqual([
+      [2048, 0.8], [1600, 0.8], [1200, 0.8], [1200, 0.68], [1200, 0.55], [960, 0.8]
+    ]);
   });
 
   test('a WebKit (WebP → PNG) demana JPEG al mateix costat i els costats següents ja van en JPEG', async () => {
@@ -73,9 +77,9 @@ describe('una captura (PNG)', () => {
     for (const [, opcions] of comprimeix.mock.calls) expect(opcions).toMatchObject({ quality: 0.8, conservaExif: false });
   });
 
-  test('un resultat en PNG és error «foto» de seguida, sense provar cap altre costat', async () => {
+  test('un resultat només en PNG és error humà de codificació, sense provar cap altre costat', async () => {
     const comprimeix = vi.fn(async () => dataUrl('image/png', PETITA));
-    await expect(preparaAdjunt(captura(), { comprimeix })).rejects.toMatchObject({ code: 'foto' });
+    await expect(preparaAdjunt(captura(), { comprimeix })).rejects.toMatchObject({ code: 'foto-codificacio' });
     expect(crides(comprimeix)).toEqual([[2048, 'image/webp'], [2048, 'image/jpeg']]);
   });
 
@@ -91,10 +95,10 @@ describe('una captura (PNG)', () => {
 });
 
 describe('una foto', () => {
-  test.each(['image/jpeg', 'image/webp', 'image/avif', 'image/gif'])('%s: un sol intent a 1200 px, encara que el resultat passe dels 2 MB', async (type) => {
-    const comprimeix = compressor({ 1200: GRAN });
+  test.each(['image/jpeg', 'image/webp', 'image/avif', 'image/gif'])('%s: si 1200 passa dels 2 MB, redueix qualitat i després costat', async (type) => {
+    const comprimeix = compressor({ 1200: GRAN, 960: PETITA });
     const a = await preparaAdjunt(foto(type), { comprimeix });
-    expect(crides(comprimeix)).toEqual([[1200, 'image/webp']]);
-    expect(a.fitxer.size).toBe(GRAN);
+    expect(crides(comprimeix)).toEqual([[1200, 'image/webp'], [1200, 'image/webp'], [1200, 'image/webp'], [960, 'image/webp']]);
+    expect(a.fitxer.size).toBe(PETITA);
   });
 });

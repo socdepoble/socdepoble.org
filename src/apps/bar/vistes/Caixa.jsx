@@ -26,11 +26,12 @@ import {
   Alerta, Boto, Camp, Dialeg, EstatBuit, Fila, Pila, Selector, TeclatNumeric
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions } from '../../comu/esquelet/index.js';
-import { esIdOpac, esSlug, useParametresConsulta } from '../../plataforma/index.js';
+import { esIdOpac, esSlug, useApp, useParametresConsulta } from '../../plataforma/index.js';
 import { NOMS_ALERGENS, grupsDe, resolModificadors } from '../nucli/cataleg.js';
 import { totals } from '../nucli/comanda.js';
 import { potTancar } from '../nucli/cobrament.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
+import { textosUiBar } from '../i18nBar.js';
 import { EditorLinia } from './EditorLinia.jsx';
 import { AvisBase, AvisDeLaColumna, AvisOperacio, Columna, NoTrobat, Preparat } from './comu.jsx';
 import { ambTornada, esTornaTpv, useFixaComanda, usePunt, useVes } from './punt.js';
@@ -53,29 +54,33 @@ const TEXTOS_ESTAT_SENSE_PERMIS = Object.freeze({ ...TEXTOS_ESTAT_CAIXA, desacti
 
 /* «Varis»: el preu es tecleja en vendre. La variant triada, si n'hi ha, va al
    títol. També el fa servir el TPV (Tpv.jsx): un sol diàleg de preu obert. */
-export function DialegPreuObert({ producte, variant = null, onTanca, onAfig }) {
+export function DialegPreuObert({ producte, variant = null, onTanca, onAfig, idioma = 'ca' }) {
+  const tx = textosUiBar(idioma);
   const [preu, setPreu] = useState(0);
-  const titol = producte?.nom ? [producte.nom, variant?.nom].filter(Boolean).join(' · ') : 'Preu obert';
+  const titol = producte?.nom ? [producte.nom, variant?.nom].filter(Boolean).join(' · ') : tx.preuObert;
   return (
-    <Dialeg obert={Boolean(producte)} onTanca={onTanca} titol={titol} descripcio="Tecleja el preu amb IVA inclòs."
-      accions={<Boto onClick={() => onTanca('boto')}>Cancel·la</Boto>}>
+    <Dialeg obert={Boolean(producte)} onTanca={onTanca} titol={titol} descripcio={tx.preuObertDesc}
+      accions={<Boto onClick={() => onTanca('boto')}>{tx.cancela}</Boto>}>
       {producte ? (
-        <TeclatNumeric mode="import" etiqueta="Preu" valor={preu} onCanvi={setPreu}
-          onAccepta={(cents) => { if (cents > 0) onAfig(cents); }} textAccepta="Afig" />
+        <TeclatNumeric mode="import" etiqueta={tx.preu} valor={preu} onCanvi={setPreu}
+          onAccepta={(cents) => { if (cents > 0) onAfig(cents); }} textAccepta={tx.afig} />
       ) : null}
     </Dialeg>
   );
 }
 
 export function CatalegCaixa({ params }) {
+  const { idioma = 'ca' } = useApp();
+  const tx = textosUiBar(idioma);
   return (
-    <Preparat titol="Productes">
-      <CatalegDelPunt params={params} />
+    <Preparat titol={tx.productes}>
+      <CatalegDelPunt params={params} idioma={idioma} />
     </Preparat>
   );
 }
 
-function CatalegDelPunt({ params }) {
+function CatalegDelPunt({ params, idioma = 'ca' }) {
+  const tx = textosUiBar(idioma);
   const bar = useBar();
   const punt = usePunt(params);
   /* El diàleg del preu obert va a la consulta (?preu=<producte>&variant=<variant>): BAR-R7. */
@@ -90,7 +95,7 @@ function CatalegDelPunt({ params }) {
     setPreuPendent(null);
     posaConsulta(preuPendent);
   }, [preuPendent, consulta.article, posaConsulta]);
-  if (punt.perduda) return <NoTrobat text="Esta comanda ja no està oberta o la taula no existix." torna={{ etiqueta: 'Ves a la caixa', trams: ['caixa'] }} />;
+  if (punt.perduda) return <NoTrobat text={tx.comandaOTaulaInexistent} torna={{ etiqueta: tx.vesALaCaixa, trams: ['caixa'] }} />;
   const { carta, establiment, accions } = bar;
   const ven = bar.permis.potEscriure;
   const perId = new Map(carta.productes.map((p) => [p.id, p]));

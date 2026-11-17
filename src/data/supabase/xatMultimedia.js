@@ -1,5 +1,6 @@
 import { getResolvedConfig, request, rpc } from './runtime.js';
-import { jwtPerBackend, usuariDeSessio } from '../identitat.js';
+import { capturaSessio, entradaSessio, jwtPerBackend, usuariDeSessio } from '../identitat.js';
+import { backendScope } from '../../config/backendConfig.js';
 import { ERRORS_ADJUNT_XAT, errorAdjuntXat, tempsLimitPujada, validaAdjuntXat } from '../xatMultimedia.js';
 
 const BUCKET = 'xat_adjunts';
@@ -15,6 +16,26 @@ function context(config) {
 function vigent(usuari, config) {
   if (config.signal?.aborted || usuariDeSessio()?.id !== usuari) throw new DOMException('Operació cancel·lada.', 'AbortError');
 }
+/* La branca xifrada reutilitza context/vigent amb el seu contracte d'UUID.
+   El camí públic captura, a més, l'entrada i el backend: una renovació conserva
+   l'entrada; eixir i tornar a entrar amb el mateix UUID no la conserva. */
+function capturaOperacio(config) {
+  const usuari = context(config);
+  const sessioVigent = capturaSessio();
+  const backend = backendScope(config);
+  const entrada = entradaSessio();
+  const comprova = ({ ignoraAbort = false } = {}) => {
+    sessioVigent();
+    if ((!ignoraAbort && config.signal?.aborted) || backendScope(config) !== backend) {
+      throw new DOMException('Operació cancel·lada.', 'AbortError');
+    }
+    const actual = usuariDeSessio();
+    if (!jwtPerBackend(config) || !actual) throw errorAdjuntXat('sessio-caducada', { status: 401 });
+    if (actual.id !== usuari) throw new DOMException('Operació cancel·lada.', 'AbortError');
+  };
+  comprova();
+  return { usuari, comprova, clau: JSON.stringify([backend, usuari, entrada]) };
+}
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-5) · Tota fallada ix amb un
    `code` d'ERRORS_ADJUNT_XAT: els codis SDP del servidor, l'esquema absent,
    la xarxa i, per a la resta, «servidor». El cos cru («Supabase 403: {…}»)
@@ -24,6 +45,7 @@ function tradueix(error) {
   const text = String(error?.message || '');
   const codi = RE_CODI_SDP.exec(text)?.[0];
   if (codi && Object.hasOwn(ERRORS_ADJUNT_XAT, codi)) return errorAdjuntXat(codi, { cause: error });
+  if (error?.status === 401) return errorAdjuntXat('sessio-caducada', { status: 401, cause: error });
   if (error?.status === 404 || /PGRST20[25]|esquema requerit/.test(text)) return noDisponible();
   if (error?.name === 'TimeoutError') return errorAdjuntXat('temps-esgotat', { name: 'TimeoutError', cause: error });
   if (error instanceof TypeError || error?.status === 0) return errorAdjuntXat('xarxa', { cause: error });
@@ -86,19 +108,19 @@ function enviaAmbProgres(url, { method, signal, body, headers }, onProgres) {
   });
 }
 
-async function puja(ruta, fitxer, usuari, config, onProgres) {
+async function puja(ruta, fitxer, usuari, config, onProgres, comprova = () => vigent(usuari, config)) {
   const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
   const jwt = jwtPerBackend(config);
   if (!jwt) throw errorAdjuntXat('sessio-caducada');
   const controller = new AbortController();
   let esgotat = false;
   const avorta = () => controller.abort();
-  const sessioCanvia = () => { if (usuariDeSessio()?.id !== usuari) avorta(); };
+  const sessioCanvia = () => { try { comprova(); } catch (error) { controller.abort(error); } };
   const timer = setTimeout(() => { esgotat = true; avorta(); }, tempsLimitPujada(fitxer.size));
   config.signal?.addEventListener('abort', avorta, { once: true });
   globalThis.window?.addEventListener('sdp:auth-change', sessioCanvia);
   try {
-    vigent(usuari, config);
+    comprova();
     const url = `${supabaseUrl}/storage/v1/object/${BUCKET}/${ruta}`;
     const peticio = {
       method: 'POST', signal: controller.signal, body: fitxer,
@@ -107,6 +129,7 @@ async function puja(ruta, fitxer, usuari, config, onProgres) {
     const resposta = typeof onProgres === 'function' && typeof XMLHttpRequest === 'function'
       ? await enviaAmbProgres(url, peticio, onProgres)
       : await fetch(url, { ...peticio, redirect: 'error' });
+    if (controller.signal.aborted) throw controller.signal.reason;
     // Reintent amb el mateix ID: la RPC de publicació valida l'objecte existent.
     if (!resposta.ok && resposta.status !== 409) {
       const cos = await resposta.text();
@@ -114,6 +137,7 @@ async function puja(ruta, fitxer, usuari, config, onProgres) {
     }
   } catch (error) {
     if (esgotat) throw errorAdjuntXat('temps-esgotat', { name: 'TimeoutError' });
+    if (controller.signal.reason?.code === 'sessio-caducada') throw controller.signal.reason;
     throw error;
   } finally {
     clearTimeout(timer);
@@ -123,61 +147,66 @@ async function puja(ruta, fitxer, usuari, config, onProgres) {
 }
 
 export async function quotaXat(config = {}) {
-  const usuari = context(config);
+  const { comprova } = capturaOperacio(config);
   const quota = primera(await crida('xat_quota', {}, config));
-  vigent(usuari, config);
+  comprova();
   if (!Number.isSafeInteger(Number(quota?.usats)) || Number(quota?.usats) < 0 || Number(quota?.limit) !== 20_000_000) throw noDisponible();
   const pendents = Array.isArray(quota.pendents) ? quota.pendents.filter((a) => UUID.test(a?.id) && Number.isSafeInteger(a.bytes) && a.bytes > 0) : [];
   return { usats: Number(quota.usats), limit: Number(quota.limit), pendents };
 }
 
 export async function descartaAdjuntXat(id, config = {}) {
-  const usuari = context(config);
-  vigent(usuari, config);
+  const { comprova } = capturaOperacio(config);
   if (!UUID.test(id)) throw errorAdjuntXat('descart');
   const fila = primera(await crida('xat_prepara_descart', { p_id: id }, config));
-  vigent(usuari, config);
+  comprova();
   if (fila?.ruta === null) return true;
   if (fila?.ruta !== id) throw errorAdjuntXat('descart');
   try { await request(`/storage/v1/object/${BUCKET}`, config, { method: 'DELETE', body: { prefixes: [fila.ruta] }, signal: config.signal }); }
   catch (error) { throw tradueix(error); }
-  vigent(usuari, config);
+  comprova();
   if (!(await crida('xat_cancella_reserva', { p_id: id }, config))) throw errorAdjuntXat('descart');
+  comprova();
   return true;
 }
 
 /* XAT-03 · `onProgres(fraccio 0..1)` és opcional i no passa a les RPC. */
 export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } = {}) {
-  const usuari = context(config);
-  vigent(usuari, config);
+  const { usuari, comprova } = capturaOperacio(config);
   if (!UUID.test(filId) || !UUID.test(entrada?.id)) throw errorAdjuntXat('format');
   validaAdjuntXat(entrada);
   const { id, fitxer, tipus, duradaMs, respostaA = null } = entrada;
+  const text = String(entrada.text ?? '').trim() || null;
   const reserva = primera(await crida('xat_reserva_adjunt', {
     p_id: id, p_fil_id: filId, p_bytes: fitxer.size, p_mime: fitxer.type, p_durada_ms: duradaMs ?? null
   }, config));
-  vigent(usuari, config);
+  comprova();
   if (reserva?.ruta !== id) throw errorAdjuntXat('sense-confirmacio');
   if (!reserva.pujat) {
-    try { await puja(reserva.ruta, fitxer, usuari, config, onProgres); }
+    try { await puja(reserva.ruta, fitxer, usuari, config, onProgres, comprova); }
     catch (error) {
       // Una reserva sense objecte pot alliberar-se. Si Storage ha acabat encara
       // que es perdera la resposta, la RPC la conserva per al reintent.
-      if (usuariDeSessio()?.id === usuari) {
-        await crida('xat_cancella_reserva', { p_id: id }, { ...config, signal: undefined }).catch(() => {});
+      const fallada = tradueix(error);
+      let mateixaSessio = false;
+      try { comprova({ ignoraAbort: true }); mateixaSessio = true; } catch { /* Cap neteja amb una altra sessió o un JWT caducat. */ }
+      if (mateixaSessio) {
+        try { await crida('xat_cancella_reserva', { p_id: id }, { ...config, signal: undefined }); }
+        catch (errorAlliberament) { fallada.errorAlliberament = errorAlliberament; }
       }
-      throw tradueix(error);
+      throw fallada;
     }
   }
-  vigent(usuari, config);
+  comprova();
   /* Gauntlet 261022_0225 (crítica Claude, MEDIA-5) · Sense peu, text null:
      cap «Foto» en valencià desat al servidor (la migració 2610220240 ho
      admet); l'etiqueta traduïda la pinta qui llig. */
-  const text = String(entrada.text ?? '').trim() || null;
   const m = primera(await crida('xat_publica_adjunt', { p_id: id, p_text: text, p_resposta_a: respostaA }, config));
-  vigent(usuari, config);
-  if (m?.id !== id || !Number.isSafeInteger(Number(m.seq)) || Number(m.seq) <= 0 || m.tipus !== tipus) throw errorAdjuntXat('sense-confirmacio');
-  return { id: m.id, filId, seq: Number(m.seq), usuariId: m.usuari_id, autorNom: m.autor_nom,
+  comprova();
+  const seq = typeof m?.seq === 'number' ? m.seq : typeof m?.seq === 'string' && /^[1-9]\d*$/.test(m.seq) ? Number(m.seq) : NaN;
+  if (m?.id !== id || m.encuat === true || !Number.isSafeInteger(seq) || seq <= 0 || m.tipus !== tipus
+    || (m.fil_id != null && m.fil_id !== filId)) throw errorAdjuntXat('sense-confirmacio');
+  return { id: m.id, filId, seq, usuariId: m.usuari_id, autorNom: m.autor_nom,
     text: m.cos, tipus: m.tipus, respostaA: m.resposta_a, metadades: m.metadades,
     comOrgId: m.com_org_id, creatAl: m.creat_al, esIA: false };
 }
@@ -190,7 +219,7 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
    ha caducat, només es torna a signar (una petició, no dues), i Storage
    continua aplicant la mateixa política de lectura. `renova` (després d'un
    error de càrrega) força una signatura nova. Un canvi de sessió no hereta
-   res. */
+   res. La cau també queda separada per backend, poble i entrada de sessió. */
 const SEGONS_SIGNATURA = 60;
 const MARGE_SIGNATURA_MS = 15_000;
 const MAXIM_SIGNATURES = 300;
@@ -221,14 +250,14 @@ function ambDescarrega(url, descarrega) {
 }
 
 export async function urlAdjuntXat(id, config = {}, { renova = false, descarrega = false } = {}) {
-  const usuari = context(config);
+  const { comprova, clau } = capturaOperacio(config);
   if (!UUID.test(id)) throw errorAdjuntXat('no-disponible');
-  const desat = propietariSignatures === usuari ? signatures.get(id) : null;
+  const desat = propietariSignatures === clau ? signatures.get(id) : null;
   if (!renova && desat?.url && desat.caducaAl - Date.now() > MARGE_SIGNATURA_MS) return ambDescarrega(desat.url, descarrega);
   let ruta = desat?.ruta;
   if (!ruta) {
     const fila = primera(await crida('xat_llegix_adjunt', { p_id: id }, config));
-    vigent(usuari, config);
+    comprova();
     if (fila?.ruta !== id) throw errorAdjuntXat('no-disponible');
     ruta = fila.ruta;
   }
@@ -239,14 +268,14 @@ export async function urlAdjuntXat(id, config = {}, { renova = false, descarrega
       { method: 'POST', body: { expiresIn: SEGONS_SIGNATURA }, signal: config.signal });
   } catch (error) {
     // Sense lectura vigent, la ruta tampoc es guarda.
-    if (propietariSignatures === usuari) signatures.delete(id);
+    if (propietariSignatures === clau) signatures.delete(id);
     throw tradueix(error);
   }
-  vigent(usuari, config);
+  comprova();
   const esperat = `/object/sign/${BUCKET}/${ruta}?`;
   if (!data?.signedURL?.startsWith(esperat)) throw errorAdjuntXat('obrir');
   const url = `${getResolvedConfig(config).supabaseUrl}/storage/v1${data.signedURL}`;
-  recordaSignatura(usuari, id, { ruta, url, caducaAl: inici + SEGONS_SIGNATURA * 1000 });
+  recordaSignatura(clau, id, { ruta, url, caducaAl: inici + SEGONS_SIGNATURA * 1000 });
   return ambDescarrega(url, descarrega);
 }
 

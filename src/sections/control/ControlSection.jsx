@@ -212,6 +212,8 @@ import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
 import { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
 import { RUTA_COMPTE } from '../../config/rutaEntrada.js';
 import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+/* Onada v1.2.7 · P0-123 · «Instal·lada al dispositiu · Última publicada» (cinc llengües, fora dels diccionaris). */
+import LiniaVersioInstallada from '../../components/universal/LiniaVersioInstallada.jsx';
 /* Onada R29 · R29-RUT-01 · Amb lazyRoute: un tros que no arriba dona LazyRouteError i la barrera de la
    ruta oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
 const ModeRural = lazyRoute(() => import('./ModeRural.jsx'));
@@ -551,6 +553,8 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
       showLogos={true}
     >
       <div ref={vistaRef} className="content-wrapper">
+        {/* Onada v1.2.7 · P0-123 · La versió instal·lada i la publicada, d'un cop d'ull. */}
+        <LiniaVersioInstallada llengua={idioma} />
         <section aria-labelledby={idDestins}>
           <h2 id={idDestins} className="sdp-sr-only">{t(...TEXTOS_PORTES.titol)}</h2>
           {/* P5 · Les targetes de doble acció, en la graella de sempre (destinsControl.js):

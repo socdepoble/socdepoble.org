@@ -28,6 +28,11 @@
  *     (PasPerfil i PasLlegat), i la Factura nova queda a dalt.
  * Proves: totes les props van a useFacturacio (port, perfil, subtle, idb,
  * locks, emmagatzematge, rellotge, entorn, descarrega, imprimix).
+ *
+ * Onada R32.5 (P0-112 / IDEA-285):
+ *   · Extirpació del reclam «Veri*Factu» i clarificació honesta (cadena local en
+ *     proves, no sistema Verifactu homologat ni remissió activa a l'AEAT).
+ *   · Internacionalització en les 5 llengües (ca, es, en, eu, gl) via `idioma`.
  */
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Carregant } from '../../../components/PedraSeca/atoms/estats.jsx';
@@ -37,41 +42,41 @@ import { CopiaLlibre, insigniaDeLaCopia } from './CopiaLlibre.jsx';
 import { FormulariFactura } from './FormulariFactura.jsx';
 import { LlibreFactures } from './LlibreFactures.jsx';
 import { estatDeLaCadena } from './nucli/formulari.js';
+import { textosFacturacio } from './nucli/textosFacturacio.js';
 import { PasLlegat } from './PasLlegat.jsx';
 import { PasPerfil } from './PasPerfil.jsx';
 import { Pas } from './peces.jsx';
 import { useFacturacio } from './useFacturacio.js';
 
 /* El que es diu de la persistència: només quan el navegador no la garantix. */
-function AvisPersistencia({ f }) {
+function AvisPersistencia({ f, tx }) {
   if (f.persistencia === 'memoria') {
     return (
-      <Alerta to="error" titol="Este llibre és de proves">
-        Es perd en tancar la pestanya: no emetes res de veres ací.
+      <Alerta to="error" titol={tx.memoriaTitol}>
+        {tx.memoriaText}
       </Alerta>
     );
   }
   if (f.persistencia !== 'denegada' && f.persistencia !== 'sense-api') return null;
   return (
-    <Alerta to="avis" titol="El navegador podria esborrar el llibre"
-      accions={f.persistencia === 'denegada' ? <Boto varietat="secundari" onClick={f.demanaPersistencia}>Torna-ho a demanar</Boto> : null}>
-      {f.persistencia === 'denegada'
-        ? 'No ha acceptat guardar-lo de manera permanent: si li falta espai, el pot esborrar. '
-        : 'Este navegador no deixa demanar que el guarde de manera permanent. '}
-      Fes còpia del llibre (pas 5) cada dia que factures.
+    <Alerta to="avis" titol={tx.esborratTitol}
+      accions={f.persistencia === 'denegada' ? <Boto varietat="secundari" onClick={f.demanaPersistencia}>{tx.tornaDemanar}</Boto> : null}>
+      {f.persistencia === 'denegada' ? tx.denegadaText : tx.senseApiText}
+      {tx.copiaConsell}
     </Alerta>
   );
 }
 
-export default function Facturacio(props) {
+export default function Facturacio({ idioma = 'ca', ...props }) {
+  const tx = textosFacturacio(idioma);
   const f = useFacturacio(props);
 
-  if (f.fase === 'carregant') return <Carregant etiqueta="Obrint el llibre de factures…" />;
+  if (f.fase === 'carregant') return <Carregant etiqueta={tx.obrint} />;
   if (f.fase === 'error') {
     return (
-      <Alerta to="error" titol="Ací no es pot facturar">
-        <p>{f.error?.message ?? 'El llibre de factures no s’ha pogut obrir.'}</p>
-        <p>Si estàs en una finestra privada, obri la Gestoria en una de normal: el llibre necessita quedar-se guardat.</p>
+      <Alerta to="error" titol={tx.errorTitol}>
+        <p>{f.error?.message ?? tx.errorDefecte}</p>
+        <p>{tx.errorPrivada}</p>
       </Alerta>
     );
   }
@@ -80,35 +85,32 @@ export default function Facturacio(props) {
   return (
     <div className="sdp-gestoria-panell">
       <div className="sdp-gestoria-panell__barra">
-        <p>
-          Factura des d’este ordinador, amb connexió o sense. Les factures i les dades de l’empresa es guarden en este
-          navegador, i no ixen d’ací.
-        </p>
-        {f.persistencia === 'concedida' ? <Insignia to="exit">El navegador no l’esborrarà</Insignia> : null}
+        <p>{tx.barraIntro}</p>
+        {f.persistencia === 'concedida' ? <Insignia to="exit">{tx.noEsborrara}</Insignia> : null}
       </div>
       <details className="sdp-gestoria-panell__documents">
-        <summary>Detalls tècnics (Veri*Factu i AEAT)</summary>
+        <summary>{tx.detallsResum}</summary>
         <div className="sdp-gestoria-panell__bloc">
-          <p>Cada factura entra al llibre Veri*Factu encadenada a l’anterior, i la cadena es torna a verificar cada vegada que obris esta pantalla.</p>
-          <p className="sdp-gestoria-panell__avis">L’enviament a l’AEAT encara no està fet: el llibre el tindrà preparat.</p>
+          <p>{tx.detallsCadena}</p>
+          <p className="sdp-gestoria-panell__avis">{tx.detallsAvis}</p>
         </div>
       </details>
-      <AvisPersistencia f={f} />
+      <AvisPersistencia f={f} tx={tx} />
       <ol className="sdp-gestoria-panell__passos">
-        <Pas numero={1} titol="Les dades de l’empresa" estat={f.config ? 'fet' : 'actiu'}>
+        <Pas numero={1} titol={tx.pas1} estat={f.config ? 'fet' : 'actiu'}>
           <PasPerfil f={f} />
         </Pas>
-        <Pas numero={2} titol="Les factures d’abans" estat={f.llegat ? 'fet' : f.config ? 'actiu' : 'bloquejat'}>
+        <Pas numero={2} titol={tx.pas2} estat={f.llegat ? 'fet' : f.config ? 'actiu' : 'bloquejat'}>
           <PasLlegat f={f} />
         </Pas>
-        <Pas numero={3} titol="Factura nova" estat={f.potEmetre ? 'actiu' : 'bloquejat'}
-          insignia={f.bloquejatPerCadena ? { to: 'error', text: 'Aturada' } : null}>
+        <Pas numero={3} titol={tx.pas3} estat={f.potEmetre ? 'actiu' : 'bloquejat'}
+          insignia={f.bloquejatPerCadena ? { to: 'error', text: tx.aturada } : null}>
           <FormulariFactura f={f} />
         </Pas>
-        <Pas numero={4} titol="El llibre de factures" estat={f.informe?.valida ? 'fet' : 'actiu'} insignia={{ to: cadena.to, text: cadena.insignia }}>
+        <Pas numero={4} titol={tx.pas4} estat={f.informe?.valida ? 'fet' : 'actiu'} insignia={{ to: cadena.to, text: cadena.insignia }}>
           <LlibreFactures f={f} />
         </Pas>
-        <Pas numero={5} titol="Còpia del llibre" estat="actiu" insignia={insigniaDeLaCopia(f)}>
+        <Pas numero={5} titol={tx.pas5} estat="actiu" insignia={insigniaDeLaCopia(f)}>
           <CopiaLlibre f={f} />
         </Pas>
       </ol>

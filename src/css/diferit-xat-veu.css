@@ -1,0 +1,198 @@
+/* Full diferit (Onada R28 · D-R27-1, opció b aprovada pel Mestre; R32.6 · P0-119): les regles del
+   reproductor de notes de veu (.sdp-xat-veu*) ixen de l'arrencada del paquet de WordPress i s'adopten a
+   l'arrel on es munta la peça (AdjuntXat.jsx, src/config/fullDiferit.js). NO s'importa des d'index.css.
+   Origen: modules.css, BLOC AdjuntXat. v1.2.7 (integració, sostre d'arrencada del connector): també el
+   contenidor .sdp-xat-bombolla-wrap--veu: Bombolla.jsx només el posa a les notes de veu, i AdjuntXat
+   (import estàtic) hi pinta el reproductor, que adopta este full amb useLayoutEffect abans del primer
+   pintat. Mateixa cascada: @layer components, després de la regla base de .sdp-xat-bombolla-wrap. */
+@layer components {
+  .sdp-xat-bombolla-wrap--veu {
+    max-inline-size: max(var(--sdp-xat-bombolla-max), min(100%, 21rem));
+  }
+  .sdp-xat-bombolla-wrap--veu .sdp-xat-bombolla__meta {
+    margin-block-start: 0;
+  }
+  .sdp-xat-veu-caixa { min-inline-size: 0; max-inline-size: 100%; }
+  .sdp-xat-veu {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--sdp-space-2);
+    inline-size: 17.5rem;
+    max-inline-size: 100%;
+    margin: 0;
+  }
+  .sdp-xat-veu--velocitat { gap: var(--sdp-space-1); }
+  .sdp-xat-veu__boto {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-touch);
+    block-size: var(--sdp-touch);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+    cursor: pointer;
+    transition: background-color var(--sdp-t);
+  }
+  .sdp-xat-veu__icona-play { transform: translateX(1px); }
+  .sdp-xat-veu__cos {
+    flex: 1 1 3.5rem;
+    min-inline-size: 3.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .sdp-xat-veu__pista {
+    position: relative;
+    display: flex;
+    align-items: center;
+    block-size: var(--sdp-touch);
+    min-inline-size: 0;
+  }
+  .sdp-xat-veu__ona {
+    position: absolute;
+    inset-inline: 0;
+    inset-block: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--sdp-space-1) / 2);
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .sdp-xat-veu__barra {
+    flex: 1 1 0;
+    min-inline-size: 1px;
+    max-inline-size: 3px;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-vora-control);
+    transition: background-color var(--sdp-t);
+  }
+  .sdp-xat-veu__barra--activa { background: var(--sdp-accio); }
+  .sdp-xat-veu__barra--1 { block-size: 0.3125rem; }
+  .sdp-xat-veu__barra--2 { block-size: 0.4375rem; }
+  .sdp-xat-veu__barra--3 { block-size: 0.625rem; }
+  .sdp-xat-veu__barra--4 { block-size: 0.8125rem; }
+  .sdp-xat-veu__barra--5 { block-size: 1rem; }
+  .sdp-xat-veu__barra--6 { block-size: 1.1875rem; }
+  .sdp-xat-veu__barra--7 { block-size: 1.375rem; }
+  .sdp-xat-veu__barra--8 { block-size: 1.625rem; }
+  .sdp-xat-veu__posicio {
+    position: relative;
+    z-index: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    inline-size: 100%;
+    block-size: var(--sdp-touch);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    cursor: pointer;
+  }
+  .sdp-xat-veu__posicio:disabled { cursor: default; }
+  .sdp-xat-veu__posicio::-webkit-slider-runnable-track {
+    block-size: var(--sdp-space-1);
+    border: 0;
+    background: transparent;
+  }
+  .sdp-xat-veu__posicio::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    inline-size: var(--sdp-space-3);
+    block-size: var(--sdp-space-3);
+    margin-block-start: calc((var(--sdp-space-1) - var(--sdp-space-3)) / 2);
+    border: 2px solid var(--sdp-fons-elevat);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio);
+    box-shadow: var(--sdp-ombra-1);
+  }
+  .sdp-xat-veu__posicio::-moz-range-track {
+    block-size: var(--sdp-space-1);
+    border: 0;
+    background: transparent;
+  }
+  .sdp-xat-veu__posicio::-moz-range-progress {
+    block-size: var(--sdp-space-1);
+    background: transparent;
+  }
+  .sdp-xat-veu__posicio::-moz-range-thumb {
+    inline-size: var(--sdp-space-3);
+    block-size: var(--sdp-space-3);
+    border: 2px solid var(--sdp-fons-elevat);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio);
+    box-shadow: var(--sdp-ombra-1);
+  }
+  .sdp-xat-veu__peu {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    margin-block-start: calc(-1 * var(--sdp-space-2));
+    line-height: var(--sdp-leading-tight);
+  }
+  .sdp-xat-veu__mic {
+    flex: none;
+    color: var(--sdp-accio-text);
+  }
+  .sdp-xat-veu__temps {
+    flex: none;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-xat-veu__velocitat {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+    margin-inline-start: auto;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    cursor: pointer;
+  }
+  .sdp-xat-veu__velocitat-pindola {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 2.5rem;
+    block-size: var(--sdp-alt-pastilla);
+    padding: 0 var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+    font-variant-numeric: tabular-nums;
+    transition: background-color var(--sdp-t), border-color var(--sdp-t);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-veu__boto:hover { background: var(--sdp-accio-control-hover); }
+    .sdp-xat-veu__velocitat:hover .sdp-xat-veu__velocitat-pindola {
+      background: var(--sdp-fons-elevat);
+      border-color: var(--sdp-vora-forta);
+    }
+  }
+  .sdp-xat-veu__boto:focus-visible,
+  .sdp-xat-veu__posicio:focus-visible,
+  .sdp-xat-veu__velocitat:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  .sdp-xat-veu--quieta {
+    align-items: center;
+    inline-size: auto;
+    color: var(--sdp-text-cos);
+  }
+}

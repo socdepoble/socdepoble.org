@@ -394,6 +394,9 @@ export const adminLligPersonalitzacio = asseguraMetode('adminLligPersonalitzacio
    nucli: ModeracioContext pregunta abans amb teCapacitat i, sense elles,
    cap targeta ni bombolla no pinta «Més opcions» ni cap porta de normes. */
 export const denunciaContingut = asseguraMetode('denunciaContingut');
+export const registraDenunciaPublica = asseguraMetode('registraDenunciaPublica');
+export const adminSafataDenuncies = asseguraMetode('adminSafataDenuncies');
+export const adminRevisaDenuncia = asseguraMetode('adminRevisaDenuncia');
 export const llistaBloquejos = asseguraMetode('llistaBloquejos');
 export const bloquejaAutor = asseguraMetode('bloquejaAutor');
 export const desbloquejaAutor = asseguraMetode('desbloquejaAutor');

@@ -35,6 +35,7 @@ import { MovimentsTorn, TornActual } from './vistes/Torn.jsx';
 import { DetallTorn, HistorialTorns, TriaTorn } from './vistes/Torns.jsx';
 import { TpvBar } from './vistes/Tpv.jsx';
 import { CatalegBarWorkspace } from './vistes/CatalegBarWorkspace.jsx';
+import { textosUiBar } from './i18nBar.js';
 
 /* Les columnes de la caixa: les mateixes a la barra, a una comanda i a una taula. */
 const CAIXA = Object.freeze({ Cataleg: CatalegCaixa, Colleccio: ComandaCaixa, Esquerra: TiquetsOberts, primer: 'cataleg' });
@@ -90,3 +91,8 @@ export const RUTES_BAR = Object.freeze([
 
 /** Els noms dels separadors de les columnes de la closca. */
 export const TITOLS_BAR = Object.freeze({ esquerra: 'Tiquets oberts', mig: 'Llista' });
+
+export function titolsBar(idioma = 'ca') {
+  const tx = textosUiBar(idioma);
+  return { esquerra: tx.colEsquerra, mig: tx.colMig };
+}

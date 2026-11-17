@@ -174,17 +174,9 @@ test('cap ombra animada: el canvi d’ombra és instantani', () => {
    resplendor d'ambient de la IAIA. Cap és una interacció. */
 const ANIMACIONS_EXEMPTES = new Set(['spin', 'sdp-xat-ressalt', 'sdp-iaia-resplendor']);
 
-/* tractor-vocabulari (ordre del Mestre, 261030) · Deute heretat amb el bloc
-   AdjuntXat, que fins ara era un full de secció fora de l'abast d'esta prova:
-   les dues transicions del reproductor de veu, de 150ms ease-out. Cap token no
-   val això (--sdp-durada-rapida fa 180ms i les corbes són cubic-bezier):
-   passar-les a token canviaria l'estil computat, i la migració no pot canviar
-   cap píxel. Queden nomenades i són les úniques: una de nova fa caure la prova,
-   i quan es tokenitzen s'han de llevar d'ací. */
-const TEMPS_LITERALS_HERETATS = [
-  '.sdp-xat-veu__boto { transition: background-color 150ms ease-out }',
-  '.sdp-xat-veu__velocitat { transition: background-color 150ms ease-out }'
-];
+/* R32.6 (P0-119) · Tokenitzades amb var(--sdp-t) les dues últimes transicions
+   heretades del bloc AdjuntXat: trinquet de temps literals a 0. */
+const TEMPS_LITERALS_HERETATS = [];
 
 test('cap temps literal a transicions ni animacions d’interacció: durada i corba de token', () => {
   const dolentes = [];

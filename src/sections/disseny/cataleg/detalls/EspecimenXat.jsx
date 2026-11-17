@@ -42,12 +42,13 @@
  * l'espècimen. Sense, /disseny/fonaments/xat tenia quatre H1 (el de la pàgina
  * i tres de mostra). El píxel no canvia: el nom és el mateix <strong>.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import { Accions, Avatar, Boto } from '../../../../components/PedraSeca/index.js';
 import { AppGridContext } from '../../../../components/layout/AppGridShell.jsx';
 import FilaConversa from '../../../xat/components/FilaConversa.jsx';
 import Bombolla from '../../../xat/components/Bombolla.jsx';
+import { ReproductorVeu } from '../../../xat/components/AdjuntXat.jsx';
 import Compositor from '../../../xat/components/Compositor.jsx';
 import ControlsAdjunt from '../../../xat/components/ControlsAdjunt.jsx';
 import CapcaleraConversa from '../../../xat/components/CapcaleraConversa.jsx';
@@ -59,6 +60,10 @@ import BotoBaixar from '../../../xat/components/BotoBaixar.jsx';
 import BarraResposta from '../../../xat/components/BarraResposta.jsx';
 import { mapejaFil } from '../../../xat/missatges.js';
 import { anotaGrups } from '../../../xat/conversa.js';
+/* v1.2.7 (integració, sostre d'arrencada del connector) · El contenidor .sdp-xat-bombolla-wrap--veu
+   viu al full diferit del reproductor de veu: la mostra feta a mà l'adopta com fa Bombolla. */
+import { useFullDiferit } from '../../../../config/fullDiferit.js';
+import cssXatVeu from '../../../../css/diferit-xat-veu.css?inline';
 
 /* Traductor mínim: els components reben `t(clau, alternativa)` com a prop i
    les alternatives ja són el text en valencià. Sense UIContext. */
@@ -294,6 +299,145 @@ function BarraAmbAdjuntsDeMostra() {
   );
 }
 
+/* R32.6 (P0-119 + P0-120) · Àudio WAV silenciós generat en memòria per a la
+   mostra viva del manual: dura el temps indicat i funciona sense cap xarxa. */
+const URLS_WAV_MOSTRA = new Map();
+function obteWavSilenciDeMostra(segons = 38) {
+  if (URLS_WAV_MOSTRA.has(segons)) return Promise.resolve(URLS_WAV_MOSTRA.get(segons));
+  if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+    return Promise.resolve('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAESsAAABAAgAZGF0YQAAAAA=');
+  }
+  const taxa = 4000;
+  const mostres = taxa * segons;
+  const buffer = new ArrayBuffer(44 + mostres);
+  const vista = new DataView(buffer);
+  const escriu = (pos, txt) => { for (let i = 0; i < txt.length; i += 1) vista.setUint8(pos + i, txt.charCodeAt(i)); };
+  escriu(0, 'RIFF');
+  vista.setUint32(4, 36 + mostres, true);
+  escriu(8, 'WAVEfmt ');
+  vista.setUint32(16, 16, true);
+  vista.setUint16(20, 1, true);
+  vista.setUint16(22, 1, true);
+  vista.setUint32(24, taxa, true);
+  vista.setUint32(28, taxa, true);
+  vista.setUint16(32, 1, true);
+  vista.setUint16(34, 8, true);
+  escriu(36, 'data');
+  vista.setUint32(40, mostres, true);
+  new Uint8Array(buffer, 44).fill(128);
+  const url = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+  URLS_WAV_MOSTRA.set(segons, url);
+  return Promise.resolve(url);
+}
+
+const FIL_SOFIA_PERSONAL = mapejaFil({
+  id: 'mostra-sofia-personal',
+  tipus: 'directe',
+  titol: 'Sofía Bornay',
+  altresNoms: ['Sofía Bornay'],
+  altres: [{ id: 'sofia-bornay', tipus: 'persona', nom: 'Sofía Bornay', avatarUrl: null }],
+  ultimText: 'Missatge de veu',
+  ultimTipus: 'veu',
+  ultimSeq: 3,
+  llegitFinsSeq: 3
+});
+
+const FIL_SOFIA_ENTITAT = mapejaFil({
+  id: 'mostra-sofia-sdp',
+  tipus: 'directe',
+  titol: 'Sofía Bornay',
+  comEntitat: true,
+  entitatId: 'socdepoble',
+  entitatNom: 'Sóc de Poble',
+  altresNoms: ['Sofía Bornay'],
+  altres: [{ id: 'sofia-bornay', tipus: 'persona', nom: 'Sofía Bornay', avatarUrl: null }],
+  ultimText: 'Bon dia!',
+  ultimSeq: 1,
+  llegitFinsSeq: 1
+});
+
+function ConversaDirectaAmbVeuDeMostra() {
+  const [canalActiu, setCanalActiu] = useState(FIL_SOFIA_PERSONAL.id);
+  const filObert = canalActiu === FIL_SOFIA_ENTITAT.id ? FIL_SOFIA_ENTITAT : FIL_SOFIA_PERSONAL;
+  const arrel = useRef(null);
+  useFullDiferit(arrel, 'xat-veu', cssXatVeu);
+  return (
+    <div ref={arrel} className="sdp-especimen__mostra" data-especimen="r32-6-xat-veu-avatars">
+      <CapcaleraConversa
+        fil={filObert}
+        canals={[FIL_SOFIA_PERSONAL, FIL_SOFIA_ENTITAT]}
+        onTriaCanal={setCanalActiu}
+        nivellTitol={NIVELL_TITOL_MOSTRA}
+        onTorna={() => {}}
+        onSeleccionar={() => {}}
+        t={t}
+      />
+      <ol className="sdp-xat-missatges" aria-label="Conversa directa amb notes de veu i avatars clicables">
+        <li className="sdp-xat-item sdp-xat-item--altre">
+          <div className="sdp-xat-bombolla-wrap sdp-xat-bombolla-wrap--veu">
+            <a
+              className="sdp-xat-bombolla__cara sdp-xat-bombolla__cara--enllac"
+              href="/gent/sofia-bornay"
+              aria-label="Obri el perfil de Sofía Bornay"
+              onClick={(e) => e.preventDefault()}
+            >
+              <Avatar nom="Sofía Bornay" llavor="sofia-bornay" mida="sm" alt="" className="sdp-xat-bombolla__avatar-grup" />
+            </a>
+            <div className="sdp-xat-bombolla sdp-xat-bombolla--altre sdp-xat-bombolla--cua">
+              <div className="sdp-xat-adjunt">
+                <ReproductorVeu
+                  obteUrl={() => obteWavSilenciDeMostra(38)}
+                  duradaMs={38_000}
+                  memoria="especimen/veu-sofia-38"
+                  locale={LOCALE}
+                  t={t}
+                />
+              </div>
+              <span className="sdp-xat-bombolla__meta">
+                <time dateTime={hui(14, 53)}>14:53</time>
+              </span>
+            </div>
+          </div>
+        </li>
+        <Bombolla
+          missatge={{
+            id: 'm-sofia-2',
+            seq: 2,
+            sender: 'other',
+            author: 'Sofía Bornay',
+            usuariId: 'sofia-bornay',
+            text: 'Ací tens la primera nota de veu gravada des del mòbil!',
+            creatAl: hui(14, 53)
+          }}
+          esGrup={false}
+          primerDelGrup={false}
+          locale={LOCALE}
+          t={t}
+        />
+        <li className="sdp-xat-item sdp-xat-item--meu">
+          <div className="sdp-xat-bombolla-wrap sdp-xat-bombolla-wrap--veu">
+            <div className="sdp-xat-bombolla sdp-xat-bombolla--meu sdp-xat-bombolla--cua">
+              <div className="sdp-xat-adjunt">
+                <ReproductorVeu
+                  obteUrl={() => obteWavSilenciDeMostra(15)}
+                  duradaMs={15_000}
+                  memoria="especimen/veu-javi-15"
+                  locale={LOCALE}
+                  t={t}
+                />
+              </div>
+              <span className="sdp-xat-bombolla__meta">
+                <time dateTime={hui(14, 54)}>14:54</time>
+                <MarquesEstat estat="llegit" t={t} />
+              </span>
+            </div>
+          </div>
+        </li>
+      </ol>
+    </div>
+  );
+}
+
 export default function EspecimenXat() {
   return (
     <Especimen id="xat" nom="Xat i missatgeria" fitxer="src/sections/xat/components/ · src/css/modules.css (sdp-xat-*)"
@@ -343,6 +487,9 @@ export default function EspecimenXat() {
           <Bombolla key={clau} missatge={msg} esGrup primerDelGrup={primerDelGrup} locale={LOCALE} t={t} />
         ))}
       </ol>
+
+      <h4>Conversa directa 1:1 amb notes de veu estil WhatsApp i avatars clicables (R32.6)</h4>
+      <ConversaDirectaAmbVeuDeMostra />
 
       <h4>Una llista viva d’«El Comú» dins d’una bombolla (Fase E, tasca 3)</h4>
       <ol className="sdp-xat-missatges" aria-label="Llista viva de mostra">

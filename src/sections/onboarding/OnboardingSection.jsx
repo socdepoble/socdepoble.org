@@ -25,6 +25,8 @@ import { CODI_ENTRADA_NATIVA, abandonaCredencialNativa, botonsNatius, esSilenciN
 import { EntradaNativa } from './EntradaNativa.jsx';
 import { LogotipGoogle } from './LogotipsDeMarca.jsx';
 import { entraAmbProveidorNatiu } from './fluxEntradaNativa.js';
+import { detectaWebViewInApp } from './detectaWebViewInApp.js';
+import { textosEscutWebview } from './textosEscutWebview.js';
 
 /* Fase D (261020, tasca 1) · Les proves que simulen useUIState sense `t`
    continuen pintant: el traductor de reserva és el valencià. */
@@ -93,7 +95,7 @@ export default function OnboardingSection() {
     demanaRecuperacioContrasenya, definixContrasenyaNova, recuperacioPendent: recuperacioDeLaSessio, logout,
     enllacDeRecuperacio, oblidaEnllacDeRecuperacio, entraComAPilot, estat: estatSessio, entraAmbTokenDeProveidor
   } = useSession();
-  const { externalConfig, t } = useUIState();
+  const { externalConfig, t, language, llenguaDelText = language } = useUIState();
   const tr = typeof t === 'function' ? t : TRADUCTOR_DE_RESERVA;
   const normalizedConfig = normalizeBackendConfig(externalConfig);
   const modeDades = normalizedConfig.dataMode;
@@ -202,6 +204,10 @@ export default function OnboardingSection() {
      full natiu d'Apple (només a iOS) i de Google. A la web, res no canvia. */
   const plataforma = plataformaNativa();
   const esNatiu = plataforma !== 'web';
+  const webviewSocial = detectaWebViewInApp(undefined, { esNatiu });
+  const txWebview = textosEscutWebview(llenguaDelText);
+  const adrecaWebview = (!esNatiu && webviewSocial.esWebViewSocial) ? urlPerAObrirFora() : null;
+  const [estatCopiaWebview, setEstatCopiaWebview] = useState(null);
   const potEntrarNatiu = esNatiu && teLaCapacitat(teCapacitat, 'entradaAmbToken') && typeof entraAmbTokenDeProveidor === 'function';
   const [portNatiuLlest, setPortNatiuLlest] = useState(false);
   useEffect(() => {
@@ -362,6 +368,31 @@ export default function OnboardingSection() {
   const [modeForcat, setModeForcat] = useState(null);
   const tornaAEntrar = () => { setModeForcat('entrar'); setObreRecuperacio(false); oblidaEnllac(); };
   const demanaUnAltre = () => { setObreRecuperacio(true); oblidaEnllac(); };
+  const obriEnllacMagicDesDeWebview = () => {
+    setErrorEntrada(null);
+    setObreRecuperacio(true);
+    oblidaEnllac();
+    setTimeout(() => { document.getElementById('rec-email')?.focus(); }, 0);
+  };
+  const obriCorreuDesDeWebview = () => {
+    setErrorEntrada(null);
+    setObreRecuperacio(false);
+    setModeForcat('entrar');
+    setTimeout(() => { document.getElementById('reg-email')?.focus(); }, 0);
+  };
+  const copiaAdrecaWebview = async () => {
+    if (!adrecaWebview) return;
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.clipboard?.writeText === 'function') {
+        await navigator.clipboard.writeText(adrecaWebview);
+        if (montat.current) setEstatCopiaWebview('copiat');
+      } else if (montat.current) {
+        setEstatCopiaWebview('error');
+      }
+    } catch {
+      if (montat.current) setEstatCopiaWebview('error');
+    }
+  };
   /* P0-63 (261108) · Només amb sessió: deixa l'enllaç que ja no val i la
      redirecció de la sessió porta a «El compte» (RUTA_COMPTE). */
   const alCompte = currentUser ? () => { setVolElCompte(true); oblidaEnllac(); } : null;
@@ -733,6 +764,61 @@ export default function OnboardingSection() {
                     <p><strong>{tr('section.login.google.marcAvis', 'Dins d’este marc no es pot entrar amb Google.')}</strong> {tr('section.login.google.marcText', 'Obri Sóc de Poble en una pestanya nova per a entrar.')}</p>
                     {adrecaFora ? <p>{abansAdreca}<code>{adrecaFora}</code>{despresAdreca}</p> : null}
                   </Alerta>
+                ) : webviewSocial.esWebViewSocial ? (
+                  <>
+                    <Alerta to="avis" viva={false}>
+                      <div data-escut-webview={webviewSocial.app}>
+                        <p>
+                          <strong>{txWebview.avis.replace('{app}', () => webviewSocial.nomApp)}</strong>{' '}
+                          {txWebview.explicacio}
+                        </p>
+                        <p>
+                          {(webviewSocial.sistema === 'ios'
+                            ? txWebview.instruccionsIos
+                            : webviewSocial.sistema === 'android'
+                              ? txWebview.instruccionsAndroid
+                              : txWebview.instruccionsAltre
+                          ).replace('{app}', () => webviewSocial.nomApp)}
+                        </p>
+                      </div>
+                    </Alerta>
+                    <div className="onboarding-entrada-nativa">
+                      {potRecuperar ? (
+                        <Boto
+                          varietat="primari"
+                          ple
+                          disabled={(canviDeModePendent && !simulaLocal) || busyStep !== null}
+                          onClick={obriEnllacMagicDesDeWebview}
+                        >
+                          {txWebview.botoEnllacMagic}
+                        </Boto>
+                      ) : null}
+                      <Boto
+                        varietat={potRecuperar ? 'secundari' : 'primari'}
+                        ple
+                        disabled={(canviDeModePendent && !simulaLocal) || busyStep !== null}
+                        onClick={obriCorreuDesDeWebview}
+                      >
+                        {txWebview.botoCorreu}
+                      </Boto>
+                      {adrecaWebview ? (
+                        <Boto varietat="fantasma" ple onClick={copiaAdrecaWebview}>
+                          {txWebview.botoCopiaUrl}
+                        </Boto>
+                      ) : null}
+                    </div>
+                    {estatCopiaWebview === 'copiat' ? (
+                      <Alerta to="exit">
+                        {txWebview.urlCopiada}
+                      </Alerta>
+                    ) : null}
+                    {estatCopiaWebview === 'error' ? (
+                      <Alerta to="avis">
+                        <p>{txWebview.errorCopia}</p>
+                        {adrecaWebview ? <p><strong translate="no">{adrecaWebview}</strong></p> : null}
+                      </Alerta>
+                    ) : null}
+                  </>
                 ) : (
                   <>
                     <p>

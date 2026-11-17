@@ -698,7 +698,9 @@ describe('Especímens del Xat · onada 3B', () => {
 
   it('Xat: la capçalera d’una pàgina («Sobre:» i participants) i la dels Avisos; el compositor dels Avisos i el del xat públic', () => {
     const arrel = pinta(EspecimenXat);
-    const [pagina, avisos] = arrel.querySelectorAll('header.sdp-xat-capcalera');
+    /* R32.6 (P0-119 + P0-120) · La mostra de la conversa directa amb veu porta la seua capçalera (Sofía Bornay). */
+    const [pagina, avisos] = [...arrel.querySelectorAll('header.sdp-xat-capcalera')]
+      .filter((capcalera) => !capcalera.closest('[data-especimen="r32-6-xat-veu-avatars"]'));
     const enllac = within(pagina).getByRole('link', { name: 'Obri la pàgina Festa major' });
     expect(enllac.getAttribute('href')).toBe('/mur');
     expect(document.getElementById(enllac.getAttribute('aria-describedby')).textContent).toBe('Sobre: Festa major · 12 participants');
@@ -713,6 +715,7 @@ describe('Especímens del Xat · onada 3B', () => {
     expect(screen.queryAllByRole('heading', { level: 1 })).toEqual([]);
     expect([...arrel.querySelectorAll('.sdp-xat-capcalera__nom')].map((nom) => [nom.tagName, nom.getAttribute('role'), nom.getAttribute('aria-level'), nom.textContent]))
       .toEqual([
+        ['STRONG', 'heading', '5', 'Sofía Bornay'],
         ['STRONG', 'heading', '5', 'Festa major'],
         ['STRONG', 'heading', '5', 'Avisos'],
         ['STRONG', 'heading', '5', 'Comissió de Festes']

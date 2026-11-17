@@ -697,9 +697,9 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       const oferides=Object.entries(CAPACITATS).filter(([,metodes])=>metodes.every(nom=>typeof local[nom]==='function')).map(([nom])=>nom);
       const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(absents).toEqual(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
+      expect(absents).toEqual(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
       expect(oferides).toHaveLength(48);
-      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(25);
+      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(28);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');
       expect(fet).toContain('els seus '+CASOS.filter(c=>absents.includes(c.capacitat)).length+' casos s’ometen en local');

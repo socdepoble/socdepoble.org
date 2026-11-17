@@ -165,7 +165,10 @@ test('public/.well-known/ard.json descriu cada recurs amb el seu format real i c
      (src/natiu/actualitzacioAppNativa.js): version, androidBuild i iosBuild. L'ARD ignora els
      membres d'arrel que no són entries (validador de Lighthouse: «Top-level members ignored by
      ARD (transport-defined)», sense avís); collections continua prohibit (sí que en dona avís). */
-  assert.deepEqual(Object.keys(ard).sort(), ['androidBuild', 'entries', 'iosBuild', 'version'],
+  /* v1.2.7 · P0-123 · I, opcionals, els canals de proves que escriu publica-tot.mjs --sincronitza-proves
+     (testflightIosBuild, apkDirectBuild i apkSha256) i latestBuild. */
+  const OPCIONALS = ['apkDirectBuild', 'apkSha256', 'latestBuild', 'testflightIosBuild'];
+  assert.deepEqual(Object.keys(ard).filter((clau) => !OPCIONALS.includes(clau)).sort(), ['androidBuild', 'entries', 'iosBuild', 'version'],
     'L’arrel ARD sols exposa entries i el manifest de versió de l’App (sense collections ni més camps)');
   assert.ok(Array.isArray(ard.entries) && ard.entries.length >= 2);
 
@@ -233,6 +236,18 @@ test('R32.3 · ard.json porta el manifest de versió de l’App, coherent amb pa
   for (const camp of ['androidBuild', 'iosBuild']) {
     assert.ok(Number.isSafeInteger(ard[camp]) && ard[camp] >= 1, `${camp} és un enter positiu`);
     assert.ok(ard[camp] <= VERSIO_CLIENT_NATIU, `${camp} (${ard[camp]}) no supera VERSIO_CLIENT_NATIU (${VERSIO_CLIENT_NATIU})`);
+  }
+  /* v1.2.7 · P0-123 · Els canals de proves, si hi són: enters positius sense passar de VERSIO_CLIENT_NATIU,
+     l'APK sempre amb la seua SHA-256, i latestBuild el més alt de tots (mai un número solt). */
+  for (const camp of ['testflightIosBuild', 'apkDirectBuild']) {
+    if (!Object.hasOwn(ard, camp)) continue;
+    assert.ok(Number.isSafeInteger(ard[camp]) && ard[camp] >= 1 && ard[camp] <= VERSIO_CLIENT_NATIU, `${camp} (${ard[camp]}) és un build vàlid`);
+  }
+  assert.equal(Object.hasOwn(ard, 'apkDirectBuild'), Object.hasOwn(ard, 'apkSha256'), 'apkDirectBuild i apkSha256 van junts');
+  if (Object.hasOwn(ard, 'apkSha256')) assert.match(ard.apkSha256, /^[0-9a-f]{64}$/);
+  if (Object.hasOwn(ard, 'latestBuild')) {
+    const builds = ['androidBuild', 'iosBuild', 'testflightIosBuild', 'apkDirectBuild'].filter((camp) => Object.hasOwn(ard, camp)).map((camp) => ard[camp]);
+    assert.equal(ard.latestBuild, Math.max(...builds), 'latestBuild és el més alt dels builds');
   }
 });
 

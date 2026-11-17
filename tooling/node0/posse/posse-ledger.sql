@@ -30,6 +30,12 @@ DO $guard$ BEGIN
  -- dinàmic per set ALTER FUNCTION literals) i es conserven el 114 d'R30 i el 116 d'R32. Cap perfil de 117 no
  -- s'accepta (ni l'experimental del kit R32 ni el catàleg sense les dues R31): ordre_desplegament.json posa
  -- 20261116040000 abans de 20261116170000 i de 20261116170200.
+ -- Onada R32.4 hi afig 20261117150000 (la pàgina /page/sistema-nervios al registre de copublicació, NO aplicada):
+ -- el complet passa a 120 (91dabe47) i es conserva el 119.
+ -- Onada v1.2.7 (kit R32.5 de Codex) hi afig 20261117140000 (safata i revisió LSSI cautelar, NO aplicada): el
+ -- catàleg complet real passa a 121 (851f46d4) i es conserven el 119 d'R32.2 i el 120 d'R32.4, que no la porta.
+ -- El 120 del kit R32.5 (3e45e1da: els 119 més 20261117140000, sense 20261117150000) no és cap catàleg publicat
+ -- i no s'accepta: el recompte 120 només val amb el registre exacte d'R32.4.
  -- A count alone cannot prove a migration identity or its source bytes.
  OR NOT EXISTS(
  SELECT 1 FROM(VALUES
@@ -47,7 +53,8 @@ DO $guard$ BEGIN
 (114,'9072d6ee39c18ff2156573d2cbf0fa6a815b1e5c4fd3a3073fd158beac3d1fd5'),
 (116,'34ddc81cbf6670272e99603f985db38f85663f93b901e5ea3b212552b556d589'),
 (119,'4c3151035be4784842fba08d88e59425a22ed3d89e64016c8dd99c81f08774b2'),
-(120,'91dabe476f642579862bffbb10b8d56f946722b8efd65deedf43e7f8fbae9f71')
+(120,'91dabe476f642579862bffbb10b8d56f946722b8efd65deedf43e7f8fbae9f71'),
+(121,'851f46d48edca7e5147c8075469a0f5c46992f7e033ca87996b51fa1df1241e0')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

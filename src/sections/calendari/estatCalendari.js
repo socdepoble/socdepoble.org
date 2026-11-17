@@ -47,6 +47,7 @@
 import { cursorDe, mouMes } from '../../utils/calendari.js';
 import { clauSetmanaIso, dillunsDe, dillunsDeClauSetmana, mouSetmana, rangDeLaGraella, sumaDies } from '../../utils/periodes.js';
 import { clauDeMes, cursorDeMes, diaDeLaClau } from './calendariGlobal.js';
+import { llegixDataHora } from '../../utils/esdeveniment.js';
 
 export const VISTES = Object.freeze(['setmana', 'dues-setmanes', 'mes', 'any', 'agenda']);
 /* Ordre del Mestre, 261003 (P6) · La vista de /calendari sense un ?vista= de la llista. */
@@ -262,4 +263,126 @@ export function rangDeLaVista({ vista, diaTriat = null, cursor, dilluns }, avui 
     return { desde, fins: new Date(cursor.any, cursor.mes + 1, 1) };
   }
   return rangDeLaGraella(cursor, { setmanes: SETMANES_DEL_MES });
+}
+
+/* R32.5 · La publicació i l'acte són dos fets independents. Una crònica pot
+   publicar-se després de l'acte; una data absent no s'inventa a partir de
+   l'altra. updated_at és auditoria, mai cap d'estes dues dates. */
+function dataCalendari(valor) {
+  if (valor == null) return null;
+  if (typeof valor !== 'string') throw new TypeError('Data de calendari invàlida');
+  const text = valor.trim();
+  if (!diaDeLaClau(text) && !llegixDataHora(text)) throw new TypeError('Data de calendari invàlida');
+  return text;
+}
+
+/** Dates originals, separades, del DTO editorial o del model d'acte. */
+export function datesDeLEsdeveniment(item = {}) {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) throw new TypeError('Esdeveniment invàlid');
+  return Object.freeze({
+    dataPublicacio: dataCalendari(item.dataPublicacio ?? item.publish_date ?? item.created_at),
+    dataActe: dataCalendari(item.dataActe ?? item.inici?.data ?? item.inici?.dataHora ?? item.date ?? item.dades?.data_inici)
+  });
+}
+
+export const RESPOSTES_RSVP = Object.freeze(['assistire', 'no-assistire', 'pendent']);
+
+function enterRsvp(valor, nom) {
+  if (!Number.isSafeInteger(valor) || valor < 0) throw new TypeError(`${nom} ha de ser un enter segur no negatiu`);
+  return valor;
+}
+
+function idRsvp(valor) {
+  if (typeof valor !== 'string' || !valor.length || valor.length > 200 || valor !== valor.trim()
+    || /[\u0000-\u001f\u007f]/u.test(valor)) throw new TypeError('Identificador RSVP invàlid');
+  return valor;
+}
+
+function respostaRsvp({ idParticipant, resposta, places = resposta === 'assistire' ? 1 : 0 } = {}) {
+  idRsvp(idParticipant);
+  if (!RESPOSTES_RSVP.includes(resposta)) throw new TypeError('Resposta RSVP invàlida');
+  enterRsvp(places, 'Places');
+  if ((resposta === 'assistire' && places === 0) || (resposta !== 'assistire' && places !== 0)) {
+    throw new TypeError('Places incompatibles amb la resposta RSVP');
+  }
+  return Object.freeze({ idParticipant, resposta, places });
+}
+
+function ocupacioRsvp(estat) {
+  if (!estat || typeof estat !== 'object' || Array.isArray(estat)) throw new TypeError('Estat RSVP invàlid');
+  idRsvp(estat.idEsdeveniment);
+  enterRsvp(estat.aforament, 'Aforament');
+  enterRsvp(estat.revisio, 'Revisió');
+  if (!Array.isArray(estat.respostes)) throw new TypeError('Respostes RSVP invàlides');
+  const participants = new Set();
+  let ocupades = 0n;
+  for (const entrada of estat.respostes) {
+    if (!entrada || typeof entrada !== 'object' || Array.isArray(entrada)) throw new TypeError('Resposta RSVP invàlida');
+    enterRsvp(entrada.places, 'Places');
+    const resposta = respostaRsvp(entrada);
+    if (participants.has(resposta.idParticipant)) throw new TypeError('Participant RSVP duplicat');
+    participants.add(resposta.idParticipant);
+    ocupades += BigInt(resposta.places);
+  }
+  if (ocupades > BigInt(estat.aforament)) throw new RangeError('Estat RSVP amb sobrevenda');
+  return Number(ocupades);
+}
+
+/** Aforament finit obligatori: 0 tanca les places; mai significa il·limitat. */
+export function creaEstatRsvp({ idEsdeveniment, aforament, respostes = [], revisio = 0 } = {}) {
+  const estat = { idEsdeveniment, aforament, respostes, revisio };
+  ocupacioRsvp(estat);
+  return Object.freeze({
+    idEsdeveniment, aforament, revisio,
+    respostes: Object.freeze(respostes.map(respostaRsvp).sort((a, b) => (
+      a.idParticipant < b.idParticipant ? -1 : Number(a.idParticipant > b.idParticipant)
+    )))
+  });
+}
+
+/** Recompte exacte: també rebutja instantànies corruptes, duplicades o amb sobrevenda. */
+export function resumAforamentRsvp(estat) {
+  const ocupades = ocupacioRsvp(estat);
+  return Object.freeze({ aforament: estat.aforament, ocupades, disponibles: estat.aforament - ocupades, complet: ocupades === estat.aforament });
+}
+
+function resultatRsvp(estat, ok, codi) {
+  return Object.freeze({ ok, codi, estat });
+}
+
+function incrementaRevisioRsvp(estat) {
+  if (estat.revisio === Number.MAX_SAFE_INTEGER) throw new RangeError('Revisió RSVP esgotada');
+  return estat.revisio + 1;
+}
+
+/**
+ * Substituïx la resposta d'una persona: repetir-la no suma places. Cancel·lar
+ * o quedar pendent les allibera. Cada canvi requerix revisioEsperada.
+ *
+ * És una transició pura sobre UNA instantània. El servidor ha de persistir
+ * amb CAS/transacció de la revisió; dos clients sobre la mateixa instantània
+ * poden produir candidats vàlids i només un pot confirmar-se remotament.
+ */
+export function aplicaRsvp(estat, canvi = {}) {
+  const ocupades = ocupacioRsvp(estat);
+  const nova = respostaRsvp(canvi);
+  enterRsvp(canvi.revisioEsperada, 'Revisió esperada');
+  if (canvi.revisioEsperada !== estat.revisio) return resultatRsvp(estat, false, 'revisio-divergent');
+  const anterior = estat.respostes.find(resposta => resposta.idParticipant === nova.idParticipant);
+  if (anterior?.resposta === nova.resposta && anterior.places === nova.places) return resultatRsvp(estat, true, 'sense-canvis');
+  // Resta abans de sumar: cap producte o suma intermedi supera l'enter segur.
+  if (nova.places > estat.aforament - (ocupades - (anterior?.places ?? 0))) return resultatRsvp(estat, false, 'aforament-complet');
+  const respostes = estat.respostes.filter(resposta => resposta.idParticipant !== nova.idParticipant);
+  return resultatRsvp(creaEstatRsvp({ ...estat, respostes: [...respostes, nova], revisio: incrementaRevisioRsvp(estat) }), true, 'actualitzat');
+}
+
+/** Una reducció de capacitat no pot expulsar silenciosament reserves confirmades. */
+export function canviaAforamentRsvp(estat, { aforament, revisioEsperada } = {}) {
+  const ocupades = ocupacioRsvp(estat);
+  enterRsvp(aforament, 'Aforament');
+  enterRsvp(revisioEsperada, 'Revisió esperada');
+  if (revisioEsperada !== estat.revisio) return resultatRsvp(estat, false, 'revisio-divergent');
+  if (aforament < ocupades) return resultatRsvp(estat, false, 'aforament-inferior-ocupacio');
+  if (aforament === estat.aforament) return resultatRsvp(estat, true, 'sense-canvis');
+  return resultatRsvp(creaEstatRsvp({ ...estat, aforament, revisio: incrementaRevisioRsvp(estat) }), true, 'actualitzat');
 }

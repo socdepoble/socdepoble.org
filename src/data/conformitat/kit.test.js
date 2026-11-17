@@ -9,6 +9,28 @@ import { ambXatsPerDefecte } from '../xatsPerDefecte.js';
    adaptador real: els dobles d'ací són mínims a posta. */
 const cas = (metode, titol) => CASOS.find((c) => c.metode === metode && (!titol || c.titol.includes(titol)));
 
+describe('R32.5 · conformitat neutral de moderacioLssi', () => {
+  test.each(['registraDenunciaPublica', 'adminSafataDenuncies', 'adminRevisaDenuncia'])('%s: TypeError amb lssi-invalid és l’únic rebuig conforme; sense capacitat s’omet', async metode => {
+    const c = cas(metode);
+    const config = Object.freeze({ dataMode: 'remote', backendId: 'node-conformitat' });
+    const ctx = contextDeConformitat({ config });
+    expect(c).toMatchObject({ capacitat: 'moderacioLssi', espera: 'rebutja', escriu: false });
+    const correcta = async (...args) => {
+      expect(args).toEqual(c.arguments(ctx));
+      expect(args[1]).toBe(config);
+      throw Object.assign(new TypeError('Input LSSI invàlid'), { code: 'lssi-invalid' });
+    };
+    expect(await executaCas(c, { [metode]: correcta }, ctx)).toEqual({ estat: 'ok', falles: [], motiu: null });
+    for (const error of [new TypeError('sense code'), Object.assign(new Error('tipus incorrecte'), { code: 'lssi-invalid' }),
+      Object.assign(new TypeError('codi incorrecte'), { code: 'no-disponible' })]) {
+      expect(await executaCas(c, { [metode]: async () => { throw error; } }, ctx)).toMatchObject({ estat: 'falla' });
+    }
+    expect(await executaCas(c, { [metode]: async () => ({}) }, ctx)).toMatchObject({ estat: 'falla' });
+    expect(await executaCas(c, {}, ctx)).toEqual({ estat: 'omés', falles: [], motiu: 'capacitat moderacioLssi absent' });
+    expect(metodesSenseCas()).not.toContain(metode);
+  });
+});
+
 describe('FEDI-04 · administració multipoble neutral, opcional i sense lectures privilegiades per defecte', () => {
   const tenantId = '11111111-1111-4111-8111-111111111111';
   test('inputs invàlids rebutgen amb abast-invalid; ni una resolució ni un error sense codi passen', async () => {
@@ -826,11 +848,11 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
     return valors[c.metode];
   }
 
-  /* R24 · CODEX-R24-03 · 'consensIsoglosses' hi afig una capacitat i tres mètodes opcionals. */
-  test('cens exacte del contracte, 32 obligatòries i 130 opcionals; cap nom sense cas', () => {
+  /* R32.5 · moderacioLssi hi afig una capacitat i tres mètodes opcionals. */
+  test('cens exacte del contracte, 32 obligatòries i 133 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(56);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(130);
+    expect(Object.keys(CAPACITATS)).toHaveLength(57);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(133);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });

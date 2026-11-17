@@ -25,7 +25,7 @@
  *         gest (iOS només obri el selector de fitxers així).
  *       - El botó redó és un sol node que canvia de nom (el focus no cau):
  *         Grava àudio amb el camp buit, Atura mentre grava, Envia el fitxer
- *         amb un de preparat (el text es queda al camp) i Envia amb text.
+ *         amb un de preparat (foto/vídeo i text en un missatge) i Envia amb text.
  *       - El menú i el calaix d'emoticones no s'obrin mai alhora.
  *   · Xat de pàgina (T63.2, T67): amb `fil`, si no s'hi pot escriure (els
  *     Avisos per a qui no n'és administrador) el compositor dona pas a l'avís
@@ -206,7 +206,7 @@ export default function Compositor({
   const camp = (
     <Formulari
       valor={valor} onCanvia={onCanvia} onEnvia={onEnvia} t={t} desactivat={desactivat}
-      onEscapa={onEscapa} campRef={campRef} adjunts={adjunts}
+      onEscapa={onEscapa} campRef={campRef} adjunts={adjunts} filId={fil?.id}
     />
   );
   /* Sempre el mateix arbre (la barra pot ser null): si canviara de forma en
@@ -228,7 +228,7 @@ export default function Compositor({
   );
 }
 
-function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef, adjunts = null }) {
+function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef, adjunts = null, filId = null }) {
   const { mida } = useAppGrid();
   const estret = mida === 'estret';
   /* Pla 261022_1425 · Mòbil o tauleta: el calaix fa de teclat (la mida només
@@ -275,6 +275,20 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
   useEffect(() => { if (!obert) setAfegida(''); }, [obert]);
   const formulari = useRef(null);
   const camp = useRef(null);
+  /* Un ACK d'una foto només buida el mateix text del mateix context.
+     La revisió també recorda editar i desfer fins al valor inicial (ABA). */
+  const revisioCamp = useRef(0);
+  const muntat = useRef(true);
+  const clauContext = JSON.stringify([filId, adjunts?.clauContext ?? null]);
+  useLayoutEffect(() => { revisioCamp.current += 1; }, [valor, clauContext]);
+  useEffect(() => {
+    muntat.current = true;
+    return () => { muntat.current = false; revisioCamp.current += 1; };
+  }, []);
+  const canviaCamp = useCallback((text) => {
+    revisioCamp.current += 1;
+    onCanvia(text);
+  }, [onCanvia]);
   /* L'última selecció coneguda del camp ({ inici, fi }), o null: al final. */
   const seleccio = useRef(null);
   /* L'últim valor que ha eixit d'ací (escriure o una emoticona): un altre
@@ -473,8 +487,8 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
   /* Estable: escriure amb el calaix obert no torna a pintar les seues llistes
      (Persones en porta 2.430). Llig el valor de l'últim pintat. Torna false
      si l'emoticona no hi cap (el calaix no la posa a les recents). */
-  const actual = useRef({ valor, tactil, onCanvia, t });
-  useLayoutEffect(() => { actual.current = { valor, tactil, onCanvia, t }; });
+  const actual = useRef({ valor, tactil, onCanvia: canviaCamp, t, clauContext });
+  useLayoutEffect(() => { actual.current = { valor, tactil, onCanvia: canviaCamp, t, clauContext }; });
   const inserix = useCallback((glif, nom) => {
     const { valor: text, tactil: enTactil, onCanvia: canvia, t: tradueix } = actual.current;
     const node = camp.current;
@@ -556,7 +570,24 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
      micròfon ni envia una nota sense escoltar-la. Repetir la mateixa acció
      (reintentar l'enviament) sí. */
   const darreraAccio = useRef(null);
+  const executaAccio = (accio) => {
+    setSuperposicio(null);
+    const revisio = revisioCamp.current;
+    const resultat = accio.onClick({ text: valor });
+    if (accio.clau !== 'envia') return;
+    Promise.resolve(resultat).then((confirmacio) => {
+      if (!confirmacio?.enviat || confirmacio.textPrincipalInclos !== valor || !muntat.current
+        || revisioCamp.current !== revisio || actual.current.clauContext !== clauContext || actual.current.valor !== valor) return;
+      actual.current.onCanvia('');
+    }).catch(() => { /* ControlsAdjunt mostra l'error i conserva el fitxer i el text. */ });
+  };
   const envia = () => {
+    if (accio?.clau === 'envia') {
+      if (desactivat || accio.ariaDisabled) return;
+      darreraAccio.current = { clau: 'envia', temps: Date.now() };
+      executaAccio(accio);
+      return;
+    }
     if (buit || desactivat) return;
     const boto = botoEnvia.current;
     const desDelBoto = Boolean(boto) && boto.getRootNode?.().activeElement === boto;
@@ -579,7 +610,7 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     // Sense acció, el submit de sempre: envia() l'apunta.
     if (!accio || accio.ariaDisabled) return;
     darreraAccio.current = { clau, temps: Date.now() };
-    accio.onClick();
+    executaAccio(accio);
   };
 
   /* Gauntlet 261025_0545 (XU-06) · Mentre un IME compon (xinés, japonés,
@@ -763,7 +794,7 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
           onChange={(e) => {
             recordaSeleccio(e);
             valorPropi.current = e.target.value;
-            onCanvia(e.target.value);
+            canviaCamp(e.target.value);
           }}
           onSelect={recordaSeleccio}
           onBlur={(e) => { compon.current = false; recordaSeleccio(e); }}

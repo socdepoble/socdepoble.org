@@ -3,6 +3,7 @@ import { Link } from '../app/contexts/RouterContext.jsx';
 import { useSessioOpcional } from '../app/contexts/SessionContext.jsx';
 import { PageFrame } from '../components/universal/PageFrame.jsx';
 import { Boto } from '../components/PedraSeca/atoms/Boto.jsx';
+import { BandaBetaMicroApp } from '../components/PedraSeca/molecules/BandaBetaMicroApp.jsx';
 import { Camp, CampText, Casella, GrupCamps, Selector } from '../components/PedraSeca/organismes/formulari.jsx';
 import { useModeracio } from '../components/PedraSeca/hooks/moderacioDePoble.js';
 import { tradueix, useTraductorOpcional } from '../components/PedraSeca/hooks/useTraductorOpcional.js';
@@ -225,6 +226,7 @@ export default function AvisadorPage() {
   const tx = (parell) => tradueix(t, parell);
   return (
     <PageFrame title={tx(TX.titol)} subtitle={tx(TX.subtitol)} showConnect={false} showComment={false}>
+      <BandaBetaMicroApp />
       <p>{tx(TX.intro)}</p>
       <p>{tx(TX.limitacions)}</p>
       {xat.avisadorClau ? <FormulariAvisador key={xat.avisadorClau} clau={xat.avisadorClau} xat={xat} /> : null}

@@ -109,7 +109,10 @@ export function TargetesArticles({
   elements = [], categories = null, etiqueta, pla = false, nivellTargeta = 'h3', commutable = false, textos,
   onTria, onAccioSecundaria, renderMedia, plegades, onPlega, textArticles, buit = null,
   /* R21 · La llengua de la closca (useClosaAplicacio().idioma) per als marcadors honestos de la capçalera. */
-  idioma
+  idioma,
+  /* Onada R32.5 · T3-UI-02 (iaia-maria-core §11) · Els articles permanents d'inventari (Nevera / Rebost)
+     sense data ni caducitat ometen la pastilla «Data no indicada», conservant qualsevol data real. */
+  ometDataNoIndicada = false
 }) {
   const t = { ...TEXTOS_TARGETES, ...textos };
   const ambSeccions = Array.isArray(categories);
@@ -122,12 +125,19 @@ export function TargetesArticles({
     const propi = typeof renderMedia === 'function' ? renderMedia(article) : null;
     const icona = propi || iconaDelQuadrat(article.icona ?? categoria?.icona);
     const boina = boinaDe(article);
+    const dataReal = article.date ?? article.data ?? article.dataCaducitat ?? article.caducitat;
+    const creatReal = article.created_at ?? article.createdAt;
+    const encapcalament = encapcalamentDeTargeta(
+      { ...article, date: dataReal, created_at: creatReal },
+      { author: boina.nom, location: boina.poble, idioma }
+    );
     return (
       <UniversalCard
         key={article.id}
         variant={pla ? 'pla' : 'default'}
         headingLevel={ambSeccions ? 'h4' : nivellTargeta}
-        {...encapcalamentDeTargeta({ ...article, date: article.date ?? article.data, created_at: article.created_at ?? article.createdAt }, { author: boina.nom, location: boina.poble, idioma })}
+        {...encapcalament}
+        {...(ometDataNoIndicada ? { showDateTime: Boolean(dataReal || creatReal) } : null)}
         authorHref={boina.href}
         avatarUrl={boina.avatar}
         title={article.nom}
@@ -207,7 +217,8 @@ export function ColumnaCataleg({
   /* Ordre del Mestre, 261004 · 'targetes': UniversalCard (TargetesArticles). Sense, les rajoles i les files de sempre. */
   forma,
   /* Correcció F3 (261006) · L'avís de l'app, dins del marc (MarcColumna). Sense, el de sempre. */
-  avis = null
+  avis = null,
+  ometDataNoIndicada = false
 }) {
   const t = { ...TEXTOS_CATALEG, ...textos };
   const { mida, idioma } = useClosaAplicacio();
@@ -325,6 +336,7 @@ export function ColumnaCataleg({
       ) : ambTargetes ? (
         <TargetesArticles
           idioma={idioma}
+          ometDataNoIndicada={ometDataNoIndicada}
           elements={articlesCos.map((article, i) => ({ article, categoria: perId.get(propis[i]?.categoriaId) || null }))}
           categories={categoriesCos}
           etiqueta={titol}

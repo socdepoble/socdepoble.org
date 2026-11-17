@@ -122,6 +122,12 @@
       "despres": "20261117150000",
       "motiu": "R32.4 (NO aplicada; l’aplica el Mestre): l’ampliació del paquet de copublicació amb /page/sistema-nervios afig una fila a private.recursos_copublicacio_paquet, que crea 2611111735. Per ordre alfabètic cru, 20261117150000 aniria abans de tot el catàleg de deu dígits.",
       "font": "README, vinyeta de 20261117150000; capçalera de 20261117150000 i de 2611111735"
+    },
+    {
+      "abans": "2611122200",
+      "despres": "20261117140000",
+      "motiu": "R32.5 (NO aplicada; l’aplica el Mestre): la safata i la revisió LSSI reutilitzen public.denuncia_publicacio_mur (2611122200), public.denuncies amb la seua quota (2610201500) i van darrere dels definers amb search_path buit de 20261116040000. Per ordre alfabètic cru, 20261117140000 aniria abans de tot el catàleg de deu dígits.",
+      "font": "README, vinyeta de 20261117140000 i pas 20 de la seqüència; capçalera de 20261117140000"
     }
   ],
   "portes": [

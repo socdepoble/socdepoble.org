@@ -1,0 +1,45 @@
+/* Full diferit (Onada R32.5 · P0-112 / T3-UI-03): les regles de la banda de fase beta (.sdp-banda-beta)
+   només les pinta BandaBetaMicroApp.jsx, dins de trossos diferits (RutaApps, AvisadorPage i /disseny).
+   No viatgen a l'arrencada del paquet de WordPress: s'adopten a l'arrel on es munta la peça
+   (src/config/fullDiferit.js), com els fulls de l'Onada R28. NO s'importa des d'index.css. */
+@layer components {
+  /* Onada R32.5 (P0-112 / T3-UI-03) · Banda universal serena per a la capçalera
+     de les micro-apps en fase Beta (Gestoria, El Bar, Nevera, Salut, Genealogia,
+     Lector, Avisador). Tokens semàntics d'avís (contrast AAA en clar, fosc i Bancal),
+     zero ombres i embolicament complet a qualsevol amplària >= 320px. */
+  .sdp-banda-beta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    box-sizing: border-box;
+    inline-size: 100%;
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-block-end: 1px solid var(--sdp-vora);
+    background: var(--sdp-avis-fons);
+    color: var(--sdp-avis-text);
+  }
+  .sdp-banda-beta__text {
+    margin: 0;
+    max-inline-size: 80ch;
+    font-size: var(--sdp-text-meta);
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  /* v1.2.7 · R325-03 · En estret la banda feia 101 px a 320 px i 80 px a 375 px en cada vista de les
+     apps, i escurçava les llistes. Es compacta sense amagar ni retallar cap paraula (WCAG 1.4.10): coixí
+     de 4 px a dalt i a baix i de 8 px als costats, i l'interlineat 1,3 de la fitxa del gestor (modules.css:
+     amb Noto Sans no es menja la cua de la «ç»). Mesurat amb Chrome: 82 px a 320 px i 64 px de 375 a
+     414 px (82 px en es i gl a 375). A ≥ 768 px no canvia res. */
+  @media (max-width: 767.98px) {
+    .sdp-banda-beta {
+      padding: var(--sdp-space-1) var(--sdp-space-2);
+    }
+    .sdp-banda-beta__text {
+      line-height: 1.3;
+    }
+  }
+}

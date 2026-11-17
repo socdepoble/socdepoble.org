@@ -436,6 +436,10 @@ const EXCEPCIONS_ORFE = {
   'src/components/patrimoni/anatomiaRuralGeometria.js': 'geometria del visor general d’Anatomia Rural: només la importa VisorAnatomiaRural3D.jsx, despenjat · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
   'src/data/patrimoni/anatomiaRural.js': 'dades del visor general d’Anatomia Rural: només les importa VisorAnatomiaRural3D.jsx, despenjat (i les proves del Pou i de l’article del Mur) · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
   'src/data/revisionsEditorialsWpMemoria.js': 'adaptador en memòria del kit de conformitat per a les revisions editorials de WordPress (P0-111, R18)',
+  /* Onada v1.2.7 · Kit R32.5 de Codex: dos motors purs, provats, sense consumidor
+     de producció a posta. Es retiren quan es connecten o s'esborren. */
+  'src/sections/gestoria/historic/nucli/resumAnualGestoria.js': 'resum anual de la Gestoria en cèntims BigInt amb exportació JSON/CSV (kit R32.5 de Codex, P0-112 / IDEA-285): motor pur sense UI encara; el cobrix resumAnualGestoria.test.js · integrat a l’Onada v1.2.7 · revisió del Mestre pendent (connectar a la Gestoria o esborrar)',
+  'src/utils/mapaRedireccions301.js': 'validador del mapa 301 de WordPress/Blogger (kit R32.5 de Codex, P0-115): el carrega tooling/seo/verifica-mapa-301.mjs, fora del paquet del navegador a posta; el cobrix mapaRedireccions301.test.js · integrat a l’Onada v1.2.7 · revisió del Mestre pendent',
 };
 /* Decisió del Mestre (30-10-2026) · Una fixture (dins de __fixtures__/) que una
    prova importa és part de la prova, amb el criteri de la línia de les proves.

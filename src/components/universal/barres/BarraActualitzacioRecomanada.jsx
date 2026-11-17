@@ -10,15 +10,21 @@
  *     totes les àrees tàctils ≥ 48 px (`var(--sdp-touch)`), amb botons centrats.
  *   · Presentacional amb `mostra` (per al catàleg `/disseny` i proves aïllades)
  *     o connectat al registre reactiu `useActualitzacioRecomanada` dins d'`App.jsx`.
- *   · En web, PWA o quan l'app ja està al dia, retorna `null` (zero node al DOM).
+ *   · Sense avís (l'app o la web ja estan al dia), retorna `null` (zero node al DOM).
+ *   · Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · Els canals de proves i la web:
+ *     `canal` 'testflight' (iOS) obri TestFlight; 'apk' (Android, instal·lació directa) baixa l'APK
+ *     signat i diu la seua SHA-256 sencera; 'web' (la PWA) carrega la versió nova. Els textos
+ *     d'estos canals, a textosActualitzacio.js (cinc llengües, fora de l'arrencada).
  */
 import { ArrowUpRight, RefreshCw, X } from 'lucide-react';
 import { useUIActionsOpcional } from '../../../app/contexts/UIContext';
 import {
+  CANALS_ACTUALITZACIO,
   descartaActualitzacioRecomanada,
   obriBotigaActualitzacio,
   useActualitzacioRecomanada
 } from '../../../config/actualitzacioRecomanada.js';
+import { textosActualitzacio } from './textosActualitzacio.js';
 
 function traductorSegur(tProp, tContext) {
   if (typeof tProp === 'function') return tProp;
@@ -30,7 +36,8 @@ export default function BarraActualitzacioRecomanada({
   mostra = undefined,
   onActualitza = null,
   onDescarta = null,
-  t: tProp = null
+  t: tProp = null,
+  llengua = null
 }) {
   const ui = useUIActionsOpcional();
   const delRegistre = useActualitzacioRecomanada();
@@ -40,20 +47,36 @@ export default function BarraActualitzacioRecomanada({
   if (!avis) return null;
 
   const esIos = avis.plataforma === 'ios';
+  const canal = avis.canal ?? null;
+  const textos = textosActualitzacio(llengua ?? ui?.language);
   const etiquetaRegio = t('natiu.actualitzacioRecomanada.regio', 'Actualització disponible de l’aplicació');
   const titol = t('natiu.actualitzacioRecomanada.titol', 'Hi ha una nova versió disponible de Sóc de Poble.');
-  const detall = esIos
-    ? t(
+  let detall;
+  let etiquetaBoto;
+  if (canal === CANALS_ACTUALITZACIO.TESTFLIGHT) {
+    detall = textos.detallTestflight;
+    etiquetaBoto = textos.accioTestflight;
+  } else if (canal === CANALS_ACTUALITZACIO.APK) {
+    detall = textos.detallApk;
+    etiquetaBoto = textos.accioApk;
+  } else if (canal === CANALS_ACTUALITZACIO.WEB) {
+    detall = textos.detallWeb.replace('{versio}', String(avis.versio ?? ''));
+    etiquetaBoto = textos.accioWeb;
+  } else if (esIos) {
+    detall = t(
       'natiu.actualitzacioRecomanada.detallIos',
       'Pots continuar usant l’aplicació ara i actualitzar-la des de l’App Store quan et vinga bé.'
-    )
-    : t(
+    );
+    etiquetaBoto = t('natiu.actualitzacioRecomanada.accioIos', 'Actualitza a l’App Store');
+  } else {
+    detall = t(
       'natiu.actualitzacioRecomanada.detallAndroid',
       'Pots continuar usant l’aplicació ara i actualitzar-la des de Google Play quan et vinga bé.'
     );
-  const etiquetaBoto = esIos
-    ? t('natiu.actualitzacioRecomanada.accioIos', 'Actualitza a l’App Store')
-    : t('natiu.actualitzacioRecomanada.accioAndroid', 'Actualitza a Google Play');
+    etiquetaBoto = t('natiu.actualitzacioRecomanada.accioAndroid', 'Actualitza a Google Play');
+  }
+  /* L'APK porta la seua suma, sencera: una de retallada no es pot comprovar. */
+  const suma = canal === CANALS_ACTUALITZACIO.APK && typeof avis.sha256 === 'string' ? avis.sha256 : null;
   const etiquetaMesTard = t('natiu.actualitzacioRecomanada.mesTard', 'Més tard');
   /* Auditoria del kit de Gemini R22 · WCAG 2.5.3: el nom accessible comença
      pel text visible («Més tard») i després diu què amaga. */
@@ -81,6 +104,7 @@ export default function BarraActualitzacioRecomanada({
       role="region"
       aria-label={etiquetaRegio}
       data-plataforma={avis.plataforma}
+      {...(canal ? { 'data-canal': canal } : null)}
     >
       <div className="sdp-barra-actualitzacio__missatge">
         <span className="sdp-barra-actualitzacio__icona" aria-hidden="true">
@@ -90,6 +114,12 @@ export default function BarraActualitzacioRecomanada({
           <strong className="sdp-barra-actualitzacio__titol">{titol}</strong>
           {' '}
           <span className="sdp-barra-actualitzacio__detall">{detall}</span>
+          {suma ? (
+            <>
+              {' '}
+              <code className="sdp-barra-actualitzacio__detall" translate="no">{suma}</code>
+            </>
+          ) : null}
         </p>
       </div>
       <div className="sdp-barra-actualitzacio__accions">

@@ -81,6 +81,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'retroalimentacio/connexio': lazyRoute(() => import('./detalls/EspecimenConnexio.jsx')),
   /* Onada R22 · T2 · Bàner superior no bloquejant d'actualització viva a les apps natives. */
   'retroalimentacio/barra-actualitzacio-app': lazyRoute(() => import('./detalls/EspecimenBarraActualitzacioApp.jsx')),
+  /* Onada R32.5 · P0-112 / T3-UI-03 · Banda superior serena de fase beta i avís No Verifactu en 5 llengües. */
+  'retroalimentacio/banda-beta-micro-app': lazyRoute(() => import('./detalls/EspecimenBandaBetaMicroApp.jsx')),
   /* T43 (ordre del Mestre, 260928) · identitat activa i administrar organitzacions. */
   'fonaments/identitat': lazyRoute(() => import('./detalls/EspecimenIdentitat.jsx')),
   'superposicions/dialeg': lazyRoute(() => import('./detalls/EspecimenDialeg.jsx')),

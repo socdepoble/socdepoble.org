@@ -286,19 +286,32 @@ function pintaBombolles(missatges, props = {}) {
   );
 }
 
-describe('xat-02, xat-09 i workspace-07 · la cara del grup', () => {
+describe('xat-02, xat-09 i workspace-07 + R32.6 (P0-120) · la cara clicable sense duplicació al lector', () => {
   const PEPA = Object.freeze({ id: 'm-pepa', sender: 'other', author: 'Pepa', usuariId: 'u-pepa', text: 'Bon dia', creatAl: '2026-11-12T08:00:00Z' });
 
-  test('és decorativa: no repetix el nom al lector i no és cap enllaç; el nom continua portant al perfil', () => {
+  test('als grups és un enllaç clicable al perfil amb tabIndex=-1 i aria-hidden perquè no repetisca el nom al lector ni duplique el Tab; en 1:1 aporta el nom accessible', () => {
     const { container } = pintaBombolles([PEPA]);
     const item = container.querySelector('li.sdp-xat-item');
     const cara = item.querySelector('.sdp-xat-bombolla__cara');
-    expect(cara.tagName).toBe('SPAN');
-    expect(cara.closest('a')).toBeNull();
-    expect(cara.querySelector('a')).toBeNull();
+    expect(cara.tagName).toBe('A');
+    expect(cara.getAttribute('href')).toBe('/gent/u-pepa');
+    expect(cara.getAttribute('tabindex')).toBe('-1');
+    expect(cara.getAttribute('aria-hidden')).toBe('true');
     expect(cara.querySelector('.sdp-nomes-lector')).toBeNull();
     expect(within(item).getAllByText('Pepa')).toHaveLength(1);
     expect(within(item).getByRole('link', { name: /Pepa/ })).toBeTruthy();
+    cleanup();
+
+    const directe = render(
+      <MemoryRouter>
+        <ol><Bombolla missatge={PEPA} esGrup={false} primerDelGrup t={t} /></ol>
+      </MemoryRouter>
+    );
+    const caraDirecta = directe.container.querySelector('.sdp-xat-bombolla__cara');
+    expect(caraDirecta.tagName).toBe('A');
+    expect(caraDirecta.getAttribute('href')).toBe('/gent/u-pepa');
+    expect(caraDirecta.hasAttribute('aria-hidden')).toBe(false);
+    expect(screen.getByRole('link', { name: 'Obri el perfil de Pepa' })).toBe(caraDirecta);
   });
 
   test('pinta la foto que li dona la conversa (caraAutor → src de CaraXat), sense text alternatiu', () => {

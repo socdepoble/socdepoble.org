@@ -474,6 +474,23 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
     expect(llig(APP, 'ControladorSdp.swift')).toContain('registerPluginInstance(CompartirNatiuPlugin())');
   });
 
+  /* v1.2.7 · P0-123 · D'on ve l'App (TestFlight o l'App Store): el connector viu a ControladorSdp.swift,
+     que ja és del target App (cap fitxer nou al projecte), es registra amb CompartirNatiuPlugin i només
+     llig el NOM del rebut (sense xarxa, sense StoreKit); el classifica src/natiu/origenInstallacio.js. */
+  test('ControladorSdp.swift: OrigenInstallacioPlugin («OrigenInstallacio».consulta) torna el nom del rebut i es registra', () => {
+    const codi = senseComentarisSwift(llig(APP, 'ControladorSdp.swift'));
+    const carrega = cosDe(codi, 'override open func capacitorDidLoad()');
+    expect(carrega).toContain('bridge?.registerPluginInstance(CompartirNatiuPlugin())');
+    expect(carrega).toContain('bridge?.registerPluginInstance(OrigenInstallacioPlugin())');
+    expect(codi).toContain('public let jsName = "OrigenInstallacio"');
+    expect(codi).toMatch(/CAPPluginMethod\(name: "consulta", returnType: CAPPluginReturnPromise\)/);
+    const consulta = cosDe(codi, '@objc func consulta(');
+    expect(consulta).toContain('Bundle.main.appStoreReceiptURL?.lastPathComponent ?? ""');
+    expect(consulta).toMatch(/call\.resolve\(\["llegit": true, "rebut": rebut\]\)/);
+    expect(codi).not.toMatch(/import StoreKit|AppTransaction|URLSession/);
+    expect(llig(PROJECTE, 'project.pbxproj')).not.toContain('OrigenInstallacio');
+  });
+
   /* 261026 (prompt 261026_1615, revisió) · Que el projecte porte la fase i la
      dependència no basta: han de ser del target App. Una fase de còpia solta, o
      penjada d'un altre target, compila igual i l'App ix sense l'extensió. */

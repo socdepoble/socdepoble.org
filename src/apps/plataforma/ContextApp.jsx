@@ -77,12 +77,14 @@ export function useSessioDeLEntorn() {
  * com { noticies }, o null. Van en un context propi; l'app els llig amb un
  * ganxo pur de l'API pública (useServeiNoticies) i mai en veu l'origen.
  */
-export function ProveidorApp({ manifest, fontSessio = null, serveis = null, children }) {
+export function ProveidorApp({ manifest, fontSessio = null, serveis = null, idioma = 'ca', children }) {
+  const llengua = typeof idioma === 'string' && idioma ? idioma : 'ca';
   const valor = useMemo(() => Object.freeze({
     manifest,
     base: rutaDeApp(manifest.id),
-    ruta: (...trams) => rutaDeApp(manifest.id, ...trams)
-  }), [manifest]);
+    ruta: (...trams) => rutaDeApp(manifest.id, ...trams),
+    idioma: llengua
+  }), [manifest, llengua]);
   const font = typeof fontSessio === 'function' ? fontSessio : null;
   const delsServeis = serveis !== null && typeof serveis === 'object' ? serveis : null;
   return (

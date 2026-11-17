@@ -831,11 +831,11 @@ describe('la factura en tres preguntes (Prompt 261014_1605, G1)', RECORREGUT, ()
     // On es guarden de veres: el llibre i el perfil són a l'IndexedDB d'este navegador (portIndexedDB, magatzemPerfil).
     expect(screen.getByText('Factura des d’este ordinador, amb connexió o sense. Les factures i les dades de l’empresa es guarden en este '
       + 'navegador, i no ixen d’ací.')).toBeTruthy();
-    const tecnics = desplegable('Detalls tècnics (Veri*Factu i AEAT)');
+    const tecnics = desplegable('Detalls tècnics (cadena local i AEAT — no Verifactu)');
     expect(tecnics.open).toBe(false);
-    expect(within(tecnics).getByText(/^Cada factura entra al llibre Veri\*Factu encadenada a l’anterior/)).toBeTruthy();
-    expect(within(tecnics).getByText('L’enviament a l’AEAT encara no està fet: el llibre el tindrà preparat.')).toBeTruthy();
-    fireEvent.click(within(tecnics).getByText('Detalls tècnics (Veri*Factu i AEAT)'));
+    expect(within(tecnics).getByText(/^Cada esborrany de factura entra al registre local encadenat a l’anterior/)).toBeTruthy();
+    expect(within(tecnics).getByText('L’enviament a l’AEAT encara no està fet: este registre en proves no és cap sistema Verifactu homologat.')).toBeTruthy();
+    fireEvent.click(within(tecnics).getByText('Detalls tècnics (cadena local i AEAT — no Verifactu)'));
     expect(tecnics.open).toBe(true);
 
     await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));

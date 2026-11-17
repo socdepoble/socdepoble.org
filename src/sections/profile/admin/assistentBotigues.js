@@ -38,11 +38,11 @@ const PUSH_NATIU_ACTIU = import.meta.env.VITE_SDP_PUSH_NATIU === '1';
 
 /** El que diuen els fitxers del projecte (assistentBotigues.test.js ho contrasta). */
 export const FITXA_NATIVA = Object.freeze({
-  versioWeb: '1.2.6',
+  versioWeb: '1.2.7',
   paquet: 'org.socdepoble.app',
   extensioCompartir: 'org.socdepoble.app.compartir',
-  versio: '1.2.6',
-  build: 11,
+  versio: '1.2.7',
+  build: 12,
   iosMinim: '16.0',
   minSdk: 24,
   compileSdk: 36,

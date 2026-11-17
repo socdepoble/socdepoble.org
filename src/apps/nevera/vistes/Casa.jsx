@@ -48,6 +48,7 @@ export function ColumnaACasa({ params }) {
   return (
     <ColumnaCataleg
       forma="targetes"
+      ometDataNoIndicada
       titol="A casa"
       categories={seccionsDe(estat, llista.id, { totesVisibles: true })}
       articles={articles}

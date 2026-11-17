@@ -278,7 +278,7 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
     titolTornadaAjustos={labels?.items || null}
     className="sdp-cataleg-workspace"
     listClassName={`sdp-cataleg-workspace__${vista}${vista === 'gran' ? ' sdp-cataleg-workspace__llista' : ''}`}
-    accionsLlista={[
+    accionsSubcapcalera={[
       { id: 'canonica', etiqueta: textos.canonica, pressed: vista === 'canonica', icona: List, onAcciona: () => setVista('canonica'), className: 'sdp-cataleg-workspace__commutador' },
       { id: 'gran', etiqueta: textos.gran, pressed: vista === 'gran', icona: Rows3, onAcciona: () => setVista('gran'), className: 'sdp-cataleg-workspace__commutador' },
       { id: 'rajola', etiqueta: textos.rajola, pressed: vista === 'rajola', icona: LayoutGrid, onAcciona: () => setVista('rajola'), className: 'sdp-cataleg-workspace__commutador' }

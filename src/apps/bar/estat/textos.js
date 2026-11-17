@@ -5,40 +5,63 @@
  * de negoci, cap clau, cap pila.
  *
  * També l'avís de la sessió (avisDeSessio): per què el Bar ven o no ven ara.
+ *
+ * Onada R32.5 · Internacionalització en les 5 llengües (ca, es, en, eu, gl)
+ * conservant el valencià per defecte.
  */
-const TEXTOS = Object.freeze({
-  SENSE_PERMIS: 'No tens permís per a fer-ho: no s’ha desat res.',
-  SENSE_TORN: 'Cal obrir el torn abans de vendre.',
-  TORN_OBERT: 'Ja hi ha un torn obert.',
-  TORN_TANCAT: 'Este torn ja està tancat.',
-  TRASPAS_NO_LLEGIT: 'Primer cal llegir la nota de traspàs del torn anterior.',
-  OBERTES_SENSE_TRASPAS: 'Hi ha comandes obertes que no passen al torn següent.',
-  OBERTA_AMB_PAGAMENTS: 'Hi ha comandes obertes amb pagaments: acaba de cobrar-les abans de tancar el torn.',
-  NO_OBERTA: 'Esta comanda ja no està oberta.',
-  NO_TROBADA: 'No l’hem trobada: potser ja s’ha tancat.',
-  CONFLICTE: 'Les dades del Bar han canviat. Revisa la caixa abans de tornar a provar-ho.',
-  JA_TANCAT: 'Este tiquet ja està tancat i no es pot reescriure.',
-  SENSE_MOTIU: 'Cal dir el motiu.',
-  MARXADA: 'Esta línia ja ha marxat: per a llevar-ne, cal anul·lar-la amb motiu.',
-  NOVA: 'Esta línia encara no ha marxat: es pot llevar sense motiu.',
-  PAGAT_SUPERA: 'Ja s’ha cobrat més del que quedaria.',
-  PASSA_PENDENT: 'No es pot cobrar més del que falta.',
-  LLIURAT_INSUFICIENT: 'El que s’ha lliurat no arriba a l’import.',
-  PENDENT: 'Encara falta cobrar una part.',
-  BUIDA: 'La comanda és buida.',
-  DEVOLUCIO_MASSA: 'No es pot tornar més del que es va vendre.',
-  QUANTITAT: 'Eixa quantitat no es pot fer servir.',
-  DESCOMPTE: 'Eixe descompte no es pot aplicar.',
-  PREU: 'Este producte necessita el preu.',
-  NOMES_LECTURA: 'Una altra pestanya està fent de caixa: esta només pot mirar.',
-  BLOQUEJAT: 'Una altra pestanya té oberta una versió anterior: tanca-la per a continuar.',
-  VERSIO_ANTIGA: 'Hi ha una versió nova en una altra pestanya: recarrega la pàgina.',
-  NO_DISPONIBLE: 'Les dades del dispositiu han deixat de respondre: recarrega la pàgina abans de continuar.',
-  CARREGANT: 'Encara s’està carregant.',
-  OCUPAT: 'Tanca el torn i les comandes obertes abans de canviar la carta.',
-  LLAVOR: 'Esta carta no existix.',
-  COPIA_INVALIDA: 'El fitxer no és una còpia vàlida del Bar.',
-  DISPOSITIU_OCUPAT: 'Per a restaurar la còpia cal un navegador que encara no tinga dades del Bar.'
+import { codiIdiomaBar, textosErrorsBar, textosUiBar } from '../i18nBar.js';
+
+const TEXTOS_MIG = Object.freeze({
+  ca: Object.freeze({
+    titol: 'Un moviment s’ha quedat a mitges',
+    errorTitol: 'No s’han pogut comprovar els moviments',
+    errorText: 'No s’ha pogut mirar si algun moviment entre comandes s’ha quedat a mitges. Revisa les comandes obertes abans de cobrar: alguna línia podria estar dues vegades.',
+    linia: 'La línia',
+    linies: 'Les línies',
+    origenCobrat: (quines, origen, desti) => `${quines}: ja s’han cobrat a «${origen}» i encara són a «${desti}». Revisa-la abans de cobrar: estes línies poden estar dues vegades. Si sobren, lleva-les de «${desti}».`,
+    destiCobrat: (quines, origen, desti) => `${quines}: ja s’han cobrat a «${desti}» i encara són a «${origen}». Revisa-la abans de cobrar: estes línies poden estar dues vegades. Si sobren, lleva-les de «${origen}».`,
+    duplicat: (quines, origen, desti) => `${quines}: són a «${origen}» i també a «${desti}». Revisa-les abans de cobrar: estes línies poden estar dues vegades. Lleva-les de la comanda on sobren; no tornes a fer el moviment.`
+  }),
+  es: Object.freeze({
+    titol: 'Un movimiento se ha quedado a medias',
+    errorTitol: 'No se han podido comprobar los movimientos',
+    errorText: 'No se ha podido comprobar si algún movimiento entre comandas se ha quedado a medias. Revisa las comandas abiertas antes de cobrar: alguna línea podría estar duplicada.',
+    linia: 'La línea',
+    linies: 'Las líneas',
+    origenCobrat: (quines, origen, desti) => `${quines}: ya se han cobrado en «${origen}» y aún siguen en «${desti}». Revísala antes de cobrar: estas líneas pueden estar duplicadas. Si sobran, quítalas de «${desti}».`,
+    destiCobrat: (quines, origen, desti) => `${quines}: ya se han cobrado en «${desti}» y aún siguen en «${origen}». Revísala antes de cobrar: estas líneas pueden estar duplicadas. Si sobran, quítalas de «${origen}».`,
+    duplicat: (quines, origen, desti) => `${quines}: están en «${origen}» y también en «${desti}». Revísalas antes de cobrar: estas líneas pueden estar duplicadas. Quítalas de la comanda donde sobren; no repitas el movimiento.`
+  }),
+  en: Object.freeze({
+    titol: 'A transfer was left incomplete',
+    errorTitol: 'Could not verify order transfers',
+    errorText: 'Could not check whether a transfer between orders was left incomplete. Review open orders before charging: an item might be listed twice.',
+    linia: 'Line',
+    linies: 'Lines',
+    origenCobrat: (quines, origen, desti) => `${quines}: already paid in “${origen}” and still present in “${desti}”. Review before charging: remove duplicates from “${desti}” if needed.`,
+    destiCobrat: (quines, origen, desti) => `${quines}: already paid in “${desti}” and still present in “${origen}”. Review before charging: remove duplicates from “${origen}” if needed.`,
+    duplicat: (quines, origen, desti) => `${quines}: present in both “${origen}” and “${desti}”. Review before charging and remove from the extra order without repeating the transfer.`
+  }),
+  eu: Object.freeze({
+    titol: 'Mugimendu bat erdibidean geratu da',
+    errorTitol: 'Ezin izan dira mugimenduak egiaztatu',
+    errorText: 'Ezin izan da begiratu eskaeren arteko mugimenduren bat erdibidean geratu den. Berrikusi eskaera irekiak kobratu aurretik: lerroren bat bikoiztuta egon liteke.',
+    linia: 'Lerroa',
+    linies: 'Lerroak',
+    origenCobrat: (quines, origen, desti) => `${quines}: dagoeneko «${origen}» eskaeran kobratu dira eta oraindik «${desti}» eskaeran daude. Berrikusi kobratu aurretik eta kendu «${desti}» eskaeratik soberan badaude.`,
+    destiCobrat: (quines, origen, desti) => `${quines}: dagoeneko «${desti}» eskaeran kobratu dira eta oraindik «${origen}» eskaeran daude. Berrikusi kobratu aurretik eta kendu «${origen}» eskaeratik soberan badaude.`,
+    duplicat: (quines, origen, desti) => `${quines}: «${origen}» eta «${desti}» eskaeretan daude. Berrikusi kobratu aurretik eta kendu soberan dauden eskaeratik.`
+  }),
+  gl: Object.freeze({
+    titol: 'Un movemento quedou a medias',
+    errorTitol: 'Non se puideron comprobar os movementos',
+    errorText: 'Non se puido mirar se algún movemento entre comandas quedou a medias. Revisa as comandas abertas antes de cobrar: algunha liña podería estar dúas veces.',
+    linia: 'A liña',
+    linies: 'As liñas',
+    origenCobrat: (quines, origen, desti) => `${quines}: xa se cobraron en «${origen}» e aínda están en «${desti}». Revísaa antes de cobrar: se sobran, quítaas de «${desti}».`,
+    destiCobrat: (quines, origen, desti) => `${quines}: xa se cobraron en «${desti}» e aínda están en «${origen}». Revísaa antes de cobrar: se sobran, quítaas de «${origen}».`,
+    duplicat: (quines, origen, desti) => `${quines}: están en «${origen}» e tamén en «${desti}». Revísaas antes de cobrar e quítaas da comanda onde sobren.`
+  })
 });
 
 /**
@@ -48,57 +71,51 @@ const TEXTOS = Object.freeze({
  * «Barra · 10:00», «Nota 0004»); el posa la vista. Res no s'arregla sol.
  * @returns {{ titol: string, text: string }}
  */
-export function avisMigMoviment(mig, nomDe) {
-  const titol = 'Un moviment s’ha quedat a mitges';
+export function avisMigMoviment(mig, nomDe, idioma = 'ca') {
+  const m = TEXTOS_MIG[codiIdiomaBar(idioma)];
   if (!mig || mig.motiu === 'ERROR') {
-    return { titol: 'No s’han pogut comprovar els moviments', text: 'No s’ha pogut mirar si algun moviment entre comandes s’ha quedat a mitges. Revisa les comandes obertes abans de cobrar: alguna línia podria estar dues vegades.' };
+    return { titol: m.errorTitol, text: m.errorText };
   }
   const linies = mig.linies.map((l) => `${l.quantitat} × ${l.nom}`).join(', ');
-  const quines = `${mig.linies.length === 1 && mig.linies[0].quantitat === 1 ? 'La línia' : 'Les línies'} ${linies}`;
+  const quines = `${mig.linies.length === 1 && mig.linies[0].quantitat === 1 ? m.linia : m.linies} ${linies}`;
   const origen = nomDe(mig.origen);
   const desti = nomDe(mig.desti);
   if (mig.motiu === 'ORIGEN_COBRAT') {
-    return { titol, text: `${quines}: ja s’han cobrat a «${origen}» i encara són a «${desti}». Revisa-la abans de cobrar: estes línies poden estar dues vegades. Si sobren, lleva-les de «${desti}».` };
+    return { titol: m.titol, text: m.origenCobrat(quines, origen, desti) };
   }
   if (mig.motiu === 'DESTI_COBRAT') {
-    return { titol, text: `${quines}: ja s’han cobrat a «${desti}» i encara són a «${origen}». Revisa-la abans de cobrar: estes línies poden estar dues vegades. Si sobren, lleva-les de «${origen}».` };
+    return { titol: m.titol, text: m.destiCobrat(quines, origen, desti) };
   }
-  return { titol, text: `${quines}: són a «${origen}» i també a «${desti}». Revisa-les abans de cobrar: estes línies poden estar dues vegades. Lleva-les de la comanda on sobren; no tornes a fer el moviment.` };
+  return { titol: m.titol, text: m.duplicat(quines, origen, desti) };
 }
 
-export function textError(error) {
+export function textError(error, idioma = 'ca') {
+  const dic = textosErrorsBar(idioma);
   const codi = error?.codi;
-  if (codi && Object.hasOwn(TEXTOS, codi)) return TEXTOS[codi];
-  return 'No s’ha pogut fer. Torna a provar-ho.';
+  if (codi && Object.hasOwn(dic, codi) && codi !== 'GENERIC') return dic[codi];
+  return dic.GENERIC;
 }
 
 /* Un avís per motiu del pont de sessió (useSessioApp, MOTIUS). `entra`: porta
    el botó «Entra» (rutaEntrada). 'sessio' i 'lliure' no en tenen: en línia no
    cal dir res. 'comprovant-desada' diu el mateix que 'comprovant', però el
-   Bar ven: el servidor comprova una sessió desada que encara no ha caigut. */
-const COMPROVANT = Object.freeze({ to: 'info', text: 'Comprovant la sessió…', entra: false });
-const AVISOS_SESSIO = Object.freeze({
-  'sense-sessio': Object.freeze({ to: 'avis', text: 'Entra per a vendre.', entra: true }),
-  comprovant: COMPROVANT,
-  'comprovant-desada': COMPROVANT,
-  'sense-permis': Object.freeze({ to: 'avis', text: 'Esta sessió no pot vendre.', entra: false }),
-  'mode-proves': Object.freeze({ to: 'info', text: 'Mode de proves: les vendes no estan lligades a cap compte.', entra: false }),
-  'fora-de-linia': Object.freeze({
-    to: 'info', text: 'Sense connexió: cada venda es desa en este dispositiu. La sessió es comprovarà quan torne la xarxa.', entra: false
-  })
-});
-
-/* Amb sessió (o en una app lliure) però sense xarxa. */
-const SENSE_CONNEXIO = Object.freeze({ to: 'info', text: 'Sense connexió: cada venda es desa en este dispositiu.', entra: false });
+   Bar ven: el servidor comprova una sessió desada que encara no ha caigut.
+   Onada R32.5 · Els textos de cada motiu viuen a i18nBar.js (textosUiBar), en les 5 llengües. */
 
 /**
  * L'avís de la sessió del Bar a partir del permís de l'estat (ProveidorBar,
  * `permis`: { potEscriure, motiu, enLinia, modeProves, rutaEntrada }):
  * { to, text, entra } o null si no cal dir res ('sessio' o 'lliure' en línia).
- * Un sol avís: el motiu ja diu el més important.
+ * Un sol avís: el motiu ja diu el més important. Amb sessió (o en una app
+ * lliure) però sense xarxa, l'avís de «Sense connexió».
  */
-export function avisDeSessio(permis) {
+export function avisDeSessio(permis, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
   const motiu = permis?.motiu;
-  if (typeof motiu === 'string' && Object.hasOwn(AVISOS_SESSIO, motiu)) return AVISOS_SESSIO[motiu];
-  return permis?.enLinia === false ? SENSE_CONNEXIO : null;
+  if (motiu === 'sense-sessio') return { to: 'avis', text: tx.sessioSenseSessio, entra: true };
+  if (motiu === 'comprovant' || motiu === 'comprovant-desada') return { to: 'info', text: tx.sessioComprovant, entra: false };
+  if (motiu === 'sense-permis') return { to: 'avis', text: tx.sessioSensePermis, entra: false };
+  if (motiu === 'mode-proves') return { to: 'info', text: tx.sessioModeProves, entra: false };
+  if (motiu === 'fora-de-linia') return { to: 'info', text: tx.sessioForaLinia, entra: false };
+  return permis?.enLinia === false ? { to: 'info', text: tx.sessioSenseConnexio, entra: false } : null;
 }

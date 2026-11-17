@@ -4,7 +4,10 @@
  * de 117 no s'accepta: ni l'experimental del kit R32 de Codex ni el catàleg sense les dues R31 originals,
  * perquè ordre_desplegament.json posa 20261116040000 abans de 20261116170000 i de 20261116170200.
  * Onada R32.4 · El 119 es conserva com a perfil històric i s'afig el 120 del catàleg real amb 20261117150000
- * (la pàgina /page/sistema-nervios al registre de copublicació, NO aplicada a cap base). */
+ * (la pàgina /page/sistema-nervios al registre de copublicació, NO aplicada a cap base).
+ * Onada v1.2.7 · El 120 es conserva com a perfil històric i s'afig el 121 amb 20261117140000 (kit R32.5 de Codex:
+ * safata i revisió LSSI cautelar, NO aplicada). El 120 del kit (calculat sobre la v1.2.5, sense 20261117150000)
+ * no és cap catàleg publicat i no s'accepta. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -17,8 +20,13 @@ const sql=fs.readFileSync(new URL('../tooling/node0/posse/posse-ledger.sql',impo
 const ordre=JSON.parse(fs.readFileSync(new URL('../supabase/ordre_desplegament.json',import.meta.url),'utf8'));
 // El catàleg R32.2 es fixa fins a la darrera R32: una onada posterior no trenca esta instantània.
 const rows=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261116170200')<=0);
-// El catàleg R32.4 es fixa fins a 20261117150000, amb el mateix criteri.
-const rows120=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261117150000')<=0);
+// El catàleg R32.4 es fixa fins a 20261117150000, amb el mateix criteri; 20261117140000 (R32.5), de versió anterior
+// però integrada després, no en formava part.
+const rows120=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261117150000')<=0&&row.version!=='20261117140000');
+// El catàleg de la v1.2.7 es fixa també fins a 20261117150000: el 120 d'R32.4 més 20261117140000.
+const rows121=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261117150000')<=0);
+// El 120 del kit R32.5 de Codex: els 119 d'R32.2 més 20261117140000, sense 20261117150000.
+const kitR325=rows121.filter(row=>row.version!=='20261117150000');
 const r32=new Set(['20261116170000','20261116170100','20261116170200']);
 const base116=rows.filter(row=>!r32.has(row.version));
 const historical=rows.filter(row=>comparaVersions(row.version,'20261115230000')<=0);
@@ -52,6 +60,10 @@ const oldPins=[
 const PIN119='119:4c3151035be4784842fba08d88e59425a22ed3d89e64016c8dd99c81f08774b2';
 // 120 calculat des dels bytes reals del catàleg (els 119 anteriors més 20261117150000), amb el ledgerHash d'esta prova.
 const PIN120='120:91dabe476f642579862bffbb10b8d56f946722b8efd65deedf43e7f8fbae9f71';
+// 121 calculat des dels bytes reals del catàleg (el 120 d'R32.4 més 20261117140000), amb el ledgerHash d'esta prova.
+const PIN121='121:851f46d48edca7e5147c8075469a0f5c46992f7e033ca87996b51fa1df1241e0';
+// Perfil 120 del kit R32.5 de Codex, calculat sobre la v1.2.5 (sense 20261117150000): no és canònic.
+const PIN_EXPERIMENTAL_120='120:3e45e1da922cb8a51c43ae23504b4e279eae11f0db7f1046b1f31156800edb85';
 // Perfil experimental del kit R32 de Codex, calculat amb la versió anterior de 20261116170000: no és canònic.
 const PIN_EXPERIMENTAL_117='117:1d55fe9ef6d0bb1a31aea153f5408699340403a9994d75b5399580eb0b8bc94a';
 function ready(entries){
@@ -83,14 +95,29 @@ test('R32.4 adds only 20261117150000 to the 119 and pins the exact 120',()=>{
  assert.equal(rows120.length,120);
  assert.deepEqual(nous.map(({version,file})=>[version,file]),[['20261117150000','20261117150000_r324_copublicacio_pagina_sistema_nervios.sql']]);
  assert.equal(`120:${ledgerHash(rows120)}`,PIN120);
- // Llista exacta de l'onada actual: els onze anteriors, el 119 d'R32.2 i el 120 d'R32.4.
- assert.deepEqual(pins,[...oldPins,PIN119,PIN120]);
+ // Els pins d'R32.4 es conserven en el mateix ordre; les onades posteriors només n'afigen al final.
+ assert.deepEqual(pins.slice(0,oldPins.length+2),[...oldPins,PIN119,PIN120]);
  assert.ok(ordre.restriccions.some(r=>r.abans==='2611111735'&&r.despres==='20261117150000'),'2611111735 abans de 20261117150000');
 });
-test('the real installer accepts 114,116,119,120 and rejects exact-count drift and every 117 profile',async()=>{
- for(const entries of[historical,base116,rows,rows120])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
+test('v1.2.7 adds only the R32.5 LSSI source 20261117140000 to the 120 and pins the exact 121',()=>{
+ const nous=rows121.filter(row=>!rows120.some(anterior=>anterior.version===row.version));
+ assert.equal(rows121.length,121);
+ assert.deepEqual(nous.map(({version,file,sha256})=>[version,file,sha256]),[['20261117140000','20261117140000_r32_5_lssi_revisio_cautelar.sql','82218b186f1ee6becc08f77056efa6ae02808f357da6facb6df03643d74b82c0']]);
+ assert.equal(`121:${ledgerHash(rows121)}`,PIN121);
+ // Llista exacta de l'onada actual: els onze anteriors, el 119 d'R32.2, el 120 d'R32.4 i el 121 de la v1.2.7.
+ assert.deepEqual(pins,[...oldPins,PIN119,PIN120,PIN121]);
+ // El 120 del kit es reprodueix byte a byte des del catàleg real, però no és cap pin.
+ assert.equal(kitR325.length,120);
+ assert.equal(`120:${ledgerHash(kitR325)}`,PIN_EXPERIMENTAL_120);
+ assert.equal(pins.includes(PIN_EXPERIMENTAL_120),false);
+ assert.ok(ordre.restriccions.some(r=>r.abans==='2611122200'&&r.despres==='20261117140000'),'2611122200 abans de 20261117140000');
+});
+test('the real installer accepts 114,116,119,120,121 and rejects exact-count drift, the R32.5 kit 120 and every 117 profile',async()=>{
+ for(const entries of[historical,base116,rows,rows120,rows121])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
  const corrupt120=structuredClone(rows120);corrupt120.at(-1).sha256='0'.repeat(64);
  for(const state of[ready(corrupt120),{...ready(rows120),migrations:119},{...ready(rows),migrations:120}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
+ const corrupt121=structuredClone(rows121);corrupt121.find(row=>row.version==='20261117140000').sha256='0'.repeat(64);
+ for(const state of[ready(corrupt121),ready(kitR325),{...ready(rows121),migrations:120},{...ready(rows120),migrations:121}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
  const corrupt=structuredClone(rows);corrupt.find(row=>r32.has(row.version)).sha256='0'.repeat(64);
  const r31Corrupt=structuredClone(rows);r31Corrupt.find(row=>Object.hasOwn(r31Originals,row.file)).sha256='0'.repeat(64);
  const [,experimental]=PIN_EXPERIMENTAL_117.split(':');
@@ -106,7 +133,7 @@ test('PostgreSQL evaluates the actual install guard for both preserved and full 
     await db.exec('truncate node0.schema_migrations');
     for(const {version,file,sha256} of entries)await db.query('insert into node0.schema_migrations values($1,$2,$3)',[version,file,sha256]);
   };
-  for(const entries of[historical,base116,rows,rows120]){
+  for(const entries of[historical,base116,rows,rows120,rows121]){
     await carrega(entries);
     await db.exec(guard);
     assert.equal((await db.query('select count(*)::int n from node0.schema_migrations')).rows[0].n,entries.length);
@@ -114,5 +141,7 @@ test('PostgreSQL evaluates the actual install guard for both preserved and full 
     await assert.rejects(db.exec(guard),/posse_install_guard/);
   }
   await carrega(senseR31);
+  await assert.rejects(db.exec(guard),/posse_install_guard/);
+  await carrega(kitR325);
   await assert.rejects(db.exec(guard),/posse_install_guard/);
 });

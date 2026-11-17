@@ -322,3 +322,6 @@ REGISTRE.push({ nom: 'BarraReproductorVeu', fitxer: 'components/universal/veu/Ba
    adjacent i resum de dues línies. Espècimen: EspecimenSelectorOpcionsDesplegable
    (formularis/selector-opcions-desplegable). */
 REGISTRE.push({ nom: 'SelectorOpcionsDesplegable', fitxer: 'PedraSeca/molecules/SelectorOpcionsDesplegable.jsx', pagina: 'formularis', estat: 'viu' });
+/* Onada R32.5 (P0-112 / T3-UI-03) · La banda de fase beta de les micro-apps en proves, en les 5 llengües.
+   Espècimen: EspecimenBandaBetaMicroApp (retroalimentacio/banda-beta-micro-app). */
+REGISTRE.push({ nom: 'BandaBetaMicroApp', fitxer: 'PedraSeca/molecules/BandaBetaMicroApp.jsx', pagina: 'retroalimentacio', estat: 'viu' });

@@ -1,0 +1,83 @@
+/* Full diferit (Onada R32.5 · La Veu, 4 estats accessibles per teclat de les mostres del banc d'escolta):
+   les regles del controlador de LaVeuDeSocDePobleArticle.jsx no viatgen a l'arrencada del paquet de
+   WordPress i s'adopten a l'arrel on es munta la peça (src/config/fullDiferit.js), com els fulls de
+   l'Onada R28 (D-R27-1, opció b aprovada pel Mestre). NO s'importa des d'index.css. */
+@layer components {
+  .sdp-banc-veus__audio--sincronitzat {
+    display: none;
+  }
+
+  .sdp-banc-veus__controlador {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-banc-veus__controls-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-banc-veus__progres {
+    flex: 1 1 10rem;
+    block-size: var(--sdp-space-2);
+    accent-color: var(--sdp-accio);
+  }
+
+  .sdp-banc-veus__seguiment {
+    display: flex;
+    flex: 1 1 14rem;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+
+  .sdp-banc-veus__posicio {
+    flex: 1 1 auto;
+    min-inline-size: 6rem;
+    min-block-size: var(--sdp-touch-min);
+    margin: 0;
+    accent-color: var(--sdp-accio);
+    cursor: pointer;
+  }
+
+  .sdp-banc-veus__posicio:focus-visible,
+  .sdp-banc-veus__transcripcio-resum:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+    border-radius: var(--sdp-radi-s);
+  }
+
+  .sdp-banc-veus__temps {
+    flex-shrink: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-banc-veus__transcripcio {
+    border-block-start: 1px solid var(--sdp-vora);
+    padding-block-start: var(--sdp-space-2);
+  }
+
+  .sdp-banc-veus__transcripcio-resum {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--sdp-touch-min);
+    padding-inline: var(--sdp-space-2);
+    color: var(--sdp-accio-text);
+    font-size: var(--sdp-text-small);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .sdp-banc-veus__transcripcio-cos {
+    margin: var(--sdp-space-2) 0 0;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-cos);
+  }
+}

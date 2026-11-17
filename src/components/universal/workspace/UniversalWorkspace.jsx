@@ -660,6 +660,7 @@ export function UniversalWorkspace({
   tornaDeLaLlista = null,
   idEspai,
   accionsLlista = CAP,
+  accionsSubcapcalera = CAP,
   peuNavegacio = null,
   amagaRodaAjustos = false,
   ajustosEnDetall = false,
@@ -816,6 +817,7 @@ export function UniversalWorkspace({
         detailClassName={detailClassName}
         className={className}
         accionsLlista={accionsLlista}
+        accionsSubcapcalera={accionsSubcapcalera}
         peuNavegacio={peuNavegacio}
         etiquetaEspai={etiquetaEspai}
         amagaRodaAjustos={amagaRodaAjustos}
@@ -832,7 +834,7 @@ function WorkspaceFrame({
   labels, icons, tagFilter, collapsibleNavigation, sortable, canCreate, onRetry, listClassName, detailClassName, className,
   /* etiquetaEspai: sense valor per defecte (B3 · P1-22). L'únic que la crida,
      UniversalWorkspace, sempre li passa la traduïda de TEXT_ESPAI_DE_TREBALL. */
-  accionsLlista, etiquetaEspai, peuNavegacio = null, amagaRodaAjustos = false, ajustosEnDetall = false, titolTornadaAjustos = null
+  accionsLlista, accionsSubcapcalera = CAP, etiquetaEspai, peuNavegacio = null, amagaRodaAjustos = false, ajustosEnDetall = false, titolTornadaAjustos = null
 }) {
   const workspace = useWorkspace();
   const focusAfterLayout = useFocusAfterLayout();
@@ -999,6 +1001,7 @@ function WorkspaceFrame({
             collapseBtnRef={collapseMiddleRef}
             expandBtnRef={expandMiddleRef}
             accionsLlista={accionsLlista}
+            accionsSubcapcalera={accionsSubcapcalera}
             navegacioRef={navegacioRef}
             expandirNavegacioRef={expandLeftRef}
             onTriaExplicita={tancaAjustosPerTria}
@@ -1636,7 +1639,7 @@ function CategoryBranch({
 function ItemListColumn({
   mestreDetall = false, tornaDeLaLlista = null, rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
   tagFilter, sortable, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef, focusAfterLayout,
-  accionsLlista = CAP, navegacioRef = null, expandirNavegacioRef = null, onTriaExplicita = null
+  accionsLlista = CAP, accionsSubcapcalera = CAP, navegacioRef = null, expandirNavegacioRef = null, onTriaExplicita = null
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
@@ -2071,6 +2074,7 @@ function ItemListColumn({
         esDark="intens"
         startActions={accionsDeCerca(false)}
         endActions={[
+          ...(Array.isArray(accionsSubcapcalera) ? accionsSubcapcalera : CAP),
           /* Ordre del Mestre (261026_2126, pla 261026_1615 §6) · El glif
              d'ordenar ja no va forçat a 20px: els 24px de totes les icones de
              les dues files (el valor per defecte d'AppGridColumn). */

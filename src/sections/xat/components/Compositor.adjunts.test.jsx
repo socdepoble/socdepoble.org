@@ -126,7 +126,7 @@ describe('el botó redó: un sol node que canvia de nom', () => {
     expect(screen.getByRole('button', { name: 'Grava àudio' })).toBe(boto);
   });
 
-  test('(c) amb un fitxer preparat, «Envia el fitxer» encara que hi haja text; Retorn continua enviant el text', () => {
+  test('(c) amb un fitxer preparat, el botó i Retorn envien el principal al mateix adjunt', () => {
     const onEnvia = vi.fn();
     const primari = { clau: 'envia', etiqueta: 'Envia el fitxer', icona: Send, onClick: vi.fn(), descritPer: 'avis-ubicacio' };
     render(<Prova inicial="Mireu" onEnvia={onEnvia} adjunts={fesAdjunts({ primari, bloquejat: true })} />);
@@ -134,10 +134,12 @@ describe('el botó redó: un sol node que canvia de nom', () => {
     expect(boto.getAttribute('aria-describedby')).toBe('avis-ubicacio');
     fireEvent.click(boto);
     expect(primari.onClick).toHaveBeenCalledOnce();
+    expect(primari.onClick).toHaveBeenCalledWith({ text: 'Mireu' });
     expect(onEnvia).not.toHaveBeenCalled();
     expect(camp().value).toBe('Mireu');
     fireEvent.keyDown(camp(), { key: 'Enter' });
-    expect(onEnvia).toHaveBeenCalledWith('Mireu');
+    expect(primari.onClick).toHaveBeenCalledTimes(2);
+    expect(onEnvia).not.toHaveBeenCalled();
   });
 
   test('(d) mentre grava, «Atura la gravació»; mentre puja, «Enviant…» enfocable i sense efecte', () => {

@@ -12,6 +12,11 @@
  *   · Quan arriba una `versioRecomanada` nova més alta que l'ajornada abans,
  *     la barra torna a mostrar-se de manera honesta.
  *   · L'ajornament es recorda amb un sol enter positiu a través de `storage.js`.
+ *   · Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · Els mòbils de prova i la web: un
+ *     avís pot portar `canal` ('testflight' a iOS, 'apk' a Android, amb la `sha256` de l'APK, o 'web'),
+ *     i la PWA (src/pwa/actualitzacioWeb.js) hi publica la versió web nova amb FONT_WEB (l'enter
+ *     `versioRecomanada` de la web és ordinalSemver de config/manifestVersio.js). El botó obri el canal
+ *     de l'avís (obriBotigaActualitzacio). Sense canal, l'avís i el botó de sempre.
  */
 import { useSyncExternalStore } from 'react';
 import { delVal, getVal, setVal } from './storage.js';
@@ -21,8 +26,36 @@ export const CLAU_ACTUALITZACIO_DESCARTADA = 'natiu-versio-recomanada-descartada
 export const ENLLAC_ANDROID_PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
 export const ENLLAC_ANDROID_MARKET = 'market://details?id=org.socdepoble.app';
 export const ENLLAC_IOS_APP_STORE = 'https://apps.apple.com/es/app/soc-de-poble/id6826441844';
+/* Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · Els dos canals de proves i la web.
+   · TestFlight · l'esquema de l'app TestFlight obri la fitxa de Sóc de Poble (el mateix identificador
+     d'Apple que l'App Store); si TestFlight no s'obri, la mateixa adreça en https, a Safari.
+     [NO VERIFICAT en un iPhone: la forma beta.itunes.apple.com/v1/app/<id> és la que fan servir les
+     apps per a obrir TestFlight; l'App ve de TestFlight i, per tant, TestFlight hi és.]
+   · APK directe · l'adreça única de canalsDeBotiga.js (FITXER_APK), que socdepoble.org redirigix (302)
+     al Node 0; Android l'obri al navegador, que el baixa.
+   · Web · recarregar la pàgina amb la versió nova (src/pwa/actualitzacioWeb.js n'és l'amo). */
+export const ID_APPLE = '6826441844';
+export const ENLLAC_TESTFLIGHT = `https://beta.itunes.apple.com/v1/app/${ID_APPLE}`;
+export const ESQUEMA_TESTFLIGHT = `itms-beta://beta.itunes.apple.com/v1/app/${ID_APPLE}`;
+export const ENLLAC_APK_DIRECTE = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 
-const PLATAFORMES_VALIDES = new Set(['android', 'ios']);
+/** El canal que obri el botó de la barra. Un avís sense canal és el de la botiga de sempre. */
+export const CANALS_ACTUALITZACIO = Object.freeze({
+  PLAY: 'play',
+  APP_STORE: 'app-store',
+  TESTFLIGHT: 'testflight',
+  APK: 'apk',
+  WEB: 'web'
+});
+const CANALS_PER_PLATAFORMA = Object.freeze({
+  android: Object.freeze([CANALS_ACTUALITZACIO.PLAY, CANALS_ACTUALITZACIO.APK]),
+  ios: Object.freeze([CANALS_ACTUALITZACIO.APP_STORE, CANALS_ACTUALITZACIO.TESTFLIGHT]),
+  web: Object.freeze([CANALS_ACTUALITZACIO.WEB])
+});
+
+const PLATAFORMES_VALIDES = new Set(['android', 'ios', 'web']);
+const SEMVER = /^\d{1,6}\.\d{1,6}\.\d{1,6}$/;
+const SHA256 = /^[0-9a-f]{64}$/;
 
 /** L'enllaç d'actualitzar, només si és una adreça https; si no, null. Mai llança. */
 export function enllacSegur(valor) {
@@ -42,7 +75,8 @@ export function enllacBotigaPerDefecte(plataforma) {
   return null;
 }
 
-/* R32.3 · Quant espera l'App que Google Play prenga el primer pla abans d'obrir l'https de reserva. */
+/* R32.3 · Quant espera l'App que Google Play (o, des de la v1.2.7, TestFlight) prenga el primer pla
+   abans d'obrir l'https de reserva. */
 export const ESPERA_RESERVA_MARKET_MS = 1500;
 const MARKET_VALID = /^market:\/\/details\?id=[A-Za-z0-9._-]+$/;
 
@@ -65,7 +99,7 @@ function obri(finestra, url) {
  * cancel·la. Sense document ni temporitzadors (una finestra mínima), torna fals i qui la
  * crida obri directament l'https.
  */
-function obriMarketAmbReserva(finestra, market, httpsUrl, espera) {
+function obriEsquemaAmbReserva(finestra, market, httpsUrl, espera) {
   const document = finestra.document;
   if (typeof finestra.setTimeout !== 'function' || typeof document?.addEventListener !== 'function'
     || typeof finestra.addEventListener !== 'function') return false;
@@ -118,12 +152,22 @@ export function obriBotigaActualitzacio(avis, {
   espera = ESPERA_RESERVA_MARKET_MS
 } = {}) {
   if (!avis || typeof avis !== 'object' || !finestra) return null;
+  /* v1.2.7 · P0-123 · La web no obri cap botiga: recarrega amb la versió nova. TestFlight, amb
+     l'esquema i la reserva https; l'APK directe, l'adreça fixa (mai una que vinga de fora). */
+  if (avis.plataforma === 'web') return recarregaWeb(finestra) ? CANALS_ACTUALITZACIO.WEB : null;
+  if (avis.plataforma === 'ios' && avis.canal === CANALS_ACTUALITZACIO.TESTFLIGHT) {
+    if (obriEsquemaAmbReserva(finestra, ESQUEMA_TESTFLIGHT, ENLLAC_TESTFLIGHT, espera)) return ESQUEMA_TESTFLIGHT;
+    return obri(finestra, ENLLAC_TESTFLIGHT) ? ENLLAC_TESTFLIGHT : null;
+  }
+  if (avis.plataforma === 'android' && avis.canal === CANALS_ACTUALITZACIO.APK) {
+    return obri(finestra, ENLLAC_APK_DIRECTE) ? ENLLAC_APK_DIRECTE : null;
+  }
   const httpsUrl = enllacSegur(avis.enllac) || enllacBotigaPerDefecte(avis.plataforma);
   if (!httpsUrl) return null;
   const market = avis.plataforma === 'android' && typeof avis.marketUrl === 'string' && MARKET_VALID.test(avis.marketUrl)
     ? avis.marketUrl
     : null;
-  if (market && obriMarketAmbReserva(finestra, market, httpsUrl, espera)) return market;
+  if (market && obriEsquemaAmbReserva(finestra, market, httpsUrl, espera)) return market;
   return obri(finestra, httpsUrl) ? httpsUrl : null;
 }
 
@@ -135,7 +179,31 @@ export function obriBotigaActualitzacio(avis, {
    la seua: un build retirat de la botiga deixa de prometre's dins de la mateixa sessió. */
 export const FONT_NODE = 'node';
 export const FONT_MANIFEST = 'manifest';
-const FONTS = Object.freeze([FONT_NODE, FONT_MANIFEST]);
+/* v1.2.7 · P0-123 · La PWA (src/pwa/actualitzacioWeb.js): mai conviu amb les altres dues, que només
+   publiquen dins de l'App nativa. */
+export const FONT_WEB = 'web';
+const FONTS = Object.freeze([FONT_NODE, FONT_MANIFEST, FONT_WEB]);
+
+/* v1.2.7 · P0-123 · Qui sap recarregar la web amb la versió nova (activar el worker que espera i
+   tornar a carregar): ho fixa src/pwa/actualitzacioWeb.js, l'única peça que en té el dret. Sense,
+   la recàrrega de sempre del navegador. */
+let recarregadorWeb = null;
+export function fixaRecarregaWeb(recarrega) {
+  recarregadorWeb = typeof recarrega === 'function' ? recarrega : null;
+}
+function recarregaWeb(finestra) {
+  try {
+    if (recarregadorWeb) {
+      recarregadorWeb();
+      return true;
+    }
+    if (typeof finestra?.location?.reload !== 'function') return false;
+    finestra.location.reload();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const perFont = new Map();
 /* Ajornament de la sessió quan l'emmagatzematge no el pot desar (navegació privada, quota). */
@@ -163,12 +231,24 @@ export function versioRecomanadaDescartada() {
   return Number.isSafeInteger(enter) && enter >= 1 ? enter : 0;
 }
 
+/* v1.2.7 · P0-123 · Els camps nous (canal, versio i sha256) només hi són quan l'avís els porta: l'avís
+   de la botiga de sempre té la forma de sempre. Un canal que no és de la plataforma, o un APK sense
+   una SHA-256 vàlida (la barra l'ha de dir), no és cap avís. La web sempre porta el seu canal. */
 function normalitzaAvis(dades) {
   if (!dades || typeof dades !== 'object') return null;
   const plataforma = PLATAFORMES_VALIDES.has(dades.plataforma) ? dades.plataforma : null;
   const versioRecomanada = dades.versioRecomanada;
   if (!plataforma || !Number.isSafeInteger(versioRecomanada) || versioRecomanada < 1) return null;
-  const enllac = enllacSegur(dades.enllac);
+  const canal = dades.canal === undefined || dades.canal === null
+    ? (plataforma === 'web' ? CANALS_ACTUALITZACIO.WEB : null)
+    : dades.canal;
+  if (canal !== null && !CANALS_PER_PLATAFORMA[plataforma].includes(canal)) return null;
+  if (plataforma === 'web' && canal !== CANALS_ACTUALITZACIO.WEB) return null;
+  const sha256 = typeof dades.sha256 === 'string' && SHA256.test(dades.sha256) ? dades.sha256 : null;
+  if (canal === CANALS_ACTUALITZACIO.APK && !sha256) return null;
+  const versio = typeof dades.versio === 'string' && SEMVER.test(dades.versio) ? dades.versio : null;
+  if (plataforma === 'web' && !versio) return null;
+  const enllac = plataforma === 'web' ? null : enllacSegur(dades.enllac);
   const marketUrl = plataforma === 'android'
     && typeof dades.marketUrl === 'string'
     && /^market:\/\/details\?id=[A-Za-z0-9._-]+$/.test(dades.marketUrl)
@@ -178,7 +258,10 @@ function normalitzaAvis(dades) {
     plataforma,
     versioRecomanada,
     enllac,
-    marketUrl
+    marketUrl,
+    ...(canal !== null ? { canal } : null),
+    ...(canal !== null && versio ? { versio } : null),
+    ...(canal === CANALS_ACTUALITZACIO.APK ? { sha256 } : null)
   });
 }
 
@@ -200,6 +283,9 @@ function recalculaInstantania() {
     && nova.versioRecomanada === instantaniaVisible.versioRecomanada
     && nova.enllac === instantaniaVisible.enllac
     && nova.marketUrl === instantaniaVisible.marketUrl
+    && nova.canal === instantaniaVisible.canal
+    && nova.versio === instantaniaVisible.versio
+    && nova.sha256 === instantaniaVisible.sha256
   );
   if (igual) return false;
   instantaniaVisible = nova;
@@ -215,6 +301,8 @@ function recalculaInstantania() {
  *     versió mínima, quan bloqueja l'App, natiu/entrada.jsx).
  */
 export function publicaActualitzacioRecomanada(dades, font = null) {
+  // v1.2.7 · P0-123 · Un avís de la web només el publica la font de la web, i la font de la web només en publica de la web.
+  if ((font === FONT_WEB) !== (dades?.plataforma === 'web') && dades) return;
   if (font !== null && !FONTS.includes(font)) return;
   const nova = normalitzaAvis(dades);
   if (nova) perFont.set(font ?? FONT_NODE, nova);
@@ -271,6 +359,7 @@ export function useActualitzacioRecomanada() {
 /** Només per a proves unitàries: deixa el registre i l'ajornament en blanc. */
 export function netejaActualitzacioRecomanadaPerProves() {
   perFont.clear();
+  recarregadorWeb = null;
   descartadaEnSessio = 0;
   diagnosiDetector = Object.freeze({ motiu: 'absent', quan: null });
   instantaniaVisible = null;

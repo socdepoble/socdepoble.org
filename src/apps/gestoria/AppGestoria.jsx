@@ -62,6 +62,13 @@
  *
  * LA PORTA DELS TRACTORS · rutes.js: la consulta que la demana es porta a la
  * Wiki, on viu, sempre a la mateixa ruta fixa.
+ *
+ * Onada R32.5 (P0-112 / IDEA-285):
+ *   · S'extirpa el literal antic «Factures i llibre Veri*Factu, també sense connexió»
+ *     i se substituïx per un subtítol honest d'esborranys i registre local encadenat
+ *     sense validesa Verifactu.
+ *   · Internacionalització completa del pont en les 5 llengües (ca, es, en, eu, gl)
+ *     via useApp().idioma, propagant l'idioma a Facturacio.jsx.
  */
 import { Suspense } from 'react';
 import { Navigate, useLocation } from '../../app/contexts/RouterContext';
@@ -94,17 +101,110 @@ export const RUTA_TITULAR = '/el-meu-perfil';
 /** El nom de la boina sense sessió: l'estat honest, mai una autora fingida. */
 export const TITULAR_SENSE_CONFIGURAR = 'Titular sense configurar';
 
+/* P0-113 · El que diu un build que desendolla la Gestoria (VITE_SDP_APP_GESTORIA=0): és l'únic text
+   que porta el cos d'un mòdul (vite.modul.config.js), i per això va a banda de TEXTOS_PONT_GESTORIA,
+   que segueix el literal d'exclusió com VISTES (modulDeBuild.test.jsx ho compila). */
+const TEXTOS_NO_COMPILADA = Object.freeze({
+  ca: Object.freeze({ titol: 'La Gestoria no és en este paquet', text: 'Esta versió de la web no porta la Gestoria.' }),
+  es: Object.freeze({ titol: 'La Gestoría no está en este paquete', text: 'Esta versión de la web no incluye la Gestoría.' }),
+  en: Object.freeze({ titol: 'Bookkeeping is not in this build', text: 'This web version does not include the Bookkeeping module.' }),
+  eu: Object.freeze({ titol: 'Gestoria ez dago pakete honetan', text: 'Web bertsio honek ez dakar Gestoria.' }),
+  gl: Object.freeze({ titol: 'A Xestoría non está neste paquete', text: 'Esta versión da web non inclúe a Xestoría.' })
+});
+
+/* Onada R32.5 · Els textos del pont en les 5 llengües. Darrere del mateix literal que VISTES: compilada
+   com a mòdul, la Gestoria no porta cap nom de vista. */
+export const TEXTOS_PONT_GESTORIA = import.meta.env.VITE_SDP_APP_GESTORIA !== '0' ? Object.freeze({
+  ca: Object.freeze({
+    titularSenseConfigurar: TITULAR_SENSE_CONFIGURAR,
+    insigniaGestoria: 'GESTORIA',
+    aprendreTitol: 'Aprendre',
+    aprendreSubtitol: 'Repàs espaiat dels conceptes de la gestoria',
+    carregantAprendre: 'Carregant Aprendre…',
+    facturacioTitol: 'Facturació',
+    facturacioSubtitol: 'Esborranys de factures i registre encadenat local, també sense connexió',
+    carregantFacturacio: 'Carregant la Facturació…',
+    carregantHistoric: 'Carregant l’Històric…',
+    carregantIdentitat: 'Carregant Identitat i Finestreta…',
+    carregantGestoria: 'Carregant la Gestoria…'
+  }),
+  es: Object.freeze({
+    titularSenseConfigurar: 'Titular sin configurar',
+    insigniaGestoria: 'GESTORÍA',
+    aprendreTitol: 'Aprender',
+    aprendreSubtitol: 'Repaso espaciado de los conceptos de gestoría',
+    carregantAprendre: 'Cargando Aprender…',
+    facturacioTitol: 'Facturación',
+    facturacioSubtitol: 'Borradores de facturas y registro encadenado local, también sin conexión',
+    carregantFacturacio: 'Cargando Facturación…',
+    carregantHistoric: 'Cargando Histórico…',
+    carregantIdentitat: 'Cargando Identidad y Ventanilla…',
+    carregantGestoria: 'Cargando la Gestoría…'
+  }),
+  en: Object.freeze({
+    titularSenseConfigurar: 'Account holder not set',
+    insigniaGestoria: 'BOOKKEEPING',
+    aprendreTitol: 'Learn',
+    aprendreSubtitol: 'Spaced repetition of bookkeeping concepts',
+    carregantAprendre: 'Loading Learn…',
+    facturacioTitol: 'Invoicing',
+    facturacioSubtitol: 'Invoice drafts and local chained ledger, offline-ready',
+    carregantFacturacio: 'Loading Invoicing…',
+    carregantHistoric: 'Loading History…',
+    carregantIdentitat: 'Loading Identity and One-Stop Desk…',
+    carregantGestoria: 'Loading Bookkeeping…'
+  }),
+  eu: Object.freeze({
+    titularSenseConfigurar: 'Titularra konfiguratu gabe',
+    insigniaGestoria: 'GESTORIA',
+    aprendreTitol: 'Ikasi',
+    aprendreSubtitol: 'Gestoriako kontzeptuen errepikapen tartekatua',
+    carregantAprendre: 'Ikasi kargatzen…',
+    facturacioTitol: 'Fakturazioa',
+    facturacioSubtitol: 'Faktura-zirriborroak eta tokiko erregistro kateatua, konexiorik gabe ere',
+    carregantFacturacio: 'Fakturazioa kargatzen…',
+    carregantHistoric: 'Historikoa kargatzen…',
+    carregantIdentitat: 'Nortasuna eta Leihatila kargatzen…',
+    carregantGestoria: 'Gestoria kargatzen…'
+  }),
+  gl: Object.freeze({
+    titularSenseConfigurar: 'Titular sen configurar',
+    insigniaGestoria: 'XESTORÍA',
+    aprendreTitol: 'Aprender',
+    aprendreSubtitol: 'Repaso espazado dos conceptos da xestoría',
+    carregantAprendre: 'Cargando Aprender…',
+    facturacioTitol: 'Facturación',
+    facturacioSubtitol: 'Borradores de facturas e rexistro encadeado local, tamén sen conexión',
+    carregantFacturacio: 'Cargando Facturación…',
+    carregantHistoric: 'Cargando Histórico…',
+    carregantIdentitat: 'Cargando Identidade e Xanela…',
+    carregantGestoria: 'Cargando a Xestoría…'
+  })
+}) : null;
+
+/** El codi de llengua ('es-ES' → 'es') si la taula en té textos; si no, el valencià. */
+const llenguaDe = (taula, idioma) => {
+  const codi = String(idioma || 'ca').toLowerCase().split('-')[0];
+  return Object.hasOwn(taula, codi) ? codi : 'ca';
+};
+
+/** Els textos del pont en la llengua de la interfície (null en un build sense la Gestoria). */
+export function textosPontGestoria(idioma) {
+  return TEXTOS_PONT_GESTORIA ? TEXTOS_PONT_GESTORIA[llenguaDe(TEXTOS_PONT_GESTORIA, idioma)] : null;
+}
+
 /**
  * L'autor de les PaginaApp del pont: el titular de la sessió, enllaçat al
  * seu perfil; sense, l'estat honest amb l'entrada al compte.
  * @param {{ nom: string, avatar: string|null, poble: string }|null} titular el de useSessioApp
  * @param {string} entrada la ruta d'entrada al compte (entradaAlTauler)
+ * @param {string} [idioma] la llengua de la interfície (Onada R32.5): el nom de la boina sense sessió
  * @returns {{ nom: string, avatar: string|null, poble: string, href: string }}
  */
-export function autorDelPont(titular, entrada) {
+export function autorDelPont(titular, entrada, idioma = 'ca') {
   return titular
     ? { ...titular, href: RUTA_TITULAR }
-    : { nom: TITULAR_SENSE_CONFIGURAR, poble: '', avatar: null, href: entrada };
+    : { nom: textosPontGestoria(idioma)?.titularSenseConfigurar ?? TITULAR_SENSE_CONFIGURAR, poble: '', avatar: null, href: entrada };
 }
 
 /**
@@ -122,25 +222,18 @@ export function entradaAlTauler(rutaEntrada, tauler) {
   return `${cami}?${params.toString()}`;
 }
 
-const ETIQUETES_APRENDRE = Object.freeze([
-  Object.freeze({ text: 'GESTORIA', className: 'sdp-badge-system' }),
-  Object.freeze({ text: 'Aprendre', className: 'sdp-badge-category' })
-]);
-const ETIQUETES_FACTURACIO = Object.freeze([
-  Object.freeze({ text: 'GESTORIA', className: 'sdp-badge-system' }),
-  Object.freeze({ text: 'Facturació', className: 'sdp-badge-category' })
-]);
-
 export default function AppGestoria() {
-  const { base } = useApp();
+  const { base, idioma = 'ca' } = useApp();
   const sessio = useSessioApp();
   const { pathname, search } = useLocation();
   const desti = desviamentDeLaConsulta(search);
   if (desti) return <Navigate to={desti} replace />;
   /* P0-113 · Només en un build que la desendolla (VITE_SDP_APP_GESTORIA=0): el text no promet cap altre lloc. */
   if (!VISTES) {
-    return <EstatBuit titol="La Gestoria no és en este paquet">Esta versió de la web no porta la Gestoria.</EstatBuit>;
+    const nc = TEXTOS_NO_COMPILADA[llenguaDe(TEXTOS_NO_COMPILADA, idioma)];
+    return <EstatBuit titol={nc.titol}>{nc.text}</EstatBuit>;
   }
+  const tx = textosPontGestoria(idioma);
 
   /* El primer tram després de /app/gestoria: RutaApps ja ha comprovat que és una entrada del manifest. */
   const entrada = pathname.slice(base.length + 1).split('/')[0];
@@ -149,13 +242,22 @@ export default function AppGestoria() {
      a l'entrada al compte. */
   const titular = sessio.titular ?? null;
   const entradaAlCompte = entradaAlTauler(sessio.rutaEntrada, `${base}/tauler`);
-  const autor = autorDelPont(titular, entradaAlCompte);
+  const autor = autorDelPont(titular, entradaAlCompte, idioma);
+  const etiquetesAprendre = [
+    { text: tx.insigniaGestoria, className: 'sdp-badge-system' },
+    { text: tx.aprendreTitol, className: 'sdp-badge-category' }
+  ];
+  const etiquetesFacturacio = [
+    { text: tx.insigniaGestoria, className: 'sdp-badge-system' },
+    { text: tx.facturacioTitol, className: 'sdp-badge-category' }
+  ];
+
   if (entrada === ENTRADA_APRENDRE) {
     const Aprendre = VISTES.aprendre;
     return (
-      <PaginaApp title="Aprendre" subtitle="Repàs espaiat dels conceptes de la gestoria" labels={ETIQUETES_APRENDRE}
+      <PaginaApp title={tx.aprendreTitol} subtitle={tx.aprendreSubtitol} labels={etiquetesAprendre}
         author={autor} rellotgeViu showComment={false} showShare={false} showConnect={false}>
-        <Suspense fallback={<Carregant etiqueta="Carregant Aprendre…" />}>
+        <Suspense fallback={<Carregant etiqueta={tx.carregantAprendre} />}>
           <Aprendre />
         </Suspense>
       </PaginaApp>
@@ -164,10 +266,10 @@ export default function AppGestoria() {
   if (entrada === ENTRADA_FACTURACIO) {
     const Facturacio = VISTES.facturacio;
     return (
-      <PaginaApp title="Facturació" subtitle="Factures i llibre Veri*Factu, també sense connexió" labels={ETIQUETES_FACTURACIO}
+      <PaginaApp title={tx.facturacioTitol} subtitle={tx.facturacioSubtitol} labels={etiquetesFacturacio}
         author={autor} rellotgeViu showComment={false} showShare={false} showConnect={false}>
-        <Suspense fallback={<Carregant etiqueta="Carregant la Facturació…" />}>
-          <Facturacio />
+        <Suspense fallback={<Carregant etiqueta={tx.carregantFacturacio} />}>
+          <Facturacio idioma={idioma} />
         </Suspense>
       </PaginaApp>
     );
@@ -175,7 +277,7 @@ export default function AppGestoria() {
   if (entrada === ENTRADA_HISTORIC) {
     const Historic = VISTES.historic;
     return (
-      <Suspense fallback={<Carregant etiqueta="Carregant l’Històric…" />}>
+      <Suspense fallback={<Carregant etiqueta={tx.carregantHistoric} />}>
         <Historic titular={titular} />
       </Suspense>
     );
@@ -183,7 +285,7 @@ export default function AppGestoria() {
   if (entrada === ENTRADA_IDENTITAT) {
     const Finestreta = VISTES.identitat;
     return (
-      <Suspense fallback={<Carregant etiqueta="Carregant Identitat i Finestreta…" />}>
+      <Suspense fallback={<Carregant etiqueta={tx.carregantIdentitat} />}>
         <Finestreta titular={titular} />
       </Suspense>
     );
@@ -193,7 +295,7 @@ export default function AppGestoria() {
      comandament porta al Full trimestral des del seu estat buit; com hrefIdentitat, la ruta la dona el pont
      (una relativa des de /app/gestoria resoldria a /app/full). */
   return (
-    <Suspense fallback={<Carregant etiqueta="Carregant la Gestoria…" />}>
+    <Suspense fallback={<Carregant etiqueta={tx.carregantGestoria} />}>
       <Closca modulActiu={entrada} hrefEntrada={sessio.teSessio || titular ? null : entradaAlCompte}
         titular={titular} hrefIdentitat={`${base}/${ENTRADA_IDENTITAT}`} hrefFull={`${base}/${ENTRADA_FULL}`} />
     </Suspense>

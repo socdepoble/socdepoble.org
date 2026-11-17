@@ -72,3 +72,38 @@ test('App.jsx no importa la barra de manera estàtica (trinquet de l\'arrencada 
   expect(font).not.toMatch(/^import\s+[^;]*BarraActualitzacioRecomanada[^;]*;/m);
   expect(font).toMatch(/import\('\.\.\/components\/universal\/barres\/BarraActualitzacioRecomanada\.jsx'\)/);
 });
+
+/* Onada v1.2.7 · P0-123 · A la web, el tros només es demana quan la PWA avisa d'una versió nova
+   (src/pwa/actualitzacioWeb.js), una sola vegada, i no es demana després de desmuntar. */
+test('a la web importa la barra quan la PWA avisa d\'una versió nova, una sola vegada', async () => {
+  const { ESDEVENIMENT_ACTUALITZACIO_WEB } = await import('../pwa/actualitzacioWeb.js');
+  const importa = vi.fn(async () => ({ default: BarraFalsa }));
+  render(<BarraActualitzacioDiferida importa={importa} plataforma={() => 'web'} />);
+  await act(async () => { await Promise.resolve(); });
+  expect(importa).not.toHaveBeenCalled();
+  await act(async () => { window.dispatchEvent(new Event(ESDEVENIMENT_ACTUALITZACIO_WEB)); });
+  expect(await screen.findByText('barra-falsa')).toBeTruthy();
+  await act(async () => { window.dispatchEvent(new Event(ESDEVENIMENT_ACTUALITZACIO_WEB)); });
+  expect(importa).toHaveBeenCalledTimes(1);
+});
+
+test('a la web, desmuntada, l\'avís de la PWA ja no importa res', async () => {
+  const { ESDEVENIMENT_ACTUALITZACIO_WEB } = await import('../pwa/actualitzacioWeb.js');
+  const importa = vi.fn(async () => ({ default: BarraFalsa }));
+  const { unmount } = render(<BarraActualitzacioDiferida importa={importa} plataforma={() => 'web'} />);
+  unmount();
+  window.dispatchEvent(new Event(ESDEVENIMENT_ACTUALITZACIO_WEB));
+  await act(async () => { await Promise.resolve(); });
+  expect(importa).not.toHaveBeenCalled();
+});
+
+test('a la web, amb el tros de veres, pinta l\'avís de la versió web que publica la PWA', async () => {
+  const { ESDEVENIMENT_ACTUALITZACIO_WEB } = await import('../pwa/actualitzacioWeb.js');
+  const { FONT_WEB } = await import('../config/actualitzacioRecomanada.js');
+  render(<BarraActualitzacioDiferida plataforma={() => 'web'} />);
+  await act(async () => {
+    publicaActualitzacioRecomanada({ plataforma: 'web', canal: 'web', versioRecomanada: 1_002_007, versio: '1.2.7' }, FONT_WEB);
+    window.dispatchEvent(new Event(ESDEVENIMENT_ACTUALITZACIO_WEB));
+  });
+  expect(await screen.findByText('Pots continuar ara i carregar la versió 1.2.7 quan et vinga bé.')).toBeTruthy();
+});

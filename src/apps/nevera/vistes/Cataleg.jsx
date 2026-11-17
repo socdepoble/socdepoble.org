@@ -47,6 +47,7 @@ export function ColumnaCatalegSencer({ params }) {
   return (
     <ColumnaCataleg
       forma="targetes"
+      ometDataNoIndicada
       titol="Catàleg"
       categories={seccionsDe(estat, llista.id, { totesVisibles: true })}
       articles={articles}

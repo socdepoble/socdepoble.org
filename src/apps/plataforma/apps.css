@@ -51,10 +51,27 @@
 /* Plegada (escriptori), el títol del grup no té lloc: només queden les icones. */
 .sdp-root:not(.is-compact).sidebar-closed .sdp-app-barra__grup { display: none; }
 
-/* ── Contenidor d'una app (RutaApps.jsx) ── */
+/* ── Contenidor d'una app (RutaApps.jsx) ──
+   Onada R32.5 · Columna flex perquè la banda beta opcional de dalt (.sdp-banda-beta)
+   convisca sense solapaments tant amb PaginaApp com amb les apps d'inset absolut
+   (.app-grid-page i .sdp-app-unica), ancorades dins de .sdp-app-contenidor__cos.
+   v1.2.7 · R325-02 · Sense height: el contenidor creix amb el contingut (flex: 1 0 auto) i omple
+   com a mínim el visor (min-height). Amb height: 100%, en mòbil el final de Facturació i d'Escàner
+   quedava davall de la barra inferior: el padding-bottom de .app-main__content (layout.css) es
+   comptava després de la caixa, no després del contingut que en desbordava. «flex: auto» és
+   «1 1 auto» escrit curt: compensa els bytes de la regla de dalt a l'arrencada del paquet. */
 .sdp-app-contenidor {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
   min-height: 100%;
+}
+
+.sdp-app-contenidor__cos {
+  position: relative;
+  flex: auto;
+  min-width: 0;
+  min-height: 0;
 }
 
 .sdp-app-avis {

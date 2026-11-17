@@ -86,10 +86,10 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, BellOff, Building2, MoreVertical, X } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
-import { rutaDePerfil } from '../../../config/navigation.js';
+import { RUTA_PERFIL_PROPI, rutaDePerfil } from '../../../config/navigation.js';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { AvatarFil } from './FilaConversa.jsx';
-import { rutaCanonicaDelXat } from '../actorsDelXat.js';
+import { RUTA_DE_LA_IAIA, rutaCanonicaDelXat } from '../actorsDelXat.js';
 import { mouFocusDelMenu, quiSigna } from './Compositor.jsx';
 import IndicadorEscrivint from './IndicadorEscrivint.jsx';
 import PastillaNoLlegits from './PastillaNoLlegits.jsx';
@@ -143,6 +143,50 @@ function propsDeTitol(nivell) {
 /* Només les rutes internes de l'aplicació: mai un enllaç a fora des d'ací. */
 const esRutaInterna = (ruta) => typeof ruta === 'string' && ruta.startsWith('/') && !ruta.startsWith('//');
 
+/**
+ * R32.6 (P0-120) · Resol la ruta del perfil públic de la capçalera en converses
+ * 1:1 i d'entitat, incloent els casos on `fil.altres` arriba buit però la fila
+ * plegada (`canals`), `fil.entitatId` o els missatges rebuts (`contrapartReserva`)
+ * identifiquen unívocament l'interlocutor.
+ */
+export function resolRutaPerfilCapcalera(fil, { canals = null, contrapartReserva = null } = {}) {
+  if (!fil || fil.subjecte) return null;
+  const canonica = rutaCanonicaDelXat(fil);
+  if (canonica) return canonica;
+  if (fil.tipus === 'grup') return null;
+  if (fil.esPropi) return RUTA_PERFIL_PROPI;
+
+  let contrapart = null;
+  if (Array.isArray(fil.altres) && fil.altres.length === 1) {
+    [contrapart] = fil.altres;
+  } else if (Array.isArray(fil.participants) && fil.participants.length === 1 && (fil.tipus || 'directe') === 'directe') {
+    [contrapart] = fil.participants;
+  } else if (Array.isArray(canals)) {
+    for (const canal of canals) {
+      if (Array.isArray(canal?.altres) && canal.altres.length === 1 && canal.altres[0]?.id != null) {
+        [contrapart] = canal.altres;
+        break;
+      }
+    }
+  }
+  if (!contrapart && !fil.comEntitat && fil.entitatId != null && String(fil.entitatId) !== '') {
+    contrapart = { tipus: 'entitat', id: fil.entitatId };
+  }
+  if (!contrapart && contrapartReserva?.id != null && String(contrapartReserva.id) !== '') {
+    contrapart = contrapartReserva;
+  }
+  if (!contrapart) {
+    return fil.esIA || fil.tipus === 'ia' ? RUTA_DE_LA_IAIA : null;
+  }
+
+  const id = contrapart.id ?? contrapart.usuariId ?? contrapart.usuari_id ?? null;
+  if (id == null || String(id) === '') return null;
+  const tipusCru = contrapart.tipus || (fil.esIA ? 'ia' : 'persona');
+  const tipus = tipusCru === 'iaia' ? 'ia' : tipusCru;
+  const canonicaSintetica = rutaCanonicaDelXat({ ...fil, tipus: fil.tipus || 'directe', altres: [{ ...contrapart, id, tipus }] });
+  return canonicaSintetica || rutaDePerfil(tipus, id);
+}
+
 /* xat-ux-a11y-02 (T7a, 261104) · El focus s'ha perdut: el control que el tenia
    s'ha desmuntat (cau a <body>, o a res dins d'un shadow root). El mateix
    criteri que la selecció de xats (XatSection, focusPerdut): mai no es roba a
@@ -160,7 +204,7 @@ export default function CapcaleraConversa({
   onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
   onTornaAOrigen = null, accioXifratge = null, accioSilenci = null, accioArxiva = null,
   accioContingutCompartit = null, accioOblit = null, escrivint = 0,
-  nivellTitol = 1, canals = null, onTriaCanal = null
+  nivellTitol = 1, canals = null, onTriaCanal = null, contrapartReserva = null
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -285,12 +329,8 @@ export default function CapcaleraConversa({
 
   /* L'altra part, amb id i tipus: només llavors hi ha perfil on anar. Un fil
      de pàgina no és de ningú: el seu enllaç va a la pàgina. */
-  const llistaContrapart = Array.isArray(fil?.altres) && fil.altres.length === 1
-    ? fil.altres
-    : (Array.isArray(fil?.participants) && fil.participants.length === 1 && fil?.tipus === 'directe' ? fil.participants : null);
-  const contrapart = !esGrup && !subjecte && llistaContrapart ? llistaContrapart[0] : null;
   const rutaCanonica = rutaCanonicaDelXat(fil);
-  const rutaPerfil = subjecte ? null : rutaCanonica || (contrapart ? rutaDePerfil(contrapart.tipus, contrapart.id) : null);
+  const rutaPerfil = resolRutaPerfilCapcalera(fil, { canals, contrapartReserva });
 
   const titolSubjecte = subjecte ? subjecte.titol || nom : '';
   const rutaSubjecte = subjecte ? rutaCanonica || (esRutaInterna(subjecte.ruta) ? subjecte.ruta : null) : null;

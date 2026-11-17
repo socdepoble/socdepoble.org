@@ -208,7 +208,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada R32 · La crònica de l'Onada R32 obri /versions, davant de la crònica R30.
     // Onada R32.3 · La crònica de l'Onada R32.3 obri /versions, davant de la crònica R32.
     // Onada R32.4 · La crònica de l'Onada R32.4 obri /versions, davant de la crònica R32.3.
-    expect([...versions.querySelectorAll('h3')].slice(0, 18).map((h3) => h3.textContent)).toEqual([
+    // Onada v1.2.7 · La crònica de les Onades R32.5 i R32.6 obri /versions, davant de la crònica R32.4.
+    expect([...versions.querySelectorAll('h3')].slice(0, 19).map((h3) => h3.textContent)).toEqual([
+      '17 de novembre de 2026, nit · Onades R32.5 i R32.6 · L’avís d’actualització d’un toc, les fotos del mòbil al Xat i la fase beta a les aplicacions en proves',
       '17 de novembre de 2026, vesprada · Onada R32.4 · L’idioma i l’eixida al calaix d’identitats, les Aplicacions en un sol enllaç del Perfil i comptes exactes al TPV i a la Gestoria',
       '17 de novembre de 2026, matinada · Onada R32.3 · Les aplicacions avisen soles d’una versió nova, el Perfil en dues columnes al mòbil i una eixida de la sessió més sòlida',
       '16 de novembre de 2026, vesprada · Onada R32 · Missatges del Xat que no cauen en error en renovar la sessió, carpetes del Bloc de Notes que no es confonen i més seguretat al servidor compartit',

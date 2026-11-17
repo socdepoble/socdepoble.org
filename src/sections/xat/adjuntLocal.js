@@ -27,11 +27,14 @@ export const CLAUS_ERROR_ADJUNT = Object.freeze({
   servidor: 'section.xat.adjunts.error.servidor',
   'sense-confirmacio': 'section.xat.adjunts.error.senseConfirmacio',
   format: 'section.xat.adjunts.error.format',
+  'format-heic': 'section.xat.adjunts.error.formatHeic',
   durada: 'section.xat.adjunts.error.durada',
   buit: 'section.xat.adjunts.error.buit',
   'durada-illegible': 'section.xat.adjunts.error.duradaIllegible',
   'video-illegible': 'section.xat.adjunts.error.videoIllegible',
   foto: 'section.xat.adjunts.error.foto',
+  'foto-mida': 'section.xat.adjunts.error.fotoMida',
+  'foto-codificacio': 'section.xat.adjunts.error.fotoCodificacio',
   'sense-gravacio': 'section.xat.adjunts.senseGravacio',
   'micro-permis': 'section.xat.adjunts.error.microPermis',
   'micro-absent': 'section.xat.adjunts.error.microAbsent',
@@ -88,9 +91,14 @@ export function duradaLocal(fitxer, { signal, creaElement = () => document.creat
 function blobDeDataUrl(data) {
   const [cap, contingut] = data.split(',');
   const mime = /^data:(image\/(?:webp|jpeg));base64$/.exec(cap)?.[1];
-  if (!mime) throw errorAdjuntXat('foto');
-  const bytes = Uint8Array.from(atob(contingut), (c) => c.charCodeAt(0));
-  return new Blob([bytes], { type: mime });
+  if (!mime || !contingut) throw errorAdjuntXat('foto-codificacio');
+  try {
+    const bytes = Uint8Array.from(atob(contingut), (c) => c.charCodeAt(0));
+    if (!bytes.length) throw errorAdjuntXat('foto-codificacio');
+    return new Blob([bytes], { type: mime });
+  } catch (cause) {
+    throw errorAdjuntXat('foto-codificacio', { cause });
+  }
 }
 
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-4) · Un MP4 d'Android porta la
@@ -148,37 +156,74 @@ export const COSTAT_FOTO = 1200;
 export const COSTATS_CAPTURA = Object.freeze([2048, 1600, 1200]);
 export const esCapturaDePantalla = (fitxer) => fitxer?.type === 'image/png';
 
-/* La imatge recodificada (WebP o JPEG), sense EXIF/GPS, al costat més gran
-   de la llista que hi cap; l'últim costat es torna encara que no hi càpia
-   (validaAdjuntXat continua dient el que no es pot pujar). */
+/* El selector natiu pot donar MIME buit: només aleshores inferim una de les
+   extensions admeses. El MIME explícit continua manant, i el navegador ha
+   de descodificar els bytes: el nom no acredita el contingut. */
+const MIME_PER_EXTENSIO = Object.freeze({
+  heic: 'image/heic', heif: 'image/heif', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+  png: 'image/png', webp: 'image/webp', avif: 'image/avif', gif: 'image/gif',
+  mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm'
+});
+function ambMimeLocal(fitxer) {
+  const extensio = /\.([^.]+)$/.exec(fitxer.name || '')?.[1].toLowerCase();
+  const inferit = Object.hasOwn(MIME_PER_EXTENSIO, extensio) ? MIME_PER_EXTENSIO[extensio] : '';
+  const mime = fitxer.type === 'image/jpg' ? 'image/jpeg' : fitxer.type || inferit;
+  // slice conserva els bytes i dona a FileReader/netejaVideo el MIME inferit.
+  return mime && mime !== fitxer.type ? fitxer.slice(0, fitxer.size, mime) : fitxer;
+}
+
+/* Sense EXIF/GPS i sempre per davall del sostre client. Preservem els tres
+   primers intents de captures; després abaixem qualitat i costat amb una
+   cerca finita (màxim 15 recodificacions, inclòs el canvi WebP → JPEG).
+   Si no hi cap o no es pot codificar, no es retorna mai l'original. */
 async function imatgeRecodificada(fitxer, { signal, comprimeix }) {
-  const costats = esCapturaDePantalla(fitxer) ? COSTATS_CAPTURA : [COSTAT_FOTO];
+  const primers = esCapturaDePantalla(fitxer) ? COSTATS_CAPTURA : [COSTAT_FOTO];
+  const intents = [
+    ...primers.map((maxSize) => ({ maxSize, quality: 0.8 })),
+    ...[0.68, 0.55].map((quality) => ({ maxSize: COSTAT_FOTO, quality })),
+    ...[960, 768, 640].flatMap((maxSize) => [0.8, 0.68, 0.55].map((quality) => ({ maxSize, quality })))
+  ];
   let format = 'image/webp';
-  let imatge = null;
-  for (const [intent, costat] of costats.entries()) {
-    if (intent > 0 && signal?.aborted) throw abortat();
-    const opcions = { maxSize: costat, quality: 0.8, conservaExif: false };
-    let data = await comprimeix(fitxer, { ...opcions, format });
-    /* Gauntlet 261022_0225 (crítica Claude, MEDIA-3) · WebKit no sap codificar
-       WebP en canvas i torna PNG: es torna a demanar en JPEG, com fa
-       fotoDinsDelPressupost, i els costats següents ja van en JPEG. Una foto
-       mai no es puja en PNG: blobDeDataUrl talla de seguida amb 'foto'. */
-    if (format === 'image/webp' && !/^data:image\/webp[;,]/.test(String(data))) {
+  const codifica = async (opcions) => {
+    try { return await comprimeix(fitxer, { ...opcions, format }); }
+    catch (cause) {
+      if (signal?.aborted) throw abortat();
+      if (cause?.name === 'AbortError') throw cause;
+      throw errorAdjuntXat(/^image\/hei[cf]$/.test(fitxer.type) ? 'format-heic' : 'foto-codificacio', { cause });
+    }
+  };
+  for (const intent of intents) {
+    if (signal?.aborted) throw abortat();
+    const opcions = { ...intent, conservaExif: false };
+    let data;
+    try { data = await codifica(opcions); }
+    catch (error) {
+      if (error?.name === 'AbortError' || format !== 'image/webp') throw error;
+      // Un codificador WebP que rebutja també pot tindre JPEG disponible.
+      format = 'image/jpeg';
+      data = await codifica(opcions);
+    }
+    if (signal?.aborted) throw abortat();
+    /* Un format no suportat pot tornar PNG. Mirem el resultat real i
+       demanem JPEG, que es manté als intents següents. Mai es puja PNG. */
+    if (format === 'image/webp' && !/^data:image\/webp;base64,/.test(String(data))) {
       if (signal?.aborted) throw abortat();
       format = 'image/jpeg';
-      data = await comprimeix(fitxer, { ...opcions, format });
+      data = await codifica(opcions);
     }
-    imatge = blobDeDataUrl(String(data));
-    if (imatge.size <= MAXIM_ADJUNT_XAT.imatge) break;
+    if (signal?.aborted) throw abortat();
+    const imatge = blobDeDataUrl(String(data));
+    if (imatge.size < MAXIM_ADJUNT_XAT.imatge) return imatge;
   }
-  return imatge;
+  throw errorAdjuntXat('foto-mida');
 }
 
 export async function preparaAdjunt(fitxer, { signal, comprimeix = compressImage, lligDurada = duradaLocal, netejaVideo = senseUbicacioVideo } = {}) {
   if (!(fitxer instanceof Blob) || !fitxer.size) throw errorAdjuntXat('buit');
   if (signal?.aborted) throw abortat();
+  fitxer = ambMimeLocal(fitxer);
   let resultat;
-  if (/^image\/(jpeg|png|webp|avif|gif)$/.test(fitxer.type)) {
+  if (/^image\/(jpeg|png|webp|avif|gif|heic|heif)$/.test(fitxer.type)) {
     // Sempre recodificada i sense EXIF/GPS, també si l'original ja és menut.
     resultat = { fitxer: await imatgeRecodificada(fitxer, { signal, comprimeix }), tipus: 'imatge', duradaMs: null };
   } else if (/^video\/(mp4|webm|quicktime)$/.test(fitxer.type)) {

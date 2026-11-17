@@ -37,7 +37,7 @@ Cada carpeta de `src/` té una responsabilitat i les portes en vigilen les front
 
 ### Port neutral de backend
 
-`src/data/backendPort.js` accepta **qualsevol adaptador que complisca el contracte** de `src/data/contracte.js` i el segella en arrencar (`freezeImplementation`). El contracte té **32 operacions de nucli** (`CONTRACTE_NUCLI`) i **56 capacitats opcionals** (`CAPACITATS`), 162 mètodes en total.
+`src/data/backendPort.js` accepta **qualsevol adaptador que complisca el contracte** de `src/data/contracte.js` i el segella en arrencar (`freezeImplementation`). El contracte té **32 operacions de nucli** (`CONTRACTE_NUCLI`) i **57 capacitats opcionals** (`CAPACITATS`), 165 mètodes en total.
 
 - **Validació:** una capacitat s'oferix sencera o no s'oferix; un nucli incomplet o una capacitat parcial rebutgen l'adaptador.
 - **Lectures principals:** les de contingut, Mur, Multimèdia i Notes porten un temps màxim de 15 s, es poden cancel·lar i es validen per forma abans d'arribar a la interfície.

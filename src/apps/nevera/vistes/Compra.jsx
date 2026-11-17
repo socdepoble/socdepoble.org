@@ -87,6 +87,7 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
   return (
     <ColumnaColleccio
       forma="targetes"
+      ometDataNoIndicada
       titol={nomLlistaVisible(llista.nom)}
       linies={linies}
       resum={{ etiqueta: 'Per comprar', comptador: linies.length, textComptador: textArticles }}
@@ -155,6 +156,7 @@ export function ColumnaCatalegCompra({ params }) {
   return (
     <ColumnaCataleg
       forma="targetes"
+      ometDataNoIndicada
       titol="Catàleg"
       avis={deMercadona ? <AvisCatalegMercadona dades={catalegMercadona} error={errorMercadona} /> : null}
       categories={seccionsDe(estat, llista?.id)}

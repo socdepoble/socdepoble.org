@@ -100,7 +100,7 @@ export function caresDelFil(fil) {
   const cares = new Map();
   for (const altre of Array.isArray(fil?.altres) ? fil.altres : []) {
     const id = altre?.id == null ? '' : String(altre.id);
-    const url = altre?.avatarUrl ?? altre?.avatar_url ?? null;
+    const url = altre?.avatarUrl ?? altre?.avatar_url ?? altre?.avatar ?? null;
     if (!id || typeof url !== 'string' || !url) continue;
     cares.set(`${altre.tipus === 'entitat' ? 'entitat' : 'altre'}:${id}`, url);
   }
@@ -110,11 +110,25 @@ export function caresDelFil(fil) {
 /**
  * La cara (src de CaraXat) de l'autor d'un missatge, o null. Un missatge
  * d'entitat pren la de l'entitat del fil, mai la de qui l'opera (xat-07).
+ * R32.6 (P0-120) · En una conversa directa 1:1 sense padró a `fil.altres`
+ * (ex. mostra o fil directe que només du `avatar_url`), cau a la imatge del fil.
  */
 export function caraDAutor(msg, fil, cares) {
-  if (!msg || !cares?.size) return null;
-  if (msg.comEntitat) return fil?.entitatId != null ? cares.get(`entitat:${fil.entitatId}`) ?? null : null;
-  return msg.usuariId != null ? cares.get(`altre:${msg.usuariId}`) ?? null : null;
+  if (!msg) return null;
+  if (msg.comEntitat) {
+    const caraEntitat = fil?.entitatId != null ? cares?.get(`entitat:${fil.entitatId}`) ?? null : null;
+    if (caraEntitat) return caraEntitat;
+    return fil && fil.tipus !== 'grup' && !fil.subjecte && !fil.comEntitat && typeof fil.avatar_url === 'string' && fil.avatar_url
+      ? fil.avatar_url
+      : null;
+  }
+  const caraPersona = msg.usuariId != null ? cares?.get(`altre:${msg.usuariId}`) ?? null : null;
+  if (caraPersona) return caraPersona;
+  if (msg.sender !== 'me' && fil && fil.tipus !== 'grup' && !fil.subjecte && !fil.esPropi && !fil.comEntitat
+    && typeof fil.avatar_url === 'string' && fil.avatar_url) {
+    return fil.avatar_url;
+  }
+  return null;
 }
 
 /**

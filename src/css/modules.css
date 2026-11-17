@@ -4247,10 +4247,16 @@ details[open] summary.accordion-header svg:last-child {
     flex: 1 1 auto;
     min-width: 0;
     min-height: var(--sdp-touch);
+    padding-inline: var(--sdp-space-1);
+    margin-inline: calc(-1 * var(--sdp-space-1));
+    border-radius: var(--sdp-radi-s);
     color: inherit;
     text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--sdp-t);
   }
   @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-capcalera__enllac:hover { background: var(--sdp-crom-hover); }
     .sdp-xat-capcalera__enllac:hover .sdp-xat-capcalera__nom { text-decoration: underline; }
   }
   .sdp-xat-capcalera__enllac:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
@@ -4450,21 +4456,44 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-bombolla__cara,
   .sdp-xat-bombolla__espai-cara {
-    flex: 0 0 1.75rem;
-    inline-size: 1.75rem;
-    block-size: 1.75rem;
+    flex: 0 0 var(--sdp-touch);
+    inline-size: var(--sdp-touch);
+    margin-inline: calc(-1 * var(--sdp-space-2));
   }
-  /* Gauntlet R22 (workspace-07) · La cara és decorativa (un span): el nom de
-     l'autor ja porta al perfil. */
+  .sdp-xat-bombolla__espai-cara {
+    block-size: 1px;
+  }
+  /* R32.6 (P0-120 + workspace-07) · Avatar clicable cap a la fitxa de qui parla
+     amb diana tàctil de --sdp-touch (48×48 px) i cercle visual de 32 px. */
   .sdp-xat-bombolla__cara {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    block-size: var(--sdp-touch);
+    margin-block-start: calc(-1 * var(--sdp-space-1));
     border-radius: var(--sdp-radi-pastilla);
+    color: inherit;
+    text-decoration: none;
+  }
+  .sdp-xat-bombolla__cara--enllac {
+    cursor: pointer;
+    transition: transform var(--sdp-t), background-color var(--sdp-t);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-bombolla__cara--enllac:hover {
+      background: var(--sdp-fons-hover-subtil);
+    }
+  }
+  .sdp-xat-bombolla__cara--enllac:active {
+    transform: scale(var(--sdp-escala-premut));
+  }
+  .sdp-xat-bombolla__cara--enllac:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
   }
   .sdp-xat-bombolla__avatar-grup.sdp-avatar {
-    width: 1.75rem;
-    height: 1.75rem;
+    width: var(--sdp-space-8);
+    height: var(--sdp-space-8);
     font-size: var(--sdp-text-meta);
   }
   .sdp-xat-item--meu .sdp-xat-bombolla-wrap { flex-direction: row-reverse; }
@@ -14930,28 +14959,14 @@ details[open] summary.accordion-header svg:last-child {
     outline: var(--sdp-focus-gruix) solid var(--sdp-focus-invers);
     outline-offset: var(--sdp-focus-separacio);
   }
-  /* MEDIA-7 · El reproductor de veu de Pedra Seca: diana de --sdp-touch, el
-     blau d'acció i els números tabulars perquè el temps no balle. */
-  .sdp-xat-veu-caixa { min-width: 0; }
-  .sdp-xat-veu { display: flex; align-items: center; gap: var(--sdp-space-2); inline-size: 16rem; max-inline-size: 100%; margin: 0; }
-  .sdp-xat-veu__boto { flex: none; display: inline-flex; align-items: center; justify-content: center; inline-size: var(--sdp-touch); block-size: var(--sdp-touch); padding: 0; border: 1px solid transparent; border-radius: var(--sdp-radi-pastilla); background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); cursor: pointer; transition: background-color 150ms ease-out; }
-  /* XAT-08 · La velocitat, com a WhatsApp: una pastilla secundària amb el
-     número, que apareix en prémer Reprodueix i gira 1× → 1,5× → 2×. Amb ella,
-     el temps és un sol número i la fila cap en 320px. Més estreta encara (un
-     plegable de 280px), la pastilla baixa a una segona línia abans que el
-     lliscant passe de 32px o la fila isca de la bombolla. */
-  .sdp-xat-veu--velocitat { flex-wrap: wrap; }
-  .sdp-xat-veu--velocitat .sdp-xat-veu__posicio { flex-basis: 0; min-inline-size: var(--sdp-space-8); }
-  .sdp-xat-veu__velocitat { flex: none; min-inline-size: var(--sdp-touch); min-block-size: var(--sdp-touch); padding: 0 var(--sdp-space-2); border: 1px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-pastilla); background: transparent; color: var(--sdp-accio-text); font: inherit; font-size: var(--sdp-text-meta); font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color 150ms ease-out; }
-  @media (hover: hover) and (pointer: fine) {
-    .sdp-xat-veu__boto:hover { background: var(--sdp-accio-control-hover); }
-    .sdp-xat-veu__velocitat:hover { background: var(--sdp-fons-subtil); }
-  }
-  .sdp-xat-veu__boto:focus-visible, .sdp-xat-veu__posicio:focus-visible, .sdp-xat-veu__velocitat:focus-visible { outline: var(--sdp-focus-gruix) solid var(--sdp-focus); outline-offset: var(--sdp-focus-separacio); }
-  .sdp-xat-veu__posicio { flex: 1 1 auto; min-width: 0; min-height: var(--sdp-touch); margin: 0; accent-color: var(--sdp-accio); cursor: pointer; }
-  .sdp-xat-veu__posicio:disabled { cursor: default; }
-  .sdp-xat-veu__temps { flex: none; color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); font-variant-numeric: tabular-nums; }
-  .sdp-xat-veu--quieta { color: var(--sdp-text-cos); }
+  /* MEDIA-7 + R32.6 (P0-119) · Reproductor de notes de veu estil WhatsApp en
+     Pedra Seca: botó Play/Pausa nítid, ona determinista sincronitzada amb
+     l'<input type="range"> accessible, durada tabular a sota i pastilla de
+     velocitat compacta (28px visuals dins de diana tàctil de --sdp-touch) que
+     mai xafa l'hora de la bombolla. Les regles del reproductor (.sdp-xat-veu*)
+     i del contenidor .sdp-xat-bombolla-wrap--veu són a src/css/diferit-xat-veu.css,
+     full diferit que AdjuntXat.jsx adopta en pintar-se (D-R27-1, opció b): fora
+     de l'arrencada (v1.2.7, integració: sostre del connector). */
 }
 /* ═══ FI DEL BLOC AdjuntXat ═══ */
 
@@ -17461,3 +17476,22 @@ details[open] summary.accordion-header svg:last-child {
 /* ═══ BLOC ONADA R26.2 · SelectorOpcionsDesplegable · ara a src/css/diferit-selector-opcions.css ═══
    Onada R28 · D-R27-1, opció (b) aprovada pel Mestre: el bloc (amb les correccions R26.3) ix de l'arrencada
    del paquet de WordPress i el selector l'adopta en muntar-se (src/config/fullDiferit.js). */
+
+/* ═══ BLOC ONADA R32.5 · T3-UI-01 (subcapçalera CatalegWorkspace a 320px) ═══
+   Els 4 estats de les mostres de La Veu viuen al full diferit src/css/diferit-la-veu.css: només
+   els pinta LaVeuDeSocDePobleArticle.jsx, i no viatgen a l'arrencada del paquet de WordPress. */
+@layer components {
+  .sdp-cataleg-workspace .app-grid-column--middle .app-grid-col-header--dark-intens {
+    container-name: sdp-cataleg-eines;
+    container-type: inline-size;
+  }
+
+  @container sdp-cataleg-eines (max-width: 263.98px) {
+    .app-grid-col-header__accions {
+      gap: 0;
+    }
+    .app-grid-col-header__accio-icon {
+      width: var(--sdp-touch-min);
+    }
+  }
+}

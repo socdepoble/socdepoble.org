@@ -38,6 +38,31 @@
  *       té «completed» en alguna pista (l'API, només lectura) i el d'iOS és al registre de pujades de
  *       producció (l'App Store). Si no, l'App avisaria d'una versió que la botiga encara no dona, a
  *       cada obertura. Mai baixa, llevat de --corregeix-ard (l'única manera de desfer una errada).
+ *   --sincronitza-proves --versio X.Y.Z [--build-testflight M] [--build-apk N] [--corregeix-ard]
+ *       Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026: actualització automàtica real als
+ *       mòbils de prova) · escriu els canals de proves del manifest, amb les mateixes garanties que
+ *       --sincronitza-ard (la versió de package.json, cap build per damunt de VERSIO_CLIENT_NATIU, mai
+ *       baixa sense --corregeix-ard) i NOMÉS amb l'evidència de cada canal:
+ *         · testflightIosBuild (--build-testflight) · després de puja-ios.mjs: el registre de pujades
+ *           (SDP_BUILDS_DIR/pujades.jsonl, que puja-ios.mjs apunta DESPRÉS d'una pujada feta) ha de
+ *           portar el build d'iOS (intern o producció: App Store Connect el dona a TestFlight). P0123-02 ·
+ *           I cap pujada de producció d'iOS entre l'iosBuild d'ard.json i el build demanat: eixa pot
+ *           estar en App Review (on l'App porta el rebut de proves, com a TestFlight) o pendent de
+ *           publicar, i no s'anuncia un TestFlight més nou fins que l'App Store la done (--sincronitza-ard
+ *           --build-ios, i després esta ordre);
+ *         · apkDirectBuild i apkSha256 (--build-apk) · després de --publica-apk: dist/descarregues/ ha
+ *           de portar l'APK publicat, amb el .sha256 que casa, idèntic a l'APK ÚNIC de la versió i el
+ *           build de _builds_de_poble/android/ i signat amb SDP_ANDROID_UPLOAD_CERT_SHA256 (apksigner,
+ *           ara); apkSha256 és la SHA-256 d'eixe fitxer publicat.
+ *       I latestBuild, el més alt dels builds de cada fitxer (també amb --sincronitza-ard). testflightIosBuild
+ *       va a public/.well-known/ard.json i, si hi ha un build fet, a dist/.well-known/ard.json (la còpia
+ *       que es desplega), tots dos o cap. P0123-01 · L'anunci de l'APK (apkDirectBuild i apkSha256) va
+ *       NOMÉS a dist/.well-known/ard.json, mai a public/: viu i mor amb l'APK de dist/descarregues/, i un
+ *       «npm run build» posterior (ORDRE_WEB en comença per ací) els retira tots dos alhora. Per a
+ *       l'APK, l'ordre és: npm run build → --publica-apk → --sincronitza-proves --build-apk → rsync de
+ *       dist/ al Node 0 → firebase deploy d'eixe mateix dist/, SENSE cap build entremig (el manifest no
+ *       pot arribar a socdepoble.org abans que l'APK al Node 0). Si entremig es fa un build, l'APK i el
+ *       seu anunci han desaparegut junts de dist/: torna a --publica-apk i a --sincronitza-proves --build-apk.
  *   La pujada d'Android és la de puja-android.mjs (API REST de Google Play, sense fastlane), i
  *   --desplega hi passa tal qual (només a la prova interna). El corredor Jarvis (--notes) no puja mai
  *   res a Google Play: no fabrica el «sí» del Mestre (Elefant R32.3).
@@ -76,11 +101,14 @@ const ADMESOS = Object.freeze({
   'sincronitza-ard': false,
   'build-ios': true,
   'corregeix-ard': false,
+  'sincronitza-proves': false,
+  'build-testflight': true,
+  'build-apk': true,
   ajuda: false
 });
 
 const PLATAFORMES_VALIDES = Object.freeze(['totes', 'web', 'wordpress', 'android', 'ios']);
-const US = 'Ús: --notes "<notes>" [--canals web,wordpress,android,ios] [--sec] | --versio X.Y.Z --build N [--plataforma totes|web|wordpress|android|ios] [--canal intern|produccio] [--push] [--json] | --versio X.Y.Z --build N --plataforma android|ios [--canal intern|produccio] [--push] [--desplega] [--compila] [--confirma=X.Y.Z+N|produccio:X.Y.Z+N@<sha12>] | --versio X.Y.Z --build N --publica-apk | --versio X.Y.Z [--build N] [--build-ios M] --sincronitza-ard';
+const US = 'Ús: --notes "<notes>" [--canals web,wordpress,android,ios] [--sec] | --versio X.Y.Z --build N [--plataforma totes|web|wordpress|android|ios] [--canal intern|produccio] [--push] [--json] | --versio X.Y.Z --build N --plataforma android|ios [--canal intern|produccio] [--push] [--desplega] [--compila] [--confirma=X.Y.Z+N|produccio:X.Y.Z+N@<sha12>] | --versio X.Y.Z --build N --publica-apk | --versio X.Y.Z [--build N] [--build-ios M] --sincronitza-ard | --versio X.Y.Z [--build-testflight M] [--build-apk N] --sincronitza-proves';
 
 /* Onada R24 · Consola Zero (P-A) · Firebase Hosting publica versions atòmiques
    des de dist/: sense retenció, una pestanya oberta abans del desplegament
@@ -147,12 +175,24 @@ export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, pl
       accio: `Publicar l'APK directe a /descarregues/${NOM_APK_PUBLIC}: entre «npm run build» (que buida dist/) i l'rsync de dist/ al Node 0 (socdepoble.cat), que és qui el servix; Firebase no el puja i hi redirigix (302)`,
       ordre: `${ORDRE_PUBLICA_APK} --versio ${v} --build ${b}`
     });
+    /* v1.2.7 · P0-123 · Les Apps d'instal·lació directa s'assabenten de l'APK nou pel manifest. */
+    passos.push({
+      plataforma: 'android',
+      accio: `Anunciar l'APK publicat a les Apps d'instal·lació directa (apkDirectBuild i apkSha256 NOMÉS a dist/.well-known/ard.json: un build nou el retira amb l'APK): després de --publica-apk i ABANS de l'rsync de dist/ al Node 0 i de firebase deploy d'eixe dist/, sense cap build entremig`,
+      ordre: `${ORDRE_SINCRONITZA_PROVES} --versio ${v} --build-apk ${b}`
+    });
   }
   if (plataformes.includes('ios')) {
     passos.push({
       plataforma: 'ios',
       accio: `Arxivar, exportar i verificar IPA (${v}+${b}) per a App Store Connect / TestFlight (${canal})`,
       ordre: `node scripts/botigues/puja-ios.mjs --versio ${v} --build ${b} --canal ${canal} --compila`
+    });
+    /* v1.2.7 · P0-123 · Les Apps de TestFlight s'assabenten del build nou pel manifest. */
+    passos.push({
+      plataforma: 'ios',
+      accio: 'Anunciar el build pujat a les Apps de TestFlight (testflightIosBuild a ard.json): després de la pujada de puja-ios.mjs --confirma, que l\'apunta al registre, i mai mentre un build de producció més baix espera l\'App Store (App Review); la web el publica en el desplegament següent',
+      ordre: `${ORDRE_SINCRONITZA_PROVES} --versio ${v} --build-testflight ${b}`
     });
   }
 
@@ -264,6 +304,7 @@ export async function compilaApkDirecte({ arrel, valors, jdkHome, versio, build,
    diferents, un mòbil amb este APK no s'actualitza des de Play sense desinstal·lar (D-R32.3-PLAY-3). */
 export const DESCARREGUES_DIST = Object.freeze(['dist', 'descarregues']);
 export const ORDRE_PUBLICA_APK = 'node scripts/botigues/publica-tot.mjs --publica-apk';
+export const ORDRE_SINCRONITZA_PROVES = 'node scripts/botigues/publica-tot.mjs --sincronitza-proves';
 const APK_DE_BUILD = /^(\d{6})_socdepoble_(\d+\.\d+\.\d+)\+([1-9]\d{0,8})\.apk$/;
 /** Els build-tools de l'SDK d'Android (on viu apksigner). */
 export const BUILD_TOOLS_ANDROID = path.join(os.homedir(), 'Library', 'Android', 'sdk', 'build-tools');
@@ -398,17 +439,21 @@ export async function publicaApkDirecte({
    l'API, el registre de pujades de producció per a l'App Store) ABANS d'escriure. Mai baixa, llevat
    de --corregeix-ard, l'única manera explícita de desfer una errada. */
 export const MANIFEST_VERSIO = Object.freeze(['public', '.well-known', 'ard.json']);
+/** v1.2.7 · La còpia que es desplega (el build copia public/ a dist/). */
+export const MANIFEST_VERSIO_DIST = Object.freeze(['dist', '.well-known', 'ard.json']);
 
-/**
- * Pur: el text d'ard.json amb version, i androidBuild i/o iosBuild, posats (i el version de cada
- * entrada). Conserva l'ordre de les claus; les que no hi eren van primer. Llança si el text no és el
- * manifest, si no es passa cap build, si un build passa de `maximBuild` (VERSIO_CLIENT_NATIU) o si
- * baixaria sense `corregeix`.
- */
-export function sincronitzaManifestVersio(text, { versio, androidBuild = null, iosBuild = null, maximBuild = Number(VERSIO_CLIENT_NATIU), corregeix = false } = {}) {
+/* v1.2.7 · P0-123 · L'ordre de les claus de versió, davant de les entrades: les de les botigues
+   públiques, les dels canals de proves (src/config/manifestVersio.js) i latestBuild, el més alt de
+   tots els builds (el calcula l'escriptor; mai s'escriu a mà). */
+export const CLAUS_DE_VERSIO = Object.freeze(['version', 'androidBuild', 'iosBuild', 'testflightIosBuild', 'apkDirectBuild', 'apkSha256', 'latestBuild']);
+const CLAUS_DE_BUILD = Object.freeze(['androidBuild', 'iosBuild', 'testflightIosBuild', 'apkDirectBuild']);
+const SHA256_HEX = /^[0-9a-f]{64}$/;
+
+/* Les guardes comunes i l'escriptura de les claus de versió: la versió X.Y.Z que mai baixa, cada build
+   un enter positiu que no passa de `maximBuild` i que mai baixa, i latestBuild recalculat. Llança amb el
+   motiu; torna el text nou. `builds` només porta els builds que es canvien. */
+function aplicaVersions(text, { versio, builds, extra = {}, maximBuild, corregeix }) {
   if (!VERSIO.test(String(versio ?? ''))) throw new Error('la versió ha de ser X.Y.Z');
-  const builds = Object.entries({ androidBuild, iosBuild }).filter(([, valor]) => valor !== null && valor !== undefined);
-  if (!builds.length) throw new Error('cal androidBuild o iosBuild: el build que ja dona la botiga');
   for (const [nom, valor] of builds) {
     if (!BUILD.test(String(valor))) throw new Error(`${nom} ha de ser un enter positiu`);
     if (Number.isSafeInteger(maximBuild) && Number(valor) > maximBuild) {
@@ -418,7 +463,7 @@ export function sincronitzaManifestVersio(text, { versio, androidBuild = null, i
   let dades;
   try { dades = JSON.parse(String(text ?? '')); } catch { throw new Error('ard.json no és JSON'); }
   if (!dades || typeof dades !== 'object' || Array.isArray(dades) || !Array.isArray(dades.entries)) throw new Error('ard.json no té «entries»');
-  const nou = { version: String(versio), ...Object.fromEntries(builds.map(([nom, valor]) => [nom, Number(valor)])) };
+  const nou = { version: String(versio), ...Object.fromEntries(builds.map(([nom, valor]) => [nom, Number(valor)])), ...extra };
   if (!corregeix && VERSIO.test(String(dades.version ?? '')) && comparaVersions(nou.version, dades.version) < 0) {
     throw new Error(`ard.json ja publica la versió ${dades.version}: no es baixa a ${nou.version} (si és una errada, --corregeix-ard)`);
   }
@@ -427,12 +472,66 @@ export function sincronitzaManifestVersio(text, { versio, androidBuild = null, i
       throw new Error(`ard.json ja publica ${nom} ${dades[nom]}: no es baixa a ${nou[nom]} (si és una errada, --corregeix-ard)`);
     }
   }
-  const resultat = Object.keys(nou).every((clau) => Object.hasOwn(dades, clau)) ? dades : { ...nou, ...dades };
-  Object.assign(resultat, nou);
+  const fusio = { ...dades, ...nou };
+  const valids = CLAUS_DE_BUILD.map((clau) => fusio[clau]).filter((valor) => Number.isSafeInteger(valor) && valor >= 1);
+  if (valids.length) fusio.latestBuild = Math.max(...valids);
+  const resultat = {};
+  for (const clau of CLAUS_DE_VERSIO) if (Object.hasOwn(fusio, clau)) resultat[clau] = fusio[clau];
+  for (const [clau, valor] of Object.entries(dades)) if (!CLAUS_DE_VERSIO.includes(clau)) resultat[clau] = valor;
   for (const entrada of resultat.entries) {
     if (entrada && typeof entrada === 'object' && typeof entrada.version === 'string') entrada.version = nou.version;
   }
   return `${JSON.stringify(resultat, null, 2)}\n`;
+}
+
+/**
+ * Pur: el text d'ard.json amb version, i androidBuild i/o iosBuild, posats (i el version de cada
+ * entrada, i latestBuild). Les claus de versió van davant de les entrades, en l'ordre de CLAUS_DE_VERSIO.
+ * Llança si el text no és el manifest, si no es passa cap build, si un build passa de `maximBuild`
+ * (VERSIO_CLIENT_NATIU) o si baixaria sense `corregeix`.
+ */
+export function sincronitzaManifestVersio(text, { versio, androidBuild = null, iosBuild = null, maximBuild = Number(VERSIO_CLIENT_NATIU), corregeix = false } = {}) {
+  if (!VERSIO.test(String(versio ?? ''))) throw new Error('la versió ha de ser X.Y.Z');
+  const builds = Object.entries({ androidBuild, iosBuild }).filter(([, valor]) => valor !== null && valor !== undefined);
+  if (!builds.length) throw new Error('cal androidBuild o iosBuild: el build que ja dona la botiga');
+  return aplicaVersions(text, { versio, builds, maximBuild, corregeix });
+}
+
+/**
+ * v1.2.7 · P0-123 · Pur: el text d'ard.json amb version, testflightIosBuild i/o apkDirectBuild (amb la
+ * seua apkSha256) posats, i latestBuild. Les mateixes guardes que sincronitzaManifestVersio, i una més:
+ * el mateix apkDirectBuild amb una altra suma és un altre fitxer amb el mateix build, i només entra
+ * amb `corregeix`. Llança amb el motiu.
+ */
+export function sincronitzaManifestProves(text, {
+  versio, testflightIosBuild = null, apkDirectBuild = null, apkSha256 = null, maximBuild = Number(VERSIO_CLIENT_NATIU), corregeix = false,
+  senseSuma = false
+} = {}) {
+  if (!VERSIO.test(String(versio ?? ''))) throw new Error('la versió ha de ser X.Y.Z');
+  const builds = Object.entries({ testflightIosBuild, apkDirectBuild }).filter(([, valor]) => valor !== null && valor !== undefined);
+  if (!builds.length) throw new Error('cal testflightIosBuild o apkDirectBuild: el build que ja dona el canal de proves');
+  const ambApk = apkDirectBuild !== null && apkDirectBuild !== undefined;
+  /* `senseSuma` · només per a l'assaig en sec d'abans de llegir l'APK: les guardes de versió i de build,
+     sense la suma (el text que torna no s'escriu mai). */
+  if (senseSuma) return aplicaVersions(text, { versio, builds, maximBuild, corregeix });
+  if (ambApk && !SHA256_HEX.test(String(apkSha256 ?? ''))) throw new Error('apkDirectBuild va sempre amb apkSha256, la SHA-256 (64 xifres hexadecimals en minúscula) de l’APK publicat');
+  if (!ambApk && apkSha256 !== null && apkSha256 !== undefined) throw new Error('apkSha256 només va amb apkDirectBuild');
+  if (ambApk && !corregeix) {
+    let dades = null;
+    try { dades = JSON.parse(String(text ?? '')); } catch { /* aplicaVersions ho dirà */ }
+    if (dades && Number(dades.apkDirectBuild) === Number(apkDirectBuild) && SHA256_HEX.test(String(dades.apkSha256 ?? '')) && dades.apkSha256 !== apkSha256) {
+      throw new Error(`ard.json ja publica l’apkDirectBuild ${apkDirectBuild} amb una altra SHA-256: un altre fitxer amb el mateix build no entra (si és una correcció, --corregeix-ard)`);
+    }
+  }
+  return aplicaVersions(text, { versio, builds, extra: ambApk ? { apkSha256: String(apkSha256) } : {}, maximBuild, corregeix });
+}
+
+/** P0123-02 · L'iosBuild (enter positiu) que publica l'ard.json de `cami`, o null. Mai llança. */
+export function iosBuildDelManifest(cami) {
+  try {
+    const { iosBuild } = JSON.parse(fs.readFileSync(cami, 'utf8')) ?? {};
+    return Number.isSafeInteger(iosBuild) && iosBuild >= 1 ? iosBuild : null;
+  } catch { return null; }
 }
 
 /** La versió de package.json de l'arrel, o null. */
@@ -519,6 +618,148 @@ export async function comprovaDisponibilitat({ arrel, valors = {}, androidBuild 
     }
   }
   return { codi, problemes, avisos };
+}
+
+/* ───────── v1.2.7 · P0-123 · Els canals de proves del manifest (TestFlight i l'APK directe) ───────── */
+
+/**
+ * Escriu els canals de proves a public/.well-known/ard.json (o `cami`) i, si hi ha un build fet
+ * (dist/index.html i dist/.well-known/ard.json; o `camiDist`), també a la còpia de dist/ que es
+ * desplega: totes dues o cap (primer es calculen les dues, després s'escriuen). La versió ha de ser la
+ * de package.json. Amb `sec`, només les guardes.
+ * P0123-01 · public/ només rep testflightIosBuild (i el seu latestBuild); apkDirectBuild i apkSha256
+ * van NOMÉS a la còpia de dist/, la mateixa on viu l'APK: un build posterior, que buida dist/ i hi torna
+ * a copiar public/, retira l'APK i el seu anunci alhora (mai el manifest nou amb l'APK vell).
+ * @returns {{ codi:number, canviat?:boolean, escrits?:string[], error?:string }}
+ */
+export function escriuManifestProves({
+  arrel, versio, testflightIosBuild = null, apkDirectBuild = null, apkSha256 = null, corregeix = false, senseSuma = false,
+  cami = path.join(arrel, ...MANIFEST_VERSIO),
+  camiDist = fs.existsSync(path.join(arrel, 'dist', 'index.html')) ? path.join(arrel, ...MANIFEST_VERSIO_DIST) : null,
+  versioPaquet = versioDelPaquet(arrel), maximBuild = Number(VERSIO_CLIENT_NATIU), sec = false
+}) {
+  if (String(versio) !== String(versioPaquet)) {
+    return { codi: EIXIDA.ARBRE, error: `--versio ${versio} no és la de package.json (${versioPaquet ?? 'il·legible'}): el manifest anuncia la versió del sistema` };
+  }
+  const ambTestflight = testflightIosBuild !== null && testflightIosBuild !== undefined;
+  if (!ambTestflight && (apkDirectBuild === null || apkDirectBuild === undefined)) {
+    return { codi: EIXIDA.ARBRE, error: 'cal testflightIosBuild o apkDirectBuild: el build que ja dona el canal de proves' };
+  }
+  const ambDist = Boolean(camiDist) && fs.existsSync(camiDist);
+  /* L'APK viu a dist/ (--publica-apk el copia després del build): el seu anunci va NOMÉS en la mateixa
+     còpia de dist/ que es desplega (P0123-01), i public/ només porta TestFlight. */
+  if (apkDirectBuild !== null && apkDirectBuild !== undefined && !ambDist) {
+    return { codi: EIXIDA.ARBRE, error: `no hi ha ${MANIFEST_VERSIO_DIST.join('/')}: l’APK publicat i el seu anunci van en el mateix build (npm run build, --publica-apk i després esta ordre)` };
+  }
+  const camins = [];
+  if (ambTestflight) camins.push([cami, MANIFEST_VERSIO.join('/'), { testflightIosBuild }]);
+  if (ambDist) camins.push([camiDist, MANIFEST_VERSIO_DIST.join('/'), { testflightIosBuild, apkDirectBuild, apkSha256 }]);
+  const plans = [];
+  for (const [desti, nom, canals] of camins) {
+    let abans;
+    try {
+      if (fs.lstatSync(desti).isSymbolicLink()) return { codi: EIXIDA.ARBRE, error: `${nom} és un enllaç: no s’escriu` };
+      abans = fs.readFileSync(desti, 'utf8');
+    } catch { return { codi: EIXIDA.ARBRE, error: `no es pot llegir ${nom}` }; }
+    let despres;
+    try {
+      despres = sincronitzaManifestProves(abans, { versio, ...canals, maximBuild, corregeix, senseSuma });
+    } catch (error) { return { codi: EIXIDA.ARBRE, error: `${nom}: ${error.message}` }; }
+    plans.push({ desti, nom, abans, despres });
+  }
+  if (sec || senseSuma) return { codi: EIXIDA.BE, canviat: plans.some((pla) => pla.despres !== pla.abans), escrits: [] };
+  const canviats = plans.filter((pla) => pla.despres !== pla.abans);
+  if (!canviats.length) return { codi: EIXIDA.BE, canviat: false, escrits: [] };
+  for (const pla of canviats) escriuAtomic(pla.desti, (temporal) => fs.writeFileSync(temporal, pla.despres, 'utf8'));
+  return { codi: EIXIDA.BE, canviat: true, escrits: canviats.map((pla) => pla.nom) };
+}
+
+/**
+ * L'evidència dels canals de proves, ABANS d'escriure res. Mai llança.
+ *  · TestFlight (testflightIosBuild) · el registre de pujades (SDP_BUILDS_DIR/pujades.jsonl, fora del
+ *    repositori) porta el build d'iOS, de qualsevol canal (puja-ios.mjs només l'apunta DESPRÉS d'una
+ *    pujada feta a App Store Connect, que el dona a TestFlight quan acaba de processar-lo), d'una
+ *    versió que no és més nova que la del manifest. P0123-02 · I cap pujada de PRODUCCIÓ d'iOS amb un
+ *    build més alt que `iosBuildPublicat` (l'iosBuild d'ard.json, el que ja dona l'App Store) i més baix
+ *    que el demanat: eixe build pot estar en App Review, on l'App porta el rebut de proves com a
+ *    TestFlight, o pendent de publicar, i un TestFlight més nou li mostraria «Actualitza a TestFlight».
+ *  · APK directe (apkDirectBuild) · dist/descarregues/socdepoble-android-latest.apk (el que ha publicat
+ *    --publica-apk) és un fitxer regular dins de dist/, casa amb el seu .sha256, és byte a byte l'APK
+ *    ÚNIC AAMMDD_socdepoble_<versio>+<build>.apk de _builds_de_poble/android/ (amb el seu .sha256) i
+ *    està signat amb SDP_ANDROID_UPLOAD_CERT_SHA256 (`empremta`, apksigner, ara). `apkSha256` és la
+ *    SHA-256 d'eixe fitxer publicat.
+ * @returns {Promise<{ codi:number, problemes:string[], avisos:string[], apkSha256:string|null }>}
+ */
+export async function comprovaProves({
+  arrel, valors = {}, versio, testflightIosBuild = null, apkDirectBuild = null, jdkHome = null, iosBuildPublicat = null,
+  carpeta = carpetaBuildsAndroid(arrel), dist = path.join(arrel, 'dist'),
+  empremta = (apk) => empremtaDeLApk({ apk, valors, arrel, jdkHome })
+}) {
+  const problemes = [];
+  const avisos = [];
+  let codi = EIXIDA.BE;
+  let apkSha256 = null;
+  const mal = (c, text) => { if (codi === EIXIDA.BE) codi = c; problemes.push(text); };
+  if (testflightIosBuild !== null && testflightIosBuild !== undefined) {
+    let registre = null;
+    if (String(valors.SDP_BUILDS_DIR ?? '').trim()) {
+      const cami = rutaDe(arrel, valors, 'SDP_BUILDS_DIR');
+      try {
+        const real = fs.realpathSync(cami);
+        if (fs.statSync(real).isDirectory() && !esDins(arrel, cami) && !esDins(arrel, real)) registre = cami;
+      } catch { /* no hi és */ }
+    }
+    if (!registre) mal(EIXIDA.FALTA, `falta SDP_BUILDS_DIR (o no és una carpeta de fora del repositori): el registre de pujades és l'única prova que el build ${testflightIosBuild} d'iOS ha arribat a App Store Connect`);
+    else {
+      const { entrades, errors } = llegixRegistre(registre);
+      const pujada = entrades.find((e) => e.plataforma === 'ios' && e.build === String(testflightIosBuild));
+      const sol = Number.isSafeInteger(iosBuildPublicat) && iosBuildPublicat >= 1 ? iosBuildPublicat : 0;
+      const enRevisio = entrades
+        .filter((e) => e.plataforma === 'ios' && e.canal === CANALS.PRODUCCIO && BUILD.test(String(e.build)))
+        .map((e) => Number(e.build))
+        .filter((b) => b > sol && b < Number(testflightIosBuild));
+      if (errors.length) mal(EIXIDA.ARBRE, `SDP_BUILDS_DIR/pujades.jsonl no es pot llegir sencer (línies ${errors.join(', ')}): arregla-ho a mà`);
+      else if (!pujada) mal(EIXIDA.ARBRE, `el build ${testflightIosBuild} d'iOS no és al registre de pujades: primer puja-ios.mjs --confirma (l'apunta quan la pujada s'ha fet)`);
+      else if (comparaVersions(pujada.versio, versio) === 1) mal(EIXIDA.ARBRE, `el build ${testflightIosBuild} d'iOS és de la versió ${pujada.versio}, més nova que la ${versio} del manifest`);
+      else if (enRevisio.length) {
+        const b = Math.max(...enRevisio);
+        mal(EIXIDA.ARBRE, `el build ${b} d'iOS és al registre de producció i ard.json encara publica iosBuild ${sol || 'cap'}: pot estar en App Review (on l'App porta el rebut de proves, com a TestFlight) o pendent de publicar, i no s'anuncia testflightIosBuild ${testflightIosBuild} fins que l'App Store el done. Quan el done: node scripts/botigues/publica-tot.mjs --sincronitza-ard --versio ${versio} --build-ios ${b}, i torna a esta ordre`);
+      } else avisos.push(`el build ${testflightIosBuild} d'iOS (${pujada.versio}, ${pujada.canal}) és al registre de pujades: TestFlight el dona quan App Store Connect acaba de processar-lo (de minuts a una hora)`);
+    }
+  }
+  if (apkDirectBuild !== null && apkDirectBuild !== undefined) {
+    const esperada = normalitzaEmpremta(valors.SDP_ANDROID_UPLOAD_CERT_SHA256);
+    const carpetaPublica = path.join(dist, ...DESCARREGUES_DIST.slice(1));
+    const publicat = path.join(carpetaPublica, NOM_APK_PUBLIC);
+    const unic = apksDeLaVersio(carpeta, versio, apkDirectBuild);
+    let fitxa = null;
+    try {
+      const dins = !fs.lstatSync(carpetaPublica).isSymbolicLink() && esDins(fs.realpathSync(dist), fs.realpathSync(carpetaPublica));
+      fitxa = dins ? fs.lstatSync(publicat) : null;
+    } catch { fitxa = null; }
+    if (!esperada) mal(EIXIDA.FALTA, 'falta SDP_ANDROID_UPLOAD_CERT_SHA256 al fitxer d’entorn: sense la clau de pujada no es pot verificar l’APK publicat');
+    else if (!fitxa || !fitxa.isFile()) mal(EIXIDA.ARBRE, `no hi ha cap APK publicat a dist/descarregues/${NOM_APK_PUBLIC}: primer npm run build i ${ORDRE_PUBLICA_APK} --versio ${versio} --build ${apkDirectBuild}`);
+    else if (unic.length !== 1) mal(EIXIDA.ARBRE, `hi ha ${unic.length} APK ${versio}+${apkDirectBuild} a _builds_de_poble/android/: n'hi ha d'haver un, el que ha publicat --publica-apk`);
+    else {
+      const suma = sha256DeFitxer(publicat);
+      const llig = (fitxer) => { try { return fs.readFileSync(fitxer, 'utf8').trim().split(/\s+/)[0].toLowerCase(); } catch { return ''; } };
+      if (llig(`${publicat}.sha256`) !== suma) mal(EIXIDA.VERIFICACIO, `dist/descarregues/${NOM_APK_PUBLIC} no casa amb el seu .sha256: torna a ${ORDRE_PUBLICA_APK}`);
+      else if (sha256DeFitxer(unic[0]) !== suma || llig(`${unic[0]}.sha256`) !== suma) {
+        mal(EIXIDA.VERIFICACIO, `l’APK publicat no és ${path.basename(unic[0])} (o este no casa amb el seu .sha256): el build ${apkDirectBuild} no es pot anunciar amb este fitxer`);
+      } else {
+        let signatura = null;
+        try { signatura = await empremta(publicat); } catch { signatura = null; }
+        if (!signatura) mal(EIXIDA.VERIFICACIO, 'apksigner no ha pogut verificar la signatura de l’APK publicat: no s’anuncia');
+        else if (signatura !== esperada) mal(EIXIDA.VERIFICACIO, 'l’APK publicat està signat amb una clau diferent de SDP_ANDROID_UPLOAD_CERT_SHA256: no s’anuncia');
+        else if (sha256DeFitxer(publicat) !== suma) mal(EIXIDA.VERIFICACIO, 'l’APK publicat ha canviat mentre es verificava: no s’anuncia');
+        else {
+          apkSha256 = suma;
+          avisos.push(`dist/descarregues/${NOM_APK_PUBLIC} és ${path.basename(unic[0])} (SHA-256 ${suma}), signat amb la clau de pujada`);
+        }
+      }
+    }
+  }
+  return { codi, problemes, avisos, apkSha256 };
 }
 
 /**
@@ -613,10 +854,12 @@ export async function correProtocolJarvis({ arrel, notes, canals, sec = false, s
 
 /**
  * @param {string[]} argv
- * @param {{ env?: object, play?: object, manifest?: string|null }} [dependencies] Només per a les proves: l'entorn
- *   (SDP_BOTIGUES_ENV), les opcions del client de Google Play (adreces locals) i la ruta d'un ard.json temporal.
+ * @param {{ env?: object, play?: object, manifest?: string|null, manifestDist?: string|null, proves?: object }} [dependencies]
+ *   Només per a les proves: l'entorn (SDP_BOTIGUES_ENV), les opcions del client de Google Play (adreces locals), la
+ *   ruta d'un ard.json temporal (i la de la seua còpia de dist/, per a --sincronitza-proves) i les dependències de
+ *   comprovaProves (la carpeta dels APK i la verificació de la signatura).
  */
-export async function main(argv = process.argv.slice(2), { env = process.env, play = {}, manifest = null } = {}) {
+export async function main(argv = process.argv.slice(2), { env = process.env, play = {}, manifest = null, manifestDist = null, proves = {} } = {}) {
   const { opcions, errors } = analitzaArguments(argv, ADMESOS);
   if (opcions.ajuda) {
     process.stdout.write(`node scripts/botigues/publica-tot.mjs ${US.slice(4)}\n`);
@@ -626,6 +869,50 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
 
   const arrel = arrelComprovada();
   if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l’arrel del repositori');
+
+  /* v1.2.7 · P0-123 · Els canals de proves, una ordre sola: després de puja-ios.mjs (TestFlight) i/o
+     després de --publica-apk (l'APK directe). Res s'escriu fins que totes les guardes passen. */
+  if (opcions['sincronitza-proves']) {
+    const admesos = new Set(['sincronitza-proves', 'versio', 'build-testflight', 'build-apk', 'corregeix-ard']);
+    const sobren = Object.keys(opcions).filter((nom) => !admesos.has(nom));
+    if (sobren.length) return plega(EIXIDA.US, `--sincronitza-proves només va amb --versio, --build-testflight, --build-apk i --corregeix-ard (sobren: ${sobren.map((n) => `--${n}`).join(', ')})`);
+    const bo = (nom) => opcions[nom] === undefined || BUILD.test(String(opcions[nom]));
+    if (!VERSIO.test(String(opcions.versio ?? '')) || !bo('build-testflight') || !bo('build-apk')
+        || (opcions['build-testflight'] === undefined && opcions['build-apk'] === undefined)) {
+      return plega(EIXIDA.US, 'cal --versio X.Y.Z explícita i --build-testflight M (iOS, TestFlight) i/o --build-apk N (Android, l’APK directe publicat)');
+    }
+    const corregeix = Boolean(opcions['corregeix-ard']);
+    const builds = { testflightIosBuild: opcions['build-testflight'] ?? null, apkDirectBuild: opcions['build-apk'] ?? null };
+    const camins = manifest ? { cami: manifest, camiDist: manifestDist } : {};
+    // 1. Les guardes pures, en sec, abans de llegir cap entorn (la suma de l'APK encara no se sap).
+    const assaig = escriuManifestProves({ arrel, versio: opcions.versio, ...builds, senseSuma: true, corregeix, ...camins, sec: true });
+    if (assaig.codi !== EIXIDA.BE) return plega(assaig.codi, `${assaig.error}: ard.json no canvia`);
+    const entorn = carregaEntorn({ arrel, env });
+    if (entorn.codi !== EIXIDA.BE) return plega(entorn.codi, 'El fitxer d\'entorn no deixa seguir: no es fa res.', entorn.problemes);
+    const { valors } = entorn;
+    const net = (text) => emmascara(text, valors, arrel);
+    // 2. L'evidència de cada canal: el registre de pujades d'iOS (amb l'iosBuild que ja publica ard.json, P0123-02) i l'APK publicat a dist/.
+    const iosBuildPublicat = iosBuildDelManifest(camins.cami ?? path.join(arrel, ...MANIFEST_VERSIO));
+    const evidencia = await comprovaProves({ arrel, valors, versio: opcions.versio, ...builds, iosBuildPublicat, jdkHome: jdkPerAGradle({ env })?.home ?? null, ...proves });
+    for (const avis of evidencia.avisos) process.stdout.write(`  · ${net(avis)}\n`);
+    if (evidencia.codi !== EIXIDA.BE) return plega(evidencia.codi, 'ard.json no canvia: l’App avisaria d’un build que el canal de proves encara no dona.', evidencia.problemes.map(net));
+    // 3. L'escriptura (atòmica), amb la suma del fitxer publicat i totes les guardes de nou.
+    const res = escriuManifestProves({ arrel, versio: opcions.versio, ...builds, apkSha256: evidencia.apkSha256, corregeix, ...camins });
+    if (res.codi !== EIXIDA.BE) return plega(res.codi, `${res.error}: ard.json no canvia`);
+    const dits = [
+      builds.testflightIosBuild !== null ? `testflightIosBuild ${builds.testflightIosBuild}` : null,
+      builds.apkDirectBuild !== null ? `apkDirectBuild ${builds.apkDirectBuild} (SHA-256 ${evidencia.apkSha256})` : null
+    ].filter(Boolean).join(', ');
+    if (corregeix && res.canviat) process.stdout.write('! --corregeix-ard: el manifest s\'ha corregit a mà (pot baixar); anota-ho al rebut del desplegament\n');
+    process.stdout.write(`✓ ${res.canviat ? res.escrits.join(' i ') : MANIFEST_VERSIO.join('/')}: version ${opcions.versio}, ${dits}${res.canviat ? '' : ' (ja hi era)'}\n`);
+    process.stdout.write(builds.apkDirectBuild !== null
+      ? '  Ara l’rsync de dist/ al Node 0 (l’APK) i DESPRÉS firebase deploy (el manifest): mai al revés. L’anunci de l’APK només és a dist/: cap npm run build entremig (el retiraria amb l’APK).\n'
+      : '  El desplegament web següent el publica (npm run build copia public/ a dist/).\n');
+    return EIXIDA.BE;
+  }
+  if (opcions['build-testflight'] !== undefined || opcions['build-apk'] !== undefined) {
+    return plega(EIXIDA.US, '--build-testflight i --build-apk només van amb --sincronitza-proves');
+  }
 
   /* R32.3 · Les dues accions de publicació, cada una sola (sense plataforma, canal ni pujada).
      Elefant R32.3 (Peix silent_failure_hunter, P2) · Mai juntes: el manifest viu a public/ i el build el
@@ -676,6 +963,8 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
     process.stdout.write(`✓ dist/descarregues/${NOM_APK_PUBLIC} ← ${res.origen} (${res.octets} B, SHA-256: ${res.sha256}; signatura de la clau de pujada verificada)\n`);
     process.stdout.write(`  Ara l’rsync de dist/ al Node 0 (socdepoble.cat), que és qui el servix: Firebase no el puja (hosting.ignore) i /descarregues/${NOM_APK_PUBLIC} hi redirigix (302).\n`);
     process.stdout.write('  ! L’APK directe va signat amb la clau de PUJADA: si Google Play reparteix amb una altra (App Signing), un mòbil amb este APK no s’actualitza des de Play sense desinstal·lar (D-R32.3-PLAY-3).\n');
+    // v1.2.7 · P0-123 · Perquè les Apps d'instal·lació directa ho sàpien (abans de l'rsync i de firebase deploy).
+    process.stdout.write(`  Perquè les Apps d’instal·lació directa ho sàpien, abans de l’rsync i de firebase deploy: ${ORDRE_SINCRONITZA_PROVES} --versio ${opcions.versio} --build-apk ${opcions.build}\n`);
     return EIXIDA.BE;
   }
 

@@ -7,15 +7,19 @@
  * no ven ara), el de l'última operació (AvisOperacio) i el de la base
  * (AvisBase), i Preparat, que dona l'avís de la sessió a la columna de cada
  * vista (AvisDeLaColumna).
+ *
+ * Onada R32.5 · Internacionalització en les 5 llengües oficials (ca, es, en, eu, gl)
+ * a partir de useApp().idioma, conservant el valencià quan es munta aïllada.
  */
 import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react';
 import { ArrowLeft, LockKeyhole } from 'lucide-react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { Alerta, Boto, Carregant, EstatBuit, MarcColumna, Pila } from '../../../components/PedraSeca/index.js';
-import { useClosaAplicacio } from '../../plataforma/index.js';
+import { useApp, useClosaAplicacio } from '../../plataforma/index.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { avisDeSessio, avisMigMoviment } from '../estat/textos.js';
+import { textosUiBar } from '../i18nBar.js';
 import { textNumero } from '../nucli/cobrament.js';
 import { useVes } from './punt.js';
 import { horaCurta, nomOrigen } from './vestits.js';
@@ -23,6 +27,14 @@ import { horaCurta, nomOrigen } from './vestits.js';
 /* L'avís de la sessió que Preparat dona a la columna de la vista:
    { avis, dins, reclama }. Intern: no s'exporta; el porta AvisDeLaColumna. */
 const AvisDelPreparat = createContext(null);
+
+function useIdiomaBar() {
+  try {
+    return useApp()?.idioma || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
 
 /**
  * L'avís de la sessió DINS de la columna de la vista, davall de la seua
@@ -73,10 +85,12 @@ export function Columna({ titol, torna = null, eines = null, peu = null, avis = 
  */
 export function AvisSessio() {
   const { permis } = useBar();
+  const idioma = useIdiomaBar();
+  const tx = textosUiBar(idioma);
   const navigate = useNavigate();
-  const avis = avisDeSessio(permis);
+  const avis = avisDeSessio(permis, idioma);
   if (!avis) return null;
-  const entra = avis.entra ? <Boto varietat="primari" onClick={() => navigate(permis.rutaEntrada)}>Entra</Boto> : null;
+  const entra = avis.entra ? <Boto varietat="primari" onClick={() => navigate(permis.rutaEntrada)}>{tx.entra}</Boto> : null;
   return <Alerta to={avis.to} accions={entra}>{avis.text}</Alerta>;
 }
 
@@ -103,8 +117,10 @@ export function AvisSessioEnEstret() {
 export function AvisOperacio() {
   const { avis, accions, migsMoviments = [], sala } = useBar();
   /* «Taula 3», «Barra · 10:00» o, si ja és un tiquet, «Nota 0004». */
+  const idioma = useIdiomaBar();
+  const tx = textosUiBar(idioma);
   const nomDe = (descripcio) => {
-    if (!descripcio) return 'una comanda';
+    if (!descripcio) return tx.unaComanda;
     if (descripcio.numero !== null) return textNumero(descripcio.numero);
     const nom = nomOrigen(descripcio.origen, sala);
     return descripcio.origen?.tipus === 'taula' || !descripcio.obertaA ? nom : `${nom} · ${horaCurta(descripcio.obertaA)}`;
@@ -114,7 +130,7 @@ export function AvisOperacio() {
     <>
       {avis ? <Alerta to="error" onTanca={accions.oblidaAvis}>{avis}</Alerta> : null}
       {migsMoviments.map((mig) => {
-        const { titol, text } = avisMigMoviment(mig, nomDe);
+        const { titol, text } = avisMigMoviment(mig, nomDe, idioma);
         return <Alerta key={`${mig.op}-${mig.origenId}-${mig.destiId}`} to="avis" titol={titol}>{text}</Alerta>;
       })}
     </>
@@ -127,14 +143,16 @@ export function AvisOperacio() {
  */
 export function AvisBase() {
   const { mode, persistent, errorCarrega } = useBar();
+  const idioma = useIdiomaBar();
+  const tx = textosUiBar(idioma);
   if (errorCarrega) return <Alerta to="error">{errorCarrega}</Alerta>;
   return (
     <>
       {mode === 'lectora' ? (
-        <Alerta to="avis" titol="Només lectura">Una altra pestanya està fent de caixa: esta només pot mirar.</Alerta>
+        <Alerta to="avis" titol={tx.nomesLecturaTitol}>{tx.nomesLecturaText}</Alerta>
       ) : null}
       {persistent === false ? (
-        <Alerta to="avis" titol="Les dades no es guarden">Este navegador no deixa guardar res: el que faces durarà fins que tanques la pestanya.</Alerta>
+        <Alerta to="avis" titol={tx.sensePersistenciaTitol}>{tx.sensePersistenciaText}</Alerta>
       ) : null}
     </>
   );
@@ -154,6 +172,8 @@ export function AvisBase() {
  */
 export function Preparat({ titol, ambTorn = true, avis = 'damunt', children }) {
   const bar = useBar();
+  const idioma = useIdiomaBar();
+  const tx = textosUiBar(idioma);
   const { ves } = useVes();
   /* Quantes columnes de la vista han reclamat l'avís (AvisDeLaColumna): una, o cap si la vista no el passa. */
   const [columnes, setColumnes] = useState(0);
@@ -167,14 +187,14 @@ export function Preparat({ titol, ambTorn = true, avis = 'damunt', children }) {
     reclama
   }), [avis, columnes, reclama]);
   if (!bar.carregat) {
-    return <Columna titol={titol}>{bar.errorCarrega ? <AvisBase /> : <Carregant etiqueta="Carregant el bar…" />}</Columna>;
+    return <Columna titol={titol}>{bar.errorCarrega ? <AvisBase /> : <Carregant etiqueta={tx.carregantBar} />}</Columna>;
   }
   if (ambTorn && !bar.tornActual) {
     return (
       <Columna titol={titol} avis={deLaColumna.avis}>
-        <EstatBuit icona={LockKeyhole} titol="El torn està tancat"
-          accio={<Boto varietat="primari" disabled={!bar.permis.potEscriure} onClick={() => ves('torn')}>Obri el torn</Boto>}>
-          Per a vendre cal obrir el torn: qui atén i el fons de caixa.
+        <EstatBuit icona={LockKeyhole} titol={tx.tornTancatTitol}
+          accio={<Boto varietat="primari" disabled={!bar.permis.potEscriure} onClick={() => ves('torn')}>{tx.obriTorn}</Boto>}>
+          {tx.tornTancatText}
         </EstatBuit>
       </Columna>
     );
@@ -189,11 +209,14 @@ export function Preparat({ titol, ambTorn = true, avis = 'damunt', children }) {
 }
 
 /** Un paràmetre que no troba res: «No trobat», mai una pantalla buida. */
-export function NoTrobat({ titol = 'No trobat', text, torna }) {
+export function NoTrobat({ titol, text, torna }) {
+  const idioma = useIdiomaBar();
+  const tx = textosUiBar(idioma);
+  const titolResolt = titol ?? tx.noTrobat;
   const { ves } = useVes();
   return (
-    <Columna titol={titol}>
-      <EstatBuit titol={titol} accio={torna ? <Boto onClick={() => ves(...torna.trams)}>{torna.etiqueta}</Boto> : null}>{text}</EstatBuit>
+    <Columna titol={titolResolt}>
+      <EstatBuit titol={titolResolt} accio={torna ? <Boto onClick={() => ves(...torna.trams)}>{torna.etiqueta}</Boto> : null}>{text}</EstatBuit>
     </Columna>
   );
 }

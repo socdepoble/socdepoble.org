@@ -236,17 +236,41 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(permisos.some((p) => p['android:name'] === 'android.permission.POST_NOTIFICATIONS' && p['tools:node'] === 'remove')).toBe(false);
   });
 
-  /* P0-24 · Arrere; R31 · el tercer connector espera les Tasks reals de Firebase. */
-  test('MainActivity: registra CompartirNatiuPlugin, EnrereNatiuPlugin i CiclePushNatiuPlugin abans de super.onCreate', () => {
+  /* P0-24 · Arrere; R31 · el tercer connector espera les Tasks reals de Firebase.
+     v1.2.7 · P0-123 · El quart diu d'on ve l'App (Google Play o instal·lació directa). */
+  test('MainActivity: registra CompartirNatiuPlugin, EnrereNatiuPlugin, CiclePushNatiuPlugin i OrigenInstallacioPlugin abans de super.onCreate', () => {
     const codi = senseComentarisJava(llig(JAVA, 'MainActivity.java'));
     const onCreate = cosDelMetode(codi, 'protected void onCreate(Bundle savedInstanceState)');
     const pont = onCreate.indexOf('super.onCreate(savedInstanceState);');
-    for (const connector of ['CompartirNatiuPlugin', 'EnrereNatiuPlugin', 'CiclePushNatiuPlugin']) {
+    for (const connector of ['CompartirNatiuPlugin', 'EnrereNatiuPlugin', 'CiclePushNatiuPlugin', 'OrigenInstallacioPlugin']) {
       const registre = onCreate.indexOf(`registerPlugin(${connector}.class);`);
       expect(registre, connector).toBeGreaterThanOrEqual(0);
       expect(pont, connector).toBeGreaterThan(registre);
     }
-    expect(codi.match(/registerPlugin\(/g)).toHaveLength(3);
+    expect(codi.match(/registerPlugin\(/g)).toHaveLength(4);
+  });
+
+  /* v1.2.7 · P0-123 · OrigenInstallacioPlugin: només llig l'instal·lador de la mateixa App (cap permís
+     ni cap paquet nou), amb InstallSourceInfo des d'Android 11 i el mètode antic abans (minSdk 24), i
+     sempre resol: { llegit, instalador? } (el nom el classifica src/natiu/origenInstallacio.js). */
+  test('OrigenInstallacioPlugin.java: «OrigenInstallacio».consulta llig l’instal·lador de l’App i sempre resol', () => {
+    const codi = senseComentarisJava(llig(JAVA, 'OrigenInstallacioPlugin.java'));
+    expect(codi).toMatch(/@CapacitorPlugin\(name = "OrigenInstallacio"\)/);
+    const consulta = cosDelMetode(codi, 'public void consulta(PluginCall call)');
+    expect(consulta).toContain('resposta.put("llegit", true);');
+    expect(consulta).toContain('resposta.put("llegit", false);');
+    expect(consulta).toMatch(/resposta\.put\("instalador", instalador\)/);
+    expect(consulta.match(/call\.resolve\(resposta\);/g)).toHaveLength(1);
+    expect(consulta).not.toMatch(/call\.reject/);
+    const instalador = cosDelMetode(codi, 'static String instaladorDe(Context context) throws PackageManager.NameNotFoundException');
+    expect(instalador).toMatch(/Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.R/);
+    expect(instalador).toContain('gestor.getInstallSourceInfo(paquet)');
+    expect(instalador).toContain('font.getInstallingPackageName()');
+    expect(instalador).toContain('gestor.getInstallerPackageName(paquet)');
+    expect(instalador).toContain('context.getPackageName()');
+    // Cap permís nou al manifest (QUERY_ALL_PACKAGES, REQUEST_INSTALL_PACKAGES…).
+    const manifest = llig('android', 'app', 'src', 'main', 'AndroidManifest.xml');
+    expect(manifest).not.toMatch(/QUERY_ALL_PACKAGES|REQUEST_INSTALL_PACKAGES/);
   });
 
   /* 261026 (prompt 261026_1615, revisió) · Si Android mata el procés, la tasca

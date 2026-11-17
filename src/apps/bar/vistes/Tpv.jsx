@@ -48,14 +48,18 @@
  *   · ELS AVISOS van en una llista per ordre d'importància (sessió, per
  *     emportar, l'última operació i la base): en el mòbil la peça només posa
  *     el primer fora de les pestanyes. Un avís que no té res a dir no hi entra.
+ *
+ * Onada R32.5 · Internacionalització en les 5 llengües oficials (ca, es, en, eu, gl)
+ * via useApp().idioma, preservant byte a byte el valencià per defecte.
  */
 import { useState } from 'react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { UniversalTPV } from '../../../components/PedraSeca/index.js';
-import { esIdOpac, esSlug, useParametresConsulta, useSessioApp } from '../../plataforma/index.js';
+import { esIdOpac, esSlug, useApp, useParametresConsulta, useSessioApp } from '../../plataforma/index.js';
 import { resolModificadors } from '../nucli/cataleg.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { avisDeSessio } from '../estat/textos.js';
+import { textosUiBar } from '../i18nBar.js';
 import { DialegPreuObert } from './Caixa.jsx';
 import { EditorLinia } from './EditorLinia.jsx';
 import { AvisBase, AvisOperacio, AvisSessio, NoTrobat, Preparat } from './comu.jsx';
@@ -76,21 +80,34 @@ const CAP_PREU = Object.freeze({ producte: null, variant: null });
 const demanaTria = (producte, grups) => necessitaTria(producte, grups) || producte.variants.length > 1;
 
 /* «TPV de La Parròquia», «TPV del meu bar»: «de» i l'article «el» es contrauen. */
-function etiquetaDe(nom) {
+function etiquetaDe(nom, idioma = 'ca') {
+  if (idioma === 'en') return `${nom} POS`;
+  if (idioma === 'eu') return `${nom} · TPV`;
+  if (idioma === 'es') {
+    if (/^El\s/.test(nom)) return `TPV del ${nom.slice(3)}`;
+    return `TPV de ${nom}`;
+  }
+  if (idioma === 'gl') {
+    if (/^O\s/.test(nom)) return `TPV do ${nom.slice(2)}`;
+    return `TPV de ${nom}`;
+  }
   if (/^El\s/.test(nom)) return `TPV del ${nom.slice(3)}`;
   if (/^Els\s/.test(nom)) return `TPV dels ${nom.slice(4)}`;
   return `TPV de ${nom}`;
 }
 
 export function TpvBar({ params }) {
+  const { idioma = 'ca' } = useApp();
+  const tx = textosUiBar(idioma);
   return (
-    <Preparat titol="TPV" avis="propi">
-      <TpvDelPunt params={params} />
+    <Preparat titol={tx.tpvTitol} avis="propi">
+      <TpvDelPunt params={params} idioma={idioma} />
     </Preparat>
   );
 }
 
-function TpvDelPunt({ params }) {
+function TpvDelPunt({ params, idioma = 'ca' }) {
+  const tx = textosUiBar(idioma);
   const bar = useBar();
   const sessio = useSessioApp();
   const navigate = useNavigate();
@@ -109,7 +126,7 @@ function TpvDelPunt({ params }) {
   const idPreu = preuObert ? [preuObert.id, variantPreu?.id].filter(Boolean).join('~') : null;
   const [clauPreu, setClauPreu] = useState({ id: null, generacio: 0 });
   if (idPreu !== clauPreu.id) setClauPreu({ id: idPreu, generacio: idPreu ? clauPreu.generacio + 1 : clauPreu.generacio });
-  if (punt.perduda) return <NoTrobat text="Esta comanda ja no està oberta." torna={{ etiqueta: 'Ves al TPV', trams: ['tpv'] }} />;
+  if (punt.perduda) return <NoTrobat text={tx.comandaTancada} torna={{ etiqueta: tx.vesAlTpv, trams: ['tpv'] }} />;
 
   const { carta, establiment, comandes, sala, accions } = bar;
   const { comanda } = punt;
@@ -136,8 +153,8 @@ function TpvDelPunt({ params }) {
   const triable = perTriar && perTriar.actiu !== false && demanaTria(perTriar, carta.grups) ? perTriar : null;
   const tria = {
     obert: Boolean(triable),
-    titol: triable ? triable.nom : 'Tria',
-    descripcio: triable ? descripcioTria(triable, carta.grups) : 'Tria la variant.',
+    titol: triable ? triable.nom : tx.tria,
+    descripcio: triable ? descripcioTria(triable, carta.grups) : tx.triaVariant,
     opcions: triable ? opcionsDetall(triable, carta.grups).map((o) => ({ id: o.valor, nom: o.etiqueta, valor: o.ajuda })) : [],
     onTria: (opcio) => {
       const { varianteId, opcions } = llegixOpcio(opcio.id);
@@ -166,7 +183,7 @@ function TpvDelPunt({ params }) {
   };
   const oberts = {
     obert: consulta.oberts === '1',
-    titol: 'Tiquets oberts',
+    titol: tx.tiquetsOberts,
     elements: llistaOberts.map((t) => ({
       id: t.id, nom: t.nom, detall: textLinies(t.comptador), ...(t.secundari ? { valor: t.secundari } : {}), actiu: t.id === actiu
     })),
@@ -174,38 +191,38 @@ function TpvDelPunt({ params }) {
     onTanca: (motiu) => {
       if (motiu !== 'tria') posaConsulta({ oberts: null });
     },
-    ...(ven ? { nou: { text: 'Nou tiquet de barra', onClick: nou } } : {})
+    ...(ven ? { nou: { text: tx.nouTiquetBarra, onClick: nou } } : {})
   };
 
   /* Una lectura fallida va primer: en mòbil el primer avís queda a la vista també en Productes. */
   const avisos = [];
   if (bar.errorCarrega) avisos.push(<AvisBase key="base" />);
-  if (avisDeSessio(bar.permis)) avisos.push(<AvisSessio key="sessio" />);
-  if (emportar) avisos.push(<span key="emportar">Per emportar: només la carta per a casa.</span>);
+  if (avisDeSessio(bar.permis, idioma)) avisos.push(<AvisSessio key="sessio" />);
+  if (emportar) avisos.push(<span key="emportar">{tx.avisEmportar}</span>);
   if (bar.avis) avisos.push(<AvisOperacio key="operacio" />);
   if (!bar.errorCarrega && (bar.mode === 'lectora' || bar.persistent === false)) avisos.push(<AvisBase key="base" />);
 
   return (
     <>
       <UniversalTPV
-        etiqueta={etiquetaDe(establiment.nom)}
+        etiqueta={etiquetaDe(establiment.nom, idioma)}
         marca={sessio.marca || { nom: establiment.nom }}
         avis={avisos}
         tiquet={{
-          titol: 'Tiquet',
+          titol: tx.tiquet,
           nom: nomTiquet,
           comptador: tiquet.unitats,
           linies: tiquet.linies,
           total: tiquet.total,
           resum: tiquet.resum,
           textosEstat: TEXTOS_LINIES_BAR,
-          buit: { titol: 'El tiquet és buit', text: 'Toca un producte per a afegir-lo.' },
+          buit: { titol: tx.tiquetBuitTitol, text: tx.tiquetBuitText },
           ...(ven && comanda ? { onEdita: (linia) => posaConsulta({ linia: linia.id }) } : {})
         }}
         accions={{
-          secundaria: { text: 'Tiquets oberts', comptador: comandes.length, onClick: () => posaConsulta({ oberts: '1' }) },
+          secundaria: { text: tx.tiquetsOberts, comptador: comandes.length, onClick: () => posaConsulta({ oberts: '1' }) },
           principal: {
-            text: 'Cobra',
+            text: tx.cobra,
             ...(tiquet.total ? { valor: tiquet.total.valor } : {}),
             desactivada: !ven || !comanda || tiquet.pendentCents <= 0,
             /* El cobrament de la Caixa, amb la tornada al TPV (Cobrament.jsx i Tiquets.jsx). */
@@ -213,20 +230,21 @@ function TpvDelPunt({ params }) {
           }
         }}
         cataleg={{
-          titol: 'Productes',
+          titol: tx.productes,
           categories: categoriesVestides(carta),
           articles: articlesDelTpv(carta, { comanda, establiment }),
-          textosEstat: { 'en-colleccio': 'A la comanda' },
+          textosEstat: { 'en-colleccio': tx.aLaComanda },
           onTria: toca,
           desactivat: !ven,
           buit: emportar
-            ? { titol: 'Cap producte per emportar', text: 'Marca «Per emportar» a la fitxa del producte.' }
-            : { titol: 'La carta és buida', text: 'Afig productes a la carta.' }
+            ? { titol: tx.capEmportarTitol, text: tx.capEmportarText }
+            : { titol: tx.cartaBuidaTitol, text: tx.cartaBuidaText }
         }}
         oberts={oberts}
         tria={tria}
       />
       <DialegPreuObert key={`preu-${clauPreu.generacio}`} producte={preuObert} variant={variantPreu}
+        idioma={idioma}
         onTanca={() => posaConsulta({ preu: null, variant: null })}
         onAfig={(preuCents) => {
           afig(preuObert, { preuCents, ...(variantPreu ? { varianteId: variantPreu.id } : {}) });

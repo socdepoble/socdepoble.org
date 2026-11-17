@@ -4,12 +4,13 @@ import { Alerta, Boto, Camp, CandidatsAlergens, Fila, Selector } from '../../../
 import { CatalegWorkspace, DetallCataleg } from '../../../components/universal/workspace/index.js';
 import { candidatsVariantParroquia, useApp } from '../../plataforma/index.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
+import { textosUiBar } from '../i18nBar.js';
 import { LLAVORS, obteLlavor } from '../llavors/index.js';
 import { AvisOperacio, AvisSessio } from './comu.jsx';
 import { euros } from './vestits.js';
 import { modelCartaWorkspace } from './modelCartaWorkspace.js';
 
-function DetallProducte({ item, ruta, historic }) {
+function DetallProducte({ item, ruta, historic, tx }) {
   const producte = item.dades;
   const [variantId, setVariantId] = useState(producte.variants[0]?.id || '');
   const variant = producte.variants.find(v => v.id === variantId) || producte.variants[0];
@@ -17,13 +18,13 @@ function DetallProducte({ item, ruta, historic }) {
   return <DetallCataleg title={item.title} subtitle={item.subtitle} lead={item.lead} rellotgeViu
     heroImage={item.imageUrl} heroAlt={item.title} showShare={false} showConnect={false} showComment={false}>
     <AvisSessio /><AvisOperacio />
-    <p><Link to={ruta('tpv')}>Obri el TPV</Link>{' · '}<Link to={ruta('caixa')}>Obri la caixa</Link>{' · '}
-      {!historic && <Link to={ruta('productes', producte.id)}>Edita en la carta del dispositiu</Link>}</p>
+    <p><Link to={ruta('tpv')}>{tx.obriTpv}</Link>{' · '}<Link to={ruta('caixa')}>{tx.obriCaixa}</Link>{' · '}
+      {!historic && <Link to={ruta('productes', producte.id)}>{tx.editaCarta}</Link>}</p>
     {historic && <Alerta to="avis">Consulta de la font històrica de La Parròquia. Esta vista no ha canviat la carta del dispositiu; els preus, costos i al·lèrgens requerixen revisió.</Alerta>}
     <h3>Variants</h3>
     <Camp etiqueta="Variant del producte"><Selector value={variantId} onChange={event => setVariantId(event.target.value)}
       opcions={producte.variants.map(v => ({ valor: v.id, etiqueta: `${v.nom} · ${euros(v.preuCents)}` }))} /></Camp>
-    <p>{variant?.ref ? `REF original: ${variant.ref}. ` : ''}{producte.preuObert ? 'Preu obert.' : variant ? `Preu de la carta: ${euros(variant.preuCents)}.` : 'Preu desconegut.'}</p>
+    <p>{variant?.ref ? `REF original: ${variant.ref}. ` : ''}{producte.preuObert ? `${tx.preuObert}.` : variant ? `Preu de la carta: ${euros(variant.preuCents)}.` : 'Preu desconegut.'}</p>
     {proposta ? <CandidatsAlergens proposta={proposta} /> : <>
       <h3>Al·lèrgens i escandall</h3>
       <p>Consulta la fitxa actual del producte. Esta proposta no acredita la composició, les traces, les absències ni el cost d’un escandall.</p>
@@ -33,7 +34,8 @@ function DetallProducte({ item, ruta, historic }) {
 
 export function CatalegBarWorkspace() {
   const { carta, establiment, carregat, errorCarrega } = useBar();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
+  const tx = textosUiBar(idioma);
   const [historica, setHistorica] = useState(null);
   const [carregant, setCarregant] = useState(false);
   const [errorFont, setErrorFont] = useState(null);
@@ -64,7 +66,7 @@ export function CatalegBarWorkspace() {
   }, [fitxaEnllacada, consultaHistorica]);
   const eines = <>
     <Fila justify="center">
-      <Boto aria-pressed={font === 'dispositiu'} onClick={() => { peticio.current = null; setCarregant(false); setFont('dispositiu'); }}>Carta del dispositiu</Boto>
+      <Boto aria-pressed={font === 'dispositiu'} onClick={() => { peticio.current = null; setCarregant(false); setFont('dispositiu'); }}>{tx.cartaDispositiu}</Boto>
       {LLAVORS.some(llavor => llavor.id === 'la-parroquia') && <Boto disabled={carregant} aria-pressed={font === 'historica'} onClick={consultaHistorica}>
         {carregant ? 'Carregant La Parròquia…' : 'Consulta La Parròquia · font històrica'}
       </Boto>}
@@ -72,11 +74,11 @@ export function CatalegBarWorkspace() {
     {errorFont && <Alerta to="avis">{errorFont}</Alerta>}
   </>;
   return <CatalegWorkspace font="bar" destiPublicacio="bar" id="bar-cataleg-p069" model={model} ruta={ruta('cataleg')} privateItems
-    labels={{ categories: 'Categories de la carta', items: 'Catàleg del Bar', all: 'Tota la carta', search: 'Busca a la carta…', empty: 'La carta està buida', noResults: 'No hi ha coincidències' }}
-    renderDetail={({ item }) => item ? <>{eines}<DetallProducte key={item.id} item={item} ruta={ruta} historic={font === 'historica'} /></>
-      : <DetallCataleg title="Catàleg del Bar" subtitle={actual.establiment?.nom || 'Carta del dispositiu'} lead="Categories, productes i variants en un únic espai." rellotgeViu showShare={false} showConnect={false} showComment={false}>
+    labels={{ categories: tx.catalegCategories, items: tx.catalegTitol, all: tx.catalegTota, search: tx.catalegCerca, empty: tx.catalegBuit, noResults: tx.catalegSenseCoincidencies }}
+    renderDetail={({ item }) => item ? <>{eines}<DetallProducte key={item.id} item={item} ruta={ruta} historic={font === 'historica'} tx={tx} /></>
+      : <DetallCataleg title={tx.catalegTitol} subtitle={actual.establiment?.nom || tx.cartaDispositiu} lead={tx.catalegLead} rellotgeViu showShare={false} showConnect={false} showComment={false}>
         <AvisSessio /><AvisOperacio />{eines}
-        <p><Link to={ruta('tpv')}>Obri el TPV</Link>{' · '}<Link to={ruta('caixa')}>Obri la caixa</Link>{' · '}<Link to={ruta('ajustos', 'carta')}>Gestiona la carta</Link></p>
-        <h3>Tria un producte</h3><p>La selecció obri el detall ací mateix. La consulta d’una font històrica no substituïx la carta del dispositiu.</p>
+        <p><Link to={ruta('tpv')}>{tx.obriTpv}</Link>{' · '}<Link to={ruta('caixa')}>{tx.obriCaixa}</Link>{' · '}<Link to={ruta('ajustos', 'carta')}>{tx.gestionaCarta}</Link></p>
+        <h3>{tx.triaProducteTitol}</h3><p>{tx.triaProducteText}</p>
       </DetallCataleg>} />;
 }

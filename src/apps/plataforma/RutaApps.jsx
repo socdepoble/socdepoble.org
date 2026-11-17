@@ -28,6 +28,7 @@ import { Navigate, Route, Routes, useLocation } from '../../app/contexts/RouterC
 import { useUIState } from '../../app/contexts/UIContext';
 import { RequireAuth } from '../../app/guards/RequireAuth';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
+import { BandaBetaMicroApp } from '../../components/PedraSeca/molecules/BandaBetaMicroApp.jsx';
 import { useSEO } from '../../hooks/useSEO';
 import { AvisApp, PAGINA_INEXISTENT } from './AvisApp.jsx';
 import { ElementExtern } from './ElementExtern.jsx';
@@ -36,8 +37,10 @@ import { useFontServeis } from './fontServeis.js';
 import { useFontSessio } from './fontSessio.js';
 import { rutaDeApp, titolDe } from './manifestApp.js';
 import { ProveidorApp, useAppAvaluada, useRegistre } from './PlataformaContext.jsx';
-import { PortalApps, textDelMotiu } from './PortalApps.jsx';
+import { PortalApps, appsEnProves, textDelMotiu } from './PortalApps.jsx';
 import { analitzaRuta } from './registreApps.js';
+
+const APPS_BETA = appsEnProves();
 
 /* Ordre del Mestre (261024, 15:05) · Les entrades que una app interna ha retirat, i on porta ara
    el seu enllaç vell (replace: l'historial no guanya cap pas). El Lector ja no té la pàgina de
@@ -98,13 +101,17 @@ function ContenidorApp({ manifest, entrada }) {
      Una app amb dades personals (salut, financeres) no es deixa traduir pel
      navegador: la traducció de pàgina envia el text visible a un servei de
      fora (Onada 6, revisió de seguretat de la Gestoria). */
+  const enProves = manifest.origen === 'interna' && APPS_BETA.includes(manifest.id);
   return (
-    <ProveidorApp manifest={manifest} fontSessio={useFontSessio} serveis={serveis}>
+    <ProveidorApp manifest={manifest} fontSessio={useFontSessio} serveis={serveis} idioma={llenguaDelText}>
       <div className="sdp-app-contenidor" data-sdp-app={manifest.id} translate={manifest.dadesPersonals ? 'no' : undefined}>
         <GuardaPermis permis={manifest.permisos.veure}>
           <GuardaPermis permis={entrada.permis}>
-            {capcaleraLector}
-            {contingut}
+            {enProves ? <BandaBetaMicroApp idioma={llenguaDelText} /> : null}
+            <div className="sdp-app-contenidor__cos">
+              {capcaleraLector}
+              {contingut}
+            </div>
           </GuardaPermis>
         </GuardaPermis>
       </div>
