@@ -22,12 +22,14 @@ import { DetallCompte } from './DetallCompte.jsx';
 import { DetallPrivacitat } from './DetallPrivacitat.jsx';
 import { DetallVistes } from './DetallVistes.jsx';
 import { DetallMultimedia } from './DetallMultimedia.jsx';
-import { DetallAdministracio, DetallAplicacio, DetallNodes, DetallSenseOrganitzacions } from './DetallEspai.jsx';
+import {
+  DetallAdministracio, DetallAplicacio, DetallEixir, DetallIdioma, DetallNodes, DetallSenseOrganitzacions,
+} from './DetallEspai.jsx';
 import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
 import { nodesDelPerfil } from './nodes.js';
 import {
-  ID_ADMINISTRACIO_SISTEMA, PARAM_FITXA_ORGANITZACIO, PARAM_VISTA, TEXTOS_PRIVACITAT_LLISTA, VISTA_COMPTE, VISTA_IMPORTACIO, itemsDAdministracioSistema, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
+  ID_ADMINISTRACIO_SISTEMA, ID_APLICACIONS, PARAM_FITXA_ORGANITZACIO, PARAM_VISTA, TEXTOS_EIXIR_PER_LLENGUA, TEXTOS_IDIOMA_LLISTA, TEXTOS_PRIVACITAT_LLISTA, VISTA_COMPTE, VISTA_IMPORTACIO, itemsDAdministracioSistema, itemsDAplicacions, itemsDePerfil, llenguaDelTraductor, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
 import {
   PanellAjustosVistesColumnes, PanellCromIntegrat, PanellEmpaquetatsDesplegament, PanellNodesFediversResiliencia,
@@ -53,7 +55,7 @@ const paginaDeLAgentRenovable = lazyRouteRenovable(
   () => import('./PerfilPublicSection.jsx').then((modul) => ({ default: modul.PaginaDeLAgent })),
 );
 
-export { ID_ADMINISTRACIO_SISTEMA, itemsDAdministracioSistema, itemsDePerfil };
+export { ID_ADMINISTRACIO_SISTEMA, ID_APLICACIONS, itemsDAdministracioSistema, itemsDePerfil };
 
 const p = (nom, reserva) => Object.freeze([`section.perfil.shell.${nom}`, reserva]);
 export const TEXTOS_PERFIL_SHELL = Object.freeze({
@@ -100,7 +102,7 @@ export function PanellDiferitDelPerfil({ renovable, propsPanell = null, on = 'pe
   return (
     <BarreraDelTrosAccessori key={reintent} resetKey={renovable} fallback={fallback} nomesTransport
       onFalla={() => registraIncident('tros', on, 'fallback')}>
-      <Suspense fallback={null}>
+      <Suspense fallback={<p role="status">{tradueix(t, TEXTOS_PERFIL_SHELL.carregant)}</p>}>
         <Vista {...(propsPanell || {})} />
       </Suspense>
     </BarreraDelTrosAccessori>
@@ -252,8 +254,8 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
   const { esSuperadmin: superadminAdmin } = useSuperadminEstable();
   /* P0-63 (261108) · ?vista=compte (RUTA_COMPTE): «El compte» de la persona. */
   const initialSelection = useMemo(
-    () => seleccioInicialDePerfil(identitats, [preferidaRuta, preferidaActor], { superadmin: superadminAdmin, vista }),
-    [identitats, preferidaRuta, preferidaActor, superadminAdmin, vista],
+    () => seleccioInicialDePerfil(identitats, [preferidaRuta, preferidaActor], { superadmin: superadminAdmin, aplicacions, vista }),
+    [identitats, preferidaRuta, preferidaActor, superadminAdmin, aplicacions, vista],
   );
 
   /* Encàrrec 261018_1220 (Tasca 1, ordre del Mestre: «recuperar fidelment el
@@ -280,19 +282,32 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
     () => navegacioDePerfil(identitats, aplicacions, { superadmin: superadminAdmin }),
     [identitats, aplicacions, superadminAdmin],
   );
-  const model = useMemo(() => ({
-    status: 'ready',
-    itemsComplete: true,
-    workspaceKey,
-    navigationGroups: grupsNavegacio,
-    items: [
-      ...itemsDePerfil(identitats, { ambPrivacitat }).map((item) => (item.data?.vista === 'privacitat'
-        ? ambTextosTraduits(item, tradueix(t, TEXTOS_PRIVACITAT_LLISTA.titol), tradueix(t, TEXTOS_PRIVACITAT_LLISTA.subtitol))
-        : item)),
-      ...(superadminAdmin ? itemsDAdministracioSistema().map((item) => (appIos ? ambTextosPerAppIos(item) : item)) : []),
-      ...itemsDAplicacions(aplicacions),
-    ],
-  }), [identitats, aplicacions, ambPrivacitat, workspaceKey, grupsNavegacio, t, superadminAdmin, appIos]);
+  const model = useMemo(() => {
+    const textosEixir = TEXTOS_EIXIR_PER_LLENGUA[llenguaDelTraductor(t)] || TEXTOS_EIXIR_PER_LLENGUA.ca;
+    return {
+      status: 'ready',
+      itemsComplete: true,
+      workspaceKey,
+      navigationGroups: grupsNavegacio,
+      items: [
+        ...itemsDePerfil(identitats, { ambPrivacitat }).map((item) => {
+          const vistaItem = item.data?.vista;
+          if (vistaItem === 'privacitat') {
+            return ambTextosTraduits(item, tradueix(t, TEXTOS_PRIVACITAT_LLISTA.titol), tradueix(t, TEXTOS_PRIVACITAT_LLISTA.subtitol));
+          }
+          if (vistaItem === 'idioma') {
+            return ambTextosTraduits(item, tradueix(t, TEXTOS_IDIOMA_LLISTA.titol), tradueix(t, TEXTOS_IDIOMA_LLISTA.subtitol));
+          }
+          if (vistaItem === 'eixir') {
+            return ambTextosTraduits(item, textosEixir.titol, textosEixir.subtitol);
+          }
+          return item;
+        }),
+        ...(superadminAdmin ? itemsDAdministracioSistema().map((item) => (appIos ? ambTextosPerAppIos(item) : item)) : []),
+        ...itemsDAplicacions(aplicacions),
+      ],
+    };
+  }, [identitats, aplicacions, ambPrivacitat, workspaceKey, grupsNavegacio, t, superadminAdmin, appIos]);
 
   /* Slot estable: depèn només de coses que ja són estables gràcies al
      context endurit. */
@@ -355,6 +370,12 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
        cada actor: una organització (empresa o grup) i un agent IA, també. */
     if (vista === 'multimedia') {
       return ambFitxaPublica(<DetallMultimedia key={identitat.id} identitat={identitat} config={config} />);
+    }
+    if (vista === 'idioma') {
+      return ambFitxaPublica(<DetallIdioma key={identitat.id} persona={identitat} />);
+    }
+    if (vista === 'eixir') {
+      return ambFitxaPublica(<DetallEixir key={identitat.id} persona={identitat} />);
     }
     /* P1-11 (pla 261024_2230, T5B-03) · «Membres i connexions» d'una
        organització: el mateix DetallCompte, amb els ajustos del lloc 'membres'. */

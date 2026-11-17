@@ -24,11 +24,21 @@
  * --sdp-crom-* (css/modules.css, bloc T43).
  */
 import { UserRound } from '../../../icons.jsx';
+import { createTranslator } from '../../../config/i18n.js';
 import { AvatarResolt } from './AvatarResolt.jsx';
 
+/* Gauntlet R32.6 (PERFIL-04) · Des de la 1.2.6 l'idioma i l'eixida viuen dins
+   del calaix: el nom accessible del botó que l'obri ho diu, en la llengua de la
+   interfície (`llengua`, la que tria useIdentitatDeLaBarra).
+   v1.2.6 (trinquet de l'arrencada del connector WordPress) · Els textos són les
+   claus topbar.identitat.* dels diccionaris i no una taula de cinc llengües a
+   l'entrada: es, en, eu i gl viatgen al tros diferit de cada llengua, que ja és
+   en memòria quan useIdentitatDeLaBarra la detecta. Una llengua que no és de
+   les cinc (o cap) és el valencià (normalizeLanguage). */
 /** El nom accessible del botó, en un sol lloc (també el lligen les proves). */
-export function etiquetaIdentitatActiva(nom, entitat = false) {
-  return `Identitat activa: ${nom}${entitat ? ' (organització)' : ''}. Canviar identitat`;
+export function etiquetaIdentitatActiva(nom, entitat = false, llengua = 'ca') {
+  const t = createTranslator(llengua);
+  return `${t('topbar.identitat.activa')}: ${nom}${entitat ? ` (${t('topbar.identitat.organitzacio')})` : ''}. ${t('topbar.identitat.accio')}`;
 }
 
 /** Acta 261004_1027 §3 · El nom accessible de l'avatar que porta al perfil. */
@@ -49,7 +59,7 @@ export const TEXT_COMPROVANT_SESSIO = 'Comprovant la sessió…';
    Foraster de sempre. Amb sessió, `pendent` no hi compta. */
 export function BotoIdentitatActiva({
   teSessio = false, pendent = false, nom, avatar = null, llavor = null, entitat = false, obert = false,
-  perfil = false, onClick, etiquetaEntrar = 'Entrar'
+  perfil = false, onClick, etiquetaEntrar = 'Entrar', llengua = 'ca'
 }) {
   if (!teSessio && pendent) {
     return <span className="sr-only" role="status" aria-busy="true">{TEXT_COMPROVANT_SESSIO}</span>;
@@ -82,7 +92,7 @@ export function BotoIdentitatActiva({
       onClick={onClick}
       aria-haspopup="dialog"
       aria-expanded={obert ? 'true' : 'false'}
-      aria-label={etiquetaIdentitatActiva(nomVisible, entitat)}
+      aria-label={etiquetaIdentitatActiva(nomVisible, entitat, llengua)}
       title={`Actues com a ${nomVisible}`}
     >
       {imatge}

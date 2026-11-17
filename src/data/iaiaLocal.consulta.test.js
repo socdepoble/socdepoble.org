@@ -196,7 +196,8 @@ test.each([
   ['Consola', 'el_projecte', 'Consola'],
   ['Mercat', 'ADR-2026-11-PAGINACIO-SECCIONS', 'Mercat'],
   ['Què és el Xat?', '00_full_de_ruta', 'Xat'],
-  ['Com funcionen els tractors?', 'ADR-2026-12-MODULS-OPCIONALS', 'Tractors']
+  // Onada R32.4 · La pàgina didàctica del sistema nerviós explica els tractors i passa al davant de l'ADR de mòduls.
+  ['Com funcionen els tractors?', 'sistema_nervios_skills_i_repositoris', 'Tractors']
 ])('f4 D.2 · «%s» troba la Wiki pública que en parla', (pregunta, primera, nom) => {
   const fonts = guiat(wiki(), pregunta);
   expect([pregunta, fonts[0]?.id]).toEqual([pregunta, primera]);

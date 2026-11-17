@@ -857,6 +857,16 @@ test('R32.3 · Elefant · publicaApkDirecte copia a dist/descarregues només l\'
   assert.equal(fs.readFileSync(`${publicat}.sha256`, 'utf8'), `${sha256(octets)}  socdepoble-android-latest.apk\n`);
   assert.deepEqual([fet.origen, fet.sha256, fet.octets], ['261116_socdepoble_1.2.5+10.apk', sha256(octets), octets.length]);
   assert.deepEqual(publica.DESCARREGUES_DIST, ['dist', 'descarregues']);
+  /* Onada v1.2.6 (ordre del Mestre del 17-11-2026) · El que publicaApkDirecte deixa a dist/descarregues/ és
+     exactament el que firebase.json no puja (hosting.ignore) i redirigix (302) a la mateixa ruta del Node 0:
+     cap descàrrega de l'APK la servix Firebase. El contracte sencer és a src/config/firebaseHosting.test.js. */
+  const { hosting } = JSON.parse(fs.readFileSync(path.join(ARREL, 'firebase.json'), 'utf8'));
+  assert.deepEqual(hosting.redirects.map((r) => [r.source, r.destination, r.type]),
+    fs.readdirSync(desti).sort().map((nom) => [`/descarregues/${nom}`, `https://socdepoble.cat/descarregues/${nom}`, 302]));
+  for (const patro of ['**/*.apk', '**/*.apk.sha256']) assert.ok(hosting.ignore.includes(patro), `hosting.ignore porta ${patro}`);
+  for (const nom of fs.readdirSync(desti)) {
+    assert.ok(hosting.ignore.some((patro) => patro.startsWith('**/') && path.matchesGlob(`descarregues/${nom}`, patro)), `${nom} no es puja a Firebase`);
+  }
   const intacte = () => assert.equal(Buffer.compare(fs.readFileSync(publicat), octets), 0, 'el que ja hi és no es toca');
 
   /* El contraexemple del Peix security_reviewer: un APK qualsevol amb data posterior i el seu .sha256 fet a mà.
@@ -1052,7 +1062,9 @@ test('R32.3 · publica-tot: --publica-apk i --sincronitza-ard van sols, mai junt
     'node scripts/botigues/publica-tot.mjs', 'node scripts/botigues/puja-android.mjs', 'node scripts/botigues/publica-tot.mjs --publica-apk'
   ]);
   assert.match(resum.passos[1].accio, /API REST v3 \(pista internal, esborrany/);
-  assert.match(resum.passos[2].accio, /entre «npm run build» i «firebase deploy»/);
+  // Onada v1.2.6 · L'APK el servix el Node 0: l'ordre que el publica va abans de l'rsync de dist/, no de firebase deploy.
+  assert.match(resum.passos[2].accio, /entre «npm run build» \(que buida dist\/\) i l'rsync de dist\/ al Node 0 \(socdepoble\.cat\)/);
+  assert.match(resum.passos[2].accio, /Firebase no el puja i hi redirigix \(302\)/);
   assert.equal(resum.preflight.linies.some((l) => /fastlane/.test(l) && !/sense fastlane/.test(l)), false);
 
   /* Elefant (contraexemple del Peix silent_failure_hunter) · Abans, «--sincronitza-ard --publica-apk» sense

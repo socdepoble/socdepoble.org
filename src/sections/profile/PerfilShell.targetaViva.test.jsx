@@ -136,7 +136,9 @@ test('AH-02 · totes les files de la llista d’APARTATS (inclosa «La fitxa» a
     'Les vistes',
     'El compte',
     'Els nodes',
-    'Multimèdia'
+    'Multimèdia',
+    'Idioma del Sistema',
+    'Eixir de Sóc de Poble',
   ]);
   const fitxaActiva = within(llista(container)).getByRole('button', { name: /La fitxa/ });
   expect(fitxaActiva.classList.contains('sdp-gestor-fitxa')).toBe(true);
@@ -183,7 +185,9 @@ test('canviar d’apartat desmunta l’editor: l’entrada viva es retira i tote
     'Les vistes',
     'El compte',
     'Els nodes',
-    'Multimèdia'
+    'Multimèdia',
+    'Idioma del Sistema',
+    'Eixir de Sóc de Poble',
   ]);
   fireEvent.click(within(llista(container)).getByRole('button', { name: /La fitxa/ }));
   expect(within(llista(container)).getByRole('button', { name: /La fitxa/ }).getAttribute('aria-current')).toBe('true');

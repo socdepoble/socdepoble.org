@@ -1,7 +1,8 @@
-import { errorBar, esCents, esId, esMoment } from './comu.js';
-import { origenNet, totals } from './comanda.js';
+import { errorBar, esCents, esId, esMoment, suma, textNet } from './comu.js';
+import { MAX_QUANTITAT, origenNet, totals } from './comanda.js';
 import { METODES } from './cobrament.js';
 import { desglossaIva } from './iva.js';
+import { compta, totalLinia, TIPUS_DESCOMPTE } from './linia.js';
 import { MAX_AVISOS, validaTraspas } from './traspas.js';
 
 export const ESQUEMA_COPIA_BAR = 'sdp.bar.copia.v1';
@@ -20,16 +21,31 @@ function comandaValida(registre, torns) {
   const linies = new Set();
   for (const linia of registre.linies) {
     const importLinia = registre.tipus === 'devolucio' ? linia?.importCents : linia?.preuUnitariCents;
-    if (!esId(linia?.id) || linies.has(linia.id) || !enterPositiu(linia.quantitat)
+    if (!esId(linia?.id) || linies.has(linia.id) || !enterPositiu(linia.quantitat) || linia.quantitat > MAX_QUANTITAT
       || !esCents(importLinia) || importLinia < 0 || !Number.isSafeInteger(linia.ivaPercent)
-      || linia.ivaPercent < 0 || linia.ivaPercent > 100) return false;
+      || linia.ivaPercent < 0 || linia.ivaPercent > 100
+      || !['nova', 'marxada', 'anullada'].includes(linia.estat)
+      || (linia.costUnitariCents !== undefined && (!esCents(linia.costUnitariCents) || linia.costUnitariCents < 0))) return false;
+    /* Un descompte d'import pot passar del brut: canviaQuantitat baixa
+       unitats sense tocar-lo i descompteLinia el limita (FISC-01). */
+    if (linia.descompte !== undefined) {
+      const d = linia.descompte;
+      if (!esRegistre(d) || !TIPUS_DESCOMPTE.includes(d.tipus) || !enterPositiu(d.valor) || !textNet(d.motiu, 80)
+        || (d.tipus === 'percent' && d.valor > 100)) return false;
+    }
+    if (linia.convidada !== undefined && (!esRegistre(linia.convidada) || !textNet(linia.convidada.motiu, 80))) return false;
+    if (registre.tipus !== 'devolucio' && (!Array.isArray(linia.modificadors)
+      || linia.modificadors.some((m) => !esCents(m?.deltaCents) || m.deltaCents < 0))) return false;
     linies.add(linia.id);
   }
+  if (registre.tipus !== 'devolucio' && totals(registre).pendentCents < 0) return false;
+  const pagaments = new Set();
   return registre.pagaments.every((p) => {
     const devolucio = registre.tipus === 'devolucio';
-    if (!esId(p?.id) || !METODES.includes(p.metode) || !esCents(p.importCents) || !esMoment(p.moment)
+    if (!esId(p?.id) || pagaments.has(p.id) || !METODES.includes(p.metode) || !esCents(p.importCents) || !esMoment(p.moment)
       || (devolucio ? p.importCents > 0 : p.importCents <= 0)
       || (p.part !== undefined && (!Number.isSafeInteger(p.part) || p.part < 1 || p.part > 50))) return false;
+    pagaments.add(p.id);
     if (!devolucio && p.metode === 'efectiu') {
       return esCents(p.lliuratCents) && p.lliuratCents >= p.importCents
         && esCents(p.canviCents) && p.canviCents === p.lliuratCents - p.importCents;
@@ -41,13 +57,13 @@ function comandaValida(registre, torns) {
 function totalsValids(tiquet) {
   if (tiquet.estat !== 'tancada' || !esRegistre(tiquet.totals) || !Array.isArray(tiquet.totals.perIva)) return false;
   const retorn = tiquet.tipus === 'devolucio'
-    ? -tiquet.linies.reduce((suma, linia) => suma + linia.importCents, 0) || 0 : 0;
+    ? -suma(tiquet.linies, (linia) => linia.importCents) || 0 : 0;
   const calculats = tiquet.tipus === 'venda' ? totals(tiquet) : {
     brutCents: retorn, descomptesCents: 0, convidadesCents: 0, totalCents: retorn, anullatsCents: 0,
     perIva: desglossaIva(tiquet.linies, (linia) => -linia.importCents)
   };
   const camps = ['brutCents', 'descomptesCents', 'convidadesCents', 'totalCents', 'anullatsCents'];
-  const pagat = tiquet.pagaments.reduce((suma, pagament) => suma + pagament.importCents, 0);
+  const pagat = suma(tiquet.pagaments, (pagament) => pagament.importCents);
   const taxes = new Map(calculats.perIva.map((fila) => [fila.ivaPercent, fila]));
   return camps.every((camp) => esCents(tiquet.totals[camp]) && tiquet.totals[camp] === calculats[camp])
     && esCents(pagat) && pagat === calculats.totalCents
@@ -57,6 +73,51 @@ function totalsValids(tiquet) {
       const esperada = taxes.get(fila?.ivaPercent);
       return esperada && fila.baseCents === esperada.baseCents && fila.quotaCents === esperada.quotaCents;
     });
+}
+
+/* Una devolució no inventa una venda: congela la mateixa línia, i totes les
+   parts juntes respecten les unitats i els cèntims encara retornables.
+   El bolcat pot estar desordenat; validem el conjunt, sense llegir-lo com
+   una seqüència d'operacions. creaDevolucio arredonix l'ACUMULAT: cada part
+   és floor o ceil de la seua proporció i l'acumulat ha de quadrar exacte. */
+function devolucionsValides(tiquets) {
+  const vendes = new Map(tiquets.filter((t) => t.tipus === 'venda').map((t) => [t.id, t]));
+  const acumulats = new Map();
+  const campsCongelats = ['producteId', 'varianteId', 'categoriaId', 'nomCongelat', 'varianteNomCongelat', 'ivaPercent', 'costUnitariCents'];
+  for (const tiquet of tiquets.filter((t) => t.tipus === 'devolucio')) {
+    const venda = vendes.get(tiquet.tiquetOrigenId);
+    if (!venda) return false;
+    const originals = new Map(venda.linies.map((l) => [l.id, l]));
+    const repetides = new Set();
+    let delTiquet = acumulats.get(venda.id);
+    if (!delTiquet) { delTiquet = new Map(); acumulats.set(venda.id, delTiquet); }
+    for (const linia of tiquet.linies) {
+      const original = typeof linia.liniaOrigenId === 'string' ? originals.get(linia.liniaOrigenId) : null;
+      if (!original || !compta(original) || repetides.has(original.id) || linia.estat !== 'marxada'
+        || linia.descompte !== undefined || linia.convidada !== undefined
+        || campsCongelats.some((camp) => linia[camp] !== original[camp])) return false;
+      repetides.add(original.id);
+      const total = totalLinia(original);
+      if (!esCents(total) || total < 0) return false;
+      const totalGran = BigInt(total);
+      const unitatsVenda = BigInt(original.quantitat);
+      const unitats = BigInt(linia.quantitat);
+      const import_ = BigInt(linia.importCents);
+      const proporcio = totalGran * unitats;
+      if (import_ < proporcio / unitatsVenda || import_ > (proporcio + unitatsVenda - 1n) / unitatsVenda) return false;
+      const anterior = delTiquet.get(original.id) || { unitats: 0n, import_: 0n };
+      const acumulat = { unitats: anterior.unitats + unitats, import_: anterior.import_ + import_, total: totalGran, unitatsVenda };
+      if (acumulat.unitats > unitatsVenda || acumulat.import_ > totalGran) return false;
+      delTiquet.set(original.id, acumulat);
+    }
+  }
+  for (const linies of acumulats.values()) {
+    for (const { unitats, import_, total, unitatsVenda } of linies.values()) {
+      const esperat = (total * unitats * 2n + unitatsVenda) / (unitatsVenda * 2n);
+      if (import_ !== esperat) return false;
+    }
+  }
+  return true;
 }
 
 function establimentValid(establiment) {
@@ -76,7 +137,14 @@ function tancamentValid(esborrany) {
 }
 
 function tornValid(torn) {
-  if (!esMoment(torn.obertA) || !Array.isArray(torn.moviments) || !esCents(torn.fonsInicialCents)) return false;
+  if (!esMoment(torn.obertA) || !Array.isArray(torn.moviments) || !esCents(torn.fonsInicialCents)
+    || torn.fonsInicialCents < 0) return false;
+  const moviments = new Set();
+  for (const m of torn.moviments) {
+    if (!esId(m?.id) || moviments.has(m.id) || !['entrada', 'eixida'].includes(m.tipus)
+      || !enterPositiu(m.importCents) || !textNet(m.motiu, 80) || !esMoment(m.moment)) return false;
+    moviments.add(m.id);
+  }
   if (torn.estat === 'obert') return true;
   return torn.estat === 'tancat' && esMoment(torn.tancatA) && esRegistre(torn.resum)
     && esRegistre(torn.resum.vendesPerMetode) && esRegistre(torn.resum.retornatPerMetode)
@@ -127,6 +195,7 @@ export function llegixCopiaBar(text) {
         || (tiquet.tipus === 'devolucio' && !vendes.has(tiquet.tiquetOrigenId))) throw rebutja();
       numeros.add(clau);
     }
+    if (!devolucionsValides(bolcat.tiquets)) throw rebutja();
     return bolcat;
   } catch (error) {
     if (error?.codi === 'COPIA_INVALIDA') throw error;

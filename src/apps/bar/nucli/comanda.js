@@ -146,7 +146,7 @@ export function afegeixProducte(comanda, {
     exigeix(esCents(preuCents) && preuCents >= 0, 'PREU', 'Un producte de preu obert necessita el preu.');
     preuUnitariCents = preuCents;
   } else {
-    preuUnitariCents = variant.preuCents + suma(modificadors, (m) => m.deltaCents);
+    preuUnitariCents = suma([variant.preuCents, ...modificadors.map((m) => m.deltaCents)], (n) => n);
   }
   const ivaPercent = ivaDe(producte, ivaPerDefecte);
   exigeix(Number.isSafeInteger(ivaPercent) && ivaPercent >= 0 && ivaPercent <= 100, 'IVA', 'Falta l’IVA (el del producte o el de l’establiment).');
@@ -165,7 +165,7 @@ export function afegeixProducte(comanda, {
   if (ultima && ultima.estat === 'nova' && !ultima.descompte && !ultima.convidada) {
     exigeix(ultima.quantitat + quantitat <= MAX_QUANTITAT, 'QUANTITAT', 'Massa unitats en una línia.');
     const linies = comanda.linies.map((l) => (l.id === ultima.id ? { ...l, quantitat: l.quantitat + quantitat } : l));
-    return ambEsdeveniment({ ...comanda, linies }, { moment: ara, tipus: 'quantitat', liniaId: ultima.id, abans: ultima.quantitat, despres: ultima.quantitat + quantitat });
+    return exigeixPagatCobert(ambEsdeveniment({ ...comanda, linies }, { moment: ara, tipus: 'quantitat', liniaId: ultima.id, abans: ultima.quantitat, despres: ultima.quantitat + quantitat }));
   }
 
   exigeix(esId(idLinia) && !comanda.linies.some((l) => l.id === idLinia), 'ID', 'La línia nova necessita un id que no siga de cap altra.');
@@ -186,7 +186,7 @@ export function afegeixProducte(comanda, {
     estat: 'nova',
     afegidaA: ara
   };
-  return ambEsdeveniment({ ...comanda, linies: [...comanda.linies, linia] }, { moment: ara, tipus: 'afegeix', liniaId: idLinia, despres: quantitat });
+  return exigeixPagatCobert(ambEsdeveniment({ ...comanda, linies: [...comanda.linies, linia] }, { moment: ara, tipus: 'afegeix', liniaId: idLinia, despres: quantitat }));
 }
 
 /**

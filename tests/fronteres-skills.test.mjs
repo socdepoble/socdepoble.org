@@ -497,12 +497,43 @@ test('F2: motors al frontmatter classifica procediment_amb_motor encara que el c
   assert.deepEqual(detalls(r, 'sdp-motor-inexistent'), ['F2 motor absent tooling/gates/no_existeix.mjs']);
 });
 
-test('arbre real (C): cens canònic R30.2 de 19 skills procediment_amb_motor i 24 procediment sense scripts buits', () => {
+// GOV-02 · El llevador de comentaris de shell només s'aplica dins dels blocs de codi. Una capçalera
+// Markdown («## …») o un «#12» a la prosa no amaguen el motor que ve després.
+test('F2: a la prosa i a les capçaleres un # no amaga el motor; un comentari # node dins d\'un bloc de codi no compta', (t) => {
+  const { root, cas } = fixture(t);
+  cas('sdp-f2-capcalera', '## Pas 1 · node tooling/inexistent.mjs', { motors: null });
+  cas('sdp-f2-tiquet', 'Vegeu el tiquet #12: node tooling/absent2.mjs', { motors: null });
+  cas('sdp-f2-comentari', '```sh\n# node tooling/comentat.mjs\nnode tooling/gates/porta.mjs # node tooling/cua.mjs\n```', { motors: ['tooling/gates/porta.mjs'] });
+  const r = audita(root);
+  assert.deepEqual(detalls(r, 'sdp-f2-capcalera'), [
+    'F2 motor absent tooling/inexistent.mjs',
+    'F2 motor executat al cos sense declarar a motors: tooling/inexistent.mjs'
+  ]);
+  assert.deepEqual(detalls(r, 'sdp-f2-tiquet'), [
+    'F2 motor absent tooling/absent2.mjs',
+    'F2 motor executat al cos sense declarar a motors: tooling/absent2.mjs'
+  ]);
+  for (const id of ['sdp-f2-capcalera', 'sdp-f2-tiquet']) assert.equal(r.skills.find((s) => s.id === id).classe, 'procediment_amb_motor');
+  const comentari = r.skills.find((s) => s.id === 'sdp-f2-comentari');
+  assert.deepEqual(detalls(r, 'sdp-f2-comentari'), []);
+  assert.deepEqual(comentari.motors, ['tooling/gates/porta.mjs']);
+});
+
+test('arbre real (C): cens R32.4 de 20 skills procediment_amb_motor i 23 procediment (argv Node complet) sense scripts buits', () => {
   const arrel = arrelSegura();
   const r = auditaSkills(arrel);
   const ambMotor = r.skills.filter((s) => s.classe === 'procediment_amb_motor').map((s) => s.id);
   const cognitives = r.skills.filter((s) => s.classe === 'procediment').map((s) => s.id);
-  assert.equal(ambMotor.length, 19);
-  assert.equal(cognitives.length, 24);
+  assert.equal(ambMotor.length, 20);
+  assert.equal(cognitives.length, 23);
   assert.ok(ambMotor.includes('wiki-propagar-veritat'));
+});
+
+test('arbre real (D): els motors executables declarats són representables en l’esquema documental canònic', () => {
+  const arrel = arrelSegura();
+  const schema = JSON.parse(fs.readFileSync(path.join(arrel, 'tooling/wiki/schema.json'), 'utf8'));
+  const pattern = new RegExp(schema.properties.motors.items.pattern);
+  const incompatibles = auditaSkills(arrel).skills.flatMap((s) =>
+    s.motors.filter((motor) => !pattern.test(motor)).map((motor) => `${s.id}: ${motor}`));
+  assert.deepEqual(incompatibles, [], 'El catàleg i el validador documental han de poder representar els mateixos motors reals');
 });

@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-11-16T19:05:53.855Z",
-  "hash": "cd41977203fc4e5cbc72ea88903f4832cf4fd257c487d7eafa593522fcbd51ad",
+  "timestamp": "2026-11-17T00:36:53.302Z",
+  "hash": "67279f517e4da43692be28d46abb129c89ba343791144e4b9edfe3a73bea910a",
   "filesCount": 44,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "ca38909728894660eef000009e085ab8286a9d38b9bde16d11e055bc18595659",
@@ -11,7 +11,7 @@
     ".agents/skills/core-context-panic/SKILL.md": "c570055041fd84a0071fd2b8b8af78d350b95870f8f1f44e54b74454cf220500",
     ".agents/skills/core-direccio-autonoma/SKILL.md": "55abe5bd1307a1c9be901d3ad3cb64f162c65097afb3baf27c0c863ff8c2cbde",
     ".agents/skills/core-edicio-segura/SKILL.md": "ea6130b683b61a08fcb7dda49f6ba7a19eb7b7f76f44231340b2d8c2cec5cdd9",
-    ".agents/skills/core-empaquetat-wp/SKILL.md": "5bbc76b39921a4309b1b3e55bf3be0f92dd4bf31f130034d939cde7fbff5260c",
+    ".agents/skills/core-empaquetat-wp/SKILL.md": "8fe5ae7ff5cacad4b5c4d0206d7b9c73dc1ba608af9f1dbe992c83b8ffc1baa3",
     ".agents/skills/core-estrategia-ia/SKILL.md": "7aa71aee2f1c241da566b435a1848d48c1c647acbc8b440191428b3420f46c32",
     ".agents/skills/core-gauntlet-loop/SKILL.md": "c7cb676b5380893a4177290f889237d1a7096391e55dbc063471dd73de1614dc",
     ".agents/skills/core-higiene-escriptori/SKILL.md": "6941498da0d788cb2c97aa7aaa8477268046c95520c9426c8687fc390464c73a",
@@ -48,5 +48,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "d394e96ea749330bc5472e5a84e3420c1986f5894752807e68c60d84d8eff42e",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "983c3e56a5e450934b4f804385f25a2ef28431fe39a726257d890fb38a943ca3"
   },
-  "transaction": "b43329fc-d557-4953-a15d-5b922e9c3352"
+  "transaction": "8cb76d2f-ad0f-4540-a9df-0dd27b2c2665"
 }

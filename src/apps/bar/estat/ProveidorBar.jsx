@@ -69,6 +69,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
   const [base, setBase] = useState(() => ({ persistent: magatzem.base.persistent, mode: magatzem.base.mode }));
   const [avis, setAvis] = useState(null);
   const ref = useRef(null);
+  const lecturaVigent = useRef(false);
   const cua = useRef(Promise.resolve());
   const generacio = useRef(0);
   const sessio = useSessioApp();
@@ -86,6 +87,12 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
     setDades(nou);
   }, []);
 
+  const posaLlegides = useCallback((nou) => {
+    lecturaVigent.current = true;
+    setErrorCarrega(null);
+    posa(nou);
+  }, [posa]);
+
   useEffect(() => {
     let viu = true;
     const llegixBase = () => setBase({ persistent: magatzem.base.persistent, mode: magatzem.base.mode });
@@ -93,10 +100,13 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
     const recarrega = () => {
       const pas = cua.current.then(async () => {
         if (!viu) return;
+        lecturaVigent.current = false;
         const d = await magatzem.carrega();
-        if (viu) posa(d);
+        if (viu) posaLlegides(d);
       });
-      cua.current = pas.catch(() => {});
+      cua.current = pas.catch((error) => {
+        if (viu) setErrorCarrega(textError(error));
+      });
     };
     const desfes = magatzem.base.subscriu((esdeveniment) => {
       if (!viu) return;
@@ -112,18 +122,19 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       await magatzem.base.obtinBloqueig();
       const carregades = await magatzem.carrega();
       if (!viu) return;
-      posa(carregades);
+      posaLlegides(carregades);
       llegixBase();
     })().catch((error) => {
       if (viu) setErrorCarrega(textError(error));
     });
     return () => {
       viu = false;
+      lecturaVigent.current = false;
       generacio.current += 1;
       desfes();
       magatzem.base.tanca();
     };
-  }, [magatzem, posa]);
+  }, [magatzem, posaLlegides]);
 
   /* Una operació a la cua: fn(estat, ctx) torna { estat?, valor }. */
   const opera = useCallback((fn) => {
@@ -139,8 +150,15 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         resultat = await fn(actual, { ara, id });
       } catch (error) {
         if (['CONFLICTE', 'JA_TANCAT', 'TORN_TANCAT', 'TORN_OBERT'].includes(error?.codi)) {
-          const fresques = await magatzem.carrega().catch(() => null);
-          if (fresques && vigent === generacio.current) posa(fresques);
+          try {
+            const fresques = await magatzem.carrega();
+            if (vigent === generacio.current) posaLlegides(fresques);
+          } catch (errorLectura) {
+            if (vigent === generacio.current) {
+              lecturaVigent.current = false;
+              setErrorCarrega(textError(errorLectura));
+            }
+          }
         }
         throw error;
       }
@@ -155,13 +173,14 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       if (vigent === generacio.current) setAvis(textError(error));
       return { ok: false, error };
     });
-  }, [posa, rellotge, atzar, magatzem]);
+  }, [posa, posaLlegides, rellotge, atzar, magatzem]);
 
   const accions = useMemo(() => {
     /* Una operació d'ESCRIPTURA: la guarda del permís (vegeu la capçalera) i després la de sempre. */
     const escriu = (fn) => opera((d, ctx) => {
       if (!potEscriureAra.current) throw errorBar('SENSE_PERMIS', 'Entra per a vendre.');
       if (magatzem.base.mode !== 'escriptora') throw errorBar('NOMES_LECTURA', 'Esta pestanya només pot llegir.');
+      if (!lecturaVigent.current) throw errorBar('NO_DISPONIBLE', 'Cal tornar a llegir el disc abans de canviar res.');
       return fn(d, ctx);
     });
     const exigeixVenda = (d) => {
@@ -410,8 +429,22 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       bolca: () => magatzem.bolca(),
       exportaCopia: () => magatzem.exportaCopia(),
       restauraCopia: (text) => escriu(async () => {
+        const vigent = generacio.current;
         const valor = await magatzem.restauraCopia(text);
-        return { estat: await magatzem.carrega(), valor };
+        if (vigent !== generacio.current) throw errorBar('TANCAT', 'El Bar ja s’ha tancat.');
+        // El disc ja conté la còpia: la memòria antiga no autoritza cap escriptura.
+        lecturaVigent.current = false;
+        try {
+          const estat = await magatzem.carrega();
+          if (vigent === generacio.current) {
+            lecturaVigent.current = true;
+            setErrorCarrega(null);
+          }
+          return { estat, valor };
+        } catch (error) {
+          if (vigent === generacio.current) setErrorCarrega(textError(error));
+          throw error;
+        }
       }),
       oblidaAvis: () => setAvis(null)
     };

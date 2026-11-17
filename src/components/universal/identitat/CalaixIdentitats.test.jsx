@@ -6,7 +6,8 @@ import { afterEach, expect, test, vi } from 'vitest';
 
 /* T43 (ordre del Mestre, 260928) · el calaix «Amb qui actues?». */
 vi.mock('../../../hooks/useResolvedAsset.js', () => ({ useResolvedAsset: () => '' }));
-import { CalaixIdentitats } from './CalaixIdentitats.jsx';
+import { Alerta } from '../../PedraSeca/index.js';
+import { CalaixIdentitats, ETIQUETA_EIXIR_CALAIX, ETIQUETA_IDIOMA_CALAIX } from './CalaixIdentitats.jsx';
 
 afterEach(cleanup);
 
@@ -17,7 +18,7 @@ const IDENTITATS = [
 ];
 
 function pinta(props = {}) {
-  const accions = { onTanca: vi.fn(), onTria: vi.fn(), onConnectar: vi.fn(), onFitxa: vi.fn() };
+  const accions = { onTanca: vi.fn(), onTria: vi.fn(), onIdioma: vi.fn(), onEixir: vi.fn() };
   const vista = render(<CalaixIdentitats obert identitats={IDENTITATS} {...accions} {...props} />);
   return { ...vista, ...accions };
 }
@@ -36,14 +37,23 @@ test('títol i descripció, llista amb l’activa marcada (aria-current i «Acti
   expect(container.ownerDocument.querySelectorAll('dialog [style]')).toHaveLength(0);
 });
 
-test('triar una identitat la passa al pare; les accions del peu naveguen', () => {
-  const { onTria, onConnectar, onFitxa } = pinta();
+test('triar una identitat la passa al pare; el peu mostra Idioma del sistema i Eixir de Sóc de Poble', () => {
+  const { onTria, onIdioma, onEixir } = pinta();
   fireEvent.click(screen.getByRole('button', { name: /Colla/ }));
   expect(onTria).toHaveBeenCalledWith('entitat', 'o-2');
-  fireEvent.click(screen.getByRole('button', { name: 'Connectar-me a una organització' }));
-  fireEvent.click(screen.getByRole('button', { name: 'La meua fitxa i ajustos' }));
-  expect(onConnectar).toHaveBeenCalledTimes(1);
-  expect(onFitxa).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole('button', { name: ETIQUETA_IDIOMA_CALAIX }));
+  fireEvent.click(screen.getByRole('button', { name: ETIQUETA_EIXIR_CALAIX }));
+  expect(onIdioma).toHaveBeenCalledTimes(1);
+  expect(onEixir).toHaveBeenCalledTimes(1);
+});
+
+test('mostra avís de canvis sense desar o error d’eixida dins del cos del calaix', () => {
+  pinta({
+    avisEixida: <Alerta to="avis" titol="Encara hi ha canvis sense desar"><p>Tens 1 canvi.</p></Alerta>,
+    errorEixida: <Alerta to="error">No s’ha pogut tancar la sessió.</Alerta>,
+  });
+  expect(screen.getByText('Encara hi ha canvis sense desar')).toBeTruthy();
+  expect(screen.getByText('No s’ha pogut tancar la sessió.')).toBeTruthy();
 });
 
 test('tancat, no es mostra; el botó de tancar avisa el pare', () => {
@@ -85,7 +95,7 @@ test('O4-CLAUDE-1b · «Amb qui actues?» és un calaix de la dreta: classes com
   const cos = dialeg.querySelector(':scope > .sdp-dialeg__marc > .sdp-dialeg__cos');
   expect(within(cos).getByRole('list', { name: 'Identitats' })).toBeTruthy();
   const peu = dialeg.querySelector(':scope > .sdp-dialeg__marc > footer.sdp-dialeg__peu');
-  expect(within(peu).getAllByRole('button').map((b) => b.textContent)).toEqual(['Connectar-me a una organització', 'La meua fitxa i ajustos']);
+  expect(within(peu).getAllByRole('button').map((b) => b.textContent)).toEqual([ETIQUETA_IDIOMA_CALAIX, ETIQUETA_EIXIR_CALAIX]);
 });
 
 test('O4-CLAUDE-1b · el calaix i el seu vel naixen just on acaba la barra negra, amb el token compartit amb l’Índex', () => {

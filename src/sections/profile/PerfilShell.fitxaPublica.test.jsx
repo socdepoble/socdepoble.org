@@ -212,7 +212,7 @@ describe('dins de l’espai de treball del Perfil', () => {
     expect(within(detall(container)).getByRole('button', { name: ETIQUETA_FITXA_PUBLICA }).getAttribute('aria-disabled')).toBe('true');
 
     // Una utilitat no és cap identitat: cap fila.
-    fireEvent.click(within(navegacio()).getByRole('button', { name: 'Gestoria de Poble' }));
+    fireEvent.click(within(navegacio()).getByRole('button', { name: 'Aplicacions' }));
     expect(detall(container).querySelector('.perfil-fitxa-publica')).toBeNull();
 
     // Tornar a la persona i clicar: el router porta a la fitxa pública.
@@ -232,6 +232,8 @@ describe('dins de l’espai de treball del Perfil', () => {
     ['Javi Llinares', 'Privacitat i dades', 'privacitat de Javi Llinares', '/javillinares'],
     ['Javi Llinares', 'Els nodes', 'Els nodes', '/javillinares'],
     ['Javi Llinares', 'Multimèdia', 'multimèdia de Javi Llinares', '/javillinares'],
+    ['Javi Llinares', 'Idioma del Sistema', 'Idioma del Sistema', '/javillinares'],
+    ['Javi Llinares', 'Eixir de Sóc de Poble', 'Eixir de Sóc de Poble', '/javillinares'],
     ['Forn', 'La fitxa', 'fitxa de Forn', null],
     ['Forn', 'Les vistes', 'vistes de Forn', null],
     ['Forn', 'El compte', 'compte de Forn', null],

@@ -118,8 +118,8 @@ for (const amplada of [820, 764]) {
     expect([closca(container).dataset.layout, closca(container).dataset.panell]).toEqual(['ample', '']);
     expect(tancada(navegacio(container))).toEqual([false, null]);
     const nav = within(navegacio(container));
-    /* Persona, entitat i aplicació, totes a l'abast a l'arbre desplegat. */
-    for (const nom of ['Javi Llinares', 'Forn', 'Gestoria de Poble']) {
+    /* Persona, entitat i l'entrada única d'aplicacions, totes a l'abast a l'arbre desplegat. */
+    for (const nom of ['Javi Llinares', 'Forn', 'Aplicacions']) {
       expect(nav.getAllByRole('button', { name: new RegExp(nom) }).length).toBeGreaterThan(0);
     }
     expect(container.querySelector('#app-grid-main > .sdp-workspace-detail.perfil-espai__detall')).not.toBeNull();
@@ -131,7 +131,7 @@ for (const amplada of [820, 764]) {
     fireEvent.click(nav.getByRole('button', { name: 'Replegar PERFIL' }));
     expect(closca(container).dataset.panell).toBe('');
     expect(container.querySelector('.has-left-collapsed')).not.toBeNull();
-    for (const nom of ['Javi Llinares', 'Forn', 'Gestoria de Poble']) {
+    for (const nom of ['Javi Llinares', 'Forn', 'Aplicacions']) {
       expect(nav.getByRole('button', { name: nom })).toBeTruthy();
     }
     fireEvent.click(nav.getByRole('button', { name: 'Expandir PERFIL' }));

@@ -1,9 +1,18 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { LogOut } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { Link } from '../../app/contexts/RouterContext';
+import { Link, useNavigate } from '../../app/contexts/RouterContext';
 import { dataDeFila } from '../../components/universal/editorial.js';
 import { datesDAdministracio, datesDAplicacio } from './datesDelPerfil.js';
 import { LlistaNodes } from '../../components/universal/connexio/LlistaNodes.jsx';
+import { Alerta, Boto, GrupOpcions } from '../../components/PedraSeca/index.js';
+import { textPendentsEixida, textosAvisEixida } from '../../components/universal/EixidaSegura.jsx';
+import { SUPPORTED_LANGUAGES } from '../../config/i18n.js';
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
+import * as uiContextModul from '../../app/contexts/UIContext';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { ESTATS_APLICACIO } from './aplicacions.js';
+import { TEXTOS_EIXIR_PER_LLENGUA, llenguaDelTraductor } from './perfilModel.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { RUTA_PERFIL_PROJECTE, rutaDePerfil } from '../../config/navigation.js';
 import { pobleDeFitxa } from './fitxaDePerfil.js';
@@ -39,12 +48,46 @@ const autoriaDeLaPersona = (persona) => ({
   authorHref: rutaDePerfil('persona', persona?.dades?.id),
 });
 
-import { useState, useEffect } from 'react';
-import { useUIActions } from '../../app/contexts/UIContext';
 import { textDelMotiu } from '../../apps/plataforma/PortalApps.jsx';
 import { useDestiDelPlugin } from '../plugins/useDestiDelPlugin.js';
 import { pluginPerId } from '../plugins/registrePlugins.js';
 import { desaUtilitatActiva, estaAlPanell, subscriuUtilitatsActives } from './utilitatsActives.js';
+
+function useNavegaOpcional() {
+  try {
+    return useNavigate();
+  } catch {
+    return null;
+  }
+}
+
+function useSessioSegura() {
+  try {
+    return useSessioOpcional();
+  } catch {
+    return null;
+  }
+}
+
+function useEstatUISegur() {
+  try {
+    if (typeof uiContextModul.useUIStateOpcional === 'function') return uiContextModul.useUIStateOpcional();
+    if (typeof uiContextModul.useUIState === 'function') return uiContextModul.useUIState();
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function useAccionsUISegures() {
+  try {
+    if (typeof uiContextModul.useUIActionsOpcional === 'function') return uiContextModul.useUIActionsOpcional();
+    if (typeof uiContextModul.useUIActions === 'function') return uiContextModul.useUIActions();
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 /* R19 · Arbitratge del carril Genealogia + Perfil (P1) · Una utilitat que este
    build porta ('connectada', aplicacions.js) passa, ARA i ACÍ, per la mateixa
@@ -63,7 +106,7 @@ import { desaUtilitatActiva, estaAlPanell, subscriuUtilitatsActives } from './ut
    /plugin/<id>. Una utilitat sense plugin (el Snippet o la d'un node federat)
    conserva «Obrir <nom>». */
 function EstatDeLaConnectada({ aplicacio }) {
-  const { t } = useUIActions();
+  const { t } = useAccionsUISegures() || {};
   const desti = useDestiDelPlugin({ obrir: aplicacio.ruta });
   if (desti.ruta) {
     return (
@@ -271,3 +314,190 @@ export function DetallAdministracio({ item, children }) {
   );
 }
 
+const LLENGUA_PROPIA = 'ca';
+const LLENGUES_PERFIL = Object.freeze([
+  ...SUPPORTED_LANGUAGES.filter((llengua) => llengua.code === LLENGUA_PROPIA),
+  ...SUPPORTED_LANGUAGES.filter((llengua) => llengua.code !== LLENGUA_PROPIA),
+]);
+
+/* Gauntlet R32.6 · PERFIL-03: el cos diu que es tanca la SESSIÓ, no el compte
+   (la baixa és una altra cosa: «Privacitat i dades»). PERFIL-01 i I18N-02: el
+   títol, els botons, el cos i l'error de l'avís són els de textosAvisEixida
+   (EixidaSegura.jsx), els mateixos del calaix «Amb qui actues?». */
+const TEXTOS_DETALL_EIXIR = Object.freeze({
+  ca: Object.freeze({
+    etiqueta: 'Sessió',
+    bloc: 'Tancar la sessió en este dispositiu',
+    cos: 'Es tancarà la sessió del teu compte en este navegador o aplicació i tornaràs a la pantalla d’entrada. Les teues dades al poble continuen guardades.',
+    boto: 'Eixir de Sóc de Poble',
+  }),
+  es: Object.freeze({
+    etiqueta: 'Sesión',
+    bloc: 'Cerrar la sesión en este dispositivo',
+    cos: 'Se cerrará la sesión de tu cuenta en este navegador o aplicación y volverás a la pantalla de entrada. Tus datos en el pueblo siguen guardados.',
+    boto: 'Salir de Sóc de Poble',
+  }),
+  en: Object.freeze({
+    etiqueta: 'Session',
+    bloc: 'Sign out on this device',
+    cos: 'Your account will be signed out in this browser or app and you will return to the sign-in screen. Your village data stays saved.',
+    boto: 'Sign out of Sóc de Poble',
+  }),
+  eu: Object.freeze({
+    etiqueta: 'Saioa',
+    bloc: 'Itxi saioa gailu honetan',
+    cos: 'Zure kontuaren saioa itxiko da nabigatzaile edo aplikazio honetan eta sarrera-pantailara itzuliko zara. Zure herriko datuak gordeta jarraituko dute.',
+    boto: 'Irten Sóc de Pobletik',
+  }),
+  gl: Object.freeze({
+    etiqueta: 'Sesión',
+    bloc: 'Pechar a sesión neste dispositivo',
+    cos: 'Pecharase a sesión da túa conta neste navegador ou aplicación e volverás á pantalla de entrada. Os teus datos no pobo seguen gardados.',
+    boto: 'Saír de Sóc de Poble',
+  }),
+});
+
+/**
+ * Onada R32.4 (ordre del Mestre, 261116) · «Idioma del Sistema» dins dels apartats
+ * personals d'/el-meu-perfil: canvi d'idioma en un sol clic i enllaç a /traduccions.
+ */
+export function DetallIdioma({ persona }) {
+  const t = useTraductorOpcional();
+  const estatUI = useEstatUISegur();
+  const accionsUI = useAccionsUISegures();
+  const codiActiu = estatUI?.language || accionsUI?.language || llenguaDelTraductor(t);
+  const setLanguage = accionsUI?.setLanguage;
+
+  const opcions = LLENGUES_PERFIL.map((llengua) => ({
+    valor: llengua.code,
+    etiqueta: llengua.name,
+    detall: tradueix(t, [`section.translations.option.${llengua.code}`, llengua.code === LLENGUA_PROPIA ? 'Idioma per defecte de l’aplicació' : llengua.name]),
+  }));
+
+  return (
+    <UniversalPage
+      chrome="context"
+      layout="contained"
+      title={tradueix(t, ['section.translations.system.title', 'Idioma del Sistema'])}
+      lead={tradueix(t, ['section.translations.system.lead', 'Aquest ajust canvia l’idioma de tots els menús, botons i interfícies de l’aplicació. La preferència es guarda en aquest navegador.'])}
+      labels={[{ text: tradueix(t, ['nav.idioma', 'Idioma']) }]}
+      {...dataDeFila(persona?.dades)}
+      topBarData={autoriaDeLaPersona(persona)}
+    >
+      <div className="perfil-compte">
+        <Bloc titol={tradueix(t, ['nav.idiomaTitle', 'Tria un idioma'])}>
+          <GrupOpcions
+            llegenda={tradueix(t, ['section.translations.pick', 'Selecciona un idioma'])}
+            aspecte="targetes"
+            opcions={opcions}
+            valor={codiActiu}
+            textTriada={tradueix(t, ['section.translations.status.active', 'Actiu'])}
+            onCanvi={(codi) => setLanguage?.(codi)}
+          />
+          <p className="perfil-compte__text">
+            <Link to="/traduccions">{tradueix(t, ['section.translations.pages.title', 'Traductor de Poble per a Pàgines'])}</Link>
+          </p>
+        </Bloc>
+      </div>
+    </UniversalPage>
+  );
+}
+
+/**
+ * Onada R32.4 (ordre del Mestre, 261116) · Últim apartat personal d'/el-meu-perfil:
+ * «🚪 Eixir de Sóc de Poble», amb comprovació prèvia d'esborranys pendents.
+ */
+export function DetallEixir({ persona }) {
+  const t = useTraductorOpcional();
+  const estatUI = useEstatUISegur();
+  const codiLlengua = estatUI?.language || llenguaDelTraductor(t);
+  const textosLlista = TEXTOS_EIXIR_PER_LLENGUA[codiLlengua] || TEXTOS_EIXIR_PER_LLENGUA.ca;
+  const textos = TEXTOS_DETALL_EIXIR[codiLlengua] || TEXTOS_DETALL_EIXIR.ca;
+  const textosAvis = textosAvisEixida(codiLlengua);
+  const sessio = useSessioSegura();
+  const navigate = useNavegaOpcional();
+  const [pendents, setPendents] = useState(null);
+  const [ocupat, setOcupat] = useState(false);
+  /* Cert quan el logout ha fallat: el text es tria en pintar, en la llengua d'ara. */
+  const [error, setError] = useState(null);
+  /* Gauntlet R32.6 (PERFIL-02) · Boto no passa cap ref: la porta el seu contenidor. */
+  const accionsRef = useRef(null);
+
+  const confirmaEixida = useCallback(async () => {
+    setError(null);
+    setOcupat(true);
+    try {
+      await sessio?.logout?.();
+    } catch {
+      setOcupat(false);
+      setError(true);
+      return;
+    }
+    setPendents(null);
+    setOcupat(false);
+    navigate?.('/registre', { replace: true });
+  }, [sessio, navigate]);
+
+  const demanaEixida = useCallback(async () => {
+    if (ocupat) return;
+    setError(null);
+    setOcupat(true);
+    let queden = [];
+    if (typeof sessio?.preparaEixida === 'function') {
+      try { queden = await sessio.preparaEixida(); } catch { queden = []; }
+    }
+    if (Array.isArray(queden) && queden.length) {
+      setPendents(queden);
+      setOcupat(false);
+      return;
+    }
+    await confirmaEixida();
+  }, [ocupat, sessio, confirmaEixida]);
+
+  /* Gauntlet R32.6 (PERFIL-02) · «No eixir encara» desmunta l'Alerta amb el
+     botó enfocat a dins: el focus queia a <body> i la persona perdia el lloc.
+     Torna a «Eixir de Sóc de Poble», com FilaEixidaAmbSessio a FullAjustos. */
+  const noEixirEncara = useCallback(() => {
+    setPendents(null);
+    accionsRef.current?.querySelector('button')?.focus();
+  }, []);
+
+  return (
+    <UniversalPage
+      traduccio={false}
+      chrome="context"
+      layout="contained"
+      title={textosLlista.titol}
+      lead={textosLlista.subtitol}
+      labels={[{ text: textos.etiqueta }]}
+      {...dataDeFila(persona?.dades)}
+      topBarData={autoriaDeLaPersona(persona)}
+    >
+      <div className="perfil-compte">
+        <Bloc titol={textos.bloc}>
+          <p className="perfil-compte__text">{textos.cos}</p>
+          {pendents ? (
+            <Alerta
+              to="avis"
+              titol={textosAvis.titol}
+              accions={(
+                <>
+                  <Boto varietat="secundari" onClick={noEixirEncara} autoFocus>{textosAvis.noEixir}</Boto>
+                  <Boto varietat="perill" onClick={confirmaEixida} carregant={ocupat}>{textosAvis.eixirIgualment}</Boto>
+                </>
+              )}
+            >
+              <p>{textPendentsEixida(pendents, codiLlengua)}</p>
+            </Alerta>
+          ) : null}
+          {error ? <Alerta to="error">{textosAvis.error}</Alerta> : null}
+          <div className="perfil-compte__accions" ref={accionsRef}>
+            <Boto varietat="perill" icona={LogOut} onClick={demanaEixida} carregant={ocupat}>
+              {textos.boto}
+            </Boto>
+          </div>
+        </Bloc>
+      </div>
+    </UniversalPage>
+  );
+}

@@ -17,10 +17,15 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 import { CAMINS } from '../lib/arrel.mjs';
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { parse } from '@babel/parser';
+import { fontUTF8, cssAnalitzable, declaracionsTokensCSS } from '../lib/lexic-css.mjs';
+import { existsSync, readdirSync, lstatSync } from 'node:fs';
+import { join, resolve, relative } from 'node:path';
 
-const arrel = (process.argv.find((a) => a.startsWith('--arrel=')) || '--arrel=.').split('=')[1];
+function principal() {
+const args = process.argv.slice(2);
+if (args.length > 1 || args.some(a => !a.startsWith('--arrel=') || !a.slice('--arrel='.length).trim())) throw new Error('Ús: [--arrel=DIR]');
+const arrel = resolve(args.length ? args[0].slice('--arrel='.length) : '.');
 const P = (...t) => join(arrel, ...t);
 
 const FITXA = P(CAMINS.escriptori, '01_produccio', 'contracte_graella.md');
@@ -30,7 +35,20 @@ const CSS = P('src', 'components', 'layout', 'AppGridShell.css');
 
 const faltes = [];
 const nota = (regla, msg) => faltes.push({ regla, msg });
-const llig = (f) => (existsSync(f) ? readFileSync(f, 'utf8') : null);
+const llig = (f, opcional = false) => {
+  let cursor = arrel;
+  for (const segment of relative(arrel, f).split('/')) {
+    cursor = join(cursor, segment);
+    let s;
+    try { s = lstatSync(cursor); }
+    catch (error) { if (opcional && error.code === 'ENOENT') return null; throw new Error(`Font absent o il·legible: ${f} (${error.code})`); }
+    if (s.isSymbolicLink()) throw new Error(`Symlink en font: ${f}`);
+  }
+  if (!lstatSync(f).isFile()) throw new Error(`Font no regular: ${f}`);
+  const text = fontUTF8(f, 'utf8');
+  if (!text.trim()) throw new Error(`Font buida: ${f}`);
+  return text;
+};
 
 /* ── 1. La fitxa ha d'existir ────────────────────────────────────── */
 const fitxa = llig(FITXA);
@@ -39,21 +57,28 @@ if (!fitxa) {
 }
 
 /* ── 2. Props documentades == props reals ────────────────────────── */
+const asts = new Map();
+function astFont(fitxer) {
+  if (!asts.has(fitxer)) asts.set(fitxer, parse(llig(fitxer), { sourceType: 'module', plugins: ['jsx'] }));
+  return asts.get(fitxer);
+}
+function camina(node, visita) {
+  if (!node || typeof node !== 'object') return;
+  if (typeof node.type === 'string') visita(node);
+  for (const [key, value] of Object.entries(node)) {
+    if (['comments', 'leadingComments', 'trailingComments', 'innerComments', 'loc', 'extra'].includes(key)) continue;
+    if (Array.isArray(value)) value.forEach(n => camina(n, visita));
+    else if (value && typeof value === 'object') camina(value, visita);
+  }
+}
 function propsReals(fitxer) {
-  const src = llig(fitxer);
-  if (!src) return null;
-  const m = src.match(/export default function \w+\(\s*\{([\s\S]*?)\}\s*\)/);
-  if (!m) return null;
-  return m[1]
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .split('\n')
-    .map((l) => l.replace(/\/\/.*$/, '').trim())
-    .join(' ')
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .map((t) => t.split(/[:=]/)[0].trim().replace(/^'|'$/g, ''))
-    .filter((t) => /^[\w'\-[\]]+$/.test(t));
+  const defaults = astFont(fitxer).program.body.filter(n => n.type === 'ExportDefaultDeclaration');
+  const fn = defaults[0]?.declaration;
+  if (defaults.length !== 1 || fn?.type !== 'FunctionDeclaration' || fn.params.length !== 1 || fn.params[0].type !== 'ObjectPattern') throw new Error(`Signatura no certificable: ${fitxer}`);
+  return fn.params[0].properties.map(p => {
+    if (p.type !== 'ObjectProperty' || p.computed || !['Identifier', 'StringLiteral'].includes(p.key.type)) throw new Error(`Prop opaca: ${fitxer}`);
+    return p.key.name ?? p.key.value;
+  });
 }
 
 function propsDocumentades(text, component) {
@@ -74,8 +99,9 @@ for (const [nom, fitxer] of [['AppGridShell', SHELL], ['AppGridColumn', COLUMNA]
 }
 
 /* ── 3. Els punts de tall documentats == els del codi ────────────── */
-const shell = llig(SHELL) || '';
-const tallsReals = [...shell.matchAll(/w\s*<\s*(\d+)/g)].map((m) => Number(m[1])).sort((a, b) => a - b);
+astFont(SHELL);
+const tallsReals = [];
+camina(astFont(SHELL), n => { if (n.type === 'BinaryExpression' && n.operator === '<' && n.left.type === 'Identifier' && n.left.name === 'w' && n.right.type === 'NumericLiteral') tallsReals.push(n.right.value); });
 const tallsDocs = fitxa
   ? [...(fitxa.match(/\b(\d{3,4})\s*px\b/g) || [])].map((s) => Number(s.replace(/\D/g, '')))
   : [];
@@ -85,11 +111,12 @@ for (const t of tallsReals) {
 
 /* ── 4. Cap capçalera de columna feta a mà fora d'AppGridColumn ──── */
 const VELLES = ['notes-column-header', 'perfil-columna-capcalera', 'notes-column-title', 'perfil-columna-titol'];
-import { readdirSync, statSync } from 'node:fs';
 function* jsx(dir) {
   for (const e of readdirSync(dir)) {
     const p = join(dir, e);
-    if (statSync(p).isDirectory()) yield* jsx(p);
+    const s = lstatSync(p);
+    if (s.isSymbolicLink()) throw new Error(`Symlink en font: ${p}`);
+    if (s.isDirectory()) yield* jsx(p);
     else if (/\.jsx?$/.test(e)) yield p;
   }
 }
@@ -97,7 +124,7 @@ if (existsSync(P('src'))) {
   for (const f of jsx(P('src'))) {
     /* Els comentaris no pinten res: si no els llevem, esta porta es
        denuncia a si mateixa per anomenar les classes que prohibix. */
-    const txt = readFileSync(f, 'utf8')
+    const txt = llig(f)
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/^\s*\/\/.*$/gm, '');
     for (const cls of VELLES) {
@@ -110,7 +137,9 @@ if (existsSync(P('src'))) {
 }
 
 /* ── 5. Cap columna sense `inert` quan està tancada ──────────────── */
-if (!shell.includes('inert')) {
+let teInert = false;
+camina(astFont(SHELL), n => { if (n.type === 'JSXAttribute' && n.name.name === 'inert' && !(n.value?.expression?.type === 'BooleanLiteral' && n.value.expression.value === false)) teInert = true; });
+if (!teInert) {
   nota('columna-focusable', 'AppGridShell no marca `inert` les columnes tancades: el focus hi pot caure fora de pantalla.');
 }
 
@@ -118,11 +147,12 @@ if (!shell.includes('inert')) {
 const css = llig(CSS) || '';
 const tokensCanon = new Set();
 for (const f of ['src/css/tokens.css', 'src/css/design-tokens.css', 'src/css/index.css']) {
-  const t = llig(P(f));
-  if (t) for (const m of t.matchAll(/--(sdp-[\w-]+)\s*:/g)) tokensCanon.add(m[1]);
+  const t = llig(P(f), f !== 'src/css/tokens.css');
+  if (t) for (const d of declaracionsTokensCSS(t)) if (d.nom.startsWith('--sdp-')) tokensCanon.add(d.nom.slice(2));
 }
-if (tokensCanon.size) {
-  for (const m of css.matchAll(/var\(\s*--(sdp-[\w-]+)/g)) {
+if (!tokensCanon.size) throw new Error('Cap token declarat a les fonts canòniques: no es pot certificar AppGridShell.css');
+{
+  for (const m of cssAnalitzable(css).matchAll(/var\(\s*--(sdp-[\w-]+)/g)) {
     if (!tokensCanon.has(m[1])) nota('token-inventat', `AppGridShell.css usa \`--${m[1]}\`, que no està definit enlloc.`);
   }
 }
@@ -136,3 +166,7 @@ console.error(`❌ porta:graella — ${faltes.length} divergència(es):\n`);
 for (const f of faltes) console.error(`  [${f.regla}] ${f.msg}`);
 console.error('\nO s\'arregla el codi, o s\'arregla la fitxa. Les dos coses no poden ser certes.');
 process.exit(1);
+}
+
+try { principal(); }
+catch (error) { console.error(`❌ [TRACTOR-GRAELLA] ${error.message}`); process.exit(2); }

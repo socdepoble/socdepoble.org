@@ -13,7 +13,7 @@
  * La minva vol dir que de cada unitat comprada se n'aprofita (100 − minva) %:
  * per a posar `quantitat` neta al plat, cal comprar quantitat / (1 − minva).
  */
-import { errorBar, esSlug, mitjaAmunt, sostre } from './comu.js';
+import { errorBar, esSlug } from './comu.js';
 import { variantDe } from './cataleg.js';
 
 export const UNITATS_BASE = Object.freeze(['g', 'ml', 'u']);
@@ -24,6 +24,14 @@ const MAX_MINVA = 90;
 const exigeix = (condicio, codi, missatge) => {
   if (!condicio) throw errorBar(codi, missatge);
 };
+
+/* Els productes poden superar el rang de Number encara que el resultat hi
+   càpia. Només els imports públics es convertixen a enters de Number. */
+const enterSegur = (valor) => {
+  exigeix(valor >= 0n && valor <= BigInt(Number.MAX_SAFE_INTEGER), 'IMPORT', 'El resultat de l’escandall és massa gran per a representar-lo amb precisió.');
+  return Number(valor);
+};
+const mitjaGran = (numerador, denominador) => enterSegur((numerador * 2n + denominador) / (denominador * 2n));
 
 /** Valida un ingredient. @returns {{ ok, errors }} */
 export function validaIngredient(ingredient) {
@@ -42,7 +50,7 @@ export function validaIngredient(ingredient) {
 export function costUnitariMicro(ingredient) {
   const { ok, errors } = validaIngredient(ingredient);
   exigeix(ok, 'INGREDIENT', `Ingredient no vàlid: ${errors.join('; ')}`);
-  return mitjaAmunt(ingredient.formatCompra.preuCents * MICRO_PER_CENT, ingredient.formatCompra.quantitat);
+  return mitjaGran(BigInt(ingredient.formatCompra.preuCents) * BigInt(MICRO_PER_CENT), BigInt(ingredient.formatCompra.quantitat));
 }
 
 /**
@@ -59,19 +67,24 @@ export function costEscandall(escandall, ingredients) {
     const ingredient = perId.get(ingredientId);
     exigeix(ingredient, 'INGREDIENT', `L'ingredient «${String(ingredientId)}» no existix.`);
     exigeix(Number.isSafeInteger(quantitat) && quantitat > 0, 'ESCANDALL', 'La quantitat de cada ingredient és un enter > 0 en unitat base.');
+    const { ok, errors } = validaIngredient(ingredient);
+    exigeix(ok, 'INGREDIENT', `Ingredient no vàlid: ${errors.join('; ')}`);
     const aprofitat = 100 - ingredient.minvaPercent;
-    const unitari = costUnitariMicro(ingredient);
+    /* No multipliquem el cost unitari ja arredonit: deu formats complets
+       han de costar deu preus de compra. La línia s'arredonix una vegada. */
+    const quantitatGran = BigInt(quantitat) * 100n;
     return {
       ingredientId,
       nom: ingredient.nom,
       quantitat,
-      quantitatBruta: mitjaAmunt(quantitat * 100, aprofitat),
-      costMicro: mitjaAmunt(unitari * quantitat * 100, aprofitat)
+      quantitatBruta: mitjaGran(quantitatGran, BigInt(aprofitat)),
+      costMicro: mitjaGran(BigInt(ingredient.formatCompra.preuCents) * BigInt(MICRO_PER_CENT) * quantitatGran,
+        BigInt(ingredient.formatCompra.quantitat) * BigInt(aprofitat))
     };
   });
-  const costTotalMicro = linies.reduce((total, l) => total + l.costMicro, 0) + altres * MICRO_PER_CENT;
+  const costTotalMicro = enterSegur(linies.reduce((total, l) => total + BigInt(l.costMicro), BigInt(altres) * BigInt(MICRO_PER_CENT)));
   return {
-    costRacioCents: mitjaAmunt(costTotalMicro, escandall.racions * MICRO_PER_CENT),
+    costRacioCents: mitjaGran(BigInt(costTotalMicro), BigInt(escandall.racions) * BigInt(MICRO_PER_CENT)),
     costTotalMicro,
     linies
   };
@@ -116,7 +129,7 @@ export function foodCostPermil(costCents, pvpCents, ivaPercent) {
   exigeix(Number.isSafeInteger(pvpCents) && pvpCents >= 0, 'IMPORT', 'El PVP és cèntims ≥ 0.');
   exigeix(Number.isSafeInteger(ivaPercent) && ivaPercent >= 0 && ivaPercent <= 100, 'IVA', 'L’IVA és un enter de 0 a 100.');
   if (pvpCents === 0) return null;
-  return mitjaAmunt(costCents * 1000 * (100 + ivaPercent), pvpCents * 100);
+  return mitjaGran(BigInt(costCents) * 1000n * BigInt(100 + ivaPercent), BigInt(pvpCents) * 100n);
 }
 
 /**
@@ -128,7 +141,9 @@ export function pvpSuggerit(costCents, objectiuPercent = OBJECTIU_PER_DEFECTE, i
   exigeix(Number.isSafeInteger(objectiuPercent) && objectiuPercent >= 1 && objectiuPercent <= 100, 'OBJECTIU', 'L’objectiu és un percentatge d’1 a 100.');
   exigeix(Number.isSafeInteger(ivaPercent) && ivaPercent >= 0 && ivaPercent <= 100, 'IVA', 'L’IVA és un enter de 0 a 100.');
   exigeix(Number.isSafeInteger(pasCents) && pasCents >= 1, 'PAS', 'El pas és un enter de cèntims ≥ 1.');
-  return sostre(costCents * (100 + ivaPercent), objectiuPercent * pasCents) * pasCents;
+  const numerador = BigInt(costCents) * BigInt(100 + ivaPercent);
+  const denominador = BigInt(objectiuPercent) * BigInt(pasCents);
+  return enterSegur(((numerador + denominador - 1n) / denominador) * BigInt(pasCents));
 }
 
 /** Text d'un per mil com a percentatge amb un decimal: 284 → «28,4 %». */

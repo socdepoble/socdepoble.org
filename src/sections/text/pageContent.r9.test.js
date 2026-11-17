@@ -207,7 +207,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada R30 · La crònica de l'Onada R30 obri /versions, davant de la crònica R29.
     // Onada R32 · La crònica de l'Onada R32 obri /versions, davant de la crònica R30.
     // Onada R32.3 · La crònica de l'Onada R32.3 obri /versions, davant de la crònica R32.
-    expect([...versions.querySelectorAll('h3')].slice(0, 17).map((h3) => h3.textContent)).toEqual([
+    // Onada R32.4 · La crònica de l'Onada R32.4 obri /versions, davant de la crònica R32.3.
+    expect([...versions.querySelectorAll('h3')].slice(0, 18).map((h3) => h3.textContent)).toEqual([
+      '17 de novembre de 2026, vesprada · Onada R32.4 · L’idioma i l’eixida al calaix d’identitats, les Aplicacions en un sol enllaç del Perfil i comptes exactes al TPV i a la Gestoria',
       '17 de novembre de 2026, matinada · Onada R32.3 · Les aplicacions avisen soles d’una versió nova, el Perfil en dues columnes al mòbil i una eixida de la sessió més sòlida',
       '16 de novembre de 2026, vesprada · Onada R32 · Missatges del Xat que no cauen en error en renovar la sessió, carpetes del Bloc de Notes que no es confonen i més seguretat al servidor compartit',
       '16 de novembre de 2026, matinada · Onada R30 · Les carpetes antigues del Bloc de Notes al servidor, una carpeta del Mode rural que es compacta sola i dos tocs que ja no compten doble',
@@ -613,7 +615,10 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
     expect(ATLES_OPERATIU.length).toBe(25);
     expect(llegix('src/data/iaiaLocal.js')).toContain('...ATLES_OPERATIU.map(documentDeLAtles), ...MOCK_TOWNS.map(documentDelPoble)');
     // «el codi de l'aplicació web no s'hi connecta»: cap fitxer de src, fora del text d'esta pàgina, no parla amb Ollama.
-    const textosEditorials = new Set(['sections/text/pageContent.r10.js', 'sections/mur/articles/laVeuDeSocDePobleContent.js']);
+    // Onada R32.4 · La pàgina divulgativa /page/sistema-nervios i el paquet generat de la Wiki (wikiManifest.js) també
+    // són text que anomena Ollama, no codi que s'hi connecte (com a la prova de dalt).
+    const textosEditorials = new Set(['sections/text/pageContent.r10.js', 'sections/mur/articles/laVeuDeSocDePobleContent.js',
+      'sections/text/pageContent.sistemaNervios.js', 'data/wikiManifest.js']);
     const fonts = readdirSync(path.join(ARREL, 'src'), { recursive: true })
       .map((f) => String(f).split(path.sep).join('/'))
       .filter((f) => /\.(?:js|jsx|mjs)$/.test(f) && !f.includes('.test.') && !textosEditorials.has(f));

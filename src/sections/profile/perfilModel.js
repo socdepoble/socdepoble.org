@@ -1,4 +1,4 @@
-import { Bot, Building2, Shield, UserRound, Users } from 'lucide-react';
+import { Bot, Building2, Download, Globe, LayoutGrid, LogOut, Package, Palette, Shield, SlidersHorizontal, Tag, UserRound, Users } from 'lucide-react';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { avatarDeLaFitxa, pobleDeFitxa, potEditarFitxa } from './fitxaDePerfil.js';
 import { documentDeFitxa } from './perfilCamps.js';
@@ -6,14 +6,10 @@ import { documentDeFitxa } from './perfilCamps.js';
 /* ═══════════════════════════════════════════════════════════════════
    MODEL DE L'ESPAI DE TREBALL DEL PERFIL · funcions pures
 
-   El mateix patró que el Bloc de Notes (NotesSection): tres grups a la
-   primera columna i, a la segona, els fills de l'element triat.
-     1. La persona: grup sense etiqueta, com les carpetes de Notes. El
-        títol de la columna li fa de capçalera i el plega.
-     2. GRUPS I EMPRESES: les organitzacions de la persona. Sense cap,
-        una opció que explica com crear-ne una (el Workspace no admet un
-        missatge dins d'un grup buit).
-     3. APLICACIONS: les utilitats d'aplicacions.js.
+   El mateix patró que el Bloc de Notes (NotesSection): a la primera
+   columna, la persona (amb 🛡️ Administració del sistema per a superadmin
+   i 🧩 Aplicacions com a entrada única) i GRUPS I EMPRESES (més AGENTS IA
+   si n'hi ha); a la segona, els fills de l'element triat.
    ═══════════════════════════════════════════════════════════════════ */
 
 /** Opció i element de «GRUPS I EMPRESES» quan la persona no en té cap. */
@@ -22,7 +18,10 @@ export const SENSE_ORGANITZACIONS = 'sense-organitzacions';
 /** AH-29 (IDEA-89) · Entrada «🛡️ Administració del sistema» davall de la persona a la Columna 1 (PERFIL). */
 export const ID_ADMINISTRACIO_SISTEMA = 'administracio-sistema';
 
-/** Id de categoria d'una aplicació: prefixat, perquè no xoque amb cap organització. */
+/** Onada R32.4 (ordre del Mestre, 261116) · Entrada única «🧩 Aplicacions» davall d'Administració del sistema a PERFIL. */
+export const ID_APLICACIONS = 'aplicacions';
+
+/** Id d'apartat d'una aplicació: prefixat, perquè no xoque amb cap organització. */
 export const idAplicacio = (id) => `app-${id}`;
 
 /* Pla 261015_1900 (Onada 1.3: «emoticones grans i riques als apartats») ·
@@ -32,7 +31,8 @@ export const idAplicacio = (id) => `app-${id}`;
    (NavGlyph). «La fitxa» es queda amb l'avatar de qui és (sdp-pedra-seca
    §11). 👁️ i 🛡️ porten el selector U+FE0F: sense, emojiSol els rebutja i es
    pintarien com a text menut. Tots quatre són d'Unicode 6-7 (Safari 16).
-   Pla 261018_1605 (Tasca 4) · 🖼️ «Multimèdia» (Unicode 7), també amb U+FE0F. */
+   Pla 261018_1605 (Tasca 4) · 🖼️ «Multimèdia» (Unicode 7), també amb U+FE0F.
+   Onada R32.4 (ordre del Mestre, 261116) · 🌍 «Idioma del Sistema» i 🚪 «Eixir de Sóc de Poble» (Unicode 6). */
 export const ICONES_APARTATS = Object.freeze({
   vistes: '\u{1F441}\u{FE0F}', // 👁️
   compte: '\u{1F510}', // 🔐
@@ -80,16 +80,25 @@ export const VISTA_IMPORTACIO = 'admin-importacio';
  * categoria i l'element), per damunt de l'actor actiu i de la ruta: la
  * contrasenya és del compte de la persona, no d'una organització.
  */
-export function seleccioInicialDePerfil(identitats, preferides = [], { superadmin = false, vista = null, apartat = null } = {}) {
+export function seleccioInicialDePerfil(identitats, preferides = [], { superadmin = false, aplicacions = [], vista = null, apartat = null } = {}) {
   if (superadmin === true && vista === VISTA_IMPORTACIO) return { categoryId: ID_ADMINISTRACIO_SISTEMA, itemId: VISTA_IMPORTACIO };
   const persona = (vista === VISTA_COMPTE || apartat === VISTA_COMPTE) ? identitats.find(esPersona) : null;
   if (persona) return { categoryId: String(persona.id), itemId: `${persona.id}-compte` };
   const seleccionables = identitats.filter((identitat) => !esPersona(identitat));
-  /* Onada R6 · Bloc 2 (P1-b) · La ruta no obri l'administració a qui no és superadmin. */
-  const triada = preferides.find((id) => id != null && id !== ''
-    && ((superadmin === true && String(id) === ID_ADMINISTRACIO_SISTEMA)
-      || seleccionables.some((identitat) => String(identitat.id) === String(id))));
-  return { categoryId: triada != null ? String(triada) : 'jo' };
+  const teAplicacions = Array.isArray(aplicacions) && aplicacions.length > 0;
+  for (const cand of preferides) {
+    if (cand == null || cand === '') continue;
+    const clau = String(cand);
+    /* Onada R6 · Bloc 2 (P1-b) · La ruta no obri l'administració a qui no és superadmin. */
+    if (superadmin === true && clau === ID_ADMINISTRACIO_SISTEMA) return { categoryId: ID_ADMINISTRACIO_SISTEMA };
+    if (teAplicacions && clau === ID_APLICACIONS) return { categoryId: ID_APLICACIONS };
+    if (teAplicacions && clau.startsWith('app-')) {
+      const app = aplicacions.find((a) => idAplicacio(a.id) === clau);
+      if (app) return { categoryId: ID_APLICACIONS, itemId: `${idAplicacio(app.id)}-sobre` };
+    }
+    if (seleccionables.some((identitat) => String(identitat.id) === clau)) return { categoryId: clau };
+  }
+  return { categoryId: 'jo' };
 }
 
 const esPersona = (identitat) => identitat.mena === 'persona';
@@ -112,25 +121,35 @@ const opcioDe = (identitat, order) => ({
   order,
 });
 
-/** Primera columna: persona (amb 🛡️ Administració del sistema davall, només per a superadmin), GRUPS I EMPRESES i APLICACIONS, en este ordre.
- * Onada R6 · Bloc 2 (P1-b) · Tancat per defecte: sense `{ superadmin: true }` el grup d'administració no ix. */
+/** Primera columna: persona (amb 🛡️ Administració del sistema per a superadmin i 🧩 Aplicacions com a únic enllaç quan hi ha utilitats), GRUPS I EMPRESES i AGENTS IA.
+ * Onada R6 · Bloc 2 (P1-b) · Tancat per defecte: sense `{ superadmin: true }` l'entrada d'administració no ix. */
 export function navegacioDePerfil(identitats, aplicacions = [], { superadmin = false } = {}) {
   const persones = identitats.filter(esPersona).map(opcioDe);
   const organitzacions = identitats.filter(esOrganitzacio);
   const agents = identitats.filter(esAgent);
+  const opcionsPersona = [...persones];
+  if (superadmin === true) {
+    opcionsPersona.push({
+      id: ID_ADMINISTRACIO_SISTEMA,
+      label: 'Administració del sistema',
+      icon: Shield,
+      order: opcionsPersona.length,
+    });
+  }
+  /* Onada R32.4 (ordre del Mestre, 261116) + P0-116/IDEA-290 · Aplicacions com a una sola entrada amb icona vectorial única. */
+  if (aplicacions.length) {
+    opcionsPersona.push({
+      id: ID_APLICACIONS,
+      label: 'Aplicacions',
+      icon: LayoutGrid,
+      order: opcionsPersona.length,
+    });
+  }
   const grups = [
     {
       id: 'persona',
       label: null,
-      options: [
-        ...persones,
-        ...(superadmin === true ? [{
-          id: ID_ADMINISTRACIO_SISTEMA,
-          label: '🛡️ Administració del sistema',
-          icon: Shield,
-          order: persones.length,
-        }] : []),
-      ],
+      options: opcionsPersona,
     },
     {
       id: 'organitzacions',
@@ -142,19 +161,6 @@ export function navegacioDePerfil(identitats, aplicacions = [], { superadmin = f
   ];
   /* Sense cap agent no es pinta cap capçalera buida. */
   if (agents.length) grups.push({ id: 'agents', label: 'AGENTS IA', options: agents.map(opcioDe) });
-  /* Una instància sense utilitats no pinta una capçalera buida. */
-  if (aplicacions.length) {
-    grups.push({
-      id: 'aplicacions',
-      label: 'APLICACIONS',
-      options: aplicacions.map((aplicacio, order) => ({
-        id: idAplicacio(aplicacio.id),
-        label: aplicacio.nom,
-        icon: aplicacio.icona || undefined,
-        order,
-      })),
-    });
-  }
   return grups;
 }
 
@@ -166,6 +172,29 @@ export const TEXTOS_PRIVACITAT_LLISTA = Object.freeze({
   titol: Object.freeze(['section.perfil.privacitat.pagina.titol', 'Privacitat i dades']),
   subtitol: Object.freeze(['section.perfil.privacitat.llista.subtitol', 'Les teues dades, el consentiment i la baixa'])
 });
+
+export const TEXTOS_IDIOMA_LLISTA = Object.freeze({
+  titol: Object.freeze(['section.translations.system.title', 'Idioma del Sistema']),
+  subtitol: Object.freeze(['nav.idiomaSubtitle', 'Canvia l’idioma de la interfície i guarda la preferència al navegador.']),
+});
+
+export const TEXTOS_EIXIR_PER_LLENGUA = Object.freeze({
+  ca: Object.freeze({ titol: 'Eixir de Sóc de Poble', subtitol: 'Tancar la sessió en este dispositiu' }),
+  es: Object.freeze({ titol: 'Salir de Sóc de Poble', subtitol: 'Cerrar la sesión en este dispositivo' }),
+  en: Object.freeze({ titol: 'Sign out of Sóc de Poble', subtitol: 'Sign out on this device' }),
+  eu: Object.freeze({ titol: 'Irten Sóc de Pobletik', subtitol: 'Itxi saioa gailu honetan' }),
+  gl: Object.freeze({ titol: 'Saír de Sóc de Poble', subtitol: 'Pechar a sesión neste dispositivo' }),
+});
+
+export function llenguaDelTraductor(t) {
+  if (typeof t !== 'function') return 'ca';
+  const mostra = t('section.xat.ajustos.tancaSessio', 'Tanca la sessió');
+  if (mostra === 'Cerrar sesión') return 'es';
+  if (mostra === 'Log out') return 'en';
+  if (mostra === 'Itxi saioa') return 'eu';
+  if (mostra === 'Pechar sesión') return 'gl';
+  return 'ca';
+}
 
 /**
  * Segona columna, identitats. Persona: «La fitxa», «Les vistes», «El
@@ -303,9 +332,32 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
         data: { vista: 'nodes', identitatId: identitat.id },
       });
     }
-    /* «Multimèdia», l'últim: per a la persona, darrere d'«Els nodes»; per a
-       l'organització, d'«El compte». */
+    /* «Multimèdia», l'últim d'edició per a l'organització; per a la persona,
+       darrere vénen «Idioma del Sistema» i, com a últim apartat personal,
+       «Eixir de Sóc de Poble» (Onada R32.4, ordre del Mestre, 261116). */
     fills.push(...multimedia);
+    if (persona) {
+      fills.push(
+        {
+          id: `${identitat.id}-idioma`,
+          categoryIds,
+          title: TEXTOS_IDIOMA_LLISTA.titol[1],
+          subtitle: TEXTOS_IDIOMA_LLISTA.subtitol[1],
+          icon: Globe,
+          searchText: `idioma llengua traduccions valencia castella angles euskara galego ${nom}`,
+          data: { vista: 'idioma', identitatId: identitat.id },
+        },
+        {
+          id: `${identitat.id}-eixir`,
+          categoryIds,
+          title: TEXTOS_EIXIR_PER_LLENGUA.ca.titol,
+          subtitle: TEXTOS_EIXIR_PER_LLENGUA.ca.subtitol,
+          icon: LogOut,
+          searchText: `eixir sortir tancar sessio desconnectar logout ${nom}`,
+          data: { vista: 'eixir', identitatId: identitat.id },
+        },
+      );
+    }
     return fills;
   });
 
@@ -323,12 +375,12 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
   return items;
 }
 
-/** Segona columna, aplicacions: un sol element, «Sobre esta utilitat». */
+/** Segona columna, aplicacions: totes les utilitats com a apartats nets d'«Aplicacions». */
 export function itemsDAplicacions(aplicacions = []) {
   return aplicacions.map((aplicacio) => ({
     id: `${idAplicacio(aplicacio.id)}-sobre`,
-    categoryIds: [idAplicacio(aplicacio.id)],
-    title: 'Sobre esta utilitat',
+    categoryIds: [ID_APLICACIONS],
+    title: aplicacio.nom,
     subtitle: ESTATS_APLICACIO[aplicacio.estat] || ESTATS_APLICACIO.pendent,
     icon: aplicacio.icona || undefined,
     searchText: `${aplicacio.nom} ${aplicacio.descripcio || ''}`,
@@ -337,19 +389,20 @@ export function itemsDAplicacions(aplicacions = []) {
 }
 
 export const ICONES_ADMINISTRACIO_SISTEMA = Object.freeze({
-  taxonomia: '\u{1F3F7}\u{FE0F}', // 🏷️
-  importacio: '\u{1F4E5}', // 📥
-  crom: '\u{1F3A8}', // 🎨
-  vistesColumnes: '\u{2699}\u{FE0F}', // ⚙️
-  nodesFedivers: '\u{1F310}', // 🌐
-  empaquetats: '\u{1F4E6}', // 📦
-  usuarisBotigues: '\u{1F465}', // 👥
+  taxonomia: Tag,
+  importacio: Download,
+  crom: Palette,
+  vistesColumnes: SlidersHorizontal,
+  nodesFedivers: Globe,
+  empaquetats: Package,
+  usuarisBotigues: Users,
 });
 
 /**
- * AH-29 (IDEA-89) · Els apartats d'«🛡️ Administració del sistema» a la Columna 2 (APARTATS).
- * El primer apartat per defecte és «🏷️ Taxonomia: Categories i Etiquetes» (Laboratori Doctoral).
- * R13-C7 (ordre del Mestre, 08-11-2026) · El 7é, just davall d'«📦 Empaquetats»: «👥 Usuaris,
+ * AH-29 (IDEA-89) + P0-116 / IDEA-290 (261117) · Els apartats d'«Administració del sistema» a la Columna 2 (APARTATS),
+ * amb icona vectorial única del sistema i zero emoticona enganxat al títol.
+ * El primer apartat per defecte és «Taxonomia: Categories i Etiquetes» (Laboratori Doctoral).
+ * R13-C7 (ordre del Mestre, 08-11-2026) · El 7é, just davall d'«Empaquetats»: «Usuaris,
  * Dispositius i Botigues», amb l’id i el subtítol de l’encàrrec mestre R13+R14 (23:00). La xifra
  * de verificadors només es llig a Google Play Console: la card no en porta cap de fixa.
  * Dins de l'app d'iOS (regla 2.3.10) la card porta els textos d'admin/appNativaIos.js (PerfilShell.jsx).
@@ -360,7 +413,7 @@ export function itemsDAdministracioSistema() {
     {
       id: 'admin-taxonomia',
       categoryIds,
-      title: '🏷️ Taxonomia: Categories i Etiquetes',
+      title: 'Taxonomia: Categories i Etiquetes',
       subtitle: 'Laboratori Doctoral de Biblioteconomia i Classificació · 114 categories i 105 etiquetes',
       icon: ICONES_ADMINISTRACIO_SISTEMA.taxonomia,
       searchText: 'taxonomia categories etiquetes biblioteconomia classificacio ranganathan skos tesaurus',
@@ -369,7 +422,7 @@ export function itemsDAdministracioSistema() {
     {
       id: 'admin-importacio',
       categoryIds,
-      title: '📥 Importació i Revisió Editorial',
+      title: 'Importació i Revisió Editorial',
       subtitle: 'Tauler de revisió d’administrador per als 425 articles i 18 pàgines de socdepoble.net i Blogger',
       icon: ICONES_ADMINISTRACIO_SISTEMA.importacio,
       searchText: 'importacio revisio editorial wordpress blogger 425 articles socdepoble.net',
@@ -378,7 +431,7 @@ export function itemsDAdministracioSistema() {
     {
       id: 'admin-crom',
       categoryIds,
-      title: '🎨 Colors i disseny (Crom del sistema)',
+      title: 'Colors i disseny (Crom del sistema)',
       subtitle: 'Color principal, Accent, Acció, Aplicar, Desar i Tornar al cànon',
       icon: ICONES_ADMINISTRACIO_SISTEMA.crom,
       searchText: 'colors disseny crom del sistema principal accent accio aplicar desar canon',
@@ -387,7 +440,7 @@ export function itemsDAdministracioSistema() {
     {
       id: 'admin-vistes-columnes',
       categoryIds,
-      title: '⚙️ Ajustos de vistes i columnes',
+      title: 'Ajustos de vistes i columnes',
       subtitle: 'Amplada de les columnes i carpetes visibles a la navegació',
       icon: ICONES_ADMINISTRACIO_SISTEMA.vistesColumnes,
       searchText: 'ajustos vistes columnes amplada carpetes visibles roda dentada',
@@ -396,7 +449,7 @@ export function itemsDAdministracioSistema() {
     {
       id: 'admin-nodes-fedivers',
       categoryIds,
-      title: '🌐 Nodes, Fedivers i Resiliència 3-2-1',
+      title: 'Nodes, Fedivers i Resiliència 3-2-1',
       subtitle: 'Estat de Node 0 PostgreSQL 17.11, pont ActivityPub @depoble@mastodont.cat i còpia 3-2-1 xifrada amb age',
       icon: ICONES_ADMINISTRACIO_SISTEMA.nodesFedivers,
       searchText: 'nodes fedivers resiliencia 3-2-1 node 0 postgresql activitypub mastodon age',
@@ -405,7 +458,7 @@ export function itemsDAdministracioSistema() {
     {
       id: 'admin-empaquetats',
       categoryIds,
-      title: '📦 Empaquetats i Desplegament (Mode Jarvis)',
+      title: 'Empaquetats i Desplegament (Mode Jarvis)',
       subtitle: 'Connector WordPress .zip, PWA i estat de les portes de verificació',
       icon: ICONES_ADMINISTRACIO_SISTEMA.empaquetats,
       searchText: 'empaquetats desplegament mode jarvis wordpress zip pwa portes verificacio',
@@ -414,7 +467,7 @@ export function itemsDAdministracioSistema() {
     {
       id: 'administracio-usuaris-i-dispositius',
       categoryIds,
-      title: '👥 Usuaris, Dispositius i Botigues (Google i Apple)',
+      title: 'Usuaris, Dispositius i Botigues (Google i Apple)',
       subtitle: 'Directori d’usuaris registrats i distribució en viu per canal (Google Play, App Store i Web)',
       icon: ICONES_ADMINISTRACIO_SISTEMA.usuarisBotigues,
       searchText: 'usuaris dispositius botigues google play app store iphone ipad web verificadors sessions connectats',

@@ -10,7 +10,7 @@
  * nomCongelat, varianteNomCongelat?, ivaPercent, costUnitariCents?, quantitat,
  * importCents (el que es torna, positiu), estat: 'marxada' }.
  */
-import { aliesNet, congela, errorBar, esId, esMoment, mitjaAmunt, suma, textNet } from './comu.js';
+import { aliesNet, congela, errorBar, esId, esMoment, proporcioMitjaAmunt, suma, textNet } from './comu.js';
 import { METODES } from './cobrament.js';
 import { desglossaIva } from './iva.js';
 import { compta, totalLinia } from './linia.js';
@@ -75,7 +75,7 @@ export function creaDevolucio(tiquet, seleccio, {
        part), no sobre cada tros: és monòton, mai negatiu, mai passa del
        total i l'última unitat tanca exactament el total (BAR-R4). El límit
        protegix de devolucions prèvies calculades d'una altra manera. */
-    const fins = quantitat === queden ? total : mitjaAmunt(total * (ja.quantitat + quantitat), linia.quantitat);
+    const fins = quantitat === queden ? total : proporcioMitjaAmunt(total, ja.quantitat + quantitat, linia.quantitat);
     const importCents = Math.max(0, Math.min(fins, total) - ja.importCents);
     return {
       id: `${id}-${i + 1}`,

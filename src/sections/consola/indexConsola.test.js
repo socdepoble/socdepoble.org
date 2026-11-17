@@ -346,8 +346,9 @@ describe('les 18 il·lustracions de les ordres', () => {
      còmic de /fedivers (ESTAT 261014_1505; src/sections/text/pageContent.js),
      la de l'Arbre Genealògic (IDEA-100, COMMIT R6 d79a0b530) i la de La IAIA
      Sabuda (R16-W1; IMATGE_NODRIR_IAIA de pageContent.nodrirIaia.js) i
-     l'Avisador (R17), nascut només en WebP. */
-  const ALTRES_VINYETES = ['avisador', 'fedivers', 'genealogia', 'nodrir_la_iaia'];
+     l'Avisador (R17), nascut només en WebP. v1.2.6 · La portada pròpia de /page/sistema-nervios
+     (P0-117; IMATGE_SISTEMA_NERVIOS de pageContent.sistemaNervios.js), en JPEG i WebP. */
+  const ALTRES_VINYETES = ['avisador', 'fedivers', 'genealogia', 'nodrir_la_iaia', 'sistema_nervios'];
   /* La nano card del Mercat només viu com a bessona .webp: l'original .jpg es
      va retirar a 1d45fb1a, i censImatges, legacyMedia, pageContent i la prova
      del Panell de Control ja la nomenen així. */

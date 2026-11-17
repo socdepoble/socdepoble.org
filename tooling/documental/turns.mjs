@@ -567,18 +567,27 @@ export function startHumanWatch(root,id) {
  });
 }
 
-export function acknowledgeHumanZoneChanges(root, id, note = 'Reconeixement explícit de canvis a la zona humana') {
+/** Reconeix canvis de la zona humana aprovats pel Mestre. Un torn amb `humanInventoryVersion: 1` sense
+ * `humanBaseline` usa la mateixa referència que checkTurn: la zona humana de l'inventari inicial.
+ * `files` és obligatori i no buit en tots els camins: el conjunt canviat ha de ser exactament eixe
+ * (cap altre canvi humà queda reconegut de retruc, i no hi ha cap mode «reconeix-ho tot»). */
+export function acknowledgeHumanZoneChanges(root, id, note = 'Reconeixement explícit de canvis a la zona humana', { files = null } = {}) {
+  if (!Array.isArray(files) || !files.length) throw new Error('Cal declarar la llista exacta de fitxers humans aprovats pel Mestre');
   return mutateTurn(root, id, turn => {
-    if (!turn.humanBaseline) throw new Error('No hi ha vigilància humana activa al torn');
+    const before = turn.humanBaseline?.files
+      || (turn.humanInventoryVersion === 1 ? Object.fromEntries(Object.entries(inventariInicial(root, turn)).filter(([file]) => humanZone(file))) : null);
+    if (!before) throw new Error('No hi ha vigilància humana activa al torn');
     const currentHumanZone = Object.fromEntries(Object.entries(inventory(root)).filter(([file]) => humanZone(file)));
-    const changedFiles = changes(turn.humanBaseline.files, currentHumanZone);
+    const changedFiles = changes(before, currentHumanZone);
     if (!changedFiles.length) throw new Error('No hi ha canvis a la zona humana per a reconéixer');
-    
-    turn.humanBaseline.files = currentHumanZone;
-    turn.humanBaseline.at = new Date().toISOString();
-    turn.humanBaseline.provenance = 'acknowledged';
+    const esperats = [...new Set(files.map(file => relativePath(root, file)))].sort();
+    if (JSON.stringify([...changedFiles].sort()) !== JSON.stringify(esperats)) {
+      throw new Error(`Canvis humans divergents del reconeixement: observats ${[...changedFiles].sort().join(', ')}; declarats ${esperats.join(', ')}`);
+    }
+    const at = new Date().toISOString();
+    turn.humanBaseline = { at, provenance: 'acknowledged', files: currentHumanZone };
     turn.verification = null;
-    turn.history.push({ action: 'acknowledge-human-zone-changes', files: changedFiles, at: turn.humanBaseline.at, note });
+    turn.history.push({ action: 'acknowledge-human-zone-changes', files: changedFiles, at, note });
   });
 }
 

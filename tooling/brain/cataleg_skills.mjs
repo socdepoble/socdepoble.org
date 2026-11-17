@@ -2,16 +2,17 @@ import fs from 'node:fs';
 import {esMain} from '../lib/arrel.mjs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-import { arrelSegura } from '../lib/arrel.mjs';
+import { arrel as resolArrel, arrelSegura } from '../lib/arrel.mjs';
 import { parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
+import { WIKI_DIR } from '../wiki/lib/project_paths.mjs';
 
 export const ROOT = fs.realpathSync(arrelSegura());
 export const sha = value => createHash('sha256').update(value).digest('hex');
 export const MIRRORS = [
-  '_wiki_de_poble/01_ser/00_AGENTS_I_SKILLS_MIRROR',
-  '_wiki_de_poble/01_Ser/00_AGENTS_I_SKILLS_MIRROR',
-  '_wiki_de_poble/02_saber/skills_mirror',
-];
+  '01_ser/00_AGENTS_I_SKILLS_MIRROR',
+  '01_Ser/00_AGENTS_I_SKILLS_MIRROR',
+  '02_saber/skills_mirror',
+].map(rel => path.posix.join(path.relative(ROOT, WIKI_DIR), rel));
 export function segura(root, rel) {
   if (typeof rel !== 'string' || !rel || path.isAbsolute(rel) || rel.includes('\\') ||
       rel.split('/').some(p => !p || p === '.' || p === '..')) throw new Error(`Ruta invàlida: ${rel}`);
@@ -56,7 +57,7 @@ export function inventari(root = ROOT) {
     if (d.name !== entry.name || (d.type ?? d.tipus) !== 'skill' || !['actiu', 'canonic'].includes(d.status ?? d.estat))
       throw new Error(`Skill no activa o identitat divergent: ${src.ruta}`);
     if (typeof d.description !== 'string' || !d.description.trim()) throw new Error(`Falta description: ${src.ruta}`);
-    if (!Array.isArray(d.triggers_on) || d.triggers_on.some(t => typeof t !== 'string' || !t.trim()))
+    if (!Array.isArray(d.triggers_on) || !d.triggers_on.length || d.triggers_on.some(t => typeof t !== 'string' || !t.trim()))
       throw new Error(`triggers_on invàlid: ${src.ruta}`);
     if (d.core !== undefined && !/^core:[ \t]*(true|false)[ \t]*(?:#.*)?$/m.test(fm.rawFrontmatter)) throw new Error(`core invàlid: ${src.ruta}`);
     if (d.prioritat !== undefined && !/^prioritat:[ \t]*-?\d+[ \t]*(?:#.*)?$/m.test(fm.rawFrontmatter)) throw new Error(`prioritat invàlida: ${src.ruta}`);
@@ -97,8 +98,10 @@ export function comprovaCataleg(root = ROOT, skills = inventari(root)) {
 export function catalegCLI(args = process.argv.slice(2), root = ROOT) {
   const allowed = new Set(['--check', '--escriu', '--json']);
   try {
-    if (args.some(a => !allowed.has(a) && !a.startsWith('--arrel=')) || (args.includes('--check') && args.includes('--escriu')))
+    const arrels = args.filter(a => a.startsWith('--arrel='));
+    if (args.some(a => !allowed.has(a) && !a.startsWith('--arrel=')) || arrels.length > 1 || arrels.some(a => !a.slice('--arrel='.length).trim()) || (args.includes('--check') && args.includes('--escriu')))
       throw new Error('Ús: [--check | --escriu] [--json]');
+    if (arrels.length) root = resolArrel({ argv: arrels, env: {} });
     const skills = inventari(root);
     if (args.includes('--escriu')) {
       // Cada reemplaçament és atòmic; el conjunt de dos fitxers NO és una transacció.

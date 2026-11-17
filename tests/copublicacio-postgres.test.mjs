@@ -54,6 +54,17 @@ test('R20 · PostgreSQL natiu, AAL2, Mur i concurrència entre connexions', { ti
     }
     t.diagnostic((await db.query('select version()')).rows[0].version);
 
+    // R32.4 · La primera ampliació del paquet amb migració pròpia, com demana la capçalera de 2611111735.
+    await t.test('R32.4 · /page/sistema-nervios entra al registre del paquet, additiva i idempotent', async () => {
+      const registre = async () => (await db.query(`select count(*)::int as n,
+        (count(*) filter (where tipus = 'pagina' and recurs_id = 'sistema-nervios' and origen_clau is null))::int as sistema
+        from private.recursos_copublicacio_paquet`)).rows[0];
+      const abans = await registre();
+      assert.equal(abans.sistema, 0);
+      for (let i = 0; i < 2; i++) await sqlFile(db, 'supabase/migrations/20261117150000_r324_copublicacio_pagina_sistema_nervios.sql');
+      assert.deepEqual(await registre(), { n: abans.n + 1, sistema: 1 });
+    });
+
     await t.test('Regressió R19 amb ACL, padró, AAL2, revocació i reversió', async () => {
       await sqlFile(db, 'tests/fixtures/copublicacio/regression.sql');
       assert.equal((await db.query('select count(*)::int as n from private.publicacio_traspassos')).rows[0].n, 0);

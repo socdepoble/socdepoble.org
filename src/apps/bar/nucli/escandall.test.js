@@ -104,3 +104,39 @@ describe('costDeVenda (BAR-R6: el cost que es congela a la línia venuda)', () =
     expect(costDeVenda(trencada, P('entrepa-truita'))).toEqual({ escandall: escandall('entrepa-truita'), costCents: null });
   });
 });
+
+describe('R32.4: l’escandall conserva cèntims i comprova el resultat final', () => {
+  test('deu formats complets costen deu preus, sense acumular l’arrodoniment del cost unitari', () => {
+    const farina = ingredient({ formatCompra: { quantitat: 3000, preuCents: 199 } });
+    expect(costUnitariMicro(farina)).toBe(663);
+    const resultat = costEscandall({ racions: 1, ingredients: [{ ingredientId: 'farina', quantitat: 30000 }] }, [farina]);
+    expect(resultat.costTotalMicro).toBe(19900000);
+    expect(resultat.costRacioCents).toBe(1990);
+  });
+
+  test('preu, quantitat i minva es combinen abans d’arredonir a micro-euros', () => {
+    const mitja = (n, d) => Number((n * 2n + d) / (d * 2n));
+    for (const [preu, format, quantitat, minva] of [[199, 3000, 30000, 0], [1, 3, 30000, 0], [199, 3000, 7500, 20], [600, 1000, 20, 0], [100, 1000, 100, 90]]) {
+      const i = ingredient({ formatCompra: { quantitat: format, preuCents: preu }, minvaPercent: minva });
+      const costMicro = mitja(BigInt(preu) * 10000n * BigInt(quantitat) * 100n, BigInt(format) * BigInt(100 - minva));
+      expect(costEscandall({ racions: 1, ingredients: [{ ingredientId: 'farina', quantitat }] }, [i]).linies[0].costMicro).toBe(costMicro);
+    }
+  });
+
+  test('els productes intermedis grans no rebutgen resultats públics segurs', () => {
+    const i = ingredient({ formatCompra: { quantitat: 1000000, preuCents: 1000000000000 } });
+    expect(costUnitariMicro(i)).toBe(10000000000);
+    expect(costEscandall({ racions: 1, ingredients: [{ ingredientId: 'farina', quantitat: 1 }] }, [i]))
+      .toMatchObject({ costRacioCents: 1000000, costTotalMicro: 10000000000 });
+    expect(foodCostPermil(100000000000, 1000000000000, 10)).toBe(110);
+    expect(pvpSuggerit(81883629588554, 100, 10, 1)).toBe(90071992547410);
+    expect(pvpSuggerit(0, 100, 10, Number.MAX_SAFE_INTEGER)).toBe(0);
+  });
+
+  test('cap PVP ni cost públic fora del rang segur es publica', () => {
+    expect(() => pvpSuggerit(81883629588554, 1, 10, 4503599627370496))
+      .toThrow(expect.objectContaining({ codi: 'IMPORT' }));
+    expect(() => costEscandall({ racions: 1, ingredients: [], altresCostosCents: Number.MAX_SAFE_INTEGER }, []))
+      .toThrow(expect.objectContaining({ codi: 'IMPORT' }));
+  });
+});

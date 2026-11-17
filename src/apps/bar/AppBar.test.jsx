@@ -92,6 +92,24 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+test('R32.4 · el TPV persistent mostra l’error de relectura abans d’intentar una altra venda', async () => {
+  const magatzem = await magatzemDeProva();
+  Object.defineProperty(magatzem.base, 'persistent', { get: () => true });
+  let avisa;
+  const subscriu = magatzem.base.subscriu;
+  vi.spyOn(magatzem.base, 'subscriu').mockImplementation((oient) => {
+    avisa = oient;
+    return subscriu(oient);
+  });
+  const carrega = vi.spyOn(magatzem, 'carrega');
+  munta('/app/bar/tpv', magatzem, { ...ENTORN, sessio: { ...ENTORN.sessio, enLinia: false } });
+  await screen.findByRole('button', { name: /^Cafè sol,/ });
+  carrega.mockRejectedValueOnce(Object.assign(new Error('disc sintètic'), { codi: 'NO_DISPONIBLE' }));
+  await act(async () => { avisa({ tipus: 'canvi', local: false }); });
+  expect(await screen.findByText('Les dades del dispositiu han deixat de respondre: recarrega la pàgina abans de continuar.')).toBeTruthy();
+  expect(document.querySelector('.sdp-tpv__avis')?.firstElementChild?.textContent).toBe('Les dades del dispositiu han deixat de respondre: recarrega la pàgina abans de continuar.');
+});
+
 describe('el torn', () => {
   test('sense torn, la caixa ho diu i porta a obrir-lo; obrir-lo deixa vendre', async () => {
     const magatzem = await magatzemDeProva({ ambTorn: false });

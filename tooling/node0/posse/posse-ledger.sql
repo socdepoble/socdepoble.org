@@ -46,7 +46,8 @@ DO $guard$ BEGIN
 (86,'2dee56621a634f1699b2124a19f35923c82686e18a0b9e2a4fa5c7b762ea2eab'),
 (114,'9072d6ee39c18ff2156573d2cbf0fa6a815b1e5c4fd3a3073fd158beac3d1fd5'),
 (116,'34ddc81cbf6670272e99603f985db38f85663f93b901e5ea3b212552b556d589'),
-(119,'4c3151035be4784842fba08d88e59425a22ed3d89e64016c8dd99c81f08774b2')
+(119,'4c3151035be4784842fba08d88e59425a22ed3d89e64016c8dd99c81f08774b2'),
+(120,'91dabe476f642579862bffbb10b8d56f946722b8efd65deedf43e7f8fbae9f71')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

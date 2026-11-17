@@ -158,6 +158,13 @@ test('error seguit de reintent: el segon intent arriba i l’alerta se’n va', 
   expect(botoCrear().disabled).toBe(false);
 });
 
+test('Onada R32.4 · el Foraster a /registre disposa del botó centrat «Idioma del Sistema» que porta a /traduccions', () => {
+  render(<OnboardingSection />);
+  const botoIdioma = screen.getByRole('button', { name: /Idioma del Sistema/ });
+  fireEvent.click(botoIdioma);
+  expect(m.navigate).toHaveBeenCalledWith('/traduccions');
+});
+
 test('Google pendent no congela el correu; si el correu l’avorta, Google no pinta cap error', async () => {
   const google = deferred();
   const registre = deferred();

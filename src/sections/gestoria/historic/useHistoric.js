@@ -294,22 +294,32 @@ export function useHistoric({ magatzem, subtle, tractors, entorn, rellotge, avui
   const suposits = useMemo(() => supositsDe(configuracio.suposits), [configuracio.suposits]);
   const derivats = useMemo(() => {
     if (!serie) return { banc: null, simulacio: null, escenari: null, comparacio: null, indicadors: indicadors({ serie: null }), provisio: null };
-    const banc = operacionsDelBanc({ moviments: serie.moviments, suposits, parametresPropis: configuracio.parametres });
-    const anys = serie.anys.map((a) => a.any);
-    /* La cobertura de cada trimestre: un trimestre sense extractes no té ni 303 ni 130 (mai 0,00 €). */
-    const cobertura = Object.fromEntries(serie.trimestres.map((t) => [t.clau, t.cobertura]));
-    const simulacio = simula({ operacions: banc.operacions, anys, parametresPropis: configuracio.parametres, cobertura });
-    const { facturacio, despesaIa } = configuracio.escenari;
-    const ambEscenari = facturacio !== 0 || despesaIa !== 0;
-    const escenari = ambEscenari
-      ? simula({ operacions: aplicaEscenari(banc.operacions, configuracio.escenari), anys, parametresPropis: configuracio.parametres, cobertura })
-      : null;
-    const darrer = serie.trimestres[serie.trimestres.length - 1] ?? null;
-    const provisio = darrer ? provisioDe(simulacio, { any: darrer.any, t: darrer.t }) : null;
-    return {
-      banc, simulacio, escenari, comparacio: escenari ? comparaEscenari(simulacio, escenari) : null,
-      indicadors: indicadors({ serie, provisio }), provisio
-    };
+    let banc = null;
+    let simulacio = null;
+    let provisio = null;
+    try {
+      banc = operacionsDelBanc({ moviments: serie.moviments, suposits, parametresPropis: configuracio.parametres });
+      const anys = serie.anys.map((a) => a.any);
+      /* La cobertura de cada trimestre: un trimestre sense extractes no té ni 303 ni 130 (mai 0,00 €). */
+      const cobertura = Object.fromEntries(serie.trimestres.map((t) => [t.clau, t.cobertura]));
+      simulacio = simula({ operacions: banc.operacions, anys, parametresPropis: configuracio.parametres, cobertura });
+      const darrer = serie.trimestres[serie.trimestres.length - 1] ?? null;
+      provisio = darrer ? provisioDe(simulacio, { any: darrer.any, t: darrer.t }) : null;
+      const { facturacio, despesaIa } = configuracio.escenari;
+      const ambEscenari = facturacio !== 0 || despesaIa !== 0;
+      const escenari = ambEscenari
+        ? simula({ operacions: aplicaEscenari(banc.operacions, configuracio.escenari), anys, parametresPropis: configuracio.parametres, cobertura })
+        : null;
+      return {
+        banc, simulacio, escenari, comparacio: escenari ? comparaEscenari(simulacio, escenari) : null,
+        indicadors: indicadors({ serie, provisio }), provisio, errorCalcul: null
+      };
+    } catch (error) {
+      if (!['IMPORT_FORA_DE_RANG', 'DIVISOR_INVALID'].includes(error?.codi)) throw error;
+      /* Les dades llegides i els controls continuen vius: corregir una
+         suposició o l'escenari recalcula sense tornar a obrir els extractes. */
+      return { banc, simulacio, escenari: null, comparacio: null, indicadors: indicadors({ serie, provisio }), provisio, errorCalcul: missatgeDe(error) };
+    }
   }, [serie, suposits, configuracio.parametres, configuracio.escenari]);
 
   return {

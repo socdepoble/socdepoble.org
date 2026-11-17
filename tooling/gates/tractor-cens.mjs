@@ -40,9 +40,13 @@
  * Eixides: 0 net · 1 infracció · 2 error d'execució.
  */
 
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, lstatSync } from 'node:fs';
 import path from 'node:path';
+import { fontUTF8 } from '../lib/lexic-css.mjs';
 
+function principal() {
+const args = process.argv.slice(2);
+if (args.length && (args.length !== 2 || args[0] !== '--arrel' || !args[1]?.trim() || args[1].startsWith('--'))) throw new Error('Ús: [--arrel DIR]');
 const ARREL = (() => {
   const i = process.argv.indexOf('--arrel');
   return path.resolve(i > -1 ? process.argv[i + 1] : process.cwd());
@@ -50,6 +54,14 @@ const ARREL = (() => {
 
 const R = (rel) => path.join(ARREL, rel);
 const CENS = '.agents/consell.json';
+// Un comentari HTML no compta, però conserva els seus salts de línia: el diagnòstic fitxer:línia no es desplaça.
+const visible = text => text.replace(/<!--[\s\S]*?-->/g, m => m.replace(/[^\n]/g, ' '));
+const escapa = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+for (const rel of ['.agents', '_wiki_de_poble']) {
+  const s = lstatSync(R(rel));
+  if (s.isSymbolicLink() || !s.isDirectory()) throw new Error(`Font no certificable: ${rel} (directori o symlink)`);
+}
+if (lstatSync(R(CENS)).isSymbolicLink() || !lstatSync(R(CENS)).isFile()) throw new Error(`Font no regular o symlink: ${CENS}`);
 
 const infraccions = [];
 const OK = [];
@@ -69,31 +81,40 @@ if (!existsSync(R(CENS))) {
 
 let cens;
 try {
-  cens = JSON.parse(readFileSync(R(CENS), 'utf8'));
+  cens = JSON.parse(fontUTF8(R(CENS), 'utf8'));
 } catch (e) {
   console.error(`❌ PARAT. ${CENS} no és JSON vàlid: ${e.message}`);
   process.exit(2);
 }
 
-const membres = (cens.membres || []).filter((m) => m.actiu !== false);
+if (!cens || typeof cens !== 'object' || Array.isArray(cens) || !Array.isArray(cens.membres) || !cens.membres.length) throw new Error(`${CENS}: membres ha de ser una llista no buida`);
+const textValid = v => typeof v === 'string' && Boolean(v.trim());
+for (const m of cens.membres) {
+  if (!m || typeof m !== 'object' || Array.isArray(m) || ['id', 'nom', 'fortalesa', 'debilitat', 'rol'].some(k => !textValid(m[k])) || (m.actiu !== undefined && typeof m.actiu !== 'boolean')) throw new Error(`${CENS}: membre invàlid (id, nom, fortalesa, debilitat, rol i actiu booleà)`);
+}
+if (cens.no_membres !== undefined && (!cens.no_membres || typeof cens.no_membres !== 'object' || Array.isArray(cens.no_membres) || Object.entries(cens.no_membres).some(([nom, motiu]) => !textValid(nom) || !textValid(motiu)))) throw new Error(`${CENS}: no_membres invàlid`);
+const membres = cens.membres.filter((m) => m.actiu !== false);
+if (!membres.length) throw new Error(`${CENS}: no hi ha cap membre actiu per certificar`);
 const noms = membres.map((m) => m.nom);
-const ids = membres.map((m) => m.id);
 const N = membres.length;
 
 {
   const LLEI = 'C1 · Cens vàlid';
-  const dup = ids.filter((x, i) => ids.indexOf(x) !== i);
+  const totsIds = cens.membres.map(m => m.id);
+  const dup = totsIds.filter((x, i) => totsIds.indexOf(x) !== i);
   const senseCamp = membres.filter(
     (m) => !m.nom || !m.fortalesa || !m.debilitat || !m.rol
   );
   if (dup.length) {
     falla(LLEI, CENS, 0, `ids duplicats: ${[...new Set(dup)].join(', ')}`);
   }
+  const nomsDuplicats = noms.filter((nom, i) => noms.findIndex(n => n.toLocaleLowerCase() === nom.toLocaleLowerCase()) !== i);
+  if (nomsDuplicats.length) falla(LLEI, CENS, 0, `noms actius duplicats: ${[...new Set(nomsDuplicats)].join(', ')}`);
   for (const m of senseCamp) {
     falla(LLEI, CENS, 0,
       `«${m.nom || m.id}» sense nom/fortalesa/debilitat/rol. La Regla Sagrada exigix respectar les característiques úniques de cadascuna: sense elles no es pot assignar rol.`);
   }
-  if (!dup.length && !senseCamp.length) passa(LLEI);
+  if (!dup.length && !nomsDuplicats.length && !senseCamp.length) passa(LLEI);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -111,8 +132,13 @@ function arbre(rel, eixida = []) {
     if (SALTA.has(nom) || nom.startsWith('.quarantena')) continue;
     const abs = path.join(base, nom);
     const sub = path.join(rel, nom);
-    if (statSync(abs).isDirectory()) arbre(sub, eixida);
-    else if (nom.endsWith('.md') && !nom.toUpperCase().includes('BUNDLE')) eixida.push(sub);
+    const s = lstatSync(abs);
+    if (s.isSymbolicLink()) throw new Error(`Symlink en documents del cens: ${sub}`);
+    if (s.isDirectory()) arbre(sub, eixida);
+    else if (nom.endsWith('.md') && !nom.toUpperCase().includes('BUNDLE')) {
+      if (!s.isFile()) throw new Error(`Document no regular del cens: ${sub}`);
+      eixida.push(sub);
+    }
   }
   return eixida;
 }
@@ -144,7 +170,7 @@ function nomsPresents(text) {
   let net = true;
   for (const rel of DOCS) {
     if (rel.replace(/\\/g, '/') === CENS) continue;
-    const text = readFileSync(R(rel), 'utf8');
+    const text = visible(fontUTF8(R(rel), 'utf8'));
     if (!PARLA_DEL_CONJUNT.test(text)) continue;
     const presents = nomsPresents(text);
     if (presents.length < LLINDAR_CENS) continue;
@@ -166,11 +192,11 @@ function nomsPresents(text) {
   let net = true;
   for (const rel of DOCS) {
     if (rel.replace(/\\/g, '/') === CENS) continue;
-    const linies = readFileSync(R(rel), 'utf8').split('\n');
+    const linies = visible(fontUTF8(R(rel), 'utf8')).split('\n');
     linies.forEach((l, i) => {
       if (!PARLA_DEL_CONJUNT.test(l) && !/\bpetorret/i.test(l)) return;
       for (const s of SOSPITOSES) {
-        const re = new RegExp(`(^|[^\\w-])${s}([^\\w-]|$)`, 'i');
+        const re = new RegExp(`(^|[^\\w-])${escapa(s)}([^\\w-]|$)`, 'i');
         if (!re.test(l)) continue;
         net = false;
         falla(LLEI, rel, i + 1,
@@ -195,7 +221,7 @@ function nomsPresents(text) {
   // Sempre en PLURAL: en valencià «nou model» és «un model nou», no «nou models».
   // Exigir el plural elimina el fals positiu sense perdre cap cas real.
   const SUBSTANTIU = '(?:IAs|intel·ligències|models|proveïdors|proveidors|petorretes|ties|germanes|membres)';
-  const NUMERO = `(?:\\d{1,3}|${Object.keys(LLETRES).join('|')})`;
+  const NUMERO = `(?:\\d+|${Object.keys(LLETRES).join('|')})`;
   const CONJUNT = String.raw`(?:(?:el\s+)?(?:consell|cens)|(?:l['’]|el\s+)(?:equip|conjunt)\s+(?:complet|sencer|total))`;
   const DEL_CONJUNT = String.raw`(?:del\s+(?:consell|cens|conjunt)(?:\s+(?:complet|sencer|total))?|de\s+(?:tot\s+)?l['’]equip\s+(?:complet|sencer|total))`;
   // «Consell de quatre IAs» també pot designar una convocatòria concreta;
@@ -235,7 +261,7 @@ function nomsPresents(text) {
   let net = true;
   for (const rel of DOCS) {
     if (rel.replace(/\\/g, '/') === CENS) continue;
-    const linies = readFileSync(R(rel), 'utf8').split('\n');
+    const linies = visible(fontUTF8(R(rel), 'utf8')).split('\n');
     linies.forEach((l, i) => {
       for (const recompte of recomptesGlobals(l)) {
         if (recompte.valor === N) continue;
@@ -257,7 +283,7 @@ function nomsPresents(text) {
   if (!existsSync(R(SKILL))) {
     falla(LLEI, SKILL, 0, 'Absent. És l\'única skill executiva que governa el Consell.');
   } else {
-    const text = readFileSync(R(SKILL), 'utf8');
+    const text = visible(fontUTF8(R(SKILL), 'utf8'));
     const cita = /consell\.json/.test(text);
     // Llista oberta = una MATEIXA LÍNIA amb dos o més membres i un «etc.».
     // Els `triggers_on` poden portar noms solts; això no és un cens obert.
@@ -306,3 +332,7 @@ if (infraccions.length) {
 
 console.log(`\n${banda}\nEl cens i la doctrina diuen el mateix. Cap Petorreta oblidada.\n`);
 process.exit(0);
+}
+
+try { principal(); }
+catch (error) { console.error(`❌ [TRACTOR-CENS] ${error.message}`); process.exit(2); }

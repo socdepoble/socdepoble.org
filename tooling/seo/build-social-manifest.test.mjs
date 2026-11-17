@@ -273,7 +273,8 @@ test('les presentacions /page/<clau>: l’inventari explícit, ni una clau més'
   for(const ruta of ['/page/treball','/page/notes_shared','/page/altra'])assert.equal(manifest.routes[ruta],undefined,ruta);
   // P0-60 / IDEA-191 · + l'herbari, el banc de llavors, les rutes de poble i els arbres monumentals.
   // Onada R14 · + el receptari «Què dinem?» (/page/receptes).
-  assert.equal(PAGINES_INFORMATIVES.length,15);
+  // Onada R32.4 · + el sistema nerviós (/page/sistema-nervios).
+  assert.equal(PAGINES_INFORMATIVES.length,16);
 });
 
 /* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · La Consola entra amb el head
@@ -326,7 +327,7 @@ test('cobertura de l’arbre de veres: presentacions inventariades, /disseny, /w
     'src/sections/consola/govern/governConsola.js','src/sections/text/pageContent.js','src/config/navigation.js'].map(importa));
   const inventari=[...PAGINES_INFORMATIVES.map(clau=>`/page/${clau}`),...PLUGINS_DE_L_ORDRE.map(id=>`/plugin/${id}`),'/disseny','/wikidepoble','/consola',
     ...IDS_PAGINES.map(id=>`/consola/${id}`),...IDS_GOVERN.map(id=>`/consola/govern/${id}`)];
-  assert.equal(inventari.length,15+10+3+9+4);
+  assert.equal(inventari.length,16+10+3+9+4);
   /* P0-60 / IDEA-191 · L'article del Pou de Neu i el Manifest de Poble (llavors del Mur) tenen el seu
      head, amb la variant JPEG de la il·lustració, i /page/anatomia-rural n'és l'àlies. */
   const POU='/mur/noves-tecnologies-aplicades-a-la-cultura-rural';

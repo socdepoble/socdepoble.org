@@ -12,7 +12,7 @@
  * el que es torna exactament (sempre positiu; el signe el posa el tiquet).
  * La línia congela nom, preu, IVA i cost: canviar la carta no la toca.
  */
-import { errorBar, mitjaAmunt } from './comu.js';
+import { errorBar, proporcioMitjaAmunt } from './comu.js';
 
 export const TIPUS_DESCOMPTE = Object.freeze(['percent', 'import']);
 
@@ -22,7 +22,7 @@ export const compta = (linia) => linia.estat !== 'anullada';
 /** Preu unitari per quantitat (de les anul·lades també: és el que es va anul·lar). */
 export function brutLinia(linia) {
   if (Number.isSafeInteger(linia.importCents)) return linia.importCents;
-  return linia.preuUnitariCents * linia.quantitat;
+  return proporcioMitjaAmunt(linia.preuUnitariCents, linia.quantitat, 1);
 }
 
 /** El descompte en cèntims (0 si està convidada: convidar ja ho cobrix tot). */
@@ -30,7 +30,7 @@ export function descompteLinia(linia) {
   if (!compta(linia) || linia.convidada || !linia.descompte) return 0;
   const brut = brutLinia(linia);
   const { tipus, valor } = linia.descompte;
-  if (tipus === 'percent') return Math.min(brut, mitjaAmunt(brut * valor, 100));
+  if (tipus === 'percent') return Math.min(brut, proporcioMitjaAmunt(brut, valor, 100));
   return Math.min(brut, valor);
 }
 
@@ -60,7 +60,7 @@ export function parteixLinia(linia, quantitat, idNova) {
   const part = { ...linia, id: idNova, quantitat };
   if (linia.descompte && !linia.convidada) {
     const total = descompteLinia(linia);
-    const dePart = mitjaAmunt(total * quantitat, linia.quantitat);
+    const dePart = proporcioMitjaAmunt(total, quantitat, linia.quantitat);
     part.descompte = { tipus: 'import', valor: dePart, motiu: linia.descompte.motiu };
     resta.descompte = { tipus: 'import', valor: total - dePart, motiu: linia.descompte.motiu };
     if (part.descompte.valor === 0) delete part.descompte;

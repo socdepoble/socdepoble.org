@@ -233,6 +233,44 @@
 .app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-gestor-fitxa__text {
   padding: var(--sdp-space-2) var(--sdp-space-3);
 }
+/* D-R32.3-PIXEL (v1.2.6, decisió del Mestre, 261117) · Amb la miniatura de 58 i el
+   coixí de 12, el títol d'un apartat té 91 px de línia a 320 px de finestra, 113 a
+   360 i 121 a 375 (Chrome headless, DOM real del Perfil). Les paraules més llargues
+   dels títols del sistema no hi cabien senceres en negreta de 18 px («Desplegament»,
+   131 px) i overflow-wrap: break-word les partia sense guionet («Multimèd / ia»,
+   «Empaque / tats»). El break-word es queda: és la protecció de les dades d'usuari
+   (noms d'aplicacions federades, adreces), i només talla una paraula que no cap en
+   una línia sencera. El que s'ajusta és la lletra del títol, als talls de la casa
+   per al contenidor sdp-arrel (layout.css: 400 i 359): fins a 400 px, la mida
+   xicoteta en SemiCondensed, la de les entrades de PERFIL del costat («Desplegament»
+   107 px); fins a 359 px, la meta en Condensed (tipografia-estreta.css; 86 px). Res
+   no canvia per damunt de 400 px ni fora del Perfil en dues columnes. */
+@container sdp-arrel (max-width: 400px) {
+  .app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-gestor-fitxa__titol {
+    font-size: var(--sdp-text-small);
+    font-stretch: var(--sdp-font-amplada-semi);
+  }
+}
+@container sdp-arrel (max-width: 359px) {
+  .app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-gestor-fitxa__titol {
+    font-size: var(--sdp-text-meta);
+    font-stretch: var(--sdp-font-amplada-estreta);
+  }
+}
+@supports not (container-type: inline-size) {
+  @media (max-width: 400px) {
+    .app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-gestor-fitxa__titol {
+      font-size: var(--sdp-text-small);
+      font-stretch: var(--sdp-font-amplada-semi);
+    }
+  }
+  @media (max-width: 359px) {
+    .app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .sdp-gestor-fitxa__titol {
+      font-size: var(--sdp-text-meta);
+      font-stretch: var(--sdp-font-amplada-estreta);
+    }
+  }
+}
 
 /* R32.3 · Pont visual d'identitat activa a dalt d'APARTATS (duesColumnesEstret):
    connecta per color i marcador la persona o organització triada a l'esquerra amb

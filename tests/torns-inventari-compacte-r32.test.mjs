@@ -10,7 +10,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { fixture, validDoc, writeDoc, relay, REPO } from './helpers/documental.mjs';
 import { openTurn, readTurn, bindPlan, checkTurn, sealTurn, validateDocument, inventory, changes, mutateTurn,
-  inventariInicial, inventariVerificat, FORMAT_INVENTARI_INICIAL, FORMAT_INVENTARI_VERIFICAT } from '../tooling/documental/turns.mjs';
+  inventariInicial, inventariVerificat, FORMAT_INVENTARI_INICIAL, FORMAT_INVENTARI_VERIFICAT, acknowledgeHumanZoneChanges } from '../tooling/documental/turns.mjs';
 
 const ok = () => ({ valid: true, checks: [{ name: 'fixture', exit: 0 }], errors: [] });
 const ENV_GIT = { ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))), GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' };
@@ -287,4 +287,52 @@ test('.gitignore (D-R30-15 i D-R30-16): torns i preferències locals d’Obsidia
     '_wiki_de_poble/.obsidian/community-plugins.json']) {
     assert.equal(ignorat(rel), false, `${rel} ha de continuar versionable`);
   }
+});
+
+// v1.2.6 · Un torn humanInventoryVersion 1 (sense humanBaseline) pot reconéixer, amb la llista exacta,
+// un canvi de la zona humana que el Mestre ha aprovat; qualsevol altre canvi continua vigilat.
+test('acknowledgeHumanZoneChanges en un torn v1: llista exacta, reconeixement i vigilància posterior', t => {
+  const root = fixtureGit(t);
+  const d = validDoc(root, { scope: 'code' });
+  assert.equal(d.turn.humanInventoryVersion, 1);
+  assert.equal(d.turn.humanBaseline, undefined);
+  plaVinculat(root, d);
+  const id = d.turn.turn_id;
+  const aprovat = '_wiki_de_poble/04_escriptori/01_produccio/contracte.md';
+  escriu(root, aprovat, 'fila aprovada pel Mestre\n');
+  assert.match(checkTurn(root, id).errors.join('\n'), /Zona humana modificada: _wiki_de_poble\/04_escriptori\/01_produccio\/contracte\.md/);
+  assert.throws(() => acknowledgeHumanZoneChanges(root, id, 'prova', { files: ['_wiki_de_poble/04_escriptori/01_produccio/un_altre.md'] }), /divergents/);
+  assert.equal(readTurn(root, id).humanBaseline, undefined, 'un reconeixement refusat no escriu res');
+  acknowledgeHumanZoneChanges(root, id, 'Aprovació del Mestre', { files: [aprovat] });
+  const reconegut = readTurn(root, id);
+  assert.equal(reconegut.humanBaseline.provenance, 'acknowledged');
+  assert.deepEqual(reconegut.history.at(-1).files, [aprovat]);
+  assert.deepEqual(checkTurn(root, id).errors, []);
+  escriu(root, '_wiki_de_poble/04_escriptori/01_produccio/nou.md', 'canvi posterior\n');
+  assert.match(checkTurn(root, id).errors.join('\n'), /Zona humana modificada: _wiki_de_poble\/04_escriptori\/01_produccio\/nou\.md/);
+  assert.throws(() => acknowledgeHumanZoneChanges(root, id, 'prova', { files: [aprovat] }), /divergents/);
+});
+
+// GOV-01 · La llista exacta és obligatòria en tots els camins: sense llista (o buida) no hi ha cap mode
+// «reconeix-ho tot», la crida llança i el registre del torn queda byte a byte igual.
+test('acknowledgeHumanZoneChanges sense llista exacta llança i no escriu el registre del torn', t => {
+  const root = fixtureGit(t);
+  const d = validDoc(root, { scope: 'code' });
+  assert.equal(d.turn.humanInventoryVersion, 1);
+  plaVinculat(root, d);
+  const id = d.turn.turn_id;
+  escriu(root, '_wiki_de_poble/04_escriptori/01_produccio/contracte.md', 'canvi sense declarar\n');
+  escriu(root, '_wiki_de_poble/04_escriptori/01_produccio/altre.md', 'un altre canvi sense declarar\n');
+  const cru = fs.readFileSync(registre(root, id), 'utf8');
+  for (const opcions of [undefined, {}, { files: null }, { files: [] }, { files: '_wiki_de_poble/04_escriptori/01_produccio/altre.md' }]) {
+    assert.throws(() => acknowledgeHumanZoneChanges(root, id, 'prova', opcions), /llista exacta/, JSON.stringify(opcions));
+    assert.equal(fs.readFileSync(registre(root, id), 'utf8'), cru, `registre intacte amb ${JSON.stringify(opcions)}`);
+  }
+  assert.throws(() => acknowledgeHumanZoneChanges(root, id), /llista exacta/);
+  assert.equal(fs.readFileSync(registre(root, id), 'utf8'), cru);
+  assert.equal(fs.existsSync(`${registre(root, id)}.lock`), false, 'cap lock orfe');
+  const torn = readTurn(root, id);
+  assert.equal(torn.humanBaseline, undefined);
+  assert.equal(torn.history.some(h => h.action === 'acknowledge-human-zone-changes'), false);
+  assert.match(checkTurn(root, id).errors.join('\n'), /Zona humana modificada: _wiki_de_poble\/04_escriptori\/01_produccio\/altre\.md/);
 });

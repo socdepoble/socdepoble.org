@@ -47,14 +47,15 @@ test('la card és la 7a, just davall d’Empaquetats, amb els camps del Mestre i
   const apartats = itemsDAdministracioSistema();
   expect(apartats).toHaveLength(7);
   expect(apartats.map((a) => a.id).slice(-2)).toEqual(['admin-empaquetats', 'administracio-usuaris-i-dispositius']);
+  // Expectativa actualitzada a propòsit: P0-116 / IDEA-290 (ordre del Mestre, 261117) · Icona vectorial única del sistema sense emoji duplicat al text.
   expect(apartats[6]).toMatchObject({
     id: 'administracio-usuaris-i-dispositius',
     categoryIds: ['administracio-sistema'],
-    title: '👥 Usuaris, Dispositius i Botigues (Google i Apple)',
+    title: 'Usuaris, Dispositius i Botigues (Google i Apple)',
     subtitle: 'Directori d’usuaris registrats i distribució en viu per canal (Google Play, App Store i Web)',
-    icon: '👥',
     data: { vista: 'admin-usuaris-i-dispositius' }
   });
+  expect(typeof apartats[6].icon).not.toBe('string');
   expect(apartats[6].subtitle).not.toMatch(/X\/12|\d+\/12/);
 });
 

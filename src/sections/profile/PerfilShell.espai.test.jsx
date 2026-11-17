@@ -83,52 +83,53 @@ const detall = (container) => container.querySelector('.sdp-workspace-detail');
    Prova actualitzada a propòsit. Abans fixava les cinc utilitats per a
    tothom; ara la Consola de Mètriques i el Cervell (intern: true) només ixen
    per a qui és superadmin (prova de davall). */
-test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i APLICACIONS, sense la maquinària interna', () => {
+test('la primera columna, en ordre: la persona pel seu nom, Aplicacions i GRUPS I EMPRESES', () => {
   const { container } = render(<PerfilShell />);
-  /* Onada R6 · Bloc 2 (P1-b) · Expectativa actualitzada a propòsit: sense superadmin no ix «🛡️ Administració del sistema». */
-  /* P0-114 (ordre del Mestre, 261111) · L'Avisador torna, darrere de l'Arbre Genealògic. */
   expect(etiquetesDe(navegacio())).toEqual([
-    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'L’Avisador', 'Lector RSS', 'TPV del Bar', 'Snippet',
+    'Javi Llinares', 'Aplicacions', 'GRUPS I EMPRESES', 'Forn',
   ]);
   expect(within(navegacio()).getByRole('button', { name: 'GRUPS I EMPRESES' }).getAttribute('aria-expanded')).toBe('true');
-  // En entrar: la persona activa, els seus apartats i la fitxa oberta.
+  // En entrar: la persona activa, els seus apartats (amb Idioma i, últim, Eixir) i la fitxa oberta.
   expect(within(navegacio()).getByRole('button', { name: 'Javi Llinares' }).getAttribute('aria-current')).toBe('page');
-  /* T9 (261001) · «Els nodes», abans l'últim apartat de la persona.
-     Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
-     Ordre del Mestre (261008) · «Les vistes», just després de «La fitxa». */
-  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes', 'Multimèdia']);
+  expect(apartats(container)).toEqual([
+    'La fitxa', 'Les vistes', 'El compte', 'Els nodes', 'Multimèdia', 'Idioma del Sistema', 'Eixir de Sóc de Poble',
+  ]);
   expect(within(detall(container)).getByText('fitxa de Javi Llinares')).toBeTruthy();
   expect(container.querySelector('.perfil-espai .perfil-espai__detall')).toBe(detall(container));
 });
 
-test('Bloc 3.4 · qui és superadmin hi veu també la Consola de Mètriques i el Cervell, al seu lloc', () => {
+test('Bloc 3.4 · qui és superadmin veu Administració del sistema i davall Aplicacions (amb Mètriques i Cervell als apartats)', () => {
   m.sessio = { esSuperadmin: true };
-  render(<PerfilShell />);
+  const { container } = render(<PerfilShell />);
   expect(etiquetesDe(navegacio())).toEqual([
-    'Javi Llinares', '🛡️ Administració del sistema', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'L’Avisador', 'Lector RSS', 'TPV del Bar', 'Snippet', 'Consola de Mètriques', 'Cervell (Node Graph)',
+    'Javi Llinares', 'Administració del sistema', 'Aplicacions', 'GRUPS I EMPRESES', 'Forn',
+  ]);
+  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Aplicacions' }));
+  expect(apartats(container)).toEqual([
+    'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'L’Avisador', 'Lector RSS', 'TPV del Bar', 'Snippet', 'Consola de Mètriques', 'Cervell (Node Graph)',
   ]);
   /* Una sessió que no és superadmin, o un valor que no és un sí, no les mostra. */
   for (const sessio of [{ esSuperadmin: false }, { rol: 'veí' }, {}]) {
     cleanup();
     m.sessio = sessio;
-    render(<PerfilShell />);
-    expect(etiquetesDe(navegacio())).not.toContain('Consola de Mètriques');
-    expect(etiquetesDe(navegacio())).not.toContain('Cervell (Node Graph)');
+    const subVista = render(<PerfilShell />);
+    fireEvent.click(within(navegacio()).getByRole('button', { name: 'Aplicacions' }));
+    expect(apartats(subVista.container)).not.toContain('Consola de Mètriques');
+    expect(apartats(subVista.container)).not.toContain('Cervell (Node Graph)');
   }
 });
 
-test('Bloc 3.4 · una selecció que apuntava a una utilitat interna no peta quan deixa de veure’s: l’espai torna a la primera categoria', () => {
+test('Bloc 3.4 · una selecció que apuntava a una utilitat interna no peta quan deixa de veure’s: l’espai cau al primer apartat disponible', () => {
   m.sessio = { esSuperadmin: true };
   const { container, rerender } = render(<PerfilShell />);
-  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Consola de Mètriques' }));
+  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Aplicacions' }));
+  fireEvent.click(within(container).getByRole('button', { name: /Consola de Mètriques/ }));
   expect(within(detall(container)).getByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBeTruthy();
   m.sessio = null;
   rerender(<PerfilShell />);
-  expect(etiquetesDe(navegacio())).not.toContain('Consola de Mètriques');
-  expect(within(navegacio()).getByRole('button', { name: 'Javi Llinares' }).getAttribute('aria-current')).toBe('page');
-  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
-  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes', 'Multimèdia']);
+  expect(apartats(container)).not.toContain('Consola de Mètriques');
   expect(within(detall(container)).queryByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBeNull();
+  expect(within(detall(container)).getByRole('heading', { level: 1, name: 'Gestoria de Poble' })).toBeTruthy();
 });
 
 /* Revisió adversarial del carril D (261016, problema 2) · A cada renovació
@@ -140,12 +141,13 @@ test('Bloc 3.4 · la renovació del JWT d’un superadmin que és a les Mètriqu
   const usuari = { id: 'u-1' };
   m.sessio = { estat: 'dins', currentUser: usuari, rol: 'superadmin', esSuperadmin: true };
   const { container, rerender } = render(<PerfilShell />);
-  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Consola de Mètriques' }));
+  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Aplicacions' }));
+  fireEvent.click(within(container).getByRole('button', { name: /Consola de Mètriques/ }));
   const titol = within(detall(container)).getByRole('heading', { level: 1, name: 'Consola de Mètriques' });
   m.sessio = { estat: 'comprovant', currentUser: usuari, rol: 'desconegut', esSuperadmin: false };
   rerender(<PerfilShell />);
-  expect(etiquetesDe(navegacio())).toContain('Consola de Mètriques');
-  expect(etiquetesDe(navegacio())).toContain('Cervell (Node Graph)');
+  expect(apartats(container)).toContain('Consola de Mètriques');
+  expect(apartats(container)).toContain('Cervell (Node Graph)');
   // El mateix node: ni s'ha reconciliat ni s'ha tornat a muntar.
   expect(within(detall(container)).getByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBe(titol);
   m.sessio = { estat: 'dins', currentUser: usuari, rol: 'superadmin', esSuperadmin: true };
@@ -153,25 +155,26 @@ test('Bloc 3.4 · la renovació del JWT d’un superadmin que és a les Mètriqu
   expect(within(detall(container)).getByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBe(titol);
 });
 
-test('Bloc 3.4 · si en tornar el rol ja no és superadmin, les internes se’n van i l’espai torna a la persona', () => {
+test('Bloc 3.4 · si en tornar el rol ja no és superadmin, les internes se’n van dels apartats d’Aplicacions', () => {
   const usuari = { id: 'u-1' };
   m.sessio = { estat: 'dins', currentUser: usuari, rol: 'superadmin', esSuperadmin: true };
   const { container, rerender } = render(<PerfilShell />);
-  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Consola de Mètriques' }));
+  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Aplicacions' }));
+  fireEvent.click(within(container).getByRole('button', { name: /Consola de Mètriques/ }));
   m.sessio = { estat: 'comprovant', currentUser: usuari, rol: 'desconegut', esSuperadmin: false };
   rerender(<PerfilShell />);
   m.sessio = { estat: 'dins', currentUser: usuari, rol: 'usuari', esSuperadmin: false };
   rerender(<PerfilShell />);
-  expect(etiquetesDe(navegacio())).not.toContain('Consola de Mètriques');
-  expect(within(navegacio()).getByRole('button', { name: 'Javi Llinares' }).getAttribute('aria-current')).toBe('page');
+  expect(apartats(container)).not.toContain('Consola de Mètriques');
   expect(within(detall(container)).queryByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBeNull();
 });
 
 test('cada element de l’esquerra obri els seus apartats i el primer al detall', () => {
   m.caps = new Set(['compte']);
   const { container } = render(<PerfilShell />);
-  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
-  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Privacitat i dades', 'Els nodes', 'Multimèdia']);
+  expect(apartats(container)).toEqual([
+    'La fitxa', 'Les vistes', 'El compte', 'Privacitat i dades', 'Els nodes', 'Multimèdia', 'Idioma del Sistema', 'Eixir de Sóc de Poble',
+  ]);
   fireEvent.click(within(container).getByRole('button', { name: /Privacitat i dades/ }));
   expect(within(detall(container)).getByText('privacitat de Javi Llinares')).toBeTruthy();
 
@@ -187,26 +190,26 @@ test('cada element de l’esquerra obri els seus apartats i el primer al detall'
   expect(within(nodes).getByRole('link', { name: 'Com funcionen els nodes i el Fedivers' }).getAttribute('href')).toBe('/fedivers');
   expect(within(nodes).queryAllByRole('button')).toEqual([]);
 
+  /* Onada R32.4 · «Idioma del Sistema» i «Eixir de Sóc de Poble» obrin els seus panells dedicats. */
+  fireEvent.click(within(container).getByRole('button', { name: /Idioma del Sistema/ }));
+  expect(within(detall(container)).getByRole('heading', { level: 1, name: 'Idioma del Sistema' })).toBeTruthy();
+
+  fireEvent.click(within(container).getByRole('button', { name: /Eixir de Sóc de Poble/ }));
+  expect(within(detall(container)).getByRole('heading', { level: 1, name: 'Eixir de Sóc de Poble' })).toBeTruthy();
+  expect(within(detall(container)).getByRole('button', { name: 'Eixir de Sóc de Poble' })).toBeTruthy();
+
   fireEvent.click(within(navegacio()).getByRole('button', { name: 'Forn' }));
-  // Expectativa actualitzada a propòsit: relleu del Pla 2000, punt 3 («Multimèdia», l'últim apartat de l'organització).
-  // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres i connexions», la vista pròpia dels membres d'una organització, just després d'«El compte».
   expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Membres i connexions', 'Multimèdia']);
   expect(within(detall(container)).getByText('fitxa de Forn')).toBeTruthy();
 
-  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Gestoria de Poble' }));
-  expect(apartats(container)).toEqual(['Sobre esta utilitat']);
+  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Aplicacions' }));
+  expect(apartats(container)).toEqual([
+    'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'L’Avisador', 'Lector RSS', 'TPV del Bar', 'Snippet',
+  ]);
   const pagina = detall(container);
   expect(within(pagina).getByRole('heading', { level: 1, name: 'Gestoria de Poble' })).toBeTruthy();
-  /* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · La Gestoria té destí real en este node:
-     connectada, amb el seu únic enllaç cap a la seua app (la mateixa ruta que la targeta del Panell).
-     Abans: «Pendent de connectar en este node» i cap enllaç. */
   expect(within(pagina).getByText('Connectada en este node')).toBeTruthy();
-  /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Sense preferència
-     la utilitat ja és al Panell (la mateixa regla que ControlSection: només
-     l'amaga un false explícit), i el botó ho diu. */
   expect(within(pagina).getAllByRole('button').map((b) => b.textContent)).toEqual(['Ocultar del Panell de Control']);
-  /* R19 · Loop 1 · L'enllaç diu el botó del seu plugin (registrePlugins.js, etiquetaObrir). Abans: «Obrir
-     Gestoria de Poble». */
   expect(within(pagina).queryAllByRole('link').map((enllac) => [enllac.textContent, enllac.getAttribute('href')]))
     .toEqual([['Obrir la Gestoria', '/app/gestoria']]);
 });

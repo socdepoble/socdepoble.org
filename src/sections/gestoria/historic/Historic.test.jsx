@@ -30,6 +30,36 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+test('R32.4 · un càlcul impossible avisa i es recupera canviant les suposicions sense tornar a llegir', async () => {
+  const { triat } = await llegit();
+  fireEvent.change(screen.getByLabelText('IVA de les factures als clients (%)'), { target: { value: '0' } });
+  fireEvent.change(screen.getByLabelText('Retenció d’IRPF de les factures als clients (%)'), { target: { value: '100' } });
+  expect(screen.getByText('No s’han pogut calcular els impostos')).toBeTruthy();
+  expect(screen.getByText(/han de deixar un divisor positiu/)).toBeTruthy();
+  expect(screen.queryByRole('region', { name: 'Estimació trimestral de 2025' })).toBeNull();
+  fireEvent.change(screen.getByLabelText('Retenció d’IRPF de les factures als clients (%)'), { target: { value: '0' } });
+  expect(screen.queryByText('No s’han pogut calcular els impostos')).toBeNull();
+  expect(screen.getByRole('region', { name: 'Estimació trimestral de 2025' })).toBeTruthy();
+  expect(triat.arrayBuffer).toHaveBeenCalledTimes(1);
+}, 20000);
+
+test('R32.4 · l’escenari que desborda conserva l’estimació base i es recupera sense rellegir', async () => {
+  const { container } = munta({ magatzem: await magatzemAprovat() });
+  const selector = await screen.findByLabelText('Tria els extractes del banc de tot el període');
+  const triat = fitxer('limit_sintetic.csv', 'Fecha,F. valor,Concepto,Importe,Saldo\n2025-01-02,2025-01-02,TRANSFERENCIA SINTETICA,90071992547409.87,90071992547409.87');
+  fireEvent.change(selector, { target: { files: [triat] } });
+  await screen.findByRole('heading', { level: 2, name: 'La foto del director financer' });
+  fireEvent.change(screen.getByLabelText('Facturació (% de canvi)'), { target: { value: '100' } });
+  expect(screen.getByText('No s’han pogut calcular els impostos')).toBeTruthy();
+  expect(screen.getByText(/massa gran per a calcular-lo amb precisió/)).toBeTruthy();
+  expect(screen.getByRole('region', { name: 'Estimació trimestral de 2025' })).toBeTruthy();
+  expect(container.textContent).not.toMatch(/NaN|Infinity/);
+  fireEvent.change(screen.getByLabelText('Facturació (% de canvi)'), { target: { value: '0' } });
+  expect(screen.queryByText('No s’han pogut calcular els impostos')).toBeNull();
+  expect(screen.getByRole('region', { name: 'Estimació trimestral de 2025' })).toBeTruthy();
+  expect(triat.arrayBuffer).toHaveBeenCalledTimes(1);
+}, 20000);
+
 const subtle = webcrypto.subtle;
 const ARA = Date.UTC(2026, 9, 9, 3, 0, 0);
 const rellotge = () => ARA;

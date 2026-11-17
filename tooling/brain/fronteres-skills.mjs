@@ -33,6 +33,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { CAMINS, arrel as arrelImposada, arrelSegura, esMain } from '../lib/arrel.mjs';
 import { font, inventari, segura } from './cataleg_skills.mjs';
+import { fontUTF8, declaracionsTokensCSS } from '../lib/lexic-css.mjs';
 import { parseFrontmatter, splitFrontmatter } from '../wiki/lib/frontmatter.mjs';
 
 export const ESQUEMA = 'sdp.fronteres-skills.v2';
@@ -60,7 +61,7 @@ export const DEUTE_ACCEPTAT = Object.freeze([]);
    Ni `ni` ni `cap` sols: eximirien qualsevol frase descriptiva (B10G-ARB-06). */
 const PROHIBICIO = /\b(?:mai|prohibi\w*|cap\s+component)\b/iu;
 /* `node ./tooling/…` és el mateix motor que `node tooling/…`: el prefix `./` no entra a la captura (B10G-B-ARB-04). */
-const RE_NODE = /\bnode\s+(?:\.\/)?((?:tooling|scripts|\.agents)\/[A-Za-z0-9_./-]+\.(?:mjs|cjs|js))\b/g;
+
 const RE_NPM = /\bnpm\s+run\s+([A-Za-z0-9:_-]+)/g;
 const RE_VAR = /var\(\s*(--sdp-[a-z0-9-]+)\s*[,)]/g;
 const RE_SPAN = /`([^`]+)`/g;
@@ -89,19 +90,76 @@ const dins = (p, llista) => Array.isArray(llista) && llista.some((b) => {
   return p === q || p.startsWith(`${q}/`);
 });
 
-/** Lleva els comentaris CSS sense expressions regulars (cap retrocés). */
-function senseComentaris(css) {
-  let eixida = '';
-  let i = 0;
-  while (i < css.length) {
-    const obri = css.indexOf('/*', i);
-    if (obri === -1) { eixida += css.slice(i); break; }
-    eixida += `${css.slice(i, obri)} `;
-    const tanca = css.indexOf('*/', obri + 2);
-    if (tanca === -1) break;
-    i = tanca + 2;
+/** A shell comment cannot supply an operational exclusion. Quotes preserve # inside arguments. */
+function senseComentarisShell(text) {
+  let quote = null;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '\\' && quote !== "'") { i++; continue; }
+    if (quote) { if (c === quote) quote = null; continue; }
+    if (c === '"' || c === "'") { quote = c; continue; }
+    if (c === '#' && (i === 0 || /\s/.test(text[i - 1]))) return text.slice(0, i);
   }
-  return eixida;
+  return text;
+}
+
+/** Shell argv for static node invocations. Never runs a command or interpolates a value. */
+function paraulesShell(text) {
+  const out = [];
+  let word = '', quote = null;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '\\' && quote !== "'") { if (!text[i + 1]) return { out, opac: true }; word += text[++i]; continue; }
+    if (quote) { if (c === quote) quote = null; else word += c; continue; }
+    if (c === '"' || c === "'") { quote = c; continue; }
+    if (';|&<>`'.includes(c)) break;
+    if (/\s/.test(c)) { if (word) { out.push(word); word = ''; } }
+    else word += c;
+  }
+  if (word) out.push(word);
+  return { out, opac: Boolean(quote) };
+}
+function* motorsNode(text) {
+  for (const match of text.matchAll(/\bnode\s+/g)) {
+    const words = paraulesShell(text.slice(match.index + match[0].length));
+    if (words.opac) { yield { opac: 'cometes de node sense tancar' }; continue; }
+    const testMode = words.out.includes('--test');
+    let i = 0;
+    for (; i < words.out.length; i++) {
+      const arg = words.out[i];
+      if (['-e', '--eval', '-p', '--print'].includes(arg) || /^(?:--eval|--print)=/.test(arg)) { i = words.out.length; break; }
+      if (arg === '--') { i++; break; }
+      if (!arg.startsWith('-')) break;
+      if (['-r', '--require', '--import', '--loader', '--experimental-loader', '--conditions', '--input-type', '--inspect-port', '--test-name-pattern', '--test-skip-pattern', '--test-reporter', '--test-reporter-destination'].includes(arg)) i++;
+    }
+    const targets = testMode ? words.out.slice(i) : words.out.slice(i, i + 1);
+    if (testMode && !targets.length) { yield { opac: 'node --test sense fitxers literals: descoberta no resolta' }; continue; }
+    for (const raw of targets) {
+      if (!raw) continue;
+      if (/[$`*?{}[\]]/.test(raw)) { yield { opac: `motor dinàmic o glob no verificable ${raw}` }; continue; }
+      if (!testMode && !raw.includes('/') && !/\.[cm]?js$/.test(raw)) continue; // Ordinary prose after node is not an invocation.
+      yield { ruta: raw.replace(/^\.\//, '') };
+    }
+  }
+}
+
+/** Keep exclusions in the same shell command/pipeline, never borrow one after &&, || or ;. */
+function grupsShell(text) {
+  const groups = [];
+  let quote = null, start = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '\\' && quote !== "'") { i++; continue; }
+    if (quote) { if (c === quote) quote = null; continue; }
+    if (c === '"' || c === "'") { quote = c; continue; }
+    if (c === ';' || c === '&' && text[i + 1] === '&' || c === '|' && text[i + 1] === '|') {
+      groups.push(text.slice(start, i));
+      if (c !== ';') i++;
+      start = i + 1;
+    }
+  }
+  groups.push(text.slice(start));
+  return groups;
 }
 
 /**
@@ -117,22 +175,23 @@ export function tokensDeclarats(arrel) {
     const entrades = fs.readdirSync(dir, { withFileTypes: true })
       .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
     for (const e of entrades) {
-      if (e.isSymbolicLink() || e.name === 'node_modules') continue;
+      if (e.name === 'node_modules') continue;
+      if (e.isSymbolicLink()) throw new Error(`Symlink en fonts de tokens: ${path.relative(arrel, path.join(dir, e.name))}`);
       const p = path.join(dir, e.name);
       if (e.isDirectory()) camina(p);
       else if (e.isFile() && e.name.endsWith('.css')) fitxers.push(p);
     }
   };
-  let estat = null;
-  try { estat = fs.lstatSync(src); } catch { /* sense src/: cap token */ }
-  if (estat?.isDirectory()) camina(src);
+  const estat = fs.lstatSync(src);
+  if (estat.isSymbolicLink()) throw new Error('Symlink en fonts de tokens: src');
+  if (!estat.isDirectory()) throw new Error('La font de tokens src no és un directori');
+  camina(src);
   const canonic = path.join(src, 'css', 'tokens.css');
   fitxers.sort((a, b) => (a === canonic ? -1 : b === canonic ? 1 : a < b ? -1 : a > b ? 1 : 0));
   const crus = new Map();
   for (const f of fitxers) {
-    const css = senseComentaris(fs.readFileSync(f, 'utf8'));
-    for (const m of css.matchAll(/(--sdp-[a-z0-9-]+)\s*:\s*([^;{}]+)/g)) {
-      if (!crus.has(m[1])) crus.set(m[1], m[2].trim());
+    for (const d of declaracionsTokensCSS(fontUTF8(f))) {
+      if (d.nom.startsWith('--sdp-') && !crus.has(d.nom)) crus.set(d.nom, d.valor);
     }
   }
   const resol = (valor, salts) => (salts >= 5 ? valor
@@ -182,13 +241,15 @@ const nu = (p) => {
 };
 function exclou01Produccio(tros) {
   const p = tros.split(/\s+/).map(nu);
-  const te01 = (s) => typeof s === 'string' && s.includes('01_produccio');
+  const te01 = (s) => typeof s === 'string' && /(?:^|[/*=])01_produccio(?:$|[/*])/.test(s);
+  const teFind = p.includes('find');
+  const teGrep = p.includes('grep');
   for (let i = 0; i < p.length; i++) {
     const [a, b, c] = [p[i], p[i + 1], p[i + 2]];
-    if ((a === '-not' || a === '!' || a === '\\!') && FILTRE_FIND.test(b || '') && te01(c)) return true; // find … -not -path '*01_produccio*'
-    if (FILTRE_FIND.test(a) && te01(b) && c === '-prune') return true;                                   // find … -path '*01_produccio*' -prune
-    if (/^--exclude(?:-dir)?=/.test(a) && te01(a)) return true;                                           // rsync/grep/tar --exclude(-dir)=…
-    if ((a === '--exclude' || a === '--exclude-dir') && te01(b)) return true;
+    if (teFind && (a === '-not' || a === '!' || a === '\\!') && FILTRE_FIND.test(b || '') && te01(c)) return true; // find … -not -path '*01_produccio*'
+    if (teFind && FILTRE_FIND.test(a) && te01(b) && c === '-prune') return true;                                   // find … -path '*01_produccio*' -prune
+    if (teGrep && /^--exclude(?:-dir)?=/.test(a) && te01(a)) return true;                                           // rsync/grep/tar --exclude(-dir)=…
+    if (teGrep && (a === '--exclude' || a === '--exclude-dir') && te01(b)) return true;
     if (a === 'grep' && b === '-v' && te01(c)) return true;                                              // … | grep -v 01_produccio | xargs …
   }
   return false;
@@ -270,24 +331,28 @@ export function auditaSkill(skill, { arrel, scripts = {}, tokens = new Map() }) 
   const avisos = [];
   for (const { n, text: l, tipus } of liniesDelCos(skill.text)) {
     const prohibicio = PROHIBICIO.test(l);
-    // F2 · motors i scripts, també dins de blocs de codi.
-    for (const m of l.matchAll(RE_NODE)) {
-      motors.add(m[1]);
-      if (!motorsDelCos.has(m[1])) motorsDelCos.set(m[1], n);
+    // F2 · motors i scripts, també dins de blocs de codi. El llevador de comentaris de shell només val
+    // dins d'un bloc de codi: a la prosa i a les capçaleres («## …», «tiquet #12») s'escaneja la línia sencera.
+    const ordre = tipus === 'codi' ? senseComentarisShell(l) : l;
+    for (const m of motorsNode(ordre)) {
+      if (m.opac) { afig('F2', m.opac, n); continue; }
+      motors.add(m.ruta);
+      if (!motorsDelCos.has(m.ruta)) motorsDelCos.set(m.ruta, n);
       let abs;
-      try { abs = segura(arrel, m[1]); }
-      catch { afig('F2', `motor no canònic ${m[1]}`, n); continue; }
-      if (!fs.existsSync(abs)) afig('F2', `motor absent ${m[1]}`, n);
-      else if (!fs.lstatSync(abs).isFile()) afig('F2', `motor no és fitxer regular ${m[1]}`, n);
+      try { abs = segura(arrel, m.ruta); }
+      catch { afig('F2', `motor no canònic ${m.ruta}`, n); continue; }
+      if (!fs.existsSync(abs)) afig('F2', `motor absent ${m.ruta}`, n);
+      else if (!fs.lstatSync(abs).isFile()) afig('F2', `motor no és fitxer regular ${m.ruta}`, n);
     }
     for (const m of l.matchAll(RE_NPM)) {
       if (!Object.hasOwn(scripts, m[1])) afig('F2', `script absent ${m[1]}`, n);
     }
     // F3 · a la prosa, dins de trossos `…`; dins d'un bloc de codi, la línia sencera.
     const trossos = tipus === 'codi' ? [l.trim()] : tipus === 'prosa' ? [...l.matchAll(RE_SPAN)].map((m) => m[1].trim()) : [];
-    if (!prohibicio) {
+    if (tipus === 'codi' || !prohibicio) {
       for (const tros of trossos) {
-        if (esOrdreRecursiva(tros) && !exclou01Produccio(tros)) afig('F3', `ordre recursiva d’escriptura sense excloure 01_produccio: ${tros.slice(0, 120)}`, n);
+        const executiu = senseComentarisShell(tros);
+        if (grupsShell(executiu).some(grup => esOrdreRecursiva(grup) && !exclou01Produccio(grup))) afig('F3', `ordre recursiva d’escriptura sense excloure 01_produccio: ${tros.slice(0, 120)}`, n);
       }
     }
     // F4 · tokens declarats (a tot arreu) i literals (només a la prosa, dins de `…`).
@@ -312,7 +377,7 @@ export function auditaSkill(skill, { arrel, scripts = {}, tokens = new Map() }) 
     // F5 · el que una ordre llig ha de ser dins del contracte.
     for (const m of l.matchAll(RE_LECTURA)) {
       const cru = m[1] || m[2] || m[3];
-      const p = senseBarra(cru.replace(/^\.\//, '').replace(/[.,;:)]+$/, ''));
+      const p = path.posix.normalize(senseBarra(cru.replace(/^\.\//, '').replace(/[.,;:)]+$/, '')));
       if (!dins(p, llig) && !dins(p, escriu)) afig('F5', `lectura fora de contracte.llig ${p}`, n);
     }
     // A1 · avisos heurístics: camí entre `…` amb un verb de lectura o d'escriptura, fora del contracte.
@@ -394,7 +459,7 @@ export function informe(r) {
 export function main(argv = process.argv.slice(2), { arrel = null, sortida = console, deute = DEUTE_ACCEPTAT } = {}) {
   const ambArrel = (a) => a.startsWith('--arrel=') && a.length > '--arrel='.length;
   const desconeguts = argv.filter((a) => a !== '--json' && !ambArrel(a));
-  if (desconeguts.length) {
+  if (desconeguts.length || argv.filter(ambArrel).length > 1 || argv.filter(a => a === '--json').length > 1) {
     sortida.error(`Ús: node tooling/brain/fronteres-skills.mjs [--json] [--arrel=<dir>] (desconegut: ${desconeguts.join(' ')})`);
     return 2;
   }

@@ -60,7 +60,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parse } from '@babel/parser';
 import { R, rel, EXCLOSOS, ErrorArrel } from '../lib/arrel.mjs';
-import { senseComentarisCSS } from '../lib/codi.mjs';
+import { fontUTF8, cssAnalitzable } from '../lib/lexic-css.mjs';
 
 /* ═══════════════════════ Contracte de la llei ═══════════════════════ */
 
@@ -141,6 +141,16 @@ class ErrorPorta extends Error {}
 /* Es llig dins de principal(): un flag dolent ha d'eixir amb 2, no amb una traça. */
 let NOMES = null;
 function llegeixNomes() {
+  const args = process.argv.slice(2);
+  const seen = new Set();
+  for (let j = 0; j < args.length; j++) {
+    const flag = args[j];
+    const key = flag.startsWith('--arrel=') ? '--arrel' : flag;
+    if (!['--arrel', '--nomes'].includes(key) || seen.has(key)) throw new ErrorPorta(`Ús invàlid: ${flag}`);
+    seen.add(key);
+    if (key === '--arrel') { if (!flag.startsWith('--arrel=') || !flag.slice(8).trim()) throw new ErrorPorta('Ús: --arrel=DIR'); }
+    else if (!args[++j] || args[j].startsWith('--')) throw new ErrorPorta('Falta valor de --nomes');
+  }
   const i = process.argv.indexOf('--nomes');
   if (i === -1) return null;
   const codi = String(process.argv[i + 1] || '').toUpperCase();
@@ -158,19 +168,24 @@ const falla = (llei, fitxer, linia, missatge) => {
 
 function arbre(relDir, patro, eixida = []) {
   const base = R(relDir);
-  if (!fs.existsSync(base)) return eixida;
+  const estat = fs.lstatSync(base);
+  if (estat.isSymbolicLink() || !estat.isDirectory()) throw new ErrorPorta(`font no certificable: ${relDir} (directori o symlink)`);
   for (const e of fs.readdirSync(base, { withFileTypes: true })) {
     if (EXCLOSOS.has(e.name) || e.name.startsWith('.')) continue;
+    if (e.isSymbolicLink()) throw new ErrorPorta(`symlink en fonts: ${path.join(relDir, e.name)}`);
     const abs = path.join(base, e.name);
     if (e.isDirectory()) arbre(path.join(relDir, e.name), patro, eixida);
-    else if (patro.test(e.name)) eixida.push(abs);
+    else if (patro.test(e.name)) {
+      if (!e.isFile()) throw new ErrorPorta(`font no regular: ${path.join(relDir, e.name)}`);
+      eixida.push(abs);
+    }
   }
   return eixida;
 }
 
 const fonts = new Map();
 const llig = (abs) => {
-  if (!fonts.has(abs)) fonts.set(abs, fs.readFileSync(abs, 'utf8'));
+  if (!fonts.has(abs)) fonts.set(abs, fontUTF8(abs));
   return fonts.get(abs);
 };
 
@@ -263,18 +278,57 @@ function classesDe(obert) {
 
 /* ═══════════════════════ F1 · Contracte tancat ═══════════════════════ */
 
-function lleiF1() {
-  // En l'arquitectura UniversalWorkspace, la fitxa (sdp-gestor-fitxa) no és un component
-  // aïllat amb props desestructurades, sinó que es pinta inline.
-  // F1 demanava contracte tancat: ara el contracte el definix adaptLegacyContract.
-  return null;
+function lleiF1(arrelAST, r) {
+  const funcions = [];
+  camina(arrelAST, n => {
+    if (n.type === 'FunctionDeclaration' && n.id?.name === 'DefaultItemCard') funcions.push(n);
+  });
+  if (funcions.length !== 1) {
+    falla('F1', r, 1, 'cal una única funció DefaultItemCard verificable: sense fitxa no hi ha contracte tancat');
+    return null;
+  }
+  const fn = funcions[0];
+  const permeses = new Set(['item', 'active', 'onSelect', 'untitled', 'idElement', 'llenguaContingut', 'nomAccessible', 'imageAlt']);
+  const param = fn.params[0];
+  if (fn.params.length !== 1 || param?.type !== 'ObjectPattern') {
+    falla('F1', r, linia(fn), 'DefaultItemCard ha de desestructurar un sol contracte explícit, sense props opacs');
+    return fn;
+  }
+  const claus = new Set();
+  for (const p of param.properties) {
+    const nom = p.key?.name ?? p.key?.value;
+    if (p.type !== 'ObjectProperty' || p.computed || !permeses.has(nom) || claus.has(nom)) {
+      falla('F1', r, linia(p), `prop oberta o no canònica de DefaultItemCard: ${nom ?? p.type}`);
+    }
+    claus.add(nom);
+  }
+  for (const nom of ['item', 'active', 'onSelect']) if (!claus.has(nom)) falla('F1', r, linia(fn), `falta la prop requerida ${nom} de DefaultItemCard`);
+  return fn;
 }
 
 /* ═══════════════════════ F2 · Botó natiu ═══════════════════════ */
 
-function lleiF2(arrelAST, r) {
-  const oberts = elementsJSX(arrelAST);
+function lleiF2(arrelAST, r, fn) {
+  if (fn?.async || fn?.generator) falla('F2', r, linia(fn), 'DefaultItemCard async/generador no retorna directament un botó');
+  const oberts = fn ? elementsJSX(fn) : [];
   const fitxes = oberts.filter((o) => classesDe(o).some((c) => c.token === 'sdp-gestor-fitxa'));
+  if (fitxes.length !== 1) falla('F2', r, linia(fn), 'DefaultItemCard ha de pintar exactament una fitxa canònica: absència o duplicació no és botó natiu comprovat');
+  if (fn) {
+    const retorns = [];
+    camina(fn.body, n => {
+      if (['ArrowFunctionExpression', 'FunctionExpression', 'FunctionDeclaration'].includes(n.type)) return false;
+      if (n.type === 'ReturnStatement') retorns.push(n.argument);
+    });
+    if (retorns.length !== 1 || retorns[0]?.type !== 'JSXElement' || retorns[0].openingElement !== fitxes[0]) falla('F2', r, linia(fn), 'DefaultItemCard ha de retornar directament un únic botó canònic verificable');
+  }
+  for (const o of oberts) {
+    if (fitxes.includes(o)) continue;
+    if (['button', 'a', 'input', 'select', 'textarea', 'summary'].includes(nomJSX(o.name))) falla('F2', r, linia(o), 'control interactiu dins de la fitxa: només el botó exterior fa l’acció');
+    for (const a of o.attributes) {
+      const nom = nomAtribut(a);
+      if (a.type === 'JSXSpreadAttribute' || POSTISSOS.has(nom) || nom === 'onClick') falla('F2', r, linia(a), 'control o atributs opacs dins de la fitxa');
+    }
+  }
   for (const f of fitxes) {
     if (nomJSX(f.name) !== 'button') {
       falla('F2', r, linia(f), `la fitxa ha de ser un <button> (és <${nomJSX(f.name)}>)`);
@@ -284,6 +338,7 @@ function lleiF2(arrelAST, r) {
       falla('F2', r, linia(f), 'el botó ha de dur type="button" literal: dins d\'un formulari, sense tipus, envia');
     }
     for (const a of f.attributes) {
+      if (a.type === 'JSXSpreadAttribute') falla('F2', r, linia(a), 'atributs opacs a la fitxa: no es poden descartar rols ni controls postissos');
       const at = nomAtribut(a);
       if (at && POSTISSOS.has(at)) falla('F2', r, linia(a), `\`${at}\` a la fitxa: el botó natiu ja fa focus, Intro i Espai`);
     }
@@ -298,7 +353,7 @@ function esClasseDeFitxa(token) {
   return Boolean(m && ELEMENTS_FITXA.has(m[1]));
 }
 
-function lleiF3(arrelAST, r, esFitxa) {
+function lleiF3(arrelAST, r, esFitxa, fn) {
   for (const n of arrelAST.program.body) {
     if (n.type !== 'ImportDeclaration') continue;
     const locals = n.specifiers.map((s) => s.local.name);
@@ -307,13 +362,12 @@ function lleiF3(arrelAST, r, esFitxa) {
     const targeta = perNom || perCami;
     if (targeta) falla('F3', r, linia(n), `importa ${targeta}: una targeta d'article no entra a la llista del gestor`);
   }
-  for (const o of elementsJSX(arrelAST)) {
+  for (const o of elementsJSX(fn || arrelAST)) {
     const nom = nomJSX(o.name);
-    if (ETIQUETES_ARTICLE.has(nom)) {
-      // Allow article tags in UniversalWorkspace as it's the whole layout, not just the list.
-      if (!r.includes('UniversalWorkspace.jsx')) {
-        falla('F3', r, linia(o), `<${nom}>: forma d'article (encapçalament, entradilla o cos) dins de la llista`);
-      }
+    // Sobre tot l'AST de la llista, les etiquetes d'article queden exemptes: UniversalWorkspace.jsx és tot
+    // l'espai de treball (capçalera, cos), no només la llista. Dins de DefaultItemCard no n'hi ha cap excepció.
+    if (ETIQUETES_ARTICLE.has(nom) && esFitxa) {
+      falla('F3', r, linia(o), `<${nom}>: forma d'article (encapçalament, entradilla o cos) dins de la llista`);
     }
     if (TARGETES_ARTICLE.has(nom)) falla('F3', r, linia(o), `<${nom}>: targeta d'article dins de la llista`);
     for (const a of o.attributes) {
@@ -362,14 +416,60 @@ function lleiF4Llista() {
 }
 
 /* ═══════════════════════ F5 · Projecció tancada ═══════════════════════ */
-
-
-
-
-
-
-
-/** Torna 'definicio' si ha examinat una funció; 'relleu' si només passa la prop. */
+function lleiF5(arrelAST, r) {
+  let total = 0;
+  const valida = (fn, node) => {
+    total++;
+    if (!fn || !['ArrowFunctionExpression', 'FunctionExpression', 'FunctionDeclaration', 'ObjectMethod'].includes(fn.type)) {
+      falla('F5', r, linia(node), 'getItemCard opac: cal una funció amb retorns literals verificables');
+      return;
+    }
+    if (fn.async || fn.generator) { falla('F5', r, linia(fn), 'getItemCard async/generador no retorna un objecte literal'); return; }
+    const retorns = [];
+    if (fn.body.type !== 'BlockStatement') retorns.push(fn.body);
+    else camina(fn.body, n => {
+      if (['ArrowFunctionExpression', 'FunctionExpression', 'FunctionDeclaration', 'ObjectMethod'].includes(n.type)) return false;
+      if (n.type === 'ReturnStatement') retorns.push(n.argument);
+    });
+    const retornaSempre = node => {
+      if (node?.type === 'ReturnStatement') return true;
+      if (node?.type === 'BlockStatement') return node.body.some(retornaSempre);
+      return node?.type === 'IfStatement' && retornaSempre(node.consequent) && retornaSempre(node.alternate);
+    };
+    if (fn.body.type === 'BlockStatement' && !retornaSempre(fn.body)) falla('F5', r, linia(fn), 'getItemCard té un camí sense retorn literal garantit');
+    if (!retorns.length) falla('F5', r, linia(fn), 'getItemCard sense retorn literal verificable');
+    for (const retorn of retorns) {
+      if (retorn?.type !== 'ObjectExpression') { falla('F5', r, linia(retorn || fn), 'getItemCard retorna un valor opac o buit'); continue; }
+      const claus = new Set();
+      for (const p of retorn.properties) {
+        const nom = p.key?.name ?? p.key?.value;
+        if (p.type !== 'ObjectProperty' || p.computed || !['titol', 'subtitol', 'imatge', 'icona'].includes(nom) || claus.has(nom)) falla('F5', r, linia(p), `prop oberta o no canònica de getItemCard: ${nom ?? p.type}`);
+        claus.add(nom);
+      }
+      if (!claus.has('titol')) falla('F5', r, linia(retorn), 'getItemCard ha de projectar titol explícit');
+    }
+  };
+  camina(arrelAST, n => {
+    if (n.type === 'FunctionDeclaration' && n.id?.name === 'getItemCard') valida(n, n);
+    else if (n.type === 'VariableDeclarator' && n.id?.name === 'getItemCard') valida(n.init, n);
+    else if (['ObjectProperty', 'ObjectMethod', 'ClassMethod'].includes(n.type) && (n.key?.name ?? n.key?.value) === 'getItemCard') valida(n.type === 'ObjectProperty' ? n.value : n, n);
+    else if (n.type === 'JSXAttribute' && nomAtribut(n) === 'getItemCard') {
+      // Passar la funció per identificador és relleu; la definició es revisa a la mateixa superfície.
+      const valor = n.value?.expression;
+      if (valor?.type !== 'Identifier') valida(valor, n);
+      else {
+        const definicions = [];
+        camina(arrelAST, d => {
+          if (d.type === 'FunctionDeclaration' && d.id?.name === valor.name) definicions.push(d);
+          else if (d.type === 'VariableDeclarator' && d.id?.name === valor.name) definicions.push(d.init);
+        });
+        if (definicions.length !== 1) { falla('F5', r, linia(n), `getItemCard opac: identificador ${valor.name} sense una definició local única verificable`); }
+        else if (valor.name !== 'getItemCard') valida(definicions[0], n);
+      }
+    }
+  });
+  return total;
+}
 
 
 /* ═══════════════════════ F6 · Zero estils en línia ═══════════════════════ */
@@ -389,6 +489,7 @@ function lleiF7(arrelAST, r) {
     if (nomJSX(o.name) !== 'li') continue;
     for (const a of o.attributes) {
       const at = nomAtribut(a);
+      if (a.type === 'JSXSpreadAttribute') falla('F7', r, linia(a), 'atributs opacs a <li>: no es pot descartar interactivitat');
       if (at && (POSTISSOS.has(at) || at === 'onClick')) {
         falla('F7', r, linia(a), `\`${at}\` a <li>: la fila no és un control, ho és la fitxa`);
       }
@@ -402,7 +503,7 @@ const normalitzaSelector = (s) => s.trim().replace(/\s+/g, ' ').replace(/["']/g,
 
 /** Regles CSS internes (també les de dins de @media), amb línia i declaracions. */
 function reglesCSS(font) {
-  const net = senseComentarisCSS(font);
+  const net = cssAnalitzable(font, { atributs: true });
   const regles = [];
   for (const m of net.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const prelud = m[1].split(';').pop();
@@ -426,7 +527,7 @@ function reglesCSS(font) {
 }
 
 function lleiF8(regles, r) {
-  const tokensCode = fs.readFileSync(R('src/css/tokens.css'), 'utf8');
+  const tokensCode = fontUTF8(R('src/css/tokens.css'));
   const tokensRegles = reglesCSS(tokensCode);
   const tokens = new Map();
   for (const rg of tokensRegles) {
@@ -500,6 +601,7 @@ function lleiF8(regles, r) {
   const titol = troba('.sdp-gestor-fitxa__titol');
   const subtitol = troba('.sdp-gestor-fitxa__subtitol');
   const text = troba('.sdp-gestor-fitxa__text');
+  if (!text) falla('F8', r, 1, 'falta .sdp-gestor-fitxa__text: pressupost vertical no verificable');
   if (titol && subtitol && text) {
     const fsT = px(titol.decls.get('font-size'));
     const lhT = numero(resol(titol.decls.get('line-height')));
@@ -581,7 +683,8 @@ function informe({ superficie, projeccions, fulls }) {
   for (const [codi, nom] of Object.entries(LLEIS)) {
     if (NOMES && NOMES !== codi) continue;
     const n = perLlei.get(codi).length;
-    console.log(`  ${n ? '❌' : '✅'} ${codi} · ${nom}${n ? `  (${n})` : ''}`);
+    if (codi === 'F5' && !projeccions && !n) console.log(`  ⚪ ${codi} · sense definicions getItemCard en la superfície (${projeccions} projeccions)`);
+    else console.log(`  ${n ? '❌' : '✅'} ${codi} · ${nom}${n ? `  (${n})` : ''}`);
   }
 
   if (!uniques.length) {
@@ -626,11 +729,13 @@ function principal() {
   const astFitxa = ast(R(FITXA));
   const fn = lleiF1(astFitxa, FITXA);
   lleiF2(astFitxa, FITXA, fn);
-  lleiF3(astFitxa, FITXA, false); // No es fitxa aïllada, conté més coses
+  if (fn) lleiF3(astFitxa, FITXA, true, fn);
 
   /* F3, F4, F7 · la llista */
   const astLlista = ast(R(LLISTA));
-  // lleiF3(astLlista, LLISTA, false); // ja avaluat dalt
+  // F3 sobre tot l'AST de la llista (targetes d'article, imports i HTML cru a qualsevol fila), a més de la
+  // comprovació estricta de DefaultItemCard de dalt, que només mira la fitxa.
+  lleiF3(astLlista, LLISTA, false);
   lleiF4Llista(astLlista, LLISTA);
   lleiF7(astLlista, LLISTA);
 
@@ -644,8 +749,10 @@ function principal() {
   }
 
   /* F5 · projeccions, on siguen */
-  // Desactivat perquè adaptLegacyContract ja escura les dades innecessàries, no arriben a la UI.
   let projeccions = 0;
+  for (const abs of fontsJS) {
+    if (/\bgetItemCard\b/.test(llig(abs))) projeccions += lleiF5(ast(abs), rel(abs));
+  }
 
   /* F8, F9 · fulls */
   lleiFulls(fullsCSS);

@@ -30,6 +30,7 @@
  * JS pur: sense DOM, React ni xarxa. Res del que rep es modifica.
  */
 import { dinsDeRang, esDataValida, rangTrimestre } from '../../nucli/dates.js';
+import { arrodoneixFraccio, escalaCentims, proporcioCentims, sumaCentims } from '../../nucli/diners.js';
 import { terminiPresentacio } from './impostos.js';
 
 /** L'etiqueta de tota xifra d'esta simulació. */
@@ -61,7 +62,7 @@ export function coberturaDe(mapa, any, t) {
 
 const enter = (x) => Number.isSafeInteger(x);
 const PUNTS = 10000;
-const pct = (import_, punts) => Math.round((import_ * punts) / PUNTS);
+const pct = (import_, punts) => proporcioCentims(import_, punts, PUNTS);
 
 /* L'escala general estatal: trams { fins (cèntims; null, sense sostre), tipus (punts bàsics) }. */
 const ESCALA_ESTATAL = Object.freeze([
@@ -191,16 +192,16 @@ export function parametresDe(any, propis = null) {
  * @returns {number} cèntims
  */
 export function quotaEscala(base, trams) {
-  if (!enter(base) || base <= 0 || !Array.isArray(trams)) return 0;
-  let quota = 0;
+  if (!enter(base) || base <= 0 || !escalaValida(trams, 'tipus')) return 0;
+  let quota = 0n;
   let desde = 0;
   for (const { fins, tipus } of trams) {
     const sostre = fins === null ? base : Math.min(base, fins);
-    if (sostre > desde) quota += ((sostre - desde) * tipus) / PUNTS;
+    if (sostre > desde) quota += BigInt(sostre - desde) * BigInt(tipus);
     if (fins === null || base <= fins) break;
     desde = fins;
   }
-  return Math.round(quota);
+  return arrodoneixFraccio(quota, BigInt(PUNTS));
 }
 
 /* Una operació vàlida: data, tipus i base enters; la resta, amb valors segurs. */
@@ -221,9 +222,9 @@ function normalitza(op) {
 }
 const valides = (operacions) => (Array.isArray(operacions) ? operacions.map(normalitza).filter(Boolean) : []);
 const delRang = (ops, rang) => ops.filter((op) => dinsDeRang(op.data, rang));
-const sumaDe = (ops, camp) => ops.reduce((t, op) => t + op[camp], 0);
+const sumaDe = (ops, camp) => sumaCentims(ops.map((op) => op[camp]));
 /* El cost d'una despesa per a l'IRPF: la base i, si l'IVA no es deduïx, també l'IVA. */
-const costIrpf = (op) => (op.deduibleIrpf ? op.base + (op.deduibleIva ? 0 : op.iva) : 0);
+const costIrpf = (op) => (op.deduibleIrpf ? [op.base, op.deduibleIva ? 0 : op.iva] : []);
 const avis = (codi, missatge) => Object.freeze({ codi, missatge });
 
 /* Un trimestre té dades si els extractes el cobrixen (en tot o en part) o, sense saber la cobertura, si té operacions seues. */
@@ -257,10 +258,10 @@ export function estima303({ operacions, any, t, compensacioAnterior = 0, cobertu
   const ispIntracomunitari = sumaDe(intra, 'iva');
   const ispExtracomunitari = sumaDe(extra, 'iva');
   const suportat = sumaDe(despeses.filter((op) => op.deduibleIva && ['interior', 'isp-intracomunitari', 'isp-extracomunitari'].includes(op.tractament)), 'iva');
-  const quota = repercutit + ispIntracomunitari + ispExtracomunitari - suportat;
+  const quota = sumaCentims([repercutit, ispIntracomunitari, ispExtracomunitari, -suportat]);
   const compensada = quota > 0 ? Math.min(quota, compensacio) : 0;
-  const resultat = quota - compensada;
-  const aCompensar = compensacio - compensada + (quota < 0 ? -quota : 0);
+  const resultat = sumaCentims([quota, -compensada]);
+  const aCompensar = sumaCentims([compensacio, -compensada, quota < 0 ? -quota : 0]);
   const avisos = [];
   if (cob === 'parcial') avisos.push(AVIS_PARCIAL());
   if (intra.length) {
@@ -309,10 +310,10 @@ export function estima130({
     });
   }
   const ingressos = sumaDe(del.filter((op) => op.tipus === 'ingres'), 'base');
-  const despeses = del.filter((op) => op.tipus === 'despesa').reduce((tot, op) => tot + costIrpf(op), 0);
-  const rendimentPrevi = ingressos - despeses;
+  const despeses = sumaCentims(del.filter((op) => op.tipus === 'despesa').flatMap(costIrpf));
+  const rendimentPrevi = sumaCentims([ingressos, -despeses]);
   const dificil = p.dificilAl130 && rendimentPrevi > 0 ? Math.min(pct(rendimentPrevi, p.dificilPercentatge), p.dificilLimit) : 0;
-  const rendiment = rendimentPrevi - dificil;
+  const rendiment = sumaCentims([rendimentPrevi, -dificil]);
   const quota = rendiment > 0 ? pct(rendiment, p.pagament130) : 0;
   const retencions = sumaDe(del.filter((op) => op.tipus === 'ingres'), 'retencio');
   const pagats = enter(pagamentsAnteriors) && pagamentsAnteriors > 0 ? pagamentsAnteriors : 0;
@@ -326,7 +327,7 @@ export function estima130({
   if (del.some((op) => op.origen === 'banc')) avisos.push(avis('DES_DEL_BANC', 'Calculat amb els moviments del banc: cada despesa necessita la seua factura per a deduir-se.'));
   return Object.freeze({
     ...base, ingressos, despeses, rendimentPrevi, dificil, rendiment, quota, retencions, pagamentsAnteriors: pagats, minoracio,
-    resultat: Math.max(0, quota - retencions - pagats - minoracio), avisos, motiu: null
+    resultat: sumaCentims([quota, -retencions, -pagats, -minoracio], { minimZero: true }), avisos, motiu: null
   });
 }
 
@@ -350,20 +351,20 @@ export function estimaRenda({ operacions, any, parametres, pagaments130 = 0 } = 
     });
   }
   const ingressos = sumaDe(del.filter((op) => op.tipus === 'ingres'), 'base');
-  const despeses = del.filter((op) => op.tipus === 'despesa').reduce((tot, op) => tot + costIrpf(op), 0);
-  const rendimentPrevi = ingressos - despeses;
+  const despeses = sumaCentims(del.filter((op) => op.tipus === 'despesa').flatMap(costIrpf));
+  const rendimentPrevi = sumaCentims([ingressos, -despeses]);
   const dificil = rendimentPrevi > 0 ? Math.min(pct(rendimentPrevi, p.dificilPercentatge), p.dificilLimit) : 0;
-  const rendiment = rendimentPrevi - dificil;
+  const rendiment = sumaCentims([rendimentPrevi, -dificil]);
   const baseLiquidable = Math.max(0, rendiment);
   /* El mínim personal tributa al tipus de l'escala: la quota de la base menys la del mínim que hi cap. */
   const quotaEstatal = Math.max(0, quotaEscala(baseLiquidable, p.escalaEstatal) - quotaEscala(Math.min(baseLiquidable, p.minimEstatal), p.escalaEstatal));
   const quotaAutonomica = Math.max(0, quotaEscala(baseLiquidable, p.escalaAutonomica) - quotaEscala(Math.min(baseLiquidable, p.minimAutonomic), p.escalaAutonomica));
-  const quotaIntegra = quotaEstatal + quotaAutonomica;
+  const quotaIntegra = sumaCentims([quotaEstatal, quotaAutonomica]);
   const retencions = sumaDe(del.filter((op) => op.tipus === 'ingres'), 'retencio');
   const pagats = enter(pagaments130) && pagaments130 > 0 ? pagaments130 : 0;
   return Object.freeze({
     ...base, ingressos, despeses, rendimentPrevi, dificil, rendiment, base: baseLiquidable, quotaEstatal, quotaAutonomica, quotaIntegra,
-    retencions, pagaments130: pagats, resultat: quotaIntegra - retencions - pagats,
+    retencions, pagaments130: pagats, resultat: sumaCentims([quotaIntegra, -retencions, -pagats]),
     tipusMitja: baseLiquidable > 0 ? Math.round((quotaIntegra / baseLiquidable) * 1000) / 10 : null, motiu: null
   });
 }
@@ -375,7 +376,7 @@ function resum390(trimestres, any) {
   return Object.freeze({
     model: '390', any, parcial: amb.length < 4 || trimestres.some((tr) => tr.cobertura === 'parcial'),
     repercutit: sumaDe(amb, 'repercutit'),
-    isp: amb.reduce((t, iva) => t + iva.ispIntracomunitari + iva.ispExtracomunitari, 0),
+    isp: sumaCentims(amb.flatMap((iva) => [iva.ispIntracomunitari, iva.ispExtracomunitari])),
     suportat: sumaDe(amb, 'suportat'),
     resultat: sumaDe(amb, 'quota'),
     aIngressar: sumaDe(amb, 'aIngressar'),
@@ -403,11 +404,14 @@ export function estimaAny({ operacions, any, parametres, compensacioInicial = 0,
     const iva = estima303({ operacions: ops, any, t, compensacioAnterior: compensacio, cobertura: cob });
     compensacio = iva.aCompensar;
     const irpf = estima130({ operacions: ops, any, t, parametres: p, pagamentsAnteriors: pagats, rendimentAnyAnterior, cobertura: cob, acumulatIncomplet });
-    if (enter(irpf.resultat)) pagats += irpf.resultat;
+    if (enter(irpf.resultat)) pagats = sumaCentims([pagats, irpf.resultat]);
     const xifres = [iva.aIngressar, irpf.resultat].filter(enter);
-    return Object.freeze({ t, cobertura: cob, iva, irpf, total: xifres.length ? xifres.reduce((x, y) => x + y, 0) : null });
+    return Object.freeze({ t, cobertura: cob, iva, irpf, total: xifres.length ? sumaCentims(xifres) : null });
   });
   const renda = estimaRenda({ operacions: ops, any, parametres: p, pagaments130: pagats });
+  /* El total anual també es pinta: dos models que caben per separat poden
+     desbordar junts. La validació queda dins del càlcul que captura el hook. */
+  totalDeLAny({ trimestres });
   const avisos = [];
   if (p.origen === 'd-un-altre-any') avisos.push(avis('PARAMETRES_D_UN_ALTRE_ANY', `Sense paràmetres de ${any}: s’usen els de ${p.anyDeLaFont}.`));
   if (trimestres.some((tr) => tr.iva.motiu !== null || (tr.cobertura !== null && tr.cobertura !== 'completa'))) {
@@ -450,7 +454,7 @@ export function provisioDe(simulacio, { any, t } = {}) {
   return Object.freeze({ valor: tr?.total ?? null, any, t });
 }
 
-const escala = (valor, percent) => Math.round((valor * (100 + percent)) / 100);
+const escala = escalaCentims;
 const percentValid = (x) => (typeof x === 'number' && Number.isFinite(x) && x >= -100 && x <= 1000 ? x : 0);
 
 /**
@@ -470,8 +474,8 @@ export function aplicaEscenari(operacions, { facturacio = 0, despesaIa = 0 } = {
   });
 }
 
-const diferencia = (x, y) => (enter(x) && enter(y) ? y - x : null);
-const sumaTrimestres = (any, camp) => any.trimestres.reduce((t, tr) => (enter(tr[camp]) ? t + tr[camp] : t), 0);
+const diferencia = (x, y) => (enter(x) && enter(y) ? sumaCentims([y, -x]) : null);
+const sumaTrimestres = (any, camp) => sumaCentims(any.trimestres.map((tr) => tr[camp]).filter(enter));
 
 /**
  * La diferència d'un escenari respecte de la base, any per any.
@@ -486,13 +490,12 @@ export function comparaEscenari(base, escenari) {
     if (!e) return Object.freeze({ any: b.any, iva: null, irpf130: null, renda: null, rendiment: null, total: null });
     const iva = diferencia(b.model390.aIngressar, e.model390.aIngressar);
     const irpf130 = b.trimestres.some((tr) => enter(tr.irpf.resultat))
-      ? e.trimestres.reduce((t, tr) => t + (enter(tr.irpf.resultat) ? tr.irpf.resultat : 0), 0)
-        - b.trimestres.reduce((t, tr) => t + (enter(tr.irpf.resultat) ? tr.irpf.resultat : 0), 0)
+      ? sumaCentims([...e.trimestres.map((tr) => tr.irpf.resultat).filter(enter), ...b.trimestres.map((tr) => tr.irpf.resultat).filter(enter).map((n) => -n)])
       : null;
     const renda = diferencia(b.renda.resultat, e.renda.resultat);
     const rendiment = diferencia(b.renda.rendiment, e.renda.rendiment);
     const parts = [iva, irpf130, renda].filter(enter);
-    return Object.freeze({ any: b.any, iva, irpf130, renda, rendiment, total: parts.length ? parts.reduce((x, y) => x + y, 0) : null });
+    return Object.freeze({ any: b.any, iva, irpf130, renda, rendiment, total: parts.length ? sumaCentims(parts) : null });
   });
 }
 

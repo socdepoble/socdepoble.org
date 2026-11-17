@@ -1,7 +1,7 @@
 {
   "generat": "2026-11-16T00:40:43.325Z",
   "esquema": "https://socdepoble.org/schemas/wiki-frontmatter-v2.1.json",
-  "esquemaSha256": "bb14be52fc5deccd0f9008ca25f8951f1f41598dc36bcc9698ad8786a4a01f9e",
+  "esquemaSha256": "06359f3742ddabb87d5a88e2c76c14b47743d2041290a76062c0445f47477b41",
   "metode": "F1-per-clau/v2",
   "max": {
     "F1": 52,

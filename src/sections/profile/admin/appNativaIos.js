@@ -28,7 +28,7 @@ export function esAppNativaIos(finestra = typeof window === 'undefined' ? undefi
 
 /** La card i la capçalera de l'apartat dins de l'app d'iOS: sense Google. */
 export const TEXTOS_APP_IOS = Object.freeze({
-  title: '👥 Usuaris, Dispositius i Botigues (Apple)',
+  title: 'Usuaris, Dispositius i Botigues (Apple)',
   subtitle: 'Directori d’usuaris registrats i distribució en viu per canal (App Store i Web)',
   searchText: 'usuaris dispositius botigues app store iphone ipad web sessions connectats'
 });

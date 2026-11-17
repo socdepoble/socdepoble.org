@@ -11,12 +11,31 @@
  * porta color-scheme fosc i el focus del crom, i un <dialog> els heretaria.
  *
  * Presentacional: tot li arriba per props (es pot pintar al catàleg).
+ * `avisEixida` i `errorEixida` són nodes ja pintats (les Alertes
+ * d'EixidaSegura.jsx que munta useIdentitatDeLaBarra): v1.2.6, el calaix és de
+ * l'arrencada i no importa Alerta, que viatja amb el tros diferit de l'eixida.
  */
+import { Globe, LogOut } from 'lucide-react';
 import { Boto, Dialeg, Insignia } from '../../PedraSeca/index.js';
 import { AvatarResolt } from './AvatarResolt.jsx';
 import { etiquetaDeRol } from './rols.js';
 
-export function CalaixIdentitats({ obert = false, onTanca, identitats = [], onTria, onConnectar, onFitxa }) {
+export const ETIQUETA_IDIOMA_CALAIX = 'Idioma del sistema';
+export const ETIQUETA_EIXIR_CALAIX = 'Eixir de Sóc de Poble';
+
+export function CalaixIdentitats({
+  obert = false,
+  onTanca,
+  identitats = [],
+  onTria,
+  onIdioma,
+  onEixir,
+  eixint = false,
+  avisEixida = null,
+  errorEixida = null,
+  etiquetaIdioma = ETIQUETA_IDIOMA_CALAIX,
+  etiquetaEixir = ETIQUETA_EIXIR_CALAIX,
+}) {
   return (
     <Dialeg
       obert={obert}
@@ -26,8 +45,8 @@ export function CalaixIdentitats({ obert = false, onTanca, identitats = [], onTr
       costat="dreta"
       accions={(
         <>
-          <Boto varietat="secundari" onClick={onConnectar}>Connectar-me a una organització</Boto>
-          <Boto varietat="primari" onClick={onFitxa}>La meua fitxa i ajustos</Boto>
+          <Boto varietat="secundari" icona={Globe} onClick={onIdioma}>{etiquetaIdioma}</Boto>
+          <Boto varietat="perill" icona={LogOut} onClick={onEixir} carregant={eixint}>{etiquetaEixir}</Boto>
         </>
       )}
     >
@@ -54,6 +73,8 @@ export function CalaixIdentitats({ obert = false, onTanca, identitats = [], onTr
           );
         })}
       </ul>
+      {avisEixida}
+      {errorEixida}
     </Dialeg>
   );
 }

@@ -9,13 +9,10 @@ import { emojiSol } from '../../utils/emoji.js';
    guarda: RGI complet (U+FE0F inclòs), sense ZWJ, Unicode 13 o anterior i cap
    bandera (Baseline 2022, Safari 16). */
 describe('Pla 261015 · les icones dels apartats del Perfil', () => {
-  test('👁️ Les vistes, 🔐 El compte, 🛡️ Privacitat i dades, 🌐 Els nodes, 🖼️ Multimèdia i 📄 La pàgina, tots distints', () => {
-    // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 (🖼️ «Multimèdia», la cinquena icona).
-    // I ordre del Mestre (261021, prompt 261021_0015, tasca 7): 📄 «La pàgina» d'un agent IA, la sisena.
+  test('👁️ Les vistes, 🔐 El compte, 🛡️ Privacitat i dades, 🌐 Els nodes, 🖼️ Multimèdia, 📄 La pàgina i 👥 Membres, tots distints', () => {
     expect(ICONES_APARTATS).toEqual({
       vistes: '\u{1F441}\u{FE0F}', compte: '\u{1F510}', privacitat: '\u{1F6E1}\u{FE0F}', nodes: '\u{1F310}', multimedia: '\u{1F5BC}\u{FE0F}',
       pagina: '\u{1F4C4}',
-      // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres i connexions», la vista pròpia dels membres d'una organització, just després d'«El compte» (👥, la setena).
       membres: '\u{1F465}',
     });
     expect(new Set(Object.values(ICONES_APARTATS)).size).toBe(7);
@@ -28,7 +25,7 @@ describe('Pla 261015 · les icones dels apartats del Perfil', () => {
     expect(emojiSol(glif)).toBe(glif);
   });
 
-  test('itemsDePerfil els posa a `icon` (mai al títol); «La fitxa» es queda amb la icona de la identitat', () => {
+  test('itemsDePerfil els posa a `icon` (mai al títol); «La fitxa», «Idioma del Sistema» i «Eixir de Sóc de Poble» usen icona vectorial del sistema', () => {
     const jo = { id: 'jo', mena: 'persona', nom: 'Pep', dades: {} };
     const items = Object.fromEntries(itemsDePerfil([jo], { ambPrivacitat: true }).map((item) => [item.id, item]));
     expect(items['jo-vistes']).toMatchObject({ title: 'Les vistes', icon: ICONES_APARTATS.vistes });
@@ -36,7 +33,11 @@ describe('Pla 261015 · les icones dels apartats del Perfil', () => {
     expect(items['jo-privacitat']).toMatchObject({ title: 'Privacitat i dades', icon: ICONES_APARTATS.privacitat });
     expect(items['jo-nodes']).toMatchObject({ title: 'Els nodes', icon: ICONES_APARTATS.nodes });
     expect(items['jo-multimedia']).toMatchObject({ title: 'Multimèdia', icon: ICONES_APARTATS.multimedia });
+    expect(items['jo-idioma'].title).toBe('Idioma del Sistema');
+    expect(items['jo-eixir'].title).toBe('Eixir de Sóc de Poble');
     expect(typeof items['jo-fitxa'].icon).not.toBe('string');
+    expect(typeof items['jo-idioma'].icon).not.toBe('string');
+    expect(typeof items['jo-eixir'].icon).not.toBe('string');
   });
 
   /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · 🖼️ «Multimèdia»

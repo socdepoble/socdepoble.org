@@ -842,8 +842,10 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada R32 (pla 261116_0644) · Versió unificada 1.2.4 amb el build 9: porta el pont natiu CiclePushNatiu
    d'Android, i per això l'APK i l'AAB 1.2.4+9 són obligatoris abans d'obrir el canal Push d'Android.
    Onada R32.3 (ordre del Mestre 16-11-2026 22:09) · Versió unificada 1.2.5 amb el build 10: és la primera que porta
-   l'avís automàtic de versió nova (src/natiu/actualitzacioAppNativa.js), i s'ha d'instal·lar una vegada a mà. */
-export const VERSIO_CLIENT_NATIU = 10;
+   l'avís automàtic de versió nova (src/natiu/actualitzacioAppNativa.js), i s'ha d'instal·lar una vegada a mà.
+   Onada v1.2.6 (ordre del Mestre 17-11-2026) · Versió unificada 1.2.6 amb el build 11: integra R32.4 (Codex i Gemini)
+   i és la primera que ja pot rebre l'avís automàtic des d'una App 1.2.5 (10) instal·lada. */
+export const VERSIO_CLIENT_NATIU = 11;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

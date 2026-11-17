@@ -72,6 +72,17 @@ test('C3 continua refusant un membre explícit fora del cens', () => {
   assert.match(result.output, /C3 · Membre fora del cens/);
 });
 
+// GOV-05 · Un comentari HTML de diverses línies no compta, però no desplaça el número de línia del diagnòstic.
+test('C3 i C4 informen la línia real després d’un comentari HTML de quatre línies', () => {
+  const capcalera = '# Context\n<!--\nnota interna\nde quatre línies\n-->\n\n';
+  for (const [frase, llei] of [['El Consell inclou NovaIA.', /C3 · Membre fora del cens/], ['El Consell té només 11 IAs.', /C4 · Xifra contradictòria/]]) {
+    const result = executa(`${capcalera}${frase}\n`);
+    assert.equal(result.code, 1, result.output);
+    assert.match(result.output, llei);
+    assert.match(result.output, /_wiki_de_poble\/context\.md:7\n/, result.output);
+  }
+});
+
 test('C4 conserva qualificadors locals o revisors immediats, també amb un total global correcte a la mateixa línia', () => {
   for (const text of [
     'El Consell té 4 IAs locals.',

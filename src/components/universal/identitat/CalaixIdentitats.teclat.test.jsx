@@ -53,7 +53,7 @@ test('encastat: focus inicial dins del calaix i Tab/Maj+Tab tanquen només els e
   const { dialeg } = obri(vista);
   const botons = within(dialeg).getAllByRole('button');
   const primer = within(dialeg).getByRole('button', { name: 'Tancar' });
-  const ultim = within(dialeg).getByRole('button', { name: 'La meua fitxa i ajustos' });
+  const ultim = within(dialeg).getByRole('button', { name: 'Eixir de Sóc de Poble' });
   expect(botons).toHaveLength(6);
   expect(botons.every(boto => boto.type === 'button' && boto.tabIndex === 0 && !boto.disabled)).toBe(true);
   expect(botons.slice(1, 4).map(boto => boto.textContent)).toEqual([

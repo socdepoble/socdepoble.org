@@ -52,7 +52,7 @@ export default function EspecimenIdentitat() {
         ['TargetaAdministrar.estat', "'pot-connectar' | 'administres' | 'activant' | 'comprovant' | 'pendent' | 'rebutjada' | 'te-propietaria' | 'no-del-poble' | 'membre' | 'sense-sessio' | 'no-disponible'", '—', 'Ho calcula estatDeLAdministracio.'],
         ['TargetaAdministrar.errorLectura', 'Error | null', 'null', 'Error en LLEGIR les peticions pròpies: alerta «No s’ha pogut comprovar», mai «No s’ha pogut enviar».'],
       ]}
-      a11y={['Amb sessió, l’avatar és el botó sencer: redó i de 56px (Avatar lg), mai per davall de --sdp-touch, amb :focus-visible de crom.', 'Nom accessible del botó: «El teu perfil: {nom}» amb una sola identitat; «Identitat activa: {nom}. Canviar identitat» quan obri el calaix. L’avatar és decoració (alt="", sense títol propi).', 'El calaix és un <dialog> germà del header: no hereta el crom i torna el focus al botó.', 'Les files del calaix són botons de 44px amb :focus-visible; l’activa es diu amb aria-current i amb text («Activa»).']}
+      a11y={['Amb sessió, l’avatar és el botó sencer: redó i de 56px (Avatar lg), mai per davall de --sdp-touch, amb :focus-visible de crom.', 'Nom accessible del botó: «El teu perfil: {nom}» amb una sola identitat; «Identitat activa: {nom}. Canviar identitat, idioma o eixir» quan obri el calaix (en la llengua de la interfície). L’avatar és decoració (alt="", sense títol propi).', 'El calaix és un <dialog> germà del header: no hereta el crom i torna el focus al botó.', 'Les files del calaix són botons de 44px amb :focus-visible; l’activa es diu amb aria-current i amb text («Activa»).']}
       fes={['Dir amb qui actues en tot moment, també a la barra de dalt.', 'Separar «Actua com a» d’«Edita la fitxa»: editar no canvia la identitat.', 'Avisar que qui administra veurà també les converses de l’organització.']}
       noFacis={['Pintar la foto de la persona quan actua com una entitat.', 'Canviar d’identitat en silenci en demanar administrar-la.', 'Mostrar el correu d’una altra persona a qui no n’és titular.', 'Dir «connectar» a administrar una organització: connectar és guardar-la a les teues notes, i formar-ne part és un altre camí.']}>
 
@@ -74,7 +74,7 @@ export default function EspecimenIdentitat() {
         <Boto onClick={() => setObert(true)}>Obrir el calaix d’identitats</Boto>
       </Accions>
       <CalaixIdentitats obert={obert} onTanca={() => setObert(false)} identitats={IDENTITATS}
-        onTria={() => setObert(false)} onConnectar={() => setObert(false)} onFitxa={() => setObert(false)} />
+        onTria={() => setObert(false)} onIdioma={() => setObert(false)} onEixir={() => setObert(false)} />
 
       {/* IDEA-26 (261025) · L'h4 de cada estat, fora de la seua regió: com a
           primer fill es quedava sense els 32px de dalt i tocava l'estat d'abans.

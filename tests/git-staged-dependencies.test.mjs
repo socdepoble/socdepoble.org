@@ -334,6 +334,10 @@ function skillsDePaperera(dir) {
     fs.writeFileSync(path.join(dir, '.agents', file), file === 'consell.json' ? '{}' : '# fixture\n');
   }
   fs.writeFileSync(path.join(dir, 'package.json'), '{"scripts":{}}');
+  // L'arbre preparat real materialitza les fonts versionades abans dels validadors.
+  // Fronteres també llig CSS encara que la skill de prova només governe runtime.
+  fs.mkdirSync(path.join(dir, 'src/css'), {recursive: true});
+  fs.writeFileSync(path.join(dir, 'src/css/tokens.css'), ':root { --sdp-fixture: red; }\n');
   for (const [id, llig] of [['core-neteja-brossa', '.agents/AGENTS.md'], ['core-restauracio-segellada', '.sdp-paperera']]) {
     const lloc = path.join(dir, '.agents/skills', id); fs.mkdirSync(lloc);
     fs.writeFileSync(path.join(lloc, 'SKILL.md'), [
@@ -372,7 +376,7 @@ test('arbre preparat: Fronteres real passa amb la paperera canònica buida abans
     return '';
   }});
   assert.deepEqual(crides, PASSOS_HOOK.map(p => p.args.join(' ')));
-  assert.deepEqual(fs.readdirSync(dir).sort(), ['.agents', '.sdp-paperera', 'node_modules', 'package.json']);
+  assert.deepEqual(fs.readdirSync(dir).sort(), ['.agents', '.sdp-paperera', 'node_modules', 'package.json', 'src']);
   assert.equal(fs.readFileSync(path.join(font, '.sdp-paperera/cos-privat.txt'), 'utf8'), 'synthetic-private-trash');
   assert.equal(fs.readFileSync(path.join(font, 'credencial-sintetica.secret'), 'utf8'), 'synthetic-private-credential');
 });
@@ -390,4 +394,11 @@ test('arbre preparat: una ruta arbitrària absent del contracte continua roja i 
   }}), /Fronteres continua roja/);
   assert.equal(fs.existsSync(path.join(dir, 'tooling')), false);
   assert.deepEqual(fs.readdirSync(path.join(dir, '.sdp-paperera')), []);
+});
+
+/* Una fixture incompleta continua sent una font no certificable: no eximim la lectura de tokens. */
+test('arbre preparat: Fronteres falla tancat si falten les fonts versionades src', t => {
+  const dir = temporal(t); skillsDePaperera(dir);
+  fs.rmSync(path.join(dir, 'src'), {recursive: true});
+  assert.throws(() => auditaSkills(dir), error => error.code === 'ENOENT' && error.path === path.join(dir, 'src'));
 });

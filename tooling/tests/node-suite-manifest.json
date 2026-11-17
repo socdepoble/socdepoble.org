@@ -239,7 +239,8 @@
     "tests/r32-posse-cataleg.test.mjs",
     "tests/sentinella-jarvis-r32.test.mjs",
     "tests/tractor-rls-r1-literals.test.mjs",
-    "tests/botigues-play-api-rest.test.mjs"
+    "tests/botigues-play-api-rest.test.mjs",
+    "tests/tractors-fail-closed.r324.test.mjs"
   ],
   "files": [
     {
@@ -2181,6 +2182,11 @@
       "path": "tests/botigues-play-api-rest.test.mjs",
       "suite": "primary",
       "reason": "Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Client REST de la Google Play Developer API v3 de scripts/botigues/puja-android.mjs (sense fastlane, commit d'un sol intent amb verificació de l'estat a Play i eixida 11 si és desconegut), consultaLlancament de només lectura, clau del compte de servei de preflight.mjs, APK públic verificat amb apksigner i --sincronitza-ard de publica-tot.mjs contra un Google Play local amb estat (127.0.0.1). Clau RSA generada al vol, mkdtemp, cap xarxa de fora."
+    },
+    {
+      "path": "tests/tractors-fail-closed.r324.test.mjs",
+      "suite": "primary",
+      "reason": "R32.4: contraproves fail-closed dels sis tractors crítics del sistema nerviós."
     }
   ]
 }

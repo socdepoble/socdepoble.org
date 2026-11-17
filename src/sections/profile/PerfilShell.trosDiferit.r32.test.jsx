@@ -19,6 +19,17 @@ afterEach(() => {
 });
 
 describe('Onada R32 · T1 · Panells diferits de PerfilShell i vite:preloadError en transició', () => {
+  test('R32.4 · l’espera del panell diferit s’anuncia i es retira quan arriba el contingut', async () => {
+    let resol;
+    const renovable = lazyRouteRenovable(() => new Promise((resolve) => { resol = resolve; }));
+    render(<PanellDiferitDelPerfil renovable={renovable} />);
+    expect(screen.getByRole('status').textContent).toBe('Carregant el teu perfil…');
+    await act(async () => { await Promise.resolve(); });
+    await act(async () => { resol({ default: () => <p>apartat carregat</p> }); });
+    expect(await screen.findByText('apartat carregat')).toBeTruthy();
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
   test('host.js calla el fals vite:preloadError durant una recàrrega de document i l’anota fora de transició', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     marcaTransicioDeDocument(Date.now());

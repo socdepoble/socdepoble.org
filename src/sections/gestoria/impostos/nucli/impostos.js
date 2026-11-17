@@ -46,6 +46,7 @@
  * rep es modifica.
  */
 import { dinsDeRang, esDataValida, rangTrimestre } from '../../nucli/dates.js';
+import { proporcioCentims, sumaCentims } from '../../nucli/diners.js';
 
 /** El percentatge del pagament fraccionat del 130 en estimació directa. */
 export const TIPUS_PAGAMENT_130 = 20;
@@ -58,14 +59,25 @@ export const LLEGENDA_ESTIMACIO = 'Estimació per a revisar amb la gestoria: no 
 /** Els codis de `falten`, en l'ordre en què es donen. */
 export const CODIS_FALTA = Object.freeze([
   'TRIMESTRE_INVALID', 'SENSE_FACTURES', 'ALTRA_MONEDA', 'IMPORT_DESCONEGUT', 'SENSE_TIPUS_OPERACIO',
-  'FACTURA_PENDENT', 'PAGAMENTS_ANTERIORS'
+  'FACTURA_PENDENT', 'PAGAMENTS_ANTERIORS', 'IMPORT_FORA_DE_RANG'
 ]);
 
 const enEuros = (f) => f?.moneda == null || f.moneda === MONEDA_IMPOSTOS;
 const enter = (x) => Number.isSafeInteger(x);
-const suma = (llista, camp) => llista.reduce((total, f) => total + f[camp], 0);
+const suma = (llista, camp) => sumaCentims(llista.map((f) => f[camp]));
 const plural = (n, una, moltes) => (n === 1 ? una : `${n} ${moltes}`);
 const falta = (codi, missatge) => Object.freeze({ codi, missatge });
+/* Cap xifra fiscal amb precisió perduda: el Tauler conserva la pantalla i
+   explica per què falta el resultat, igual que amb els imports desconeguts. */
+function ambRang(falten, calcula) {
+  try {
+    return calcula();
+  } catch (error) {
+    if (error?.codi !== 'IMPORT_FORA_DE_RANG') throw error;
+    falten.push(falta(error.codi, error.message));
+    return null;
+  }
+}
 /* GES-A4: la retenció amb el signe de la factura. El model la guarda en positiu; en una rectificativa
    (base negativa) va girada, com al total (nucli/model.js, totalAmbRetencio). */
 const retencioAmbSigne = (f) => (enter(f.retencio) ? Math.abs(f.retencio) * (f.subtotal < 0 ? -1 : 1) : 0);
@@ -152,15 +164,16 @@ export function estimaIva303({ factures = [], any, t } = {}) {
   }
   /* Hi ha mesura si almenys una factura del trimestre és en euros i té l'IVA llegit. */
   const ambDades = grups.emeses.length + grups.rebudes.length > 0;
-  const repercutit = ambDades ? suma(grups.emeses, 'iva') : null;
-  const suportat = ambDades ? suma(deduibles, 'iva') : null;
+  const xifres = ambDades ? ambRang(falten, () => {
+    const repercutit = suma(grups.emeses, 'iva');
+    const suportat = suma(deduibles, 'iva');
+    return { repercutit, suportat, resultat: sumaCentims([repercutit, -suportat]) };
+  }) : null;
   return {
     ...base,
     completa: falten.length === 0,
     falten: ordena(falten),
-    repercutit,
-    suportat,
-    resultat: ambDades ? repercutit - suportat : null,
+    ...(xifres ?? { repercutit: null, suportat: null, resultat: null }),
     factures: { emeses: grups.emeses.length, rebudes: grups.rebudes.length }
   };
 }
@@ -196,22 +209,20 @@ export function estimaIrpf130({ factures = [], any, t, pagamentsAnteriors = null
   if (grups.emeses.length + grups.rebudes.length === 0) {
     return { ...base, ...buit, completa: false, falten: ordena(falten), pagamentsAnteriors: pagats, factures: factures130 };
   }
-  const ingressos = suma(grups.emeses, 'subtotal');
-  const despeses = suma(grups.rebudes, 'subtotal');
-  const rendiment = ingressos - despeses;
-  const quota = rendiment > 0 ? Math.round((rendiment * TIPUS_PAGAMENT_130) / 100) : 0;
-  const retencions = grups.emeses.reduce((total, f) => total + retencioAmbSigne(f), 0);
+  const xifres = ambRang(falten, () => {
+    const ingressos = suma(grups.emeses, 'subtotal');
+    const despeses = suma(grups.rebudes, 'subtotal');
+    const rendiment = sumaCentims([ingressos, -despeses]);
+    const quota = rendiment > 0 ? proporcioCentims(rendiment, TIPUS_PAGAMENT_130, 100) : 0;
+    const retencions = sumaCentims(grups.emeses.map(retencioAmbSigne));
+    return { ingressos, despeses, rendiment, quota, retencions, resultat: sumaCentims([quota, -retencions, -(pagats ?? 0)], { minimZero: true }) };
+  });
   return {
     ...base,
     completa: falten.length === 0,
     falten: ordena(falten),
-    ingressos,
-    despeses,
-    rendiment,
-    quota,
-    retencions,
+    ...(xifres ?? buit),
     pagamentsAnteriors: pagats,
-    resultat: Math.max(0, quota - retencions - (pagats ?? 0)),
     factures: factures130
   };
 }
@@ -237,10 +248,11 @@ function ordena(falten) {
 export function resumHisenda({ iva, irpf } = {}) {
   const xifres = [iva?.resultat, irpf?.resultat].filter(enter);
   const falten = ordena([...(iva?.falten ?? []), ...(irpf?.falten ?? [])]);
+  const total = xifres.length ? ambRang(falten, () => sumaCentims(xifres.map((x) => Math.max(0, x)))) : null;
   return {
-    total: xifres.length ? xifres.reduce((total, x) => total + Math.max(0, x), 0) : null,
+    total,
     ivaACompensar: enter(iva?.resultat) ? Math.max(0, -iva.resultat) : null,
-    completa: xifres.length === 2 && Boolean(iva?.completa) && Boolean(irpf?.completa),
-    falten
+    completa: total !== null && xifres.length === 2 && Boolean(iva?.completa) && Boolean(irpf?.completa),
+    falten: ordena(falten)
   };
 }

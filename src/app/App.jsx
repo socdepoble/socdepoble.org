@@ -7,7 +7,7 @@ import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
 import { useScrollDeNavegacio } from '../hooks/useScrollDeNavegacio.js';
 import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState, useSyncExternalStore } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useParams, useRouter } from './contexts/RouterContext';
-import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
+import { MoonStar, Search, Settings, Sun } from '../icons.jsx';
 import { ChevronDown, LayoutGrid, PanelLeftClose } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/IaiaIcon.jsx';
 import { tradueix, useTraductorOpcional } from '../components/PedraSeca/hooks/useTraductorOpcional.js';
@@ -859,12 +859,11 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
             Mestre 261021, prompt 261021_0015, tasca 3). Per a reactivar-la,
             torna l'import i l'element: main.jsx continua capturant
             beforeinstallprompt i el component es conserva amb les seues proves. */}
-        <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
-          <Globe aria-hidden="true" focusable="false" />
-        </button>
-        {/* T30 (ordre del Mestre, 260927 nit): la IAIA (la figureta al costat
-            de la bola del món) es queda a la barra negra, en mòbil i en
-            escriptori. La «icona de la IA» que T23.1 mana llevar no és esta.
+        {/* Onada R32.4 (ordre del Mestre, 261116) · El selector d'idioma ix de
+            header.bar-black per alliberar espai al logotip en mòbil i viu al
+            calaix d'identitats, a /el-meu-perfil i a /registre. */}
+        {/* T30 (ordre del Mestre, 260927 nit): la IAIA es queda a la barra negra,
+            en mòbil i en escriptori. La «icona de la IA» que T23.1 mana llevar no és esta.
             Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · Porta a
             /iaia, la porta única de la IAIA MarIA, amb el Selector de
             Realitat al peu; abans anava a la pantalla solta /realitat. El nom

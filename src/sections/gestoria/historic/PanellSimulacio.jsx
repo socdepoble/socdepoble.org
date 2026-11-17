@@ -331,6 +331,7 @@ export function PanellSimulacio({ h, visible }) {
         sense un altre origen conegut compten com a cobraments de clients (per prudència, l’estimació en pot eixir alta) i la renda només
         compta l’activitat econòmica, sense altres rendes, reduccions ni deduccions. No és cap declaració.
       </Alerta>
+      {h.errorCalcul ? <Alerta to="error" titol="No s’han pogut calcular els impostos">{h.errorCalcul}</Alerta> : null}
       {banc && (banc.senseTractament || banc.noDeduibles) ? (
         /* Els recomptes també són xifres de la persona: amb l'ull tancat, amagats. */
         <p className="sdp-gestoria-historic__nota">
@@ -347,7 +348,7 @@ export function PanellSimulacio({ h, visible }) {
       <div className="sdp-gestoria-historic__any">
         <h3 className="sdp-gestoria-historic__subtitol">Paràmetres i suposicions</h3>
         <Suposits key={`suposits-${h.carregada}`} h={h} />
-        {(h.simulacio?.anys ?? []).map((any) => <ParametresDeLAny key={`${any.any}-${h.carregada}`} h={h} any={any.any} />)}
+        {(h.simulacio?.anys ?? h.serie?.anys ?? []).map((any) => <ParametresDeLAny key={`${any.any}-${h.carregada}`} h={h} any={any.any} />)}
       </div>
     </section>
   );

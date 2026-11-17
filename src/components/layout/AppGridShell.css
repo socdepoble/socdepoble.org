@@ -268,6 +268,25 @@
   font-size: var(--sdp-text-meta);
   font-weight: 700;
 }
+/* D-R32.3-PIXEL (v1.2.6, decisió del Mestre, 261117) · Fins a 359 px de contenidor
+   sdp-arrel (el sostre ultra-estret de layout.css), el rètol de la columna en dues
+   columnes té 60 px: «APARTATS» en SemiCondensed en fa 63 i se'n retallava la S
+   (display: flex no pinta l'ellipsis). En Condensed (tipografia-estreta.css) en fa
+   58 i hi cap sencer, igual que «SECTIONS» i «ATALAK»; la separació icona-text de
+   l'harmonització del 261018 no es toca. Els títols dels apartats canvien al mateix
+   tall (modules.css, D-R32.3-PIXEL). */
+@container sdp-arrel (max-width: 359px) {
+  .app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-col-header__titol {
+    font-stretch: var(--sdp-font-amplada-estreta);
+  }
+}
+@supports not (container-type: inline-size) {
+  @media (max-width: 359px) {
+    .app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-col-header__titol {
+      font-stretch: var(--sdp-font-amplada-estreta);
+    }
+  }
+}
 .app-grid-shell[data-layout="estret"][data-dues-columnes="true"][data-panell="left"] .app-grid-col-header--dark-intens > .app-grid-col-header__accions:last-child {
   min-width: 0;
   flex: 0 1 auto;

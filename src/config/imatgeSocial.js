@@ -257,6 +257,8 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
      retall de cobertura centrat, JPEG baseline, ≤300 000 B, sense APP1. */
   '/assets/ui/plugins/cervell_vinyeta.jpg',
   '/assets/ui/plugins/consola_vinyeta.jpg',
+  /* v1.2.6 · Portada pròpia de /page/sistema-nervios (P0-117) i la seua variant social 1200×630 (≤300 000 B, sense APP1). */
+  '/assets/ui/plugins/sistema_nervios_vinyeta.jpg',
   '/assets/towns/la-torre-de-les-macanes/1.jpg',
   '/assets/towns/orxeta/1.jpg',
   '/assets/towns/sella/1.jpg',

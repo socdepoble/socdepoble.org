@@ -44,25 +44,26 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
     expect(perfilShellSource).toContain('amagaRodaAjustos={true}');
   });
 
-  test('3. Columna 1 (PERFIL) mostra «🛡️ Administració del sistema» just davall de Javi Llinares i obri els 7 apartats a la Columna 2', () => {
-    /* Onada R6 · Bloc 2 (P1-b) · El grup d'administració és només per a superadmin. */
+  test('3. Columna 1 (PERFIL) mostra «Administració del sistema» just davall de Javi Llinares i obri els 7 apartats amb icona vectorial única a la Columna 2', () => {
+    /* Onada R6 · Bloc 2 (P1-b) + P0-116 / IDEA-290 (ordre del Mestre, 261117) · Icona vectorial pròpia del sistema sense emoji duplicat al text. */
     const grups = navegacioDePerfil([{ id: 'jo', mena: 'persona', nom: 'Javi Llinares', dades: {} }], [], { superadmin: true });
     expect(grups[0].options.map((o) => [o.id, o.label])).toEqual([
       ['jo', 'Javi Llinares'],
-      [ID_ADMINISTRACIO_SISTEMA, '🛡️ Administració del sistema'],
+      [ID_ADMINISTRACIO_SISTEMA, 'Administració del sistema'],
     ]);
 
     const apartats = itemsDAdministracioSistema();
     expect(apartats.map((a) => [a.id, a.title])).toEqual([
-      ['admin-taxonomia', '🏷️ Taxonomia: Categories i Etiquetes'],
-      ['admin-importacio', '📥 Importació i Revisió Editorial'],
-      ['admin-crom', '🎨 Colors i disseny (Crom del sistema)'],
-      ['admin-vistes-columnes', '⚙️ Ajustos de vistes i columnes'],
-      ['admin-nodes-fedivers', '🌐 Nodes, Fedivers i Resiliència 3-2-1'],
-      ['admin-empaquetats', '📦 Empaquetats i Desplegament (Mode Jarvis)'],
-      /* R13-C7 (ordre del Mestre, 08-11-2026) · El 7é apartat, just davall d'Empaquetats. Actualitzada a posta. */
-      ['administracio-usuaris-i-dispositius', '👥 Usuaris, Dispositius i Botigues (Google i Apple)'],
+      ['admin-taxonomia', 'Taxonomia: Categories i Etiquetes'],
+      ['admin-importacio', 'Importació i Revisió Editorial'],
+      ['admin-crom', 'Colors i disseny (Crom del sistema)'],
+      ['admin-vistes-columnes', 'Ajustos de vistes i columnes'],
+      ['admin-nodes-fedivers', 'Nodes, Fedivers i Resiliència 3-2-1'],
+      ['admin-empaquetats', 'Empaquetats i Desplegament (Mode Jarvis)'],
+      /* R13-C7 (ordre del Mestre, 08-11-2026) · El 7é apartat, just davall d'Empaquetats. Actualitzada a posta (P0-116). */
+      ['administracio-usuaris-i-dispositius', 'Usuaris, Dispositius i Botigues (Google i Apple)'],
     ]);
+    for (const apartat of apartats) expect(typeof apartat.icon).not.toBe('string');
   });
 
   test('4. El Tesaurus Doctoral exposa les 114 categories, 105 etiquetes WP + Associacionisme (111 SKOS), 425 articles, 18 pàgines i les 4 facetes ortogonals (PMEST + SKOS)', () => {

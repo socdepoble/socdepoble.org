@@ -47,6 +47,19 @@ export function mitjaAmunt(numerador, denominador) {
   return resultat === 0 ? 0 : signe * resultat;
 }
 
+/** (valor × factor) / divisor: el producte intermedi pot ser més gran que un Number segur. */
+export function proporcioMitjaAmunt(valor, factor, divisor) {
+  if (![valor, factor, divisor].every(Number.isSafeInteger) || divisor <= 0) {
+    throw errorBar('IMPORT', 'La proporció necessita enters segurs i un divisor positiu.');
+  }
+  const producte = BigInt(valor) * BigInt(factor);
+  const absolut = producte < 0n ? -producte : producte;
+  const d = BigInt(divisor);
+  const resultat = Number((absolut * 2n + d) / (d * 2n));
+  if (!esCents(resultat)) throw errorBar('IMPORT', 'El resultat de la proporció és massa gran.');
+  return resultat === 0 ? 0 : producte < 0n ? -resultat : resultat;
+}
+
 /** Divisió entera arrodonida cap amunt (per a enters no negatius). */
 export function sostre(numerador, denominador) {
   if (!esCents(numerador) || numerador < 0 || !esCents(denominador) || denominador <= 0) {

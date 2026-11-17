@@ -151,7 +151,7 @@ test('T43 · la barra negra diu amb qui actues i el calaix d’identitats viu fo
       expect(trobat).not.toBeNull();
       return trobat;
     });
-    const boto = await within(header).findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
+    const boto = await within(header).findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat, idioma o eixir' });
     expect(boto.closest('header.bar-black')).not.toBeNull();
     expect(boto.hasAttribute('style')).toBe(false);
     fireEvent.click(boto);
@@ -161,13 +161,13 @@ test('T43 · la barra negra diu amb qui actues i el calaix d’identitats viu fo
     const forn = await within(dialeg).findByRole('button', { name: /Forn de la Torre/ });
     expect(within(dialeg).getByRole('button', { name: /Pepa Soler/ }).getAttribute('aria-current')).toBe('true');
     fireEvent.click(forn);
-    const entitat = await within(header).findByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat' });
+    const entitat = await within(header).findByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat, idioma o eixir' });
     expect(entitat.classList.contains('sdp-top-bar-avatar--entitat')).toBe(true);
     expect(entitat.querySelector('.sdp-avatar').textContent).toBe('FD');
     /* Deixa la preferència com estava: es torna a actuar com a persona. */
     fireEvent.click(entitat);
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Amb qui actues?' })).getByRole('button', { name: /Pepa Soler/ }));
-    await within(header).findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
+    await within(header).findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat, idioma o eixir' });
   } finally {
     cleanup();
     if (Object.keys(anterior).length) setBackendImplementation(anterior);

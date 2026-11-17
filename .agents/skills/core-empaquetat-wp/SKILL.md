@@ -21,6 +21,10 @@ contracte.llig:
   - tests/enxufe-empaqueta.test.mjs
 contracte.escriu:
   - wordpress-plugin/builds
+motors:
+  - wordpress-plugin/eines/empaqueta.mjs
+  - tests/enxufe-empaqueta.test.mjs
+  - tests/higiene-paquets.test.mjs
 ---
 # Tractors i Procediment d'Empaquetat del Plugin de WordPress (Enxufe)
 

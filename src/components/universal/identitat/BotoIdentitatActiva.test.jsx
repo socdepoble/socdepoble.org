@@ -1,6 +1,9 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
+/* v1.2.6 · El nom accessible ve de les claus topbar.identitat.* dels cinc
+   diccionaris (PERFIL-04 el prova en es, en, eu i gl). */
+import '../../../../tests/helpers/diccionaris.js';
 
 /* T43 (ordre del Mestre, 260928) · el botó de la identitat activa. La
    resolució de sdp-media:// es prova a useIdentitatDeLaBarra.test. */
@@ -79,7 +82,7 @@ test('acta 261004_1027 · sense foto, les inicials en el mateix cercle gran; una
 test('persona amb organitzacions: el nom accessible diu amb qui actues i obri el calaix', () => {
   /* Un origen de fotos de sessió que l'Avatar accepta (utils/sanitize.js). */
   render(<BotoIdentitatActiva teSessio nom="Pepa Soler" avatar="https://lh3.googleusercontent.com/a/pepa" llavor="u-1" obert={false} />);
-  const boto = screen.getByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
+  const boto = screen.getByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat, idioma o eixir' });
   expect(boto.getAttribute('aria-haspopup')).toBe('dialog');
   expect(boto.getAttribute('aria-expanded')).toBe('false');
   expect(boto.getAttribute('title')).toBe('Actues com a Pepa Soler');
@@ -93,16 +96,41 @@ test('persona amb organitzacions: el nom accessible diu amb qui actues i obri el
 
 test('entitat sense logo: les SEUES inicials, l’anell d’entitat i «(organització)» al nom', () => {
   render(<BotoIdentitatActiva teSessio entitat nom="Forn de la Torre" avatar={null} llavor="o-1" obert />);
-  const boto = screen.getByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat' });
+  const boto = screen.getByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat, idioma o eixir' });
   expect(boto.classList.contains('sdp-top-bar-avatar--entitat')).toBe(true);
   expect(boto.getAttribute('aria-expanded')).toBe('true');
   expect(boto.querySelector('img')).toBeNull();
   expect(boto.querySelector('.sdp-avatar').textContent).toBe('FD');
 });
 
+/* Gauntlet R32.6 (PERFIL-04) · Des de la 1.2.6 l'idioma i l'eixida viuen dins
+   del calaix: qui no veu la pantalla ho ha de sentir en el nom del botó que
+   l'obri, en la llengua de la interfície. Sense `llengua`, el valencià. */
+test.each([
+  ['ca', 'Identitat activa: Forn de la Torre (organització). Canviar identitat, idioma o eixir'],
+  ['es', 'Identidad activa: Forn de la Torre (organización). Cambiar identidad, idioma o salir'],
+  ['en', 'Active identity: Forn de la Torre (organisation). Switch identity, language or sign out'],
+  ['eu', 'Identitate aktiboa: Forn de la Torre (erakundea). Aldatu identitatea, hizkuntza edo irten'],
+  ['gl', 'Identidade activa: Forn de la Torre (organización). Cambiar identidade, idioma ou saír'],
+])('PERFIL-04 · en %s, el nom accessible diu que el calaix també porta a l’idioma i a eixir', (llengua, nom) => {
+  render(<BotoIdentitatActiva teSessio entitat nom="Forn de la Torre" llengua={llengua} />);
+  const boto = screen.getByRole('button', { name: nom });
+  expect(boto.getAttribute('aria-haspopup')).toBe('dialog');
+  expect(etiquetaIdentitatActiva('Forn de la Torre', true, llengua)).toBe(nom);
+});
+
+test('PERFIL-04 · sense llengua, o amb una que no és de les cinc, el valencià', () => {
+  const ca = 'Identitat activa: Pepa Soler. Canviar identitat, idioma o eixir';
+  expect(etiquetaIdentitatActiva('Pepa Soler')).toBe(ca);
+  expect(etiquetaIdentitatActiva('Pepa Soler', false, 'fr')).toBe(ca);
+  expect(etiquetaIdentitatActiva('Pepa Soler', false, 'constructor')).toBe(ca);
+  render(<BotoIdentitatActiva teSessio nom="Pepa Soler" />);
+  expect(screen.getByRole('button', { name: ca })).toBeTruthy();
+});
+
 test('una entitat activa mai perd el calaix ni l’anell, encara que arribe `perfil`', () => {
   render(<BotoIdentitatActiva teSessio entitat perfil nom="Forn de la Torre" />);
-  const boto = screen.getByRole('button', { name: /Forn de la Torre \(organització\)\. Canviar identitat/ });
+  const boto = screen.getByRole('button', { name: /Forn de la Torre \(organització\)\. Canviar identitat, idioma o eixir/ });
   expect(boto.getAttribute('aria-haspopup')).toBe('dialog');
   expect(boto.classList.contains('sdp-top-bar-avatar--entitat')).toBe(true);
 });

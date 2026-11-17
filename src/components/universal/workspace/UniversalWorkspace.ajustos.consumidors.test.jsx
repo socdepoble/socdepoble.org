@@ -105,14 +105,14 @@ const obriRoda = (c) => {
   return { roda, dialeg: within(screen.getByRole('dialog', { name: RODA })) };
 };
 
-test('AH-29 (IDEA-89) · Perfil · la roda dentada s’ha eliminat de la fila Tot de la Columna 1 i s’ha integrat a «🛡️ Administració del sistema»', () => {
+test('AH-29 (IDEA-89) · Perfil · la roda dentada s’ha eliminat de la fila Tot de la Columna 1 i s’ha integrat a «Administració del sistema»', () => {
   ambAmplada(1400);
-  /* Onada R6 · Bloc 2 (P1-b) · El grup d'administració és només per a superadmin. */
+  /* Onada R6 · Bloc 2 (P1-b) + P0-116 / IDEA-290 (ordre del Mestre, 261117) · Icona vectorial única del sistema sense emoji duplicat al text. */
   m.sessio = { esSuperadmin: true };
   try {
     const { container } = render(<PerfilShell />);
     expect(within(navegacio(container)).getByRole('button', { name: 'Forn' })).toBeTruthy();
-    expect(within(navegacio(container)).getByRole('button', { name: '🛡️ Administració del sistema' })).toBeTruthy();
+    expect(within(navegacio(container)).getByRole('button', { name: 'Administració del sistema' })).toBeTruthy();
     expect(within(navegacio(container)).queryByRole('button', { name: RODA })).toBeNull();
   } finally {
     m.sessio = null;

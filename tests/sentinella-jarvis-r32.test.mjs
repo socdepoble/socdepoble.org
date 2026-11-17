@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { diagnosticar, validaComponentPortable } from '../tooling/sentinella/sentinella-jarvis-espai.mjs';
+import { diagnosticar, validaComponentPortable } from '../tooling/gates/sentinella-jarvis-espai.mjs';
 function fixture(t) {
   const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-r32-jarvis-')));
   t.after(() => fs.rmSync(home, { recursive: true, force: true }));
@@ -75,7 +75,7 @@ test('Windows retorna quota real si disponible i bloqueig honest de neteja', (t)
 
 test('el helper Python públic tampoc pot eliminar ni un fitxer, encara que config.neteja=True', (t) => {
   const { home, cache } = fixture(t);
-  const source = path.resolve('tooling/sentinella/sentinella-posix.py');
+  const source = path.resolve('tooling/gates/sentinella-posix.py');
   const code = `import importlib.util,sys,json
 s=importlib.util.spec_from_file_location('sentinella',sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
 mutacions=[]

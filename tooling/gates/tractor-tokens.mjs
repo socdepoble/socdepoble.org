@@ -32,19 +32,38 @@
  * Eixides: 0 net · 1 infracció · 2 error d'execució.
  */
 
-import { senseComentaris } from '../lib/codi.mjs';
+import { parse } from '@babel/parser';
+import { fontUTF8, cssAnalitzable, declaracionsTokensCSS } from '../lib/lexic-css.mjs';
+// Parse JS/TS before scanning: template-expression comments and malformed input cannot disappear.
+function senseComentaris(text, ruta) {
+  if (ruta.endsWith('.css')) return cssAnalitzable(text);
+  const ast = parse(text, { sourceType: 'unambiguous', plugins: ['jsx', ...( /\.tsx?$/.test(ruta) ? ['typescript'] : [])] });
+  let cursor = 0, out = '';
+  for (const c of ast.comments ?? []) { out += text.slice(cursor, c.start) + text.slice(c.start, c.end).replace(/[^\n]/g, ' '); cursor = c.end; }
+  return out + text.slice(cursor);
+}
 import { analitzaJsx } from '../lib/jsx-class-values.mjs';
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, lstatSync } from 'node:fs';
 import path from 'node:path';
 
+function principal() {
+const args = process.argv.slice(2);
+const opcions = new Map();
+for (let i = 0; i < args.length; i++) {
+  const flag = args[i];
+  if (!['--root', '--nomes'].includes(flag) || opcions.has(flag)) throw new Error(`Ús invàlid: ${flag}`);
+  const valor = args[++i];
+  if (!valor?.trim() || valor.startsWith('--')) throw new Error(`Falta valor de ${flag}`);
+  opcions.set(flag, valor);
+}
+if (opcions.has('--nomes') && !/^T[1-6]$/.test(opcions.get('--nomes'))) throw new Error('--nomes ha de ser T1, T2, T3, T4, T5 o T6');
+
 const ROOT = (() => {
-  const i = process.argv.indexOf('--root');
-  return path.resolve(i > -1 ? process.argv[i + 1] : process.cwd());
+  return path.resolve(opcions.get('--root') ?? process.cwd());
 })();
 
 const NOMES = (() => {
-  const i = process.argv.indexOf('--nomes');
-  return i > -1 ? process.argv[i + 1] : null;
+  return opcions.get('--nomes') ?? null;
 })();
 
 const R = (rel) => path.join(ROOT, rel);
@@ -76,13 +95,19 @@ const actiu = (llei) => !NOMES || NOMES === llei.split(' ')[0];
 
 function arbre(rel, eixida = []) {
   const base = R(rel);
-  if (!existsSync(base)) return eixida;
+  const estat = lstatSync(base);
+  if (estat.isSymbolicLink() || !estat.isDirectory()) throw new Error(`Font no certificable (directori o symlink): ${rel}`);
   for (const nom of readdirSync(base)) {
     if (SALTA.has(nom) || nom.startsWith('.')) continue;
     const abs = path.join(base, nom);
     const sub = path.join(rel, nom);
-    if (statSync(abs).isDirectory()) arbre(sub, eixida);
-    else if (EXT.test(nom)) eixida.push(sub);
+    const s = lstatSync(abs);
+    if (s.isSymbolicLink()) throw new Error(`Symlink en fonts: ${sub}`);
+    if (s.isDirectory()) arbre(sub, eixida);
+    else if (EXT.test(nom)) {
+      if (!s.isFile()) throw new Error(`Font no regular: ${sub}`);
+      eixida.push(sub);
+    }
   }
   return eixida;
 }
@@ -90,19 +115,22 @@ function arbre(rel, eixida = []) {
 /* ══════════════════════════════════════════════════════════════════
    Extracció dels tokens declarats + límits dels blocs de tema
    ══════════════════════════════════════════════════════════════════ */
+// Valida tota la superfície abans de llegir el primer CSS (inclou els ancestres).
+const FITXERS = arbre('src');
 if (!existsSync(R(FONT_TOKENS))) {
   console.error(`PARAT. No existix ${FONT_TOKENS}. Arrel equivocada?`);
   process.exit(2);
 }
 
-const cssFont = readFileSync(R(FONT_TOKENS), 'utf8');
-const liniesFont = cssFont.split('\n');
+const cssFont = fontUTF8(R(FONT_TOKENS), 'utf8');
+if (lstatSync(R(FONT_TOKENS)).isSymbolicLink() || !cssFont.trim()) throw new Error(`Font de tokens buida o symlink: ${FONT_TOKENS}`);
+const liniesFont = cssAnalitzable(cssFont).split('\n');
 
 /* Els tokens de la capa 0 existixen de veres: T1 no els pot cridar fantasmes. */
 const CANON = new Set();
 if (existsSync(R(FONT_CANON))) {
-  for (const m of senseComentaris(readFileSync(R(FONT_CANON), 'utf8'), FONT_CANON).matchAll(/(--sdp-[\w-]+)\s*:/g)) {
-    CANON.add(m[1]);
+  for (const d of declaracionsTokensCSS(fontUTF8(R(FONT_CANON), 'utf8'))) {
+    if (d.nom.startsWith('--sdp-')) CANON.add(d.nom);
   }
 }
 
@@ -133,9 +161,8 @@ for (const { match: m, linia } of coincidenciesAmbLinia(senseComentaris(cssFont,
 }
 
 /* Els tokens d'escala z viuen al mateix bloc però amb prefix `--z-`. */
-for (const m of cssFont.matchAll(/(--z-[\w-]+)\s*:/g)) DEFINITS.add(m[1]);
-
-const FITXERS = arbre('src');
+for (const d of declaracionsTokensCSS(cssFont)) if (d.nom.startsWith('--z-')) DEFINITS.add(d.nom);
+if (!DEFINITS.size) throw new Error(`Cap token declarat a ${FONT_TOKENS}: no es pot certificar el vocabulari`);
 
 /* El CSS pot separar var(), el nom i el delimitador amb salts de línia.
    Escaneja la font completa sense perdre les línies originals del diagnòstic. */
@@ -155,7 +182,7 @@ if (actiu('T1 · Token inexistent')) {
   const LLEI = 'T1 · Token inexistent';
   let net = true;
   for (const rel of FITXERS) {
-    const codi = senseComentaris(readFileSync(R(rel), 'utf8'), rel);
+    const codi = senseComentaris(fontUTF8(R(rel), 'utf8'), rel);
     for (const { match: m, linia } of coincidenciesAmbLinia(codi, /var\(\s*(--(?:sdp|z)-[\w-]+)\s*[,)]/g)) {
       const t = m[1];
       if (DEFINITS.has(t)) continue;
@@ -174,7 +201,7 @@ if (actiu('T2 · Fallback prohibit')) {
   const LLEI = 'T2 · Fallback prohibit';
   let net = true;
   for (const rel of FITXERS) {
-    const codi = senseComentaris(readFileSync(R(rel), 'utf8'), rel);
+    const codi = senseComentaris(fontUTF8(R(rel), 'utf8'), rel);
     // La coma ja declara el fallback, també si és buit o conté var() niats.
     // No recorre tot el valor cercant un parèntesi final per a cada coincidència.
     for (const { match: m, linia } of coincidenciesAmbLinia(codi, /var\(\s*(--sdp-[\w-]+)\s*,/g)) {
@@ -243,7 +270,7 @@ if (actiu('T3 · Font única')) {
     const norm3 = rel.replace(/\\/g, '/');
     if (norm3 === FONT_CANON) continue;   // capa 0 · generada, declaració legítima
     const esFont = norm3 === FONT_TOKENS;
-    const brut = readFileSync(R(rel), 'utf8');
+    const brut = fontUTF8(R(rel), 'utf8');
     let pintat = null;   // els rangs del text pintat, només si cal
     const codi = senseComentaris(brut, rel);
     for (const { match: m, linia } of coincidenciesAmbLinia(codi, /(--sdp-[\w-]+)\s*:/g)) {
@@ -270,7 +297,7 @@ if (actiu('T4 · Dos capes')) {
   for (const rel of FITXERS) {
     const norm = rel.replace(/\\/g, '/');
     if (EXEMPTS_T4.has(norm)) continue;
-    const codi = senseComentaris(readFileSync(R(rel), 'utf8'), rel);
+    const codi = senseComentaris(fontUTF8(R(rel), 'utf8'), rel);
     for (const { match: m, linia } of coincidenciesAmbLinia(codi, /var\(\s*(--sdp-[\w-]+)\s*[,)]/g)) {
         if (!PRIMITIVA.test(m[1])) continue;
         net = false;
@@ -292,7 +319,7 @@ if (actiu('T5 · Capa 0 intocable')) {
   for (const rel of FITXERS) {
     const norm = rel.replace(/\\/g, '/');
     if (norm === FONT_TOKENS || norm === FONT_CANON) continue;
-    const codi = senseComentaris(readFileSync(R(rel), 'utf8'), rel);
+    const codi = senseComentaris(fontUTF8(R(rel), 'utf8'), rel);
     for (const { match: m, linia } of coincidenciesAmbLinia(codi, /var\(\s*(--sdp-canon-[\w-]+)\s*[,)]/g)) {
         net = false;
         falla(LLEI, rel, linia,
@@ -313,7 +340,7 @@ if (actiu('T6 · Zero Tailwind Tòxic')) {
   let net = true;
   for (const rel of FITXERS) {
     if (!rel.endsWith('.jsx') && !rel.endsWith('.tsx')) continue;
-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
+    senseComentaris(fontUTF8(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
       const match = l.match(/(?:bg|text|border)-\[#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\]/);
       if (match) {
         net = false;
@@ -362,3 +389,7 @@ if (infraccions.length) {
 
 console.log(`\n${banda}\nVocabulari tancat. Cap component s'inventa res.\n`);
 process.exit(0);
+}
+
+try { principal(); }
+catch (error) { console.error(`❌ [TRACTOR-TOKENS] ${error.message}`); process.exit(2); }

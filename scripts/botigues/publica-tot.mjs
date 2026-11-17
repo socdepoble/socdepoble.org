@@ -18,8 +18,17 @@
  *       copia l'APK directe signat (../_builds_de_poble/android/AAMMDD_socdepoble_X.Y.Z+N.apk, ÚNIC per
  *       a la versió i el build, amb el seu .sha256 i la signatura de SDP_ANDROID_UPLOAD_CERT_SHA256
  *       verificada ara amb apksigner) a dist/descarregues/socdepoble-android-latest.apk, l'adreça de
- *       canalsDeBotiga.js. Va DESPRÉS de npm run build (que buida dist/) i ABANS de firebase deploy.
- *       Mai a public/: Vite el copiaria dins de dist-natiu/ (l'app nativa) i del connector WordPress.
+ *       canalsDeBotiga.js. Va DESPRÉS de npm run build (que buida dist/) i ABANS de l'rsync de dist/
+ *       al Node 0. Mai a public/: Vite el copiaria dins de dist-natiu/ (l'app nativa) i del connector
+ *       WordPress.
+ *       Onada v1.2.6 (ordre del Mestre del 17-11-2026: cap descàrrega de l'APK ha de costar a Firebase
+ *       Hosting) · Firebase NO el servix: firebase.json l'exclou del paquet (hosting.ignore «**\/*.apk»
+ *       i «**\/*.apk.sha256») i redirigix (302) /descarregues/socdepoble-android-latest.apk i el seu
+ *       .sha256 a la mateixa ruta de https://socdepoble.cat (src/config/firebaseHosting.test.js). Qui el
+ *       servix és el Node 0 (Caddy darrere de Cloudflare), i l'ÚNIC camí pel qual hi arriba és la còpia
+ *       de dist/ al mirall (rsync sense --delete, sense cap exclusió de dist/descarregues/). Si eixa
+ *       còpia no es fa DESPRÉS d'esta ordre, l'adreça de socdepoble.org continua redirigint a l'APK
+ *       anterior del Node 0 (o a un 404 si no n'hi ha cap), encara que «firebase deploy» isca bé.
  *   --sincronitza-ard --versio X.Y.Z [--build N] [--build-ios M] [--corregeix-ard]
  *       escriu version i androidBuild (--build) i/o iosBuild (--build-ios) a public/.well-known/ard.json,
  *       el manifest que consulta src/natiu/actualitzacioAppNativa.js, amb sincronitzaManifestVersio.
@@ -135,7 +144,7 @@ export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, pl
     });
     passos.push({
       plataforma: 'android',
-      accio: `Publicar l'APK directe a /descarregues/${NOM_APK_PUBLIC}: entre «npm run build» i «firebase deploy» del pas web (el build buida dist/)`,
+      accio: `Publicar l'APK directe a /descarregues/${NOM_APK_PUBLIC}: entre «npm run build» (que buida dist/) i l'rsync de dist/ al Node 0 (socdepoble.cat), que és qui el servix; Firebase no el puja i hi redirigix (302)`,
       ordre: `${ORDRE_PUBLICA_APK} --versio ${v} --build ${b}`
     });
   }
@@ -234,11 +243,20 @@ export async function compilaApkDirecte({ arrel, valors, jdkHome, versio, build,
 
 /* ───────── R32.3 · L'APK directe a /descarregues i la versió publicada a ard.json ───────── */
 
-/* Firebase Hosting servix dist/ (firebase.json) i /descarregues/socdepoble-android-latest.apk és
-   l'adreça única de canalsDeBotiga.js (FITXER_APK). L'APK NO va a public/: Vite el copiaria dins de
-   dist-natiu/ (107 MB dins de l'app) i del connector WordPress. `npm run build` buida dist/, per
-   això es copia DESPRÉS del build i ABANS de firebase deploy. Els noms que comencen per «.» no es
-   despleguen (hosting.ignore de firebase.json exclou els fitxers ocults): la còpia temporal no pot eixir mai a la web.
+/* https://socdepoble.org/descarregues/socdepoble-android-latest.apk és l'adreça única de
+   canalsDeBotiga.js (FITXER_APK). L'APK NO va a public/: Vite el copiaria dins de dist-natiu/ (107 MB
+   dins de l'app) i del connector WordPress. `npm run build` buida dist/, per això es copia DESPRÉS del
+   build i ABANS de l'rsync de dist/ al Node 0.
+   Onada v1.2.6 (ordre del Mestre del 17-11-2026) · Firebase Hosting servix dist/ (firebase.json) però
+   NO l'APK: hosting.ignore deixa fora del paquet tot .apk i tot .apk.sha256, i les dues adreces de
+   /descarregues/ redirigixen (302) a la mateixa ruta de https://socdepoble.cat, el mirall del Node 0
+   (Caddy darrere de Cloudflare). Cada descàrrega des de socdepoble.org costa a Firebase només la
+   resposta de la redirecció, no els 107 MB. L'APK arriba al Node 0 NOMÉS per la còpia de dist/ al
+   mirall (rsync sense --delete), que ha d'incloure dist/descarregues/ i fer-se després d'esta ordre;
+   la recepta d'eixa còpia no és al repositori (tooling/node0/ i scripts/ no porten cap rsync).
+   Els noms que comencen per «.» no es despleguen (hosting.ignore de firebase.json exclou els fitxers
+   ocults): la còpia temporal no pot eixir mai a Firebase, i a l'rsync només si es llançara mentre
+   esta ordre escriu (el temporal s'esborra en acabar).
    Elefant R32.3 (Peix security_reviewer, P2) · Un .sha256 al costat només diu que l'APK casa amb ell
    mateix: en publicar, la signatura es torna a VERIFICAR (apksigner) contra
    SDP_ANDROID_UPLOAD_CERT_SHA256, i dos APK de la mateixa versió i build són ambigus (cap «el més nou»).
@@ -325,7 +343,7 @@ export async function publicaApkDirecte({
   if (!esperada) return no(EIXIDA.FALTA, 'falta SDP_ANDROID_UPLOAD_CERT_SHA256 al fitxer d’entorn: sense la clau de pujada no es pot verificar l’APK');
   const dist = path.join(arrel, 'dist');
   if (!fs.existsSync(path.join(dist, 'index.html'))) {
-    return no(EIXIDA.ARBRE, 'no hi ha dist/index.html: primer npm run build (el build buida dist/ i s’emportaria l’APK); després, abans de firebase deploy');
+    return no(EIXIDA.ARBRE, 'no hi ha dist/index.html: primer npm run build (el build buida dist/ i s’emportaria l’APK); després, abans de l’rsync de dist/ al Node 0');
   }
   const candidats = apksDeLaVersio(carpeta, versio, build);
   if (!candidats.length) return no(EIXIDA.ARBRE, `no hi ha cap APK ${versio}+${build} a _builds_de_poble/android/: el fa publica-tot.mjs --plataforma android --compila`);
@@ -612,13 +630,14 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
   /* R32.3 · Les dues accions de publicació, cada una sola (sense plataforma, canal ni pujada).
      Elefant R32.3 (Peix silent_failure_hunter, P2) · Mai juntes: el manifest viu a public/ i el build el
      copia a dist/, així que --sincronitza-ard va ABANS de npm run build; l'APK va a dist/, DESPRÉS del
-     build i abans de firebase deploy. Cap de les dues escriu res fins que totes les guardes passen. */
+     build i abans de l'rsync de dist/ al Node 0 (Onada v1.2.6: Firebase no el puja i hi redirigix).
+     Cap de les dues escriu res fins que totes les guardes passen. */
   if (opcions['publica-apk'] || opcions['sincronitza-ard']) {
     const admesos = new Set(['publica-apk', 'sincronitza-ard', 'versio', 'build', 'build-ios', 'corregeix-ard']);
     const sobren = Object.keys(opcions).filter((nom) => !admesos.has(nom));
     if (sobren.length) return plega(EIXIDA.US, `--publica-apk i --sincronitza-ard només van amb --versio, --build, --build-ios i --corregeix-ard (sobren: ${sobren.map((n) => `--${n}`).join(', ')})`);
     if (opcions['publica-apk'] && opcions['sincronitza-ard']) {
-      return plega(EIXIDA.US, '--publica-apk i --sincronitza-ard van en ordres a banda: el manifest (public/) abans de npm run build; l’APK (dist/) després del build i abans de firebase deploy');
+      return plega(EIXIDA.US, '--publica-apk i --sincronitza-ard van en ordres a banda: el manifest (public/) abans de npm run build; l’APK (dist/) després del build i abans de l’rsync de dist/ al Node 0');
     }
     if (opcions['build-ios'] !== undefined && !opcions['sincronitza-ard']) return plega(EIXIDA.US, '--build-ios només va amb --sincronitza-ard');
     if (opcions['corregeix-ard'] && !opcions['sincronitza-ard']) return plega(EIXIDA.US, '--corregeix-ard només va amb --sincronitza-ard');
@@ -654,7 +673,8 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
 
     const res = await publicaApkDirecte({ arrel, versio: opcions.versio, build: opcions.build, valors, jdkHome: jdkPerAGradle({ env })?.home ?? null });
     if (res.codi !== EIXIDA.BE) return plega(res.codi, net(res.error));
-    process.stdout.write(`✓ /descarregues/${NOM_APK_PUBLIC} ← ${res.origen} (${res.octets} B, SHA-256: ${res.sha256}; signatura de la clau de pujada verificada); ara firebase deploy\n`);
+    process.stdout.write(`✓ dist/descarregues/${NOM_APK_PUBLIC} ← ${res.origen} (${res.octets} B, SHA-256: ${res.sha256}; signatura de la clau de pujada verificada)\n`);
+    process.stdout.write(`  Ara l’rsync de dist/ al Node 0 (socdepoble.cat), que és qui el servix: Firebase no el puja (hosting.ignore) i /descarregues/${NOM_APK_PUBLIC} hi redirigix (302).\n`);
     process.stdout.write('  ! L’APK directe va signat amb la clau de PUJADA: si Google Play reparteix amb una altra (App Signing), un mòbil amb este APK no s’actualitza des de Play sense desinstal·lar (D-R32.3-PLAY-3).\n');
     return EIXIDA.BE;
   }
@@ -742,7 +762,7 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
     const resApk = await compilaApkDirecte({ arrel, valors: pre.valors, jdkHome: pre.jdk.home, versio, build });
     if (resApk.codi !== EIXIDA.BE) return plega(resApk.codi, resApk.error);
     process.stdout.write(`✓ APK directe universal signat i verificat: ${resApk.nomFitxer} (SHA-256: ${resApk.sha256})\n`);
-    process.stdout.write(`  Per a publicar-lo a /descarregues/${NOM_APK_PUBLIC}: després de «npm run build» i abans de «firebase deploy», ${ORDRE_PUBLICA_APK} --versio ${versio} --build ${build}\n`);
+    process.stdout.write(`  Per a publicar-lo a /descarregues/${NOM_APK_PUBLIC}: després de «npm run build» i abans de l’rsync de dist/ al Node 0 (socdepoble.cat), ${ORDRE_PUBLICA_APK} --versio ${versio} --build ${build}\n`);
   }
 
   return EIXIDA.BE;

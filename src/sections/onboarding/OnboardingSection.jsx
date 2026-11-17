@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LoaderCircle } from 'lucide-react';
+import { Globe, LoaderCircle } from 'lucide-react';
 import { useNavigate, useRouter } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
-import { Alerta, Boto, Divisor } from '../../components/PedraSeca/index.js';
+import { Accions, Alerta, Boto, Divisor } from '../../components/PedraSeca/index.js';
 import { MARCA_ENTRADA_PILOT, MARCA_SENSE_ENTRADA_AUTOMATICA, codiDEntrada, missatgeDEntrada, toDeLErrorDEntrada } from './onboardingModel.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIState } from '../../app/contexts/UIContext';
@@ -568,6 +568,13 @@ export default function OnboardingSection() {
       showLogos: true
     };
   const titolPagina = tr('section.login.benvinguda.titol', 'Benvinguda al Mas Electrònic');
+  const accesIdioma = (
+    <Accions>
+      <Boto varietat="secundari" icona={Globe} onClick={() => navigate('/traduccions')}>
+        {tr('section.translations.system.title', 'Idioma del Sistema')}
+      </Boto>
+    </Accions>
+  );
 
   if (recuperacioEnCurs) {
     let pas;
@@ -801,6 +808,7 @@ export default function OnboardingSection() {
           />
         ) : null}
         {activeStep === 0 && esNatiu ? benvinguda : null}
+        {accesIdioma}
       </div>
     </UniversalPage>
   );

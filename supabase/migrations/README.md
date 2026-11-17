@@ -214,7 +214,7 @@ La `20261116040000` és transaccional, conserva signatures/OID/propietari/ACL/RL
 
 **Totes dues, aplicades a producció** pel Mestre el 16-11-2026 (`pas2_push_sessio_ok = true` i 29/29 funcions amb `search_path` buit; captura `261116_1503` del receptari SQL R30/R31, amb els mateixos bytes que Git). Cap prova local acredita eixa aplicació. Queden pendents, i ho diuen la taula canònica i les vinyetes de [../README.md](../README.md):
 
-- les 7 funcions `SECURITY DEFINER` heretades a producció fora de Git, sense path buit (captura `261116_1508`), per a l’Onada R33;
+- les 7 funcions `SECURITY DEFINER` heretades a producció fora de Git, sense path buit (captura `261116_1508`), ara les blinda [20261116170000_r32_fossils_search_path.sql](20261116170000_r32_fossils_search_path.sql) (Onada R32), aplicada a producció pel Mestre el 17-11-2026 a les 01:55 CET (certificat `261117_0155`, pas 3, amb el mateix SHA-256 que Git): en queda pendent només la sonda posterior dels 7 fòssils (`../snippets/r32_7_fossils_sonda.sql`), que no consta exportada;
 - un conflicte d’evidència sobre `2611121630_xat_propi.sql`: el receptari del 16-11 la dona pendent de rebase sobre la `xat_fils_meus` de `20261114061000` per una sonda (`public.obri_fil_propi()`) que cap migració de Git crea, però el registre SQL del T2 la dona aplicada el 13-11-2026 (pas 4, SHA-256 igual al de Git), abans que R24. No s’ha de tornar a aplicar; el Mestre ho ha de confirmar amb una sonda vàlida (`private.xat_propi_integritat()` o `public.xat_fils.propi_usuari_id`);
 - les claus Push VAPID/FCM/APNs i la prova en aparells físics, sense verificar.
 

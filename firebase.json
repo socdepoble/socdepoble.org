@@ -7,11 +7,25 @@
       "!.well-known",
       "**/node_modules/**",
       "_headers",
-      "_redirects"
+      "_redirects",
+      "**/*.apk",
+      "**/*.apk.sha256"
     ],
     "cleanUrls": false,
     "trailingSlash": false,
     "appAssociation": "NONE",
+    "redirects": [
+      {
+        "source": "/descarregues/socdepoble-android-latest.apk",
+        "destination": "https://socdepoble.cat/descarregues/socdepoble-android-latest.apk",
+        "type": 302
+      },
+      {
+        "source": "/descarregues/socdepoble-android-latest.apk.sha256",
+        "destination": "https://socdepoble.cat/descarregues/socdepoble-android-latest.apk.sha256",
+        "type": 302
+      }
+    ],
     "rewrites": [
       {
         "regex": "^/\\.well-known/webfinger/(?i:acct(?::|%3a)socdepoble(?:@|%40)socdepoble\\.org)$",

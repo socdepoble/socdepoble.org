@@ -6,16 +6,19 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    botó i el calaix de veres; la sessió, la identitat i els mitjans simulats. */
 /* Revisió del Gauntlet 261017 (ID4) · `estat` és el de useSession
    ('comprovant' | 'dins' | 'fora'); undefined, com abans d'esta prova. */
-const m = vi.hoisted(() => ({ user: null, identitat: null, senseSessio: false, senseIdentitat: false, estat: undefined }));
+const m = vi.hoisted(() => ({
+  user: null, identitat: null, senseSessio: false, senseIdentitat: false, estat: undefined,
+  logout: vi.fn(), preparaEixida: vi.fn(),
+}));
 /* Prompt 261014_0400 (ordre del Mestre) · La simulació calca el contracte de
    veres dels dos mòduls: sense proveïdor, l'estricte llança amb el seu missatge
    (SessionContext.jsx, IdentitatContext.jsx) i l'opcional torna null. */
 vi.mock('../../../app/contexts/SessionContext', () => ({
   useSession: () => {
     if (m.senseSessio) throw new Error('useSession ha de ser usat dins de SessionProvider');
-    return { currentUser: m.user, estat: m.estat };
+    return { currentUser: m.user, estat: m.estat, logout: m.logout, preparaEixida: m.preparaEixida };
   },
-  useSessioOpcional: () => (m.senseSessio ? null : { currentUser: m.user, estat: m.estat })
+  useSessioOpcional: () => (m.senseSessio ? null : { currentUser: m.user, estat: m.estat, logout: m.logout, preparaEixida: m.preparaEixida })
 }));
 vi.mock('../../../app/contexts/IdentitatContext.jsx', () => ({
   useIdentitat: () => {
@@ -52,6 +55,8 @@ beforeEach(() => {
   m.senseSessio = false;
   m.senseIdentitat = false;
   m.estat = undefined;
+  m.logout.mockReset().mockResolvedValue(undefined);
+  m.preparaEixida.mockReset().mockResolvedValue([]);
   m.user = { id: 'u-1', user_metadata: { avatar_url: 'https://lh3.googleusercontent.com/a/pepa.png' } };
   m.identitat = {
     actor: PERSONA,
@@ -63,7 +68,7 @@ beforeEach(() => {
 test('una entitat sense logo mostra les SEUES inicials, mai la foto de la persona', () => {
   m.identitat.actor = FORN;
   render(<Barra onNavega={vi.fn()} />);
-  const boto = screen.getByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat' });
+  const boto = screen.getByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat, idioma o eixir' });
   expect(boto.querySelector('img')).toBeNull();
   expect(boto.querySelector('.sdp-avatar').textContent).toBe('FD');
   expect(boto.innerHTML).not.toContain('pepa.png');
@@ -79,7 +84,7 @@ test('el logo desat com a sdp-media:// es resol abans de pintar-lo', () => {
 test('el calaix és germà del header, sense estils en línia; triar crida setActor i el tanca', async () => {
   const { container } = render(<Barra onNavega={vi.fn()} />);
   expect(screen.queryByRole('dialog')).toBeNull();
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' })); });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat, idioma o eixir' })); });
   const dialeg = screen.getByRole('dialog', { name: 'Amb qui actues?' });
   expect(dialeg.closest('header.bar-black')).toBeNull();
   expect(container.querySelector('header.bar-black').contains(dialeg)).toBe(false);
@@ -120,18 +125,25 @@ test('261018 · triar una identitat porta al seu workspace, amb un número d’a
 /* T4 (ordre del Mestre, 260930) · Sense sessió el botó porta a /registre en
    mode Entrar i amb la ruta actual com a ?tornar (rutaDEntrada). Sense router
    llegible, la ruta és la de la barra d'adreces: '/' a jsdom. */
-test('les accions del calaix tanquen i naveguen; sense sessió el botó porta a /registre', async () => {
+test('les accions del calaix porten a Idioma i tanquen la sessió de forma segura; sense sessió el botó porta a /registre', async () => {
   const onNavega = vi.fn();
   const vista = render(<Barra onNavega={onNavega} />);
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Identitat activa/ })); });
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar-me a una organització' })); });
-  // Poliment T43 · les organitzacions reals (padró), no el catàleg d'agents de /perfil.
-  expect(onNavega).toHaveBeenLastCalledWith('/cerca?tipus=entitats');
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Idioma del sistema' })); });
+  expect(onNavega).toHaveBeenLastCalledWith('/traduccions');
   expect(screen.queryByRole('dialog')).toBeNull();
+
+  // Amb canvis pendents, mostra avís abans d'eixir
+  m.preparaEixida.mockResolvedValueOnce([{ entitat: 'nota', camps: ['content'] }]);
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Identitat activa/ })); });
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'La meua fitxa i ajustos' })); });
-  /* Encàrrec 261018_1220 (Tasca 1) · amb el número de l'anada (el Perfil el llig). */
-  expect(onNavega).toHaveBeenLastCalledWith('/el-meu-perfil', { state: { espaiIdentitat: expect.any(Number) } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Eixir de Sóc de Poble' })); });
+  expect(m.logout).not.toHaveBeenCalled();
+  expect(screen.getByText('Encara hi ha canvis sense desar')).toBeTruthy();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Eixir igualment' })); });
+  expect(m.logout).toHaveBeenCalledTimes(1);
+  expect(onNavega).toHaveBeenLastCalledWith('/registre', { replace: true });
+  expect(screen.queryByRole('dialog')).toBeNull();
+
   vista.unmount();
   m.user = null;
   m.identitat = { actor: { tipus: 'persona', id: null, nom: null, avatar: null, rol: 'convidat' }, identitats: [], setActor: vi.fn(() => false) };
@@ -164,7 +176,7 @@ test('acta 261004_1027 · quan arriba una organització on mana, l’avatar torn
   expect(screen.getByRole('button', { name: 'El teu perfil: Pepa Soler' })).toBeTruthy();
   m.identitat = { ...m.identitat, identitats: [{ ...PERSONA, activa: true }, { ...FORN, activa: false }] };
   rerender(<Barra onNavega={onNavega} />);
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' })); });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat, idioma o eixir' })); });
   expect(screen.getByRole('dialog', { name: 'Amb qui actues?' })).toBeTruthy();
   expect(onNavega).not.toHaveBeenCalled();
 });

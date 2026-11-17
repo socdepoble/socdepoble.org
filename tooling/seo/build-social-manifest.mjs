@@ -111,7 +111,10 @@ export const PAGINES_INFORMATIVES = Object.freeze(['publicar_mur', 'publicar_mer
   'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals',
   /* Onada R14 · El receptari «Què dinem?» (Muro, El Comtat, 2019), amb la variant social de la làmina de
      l'olleta murera com a og_image (pageContent.patrimoniR14.js). */
-  'receptes']);
+  'receptes',
+  /* Onada R32.4 (lot_01 de Gemini) · La pàgina didàctica del sistema nerviós (skills, tractors i
+     repositoris oberts; pageContent.sistemaNervios.js), amb la variant social de la seua il·lustració. */
+  'sistema-nervios']);
 /* P0-SEO-UNIVERSAL (13-11-2026) · /page/node-zero NO entra ací: pageContent.r10.js i
    pageContent.fediversityR20.js en recomponen l'entradeta en execució, i este productor llig el literal
    de pageContent.js (AST, sense executar res): el head servit diria una cosa i el del client una altra
@@ -126,7 +129,9 @@ export const PAGINES_A_PUBLICACIONS = Object.freeze(['anatomia-rural', 'la-veu-d
    (Object.assign): [font, exportació]. */
 export const FONTS_DE_PAGINES = Object.freeze([
   Object.freeze(['src/sections/text/pageContent.patrimoniR9.js', 'PAGINES_PATRIMONI_R9']),
-  Object.freeze(['src/sections/text/pageContent.patrimoniR14.js', 'PAGINES_PATRIMONI_R14'])
+  Object.freeze(['src/sections/text/pageContent.patrimoniR14.js', 'PAGINES_PATRIMONI_R14']),
+  /* Onada R32.4 · /page/sistema-nervios: el cos es construïx amb funcions en cinc llengües, sense imports. */
+  Object.freeze(['src/sections/text/pageContent.sistemaNervios.js', 'PAGINA_SISTEMA_NERVIOS'])
 ]);
 
 /* Ordre del Mestre (30-10-2026, prompt 2208, T1.1 i T2.1) · Les fonts JS de les

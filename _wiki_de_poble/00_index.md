@@ -35,6 +35,7 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 ## Eines i Maquinària
 
 - [[00_index_maquina]]
+- [[sistema_nervios_skills_i_repositoris]]
 - [[02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md]]
 - [[02_saber/architecture/260913_0635_arquitectura_perfil_universal.md]]
 - [[02_saber/architecture/perfil_minim_allotjament_node_municipal.md]]

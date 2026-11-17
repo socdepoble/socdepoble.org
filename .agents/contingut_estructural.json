@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "8edbbd6292266b5f48f540b91cddfa4dfc20452f60f84272bafa4ec5a4ad301c",
-      "html": 93420,
-      "aprovat_per": "Claude R32.3 261117 (crònica v1.2.5 build 10, correcció Llei 0 dels noms del Perfil mòbil, dins de l'ordre T5 R32.3 del Mestre de 16-11-2026 22:09; pendent de lectura humana)",
+      "sha256": "da9be773d00d62345464db91d135a31b4ea761e713eda7ff90f2b5c3af756316",
+      "html": 98677,
+      "aprovat_per": "Claude v1.2.6 261117 (crònica R32.4 de la v1.2.6 build 11 i Llei 0 de les cinc migracions aplicades pel Mestre el 17-11-2026 a les 01:55 CET a les cròniques R32 i R32.3, dins de l'ordre directa del Mestre de 17-11-2026, Onada v1.2.6; pendent de lectura humana)",
       "data": "2026-11-17"
     },
     "wikidepoble": {

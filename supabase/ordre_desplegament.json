@@ -84,20 +84,20 @@
     {
       "abans": "20261114000100",
       "despres": "20261116170000",
-      "motiu": "R32 (NO aplicada): els fòssils heretats es blinden després de les revocacions de R22.2, amb backup íntegre i pins de cos. Abans, el Mestre exporta amb snippets/r32_7_fossils_sonda.sql el DDL, els disparadors i l'ACL dels 7 fòssils: tres hashes del receptari R30/R31 no coincidixen amb les fixtures.",
-      "font": "README R32; capçalera de 20261116170000"
+      "motiu": "R32 (aplicada a producció pel Mestre el 17-11-2026 a les 01:55 CET, pas 3 del certificat 261117_0155 (_investigacio_ia_de_poble/261117_sql_produccio_r32)): els fòssils heretats es blinden després de les revocacions de R22.2, amb backup íntegre i pins de cos. Abans, el Mestre exporta amb snippets/r32_7_fossils_sonda.sql el DDL, els disparadors i l'ACL dels 7 fòssils: tres hashes del receptari R30/R31 no coincidixen amb les fixtures. A Producció ho va fer la sonda conjunta de les 01:44 (els 9 source_sha256, iguals als pins de Git); la sonda posterior dels 7 fòssils no consta exportada.",
+      "font": "README R32; capçalera de 20261116170000; certificat 261117_0155"
     },
     {
       "abans": "20261114061000",
       "despres": "20261116170100",
-      "motiu": "R32 (NO aplicada): rebase additiu del fil propi després de la signatura R24; mai reaplicar 2611121630 damunt de R24 (avorta amb 42P13). A Producció no cal: 2611121630 hi és des del T2 del 13-11-2026, abans de R24.",
-      "font": "README R32; capçalera de 20261116170100"
+      "motiu": "R32 (aplicada a producció pel Mestre el 17-11-2026 a les 01:55 CET, darrere de les dues R24, pas 6 del certificat 261117_0155 (_investigacio_ia_de_poble/261117_sql_produccio_r32)): rebase additiu del fil propi després de la signatura R24; mai reaplicar 2611121630 damunt de R24 (avorta amb 42P13). A Producció no calia: 2611121630 hi és des del T2 del 13-11-2026, abans de R24.",
+      "font": "README R32; capçalera de 20261116170100; certificat 261117_0155"
     },
     {
       "abans": "20261114000100",
       "despres": "20261116170200",
-      "motiu": "R32 (NO aplicada): baixa atòmica després de revocacions i retirada delete_user R22.2; font/configuració pinades. Abans, el Mestre exporta pg_get_functiondef de demana_baixa(text) i cancela_baixa().",
-      "font": "README R32; capçalera de 20261116170200"
+      "motiu": "R32 (aplicada a producció pel Mestre el 17-11-2026 a les 01:55 CET, la primera de les cinc, pas 2 del certificat 261117_0155 (_investigacio_ia_de_poble/261117_sql_produccio_r32)): baixa atòmica després de revocacions i retirada delete_user R22.2; font/configuració pinades. Abans, el Mestre exporta pg_get_functiondef de demana_baixa(text) i cancela_baixa(); a Producció ho va fer la sonda conjunta de les 01:44.",
+      "font": "README R32; capçalera de 20261116170200; certificat 261117_0155"
     },
     {
       "abans": "20261115170000",
@@ -116,6 +116,12 @@
       "despres": "20261116170200",
       "motiu": "R32 baixa després de les definicions canòniques R31",
       "font": "README R31/R32; fonts originals CAS R31 verificades"
+    },
+    {
+      "abans": "2611111735",
+      "despres": "20261117150000",
+      "motiu": "R32.4 (NO aplicada; l’aplica el Mestre): l’ampliació del paquet de copublicació amb /page/sistema-nervios afig una fila a private.recursos_copublicacio_paquet, que crea 2611111735. Per ordre alfabètic cru, 20261117150000 aniria abans de tot el catàleg de deu dígits.",
+      "font": "README, vinyeta de 20261117150000; capçalera de 20261117150000 i de 2611111735"
     }
   ],
   "portes": [

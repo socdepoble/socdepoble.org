@@ -169,7 +169,7 @@
       "items": {
         "type": "string",
         "minLength": 1,
-        "pattern": "^(?:tooling|scripts|\\.agents)/[A-Za-z0-9_./-]+\\.(?:mjs|cjs|js)$"
+        "pattern": "^(?:tooling|scripts|\\.agents|tests|wordpress-plugin/eines)/[A-Za-z0-9_./-]+\\.(?:mjs|cjs|js)$"
       }
     }
   }

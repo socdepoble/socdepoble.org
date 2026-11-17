@@ -19,7 +19,9 @@ vi.mock('./PerfilEditor.jsx', () => ({
 }));
 vi.mock('./DetallCompte.jsx', () => ({ DetallCompte: ({ identitat }) => <p>{`compte de ${identitat.nom}`}</p> }));
 vi.mock('./DetallPrivacitat.jsx', () => ({ DetallPrivacitat: () => null }));
-vi.mock('./DetallEspai.jsx', () => ({ DetallAplicacio: () => null, DetallNodes: () => null, DetallSenseOrganitzacions: () => null }));
+vi.mock('./DetallEspai.jsx', () => ({
+  DetallAplicacio: () => null, DetallEixir: () => null, DetallIdioma: () => null, DetallNodes: () => null, DetallSenseOrganitzacions: () => null,
+}));
 vi.mock('./DialegNovaOrganitzacio.jsx', () => ({ DialegNovaOrganitzacio: () => null }));
 vi.mock('../../components/universal/TargetaViva.jsx', () => ({
   AVISOS_TARGETA_VIVA: { perfil: '' }, TargetaViva: () => null, useDocumentViu: () => null,

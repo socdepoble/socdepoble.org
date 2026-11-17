@@ -36,9 +36,10 @@ describe('Gauntlet 261016 (encàrrec D) · la imatge de «La fitxa» a la llista
   test('cap altre apartat porta imatge', () => {
     const jo = { id: 'jo', mena: 'persona', nom: 'Pep', avatar: 'a.webp', dades: { avatar_url: 'a.webp' } };
     const altres = itemsDePerfil([jo], { ambPrivacitat: true }).filter((item) => item.id !== 'jo-fitxa');
-    // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
+    // Expectativa actualitzada a propòsit: Onada R32.4 (ordre del Mestre, 261116: «Idioma del Sistema» i, últim, «Eixir de Sóc de Poble»).
     expect(altres.map((item) => [item.id, item.image])).toEqual([
       ['jo-vistes', undefined], ['jo-compte', undefined], ['jo-privacitat', undefined], ['jo-nodes', undefined], ['jo-multimedia', undefined],
+      ['jo-idioma', undefined], ['jo-eixir', undefined],
       ['sense-organitzacions-crear', undefined],
     ]);
     /* Relleu del Pla 2000, punt 3 · «Multimèdia» d'una organització i d'un agent

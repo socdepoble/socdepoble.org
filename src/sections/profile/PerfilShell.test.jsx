@@ -95,30 +95,20 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-test('primera columna: tres grups en ordre, la persona amb el seu nom i Administració del sistema, les organitzacions i les aplicacions', () => {
+test('primera columna: persona (amb Aplicacions com a únic enllaç) i GRUPS I EMPRESES', () => {
   render(<PerfilShell />);
-  expect(grups().map((g) => g.id)).toEqual(['persona', 'organitzacions', 'aplicacions']);
-  // Com les carpetes de Notes: el primer grup no porta etiqueta, el títol de la columna li fa de capçalera.
-  expect(grups().map((g) => g.label)).toEqual([null, 'GRUPS I EMPRESES', 'APLICACIONS']);
-  /* Onada R6 · Bloc 2 (P1-b) · Expectativa actualitzada a propòsit: sense
-     superadmin, ni «🛡️ Administració del sistema» ni els seus 7 apartats
-     (amb superadmin, la prova P1-b de davall). */
-  expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([['jo', 'Pep']]);
+  expect(grups().map((g) => g.id)).toEqual(['persona', 'organitzacions']);
+  expect(grups().map((g) => g.label)).toEqual([null, 'GRUPS I EMPRESES']);
+  /* Onada R32.4 (ordre del Mestre, 261116) + P0-116 · Sense superadmin, a PERFIL ix la
+     persona i l'enllaç únic «Aplicacions» amb icona vectorial única; totes les aplicacions viuen com a
+     apartats nets d'APARTATS (categoryId 'aplicacions'). */
+  expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([['jo', 'Pep'], ['aplicacions', 'Aplicacions']]);
   expect(m.workspace.amagaRodaAjustos).toBe(true);
   expect(filsDe('administracio-sistema')).toEqual([]);
   expect(grups()[1].options.map((o) => [o.id, o.label])).toEqual([['O', 'Forn'], ['G', 'Colla']]);
-  /* Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
-     maquinària interna de desenvolupament de l'aside en pantalles d'usuari»)
-     · Expectativa actualitzada a propòsit: sense superadmin, ni la Consola
-     de Mètriques ni el Cervell (intern: true). Amb superadmin, les cinc de
-     sempre (prova de davall). */
-  expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
-    /* Encàrrec d'harmonització (261018) · el catàleg complet del Panell, i «Lector RSS».
-       P0-114 (ordre del Mestre, 261111) · Expectativa actualitzada a propòsit en R19 · T3: L'Avisador ja
-       és a APLICACIONS darrere de l'Arbre Genealògic (aplicacions.test.js i PerfilShell.espai.test.jsx ho
-       fixen), i esta llista no el comptava. */
-    ['app-gestoria', 'Gestoria de Poble'], ['app-rebost', 'Rebost Domèstic'], ['app-salut', 'Salut'],
-    ['app-genealogia', 'Arbre Genealògic'], ['app-avisador', 'L’Avisador'], ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
+  expect(filsDe('aplicacions')).toEqual([
+    'app-gestoria-sobre', 'app-rebost-sobre', 'app-salut-sobre',
+    'app-genealogia-sobre', 'app-avisador-sobre', 'app-lector-rss-sobre', 'app-tpv-sobre', 'app-snippet-sobre',
   ]);
   for (const opcio of grups().flatMap((g) => g.options)) expect(opcio.icon).toBeTruthy();
   expect(grups()[1].options[0].icon).not.toBe(grups()[1].options[1].icon);
@@ -128,15 +118,18 @@ test('primera columna: tres grups en ordre, la persona amb el seu nom i Administ
   expect(m.workspace.model.itemsComplete).toBe(true);
 });
 
-test('Bloc 3.4 · amb superadmin, APLICACIONS porta també la Consola de Mètriques i el Cervell, al seu lloc', () => {
+test('Bloc 3.4 · amb superadmin, Aplicacions queda just davall d’Administració del sistema amb icona vectorial única i els seus apartats porten també Mètriques i Cervell', () => {
   m.sessio = { esSuperadmin: true };
   render(<PerfilShell />);
-  expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
-    ['app-gestoria', 'Gestoria de Poble'], ['app-rebost', 'Rebost Domèstic'], ['app-salut', 'Salut'],
-    ['app-genealogia', 'Arbre Genealògic'], ['app-avisador', 'L’Avisador'], ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
-    ['app-metriques', 'Consola de Mètriques'], ['app-cervell', 'Cervell (Node Graph)'],
+  expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([
+    ['jo', 'Pep'], ['administracio-sistema', 'Administració del sistema'], ['aplicacions', 'Aplicacions'],
   ]);
-  for (const opcio of grups()[2].options) expect(opcio.icon).toBeTruthy();
+  expect(filsDe('aplicacions')).toEqual([
+    'app-gestoria-sobre', 'app-rebost-sobre', 'app-salut-sobre',
+    'app-genealogia-sobre', 'app-avisador-sobre', 'app-lector-rss-sobre', 'app-tpv-sobre', 'app-snippet-sobre',
+    'app-metriques-sobre', 'app-cervell-sobre',
+  ]);
+  for (const id of filsDe('aplicacions')) expect(item(id).icon).toBeTruthy();
 });
 
 /* Onada R6 · Bloc 2 (P1-b) · «🛡️ Administració del sistema» és només per a superadmin. */
@@ -157,7 +150,7 @@ test('P1-b · sense superadmin: ni el grup, ni els 7 apartats, ni la ruta, ni el
   cleanup();
   m.sessio = { esSuperadmin: true };
   render(<PerfilShell />);
-  expect(grups()[0].options.map((o) => o.id)).toEqual(['jo', 'administracio-sistema']);
+  expect(grups()[0].options.map((o) => o.id)).toEqual(['jo', 'administracio-sistema', 'aplicacions']);
   expect(filsDe('administracio-sistema')).toEqual(panells.map((p) => p.id));
   expect(m.workspace.initialSelection).toEqual({ categoryId: 'administracio-sistema' });
   for (const panell of panells) expect(m.workspace.renderDetail({ item: panell })).not.toBeNull();
@@ -174,7 +167,7 @@ test('R13-C7 · «👥 Usuaris, Dispositius i Botigues»: el panell diferit, i a
   expect(filsDe('administracio-sistema').slice(-2)).toEqual(['admin-empaquetats', 'administracio-usuaris-i-dispositius']);
   render(m.workspace.renderDetail({ item: item('administracio-usuaris-i-dispositius') }));
   expect(await screen.findByTestId('panell-usuaris-dispositius-botigues')).toBeTruthy();
-  expect(screen.getByRole('heading', { level: 1, name: '👥 Usuaris, Dispositius i Botigues (Google i Apple)' })).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 1, name: 'Usuaris, Dispositius i Botigues (Google i Apple)' })).toBeTruthy();
   expect(screen.getByTestId('boto-descarrega-google-play')).toBeTruthy();
   cleanup();
   window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'ios' };
@@ -195,9 +188,10 @@ test('R13-C7 · «👥 Usuaris, Dispositius i Botigues»: el panell diferit, i a
   }
 });
 
-test('Bloc 3.4 · una llista federada sense la marca `intern` no canvia: totes les seues utilitats, també sense superadmin', () => {
+test('Bloc 3.4 · una llista federada sense la marca `intern` no canvia: totes les seues utilitats dins d’🧩 Aplicacions, també sense superadmin', () => {
   render(<PerfilShell aplicacions={[{ id: 'forn-comunal', nom: 'Forn comunal' }, { id: 'metriques', nom: 'Mètriques del forn' }]} />);
-  expect(grups()[2].options.map((o) => o.id)).toEqual(['app-forn-comunal', 'app-metriques']);
+  expect(grups()[0].options.map((o) => o.id)).toEqual(['jo', 'aplicacions']);
+  expect(filsDe('aplicacions')).toEqual(['app-forn-comunal-sobre', 'app-metriques-sobre']);
 });
 
 test('sense organitzacions el grup es mostra igualment, amb una opció que explica com crear-ne una', () => {
@@ -213,36 +207,30 @@ test('sense organitzacions el grup es mostra igualment, amb una opció que expli
   expect(typeof m.workspace.onCreate).toBe('function');
 });
 
-test('segona columna: els fills de cada element segons el tipus', () => {
+test('segona columna: els fills de cada element segons el tipus (amb Idioma i, últim, Eixir per a la persona)', () => {
   m.caps = new Set(['compte']);
   render(<PerfilShell />);
-  /* T9 (261001) · «Els nodes» és l'últim apartat de la persona; una organització no en té.
-     Ordre del Mestre (261008) · «Les vistes» just després de «La fitxa», només
-     per a qui la pot editar: la Colla (membre) no en té. */
-  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
-  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-privacitat', 'jo-nodes', 'jo-multimedia']);
-  /* Expectativa actualitzada a propòsit: ordre del Mestre (18-10-2026, relleu del
-     Pla 2000, punt 3) · «Multimèdia» també és l'últim apartat de l'organització
-     que la persona pot editar; la Colla (membre), no. */
-  // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres i connexions», la vista pròpia dels membres d'una organització, just després d'«El compte».
+  /* Onada R32.4 (ordre del Mestre, 261116) · Als apartats personals hi apareixen
+     «Idioma del Sistema» i, com a últim apartat al final del tot, «Eixir de Sóc de Poble». */
+  expect(filsDe('jo')).toEqual([
+    'jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-privacitat', 'jo-nodes', 'jo-multimedia', 'jo-idioma', 'jo-eixir',
+  ]);
   expect(filsDe('O')).toEqual(['O-fitxa', 'O-vistes', 'O-compte', 'O-membres', 'O-multimedia']);
   expect(filsDe('G')).toEqual(['G-fitxa', 'G-compte', 'G-membres']);
-  expect(filsDe('app-gestoria')).toEqual(['app-gestoria-sobre']);
-  for (const id of ['rebost', 'salut', 'lector-rss', 'tpv', 'snippet']) {
-    expect(filsDe(`app-${id}`)).toEqual([`app-${id}-sobre`]);
-  }
+  expect(filsDe('aplicacions')).toEqual([
+    'app-gestoria-sobre', 'app-rebost-sobre', 'app-salut-sobre', 'app-genealogia-sobre',
+    'app-avisador-sobre', 'app-lector-rss-sobre', 'app-tpv-sobre', 'app-snippet-sobre',
+  ]);
   /* Gauntlet 261016 (Bloc 3.4) · Sense superadmin, la maquinària interna no té cap apartat. */
   for (const id of ['metriques', 'cervell']) {
-    expect(filsDe(`app-${id}`)).toEqual([]);
+    expect(item(`app-${id}-sobre`)).toBeUndefined();
   }
   expect(filsDe('sense-organitzacions')).toEqual([]);
   expect(item('jo-privacitat')).toMatchObject({ title: 'Privacitat i dades' });
-  /* R19 · T3 (ordre del Mestre, 261111; pla 261111_1720) · La Gestoria té destí real en este node
-     (/app/gestoria): connectada. Abans: «Pendent de connectar en este node».
-     Arbitratge del carril (P1) · El Snippet també: la seua secció és la seua fitxa del Panell
-     (/control?fitxa=snippet). DEROGAT «El Snippet continua pendent». */
-  expect(item('app-gestoria-sobre')).toMatchObject({ title: 'Sobre esta utilitat', subtitle: 'Connectada en este node' });
-  expect(item('app-snippet-sobre')).toMatchObject({ title: 'Sobre esta utilitat', subtitle: 'Connectada en este node' });
+  expect(item('jo-idioma')).toMatchObject({ title: 'Idioma del Sistema', data: { vista: 'idioma', identitatId: 'jo' } });
+  expect(item('jo-eixir')).toMatchObject({ title: 'Eixir de Sóc de Poble', data: { vista: 'eixir', identitatId: 'jo' } });
+  expect(item('app-gestoria-sobre')).toMatchObject({ title: 'Gestoria de Poble', subtitle: 'Connectada en este node' });
+  expect(item('app-snippet-sobre')).toMatchObject({ title: 'Snippet', subtitle: 'Connectada en este node' });
   expect(itemsDePerfil([jo])[0]).toMatchObject({ title: 'La fitxa', subtitle: 'Pep', image: 'a.webp', categoryIds: ['jo'] });
 });
 
@@ -341,8 +329,7 @@ test('261018 · el subtítol de «La fitxa» és «Nom · Poble» per a la perso
 
 test('«Privacitat i dades» només apareix si el backend declara «compte» o «consentiment»', () => {
   const vista = render(<PerfilShell />);
-  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
-  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-nodes', 'jo-multimedia']);
+  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-nodes', 'jo-multimedia', 'jo-idioma', 'jo-eixir']);
   m.caps = new Set(['consentiment']);
   vista.rerender(<PerfilShell />);
   expect(filsDe('jo')).toContain('jo-privacitat');
@@ -421,15 +408,17 @@ test('una instància federada hi endolla les seues utilitats: la connectada s’
     { id: 'Mal Format', nom: 'No' },
     { id: 'forn-comunal', nom: 'Repetida' },
   ]} />);
-  expect(grups()[2].options.map((o) => o.id)).toEqual(['app-forn-comunal']);
+  expect(grups()[0].options.map((o) => o.id)).toEqual(['jo', 'aplicacions']);
+  expect(filsDe('aplicacions')).toEqual(['app-forn-comunal-sobre']);
   render(m.workspace.renderDetail({ item: item('app-forn-comunal-sobre') }));
   expect(screen.getByText('Connectada en este node')).toBeTruthy();
   expect(screen.getByRole('link', { name: 'Obrir Forn comunal' }).getAttribute('href')).toBe('/mercat');
 });
 
-test('sense utilitats, cap capçalera APLICACIONS buida', () => {
+test('sense utilitats, cap entrada 🧩 Aplicacions buida', () => {
   render(<PerfilShell aplicacions={[]} />);
   expect(grups().map((g) => g.id)).toEqual(['persona', 'organitzacions']);
+  expect(grups()[0].options.map((o) => o.id)).toEqual(['jo']);
 });
 
 test('el detall del Perfil porta la classe que el deixa sense scroll propi (el fa la pàgina)', () => {

@@ -140,3 +140,54 @@ export function sumaImports(llista) {
   if (!Number.isSafeInteger(total)) throw new RangeError('La suma dels imports és massa gran per a representar-la en cèntims segurs.');
   return { total, incomplet };
 }
+
+/* Les estimacions també admeten qualsevol enter segur. Els productes i les
+   sumes intermèdies poden passar-ne el límit encara que el resultat hi càpia. */
+const errorNumeric = (codi, text) => Object.assign(new RangeError(text), { codi });
+const enterGran = (valor) => {
+  if (!Number.isSafeInteger(valor)) throw errorNumeric('IMPORT_FORA_DE_RANG', 'Cal un import en cèntims enters segurs.');
+  return BigInt(valor);
+};
+const aCentims = (valor) => {
+  if (valor > BigInt(Number.MAX_SAFE_INTEGER) || valor < BigInt(Number.MIN_SAFE_INTEGER)) {
+    throw errorNumeric('IMPORT_FORA_DE_RANG', 'El resultat és massa gran per a calcular-lo amb precisió. Revisa els imports o redueix el percentatge de l’escenari.');
+  }
+  return Number(valor);
+};
+
+/** Suma exacta d'imports coneguts; falla explícitament si el resultat no cap. */
+export function sumaCentims(llista, { minimZero = false } = {}) {
+  const suma = llista.reduce((total, valor) => total + enterGran(valor), 0n);
+  return aCentims(minimZero && suma < 0n ? 0n : suma);
+}
+
+/* Mateix empat que Math.round, cap amunt també en negatiu; només es lleva
+   l'error de coma flotant, sense canviar la política de les estimacions. */
+export function arrodoneixFraccio(numerador, denominador) {
+  if (typeof numerador !== 'bigint' || typeof denominador !== 'bigint' || denominador <= 0n) {
+    throw errorNumeric('DIVISOR_INVALID', 'No es pot calcular la base amb estes suposicions: l’IVA i la retenció han de deixar un divisor positiu. Revisa els percentatges.');
+  }
+  const quocient = numerador / denominador;
+  const residu = numerador % denominador;
+  const ajust = residu * 2n >= denominador ? 1n : residu * -2n > denominador ? -1n : 0n;
+  return aCentims(quocient + ajust);
+}
+
+/** import × multiplicador / divisor, arredonit una sola vegada. */
+export const proporcioCentims = (import_, multiplicador, divisor) => arrodoneixFraccio(
+  enterGran(import_) * enterGran(multiplicador), enterGran(divisor)
+);
+
+/** Aplica un canvi percentual decimal sense perdre cèntims en 100 + percentatge. */
+export function escalaCentims(import_, percentatge) {
+  if (typeof percentatge !== 'number' || !Number.isFinite(percentatge)) {
+    throw errorNumeric('IMPORT_FORA_DE_RANG', 'Cal un percentatge finit.');
+  }
+  const [mantissa, exponent = '0'] = String(percentatge).toLowerCase().split('e');
+  const decimals = mantissa.split('.')[1]?.length ?? 0;
+  const potencia = Number(exponent) - decimals;
+  const xifres = BigInt(mantissa.replace('.', ''));
+  const numerador = potencia > 0 ? xifres * 10n ** BigInt(potencia) : xifres;
+  const denominador = potencia < 0 ? 10n ** BigInt(-potencia) : 1n;
+  return arrodoneixFraccio(enterGran(import_) * (100n * denominador + numerador), 100n * denominador);
+}

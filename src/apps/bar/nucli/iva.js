@@ -6,7 +6,7 @@
  * cap amunt, i quota = total − base. Exemple: 1,00 € al 10 % → base 0,91 i
  * quota 0,09. És informatiu: la nota no és cap factura.
  */
-import { mitjaAmunt } from './comu.js';
+import { errorBar, proporcioMitjaAmunt, suma } from './comu.js';
 
 /**
  * @param {Array<{ ivaPercent: number }>} linies
@@ -17,14 +17,17 @@ export function desglossaIva(linies, importDe) {
   const perTipus = new Map();
   for (const linia of linies || []) {
     const total = importDe(linia);
+    if (!Number.isSafeInteger(linia.ivaPercent) || linia.ivaPercent < 0 || linia.ivaPercent > 100) {
+      throw errorBar('IVA', 'L’IVA és un enter de 0 a 100.');
+    }
     if (!total) continue;
-    perTipus.set(linia.ivaPercent, (perTipus.get(linia.ivaPercent) || 0) + total);
+    perTipus.set(linia.ivaPercent, suma([perTipus.get(linia.ivaPercent) || 0, total], (n) => n));
   }
   return [...perTipus.entries()]
     .filter(([, total]) => total !== 0)
     .sort(([a], [b]) => a - b)
     .map(([ivaPercent, total]) => {
-      const baseCents = mitjaAmunt(total * 100, 100 + ivaPercent);
+      const baseCents = proporcioMitjaAmunt(total, 100, 100 + ivaPercent);
       return { ivaPercent, baseCents, quotaCents: total - baseCents };
     });
 }

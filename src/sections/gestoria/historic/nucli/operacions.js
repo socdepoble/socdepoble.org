@@ -25,6 +25,7 @@
  */
 import { proveidorDe, tractamentIva } from '../../despeses/nucli/categories.js';
 import { parametresDe } from '../../impostos/nucli/simulacio.js';
+import { proporcioCentims } from '../../nucli/diners.js';
 
 /** Les suposicions per defecte. Percentatges en punts bàsics (2100 = 21 %). */
 export const SUPOSITS_PER_DEFECTE = Object.freeze({
@@ -74,7 +75,7 @@ export function supositsDe(propis = null) {
 
 /* Una despesa amb l'IVA dins del càrrec: la base i la quota. */
 function ambIvaDins(total, tipus) {
-  const base = Math.round((total * PUNTS) / (PUNTS + tipus));
+  const base = proporcioCentims(total, PUNTS, PUNTS + tipus);
   return { base, iva: total - base };
 }
 
@@ -88,7 +89,7 @@ function despesaAmbProveidor(m, total, s, ivaGeneral) {
   }
   if (tractament === 'isp-intracomunitari' || tractament === 'isp-extracomunitari') {
     if (s.estrangerAmbIva) return { tractament: 'sense-iva', base: total, iva: 0, deduibleIva: false, deduibleIrpf: true };
-    return { tractament, base: total, iva: Math.round((total * ivaGeneral) / PUNTS), deduibleIva: true, deduibleIrpf: true };
+    return { tractament, base: total, iva: proporcioCentims(total, ivaGeneral, PUNTS), deduibleIva: true, deduibleIrpf: true };
   }
   return null;
 }
@@ -124,10 +125,10 @@ export function operacionsDelBanc({ moviments = [], suposits = SUPOSITS_PER_DEFE
     }
     if (m.categoria === 'clients') {
       /* El cobrat = base × (1 + IVA − retenció). Una eixida de clients és una devolució: en negatiu. */
-      const base = Math.round((m.centims * PUNTS) / (PUNTS + s.ivaVendes - s.retencioVendes));
+      const base = proporcioCentims(m.centims, PUNTS, PUNTS + s.ivaVendes - s.retencioVendes);
       operacions.push({
-        ...comu, tipus: 'ingres', tractament: 'interior', base, iva: Math.round((base * s.ivaVendes) / PUNTS),
-        retencio: Math.round((base * s.retencioVendes) / PUNTS), deduibleIva: false, deduibleIrpf: true
+        ...comu, tipus: 'ingres', tractament: 'interior', base, iva: proporcioCentims(base, s.ivaVendes, PUNTS),
+        retencio: proporcioCentims(base, s.retencioVendes, PUNTS), deduibleIva: false, deduibleIrpf: true
       });
       continue;
     }

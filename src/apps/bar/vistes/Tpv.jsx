@@ -177,12 +177,13 @@ function TpvDelPunt({ params }) {
     ...(ven ? { nou: { text: 'Nou tiquet de barra', onClick: nou } } : {})
   };
 
-  /* L'avís damunt del tiquet, per ordre d'importància: la sessió, per emportar, l'última operació i la base. */
+  /* Una lectura fallida va primer: en mòbil el primer avís queda a la vista també en Productes. */
   const avisos = [];
+  if (bar.errorCarrega) avisos.push(<AvisBase key="base" />);
   if (avisDeSessio(bar.permis)) avisos.push(<AvisSessio key="sessio" />);
   if (emportar) avisos.push(<span key="emportar">Per emportar: només la carta per a casa.</span>);
   if (bar.avis) avisos.push(<AvisOperacio key="operacio" />);
-  if (bar.mode === 'lectora' || bar.persistent === false) avisos.push(<AvisBase key="base" />);
+  if (!bar.errorCarrega && (bar.mode === 'lectora' || bar.persistent === false)) avisos.push(<AvisBase key="base" />);
 
   return (
     <>

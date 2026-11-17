@@ -36,7 +36,9 @@
  * En eixe cas la barra diu «Entrar» a qui té sessió fins a recarregar, i el pet
  * passa al consumidor següent (CoreContentProvider). En producció no hi ha HMR.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { createElement, useCallback, useEffect, useRef, useState } from 'react';
+import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
+import { ETIQUETA_EIXIR_CALAIX, ETIQUETA_IDIOMA_CALAIX } from './CalaixIdentitats.jsx';
 import { useSessioOpcional } from '../../../app/contexts/SessionContext';
 import { useIdentitatOpcional } from '../../../app/contexts/IdentitatContext.jsx';
 /* Onada R24 · wp_trinquet · Del seu mòdul, no de useAccions.js: la barra és de l'arrencada. */
@@ -44,6 +46,16 @@ import { useUbicacioApp } from '../../PedraSeca/hooks/useUbicacioApp.js';
 import { treuBase } from '../../../app/contexts/politicaRouter.js';
 import { esRutaDEntrada, rutaDEntrada } from '../../../config/rutaEntrada.js';
 import { RUTA_PERFIL_PROPI, rutaEspaiDIdentitat } from '../../../config/navigation.js';
+
+function codiDeLlengua(t) {
+  if (typeof t !== 'function') return 'ca';
+  const mostra = t('section.xat.ajustos.tancaSessio', 'Tanca la sessió');
+  if (mostra === 'Cerrar sesión') return 'es';
+  if (mostra === 'Log out') return 'en';
+  if (mostra === 'Itxi saioa') return 'eu';
+  if (mostra === 'Pechar sesión') return 'gl';
+  return 'ca';
+}
 
 /* Correcció de la revisió T1–T4 (260930) · La ruta de l'app, camí i consulta
    SENCERS, llegida en el clic com rutaActual (useAccions.js): en memòria,
@@ -82,13 +94,47 @@ export const CLAU_RECUPERACIO_ESPAI = 'espaiIdentitat';
 let recuperacions = Date.now();
 const ambRecuperacio = () => ({ state: { [CLAU_RECUPERACIO_ESPAI]: ++recuperacions } });
 
+/* v1.2.6 (trinquet de l'arrencada del connector WordPress) · L'avís de canvis
+   sense desar i l'error d'eixida es pinten amb les peces d'EixidaSegura.jsx
+   (AvisEixidaDelCalaix, ErrorEixidaDelCalaix), que no viatgen a l'arrencada:
+   ni el mòdul (les taules de les cinc llengües) ni Alerta i les seues icones.
+   El patró és el de l'oblit de la IAIA (SessionContext.jsx): import() sota
+   demanda, precarregat després del primer pintat amb una persona dins (una
+   eixida sense xarxa en un ordinador compartit troba el tros ja en memòria) i
+   una càrrega fallida s'oblida perquè la següent ho torne a provar. L'eixida
+   l'espera junt amb preparaEixida abans de pintar res: l'avís no apareix mai
+   a mitges ni en una altra llengua. Si el tros no arriba i queden canvis, no
+   s'ix: sense avís, eixir els esborraria en silenci (T47). */
+let avisosEixida = null;
+const carregaAvisosEixida = () => {
+  avisosEixida ??= import('../EixidaSegura.jsx').catch((error) => {
+    avisosEixida = null;
+    throw error;
+  });
+  return avisosEixida;
+};
+
 export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
   const sessio = useSessioOpcional();
   const currentUser = sessio?.currentUser ?? null;
   const { actor = null, identitats = [], setActor } = useIdentitatOpcional() ?? {};
   /* El router on viu l'app (memòria o navegador), o null: la ruta es llig en el clic. */
   const router = useUbicacioApp();
+  const t = useTraductorOpcional();
+  const llengua = codiDeLlengua(t);
   const [obert, setObert] = useState(false);
+  const [pendentsEixida, setPendentsEixida] = useState(null);
+  const [eixint, setEixint] = useState(false);
+  /* Cert quan el logout ha fallat: el text es tria en pintar, en la llengua d'ara. */
+  const [errorEixida, setErrorEixida] = useState(null);
+  /* Gauntlet R32.6 (PERFIL-01 i I18N-02) · L'avís d'eixida, en la llengua de la
+     interfície, amb els mateixos textos que l'apartat Eixir del Perfil: les
+     peces d'EixidaSegura.jsx, quan el seu tros ja és en memòria (vegeu
+     carregaAvisosEixida, dalt). */
+  const [avisos, setAvisos] = useState(null);
+  /* Gauntlet R32.6 (PERFIL-02) · El botó «Eixir de Sóc de Poble» que ha obert
+     l'avís. Viu a CalaixIdentitats, que no porta ref: el pren el clic. */
+  const obridorEixida = useRef(null);
   const teSessio = Boolean(currentUser);
   /* Revisió del Gauntlet 261017 (ID4; relleu 3: mai «Foraster» mentre la
      sessió és vàlida) · Una pestanya nova amb una sessió recordada: mentre es
@@ -104,21 +150,84 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
   /* Res a triar: només la persona (o encara cap organització carregada). */
   const directe = teSessio && !entitat && identitats.length <= 1;
 
-  /* Si la sessió se'n va amb el calaix obert, es tanca. */
-  useEffect(() => { if (!teSessio) setObert(false); }, [teSessio]);
+  /* Amb una persona dins, el tros de l'avís d'eixida es precarrega després del
+     primer pintat (una fallada no avisa: l'eixida ho torna a provar). Si la
+     sessió se'n va amb el calaix obert, es tanca. */
+  useEffect(() => {
+    if (teSessio) {
+      carregaAvisosEixida().catch(() => {});
+      return;
+    }
+    setObert(false);
+    setPendentsEixida(null);
+    setErrorEixida(null);
+    setEixint(false);
+  }, [teSessio]);
 
-  const tanca = useCallback(() => setObert(false), []);
+  const tanca = useCallback(() => {
+    setObert(false);
+    setPendentsEixida(null);
+    setErrorEixida(null);
+  }, []);
   const navega = useCallback((ruta, opcions) => {
     setObert(false);
+    setPendentsEixida(null);
+    setErrorEixida(null);
     if (opcions) onNavega?.(ruta, opcions);
     else onNavega?.(ruta);
   }, [onNavega]);
   const tria = useCallback((tipus, id) => {
     const fet = setActor?.(tipus, id) ?? false;
     setObert(false);
+    setPendentsEixida(null);
+    setErrorEixida(null);
     if (fet) onNavega?.(rutaEspaiDIdentitat(tipus, id), ambRecuperacio());
     return fet;
   }, [setActor, onNavega]);
+  const confirmaEixir = useCallback(async () => {
+    setErrorEixida(null);
+    setEixint(true);
+    try {
+      await sessio?.logout?.();
+    } catch {
+      setEixint(false);
+      setErrorEixida(true);
+      return;
+    }
+    setPendentsEixida(null);
+    setEixint(false);
+    setObert(false);
+    onNavega?.('/registre', { replace: true });
+  }, [sessio, onNavega]);
+  const demanaEixir = useCallback(async (event) => {
+    const boto = event?.currentTarget;
+    obridorEixida.current = typeof boto?.focus === 'function' ? boto : null;
+    if (eixint) return;
+    setErrorEixida(null);
+    setEixint(true);
+    const prepara = async () => {
+      if (typeof sessio?.preparaEixida !== 'function') return [];
+      try { return await sessio.preparaEixida(); } catch { return []; }
+    };
+    /* preparaEixida es crida en el clic, com abans; el tros, en paral·lel. */
+    const [queden, peces] = await Promise.all([prepara(), carregaAvisosEixida().catch(() => null)]);
+    if (peces) setAvisos(peces);
+    if (Array.isArray(queden) && queden.length) {
+      setEixint(false);
+      if (peces) setPendentsEixida(queden);
+      else console.warn('[eixida] No ha arribat el tros de l’avís: amb canvis sense desar, no s’ix.');
+      return;
+    }
+    await confirmaEixir();
+  }, [eixint, sessio, confirmaEixir]);
+  /* Gauntlet R32.6 (PERFIL-02) · «No eixir encara» desmunta l'Alerta amb el
+     botó enfocat a dins: el focus queia a <body>, fora del calaix modal. Torna
+     a «Eixir de Sóc de Poble», com FilaEixidaAmbSessio a FullAjustos. */
+  const noEixirEncara = useCallback(() => {
+    setPendentsEixida(null);
+    const boto = obridorEixida.current;
+    if (boto?.isConnected) boto.focus();
+  }, []);
   const entra = () => {
     const ruta = rutaSencera(router);
     if (esRutaDEntrada(ruta)) return;
@@ -136,20 +245,33 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
     entitat,
     obert,
     perfil: directe,
+    /* Gauntlet R32.6 (PERFIL-04) · El nom accessible del botó, en esta llengua. */
+    llengua,
     etiquetaEntrar,
     onClick: pendent ? undefined : !teSessio ? entra : directe ? () => navega(RUTA_PERFIL_PROPI, ambRecuperacio()) : () => setObert(true)
   };
+
+  const avisEixida = pendentsEixida && avisos ? createElement(avisos.AvisEixidaDelCalaix, {
+    pendents: pendentsEixida, llengua, eixint, onNoEixir: noEixirEncara, onEixir: confirmaEixir,
+  }) : null;
 
   const calaix = teSessio ? {
     obert,
     onTanca: tanca,
     identitats,
     onTria: tria,
-    /* Poliment T43 · les organitzacions reals del poble: /cerca en trau el
-       padró i enllaça cada entitat a /empresa/:id. /perfil és el catàleg
-       d'agents del contingut base, no el directori d'organitzacions. */
-    onConnectar: () => navega('/cerca?tipus=entitats'),
-    onFitxa: () => navega(RUTA_PERFIL_PROPI, ambRecuperacio())
+    /* v1.2.6 (trinquet de l'arrencada del connector WordPress) · Els dos botons
+       del peu, en la llengua de la interfície, amb les claus topbar.identitat.*:
+       es, en, eu i gl viatgen al tros diferit de cada diccionari, ja en memòria
+       quan la interfície parla eixa llengua. Sense traductor, el valencià que
+       CalaixIdentitats pinta de sempre. */
+    etiquetaIdioma: tradueix(t, ['topbar.identitat.idioma', ETIQUETA_IDIOMA_CALAIX]),
+    etiquetaEixir: tradueix(t, ['topbar.identitat.eixir', ETIQUETA_EIXIR_CALAIX]),
+    onIdioma: () => navega('/traduccions'),
+    onEixir: demanaEixir,
+    eixint,
+    avisEixida,
+    errorEixida: errorEixida && avisos ? createElement(avisos.ErrorEixidaDelCalaix, { llengua }) : null,
   } : null;
 
   return { boto, calaix };

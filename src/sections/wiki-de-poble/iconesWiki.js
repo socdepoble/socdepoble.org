@@ -111,6 +111,7 @@ export const ICONES_PER_ID = Object.freeze({
   perfil_psiquiatric: '🛋️',
   sdp_lock: '🔐',
   sistema_immunitari: '🦠',
+  sistema_nervios_skills_i_repositoris: '📡',
   soci_sollutia: '🤝',
   /* SABER · Consola termodinàmica */
   '00_portada': '🏠',

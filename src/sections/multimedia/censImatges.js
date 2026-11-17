@@ -74,6 +74,7 @@ const VINYETES = [
   ['consola', 'Vinyeta de la Consola'], ['disseny', 'Vinyeta de Disseny'], ['fedivers', 'Vinyeta del Fedivers', 'webp'],
   ['gestoria', 'Vinyeta de la Gestoria'], ['habitatge', 'Vinyeta d’Habitatge', 'webp'], ['mapa', 'Vinyeta del Mapa', 'webp'],
   ['nodrir_la_iaia', 'Vinyeta de La IAIA Sabuda', 'webp'], ['rebost', 'Vinyeta del Rebost', 'webp'], ['rss', 'Vinyeta de Notícies'], ['salut', 'Vinyeta de Salut', 'webp'],
+  ['sistema_nervios', 'Vinyeta del Sistema Nerviós'],
   ['treball', 'Vinyeta de Treball', 'webp'], ['vehicle', 'Vinyeta de Vehicles', 'webp']
 ];
 

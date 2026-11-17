@@ -21,7 +21,7 @@ import {
 } from '../basesComu.js';
 import { extrauEspecificacio, fusionaEspecificacions, quantitatEn, unitatDe } from '../extractorEspecificacio.js';
 
-const preuDe = (valor) => enterEntre(valor, 0, 10_000_000);
+const preuDe = (valor) => Number.isSafeInteger(valor) && valor >= 0 && valor <= 10_000_000 ? valor : null;
 
 /** Els recents amb este article al davant, sense repetits i dins del límit. */
 function ambRecent(recents, element, ara) {
@@ -128,6 +128,15 @@ export function quantitatEnUnitatDePreu(especificacio, unitatPreu = 'u') {
 /** Un número de veres (mai una cadena) dins del marge, o null. */
 const numeroEntre = (valor, minim, maxim) => (typeof valor === 'number' && Number.isFinite(valor) && valor >= minim && valor <= maxim ? valor : null);
 
+/* La representació decimal d'un Number ja validat, també si usa notació exponencial. */
+function fraccioDecimal(valor) {
+  const [mantissa, exponent = '0'] = String(valor).split('e');
+  const [enter, decimals = ''] = mantissa.split('.');
+  const xifra = BigInt(`${enter}${decimals}`);
+  const escala = decimals.length - Number(exponent);
+  return escala >= 0 ? [xifra, 10n ** BigInt(escala)] : [xifra * 10n ** BigInt(-escala), 1n];
+}
+
 /**
  * El cost del viatge a la gran superfície, en cèntims, o null si les dades no són vàlides (P1-01: la benzina, no un cost fix).
  * desplacament: { km (el camí d'anada, 0-300), consumL100km (2-25), preuLitreCents (enter, 50-500),
@@ -141,11 +150,13 @@ export function costDesplacamentDe(desplacament) {
   const preu = Number.isSafeInteger(desplacament.preuLitreCents) ? numeroEntre(desplacament.preuLitreCents, 50, 500) : null;
   if (km === null || consum === null || preu === null) return null;
   const trams = desplacament.anadaITornada === false ? 1 : 2;
-  /* Es dividix per 100 al final, amb menys soroll de coma flotant (20 km, 6,5 L/100 km i 165 c/L: 429 c). */
-  const brut = (km * trams * consum * preu) / 100;
-  /* Abans d'arrodonir al cèntim, s'arrodonix a la milionèsima: la coma flotant no resta cap cèntim a les meitats
-     exactes (8,2 km × 2 × 7,5 L × 150 c fa 184,49999999999997 i ha de donar 185, no 184). */
-  const cents = Math.round(Math.round(brut * 1e6) / 1e6);
+  /* Un sol arrodoniment sobre els decimals originals: ni 8,2 es queda curt
+     a la meitat, ni 8,199999999 puja artificialment a eixa mateixa meitat. */
+  const [kmN, kmD] = fraccioDecimal(km);
+  const [consumN, consumD] = fraccioDecimal(consum);
+  const numerador = kmN * BigInt(trams) * consumN * BigInt(preu);
+  const denominador = 100n * kmD * consumD;
+  const cents = Number((2n * numerador + denominador) / (2n * denominador));
   /* «|| 0» lleva el -0 que donaria km = -0. */
   return Number.isSafeInteger(cents) && cents <= 100_000 ? cents || 0 : null;
 }

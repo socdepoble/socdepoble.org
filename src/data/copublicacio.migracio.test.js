@@ -6,7 +6,9 @@ import { FONTS_BANC_LLAVORS, VARIETATS_CATALEG_VALENCIA, VARIETATS_AVL_MALLORCA,
 import { LLIBRES_ARBRES_MONUMENTALS } from './patrimoni/llibresArbresMonumentals.js';
 import { RECEPTES_QUE_DINEM } from './patrimoni/queDinem.js';
 
-const SQL = readFileSync('supabase/migrations/2611111735_copublicacio_registrada.sql', 'utf8');
+/* El registre de 2611111735 i les seues ampliacions (cada una amb la seua migració): R32.4 · /page/sistema-nervios. */
+const SQL = ['2611111735_copublicacio_registrada.sql', '20261117150000_r324_copublicacio_pagina_sistema_nervios.sql']
+  .map((fitxer) => readFileSync(`supabase/migrations/${fitxer}`, 'utf8')).join('\n');
 
 test('el registre SQL cobreix els identificadors reals de les set superfícies del contracte', () => {
   const idsPerTipus = new Map();

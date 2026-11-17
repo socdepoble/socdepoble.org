@@ -65,7 +65,7 @@ test('amb una sola identitat el botó continua a la barra i porta al perfil, sen
 
 test('el disparador és un sol botó, sense botons niats, i té nom accessible complet', async () => {
   const { container } = render(<Barra />);
-  const disparador = screen.getByRole('button', { name: 'Identitat activa: Pep. Canviar identitat' });
+  const disparador = screen.getByRole('button', { name: 'Identitat activa: Pep. Canviar identitat, idioma o eixir' });
   expect(disparador.tagName).toBe('BUTTON');
   expect(disparador.getAttribute('aria-haspopup')).toBe('dialog');
   expect(disparador.getAttribute('aria-expanded')).toBe('false');

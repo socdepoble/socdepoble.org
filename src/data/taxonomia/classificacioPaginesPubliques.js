@@ -32,6 +32,7 @@ export const CLASSIFICACIO_PAGINES_PUBLIQUES=Object.freeze({
  'arbres-monumentals':['natura-excursions','Arbres Monumentals'],
  // Onada R14 · El receptari «Què dinem?» (Muro, El Comtat, 2019): cultura i patrimoni del poble.
  'la-iaia-sabuda':['patrimoni-cultura','Documentació'],
+ 'sistema-nervios':['tecnologia-lliure','Node 0','Documentació'],
  receptes:['patrimoni-cultura','Patrimoni'],
  dispositius:['tecnologia-lliure','Documentació']
 });
