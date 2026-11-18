@@ -37,7 +37,7 @@ import { paginesConsola } from './consolaPagines.js';
 import { ETIQUETA_NAV_GOVERN, TITOL_GOVERN, TITOL_SALA_MAQUINES, paginesGovern } from './govern/governConsola.js';
 import { SLUGS_XIFRES, rutaXifra } from './xifresMas.js';
 import { ETIQUETA_ACCES, TITOL_DIAGNOSI } from './diagnosiConsola.js';
-import { ETIQUETA_NAV_EMPAQUETATS, RUTA_EMPAQUETATS } from './empaquetats.js';
+import { RUTA_EMPAQUETATS } from './empaquetats.js';
 
 const MAPA = {
   schema: 'sdp.mapa.v1', generat: '2026-09-25T13:12:23.715Z', tall: null,
@@ -210,13 +210,9 @@ test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xif
   /* P1-35 (pla 261028_1526 §3.5.2) · I, darrere de les xifres, la targeta dels
      empaquetats: una porta, cap a la seua pàgina. Expectativa actualitzada a
      propòsit: el total suma eixa porta. */
-  const delsEmpaquetats = cap('/consola', screen.getByRole('navigation', { name: ETIQUETA_NAV_EMPAQUETATS }));
-  expect(delsEmpaquetats).toEqual([RUTA_EMPAQUETATS]);
-  const delBrain = cap('/consola', screen.getByRole('navigation', { name: 'Brain de taxonomia' }));
-  expect(delBrain).toEqual(['/consola/taxonomia']);
-  const deBotigues = cap('/consola', screen.getByRole('region', { name: 'Botigues i verificadors' }));
-  expect(deBotigues).toEqual(['/consola/botigues']);
-  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length + delGovern.length + delsEmpaquetats.length + deBotigues.length + delBrain.length);
+  const delsCanals = cap('/consola', screen.getByRole('navigation', { name: 'Canals, empaquetats i taxonomia' }));
+  expect(delsCanals).toEqual([RUTA_EMPAQUETATS, '/consola/taxonomia', '/consola/botigues']);
+  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length + delGovern.length + delsCanals.length);
   expect(errors).not.toHaveBeenCalled();
 });
 
@@ -375,7 +371,7 @@ test('/consola/taxonomia: la targeta del peu del tauler obri la pàgina al cim, 
   await esperaElTauler();
 
   contenidor.scrollTop = 900;
-  fireEvent.click(within(screen.getByRole('navigation', { name: 'Brain de taxonomia' })).getByRole('link', { name: 'Categories i etiquetes' }));
+  fireEvent.click(within(screen.getByRole('navigation', { name: 'Canals, empaquetats i taxonomia' })).getByRole('link', { name: 'Categories i etiquetes' }));
   expect(window.location.pathname).toBe('/consola/taxonomia');
   expect(h1()).toBe('Categories i etiquetes');
   expect(contenidor.scrollTop).toBe(0);

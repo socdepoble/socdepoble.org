@@ -41,9 +41,15 @@ function lligAmbGuardes(nom, args, backend) {
   const feina = Promise.resolve().then(() => {
     if (control.signal.aborted) throw control.signal.reason;
     return backend[nom](nom === 'loadNotesPage' ? { ...args[0], signal: control.signal } : args[0], { ...config, signal: control.signal });
-  }).then(valor => {
+  }).then(async valor => {
     if (control.signal.aborted || estatPort.currentImpl !== backend) throw new DOMException('Operació cancel·lada.', 'AbortError');
-    return validaLectura(nom, valor);
+    const net = validaLectura(nom, valor);
+    if (nom !== 'loadMur') return net;
+    // El llibre és un tros diferit: mai entra al paquet síncron del port.
+    const { completaMurAmbWiki } = await import('./wikiAlMur.js');
+    const mur = await completaMurAmbWiki(net);
+    if (control.signal.aborted || estatPort.currentImpl !== backend) throw new DOMException('Operació cancel·lada.', 'AbortError');
+    return mur;
   });
   return Promise.race([feina, interrompuda]).finally(() => {
     clearTimeout(rellotge); for (const signal of senyals) signal.removeEventListener('abort', avorta); control.signal.removeEventListener('abort', talla); estatPort.lecturesEnVol.delete(control);
@@ -222,6 +228,12 @@ export const enviaMissatge = asseguraMetode('enviaMissatge');
 export const marcaLlegit = asseguraMetode('marcaLlegit');
 export const loadRitmeXat = asseguraMetode('loadRitmeXat');
 export const actualitzaPresenciaXat = asseguraMetode('actualitzaPresenciaXat');
+/* P0-122 · Grup opcional complet; estat local i optimisme són del servei. */
+export const carregaAccionsMissatges = asseguraMetode('carregaAccionsMissatges');
+export const alternaReaccio = asseguraMetode('alternaReaccio');
+export const alternaDestacat = asseguraMetode('alternaDestacat');
+export const alternaFixat = asseguraMetode('alternaFixat');
+export const eliminaPerAMi = asseguraMetode('eliminaPerAMi');
 export const creaFilDirecte = asseguraMetode('creaFilDirecte');
 export const carregaMembres = asseguraMetode('carregaMembres');
 export const subscribeToXat = asseguraMetode('subscribeToXat');

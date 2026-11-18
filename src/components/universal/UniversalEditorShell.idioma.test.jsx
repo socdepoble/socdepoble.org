@@ -101,11 +101,12 @@ describe('les reserves són el valencià del diccionari', () => {
   /* AH-03 i AH-08.1 (ordre del Mestre, 261104) · El parell 40 és el del botó
      gran «Tancar l’edició avançada» (editor.closca.tancaEdicioAvancada).
      AH-02 (Onada R21) · El 41, el botó «Editar» del document en repòs.
-     R22.1 (r221-ui-07) · El 42, el nom del camp del vídeo de capçalera als avisos. */
-  test('els 42 parells de TEXTOS_CLOSCA: clau editor.closca.*, reserva = ca i traducció pròpia en anglés', () => {
+     R22.1 (r221-ui-07) · El 42, el nom del camp del vídeo de capçalera als avisos.
+     v1.2.8 · Gemini R32.9 (P0-126) · Del 43 al 47, l'interruptor «Mostrar també al Mur» de l'Edició avançada. */
+  test('els 47 parells de TEXTOS_CLOSCA: clau editor.closca.*, reserva = ca i traducció pròpia en anglés', () => {
     const parells = Object.values(TEXTOS_CLOSCA);
-    expect(parells).toHaveLength(42);
-    expect(new Set(parells.map(([clau]) => clau)).size).toBe(42);
+    expect(parells).toHaveLength(47);
+    expect(new Set(parells.map(([clau]) => clau)).size).toBe(47);
     expect(TEXTOS_CLOSCA.tancaEdicioAvancada).toEqual(['editor.closca.tancaEdicioAvancada', 'Tancar l’edició avançada']);
     expect(TEXTOS_CLOSCA.editaText).toEqual(['editor.closca.edita.text', 'Editar']);
     expect(TEXTOS_CLOSCA.campVideo).toEqual(['editor.closca.camp.video', 'Vídeo de capçalera']);

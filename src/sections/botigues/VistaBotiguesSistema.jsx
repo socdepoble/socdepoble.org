@@ -51,7 +51,7 @@ export function VistaBotiguesSistema({ model, onCopia, copiant = false, avis = n
           <li key={membre.id}><a href={membre.url} target="_blank" rel="noopener noreferrer">{membre.nom}</a>{' · '}<Insignia to="neutre">Estat operatiu no verificat</Insignia></li>
         ))}
       </ul>
-      <p>Node 0, la IAIA i els serveis del poble necessiten els seus propis rebuts operatius. Una entrada del cens no els substituïx. <Link to="/page/node-zero">Node 0</Link>{' · '}<Link to="/page/fediversity">Fediversity</Link>{' · '}<Link to="/consola">Consola</Link>.</p>
+      <p>Node 0, la IAIA i els serveis de Sóc de Poble necessiten els seus propis rebuts operatius. Una entrada del cens no els substituïx. <Link to="/page/node-zero">Node 0</Link>{' · '}<Link to="/page/fediversity">Fediversity</Link>{' · '}<Link to="/consola">Consola</Link>.</p>
     </article>
   );
 }

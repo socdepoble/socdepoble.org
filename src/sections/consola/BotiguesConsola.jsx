@@ -8,9 +8,13 @@ import { BOTIGUES_SISTEMA_META as meta } from '../botigues/botiguesSistemaMeta.j
 
 const BotiguesSistema = lazy(() => import('../botigues/BotiguesSistema.jsx'));
 
+export function TargetaBotiguesConsola() {
+  return <TargetaConsola icona={Smartphone} titol={meta.title} subtitol={meta.subtitle} entradilla={meta.lead} creat={meta.creat} a={meta.ruta} imatge={meta.image} imatgeAlt={meta.imageAlt} />;
+}
+
 export function SeccioBotiguesConsola() {
   return <section aria-label="Botigues i verificadors"><h2>Botigues i verificadors</h2><div className="sdp-card-grid">
-    <TargetaConsola icona={Smartphone} titol={meta.title} subtitol={meta.subtitle} entradilla={meta.lead} creat={meta.creat} a={meta.ruta} imatge={meta.image} imatgeAlt={meta.imageAlt} />
+    <TargetaBotiguesConsola />
   </div></section>;
 }
 

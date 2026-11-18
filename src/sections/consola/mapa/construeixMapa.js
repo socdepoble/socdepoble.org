@@ -261,6 +261,17 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       aresta('document:.agents/cervell.json', nodeDeRuta(ruta).id, 'carrega', 'declarat', '.agents/cervell.json');
     }
   }
+  for (const dimensio of fonts.cervell?.dimensions ?? []) {
+    if (!dimensio?.id || !Array.isArray(dimensio.skills)) continue;
+    const id = `document:.agents/cervell.json#${dimensio.id}`;
+    node(id, 'document', '.agents/cervell.json', { dimensio: dimensio.id });
+    aresta('document:.agents/cervell.json', id, 'governa', 'declarat', '.agents/cervell.json');
+    for (const nom of dimensio.skills) {
+      const ruta = `.agents/skills/${nom}/SKILL.md`;
+      nodeRuta(ruta);
+      aresta(id, `skill:${nom}`, 'governa', 'declarat', '.agents/cervell.json');
+    }
+  }
 
   /* ── Càrrega d'arrencada per hook: un script de SessionStart que exporta les
        fonts que injecta (context-local.mjs → SOURCES) és un carregador, com
@@ -604,7 +615,7 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       const text = hooksGit?.[t.llancador?.esdeveniment];
       if (t.script && existeix && !existeix(t.script)) estat = 'mort';
       else if (typeof text !== 'string') estat = 'desconegut';   // sense font, no es jutja
-      else estat = t.script && text.includes(t.script) ? 'viu' : 'mort';
+      else estat = t.script && text.includes(t.script) ? (fonts.hooksGitEstat?.[t.llancador?.esdeveniment] === 'programat' ? 'programat' : 'viu') : 'mort';
     } else if (tipus === 'antigravity-hook') {
       // El llançador és declarat encara que falte la font: desconegut, mai «sense llançador».
       const ordres = ordresAntigravity(t.llancador);
@@ -617,7 +628,7 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       const etiqueta = t.llancador?.etiqueta ?? null;
       const l = etiqueta ? llancadors.find((x) => x.etiqueta === etiqueta) : null;
       if (l) { usats.add(l.etiqueta); llancadorDe.set(t.id, l); estat = estatDeLlancador({ ...l, script: t.script ?? l.script }); }
-      else estat = 'declarat-sense-llancador';
+      else estat = fonts.observacioLlancadors === false ? 'desconegut' : 'declarat-sense-llancador';
     }
     estats.set(t.id, estat);
     return estat;

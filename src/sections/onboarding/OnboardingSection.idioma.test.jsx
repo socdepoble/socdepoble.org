@@ -311,8 +311,10 @@ describe('pantalla · la llengua triada', () => {
     expect(screen.getByRole('checkbox').labels[0].textContent)
       .toBe(`He llegit i accepte la Política de privacitat (versió ${VERSIO_POLITICA_PRIVACITAT})`);
     expect(screen.getAllByRole('heading').map((h) => h.textContent))
-      .toEqual(['Benvinguda al Mas Electrònic', 'Benvinguda a la Beta de Sóc de Poble', 'Accés ràpid amb Google', 'Crea el teu compte']);
-    const benvinguda = document.querySelector('.onboarding-card__intro--espaiada');
+      /* v1.2.8 · Gemini R32.8 (P0-125c, ordre del Mestre del 17-11-2026): Google i el formulari, dalt de tot;
+         la benvinguda a la Beta (entradeta i avís RGPD) passa davall. */
+      .toEqual(['Benvinguda al Mas Electrònic', 'Accés ràpid amb Google', 'Crea el teu compte', 'Benvinguda a la Beta de Sóc de Poble']);
+    const benvinguda = [...document.querySelectorAll('.onboarding-card__intro--espaiada')].at(-1);
     expect(benvinguda.innerHTML).toBe('L\'accés és <strong>totalment segur</strong> i les teues dades estan protegides pel Reglament europeu de protecció de dades (RGPD). '
       + 'Com que estem en proves, t\'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!');
     for (const etiqueta of ['Nom i cognoms', 'Correu electrònic', 'Contrasenya', 'Confirmar contrasenya']) expect(screen.getByLabelText(etiqueta)).toBeTruthy();

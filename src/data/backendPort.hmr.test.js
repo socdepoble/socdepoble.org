@@ -13,7 +13,9 @@ const nucli = (metodes = {}) => ({
   ...Object.fromEntries(contracte.CONTRACTE_NUCLI.map(nom => [nom, () => null])),
   ...metodes
 });
-const MUR = Object.freeze({ feedPosts: [], events: [], marketItems: [] });
+// La identitat del DTO es prova amb una lectura sense projecció editorial.
+// loadMur afig legítimament els capítols públics de la Wiki (P0-126).
+const MULTIMEDIA = Object.freeze({ mediaItems: [] });
 
 beforeEach(async () => {
   vi.resetModules();
@@ -22,12 +24,13 @@ beforeEach(async () => {
 
 test('la instància nova del port veu l’adaptador i el segell de la vella', async () => {
   const vell = await import('./backendPort.js');
-  vell.setBackendImplementation(nucli({ loadMur: () => MUR, getCurrentUser: () => ({ id: 'u' }) }));
+  vell.setBackendImplementation(nucli({ loadMultimedia: () => MULTIMEDIA, getCurrentUser: () => ({ id: 'u' }) }));
   vell.freezeImplementation();
   const nou = await import('./backendPort.js?hmr=despres');
   expect(nou).not.toBe(vell);
   expect(Object.keys(nou.getBackendImplementation())).toEqual(Object.keys(vell.getBackendImplementation()));
-  await expect(nou.loadMur('u')).resolves.toBe(MUR);
+  expect(nou.getBackendImplementation()).toBe(vell.getBackendImplementation());
+  await expect(nou.loadMultimedia('u')).resolves.toBe(MULTIMEDIA);
   expect(nou.getCurrentUser()).toEqual({ id: 'u' });
   expect(() => nou.setBackendImplementation(nucli())).toThrow('Backend bloquejat');
 });
@@ -35,15 +38,16 @@ test('la instància nova del port veu l’adaptador i el segell de la vella', as
 test('canviar el backend des d’una instància talla la lectura en vol de l’altra', async () => {
   const vell = await import('./backendPort.js');
   let senyal;
-  vell.setBackendImplementation(nucli({ loadMur: (_u, c) => { senyal = c.signal; return new Promise(() => {}); } }));
-  const lectura = vell.loadMur('u');
+  vell.setBackendImplementation(nucli({ loadMultimedia: (_u, c) => { senyal = c.signal; return new Promise(() => {}); } }));
+  const lectura = vell.loadMultimedia('u');
   lectura.catch(() => {});
   const nou = await import('./backendPort.js?hmr=despres');
-  nou.setBackendImplementation(nucli({ loadMur: () => MUR }));
+  nou.setBackendImplementation(nucli({ loadMultimedia: () => MULTIMEDIA }));
   try {
     expect(senyal.aborted).toBe(true);
     await expect(lectura).rejects.toMatchObject({ name: 'AbortError' });
-    await expect(vell.loadMur('u')).resolves.toBe(MUR);
+    expect(nou.getBackendImplementation()).toBe(vell.getBackendImplementation());
+    await expect(vell.loadMultimedia('u')).resolves.toBe(MULTIMEDIA);
   } finally { vell.destroy(); }
 });
 

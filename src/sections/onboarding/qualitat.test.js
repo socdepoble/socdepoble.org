@@ -15,6 +15,7 @@ const CENS = Object.freeze([
   'src/sections/onboarding/RecuperacioSteps.jsx',
   'src/sections/onboarding/OnboardingSteps.jsx',
   'src/sections/onboarding/OnboardingSection.jsx',
+  'src/sections/onboarding/OnboardingSection.marc.test.jsx',
   'src/sections/onboarding/OnboardingSection.recuperacio.test.jsx',
   'src/sections/onboarding/onboardingModel.js',
   'src/app/contexts/SessionContext.jsx',

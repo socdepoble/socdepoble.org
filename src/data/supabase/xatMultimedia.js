@@ -1,7 +1,7 @@
 import { getResolvedConfig, request, rpc } from './runtime.js';
 import { capturaSessio, entradaSessio, jwtPerBackend, usuariDeSessio } from '../identitat.js';
 import { backendScope } from '../../config/backendConfig.js';
-import { ERRORS_ADJUNT_XAT, errorAdjuntXat, tempsLimitPujada, validaAdjuntXat } from '../xatMultimedia.js';
+import { ERRORS_ADJUNT_XAT, QUOTA_XAT_BYTES, normalitzaUbicacioXat, errorAdjuntXat, tempsLimitPujada, validaAdjuntXat } from '../xatMultimedia.js';
 
 const BUCKET = 'xat_adjunts';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -150,7 +150,7 @@ export async function quotaXat(config = {}) {
   const { comprova } = capturaOperacio(config);
   const quota = primera(await crida('xat_quota', {}, config));
   comprova();
-  if (!Number.isSafeInteger(Number(quota?.usats)) || Number(quota?.usats) < 0 || Number(quota?.limit) !== 20_000_000) throw noDisponible();
+  if (!Number.isSafeInteger(Number(quota?.usats)) || Number(quota?.usats) < 0 || ![20_000_000, QUOTA_XAT_BYTES].includes(Number(quota?.limit))) throw noDisponible();
   const pendents = Array.isArray(quota.pendents) ? quota.pendents.filter((a) => UUID.test(a?.id) && Number.isSafeInteger(a.bytes) && a.bytes > 0) : [];
   return { usats: Number(quota.usats), limit: Number(quota.limit), pendents };
 }
@@ -176,6 +176,7 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   if (!UUID.test(filId) || !UUID.test(entrada?.id)) throw errorAdjuntXat('format');
   validaAdjuntXat(entrada);
   const { id, fitxer, tipus, duradaMs, respostaA = null } = entrada;
+  const ubicacio = normalitzaUbicacioXat(entrada.ubicacio);
   const text = String(entrada.text ?? '').trim() || null;
   const reserva = primera(await crida('xat_reserva_adjunt', {
     p_id: id, p_fil_id: filId, p_bytes: fitxer.size, p_mime: fitxer.type, p_durada_ms: duradaMs ?? null
@@ -201,14 +202,32 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   /* Gauntlet 261022_0225 (crítica Claude, MEDIA-5) · Sense peu, text null:
      cap «Foto» en valencià desat al servidor (la migració 2610220240 ho
      admet); l'etiqueta traduïda la pinta qui llig. */
-  const m = primera(await crida('xat_publica_adjunt', { p_id: id, p_text: text, p_resposta_a: respostaA }, config));
+  const params = { p_id: id, p_text: text, p_resposta_a: respostaA, ...(ubicacio ? { p_ubicacio: ubicacio } : {}) };
+  /* v1.2.8 · Llei 0 SQL: fins que el Mestre aplique 20261117193000 (R32.8), Producció només té la
+     RPC de tres arguments. Si la de quatre (amb p_ubicacio) no hi és, la mateixa publicació
+     (idempotent per p_id; la reserva i el fitxer ja hi són) es repetix sense la ubicació al
+     servidor, com en la v1.2.7, i el resultat ho diu (ubicacioNoAdmesa). */
+  let ubicacioNoAdmesa = false;
+  let m;
+  try { m = primera(await crida('xat_publica_adjunt', params, config)); }
+  catch (error) {
+    if (!ubicacio || error?.code !== noDisponible().code) throw error;
+    comprova();
+    const sense = { ...params };
+    delete sense.p_ubicacio;
+    m = primera(await crida('xat_publica_adjunt', sense, config));
+    ubicacioNoAdmesa = true;
+  }
   comprova();
   const seq = typeof m?.seq === 'number' ? m.seq : typeof m?.seq === 'string' && /^[1-9]\d*$/.test(m.seq) ? Number(m.seq) : NaN;
   if (m?.id !== id || m.encuat === true || !Number.isSafeInteger(seq) || seq <= 0 || m.tipus !== tipus
     || (m.fil_id != null && m.fil_id !== filId)) throw errorAdjuntXat('sense-confirmacio');
+  const llocConfirmat = normalitzaUbicacioXat(m.metadades?.ubicacio);
+  if ((ubicacio && !ubicacioNoAdmesa && (!llocConfirmat || llocConfirmat.lat !== ubicacio.lat || llocConfirmat.lng !== ubicacio.lng))
+    || (entrada.conservaUbicacio === false && llocConfirmat)) throw errorAdjuntXat('sense-confirmacio');
   return { id: m.id, filId, seq, usuariId: m.usuari_id, autorNom: m.autor_nom,
     text: m.cos, tipus: m.tipus, respostaA: m.resposta_a, metadades: m.metadades,
-    comOrgId: m.com_org_id, creatAl: m.creat_al, esIA: false };
+    comOrgId: m.com_org_id, creatAl: m.creat_al, esIA: false, ...(ubicacioNoAdmesa ? { ubicacioNoAdmesa: true } : {}) };
 }
 
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-8, STRESS-2 i STRESS-7) · La

@@ -23,6 +23,7 @@
  * (un id «constructor» o «__proto__» és un id com qualsevol altre).
  */
 import { getVal, setVal } from '../../../config/storage.js';
+import { esEspaiValid } from './espaiValid.js';
 
 export const CLAU_CARPETES_VISIBLES = 'workspace-carpetes-visibles';
 /* La reserva estable de l'espai: la que fa servir un UniversalWorkspace que no
@@ -30,8 +31,6 @@ export const CLAU_CARPETES_VISIBLES = 'workspace-carpetes-visibles';
 export const ESPAI_COMU = 'comu';
 
 const VERSIO = 1;
-/* La mateixa forma que la clau del mestre-detall (nivellMestreDetall.js). */
-const PATRO_ESPAI = /^[a-z][a-z0-9-]{0,39}$/;
 const LLARGADA_MAXIMA_ID = 160;
 export const ESPAIS_MAXIMS = 32;
 export const AMAGADES_MAXIMES = 200;
@@ -47,8 +46,8 @@ const oients = new Set();
 
 const esObjecte = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 
-/** Un nom d'espai vàlid: minúscules, xifres i guions, com la clau del mestre-detall. */
-export const esEspaiValid = (espai) => typeof espai === 'string' && PATRO_ESPAI.test(espai);
+/* v1.2.8 · El validador viu a espaiValid.js (el comparteix columnesPlegades.js); es reexporta igual. */
+export { esEspaiValid };
 
 /** Un id de carpeta vàlid: un text no buit i curt (els ids del Workspace ja són text). */
 const esIdValid = (id) => typeof id === 'string' && id.length > 0 && id.length <= LLARGADA_MAXIMA_ID;

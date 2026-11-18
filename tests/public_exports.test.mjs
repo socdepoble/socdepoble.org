@@ -151,7 +151,8 @@ test('la validació reconeix destins exclosos sense llegir cossos ni ampliar el 
   const result = verificaEnllacos(root, manifest, { log: { log() {}, error() {} } });
   assert.deepEqual(result.trencats, []);
   assert.equal(result.capArxiu, 1);
-  assert.equal(result.capNoPublics, 5);
+  assert.equal(result.capNoPublics, 4);
+  assert.ok(manifest.items[0].content.includes('/consola/explorador?peca=skill%3Apolicy'), 'la skill té fitxa pública al graf, sense exportar-ne el cos');
   assert.equal(read.mock.callCount(), 0);
   assert.equal(JSON.stringify({ categories: manifest.categories, items: manifest.items }), publicBefore);
   assert.doesNotMatch(publicBefore, /secretprivat|secretacta|secretescriptori|secrethistoric|secretgovern|secretskill/);

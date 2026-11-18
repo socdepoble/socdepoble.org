@@ -77,11 +77,11 @@ const CLAUS = {
     ca: 'Torna-ho a provar', es: 'Vuelve a intentarlo', en: 'Try again', eu: 'Saiatu berriro', gl: 'Téntao de novo'
   },
   'error.backendInabastable': {
-    ca: 'El servidor de poble no respon ara mateix. El contingut no s’ha pogut carregar.',
-    es: 'El servidor del pueblo no responde ahora mismo. No se ha podido cargar el contenido.',
-    en: 'The town server is not responding right now. The content could not be loaded.',
-    eu: 'Herriko zerbitzariak ez du erantzuten oraintxe. Ezin izan da edukia kargatu.',
-    gl: 'O servidor da vila non responde agora mesmo. Non se puido cargar o contido.'
+    ca: 'El servidor de Sóc de Poble no respon ara mateix. El contingut no s’ha pogut carregar.',
+    es: 'El servidor de Sóc de Poble no responde ahora mismo. No se ha podido cargar el contenido.',
+    en: 'The Sóc de Poble server is not responding right now. The content could not be loaded.',
+    eu: 'Sóc de Poble-ren zerbitzariak ez du erantzuten oraintxe. Ezin izan da edukia kargatu.',
+    gl: 'O servidor de Sóc de Poble non responde agora mesmo. Non se puido cargar o contido.'
   },
   'error.tornaDemostracio': {
     ca: 'Tornar al mode de proves',
@@ -138,11 +138,11 @@ const CLAUS = {
     ca: 'Saber-ne més', es: 'Saber más', en: 'Learn more', eu: 'Gehiago jakin', gl: 'Saber máis'
   },
   'error.servidor': {
-    ca: 'El servidor de poble ha tornat un error. Torna-ho a provar més tard.',
-    es: 'El servidor del pueblo ha devuelto un error. Vuelve a intentarlo más tarde.',
-    en: 'The town server returned an error. Try again later.',
-    eu: 'Herriko zerbitzariak errore bat itzuli du. Saiatu berriro geroago.',
-    gl: 'O servidor da vila devolveu un erro. Téntao de novo máis tarde.'
+    ca: 'El servidor de Sóc de Poble ha tornat un error. Torna-ho a provar més tard.',
+    es: 'El servidor de Sóc de Poble ha devuelto un error. Vuelve a intentarlo más tarde.',
+    en: 'The Sóc de Poble server returned an error. Try again later.',
+    eu: 'Sóc de Poble-ren zerbitzariak errore bat itzuli du. Saiatu berriro geroago.',
+    gl: 'O servidor de Sóc de Poble devolveu un erro. Téntao de novo máis tarde.'
   },
   'error.connectarBloc': {
     ca: 'No s’ha pogut obrir el teu Bloc.',

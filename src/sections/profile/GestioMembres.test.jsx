@@ -104,8 +104,8 @@ test('una administradora no toca cap administradora ni la propietària, ni nomen
 });
 
 test('si la llista no es pot llegir, ho diu (el missatge del codi, en valencià) i no oferix cap alta', async () => {
-  pinta({ llistaMembres: vi.fn(async () => { throw Object.assign(new Error('El servidor d’este poble encara no gestiona els membres de les organitzacions.'), { code: 'NO-DISPONIBLE' }); }) });
-  expect((await screen.findByRole('alert')).textContent).toBe('El servidor d’este poble encara no gestiona els membres de les organitzacions.');
+  pinta({ llistaMembres: vi.fn(async () => { throw Object.assign(new Error('El servidor de Sóc de Poble encara no gestiona els membres de les organitzacions.'), { code: 'NO-DISPONIBLE' }); }) });
+  expect((await screen.findByRole('alert')).textContent).toBe('El servidor de Sóc de Poble encara no gestiona els membres de les organitzacions.');
   expect(screen.queryByRole('region', { name: 'Membres de Forn' })).toBeNull();
   /* Correcció 261008 · Honestedat abans que promeses: si el servidor ja ha dit
      que no gestiona els membres, el formulari d'alta no promet el que fallarà. */

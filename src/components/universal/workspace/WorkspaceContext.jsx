@@ -59,6 +59,9 @@ export function WorkspaceProvider({
   /* B6-B2 · onQueryChange(consulta): cada canvi de la consulta (escriure,
      «Tancar», «Netejar»), mai la de muntar. Sense, ningú no l'escolta. */
   onQueryChange = null,
+  /* P0-127 (R32.9) · Notifica el canvi explícit d'una columna ('left' | 'middle')
+     perquè UniversalWorkspace el persisteisca a storage.js. */
+  onToggleColumn = null,
   children
 }) {
   const [state, dispatch] = useReducer(
@@ -531,9 +534,17 @@ export function WorkspaceProvider({
     clearFilters: () => dispatch({ type: 'filters/clear' }),
     openSearch: () => dispatch({ type: 'search/open' }),
     closeSearch: () => dispatch({ type: 'search/close' }),
-    toggleColumn: (column) => dispatch({ type: 'column/toggle', column })
+    toggleColumn: (column) => {
+      if (column === 'left' || column === 'middle') {
+        const nextCollapsed = !stateRef.current.collapsed[column];
+        dispatch({ type: 'column/toggle', column });
+        onToggleColumn?.(column, nextCollapsed);
+        return;
+      }
+      dispatch({ type: 'column/toggle', column });
+    }
   }), [navigationGroups, normalizedCategories, normalizedItems, filteredItems, activeItem, state,
-    itemResolution, retryItemResolution, selectCategory, selectItem, requestItem, setSort, status]);
+    itemResolution, retryItemResolution, selectCategory, selectItem, requestItem, setSort, status, onToggleColumn]);
 
   return (
     <WorkspaceContext.Provider value={value}>

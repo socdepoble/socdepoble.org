@@ -215,7 +215,7 @@ test('R · el missatge és el mateix tant si el compte existix com si no, i no r
 
 test.each([
   [CODI_ENTRADA.MASSA_INTENTS, 'avis', 'Massa intents seguits.', true],
-  [CODI_ENTRADA.SERVIDOR_INABASTABLE, 'avis', 'El servidor del poble no respon ara mateix.', false],
+  [CODI_ENTRADA.SERVIDOR_INABASTABLE, 'avis', 'El servidor de Sóc de Poble no respon ara mateix.', false],
 ])('R · un error %s es diu clar amb l’Alerta de to %s i mai el cos cru', async (code, to, frase, ambEspera) => {
   m.demana.mockRejectedValue(Object.assign(new Error('Supabase 429: {"msg":"cru del servidor"}'), { code }));
   obriRecuperacio('ana@poble.test');
@@ -497,7 +497,7 @@ test('R · si eixir falla, ho diu clar i la pantalla es queda', async () => {
   m.eix.mockRejectedValue(Object.assign(new TypeError('Failed to fetch'), { status: 0 }));
   ambRecuperacio();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Eixir del compte' })); });
-  expect(screen.getByRole('status').textContent).toContain('El servidor del poble no respon ara mateix.');
+  expect(screen.getByRole('status').textContent).toContain('El servidor de Sóc de Poble no respon ara mateix.');
   expect(screen.getByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
 });
 

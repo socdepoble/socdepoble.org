@@ -30,6 +30,7 @@ import { useSessioOpcional } from './contexts/SessionContext.jsx';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
+import { columnaPlegadaDe, desaColumnaPlegada } from '../components/universal/workspace/persistenciaColumnesUI.js';
 import { ATRIBUT_CONTRAST, CONTRAST_BANCAL, arrelDePresentacio, reclamaAtribut } from '../config/theme';
 import { esAmaDelDocument } from '../apps/plataforma/interruptors.js';
 import { BarreraDelTrosAccessori, lazyRoute } from '../apps/plataforma/lazyRoute.js';
@@ -313,7 +314,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
 function AppShell({ children, mobileNav }) {
   const [containerWidth, setContainerWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isDesktopSidebarClosed, setIsDesktopSidebarClosed] = useState(false);
+  const [isDesktopSidebarClosed, setIsDesktopSidebarClosed] = useState(() => columnaPlegadaDe('app-sidebar', 'left') === true);
   /* Bloc 3.10 (pla 261016_1530) · Una caixa baixa (data-sdp-curta) també
      deixa que les barres acompanyen el scroll fora del compacte. */
   const [curta, setCurta] = useState(false);
@@ -366,7 +367,11 @@ function AppShell({ children, mobileNav }) {
     if (isCompact) {
       setIsMobileSidebarOpen(v => !v);
     } else {
-      setIsDesktopSidebarClosed(v => !v);
+      setIsDesktopSidebarClosed((v) => {
+        const next = !v;
+        desaColumnaPlegada('app-sidebar', 'left', next);
+        return next;
+      });
     }
   }, [isCompact]);
   /* Prompt 261014_0400 (ordre del Mestre), front B · 'sidebar-closed' la posa

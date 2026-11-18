@@ -205,12 +205,13 @@ test.each([
   expect([pregunta, destins(fonts)]).toEqual([pregunta, fonts.map((font) => `/wikidepoble?item=${encodeURIComponent(font.id)}`)]);
 });
 
-/* Sentinelles i la Viquipèdia no surten a cap document de la Wiki pública
-   (ni al títol ni al cos), ni cap pàgina explica com es traduïx una pàgina o
-   com es ven al Mercat: la llista buida és la veritat. Si la Wiki en publica
-   una pàgina, esta prova cau i la cerca l'ha de trobar. */
+/* La Viquipèdia no surt a cap document de la Wiki pública (ni al títol ni al
+   cos), ni cap pàgina explica com es traduïx una pàgina o com es ven al Mercat:
+   la llista buida és la veritat. Si la Wiki en publica una pàgina, esta prova
+   cau i la cerca l'ha de trobar.
+   v1.2.8 · «Sentinelles» ix de la llista: la Wiki pública ja nomena la skill
+   core-sentinella-blindatge (Codex R32.7) al mapa del sistema nerviós. */
 test.each([
-  ['Sentinelles', ['sentinelles']],
   ['Viquipèdia', ['viquipèdia', 'wikipedia']],
   ['Com tradueixo una pàgina?', []],
   ['Com vendre al Mercat?', []]

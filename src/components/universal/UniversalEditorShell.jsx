@@ -1,5 +1,6 @@
 import { Image as ImageIcon, Crop, SlidersHorizontal, ChevronUp, SquarePen } from 'lucide-react';
 import { DateTimeControl, Alerta, Boto, SelectorDataHora } from '../PedraSeca/index.js';
+import { Interruptor } from '../PedraSeca/organismes/formulari.jsx';
 import { BotoVisibilitat } from './barres/BotoVisibilitat.jsx';
 import { ETIQUETA_RESERVA_ARA, dataHoraEdicio } from './barres/dataHoraBarra.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
@@ -52,6 +53,11 @@ export const TEXTOS_CLOSCA = Object.freeze({
   comptador: parellCloscaEditor('comptador', '{camp}: {llargaria} de {maxim} caràcters'),
   edicioAvancada: parellCloscaEditor('edicioAvancada', 'Edició avançada'),
   tancaEdicioAvancada: parellCloscaEditor('tancaEdicioAvancada', 'Tancar l’edició avançada'),
+  mostrarAlMurEtiqueta: parellCloscaEditor('mostrarAlMur.etiqueta', 'Mostrar també al Mur'),
+  mostrarAlMurActiu: parellCloscaEditor('mostrarAlMur.actiu', 'Mostrar també al Mur'),
+  mostrarAlMurInactiu: parellCloscaEditor('mostrarAlMur.inactiu', 'Només al seu llibre o carpeta'),
+  mostrarAlMurAjudaActiu: parellCloscaEditor('mostrarAlMur.ajudaActiu', 'Visible a l’aparador del Mur i guardada dins del seu llibre o carpeta.'),
+  mostrarAlMurAjudaInactiu: parellCloscaEditor('mostrarAlMur.ajudaInactiu', 'Es manté guardada i accessible dins del seu llibre o carpeta sense aparéixer al Mur.'),
   imatgeAjuda: parellCloscaEditor('imatge.ajuda', "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia."),
   imatgePujant: parellCloscaEditor('imatge.pujant', 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.'),
   imatgeErrorDesar: parellCloscaEditor('imatge.errorDesar', "No s'ha pogut desar la imatge."),
@@ -603,6 +609,9 @@ export function UniversalEditorShell({
   posicioEdicioAvancada = 'despres-autoria',
   previsualitzacioTargeta = null,
   visibilitatEnLinia = null,
+  mostrarAlMur = undefined,
+  onCanviaMostrarAlMur = null,
+  desactivatMostrarAlMur = false,
   popupVisibilitat = 'dialog',
   /* P0-58 (IDEA-189) · Opcional, i sense ella el DOM i el comportament de
      sempre (el Perfil i el catàleg només reben l'enganxat pla d'una línia):
@@ -859,6 +868,28 @@ export function UniversalEditorShell({
       resum.focus({ preventScroll: true });
     }
   }, []);
+  const blocMostrarAlMur = edicioAvancada && typeof onCanviaMostrarAlMur === 'function' ? (
+    <div className="sdp-edicio-avancada__mur" data-sdp-mostrar-al-mur="true">
+      <Interruptor
+        etiqueta={tradueix(t, TEXTOS_CLOSCA.mostrarAlMurEtiqueta)}
+        actiu={Boolean(mostrarAlMur)}
+        desactivat={desactivatMostrarAlMur}
+        textosEstat={{
+          si: tradueix(t, TEXTOS_CLOSCA.mostrarAlMurActiu),
+          no: tradueix(t, TEXTOS_CLOSCA.mostrarAlMurInactiu),
+        }}
+        onCanvi={onCanviaMostrarAlMur}
+      />
+      <p className="sdp-edicio-avancada__mur-ajuda">
+        {mostrarAlMur
+          ? tradueix(t, TEXTOS_CLOSCA.mostrarAlMurAjudaActiu)
+          : tradueix(t, TEXTOS_CLOSCA.mostrarAlMurAjudaInactiu)}
+      </p>
+    </div>
+  ) : null;
+  const contingutVisibilitatAvancada = blocMostrarAlMur || visibilitatEnLinia
+    ? <>{blocMostrarAlMur}{visibilitatEnLinia}</>
+    : null;
   const desplegable = edicioAvancada ? (
     <details ref={desplegableRef} className="sdp-edicio-avancada">
       <summary ref={resumDesplegableRef} className="sdp-edicio-avancada__resum">
@@ -894,7 +925,7 @@ export function UniversalEditorShell({
         {classificacio ? <div className="page-title-classificacio">{classificacio}</div> : null}
         {revisioEdicioAvancada ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="revisio">{revisioEdicioAvancada}</div> : null}
         {previsualitzacioTargeta ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="targeta-viva">{previsualitzacioTargeta}</div> : null}
-        {visibilitatEnLinia ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="visibilitat">{visibilitatEnLinia}</div> : null}
+        {contingutVisibilitatAvancada ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="visibilitat">{contingutVisibilitatAvancada}</div> : null}
         <button
           type="button"
           className="sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar"

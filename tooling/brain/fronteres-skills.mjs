@@ -5,9 +5,9 @@
  * QUÈ FA
  *   Comprova que cada skill de `.agents/skills/*\/SKILL.md` complix el seu contracte
  *   executable (REGLES, F1-F5) i manté un deute conegut en trinquet (DEUTE_ACCEPTAT).
- *   Només llig: no importa child_process, no escriu cap fitxer i no executa cap ordre
- *   de les skills. Un `node <camí>` es comprova al disc; un `npm run <script>`, a
- *   package.json. Res més.
+ *   Només llig: no escriu cap fitxer ni executa ordres de les skills. Git només
+ *   resol l'arrel i enumera l'índex amb argv literals, sense shell ni refresh.
+ *   Un `node <camí>` es comprova al disc; un `npm run <script>`, a package.json.
  *
  * CRÈDIT
  *   L'esquelet ve del kit de Codex, auditat com a dada i no integrat en cru
@@ -31,6 +31,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { CAMINS, arrel as arrelImposada, arrelSegura, esMain } from '../lib/arrel.mjs';
 import { font, inventari, segura } from './cataleg_skills.mjs';
 import { fontUTF8, declaracionsTokensCSS } from '../lib/lexic-css.mjs';
@@ -39,7 +40,7 @@ import { parseFrontmatter, splitFrontmatter } from '../wiki/lib/frontmatter.mjs'
 export const ESQUEMA = 'sdp.fronteres-skills.v2';
 
 export const REGLES = Object.freeze({
-  F1: 'contracte.llig i contracte.escriu: llistes no buides de camins canònics que existixen',
+  F1: 'contracte.llig i contracte.escriu: llistes no buides de camins canònics existents; només quatre directoris efímers exactes poden faltar si Git acredita que no són versionats',
   F2: 'cada motor declarat a `motors` o invocat amb `node <camí>` és un fitxer regular canònic dins de l’arrel, sense symlinks, i tot `node <camí>` del cos figura en `motors`; cada `npm run <script>` és a package.json (també dins de blocs de codi)',
   F3: 'cap ordre d’escriptura recursiva (sed -i, perl -i, find … -exec/-delete, xargs rm|sed|perl) sense excloure 01_produccio',
   F4: 'cada var(--sdp-*) està declarat a src/**/*.css; cap color, ombra ni radi literal fora d’una prohibició o del valor del token que la línia nomena',
@@ -85,6 +86,22 @@ const RE_CAMI = new RegExp(
 
 const compacta = (v) => String(v).toLowerCase().replace(/\s+/g, '');
 const senseBarra = (p) => (typeof p === 'string' && p.endsWith('/') ? p.slice(0, -1) : p);
+const DIRECTORIS_EFIMERS = new Set(['.agents/runtime', '.agents/runtime/turns', '.sdp-paperera', '.immunitari']);
+
+/** Ni un error de Git ni estar dins d'un altre repositori acrediten absència
+ * efímera. ls-files és plumbing de lectura i no refresca físicament l'índex. */
+function fitxersVersionats(arrel) {
+  try {
+    const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
+    const opcions = { cwd: arrel, encoding: 'utf8', timeout: 1000, maxBuffer: 20 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'ignore'], env: { ...env, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0' } };
+    const top = execFileSync('git', ['--no-optional-locks', '-c', 'core.fsmonitor=false', 'rev-parse', '--show-toplevel'], opcions).trim();
+    if (fs.realpathSync(top) !== fs.realpathSync(arrel)) return null;
+    return new Set(execFileSync('git', ['--no-optional-locks', '-c', 'core.fsmonitor=false', 'ls-files', '--cached', '-z'], opcions).split('\0').filter(Boolean));
+  } catch { return null; }
+}
+const efimerAbsent = (rel, versionats) => DIRECTORIS_EFIMERS.has(rel) && versionats !== null
+  && ![...versionats].some(file => file === rel || file.startsWith(`${rel}/`));
 const dins = (p, llista) => Array.isArray(llista) && llista.some((b) => {
   const q = senseBarra(String(b));
   return p === q || p.startsWith(`${q}/`);
@@ -279,14 +296,14 @@ function declaracionsLiterals(tros) {
   return { decls, resta: resta + tros.slice(cursor) };
 }
 
-function comprovaContracte(clau, llista, arrel, afig) {
+function comprovaContracte(clau, llista, arrel, afig, versionats) {
   if (!Array.isArray(llista) || llista.length === 0) { afig('F1', `${clau} absent o buit`); return; }
   for (const p of llista) {
     const rel = senseBarra(p);
     let abs = null;
     try { abs = typeof rel === 'string' && rel ? segura(arrel, rel) : null; } catch { abs = null; }
     if (!abs) afig('F1', `${clau}: camí no canònic ${p}`);
-    else if (!fs.existsSync(abs)) afig('F1', `${clau}: absent ${p}`);
+    else if (!fs.existsSync(abs) && !efimerAbsent(rel, versionats)) afig('F1', `${clau}: absent ${p}`);
   }
 }
 
@@ -294,7 +311,7 @@ function comprovaContracte(clau, llista, arrel, afig) {
  * Audita una skill de l'inventari ({ id, sha256, text }).
  * → { id, sha256, classe, llig, escriu, motors, violacions: [{ regla, empremta, detall, linies }], avisos }
  */
-export function auditaSkill(skill, { arrel, scripts = {}, tokens = new Map() }) {
+export function auditaSkill(skill, { arrel, scripts = {}, tokens = new Map(), versionats = fitxersVersionats(arrel) }) {
   const d = parseFrontmatter(skill.text).data;
   const llig = d['contracte.llig'];
   const escriu = d['contracte.escriu'];
@@ -305,8 +322,8 @@ export function auditaSkill(skill, { arrel, scripts = {}, tokens = new Map() }) 
     const v = trobades.get(e);
     if (linia !== null && !v.linies.includes(linia)) v.linies.push(linia);
   };
-  comprovaContracte('contracte.llig', llig, arrel, afig);
-  comprovaContracte('contracte.escriu', escriu, arrel, afig);
+  comprovaContracte('contracte.llig', llig, arrel, afig, versionats);
+  comprovaContracte('contracte.escriu', escriu, arrel, afig, versionats);
 
   const motors = new Set();
   const motorsDeclarats = new Set();
@@ -420,7 +437,8 @@ export function auditaSkills(arrel = arrelSegura(), { deute = DEUTE_ACCEPTAT } =
   const pkg = JSON.parse(font(arrel, 'package.json').text);
   const scripts = pkg && typeof pkg.scripts === 'object' && pkg.scripts !== null ? pkg.scripts : {};
   const tokens = tokensDeclarats(arrel);
-  const skills = inventariades.map((s) => auditaSkill(s, { arrel, scripts, tokens }));
+  const versionats = fitxersVersionats(arrel);
+  const skills = inventariades.map((s) => auditaSkill(s, { arrel, scripts, tokens, versionats }));
   const acceptat = new Map(deute.map((e) => [`${e.skill}|${e.empremta}`, e]));
   const vistes = new Set();
   const noves = [];

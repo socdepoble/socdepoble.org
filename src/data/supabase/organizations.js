@@ -647,8 +647,8 @@ export async function desaContacteOrganitzacio(orgId, { correu = '', public: esP
    la xarxa: un id que no és cap UUID no arriba mai a Postgres (22P02).
    ═══════════════════════════════════════════════════════════════════ */
 const RE_CODI_ORGMEM = /SDP-ORGMEM-\d{3}/;
-const SENSE_MEMBRES = 'El servidor d’este poble encara no gestiona els membres de les organitzacions.';
-const SENSE_TRANSFERENCIA = 'El servidor d’este poble encara no sap transferir la propietat de les organitzacions.';
+const SENSE_MEMBRES = 'El servidor de Sóc de Poble encara no gestiona els membres de les organitzacions.';
+const SENSE_TRANSFERENCIA = 'El servidor de Sóc de Poble encara no sap transferir la propietat de les organitzacions.';
 const TIPUS_MEMBRE = new Set(['persona', 'organitzacio']);
 const ROLS_MEMBRE = new Set(['owner', 'admin', 'member']);
 

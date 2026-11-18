@@ -66,6 +66,8 @@ import { construeixMapa } from '../../src/sections/consola/mapa/construeixMapa.j
 import { SOURCES as FONTS_CONTEXT_LOCAL } from './context-local.mjs';
 import { resumTorns, resumEscriptori, resumLedger, resumEstat } from './fonts-vigilancia.mjs';
 import { seleccionaPassos } from '../gates/run-portes.mjs';
+import { construeixIndex } from './build_skills_index.mjs';
+import { checkDocuments } from '../gates/porta-documents.mjs';
 
 const llig = (abs) => { try { return fs.readFileSync(abs, 'utf8'); } catch { return null; } };
 const sha256 = (text) => crypto.createHash('sha256').update(text).digest('hex');
@@ -86,8 +88,10 @@ export const ESDEVENIMENTS_GIT = Object.freeze(['pre-commit', 'commit-msg', 'pos
 
 function git(arrel, args) {
   try {
-    return execFileSync('git', ['-C', arrel, ...args], {
-      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 10000
+    const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
+    return execFileSync('git', ['--no-optional-locks', '-c', 'core.fsmonitor=false', '-C', arrel, ...args], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 1000,
+      env: { ...env, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0' }
     }).trim();
   } catch { return null; }
 }
@@ -243,16 +247,32 @@ function llancadors(arrel, home, plataforma) {
  * hook present però sense eixa configuració es passa buit: git no el veu.
  * Torna null fora de git (cap font: les tasques queden desconegudes).
  */
-export function hooksGit(arrel, { absents = null } = {}) {
+export function estatHooksGit(arrel) {
   const hooksPath = git(arrel, ['config', '--get', 'core.hooksPath']);
-  if (hooksPath === null && !fs.existsSync(path.join(arrel, '.git'))) return null;
-  const actius = typeof hooksPath === 'string' && /^\.husky(?:\/_)?\/?$/.test(hooksPath);
-  if (!actius && absents) absents.push({ ruta: '.husky/_', motiu: `core.hooksPath ${hooksPath ? `és «${hooksPath}»` : 'no està definit'}: git no executa els hooks de .husky/` });
+  const commonDir = git(arrel, ['rev-parse', '--path-format=absolute', '--git-common-dir']);
+  if (!commonDir) return null;
+  const carpeta = hooksPath ? path.resolve(arrel, hooksPath) : path.join(commonDir, 'hooks');
+  let prepare = null;
+  try { prepare = JSON.parse(llig(path.join(arrel, 'package.json')))?.scripts?.prepare; } catch { /* invalid package is reported separately */ }
+  const husky = /(?:^|[\s/])husky(?:\s|$)/.test(prepare ?? '');
+  const font = hooksPath && !/^\.husky(?:\/_)?\/?$/.test(hooksPath)
+    ? (path.basename(carpeta) === '_' ? path.dirname(carpeta) : carpeta) : path.join(arrel, '.husky');
+  const esExecutable = ev => { try { const f = path.join(carpeta, ev); if (!fs.statSync(f).isFile()) return false; fs.accessSync(f, fs.constants.X_OK); return true; } catch { return false; } };
+  const fontValida = ev => { try { return fs.statSync(path.join(font, ev)).isFile() && llig(path.join(font, ev)) !== null; } catch { return false; } };
+  const instalHuskyDeclarada = husky && (!hooksPath || [path.join(arrel, '.husky'), path.join(arrel, '.husky/_')].includes(carpeta));
+  const estats = Object.fromEntries(ESDEVENIMENTS_GIT.map(ev => [ev, esExecutable(ev) && fontValida(ev) ? 'viu' : instalHuskyDeclarada && fontValida(ev) ? 'programat' : 'mort']));
+  return { configurat: Boolean(hooksPath), estats, estat: Object.values(estats).includes('viu') ? 'viu' : Object.values(estats).includes('programat') ? 'programat' : 'mort', carpeta, font };
+}
+
+export function hooksGit(arrel, { absents = null } = {}) {
+  const estat = estatHooksGit(arrel);
+  if (!estat) return null;
+  if (estat.estat === 'mort' && absents) absents.push({ ruta: '.husky', motiu: 'Hooks de Git absents o sense instal·lació declarada' });
   const resultat = {};
   for (const ev of ESDEVENIMENTS_GIT) {
-    const text = llig(path.join(arrel, '.husky', ev));
-    if (text === null) continue;
-    resultat[ev] = actius ? text : '';
+    const text = llig(path.join(estat.font, ev));
+    if (text === null) { resultat[ev] = ''; continue; }
+    resultat[ev] = estat.estats[ev] === 'mort' ? '' : text;
   }
   return resultat;
 }
@@ -381,7 +401,7 @@ export function arnesosObservats(arrel, { ara = Date.now() } = {}) {
  * Llig totes les fonts. Cap excepció: el que falta va a `absents` i el
  * compilador ho pinta com a avís i N/A.
  */
-export function recullFonts(arrel, { home = os.homedir(), plataforma = process.platform, ara = Date.now() } = {}) {
+export function recullFonts(arrel, { home = os.homedir(), plataforma = process.platform, ara = Date.now(), diagnostic = true, instantania = false } = {}) {
   const absents = [];
   const json = (rel, { opcional = false } = {}) => {
     const text = llig(path.join(arrel, rel));
@@ -425,9 +445,24 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
       });
   } catch { absents.push({ ruta: '.agents/skills', motiu: 'directori il·legible' }); }
 
+  const derivades = {};
+  const indexEsperat = construeixIndex(arrel);
+  let skillsIndex = json('.agents/skills_index.json', { opcional: true });
+  if (!fs.existsSync(path.join(arrel, '.agents/skills_index.json'))) { skillsIndex = indexEsperat; derivades.index = 'derivat'; }
+  else if (JSON.stringify(skillsIndex) !== JSON.stringify(indexEsperat)) absents.push({ ruta: '.agents/skills_index.json', motiu: 'Projecció divergent de les fonts canòniques' });
+  else derivades.index = 'disc';
   let skillsClaude = null;
-  try { skillsClaude = fs.readdirSync(path.join(arrel, '.claude/skills')).filter((n) => !n.startsWith('.')).sort(); }
-  catch { absents.push({ ruta: '.claude/skills', motiu: 'absent' }); }
+  try {
+    skillsClaude = fs.readdirSync(path.join(arrel, '.claude/skills')).filter((n) => !n.startsWith('.')).sort();
+    for (const nom of skillsClaude) {
+      const f = path.join(arrel, '.claude/skills', nom, 'SKILL.md');
+      if (llig(f) !== llig(path.join(dirSkills, nom, 'SKILL.md')) || llig(f) === null) absents.push({ ruta: `.claude/skills/${nom}`, motiu: 'Catàleg divergent de la font canònica' });
+    }
+    derivades.cataleg = 'disc';
+  } catch {
+    if (!fs.existsSync(path.join(arrel, '.claude/skills')) && skillsDisc) { skillsClaude = skillsDisc.map(s => s.nom); derivades.cataleg = 'derivat'; }
+    else absents.push({ ruta: '.claude/skills', motiu: 'il·legible' });
+  }
 
   const branca = git(arrel, ['rev-parse', '--abbrev-ref', 'HEAD']);
   const commit = git(arrel, ['rev-parse', '--short', 'HEAD']);
@@ -439,7 +474,8 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
     tall: branca || commit ? { branca, commit, arbre_net: estat === null ? null : estat === '' } : null,
     absents,
     protocolledge: json('.agents/protocolledge.json'),
-    skillsIndex: json('.agents/skills_index.json'),
+    skillsIndex,
+    derivades,
     cervell: json('.agents/cervell.json'),
     settings: json('.claude/settings.json'),
     hooksAntigravity: json('.agents/hooks.json'),
@@ -456,11 +492,13 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
     skillsDisc,
     skillsClaude,
     llancadors: llancadors(arrel, home, plataforma),
+    observacioLlancadors: plataforma === 'darwin',
     hooksGit: hooksGit(arrel, { absents }),
-    frontissa: frontissa(arrel),
+    hooksGitEstat: estatHooksGit(arrel)?.estats ?? null,
+    frontissa: diagnostic ? frontissa(arrel) : null,
     // Les dues portes de només lectura de les mètriques de salut (null si no hi són o no responen).
-    portaDocuments: portaDocuments(arrel),
-    cadenaPortes: cadenaPortes(arrel),
+    portaDocuments: instantania ? checkDocuments(arrel, { instantania: true, ara }) : diagnostic ? portaDocuments(arrel) : null,
+    cadenaPortes: diagnostic ? cadenaPortes(arrel) : null,
     timeMachine: ultimaInstantania ? { ultima: ultimaInstantania } : null,
     // Vigilància: torns, Escriptori, LEDGER i relleu d'ESTAT (null si la font no hi és).
     torns: resumTorns(arrel),
@@ -472,10 +510,18 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
 
 export function recullMapa(arrel = arrelSegura(), opcions = {}) {
   const ara = opcions.ara ?? Date.now();
-  const fonts = recullFonts(arrel, { ...opcions, ara });
+  const fonts = opcions.fonts ?? recullFonts(arrel, { ...opcions, ara });
   const absoluts = new Map(fonts.llancadors.map((l) => [l.script, l.scriptAbsolut]));
+  const rawVersionats = git(arrel, ['ls-files', '-z']);
+  const top = git(arrel, ['rev-parse', '--show-toplevel']);
+  let versionats = null;
+  try {
+    if (rawVersionats !== null && top && fs.realpathSync(top) === fs.realpathSync(arrel)) versionats = new Set(rawVersionats.split('\0'));
+  } catch { /* Neither another repository nor a failed physical-root check authorises an exemption. */ }
   const existeix = (ruta) => {
     const abs = absoluts.get(ruta) ?? (path.isAbsolute(ruta) ? ruta : path.join(arrel, ruta));
+    if (versionats && ['.agents/runtime', '.agents/runtime/turns', '.sdp-paperera', '.immunitari'].includes(ruta)
+      && ![...versionats].some(file => file === ruta || file.startsWith(`${ruta}/`))) return true;
     return fs.existsSync(abs);
   };
   for (const l of fonts.llancadors) delete l.scriptAbsolut;

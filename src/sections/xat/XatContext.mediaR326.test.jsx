@@ -130,3 +130,16 @@ test('R32.6 · un 401 no reintenta sol; el reintent manual conserva l’ID', asy
   await act(async () => { expect(await value.sendChatMedia({ id: FIL }, entrada)).toHaveLength(1); });
   expect(mock.publicaAdjuntXat.mock.calls.map(([, dades]) => dades.id)).toEqual([ID, ID]);
 });
+
+test('R32.8 · el context conserva lloc confirmat i rebutja ACK que el perda', async () => {
+  await munta();const ubicacio = { lat: 38.64, lng: -0.49 };
+  mock.publicaAdjuntXat.mockResolvedValueOnce({ ...ack(), metadades: { ubicacio } });
+  await act(async () => { expect(await value.sendChatMedia({ id: FIL }, { ...adjunt(), ubicacio })).toHaveLength(1); });
+  expect(mock.publicaAdjuntXat.mock.calls[0][1].ubicacio).toEqual(ubicacio);
+  mock.publicaAdjuntXat.mockResolvedValueOnce(ack());
+  await act(async () => { await expect(value.sendChatMedia({ id: FIL }, { ...adjunt(), ubicacio })).rejects.toMatchObject({ code: 'sense-confirmacio' }); });
+});
+test('R32.8 · opt-out no confirma una ubicació d’un primer intent antic', async () => {
+  await munta();mock.publicaAdjuntXat.mockResolvedValueOnce({ ...ack(), metadades: { ubicacio: { lat: 38.64, lng: -0.49 } } });
+  await act(async () => { await expect(value.sendChatMedia({ id: FIL }, { ...adjunt(), conservaUbicacio: false })).rejects.toMatchObject({ code: 'sense-confirmacio' }); });
+});

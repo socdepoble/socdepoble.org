@@ -18,11 +18,14 @@ export const VIDA_SALUT_BONA_MS = 5 * 60 * 1000;
 export const VIDA_SALUT_DOLENTA_MS = 60 * 1000;
 export const MAX_CARACTERS_BLOC_NODE0 = 240;
 
-let salut = { bona: false, finsA: 0 };
+let salut = { punt: null, bona: false, finsA: 0 };
+let revisioSalut = 0;
+export const MAX_RECURSOS_VEU = 4;
 
 /** Esborra la comprovació de salut en memòria. */
 export function reiniciaSalutNode0() {
-  salut = { bona: false, finsA: 0 };
+  revisioSalut += 1;
+  salut = { punt: null, bona: false, finsA: 0 };
 }
 
 export const nouError = (codi, missatge, causa) => {
@@ -33,12 +36,20 @@ export const nouError = (codi, missatge, causa) => {
 };
 
 async function ambLimit(fn, ms, signalExtern) {
+  if (signalExtern?.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
   const control = new AbortController();
-  const temporitzador = setTimeout(() => control.abort(), ms);
-  const alExtern = () => control.abort();
+  let rebutja;
+  const cancelada = new Promise((_resolve, reject) => { rebutja = reject; });
+  const avorta = (extern) => {
+    control.abort();
+    rebutja(nouError(extern ? CODI_VEU_AVORTADA : CODI_VEU_NO_DISPONIBLE, extern ? 'Locució aturada.' : 'El Node 0 ha trigat massa.'));
+  };
+  const temporitzador = setTimeout(() => avorta(false), ms);
+  const alExtern = () => avorta(true);
   signalExtern?.addEventListener('abort', alExtern, { once: true });
   try {
-    return await fn(control.signal);
+    // També liquida la promesa si un transport alié ignora abort.
+    return await Promise.race([fn(control.signal), cancelada]);
   } finally {
     clearTimeout(temporitzador);
     signalExtern?.removeEventListener('abort', alExtern);
@@ -46,8 +57,10 @@ async function ambLimit(fn, ms, signalExtern) {
 }
 
 async function nodeZeroSa(punt, signal) {
+  if (signal?.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
   const ara = Date.now();
-  if (ara < salut.finsA) return salut.bona;
+  if (punt === salut.punt && ara < salut.finsA) return salut.bona;
+  const revisio = revisioSalut;
   let bona = false;
   try {
     const resposta = await ambLimit((s) => fetch(`${punt}/salut`, { method: 'GET', signal: s, credentials: 'omit' }),
@@ -59,7 +72,7 @@ async function nodeZeroSa(punt, signal) {
     if (signal?.aborted) return false;
     bona = false;
   }
-  salut = { bona, finsA: Date.now() + (bona ? VIDA_SALUT_BONA_MS : VIDA_SALUT_DOLENTA_MS) };
+  if (!signal?.aborted && revisioSalut === revisio) salut = { punt, bona, finsA: Date.now() + (bona ? VIDA_SALUT_BONA_MS : VIDA_SALUT_DOLENTA_MS) };
   return bona;
 }
 
@@ -81,16 +94,14 @@ async function demanaBlocAudioNode0(punt, blocText, idioma, veu, signal) {
   }, TEMPS_LIMIT_NODE0_MS, signal);
 }
 
-function reprodueixBlob(blob, signal, registra, reproductorCompartit = null) {
+function reprodueixBlob(blob, signal, registra, reproductorCompartit, onInici) {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) { reject(nouError(CODI_VEU_AVORTADA, 'Locució aturada.')); return; }
     const adreca = URL.createObjectURL(blob);
-    let audio = reproductorCompartit;
-    if (audio && 'src' in audio) {
-      audio.src = adreca;
-    } else {
-      audio = new Audio(adreca);
-    }
+    const audio = reproductorCompartit;
     let acabada = false;
+    let iniciat = false;
+    const enIniciar = () => { if (!acabada && !iniciat && !signal?.aborted) { iniciat = true; onInici?.(); } };
     const enAcabar = () => acaba();
     const enError = () => acaba(nouError(CODI_VEU_NO_DISPONIBLE, 'L\'àudio del Node 0 no es pot reproduir.'));
     const enAvortar = () => acaba(nouError(CODI_VEU_AVORTADA, 'Locució aturada.'));
@@ -99,51 +110,121 @@ function reprodueixBlob(blob, signal, registra, reproductorCompartit = null) {
       acabada = true;
       audio.removeEventListener?.('ended', enAcabar);
       audio.removeEventListener?.('error', enError);
+      audio.removeEventListener?.('playing', enIniciar);
       signal?.removeEventListener('abort', enAvortar);
-      try { audio.pause(); } catch { /* ja parat */ }
+      if (error) { try { audio.pause(); } catch { /* ja parat */ } }
       URL.revokeObjectURL(adreca);
       if (error) reject(error); else resolve(audio);
     };
-    registra((codi) => acaba(nouError(codi, 'Locució aturada.')));
-    audio.addEventListener('ended', enAcabar);
-    audio.addEventListener('error', enError);
-    signal?.addEventListener('abort', enAvortar, { once: true });
-    Promise.resolve(audio.play()).catch((causa) => acaba(nouError(CODI_VEU_NO_DISPONIBLE, 'L\'àudio del Node 0 no s\'ha pogut iniciar.', causa)));
+    try {
+      registra((codi) => acaba(nouError(codi, 'Locució aturada.')));
+      audio.addEventListener('ended', enAcabar);
+      audio.addEventListener('error', enError);
+      audio.addEventListener('playing', enIniciar);
+      signal?.addEventListener('abort', enAvortar, { once: true });
+      audio.src = adreca;
+      Promise.resolve(audio.play()).catch((causa) => acaba(nouError(CODI_VEU_NO_DISPONIBLE, 'L\'àudio del Node 0 no s\'ha pogut iniciar.', causa)));
+    } catch (causa) { acaba(nouError(CODI_VEU_NO_DISPONIBLE, 'L\'àudio del Node 0 no s\'ha pogut iniciar.', causa)); }
   });
 }
 
-/* Torna una promesa si ha parlat pel Node 0; llança qualsevol error perquè qui
-   crida passe al navegador (llevat de VEU_AVORTADA, que es respecta).
-   Onada R23 · En articles llargs (> 240 caràcters) encadena blocs de frases amb
-   pre-descàrrega (prefetch) del bloc següent i reutilitza el mateix element Audio
-   perquè sone de principi a fi sense talls en mòbil amb qualsevol de les 7 veus. */
-export async function parlaPerNodeZero(punt, text, idioma, signal, registra, veu = null, partirBlocs = null) {
-  if (!await nodeZeroSa(punt, signal)) throw nouError(CODI_VEU_NO_DISPONIBLE, 'Node 0 sense salut.');
-  const blocs = typeof partirBlocs === 'function' && text.length > MAX_CARACTERS_BLOC_NODE0
-    ? partirBlocs(text, MAX_CARACTERS_BLOC_NODE0)
-    : [text];
-  if (!blocs.length) return;
-
-  if (blocs.length === 1) {
-    const blob = await demanaBlocAudioNode0(punt, blocs[0], idioma, veu, signal);
-    await reprodueixBlob(blob, signal, registra);
-    return;
-  }
-
-  let reproductor = null;
-  let promesaSeguent = demanaBlocAudioNode0(punt, blocs[0], idioma, veu, signal);
-
-  for (let i = 0; i < blocs.length; i += 1) {
-    if (signal?.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
-    const actualPromesa = promesaSeguent;
-    const teSeguent = i + 1 < blocs.length;
-    const blobActual = await actualPromesa;
-    if (signal?.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
-    if (teSeguent) {
-      promesaSeguent = demanaBlocAudioNode0(punt, blocs[i + 1], idioma, veu, signal);
-      /* Evita unhandled rejection si s'avorta mentre es reprodueix el bloc actual. */
-      promesaSeguent.catch(() => {});
+/** Sessió curta de recursos: com a màxim quatre slots (Blob o petició).
+ * L'actiu queda fixat; el lookahead guarda només el primer fragment de cada
+ * bloc editorial. No es creen objectURL fins que es consumix un Blob. */
+export function creaSessioNode0(signal) {
+  const control = new AbortController();
+  const recursos = new Map();
+  let audio = null, cancelaAudio = null, salutPendent = null;
+  const vigent = () => {
+    if (control.signal.aborted || signal?.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
+  };
+  const tanca = () => {
+    if (control.signal.aborted) return;
+    control.abort(); cancelaAudio?.(CODI_VEU_AVORTADA);
+    for (const entrada of recursos.values()) entrada.control.abort();
+    recursos.clear();
+    if (audio) {
+      try { audio.pause(); audio.removeAttribute?.('src'); audio.load?.(); } catch { /* alliberament del reproductor */ }
     }
-    reproductor = await reprodueixBlob(blobActual, signal, registra, reproductor);
+    signal?.removeEventListener('abort', tanca);
+  };
+  signal?.addEventListener('abort', tanca, { once: true });
+  if (signal?.aborted) tanca();
+  const demana = (punt, text, idioma, veu, fixat = false) => {
+    vigent();
+    const clau = JSON.stringify([punt, idioma, veu, text]);
+    let entrada = recursos.get(clau);
+    if (entrada) {
+      entrada.fixat ||= fixat;
+      recursos.delete(clau); recursos.set(clau, entrada);
+      return entrada;
+    }
+    if (recursos.size >= MAX_RECURSOS_VEU) {
+      const candidata = [...recursos.entries()].find(([, e]) => !e.fixat && e.blob);
+      // Una petició encara en curs conserva el seu slot; no obrim una cinquena
+      // connexió perquè un transport alié puga ignorar l'avortament de l'antiga.
+      const expulsable = candidata;
+      if (!expulsable) return null;
+      recursos.delete(expulsable[0]); expulsable[1].control.abort();
+    }
+    entrada = { control: new AbortController(), fixat, blob: null, promesa: null };
+    recursos.set(clau, entrada);
+    const alTancar = () => entrada.control.abort();
+    control.signal.addEventListener('abort', alTancar, { once: true });
+    entrada.promesa = (async () => {
+      salutPendent ||= nodeZeroSa(punt, control.signal).finally(() => { salutPendent = null; });
+      if (!await salutPendent) throw nouError(CODI_VEU_NO_DISPONIBLE, 'Node 0 sense salut.');
+      vigent();
+      const blob = await demanaBlocAudioNode0(punt, text, idioma, veu, entrada.control.signal);
+      vigent();
+      if (recursos.get(clau) !== entrada || entrada.control.signal.aborted) throw nouError(CODI_VEU_AVORTADA, 'Precàrrega descartada.');
+      entrada.blob = blob;
+      return blob;
+    })().catch((error) => {
+      if (recursos.get(clau) === entrada) recursos.delete(clau);
+      throw error;
+    }).finally(() => control.signal.removeEventListener('abort', alTancar));
+    entrada.promesa.catch(() => {});
+    return entrada;
+  };
+  const precarrega = async (punt, text, idioma, veu) => {
+    const entrada = demana(punt, text, idioma, veu);
+    if (!entrada) return false;
+    await entrada.promesa;
+    return true;
+  };
+  const parla = async (punt, blocs, idioma, veu, onInici) => {
+    for (let i = 0; i < blocs.length; i += 1) {
+      vigent();
+      const entrada = demana(punt, blocs[i], idioma, veu, true);
+      if (!entrada) throw nouError(CODI_VEU_NO_DISPONIBLE, 'No queda espai per a preparar la veu.');
+      const blob = await entrada.promesa;
+      vigent();
+      if (i + 1 < blocs.length) precarrega(punt, blocs[i + 1], idioma, veu).catch(() => {});
+      audio ||= new Audio();
+      await reprodueixBlob(blob, control.signal, (cancela) => { cancelaAudio = cancela; }, audio, i === 0 ? onInici : null);
+      cancelaAudio = null;
+      const clau = JSON.stringify([punt, idioma, veu, blocs[i]]);
+      if (recursos.get(clau) === entrada) recursos.delete(clau);
+    }
+  };
+  return { parla, precarrega, tanca };
+}
+
+const fragmentsNode0 = (text, partirBlocs) => typeof partirBlocs === 'function' && text.length > MAX_CARACTERS_BLOC_NODE0
+  ? partirBlocs(text, MAX_CARACTERS_BLOC_NODE0) : [text];
+
+export async function precarregaVeu(punt, text, idioma, signal, veu, partirBlocs, sessio) {
+  if (signal?.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
+  return sessio.precarrega(punt, fragmentsNode0(text, partirBlocs)[0], idioma, veu);
+}
+
+export async function parlaPerNodeZero(punt, text, idioma, signal, registra, veu = null, partirBlocs = null, sessio = null, onInici = null) {
+  const recursos = sessio || creaSessioNode0(signal);
+  registra(() => recursos.tanca());
+  try {
+    await recursos.parla(punt, fragmentsNode0(text, partirBlocs), idioma, veu, onInici);
+  } finally {
+    if (!sessio) recursos.tanca();
   }
 }

@@ -1,5 +1,5 @@
 import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useMemo, useSyncExternalStore } from 'react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
 import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
@@ -14,6 +14,7 @@ import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
+import { desaRevisioEditorial, revisioEditorial, subscriuRevisionsEditorials, versioRevisionsEditorials } from '../../data/revisionsEditorialsDelNavegador.js';
 import { useSEO } from '../../hooks/useSEO.js';
 import { compartix, urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
 import { PAGE_COPY } from '../text/pageContent';
@@ -348,7 +349,24 @@ function DocumentacioLocal({ item }) {
  * pàgina. Mai s'hi posa la data d'ara.
  */
 export function dataDeDocumentWiki(item) {
-  return dataHoraDeBarra({ creat: [item?.attributes?.date, dataDelNom(item?.id)] });
+  return dataHoraDeBarra({
+    creat: [item?.attributes?.date, dataDelNom(item?.id)],
+    modificat: item?.attributes?.updated ?? item?.updated
+  });
+}
+
+export function destiInternDeWiki(hrefCru, camiActual = '/wikidepoble') {
+  if (typeof hrefCru !== 'string') return null;
+  const href = hrefCru.trim();
+  if (!href || href.startsWith('#') || href.startsWith('//')) return null;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(href)) return null;
+  if (href.startsWith('?')) return `${camiActual || '/wikidepoble'}${href}`;
+  if (href.startsWith('/')) {
+    if (/^\/(assets|ap|__iaia|api)(\/|$)/.test(href)) return null;
+    if (/\.[a-z0-9]{2,5}(?:[?#]|$)/i.test(href)) return null;
+    return href;
+  }
+  return null;
 }
 
 /* SPEC G · Tot l'HTML que pinta la Wiki passa primer per resolRecursosDeHtml
@@ -370,12 +388,55 @@ export function dataDeDocumentWiki(item) {
    src/sections/gestoria/qualitat.test.js: cap classe passada en variable). */
 function ProsaDeLaWiki({ encoixinada = false, html }) {
   const lang = useLlenguaDelContingut();
-  return <div className={encoixinada ? 'sdp-prose sdp-prose--encoixinada' : 'sdp-prose'} lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(html), { llistesNumerades: true }) }} />;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const alClicarProsa = (event) => {
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const node = event.target instanceof Element ? event.target.closest('a[href]') : null;
+    if (!node || node.hasAttribute('download')) return;
+    const target = (node.getAttribute('target') || '').trim().toLowerCase();
+    if (target && target !== '_self') return;
+    const desti = destiInternDeWiki(node.getAttribute('href'), location?.pathname || '/wikidepoble');
+    if (!desti) return;
+    event.preventDefault();
+    navigate(desti);
+  };
+  return <div className={encoixinada ? 'sdp-prose sdp-prose--encoixinada' : 'sdp-prose'} lang={lang} onClick={alClicarProsa} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(html), { llistesNumerades: true }) }} />;
 }
 
 /* El Quadre ISO d'un document: etiquetes i valors en valencià, escrits ací. */
 function QuadreDelDocument({ children }) {
   return <div className="sdp-article" lang={useLlenguaDelContingut()}>{children}</div>;
+}
+
+/* v1.2.8 · P0-126 (costura Codex R32.9 ↔ Gemini R32.9) · Interruptor «Mostrar també al Mur»
+   d'un document de la Wiki, només per a superadmin. Desa la revisió editorial del Mur amb la
+   clau 'wiki:<id>' (la de wikiAlMur.js) al navegador; desactivar-lo conserva el document al seu
+   llibre i no canvia cap permís. Sense suport remot, la revisió no viatja a cap altre navegador. */
+function InterruptorWikiAlMur({ item }) {
+  const { esSuperadmin } = useSuperadminEstable();
+  useSyncExternalStore(subscriuRevisionsEditorials, versioRevisionsEditorials, versioRevisionsEditorials);
+  if (!esSuperadmin || !item?.id) return null;
+  const clau = `wiki:${item.id}`;
+  const revisio = revisioEditorial('mur', clau);
+  const perDefecte = typeof item.mur === 'boolean' ? item.mur : item.attributes?.mur === true;
+  const actiu = typeof revisio?.mostrarAlMur === 'boolean' ? revisio.mostrarAlMur : perDefecte;
+  return (
+    <tr>
+      <th scope="row">Mur</th>
+      <td>
+        <label>
+          <input
+            type="checkbox"
+            checked={actiu}
+            onChange={(event) => desaRevisioEditorial('mur', clau, { mostrarAlMur: event.target.checked })}
+          />{' '}
+          Mostrar també al Mur
+        </label>
+      </td>
+    </tr>
+  );
 }
 
 function WikiDetail({ item }) {
@@ -502,7 +563,8 @@ function WikiDetail({ item }) {
       lead={editorial.entradilla ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(parseMarkdownEnLinia(editorial.entradilla))) }} /> : null}
       {...data}
       labels={labels}
-      heroImage={item.image}
+      heroImage={item.image || item.attributes?.image}
+      heroAlt={item.imageAlt || item.attributes?.imageAlt || ''}
       showLogos={true}
       copyright={COPYRIGHT_SDP}
       /* Cicle 4 (lang-ca-nomes-a-textsection) · El document, en valencià. */
@@ -543,6 +605,12 @@ function WikiDetail({ item }) {
                   <td>{String(item.attributes.version)}</td>
                 </tr>
               )}
+              {(item.revisions ?? item.attributes?.revisions) != null && (
+                <tr>
+                  <th scope="row">Revisions</th>
+                  <td>{String(item.revisions ?? item.attributes.revisions)}</td>
+                </tr>
+              )}
               {item.attributes?.author && (
                 <tr>
                   <th scope="row">Autor / Propietari</th>
@@ -553,6 +621,12 @@ function WikiDetail({ item }) {
                 <tr>
                   <th scope="row">Data Creació</th>
                   <td>{String(item.attributes.date)}</td>
+                </tr>
+              )}
+              {(item.attributes?.updated || item.updated) && (
+                <tr>
+                  <th scope="row">Última actualització</th>
+                  <td>{String(item.attributes?.updated || item.updated)}</td>
                 </tr>
               )}
               {item.attributes?.type && (
@@ -579,6 +653,7 @@ function WikiDetail({ item }) {
                 <th scope="row">Classificació</th>
                 <td>{item.tags?.length > 0 ? item.tags.join(', ') : 'Públic'}</td>
               </tr>
+              <InterruptorWikiAlMur item={item} />
             </tbody>
           </table>
         </QuadreDelDocument>
@@ -720,7 +795,9 @@ export default function WikiDePobleSection() {
           tags: i.tags,
           attributes: i.attributes || {},
           content: i.content,
-          image: i.image
+          image: i.image || i.attributes?.image,
+          imageAlt: i.imageAlt || i.attributes?.imageAlt || '',
+          ...(i.revisions != null ? { revisions: i.revisions } : {})
         }))
       ]
     };

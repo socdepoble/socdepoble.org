@@ -29,6 +29,7 @@ vi.mock('./GlobalSaveManager.js', async importOriginal => {
   } }) };
 });
 import { NotesProvider, useNotes } from './NotesContext';
+import { bgSaveManager } from './GlobalSaveManager.js';
 
 beforeEach(() => {
   mocks.toast.mockReset();
@@ -55,4 +56,31 @@ test('sense emoticona (o amb brossa) el payload no porta la clau: republicar sen
   mocks.send.mockClear();
   await publica({ id: 'brossa', title: 'T', content: '', revision: 1, icon: '🍅 Tomaques' });
   expect(payloadEnviat()).not.toHaveProperty('icon');
+});
+
+test.each([{ mostrarAlMur: false }, { ocultarDelMur: true }, { mostrarAlMur: true, ocultarDelMur: false }])('R32.9: publishNote preserva la decisió %j sense retirar la nota de la carpeta', async decisio => {
+  const note = { id: `mur-${String(decisio.mostrarAlMur)}`, title: 'Capítol', content: '', folderId: 'llibre', revision: 1, ...decisio };
+  await publica(note);
+  const visible = decisio.mostrarAlMur ?? !decisio.ocultarDelMur;
+  expect(payloadEnviat()).toMatchObject({ mostrarAlMur: visible, ocultarDelMur: !visible });
+  expect(mocks.update.mock.calls.some(([, changes]) => changes.folderId === 'llibre')).toBe(true);
+  expect(note.folderId).toBe('llibre'); expect(note).not.toHaveProperty('isPublished');
+});
+
+test('R32.9: cap publicació o desat davant una decisió textual o contradictòria', async () => {
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  for (const decisio of [{ mostrarAlMur: 'false' }, { mostrarAlMur: true, ocultarDelMur: true }]) {
+    await act(async () => { await expect(result.current.publishNote({ id: 'invalida', revision: 1, ...decisio })).rejects.toMatchObject({ code: 'mur-visibilitat-invalida' }); });
+  }
+  expect(mocks.send).not.toHaveBeenCalled(); expect(mocks.update).not.toHaveBeenCalled();
+});
+
+test('R32.9: editar un alias envia un únic parell coherent, sense deixar l’invers vell a l’esborrany', async () => {
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  await act(async () => {
+    result.current.setLocalNoteField('parell', 'mostrarAlMur', false);
+    await bgSaveManager.flush('tenant-user', 'parell');
+  });
+  expect(mocks.update).toHaveBeenCalled();
+  expect(mocks.update.mock.calls.at(-1)[1]).toMatchObject({ mostrarAlMur: false, ocultarDelMur: true });
 });

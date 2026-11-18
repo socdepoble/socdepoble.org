@@ -27,7 +27,7 @@ import { parse } from '@babel/parser';
 import { isDeepStrictEqual } from 'node:util';
 
 import { arrelSegura, R } from '../lib/arrel.mjs';
-import { confinedFile, publicMetadata, publicSeoRoute } from '../wiki/lib/publication-policy.mjs';
+import { confinedFile, publicMetadata, publicSeoRoute, wikiEditorial, WIKI_DATE_FALLBACK } from '../wiki/lib/publication-policy.mjs';
 
 const ARREL = arrelSegura();
 const DESTI = R('wordpress-plugin/dist/seo-routes.json');
@@ -164,6 +164,44 @@ async function carregaDetalls() {
   return eixida;
 }
 
+/* El mateix manifest i regla social que WikiDetail i el prerender modern.
+ * No carrega cossos de fonts privades ni reinterpreta Markdown amb una altra
+ * regla de títol/imatge. L'absència de manifest és legítima en fixtures mínims.
+ */
+async function carregaWiki() {
+  const rel = 'src/data/wikiManifest.js';
+  const abs = R(rel);
+  if (!fs.existsSync(abs)) return [];
+  const regla = R('src/sections/wiki-de-poble/seoWiki.js');
+  if (!confinedFile(ARREL, abs) || !confinedFile(ARREL, regla)) { fatal('Font Wiki SEO fora de la frontera o absent.'); return []; }
+  try {
+    const rutes = R('src/config/rutaSocial.js');
+    if (!confinedFile(ARREL, rutes)) throw new TypeError('Regla de rutes Wiki absent.');
+    const [{ wikiManifest }, { metadadesDeDocumentPublic }, { idDeDocumentWiki }] = await Promise.all([
+      import(pathToFileURL(abs).href), import(pathToFileURL(regla).href), import(pathToFileURL(rutes).href)
+    ]);
+    if (!Array.isArray(wikiManifest?.items)) throw new TypeError('Manifest Wiki sense items.');
+    const ids = new Set();
+    const result = [];
+    for (const item of wikiManifest.items) {
+      if (!idDeDocumentWiki(item?.id) || ids.has(item.id)) throw new TypeError('Identitat Wiki invàlida o duplicada.');
+      ids.add(item.id);
+      if (!publicMetadata(item.attributes)) continue;
+      const editorial = wikiEditorial({ ...item.attributes, ...Object.fromEntries(['image', 'imageAlt', 'date', 'updated', 'version', 'revisions', 'mur'].filter(k => Object.hasOwn(item, k)).map(k => [k, item[k]])) });
+      const meta = metadadesDeDocumentPublic(item);
+      if (meta.imatge?.estat === 'bloquejada') throw new TypeError(`Imatge Wiki bloquejada: ${item.id}`);
+      result.push({ ruta: `wikidepoble/${encodeURIComponent(item.id)}`, title: meta.title, description: meta.description,
+        image: typeof meta.image === 'object' && meta.image ? meta.image.url : meta.image || IMATGE_DEFECTE,
+        ...(meta.image?.alt ? { imageAlt: meta.image.alt } : {}),
+        type: 'Article', lastmod: editorial.updated || editorial.date || WIKI_DATE_FALLBACK,
+        ...(editorial.date ? { published: editorial.date } : {}),
+        ...(editorial.version === undefined ? {} : { version: editorial.version }),
+        ...(editorial.revisions === undefined ? {} : { revisions: editorial.revisions }) });
+    }
+    return result;
+  } catch (error) { fatal(`No s'ha pogut construir el SEO Wiki: ${error.message.split('\n')[0]}`); return []; }
+}
+
 function retalla(text, max = 155) {
   const net = String(text).replace(/\s+/g, ' ').trim();
   if (net.length <= max) return net;
@@ -225,6 +263,9 @@ for (const d of detalls) {
   };
 }
 
+const capitolsWiki = await carregaWiki();
+for (const { ruta, ...meta } of capitolsWiki) manifest.routes[ruta] = { status: 200, index: true, ...meta };
+
 /* ─────────────────────────────── Fail-closed ─────────────────────────────── */
 
 const total = Object.keys(manifest.routes).length;
@@ -261,7 +302,9 @@ if (process.argv.includes('--verifica')) {
   const comparable = (value) => ({
     routes: Object.fromEntries(Object.entries(value.routes || {}).map(([key, route]) => {
       const content = { ...route };
-      delete content.lastmod;
+      // Les dates de llavors/llistes són de generació. Les de la Wiki són
+      // editorials i també formen part del contracte que comprovem.
+      if (!key.startsWith('wikidepoble/')) delete content.lastmod;
       return [key, content];
     })),
     aliases: value.aliases || {},

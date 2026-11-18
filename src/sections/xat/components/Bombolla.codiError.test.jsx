@@ -1,12 +1,16 @@
 /* Onada 6 · Revisió 261009 · Una bombolla en error que porta un codi SDP
    traduït (codiError, el deixa XatContext) diu el text de la seua clau en la
    llengua de la interfície (errorsXat.js), mai el codi cru; sense codi
-   traduït, el missatge de l'error; sense res, «No s'ha enviat». */
+   traduït, el missatge de l'error; sense res, «No s'ha enviat».
+   Onada R32.7 (kit Gemini, espill d'avatars) · La bombolla pròpia porta ara
+   l'avatar d'espill, que és un <Link> al perfil propi: com a l'app, es pinta
+   dins d'un MemoryRouter. */
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
 import '../../../../tests/helpers/diccionaris.js';
 import Bombolla from './Bombolla.jsx';
 import { createTranslator } from '../../../config/i18n.js';
+import { MemoryRouter } from '../../../app/contexts/RouterContext.jsx';
 
 afterEach(cleanup);
 
@@ -15,7 +19,9 @@ const enError = (extra = {}) => ({
   error: 'Has enviat molts missatges en poc de temps. Espera uns segons i torna-ho a provar.', ...extra
 });
 const pinta = (missatge, llengua) => render(
-  <ul><Bombolla missatge={missatge} locale="ca-ES" t={createTranslator(llengua)} onReintenta={() => {}} onDescarta={() => {}} /></ul>
+  <MemoryRouter>
+    <ul><Bombolla missatge={missatge} locale="ca-ES" t={createTranslator(llengua)} onReintenta={() => {}} onDescarta={() => {}} /></ul>
+  </MemoryRouter>
 );
 
 test('amb codiError SDP-XAT-429, el text de la clau en la llengua de la interfície', () => {

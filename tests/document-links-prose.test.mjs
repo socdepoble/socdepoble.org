@@ -160,3 +160,21 @@ test('un enllaç NFC a una carpeta NFD torna el nom tal com és al disc', (t) =>
   const ascii = resolveDocumentLink(extractDocumentLinks('[Índex](00_index_escriptori.md)')[0], source, [source], root);
   assert.equal(ascii, source);
 });
+
+test('R32.9 · alias *_SKILL confinat, homònim ambigu i symlink continuen rojos', t => {
+  const f = setup(t, ''), source = f.source, skill = path.join(f.root, '.agents/skills/core-prova/SKILL.md');
+  const link = {kind:'wiki', target:'core-prova_SKILL'};
+  assert.throws(() => resolveDocumentLink(link, source, f.files, f.root), /inexistent/);
+  f.put('.agents/skills/core-prova/SKILL.md', 'Cos privat');
+  assert.equal(resolveDocumentLink(link, source, f.files, f.root), skill);
+  f.put(`${DESK}/core-prova_SKILL.md`, '# Homònim');
+  assert.throws(() => resolveDocumentLink(link, source, [...f.files,path.join(f.root,DESK,'core-prova_SKILL.md')], f.root), /ambigu/);
+  fs.unlinkSync(skill);fs.symlinkSync(path.join(f.root,DESK,'real.md'),skill);
+  assert.throws(() => resolveDocumentLink(link, source, f.files, f.root), /symlink/);
+});
+
+test('R32.9 · les queries web no es perden i un catàleg inventat no acredita URLs', t => {
+  const f=setup(t,'');
+  assert.deepEqual(extractDocumentLinks('[Wiki](/wikidepoble?item=fantasma#x)'),[{kind:'markdown',target:'/wikidepoble?item=fantasma'}]);
+  assert.throws(()=>resolveDocumentLink({kind:'markdown',target:'/consola'},f.source,f.files,f.root,{webLinks:new Map([['/consola',true]])}),/no acreditat/);
+});

@@ -123,7 +123,7 @@ export async function desaRevisioEditorialAmbServidor(seccio, element, camps, { 
     const canvis = canvisDelServidor(enviada || {});
     /* Àrbitre B4-S1 · La RPC no sap esborrar (p. ex. publishDate: null): si en
        queda algun camp fora, la còpia del navegador ha de continuar manant. */
-    const completa = !!enviada && Object.values(enviada).every((valor) => valor !== null);
+    const completa = !!enviada && Object.entries(enviada).every(([camp, valor]) => valor !== null && Object.hasOwn(CAMP_DEL_SERVIDOR, camp));
     if (!Object.keys(canvis).length) return { desada: true, desti: 'navegador', motiu: 'sense-camps' };
     let resultat;
     try {
@@ -144,7 +144,9 @@ export async function desaRevisioEditorialAmbServidor(seccio, element, camps, { 
       persisteixMapa(mapa);
       notifica();
     }
-    return { desada: true, desti: 'servidor', motiu: null, versio: resultat.versio };
+    return completa ? { desada: true, desti: 'servidor', motiu: null, versio: resultat.versio }
+      : { desada: true, desti: 'navegador', motiu: 'camps-nomes-navegador', versio: resultat.versio,
+        campsNoDesats: Object.keys(enviada || {}).filter(camp => !Object.hasOwn(CAMP_DEL_SERVIDOR, camp) || enviada[camp] === null) };
   });
   enVol.set(clau, torn);
   try {

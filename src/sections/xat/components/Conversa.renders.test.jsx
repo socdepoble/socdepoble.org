@@ -220,7 +220,19 @@ describe('cada bombolla es pinta només quan canvia', () => {
     vista.repinta({ moderacio: moderacio({ potBloquejar: false }) });
     expect(bombollesPintades()).toBe(N - Math.floor(N / 3));
     act(() => { fireEvent.click(within(bombolla('m1')).getByRole('button', { name: 'Opcions del missatge' })); });
-    expect(within(bombolla('m1')).getAllByRole('menuitem').map((fila) => fila.textContent)).toEqual(['Respon', 'Copia el text', 'Denuncia el missatge']);
+    expect(within(bombolla('m1')).getAllByRole('menuitem').map((fila) => fila.textContent)).toEqual([
+      'Respon',
+      'Respon en privat',
+      'Reacciona',
+      'Destaca',
+      'Fixa',
+      'Reenvia',
+      'Copia el text',
+      'Envia un missatge a Pep',
+      'Denuncia el missatge',
+      'Elimina',
+      'Selecciona missatges'
+    ]);
   });
 
   test('mode de selecció: entrar repinta totes; triar-ne una, només eixa; el Retall porta la triada', async () => {

@@ -94,21 +94,20 @@ describe('a la web, res no canvia', () => {
     expect(m.quanLlest).toHaveBeenCalledTimes(0);
   });
 
-  /* Fase D (261020, revisió) · L1 i L2 · La web conserva la capçalera i el text de sempre. */
-  test('la capçalera de sempre (logotip, etiquetes i entradeta) i l’explicació d’Entrar que nomena Google', async () => {
+  /* Fase D (261020, revisió) + R32.8 (P0-125c) · Jerarquia unificada: damunt del botó de Google només el logotip i títol (sense entradeta ni etiquetes que l'empenyen avall en 360px), i l'entradeta va al peu de benvinguda. */
+  test('la capçalera unificada (logotip sense paràgrafs llargs a sobre) i l’explicació d’Entrar que nomena Google', async () => {
     window.history.replaceState(null, '', '/registre?mode=entrar');
     try {
       await pinta();
       expect(m.pagina).toEqual({
         title: 'Benvinguda al Mas Electrònic',
-        lead: "Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses.",
-        labels: ['Online-First', 'Perfil privat', 'RGPD Segur'],
         showLogos: true,
         chrome: 'system',
         // Gauntlet 261030 (cicle 2, decisió 7) · L'alta mostra el correu de la persona: Traduir no hi envia res.
         traduccio: false
       });
       expect(screen.getByText(INTRO_WEB).className).toBe('onboarding-card__intro');
+      expect(screen.getByText("Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses.")).toBeTruthy();
       expect(screen.queryByText(/entra amb el botó de dalt/)).toBeNull();
     } finally {
       window.history.replaceState(null, '', '/');
@@ -320,9 +319,9 @@ describe('els errors', () => {
     const alerta = document.querySelector('.sp-card-body .sdp-alerta');
     expect(alerta.classList.contains('sdp-alerta--avis')).toBe(true);
     expect(alerta.getAttribute('role')).toBeNull();
-    expect(alerta.textContent).toContain('El servidor del poble no ha acceptat la identificació del teu compte.');
+    expect(alerta.textContent).toContain('El servidor de Sóc de Poble no ha acceptat la identificació del teu compte.');
     expect(estat()).toBe(regio);
-    expect(regio.textContent).toContain('El servidor del poble no ha acceptat la identificació del teu compte.');
+    expect(regio.textContent).toContain('El servidor de Sóc de Poble no ha acceptat la identificació del teu compte.');
     expect(document.querySelectorAll('.sp-card-body [role="status"]')).toHaveLength(1);
     expect(m.oblida).toHaveBeenCalledWith('apple');
   });

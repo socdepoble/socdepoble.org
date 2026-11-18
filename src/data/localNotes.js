@@ -8,6 +8,7 @@ import { dataIsoONull } from '../utils/calendari.js';
 import { registraIncident } from '../utils/autocuracio.js';
 import { coaccionaAmbit, esFitxaDAmbit } from '../utils/publicacioUniversal.js';
 import { nomDeCarpetaValid, carpetaDeFila } from './carpetesNotes.js';
+import { capturaVisibilitatMur } from './visibilitatMur.js';
 
 const STORE = 'notes';
 
@@ -62,7 +63,7 @@ const persistence = {
 };
 
 function clean(input) {
-  const result = {};
+  const result = capturaVisibilitatMur(input);
   for (const field of ['title', 'subtitle', 'lead', 'content']) if (input[field] !== undefined) result[field] = sanitizeHtml(input[field]);
   for (const field of ['heroImage', 'logoImage', 'logoImageDark']) if (input[field] !== undefined) result[field] = esFontImatgeSegura(input[field]) ? input[field] : '';
   for (const field of ['categories', 'tags']) if (input[field] !== undefined) {

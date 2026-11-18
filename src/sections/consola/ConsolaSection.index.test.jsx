@@ -139,7 +139,7 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: l’índex ve d
   await obri('/consola');
   const regio = index();
   expect(regio.tagName).toBe('SECTION');
-  expect(regio.className).toBe('sdp-consola__index sdp-prose sdp-centre');
+  expect(regio.className).toBe('sdp-consola__index sdp-prose');
   // Darrere de «Sóc de Poble en xifres» (l'última graella del tauler) i de totes les targetes.
   const mas = screen.getByRole('region', { name: TITOL_MAS });
   expect(Boolean(mas.compareDocumentPosition(regio) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);

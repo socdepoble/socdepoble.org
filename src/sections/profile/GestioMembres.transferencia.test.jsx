@@ -244,7 +244,7 @@ describe('GestioMembres · «Transferir la propietat»', () => {
     await taula();
     fireEvent.click(screen.getByRole('button', BOTO('Andreu')));
     await confirma();
-    expect(screen.getByRole('alert').textContent).toBe('El servidor d’este poble encara no sap transferir la propietat de les organitzacions.');
+    expect(screen.getByRole('alert').textContent).toBe('El servidor de Sóc de Poble encara no sap transferir la propietat de les organitzacions.');
     expect(screen.queryByRole('button', CAP_BOTO)).toBeNull();
     // La resta de la gestió continua: el servidor sí que gestiona els membres.
     expect(screen.getByRole('button', { name: 'Llevar: Andreu' })).toBeTruthy();

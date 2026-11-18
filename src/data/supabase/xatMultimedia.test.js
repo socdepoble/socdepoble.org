@@ -379,3 +379,69 @@ test('R32.6 · un senyal avortat no hereta una signatura de la cau', async () =>
   const controller = new AbortController(); controller.abort();
   await expect(urlAdjuntXat(id, { signal: controller.signal })).rejects.toMatchObject({ name: 'AbortError' });
 });
+
+/* R32.8 · La migració de lloc no es degrada mai en silenci a la RPC antiga. */
+test.each([20_000_000, 250_000_000])('quota remota coneguda %s es mostra sense inventar límit', async limit => {
+  m.rpc.mockResolvedValueOnce({ usats: 4, limit });
+  await expect(quotaXat()).resolves.toMatchObject({ usats: 4, limit });
+});
+test.each([0, 249_999_999, 1_000_000_000])('quota remota desconeguda %s no es disfressa de250MB', async limit => {
+  m.rpc.mockResolvedValueOnce({ usats: 4, limit });
+  await expect(quotaXat()).rejects.toMatchObject({ code: 'sense-capacitat' });
+});
+test('GPS entra a la sobrecàrrega4 i només confirma el lloc retornat pel servidor', async () => {
+  const ubicacio = { lat: 38.64, lng: -0.49 };
+  m.rpc.mockImplementation(async (nom, p) => nom === 'xat_reserva_adjunt' ? { ruta: ID, pujat: false }
+    : { id: ID, fil_id: FIL, seq: 1, tipus: 'imatge', metadades: { ubicacio: p.p_ubicacio } });
+  await expect(publicaAdjuntXat(FIL, { ...entrada(), ubicacio })).resolves.toMatchObject({ metadades: { ubicacio } });
+  expect(m.rpc.mock.calls[1][1]).toEqual({ p_id: ID, p_text: null, p_resposta_a: null, p_ubicacio: ubicacio });
+});
+/* v1.2.8 · Llei 0 SQL: Producció sense 20261117193000 només té la RPC de tres arguments. */
+test('sense la sobrecàrrega4 al servidor, la mateixa publicació es repetix sense p_ubicacio i ho diu', async () => {
+  const ubicacio = { lat: 38.64, lng: -0.49 };
+  m.rpc.mockImplementation(async (nom, p) => {
+    if (nom === 'xat_reserva_adjunt') return { ruta: ID, pujat: true };
+    if ('p_ubicacio' in p) throw Object.assign(new Error('PGRST202 Could not find the function'), { status: 404 });
+    return { id: ID, fil_id: FIL, seq: 1, tipus: 'imatge', metadades: {} };
+  });
+  await expect(publicaAdjuntXat(FIL, { ...entrada(), ubicacio })).resolves.toMatchObject({ id: ID, ubicacioNoAdmesa: true });
+  expect(m.rpc.mock.calls.filter(([nom]) => nom === 'xat_publica_adjunt').map(([, p]) => p))
+    .toEqual([{ p_id: ID, p_text: null, p_resposta_a: null, p_ubicacio: ubicacio }, { p_id: ID, p_text: null, p_resposta_a: null }]);
+});
+test('sense ubicació, un 404 de la publicació no es repetix', async () => {
+  m.rpc.mockImplementation(async nom => {
+    if (nom === 'xat_reserva_adjunt') return { ruta: ID, pujat: true };
+    throw Object.assign(new Error('PGRST202'), { status: 404 });
+  });
+  await expect(publicaAdjuntXat(FIL, entrada())).rejects.toMatchObject({ code: 'sense-capacitat' });
+  expect(m.rpc.mock.calls.filter(([nom]) => nom === 'xat_publica_adjunt')).toHaveLength(1);
+});
+test.each([undefined, { lat: 0, lng: 0 }])('ACK amb lloc absent/diferent no es confirma', async lloc => {
+  m.rpc.mockImplementation(async nom => nom === 'xat_reserva_adjunt' ? { ruta: ID, pujat: true }
+    : { id: ID, seq: 1, tipus: 'imatge', metadades: { ubicacio: lloc } });
+  await expect(publicaAdjuntXat(FIL, { ...entrada(), ubicacio: { lat: 38.64, lng: -0.49 } })).rejects.toMatchObject({ code: 'sense-confirmacio' });
+});
+test('opt-out no confirma un ACK antic amb GPS per al mateixID', async () => {
+  m.rpc.mockImplementation(async nom => nom === 'xat_reserva_adjunt' ? { ruta: ID, pujat: true }
+    : { id: ID, seq: 1, tipus: 'imatge', metadades: { ubicacio: { lat: 38.64, lng: -0.49 } } });
+  await expect(publicaAdjuntXat(FIL, { ...entrada(), conservaUbicacio: false })).rejects.toMatchObject({ code: 'sense-confirmacio' });
+});
+/* v1.2.8 · Llei 0 SQL: la RPC nova absent ja no deixa la foto encallada. La mateixa publicació (p_id
+   idempotent) es repetix una sola vegada sense p_ubicacio i el resultat ho diu (ubicacioNoAdmesa), perquè
+   ControlsAdjunt avise que s'ha enviat sense la ubicació. Si també falla, l'error és visible. */
+test('RPC nova absent: una sola repetició sense GPS, que ho diu; si torna a fallar, error visible', async () => {
+  const absent = Object.assign(new Error('PGRST202'), { code: 'PGRST202' });
+  m.rpc.mockImplementation(async nom => { if (nom === 'xat_reserva_adjunt') return { ruta: ID, pujat: true }; throw absent; });
+  await expect(publicaAdjuntXat(FIL, { ...entrada(), ubicacio: { lat: 0, lng: 0 } })).rejects.toBeDefined();
+  expect(m.rpc.mock.calls.filter(([nom]) => nom === 'xat_publica_adjunt')).toHaveLength(2);
+  expect(m.rpc.mock.calls.filter(([nom]) => nom === 'xat_publica_adjunt').map(([, p]) => 'p_ubicacio' in p)).toEqual([true, false]);
+});
+test.each([{ lat: 91, lng: 0 }, { lat: '38', lng: 0 }, { lat: 38, lng: 0, autor: 'injected' }])('ubicació invàlida no reserva ni puja', async ubicacio => {
+  await expect(publicaAdjuntXat(FIL, { ...entrada(), ubicacio })).rejects.toMatchObject({ code: 'ubicacio-invalida' });
+  expect(m.rpc).not.toHaveBeenCalled();expect(fetch).not.toHaveBeenCalled();
+});
+
+test('opt-out amb metadades de lloc contradictòries falla abans de qualsevol xarxa', async () => {
+  await expect(publicaAdjuntXat(FIL, { ...entrada(), conservaUbicacio: false, ubicacio: { lat: 38.64, lng: -0.49 } })).rejects.toMatchObject({ code: 'ubicacio-invalida' });
+  expect(m.rpc).not.toHaveBeenCalled();expect(fetch).not.toHaveBeenCalled();
+});

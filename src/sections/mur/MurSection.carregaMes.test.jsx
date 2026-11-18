@@ -54,7 +54,10 @@ const pinta = () => {
   mocks.externalConfig = CONFIG;
   return render(<MurProvider config={CONFIG}><MurSection /></MurProvider>);
 };
-const targetes = () => document.querySelectorAll('.sdp-card-grid > *');
+/* v1.2.8 · Codex R32.9 (P0-126) · Els capítols de la Wiki amb `mur: true` es projecten al Mur (wikiAlMur.js);
+   esta prova compta les publicacions paginades de loadMur, no la projecció del llibre. */
+const targetes = () => [...document.querySelectorAll('.sdp-card-grid > *')]
+  .filter((targeta) => !targeta.querySelector('a[href^="/wikidepoble?item="]'));
 const botoMes = () => screen.queryByRole('button', { name: 'Mostra més' });
 
 afterEach(() => {
@@ -138,7 +141,7 @@ test('si la càrrega falla, l’avís de sempre; «Torna-ho a provar» torna a d
   await act(async () => { boto.click(); });
   const avis = await screen.findByRole('alert');
   expect(avis.textContent).toContain("No s'ha pogut carregar el Mur");
-  expect(avis.textContent).toContain('El servidor de poble ha tornat un error.');
+  expect(avis.textContent).toContain('El servidor de Sóc de Poble ha tornat un error.');
   expect(avis.textContent).not.toMatch(/Supabase|503|upstream/);
   // Les targetes que ja hi eren no se'n van.
   expect(targetes()).toHaveLength(2);

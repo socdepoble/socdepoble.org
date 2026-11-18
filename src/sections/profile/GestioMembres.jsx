@@ -104,7 +104,7 @@ export const ERRORS_MEMBRES = Object.freeze({
   'SDP-ORGMEM-006': textErrorMembre('orgmem006', 'Només la propietària nomena, degrada o lleva administradores.'),
   'SDP-ORGMEM-007': textErrorMembre('orgmem007', 'Una organització no pot ser membre d’ella mateixa ni d’una d’un altre poble.'),
   'SDP-ORGMEM-008': textErrorMembre('orgmem008', 'Per a afegir una organització com a membre, cal que també l’administres.'),
-  'NO-DISPONIBLE': textErrorMembre('noDisponible', 'El servidor d’este poble encara no gestiona els membres de les organitzacions.'),
+  'NO-DISPONIBLE': textErrorMembre('noDisponible', 'El servidor de Sóc de Poble encara no gestiona els membres de les organitzacions.'),
 });
 
 /* L'error del port, traduït pel seu codi; sense cap codi propi, el genèric. */
@@ -122,7 +122,7 @@ const esCancel = (error) => error?.name === 'AbortError';
 export const ERRORS_TRANSFERENCIA = Object.freeze({
   'SDP-ORGMEM-003': textErrorMembre('transfereixOrgmem003', 'Només es pot transferir a una persona que siga membre de l’organització i del seu poble i que no haja demanat la baixa.'),
   'SDP-ORGMEM-006': textErrorMembre('transfereixOrgmem006', 'Només la propietària pot transferir la propietat.'),
-  'NO-DISPONIBLE': textErrorMembre('transfereixNoDisponible', 'El servidor d’este poble encara no sap transferir la propietat de les organitzacions.'),
+  'NO-DISPONIBLE': textErrorMembre('transfereixNoDisponible', 'El servidor de Sóc de Poble encara no sap transferir la propietat de les organitzacions.'),
 });
 const textDErrorTransferencia = (error, generic, t) => {
   const codi = typeof error?.code === 'string' ? error.code : '';

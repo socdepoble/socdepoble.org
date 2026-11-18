@@ -15,7 +15,11 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: detalls/EspecimenCopiaSeguretatXat.jsx i manifest.js, 2026-11-15T05:37:27+01:00,
+ * Darrera posada al dia: detalls/EspecimenXat.jsx, 2026-11-17T20:07:00+01:00,
+ * Onada R32.8 (P0-125a/d i P0-126): mostra viva a l'espècimen del Xat del xip clicable «Veure al mapa»
+ * dins de Bombolla amb coordenades GPS, la píndola activa per defecte «Ubicació inclosa · Amaga el lloc»
+ * a la previsualització de ControlsAdjunt i el botó accessible ✕ per a tancar qualsevol avís o alerta.
+ * Versió anterior: detalls/EspecimenCopiaSeguretatXat.jsx i manifest.js, 2026-11-15T05:37:27+01:00,
  * Onada R28 (pla 261115_0135; correccions de la revisió adversarial de Claude, troballes copia-xat-03, copia-xat-04,
  * copia-xat-07 i veu-editorial-07): l'espècimen de la «Còpia de seguretat» del Xat mostra el nom d'arxiu que produïx
  * nomArxiuCopiaSeguretatXat, l'avís de quan no hi ha cap missatge carregat i el d'un navegador que no pot xifrar
@@ -380,4 +384,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-15T05:37:27+01:00';
+export const VERSIO_CATALEG = '2026-11-17T20:07:00+01:00';

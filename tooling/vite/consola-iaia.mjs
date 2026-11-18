@@ -46,9 +46,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { loadEnv } from 'vite';
-import { PROJECT_DIR, AGENTS_DIR, SKILLS_DIR } from '../wiki/lib/project_paths.mjs';
+import { PROJECT_DIR } from '../wiki/lib/project_paths.mjs';
 import { parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
 import { recullMapa } from '../brain/mapa-consola.mjs';
+import { turnPattern, sha, relativePath, protectedPath } from '../documental/core.mjs';
+import { readTurn, activeReceipts, validateDocument } from '../documental/turns.mjs';
 
 export const RUTA_CONSOLA = '/__iaia/consola.json';
 export const RUTA_MAPA = '/__iaia/mapa.json';
@@ -78,31 +80,57 @@ const parseJsonl = (txt) => {
    build_skills_index.mjs, que coneix les claus amb punt i els blocs `>`/`|`. */
 const frontmatter = (txt) => parseFrontmatter(txt ?? '').data;
 
-export function recullConsola() {
-  const diariData = parseJsonl(llig(path.join(AGENTS_DIR, '.diari_sessio.jsonl')));
+/** Only a bound, valid receipt counts as pulse. Neither mtime nor the build clock is activity. */
+export function rebutsAcreditats(arrel, ara = Date.now()) {
+  const rebuts = [];
+  const store = path.join(arrel, '.agents/runtime/turns');
+  let noms;
+  try { noms = fs.readdirSync(store).sort(); } catch { return rebuts; }
+  for (const nom of noms) {
+    const id = nom.replace(/\.json$/, '');
+    if (!nom.endsWith('.json') || !turnPattern.test(id)) continue;
+    try {
+      const turn = readTurn(arrel, id, { closed: true, now: ara });
+      for (const r of activeReceipts(turn)) {
+        const t = Date.parse(r.issuedAt);
+        if (!Number.isFinite(t) || t > ara || t < Date.parse(turn.createdAt) || r.creation?.state === 'prepared') continue;
+        if (relativePath(arrel, r.file) !== r.file || !protectedPath(arrel, r.file)) continue;
+        const raw = llig(path.join(arrel, r.file));
+        if (raw === null || validateDocument(arrel, raw, r.file, { closed: true }).length) continue;
+        // Opaque identifiers and category only; no actor, title, contents or filesystem path.
+        rebuts.push({ t: r.issuedAt, peticio: sha(`${id}:${r.id}`), protocols: [r.route], fonts: [], origen: 'torn-acreditat' });
+      }
+    } catch { /* Invalid, expired or incomplete records are not accredited activity. */ }
+  }
+  return rebuts.sort((a, b) => b.t.localeCompare(a.t));
+}
+
+export function recullConsola({ arrel = PROJECT_DIR, ara = Date.now() } = {}) {
+  const agentsDir = path.join(arrel, '.agents'), skillsDir = path.join(agentsDir, 'skills');
+  const diariData = parseJsonl(llig(path.join(agentsDir, '.diari_sessio.jsonl')));
   const diari = diariData.items;
 
-  const rebuts = diari
-    .filter((e) => e.tipus === 'matrix.rebut')
+  const rebuts = [...diari
+    .filter((e) => e.tipus === 'matrix.rebut' && Number.isFinite(Date.parse(e.t)) && Date.parse(e.t) <= ara)
     .map((e) => ({
       t: e.t,
       peticio: e.peticio_sha256 ?? null,
       protocols: e.protocols ?? [],
       fonts: (e.fonts ?? []).map((f) => ({ ruta: f.ruta, sha256: f.sha256 }))
     }))
-    .reverse();
+    , ...rebutsAcreditats(arrel, ara)].sort((a, b) => String(b.t).localeCompare(String(a.t)));
 
   /* Contracte proposat (§3.6). Hui el diari no en té cap: la UI ho dirà. */
   const consums = diari.filter((e) => e.tipus === 'consum.tokens');
 
-  const manifest = llig(path.join(AGENTS_DIR, 'manifest.yaml')) ?? '';
+  const manifest = llig(path.join(agentsDir, 'manifest.yaml')) ?? '';
   const alManifest = [...manifest.matchAll(/^\s+-\s+skills\/([^/]+)\/SKILL\.md\s*$/gm)].map((m) => m[1]);
-  const alDisc = fs.existsSync(SKILLS_DIR)
-    ? fs.readdirSync(SKILLS_DIR).filter((n) => fs.existsSync(path.join(SKILLS_DIR, n, 'SKILL.md')))
+  const alDisc = fs.existsSync(skillsDir)
+    ? fs.readdirSync(skillsDir).filter((n) => fs.existsSync(path.join(skillsDir, n, 'SKILL.md')))
     : [];
 
   const skills = [...new Set([...alManifest, ...alDisc])].sort().map((nom) => {
-    const fm = frontmatter(llig(path.join(SKILLS_DIR, nom, 'SKILL.md')));
+    const fm = frontmatter(llig(path.join(skillsDir, nom, 'SKILL.md')));
     return {
       nom,
       alManifest: alManifest.includes(nom),
@@ -114,32 +142,32 @@ export function recullConsola() {
   });
 
   let segell = null;
-  try { segell = JSON.parse(llig(path.join(AGENTS_DIR, 'SKILLS_SEAL.json'))); } catch { /* sense segell */ }
+  try { segell = JSON.parse(llig(path.join(agentsDir, 'SKILLS_SEAL.json'))); } catch { /* sense segell */ }
 
   let credits = null;
   try {
-    const txtCredits = llig(path.join(AGENTS_DIR, 'credits.json'));
+    const txtCredits = llig(path.join(agentsDir, 'credits.json'));
     if (txtCredits) credits = JSON.parse(txtCredits);
   } catch { /* no hi ha */ }
 
   let estrategia_consum = null;
   try {
-    estrategia_consum = llig(path.join(AGENTS_DIR, 'estrategia_consum.txt'));
+    estrategia_consum = llig(path.join(agentsDir, 'estrategia_consum.txt'));
   } catch { /* no hi ha */ }
 
-  const immunitariData = parseJsonl(llig(path.join(PROJECT_DIR, '.immunitari', 'journal.ndjson')));
+  const immunitariData = parseJsonl(llig(path.join(arrel, '.immunitari', 'journal.ndjson')));
   const immunitari = immunitariData.items;
 
   let artefactesActius = 0;
   try {
-    const dirEsc = path.join(PROJECT_DIR, '_wiki_de_poble/04_escriptori');
+    const dirEsc = path.join(arrel, '_wiki_de_poble/04_escriptori');
     artefactesActius = fs.readdirSync(dirEsc, { withFileTypes: true })
       .filter((e) => e.isFile() && !e.name.startsWith('.') && !e.name.startsWith('00_'))
       .length;
   } catch { artefactesActius = 0; }
 
   return {
-    generat: new Date().toISOString(),
+    generat: new Date(ara).toISOString(),
     rebuts,
     consums,
     credits,
@@ -148,7 +176,7 @@ export function recullConsola() {
     segell,
     termometria: { artefactesActius, abast: '04_escriptori' },
     immunitari: { operacions: immunitari.length, ultima: immunitari.at(-1) ?? null },
-    fonts: { diari: diariData.font, immunitari: immunitariData.font }
+    fonts: { diari: { ...diariData.font, ...(diariData.font.h ? { h: ara } : {}) }, immunitari: { ...immunitariData.font, ...(immunitariData.font.h ? { h: ara } : {}) } }
   };
 }
 
@@ -667,8 +695,8 @@ export const governAlRellotge = (govern, ara) => (govern && typeof govern === 'o
 /** Els productors de la instantània: els del middleware, amb el rellotge `ara` (ms). */
 export function productorsDeLaInstantania({ arrel = PROJECT_DIR, ara = Date.now(), compilador = compiladorGovern, vocabulari = vocabulariGovern } = {}) {
   return {
-    consola: () => ambRellotge(recullConsola(), ara),
-    mapa: () => recullMapa(arrel, { ara }),
+    consola: () => ambRellotge(recullConsola({ arrel, ara }), ara),
+    mapa: () => recullMapa(arrel, { ara, instantania: true, diagnostic: false, home: path.join(arrel, '.agents/runtime/home'), plataforma: 'linux' }),
     govern: async () => governAlRellotge(await compilaGovern({ arrel, compilador, vocabulari, ara }), ara),
     empaquetats: () => recullEmpaquetats(arrel, { ara: new Date(ara) })
   };

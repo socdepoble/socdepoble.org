@@ -568,7 +568,7 @@ describe('el menú de ControlsAdjunt', () => {
       .toEqual(['0,0 de 20 MB del xat', 'Este navegador no permet gravar àudio.']);
     fireEvent.click(screen.getByRole('menuitem', { name: 'Fotos i vídeos' }));
     expect(clics).toHaveBeenCalledOnce();
-    expect(clics.mock.contexts[0]).toBe(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'));
+    expect(clics.mock.contexts[0]).toBe(screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'));
     expect(screen.queryByLabelText('Fes una foto amb la càmera')).toBeNull();
   });
 
@@ -608,7 +608,7 @@ describe('el menú de ControlsAdjunt', () => {
     expect(safata.querySelector('.sdp-xat-pindola')).toBeNull();
     expect([...safata.children].map((n) => n.tagName)).toEqual(['P', 'INPUT']);
     expect(screen.getByRole('status').textContent).toBe('');
-    fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['f'], { type: 'image/jpeg' })] } });
+    fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [new Blob(['f'], { type: 'image/jpeg' })] } });
     expect(await screen.findByRole('group', { name: 'Adjunts del xat' })).toBe(safata);
     expect(safata.classList.contains('sdp-xat-adjunts--activa')).toBe(true);
     expect(mes().getAttribute('aria-disabled')).toBe('true');
@@ -623,7 +623,7 @@ describe('el menú de ControlsAdjunt', () => {
     m.preparaAdjunt.mockRejectedValueOnce(new Error('No hem pogut preparar el fitxer.'));
     const vista = render(<Barra usuariId="safata-error" servei={serveiAmbQuota()} />);
     await waitFor(() => expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeTruthy());
-    fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['f'], { type: 'image/jpeg' })] } });
+    fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [new Blob(['f'], { type: 'image/jpeg' })] } });
     expect(await screen.findByRole('alert')).toBeTruthy();
     const safata = vista.container.querySelector('.sdp-xat-adjunts');
     expect(safata.classList.contains('sdp-xat-adjunts--activa')).toBe(true);
@@ -638,7 +638,7 @@ describe('el menú de ControlsAdjunt', () => {
     vi.stubGlobal('URL', { createObjectURL: vi.fn().mockReturnValue('blob:foto'), revokeObjectURL: vi.fn() });
     render(<Barra usuariId="preparant-micro" servei={serveiAmbQuota()} />);
     expect(await screen.findByRole('button', { name: 'Grava àudio' })).toBe(redo());
-    fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['f'], { type: 'image/jpeg' })] } });
+    fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [new Blob(['f'], { type: 'image/jpeg' })] } });
     await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Preparant el fitxer…'));
     expect(screen.queryByRole('button', { name: 'Grava àudio' })).toBeNull();
     expect(redo().disabled).toBe(true);

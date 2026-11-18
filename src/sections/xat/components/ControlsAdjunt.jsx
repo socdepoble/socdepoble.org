@@ -15,12 +15,12 @@
  *     ix sense adjunts, com sempre.
  */
 import { useEffect, useId, useRef, useState } from 'react';
-import { Camera, ImagePlus, Mic, RefreshCw, Send, Square, X } from 'lucide-react';
+import { Camera, ImagePlus, MapPin, Mic, RefreshCw, Send, Square, X } from 'lucide-react';
 import { descartaAdjuntXat, quotaXat, teCapacitat } from '../../../data/backendPort.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
 import { getRuntimePolicy } from '../../../config/runtimePolicy.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
-import { MAX_VEU_MS, gravaVeu, mimeDeGravacio, preparaAdjunt, textDErrorAdjunt } from '../adjuntLocal.js';
+import { MAX_VEU_MS, amagaUbicacioAdjunt, gravaVeu, mimeDeGravacio, preparaAdjunt, textDErrorAdjunt } from '../adjuntLocal.js';
 import { PrevisualitzacioAdjunt, callaVeuActiva, tempsDeVeu, traductorAdjunt } from './AdjuntXat.jsx';
 import { ID_MENU_ADJUNTS, LIMIT_TEXT } from './Compositor.jsx';
 import useCompartitPendent from '../useCompartitPendent.js';
@@ -72,6 +72,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const [pujant, setPujant] = useState(false);
   // null sense enviament; { fraccio: null } fins al primer byte; { fraccio: 0..1 }.
   const [progres, setProgres] = useState(null);
+  const [progresCompressio, setProgresCompressio] = useState(null);
   /* El peu propi de «Compartir» es conserva; en enviar una foto o un vídeo
      s'hi suma el camp principal. Les notes de veu no porten peu. */
   const [peu, setPeu] = useState('');
@@ -83,6 +84,8 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const lecturaQuotaRef = useRef(0);
   // La guarda és síncrona: dos gestos abans del següent render només envien una volta.
   const pujadaRef = useRef(null);
+  // Després d'un ACK incert, la ubicació i el binari del mateix ID són immutables.
+  const intentEnviamentRef = useRef(null);
   // Canviar de fil pot tornar un Compartir al lot; «Cancel·la» el descarta.
   const cancelladesRef = useRef(new WeakSet());
   const gravadora = useRef(null);
@@ -113,8 +116,8 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     revisioContext.current += 1;
     lecturaQuotaRef.current += 1;
     operacio.current?.abort(); gravadora.current?.cancella(); gravadora.current = null;
-    operacio.current = null; pujadaRef.current = null;
-    setPreparat(null); setGravant(false); setOcupat(null); setPujant(false); setProgres(null); setError(null); setPeu(''); setDeCompartir(false);
+    operacio.current = null; pujadaRef.current = null; intentEnviamentRef.current = null;
+    setPreparat(null); setGravant(false); setOcupat(null); setPujant(false); setProgres(null); setProgresCompressio(null); setError(null); setPeu(''); setDeCompartir(false);
     /* P1-66 · L'error de la quota es queda fins que arriba una lectura nova:
        «Torna-ho a provar» (al menú del +) no fa desaparéixer el + ni li pren
        el focus mentre es torna a llegir. */
@@ -209,7 +212,8 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     alliberaEnMa();
     operacio.current?.abort(); gravadora.current?.cancella(); gravadora.current = null;
     pujadaRef.current = null;
-    setPreparat(null); setGravant(false); setOcupat(null); setPujant(false); setProgres(null); setError(null); setPeu(''); setDeCompartir(false);
+    intentEnviamentRef.current = null;
+    setPreparat(null); setGravant(false); setOcupat(null); setPujant(false); setProgres(null); setProgresCompressio(null); setError(null); setPeu(''); setDeCompartir(false);
   };
   const descartaPendent = async (id) => {
     if (pujadaRef.current) return;
@@ -230,6 +234,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   };
   const accepta = (adjunt) => {
     if (quota && quota.usats + adjunt.fitxer.size > quota.limit) throw errorAdjuntXat('SDP-XAT-020');
+    intentEnviamentRef.current = null;
     setPreparat(adjunt);
   };
   /* Torna com ha acabat: 'preparada', 'fallida' (error a la vista), 'avortada'
@@ -241,20 +246,45 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     const controller = new AbortController(); operacio.current = controller;
     origen.current = 'tria';
     if (ambPeu) setDeCompartir(true);
-    setOcupat('tria'); setError(null);
+    setOcupat('tria'); setError(null); setProgresCompressio(null);
+    const onProgresCompressio = fraccio => {
+      if (viu.current && operacio.current === controller && !controller.signal.aborted && Number.isFinite(fraccio)) {
+        setProgresCompressio(anterior => Math.max(anterior ?? 0, Math.min(1, Math.max(0, fraccio))));
+      }
+    };
     let estat = 'avortada';
     try {
-      const adjunt = await preparaAdjunt(fitxer, { signal: controller.signal });
-      if (viu.current && !controller.signal.aborted) { accepta(adjunt); estat = 'preparada'; }
+      const adjunt = await preparaAdjunt(fitxer, { signal: controller.signal, onProgresCompressio });
+      if (viu.current && operacio.current === controller && !controller.signal.aborted) { accepta(adjunt); estat = 'preparada'; }
     } catch (e) {
-      if (viu.current && !controller.signal.aborted) {
+      if (viu.current && operacio.current === controller && !controller.signal.aborted) {
         if (ambPeu) { setPeu(''); setDeCompartir(false); }
         setError(e);
         estat = 'fallida';
       }
     }
-    finally { if (viu.current && operacio.current === controller) setOcupat(null); }
+    finally { if (viu.current && operacio.current === controller) { setOcupat(null); setProgresCompressio(null); } }
     return estat;
+  };
+  const amagaLloc = async () => {
+    if (!preparat?.ubicacio || pujadaRef.current || pujant || ocupat || intentEnviamentRef.current === preparat.id) return;
+    operacio.current?.abort();
+    const controller = new AbortController(); operacio.current = controller;
+    setOcupat('ubicacio'); setError(null);
+    try {
+      const net = await amagaUbicacioAdjunt(preparat, { signal: controller.signal });
+      if (viu.current && operacio.current === controller && !controller.signal.aborted) accepta(net);
+    } catch (e) {
+      if (viu.current && operacio.current === controller && !controller.signal.aborted && e?.name !== 'AbortError') setError(e);
+    } finally {
+      if (viu.current && operacio.current === controller) setOcupat(null);
+    }
+  };
+  const tancaAvis = (event) => {
+    const boto = event.currentTarget;
+    const teniaFocus = boto.getRootNode().activeElement === boto;
+    setError(null);
+    if (teniaFocus) botons[preparat ? 'primari' : ocupat ? 'cancella' : 'adjunta'].current?.focus();
   };
   /* 261026 (prompt 261026_1615, tasca 2) · Una imatge del menú «Compartir» del
      dispositiu per a esta conversa (DialegCompartir) entra com si l'haguera
@@ -326,7 +356,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     finally { if (viu.current && operacio.current === controller) { setOcupat(null); setGravant(false); gravadora.current = null; } }
   };
   const envia = async ({ text: textPrincipal = '' } = {}) => {
-    if (!preparat || pujadaRef.current || pujant) return null;
+    if (!preparat || pujadaRef.current || pujant || ocupat) return null;
     const principal = preparat.tipus === 'veu' ? '' : String(textPrincipal);
     const text = preparat.tipus === 'veu' ? '' : [deCompartir ? peu.trim() : '', principal.trim()].filter(Boolean).join('\n\n');
     if (text.length > LIMIT_TEXT) {
@@ -335,6 +365,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     }
     const controller = new AbortController(); operacio.current = controller;
     pujadaRef.current = controller;
+    intentEnviamentRef.current = preparat.id;
     setPujant(true); setError(null); setProgres({ fraccio: null });
     /* XAT-03 · El port informa dels bytes que ja han eixit. Només compta el
        d'esta pujada: una de cancel·lada o d'un altre fil ja no pinta res. */
@@ -351,6 +382,8 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
       const resultat = await onEnvia(fil, text ? { ...preparat, text } : preparat, { signal: controller.signal, onProgres });
       if (!Array.isArray(resultat) || !resultat.length) throw errorAdjuntXat('sense-confirmacio');
       enviat = true;
+      /* v1.2.8 · Llei 0: un servidor sense 20261117193000 ha publicat sense la ubicació (xatMultimedia.js); es diu. */
+      if (resultat[0]?.ubicacioNoAdmesa === true && viu.current) setError(errorAdjuntXat('ubicacio-no-admesa'));
       // Enviat: la còpia nativa ja sobra (també si la conversa s'ha tancat mentre pujava).
       if (compartitEnviat) alliberaFitxerCompartit(compartitEnviat);
       if (viu.current && !controller.signal.aborted && operacio.current === controller) {
@@ -398,7 +431,10 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   /* La càmera directa, només en una pantalla tàctil (mòbil, tauleta): és on
      `capture` obri la càmera; a l'escriptori seria el mateix selector. */
   const tactil = Boolean(globalThis.matchMedia?.(CONSULTA_TACTIL)?.matches);
-  const avisUbicacio = preparat?.tipus === 'video' && !preparat.senseUbicacio;
+  const ubicacio = Number.isFinite(preparat?.ubicacio?.lat) && Number.isFinite(preparat?.ubicacio?.lng) ? preparat.ubicacio : null;
+  const avisUbicacio = preparat?.tipus === 'video' && !preparat.senseUbicacio && !ubicacio;
+  const haIntentatEnviar = preparat && intentEnviamentRef.current === preparat.id;
+  const percentatge = (fraccio) => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(fraccio);
   const minuts = String(MAX_VEU_MS / 60_000);
   const queden = MAX_VEU_MS / 1000 - segonsGravats;
   const textGravant = queden <= AVISOS_GRAVACIO.final
@@ -414,9 +450,10 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
       : t('section.xat.adjunts.aturadaTemps', 'La gravació s’ha aturat sola en arribar als {minuts} minuts. Escolta-la abans d’enviar.').replace('{minuts}', minuts))
     : '';
   const estat = gravant ? textGravant
+    : ocupat === 'ubicacio' ? t('section.xat.adjunts.amagantLloc', 'Amagant la ubicació…')
+      : ocupat === 'tria' && progresCompressio !== null ? t('section.xat.adjunts.comprimintVideo', 'Comprimint vídeo… {percentatge}').replace('{percentatge}', percentatge(progresCompressio))
     : ocupat === 'grava' ? t('section.xat.adjunts.esperantMicro', 'Esperant el permís del micròfon…')
       : ocupat ? t('section.xat.adjunts.preparant', 'Preparant el fitxer…') : avisAturada;
-  const percentatge = (fraccio) => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(fraccio);
   /* P1-66 · La safata només ocupa lloc mentre hi ha alguna cosa a fer; buida,
      col·lapsa a 0 (modules.css) i no és cap grup. La regió viva dels passos i
      els selectors de fitxer hi són sempre. */
@@ -424,7 +461,10 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const safata = (
     <div className={activa ? 'sdp-xat-adjunts sdp-xat-adjunts--activa' : 'sdp-xat-adjunts'} role={activa ? 'group' : undefined}
       aria-label={activa ? t('section.xat.adjunts.grup', 'Adjunts del xat') : undefined} ref={contenidor}>
-      {error ? <p role="alert">{textDErrorAdjunt(error, t, t('section.xat.adjunts.error.envia', 'No hem pogut enviar el fitxer.'))}</p> : null}
+      {error ? <div className="sdp-xat-adjunts__fila">
+        <p role="alert">{textDErrorAdjunt(error, t, t('section.xat.adjunts.error.envia', 'No hem pogut enviar el fitxer.'))}</p>
+        <button type="button" className="sdp-xat-icona" onClick={tancaAvis} aria-label={t('section.xat.adjunts.tancaAvis', 'Tanca l’avís')}><X size={20} aria-hidden="true" focusable="false" /></button>
+      </div> : null}
       {quota?.pendents?.length ? <div role="group" aria-label={t('section.xat.adjunts.pendents', 'Fitxers pendents d’enviar')}>
         <p>{t('section.xat.adjunts.pendentsText', 'Tens fitxers que no s’han arribat a enviar. Pots descartar-los per recuperar espai.')}</p>
         {quota.pendents.map((a) => <button type="button" className="sdp-xat-pindola" key={a.id} disabled={pujant || Boolean(ocupat)} onClick={() => descartaPendent(a.id)}>
@@ -444,13 +484,36 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
       {preparat && deCompartir && preparat.tipus !== 'veu' ? (
         <label className="sdp-xat-adjunts__peu">
           <span className="sdp-nomes-lector">{t('section.xat.adjunts.peu', 'Text del fitxer (opcional)')}</span>
-          <input type="text" name="xatPeuAdjunt" autoComplete="off" maxLength={LIMIT_TEXT} value={peu} disabled={pujant}
+          <input type="text" name="xatPeuAdjunt" autoComplete="off" maxLength={LIMIT_TEXT} value={peu} disabled={pujant || Boolean(ocupat)}
             placeholder={t('section.xat.adjunts.peuPlaceholder', 'Afig un text…')}
             onChange={(e) => setPeu(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent?.isComposing) { e.preventDefault(); botons.primari.current?.click(); } }} />
         </label>
       ) : null}
+      {ubicacio ? <>
+        {/* R32.8 · Codex (semàntica: neteja real del fitxer, reintent idempotent) + Gemini (píndola amb MapPin). */}
+        <div className="sdp-xat-adjunts__fila sdp-xat-ubicacio-control">
+          <p className="sdp-xat-adjunts__avis sdp-xat-ubicacio-control__estat" id={idAvis}>
+            <MapPin size={16} aria-hidden="true" focusable="false" />
+            <span>{t('section.xat.adjunts.ubicacioInclosa', '📍 S’inclourà la ubicació on s’ha fet ({lat}°, {lng}°)')
+              .replace('{lat}', new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(ubicacio.lat))
+              .replace('{lng}', new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(ubicacio.lng))}</span>
+          </p>
+          <button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria" disabled={pujant || Boolean(ocupat) || haIntentatEnviar}
+            title={haIntentatEnviar ? t('section.xat.adjunts.ubicacioFixada', 'El primer intent pot haver arribat al servidor. El reintent conserva la mateixa ubicació.') : undefined}
+            onClick={amagaLloc}>{t('section.xat.adjunts.amagaLloc', 'Amaga el lloc')}</button>
+        </div>
+        {haIntentatEnviar ? <p className="sdp-xat-adjunts__avis">{t('section.xat.adjunts.ubicacioFixada', 'El primer intent pot haver arribat al servidor. El reintent conserva la mateixa ubicació.')}</p> : null}
+      </> : preparat?.conservaUbicacio === false ? (
+        <p className="sdp-xat-adjunts__avis sdp-xat-ubicacio-control__estat">
+          <MapPin size={16} aria-hidden="true" focusable="false" />
+          <span>{t('section.xat.ubicacio.amagada', 'Ubicació amagada')}</span>
+        </p>
+      ) : null}
       {avisUbicacio ? <p className="sdp-xat-adjunts__avis" id={idAvis}>{t('section.xat.adjunts.videoUbicacio', 'Este vídeo s’envia tal com és: si el mòbil hi va guardar la ubicació, qui el reba la podrà vore.')}</p> : null}
+      {ocupat === 'tria' && progresCompressio !== null ? <p className="sdp-xat-adjunts__progres">
+        <progress max="1" value={progresCompressio} aria-label={t('section.xat.adjunts.progresCompressio', 'Progrés de la compressió del vídeo')} />
+      </p> : null}
       {/* XAT-03 · La barra nativa diu el percentatge als lectors; el text visible no es repetix. */}
       {progres && preparat ? (
         <p className="sdp-xat-adjunts__progres">
@@ -459,7 +522,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
         </p>
       ) : null}
       <p className={avisAturada && estat === avisAturada ? 'sdp-xat-adjunts__estat sdp-xat-adjunts__avis' : 'sdp-xat-adjunts__estat'} role="status">{estat}</p>
-      <input className="sdp-nomes-lector" type="file" ref={selector} accept={ACCEPTA_GALERIA} tabIndex={-1} aria-label={t('section.xat.adjunts.selector', 'Tria una foto o un vídeo de fins a 10 segons')} onChange={(e) => { const fitxer = e.target.files?.[0]; e.target.value = ''; tria(fitxer); }} />
+      <input className="sdp-nomes-lector" type="file" ref={selector} accept={ACCEPTA_GALERIA} tabIndex={-1} aria-label={t('section.xat.adjunts.selector', 'Tria una foto o un vídeo de fins a 60 segons')} onChange={(e) => { const fitxer = e.target.files?.[0]; e.target.value = ''; tria(fitxer); }} />
       {tactil ? <input className="sdp-nomes-lector" type="file" ref={selectorCamera} accept="image/*" capture="environment" tabIndex={-1} aria-label={t('section.xat.adjunts.selectorCamera', 'Fes una foto amb la càmera')} onChange={(e) => { const fitxer = e.target.files?.[0]; e.target.value = ''; tria(fitxer); }} /> : null}
     </div>
   );
@@ -470,7 +533,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const primari = gravant
     ? { clau: 'atura', etiqueta: t('section.xat.adjunts.atura', 'Atura la gravació'), icona: Square, onClick: () => gravadora.current?.atura() }
     : preparat
-      ? { clau: 'envia', etiqueta: pujant ? t('section.xat.adjunts.enviant', 'Enviant…') : t('section.xat.adjunts.envia', 'Envia el fitxer'), icona: Send, onClick: envia, ariaDisabled: pujant, ocupat: pujant, descritPer: avisUbicacio ? idAvis : undefined }
+      ? { clau: 'envia', etiqueta: pujant ? t('section.xat.adjunts.enviant', 'Enviant…') : t('section.xat.adjunts.envia', 'Envia el fitxer'), icona: Send, onClick: envia, ariaDisabled: pujant || Boolean(ocupat), ocupat: pujant || Boolean(ocupat), descritPer: avisUbicacio || ubicacio ? idAvis : undefined }
       : quota && potGravar && !ocupat
         ? { clau: 'grava', etiqueta: t('section.xat.adjunts.grava', 'Grava àudio'), icona: Mic, onClick: grava, nomesBuit: true, ariaDisabled: pujant }
         : null;

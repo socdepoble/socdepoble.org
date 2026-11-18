@@ -9,9 +9,10 @@
    (opcional): rep la fracció 0..1 dels bytes ja pujats. Qui no puja res de
    veres (seed, local) l'ignora. El contracte és a contracte.js; el preu de
    seguretat (XHR no veta redireccions), al port de Supabase. */
-export const QUOTA_XAT_BYTES = 20_000_000;
-export const MAX_VIDEO_MS = 10_000;
-export const MISSATGE_QUOTA_XAT = "Espera't, que no tenim més diners per a pagar el servidor... ja et direm quan en pots pujar més!";
+export const QUOTA_XAT_BYTES = 250_000_000;
+export const MAX_VIDEO_MS = 60_000;
+export const MAX_VIDEO_ENTRADA_BYTES = 150_000_000;
+export const MISSATGE_QUOTA_XAT = 'Has arribat al límit d’espai dels adjunts del xat. Revisa els fitxers pendents o prova-ho més endavant.';
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-3 i MEDIA-9) · Cap foto en PNG:
    WebKit no sap codificar WebP en canvas i la foto es torna a demanar en JPEG
    (adjuntLocal.js); un PNG pesaria unes nou vegades més contra la quota. El
@@ -22,7 +23,7 @@ export const MIME_XAT = Object.freeze({
   'video/mp4': 'video', 'video/webm': 'video', 'video/quicktime': 'video',
   'audio/webm': 'veu', 'audio/mp4': 'veu', 'audio/ogg': 'veu'
 });
-export const MAXIM_ADJUNT_XAT = Object.freeze({ imatge: 2_000_000, veu: 3_000_000, video: QUOTA_XAT_BYTES });
+export const MAXIM_ADJUNT_XAT = Object.freeze({ imatge: 2_000_000, veu: 3_000_000, video: 20_000_000 });
 /* B2e · P1-12 (marató 261101_2143) · El que veu el servidor d'un adjunt
    xifrat: MIME opac i sostre del blob farcit (Padmé) al bucket. Viuen ací, al
    mòdul neutral, perquè el transport de Supabase (supabase/xatXifrat.js) no
@@ -52,12 +53,21 @@ export const ERRORS_ADJUNT_XAT = Object.freeze({
   xarxa: 'No hem pogut connectar amb el servidor. Comprova la connexió i torna-ho a provar.',
   servidor: 'El servidor no ha pogut atendre la petició. Torna-ho a provar d’ací a una estona.',
   'sense-confirmacio': 'El servidor no ha confirmat el missatge. Torna-ho a provar.',
-  format: 'Tria una foto o un vídeo de fins a 10 segons.',
+  format: 'Tria una foto o un vídeo de fins a 60 segons.',
   'format-heic': 'Este navegador no pot preparar esta foto HEIC o HEIF. Prova-ho amb Safari o tria una foto JPEG o PNG.',
-  durada: 'El vídeo ha de durar com a màxim 10 segons.',
+  durada: 'El vídeo ha de durar com a màxim 60 segons.',
   buit: 'Tria un fitxer que no estiga buit.',
   'durada-illegible': 'No hem pogut llegir la durada del vídeo.',
   'video-illegible': 'El navegador no pot llegir este vídeo.',
+  'video-mida-entrada': 'Tria un vídeo de com a màxim 150 MB.',
+  'video-compressio-no-disponible': 'Este navegador no pot preparar este vídeo. Tria’n un de menys de 20 MB o prova un altre navegador.',
+  'video-audio-no-capturable': 'No podem comprimir este vídeo conservant-ne el so. Tria’n un de menys de 20 MB o prova un altre navegador.',
+  'video-compressio': 'No hem pogut preparar el vídeo. Torna-ho a provar mantenint esta pantalla oberta.',
+  'video-mida': 'El vídeo preparat encara supera 20 MB. Tria un clip més curt.',
+  'video-compressio-temps': 'El vídeo s’ha quedat aturat mentre es preparava. Torna-ho a provar amb esta pantalla oberta.',
+  'ubicacio-invalida': 'La ubicació del fitxer no és vàlida. Torna a preparar-lo.',
+  'ubicacio-no-admesa': 'S’ha enviat sense la ubicació: el servidor de Sóc de Poble encara no l’admet.',
+  'ubicacio-no-eliminable': 'Este navegador no ha pogut amagar la ubicació del vídeo. Tria un MP4 o prova-ho amb un altre navegador.',
   foto: 'No hem pogut preparar la foto.',
   'foto-mida': 'No hem pogut reduir prou esta foto. Tria’n una altra o guarda-la amb menys resolució.',
   'foto-codificacio': 'Este navegador no ha pogut preparar la foto. Prova-ho amb una altra foto o amb un altre navegador.',
@@ -81,11 +91,22 @@ export const tempsLimitPujada = (bytes) => 30_000 + Math.ceil(Math.max(0, Number
 /** Un Error amb el `code` i el text valencià d'ERRORS_ADJUNT_XAT. */
 export const errorAdjuntXat = (code, extra = {}) => Object.assign(new Error(ERRORS_ADJUNT_XAT[code]), { code, ...extra });
 
-export function validaAdjuntXat({ fitxer, tipus, duradaMs }) {
+/** Només coordenades explícites del DTO: sense coacció, altitud ni autoritat. */
+export function normalitzaUbicacioXat(valor) {
+  if (valor === null || valor === undefined) return null;
+  if (typeof valor !== 'object' || Array.isArray(valor) || Object.keys(valor).length !== 2
+    || !Object.keys(valor).every(clau => clau === 'lat' || clau === 'lng')
+    || !Number.isFinite(valor.lat) || !Number.isFinite(valor.lng)
+    || valor.lat < -90 || valor.lat > 90 || valor.lng < -180 || valor.lng > 180) throw errorAdjuntXat('ubicacio-invalida');
+  return { lat: valor.lat, lng: valor.lng };
+}
+
+export function validaAdjuntXat({ fitxer, tipus, duradaMs, ubicacio, conservaUbicacio }) {
   if (!(fitxer instanceof Blob) || !fitxer.size || MIME_XAT[fitxer.type] !== tipus) throw errorAdjuntXat('format');
-  // El servidor diu SDP-XAT-020 tant per la quota com pel sostre del tipus.
-  if (fitxer.size > QUOTA_XAT_BYTES || fitxer.size > MAXIM_ADJUNT_XAT[tipus]) throw errorAdjuntXat('SDP-XAT-020');
+  if (fitxer.size > MAXIM_ADJUNT_XAT[tipus]) throw errorAdjuntXat(tipus === 'video' ? 'video-mida' : 'SDP-XAT-020');
   if (tipus !== 'imatge' && (!Number.isSafeInteger(duradaMs) || duradaMs <= 0 || (tipus === 'video' && duradaMs > MAX_VIDEO_MS))) {
     throw errorAdjuntXat('durada');
   }
+  const lloc = normalitzaUbicacioXat(ubicacio);
+  if (conservaUbicacio === false && lloc) throw errorAdjuntXat('ubicacio-invalida');
 }

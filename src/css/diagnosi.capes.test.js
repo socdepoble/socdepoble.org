@@ -136,7 +136,9 @@ describe('l’accés ràpid i la secció', () => {
   });
 
   test('separada de l’Índex per dalt amb el mateix aire que l’Índex de les xifres', () => {
-    const index = declaracions(unaRegla('.sdp-consola__index'));
+    /* v1.2.8 · Gemini R32.9 (Quadre Blanc Editorial) · L'Índex té ara la regla base i una de @media (min-width: 900px)
+       per a les dues columnes; l'aire de dalt és el de la regla base. */
+    const index = declaracions(deSelector('.sdp-consola__index').find((r) => !r.pares.some((p) => p.startsWith('@media'))));
     expect(declaracions(unaRegla('.sdp-consola__diagnosi'))).toEqual({ 'margin-top': index['margin-top'] });
     expect(index['margin-top']).toBe('var(--sdp-space-8)');
   });

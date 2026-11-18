@@ -49,13 +49,14 @@ import {
   respostaDeLaIAIA
 } from '../../../data/iaiaLocal.js';
 import { Fragment, Suspense, forwardRef, lazy, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, FileText, ImagePlus } from 'lucide-react';
-import { Link } from '../../../app/contexts/RouterContext.jsx';
+import { AlertTriangle, Copy, CornerUpRight, FileText, ImagePlus, Pin, Star, Trash2, X } from 'lucide-react';
+import { Link, useNavigate } from '../../../app/contexts/RouterContext.jsx';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import CapcaleraConversa from './CapcaleraConversa.jsx';
-import Bombolla from './Bombolla.jsx';
+import Bombolla, { normalitzaReaccions } from './Bombolla.jsx';
+import DialegCompartir from './DialegCompartir.jsx';
 import SeparadorDia from './SeparadorDia.jsx';
 import SeparadorNoLlegits from './SeparadorNoLlegits.jsx';
 import BotoBaixar from './BotoBaixar.jsx';
@@ -78,7 +79,7 @@ import { useSilenciDelFil } from '../useSilenciDelFil.js';
 import { useArxivaDelFil } from '../useArxivaDelFil.js';
 import DialegSilenci from './DialegSilenci.jsx';
 import PanellAdjuntsConversa from './PanellAdjuntsConversa.jsx';
-import { DialegConfirmacio } from '../../../components/PedraSeca/organismes/Dialeg.jsx';
+import { Dialeg, DialegConfirmacio } from '../../../components/PedraSeca/organismes/Dialeg.jsx';
 
 /* P1-12 pas 17 (pla 261101_1246, T7 · S5) · L'estat del xifratge d'esta conversa i el
    diàleg del número de seguretat, darrere de la bandera compilada. Apagada, Rollup
@@ -334,14 +335,36 @@ export default function Conversa({
   moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false,
   carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false, respostaLocalIAIA = respostaDeLaIAIA,
   senseSessio = false, escrivint = 0, onEscrivint = null, onOblidaSessioIAIA = null,
-  ambContingutCompartit = false, ambArxivar = false, canals = null, onTriaCanal = null
+  ambContingutCompartit = false, ambArxivar = false, canals = null, onTriaCanal = null,
+  caraPropia = null, nomPropi = '', rutaPropia = null,
+  filsPerReenviar = null, onReenviaMissatge = null, onNouGrupReenvia = null,
+  onAlternaReaccio = null, onAlternaDestacat = null, onAlternaFixat = null,
+  onEliminaMissatge = null, onObriDirecteAmb = null,
+  /* v1.2.8 · «Elimina per a tothom» només apareix amb un motor que ho faça al servidor; sense, seria
+     un esborrat només de la pantalla pròpia presentat com si fóra per a tothom (Llei 0). */
+  onEliminaPerATothom = null
 }) {
+  const navigate = useNavigate();
   /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
      guarda la de l'últim render confirmat. */
   const establesRef = useRef(null);
   const estables = useMemo(() => estabilitza(missatgesRebuts, establesRef.current), [missatgesRebuts]);
   useLayoutEffect(() => { establesRef.current = estables; }, [estables]);
-  const messages = estables.llista;
+  const [amagatsLocals, setAmagatsLocals] = useState(() => new Set());
+  const [lapidesLocals, setLapidesLocals] = useState(() => new Map());
+  const [reaccionsLocals, setReaccionsLocals] = useState(() => new Map());
+  const [destacatsLocals, setDestacatsLocals] = useState(() => new Map());
+  const [fixatIdLocal, setFixatIdLocal] = useState(undefined);
+  const [dialegElimina, setDialegElimina] = useState(null);
+  const [lotReenvia, setLotReenvia] = useState(null);
+  const obridorEliminaRef = useRef(null);
+  const obridorReenviaRef = useRef(null);
+  const messages = useMemo(
+    () => (amagatsLocals.size === 0
+      ? estables.llista
+      : estables.llista.filter((m) => m?.id == null || !amagatsLocals.has(String(m.id)))),
+    [estables.llista, amagatsLocals]
+  );
   const [text, setText] = useState(() => initialText || llegixEsborrany(clauEsborrany));
   const [modeSeleccio, setModeSeleccio] = useState(false);
   const [triats, setTriats] = useState(() => new Set());
@@ -350,6 +373,8 @@ export default function Conversa({
   const [aBaix, setABaix] = useState(true);
   const [nousAvall, setNousAvall] = useState(0);
   const [ressalt, setRessalt] = useState(null);
+  const [avisFilTancat, setAvisFilTancat] = useState(null);
+  const clauAvisFil = avisFil ? `${fil?.id ?? ''}::${tipusAvisFil}::${String(avisFil)}` : null;
   /* P1-12 pas 17 (T7 · S5) · L'estat del xifratge (invisible amb la bandera apagada) i el
      diàleg del número: null mentre no s'ha obert mai (no es carrega), true obert, false tancat. */
   const xifratge = useXifratgeDelFil(fil);
@@ -698,6 +723,13 @@ export default function Conversa({
        estat nou: en muntar, forçava un segon render de tota la conversa. Ara
        només es buida si hi havia res triat. */
     setTriats((previs) => (previs.size ? new Set() : previs));
+    setAmagatsLocals((previs) => (previs.size ? new Set() : previs));
+    setLapidesLocals((previs) => (previs.size ? new Map() : previs));
+    setReaccionsLocals((previs) => (previs.size ? new Map() : previs));
+    setDestacatsLocals((previs) => (previs.size ? new Map() : previs));
+    setFixatIdLocal((previ) => (previ !== undefined ? undefined : previ));
+    setDialegElimina((previ) => (previ !== null ? null : previ));
+    setLotReenvia((previ) => (previ !== null ? null : previ));
   }, [fil?.id]);
 
   /* L'espera a estar al dia té límit: passat MS_ESPERA_OBERTURA es fixa amb
@@ -1146,8 +1178,122 @@ export default function Conversa({
      de moderació de cada missatge són sempre les mateixes funcions (es
      resolen en el clic, amb la moderació i el fil del darrer render), i la
      tria de cada bombolla només canvia quan canvia la seua casella. */
-  const araRef = useRef({ moderacio, fil });
-  useLayoutEffect(() => { araRef.current = { moderacio, fil }; });
+  const araRef = useRef({
+    moderacio, fil, navigate, actorLlista, usuariAdjunts, onSendMessage, onCopia,
+    onAlternaReaccio, onAlternaDestacat, onAlternaFixat, onReenviaMissatge, onObriDirecteAmb, onEliminaMissatge, messages
+  });
+  useLayoutEffect(() => {
+    araRef.current = {
+      moderacio, fil, navigate, actorLlista, usuariAdjunts, onSendMessage, onCopia,
+      onAlternaReaccio, onAlternaDestacat, onAlternaFixat, onReenviaMissatge, onObriDirecteAmb, onEliminaMissatge, messages
+    };
+  });
+
+  const responEnPrivat = useCallback((msg) => {
+    if (!msg) return;
+    const { onObriDirecteAmb: cb, navigate: nav } = araRef.current;
+    if (typeof cb === 'function') {
+      cb(msg, { cita: true });
+      return;
+    }
+    const uid = msg.usuariId != null ? String(msg.usuariId) : '';
+    if (!uid) return;
+    const resum = String(msg.text ?? '').trim().slice(0, 140);
+    const params = new URLSearchParams({ amb: uid });
+    if (resum) params.set('context', `> ${resum}\n`);
+    nav(`/xat?${params.toString()}`);
+  }, []);
+
+  const enviaPrivat = useCallback((msg) => {
+    if (!msg) return;
+    const { onObriDirecteAmb: cb, navigate: nav } = araRef.current;
+    if (typeof cb === 'function') {
+      cb(msg, { cita: false });
+      return;
+    }
+    const uid = msg.usuariId != null ? String(msg.usuariId) : '';
+    if (!uid) return;
+    nav(`/xat?${new URLSearchParams({ amb: uid }).toString()}`);
+  }, []);
+
+  const alternaReaccio = useCallback((msg, emoji) => {
+    if (!msg || msg.id == null || !emoji) return;
+    const id = String(msg.id);
+    const { actorLlista: actor, usuariAdjunts: uidAdj, onAlternaReaccio: cb } = araRef.current;
+    const meuId = actor?.id ?? uidAdj ?? null;
+    setReaccionsLocals((previs) => {
+      const actual = previs.has(id)
+        ? previs.get(id)
+        : normalitzaReaccions(msg.reaccions ?? msg.metadades?.reaccions ?? null, meuId);
+      const idx = actual.findIndex((r) => r.emoji === emoji);
+      let seguent;
+      if (idx >= 0) {
+        const entrada = actual[idx];
+        const nouQuants = entrada.meua ? entrada.quants - 1 : entrada.quants + 1;
+        seguent = actual.map((r, i) => (i === idx ? { emoji, quants: nouQuants, meua: !entrada.meua } : r)).filter((r) => r.quants > 0);
+      } else {
+        seguent = [...actual, { emoji, quants: 1, meua: true }];
+      }
+      const nous = new Map(previs);
+      nous.set(id, seguent);
+      return nous;
+    });
+    cb?.(msg, emoji);
+  }, []);
+
+  const alternaDestacat = useCallback((msg, nouEstat) => {
+    if (!msg || msg.id == null) return;
+    const id = String(msg.id);
+    setDestacatsLocals((previs) => {
+      const nous = new Map(previs);
+      nous.set(id, Boolean(nouEstat));
+      return nous;
+    });
+    araRef.current.onAlternaDestacat?.(msg, Boolean(nouEstat));
+  }, []);
+
+  const alternaFixat = useCallback((msg, nouEstat) => {
+    if (!msg || msg.id == null) return;
+    const id = String(msg.id);
+    setFixatIdLocal(nouEstat ? id : false);
+    araRef.current.onAlternaFixat?.(msg, Boolean(nouEstat));
+  }, []);
+
+  const obriReenvia = useCallback((msg, obridor = null) => {
+    if (!msg) return;
+    obridorReenviaRef.current = obridor ?? null;
+    const llista = Array.isArray(msg) ? msg : [msg];
+    const textCombinat = llista.map((x) => String(x?.text ?? '').trim()).filter(Boolean).join('\n\n');
+    setLotReenvia({ reenviat: true, missatges: llista, text: textCombinat });
+  }, []);
+
+  const demanaElimina = useCallback((msg, obridor = null) => {
+    if (!msg) return;
+    obridorEliminaRef.current = obridor ?? null;
+    const llista = Array.isArray(msg) ? msg : [msg];
+    setDialegElimina({ missatges: llista });
+  }, []);
+
+  const seleccionaDesDeMissatge = useCallback((msg) => {
+    const { messages: llistaAra } = araRef.current;
+    const idx = llistaAra.findIndex((x) => x === msg || (x?.id != null && msg?.id != null && String(x.id) === String(msg.id)));
+    const clau = idx >= 0 ? clauDe(llistaAra[idx], idx) : (msg?.id != null ? String(msg.id) : null);
+    setModeSeleccio(true);
+    if (clau != null) {
+      setTriats(new Set([clau]));
+    }
+  }, []);
+
+  const missatgeFixat = useMemo(() => {
+    if (fixatIdLocal === false) return null;
+    if (typeof fixatIdLocal === 'string' && fixatIdLocal) {
+      return perId.get(fixatIdLocal) ?? null;
+    }
+    const idDelFil = fil?.missatgeFixatId ?? fil?.fixatId ?? null;
+    if (idDelFil != null && perId.has(String(idDelFil))) return perId.get(String(idDelFil));
+    return messages.find((m) => m && !m.esborrat && !m.bloquejat && (m.fixat || m.metadades?.fixat)) ?? null;
+  }, [fixatIdLocal, perId, fil, messages]);
+
   const [accionsPerMissatge] = useState(() => new WeakMap());
   const accionsDe = useCallback((msg) => {
     let accions = accionsPerMissatge.get(msg);
@@ -1184,11 +1330,7 @@ export default function Conversa({
     if (!msg || msg.id == null) return;
     setVisorGaleria({ missatgeId: String(msg.id), urlInicial: url || null, obridor: obridor || null });
   }, []);
-  /* Gauntlet R22 (xat-03) · Estable: un onTanca nou a cada pintat ja no
-     tornava a muntar res al visor, però no cal. */
   const tancaVisorGaleria = useCallback(() => setVisorGaleria(null), []);
-  /* Gauntlet R22 (xat-07, xat-09) · Les cares del padró del fil (fil.altres)
-     i, per a cada foto, la llavor de l'autor: una entitat, pel seu nom. */
   const caresFil = useMemo(() => caresDelFil(fil), [fil]);
   const galeriaImatges = useMemo(
     () => imatgesDeLaGaleria(messages, { t, fil, cares: caresFil }),
@@ -1198,10 +1340,6 @@ export default function Conversa({
   const bombolles = useMemo(() => {
     const pintaAccionsIAIA = (preguntaText, respostaText) => {
       const accionsIAIA = extreuAccionsDeRespostaIAIA(respostaText);
-      /* xat-ux-a11y-05 (T7a, 261104) · L'esborrany, només darrere d'una pregunta
-         (davall de la salutació o de la crida a registrar-se no hi ha cap
-         resposta que guardar, i el botó la feia semblar una resposta: IA-07) i
-         només amb sessió (sense, crear la nota falla sempre). */
       const esborranyIAIA = !senseSessio && typeof onEnviaAlBloc === 'function' && String(preguntaText ?? '').trim()
         ? esborranyDeRespostaIAIA(preguntaText, respostaText)
         : null;
@@ -1230,10 +1368,6 @@ export default function Conversa({
     return files.map((fila, idxFila) => {
       if (fila.tipus === 'dia') return <SeparadorDia key={fila.clau} iso={fila.iso} locale={locale} t={t} />;
       if (fila.tipus === 'no-llegits') return <SeparadorNoLlegits key={fila.clau} quants={fila.quants} t={t} />;
-      /* IDEA-56 (Bloc F.2) · Una resposta local de la IAIA, amb el seu avís
-         (la classe de la cortesia): només la veu qui ha preguntat. Sense seq
-         (cap data-vist), sense «Respon» ni denúncia. Gauntlet 261029 (cicle
-         1) · Darrere de la seua pregunta (intercalaRespostesLocals). */
       if (fila.tipus === 'iaia-local') {
         return (
           <Fragment key={fila.clau}>
@@ -1245,10 +1379,11 @@ export default function Conversa({
           </Fragment>
         );
       }
-      const msg = fila.msg;
-      /* Fase D (261020, tasca 2) · Què es pot denunciar o bloquejar d'esta bombolla. */
+      const msgOriginal = fila.msg;
+      const clauId = msgOriginal?.id != null ? String(msgOriginal.id) : null;
+      const msg = clauId && lapidesLocals.has(clauId) ? lapidesLocals.get(clauId) : msgOriginal;
       const objectiu = moderacio && !msg.bloquejat ? moderacio.objectiuDeMissatge?.(msg, fil) ?? null : null;
-      const accions = objectiu ? accionsDe(msg) : null;
+      const accions = objectiu ? accionsDe(msgOriginal) : null;
       const esRespostaIAIA = (cortesiaIAIA || consultaIAIA) && Boolean(msg?.is_ai || msg?.esIA || msg?.usuariId === IAIA_ID);
       let preguntaPrevia = '';
       if (esRespostaIAIA) {
@@ -1260,6 +1395,12 @@ export default function Conversa({
         }
       }
       const accionsIAIANode = esRespostaIAIA ? pintaAccionsIAIA(preguntaPrevia, msg?.text) : null;
+      const reaccionsMsg = clauId && reaccionsLocals.has(clauId) ? reaccionsLocals.get(clauId) : null;
+      const destacatMsg = clauId && destacatsLocals.has(clauId)
+        ? destacatsLocals.get(clauId)
+        : Boolean(msg?.destacat || msg?.metadades?.destacat);
+      const fixatMsg = missatgeFixat != null && clauId != null && String(missatgeFixat.id) === clauId;
+
       const bombollaNode = (
         <Bombolla
           key={accionsIAIANode ? undefined : fila.clau}
@@ -1274,6 +1415,20 @@ export default function Conversa({
           citat={msg.respostaA != null ? perId.get(String(msg.respostaA)) ?? null : null}
           onVesACita={vesAlMissatge}
           onRespon={potRespondre ? respon : null}
+          onResponEnPrivat={esGrup && potRespondre ? responEnPrivat : null}
+          onReacciona={potRespondre ? alternaReaccio : null}
+          onDestaca={alternaDestacat}
+          onFixa={potRespondre ? alternaFixat : null}
+          onReenvia={obriReenvia}
+          onEnviaPrivat={esGrup ? enviaPrivat : null}
+          onElimina={demanaElimina}
+          onSelecciona={seleccionaDesDeMissatge}
+          reaccions={reaccionsMsg}
+          destacat={destacatMsg}
+          fixat={fixatMsg}
+          caraPropia={caraPropia}
+          nomPropi={nomPropi}
+          rutaPropia={rutaPropia}
           ressaltat={ressalt != null && msg.id != null && ressalt.id === String(msg.id)}
           locale={locale}
           t={t}
@@ -1298,6 +1453,8 @@ export default function Conversa({
     });
   }, [
     files, moderacio, fil, accionsDe, configAdjunts, usuariAdjunts, esGrup, perId, vesAlMissatge, potRespondre, respon,
+    responEnPrivat, alternaReaccio, alternaDestacat, alternaFixat, obriReenvia, enviaPrivat, demanaElimina, seleccionaDesDeMissatge,
+    lapidesLocals, reaccionsLocals, destacatsLocals, missatgeFixat, caraPropia, nomPropi, rutaPropia,
     ressalt, locale, t, modeSeleccio, seleccioDe, triats, onReintenta, onDescarta, onCopia, actorLlista, onMutaLlista,
     obriImatgeGaleria, cortesiaIAIA, consultaIAIA, onEnviaAlBloc, enviaEsborranyIAIA, creantNota, senseSessio, caresFil
   ]);
@@ -1457,6 +1614,31 @@ export default function Conversa({
           }
         } : null}
       />
+      {missatgeFixat && !modeSeleccio ? (
+        <div className="sdp-xat-fixat-baner" role="region" aria-label={t('section.xat.missatge.fixatEtiqueta', 'Missatge fixat')}>
+          <button
+            type="button"
+            className="sdp-xat-fixat-baner__ves"
+            onClick={() => vesAlMissatge(missatgeFixat.id)}
+          >
+            <Pin size={16} aria-hidden="true" focusable="false" />
+            <span className="sdp-xat-fixat-baner__text">
+              <strong>{t('section.xat.missatge.fixatEtiqueta', 'Missatge fixat')}: </strong>
+              {String(missatgeFixat.text ?? '').trim() || t('section.xat.missatge.opcions', 'Opcions del missatge')}
+            </span>
+          </button>
+          {potRespondre ? (
+            <button
+              type="button"
+              className="sdp-xat-icona"
+              aria-label={t('section.xat.missatge.desfixa', 'Desfixa')}
+              onClick={() => alternaFixat(missatgeFixat, false)}
+            >
+              <X size={18} aria-hidden="true" focusable="false" />
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <PanellAdjuntsConversa
         obert={contingutCompartitObert && !modeSeleccio}
         onTanca={() => setContingutCompartitObert(false)}
@@ -1617,7 +1799,7 @@ export default function Conversa({
           s'ha pogut llegir. Mentre una lectura vola, el botó continua al seu
           lloc i amb el focus (aria-disabled i no disabled), diu
           «Actualitzant…» i no torna a demanar. */}
-      {avisFil ? (
+      {avisFil && avisFilTancat !== clauAvisFil ? (
         <div className="sdp-xat-avis-public">
           <AlertTriangle size={16} aria-hidden="true" focusable="false" />
           <span role="status">
@@ -1638,6 +1820,14 @@ export default function Conversa({
                 : t('section.xat.missatge.reintenta', 'Torna-ho a provar')}
             </button>
           ) : null}
+          <button
+            type="button"
+            className="sdp-xat-icona sdp-xat-avis-public__tanca"
+            onClick={() => setAvisFilTancat(clauAvisFil)}
+            aria-label={t('section.xat.adjunts.tancaAvis', 'Tanca l’avís')}
+          >
+            <X size={16} aria-hidden="true" focusable="false" />
+          </button>
         </div>
       ) : null}
 
@@ -1653,16 +1843,72 @@ export default function Conversa({
           ix com sempre; si `actiu` canvia, el camp no es torna a muntar. */}
       {modeSeleccio ? (
         <div className="sdp-xat-compositor sdp-xat-compositor--seleccio">
-          <button
-            type="button"
-            className="sdp-xat-accio-bloc"
-            onClick={enviaAlBloc}
-            disabled={triats.size === 0 || creantNota}
-            aria-busy={creantNota || undefined}
-          >
-            <FileText size={20} aria-hidden="true" focusable="false" />
-            <span>{creantNota ? t('section.xat.seleccio.creant', 'Creant la nota…') : t('section.xat.seleccio.enviaBloc', 'Enviar al Bloc de Notes')}</span>
-          </button>
+          <div className="sdp-xat-seleccio-accions" role="toolbar" aria-label={t('section.xat.missatge.selecciona', 'Selecciona missatges')}>
+            <button
+              type="button"
+              className="sdp-xat-seleccio-accions__boto"
+              disabled={triats.size === 0}
+              onClick={() => {
+                const llista = messages.filter((m, i) => triats.has(clauDe(m, i)));
+                if (llista.length > 0) obriReenvia(llista);
+              }}
+            >
+              <CornerUpRight size={18} aria-hidden="true" focusable="false" />
+              <span>{t('section.xat.seleccio.reenvia', 'Reenvia')}</span>
+            </button>
+            <button
+              type="button"
+              className="sdp-xat-seleccio-accions__boto"
+              disabled={triats.size === 0}
+              onClick={() => {
+                const llista = messages.filter((m, i) => triats.has(clauDe(m, i)));
+                for (const m of llista) alternaDestacat(m, true);
+                surtDeSeleccio();
+              }}
+            >
+              <Star size={18} aria-hidden="true" focusable="false" />
+              <span>{t('section.xat.seleccio.destaca', 'Destaca')}</span>
+            </button>
+            <button
+              type="button"
+              className="sdp-xat-seleccio-accions__boto"
+              disabled={triats.size === 0}
+              onClick={() => {
+                const textTria = messages
+                  .filter((m, i) => triats.has(clauDe(m, i)))
+                  .map((m) => String(m?.text ?? '').trim())
+                  .filter(Boolean)
+                  .join('\n\n');
+                if (textTria) onCopia?.(textTria);
+                surtDeSeleccio();
+              }}
+            >
+              <Copy size={18} aria-hidden="true" focusable="false" />
+              <span>{t('section.xat.seleccio.copia', 'Copia')}</span>
+            </button>
+            <button
+              type="button"
+              className="sdp-xat-seleccio-accions__boto sdp-xat-seleccio-accions__boto--perill"
+              disabled={triats.size === 0}
+              onClick={() => {
+                const llista = messages.filter((m, i) => triats.has(clauDe(m, i)));
+                if (llista.length > 0) demanaElimina(llista);
+              }}
+            >
+              <Trash2 size={18} aria-hidden="true" focusable="false" />
+              <span>{t('section.xat.seleccio.elimina', 'Elimina')}</span>
+            </button>
+            <button
+              type="button"
+              className="sdp-xat-accio-bloc"
+              onClick={enviaAlBloc}
+              disabled={triats.size === 0 || creantNota}
+              aria-busy={creantNota || undefined}
+            >
+              <FileText size={20} aria-hidden="true" focusable="false" />
+              <span>{creantNota ? t('section.xat.seleccio.creant', 'Creant la nota…') : t('section.xat.seleccio.enviaBloc', 'Enviar al Bloc de Notes')}</span>
+            </button>
+          </div>
         </div>
       ) : (
         <ControlsAdjunt
@@ -1700,6 +1946,121 @@ export default function Conversa({
         </ControlsAdjunt>
       )}
       {peu}
+      {dialegElimina ? (() => {
+        const llistaElimina = dialegElimina.missatges;
+        const esAdminGrup = fil?.rol === 'admin' || fil?.rol === 'propietari';
+        const potPerATothom = typeof onEliminaPerATothom === 'function' && llistaElimina.length > 0 && llistaElimina.every((m) => m?.sender === 'me' || esAdminGrup);
+        const tancaElimina = () => {
+          setDialegElimina(null);
+          obridorEliminaRef.current?.focus?.({ preventScroll: true });
+        };
+        const executaElimina = (abast) => {
+          if (abast === 'mi') {
+            setAmagatsLocals((previs) => {
+              const nous = new Set(previs);
+              for (const m of llistaElimina) if (m?.id != null) nous.add(String(m.id));
+              return nous;
+            });
+          } else {
+            setLapidesLocals((previs) => {
+              const nous = new Map(previs);
+              for (const m of llistaElimina) {
+                if (m?.id != null) nous.set(String(m.id), { ...m, esborrat: true });
+              }
+              return nous;
+            });
+          }
+          for (const m of llistaElimina) onEliminaMissatge?.(m, { abast });
+          if (abast === 'tothom') onEliminaPerATothom?.(llistaElimina);
+          setDialegElimina(null);
+          if (modeSeleccio) surtDeSeleccio();
+          else obridorEliminaRef.current?.focus?.({ preventScroll: true });
+        };
+        return (
+          <Dialeg
+            obert={true}
+            onTanca={tancaElimina}
+            titol={t('section.xat.missatge.eliminaTitol', 'Vols eliminar el missatge?')}
+            mida="s"
+            className="sdp-xat-dialeg"
+          >
+            <div className="sdp-xat-dialeg__cos">
+              <div className="sdp-xat-elimina-opcions">
+                {potPerATothom ? (
+                  <button
+                    type="button"
+                    className="sdp-xat-pindola sdp-xat-pindola--perill"
+                    onClick={() => executaElimina('tothom')}
+                  >
+                    {t('section.xat.missatge.eliminaPerATothom', 'Elimina per a tothom')}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="sdp-xat-pindola sdp-xat-pindola--perill"
+                  onClick={() => executaElimina('mi')}
+                >
+                  {t('section.xat.missatge.eliminaPerAMi', 'Elimina per a mi')}
+                </button>
+                <button
+                  type="button"
+                  className="sdp-xat-pindola sdp-xat-pindola--secundaria"
+                  onClick={tancaElimina}
+                >
+                  {t('common.cancela', 'Cancel·lar')}
+                </button>
+              </div>
+            </div>
+          </Dialeg>
+        );
+      })() : null}
+      {lotReenvia ? (
+        <DialegCompartir
+          obert={true}
+          lot={lotReenvia}
+          fils={filsPerReenviar || canals || (fil ? [fil] : [])}
+          filActiuId={fil?.id ?? null}
+          senseSessio={senseSessio}
+          tornar={`/xat/${encodeURIComponent(String(fil?.id ?? ''))}`}
+          onTria={(desti) => {
+            const textEnviar = String(lotReenvia.text || '').trim();
+            if (typeof onReenviaMissatge === 'function') {
+              onReenviaMissatge(lotReenvia.missatges, [desti]);
+            } else if (desti && String(desti.id) === String(fil?.id) && textEnviar) {
+              onSendMessage?.(fil, textEnviar);
+            } else if (desti?.id != null) {
+              const p = new URLSearchParams();
+              if (textEnviar) p.set('context', textEnviar);
+              navigate(`/xat/${encodeURIComponent(String(desti.id))}${p.toString() ? `?${p.toString()}` : ''}`);
+            }
+            setLotReenvia(null);
+            if (modeSeleccio) surtDeSeleccio();
+          }}
+          onNouGrup={(lotActual) => {
+            const textEnviar = String(lotActual?.text || '').trim();
+            setLotReenvia(null);
+            if (modeSeleccio) surtDeSeleccio();
+            if (typeof onNouGrupReenvia === 'function') {
+              onNouGrupReenvia(lotActual);
+              return;
+            }
+            const p = new URLSearchParams();
+            if (textEnviar) p.set('context', textEnviar);
+            navigate(`/xat${p.toString() ? `?${p.toString()}` : ''}`);
+          }}
+          onDescarta={() => {
+            setLotReenvia(null);
+            obridorReenviaRef.current?.focus?.({ preventScroll: true });
+          }}
+          onVes={(ruta) => {
+            setLotReenvia(null);
+            navigate(ruta);
+          }}
+          locale={locale}
+          t={t}
+          joId={actorLlista?.id ?? usuariAdjunts ?? null}
+        />
+      ) : null}
       <VisorGaleriaXat
         obert={Boolean(visorGaleria)}
         imatges={galeriaImatges}

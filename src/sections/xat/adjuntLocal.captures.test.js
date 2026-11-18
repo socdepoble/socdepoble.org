@@ -32,11 +32,11 @@ describe('les constants', () => {
 });
 
 describe('una captura (PNG)', () => {
-  test('a 2048 px en WebP 0,8 i sense EXIF, en un sol intent si hi cap', async () => {
+  test('a 2048 px en WebP 0,8 amb EXIF publicable per defecte, en un sol intent si hi cap', async () => {
     const comprimeix = compressor({ 2048: PETITA });
     const a = await preparaAdjunt(captura(), { comprimeix });
     expect(comprimeix).toHaveBeenCalledOnce();
-    expect(comprimeix.mock.calls[0][1]).toEqual({ maxSize: 2048, quality: 0.8, conservaExif: false, format: 'image/webp' });
+    expect(comprimeix.mock.calls[0][1]).toEqual({ maxSize: 2048, quality: 0.8, conservaExif: true, format: 'image/webp' });
     expect(a).toMatchObject({ tipus: 'imatge', duradaMs: null });
     expect(a.fitxer.type).toBe('image/webp');
     expect(a.fitxer.size).toBe(PETITA);
@@ -74,7 +74,7 @@ describe('una captura (PNG)', () => {
     const a = await preparaAdjunt(captura(), { comprimeix });
     expect(crides(comprimeix)).toEqual([[2048, 'image/webp'], [2048, 'image/jpeg'], [1600, 'image/jpeg']]);
     expect(a.fitxer.type).toBe('image/jpeg');
-    for (const [, opcions] of comprimeix.mock.calls) expect(opcions).toMatchObject({ quality: 0.8, conservaExif: false });
+    for (const [, opcions] of comprimeix.mock.calls) expect(opcions).toMatchObject({ quality: 0.8, conservaExif: true });
   });
 
   test('un resultat només en PNG és error humà de codificació, sense provar cap altre costat', async () => {

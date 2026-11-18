@@ -68,12 +68,16 @@ export function parseDocument(raw) {
 // Fail closed on unknown JSON Schema constructs; support exactly the schema in this repo.
 const allowed = new Set(['$schema', '$id', '$comment', 'title', 'description', 'type', 'properties',
   'required', 'additionalProperties', 'enum', 'const', 'items', 'uniqueItems', 'minItems', 'maxItems',
-  'minLength', 'maxLength', 'pattern']);
+  'minLength', 'maxLength', 'pattern', 'minimum', 'maximum', 'default']);
 export function checkSchema(schema) {
   if (!schema || typeof schema !== 'object' || Array.isArray(schema)) throw new Error('Esquema il·legible');
   for (const key of Object.keys(schema)) if (!allowed.has(key)) throw new Error(`Esquema no suportat: ${key}`);
   if (!['object', 'array', 'string', 'boolean', 'integer', 'number'].includes(schema.type)) throw new Error('Tipus d’esquema no suportat');
   if (schema.pattern) new RegExp(schema.pattern);
+  for (const key of ['minimum', 'maximum']) {
+    if (Object.hasOwn(schema, key) && (!['integer', 'number'].includes(schema.type) || !Number.isFinite(schema[key]))) throw new Error(`Límit numèric d’esquema invàlid: ${key}`);
+  }
+  if (schema.minimum !== undefined && schema.maximum !== undefined && schema.minimum > schema.maximum) throw new Error('Límits numèrics d’esquema invertits');
   for (const sub of Object.values(schema.properties || {})) checkSchema(sub);
   if (schema.items) checkSchema(schema.items);
 }
@@ -83,6 +87,11 @@ export function validateSchema(data, schema, at = 'frontmatter') {
   if (schema.type === 'integer' ? !Number.isInteger(data) : type !== schema.type) return [`${at}: cal ${schema.type}`];
   if (schema.enum && !schema.enum.includes(data)) errors.push(`${at}: fora de l’enum`);
   if (Object.hasOwn(schema, 'const') && data !== schema.const) errors.push(`${at}: valor diferent de const`);
+  if (type === 'number') {
+    if (!Number.isFinite(data)) errors.push(`${at}: número no finit`);
+    if (schema.minimum !== undefined && data < schema.minimum) errors.push(`${at}: menor que minimum`);
+    if (schema.maximum !== undefined && data > schema.maximum) errors.push(`${at}: major que maximum`);
+  }
   if (type === 'string') {
     const len = [...data].length;
     if (schema.minLength !== undefined && len < schema.minLength) errors.push(`${at}: massa curt`);

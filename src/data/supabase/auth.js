@@ -596,12 +596,12 @@ const MISSATGE_ENTRADA = Object.freeze({
   [CODI_ENTRADA.CONTRASENYA_FEBLE]: 'La contrasenya és massa feble. Tria’n una de més llarga i més difícil d’endevinar.',
   [CODI_ENTRADA.COMPTE_EXISTENT]: 'Ja hi ha un compte amb este correu. Entra amb la teua contrasenya.',
   [CODI_ENTRADA.MASSA_INTENTS]: 'Massa intents seguits. Espera uns minuts i torna-ho a provar.',
-  [CODI_ENTRADA.SERVIDOR_INABASTABLE]: 'El servidor del poble no respon ara mateix. Torna-ho a provar d’ací a una estona.',
+  [CODI_ENTRADA.SERVIDOR_INABASTABLE]: 'El servidor de Sóc de Poble no respon ara mateix. Torna-ho a provar d’ací a una estona.',
   [CODI_ENTRADA.ENLLAC_CADUCAT]: 'L’enllaç per a restablir la contrasenya ja no val: ha caducat o ja s’ha fet servir. Demana’n un altre des de «Has oblidat la contrasenya?».',
   [CODI_ENTRADA.MATEIXA_CONTRASENYA]: 'La contrasenya nova ha de ser diferent de l’anterior.',
   /* Fase D (261020, tasca 1) · L'entrada amb el testimoni d'un proveïdor (entraAmbTokenDeProveidor). */
-  [CODI_ENTRADA.TOKEN_REBUTJAT]: 'El servidor del poble no ha acceptat la identificació del teu compte. Torna-ho a provar o entra amb el correu.',
-  [CODI_ENTRADA.PROVEIDOR_INACTIU]: 'Esta manera d’entrar encara no està activada al servidor del poble. Entra amb el correu.',
+  [CODI_ENTRADA.TOKEN_REBUTJAT]: 'El servidor de Sóc de Poble no ha acceptat la identificació del teu compte. Torna-ho a provar o entra amb el correu.',
+  [CODI_ENTRADA.PROVEIDOR_INACTIU]: 'Esta manera d’entrar encara no està activada al servidor de Sóc de Poble. Entra amb el correu.',
   [CODI_ENTRADA.DESCONEGUT]: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
 });
 const LIMIT_GOTRUE = /^over_[a-z_]+_rate_limit$/;

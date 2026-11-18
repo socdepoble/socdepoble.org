@@ -107,17 +107,19 @@ test('hooks de git: viu si el hook cita l’script, mort si no; sense core.hooks
   execFileSync('git', ['-C', arrel, 'init', '-q']);
   // Amb git però sense core.hooksPath: el hook existix però git no l'executa.
   const absents = [];
-  assert.deepEqual(hooksGit(arrel, { absents }), { 'pre-commit': '' });
+  assert.deepEqual(hooksGit(arrel, { absents }), { 'pre-commit': '', 'commit-msg': '', 'post-commit': '', 'pre-push': '' });
   assert.equal(absents.length, 1);
-  assert.equal(absents[0].ruta, '.husky/_');
+  assert.equal(absents[0].ruta, '.husky');
   execFileSync('git', ['-C', arrel, 'config', 'core.hooksPath', '.husky/_']);
+  escriu(arrel, '.husky/_/pre-commit', '#!/bin/sh\nexit 0\n');
+  fs.chmodSync(path.join(arrel, '.husky/_/pre-commit'), 0o755);
   assert.equal(hooksGit(arrel)['pre-commit'].includes('frontissa-contingut'), true);
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
   const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });
   const estat = Object.fromEntries(mapa.tasques.map((t) => [t.id, t.estat]));
   assert.equal(estat['frontissa-contingut'], 'viu');
   assert.equal(estat['porta-oblidada'], 'mort');
-  assert.equal(estat.post, 'desconegut', '.husky/post-commit no existix: no es jutja');
+  assert.equal(estat.post, 'mort', '.husky/post-commit absent: cap hook instal·lat el pot executar');
   assert.ok(mapa.arestes.some((a) => a.de === 'hook:git:pre-commit' && a.a === 'tasca:frontissa-contingut' && a.tipus === 'dispara'));
   assert.doesNotThrow(() => normalitzaMapa(mapa));
 });
@@ -322,6 +324,7 @@ test('portes 261026: porta-documents i run-portes --diagnostic mesuren conformit
   // R31 incorpora Coherència editorial viva com a pas de lectura real; el
   // denominador del diagnòstic l'ha de comptar sense convertir-lo en N/A.
   assert.deepEqual(PASSOS_DIAGNOSTIC.map((pas) => pas.nom), ['Contracte de plantilles', 'Autoritat i arrencada', 'Segell de skills',
+    'Consola neta (motor; imatges com a dependència explícita)',
     'Integritat del LEDGER', 'Contracte documental', 'Higiene de paquets', 'Tractor Vigilant', 'Lògica universal', 'Porta Cobertura Social', 'Coherència editorial viva'],
   'els passos readOnly de run-portes.mjs');
   assert.equal(fonts.cadenaPortes.total, PASSOS_DIAGNOSTIC.length, 'els passos readOnly de run-portes.mjs');

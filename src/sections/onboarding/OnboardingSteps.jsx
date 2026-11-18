@@ -97,7 +97,7 @@ const modeDelFormulari = (modeInicial, potRecuperar = false) => {
  * sense quedar en un oval de vora. Sense recuperació, o amb un altre codi,
  * l'Alerta de sempre.
  */
-export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar, onRecupera = null, introEntrada = null, t = TRADUCTOR_DE_RESERVA }) {
+export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar, onRecupera = null, introEntrada = null, teAccesGoogle = false, t = TRADUCTOR_DE_RESERVA }) {
   const potRecuperar = typeof onRecupera === 'function';
   const [mode, setMode] = useState(() => modeDelFormulari(modeInicial, potRecuperar));
   const [modeRebut, setModeRebut] = useState(modeInicial);
@@ -262,16 +262,6 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
       title={entrant ? t('section.login.registre.titolEntrar', 'Entra al teu compte') : t('section.login.registre.titolCrear', 'Crea el teu compte')}
       body={
         <>
-          {entrant ? (
-            <p className="onboarding-card__intro">
-              {introEntrada || t('section.login.registre.introEntrar', 'Entra amb el correu i la contrasenya del teu compte. Si el vas crear amb Google, no té contrasenya: entra amb Google.')}
-            </p>
-          ) : (
-            <p className="onboarding-card__intro">
-              {t('section.login.registre.introCrear', 'Primer entra una persona real. El teu perfil queda privat i separat de les organitzacions que crearàs després.')}
-            </p>
-          )}
-
           <div className="sdp-pindola--centrada onboarding-form__pindola">
             <PillToggle
               etiqueta={t('section.login.registre.opcions', 'Opcions d’accés')}
@@ -284,6 +274,23 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
               ]}
             />
           </div>
+
+          {entrant ? (
+            <p className="onboarding-card__intro">
+              {introEntrada || t('section.login.registre.introEntrar', 'Entra amb el correu i la contrasenya del teu compte. Si el vas crear amb Google, no té contrasenya: entra amb Google.')}
+            </p>
+          ) : (
+            <>
+              <p className="onboarding-card__intro">
+                {t('section.login.registre.introCrear', 'Primer entra una persona real. El teu perfil queda privat i separat de les organitzacions que crearàs després.')}
+              </p>
+              {teAccesGoogle ? (
+                <p className="onboarding-card__nota-google">
+                  {t('section.login.registre.notaGoogleCrear', 'També pots crear el compte en un sol toc amb el botó de Google de dalt.')}
+                </p>
+              ) : null}
+            </>
+          )}
 
           {error ? <Alerta to={toDeLErrorDEntrada(codiError)} accions={accionsDeLAvis}>{error}</Alerta> : null}
 

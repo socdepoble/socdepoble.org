@@ -174,6 +174,7 @@ export function mapejaMissatge(m, joId) {
     is_ai: Boolean(m.esIA),
     /* Escrit en nom d'una entitat (T2): el nom que es pinta és el de l'entitat. */
     comEntitat: Boolean(m.comOrgId),
+    comOrgId: m.comOrgId ?? null,
     creatAl: m.creatAl || null,
     respostaA: m.respostaA || null,
     esborrat: Boolean(m.esborratAl),

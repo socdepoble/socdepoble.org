@@ -28,11 +28,11 @@ import { DiagnosiConsola } from './DiagnosiConsola.jsx';
 import { ETIQUETA_VERSIO } from './diagnosiConsola.js';
 import { versioCanonica } from '../../config/versio.js';
 import { resolvePageSlugPath } from '../../config/navigation.js';
-import { carregaEmpaquetats, esRutaEmpaquetats, paginaEmpaquetats } from './empaquetats.js';
-import { PaginaEmpaquetats, SeccioEmpaquetats } from './EmpaquetatsConsola.jsx';
+import { ENTRADETA_EMPAQUETATS, carregaEmpaquetats, esRutaEmpaquetats, paginaEmpaquetats } from './empaquetats.js';
+import { PaginaEmpaquetats, TargetaEmpaquetats } from './EmpaquetatsConsola.jsx';
 import { miniaturaDePagina } from './imatgesConsola.js';
 import { metadadesDeBotigues, metadadesDeSubpagina, metadadesDelTauler } from './seoConsola.js';
-import { PaginaBotiguesConsola, SeccioBotiguesConsola } from './BotiguesConsola.jsx';
+import { PaginaBotiguesConsola, TargetaBotiguesConsola } from './BotiguesConsola.jsx';
 // Ordre del Mestre (30-10-2026, prompt 2208; SEO-CRIT-02) · Del mòdul pur de config/, no de TextSection.jsx.
 import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
 import { XIFRA_DE_CODI, segmentXifra, xifraDelMas, xifresDeLaGraella, xifresDeVista } from './xifresMas.js';
@@ -59,14 +59,26 @@ const BrainTaxonomia = lazy(() => import('../taxonomia/BrainTaxonomia.jsx'));
 
 /* P0-61 · El bloc del tauler: el seu H2 i una sola targeta cap a /consola/taxonomia,
    com el dels empaquetats. Només ací: ni la Consola incrustada de la Wiki ni l'Índex. */
-function SeccioBrainTaxonomia() {
+export const TITOL_CANALS_EMPAQUETATS_TAXONOMIA = 'Canals, empaquetats i taxonomia';
+export const ETIQUETA_NAV_CANALS_EMPAQUETATS_TAXONOMIA = 'Canals, empaquetats i taxonomia';
+
+/* R32.9 · Les 3 targetes germanes d'una sola fitxa (Empaquetats, Brain de
+   taxonomia i Botigues i verificadors) agrupades en una única fila harmònica. */
+function SeccioCanalsEmpaquetatsTaxonomia({ empaquetats }) {
   const id = useId();
   const pagina = PAGINA_BRAIN_TAXONOMIA;
   return (
     <section aria-labelledby={id}>
-      <h2 id={id}>{pagina.title}</h2>
-      <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella} aria-label={pagina.etiquetaNav}>
+      <h2 id={id}>{TITOL_CANALS_EMPAQUETATS_TAXONOMIA}</h2>
+      <p>{ENTRADETA_EMPAQUETATS}</p>
+      <nav
+        className="sdp-card-grid sdp-consola__graella sdp-consola__graella--canals"
+        onKeyDown={gestionaTeclaGraella}
+        aria-label={ETIQUETA_NAV_CANALS_EMPAQUETATS_TAXONOMIA}
+      >
+        <TargetaEmpaquetats font={empaquetats} />
         <TargetaConsola icona={Network} titol={pagina.title} subtitol={pagina.subtitle} entradilla={pagina.lead} a={pagina.ruta} creat={copyConsola().date} />
+        <TargetaBotiguesConsola />
       </nav>
     </section>
   );
@@ -620,9 +632,7 @@ export default function ConsolaSection() {
         traduccio={false} llenguaDelContingut="ca">
         <PrivacitatConsola.Provider value={privat}>
           <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={ara} cimRef={cim} ambImatges locale={locale} />
-          <SeccioEmpaquetats font={empaquetats} />
-          <SeccioBrainTaxonomia />
-          <SeccioBotiguesConsola />
+          <SeccioCanalsEmpaquetatsTaxonomia empaquetats={empaquetats} />
           <IndexConsola fonts={fontsDe(consola, mapa)} govern={govern} empaquetats={empaquetats} locale={locale} ara={ara} />
           <DiagnosiConsola fonts={fontsDe(consola, mapa)} locale={locale} ara={ara} />
         </PrivacitatConsola.Provider>

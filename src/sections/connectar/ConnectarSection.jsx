@@ -231,10 +231,10 @@ const modeResolt = (config) => normalizeBackendConfig(config || {}).dataMode;
    EstatErrorDades del Mur), mai el missatge de l'adaptador. */
 function textDelBlocFallat(error, t) {
   if (esBackendInabastable(error)) {
-    return t('error.backendInabastable', 'El servidor de poble no respon ara mateix. El contingut no s’ha pogut carregar.');
+    return t('error.backendInabastable', 'El servidor de Sóc de Poble no respon ara mateix. El contingut no s’ha pogut carregar.');
   }
   if (Number(error?.status) >= 400) {
-    return t('error.servidor', 'El servidor de poble ha tornat un error. Torna-ho a provar més tard.');
+    return t('error.servidor', 'El servidor de Sóc de Poble ha tornat un error. Torna-ho a provar més tard.');
   }
   return t('error.xarxa', 'Revisa la connexió i torna-ho a provar.');
 }

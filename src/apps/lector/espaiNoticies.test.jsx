@@ -25,6 +25,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CLAU_CARPETES_VISIBLES, _reiniciaCarpetesVisibles } from '../../components/universal/workspace/carpetesVisibles.js';
 import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { delVal, setVal } from '../../config/storage.js';
+import { CLAU_COLUMNES_PLEGADES, _reiniciaColumnesPlegades } from '../../components/universal/workspace/columnesPlegades.js';
 import { validaRutes } from '../plataforma/index.js';
 import { validaManifestApp } from '../plataforma/manifestApp.js';
 import { ARA, munta, prepara, tancats } from './__fixtures__/muntaLector.jsx';
@@ -74,6 +75,9 @@ async function titolDelLector(titol) {
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   ambAmplada(1400);
+  /* v1.2.8 · P0-127 (Codex R32.9): les columnes plegades a mà ara es recorden; cada prova comença sense preferència. */
+  delVal(CLAU_COLUMNES_PLEGADES);
+  _reiniciaColumnesPlegades();
 });
 
 afterEach(() => {

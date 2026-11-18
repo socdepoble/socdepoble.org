@@ -242,7 +242,15 @@
     "tests/botigues-play-api-rest.test.mjs",
     "tests/tractors-fail-closed.r324.test.mjs",
     "tests/r32-5-lssi-postgres.test.mjs",
-    "tests/botigues-canal-proves.test.mjs"
+    "tests/botigues-canal-proves.test.mjs",
+    "tests/r327-xat-accions-pglite.test.mjs",
+    "tooling/gates/tractor-sentinella-blindatge.test.mjs",
+    "tooling/gates/tractor-sentinella-blindatge.http.test.mjs",
+    "tests/r328-xat-quota-video-ubicacio-postgres.test.mjs",
+    "tests/tractor-consola-neta.test.mjs",
+    "tests/wiki-publicacio-r329.test.mjs",
+    "tooling/gates/build-seo-manifest.test.mjs",
+    "tests/frontmatter-schema-r329.test.mjs"
   ],
   "files": [
     {
@@ -2199,6 +2207,46 @@
       "path": "tests/botigues-canal-proves.test.mjs",
       "suite": "primary",
       "reason": "Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · Els canals de proves del manifest públic (testflightIosBuild, apkDirectBuild + apkSha256 i latestBuild) de publica-tot.mjs --sincronitza-proves: les garanties de --sincronitza-ard (versió de package.json, sostre de VERSIO_CLIENT_NATIU, mai baixa sense --corregeix-ard), l'evidència del registre de pujades d'iOS i de l'APK publicat (sumes i signatura fingida), i l'escriptura de public/ i dist/ junts o cap. mkdtemp, cap xarxa ni cap eina real."
+    },
+    {
+      "path": "tests/r327-xat-accions-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.test.mjs",
+      "suite": "primary",
+      "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.http.test.mjs",
+      "suite": "primary",
+      "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
+    },
+    {
+      "path": "tests/r328-xat-quota-video-ubicacio-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.8: SQL natiu descartable, catàleg complet, doble aplicació, quota concurrent,60s i ubicació; cap producció."
+    },
+    {
+      "path": "tests/tractor-consola-neta.test.mjs",
+      "suite": "primary",
+      "reason": "R32.9: diagnòstic de clons/worktrees, graf i instantània pública amb negatives."
+    },
+    {
+      "path": "tests/wiki-publicacio-r329.test.mjs",
+      "suite": "primary",
+      "reason": "R32.9: metadades editorials, historial Git i resolució pública de fonts de la Wiki."
+    },
+    {
+      "path": "tooling/gates/build-seo-manifest.test.mjs",
+      "suite": "primary",
+      "reason": "R32.9: prerender de la Wiki amb imatge pròpia i dates acreditades."
+    },
+    {
+      "path": "tests/frontmatter-schema-r329.test.mjs",
+      "suite": "primary",
+      "reason": "R32.9: compatibilitat estricta dels camps editorials amb el tractor de frontmatter; rangs i default inert."
     }
   ]
 }

@@ -430,7 +430,7 @@ const errorAmbCodi = (code) => Object.assign(new Error(CRU), { code });
 
 test.each([
   [CODI_ENTRADA.CREDENCIALS, 'alert', 'error', 'El correu o la contrasenya no són correctes.'],
-  [CODI_ENTRADA.SERVIDOR_INABASTABLE, 'status', 'avis', 'El servidor del poble no respon ara mateix.'],
+  [CODI_ENTRADA.SERVIDOR_INABASTABLE, 'status', 'avis', 'El servidor de Sóc de Poble no respon ara mateix.'],
   [CODI_ENTRADA.MASSA_INTENTS, 'status', 'avis', 'Massa intents seguits.'],
   [CODI_ENTRADA.CORREU_PENDENT, 'status', 'avis', 'Encara no has confirmat el correu.'],
   [CODI_ENTRADA.CONTRASENYA_FEBLE, 'alert', 'error', 'La contrasenya és massa feble.'],
@@ -457,7 +457,7 @@ test('T4 · un servidor inabastable que arriba sense codi (estat 0) tampoc no pi
   await registra();
   const avis = screen.getByRole('status');
   expect(avis.classList.contains('sdp-alerta--avis')).toBe(true);
-  expect(avis.textContent).toContain('El servidor del poble no respon ara mateix.');
+  expect(avis.textContent).toContain('El servidor de Sóc de Poble no respon ara mateix.');
   expect(avis.textContent).not.toMatch(/Supabase|\{/);
 });
 

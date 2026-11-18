@@ -3,12 +3,54 @@ import {esMain} from '../lib/arrel.mjs';
 /** Checks the actual worktree, commit or staging area; independent of the editor that wrote it. */
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { ROOT, options } from '../documental/cli.mjs';
-import { DESK, protectedPath, humanZone, loadContract, anchored } from '../documental/core.mjs';
-import { validateDocument } from '../documental/turns.mjs';
-const git=(root,args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:20*1024*1024});
-export function checkDocuments(root,{staged=false,base=null,all=false}={}) {
+import { DESK, protectedPath, humanZone, loadContract, anchored, parseDocument, receiptPattern, readContract, resolveRoute } from '../documental/core.mjs';
+import { validateDocument, readTurn, isActiveReceipt } from '../documental/turns.mjs';
+const git=(root,args)=>execFileSync('git',['--no-optional-locks','-c','core.fsmonitor=false',...args],{cwd:root,encoding:'utf8',timeout:1000,maxBuffer:20*1024*1024});
+/** diff-index does not refresh stat data. Unlike porcelain diff, it may include unchanged
+ * files with stale mtimes: compare their actual blob bytes to HEAD before selecting them.
+ * hash-object is deliberately avoided: configured clean filters may execute arbitrary code. */
+function fitxersInstantania(root) {
+  const split=s=>s.split('\0').filter(Boolean);
+  const candidats=split(git(root,['diff-index','HEAD','--name-only','--diff-filter=ACMR','-z','--',DESK]));
+  const blobs=new Map(split(git(root,['ls-tree','-r','-z','HEAD','--',DESK])).map(line=>{
+    const m=/^[0-7]{6} blob ([a-f0-9]{40}|[a-f0-9]{64})\t([\s\S]+)$/.exec(line);
+    return m ? [m[2],m[1]] : [null,null];
+  }));
+  const modificats=candidats.filter(file=>{
+    if (!protectedPath(root,file)||humanZone(file)) return false;
+    const hash=blobs.get(file);
+    if (!hash) return true;
+    const full=path.join(root,file),stat=fs.lstatSync(full);
+    const bytes=stat.isSymbolicLink()?Buffer.from(fs.readlinkSync(full)):fs.readFileSync(full);
+    const actual=createHash(hash.length===40?'sha1':'sha256').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+    return actual!==hash;
+  });
+  return [...modificats,...split(git(root,['ls-files','--others','--exclude-standard','-z','--',DESK]))];
+}
+/** Public snapshots describe current work, never authorise its closure. */
+export function esEsborranyEnCurs(root, content, file, ara = Date.now()) {
+  try {
+    const { data } = parseDocument(content);
+    if (data.status !== 'esborrany') return false;
+    const m = receiptPattern.exec(data.reflex ?? '');
+    if (!m) return false;
+    const turn = readTurn(root, m[1], { now: ara });
+    if (!Number.isFinite(Date.parse(turn.createdAt)) || Date.parse(turn.createdAt) > ara) return false;
+    const r = turn.receipts[m[2]];
+    if (!r) return false;
+    const contract = r.contractSnapshot ? readContract(root, r.contractSnapshot) : loadContract(root, {route:r.route});
+    const route = resolveRoute(contract, {route:r.route});
+    if ((!r.contractSnapshot && turn.contractHash !== contract.hash) || r.templateHash !== route.templateHash || r.routeVersion !== route.version || data.type !== route.tipus) return false;
+    return Boolean(r && r.id === m[2] && r.file === file && isActiveReceipt(r)
+      && r.creation?.state !== 'prepared' && Date.parse(r.issuedAt) <= ara
+      && Date.parse(r.issuedAt) >= Date.parse(turn.createdAt));
+  } catch { return false; }
+}
+export function checkDocuments(root,{staged=false,base=null,all=false,instantania=false,ara=Date.now()}={}) {
+  if (instantania && (staged || base)) throw new Error('La instantània pública no substituïx una comprovació de tancament');
   loadContract(root);
   let files;
   const split=s=>s.split('\0').filter(Boolean);
@@ -20,12 +62,13 @@ export function checkDocuments(root,{staged=false,base=null,all=false}={}) {
       if(e.isDirectory()) walk(p); else if(e.name.toLowerCase().endsWith('.md')) files.push(p);
     }}
     walk(DESK);
-  } else if(staged) files=split(git(root,['diff','--cached','--name-only','--diff-filter=ACMR','-z']));
+  } else if(instantania) files=fitxersInstantania(root);
+  else if(staged) files=split(git(root,['diff','--cached','--name-only','--diff-filter=ACMR','-z']));
   else if(base) files=split(git(root,['diff',base,'HEAD','--name-only','--diff-filter=ACMR','-z']));
   else files=[...split(git(root,['diff','HEAD','--name-only','--diff-filter=ACMR','-z'])),...split(git(root,['ls-files','--others','--exclude-standard','-z']))];
   files=[...new Set(files)].filter(file=>protectedPath(root,file)&&!humanZone(file));
   const read=file=>staged?git(root,['show',`:${file}`]):base?git(root,['show',`HEAD:${file}`]):fs.readFileSync(path.join(root,file),'utf8');
-  const errors=[];
+  const errors=[], enCurs=[];
   // R32 · D-R30-15: els registres de torn són locals i ja no viatgen amb el commit. Un registre encara
   // versionat (històric) es llig de l'índex o del commit; si no hi és, el de la màquina que el va obrir.
   const versionat=rel=>split(staged?git(root,['ls-files','-z','--',rel]):git(root,['ls-tree','-z','--name-only','HEAD','--',rel])).length>0;
@@ -46,11 +89,12 @@ export function checkDocuments(root,{staged=false,base=null,all=false}={}) {
   const index=files.length?read(`${DESK}/00_index_escriptori.md`):'';
   for(const file of files) {
     try {
+      if (instantania && esEsborranyEnCurs(root, read(file), file, ara)) { enCurs.push(file); continue; }
       errors.push(...validateDocument(root,read(file),file,{closed:true,...((staged||base)?{readRecord,readSnapshot:read}:{})}).map(e=>`${file}: ${e}`));
       if(file!==`${DESK}/00_index_escriptori.md`&&!anchored(index,file)) errors.push(`Sense àncora: ${file}`);
     }catch(e){errors.push(`${file}: ${e.message}`);}
   }
-  return {valid:!errors.length,checked:files.length,errors};
+  return {valid:!errors.length,checked:files.length,errors,...(instantania ? { enCurs } : {})};
 }
 if (esMain(import.meta.url)) {
   try{const o=options(),r=checkDocuments(path.resolve(o.arrel||ROOT),o);console.log(JSON.stringify(r,null,2));process.exitCode=r.valid?0:1;}

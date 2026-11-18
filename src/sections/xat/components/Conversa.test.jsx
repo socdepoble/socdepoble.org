@@ -271,11 +271,26 @@ describe('scroll i «Baixa al final»', () => {
   });
 });
 
+/* Onada R32.7 (kit Gemini, menú de 11 opcions estil WhatsApp) · Sense
+   moderació, el menú d'un missatge confirmat d'una altra persona en un grup on
+   es pot escriure porta: el bloc del missatge (Respon, Respon en privat,
+   Reacciona, Destaca, Fixa, Reenvia, Copia el text), el de la persona (Envia
+   un missatge a…) i el de la gestió (Elimina, Selecciona missatges). «Respon»
+   continua encapçalant-lo. */
+const MENU_COMPLET_DE_PEP = [
+  'Respon', 'Respon en privat', 'Reacciona', 'Destaca', 'Fixa', 'Reenvia', 'Copia el text',
+  'Envia un missatge a Pep',
+  'Elimina', 'Selecciona missatges'
+];
+/* Les opcions que escriuen en el fil (o hi deixen rastre per a tothom) només
+   apareixen amb permís d'escriure i sobre un missatge confirmat. */
+const OPCIONS_QUE_ESCRIUEN = ['Respon', 'Respon en privat', 'Reacciona', 'Fixa'];
+
 describe('respostes', () => {
   test('«Respon» encapçala el menú, obri la barra amb el focus al camp i envia amb respostaA', async () => {
     const { props } = pinta({ messages: [m('1', 1, 'other', { text: 'Bon dia' }), m('2', 2, 'me', { text: 'Hola' })] });
     const menu = menuDe('1');
-    expect(within(menu).getAllByRole('menuitem').map((e) => e.textContent)).toEqual(['Respon', 'Copia el text']);
+    expect(within(menu).getAllByRole('menuitem').map((e) => e.textContent)).toEqual(MENU_COMPLET_DE_PEP);
     fireEvent.click(within(menu).getByRole('menuitem', { name: 'Respon' }));
     expect(screen.queryByRole('menu')).toBeNull();
     const barra = screen.getByRole('group', { name: 'Resposta a Pep' });
@@ -341,18 +356,28 @@ describe('respostes', () => {
       fireEvent.click(within(item(id)).getByRole('button', { name: 'Opcions del missatge' }));
       return items;
     };
-    expect(noms('1')).toEqual(['Respon', 'Copia el text']);
-    expect(noms('2')).toEqual(['Copia el text']);
-    expect(noms('3')).toEqual(['Copia el text']);
+    expect(noms('1')).toEqual(MENU_COMPLET_DE_PEP);
+    /* R32.7 · Un pendent o un fallit propi: copiar, i la gestió local (eliminar
+       o seleccionar); cap opció que el servidor encara no té on aplicar. */
+    expect(noms('2')).toEqual(['Copia el text', 'Elimina', 'Selecciona missatges']);
+    expect(noms('3')).toEqual(['Copia el text', 'Elimina', 'Selecciona missatges']);
     expect(within(item('4')).queryByRole('button', { name: 'Opcions del missatge' })).toBeNull();
   });
 
+  /* R32.7 · Sense permís d'escriure, cap opció que escriga al fil (ni
+     «Respon», ni «Respon en privat», ni «Reacciona», ni «Fixa»); les opcions
+     personals (Destaca, Reenvia, Copia el text) i la gestió local, sí. En un
+     canal, «Envia un missatge a…» obri un xat directe: no escriu al canal. */
   test.each([
-    ['un fil amb potEscriure: false', { ...FIL, tipus: 'directe', potEscriure: false }],
-    ['un canal sense permís explícit (D7)', { id: 'a-1', tipus: 'canal', name: 'Avisos', llegitFinsSeq: 100 }]
-  ])('%s: sense «Respon»', (_, fil) => {
+    ['un fil amb potEscriure: false', { ...FIL, tipus: 'directe', potEscriure: false },
+      ['Destaca', 'Reenvia', 'Copia el text', 'Elimina', 'Selecciona missatges']],
+    ['un canal sense permís explícit (D7)', { id: 'a-1', tipus: 'canal', name: 'Avisos', llegitFinsSeq: 100 },
+      ['Destaca', 'Reenvia', 'Copia el text', 'Envia un missatge a Pep', 'Elimina', 'Selecciona missatges']]
+  ])('%s: sense «Respon»', (_, fil, esperat) => {
     pinta({ fil, messages: [m('1', 1, 'other')] });
-    expect(within(menuDe('1')).getAllByRole('menuitem').map((e) => e.textContent)).toEqual(['Copia el text']);
+    const opcions = within(menuDe('1')).getAllByRole('menuitem').map((e) => e.textContent);
+    expect(opcions).toEqual(esperat);
+    expect(opcions.filter((opcio) => OPCIONS_QUE_ESCRIUEN.includes(opcio))).toEqual([]);
   });
 });
 

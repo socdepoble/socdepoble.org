@@ -109,11 +109,11 @@ L'Editor Universal (`UniversalEditorShell.jsx` i `NotesEditor.jsx`) incorpora la
 
 ## 7. Un Sol Desplegable a `/notes` (`Edició avançada de la nota`) i Doble Botó «Publicar al Mur» (`261114`)
 
-- **Prohibit apilar dos quadres dalt de `/notes`:** El panell `Visibilitat i publicació de la nota` (`PanellVisibilitatEnLinia`) **MAI** es pinta com un segon quadre solt damunt d'`Edició avançada de la nota`. Viu **dins de `<details class="sdp-edicio-avancada">`, a la part final de tot** (`data-sdp-ranura="visibilitat"`, just damunt del botó centrat `Tancar l’edició avançada`), de manera que quan es tanca `Edició avançada` queda un únic desplegable net.
+- **Prohibit apilar dos quadres dalt de `/notes`:** El panell `Visibilitat i publicació de la nota` (`PanellVisibilitatEnLinia`) **MAI** es pinta com un segon quadre solt damunt d'`Edició avançada de la nota`. Viu **dins del mateix desplegable d’Edició avançada, a la part final de tot** (`data-sdp-ranura="visibilitat"`, just damunt del botó centrat `Tancar l’edició avançada`), de manera que quan es tanca `Edició avançada` queda un únic desplegable net.
 - **Doble botó coherent «Publicar al Mur» i Guarda d'Esborrany amb Scroll Amunt:**
   1. **Dins d'`Edició avançada de la nota` (al final de `Visibilitat i publicació de la nota`):** Quan l'usuari tria «📣 Públic al Mur de poble» (o l'àmbit triat), el botó centrat `Publicar al Mur` s'activa. Quan es tanca `Edició avançada`, eixe botó es plega amb el panell.
   2. **Davall de l'entradilla (`UniversalToolbar`):** Hi ha el segon botó `Publicar al Mur` (o `Actualitzar al Mur` / `Publicat`). Si la nota encara està en **`🔒 Esborrany privat`** i l'usuari prem `Publicar al Mur` davall de l'entradilla, l'editor **NO publica a cegues**: obri automàticament `Edició avançada de la nota`, fa un *scroll* suau cap amunt fins a `Visibilitat i publicació de la nota` i mostra un recordatori clar indicant que abans de publicar cal passar la nota d'esborrany privat a públic («📣 Públic al Mur de poble» o l'àmbit triat). Si la nota ja s'ha marcat com a pública i té poble vàlid, el botó de davall de l'entradilla publica o actualitza directament.
-- **Botons sempre centrats:** Tots els botons d'acció dins de l'editor (`.sdp-visibilitat-linia__accions`, `.sdp-edicio-avancada__boto-tancar`, `.sdp-accions`) van centrats (`justify-content: center`), mai arrambats a l'esquerra.
+- **Botons sempre centrats:** Tots els botons d'acció dins de l'editor (les accions de visibilitat en línia, el botó de tancar Edició avançada, la ranura d’accions) van centrats (`justify-content: center`), mai arrambats a l'esquerra.
 
 ## Vincles
 

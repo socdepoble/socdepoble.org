@@ -14,7 +14,9 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test } from 'vitest';
-import { MIME_XAT, QUOTA_XAT_BYTES } from '../xatMultimedia.js';
+import { MIME_XAT } from '../xatMultimedia.js';
+// Estos pins són del DDL històric de 2610220240, no de la quota vigent.
+const QUOTA_HISTORICA_BYTES = 20_000_000;
 
 /* vitest s'executa des de l'arrel del repositori (com qualitat.test.js). */
 const ARREL = process.cwd();
@@ -233,18 +235,18 @@ test('F12, F14 i R7 · la llista MIME és la del client més el QuickTime; el bu
   expect(new Set(llista)).toEqual(new Set([...Object.keys(MIME_XAT), 'video/quicktime']));
   const bucket = [...(/array\[([^\]]*)\]\)/.exec(CODI)?.[1] || '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
   expect(bucket).toEqual(llista);
-  expect(CODI).toContain(`values ('xat_adjunts', 'xat_adjunts', false, ${QUOTA_XAT_BYTES},`);
+  expect(CODI).toContain(`values ('xat_adjunts', 'xat_adjunts', false, ${QUOTA_HISTORICA_BYTES},`);
   const sostre = cos('private', 'xat_maxim_adjunt');
   expect(sostre).toContain("when p_mime in ('image/webp', 'image/jpeg') then 2000000");
   expect(sostre).toContain("when p_mime in ('audio/mp4', 'audio/webm', 'audio/ogg') then 3000000");
-  expect(sostre).toContain(`when p_mime in ('video/mp4', 'video/webm', 'video/quicktime') then ${QUOTA_XAT_BYTES}`);
+  expect(sostre).toContain(`when p_mime in ('video/mp4', 'video/webm', 'video/quicktime') then ${QUOTA_HISTORICA_BYTES}`);
   /* R7 · El CHECK no depén de cap funció: només els límits fixos, amb nom. */
-  expect(CODI).toContain(`constraint xat_adjunts_mida check (bytes between 64 and ${QUOTA_XAT_BYTES}),`);
+  expect(CODI).toContain(`constraint xat_adjunts_mida check (bytes between 64 and ${QUOTA_HISTORICA_BYTES}),`);
   const taula = CODI.slice(CODI.indexOf('create table public.xat_adjunts'), CODI.indexOf('create index xat_adjunts_usuari_creat'));
   expect(taula).not.toContain('xat_maxim_adjunt');
   const reserva = cos('public', 'xat_reserva_adjunt');
   expect(reserva).toContain('if p_bytes > private.xat_maxim_adjunt(p_mime) then raise exception');
-  expect(reserva).toContain(`if v_total + p_bytes > ${QUOTA_XAT_BYTES} then raise exception 'sdp-xat-020:`);
+  expect(reserva).toContain(`if v_total + p_bytes > ${QUOTA_HISTORICA_BYTES} then raise exception 'sdp-xat-020:`);
 });
 
 test('F13 · sense peu, el missatge es desa amb text null: cap etiqueta en valencià al servidor', () => {

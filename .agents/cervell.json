@@ -12,35 +12,95 @@
   "dimensions": [
     {
       "id": "identitat",
-      "ruta": "_wiki_de_poble/01_ser"
+      "ruta": "_wiki_de_poble/01_ser",
+      "skills": [
+        "core-identitat",
+        "core-identitat-visual",
+        "core-portaveu-institucional"
+      ]
     },
     {
       "id": "coneixement",
-      "ruta": "_wiki_de_poble/02_saber"
+      "ruta": "_wiki_de_poble/02_saber",
+      "skills": [
+        "core-comprensio-reflexiva",
+        "core-taxonomia-estricta",
+        "core-tecniques-investigacio",
+        "sdp-calendari-agricola",
+        "sdp-estudi-mercat",
+        "wiki-busca-skills"
+      ]
     },
     {
       "id": "governanca",
-      "ruta": ".agents"
+      "ruta": ".agents",
+      "skills": [
+        "core-consell-i-colmena",
+        "core-context-panic",
+        "core-direccio-autonoma",
+        "core-edicio-segura",
+        "core-estrategia-ia",
+        "core-seguretat-audit",
+        "core-sentinella-blindatge",
+        "sdp-workflow"
+      ]
     },
     {
       "id": "procediments",
-      "ruta": ".agents/skills"
+      "ruta": ".agents/skills",
+      "skills": [
+        "core-empaquetat-wp",
+        "core-neteja-brossa",
+        "core-restauracio-segellada",
+        "core-salfumant-radical",
+        "sdp-app-grid-shell",
+        "sdp-casos-us-essencials",
+        "sdp-clon-loiverse",
+        "sdp-clon-whatsapp",
+        "sdp-importacio-editorial",
+        "sdp-pedra-seca",
+        "sdp-universal-editor",
+        "sdp-universal-page"
+      ]
     },
     {
       "id": "plantilles",
-      "ruta": "_wiki_de_poble/03_actuar/plantilles"
+      "ruta": "_wiki_de_poble/03_actuar/plantilles",
+      "skills": [
+        "core-calibratge-visual-nano",
+        "core-informes-pdf",
+        "core-llegibilitat-text",
+        "core-maquetacio-markdown"
+      ]
     },
     {
       "id": "treball_actiu",
-      "ruta": "_wiki_de_poble/04_escriptori"
+      "ruta": "_wiki_de_poble/04_escriptori",
+      "skills": [
+        "core-higiene-escriptori",
+        "core-temps-termodinamic",
+        "sdp-vigilant-tellado"
+      ]
     },
     {
       "id": "evidencia",
-      "ruta": "_wiki_de_poble/10_actes"
+      "ruta": "_wiki_de_poble/10_actes",
+      "skills": [
+        "core-automillora",
+        "core-gauntlet-loop",
+        "core-secretaria-auditoria",
+        "core-telemetria-huma",
+        "wiki-documentacio-i-reflex",
+        "wiki-propagar-veritat"
+      ]
     },
     {
       "id": "historia",
-      "ruta": "_wiki_de_poble/90_arxiu_historic"
+      "ruta": "_wiki_de_poble/90_arxiu_historic",
+      "skills": [
+        "core-memoria-historica",
+        "wiki-cicle-de-vida"
+      ]
     }
   ]
 }

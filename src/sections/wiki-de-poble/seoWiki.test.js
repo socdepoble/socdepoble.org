@@ -112,3 +112,23 @@ describe('la portada de la Wiki porta la seua imatge al head', () => {
     expect(metadadesDeDocumentWiki({ id: 'cap' }, '?item=cap', [])).toEqual({ title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: false });
   });
 });
+
+describe('R32.9 · imatge pròpia del capítol en el head compartit', () => {
+  it('propaga la portada local i alt, tant top-level com attributes, amb prioritat sobre el mapa legacy', () => {
+    const image = '/assets/ui/plugins/sistema_nervios_vinyeta.jpg';
+    const expected = { url: 'https://socdepoble.org/assets/ui/plugins/sistema_nervios_vinyeta-social-1200x630.jpg', alt: 'El sistema nerviós il·lustrat' };
+    for (const fields of [{ image, imageAlt: expected.alt }, { attributes: { image, imageAlt: expected.alt } }]) {
+      const meta = metadadesDeDocumentPublic({ id: 'capitol', content: '# Un capítol', ...fields }, { imatges: { capitol: '/assets/antiga.jpg' } });
+      expect(meta.image).toEqual(expected);
+      expect(meta.imatge).toMatchObject({ estat: 'triada', ref: image });
+    }
+  });
+  it('sense foto pròpia conserva legacy o genèrica; una foto bloquejada no es substituïx per legacy', () => {
+    expect(metadadesDeDocumentPublic({ id: 'cap', content: '# Cap' }, { imatges: { cap: '/assets/legacy.jpg' } }).image).toBe('/assets/legacy.jpg');
+    expect(metadadesDeDocumentPublic({ id: 'cap', content: '# Cap' }, { imatges: {} }).image).toBeNull();
+    for (const image of ['javascript:alert(1)', 'https://extern.invalid/a.jpg', '/assets/a.svg', '/assets/../secret.jpg']) {
+      const meta = metadadesDeDocumentPublic({ id: 'cap', image, content: '# Cap' }, { imatges: { cap: '/assets/legacy.jpg' } });
+      expect(meta.image).toBeNull();expect(meta.imatge.estat).toBe('bloquejada');
+    }
+  });
+});

@@ -1,5 +1,5 @@
 import { CAMINS, MARCADOR, esMain } from '../lib/arrel.mjs';
-import { extractDocumentLinks, resolveDocumentLink } from '../lib/document-links.mjs';
+import { extractDocumentLinks, resolveDocumentLink, prepareDocumentWebLinks } from '../lib/document-links.mjs';
 import { canonical, inside } from '../documental/core.mjs';
 import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { readdir, readFile, stat, lstat } from 'node:fs/promises';
@@ -94,6 +94,7 @@ export class VerificadorSCC {
     // D-R30-14: arrel viva (memo per auditoria) i enllaços a l'arxiu acceptats des d'ella.
     this.viva = null;
     this.arxiuAcceptats = 0;
+    this.webLinks = null;
   }
 
   /** D-R30-14 · L'arrel viva, calculada una sola vegada per auditoria. */
@@ -207,7 +208,7 @@ export class VerificadorSCC {
     const invalid = (message) => { this.errors.push({code:'LINK_INVALID', message, affected_files:[relative(this.wikiRoot,source)]}); return null; };
     const ambigu = (arxiu) => invalid(`Enllaç ambigu: ${arxiu.desti} · arxiu històric (D-R30-14): ${arxiu.motiu}`);
     let trobat;
-    try { trobat = resolveDocumentLink(link, source, allFiles, this.wikiRoot); }
+    try { trobat = resolveDocumentLink(link, source, allFiles, this.wikiRoot, { webLinks: this.webLinks }); }
     catch (e) {
       // D-R30-14: un destí de l'arxiu històric que existix al disc de l'arrel viva és vàlid (només existència).
       const arxiu = this.destiArxiuHistoric(link, source);
@@ -375,7 +376,7 @@ export class VerificadorSCC {
   }
 
   async runAudits() {
-    this.errors = []; this.graph.clear(); this.viva = null; this.arxiuAcceptats = 0;
+    this.errors = []; this.graph.clear(); this.viva = null; this.arxiuAcceptats = 0; this.webLinks = null;
     const allFiles = await this.getAllMarkdownFiles(this.wikiRoot);
     
     if (allFiles.length === 0) {
@@ -391,6 +392,8 @@ export class VerificadorSCC {
       };
     }
 
+    const links = (await Promise.all(allFiles.map(file => readFile(file, 'utf8')))).flatMap(extractDocumentLinks);
+    this.webLinks = await prepareDocumentWebLinks(this.wikiRoot, links);
     await this.verifyInboxLimit();
     const deskFiles = [];
     const walkDesk = async dir => {

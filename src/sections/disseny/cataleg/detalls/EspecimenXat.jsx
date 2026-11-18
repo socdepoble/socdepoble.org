@@ -438,6 +438,182 @@ function ConversaDirectaAmbVeuDeMostra() {
   );
 }
 
+const CITAT_LA_VEU_MOSTRA = Object.freeze({
+  id: 'm-veu-0',
+  seq: 10,
+  sender: 'other',
+  author: 'Redacció La Veu',
+  usuariId: 'la-veu',
+  text: 'https://socdepoble.org/mur/la-veu-de-soc-de-poble — Crònica setmanal il·lustrada del poble'
+});
+
+const MISSATGES_ESPILL_R32_7 = [
+  {
+    id: 'm-espill-anna-1',
+    seq: 11,
+    sender: 'other',
+    author: 'Anna Climent',
+    usuariId: 'anna-climent',
+    respostaA: 'm-veu-0',
+    text: 'Bon dia! Ja heu vist l’edició d’esta setmana de La Veu de Sóc de Poble?',
+    creatAl: hui(11, 42),
+    estatEnviament: 'enviat',
+    reaccions: { '😂': ['javi-llinares', 'sofia-bornay'] }
+  },
+  {
+    id: 'm-espill-javi-1',
+    seq: 12,
+    sender: 'me',
+    author: 'Javi Llinares',
+    usuariId: 'javi-llinares',
+    text: 'Quina meravella de portada! Ara mateix la reenvie a la quadrilla.',
+    creatAl: hui(11, 43),
+    estatEnviament: 'llegit'
+  },
+  {
+    id: 'm-espill-javi-2',
+    seq: 13,
+    sender: 'me',
+    author: 'Javi Llinares',
+    usuariId: 'javi-llinares',
+    text: 'Ens veiem a les 19:00 a la plaça per a repartir els cartells.',
+    creatAl: hui(11, 44),
+    estatEnviament: 'llegit'
+  }
+];
+
+function ConversaEspill11OpcionsDeMostra() {
+  const [avis, setAvis] = useState('');
+  const [reaccionsMapa, setReaccionsMapa] = useState(() => ({
+    'm-espill-anna-1': { '😂': ['javi-llinares', 'sofia-bornay'] }
+  }));
+  const [destacats, setDestacats] = useState(() => ({}));
+  const [fixatId, setFixatId] = useState(null);
+
+  const alternaReaccio = (msg, emoji) => {
+    setReaccionsMapa((prev) => {
+      const actual = { ...(prev[msg.id] || {}) };
+      const usuaris = new Set(actual[emoji] || []);
+      if (usuaris.has('javi-llinares')) usuaris.delete('javi-llinares');
+      else usuaris.add('javi-llinares');
+      if (usuaris.size === 0) delete actual[emoji];
+      else actual[emoji] = [...usuaris];
+      return { ...prev, [msg.id]: actual };
+    });
+    setAvis(`Reacció ${emoji} actualitzada.`);
+  };
+
+  return (
+    <div className="sdp-especimen__mostra" data-especimen="r32-7-xat-espill-11-opcions">
+      <CapcaleraConversa
+        fil={FILS[0]}
+        nivellTitol={NIVELL_TITOL_MOSTRA}
+        onTorna={() => {}}
+        onSeleccionar={() => setAvis('Activaria la selecció de missatges.')}
+        t={t}
+      />
+      <ol className="sdp-xat-missatges" aria-label="Conversa d’espill amb avatars de 44 px, reaccions i menú de 11 opcions">
+        {filesDe(MISSATGES_ESPILL_R32_7).map(({ clau, msg, primerDelGrup }) => (
+          <Bombolla
+            key={clau}
+            missatge={msg}
+            esGrup
+            primerDelGrup={primerDelGrup}
+            citat={msg.respostaA === 'm-veu-0' ? CITAT_LA_VEU_MOSTRA : null}
+            nomPropi="Javi Llinares"
+            usuariAdjunts="javi-llinares"
+            reaccions={reaccionsMapa[msg.id] || null}
+            destacat={Boolean(destacats[msg.id])}
+            fixat={fixatId === msg.id}
+            nomAutor={msg.sender === 'other' ? msg.author : ''}
+            onVesACita={() => setAvis('Aniria al missatge citat de La Veu.')}
+            onRespon={(m) => setAvis(`Respondria a «${m.text}».`)}
+            onResponEnPrivat={(m) => setAvis(`Respondria en privat a ${m.author}.`)}
+            onReacciona={alternaReaccio}
+            onDestaca={(m, nou) => {
+              setDestacats((prev) => ({ ...prev, [m.id]: nou }));
+              setAvis(nou ? 'Missatge destacat.' : 'Llevat dels destacats.');
+            }}
+            onFixa={(m, nou) => {
+              setFixatId(nou ? m.id : null);
+              setAvis(nou ? 'Missatge fixat dalt de la conversa.' : 'Missatge desfixat.');
+            }}
+            onReenvia={() => setAvis('Obriria Reenvia a… amb cerca i «Nou grup».')}
+            onCopia={() => setAvis('Text copiat al porta-retalls.')}
+            onEnviaPrivat={(m) => setAvis(`Obriria xat directe amb ${m.author}.`)}
+            onDenuncia={() => setAvis('Obriria el diàleg de denúncia.')}
+            onBloqueja={() => setAvis('Obriria el diàleg de bloqueig.')}
+            onElimina={() => setAvis('Obriria «Elimina per a mi» / «Elimina per a tothom».')}
+            onSelecciona={() => setAvis('Activaria les caselles de selecció múltiple.')}
+            locale={LOCALE}
+            t={t}
+          />
+        ))}
+      </ol>
+      {avis ? <p role="status">{avis}</p> : null}
+    </div>
+  );
+}
+
+const SERVEI_QUOTA_PLENA_MOSTRA = { teCapacitat: () => true, quotaXat: async () => ({ usats: 19_999_999, limit: 20_000_000 }) };
+const MISSATGE_UBICACIO_SAFAREIG = Object.freeze({
+  id: 'm-safareig-riu',
+  seq: 70,
+  sender: 'other',
+  author: 'Sofía Bornay',
+  usuariId: 'sofia-bornay',
+  text: 'Mireu en quin estat ha quedat el safareig antic del riu després de la pluja.',
+  metadades: { ubicacio: { lat: 38.5892, lng: -0.4214 } },
+  creatAl: hui(18, 45),
+  estatEnviament: 'enviat'
+});
+
+/* Onada R32.8 (ordre del Mestre del 17-11-2026, P0-125a/d i P0-126) · Mostra de xip «Veure al mapa», píndola GPS activa per defecte i avís amb ✕. */
+function UbicacioIAvisTancableDeMostra() {
+  const [valor, setValor] = useState('');
+  const [conserva, setConserva] = useState(true);
+  const [mostraError, setMostraError] = useState(true);
+  return (
+    <div data-especimen="r32-8-xat-ubicacio-i-avis">
+      <ol className="sdp-xat-missatges" aria-label="Missatge amb ubicació al mapa">
+        <Bombolla missatge={MISSATGE_UBICACIO_SAFAREIG} esGrup locale={LOCALE} t={t} />
+      </ol>
+      <AppGridContext.Provider value={{ mida: 'ample' }}>
+        <div className="sdp-xat-conversa">
+          <div className="sdp-xat-adjunts sdp-xat-adjunts--activa" role="group" aria-label="Adjunts del xat">
+            {mostraError ? (
+              <div className="sdp-xat-adjunts__alerta">
+                <p role="alert">Has arribat al límit d’espai dels adjunts del xat. Revisa els fitxers pendents o prova-ho més endavant.</p>
+                <button
+                  type="button"
+                  className="sdp-xat-icona sdp-xat-adjunts__tanca-error"
+                  aria-label="Tanca l’avís"
+                  onClick={() => setMostraError(false)}
+                >
+                  ×
+                </button>
+              </div>
+            ) : null}
+            <div className="sdp-xat-ubicacio-control">
+              <span className="sdp-xat-ubicacio-control__estat">
+                <span>{conserva ? '📍 S’inclourà la ubicació on s’ha fet (38,59°, -0,42°)' : '📍 Ubicació amagada'}</span>
+              </span>
+              {conserva ? (
+                <button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria" onClick={() => setConserva(false)}>
+                  Amaga el lloc
+                </button>
+              ) : null}
+            </div>
+          </div>
+          <ControlsAdjunt fil={FIL_PAGINA} servei={SERVEI_QUOTA_PLENA_MOSTRA} onEnvia={ENVIA_ADJUNT_DE_MOSTRA} t={t} locale={LOCALE}>
+            {(adjunts) => <Compositor valor={valor} onCanvia={setValor} onEnvia={() => setValor('')} t={t} adjunts={adjunts} />}
+          </ControlsAdjunt>
+        </div>
+      </AppGridContext.Provider>
+    </div>
+  );
+}
+
 export default function EspecimenXat() {
   return (
     <Especimen id="xat" nom="Xat i missatgeria" fitxer="src/sections/xat/components/ · src/css/modules.css (sdp-xat-*)"
@@ -491,6 +667,9 @@ export default function EspecimenXat() {
       <h4>Conversa directa 1:1 amb notes de veu estil WhatsApp i avatars clicables (R32.6)</h4>
       <ConversaDirectaAmbVeuDeMostra />
 
+      <h4>Espill d’avatars 44×44 px, botons visibles, píndola «😂 2» i menú de les 11 opcions de WhatsApp (R32.7)</h4>
+      <ConversaEspill11OpcionsDeMostra />
+
       <h4>Una llista viva d’«El Comú» dins d’una bombolla (Fase E, tasca 3)</h4>
       <ol className="sdp-xat-missatges" aria-label="Llista viva de mostra">
         <Bombolla missatge={MISSATGE_LLISTA} esGrup locale={LOCALE} t={t} actorLlista={ACTOR_MOSTRA} />
@@ -511,6 +690,9 @@ export default function EspecimenXat() {
       <h4>Adjunts a la barra única: previsualitza abans d’enviar (P1-66)</h4>
       <p>Toca + per a triar una foto o un vídeo de fins a 10 segons; amb el camp buit, el botó redó grava àudio; amb text o un fitxer preparat, envia. Esta mostra no puja cap fitxer.</p>
       <BarraAmbAdjuntsDeMostra />
+
+      <h4>Geolocalització per defecte amb «Amaga el lloc», xip «Veure al mapa» i avís tancable amb ✕ (R32.8)</h4>
+      <UbicacioIAvisTancableDeMostra />
 
       <h4>Capçalera de la conversa: una pàgina («Sobre:» i participants) i els Avisos (el megàfon)</h4>
       <CapcaleresDeMostra />

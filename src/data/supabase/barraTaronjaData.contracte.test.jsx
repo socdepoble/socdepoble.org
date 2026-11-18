@@ -251,16 +251,9 @@ async function wikiSenseData() {
 /* Deutes de DADES coneguts: la pàgina ja llig la font, però la font encara
    no porta cap data real. [pàgina, motiu i qui el resol, font sense data
    (quantes entrades en falten), pinta amb la font de veres]. */
-const PENDENTS = [
-  ['Wiki · document del manifest generat sense `date` ni segell', 'el generador (tooling/wiki/compile-wiki-to-app.mjs) no posa cap data al manifest (hui, 73 de 74 documents)',
-    async () => (await wikiSenseData()).sense.length,
-    async () => {
-      const { sense } = await wikiSenseData();
-      estat.itemId = sense[0].id;
-      estat.search = `?item=${encodeURIComponent(estat.itemId)}`;
-      return render(<WikiDePobleSection />);
-    }]
-];
+/* v1.2.8 · Deute resolt per Codex R32.9: compile-wiki-to-app.mjs ja posa data (frontmatter, Git, nom o
+   reserva estable) als 83 documents del manifest. El pendent es convertix en guarda: cap document sense data. */
+const PENDENTS = [];
 
 beforeEach(() => {
   estat.itemId = null; estat.search = ''; estat.params = {}; estat.preloadedItem = null;
@@ -337,9 +330,8 @@ describe('T51 · barra taronja en lectura: data i hora sempre (el dia sol, si la
     expect(pastilla(container)).toBeNull();
   });
 
-  test.each(PENDENTS)('pendent · %s: %s (la font encara no en porta; la pàgina, sense pastilla i mai la d’ara)', async (_, __, fontSenseData, pinta) => {
-    expect(await fontSenseData()).toBeGreaterThan(0);
-    const { container } = await pinta();
-    expect(pastilla(container)).toBeNull();
+  test('resolt (R32.9) · Wiki: cap document del manifest generat queda sense data', async () => {
+    expect(PENDENTS).toEqual([]);
+    expect((await wikiSenseData()).sense.map((item) => item.id)).toEqual([]);
   });
 });

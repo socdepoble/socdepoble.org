@@ -1353,7 +1353,14 @@ export const CASOS = Object.freeze([
      Cap prova de conformitat crea una denúncia ni retira contingut real. */
   cas({ metode: 'registraDenunciaPublica', capacitat: 'moderacioLssi', espera: 'rebutja', titol: 'R32.5: una denúncia amb UUID públic invàlid rebutja abans de registrar', arguments: ctx => [{ publicacioId: 'no-uuid', motiu: 'illegal' }, ctx.config], comprova: e => [...rebuigTipusR15(e), ...rebuigAmbCodi('lssi-invalid')(e)] }),
   cas({ metode: 'adminSafataDenuncies', capacitat: 'moderacioLssi', espera: 'rebutja', titol: 'R32.5: la safata LSSI amb límit zero rebutja abans de llegir', arguments: ctx => [{ estat: 'pendent', limit: 0 }, ctx.config], comprova: e => [...rebuigTipusR15(e), ...rebuigAmbCodi('lssi-invalid')(e)] }),
-  cas({ metode: 'adminRevisaDenuncia', capacitat: 'moderacioLssi', espera: 'rebutja', titol: 'R32.5: retirar sense justificació rebutja abans de qualsevol revisió', arguments: ctx => [{ id: ctx.idMissatge, decisio: 'retirada', justificacio: '', estatEsperat: 'pendent' }, ctx.config], comprova: e => [...rebuigTipusR15(e), ...rebuigAmbCodi('lssi-invalid')(e)] })
+  cas({ metode: 'adminRevisaDenuncia', capacitat: 'moderacioLssi', espera: 'rebutja', titol: 'R32.5: retirar sense justificació rebutja abans de qualsevol revisió', arguments: ctx => [{ id: ctx.idMissatge, decisio: 'retirada', justificacio: '', estatEsperat: 'pendent' }, ctx.config], comprova: e => [...rebuigTipusR15(e), ...rebuigAmbCodi('lssi-invalid')(e)] }),
+  /* R32.7 · Entrades estructuralment invàlides es rebutgen abans de sessió o transport. */
+  cas({ metode: 'carregaAccionsMissatges', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: carregaAccionsMissatges rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
+  cas({ metode: 'alternaReaccio', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: alternaReaccio rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
+  cas({ metode: 'alternaDestacat', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: alternaDestacat rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
+  cas({ metode: 'alternaFixat', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: alternaFixat rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
+  cas({ metode: 'eliminaPerAMi', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: eliminaPerAMi rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
+
 ]);
 
 /**

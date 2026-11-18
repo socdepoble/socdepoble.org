@@ -581,7 +581,8 @@ export const TRAZABILITAT_RONDA1_CENS = Object.freeze({
     'e7b05b3a5',
     '/assets/nano_cards/cervell_nano_card.webp',
     '/assets/nano_cards/cervell_nano_card-social-1200x630.jpg',
-    ['src/sections/consola/imatgesConsola.js', 'src/sections/multimedia/censImatges.js', 'src/sections/multimedia/legacyMedia.js']
+    /* v1.2.8 · Gemini R32.9 (lot 03) dona /consola/agents la vinyeta snippet_nano_card: la Consola ja no la cita. */
+    ['src/sections/multimedia/censImatges.js', 'src/sections/multimedia/legacyMedia.js']
   ),
   '/assets/nano_cards/gestoria_nano_card.jpg': tracaRonda1(
     '/assets/nano_cards/gestoria_nano_card.jpg',

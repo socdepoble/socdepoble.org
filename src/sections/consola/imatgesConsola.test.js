@@ -333,7 +333,7 @@ describe('P1-29 · traçabilitat semàntica i sincronització amb la Ronda 1 (e7
     expect(comparades).toBeGreaterThan(0);
   });
 
-  test('qualsevol coincidència de bytes SHA-256 dins d’IMATGES_CONSOLA està acreditada a reutilitzacioBytesAmb i pinta rutes diferents al tauler', () => {
+  test('zero coincidències de bytes SHA-256 dins d’IMATGES_CONSOLA: cap vinyeta es repetix al tauler i reutilitzacioBytesAmb és sempre null', () => {
     const perSha = new Map();
     for (const [id, { imatge }] of Object.entries(IMATGES_CONSOLA)) {
       const sha = createHash('sha256').update(readFileSync(alDisc(imatge))).digest('hex');
@@ -341,14 +341,10 @@ describe('P1-29 · traçabilitat semàntica i sincronització amb la Ronda 1 (e7
       perSha.get(sha).push(id);
     }
     const compartides = [...perSha.values()].filter((ids) => ids.length > 1);
-    expect(compartides).toEqual([['explorador', 'agents']]);
-    expect(TRAZABILITAT_IMATGES_CONSOLA.explorador.reutilitzacioBytesAmb).toBe('agents');
-    expect(TRAZABILITAT_IMATGES_CONSOLA.agents.reutilitzacioBytesAmb).toBe('explorador');
+    expect(compartides).toEqual([]);
     expect(miniaturaDePagina('explorador').imatge).not.toBe(miniaturaDePagina('agents').imatge);
     for (const [id, traca] of Object.entries(TRAZABILITAT_IMATGES_CONSOLA)) {
-      if (id !== 'explorador' && id !== 'agents') {
-        expect(traca.reutilitzacioBytesAmb, id).toBeNull();
-      }
+      expect(traca.reutilitzacioBytesAmb, id).toBeNull();
     }
   });
 

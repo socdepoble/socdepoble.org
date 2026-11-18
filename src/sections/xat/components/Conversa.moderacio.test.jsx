@@ -87,29 +87,32 @@ function obriMenuDeLaConversa() {
   return { boto, files: screen.getAllByRole('menuitem').map((fila) => fila.textContent) };
 }
 
+const BLOC_1_BASE = ['Respon', 'Reacciona', 'Destaca', 'Fixa', 'Reenvia', 'Copia el text'];
+const BLOC_3_BASE = ['Elimina', 'Selecciona missatges'];
+
 describe('la bombolla', () => {
-  test('sense moderació, el menú de sempre', () => {
+  test('sense moderació, el menú WhatsApp complet sense accions de moderació', () => {
     pinta({ mod: null });
-    expect(obriMenuDe('1').files).toEqual(['Respon', 'Copia el text']);
+    expect(obriMenuDe('1').files).toEqual([...BLOC_1_BASE, ...BLOC_3_BASE]);
   });
 
-  test('amb moderació, una bombolla aliena: «Denuncia el missatge» i «Bloqueja Pep», darrere de «Copia el text»', () => {
+  test('amb moderació, una bombolla aliena incorpora «Denuncia el missatge» i «Bloqueja Pep» al segon bloc', () => {
     pinta();
-    expect(obriMenuDe('1').files).toEqual(['Respon', 'Copia el text', 'Denuncia el missatge', 'Bloqueja Pep']);
+    expect(obriMenuDe('1').files).toEqual([...BLOC_1_BASE, 'Denuncia el missatge', 'Bloqueja Pep', ...BLOC_3_BASE]);
   });
 
-  test('qui no pot bloquejar només denuncia; un missatge signat per una entitat, també (no diu qui l’opera)', () => {
+  test('qui no pot bloquejar només denuncia; un missatge signat per una entitat, també (no diu qui l’opera ni oferix missatge privat)', () => {
     pinta({ mod: moderacio({ potBloquejar: false }) });
-    expect(obriMenuDe('1').files).toEqual(['Respon', 'Copia el text', 'Denuncia el missatge']);
+    expect(obriMenuDe('1').files).toEqual([...BLOC_1_BASE, 'Denuncia el missatge', ...BLOC_3_BASE]);
     cleanup();
     pinta({ fil: GRUP, messages: [m('1', 1, { comEntitat: true, author: 'Ajuntament' })] });
-    expect(obriMenuDe('1').files).toEqual(['Respon', 'Copia el text', 'Denuncia el missatge']);
+    expect(obriMenuDe('1').files).toEqual([...BLOC_1_BASE, 'Denuncia el missatge', ...BLOC_3_BASE]);
   });
 
-  test('ni la IAIA ni els propis porten res de nou', () => {
+  test('ni la IAIA ni els propis porten denúncia, bloqueig ni resposta privada', () => {
     pinta({ fil: GRUP, messages: [m('1', 1, { usuariId: IAIA_ID, author: 'IAIA MarIA', is_ai: true }), m('2', 2, { sender: 'me', usuariId: 'jo' })] });
-    expect(obriMenuDe('1').files).toEqual(['Respon', 'Copia el text']);
-    expect(obriMenuDe('2').files).toEqual(['Respon', 'Copia el text']);
+    expect(obriMenuDe('1').files).toEqual([...BLOC_1_BASE, ...BLOC_3_BASE]);
+    expect(obriMenuDe('2').files).toEqual([...BLOC_1_BASE, ...BLOC_3_BASE]);
   });
 
   test('«Denuncia el missatge» porta l’objectiu i el «⋯» al proveïdor, i el focus torna al «⋯»', () => {

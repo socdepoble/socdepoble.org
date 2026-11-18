@@ -56,12 +56,15 @@ vi.mock('./empaquetats.js', async (importOriginal) => ({
   carregaEmpaquetats: () => { crides.empaquetats += 1; return Promise.resolve(fonts.empaquetats); }
 }));
 import { RouterProvider, Route, Routes } from '../../app/contexts/RouterContext';
-import ConsolaSection from './ConsolaSection.jsx';
+import ConsolaSection, {
+  ETIQUETA_NAV_CANALS_EMPAQUETATS_TAXONOMIA,
+  TITOL_CANALS_EMPAQUETATS_TAXONOMIA
+} from './ConsolaSection.jsx';
 import { CLAU_PRIVACITAT, copyConsola } from './consolaPagines.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { dataLocal } from './consolaContent.js';
 import {
-  ETIQUETA_NAV_EMPAQUETATS, RUTA_EMPAQUETATS, TITOL_EMPAQUETATS, normalitzaEmpaquetats, paginaEmpaquetats
+  RUTA_EMPAQUETATS, normalitzaEmpaquetats, paginaEmpaquetats
 } from './empaquetats.js';
 import { VERSIO_SISTEMA as VERSIO, versioCanonica } from '../../config/versio.js';
 import { TEXT_BOTO_JARVIS, TITOL_JARVIS } from './jarvis.js';
@@ -115,19 +118,19 @@ const main = () => document.querySelector('main');
 const peu = () => document.querySelector('.sdp-consola__peu');
 
 describe('el tauler de /consola', () => {
-  test('darrere de les xifres i abans de l’Índex, una secció amb el seu H2 i una sola targeta, cap a la seua pàgina', async () => {
+  test('darrere de les xifres i abans de l’Índex, una sola secció unificada amb les 3 targetes en fila (Empaquetats, Brain Taxonomia i Botigues)', async () => {
     fonts.empaquetats = normalitzaEmpaquetats(BRUT);
     await obri('/consola');
-    const seccio = screen.getByRole('region', { name: TITOL_EMPAQUETATS });
+    const seccio = screen.getByRole('region', { name: TITOL_CANALS_EMPAQUETATS_TAXONOMIA });
     expect(seccio.tagName).toBe('SECTION');
-    expect([...seccio.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([TITOL_EMPAQUETATS]);
+    expect([...seccio.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([TITOL_CANALS_EMPAQUETATS_TAXONOMIA]);
     const despres = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
     expect(despres(screen.getByRole('region', { name: 'Sóc de Poble en xifres' }), seccio)).toBe(true);
     expect(despres(seccio, screen.getByRole('region', { name: 'Índex de la Consola' }))).toBe(true);
-    const nav = within(seccio).getByRole('navigation', { name: ETIQUETA_NAV_EMPAQUETATS });
-    expect(nav.className).toBe('sdp-card-grid sdp-consola__graella');
+    const nav = within(seccio).getByRole('navigation', { name: ETIQUETA_NAV_CANALS_EMPAQUETATS_TAXONOMIA });
+    expect(nav.className).toBe('sdp-card-grid sdp-consola__graella sdp-consola__graella--canals');
     const targetes = [...nav.querySelectorAll('article.sp-card')];
-    expect(targetes).toHaveLength(1);
+    expect(targetes).toHaveLength(3);
     const [t] = targetes;
     expect(t.className).toBe('sp-card sdp-consola__targeta');
     expect(t.querySelector('h3.sp-card-title').textContent).toBe(paginaEmpaquetats().title);
@@ -135,7 +138,7 @@ describe('el tauler de /consola', () => {
     // La web és la font de la versió: no compta al recompte.
     expect(t.querySelector('.sdp-consola__dada').textContent).toBe(`v${VERSIO} · 3 de 3 al pas`);
     expect([...t.querySelectorAll('.sp-card-label')].map((l) => l.textContent)).toEqual(['En ordre']);
-    expect([...nav.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual([RUTA_EMPAQUETATS]);
+    expect([...nav.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual([RUTA_EMPAQUETATS, '/consola/taxonomia', '/consola/botigues']);
     // La data de la pastilla: la de la instantània, més recent que la del copy.
     const quan = dataHoraDeBarra({ creat: copyConsola().date, modificat: BRUT.generat });
     expect(t.querySelector('.sp-card-header time').getAttribute('datetime')).toBe(quan.dateTime);
@@ -146,7 +149,8 @@ describe('el tauler de /consola', () => {
 
   test('sense font, la targeta diu per què i no inventa cap xifra', async () => {
     await obri('/consola');
-    const t = within(screen.getByRole('navigation', { name: ETIQUETA_NAV_EMPAQUETATS })).getByRole('article');
+    const nav = screen.getByRole('navigation', { name: ETIQUETA_NAV_CANALS_EMPAQUETATS_TAXONOMIA });
+    const [t] = [...nav.querySelectorAll('article.sp-card')];
     expect(t.querySelector('.sdp-consola__dada').textContent).toBe('Empaquetats no disponibles en este entorn');
     expect([...t.querySelectorAll('.sp-card-label')].map((l) => l.textContent)).toEqual(['Sense font']);
     expect(t.textContent).not.toMatch(/\d de \d/);

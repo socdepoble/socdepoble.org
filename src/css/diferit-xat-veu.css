@@ -7,7 +7,7 @@
    pintat. Mateixa cascada: @layer components, després de la regla base de .sdp-xat-bombolla-wrap. */
 @layer components {
   .sdp-xat-bombolla-wrap--veu {
-    max-inline-size: max(var(--sdp-xat-bombolla-max), min(100%, 21rem));
+    max-inline-size: max(var(--sdp-xat-bombolla-max), min(100%, 26rem));
   }
   .sdp-xat-bombolla-wrap--veu .sdp-xat-bombolla__meta {
     margin-block-start: 0;

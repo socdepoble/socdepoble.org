@@ -203,7 +203,7 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
      empaquetats (EmpaquetatsConsola.jsx), amb la seua targeta. Expectativa
      actualitzada a propòsit: «Sóc de Poble en xifres» just davant de l'Índex. */
   expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent))
-    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'Sóc de Poble en xifres', 'Empaquetats i llançament', 'Categories i etiquetes', 'Botigues i verificadors', 'Índex de la Consola', 'Diagnòstic de Sóc de Poble']);
+    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'Sóc de Poble en xifres', 'Canals, empaquetats i taxonomia', 'Índex de la Consola', 'Diagnòstic de Sóc de Poble']);
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 

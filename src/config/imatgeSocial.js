@@ -302,6 +302,9 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
   '/assets/nano_cards/metriques_nano_card.jpg',
   '/assets/nano_cards/lector_rss_nano_card.jpg',
   '/assets/nano_cards/cervell_nano_card.jpg',
+  /* v1.2.8 · Gemini R32.9 (lot 03) dona /consola/agents la vinyeta snippet_nano_card.jpg (581 KB); la variant
+     social l'ha generada tria-imatge-seo.mjs · generaVariantSocial1200x630 (282 KB). */
+  '/assets/nano_cards/snippet_nano_card.jpg',
   '/assets/nano_cards/govern_requeriments_nano_card.jpg',
   '/assets/nano_cards/govern_balanc_nano_card.jpg',
   '/assets/nano_cards/govern_certificacio_nano_card.jpg',

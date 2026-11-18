@@ -7,7 +7,8 @@ import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
 import { entradaMestreDetall, recordaNivell } from './nivellMestreDetall.js';
 import { buildWorkspaceFolderForest } from './workspaceFolderForest.js';
-import { carpetesAmagadesDe, desaCarpetaAmagada, espaiDe, subscriuCarpetesVisibles } from './carpetesVisibles.js';
+import { ESPAI_COMU, carpetesAmagadesDe, desaCarpetaAmagada, espaiDe, subscriuCarpetesVisibles } from './carpetesVisibles.js';
+import { clauEspaiDeWorkspaceKey, columnesPlegadesDe, combinaColumnesInicialsIDesades, desaColumnaPlegada } from './persistenciaColumnesUI.js';
 import { ALL_CATEGORY_ID, ORDENACIONS, ordenaElements } from './workspaceState.js';
 import { navegacioPlegadaDeLaFinestra } from '../../layout/graella.js';
 import { ItemMedia } from './ItemMedia.jsx';
@@ -746,13 +747,29 @@ export function UniversalWorkspace({
      la remuntada l'hereta. La primera muntada no canvia: la ref naix buida i
      mana columnesInicials, com sempre. */
   const columnesRef = useRef(null);
-  /* Ordre del Mestre (30-10-2026, Bloc de Notes) · Sense columnesInicials ni
-     mode compacte, la navegació arrenca plegada en rail en la franja estreta
-     de la finestra i oberta per damunt (els talls, a layout/graella.js). Es
-     decidix una vegada, en muntar; després mana la persona. */
+  const espaiColumnes = espaiDe(
+    idEspai,
+    mestreDetall && typeof mestreDetall === 'object' ? mestreDetall.clau : null,
+    clauEspaiDeWorkspaceKey(model.workspaceKey)
+  );
+  const persisteixColumnes = !compacte && espaiColumnes !== ESPAI_COMU;
+  const alAlternarColumna = useCallback((columna, plegada) => {
+    if (persisteixColumnes) desaColumnaPlegada(espaiColumnes, columna, plegada);
+  }, [persisteixColumnes, espaiColumnes]);
+  /* Ordre del Mestre (30-10-2026, Bloc de Notes) + P0-127 (R32.9) · Sense
+     columnesInicials ni mode compacte, la navegació arrenca plegada en rail en
+     la franja estreta de la finestra i oberta per damunt; quan la persona ja ha
+     plegat o desplegat manualment una columna d'este espai, la seua preferència
+     desada a storage.js (`workspace.columnesPlegades.v1`) es conserva en passar
+     d'un capítol a un altre, canviar de secció i tornar. */
   const [plegadaPerLaFinestra] = useState(navegacioPlegadaDeLaFinestra);
-  const columnesDeMuntada = columnesRef.current ?? columnesInicials
+  const baseColumnesArrencada = columnesInicials
     ?? (compacte ? COLUMNES_COMPACTE : (plegadaPerLaFinestra ? NAVEGACIO_PLEGADA : undefined));
+  const columnesDeMuntada = columnesRef.current ?? (
+    persisteixColumnes
+      ? combinaColumnesInicialsIDesades(baseColumnesArrencada, columnesPlegadesDe(espaiColumnes))
+      : baseColumnesArrencada
+  );
   /* Ordre d'usabilitat (30-10-2026) · Els noms traduïts dels botons que
      pleguen i despleguen cada columna (AppGridColumn, TextosDeLaColumna). */
   const textosDeLaColumna = useMemo(
@@ -787,6 +804,7 @@ export function UniversalWorkspace({
       categoriaSenseElement={compacte}
       filtraPerConsulta={model.filtraPerConsulta !== false}
       onQueryChange={model.onQueryChange ?? null}
+      onToggleColumn={alAlternarColumna}
     >
       <WorkspaceFrame
         columnesRef={columnesRef}

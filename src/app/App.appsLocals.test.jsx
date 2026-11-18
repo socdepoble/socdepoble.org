@@ -352,7 +352,7 @@ async function clicAlTitularFinsAlRegistre() {
   expect(tornar()).toBe('/app/gestoria/tauler');
   expect(await screen.findByRole('heading', { name: 'Benvinguda al Mas Electrònic' }, { timeout: 8000 })).toBeTruthy();
 }
-const AVIS_SERVIDOR_CAIGUT = /El servidor de poble no respon ara mateix/;
+const AVIS_SERVIDOR_CAIGUT = /El servidor de Sóc de Poble no respon ara mateix/;
 
 test.each(['local', 'seed'])('[DEFECTE D1] sense sessió, en mode %s i amb un port sense la capacitat ‘salut’, el clic al titular porta a /registre i l’entrada demana enterRemoteMode (la real desa l’elecció i recarrega)', async (mode) => {
   await munta('/app/gestoria/tauler', async ({ crides }) => {

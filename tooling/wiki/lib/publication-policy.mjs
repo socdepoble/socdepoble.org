@@ -6,6 +6,84 @@
 import { CAMINS } from '../../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+// La reserva no és una data acreditada de creació: és un valor estable per a
+// distribucions sense historial. Mai usem mtime ni l'hora de compilació.
+export const WIKI_DATE_FALLBACK = '1970-01-01T00:00:00Z';
+export const WIKI_IMAGE_PATTERN = '^/assets/(?:[A-Za-z0-9_-][A-Za-z0-9._-]*/)*[A-Za-z0-9_-][A-Za-z0-9._-]*\\.(?:jpg|jpeg|png|webp|avif|gif)$';
+export const WIKI_DATE_PATTERN = '^\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?(?:Z|[+-]\\d{2}:\\d{2}))?$';
+
+export function wikiDate(value) {
+  if (typeof value !== 'string' || !new RegExp(WIKI_DATE_PATTERN).test(value) || !Number.isFinite(Date.parse(value))) return false;
+  const [calendar, time] = value.split('T');
+  if (!new Date(`${calendar}T00:00:00Z`).toISOString().startsWith(calendar)) return false;
+  if (time) {
+    const m = /^(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(?:Z|[+-](\d{2}):(\d{2}))$/.exec(time);
+    if (!m || +m[1] > 23 || +m[2] > 59 || +m[3] > 59 || +(m[4] || 0) > 23 || +(m[5] || 0) > 59) return false;
+  }
+  return true;
+}
+
+/** Valida els camps editorials nous sense relaxar la frontera de privacitat.
+ * El parser YAML lleuger conserva escalars com a text: sols convertim literals
+ * no citats. Un «mur: \"false\"» no és un booleà editorial.
+ */
+export function wikiEditorial(attributes, { rawFrontmatter } = {}) {
+  const a = { ...attributes };
+  for (const key of ['mur', 'revisions']) {
+    if (typeof a[key] !== 'string' || typeof rawFrontmatter !== 'string') continue;
+    const literal = new RegExp(`^${key}:[ \\t]*(true|false|0|[1-9]\\d*)[ \\t]*(?:#.*)?$`, 'm').exec(rawFrontmatter.replaceAll('\r\n', '\n'));
+    if (literal && literal[1] === a[key]) {
+      if (key === 'mur' && /^(true|false)$/.test(a[key])) a[key] = a[key] === 'true';
+      if (key === 'revisions' && /^(0|[1-9]\d*)$/.test(a[key])) a[key] = Number(a[key]);
+    }
+  }
+  const invalid = key => { throw new TypeError(`Metadada editorial invàlida: ${key}`); };
+  if (Object.hasOwn(a, 'mur') && typeof a.mur !== 'boolean') invalid('mur');
+  if (Object.hasOwn(a, 'revisions') && (!Number.isSafeInteger(a.revisions) || a.revisions < 0)) invalid('revisions');
+  for (const key of ['date', 'updated']) if (Object.hasOwn(a, key) && !wikiDate(a[key])) invalid(key);
+  if (Object.hasOwn(a, 'image') && (typeof a.image !== 'string' || !new RegExp(WIKI_IMAGE_PATTERN).test(a.image))) invalid('image');
+  for (const [key, max] of [['imageAlt', 500], ['version', 80]]) {
+    if (Object.hasOwn(a, key) && (typeof a[key] !== 'string' || !a[key].trim() || a[key].trim() !== a[key] || a[key].length > max || /[\u0000-\u001f\u007f]/.test(a[key]))) invalid(key);
+  }
+  return a;
+}
+
+/** Historial del fitxer (committer ISO, també després de renoms). No escriu,
+ * no usa shell, no executa diffs externs i té límits de temps/memòria.
+ */
+export function wikiHistory(root, file) {
+  if (!fs.existsSync(path.join(root, '.git'))) return [];
+  try {
+    const output = execFileSync('git', ['--literal-pathspecs', '-C', root, '-c', 'log.showSignature=false',
+      'log', '--follow', '--no-ext-diff', '--no-textconv', '--format=%cI', '--', path.relative(root, file)],
+    { encoding: 'utf8', timeout: 5000, maxBuffer: 4 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+    const dates = output.trim().split(/\r?\n/).filter(Boolean);
+    return dates.every(wikiDate) ? dates : [];
+  } catch { return []; }
+}
+
+/** Mateixa editorial a primer nivell i en attributes per als consumidors.
+ * revisions=0 explicita que no hi ha commits acreditats en esta distribució.
+ */
+export function resolveWikiEditorial(attributes, { root, file, rawFrontmatter } = {}) {
+  const a = wikiEditorial(attributes, { rawFrontmatter });
+  const history = ['date', 'updated', 'revisions'].some(key => !Object.hasOwn(a, key)) ? wikiHistory(root, file) : [];
+  const named = /^(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})_/.exec(path.basename(file));
+  const candidate = named ? `20${named[1]}-${named[2]}-${named[3]}T${named[4]}:${named[5]}:00Z` : '';
+  const fallback = wikiDate(candidate) ? candidate : WIKI_DATE_FALLBACK;
+  const date = a.date ?? history.at(-1) ?? fallback;
+  const editorial = { ...(a.image === undefined ? {} : { image: a.image }), ...(a.imageAlt === undefined ? {} : { imageAlt: a.imageAlt }),
+    date, updated: a.updated ?? history[0] ?? date, ...(a.version === undefined ? {} : { version: a.version }),
+    revisions: a.revisions ?? history.length, mur: a.mur ?? false,
+    origenEditorial: {
+      date: a.date !== undefined ? 'frontmatter' : history.length ? 'git' : wikiDate(candidate) ? 'nom' : 'reserva',
+      updated: a.updated !== undefined ? 'frontmatter' : history.length ? 'git' : a.date !== undefined ? 'frontmatter' : wikiDate(candidate) ? 'nom' : 'reserva',
+      revisions: a.revisions !== undefined ? 'frontmatter' : history.length ? 'git' : 'sense-historial'
+    } };
+  return { editorial, attributes: { ...a, ...editorial } };
+}
 
 export const PUBLIC_WIKI_DIRS = Object.freeze(['01_ser', '02_saber', '03_actuar']);
 const PUBLIC_DIRS = new Set(PUBLIC_WIKI_DIRS);

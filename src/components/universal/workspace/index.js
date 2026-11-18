@@ -4,6 +4,10 @@ export { UniversalWorkspace, DefaultItemCard } from './UniversalWorkspace.jsx';
 export {
   ESPAI_COMU, carpetesAmagadesDe, desaCarpetaAmagada, espaiDe, subscriuCarpetesVisibles
 } from './carpetesVisibles.js';
+export {
+  CLAU_COLUMNES_PLEGADES, columnesPlegadesDe, desaColumnaPlegada,
+  desaColumnesPlegades, subscriuColumnesPlegades
+} from './columnesPlegades.js';
 
 /* Fitxa Gestor F4 (R15b) · El catàleg és un consumidor del primitiu i viu fora del mòdul
    (src/components/universal/CatalegWorkspace.jsx); la façana el continua exportant. */

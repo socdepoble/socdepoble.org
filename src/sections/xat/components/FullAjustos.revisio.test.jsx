@@ -141,7 +141,10 @@ test('P3 · la nota de l’arrel diu on porta «Privacitat», i no promet un apa
 
   ambSessio({ capacitats: [] });
   obriElFull();
-  expect(within(full()).getByText('«Privacitat» obri el teu perfil, però el servidor d’este poble encara no hi oferix l’apartat «Privacitat i dades».')).toBeTruthy();
+  /* Onada R32.9 (Llei 32) · El diccionari diu ara «el servidor de
+     Sóc de Poble» en lloc d’«el servidor d’este poble»; la nota continua sense
+     prometre l’apartat que el servidor no té. */
+  expect(within(full()).getByText('«Privacitat» obri el teu perfil, però el servidor de Sóc de Poble encara no hi oferix l’apartat «Privacitat i dades».')).toBeTruthy();
   fireEvent.click(fila('Privacitat'));
   expect(mocks.navigate).toHaveBeenLastCalledWith('/el-meu-perfil');
 });

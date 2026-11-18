@@ -192,6 +192,12 @@ import {
   loadMissatges,
   enviaMissatge,
   publicaAdjuntXat,
+  urlAdjuntXat,
+  carregaAccionsMissatges as carregaAccionsAlPort,
+  alternaReaccio as reaccioAlPort,
+  alternaDestacat as destacatAlPort,
+  alternaFixat as fixatAlPort,
+  eliminaPerAMi as eliminaAlPort,
   marcaLlegit,
   creaFilDirecte,
   loadPerfilPublic,
@@ -228,7 +234,10 @@ import AvisOblitXat from './components/AvisOblitXat.jsx';
 /* Gauntlet 261017 (WP7b, P2) · De la font, identitat.js: appSeed.js només el
    reexporta, i importar-lo d'allà arrossegava la llavor sencera (PAGE_COPY
    inclosa) al tros d'entrada. La mateixa funció, el mateix valor. */
-import { capturaSessio, getDefaultUserId, sessioRecuperable } from '../../data/identitat.js';
+import { capturaSessio, entradaSessio, getDefaultUserId, sessioRecuperable } from '../../data/identitat.js';
+/* v1.2.8 · Només la projecció pura és estàtica; el motor d'accions i serveiXat.js es carreguen en diferit
+   (pes de l'arrencada estàtica del connector de WordPress). */
+import { projectaAccionsMissatges } from '../../data/xat/projeccioAccionsMissatges.js';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
@@ -498,6 +507,9 @@ const BUIT = {
   avisLlista: null,
   sendChatMessage: async () => [],
   sendChatMedia: null,
+  alternaReaccio: null, alternaDestacat: null, alternaFixat: null, eliminaPerAMi: null,
+  responEnPrivat: null, reenviaAConverses: null, carregaAccionsMissatges: null, carregaDestacats: null,
+  missatgesDestacats: CAP, esborranyPrivat: null, errorAccions: null,
   reintenta: async () => [],
   descartaFallit: () => {},
   marcaVist: () => {},
@@ -781,6 +793,8 @@ export function XatProvider({ children, config }) {
   }, [token]);
 
   const [fils, setFils] = useState([]);
+  const [estatAccions, setEstatAccions] = useState({ perMissatge: {}, destacats: [], esborranyPrivat: null });
+  const [errorAccions, setErrorAccions] = useState(null);
   const filsRef = useRef([]);
   /* ── R21 (carril f2) · El xat propi «<Nom> (Tu)» ──
      Gauntlet R21 (regressio_ui_xat-02/-05, honestedat_textos-04) · La fila
@@ -1957,7 +1971,10 @@ export function XatProvider({ children, config }) {
     const respostaA = opcions?.respostaA ? String(opcions.respostaA) : null;
     const esperaLaXarxa = opcions?.esperaLaXarxa !== false;
 
-    const id = generaId();
+    const id = opcions?.clientMsgId ?? generaId();
+    if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+      throw new Error('L’identificador del reenviament no és vàlid.');
+    }
     const pendent = {
       id,
       threadId: filId,
@@ -2018,6 +2035,10 @@ export function XatProvider({ children, config }) {
      XAT-03 · `onProgres` (opcional) passa tal qual al port: el progrés de la pujada. */
   const sendChatMedia = useCallback(async (fil, adjunt, { signal, onProgres } = {}) => {
     const op = captura();
+    // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
+    const { errorAdjuntXat, normalitzaUbicacioXat } = await import('../../data/xatMultimedia.js');
+    const ubicacioEsperada = normalitzaUbicacioXat(adjunt?.ubicacio);
+    if (adjunt?.conservaUbicacio === false && ubicacioEsperada) throw errorAdjuntXat('ubicacio-invalida');
     if (!joId || !vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
     const complet = filsRef.current.find((f) => f.id === fil?.id) || visitantsRef.current[fil?.id] || fil;
     if (!complet?.id || complet.potEscriure === false || (complet.tipus === 'canal' && complet.potEscriure !== true)) {
@@ -2103,10 +2124,14 @@ export function XatProvider({ children, config }) {
       // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
       throw (await import('../../data/xatMultimedia.js')).errorAdjuntXat('sense-confirmacio');
     }
+    const ubicacioConfirmada = normalitzaUbicacioXat(desat.metadades?.ubicacio);
+    // v1.2.8 · Un servidor sense 20261117193000 publica sense la ubicació (ubicacioNoAdmesa, xatMultimedia.js).
+    if ((ubicacioEsperada && desat.ubicacioNoAdmesa !== true && (!ubicacioConfirmada || ubicacioConfirmada.lat !== ubicacioEsperada.lat || ubicacioConfirmada.lng !== ubicacioEsperada.lng))
+      || (adjunt.conservaUbicacio === false && ubicacioConfirmada)) throw errorAdjuntXat('sense-confirmacio');
     const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
     mutaMissatges((previs) => ({ ...previs, [complet.id]: fusionaPerSeq(previs[complet.id] || [], [definitiu]) }));
     mutaFils((previs) => previs.map((f) => f.id === complet.id ? actualitzaFilAmbMissatge(f, definitiu) : f));
-    return [definitiu];
+    return [desat.ubicacioNoAdmesa === true ? { ...definitiu, ubicacioNoAdmesa: true } : definitiu];
   }, [joId, captura, vigent, config, mutaMissatges, mutaFils]);
 
   /* ── Reintent manual d'una bombolla en error, amb el mateix id ── */
@@ -2468,15 +2493,15 @@ export function XatProvider({ children, config }) {
       /* R24 · xat_entrega (P2-9) · Si el servidor no informa de l'entrega, la marca ho diu. */
       const rebutsConeguts = !fil || fil.esPropi || fil.rebutsConeguts !== false;
       const combinats = combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], llegitAltres, rebutAltres, rebutsConeguts);
-      resultat[id] = anotaMissatgesBloquejats(
+      resultat[id] = projectaAccionsMissatges(anotaMissatgesBloquejats(
         cablejatRural.current?.projecta(combinats, fil) ?? combinats,
         esPersonaBloquejada
-      );
+      ), estatAccions.perMissatge);
     }
     return resultat;
     /* R32 (xat_tros_paralel) · versioRural: el cablejat de la ref ha arribat. */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missatgesPerFil, pendentsPerFil, filsVisibles, esPersonaBloquejada, versioRural]);
+  }, [missatgesPerFil, pendentsPerFil, filsVisibles, esPersonaBloquejada, versioRural, estatAccions.perMissatge]);
 
   /* Decisió 1 del Mestre (261007) · El que es VEU penja de l'àmbit de dades,
      no del testimoni d'operació. Amb un àmbit nou, res no es veu fins que la
@@ -2688,6 +2713,141 @@ export function XatProvider({ children, config }) {
     return { estat: 'local', arxivat: objectiu };
   }, [potArxivarFil, mutaArxivatsLocals]);
 
+  /* R32.7 · Els flags són una projecció per sessió, mai una modificació de
+     seq/cursors ni del missatge autoritari. El servei només reté IDs/flags. */
+  const entornAccions = useRef(null);
+  entornAccions.current = { ambit: ambitEstable, actiu: dins(), usuariId: joId, modeDades, config,
+    missatgesPerFil, esPersonaBloquejada, creaFil, obriFil, enviaAmbNormes, sendChatMedia };
+  const opcionsMotorAccions = () => ({
+    port: {
+      carregaAccionsMissatges: (...args) => carregaAccionsAlPort(...args),
+      alternaReaccio: (...args) => reaccioAlPort(...args), alternaDestacat: (...args) => destacatAlPort(...args),
+      alternaFixat: (...args) => fixatAlPort(...args), eliminaPerAMi: (...args) => eliminaAlPort(...args)
+    },
+    obteContext: () => {
+      const e = entornAccions.current;
+      return { ...e, clau: JSON.stringify([e.ambit, entradaSessio()]), actiu: e.actiu && !desmuntat.current, comprova: capturaSessio() };
+    },
+    obteMissatge: (ref) => {
+      const id = typeof ref === 'string' ? ref : ref?.id ?? ref?.missatgeId;
+      const filDemanat = ref?.threadId ?? ref?.filId;
+      const e = entornAccions.current;
+      for (const [filId, files] of Object.entries(e.missatgesPerFil)) {
+        if (filDemanat && filDemanat !== filId) continue;
+        const m = files.find(m => m.id === id);
+        if (!m || e.esPersonaBloquejada(m.usuariId)) continue;
+        const fil = filsRef.current.find(f => f.id === filId);
+        if (fil?.participant === false) continue;
+        return m;
+      }
+      return null;
+    },
+    onCanvi: setEstatAccions,
+    creaPrivat: id => entornAccions.current.creaFil(id),
+    obreFil: id => entornAccions.current.obriFil(id),
+    enviaText: async (desti, text, opcions) => {
+      const e = entornAccions.current;
+      if (e.modeDades !== 'remote') return e.enviaAmbNormes(desti, text, opcions);
+      const valida = capturaSessio(), ambit = e.ambit;
+      const comprova = () => {
+        valida();
+        if (opcions.signal?.aborted || desmuntat.current || entornAccions.current.ambit !== ambit) throw new DOMException('Operació cancel·lada.', 'AbortError');
+      };
+      const moderacio = moderacioRef.current;
+      if (typeof moderacio?.asseguraNormes === 'function' && !esXatPrivatDeLaIAIA(desti) && !(await moderacio.asseguraNormes())) {
+        throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
+      }
+      comprova();
+      const { serveiXat } = await import('../../data/xat/serveiXat.js');
+      const publica = () => serveiXat.enviaMissatge(desti.id, { id: opcions.clientMsgId, text }, { ...entornAccions.current.config, signal: opcions.signal });
+      let desat;
+      try { desat = await publica(); }
+      catch (error) {
+        if (!esRebuigDeNormes(error) || typeof moderacio?.asseguraNormes !== 'function') throw error;
+        if (!(await moderacio.asseguraNormes({ rebutjades: true }))) throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
+        comprova(); desat = await publica();
+      }
+      comprova();
+      if (desat?.id !== opcions.clientMsgId || desat.filId !== desti.id || desat.encuat === true
+        // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
+        || !Number.isSafeInteger(desat.seq) || desat.seq <= 0) throw (await import('../../data/xatMultimedia.js')).errorAdjuntXat('sense-confirmacio');
+      const definitiu = { ...mapejaMissatge(desat, e.usuariId), author: 'Jo' };
+      mutaMissatges(previs => ({ ...previs, [desti.id]: fusionaPerSeq(previs[desti.id] || [], [definitiu]) }));
+      mutaFils(previs => previs.map(f => f.id === desti.id ? actualitzaFilAmbMissatge(f, definitiu) : f));
+      return [definitiu];
+    },
+    enviaAdjunt: (...args) => entornAccions.current.sendChatMedia(...args),
+    lligBlob: async (m, { signal }) => {
+      // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
+      const { MAXIM_ADJUNT_XAT, MIME_XAT } = await import('../../data/xatMultimedia.js');
+      const meta = m.metadades?.adjunt;
+      if (!meta?.id || MIME_XAT[meta.mime] !== m.tipus) throw new Error('Este adjunt no està disponible per a reenviar.');
+      const url = await urlAdjuntXat(meta.id, { ...entornAccions.current.config, signal }, { renova: true });
+      const resposta = await fetch(url, { signal, credentials: 'omit', redirect: 'error' });
+      if (!resposta.ok) throw Object.assign(new Error('No hem pogut llegir l’adjunt autoritzat.'), { status: resposta.status });
+      const maxim = MAXIM_ADJUNT_XAT[m.tipus];
+      const chunks = []; let bytes = 0;
+      if (resposta.body?.getReader) {
+        const reader = resposta.body.getReader();
+        try {
+          for (;;) {
+            if (signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
+            const { done, value } = await reader.read(); if (done) break;
+            bytes += value.byteLength;
+            if (bytes > maxim) { await reader.cancel(); throw new Error('L’adjunt supera el límit permés.'); }
+            chunks.push(value);
+          }
+        } finally { reader.releaseLock(); }
+      } else {
+        const blob = await resposta.blob(); bytes = blob.size; chunks.push(blob);
+      }
+      if (!bytes || bytes > maxim) throw new Error('L’adjunt no té una mida vàlida.');
+      return new Blob(chunks, { type: meta.mime });
+    }
+  });
+  const opcionsMotorRef = useRef(opcionsMotorAccions);
+  opcionsMotorRef.current = opcionsMotorAccions;
+  /* v1.2.8 · Motor diferit: el mòdul es carrega la primera vegada que algú el necessita (una acció o la
+     càrrega de flags del fil visible). Fins aleshores sincronitza/activa/tanca només anoten l'estat. */
+  const motorAccionsRef = useRef(null);
+  if (!motorAccionsRef.current) {
+    let promesa = null, instancia = null, actiu = false;
+    motorAccionsRef.current = {
+      carrega: () => (promesa ??= import('../../data/xat/accionsMissatge.js').then(({ creaAccionsMissatge }) => {
+        instancia = creaAccionsMissatge(opcionsMotorRef.current());
+        instancia.sincronitza();
+        if (actiu) instancia.activa();
+        return instancia;
+      }).catch((error) => { promesa = null; throw error; })),
+      sincronitza: () => { instancia?.sincronitza(); },
+      activa: () => { actiu = true; instancia?.activa(); },
+      tanca: () => { actiu = false; instancia?.tanca(); }
+    };
+  }
+  const motorAccions = motorAccionsRef.current;
+  useLayoutEffect(() => { motorAccions.sincronitza(); }, [motorAccions, ambitEstable, joId]);
+  useEffect(() => { motorAccions.activa(); return () => motorAccions.tanca(); }, [motorAccions]);
+  const accionsMissatge = useMemo(() => Object.fromEntries([
+    'alternaReaccio', 'alternaDestacat', 'alternaFixat', 'eliminaPerAMi', 'responEnPrivat', 'reenviaAConverses', 'carregaAccionsMissatges'
+  ].map(nom => [nom, (...args) => {
+    setErrorAccions(null);
+    const ambit = entornAccions.current.ambit;
+    return motorAccions.carrega().then(motor => motor[nom](...args)).catch(error => {
+      if (!desmuntat.current && entornAccions.current.ambit === ambit && error?.name !== 'AbortError') setErrorAccions(error);
+      throw error;
+    });
+  }])), [motorAccions]);
+  const idsAccions = (filActiu ? missatgesPerFil[filActiu] || [] : []).map(m => m.id).sort().join(',');
+  useEffect(() => {
+    if (!visible || !filActiu || !idsAccions || !teCapacitat('xatAccionsMissatge')) return undefined;
+    const control = new AbortController(), ids = idsAccions.split(',');
+    (async () => {
+      for (let i = 0; i < ids.length; i += 100) await accionsMissatge.carregaAccionsMissatges({ filId: filActiu, missatgeIds: ids.slice(i, i + 100) }, { signal: control.signal });
+    })().catch(() => { /* errorAccions est accessible; una lectura no tomba el xat. */ });
+    return () => control.abort();
+  }, [visible, filActiu, idsAccions, accionsMissatge]);
+  const carregaDestacats = useCallback(opcions => accionsMissatge.carregaAccionsMissatges({ ...opcions, nomesDestacats: true }), [accionsMissatge]);
+
   const value = useMemo(() => ({
     status: visible ? estat : joId ? 'loading' : 'ready',
     error: null,
@@ -2739,6 +2899,11 @@ export function XatProvider({ children, config }) {
     /* Fase D (261020, tasca 2) · Amb la porta de les normes (enviaAmbNormes). */
     sendChatMessage: enviaAmbNormes,
     sendChatMedia,
+    ...accionsMissatge,
+    carregaDestacats,
+    missatgesDestacats: visible ? estatAccions.destacats : CAP,
+    esborranyPrivat: visible ? estatAccions.esborranyPrivat : null,
+    errorAccions: visible ? errorAccions : null,
     reintenta,
     descartaFallit,
     marcaVist,
@@ -2772,7 +2937,7 @@ export function XatProvider({ children, config }) {
     arxivaFil
   }), [visible, joId, joNom, joAvatar, joEsJavi, xatPropi, entitatActiva, estatSessio, usuari?.id, actuaComEntitat, clauPersona, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, filCarregat, avisFil, recarregaFil, tipusAvisFil, llegintFil,
-    enviaAmbNormes, sendChatMedia, reintenta, descartaFallit, marcaVist,
+    enviaAmbNormes, sendChatMedia, accionsMissatge, carregaDestacats, estatAccions, errorAccions, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
     modeDades, consumixEntrada, iaiaApagada, filAmagat, oblitXat, oblitXatFallit, reintentaOblitXat, potSilenciarFil, silenciaFil, potArxivarFil, arxivaFil]);
 

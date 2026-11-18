@@ -76,7 +76,7 @@ function transferenciaDelPort() {
 
 /* Com l'adaptador quan el servidor no té l'esquema: el mateix `code`. */
 const errorSenseMembres = () => Object.assign(
-  new Error('El servidor d’este poble encara no gestiona els membres de les organitzacions.'),
+  new Error('El servidor de Sóc de Poble encara no gestiona els membres de les organitzacions.'),
   { code: 'NO-DISPONIBLE' },
 );
 

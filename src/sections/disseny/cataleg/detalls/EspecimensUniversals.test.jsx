@@ -698,9 +698,12 @@ describe('Especímens del Xat · onada 3B', () => {
 
   it('Xat: la capçalera d’una pàgina («Sobre:» i participants) i la dels Avisos; el compositor dels Avisos i el del xat públic', () => {
     const arrel = pinta(EspecimenXat);
-    /* R32.6 (P0-119 + P0-120) · La mostra de la conversa directa amb veu porta la seua capçalera (Sofía Bornay). */
+    /* R32.6 (P0-119 + P0-120) · La mostra de la conversa directa amb veu porta la seua capçalera (Sofía Bornay).
+       R32.7 (kit Gemini) · La mostra de l'espill d'avatars i del menú de les 11 opcions porta també la seua
+       (Comissió de Festes). La mostra de la ubicació (R32.8) no en porta cap. */
+    const MOSTRES_AMB_CAPCALERA_PROPIA = '[data-especimen="r32-6-xat-veu-avatars"], [data-especimen="r32-7-xat-espill-11-opcions"]';
     const [pagina, avisos] = [...arrel.querySelectorAll('header.sdp-xat-capcalera')]
-      .filter((capcalera) => !capcalera.closest('[data-especimen="r32-6-xat-veu-avatars"]'));
+      .filter((capcalera) => !capcalera.closest(MOSTRES_AMB_CAPCALERA_PROPIA));
     const enllac = within(pagina).getByRole('link', { name: 'Obri la pàgina Festa major' });
     expect(enllac.getAttribute('href')).toBe('/mur');
     expect(document.getElementById(enllac.getAttribute('aria-describedby')).textContent).toBe('Sobre: Festa major · 12 participants');
@@ -716,6 +719,7 @@ describe('Especímens del Xat · onada 3B', () => {
     expect([...arrel.querySelectorAll('.sdp-xat-capcalera__nom')].map((nom) => [nom.tagName, nom.getAttribute('role'), nom.getAttribute('aria-level'), nom.textContent]))
       .toEqual([
         ['STRONG', 'heading', '5', 'Sofía Bornay'],
+        ['STRONG', 'heading', '5', 'Comissió de Festes'],
         ['STRONG', 'heading', '5', 'Festa major'],
         ['STRONG', 'heading', '5', 'Avisos'],
         ['STRONG', 'heading', '5', 'Comissió de Festes']

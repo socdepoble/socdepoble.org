@@ -36,6 +36,8 @@ DO $guard$ BEGIN
  -- catàleg complet real passa a 121 (851f46d4) i es conserven el 119 d'R32.2 i el 120 d'R32.4, que no la porta.
  -- El 120 del kit R32.5 (3e45e1da: els 119 més 20261117140000, sense 20261117150000) no és cap catàleg publicat
  -- i no s'accepta: el recompte 120 només val amb el registre exacte d'R32.4.
+ -- Onada v1.2.8 (kits R32.7 i R32.8 de Codex) hi afig 20261117173000 i 20261117193000 (accions del xat; quota, vídeo
+ -- i ubicació; NO aplicades): el catàleg complet real passa a 123 (1de4ff25) i es conserva el 121 de la v1.2.7.
  -- A count alone cannot prove a migration identity or its source bytes.
  OR NOT EXISTS(
  SELECT 1 FROM(VALUES
@@ -54,7 +56,8 @@ DO $guard$ BEGIN
 (116,'34ddc81cbf6670272e99603f985db38f85663f93b901e5ea3b212552b556d589'),
 (119,'4c3151035be4784842fba08d88e59425a22ed3d89e64016c8dd99c81f08774b2'),
 (120,'91dabe476f642579862bffbb10b8d56f946722b8efd65deedf43e7f8fbae9f71'),
-(121,'851f46d48edca7e5147c8075469a0f5c46992f7e033ca87996b51fa1df1241e0')
+(121,'851f46d48edca7e5147c8075469a0f5c46992f7e033ca87996b51fa1df1241e0'),
+(123,'1de4ff25c313f242b463d00445377f5692f87b762927a13e1ed20464ab1f0bab')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

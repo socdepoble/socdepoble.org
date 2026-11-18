@@ -1,6 +1,7 @@
 import { sanitizeHtml, netejaText, esFontImatgePropia } from '../utils/sanitize.js';
 import { origenPublic } from './origenNota.js';
 import { fotoDelBucketPublic } from '../utils/mitjaOpac.js';
+import { capturaVisibilitatMur, visibilitatMurLlegida } from './visibilitatMur.js';
 /* IDEA-61 (T0, prompt 261102_1532) · El contracte del Flux Universal de
    Publicació: JS pur, sense React ni xarxa (la seua única importació és
    sanitize.js, com la d'ací). */
@@ -261,6 +262,7 @@ export function mapSectionSubmissionToItem(submission) {
     sectionId,
     created_at: payload.created_at || createdAt
   };
+  Object.assign(baseItem, capturaVisibilitatMur(baseItem));
   /* T43 (ordre del Mestre, 260928) · Esta funció munta el payload que
      appendSectionSubmissionNetworkOnly escriu a section_submissions, i eixa
      fila la llig tot el poble. L'origen d'una connexió compartida hi va net i
@@ -792,6 +794,8 @@ function netejaAmbit(payload, sectionId) {
 const MODE_DE_TRADUCCIO_ILLEGIBLE = 'R51_TRANSLATION_MODE_INVALID';
 
 function netejaTipusDelPayload(dades) {
+  const visibilitat = visibilitatMurLlegida(dades);
+  Object.assign(dades, visibilitat ?? { mostrarAlMur: false, ocultarDelMur: true });
   for (const clau of CLAUS_DE_TEXT_DEL_PAYLOAD) {
     const valor = dades[clau];
     if (valor == null || typeof valor === 'string') continue;

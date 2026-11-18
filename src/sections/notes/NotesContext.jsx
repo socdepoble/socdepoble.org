@@ -39,6 +39,10 @@ import { getVal, setVal } from '../../config/storage.js';
    Publicació: la fitxa d'àmbit d'una nota es projecta al payload amb ell. */
 import { ESTATS, canviaEstat, coaccionaAmbit, esFitxaDAmbit, projeccioPayload, seccioDAmbit } from '../../utils/publicacioUniversal.js';
 import { marcaPublicacioEsborrada } from '../../data/publicacionsEsborrades.js';
+import { capturaVisibilitatMur } from '../../data/visibilitatMur.js';
+
+const netejaCampDeNota = (camp, valor) => ['mostrarAlMur', 'ocultarDelMur'].includes(camp)
+  ? capturaVisibilitatMur({ [camp]: valor })[camp] : netejaCamp(camp, valor);
 
 /* F03-UI · Si la nota té (o ha tingut sense retirar) una publicació al Mur. */
 const esNotaPublicada = (note) => Boolean(note?.isPublished || note?.publishedSubmissionId);
@@ -409,7 +413,7 @@ export function NotesProvider({ children }) {
     if (esborrades.current.has(noteId)) return Promise.resolve(false);
     /* IDEA-61 · La fitxa d'àmbit és un objecte: la neteja el contracte, no el
        sanejador de text (que en faria «[object Object]»). */
-    const netejat = field === 'fitxa' ? fitxaDeNota(value) : netejaCamp(field, value);
+    const netejat = field === 'fitxa' ? fitxaDeNota(value) : netejaCampDeNota(field, value);
     return bgSaveManager.enqueue(
       scopeKey,
       noteId,
@@ -429,12 +433,13 @@ export function NotesProvider({ children }) {
       return;
     }
     if (!id || operationRef.current !== operation || esborrades.current.has(id)) return;
-    void saveNoteField(id, field, value);
+    const canvis = ['mostrarAlMur', 'ocultarDelMur'].includes(field) ? capturaVisibilitatMur({ [field]: value }) : { [field]: value };
+    for (const [camp, valor] of Object.entries(canvis)) void saveNoteField(id, camp, valor);
     setLocalNoteOverrides(prev => {
       const currentOverrides = prev[id] || EMPTY_OVERRIDE;
-      if (currentOverrides[field] === value) return prev;
+      if (Object.entries(canvis).every(([camp, valor]) => currentOverrides[camp] === valor)) return prev;
 
-      const next = { ...prev, [id]: { ...currentOverrides, [field]: value } };
+      const next = { ...prev, [id]: { ...currentOverrides, ...canvis } };
 
 
 
@@ -454,7 +459,7 @@ export function NotesProvider({ children }) {
     if (!id || esborrades.current.has(id)) throw new DOMException('Operació cancel·lada.', 'AbortError');
     if (!Number.isSafeInteger(creada.revision) || creada.revision < 0) throw new Error('La nota creada no porta una revisió vàlida per a conservar l’esborrany.');
     const nets = Object.fromEntries(Object.entries(camps || {}).map(([camp, valor]) => [camp,
-      camp === 'fitxa' ? fitxaDeNota(valor) : netejaCamp(camp, valor)]));
+      camp === 'fitxa' ? fitxaDeNota(valor) : netejaCampDeNota(camp, valor)]));
     if (!Object.keys(nets).length) return true;
     for (const [camp, valor] of Object.entries(nets)) {
       void bgSaveManager.enqueue(scopeKey, id, camp, valor, () => ({ revision: creada.revision }),
@@ -518,6 +523,8 @@ export function NotesProvider({ children }) {
     if (nomesLectura) return Promise.reject(new ErrorIdentitatDeLectura());
     const compartir = mode === 'compartir' || esConnexio(activeNote) || esExtern(activeNote);
     if (!activeNote || operationRef.current !== operation) return Promise.resolve(false);
+    let visibilitatMur;
+    try { visibilitatMur = capturaVisibilitatMur(activeNote); } catch (error) { return Promise.reject(error); }
     if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
       // P1-22 · El motiu en la llengua de l'app (visibilitatNota.js, amb `t`).
       const motiu = motiuModeLocal({ connexio: compartir, t });
@@ -598,7 +605,7 @@ export function NotesProvider({ children }) {
        copyright que li pinta l'editor és el de l'original (NotesEditor), i
        desar-lo ací l'escriuria a la nota. */
     /* IDEA-61 · També la fitxa d'àmbit (`fitxa`): sense ella (undefined) no es desa res. */
-    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'logoImageDark', 'folderId', 'categories', 'tags', 'copyright', 'icon', 'publishDate', 'fitxa']) {
+    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'logoImageDark', 'folderId', 'categories', 'tags', 'copyright', 'icon', 'publishDate', 'fitxa', 'mostrarAlMur', 'ocultarDelMur']) {
       if (field === 'copyright' && esConnexio(activeNote)) continue;
       if (activeNote[field] !== undefined) void saveNoteField(activeNote.id, field, activeNote[field]);
     }
@@ -811,6 +818,7 @@ export function NotesProvider({ children }) {
       const fitxa = compartir ? null : fitxaDeNota(activeNote.fitxa);
       const seccio = seccioDAmbit(fitxa?.ambit);
       const payloadDeSempre = {
+        ...visibilitatMur,
         sectionId: seccio,
         type: compartir ? 'compartit' : 'feed',
         ...(compartir && activeNote.origen ? { origen: Object.fromEntries(

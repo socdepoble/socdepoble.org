@@ -231,7 +231,7 @@ describe('incloure', () => {
     render(bloc());
     const treballador = await screen.findByRole('radio', { name: /^Treballador \/ Soci/ });
     expect(treballador.disabled).toBe(true);
-    expect(treballador.closest('.sdp-casella').textContent).toContain('Encara no es pot desar: el servidor de poble només distingix administradores i membres.');
+    expect(treballador.closest('.sdp-casella').textContent).toContain('Encara no es pot desar: el servidor de Sóc de Poble només distingix administradores i membres.');
   });
 
   test('administradora: només la propietària, amb confirmació; cancel·lar no escriu', async () => {

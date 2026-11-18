@@ -34,6 +34,8 @@ import {
   VIDA_SALUT_BONA_MS,
   VIDA_SALUT_DOLENTA_MS,
   nouError,
+  creaSessioNode0,
+  precarregaVeu as precarregaNode0,
   parlaPerNodeZero,
   reiniciaSalutNode0,
 } from './veuNode0.js';
@@ -207,6 +209,8 @@ export function normalitzaPerVeu(text, idioma = 'ca') {
 
 let activa = null; // { cancela(codi) } de la locució en curs
 let puntFixat;
+let preparacioImplicit = null;
+const sessions = new Set();
 const oientsEstat = new Set();
 
 function notificaEstat() {
@@ -229,6 +233,8 @@ const sintesi = () => (typeof window !== 'undefined' && window.speechSynthesis
  * no és una adreça https:// vàlida es descarta i el camí Node 0 queda apagat.
  */
 export function fixaPuntNode0(url) {
+  for (const sessio of [...sessions]) sessio.tanca();
+  preparacioImplicit = null;
   puntFixat = url === null ? null : (validaPuntHttpsVeu(url) ?? null);
   reiniciaSalutNode0();
 }
@@ -264,7 +270,12 @@ export function atura() {
   activa = null;
   if (actual) notificaEstat();
   actual?.cancela();
-  try { sintesi()?.cancel(); } catch { /* sense síntesi: res a aturar */ }
+  preparacioImplicit?.sessio.tanca(); preparacioImplicit = null;
+  // Sense propietari, només es cancel·la una cua nativa que encara existix.
+  if (!actual) {
+    const synth = sintesi();
+    if (synth?.speaking || synth?.pending) { try { synth.cancel(); } catch { /* motor no disponible */ } }
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -293,17 +304,20 @@ export function triaVeu(veus, idioma = 'ca', veuId = null) {
 }
 
 /* voiceschanged pot arribar tard: si encara no hi ha veus, s'espera un poc. */
-function esperaVeus(synth) {
+function esperaVeus(synth, signal) {
   const ara = synth.getVoices?.() || [];
   if (ara.length || typeof synth.addEventListener !== 'function') return Promise.resolve(ara);
   return new Promise((resolve) => {
     const acaba = () => {
       clearTimeout(temps);
       synth.removeEventListener('voiceschanged', acaba);
+      signal?.removeEventListener('abort', acaba);
       resolve(synth.getVoices?.() || []);
     };
     const temps = setTimeout(acaba, ESPERA_VEUS_MS);
     synth.addEventListener('voiceschanged', acaba);
+    signal?.addEventListener('abort', acaba, { once: true });
+    if (signal?.aborted) acaba();
   });
 }
 
@@ -357,48 +371,63 @@ export function parteixEnBlocsDeVeu(text, maxBloc = MAX_CARACTERS_BLOC_NAVEGADOR
   return blocs;
 }
 
-async function parlaPerNavegador(text, idioma, signal, registra, veuId = null) {
+function creaCuaNavegador(idioma, signal, veuId, enFallada) {
   const synth = sintesi();
-  if (!synth) throw nouError(CODI_VEU_NO_DISPONIBLE, 'Este navegador no té síntesi de veu.');
-  const veus = await esperaVeus(synth);
-  if (signal?.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
-  const veu = triaVeu(veus, idioma, veuId);
-  const blocs = parteixEnBlocsDeVeu(text, MAX_CARACTERS_BLOC_NAVEGADOR);
-  if (!blocs.length) return;
-
-  try {
-    synth.cancel();
-  } catch {
-    /* sense locució prèvia */
-  }
-
-  for (const bloc of blocs) {
-    if (signal?.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
-    await new Promise((resolve, reject) => {
-      const enunciat = new window.SpeechSynthesisUtterance(bloc);
+  const treballs = [];
+  const enCua = new Set();
+  let veu = null, llesta = false, tancada = false;
+  const tanca = (error = nouError(CODI_VEU_AVORTADA, 'Locució aturada.')) => {
+    if (tancada) return;
+    tancada = true;
+    const teniaCua = enCua.size > 0;
+    for (const enunciat of enCua) { enunciat.onstart = null; enunciat.onend = null; enunciat.onerror = null; }
+    enCua.clear();
+    for (const treball of treballs.splice(0)) treball.reject(error);
+    signal.removeEventListener('abort', enAvortar);
+    if (teniaCua) { try { synth?.cancel(); } catch { /* la cua ja s'ha aturat */ } }
+  };
+  const enAvortar = () => tanca();
+  signal.addEventListener('abort', enAvortar, { once: true });
+  const impulsa = () => {
+    if (!llesta || tancada || signal.aborted) return;
+    while (enCua.size < 2) {
+      const treball = treballs.find((t) => t.proxim < t.blocs.length);
+      if (!treball) return;
+      const primer = treball.proxim === 0;
+      const enunciat = new window.SpeechSynthesisUtterance(treball.blocs[treball.proxim++]);
       enunciat.lang = veu?.lang || PRIORITAT_VEUS[llenguaTriada(idioma)].perDefecte;
       if (veu) enunciat.voice = veu;
-      let acabada = false;
-      const acaba = (error) => {
-        if (acabada) return;
-        acabada = true;
-        if (error) reject(error); else resolve();
+      enCua.add(enunciat);
+      enunciat.onstart = () => { if (!tancada && !signal.aborted && primer) treball.onInici?.(); };
+      enunciat.onend = () => {
+        if (tancada || !enCua.delete(enunciat)) return;
+        enunciat.onstart = null; enunciat.onend = null; enunciat.onerror = null;
+        treball.acabats += 1;
+        if (treball.acabats === treball.blocs.length) { treballs.splice(treballs.indexOf(treball), 1); treball.resolve(); }
+        impulsa();
       };
-      registra((codi) => acaba(nouError(codi, 'Locució aturada.')));
-      enunciat.onend = () => acaba();
       enunciat.onerror = (esdeveniment) => {
         const motiu = esdeveniment?.error;
-        acaba(motiu === 'canceled' || motiu === 'interrupted'
+        const error = motiu === 'canceled' || motiu === 'interrupted'
           ? nouError(CODI_VEU_AVORTADA, 'Locució aturada.')
-          : nouError(CODI_VEU_NO_DISPONIBLE, 'La síntesi del navegador ha fallat.', motiu));
+          : nouError(CODI_VEU_NO_DISPONIBLE, 'La síntesi del navegador ha fallat.', motiu);
+        tanca(error); enFallada(error);
       };
-      try {
-        synth.speak(enunciat);
-      } catch (causa) {
-        acaba(nouError(CODI_VEU_NO_DISPONIBLE, 'La síntesi del navegador ha fallat.', causa));
-      }
-    });
-  }
+      try { synth.speak(enunciat); }
+      catch (cause) { const error = nouError(CODI_VEU_NO_DISPONIBLE, 'La síntesi del navegador ha fallat.', cause); tanca(error); enFallada(error); return; }
+    }
+  };
+  const veusLlesta = synth ? esperaVeus(synth, signal) : Promise.reject(nouError(CODI_VEU_NO_DISPONIBLE, 'Este navegador no té síntesi de veu.'));
+  veusLlesta.then((veus) => { if (!tancada && !signal.aborted) { veu = triaVeu(veus, idioma, veuId); llesta = true; impulsa(); } })
+    .catch((error) => { tanca(error); enFallada(error); });
+  return {
+    parla: (text, onInici) => new Promise((resolve, reject) => {
+      if (tancada || signal.aborted) { reject(nouError(CODI_VEU_AVORTADA, 'Locució aturada.')); return; }
+      treballs.push({ blocs: parteixEnBlocsDeVeu(text, MAX_CARACTERS_BLOC_NAVEGADOR), proxim: 0, acabats: 0, resolve, reject, onInici });
+      impulsa();
+    }),
+    tanca
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -413,64 +442,123 @@ async function parlaPerNavegador(text, idioma, signal, registra, veuId = null) {
  *   `veu` admet un id de `IDS_VEU_VALIDA`; si s'omet, usa la preferència desada.
  * @returns {Promise<void>} rebutjada amb Error({ codi }) VEU_NO_DISPONIBLE o VEU_AVORTADA.
  */
-export async function parla(text, { idioma = 'ca', privat = false, signal, veu } = {}) {
-  atura();
-  if (signal?.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
+export function creaSessioVeu({ idioma = 'ca', privat = false, signal, veu } = {}) {
   const llengua = llenguaTriada(idioma);
-  const net = normalitzaPerVeu(text, llengua);
-  if (!net) return;
-
   const veuTriada = veu !== undefined ? validaVeuPreferida(veu) : veuPreferidaExplicita();
   const forcaNavegador = veuTriada === VEU_AUTO_NAVEGADOR;
   const veuPerNode0 = veuTriada && !forcaNavegador ? veuTriada : null;
-
+  const punt = privat || forcaNavegador ? null : puntNode0();
   const control = new AbortController();
-  let cancelaActual = null;
-  const entrada = {
-    cancela: () => {
-      control.abort();
-      cancelaActual?.(CODI_VEU_AVORTADA);
-    },
-  };
-  activa = entrada;
-  notificaEstat();
-  /* Onada R29 · R29-CV-04 · Avortar amb el signal calla també la síntesi del navegador (atura() fa
-     el cancel()) si la locució encara és la vigent; si ja n'hi ha una altra, només rebutja la seua. */
-  const enAvortar = () => {
-    if (activa === entrada) atura();
-    else entrada.cancela();
-  };
-  signal?.addEventListener('abort', enAvortar, { once: true });
-  const registra = (cancela) => { cancelaActual = cancela; };
-  const avortadaSiCal = () => {
-    if (control.signal.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
-  };
-
-  try {
-    const punt = privat || forcaNavegador ? null : puntNode0();
-    if (punt) {
-      try {
-        await parlaPerNodeZero(punt, net, llengua, control.signal, registra, veuPerNode0, parteixEnBlocsDeVeu);
-        return;
-      } catch (error) {
-        if (error?.codi === CODI_VEU_AVORTADA || control.signal.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.');
-        /* Cau en silenci a la veu del navegador. */
-      }
-    }
-    avortadaSiCal();
-    await parlaPerNavegador(net, llengua, control.signal, registra, veuTriada);
-  } finally {
+  const node = creaSessioNode0(control.signal);
+  const treballs = [];
+  let navegador = null, drenant = false, camiNode = Boolean(punt), tancada = false;
+  const entrada = { cancela: () => tanca() };
+  const tanca = (error = nouError(CODI_VEU_AVORTADA, 'Locució aturada.')) => {
+    if (tancada) return;
+    tancada = true;
+    // La cua pròpia lleva listeners abans de l'abort; no toca cap veu aliena.
+    navegador?.tanca(error);
+    control.abort(); node.tanca();
+    for (const treball of treballs.splice(0)) treball.reject(error);
     signal?.removeEventListener('abort', enAvortar);
-    if (activa === entrada) {
-      activa = null;
-      notificaEstat();
+    sessions.delete(sessio); desubscriuPreferencia();
+    if (preparacioImplicit?.sessio === sessio) preparacioImplicit = null;
+    if (activa === entrada) { activa = null; notificaEstat(); }
+  };
+  const enAvortar = () => tanca();
+  const viu = () => { if (tancada || control.signal.aborted) throw nouError(CODI_VEU_AVORTADA, 'Locució aturada.'); };
+  const prenVeu = () => {
+    viu();
+    if (activa !== entrada) {
+      atura(); activa = entrada; notificaEstat();
     }
+  };
+  const passaAlNavegador = () => {
+    navegador ||= creaCuaNavegador(llengua, control.signal, veuTriada, tanca);
+    for (const treball of treballs) {
+      if (treball.enviat) continue;
+      treball.enviat = true;
+      navegador.parla(treball.net, treball.onInici).then(() => {
+        const index = treballs.indexOf(treball); if (index >= 0) treballs.splice(index, 1);
+        treball.resolve();
+      }, (error) => { treball.reject(error); tanca(error); });
+    }
+  };
+  const drena = async () => {
+    if (!camiNode) { passaAlNavegador(); return; }
+    if (drenant) return;
+    drenant = true;
+    try {
+      while (treballs.length && !tancada) {
+        const treball = treballs[0];
+        try {
+          await parlaPerNodeZero(punt, treball.net, llengua, control.signal, () => {}, veuPerNode0, parteixEnBlocsDeVeu, node, treball.onInici);
+        } catch (error) {
+          if (error?.codi === CODI_VEU_AVORTADA || control.signal.aborted) { tanca(); return; }
+          // Una fallada de preparació futura només es degrada quan li toca sonar.
+          camiNode = false; node.tanca(); passaAlNavegador(); return;
+        }
+        viu(); treballs.shift(); treball.resolve();
+      }
+    } catch (error) { tanca(error); }
+    finally { drenant = false; }
+  };
+  const sessio = {
+    parla: (text, { onInici } = {}) => {
+      try { prenVeu(); } catch (error) { return Promise.reject(error); }
+      const net = normalitzaPerVeu(text, llengua);
+      if (!net) return Promise.resolve();
+      const promesa = new Promise((resolve, reject) => treballs.push({ net, onInici: () => { if (!tancada && activa === entrada) onInici?.(); }, resolve, reject, enviat: false }));
+      drena().catch(tanca);
+      return promesa;
+    },
+    precarregaVeu: async (text) => {
+      viu();
+      if (!punt || !camiNode) return false;
+      const net = normalitzaPerVeu(text, llengua);
+      if (!net) return false;
+      return precarregaNode0(punt, net, llengua, control.signal, veuPerNode0, parteixEnBlocsDeVeu, node);
+    },
+    tanca
+  };
+  const desubscriuPreferencia = subscriuVeuPreferida(() => tanca());
+  sessions.add(sessio);
+  signal?.addEventListener('abort', enAvortar, { once: true });
+  if (signal?.aborted) tanca();
+  return sessio;
+}
+
+const clauPreparacio = (opcions) => JSON.stringify([llenguaTriada(opcions.idioma), Boolean(opcions.privat), opcions.veu ?? veuPreferidaExplicita(), puntNode0()]);
+
+/** Prepara sense reproduir. Amb sessió explícita, compartix la finestra bounded
+ * de lectura; sense, guarda una preparació curta per a la pròxima parla. */
+export function precarregaVeu(text, opcions = {}) {
+  if (opcions.sessio) return opcions.sessio.precarregaVeu(text);
+  if (opcions.privat || opcions.veu === VEU_AUTO_NAVEGADOR) return Promise.resolve(false);
+  const clau = clauPreparacio(opcions);
+  if (!preparacioImplicit || preparacioImplicit.clau !== clau || preparacioImplicit.signal !== opcions.signal) {
+    preparacioImplicit?.sessio.tanca();
+    preparacioImplicit = { clau, signal: opcions.signal, sessio: creaSessioVeu(opcions) };
   }
+  return preparacioImplicit.sessio.precarregaVeu(text);
+}
+
+export async function parla(text, opcions = {}) {
+  if (opcions.sessio) return opcions.sessio.parla(text, { onInici: opcions.onInici });
+  let sessio;
+  if (preparacioImplicit?.clau === clauPreparacio(opcions) && preparacioImplicit.signal === opcions.signal) {
+    sessio = preparacioImplicit.sessio; preparacioImplicit = null;
+  } else {
+    sessio = creaSessioVeu(opcions);
+  }
+  try { return await sessio.parla(text, { onInici: opcions.onInici }); }
+  finally { sessio.tanca(); }
 }
 
 /** Només per a proves: torna l'estat intern i la preferència al de l'arrencada. */
 export function reiniciaVeuPerProves() {
   atura();
+  for (const sessio of [...sessions]) sessio.tanca();
   puntFixat = undefined;
   desaVeuPreferida(null);
   reiniciaSalutNode0();

@@ -84,6 +84,7 @@ import CaraXat from './CaraXat.jsx';
 import { useLocation, useNavigate } from '../../../app/contexts/RouterContext';
 import { useUIActions } from '../../../app/contexts/UIContext';
 import { getVal, setVal } from '../../../config/storage.js';
+import { columnaPlegadaDe, desaColumnaPlegada } from '../../../components/universal/workspace/persistenciaColumnesUI.js';
 import { useXat } from '../XatContext';
 import { useCaraDelPoble } from '../usePobleAmfitrio.js';
 import { comunitatsAmbCaraDelPoble } from '../pobleAmfitrio.js';
@@ -152,6 +153,8 @@ const PRINCIPALS = ENTRADES_RAIL.filter((e) => !e.seccio && !e.amagada);
 const DE_MES = ENTRADES_RAIL.filter((e) => e.seccio === 'mes' && !e.amagada);
 
 function railPlegatInicial() {
+  const unificat = columnaPlegadaDe('xat', 'left');
+  if (typeof unificat === 'boolean') return unificat;
   return getVal(CLAU_RAIL, 'plegat') !== 'obert';
 }
 
@@ -188,6 +191,7 @@ export default function ClosCaXat({
   const alterna = useCallback(() => {
     const seguent = !plegat;
     setVal(CLAU_RAIL, seguent ? 'plegat' : 'obert');
+    desaColumnaPlegada('xat', 'left', seguent);
     setPlegat(seguent);
   }, [plegat]);
 

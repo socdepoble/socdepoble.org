@@ -68,16 +68,16 @@
       "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "25d450c687cae5ae23017208a48006fc0a325622aafa2b17faff6b89c46cb141",
-      "html": 21948,
-      "aprovat_per": "Codex-R32.5-documentacio-derivada",
-      "data": "2026-11-17"
+      "sha256": "cfadd9f3dbca819acd844d34745500870dacefc0b3a1a187d5db9307ff4e1c26",
+      "html": 21954,
+      "aprovat_per": "Mestre Javi (ordre al xat 18-11-2026, aprovació delegada a Claude v1.2.8)",
+      "data": "2026-11-18"
     },
     "fediversity": {
-      "sha256": "7021c9a2d39b2b3456cab88a257a2e3f7f570979a92e707bf6ae3ebd31a37192",
-      "html": 63795,
-      "aprovat_per": "Codex-R32.5-documentacio-derivada",
-      "data": "2026-11-17"
+      "sha256": "b23553385c2ac4238bf72d0c8def447c9e8bdcc81ad40d1e9f9de3e4b963fcd7",
+      "html": 63835,
+      "aprovat_per": "Mestre Javi (ordre al xat 18-11-2026, aprovació delegada a Claude v1.2.8)",
+      "data": "2026-11-18"
     },
     "habitatge": {
       "sha256": "bf9ee48a8ca1eca44eb3e22a053bcc7626b72bd3321b9bf624e690cb3c97463a",
@@ -104,10 +104,10 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "1d5badc83115c11b69f8065abd49643ba42dc4ed89a876e8b6748ef86364fd08",
-      "html": 27348,
-      "aprovat_per": "Codex-R32.5-documentacio-derivada",
-      "data": "2026-11-17"
+      "sha256": "12ddcaca3645761ef7c9744935fa51d40d1296a1db5904e949c0c28741df12c0",
+      "html": 27354,
+      "aprovat_per": "Mestre Javi (ordre al xat 18-11-2026, aprovació delegada a Claude v1.2.8)",
+      "data": "2026-11-18"
     },
     "notes": {
       "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",
@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "2ddc4e3320dc4fb79c1b3901c7e26105d68823bc83b43933e02b7856144ed5df",
-      "html": 106871,
-      "aprovat_per": "Claude v1.2.7 · crònica en 5 llengües dins de l'ordre del Mestre del 17-11-2026, pendent de lectura humana",
-      "data": "2026-11-17"
+      "sha256": "2fdc27ce9a1cfcd95e0126536573dad380f793c43b5bf984e04b56da6b734480",
+      "html": 115039,
+      "aprovat_per": "Mestre Javi (ordre al xat 18-11-2026, aprovació delegada a Claude v1.2.8)",
+      "data": "2026-11-18"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

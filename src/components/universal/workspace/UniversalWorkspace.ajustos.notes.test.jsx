@@ -42,6 +42,7 @@ vi.mock('../../../hooks/useResolvedAsset.js', () => ({
 }));
 
 import NotesSection from '../../../sections/notes/NotesSection.jsx';
+import { CLAU_COLUMNES_PLEGADES, _reiniciaColumnesPlegades } from './columnesPlegades.js';
 
 /* La secció de veres i el diàleg obert: amb la màquina carregada passava
    dels 5 s per defecte. */
@@ -51,6 +52,9 @@ const NOTA = Object.freeze({ id: 'a1', title: 'Primera', folderId: 'f-mercat', u
 const nom = (id) => NOTE_FOLDERS_SEED.find((carpeta) => carpeta.id === id).name;
 
 beforeEach(() => {
+  /* v1.2.8 · P0-127 (Codex R32.9): les columnes plegades a mà ara es recorden; cada prova comença sense preferència. */
+  delVal(CLAU_COLUMNES_PLEGADES);
+  _reiniciaColumnesPlegades();
   dades.notes = [NOTA];
   sessionStorage.clear();
   delVal(CLAU_CARPETES_VISIBLES);

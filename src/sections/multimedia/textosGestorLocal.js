@@ -190,7 +190,7 @@ export const TEXTOS_LOCAL = congela({
   'text.pendents': ['section.multimedia.local.text.pendents', 'Hi ha canvis sense desar: ⌘S o Ctrl+S per a desar.'],
   'text.senseCanvis': ['section.multimedia.local.text.senseCanvis', 'Sense canvis pendents.'],
   'text.envia': ['section.multimedia.local.text.envia', 'Enviar al Bloc de Notes'],
-  'text.enviaAjuda': ['section.multimedia.local.text.enviaAjuda', 'Crea una nota amb este text al teu Bloc de Notes; amb sessió, la nota es desa al servidor de poble.'],
+  'text.enviaAjuda': ['section.multimedia.local.text.enviaAjuda', 'Crea una nota amb este text al teu Bloc de Notes; amb sessió, la nota es desa al servidor de Sóc de Poble.'],
   'text.calEntrar': ['section.multimedia.local.text.calEntrar', 'Per a enviar-lo al Bloc de Notes cal entrar al compte.'],
   'text.errorNota': ['section.multimedia.local.text.errorNota', 'No s’ha pogut crear la nota. Comprova la connexió i la sessió.'],
   'text.massaLlarg': ['section.multimedia.local.text.massaLlarg', 'Massa text per a una nota ({pes}; màxim {max}).'],

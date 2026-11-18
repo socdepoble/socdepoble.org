@@ -40,18 +40,24 @@ import { resolvePageSlugPath } from '../../config/navigation.js';
  * targeta, que porta a la pàgina. `font` és la lectura de useFontDev
  * ({ estat, valor }).
  */
-export function SeccioEmpaquetats({ font }) {
-  const id = useId();
+export function TargetaEmpaquetats({ font }) {
   const pagina = paginaEmpaquetats();
   const coberta = cobertaEmpaquetats(font.valor, font.estat);
+  return (
+    <TargetaConsola icona={Package} titol={pagina.title} subtitol={pagina.subtitle} entradilla={pagina.lead}
+      dada={coberta.dada} etiquetes={coberta.etiquetes} a={pagina.ruta}
+      creat={copyConsola().date} generat={font.valor?.generat ?? null} />
+  );
+}
+
+export function SeccioEmpaquetats({ font }) {
+  const id = useId();
   return (
     <section aria-labelledby={id}>
       <h2 id={id}>{TITOL_EMPAQUETATS}</h2>
       <p>{ENTRADETA_EMPAQUETATS}</p>
       <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella} aria-label={ETIQUETA_NAV_EMPAQUETATS}>
-        <TargetaConsola icona={Package} titol={pagina.title} subtitol={pagina.subtitle} entradilla={pagina.lead}
-          dada={coberta.dada} etiquetes={coberta.etiquetes} a={pagina.ruta}
-          creat={copyConsola().date} generat={font.valor?.generat ?? null} />
+        <TargetaEmpaquetats font={font} />
       </nav>
     </section>
   );

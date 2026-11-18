@@ -13,6 +13,21 @@ const origin='https://socdepoble.org';
    src/data/wikiManifest.js, el mateix que pinta el client: la fixture n'escriu
    un. Les pàgines de text de sections.js (/anima, /fedivers) també hi entren. */
 const wikiManifest=items=>`export const wikiManifest = ${JSON.stringify({categories:[],items},null,2)};\n`;
+
+test('R32.9 · la fotografia pròpia de cada capítol viatja al head, amb origen del build i sense degradació silenciosa', async t => {
+  const {root,put}=fixture(t);
+  put('public/assets/capitol.jpg','fixture');
+  const capitol={...LLIBRE,image:'/assets/capitol.jpg',imageAlt:'Una escena del capítol'};
+  put('src/data/wikiManifest.js',wikiManifest([capitol]));
+  const {manifest}=await buildSocialManifest({root,origin,policyRoot,estricte:true});
+  assert.deepEqual(manifest.routes['/wikidepoble?item=llibre'].image,{url:origin+'/assets/capitol.jpg',alt:'Una escena del capítol'});
+  put('src/data/wikiManifest.js',wikiManifest([{...capitol,image:'/assets/absent.jpg'}]));
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot,estricte:true}),/no servible/);
+  for (const image of ['data:image/png;base64,eA==','javascript:alert(1)','https://aliens.example/foto.jpg']) {
+    put('src/data/wikiManifest.js',wikiManifest([{...capitol,image}]));
+    await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/Imatge social bloquejada/);
+  }
+});
 const LLIBRE={id:'llibre',title:'llibre',tags:[],attributes:{description:'Memòria contrastada'},content:'# El Llibre d’Or\n\nText sencer que no ha de viatjar.'};
 const PRIVATS=[
   {id:'privat',title:'privat',attributes:{visibility:'private',description:'NO_EXPORTAR_PRIVAT'},content:'# Privat'},
@@ -273,8 +288,9 @@ test('les presentacions /page/<clau>: l’inventari explícit, ni una clau més'
   for(const ruta of ['/page/treball','/page/notes_shared','/page/altra'])assert.equal(manifest.routes[ruta],undefined,ruta);
   // P0-60 / IDEA-191 · + l'herbari, el banc de llavors, les rutes de poble i els arbres monumentals.
   // Onada R14 · + el receptari «Què dinem?» (/page/receptes).
-  // Onada R32.4 · + el sistema nerviós (/page/sistema-nervios).
-  assert.equal(PAGINES_INFORMATIVES.length,16);
+  // R32.9 · sistema-nervios és un àlies del capítol Wiki, fora del copy duplicat.
+  assert.equal(PAGINES_INFORMATIVES.length,15);
+  assert.ok(!PAGINES_INFORMATIVES.includes('sistema-nervios'));
 });
 
 /* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · La Consola entra amb el head
@@ -327,7 +343,8 @@ test('cobertura de l’arbre de veres: presentacions inventariades, /disseny, /w
     'src/sections/consola/govern/governConsola.js','src/sections/text/pageContent.js','src/config/navigation.js'].map(importa));
   const inventari=[...PAGINES_INFORMATIVES.map(clau=>`/page/${clau}`),...PLUGINS_DE_L_ORDRE.map(id=>`/plugin/${id}`),'/disseny','/wikidepoble','/consola',
     ...IDS_PAGINES.map(id=>`/consola/${id}`),...IDS_GOVERN.map(id=>`/consola/govern/${id}`)];
-  assert.equal(inventari.length,16+10+3+9+4);
+  assert.equal(inventari.length,15+10+3+9+4);
+  assert.equal(manifest.aliases['/page/sistema-nervios'],'/wikidepoble?item=sistema_nervios_skills_i_repositoris');
   /* P0-60 / IDEA-191 · L'article del Pou de Neu i el Manifest de Poble (llavors del Mur) tenen el seu
      head, amb la variant JPEG de la il·lustració, i /page/anatomia-rural n'és l'àlies. */
   const POU='/mur/noves-tecnologies-aplicades-a-la-cultura-rural';

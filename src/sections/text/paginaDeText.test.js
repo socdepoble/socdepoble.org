@@ -108,7 +108,7 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
   expect(html).toContain('<strong>socdepoble.org</strong></a>');
   expect(cosDe(html).textContent).toContain('dos accessos públics consolidats');
   expect(cosDe(html).textContent).toContain('sense garantia de disponibilitat; PostgreSQL propi ja està instal·lat, mentre la SPA continua amb Supabase.');
-  expect(PAGE_COPY.fedivers.lead).toBe('Un balanç datat dels serveis del poble. Cada avanç distingix producció, proves locals i treball pendent.');
+  expect(PAGE_COPY.fedivers.lead).toBe('Un balanç datat dels serveis de Sóc de Poble. Cada avanç distingix producció, proves locals i treball pendent.');
   expect(html).toContain('<a href="https://socdepoble.cat" target="_blank" rel="noopener noreferrer"><strong>socdepoble.cat</strong></a>');
   // El Fedivers és horitzó, no funció: la pàgina ho diu.
   expect(html).toContain('Hui encara no està fet');

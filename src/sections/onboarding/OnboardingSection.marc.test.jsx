@@ -59,7 +59,7 @@ function marcDins(origenDalt, origenMarc = ORIGEN_APP) {
 }
 
 const botoGoogle = () => screen.queryByRole('button', { name: 'Entrar amb Google' });
-const enllacFora = () => screen.queryByRole('link', { name: 'Obri en una pestanya nova' });
+const enllacFora = () => screen.queryByRole('link', { name: 'Continua amb Google' });
 
 beforeEach(() => {
   for (const f of [m.navigate, m.toast, m.google]) f.mockReset();
@@ -73,29 +73,31 @@ afterEach(() => {
 test.each([
   ['iframe d’un altre origen del mateix lloc (política conservadora)', () => marcDins('https://www.sollutia.com')],
   ['iframe d’un altre lloc', () => marcDins('https://gentdelatorre.net')]
-])('B · %s: cap botó de Google, l’avís honest i l’eixida en una pestanya nova', async (_cas, fes) => {
+])('B + R32.8 · %s: mostra el mateix botó gran de marca «Continua amb Google» cap a una pestanya segura i l’avís honest', async (_cas, fes) => {
   m.finestra = fes();
   const obri = vi.spyOn(window, 'open');
   render(<OnboardingSection />);
   expect(botoGoogle()).toBeNull();
   const enllac = enllacFora();
   expect(enllac).not.toBeNull();
-  // L'eixida: l'entrada real de l'app, a una pestanya nova i sense opener ni referent.
+  // L'eixida és el botó gran de marca amb LogotipGoogle cap a l'entrada real en pestanya segura.
   expect(enllac.getAttribute('href')).toBe(ENTRADA_REAL);
   expect(enllac.getAttribute('target')).toBe('_blank');
   expect(enllac.getAttribute('rel').split(' ').sort()).toEqual(['noopener', 'noreferrer']);
-  expect(enllac.classList.contains('sdp-boto')).toBe(true);
+  expect(enllac.className).toBe('sdp-boto sdp-boto--ple sdp-boto--marca sdp-boto--google');
+  expect(enllac.querySelector('svg.sdp-boto__logotip')?.getAttribute('aria-hidden')).toBe('true');
   expect(enllac.tabIndex).toBe(0);
-  // L'avís és l'espècimen <Alerta> informatiu: regió viva, sense estils en línia, la frase clau en negreta.
-  const avis = enllac.closest('.sdp-alerta');
+  // L'avís informatiu d'acompanyament: regió viva, sense estils en línia, la frase clau en negreta.
+  const seccio = enllac.closest('section');
+  const avis = seccio.querySelector('.sdp-alerta');
   expect(avis.classList.contains('sdp-alerta--info')).toBe(true);
   expect(avis.getAttribute('role')).toBe('status');
   expect(avis.querySelector('strong').textContent).toBe('Dins d’este marc no es pot entrar amb Google.');
   expect(avis.textContent).toContain('Obri Sóc de Poble en una pestanya nova per a entrar.');
-  expect(avis.querySelectorAll('[style]')).toHaveLength(0);
+  expect(seccio.querySelectorAll('[style]')).toHaveLength(0);
   // Si el marc no deixa obrir finestres: l'adreça, per a copiar-la.
   expect(avis.querySelector('code').textContent).toBe(ENTRADA_REAL);
-  // El clic no comença cap entrada, no obri cap finestra per codi i no navega res.
+  // El clic no comença cap entrada OAuth interna ni crida window.open per codi.
   await act(async () => { fireEvent.click(enllac); });
   expect(m.google).not.toHaveBeenCalled();
   expect(obri).not.toHaveBeenCalled();

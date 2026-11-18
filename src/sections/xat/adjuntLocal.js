@@ -1,5 +1,7 @@
 import { compressImage } from '../../utils/imageUtils.js';
-import { ERRORS_ADJUNT_XAT, MAXIM_ADJUNT_XAT, MAX_VIDEO_MS, QUOTA_XAT_BYTES, errorAdjuntXat } from '../../data/xatMultimedia.js';
+import { ERRORS_ADJUNT_XAT, MAXIM_ADJUNT_XAT, MAXIM_BLOB_ADJUNT, MAX_VIDEO_ENTRADA_BYTES, MAX_VIDEO_MS, normalitzaUbicacioXat, errorAdjuntXat } from '../../data/xatMultimedia.js';
+import { inspeccionaUbicacioMitja, senseUbicacioVideo as netejaUbicacioVideo } from '../../utils/ubicacioMitjans.js';
+import { comprimeixVideoClient } from '../../utils/compressioVideoClient.js';
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-7) · Primer AAC en MP4: Safari,
    iOS, Chrome i Firefox el reproduïxen, i Chrome el grava des que ho admet
    (abans guanyava el WebM, sense durada ni cerca a Chromium). El WebM/Opus
@@ -33,6 +35,16 @@ export const CLAUS_ERROR_ADJUNT = Object.freeze({
   'durada-illegible': 'section.xat.adjunts.error.duradaIllegible',
   'video-illegible': 'section.xat.adjunts.error.videoIllegible',
   foto: 'section.xat.adjunts.error.foto',
+  'video-mida-entrada': 'section.xat.adjunts.error.video-mida-entrada',
+  'video-compressio-no-disponible': 'section.xat.adjunts.error.video-compressio-no-disponible',
+  'video-audio-no-capturable': 'section.xat.adjunts.error.video-audio-no-capturable',
+  'video-compressio': 'section.xat.adjunts.error.video-compressio',
+  'video-mida': 'section.xat.adjunts.error.video-mida',
+  'video-compressio-temps': 'section.xat.adjunts.error.video-compressio-temps',
+  'ubicacio-invalida': 'section.xat.adjunts.error.ubicacio-invalida',
+  'ubicacio-no-admesa': 'section.xat.adjunts.error.ubicacio-no-admesa',
+  'ubicacio-no-eliminable': 'section.xat.adjunts.error.ubicacio-no-eliminable',
+
   'foto-mida': 'section.xat.adjunts.error.fotoMida',
   'foto-codificacio': 'section.xat.adjunts.error.fotoCodificacio',
   'sense-gravacio': 'section.xat.adjunts.senseGravacio',
@@ -55,7 +67,7 @@ export function textDErrorAdjunt(error, t, perDefecte = '') {
 
 export function comprovaMida(fitxer) {
   if (!(fitxer instanceof Blob) || !fitxer.size) throw errorAdjuntXat('buit');
-  if (fitxer.size > QUOTA_XAT_BYTES) throw errorAdjuntXat('SDP-XAT-020');
+  if (fitxer.size > MAXIM_BLOB_ADJUNT) throw errorAdjuntXat('video-mida');
 }
 
 /** Metadades del fitxer local: no es puja cap byte per a mirar la durada. */
@@ -64,27 +76,45 @@ export function duradaLocal(fitxer, { signal, creaElement = () => document.creat
     if (signal?.aborted) return reject(abortat());
     const element = creaElement();
     const url = urls.createObjectURL(fitxer);
+    let acabada = false, cercantFinal = false;
     const neteja = () => {
       clearTimeout(timer);
       signal?.removeEventListener('abort', cancella);
-      element.onloadedmetadata = element.onerror = null;
-      element.removeAttribute('src');
-      element.load();
+      element.onloadedmetadata = element.onerror = element.ondurationchange = element.ontimeupdate = element.onseeked = null;
+      try { element.removeAttribute('src'); element.load(); } catch { /* El decoder ja està descarregat. */ }
       urls.revokeObjectURL(url);
     };
-    const acaba = (valor, error = false) => { neteja(); (error ? reject : resolve)(valor); };
+    const acaba = (valor, error = false) => {
+      if (acabada) return;
+      acabada = true; neteja(); (error ? reject : resolve)(valor);
+    };
     const cancella = () => acaba(abortat(), true);
     const timer = setTimeout(() => acaba(errorAdjuntXat('durada-illegible'), true), 10_000);
-    element.preload = 'metadata';
-    element.onloadedmetadata = () => {
+    const llig = () => {
+      if (acabada) return;
+      if (signal?.aborted) { cancella(); return; }
+      // MediaRecorder WebM pot ometre l’índex. Un sol seek local resol el
+      // final; el mateix timeout i signal també governen esta espera.
+      if (element.duration === Infinity) {
+        if (!cercantFinal) {
+          cercantFinal = true;
+          element.ondurationchange = element.ontimeupdate = element.onseeked = llig;
+          try { element.currentTime = 1e10; }
+          catch { acaba(errorAdjuntXat('durada-illegible'), true); }
+        }
+        return;
+      }
       const ms = element.duration * 1000;
-      if (!Number.isFinite(ms) || ms <= 0 || ms > MAX_VIDEO_MS) {
-        acaba(errorAdjuntXat('durada'), true);
-      } else acaba(Math.ceil(ms));
+      if (cercantFinal && (!Number.isFinite(ms) || ms <= 0)) return;
+      if (!Number.isFinite(ms) || ms <= 0 || ms > MAX_VIDEO_MS) acaba(errorAdjuntXat('durada'), true);
+      else acaba(Math.ceil(ms));
     };
+    element.preload = 'metadata';
+    element.onloadedmetadata = llig;
     element.onerror = () => acaba(errorAdjuntXat('video-illegible'), true);
     signal?.addEventListener('abort', cancella, { once: true });
-    element.src = url;
+    try { element.src = url; }
+    catch { acaba(errorAdjuntXat('video-illegible'), true); }
   });
 }
 
@@ -101,50 +131,8 @@ function blobDeDataUrl(data) {
   }
 }
 
-/* Gauntlet 261022_0225 (crítica Claude, MEDIA-4) · Un MP4 d'Android porta la
-   ubicació a moov/udta (©xyz) i un MOV d'iPhone, a moov/meta
-   (com.apple.quicktime.location.ISO6709). Sense recodificar res, les caixes
-   udta i meta (de dalt, de moov i de cada trak) i les XMP passen a ser
-   «free» i el seu contingut es posa a zero: la mida no canvia, cap
-   desplaçament es mou, els reproductors se les salten i les coordenades ja
-   no són als bytes. Si l'estructura no és la que esperem, o el vídeo és
-   WebM, torna `net: false` i la interfície avisa abans d'enviar-lo: mai es
-   puja en silenci. */
-const CAIXA_FREE = [0x66, 0x72, 0x65, 0x65];
-const UUID_XMP = 'be7acfcb97a942e89c71999491e3afac';
-export async function senseUbicacioVideo(fitxer) {
-  if (!/^video\/(mp4|quicktime)$/.test(fitxer?.type || '')) return { fitxer, net: false };
-  try {
-    const bytes = new Uint8Array(await fitxer.arrayBuffer());
-    const vista = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    let teMoov = false;
-    const esXmp = (p, cap) => Array.from(bytes.subarray(p + cap, p + cap + 16), (b) => b.toString(16).padStart(2, '0')).join('') === UUID_XMP;
-    const recorre = (inici, fi, nivell) => {
-      for (let p = inici; p < fi;) {
-        if (fi - p < 8) throw new Error('caixa tallada');
-        let mida = vista.getUint32(p);
-        let cap = 8;
-        if (mida === 1) {
-          if (fi - p < 16) throw new Error('caixa tallada');
-          mida = Number(vista.getBigUint64(p + 8));
-          cap = 16;
-        } else if (mida === 0) mida = fi - p;
-        if (mida < cap || mida > fi - p) throw new Error('caixa invàlida');
-        const tipus = String.fromCharCode(...bytes.subarray(p + 4, p + 8));
-        if (nivell === 0 && tipus === 'moov') teMoov = true;
-        if (tipus === 'udta' || tipus === 'meta' || (tipus === 'uuid' && esXmp(p, cap))) {
-          bytes.set(CAIXA_FREE, p + 4);
-          bytes.fill(0, p + cap, p + mida);
-        } else if ((nivell === 0 && tipus === 'moov') || (nivell === 1 && tipus === 'trak')) recorre(p + cap, p + mida, nivell + 1);
-        p += mida;
-      }
-    };
-    recorre(0, bytes.length, 0);
-    return teMoov ? { fitxer: new Blob([bytes], { type: fitxer.type }), net: true } : { fitxer, net: false };
-  } catch {
-    return { fitxer, net: false };
-  }
-}
+/** Neteja acotada del contenidor; la implementació compartida no recodifica. */
+export const senseUbicacioVideo = (fitxer, opcions) => netejaUbicacioVideo(fitxer, opcions);
 
 /* IDEA-36 (assalt 261101, T7 · S3) · Una captura de pantalla (PNG: el que
    fan iOS, Android i el porta-retalls) porta text menut i es llig millor gran:
@@ -172,11 +160,11 @@ function ambMimeLocal(fitxer) {
   return mime && mime !== fitxer.type ? fitxer.slice(0, fitxer.size, mime) : fitxer;
 }
 
-/* Sense EXIF/GPS i sempre per davall del sostre client. Preservem els tres
+/* Amb EXIF publicable per defecte; l’opt-out el lleva. Sempre per davall del sostre client. Preservem els tres
    primers intents de captures; després abaixem qualitat i costat amb una
    cerca finita (màxim 15 recodificacions, inclòs el canvi WebP → JPEG).
    Si no hi cap o no es pot codificar, no es retorna mai l'original. */
-async function imatgeRecodificada(fitxer, { signal, comprimeix }) {
+async function imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio = true }) {
   const primers = esCapturaDePantalla(fitxer) ? COSTATS_CAPTURA : [COSTAT_FOTO];
   const intents = [
     ...primers.map((maxSize) => ({ maxSize, quality: 0.8 })),
@@ -194,7 +182,7 @@ async function imatgeRecodificada(fitxer, { signal, comprimeix }) {
   };
   for (const intent of intents) {
     if (signal?.aborted) throw abortat();
-    const opcions = { ...intent, conservaExif: false };
+    const opcions = { ...intent, conservaExif: conservaUbicacio !== false };
     let data;
     try { data = await codifica(opcions); }
     catch (error) {
@@ -218,24 +206,63 @@ async function imatgeRecodificada(fitxer, { signal, comprimeix }) {
   throw errorAdjuntXat('foto-mida');
 }
 
-export async function preparaAdjunt(fitxer, { signal, comprimeix = compressImage, lligDurada = duradaLocal, netejaVideo = senseUbicacioVideo } = {}) {
+/** El lloc es rescata de l’original abans de tocar píxels o contenidors. */
+export async function preparaAdjunt(fitxer, {
+  signal, conservaUbicacio = true, onProgresCompressio,
+  comprimeix = compressImage, lligDurada = duradaLocal, netejaVideo = senseUbicacioVideo,
+  inspecciona = inspeccionaUbicacioMitja, comprimeixVideo = comprimeixVideoClient,
+} = {}) {
   if (!(fitxer instanceof Blob) || !fitxer.size) throw errorAdjuntXat('buit');
   if (signal?.aborted) throw abortat();
   fitxer = ambMimeLocal(fitxer);
+  const imatge = /^image\/(jpeg|png|webp|avif|gif|heic|heif)$/.test(fitxer.type);
+  const video = /^video\/(mp4|webm|quicktime)$/.test(fitxer.type);
+  if (!imatge && !video) throw errorAdjuntXat('format');
+  if (video && fitxer.size > MAX_VIDEO_ENTRADA_BYTES) throw errorAdjuntXat('video-mida-entrada');
+  const inspeccio = await inspecciona(fitxer, { signal });
+  if (signal?.aborted) throw abortat();
+  const conserva = conservaUbicacio !== false;
+  const ubicacio = conserva && inspeccio?.coordenades
+    ? normalitzaUbicacioXat({ lat: inspeccio.coordenades.lat, lng: inspeccio.coordenades.lng }) : null;
   let resultat;
-  if (/^image\/(jpeg|png|webp|avif|gif|heic|heif)$/.test(fitxer.type)) {
-    // Sempre recodificada i sense EXIF/GPS, també si l'original ja és menut.
-    resultat = { fitxer: await imatgeRecodificada(fitxer, { signal, comprimeix }), tipus: 'imatge', duradaMs: null };
-  } else if (/^video\/(mp4|webm|quicktime)$/.test(fitxer.type)) {
-    comprovaMida(fitxer);
+  if (imatge) {
+    resultat = { fitxer: await imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio: conserva }), tipus: 'imatge', duradaMs: null };
+  } else {
     const duradaMs = await lligDurada(fitxer, { signal });
     if (signal?.aborted) throw abortat();
-    const { fitxer: net, net: senseUbicacio } = await netejaVideo(fitxer);
-    resultat = { fitxer: net, tipus: 'video', duradaMs, senseUbicacio };
-  } else throw errorAdjuntXat('format');
+    if (!Number.isSafeInteger(duradaMs) || duradaMs <= 0 || duradaMs > MAX_VIDEO_MS) throw errorAdjuntXat('durada');
+    const reduit = await comprimeixVideo(fitxer, { signal, duradaMs, onProgresCompressio, audioEsperat: inspeccio?.audioEsperat ?? 'desconegut' });
+    if (signal?.aborted) throw abortat();
+    if (!(reduit?.fitxer instanceof Blob) || !reduit.fitxer.size) throw errorAdjuntXat('video-compressio');
+    let preparat = reduit.fitxer;
+    let net = reduit.comprimit === true;
+    if (!conserva && !net) {
+      const netejat = await netejaVideo(preparat, { signal });
+      if (!netejat.net) throw errorAdjuntXat('ubicacio-no-eliminable');
+      preparat = netejat.fitxer; net = true;
+    }
+    resultat = { fitxer: preparat, tipus: 'video', duradaMs, senseUbicacio: net, videoComprimit: reduit.comprimit === true };
+  }
   if (signal?.aborted) throw abortat();
   comprovaMida(resultat.fitxer);
-  return { ...resultat, id: crypto.randomUUID() };
+  return { ...resultat, id: crypto.randomUUID(), conservaUbicacio: conserva,
+    ubicacioVerificada: Boolean(inspeccio?.completa), ...(ubicacio ? { ubicacio } : {}) };
+}
+
+/** Només abans del primer intent d’enviament; una altra càrrega rep un ID nou. */
+export async function amagaUbicacioAdjunt(adjunt, { signal, comprimeix = compressImage, netejaVideo = senseUbicacioVideo } = {}) {
+  if (signal?.aborted) throw abortat();
+  let fitxer = adjunt.fitxer;
+  if (adjunt.tipus === 'imatge') fitxer = await imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio: false });
+  else if (adjunt.tipus === 'video' && !adjunt.senseUbicacio) {
+    const netejat = await netejaVideo(fitxer, { signal });
+    if (!netejat.net) throw errorAdjuntXat('ubicacio-no-eliminable');
+    fitxer = netejat.fitxer;
+  }
+  if (signal?.aborted) throw abortat();
+  const resultat = { ...adjunt, fitxer, id: crypto.randomUUID(), conservaUbicacio: false, senseUbicacio: true };
+  delete resultat.ubicacio;
+  return resultat;
 }
 
 /* El micròfon que el sistema no deixa usar no és culpa de ningú (MEDIA-11):

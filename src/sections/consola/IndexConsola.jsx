@@ -156,7 +156,7 @@ export function IndexConsola({ fonts = {}, govern = null, empaquetats = null, lo
     estatMapa: fonts.estatMapa, estatDades: fonts.estatDades, govern, empaquetats, ara
   });
   return (
-    <section className="sdp-consola__index sdp-prose sdp-centre" aria-labelledby={id}>
+    <section className="sdp-consola__index sdp-prose" aria-labelledby={id}>
       <h2 id={id}>{arrel.titol}</h2>
       <p className="lead">{arrel.text}</p>
       {arrel.fills.map((pagina) => <Pagina key={pagina.id} node={pagina} privat={privat} />)}

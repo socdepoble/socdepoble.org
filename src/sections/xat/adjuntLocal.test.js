@@ -13,11 +13,11 @@ test('Chrome grava AAC en MP4 i Firefox es queda amb Opus en WebM', () => {
   expect(mimeDeGravacio({ isTypeSupported: () => true })).toBe('audio/mp4;codecs=mp4a.40.2');
   expect(mimeDeGravacio({ isTypeSupported: (mime) => mime.startsWith('audio/webm') || mime.startsWith('audio/ogg') })).toBe('audio/webm;codecs=opus');
 });
-test('la foto es recodifica localment fins i tot si ja és menuda i lleva EXIF', async () => {
+test('la foto es recodifica localment fins i tot si ja és menuda i conserva EXIF publicable de sèrie', async () => {
   const comprimeix = vi.fn().mockResolvedValue('data:image/webp;base64,YWJj');
   const foto = new Blob(['original'], { type: 'image/jpeg' });
   const a = await preparaAdjunt(foto, { comprimeix });
-  expect(comprimeix).toHaveBeenCalledWith(foto, expect.objectContaining({ conservaExif: false, maxSize: 1200 }));
+  expect(comprimeix).toHaveBeenCalledWith(foto, expect.objectContaining({ conservaExif: true, maxSize: 1200 }));
   expect(comprimeix).toHaveBeenCalledOnce();
   expect(a.fitxer.type).toBe('image/webp');
   expect(a.fitxer.size).toBe(3);
@@ -28,7 +28,7 @@ test('si el navegador no sap fer WebP, la foto ix en JPEG', async () => {
   const comprimeix = vi.fn(async (_f, { format }) => (format === 'image/webp' ? 'data:image/png;base64,YWJj' : 'data:image/jpeg;base64,YWJjZA=='));
   const a = await preparaAdjunt(new Blob(['original'], { type: 'image/jpeg' }), { comprimeix });
   expect(comprimeix.mock.calls.map(([, o]) => o.format)).toEqual(['image/webp', 'image/jpeg']);
-  expect(comprimeix.mock.calls[1][1]).toMatchObject({ conservaExif: false, maxSize: 1200 });
+  expect(comprimeix.mock.calls[1][1]).toMatchObject({ conservaExif: true, maxSize: 1200 });
   expect(a.fitxer.type).toBe('image/jpeg');
   expect(a.fitxer.size).toBe(4);
 });
@@ -37,9 +37,9 @@ test('una foto mai no es puja en PNG', async () => {
   await expect(preparaAdjunt(new Blob(['x'], { type: 'image/png' }), { comprimeix })).rejects.toMatchObject({ code: 'foto-codificacio' });
   expect(() => validaAdjuntXat({ fitxer: new Blob(['x'], { type: 'image/png' }), tipus: 'imatge' })).toThrow();
 });
-test('la quota té 20.000.000 bytes exactes, sense confondre MB i MiB', () => {
+test('el sostre de vídeo té 20.000.000 bytes exactes, sense confondre MB i MiB', () => {
   expect(() => validaAdjuntXat({ fitxer: new Blob([new Uint8Array(20_000_000)], { type: 'video/mp4' }), tipus: 'video', duradaMs: 9_000 })).not.toThrow();
-  expect(() => validaAdjuntXat({ fitxer: new Blob([new Uint8Array(20_000_001)], { type: 'video/mp4' }), tipus: 'video', duradaMs: 9_000 })).toThrow(MISSATGE_QUOTA_XAT);
+  expect(() => validaAdjuntXat({ fitxer: new Blob([new Uint8Array(20_000_001)], { type: 'video/mp4' }), tipus: 'video', duradaMs: 9_000 })).toThrow(ERRORS_ADJUNT_XAT['video-mida']);
 });
 /* Els sostres per tipus de la migració 2610220240: el client no reserva el que el servidor rebutjaria. */
 test('foto fins a 2 MB, veu fins a 3 MB i vídeo de l’iPhone admés', () => {
@@ -49,13 +49,13 @@ test('foto fins a 2 MB, veu fins a 3 MB i vídeo de l’iPhone admés', () => {
   expect(() => validaAdjuntXat({ fitxer: new Blob(['mov'], { type: 'video/quicktime' }), tipus: 'video', duradaMs: 1000 })).not.toThrow();
 });
 describe('durada de vídeo i recursos locals', () => {
-  test.each([10, 10.001, Infinity, NaN])('durada %s segons', async (durada) => {
+  test.each([60, 60.001, NaN])('durada %s segons', async (durada) => {
     const element = { duration: durada, removeAttribute: vi.fn(), load: vi.fn() };
     const urls = { createObjectURL: () => 'blob:local', revokeObjectURL: vi.fn() };
     const resultat = duradaLocal(new Blob(['x']), { creaElement: () => element, urls });
     element.onloadedmetadata();
-    if (durada === 10) await expect(resultat).resolves.toBe(10_000);
-    else await expect(resultat).rejects.toThrow('10 segons');
+    if (durada === 60) await expect(resultat).resolves.toBe(60_000);
+    else await expect(resultat).rejects.toThrow('60 segons');
     expect(urls.revokeObjectURL).toHaveBeenCalledWith('blob:local');
     expect(element.load).toHaveBeenCalled();
   });
@@ -113,18 +113,18 @@ describe('vídeo sense ubicació', () => {
     const trencat = new Blob([new Uint8Array([0, 0, 0, 99, 0x6d, 0x6f, 0x6f, 0x76])], { type: 'video/mp4' });
     await expect(senseUbicacioVideo(trencat)).resolves.toEqual({ fitxer: trencat, net: false });
   });
-  test('preparaAdjunt puja el vídeo net i diu si l’ha pogut netejar', async () => {
+  test('preparaAdjunt neteja el vídeo només en opt-out explícit', async () => {
     const original = mp4AmbUbicacio();
-    const a = await preparaAdjunt(original, { lligDurada: async () => 4000 });
+    const a = await preparaAdjunt(original, { lligDurada: async () => 4000, conservaUbicacio: false, comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }) });
     expect(a).toMatchObject({ tipus: 'video', duradaMs: 4000, senseUbicacio: true });
     expect(await text(a.fitxer)).not.toContain(GPS);
-    const webm = await preparaAdjunt(new Blob(['webm'], { type: 'video/webm' }), { lligDurada: async () => 4000 });
+    const webm = await preparaAdjunt(new Blob(['webm'], { type: 'video/webm' }), { lligDurada: async () => 4000, comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }) });
     expect(webm).toMatchObject({ tipus: 'video', senseUbicacio: false });
   });
-  test('el MOV de l’iPhone (video/quicktime) s’admet i també es neteja', async () => {
+  test('el MOV de l’iPhone (video/quicktime) s’admet i es neteja amb opt-out', async () => {
     const mp4 = mp4AmbUbicacio();
     const mov = new Blob([await mp4.arrayBuffer()], { type: 'video/quicktime' });
-    const a = await preparaAdjunt(mov, { lligDurada: async () => 3000 });
+    const a = await preparaAdjunt(mov, { lligDurada: async () => 3000, conservaUbicacio: false, comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }) });
     expect(a).toMatchObject({ tipus: 'video', senseUbicacio: true });
     expect(a.fitxer.type).toBe('video/quicktime');
     expect(await text(a.fitxer)).not.toContain(GPS);
@@ -233,8 +233,9 @@ describe('errors dels adjunts traduïbles', () => {
   test.each(Object.entries(CLAUS_ERROR_ADJUNT))('%s → %s és al diccionari valencià amb el mateix text', (code, clau) => {
     expect(ca[clau]).toBe(ERRORS_ADJUNT_XAT[code]);
   });
-  test('la quota diu literalment el text del Mestre', () => {
-    expect(ca['section.xat.adjunts.error.quota']).toBe("Espera't, que no tenim més diners per a pagar el servidor... ja et direm quan en pots pujar més!");
+  test('la quota usa el text seré del contracte vigent', () => {
+    expect(ca['section.xat.adjunts.error.quota']).toBe(MISSATGE_QUOTA_XAT);
+    expect(MISSATGE_QUOTA_XAT).not.toMatch(/diners|servidor/);
   });
   test('textDErrorAdjunt tradueix pel codi i, sense codi, conserva el missatge', () => {
     const t = vi.fn((clau) => `«${clau}»`);
@@ -242,5 +243,34 @@ describe('errors dels adjunts traduïbles', () => {
     expect(t).toHaveBeenCalledWith('section.xat.adjunts.error.quota', MISSATGE_QUOTA_XAT);
     expect(textDErrorAdjunt(new Error('Missatge propi'), t, 'reserva')).toBe('Missatge propi');
     expect(textDErrorAdjunt(null, t, 'reserva')).toBe('reserva');
+  });
+});
+
+describe('R32.8 · WebM amb durada Infinity necessita llegir el final', () => {
+  test.each([1.602, 60, 60.001])('resol una durada final real de %s segons i valida el sostre', async durada => {
+    const element = { duration: Infinity, currentTime: 0, removeAttribute: vi.fn(), load: vi.fn() };
+    const urls = { createObjectURL: () => 'blob:webm', revokeObjectURL: vi.fn() };
+    const resultat = duradaLocal(new Blob(['webm']), { creaElement: () => element, urls });
+    element.onloadedmetadata();expect(element.currentTime).toBe(1e10);
+    const tardana = element.ondurationchange;
+    element.duration = durada;element.ondurationchange();
+    if (durada > 60) await expect(resultat).rejects.toMatchObject({ code: 'durada' });
+    else await expect(resultat).resolves.toBe(Math.ceil(durada * 1000));
+    tardana();expect(urls.revokeObjectURL).toHaveBeenCalledOnce();
+    for (const key of ['onloadedmetadata','onerror','ondurationchange','ontimeupdate','onseeked']) expect(element[key]).toBeNull();
+  });
+  test('Infinity que no es resol té timeout global i cap bucle de seek', async () => {
+    vi.useFakeTimers();let seeks = 0;const element = { duration: Infinity, set currentTime(v) { seeks += Number(v > 0); }, removeAttribute: vi.fn(), load: vi.fn() };
+    const urls = { createObjectURL: () => 'blob:webm', revokeObjectURL: vi.fn() };
+    const resultat = duradaLocal(new Blob(['webm']), { creaElement: () => element, urls }).catch(e => e);
+    element.onloadedmetadata();element.ontimeupdate();element.onseeked();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(await resultat).toMatchObject({ code: 'durada-illegible' });expect(seeks).toBe(1);expect(urls.revokeObjectURL).toHaveBeenCalledOnce();
+  });
+  test('cancel·lar durant el seek es liquida immediatament i lleva handlers', async () => {
+    const c = new AbortController(),element = { duration: Infinity, currentTime: 0, removeAttribute: vi.fn(), load: vi.fn() };
+    const urls = { createObjectURL: () => 'blob:webm', revokeObjectURL: vi.fn() };
+    const resultat = duradaLocal(new Blob(['webm']), { signal:c.signal,creaElement:()=>element,urls });element.onloadedmetadata();c.abort();
+    await expect(resultat).rejects.toMatchObject({ name:'AbortError' });expect(element.ondurationchange).toBeNull();expect(urls.revokeObjectURL).toHaveBeenCalledOnce();
   });
 });

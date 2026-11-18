@@ -65,7 +65,7 @@ const pinta = (envia = vi.fn().mockResolvedValue([{ id: 'm' }]), extra = {}) => 
   return envia;
 };
 const peu = () => screen.getByRole('textbox', { name: PEU });
-const selector = () => screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons');
+const selector = () => screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons');
 
 test('amb la quota llegida, la imatge compartida es prepara amb el text de peu i no s’envia sola', async () => {
   const quota = deferred();
@@ -194,7 +194,7 @@ test('«Cancel·la» buida el peu: la foto següent, triada a mà, no l’hereta
   // El lot ja s'havia pres: cancel·lar no el torna a carregar.
   expect(compartitPendent()).toBeNull();
   await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
-  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [segona] } });
+  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [segona] } });
   await screen.findByAltText('Foto adjunta');
   expect(m.preparaAdjunt).toHaveBeenCalledTimes(2);
   expect(screen.queryByRole('textbox', { name: PEU })).toBeNull();

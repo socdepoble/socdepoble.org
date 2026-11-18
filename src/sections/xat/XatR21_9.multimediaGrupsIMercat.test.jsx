@@ -261,7 +261,7 @@ describe('T1.2 · VisorGaleriaXat (Lightbox, carrusel, zoom i Escape LIFO)', () 
 describe('T1.3 · Grups estil WhatsApp: CaraXat de 28px i paleta determinista WCAG AAA (>= 7:1)', () => {
   const t = createTranslator('ca');
 
-  test('pinta CaraXat circular a la primera bombolla del grup, espaiador a la consecutiva i cap cara als missatges propis', () => {
+  test('pinta CaraXat circular a la primera bombolla del grup, espaiador a la consecutiva i, als missatges propis, l’avatar d’espill sense nom (R32.7)', () => {
     const { container } = render(
       <MemoryRouter>
         <ol>
@@ -292,7 +292,14 @@ describe('T1.3 · Grups estil WhatsApp: CaraXat de 28px i paleta determinista WC
     expect(items[0].querySelector('.sdp-xat-bombolla__autor').className).toMatch(/sdp-xat-bombolla__autor--to-[1-6]/);
     expect(items[1].querySelector('.sdp-xat-bombolla__espai-cara')).not.toBeNull();
     expect(items[1].querySelector('.sdp-xat-bombolla__autor')).toBeNull();
-    expect(items[2].querySelector('.sdp-xat-bombolla__cara')).toBeNull();
+    /* Onada R32.7 (kit Gemini, espill d'avatars) · La primera bombolla pròpia
+       porta ara, a la dreta, el meu avatar d'espill clicable cap al meu perfil;
+       el nom de l'autor continua sense pintar-se als missatges propis. */
+    const caraMeua = items[2].querySelector('a.sdp-xat-bombolla__cara--enllac');
+    expect(caraMeua).not.toBeNull();
+    expect(caraMeua.getAttribute('href')).toBe('/gent/u-javi');
+    expect(caraMeua.getAttribute('aria-label')).toBe('Obri el meu perfil');
+    expect(items[2].querySelector('.sdp-xat-bombolla__autor')).toBeNull();
     expect(items[2].querySelector('.sdp-xat-bombolla__espai-cara')).toBeNull();
   });
 

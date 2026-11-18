@@ -373,14 +373,18 @@ describe('Ordre 0 · el nom a 20px i l’avanç a 18px a la targeta de conversa'
    1440px. */
 const ANCORA = '.sdp-xat-bombolla-wrap';
 const DISPARADOR = '.sdp-xat-bombolla__accions';
-const MENU_DE_LA_FILA = '.sdp-xat-bombolla-wrap > .sdp-xat-bombolla__accions > .sdp-xat-menu';
-const ALTURA_DEL_MENU = 'calc(var(--sdp-touch) + var(--sdp-space-1))';
+/* v1.2.8 · Gemini R32.7 (menú d'11 opcions amb la pestanya ⌄): la franja d'accions és absoluta i ocupa tota
+   l'amplada de la fila (inset-inline: 0), de manera que el menú continua penjant de la fila, no del «⋯»; naix
+   davall de la pestanya i no s'estira amb la fila perquè té amplària màxima. Les guardes d'estret no canvien. */
+const MENU_DE_LA_FILA = '.sdp-xat-bombolla__accions > .sdp-xat-menu';
+const ALTURA_DEL_MENU = 'calc(var(--sdp-space-8) + var(--sdp-space-1))';
+const MENU_ESTRET_AMPLE = '.sdp-root[data-sdp-estret] .sdp-xat-bombolla__accions > .sdp-xat-menu';
 const MENU_ALIE = '.sdp-xat-item--altre .sdp-xat-menu';
 const ESTRET_ALIE = '.sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-menu';
 const ESTRET_MEU = '.sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-menu';
 const TOPALL_ALIE = '.sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-bombolla-wrap .sdp-xat-menu';
 const TOPALL_MEU = '.sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-bombolla-wrap .sdp-xat-menu';
-const CONEGUDES = new Set(['.sdp-xat-menu', MENU_DE_LA_FILA, MENU_ALIE, ESTRET_ALIE, ESTRET_MEU, TOPALL_ALIE, TOPALL_MEU]);
+const CONEGUDES = new Set(['.sdp-xat-menu', MENU_DE_LA_FILA, MENU_ESTRET_AMPLE, MENU_ALIE, ESTRET_ALIE, ESTRET_MEU, TOPALL_ALIE, TOPALL_MEU]);
 const MOUEN = /^(left|right|inset(-inline)?(-start|-end)?|margin(-left|-right|-inline(-start|-end)?)?)$/;
 
 /** L'últim valor escrit per a la propietat en les regles que nomenen el selector sencer. */
@@ -398,9 +402,11 @@ function auditaAncoraDelMenu(css) {
   const de = (selector, propietat) => ultimValor(totes, selector, propietat);
   const minim = de('.sdp-xat-menu', 'min-width');
   if (de(ANCORA, 'position') !== 'relative') fallades.push(`${ANCORA}: position ${de(ANCORA, 'position')}, no és l’àncora`);
-  if (de(DISPARADOR, 'position') !== 'static') fallades.push(`${DISPARADOR}: position ${de(DISPARADOR, 'position')}, el menú penja del «⋯»`);
+  const franjaDeLaFila = de(DISPARADOR, 'position') === 'absolute' && de(DISPARADOR, 'inset-inline') === '0';
+  if (de(DISPARADOR, 'position') !== 'static' && !franjaDeLaFila) fallades.push(`${DISPARADOR}: position ${de(DISPARADOR, 'position')}, el menú penja del «⋯»`);
   if (de(MENU_DE_LA_FILA, 'top') !== ALTURA_DEL_MENU) fallades.push(`${MENU_DE_LA_FILA}: top ${de(MENU_DE_LA_FILA, 'top')}, el menú cau al peu de la bombolla`);
-  if (de(MENU_DE_LA_FILA, 'width') !== 'min-content') fallades.push(`${MENU_DE_LA_FILA}: width ${de(MENU_DE_LA_FILA, 'width')}, el menú s’estira amb la fila`);
+  if (de(MENU_DE_LA_FILA, 'width') !== 'min-content' && !de(MENU_DE_LA_FILA, 'max-inline-size')) fallades.push(`${MENU_DE_LA_FILA}: width ${de(MENU_DE_LA_FILA, 'width')}, el menú s’estira amb la fila`);
+  if (franjaDeLaFila && de(MENU_ESTRET_AMPLE, 'max-inline-size') !== minim) fallades.push(`${MENU_ESTRET_AMPLE}: en estret el menú no fa ${minim}, i el topall no hi correspon`);
   const costats = (selector, props) => props.map((p) => de(selector, p)).join(' | ');
   if (costats(MENU_ALIE, ['left', 'right']) !== '0 | auto') fallades.push(`${MENU_ALIE}: ${costats(MENU_ALIE, ['left', 'right'])}`);
   if (costats('.sdp-xat-menu', ['right']) !== '0') fallades.push(`.sdp-xat-menu: right ${de('.sdp-xat-menu', 'right')}`);

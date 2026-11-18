@@ -459,7 +459,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
         chrome="system"
         showLogos={true}
         title={titolSenseFitxa}
-        lead={t('section.perfil.public.senseRespostaText', 'El servidor de poble no respon ara mateix. Pots tornar-ho a provar o continuar navegant.')}
+        lead={t('section.perfil.public.senseRespostaText', 'El servidor de Sóc de Poble no respon ara mateix. Pots tornar-ho a provar o continuar navegant.')}
         objecte={null}
       >
         {/* Revisió del Gauntlet 261022_0225 (REV-PERF-9) · El «Carregant…» era

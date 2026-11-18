@@ -17,6 +17,7 @@ import { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_LOCAL_IAIA } from './useObriXatPerDefecte
 import { RUTA_SOBRE_DE_SOC_DE_POBLE } from './actorsDelXat.js';
 import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../config/navigation.js';
 import { DURADA_PULSACIO } from '../../components/PedraSeca/organismes/pulsacioLlarga.js';
+import { CLAU_COLUMNES_PLEGADES, _reiniciaColumnesPlegades } from '../../components/universal/workspace/columnesPlegades.js';
 
 const mocks = vi.hoisted(() => ({
   creaNota: vi.fn(),
@@ -214,6 +215,9 @@ afterEach(cleanup);
    rebuig d'una prova deixaria la columna buida en la següent. */
 afterEach(() => mocks.fitxaVivaRenovable?.reinicia());
 beforeEach(() => {
+  /* v1.2.8 · P0-127 (Codex R32.9): les columnes plegades a mà ara es recorden; cada prova comença sense preferència. */
+  delVal(CLAU_COLUMNES_PLEGADES);
+  _reiniciaColumnesPlegades();
   vi.clearAllMocks();
   /* clearAllMocks no lleva les implementacions: les proves de l'encaminador
      (onada 3B) en posen una a navigate. */

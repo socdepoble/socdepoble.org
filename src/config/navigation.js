@@ -12,6 +12,8 @@ import {
 /* P0-SEO-UNIVERSAL (13-11-2026) · Exportat (només la paraula): el manifest social
    i la porta de cobertura del Router en lligen les claus, sense copiar-les. */
 export const PAGE_ROUTE_MAP = {
+  // R32.9: PageDetailSection executa Navigate amb replace abans de carregar cap còpia.
+  'sistema-nervios': '/wikidepoble?item=sistema_nervios_skills_i_repositoris',
   'el-projecte': '/projecte',
   projecte: '/projecte',
   skills: '/skills',

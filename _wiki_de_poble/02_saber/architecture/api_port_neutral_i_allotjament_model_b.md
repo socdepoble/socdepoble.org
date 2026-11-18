@@ -48,9 +48,9 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 57 capacitats atòmiques opcionals (`CAPACITATS`)
+## 58 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**133 mètodes addicionals** i **165 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**138 mètodes addicionals** i **170 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
@@ -63,6 +63,7 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `curadoriaCultural` | `estatCuradoriaCultural`, `llistaAportacionsCulturals`, `enviaAportacioCultural`, `revisaAportacioCultural` |
 | `iaia` | `consultaIAIA` |
 | `xatRitme` | `loadRitmeXat`, `actualitzaPresenciaXat` |
+| `xatAccionsMissatge` | `carregaAccionsMissatges`, `alternaReaccio`, `alternaDestacat`, `alternaFixat`, `eliminaPerAMi` |
 | `carpetesNotes` | `creaCarpetaNotes` |
 | `edicioEditorial` | `adminActualitzaPublicacioEditorial` |
 | `revisionsLlavor` | `loadSeedRevisions`, `desaRevisioSeed` |
@@ -140,11 +141,13 @@ ni totes les branques possibles de cada mètode.
 
 R32.5 (2026-11-17) afig `moderacioLssi`: tres mètodes opcionals de denúncia pública i revisió humana, amb tres casos de rebuig previ; el grup no està disponible a l’adaptador local.
 
-El recompte actual és de **228 casos sobre 165 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+R32.7 (2026-11-17) afig `xatAccionsMissatge`: cinc mètodes opcionals de reaccions, destacats, fixats i esborrat per a mi, amb cinc casos de rebuig previ; el grup tampoc no està disponible a l’adaptador local.
 
-L’adaptador local oferix **48 dels 57 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 28 casos** d’estos grups per **capacitat absent**.
+El recompte actual és de **233 casos sobre 170 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
 
-Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 165 operacions en un servidor remot continua pendent.
+L’adaptador local oferix **48 dels 58 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 33 casos** d’estos grups per **capacitat absent**.
+
+Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 170 operacions en un servidor remot continua pendent.
 
 ### Consens del joc «D'on parles?» (R24)
 
@@ -238,8 +241,8 @@ requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
 **no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
 real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
 
-L'adaptador local oferix **48 dels 57 grups declarats**; `CAPACITATS_NO_DECLARADES`
-conté `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. `versioMinimaClient` torna honestament `null`, sense transport.
+L'adaptador local oferix **48 dels 58 grups declarats**; `CAPACITATS_NO_DECLARADES`
+conté `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. `versioMinimaClient` torna honestament `null`, sense transport.
 L'administració multipoble està **denegada per defecte**: requerix el catàleg i
 la política `administracioLocal` injectats en construir la instància. La política
 només autoritza amb `true`, i **no deriva permisos** de rols o MFA del client.
@@ -295,3 +298,7 @@ conformitat, **cobertura declarada** i la decisió documentada del projecte.
 
 - [[00_index]]
 - [[ADR-2026-09-SOLLUTIA-MODEL-B]]
+
+## R32.7 · Accions de missatge opcionals
+
+Els **cinc mètodes** d’`xatAccionsMissatge` tenen **cinc casos de rebuig** abans de transport. Les reaccions són **agregats sense UUID** d’altres persones. Les mutacions expressen l’**estat final desitjat** per resistir ACK perduts. La sessió i el fil es **verifiquen al backend**; el fallback local identificat només s’activa davant absència SQL estructurada, sense convertir 401, 403 o xarxa en èxit. El reenviament i la resposta privada s’orquestren al servei del xat, amb nous adjunts per destí i **sense exposar operadors** d’entitats. El kit preparat **no acredita desplegament remot**.

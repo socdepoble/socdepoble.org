@@ -51,8 +51,10 @@ test('R34 · un config antic migra alias coneguts sense tocar textos privats ni 
  expect(etiquetesBase({v:1,etiquetes:['Noves tecnologies','reivindicant','PROJECTE TIC']})).toEqual(NOMS_ETIQUETES_CANONIQUES_49);
 });
 
-test('R41/R17.2B/R32.4 · les 35 pàgines (amb receptes, la-iaia-sabuda, dispositius i sistema-nervios) i els seus labels són canònics en 5 idiomes, amb Sistema i sense Mur',()=>{
- expect(Object.keys(PAGE_COPY)).toHaveLength(35);
+test('R32.9 · les 34 pàgines conserven labels canònics en 5 idiomes; sistema-nervios viu al llibre',()=>{
+ expect(Object.keys(PAGE_COPY)).toHaveLength(34);
+ expect(PAGE_COPY).not.toHaveProperty('sistema-nervios');
+ expect(CLASSIFICACIO_PAGINES_PUBLIQUES).not.toHaveProperty('sistema-nervios');
  expect(PAGE_COPY.dispositius.title).toBe('Compatibilitat de connexió');
  expect(CLASSIFICACIO_PAGINES_PUBLIQUES.dispositius).toEqual(['tecnologia-lliure','Documentació']);
  // Arbitratge R46, Loop 3 (L2-04) · P6 (directriu 261003_2325 del Mestre): les 8 pàgines d'acció de DESTINS_CONTROL no porten cap etiqueta.

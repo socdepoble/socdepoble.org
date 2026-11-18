@@ -297,10 +297,10 @@ if (fs.existsSync(PANY)) {
 /* Anti-deriva: si l'esquema creix amb una construcció que no sabem fer
  * complir, callar seria pitjor que caure. */
 const ARREL_OK = new Set(['$schema', '$id', 'title', 'description', '$comment', 'type',
-  'additionalProperties', 'required', 'properties']);
+  'additionalProperties', 'required', 'properties', 'minimum', 'maximum', 'default']);
 const PROP_OK = new Set(['type', 'enum', 'const', 'pattern', 'minLength', 'maxLength',
-  'minItems', 'maxItems', 'uniqueItems', 'items', 'description', '$comment']);
-const ITEM_OK = new Set(['type', 'enum', 'const', 'pattern', 'minLength', 'maxLength']);
+  'minItems', 'maxItems', 'uniqueItems', 'items', 'description', '$comment', 'minimum', 'maximum', 'default']);
+const ITEM_OK = new Set(['type', 'enum', 'const', 'pattern', 'minLength', 'maxLength', 'minimum', 'maximum', 'default']);
 
 const desconegudes = [];
 for (const k of Object.keys(S)) if (!ARREL_OK.has(k)) desconegudes.push(`(arrel) ${k}`);
@@ -314,6 +314,22 @@ if (desconegudes.length) {
     'Amplieu el tractor o simplifiqueu l\'esquema. No validem a mitges.',
   ]);
 }
+
+// Same numeric contract as documental/core.mjs. default is only an annotation:
+// it neither supplies a required value nor changes parsed data or source bytes.
+const limitsInvalids = [];
+const comprovaLimits = (def, nom) => {
+  for (const key of ['minimum', 'maximum']) {
+    if (Object.hasOwn(def, key) && (!['integer', 'number'].includes(def.type) || !Number.isFinite(def[key]))) limitsInvalids.push(`${nom}.${key}: límit numèric invàlid`);
+  }
+  if (def.minimum !== undefined && def.maximum !== undefined && def.minimum > def.maximum) limitsInvalids.push(`${nom}: límits numèrics invertits`);
+};
+comprovaLimits(S, '(arrel)');
+for (const [nom, def] of Object.entries(S.properties ?? {})) {
+  comprovaLimits(def, nom);
+  if (def.items) comprovaLimits(def.items, `${nom}.items`);
+}
+if (limitsInvalids.length) mor('L’esquema declara límits numèrics invàlids.', limitsInvalids);
 
 const PROPS = S.properties ?? {};
 const REQ = S.required ?? [];
@@ -385,7 +401,7 @@ function escalar(s) {
   if (t === 'true') return true;
   if (t === 'false') return false;
   if (t === 'null' || t === '~') return null;
-  if (/^-?\d+$/.test(t)) return Number(t);
+  if (/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(t)) return Number(t);
   return t;
 }
 
@@ -472,6 +488,12 @@ function comprovaEscalar(n, clau, v, def) {
   }
   if (def.type === 'boolean' && typeof v !== 'boolean') { f.F7.push({ n, clau, detall: 'no és booleà' }); return; }
   if (def.type === 'integer' && !Number.isInteger(v)) { f.F7.push({ n, clau, detall: 'no és enter' }); return; }
+  if (def.type === 'number' && typeof v !== 'number') { f.F7.push({ n, clau, detall: 'no és número' }); return; }
+  if (typeof v === 'number') {
+    if (!Number.isFinite(v)) { f.F7.push({ n, clau, detall: 'número no finit' }); return; }
+    if (def.minimum !== undefined && v < def.minimum) f.F7.push({ n, clau, detall: `${v} < minimum ${def.minimum}` });
+    if (def.maximum !== undefined && v > def.maximum) f.F7.push({ n, clau, detall: `${v} > maximum ${def.maximum}` });
+  }
   if (typeof v === 'string') {
     if (def.enum && !def.enum.includes(v)) f.F3.push({ n, clau, valor: v });
     if (def.const !== undefined && v !== def.const) f.F3.push({ n, clau, valor: v });

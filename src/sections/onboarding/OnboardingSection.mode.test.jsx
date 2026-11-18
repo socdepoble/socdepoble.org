@@ -160,7 +160,7 @@ test('T16 amb sonda · el servidor no respon: no es desa res, avís en mode de p
   render(<StrictMode><OnboardingSection /></StrictMode>);
   const avis = await screen.findByRole('status');
   expect(avis.classList.contains('sdp-alerta--avis')).toBe(true);
-  expect(avis.textContent).toContain('El servidor de poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.');
+  expect(avis.textContent).toContain('El servidor de Sóc de Poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.');
   expect(m.comprova).toHaveBeenCalledTimes(1);
   expect(m.enterRemote).not.toHaveBeenCalled();
   // Mentre no es pot entrar, ni el formulari ni Google.
@@ -250,7 +250,7 @@ async function entraAmbError(error) {
   fireEvent.change(screen.getByLabelText('Contrasenya'), { target: { name: 'password', value: 'contrasenya-actual' } });
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Entrar al compte' })); });
 }
-const servidorCaigut = () => Object.assign(new Error('El servidor del poble no respon ara mateix.'), { code: CODI_ENTRADA.SERVIDOR_INABASTABLE });
+const servidorCaigut = () => Object.assign(new Error('El servidor de Sóc de Poble no respon ara mateix.'), { code: CODI_ENTRADA.SERVIDOR_INABASTABLE });
 
 test('T2 · en remot per una elecció desada, un servidor inabastable ofereix «Tornar al mode de proves»', async () => {
   m.config = { dataMode: 'remote', tenantId: TENANT };

@@ -74,16 +74,16 @@ La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista 
 
 Font executiva: les carpetes de `.agents/skills/`. `tooling/brain/cataleg_skills.mjs --check` comprova el catàleg; el segell i els miralls tenen comprovacions pròpies. El prefix d’un nom no equival a la marca `core: true` del frontmatter.
 
-De les 43 skills actives, 20 declaren motors propis al camp `motors:` del frontmatter (scripts de `tooling/`, `tests/` o `wordpress-plugin/eines/`) i 23 són procedimentals o de governança cognitiva. Ho reproduïx `node tooling/brain/fronteres-skills.mjs` (17-11-2026: «43 skills (23 procediment, 20 amb motor)»).
+De les 44 skills actives, 21 declaren motors propis al camp `motors:` del frontmatter (scripts de `tooling/`, `tests/` o `wordpress-plugin/eines/`) i 23 són procedimentals o de governança cognitiva. Ho reproduïx `node tooling/brain/fronteres-skills.mjs` (17-11-2026: «43 skills (23 procediment, 20 amb motor)»).
 
 El mapa divulgatiu per famílies i la distinció amb els repositoris externs estudiats es poden consultar a [[sistema_nervios_skills_i_repositoris]].
 
 | Mesura | Valor |
 | --- | --- |
-| skills actives | 43 |
+| skills actives | 44 |
 | marca core: true | 9 |
-| sense marca core: true | 34 |
-| prefix core- | 27 |
+| sense marca core: true | 35 |
+| prefix core- | 28 |
 | prefix sdp- | 12 |
 | prefix wiki- | 4 |
 

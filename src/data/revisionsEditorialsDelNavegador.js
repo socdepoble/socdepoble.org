@@ -22,6 +22,11 @@
  * igual), que no reexporta. Cap altre mòdul no els ha d'importar.
  */
 import { STORAGE_PREFIX, getVal, setVal } from '../config/storage.js';
+/* v1.2.8 · wikiAlMur.js es carrega en diferit (backendPort.js) i s'hi registra en carregar-se: fins
+   aleshores no hi ha cap capítol de la Wiki per fusionar (el mateix que fusionaCapitolsWiki sense catàleg). */
+let fusionaCapitolsWiki = (llista) => llista;
+export function registraCapitolsWiki(fusiona) { fusionaCapitolsWiki = typeof fusiona === 'function' ? fusiona : (llista) => llista; }
+import { esVisibleAlMur } from './visibilitatMur.js';
 
 const CLAU_STORAGE = 'publicacions.revisions.v1';
 const SECCIONS_VALIDES = Object.freeze(new Set(['mur', 'events']));
@@ -36,7 +41,8 @@ const CLAUS_DE_L_ELEMENT = Object.freeze({
   copyright: Object.freeze(['copyright']),
   icon: Object.freeze(['icon']),
   publishDate: Object.freeze(['publish_date']),
-  tags: Object.freeze(['tags'])
+  tags: Object.freeze(['tags']),
+  mostrarAlMur: Object.freeze(['mostrarAlMur'])
 });
 export const CAMPS_DE_LA_REVISIO = Object.freeze(Object.keys(CLAUS_DE_L_ELEMENT));
 const MAX_COS = 600000;
@@ -64,7 +70,9 @@ function campsValids(camps) {
   for (const camp of CAMPS_DE_LA_REVISIO) {
     if (!Object.prototype.hasOwnProperty.call(camps, camp)) continue;
     const valor = camps[camp];
-    if (camp === 'tags') {
+    if (camp === 'mostrarAlMur') {
+      if (typeof valor === 'boolean') nets.mostrarAlMur = valor;
+    } else if (camp === 'tags') {
       if (Array.isArray(valor)) {
         nets.tags = valor.filter((etiqueta) => typeof etiqueta === 'string' && etiqueta.length <= 80).slice(0, MAX_ETIQUETES);
       }
@@ -198,20 +206,25 @@ export function revisaElement(seccio, element) {
   const canvis = Object.entries(camps)
     .map(([camp, valor]) => [clauDeDesti(element, CLAUS_DE_L_ELEMENT[camp]), valor])
     .filter(([clau, valor]) => !igual(element[clau], valor));
+  if (typeof camps.mostrarAlMur === 'boolean' && element.ocultarDelMur !== !camps.mostrarAlMur) canvis.push(['ocultarDelMur', !camps.mostrarAlMur]);
   if (!canvis.length) return element;
   const revisat = { ...element };
   for (const [clau, valor] of canvis) revisat[clau] = Array.isArray(valor) ? [...valor] : valor;
+  if (typeof camps.mostrarAlMur === 'boolean') revisat.ocultarDelMur = !camps.mostrarAlMur;
   return revisat;
 }
 
 /** La llista amb les revisions al damunt; la MATEIXA llista si cap element en té. */
 export function revisaLlista(llista, seccio) {
-  if (!Array.isArray(llista) || !llista.length) return llista || [];
+  if (!Array.isArray(llista)) return llista || [];
   const mapa = carregaMapa();
   const s = String(seccio || '').trim().toLowerCase();
-  if (!mapa.size || !SECCIONS_VALIDES.has(s)) return llista;
-  if (!llista.some((element) => element?.id != null && mapa.has(`${s}:${String(element.id)}`))) return llista;
-  return llista.map((element) => revisaElement(s, element));
+  if (!SECCIONS_VALIDES.has(s)) return llista;
+  const base = s === 'mur' ? fusionaCapitolsWiki(llista) : llista;
+  const revisades = mapa.size && base.some(element => element?.id != null && mapa.has(`${s}:${String(element.id)}`))
+    ? base.map(element => revisaElement(s, element)) : base;
+  if (s !== 'mur' || revisades.every(esVisibleAlMur)) return revisades;
+  return revisades.filter(esVisibleAlMur);
 }
 
 /** Només per a _reiniciaRevisionsEditorialsPerAProves (revisionsEditorials.js): buida la memòria i l'emmagatzematge i avisa els oients. */

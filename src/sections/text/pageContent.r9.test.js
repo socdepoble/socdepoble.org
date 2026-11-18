@@ -209,7 +209,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada R32.3 · La crònica de l'Onada R32.3 obri /versions, davant de la crònica R32.
     // Onada R32.4 · La crònica de l'Onada R32.4 obri /versions, davant de la crònica R32.3.
     // Onada v1.2.7 · La crònica de les Onades R32.5 i R32.6 obri /versions, davant de la crònica R32.4.
-    expect([...versions.querySelectorAll('h3')].slice(0, 19).map((h3) => h3.textContent)).toEqual([
+    // Onada v1.2.8 · La crònica de les Onades R32.7, R32.8 i R32.9 obri /versions, davant de la crònica R32.5 i R32.6.
+    expect([...versions.querySelectorAll('h3')].slice(0, 20).map((h3) => h3.textContent)).toEqual([
+      '18 de novembre de 2026 · Onades R32.7, R32.8 i R32.9 · Reaccions i missatges fixats al Xat, vídeos comprimits al navegador i capítols de la Wiki al Mur',
       '17 de novembre de 2026, nit · Onades R32.5 i R32.6 · L’avís d’actualització d’un toc, les fotos del mòbil al Xat i la fase beta a les aplicacions en proves',
       '17 de novembre de 2026, vesprada · Onada R32.4 · L’idioma i l’eixida al calaix d’identitats, les Aplicacions en un sol enllaç del Perfil i comptes exactes al TPV i a la Gestoria',
       '17 de novembre de 2026, matinada · Onada R32.3 · Les aplicacions avisen soles d’una versió nova, el Perfil en dues columnes al mòbil i una eixida de la sessió més sòlida',
@@ -596,13 +598,16 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
     const declarades = passos.filter((pas) => !pas.prova);
     const ambMutacions = seleccionaPassos({ cens: true, ambMutacions: true });
     const proves = passos.filter((pas) => pas.prova);
-    const tall14_11 = declarades.filter((pas) => !POSTERIORS_AL_TALL_14_11.includes(pas.script));
-    expect(declarades.length - tall14_11.length).toBe(POSTERIORS_AL_TALL_14_11.length);
+    const tractorR329 = 'tooling/gates/tractor-consola-neta.mjs';
+    // R32.9 és posterior al tall i no altera la xifra històrica del 14-11.
+    const tall14_11 = declarades.filter((pas) => !POSTERIORS_AL_TALL_14_11.includes(pas.script) && pas.args?.[0] !== tractorR329);
+    expect(declarades).toContainEqual(expect.objectContaining({ args: [tractorR329, '--json'], readOnly: true }));
+    expect(declarades.length - tall14_11.length).toBe(POSTERIORS_AL_TALL_14_11.length + 1);
     expect(tall14_11).toHaveLength(60);
     expect(tall14_11).toContainEqual(expect.objectContaining({ nom: 'Porta Build', potMutar: true }));
-    expect(cens).toHaveLength(60);
-    expect(declarades).toHaveLength(61);
-    expect(ambMutacions).toHaveLength(61);
+    expect(cens).toHaveLength(61);
+    expect(declarades).toHaveLength(62);
+    expect(ambMutacions).toHaveLength(62);
     expect(ambMutacions).toEqual(declarades);
     expect(declarades.filter((pas) => !cens.includes(pas))).toEqual([
       expect.objectContaining({ nom: 'Porta Build', potMutar: true }),

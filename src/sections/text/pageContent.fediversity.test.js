@@ -426,7 +426,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
 
     const fedivers=new DOMParser().parseFromString(PAGE_COPY.fedivers.html,'text/html').body.textContent;
     for(const tros of ['socdepoble.org','gentdelatorre.net','socdepoble.cat','Gent de Xixona','Gent de Relleu','Gent de Tibi','Gent d’Alcoleja','Gent de Penàguila'])expect(fedivers).toContain(tros);
-    expect(PAGE_COPY.fedivers.lead).toBe('Un balanç datat dels serveis del poble. Cada avanç distingix producció, proves locals i treball pendent.');
+    expect(PAGE_COPY.fedivers.lead).toBe('Un balanç datat dels serveis de Sóc de Poble. Cada avanç distingix producció, proves locals i treball pendent.');
     expect(fedivers).toContain('sense garantia de disponibilitat; PostgreSQL propi ja està instal·lat, mentre la SPA continua amb Supabase.');
     expect(fedivers).toContain('ja té PostgreSQL propi per a l’API, amb la SPA encara connectada a Supabase');
     expect(PAGE_COPY.fedivers.lead).not.toContain('tres d’actius');
@@ -679,12 +679,12 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     // dated note (one source, INVENTARI_CONTRACTE), checked against the code.
     expect(fet).toContain(nucli+' mètodes obligatoris i '+capacitats+' capacitats opcionals declarades');
     expect(fet).toContain(opcionals+' mètodes addicionals: '+total+' mètodes en total');
-    expect(fet).toContain('recompte del codi local del 13 de novembre de 2026');
+    expect(fet).toContain('recompte del codi local del 17 de novembre de 2026');
     expect(fet).toContain('no certifica les '+total+' operacions contra un servidor remot');
     const paginaCompleta=new DOMParser().parseFromString(copy.html,'text/html');
     const notaActual=[...paginaCompleta.querySelectorAll('p')].find(p=>p.textContent.includes('Inventari del codi local.'))?.textContent;
     const {CASOS,metodesSenseCas}=await import('../../data/conformitat/kit.js');
-    expect(notaActual).toContain('13 de novembre de 2026');
+    expect(notaActual).toContain('17 de novembre de 2026');
     expect(notaActual).toContain(capacitats+' capacitats i '+total+' mètodes amb '+CASOS.length+' casos');
     expect(notaActual).toContain('46/138/190');
     expect(notaActual).toContain('no acredita activació');
@@ -697,9 +697,9 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       const oferides=Object.entries(CAPACITATS).filter(([,metodes])=>metodes.every(nom=>typeof local[nom]==='function')).map(([nom])=>nom);
       const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(absents).toEqual(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
+      expect(absents).toEqual(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
       expect(oferides).toHaveLength(48);
-      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(28);
+      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(33);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');
       expect(fet).toContain('els seus '+CASOS.filter(c=>absents.includes(c.capacitat)).length+' casos s’ometen en local');

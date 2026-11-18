@@ -109,6 +109,14 @@ describe('amb la RPC: el port rep la revisió amb els camps blancs i la versió'
 });
 
 describe('àrbitre B4-S1 · la marca de servidor no amaga una revisió que el servidor no té', () => {
+  test('R32.9: mostrarAlMur no admés per RPC continua local i mai rep un ACK de tots els camps', async () => {
+    port.edita.mockResolvedValue({ versio: 8 });
+    await expect(desaRevisioEditorialAmbServidor('mur', MANIFEST, { title: 'T', mostrarAlMur: false }, opcions()))
+      .resolves.toMatchObject({ desti: 'navegador', motiu: 'camps-nomes-navegador', campsNoDesats: ['mostrarAlMur'] });
+    expect(port.edita.mock.calls[0][0].canvis).toEqual({ title: 'T' });
+    expect(JSON.parse(window.localStorage.getItem(CLAU))['mur:manifest-de-poble']).not.toHaveProperty('servidor');
+    expect(revisaElement('mur', { ...MANIFEST, _editorialVersio: 8 })).toMatchObject({ title: 'T', mostrarAlMur: false });
+  });
   test('una desada posterior en cua que el servidor rebutja continua manant al lector', async () => {
     let allibera;
     port.edita

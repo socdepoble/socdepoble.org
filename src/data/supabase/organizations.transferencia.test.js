@@ -94,7 +94,7 @@ test('els codis del servidor es llegixen pel prefix SDP, amb el text del contrac
 });
 
 test('la RPC absent (404 o PGRST202) és NO-DISPONIBLE amb la frase de la transferència; la resta passa tal qual', async () => {
-  const frase = 'El servidor d’este poble encara no sap transferir la propietat de les organitzacions.';
+  const frase = 'El servidor de Sóc de Poble encara no sap transferir la propietat de les organitzacions.';
   m.request.mockRejectedValueOnce(errorServidor(404, '{"code":"PGRST202","message":"Could not find the function"}'));
   await expect(transfereixPropietatOrganitzacio(ORG, PEPA_PERSONA)).rejects.toMatchObject({ code: 'NO-DISPONIBLE', message: frase });
   const senseEstat = errorServidor(undefined, '{"code":"PGRST202"}');

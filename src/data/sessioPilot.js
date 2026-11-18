@@ -3,7 +3,7 @@
  * prompt; F66 del relleu de Codex).
  *
  * El problema: a localhost:3340/registre?mode=entrar, amb el node en mode de
- * proves i el servidor del poble caigut (ERR_EMPTY_RESPONSE contra
+ * proves i el servidor de Sóc de Poble caigut (ERR_EMPTY_RESPONSE contra
  * http://127.0.0.1:54321/auth/v1/), no hi havia manera d'entrar. L'entrada
  * real rebutja en seed i local amb MODE_LOCAL (supabase/auth.js ·
  * exigeixModeRemot), i «Forçar entrada local (Mock)» només desbloquejava el
@@ -50,7 +50,7 @@ export const PROVEIDOR_PILOT = 'pilot-local';
  * la vista en pinta el missatge tal qual (onboardingModel.js · missatgeDEntrada). */
 export const CODI_PILOT_NO_DISPONIBLE = 'pilot-no-disponible';
 
-const MISSATGE_NOMES_EN_PROVES = 'L’entrada pilot només existix en desenvolupament i en mode de proves (seed o local). Amb el servidor del poble cal entrar amb un compte de veres.';
+const MISSATGE_NOMES_EN_PROVES = 'L’entrada pilot només existix en desenvolupament i en mode de proves (seed o local). Amb el servidor de Sóc de Poble cal entrar amb un compte de veres.';
 const MISSATGE_SESSIO_SENSE_PREPARAR = 'La sessió d’esta pàgina encara no està preparada per al mode de proves. Recarrega la pàgina i torna-ho a provar.';
 const MISSATGE_SENSE_EMMAGATZEMATGE = 'No s’ha pogut desar la sessió de prova. Comprova que el navegador deixa guardar dades d’esta pàgina.';
 

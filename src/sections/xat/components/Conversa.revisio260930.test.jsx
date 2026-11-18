@@ -346,10 +346,17 @@ describe('menú «⋯» de la bombolla', () => {
     expect(document.activeElement).toBe(boto);
   });
 
-  test('#8 · sense «Respon», la primera opció és «Copia el text»', () => {
+  /* Onada R32.7 (kit Gemini, menú de 11 opcions) · Sense permís d'escriure,
+     la primera opció del menú ja no és «Copia el text» sinó «Destaca» (el
+     bloc del missatge comença per les opcions personals). La regla #8 no
+     canvia: el focus entra a la primera opció, i cap opció és «Respon». */
+  test('#8 · sense «Respon», el focus entra a la primera opció («Destaca»)', () => {
     pinta({ fil: { ...FIL, tipus: 'directe', potEscriure: false }, messages: [m('1', 1, 'other', { text: 'Bon dia' })] });
     fireEvent.click(botoOpcions('1'));
-    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Copia el text' }));
+    const opcions = within(screen.getByRole('menu')).getAllByRole('menuitem');
+    expect(opcions[0].textContent).toBe('Destaca');
+    expect(document.activeElement).toBe(opcions[0]);
+    expect(opcions.some((opcio) => /^Respon/.test(opcio.textContent))).toBe(false);
   });
 
   test('#8 · «Respon» sobre el missatge que ja és la resposta també porta el focus al camp', () => {

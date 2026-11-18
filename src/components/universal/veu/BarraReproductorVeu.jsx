@@ -183,6 +183,12 @@ export function BarraReproductorVeu({
   /* Onada R29 · R29-CV-05 · Testimoni de la locució que la barra té en curs (null si no en té cap,
      o si una altra peça l'ha tallada): tancar o desmuntar només aturen la veu si és de la barra. */
   const veuPropiaRef = useRef(null);
+  const aturaVeuPropia = useCallback(() => {
+    const propia = veuPropiaRef.current;
+    veuPropiaRef.current = null;
+    if (typeof propia?.tanca === 'function') propia.tanca();
+    else if (propia) serveiVeu.atura();
+  }, []);
   const indexRef = useRef(0);
   const blocsRef = useRef(blocs);
   const estatRef = useRef(estat);
@@ -339,7 +345,7 @@ export function BarraReproductorVeu({
       clearTimeout(timerCopiatRef.current);
       setCopiatRecent(false);
       setMissatgeEstat('');
-      if (veuPropiaRef.current) serveiVeu.atura();
+      aturaVeuPropia();
       if (audioFontRef.current) {
         try { audioFontRef.current.pause(); } catch { /* ignorat */ }
       }
@@ -373,7 +379,7 @@ export function BarraReproductorVeu({
     if (!mostraEspecimen) {
       setEstat('parlant');
     }
-  }, [oberta, idioma, capcaleraRef, cosRef, pistesFontSo, blocsMostra, mostraEspecimen, t]);
+  }, [oberta, idioma, capcaleraRef, cosRef, pistesFontSo, blocsMostra, mostraEspecimen, t, aturaVeuPropia]);
 
   /* Neteja garantida en desmuntar. Onada R29 · R29-CV-04/05 · Només calla la veu si és de la barra
      (també a l'espècimen, que abans només avortava la promesa i el bloc continuava sonant). */
@@ -381,12 +387,12 @@ export function BarraReproductorVeu({
     sessioIdRef.current += 1;
     copiaIdRef.current += 1;
     clearTimeout(timerCopiatRef.current);
-    if (veuPropiaRef.current) serveiVeu.atura();
+    aturaVeuPropia();
     if (audioFontRef.current) {
       try { audioFontRef.current.pause(); } catch { /* ignorat */ }
     }
     ressaltatDomRef.current = marcaBlocActiuDom(ressaltatDomRef.current, null);
-  }, []);
+  }, [aturaVeuPropia]);
 
   /* Ressaltat suau del bloc actiu al DOM mentre el reproductor és obert en mode lectura. */
   useEffect(() => {
@@ -472,6 +478,54 @@ export function BarraReproductorVeu({
     const idSessio = sessioIdRef.current + 1;
     sessioIdRef.current = idSessio;
     const control = new AbortController();
+    /* Els ports injectats antics conserven el camí seqüencial. El servei real
+       aporta una sessió propietària: un Audio, quatre slots i cua nativa real. */
+    const sessio = typeof serveiVeu.creaSessioVeu === 'function' ? serveiVeu.creaSessioVeu({
+      idioma: idioma || 'ca', privat, veu: clauVeuActiva || undefined, signal: control.signal
+    }) : null;
+
+    const correSessio = async () => {
+      let inici = indexRef.current;
+      if (inici < 0 || inici >= blocs.length) inici = 0;
+      const enCua = new Map();
+      const vigent = () => sessioIdRef.current === idSessio && !control.signal.aborted;
+      const encua = (i) => {
+        if (i >= blocs.length || enCua.has(i) || !vigent()) return;
+        const promesa = sessio.parla(blocs[i].text, { onInici: () => {
+          if (!vigent()) return;
+          setIndexActual(i); indexRef.current = i;
+          if (!mostraEspecimen && blocs[i]?.element) {
+            ressaltatDomRef.current = marcaBlocActiuDom(ressaltatDomRef.current, blocs[i].element);
+            if (i !== inici && seguixLecturaRef.current) desplacaASeccio(blocs[i].element, { behavior: 'smooth', block: 'start' });
+          }
+          // Preparar no significa sonar: només l'inici real avança el ressaltat.
+          for (const futur of [i + 1, i + 2]) {
+            if (futur < blocs.length) sessio.precarregaVeu(blocs[futur].text).catch(() => {
+              /* La demanda d'eixe bloc aplicarà el fallback del servei si cal. */
+            });
+          }
+        } });
+        promesa.catch(() => {}); // El pròxim bloc pot avortar abans que l'esperem.
+        enCua.set(i, promesa);
+      };
+      veuPropiaRef.current = sessio;
+      try {
+        encua(inici); encua(inici + 1);
+        for (let i = inici; i < blocs.length && vigent(); i += 1) {
+          await enCua.get(i);
+          if (!vigent()) return;
+          enCua.delete(i); encua(i + 2);
+        }
+        if (vigent()) setEstat('acabat');
+      } catch (error) {
+        if (!vigent()) return;
+        if (error?.codi === serveiVeu.CODI_VEU_AVORTADA) setEstat('pausat');
+        else { setEstat('error'); setMissatgeEstat(tradueix(t, TEXTOS.senseVeu)); }
+      } finally {
+        if (veuPropiaRef.current === sessio) veuPropiaRef.current = null;
+        sessio.tanca();
+      }
+    };
 
     const correCua = async () => {
       let i = indexRef.current;
@@ -525,9 +579,10 @@ export function BarraReproductorVeu({
       }
     };
 
-    correCua();
+    if (sessio) correSessio(); else correCua();
     return () => {
       control.abort();
+      sessio?.tanca();
     };
   }, [oberta, esFontAudio, estat, cicleCua, blocs, idioma, privat, clauVeuActiva, mostraEspecimen, t]);
 
@@ -539,13 +594,13 @@ export function BarraReproductorVeu({
       if (esFontAudio) {
         try { audioFontRef.current?.pause(); } catch { /* ignorat */ }
       } else {
-        serveiVeu.atura();
+        aturaVeuPropia();
       }
       setEstat('pausat');
       return;
     }
     reprenLectura();
-  }, [esFontAudio, reprenLectura]);
+  }, [esFontAudio, reprenLectura, aturaVeuPropia]);
 
   const saltaABloc = useCallback((nouIndex, { tancaSelector = false } = {}) => {
     const total = blocsRef.current.length;
@@ -561,7 +616,7 @@ export function BarraReproductorVeu({
       } catch { /* ignorat */ }
       pistaAudioCarregadaRef.current = '';
     } else {
-      serveiVeu.atura();
+      aturaVeuPropia();
     }
     indexRef.current = desti;
     setIndexActual(desti);
@@ -578,7 +633,7 @@ export function BarraReproductorVeu({
     }
     setCicleCua((n) => n + 1);
     setEstat('parlant');
-  }, [esFontAudio, mostraEspecimen]);
+  }, [esFontAudio, mostraEspecimen, aturaVeuPropia]);
 
   const copiaFragmentActual = useCallback(async () => {
     const bloc = blocsRef.current[indexRef.current];
@@ -612,7 +667,7 @@ export function BarraReproductorVeu({
     clearTimeout(timerCopiatRef.current);
     setCopiatRecent(false);
     /* Onada R29 · R29-CV-05 · Pausada per una altra peça (el Refranyer, el joc), tancar la barra no talla eixa veu. */
-    if (veuPropiaRef.current) serveiVeu.atura();
+    aturaVeuPropia();
     if (audioFontRef.current) {
       try { audioFontRef.current.pause(); } catch { /* ignorat */ }
     }
@@ -636,7 +691,7 @@ export function BarraReproductorVeu({
         }
       });
     }
-  }, [onTanca, botoActivadorRef, invocadorRef]);
+  }, [onTanca, botoActivadorRef, invocadorRef, aturaVeuPropia]);
 
   /* Onada R28 · veu-editorial-10 · Escape dins de la barra tanca el panell «Apartats» i torna el
      focus al seu botó. Amb el panell tancat no fa res: la barra no és cap diàleg i continua sonant. */

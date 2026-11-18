@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { arrelSegura } from '../tooling/lib/arrel.mjs';
 import {
   DEUTE_ACCEPTAT, ESQUEMA, REGLES, auditaSkills, empremta, informe, main, motiuDeute, tokensDeclarats
@@ -90,6 +91,10 @@ const captura = () => {
   const linies = [];
   return { linies, text: () => linies.join('\n'), log: (s) => linies.push(String(s)), error: (s) => linies.push(String(s)) };
 };
+const git = (root, ...args) => execFileSync('git', ['--no-optional-locks', '-c', 'core.fsmonitor=false', '-c', 'maintenance.auto=false', '-c', 'gc.auto=0',
+  '-c', 'user.name=Fixture', '-c', 'user.email=test@example.invalid', '-c', 'commit.gpgsign=false', ...args],
+{ cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+const iniciaGit = root => { git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'fixture'); };
 
 test('fixture neta: tres skills, cap violació, classe i motors', (t) => {
   const { root } = fixture(t);
@@ -115,6 +120,45 @@ test('F1: contracte buit, no canònic o absent cau; el corregit passa', (t) => {
   ]);
   cas('sdp-f1', 'Cos.', { llig: ['docs/llig.md'], escriu: ['docs/escriu/'] });
   assert.deepEqual(detalls(audita(root), 'sdp-f1'), []);
+});
+
+test('R32.9 F1: quatre directoris efímers exactes no versionats poden faltar sense crear-los ni tocar índex', t => {
+  const { root, cas } = fixture(t);
+  const dirs = ['.agents/runtime', '.agents/runtime/turns', '.sdp-paperera', '.immunitari'];
+  cas('sdp-efimers', 'Cos.', { llig: dirs, escriu: dirs }); iniciaGit(root);
+  const index = path.join(root, '.git/index'), before = fs.readFileSync(index), mtime = fs.statSync(index, { bigint: true }).mtimeNs;
+  assert.deepEqual(detalls(audita(root), 'sdp-efimers'), []);
+  assert.deepEqual(fs.readFileSync(index), before); assert.equal(fs.statSync(index, { bigint: true }).mtimeNs, mtime);
+  for (const dir of dirs) assert.equal(fs.existsSync(path.join(root, dir)), false, `no fabrica ${dir}`);
+});
+
+test('R32.9 F1: una font normal, un fill efímer o un prefix semblant absents continuen rojos', t => {
+  const { root, cas } = fixture(t);
+  cas('sdp-efimers', 'Cos.', { llig: ['docs/absent.md', '.sdp-paperera/prova.json', '.sdp-paperera-extra'] }); iniciaGit(root);
+  assert.deepEqual(detalls(audita(root), 'sdp-efimers'), ['F1 contracte.llig: absent .sdp-paperera-extra', 'F1 contracte.llig: absent .sdp-paperera/prova.json', 'F1 contracte.llig: absent docs/absent.md']);
+});
+
+test('R32.9 F1: nom efímer que era fitxer versionat i directori amb fills versionats absents no es perdonen', t => {
+  const { root, cas, escriu } = fixture(t);
+  cas('sdp-efimers', 'Cos.', { llig: ['.sdp-paperera', '.immunitari'] });
+  escriu('.sdp-paperera', 'fitxer versionat'); escriu('.immunitari/estat.json', '{}'); iniciaGit(root);
+  fs.unlinkSync(path.join(root, '.sdp-paperera')); fs.rmSync(path.join(root, '.immunitari'), { recursive: true });
+  assert.deepEqual(detalls(audita(root), 'sdp-efimers'), ['F1 contracte.llig: absent .immunitari', 'F1 contracte.llig: absent .sdp-paperera']);
+  const before = process.env.GIT_INDEX_FILE;
+  try {
+    process.env.GIT_INDEX_FILE = path.join(root, 'index-alié');
+    assert.deepEqual(detalls(audita(root), 'sdp-efimers'), ['F1 contracte.llig: absent .immunitari', 'F1 contracte.llig: absent .sdp-paperera']);
+  } finally { if (before === undefined) delete process.env.GIT_INDEX_FILE; else process.env.GIT_INDEX_FILE = before; }
+});
+
+test('R32.9 F1: error Git o arrel sense Git no acrediten absència efímera', t => {
+  const { root, cas } = fixture(t);
+  cas('sdp-efimers', 'Cos.', { llig: ['.sdp-paperera'] });
+  assert.deepEqual(detalls(audita(root), 'sdp-efimers'), ['F1 contracte.llig: absent .sdp-paperera']);
+  iniciaGit(root);
+  const before = process.env.PATH;
+  try { process.env.PATH = ''; assert.deepEqual(detalls(audita(root), 'sdp-efimers'), ['F1 contracte.llig: absent .sdp-paperera']); }
+  finally { if (before === undefined) delete process.env.PATH; else process.env.PATH = before; }
 });
 
 test('F2: motor absent i script absent (també dins d\'un bloc de codi) caen; el corregit passa', (t) => {
@@ -366,7 +410,7 @@ test('un deute mal escrit no eximix res: empremta incoherent o regla desconeguda
   assert.match(sortida.text(), /empremta incoherent/);
 });
 
-test('no executa cap ordre de les skills: ni el motor ni l\'script deixen rastre, i el mòdul no importa child_process', (t) => {
+test('no executa cap ordre de les skills: només dues lectures Git literals poden usar child_process', (t) => {
   const { root, escriu, cas } = fixture(t, { scripts: { porta: 'node tooling/gates/porta.mjs', marca: 'node tooling/gates/marca.mjs npm' } });
   escriu('tooling/gates/marca.mjs', "import fs from 'node:fs';\nfs.writeFileSync(new URL('../../MARCA-' + (process.argv[2] || 'node'), import.meta.url), 'executat');\n");
   cas('sdp-marca', 'Executa `node tooling/gates/marca.mjs` i `npm run marca`.\n\n```sh\nnode tooling/gates/marca.mjs\nnpm run marca\n```');
@@ -376,7 +420,7 @@ test('no executa cap ordre de les skills: ni el motor ni l\'script deixen rastre
   assert.deepEqual(detalls(r, 'sdp-marca'), []);
   assert.equal(fs.existsSync(path.join(root, 'MARCA-node')), false, 'el motor no s\'ha d\'executar');
   assert.equal(fs.existsSync(path.join(root, 'MARCA-npm')), false, 'l\'script no s\'ha d\'executar');
-  // El mòdul i les seues importacions locals (transitives) no carreguen child_process.
+  // Només la frontera d'índex de F1 pot llegir Git; cap motor/script de skill.
   const vistos = new Set();
   const pendents = [MODUL];
   while (pendents.length) {
@@ -384,7 +428,12 @@ test('no executa cap ordre de les skills: ni el motor ni l\'script deixen rastre
     if (vistos.has(f)) continue;
     vistos.add(f);
     const font = fs.readFileSync(f, 'utf8');
-    assert.doesNotMatch(font, /(?:from\s+|import\(\s*|require\(\s*)['"](?:node:)?child_process['"]/, `${path.relative(ROOT, f)} importa child_process`);
+    if (f === MODUL) {
+      assert.match(font, /import \{ execFileSync \} from 'node:child_process'/);
+      assert.deepEqual([...font.matchAll(/execFileSync\(([^,\n]+)/g)].map(m => m[1]), ["'git'", "'git'"]);
+      assert.match(font, /'rev-parse', '--show-toplevel'/); assert.match(font, /'ls-files', '--cached', '-z'/);
+      assert.doesNotMatch(font, /\bshell\s*:/);
+    } else assert.doesNotMatch(font, /(?:from\s+|import\(\s*|require\(\s*)['"](?:node:)?child_process['"]/, `${path.relative(ROOT, f)} importa child_process`);
     for (const m of font.matchAll(/\bfrom\s+'(\.{1,2}\/[^']+)'/g)) pendents.push(path.resolve(path.dirname(f), m[1]));
   }
   assert.ok(vistos.size >= 4, 'fronteres-skills, cataleg_skills, arrel i frontmatter');
@@ -519,14 +568,15 @@ test('F2: a la prosa i a les capçaleres un # no amaga el motor; un comentari # 
   assert.deepEqual(comentari.motors, ['tooling/gates/porta.mjs']);
 });
 
-test('arbre real (C): cens R32.4 de 20 skills procediment_amb_motor i 23 procediment (argv Node complet) sense scripts buits', () => {
+test('arbre real (C): cens R32.7 de 21 skills procediment_amb_motor i 23 procediment (argv Node complet) sense scripts buits', () => {
   const arrel = arrelSegura();
   const r = auditaSkills(arrel);
   const ambMotor = r.skills.filter((s) => s.classe === 'procediment_amb_motor').map((s) => s.id);
   const cognitives = r.skills.filter((s) => s.classe === 'procediment').map((s) => s.id);
-  assert.equal(ambMotor.length, 20);
+  assert.equal(ambMotor.length, 21);
   assert.equal(cognitives.length, 23);
   assert.ok(ambMotor.includes('wiki-propagar-veritat'));
+  assert.ok(ambMotor.includes('core-sentinella-blindatge'));
 });
 
 test('arbre real (D): els motors executables declarats són representables en l’esquema documental canònic', () => {

@@ -591,13 +591,14 @@ export default function OnboardingSection() {
      els passos (formulari i recuperació) el reben com a `t`. La reserva escrita
      al codi és el valor valencià del diccionari. «Online-First» no és valencià
      i es queda; l'accés pilot (només en desenvolupament) tampoc no es traduïx. */
-  const capcalera = esNatiu
-    ? { showLogos: true }
-    : {
-      lead: tr('section.login.benvinguda.lead', "Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses."),
-      labels: ['Online-First', tr('section.login.benvinguda.perfilPrivat', 'Perfil privat'), tr('section.login.benvinguda.rgpdSegur', 'RGPD Segur')],
-      showLogos: true
-    };
+  /* Fase D (261020, revisió) + R32.8 (P0-125c, ordre del Mestre del 17-11-2026) ·
+     Jerarquia omnicanal unificada (Web, App nativa iOS/Android i WordPress): el
+     botó oficial de marca Google (o Apple/Google natiu) ha d'aparéixer SEMPRE
+     visible en el primer pantallàs mòbil (360px) sense paràgrafs llargs ni tires
+     d'etiquetes a sobre que l'empenyen avall. L'entradeta i l'avís RGPD viuen al
+     bloc `benvinguda` davall del formulari. */
+  const capcalera = { showLogos: true };
+  const leadBenvinguda = tr('section.login.benvinguda.lead', "Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses.");
   const titolPagina = tr('section.login.benvinguda.titol', 'Benvinguda al Mas Electrònic');
   const accesIdioma = (
     <Accions>
@@ -648,10 +649,27 @@ export default function OnboardingSection() {
     <div className="onboarding-benvinguda">
       <h3>{tr('section.login.benvinguda.beta', 'Benvinguda a la Beta de Sóc de Poble')}</h3>
       <p className="onboarding-card__intro onboarding-card__intro--espaiada">
+        {leadBenvinguda}
+      </p>
+      <p className="onboarding-card__intro onboarding-card__intro--espaiada">
         {abansSegur}<strong>{tr('section.login.benvinguda.segur', 'totalment segur')}</strong>{despresSegur}
       </p>
     </div>
   );
+  const accesPilotDev = potPassarAProves ? (
+    <Alerta
+      to="info"
+      viva={false}
+      titol="Accés pilot de desenvolupament · només en aquest ordinador"
+      accions={(
+        <Boto varietat="secundari" disabled={busyStep !== null} onClick={passaAProvesIEntra}>
+          Entra com a {PERSONA_PILOT.nom}
+        </Boto>
+      )}
+    >
+      Per a provar l’app per dins sense contrasenya, entra com a {PERSONA_PILOT.nom}, la persona pilot, amb les seues organitzacions. La pàgina es recarrega en mode de proves (dades de mostra): no passa pel servidor de Sóc de Poble ni dona cap permís real. Per a tornar al compte de veres, ix de la sessió i entra ací amb Google o amb el correu. Només apareix en desenvolupament.
+    </Alerta>
+  ) : null;
 
   /* Gauntlet 261030 (cicle 2, traduir-correu-a-registre; decisió 7) · L'alta
      mostra el correu de la persona («Hem enviat l'enllaç de confirmació a…»):
@@ -663,11 +681,9 @@ export default function OnboardingSection() {
       chrome="system"
       traduccio={false}
     >
-      <div className="content-wrapper">
+      <div className="content-wrapper onboarding-vista">
         {activeStep === 0 && (
           <>
-            {esNatiu ? null : benvinguda}
-
             {servidorCaigut && !simulaLocal ? (
               <Alerta
                 to="avis"
@@ -678,7 +694,7 @@ export default function OnboardingSection() {
                   ) : null}
                 </>}
               >
-                {tr('section.login.servidor.caigut', 'El servidor de poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.')}
+                {tr('section.login.servidor.caigut', 'El servidor de Sóc de Poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.')}
               </Alerta>
             ) : null}
 
@@ -687,7 +703,7 @@ export default function OnboardingSection() {
                 to="avis"
                 accions={<Boto varietat="secundari" carregant={sondant} onClick={decidixEntrada}>{tr('section.login.servidor.connecta', 'Connectar amb el servidor')}</Boto>}
               >
-                {tr('section.login.servidor.suspesa', 'Has tornat al mode de proves: pots explorar l’app amb dades de mostra. Per a crear el compte o entrar, connecta amb el servidor de poble.')}
+                {tr('section.login.servidor.suspesa', 'Has tornat al mode de proves: pots explorar l’app amb dades de mostra. Per a crear el compte o entrar, connecta amb el servidor de Sóc de Poble.')}
               </Alerta>
             ) : null}
 
@@ -706,24 +722,7 @@ export default function OnboardingSection() {
                   </Boto>
                 )}
               >
-                Per a provar l’app per dins sense el servidor del poble, pots entrar com a {PERSONA_PILOT.nom}, la persona pilot de les dades de mostra. És una sessió de prova: només viu en esta pestanya d’aquest ordinador, no passa pel servidor i no dona cap permís real. Només apareix en desenvolupament.
-              </Alerta>
-            ) : null}
-
-            {/* Encàrrec 261018_1220 · En desenvolupament i en remot: l'accés
-                pilot d'un sol clic (passa al mode de proves i hi entra). */}
-            {potPassarAProves ? (
-              <Alerta
-                to="info"
-                viva={false}
-                titol="Accés pilot de desenvolupament · només en aquest ordinador"
-                accions={(
-                  <Boto varietat="secundari" disabled={busyStep !== null} onClick={passaAProvesIEntra}>
-                    Entra com a {PERSONA_PILOT.nom}
-                  </Boto>
-                )}
-              >
-                Per a provar l’app per dins sense contrasenya, entra com a {PERSONA_PILOT.nom}, la persona pilot, amb les seues organitzacions. La pàgina es recarrega en mode de proves (dades de mostra): no passa pel servidor del poble ni dona cap permís real. Per a tornar al compte de veres, ix de la sessió i entra ací amb Google o amb el correu. Només apareix en desenvolupament.
+                Per a provar l’app per dins sense el servidor de Sóc de Poble, pots entrar com a {PERSONA_PILOT.nom}, la persona pilot de les dades de mostra. És una sessió de prova: només viu en esta pestanya d’aquest ordinador, no passa pel servidor i no dona cap permís real. Només apareix en desenvolupament.
               </Alerta>
             ) : null}
 
@@ -750,20 +749,30 @@ export default function OnboardingSection() {
               <div className="sp-card-body">
                 <h3>{tr('section.login.google.titol', 'Accés ràpid amb Google')}</h3>
                 {enMarcAlie ? (
-                  /* B · L'enllaç obri una pestanya nova (mai la finestra de dalt),
-                     sense opener ni referent. Si el marc no deixa obrir-ne,
-                     l'adreça es pot copiar. */
-                  <Alerta
-                    to="info"
-                    accions={adrecaFora ? (
-                      <a className="sdp-boto sdp-boto--secundari" href={adrecaFora} target="_blank" rel="noopener noreferrer">
-                        <span>{tr('section.login.google.pestanya', 'Obri en una pestanya nova')}</span>
-                      </a>
+                  /* B + R32.8 (P0-125c) · En WordPress o marc d'un altre origen, es
+                     mostra el MATEIX botó gran oficial de marca Google amb el
+                     LogotipGoogle («Continua amb Google») que obri netament
+                     adrecaFora en una pestanya nova segura (sense opener ni
+                     referent), acompanyat de l'avís honest i l'adreça copiable. */
+                  <>
+                    {adrecaFora ? (
+                      <div className="onboarding-card__action--ple">
+                        <a
+                          className="sdp-boto sdp-boto--ple sdp-boto--marca sdp-boto--google"
+                          href={adrecaFora}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <LogotipGoogle />
+                          <span>{tr('section.login.nativa.google', 'Continua amb Google')}</span>
+                        </a>
+                      </div>
                     ) : null}
-                  >
-                    <p><strong>{tr('section.login.google.marcAvis', 'Dins d’este marc no es pot entrar amb Google.')}</strong> {tr('section.login.google.marcText', 'Obri Sóc de Poble en una pestanya nova per a entrar.')}</p>
-                    {adrecaFora ? <p>{abansAdreca}<code>{adrecaFora}</code>{despresAdreca}</p> : null}
-                  </Alerta>
+                    <Alerta to="info">
+                      <p><strong>{tr('section.login.google.marcAvis', 'Dins d’este marc no es pot entrar amb Google.')}</strong> {tr('section.login.google.marcText', 'Obri Sóc de Poble en una pestanya nova per a entrar.')}</p>
+                      {adrecaFora ? <p>{abansAdreca}<code>{adrecaFora}</code>{despresAdreca}</p> : null}
+                    </Alerta>
+                  </>
                 ) : webviewSocial.esWebViewSocial ? (
                   <>
                     <Alerta to="avis" viva={false}>
@@ -890,10 +899,12 @@ export default function OnboardingSection() {
             onTornar={() => setConfirmationEmail('')}
             onRecupera={potRecuperar ? demanaRecuperacio : null}
             introEntrada={introEntradaNativa}
+            teAccesGoogle={!esNatiu || proveidorsNatius.includes('google')}
             t={tr}
           />
         ) : null}
-        {activeStep === 0 && esNatiu ? benvinguda : null}
+        {activeStep === 0 ? accesPilotDev : null}
+        {activeStep === 0 ? benvinguda : null}
         {accesIdioma}
       </div>
     </UniversalPage>

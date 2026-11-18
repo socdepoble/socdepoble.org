@@ -699,7 +699,7 @@ test('Revisió · amb el Bloc en error no queda «Obrint el teu Bloc…»: l’A
   expect(screen.queryByRole('button', { name: 'Obrint el teu Bloc…' })).toBeNull();
   const avis = screen.getByText('No s’ha pogut obrir el teu Bloc.', { selector: '.sdp-alerta__titol' }).closest('.sdp-alerta');
   expect(avis.getAttribute('role')).toBe('alert');
-  expect(avis.textContent).toContain('El servidor de poble ha tornat un error. Torna-ho a provar més tard.');
+  expect(avis.textContent).toContain('El servidor de Sóc de Poble ha tornat un error. Torna-ho a provar més tard.');
   expect(avis.textContent).not.toMatch(/Supabase|relation/);
   // El botó de connectar no fa res mentre el Bloc no s'ha obert.
   const connecta = screen.getByRole('button', { name: CONNECTA });
@@ -715,9 +715,9 @@ test('Revisió · el text del Bloc fallat el tria el codi: servidor inabastable,
   mocks.canCreate = false;
   mocks.statusBloc = 'error';
   const casos = [
-    [{ codi: 'backend-inabastable' }, 'El servidor de poble no respon ara mateix.'],
-    [{ status: 0 }, 'El servidor de poble no respon ara mateix.'],
-    [{ status: 403 }, 'El servidor de poble ha tornat un error.'],
+    [{ codi: 'backend-inabastable' }, 'El servidor de Sóc de Poble no respon ara mateix.'],
+    [{ status: 0 }, 'El servidor de Sóc de Poble no respon ara mateix.'],
+    [{ status: 403 }, 'El servidor de Sóc de Poble ha tornat un error.'],
     [{}, 'Revisa la connexió i torna-ho a provar.']
   ];
   for (const [camps, text] of casos) {
@@ -736,7 +736,7 @@ test('Revisió · el contingut de fora amb el Bloc en error també ho diu i es p
   render(<ConnectarSection />);
   expect(screen.queryByRole('button', { name: 'Obrint el teu Bloc…' })).toBeNull();
   expect(screen.getByText('No s’ha pogut obrir el teu Bloc.', { selector: '.sdp-alerta__titol' })).toBeTruthy();
-  expect(screen.getByRole('alert').textContent).toContain('El servidor de poble no respon ara mateix.');
+  expect(screen.getByRole('alert').textContent).toContain('El servidor de Sóc de Poble no respon ara mateix.');
   expect(screen.getByRole('button', { name: CONNECTA }).disabled).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Torna-ho a provar' }));
   expect(mocks.refresh).toHaveBeenCalledTimes(1);

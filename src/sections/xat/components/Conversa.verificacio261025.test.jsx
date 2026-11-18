@@ -452,7 +452,9 @@ describe('D5 · l’avís del fil diu què ha fallat, i el reintent diu quan ja 
     const boto = screen.getByRole('button', { name: 'Torna-ho a provar' });
     boto.focus();
     vista.repinta({ llegintFil: true });
-    const ocupat = within(screen.getByText(textLectura).parentElement).getByRole('button');
+    /* Onada R32.8 · L'avís porta ara també la ✕ «Tanca l’avís»: el botó del
+       reintent es busca pel seu nom, i continua sent el mateix element. */
+    const ocupat = within(screen.getByText(textLectura).parentElement).getByRole('button', { name: 'Actualitzant…' });
     expect(ocupat).toBe(boto);
     expect(document.activeElement).toBe(boto);
     expect(ocupat.textContent).toBe('Actualitzant…');

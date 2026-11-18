@@ -57,7 +57,7 @@ const peuDelMenu = (boto = mes()) => {
 };
 const tria = async () => {
   await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
-  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
+  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
 };
 /* Amb micròfon (jsdom no en porta): l'API i el gravador, de mentides. */
 const ambMicrofon = () => { vi.stubGlobal('navigator', { ...globalThis.navigator, mediaDevices: { getUserMedia: vi.fn() } }); };
@@ -165,7 +165,7 @@ test('mentre descarta un pendent no permet iniciar una altra preparació', async
   expect(screen.getByRole('button', { name: 'Grava àudio' }).getAttribute('aria-disabled')).toBe('true');
   fireEvent.click(screen.getByRole('button', { name: 'Grava àudio' }));
   expect(m.gravaVeu).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['foto'], { type: 'image/jpeg' })] } });
+  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [new Blob(['foto'], { type: 'image/jpeg' })] } });
   expect(m.preparaAdjunt).not.toHaveBeenCalled();
   await act(async () => { tard.resolve(true); });
   await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
@@ -190,16 +190,16 @@ test('un codi SDP del servidor es diu en la llengua de qui envia', async () => {
   render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} t={t} />);
   await waitFor(() => expect(plus().hasAttribute('aria-disabled')).toBe(false));
   expect(peuDelMenu(plus())[0]).toBe('0,0 de 20 MB del chat');
-  fireEvent.change(screen.getByLabelText('Elige una foto o un vídeo de hasta 10 segundos'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
+  fireEvent.change(screen.getByLabelText('Elige una foto o un vídeo de hasta 60 segundos'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   fireEvent.click(await screen.findByRole('button', { name: 'Envía el archivo' }));
   expect((await screen.findByRole('alert')).textContent).toBe('En esta conversación no puedes enviar archivos.');
   expect(screen.queryByText(ERRORS_ADJUNT_XAT['SDP-XAT-011'])).toBeNull();
 });
-test('la quota esgotada diu literalment el text del Mestre', async () => {
+test('la quota esgotada explica el límit sense atribuir-lo a diners o a una xifra de client', async () => {
   servei.quotaXat.mockResolvedValue({ usats: 19_999_999, limit: 20_000_000 });
   render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   await tria();
-  expect((await screen.findByRole('alert')).textContent).toBe("Espera't, que no tenim més diners per a pagar el servidor... ja et direm quan en pots pujar més!");
+  expect((await screen.findByRole('alert')).textContent).toBe('Has arribat al límit d’espai dels adjunts del xat. Revisa els fitxers pendents o prova-ho més endavant.');
 });
 /* MEDIA-6 · El focus segueix el pas: mai no cau al principi de la pàgina. */
 test('triar una foto porta el focus a Envia i enviar-la el torna al +', async () => {
@@ -209,7 +209,7 @@ test('triar una foto porta el focus a Envia i enviar-la el torna al +', async ()
   render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   const foto = await screen.findByRole('button', { name: 'Adjunta' });
   foto.focus();
-  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
+  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel·la' })));
   expect(screen.getByRole('status').textContent).toBe('Preparant el fitxer…');
   await act(async () => { preparant.resolve(adjunt()); });
@@ -319,7 +319,7 @@ test('a l’encastat, acabar de preparar la foto no pren el focus a la pàgina a
   render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />, { container: e.arrel });
   const dins = within(e.arrel);
   await waitFor(() => expect(dins.getByRole('button', { name: 'Adjunta' }).hasAttribute('aria-disabled')).toBe(false));
-  fireEvent.change(dins.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
+  fireEvent.change(dins.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   e.amfitrio.focus();
   await act(async () => { preparant.resolve(adjunt()); });
   await dins.findByRole('button', { name: 'Envia el fitxer' });
@@ -336,7 +336,7 @@ test('a l’encastat, el focus perdut dins del panell continua passant al pas no
   const foto = await dins.findByRole('button', { name: 'Adjunta' });
   await waitFor(() => expect(foto.hasAttribute('aria-disabled')).toBe(false));
   foto.focus();
-  fireEvent.change(dins.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
+  fireEvent.change(dins.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   await waitFor(() => expect(e.shadow.activeElement).toBe(dins.getByRole('button', { name: 'Cancel·la' })));
   await act(async () => { preparant.resolve(adjunt()); });
   await waitFor(() => expect(e.shadow.activeElement).toBe(dins.getByRole('button', { name: 'Envia el fitxer' })));
@@ -512,7 +512,7 @@ test('el percentatge parla la llengua de qui envia', async () => {
   const tard = deferred(); const envia = vi.fn().mockReturnValue(tard.promise);
   render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} t={createTranslator('en')} locale="en-GB" />);
   await waitFor(() => expect(plus().hasAttribute('aria-disabled')).toBe(false));
-  fireEvent.change(screen.getByLabelText('Choose a photo or a video of up to 10 seconds'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
+  fireEvent.change(screen.getByLabelText('Choose a photo or a video up to 60 seconds long'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   fireEvent.click(await screen.findByRole('button', { name: 'Send the file' }));
   const barra = await screen.findByRole('progressbar', { name: 'Upload progress' });
   await act(async () => { envia.mock.calls[0][2].onProgres(0.05); });

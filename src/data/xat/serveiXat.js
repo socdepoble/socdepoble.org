@@ -1,4 +1,5 @@
 import { backendScope, normalizeBackendConfig } from '../../config/backendConfig.js';
+export { creaAccionsMissatge, projectaAccionsMissatges } from './accionsMissatge.js';
 import { getEfimer } from '../../config/storage.js';
 import {
   enviaMissatge as enviaMissatgePort,
@@ -489,7 +490,7 @@ function escoltaCanvisSessioPerDefecte(avisa) {
  *   · `comOrgId` / `actorOrgId`: l'actor que la crida espera; cal una font viva.
  */
 export function creaServeiXat({
-  enviaMissatge = enviaMissatgePort,
+  enviaMissatge = (...args) => enviaMissatgePort(...args),
   refreshSession = (...args) => refrescaSessioPort(...args),
   obteContextSessio = obteContextSessioPerDefecte,
   obteActorOrgId = null,

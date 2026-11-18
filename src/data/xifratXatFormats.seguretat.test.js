@@ -638,12 +638,12 @@ describe('cos · JSON canònic', () => {
   test('l’adjunt: classe, MIME de la seua classe, sostres en clar, durada, FK i h', () => {
     const a = foto.a;
     const veu = { ...a, c: 3, m: 'audio/webm', b: 3_000_000, d: 45000 };
-    const video = { ...a, c: 4, m: 'video/quicktime', b: 19_922_943, d: 10_000 };
+    const video = { ...a, c: 4, m: 'video/quicktime', b: 19_922_943, d: 60_000 };
     for (const bo of [veu, video]) expect(F.llegixCos(F.construeixCos({ a: bo })).a).toEqual(bo);
     const dolents = [
       [{ ...a, c: 1 }, 'a.c'], [{ ...a, c: '2' }, 'a.c'], [{ ...a, m: 'image/svg+xml' }, 'a.m'], [{ ...a, m: 'text/html' }, 'a.m'],
       [{ ...a, m: 'video/mp4' }, 'a.m'], [{ ...a, b: 2_000_001 }, 'a.b'], [{ ...a, b: 0 }, 'a.b'], [{ ...video, b: 19_922_944 }, 'a.b'],
-      [{ ...a, d: 0 }, 'a.d'], [{ ...veu, d: null }, 'a.d'], [{ ...video, d: 10_001 }, 'a.d'], [{ ...veu, d: 1.5 }, 'a.d'],
+      [{ ...a, d: 0 }, 'a.d'], [{ ...veu, d: null }, 'a.d'], [{ ...video, d: 60_001 }, 'a.d'], [{ ...veu, d: 1.5 }, 'a.d'],
       [{ ...veu, b: 3_000_001 }, 'a.b']
     ];
     for (const [dolent, camp] of dolents) expect(() => F.construeixCos({ a: dolent }), camp).toThrow(invalid('rang', { format: 'cos', camp }));

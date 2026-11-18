@@ -97,6 +97,17 @@ export const CAPACITATS = Object.freeze({
   /* R54 · Rebuts explícits dels altres i presència autoritzada amb TTL de servidor.
      Opcional i completa: cap canvi als 32 mètodes del nucli ni a la Frontissa. */
   xatRitme: Object.freeze(['loadRitmeXat', 'actualitzaPresenciaXat']),
+  /* P0-122 · Interaccions de missatges, opcionals i agrupades. Config és
+     sempre l'últim argument. La lectura torna {missatges, teMes, seguentId};
+     cada estat porta {missatgeId, filId, reaccions:[{emoji,total,meua}],
+     destacat, fixat, amagat}, sense identitats d'operadors d'entitat.
+     Els mutadors reben l'estat final desitjat, no un toggle cec repetible.
+     XAT_ACCIONS_SQL_ABSENT identifica només l'absència estructurada de les
+     RPC/taules esperades: el servei pot conservar un estat local identificat.
+     El port no fabrica cap confirmació ni absorbeix denegacions o errors. */
+  xatAccionsMissatge: Object.freeze([
+    'carregaAccionsMissatges', 'alternaReaccio', 'alternaDestacat', 'alternaFixat', 'eliminaPerAMi'
+  ]),
   carpetesNotes: Object.freeze(['creaCarpetaNotes']),
   /* R12: patch d'un element existent d'app_content; whole-row version CAS, superadmin+aal2 al servidor. */
   edicioEditorial: Object.freeze(['adminActualitzaPublicacioEditorial']),
@@ -193,7 +204,7 @@ export const CAPACITATS = Object.freeze({
   ]),
   /* Adjunts privats del xat; independents dels mitjans públics del perfil.
      quotaXat(config) → { usats, limit, pendents: [{id, bytes, mime}] } en bytes (reserves incloses).
-     publicaAdjuntXat(filId, {id, fitxer: Blob, tipus, duradaMs, text?, respostaA?}, config)
+     publicaAdjuntXat(filId, {id, fitxer: Blob, tipus, duradaMs, text?, respostaA?, ubicacio?: {lat,lng}}, config)
        → Missatge confirmat; id estable per reintentar sense duplicar quota.
        config.onProgres(fraccio 0..1) és opcional (XAT-03): els bytes ja pujats;
        no viatja a les RPC i qui no puja res de veres (seed, local) l'ignora.
@@ -856,8 +867,10 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada v1.2.6 (ordre del Mestre 17-11-2026) · Versió unificada 1.2.6 amb el build 11: integra R32.4 (Codex i Gemini)
    i és la primera que ja pot rebre l'avís automàtic des d'una App 1.2.5 (10) instal·lada.
    Onada v1.2.7 (ordre del Mestre 17-11-2026, tarda) · Versió unificada 1.2.7 amb el build 12: integra R32.5 i R32.6 i
-   P0-123 (avís d'un toc per a TestFlight, APK directe i PWA); els mòbils amb el build 11 o anterior l'instal·len a mà. */
-export const VERSIO_CLIENT_NATIU = 12;
+   P0-123 (avís d'un toc per a TestFlight, APK directe i PWA); els mòbils amb el build 11 o anterior l'instal·len a mà.
+   Onada v1.2.8 (ordre del Mestre 18-11-2026) · Versió unificada 1.2.8 amb el build 13: integra R32.7, R32.8 i R32.9
+   de Codex i Gemini (accions del xat, vídeo i ubicació, consola, Wiki al Mur i columnes plegades). */
+export const VERSIO_CLIENT_NATIU = 13;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

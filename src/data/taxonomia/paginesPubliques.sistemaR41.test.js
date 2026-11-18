@@ -86,9 +86,7 @@ const PAGES=[
  ['la-iaia-sabuda','patrimoni-cultura','Documentació'],
  // Onada R14 · /page/receptes, el receptari «Què dinem?».
  ['receptes','patrimoni-cultura','Patrimoni'],
- ['dispositius','tecnologia-lliure','Documentació'],
- // Onada R32.4 (lot_01 de Gemini) · /page/sistema-nervios: Sistema, tecnologia lliure i Node 0.
- ['sistema-nervios','tecnologia-lliure','Node 0']
+ ['dispositius','tecnologia-lliure','Documentació']
 ];
 // P6 · les huit pàgines d'acció (publicar i saber-ne més del Panell): cap etiqueta, en cap llengua.
 const ACTION_PAGES=['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge'];
@@ -135,9 +133,10 @@ const sentinels=()=>({
 });
 
 describe('R41 independent public-page contract',()=>{
- it('the fixture covers exactly the 35 public keys (27 classified, with R14 receptes, P0-64 La IAIA Sabuda and R32.4 sistema-nervios, + 8 P6 action pages) and the 6/49 normative vocabularies',()=>{
-  expect(PAGES).toHaveLength(27);expect(ACTION_PAGES).toHaveLength(8);
-  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(35);
+ it('R32.9: 34 public keys (26 classified + 8 action pages); the merged chapter has no fossil page entry',()=>{
+  expect(PAGES).toHaveLength(26);expect(ACTION_PAGES).toHaveLength(8);
+  expect(PAGE_COPY).not.toHaveProperty('sistema-nervios');
+  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(34);
   expect(Object.keys(PAGE_COPY).sort()).toEqual(keys.sort());
   expect(Object.keys(CATEGORIES)).toHaveLength(6);expect(new Set(TAGS_49).size).toBe(49);
  });

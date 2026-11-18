@@ -9,6 +9,7 @@ import { ambDescartats, creaColumnesOpcionals } from './columnesOpcionals.js';
 import { coaccionaAmbit, esFitxaDAmbit } from '../../utils/publicacioUniversal.js';
 import { nomDeCarpetaValid, carpetaDeFila } from '../carpetesNotes.js';
 import { CODI_ESQUEMA_ABSENT } from '../errorsBackend.js';
+import { capturaVisibilitatMur, visibilitatMurLlegida } from '../visibilitatMur.js';
 
 async function carpetesPrivades(config, ownerUserId) {
   const { tenantId } = getResolvedConfig(config);
@@ -68,7 +69,16 @@ export async function creaCarpetaNotes(input, config = {}) {
    migració, la data es guarda al dispositiu i publishNote l'aplica igual.
    IDEA-61 (T0, prompt 261102_1532) · `fitxa`, la fitxa d'àmbit del Flux
    Universal de Publicació (jsonb, migració 2611021800). Mateixa quarantena. */
-const opcionalsNotes = creaColumnesOpcionals('notes', { icon: 'icon', publishDate: 'publish_date', fitxa: 'fitxa', logoImageDark: 'logo_image_dark' });
+const opcionalsNotes = creaColumnesOpcionals('notes', { icon: 'icon', publishDate: 'publish_date', fitxa: 'fitxa', logoImageDark: 'logo_image_dark', mostrarAlMur: 'mostrar_al_mur' });
+
+const visibilitatDeFila = row => row.mostrar_al_mur === undefined ? {} : (visibilitatMurLlegida({ mostrarAlMur: row.mostrar_al_mur }) || {});
+function confirmaVisibilitat(dto, input, descartats) {
+  const camps = ['mostrarAlMur', 'ocultarDelMur'].filter(camp => input[camp] !== undefined);
+  const desitjada = capturaVisibilitatMur(input);
+  const pendents = (descartats || []).filter(camp => camp !== 'mostrarAlMur');
+  if (camps.length && (descartats?.includes('mostrarAlMur') || dto.mostrarAlMur !== desitjada.mostrarAlMur)) pendents.push(...camps);
+  return ambDescartats(dto, [...new Set(pendents)]);
+}
 
 /* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit d'una nota, un sol
    objecte { ambit, estat, dades } coaccionat pel contracte en escriure i en
@@ -105,6 +115,7 @@ const nota = (row) => ({ id: row.id, folderId: row.folder_id, title: row.title, 
   ...(row.publish_date !== undefined ? { publishDate: dataIsoONull(row.publish_date) } : {}),
   /* IDEA-61 · la fitxa d'àmbit, amb el mateix criteri (només si la fila la porta). */
   ...(row.fitxa !== undefined ? { fitxa: fitxaDeNota(row.fitxa) } : {}),
+  ...visibilitatDeFila(row),
   createdAt: row.created_at, updatedAt: row.updated_at });
 
 // Columnes de targeta explícites: el cos ric només viatja en resoldre un ID.
@@ -234,6 +245,7 @@ export async function loadNotes(ownerUserId = getDefaultUserId(), config = {}) {
 }
 
 export async function createNote(input, config = {}) {
+  const visibilitat = capturaVisibilitatMur(input);
   if (getResolvedConfig(config).runtimeDataMode !== 'remote') {
     const { localNotes } = await import('../localNotes.js');
     return localNotes.create(input, config);
@@ -256,15 +268,17 @@ export async function createNote(input, config = {}) {
     ...(input.publishDate !== undefined ? { publish_date: dataIsoONull(input.publishDate) } : {}),
     /* IDEA-61 · la fitxa d'àmbit, si ve: neta pel contracte o null. */
     ...(input.fitxa !== undefined ? { fitxa: fitxaDeNota(input.fitxa) } : {}),
-    ...(input.logoImageDark !== undefined ? { logo_image_dark: input.logoImageDark } : {}) };
+    ...(input.logoImageDark !== undefined ? { logo_image_dark: input.logoImageDark } : {}),
+    ...(visibilitat.mostrarAlMur === undefined ? {} : { mostrar_al_mur: visibilitat.mostrarAlMur }) };
   const { resultat: rows, descartats } = await opcionalsNotes.envia(body, (cos) => request('/rest/v1/notes', config, {
     method: 'POST', headers: { Prefer: 'return=representation' }, body: cos
   }));
   if (!rows?.[0]) throw new ErrorSupabase('Error al crear la nota.', 500);
-  return ambDescartats(nota(rows[0]), descartats);
+  return confirmaVisibilitat(nota(rows[0]), input, descartats);
 }
 
 export async function updateNote(id, updates, expectedRevision, config = {}) {
+  const visibilitat = capturaVisibilitatMur(updates);
   if (getResolvedConfig(config).runtimeDataMode !== 'remote') {
     const { localNotes } = await import('../localNotes.js');
     return localNotes.update(id, updates, expectedRevision, config);
@@ -314,7 +328,8 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
     /* T40 · la data de publicació (columna opcional, amb quarantena). */
     publish_date: updates.publishDate === undefined ? undefined : dataIsoONull(updates.publishDate),
     /* IDEA-61 · la fitxa d'àmbit (columna opcional, amb quarantena). */
-    fitxa: updates.fitxa === undefined ? undefined : fitxaDeNota(updates.fitxa) };
+    fitxa: updates.fitxa === undefined ? undefined : fitxaDeNota(updates.fitxa),
+    mostrar_al_mur: visibilitat.mostrarAlMur };
   for (const key of Object.keys(payload)) if (payload[key] === undefined) delete payload[key];
   const revision = expectedRevision != null ? `&revision=eq.${expectedRevision}` : '';
   const url = `/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}${revision}`;
@@ -325,7 +340,7 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
     { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: cos }));
   sessionGuard();
   if (!rows?.[0]) await senseFila(id, tenantId, config);
-  return ambDescartats(nota(rows[0]), descartats);
+  return confirmaVisibilitat(nota(rows[0]), updates, descartats);
 }
 
 /** F10: una escriptura amb revision=eq.N que no toca cap fila és una nota que

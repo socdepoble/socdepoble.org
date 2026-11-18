@@ -176,9 +176,18 @@ test('B2-01 · les cinc llengües: el text de la clau i el nom accessible sense 
 test('B2-01 · sense la marca, la pròpia, l’esborrada o un missatge del servidor: cap enllaç; en la selecció, cap enllaç interactiu', async () => {
   const resposta = await respostaSimulada();
   const senseMarca = Object.fromEntries(Object.entries(resposta).filter(([clau]) => clau !== 'accioRegistre'));
-  for (const missatge of [senseMarca, { ...resposta, sender: 'me' }, { ...resposta, esborrat: true }]) {
-    pintaBombolla(missatge);
-    expect(screen.queryByRole('link')).toBeNull();
+  /* Onada R32.7 (kit Gemini, espill d'avatars) · La bombolla pròpia porta ara
+     el seu avatar d'espill, un enllaç al perfil propi («Obri el meu perfil»).
+     La invariant no canvia: cap enllaç a /registre ni cap altre enllaç que no
+     siga eixe avatar. */
+  for (const [missatge, enllacosEsperats] of [
+    [senseMarca, []],
+    [{ ...resposta, sender: 'me' }, [['Obri el meu perfil', '/el-meu-perfil']]],
+    [{ ...resposta, esborrat: true }, []]
+  ]) {
+    const { container } = pintaBombolla(missatge);
+    expect(screen.queryAllByRole('link').map((a) => [a.getAttribute('aria-label') ?? a.textContent, a.getAttribute('href')])).toEqual(enllacosEsperats);
+    expect(container.querySelector('a[href="/registre"]')).toBeNull();
     expect(screen.queryByText(/Entra o registra/)).toBeNull();
     cleanup();
   }

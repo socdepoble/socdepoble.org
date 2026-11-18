@@ -263,10 +263,10 @@ describe('els errors del servidor, pel codi', () => {
   test('el text de cada codi nou és la frase en valencià', async () => {
     ambRutes({ [TOKEN]: () => { throw errorDeGoTrue(400, { error_code: 'provider_disabled' }); } });
     await expect(entraAmbTokenDeProveidor('apple', apple(), CONFIG)).rejects
-      .toThrow('Esta manera d’entrar encara no està activada al servidor del poble. Entra amb el correu.');
+      .toThrow('Esta manera d’entrar encara no està activada al servidor de Sóc de Poble. Entra amb el correu.');
     ambRutes({ [TOKEN]: () => { throw errorDeGoTrue(400, { error: 'invalid request', error_description: 'Bad ID token' }); } });
     await expect(entraAmbTokenDeProveidor('apple', apple(), CONFIG)).rejects
-      .toThrow('El servidor del poble no ha acceptat la identificació del teu compte. Torna-ho a provar o entra amb el correu.');
+      .toThrow('El servidor de Sóc de Poble no ha acceptat la identificació del teu compte. Torna-ho a provar o entra amb el correu.');
   });
 });
 

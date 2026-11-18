@@ -88,7 +88,7 @@ function ambSufixDeWiki(titol) {
  * SOCIAL_IMAGES (`imatges`) o cap; og:type 'article'. El canonical no va
  * ací: és el de la clau de la ruta (useSEO · clauSocialDeRuta), ?item=<id>.
  */
-export function metadadesDeDocumentPublic(document, { imatges = SOCIAL_IMAGES } = {}) {
+export function metadadesDeDocumentPublic(document, { imatges = SOCIAL_IMAGES, ...opcions } = {}) {
   const editorial = extreuEditorial(document.content || '');
   const atributs = document.attributes || {};
   const h2 = !editorial.entradilla ? editorial.cos?.trimStart().match(/^##[ \t]+([^\n]+)/)?.[1] : null;
@@ -97,10 +97,16 @@ export function metadadesDeDocumentPublic(document, { imatges = SOCIAL_IMAGES } 
   const titol = propi || ambSufixDeWiki(huma);
   const descripcio = h2 || atributs.description || editorial.entradilla
     || `Document públic de la Wiki de Poble: ${huma}.`;
+  const propia = document.image ?? atributs.image;
+  const alt = document.imageAlt ?? atributs.imageAlt ?? huma;
+  // Mateix selector segur que les pàgines: la portada explícita mana sobre
+  // el mapa legacy. Una referència bloquejada no cau a una altra fotografia.
+  const social = propia === undefined ? null : metadadesDePagina({ title: huma, image: propia, imageAlt: alt }, opcions);
   return {
     title: textPla(titol, LIMIT_TITOL),
     description: textPla(descripcio, LIMIT_DESCRIPCIO),
-    image: imatges && Object.hasOwn(imatges, document.id) ? imatges[document.id] : null,
+    image: social ? social.image : imatges && Object.hasOwn(imatges, document.id) ? imatges[document.id] : null,
+    ...(social ? { imatge: social.imatge } : {}),
     ogType: 'article',
     index: true
   };

@@ -17,7 +17,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { escriuGenerat } from '../scripts/canonada.mjs';
-import { PUBLIC_WIKI_DIRS, publicWikiFiles, readPublicWikiFile, publicMetadata } from './lib/publication-policy.mjs';
+import { PUBLIC_WIKI_DIRS, publicWikiFiles, readPublicWikiFile, publicMetadata, resolveWikiEditorial, confinedFile } from './lib/publication-policy.mjs';
 export { PUBLIC_WIKI_DIRS };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -60,7 +60,7 @@ function resolIdentitat(targetOrPath) {
 
 // Convertix WikiLinks actius, conservant codi, comentaris i escapaments literals.
 // La màscara compartida conserva els offsets: mai es reconstruïx el document.
-function processWikiLinks(text) {
+function processWikiLinks(text, root) {
   const prose = markdownProse(text);
   return text.replace(/\[\[(.*?)\]\]/g, (match, inner, offset) => {
     if (prose.slice(offset, offset + match.length) !== match) return match;
@@ -72,6 +72,13 @@ function processWikiLinks(text) {
     // traiem el # fragment per l'ID de l'item si hi ha
     const rawTarget = target.split('#')[0].trim();
     const id = resolIdentitat(rawTarget);
+    // Les skills viuen en governança privada, no en el llibre públic. El
+    // graf públic ja té una fitxa seleccionable per a cada SKILL físic: no
+    // publiquem ni llegim el seu cos per a derivar este destí existent.
+    const skill = /^([a-z][a-z0-9-]{0,79})_SKILL$/.exec(id);
+    if (skill && confinedFile(root, path.join(root, CAMINS.agents, 'skills', skill[1], 'SKILL.md'))) {
+      return `[${label.trim()}](/consola/explorador?peca=${encodeURIComponent(`skill:${skill[1]}`)})`;
+    }
     return `[${label.trim()}](?item=${encodeURIComponent(id)})`;
   });
 }
@@ -139,6 +146,10 @@ export function construeixManifest(root = ROOT_PER_DEFECTE) {
       continue;
     }
 
+    let resolved;
+    try { resolved = resolveWikiEditorial(attr, { root, file, rawFrontmatter: parsed.rawFrontmatter }); }
+    catch (cause) { throw new TypeError(`${path.relative(root, file)}: ${cause.message}`, { cause }); }
+
     const categoryId = ensureCategory(categoriesMap, path.dirname(path.relative(wikiRoot, file)));
 
     const baseName = path.basename(file, '.md');
@@ -152,8 +163,9 @@ export function construeixManifest(root = ROOT_PER_DEFECTE) {
       subtitle,
       categoryId,
       tags: attr.tags || [],
-      attributes: attr,
-      content: processWikiLinks(parsed.body)
+      ...resolved.editorial,
+      attributes: resolved.attributes,
+      content: processWikiLinks(parsed.body, root)
     });
   }
 

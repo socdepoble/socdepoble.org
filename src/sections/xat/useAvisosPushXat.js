@@ -88,7 +88,7 @@ export const TEXTOS_AVISOS = Object.freeze({
   ios: ['section.xat.ajustos.avisos.ios', 'A l’iPhone i a l’iPad, afig Sóc de Poble a la pantalla d’inici i obri-la des d’allí per a rebre avisos.'],
   error: ['section.xat.ajustos.avisos.error', 'No s’han pogut activar els avisos. Torna-ho a provar d’ací a una estona.'],
   senseWorker: ['section.xat.ajustos.avisos.senseWorker', 'Torna a carregar la pàgina i prova-ho de nou.'],
-  noDisponible: ['section.xat.ajustos.avisos.noDisponible', 'El servidor d’este poble encara no envia avisos. Torna-ho a provar més avant.'],
+  noDisponible: ['section.xat.ajustos.avisos.noDisponible', 'El servidor de Sóc de Poble encara no envia avisos. Torna-ho a provar més avant.'],
   eixida: ['section.xat.ajustos.avisos.eixida', 'Quan tanques la sessió, este dispositiu deixa de rebre avisos.']
 });
 

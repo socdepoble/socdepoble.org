@@ -38,8 +38,7 @@
     "publicar_mapa",
     "anatomia-rural",
     "versions",
-    "anima",
-    "sistema-nervios"
+    "anima"
   ],
   "lexicProhibit": [
     {
@@ -153,8 +152,7 @@
         "_wiki_de_poble/01_ser/agents_equip_ia.md",
         "_wiki_de_poble/02_saber/00_full_de_ruta.md",
         "_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md",
-        "_wiki_de_poble/02_saber/sistema_nervios_skills_i_repositoris.md",
-        "src/sections/text/pageContent.sistemaNervios.js"
+        "_wiki_de_poble/02_saber/sistema_nervios_skills_i_repositoris.md"
       ]
     },
     {

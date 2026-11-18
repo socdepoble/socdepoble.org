@@ -50,14 +50,14 @@ const peu = () => screen.getByRole('textbox', { name: 'Text del fitxer (opcional
 const canvia = (text) => fireEvent.change(principal(), { target: { value: text } });
 const tria = async () => {
   await waitFor(() => expect(screen.getByRole('button', { name: 'Adjunta' }).hasAttribute('aria-disabled')).toBe(false));
-  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [FOTO] } });
+  fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 60 segons'), { target: { files: [FOTO] } });
   await screen.findByRole('button', { name: 'Envia el fitxer' });
 };
 const ack = (_fil, adjunt) => Promise.resolve([{ id: adjunt.id, text: adjunt.text ?? null }]);
 
 test('el selector conserva els formats i vídeos anteriors i admet fotos mòbils per MIME i extensió', async () => {
   render(<Barra onEnvia={vi.fn(ack)} />);
-  const selector = await screen.findByLabelText('Tria una foto o un vídeo de fins a 10 segons');
+  const selector = await screen.findByLabelText('Tria una foto o un vídeo de fins a 60 segons');
   expect(selector.accept.split(',')).toEqual(expect.arrayContaining([
     'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/heic', 'image/heif',
     '.heic', '.heif', '.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', 'video/mp4', 'video/webm', 'video/quicktime', '.mp4', '.webm', '.mov'

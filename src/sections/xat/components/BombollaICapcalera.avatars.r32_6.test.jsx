@@ -97,8 +97,11 @@ describe('R32.6 · Lot 02 (P0-120) · Avatars sempre visibles i clicables en Bom
     expect(items[1].querySelector('.sdp-xat-bombolla__espai-cara')).not.toBeNull();
     expect(items[1].querySelector('.sdp-xat-bombolla__cara')).toBeNull();
 
-    // La bombolla pròpia no porta cara aliena ni espaiador
-    expect(items[2].querySelector('.sdp-xat-bombolla__cara')).toBeNull();
+    // R32.7 · La primera bombolla pròpia porta ara el meu avatar d'espill clicable i cap espaiador
+    const enllacMeu = items[2].querySelector('a.sdp-xat-bombolla__cara--enllac');
+    expect(enllacMeu).not.toBeNull();
+    expect(enllacMeu.getAttribute('href')).toBe('/gent/u-javi');
+    expect(enllacMeu.getAttribute('aria-label')).toBe('Obri el meu perfil');
     expect(items[2].querySelector('.sdp-xat-bombolla__espai-cara')).toBeNull();
 
     fireEvent.click(enllacCara);

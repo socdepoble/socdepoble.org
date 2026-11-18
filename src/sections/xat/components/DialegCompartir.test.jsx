@@ -114,14 +114,14 @@ test('els fitxers rebutjats es diuen amb el nombre, i la resta del lot es pot en
   render(<DialegCompartir {...props} lot={lot({ fitxers: [foto(), 'no-es-un-fitxer'], rebutjats: 1 })} />);
   const finestra = dialeg();
   expect(within(finestra).getByText('Tens una imatge per enviar. Tria la conversa.')).toBeTruthy();
-  expect(within(finestra).getByText('2 fitxers no es poden enviar al xat: només fotos JPEG, PNG, WebP o GIF de fins a 20 MB.').getAttribute('role')).toBe('status');
+  expect(within(finestra).getByText("2 fitxers no es poden enviar al xat: s'admeten imatges del dispositiu (es comprimeixen automàticament) i text.").getAttribute('role')).toBe('status');
   expect(within(finestra).getAllByRole('button', { name: /Comissió de festes|Javi Llinares/ })).toHaveLength(2);
 });
 
 test('un lot només de rebutjats diu que no s’ha pogut rebre i es tanca amb «Entesos»', () => {
   render(<DialegCompartir {...props} lot={lot({ rebutjats: 3 })} senseSessio />);
   const finestra = dialeg('No s’ha pogut rebre');
-  expect(within(finestra).getByRole('status').textContent).toBe('3 fitxers no es poden enviar al xat: només fotos JPEG, PNG, WebP o GIF de fins a 20 MB.');
+  expect(within(finestra).getByRole('status').textContent).toBe("3 fitxers no es poden enviar al xat: s'admeten imatges del dispositiu (es comprimeixen automàticament) i text.");
   expect(within(finestra).queryByText(/Tria la conversa/)).toBeNull();
   expect(within(finestra).queryByRole('list')).toBeNull();
   // Ni la llista ni l'entrada: no hi ha res per enviar.

@@ -35,6 +35,8 @@ vi.mock('../../../services/veuIaiaService.js', async () => {
   const real = await vi.importActual('../../../services/veuIaiaService.js');
   return {
     ...real,
+    // Port antic injectat: la suite de sessió R32.7 prova el motor real a banda.
+    creaSessioVeu: undefined,
     parla: vi.fn(),
     atura: vi.fn(),
     llegeixVeuPreferida: vi.fn(() => ''),

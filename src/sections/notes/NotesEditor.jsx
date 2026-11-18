@@ -938,6 +938,19 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       posicioEdicioAvancada: 'despres-autoria',
       titolEdicioAvancada: t('section.notes.editor.edicioAvancada.titol', 'Edició avançada de la nota'),
       resumEdicioAvancada: t('section.notes.editor.edicioAvancada.resum', 'Afig la foto de capçalera, el logotip, l’àmbit de publicació, etiquetes i drets'),
+      mostrarAlMur: notaEnEdicio
+        ? (typeof notaEnEdicio.mostrarAlMur === 'boolean' ? notaEnEdicio.mostrarAlMur : Boolean(notaEnEdicio.isPublished))
+        : false,
+      desactivatMostrarAlMur: Boolean(!notaEnEdicio || retiradaPendent || nomesLectura),
+      onCanviaMostrarAlMur: notaEnEdicio ? (actiu) => {
+        const volMur = Boolean(actiu);
+        escriu([{ doc: notaEnEdicio, canvis: { mostrarAlMur: volMur, ocultarDelMur: !volMur } }]);
+        if (!volMur && retirable && notaEnEdicio.isPublished) {
+          Promise.resolve(retiraDelMur(notaEnEdicio)).catch(() => {});
+        } else if (volMur && !notaEnEdicio.isPublished && !bloqueig && (!teMultiPoble || pobleIdPublicat)) {
+          Promise.resolve(visibilitat.onTria(true, { ...notaEnEdicio, mostrarAlMur: true, ocultarDelMur: false })).catch(() => {});
+        }
+      } : null,
       showDarkLogoUpload: true,
       /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 8) · El cos d'una
          publicació: l'ordre «/» Imatge pregunta si es conserven la ubicació i la
@@ -1067,7 +1080,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio, idPublicatNota, seccioNota, pobleIdPublicat, llocPublicatConegut, modeLocalNota, retirable, retiraDelMur, potRetirarDelMur, senseFilaDeNota, retiradaPendent]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio, idPublicatNota, seccioNota, pobleIdPublicat, llocPublicatConegut, modeLocalNota, retirable, retiraDelMur, potRetirarDelMur, senseFilaDeNota, retiradaPendent, escriu, nomesLectura, teMultiPoble]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

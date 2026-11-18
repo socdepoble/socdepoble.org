@@ -18,6 +18,7 @@ import { FONT_DELS_DICCIONARIS as fontI18n } from '../../../../tests/helpers/dic
 import fontWorkspace from './UniversalWorkspace.jsx?raw';
 import { CLAU_CARPETES_VISIBLES, _reiniciaCarpetesVisibles } from './carpetesVisibles.js';
 import { UniversalWorkspace } from './UniversalWorkspace.jsx';
+import { CLAU_COLUMNES_PLEGADES, _reiniciaColumnesPlegades } from './columnesPlegades.js';
 
 vi.mock('../../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => ref,
@@ -35,6 +36,9 @@ beforeAll(() => {
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 1400 });
 });
 beforeEach(() => {
+  /* v1.2.8 · P0-127 (Codex R32.9): les columnes plegades a mà ara es recorden; cada prova comença sense preferència. */
+  delVal(CLAU_COLUMNES_PLEGADES);
+  _reiniciaColumnesPlegades();
   delVal(CLAU_CARPETES_VISIBLES);
   delVal('sdp-grid-widths');
   _reiniciaCarpetesVisibles();

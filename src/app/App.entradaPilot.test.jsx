@@ -4,7 +4,7 @@
  * Supabase: SessionProvider → sessionService → identitat → sessioPilot.
  *
  * El cas del Mestre: localhost:3340/registre?mode=entrar en mode de proves,
- * amb el servidor del poble a http://127.0.0.1:54321 caigut. Ací el fetch fals
+ * amb el servidor de Sóc de Poble a http://127.0.0.1:54321 caigut. Ací el fetch fals
  * rebutja com ERR_EMPTY_RESPONSE i apunta cada petició:
  *   · l'única petició és la sonda de salut (/auth/v1/health), que diu que el
  *     servidor no respon;
@@ -77,7 +77,7 @@ async function muntaLApp(dataMode, cos) {
   }
 }
 
-/* Les peticions al servidor del poble, com a camí (sense l'origen). */
+/* Les peticions al servidor de Sóc de Poble, com a camí (sense l'origen). */
 const peticionsAlServidor = (xarxa) => xarxa.mock.calls
   .map(([url]) => String(url))
   .filter((url) => url.startsWith(SERVIDOR))
@@ -86,7 +86,7 @@ const peticionsAlServidor = (xarxa) => xarxa.mock.calls
 describe('F66 · l’entrada pilot local, de punta a punta', () => {
   test('seed · amb el servidor caigut, entra com a persona pilot sense cap petició i aterra al seu perfil', async () => {
     await muntaLApp('seed', async (xarxa) => {
-      const avis = await screen.findByText(/El servidor de poble no respon ara mateix/, undefined, ESPERA);
+      const avis = await screen.findByText(/El servidor de Sóc de Poble no respon ara mateix/, undefined, ESPERA);
       expect(avis.closest('[role="status"]')).not.toBeNull();
       // Fins ací, només la sonda de salut: cap petició d'entrada ni de dades.
       expect(peticionsAlServidor(xarxa).length).toBeGreaterThan(0);

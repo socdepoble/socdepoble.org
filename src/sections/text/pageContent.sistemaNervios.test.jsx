@@ -1,14 +1,11 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PAGE_COPY } from './pageContent.js';
-import { localitzaPagina } from './pageContent.r10.js';
-import { paginaPerAppNativa, nomenaPlataformaAliena } from './perAppNativa.js';
-import { sanitizeHtml } from '../../utils/sanitize.js';
 import { wikiManifest } from '../../data/wikiManifest.js';
 import { auditaSkills } from '../../../tooling/brain/fronteres-skills.mjs';
 
-const LLENGUES = ['ca', 'es', 'en', 'eu', 'gl'];
+import { resolvePageSlugPath } from '../../config/navigation.js';
 
 /* L0-01 (Gauntlet v1.2.6) · Llicències llegides el 17-11-2026 amb
    `curl -s https://api.github.com/repos/<repo>/license` i, quan l'API diu NOASSERTION o en remet
@@ -48,86 +45,34 @@ const classificacioReal = () => {
   return { motors, ambMotor, procedimentals: r.total - ambMotor, total: r.total };
 };
 
-describe('pageContent.sistemaNervios · /page/sistema-nervios en 5 llengües', () => {
-  it('exposa la pàgina sistema-nervios classificada i amb paritat completa en ca, es, en, eu i gl', () => {
-    const base = PAGE_COPY['sistema-nervios'];
-    expect(base).toBeDefined();
-    expect(base.labels?.length).toBeGreaterThanOrEqual(3);
-
-    for (const lang of LLENGUES) {
-      const loc = localitzaPagina(base, lang, 'sistema-nervios');
-      expect(loc.title?.length, `title ${lang}`).toBeGreaterThan(10);
-      expect(loc.subtitle?.length, `subtitle ${lang}`).toBeGreaterThan(15);
-      expect(loc.lead?.length, `lead ${lang}`).toBeGreaterThan(40);
-      expect(loc.imageAlt?.length, `imageAlt ${lang}`).toBeGreaterThan(20);
-
-      const htmlNet = sanitizeHtml(loc.html);
-      expect(htmlNet, `3 taules en ${lang}`).toContain('<div class="sdp-taula-prosa"><table>');
-      expect((htmlNet.match(/<table>/g) || []).length, `nombre de taules en ${lang}`).toBe(3);
-      expect((htmlNet.match(/<caption>/g) || []).length, `captions en ${lang}`).toBe(3);
-      expect(htmlNet).toContain('scope="col"');
-
-      // Enllaços clicables als repositoris estudiats i del Node 0
-      expect(htmlNet).toContain('https://github.com/affaan-m/everything-claude-code');
-      expect(htmlNet).toContain('https://github.com/storytold/craft-anything');
-      expect(htmlNet).toContain('https://github.com/every-app/open-seo');
-      expect(htmlNet).toContain('https://github.com/awesome-selfhosted/awesome-selfhosted');
-      expect(htmlNet).toContain('https://github.com/calcom/cal.diy');
-      expect(htmlNet).toContain('https://github.com/Flomp/wanderer');
-      expect(htmlNet).toContain('https://github.com/debpalash/VoiceStudio');
-      expect(htmlNet).toContain('https://github.com/OpenWhispr/openwhispr');
-      expect(htmlNet).toContain('https://github.com/CapSoftware/Cap');
-      expect(htmlNet).toContain('https://github.com/wide-trace/open-higgsfield');
-
-      // CTAs finals vius
-      expect(htmlNet).toContain('href="/wikidepoble?item=sistema_nervios_skills_i_repositoris"');
-      expect(htmlNet).toContain('href="/consola"');
-
-      // Regla 2.3.10 d'App Store: cap menció a plataformes mòbils alienes ni pèrdua de contingut
-      expect(nomenaPlataformaAliena(loc.html), `sense plataforma aliena en ${lang}`).toBe(false);
-      expect(paginaPerAppNativa(loc).html).toBe(loc.html);
-    }
+describe('R32.9 · sistema nerviós canònic a la Wiki', () => {
+  it('retira el duplicat i conserva una adreça antiga que redirigix a un únic document', () => {
+    expect(PAGE_COPY['sistema-nervios']).toBeUndefined();
+    expect(resolvePageSlugPath('sistema-nervios')).toBe('/wikidepoble?item=sistema_nervios_skills_i_repositoris');
+    expect(existsSync(path.join(process.cwd(), 'src/sections/text/pageContent.sistemaNervios.js'))).toBe(false);
   });
-});
-
-describe('Llei 0 · /page/sistema-nervios no afirma res que no siga verificat (Gauntlet v1.2.6)', () => {
-  it('L0-01: cada repositori porta la seua llicència verificada, en les 5 llengües', () => {
-    const base = PAGE_COPY['sistema-nervios'];
-    for (const lang of LLENGUES) {
-      const html = localitzaPagina(base, lang, 'sistema-nervios').html;
-      for (const [repo, llicencia] of LLICENCIES_PAGINA) {
-        expect(html, `${repo} en ${lang}`).toMatch(new RegExp(`${escapa(repo)}</a> \\(<code>${escapa(llicencia)}</code>[;)]`));
-      }
-      expect(html, `Cap en ${lang}: crates MIT`).toMatch(/CapSoftware\/Cap<\/a> \(<code>AGPL-3\.0<\/code>;[^)]*<code>cap-camera\*<\/code>[^)]*<code>scap-\*<\/code>[^)]*<code>MIT<\/code>[^)]*\)/);
-      expect(html, `cap CC-BY-SA-4.0 en ${lang}`).not.toContain('CC-BY-SA-4.0');
-      expect(html, `cap «MIT / AGPL» compartit en ${lang}`).not.toContain('<code>MIT</code> / <code>AGPL-3.0</code>');
+  it('conserva foto, dates, versió, opt-in del Mur i totes les fonts originals', () => {
+    const item = wikiManifest.items.find((i) => i.id === 'sistema_nervios_skills_i_repositoris');
+    expect(item.image).toBe('/assets/ui/plugins/sistema_nervios_vinyeta.jpg');
+    expect(item.imageAlt.length).toBeGreaterThan(40);
+    expect(item.attributes.date).toBe('2026-11-17T00:14:00+01:00');
+    expect(item.attributes.updated).toBe('2026-11-17T20:15:00+01:00');
+    expect(item.attributes.version).toBe('1.1.0');
+    expect(item.attributes.mur).toBe(true);
+    for (const url of ['https://github.com/github/spec-kit',
+      'https://github.com/google/elephant-goldfish-model',
+      'https://github.com/rizinorg/rizin', 'https://github.com/frida/frida',
+      'https://wordpress.org/plugins/vigilante/', '/consola/inventari',
+      '/page/node-zero', '/consola', '/page/rutes-de-poble']) expect(item.content, url).toContain(url);
+    for (const id of ['sdp-workflow_SKILL', 'core-tecniques-investigacio_SKILL', 'core-gauntlet-loop_SKILL', 'sdp-vigilant-tellado_SKILL']) {
+      const slug = id.replace(/_SKILL$/, '');
+      expect(item.content).toContain(`(/consola/explorador?peca=${encodeURIComponent(`skill:${slug}`)})`);
+      expect(existsSync(path.join(process.cwd(), '.agents/skills', slug, 'SKILL.md')), id).toBe(true);
+      expect(wikiManifest.items.some((i) => i.id === id), 'cap skill executiva publicada com a capítol').toBe(false);
     }
-  });
-
-  it('L0-02: la fila de skills sdp-* diu on s’escriuen i on s’apliquen, sense presentar-les com a actives a les pantalles', () => {
-    const base = PAGE_COPY['sistema-nervios'];
-    for (const lang of LLENGUES) {
-      const html = localitzaPagina(base, lang, 'sistema-nervios').html;
-      const fila = html.split('<tr>').find((f) => f.includes('<code>sdp-*</code>'));
-      expect(fila, `fila sdp-* en ${lang}`).toBeDefined();
-      const estat = fila.split('<td>').pop();
-      expect(estat, `estat sdp-* en ${lang}`).toContain('<code>.agents/skills/</code>');
-      expect(estat, `estat sdp-* en ${lang}`).toContain('<code>src/</code>');
-      expect(estat, `estat sdp-* en ${lang}`).not.toMatch(/Actiu|Activo|Active|aktibo/);
-    }
-  });
-
-  it('I18N-03: «xat familiar» és «family chat» en anglés i «familia-txata» en basc; el valencià nou usa -ix', () => {
-    const base = PAGE_COPY['sistema-nervios'];
-    const en = localitzaPagina(base, 'en', 'sistema-nervios').html;
-    const eu = localitzaPagina(base, 'eu', 'sistema-nervios').html;
-    const ca = localitzaPagina(base, 'ca', 'sistema-nervios').html;
-    expect(en).toContain('family chat');
-    expect(en).not.toContain('familiar chat');
-    expect(eu).toContain('familia-txata');
-    expect(eu).not.toContain('txat ezaguna');
-    expect(ca).toContain('Definixen');
-    expect(ca).not.toContain('Defineixen');
+    expect(item.content.replaceAll('**', '')).toContain('Al servidor de Sóc de Poble');
+    expect(item.content).not.toContain('servidor del poble');
+    expect(item.content).not.toContain('2506.13651');
   });
 });
 
@@ -145,7 +90,7 @@ describe('Llei 0 · Wiki compilada, inventari de skills i README (Gauntlet v1.2.
 
   it('L0-02: cada motor atribuït a una família és un motor declarat a `motors:` per la skill que nomena, i la resta es diu procedimental', () => {
     const { motors, ambMotor, procedimentals, total } = classificacioReal();
-    expect(total).toBe(43);
+    expect(total).toBe(44);
     const md = fitxaWiki('sistema_nervios_skills_i_repositoris');
     const inici = md.indexOf('### 3.1');
     const taula = md.slice(inici, md.indexOf('### 3.2')).split('\n').filter((l) => l.startsWith('| **'));
@@ -182,7 +127,7 @@ describe('Llei 0 · Wiki compilada, inventari de skills i README (Gauntlet v1.2.
   it('GOV-04: l’inventari de la Consola dona el cens de motors que torna fronteres-skills.mjs', () => {
     const { ambMotor, procedimentals } = classificacioReal();
     const md = fitxaWiki('03_inventari_skills');
-    expect(md).toContain(`De les 43 skills actives, ${ambMotor} declaren motors propis al camp \`motors:\``);
+    expect(md).toContain(`De les 44 skills actives, ${ambMotor} declaren motors propis al camp \`motors:\``);
     expect(md).toContain(`i ${procedimentals} són procedimentals o de governança cognitiva`);
     expect(md).toContain('`node tooling/brain/fronteres-skills.mjs`');
   });

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { PAGE_ROUTE_MAP } from '../config/navigation.js';
 import { ESPECIES_HERBARI_LA_TORRE_117 } from './patrimoni/herbariLaTorre117.js';
 import { FONTS_BANC_LLAVORS, VARIETATS_CATALEG_VALENCIA, VARIETATS_AVL_MALLORCA, ESPECIES_ATLES_CATALUNYA } from './patrimoni/bancLlavors.js';
 import { LLIBRES_ARBRES_MONUMENTALS } from './patrimoni/llibresArbresMonumentals.js';
@@ -21,7 +22,9 @@ test('el registre SQL cobreix els identificadors reals de les set superfícies d
   const catalegs = LLIBRES_ARBRES_MONUMENTALS.map(llibre => llibre.id);
   const arbres = LLIBRES_ARBRES_MONUMENTALS.flatMap(llibre => llibre.exemplars.map(arbre => `${llibre.id}:${arbre.id}`));
   const ids = {
-    pagina: Object.keys(PAGE_COPY),
+    /* v1.2.8 · Codex R32.9 · /page/sistema-nervios passa al llibre de la Wiki (PAGE_ROUTE_MAP, Navigate amb replace):
+       la clau ja no és a PAGE_COPY, però el registre de 20261117150000 (R32.4, fixat al pin POSSE) la conserva. */
+    pagina: [...Object.keys(PAGE_COPY), ...['sistema-nervios'].filter((clau) => PAGE_ROUTE_MAP[clau]?.startsWith('/wikidepoble?item='))],
     llibre_cataleg: ['que-dinem', 'herbari', 'banc-de-llavors', ...catalegs, ...FONTS_BANC_LLAVORS.map(font => font.id)],
     recepta: RECEPTES_QUE_DINEM.map(recepta => recepta.slug),
     arbre: arbres,

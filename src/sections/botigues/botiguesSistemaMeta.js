@@ -2,8 +2,8 @@
 export const BOTIGUES_SISTEMA_META = Object.freeze({
   id: 'admin-botigues-verificadors',
   ruta: '/consola/botigues',
-  title: '📲 Botigues, Verificadors (2/12) i Flota d’IAs',
-  subtitle: 'Aplicacions, proves i serveis del poble amb procedència explícita',
+  title: 'Botigues, Verificadors (2/12) i Flota d’IAs',
+  subtitle: 'Aplicacions, proves i serveis de Sóc de Poble amb procedència explícita',
   lead: 'Consulta els canals configurats, l’última dada comunicada dels verificadors i el cens d’IAs, separats de les comprovacions en viu encara no connectades.',
   creat: '2026-11-08',
   // La il·lustració ja aprovada de Descàrregues; no es modifica el recurs ni el seu copy.

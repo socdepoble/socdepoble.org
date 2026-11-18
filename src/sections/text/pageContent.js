@@ -1,5 +1,4 @@
 import { PAGINA_NODRIR_IAIA } from './pageContent.nodrirIaia.js';
-import { PAGINA_SISTEMA_NERVIOS } from './pageContent.sistemaNervios.js';
 import { aplicaDossierR10 } from './pageContent.r10.js';
 import { afigPrimeraTargetaFediversity } from './pageContent.targetaMur.js';
 import { legalContent } from './legalContent.js';
@@ -152,12 +151,12 @@ export const PAGE_COPY = {
   "versions": {
     "date": "2026-08-26T06:53:13+02:00",
     "title": "Versions del Sistema",
-    "subtitle": "Versió actual: v1.2.7 · Connector WordPress v1.1.12 a WordPress.org",
+    "subtitle": "Versió actual: v1.2.8 · Connector WordPress v1.1.12 a WordPress.org",
     "lead": "Registre viu d'actualitzacions de Sóc de Poble. Ací pots consultar de forma clara què s'ha afegit, què s'ha millorat i què s'ha corregit en cada entrega, seguit de la crònica fundacional del projecte.",
     "image": "/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png",
     "imageAlt": "Versions del Sistema",
     "labels": [
-      { "text": "v1.2.7 · WP v1.1.12", "className": "sdp-badge-system" },
+      { "text": "v1.2.8 · WP v1.1.12", "className": "sdp-badge-system" },
       { "text": "Registre de canvis", "className": "sdp-badge-category" },
       { "text": "Sistema", "className": "sdp-badge-tag" }
     ],
@@ -963,7 +962,6 @@ Object.assign(PAGE_COPY, PAGINES_PATRIMONI_R9);
    5 llengües, és a pageContent.patrimoniR14.js; la llista de receptes va davall (PageDetailSection, tros diferit). */
 Object.assign(PAGE_COPY, PAGINES_PATRIMONI_R14);
 Object.assign(PAGE_COPY, PAGINA_NODRIR_IAIA);
-Object.assign(PAGE_COPY, PAGINA_SISTEMA_NERVIOS);
 PAGE_COPY.dispositius = PAGINA_DISPOSITIUS;
 
 // AH-22 · suplement editorial localitzat, sense declarar-lo desplegat.
