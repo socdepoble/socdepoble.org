@@ -3266,10 +3266,15 @@ Cap rebut acredita que la migració s’haja executat sencera contra producció.
 - [[00_index]]
 
 
-## R32.11 · CAS general preparat, activació manual pendent
+## R32.11 · CAS general aplicat a Producció, client encara sense activar
 
-`snippets/r32_11_publicacions_cas.sql` és un paquet **manual, no aplicat a
-Producció i fora del catàleg de 124 migracions**. Implementa la RPC nova
+`snippets/r32_11_publicacions_cas.sql` és un paquet **manual, fora del catàleg de
+124 migracions**. Segons el rebut del Mestre, l'aplica a **Producció el 19-11-2026 a
+les 01:37 CET** des de l'editor SQL («Success. No rows returned», amb el preflight i el
+postflight integrats): `REBUT_SQL_PRODUCCIO_R32_11_PUBLICACIONS_CAS_261119_0137.json`, a la
+carpeta `_investigacio_ia_de_poble/261118_marato_matinada_deute_zero_v1_2_8/`, amb el
+SHA-256 `d36dcacd…`, el mateix d'este fitxer. La capçalera del fitxer conserva «MANUAL,
+NO APLICAT A PRODUCCIÓ» perquè el SHA-256 ha de ser el del rebut: l'estat és el d'esta secció. Implementa la RPC nova
 `publica_section_submission_cas(uuid,uuid,text,jsonb,text,text,uuid,boolean,timestamptz,uuid)`.
 El token nul només crea; un token llegit actualitza exactament eixa revisió.
 L'opID lliga una petició immutable i permet recuperar un ACK perdut. Un replay
@@ -3293,7 +3298,7 @@ persistix l'operació abans d'enviar-la i conserva token, opID i esborrany davan
 error, cancel·lació o canvi de sessió/backend. Si falta la RPC, no fa upsert.
 Una fila que ja ha usat CAS conserva eixe requisit en disc i rebutja un
 reintent legacy després de recarregar. `versionada` continua desactivat per
-defecte fins al rebut manual verificat;
+defecte: el rebut manual ja existix, i activar-lo en un client és una tasca posterior;
 la ruta legacy continua sent compatible i no acredita CAS.
 
 Prova local reproduïble, sense accés remot:

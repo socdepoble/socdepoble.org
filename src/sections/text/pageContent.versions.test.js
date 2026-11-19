@@ -4118,8 +4118,8 @@ describe('Onades R32.10, R32.11 i R32.12 · Crònica d’obertura en les cinc ll
    l'Onada R32.12 de Gemini (pla 261118_1937) i 24 ítems del Llibre Mestre (la crònica en diu «segona part» de
    les Onades R32.11 i R32.12). Llei 0: la 1.2.10 no consta a cap botiga quan s'escriu; el connector publicat continua en la 1.1.12 i
    ni el 1.1.17 ni el 1.1.18 del repositori s'han publicat; les migracions 20261117173000, 20261117193000 i
-   20261118230000 i els paquets manuals de supabase/snippets (r32_10_* i r32_11_*) NO s'han aplicat (els aplica el
-   Mestre). La pastilla del poble diu el nom oficial: cap fitxa no porta encara el nom curt. Regla 2.3.10: cap nom de
+   20261118230000 i els paquets manuals r32_10_* de supabase/snippets NO s'han aplicat (els aplica el
+   Mestre); el r32_11_* el va aplicar el Mestre el 19-11-2026 (rebut del Mestre) i cap client no l'usa encara. La pastilla del poble diu el nom oficial: cap fitxa no porta encara el nom curt. Regla 2.3.10: cap nom de
    plataforma mòbil, de botiga, de canal de proves, de paquet, de navegador ni de proveïdor. */
 describe('Onades R32.11 i R32.12, segona part · Crònica d’obertura en les cinc llengües amb la guia de tot el que pots fer, la data de cada targeta, l’Arbre Genealògic amb frase de pas i Llei 0', () => {
   const PREFIXOS_R32_13 = {
@@ -4143,11 +4143,22 @@ describe('Onades R32.11 i R32.12, segona part · Crònica d’obertura en les ci
   const CONNECTORS_NO_PUBLICATS_R32_13 = { ca: `ni la 1.1.17 ni la ${CONNECTOR} del repositori s’han publicat`,
     es: `ni la 1.1.17 ni la ${CONNECTOR} del repositorio se han publicado`, en: `neither 1.1.17 nor ${CONNECTOR} in the repository has been published`,
     eu: `biltegiko 1.1.17 eta ${CONNECTOR} ez dira oraindik argitaratu`, gl: `nin a 1.1.17 nin a ${CONNECTOR} do repositorio se publicaron` };
-  /* Llei 0 · Les dues migracions del Xat, la nova dels avisos i els paquets manuals, NO aplicats: els aplica el Mestre. */
+  /* Llei 0 · Les dues migracions del Xat, la nova dels avisos i els paquets manuals de R32.10, NO aplicats: els aplica el Mestre.
+     El de R32.11 el va aplicar el Mestre el 19-11-2026 (REBUT_SQL_PRODUCCIO_R32_11_PUBLICACIONS_CAS_261119_0137.json), i cap
+     client no activa encara `versionada`: la crònica ho diu així, amb la data i sense «ja s'ha aplicat». */
   const MIGRACIONS_R32_13 = ['20261117173000', '20261117193000', '20261118230000'];
   const NO_APLICADES_R32_13 = { ca: 'encara no s’han aplicat al servidor compartit', es: 'todavía no se han aplicado en el servidor compartido',
     en: 'have not yet been applied on the shared server', eu: 'oraindik ez dira aplikatu zerbitzari partekatuan', gl: 'aínda non se aplicaron no servidor compartido' };
   const PAQUETS_R32_13 = { ca: 'paquets manuals', es: 'paquetes manuales', en: 'manual packages', eu: 'eskuzko paketeak', gl: 'paquetes manuais' };
+  const PAQUETS_R32_10_R32_13 = { ca: 'paquets manuals de l’Onada R32.10', es: 'paquetes manuales de la Oleada R32.10', en: 'manual packages of Wave R32.10',
+    eu: 'R32.10 olatuko eskuzko paketeak', gl: 'paquetes manuais da Onda R32.10' };
+  const APLICAT_R32_11_R32_13 = { ca: 'El de l’Onada R32.11, el de les publicacions, el Mestre l’ha aplicat al servidor el 19 de novembre',
+    es: 'El de la Oleada R32.11, el de las publicaciones, el Mestre lo aplicó en el servidor el 19 de noviembre',
+    en: 'The Mestre applied the one from Wave R32.11, for publications, on the server on 19 November',
+    eu: 'R32.11 olatukoa, argitalpenena, Mestrek zerbitzarian aplikatu zuen azaroaren 19an',
+    gl: 'O da Onda R32.11, o das publicacións, aplicouno o Mestre no servidor o 19 de novembro' };
+  const NO_EL_FA_SERVIR_R32_13 = { ca: 'l’aplicació encara no el fa servir', es: 'la aplicación todavía no lo usa', en: 'the app does not use it yet',
+    eu: 'aplikazioak oraindik ez du erabiltzen', gl: 'a aplicación aínda non o usa' };
   const JA_APLICADA_R32_13 = /ja s’han? aplicat|ya se han? aplicado|ha(?:s|ve) already been applied|ha(?:s|ve) been applied|jada aplikatu d(?:a|ira)|xa se aplicaron|xa se aplicou/i;
   /* La guia: els tretze passos de PASSOS_POTS_FER. */
   const TRETZE_R32_13 = { ca: 'tretze passos', es: 'trece pasos', en: 'thirteen steps', eu: 'hamahiru urratsetan', gl: 'trece pasos' };
@@ -4202,6 +4213,11 @@ describe('Onades R32.11 i R32.12, segona part · Crònica d’obertura en les ci
       expect(pla, llengua).toContain(NO_APLICADES_R32_13[llengua]);
       expect(pla, llengua).toContain(PAQUETS_R32_13[llengua]);
       expect(JA_APLICADA_R32_13.test(pla), llengua).toBe(false);
+      // El paquet de R32.10 continua pendent; el de R32.11, aplicat pel Mestre el 19-11 i encara sense ús al client.
+      expect(pla, llengua).toContain(PAQUETS_R32_10_R32_13[llengua]);
+      expect(pla, llengua).toContain(APLICAT_R32_11_R32_13[llengua]);
+      expect(pla, llengua).toContain(NO_EL_FA_SERVIR_R32_13[llengua]);
+      expect(pla).not.toMatch(/R32\.10 (?:i|y|and|e|eta) R32\.11/);
       // La guia, el Panell de Control (rètols del giny), l'Arbre Genealògic, la pastilla del poble i les contrasenyes.
       expect(pla, llengua).toContain(TRETZE_R32_13[llengua]);
       expect(pla, llengua).toContain(SEGONS_R32_13[llengua]);
@@ -4252,6 +4268,9 @@ describe('Onades R32.11 i R32.12, segona part · Crònica d’obertura en les ci
     }
     const paquets = readdirSync(resolve(process.cwd(), 'supabase/snippets')).filter((f) => /^r32_1[01]_.*\.sql$/.test(f)).sort();
     expect(paquets).toEqual(['r32_10_fossils_acl_enduriment.sql', 'r32_10_xat_privades_rls_repara.sql', 'r32_11_publicacions_cas.sql']);
+    // Llei 0 · El paquet R32.11 té el rebut del Mestre al README, i cap client no activa encara `versionada`.
+    expect(llegix('supabase/README.md')).toContain('REBUT_SQL_PRODUCCIO_R32_11_PUBLICACIONS_CAS_261119_0137.json');
+    expect(llegix('src/data/projeccionsCatalegServei.js')).toContain('versionada = false');
     // La guia: una pàgina de PAGE_COPY amb tretze passos, cadascun amb el seu enllaç, en cinc llengües.
     expect(RUTA_POTS_FER).toBe('/page/tot-el-que-pots-fer');
     expect(PASSOS_POTS_FER).toHaveLength(13);
