@@ -1,6 +1,6 @@
 {
   "name": "socdepoble-react",
-  "version": "1.2.10",
+  "version": "1.2.11",
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "sideEffects": [
@@ -136,7 +136,9 @@
     "porta:logica-universal": "node tooling/gates/porta-logica-universal.mjs",
     "porta:conformitat-federacio": "node tooling/gates/conformitat-federacio.mjs --json",
     "porta:economia-arrencada": "node tooling/gates/tractor-economia-arrencada.mjs --json",
-    "porta:imatges-enquadrament": "node tooling/gates/tractor-imatges-enquadrament.mjs --json"
+    "porta:imatges-enquadrament": "node tooling/gates/tractor-imatges-enquadrament.mjs --json",
+    "porta:egress": "node tooling/gates/tractor-anti-factura-egress.mjs",
+    "seo:compila-mapa-301": "node tooling/seo/mapa-redireccions-301.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

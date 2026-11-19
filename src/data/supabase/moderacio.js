@@ -109,7 +109,8 @@ function traduix(error) {
   const missatge = String(cos?.message ?? error.message ?? '');
   const codiPg = String(cos?.code ?? '');
   let code = CODI_MODERACIO.DESCONEGUT;
-  if (/SDP-MOD-429/.test(missatge) || error.status === 429) code = CODI_MODERACIO.LIMIT;
+  /* Gauntlet R32.14 · El trigger del paquet manual R32.13 limita amb SDP-LSSI-429 (sqlstate 42900). */
+  if (/SDP-(?:MOD|LSSI)-429/.test(missatge) || error.status === 429) code = CODI_MODERACIO.LIMIT;
   else if (/SDP-MOD-000/.test(missatge) || error.status === 401) code = CODI_MODERACIO.SENSE_SESSIO;
   else if (/SDP-MOD-001/.test(missatge) || ['23514', '22P02', '23503'].includes(codiPg)) code = CODI_MODERACIO.OBJECTIU_INVALID;
   else if (/SDP-MOD-002/.test(missatge)) code = CODI_MODERACIO.MOTIU_INVALID;

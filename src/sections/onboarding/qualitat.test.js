@@ -46,7 +46,14 @@ const CENS = Object.freeze([
   'src/sections/onboarding/CampsDIdentitatALAlta.jsx',
   'src/sections/onboarding/IdentitatAlPoble.test.jsx',
   'src/sections/onboarding/OnboardingSection.usuari.test.jsx',
-  'src/sections/onboarding/onboardingModel.username.test.js'
+  'src/sections/onboarding/onboardingModel.username.test.js',
+  /* P0-114 Escut 1 (Onada R32.13) · Detector lineal O(n) i orientació OAuth WebView en 5 llengües. */
+  'src/utils/navegadorIncrustat.js',
+  'src/utils/navegadorIncrustat.r32_13.test.jsx',
+  'src/sections/onboarding/detectaWebViewInApp.js',
+  'src/sections/onboarding/textosEscutWebview.js',
+  'src/sections/onboarding/OnboardingSection.webview.r32_5.test.jsx',
+  'src/sections/onboarding/textosEscutWebview.r32_7.test.js'
 ]);
 
 describe('el cens', () => {

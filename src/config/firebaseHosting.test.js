@@ -57,7 +57,13 @@ test('dist, sense barra final i sense URL netes', () => {
      solts a /_headers i /_redirects (prova d'ignore, més avall).
      Onada v1.2.6 · I cap .apk ni .apk.sha256, de cap carpeta: els servix el
      Node 0 (prova de l'APK, més avall). */
-  expect(hosting.ignore).toEqual(['**/.*', '!.well-known', '**/node_modules/**', '_headers', '_redirects', '**/*.apk', '**/*.apk.sha256']);
+  // R32.13 · Cap artefacte de distribució entra a Hosting. R32.14 (D07/D14) · El
+  // paquet OpenData municipal lleuger (opendata/*.zip <= 2 MB) sí que es publica:
+  // l'ignore deixa fora els ZIP de /descarregues i el preflight de Hosting
+  // (tractor-anti-factura-egress.mjs --require-build) bloqueja qualsevol altre ZIP.
+  expect(hosting.ignore).toEqual(['**/.*', '!.well-known', '**/node_modules/**', '_headers', '_redirects', '**/*.apk', '**/*.apk.sha256',
+    '**/*.aab', '**/*.ipa', '**/*.xcarchive', '**/*.xcarchive/**', 'descarregues/**/*.zip']);
+  expect(hosting.predeploy).toEqual(['node tooling/gates/tractor-anti-factura-egress.mjs --require-build']);
 });
 
 /* P1-23 (ordre del Mestre del 30-10-2026) · Les reescriptures de WebFinger van
@@ -546,9 +552,16 @@ test('Onada v1.2.6 · cap APK entra al paquet de Firebase (les dues lectures de 
   const apks = [`descarregues/${NOM_APK_PUBLIC}`, `descarregues/${NOM_APK_PUBLIC}.sha256`, NOM_APK_PUBLIC,
     'descarregues/socdepoble-android-1.2.6+11.apk', 'qualsevol/carpeta/app-release.apk', 'qualsevol/carpeta/app-release.apk.sha256'];
   for (const fitxer of apks) expect([fitxer, ignoratGlob(fitxer), ignoratGit(fitxer)]).toEqual([fitxer, true, true]);
-  // La resta de /descarregues/ (la pàgina prerenderitzada) i les altres sumes sí que es publiquen.
-  for (const fitxer of ['descarregues/index.html', 'opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip',
-    'opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip.sha256']) {
+  // R32.13 · La mateixa exclusió protegeix cada format d'artefacte, també
+  // arrels i carpetes niades; un .xcarchive és un arbre, no només un fitxer.
+  for (const fitxer of ['app.aab', 'descarregues/app.aab', 'app.ipa', 'qualsevol/carpeta/app.ipa', 'app.xcarchive',
+    'builds/app.xcarchive/Products/Applications/App.app/Info.plist', 'descarregues/socdepoble-snippet.zip', 'descarregues/wp/connector.zip']) {
+    expect([fitxer, ignoratGlob(fitxer), ignoratGit(fitxer)]).toEqual([fitxer, true, true]);
+  }
+  // La pàgina prerenderitzada, les sumes menudes i el ZIP OpenData lleuger (R32.14) sí que es publiquen.
+  for (const fitxer of ['descarregues/index.html',
+    'opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip.sha256',
+    'opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip']) {
     expect([fitxer, ignoratGlob(fitxer), ignoratGit(fitxer)]).toEqual([fitxer, false, false]);
   }
   // Cada redirecció és d'un fitxer que Firebase no té: la redirecció mana igualment, però el fitxer no ocupa ni es servix.

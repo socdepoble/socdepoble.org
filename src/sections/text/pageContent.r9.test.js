@@ -214,7 +214,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.8 · La crònica de les Onades R32.7, R32.8 i R32.9 obri /versions, davant de la crònica R32.5 i R32.6.
     // Onada v1.2.9 · La crònica de les Onades R32.10, R32.11 i R32.12 obri /versions, davant de la crònica R32.7, R32.8 i R32.9.
     // Onada v1.2.10 · La crònica de la segona part de R32.11 i R32.12 obri /versions, davant de la crònica R32.10, R32.11 i R32.12.
-    expect([...versions.querySelectorAll('h3')].slice(0, 22).map((h3) => h3.textContent)).toEqual([
+    // Onada v1.2.11 · La crònica de les Onades R32.13 i R32.14 obri /versions, davant de la segona part de R32.11 i R32.12.
+    expect([...versions.querySelectorAll('h3')].slice(0, 23).map((h3) => h3.textContent)).toEqual([
+      '19 de novembre de 2026, vesprada · Onades R32.13 i R32.14 · El Bar en cinc llengües, l’avís de contingut il·lícit i un connector de WordPress més lleuger',
       '19 de novembre de 2026 · Onades R32.11 i R32.12, segona part · La guia de tot el que pots fer, la data de cada targeta segons el tipus i l’Arbre Genealògic amb frase de pas',
       '18 de novembre de 2026, nit · Onades R32.10, R32.11 i R32.12 · L’Avisador renovat, l’assistència als esdeveniments i les accions del Xat dins de la sessió',
       '18 de novembre de 2026 · Onades R32.7, R32.8 i R32.9 · Reaccions i missatges fixats al Xat, vídeos comprimits al navegador i capítols de la Wiki al Mur',
@@ -602,7 +604,8 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
     // nova trenca esta prova i obliga a renovar xifra i data en les cinc llengües.
     const POSTERIORS_AL_TALL_14_11 = [
       'porta:coherencia-editorial', // Gemini R31, 16-11-2026
-      'porta:conformitat-federacio', 'porta:economia-arrencada', 'porta:imatges-enquadrament' // Codex R32.11, 18-11-2026
+      'porta:conformitat-federacio', 'porta:economia-arrencada', 'porta:imatges-enquadrament', // Codex R32.11, 18-11-2026
+      'porta:egress' // Codex R32.13, 19-11-2026: preflight de Hosting, posterior al rebut històric
     ];
     const cens = seleccionaPassos({ cens: true });
     const declarades = passos.filter((pas) => !pas.prova);
@@ -615,9 +618,9 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
     expect(declarades.length - tall14_11.length).toBe(POSTERIORS_AL_TALL_14_11.length + 1);
     expect(tall14_11).toHaveLength(60);
     expect(tall14_11).toContainEqual(expect.objectContaining({ nom: 'Porta Build', potMutar: true }));
-    expect(cens).toHaveLength(64);
-    expect(declarades).toHaveLength(65);
-    expect(ambMutacions).toHaveLength(65);
+    expect(cens).toHaveLength(65);
+    expect(declarades).toHaveLength(66);
+    expect(ambMutacions).toHaveLength(66);
     expect(ambMutacions).toEqual(declarades);
     expect(declarades.filter((pas) => !cens.includes(pas))).toEqual([
       expect.objectContaining({ nom: 'Porta Build', potMutar: true }),

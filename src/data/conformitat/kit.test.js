@@ -849,10 +849,10 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
   }
 
   /* R32.5 · moderacioLssi hi afig una capacitat i tres mètodes opcionals. */
-  test('cens exacte del contracte, 32 obligatòries i 138 opcionals; cap nom sense cas', () => {
+  test('cens exacte del contracte, 32 obligatòries i 142 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(58);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(138);
+    expect(Object.keys(CAPACITATS)).toHaveLength(60);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(142);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });
@@ -1053,4 +1053,32 @@ test('R24 · consensIsoglosses: tres casos de rebuig previ, un per mètode, que 
     }
     expect(await executaCas(c, {}, ctx)).toMatchObject({ estat: 'omés', motiu: 'capacitat consensIsoglosses absent' });
   }
+});
+
+describe('R32.13 · ACK remot i denúncia diligent amb entrades malformades', () => {
+  const methods = [...CAPACITATS.ackCrdtRural, ...CAPACITATS.denunciesDiligents];
+  const errorFor = method => method === 'confirmaCapturaCrdtRural'
+    ? Object.assign(new Error('Captura invàlida'), { code: 'RURAL_CRDT_INVALID' })
+    : method === 'llistaDenunciesDiligents' ? new TypeError('Filtre invàlid')
+      : Object.assign(new TypeError('Denúncia invàlida'), { code: 'LSSI_DILIGENT_INVALID' });
+  test.each(methods)('%s: arguments, config final, rebuig específic i absència honestos', async method => {
+    const c = cas(method), config = Object.freeze({ dataMode: 'remote' });
+    const context = contextDeConformitat({ config });
+    expect(c).toMatchObject({ espera: 'rebutja', escriu: false, requerix: [] });
+    let calls = 0;
+    const correct = async (...args) => { calls++; expect(args).toEqual(c.arguments(context)); expect(args.at(-1)).toBe(config); throw errorFor(method); };
+    expect(await executaCas(c, { [method]: correct }, context)).toEqual({ estat: 'ok', falles: [], motiu: null });
+    expect(calls).toBe(1);
+    for (const value of [null, {}, [], true]) expect(await executaCas(c, { [method]: async () => value }, context)).toMatchObject({ estat: 'falla' });
+    for (const error of [new Error('Sense tipus ni codi'), Object.assign(new Error('Un altre domini'), { code: 'NO-DISPONIBLE' })])
+      expect(await executaCas(c, { [method]: async () => { throw error; } }, context)).toMatchObject({ estat: 'falla' });
+    if (method !== 'llistaDenunciesDiligents') {
+      expect(await executaCas(c, { [method]: async () => { throw Object.assign(new TypeError('Codi alié'), { code: 'WRONG_DOMAIN' }); } }, context)).toMatchObject({ estat: 'falla' });
+    }
+    expect(await executaCas(c, {}, context)).toMatchObject({ estat: 'omés', motiu: `capacitat ${c.capacitat} absent` });
+  });
+  test('els quatre mètodes tenen un cas comú explícit i cap deute nou', () => {
+    expect(CASOS.filter(c => c.titol.startsWith('R32.13:')).map(c => c.metode)).toEqual(methods);
+    expect(metodesSenseCas()).toEqual([]);
+  });
 });

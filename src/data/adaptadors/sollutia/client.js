@@ -11,7 +11,7 @@ let lectura;
 
 /** Conserva el port públic; un issuer de sessió mai és un endpoint de dades. */
 export async function llig(recurs, params = {}, options = {}) {
-  if (!Object.hasOwn(CONFIGURACIO.resources, recurs)) throw new ErrorDades('UNKNOWN_RESOURCE');
+  if (typeof recurs !== 'string' || !Object.hasOwn(CONFIGURACIO.resources, recurs)) throw new ErrorDades('UNKNOWN_RESOURCE');
   lectura ||= creaFrontissa(CONFIGURACIO);
   return lectura(recurs, params, options);
 }

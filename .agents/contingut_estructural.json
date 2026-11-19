@@ -68,15 +68,15 @@
       "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "fe53c0f09781aded878cc016d10adcf7b87843991b3e198d17ba0a73f4fc6c87",
+      "sha256": "9ad1e1e2fe80874e58b9c1981540d48e78f2d51a690bac4c5f0ae72166411c9c",
       "html": 21957,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "aprovat_per": "Claude v1.2.11 (Carril 1), per l'encàrrec autònom del Mestre Javi del 19-11-2026 14:14 (pla 261119_1414: integrar R32.13 i desplegar v1.2.11); pendent de lectura humana",
       "data": "2026-11-19"
     },
     "fediversity": {
-      "sha256": "8bd349973f154c012f6adf569ef3ee785321047909010ec81a78dc67ecb12ee4",
-      "html": 65296,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "sha256": "4757102c3a588090114156fd226a9307a08e90d9000811045de9b6d42fce0020",
+      "html": 65358,
+      "aprovat_per": "Claude v1.2.11 (Carril 1), per l'encàrrec autònom del Mestre Javi del 19-11-2026 14:14 (pla 261119_1414: integrar R32.13 i desplegar v1.2.11); pendent de lectura humana",
       "data": "2026-11-19"
     },
     "habitatge": {
@@ -104,9 +104,9 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "4a6cc179c348d0de3158b4a1b5fff81272900ce71b988bca6d5f98caa64a58f0",
+      "sha256": "1a55f0796a029428ac37ed99960d80c143ebdcd5fca77610c9b62964a34de439",
       "html": 28676,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "aprovat_per": "Claude v1.2.11 (Carril 1), per l'encàrrec autònom del Mestre Javi del 19-11-2026 14:14 (pla 261119_1414: integrar R32.13 i desplegar v1.2.11); pendent de lectura humana",
       "data": "2026-11-19"
     },
     "notes": {
@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "2a387c2f42011c8830e97f573c3c3d5569a4a275d238cad2e127b34813409b76",
-      "html": 128132,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus» i nota Llei 0 sobre r32_11_publicacions_cas.sql aplicat a les 01:37; aprovació delegada a Claude v1.2.10)",
+      "sha256": "8c819edae40d68b4c9f51acdec91aab2463bfa032a21fe71ee73bfafb78a7cf3",
+      "html": 132067,
+      "aprovat_per": "Claude v1.2.11 (Carril 1), per l'encàrrec autònom del Mestre Javi del 19-11-2026 14:14 (pla 261119_1414: integrar R32.13 i desplegar v1.2.11), crònica ajustada pel Gauntlet; pendent de lectura humana",
       "data": "2026-11-19"
     },
     "wikidepoble": {

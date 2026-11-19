@@ -12,6 +12,21 @@ import { clauFontCataleg, errorProjeccioCataleg } from '../data/projeccionsCatal
 
 const EMPTY = Object.freeze({}), NONE = Object.freeze([]);
 const disponible = () => { try { return teCapacitat('projeccionsCataleg'); } catch { return false; } };
+/* Onada R32.14 · D-R32-PUB-1, cablejat però apagat per defecte. El Mestre va aplicar
+   r32_11_publicacions_cas.sql a producció el 19-11-2026 a les 01:37 CET (rebut
+   REBUT_SQL_PRODUCCIO_R32_11_PUBLICACIONS_CAS_261119_0137.json), però el Gauntlet de R32.14
+   (P1, reproduït) va trobar que una operació amb una versió esperada vella («conflicte-versio»)
+   es reintenta per sempre i deixa encallades les referències de darrere a la mateixa cua.
+   Fins que eixa cua tinga eixida, el CAS general només s'encén amb VITE_SDP_PUBLICACIONS_CAS=1
+   en un build, i només en remot Supabase: l'adaptador local i el Node 0 rebutgen
+   expectedUpdatedAt. Una RPC absent conserva l'esborrany i l'operació (content.js). */
+export function publicacionsVersionades(config) {
+  if (import.meta.env.VITE_SDP_PUBLICACIONS_CAS !== '1') return false;
+  try {
+    const c = normalizeBackendConfig(config || {});
+    return c.dataMode === 'remote' && c.backendId === 'supabase';
+  } catch { return false; }
+}
 
 /** A lazy consumer connection; neither the root entry nor catalogue sources
  * acquire another publication store. Public reads also work without a session.
@@ -52,6 +67,7 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
     if (abast) {
       try {
         service = creaServeiProjeccionsCataleg({ abast, comprovaSessio: check, lectora: !escriptura,
+          versionada: publicacionsVersionades(config),
           publica: submission => appendSectionSubmissionNetworkOnly({ ...submission,
             actor: { tipus: identitat.actor?.tipus === 'entitat' ? 'entitat' : 'persona', id: identitat.actor?.id ?? identitat.actorId ?? ownerId } }, { ...config, signal: controller.signal }) });
       } catch (error) { configurationError = error; }
@@ -103,7 +119,7 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
       const nextRows = rows.flat();
       if (service && escriptura) {
         /* Onada R32 (Gauntlet del Carril 1) · L'adopció de versions és
-           comptabilitat local (dorment mentre D-R32-PUB-1 continue pendent: el
+           comptabilitat local (dorment mentre D-R32-PUB-1 no s'encén: el
            servei no toca el magatzem i torna false). La lectura remota és de
            xarxa, com al viu: una fallada del magatzem local (NO_DISPONIBLE quan
            la base ja oberta deixa de respondre, quota) no amaga les files

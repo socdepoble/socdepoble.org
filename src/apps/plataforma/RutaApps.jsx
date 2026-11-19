@@ -30,7 +30,7 @@ import { RequireAuth } from '../../app/guards/RequireAuth';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 import { BandaBetaMicroApp } from '../../components/PedraSeca/molecules/BandaBetaMicroApp.jsx';
 import { useSEO } from '../../hooks/useSEO';
-import { AvisApp, PAGINA_INEXISTENT } from './AvisApp.jsx';
+import { AvisApp } from './AvisApp.jsx';
 import { ElementExtern } from './ElementExtern.jsx';
 import { useEscalfamentMemoriaCau } from './escalfamentMemoriaCau.js';
 import { useFontServeis } from './fontServeis.js';
@@ -39,6 +39,7 @@ import { rutaDeApp, titolDe } from './manifestApp.js';
 import { ProveidorApp, useAppAvaluada, useRegistre } from './PlataformaContext.jsx';
 import { PortalApps, appsEnProves, textDelMotiu } from './PortalApps.jsx';
 import { analitzaRuta } from './registreApps.js';
+import { textosPortalApps } from './textosPortalApps.js';
 
 const APPS_BETA = appsEnProves();
 
@@ -47,6 +48,11 @@ const APPS_BETA = appsEnProves();
    fonts: les fonts viuen a l'arbre de les notícies. Una entrada que no és ací i no existix, l'avís
    de pàgina inexistent de sempre. */
 const ENTRADES_RETIRADES = Object.freeze({ lector: Object.freeze({ fonts: 'noticies' }) });
+
+/* Onada R32.13 · Àlies canònics d'apps unificades amb el Rebost / Nevera (sdp-clon-loiverse). */
+const APPS_UNIFICADES = Object.freeze({
+  mercaderies: Object.freeze({ app: 'nevera', entradaPerDefecte: 'rebost' })
+});
 
 /* La nova entrada d'una retirada, o null. Només d'una app interna i amb claus pròpies. */
 function entradaQueLaSubstituix(manifest, slug) {
@@ -72,6 +78,7 @@ function ContenidorApp({ manifest, entrada }) {
   const { search } = useLocation();
   /* Fase D (261020, tasca 4.1) · L1 · Els títols seguixen la llengua del text, no la demanada. */
   const { language, llenguaDelText = language } = useUIState();
+  const tx = textosPortalApps(llenguaDelText);
   const titol = titolDe(manifest.titol, llenguaDelText);
   useSEO({ title: titol, index: false });
   const serveis = useFontServeis(manifest);
@@ -88,7 +95,7 @@ function ContenidorApp({ manifest, entrada }) {
     contingut = <ElementExtern manifest={manifest} />;
   } else if (Component) {
     contingut = (
-      <Suspense fallback={<Carregant etiqueta="Carregant l’app…" />}>
+      <Suspense fallback={<Carregant etiqueta={tx.carregantApp} />}>
         <Routes>
           <Route path={`${manifest.id}/*`} element={<Component />} />
         </Routes>
@@ -132,20 +139,28 @@ export default function RutaApps() {
   const { pathname } = useLocation();
   const { dins, id, trams } = analitzaRuta(pathname);
   const app = useAppAvaluada(trams === null ? null : id);
+  const unificada = !app && id && Object.hasOwn(APPS_UNIFICADES, id) ? APPS_UNIFICADES[id] : null;
+  const destiUnificat = useAppAvaluada(unificada ? unificada.app : null);
   const { language, llenguaDelText = language, t } = useUIState();
+  const tx = textosPortalApps(llenguaDelText);
   useEscalfamentMemoriaCau(); // closca de /app/* sense xarxa (ordre del Mestre, 261007)
 
   if (!dins) return null;
   if (pathname === '/app/') return <Navigate to="/app" replace />;
   if (trams === null) {
-    return <AvisApp titol="Esta adreça no és vàlida">Les adreces de les apps només porten minúscules, xifres i guions.</AvisApp>;
+    return <AvisApp titol={tx.adrecaInvalidaTitol}>{tx.adrecaInvalidaText}</AvisApp>;
   }
   if (!id) return <PortalDeLaRuta />;
-  if (!app) return <AvisApp titol="No coneixem esta app">Este node no té cap app amb este nom.</AvisApp>;
+  if (unificada && destiUnificat) {
+    const subruta = trams.length ? trams : [unificada.entradaPerDefecte];
+    return <Navigate to={rutaDeApp(unificada.app, ...subruta)} replace />;
+  }
+  if (!app) return <AvisApp titol={tx.appDesconegudaTitol}>{tx.appDesconegudaText}</AvisApp>;
 
   const { manifest, estat, motiu } = app;
   if (estat !== 'available') {
-    return <AvisApp titol={TITOL_ESTAT[estat]}>{textDelMotiu(motiu, t)}</AvisApp>;
+    const titolEstat = estat === 'disabled' ? tx.appNoActivada : (estat === 'unavailable' ? tx.appNoPotObrirAci : TITOL_ESTAT[estat]);
+    return <AvisApp titol={titolEstat}>{textDelMotiu(motiu, t)}</AvisApp>;
   }
   if (!trams.length) return <Navigate to={rutaDeApp(manifest.id, manifest.entradaPerDefecte)} replace />;
 
@@ -155,11 +170,11 @@ export default function RutaApps() {
   if (!entrada) {
     return (
       <AvisApp
-        titol={PAGINA_INEXISTENT.titol}
+        titol={tx.paginaInexistentTitol}
         desti={rutaDeApp(manifest.id, manifest.entradaPerDefecte)}
-        etiqueta={`Ves a ${titolDe(manifest.titol, llenguaDelText)}`}
+        etiqueta={tx.vesA(titolDe(manifest.titol, llenguaDelText))}
       >
-        {PAGINA_INEXISTENT.text}
+        {tx.paginaInexistentText}
       </AvisApp>
     );
   }

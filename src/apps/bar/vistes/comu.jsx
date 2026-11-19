@@ -122,7 +122,7 @@ export function AvisOperacio() {
   const nomDe = (descripcio) => {
     if (!descripcio) return tx.unaComanda;
     if (descripcio.numero !== null) return textNumero(descripcio.numero);
-    const nom = nomOrigen(descripcio.origen, sala);
+    const nom = nomOrigen(descripcio.origen, sala, idioma);
     return descripcio.origen?.tipus === 'taula' || !descripcio.obertaA ? nom : `${nom} · ${horaCurta(descripcio.obertaA)}`;
   };
   if (!avis && migsMoviments.length === 0) return null;

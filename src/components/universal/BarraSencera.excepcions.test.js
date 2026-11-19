@@ -90,8 +90,8 @@ const SENSE_BARRA_BLAVA = Object.freeze([
     motiu: 'Ordre del Mestre 261003 (MD): el Tauler i el detall d’Usuaris i d’Entitats van sense barra blava; la capçalera de la columna porta la tornada (AdminSection.barraTaronja.test.jsx).' },
   { fitxer: 'src/pages/AvisadorPage.jsx', ocurrencies: 1,
     motiu: 'Eina privada de seguretat (Batec de Vida), PageFrame sense chrome. Cap ordre registrada ací: pendent de decisió del Mestre (mantindre-la sense barra o donar-n’hi).' },
-  { fitxer: 'src/pages/NotFoundPage.jsx', ocurrencies: 1,
-    motiu: 'Pàgina 404 (noindex), UniversalPage sense chrome. Cap ordre registrada ací: pendent de decisió del Mestre (mantindre-la sense barra o donar-n’hi).' },
+  /* Onada R32.14 · La pàgina 404 ix d'esta llista: el 404 Pedra Seca de Gemini R32.13 (lot 03) porta
+     chrome 'system', integrat per ordre del Mestre al pla 261119_1414_pla_implementacio_onada_r32_14. */
   { fitxer: 'src/sections/text/PaginesImportadesSection.jsx', ocurrencies: 1,
     motiu: 'Pàgina pública del fons documental (importacions-editorials, servida per PageDetailSection.jsx), UniversalPage sense chrome. Pendent de decisió del Mestre.' },
   { fitxer: 'src/sections/patrimoni/NaturaPatrimoniWorkspaceSection.jsx', ocurrencies: 1,

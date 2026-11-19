@@ -1,6 +1,6 @@
 /**
- * textosPortalApps.js — Textos de la interfície del portal /app en les 5
- * llengües de Sóc de Poble (`ca`, `es`, `en`, `eu`, `gl`) · Onada R30.2 (D11).
+ * textosPortalApps.js — Textos de la interfície del portal /app i de RutaApps
+ * en les 5 llengües de Sóc de Poble (`ca`, `es`, `en`, `eu`, `gl`) · Onada R30.2 + R32.13.
  *
  * Viu dins del tros diferit de `/app` perquè no engreixe el diccionari
  * d'arrencada (`ca.js`) del paquet de l'amfitrió i mantinga zero col·lisió CAS.
@@ -24,7 +24,22 @@ export const TEXTOS_PORTAL_APPS = Object.freeze({
     testersGrup: 'Grup Google Groups (socdepoble-testers)',
     testersPlay: 'Proves a Google Play',
     testersAppStore: 'App Store (iOS)',
-    testersAdmin: 'Tauler de botigues (/admin)'
+    testersAdmin: 'Tauler de botigues (/admin)',
+    tornaApps: 'Torna a les apps',
+    carregantApp: 'Carregant l’app…',
+    adrecaInvalidaTitol: 'Esta adreça no és vàlida',
+    adrecaInvalidaText: 'Les adreces de les apps només porten minúscules, xifres i guions.',
+    appDesconegudaTitol: 'No coneixem esta app',
+    appDesconegudaText: 'Este node no té cap app amb este nom.',
+    appNoActivada: 'Esta app no està activada',
+    appNoPotObrirAci: 'Esta app no es pot obrir ací',
+    appNoPotObrir: 'Esta app no es pot obrir',
+    appMalDeclarada: 'Les seues pàgines estan mal declarades. Ho ha d’arreglar qui la manté.',
+    paginaInexistentTitol: 'Esta pàgina de l’app no existix',
+    paginaInexistentText: 'Pot ser que l’enllaç siga antic o estiga mal copiat.',
+    vesA: (nom) => `Ves a ${nom}`,
+    navegacioCol: 'Navegació',
+    llistaCol: 'Llista'
   }),
   es: Object.freeze({
     titol: 'Apps',
@@ -43,7 +58,22 @@ export const TEXTOS_PORTAL_APPS = Object.freeze({
     testersGrup: 'Grupo Google Groups (socdepoble-testers)',
     testersPlay: 'Pruebas en Google Play',
     testersAppStore: 'App Store (iOS)',
-    testersAdmin: 'Panel de tiendas (/admin)'
+    testersAdmin: 'Panel de tiendas (/admin)',
+    tornaApps: 'Volver a las apps',
+    carregantApp: 'Cargando la app…',
+    adrecaInvalidaTitol: 'Esta dirección no es válida',
+    adrecaInvalidaText: 'Las direcciones de las apps solo llevan minúsculas, cifras y guiones.',
+    appDesconegudaTitol: 'No conocemos esta app',
+    appDesconegudaText: 'Esta web no tiene ninguna app con este nombre.',
+    appNoActivada: 'Esta app no está activada',
+    appNoPotObrirAci: 'Esta app no se puede abrir aquí',
+    appNoPotObrir: 'Esta app no se puede abrir',
+    appMalDeclarada: 'Sus páginas están mal declaradas. Debe arreglarlo quien la mantiene.',
+    paginaInexistentTitol: 'Esta página de la app no existe',
+    paginaInexistentText: 'Puede que el enlace sea antiguo o esté mal copiado.',
+    vesA: (nom) => `Ir a ${nom}`,
+    navegacioCol: 'Navegación',
+    llistaCol: 'Lista'
   }),
   en: Object.freeze({
     titol: 'Apps',
@@ -62,7 +92,22 @@ export const TEXTOS_PORTAL_APPS = Object.freeze({
     testersGrup: 'Google Groups (socdepoble-testers)',
     testersPlay: 'Google Play testing',
     testersAppStore: 'App Store (iOS)',
-    testersAdmin: 'Stores dashboard (/admin)'
+    testersAdmin: 'Stores dashboard (/admin)',
+    tornaApps: 'Back to apps',
+    carregantApp: 'Loading app…',
+    adrecaInvalidaTitol: 'Invalid app address',
+    adrecaInvalidaText: 'App addresses only contain lowercase letters, digits, and hyphens.',
+    appDesconegudaTitol: 'Unknown app',
+    appDesconegudaText: 'There is no app with this name here.',
+    appNoActivada: 'This app is switched off',
+    appNoPotObrirAci: 'This app cannot be opened here',
+    appNoPotObrir: 'This app cannot be opened',
+    appMalDeclarada: 'Its pages are misconfigured. Its maintainer needs to fix them.',
+    paginaInexistentTitol: 'This app page does not exist',
+    paginaInexistentText: 'The link may be outdated or mistyped.',
+    vesA: (nom) => `Go to ${nom}`,
+    navegacioCol: 'Navigation',
+    llistaCol: 'List'
   }),
   eu: Object.freeze({
     titol: 'Aplikazioak',
@@ -81,7 +126,22 @@ export const TEXTOS_PORTAL_APPS = Object.freeze({
     testersGrup: 'Google Groups taldea (socdepoble-testers)',
     testersPlay: 'Probak Google Play-n',
     testersAppStore: 'App Store (iOS)',
-    testersAdmin: 'Denden panela (/admin)'
+    testersAdmin: 'Denden panela (/admin)',
+    tornaApps: 'Itzuli aplikazioetara',
+    carregantApp: 'Aplikazioa kargatzen…',
+    adrecaInvalidaTitol: 'Helbide hau ez da baliozkoa',
+    adrecaInvalidaText: 'Aplikazioen helbideek letra xeheak, zifrak eta marratxoak baino ez dituzte.',
+    appDesconegudaTitol: 'Ez dugu aplikazio hau ezagutzen',
+    appDesconegudaText: 'Ez dago izen hau duen aplikaziorik hemen.',
+    appNoActivada: 'Aplikazio hau ez dago aktibatuta',
+    appNoPotObrirAci: 'Aplikazio hau ezin da hemen ireki',
+    appNoPotObrir: 'Aplikazio hau ezin da ireki',
+    appMalDeclarada: 'Bere orriak gaizki adierazita daude. Mantentzen duenak konpondu behar du.',
+    paginaInexistentTitol: 'Aplikazioko orri hau ez da existitzen',
+    paginaInexistentText: 'Baliteke esteka zaharra izatea edo gaizki kopiatuta egotea.',
+    vesA: (nom) => `Joan ${nom} atalera`,
+    navegacioCol: 'Nabigazioa',
+    llistaCol: 'Zerrenda'
   }),
   gl: Object.freeze({
     titol: 'Apps',
@@ -100,7 +160,22 @@ export const TEXTOS_PORTAL_APPS = Object.freeze({
     testersGrup: 'Grupo Google Groups (socdepoble-testers)',
     testersPlay: 'Probas en Google Play',
     testersAppStore: 'App Store (iOS)',
-    testersAdmin: 'Panel de tendas (/admin)'
+    testersAdmin: 'Panel de tendas (/admin)',
+    tornaApps: 'Volver ás apps',
+    carregantApp: 'Cargando a app…',
+    adrecaInvalidaTitol: 'Este enderezo non é válido',
+    adrecaInvalidaText: 'Os enderezos das apps só levan minúsculas, cifras e guións.',
+    appDesconegudaTitol: 'Non coñecemos esta app',
+    appDesconegudaText: 'Non hai ningunha app con este nome aquí.',
+    appNoActivada: 'Esta app non está activada',
+    appNoPotObrirAci: 'Esta app non se pode abrir aquí',
+    appNoPotObrir: 'Esta app non se pode abrir',
+    appMalDeclarada: 'As súas páxinas están mal declaradas. Debe arranxalo quen a mantén.',
+    paginaInexistentTitol: 'Esta páxina da app non existe',
+    paginaInexistentText: 'Pode que a ligazón sexa antiga ou estea mal copiada.',
+    vesA: (nom) => `Ir a ${nom}`,
+    navegacioCol: 'Navegación',
+    llistaCol: 'Lista'
   })
 });
 

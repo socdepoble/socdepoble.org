@@ -16,6 +16,7 @@
  */
 import { errorBar } from '../nucli/comu.js';
 import { ESTABLIMENT_EXEMPLE, llavorCarta } from '../nucli/llavor.js';
+import { textosUiBar } from '../i18nBar.js';
 
 /* La de La Parròquia, darrere del literal de compilació EXACTE. */
 const carregaLaParroquia = import.meta.env.DEV || import.meta.env.VITE_SDP_BAR_LLAVOR_LA_PARROQUIA === '1'
@@ -40,9 +41,23 @@ const CARREGADORS = Object.freeze({
 /** Les llavors que es poden carregar en este build, en l'ordre dels botons: { id, nom, accio, nomDelBar }. */
 export const LLAVORS = Object.freeze(CONEGUDES.filter((l) => Object.hasOwn(CARREGADORS, l.id)));
 
+/** Les llavors disponibles traduïdes en l'idioma de la interfície. */
+export function llavorsDisponibles(idioma = 'ca') {
+  const tx = textosUiBar(idioma);
+  return LLAVORS.map((l) => (l.id === 'exemple'
+    ? { ...l, nom: tx.llavorNomExemple, accio: tx.llavorAccioExemple }
+    : l.id === 'la-parroquia'
+      ? { ...l, accio: tx.llavorAccioParroquia }
+      : l));
+}
+
 /** El nom d'una llavor pel seu id (sense id, la d'exemple: és la de la primera càrrega). */
-export function nomDeLlavor(id) {
-  return (CONEGUDES.find((l) => l.id === (id || 'exemple')) || { nom: 'Carta pròpia' }).nom;
+export function nomDeLlavor(id, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
+  const clau = id || 'exemple';
+  if (clau === 'exemple') return tx.llavorNomExemple;
+  const trobada = CONEGUDES.find((l) => l.id === clau);
+  return trobada ? trobada.nom : tx.llavorNomPropia;
 }
 
 /**

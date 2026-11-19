@@ -1,18 +1,5 @@
 /**
  * El Bar · vistes/Ajustos.jsx — sala, caixa i dispositiu (disseny del Bar §A.7-§A.8).
- *
- *   · Dispositiu: on viuen les dades (este navegador), si el navegador ha
- *     promés guardar-les, «Desa una còpia» (JSON) i els interruptors de l'app.
- *   · Caixa: el nom del bar i l'IVA per defecte (el posa qui gestiona el bar:
- *     el TPV no aconsella cap tipus).
- *   · Sala: les zones i les taules (de només lectura en esta versió).
- *   · Carta: la llavor d'ara i carregar-ne una altra (llavors/index.js), amb
- *     el diàleg de confirmació destructiu a la consulta (?llavor=<id>), que
- *     diu què canvia de l'establiment i recorda desar abans una còpia, i el
- *     resum i els avisos de la importació (Onada 3).
- * Sense permís d'escriptura (ProveidorBar, permis.potEscriure): «Desa» i les
- * llavors queden desactivats. La còpia, la persistència i els interruptors
- * del dispositiu no escriuen dades del Bar i continuen igual.
  */
 import { useEffect, useRef, useState } from 'react';
 import { Download, HardDrive } from 'lucide-react';
@@ -24,35 +11,39 @@ import { esSlug, titolDe, useApp, useInterruptorsApp, useParametresConsulta } fr
 import { MAX_BYTES_COPIA_BAR } from '../nucli/copia.js';
 import { taulesEnOrdre } from '../nucli/sala.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
-import { LLAVORS, nomDeLlavor } from '../llavors/index.js';
+import { textProductesBar, textosUiBar } from '../i18nBar.js';
+import { llavorsDisponibles, nomDeLlavor } from '../llavors/index.js';
 import { AvisBase, AvisOperacio, AvisSessioEnEstret, Columna, Preparat } from './comu.jsx';
 import { desaFitxer, nomFitxer } from './desa.js';
-import { SECCIONS_AJUSTOS, useUnaVegada, useVes } from './punt.js';
+import { seccionsAjustos, useIdiomaBar, useUnaVegada, useVes } from './punt.js';
 
-/* Fora de cap Preparat: en estret, quan és el panell que es veu, porta l'avís de la sessió ella
-   mateixa; en ample i en tauleta el diu el detall del costat (AjustTriat), una sola vegada. */
 export function ApartatsAjustos({ params }) {
+  const idioma = useIdiomaBar();
+  const tx = textosUiBar(idioma);
   const { ruta } = useVes();
   return (
-    <ColumnaColleccions titol="Ajustos" actiu={params?.seccio || 'dispositiu'}
-      colleccions={SECCIONS_AJUSTOS.map((s) => ({ id: s.id, nom: s.nom, comptador: 0, secundari: s.text }))}
+    <ColumnaColleccions titol={tx.ajustosTitol} actiu={params?.seccio || 'dispositiu'}
+      colleccions={seccionsAjustos(idioma).map((s) => ({ id: s.id, nom: s.nom, comptador: 0, secundari: s.text }))}
       hrefDe={(s) => ruta('ajustos', s.id)} textComptador={() => ''} avis={<AvisSessioEnEstret />} />
   );
 }
 
 export function AjustTriat({ params }) {
+  const idioma = useIdiomaBar();
+  const tx = textosUiBar(idioma);
   const seccio = params?.seccio || 'dispositiu';
   return (
-    <Preparat titol="Ajustos" ambTorn={false}>
-      {seccio === 'dispositiu' ? <Dispositiu /> : null}
-      {seccio === 'caixa' ? <Caixa /> : null}
-      {seccio === 'sala' ? <Sala /> : null}
-      {seccio === 'carta' ? <CartaLlavor /> : null}
+    <Preparat titol={tx.ajustosTitol} ambTorn={false}>
+      {seccio === 'dispositiu' ? <Dispositiu idioma={idioma} /> : null}
+      {seccio === 'caixa' ? <Caixa idioma={idioma} /> : null}
+      {seccio === 'sala' ? <Sala idioma={idioma} /> : null}
+      {seccio === 'carta' ? <CartaLlavor idioma={idioma} /> : null}
     </Preparat>
   );
 }
 
-function Dispositiu() {
+function Dispositiu({ idioma = 'ca' }) {
+  const tx = textosUiBar(idioma);
   const { accions, persistent, mode, permis } = useBar();
   const { manifest } = useApp();
   const interruptors = useInterruptorsApp();
@@ -80,7 +71,7 @@ function Dispositiu() {
       const concedit = await accions.demanaPersistencia();
       const nouEstat = await accions.estatPersistencia();
       setEstat(nouEstat);
-      setAvis(concedit === null ? 'Este navegador no permet demanar-ho.' : (concedit ? 'Fet: el navegador no les esborrarà per falta d’espai.' : 'El navegador no ho ha concedit.'));
+      setAvis(concedit === null ? tx.navegadorNoPermetDemanar : (concedit ? tx.fetNoEsborrara : tx.navegadorNoConcedit));
     } catch {
       setErrorPersistencia(true);
     } finally {
@@ -93,9 +84,9 @@ function Dispositiu() {
       const text = await accions.exportaCopia();
       const ara = new Date().toISOString();
       const ofert = desaFitxer(nomFitxer('copia-bar', 'dispositiu', ara, 'json'), text, 'application/json');
-      setAvis(ofert ? 'Còpia preparada: el navegador et deixa triar on desar-la.' : 'Este navegador no deixa desar fitxers des d’ací.');
+      setAvis(ofert ? tx.copiaPreparada : tx.navegadorNoDeixaDesar);
     } catch {
-      setAvis('No s’ha pogut llegir la còpia del Bar.');
+      setAvis(tx.errorLlegirCopia);
     }
   };
   const triaCopia = (event) => {
@@ -103,7 +94,7 @@ function Dispositiu() {
     event.target.value = '';
     if (!fitxer) return;
     if (fitxer.size > MAX_BYTES_COPIA_BAR) {
-      setAvis('El fitxer és massa gran per a ser una còpia del Bar.');
+      setAvis(tx.fitxerMassaGranCopia);
       return;
     }
     setFitxerCopia(fitxer);
@@ -113,42 +104,43 @@ function Dispositiu() {
       const resultat = await accions.restauraCopia(await fitxerCopia.text());
       if (resultat.ok) {
         const { torns, tiquets } = resultat.valor;
-        setAvis(`Còpia restaurada. Conté ${torns} ${torns === 1 ? 'torn' : 'torns'} i ${tiquets} ${tiquets === 1 ? 'tiquet' : 'tiquets'}.`);
+        setAvis(tx.copiaRestaurada(torns, tiquets));
       }
     } catch {
-      setAvis('No s’ha pogut llegir el fitxer.');
+      setAvis(tx.errorLlegirFitxer);
     } finally {
       setFitxerCopia(null);
     }
   });
   return (
-    <Columna titol="Dispositiu">
+    <Columna titol={tx.ajustDispositiuNom}>
       <AvisBase />
       <AvisOperacio />
-      {errorPersistencia ? <Alerta to="error">No s’ha pogut comprovar o demanar la persistència del navegador. Torna-ho a provar; desa una còpia del Bar.</Alerta> : null}
+      {errorPersistencia ? <Alerta to="error">{tx.errorPersistencia}</Alerta> : null}
       {avis ? <Alerta to="info" onTanca={() => setAvis(null)}>{avis}</Alerta> : null}
-      <BarraResum etiqueta="On són les dades" comptador={0} textComptador={() => ''}
-        total={persistent ? 'En este navegador' : 'Només en memòria'} textTotal="Lloc" />
-      <p>Les dades del bar no ixen d’este dispositiu: no es sincronitzen amb cap servidor. Esborrar les dades del navegador les esborra. Desa una còpia en cada tancament.</p>
-      {estat ? <p>{estat.duradora ? 'El navegador ha promés no esborrar-les per falta d’espai.' : 'El navegador encara no ha promés guardar-les.'}</p> : null}
-      <Boto icona={HardDrive} onClick={demana} carregant={demanant} disabled={demanant}>Demana que no s’esborren</Boto>
-      <Boto icona={Download} onClick={copia}>Desa una còpia (JSON)</Boto>
-      <Camp etiqueta="Restaura una còpia del Bar" ajuda="Disponible en un navegador que encara no tinga dades del Bar.">
+      <BarraResum etiqueta={tx.onSonLesDades} comptador={0} textComptador={() => ''}
+        total={persistent ? tx.enEsteNavegador : tx.nomesEnMemoria} textTotal={tx.llocEtiqueta} />
+      <p>{tx.privacitatDispositiuText}</p>
+      {estat ? <p>{estat.duradora ? tx.promesNoEsborrar : tx.encaraNoPromes}</p> : null}
+      <Boto icona={HardDrive} onClick={demana} carregant={demanant} disabled={demanant}>{tx.demanaNoEsborren}</Boto>
+      <Boto icona={Download} onClick={copia}>{tx.desaCopiaJson}</Boto>
+      <Camp etiqueta={tx.restauraCopiaCamp} ajuda={tx.ajudaRestauraCopia}>
         <CampText tipus="file" accept=".json,application/json" onChange={triaCopia}
           disabled={!permis.potEscriure || mode === 'lectora' || ocupat} />
       </Camp>
       <DialegConfirmacio obert={Boolean(fitxerCopia)} carregant={ocupat}
-        titol="Restaura la còpia del Bar" descripcio="La còpia ocuparà el lloc de les dades d’exemple en este navegador."
-        etiquetaConfirma="Restaura la còpia" etiquetaCancela="Cancel·la"
+        titol={tx.restauraCopiaTitol} descripcio={tx.restauraCopiaDesc}
+        etiquetaConfirma={tx.restauraCopiaConfirma} etiquetaCancela={tx.cancela}
         onTanca={() => setFitxerCopia(null)} onConfirma={restaura} />
       {manifest.interruptors.filter((i) => interruptors.avalua(i.id).motiu !== 'apagat-per-defecte').map((i) => (
-        <Interruptor key={i.id} etiqueta={titolDe(i.titol)} actiu={interruptors.actiu(i.id)} onCanvi={(actiu) => interruptors.apaga(i.id, !actiu)} />
+        <Interruptor key={i.id} etiqueta={titolDe(i.titol, idioma)} actiu={interruptors.actiu(i.id)} onCanvi={(actiu) => interruptors.apaga(i.id, !actiu)} />
       ))}
     </Columna>
   );
 }
 
-function Caixa() {
+function Caixa({ idioma = 'ca' }) {
+  const tx = textosUiBar(idioma);
   const { establiment, accions, permis } = useBar();
   const [nom, setNom] = useState(establiment.nom);
   const [iva, setIva] = useState(String(establiment.ivaPerDefecte));
@@ -159,112 +151,109 @@ function Caixa() {
     setDesat(r.ok);
   };
   return (
-    <Columna titol="Caixa">
+    <Columna titol={tx.caixaTitol}>
       <AvisOperacio />
-      {desat ? <Alerta to="exit">Desat. Les comandes ja fetes conserven l’IVA que tenien.</Alerta> : null}
-      <Camp etiqueta="Nom del bar" ajuda="Es veu a la nota del client.">
+      {desat ? <Alerta to="exit">{tx.desatIvaConservat}</Alerta> : null}
+      <Camp etiqueta={tx.nomDelBar} ajuda={tx.ajudaNomDelBar}>
         <CampText value={nom} maxLength={80} onChange={(event) => { setNom(event.target.value); setDesat(false); }} />
       </Camp>
-      <Camp etiqueta="IVA per defecte (%)" ajuda="El decidix qui gestiona el bar; un producte en pot portar un altre."
-        error={ivaNet === null ? 'Escriu un enter de 0 a 100.' : undefined}>
+      <Camp etiqueta={tx.ivaPerDefecte} ajuda={tx.ajudaIvaPerDefecte}
+        error={ivaNet === null ? tx.errorIvaRang : undefined}>
         <CampText inputMode="numeric" value={iva} maxLength={3} onChange={(event) => { setIva(event.target.value); setDesat(false); }} />
       </Camp>
-      <Boto varietat="primari" disabled={!permis.potEscriure || ivaNet === null} onClick={desa}>Desa</Boto>
+      <Boto varietat="primari" disabled={!permis.potEscriure || ivaNet === null} onClick={desa}>{tx.desa}</Boto>
     </Columna>
   );
 }
 
-function Sala() {
+function Sala({ idioma = 'ca' }) {
+  const tx = textosUiBar(idioma);
   const { sala } = useBar();
   return (
-    <Columna titol="Sala">
-      <p>Les zones i les taules del plànol. Editar-les és per a una versió pròxima.</p>
+    <Columna titol={tx.sala}>
+      <p>{tx.salaZonesText}</p>
       {sala.zones.map((zona) => (
         <LiniesColleccio key={zona.id} etiqueta={zona.nom}
           linies={taulesEnOrdre(sala).filter((t) => t.zonaId === zona.id).map((t) => ({
-            id: t.id, articleId: t.id, nom: t.nom, detall: `Fila ${t.posicio.fila}, columna ${t.posicio.columna}`, valor: `${t.places} places`
+            id: t.id, articleId: t.id, nom: t.nom, detall: tx.filaColumna(t.posicio.fila, t.posicio.columna), valor: `${t.places} ${tx.places}`
           }))} />
       ))}
     </Columna>
   );
 }
 
-const textProductes = (n) => `${n} ${n === 1 ? 'producte' : 'productes'}`;
 const linia = (id, nom, valor) => ({ id, articleId: id, nom, valor: String(valor) });
 
-/* El resum de l'importador com a línies de només lectura. */
-function liniesDelResum(resum) {
+function liniesDelResum(resum, tx) {
   const iva = Object.keys(resum.perIva).map(Number).sort((a, b) => a - b)
-    .map((percent) => linia(`iva-${percent}`, `IVA del ${percent} %`, resum.perIva[percent]));
+    .map((percent) => linia(`iva-${percent}`, tx.ivaDelPercent(percent), resum.perIva[percent]));
   return [
-    linia('productes', 'Productes', resum.productes),
-    linia('variants', 'Variants', resum.variants),
-    linia('categories', 'Categories', resum.categories),
-    linia('inactius', 'No disponibles', resum.inactius),
-    linia('preu-obert', 'Amb preu obert', resum.preuObert),
+    linia('productes', tx.productes, resum.productes),
+    linia('variants', tx.variantsResum, resum.variants),
+    linia('categories', tx.categoriesTitol, resum.categories),
+    linia('inactius', tx.noDisponibles, resum.inactius),
+    linia('preu-obert', tx.ambPreuObert, resum.preuObert),
     ...iva,
-    ...(resum.senseIva ? [linia('sense-iva', 'Amb l’IVA de l’establiment', resum.senseIva)] : []),
-    linia('modificadors', 'Grups de modificadors no importats', resum.modificadors)
+    ...(resum.senseIva ? [linia('sense-iva', tx.ambIvaEstabliment, resum.senseIva)] : []),
+    linia('modificadors', tx.grupsNoImportats, resum.modificadors)
   ];
 }
 
-function ResumLlavor({ resultat }) {
+function ResumLlavor({ resultat, idioma = 'ca' }) {
+  const tx = textosUiBar(idioma);
   const { nom, resum, avisos = [] } = resultat;
   return (
     <>
-      <Alerta to="exit">{resum ? `Fet: «${nom}» té ${textProductes(resum.productes)} en ${resum.categories} categories.` : `Fet: torna a ser la «${nom}».`}</Alerta>
-      {resum ? <LiniesColleccio etiqueta="Resum de la importació" linies={liniesDelResum(resum)} /> : null}
+      <Alerta to="exit">{resum ? tx.fetLlavorAmbResum(nom, textProductesBar(resum.productes, idioma), resum.categories) : tx.fetLlavorTorna(nom)}</Alerta>
+      {resum ? <LiniesColleccio etiqueta={tx.resumImportacio} linies={liniesDelResum(resum, tx)} /> : null}
       {avisos.length ? (
         <>
-          <p>{`La importació ha deixat ${avisos.length} ${avisos.length === 1 ? 'avís' : 'avisos'}:`}</p>
-          <LiniesColleccio etiqueta="Avisos de la importació" linies={avisos.map((a, i) => ({ id: `avis-${i + 1}`, articleId: `avis-${i + 1}`, nom: a.text }))} />
+          <p>{tx.avisosImportacioIntro(avisos.length)}</p>
+          <LiniesColleccio etiqueta={tx.avisosImportacio} linies={avisos.map((a, i) => ({ id: `avis-${i + 1}`, articleId: `avis-${i + 1}`, nom: a.text }))} />
         </>
       ) : null}
     </>
   );
 }
 
-/* La confirmació va a la consulta (Clàusula dels Slugs, BAR-R7): ?llavor=<id>. */
 const PARAMETRES_CARTA = Object.freeze({ llavor: esSlug });
 
-/* Què canvia de l'establiment: només el nom, i només si la llavor en porta un. */
-const textEstabliment = (llavor) => (llavor.nomDelBar
-  ? `El nom del bar passa a ser «${llavor.nomDelBar}». L’IVA per defecte i les monedes de la caixa no canvien.`
-  : 'El nom del bar, l’IVA per defecte i les monedes de la caixa no canvien.');
-
-function CartaLlavor() {
+function CartaLlavor({ idioma = 'ca' }) {
+  const tx = textosUiBar(idioma);
   const { carta, establiment, accions, permis } = useBar();
   const [consulta, posaConsulta] = useParametresConsulta(PARAMETRES_CARTA);
   const [resultat, setResultat] = useState(null);
   const [ocupat, executa] = useUnaVegada();
-  /* Sense permís, cap confirmació s'obri, tampoc per la consulta. */
-  const triada = permis.potEscriure ? LLAVORS.find((l) => l.id === consulta.llavor) || null : null;
+  const llistaLlavors = llavorsDisponibles(idioma);
+  const triada = permis.potEscriure ? llistaLlavors.find((l) => l.id === consulta.llavor) || null : null;
   const tria = (id) => {
     accions.oblidaAvis();
     setResultat(null);
     posaConsulta({ llavor: id });
   };
   const tanca = () => posaConsulta({ llavor: null });
-  /* Un sol toc a «Substituïx la carta», encara que se'n facen dos (useUnaVegada). */
   const confirma = () => executa(async () => {
     const r = await accions.carregaLlavor(triada.id);
     tanca();
     if (r.ok) setResultat({ nom: triada.nom, ...r.valor });
   });
+  const textEstabliment = triada
+    ? (triada.nomDelBar ? tx.textEstablimentCanvia(triada.nomDelBar) : tx.textEstablimentNoCanvia)
+    : '';
   return (
-    <Columna titol="Carta">
+    <Columna titol={tx.cartaTitol}>
       <AvisOperacio />
-      <BarraResum etiqueta="Carta" comptador={carta.productes.length} textComptador={textProductes}
-        total={nomDeLlavor(establiment.llavor)} textTotal="Llavor" />
-      <p>Carregar una carta substituïx la d’ara sencera: productes, categories, modificadors, ingredients i escandalls. La sala, els torns i els tiquets no canvien. Cal tindre el torn tancat i cap comanda oberta.</p>
-      {LLAVORS.map((l) => <Boto key={l.id} disabled={!permis.potEscriure} onClick={() => tria(l.id)}>{l.accio}</Boto>)}
-      {resultat ? <ResumLlavor resultat={resultat} /> : null}
+      <BarraResum etiqueta={tx.cartaTitol} comptador={carta.productes.length} textComptador={(n) => textProductesBar(n, idioma)}
+        total={nomDeLlavor(establiment.llavor, idioma)} textTotal={tx.llavorEtiqueta} />
+      <p>{tx.cartaLlavorExplicacio}</p>
+      {llistaLlavors.map((l) => <Boto key={l.id} disabled={!permis.potEscriure} onClick={() => tria(l.id)}>{l.accio}</Boto>)}
+      {resultat ? <ResumLlavor resultat={resultat} idioma={idioma} /> : null}
       <DialegConfirmacio obert={Boolean(triada)} destructiu carregant={ocupat}
-        titol={triada ? `Substituïx la carta per «${triada.nom}»?` : 'Substituïx la carta'}
-        descripcio="Els canvis fets a la carta d’ara es perdran."
-        etiquetaConfirma="Substituïx la carta" etiquetaCancela="Cancel·la" onTanca={tanca} onConfirma={confirma}>
-        {triada ? <p>{textEstabliment(triada)}</p> : null}
-        <p>Si la vols guardar, desa abans una còpia des d’Ajustos › Dispositiu. La podràs restaurar en un navegador sense dades del Bar.</p>
+        titol={triada ? tx.substituixCartaPer(triada.nom) : tx.substituixCarta}
+        descripcio={tx.canvisCartaPerdran}
+        etiquetaConfirma={tx.substituixCarta} etiquetaCancela={tx.cancela} onTanca={tanca} onConfirma={confirma}>
+        {triada ? <p>{textEstabliment}</p> : null}
+        <p>{tx.desaCopiaAbansCarta}</p>
       </DialegConfirmacio>
     </Columna>
   );

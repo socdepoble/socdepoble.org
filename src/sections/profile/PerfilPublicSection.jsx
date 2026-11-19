@@ -24,7 +24,7 @@
  *     de l'organització només ix si l'ha fet públic, amb un mailto validat.
  */
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Bot, Contact, MessageCircle, PencilLine, UserCheck } from 'lucide-react';
+import { Bot, Contact, Flag, MessageCircle, PencilLine, UserCheck } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 /* Gauntlet 261025_0545 (CUR-01) · Qui mira: la persona i l'entrada de la
@@ -101,6 +101,7 @@ import {
   altLogotipPerfilPublic,
   etiquetaTipusPerfilPublic
 } from './textosPerfilPublic.js';
+import { textosDenunciaContingut } from '../../components/universal/i18nDenunciaContingut.js';
 
 /* Onada R17 (AH-R17-10) · El dossier històric, estatutari i el model d'acta
    d'El Rentonar, en un tros diferit: les seues dades (data/patrimoni/actaRentonar.js)
@@ -109,6 +110,7 @@ import {
    perfil: DocumentacioHistoricaRentonar.test.jsx comprova que és idèntica a
    ATRIBUCIO_RENTONAR, la font. */
 const DocumentacioHistoricaRentonar = lazy(() => import('./DocumentacioHistoricaRentonar.jsx'));
+const DialegDenunciaContingut = lazy(() => import('../../components/universal/DialegDenunciaContingut.jsx'));
 export const ATRIBUCIO_PERFIL_RENTONAR = 'CC BY-NC-SA 4.0 Pedro Ferrer Rodriguez · El Rentonar. Natura i Patrimoni.';
 
 /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
@@ -777,6 +779,19 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
      una fitxa privada que només veu qui la té, no ix cap al motor. Sense la
      marca, tampoc (fallada tancada). */
   const fitxaTraduible = perfil.publicat === true && !ambVeinatConnectat;
+  const [denunciaLssiOberta, setDenunciaLssiOberta] = useState(false);
+  const [denunciaLssiMuntada, setDenunciaLssiMuntada] = useState(false);
+  /* Onada R32.14 (integració de Gemini R32.13) · Ni la fitxa pròpia (directeAmbUnMateix, també la de la persona
+     pilot mirada per ella mateixa, R24.2) ni la de la persona de contacte del paquet (institucional, com la del
+     projecte; en remot el servidor no la coneix) oferixen l'avís LSSI: cap fila d'accions buida (REV-PERF-7). */
+  const potNotificarLssi = !perfil.propietari && !perfil.esIA && !esElProjecte && !administra
+    && !directeAmbUnMateix && !esLaPilotDelPaquet
+    && (perfil.tipus === 'persona' || perfil.tipus === 'entitat');
+  const txDenunciaLssi = textosDenunciaContingut(llenguaDelText);
+  const obriDenunciaLssi = () => {
+    setDenunciaLssiMuntada(true);
+    setDenunciaLssiOberta(true);
+  };
 
   return (
     <UniversalPage
@@ -954,6 +969,30 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
         <ConnexionsPubliques revisio={revisioConnexions} tipus={perfil.tipus === 'persona' ? 'persona' : 'entitat'} id={perfil.id} config={externalConfig} t={t} visor={visor} />
         {administra ? <VisibilitatConnexions onCanvi={() => setRevisioConnexions(n => n + 1)} tipus="entitat" id={perfil.id} config={externalConfig} t={t} visor={visor} /> : null}
       </> : null}
+      {potNotificarLssi ? (
+        <div className="sdp-alerta__accions sdp-alerta__accions--centrades">
+          <Boto varietat="fantasma" icona={Flag} onClick={obriDenunciaLssi}>
+            {txDenunciaLssi.botoObrirPerfil}
+          </Boto>
+        </div>
+      ) : null}
+      {potNotificarLssi && denunciaLssiMuntada ? (
+        <Suspense fallback={null}>
+          <DialegDenunciaContingut
+            obert={denunciaLssiOberta}
+            onTanca={() => setDenunciaLssiOberta(false)}
+            objectiu={{
+              tipus: perfil.tipus,
+              id: perfil.id,
+              titol: perfil.nom,
+              autor: { tipus: perfil.tipus, id: perfil.id, nom: perfil.nom },
+              bloquejable: true
+            }}
+            idioma={llenguaDelText}
+            config={externalConfig}
+          />
+        </Suspense>
+      ) : null}
     </UniversalPage>
   );
 }

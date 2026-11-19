@@ -19,7 +19,9 @@ import {
   Beer, Coffee, CupSoda, GlassWater, IceCreamCone, Martini, Sandwich, Soup, Utensils, UtensilsCrossed, Wheat, Wine
 } from 'lucide-react';
 import { formatEuros } from '../../../utils/diners.js';
-import { ALERGENS, NOMS_ALERGENS, ordenaAlergens } from '../../../utils/productes/producteUniversal.js';
+import { ALERGENS, ordenaAlergens } from '../../../utils/productes/producteUniversal.js';
+import { textosUiBar } from '../i18nBar.js';
+import { nomAlergen } from '../i18nMercaderies.js';
 import { cartaDelCanal, grupsDe, teGrupObligatori } from '../nucli/cataleg.js';
 import { totals } from '../nucli/comanda.js';
 import { brutLinia, totalLinia } from '../nucli/linia.js';
@@ -30,7 +32,12 @@ const ICONES = Object.freeze({ Beer, Coffee, CupSoda, GlassWater, IceCreamCone, 
 export const euros = (cents) => formatEuros(cents);
 
 /** «3 línies», «1 línia». */
-export const textLinies = (n) => `${n} ${n === 1 ? 'línia' : 'línies'}`;
+export function textLinies(n, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
+  return `${n} ${n === 1 ? tx.liniaSingular : tx.liniaPlural}`;
+}
+
+export const textLiniesPerIdioma = (idioma = 'ca') => (n) => textLinies(n, idioma);
 
 /** Les categories de la carta amb la icona feta component (cap color per categoria). */
 export function categoriesVestides(carta) {
@@ -55,17 +62,19 @@ export function imatgeDe(producte, establiment) {
 }
 
 /** El valor de la rajola: el preu si n'hi ha un de sol, «N variants» si no, «Preu obert». */
-export function valorDeProducte(producte) {
-  if (producte.preuObert) return 'Preu obert';
+export function valorDeProducte(producte, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
+  if (producte.preuObert) return tx.preuObert;
   const preus = new Set(producte.variants.map((v) => v.preuCents));
-  return preus.size === 1 ? euros(producte.variants[0].preuCents) : `${producte.variants.length} variants`;
+  return preus.size === 1 ? euros(producte.variants[0].preuCents) : tx.variantsComptador(producte.variants.length);
 }
 
 /**
  * Els productes de la carta com a articles de l'esquelet. `aComanda`: els
  * ids que ja són a la comanda en curs (estat 'en-colleccio', amb text).
  */
-export function articlesDeCarta(carta, { aComanda = new Set(), establiment, ambInactius = false } = {}) {
+export function articlesDeCarta(carta, { aComanda = new Set(), establiment, ambInactius = false, idioma = 'ca' } = {}) {
+  const tx = textosUiBar(idioma);
   return (carta?.productes || [])
     .filter((p) => ambInactius || p.actiu)
     .slice()
@@ -78,8 +87,8 @@ export function articlesDeCarta(carta, { aComanda = new Set(), establiment, ambI
         id: p.id,
         nom: p.nom,
         categoriaId: p.categoriaId,
-        valor: valorDeProducte(p),
-        ...(p.exemple ? { secundari: 'Preu d’exemple' } : {}),
+        valor: valorDeProducte(p, idioma),
+        ...(p.exemple ? { secundari: tx.preuExemple } : {}),
         ...(imatgeDe(p, establiment) ? { imatge: imatgeDe(p, establiment) } : {}),
         estat
       };
@@ -92,11 +101,12 @@ export function articlesDeCarta(carta, { aComanda = new Set(), establiment, ambI
  * Cada opció porta el preu final i, a `valor`, una clau que l'app torna a llegir.
  *   valor 'variant~grup1~opcio1[~grup2~opcio2...]'
  */
-export function opcionsDetall(producte, grups) {
+export function opcionsDetall(producte, grups, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
   const grupsProducte = grupsDe(producte, grups);
   const variants = producte.variants;
   if (grupsProducte.length === 0) {
-    return variants.map((v) => ({ valor: `${v.id}~~`, etiqueta: v.nom, ajuda: producte.preuObert ? 'Preu obert' : euros(v.preuCents) }));
+    return variants.map((v) => ({ valor: `${v.id}~~`, etiqueta: v.nom, ajuda: producte.preuObert ? tx.preuObert : euros(v.preuCents) }));
   }
   let combinacions = [[]];
   for (const grup of grupsProducte) {
@@ -111,7 +121,7 @@ export function opcionsDetall(producte, grups) {
     return {
       valor: `${v.id}~${clauGrups}`,
       etiqueta: [variants.length > 1 ? v.nom : null, ...triaGrups.map((o) => o.nom)].filter(Boolean).join(' · ') || v.nom,
-      ajuda: producte.preuObert ? 'Preu obert' : euros(v.preuCents + delta)
+      ajuda: producte.preuObert ? tx.preuObert : euros(v.preuCents + delta)
     };
   }));
 }
@@ -129,11 +139,12 @@ export function llegixOpcio(valor) {
 }
 
 /** El text que demana la tria al diàleg menut del TPV (un o diversos grups, o la variant). */
-export function descripcioTria(producte, grups) {
+export function descripcioTria(producte, grups, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
   const delProducte = grupsDe(producte, grups);
-  if (delProducte.length === 0) return 'Tria la variant.';
-  if (delProducte.length === 1) return `Tria una opció de «${delProducte[0].nom}».`;
-  return `Tria una opció de ${delProducte.map((g) => `«${g.nom}»`).join(' i ')}.`;
+  if (delProducte.length === 0) return tx.triaVariant;
+  if (delProducte.length === 1) return tx.triaOpcioUna(delProducte[0].nom);
+  return tx.triaOpcioDiverses(delProducte.map((g) => `«${g.nom}»`).join(tx.separadorI));
 }
 
 /**
@@ -159,26 +170,27 @@ export function preuObertDeConsulta(carta, { preu = null, variant = null } = {})
 }
 
 /** El text de davall d'una línia: variant, modificadors, nota, descompte o convidada. */
-export function detallDeLinia(linia) {
+export function detallDeLinia(linia, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
   const parts = [linia.varianteNomCongelat, ...(linia.modificadors || []).map((m) => m.nomCongelat), linia.nota ? `«${linia.nota}»` : null];
-  if (linia.convidada) parts.push(`Convidada: ${linia.convidada.motiu}`);
+  if (linia.convidada) parts.push(tx.convidadaMotiu(linia.convidada.motiu));
   else if (linia.descompte) {
-    parts.push(linia.descompte.tipus === 'percent' ? `Descompte ${linia.descompte.valor} %` : `Descompte ${euros(linia.descompte.valor)}`);
+    parts.push(linia.descompte.tipus === 'percent' ? tx.descomptePercent(linia.descompte.valor) : tx.descompteImport(euros(linia.descompte.valor)));
   }
-  if (linia.estat === 'anullada' && linia.motiuAnullacio) parts.push(`Motiu: ${linia.motiuAnullacio}`);
+  if (linia.estat === 'anullada' && linia.motiuAnullacio) parts.push(tx.motiuAnullacio(linia.motiuAnullacio));
   return parts.filter(Boolean).join(' · ') || undefined;
 }
 
 const ESTAT_LINIA = Object.freeze({ nova: 'normal', marxada: 'fet', anullada: 'anullat' });
 
 /** Les línies d'una comanda o d'un tiquet per a l'esquelet (LiniesColleccio). */
-export function liniesVestides(comanda) {
+export function liniesVestides(comanda, idioma = 'ca') {
   return (comanda?.linies || []).map((l) => ({
     id: l.id,
     articleId: l.producteId,
     quantitat: l.quantitat,
     nom: l.nomCongelat,
-    detall: detallDeLinia(l),
+    detall: detallDeLinia(l, idioma),
     valor: euros(l.estat === 'anullada' ? brutLinia(l) : totalLinia(l)),
     estat: ESTAT_LINIA[l.estat] || 'normal'
   }));
@@ -187,23 +199,30 @@ export function liniesVestides(comanda) {
 /** Els textos d'estat de les línies del Bar: «Marxat» i «Anul·lat». */
 export const TEXTOS_LINIES_BAR = Object.freeze({ fet: 'Marxat', anullat: 'Anul·lat' });
 
+export function textosLiniesBar(idioma = 'ca') {
+  const tx = textosUiBar(idioma);
+  return { fet: tx.liniaMarxat, anullat: tx.liniaAnullat };
+}
+
 /** El resum de la comanda per a la BarraResum de l'esquelet. */
-export function resumDeComanda(comanda) {
+export function resumDeComanda(comanda, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
   const t = comanda ? totals(comanda) : { totalCents: 0, pendentCents: 0, pagatCents: 0 };
   const vives = (comanda?.linies || []).filter((l) => l.estat !== 'anullada').length;
   return {
-    etiqueta: 'Comanda',
+    etiqueta: tx.comandaEtiqueta,
     comptador: vives,
-    textComptador: textLinies,
+    textComptador: textLiniesPerIdioma(idioma),
     total: euros(t.pagatCents > 0 ? t.pendentCents : t.totalCents),
-    textTotal: t.pagatCents > 0 ? 'Pendent' : 'Total'
+    textTotal: t.pagatCents > 0 ? tx.pendentEtiqueta : tx.totalEtiqueta
   };
 }
 
 /** El nom de l'origen d'una comanda: «Barra», «Taula 3», «Per emportar». */
-export function nomOrigen(origen, sala) {
+export function nomOrigen(origen, sala, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
   if (origen?.tipus === 'taula') return sala?.taules?.find((t) => t.id === origen.taulaId)?.nom || origen.taulaId;
-  return origen?.tipus === 'emportar' ? 'Per emportar' : 'Barra';
+  return origen?.tipus === 'emportar' ? tx.perEmportar : tx.barra;
 }
 
 /** Hora local curta d'un moment ISO. */
@@ -217,19 +236,20 @@ export function horaCurta(moment) {
  * més nova: la barra (encara que no en tinga cap, amb l'id 'barra'), les
  * taules i per emportar. { id, nom, comptador (línies vives), secundari }.
  */
-export function tiquetsOberts(comandes, sala) {
+export function tiquetsOberts(comandes, sala, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
   const ordenades = [...comandes].sort((a, b) => (a.obertaA < b.obertaA ? -1 : 1));
   const targetes = ordenades.map((c) => {
     const t = totals(c);
     const vives = c.linies.filter((l) => l.estat !== 'anullada').length;
     return {
       id: c.id,
-      nom: c.origen.tipus === 'taula' ? nomOrigen(c.origen, sala) : `${nomOrigen(c.origen, sala)} · ${horaCurta(c.obertaA)}`,
+      nom: c.origen.tipus === 'taula' ? nomOrigen(c.origen, sala, idioma) : `${nomOrigen(c.origen, sala, idioma)} · ${horaCurta(c.obertaA)}`,
       comptador: vives,
-      secundari: t.pagatCents > 0 ? `Pendent ${euros(t.pendentCents)}` : euros(t.totalCents)
+      secundari: t.pagatCents > 0 ? tx.pendentImport(euros(t.pendentCents)) : euros(t.totalCents)
     };
   });
-  if (!comandes.some((c) => c.origen.tipus === 'barra')) targetes.unshift({ id: 'barra', nom: 'Barra', comptador: 0 });
+  if (!comandes.some((c) => c.origen.tipus === 'barra')) targetes.unshift({ id: 'barra', nom: tx.barra, comptador: 0 });
   return targetes;
 }
 
@@ -243,23 +263,23 @@ function unitatsPerProducte(comanda) {
 }
 
 /* «1 unitat», «3 unitats». */
-const textUnitats = (n) => `${n} ${n === 1 ? 'unitat' : 'unitats'}`;
+function textUnitats(n, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
+  return `${n} ${n === 1 ? tx.unitatSingular : tx.unitatPlural}`;
+}
 
 /**
  * Les rajoles del TPV: els productes de la carta (articlesDeCarta) amb la
  * insígnia de les unitats que ja són a la comanda («2») i el seu text per al
  * lector (insigniaLector, «2 unitats a la comanda»: el número sol no diu de
- * què és). Una comanda per emportar només veu el canal 'emportar' de la carta
- * (cartaDelCanal, ordre del Mestre, 261006: «la carta per a casa»).
- * Un producte amb al·lèrgens els porta a l'article (`alergens`, una còpia en
- * l'ordre del Reglament, ordenaAlergens del contracte comú); un sense, no en
- * porta la clau. Només el TPV: la Caixa (articlesDeCarta) no canvia.
+ * què és).
  */
-export function articlesDelTpv(carta, { comanda = null, establiment } = {}) {
+export function articlesDelTpv(carta, { comanda = null, establiment, idioma = 'ca' } = {}) {
+  const tx = textosUiBar(idioma);
   const unitats = unitatsPerProducte(comanda);
   const delCanal = comanda?.origen?.tipus === 'emportar' ? { ...carta, productes: cartaDelCanal(carta, 'emportar') } : carta;
   const perId = new Map((delCanal?.productes || []).map((p) => [p.id, p]));
-  return articlesDeCarta(delCanal, { aComanda: new Set(unitats.keys()), establiment })
+  return articlesDeCarta(delCanal, { aComanda: new Set(unitats.keys()), establiment, idioma })
     .map((article) => {
       const producte = perId.get(article.id);
       const ambFont = typeof producte?.fontAlergens === 'string' && Boolean(producte.fontAlergens.trim());
@@ -267,33 +287,31 @@ export function articlesDelTpv(carta, { comanda = null, establiment } = {}) {
       const traces = ambFont ? ordenaAlergens(producte?.tracesAlergens) : [];
       const informats = new Set([...alergens, ...traces, ...(ambFont ? producte?.alergensAbsents || [] : [])]);
       const teAnotacions = [producte?.alergens, producte?.tracesAlergens, producte?.alergensAbsents].some((ids) => ids?.length);
-      const avisAlergens = [traces.length ? `T: ${traces.map((id) => NOMS_ALERGENS[id]).join(', ')}` : null,
-        (producte?.alergensEstat || teAnotacions) && informats.size < ALERGENS.length ? 'Al·lèrgens pendents' : null].filter(Boolean).join(' · ');
+      const avisAlergens = [traces.length ? `T: ${traces.map((id) => nomAlergen(id, idioma)).join(', ')}` : null,
+        (producte?.alergensEstat || teAnotacions) && informats.size < ALERGENS.length ? tx.alergensPendents : null].filter(Boolean).join(' · ');
       const vestit = { ...article, ...(alergens.length ? { alergens } : {}),
         ...(avisAlergens ? { secundari: [article.secundari, avisAlergens].filter(Boolean).join(' · ') } : {}) };
       return unitats.has(article.id)
-        ? { ...vestit, insignia: String(unitats.get(article.id)), insigniaLector: `${textUnitats(unitats.get(article.id))} a la comanda` }
+        ? { ...vestit, insignia: String(unitats.get(article.id)), insigniaLector: tx.unitatsAComanda(textUnitats(unitats.get(article.id), idioma)) }
         : vestit;
     });
 }
 
 /**
  * El tiquet del TPV d'una comanda (o de cap): les unitats vives (el «[3]»
- * de Loyverse), les línies vestides, el total (el pendent si ja se n'ha
- * cobrat una part) i el resum: l'IVA inclòs per tipus, informatiu com a la
- * nota, i el que ja s'ha cobrat. Sense cap línia, ni total ni resum.
- *   { unitats, linies, total: { etiqueta, valor } | null, resum, pendentCents }
+ * de Loyverse), les línies vestides, el total i el resum.
  */
-export function tiquetDeComanda(comanda) {
+export function tiquetDeComanda(comanda, idioma = 'ca') {
+  const tx = textosUiBar(idioma);
   const unitats = [...unitatsPerProducte(comanda).values()].reduce((suma, n) => suma + n, 0);
   if (!comanda || comanda.linies.length === 0) return { unitats, linies: [], total: null, resum: [], pendentCents: 0 };
   const t = totals(comanda);
-  const resum = t.perIva.map((g) => ({ etiqueta: `IVA del ${g.ivaPercent} % inclòs`, valor: euros(g.quotaCents) }));
-  if (t.pagatCents > 0) resum.push({ etiqueta: 'Ja cobrat', valor: euros(t.pagatCents) });
+  const resum = t.perIva.map((g) => ({ etiqueta: tx.ivaInclosPercent(g.ivaPercent), valor: euros(g.quotaCents) }));
+  if (t.pagatCents > 0) resum.push({ etiqueta: tx.jaCobrat, valor: euros(t.pagatCents) });
   return {
     unitats,
-    linies: liniesVestides(comanda),
-    total: { etiqueta: t.pagatCents > 0 ? 'Pendent' : 'Total', valor: euros(t.pagatCents > 0 ? t.pendentCents : t.totalCents) },
+    linies: liniesVestides(comanda, idioma),
+    total: { etiqueta: t.pagatCents > 0 ? tx.pendentEtiqueta : tx.totalEtiqueta, valor: euros(t.pagatCents > 0 ? t.pendentCents : t.totalCents) },
     resum,
     pendentCents: t.pendentCents
   };

@@ -28,6 +28,7 @@ import { entraAmbProveidorNatiu } from './fluxEntradaNativa.js';
 import { detectaWebViewInApp } from './detectaWebViewInApp.js';
 import { textosEscutWebview } from './textosEscutWebview.js';
 import { textosOnboardingExtra } from './i18nOnboardingExtra.js';
+import { copiaEnllacAmbReserva } from '../../utils/navegadorIncrustat.js';
 
 /* Fase D (261020, tasca 1) · Les proves que simulen useUIState sense `t`
    continuen pintant: el traductor de reserva és el valencià. */
@@ -384,15 +385,15 @@ export default function OnboardingSection() {
   };
   const copiaAdrecaWebview = async () => {
     if (!adrecaWebview) return;
-    try {
-      if (typeof navigator !== 'undefined' && typeof navigator.clipboard?.writeText === 'function') {
-        await navigator.clipboard.writeText(adrecaWebview);
-        if (montat.current) setEstatCopiaWebview('copiat');
-      } else if (montat.current) {
-        setEstatCopiaWebview('error');
-      }
-    } catch {
-      if (montat.current) setEstatCopiaWebview('error');
+    const copiat = await copiaEnllacAmbReserva(adrecaWebview);
+    if (!montat.current) return;
+    if (copiat) {
+      setEstatCopiaWebview((prev) => ({
+        estat: 'copiat',
+        vegades: prev?.estat === 'copiat' ? prev.vegades + 1 : 1
+      }));
+    } else {
+      setEstatCopiaWebview({ estat: 'error', vegades: 0 });
     }
   };
   /* P0-63 (261108) · Només amb sessió: deixa l'enllaç que ja no val i la
@@ -787,7 +788,7 @@ export default function OnboardingSection() {
                 ) : webviewSocial.esWebViewSocial ? (
                   <>
                     <Alerta to="avis" viva={false}>
-                      <div data-escut-webview={webviewSocial.app}>
+                      <div data-escut-webview={webviewSocial.app} data-motiu-oauth="disallowed_useragent">
                         <p>
                           <strong>{txWebview.avis.replace('{app}', () => webviewSocial.nomApp)}</strong>{' '}
                           {txWebview.explicacio}
@@ -827,12 +828,12 @@ export default function OnboardingSection() {
                         </Boto>
                       ) : null}
                     </div>
-                    {estatCopiaWebview === 'copiat' ? (
+                    {estatCopiaWebview?.estat === 'copiat' ? (
                       <Alerta to="exit">
-                        {txWebview.urlCopiada}
+                        {estatCopiaWebview.vegades % 2 === 0 ? `${txWebview.urlCopiada} ` : txWebview.urlCopiada}
                       </Alerta>
                     ) : null}
-                    {estatCopiaWebview === 'error' ? (
+                    {estatCopiaWebview?.estat === 'error' ? (
                       <Alerta to="avis">
                         <p>{txWebview.errorCopia}</p>
                         {adrecaWebview ? <p><strong translate="no">{adrecaWebview}</strong></p> : null}

@@ -36,6 +36,7 @@
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useSessioApp } from '../../plataforma/index.js';
+import { codiIdiomaBar } from '../i18nBar.js';
 import { creaMagatzemBar } from '../magatzem.js';
 import { errorBar } from '../nucli/comu.js';
 import { nouId } from '../nucli/ids.js';
@@ -62,7 +63,7 @@ const AMB_TORN = Object.freeze({ ambTorn: true });
 /** El número següent del torn: «Nota 0001», «Nota 0002»… (vendes i devolucions). */
 const seguentNumero = (tiquets) => tiquets.reduce((maxim, t) => Math.max(maxim, t.numero || 0), 0) + 1;
 
-export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, atzar = Math.random, children }) {
+export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, atzar = Math.random, idioma = 'ca', children }) {
   const [magatzem] = useState(() => injectat || creaMagatzemBar());
   const [dades, setDades] = useState(null);
   const [errorCarrega, setErrorCarrega] = useState(null);
@@ -73,6 +74,11 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
   const cua = useRef(Promise.resolve());
   const generacio = useRef(0);
   const sessio = useSessioApp();
+  const idiomaActiu = codiIdiomaBar(idioma);
+  const idiomaRef = useRef(idiomaActiu);
+  useEffect(() => {
+    idiomaRef.current = idiomaActiu;
+  });
   const { potEscriure, motiu, enLinia, modeProves, rutaEntrada } = sessio;
   const permis = useMemo(() => Object.freeze({ potEscriure, motiu, enLinia, modeProves, rutaEntrada }),
     [potEscriure, motiu, enLinia, modeProves, rutaEntrada]);
@@ -105,7 +111,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         if (viu) posaLlegides(d);
       });
       cua.current = pas.catch((error) => {
-        if (viu) setErrorCarrega(textError(error));
+        if (viu) setErrorCarrega(textError(error, idiomaRef.current));
       });
     };
     const desfes = magatzem.base.subscriu((esdeveniment) => {
@@ -125,7 +131,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       posaLlegides(carregades);
       llegixBase();
     })().catch((error) => {
-      if (viu) setErrorCarrega(textError(error));
+      if (viu) setErrorCarrega(textError(error, idiomaRef.current));
     });
     return () => {
       viu = false;
@@ -156,7 +162,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
           } catch (errorLectura) {
             if (vigent === generacio.current) {
               lecturaVigent.current = false;
-              setErrorCarrega(textError(errorLectura));
+              setErrorCarrega(textError(errorLectura, idiomaRef.current));
             }
           }
         }
@@ -170,7 +176,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       if (vigent === generacio.current) setAvis(null);
       return { ok: true, valor };
     }, (error) => {
-      if (vigent === generacio.current) setAvis(textError(error));
+      if (vigent === generacio.current) setAvis(textError(error, idiomaRef.current));
       return { ok: false, error };
     });
   }, [posa, posaLlegides, rellotge, atzar, magatzem]);
@@ -442,7 +448,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
           }
           return { estat, valor };
         } catch (error) {
-          if (vigent === generacio.current) setErrorCarrega(textError(error));
+          if (vigent === generacio.current) setErrorCarrega(textError(error, idiomaRef.current));
           throw error;
         }
       }),
@@ -462,9 +468,10 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
     avis,
     ...(dades || {}),
     migsMoviments,
+    idioma: idiomaActiu,
     permis,
     accions
-  }), [dades, errorCarrega, base, avis, migsMoviments, permis, accions]);
+  }), [dades, errorCarrega, base, avis, migsMoviments, idiomaActiu, permis, accions]);
 
   return <ContextBar.Provider value={valor}>{children}</ContextBar.Provider>;
 }

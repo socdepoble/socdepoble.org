@@ -76,6 +76,9 @@ export const SECCIONS_PAGINABLES = Object.freeze({
 });
 
 export const CAPACITATS = Object.freeze({
+  /* PF-03 optional durable capture acknowledgement; never simulated locally. */
+  ackCrdtRural: Object.freeze(['confirmaCapturaCrdtRural']),
+  denunciesDiligents: Object.freeze(['registraDenunciaDiligent', 'revisaDenunciaDiligent', 'llistaDenunciesDiligents']),
   revocacioPublicacions: Object.freeze(['revocaPublicacioMur', 'drenaRevocacionsMur', 'encuaRevocacioNotaMur']),
   /* R19 · El recurs s'identifica per { recursTipus, recursId }. La lectura
      torna { recursTipus, recursId, versio, publicadorsRegistrats, publicadorEfectiu }.
@@ -876,8 +879,14 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada v1.2.10 · Onades R32.11 i R32.12, segona part (ordre del Mestre 19-11-2026; el nom que diu la crònica de
    /versions) · Versió unificada 1.2.10 amb el build 15: integra els lots 14–18 de
    Codex R32.11, Gemini R32.12 (pla 261118_1937) i 24 ítems del Llibre Mestre (guia «Tot el que pots fer», data de
-   les targetes per tipus, Arbre Genealògic amb frase de pas, Constitució en cinc llengües i entrades en NFC fitat). */
-export const VERSIO_CLIENT_NATIU = 15;
+   les targetes per tipus, Arbre Genealògic amb frase de pas, Constitució en cinc llengües i entrades en NFC fitat).
+   Onada v1.2.11 · Onades R32.13 i R32.14 (ordre del Mestre 19-11-2026, dinar; pla 261119_1414) · Versió unificada 1.2.11
+   amb el build 16: integra Gemini R32.13 (El Bar i Mercaderies en cinc llengües, escut del navegador incrustat,
+   notificació LSSI art. 16 i 404 Pedra Seca) i Codex R32.13 (ACK CRDT i denúncies diligents opcionals, mapa 301,
+   preflight d'egress i motors purs), la costura del diàleg LSSI amb els dos ports, el paquet OpenData lleuger a
+   Hosting, el CAS general de publicacions cablejat però apagat (D-R32-PUB-1, P1 del Gauntlet) i el connector
+   WordPress 1.1.19 sota 10 MB. */
+export const VERSIO_CLIENT_NATIU = 16;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

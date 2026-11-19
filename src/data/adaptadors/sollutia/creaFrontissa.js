@@ -11,9 +11,39 @@ const control = /[\u0000-\u0020\u007f-\u009f\p{Cf}]/u;
    l'XML a 2 MiB; l'escapat també compta dins del sobre. Cada recurs conserva el seu límit
    inferior immutable; el comptador del stream, no Content-Length, l'aplica. */
 const MAXIM_BYTES_CATALEG = 3_145_728;
+/* Configuració i opcions són dades: cap getter ni coerció d'objectes es
+   necessita per llegir un catàleg explícit. */
+function campsPropis(value, code) {
+  if (!pla(value)) throw new ErrorDades(code);
+  const result = Object.create(null);
+  for (const key of Reflect.ownKeys(value)) {
+    const d = Object.getOwnPropertyDescriptor(value, key);
+    if (typeof key !== 'string' || !d.enumerable || !Object.hasOwn(d, 'value')
+      || ['__proto__', 'constructor', 'prototype'].includes(key)) throw new ErrorDades(code);
+    result[key] = d.value;
+  }
+  return result;
+}
+/* S'aplica també al JSON cru abans del traductor; ignorar una branca al DTO
+   no pot convertir un sobre amb claus de prototip en un contracte vàlid. */
+function validaSobre(value) {
+  const stack = [[value, 0]];
+  let nodes = 0;
+  while (stack.length) {
+    const [item, depth] = stack.pop();
+    if (++nodes > 10_000 || depth > 32) throw new ErrorDades('INVALID_PAYLOAD');
+    if (!item || typeof item !== 'object') continue;
+    for (const key of Object.keys(item)) {
+      if (['__proto__', 'constructor', 'prototype'].includes(key)) throw new ErrorDades('INVALID_PAYLOAD');
+      stack.push([item[key], depth + 1]);
+      if (stack.length + nodes > 10_000) throw new ErrorDades('INVALID_PAYLOAD');
+    }
+  }
+  return value;
+}
 function rutaValida(path) {
   if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//') || path.includes('\\') || control.test(path)) return false;
-  try { return path.split('/').every(part => { const s = decodeURIComponent(part); return !['.', '..'].includes(s) && !['/', '\\', '?', '#'].some(c => s.includes(c)) && !control.test(s); }); }
+  try { return path.split('/').every(part => { const s = decodeURIComponent(part); return !['.', '..'].includes(s) && !['/', '\\', '?', '#', '%'].some(c => s.includes(c)) && !control.test(s); }); }
   catch { return false; }
 }
 function espera(promesa, signal) {
@@ -54,14 +84,17 @@ function capturaDto(entrada) {
   return copia(entrada, 0);
 }
 
-export function creaFrontissa({ apiOrigin, allowedOrigins, resources, fetchImpl = fetch, capturaContext = () => () => {} }) {
+export function creaFrontissa(config) {
+  const { apiOrigin, allowedOrigins, resources, fetchImpl = fetch, capturaContext = () => () => {} } = campsPropis(config, 'INVALID_RESOURCE');
   let base;
+  if (typeof apiOrigin !== 'string') throw new ErrorDades('INVALID_ORIGIN');
   try { base = new URL(apiOrigin); } catch { throw new ErrorDades('INVALID_ORIGIN'); }
   if (base.protocol !== 'https:' || base.username || base.password || base.pathname !== '/' || base.search || base.hash
     || !Array.isArray(allowedOrigins) || !allowedOrigins.includes(base.origin)) throw new ErrorDades('INVALID_ORIGIN');
   if (!pla(resources) || typeof capturaContext !== 'function') throw new ErrorDades('INVALID_RESOURCE');
   const catalog = Object.create(null);
-  for (const [name, source] of Object.entries(resources)) {
+  for (const [name, rawSource] of Object.entries(campsPropis(resources, 'INVALID_RESOURCE'))) {
+    const source = campsPropis(rawSource, 'INVALID_RESOURCE');
     if (source.enabled !== true) continue;
     if (typeof source.captureId !== 'string' || !/^[A-Za-z0-9._:-]{1,200}$/.test(source.captureId) || typeof source.decode !== 'function'
       || !rutaValida(source.path) || !Array.isArray(source.params) || source.params.some(p => typeof p !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,79}$/.test(p))
@@ -73,8 +106,12 @@ export function creaFrontissa({ apiOrigin, allowedOrigins, resources, fetchImpl 
   }
   Object.freeze(catalog);
 
-  return async function llig(name, params = {}, { signal } = {}) {
-    if (!Object.hasOwn(catalog, name)) throw new ErrorDades('UNKNOWN_RESOURCE');
+  return async function llig(name, params = {}, options = {}) {
+    if (typeof name !== 'string' || !Object.hasOwn(catalog, name)) throw new ErrorDades('UNKNOWN_RESOURCE');
+    const opts = campsPropis(options, 'INVALID_OPTIONS');
+    if (Object.keys(opts).some(key => key !== 'signal')) throw new ErrorDades('INVALID_OPTIONS');
+    const { signal } = opts;
+    if (signal !== undefined && !(signal instanceof AbortSignal)) throw new ErrorDades('INVALID_OPTIONS');
     const resource = catalog[name], url = new URL(resource.url);
     if (!pla(params)) throw new ErrorDades('INVALID_QUERY');
     for (const key of Reflect.ownKeys(params)) {
@@ -92,14 +129,19 @@ export function creaFrontissa({ apiOrigin, allowedOrigins, resources, fetchImpl 
     catch { throw new ErrorDades('CONTEXT_CHANGED'); }
     const comprovaContext = () => { try { context(); } catch { throw new ErrorDades('CONTEXT_CHANGED'); } };
     const controller = new AbortController();
-    let expired = false, reader, completed = false;
+    let expired = false, reader, body, completed = false;
     const cancel = () => controller.abort(new ErrorDades('CANCELLED'));
     signal?.addEventListener('abort', cancel, { once: true });
+    if (signal?.aborted) cancel();
     const timer = setTimeout(() => { expired = true; controller.abort(new ErrorDades('TIMEOUT')); }, resource.timeoutMs);
     try {
+      if (controller.signal.aborted) throw controller.signal.reason;
       const response = await espera(fetchImpl(url.href, { method: 'GET', credentials: 'omit', redirect: 'error', headers: { Accept: 'application/json' }, signal: controller.signal }), controller.signal);
+      body = response.body;
       comprovaContext();
       if (!response.ok) throw new ErrorDades(response.status === 401 ? 'UNAUTHENTICATED' : response.status === 403 ? 'FORBIDDEN' : 'UNAVAILABLE', response.status);
+      if (response.status === 206 || response.redirected === true
+        || response.url && new URL(response.url).href !== url.href) throw new ErrorDades('INVALID_PAYLOAD');
       const type = response.headers.get('content-type') || '';
       if (!/^application\/(?:[a-z0-9.+-]+\+)?json(?:;|$)/i.test(type)) throw new ErrorDades('INVALID_PAYLOAD');
       const declared = response.headers.get('content-length');
@@ -114,17 +156,21 @@ export function creaFrontissa({ apiOrigin, allowedOrigins, resources, fetchImpl 
         if (!ArrayBuffer.isView(part.value) || part.value.BYTES_PER_ELEMENT !== 1 || !part.value.byteLength || ++chunks > 65_536) throw new ErrorDades('INVALID_PAYLOAD');
         bytes += part.value.byteLength;
         if (bytes > resource.maxBytes) throw new ErrorDades('PAYLOAD_TOO_LARGE');
-        parts.push(decoder.decode(part.value, { stream: true }));
+        try { parts.push(decoder.decode(part.value, { stream: true })); }
+        catch { throw new ErrorDades('INVALID_PAYLOAD'); }
       }
-      parts.push(decoder.decode());
+      try { parts.push(decoder.decode()); }
+      catch { throw new ErrorDades('INVALID_PAYLOAD'); }
       if (controller.signal.aborted) throw controller.signal.reason;
       let dto;
       try {
-        const decoded = resource.decode(JSON.parse(parts.join('')));
+        const decoded = resource.decode(validaSobre(JSON.parse(parts.join(''))));
         if (decoded instanceof Promise) { decoded.catch(() => {}); throw new ErrorDades('INVALID_PAYLOAD'); }
         dto = capturaDto(decoded);
       } catch { throw new ErrorDades('INVALID_PAYLOAD'); }
-      comprovaContext(); completed = true; return dto;
+      comprovaContext();
+      if (controller.signal.aborted || signal?.aborted) throw new ErrorDades(expired ? 'TIMEOUT' : 'CANCELLED');
+      completed = true; return dto;
     } catch (error) {
       if (expired) throw new ErrorDades('TIMEOUT');
       if (signal?.aborted) throw new ErrorDades('CANCELLED');
@@ -133,7 +179,7 @@ export function creaFrontissa({ apiOrigin, allowedOrigins, resources, fetchImpl 
     } finally {
       if (!completed) {
         controller.abort();
-        if (reader) { try { Promise.resolve(reader.cancel()).catch(() => {}); } catch { /* Ja avortat. */ } }
+        try { Promise.resolve(reader ? reader.cancel() : body?.cancel()).catch(() => {}); } catch { /* Ja avortat. */ }
       }
       try { reader?.releaseLock(); } catch { /* Una lectura avortada encara pot estar pendent. */ }
       clearTimeout(timer); signal?.removeEventListener('abort', cancel);

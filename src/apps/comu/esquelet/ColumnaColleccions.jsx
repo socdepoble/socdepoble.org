@@ -13,6 +13,7 @@
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { useNavigate, useRouter } from '../../../app/contexts/RouterContext';
 import { EstatBuit, MarcColumna, TargetesColleccions } from '../../../components/PedraSeca/index.js';
+import { textosColleccionsEsquelet, useIdiomaEsquelet } from './i18nEsquelet.js';
 
 const TEXTOS_COLLECCIONS = Object.freeze({
   buit: 'Encara no n’hi ha cap',
@@ -20,17 +21,20 @@ const TEXTOS_COLLECCIONS = Object.freeze({
 });
 
 export function ColumnaColleccions({
-  titol = 'Col·leccions', colleccions = [], actiu = null, hrefDe, onTria, onCrea, textCrea, textComptador, textos, avis = null
+  titol, colleccions = [], actiu = null, hrefDe, onTria, onCrea, textCrea, textComptador, textos, avis = null
 }) {
-  const t = { ...TEXTOS_COLLECCIONS, ...textos };
+  const idioma = useIdiomaEsquelet();
+  const baseColleccions = textosColleccionsEsquelet(idioma);
+  const t = { ...TEXTOS_COLLECCIONS, ...baseColleccions, ...textos };
+  const titolResolt = titol ?? baseColleccions.titolPerDefecte;
   const navigate = useNavigate();
   const { basename = '' } = useRouter();
   const cami = typeof hrefDe === 'function' ? hrefDe : null;
   return (
-    <MarcColumna capcalera={<AppGridColumn titol={titol} />} avis={avis} etiqueta={titol}>
+    <MarcColumna capcalera={<AppGridColumn titol={titolResolt} />} avis={avis} etiqueta={titolResolt}>
       <TargetesColleccions
         colleccions={colleccions}
-        etiqueta={titol}
+        etiqueta={titolResolt}
         actiu={actiu}
         hrefDe={cami ? (colleccio) => basename + cami(colleccio) : undefined}
         onTria={cami ? (colleccio) => navigate(cami(colleccio)) : onTria}

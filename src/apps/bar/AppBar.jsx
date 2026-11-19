@@ -20,7 +20,7 @@ import { RUTES_BAR, titolsBar } from './rutesBar.js';
 export default function AppBar({ magatzem, rellotge, atzar }) {
   const { idioma = 'ca' } = useApp();
   return (
-    <ProveidorBar magatzem={magatzem} rellotge={rellotge} atzar={atzar}>
+    <ProveidorBar magatzem={magatzem} rellotge={rellotge} atzar={atzar} idioma={idioma}>
       <ClosaAplicacio rutes={RUTES_BAR} titols={titolsBar(idioma)} />
     </ProveidorBar>
   );

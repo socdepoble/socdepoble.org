@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.18
+Stable tag: 1.1.19
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,10 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.19 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.11 de Sóc de Poble, la que explica la seua pàgina «Versions»: El Bar i Mercaderies en cinc llengües, la notificació de contingut il·lícit (LSSI, art. 16) als perfils i a les fitxes, i una pàgina d'error 404 que orienta.
+* **Paquet del directori més lleuger:** les il·lustracions dels articles del Mur ja no viatgen dins del paquet de WordPress.org; el navegador les carrega de socdepoble.org, com ja fa amb les fotos dels pobles, i el paquet queda per davall del límit de 10 MB del directori.
+
 = 1.1.18 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.10 de Sóc de Poble, la que explica la seua pàgina «Versions»: la guia «Tot el que pots fer a Sóc de Poble, pas a pas», la Constitució en cinc llengües i la data de cada targeta del Mur segons el tipus de publicació.
 * **Paquet publicable amb credencials reals:** el paquet d'una versió publicable ja no es construïx amb la clau de mostra de les proves automàtiques.
@@ -234,6 +238,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.19 =
+Visor al dia amb la versió 1.2.11 de Sóc de Poble: El Bar i Mercaderies en cinc llengües, la notificació de contingut il·lícit i una pàgina 404 que orienta; el paquet del directori carrega les il·lustracions del Mur de socdepoble.org.
 
 = 1.1.18 =
 Visor al dia amb la versió 1.2.10 de Sóc de Poble: la guia «Tot el que pots fer», la Constitució en cinc llengües i la data de cada targeta del Mur segons el tipus; el paquet publicable exigix credencials reals.

@@ -37,6 +37,7 @@ import {
 } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { TargetesArticles } from './ColumnaCataleg.jsx';
+import { textosColleccioEsquelet } from './i18nEsquelet.js';
 import { useVistesEsquelet } from './vistes.js';
 
 const TEXTOS_COLLECCIO = Object.freeze({
@@ -66,12 +67,14 @@ const comArticle = (linia, textosEstat) => {
 };
 
 export function ColumnaColleccio({
-  titol = 'Col·lecció', linies = [], forma = 'linies', resum = null,
+  titol, linies = [], forma = 'linies', resum = null,
   onTria, onEdita, onResta, onSuma, onLleva, textosLinies, peu = null, primer, tram, textos, avis = null,
   ometDataNoIndicada = false
 }) {
-  const t = { ...TEXTOS_COLLECCIO, ...textos };
   const { mida, idioma } = useClosaAplicacio();
+  const baseColleccio = textosColleccioEsquelet(idioma);
+  const t = { ...TEXTOS_COLLECCIO, ...baseColleccio, ...textos };
+  const titolResolt = titol ?? baseColleccio.titolPerDefecte;
   const vistes = useVistesEsquelet({ primer, tram });
   const llista = Array.isArray(linies) ? linies.filter((linia) => linia && typeof linia.id === 'string') : [];
   const perId = new Map(llista.map((linia) => [linia.id, linia]));
@@ -85,8 +88,8 @@ export function ColumnaColleccio({
   }] : [];
 
   return (
-    <MarcColumna capcalera={<AppGridColumn titol={titol} startActions={startActions} />}
-      eines={resum ? <BarraResum {...resum} forma="capcalera" /> : null} peu={peu} avis={avis} etiqueta={titol}>
+    <MarcColumna capcalera={<AppGridColumn titol={titolResolt} startActions={startActions} />}
+      eines={resum ? <BarraResum {...resum} forma="capcalera" /> : null} peu={peu} avis={avis} etiqueta={titolResolt}>
       {forma === 'targetes' ? (
         <TargetesArticles
           idioma={idioma}
@@ -105,7 +108,7 @@ export function ColumnaColleccio({
               created_at: linia.created_at ?? linia.createdAt
             }
           }))}
-          etiqueta={titol}
+          etiqueta={titolResolt}
           nivellTargeta={resum ? 'h4' : 'h3'}
           commutable
           textos={{ 'en-colleccio': t.enColleccio }}
@@ -116,7 +119,7 @@ export function ColumnaColleccio({
       ) : forma === 'rajoles' ? (
         <GraellaArticles
           articles={llista.map((linia) => comArticle(linia, { ...TEXTOS_ESTAT_LINIA, ...textosLinies }))}
-          etiqueta={titol}
+          etiqueta={titolResolt}
           commutable
           textos={{ 'en-colleccio': t.enColleccio }}
           onTria={onTria ? (article) => onTria(perId.get(article.id)) : undefined}
@@ -124,7 +127,7 @@ export function ColumnaColleccio({
           buit={buit}
         />
       ) : (
-        <LiniesColleccio linies={llista} etiqueta={titol} onTria={onTria} onEdita={onEdita} onResta={onResta}
+        <LiniesColleccio linies={llista} etiqueta={titolResolt} onTria={onTria} onEdita={onEdita} onResta={onResta}
           onSuma={onSuma} onLleva={onLleva} textos={textosLinies} buit={buit} />
       )}
     </MarcColumna>

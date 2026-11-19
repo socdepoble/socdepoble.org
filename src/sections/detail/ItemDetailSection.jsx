@@ -1,4 +1,5 @@
 import { Suspense, useMemo, useState } from 'react';
+import { Flag } from 'lucide-react';
 import { Link, Navigate, useLocation, useNavigate, useParams, useRouter } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
@@ -26,7 +27,9 @@ import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
    navegador. Només llig la cau; amb una fitxa completa, el mateix objecte. */
 import { usePobleHidratat } from '../pobles/usePobleHidratat.js';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
+import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
+import { textosDenunciaContingut } from '../../components/universal/i18nDenunciaContingut.js';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
@@ -86,6 +89,8 @@ const SECCIO_DE_RECEPTES = 'receptes';
 /* Onada R29 · R29-RUT-01 · Amb lazyRoute: si el tros no arriba, la barrera de la ruta rep un
    LazyRouteError i oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
 const ReceptaDetailSection = lazyRoute(() => import('../patrimoni/ReceptaDetailSection.jsx'));
+/* Onada R32.14 · R29-RUT-01: el diàleg LSSI (Gemini R32.13) també és un tros amb lazyRoute. */
+const DialegDenunciaContingut = lazyRoute(() => import('../../components/universal/DialegDenunciaContingut.jsx'));
 function DetallDeRecepta() {
   const { t } = useUIActions();
   return (
@@ -290,7 +295,7 @@ function DetallDElement() {
     );
   }
 
-  return <PaginaDelDetall section={section} sectionId={sectionId} item={itemHidratat} pagina={pagina} chrome="full" plaTraduccio={plaTraduccio} />;
+  return <PaginaDelDetall section={section} sectionId={sectionId} item={itemHidratat} pagina={pagina} chrome="full" plaTraduccio={plaTraduccio} language={language} />;
 }
 
 /* Pla 261027_0845 (Guarda Nocturna), P1-55 · La pàgina d'un element ja
@@ -299,9 +304,11 @@ function DetallDElement() {
    (VistaDelPoble, davall). És el mateix codi que vivia al final de
    DetallDElement, mogut sense canvis. `senseXat`: el cos sense el botó blau
    del xat (renderBody de Pobles) i la barra blava sense «Comentar». */
-function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = false, plaTraduccio = null }) {
+function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = false, plaTraduccio = null, language = 'ca' }) {
   const { t } = useUIActions();
   const navigate = useNavigate();
+  /* Gauntlet R32.14 · L'objectiu de l'avís LSSI passa per les exclusions de la moderació. */
+  const moderacio = useModeracio();
   /* Ordre E del Mestre (261007, prompt 261007_1628) · El logotip que la
      persona va pujar damunt de l'H1 a l'editor de Notes (logo_image), també
      quan és un sdp-media:// que només resol el port. Sense logo_image, null
@@ -339,6 +346,17 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
      visor (CosAmbVisor): el mateix div.content-wrapper de sempre, cap node
      nou. Fora del Mur i de les notes, null: el contenidor tal qual. */
   const visorDelCos = visorDelCosDElement(section, item, pagina, t);
+  const [denunciaLssiOberta, setDenunciaLssiOberta] = useState(false);
+  const [denunciaLssiMuntada, setDenunciaLssiMuntada] = useState(false);
+  /* Gauntlet R32.14 · L'avís LSSI passa per les mateixes exclusions que «Més opcions» (objectiuDeTargeta): ni el
+     contingut propi, ni el de Sóc de Poble, ni el de la IAIA, ni un element sense autor identificable. */
+  const objectiuLssi = SECCIONS_AMB_MODERACIO.has(sectionId) && !senseXat ? (moderacio?.objectiuDeTargeta?.(objecte) ?? null) : null;
+  const potNotificarLssi = Boolean(objectiuLssi);
+  const txDenunciaLssi = textosDenunciaContingut(language);
+  const obriDenunciaLssi = () => {
+    setDenunciaLssiMuntada(true);
+    setDenunciaLssiOberta(true);
+  };
   /* Gauntlet 261030 (Fase 3, TC3.2; traduir-contingut-de-membres) · Traduir
      només amb un element públic d'una secció pública (traduccio/
      visibilitatTraduible.js): una publicació del veïnat (/mur/:id, només per
@@ -413,6 +431,23 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
           {section.renderBody(item, senseXat ? { detall: true, senseXat: true } : { detall: true })}
         </CosAmbVisor>
       </ProveidorSincronitzacioTargetes>
+      {potNotificarLssi ? (
+        <div className="sdp-alerta__accions sdp-alerta__accions--centrades">
+          <Boto varietat="fantasma" icona={Flag} onClick={obriDenunciaLssi}>
+            {txDenunciaLssi.botoObrirContingut}
+          </Boto>
+        </div>
+      ) : null}
+      {potNotificarLssi && denunciaLssiMuntada ? (
+        <Suspense fallback={null}>
+          <DialegDenunciaContingut
+            obert={denunciaLssiOberta}
+            onTanca={() => setDenunciaLssiOberta(false)}
+            objectiu={{ ...objectiuLssi, titol: objectiuLssi.titol || pagina?.title || '' }}
+            idioma={language}
+          />
+        </Suspense>
+      ) : null}
     </UniversalPage>
   );
 }

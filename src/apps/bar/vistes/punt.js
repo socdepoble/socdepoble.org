@@ -22,6 +22,12 @@ import { useLocation, useNavigate } from '../../../app/contexts/RouterContext';
 import { esIdOpac, useApp } from '../../plataforma/index.js';
 import { comandaObertaDe } from '../nucli/comanda.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
+import { codiIdiomaBar, textosUiBar } from '../i18nBar.js';
+
+/** Idioma actiu dins d'una vista del Bar, amb reserva segura 'ca' en proves aïllades. */
+export function useIdiomaBar() {
+  return codiIdiomaBar(useBar()?.idioma);
+}
 
 /** L'id d'una comanda: un id opac que comença per «c-» (nucli/ids.js). */
 export const esIdComanda = (valor) => esIdOpac(valor) && valor.startsWith('c-');
@@ -53,6 +59,15 @@ export const PASSOS = Object.freeze([
   { id: 'traspas', nom: 'Traspàs' },
   { id: 'confirmar', nom: 'Confirmar' }
 ]);
+export function passosTancament(idioma = 'ca') {
+  const tx = textosUiBar(idioma);
+  return [
+    { id: 'arqueig', nom: tx.pasArqueig },
+    { id: 'resum', nom: tx.pasResum },
+    { id: 'traspas', nom: tx.pasTraspas },
+    { id: 'confirmar', nom: tx.pasConfirmar }
+  ];
+}
 export const esPas = (valor) => PASSOS.some((p) => p.id === valor);
 
 /** Les seccions dels ajustos (/ajustos/<seccio>). */
@@ -62,6 +77,15 @@ export const SECCIONS_AJUSTOS = Object.freeze([
   { id: 'sala', nom: 'Sala', text: 'Zones i taules' },
   { id: 'carta', nom: 'Carta', text: 'Llavor i importació' }
 ]);
+export function seccionsAjustos(idioma = 'ca') {
+  const tx = textosUiBar(idioma);
+  return [
+    { id: 'dispositiu', nom: tx.ajustDispositiuNom, text: tx.ajustDispositiuText },
+    { id: 'caixa', nom: tx.ajustCaixaNom, text: tx.ajustCaixaText },
+    { id: 'sala', nom: tx.ajustSalaNom, text: tx.ajustSalaText },
+    { id: 'carta', nom: tx.ajustCartaNom, text: tx.ajustCartaText }
+  ];
+}
 export const esSeccioAjustos = (valor) => SECCIONS_AJUSTOS.some((s) => s.id === valor);
 
 /**

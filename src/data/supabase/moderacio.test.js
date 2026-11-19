@@ -133,6 +133,9 @@ describe('remot · bloquejos sobre public.bloquejos', () => {
   test('els codis SDP-MOD del servidor, la taula absent i la xarxa caiguda es tradueixen', async () => {
     fetchDeProva.mockResolvedValueOnce(resposta({ code: '42900', message: 'SDP-MOD-429: has arribat al màxim de 1.000 bloquejos.' }, 400));
     await expect(bloquejaAutor({ tipus: 'persona', id: VEINA }, REMOT)).rejects.toMatchObject({ code: 'limit' });
+    // Gauntlet R32.14 · El trigger del paquet manual R32.13 limita les denúncies amb SDP-LSSI-429 (sqlstate 42900).
+    fetchDeProva.mockResolvedValueOnce(resposta({ code: '42900', message: 'SDP-LSSI-429' }, 400));
+    await expect(bloquejaAutor({ tipus: 'persona', id: VEINA }, REMOT)).rejects.toMatchObject({ code: 'limit' });
     fetchDeProva.mockResolvedValueOnce(resposta({ code: '22023', message: 'SDP-MOD-004: no et pots bloquejar a tu mateix.' }, 400));
     await expect(bloquejaAutor({ tipus: 'persona', id: VEINA }, REMOT)).rejects.toMatchObject({ code: 'autobloqueig' });
     fetchDeProva.mockResolvedValueOnce(resposta({ code: 'PGRST205', message: "Could not find the table 'public.bloquejos' in the schema cache" }, 404));

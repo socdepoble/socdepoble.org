@@ -264,9 +264,17 @@
     "tooling/tests/data-text-scanner.r32_11.test.mjs",
     "tests/r3211-fronteres-skills-lineal.test.mjs",
     "tests/a03-push-credencials-postgres.test.mjs",
-    "tests/membres-i-seguiments-concurrents-postgres.test.mjs"
+    "tests/membres-i-seguiments-concurrents-postgres.test.mjs",
+    "tests/r3213-pf03-lssi-postgres.test.mjs",
+    "tests/r3213-anti-factura-egress.test.mjs",
+    "tooling/tests/mapa-redireccions-r32_13-301.test.mjs"
   ],
   "files": [
+    {
+      "path": "tests/a03-push-credencials-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "P1-74 (A-03): caché de credencials natives per (proveïdor, empremta) sobre PGlite real; v1 intacta, sostre de quatre vives i només service_role."
+    },
     {
       "path": "tests/action-contrast.test.mjs",
       "suite": "primary",
@@ -281,6 +289,17 @@
       "path": "tests/administracio-multipoble-postgres.test.mjs",
       "suite": "primary",
       "reason": "FEDI-04: migracions reals i aïllament multipoble sobre PostgreSQL WASM amb PGlite local explícit; sense mòdul declara omissió, no SQL certificat."
+    },
+    {
+      "path": "tests/agentic-browsing-ard-llms.test.mjs",
+      "suite": "primary",
+      "reason": "R31 (IDEA-275 · lot_02 Gemini): validació determinista de public/llms.txt, public/.well-known/ard.json (URNs urn:air:socdepoble.org i representativeQueries) i llistes blanques de build."
+    },
+    {
+      "path": "tests/agents-app-content-r21-5-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R21.5: purga del catàleg antic, hidratació canònica i preservació de persones i entitats reals sobre PostgreSQL real."
     },
     {
       "path": "tests/anticipacio-261003.test.mjs",
@@ -298,6 +317,12 @@
       "reason": "R19/P0-113: contracte portable dels paquets de l’amfitrió, literals d’exclusió i bloqueig de dades de salut o financeres; fixtures sintètiques sense backend."
     },
     {
+      "path": "tests/auditoria-produccio-publica.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.6: auditoria pública GET, redacció de credencials, límits i desconeguts explícits."
+    },
+    {
       "path": "tests/backend_consolidacio.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -306,6 +331,16 @@
       "path": "tests/bot-arrencada.test.mjs",
       "suite": "primary",
       "reason": "P1-24 (C1645-03/04): arrencada del cervell del bot amb corpus mínim a mkdtemp, sense xarxa ni credencials (@google/genai fals); contracte productor→public/rag-index.json→hydrateRagIndex→search→prompt, frontera de la Wiki pública (publication-policy) per a cada entrada de l’índex, historial fitat a 8 i immunite.mjs linkat."
+    },
+    {
+      "path": "tests/botigues-canal-proves.test.mjs",
+      "suite": "primary",
+      "reason": "Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · Els canals de proves del manifest públic (testflightIosBuild, apkDirectBuild + apkSha256 i latestBuild) de publica-tot.mjs --sincronitza-proves: les garanties de --sincronitza-ard (versió de package.json, sostre de VERSIO_CLIENT_NATIU, mai baixa sense --corregeix-ard), l'evidència del registre de pujades d'iOS i de l'APK publicat (sumes i signatura fingida), i l'escriptura de public/ i dist/ junts o cap. mkdtemp, cap xarxa ni cap eina real."
+    },
+    {
+      "path": "tests/botigues-play-api-rest.test.mjs",
+      "suite": "primary",
+      "reason": "Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Client REST de la Google Play Developer API v3 de scripts/botigues/puja-android.mjs (sense fastlane, commit d'un sol intent amb verificació de l'estat a Play i eixida 11 si és desconegut), consultaLlancament de només lectura, clau del compte de servei de preflight.mjs, APK públic verificat amb apksigner i --sincronitza-ard de publica-tot.mjs contra un Google Play local amb estat (127.0.0.1): R32.3-PEIX-ARD, només la pista production «completed» s'anuncia a tots els Android i el pla omnicanal de producció l'encadena abans de npm run build. Clau RSA generada al vol, mkdtemp, cap xarxa de fora."
     },
     {
       "path": "tests/botigues.estat.test.mjs",
@@ -403,6 +438,12 @@
       "reason": "P2-12 · B10 marató 261101_2143: detector de només lectura del consum acreditat (port de candidatsConsum del pegat 261025_1705). Reproducció del 261025, triatge CONS-A..D, protecció explícita, acreditació amb acta, HEAD i versió consolidada, actes que mantenen viu, rancis, CLI en fase avis (exit 0, cap escriptura), la porta Olivera no el crida; fixtures a mkdtemp."
     },
     {
+      "path": "tests/contingut-frontera-r21-6-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R21.6: límits públics i notes privades amb PostgreSQL 18.6 real."
+    },
+    {
       "path": "tests/contrast-aaa.test.mjs",
       "suite": "primary",
       "reason": "R21 AAA: luminància relativa i composició alfa; contracte de parells semàntics clar/fosc/Bancal."
@@ -456,6 +497,11 @@
       "path": "tests/cua-operacions-offline.test.mjs",
       "suite": "primary",
       "reason": "O8/O9: cua durable SHA-256, HLC/LWW amb còpia de conflicte, CAS i ACK idempotent sense autoritat de client."
+    },
+    {
+      "path": "tests/d-r30-14-enllacos-arxiu-historic.test.mjs",
+      "suite": "primary",
+      "reason": "R32 · D-R30-14: enllaços de documents vius cap a 90_arxiu_historic vàlids només si el destí existix al disc real del repositori; inventats, fora de l'arrel o absents continuen rebutjats, també dins de l'arbre preparat del hook."
     },
     {
       "path": "tests/datapackage-public-corpus.test.mjs",
@@ -528,6 +574,12 @@
       "reason": "QA-R2-07 i P-16 (residus 261030) · bot empaquetable: el Dockerfile, el .dockerignore i el compose llegits com a text; graf de mòduls de bot/ (../tooling inclòs) resolt dins de la imatge, paquets declarats, secrets i estat fora a qualsevol fondària, Node exacte dins dels engines (també a la CI), usuari sense privilegis, i arrencada del cervell en la imatge reconstruïda a mkdtemp amb @google/genai fals; cap Docker ni xarxa."
     },
     {
+      "path": "tests/empremta-funcions-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "Onada R22 (dossier R03): porta d'empremta de funcions; md5(prosrc) i capçalera de cada funció d'un bolcat de producció q16 contra l'última definició de Git (catàleg sintètic sobre PostgreSQL 18.6 real), simulació d'una reconciliació, --ref HEAD i codis d'eixida 0, 1 i 2; cap servei remot."
+    },
+    {
       "path": "tests/enllacos-sessio.test.mjs",
       "suite": "session",
       "reason": "Audita git diff HEAD de la sessió; un checkout net de CI no té els canvis locals que esta prova avalua. Manté corredor explícit i no s’amaga el deute de la sessió."
@@ -558,6 +610,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/enxufe-secrets-i-abilities.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · Secrets API de WP 7.2 (WP_Secret, absent ≠ error, precedència constant → entorn → API) i abilities amb permís per objecte i esquemes tancats; fixtures PHP estàtiques, sense WordPress real."
+    },
+    {
       "path": "tests/enxufe-traduccio.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -583,6 +640,12 @@
       "reason": "O8/O9: mòdul NixOS declaratiu, endpoints federats, preparació OpenData verificada i límit explícit de Nix no instal·lat."
     },
     {
+      "path": "tests/firebase-capcaleres-cache.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Consola Zero (P-B): trinquet del contracte de memòria cau de firebase.json avaluat com Hosting (no-cache a l'HTML i a sw.js, immutable només a l'arrel d'/assets amb empremta, cap reescriptura d'/assets) amb mutants que el fan caure; cap xarxa."
+    },
+    {
       "path": "tests/fonts-vigilancia.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -606,6 +669,11 @@
       "path": "tests/frontissa-gate.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/frontmatter-schema-r329.test.mjs",
+      "suite": "primary",
+      "reason": "R32.9: compatibilitat estricta dels camps editorials amb el tractor de frontmatter; rangs i default inert."
     },
     {
       "path": "tests/frontmatter-sessio.test.mjs",
@@ -813,9 +881,21 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/logica-universal.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.6: contracte AST adversarial de totes les seccions i apps."
+    },
+    {
       "path": "tests/mapa-consola.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/membres-i-seguiments-concurrents-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "P1-13 / P2-10: dues sessions reals de PostgreSQL natiu sobre els panys sdp-orgowner/sdp-orgmem (C11-03) i la quota de 30 altes per hora de segueix, en els dos ordres entre el camí personal i el de l’entitat; la línia base SDP_MEMBRES_CONCURRENTS_BASELINE=1 ha de fallar."
     },
     {
       "path": "tests/migracio-admin-resum-sessions-dispositius.test.mjs",
@@ -883,9 +963,27 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/migracions-cataleg-mixt-r21-9b.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.9b: ordre cronològic del catàleg mixt de 10 i 14 dígits; Node 0 amb el pla ordenat, sense ordre alfabètic cru; avisa de les inversions que db push no respectaria; cap recepta executable (package.json, workflows, scripts/ i tooling/) aplica migracions amb db push ni amb un glob cru, i el README de supabase ho prohibix."
+    },
+    {
       "path": "tests/migracions-r15-prevol.test.mjs",
       "suite": "primary",
       "reason": "R15.2: prevol SQL read-only, migracions canòniques en PostgreSQL WASM explícit, aal2, RLS restrictiva, índexs i privadesa append-only; cap BD remota."
+    },
+    {
+      "path": "tests/missatgeria-r21-2-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R21.2: regressió de missatgeria, consentiment i aïllament sobre PostgreSQL real; cap backend remot."
+    },
+    {
+      "path": "tests/mur-membres-actes-v2-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R21.1 v2: projecció anònima, membres, actes i moderació amb PostgreSQL 18.6 real, cap servei remot."
     },
     {
       "path": "tests/natiu-build.test.mjs",
@@ -961,6 +1059,11 @@
       "path": "tests/node0-backend-native.test.mjs",
       "suite": "session",
       "reason": "R4: execució explícita SDP_NODE0_NATIVE_LAB=1 exclusivament a node0_gauntlet_r4 natiu; 75 migracions, dos usuaris de laboratori, notes, perfil, xat i revocació. El salt local no acredita SQL natiu."
+    },
+    {
+      "path": "tests/node0-cache-imatges-socials.test.mjs",
+      "suite": "primary",
+      "reason": "P0-SEO-UNIVERSAL · servidor del Node 0: /assets/og/ amb una hora de memòria cau (mai immutable), la resta de /assets/ immutable i un directori prerenderitzat amb el seu head; servidor de veres en loopback efímer i directori temporal."
     },
     {
       "path": "tests/node0-caddy-gateway.test.mjs",
@@ -1043,9 +1146,19 @@
       "reason": "R4: clon sense ZIP reconstruïx en memòria els bytes canònics des de la instantània versionada; SHA fix, cap xarxa ni escriptura pública, cap fallback d’un ZIP corrupte."
     },
     {
+      "path": "tests/node0-perimetre-servidor.test.mjs",
+      "suite": "primary",
+      "reason": "Onada R22 (eixa42) · servidor heretat del Node 0: escolta només a loopback, cap Host ni X-Forwarded-Host alié a la redirecció a https ni al manifest de mitjans signat, /api/estat sense túnel ni maquinari, immutable només amb empremta; servidor de veres en loopback efímer i directori temporal."
+    },
+    {
       "path": "tests/node0-posse-http.test.mjs",
       "suite": "primary",
       "reason": "AH09: frontera HTTP privada de safata/conformitat, cookie i actor esperat, factory per petició, aliases en un motor, batches només preparats i errors sense diagnòstics; sense transport OAuth real."
+    },
+    {
+      "path": "tests/node0-posse-safata.r3211.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: safata POSSE amb aprovació WebAuthn vinculada, journal CAS i revocació auditada; efectes simulats, cap publicació remota."
     },
     {
       "path": "tests/node0-postgres-app.test.mjs",
@@ -1176,16 +1289,6 @@
       "path": "tests/node0-r9-startup.test.mjs",
       "suite": "primary",
       "reason": "R9: unavailable local PostgreSQL waits, cancellation reaps children and unsafe authority fails before keys/listen; portable controlled processes."
-    },
-    {
-      "path": "tests/node0-perimetre-servidor.test.mjs",
-      "suite": "primary",
-      "reason": "Onada R22 (eixa42) · servidor heretat del Node 0: escolta només a loopback, cap Host ni X-Forwarded-Host alié a la redirecció a https ni al manifest de mitjans signat, /api/estat sense túnel ni maquinari, immutable només amb empremta; servidor de veres en loopback efímer i directori temporal."
-    },
-    {
-      "path": "tests/node0-cache-imatges-socials.test.mjs",
-      "suite": "primary",
-      "reason": "P0-SEO-UNIVERSAL · servidor del Node 0: /assets/og/ amb una hora de memòria cau (mai immutable), la resta de /assets/ immutable i un directori prerenderitzat amb el seu head; servidor de veres en loopback efímer i directori temporal."
     },
     {
       "path": "tests/node0-r9-static-inbox.test.mjs",
@@ -1378,6 +1481,213 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/push-aprovisionament.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.2: aprovisionament i preflight de push amb fixtures, sense secrets ni desplegaments reals."
+    },
+    {
+      "path": "tests/push-registra-suites.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.2: fusió estructural del manifest, idempotència i escriptura atòmica amb fixtures temporals."
+    },
+    {
+      "path": "tests/r21-9b-beta-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R21.9b: canal Beta Testers i registre d’aparadors amb PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r22-0-reconciliacio-deriva-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.0: reconciliació de la deriva de producció (frontera de mitjans_privats, límit de ritme del xat i retirada d'admin_list_users()) sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r22-1-hero-video-url-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.1: hero_video_url amb CHECK, permisos de columna, directori, list_my_organizations i perfil_public sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r22-2-reconciliacio-deriva-produccio-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.2: reconciliació de la deriva de producció (propietat, delete_user, xat_envia de 2610081543 amb CHECK de metadades, consentiment etapa A, funcions d'administració de Git, privilegis per defecte i heretades, autoria per disparador, notes.icon i publish_date) amb els residus literals de producció i un rol sense superusuari, sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r22-3-sostres-de-volum-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.3: sostres de volum per compte (user_tags, notes, fusible de mida, organitzacions, xat per hora i Mur amb publica_nota_al_mur i revoca_publicacio_de_nota) sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r22-4-purga-baixes-avis-worker-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.4: purga de baixes amb assaig previ de l'esborrat d'Auth i avís SDP-BAIXA-044 del worker sobre PostgreSQL 18.6 real, cap servei remot ni planificador."
+    },
+    {
+      "path": "tests/r22-5-buckets-mitjans-i-heretats-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R22.5: límits de mitjans, tancament dels buckets heretats i invariant del bucket públic amb els residus literals de Storage de producció sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/r24-consens-isoglosses-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (CODEX-R24-03): el mapatge del port consensIsoglosses (src/data/consensIsoglosses.js) contra la RPC resum_consens_isoglosses_poble i les taules joc_isoglosses_vots_consens i aportacions_veu_poble de les migracions R23, trobades pel contingut, sobre PostgreSQL 18.6 real amb tot el catàleg; cap servei remot."
+    },
+    {
+      "path": "tests/r28-rgpd-quotes-r23.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R28 (D-R24.2-5 i D-R24.2-6): exportació RGPD de les files R23 pròpies (veu_del_poble) amb les seccions de 2611070600 intactes i quotes d'escriptura per persona a aportacions i vots (60/h, 500/24 h, 2000 vives, vot repetit fora, autoria aliena per la RLS, servidor exempt), sense GRANT ni política nova, idempotència i precondició SDP-R28-002; catàleg complet sobre PGlite local explícit; sense el mòdul declara omissió, no SQL certificat."
+    },
+    {
+      "path": "tests/r29-esquemes-json-contractes.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R29 (kit lot_05 de Codex): paritat de validació JSON de mesures de patrimoni entre el port neutral i el catàleg PostgreSQL complet: tipus primitius, Unicode, claus reservades i límits de camps, text i nombres; PGlite local explícit, sense serveis remots ni concessions noves."
+    },
+    {
+      "path": "tests/r29-quotes-rls-i-consens.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R29 (SQL-R29-01..04 i 06): migració 20261115170000, NO aplicada a producció; RLS a les taules privades de R24, sostres per compte a aportacions culturals i revisions de patrimoni, consens d'isoglosses que un sol compte no pot buidar, normes UGC i pertinença a les taules R23, idempotència; catàleg complet sobre PGlite local explícit; sense el mòdul declara omissió, no SQL certificat."
+    },
+    {
+      "path": "tests/r30-2-pf03-ack-crdt.test.mjs",
+      "suite": "primary",
+      "reason": "R30.2/PF-03: ACK remot explícit per captura i DOT, retenció estricta de 90 dies amb rellotge remot, certificat causal permanent, convergència de rèpliques antigues i preservació d'edicions pendents; fixtures portables sense xarxa."
+    },
+    {
+      "path": "tests/r30-carpetes-locals-pglite.test.mjs",
+      "suite": "laboratory",
+      "kind": "postgres",
+      "reason": "R30 PF-01 viva + invariants R31 (Onada R32): prova SQL amb PGlite local explícit via SDP_PGLITE_MODULE contra crea_carpeta_notes (2611051930); el test refusa executar-se sense motor. Sense serveis remots ni la migració rebutjada 20261115233000."
+    },
+    {
+      "path": "tests/r30-editorial-cas-cataleg.test.mjs",
+      "suite": "laboratory",
+      "kind": "postgres",
+      "reason": "R30 P1-79 (kit lot_01 de Codex): catàleg complet en l'ordre del pla més la reaplicació de 20261115230000 amb PGlite local explícit; WP CAS sense bypass (signatura antiga, taula directa, AAL1/NULL, compte aliè) i publicació de Notes amb replay. Cap servei remot."
+    },
+    {
+      "path": "tests/r30-editorial-cas.test.mjs",
+      "suite": "laboratory",
+      "kind": "postgres",
+      "reason": "R30 P1-79 (kit lot_01 de Codex): CAS de la curadoria WordPress (20261115230000) sobre 2611110455 amb PGlite local explícit via SDP_PGLITE_MODULE; el test refusa executar-se sense motor. Dos escriptors, signatura antiga només de creació i sense sessió; cap servei remot."
+    },
+    {
+      "path": "tests/r30-independent-cas-aal-null.test.mjs",
+      "suite": "laboratory",
+      "kind": "postgres",
+      "reason": "R30 P1-79 · revisió independent de la precondició AAL2 davant claims nuls amb PGlite local explícit. Cap connexió ni sessió remota."
+    },
+    {
+      "path": "tests/r31-definer-search-path.test.mjs",
+      "suite": "primary",
+      "reason": "R31 (ADD118 al kit; migració 116 d'este catàleg): definers amb path buit, ACL preservades, idempotència, deriva i taules temporals adversàries en PGlite."
+    },
+    {
+      "path": "tests/r31-push-android-task.test.mjs",
+      "suite": "primary",
+      "reason": "R31 Passada2: Task Firebase real serialitzada en el pont Android propi; compilació del Java de producció i intercalacions de registre/baixa."
+    },
+    {
+      "path": "tests/r31-push-sessio-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R31: RLS de dispositius Push, revocació de sessió i canvi de compte sobre PGlite real."
+    },
+    {
+      "path": "tests/r31-reconciliacio-e2ee.test.mjs",
+      "suite": "primary",
+      "reason": "R31+R32: conciliació causal E2EE fusionada amb R29-E2EE-02; textos llegits dels cinc diccionaris."
+    },
+    {
+      "path": "tests/r32-5-lssi-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.5: catàleg SQL real, RLS, quota concurrent i retirada cautelar humana LSSI."
+    },
+    {
+      "path": "tests/r32-baixa-sessions-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
+    },
+    {
+      "path": "tests/r32-fossils-i-xat-rebase-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
+    },
+    {
+      "path": "tests/r32-posse-cataleg.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
+    },
+    {
+      "path": "tests/r3210-motors-cli.test.mjs",
+      "suite": "primary",
+      "reason": "R32.10: consumidors CLI reals del resum anual i mapa 301, exactitud de cèntims i zero escriptures implícites."
+    },
+    {
+      "path": "tests/r3211-css-lineal.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: escàner CSS fulla lineal compartit per tres tractors; offsets/corpus reals i pressupost64KiB sense delimitador."
+    },
+    {
+      "path": "tests/r3211-economia-arrencada.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11 P2-15: pressupost explícit de fonts i projecció documental, sense rotar ni llegir recursos humans."
+    },
+    {
+      "path": "tests/r3211-federacio-conformitat.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: conformitat pública WebFinger/ActivityPub amb generador real i integritat dels recursos OpenData; cap crida remota."
+    },
+    {
+      "path": "tests/r3211-fronteres-skills-lineal.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11 P1-30: pressupost lèxic lineal i diagnòstic incomplet failclosed; 64KiB i regressió F1-F5 sense excepcions."
+    },
+    {
+      "path": "tests/r3211-imatges-enquadrament.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11 P1-29 i lot06: consumidors reals crop, originals intactes, inventari/procedència i límits sense purgar assets."
+    },
+    {
+      "path": "tests/r3211-publicacions-cas-native.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: CAS publicacions sobre PostgreSQL natiu descartable amb dues connexions READ COMMITTED, sis interleavings amb barreres observades, ACL/export i compatibilitat PG18 NOT NULL; cap producció."
+    },
+    {
+      "path": "tests/r3213-anti-factura-egress.test.mjs",
+      "suite": "primary",
+      "reason": "R32.13: porta anti-egress en arbres Hosting descartables, ignorats, cache immutable, regex acotades i binaris."
+    },
+    {
+      "path": "tests/r3213-pf03-lssi-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.13: PF03 i LSSI en PostgreSQL 18.6 natiu amb dues sessions READ COMMITTED i PGlite; dependències locals obligatòries, cap salt silenciós ni SQL remot."
+    },
+    {
+      "path": "tests/r327-xat-accions-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
+    },
+    {
+      "path": "tests/r328-xat-quota-video-ubicacio-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.8: SQL natiu descartable, catàleg complet, doble aplicació, quota concurrent,60s i ubicació; cap producció."
+    },
+    {
+      "path": "tests/r32_11_publicacions_cas.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: snippet CAS manual en PGlite descartable, ACK/replay/conflictes/ACL i portabilitat; cap execució SQL remota."
+    },
+    {
       "path": "tests/reflex-doctor-index.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable de la Porta Reflex al pre-commit (P0-22, B1.3 261101): a l'arbre preparat el doctor certifica l'índex i fora continua estricte contra HEAD."
@@ -1431,6 +1741,11 @@
       "path": "tests/self-describe-coherencia.test.mjs",
       "suite": "primary",
       "reason": "B1.3-c 261101 (D6): src/data/SELF-DESCRIBE.md sense camins absents (Doctrina) ni deute de frontmatter, i tres afirmacions lligades al codi en els dos sentits (mode per defecte, entrades sense injectaBackendDelPaquet, cua de les Notes). Les portes s'executen en mode de només lectura."
+    },
+    {
+      "path": "tests/sentinella-jarvis-r32.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
     },
     {
       "path": "tests/sessio-rural-crdt-opfs.test.mjs",
@@ -1523,9 +1838,19 @@
       "reason": "Contracte de fonts de recuperació: Wiki pública i regles vigents sense arxiu, fòssils ni corpus protegits."
     },
     {
+      "path": "tests/tancament-titol-xat.test.mjs",
+      "suite": "primary",
+      "reason": "R30: camp informatiu chat_title_suggestion de tancament.mjs (aammdd_hhmm_rXX_slug ≤ 70 caràcters) derivat de l'última Acta Marmota; determinista, només fitxers regulars, null sense actes; arbres sintètics a mkdtemp."
+    },
+    {
       "path": "tests/time-machine.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/torns-inventari-compacte-r32.test.mjs",
+      "suite": "primary",
+      "reason": "R32 · D-R30-15/16: inventari compacte dels torns (commit base + diferències), lectura dels torns llegats, arxivat --arxiva amb torns compactes, i .gitignore de torns i preferències locals d'Obsidian."
     },
     {
       "path": "tests/tractor-arrel.test.mjs",
@@ -1533,9 +1858,29 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/tractor-cens-context.test.mjs",
+      "suite": "primary",
+      "reason": "R31: cens global del Consell amb context, quantificadors de subconjunt i contraexemples mixtos."
+    },
+    {
+      "path": "tests/tractor-coherencia-editorial-viva.test.mjs",
+      "suite": "primary",
+      "reason": "R31 (IDEA-273 · lot_01 Gemini): validació de les 6 lleis CEV-1..CEV-6 de tractor-coherencia-editorial-viva.mjs, paritat 5 llengües, cens i propagació per dominis."
+    },
+    {
+      "path": "tests/tractor-consola-neta.test.mjs",
+      "suite": "primary",
+      "reason": "R32.9: diagnòstic de clons/worktrees, graf i instantània pública amb negatives."
+    },
+    {
       "path": "tests/tractor-crom.test.mjs",
       "suite": "primary",
       "reason": "Ordre del Mestre (T15, 260930; 30-10-2026) · Porta Crom K4 rectangle pur: nav.app-sidebar .nav-item i .sidebar-control-btn amb border-radius 0 i mai width: 100%; el mutant de la pastilla, una cantonada arrodonida, una .nav-item més específica sense app-sidebar (.sdp-root .nav-item.active) i la base absent cauen; només la .nav-item nua i exacta (barra mòbil) fora d'abast; fulls CSS temporals."
+    },
+    {
+      "path": "tests/tractor-cromatic-temes.test.mjs",
+      "suite": "primary",
+      "reason": "R31: cobertura cromàtica multi-tema incorporada per Gemini R30.2 i protegida en CI."
     },
     {
       "path": "tests/tractor-doctrina-locals.test.mjs",
@@ -1578,6 +1923,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/tractor-rls-r1-literals.test.mjs",
+      "suite": "primary",
+      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
+    },
+    {
       "path": "tests/tractor-rls-r2-ddl.test.mjs",
       "suite": "primary",
       "reason": "Regressions estàtiques R2: només DDL real acredita RLS; comentaris, literals i cossos SQL no compten."
@@ -1593,6 +1943,11 @@
       "reason": "Ordre del Mestre (30-10-2026) · Porta Rutes R1 amb frontera esquerra: l'arxiu fred germà no és un literal de la Wiki i un literal real (també darrere de «../» o de «/») encara cau; fixtures temporals sense línia base."
     },
     {
+      "path": "tests/tractor-tokens-multilinia.r29.test.mjs",
+      "suite": "primary",
+      "reason": "R29 (kit lot_13 de Codex): Porta Tokens T1–T5 sobre declaracions i usos multilínia de var(--sdp-*), fallbacks buits o niats i declaracions comentades; arbres sintètics a mkdtemp, cap xarxa."
+    },
+    {
       "path": "tests/tractor-tokens-prosa.test.mjs",
       "suite": "primary",
       "reason": "Revisió adversarial de la Ronda 1 (31-10-2026) · Porta Tokens, T3: la prosa que la interfície pinta no declara cap token, i un srcDoc, un dangerouslySetInnerHTML, un cssText o una plantilla hi continuen comptant; arbres sintètics a mkdtemp, cap xarxa."
@@ -1606,6 +1961,16 @@
       "path": "tests/tractor-vocabulari-diferits.test.mjs",
       "suite": "primary",
       "reason": "Onada R29 (css-diferit-04, vocab-comentaris, vocab-abast-apps): la porta de vocabulari sobre arbres fingits temporals (classe diferida orfe, clau creuada, herència tancada, comentaris CSS, src/apps i cadena d'@import d'index.css) i sobre el worktree."
+    },
+    {
+      "path": "tests/tractors-fail-closed.r324.test.mjs",
+      "suite": "primary",
+      "reason": "R32.4: contraproves fail-closed dels sis tractors crítics del sistema nerviós."
+    },
+    {
+      "path": "tests/usabilitat-botons-r31.test.mjs",
+      "suite": "primary",
+      "reason": "R31 (IDEA-275/276 · lot_03 Gemini): contracte AST/JSX de type explícit en <button>, WCAG 2.5.3 Label in Name en controls de data/hora, <dialog> natiu i les 4 rutes d'entitat."
     },
     {
       "path": "tests/uuid-editorial-authorship-boundary-r19.test.mjs",
@@ -1628,9 +1993,72 @@
       "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
     },
     {
+      "path": "tests/wiki-publicacio-r329.test.mjs",
+      "suite": "primary",
+      "reason": "R32.9: metadades editorials, historial Git i resolució pública de fonts de la Wiki."
+    },
+    {
+      "path": "tests/xat-directe-canonic-r24-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (IDEA-260 a): un sol directe persona↔persona per parella i poble; clau canònica i índex únic, reconciliació dels duplicats (supervivent més antic, missatges en ordre cronològic amb numeració monòtona, cursors en prefix conservador, adjunts, cua d'avisos, denúncies, lectures i estat repuntats), E2EE i visibilitat a pendents, canal d'entitat intacte, crea_fil_directe per clau i concurrent, permisos tancats a anon i PUBLIC, sobre PostgreSQL 18.6 real; cap servei remot."
+    },
+    {
+      "path": "tests/xat-entrega-r24-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (IDEA-260 b, xat_entrega): rebut d'entrega dels altres a xat_fils_meus (rebut_pels_altres_fins_seq al final), regla D-1 del mínim dels gestors vigents (la de xat_ritme), monotonia, denegacions (foraster, anon, gestor revocat), la IAIA fora del còmput i idempotència sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/xat-propi-r21-4-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R21.4: xat propi d’un sol participant, idempotència, aïllament i absència d’auto-push sobre PostgreSQL real."
+    },
+    {
+      "path": "tests/xat-push-omnicanal.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.2: cadena de missatgeria i push omnicanal amb fixtures locals i proveïdors simulats."
+    },
+    {
+      "path": "tests/xat-r24-directe-marxa-enrere-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (Gauntlet G-sql-2): la marxa enrere de 20261114060000 llegida literalment de la capçalera no deixa cap UUID d'un compte suprimit, la reaplicació funciona i una marxa enrere parcial es repara (claus mortes fora, claus vives intactes), sobre PostgreSQL 18.6 real; cap servei remot."
+    },
+    {
+      "path": "tests/xat-r24-entrega-bots-per-fil-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (Gauntlet G-sql-4): paritat llista↔bombolla de la regla D-1 (MIN) en tots els estats de participant (eixit, amagat, bot lligat i sense lligam, gestor revocat, entitat, directe, fil propi), bots lligats resolts una vegada per fil (pg_stat_xact_user_functions, sense mesurar temps) i helper tancat a l'API, sobre PostgreSQL 18.6 real; cap servei remot."
+    },
+    {
+      "path": "tests/xat-r24-entrega-precondicions-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "R24 (Gauntlet G-sql-1): 20261114061000 sense 20261113003000 avorta neta amb SDP-XAT-947 (55000) abans de crear cap funció, i xat_fils_meus continua funcionant; catàleg sencer menys R21.9b sobre PostgreSQL 18.6 real, cap servei remot."
+    },
+    {
+      "path": "tests/xat-r24-readme-regla-d1.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 (Gauntlet G-sql-3): supabase/README.md, 20261114061000 i el comentari de src/data/localXat.js descriuen la mateixa regla D-1 (MIN com xat_ritme, pendent de decisió del Mestre, MAX com a alternativa); prova estàtica."
+    },
+    {
       "path": "tests/xat_f0_migracio.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tooling/brain/__tests__/observatori-rss-mestres.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · Observatori RSS de Mestres (IDEA-265): anàlisi del feed, sedàs i Oblit Saludable amb fetch i lookup injectats; cap xarxa real ni model."
+    },
+    {
+      "path": "tooling/brain/__tests__/observatori-rss-seguretat.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · negatives de seguretat de l’Observatori: SSRF IPv4/IPv6 i adreça fixada al socket, redireccions, bytes i termini, esquema de l’eixida del model i rutes d’escriptura; tot amb dobles locals."
     },
     {
       "path": "tooling/brain/fonts-govern.test.mjs",
@@ -1641,6 +2069,38 @@
       "path": "tooling/broker/broker.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tooling/gates/__tests__/porta-perimetre-tellado.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · porta Tellado v1.3: lexer lineal, xarxa de seguretat de signatures, veredicte desconegut/net i negatives R25.2-P01..P03 amb fixtures temporals."
+    },
+    {
+      "path": "tooling/gates/__tests__/r25-2-octet-length-sql.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · contracte estàtic de 20261114171500: sostres = 4 × límit de caràcters R23 i estat NO aplicada al README; sense base de dades."
+    },
+    {
+      "path": "tooling/gates/__tests__/sonda-tellado-5-rutes.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · sonda GET de 5 rutes contra un servidor efímer 127.0.0.1:0: bytes i salts acotats i Retry-After vàlid; cap xarxa externa."
+    },
+    {
+      "path": "tooling/gates/build-seo-manifest.test.mjs",
+      "suite": "primary",
+      "reason": "R32.9: prerender de la Wiki amb imatge pròpia i dates acreditades."
+    },
+    {
+      "path": "tooling/gates/consola-zero-nucli.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Consola Zero (P-G): nucli pur de l'arnés (Hosting en local, classificació CDP amb fixtures del 404 de modulepreload «about:client», rutes de consola-zero.rutes.json contra els <Route> de src/app/App.jsx, resum i codis); cap navegador ni xarxa."
+    },
+    {
+      "path": "tooling/gates/consola-zero.sense-rutes.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Gauntlet Loop ronda 2 (G-client-9): Consola Zero no és verd sense cap ruta visitada ni desfasament executat (codi 2), i --escenaris o --rutes buits després del filtre són un error d'ús abans de construir res; fixtures CDP, cap navegador ni xarxa."
     },
     {
       "path": "tooling/gates/guarda-nocturna.test.mjs",
@@ -1661,6 +2121,16 @@
       "path": "tooling/gates/tractor-psicopatia.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.http.test.mjs",
+      "suite": "primary",
+      "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.test.mjs",
+      "suite": "primary",
+      "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
     },
     {
       "path": "tooling/instalador/inicia-node-germa.test.mjs",
@@ -1691,6 +2161,24 @@
       "path": "tooling/media/sentinella-video-aplec2023.test.mjs",
       "suite": "primary",
       "reason": "R10/AH27: sentinella oEmbed del reportatge À Punt de l’Aplec, resposta correcta, vídeo caigut i temps límit; sense programació ni enviament remot."
+    },
+    {
+      "path": "tooling/menjarIBeure/syncAparadorsVius.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.9b: motor pur de plans d’aparadors consentits (preus en cèntims, pending_review, seasonal_hidden)."
+    },
+    {
+      "path": "tooling/scripts/retencio-assets.postcondicions.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Gauntlet Loop ronda 2 (G-client-6, 7 i 8): --retira esborra de dist/assets el tros que una incorpora anterior ja havia copiat, un pool corrupte no deixa cap build a mitges (validació abans de copiar) i --arxiu i --dist han de ser carpetes separades (codi 2); dist/ i arxiu fingits en un mkdtemp, cap build ni xarxa."
+    },
+    {
+      "path": "tooling/scripts/retencio-assets.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R24 Consola Zero (P-A): retenció dels recursos amb empremta entre desplegaments de Firebase sobre dist/ i arxius fingits en un mkdtemp; builds sencers o res, sostre, dies, clausura del graf, col·lisions, idempotència, enllaços simbòlics, paritat amb public/sw.js i l'ordre build → arxiva → incorpora → deploy; cap build ni xarxa."
     },
     {
       "path": "tooling/seo/adversarial-edge.test.mjs",
@@ -1788,9 +2276,35 @@
       "reason": "P0-SEO-UNIVERSAL · text d'un veí abans d'un head estàtic: sense caràcters de format Unicode, detector de contactes amb els vectors del Mur públic (2611122200) i regla de suplantació de nom; pur."
     },
     {
+      "path": "tooling/tests/data-text-scanner.r32_11.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: escàners documentals lineals, equivalència de gramàtica heretada i vectors adversarials64KiB; cap servei remot."
+    },
+    {
+      "path": "tooling/tests/document-link-scanners.r32_11.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: escàners documentals lineals, equivalència de gramàtica heretada i vectors adversarials64KiB; cap servei remot."
+    },
+    {
+      "path": "tooling/tests/document-parsers.r32_11.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: escàners documentals lineals, equivalència de gramàtica heretada i vectors adversarials64KiB; cap servei remot."
+    },
+    {
+      "path": "tooling/tests/mapa-redireccions-r32_13-301.test.mjs",
+      "suite": "primary",
+      "reason": "R32.13: compilació i verificació lineals 301, tres dominis, normalització estricta i emissors locals sense desplegament."
+    },
+    {
       "path": "tooling/vite/associacio-apps.test.mjs",
       "suite": "primary",
       "reason": "T6 (carril F-botigues, marató 261101) · Android App Links: forma exacta d'assetlinks.json, cap empremta mal formada o de farciment, cap publicació sense empremtes ni per a un altre domini, appAssociation NONE a firebase.json i connector del build (SSR, origen canònic); directoris temporals, cap xarxa."
+    },
+    {
+      "path": "tooling/vite/banderes-de-capacitat.test.mjs",
+      "suite": "primary",
+      "kind": "node",
+      "reason": "R21.1 v2: banderes de capacitat de build (VITE_SDP_COPUBLICACIO apagada per defecte) sense servei remot."
     },
     {
       "path": "tooling/vite/consola-iaia.test.mjs",
@@ -1828,6 +2342,11 @@
       "reason": "IDEA-31 (QA-R2-13; cicle 2) · Traductor Sobirà de desenvolupament (/__iaia/traduir): contracte, validacions i límits del PHP, Apertium beta→principal (GL només la beta), format txt/html explícit, DE i EU configurables amb target del destí, 12 s per crida i 30 s per petició, pausa només per 403/429; fetch i rellotge injectats, cap xarxa real."
     },
     {
+      "path": "tooling/wiki/__tests__/audita-graf-skills.test.mjs",
+      "suite": "primary",
+      "reason": "R26 · auditor del graf de skills: tipus crus com cataleg_skills, noms curts únics o des de l’origen i negatives R25.2-G01/G02."
+    },
+    {
       "path": "tooling/wiki/tests/contract_consistency.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
@@ -1841,507 +2360,6 @@
       "path": "tooling/wiki/wiki-forja-lint.test.mjs",
       "suite": "primary",
       "reason": "IDEA-130 (kit r79, integrat per K3 a l'Onada R10) · wiki-forja-lint de només lectura sobre una Wiki sintètica temporal: wiki-sync per fitxers, ## Vincles, rutes src/ inexistents o fora de l'arrel, etiquetes skill-forge sense llegir 90_arxiu_historic, i cap --diff que comence per «-» arriba a git (executor injectat, cap git real)."
-    },
-    {
-      "path": "tests/missatgeria-r21-2-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R21.2: regressió de missatgeria, consentiment i aïllament sobre PostgreSQL real; cap backend remot."
-    },
-    {
-      "path": "tests/xat-push-omnicanal.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R21.2: cadena de missatgeria i push omnicanal amb fixtures locals i proveïdors simulats."
-    },
-    {
-      "path": "tests/push-aprovisionament.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R21.2: aprovisionament i preflight de push amb fixtures, sense secrets ni desplegaments reals."
-    },
-    {
-      "path": "tests/push-registra-suites.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R21.2: fusió estructural del manifest, idempotència i escriptura atòmica amb fixtures temporals."
-    },
-    {
-      "path": "tests/xat-propi-r21-4-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R21.4: xat propi d’un sol participant, idempotència, aïllament i absència d’auto-push sobre PostgreSQL real."
-    },
-    {
-      "path": "tests/agents-app-content-r21-5-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R21.5: purga del catàleg antic, hidratació canònica i preservació de persones i entitats reals sobre PostgreSQL real."
-    },
-    {
-      "path": "tests/logica-universal.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R21.6: contracte AST adversarial de totes les seccions i apps."
-    },
-    {
-      "path": "tests/contingut-frontera-r21-6-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R21.6: límits públics i notes privades amb PostgreSQL 18.6 real."
-    },
-    {
-      "path": "tests/auditoria-produccio-publica.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R21.6: auditoria pública GET, redacció de credencials, límits i desconeguts explícits."
-    },
-    {
-      "path": "tests/mur-membres-actes-v2-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R21.1 v2: projecció anònima, membres, actes i moderació amb PostgreSQL 18.6 real, cap servei remot."
-    },
-    {
-      "path": "tests/r21-9b-beta-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R21.9b: canal Beta Testers i registre d’aparadors amb PostgreSQL 18.6 real, cap servei remot."
-    },
-    {
-      "path": "tests/r22-1-hero-video-url-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R22.1: hero_video_url amb CHECK, permisos de columna, directori, list_my_organizations i perfil_public sobre PostgreSQL 18.6 real, cap servei remot."
-    },
-    {
-      "path": "tests/r22-0-reconciliacio-deriva-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R22.0: reconciliació de la deriva de producció (frontera de mitjans_privats, límit de ritme del xat i retirada d'admin_list_users()) sobre PostgreSQL 18.6 real, cap servei remot."
-    },
-    {
-      "path": "tests/r22-2-reconciliacio-deriva-produccio-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R22.2: reconciliació de la deriva de producció (propietat, delete_user, xat_envia de 2610081543 amb CHECK de metadades, consentiment etapa A, funcions d'administració de Git, privilegis per defecte i heretades, autoria per disparador, notes.icon i publish_date) amb els residus literals de producció i un rol sense superusuari, sobre PostgreSQL 18.6 real, cap servei remot."
-    },
-    {
-      "path": "tests/r22-3-sostres-de-volum-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R22.3: sostres de volum per compte (user_tags, notes, fusible de mida, organitzacions, xat per hora i Mur amb publica_nota_al_mur i revoca_publicacio_de_nota) sobre PostgreSQL 18.6 real, cap servei remot."
-    },
-    {
-      "path": "tests/r22-4-purga-baixes-avis-worker-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R22.4: purga de baixes amb assaig previ de l'esborrat d'Auth i avís SDP-BAIXA-044 del worker sobre PostgreSQL 18.6 real, cap servei remot ni planificador."
-    },
-    {
-      "path": "tests/r22-5-buckets-mitjans-i-heretats-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R22.5: límits de mitjans, tancament dels buckets heretats i invariant del bucket públic amb els residus literals de Storage de producció sobre PostgreSQL 18.6 real, cap servei remot."
-    },
-    {
-      "path": "tests/r24-consens-isoglosses-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R24 (CODEX-R24-03): el mapatge del port consensIsoglosses (src/data/consensIsoglosses.js) contra la RPC resum_consens_isoglosses_poble i les taules joc_isoglosses_vots_consens i aportacions_veu_poble de les migracions R23, trobades pel contingut, sobre PostgreSQL 18.6 real amb tot el catàleg; cap servei remot."
-    },
-    {
-      "path": "tests/empremta-funcions-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "Onada R22 (dossier R03): porta d'empremta de funcions; md5(prosrc) i capçalera de cada funció d'un bolcat de producció q16 contra l'última definició de Git (catàleg sintètic sobre PostgreSQL 18.6 real), simulació d'una reconciliació, --ref HEAD i codis d'eixida 0, 1 i 2; cap servei remot."
-    },
-    {
-      "path": "tests/xat-directe-canonic-r24-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R24 (IDEA-260 a): un sol directe persona↔persona per parella i poble; clau canònica i índex únic, reconciliació dels duplicats (supervivent més antic, missatges en ordre cronològic amb numeració monòtona, cursors en prefix conservador, adjunts, cua d'avisos, denúncies, lectures i estat repuntats), E2EE i visibilitat a pendents, canal d'entitat intacte, crea_fil_directe per clau i concurrent, permisos tancats a anon i PUBLIC, sobre PostgreSQL 18.6 real; cap servei remot."
-    },
-    {
-      "path": "tests/xat-entrega-r24-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R24 (IDEA-260 b, xat_entrega): rebut d'entrega dels altres a xat_fils_meus (rebut_pels_altres_fins_seq al final), regla D-1 del mínim dels gestors vigents (la de xat_ritme), monotonia, denegacions (foraster, anon, gestor revocat), la IAIA fora del còmput i idempotència sobre PostgreSQL 18.6 real, cap servei remot."
-    },
-    {
-      "path": "tests/xat-r24-entrega-precondicions-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R24 (Gauntlet G-sql-1): 20261114061000 sense 20261113003000 avorta neta amb SDP-XAT-947 (55000) abans de crear cap funció, i xat_fils_meus continua funcionant; catàleg sencer menys R21.9b sobre PostgreSQL 18.6 real, cap servei remot."
-    },
-    {
-      "path": "tests/xat-r24-entrega-bots-per-fil-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R24 (Gauntlet G-sql-4): paritat llista↔bombolla de la regla D-1 (MIN) en tots els estats de participant (eixit, amagat, bot lligat i sense lligam, gestor revocat, entitat, directe, fil propi), bots lligats resolts una vegada per fil (pg_stat_xact_user_functions, sense mesurar temps) i helper tancat a l'API, sobre PostgreSQL 18.6 real; cap servei remot."
-    },
-    {
-      "path": "tests/xat-r24-directe-marxa-enrere-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R24 (Gauntlet G-sql-2): la marxa enrere de 20261114060000 llegida literalment de la capçalera no deixa cap UUID d'un compte suprimit, la reaplicació funciona i una marxa enrere parcial es repara (claus mortes fora, claus vives intactes), sobre PostgreSQL 18.6 real; cap servei remot."
-    },
-    {
-      "path": "tests/xat-r24-readme-regla-d1.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R24 (Gauntlet G-sql-3): supabase/README.md, 20261114061000 i el comentari de src/data/localXat.js descriuen la mateixa regla D-1 (MIN com xat_ritme, pendent de decisió del Mestre, MAX com a alternativa); prova estàtica."
-    },
-    {
-      "path": "tests/migracions-cataleg-mixt-r21-9b.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R21.9b: ordre cronològic del catàleg mixt de 10 i 14 dígits; Node 0 amb el pla ordenat, sense ordre alfabètic cru; avisa de les inversions que db push no respectaria; cap recepta executable (package.json, workflows, scripts/ i tooling/) aplica migracions amb db push ni amb un glob cru, i el README de supabase ho prohibix."
-    },
-    {
-      "path": "tooling/menjarIBeure/syncAparadorsVius.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R21.9b: motor pur de plans d’aparadors consentits (preus en cèntims, pending_review, seasonal_hidden)."
-    },
-    {
-      "path": "tooling/vite/banderes-de-capacitat.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R21.1 v2: banderes de capacitat de build (VITE_SDP_COPUBLICACIO apagada per defecte) sense servei remot."
-    },
-    {
-      "path": "tooling/scripts/retencio-assets.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R24 Consola Zero (P-A): retenció dels recursos amb empremta entre desplegaments de Firebase sobre dist/ i arxius fingits en un mkdtemp; builds sencers o res, sostre, dies, clausura del graf, col·lisions, idempotència, enllaços simbòlics, paritat amb public/sw.js i l'ordre build → arxiva → incorpora → deploy; cap build ni xarxa."
-    },
-    {
-      "path": "tests/firebase-capcaleres-cache.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R24 Consola Zero (P-B): trinquet del contracte de memòria cau de firebase.json avaluat com Hosting (no-cache a l'HTML i a sw.js, immutable només a l'arrel d'/assets amb empremta, cap reescriptura d'/assets) amb mutants que el fan caure; cap xarxa."
-    },
-    {
-      "path": "tooling/gates/consola-zero-nucli.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R24 Consola Zero (P-G): nucli pur de l'arnés (Hosting en local, classificació CDP amb fixtures del 404 de modulepreload «about:client», rutes de consola-zero.rutes.json contra els <Route> de src/app/App.jsx, resum i codis); cap navegador ni xarxa."
-    },
-    {
-      "path": "tooling/scripts/retencio-assets.postcondicions.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R24 Gauntlet Loop ronda 2 (G-client-6, 7 i 8): --retira esborra de dist/assets el tros que una incorpora anterior ja havia copiat, un pool corrupte no deixa cap build a mitges (validació abans de copiar) i --arxiu i --dist han de ser carpetes separades (codi 2); dist/ i arxiu fingits en un mkdtemp, cap build ni xarxa."
-    },
-    {
-      "path": "tooling/gates/consola-zero.sense-rutes.test.mjs",
-      "suite": "primary",
-      "kind": "node",
-      "reason": "R24 Gauntlet Loop ronda 2 (G-client-9): Consola Zero no és verd sense cap ruta visitada ni desfasament executat (codi 2), i --escenaris o --rutes buits després del filtre són un error d'ús abans de construir res; fixtures CDP, cap navegador ni xarxa."
-    },
-    {
-      "path": "tooling/gates/__tests__/porta-perimetre-tellado.test.mjs",
-      "suite": "primary",
-      "reason": "R26 · porta Tellado v1.3: lexer lineal, xarxa de seguretat de signatures, veredicte desconegut/net i negatives R25.2-P01..P03 amb fixtures temporals."
-    },
-    {
-      "path": "tooling/gates/__tests__/r25-2-octet-length-sql.test.mjs",
-      "suite": "primary",
-      "reason": "R26 · contracte estàtic de 20261114171500: sostres = 4 × límit de caràcters R23 i estat NO aplicada al README; sense base de dades."
-    },
-    {
-      "path": "tooling/gates/__tests__/sonda-tellado-5-rutes.test.mjs",
-      "suite": "primary",
-      "reason": "R26 · sonda GET de 5 rutes contra un servidor efímer 127.0.0.1:0: bytes i salts acotats i Retry-After vàlid; cap xarxa externa."
-    },
-    {
-      "path": "tooling/wiki/__tests__/audita-graf-skills.test.mjs",
-      "suite": "primary",
-      "reason": "R26 · auditor del graf de skills: tipus crus com cataleg_skills, noms curts únics o des de l’origen i negatives R25.2-G01/G02."
-    },
-    {
-      "path": "tests/enxufe-secrets-i-abilities.test.mjs",
-      "suite": "primary",
-      "reason": "R26 · Secrets API de WP 7.2 (WP_Secret, absent ≠ error, precedència constant → entorn → API) i abilities amb permís per objecte i esquemes tancats; fixtures PHP estàtiques, sense WordPress real."
-    },
-    {
-      "path": "tooling/brain/__tests__/observatori-rss-mestres.test.mjs",
-      "suite": "primary",
-      "reason": "R26 · Observatori RSS de Mestres (IDEA-265): anàlisi del feed, sedàs i Oblit Saludable amb fetch i lookup injectats; cap xarxa real ni model."
-    },
-    {
-      "path": "tooling/brain/__tests__/observatori-rss-seguretat.test.mjs",
-      "suite": "primary",
-      "reason": "R26 · negatives de seguretat de l’Observatori: SSRF IPv4/IPv6 i adreça fixada al socket, redireccions, bytes i termini, esquema de l’eixida del model i rutes d’escriptura; tot amb dobles locals."
-    },
-    {
-      "path": "tests/r28-rgpd-quotes-r23.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R28 (D-R24.2-5 i D-R24.2-6): exportació RGPD de les files R23 pròpies (veu_del_poble) amb les seccions de 2611070600 intactes i quotes d'escriptura per persona a aportacions i vots (60/h, 500/24 h, 2000 vives, vot repetit fora, autoria aliena per la RLS, servidor exempt), sense GRANT ni política nova, idempotència i precondició SDP-R28-002; catàleg complet sobre PGlite local explícit; sense el mòdul declara omissió, no SQL certificat."
-    },
-    {
-      "path": "tests/r29-quotes-rls-i-consens.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R29 (SQL-R29-01..04 i 06): migració 20261115170000, NO aplicada a producció; RLS a les taules privades de R24, sostres per compte a aportacions culturals i revisions de patrimoni, consens d'isoglosses que un sol compte no pot buidar, normes UGC i pertinença a les taules R23, idempotència; catàleg complet sobre PGlite local explícit; sense el mòdul declara omissió, no SQL certificat."
-    },
-    {
-      "path": "tests/r29-esquemes-json-contractes.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "R29 (kit lot_05 de Codex): paritat de validació JSON de mesures de patrimoni entre el port neutral i el catàleg PostgreSQL complet: tipus primitius, Unicode, claus reservades i límits de camps, text i nombres; PGlite local explícit, sense serveis remots ni concessions noves."
-    },
-    {
-      "path": "tests/tractor-tokens-multilinia.r29.test.mjs",
-      "suite": "primary",
-      "reason": "R29 (kit lot_13 de Codex): Porta Tokens T1–T5 sobre declaracions i usos multilínia de var(--sdp-*), fallbacks buits o niats i declaracions comentades; arbres sintètics a mkdtemp, cap xarxa."
-    },
-    {
-      "path": "tests/tancament-titol-xat.test.mjs",
-      "suite": "primary",
-      "reason": "R30: camp informatiu chat_title_suggestion de tancament.mjs (aammdd_hhmm_rXX_slug ≤ 70 caràcters) derivat de l'última Acta Marmota; determinista, només fitxers regulars, null sense actes; arbres sintètics a mkdtemp."
-    },
-    {
-      "path": "tests/r30-editorial-cas.test.mjs",
-      "suite": "laboratory",
-      "kind": "postgres",
-      "reason": "R30 P1-79 (kit lot_01 de Codex): CAS de la curadoria WordPress (20261115230000) sobre 2611110455 amb PGlite local explícit via SDP_PGLITE_MODULE; el test refusa executar-se sense motor. Dos escriptors, signatura antiga només de creació i sense sessió; cap servei remot."
-    },
-    {
-      "path": "tests/r30-editorial-cas-cataleg.test.mjs",
-      "suite": "laboratory",
-      "kind": "postgres",
-      "reason": "R30 P1-79 (kit lot_01 de Codex): catàleg complet en l'ordre del pla més la reaplicació de 20261115230000 amb PGlite local explícit; WP CAS sense bypass (signatura antiga, taula directa, AAL1/NULL, compte aliè) i publicació de Notes amb replay. Cap servei remot."
-    },
-    {
-      "path": "tests/r30-independent-cas-aal-null.test.mjs",
-      "suite": "laboratory",
-      "kind": "postgres",
-      "reason": "R30 P1-79 · revisió independent de la precondició AAL2 davant claims nuls amb PGlite local explícit. Cap connexió ni sessió remota."
-    },
-    {
-      "path": "tests/agentic-browsing-ard-llms.test.mjs",
-      "suite": "primary",
-      "reason": "R31 (IDEA-275 · lot_02 Gemini): validació determinista de public/llms.txt, public/.well-known/ard.json (URNs urn:air:socdepoble.org i representativeQueries) i llistes blanques de build."
-    },
-    {
-      "path": "tests/d-r30-14-enllacos-arxiu-historic.test.mjs",
-      "suite": "primary",
-      "reason": "R32 · D-R30-14: enllaços de documents vius cap a 90_arxiu_historic vàlids només si el destí existix al disc real del repositori; inventats, fora de l'arrel o absents continuen rebutjats, també dins de l'arbre preparat del hook."
-    },
-    {
-      "path": "tests/r30-2-pf03-ack-crdt.test.mjs",
-      "suite": "primary",
-      "reason": "R30.2/PF-03: ACK remot explícit per captura i DOT, retenció estricta de 90 dies amb rellotge remot, certificat causal permanent, convergència de rèpliques antigues i preservació d'edicions pendents; fixtures portables sense xarxa."
-    },
-    {
-      "path": "tests/r30-carpetes-locals-pglite.test.mjs",
-      "suite": "laboratory",
-      "kind": "postgres",
-      "reason": "R30 PF-01 viva + invariants R31 (Onada R32): prova SQL amb PGlite local explícit via SDP_PGLITE_MODULE contra crea_carpeta_notes (2611051930); el test refusa executar-se sense motor. Sense serveis remots ni la migració rebutjada 20261115233000."
-    },
-    {
-      "path": "tests/r31-definer-search-path.test.mjs",
-      "suite": "primary",
-      "reason": "R31 (ADD118 al kit; migració 116 d'este catàleg): definers amb path buit, ACL preservades, idempotència, deriva i taules temporals adversàries en PGlite."
-    },
-    {
-      "path": "tests/r31-push-android-task.test.mjs",
-      "suite": "primary",
-      "reason": "R31 Passada2: Task Firebase real serialitzada en el pont Android propi; compilació del Java de producció i intercalacions de registre/baixa."
-    },
-    {
-      "path": "tests/r31-push-sessio-postgres.test.mjs",
-      "suite": "primary",
-      "reason": "R31: RLS de dispositius Push, revocació de sessió i canvi de compte sobre PGlite real."
-    },
-    {
-      "path": "tests/r31-reconciliacio-e2ee.test.mjs",
-      "suite": "primary",
-      "reason": "R31+R32: conciliació causal E2EE fusionada amb R29-E2EE-02; textos llegits dels cinc diccionaris."
-    },
-    {
-      "path": "tests/torns-inventari-compacte-r32.test.mjs",
-      "suite": "primary",
-      "reason": "R32 · D-R30-15/16: inventari compacte dels torns (commit base + diferències), lectura dels torns llegats, arxivat --arxiva amb torns compactes, i .gitignore de torns i preferències locals d'Obsidian."
-    },
-    {
-      "path": "tests/tractor-cens-context.test.mjs",
-      "suite": "primary",
-      "reason": "R31: cens global del Consell amb context, quantificadors de subconjunt i contraexemples mixtos."
-    },
-    {
-      "path": "tests/tractor-coherencia-editorial-viva.test.mjs",
-      "suite": "primary",
-      "reason": "R31 (IDEA-273 · lot_01 Gemini): validació de les 6 lleis CEV-1..CEV-6 de tractor-coherencia-editorial-viva.mjs, paritat 5 llengües, cens i propagació per dominis."
-    },
-    {
-      "path": "tests/tractor-cromatic-temes.test.mjs",
-      "suite": "primary",
-      "reason": "R31: cobertura cromàtica multi-tema incorporada per Gemini R30.2 i protegida en CI."
-    },
-    {
-      "path": "tests/usabilitat-botons-r31.test.mjs",
-      "suite": "primary",
-      "reason": "R31 (IDEA-275/276 · lot_03 Gemini): contracte AST/JSX de type explícit en <button>, WCAG 2.5.3 Label in Name en controls de data/hora, <dialog> natiu i les 4 rutes d'entitat."
-    },
-    {
-      "path": "tests/r32-baixa-sessions-pglite.test.mjs",
-      "suite": "primary",
-      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
-    },
-    {
-      "path": "tests/r32-fossils-i-xat-rebase-pglite.test.mjs",
-      "suite": "primary",
-      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
-    },
-    {
-      "path": "tests/r32-posse-cataleg.test.mjs",
-      "suite": "primary",
-      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
-    },
-    {
-      "path": "tests/sentinella-jarvis-r32.test.mjs",
-      "suite": "primary",
-      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
-    },
-    {
-      "path": "tests/tractor-rls-r1-literals.test.mjs",
-      "suite": "primary",
-      "reason": "R32.2: contracte executable SQL, JARVIS o hook del lliurament conciliat."
-    },
-    {
-      "path": "tests/botigues-play-api-rest.test.mjs",
-      "suite": "primary",
-      "reason": "Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Client REST de la Google Play Developer API v3 de scripts/botigues/puja-android.mjs (sense fastlane, commit d'un sol intent amb verificació de l'estat a Play i eixida 11 si és desconegut), consultaLlancament de només lectura, clau del compte de servei de preflight.mjs, APK públic verificat amb apksigner i --sincronitza-ard de publica-tot.mjs contra un Google Play local amb estat (127.0.0.1): R32.3-PEIX-ARD, només la pista production «completed» s'anuncia a tots els Android i el pla omnicanal de producció l'encadena abans de npm run build. Clau RSA generada al vol, mkdtemp, cap xarxa de fora."
-    },
-    {
-      "path": "tests/tractors-fail-closed.r324.test.mjs",
-      "suite": "primary",
-      "reason": "R32.4: contraproves fail-closed dels sis tractors crítics del sistema nerviós."
-    },
-    {
-      "path": "tests/r32-5-lssi-postgres.test.mjs",
-      "suite": "primary",
-      "reason": "R32.5: catàleg SQL real, RLS, quota concurrent i retirada cautelar humana LSSI."
-    },
-    {
-      "path": "tests/botigues-canal-proves.test.mjs",
-      "suite": "primary",
-      "reason": "Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · Els canals de proves del manifest públic (testflightIosBuild, apkDirectBuild + apkSha256 i latestBuild) de publica-tot.mjs --sincronitza-proves: les garanties de --sincronitza-ard (versió de package.json, sostre de VERSIO_CLIENT_NATIU, mai baixa sense --corregeix-ard), l'evidència del registre de pujades d'iOS i de l'APK publicat (sumes i signatura fingida), i l'escriptura de public/ i dist/ junts o cap. mkdtemp, cap xarxa ni cap eina real."
-    },
-    {
-      "path": "tests/r327-xat-accions-pglite.test.mjs",
-      "suite": "primary",
-      "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
-    },
-    {
-      "path": "tooling/gates/tractor-sentinella-blindatge.test.mjs",
-      "suite": "primary",
-      "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
-    },
-    {
-      "path": "tooling/gates/tractor-sentinella-blindatge.http.test.mjs",
-      "suite": "primary",
-      "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
-    },
-    {
-      "path": "tests/r328-xat-quota-video-ubicacio-postgres.test.mjs",
-      "suite": "primary",
-      "reason": "R32.8: SQL natiu descartable, catàleg complet, doble aplicació, quota concurrent,60s i ubicació; cap producció."
-    },
-    {
-      "path": "tests/tractor-consola-neta.test.mjs",
-      "suite": "primary",
-      "reason": "R32.9: diagnòstic de clons/worktrees, graf i instantània pública amb negatives."
-    },
-    {
-      "path": "tests/wiki-publicacio-r329.test.mjs",
-      "suite": "primary",
-      "reason": "R32.9: metadades editorials, historial Git i resolució pública de fonts de la Wiki."
-    },
-    {
-      "path": "tooling/gates/build-seo-manifest.test.mjs",
-      "suite": "primary",
-      "reason": "R32.9: prerender de la Wiki amb imatge pròpia i dates acreditades."
-    },
-    {
-      "path": "tests/frontmatter-schema-r329.test.mjs",
-      "suite": "primary",
-      "reason": "R32.9: compatibilitat estricta dels camps editorials amb el tractor de frontmatter; rangs i default inert."
-    },
-    {
-      "path": "tests/r3210-motors-cli.test.mjs",
-      "suite": "primary",
-      "reason": "R32.10: consumidors CLI reals del resum anual i mapa 301, exactitud de cèntims i zero escriptures implícites."
-    },
-    {
-      "path": "tests/r3211-federacio-conformitat.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11: conformitat pública WebFinger/ActivityPub amb generador real i integritat dels recursos OpenData; cap crida remota."
-    },
-    {
-      "path": "tests/r3211-economia-arrencada.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11 P2-15: pressupost explícit de fonts i projecció documental, sense rotar ni llegir recursos humans."
-    },
-    {
-      "path": "tests/node0-posse-safata.r3211.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11: safata POSSE amb aprovació WebAuthn vinculada, journal CAS i revocació auditada; efectes simulats, cap publicació remota."
-    },
-    {
-      "path": "tests/r32_11_publicacions_cas.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11: snippet CAS manual en PGlite descartable, ACK/replay/conflictes/ACL i portabilitat; cap execució SQL remota."
-    },
-    {
-      "path": "tests/r3211-imatges-enquadrament.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11 P1-29 i lot06: consumidors reals crop, originals intactes, inventari/procedència i límits sense purgar assets."
-    },
-    {
-      "path": "tests/r3211-css-lineal.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11: escàner CSS fulla lineal compartit per tres tractors; offsets/corpus reals i pressupost64KiB sense delimitador."
-    },
-    {
-      "path": "tests/r3211-publicacions-cas-native.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11: CAS publicacions sobre PostgreSQL natiu descartable amb dues connexions READ COMMITTED, sis interleavings amb barreres observades, ACL/export i compatibilitat PG18 NOT NULL; cap producció."
-    },
-    {
-      "path": "tooling/tests/document-parsers.r32_11.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11: escàners documentals lineals, equivalència de gramàtica heretada i vectors adversarials64KiB; cap servei remot."
-    },
-    {
-      "path": "tooling/tests/document-link-scanners.r32_11.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11: escàners documentals lineals, equivalència de gramàtica heretada i vectors adversarials64KiB; cap servei remot."
-    },
-    {
-      "path": "tooling/tests/data-text-scanner.r32_11.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11: escàners documentals lineals, equivalència de gramàtica heretada i vectors adversarials64KiB; cap servei remot."
-    },
-    {
-      "path": "tests/r3211-fronteres-skills-lineal.test.mjs",
-      "suite": "primary",
-      "reason": "R32.11 P1-30: pressupost lèxic lineal i diagnòstic incomplet failclosed; 64KiB i regressió F1-F5 sense excepcions."
-    },
-    {
-      "path": "tests/a03-push-credencials-postgres.test.mjs",
-      "suite": "primary",
-      "reason": "P1-74 (A-03): caché de credencials natives per (proveïdor, empremta) sobre PGlite real; v1 intacta, sostre de quatre vives i només service_role."
-    },
-    {
-      "path": "tests/membres-i-seguiments-concurrents-postgres.test.mjs",
-      "suite": "primary",
-      "kind": "postgres",
-      "reason": "P1-13 / P2-10: dues sessions reals de PostgreSQL natiu sobre els panys sdp-orgowner/sdp-orgmem (C11-03) i la quota de 30 altes per hora de segueix, en els dos ordres entre el camí personal i el de l’entitat; la línia base SDP_MEMBRES_CONCURRENTS_BASELINE=1 ha de fallar."
     }
   ]
 }

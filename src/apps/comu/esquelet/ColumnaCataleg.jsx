@@ -38,6 +38,7 @@ import {
   MarcColumna, PaginaApp, PillToggle, SelectorCategoria, UniversalCard
 } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
+import { textosCatalegEsquelet, textosTargetesEsquelet } from './i18nEsquelet.js';
 import { useVistaCataleg, useVistesEsquelet } from './vistes.js';
 
 /* Els textos d'estat per defecte de la forma «targetes»: els mateixos de les
@@ -114,7 +115,8 @@ export function TargetesArticles({
      sense data ni caducitat ometen la pastilla «Data no indicada», conservant qualsevol data real. */
   ometDataNoIndicada = false
 }) {
-  const t = { ...TEXTOS_TARGETES, ...textos };
+  const baseTargetes = textosTargetesEsquelet(idioma);
+  const t = { ...TEXTOS_TARGETES, ...baseTargetes, ...textos };
   const ambSeccions = Array.isArray(categories);
   const llista = (Array.isArray(elements) ? elements : [])
     .filter((element) => element?.article && typeof element.article.id === 'string')
@@ -212,7 +214,7 @@ const TEXTOS_CATALEG = Object.freeze({
 });
 
 export function ColumnaCataleg({
-  titol = 'Catàleg', categories = [], articles = [], destacats = [], agrupa = true,
+  titol, categories = [], articles = [], destacats = [], agrupa = true,
   selector = 'pastilles', ambVistes = true, vistaPerDefecte = 'graella',
   onTria, commutable = false, textosEstat, renderMedia, plegades, onPlega, textArticles,
   afegit = null, detall = null, resum = null, primer, tram, textos,
@@ -222,8 +224,10 @@ export function ColumnaCataleg({
   avis = null,
   ometDataNoIndicada = false
 }) {
-  const t = { ...TEXTOS_CATALEG, ...textos };
   const { mida, idioma } = useClosaAplicacio();
+  const baseCataleg = textosCatalegEsquelet(idioma);
+  const t = { ...TEXTOS_CATALEG, ...baseCataleg, ...textos };
+  const titolResolt = titol ?? baseCataleg.titolPerDefecte;
   const vista = useVistaCataleg(vistaPerDefecte);
   const vistes = useVistesEsquelet({ primer, tram });
   const llista = Array.isArray(articles) ? articles : [];
@@ -263,8 +267,8 @@ export function ColumnaCataleg({
   const teFitxa = (article) => ambTargetes && Boolean(detall) && Boolean(boinaDe(article).nom);
   const candidata = ambTargetes && vista.fitxa ? llista.find((article) => article.id === vista.fitxa) || null : null;
   const articleFitxa = candidata && teFitxa(candidata) ? candidata : null;
-  const textosFitxa = { ...TEXTOS_TARGETES, ...textosEstat };
-  const textAccioFitxa = detall?.textAccepta || (typeof detall?.etiquetaVariants === 'string' ? detall.etiquetaVariants : null) || 'Opcions';
+  const textosFitxa = { ...TEXTOS_TARGETES, ...textosTargetesEsquelet(idioma), ...textosEstat };
+  const textAccioFitxa = detall?.textAccepta || (typeof detall?.etiquetaVariants === 'string' ? detall.etiquetaVariants : null) || baseCataleg.opcions;
   /* El focus: en obrir la fitxa des de l'app, a l'H1; en tancar-la, a la targeta de l'article
      (si es veu). Una fitxa que ja és a la URL en muntar (un enllaç, una recàrrega) no mou el
      focus: és del canvi de ruta, i encastat podria ser d'un camp de l'amfitrió. */
@@ -323,8 +327,8 @@ export function ColumnaCataleg({
   ) : null;
 
   return (
-    <MarcColumna capcalera={<AppGridColumn titol={titol} />} eines={selector || ambVistes || afegit ? eines : null}
-      peu={peu} avis={avis} etiqueta={titol}>
+    <MarcColumna capcalera={<AppGridColumn titol={titolResolt} />} eines={selector || ambVistes || afegit ? eines : null}
+      peu={peu} avis={avis} etiqueta={titolResolt}>
       {articleFitxa ? (
         <FitxaArticle
           article={articleFitxa}
@@ -341,7 +345,7 @@ export function ColumnaCataleg({
           ometDataNoIndicada={ometDataNoIndicada}
           elements={articlesCos.map((article, i) => ({ article, categoria: perId.get(propis[i]?.categoriaId) || null }))}
           categories={categoriesCos}
-          etiqueta={titol}
+          etiqueta={titolResolt}
           pla={vista.vista === 'llista'}
           onTria={tria}
           onAccioSecundaria={obriDetall}
@@ -357,7 +361,7 @@ export function ColumnaCataleg({
         <Peca
           articles={articlesCos}
           categories={categoriesCos}
-          etiqueta={titol}
+          etiqueta={titolResolt}
           onTria={tria}
           onAccioSecundaria={obriDetall}
           commutable={commutable}
@@ -395,7 +399,7 @@ export function ColumnaCataleg({
               {/* Ordre del Mestre, 261004 (integració final) · La porta a la fitxa de l'article, si
                   en té i no s'hi és ja. */}
               {teFitxa(articleObert) && vista.fitxa !== articleObert.id ? (
-                <Boto varietat="secundari" icona={FileText} onClick={() => vista.obriFitxa(articleObert.id)}>Fitxa de l’article</Boto>
+                <Boto varietat="secundari" icona={FileText} onClick={() => vista.obriFitxa(articleObert.id)}>{baseCataleg.fitxaArticle}</Boto>
               ) : null}
             </>
           ) : null}

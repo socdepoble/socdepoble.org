@@ -2077,6 +2077,7 @@ Rebuts de l'«Estat declarat» (`P0-05` / `P2-10`): «bolcat del 13-11-2026» i 
 | Snippet manual 6 | `snippets/r32_baixa_sessions_rollback.sql` | Marxa enrere de `20261116170200` des del backup privat; disponible, no executada (la còpia `rollback_03_baixa_sessions.sql` de la carpeta del certificat 261117_0155 té el mateix SHA-256, `f84fb183…`) |
 | Snippet manual 7 | `snippets/r32_10_xat_privades_rls_repara.sql` | R32.10: reparació manual idempotent de RLS i ACL de taula/columna de les dues taules internes del xat; conserva dades i accés intern del propietari; polítiques o privilegis heretats no revisats avorten. Preparat i provat localment, sense aplicació remota en este torn |
 | Snippet manual 8 | `snippets/r32_10_fossils_acl_enduriment.sql` | R32.10: mínim EXECUTE dels 7 definers amb OID, propietari i DDL postimatge verificats; sense concessions noves, comprova herència efectiva i conserva backup d’ACL. Preparat i provat localment; l’aplica el Mestre després d’exportar i revisar consumidors |
+| Snippet manual R32.13 | `snippets/r32_13_pf03_crdt_ack_i_lssi_denuncies.sql` | **NO aplicat a Producció**; paquet manual fora del catàleg de migracions: ACK causal CRDT durable i denúncies LSSI sobre el flux existent, amb revisió humana CAS. Verificat localment amb PostgreSQL 18.6 (dues sessions READ COMMITTED) i PGlite; cap prova local acredita execució remota |
 
 **R32.10 · integritat del pre-vol:** l’export històric `resultat_sonda_produccio_261117_0144.json` concorda amb els seus hashes recalculats en 7/9 files. Els DDL literals de `public.demana_baixa(text)` i `public.omega_invalidate_stale_translations()` no produïxen els hashes declarats. Açò no determina el DDL remot actual ni autoritza substituir pins: cal un export fresc i íntegre. La nova ACL requerix la postimatge exacta de `private.r32_fossils_backup`; un pin NULL o qualsevol deriva avorta. El paquet consolidat i la verificació booleana són a `../_investigacio_ia_de_poble/261118_r32_10_codex_deute_zero/`; no són migracions noves ni s’han executat a Producció.
 
@@ -3345,3 +3346,42 @@ columnes, restriccions ni metadades inesperades. Prova:
 `node --test tests/r3211-publicacions-cas-native.test.mjs`, només amb la
 fixture de clúster descartable per socket Unix; no acredita Auth/JWT signat,
 PostgREST ni cap desplegament remot.
+
+## R32.13 · ACK causal CRDT i moderació diligent, paquet manual no aplicat
+
+`snippets/r32_13_pf03_crdt_ack_i_lssi_denuncies.sql` és un paquet **manual,
+NO aplicat a Producció i fora del catàleg de migracions**. Requerix el
+catàleg complet de `v1.2.8`, inclòs el flux LSSI de R32.5. No substituïx cap
+migració històrica ni s'executa en importar el client.
+
+PF-03 conserva captures i DOTs en taules privades per poble i persona
+autenticada. Un request ID repetit conserva els bytes i l'hora remota del
+primer rebut; no renova artificialment l'antiguitat. Un DOT contradictori o
+un replay amb un cos diferent es rebutgen. El client només compacta
+supressions de més de 90 dies acreditades per un rebut remot de la captura
+exacta; operacions locals posteriors o no confirmades es conserven. Si falta
+la RPC, no hi ha ACK remot ni compactació substitutòria.
+
+La part LSSI reutilitza `public.denuncies`, el validador de publicacions i el
+hash d'IP existents. La denúncia obri una petició de revisió humana: no
+determina il·legalitat ni oculta contingut automàticament. La revisió usa
+versió CAS i traça privada; la retirada cautelar conserva l'original. Les
+RPC i les taules tenen privilegis mínims, RLS i `search_path` buit als
+cossos privilegiats; la instal·lació conserva el path del caller i rebutja
+espais de noms que podrien suplantar el catàleg. La baixa del compte purga
+els rebuts i les captures personals segons les FK; els rebuts anònims no
+adquirixen autoria autenticada.
+
+Prova local reproduïble:
+
+```sh
+SDP_PGLITE_MODULE=/ruta/existent/pglite/dist/index.js node --test tests/r3213-pf03-lssi-postgres.test.mjs
+```
+
+La suite prepara un clúster descartable de **PostgreSQL 18.6**, comprova dos
+PIDs de backend independents en **READ COMMITTED** i observa l'espera dels
+panys abans de commit o rollback. També executa el mateix paquet amb
+**PGlite**, incloent-hi límits d'ACL/RLS, mutants i ombres de tipus hostils.
+PGlite serialitza les seues consultes i no substituïx la prova nativa de
+dues sessions. Estes proves no acrediten Auth/JWT signat, PostgREST,
+desplegament ni aplicació a la base de dades remota.

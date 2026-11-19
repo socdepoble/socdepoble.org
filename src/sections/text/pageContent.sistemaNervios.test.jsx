@@ -56,9 +56,10 @@ describe('R32.9 · sistema nerviós canònic a la Wiki', () => {
     expect(item.image).toBe('/assets/ui/plugins/sistema_nervios_vinyeta.jpg');
     expect(item.imageAlt.length).toBeGreaterThan(40);
     expect(item.attributes.date).toBe('2026-11-17T00:14:00+01:00');
-    expect(item.attributes.updated).toBe('2026-11-17T20:15:00+01:00');
-    expect(item.attributes.version).toBe('1.1.0');
+    expect(item.attributes.updated).toBe('2026-11-19T02:00:00+01:00');
+    expect(item.attributes.version).toBe('1.2.0');
     expect(item.attributes.mur).toBe(true);
+    expect(item.content).not.toMatch(/^\| /m);
     for (const url of ['https://github.com/github/spec-kit',
       'https://github.com/google/elephant-goldfish-model',
       'https://github.com/rizinorg/rizin', 'https://github.com/frida/frida',
@@ -93,10 +94,15 @@ describe('Llei 0 · Wiki compilada, inventari de skills i README (Gauntlet v1.2.
     expect(total).toBe(44);
     const md = fitxaWiki('sistema_nervios_skills_i_repositoris');
     const inici = md.indexOf('### 3.1');
-    const taula = md.slice(inici, md.indexOf('### 3.2')).split('\n').filter((l) => l.startsWith('| **'));
-    const families = taula
-      .map((l) => l.split('|').map((c) => c.trim()))
-      .map((c) => ({ skills: [...c[1].matchAll(/`((?:core|sdp|wiki)-[a-z-]+)`/g)].map((m) => m[1]), incorporacio: c[4] }))
+    const blocs = md.slice(inici, md.indexOf('### 3.2')).split(/\n(?=#### )/).slice(1);
+    const families = blocs
+      .map((b) => {
+        const liniaInc = b.split('\n').find((l) => l.includes('**Incorporació real:**')) || '';
+        return {
+          skills: [...b.matchAll(/`((?:core|sdp|wiki)-[a-z-]+)`/g)].map((m) => m[1]),
+          incorporacio: liniaInc,
+        };
+      })
       .filter((f) => f.skills.length);
     expect(families.length).toBe(8);
     expect(families.flatMap((f) => f.skills).sort()).toEqual([...motors.keys()].sort());

@@ -475,3 +475,9 @@ export const desaRevisioEditorialWp = asseguraMetode('desaRevisioEditorialWp');
 export const lligConsensIsoglossesPoble = asseguraMetode('lligConsensIsoglossesPoble');
 export const votaVariantIsoglossaPoble = asseguraMetode('votaVariantIsoglossaPoble');
 export const desaAportacioVeuPoble = asseguraMetode('desaAportacioVeuPoble');
+
+/* R32.13 optional capabilities; absence is explicit, never a synthetic ACK. */
+export const confirmaCapturaCrdtRural = asseguraMetode('confirmaCapturaCrdtRural');
+export const registraDenunciaDiligent = asseguraMetode('registraDenunciaDiligent');
+export const revisaDenunciaDiligent = asseguraMetode('revisaDenunciaDiligent');
+export const llistaDenunciesDiligents = asseguraMetode('llistaDenunciesDiligents');

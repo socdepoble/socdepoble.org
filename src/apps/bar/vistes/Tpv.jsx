@@ -65,8 +65,8 @@ import { EditorLinia } from './EditorLinia.jsx';
 import { AvisBase, AvisOperacio, AvisSessio, NoTrobat, Preparat } from './comu.jsx';
 import { useFixaComanda, usePunt, useVes } from './punt.js';
 import {
-  TEXTOS_LINIES_BAR, articlesDelTpv, categoriesVestides, descripcioTria, llegixOpcio, necessitaTria, nomOrigen, opcionsDetall,
-  preuObertDeConsulta, textLinies, tiquetDeComanda, tiquetsOberts, triaLaVariant
+  articlesDelTpv, categoriesVestides, descripcioTria, llegixOpcio, necessitaTria, nomOrigen, opcionsDetall,
+  preuObertDeConsulta, textLinies, textosLiniesBar, tiquetDeComanda, tiquetsOberts, triaLaVariant
 } from './vestits.js';
 
 /* La consulta del TPV: només slugs, ids opacs i la bandera dels oberts. */
@@ -131,7 +131,7 @@ function TpvDelPunt({ params, idioma = 'ca' }) {
   const { carta, establiment, comandes, sala, accions } = bar;
   const { comanda } = punt;
   const perId = new Map(carta.productes.map((p) => [p.id, p]));
-  const tiquet = tiquetDeComanda(comanda);
+  const tiquet = tiquetDeComanda(comanda, idioma);
   const emportar = comanda?.origen?.tipus === 'emportar';
 
   /* A /tpv, la comanda que rep el primer producte passa al camí (BAR-R7). */
@@ -154,8 +154,8 @@ function TpvDelPunt({ params, idioma = 'ca' }) {
   const tria = {
     obert: Boolean(triable),
     titol: triable ? triable.nom : tx.tria,
-    descripcio: triable ? descripcioTria(triable, carta.grups) : tx.triaVariant,
-    opcions: triable ? opcionsDetall(triable, carta.grups).map((o) => ({ id: o.valor, nom: o.etiqueta, valor: o.ajuda })) : [],
+    descripcio: triable ? descripcioTria(triable, carta.grups, idioma) : tx.triaVariant,
+    opcions: triable ? opcionsDetall(triable, carta.grups, idioma).map((o) => ({ id: o.valor, nom: o.etiqueta, valor: o.ajuda })) : [],
     onTria: (opcio) => {
       const { varianteId, opcions } = llegixOpcio(opcio.id);
       /* Preu obert amb variants: la variant ja és triada, ara el teclat. */
@@ -175,8 +175,8 @@ function TpvDelPunt({ params, idioma = 'ca' }) {
      nom de l'actiu va també al títol del tiquet. Mirar-los és lectura: sense
      permís la llista s'obri igual, i només falta «Nou tiquet de barra». */
   const actiu = comanda?.id || (params?.comanda ? null : 'barra');
-  const llistaOberts = tiquetsOberts(comandes, sala);
-  const nomTiquet = llistaOberts.find((t) => t.id === actiu)?.nom || nomOrigen(punt.origen, sala);
+  const llistaOberts = tiquetsOberts(comandes, sala, idioma);
+  const nomTiquet = llistaOberts.find((t) => t.id === actiu)?.nom || nomOrigen(punt.origen, sala, idioma);
   const nou = async () => {
     const r = await accions.novaComanda({ tipus: 'barra' });
     if (r.ok) ves('tpv', r.valor.id);
@@ -185,7 +185,7 @@ function TpvDelPunt({ params, idioma = 'ca' }) {
     obert: consulta.oberts === '1',
     titol: tx.tiquetsOberts,
     elements: llistaOberts.map((t) => ({
-      id: t.id, nom: t.nom, detall: textLinies(t.comptador), ...(t.secundari ? { valor: t.secundari } : {}), actiu: t.id === actiu
+      id: t.id, nom: t.nom, detall: textLinies(t.comptador, idioma), ...(t.secundari ? { valor: t.secundari } : {}), actiu: t.id === actiu
     })),
     onTria: (element) => (element.id === 'barra' ? ves('tpv') : ves('tpv', element.id)),
     onTanca: (motiu) => {
@@ -215,7 +215,7 @@ function TpvDelPunt({ params, idioma = 'ca' }) {
           linies: tiquet.linies,
           total: tiquet.total,
           resum: tiquet.resum,
-          textosEstat: TEXTOS_LINIES_BAR,
+          textosEstat: textosLiniesBar(idioma),
           buit: { titol: tx.tiquetBuitTitol, text: tx.tiquetBuitText },
           ...(ven && comanda ? { onEdita: (linia) => posaConsulta({ linia: linia.id }) } : {})
         }}
@@ -232,7 +232,7 @@ function TpvDelPunt({ params, idioma = 'ca' }) {
         cataleg={{
           titol: tx.productes,
           categories: categoriesVestides(carta),
-          articles: articlesDelTpv(carta, { comanda, establiment }),
+          articles: articlesDelTpv(carta, { comanda, establiment, idioma }),
           textosEstat: { 'en-colleccio': tx.aLaComanda },
           onTria: toca,
           desactivat: !ven,

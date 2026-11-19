@@ -6,14 +6,27 @@
  * (cap ruta de la taula casa amb la URL): la persona sempre llig el mateix.
  */
 import { Link } from '../../app/contexts/RouterContext';
+import { useUIState } from '../../app/contexts/UIContext';
 import { EstatBuit } from '../../components/PedraSeca/atoms/estats.jsx';
+import { textosPortalApps } from './textosPortalApps.js';
 
-export function AvisApp({ titol, children, desti = '/app', etiqueta = 'Torna a les apps' }) {
+function useIdiomaAvis() {
+  try {
+    const ui = useUIState();
+    return ui?.llenguaDelText || ui?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
+export function AvisApp({ titol, children, desti = '/app', etiqueta }) {
+  const tx = textosPortalApps(useIdiomaAvis());
+  const etiquetaResolta = etiqueta ?? tx.tornaApps;
   return (
     <section className="sdp-app-avis">
       <EstatBuit
         titol={titol}
-        accio={<Link to={desti} className="sdp-boto sdp-boto--secundari">{etiqueta}</Link>}
+        accio={<Link to={desti} className="sdp-boto sdp-boto--secundari">{etiquetaResolta}</Link>}
       >
         {children}
       </EstatBuit>

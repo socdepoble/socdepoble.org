@@ -15,7 +15,7 @@
  *   · Els mitjans EXTERNS de la variant del directori de WordPress.org
  *     (SDP_VARIANT=wordpress): el contingut pesant del servei i les
  *     il·lustracions editorials/demostratives (uploads/, towns/, fotos/,
- *     events/, ui/, nano_cards/, img/, notes/ i importacio-wp/) no viatgen dins del zip per
+ *     events/, ui/, nano_cards/, img/, notes/, importacio-wp/ i mur/) no viatgen dins del zip per
  *     mantindre el paquet al voltant de 3,6 MB (molt per davall del límit de
  *     10 MB de WordPress.org), i se servixen des de l'origen extern
  *     (https://socdepoble.org). La carcassa bàsica de la interfície (system/,
@@ -87,7 +87,15 @@ export const MITJANS_EXTERNS_DEL_DIRECTORI = Object.freeze({
     'assets/nano_cards/',
     'assets/img/',
     'assets/notes/',
-    'assets/importacio-wp/'
+    'assets/importacio-wp/',
+    /* Onada R32.14 (D06) · Les il·lustracions editorials dels articles del Mur
+       (Farcellet, Manifest de Poble, La Veu, les seues còpies socials): el zip
+       v1.1.18 en portava 2,8 MB i feia 10.536.506 B, per damunt dels
+       10.485.760 B de WordPress.org. Cap CSS ni PHP les referencia: els articles
+       les pinten a través del resolutor de mitjans. Les miniatures de les vistes
+       prèvies d'enllaç del Xat (previaEnllacIntern.js) no hi passen, i al connector
+       ja no apuntaven a la carpeta del paquet: deute anotat a l'informe R32.14. */
+    'assets/mur/'
   ])
 });
 

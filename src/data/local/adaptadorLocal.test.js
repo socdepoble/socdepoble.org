@@ -14,6 +14,7 @@ import { entradaOpenDataDelPoble } from '../entradaOpenDataDelPoble.js';
 import { exportaMunicipiOpenData } from '../exportaMunicipiOpenData.js';
 import { importaMunicipiOpenData } from '../importaMunicipiOpenData.js';
 import { metodesSenseCas } from '../conformitat/kit.js';
+import { validaBackendImplementation } from '../backendPort.js';
 import { adoptaSessioExterna, configuraBackendSessio, desaSessio, esborraSessio, usuariDeSessio } from '../identitat.js';
 import { esperaLaIAIA, reiniciaLocalXat } from '../localXat.js';
 import { APP_SEED } from '../appSeed.js';
@@ -78,8 +79,8 @@ describe('opcions de la factoria', () => {
   test('les capacitats no declarades són exactament les que el contracte té i este node deixa a posta', () => {
     const a = creaAdaptadorLocal();
     const absents = Object.keys(CAPACITATS).filter((cap) => CAPACITATS[cap].every((m) => typeof a[m] !== 'function'));
-    expect(Object.keys(CAPACITATS)).toHaveLength(58);
-    expect(CAPACITATS_NO_DECLARADES).toEqual(['revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
+    expect(Object.keys(CAPACITATS)).toHaveLength(60);
+    expect(CAPACITATS_NO_DECLARADES).toEqual(['ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
     expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
     const deContracte = CONTRACTE_BACKEND.filter((m) => !absents.some((cap) => CAPACITATS[cap].includes(m)));
     expect(deContracte.filter((m) => typeof a[m] !== 'function')).toEqual([]);
@@ -920,4 +921,20 @@ test('R21.6 · la lectura canònica seed no substituïx el catàleg propi d’un
   core.agents[0].extra.conserva=false;
   expect((await a.loadCoreContent()).agents).toEqual(agents);
  }finally{await a.destroy();}
+});
+
+test('R32.13 · cap estat local anuncia ACK durable ni moderació remota diligent', async () => {
+  for (const mode of ['seed', 'local']) {
+    const a = creaAdaptadorLocal({ mode });
+    try {
+      const port = validaBackendImplementation(a).candidate;
+      for (const cap of ['ackCrdtRural', 'denunciesDiligents']) {
+        expect(CAPACITATS_NO_DECLARADES).toContain(cap);
+        for (const method of CAPACITATS[cap]) {
+          expect(a[method], `${mode}/${method}`).toBeUndefined();
+          expect(port[method], `${mode}/port/${method}`).toBeUndefined();
+        }
+      }
+    } finally { await a.destroy(); }
+  }
 });

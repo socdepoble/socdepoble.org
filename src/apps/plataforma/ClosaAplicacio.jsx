@@ -44,10 +44,11 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import AppGridShell, { useAppGrid } from '../../components/layout/AppGridShell.jsx';
-import { AvisApp, PAGINA_INEXISTENT } from './AvisApp.jsx';
+import { AvisApp } from './AvisApp.jsx';
 import { rutaDeApp, titolDe } from './manifestApp.js';
 import { useApp } from './ContextApp.jsx';
 import { esRutaUnica, useRutaApp, validaRutes } from './rutesAplicacio.js';
+import { textosPortalApps } from './textosPortalApps.js';
 
 /* La columna de ClosaAplicacio i el panell d'AppGridShell que la fa visible
    en «estret» (null: cap panell obert, es veu el detall). */
@@ -111,6 +112,7 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
   const { manifest } = useApp();
   /* Fase D (261020, tasca 4.1) · L1 · El títol seguix la llengua del text, no la demanada. */
   const { language, llenguaDelText = language } = useUIState();
+  const tx = textosPortalApps(llenguaDelText);
   const titol = titolDe(manifest.titol, llenguaDelText);
   const validacio = useMemo(() => validaTaulaDeClosa(rutes, manifest), [rutes, manifest]);
   const coincidencia = useRutaApp(validacio.ok ? rutes : null);
@@ -121,19 +123,19 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
 
   if (!validacio.ok) {
     return (
-      <AvisApp titol="Esta app no es pot obrir">
-        Les seues pàgines estan mal declarades. Ho ha d’arreglar qui la manté.
+      <AvisApp titol={tx.appNoPotObrir}>
+        {tx.appMalDeclarada}
       </AvisApp>
     );
   }
   if (!coincidencia) {
     return (
       <AvisApp
-        titol={PAGINA_INEXISTENT.titol}
+        titol={tx.paginaInexistentTitol}
         desti={rutaDeApp(manifest.id, manifest.entradaPerDefecte)}
-        etiqueta={`Ves a ${titol}`}
+        etiqueta={tx.vesA(titol)}
       >
-        {PAGINA_INEXISTENT.text}
+        {tx.paginaInexistentText}
       </AvisApp>
     );
   }
@@ -166,8 +168,8 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
         {capcalera}
         <AppGridShell
           aria-label={titol}
-          leftTitle={titols.esquerra || 'Navegació'}
-          middleTitle={titols.mig || 'Llista'}
+          leftTitle={titols.esquerra || tx.navegacioCol}
+          middleTitle={titols.mig || tx.llistaCol}
           leftColumn={Esquerra ? <Esquerra params={params} /> : null}
           middleColumn={<Mig params={params} />}
           rightColumn={<Detall params={params} />}

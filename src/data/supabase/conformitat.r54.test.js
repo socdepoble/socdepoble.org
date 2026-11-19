@@ -110,3 +110,21 @@ test('R15 · èxits i rebuigs amb funcions reals; arguments invàlids no arriben
   expect(calls.find(([nom])=>nom==='envia_aportacio_cultural')[1]).toMatchObject({p_permisos:true,p_autoria:'Informant sintètic'});
   expect(calls.find(([nom])=>nom==='revisa_aportacio_cultural')[1]).toEqual({p_id:F,p_estat:'aprovat',p_nota:'Revisió sintètica de conformitat'});
 });
+
+/* R32.13 · Codi Supabase real; cap cas comú crea captures ni denúncies. */
+import { confirmaCapturaCrdtRural } from './crdtRuralAck.js';
+import { registraDenunciaDiligent, revisaDenunciaDiligent, llistaDenunciesDiligents } from './denunciesDiligents.js';
+const r3213 = CASOS.filter(c => c.titol.startsWith('R32.13:'));
+const adapterR3213 = { confirmaCapturaCrdtRural, registraDenunciaDiligent, revisaDenunciaDiligent, llistaDenunciesDiligents };
+test('R32.13 · quatre operacions reals rebutgen abans de RPC, inferència o escriptura', async () => {
+  expect(r3213).toHaveLength(4);
+  expect(r3213.map(c => c.metode)).toEqual(Object.keys(adapterR3213));
+  const context = contextDeConformitat({ config: Object.freeze({ dataMode: 'remote' }) });
+  for (const c of r3213) {
+    expect(c).toMatchObject({ espera: 'rebutja', escriu: false, requerix: [] });
+    expect(await executaCas(c, adapterR3213, context), c.titol).toEqual({ estat: 'ok', falles: [], motiu: null });
+  }
+  expect(io.rpc).not.toHaveBeenCalled();
+  expect(io.invoke).not.toHaveBeenCalled();
+  expect(metodesSenseCas()).toEqual([]);
+});

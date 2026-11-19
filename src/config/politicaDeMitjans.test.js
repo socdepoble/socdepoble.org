@@ -61,10 +61,12 @@ describe('els mitjans externs del directori', () => {
       'assets/nano_cards/',
       'assets/img/',
       'assets/notes/',
-      'assets/importacio-wp/'
+      'assets/importacio-wp/',
+      'assets/mur/'
     ]);
     for (const cami of ['assets/uploads/poble/x.jpg', 'assets/ui/plugins/consola_vinyeta.jpg',
-      'assets/nano_cards/mur_nano_card.jpg', 'assets/img/que-es-socdepoble-1.jpg', 'assets/notes/bloc_notes_vintage.jpg', 'assets/importacio-wp/wp-x.jpg']) {
+      'assets/nano_cards/mur_nano_card.jpg', 'assets/img/que-es-socdepoble-1.jpg', 'assets/notes/bloc_notes_vintage.jpg', 'assets/importacio-wp/wp-x.jpg',
+      'assets/mur/copies_seguretat_farcellet_hero.webp', 'assets/mur/manifest-de-poble/Manifest_de_Poble_1.webp']) {
       expect(esExtern(cami, MITJANS_EXTERNS_DEL_DIRECTORI.prefixos), cami).toBe(true);
     }
   });

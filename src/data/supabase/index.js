@@ -155,3 +155,9 @@ const ambConsens = import.meta.env.VITE_SDP_CONSENS_ISOGLOSSES === '1';
 export const lligConsensIsoglossesPoble = ambConsens ? consensAmbServidor.lligConsensIsoglossesPoble : undefined;
 export const votaVariantIsoglossaPoble = ambConsens ? consensAmbServidor.votaVariantIsoglossaPoble : undefined;
 export const desaAportacioVeuPoble = ambConsens ? consensAmbServidor.desaAportacioVeuPoble : undefined;
+
+/* Explicitly invoked only after the optional R32.13 SQL is installed. */
+export async function confirmaCapturaCrdtRural(input, config = {}) { return (await import('./crdtRuralAck.js')).confirmaCapturaCrdtRural(input, config); }
+export async function registraDenunciaDiligent(input, config = {}) { return (await import('./denunciesDiligents.js')).registraDenunciaDiligent(input, config); }
+export async function revisaDenunciaDiligent(input, config = {}) { return (await import('./denunciesDiligents.js')).revisaDenunciaDiligent(input, config); }
+export async function llistaDenunciesDiligents(input, config = {}) { return (await import('./denunciesDiligents.js')).llistaDenunciesDiligents(input, config); }

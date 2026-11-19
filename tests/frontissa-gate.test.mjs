@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse } from '@babel/parser';
 import { auditFrontissa, validateFrontissaStructure } from '../tooling/gates/tractor-frontissa.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -47,20 +48,61 @@ test('entry empty write catalog must really be frozen and linked to the audited 
   ]) assert.throws(() => validateFrontissaStructure(changed, transport));
 });
 
-for (const [name, editClient, editTransport] of [
-  ['origin allowlist bypass', value => value, value => value.replace('!allowedOrigins.includes(base.origin)', 'false')],
-  ['DTO decoder bypass', value => value, value => value.replace("resource.decode(JSON.parse(parts.join('')))", "JSON.parse(parts.join(''))")],
-  ['production catalog bypass', value => value.replace("if (!Object.hasOwn(CONFIGURACIO.resources, recurs)) throw new ErrorDades('UNKNOWN_RESOURCE');", 'return {};'), value => value],
+/* Mutate one executable node, never an obsolete source-text spelling. Missing
+   or ambiguous targets fail the harness instead of silently testing the original. */
+function mutaNode(source, label, predicate, replacement) {
+  const targets = [];
+  function visit(node) {
+    if (!node || typeof node !== 'object') return;
+    if (predicate(node)) targets.push(node);
+    for (const child of Object.values(node)) {
+      if (Array.isArray(child)) child.forEach(visit);
+      else if (child && typeof child === 'object') visit(child);
+    }
+  }
+  visit(parse(source, { sourceType: 'module' }));
+  assert.equal(targets.length, 1, `${label}: exactly one executable mutation target is required`);
+  const node = targets[0], changed = source.slice(0, node.start) + replacement(node) + source.slice(node.end);
+  assert.notEqual(changed, source, `${label}: the selected node must actually change`);
+  return changed;
+}
+const identifier = (node, name) => node?.type === 'Identifier' && node.name === name;
+const member = (node, object, property) => node?.type === 'MemberExpression' && !node.computed
+  && identifier(node.object, object) && identifier(node.property, property);
+
+for (const [name, editClient, editTransport, expectedFailure] of [
+  ['origin allowlist bypass', value => value, value => mutaNode(value, 'origin allowlist',
+    node => node.type === 'UnaryExpression' && node.operator === '!' && node.argument.type === 'CallExpression'
+      && member(node.argument.callee, 'allowedOrigins', 'includes'), () => 'false'),
+  error => error.code === 'ERR_ASSERTION' && /Missing expected exception/.test(error.message)
+    && error.expected?.code === 'INVALID_ORIGIN'],
+  ['DTO decoder bypass', value => value, value => mutaNode(value, 'DTO decoder',
+    node => node.type === 'CallExpression' && member(node.callee, 'resource', 'decode'), node => {
+      assert.equal(node.arguments.length, 1, 'the decoder must receive one complete envelope');
+      // Keep envelope validation intact; bypass only the DTO translator.
+      return value.slice(node.arguments[0].start, node.arguments[0].end);
+    }),
+  error => error.code === 'ERR_ASSERTION' && error.actual?.secret === 'not-a-dto-field'
+    && error.expected?.name === 'A' && !Object.hasOwn(error.expected, 'secret')],
+  ['production catalog bypass', value => mutaNode(value, 'production catalog',
+    node => node.type === 'IfStatement' && node.consequent.type === 'ThrowStatement'
+      && node.consequent.argument.type === 'NewExpression' && identifier(node.consequent.argument.callee, 'ErrorDades')
+      && node.consequent.argument.arguments[0]?.value === 'UNKNOWN_RESOURCE', () => 'return {};'), value => value,
+  error => error.code === 'ERR_ASSERTION' && /Missing expected rejection/.test(error.message)
+    && error.expected?.code === 'UNKNOWN_RESOURCE'],
 ]) test(`runtime probes detect ${name} with intact transport AST`, async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-frontissa-mutant-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.mkdirSync(path.join(root, DIR), { recursive: true });
   fs.writeFileSync(path.join(root, 'package.json'), '{"type":"module"}');
-  assert.ok(editClient(client) !== client || editTransport(transport) !== transport, 'the intended mutant must actually change source');
-  fs.writeFileSync(path.join(root, DIR, 'client.js'), editClient(client));
-  fs.writeFileSync(path.join(root, DIR, 'creaFrontissa.js'), editTransport(transport));
-  validateFrontissaStructure(editClient(client), editTransport(transport));
+  const changedClient = editClient(client), changedTransport = editTransport(transport);
+  assert.ok(changedClient !== client || changedTransport !== transport, 'the intended mutant must actually change source');
+  fs.writeFileSync(path.join(root, DIR, 'client.js'), changedClient);
+  fs.writeFileSync(path.join(root, DIR, 'creaFrontissa.js'), changedTransport);
+  validateFrontissaStructure(changedClient, changedTransport);
   const fetchBefore = globalThis.fetch;
-  await assert.rejects(() => auditFrontissa(root));
+  await assert.rejects(() => auditFrontissa(root), expectedFailure,
+    'the injected mutant must be detected by its intended runtime security oracle');
   assert.equal(globalThis.fetch, fetchBefore, 'gate restores the fetch guard even after failure');
+  t.diagnostic(`${name}: one AST mutation injected; structure accepted; intended runtime oracle rejected it`);
 });

@@ -31,12 +31,12 @@ function autoritatPendent() {
   return { inici, fi, autoritza: vi.fn(async () => { inici.resol(); return fi.promesa; }) };
 }
 
-test('el local conserva les capacitats declarades, les deu absències explícites i els casos històrics', async () => {
+test('el local conserva les capacitats declarades, les dotze absències explícites i els casos històrics', async () => {
   const a = crea();
   /* R32.5 · La 57a capacitat, moderacioLssi, requerix servidor autoritatiu. */
-  expect(Object.keys(CAPACITATS)).toHaveLength(58);
-  expect(Object.values(CAPACITATS).flat().filter(m => typeof a[m] !== 'function')).toEqual(['revocaPublicacioMur','drenaRevocacionsMur','encuaRevocacioNotaMur','adminResumSessionsDispositius','adminLlistaSessionsDispositius','estatCuradoriaCultural','llistaAportacionsCulturals','enviaAportacioCultural','revisaAportacioCultural','consultaIAIA','loadRitmeXat','actualitzaPresenciaXat','carregaAccionsMissatges','alternaReaccio','alternaDestacat','alternaFixat','eliminaPerAMi','importaMunicipiOpenData','confirmaCorreu','reenviaVerificacioCorreu','demanaRestablimentCorreu','restablixContrasenyaAmbCorreu','registraDenunciaPublica','adminSafataDenuncies','adminRevisaDenuncia']);
-  expect(CASOS).toHaveLength(233);
+  expect(Object.keys(CAPACITATS)).toHaveLength(60);
+  expect(Object.values(CAPACITATS).flat().filter(m => typeof a[m] !== 'function')).toEqual(['confirmaCapturaCrdtRural','registraDenunciaDiligent','revisaDenunciaDiligent','llistaDenunciesDiligents','revocaPublicacioMur','drenaRevocacionsMur','encuaRevocacioNotaMur','adminResumSessionsDispositius','adminLlistaSessionsDispositius','estatCuradoriaCultural','llistaAportacionsCulturals','enviaAportacioCultural','revisaAportacioCultural','consultaIAIA','loadRitmeXat','actualitzaPresenciaXat','carregaAccionsMissatges','alternaReaccio','alternaDestacat','alternaFixat','eliminaPerAMi','importaMunicipiOpenData','confirmaCorreu','reenviaVerificacioCorreu','demanaRestablimentCorreu','restablixContrasenyaAmbCorreu','registraDenunciaPublica','adminSafataDenuncies','adminRevisaDenuncia']);
+  expect(CASOS).toHaveLength(237);
   for (const plataforma of ['ios', 'android', 'web', '', null, {}]) expect(await a.versioMinimaClient(plataforma, { dataMode: 'remote', supabaseUrl: 'https://fora.invalid' })).toBeNull();
 });
 
