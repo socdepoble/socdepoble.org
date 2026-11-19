@@ -885,8 +885,12 @@ export const LIMIT_DADES_OBERTES = 5000;
    notificació LSSI art. 16 i 404 Pedra Seca) i Codex R32.13 (ACK CRDT i denúncies diligents opcionals, mapa 301,
    preflight d'egress i motors purs), la costura del diàleg LSSI amb els dos ports, el paquet OpenData lleuger a
    Hosting, el CAS general de publicacions cablejat però apagat (D-R32-PUB-1, P1 del Gauntlet) i el connector
-   WordPress 1.1.19 sota 10 MB. */
-export const VERSIO_CLIENT_NATIU = 16;
+   WordPress 1.1.19 sota 10 MB.
+   Onada v1.2.12 · Onades R32.14 i R32.15 (ordre del Mestre 19-11-2026, nit; prompt 261119_1754) · Versió unificada 1.2.12
+   amb el build 17: integra Codex R32.14 (vista prèvia del Xat sense amagats, contenidors mèdia, mapa 301 i Tellado) i
+   Gemini R32.14 (Gestoria en cinc llengües, Rebost a 320 px i Wiki sense taules amples), l'eixida de la cua CAS de
+   publicacions (D-R32.14-1, encara apagada), el pegat P2 de registra_denuncia_diligent i el connector WordPress 1.1.20. */
+export const VERSIO_CLIENT_NATIU = 17;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

@@ -3,6 +3,7 @@
    Padmé declarada, xifraAdjuntXat el rebutja com a incoherent: qui crida no rep
    mai eixe `a`, així que la FK (`a.k`) es posa a zero abans de llançar. El
    protocol es dobla ací només per a fabricar eixa incoherència. */
+import { jpegDeMida } from '../../tests/helpers/contenidorsMedia.js';
 import { describe, expect, test, vi } from 'vitest';
 
 const fals = vi.hoisted(() => ({ a: null }));
@@ -27,7 +28,7 @@ const A = 'aaaaaaaa-1111-4111-8111-111111111111';
 
 describe('xifraAdjuntXat · FK d’un resultat incoherent', () => {
   test('el blob no fa la mida declarada: error incoherent i la FK que no ix enlloc, a zero', async () => {
-    const clar = cripto.getRandomValues(new Uint8Array(3000));
+    const clar = jpegDeMida(3000);
     await expect(xifraAdjuntXat({ cripto, fil: FIL, adjunt: ADJ, emissor: A, bytes: clar, mime: 'image/jpeg' }))
       .rejects.toMatchObject({ code: 'obrir', codi: CODI_ADJUNT.incoherent });
     expect(fals.a.k).toHaveLength(32);

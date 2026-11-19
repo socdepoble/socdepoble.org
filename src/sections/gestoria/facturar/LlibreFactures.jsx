@@ -48,28 +48,21 @@ import { TEXTOS_FACTURACIO } from './nucli/textosFacturacio.js';
 import { AvisDeZona } from './peces.jsx';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+import { localitzaEstatCadenaGestoria, localitzaOpcionsGestoria, tf, tg } from '../i18nGestoria.js';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /** Les factures que es mostren d'entrada; la resta, amb «Mostra-les totes». */
 export const FACTURES_VISIBLES = 50;
 
-const ORDINAL = Object.freeze({ 1: '1r', 2: '2n', 3: '3r', 4: '4t' });
-
-/* « del 3r trimestre de 2026», « de 2026» o res: el període al text del botó del CSV. */
-function textDelPeriode(any, trimestre) {
-  if (any === null) return '';
-  return ORDINAL[trimestre] ? ` del ${ORDINAL[trimestre]} trimestre de ${any}` : ` de ${any}`;
-}
-
 /* La nota del peu: el que no suma i el que suma només la diferència. */
-function notaDelTotal(resum) {
+function notaDelTotal(resum, idioma) {
   return [
-    resum.anulades ? 'Les anul·lades no sumen.' : '',
-    resum.ambSubstitucions ? 'Les que en substituïxen d’altres sumen la diferència.' : ''
+    resum.anulades ? tg(idioma, 'Les anul·lades no sumen.') : '',
+    resum.ambSubstitucions ? tg(idioma, 'Les que en substituïxen d’altres sumen la diferència.') : ''
   ].filter(Boolean).join(' ');
 }
 
-export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
+export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca, idioma = 'ca' }) {
   const [anulant, setAnulant] = useState(null);
   const [motiu, setMotiu] = useState('');
   const [totes, setTotes] = useState(false);
@@ -79,7 +72,9 @@ export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
   const [cerca, setCerca] = useState('');
   const [baixant, setBaixant] = useState(false);
   const { mostrada } = f;
-  const estat = estatDeLaCadena(f.informe);
+  const estat = localitzaEstatCadenaGestoria(estatDeLaCadena(f.informe), idioma);
+  const opcionsPeriode = useMemo(() => localitzaOpcionsGestoria(OPCIONS_PERIODE, idioma), [idioma]);
+  const opcionsEstat = useMemo(() => localitzaOpcionsGestoria(OPCIONS_ESTAT_LLIBRE, idioma), [idioma]);
   const files = useMemo(() => filesDelLlibre(f.cadena), [f.cadena]);
   const anys = useMemo(() => anysDelLlibre(files), [files]);
   /* L'any triat, si encara és al llibre; si no, el de la factura més nova. */
@@ -91,7 +86,7 @@ export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
   const visibles = totes ? resum.files : resum.files.slice(0, FACTURES_VISIBLES);
   const hora = Number.isFinite(f.verificatA) ? dataHoraAmbHus(f.verificatA).slice(11, 16) : null;
   const filaMostrada = mostrada ? files.find((fila) => clauDeFactura(fila.registre) === mostrada) ?? null : null;
-  const nota = notaDelTotal(resum);
+  const nota = notaDelTotal(resum, idioma);
 
   const obri = (fila) => {
     setMotiu('');
@@ -113,9 +108,9 @@ export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
   return (
     <>
       <Alerta to={estat.to} viva={false} titol={estat.titol}
-        accions={<Boto varietat="secundari" onClick={f.verifica} carregant={f.ocupat === 'verificant'} disabled={Boolean(f.ocupat)}>Torna a verificar</Boto>}>
+        accions={<Boto varietat="secundari" onClick={f.verifica} carregant={f.ocupat === 'verificant'} disabled={Boolean(f.ocupat)}>{tg(idioma, 'Torna a verificar')}</Boto>}>
         {estat.text ? <p ref={adoptaEstilsDiferits}>{estat.text}</p> : null}
-        {hora ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{`Verificada a les ${hora}.`}</p> : null}
+        {hora ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{tf(idioma, 'verificadaALes', hora)}</p> : null}
         {estat.incidencies.length ? (
           <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__avisos">
             {estat.incidencies.map((incidencia, i) => <li ref={adoptaEstilsDiferits} key={`${i}-${incidencia}`}>{incidencia}</li>)}
@@ -126,28 +121,28 @@ export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
       {files.length ? (
         <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
           {anys.length > 1 ? (
-            <PillToggle etiqueta="Any del llibre" valor={any} onCanvi={setAnyTriat} opcions={anys.map((a) => ({ valor: a, text: String(a) }))} />
+            <PillToggle etiqueta={tg(idioma, 'Any del llibre')} valor={any} onCanvi={setAnyTriat} opcions={anys.map((a) => ({ valor: a, text: String(a) }))} />
           ) : null}
-          <PillToggle etiqueta={any === null ? 'Període' : `Període de ${any}`} valor={periode} onCanvi={setPeriode} opcions={OPCIONS_PERIODE} />
-          <PillToggle etiqueta="Estat de les factures" valor={estatTriat} onCanvi={setEstatTriat} opcions={OPCIONS_ESTAT_LLIBRE} />
-          <Camp etiqueta="Cerca per número, client o NIF">
+          <PillToggle etiqueta={any === null ? tg(idioma, 'Període') : tf(idioma, 'periodeDe', any)} valor={periode} onCanvi={setPeriode} opcions={opcionsPeriode} />
+          <PillToggle etiqueta={tg(idioma, 'Estat de les factures')} valor={estatTriat} onCanvi={setEstatTriat} opcions={opcionsEstat} />
+          <Camp etiqueta={tg(idioma, 'Cerca per número, client o NIF')}>
             <CampText tipus="search" value={cerca} spellCheck={false} onChange={(event) => setCerca(event.target.value)} />
           </Camp>
         </div>
       ) : null}
       {resum.files.length ? (
-        <Taula titol="Factures emeses" className="sdp-gestoria-panell__taula">
+        <Taula titol={tg(idioma, 'Factures emeses')} className="sdp-gestoria-panell__taula">
           <thead ref={adoptaEstilsDiferits}>
             <tr>
-              <th scope="col">Número</th>
-              <th scope="col">Data</th>
-              <th scope="col">Tipus</th>
-              <th scope="col">Client</th>
-              <th scope="col">Base</th>
-              <th scope="col">IVA</th>
-              <th scope="col">Total</th>
-              <th scope="col">Estat</th>
-              <th scope="col">Acció</th>
+              <th scope="col">{tg(idioma, 'Número')}</th>
+              <th scope="col">{tg(idioma, 'Data')}</th>
+              <th scope="col">{tg(idioma, 'Tipus')}</th>
+              <th scope="col">{tg(idioma, 'Client')}</th>
+              <th scope="col">{tg(idioma, 'Base')}</th>
+              <th scope="col">{tg(idioma, 'IVA')}</th>
+              <th scope="col">{tg(idioma, 'Total')}</th>
+              <th scope="col">{tg(idioma, 'Estat')}</th>
+              <th scope="col">{tg(idioma, 'Acció')}</th>
             </tr>
           </thead>
           <tbody>
@@ -155,22 +150,21 @@ export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
               <tr ref={adoptaEstilsDiferits} key={clauDeFactura(fila.registre)}>
                 <th scope="row">{fila.numSerie}</th>
                 <td>{fila.data}</td>
-                <td>{fila.tipus}</td>
+                <td>{tg(idioma, fila.tipus)}</td>
                 <td>{fila.client}</td>
                 <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(fila.base)}</td>
                 <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(fila.quota)}</td>
                 <td className="sdp-gestoria-panell__cel" data-tipus="import">{fila.total}</td>
-                <td><Insignia to={fila.anulada ? 'neutre' : 'exit'}>{fila.anulada ? 'Anul·lada' : 'Emesa'}</Insignia></td>
+                <td><Insignia to={fila.anulada ? 'neutre' : 'exit'}>{tg(idioma, fila.anulada ? 'Anul·lada' : 'Emesa')}</Insignia></td>
                 <td>
                   <div className="sdp-gestoria-panell__accions-fila">
-                    <Boto varietat="fantasma" aria-label={`Mostra la factura ${fila.numSerie}`} aria-pressed={mostrada === clauDeFactura(fila.registre)}
+                    <Boto varietat="fantasma" aria-label={tf(idioma, 'mostraFacturaAria', fila.numSerie)} aria-pressed={mostrada === clauDeFactura(fila.registre)}
                       onClick={mostra(fila)}>
-                      Factura
+                      {tg(idioma, 'Factura')}
                     </Boto>
-                    {/* Troballa F3 (261007): amb la cadena amb incidències no s'anul·la res fins que s'arregle. */}
                     {fila.anulada || !f.cadenaBona ? null : (
-                      <Boto varietat="fantasma" disabled={Boolean(f.ocupat)} aria-label={`Anul·la la factura ${fila.numSerie}`} onClick={() => obri(fila)}>
-                        Anul·la
+                      <Boto varietat="fantasma" disabled={Boolean(f.ocupat)} aria-label={tf(idioma, 'anullaFacturaAria', fila.numSerie)} onClick={() => obri(fila)}>
+                        {tg(idioma, 'Anul·la')}
                       </Boto>
                     )}
                   </div>
@@ -179,9 +173,8 @@ export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
             ))}
           </tbody>
           <tfoot>
-            {/* Tot el que passa el filtre, no només les 50 visibles; les anul·lades no sumen (resumDelLlibre). */}
             <tr>
-              <th scope="row" colSpan={4}>Total del període</th>
+              <th scope="row" colSpan={4}>{tg(idioma, 'Total del període')}</th>
               <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(resum.totals.base)}</td>
               <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(resum.totals.quota)}</td>
               <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(resum.totals.total)}</td>
@@ -192,32 +185,31 @@ export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
       ) : <p ref={adoptaEstilsDiferits}>{files.length ? tx.llibreBuitFiltres : tx.llibreBuitInicial}</p>}
       {resum.files.length > visibles.length ? (
         <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
-          <Boto varietat="secundari" onClick={() => setTotes(true)}>{`Mostra les ${resum.files.length} factures`}</Boto>
+          <Boto varietat="secundari" onClick={() => setTotes(true)}>{tf(idioma, 'mostraNFactures', resum.files.length)}</Boto>
         </div>
       ) : null}
       {files.length ? (
         <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
           <Boto varietat="secundari" onClick={() => setBaixant(true)} disabled={Boolean(f.ocupat) || !f.cadenaBona || !delPeriode.length}
             carregant={f.ocupat === 'csv'}>
-            {`Descarrega el llibre${textDelPeriode(any, trimestre)} (CSV)`}
+            {tf(idioma, 'descarregaLlibreCsv', any, trimestre)}
           </Boto>
         </div>
       ) : null}
       {filaMostrada ? (
         <ImpressioFactura key={mostrada} registre={filaMostrada.registre} anulada={filaMostrada.anulada}
-          onTanca={f.tancaFactura} imprimix={f.imprimix} />
+          onTanca={f.tancaFactura} imprimix={f.imprimix} idioma={idioma} />
       ) : null}
       {files.length ? (
         <details ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__documents">
-          <summary>Detalls tècnics: l’XML de prova per a l’AEAT</summary>
+          <summary>{tg(idioma, 'Detalls tècnics: l’XML de prova per a l’AEAT')}</summary>
           <div className="sdp-gestoria-panell__bloc">
             <p className="sdp-gestoria-panell__nota">
-              L’XML de prova porta els registres com els enviarà el programa a l’AEAT quan hi haja remissió. Ara no s’envia res,
-              i encara li falta el bloc del sistema informàtic (la declaració responsable del programa no existix).
+              {tg(idioma, 'L’XML de prova porta els registres com els enviarà el programa a l’AEAT quan hi haja remissió. Ara no s’envia res, i encara li falta el bloc del sistema informàtic (la declaració responsable del programa no existix).')}
             </p>
             <div className="sdp-gestoria-panell__accions">
               <Boto varietat="secundari" onClick={f.exportaXml} disabled={Boolean(f.ocupat) || !f.cadenaBona} carregant={f.ocupat === 'xml'}>
-                Descarrega l’XML de prova per a l’AEAT
+                {tg(idioma, 'Descarrega l’XML de prova per a l’AEAT')}
               </Boto>
             </div>
           </div>
@@ -225,16 +217,16 @@ export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
       ) : null}
 
       <DialegConfirmacio obert={Boolean(anulant)} destructiu onTanca={() => setAnulant(null)} onConfirma={anulla}
-        titol={anulant ? `Anul·les la factura ${anulant.numSerie}?` : 'Anul·les la factura?'}
-        descripcio="Anul·la només una factura que no s’havia d’haver emés. Si el que cal és corregir-la, fes una rectificativa. La factura i el seu número es queden al llibre."
-        etiquetaConfirma="Sí, anul·la-la" carregant={f.ocupat === 'anul·lant'}>
-        <Camp etiqueta="Per què l’anul·les? (opcional)" ajuda="Queda al llibre, per a qui el revise.">
+        titol={tf(idioma, 'anullesFactura', anulant?.numSerie ?? null)}
+        descripcio={tg(idioma, 'Anul·la només una factura que no s’havia d’haver emés. Si el que cal és corregir-la, fes una rectificativa. La factura i el seu número es queden al llibre.')}
+        etiquetaConfirma={tg(idioma, 'Sí, anul·la-la')} carregant={f.ocupat === 'anul·lant'}>
+        <Camp etiqueta={tg(idioma, 'Per què l’anul·les? (opcional)')} ajuda={tg(idioma, 'Queda al llibre, per a qui el revise.')}>
           <CampText value={motiu} spellCheck={false} onChange={(event) => setMotiu(event.target.value)} />
         </Camp>
       </DialegConfirmacio>
       <DialegConfirmacio obert={baixant} onTanca={() => setBaixant(false)} onConfirma={baixa}
-        titol="Descarregar el llibre sense xifrar?" descripcio={AVIS_SENSE_XIFRAR_LLIBRE}
-        etiquetaConfirma="Descarrega’l" etiquetaCancela="Encara no" carregant={f.ocupat === 'csv'} />
+        titol={tg(idioma, 'Descarregar el llibre sense xifrar?')} descripcio={tg(idioma, AVIS_SENSE_XIFRAR_LLIBRE)}
+        etiquetaConfirma={tg(idioma, 'Descarrega’l')} etiquetaCancela={tg(idioma, 'Encara no')} carregant={f.ocupat === 'csv'} />
     </>
   );
 }

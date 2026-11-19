@@ -25,18 +25,19 @@ import { dataCurta } from './nucli/formulari.js';
 import { AvisDeZona, llegixText } from './peces.jsx';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+import { tg } from '../i18nGestoria.js';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /** L'estat de la còpia per a la insígnia del pas: { to, text }. */
-export function insigniaDeLaCopia(f) {
+export function insigniaDeLaCopia(f, idioma = 'ca') {
   /* Troballa F2 (261007): amb la cadena amb incidències, cap còpia d'ara és bona; mai «Al dia». */
-  if (f.informe && !f.informe.valida) return { to: 'error', text: 'Llibre amb incidències' };
-  if (!f.perfil.copia) return { to: 'avis', text: 'Sense còpia' };
+  if (f.informe && !f.informe.valida) return { to: 'error', text: tg(idioma, 'Llibre amb incidències') };
+  if (!f.perfil.copia) return { to: 'avis', text: tg(idioma, 'Sense còpia') };
   const pendents = f.config ? registresSenseCopia(f.cadena, f.perfil.copia, f.config.nif) : 0;
-  return pendents ? { to: 'avis', text: 'Còpia antiga' } : { to: 'exit', text: 'Al dia' };
+  return pendents ? { to: 'avis', text: tg(idioma, 'Còpia antiga') } : { to: 'exit', text: tg(idioma, 'Al dia') };
 }
 
-export function CopiaLlibre({ f }) {
+export function CopiaLlibre({ f, idioma = 'ca' }) {
   const copia = f.perfil.copia;
   const pendents = f.config ? registresSenseCopia(f.cadena, copia, f.config.nif) : 0;
   const quan = copia ? dataHoraAmbHus(copia.instant) : null;
@@ -58,41 +59,40 @@ export function CopiaLlibre({ f }) {
   return (
     <>
       <p ref={adoptaEstilsDiferits}>
-        El llibre viu en este navegador, que el pot esborrar si es netegen les dades del lloc. Fes-ne còpia cada
-        dia que factures i guarda-la també fora d’este ordinador: un llapis USB o la carpeta de la gestoria.
+        {tg(idioma, 'El llibre viu en este navegador, que el pot esborrar si es netegen les dades del lloc. Fes-ne còpia cada dia que factures i guarda-la també fora d’este ordinador: un llapis USB o la carpeta de la gestoria.')}
       </p>
       {copia ? (
         <p ref={adoptaEstilsDiferits}>{`L’última còpia és «${copia.dades.nomFitxer ?? 'sense nom'}», del ${dataCurta(quan.slice(0, 10))} a les ${quan.slice(11, 16)}.`}</p>
       ) : (
-        <Alerta to="avis" viva={false} titol="Encara no hi ha cap còpia del llibre">
-          Fes-ne una ara: sense còpia, si el navegador esborra les dades, el llibre es perd.
+        <Alerta to="avis" viva={false} titol={tg(idioma, 'Encara no hi ha cap còpia del llibre')}>
+          {tg(idioma, 'Fes-ne una ara: sense còpia, si el navegador esborra les dades, el llibre es perd.')}
         </Alerta>
       )}
       {f.informe && !f.informe.valida ? (
-        <Alerta to="error" viva={false} titol="El llibre té incidències">
+        <Alerta to="error" viva={false} titol={tg(idioma, 'El llibre té incidències')}>
           Si tens una còpia bona del llibre, restaura-la ací baix. Una còpia feta ara porta «incidencia» al nom: serveix
           per a la gestoria, però no substituïx l’última còpia bona.
         </Alerta>
       ) : null}
       {copia && pendents ? (
-        <Alerta to="avis" viva={false} titol="Hi ha registres sense còpia">
+        <Alerta to="avis" viva={false} titol={tg(idioma, 'Hi ha registres sense còpia')}>
           {`Des de l’última còpia s’han fet ${pendents === 1 ? 'un registre' : `${pendents} registres`}: fes-ne una altra.`}
         </Alerta>
       ) : null}
       <div className="sdp-gestoria-panell__accions">
         {f.potTriarCarpeta ? (
           <Boto varietat="primari" disabled={ocupat} carregant={f.ocupat === 'exportant'} onClick={() => f.exporta('carpeta')}>
-            Desa la còpia en una carpeta
+            {tg(idioma, 'Desa la còpia en una carpeta')}
           </Boto>
         ) : null}
         <Boto varietat={f.potTriarCarpeta ? 'secundari' : 'primari'} disabled={ocupat} onClick={() => f.exporta('descarrega')}>
-          Descarrega la còpia
+          {tg(idioma, 'Descarrega la còpia')}
         </Boto>
       </div>
       <AvisDeZona avis={f.avis} zona="copia" onTanca={f.tancaAvis} />
-      <Camp etiqueta="Restaura una còpia"
-        ajuda="Tria un fitxer de còpia del llibre (.json). Abans de tocar res es verifica la cadena sencera; només s’hi afig el que falta i mai es reescriu el que ja hi ha.">
-        <CampText tipus="file" accept={ACCEPTA_COPIA} textBoto="Tria la còpia" disabled={ocupat} onChange={restaura} />
+      <Camp etiqueta={tg(idioma, 'Restaura una còpia')}
+        ajuda={tg(idioma, 'Tria un fitxer de còpia del llibre (.json). Abans de tocar res es verifica la cadena sencera; només s’hi afig el que falta i mai es reescriu el que ja hi ha.')}>
+        <CampText tipus="file" accept={ACCEPTA_COPIA} textBoto={tg(idioma, 'Tria la còpia')} disabled={ocupat} onChange={restaura} />
       </Camp>
     </>
   );

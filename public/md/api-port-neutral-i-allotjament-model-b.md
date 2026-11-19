@@ -10,7 +10,7 @@
 # API del port neutral i allotjament Model B
 
 **Contrast inicial:** arbre de l'assalt 261101_1246, 2026-11-01. **Recompte actualitzat**
-des de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-14 (R24, consens del joc «D'on parles?»; l'anterior, el 2026-11-12, R21, co-publicació registrada i revocació durable).
+des de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-19 (R32.13, ACK causal CRDT i denúncies diligents; l'anterior, el 2026-11-14, R24, consens del joc «D'on parles?»).
 **Esborrany. Inventari de codi**; **no acredita cap nou desplegament** ni l'aprovació d'una ADR.
 Les **signatures i DTO** són a `src/data/contracte.js` i a les **implementacions**;
 la **llista següent** enumera noms.
@@ -52,16 +52,18 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 58 capacitats atòmiques opcionals (`CAPACITATS`)
+## 60 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**138 mètodes addicionals** i **170 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**142 mètodes addicionals** i **174 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
-un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 57 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 60 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
+| `ackCrdtRural` | `confirmaCapturaCrdtRural` |
+| `denunciesDiligents` | `registraDenunciaDiligent`, `revisaDenunciaDiligent`, `llistaDenunciesDiligents` |
 | `projeccionsCataleg` | `loadProjeccionsCataleg` |
 | `administracioSessions` | `adminResumSessionsDispositius`, `adminLlistaSessionsDispositius` |
 | `curadoriaCultural` | `estatCuradoriaCultural`, `llistaAportacionsCulturals`, `enviaAportacioCultural`, `revisaAportacioCultural` |
@@ -147,11 +149,13 @@ R32.5 (2026-11-17) afig `moderacioLssi`: tres mètodes opcionals de denúncia p�
 
 R32.7 (2026-11-17) afig `xatAccionsMissatge`: cinc mètodes opcionals de reaccions, destacats, fixats i esborrat per a mi, amb cinc casos de rebuig previ; el grup tampoc no està disponible a l’adaptador local.
 
-El recompte actual és de **233 casos sobre 170 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+R32.13 (2026-11-19) afig `ackCrdtRural` i `denunciesDiligents`: quatre mètodes opcionals i quatre casos comuns de rebuig primitiu abans del transport. Els dos grups són absents en local; les proves de captura durable i moderació sobre PostgreSQL són locals i no acrediten activació remota.
 
-L’adaptador local oferix **48 dels 58 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 33 casos** d’estos grups per **capacitat absent**.
+El recompte actual és de **237 casos sobre 174 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
 
-Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 170 operacions en un servidor remot continua pendent.
+L’adaptador local oferix **48 dels 60 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 37 casos** d’estos grups per **capacitat absent**.
+
+Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 174 operacions en un servidor remot continua pendent.
 
 ### Consens del joc «D'on parles?» (R24)
 
@@ -245,8 +249,8 @@ requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
 **no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
 real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
 
-L'adaptador local oferix **48 dels 58 grups declarats**; `CAPACITATS_NO_DECLARADES`
-conté `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. `versioMinimaClient` torna honestament `null`, sense transport.
+L'adaptador local oferix **48 dels 60 grups declarats**; `CAPACITATS_NO_DECLARADES`
+conté `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. `versioMinimaClient` torna honestament `null`, sense transport.
 L'administració multipoble està **denegada per defecte**: requerix el catàleg i
 la política `administracioLocal` injectats en construir la instància. La política
 només autoritza amb `true`, i **no deriva permisos** de rols o MFA del client.

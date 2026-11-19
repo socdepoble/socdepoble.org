@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "8c819edae40d68b4c9f51acdec91aab2463bfa032a21fe71ee73bfafb78a7cf3",
-      "html": 132067,
-      "aprovat_per": "Claude v1.2.11 (Carril 1), per l'encàrrec autònom del Mestre Javi del 19-11-2026 14:14 (pla 261119_1414: integrar R32.13 i desplegar v1.2.11), crònica ajustada pel Gauntlet; pendent de lectura humana",
+      "sha256": "5959f35ca5b1ea2c7bb767c0821a54d14077cecb21f1605643c251cfc7ab6995",
+      "html": 136085,
+      "aprovat_per": "Claude v1.2.12 (Carril 1), per l'encàrrec del Mestre Javi del 19-11-2026 (prompt 261119_1754: integrar R32.14 i desplegar v1.2.12), crònica FITA_R32_15 contrastada amb el codi; pendent de lectura humana",
       "data": "2026-11-19"
     },
     "wikidepoble": {

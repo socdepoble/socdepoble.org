@@ -1,0 +1,3533 @@
+{
+  "schema": "sdp.r3214.sql-contract.v1",
+  "pre": {
+    "tables": {
+      "public.xat_reaccions": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "missatge_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "usuari_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "emoji",
+              "text",
+              true,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX xat_reaccions_pkey ON public.xat_reaccions USING btree (missatge_id, usuari_id, emoji)",
+              true,
+              true
+            ]
+          ],
+          "policies": [
+            [
+              "xat_reaccions_propies",
+              "*",
+              true,
+              [
+                "authenticated"
+              ],
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))",
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))"
+            ]
+          ],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_reaccions_emoji_check",
+              "CHECK (((char_length(emoji) >= 1) AND (char_length(emoji) <= 16)))"
+            ],
+            [
+              "xat_reaccions_missatge_id_fkey",
+              "FOREIGN KEY (missatge_id) REFERENCES xat_missatges(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_reaccions_pkey",
+              "PRIMARY KEY (missatge_id, usuari_id, emoji)"
+            ],
+            [
+              "xat_reaccions_usuari_id_fkey",
+              "FOREIGN KEY (usuari_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "public.xat_missatges_destacats": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "usuari_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "missatge_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE INDEX xat_destacats_missatge_idx ON public.xat_missatges_destacats USING btree (missatge_id)",
+              true,
+              true
+            ],
+            [
+              "CREATE UNIQUE INDEX xat_missatges_destacats_pkey ON public.xat_missatges_destacats USING btree (usuari_id, missatge_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [
+            [
+              "xat_destacats_propis",
+              "*",
+              true,
+              [
+                "authenticated"
+              ],
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))",
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))"
+            ]
+          ],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_missatges_destacats_missatge_id_fkey",
+              "FOREIGN KEY (missatge_id) REFERENCES xat_missatges(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_missatges_destacats_pkey",
+              "PRIMARY KEY (usuari_id, missatge_id)"
+            ],
+            [
+              "xat_missatges_destacats_usuari_id_fkey",
+              "FOREIGN KEY (usuari_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "public.xat_missatges_fixats": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "conversa_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "missatge_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "fixat_per",
+              "uuid",
+              false,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE INDEX xat_fixats_missatge_idx ON public.xat_missatges_fixats USING btree (missatge_id)",
+              true,
+              true
+            ],
+            [
+              "CREATE UNIQUE INDEX xat_missatges_fixats_pkey ON public.xat_missatges_fixats USING btree (conversa_id, missatge_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [
+            [
+              "xat_fixats_autor",
+              "*",
+              true,
+              [
+                "authenticated"
+              ],
+              "((fixat_per = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, conversa_id))",
+              "((fixat_per = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, conversa_id))"
+            ]
+          ],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_missatges_fixats_conversa_id_fkey",
+              "FOREIGN KEY (conversa_id) REFERENCES xat_fils(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_missatges_fixats_fixat_per_fkey",
+              "FOREIGN KEY (fixat_per) REFERENCES auth.users(id) ON DELETE SET NULL"
+            ],
+            [
+              "xat_missatges_fixats_missatge_id_fkey",
+              "FOREIGN KEY (missatge_id) REFERENCES xat_missatges(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_missatges_fixats_pkey",
+              "PRIMARY KEY (conversa_id, missatge_id)"
+            ]
+          ]
+        }
+      ],
+      "public.xat_missatges_amagats": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "usuari_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "missatge_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE INDEX xat_amagats_missatge_idx ON public.xat_missatges_amagats USING btree (missatge_id)",
+              true,
+              true
+            ],
+            [
+              "CREATE UNIQUE INDEX xat_missatges_amagats_pkey ON public.xat_missatges_amagats USING btree (usuari_id, missatge_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [
+            [
+              "xat_amagats_propis",
+              "*",
+              true,
+              [
+                "authenticated"
+              ],
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))",
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))"
+            ]
+          ],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_missatges_amagats_missatge_id_fkey",
+              "FOREIGN KEY (missatge_id) REFERENCES xat_missatges(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_missatges_amagats_pkey",
+              "PRIMARY KEY (usuari_id, missatge_id)"
+            ],
+            [
+              "xat_missatges_amagats_usuari_id_fkey",
+              "FOREIGN KEY (usuari_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "private.xat_push_credencials_v2": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "proveidor",
+              "text",
+              true,
+              null
+            ],
+            [
+              "empremta",
+              "text",
+              true,
+              null
+            ],
+            [
+              "valor",
+              "text",
+              true,
+              null
+            ],
+            [
+              "caduca_al",
+              "timestamp with time zone",
+              true,
+              null
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX xat_push_credencials_v2_pkey ON private.xat_push_credencials_v2 USING btree (proveidor, empremta)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_push_credencials_v2_empremta_forma",
+              "CHECK ((empremta ~ '^[0-9a-f]{16}$'::text))"
+            ],
+            [
+              "xat_push_credencials_v2_pkey",
+              "PRIMARY KEY (proveidor, empremta)"
+            ],
+            [
+              "xat_push_credencials_v2_proveidor_valid",
+              "CHECK ((proveidor = ANY (ARRAY['apns'::text, 'fcm'::text])))"
+            ],
+            [
+              "xat_push_credencials_v2_valor_forma",
+              "CHECK ((((char_length(valor) >= 20) AND (char_length(valor) <= 4096)) AND (valor ~ '^[A-Za-z0-9._-]+$'::text)))"
+            ]
+          ]
+        }
+      ],
+      "private.r3210_fossils_acl_backup": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "signature",
+              "text",
+              true,
+              null
+            ],
+            [
+              "function_oid",
+              "oid",
+              true,
+              null
+            ],
+            [
+              "owner_oid",
+              "oid",
+              true,
+              null
+            ],
+            [
+              "definition_hash",
+              "text",
+              true,
+              null
+            ],
+            [
+              "before_acl",
+              "text",
+              false,
+              null
+            ],
+            [
+              "after_acl",
+              "text",
+              true,
+              null
+            ],
+            [
+              "captured_at",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3210_fossils_acl_backup_pkey ON private.r3210_fossils_acl_backup USING btree (signature)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3210_fossils_acl_backup_pkey",
+              "PRIMARY KEY (signature)"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_crdt_captures": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "tenant_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "owner_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "request_id",
+              "text",
+              true,
+              null
+            ],
+            [
+              "canonical_capture",
+              "text",
+              true,
+              null
+            ],
+            [
+              "capture_sha256",
+              "text",
+              true,
+              null
+            ],
+            [
+              "frontier",
+              "jsonb",
+              true,
+              null
+            ],
+            [
+              "confirmed_at",
+              "timestamp with time zone",
+              true,
+              null
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_crdt_captures_pkey ON private.r3213_crdt_captures USING btree (tenant_id, owner_id, request_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_crdt_captures_canonical_capture_check",
+              "CHECK ((octet_length(canonical_capture) <= 4194304))"
+            ],
+            [
+              "r3213_crdt_captures_capture_sha256_check",
+              "CHECK ((capture_sha256 ~ '^[a-f0-9]{64}$'::text))"
+            ],
+            [
+              "r3213_crdt_captures_frontier_check",
+              "CHECK ((jsonb_typeof(frontier) = 'array'::text))"
+            ],
+            [
+              "r3213_crdt_captures_owner_id_fkey",
+              "FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_crdt_captures_pkey",
+              "PRIMARY KEY (tenant_id, owner_id, request_id)"
+            ],
+            [
+              "r3213_crdt_captures_request_id_check",
+              "CHECK ((request_id ~ '^[A-Za-z0-9_-]{1,128}$'::text))"
+            ],
+            [
+              "r3213_crdt_captures_tenant_id_fkey",
+              "FOREIGN KEY (tenant_id) REFERENCES towns(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_crdt_dots": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "tenant_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "owner_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "dot",
+              "text",
+              true,
+              null
+            ],
+            [
+              "operation",
+              "jsonb",
+              true,
+              null
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_crdt_dots_pkey ON private.r3213_crdt_dots USING btree (tenant_id, owner_id, dot)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_crdt_dots_owner_id_fkey",
+              "FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_crdt_dots_pkey",
+              "PRIMARY KEY (tenant_id, owner_id, dot)"
+            ],
+            [
+              "r3213_crdt_dots_tenant_id_fkey",
+              "FOREIGN KEY (tenant_id) REFERENCES towns(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_lssi_flux": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "denuncia_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "estat",
+              "text",
+              true,
+              null
+            ],
+            [
+              "versio",
+              "integer",
+              true,
+              null
+            ],
+            [
+              "modificada_al",
+              "timestamp with time zone",
+              true,
+              "clock_timestamp()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_lssi_flux_pkey ON private.r3213_lssi_flux USING btree (denuncia_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_lssi_flux_denuncia_id_fkey",
+              "FOREIGN KEY (denuncia_id) REFERENCES denuncies(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_lssi_flux_estat_check",
+              "CHECK ((estat = ANY (ARRAY['rebuda'::text, 'en_revisio'::text, 'ocultacio_cautelar'::text, 'arxivada'::text, 'resolta'::text])))"
+            ],
+            [
+              "r3213_lssi_flux_pkey",
+              "PRIMARY KEY (denuncia_id)"
+            ],
+            [
+              "r3213_lssi_flux_versio_check",
+              "CHECK ((versio >= 1))"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_lssi_audit": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "id",
+              "uuid",
+              true,
+              "gen_random_uuid()"
+            ],
+            [
+              "denuncia_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "actor_id",
+              "uuid",
+              false,
+              null
+            ],
+            [
+              "anterior",
+              "text",
+              false,
+              null
+            ],
+            [
+              "estat",
+              "text",
+              true,
+              null
+            ],
+            [
+              "justificacio",
+              "text",
+              true,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "clock_timestamp()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_lssi_audit_pkey ON private.r3213_lssi_audit USING btree (id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_lssi_audit_actor_id_fkey",
+              "FOREIGN KEY (actor_id) REFERENCES auth.users(id) ON DELETE SET NULL"
+            ],
+            [
+              "r3213_lssi_audit_denuncia_id_fkey",
+              "FOREIGN KEY (denuncia_id) REFERENCES denuncies(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_lssi_audit_estat_check",
+              "CHECK ((estat = ANY (ARRAY['rebuda'::text, 'en_revisio'::text, 'ocultacio_cautelar'::text, 'arxivada'::text, 'resolta'::text])))"
+            ],
+            [
+              "r3213_lssi_audit_justificacio_check",
+              "CHECK (((char_length(justificacio) >= 1) AND (char_length(justificacio) <= 2000)))"
+            ],
+            [
+              "r3213_lssi_audit_pkey",
+              "PRIMARY KEY (id)"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_lssi_rebuts": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "subjecte",
+              "text",
+              true,
+              null
+            ],
+            [
+              "operacio_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "peticio_sha256",
+              "text",
+              true,
+              null
+            ],
+            [
+              "rebut",
+              "jsonb",
+              true,
+              null
+            ],
+            [
+              "actor_id",
+              "uuid",
+              false,
+              null
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_lssi_rebuts_pkey ON private.r3213_lssi_rebuts USING btree (subjecte, operacio_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_lssi_rebuts_actor_id_fkey",
+              "FOREIGN KEY (actor_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_lssi_rebuts_peticio_sha256_check",
+              "CHECK ((peticio_sha256 ~ '^[a-f0-9]{64}$'::text))"
+            ],
+            [
+              "r3213_lssi_rebuts_pkey",
+              "PRIMARY KEY (subjecte, operacio_id)"
+            ]
+          ]
+        }
+      ]
+    },
+    "functions": {
+      "private.denuncies_abans_insercio()": [
+        {
+          "body": "71c11c9a704161e5e1406518cd8ed856cd19c95db4d19a0a54b0db7a68b4a47c",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "trigger",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        },
+        {
+          "body": "c92d45f52316897522d3f1b3547a461b0cf127e02544c313b68280bf34c3e6b3",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "trigger",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_fils_meus(p_tenant_id uuid)": [
+        {
+          "body": "1f2a329adf5b165c7941fa693615fe4211c6d85e4f0fbda6077f26f1691a97ac",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "TABLE(id uuid, tipus text, titol text, imatge_url text, actualitzat_al timestamp with time zone, altres_noms text[], ultim_text text, ultim_al timestamp with time zone, ultim_autor_id uuid, ultim_seq bigint, llegit_fins_seq bigint, rebut_fins_seq bigint, llegit_pels_altres_fins_seq bigint, no_llegits integer, arxivat_al timestamp with time zone, fixat_al timestamp with time zone, silenciat_fins_al timestamp with time zone, preferit_al timestamp with time zone, no_llegit_manual boolean, org_id uuid, entitat_nom text, com_entitat boolean, altres jsonb, comunitat_id uuid, subjecte_tipus text, subjecte_id text, subjecte_ruta text, subjecte_titol text, subjecte_uri text, rol text, participants integer, ultim_tipus text, epoca_actual integer, cap_epoca_hash text, e2ee_des_de_seq bigint, canal_clau text, rebut_pels_altres_fins_seq bigint)",
+          "defaults": null,
+          "proretset": true,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        },
+        {
+          "body": "17a5b8b1beee4921a9e771f0fa16632803babc7b6a076d03e485759eae0ea4c4",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "TABLE(id uuid, tipus text, titol text, imatge_url text, actualitzat_al timestamp with time zone, altres_noms text[], ultim_text text, ultim_al timestamp with time zone, ultim_autor_id uuid, ultim_seq bigint, llegit_fins_seq bigint, rebut_fins_seq bigint, llegit_pels_altres_fins_seq bigint, no_llegits integer, arxivat_al timestamp with time zone, fixat_al timestamp with time zone, silenciat_fins_al timestamp with time zone, preferit_al timestamp with time zone, no_llegit_manual boolean, org_id uuid, entitat_nom text, com_entitat boolean, altres jsonb, comunitat_id uuid, subjecte_tipus text, subjecte_id text, subjecte_ruta text, subjecte_titol text, subjecte_uri text, rol text, participants integer, ultim_tipus text, epoca_actual integer, cap_epoca_hash text, e2ee_des_de_seq bigint, canal_clau text, rebut_pels_altres_fins_seq bigint)",
+          "defaults": null,
+          "proretset": true,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_publica_adjunt(p_id uuid, p_text text, p_resposta_a uuid)": [
+        {
+          "body": "28bf2db16b2222620ab2d978c70afe4b7713f97fb6f5160083cd50108ec13ccb",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": "NULL::uuid",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_quota()": [
+        {
+          "body": "41a4d7e443a47dcccaf226a26bfc7799c7c5211d5edcdbbaa38987f6b4df2e14",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        },
+        {
+          "body": "c9607dbf16a0dfc4e716a71876a180c2f9e0dc3f1a6b2674a16357671290b01a",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_reserva_adjunt(p_id uuid, p_fil_id uuid, p_bytes bigint, p_mime text, p_durada_ms integer)": [
+        {
+          "body": "17241d05975614f723170fd52d15da2676db495996c7a7ab40097326b00b5d4f",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": "NULL::integer",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        },
+        {
+          "body": "dddb2fda616808f319c0bf036d3489a6ee90ff72596c32e50f533ef6167373e5",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": "NULL::integer",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "private.r3213_lssi_sync()": [
+        {
+          "body": "c501dfb164d1e237303c235c464454272eaa2438e082bfa6cfff8ab2d0f0669a",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "trigger",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "private.xat_accio_estat(p_id uuid)": [
+        {
+          "body": "40d72d2a38b190b117d04da993d1252dd7e9adb854510a143c6f01357f75bd35",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "sql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "private.xat_accio_visible(p_id uuid, p_fil_id uuid)": [
+        {
+          "body": "c819f68a1aa31e5287d38eb939661e12f2b696dd4337cd370f66d65b3845b324",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "sql",
+          "result": "boolean",
+          "defaults": "NULL::uuid",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.confirma_captura_crdt_rural(p_tenant uuid, p_request text, p_capture text, p_sha256 text, p_frontier jsonb)": [
+        {
+          "body": "45a8b355a4e22812790907b1e56ade8444565339d410cffd1eeb12a5fbd3226f",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.llista_denuncies_diligents(p_estat text, p_limit integer)": [
+        {
+          "body": "70d19bde272059c474c4bf471f6bf298abd39e7e364f447fcfa3c3d36ca3f110",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": "50",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.registra_denuncia_diligent(p_publicacio uuid, p_motiu text, p_detall text, p_operacio uuid)": [
+        {
+          "body": "8e83339040e3f1cd547246486f1c87a88faa01660e64a8aa2aff7c4418545f21",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "anon",
+              "EXECUTE",
+              false
+            ],
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              true
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.revisa_denuncia_diligent(p_id uuid, p_estat_esperat text, p_versio integer, p_estat text, p_justificacio text, p_operacio uuid)": [
+        {
+          "body": "2d18b9f4aab5080aba0a93e490161911087b56e3690922ea06f612a7ad4d0b81",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_accions_missatges(p_fil_id uuid, p_ids uuid[], p_nomes_destacats boolean, p_despres_de_id uuid, p_limit integer)": [
+        {
+          "body": "301a69eeb2f2bd183b054e3c5720208d88d5556c9d1387ee114fd9c23fdb86c2",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": "NULL::uuid, '{}'::uuid[], false, NULL::uuid, 100",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_alterna_destacat(p_fil_id uuid, p_missatge_id uuid, p_actiu boolean)": [
+        {
+          "body": "c97105c39010b0e5a6e823e0f55d00d94f91bd51247d3c01c09d5785c3f43b36",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_alterna_fixat(p_fil_id uuid, p_missatge_id uuid, p_actiu boolean)": [
+        {
+          "body": "4bf4faa7c30c4d0a97a60a4e64b85d71a54e73d12d743ff778c2ea985a5aabe4",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_alterna_reaccio(p_fil_id uuid, p_missatge_id uuid, p_emoji text, p_activa boolean)": [
+        {
+          "body": "22eaac4ec5a81b14aab94e4308d5ceda27a4a2078497c3e7a55990d11e16f3de",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_elimina_per_a_mi(p_fil_id uuid, p_missatge_id uuid)": [
+        {
+          "body": "8d68523d654c4e47f43af1232a6ca42d43e69c37cff08cfb87ef86c0c2c1c2d6",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_publica_adjunt(p_id uuid, p_text text, p_resposta_a uuid, p_ubicacio jsonb)": [
+        {
+          "body": "e478942615b608443df92d4979b1409a8c6fca4d4b6280ee9652a09545d100fa",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_push_credencial_v2(p_proveidor text, p_empremta text)": [
+        {
+          "body": "0feb81b669ce17081e67ed721a2a951755a1be71dbb8b5701d1ecc5f806cf26a",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "text",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "service_role",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              true
+            ]
+          ]
+        }
+      ],
+      "public.xat_push_desa_credencial_v2(p_proveidor text, p_empremta text, p_valor text, p_caduca_al timestamp with time zone)": [
+        {
+          "body": "8ccb401aee33380ddc820101b67e0326293b80d689449f4230f80e1e5e894f13",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "boolean",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "service_role",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              true
+            ]
+          ]
+        }
+      ]
+    },
+    "triggers": {
+      "denuncies_abans_insercio": [
+        {
+          "tgname": "denuncies_abans_insercio",
+          "ddl": "CREATE TRIGGER denuncies_abans_insercio BEFORE INSERT ON public.denuncies FOR EACH ROW EXECUTE FUNCTION private.denuncies_abans_insercio()",
+          "tgenabled": "O"
+        }
+      ],
+      "r3213_lssi_decisio": [
+        {
+          "tgname": "r3213_lssi_decisio",
+          "ddl": "CREATE TRIGGER r3213_lssi_decisio AFTER UPDATE OF estat ON public.denuncies FOR EACH ROW WHEN ((old.estat IS DISTINCT FROM new.estat)) EXECUTE FUNCTION private.r3213_lssi_sync()",
+          "tgenabled": "O"
+        }
+      ],
+      "r3213_lssi_insercio": [
+        {
+          "tgname": "r3213_lssi_insercio",
+          "ddl": "CREATE TRIGGER r3213_lssi_insercio AFTER INSERT ON public.denuncies FOR EACH ROW EXECUTE FUNCTION private.r3213_lssi_sync()",
+          "tgenabled": "O"
+        }
+      ]
+    }
+  },
+  "post": {
+    "tables": {
+      "public.xat_reaccions": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "missatge_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "usuari_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "emoji",
+              "text",
+              true,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX xat_reaccions_pkey ON public.xat_reaccions USING btree (missatge_id, usuari_id, emoji)",
+              true,
+              true
+            ]
+          ],
+          "policies": [
+            [
+              "xat_reaccions_propies",
+              "*",
+              true,
+              [
+                "authenticated"
+              ],
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))",
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))"
+            ]
+          ],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_reaccions_emoji_check",
+              "CHECK (((char_length(emoji) >= 1) AND (char_length(emoji) <= 16)))"
+            ],
+            [
+              "xat_reaccions_missatge_id_fkey",
+              "FOREIGN KEY (missatge_id) REFERENCES xat_missatges(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_reaccions_pkey",
+              "PRIMARY KEY (missatge_id, usuari_id, emoji)"
+            ],
+            [
+              "xat_reaccions_usuari_id_fkey",
+              "FOREIGN KEY (usuari_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "public.xat_missatges_destacats": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "usuari_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "missatge_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE INDEX xat_destacats_missatge_idx ON public.xat_missatges_destacats USING btree (missatge_id)",
+              true,
+              true
+            ],
+            [
+              "CREATE UNIQUE INDEX xat_missatges_destacats_pkey ON public.xat_missatges_destacats USING btree (usuari_id, missatge_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [
+            [
+              "xat_destacats_propis",
+              "*",
+              true,
+              [
+                "authenticated"
+              ],
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))",
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))"
+            ]
+          ],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_missatges_destacats_missatge_id_fkey",
+              "FOREIGN KEY (missatge_id) REFERENCES xat_missatges(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_missatges_destacats_pkey",
+              "PRIMARY KEY (usuari_id, missatge_id)"
+            ],
+            [
+              "xat_missatges_destacats_usuari_id_fkey",
+              "FOREIGN KEY (usuari_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "public.xat_missatges_fixats": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "conversa_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "missatge_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "fixat_per",
+              "uuid",
+              false,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE INDEX xat_fixats_missatge_idx ON public.xat_missatges_fixats USING btree (missatge_id)",
+              true,
+              true
+            ],
+            [
+              "CREATE UNIQUE INDEX xat_missatges_fixats_pkey ON public.xat_missatges_fixats USING btree (conversa_id, missatge_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [
+            [
+              "xat_fixats_autor",
+              "*",
+              true,
+              [
+                "authenticated"
+              ],
+              "((fixat_per = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, conversa_id))",
+              "((fixat_per = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, conversa_id))"
+            ]
+          ],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_missatges_fixats_conversa_id_fkey",
+              "FOREIGN KEY (conversa_id) REFERENCES xat_fils(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_missatges_fixats_fixat_per_fkey",
+              "FOREIGN KEY (fixat_per) REFERENCES auth.users(id) ON DELETE SET NULL"
+            ],
+            [
+              "xat_missatges_fixats_missatge_id_fkey",
+              "FOREIGN KEY (missatge_id) REFERENCES xat_missatges(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_missatges_fixats_pkey",
+              "PRIMARY KEY (conversa_id, missatge_id)"
+            ]
+          ]
+        }
+      ],
+      "public.xat_missatges_amagats": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "usuari_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "missatge_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE INDEX xat_amagats_missatge_idx ON public.xat_missatges_amagats USING btree (missatge_id)",
+              true,
+              true
+            ],
+            [
+              "CREATE UNIQUE INDEX xat_missatges_amagats_pkey ON public.xat_missatges_amagats USING btree (usuari_id, missatge_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [
+            [
+              "xat_amagats_propis",
+              "*",
+              true,
+              [
+                "authenticated"
+              ],
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))",
+              "((usuari_id = ( SELECT auth.uid() AS uid)) AND private.xat_accio_visible(missatge_id, NULL::uuid))"
+            ]
+          ],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_missatges_amagats_missatge_id_fkey",
+              "FOREIGN KEY (missatge_id) REFERENCES xat_missatges(id) ON DELETE CASCADE"
+            ],
+            [
+              "xat_missatges_amagats_pkey",
+              "PRIMARY KEY (usuari_id, missatge_id)"
+            ],
+            [
+              "xat_missatges_amagats_usuari_id_fkey",
+              "FOREIGN KEY (usuari_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "private.xat_push_credencials_v2": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "proveidor",
+              "text",
+              true,
+              null
+            ],
+            [
+              "empremta",
+              "text",
+              true,
+              null
+            ],
+            [
+              "valor",
+              "text",
+              true,
+              null
+            ],
+            [
+              "caduca_al",
+              "timestamp with time zone",
+              true,
+              null
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX xat_push_credencials_v2_pkey ON private.xat_push_credencials_v2 USING btree (proveidor, empremta)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "xat_push_credencials_v2_empremta_forma",
+              "CHECK ((empremta ~ '^[0-9a-f]{16}$'::text))"
+            ],
+            [
+              "xat_push_credencials_v2_pkey",
+              "PRIMARY KEY (proveidor, empremta)"
+            ],
+            [
+              "xat_push_credencials_v2_proveidor_valid",
+              "CHECK ((proveidor = ANY (ARRAY['apns'::text, 'fcm'::text])))"
+            ],
+            [
+              "xat_push_credencials_v2_valor_forma",
+              "CHECK ((((char_length(valor) >= 20) AND (char_length(valor) <= 4096)) AND (valor ~ '^[A-Za-z0-9._-]+$'::text)))"
+            ]
+          ]
+        }
+      ],
+      "private.r3210_fossils_acl_backup": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "signature",
+              "text",
+              true,
+              null
+            ],
+            [
+              "function_oid",
+              "oid",
+              true,
+              null
+            ],
+            [
+              "owner_oid",
+              "oid",
+              true,
+              null
+            ],
+            [
+              "definition_hash",
+              "text",
+              true,
+              null
+            ],
+            [
+              "before_acl",
+              "text",
+              false,
+              null
+            ],
+            [
+              "after_acl",
+              "text",
+              true,
+              null
+            ],
+            [
+              "captured_at",
+              "timestamp with time zone",
+              true,
+              "now()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3210_fossils_acl_backup_pkey ON private.r3210_fossils_acl_backup USING btree (signature)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3210_fossils_acl_backup_pkey",
+              "PRIMARY KEY (signature)"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_crdt_captures": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "tenant_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "owner_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "request_id",
+              "text",
+              true,
+              null
+            ],
+            [
+              "canonical_capture",
+              "text",
+              true,
+              null
+            ],
+            [
+              "capture_sha256",
+              "text",
+              true,
+              null
+            ],
+            [
+              "frontier",
+              "jsonb",
+              true,
+              null
+            ],
+            [
+              "confirmed_at",
+              "timestamp with time zone",
+              true,
+              null
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_crdt_captures_pkey ON private.r3213_crdt_captures USING btree (tenant_id, owner_id, request_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_crdt_captures_canonical_capture_check",
+              "CHECK ((octet_length(canonical_capture) <= 4194304))"
+            ],
+            [
+              "r3213_crdt_captures_capture_sha256_check",
+              "CHECK ((capture_sha256 ~ '^[a-f0-9]{64}$'::text))"
+            ],
+            [
+              "r3213_crdt_captures_frontier_check",
+              "CHECK ((jsonb_typeof(frontier) = 'array'::text))"
+            ],
+            [
+              "r3213_crdt_captures_owner_id_fkey",
+              "FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_crdt_captures_pkey",
+              "PRIMARY KEY (tenant_id, owner_id, request_id)"
+            ],
+            [
+              "r3213_crdt_captures_request_id_check",
+              "CHECK ((request_id ~ '^[A-Za-z0-9_-]{1,128}$'::text))"
+            ],
+            [
+              "r3213_crdt_captures_tenant_id_fkey",
+              "FOREIGN KEY (tenant_id) REFERENCES towns(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_crdt_dots": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "tenant_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "owner_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "dot",
+              "text",
+              true,
+              null
+            ],
+            [
+              "operation",
+              "jsonb",
+              true,
+              null
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_crdt_dots_pkey ON private.r3213_crdt_dots USING btree (tenant_id, owner_id, dot)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_crdt_dots_owner_id_fkey",
+              "FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_crdt_dots_pkey",
+              "PRIMARY KEY (tenant_id, owner_id, dot)"
+            ],
+            [
+              "r3213_crdt_dots_tenant_id_fkey",
+              "FOREIGN KEY (tenant_id) REFERENCES towns(id) ON DELETE CASCADE"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_lssi_flux": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "denuncia_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "estat",
+              "text",
+              true,
+              null
+            ],
+            [
+              "versio",
+              "integer",
+              true,
+              null
+            ],
+            [
+              "modificada_al",
+              "timestamp with time zone",
+              true,
+              "clock_timestamp()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_lssi_flux_pkey ON private.r3213_lssi_flux USING btree (denuncia_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_lssi_flux_denuncia_id_fkey",
+              "FOREIGN KEY (denuncia_id) REFERENCES denuncies(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_lssi_flux_estat_check",
+              "CHECK ((estat = ANY (ARRAY['rebuda'::text, 'en_revisio'::text, 'ocultacio_cautelar'::text, 'arxivada'::text, 'resolta'::text])))"
+            ],
+            [
+              "r3213_lssi_flux_pkey",
+              "PRIMARY KEY (denuncia_id)"
+            ],
+            [
+              "r3213_lssi_flux_versio_check",
+              "CHECK ((versio >= 1))"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_lssi_audit": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "id",
+              "uuid",
+              true,
+              "gen_random_uuid()"
+            ],
+            [
+              "denuncia_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "actor_id",
+              "uuid",
+              false,
+              null
+            ],
+            [
+              "anterior",
+              "text",
+              false,
+              null
+            ],
+            [
+              "estat",
+              "text",
+              true,
+              null
+            ],
+            [
+              "justificacio",
+              "text",
+              true,
+              null
+            ],
+            [
+              "creat_al",
+              "timestamp with time zone",
+              true,
+              "clock_timestamp()"
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_lssi_audit_pkey ON private.r3213_lssi_audit USING btree (id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_lssi_audit_actor_id_fkey",
+              "FOREIGN KEY (actor_id) REFERENCES auth.users(id) ON DELETE SET NULL"
+            ],
+            [
+              "r3213_lssi_audit_denuncia_id_fkey",
+              "FOREIGN KEY (denuncia_id) REFERENCES denuncies(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_lssi_audit_estat_check",
+              "CHECK ((estat = ANY (ARRAY['rebuda'::text, 'en_revisio'::text, 'ocultacio_cautelar'::text, 'arxivada'::text, 'resolta'::text])))"
+            ],
+            [
+              "r3213_lssi_audit_justificacio_check",
+              "CHECK (((char_length(justificacio) >= 1) AND (char_length(justificacio) <= 2000)))"
+            ],
+            [
+              "r3213_lssi_audit_pkey",
+              "PRIMARY KEY (id)"
+            ]
+          ]
+        }
+      ],
+      "private.r3213_lssi_rebuts": [
+        {
+          "acl": [],
+          "rls": true,
+          "force": false,
+          "columns": [
+            [
+              "subjecte",
+              "text",
+              true,
+              null
+            ],
+            [
+              "operacio_id",
+              "uuid",
+              true,
+              null
+            ],
+            [
+              "peticio_sha256",
+              "text",
+              true,
+              null
+            ],
+            [
+              "rebut",
+              "jsonb",
+              true,
+              null
+            ],
+            [
+              "actor_id",
+              "uuid",
+              false,
+              null
+            ]
+          ],
+          "indexes": [
+            [
+              "CREATE UNIQUE INDEX r3213_lssi_rebuts_pkey ON private.r3213_lssi_rebuts USING btree (subjecte, operacio_id)",
+              true,
+              true
+            ]
+          ],
+          "policies": [],
+          "columnacl": [],
+          "effective": [
+            [
+              "anon",
+              false,
+              false
+            ],
+            [
+              "authenticated",
+              false,
+              false
+            ],
+            [
+              "service_role",
+              false,
+              false
+            ]
+          ],
+          "constraints": [
+            [
+              "r3213_lssi_rebuts_actor_id_fkey",
+              "FOREIGN KEY (actor_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ],
+            [
+              "r3213_lssi_rebuts_peticio_sha256_check",
+              "CHECK ((peticio_sha256 ~ '^[a-f0-9]{64}$'::text))"
+            ],
+            [
+              "r3213_lssi_rebuts_pkey",
+              "PRIMARY KEY (subjecte, operacio_id)"
+            ]
+          ]
+        }
+      ]
+    },
+    "functions": {
+      "private.denuncies_abans_insercio()": [
+        {
+          "body": "c92d45f52316897522d3f1b3547a461b0cf127e02544c313b68280bf34c3e6b3",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "trigger",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "private.r3213_lssi_sync()": [
+        {
+          "body": "c501dfb164d1e237303c235c464454272eaa2438e082bfa6cfff8ab2d0f0669a",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "trigger",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "private.xat_accio_estat(p_id uuid)": [
+        {
+          "body": "40d72d2a38b190b117d04da993d1252dd7e9adb854510a143c6f01357f75bd35",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "sql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "private.xat_accio_visible(p_id uuid, p_fil_id uuid)": [
+        {
+          "body": "c819f68a1aa31e5287d38eb939661e12f2b696dd4337cd370f66d65b3845b324",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "sql",
+          "result": "boolean",
+          "defaults": "NULL::uuid",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.confirma_captura_crdt_rural(p_tenant uuid, p_request text, p_capture text, p_sha256 text, p_frontier jsonb)": [
+        {
+          "body": "45a8b355a4e22812790907b1e56ade8444565339d410cffd1eeb12a5fbd3226f",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.llista_denuncies_diligents(p_estat text, p_limit integer)": [
+        {
+          "body": "70d19bde272059c474c4bf471f6bf298abd39e7e364f447fcfa3c3d36ca3f110",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": "50",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.registra_denuncia_diligent(p_publicacio uuid, p_motiu text, p_detall text, p_operacio uuid)": [
+        {
+          "body": "8e83339040e3f1cd547246486f1c87a88faa01660e64a8aa2aff7c4418545f21",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "anon",
+              "EXECUTE",
+              false
+            ],
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              true
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.revisa_denuncia_diligent(p_id uuid, p_estat_esperat text, p_versio integer, p_estat text, p_justificacio text, p_operacio uuid)": [
+        {
+          "body": "2d18b9f4aab5080aba0a93e490161911087b56e3690922ea06f612a7ad4d0b81",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_accions_missatges(p_fil_id uuid, p_ids uuid[], p_nomes_destacats boolean, p_despres_de_id uuid, p_limit integer)": [
+        {
+          "body": "301a69eeb2f2bd183b054e3c5720208d88d5556c9d1387ee114fd9c23fdb86c2",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": "NULL::uuid, '{}'::uuid[], false, NULL::uuid, 100",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_alterna_destacat(p_fil_id uuid, p_missatge_id uuid, p_actiu boolean)": [
+        {
+          "body": "c97105c39010b0e5a6e823e0f55d00d94f91bd51247d3c01c09d5785c3f43b36",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_alterna_fixat(p_fil_id uuid, p_missatge_id uuid, p_actiu boolean)": [
+        {
+          "body": "4bf4faa7c30c4d0a97a60a4e64b85d71a54e73d12d743ff778c2ea985a5aabe4",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_alterna_reaccio(p_fil_id uuid, p_missatge_id uuid, p_emoji text, p_activa boolean)": [
+        {
+          "body": "22eaac4ec5a81b14aab94e4308d5ceda27a4a2078497c3e7a55990d11e16f3de",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_elimina_per_a_mi(p_fil_id uuid, p_missatge_id uuid)": [
+        {
+          "body": "8d68523d654c4e47f43af1232a6ca42d43e69c37cff08cfb87ef86c0c2c1c2d6",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_fils_meus(p_tenant_id uuid)": [
+        {
+          "body": "17a5b8b1beee4921a9e771f0fa16632803babc7b6a076d03e485759eae0ea4c4",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "TABLE(id uuid, tipus text, titol text, imatge_url text, actualitzat_al timestamp with time zone, altres_noms text[], ultim_text text, ultim_al timestamp with time zone, ultim_autor_id uuid, ultim_seq bigint, llegit_fins_seq bigint, rebut_fins_seq bigint, llegit_pels_altres_fins_seq bigint, no_llegits integer, arxivat_al timestamp with time zone, fixat_al timestamp with time zone, silenciat_fins_al timestamp with time zone, preferit_al timestamp with time zone, no_llegit_manual boolean, org_id uuid, entitat_nom text, com_entitat boolean, altres jsonb, comunitat_id uuid, subjecte_tipus text, subjecte_id text, subjecte_ruta text, subjecte_titol text, subjecte_uri text, rol text, participants integer, ultim_tipus text, epoca_actual integer, cap_epoca_hash text, e2ee_des_de_seq bigint, canal_clau text, rebut_pels_altres_fins_seq bigint)",
+          "defaults": null,
+          "proretset": true,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_publica_adjunt(p_id uuid, p_text text, p_resposta_a uuid)": [
+        {
+          "body": "28bf2db16b2222620ab2d978c70afe4b7713f97fb6f5160083cd50108ec13ccb",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": "NULL::uuid",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_publica_adjunt(p_id uuid, p_text text, p_resposta_a uuid, p_ubicacio jsonb)": [
+        {
+          "body": "e478942615b608443df92d4979b1409a8c6fca4d4b6280ee9652a09545d100fa",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_push_credencial_v2(p_proveidor text, p_empremta text)": [
+        {
+          "body": "0feb81b669ce17081e67ed721a2a951755a1be71dbb8b5701d1ecc5f806cf26a",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "text",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "service_role",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              true
+            ]
+          ]
+        }
+      ],
+      "public.xat_push_desa_credencial_v2(p_proveidor text, p_empremta text, p_valor text, p_caduca_al timestamp with time zone)": [
+        {
+          "body": "8ccb401aee33380ddc820101b67e0326293b80d689449f4230f80e1e5e894f13",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "boolean",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "service_role",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              false
+            ],
+            [
+              "service_role",
+              true
+            ]
+          ]
+        }
+      ],
+      "public.xat_quota()": [
+        {
+          "body": "c9607dbf16a0dfc4e716a71876a180c2f9e0dc3f1a6b2674a16357671290b01a",
+          "prosecdef": true,
+          "provolatile": "s",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": null,
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ],
+      "public.xat_reserva_adjunt(p_id uuid, p_fil_id uuid, p_bytes bigint, p_mime text, p_durada_ms integer)": [
+        {
+          "body": "dddb2fda616808f319c0bf036d3489a6ee90ff72596c32e50f533ef6167373e5",
+          "prosecdef": true,
+          "provolatile": "v",
+          "proconfig": [
+            "search_path=\"\""
+          ],
+          "lanname": "plpgsql",
+          "result": "jsonb",
+          "defaults": "NULL::integer",
+          "proretset": false,
+          "proleakproof": false,
+          "proparallel": "u",
+          "acl": [
+            [
+              "authenticated",
+              "EXECUTE",
+              false
+            ]
+          ],
+          "effective": [
+            [
+              "anon",
+              false
+            ],
+            [
+              "authenticated",
+              true
+            ],
+            [
+              "service_role",
+              false
+            ]
+          ]
+        }
+      ]
+    },
+    "triggers": {
+      "denuncies_abans_insercio": [
+        {
+          "tgname": "denuncies_abans_insercio",
+          "ddl": "CREATE TRIGGER denuncies_abans_insercio BEFORE INSERT ON public.denuncies FOR EACH ROW EXECUTE FUNCTION private.denuncies_abans_insercio()",
+          "tgenabled": "O"
+        }
+      ],
+      "r3213_lssi_decisio": [
+        {
+          "tgname": "r3213_lssi_decisio",
+          "ddl": "CREATE TRIGGER r3213_lssi_decisio AFTER UPDATE OF estat ON public.denuncies FOR EACH ROW WHEN ((old.estat IS DISTINCT FROM new.estat)) EXECUTE FUNCTION private.r3213_lssi_sync()",
+          "tgenabled": "O"
+        }
+      ],
+      "r3213_lssi_insercio": [
+        {
+          "tgname": "r3213_lssi_insercio",
+          "ddl": "CREATE TRIGGER r3213_lssi_insercio AFTER INSERT ON public.denuncies FOR EACH ROW EXECUTE FUNCTION private.r3213_lssi_sync()",
+          "tgenabled": "O"
+        }
+      ]
+    }
+  }
+}

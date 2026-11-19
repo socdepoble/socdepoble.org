@@ -22,7 +22,13 @@ import { Link, Navigate, useLocation } from '../../app/contexts/RouterContext';
 import { Accions, Alerta, Boto, Carregant, EstatBuit, PaginaApp, Pila } from '../../components/PedraSeca/index.js';
 import { useApp, useSessioApp, lazyRoute } from '../plataforma/index.js';
 import { ENTRADA_APRENDRE, ENTRADA_FACTURACIO, ENTRADA_FULL, ENTRADA_IDENTITAT, desviamentDeLaConsulta } from './rutes.js';
-export { CODIS_IDIOMA_GESTORIA, TEXTOS_BUIT_GESTORIA, textosBuitGestoria } from './i18nGestoria.js';
+export {
+  CODIS_IDIOMA_GESTORIA,
+  TEXTOS_BUIT_GESTORIA,
+  TEXTOS_SECCIONS_GESTORIA,
+  textosBuitGestoria,
+  textosSeccionsGestoria
+} from './i18nGestoria.js';
 
 const VISTES = import.meta.env.VITE_SDP_APP_GESTORIA !== '0' ? Object.freeze({
   tauler: lazyRoute(() => import('../../sections/gestoria/tauler/ShellGestoria.jsx')),
@@ -280,6 +286,7 @@ export default function AppGestoria() {
     { text: tx.insigniaGestoria, className: 'sdp-badge-system' },
     { text: tx.facturacioTitol, className: 'sdp-badge-category' }
   ];
+  const propIdioma = idioma && idioma !== 'ca' ? { idioma } : {};
 
   if (entrada === ENTRADA_APRENDRE) {
     const Aprendre = VISTES.aprendre;
@@ -288,7 +295,7 @@ export default function AppGestoria() {
         author={autor} rellotgeViu showComment={false} showShare={false} showConnect={false}>
         <LimitErrorPontGestoria clauRuta={pathname} tx={tx} rutaTauler={rutaTauler}>
           <Suspense fallback={<Carregant etiqueta={tx.carregantAprendre} />}>
-            <Aprendre />
+            <Aprendre {...propIdioma} />
           </Suspense>
         </LimitErrorPontGestoria>
       </PaginaApp>
@@ -329,7 +336,7 @@ export default function AppGestoria() {
     return (
       <LimitErrorPontGestoria clauRuta={pathname} tx={tx} rutaTauler={rutaTauler}>
         <Suspense fallback={<Carregant etiqueta={tx.carregantHistoric} />}>
-          <Historic titular={titular} />
+          <Historic titular={titular} {...propIdioma} />
         </Suspense>
       </LimitErrorPontGestoria>
     );
@@ -339,7 +346,7 @@ export default function AppGestoria() {
     return (
       <LimitErrorPontGestoria clauRuta={pathname} tx={tx} rutaTauler={rutaTauler}>
         <Suspense fallback={<Carregant etiqueta={tx.carregantIdentitat} />}>
-          <Finestreta titular={titular} />
+          <Finestreta titular={titular} {...propIdioma} />
         </Suspense>
       </LimitErrorPontGestoria>
     );
@@ -349,7 +356,8 @@ export default function AppGestoria() {
     <LimitErrorPontGestoria clauRuta={pathname} tx={tx} rutaTauler={null}>
       <Suspense fallback={<Carregant etiqueta={tx.carregantGestoria} />}>
         <Closca modulActiu={entrada} hrefEntrada={sessio.teSessio || titular ? null : entradaAlCompte}
-          titular={titular} hrefIdentitat={`${base}/${ENTRADA_IDENTITAT}`} hrefFull={`${base}/${ENTRADA_FULL}`} />
+          titular={titular} hrefIdentitat={`${base}/${ENTRADA_IDENTITAT}`} hrefFull={`${base}/${ENTRADA_FULL}`}
+          {...propIdioma} />
       </Suspense>
     </LimitErrorPontGestoria>
   );

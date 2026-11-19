@@ -53,8 +53,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
+import { preparaRevisioTellado, catalogaTellado, resumCatalegTellado } from '../lib/tellado-cataleg-r32_14.mjs';
 
-export const VERSIO_PORTA_TELLADO = '1.4.0';
+export const VERSIO_PORTA_TELLADO = '1.5.0';
 export const MAX_BYTES_FITXER_ESCANEIG = 8 * 1024 * 1024;
 export const MAX_BYTES_TOTAL_ESCANEIG = 256 * 1024 * 1024;
 export const MAX_INCIDENCIES = 1000;
@@ -1782,9 +1783,13 @@ export function avaluaPerimetreTellado(arrel = arrelSegura(), opcions = {}) {
     infraccions.push({ regla, fitxer, linia, missatge, ...extra });
   };
   const desconeguts = [];
+  const revisionsDinamiques = [];
+  let revisioDinamica = new Map();
   let totalDesconeguts = 0;
   const declaraDesconegut = (d) => {
     totalDesconeguts += 1;
+    const revisio = catalogaTellado(d, revisioDinamica);
+    if (revisio) revisionsDinamiques.push(revisio);
     if (desconeguts.length < MAX_DESCONEGUTS) desconeguts.push(d);
   };
   const destinsXarxa = { coberts: 0, desconeguts: 0 };
@@ -1829,6 +1834,7 @@ export function avaluaPerimetreTellado(arrel = arrelSegura(), opcions = {}) {
     fitxersEscanejats += 1;
     const ext = path.extname(abs).toLowerCase();
     const net = netejaComentarisLineal(cru, ext);
+    revisioDinamica = preparaRevisioTellado(cru, net);
     if (ext === '.php') textos.set(rel, { cru, net });
     const salts = construeixIndexSaltsLinia(net);
     const linia = (index) => numeroLiniaAmbIndex(salts, index);
@@ -2028,6 +2034,7 @@ export function avaluaPerimetreTellado(arrel = arrelSegura(), opcions = {}) {
     desconegutsTruncats: totalDesconeguts > desconeguts.length,
     desconeguts,
     destinsXarxa,
+    catalegDinamic: resumCatalegTellado(revisionsDinamiques, totalDesconeguts, totalDesconeguts > desconeguts.length),
   };
 }
 

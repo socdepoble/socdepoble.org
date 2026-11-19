@@ -399,6 +399,11 @@ export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } 
   if (!(fitxer instanceof Blob) || !extensions[fitxer.type] || (!isPrivate && fitxer.type === 'application/pdf'))
     throw new Error('Format de fitxer no admés en este destí');
   if (!fitxer.size || fitxer.size > (isPrivate ? MIDA_MAX_PRIVADA : MIDA_MAX_PUBLICA)) throw new Error('Mida de fitxer no admesa');
+  if (['image/jpeg', 'image/png', 'image/webp'].includes(fitxer.type)) {
+    const { validaFitxerMedia } = await import('../../utils/validadorContenidorsMedia.js');
+    await validaFitxerMedia(fitxer, { signal: config.signal });
+    vigent();
+  }
   const bucket = isPrivate ? 'mitjans_privats' : 'mitjans';
   const ruta = `${selectedTenant.toLowerCase()}/${user.id.toLowerCase()}/${carpeta}/${crypto.randomUUID()}.${extensions[fitxer.type]}`;
   const client = await getClient(config);

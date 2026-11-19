@@ -3,6 +3,8 @@
    via el protocol, hash SHA-256 verificat ABANS de desxifrar, llista blanca
    de MIME al receptor i sostres del bucket. WebCrypto real de Node. */
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { jpegDeMida } from '../../tests/helpers/contenidorsMedia.js';
+import { WEBP_NET } from '../../tests/helpers/mitjansPublicsNets.js';
 import { readFileSync } from 'node:fs';
 import { CODI_ADJUNT, MAXIM_BLOB_ADJUNT, MIMES_ADJUNT_XIFRAT, PRESSUPOST_BLOBS_ESCRIPTORI, PRESSUPOST_BLOBS_MOBIL, SOSTRE_BLOBS_ADJUNTS, capAlBucket, creaRegistreBlobsAdjunts, desxifraAdjuntXat, midaBlobAdjunt, pressupostBlobsAdjunts, verificaHashAdjunt, xifraAdjuntXat } from './xatMultimediaXifrat.js';
 import { CLASSE_ADJUNT, MAXIM_CLAR_ADJUNT } from './xifratXatFormats.js';
@@ -19,7 +21,7 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('xifraAdjuntXat / desxifraAdjuntXat', () => {
   test('anada i tornada: el blob no porta el clar, fa la mida Padmé declarada i torna els mateixos bytes amb el MIME real', async () => {
-    const clar = bytes(3000);
+    const clar = jpegDeMida(3000);
     const { blob, a, mida } = await xifraAdjuntXat({ cripto, fil: FIL, adjunt: ADJ, emissor: A, bytes: clar, mime: 'image/jpeg' });
     expect(mida).toBe(blob.length);
     expect(blob.length).toBe(midaBlobAdjunt(3000));
@@ -70,7 +72,7 @@ describe('xifraAdjuntXat / desxifraAdjuntXat', () => {
   });
 
   test('una FK d’un altre adjunt no obri el blob (GCM rebutja) i ix com a manipulat', async () => {
-    const clar = bytes(1024);
+    const clar = WEBP_NET.slice();
     const u = await xifraAdjuntXat({ cripto, fil: FIL, adjunt: ADJ, emissor: A, bytes: clar, mime: 'image/webp' });
     const v = await xifraAdjuntXat({ cripto, fil: FIL, adjunt: ADJ, emissor: A, bytes: clar, mime: 'image/webp' });
     await expect(desxifraAdjuntXat({ cripto, fil: FIL, emissor: A, a: { ...u.a, k: v.a.k }, blob: u.blob })).rejects.toMatchObject({ code: 'obrir' });

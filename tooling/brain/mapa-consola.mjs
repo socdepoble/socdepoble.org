@@ -508,6 +508,33 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
   };
 }
 
+/** MAPA-07-03 (Mestre, 2026-11-19). Època d'obertura, no el moment del
+ * sanejament administratiu: alguns torns antics es tancaren el 16-11.
+ * Només ISO UTC amb calendari real; Date.parse tot sol normalitza dates
+ * impossibles. Cap dada absent, numèrica o ambigua acredita l'excepció. */
+export const FRONTERA_PRE_REBUT = '2026-11-14T23:59:59.999Z';
+export function particionaTornsPreRebut(torns) {
+  const historics = [], actuals = [];
+  if (!Array.isArray(torns)) return { actuals: torns, historic: { decisio: 'MAPA-07-03', campTemporal: 'createdAt', fronteraInclusiva: FRONTERA_PRE_REBUT, total: null, torns: [] } };
+  const limit = Date.parse(FRONTERA_PRE_REBUT);
+  for (const torn of torns) {
+    const data = torn?.createdAt;
+    let antic = false;
+    if (torn?.state === 'closed' && torn?.rebuts === 0 && typeof data === 'string'
+      && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(data)) {
+      const ms = Date.parse(data);
+      const canonical = data.slice(0, 19) + '.' + (data.slice(19, -1).slice(1) || '').padEnd(3, '0') + 'Z';
+      antic = Number.isFinite(ms) && ms <= limit && new Date(ms).toISOString() === canonical;
+    }
+    if (antic) historics.push({ id: typeof torn.id === 'string' ? torn.id : null,
+      actor: typeof torn.actor === 'string' ? torn.actor : null, createdAt: data, state: 'closed', rebuts: 0 });
+    else actuals.push(torn);
+  }
+  historics.sort((a, b) => a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : (a.id ?? '') < (b.id ?? '') ? -1 : (a.id ?? '') > (b.id ?? '') ? 1 : 0);
+  return { actuals, historic: { decisio: 'MAPA-07-03', campTemporal: 'createdAt', fronteraInclusiva: FRONTERA_PRE_REBUT,
+    total: historics.length, torns: historics, totalTornsIncloentHistorics: torns.length } };
+}
+
 export function recullMapa(arrel = arrelSegura(), opcions = {}) {
   const ara = opcions.ara ?? Date.now();
   const fonts = opcions.fonts ?? recullFonts(arrel, { ...opcions, ara });
@@ -525,7 +552,9 @@ export function recullMapa(arrel = arrelSegura(), opcions = {}) {
     return fs.existsSync(abs);
   };
   for (const l of fonts.llancadors) delete l.scriptAbsolut;
-  return construeixMapa(fonts, { existeix, ara });
+  const particio = particionaTornsPreRebut(fonts.torns);
+  return { ...construeixMapa({ ...fonts, torns: particio.actuals }, { existeix, ara }),
+    tornsHistoricsPreRebut: particio.historic };
 }
 
 function main() {

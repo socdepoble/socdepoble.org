@@ -34,6 +34,7 @@ import {
   PLANTILLA_CORREU_PER_DEFECTE, TIPUS_EML, adrecaValida, construeixEml, fitxersPerCompartir,
   nomEsborrany, ompliPlantilla, potCompartirFitxers, urlRedaccioGmail, valorsCorreu
 } from './correuGestoria.js';
+import { tg } from '../i18nGestoria.js';
 import { copiaAdjunts, empremtaAdjunts, mateixosAdjunts, potCalcularEmpremta } from './revisioAdjunts.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
@@ -114,7 +115,7 @@ function senseError(errors, camp) {
 export default function EnviamentGestoria({
   any, t, adjunts, plantilla = PLANTILLA_CORREU_PER_DEFECTE,
   obri = obriPerDefecte, descarrega = descarregaPerDefecte, navegador = globalThis.navigator,
-  subtle = globalThis.crypto?.subtle, inicials = {}, compteGmail = null, nivellTitol = 2
+  subtle = globalThis.crypto?.subtle, inicials = {}, compteGmail = null, nivellTitol = 2, idioma = 'ca'
 }) {
   const nivell = nivellDe(nivellTitol);
   const Titol = `h${nivell}`;
@@ -312,7 +313,7 @@ export default function EnviamentGestoria({
 
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-enviament" aria-labelledby={idTitol}>
-      <Titol id={idTitol}>Prepara el correu per a la gestoria</Titol>
+      <Titol id={idTitol}>{tg(idioma, 'Prepara el correu per a la gestoria')}</Titol>
       <p>
         {trimestre ? `Full del ${trimestre}. ` : ''}
         Ací només es prepara l&apos;esborrany: l&apos;envies tu des del teu correu, després de revisar-lo.
@@ -324,29 +325,29 @@ export default function EnviamentGestoria({
       </Alerta>
       {derivat.error ? <Alerta to="error">{derivat.error}</Alerta> : null}
       {!llistaAdjunts.length ? (
-        <Alerta to="avis" viva={false}>Encara no hi ha cap full per adjuntar.</Alerta>
+        <Alerta to="avis" viva={false}>{tg(idioma, 'Encara no hi ha cap full per adjuntar.')}</Alerta>
       ) : null}
 
       <form ref={formulari} className="sdp-gestoria-enviament__formulari" noValidate onSubmit={(event) => event.preventDefault()}>
-        <Camp etiqueta="Destinatari" ajuda="L'adreça de correu de la gestoria." error={errors.per} obligatori>
+        <Camp etiqueta={tg(idioma, 'Destinatari')} ajuda={tg(idioma, "L'adreça de correu de la gestoria.")} error={errors.per} obligatori>
           <CampText tipus="email" name="per" value={per} onChange={canvia('per', setPer)}
             autoComplete="off" inputMode="email" spellCheck={false} />
         </Camp>
-        <Camp etiqueta="Nom per a l'assumpte" ajuda="Com et coneix la gestoria: el teu nom o el de l'empresa."
+        <Camp etiqueta={tg(idioma, "Nom per a l'assumpte")} ajuda={tg(idioma, "Com et coneix la gestoria: el teu nom o el de l'empresa.")}
           error={errors.nom} obligatori={nomCal}>
           <CampText name="nom" value={nom} onChange={canvia('nom', setNom)} autoComplete="off" />
         </Camp>
-        <Camp etiqueta="Persona de la gestoria (opcional)" ajuda="El nom per a la salutació. Si el deixes buit, el correu diu només «Hola».">
+        <Camp etiqueta={tg(idioma, 'Persona de la gestoria (opcional)')} ajuda={tg(idioma, 'El nom per a la salutació. Si el deixes buit, el correu diu només «Hola».')}>
           <CampText name="persona" value={persona} onChange={canvia('persona', setPersona)} autoComplete="off" />
         </Camp>
-        <Camp etiqueta="Assumpte" error={errors.assumpte}>
+        <Camp etiqueta={tg(idioma, 'Assumpte')} error={errors.assumpte}>
           <CampText name="assumpte" value={assumpte} onChange={canvia('assumpte', setAssumpteEditat)} autoComplete="off" />
         </Camp>
-        <Camp etiqueta="Text del correu">
+        <Camp etiqueta={tg(idioma, 'Text del correu')}>
           <AreaText name="cos" files={5} value={cos} onChange={canvia('cos', setCosEditat)} />
         </Camp>
         {assumpteEditat !== null || cosEditat !== null ? (
-          <Boto varietat="fantasma" onClick={restaura}>Torna a la plantilla</Boto>
+          <Boto varietat="fantasma" onClick={restaura}>{tg(idioma, 'Torna a la plantilla')}</Boto>
         ) : null}
         {avisos.length ? (
           <Alerta to="avis" titol="La plantilla té marcadors sense valor">
@@ -357,13 +358,13 @@ export default function EnviamentGestoria({
         ) : null}
 
         <section className="sdp-gestoria-enviament__vista" aria-labelledby={idVista}>
-          <Subtitol id={idVista}>Vista prèvia</Subtitol>
+          <Subtitol id={idVista}>{tg(idioma, 'Vista prèvia')}</Subtitol>
           <dl className="sdp-gestoria-enviament__dades">
-            <dt>Per a</dt>
-            <dd>{per.trim() || 'Encara no hi ha destinatari.'}</dd>
-            <dt>Assumpte</dt>
-            <dd>{assumpte.trim() || 'Sense assumpte.'}</dd>
-            <dt>Adjunts</dt>
+            <dt>{tg(idioma, 'Per a')}</dt>
+            <dd>{per.trim() || tg(idioma, 'Encara no hi ha destinatari.')}</dd>
+            <dt>{tg(idioma, 'Assumpte')}</dt>
+            <dd>{assumpte.trim() || tg(idioma, 'Sense assumpte.')}</dd>
+            <dt>{tg(idioma, 'Adjunts')}</dt>
             <dd>
               {llistaAdjunts.length ? (
                 <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-enviament__adjunts">
@@ -371,13 +372,13 @@ export default function EnviamentGestoria({
                     <li ref={adoptaEstilsDiferits} key={`${i}-${adjunt?.nom}`}>{adjunt?.nom} ({midaLlegible(adjunt?.dades)})</li>
                   ))}
                 </ul>
-              ) : 'Cap.'}
+              ) : tg(idioma, 'Cap.')}
             </dd>
           </dl>
           <p className="sdp-gestoria-enviament__cos">{cos}</p>
         </section>
 
-        <Casella name="revisat" etiqueta="He revisat el full i l'adjunt abans d'enviar-lo"
+        <Casella name="revisat" etiqueta={tg(idioma, "He revisat el full i l'adjunt abans d'enviar-lo")}
           checked={marcada} required disabled={!potEmpremta}
           onChange={(event) => marca(event.target.checked)}
           aria-invalid={errors.revisat ? 'true' : undefined}
@@ -394,14 +395,14 @@ export default function EnviamentGestoria({
 
         <ul className="sdp-gestoria-enviament__accions">
           <li className="sdp-gestoria-enviament__opcio">
-            <Boto varietat="primari" onClick={obriGmail} aria-describedby={idAjudaGmail}>Obri la redacció de Gmail</Boto>
+            <Boto varietat="primari" onClick={obriGmail} aria-describedby={idAjudaGmail}>{tg(idioma, 'Obri la redacció de Gmail')}</Boto>
             <p id={idAjudaGmail} className="sdp-gestoria-enviament__ajuda">
               Obri Gmail en una pestanya nova amb el destinatari, l&apos;assumpte i el text. Gmail no admet adjunts
               per l&apos;adreça: el full es descarrega alhora i l&apos;has d&apos;arrossegar a la finestra del correu.
             </p>
           </li>
           <li className="sdp-gestoria-enviament__opcio">
-            <Boto varietat="secundari" onClick={descarregaEml} aria-describedby={idAjudaEml}>Descarrega l&apos;esborrany (.eml)</Boto>
+            <Boto varietat="secundari" onClick={descarregaEml} aria-describedby={idAjudaEml}>{tg(idioma, "Descarrega l'esborrany (.eml)")}</Boto>
             <p id={idAjudaEml} className="sdp-gestoria-enviament__ajuda">
               Un esborrany amb el full ja adjunt, per a obrir-lo amb Mail, Outlook o Thunderbird.
             </p>
@@ -409,7 +410,7 @@ export default function EnviamentGestoria({
           {potCompartir ? (
             <li ref={adoptaEstilsDiferits} className="sdp-gestoria-enviament__opcio">
               <Boto varietat="secundari" onClick={comparteix} carregant={compartint} aria-describedby={idAjudaComparteix}>
-                Comparteix…
+                {tg(idioma, 'Comparteix…')}
               </Boto>
               <p id={idAjudaComparteix} className="sdp-gestoria-enviament__ajuda">
                 El menú de compartir del sistema, amb el full adjunt. El destinatari el tries a l&apos;aplicació.

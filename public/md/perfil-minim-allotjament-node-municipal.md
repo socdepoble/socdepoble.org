@@ -24,18 +24,39 @@
 
 **Lectura** per l'**accés SSH ja configurat** `macmini` (`192.168.0.23`), amb `BatchMode=yes`, `ConnectTimeout=5` i `StrictHostKeyChecking=yes`. **No s'ha modificat cap servei**, **instal·lat cap paquet** ni **llegit cap credencial**. **Comandes executades:** `date -u`, `uname -srm`, `sw_vers`, `sysctl hw.model hw.memsize hw.physicalcpu hw.logicalcpu machdep.cpu.brand_string`, `vm_stat`, `top -l 1 -n 0`, `df -k /`, `df -k /System/Volumes/Data` i `sysctl vm.swapusage`.
 
-| Mesura | Resultat observat | Tall UTC |
-| --- | --- | --- |
-| Maquinari | Mac16,10, Apple M4, arm64, 10 nuclis físics i lògics | 2026-11-03T15:23:43Z |
-| RAM física | 25.769.803.776 bytes = 24 GiB | 2026-11-03T15:23:43Z |
-| Sistema | macOS 27.2, build 26B123; Darwin 27.2.0 | 2026-11-03T15:23:43Z |
-| CPU, una instantània de tot l'amfitrió | 1,11 % usuari, 10,00 % sistema, 88,88 % inactiva | 2026-11-03T15:23:43Z |
-| Càrrega mitjana a 1, 5 i 15 minuts | 1,14 / 1,19 / 1,43 | 2026-11-03T15:23:43Z |
-| Memòria de tot l'amfitrió, eixida de `top` | 23G ocupada, amb 1950M wired i 278M de compressor; 668M lliures | 2026-11-03T15:23:43Z |
-| Intercanvi de memòria | `vm.swapusage`: total, ocupada i lliure 0,00M | 2026-11-03T15:24:45Z |
-| Volum APFS de dades | 482.797.652 KiB totals; 99.964.356 KiB ocupats (95,33 GiB); 358.070.968 KiB disponibles compartits (341,48 GiB); 22 % segons `df` | 2026-11-03T15:24:45Z |
+#### Maquinari
 
-`vm_stat` declara pàgines de 16.384 bytes: 679.909 actives, 673.898 inactives, 124.774 wired, 17.801 ocupades pel compressor i 36.257 lliures. Les unitats `G` i `M` de la fila de `top` es conserven com les va imprimir l'eina. La memòria ocupada inclou macOS, altres processos i memòria cau: **no és la RAM que necessita el servei de Sóc de Poble**. CPU i càrrega són una instantània de la màquina, no una prova de concurrència ni un mínim d'allotjament. En APFS els volums compartixen espai; les xifres de `/` i `/System/Volumes/Data` no se sumen.
+**Resultat observat:** `Mac16,10`, **Apple M4**, `arm64`, **10 nuclis físics i lògics** · **Tall UTC:** `2026-11-03T15:23:43Z`.
+
+#### RAM física
+
+**Resultat observat:** `25.769.803.776 bytes` = **24 GiB** · **Tall UTC:** `2026-11-03T15:23:43Z`.
+
+#### Sistema operatiu
+
+**Resultat observat:** **macOS 27.2**, build `26B123`; **Darwin 27.2.0** · **Tall UTC:** `2026-11-03T15:23:43Z`.
+
+#### CPU, una instantània de tot l'amfitrió
+
+**Resultat observat:** **1,11 % usuari**, **10,00 % sistema** i **88,88 % inactiva** · **Tall UTC:** `2026-11-03T15:23:43Z`.
+
+#### Càrrega mitjana a 1, 5 i 15 minuts
+
+**Resultat observat:** `1,14 / 1,19 / 1,43` · **Tall UTC:** `2026-11-03T15:23:43Z`.
+
+#### Memòria de tot l'amfitrió, eixida de `top`
+
+**Resultat observat:** **23G ocupada**, amb `1950M` *wired* i `278M` de compressor; **668M lliures** · **Tall UTC:** `2026-11-03T15:23:43Z`.
+
+#### Intercanvi de memòria
+
+**Resultat observat:** `vm.swapusage` amb total, ocupada i lliure a **0,00M** · **Tall UTC:** `2026-11-03T15:24:45Z`.
+
+#### Volum APFS de dades
+
+**Resultat observat:** `482.797.652 KiB` totals; `99.964.356 KiB` ocupats (**95,33 GiB**); `358.070.968 KiB` disponibles compartits (**341,48 GiB**); **22 %** segons `df` · **Tall UTC:** `2026-11-03T15:24:45Z`.
+
+`vm_stat` declara **pàgines de 16.384 bytes**: 679.909 actives, 673.898 inactives, 124.774 wired, 17.801 ocupades pel compressor i 36.257 lliures. Les unitats `G` i `M` de la fila de `top` es conserven com les va imprimir l'eina. La memòria ocupada inclou **macOS, altres processos i memòria cau**: **no és la RAM que necessita el servei de Sóc de Poble**. CPU i càrrega són una **instantània de la màquina**, no una **prova de concurrència** ni un mínim d'allotjament. En APFS els volums compartixen espai; les xifres de `/` i `/System/Volumes/Data` **no se sumen**.
 
 **Encara no mesurat:** **consum elèctric en watts o kWh** i **mida real de la base de dades de producció**. En este carril no s'ha disposat d'una **sessió SQL no interactiva ja establerta** amb què consultar-la; **no s'han llegit `.env`**, desbloquejat el clauer ni iniciat sessions noves. **No hi ha Nix**, `nix-instantiate` ni `nix-store` en el PATH consultat del Mac de treball ni del Node 0. Docker existix al Mac de treball, però el seu **daemon no està disponible**; **no s'ha arrancat**.
 
@@ -70,15 +91,33 @@ El recompte de **1.021 fitxers publicables** coincidix amb el **desplegament a F
 
 ### 2.1 Recursos principals comprimits
 
-| Recurs | Cru | gzip -9 | Brotli 11 |
-| --- | --- | --- | --- |
-| `index.html` | 5.536 | 2.102 | 1.795 |
-| `fonts/noto-sans.css` | 2.170 | 1.012 | 947 |
-| `assets/index-BoNloTr2.js` (entrada) | 1.461.491 | 404.555 | 331.412 |
-| Closca inicial (les tres) | 1.469.197 | 407.669 | 334.154 |
-| Tot el JavaScript | 6.825.336 | 2.203.425 | 1.905.389 |
-| `assets/wikiManifest-C60Infyk.js` | 577.927 | 199.642 | 163.777 |
-| `assets/DocumentEditor-CX-ooyxg.js` | 499.021 | 161.233 | 137.271 |
+#### `index.html`
+
+**Cru:** `5.536 B` · **gzip -9:** `2.102 B` · **Brotli 11:** `1.795 B`.
+
+#### `fonts/noto-sans.css`
+
+**Cru:** `2.170 B` · **gzip -9:** `1.012 B` · **Brotli 11:** `947 B`.
+
+#### `assets/index-BoNloTr2.js` (entrada)
+
+**Cru:** `1.461.491 B` · **gzip -9:** `404.555 B` · **Brotli 11:** `331.412 B`.
+
+#### Closca inicial (les tres peces)
+
+**Cru:** `1.469.197 B` · **gzip -9:** `407.669 B` · **Brotli 11:** `334.154 B`.
+
+#### Tot el JavaScript
+
+**Cru:** `6.825.336 B` · **gzip -9:** `2.203.425 B` · **Brotli 11:** `1.905.389 B`.
+
+#### `assets/wikiManifest-C60Infyk.js`
+
+**Cru:** `577.927 B` · **gzip -9:** `199.642 B` · **Brotli 11:** `163.777 B`.
+
+#### `assets/DocumentEditor-CX-ooyxg.js`
+
+**Cru:** `499.021 B` · **gzip -9:** `161.233 B` · **Brotli 11:** `137.271 B`.
 
 Les xifres són en bytes. La closca inicial és el que `index.html` referencia directament; la resta de mòduls es carreguen quan s'obri cada secció.
 
@@ -124,11 +163,19 @@ El node en **mode `remote`** necessita un **projecte Supabase** amb les **migrac
 - **Funcions, tall actual del 2026-11-03:** cinc entrades `index.ts` a `supabase/functions/`: `compte-apple`, `noticies`, `purga-fitxers`, `ap-inbox-verifica` i `notifica-xat`; més el codi compartit de `_shared`. És un inventari de fonts, no de funcions desplegades. `purga-fitxers` llig la clau de servei i `SDP_CRON_SECRET` de l'entorn de la funció (`Deno.env`); `compte-apple` llig la clau de servei, els cinc secrets d'Apple (els identificadors d'equip, de clau i de client, la clau privada i la clau dels testimonis; els noms exactes són al codi de la funció, perquè el client web no els ha de nomenar mai) i `SDP_CRON_SECRET`.
 - **No mesurat:** la mida de la base de dades de producció. Cal consultar-la al projecte abans de fixar el disc d'un node gran.
 
-| Bucket | Públic | Límit per fitxer (bytes) | Tipus admesos |
-| --- | --- | --- | --- |
-| `mitjans` | sí | 5.242.880 | WebP, JPEG, PNG i AVIF |
-| `mitjans_privats` | no | 25.242.880 | WebP, JPEG, PNG, AVIF i PDF |
-| `xat_adjunts` | no | 20.000.000 | WebP, JPEG, MP4, WebM, QuickTime, àudio WebM, MP4 i Ogg, i `application/octet-stream` per als adjunts xifrats (E2EE) |
+### Buckets de Storage configurats
+
+#### Bucket `mitjans`
+
+**Públic:** **sí** · **Límit per fitxer:** `5.242.880 bytes` · **Tipus admesos:** **WebP**, **JPEG**, **PNG** i **AVIF**.
+
+#### Bucket `mitjans_privats`
+
+**Públic:** **no** · **Límit per fitxer:** `25.242.880 bytes` · **Tipus admesos:** **WebP**, **JPEG**, **PNG**, **AVIF** i **PDF**.
+
+#### Bucket `xat_adjunts`
+
+**Públic:** **no** · **Límit per fitxer:** `20.000.000 bytes` · **Tipus admesos:** **WebP**, **JPEG**, **MP4**, **WebM**, **QuickTime**, **àudio WebM**, **MP4** i **Ogg**, més `application/octet-stream` per als **adjunts xifrats (E2EE)**.
 
 ### 4.1 Administració multipoble · assaig SQL local del 2026-11-03
 
@@ -155,30 +202,57 @@ La prova de l'instal·lador genera la federació del node de Xixona des de la c�
 
 ## 7. Preus oficials consultats
 
-Totes les pàgines es van consultar el 2026-11-01. Cap mostrava data d'actualització dels preus. Les xifres són tal com les publiquen, sense impostos.
+Totes les pàgines es van consultar el **2026-11-01**. Cap mostrava data d'actualització dels preus. Les xifres són tal com les publiquen, **sense impostos**.
 
-| Servei | Xifra | Font |
-| --- | --- | --- |
-| Supabase Free | 500 MB de base de dades, 1 GB de fitxers, 5 GB d'eixida, 50.000 usuaris actius al mes, pausa després d'una setmana d'inactivitat, 2 projectes actius | [supabase.com/pricing](https://supabase.com/pricing) |
-| Supabase Pro | des de 25 $ al mes per projecte: 8 GB de disc, 100 GB de fitxers, 250 GB d'eixida, 100.000 usuaris actius al mes i 10 $ de còmput que cobrixen una instància Micro (1 GB de RAM) | [supabase.com/pricing](https://supabase.com/pricing) |
-| Supabase Pro, excés | 0,125 $/GB de disc, 0,09 $/GB d'eixida, 0,0213 $/GB de fitxers | [supabase.com/pricing](https://supabase.com/pricing) |
-| Firebase Hosting | sense cost fins a 10 GB d'emmagatzematge i 360 MB al dia de transferència; en el pla Blaze, després 0,026 $/GB i 0,15 $/GB; domini propi i SSL en els dos plans | [firebase.google.com/pricing](https://firebase.google.com/pricing) |
-| Hetzner CX23 | 2 vCPU, 4 GB, 40 GB NVMe, 20 TB de trànsit, 5,99 € al mes (Nuremberg i Hèlsinki) | [hetzner.com/cloud/cost-optimized](https://www.hetzner.com/cloud/cost-optimized) |
-| Hetzner CX33 | 4 vCPU, 8 GB, 80 GB NVMe, 20 TB de trànsit, 8,99 € al mes | [hetzner.com/cloud/cost-optimized](https://www.hetzner.com/cloud/cost-optimized) |
-| Hetzner CPX02 | 1 vCPU, 1 GB, 20 GB NVMe, 20 TB de trànsit, 6,49 € al mes | [hetzner.com/cloud/regular-performance](https://www.hetzner.com/cloud/regular-performance) |
-| Hetzner CPX32 | 4 vCPU, 8 GB, 160 GB NVMe, 20 TB de trànsit, 35,99 € al mes | [hetzner.com/cloud/regular-performance](https://www.hetzner.com/cloud/regular-performance) |
+### Supabase Free
+
+Oferix **500 MB de base de dades**, **1 GB de fitxers**, **5 GB d'eixida**, **50.000 usuaris actius al mes**, pausa després d'una setmana d'inactivitat i **2 projectes actius** (font: [supabase.com/pricing](https://supabase.com/pricing)).
+
+### Supabase Pro
+
+Partix de **25 USD al mes per projecte**: **8 GB de disc**, **100 GB de fitxers**, **250 GB d'eixida**, **100.000 usuaris actius al mes** i **10 USD de còmput** que cobrixen una instància Micro (**1 GB de RAM**) (font: [supabase.com/pricing](https://supabase.com/pricing)).
+
+### Supabase Pro, excés
+
+Tarifica a **0,125 USD/GB de disc**, **0,09 USD/GB d'eixida** i **0,0213 USD/GB de fitxers** (font: [supabase.com/pricing](https://supabase.com/pricing)).
+
+### Firebase Hosting
+
+Funciona **sense cost** fins a **10 GB d'emmagatzematge** i **360 MB al dia de transferència**; en el pla Blaze, després costa **0,026 USD/GB** i **0,15 USD/GB**, amb **domini propi i SSL** en els dos plans (font: [firebase.google.com/pricing](https://firebase.google.com/pricing)).
+
+### Hetzner CX23
+
+Inclou **2 vCPU**, **4 GB de RAM**, **40 GB NVMe** i **20 TB de trànsit** per **5,99 € al mes** a Nuremberg i Hèlsinki (font: [hetzner.com/cloud/cost-optimized](https://www.hetzner.com/cloud/cost-optimized)).
+
+### Hetzner CX33
+
+Inclou **4 vCPU**, **8 GB de RAM**, **80 GB NVMe** i **20 TB de trànsit** per **8,99 € al mes** (font: [hetzner.com/cloud/cost-optimized](https://www.hetzner.com/cloud/cost-optimized)).
+
+### Hetzner CPX02
+
+Inclou **1 vCPU**, **1 GB de RAM**, **20 GB NVMe** i **20 TB de trànsit** per **6,49 € al mes** (font: [hetzner.com/cloud/regular-performance](https://www.hetzner.com/cloud/regular-performance)).
+
+### Hetzner CPX32
+
+Inclou **4 vCPU**, **8 GB de RAM**, **160 GB NVMe** i **20 TB de trànsit** per **35,99 € al mes** (font: [hetzner.com/cloud/regular-performance](https://www.hetzner.com/cloud/regular-performance)).
 
 Les dos pàgines de Hetzner mostraven el 2026-11-01 l'avís «This product is currently unavailable» a cada pla.
 
 ## 8. Tres escenaris de cost mensual
 
-Supòsit comú, no mesurat: una visita nova transferix uns 2 MB. La closca comprimida (334.154 bytes) i les fonts (95.756 bytes) sumen 0,43 MB; la resta són imatges i mòduls de secció, i una WebP de `dist/` fa 175.752 bytes de mitjana.
+Supòsit comú, no mesurat: una visita nova transferix uns **2 MB**. La closca comprimida (`334.154 bytes`) i les fonts (`95.756 bytes`) sumen **0,43 MB**; la resta són imatges i mòduls de secció, i una WebP de `dist/` fa `175.752 bytes` de mitjana.
 
-| Escenari | Peces | Cost mensual | Quota o límit |
-| --- | --- | --- | --- |
-| A. Demostració estàtica (`seed`) | Firebase Hosting sense cost | 0 € | 360 MB al dia: unes 180 visites noves diàries |
-| B. Node gestionat (`remote`) | Supabase Pro i Firebase Hosting Blaze | 25 $ amb 3.000 visites al mes (6 GB, dins dels 360 MB diaris); 27,88 $ amb 15.000 (30 GB, 19,2 GB × 0,15 $) | 8 GB de disc i 250 GB d'eixida de Supabase |
-| C. Node autoallotjat (`remote`) | Supabase amb Docker i nginx a Hetzner | 5,99 € amb el mínim de Supabase (CX23) o 8,99 € amb el recomanat (CX33), plans marcats com a no disponibles el 2026-11-01 (secció 7) | 20 TB de trànsit; còpies de seguretat i administració a part |
+### A · Demostració estàtica (`seed`)
+
+**Peces:** **Firebase Hosting sense cost** · **Cost mensual:** **0 €** · **Quota o límit:** **360 MB al dia** (unes **180 visites noves diàries**).
+
+### B · Node gestionat (`remote`)
+
+**Peces:** Supabase Pro i Firebase Hosting Blaze · **Cost mensual:** **25 USD** amb `3.000` visites al mes (`6 GB`, dins dels `360 MB` diaris) o **27,88 USD** amb `15.000` visites (`30 GB`, `19,2 GB × 0,15 USD`) · **Quota o límit:** **8 GB de disc** i **250 GB d'eixida** de Supabase.
+
+### C · Node autoallotjat (`remote`)
+
+**Peces:** **Supabase amb Docker** i **nginx a Hetzner** · **Cost mensual:** **5,99 €** amb el mínim de Supabase (`CX23`) o **8,99 €** amb el recomanat (`CX33`), plans marcats com a no disponibles el `2026-11-01` (secció 7) · **Quota o límit:** **20 TB de trànsit**, amb còpies de seguretat i administració a part.
 
 - **Fora dels tres escenaris:** el domini, l'IVA, les còpies de seguretat, el correu per als enllaços d'accés i les hores d'administració.
 - **Supabase Free:** no servix per a un node en producció, perquè el projecte es pausa després d'una setmana sense activitat.

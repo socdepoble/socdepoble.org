@@ -13997,4 +13997,18 @@ details[open] summary.accordion-header svg:last-child {
       }
     }
   }
+
+  /* Onada R32.14 · T3-UI-01 · Les categories fulla i subtítols de categoria
+     del catàleg d'una micro-app (.sdp-app-unica .sdp-cataleg-workspace, ex.
+     «Ingredients i espècies» del Rebost) alliberen l'espaiador buit de
+     subcarpeta i admeten salt de línia net en qualsevol amplària (320 px–1280 px),
+     sense alterar l'extracte d'una línia de les seccions documentals (Wiki). */
+  .sdp-app-unica .sdp-cataleg-workspace .sdp-workspace-folder-row > .sdp-workspace-folder-toggle-spacer {
+    display: none;
+  }
+
+  .sdp-app-unica .sdp-cataleg-workspace .sdp-workspace-folder-row .sdp-workspace-nav-item__label,
+  .sdp-app-unica .sdp-cataleg-workspace .sdp-cataleg-workspace__canonica .sdp-gestor-fitxa__subtitol {
+    white-space: normal;
+  }
 }

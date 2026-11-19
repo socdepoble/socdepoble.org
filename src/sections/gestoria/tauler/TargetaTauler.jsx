@@ -40,6 +40,7 @@ import {
   Building2, Calculator, Eye, EyeOff, Hourglass, Landmark, Link2, Percent, Receipt, Scale, TrendingDown, TrendingUp, Wallet
 } from 'lucide-react';
 import { UniversalCard } from '../../../components/PedraSeca/organismes/UniversalCard.jsx';
+import { tg, tf } from '../i18nGestoria.js';
 import { etiquetaXifra, textAmagat, textXifra } from './nucli/targetesTauler.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
@@ -75,11 +76,11 @@ export const AVISOS_ACCIONS_PRIVADES = Object.freeze({
  * @param {((text: string) => void)|null} onAvis
  * @returns {object} les props per a PaginaApp
  */
-export function barraPrivada(onAvis) {
+export function barraPrivada(onAvis, idioma = 'ca') {
   if (typeof onAvis !== 'function') return { showComment: false, showShare: false, showConnect: false };
   return {
     accionsInoperatives: true,
-    onClickInoperatiu: (accio) => onAvis(AVISOS_ACCIONS_PRIVADES[accio] ?? AVISOS_ACCIONS_PRIVADES.compartir)
+    onClickInoperatiu: (accio) => onAvis(tg(idioma, AVISOS_ACCIONS_PRIVADES[accio] ?? AVISOS_ACCIONS_PRIVADES.compartir))
   };
 }
 
@@ -90,11 +91,11 @@ export function barraPrivada(onAvis) {
  * @param {((text: string) => void)|null} onAvis
  * @returns {object} les props per a UniversalCard
  */
-export function peuPrivat(onAvis) {
+export function peuPrivat(onAvis, idioma = 'ca') {
   if (typeof onAvis !== 'function') return { showShare: false, showComment: false };
   return {
-    onComment: () => onAvis(AVISOS_ACCIONS_PRIVADES.comentar),
-    onShare: () => onAvis(AVISOS_ACCIONS_PRIVADES.compartir)
+    onComment: () => onAvis(tg(idioma, AVISOS_ACCIONS_PRIVADES.comentar)),
+    onShare: () => onAvis(tg(idioma, AVISOS_ACCIONS_PRIVADES.compartir))
   };
 }
 
@@ -102,23 +103,24 @@ export function peuPrivat(onAvis) {
  * L'ull de privacitat: un sol control per boina, amb aria-pressed (premut =
  * les xifres es veuen). El nom no canvia: el que canvia és l'estat.
  */
-export function UllPrivacitat({ visible = false, onCommuta, etiqueta = 'Mostra les xifres' }) {
+export function UllPrivacitat({ visible = false, onCommuta, etiqueta = 'Mostra les xifres', idioma = 'ca' }) {
   const Icona = visible ? Eye : EyeOff;
+  const etiquetaLoc = tg(idioma, etiqueta);
   return (
     <button ref={adoptaEstilsDiferits} type="button" className="sdp-gestoria-ull" aria-pressed={visible ? 'true' : 'false'}
-      aria-label={etiqueta} title={etiqueta} onClick={onCommuta}>
+      aria-label={etiquetaLoc} title={etiquetaLoc} onClick={onCommuta}>
       <Icona size={20} aria-hidden="true" focusable="false" />
     </button>
   );
 }
 
 /* El quadrat: la xifra mostrada, la xifra amagada o, sense xifra, la icona. */
-function quadratDe(targeta, mostra) {
+function quadratDe(targeta, mostra, idioma = 'ca') {
   if (targeta.xifra && mostra) {
     return { type: 'price', value: textXifra(targeta.xifra), label: `${targeta.titol}: ${etiquetaXifra(targeta.xifra)}` };
   }
   if (targeta.xifra) {
-    const amagat = textAmagat(targeta.xifra);
+    const amagat = tg(idioma, textAmagat(targeta.xifra));
     return {
       type: 'custom',
       label: amagat,
@@ -145,7 +147,7 @@ function quadratDe(targeta, mostra) {
  * @param {boolean} [p.ambAccionsPrivades] el peu porta Comentar i Compartir, que només avisen (ordre del Mestre,
  *   14-10-2026, punt 5); sense, apagats com sempre
  */
-export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicial = false, onObri, onAvis, ambAccionsPrivades = false }) {
+export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicial = false, onObri, onAvis, ambAccionsPrivades = false, idioma = 'ca' }) {
   const [visible, setVisible] = useState(visibleInicial === true);
   const ambXifra = Boolean(targeta.xifra);
   const obri = () => onObri?.(targeta.id);
@@ -158,10 +160,10 @@ export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicia
       imatgePrivada
       onDateTime={false}
       headerAction={ambXifra ? (
-        <UllPrivacitat visible={visible} etiqueta={`Mostra la xifra de ${targeta.titol}`}
+        <UllPrivacitat visible={visible} etiqueta={tf(idioma, 'mostraXifraDe', targeta.titol)} idioma={idioma}
           onCommuta={() => setVisible((abans) => !abans)} />
       ) : null}
-      squareBadge={quadratDe(targeta, visible)}
+      squareBadge={quadratDe(targeta, visible, idioma)}
       title={targeta.titol}
       subtitle={targeta.subtitol}
       body={(
@@ -173,8 +175,8 @@ export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicia
       labels={targeta.etiquetes}
       onMainClick={obri}
       hasFooter
-      {...peuPrivat(ambAccionsPrivades === true ? onAvis : null)}
-      onTranslate={() => onAvis?.(AVIS_XIFRES_SENSE_TRADUCCIO)}
+      {...peuPrivat(ambAccionsPrivades === true ? onAvis : null, idioma)}
+      onTranslate={() => onAvis?.(tg(idioma, AVIS_XIFRES_SENSE_TRADUCCIO))}
       onConnect={obri}
       telemetria={SENSE_TELEMETRIA}
     />

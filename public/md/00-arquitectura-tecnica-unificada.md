@@ -42,19 +42,43 @@ Contractes de localització del codi:
 
 ## 2. Estat de les tecnologies descentralitzades
 
-La descentralització, el P2P i la resiliència rural formen part de la història i de la visió de [[el_projecte]], però no de l'arquitectura vigent. L'ADR-2026-08 va retirar la pila offline; el que en queda és recerca.
+La **descentralització**, el **P2P** i la **resiliència rural** formen part de la història i de la visió de [[el_projecte]], però **no de l'arquitectura vigent**. L'`ADR-2026-08` va retirar la pila offline; el que en queda és **recerca**.
 
-| Capacitat | Estat en esta baseline | Condició per reobrir-la |
-|---|---|---|
-| Sincronització offline general amb Dexie | Retirada per l'ADR-2026-08 (l'IndexedDB d'apps del dispositiu i cofre local seguix [[ADR-2026-10-APPS-DEL-DISPOSITIU]] i [[ADR-2026-13-BYOP-XIFRAT-LOCAL]]) | ADR nova que substituïsca l'online-first |
-| Supabase amb fallback local (mode híbrid) | Retirat; Supabase és l'única font de veritat | ADR nova que substituïsca l'online-first |
-| PWA offline amb Workbox | Retirada per l'ADR-2026-08; l'app-shell instal·lable actual (`public/sw.js` i `manifest.webmanifest`) seguix [[ADR-2026-10-APPS-DEL-DISPOSITIU]] | ADR nova que substituïsca l'online-first |
-| Y.js o un altre CRDT | Recerca; cap garantia de reconciliació | ADR, prototip, proves de convergència i límits de GC |
-| WebRTC/P2P remot | Recerca | Signaling, identitat, xifratge, NAT i proves multi-dispositiu |
-| OPFS | Recerca | Cas d'ús online-first, compatibilitat Safari 16 i migració |
-| PowerSync | Recerca; no és dependència actual | ADR i integració demostrable |
-| LoRa/Meshtastic, drons o satèl·lit | Recerca | Prototip físic, pressupost, legalitat i model d'amenaça |
-| Xifrat homomòrfic o postquàntic | Recerca | Cas d'ús, revisió criptogràfica i implementació auditada |
+### Sincronització offline general amb Dexie
+
+**Estat en esta baseline:** **Retirada per l'`ADR-2026-08`** (l'`IndexedDB` d'apps del dispositiu i cofre local seguix [[ADR-2026-10-APPS-DEL-DISPOSITIU]] i [[ADR-2026-13-BYOP-XIFRAT-LOCAL]]). **Condició per reobrir-la:** **ADR nova** que substituïsca l'online-first.
+
+### Supabase amb fallback local (mode híbrid)
+
+**Estat en esta baseline:** **Retirat**; **Supabase** és l'**única font de veritat** de les dades compartides. **Condició per reobrir-la:** **ADR nova** que substituïsca l'online-first.
+
+### PWA offline amb Workbox
+
+**Estat en esta baseline:** **Retirada per l'`ADR-2026-08`**; l'**app-shell instal·lable** actual (`public/sw.js` i `manifest.webmanifest`) seguix [[ADR-2026-10-APPS-DEL-DISPOSITIU]]. **Condició per reobrir-la:** **ADR nova** que substituïsca l'online-first.
+
+### Y.js o un altre CRDT
+
+**Estat en esta baseline:** **Recerca**, sense **cap garantia de reconciliació** operativa. **Condició per reobrir-la:** **ADR**, prototip, **proves de convergència** i límits de **GC**.
+
+### WebRTC / P2P remot
+
+**Estat en esta baseline:** **Recerca**. **Condició per reobrir-la:** servidor de **signaling**, **identitat**, **xifratge**, travessa de **NAT** i **proves multi-dispositiu**.
+
+### OPFS
+
+**Estat en esta baseline:** **Recerca**. **Condició per reobrir-la:** **cas d'ús online-first** definit, **compatibilitat amb Safari 16** i pla de **migració**.
+
+### PowerSync
+
+**Estat en esta baseline:** **Recerca**; **no és dependència actual** del projecte. **Condició per reobrir-la:** **ADR** aprovada i **integració demostrable**.
+
+### LoRa / Meshtastic, drons o satèl·lit
+
+**Estat en esta baseline:** **Recerca**. **Condició per reobrir-la:** **prototip físic**, **pressupost**, marc de **legalitat** i **model d'amenaça**.
+
+### Xifrat homomòrfic o postquàntic
+
+**Estat en esta baseline:** **Recerca**. **Condició per reobrir-la:** **cas d'ús** justificat, **revisió criptogràfica** independent i **implementació auditada**.
 
 No existeixen en esta baseline `MassiveFusionEngine`, `sync-wiki-crdt.js`, `dron_link_protocol.js` ni una malla Y.js operativa. Els noms històrics poden orientar un experiment, però no són API, control de seguretat ni criteri d'acceptació.
 

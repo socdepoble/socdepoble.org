@@ -20,21 +20,13 @@ import { DialegConfirmacio } from '../../../components/PedraSeca/organismes/Dial
 import { BARALLA_GESTORIA } from './baralla.js';
 import { CAIXES_PER_DEFECTE, ZONA_HORARIA, estatInicial, pendents, proximRepas, reconcilia, respon } from './leitner.js';
 import { creaMagatzemProgres, magatzemProgres } from './magatzemProgres.js';
+import { barallaGestoria, diaLlegibleGestoria, tf, tg } from '../i18nGestoria.js';
 
 const FASES = ['Concepte', 'Imatge per recordar', 'Record sense pista', 'Explicació de la resposta', 'Repàs programat'];
 const FASE = { concepte: 0, imatge: 1, record: 2, explicacio: 3, programat: 4 };
 const ULTIMA_CAIXA = CAIXES_PER_DEFECTE.length - 1;
 const araPerDefecte = () => new Date();
 const enMs = valor => (valor instanceof Date ? valor.getTime() : valor);
-
-let formatDia = null;
-function diaLlegible(ms) {
-  formatDia ||= new Intl.DateTimeFormat('ca-ES', { timeZone: ZONA_HORARIA, weekday: 'long', day: 'numeric', month: 'long' });
-  return formatDia.format(ms);
-}
-
-const durada = dies => (dies === 0 ? 'hui mateix' : dies === 1 ? '1 dia' : `${dies} dies`);
-const INTERVALS = CAIXES_PER_DEFECTE.map((dies, caixa) => `caixa ${caixa}: ${durada(dies)}`).join(' · ');
 
 /* Una targeta en repàs (caixa ≥ 1) no torna a ensenyar el concepte. */
 const faseInicial = estat => (estat?.caixa > 0 ? FASE.record : FASE.concepte);
@@ -45,12 +37,17 @@ function novaSessio(llista, baralla, ara) {
   return { estats, cua, fase: faseInicial(estats[cua[0]]) };
 }
 
-function etiquetaCaixa(estat) {
+function etiquetaCaixa(estat, idioma) {
   const caixa = estat?.caixa > 0 ? estat.caixa : 0;
-  return `Caixa ${caixa} de ${ULTIMA_CAIXA}${estat?.dueAt == null ? ' · nova' : ''}`;
+  return tf(idioma, 'etiquetaCaixa', caixa, ULTIMA_CAIXA, estat?.dueAt == null);
 }
 
-export default function Aprendre({ baralla = BARALLA_GESTORIA, magatzem, ara = araPerDefecte }) {
+export default function Aprendre({ baralla: barallaProp = BARALLA_GESTORIA, magatzem, ara = araPerDefecte, idioma = 'ca' }) {
+  const baralla = useMemo(() => barallaGestoria(barallaProp, idioma), [barallaProp, idioma]);
+  const intervals = useMemo(
+    () => CAIXES_PER_DEFECTE.map((dies, caixa) => tf(idioma, 'intervalCaixa', caixa, dies)).join(' · '),
+    [idioma]
+  );
   const desti = useMemo(
     () => (magatzem === null ? creaMagatzemProgres({ idb: null }) : magatzem || magatzemProgres()),
     [magatzem]
@@ -163,46 +160,43 @@ export default function Aprendre({ baralla = BARALLA_GESTORIA, magatzem, ara = a
     <section aria-labelledby={idTitol}>
       <h2 id={idTitol}>{baralla.titol}</h2>
       <Alerta to="info" viva={false}>{baralla.avis}</Alerta>
-      <p>
-        Repàs per caixes de Leitner: cada targeta viu en una caixa. Si la recordes, puja a la següent i tarda més
-        a tornar; si no, torna a la caixa 0 i la repasses hui mateix. Intervals: {INTERVALS}.
-      </p>
-      {avis ? <Alerta to="avis">{avis}</Alerta> : null}
-      <p role="status">{missatge}</p>
+      <p>{tf(idioma, 'leitnerIntro', intervals)}</p>
+      {avis ? <Alerta to="avis">{tg(idioma, avis)}</Alerta> : null}
+      <p role="status">{tg(idioma, missatge)}</p>
 
-      {!llesta ? <p>Carregant el teu progrés…</p> : (
+      {!llesta ? <p>{tg(idioma, 'Carregant el teu progrés…')}</p> : (
         <>
-          <p>Pendents hui: <strong>{cua.length}</strong></p>
+          <p>{tf(idioma, 'pendentsHui')} <strong>{cua.length}</strong></p>
 
           {actual ? (
-            <article aria-label={`Targeta: ${actual.titol}`}>
+            <article aria-label={tf(idioma, 'targetaAria', actual.titol)}>
               <p>
-                <strong>{actual.titol}</strong> <Insignia to="neutre">{etiquetaCaixa(estatActual)}</Insignia>
+                <strong>{actual.titol}</strong> <Insignia to="neutre">{etiquetaCaixa(estatActual, idioma)}</Insignia>
               </p>
-              <p>Fase {fase + 1} de {FASES.length}</p>
-              <h3 ref={titolFase} tabIndex={-1}>{FASES[fase]}</h3>
+              <p>{tf(idioma, 'faseDe', fase + 1, FASES.length)}</p>
+              <h3 ref={titolFase} tabIndex={-1}>{tg(idioma, FASES[fase])}</h3>
 
               {fase === FASE.concepte ? (
                 <>
                   <p>{actual.concepte}</p>
-                  <Boto varietat="primari" onClick={() => vesA(FASE.imatge)}>Mostra la imatge</Boto>
+                  <Boto varietat="primari" onClick={() => vesA(FASE.imatge)}>{tg(idioma, 'Mostra la imatge')}</Boto>
                 </>
               ) : null}
 
               {fase === FASE.imatge ? (
                 <>
                   <p>{actual.concepte}</p>
-                  <p><strong>Per a recordar-ho:</strong> {actual.mnemotecnia}</p>
-                  <Boto varietat="primari" onClick={() => vesA(FASE.record)}>Següent</Boto>
+                  <p><strong>{tg(idioma, 'Per a recordar-ho:')}</strong> {actual.mnemotecnia}</p>
+                  <Boto varietat="primari" onClick={() => vesA(FASE.record)}>{tg(idioma, 'Següent')}</Boto>
                 </>
               ) : null}
 
               {fase === FASE.record ? (
                 <>
-                  <p>Sense mirar res, intenta recordar la resposta.</p>
+                  <p>{tg(idioma, 'Sense mirar res, intenta recordar la resposta.')}</p>
                   <p><strong>{actual.pregunta}</strong></p>
-                  <Boto varietat="primari" onClick={() => contesta(true)}>Ho recorde</Boto>
-                  <Boto varietat="secundari" onClick={() => contesta(false)}>No ho recorde</Boto>
+                  <Boto varietat="primari" onClick={() => contesta(true)}>{tg(idioma, 'Ho recorde')}</Boto>
+                  <Boto varietat="secundari" onClick={() => contesta(false)}>{tg(idioma, 'No ho recorde')}</Boto>
                 </>
               ) : null}
 
@@ -211,16 +205,16 @@ export default function Aprendre({ baralla = BARALLA_GESTORIA, magatzem, ara = a
                   <p><strong>{actual.pregunta}</strong></p>
                   <p>
                     <Insignia to={verdicte ? 'exit' : 'avis'}>
-                      {verdicte ? 'Has dit que ho recordaves' : 'Has dit que no ho recordaves'}
+                      {tg(idioma, verdicte ? 'Has dit que ho recordaves' : 'Has dit que no ho recordaves')}
                     </Insignia>
                   </p>
-                  <p><strong>Resposta:</strong> {actual.resposta}</p>
+                  <p><strong>{tg(idioma, 'Resposta:')}</strong> {actual.resposta}</p>
                   <p>{actual.explicacio}</p>
-                  <p>Si la resposta no és la que pensaves, corregix-ho abans de continuar.</p>
+                  <p>{tg(idioma, 'Si la resposta no és la que pensaves, corregix-ho abans de continuar.')}</p>
                   <Boto varietat="fantasma" onClick={() => setVerdicte(valor => !valor)}>
-                    {verdicte ? 'Corregix: no ho recordava' : 'Corregix: sí que ho recordava'}
+                    {tg(idioma, verdicte ? 'Corregix: no ho recordava' : 'Corregix: sí que ho recordava')}
                   </Boto>
-                  <Boto varietat="primari" onClick={programa}>Següent</Boto>
+                  <Boto varietat="primari" onClick={programa}>{tg(idioma, 'Següent')}</Boto>
                 </>
               ) : null}
 
@@ -228,42 +222,42 @@ export default function Aprendre({ baralla = BARALLA_GESTORIA, magatzem, ara = a
                 <>
                   <p>
                     <Insignia to={verdicte ? 'exit' : 'avis'}>
-                      {!verdicte ? 'Torna a la caixa 0'
-                        : programat.caixaAbans >= ULTIMA_CAIXA ? `Es queda a la caixa ${ULTIMA_CAIXA}, la més alta`
-                          : `Puja a la caixa ${programat.estat.caixa}`}
+                      {!verdicte ? tg(idioma, 'Torna a la caixa 0')
+                        : programat.caixaAbans >= ULTIMA_CAIXA ? tf(idioma, 'esQuedaCaixaAlta', ULTIMA_CAIXA)
+                          : tf(idioma, 'pujaCaixa', programat.estat.caixa)}
                     </Insignia>
                   </p>
                   <p>
                     {tornaHui
-                      ? 'Torna a eixir en este mateix repàs, al final de la cua.'
-                      : `Tornarà a eixir el ${diaLlegible(programat.estat.dueAt)}.`}
+                      ? tg(idioma, 'Torna a eixir en este mateix repàs, al final de la cua.')
+                      : tf(idioma, 'tornaraEl', diaLlegibleGestoria(programat.estat.dueAt, idioma, ZONA_HORARIA))}
                   </p>
                   <Boto varietat="primari" onClick={seguentTargeta}>
-                    {quedaran > 0 ? 'Següent targeta' : 'Acaba el repàs'}
+                    {tg(idioma, quedaran > 0 ? 'Següent targeta' : 'Acaba el repàs')}
                   </Boto>
                 </>
               ) : null}
             </article>
           ) : (
             <>
-              <h3 ref={titolFase} tabIndex={-1}>Repàs fet per hui</h3>
+              <h3 ref={titolFase} tabIndex={-1}>{tg(idioma, 'Repàs fet per hui')}</h3>
               <p>
                 {proxim === null
-                  ? 'No hi ha cap repàs programat.'
-                  : `Pròxim repàs: ${diaLlegible(proxim)}.`}
+                  ? tg(idioma, 'No hi ha cap repàs programat.')
+                  : tf(idioma, 'proximRepas', diaLlegibleGestoria(proxim, idioma, ZONA_HORARIA))}
               </p>
             </>
           )}
 
           <details>
-            <summary>Caixa de cada targeta</summary>
+            <summary>{tg(idioma, 'Caixa de cada targeta')}</summary>
             <ul>
               {baralla.targetes.map(targeta => {
                 const estat = estats[targeta.id];
                 return (
                   <li key={targeta.id}>
-                    {targeta.titol}: {etiquetaCaixa(estat)}
-                    {estat?.dueAt != null ? ` · torna el ${diaLlegible(estat.dueAt)}` : ''}
+                    {targeta.titol}: {etiquetaCaixa(estat, idioma)}
+                    {estat?.dueAt != null ? tf(idioma, 'tornaEl', diaLlegibleGestoria(estat.dueAt, idioma, ZONA_HORARIA)) : ''}
                   </li>
                 );
               })}
@@ -271,11 +265,11 @@ export default function Aprendre({ baralla = BARALLA_GESTORIA, magatzem, ara = a
           </details>
 
           <p>
-            {desti.persistent
+            {tg(idioma, desti.persistent
               ? 'El progrés es guarda només en este dispositiu, sense dades personals.'
-              : 'El progrés només dura esta sessió: no es guarda enlloc.'}
+              : 'El progrés només dura esta sessió: no es guarda enlloc.')}
           </p>
-          <Boto varietat="secundari" onClick={() => setConfirma(true)}>Oblida el meu progrés</Boto>
+          <Boto varietat="secundari" onClick={() => setConfirma(true)}>{tg(idioma, 'Oblida el meu progrés')}</Boto>
         </>
       )}
 
@@ -283,9 +277,9 @@ export default function Aprendre({ baralla = BARALLA_GESTORIA, magatzem, ara = a
         obert={confirma}
         destructiu
         carregant={oblidant}
-        titol="Vols oblidar el teu progrés?"
-        descripcio="S’esborraran les caixes i les dates de repàs d’esta baralla en este dispositiu. Les targetes no canvien."
-        etiquetaConfirma="Sí, oblida’l"
+        titol={tg(idioma, 'Vols oblidar el teu progrés?')}
+        descripcio={tg(idioma, 'S’esborraran les caixes i les dates de repàs d’esta baralla en este dispositiu. Les targetes no canvien.')}
+        etiquetaConfirma={tg(idioma, 'Sí, oblida’l')}
         onTanca={() => { if (!oblidant) setConfirma(false); }}
         onConfirma={oblida}
       />

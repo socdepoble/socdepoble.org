@@ -1029,3 +1029,115 @@ export function textosBuitNevera(idioma) {
 export function textosVistaNevera(idioma) {
   return TEXTOS_VISTA_NEVERA[codiIdiomaNevera(idioma)];
 }
+
+export const TEXTOS_CASA_NEVERA = Object.freeze({
+  ca: Object.freeze({ 'hi-ha': 'N’hi ha', 'se-n-acaba': 'Se n’acaba', acabat: 'S’ha acabat' }),
+  es: Object.freeze({ 'hi-ha': 'Hay', 'se-n-acaba': 'Se está acabando', acabat: 'Se ha acabado' }),
+  en: Object.freeze({ 'hi-ha': 'In stock', 'se-n-acaba': 'Running low', acabat: 'Out of stock' }),
+  eu: Object.freeze({ 'hi-ha': 'Badago', 'se-n-acaba': 'Amaitzen ari da', acabat: 'Amaitu da' }),
+  gl: Object.freeze({ 'hi-ha': 'Hai', 'se-n-acaba': 'Está acabándose', acabat: 'Acabouse' }),
+});
+
+export const TEXTOS_CATEGORIES_NEVERA = Object.freeze({
+  ca: Object.freeze({
+    'fruita-verdura': 'Fruita i verdura',
+    'pa-pastissos': 'Pa i pastissos',
+    'llet-formatge': 'Llet i formatge',
+    'carn-peix': 'Carn i peix',
+    'ingredients-especies': 'Ingredients i espècies',
+    congelats: 'Congelats',
+    'cereals-pasta': 'Cereals i pasta',
+    'picar-dolcos': 'Picar i dolços',
+    begudes: 'Begudes',
+    llar: 'Casa',
+    'higiene-salut': 'Higiene i salut',
+    mascotes: 'Mascotes',
+    jardi: 'Jardí',
+    propis: 'Articles propis',
+  }),
+  es: Object.freeze({
+    'fruita-verdura': 'Fruta y verdura',
+    'pa-pastissos': 'Pan y bollería',
+    'llet-formatge': 'Leche y queso',
+    'carn-peix': 'Carne y pescado',
+    'ingredients-especies': 'Ingredientes y especias',
+    congelats: 'Congelados',
+    'cereals-pasta': 'Cereales y pasta',
+    'picar-dolcos': 'Picoteo y dulces',
+    begudes: 'Bebidas',
+    llar: 'Hogar',
+    'higiene-salut': 'Higiene y salud',
+    mascotes: 'Mascotas',
+    jardi: 'Jardín',
+    propis: 'Artículos propios',
+  }),
+  en: Object.freeze({
+    'fruita-verdura': 'Fruit & vegetables',
+    'pa-pastissos': 'Bread & pastries',
+    'llet-formatge': 'Milk & cheese',
+    'carn-peix': 'Meat & fish',
+    'ingredients-especies': 'Pantry & spices',
+    congelats: 'Frozen',
+    'cereals-pasta': 'Grains & pasta',
+    'picar-dolcos': 'Snacks & sweets',
+    begudes: 'Drinks',
+    llar: 'Household',
+    'higiene-salut': 'Health & hygiene',
+    mascotes: 'Pets',
+    jardi: 'Garden',
+    propis: 'Custom items',
+  }),
+  eu: Object.freeze({
+    'fruita-verdura': 'Fruta eta barazkiak',
+    'pa-pastissos': 'Ogia eta opilak',
+    'llet-formatge': 'Esnea eta gazta',
+    'carn-peix': 'Haragia eta arraina',
+    'ingredients-especies': 'Osagaiak eta espeziak',
+    congelats: 'Izoztuak',
+    'cereals-pasta': 'Zerealak eta pasta',
+    'picar-dolcos': 'Mokaduak eta gozoak',
+    begudes: 'Edariak',
+    llar: 'Etxea',
+    'higiene-salut': 'Higienea eta osasuna',
+    mascotes: 'Maskotak',
+    jardi: 'Lorategia',
+    propis: 'Artikulu propioak',
+  }),
+  gl: Object.freeze({
+    'fruita-verdura': 'Froita e verdura',
+    'pa-pastissos': 'Pan e pastelaría',
+    'llet-formatge': 'Leite e queixo',
+    'carn-peix': 'Carne e peixe',
+    'ingredients-especies': 'Ingredientes e especias',
+    congelats: 'Conxelados',
+    'cereals-pasta': 'Cereais e pasta',
+    'picar-dolcos': 'Petiscos e doces',
+    begudes: 'Bebidas',
+    llar: 'Fogar',
+    'higiene-salut': 'Hixiene e saúde',
+    mascotes: 'Mascotas',
+    jardi: 'Xardín',
+    propis: 'Artigos propios',
+  }),
+});
+
+export const TEXTOS_ENTRADETA_NEVERA = Object.freeze({
+  ca: Object.freeze({ propi: 'Article propi', botiga: 'Producte de botiga', base: 'Article de base del catàleg' }),
+  es: Object.freeze({ propi: 'Artículo propio', botiga: 'Producto de tienda', base: 'Artículo base del catálogo' }),
+  en: Object.freeze({ propi: 'Custom item', botiga: 'Store product', base: 'Base catalogue item' }),
+  eu: Object.freeze({ propi: 'Artikulu propioa', botiga: 'Dendako produktua', base: 'Katalogoko oinarrizko artikulua' }),
+  gl: Object.freeze({ propi: 'Artigo propio', botiga: 'Produto de tenda', base: 'Artigo base do catálogo' }),
+});
+
+export function textosCasaNevera(idioma) {
+  return TEXTOS_CASA_NEVERA[codiIdiomaNevera(idioma)];
+}
+
+export function nomCategoriaNevera(categoriaId, idioma) {
+  const mapa = TEXTOS_CATEGORIES_NEVERA[codiIdiomaNevera(idioma)];
+  return Object.hasOwn(mapa, categoriaId ?? '') ? mapa[categoriaId] : undefined;
+}
+
+export function textosEntradetaNevera(idioma) {
+  return TEXTOS_ENTRADETA_NEVERA[codiIdiomaNevera(idioma)];
+}

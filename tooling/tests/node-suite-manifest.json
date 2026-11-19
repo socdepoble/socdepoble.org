@@ -267,7 +267,12 @@
     "tests/membres-i-seguiments-concurrents-postgres.test.mjs",
     "tests/r3213-pf03-lssi-postgres.test.mjs",
     "tests/r3213-anti-factura-egress.test.mjs",
-    "tooling/tests/mapa-redireccions-r32_13-301.test.mjs"
+    "tooling/tests/mapa-redireccions-r32_13-301.test.mjs",
+    "tests/r3214-bundle-xat-postgres.test.mjs",
+    "tooling/tests/mapa-redireccions-r32_14-301.test.mjs",
+    "tooling/gates/__tests__/tellado-cataleg-r32_14.test.mjs",
+    "tests/r3215-lssi-repetida-postgres.test.mjs",
+    "tests/r3215-mapa0703.test.mjs"
   ],
   "files": [
     {
@@ -2360,6 +2365,31 @@
       "path": "tooling/wiki/wiki-forja-lint.test.mjs",
       "suite": "primary",
       "reason": "IDEA-130 (kit r79, integrat per K3 a l'Onada R10) · wiki-forja-lint de només lectura sobre una Wiki sintètica temporal: wiki-sync per fitxers, ## Vincles, rutes src/ inexistents o fora de l'arrel, etiquetes skill-forge sense llegir 90_arxiu_historic, i cap --diff que comence per «-» arriba a git (executor injectat, cap git real)."
+    },
+    {
+      "path": "tests/r3214-bundle-xat-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.14 PostgreSQL18.6 native/PGlite mandatory: idempotent production bundle and actor-private inbox."
+    },
+    {
+      "path": "tooling/tests/mapa-redireccions-r32_14-301.test.mjs",
+      "suite": "primary",
+      "reason": "R32.14 exact URI indexing collision and shuffled benchmark regression."
+    },
+    {
+      "path": "tooling/gates/__tests__/tellado-cataleg-r32_14.test.mjs",
+      "suite": "primary",
+      "reason": "R32.14 all 36 dynamic signatures catalog obligations and hostile mutants."
+    },
+    {
+      "path": "tests/r3215-lssi-repetida-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.15 P2 LSSI: registra_denuncia_diligent respecta el rebut de denuncia_publicacio_mur (repetida i ampliació append-only) en PostgreSQL 18.6 natiu i PGlite; pegat idempotent amb guardes de deriva; cap SQL remot."
+    },
+    {
+      "path": "tests/r3215-mapa0703.test.mjs",
+      "suite": "primary",
+      "reason": "R32.15 MAPA-07-03 (lot_01 de Codex): torns pre-rebut <= 2026-11-14 segregats per createdAt; dates noves, absents o invàlides continuen bloquejant."
     }
   ]
 }

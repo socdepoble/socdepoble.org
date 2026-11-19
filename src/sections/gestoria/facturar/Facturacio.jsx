@@ -43,6 +43,7 @@ import { FormulariFactura } from './FormulariFactura.jsx';
 import { LlibreFactures } from './LlibreFactures.jsx';
 import { estatDeLaCadena } from './nucli/formulari.js';
 import { textosFacturacio } from './nucli/textosFacturacio.js';
+import { localitzaEstatCadenaGestoria, tg } from '../i18nGestoria.js';
 import { PasLlegat } from './PasLlegat.jsx';
 import { PasPerfil } from './PasPerfil.jsx';
 import { Pas } from './peces.jsx';
@@ -78,13 +79,13 @@ export default function Facturacio({ idioma = 'ca', ...props }) {
   if (f.fase === 'error') {
     return (
       <Alerta to="error" titol={tx.errorTitol}>
-        <p ref={adoptaEstilsDiferits}>{f.error?.message ?? tx.errorDefecte}</p>
+        <p ref={adoptaEstilsDiferits}>{tg(idioma, f.error?.message ?? tx.errorDefecte)}</p>
         <p>{tx.errorPrivada}</p>
       </Alerta>
     );
   }
 
-  const cadena = estatDeLaCadena(f.informe);
+  const cadena = localitzaEstatCadenaGestoria(estatDeLaCadena(f.informe), idioma);
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell">
       <div className="sdp-gestoria-panell__barra">
@@ -100,21 +101,22 @@ export default function Facturacio({ idioma = 'ca', ...props }) {
       </details>
       <AvisPersistencia f={f} tx={tx} />
       <ol className="sdp-gestoria-panell__passos">
-        <Pas numero={1} titol={tx.pas1} estat={f.config ? 'fet' : 'actiu'}>
-          <PasPerfil f={f} />
+        <Pas numero={1} titol={tx.pas1} estat={f.config ? 'fet' : 'actiu'} idioma={idioma}>
+          <PasPerfil f={f} idioma={idioma} />
         </Pas>
-        <Pas numero={2} titol={tx.pas2} estat={f.llegat ? 'fet' : f.config ? 'actiu' : 'bloquejat'}>
-          <PasLlegat f={f} />
+        <Pas numero={2} titol={tx.pas2} estat={f.llegat ? 'fet' : f.config ? 'actiu' : 'bloquejat'} idioma={idioma}>
+          <PasLlegat f={f} idioma={idioma} />
         </Pas>
-        <Pas numero={3} titol={tx.pas3} estat={f.potEmetre ? 'actiu' : 'bloquejat'}
+        <Pas numero={3} titol={tx.pas3} estat={f.potEmetre ? 'actiu' : 'bloquejat'} idioma={idioma}
           insignia={f.bloquejatPerCadena ? { to: 'error', text: tx.aturada } : null}>
-          <FormulariFactura f={f} />
+          <FormulariFactura f={f} idioma={idioma} />
         </Pas>
-        <Pas numero={4} titol={tx.pas4} estat={f.informe?.valida ? 'fet' : 'actiu'} insignia={{ to: cadena.to, text: cadena.insignia }}>
-          <LlibreFactures f={f} tx={tx} />
+        <Pas numero={4} titol={tx.pas4} estat={f.informe?.valida ? 'fet' : 'actiu'} idioma={idioma}
+          insignia={{ to: cadena.to, text: cadena.insignia }}>
+          <LlibreFactures f={f} tx={tx} idioma={idioma} />
         </Pas>
-        <Pas numero={5} titol={tx.pas5} estat="actiu" insignia={insigniaDeLaCopia(f)}>
-          <CopiaLlibre f={f} />
+        <Pas numero={5} titol={tx.pas5} estat="actiu" idioma={idioma} insignia={insigniaDeLaCopia(f, idioma)}>
+          <CopiaLlibre f={f} idioma={idioma} />
         </Pas>
       </ol>
     </div>

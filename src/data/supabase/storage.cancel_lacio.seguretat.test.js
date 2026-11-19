@@ -7,6 +7,7 @@ vi.mock('../identitat.js', () => ({ usuariDeSessio: () => ({ id: m.uid }), captu
 import { deleteFile, resolveAsset, uploadToStorage } from './storage.js';
 import { observaReconciliacioStorage, controlStorageDe } from './controlStorage.js';
 import { tempsLimitPujada } from '../xatMultimedia.js';
+import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 const UID = '11111111-1111-4111-8111-111111111111', TENANT = '22222222-2222-4222-8222-222222222222';
 const CONFIG = { tenantId: TENANT };
 let desconnecta, avisa, observats;
@@ -19,9 +20,10 @@ beforeEach(() => {
 });
 afterEach(() => { desconnecta(); avisa.mockRestore(); vi.useRealTimers(); });
 test('una pujada amb UUID confirmada després de cancel·lar es compensa i no torna cap URL a la vista', async () => {
-  let resol; m.puja.mockImplementation(()=>new Promise(r=>{resol=r;})); const ac=new AbortController();
-  const feina=uploadToStorage(new Blob(['a'],{type:'image/webp'}),{carpeta:'avatars'},{...CONFIG,signal:ac.signal});
-  const rebuig=expect(feina).rejects.toBeInstanceOf(Error);await vi.advanceTimersByTimeAsync(0);ac.abort();await rebuig;
+  let resol, arranca; const iniciada = new Promise(r => { arranca = r; });
+  m.puja.mockImplementation(()=>new Promise(r=>{resol=r;arranca();})); const ac=new AbortController();
+  const feina=uploadToStorage(new Blob([WEBP_NET],{type:'image/webp'}),{carpeta:'avatars'},{...CONFIG,signal:ac.signal});
+  const rebuig=expect(feina).rejects.toBeInstanceOf(Error);await iniciada;ac.abort();await rebuig;
   resol({data:{path:'no-es-publica'},error:null});await vi.advanceTimersByTimeAsync(0);
   expect(m.esborra).toHaveBeenCalledExactlyOnceWith([m.puja.mock.calls[0][0]]);
   expect(observats).toEqual([{tipus:'pujada',estat:'compensat'}]);expect(controlStorageDe(m.client.storage).estat().enVol).toBe(0);
@@ -40,7 +42,7 @@ test('esborrat tardà: comprova l’estat actual i invalida el resultat antic se
 });
 test('el canvi de sessió no executa compensacions amb credencials de la persona nova', async () => {
   let resol;m.puja.mockImplementation(()=>new Promise(r=>{resol=r;}));const ac=new AbortController();
-  const feina=uploadToStorage(new Blob(['a'],{type:'image/webp'}),{carpeta:'avatars'},{...CONFIG,signal:ac.signal}).catch(e=>e);
+  const feina=uploadToStorage(new Blob([WEBP_NET],{type:'image/webp'}),{carpeta:'avatars'},{...CONFIG,signal:ac.signal}).catch(e=>e);
   await vi.advanceTimersByTimeAsync(0);ac.abort();await feina;m.uid='33333333-3333-4333-8333-333333333333';resol({data:{},error:null});await vi.advanceTimersByTimeAsync(0);
   expect(m.esborra).not.toHaveBeenCalled();expect(observats).toEqual([{tipus:'pujada',estat:'pendent',motiu:'sessio-canviada'}]);
 });
@@ -58,8 +60,8 @@ test('deu esborrats ignorats pel transport no superen quatre peticions físiques
 /* V2-01 · La sonda del verificador (PN-04): cinc pujades sense senyal, com NotesEditor i PerfilContext, amb un transport que no torna. */
 test('cinc pujades sense senyal amb un transport que no torna: totes acaben, i la cinquena per la cua, no per un termini', async () => {
   const resolen=[];m.puja.mockImplementation(()=>new Promise(r=>resolen.push(r)));
-  const ms=tempsLimitPujada(1),estats=Array.from({length:5},()=>({nom:'pendent'}));
-  Array.from({length:5},()=>uploadToStorage(new Blob(['a'],{type:'image/webp'}),{carpeta:'notes'},CONFIG))
+  const ms=tempsLimitPujada(WEBP_NET.length),estats=Array.from({length:5},()=>({nom:'pendent'}));
+  Array.from({length:5},()=>uploadToStorage(new Blob([WEBP_NET],{type:'image/webp'}),{carpeta:'notes'},CONFIG))
     .forEach((p,i)=>p.then(v=>Object.assign(estats[i],{nom:'resolta',v}),v=>Object.assign(estats[i],{nom:'rebutjada',v})));
   await vi.advanceTimersByTimeAsync(ms);
   expect(estats.map(e=>e.nom)).toEqual(['rebutjada','rebutjada','rebutjada','rebutjada','pendent']);
@@ -92,7 +94,7 @@ test('el sostre de quatre transports no es reinicia amb un client nou per renova
 test('una reentrada del mateix uid mentre la pujada espera torn no inicia cap upload', async () => {
   const resolen=[];m.esborra.mockImplementation(()=>new Promise(r=>resolen.push(r)));
   const feines=Array.from({length:4},(_,i)=>deleteFile('mitjans',`${i}.webp`));await vi.advanceTimersByTimeAsync(0);
-  const pujada=uploadToStorage(new Blob(['a'],{type:'image/webp'}),{carpeta:'avatars'},CONFIG).catch(e=>e);
+  const pujada=uploadToStorage(new Blob([WEBP_NET],{type:'image/webp'}),{carpeta:'avatars'},CONFIG).catch(e=>e);
   await vi.advanceTimersByTimeAsync(0);m.generacio++;
   resolen.forEach(r=>r({data:[],error:null}));await Promise.all(feines);await vi.advanceTimersByTimeAsync(0);
   expect(await pujada).toBeInstanceOf(Error);expect(m.puja).not.toHaveBeenCalled();

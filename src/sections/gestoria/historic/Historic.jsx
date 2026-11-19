@@ -78,7 +78,8 @@ import PortaCofre from '../cofre/PortaCofre.jsx';
 import { CATEGORIES, PROVEIDORS, TEXT_MOTIUS, categoriaDe, proveidorDe } from '../despeses/nucli/categories.js';
 import { perRevisar } from '../despeses/nucli/serieHistorica.js';
 import { formatData, nomMes } from '../nucli/dates.js';
-import { ETIQUETA_BETA_OBERTA } from '../insigniaBetaOberta.js';
+import { tg, tf, localitzaTargetaGestoria } from '../i18nGestoria.js';
+import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta } from '../insigniaBetaOberta.js';
 import { formatImport } from '../nucli/diners.js';
 import { BlocTargetes, PaginaTargeta, Xifra } from '../tauler/Tauler.jsx';
 import { TRACTOR_HISTORIC } from '../tractors.js';
@@ -151,7 +152,7 @@ export function pastillaDe(ms) {
  * @param {number} ara l'instant d'ara (el rellotge de la pàgina)
  * @returns {{ time: string, date: string|undefined, dateTime: string, etiqueta: string }|null}
  */
-export function pastillaDeLectura(ms, ara) {
+export function pastillaDeLectura(ms, ara, idioma = 'ca') {
   const pastilla = pastillaDe(ms);
   if (!pastilla) return null;
   const avui = pastillaDe(ara);
@@ -160,20 +161,13 @@ export function pastillaDeLectura(ms, ara) {
     time: pastilla.time,
     date: mateixDia ? undefined : pastilla.date,
     dateTime: pastilla.dateTime,
-    etiqueta: `Dades llegides a les ${pastilla.time} del ${pastilla.date}`
+    etiqueta: tf(idioma, 'dadesLlegides', pastilla.time, pastilla.date)
   };
 }
 
-/**
- * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · L'autoria de la
- * boina: el titular de la sessió que passa el pont, enllaçat al seu perfil;
- * sense nom, TITULAR_HISTORIC.
- * @param {{ nom?: string, avatar?: string|null, poble?: string }|null} titular
- * @returns {{ nom: string, poble: string, avatar: string|null, href: string }}
- */
-export function titularDelHistoric(titular) {
+export function titularDelHistoric(titular, idioma = 'ca') {
   const nom = typeof titular?.nom === 'string' ? titular.nom.trim() : '';
-  if (!nom) return TITULAR_HISTORIC;
+  if (!nom) return idioma === 'ca' ? TITULAR_HISTORIC : Object.freeze({ ...TITULAR_HISTORIC, nom: tg(idioma, TITULAR_HISTORIC.nom) });
   return Object.freeze({
     nom,
     poble: typeof titular.poble === 'string' ? titular.poble : '',
@@ -183,15 +177,14 @@ export function titularDelHistoric(titular) {
 }
 
 /* La porta del tractor i el selector dels extractes. */
-function PortaHistoric({ h, onObreTractors, onOblida }) {
-  if (h.porta.carregant) return <Carregant etiqueta="Llegint les aprovacions dels tractors…" />;
+function PortaHistoric({ h, onObreTractors, onOblida, idioma = 'ca' }) {
+  if (h.porta.carregant) return <Carregant etiqueta={tg(idioma, 'Llegint les aprovacions dels tractors…')} />;
   if (!h.aprovat) {
-    const estat = ESTATS_TRACTOR[h.fila?.estat] ?? ESTATS_TRACTOR.pendent;
+    const estat = tg(idioma, ESTATS_TRACTOR[h.fila?.estat] ?? ESTATS_TRACTOR.pendent);
     return (
-      <Alerta to="avis" titol="Cal aprovar el tractor"
-        accions={<AccioAprovacio porta={h.porta} id={TRACTOR_HISTORIC.id} onObreTractors={onObreTractors} />}>
-        {`L’Històric llig els extractes del banc amb el tractor «Gestoria · Històric del banc i despesa en IA», que ${estat}. `}
-        {`Aprova’l amb la teua signatura ${onSAprova()}: sense, cap fitxer es llig i no hi ha cap xifra.`}
+      <Alerta to="avis" titol={tg(idioma, 'Cal aprovar el tractor')}
+        accions={<AccioAprovacio porta={h.porta} id={TRACTOR_HISTORIC.id} onObreTractors={onObreTractors} idioma={idioma} />}>
+        {tf(idioma, 'portaHistoric', estat, onSAprova(idioma))}
         {h.porta.error ? ` ${h.porta.error}` : ''}
       </Alerta>
     );
@@ -199,15 +192,15 @@ function PortaHistoric({ h, onObreTractors, onOblida }) {
   const periode = h.rang ? `del ${dia(h.rang.inici)} al ${dia(h.rang.fi)}` : '';
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__porta">
-      <Camp key={h.generacio} etiqueta="Tria els extractes del banc de tot el període"
+      <Camp key={h.generacio} etiqueta={tg(idioma, 'Tria els extractes del banc de tot el període')}
         ajuda={`Norma 43 o el CSV de moviments, fins a 60 fitxers: l’històric va ${periode}. Res es puja enlloc.`}>
         <CampText tipus="file" multiple accept={ACCEPTA_HISTORIC} disabled={h.llegint}
           onChange={(event) => h.llig(Array.from(event.target.files ?? []))} />
       </Camp>
-      {h.llegint ? <Carregant etiqueta="Llegint i classificant els extractes…" /> : null}
-      {h.error ? <Alerta to="error" titol="No s’han pogut llegir els extractes">{h.error}</Alerta> : null}
+      {h.llegint ? <Carregant etiqueta={tg(idioma, 'Llegint i classificant els extractes…')} /> : null}
+      {h.error ? <Alerta to="error" titol={tg(idioma, 'No s’han pogut llegir els extractes')}>{h.error}</Alerta> : null}
       {h.lectura?.avisos?.length ? (
-        <Alerta to="avis" titol="Hi ha fitxers que no s’han llegit">
+        <Alerta to="avis" titol={tg(idioma, 'Hi ha fitxers que no s’han llegit')}>
           <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__avisos">
             {h.lectura.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
           </ul>
@@ -215,21 +208,21 @@ function PortaHistoric({ h, onObreTractors, onOblida }) {
       ) : null}
       {h.lectura || h.llegint ? (
         <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__accions">
-          {h.potTornarALlegir ? <Boto icona={RotateCcw} onClick={() => h.tornaALlegir()}>Torna a llegir amb les regles</Boto> : null}
-          <Boto varietat="secundari" onClick={onOblida}>Oblida les dades</Boto>
+          {h.potTornarALlegir ? <Boto icona={RotateCcw} onClick={() => h.tornaALlegir()}>{tg(idioma, 'Torna a llegir amb les regles')}</Boto> : null}
+          <Boto varietat="secundari" onClick={onOblida}>{tg(idioma, 'Oblida les dades')}</Boto>
         </div>
       ) : null}
-      <RevocaAprovacio porta={h.porta} id={TRACTOR_HISTORIC.id} />
+      <RevocaAprovacio porta={h.porta} id={TRACTOR_HISTORIC.id} idioma={idioma} />
     </div>
   );
 }
 
 /* Una secció amb el seu títol (h2). */
-function Seccio({ titol, children, ajuda }) {
+function Seccio({ titol, children, ajuda, idioma = 'ca' }) {
   const id = useId();
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__seccio" aria-labelledby={id}>
-      <h2 id={id} className="sdp-gestoria-historic__titol">{titol}</h2>
+      <h2 id={id} className="sdp-gestoria-historic__titol">{tg(idioma, titol)}</h2>
       {ajuda ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">{ajuda}</p> : null}
       {children}
     </section>
@@ -237,26 +230,26 @@ function Seccio({ titol, children, ajuda }) {
 }
 
 /* La taula d'un tipus de tram (mesos, trimestres o anys). */
-function TaulaTrams({ titol, trams, visible }) {
+function TaulaTrams({ titol, trams, visible, idioma = 'ca' }) {
   return (
-    <Taula titol={titol} densa>
+    <Taula titol={tg(idioma, titol)} densa>
       <thead ref={adoptaEstilsDiferits}>
         <tr>
-          <th scope="col">Període</th><th scope="col">Cobertura</th><th scope="col">Entrades</th><th scope="col">Eixides</th>
-          <th scope="col">Net</th><th scope="col">Despesa en IA</th><th scope="col">IA sobre les eixides</th>
+          <th scope="col">{tg(idioma, 'Període')}</th><th scope="col">{tg(idioma, 'Cobertura')}</th><th scope="col">{tg(idioma, 'Entrades')}</th><th scope="col">{tg(idioma, 'Eixides')}</th>
+          <th scope="col">{tg(idioma, 'Net')}</th><th scope="col">{tg(idioma, 'Despesa en IA')}</th><th scope="col">{tg(idioma, 'IA sobre les eixides')}</th>
         </tr>
       </thead>
       <tbody>
         {trams.map((t) => (
           <tr ref={adoptaEstilsDiferits} key={t.clau}>
             <th scope="row">{nomDelTram(t)}</th>
-            <td>{TEXT_COBERTURA[t.cobertura]}</td>
-            <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(t.entrades)} visible={visible} /></td>
-            <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(t.eixides)} visible={visible} /></td>
-            <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(t.net)} visible={visible} /></td>
-            <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(t.ia?.net)} visible={visible} /></td>
+            <td>{tg(idioma, TEXT_COBERTURA[t.cobertura])}</td>
+            <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(t.entrades)} visible={visible} idioma={idioma} /></td>
+            <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(t.eixides)} visible={visible} idioma={idioma} /></td>
+            <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(t.net)} visible={visible} idioma={idioma} /></td>
+            <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(t.ia?.net)} visible={visible} idioma={idioma} /></td>
             <td className="sdp-gestoria-historic__xifra">
-              <Percentatge valor={t.ia && t.eixides > 0 ? Math.round((t.ia.net / t.eixides) * 1000) / 10 : null} visible={visible} />
+              <Percentatge valor={t.ia && t.eixides > 0 ? Math.round((t.ia.net / t.eixides) * 1000) / 10 : null} visible={visible} idioma={idioma} />
             </td>
           </tr>
         ))}
@@ -463,7 +456,7 @@ function SeccioRevisio({ h, visible }) {
 }
 
 /* El llibre per a la gestora: es prepara, s'avisa que ix sense xifrar i se'n mostra l'empremta. */
-function SeccioLlibre({ h, subtle, descarrega, onAnuncia }) {
+function SeccioLlibre({ h, subtle, descarrega, onAnuncia, idioma = 'ca' }) {
   const [llibre, setLlibre] = useState(null);
   const [preparant, setPreparant] = useState(false);
   const [error, setError] = useState('');
@@ -491,13 +484,13 @@ function SeccioLlibre({ h, subtle, descarrega, onAnuncia }) {
     setLlibre(null);
   };
   return (
-    <Seccio titol="El llibre per a la gestora" ajuda="Un XLSX amb set fulles: el resum anual i trimestral, els moviments categoritzats (sense el text dels conceptes), la despesa en IA per mes i proveïdor, les estimacions i els paràmetres amb la seua font.">
+    <Seccio titol="El llibre per a la gestora" idioma={idioma} ajuda="Un XLSX amb set fulles: el resum anual i trimestral, els moviments categoritzats (sense el text dels conceptes), la despesa en IA per mes i proveïdor, les estimacions i els paràmetres amb la seua font.">
       <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__accions">
-        <Boto varietat="primari" icona={FileDown} carregant={preparant} onClick={prepara}>Prepara el llibre (XLSX)</Boto>
+        <Boto varietat="primari" icona={FileDown} carregant={preparant} onClick={prepara}>{tg(idioma, 'Prepara el llibre (XLSX)')}</Boto>
       </div>
       {error ? <Alerta to="error" titol="No s’ha pogut preparar el llibre">{error}</Alerta> : null}
       <DialegConfirmacio obert={Boolean(llibre)} onTanca={() => setLlibre(null)} onConfirma={confirma}
-        titol="Descarregar el llibre sense xifrar?" descripcio={AVIS_SENSE_XIFRAR} etiquetaConfirma="Descarrega’l" etiquetaCancela="Encara no">
+        titol={tg(idioma, 'Descarregar el llibre sense xifrar?')} descripcio={AVIS_SENSE_XIFRAR} etiquetaConfirma={tg(idioma, 'Descarrega’l')} etiquetaCancela={tg(idioma, 'Encara no')}>
         {llibre ? (
           <dl ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__dades">
             <dt>Fitxer</dt><dd>{llibre.nom}</dd>
@@ -510,19 +503,8 @@ function SeccioLlibre({ h, subtle, descarrega, onAnuncia }) {
   );
 }
 
-/**
- * La vista «Històric i IA» SENSE la porta del cofre: la fan servir l'export
- * per defecte (que hi passa la persistència del cofre i la porta) i les
- * proves. `porta(contingut)`, si n'hi ha, embolcalla tot el que va davall
- * del títol (Historic hi posa PortaCofre).
- * @param {{ magatzem?: object, subtle?: SubtleCrypto, tractors?: object[], entorn?: object, rellotge?: () => number,
- *   avui?: object, persistencia?: { llig: Function, desa: Function, subscriu?: Function }, descarrega?: Function,
- *   porta?: (contingut: import('react').ReactNode) => import('react').ReactNode,
- *   titular?: { nom: string, avatar?: string|null, poble?: string }|null }} props
- *   `titular`: el de la sessió, que passa el pont (ordre del Mestre, 13-10-2026, front B); sense, l'estat honest
- */
 export function VistaHistoric({
-  magatzem, subtle, tractors, entorn, rellotge, avui, persistencia, descarrega = descarregaPerDefecte, porta = null, titular: titularPropi = null
+  magatzem, subtle, tractors, entorn, rellotge, avui, persistencia, descarrega = descarregaPerDefecte, porta = null, titular: titularPropi = null, idioma = 'ca'
 }) {
   const navigate = useNavigate();
   const h = useHistoric({ magatzem, subtle, tractors, entorn, rellotge, avui, persistencia });
@@ -543,20 +525,22 @@ export function VistaHistoric({
     refTitol.current?.focus();
   }, [oberta]);
   useEffect(() => {
-    if (!h.llegint && h.lectura && !h.error) setAnunci('Lectura completada.');
-  }, [h.llegint, h.lectura, h.error]);
+    if (!h.llegint && h.lectura && !h.error) setAnunci(tg(idioma, 'Lectura completada.'));
+  }, [h.llegint, h.lectura, h.error, idioma]);
 
-  const targetes = useMemo(() => targetesHistoric({ serie: h.serie, indicadors: h.indicadors, provisio: h.provisio }),
-    [h.serie, h.indicadors, h.provisio]);
+  const targetes = useMemo(
+    () => targetesHistoric({ serie: h.serie, indicadors: h.indicadors, provisio: h.provisio }).map((t) => localitzaTargetaGestoria(t, idioma)),
+    [h.serie, h.indicadors, h.provisio, idioma]
+  );
   const pastilla = pastillaDe(h.llegit);
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): el titular de la sessió i el xip de la lectura. */
-  const titular = titularDelHistoric(titularPropi);
-  const lectura = pastillaDeLectura(h.llegit, typeof rellotge === 'function' ? rellotge() : Date.now());
+  const titular = titularDelHistoric(titularPropi, idioma);
+  const lectura = pastillaDeLectura(h.llegit, typeof rellotge === 'function' ? rellotge() : Date.now(), idioma);
   /* Amb el cofre bloquejat no hi ha cap xifra que mostrar: la boina va sense
      l'ull (i sense xip). El rellotge viu el posa PaginaApp igualment. */
   const boina = h.persistenciaBloquejada ? null : (
     <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina">
-      <UllPrivacitat visible={visible} onCommuta={() => setVisible((abans) => !abans)} etiqueta="Mostra les xifres" />
+      <UllPrivacitat visible={visible} onCommuta={() => setVisible((abans) => !abans)} etiqueta="Mostra les xifres" idioma={idioma} />
       {lectura ? (
         <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina__lectura">
           <DateTimeControl time={lectura.time} date={lectura.date} dateTime={lectura.dateTime} label={lectura.etiqueta} />
@@ -565,7 +549,7 @@ export function VistaHistoric({
     </span>
   );
   const oblida = () => {
-    setAnunci(h.llegint ? 'Lectura cancel·lada. Les dades s’han oblidat.' : 'Les dades s’han oblidat.');
+    setAnunci(tg(idioma, h.llegint ? 'Lectura cancel·lada. Les dades s’han oblidat.' : 'Les dades s’han oblidat.'));
     setVisible(false);
     h.oblida();
   };
@@ -573,56 +557,64 @@ export function VistaHistoric({
     navegat.current = true;
     setOberta(id);
   };
-  const comuns = { titular, pastilla, visible, generacio: h.generacio, onObri: obri, onAvis: setAnunci };
+  const comuns = { titular, pastilla, visible, generacio: h.generacio, onObri: obri, onAvis: setAnunci, idioma };
   const targeta = oberta ? targetes.find((t) => t.id === oberta) ?? null : null;
 
   if (targeta) {
     return (
       <PaginaTargeta targeta={targeta} titular={titular} visible={visible} barActions={boina} rellotge={rellotge}
-        onTorna={() => { navegat.current = true; setOberta(null); }} refTitol={refTitol} />
+        onTorna={() => { navegat.current = true; setOberta(null); }} refTitol={refTitol} idioma={idioma} />
     );
   }
 
   const contingut = (
     <>
-      <PortaHistoric h={h} onObreTractors={() => navigate(CONSULTA_TRACTORS_HISTORIC)} onOblida={oblida} />
+      <PortaHistoric h={h} onObreTractors={() => navigate(CONSULTA_TRACTORS_HISTORIC)} onOblida={oblida} idioma={idioma} />
       {h.errorPersistencia ? <Alerta to="avis" titol="Configuració">{h.errorPersistencia}</Alerta> : null}
       {h.serie ? (
         <>
           {h.serie.avisos.length ? (
-            <Alerta to="info" titol="Notes de la lectura">
+            <Alerta to="info" titol={tg(idioma, 'Notes de la lectura')}>
               <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__avisos">
                 {h.serie.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
               </ul>
             </Alerta>
           ) : null}
-          <BlocTargetes titol="La foto del director financer" targetes={targetes} {...comuns} />
-          <Seccio titol="L’històric" ajuda={h.serie.rang ? `Del ${dia(h.serie.rang.inici)} al ${dia(h.serie.rang.fi)}. Sense extractes, un període no té xifra; si en falta algun dia d’algun compte, és «parcial». Els traspassos entre comptes propis no són ni entrada ni eixida.` : undefined}>
-            <GraficMensual titol="Eixides per mes, sense traspassos" mesos={h.serie.mesos} valorDe={(m) => m.eixides} visible={visible} />
-            <Pestanyes etiqueta="Agrupa l’històric" pestanyes={[
-              { id: 'mes', etiqueta: 'Per mes', contingut: <TaulaTrams titol="L’històric per mes" trams={h.serie.mesos} visible={visible} /> },
-              { id: 'trimestre', etiqueta: 'Per trimestre', contingut: <TaulaTrams titol="L’històric per trimestre" trams={h.serie.trimestres} visible={visible} /> },
-              { id: 'any', etiqueta: 'Per any', contingut: <TaulaTrams titol="L’històric per any" trams={h.serie.anys} visible={visible} /> }
+          <BlocTargetes titol={tg(idioma, 'La foto del director financer')} targetes={targetes} {...comuns} />
+          <Seccio titol="L’històric" idioma={idioma} ajuda={h.serie.rang ? `Del ${dia(h.serie.rang.inici)} al ${dia(h.serie.rang.fi)}. Sense extractes, un període no té xifra; si en falta algun dia d’algun compte, és «parcial». Els traspassos entre comptes propis no són ni entrada ni eixida.` : undefined}>
+            <GraficMensual titol={tg(idioma, 'Eixides per mes, sense traspassos')} mesos={h.serie.mesos} valorDe={(m) => m.eixides} visible={visible} />
+            <Pestanyes etiqueta={tg(idioma, 'Agrupa l’històric')} pestanyes={[
+              { id: 'mes', etiqueta: tg(idioma, 'Per mes'), contingut: <TaulaTrams titol="L’històric per mes" trams={h.serie.mesos} visible={visible} idioma={idioma} /> },
+              { id: 'trimestre', etiqueta: tg(idioma, 'Per trimestre'), contingut: <TaulaTrams titol="L’històric per trimestre" trams={h.serie.trimestres} visible={visible} idioma={idioma} /> },
+              { id: 'any', etiqueta: tg(idioma, 'Per any'), contingut: <TaulaTrams titol="L’històric per any" trams={h.serie.anys} visible={visible} idioma={idioma} /> }
             ]} />
             <TaulaCategories totals={h.serie.totals} visible={visible} />
           </Seccio>
           <SeccioIa serie={h.serie} visible={visible} />
           <SeccioRevisio h={h} visible={visible} />
-          <PanellSimulacio h={h} visible={visible} />
-          <SeccioLlibre h={h} subtle={subtle} descarrega={descarrega} onAnuncia={setAnunci} />
+          <PanellSimulacio h={h} visible={visible} idioma={idioma} />
+          <SeccioLlibre h={h} subtle={subtle} descarrega={descarrega} onAnuncia={setAnunci} idioma={idioma} />
         </>
       ) : h.aprovat && !h.llegint && !h.porta.carregant ? (
-        <EstatBuit icona={FileSearch} titol="Encara no hi ha cap extracte">
-          Tria els extractes del banc de tot el període (un per trimestre i compte, per exemple): l’Històric els unix sense comptar dues vegades els dies repetits.
+        <EstatBuit icona={FileSearch} titol={tg(idioma, 'Encara no hi ha cap extracte')}>
+          {tg(idioma, 'Tria els extractes del banc de tot el període (un per trimestre i compte, per exemple): l’Històric els unix sense comptar dues vegades els dies repetits.')}
         </EstatBuit>
       ) : null}
     </>
   );
 
+  const etiquetesLoc = idioma === 'ca'
+    ? ETIQUETES
+    : [
+      { text: tg(idioma, 'GESTORIA'), className: 'sdp-badge-system' },
+      { text: tg(idioma, 'Històric i IA'), className: 'sdp-badge-category' },
+      etiquetaBetaOberta(idioma)
+    ];
+
   return (
-    <PaginaApp title="Històric i IA" subtitle="El banc des de l’any passat, la despesa en IA i les simulacions"
-      lead="El panell del director financer: tots els extractes de l’1 de gener de l’any passat al final del trimestre passat, classificats en este ordinador."
-      author={titular} barActions={boina} rellotgeViu rellotge={rellotge} labels={ETIQUETES} refTitol={refTitol}
+    <PaginaApp title={tg(idioma, 'Històric i IA')} subtitle={tg(idioma, 'El banc des de l’any passat, la despesa en IA i les simulacions')}
+      lead={tg(idioma, 'El panell del director financer: tots els extractes de l’1 de gener de l’any passat al final del trimestre passat, classificats en este ordinador.')}
+      author={titular} barActions={boina} rellotgeViu rellotge={rellotge} labels={etiquetesLoc} refTitol={refTitol}
       showComment={false} showShare={false} showConnect={false}>
       <p ref={adoptaEstilsDiferits} role="status" aria-live="polite" className="sdp-nomes-lector">{anunci}</p>
       {typeof porta === 'function' ? porta(contingut) : contingut}
@@ -630,23 +622,13 @@ export function VistaHistoric({
   );
 }
 
-/**
- * La vista «Històric i IA» de la ruta: darrere del cofre xifrat. La
- * configuració de la persona viu xifrada a la col·lecció 'historic' de
- * l'únic cofre de l'app; en eixir de la vista, el cofre es bloqueja (la clau
- * i tot el que és desxifrat fora de la memòria).
- * @param {{ cofre?: object, magatzem?: object, subtle?: SubtleCrypto, tractors?: object[], entorn?: object,
- *   rellotge?: () => number, avui?: object, descarrega?: Function, titular?: object|null }} props
- *   `cofre`: per a les proves (creaCofreLocal); sense, el de l'app (cofreDeLaGestoria)
- *   `titular`: el de la sessió, que passa el pont (ordre del Mestre, 13-10-2026, pla 261013_1405, front B)
- */
 export default function Historic({ cofre: cofreDeFora = null, ...props }) {
   const [cofre] = useState(() => cofreDeFora ?? cofreDeLaGestoria());
   const persistencia = useMemo(() => persistenciaDelCofre(cofre, COLLECCIO_HISTORIC), [cofre]);
   useEffect(() => () => cofre.bloqueja('eixida'), [cofre]);
-  const { descarrega, rellotge } = props;
+  const { descarrega, rellotge, idioma = 'ca' } = props;
   const porta = useCallback((contingut) => (
-    <PortaCofre cofre={cofre} descarrega={descarrega} rellotge={rellotge}>{() => contingut}</PortaCofre>
-  ), [cofre, descarrega, rellotge]);
+    <PortaCofre cofre={cofre} descarrega={descarrega} rellotge={rellotge} idioma={idioma}>{() => contingut}</PortaCofre>
+  ), [cofre, descarrega, rellotge, idioma]);
   return <VistaHistoric {...props} persistencia={persistencia} porta={porta} />;
 }

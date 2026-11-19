@@ -291,6 +291,15 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   const { id, fitxer, tipus, duradaMs, respostaA = null } = entrada;
   const ubicacio = normalitzaUbicacioXat(entrada.ubicacio);
   const text = String(entrada.text ?? '').trim() || null;
+  if (fitxer.type !== 'audio/ogg') {
+    const { validaFitxerMedia } = await import('../../utils/validadorContenidorsMedia.js');
+    try { await validaFitxerMedia(fitxer, { signal: config.signal }); }
+    catch (cause) {
+      if (cause?.name === 'AbortError') throw cause;
+      throw errorAdjuntXat(tipus === 'imatge' ? 'foto-codificacio' : 'format', { cause });
+    }
+    comprova();
+  }
   if (tipus === 'imatge') await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal);
   const reserva = primera(await crida('xat_reserva_adjunt', {
     p_id: id, p_fil_id: filId, p_bytes: fitxer.size, p_mime: fitxer.type, p_durada_ms: duradaMs ?? null

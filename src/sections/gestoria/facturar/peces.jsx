@@ -12,6 +12,7 @@ import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+import { tg } from '../i18nGestoria.js';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 const INSIGNIES = Object.freeze({
@@ -24,7 +25,7 @@ const INSIGNIES = Object.freeze({
  * Un pas numerat: una targeta amb el títol (h2), la insígnia del seu estat i el cos.
  * `insignia` ({ to, text }) substituïx la de l'estat quan el pas en diu una altra cosa.
  */
-export function Pas({ numero, titol, estat, insignia = null, children }) {
+export function Pas({ numero, titol, estat, insignia = null, idioma = 'ca', children }) {
   const idTitol = useId();
   const marca = insignia ?? INSIGNIES[estat] ?? INSIGNIES.bloquejat;
   return (
@@ -32,7 +33,7 @@ export function Pas({ numero, titol, estat, insignia = null, children }) {
       <section aria-labelledby={idTitol}>
         <div className="sdp-gestoria-panell__cap">
           <h2 id={idTitol} className="sdp-gestoria-panell__titol">{`${numero}. ${titol}`}</h2>
-          <Insignia to={marca.to}>{marca.text}</Insignia>
+          <Insignia to={marca.to}>{tg(idioma, marca.text)}</Insignia>
         </div>
         <div className="sdp-gestoria-panell__cos">{children}</div>
       </section>

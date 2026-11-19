@@ -14,4 +14,18 @@
  * aprovacioEnProduccio.test.jsx les confronta amb el registre. La Gestoria
  * només parla valencià (les seues pàgines no passen pel traductor).
  */
+import { codiIdiomaGestoria, tg } from './i18nGestoria.js';
+
 export const ETIQUETA_BETA_OBERTA = Object.freeze({ text: 'En proves · Beta oberta', className: 'sdp-insignia-beta-oberta' });
+
+const PER_IDIOMA = Object.freeze({
+  ca: ETIQUETA_BETA_OBERTA,
+  es: Object.freeze({ text: tg('es', 'En proves · Beta oberta'), className: 'sdp-insignia-beta-oberta' }),
+  en: Object.freeze({ text: tg('en', 'En proves · Beta oberta'), className: 'sdp-insignia-beta-oberta' }),
+  eu: Object.freeze({ text: tg('eu', 'En proves · Beta oberta'), className: 'sdp-insignia-beta-oberta' }),
+  gl: Object.freeze({ text: tg('gl', 'En proves · Beta oberta'), className: 'sdp-insignia-beta-oberta' })
+});
+
+export function etiquetaBetaOberta(idioma = 'ca') {
+  return PER_IDIOMA[codiIdiomaGestoria(idioma)] ?? ETIQUETA_BETA_OBERTA;
+}

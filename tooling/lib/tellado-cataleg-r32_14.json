@@ -1,0 +1,667 @@
+{
+  "esquema": "sdp.tellado.cataleg-dinamic.v1",
+  "base": "898fb36ad + R32.13 adaptat S2",
+  "signatures": [
+    {
+      "id": "TELLADO-R3214-01",
+      "categoria": "script-mateix-origen-sri",
+      "fontRevisada": "src/apps/plataforma/carregaModul.js",
+      "sha256": "cb0d1f6af670a0460ddd6b0be39bd505c17d8ec1c253465ed80ec907ccc9f2a0",
+      "linia": 106,
+      "tipus": "SCRIPT_INJECTAT_DINAMIC",
+      "regla": "TELLADO-EXF-01",
+      "embornal": "const script = doc.createElement('script');",
+      "requisits": [
+        "if (url.origin !== location.origin)",
+        "script.setAttribute('integrity', integrity)",
+        "script.setAttribute('crossorigin', 'anonymous')",
+        "const cos = delMateixOrigen(manifest.cos.cami)",
+        "injecta(manifest.id, cos, manifest.cos.integrity)"
+      ],
+      "limit": "La política comprovada és origen de pàgina + SRI. El digest fixa també el flux entre la guarda i el sink; la mera presència de les paraules no certifica un fitxer alterat.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-02",
+      "categoria": "transport-delegat-manifest",
+      "fontRevisada": "src/components/universal/LiniaVersioInstallada.jsx",
+      "sha256": "6fcd248ec94ada080bd5bc473aba8943634dc39e5f4f652139dc02ee3169282d",
+      "linia": 116,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const fetchDelNavegador = (url, opcions) => fetch(url, opcions);",
+      "requisits": [
+        "const fetchDelNavegador = (url, opcions) => fetch(url, opcions)",
+        "const url = urlManifestPublic({ plataforma, origen })",
+        "consultaJsonPublic({ fetchImpl, url })"
+      ],
+      "limit": "El wrapper delega la política a consultaJsonPublic i urlManifestPublic; esta regla no resol la URL ni executa eixos mòduls.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-03",
+      "categoria": "lectura-imatge-publica",
+      "fontRevisada": "src/components/universal/enquadrament/imatgeCanvas.js",
+      "sha256": "cfe14d203f25b3533d223f37976ebf971ee4a7463ab676a62ebb351989f47784",
+      "linia": 45,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(font, peticio);",
+      "requisits": [
+        "const peticio = { mode: 'cors', credentials: 'omit', signal }",
+        "if (!esFontImatgePropia(font)) peticio.referrerPolicy = 'no-referrer'",
+        "return resposta.blob()"
+      ],
+      "limit": "La imatge pot ser externa; es comproven omit/no-referrer, no s'acredita el domini, el consentiment ni la resposta servida.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-04",
+      "categoria": "transport-delegat-frontissa",
+      "fontRevisada": "src/data/adaptadors/noticies/client.js",
+      "sha256": "d16ea855f9798bab86be9060689bd1a6ad47721e0a43fdce0f4310167c732fcc",
+      "linia": 291,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "window.fetch",
+      "embornal": "fetchImpl = (url, init) => globalThis.fetch(url, init),",
+      "requisits": [
+        "fetchImpl = (url, init) => globalThis.fetch(url, init)",
+        "if (typeof cami !==",
+        "origen = new URL(apiOrigin).origin",
+        "allowedOrigins: [origen]",
+        "maxBytes: MAXIM_RESPOSTA"
+      ],
+      "limit": "La Frontissa imposa la política del recurs. apiOrigin és configuració runtime; no és un origen estàtic provat.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-05",
+      "categoria": "transport-delegat-frontissa",
+      "fontRevisada": "src/data/adaptadors/viquipedia/client.js",
+      "sha256": "713e3aac979a89694f2cd6caaefb7fefdc4903e86ff8e724a5bb37a3686d7170",
+      "linia": 151,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "window.fetch",
+      "embornal": "fetchImpl = (url, init) => globalThis.fetch(url, init),",
+      "requisits": [
+        "fetchImpl = (url, init) => globalThis.fetch(url, init)",
+        "allowedOrigins: [apiOrigin]",
+        "referrerPolicy: 'no-referrer'",
+        "path: '/w/api.php'"
+      ],
+      "limit": "La política la fixa creaFrontissa i ORIGENS; la regla identifica el wrapper i les opcions, no una connexió real.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-06",
+      "categoria": "backend-oauth",
+      "fontRevisada": "src/data/oauthRelay.js",
+      "sha256": "f307763520ca6f862de6d0198c67f63f3982c64322a2f4dc94e319c126a7b56e",
+      "linia": 709,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=${EXCHANGE_GRANT}`, {",
+      "requisits": [
+        "const { supabaseUrl, supabaseAnonKey } = config",
+        "backendScope(config)",
+        "attempt.assertCurrent()",
+        "method: 'POST', redirect: 'error'",
+        "code_verifier: verificador"
+      ],
+      "limit": "El backend prové de configuració de sessió; la regla conserva estat i redirect:error, sense afirmar destí estàtic ni absència de secrets OAuth en el cos legítim.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-07",
+      "categoria": "backend-autenticacio",
+      "fontRevisada": "src/data/supabase/auth.js",
+      "sha256": "23fe11071a60274964caf43ec7ebbc303f7b0188a345b1827d31529b1e83a96d",
+      "linia": 55,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {",
+      "requisits": [
+        "getResolvedConfig(config)",
+        "esBackendDeSessio(config)",
+        "redirect: 'error'",
+        "supabaseAnonKey"
+      ],
+      "limit": "Endpoints GoTrue de configuració validada a runtime. Les dades autenticadores continuen anant al backend elegit; no es valida cap servidor remot.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-08",
+      "categoria": "backend-autenticacio",
+      "fontRevisada": "src/data/supabase/auth.js",
+      "sha256": "23fe11071a60274964caf43ec7ebbc303f7b0188a345b1827d31529b1e83a96d",
+      "linia": 576,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(`${supabaseUrl}/auth/v1/health`, {",
+      "requisits": [
+        "getResolvedConfig(config)",
+        "esBackendDeSessio(config)",
+        "redirect: 'error'",
+        "supabaseAnonKey"
+      ],
+      "limit": "Endpoints GoTrue de configuració validada a runtime. Les dades autenticadores continuen anant al backend elegit; no es valida cap servidor remot.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-09",
+      "categoria": "backend-autenticacio",
+      "fontRevisada": "src/data/supabase/auth.js",
+      "sha256": "23fe11071a60274964caf43ec7ebbc303f7b0188a345b1827d31529b1e83a96d",
+      "linia": 1208,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const peticio = fetch(`${supabaseUrl}/auth/v1/logout?scope=${scope}`, {",
+      "requisits": [
+        "getResolvedConfig(config)",
+        "esBackendDeSessio(config)",
+        "redirect: 'error'",
+        "supabaseAnonKey"
+      ],
+      "limit": "Endpoints GoTrue de configuració validada a runtime. Les dades autenticadores continuen anant al backend elegit; no es valida cap servidor remot.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-10",
+      "categoria": "backend-port",
+      "fontRevisada": "src/data/supabase/runtime.js",
+      "sha256": "e69bd7e11dba24ab21e1aa68a283a9bad1b88a2e5c87756eda05563d29490f24",
+      "linia": 86,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const response = await fetch(`${supabaseUrl}${path}`, { method, redirect: 'error', headers: buildHeaders(config, supabaseAnonKey, headers, { anonim }),",
+      "requisits": [
+        "config = normalizeBackendConfig(config)",
+        "validatePublicCredentials(supabaseUrl, supabaseAnonKey)",
+        "method, redirect: 'error'",
+        "headers: buildHeaders(config, supabaseAnonKey, headers",
+        "signal: controller.signal"
+      ],
+      "limit": "El prefix del backend és validat en runtime. El path i method continuen sent paràmetres del port; esta cobertura no els substituïx per una prova de destí.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-11",
+      "categoria": "storage-privat",
+      "fontRevisada": "src/data/supabase/xatMultimedia.js",
+      "sha256": "e78a4315bc05184b583d835198af745132ae32d66745f107df6b7522538cf4e5",
+      "linia": 130,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await esperaAmbSenyal(fetch(`${supabaseUrl}/storage/v1/object/authenticated/${BUCKET}/${ruta}`, {",
+      "requisits": [
+        "getResolvedConfig(config)",
+        "jwtPerBackend(config)",
+        "redirect: 'error'",
+        "comprova()",
+        "Authorization: `Bearer ${jwt}`"
+      ],
+      "limit": "Storage privat de la sessió amb JWT i redirect:error. El catàleg no certifica la RLS remota ni el bucket servit.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-12",
+      "categoria": "storage-privat",
+      "fontRevisada": "src/data/supabase/xatMultimedia.js",
+      "sha256": "e78a4315bc05184b583d835198af745132ae32d66745f107df6b7522538cf4e5",
+      "linia": 243,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": ": await fetch(url, { ...peticio, redirect: 'error' });",
+      "requisits": [
+        "getResolvedConfig(config)",
+        "jwtPerBackend(config)",
+        "redirect: 'error'",
+        "comprova()",
+        "Authorization: `Bearer ${jwt}`"
+      ],
+      "limit": "Storage privat de la sessió amb JWT i redirect:error. El catàleg no certifica la RLS remota ni el bucket servit.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-13",
+      "categoria": "lectura-adjunt-signat",
+      "fontRevisada": "src/data/supabase/xatXifrat.js",
+      "sha256": "3f2bd6e20edbd1e4f0d4b772d8e4e559aeb3d391f69e984c38606d812e8dcd08",
+      "linia": 244,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "try { resposta = await fetch(url, { method: 'GET', redirect: 'error', signal: control.signal }); }",
+      "requisits": [
+        "vigent(usuari, config)",
+        "method: 'GET', redirect: 'error'",
+        "globalThis.window?.addEventListener('sdp:auth-change'",
+        "midaEsperada ?? MAXIM_BLOB_ADJUNT"
+      ],
+      "limit": "URL signada proveïda pel flux d'adjunts, amb límit i sessió. El destí no és deduïble literalment al sink.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-14",
+      "categoria": "telemetria-explicita",
+      "fontRevisada": "src/data/telemetria.js",
+      "sha256": "7239e2b1fa058e598bc18238a3bf73c0bd2fe9d9b0b549e0e1f30599ec2ac898",
+      "linia": 241,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "window.fetch",
+      "embornal": "const promesa = window.fetch(`${config.host}/api/send`, {",
+      "requisits": [
+        "if (telemetriaApagada()) return",
+        "if (encastada()) return",
+        "if (!config.actiu) return",
+        "credentials: 'omit'",
+        "referrerPolicy: 'no-referrer'",
+        "JSON.stringify({ type: 'event', payload })"
+      ],
+      "limit": "Telemetria configurada, amb eixida possible a un tercer. Les guardes es cataloguen; no es declara zero exfiltració ni es resol el host runtime.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-15",
+      "categoria": "transport-traduccio-amfitrio",
+      "fontRevisada": "src/data/traductor.js",
+      "sha256": "c7cf6459db8e0ec0050825506899bd75b66b60bbbad55b9603aec370e2e3bbb5",
+      "linia": 244,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "window.fetch",
+      "embornal": "const fer = (opcions) => (fetchPropi ? fetchPropi(adreca, opcions) : globalThis.fetch(adreca, opcions));",
+      "requisits": [
+        "if (lloc?.origin && adreca.origin !== lloc.origin) return",
+        "const adreca = urlDeServei(url)",
+        "exigixTraduccioPublica(textos,opcions)",
+        "credentials: 'omit'"
+      ],
+      "limit": "La guarda de servei és runtime i la política de contingut la fixa exigixTraduccioPublica. No es comprova el proveïdor del servidor.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-16",
+      "categoria": "transport-traduccio-externa",
+      "fontRevisada": "src/data/traductorLliure.js",
+      "sha256": "9f6495a12d2cf65101cc67639783224467e86a5a9ce855ea18279cdad1c4e836",
+      "linia": 191,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "window.fetch",
+      "embornal": "const fer = (url, opcions) => (fetchPropi ? fetchPropi(url, opcions) : globalThis.fetch(url, opcions));",
+      "requisits": [
+        "globalThis.fetch(url, opcions)",
+        "credentials: 'omit'",
+        "referrerPolicy: 'no-referrer'",
+        "redirect: 'error'",
+        "exigixTraduccioPublica("
+      ],
+      "limit": "Hi ha eixida deliberada de text públic a Apertium/MyMemory. Es cataloga el comportament sense convertir-lo en un destí local o segur per definició.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-17",
+      "categoria": "lectura-adjunt-autoritzat",
+      "fontRevisada": "src/data/xat/creaOpcionsMotorAccions.js",
+      "sha256": "18f60f2fb6fd45a941a5c7fefda4045f86354819b1ddebe9b5459354d4e960fb",
+      "linia": 86,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(url, { signal, credentials: 'omit', redirect: 'error' });",
+      "requisits": [
+        "const url = await urlAdjuntXat(meta.id",
+        "credentials: 'omit', redirect: 'error'",
+        "if (!bytes || bytes > maxim) throw",
+        "MAXIM_ADJUNT_XAT[m.tipus]"
+      ],
+      "limit": "La URL arriba del backendPort, no és literal. Es conserven permisos de meta, omissió de galetes, no redirect i límit local.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-18",
+      "categoria": "script-jsonld-inert",
+      "fontRevisada": "src/hooks/seoHead.js",
+      "sha256": "6ab59398ac87f515d2de8589874031a4f39bcd0650cf29f472d49e33ef610688",
+      "linia": 176,
+      "tipus": "SCRIPT_INJECTAT_DINAMIC",
+      "regla": "TELLADO-EXF-01",
+      "embornal": "const script = document.createElement('script'); script.type = 'application/ld+json'; script.dataset.sdpSeo = 'true';",
+      "requisits": [
+        "const script = document.createElement('script'); script.type = 'application/ld+json'",
+        "script.textContent = data.jsonLd",
+        "document.head.appendChild(script)"
+      ],
+      "limit": "JSON-LD sense src, no JavaScript executable. El digest íntegre evita que un canvi de type o src mantinga la cobertura.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-19",
+      "categoria": "transport-fitxer-natiu",
+      "fontRevisada": "src/natiu/compartirNatiu.js",
+      "sha256": "58c49bb47ca74a37ff3839837e60d9fe90baa2b307c13de4f01cf507dc6c39df",
+      "linia": 68,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "window.fetch",
+      "embornal": "finestra = globalThis, llegix = (url, opcions) => globalThis.fetch(url, opcions), sessio = () => undefined, registraTallador = null,",
+      "requisits": [
+        "llegix = (url, opcions) => globalThis.fetch(url, opcions)",
+        "const url = pont.convertFileSrc(ruta)",
+        "if (!ruta.startsWith('/')",
+        "if (!blob.size || blob.size > MAX_BYTES)",
+        "if (caducat())"
+      ],
+      "limit": "El pont natiu resol el fitxer. El scanner JS no prova la implementació nativa ni permet afirmar un origen HTTP específic.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-20",
+      "categoria": "consola-cami-constant",
+      "fontRevisada": "src/sections/consola/EmpaquetatsConsola.jsx",
+      "sha256": "45ae1472ab9cea251d48b36d8480355d5c5703c9a8c56d7e9701bd61c838abda",
+      "linia": 173,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const r = await fetch(RUTA_PROGRES, { cache: 'no-store', signal: ac.signal });",
+      "requisits": [
+        "RUTA_PROGRES",
+        "RUTA_PUBLICA_TOT",
+        "cache: 'no-store'",
+        "JSON.stringify(peticio)",
+        "ac.abort()"
+      ],
+      "limit": "Endpoints locals de la consola. La regla no executa ni autoritza el middleware de publicació.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-21",
+      "categoria": "consola-cami-constant",
+      "fontRevisada": "src/sections/consola/EmpaquetatsConsola.jsx",
+      "sha256": "45ae1472ab9cea251d48b36d8480355d5c5703c9a8c56d7e9701bd61c838abda",
+      "linia": 203,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const r = await fetch(RUTA_PUBLICA_TOT, {",
+      "requisits": [
+        "RUTA_PROGRES",
+        "RUTA_PUBLICA_TOT",
+        "cache: 'no-store'",
+        "JSON.stringify(peticio)",
+        "ac.abort()"
+      ],
+      "limit": "Endpoints locals de la consola. La regla no executa ni autoritza el middleware de publicació.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-22",
+      "categoria": "consola-cami-constant",
+      "fontRevisada": "src/sections/consola/consolaContent.js",
+      "sha256": "081084a8c7db21d7db1fb5720f2c3c53e6b873ea5799e5c42fbc94612229a6bb",
+      "linia": 16,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const r = await fetch(FONT_CONSOLA, opcionsDeLectura(signal));",
+      "requisits": [
+        "FONT_CONSOLA = '/__iaia/consola.json'",
+        "if (!fontsLlegibles()) return null",
+        "opcionsDeLectura(signal)",
+        "errorDeLaInstantania(cos)"
+      ],
+      "limit": "Cami local amb guarda de variant i esquema de resposta; no valida autenticació del middleware.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-23",
+      "categoria": "consola-cami-constant",
+      "fontRevisada": "src/sections/consola/empaquetats.js",
+      "sha256": "c459628a7575442d4892f71bcffd1e0ab7017dd66b80c61ef2967ac78bb0d3a8",
+      "linia": 194,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const r = await fetch(FONT_EMPAQUETATS, opcionsDeLectura(signal));",
+      "requisits": [
+        "FONT_EMPAQUETATS = '/__iaia/empaquetats.json'",
+        "if (!fontsLlegibles()) return null",
+        "opcionsDeLectura(signal)",
+        "errorDeLaInstantania(cos)"
+      ],
+      "limit": "Cami local amb guarda de variant i esquema de resposta; no valida autenticació del middleware.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-24",
+      "categoria": "consola-cami-constant",
+      "fontRevisada": "src/sections/consola/govern/governContent.js",
+      "sha256": "b0bd2d5f0ba67afd02ee75707b6df918e5500e1fb1f34d468c9237afe855dd07",
+      "linia": 145,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const r = await fetch(FONT_GOVERN, opcionsDeLectura(signal));",
+      "requisits": [
+        "FONT_GOVERN = '/__iaia/govern.json'",
+        "if (!fontsLlegibles()) return null",
+        "opcionsDeLectura(signal)",
+        "errorDeLaInstantania(cos)"
+      ],
+      "limit": "Cami local amb guarda de variant i esquema de resposta; no valida autenticació del middleware.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-25",
+      "categoria": "editor-cami-escapat",
+      "fontRevisada": "src/sections/consola/mapa/DetallPeca.jsx",
+      "sha256": "c4ff659b10f0c151755b0ebd4541e1ccfe68747db941a0734bbe973d1388b6ea",
+      "linia": 153,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(`/__open-in-editor?file=${encodeURIComponent(ruta)}`);",
+      "requisits": [
+        "rutaEditable(ruta, import.meta.env.DEV, avisos)",
+        "`/__open-in-editor?file=${encodeURIComponent(ruta)}`",
+        "if (!resposta.ok) throw"
+      ],
+      "limit": "Destí del mateix origen, paràmetre escapat. La guarda de botó no equival a autorització del middleware local.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-26",
+      "categoria": "consola-cami-constant",
+      "fontRevisada": "src/sections/consola/mapa/mapaContent.js",
+      "sha256": "d92049ccb8a2621b8bcaa107c819f37dc41764d0d0c7907c9930209047f45c30",
+      "linia": 27,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const r = await fetch(FONT_MAPA, opcionsDeLectura(signal));",
+      "requisits": [
+        "FONT_MAPA = '/__iaia/mapa.json'",
+        "if (!fontsLlegibles()) return null",
+        "opcionsDeLectura(signal)",
+        "errorDeLaInstantania(cos)"
+      ],
+      "limit": "Cami local amb guarda de variant i esquema de resposta; no valida autenticació del middleware.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-27",
+      "categoria": "lectura-rang-imatge-propia",
+      "fontRevisada": "src/sections/multimedia/useMetadadesFoto.js",
+      "sha256": "cb255f65cad8478a416a43ffa0dda560261cbfbca4551256cfca5e928381cce5",
+      "linia": 89,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(url, { headers: { Range: `bytes=0-${maxim - 1}` }, signal, credentials: 'same-origin' });",
+      "requisits": [
+        "!esMitjaOpac(src) && esFontImatgePropia(src)",
+        "credentials: 'same-origin'",
+        "Range:",
+        "lector.cancel?.()",
+        "resposta.status === 206"
+      ],
+      "limit": "Lectors de rang amb URL validada per qui crida; prefix i rang tenen polítiques diferents de redirect, que el catàleg conserva explícitament.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-28",
+      "categoria": "lectura-rang-imatge-propia",
+      "fontRevisada": "src/sections/multimedia/useMetadadesFoto.js",
+      "sha256": "cb255f65cad8478a416a43ffa0dda560261cbfbca4551256cfca5e928381cce5",
+      "linia": 128,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(url, { headers: { Range: `bytes=${pos}-${pos + n - 1}` }, signal, credentials: 'same-origin', redirect: 'error' });",
+      "requisits": [
+        "!esMitjaOpac(src) && esFontImatgePropia(src)",
+        "credentials: 'same-origin'",
+        "Range:",
+        "lector.cancel?.()",
+        "resposta.status === 206"
+      ],
+      "limit": "Lectors de rang amb URL validada per qui crida; prefix i rang tenen polítiques diferents de redirect, que el catàleg conserva explícitament.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-29",
+      "categoria": "transport-delegat-tauler",
+      "fontRevisada": "src/sections/text/TaulerTelemetria.jsx",
+      "sha256": "7e6e09d1d33f289ca27f2d450a55fa1febec32211df23b73fadc94799dea8e4b",
+      "linia": 583,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "window.fetch",
+      "embornal": "? (...parametres) => window.fetch(...parametres)",
+      "requisits": [
+        "(...parametres) => window.fetch(...parametres)",
+        "basesDelTauler(shareUrl)",
+        "OPCIONS_DE_CONSULTA"
+      ],
+      "limit": "Wrapper variàdic: es conserva la delegació del tauler, sense deduir les opcions a partir del sink.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-30",
+      "categoria": "servei-veu-configurat",
+      "fontRevisada": "src/services/veuNode0.js",
+      "sha256": "91fdfcece4e888ca98dfec040ac66b3285d118d4585f4870f13358de2fc4cb7d",
+      "linia": 68,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await ambLimit((s) => fetch(`${punt}/salut`, { method: 'GET', signal: s, credentials: 'omit' }),",
+      "requisits": [
+        "credentials: 'omit'",
+        "Promise.race([fn(control.signal), cancelada])",
+        "method: 'POST'",
+        "llegeixAudioNode0(resposta, { signal: s })"
+      ],
+      "limit": "El punt Node0 és configuració runtime. El text editorial s'envia intencionadament; cap regla declara zero eixida ni resol l'endpoint.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-31",
+      "categoria": "servei-veu-configurat",
+      "fontRevisada": "src/services/veuNode0.js",
+      "sha256": "91fdfcece4e888ca98dfec040ac66b3285d118d4585f4870f13358de2fc4cb7d",
+      "linia": 84,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(punt, {",
+      "requisits": [
+        "credentials: 'omit'",
+        "Promise.race([fn(control.signal), cancelada])",
+        "method: 'POST'",
+        "llegeixAudioNode0(resposta, { signal: s })"
+      ],
+      "limit": "El punt Node0 és configuració runtime. El text editorial s'envia intencionadament; cap regla declara zero eixida ni resol l'endpoint.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-32",
+      "categoria": "conversio-data-url",
+      "fontRevisada": "src/utils/pujadaImatge.js",
+      "sha256": "3ff96648370878bc84624a18951dff49a625c2f4494d62f6b134ebc0d7d49fb8",
+      "linia": 145,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(dataUrl);",
+      "requisits": [
+        "export async function fitxerDeDataUrl(dataUrl, nomBase)",
+        "fetch(dataUrl)",
+        "tipusReal(dataUrl, blob)",
+        "new File([blob]"
+      ],
+      "limit": "El nom del paràmetre dataUrl no és una validació: la funció exportada accepta un valor runtime. La signatura queda catalogada amb eixe límit explícit.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-33",
+      "categoria": "service-worker-request",
+      "fontRevisada": "public/sw.js",
+      "sha256": "4658b02a6188a42cc6a39d48f9f650f9f9f6b56b6933aa329844abc70137cae2",
+      "linia": 638,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "resposta = await fetch(event.request, { cache: 'no-store' });",
+      "requisits": [
+        "const peticio = event.request",
+        "new URL(event.request.url).pathname",
+        "new Request(new URL(cami, origen).href)",
+        "const url = new URL(pla.closca, origen).href",
+        "self.location.origin"
+      ],
+      "limit": "El SW reenvia Request i reconstrueix recursos. El catàleg descriu el flux; no transforma els Requests en una prova de mateix origen ni amplia l'abast del worker.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-34",
+      "categoria": "service-worker-request",
+      "fontRevisada": "public/sw.js",
+      "sha256": "4658b02a6188a42cc6a39d48f9f650f9f9f6b56b6933aa329844abc70137cae2",
+      "linia": 699,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(peticio);",
+      "requisits": [
+        "const peticio = event.request",
+        "new URL(event.request.url).pathname",
+        "new Request(new URL(cami, origen).href)",
+        "const url = new URL(pla.closca, origen).href",
+        "self.location.origin"
+      ],
+      "limit": "El SW reenvia Request i reconstrueix recursos. El catàleg descriu el flux; no transforma els Requests en una prova de mateix origen ni amplia l'abast del worker.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-35",
+      "categoria": "service-worker-request",
+      "fontRevisada": "public/sw.js",
+      "sha256": "4658b02a6188a42cc6a39d48f9f650f9f9f6b56b6933aa329844abc70137cae2",
+      "linia": 728,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "resposta = await fetch(peticio);",
+      "requisits": [
+        "const peticio = event.request",
+        "new URL(event.request.url).pathname",
+        "new Request(new URL(cami, origen).href)",
+        "const url = new URL(pla.closca, origen).href",
+        "self.location.origin"
+      ],
+      "limit": "El SW reenvia Request i reconstrueix recursos. El catàleg descriu el flux; no transforma els Requests en una prova de mateix origen ni amplia l'abast del worker.",
+      "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-36",
+      "categoria": "service-worker-request",
+      "fontRevisada": "public/sw.js",
+      "sha256": "4658b02a6188a42cc6a39d48f9f650f9f9f6b56b6933aa329844abc70137cae2",
+      "linia": 741,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "resposta = await fetch(new Request(url, { credentials: 'same-origin', cache: 'no-cache', headers: { Accept: 'text/html' } }));",
+      "requisits": [
+        "const peticio = event.request",
+        "new URL(event.request.url).pathname",
+        "new Request(new URL(cami, origen).href)",
+        "const url = new URL(pla.closca, origen).href",
+        "self.location.origin"
+      ],
+      "limit": "El SW reenvia Request i reconstrueix recursos. El catàleg descriu el flux; no transforma els Requests en una prova de mateix origen ni amplia l'abast del worker.",
+      "certificaDesti": false
+    }
+  ]
+}

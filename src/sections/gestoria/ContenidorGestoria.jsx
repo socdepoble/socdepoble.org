@@ -22,13 +22,14 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { contextAprovacio, useTractors } from '../tractors/useTractors.js';
+import { tg } from './i18nGestoria.js';
 import PanellGestoria, { estatTractorsDe } from './PanellGestoria.jsx';
 
 /* L'ítem de la Wiki on s'aproven els tractors (WikiDePobleSection, modulsLocalsActius). */
 export const CONSULTA_TRACTORS = '?categoria=tractors_cat&item=tractors_aprovacio';
 
 export default function ContenidorGestoria({
-  magatzem, subtle, tractors, entorn, rellotge, inflate, avui, descarrega, onFactures
+  magatzem, subtle, tractors, entorn, rellotge, inflate, avui, descarrega, onFactures, idioma = 'ca'
 }) {
   const navigate = useNavigate();
   const porta = useTractors({ magatzem, subtle, tractors, entorn, rellotge });
@@ -41,11 +42,11 @@ export default function ContenidorGestoria({
   );
   const obreTractors = useCallback(() => navigate(CONSULTA_TRACTORS), [navigate]);
 
-  if (porta.carregant) return <Carregant etiqueta="Llegint les aprovacions dels tractors…" />;
+  if (porta.carregant) return <Carregant etiqueta={tg(idioma, 'Llegint les aprovacions dels tractors…')} />;
   return (
     <>
       {porta.error ? (
-        <Alerta to="error" titol="No s’han pogut llegir les aprovacions dels tractors">
+        <Alerta to="error" titol={tg(idioma, 'No s’han pogut llegir les aprovacions dels tractors')}>
           {`${porta.error} Sense elles, la Gestoria no llig cap factura.`}
         </Alerta>
       ) : null}
@@ -60,6 +61,7 @@ export default function ContenidorGestoria({
         avui={avui}
         descarrega={descarrega}
         onFactures={onFactures}
+        idioma={idioma}
       />
     </>
   );

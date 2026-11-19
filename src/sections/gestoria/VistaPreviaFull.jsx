@@ -13,6 +13,7 @@
  * plantilla.
  */
 import { Taula } from '../../components/PedraSeca/organismes/Taula.jsx';
+import { tg } from './i18nGestoria.js';
 import { formatData } from './nucli/dates.js';
 import { formatImport } from './nucli/diners.js';
 import { adoptaFullDiferit } from '../../config/fullDiferit.js';
@@ -123,12 +124,12 @@ function Fila({ fila, n, combinades, formats }) {
 /**
  * @param {{ full: object, titol?: string }} props full: el de maquetaFull
  */
-export default function VistaPreviaFull({ full, titol = 'Vista prèvia del full' }) {
+export default function VistaPreviaFull({ full, titol = 'Vista prèvia del full', idioma = 'ca' }) {
   if (!full || !Array.isArray(full.files) || !Array.isArray(full.columnes)) return null;
   const n = full.columnes.length;
   const combinades = combinacionsPerFila(full.combinacions);
   return (
-    <Taula titol={titol} densa className="sdp-gestoria-full">
+    <Taula titol={tg(idioma, titol)} densa className="sdp-gestoria-full">
       <tbody ref={adoptaEstilsDiferits}>
         {full.files.map((fila, i) => (
           <Fila key={`${i}-${fila.rol}`} fila={fila} n={n} combinades={combinades.get(i) ?? []} formats={full.formats} />

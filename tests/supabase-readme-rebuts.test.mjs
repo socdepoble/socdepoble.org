@@ -3,6 +3,7 @@
 // Només llig l'arbre real; cap xarxa ni base de dades.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,8 +43,15 @@ const DESCONEGUDES = [
 ];
 
 test('la taula canònica es llig sencera i cada estat és reconegut', () => {
-  // 124 des de P1-74 (A-03): 20261118230000, NO aplicada.
-  assert.equal(taula.length, 124);
+  // R32.14 adds only 20261119143000; the historical124 receipts stay exactly as in HEAD.
+  assert.equal(taula.length, 125);
+  const historic = taula.filter(f => f.versio !== '20261119143000');
+  assert.equal(historic.length, 124);
+  assert.equal(createHash('sha256').update(JSON.stringify(historic.map(({ ordre, versio, fitxer, estat }) => ({ ordre, versio, fitxer, estat })))).digest('hex'),
+    '693bb79f55e01622169354fc7d1a1eee3ad300d89c47465f9985353048cb7464');
+  assert.equal(fila('20261119143000').ordre, 125);
+  assert.equal(fila('20261119143000').fitxer, '20261119143000_r32_14_xat_fils_previa_sense_amagats.sql');
+  assert.equal(declarat.get('20261119143000'), 'declarada_no_aplicada');
   assert.deepEqual(informe.errors, []);
   assert.deepEqual(informe.avisos.filter((a) => a.codi === 'A-ESTAT-NO-RECONEGUT'), []);
 });

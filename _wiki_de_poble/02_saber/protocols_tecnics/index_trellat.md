@@ -15,12 +15,21 @@ L’Índex de Trellat (IT) és un marc de conversa per combinar quatre dimension
 IT = (0,4 × CT) + (0,3 × CE) + (0,2 × CA) + (0,1 × CR)
 ```
 
-| Variable | Dimensió | Evidència admissible |
-|---|---|---|
-| CT | Coherència de Trellat | Resultats reproduïbles de Wiki, contradiccions i decisions resoltes sobre el total revisat. |
-| CE | Eficiència cognitiva | Tasques i recursos mesurats amb una definició prèvia d’«útil»; mai una impressió retrospectiva. |
-| CA | Accessibilitat | Casos o components aprovats sobre el total en scope, amb prova automàtica i manual declarada. |
-| CR | Resiliència de sincronització | Escenaris de fallada superats sobre el total executat; només quan existisca un motor real. Amb l’arquitectura online-first no n’hi ha cap, i hui CR val N/A. |
+### CT · Coherència de Trellat
+
+Mesura els **resultats reproduïbles de la Wiki**, les **contradiccions detectades** i les **decisions resoltes** sobre el **total revisat**.
+
+### CE · Eficiència cognitiva
+
+Avalua les **tasques i recursos mesurats** amb una **definició prèvia d’«útil»**; no s'admet **mai una impressió retrospectiva**.
+
+### CA · Accessibilitat
+
+Compta els **casos o components aprovats** sobre el **total en scope**, exigint tant **prova automàtica** com **revisió manual declarada**.
+
+### CR · Resiliència de sincronització
+
+Registra els **escenaris de fallada superats** sobre el **total executat**, aplicable **només quan existisca un motor real**. Amb l’arquitectura **online-first** no n’hi ha cap, i hui `CR` val **`N/A`**.
 
 ## Contracte de mesura
 

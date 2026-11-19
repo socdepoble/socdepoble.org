@@ -53,3 +53,80 @@ export function codiIdiomaGestoria(idioma) {
 export function textosBuitGestoria(idioma) {
   return TEXTOS_BUIT_GESTORIA[codiIdiomaGestoria(idioma)];
 }
+
+export const TEXTOS_SECCIONS_GESTORIA = Object.freeze({
+  ca: Object.freeze({
+    tauler: 'Tauler Central',
+    facturacio: 'Facturació',
+    contactes: 'Contactes',
+    burocracia: 'Burocràcia',
+    identitat: 'Identitat i Finestreta',
+    bancs: 'Bancs i Tresoreria',
+    impostos: 'Impostos',
+    full: 'Full trimestral',
+    historic: 'Històric i IA',
+    informes: 'Informes',
+    escaner: 'Escàner Local',
+    aprendre: 'Aprendre'
+  }),
+  es: Object.freeze({
+    tauler: 'Tablero Central',
+    facturacio: 'Facturación',
+    contactes: 'Contactos',
+    burocracia: 'Burocracia',
+    identitat: 'Identidad y Ventanilla',
+    bancs: 'Bancos y Tesorería',
+    impostos: 'Impuestos',
+    full: 'Hoja trimestral',
+    historic: 'Histórico e IA',
+    informes: 'Informes',
+    escaner: 'Escáner Local',
+    aprendre: 'Aprender'
+  }),
+  en: Object.freeze({
+    tauler: 'Central Dashboard',
+    facturacio: 'Invoicing',
+    contactes: 'Contacts',
+    burocracia: 'Paperwork',
+    identitat: 'Identity and One-Stop Desk',
+    bancs: 'Banking and Treasury',
+    impostos: 'Taxes',
+    full: 'Quarterly sheet',
+    historic: 'History and AI',
+    informes: 'Reports',
+    escaner: 'Local Scanner',
+    aprendre: 'Learn'
+  }),
+  eu: Object.freeze({
+    tauler: 'Aginte Mahai Nagusia',
+    facturacio: 'Fakturazioa',
+    contactes: 'Kontaktuak',
+    burocracia: 'Burokrazia',
+    identitat: 'Nortasuna eta Leihatila',
+    bancs: 'Bankuak eta Diruzaintza',
+    impostos: 'Zergak',
+    full: 'Hiruhileko orria',
+    historic: 'Historikoa eta AA',
+    informes: 'Txostenak',
+    escaner: 'Tokiko Eskanerra',
+    aprendre: 'Ikasi'
+  }),
+  gl: Object.freeze({
+    tauler: 'Taboleiro Central',
+    facturacio: 'Facturación',
+    contactes: 'Contactos',
+    burocracia: 'Burocracia',
+    identitat: 'Identidade e Xanela',
+    bancs: 'Bancos e Tesouraría',
+    impostos: 'Impostos',
+    full: 'Folla trimestral',
+    historic: 'Histórico e IA',
+    informes: 'Informes',
+    escaner: 'Escáner Local',
+    aprendre: 'Aprender'
+  })
+});
+
+export function textosSeccionsGestoria(idioma) {
+  return TEXTOS_SECCIONS_GESTORIA[codiIdiomaGestoria(idioma)];
+}

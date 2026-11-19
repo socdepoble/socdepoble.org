@@ -30,6 +30,11 @@ import { adoptaFullDiferit } from '../../config/fullDiferit.js';
 import cssDiferitTractors from '../../css/diferit-tractors.css?inline';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'tractors', cssDiferitTractors); };
 
+const codiIdiomaDialeg = (idioma) => {
+  const c = String(idioma || 'ca').toLowerCase().split('-')[0];
+  return ['ca', 'es', 'en', 'eu', 'gl'].includes(c) ? c : 'ca';
+};
+
 /* ErrorAprovacio.codi (i els de la UI) → què ha passat i què pot fer el Mestre. */
 const TEXTOS_ERROR = Object.freeze({
   APROVACIO_REQUERIDA: 'Este tractor no té cap aprovació vigent.',
@@ -43,10 +48,107 @@ const TEXTOS_ERROR = Object.freeze({
   EMPREMTA_INVALIDA: 'No s’ha pogut calcular l’empremta d’esta versió: no es pot aprovar.'
 });
 
+const TEXTOS_DIALEG_I18N = Object.freeze({
+  es: Object.freeze({
+    errorDefecte: 'No se ha podido completar la operación.',
+    cancella: 'Cancelar',
+    titol: (nom) => `Aprobar «${nom}»`,
+    descripcio: (versio, curta) => `Apruebas la versión ${versio} con la huella corta ${curta}. Si cambia una sola línea del código, del manifiesto o de la ficha, la aprobación deja de valer.`,
+    senseEmpremta: 'Esta versión no tiene huella: no se puede aprobar.',
+    empremtaCurta: 'Huella corta:',
+    cap: 'ninguna',
+    fitxaAria: 'Ficha explicativa',
+    heLlegit: 'He leído la ficha entera',
+    ajudaDins: 'Qué hace, qué lee, qué escribe, qué no hace nunca y sus límites. Está aquí arriba, dentro de este diálogo.',
+    ajudaFora: 'Qué hace, qué lee, qué escribe, qué no hace nunca y sus límites. Está en el panel, detrás de este diálogo.',
+    signatura: 'Firma',
+    signaturaText: 'Touch ID, Windows Hello o una llave de acceso. El gesto de verificación lo haces tú.',
+    signaBoto: 'Firmar con Touch ID o llave de acceso',
+    noPotSignarTitol: 'Este navegador no puede firmar',
+    noPotSignarText: 'Este tractor exige firma con Touch ID o llave de acceso, y este navegador no la ofrece (o la página no está en un contexto seguro).',
+    confirmacioTitol: 'Confirmación escrita',
+    exigeixSignatura: 'Este tractor exige firma: la confirmación escrita no basta.',
+    escriuEmpremta: 'Escribe la huella corta',
+    ajudaEmpremta: (curta) => `Es ${curta}. Mayúsculas, espacios y guiones no importan.`,
+    aprovaConfirmacio: 'Aprobar con confirmación escrita'
+  }),
+  en: Object.freeze({
+    errorDefecte: 'Could not complete the operation.',
+    cancella: 'Cancel',
+    titol: (nom) => `Approve “${nom}”`,
+    descripcio: (versio, curta) => `You are approving version ${versio} with short hash ${curta}. If a single line of code, manifest or spec sheet changes, approval is invalidated.`,
+    senseEmpremta: 'This version has no hash: it cannot be approved.',
+    empremtaCurta: 'Short hash:',
+    cap: 'none',
+    fitxaAria: 'Spec sheet',
+    heLlegit: 'I have read the entire spec sheet',
+    ajudaDins: 'What it does, reads, writes, never does and its limits. Shown right above inside this dialog.',
+    ajudaFora: 'What it does, reads, writes, never does and its limits. Shown in the panel behind this dialog.',
+    signatura: 'Cryptographic signature',
+    signaturaText: 'Touch ID, Windows Hello or a passkey. You perform the verification gesture.',
+    signaBoto: 'Sign with Touch ID or passkey',
+    noPotSignarTitol: 'This browser cannot sign',
+    noPotSignarText: 'This tractor requires Touch ID or a passkey signature, and this browser does not provide one in this context.',
+    confirmacioTitol: 'Written confirmation',
+    exigeixSignatura: 'This tractor requires a hardware/passkey signature: written confirmation is not accepted.',
+    escriuEmpremta: 'Type the short hash',
+    ajudaEmpremta: (curta) => `It is ${curta}. Case, spaces and hyphens are ignored.`,
+    aprovaConfirmacio: 'Approve with written confirmation'
+  }),
+  eu: Object.freeze({
+    errorDefecte: 'Ezin izan da eragiketa osatu.',
+    cancella: 'Utzi',
+    titol: (nom) => `Onartu «${nom}»`,
+    descripcio: (versio, curta) => `${versio} bertsioa onartzen duzu ${curta} aztarna laburrarekin. Kodeko, manifestuko edo fitxako lerro bakar bat aldatzen bada, onespenak balioa galtzen du.`,
+    senseEmpremta: 'Bertsio honek ez du aztarnarik: ezin da onartu.',
+    empremtaCurta: 'Aztarna laburra:',
+    cap: 'bat ere ez',
+    fitxaAria: 'Azalpen-fitxa',
+    heLlegit: 'Fitxa osoa irakurri dut',
+    ajudaDins: 'Zer egiten duen, zer irakurtzen eta idazten duen, zer ez duen inoiz egiten eta bere mugak. Hemen goian dago.',
+    ajudaFora: 'Zer egiten duen, zer irakurtzen eta idazten duen, zer ez duen inoiz egiten eta bere mugak. Atzeko panelean dago.',
+    signatura: 'Sinadura',
+    signaturaText: 'Touch ID, Windows Hello edo pasagako bat. Egiaztapen-keinua zuk egiten duzu.',
+    signaBoto: 'Sinatu Touch ID edo pasagakoarekin',
+    noPotSignarTitol: 'Nabigatzaile honek ezin du sinatu',
+    noPotSignarText: 'Traktore honek Touch ID edo pasagako bidezko sinadura eskatzen du, eta nabigatzaile honek ez du eskaintzen.',
+    confirmacioTitol: 'Idatzizko berrespena',
+    exigeixSignatura: 'Traktore honek sinadura eskatzen du: idatzizko berrespenak ez du balio.',
+    escriuEmpremta: 'Idatzi aztarna laburra',
+    ajudaEmpremta: (curta) => `${curta} da. Maiuskulak, zuriuneak eta marratxoak ez dira kontuan hartzen.`,
+    aprovaConfirmacio: 'Onartu idatzizko berrespenarekin'
+  }),
+  gl: Object.freeze({
+    errorDefecte: 'Non se puido completar a operación.',
+    cancella: 'Cancelar',
+    titol: (nom) => `Aprobar «${nom}»`,
+    descripcio: (versio, curta) => `Aprobas a versión ${versio} coa pegada curta ${curta}. Se cambia unha soa liña do código, do manifesto ou da ficha, a aprobación deixa de valer.`,
+    senseEmpremta: 'Esta versión non ten pegada: non se pode aprobar.',
+    empremtaCurta: 'Pegada curta:',
+    cap: 'ningunha',
+    fitxaAria: 'Ficha explicativa',
+    heLlegit: 'Lin a ficha enteira',
+    ajudaDins: 'Que fai, que le, que escribe, que non fai nunca e os seus límites. Está aquí enriba, dentro deste diálogo.',
+    ajudaFora: 'Que fai, que le, que escribe, que non fai nunca e os seus límites. Está no panel, detrás deste diálogo.',
+    signatura: 'Sinatura',
+    signaturaText: 'Touch ID, Windows Hello ou unha chave de paso. O xesto de verificación falo ti.',
+    signaBoto: 'Asinar con Touch ID ou chave de paso',
+    noPotSignarTitol: 'Este navegador non pode asinar',
+    noPotSignarText: 'Este tractor esixe sinatura con Touch ID ou chave de paso, e este navegador non a ofrece neste contexto.',
+    confirmacioTitol: 'Confirmación escrita',
+    exigeixSignatura: 'Este tractor esixe sinatura: a confirmación escrita non abonda.',
+    escriuEmpremta: 'Escribe a pegada curta',
+    ajudaEmpremta: (curta) => `É ${curta}. Maiúsculas, espazos e guións non importan.`,
+    aprovaConfirmacio: 'Aprobar con confirmación escrita'
+  })
+});
+
 /* { titol, detall }: el text clar i, si n'hi ha, el motiu tècnic de la porta. */
-export function textError(error) {
+export function textError(error, idioma = 'ca') {
+  const llengua = codiIdiomaDialeg(idioma);
   const detall = typeof error?.message === 'string' ? error.message.trim() : '';
-  const titol = TEXTOS_ERROR[error?.codi] ?? 'No s’ha pogut completar l’operació.';
+  const defecte = llengua === 'ca' ? 'No s’ha pogut completar l’operació.' : TEXTOS_DIALEG_I18N[llengua].errorDefecte;
+  const titol = TEXTOS_ERROR[error?.codi] ?? defecte;
   return { titol, detall: detall && detall !== titol ? detall : '' };
 }
 
@@ -60,9 +162,9 @@ function EnLinia({ text }) {
 }
 
 /* La fitxa sencera. Penja del diàleg com del tractor al panell: «#» és un h5 i la resta, h6. */
-function FitxaDelTractor({ fitxa }) {
+function FitxaDelTractor({ fitxa, etiqueta = 'Fitxa explicativa' }) {
   return (
-    <section ref={adoptaEstilsDiferits} className="sdp-tractors-panell__fitxa" aria-label="Fitxa explicativa">
+    <section ref={adoptaEstilsDiferits} className="sdp-tractors-panell__fitxa" aria-label={etiqueta}>
       {blocsDeFitxa(fitxa).map((bloc, i) => {
         if (bloc.tipus === 'titol') {
           const Titol = bloc.nivell <= 1 ? 'h5' : 'h6';
@@ -97,7 +199,9 @@ function curtaDe(empremta) {
   }
 }
 
-export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, empremta, webauthn = false, fitxa = null }) {
+export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, empremta, webauthn = false, fitxa = null, idioma = 'ca' }) {
+  const llengua = codiIdiomaDialeg(idioma);
+  const tx = llengua === 'ca' ? null : TEXTOS_DIALEG_I18N[llengua];
   const [llegit, setLlegit] = useState(false);
   const [text, setText] = useState('');
   const [ocupat, setOcupat] = useState(null);
@@ -141,7 +245,7 @@ export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, em
     try {
       await onAprova?.({ nivell, confirmacio: nivell === 'confirmacio' ? text : undefined });
     } catch (e) {
-      if (viu.current) setError(textError(e));
+      if (viu.current) setError(textError(e, llengua));
     } finally {
       if (viu.current) setOcupat(null);
     }
@@ -154,24 +258,24 @@ export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, em
     <Dialeg
       obert={obert}
       onTanca={tanca}
-      titol={`Aprova «${nom}»`}
+      titol={tx ? tx.titol(nom) : `Aprova «${nom}»`}
       descripcio={curta
-        ? `Aproves la versió ${manifest?.versio ?? ''} amb l’empremta curta ${curta}. Si canvia una sola línia del codi, del manifest o de la fitxa, l’aprovació deixa de valdre.`
-        : 'Esta versió no té empremta: no es pot aprovar.'}
+        ? (tx ? tx.descripcio(manifest?.versio ?? '', curta) : `Aproves la versió ${manifest?.versio ?? ''} amb l’empremta curta ${curta}. Si canvia una sola línia del codi, del manifest o de la fitxa, l’aprovació deixa de valdre.`)
+        : (tx ? tx.senseEmpremta : 'Esta versió no té empremta: no es pot aprovar.')}
       tancaEnVel={!ocupat}
       mida={ambFitxa ? 'g' : undefined}
-      accions={<Boto varietat="secundari" onClick={() => tanca('boto')} disabled={Boolean(ocupat)}>Cancel·la</Boto>}
+      accions={<Boto varietat="secundari" onClick={() => tanca('boto')} disabled={Boolean(ocupat)}>{tx ? tx.cancella : 'Cancel·la'}</Boto>}
     >
       <div ref={adoptaEstilsDiferits} className="sdp-tractors-dialeg">
         <p className="sdp-tractors-dialeg__empremta">
-          Empremta curta: <strong className="sdp-tractors-dialeg__curta">{curta ?? 'cap'}</strong>
+          {tx ? tx.empremtaCurta : 'Empremta curta:'} <strong className="sdp-tractors-dialeg__curta">{curta ?? (tx ? tx.cap : 'cap')}</strong>
         </p>
-        {ambFitxa ? <FitxaDelTractor fitxa={fitxa} /> : null}
+        {ambFitxa ? <FitxaDelTractor fitxa={fitxa} etiqueta={tx ? tx.fitxaAria : 'Fitxa explicativa'} /> : null}
         <Casella
-          etiqueta="He llegit la fitxa sencera"
+          etiqueta={tx ? tx.heLlegit : 'He llegit la fitxa sencera'}
           ajuda={ambFitxa
-            ? 'Què fa, què llig, què escriu, què no fa mai i els seus límits. És ací dalt, dins d’este diàleg.'
-            : 'Què fa, què llig, què escriu, què no fa mai i els seus límits. És al panell, darrere d’este diàleg.'}
+            ? (tx ? tx.ajudaDins : 'Què fa, què llig, què escriu, què no fa mai i els seus límits. És ací dalt, dins d’este diàleg.')
+            : (tx ? tx.ajudaFora : 'Què fa, què llig, què escriu, què no fa mai i els seus límits. És al panell, darrere d’este diàleg.')}
           checked={llegit}
           onChange={(e) => setLlegit(e.target.checked)}
           disabled={Boolean(ocupat)}
@@ -179,36 +283,34 @@ export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, em
 
         {webauthn ? (
           <section ref={adoptaEstilsDiferits} className="sdp-tractors-dialeg__via" aria-labelledby={idSignatura}>
-            <h3 id={idSignatura} className="sdp-tractors-dialeg__titol">Signatura</h3>
+            <h3 id={idSignatura} className="sdp-tractors-dialeg__titol">{tx ? tx.signatura : 'Signatura'}</h3>
             <p>
-              Touch ID, Windows Hello o una clau de pas. El gest de verificació el fas tu; ara bé, un programa que
-              ja controle este navegador podria registrar-hi una clau pròpia.
+              {tx ? tx.signaturaText : 'Touch ID, Windows Hello o una clau de pas. El gest de verificació el fas tu; ara bé, un programa que ja controle este navegador podria registrar-hi una clau pròpia.'}
             </p>
             <Boto varietat="primari" onClick={() => envia('signatura')} disabled={!potAprovar}
               carregant={ocupat === 'signatura'}>
-              Signa amb Touch ID o clau de pas
+              {tx ? tx.signaBoto : 'Signa amb Touch ID o clau de pas'}
             </Boto>
           </section>
         ) : exigeixSignatura ? (
-          <Alerta to="avis" viva={false} titol="Este navegador no pot signar">
-            Este tractor exigix la signatura amb Touch ID o una clau de pas, i este navegador no l’oferix
-            (o la pàgina no s’ha obert en un context segur: https o localhost).
+          <Alerta to="avis" viva={false} titol={tx ? tx.noPotSignarTitol : 'Este navegador no pot signar'}>
+            {tx ? tx.noPotSignarText : 'Este tractor exigix la signatura amb Touch ID o una clau de pas, i este navegador no l’oferix (o la pàgina no s’ha obert en un context segur: https o localhost).'}
           </Alerta>
         ) : null}
 
         <section className="sdp-tractors-dialeg__via" aria-labelledby={idConfirmacio}>
-          <h3 id={idConfirmacio} className="sdp-tractors-dialeg__titol">Confirmació escrita</h3>
+          <h3 id={idConfirmacio} className="sdp-tractors-dialeg__titol">{tx ? tx.confirmacioTitol : 'Confirmació escrita'}</h3>
           {exigeixSignatura ? (
-            <p ref={adoptaEstilsDiferits}>Este tractor exigix signatura: la confirmació escrita no hi val.</p>
+            <p ref={adoptaEstilsDiferits}>{tx ? tx.exigeixSignatura : 'Este tractor exigix signatura: la confirmació escrita no hi val.'}</p>
           ) : null}
-          <Camp etiqueta="Escriu l’empremta curta"
-            ajuda={curta ? `És ${curta}. Majúscules, espais i guions no importen.` : undefined}>
+          <Camp etiqueta={tx ? tx.escriuEmpremta : 'Escriu l’empremta curta'}
+            ajuda={curta ? (tx ? tx.ajudaEmpremta(curta) : `És ${curta}. Majúscules, espais i guions no importen.`) : undefined}>
             <CampText value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" spellCheck={false}
               disabled={exigeixSignatura || Boolean(ocupat)} />
           </Camp>
           <Boto varietat={webauthn ? 'secundari' : 'primari'} onClick={() => envia('confirmacio')}
             disabled={exigeixSignatura || !potAprovar || !text.trim()} carregant={ocupat === 'confirmacio'}>
-            Aprova amb confirmació escrita
+            {tx ? tx.aprovaConfirmacio : 'Aprova amb confirmació escrita'}
           </Boto>
         </section>
 

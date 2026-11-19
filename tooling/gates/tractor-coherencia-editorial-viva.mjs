@@ -331,14 +331,19 @@ export async function avaluaCoherenciaEditorial({
   const consell = JSON.parse(fs.readFileSync(R(mapa.invariantsCens.consellJson), 'utf8'));
   const membresActius = (consell.membres || []).filter((m) => m.actiu !== false);
   const equipMd = fs.readFileSync(R(mapa.invariantsCens.wikiEquipIa), 'utf8');
-  const filesTaulaEquip = equipMd
+  const capcaleresEquip = equipMd
     .split('\n')
-    .filter((l) => /^\|\s*[a-z0-9-]+\s*\|/i.test(l) && !/^\|\s*Identificador\s*\|/i.test(l) && !/^\|\s*---/.test(l));
+    .filter((l) => /^###\s+.+?\s+\(`[a-z0-9-]+`\)\s*$/i.test(l));
+  const filesTaulaEquip = capcaleresEquip.length > 0
+    ? capcaleresEquip
+    : equipMd
+      .split('\n')
+      .filter((l) => /^\|\s*[a-z0-9-]+\s*\|/i.test(l) && !/^\|\s*Identificador\s*\|/i.test(l) && !/^\|\s*---/.test(l));
   if (filesTaulaEquip.length !== membresActius.length) {
     falla(
       'CEV-3',
       mapa.invariantsCens.wikiEquipIa,
-      `La taula d’Equip IA llista ${filesTaulaEquip.length} membres però consell.json té ${membresActius.length} actius`,
+      `El cens d’Equip IA llista ${filesTaulaEquip.length} membres però consell.json té ${membresActius.length} actius`,
     );
   }
 

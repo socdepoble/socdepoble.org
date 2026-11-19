@@ -12,26 +12,59 @@ Aquesta taula recull la potència i cost relatiu dels models d'Intel·ligència 
 
 ## Família Claude
 
-| Model | Identificador | Potència (1–10, relativa) | Context | Preu API (entrada / eixida, $/MTok) | Consum de límit relatiu (Sonnet 5 = 1) | Lloc ideal a Sóc de Poble |
-| --- | --- | --- | --- | --- | --- | --- |
-| Haiku 4.5 | `claude-haiku-4-5` | 3 | 200K | 1 / 5 | 0,5 | Pic i pala mecànic: reanomenar, formatar, lectors de workflows, classificar, resumir logs. Mai decisions d'arquitectura. |
-| Sonnet 4.6 | `claude-sonnet-4-6` | 5 | 1M | 3 / 15 | 1,5 | Cap: costa més que Sonnet 5 i rendix menys. Només si un contracte antic el demana. |
-| Sonnet 5 | `claude-sonnet-5` | 6 | 1M | 2 / 10 | 1 | El cavall de treball: CSS i JSX de rutina, proves, documentació, refutadors d'auditoria en paral·lel. |
-| Opus 4.6 / 4.7 / 4.8 | `claude-opus-4-6`, `-4-7`, `-4-8` | 6,5 / 7 / 7,5 | 1M | 5 / 25 | 2,5 | Cap raó de triar-los: mateix preu que Opus 5 i menys potència. Compatibilitat només. |
-| Opus 5 | `claude-opus-5` | 8 | 1M | 5 / 25 | 2,5 | Arquitectura, refactors entre fitxers, jutge i orquestrador d'auditories, decisions de Model B. El model per defecte de Claude Code. |
-| Opus 5.5 (en llançament) | `claude-opus-5-5` | 8,5 | 1M | 4 / 20 | 2 | El substitut natural d'Opus 5 quan estiga disponible al pla: mateix nivell, més barat. Només si el Mestre l'anomena. |
-| Fable 5 | `claude-fable-5` | 9 | 1M | 10 / 50 | 5 | Superat per Fable 5.1 al mateix preu. |
-| Fable 5.1 | `claude-fable-5-1` | 9,5 | 1M | 10 / 50 | 5 | Tasques de llarg abast amb molta autonomia: Ultracode amb refutació adversarial, auditories extremes, problemes on Opus 5 s'encalla. Cinc vegades el consum de Sonnet 5: es reserva, no es gasta en CSS. |
-| Fable 5.2 | `claude-fable-5-2` | 10 | 1M | 8 / 40 | 4 | Cimera actual d'Anthropic per a colls d'ampolla arquitectònics extrems i arbitratge Ultracode d'alta complexitat; es reserva com a escalada quirúrgica sobre Opus 5.5. |
-| Mythos 5.1 | `claude-mythos-5-1` | 9,5 | 1M | 10 / 50 | 5 | No disponible: només organitzacions aprovades (Project Glasswing). Mateix model que Fable 5.1 sense les mesures addicionals. |
+### Haiku 4.5 (`claude-haiku-4-5`)
+
+**Potència relativa:** `3/10` · **Context:** `200K` · **Preu API (entrada / eixida):** `1 / 5 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `0,5`. **Lloc ideal a Sóc de Poble:** **pic i pala mecànic** (reanomenar, formatar, lectors de workflows, classificar, resumir logs); **mai decisions d'arquitectura**.
+
+### Sonnet 4.6 (`claude-sonnet-4-6`)
+
+**Potència relativa:** `5/10` · **Context:** `1M` · **Preu API (entrada / eixida):** `3 / 15 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `1,5`. **Lloc ideal a Sóc de Poble:** **cap**, perquè costa més que Sonnet 5 i rendix menys; només si un contracte antic el demana.
+
+### Sonnet 5 (`claude-sonnet-5`)
+
+**Potència relativa:** `6/10` · **Context:** `1M` · **Preu API (entrada / eixida):** `2 / 10 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `1`. **Lloc ideal a Sóc de Poble:** **el cavall de treball** històric per a CSS i JSX de rutina, proves, documentació i refutadors d'auditoria en paral·lel.
+
+### Opus 4.6 / 4.7 / 4.8 (`claude-opus-4-6`, `-4-7`, `-4-8`)
+
+**Potència relativa:** `6,5 / 7 / 7,5` sobre `10` · **Context:** `1M` · **Preu API (entrada / eixida):** `5 / 25 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `2,5`. **Lloc ideal a Sóc de Poble:** **cap raó de triar-los**, ja que tenen el mateix preu que Opus 5 i menys potència; només per compatibilitat.
+
+### Opus 5 (`claude-opus-5`)
+
+**Potència relativa:** `8/10` · **Context:** `1M` · **Preu API (entrada / eixida):** `5 / 25 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `2,5`. **Lloc ideal a Sóc de Poble:** **arquitectura**, **refactors entre fitxers**, jutge i orquestrador d'auditories i **decisions de Model B**; model per defecte de Claude Code.
+
+### Opus 5.5, en llançament (`claude-opus-5-5`)
+
+**Potència relativa:** `8,5/10` · **Context:** `1M` · **Preu API (entrada / eixida):** `4 / 20 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `2`. **Lloc ideal a Sóc de Poble:** el **substitut natural d'Opus 5** quan estiga disponible al pla (mateix nivell, més barat), només si el Mestre l'anomena.
+
+### Fable 5 (`claude-fable-5`)
+
+**Potència relativa:** `9/10` · **Context:** `1M` · **Preu API (entrada / eixida):** `10 / 50 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `5`. **Lloc ideal a Sóc de Poble:** **superat per Fable 5.1** al mateix preu.
+
+### Fable 5.1 (`claude-fable-5-1`)
+
+**Potència relativa:** `9,5/10` · **Context:** `1M` · **Preu API (entrada / eixida):** `10 / 50 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `5`. **Lloc ideal a Sóc de Poble:** **tasques de llarg abast** amb molta autonomia, **Ultracode amb refutació adversarial**, auditories extremes i problemes on Opus 5 s'encalla. Representa cinc vegades el consum de Sonnet 5: **es reserva, no es gasta en CSS**.
+
+### Fable 5.2 (`claude-fable-5-2`)
+
+**Potència relativa:** `10/10` · **Context:** `1M` · **Preu API (entrada / eixida):** `8 / 40 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `4`. **Lloc ideal a Sóc de Poble:** **cimera actual d'Anthropic** per a **colls d'ampolla arquitectònics extrems** i arbitratge Ultracode d'alta complexitat; es reserva com a **escalada quirúrgica** sobre Opus 5.5.
+
+### Mythos 5.1 (`claude-mythos-5-1`)
+
+**Potència relativa:** `9,5/10` · **Context:** `1M` · **Preu API (entrada / eixida):** `10 / 50 USD/MTok` · **Consum relatiu (Sonnet 5 = 1):** `5`. **Lloc ideal a Sóc de Poble:** **no disponible**, reservat només a organitzacions aprovades (Project Glasswing); mateix model que Fable 5.1 sense les mesures addicionals.
 
 ## Família Gemini i orquestració Antigravity
 
-| Model | Identificador | Potència (1–10, relativa) | Context | Subscripció / Entorn | Rol ideal a Sóc de Poble |
-| --- | --- | --- | --- | --- | --- |
-| Gemini 3 Flash | `gemini-3-flash` | 7 | 1M | Google AI Ultra / Antigravity | Triatge àgil, lectura ràpida, navegació assistida i operacions lleugeres de baix consum. |
-| Gemini Pro / Argon | `gemini-4-argon-high` | 9 | 1M | Google AI Ultra / Antigravity | Coordinació documental, paritat en cinc llengües i verificació de portes. |
-| Gemini 4 Carbon (High) | `gemini-4-carbon-high` | 9,5 | 1M | Google AI Ultra / Antigravity | Motor de frontera de la IAIA MarIA per a maquetació Pedra Seca, Workspaces modulars, síntesi acadèmica de grans PDFs i kits segellats amb SHA-256. |
+### Gemini 3 Flash (`gemini-3-flash`)
+
+**Potència relativa:** `7/10` · **Context:** `1M` · **Subscripció / Entorn:** **Google AI Ultra / Antigravity**. **Rol ideal a Sóc de Poble:** **triatge àgil**, lectura ràpida, **navegació assistida** i operacions lleugeres de baix consum.
+
+### Gemini Pro / Argon (`gemini-4-argon-high`)
+
+**Potència relativa:** `9/10` · **Context:** `1M` · **Subscripció / Entorn:** **Google AI Ultra / Antigravity**. **Rol ideal a Sóc de Poble:** **coordinació documental**, **paritat en cinc llengües** i **verificació de portes**.
+
+### Gemini 4 Carbon High (`gemini-4-carbon-high`)
+
+**Potència relativa:** `9,5/10` · **Context:** `1M` · **Subscripció / Entorn:** **Google AI Ultra / Antigravity**. **Rol ideal a Sóc de Poble:** **motor de frontera de la IAIA MarIA** per a **maquetació Pedra Seca**, **Workspaces modulars**, síntesi acadèmica de grans PDFs i kits segellats amb SHA-256.
 
 ## Regles de triatge que se'n deriven per al Mas (Estratègia de Frontera)
 

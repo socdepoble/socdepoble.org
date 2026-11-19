@@ -48,6 +48,7 @@ import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { Camp, CampText, Casella, GrupCamps } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
 import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/AprovacioEnLinia.jsx';
+import { tg, tf } from '../i18nGestoria.js';
 import { formatData } from '../nucli/dates.js';
 import { TRACTOR_ESCANER, TRACTOR_TAULER } from '../tractors.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
@@ -107,13 +108,13 @@ function Severitat({ severitat }) {
 }
 
 /* Una xifra del banc: el text, o «Xifra amagada» mentre l'ull de la boina està tancat. */
-function XifraDelBanc({ valor, visible }) {
-  if (!Number.isFinite(valor)) return <span ref={adoptaEstilsDiferits}>Sense dades</span>;
+function XifraDelBanc({ valor, visible, idioma = 'ca' }) {
+  if (!Number.isFinite(valor)) return <span ref={adoptaEstilsDiferits}>{tg(idioma, 'Sense dades')}</span>;
   if (!visible) {
     return (
       <span ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__amagat">
         <EyeOff size={20} aria-hidden="true" focusable="false" />
-        <span>Xifra amagada</span>
+        <span>{tg(idioma, 'Xifra amagada')}</span>
       </span>
     );
   }
@@ -129,8 +130,8 @@ function NotaFora({ fora }) {
   return fora > 0 ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">{`I ${plural(fora, 'fila', 'files')} més, que no es pinten.`}</p> : null;
 }
 
-function SenseRes() {
-  return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">Res en este apartat.</p>;
+function SenseRes({ idioma = 'ca' }) {
+  return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">{tg(idioma, 'Res en este apartat.')}</p>;
 }
 
 /* Revisió adversarial 13-10-2026, troballes PRIV-2, ORD-1 i FP-1: de la identitat legal (la seua carpeta, també la que
@@ -411,7 +412,7 @@ function ResumDelTauler({ dades, visible }) {
  *   onObreIdentitat?: () => void }} p `escaner`: el de useEscaner; `tauler`: el de useTauler; `dades`: el de
  *   dadesDelTauler (la closca); `visible`: l'ull de la boina; `onObreIdentitat`: obri la vista «Identitat i Finestreta»
  */
-export function PanellEscaner({ escaner, tauler, dades = null, visible = false, onObreTractors, onObreIdentitat }) {
+export function PanellEscaner({ escaner, tauler, dades = null, visible = false, onObreTractors, onObreIdentitat, idioma = 'ca' }) {
   const [vista, setVista] = useState('bancs');
   const idTria = useId();
   const idRadiografia = useId();
@@ -419,14 +420,13 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
   /* La porta és la del Tauler (useEscaner no en fa cap segona passada). */
   const porta = escaner.porta ?? tauler.porta ?? null;
 
-  if (porta?.carregant) return <Carregant etiqueta="Llegint les aprovacions dels tractors…" />;
+  if (porta?.carregant) return <Carregant etiqueta={tg(idioma, 'Llegint les aprovacions dels tractors…')} />;
   if (!escaner.aprovat) {
-    const estat = ESTATS_TRACTOR[escaner.fila?.estat] ?? ESTATS_TRACTOR.pendent;
+    const estat = tg(idioma, ESTATS_TRACTOR[escaner.fila?.estat] ?? ESTATS_TRACTOR.pendent);
     return (
-      <Alerta to="avis" titol="Cal aprovar el tractor"
-        accions={<AccioAprovacio porta={porta} id={TRACTOR_ESCANER.id} onObreTractors={onObreTractors} />}>
-        {`L’Escàner Local recorre la carpeta amb el tractor «Gestoria · Escàner Local de la carpeta», que ${estat}. `}
-        {`Aprova’l amb la teua signatura ${onSAprova()}: sense, no es llista ni es llig cap fitxer.`}
+      <Alerta to="avis" titol={tg(idioma, 'Cal aprovar el tractor')}
+        accions={<AccioAprovacio porta={porta} id={TRACTOR_ESCANER.id} onObreTractors={onObreTractors} idioma={idioma} />}>
+        {tf(idioma, 'portaEscaner', estat, onSAprova(idioma))}
         {porta?.error ? ` ${porta.error}` : ''}
       </Alerta>
     );
@@ -450,30 +450,27 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner">
       {tauler.aprovat ? null : (
-        <Alerta to="info" viva={false} titol="Per a abocar els extractes cal també el Tauler"
-          accions={<AccioAprovacio porta={porta} id={TRACTOR_TAULER.id} onObreTractors={onObreTractors} varietat="secundari" />}>
-          El Tauler llig els extractes amb el seu tractor, «Gestoria · Tauler de l’empresa», que encara no està aprovat.
-          L’Escàner pot analitzar la carpeta igualment.
+        <Alerta to="info" viva={false} titol={tg(idioma, 'Per a abocar els extractes cal també el Tauler')}
+          accions={<AccioAprovacio porta={porta} id={TRACTOR_TAULER.id} onObreTractors={onObreTractors} varietat="secundari" idioma={idioma} />}>
+          {tg(idioma, 'El Tauler llig els extractes amb el seu tractor, «Gestoria · Tauler de l’empresa», que encara no està aprovat. L’Escàner pot analitzar la carpeta igualment.')}
         </Alerta>
       )}
 
       <section className="sdp-gestoria-escaner__seccio" aria-labelledby={idTria}>
-        <h2 id={idTria} className="sdp-gestoria-escaner__titol">Tria la carpeta</h2>
-        <Alerta to="info" viva={false} titol="La carpeta no ix d’este ordinador">
-          L’Escàner en llig el nom, la mida i la data de cada fitxer. Només en llig els bytes per a comparar els que tenen la
-          mateixa mida (els duplicats) i els primers 4 kB dels extractes del banc. No llig mai la carpeta de la identitat ni
-          l’arxiu, no mou ni esborra res i no guarda res.
+        <h2 id={idTria} className="sdp-gestoria-escaner__titol">{tg(idioma, 'Tria la carpeta')}</h2>
+        <Alerta to="info" viva={false} titol={tg(idioma, 'La carpeta no ix d’este ordinador')}>
+          {tg(idioma, 'L’Escàner en llig el nom, la mida i la data de cada fitxer. Només en llig els bytes per a comparar els que tenen la mateixa mida (els duplicats) i els primers 4 kB dels extractes del banc. No llig mai la carpeta de la identitat ni l’arxiu, no mou ni esborra res i no guarda res.')}
         </Alerta>
         {escaner.potTriarCarpeta ? (
           <div ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__accions">
             <Boto varietat={escaner.teCarpeta ? 'secundari' : 'primari'} onClick={escaner.triaCarpeta}
               carregant={escaner.ocupat === 'carpeta'}>
-              {escaner.teCarpeta ? 'Tria una altra carpeta' : 'Tria la carpeta arrel'}
+              {tg(idioma, escaner.teCarpeta ? 'Tria una altra carpeta' : 'Tria la carpeta arrel')}
             </Boto>
           </div>
         ) : (
-          <Camp etiqueta="Tria la carpeta arrel"
-            ajuda="Este navegador no obri el selector de carpetes: tria-la amb este botó. Res es puja enlloc. A l’iPhone i a l’iPad només es poden triar fitxers solts: sense carpetes, l’Escàner no sap els trimestres ni els bancs.">
+          <Camp etiqueta={tg(idioma, 'Tria la carpeta arrel')}
+            ajuda={tg(idioma, 'Este navegador no obri el selector de carpetes: tria-la amb este botó. Res es puja enlloc. A l’iPhone i a l’iPad només es poden triar fitxers solts: sense carpetes, l’Escàner no sap els trimestres ni els bancs.')}>
             {/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): la carpeta arrel porta la identitat legal;
                 la línia d'estat del selector només en diu el recompte, cap nom de fitxer. */}
             <CampText tipus="file" webkitdirectory="" multiple nomsVisibles={false}
@@ -482,17 +479,17 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
         )}
         {escaner.nomCarpeta ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">{`Carpeta triada: «${escaner.nomCarpeta}».`}</p> : null}
         {escaner.ocupat === 'escaneig' ? (
-          <Progres etiqueta={TEXT_FASE[progres?.fase] ?? 'Analitzant la carpeta…'}
+          <Progres etiqueta={TEXT_FASE[progres?.fase] ?? tg(idioma, 'Analitzant la carpeta…')}
             valor={progres && Number.isFinite(progres.total) && progres.total > 0 ? progres.fet : null}
             max={progres && Number.isFinite(progres.total) && progres.total > 0 ? progres.total : 100} />
         ) : null}
-        {escaner.error ? <Alerta to="error" titol="No s’ha pogut analitzar la carpeta">{escaner.error}</Alerta> : null}
-        <RevocaAprovacio porta={porta} id={TRACTOR_ESCANER.id} />
+        {escaner.error ? <Alerta to="error" titol={tg(idioma, 'No s’ha pogut analitzar la carpeta')}>{escaner.error}</Alerta> : null}
+        <RevocaAprovacio porta={porta} id={TRACTOR_ESCANER.id} idioma={idioma} />
       </section>
 
       {r ? (
         <section ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__seccio" aria-labelledby={idRadiografia}>
-          <h2 id={idRadiografia} className="sdp-gestoria-escaner__titol">Radiografia de la carpeta</h2>
+          <h2 id={idRadiografia} className="sdp-gestoria-escaner__titol">{tg(idioma, 'Radiografia de la carpeta')}</h2>
           <p className="sdp-gestoria-escaner__nota">
             {`${plural(r.fitxers, 'fitxer classificat', 'fitxers classificats')} pel nom, la mida i la carpeta. Les dates dels noms són indicis: revisa-les. Les carpetes buides no es veuen.`}
           </p>
@@ -511,11 +508,11 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
           {/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): cada tessel·la és un Boto del nucli 1.1.0 amb
               aria-pressed (la triada), el títol i el recompte. L'espai entre els dos fa que el nom diga «Bancs 3
               extractes»; en la columna flex no es pinta. */}
-          <div className="sdp-gestoria-escaner__radiografia" role="group" aria-label="Apartats de la radiografia">
+          <div className="sdp-gestoria-escaner__radiografia" role="group" aria-label={tg(idioma, 'Apartats de la radiografia')}>
             {TESSELES.map((t) => (
               <Boto key={t.id} varietat="secundari" icona={t.icona} className="sdp-gestoria-escaner__tessela"
                 aria-pressed={vista === t.id ? 'true' : 'false'} onClick={() => setVista(t.id)}>
-                <span ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__tessela-titol">{t.titol}</span>{' '}
+                <span ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__tessela-titol">{tg(idioma, t.titol)}</span>{' '}
                 <span className="sdp-gestoria-escaner__tessela-compte">{t.compte(r)}</span>
               </Boto>
             ))}
@@ -523,7 +520,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
           <Detall vista={vista} resultat={resultat} />
           {r.identitat.carpetes > 0 || r.identitat.fitxers > 0 ? (
             <Alerta to="info" viva={false} titol="La identitat legal té la seua vista"
-              accions={onObreIdentitat ? <Boto varietat="secundari" onClick={onObreIdentitat}>Obri Identitat i Finestreta</Boto> : null}>
+              accions={onObreIdentitat ? <Boto varietat="secundari" onClick={onObreIdentitat}>{tg(idioma, 'Obri Identitat i Finestreta')}</Boto> : null}>
               {`L’Escàner ha vist ${plural(r.identitat.fitxers, 'fitxer', 'fitxers')} de la identitat legal i no n’ha llegit cap byte. Les dades del titular es revisen i es confirmen a «Identitat i Finestreta».`}
             </Alerta>
           ) : null}
@@ -544,9 +541,9 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
 
       {r ? (
         <section ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__seccio" aria-labelledby={idExtractes}>
-          <h2 id={idExtractes} className="sdp-gestoria-escaner__titol">Extractes per al Tauler</h2>
+          <h2 id={idExtractes} className="sdp-gestoria-escaner__titol">{tg(idioma, 'Extractes per al Tauler')}</h2>
           {resultat.extractes.length ? (
-            <GrupCamps llegenda="Els extractes que s’abocaran al Tauler" className="sdp-gestoria-escaner__extractes">
+            <GrupCamps llegenda={tg(idioma, 'Els extractes que s’abocaran al Tauler')} className="sdp-gestoria-escaner__extractes">
               {resultat.extractes.map((f) => (
                 <Casella key={f.ruta} etiqueta={f.ruta} ajuda={`${TEXT_FORMAT[f.format] ?? f.format}. ${f.motiu}`}
                   checked={f.seleccionable && seleccio.includes(f.ruta)} disabled={!f.seleccionable}
@@ -554,16 +551,16 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
               ))}
             </GrupCamps>
           ) : (
-            <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">No s’ha trobat cap extracte del banc en la carpeta.</p>
+            <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">{tg(idioma, 'No s’ha trobat cap extracte del banc en la carpeta.')}</p>
           )}
           <div className="sdp-gestoria-escaner__accions">
             <Boto varietat="primari" onClick={aboca} disabled={!potAbocar} carregant={Boolean(tauler.llegint)}>
-              {triats === 1 ? 'Aboca 1 extracte al Tauler' : `Aboca ${triats} extractes al Tauler`}
+              {tf(idioma, 'abocaExtractes', triats)}
             </Boto>
           </div>
-          {tauler.error ? <Alerta to="error" titol="No s’han pogut llegir els extractes">{tauler.error}</Alerta> : null}
+          {tauler.error ? <Alerta to="error" titol={tg(idioma, 'No s’han pogut llegir els extractes')}>{tauler.error}</Alerta> : null}
           {tauler.lectura?.avisos?.length ? (
-            <Alerta to="avis" titol="Hi ha fitxers que no s’han llegit">
+            <Alerta to="avis" titol={tg(idioma, 'Hi ha fitxers que no s’han llegit')}>
               <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__llista">
                 {tauler.lectura.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
               </ul>
@@ -575,7 +572,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
 
       {escaner.teCarpeta || escaner.nomCarpeta || escaner.error ? (
         <div ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__accions">
-          <Boto varietat="secundari" onClick={oblida}>Oblida la carpeta</Boto>
+          <Boto varietat="secundari" onClick={oblida}>{tg(idioma, 'Oblida la carpeta')}</Boto>
         </div>
       ) : null}
     </div>

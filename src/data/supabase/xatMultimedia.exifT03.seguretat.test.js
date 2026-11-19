@@ -5,6 +5,7 @@ import { preparaAdjunt } from '../../sections/xat/adjuntLocal.js';
 import { publicaAdjuntXat } from './xatMultimedia.js';
 import { ambExifDeLoriginal, extreuTiff } from '../../components/universal/enquadrament/exifIncrustat.js';
 import { llegixExif } from '../../components/universal/enquadrament/exif.js';
+import { mp4 } from '../../../tests/helpers/contenidorsMedia.js';
 import { JPEG_NET, WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 import { APP0_JFIF, IMATGE, SOI, TIPUS, app1Exif, concatena, dataOriginal, gpsTorre, tiff } from '../../../tests/helpers/jpegProva.js';
 const m = vi.hoisted(() => ({ rpc: vi.fn(), request: vi.fn(), user: { id: '00000000-0000-4000-8000-000000000001' } }));
@@ -13,10 +14,10 @@ vi.mock('../identitat.js', () => ({ usuariDeSessio: () => m.user, jwtPerBackend:
 const FIL = '00000000-0000-4000-8000-000000000003';
 const ID = '00000000-0000-4000-8000-000000000002';
 const LLOC = { lat: 38.5919, lng: -0.4184 };
-const fotoGps = (extra = {}) => new Blob([concatena(SOI, APP0_JFIF, app1Exif(tiff({
+const fotoGps = (extra = {}, raster = JPEG_NET.subarray(2)) => new Blob([concatena(SOI, APP0_JFIF, app1Exif(tiff({
   ifd0: [{ tag: 0x010f, tipus: TIPUS.ASCII, valors: 'CAMERA-SINTETICA' }],
   exif: dataOriginal('2017:05:14 10:22:33', '+02:00'), gps: gpsTorre(), ...extra
-})), IMATGE)], { type: 'image/jpeg' });
+})), raster)], { type: 'image/jpeg' });
 const bytes = async blob => new Uint8Array(await blob.arrayBuffer());
 const gps = async blob => llegixExif(concatena(SOI, app1Exif(extreuTiff(await bytes(blob)) ?? new Uint8Array()))).gps;
 const sha = async blob => createHash('sha256').update(await bytes(blob)).digest('hex');
@@ -142,7 +143,9 @@ const caixa = (tipus, ...fills) => {
 const COORD_VIDEO = '+38.5919-000.4184/';
 function videoGps() {
   const xyz = caixa('xxxx', COORD_VIDEO); xyz.set([0xa9, 0x78, 0x79, 0x7a], 4);
-  return new Blob([caixa('ftyp', 'isom', new Uint8Array(4)), caixa('moov', caixa('udta', xyz)), caixa('mdat', 'MOSTRES-SINTETIQUES')], { type: 'video/mp4' });
+  const base = mp4(false), view = new DataView(base.buffer);
+  const start = view.getUint32(0), end = start + view.getUint32(start);
+  return new Blob([base.subarray(0, start), caixa('moov', base.subarray(start + 8, end), caixa('udta', xyz)), caixa('mdat', 'MOSTRES-SINTETIQUES')], { type: 'video/mp4' });
 }
 
 test('EXIF_T03 vídeo: MP4 conegut es saneja abans de pujar, manté mostres/mida i GPS consentit al DTO', async () => {
@@ -174,7 +177,8 @@ test('EXIF_T03 vídeo: legacy GPS amb bandera falsa no publica via RPC3 ni afirm
 });
 
 test.each(['reserva-pujada', '409', 'XHR409'])('EXIF_T03 delta: %s amb GPS remot antic i Blob local net del mateix ID no es publica', async via => {
-  const original = fotoGps();
+  // Objecte remot legacy deliberadament incomplet; no passa per la pujada.
+  const original = fotoGps({}, IMATGE);
   const net = await preparaAdjunt(original, { comprimeix: compressorRaster(original, 'image/jpeg') });
   const antic = await bytes(original);
   const remot = new Blob([antic.subarray(0, antic.length - 2), new Uint8Array(net.fitxer.size - original.size), antic.subarray(antic.length - 2)], { type: original.type });

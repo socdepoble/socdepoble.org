@@ -30,6 +30,7 @@ import { Carregant } from '../../../components/PedraSeca/atoms/estats.jsx';
 import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { Camp, CampText, Casella } from '../../../components/PedraSeca/organismes/formulari.jsx';
+import { tg } from '../i18nGestoria.js';
 import { CONFIRMACIO_EN_CLAR } from './cofre.js';
 import { avaluaFrase } from './nucli/cripto.js';
 import { useCofre } from './useCofre.js';
@@ -60,30 +61,30 @@ const ROBUSTESA = Object.freeze({
 const AJUDA_FRASE = 'Almenys 12 caràcters o 4 paraules. Quatre o cinc paraules sense relació entre elles són més fàcils de recordar i més fortes que una contrasenya curta i rara.';
 
 /** Un camp de frase de pas: etiqueta pròpia, ull, ajuda i error lligats per id. */
-function CampFrase({ etiqueta, valor, onCanvi, autoComplete, ajuda = null, error = null, etiquetaUll = 'Mostra la frase de pas', desactivat = false }) {
+function CampFrase({ etiqueta, valor, onCanvi, autoComplete, ajuda = null, error = null, etiquetaUll = 'Mostra la frase de pas', desactivat = false, idioma = 'ca' }) {
   const id = useId();
   const idAjuda = `${id}-ajuda`;
   const idError = `${id}-error`;
   const descrit = [ajuda ? idAjuda : null, error ? idError : null].filter(Boolean).join(' ') || undefined;
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-camp">
-      <label className="sdp-camp__etiqueta" htmlFor={id}>{etiqueta}</label>
-      {ajuda ? <p ref={adoptaEstilsDiferits} id={idAjuda} className="sdp-camp__ajuda">{ajuda}</p> : null}
+      <label className="sdp-camp__etiqueta" htmlFor={id}>{tg(idioma, etiqueta)}</label>
+      {ajuda ? <p ref={adoptaEstilsDiferits} id={idAjuda} className="sdp-camp__ajuda">{tg(idioma, ajuda)}</p> : null}
       <ControlContrasenya id={id} value={valor} onChange={(event) => onCanvi(event.target.value)} autoComplete={autoComplete}
-        etiquetaUll={etiquetaUll} aria-describedby={descrit} aria-invalid={error ? 'true' : undefined} disabled={desactivat} />
-      {error ? <p ref={adoptaEstilsDiferits} id={idError} className="sdp-camp__error">{error}</p> : null}
+        etiquetaUll={tg(idioma, etiquetaUll)} aria-describedby={descrit} aria-invalid={error ? 'true' : undefined} disabled={desactivat} />
+      {error ? <p ref={adoptaEstilsDiferits} id={idError} className="sdp-camp__error">{tg(idioma, error)}</p> : null}
     </div>
   );
 }
 
 /** L'indicador senzill de robustesa d'una frase nova. */
-function Robustesa({ frase }) {
+function Robustesa({ frase, idioma = 'ca' }) {
   const avaluacio = avaluaFrase(frase);
   const marca = ROBUSTESA[avaluacio.nivell];
   return (
     <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__robustesa" aria-live="polite">
-      <span>Robustesa:</span>
-      <Insignia to={marca.to}>{marca.text}</Insignia>
+      <span>{tg(idioma, 'Robustesa:')}</span>
+      <Insignia to={marca.to}>{tg(idioma, marca.text)}</Insignia>
       {avaluacio.valida ? <span ref={adoptaEstilsDiferits}>{avaluacio.motiu}</span> : null}
     </p>
   );
@@ -100,11 +101,11 @@ function AvisCofre({ avis, zona, onTanca }) {
 }
 
 /** Una subsecció del cofre obert, amb el seu títol. */
-function Seccio({ titol, children }) {
+function Seccio({ titol, idioma = 'ca', children }) {
   const id = useId();
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__seccio" aria-labelledby={id}>
-      <h3 id={id} className="sdp-gestoria-cofre__subtitol">{titol}</h3>
+      <h3 id={id} className="sdp-gestoria-cofre__subtitol">{tg(idioma, titol)}</h3>
       {children}
     </section>
   );
@@ -119,19 +120,19 @@ function errorDeFraseNova(frase, repeticio) {
 }
 
 /** Les frases nova i repetida, amb l'indicador; l'error va al camp que el té. */
-function FrasesNoves({ frase, setFrase, repeticio, setRepeticio, error, desactivat }) {
+function FrasesNoves({ frase, setFrase, repeticio, setRepeticio, error, desactivat, idioma = 'ca' }) {
   return (
     <>
       <CampFrase etiqueta="Frase de pas nova" valor={frase} onCanvi={setFrase} autoComplete="new-password" ajuda={AJUDA_FRASE}
-        error={error?.camp === 'frase' ? error.text : null} desactivat={desactivat} />
-      <Robustesa frase={frase} />
+        error={error?.camp === 'frase' ? error.text : null} desactivat={desactivat} idioma={idioma} />
+      <Robustesa frase={frase} idioma={idioma} />
       <CampFrase etiqueta="Repetix la frase de pas" valor={repeticio} onCanvi={setRepeticio} autoComplete="new-password"
-        etiquetaUll="Mostra la repetició de la frase" error={error?.camp === 'repeticio' ? error.text : null} desactivat={desactivat} />
+        etiquetaUll="Mostra la repetició de la frase" error={error?.camp === 'repeticio' ? error.text : null} desactivat={desactivat} idioma={idioma} />
     </>
   );
 }
 
-function FormulariCrea({ c }) {
+function FormulariCrea({ c, idioma = 'ca' }) {
   const [frase, setFrase] = useState('');
   const [repeticio, setRepeticio] = useState('');
   const [error, setError] = useState(null);
@@ -148,18 +149,17 @@ function FormulariCrea({ c }) {
   return (
     <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
       <p>
-        El que guardes en este cofre es desa xifrat en este navegador. Només la teua frase de pas o el codi de recuperació
-        l’obrin: ningú més, tampoc Sóc de Poble, ho pot recuperar si perds totes dues coses.
+        {tg(idioma, 'El que guardes en este cofre es desa xifrat en este navegador. Només la teua frase de pas o el codi de recuperació l’obrin: ningú més, tampoc Sóc de Poble, ho pot recuperar si perds totes dues coses.')}
       </p>
-      <FrasesNoves frase={frase} setFrase={setFrase} repeticio={repeticio} setRepeticio={setRepeticio} error={error} desactivat={Boolean(c.ocupat)} />
+      <FrasesNoves frase={frase} setFrase={setFrase} repeticio={repeticio} setRepeticio={setRepeticio} error={error} desactivat={Boolean(c.ocupat)} idioma={idioma} />
       <div className="sdp-gestoria-cofre__accions">
-        <Boto tipus="submit" varietat="primari" icona={Lock} carregant={c.ocupat === 'creant'} disabled={Boolean(c.ocupat)}>Crea el cofre</Boto>
+        <Boto tipus="submit" varietat="primari" icona={Lock} carregant={c.ocupat === 'creant'} disabled={Boolean(c.ocupat)}>{tg(idioma, 'Crea el cofre')}</Boto>
       </div>
     </form>
   );
 }
 
-function FormulariObre({ c, onOblidada }) {
+function FormulariObre({ c, onOblidada, idioma = 'ca' }) {
   const [frase, setFrase] = useState('');
   async function envia(event) {
     event.preventDefault();
@@ -167,16 +167,16 @@ function FormulariObre({ c, onOblidada }) {
   }
   return (
     <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
-      <CampFrase etiqueta="Frase de pas" valor={frase} onCanvi={setFrase} autoComplete="current-password" desactivat={Boolean(c.ocupat)} />
+      <CampFrase etiqueta="Frase de pas" valor={frase} onCanvi={setFrase} autoComplete="current-password" desactivat={Boolean(c.ocupat)} idioma={idioma} />
       <div className="sdp-gestoria-cofre__accions">
-        <Boto tipus="submit" varietat="primari" icona={LockOpen} carregant={c.ocupat === 'obrint'} disabled={Boolean(c.ocupat) || !frase}>Obri el cofre</Boto>
-        <Boto varietat="fantasma" disabled={Boolean(c.ocupat)} onClick={onOblidada}>He oblidat la frase de pas</Boto>
+        <Boto tipus="submit" varietat="primari" icona={LockOpen} carregant={c.ocupat === 'obrint'} disabled={Boolean(c.ocupat) || !frase}>{tg(idioma, 'Obri el cofre')}</Boto>
+        <Boto varietat="fantasma" disabled={Boolean(c.ocupat)} onClick={onOblidada}>{tg(idioma, 'He oblidat la frase de pas')}</Boto>
       </div>
     </form>
   );
 }
 
-function FormulariRecupera({ c, onTorna }) {
+function FormulariRecupera({ c, onTorna, idioma = 'ca' }) {
   const [codi, setCodi] = useState('');
   const [frase, setFrase] = useState('');
   const [repeticio, setRepeticio] = useState('');
@@ -199,26 +199,26 @@ function FormulariRecupera({ c, onTorna }) {
         un codi nou: el codi usat i la frase d’abans ja no obrin res del que hi ha ara. Les còpies xifrades fetes abans
         continuen obrint-se amb els secrets d’aleshores.
       </p>
-      <Camp etiqueta="Codi de recuperació" ajuda="Les 26 lletres i xifres que vas apuntar en crear el cofre (ABCD-EFGH-…).">
+      <Camp etiqueta={tg(idioma, 'Codi de recuperació')} ajuda={tg(idioma, 'Les 26 lletres i xifres que vas apuntar en crear el cofre (ABCD-EFGH-…).')}>
         <CampText value={codi} onChange={(event) => setCodi(event.target.value)} autoComplete="off" autoCapitalize="characters"
           spellCheck={false} disabled={Boolean(c.ocupat)} />
       </Camp>
-      <FrasesNoves frase={frase} setFrase={setFrase} repeticio={repeticio} setRepeticio={setRepeticio} error={error} desactivat={Boolean(c.ocupat)} />
+      <FrasesNoves frase={frase} setFrase={setFrase} repeticio={repeticio} setRepeticio={setRepeticio} error={error} desactivat={Boolean(c.ocupat)} idioma={idioma} />
       <div className="sdp-gestoria-cofre__accions">
         <Boto tipus="submit" varietat="primari" icona={KeyRound} carregant={c.ocupat === 'recuperant'} disabled={Boolean(c.ocupat) || !codi}>
-          Recupera el cofre
+          {tg(idioma, 'Recupera el cofre')}
         </Boto>
-        <Boto varietat="fantasma" disabled={Boolean(c.ocupat)} onClick={onTorna}>Torna a la frase de pas</Boto>
+        <Boto varietat="fantasma" disabled={Boolean(c.ocupat)} onClick={onTorna}>{tg(idioma, 'Torna a la frase de pas')}</Boto>
       </div>
     </form>
   );
 }
 
-function PanellCodi({ codi, onApuntat }) {
+function PanellCodi({ codi, onApuntat, idioma = 'ca' }) {
   const [apuntat, setApuntat] = useState(false);
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari">
-      <Alerta to="avis" viva={false} titol="Apunta ara el codi de recuperació">
+      <Alerta to="avis" viva={false} titol={tg(idioma, 'Apunta ara el codi de recuperació')}>
         <p>
           Només es mostra esta vegada. Escriu-lo en paper i guarda’l lluny de l’ordinador. No el copies, no li faces
           fotos i no el deixes en cap altre programa. Sense la frase i sense este codi, el cofre no es pot obrir.
@@ -231,15 +231,15 @@ function PanellCodi({ codi, onApuntat }) {
       <p className="sdp-gestoria-cofre__codi">
         <code translate="no">{codi}</code>
       </p>
-      <Casella etiqueta="L’he apuntat en paper i el guarde en un lloc segur" checked={apuntat} onChange={(event) => setApuntat(event.target.checked)} />
+      <Casella etiqueta={tg(idioma, 'L’he apuntat en paper i el guarde en un lloc segur')} checked={apuntat} onChange={(event) => setApuntat(event.target.checked)} />
       <div className="sdp-gestoria-cofre__accions">
-        <Boto varietat="primari" disabled={!apuntat} onClick={onApuntat}>Continua</Boto>
+        <Boto varietat="primari" disabled={!apuntat} onClick={onApuntat}>{tg(idioma, 'Continua')}</Boto>
       </div>
     </div>
   );
 }
 
-function ImportaCopia({ c, zona }) {
+function ImportaCopia({ c, zona, idioma = 'ca' }) {
   const [copia, setCopia] = useState(null);
   const [frase, setFrase] = useState('');
   const [errorFitxer, setErrorFitxer] = useState(null);
@@ -263,22 +263,22 @@ function ImportaCopia({ c, zona }) {
   }
   return (
     <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
-      <Camp etiqueta={zona === 'porta' ? 'Restaura una còpia xifrada' : 'Importa una còpia xifrada'} error={errorFitxer}
-        ajuda="Un fitxer .json fet amb «Descarrega la còpia xifrada». Abans de tocar res es comprova sencer; en un cofre obert només s’hi afig el que falta.">
-        <CampText tipus="file" accept=".json,application/json" textBoto="Tria la còpia" disabled={Boolean(c.ocupat)} onChange={tria} />
+      <Camp etiqueta={tg(idioma, zona === 'porta' ? 'Restaura una còpia xifrada' : 'Importa una còpia xifrada')} error={errorFitxer}
+        ajuda={tg(idioma, 'Un fitxer .json fet amb «Descarrega la còpia xifrada». Abans de tocar res es comprova sencer; en un cofre obert només s’hi afig el que falta.')}>
+        <CampText tipus="file" accept=".json,application/json" textBoto={tg(idioma, 'Tria la còpia')} disabled={Boolean(c.ocupat)} onChange={tria} />
       </Camp>
       <CampFrase etiqueta="Frase de pas de la còpia" valor={frase} onCanvi={setFrase} autoComplete="off"
-        etiquetaUll="Mostra la frase de la còpia" desactivat={Boolean(c.ocupat)} />
+        etiquetaUll="Mostra la frase de la còpia" desactivat={Boolean(c.ocupat)} idioma={idioma} />
       <div className="sdp-gestoria-cofre__accions">
         <Boto tipus="submit" varietat="secundari" carregant={c.ocupat === 'important'} disabled={Boolean(c.ocupat) || !copia || !frase}>
-          {zona === 'porta' ? 'Restaura la còpia' : 'Importa la còpia'}
+          {tg(idioma, zona === 'porta' ? 'Restaura la còpia' : 'Importa la còpia')}
         </Boto>
       </div>
     </form>
   );
 }
 
-function FormulariCanvia({ c }) {
+function FormulariCanvia({ c, idioma = 'ca' }) {
   const [actual, setActual] = useState('');
   const [frase, setFrase] = useState('');
   const [repeticio, setRepeticio] = useState('');
@@ -303,18 +303,18 @@ function FormulariCanvia({ c }) {
         s’obrin amb la frase vella. Si creus que algú coneix la frase o el codi, marca la casella.
       </p>
       <CampFrase etiqueta="Frase de pas actual" valor={actual} onCanvi={setActual} autoComplete="current-password"
-        etiquetaUll="Mostra la frase actual" desactivat={Boolean(c.ocupat)} />
-      <FrasesNoves frase={frase} setFrase={setFrase} repeticio={repeticio} setRepeticio={setRepeticio} error={error} desactivat={Boolean(c.ocupat)} />
+        etiquetaUll="Mostra la frase actual" desactivat={Boolean(c.ocupat)} idioma={idioma} />
+      <FrasesNoves frase={frase} setFrase={setFrase} repeticio={repeticio} setRepeticio={setRepeticio} error={error} desactivat={Boolean(c.ocupat)} idioma={idioma} />
       <Casella etiqueta="Algú pot conéixer la frase o el codi: renova també la clau de les dades i el codi de recuperació"
         checked={rota} onChange={(event) => setRota(event.target.checked)} disabled={Boolean(c.ocupat)} />
       <div className="sdp-gestoria-cofre__accions">
-        <Boto tipus="submit" varietat="secundari" carregant={c.ocupat === 'canviant'} disabled={Boolean(c.ocupat) || !actual}>Canvia la frase de pas</Boto>
+        <Boto tipus="submit" varietat="secundari" carregant={c.ocupat === 'canviant'} disabled={Boolean(c.ocupat) || !actual}>{tg(idioma, 'Canvia la frase de pas')}</Boto>
       </div>
     </form>
   );
 }
 
-function FormulariRenova({ c }) {
+function FormulariRenova({ c, idioma = 'ca' }) {
   const [frase, setFrase] = useState('');
   async function envia(event) {
     event.preventDefault();
@@ -328,15 +328,15 @@ function FormulariRenova({ c }) {
         Les còpies xifrades fetes abans continuen obrint-se amb el codi i la frase d’aleshores.
       </p>
       <CampFrase etiqueta="Frase de pas actual" valor={frase} onCanvi={setFrase} autoComplete="current-password"
-        etiquetaUll="Mostra la frase per al codi nou" desactivat={Boolean(c.ocupat)} />
+        etiquetaUll="Mostra la frase per al codi nou" desactivat={Boolean(c.ocupat)} idioma={idioma} />
       <div className="sdp-gestoria-cofre__accions">
-        <Boto tipus="submit" varietat="secundari" carregant={c.ocupat === 'renovant'} disabled={Boolean(c.ocupat) || !frase}>Fes un codi nou</Boto>
+        <Boto tipus="submit" varietat="secundari" carregant={c.ocupat === 'renovant'} disabled={Boolean(c.ocupat) || !frase}>{tg(idioma, 'Fes un codi nou')}</Boto>
       </div>
     </form>
   );
 }
 
-function FormulariClar({ c }) {
+function FormulariClar({ c, idioma = 'ca' }) {
   const [entes, setEntes] = useState(false);
   const [frase, setFrase] = useState('');
   async function envia(event) {
@@ -356,10 +356,10 @@ function FormulariClar({ c }) {
       </Alerta>
       <Casella etiqueta={CONFIRMACIO_EN_CLAR} checked={entes} onChange={(event) => setEntes(event.target.checked)} disabled={Boolean(c.ocupat)} />
       <CampFrase etiqueta="Frase de pas actual" valor={frase} onCanvi={setFrase} autoComplete="current-password"
-        etiquetaUll="Mostra la frase per a exportar" desactivat={Boolean(c.ocupat)} />
+        etiquetaUll="Mostra la frase per a exportar" desactivat={Boolean(c.ocupat)} idioma={idioma} />
       <div className="sdp-gestoria-cofre__accions">
         <Boto tipus="submit" varietat="perill" carregant={c.ocupat === 'exportant-clar'} disabled={Boolean(c.ocupat) || !entes || !frase}>
-          Descarrega sense xifrar
+          {tg(idioma, 'Descarrega sense xifrar')}
         </Boto>
       </div>
     </form>
@@ -367,11 +367,11 @@ function FormulariClar({ c }) {
 }
 
 /* L'estat obert, dins de la targeta «Cofre xifrat»: l'avís, el codi pendent i «Bloqueja». */
-function EstatObert({ c }) {
+function EstatObert({ c, idioma = 'ca' }) {
   return (
     <>
-      <Alerta to="exit" viva={false} titol="El cofre és obert">
-        <p ref={adoptaEstilsDiferits}>Es bloqueja sol després de 10 minuts sense activitat, si la pestanya està amagada més de 5 minuts o si ixes de la pàgina.</p>
+      <Alerta to="exit" viva={false} titol={tg(idioma, 'El cofre és obert')}>
+        <p ref={adoptaEstilsDiferits}>{tg(idioma, 'Es bloqueja sol després de 10 minuts sense activitat, si la pestanya està amagada més de 5 minuts o si ixes de la pàgina.')}</p>
       </Alerta>
       {c.codiSenseConfirmar ? (
         <Alerta to="avis" viva={false} titol="Falta un codi de recuperació apuntat">
@@ -382,42 +382,42 @@ function EstatObert({ c }) {
         </Alerta>
       ) : null}
       <div className="sdp-gestoria-cofre__accions">
-        <Boto varietat="primari" icona={Lock} onClick={c.bloqueja}>Bloqueja</Boto>
+        <Boto varietat="primari" icona={Lock} onClick={c.bloqueja}>{tg(idioma, 'Bloqueja')}</Boto>
       </div>
     </>
   );
 }
 
 /* La gestió del cofre obert, en una targeta pròpia després del contingut: còpies, frase, codi i exportació en clar. */
-function GestioCofre({ c }) {
+function GestioCofre({ c, idioma = 'ca' }) {
   const id = useId();
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre" aria-labelledby={id}>
       <div className="sdp-gestoria-cofre__cap">
-        <h2 id={id} className="sdp-gestoria-cofre__titol">Còpies i claus del cofre</h2>
+        <h2 id={id} className="sdp-gestoria-cofre__titol">{tg(idioma, 'Còpies i claus del cofre')}</h2>
       </div>
-      <Seccio titol="Còpia de seguretat xifrada">
+      <Seccio titol="Còpia de seguretat xifrada" idioma={idioma}>
         <p className="sdp-gestoria-cofre__nota">
           El cofre viu en este navegador, que el pot esborrar. La còpia ix xifrada: sense la frase de pas no es pot llegir.
         </p>
         <div className="sdp-gestoria-cofre__accions">
           <Boto varietat="secundari" carregant={c.ocupat === 'exportant'} disabled={Boolean(c.ocupat)} onClick={c.exporta}>
-            Descarrega la còpia xifrada
+            {tg(idioma, 'Descarrega la còpia xifrada')}
           </Boto>
         </div>
         <AvisCofre avis={c.avis} zona="copia" onTanca={c.tancaAvis} />
-        <ImportaCopia c={c} zona="copia" />
+        <ImportaCopia c={c} zona="copia" idioma={idioma} />
       </Seccio>
-      <Seccio titol="Canvia la frase de pas">
-        <FormulariCanvia c={c} />
+      <Seccio titol="Canvia la frase de pas" idioma={idioma}>
+        <FormulariCanvia c={c} idioma={idioma} />
         <AvisCofre avis={c.avis} zona="frase" onTanca={c.tancaAvis} />
       </Seccio>
-      <Seccio titol="Codi de recuperació nou">
-        <FormulariRenova c={c} />
+      <Seccio titol="Codi de recuperació nou" idioma={idioma}>
+        <FormulariRenova c={c} idioma={idioma} />
         <AvisCofre avis={c.avis} zona="codi" onTanca={c.tancaAvis} />
       </Seccio>
-      <Seccio titol="Exporta sense xifrar">
-        <FormulariClar c={c} />
+      <Seccio titol="Exporta sense xifrar" idioma={idioma}>
+        <FormulariClar c={c} idioma={idioma} />
         <AvisCofre avis={c.avis} zona="clar" onTanca={c.tancaAvis} />
       </Seccio>
     </section>
@@ -428,7 +428,7 @@ function GestioCofre({ c }) {
  * @param {{ cofre?: object, descarrega?: Function, rellotge?: () => number,
  *   children?: (cofre: object) => import('react').ReactNode }} props
  */
-export default function PortaCofre({ cofre, descarrega, rellotge, children }) {
+export default function PortaCofre({ cofre, descarrega, rellotge, idioma = 'ca', children }) {
   const c = useCofre({ cofre, descarrega, rellotge });
   const [oblidada, setOblidada] = useState(false);
   const idTitol = useId();
@@ -440,8 +440,8 @@ export default function PortaCofre({ cofre, descarrega, rellotge, children }) {
 
   let cos;
   let obert = false;
-  if (c.codiRecuperacio) cos = <PanellCodi codi={c.codiRecuperacio} onApuntat={c.codiApuntat} />;
-  else if (c.estat === 'carregant') cos = <Carregant etiqueta="Comprovant el cofre…" />;
+  if (c.codiRecuperacio) cos = <PanellCodi codi={c.codiRecuperacio} onApuntat={c.codiApuntat} idioma={idioma} />;
+  else if (c.estat === 'carregant') cos = <Carregant etiqueta={tg(idioma, 'Comprovant el cofre…')} />;
   else if (c.estat === 'insegur') {
     cos = (
       <Alerta to="error" viva={false} titol="El cofre no s’obri en esta adreça">
@@ -460,17 +460,17 @@ export default function PortaCofre({ cofre, descarrega, rellotge, children }) {
   } else if (c.estat === 'absent') {
     cos = (
       <>
-        <FormulariCrea c={c} />
-        <ImportaCopia c={c} zona="porta" />
+        <FormulariCrea c={c} idioma={idioma} />
+        <ImportaCopia c={c} zona="porta" idioma={idioma} />
       </>
     );
   } else if (c.estat === 'bloquejat') {
     cos = oblidada
-      ? <FormulariRecupera c={c} onTorna={() => setOblidada(false)} />
-      : <FormulariObre c={c} onOblidada={() => setOblidada(true)} />;
+      ? <FormulariRecupera c={c} onTorna={() => setOblidada(false)} idioma={idioma} />
+      : <FormulariObre c={c} onOblidada={() => setOblidada(true)} idioma={idioma} />;
   } else {
     obert = true;
-    cos = <EstatObert c={c} />;
+    cos = <EstatObert c={c} idioma={idioma} />;
   }
 
   /* Tres blocs germans: la targeta del cofre, el contingut (només obert) i la gestió (només obert). */
@@ -478,14 +478,14 @@ export default function PortaCofre({ cofre, descarrega, rellotge, children }) {
     <>
       <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre" aria-labelledby={idTitol}>
         <div className="sdp-gestoria-cofre__cap">
-          <h2 id={idTitol} className="sdp-gestoria-cofre__titol">Cofre xifrat</h2>
-          <Insignia to={marca.to}>{marca.text}</Insignia>
+          <h2 id={idTitol} className="sdp-gestoria-cofre__titol">{tg(idioma, 'Cofre xifrat')}</h2>
+          <Insignia to={marca.to}>{tg(idioma, marca.text)}</Insignia>
         </div>
         <AvisCofre avis={c.avis} zona="porta" onTanca={c.tancaAvis} />
         {cos}
       </section>
       {obert && typeof children === 'function' ? children(c.cofre) : null}
-      {obert ? <GestioCofre c={c} /> : null}
+      {obert ? <GestioCofre c={c} idioma={idioma} /> : null}
     </>
   );
 }

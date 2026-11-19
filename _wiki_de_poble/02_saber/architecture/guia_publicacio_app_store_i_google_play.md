@@ -21,16 +21,37 @@ Esta guia reunix el que cal **copiar i enganxar** per a pujar l'App de Sóc de P
 
 ## 2. Dades fixes de les dues fitxes
 
-| Camp | Valor | On es comprova |
-| --- | --- | --- |
-| Nom de l'App | Sóc de Poble | `ios/App/App/Info.plist` (CFBundleDisplayName) |
-| Política de privacitat | `https://socdepoble.org/legal` | `src/config/sections.js:56`; en producció, 200 amb la descripció de privacitat |
-| URL de suport | `https://socdepoble.org/legal` | Apartat 1 de la pàgina, amb el correu públic del projecte (`src/sections/text/legalContent.js:33`) |
-| URL de màrqueting (opcional a Apple) | `https://socdepoble.org/projecte` | En producció, 200 |
-| URL per a esborrar el compte (Google) | `https://socdepoble.org/legal#esborra-compte` | `src/sections/text/legalContent.js:182`; l'àncora és al paquet de producció |
-| Correu de contacte de la fitxa | El correu públic de l'apartat 1 de `/legal` | Cap correu personal |
-| Drets del contingut (Apple) | L'App mostra contingut que publiquen les persones usuàries | Normes a l'apartat 3 de `/legal` |
-| Xifratge (Apple) | `ITSAppUsesNonExemptEncryption = false` | `ios/App/App/Info.plist:44` |
+### Nom de l'App
+
+**Valor:** **Sóc de Poble** · **On es comprova:** `ios/App/App/Info.plist` (`CFBundleDisplayName`).
+
+### Política de privacitat
+
+**Valor:** `https://socdepoble.org/legal` · **On es comprova:** `src/config/sections.js:56`; en producció respon `200` amb la descripció de privacitat.
+
+### URL de suport
+
+**Valor:** `https://socdepoble.org/legal` · **On es comprova:** apartat 1 de la pàgina, amb el **correu públic del projecte** (`src/sections/text/legalContent.js:33`).
+
+### URL de màrqueting (opcional a Apple)
+
+**Valor:** `https://socdepoble.org/projecte` · **On es comprova:** en producció respon `200`.
+
+### URL per a esborrar el compte (Google)
+
+**Valor:** `https://socdepoble.org/legal#esborra-compte` · **On es comprova:** `src/sections/text/legalContent.js:182`; l'àncora és al **paquet de producció**.
+
+### Correu de contacte de la fitxa
+
+**Valor:** el **correu públic de l'apartat 1** de `/legal` · **On es comprova:** **cap correu personal**.
+
+### Drets del contingut (Apple)
+
+**Valor:** l'App mostra **contingut que publiquen les persones usuàries** · **On es comprova:** normes a l'apartat 3 de `/legal`.
+
+### Xifratge (Apple)
+
+**Valor:** `ITSAppUsesNonExemptEncryption = false` · **On es comprova:** `ios/App/App/Info.plist:44`.
 
 - **Llengües de la fitxa:** català (`ca`) per als textos en valencià, castellà (`es-ES`) i anglés (`en-GB` o `en-US`); la llengua principal la tria el Mestre.
 - **Categoria proposada:** a Apple, «Social Networking» de principal i «News» de secundària; a Google, «Social». És una proposta, no una decisió.
@@ -280,17 +301,41 @@ Descripció completa: la de la secció 3.3.
 
 Comptats amb un script de Node sobre els textos d'esta guia: els caràcters són punts de codi (`[...text].length`) i els octets, UTF-8 (`Buffer.byteLength`). Apple limita les paraules clau i les notes de revisió en octets, no en caràcters.
 
-| Botiga | Camp | Límit | ca | es | en |
-| --- | --- | --- | --- | --- | --- |
-| Apple | Nom | 30 caràcters | 12 | 12 | 12 |
-| Apple | Subtítol | 30 caràcters | 29 | 27 | 28 |
-| Apple | Text promocional | 170 caràcters | 106 | 104 | 87 |
-| Apple | Descripció | 4.000 caràcters | 1.019 | 1.028 | 1.008 |
-| Apple | Paraules clau | 100 octets | 86 | 91 | 82 |
-| Apple | Notes de revisió (secció 11) | 4.000 octets | | | 1.199 |
-| Google | Títol | 30 caràcters | 12 | 12 | 12 |
-| Google | Descripció breu | 80 caràcters | 73 | 74 | 72 |
-| Google | Descripció completa | 4.000 caràcters | 1.019 | 1.028 | 1.008 |
+### Apple · Nom
+
+**Límit:** **30 caràcters** · **Valencià (`ca`):** `12` · **Castellà (`es`):** `12` · **Anglés (`en`):** `12`.
+
+### Apple · Subtítol
+
+**Límit:** **30 caràcters** · **Valencià (`ca`):** `29` · **Castellà (`es`):** `27` · **Anglés (`en`):** `28`.
+
+### Apple · Text promocional
+
+**Límit:** **170 caràcters** · **Valencià (`ca`):** `106` · **Castellà (`es`):** `104` · **Anglés (`en`):** `87`.
+
+### Apple · Descripció
+
+**Límit:** **4.000 caràcters** · **Valencià (`ca`):** `1.019` · **Castellà (`es`):** `1.028` · **Anglés (`en`):** `1.008`.
+
+### Apple · Paraules clau
+
+**Límit:** **100 octets** · **Valencià (`ca`):** `86` · **Castellà (`es`):** `91` · **Anglés (`en`):** `82`.
+
+### Apple · Notes de revisió (secció 11)
+
+**Límit:** **4.000 octets** · **Anglés (`en`):** `1.199` octets.
+
+### Google · Títol
+
+**Límit:** **30 caràcters** · **Valencià (`ca`):** `12` · **Castellà (`es`):** `12` · **Anglés (`en`):** `12`.
+
+### Google · Descripció breu
+
+**Límit:** **80 caràcters** · **Valencià (`ca`):** `73` · **Castellà (`es`):** `74` · **Anglés (`en`):** `72`.
+
+### Google · Descripció completa
+
+**Límit:** **4.000 caràcters** · **Valencià (`ca`):** `1.019` · **Castellà (`es`):** `1.028` · **Anglés (`en`):** `1.008`.
 
 - **Amb les frases de la secció 3.4:** text promocional de 132, 128 i 112 caràcters, i descripció de 1.075, 1.087 i 1.056.
 - **Amb les dues frases per verificar de la secció 11:** notes de 1.451 octets.
@@ -303,34 +348,85 @@ Les definicions són les de Google: «recollir» és transmetre dades fora del d
 
 ### 6.1 Recollida, seguretat i eliminació
 
-| Pregunta | Resposta | Evidència |
-| --- | --- | --- |
-| L'App recull o compartix dades dels tipus exigits? | Sí | Taula de la secció 6.2 |
-| Totes les dades es xifren en trànsit? | Sí | `vite.natiu.config.js:250` (el binari para sense un Supabase `https`); `capacitor.config.json` (`androidScheme: https`, `allowMixedContent: false`) |
-| Hi ha manera de demanar l'eliminació de les dades? | Sí | Dins de l'App (secció 8) i per correu (`legalContent.js:182`) |
-| URL per a esborrar el compte | `https://socdepoble.org/legal#esborra-compte` | Explica els dos camins, què s'esborra, què es conserva i els terminis |
-| Es poden esborrar dades sense esborrar el compte? | Sí, en part | Notes (`src/data/supabase/notes.js:261`); la resta de continguts, No verificat |
-| Comptes que es poden crear | Correu i contrasenya; Apple a iOS i Google, quan estiguen actius (secció 9) | `src/data/supabase/auth.js:522`, `:639`; `src/natiu/entradaSocial.js:41` |
+#### L'App recull o compartix dades dels tipus exigits?
+
+**Resposta:** **Sí** · **Evidència:** catàleg detallat de la **secció 6.2**.
+
+#### Totes les dades es xifren en trànsit?
+
+**Resposta:** **Sí** · **Evidència:** `vite.natiu.config.js:250` (el binari para sense un Supabase `https`) i `capacitor.config.json` (`androidScheme: https`, `allowMixedContent: false`).
+
+#### Hi ha manera de demanar l'eliminació de les dades?
+
+**Resposta:** **Sí** · **Evidència:** camí directe **dins de l'App** (secció 8) i sol·licitud per correu (`legalContent.js:182`).
+
+#### URL per a esborrar el compte
+
+**Resposta:** `https://socdepoble.org/legal#esborra-compte` · **Evidència:** explica els **dos camins**, què s'esborra, què es conserva i els **terminis**.
+
+#### Es poden esborrar dades sense esborrar el compte?
+
+**Resposta:** **Sí, en part** · **Evidència:** notes privades (`src/data/supabase/notes.js:261`); la resta de continguts, **No verificat**.
+
+#### Comptes que es poden crear
+
+**Resposta:** **Correu i contrasenya**; **Apple a iOS** i **Google**, quan estiguen actius (secció 9) · **Evidència:** `src/data/supabase/auth.js:522`, `:639` i `src/natiu/entradaSocial.js:41`.
 
 ### 6.2 Tipus de dades recollides
 
-**Cap tipus es compartix**: Supabase, Sollutia i Google Workspace són **encarregats del tractament per contracte** (`legalContent.js:132-138`), i la IAIA MarIA de l'aplicació no envia el que li escrius a cap proveïdor d'intel·ligència artificial: **respon al dispositiu** (`legalContent.js:157-162`; `src/data/iaiaLocal.js:43-44`; la guarda és `src/sections/text/legal.iaia.test.js`). Amb compte, la pregunta al xat de la IAIA es publica al **xat públic** de la seua pàgina (fila «Activitat › Altre contingut generat»). A l'App nativa no hi ha «Vore mapa» i **no es connecta a OpenStreetMap** (`legalContent.js:242`; `src/sections/mur/MapaFotografic.jsx:842`). Només l'historial de cerques podria marcar-se com a **processat de manera efímera**, i només amb la **comprovació de la secció 14.1**.
+**Cap tipus es compartix**: Supabase, Sollutia i Google Workspace són **encarregats del tractament per contracte** (`legalContent.js:132-138`), i la IAIA MarIA de l'aplicació no envia el que li escrius a cap proveïdor d'intel·ligència artificial: **respon al dispositiu** (`legalContent.js:157-162`; `src/data/iaiaLocal.js:43-44`; la guarda és `src/sections/text/legal.iaia.test.js`). Amb compte, la pregunta al xat de la IAIA es publica al **xat públic** de la seua pàgina (entrada «Activitat › Altre contingut generat»). A l'App nativa no hi ha «Vore mapa» i **no es connecta a OpenStreetMap** (`legalContent.js:242`; `src/sections/mur/MapaFotografic.jsx:842`). Només l'historial de cerques podria marcar-se com a **processat de manera efímera**, i només amb la **comprovació de la secció 14.1**.
 
-| Categoria › tipus | Obligatori o opcional | Finalitats | Evidència |
-| --- | --- | --- | --- |
-| Informació personal › Nom | Obligatori (pot ser un pseudònim) | Funcionalitat; gestió del compte | `legalContent.js:96`; `src/data/supabase/perfils.js:101` |
-| Informació personal › Adreça electrònica | Obligatori | Funcionalitat; gestió del compte; frau, seguretat i compliment | `legalContent.js:95` i `:101` (empremta per a la prova del consentiment) |
-| Informació personal › Identificadors d'usuari | Obligatori | Funcionalitat; gestió del compte; frau, seguretat i compliment | `legalContent.js:95` (identificador d'Apple o Google); `src/data/supabase/moderacio.js:106` |
-| Ubicació › Ubicació aproximada | Opcional | Funcionalitat | `src/components/universal/enquadrament/geolocalitzacio.js:14-20` (precisions «100m» i «poble»); la política ho diu a `legalContent.js:98` (apartat 8) i `:153` (apartat 13) |
-| Ubicació › Ubicació precisa | Opcional | Funcionalitat | `geolocalitzacio.js:28` (precisió «exacta» de sèrie a les fotos de publicació); `src/utils/imageUtils.js:17-30`; la política ho diu a `legalContent.js:98` (apartat 8) i `:153` (apartat 13) |
-| Missatges › Altres missatges a l'App | Opcional | Funcionalitat | `legalContent.js:97`, `:124`; el xifratge d'extrem a extrem encara no és actiu (`src/data/supabase/xatXifrat.js:9-13`) |
-| Fotos i vídeos › Fotos | Opcional | Funcionalitat | `src/data/xatMultimedia.js:18-22`; foto de perfil (`legalContent.js:96`) |
-| Fotos i vídeos › Vídeos | Opcional | Funcionalitat | `xatMultimedia.js:20` |
-| Fitxers d'àudio › Gravacions de veu o so | Opcional | Funcionalitat | `xatMultimedia.js:21` (notes de veu del xat) |
-| Contactes | Opcional | Funcionalitat | Seguiments, el graf social de l'App (`legalContent.js:99`; `src/data/supabase/seguiments.js:118`). Decisió del Mestre (secció 14.1) |
-| Activitat › Altre contingut generat | Opcional | Funcionalitat; frau, seguretat i compliment | Publicacions, notes, consultes a la IAIA MarIA i denúncies (`legalContent.js:97`, `:102`, `:105`) |
-| Activitat › Altres accions | Opcional | Funcionalitat; frau, seguretat i compliment | Bloquejos i acceptació de les normes (`moderacio.js:149`, `:216`) |
-| Activitat › Historial de cerques a l'App | Opcional | Funcionalitat | La cerca del directori va dins de la URL de PostgREST, una paraula per filtre `ilike` (`src/data/supabase/organizations.js:212-220` i `:254-259`), i la de membres del xat, dins de la crida `membres_del_poble` (`src/data/supabase/xat.js:825-828`). Google demana declarar-la encara que el tractament siga efímer. Processat de manera efímera: Sí només si es confirma que ni l'API ni els registres de Supabase guarden la consulta (secció 14.1); fins aleshores, No |
+#### Informació personal › Nom
+
+**Caràcter:** **Obligatori** (pot ser un pseudònim) · **Finalitats:** **funcionalitat** i **gestió del compte** · **Evidència:** `legalContent.js:96` i `src/data/supabase/perfils.js:101`.
+
+#### Informació personal › Adreça electrònica
+
+**Caràcter:** **Obligatori** · **Finalitats:** **funcionalitat**, **gestió del compte**, i **frau, seguretat i compliment** · **Evidència:** `legalContent.js:95` i `:101` (empremta per a la prova del consentiment).
+
+#### Informació personal › Identificadors d'usuari
+
+**Caràcter:** **Obligatori** · **Finalitats:** **funcionalitat**, **gestió del compte**, i **frau, seguretat i compliment** · **Evidència:** `legalContent.js:95` (identificador d'Apple o Google) i `src/data/supabase/moderacio.js:106`.
+
+#### Ubicació › Ubicació aproximada
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** · **Evidència:** `src/components/universal/enquadrament/geolocalitzacio.js:14-20` (precisions «100m» i «poble»); la política ho recull a `legalContent.js:98` (apartat 8) i `:153` (apartat 13).
+
+#### Ubicació › Ubicació precisa
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** · **Evidència:** `geolocalitzacio.js:28` (precisió «exacta» de sèrie a les fotos de publicació) i `src/utils/imageUtils.js:17-30`; la política ho recull a `legalContent.js:98` (apartat 8) i `:153` (apartat 13).
+
+#### Missatges › Altres missatges a l'App
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** · **Evidència:** `legalContent.js:97`, `:124`; el **xifratge d'extrem a extrem** encara no és actiu (`src/data/supabase/xatXifrat.js:9-13`).
+
+#### Fotos i vídeos › Fotos
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** · **Evidència:** `src/data/xatMultimedia.js:18-22` i foto de perfil (`legalContent.js:96`).
+
+#### Fotos i vídeos › Vídeos
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** · **Evidència:** `xatMultimedia.js:20`.
+
+#### Fitxers d'àudio › Gravacions de veu o so
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** · **Evidència:** `xatMultimedia.js:21` (**notes de veu** del xat).
+
+#### Contactes
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** · **Evidència:** seguiments, el **graf social de l'App** (`legalContent.js:99`; `src/data/supabase/seguiments.js:118`). Pendent de decisió del Mestre (secció 14.1).
+
+#### Activitat › Altre contingut generat
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** i **frau, seguretat i compliment** · **Evidència:** publicacions, notes, consultes a la IAIA MarIA i denúncies (`legalContent.js:97`, `:102`, `:105`).
+
+#### Activitat › Altres accions
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** i **frau, seguretat i compliment** · **Evidència:** bloquejos i acceptació de les normes (`moderacio.js:149`, `:216`).
+
+#### Activitat › Historial de cerques a l'App
+
+**Caràcter:** **Opcional** · **Finalitats:** **funcionalitat** · **Evidència:** la cerca del directori va dins de la URL de PostgREST, una paraula per filtre `ilike` (`src/data/supabase/organizations.js:212-220` i `:254-259`), i la de membres del xat, dins de la crida `membres_del_poble` (`src/data/supabase/xat.js:825-828`). Google demana declarar-la encara que el tractament siga efímer. **Processat de manera efímera:** **Sí** només si es confirma que ni l'API ni els registres de Supabase guarden la consulta (secció 14.1); fins aleshores, **No**.
 
 ### 6.3 Dades que l'App no recull
 
@@ -437,21 +533,48 @@ Reports are reviewed by a person within 24 hours.
 
 ### 12.1 Mides exigides hui
 
-| Botiga | Dispositiu | Mides en píxels | Exigència |
-| --- | --- | --- | --- |
-| Apple | iPhone amb Dynamic Island, pantalla mitjana (6,1" i 6,3") | 1206 × 2622 o 1179 × 2556 | Obligatòria segons «Required device sizes» |
-| Apple | iPhone amb Dynamic Island, pantalla gran (6,9" i 6,7") | 1320 × 2868, 1290 × 2796 o 1260 × 2736 | Recomanada: sense ella, la de 6,5" passa a ser obligatòria |
-| Apple | iPhone amb Face ID, pantalla gran (6,5") | 1284 × 2778 o 1242 × 2688 | Obligatòria si falten les de pantalla gran amb Dynamic Island |
-| Apple | iPad de 13" | 2064 × 2752 o 2048 × 2732 | Obligatòria: l'App funciona a l'iPad (`TARGETED_DEVICE_FAMILY = "1,2"`) |
-| Apple | iPad Pro de 12,9" (2a generació) | 2048 × 2732 | Opcional: s'escala de la de 13" |
-| Apple | iPhone Duo | 1398 × 2034 (exterior) i 2007 × 2853 (interior) | Obligatòria des d'abril de 2027 per a builds amb el SDK d'iOS 27.1 o posterior |
-| Google | Telèfon | Entre 320 i 3840; el costat llarg, com a molt el doble del curt | De 2 a 8; per a les recomanacions, 4 de 1080 × 1920 o més |
-| Google | Tauletes de 7" i 10" | Entre 1080 i 7680, en 16:9 o 9:16 | Opcionals |
-| Google | Gràfic destacat | 1024 × 500, JPEG o PNG de 24 bits sense alfa | Obligatori |
-| Google | Icona | 512 × 512, PNG de 32 bits amb alfa, 1024 KB com a molt | Obligatòria |
+#### Apple · iPhone amb Dynamic Island, pantalla mitjana (6,1" i 6,3")
+
+**Mides en píxels:** `1206 × 2622` o `1179 × 2556` · **Exigència:** **Obligatòria** segons «Required device sizes».
+
+#### Apple · iPhone amb Dynamic Island, pantalla gran (6,9" i 6,7")
+
+**Mides en píxels:** `1320 × 2868`, `1290 × 2796` o `1260 × 2736` · **Exigència:** **Recomanada**; sense ella, la de 6,5" passa a ser obligatòria.
+
+#### Apple · iPhone amb Face ID, pantalla gran (6,5")
+
+**Mides en píxels:** `1284 × 2778` o `1242 × 2688` · **Exigència:** **Obligatòria** si falten les de pantalla gran amb Dynamic Island.
+
+#### Apple · iPad de 13"
+
+**Mides en píxels:** `2064 × 2752` o `2048 × 2732` · **Exigència:** **Obligatòria**, perquè l'App funciona a l'iPad (`TARGETED_DEVICE_FAMILY = "1,2"`).
+
+#### Apple · iPad Pro de 12,9" (2a generació)
+
+**Mides en píxels:** `2048 × 2732` · **Exigència:** **Opcional**, s'escala automàticament de la de 13".
+
+#### Apple · iPhone Duo
+
+**Mides en píxels:** `1398 × 2034` (exterior) i `2007 × 2853` (interior) · **Exigència:** **Obligatòria des d'abril de 2027** per a builds amb el SDK d'iOS 27.1 o posterior.
+
+#### Google · Telèfon
+
+**Mides en píxels:** entre `320` i `3840` (el costat llarg, com a molt el doble del curt) · **Exigència:** de **2 a 8 captures**; per a les recomanacions, `4` de `1080 × 1920` o més.
+
+#### Google · Tauletes de 7" i 10"
+
+**Mides en píxels:** entre `1080` i `7680`, en proporció `16:9` o `9:16` · **Exigència:** **Opcionals**.
+
+#### Google · Gràfic destacat
+
+**Mides en píxels:** `1024 × 500`, JPEG o PNG de 24 bits sense alfa · **Exigència:** **Obligatori**.
+
+#### Google · Icona
+
+**Mides en píxels:** `512 × 512`, PNG de 32 bits amb alfa, `1024 KB` com a molt · **Exigència:** **Obligatòria**.
 
 - **Apple:** d'1 a 10 captures per mida, en JPEG o PNG, sense canal alfa.
-- **Contradicció de la font:** la pàgina d'Apple demana la pantalla mitjana com a obligatòria i, alhora, diu que la de 6,5" ho és si falten les grans. Pujar les tres mides d'iPhone de la taula evita el dubte.
+- **Contradicció de la font:** la pàgina d'Apple demana la pantalla mitjana com a obligatòria i, alhora, diu que la de 6,5" ho és si falten les grans. Pujar les tres mides d'iPhone anteriors evita el dubte.
 
 ### 12.2 Captures existents
 

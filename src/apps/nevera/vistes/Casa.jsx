@@ -25,27 +25,27 @@ import { CASA } from './constants.js';
 import { textArticles, useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
 import {
-  TEXTOS_CASA, articlesVestits, liniesVestides, perArticle, productesALaGraella, seccionsDe, suggerimentsVestits
+  articlesVestits, liniesVestides, perArticle, productesALaGraella, seccionsDe, suggerimentsVestits, textosCasa
 } from './vestits.js';
-
-const VARIANTS_CASA = Object.freeze([
-  { valor: 'hi-ha', etiqueta: TEXTOS_CASA['hi-ha'] },
-  { valor: 'se-n-acaba', etiqueta: TEXTOS_CASA['se-n-acaba'] },
-  { valor: 'acabat', etiqueta: TEXTOS_CASA.acabat }
-]);
 
 export function ColumnaACasa({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
   const { idioma } = useClosaAplicacio();
   const txBuit = textosBuitNevera(idioma);
   const tx = textosVistaNevera(idioma);
+  const txCasa = textosCasa(idioma);
+  const variantsCasa = [
+    { valor: 'hi-ha', etiqueta: txCasa['hi-ha'] },
+    { valor: 'se-n-acaba', etiqueta: txCasa['se-n-acaba'] },
+    { valor: 'acabat', etiqueta: txCasa.acabat }
+  ];
   const deixa = { valor: 'deixa', etiqueta: tx.noElSeguisques };
   /* La fitxa d'un producte de botiga també el posa a la graella, com el detall (vestits.js). */
   const { article: obert, fitxa } = useVistaCataleg();
   const llista = llistaVigent(params);
   const linies = perArticle(llista);
   const aCasa = new Map(estat.casa.map((entrada) => [entrada.articleId, entrada.estat]));
-  const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => TEXTOS_CASA[aCasa.get(a.id)] };
+  const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => txCasa[aCasa.get(a.id)], idioma };
   /* REGLA D'OR 1 (261004) · Cada targeta, amb la boina de qui signa l'article (autoria.js). */
   const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista.id, obert || fitxa), autoria: autoriaDArticle });
   const seguits = articles.filter((article) => aCasa.has(article.id));
@@ -55,7 +55,7 @@ export function ColumnaACasa({ params }) {
       forma="targetes"
       ometDataNoIndicada
       titol={tx.aCasa}
-      categories={seccionsDe(estat, llista.id, { totesVisibles: true })}
+      categories={seccionsDe(estat, llista.id, { totesVisibles: true, idioma })}
       articles={articles}
       destacats={seguits.length ? [{ id: 'seguits', nom: tx.elQueTensACasa, icona: Refrigerator, articles: seguits }] : []}
       textosEstat={{ 'en-colleccio': tx.aLlistaNom(llista.nom) }}
@@ -64,7 +64,7 @@ export function ColumnaACasa({ params }) {
       detall={{
         triaDirecta: true,
         etiquetaVariants: tx.queEnTens,
-        variantsDe: (article) => (aCasa.has(article.id) ? [...VARIANTS_CASA, deixa] : VARIANTS_CASA),
+        variantsDe: (article) => (aCasa.has(article.id) ? [...variantsCasa, deixa] : variantsCasa),
         onAccepta: ({ variant }, article) => accions.marcaACasa(article.id, variant === deixa.valor ? null : variant),
         accionsDe: (article, tanca) => (linies.has(article.id) ? null : (
           <Boto icona={Plus} onClick={() => {
@@ -86,10 +86,11 @@ export function ColumnaCalComprar({ params }) {
   const { idioma } = useClosaAplicacio();
   const txBuit = textosBuitNevera(idioma);
   const tx = textosVistaNevera(idioma);
+  const txCasa = textosCasa(idioma);
   const obriDetall = useObriDetall(CASA);
   const llista = llistaVigent(params);
   const propostes = propostesDeCasa(estat, llista.id);
-  const linies = liniesVestides(estat, propostes, { detall: (proposta) => TEXTOS_CASA[proposta.estat] });
+  const linies = liniesVestides(estat, propostes, { detall: (proposta) => txCasa[proposta.estat], idioma });
   return (
     <ColumnaColleccio
       titol={tx.calComprar}

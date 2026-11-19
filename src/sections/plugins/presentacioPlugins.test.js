@@ -197,9 +197,10 @@ describe('els literals citats són els de l’app', () => {
   const SALUT = 'src/apps/salut';
   const CITES = {
     rebost: [
-      ['N’hi ha', `${NEVERA}/vistes/vestits.js`, "'hi-ha': 'N’hi ha'"],
-      ['Se n’acaba', `${NEVERA}/vistes/vestits.js`, "'se-n-acaba': 'Se n’acaba'"],
-      ['S’ha acabat', `${NEVERA}/vistes/vestits.js`, "acabat: 'S’ha acabat'"],
+      // R32.15 · Gemini R32.14 (lot_03) va moure els estats del rebost al diccionari de cinc llengües.
+      ['N’hi ha', `${NEVERA}/i18nNevera.js`, "'hi-ha': 'N’hi ha'"],
+      ['Se n’acaba', `${NEVERA}/i18nNevera.js`, "'se-n-acaba': 'Se n’acaba'"],
+      ['S’ha acabat', `${NEVERA}/i18nNevera.js`, "acabat: 'S’ha acabat'"],
       /* Gemini R32.11 · lot_04 · De Casa.jsx a i18nNevera.js (TEXTOS_VISTA_NEVERA). */
       ['El que tens a casa', `${NEVERA}/vistes/Casa.jsx`, 'nom: tx.elQueTensACasa', 'nevera', 'elQueTensACasa'],
       ['No el seguisques', `${NEVERA}/vistes/Casa.jsx`, 'etiqueta: tx.noElSeguisques', 'nevera', 'noElSeguisques'],

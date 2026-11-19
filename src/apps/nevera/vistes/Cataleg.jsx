@@ -46,7 +46,7 @@ export function ColumnaCatalegSencer({ params }) {
   const llista = llistaVigent(params);
   const linies = perArticle(llista);
   const propis = new Set(estat.propis.map((propi) => propi.id));
-  const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio };
+  const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio, idioma };
   /* REGLA D'OR 1 (261004) · Cada targeta, amb la boina de qui signa l'article (autoria.js). */
   const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista.id, obert || fitxa), autoria: autoriaDArticle });
   return (
@@ -54,7 +54,7 @@ export function ColumnaCatalegSencer({ params }) {
       forma="targetes"
       ometDataNoIndicada
       titol={tx.cataleg}
-      categories={seccionsDe(estat, llista.id, { totesVisibles: true })}
+      categories={seccionsDe(estat, llista.id, { totesVisibles: true, idioma })}
       articles={articles}
       textosEstat={{ 'en-colleccio': tx.aLlistaNom(llista.nom) }}
       onTria={(article, { obriDetall }) => obriDetall()}

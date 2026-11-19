@@ -28,11 +28,11 @@ async function nativeBinaries(require) {
 }
 
 /** Cluster descartable. Les connexions i els rols no arriben a cap servidor extern. */
-export async function startLocalPostgres() {
+export async function startLocalPostgres({ dataRoot = resolve('node_modules/.cache/sdp-postgres') } = {}) {
   const require = createRequire(import.meta.resolve('embedded-postgres'));
   const { Client } = require('pg');
   const binaries = await nativeBinaries(require);
-  const parent = resolve('node_modules/.cache/sdp-postgres');
+  const parent = resolve(dataRoot);
   await mkdir(parent, { recursive: true });
   const directory = await mkdtemp(join(parent, 'pg-'));
   const data = join(directory, 'data');

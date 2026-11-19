@@ -17,12 +17,21 @@ Cap plantilla ha d'incrustar blocs repetits de logos. Les plantilles han d'enlla
 
 ## Recursos oficials
 
-| Recurs | Ús | Ubicació |
-|---|---|---|
-| Logo principal de Sóc de Poble | Capçaleres, portada, marca institucional | *Pendent de fixar* |
-| Isotip Mas | Favicon, icona d'aplicació, avatars | *Pendent de fixar* (el favicon actual és `public/favicon.svg`) |
-| Marca IAIA MarIA | Documents interns i agents | *Pendent de fixar* |
-| Cartell fundacional | Narrativa i presentacions | *Pendent de fixar* (Magatzem Multimèdia, vegeu [[00_visio_i_pilars]]) |
+### Logo principal de Sóc de Poble
+
+Destinat a **capçaleres**, **portada** i **marca institucional** del projecte. **Ubicació canònica:** *Pendent de fixar*.
+
+### Isotip Mas
+
+Utilitzat com a **favicon**, **icona d'aplicació** i **avatars** de sistema. **Ubicació canònica:** *Pendent de fixar* (el **favicon actual** viu a `public/favicon.svg`).
+
+### Marca IAIA MarIA
+
+Reservada a **documents interns** i identificació de la **coordinació d'agents**. **Ubicació canònica:** *Pendent de fixar*.
+
+### Cartell fundacional
+
+Emprat en **narrativa històrica** i **presentacions institucionals**. **Ubicació canònica:** *Pendent de fixar* (**Magatzem Multimèdia**, vegeu [[00_visio_i_pilars]]).
 
 ## Prohibicions
 

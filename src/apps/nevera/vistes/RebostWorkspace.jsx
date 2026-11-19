@@ -7,15 +7,16 @@ import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
 import { autoriaDArticle } from './autoria.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { useVistaNevera } from './context.js';
-import { TEXTOS_CASA } from './vestits.js';
+import { textosCasa } from './vestits.js';
 import { modelRebostWorkspace } from './modelRebostWorkspace.js';
 
 export function RebostWorkspace({ params = {} }) {
-  const { idioma = 'ca' } = useApp();
+  const { idioma: idiomaApp = 'ca' } = useApp();
+  const { estat, accions, llistaVigent, ruta, llegit, mode, idioma = idiomaApp } = useVistaNevera();
   const txBuit = textosBuitNevera(idioma);
   const tx = textosVistaNevera(idioma);
-  const { estat, accions, llistaVigent, ruta, llegit, mode } = useVistaNevera();
-  const model = useMemo(() => modelRebostWorkspace(estat), [estat]);
+  const txCasa = textosCasa(idioma);
+  const model = useMemo(() => modelRebostWorkspace(estat, idioma), [estat, idioma]);
   const llista = llistaVigent(params);
   const potEscriure = llegit && mode !== 'lectora';
   const renderDetail = ({ item }) => {
@@ -25,16 +26,16 @@ export function RebostWorkspace({ params = {} }) {
     return <DetallCataleg title={item?.title || tx.rebost} subtitle={item?.subtitle || tx.laNeveraDeCasa}
       lead={item?.lead || tx.rebostLead}
       author={article ? autoriaDArticle(article) : null} rellotgeViu showShare={false} showConnect={false} showComment={false}>
-      <Accions>
+      <Accions role="group" aria-label={tx.laNeveraDeCasa}>
         <Link to={ruta('llista', llista.id)}>{tx.obriLaCompra(llista.nom)}</Link>
         <Link to={ruta('casa', llista.id)}>{tx.queTincACasa}</Link>
       </Accions>
       <AvisNevera sempre />
       {article ? <>
         <h3>{tx.elTeuRebost}</h3>
-        <p>{aCasa ? TEXTOS_CASA[aCasa.estat] : tx.noMarcatACasa}</p>
-        <Accions>
-          {Object.entries(TEXTOS_CASA).map(([valor, etiqueta]) => <Boto key={valor} disabled={!potEscriure}
+        <p>{aCasa ? txCasa[aCasa.estat] : tx.noMarcatACasa}</p>
+        <Accions role="group" aria-label={tx.elTeuRebost}>
+          {Object.entries(txCasa).map(([valor, etiqueta]) => <Boto key={valor} disabled={!potEscriure}
             aria-pressed={aCasa?.estat === valor} onClick={() => accions.marcaACasa(article.id, valor)}>{etiqueta}</Boto>)}
           {aCasa && <Boto disabled={!potEscriure} onClick={() => accions.marcaACasa(article.id, null)}>{tx.deixaDeSeguirlo}</Boto>}
           <Boto disabled={!potEscriure || aLaLlista} onClick={() => accions.afig(llista.id, article.id)}>

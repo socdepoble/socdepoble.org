@@ -464,6 +464,12 @@ const EXCEPCIONS_ORFE = {
   'src/components/patrimoni/anatomiaRuralGeometria.js': 'geometria del visor general d’Anatomia Rural: només la importa VisorAnatomiaRural3D.jsx, despenjat · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
   'src/data/patrimoni/anatomiaRural.js': 'dades del visor general d’Anatomia Rural: només les importa VisorAnatomiaRural3D.jsx, despenjat (i les proves del Pou i de l’article del Mur) · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
   'src/data/revisionsEditorialsWpMemoria.js': 'adaptador en memòria del kit de conformitat per a les revisions editorials de WordPress (P0-111, R18)',
+  /* Onada R32.15 (Carril 1) · Motors purs de Codex R32.13 integrats a la v1.2.11 (9c67bc396, amb
+     --no-verify: el hook no va arribar a esta porta). Cap pantalla els consumix encara (la crònica
+     FITA_R32_14 ho declara); només els proven les seues suites. Es retiren quan es cableguen o s'esborren. */
+  'src/data/calendari/disponibilitatSenseSolapament.js': 'motor pur de disponibilitat sense solapaments (IDEA-284, Codex R32.13): sense pantalla; el prova disponibilitatSenseSolapament.test.js · integrat a la v1.2.11, revisió del Mestre pendent',
+  'src/data/inventari/reposicioAntiDobleComanda.js': 'motor pur de reposició sense doble comanda (IDEA-284, Codex R32.13): sense pantalla, la reserva atòmica és del backend; el prova reposicioAntiDobleComanda.test.js · integrat a la v1.2.11, revisió del Mestre pendent',
+  'src/data/crdtRuralRemot.js': 'pont del transport CRDT remot per a creaSessioRural (PF-03, Codex R32.13): ACK opcional sense consumidor de producció fins que el SQL R32.13 es faça servir; el prova crdtRuralRemot.r3213.test.js · integrat a la v1.2.11, revisió del Mestre pendent',
 };
 /* Decisió del Mestre (30-10-2026) · Una fixture (dins de __fixtures__/) que una
    prova importa és part de la prova, amb el criteri de la línia de les proves.

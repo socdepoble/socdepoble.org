@@ -6,8 +6,9 @@
    rellotge: en avortar-lo, la petició física queda avortada a l'instant, una
    operació que encara era a la cua no arriba mai al fetch, i en acabar no
    queda cap plaça, cap cua ni cap temporitzador. */
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { StorageClient } from '@supabase/storage-js';
+import { webpDeMida } from '../../../tests/helpers/contenidorsMedia.js';
 
 const m = vi.hoisted(() => ({ usuari: null, client: null, peticions: [], esborratRapid: false }));
 vi.mock('./runtime.js', () => ({
@@ -26,7 +27,7 @@ const ARREL = 'https://storage.invalid/storage/v1';
 const RUTA_PRIVADA = `${POBLE}/${UID}/notes/4b5c6d7e-8f90-4a1b-8c2d-3e4f5a6b7c8d.webp`;
 const REF_PRIVADA = `sdp-media://mitjans_privats/${RUTA_PRIVADA}`;
 const REF_AVATAR = `sdp-media://mitjans/${POBLE}/${UID}/avatars/4b5c6d7e-8f90-4a1b-8c2d-3e4f5a6b7c8d.webp`;
-const webp = (bytes) => new Blob([new Uint8Array(bytes)], { type: 'image/webp' });
+const webp = (bytes) => new Blob([webpDeMida(bytes)], { type: 'image/webp' });
 
 /* El transport: cada petició es queda penjada fins que el seu senyal s'avorta
    (o fins al drenatge de l'afterEach). Amb `esborratRapid`, un DELETE contesta
@@ -48,6 +49,11 @@ async function finsQueIxca(metode, tros) {
   for (let ronda = 0; ronda < 20 && !peticio(metode, tros); ronda++) await vi.advanceTimersByTimeAsync(0);
   return peticio(metode, tros);
 }
+
+/* R32.15 · storage.js carrega el validador de contenidors amb un import diferit. En fred, eixe
+   import tarda temps real (transformació del mòdul) i finsQueIxca només deixa córrer microtasques
+   amb el rellotge fals: la primera prova del fitxer no veia eixir el POST. Es precarrega una volta. */
+beforeAll(async () => { await import('../../utils/validadorContenidorsMedia.js'); });
 
 let avis;
 beforeEach(() => {

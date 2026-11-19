@@ -17,9 +17,12 @@ const disponible = () => { try { return teCapacitat('projeccionsCataleg'); } cat
    REBUT_SQL_PRODUCCIO_R32_11_PUBLICACIONS_CAS_261119_0137.json), però el Gauntlet de R32.14
    (P1, reproduït) va trobar que una operació amb una versió esperada vella («conflicte-versio»)
    es reintenta per sempre i deixa encallades les referències de darrere a la mateixa cua.
-   Fins que eixa cua tinga eixida, el CAS general només s'encén amb VITE_SDP_PUBLICACIONS_CAS=1
-   en un build, i només en remot Supabase: l'adaptador local i el Node 0 rebutgen
-   expectedUpdatedAt. Una RPC absent conserva l'esborrany i l'operació (content.js). */
+   R32.15 (D-R32.14-1) · La cua ja no s'encalla: un conflicte o un rebuig permanent passa a
+   incidència durable per audiència i ix de la cua automàtica; es tanca sola quan el servidor ja té la
+   projecció local, i a mà amb `resolIncidencia` (projeccionsCatalegServei.js). Encara no hi ha cap
+   pantalla que la resolga: encendre'l per defecte és decisió del Mestre, i fins aleshores només s'encén amb
+   VITE_SDP_PUBLICACIONS_CAS=1 en un build, i només en remot Supabase: l'adaptador local i el
+   Node 0 rebutgen expectedUpdatedAt. Una RPC absent conserva l'esborrany i l'operació (content.js). */
 export function publicacionsVersionades(config) {
   if (import.meta.env.VITE_SDP_PUBLICACIONS_CAS !== '1') return false;
   try {
@@ -148,7 +151,8 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
       }
       catch (cause) {
         const error = Object.assign(errorProjeccioCataleg(cause?.codi ?? cause?.code ?? 'sincronitzacio-error', cause),
-          { desatLocal: true, ...(cause?.name === 'AbortError' ? { name: 'AbortError' } : {}) });
+          { desatLocal: true, ...(Array.isArray(cause?.incidencies) ? { incidencies: cause.incidencies } : {}),
+            ...(cause?.name === 'AbortError' ? { name: 'AbortError' } : {}) });
         if (error.name !== 'AbortError') await update(error);
         throw error;
       }
@@ -172,7 +176,11 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
         await this.prepara(); check();
         if (!service || !escriptura) throw configurationError ?? errorProjeccioCataleg('sense-permis');
         const row = await service.desa(font, destins); check(); active.set(clauFontCataleg(font), Infinity); await update(null);
-        await sync(); return row;
+        /* R32.15 · La incidència d'una altra referència no fa fallar el desament d'esta, que el servidor sí ha confirmat. */
+        try { await sync(); } catch (error) {
+          if (error?.codi !== 'incidencia-versio' || !Array.isArray(error.incidencies) || error.incidencies.some(i => i.clau === row.clau)) throw error;
+        }
+        return row;
       },
       sync,
       /* Gauntlet R22 (notes-04) · Un bloqueig o un desbloqueig nou: es tornen a

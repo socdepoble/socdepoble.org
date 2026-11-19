@@ -290,9 +290,9 @@ El 16 es va decidir **conservar l'EXIF** de les fotos per a **cartografiar arbre
 
 ***
 
-## Part IV · Perles oblidades que mereixen tornar i taula de decisions
+## Part IV · Perles oblidades que mereixen tornar i registre de decisions
 
-Aquesta quarta part rescata les **idees d'alt valor comunitari i tècnic que van quedar adormides a l'arxiu** (conciliació de les **272 perles identificades als 34 lots**) i consolida la **taula mestra de decisions vigents, superades i en tensió**.
+Aquesta quarta part rescata les **idees d'alt valor comunitari i tècnic que van quedar adormides a l'arxiu** (conciliació de les **272 perles identificades als 34 lots**) i consolida el **registre mestre de decisions vigents, superades i en tensió**.
 
 ### 1. Perles Oblidades que Mereixen Tornar (Conciliació de les 272 Perles dels 34 Lots)
 - **«Estic bé»:** un **registre diari voluntari per a qui viu a soles**, amb **dos o tres guardians triats per la mateixa persona**, sense càmeres ni rastreig (font: `260929_1415_auditoria_claude.md`).
@@ -312,40 +312,133 @@ Aquesta quarta part rescata les **idees d'alt valor comunitari i tècnic que van
 
 ### 2. Decisions Vigents, Superades i en Tensió
 
-| Decisió | Data | Estat | Font |
-| --- | --- | --- | --- |
-| Trellat Visual: zero ombres a les targetes (proposta) | 260916 | superada | `260916_0745_INFORME_apple_design_skill.md`; `261004_0133_prompt_claude_aprovacio.md` |
-| `ADR-2026-08` Online-First: retirada de PWA, `Dexie`, outbox i doctrina offline | 2026-08-02 (acceptada al cos de `[C01]`) | vigent | `ADR-2026-08-ONLINE-FIRST.md` (`[C01]`); `260924_0652_auditoria_claude.md` (D-05); `260921_2005_informe_auditoria_brain_claude.md` (§6.5); `260923_2305_auditoria_codex.md` |
-| Sollutia com a «proveïdor de backend» (bloc fix antic dels prompts; Model A) | fins a 260926 | superada | `260926_1050_auditoria_claude.md` (CER-02); `260921_0840_informe_fortificacio_codex.md` (F01) |
-| Reunió davall l'Olivera | 260921 | vigent | `260921_0555_INFORME_reunio_olivera_claude.md` |
-| Model Arquitecte/Executor de l'Acta 1002 («Sirena de Models») | 260921 | incerta (vigent el 21-09, en tensió amb l'implementador exclusiu del 14-10) | `260921_2155_informe_auditoria_brain_claude_torn2.md`; `261014_2035_auditoria_claude.md` |
-| Contracte documental executable amb rebut extern | 260922 | vigent | `260922_0310_auditoria_codex.md` |
-| Llei del Píxel | 260923 | vigent | `260923_0016_auditoria_claude.md` |
-| D1: Sollutia com a proveïdor d'infraestructura (SPA i backend) | 260923 | superada | `260923_2305_pla_implementacio_fortificacio_sollutia.md` |
-| Model B al codi: l'amfitrió no injecta backend; Supabase de SdP darrere de `backendPort.js` | 260923 | vigent | `ADR-2026-09-SOLLUTIA-MODEL-B.md` (`[C02]`); `260923_2305_auditoria_claude.md` |
-| Frontissa de catàleg tancat, només `GET`, desactivada fins a captura real de Sollutia | 260923–261017 | vigent | `260923_2305_auditoria_codex.md`; `261016_1632_auditoria_codex.md` |
-| Federació tancada per defecte, com a capacitat opcional futura | 260926 | incerta / full de ruta | `260926_0145_auditoria_claude.md`; `261001_0400_auditoria_claude.md` (`[H05]`) |
-| El xat privat no es federa mai (`XAT-R01`) | 260926 | proposta (esborrany de skill) | `260926_2330_skill_esborrany_xat.md` |
-| Plantilla de prompt v3.0 «sense metàfores», sense el llegat de 30 anys | 260927 | superada | `260927_2345_prompt_claude_regressions.md` |
-| Porta d'Antigravity amb `ask` per defecte | 260930 | pendent (preparada al laboratori; el 261006 el hook encara permetia per defecte) | `260930_0400_auditoria_claude.md`; `261006_1150_auditoria_claude.md` |
-| Gestoria 100% local, amb aprovació humana en tres nivells | 261002 | vigent | `261002_0120_auditoria_claude.md` |
-| Contracte d'amfitrió `sdp.amfitrio.v1` | 261002 | vigent | `261002_1700_auditoria_claude.md` |
-| Model B absolut: SPA cega a l'amfitrió, WordPress sense Tenant ID | 261003 | vigent | `261003_1330_auditoria_claude.md` |
-| Correlació de l'OAuth per id d'intent | 261003 | proposta (implementació no acreditada) | `261003_1950_auditoria_codex.md` |
-| Tot el que no és infraestructura viu com a plugin | 261003 | vigent | `261003_2320_directriu_arquitectura_plugins.md` |
-| AAA, 48 px, Noto Sans local, ombra subtil i mai vora sòlida | 261004 | incerta | `261004_0133_prompt_claude_aprovacio.md` |
-| Gestoria muntada dins de la Wiki (`D3`) | 261004 | superada | `261004_1435_auditoria_codex.md` |
-| Model B = «ADR + port neutral»; `ADR-2026-09` signada | 261006 | vigent | `261006_0300_auditoria_claude.md` |
-| Offline modest per app: `IndexedDB` i closca de *service worker* al TPV (`ADR-2026-10`) | 261007 | incerta (esborrany) | `261007_0030_auditoria_claude.md` |
-| Les migracions les aplica sempre el Mestre | 261008 | vigent | `261008_1740_auditoria_onada4_claude.md` |
-| Neteja reversible: paperera fora del repo; l'esborrat el fa el Mestre | 261009 | vigent | `261009_2005_auditoria_inventari_onada9.md` |
-| Derogació dels llindars de l'antiga Consola (Índex de Trellat, UDR, tombstones CRDT, RAM, FPS…), amb dues idees salvades | 261010 | vigent | `261010_1741_auditoria_claude.md` |
-| Rail intern de la Gestoria | 261012 | superada | `261012_2145_ordre_unificacio_barra_maria.md` |
-| Implementador exclusiu: un sol agent edita `src/` | 261014 | vigent | `261014_2035_auditoria_claude.md` |
-| Direcció Autònoma de MarIA mentre el Mestre és absent | 261014 | vigent | `261014_2035_auditoria_claude.md` |
-| Dignitat de persona: sense drets d'autor ni categories (les seues obres sí que en conserven) | 261015 | vigent | `261015_1945_auditoria_codex.md`; `261015_1933_acta_marmota_codex_fase1.md` |
-| EXIF esborrat per defecte a les fotos | anterior a 261016 | superada | `261016_0022_auditoria_claude.md`; `261016_0015_pla_implementacio_gauntlet_autonom.md` |
-| Llei del Quadrat amb l'EXIF conservat per defecte i lector Range WebP `>256 KiB` | 261016–261017 | vigent | `261016_0015_pla_implementacio_gauntlet_autonom.md`; `261017_1526_auditoria_claude.md` |
+#### Trellat Visual: zero ombres a les targetes (proposta)
+
+**Data:** `260916` · **Estat:** **superada** · **Font:** `260916_0745_INFORME_apple_design_skill.md`; `261004_0133_prompt_claude_aprovacio.md`.
+
+#### `ADR-2026-08` Online-First: retirada de PWA, `Dexie`, outbox i doctrina offline
+
+**Data:** `2026-08-02` (acceptada al cos de `[C01]`) · **Estat:** **vigent** · **Font:** `ADR-2026-08-ONLINE-FIRST.md` (`[C01]`); `260924_0652_auditoria_claude.md` (D-05); `260921_2005_informe_auditoria_brain_claude.md` (§6.5); `260923_2305_auditoria_codex.md`.
+
+#### Sollutia com a «proveïdor de backend» (bloc fix antic dels prompts; Model A)
+
+**Data:** fins a `260926` · **Estat:** **superada** · **Font:** `260926_1050_auditoria_claude.md` (CER-02); `260921_0840_informe_fortificacio_codex.md` (F01).
+
+#### Reunió davall l'Olivera
+
+**Data:** `260921` · **Estat:** **vigent** · **Font:** `260921_0555_INFORME_reunio_olivera_claude.md`.
+
+#### Model Arquitecte/Executor de l'Acta 1002 («Sirena de Models»)
+
+**Data:** `260921` · **Estat:** **incerta** (vigent el 21-09, en tensió amb l'implementador exclusiu del 14-10) · **Font:** `260921_2155_informe_auditoria_brain_claude_torn2.md`; `261014_2035_auditoria_claude.md`.
+
+#### Contracte documental executable amb rebut extern
+
+**Data:** `260922` · **Estat:** **vigent** · **Font:** `260922_0310_auditoria_codex.md`.
+
+#### Llei del Píxel
+
+**Data:** `260923` · **Estat:** **vigent** · **Font:** `260923_0016_auditoria_claude.md`.
+
+#### D1: Sollutia com a proveïdor d'infraestructura (SPA i backend)
+
+**Data:** `260923` · **Estat:** **superada** · **Font:** `260923_2305_pla_implementacio_fortificacio_sollutia.md`.
+
+#### Model B al codi: l'amfitrió no injecta backend; Supabase de SdP darrere de `backendPort.js`
+
+**Data:** `260923` · **Estat:** **vigent** · **Font:** `ADR-2026-09-SOLLUTIA-MODEL-B.md` (`[C02]`); `260923_2305_auditoria_claude.md`.
+
+#### Frontissa de catàleg tancat, només `GET`, desactivada fins a captura real de Sollutia
+
+**Data:** `260923–261017` · **Estat:** **vigent** · **Font:** `260923_2305_auditoria_codex.md`; `261016_1632_auditoria_codex.md`.
+
+#### Federació tancada per defecte, com a capacitat opcional futura
+
+**Data:** `260926` · **Estat:** **incerta / full de ruta** · **Font:** `260926_0145_auditoria_claude.md`; `261001_0400_auditoria_claude.md` (`[H05]`).
+
+#### El xat privat no es federa mai (`XAT-R01`)
+
+**Data:** `260926` · **Estat:** **proposta** (esborrany de skill) · **Font:** `260926_2330_skill_esborrany_xat.md`.
+
+#### Plantilla de prompt v3.0 «sense metàfores», sense el llegat de 30 anys
+
+**Data:** `260927` · **Estat:** **superada** · **Font:** `260927_2345_prompt_claude_regressions.md`.
+
+#### Porta d'Antigravity amb `ask` per defecte
+
+**Data:** `260930` · **Estat:** **pendent** (preparada al laboratori; el `261006` el hook encara permetia per defecte) · **Font:** `260930_0400_auditoria_claude.md`; `261006_1150_auditoria_claude.md`.
+
+#### Gestoria 100% local, amb aprovació humana en tres nivells
+
+**Data:** `261002` · **Estat:** **vigent** · **Font:** `261002_0120_auditoria_claude.md`.
+
+#### Contracte d'amfitrió `sdp.amfitrio.v1`
+
+**Data:** `261002` · **Estat:** **vigent** · **Font:** `261002_1700_auditoria_claude.md`.
+
+#### Model B absolut: SPA cega a l'amfitrió, WordPress sense Tenant ID
+
+**Data:** `261003` · **Estat:** **vigent** · **Font:** `261003_1330_auditoria_claude.md`.
+
+#### Correlació de l'OAuth per id d'intent
+
+**Data:** `261003` · **Estat:** **proposta** (implementació no acreditada) · **Font:** `261003_1950_auditoria_codex.md`.
+
+#### Tot el que no és infraestructura viu com a plugin
+
+**Data:** `261003` · **Estat:** **vigent** · **Font:** `261003_2320_directriu_arquitectura_plugins.md`.
+
+#### AAA, 48 px, Noto Sans local, ombra subtil i mai vora sòlida
+
+**Data:** `261004` · **Estat:** **incerta** · **Font:** `261004_0133_prompt_claude_aprovacio.md`.
+
+#### Gestoria muntada dins de la Wiki (`D3`)
+
+**Data:** `261004` · **Estat:** **superada** · **Font:** `261004_1435_auditoria_codex.md`.
+
+#### Model B = «ADR + port neutral»; `ADR-2026-09` signada
+
+**Data:** `261006` · **Estat:** **vigent** · **Font:** `261006_0300_auditoria_claude.md`.
+
+#### Offline modest per app: `IndexedDB` i closca de *service worker* al TPV (`ADR-2026-10`)
+
+**Data:** `261007` · **Estat:** **incerta** (esborrany) · **Font:** `261007_0030_auditoria_claude.md`.
+
+#### Les migracions les aplica sempre el Mestre
+
+**Data:** `261008` · **Estat:** **vigent** · **Font:** `261008_1740_auditoria_onada4_claude.md`.
+
+#### Neteja reversible: paperera fora del repo; l'esborrat el fa el Mestre
+
+**Data:** `261009` · **Estat:** **vigent** · **Font:** `261009_2005_auditoria_inventari_onada9.md`.
+
+#### Derogació dels llindars de l'antiga Consola (Índex de Trellat, UDR, tombstones CRDT, RAM, FPS…), amb dues idees salvades
+
+**Data:** `261010` · **Estat:** **vigent** · **Font:** `261010_1741_auditoria_claude.md`.
+
+#### Rail intern de la Gestoria
+
+**Data:** `261012` · **Estat:** **superada** · **Font:** `261012_2145_ordre_unificacio_barra_maria.md`.
+
+#### Implementador exclusiu: un sol agent edita `src/`
+
+**Data:** `261014` · **Estat:** **vigent** · **Font:** `261014_2035_auditoria_claude.md`.
+
+#### Direcció Autònoma de MarIA mentre el Mestre és absent
+
+**Data:** `261014` · **Estat:** **vigent** · **Font:** `261014_2035_auditoria_claude.md`.
+
+#### Dignitat de persona: sense drets d'autor ni categories (les seues obres sí que en conserven)
+
+**Data:** `261015` · **Estat:** **vigent** · **Font:** `261015_1945_auditoria_codex.md`; `261015_1933_acta_marmota_codex_fase1.md`.
+
+#### EXIF esborrat per defecte a les fotos
+
+**Data:** anterior a `261016` · **Estat:** **superada** · **Font:** `261016_0022_auditoria_claude.md`; `261016_0015_pla_implementacio_gauntlet_autonom.md`.
+
+#### Llei del Quadrat amb l'EXIF conservat per defecte i lector Range WebP `>256 KiB`
+
+**Data:** `261016–261017` · **Estat:** **vigent** · **Font:** `261016_0015_pla_implementacio_gauntlet_autonom.md`; `261017_1526_auditoria_claude.md`.
 
 ***
 
@@ -367,68 +460,221 @@ Aquesta cinquena part documenta les **tensions de metadades preservades sense fa
 
 ### 2. Mapa de la Mostra de Fonts Verificades amb SHA-256 (`H01`–`H10` i `C01`–`C09`)
 
-| Codi | Camí Relatiu a `socdepoble.org` | Bytes / Línies | SHA-256 i Rol Documental |
-| --- | --- | --- | --- |
-| **H01** | `_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0445_PROMPT_Auditoria_Forense_Deute_Tecnic.md` | `7.869 B` / `86 L` | `f10190c7416457f592fdee518acf7a8ec36c9131e8d79bbcc1ffeec137e1b8c3` (`font_historica_no_normativa`) |
-| **H02** | `_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_0550_prompt_auditoria_identitat.md` | `8.093 B` / `122 L` | `583d125c649b47869991749cbdcc56e22ad79ec7a7eefc335e5993244af548f8` (`font_historica_no_normativa`) |
-| **H03** | `_wiki_de_poble/90_arxiu_historic/260923_1930_neteja/260923_1821_auditoria_codex.md` | `13.655 B` / `130 L` | `5de1065bc73695ed79088434ee373d3a49f8c92927dbe5523420b69dcecf8fcd` (`font_historica_no_normativa`) |
-| **H04** | `_wiki_de_poble/90_arxiu_historic/260923_Auditories_Editor_T4/260923_2153_pla_implementacio.md` | `8.582 B` / `107 L` | `cb384d189034f635e3bfd611c6b7220d3267782cac4e24a2f7979787224830f2` (`font_historica_no_normativa`) |
-| **H05** | `_wiki_de_poble/90_arxiu_historic/261001_0400_auditoria_claude.md` | `15.776 B` / `176 L` | `9a7cecc1b5df3576d3088ec2ce26d8fbcab3e97f87431d8f3f1ba738587b0e86` (`font_historica_no_normativa`) |
-| **H06** | `_wiki_de_poble/90_arxiu_historic/261002_1700_informe_estudi_mercat.md` | `45.727 B` / `347 L` | `4d5f233ac0a580ed112fe656d30a0bc92194cb53a7e8842c172eb0c16f68fdb3` (`font_historica_no_normativa`) |
-| **H07** | `_wiki_de_poble/90_arxiu_historic/261003_Onada_4_Tancament/261003_1935_pla_implementacio_maria.md` | `6.521 B` / `79 L` | `b7a6ea2a76c293f7e5211a36cf72805a033b992918677028396c10efe414e84f` (`font_historica_no_normativa`) |
-| **H08** | `_wiki_de_poble/90_arxiu_historic/261003_Onada_4_Tancament/261003_2109_prompt_claude_offline.md` | `6.409 B` / `98 L` | `45f7063b33be2e36488d286c145e7f98abe5ba9351b2e39d577dd200893ca79c` (`font_historica_no_normativa`) |
-| **H09** | `_wiki_de_poble/90_arxiu_historic/261003_Onada_4_Tancament/261003_2246_decisio_fusibles.md` | `916 B` / `8 L` | `ebedca27d5b277a9ddeb76929df52e0b7b5c6c02c61613e34f25ebc4611cd520` (`font_historica_no_normativa`) |
-| **H10** | `_wiki_de_poble/90_arxiu_historic/261006_2200_contingut_el_xat.md` | `5.500 B` / `71 L` | `2e2d1a293395d992e1b27218658ef6b4c3cecc3413c2e6347caeb50cb19f0212` (`font_historica_no_normativa`) |
-| **C01** | `_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md` | `2.768 B` / `62 L` | `4ddd2b4f191eb81e774da30de5446dc9786e62dc22580ea573fcd596dafe2bd3` (`norma_vigent`) |
-| **C02** | `_wiki_de_poble/02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md` | `3.426 B` / `53 L` | `7095897afc8904d4c38575825215d0248d3f0472c153062733bfa5932f955a5c` (`norma_vigent`) |
-| **C03** | `_wiki_de_poble/01_ser/01_identitat.md` | `2.984 B` / `48 L` | `ccc6be9a651e9371ea84416690efebc1e4885937f34fd435994a6d628335a7ed` (`context_vigent`) |
-| **C04** | `_wiki_de_poble/01_ser/03_equip_ia.md` | `649 B` / `25 L` | `146cbd7bafd72d2e8468d6ccad05710b0947ed75c0d1d1ef8f730458257aff3d` (`context_vigent`) |
-| **C05** | `_wiki_de_poble/01_ser/personalitat_iaia.md` | `4.464 B` / `47 L` | `be4d3fb5cd61fedaf6b46eaccbf9dae7f30b5a8f61e5f572b7d8ed4a3fcbc54c` (`context_vigent`) |
-| **C06** | `_wiki_de_poble/02_saber/el_projecte.md` | `3.571 B` / `51 L` | `9cd217eec3c48d0813c98a12f1dc631c0f84a52d63ab4f1baa8e0cc5f37f` (`context_vigent`) |
-| **C07** | `_wiki_de_poble/02_saber/00_visio_i_pilars.md` | `3.941 B` / `62 L` | `305f0822055ba9c738b81a5826cd85de844296367f4012789fccabd0eeecc34b` (`context_vigent`) |
-| **C08** | `_wiki_de_poble/02_saber/codex_huma/arquitectura_sistema_nervios.md` | `2.279 B` / `50 L` | `827a6ea30cdaab77fba72b03184861b9d1f48110956b079931e88d3002894fc7` (`norma_vigent`) |
-| **C09** | `_wiki_de_poble/02_saber/protocols_tecnics/contingencia_offline.md` | `4.278 B` / `94 L` | `025d09b7c6489ec8a7bc03879ad593f9aa0c1eb2b4d0c2f50f345bd8f81eea9d` (`arxivat_no_vigent`) |
+#### H01 · `260921_0445_PROMPT_Auditoria_Forense_Deute_Tecnic.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0445_PROMPT_Auditoria_Forense_Deute_Tecnic.md` · **Mida:** `7.869 B` / `86 L` · **SHA-256:** `f10190c7416457f592fdee518acf7a8ec36c9131e8d79bbcc1ffeec137e1b8c3` (`font_historica_no_normativa`).
+
+#### H02 · `260922_0550_prompt_auditoria_identitat.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_0550_prompt_auditoria_identitat.md` · **Mida:** `8.093 B` / `122 L` · **SHA-256:** `583d125c649b47869991749cbdcc56e22ad79ec7a7eefc335e5993244af548f8` (`font_historica_no_normativa`).
+
+#### H03 · `260923_1821_auditoria_codex.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/260923_1930_neteja/260923_1821_auditoria_codex.md` · **Mida:** `13.655 B` / `130 L` · **SHA-256:** `5de1065bc73695ed79088434ee373d3a49f8c92927dbe5523420b69dcecf8fcd` (`font_historica_no_normativa`).
+
+#### H04 · `260923_2153_pla_implementacio.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/260923_Auditories_Editor_T4/260923_2153_pla_implementacio.md` · **Mida:** `8.582 B` / `107 L` · **SHA-256:** `cb384d189034f635e3bfd611c6b7220d3267782cac4e24a2f7979787224830f2` (`font_historica_no_normativa`).
+
+#### H05 · `261001_0400_auditoria_claude.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/261001_0400_auditoria_claude.md` · **Mida:** `15.776 B` / `176 L` · **SHA-256:** `9a7cecc1b5df3576d3088ec2ce26d8fbcab3e97f87431d8f3f1ba738587b0e86` (`font_historica_no_normativa`).
+
+#### H06 · `261002_1700_informe_estudi_mercat.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/261002_1700_informe_estudi_mercat.md` · **Mida:** `45.727 B` / `347 L` · **SHA-256:** `4d5f233ac0a580ed112fe656d30a0bc92194cb53a7e8842c172eb0c16f68fdb3` (`font_historica_no_normativa`).
+
+#### H07 · `261003_1935_pla_implementacio_maria.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/261003_Onada_4_Tancament/261003_1935_pla_implementacio_maria.md` · **Mida:** `6.521 B` / `79 L` · **SHA-256:** `b7a6ea2a76c293f7e5211a36cf72805a033b992918677028396c10efe414e84f` (`font_historica_no_normativa`).
+
+#### H08 · `261003_2109_prompt_claude_offline.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/261003_Onada_4_Tancament/261003_2109_prompt_claude_offline.md` · **Mida:** `6.409 B` / `98 L` · **SHA-256:** `45f7063b33be2e36488d286c145e7f98abe5ba9351b2e39d577dd200893ca79c` (`font_historica_no_normativa`).
+
+#### H09 · `261003_2246_decisio_fusibles.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/261003_Onada_4_Tancament/261003_2246_decisio_fusibles.md` · **Mida:** `916 B` / `8 L` · **SHA-256:** `ebedca27d5b277a9ddeb76929df52e0b7b5c6c02c61613e34f25ebc4611cd520` (`font_historica_no_normativa`).
+
+#### H10 · `261006_2200_contingut_el_xat.md`
+
+**Camí relatiu:** `_wiki_de_poble/90_arxiu_historic/261006_2200_contingut_el_xat.md` · **Mida:** `5.500 B` / `71 L` · **SHA-256:** `2e2d1a293395d992e1b27218658ef6b4c3cecc3413c2e6347caeb50cb19f0212` (`font_historica_no_normativa`).
+
+#### C01 · `ADR-2026-08-ONLINE-FIRST.md`
+
+**Camí relatiu:** `_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md` · **Mida:** `2.768 B` / `62 L` · **SHA-256:** `4ddd2b4f191eb81e774da30de5446dc9786e62dc22580ea573fcd596dafe2bd3` (`norma_vigent`).
+
+#### C02 · `ADR-2026-09-SOLLUTIA-MODEL-B.md`
+
+**Camí relatiu:** `_wiki_de_poble/02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md` · **Mida:** `3.426 B` / `53 L` · **SHA-256:** `7095897afc8904d4c38575825215d0248d3f0472c153062733bfa5932f955a5c` (`norma_vigent`).
+
+#### C03 · `01_identitat.md`
+
+**Camí relatiu:** `_wiki_de_poble/01_ser/01_identitat.md` · **Mida:** `2.984 B` / `48 L` · **SHA-256:** `ccc6be9a651e9371ea84416690efebc1e4885937f34fd435994a6d628335a7ed` (`context_vigent`).
+
+#### C04 · `03_equip_ia.md`
+
+**Camí relatiu:** `_wiki_de_poble/01_ser/03_equip_ia.md` · **Mida:** `649 B` / `25 L` · **SHA-256:** `146cbd7bafd72d2e8468d6ccad05710b0947ed75c0d1d1ef8f730458257aff3d` (`context_vigent`).
+
+#### C05 · `personalitat_iaia.md`
+
+**Camí relatiu:** `_wiki_de_poble/01_ser/personalitat_iaia.md` · **Mida:** `4.464 B` / `47 L` · **SHA-256:** `be4d3fb5cd61fedaf6b46eaccbf9dae7f30b5a8f61e5f572b7d8ed4a3fcbc54c` (`context_vigent`).
+
+#### C06 · `el_projecte.md`
+
+**Camí relatiu:** `_wiki_de_poble/02_saber/el_projecte.md` · **Mida:** `3.571 B` / `51 L` · **SHA-256:** `9cd217eec3c48d0813c98a12f1dc631c0f84a52d63ab4f1baa8e0cc5f37f` (`context_vigent`).
+
+#### C07 · `00_visio_i_pilars.md`
+
+**Camí relatiu:** `_wiki_de_poble/02_saber/00_visio_i_pilars.md` · **Mida:** `3.941 B` / `62 L` · **SHA-256:** `305f0822055ba9c738b81a5826cd85de844296367f4012789fccabd0eeecc34b` (`context_vigent`).
+
+#### C08 · `arquitectura_sistema_nervios.md`
+
+**Camí relatiu:** `_wiki_de_poble/02_saber/codex_huma/arquitectura_sistema_nervios.md` · **Mida:** `2.279 B` / `50 L` · **SHA-256:** `827a6ea30cdaab77fba72b03184861b9d1f48110956b079931e88d3002894fc7` (`norma_vigent`).
+
+#### C09 · `contingencia_offline.md`
+
+**Camí relatiu:** `_wiki_de_poble/02_saber/protocols_tecnics/contingencia_offline.md` · **Mida:** `4.278 B` / `94 L` · **SHA-256:** `025d09b7c6489ec8a7bc03879ad593f9aa0c1eb2b4d0c2f50f345bd8f81eea9d` (`arxivat_no_vigent`).
 
 ### 3. Manifest dels 34 Lots de Lectura (`617/617` Textos) i Candidats a Llast Pur (`165` Fitxers)
 
 **Denominador del 17-10-2026** a les 15:27: `418` entrades d'arrel, **`656` fitxers recursius** i **`617` textos llegits** (`614` Markdown i `3` TXT; els `39` fitxers no textuals no es van llegir com a prosa). **Empremta agregada de la llista** (`ruta, SHA-256` de cada fitxer): `1bc25d4a86318f29356d5bcfcf8cbbe8bf0874051214459fe94ae9ea8e2068d9`. Els **`165` fitxers** marcats pels lectors com a tàctica consumida (sense res noble per destil·lar) queden inventariats a l'**Annex B** de `261017_1526_auditoria_claude` com a primers candidats a l'arxiu fred un cop el Mestre segelle este llibre.
 
-| Lot | Període | Fitxers | KB | Empremta del lot (16) |
-| --- | --- | --- | --- | --- |
-| 1 | 260922–260924 | 16 | 259 | `6015696c21da151e` |
-| 2 | 260924–260921 | 27 | 293 | `d1fc29f07e6efc58` |
-| 3 | 260921–260922 | 22 | 293 | `b9c8f330e890827e` |
-| 4 | 260922–260922 | 31 | 298 | `f0e49ad1b2fc6b76` |
-| 5 | 260922–260923 | 25 | 265 | `a61f597dd7f1907e` |
-| 6 | 260923–260923 | 27 | 299 | `892a60eb667d0ca0` |
-| 7 | 260923–260924 | 24 | 275 | `2d578289bb5ee1c7` |
-| 8 | 260924–260924 | 19 | 293 | `0fcdd0aa8f824286` |
-| 9 | 260924–260924 | 16 | 277 | `5344768bf98c4535` |
-| 10 | 260924–260924 | 17 | 296 | `2ef4c4082bf437a3` |
-| 11 | 260924–260925 | 23 | 295 | `3b9b3e704eee0071` |
-| 12 | 260926–260926 | 11 | 286 | `3a7064b1294b943d` |
-| 13 | 260926–260927 | 25 | 295 | `73b6309fe5cb27ff` |
-| 14 | 260927–260926 | 14 | 149 | `1da1c6874febe246` |
-| 15 | 260926–260928 | 12 | 296 | `28873d2057aa34ed` |
-| 16 | 260928–260929 | 11 | 103 | `c66e97153ffa04a3` |
-| 17 | 260929–260929 | 3 | 289 | `2f9d9abf07273f5a` |
-| 18 | 260929–260930 | 25 | 268 | `363ffb574ee88efb` |
-| 19 | 260930–261001 | 20 | 292 | `b828cea4b20e4ed1` |
-| 20 | 261001–261001 | 14 | 296 | `5e99e1dc3e4ef9b7` |
-| 21 | 261001–261002 | 11 | 277 | `aa2b2833d414886d` |
-| 22 | 261002–261002 | 16 | 286 | `5aed205697200ecb` |
-| 23 | 261002–261003 | 13 | 175 | `eb487b86060dc823` |
-| 24 | 261003–261004 | 16 | 296 | `6827f34526db8178` |
-| 25 | 261004–261004 | 29 | 297 | `246853b898ac9fc9` |
-| 26 | 261004–261006 | 16 | 206 | `1fc38e07e158b997` |
-| 27 | 261006–261007 | 16 | 292 | `319b014101b68a99` |
-| 28 | 261007–261009 | 25 | 291 | `4a60640989d5913d` |
-| 29 | 261009–261012 | 26 | 298 | `4b68b14981644f3d` |
-| 30 | 261012–261013 | 21 | 244 | `ffc881445b39e6b2` |
-| 31 | 261013–261014 | 13 | 292 | `8fd7e6b0c03ddb2c` |
-| 32 | 261014–261015 | 17 | 282 | `0721b825df063d8e` |
-| 33 | 261015–261016 | 8 | 279 | `0b4118733aaa4f4e` |
-| 34 | 261016–261016 | 8 | 242 | `358b9f1d958e4ce5` |
+#### Lot 1 (`260922–260924`)
+
+**Fitxers:** `16` · **Pes:** `259 KB` · **Empremta del lot (16):** `6015696c21da151e`.
+
+#### Lot 2 (`260924–260921`)
+
+**Fitxers:** `27` · **Pes:** `293 KB` · **Empremta del lot (16):** `d1fc29f07e6efc58`.
+
+#### Lot 3 (`260921–260922`)
+
+**Fitxers:** `22` · **Pes:** `293 KB` · **Empremta del lot (16):** `b9c8f330e890827e`.
+
+#### Lot 4 (`260922–260922`)
+
+**Fitxers:** `31` · **Pes:** `298 KB` · **Empremta del lot (16):** `f0e49ad1b2fc6b76`.
+
+#### Lot 5 (`260922–260923`)
+
+**Fitxers:** `25` · **Pes:** `265 KB` · **Empremta del lot (16):** `a61f597dd7f1907e`.
+
+#### Lot 6 (`260923–260923`)
+
+**Fitxers:** `27` · **Pes:** `299 KB` · **Empremta del lot (16):** `892a60eb667d0ca0`.
+
+#### Lot 7 (`260923–260924`)
+
+**Fitxers:** `24` · **Pes:** `275 KB` · **Empremta del lot (16):** `2d578289bb5ee1c7`.
+
+#### Lot 8 (`260924–260924`)
+
+**Fitxers:** `19` · **Pes:** `293 KB` · **Empremta del lot (16):** `0fcdd0aa8f824286`.
+
+#### Lot 9 (`260924–260924`)
+
+**Fitxers:** `16` · **Pes:** `277 KB` · **Empremta del lot (16):** `5344768bf98c4535`.
+
+#### Lot 10 (`260924–260924`)
+
+**Fitxers:** `17` · **Pes:** `296 KB` · **Empremta del lot (16):** `2ef4c4082bf437a3`.
+
+#### Lot 11 (`260924–260925`)
+
+**Fitxers:** `23` · **Pes:** `295 KB` · **Empremta del lot (16):** `3b9b3e704eee0071`.
+
+#### Lot 12 (`260926–260926`)
+
+**Fitxers:** `11` · **Pes:** `286 KB` · **Empremta del lot (16):** `3a7064b1294b943d`.
+
+#### Lot 13 (`260926–260927`)
+
+**Fitxers:** `25` · **Pes:** `295 KB` · **Empremta del lot (16):** `73b6309fe5cb27ff`.
+
+#### Lot 14 (`260927–260926`)
+
+**Fitxers:** `14` · **Pes:** `149 KB` · **Empremta del lot (16):** `1da1c6874febe246`.
+
+#### Lot 15 (`260926–260928`)
+
+**Fitxers:** `12` · **Pes:** `296 KB` · **Empremta del lot (16):** `28873d2057aa34ed`.
+
+#### Lot 16 (`260928–260929`)
+
+**Fitxers:** `11` · **Pes:** `103 KB` · **Empremta del lot (16):** `c66e97153ffa04a3`.
+
+#### Lot 17 (`260929–260929`)
+
+**Fitxers:** `3` · **Pes:** `289 KB` · **Empremta del lot (16):** `2f9d9abf07273f5a`.
+
+#### Lot 18 (`260929–260930`)
+
+**Fitxers:** `25` · **Pes:** `268 KB` · **Empremta del lot (16):** `363ffb574ee88efb`.
+
+#### Lot 19 (`260930–261001`)
+
+**Fitxers:** `20` · **Pes:** `292 KB` · **Empremta del lot (16):** `b828cea4b20e4ed1`.
+
+#### Lot 20 (`261001–261001`)
+
+**Fitxers:** `14` · **Pes:** `296 KB` · **Empremta del lot (16):** `5e99e1dc3e4ef9b7`.
+
+#### Lot 21 (`261001–261002`)
+
+**Fitxers:** `11` · **Pes:** `277 KB` · **Empremta del lot (16):** `aa2b2833d414886d`.
+
+#### Lot 22 (`261002–261002`)
+
+**Fitxers:** `16` · **Pes:** `286 KB` · **Empremta del lot (16):** `5aed205697200ecb`.
+
+#### Lot 23 (`261002–261003`)
+
+**Fitxers:** `13` · **Pes:** `175 KB` · **Empremta del lot (16):** `eb487b86060dc823`.
+
+#### Lot 24 (`261003–261004`)
+
+**Fitxers:** `16` · **Pes:** `296 KB` · **Empremta del lot (16):** `6827f34526db8178`.
+
+#### Lot 25 (`261004–261004`)
+
+**Fitxers:** `29` · **Pes:** `297 KB` · **Empremta del lot (16):** `246853b898ac9fc9`.
+
+#### Lot 26 (`261004–261006`)
+
+**Fitxers:** `16` · **Pes:** `206 KB` · **Empremta del lot (16):** `1fc38e07e158b997`.
+
+#### Lot 27 (`261006–261007`)
+
+**Fitxers:** `16` · **Pes:** `292 KB` · **Empremta del lot (16):** `319b014101b68a99`.
+
+#### Lot 28 (`261007–261009`)
+
+**Fitxers:** `25` · **Pes:** `291 KB` · **Empremta del lot (16):** `4a60640989d5913d`.
+
+#### Lot 29 (`261009–261012`)
+
+**Fitxers:** `26` · **Pes:** `298 KB` · **Empremta del lot (16):** `4b68b14981644f3d`.
+
+#### Lot 30 (`261012–261013`)
+
+**Fitxers:** `21` · **Pes:** `244 KB` · **Empremta del lot (16):** `ffc881445b39e6b2`.
+
+#### Lot 31 (`261013–261014`)
+
+**Fitxers:** `13` · **Pes:** `292 KB` · **Empremta del lot (16):** `8fd7e6b0c03ddb2c`.
+
+#### Lot 32 (`261014–261015`)
+
+**Fitxers:** `17` · **Pes:** `282 KB` · **Empremta del lot (16):** `0721b825df063d8e`.
+
+#### Lot 33 (`261015–261016`)
+
+**Fitxers:** `8` · **Pes:** `279 KB` · **Empremta del lot (16):** `0b4118733aaa4f4e`.
+
+#### Lot 34 (`261016–261016`)
+
+**Fitxers:** `8` · **Pes:** `242 KB` · **Empremta del lot (16):** `358b9f1d958e4ce5`.
 
 ## Vincles
 

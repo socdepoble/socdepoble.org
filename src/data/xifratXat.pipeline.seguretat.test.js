@@ -14,6 +14,7 @@ import { creaIdentitat } from './xifratXatProtocol.js';
 import { creaMagatzemXat } from './xifratXatMagatzem.js';
 import { aBase64url } from './xifratXatCripto.js';
 import { creaIdbFalsEstructurat } from '../../tests/helpers/idbFalsEstructurat.js';
+import { jpegDeMida } from '../../tests/helpers/contenidorsMedia.js';
 
 const cripto = globalThis.crypto;
 const A = 'aaaaaaaa-1111-4111-8111-111111111111';
@@ -172,7 +173,7 @@ describe('pipeline extrem a extrem (dos parts, doble de servidor en memòria)', 
   });
 
   test('adjunts: xifrats abans de pujar; B els rep amb les metadades de sempre i els obri com a blob: desxifrat', async () => {
-    const foto = cripto.getRandomValues(new Uint8Array(3000));
+    const foto = jpegDeMida(3000);
     const publicat = await a.d.publicaAdjuntXat(FIL, { id: ADJ, fitxer: new Blob([foto], { type: 'image/jpeg' }), tipus: 'foto', text: 'la foto' });
     expect(publicat).toMatchObject({ id: ADJ, text: 'la foto', tipus: 'foto', metadades: { adjunt: { id: ADJ, mime: 'image/jpeg', bytes: 3000 } } });
     expect(a.impl.publicaAdjuntXat).not.toHaveBeenCalled();
@@ -278,7 +279,7 @@ describe('pas 17 · LRU dels adjunts desxifrats i oblit amb CI explícita', () =
   let identitatB;
   let b;
   let revocades;
-  const foto = () => new Blob([cripto.getRandomValues(new Uint8Array(3000))], { type: 'image/jpeg' });
+  const foto = () => new Blob([jpegDeMida(3000)], { type: 'image/jpeg' });
   /* Gauntlet 261029 (c1, ordre-pas17) · Una part B nova per cas: decorador, magatzem, servei i
      LRU propis (bytesBlobs 0), amb la identitat publicada de B i els tres adjunts ja rebuts.
      Cap cas hereta els blob: ni l'àmbit d'un altre, en qualsevol ordre (--sequence.shuffle). */

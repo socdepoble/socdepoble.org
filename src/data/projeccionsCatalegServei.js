@@ -6,6 +6,7 @@ import { capturaAbastProjeccions, capturaDestinsDeFontCataleg, capturaFontCatale
   errorProjeccioCataleg, idPublicacioProjeccio, payloadProjeccioCataleg, projeccioCatalegDe } from './projeccionsCataleg.js';
 
 const AUDIENCIES = ['privada', 'publica'];
+const INCIDENCIES = ['conflicte-versio', 'versio-desconeguda', 'rebuig-servidor'];
 const UUID = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const copia = value => JSON.parse(JSON.stringify(value));
 const enter = value => Number.isSafeInteger(value) && value >= 0;
@@ -25,10 +26,21 @@ function registreNet(input) {
       || clauFontCataleg(opFont) !== input.clau || op.expectedUpdatedAt !== null && !instant(op.expectedUpdatedAt)) throw errorProjeccioCataleg('registre-invalid');
     operacions[audiencia] = { id: op.id, seq: op.seq, font: opFont, destins: opDestins, expectedUpdatedAt: op.expectedUpdatedAt };
   }
+  /* R32.15 · D-R32.14-1 · Una incidència de versió aparta l'audiència de la cua
+     automàtica fins que algú la resol: ni es reintenta per sempre ni encalla les
+     referències de darrere. Els registres antics no en porten (null). */
+  /* Tolerant: una incidència d'un build posterior (codi desconegut) es descarta i
+     l'audiència torna a la cua; mai fa caure el magatzem sencer. */
+  const incidencies = {};
+  for (const audiencia of AUDIENCIES) {
+    const inc = input.incidencies?.[audiencia] ?? null;
+    incidencies[audiencia] = inc && typeof inc === 'object' && INCIDENCIES.includes(inc.codi) && enter(inc.seq) && inc.seq >= 1 && inc.seq <= input.seq
+      ? { codi: inc.codi, seq: inc.seq } : null;
+  }
   return { clau: input.clau, font, destins, seq: input.seq, ids: { ...input.ids },
     confirmacions: { ...input.confirmacions }, publicaIntentada: input.publicaIntentada,
     versions: input.versions ? { ...input.versions } : { privada: null, publica: null },
-    cas: input.cas === true || AUDIENCIES.some(a => operacions[a] !== null), operacions };
+    cas: input.cas === true || AUDIENCIES.some(a => operacions[a] !== null), operacions, incidencies };
 }
 export function creaMagatzemProjeccionsCataleg({ abast, ...opcions }) {
   const scope = capturaAbastProjeccions(abast);
@@ -36,12 +48,20 @@ export function creaMagatzemProjeccionsCataleg({ abast, ...opcions }) {
     stores: { projeccions: { clau: 'clau' } }, llistaBlanca: { projeccions: registreNet }, ...opcions });
 }
 export const registreProjeccioPendent = row => AUDIENCIES.some(a => row.confirmacions[a] !== row.seq);
+/** R32.15 · Pendent, però fora de la cua automàtica fins a una resolució explícita. */
+export const registreProjeccioAmbIncidencia = row => AUDIENCIES.some(a => (row.incidencies?.[a] ?? null) !== null);
+const esConflicteVersio = error => error?.codi === 'conflicte-versio' || error?.code === 'conflicte-versio';
+/* Rebutjos deterministes del CAS per a una fila concreta (autoria perduda, contingut
+   no publicable, retirada per moderació, hash d'operació divergent): reintentar-los
+   no canvia res. La xarxa, la sessió i l'RPC absent continuen aturant la cua. */
+const esRebuigPermanent = error => [error?.message, error?.cause?.message].some(m => /SDP-PUB-CAS-00[1245]/.test(String(m ?? '')));
 export function filesDeRegistreProjeccio(row, abast) {
   const scope = capturaAbastProjeccions(abast), net = registreNet(row);
   return AUDIENCIES.map(audiencia => ({ id: net.ids[audiencia], ownerUserId: scope.ownerId,
     sectionId: audiencia === 'publica' ? 'mur' : 'notes',
     ...payloadProjeccioCataleg({ font: net.font, destins: destinsPerAudiencia(net.destins, audiencia), audiencia }),
-    _projeccioLocal: true, _projeccioPendent: registreProjeccioPendent(net) }));
+    _projeccioLocal: true, _projeccioPendent: registreProjeccioPendent(net),
+    ...(net.incidencies[audiencia] ? { _projeccioIncidencia: net.incidencies[audiencia].codi } : {}) }));
 }
 /** Durable outbox, one immutable row per audience. A partial acknowledgement
  * is pending, never a successful publication. Server RLS remains authoritative.
@@ -71,7 +91,8 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
       comprova();
       const seq = (old?.seq ?? 0) + 1;
       return registreNet({ clau, font, destins, seq, ids, confirmacions: old?.confirmacions ?? { publica: 0, privada: 0 }, publicaIntentada: old?.publicaIntentada ?? false,
-        versions: old?.versions, cas: old?.cas, operacions: old?.operacions });
+        versions: old?.versions, cas: old?.cas, operacions: old?.operacions,
+        incidencies: Object.fromEntries(AUDIENCIES.map(a => [a, old?.incidencies?.[a]?.codi === 'rebuig-servidor' ? null : old?.incidencies?.[a] ?? null])) });
     });
     comprova(); return saved;
   }
@@ -85,15 +106,19 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
     const net = registreNet(current);
     if (versionada === true && (row.operacions?.[audiencia]?.id ?? null) !== (net.operacions[audiencia]?.id ?? null)) throw errorProjeccioCataleg('confirmacio-invalida');
     return registreNet({ ...net, operacions: { ...net.operacions, [audiencia]: null }, versions: { ...net.versions, [audiencia]: instant(saved?.updatedAt) ? saved.updatedAt : null },
+      incidencies: { ...net.incidencies, [audiencia]: null },
       confirmacions: { ...current.confirmacions, [audiencia]: Math.max(current.confirmacions[audiencia], row.seq) } });
   });
   /* Les versions que un registre confirmat i sense versió pot adoptar d'una
      lectura remota: només les d'una fila única que és exactament la projecció
      que es va confirmar. Pura: no toca el magatzem. Null si no n'adopta cap. */
   function versionsAdoptables(net, items) {
-    let versions = null;
+    let versions = null, confirmacions = null, incidencies = null;
     for (const audiencia of AUDIENCIES) {
-      if (net.operacions[audiencia] || net.versions[audiencia] !== null || net.confirmacions[audiencia] !== net.seq) continue;
+      /* R32.15 · Una incidència de conflicte es tanca sola quan el servidor ja té
+         exactament la projecció local d'ara: no hi ha res a escriure. */
+      const tanca = net.incidencies[audiencia]?.codi === 'conflicte-versio' && !net.operacions[audiencia];
+      if (!tanca && (net.operacions[audiencia] || net.versions[audiencia] !== null || net.confirmacions[audiencia] !== net.seq)) continue;
       const matches = items.filter(candidate => candidate?.id === net.ids[audiencia]);
       const item = matches.length === 1 ? matches[0] : null;
       const remote = projeccioCatalegDe(item), destins = destinsPerAudiencia(net.destins, audiencia);
@@ -108,9 +133,14 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
           ownerUserId: scope.ownerId, authorOrgId: item.authorOrgId, sectionId }), sectionId };
       const stable = (value, depth = 0) => Array.isArray(value) ? value.map(entry => stable(entry, depth + 1)) : value && typeof value === 'object'
         ? Object.fromEntries(Object.keys(value).sort().filter(key => depth || !['created_at', 'updated_at', 'updatedAt', 'author', 'author_name'].includes(key)).map(key => [key, stable(value[key], depth + 1)])) : value;
-      if (JSON.stringify(stable(item)) === JSON.stringify(stable(expected))) versions = { ...(versions ?? net.versions), [audiencia]: item.updated_at };
+      if (JSON.stringify(stable(item)) !== JSON.stringify(stable(expected))) continue;
+      versions = { ...(versions ?? net.versions), [audiencia]: item.updated_at };
+      if (tanca) {
+        confirmacions = { ...(confirmacions ?? net.confirmacions), [audiencia]: net.seq };
+        incidencies = { ...(incidencies ?? net.incidencies), [audiencia]: null };
+      }
     }
-    return versions;
+    return versions && { versions, ...(confirmacions ? { confirmacions, incidencies } : {}) };
   }
   /* Onada R32 (Gauntlet del Carril 1) · L'adopció és comptabilitat local i la
      crida el hook dins de cada lectura remota. Per això només escriu quan una
@@ -132,19 +162,50 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
       if (!versionsAdoptables(row, items)) continue;
       await base.actualitza('projeccions', row.clau, current => {
         comprova(); if (!current) return undefined;
-        const net = registreNet(current), versions = versionsAdoptables(net, items);
-        if (!versions) return undefined;
-        adoptada = true; return registreNet({ ...net, versions });
+        const net = registreNet(current), adopcio = versionsAdoptables(net, items);
+        if (!adopcio) return undefined;
+        adoptada = true; return registreNet({ ...net, ...adopcio });
       });
     }
     return adoptada;
   }
+  /* R32.15 · D-R32.14-1 · El servidor ha rebutjat l'operació (versió esperada
+     vella) o no se'n coneix la versió: l'audiència passa a incidència durable i
+     l'operació rància ix de la cua. Només si l'operació encara és la mateixa. */
+  const marcaIncidencia = (clau, audiencia, opId, codi) => base.actualitza('projeccions', clau, current => {
+    comprova(); if (!current) throw errorProjeccioCataleg('registre-invalid');
+    const net = registreNet(current), op = net.operacions[audiencia];
+    if (opId !== null && op?.id !== opId) return net;
+    return registreNet({ ...net, operacions: { ...net.operacions, [audiencia]: null },
+      incidencies: { ...net.incidencies, [audiencia]: { codi, seq: op?.seq ?? net.seq } } });
+  });
+  /* Resolució explícita (decisió de la persona, mai automàtica): la nova base és
+     la versió remota que acaba de llegir; la pròxima sincronització hi aplica
+     l'edició local amb una operació nova, una sola vegada. */
+  async function resolIncidencia(clau, audiencia, { versioRemota } = {}) {
+    escriu();
+    if (versionada !== true) throw errorProjeccioCataleg('cas-no-disponible');
+    // null: la fila remota no existix i l'operació nova serà una creació (mai sobreescriu).
+    if (!AUDIENCIES.includes(audiencia) || versioRemota !== null && !instant(versioRemota)) throw errorProjeccioCataleg('versio-invalida');
+    const saved = await base.actualitza('projeccions', clau, current => {
+      comprova(); if (!current) throw errorProjeccioCataleg('registre-invalid');
+      const net = registreNet(current);
+      if (!net.incidencies[audiencia]) throw errorProjeccioCataleg('sense-incidencia');
+      // Amb null, l'audiència torna a «mai confirmada»: la pròxima operació és una creació.
+      return registreNet({ ...net, versions: { ...net.versions, [audiencia]: versioRemota }, incidencies: { ...net.incidencies, [audiencia]: null },
+        ...(versioRemota === null ? { confirmacions: { ...net.confirmacions, [audiencia]: 0 } } : {}) });
+    });
+    comprova(); return saved;
+  }
   async function sincronitzaAra() {
     escriu();
     if (typeof publica !== 'function') throw errorProjeccioCataleg('sincronitzacio-no-disponible');
+    // Sense CAS (rollback del flag), les incidències no compten: el camí legacy publica i confirma les neteja.
+    const teIncidencia = (row, audiencia) => versionada === true && row.incidencies[audiencia] !== null;
     for (;;) {
-      const pending = (await llista()).find(registreProjeccioPendent);
-      if (!pending) return;
+      // Per audiència: una incidència al Mur no atura la nota privada, ni a l'inrevés.
+      const pending = (await llista()).find(row => AUDIENCIES.some(a => row.confirmacions[a] !== row.seq && !teIncidencia(row, a)));
+      if (!pending) break;
       if (pending.cas && versionada !== true) throw errorProjeccioCataleg('cas-no-disponible');
       for (const audiencia of AUDIENCIES) {
         comprova();
@@ -152,20 +213,25 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
         if (!row) throw errorProjeccioCataleg('registre-invalid');
         if (row.confirmacions[audiencia] === row.seq) continue;
         const destinsActuals = destinsPerAudiencia(row.destins, audiencia);
-        // Una referència només privada no filtra ni l'id al Mur.
+        // Una referència només privada no filtra ni l'id al Mur (i confirmar en neteja una incidència rància).
         if (audiencia === 'publica' && !destinsActuals.length && !row.publicaIntentada && !row.operacions[audiencia]) { await confirma(row, audiencia); continue; }
+        if (teIncidencia(row, audiencia)) continue;
         if (versionada === true) {
           row = await base.actualitza('projeccions', pending.clau, current => {
             comprova(); const net = registreNet(current);
             if (net.operacions[audiencia] || net.confirmacions[audiencia] === net.seq
               || audiencia === 'publica' && !destinsPerAudiencia(net.destins, audiencia).length && !net.publicaIntentada) return net;
-            if (net.confirmacions[audiencia] > 0 && net.versions[audiencia] === null) throw errorProjeccioCataleg('versio-desconeguda');
+            // Un Mur mai intentat no té cap fila remota: l'operació és una creació (expectedUpdatedAt null).
+            if (net.confirmacions[audiencia] > 0 && net.versions[audiencia] === null && !(audiencia === 'publica' && !net.publicaIntentada)) {
+              return registreNet({ ...net, incidencies: { ...net.incidencies, [audiencia]: { codi: 'versio-desconeguda', seq: net.seq } } });
+            }
             const id = globalThis.crypto?.randomUUID?.();
             if (!UUID.test(id ?? '')) throw errorProjeccioCataleg('aleatorietat-no-disponible');
             return registreNet({ ...net, cas: true, publicaIntentada: net.publicaIntentada || audiencia === 'publica',
               operacions: { ...net.operacions, [audiencia]: { id, seq: net.seq, font: net.font, destins: net.destins, expectedUpdatedAt: net.versions[audiencia] } } });
           });
           comprova();
+          if (teIncidencia(row, audiencia)) continue;
           if (!row.operacions[audiencia]) { if (row.confirmacions[audiencia] !== row.seq) await confirma(row, audiencia); continue; }
         } else if (audiencia === 'publica') {
           await base.actualitza('projeccions', pending.clau, current => { comprova(); return registreNet({ ...current, publicaIntentada: true }); });
@@ -177,7 +243,12 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
         const payload = payloadProjeccioCataleg({ font, destins, audiencia });
         const submission = { id: row.ids[audiencia], sectionId: audiencia === 'publica' ? 'mur' : 'notes', payload: copia(payload) };
         if (op) { submission.expectedUpdatedAt = op.expectedUpdatedAt; submission.operationId = op.id; }
-        const saved = await publica(submission);
+        let saved;
+        try { saved = await publica(submission); }
+        catch (error) {
+          if (!op || !(esConflicteVersio(error) || esRebuigPermanent(error))) throw error;
+          comprova(); await marcaIncidencia(row.clau, audiencia, op.id, esConflicteVersio(error) ? 'conflicte-versio' : 'rebuig-servidor'); continue;
+        }
         comprova();
         if (saved?.id !== row.ids[audiencia] || saved?.sectionId !== (audiencia === 'publica' ? 'mur' : 'notes')
           || JSON.stringify(saved?.payload?.projeccioCataleg) !== JSON.stringify(payload.projeccioCataleg)
@@ -185,9 +256,14 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
         await confirma(op ? { ...row, seq: op.seq } : row, audiencia, saved);
       }
     }
+    /* La cua ha avançat tot el que podia. Les incidències que queden s'avisen
+       sense cap crida al servidor: l'esborrany continua desat localment. */
+    const incidencies = (await llista()).filter(registreProjeccioPendent)
+      .flatMap(row => AUDIENCIES.filter(a => teIncidencia(row, a)).map(audiencia => ({ clau: row.clau, audiencia, codi: row.incidencies[audiencia].codi })));
+    if (incidencies.length) throw Object.assign(errorProjeccioCataleg('incidencia-versio'), { incidencies });
   }
   return {
-    prepara, llista, desa, adoptaVersionsRemotes,
+    prepara, llista, desa, adoptaVersionsRemotes, resolIncidencia,
     get persistent() { return base.persistent; },
     get mode() { return base.mode; },
     sincronitza() {

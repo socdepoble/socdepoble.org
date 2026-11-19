@@ -28,6 +28,7 @@ import { configDeFormulari, configDeJson, dataCurta, errorsDelPerfil, formulariD
 import { AvisDeZona, ErrorsDelFormulari, llegixText } from './peces.jsx';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+import { tf, tg } from '../i18nGestoria.js';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* El domicili fiscal d'una configuració, en una línia. */
@@ -36,7 +37,7 @@ function domiciliDe(config) {
   return fiscal ? `${fiscal.adreca}, ${fiscal.codiPostal} ${fiscal.poblacio}${fiscal.provincia ? ` (${fiscal.provincia})` : ''}` : '';
 }
 
-export function PasPerfil({ f }) {
+export function PasPerfil({ f, idioma = 'ca' }) {
   const [obert, setObert] = useState(() => !f.config);
   const [formulari, setFormulari] = useState(() => formulariDeConfig(f.config));
   const [base, setBase] = useState(() => f.config);
@@ -95,20 +96,18 @@ export function PasPerfil({ f }) {
     return (
       <>
         <details ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__documents">
-          <summary>{`Les dades desades (versió ${versio.versio})`}</summary>
+          <summary>{tf(idioma, 'dadesDesadesVersio', versio.versio)}</summary>
           <div className="sdp-gestoria-panell__bloc">
             <dl className="sdp-gestoria-panell__dades">
-              <div><dt>NIF</dt><dd>{f.config.nif}</dd></div>
-              <div><dt>Nom legal</dt><dd>{f.config.nom}</dd></div>
-              {f.config.nomComercial ? <div ref={adoptaEstilsDiferits}><dt>Nom comercial</dt><dd>{f.config.nomComercial}</dd></div> : null}
-              <div><dt>Domicili fiscal</dt><dd>{domiciliDe(f.config)}</dd></div>
-              <div><dt>Primer dia que factures ací</dt><dd>{dataCurta(f.config.facturacio.dataPas)}</dd></div>
+              <div><dt>{tg(idioma, 'NIF')}</dt><dd>{f.config.nif}</dd></div>
+              <div><dt>{tg(idioma, 'Nom legal')}</dt><dd>{f.config.nom}</dd></div>
+              {f.config.nomComercial ? <div ref={adoptaEstilsDiferits}><dt>{tg(idioma, 'Nom comercial')}</dt><dd>{f.config.nomComercial}</dd></div> : null}
+              <div><dt>{tg(idioma, 'Domicili fiscal')}</dt><dd>{domiciliDe(f.config)}</dd></div>
+              <div><dt>{tg(idioma, 'Primer dia que factures ací')}</dt><dd>{dataCurta(f.config.facturacio.dataPas)}</dd></div>
             </dl>
-            <p className="sdp-gestoria-panell__nota">
-              {`Versió ${versio.versio} del perfil, desada en este ordinador. Les dades no ixen d’ací.`}
-            </p>
+            <p className="sdp-gestoria-panell__nota">{tf(idioma, 'notaVersioPerfil', versio.versio)}</p>
             <div className="sdp-gestoria-panell__accions">
-              <Boto varietat="secundari" onClick={obri}>Canvia les dades de l’empresa</Boto>
+              <Boto varietat="secundari" onClick={obri}>{tg(idioma, 'Canvia les dades de l’empresa')}</Boto>
             </div>
           </div>
         </details>
@@ -120,55 +119,54 @@ export function PasPerfil({ f }) {
   return (
     <form ref={adoptaEstilsDiferits} id={idForm} className="sdp-gestoria-panell__bloc" noValidate onSubmit={desa}>
       <p>
-        Estes dades van a cada factura com a emissor. Es guarden només en este ordinador, i cada canvi es
-        guarda com una versió nova: les factures ja fetes conserven les dades del dia que es van emetre.
+        {tg(idioma, 'Estes dades van a cada factura com a emissor. Es guarden només en este ordinador, i cada canvi es guarda com una versió nova: les factures ja fetes conserven les dades del dia que es van emetre.')}
       </p>
-      <Camp etiqueta="Importa la configuració (opcional)"
-        ajuda="Si ja tens el fitxer .json de l’empresa (el mateix que llig el Tauler), tria’l i s’omplirà el formulari.">
-        <CampText tipus="file" accept=".json,application/json" textBoto="Tria el fitxer" onChange={importa} />
+      <Camp etiqueta={tg(idioma, 'Importa la configuració (opcional)')}
+        ajuda={tg(idioma, 'Si ja tens el fitxer .json de l’empresa (el mateix que llig el Tauler), tria’l i s’omplirà el formulari.')}>
+        <CampText tipus="file" accept=".json,application/json" textBoto={tg(idioma, 'Tria el fitxer')} onChange={importa} />
       </Camp>
       {importat ? (
         <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">
           {`Dades carregades de «${importat}»: revisa-les i desa-les.${fixada ? ' El primer dia que factures ací no canvia: ja hi ha factures emeses.' : ''}`}
         </p>
       ) : null}
-      <GrupCamps llegenda="L’empresa">
-        <Camp etiqueta="NIF" obligatori
-          ajuda={fixada ? 'Ja hi ha factures emeses amb este NIF: no es pot canviar.' : 'El DNI, el NIE o el CIF de qui factura.'}>
+      <GrupCamps llegenda={tg(idioma, 'L’empresa')}>
+        <Camp etiqueta={tg(idioma, 'NIF')} obligatori
+          ajuda={tg(idioma, fixada ? 'Ja hi ha factures emeses amb este NIF: no es pot canviar.' : 'El DNI, el NIE o el CIF de qui factura.')}>
           <CampText value={formulari.nif} autoComplete="off" spellCheck={false} readOnly={Boolean(fixada)} onChange={canvia('nif')} />
         </Camp>
-        <Camp etiqueta="Nom legal" obligatori ajuda="La raó social, o el nom i els cognoms si eres autònom.">
+        <Camp etiqueta={tg(idioma, 'Nom legal')} obligatori ajuda={tg(idioma, 'La raó social, o el nom i els cognoms si eres autònom.')}>
           <CampText value={formulari.nom} autoComplete="organization" spellCheck={false} onChange={canvia('nom')} />
         </Camp>
-        <Camp etiqueta="Nom comercial (opcional)" ajuda="El nom amb què et coneix la gent, si no és el legal.">
+        <Camp etiqueta={tg(idioma, 'Nom comercial (opcional)')} ajuda={tg(idioma, 'El nom amb què et coneix la gent, si no és el legal.')}>
           <CampText value={formulari.nomComercial} spellCheck={false} onChange={canvia('nomComercial')} />
         </Camp>
       </GrupCamps>
-      <GrupCamps llegenda="Domicili fiscal">
-        <Camp etiqueta="Adreça" obligatori>
+      <GrupCamps llegenda={tg(idioma, 'Domicili fiscal')}>
+        <Camp etiqueta={tg(idioma, 'Adreça')} obligatori>
           <CampText value={formulari.adreca} autoComplete="street-address" spellCheck={false} onChange={canvia('adreca')} />
         </Camp>
-        <Camp etiqueta="Codi postal" obligatori>
+        <Camp etiqueta={tg(idioma, 'Codi postal')} obligatori>
           <CampText value={formulari.codiPostal} inputMode="numeric" autoComplete="postal-code" spellCheck={false} onChange={canvia('codiPostal')} />
         </Camp>
-        <Camp etiqueta="Població" obligatori>
+        <Camp etiqueta={tg(idioma, 'Població')} obligatori>
           <CampText value={formulari.poblacio} spellCheck={false} onChange={canvia('poblacio')} />
         </Camp>
-        <Camp etiqueta="Província (opcional)">
+        <Camp etiqueta={tg(idioma, 'Província (opcional)')}>
           <CampText value={formulari.provincia} spellCheck={false} onChange={canvia('provincia')} />
         </Camp>
       </GrupCamps>
-      <Camp etiqueta="Primer dia que factures ací" obligatori
-        ajuda={fixada
+      <Camp etiqueta={tg(idioma, 'Primer dia que factures ací')} obligatori
+        ajuda={tg(idioma, fixada
           ? 'Ja hi ha factures emeses des d’este dia: no es pot canviar.'
-          : 'El primer dia que factures amb este programa. Les factures d’abans d’eixe dia les fa l’eina que feies servir.'}>
+          : 'El primer dia que factures amb este programa. Les factures d’abans d’eixe dia les fa l’eina que feies servir.')}>
         <CampText tipus="date" value={formulari.dataPas} readOnly={Boolean(fixada)} onChange={canvia('dataPas')} />
       </Camp>
-      <ErrorsDelFormulari titol="Revisa les dades de l’empresa" errors={errors} />
+      <ErrorsDelFormulari titol={tg(idioma, 'Revisa les dades de l’empresa')} errors={errors} />
       <AvisDeZona avis={f.avis} zona="perfil" onTanca={f.tancaAvis} />
       <div className="sdp-gestoria-panell__accions">
-        <Boto varietat="primari" tipus="submit" carregant={f.ocupat === 'perfil'}>Desa les dades de l’empresa</Boto>
-        {f.config ? <Boto varietat="secundari" onClick={() => setObert(false)}>Deixa-ho com estava</Boto> : null}
+        <Boto varietat="primari" tipus="submit" carregant={f.ocupat === 'perfil'}>{tg(idioma, 'Desa les dades de l’empresa')}</Boto>
+        {f.config ? <Boto varietat="secundari" onClick={() => setObert(false)}>{tg(idioma, 'Deixa-ho com estava')}</Boto> : null}
       </div>
     </form>
   );

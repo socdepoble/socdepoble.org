@@ -25,15 +25,33 @@ Esta peça de la Consola respon a una pregunta: **què corre sol, quan, qui ho l
 
 ## Què hi ha al Mas (observat el 24-09-2026)
 
-| Procés | Llançador | Cadència | Què fa | Estat observat |
-|---|---|---|---|---|
-| Plaquetes | launchd `org.socdepoble.plaquetes`, fora del repositori | cada 3.600 s i en arrancar | executa `scripts/immunitari/plaquetes.mjs diagnostic --autonom` i escriu receptes a `.immunitari/receptes/` i el registre a `.immunitari/cron.out` | viu; diagnostica i no aplica mai |
-| Reflex daemon | launchd `com.socdepoble.reflex_daemon`, resident (`KeepAlive`), fora del repositori | permanent | hauria d'executar `tooling/wiki/core/reflex_daemon.mjs` | **mort**: el fitxer no existix i el procés cau amb `MODULE_NOT_FOUND` en bucle |
-| Arrencada de sessió | hook `SessionStart` de Claude Code | per esdeveniment | `context-local.mjs` i `despertar.mjs`, que regenera `ON_ESTIC.md` | viu |
-| Router cognitiu | hook `UserPromptSubmit` | per esdeveniment | `persona_router.mjs --punters` | viu |
-| Porta local | hook `PreToolUse` | per esdeveniment | `hooks-local.mjs` | viu a Claude Code |
-| Segell automàtic | hook `PostToolUse` | per esdeveniment | `segell-auto.mjs` | viu; hui refusa perquè el segell està divergent |
-| Hooks d'Antigravity | `.agents/hooks.json` | per esdeveniment | les mateixes portes | declarats sense consumidor acreditat |
+### Plaquetes
+
+**Llançador:** `launchd` `org.socdepoble.plaquetes` (fora del repositori) · **Cadència:** cada **3.600 s** i en arrancar. Executa `scripts/immunitari/plaquetes.mjs diagnostic --autonom` i escriu receptes a `.immunitari/receptes/` i el registre a `.immunitari/cron.out`. **Estat observat:** **viu**; diagnostica i no aplica mai.
+
+### Reflex daemon
+
+**Llançador:** `launchd` `com.socdepoble.reflex_daemon`, resident (`KeepAlive`), fora del repositori · **Cadència:** **permanent**. Hauria d'executar `tooling/wiki/core/reflex_daemon.mjs`. **Estat observat:** **mort**, perquè el fitxer no existix i el procés cau amb `MODULE_NOT_FOUND` en bucle.
+
+### Arrencada de sessió
+
+**Llançador:** hook `SessionStart` de Claude Code · **Cadència:** **per esdeveniment**. Executa `context-local.mjs` i `despertar.mjs`, que regenera `ON_ESTIC.md`. **Estat observat:** **viu**.
+
+### Router cognitiu
+
+**Llançador:** hook `UserPromptSubmit` · **Cadència:** **per esdeveniment**. Executa `persona_router.mjs --punters`. **Estat observat:** **viu**.
+
+### Porta local
+
+**Llançador:** hook `PreToolUse` · **Cadència:** **per esdeveniment**. Executa `hooks-local.mjs`. **Estat observat:** **viu a Claude Code**.
+
+### Segell automàtic
+
+**Llançador:** hook `PostToolUse` · **Cadència:** **per esdeveniment**. Executa `segell-auto.mjs`. **Estat observat:** **viu**; hui refusa perquè el segell està divergent.
+
+### Hooks d'Antigravity
+
+**Llançador:** `.agents/hooks.json` · **Cadència:** **per esdeveniment**. Declara les mateixes portes de control. **Estat observat:** **declarats sense consumidor acreditat**.
 
 El registre `.agents/cron/registre_tasques.json` declara cinc tasques de Plaquetes, cadascuna amb nivell, pressupost i fusible:
 
@@ -77,13 +95,25 @@ Proposta: ampliar `.agents/cron/registre_tasques.json`, que és la còpia declar
 
 ## Com calcula l'estat la Consola
 
-| Estat | Regla | Com es pinta |
-|---|---|---|
-| viu | llançador present, script existent i registre amb activitat dins de dos cicles | traç ple |
-| mort | script inexistent, o l'última línia del registre és un error | roig |
-| declarat sense llançador | és al registre però no té cap plist ni hook | buit |
-| llançador sense declaració | té plist o hook però no és al registre | traç discontinu, amb avís |
-| exemple | només per a la demostració | gris, amb la xapa «exemple» |
+### Estat `viu`
+
+**Regla:** **llançador present**, **script existent** i registre amb activitat dins de **dos cicles**. **Com es pinta:** **traç ple**.
+
+### Estat `mort`
+
+**Regla:** **script inexistent**, o l'última línia del registre és un **error**. **Com es pinta:** **roig**.
+
+### Estat `declarat sense llançador`
+
+**Regla:** consta al **registre declaratiu** però no té cap `plist` ni `hook` associat. **Com es pinta:** **buit**.
+
+### Estat `llançador sense declaració`
+
+**Regla:** té `plist` o `hook` al sistema però **no és al registre**. **Com es pinta:** **traç discontinu, amb avís**.
+
+### Estat `exemple`
+
+**Regla:** entrada inclosa **només per a la demostració**. **Com es pinta:** **gris**, amb la xapa «exemple».
 
 El navegador no pot llegir `~/Library/LaunchAgents` ni els registres. Ho ha de compilar un script de node, de només lectura, que deixe el resultat al JSON que llig la Consola (vegeu [[04_contracte_de_dades]]).
 

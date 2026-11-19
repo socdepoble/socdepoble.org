@@ -9,11 +9,11 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 // Un sol lexer i unes mateixes regles que la porta Tellado (R25.2-P01/P03, IDEA-266).
-import { defectesPermisosWp, faviconsRasterValids, mancancesManteniment503, netejaComentarisLineal, teGuardaAbspathAmbEixida, trobaSecretsWp } from './porta-perimetre-tellado.mjs';
+import { avaluaPerimetreTellado, defectesPermisosWp, faviconsRasterValids, mancancesManteniment503, netejaComentarisLineal, teGuardaAbspathAmbEixida, trobaSecretsWp } from './porta-perimetre-tellado.mjs';
 export const readOnly = true;
 const SENSIBLE = /(?:^|\/)(?:\.env[^/]*|\.git[^/]*|debug\.log|error_log|phpinfo\.php|wp-config[^/]*\.php)$|\.(?:sql(?:\.gz)?|bak|old|orig|swp)$/i;
 const EXECUTABLE = /\.(php[0-9]?|phtml|phar|sh|py|pl|cgi)$/i;
-const NOU = new Set(['VIG-01','VIG-02','VIG-03','VIG-04','VIG-05','VIG-06','VIG-07','VIG-08','VIG-09','VIG-10','VB1','VB2','VB3','VB9','VB10','VC2']);
+const NOU = new Set(['VIG-01','VIG-02','VIG-03','VIG-04','VIG-05','VIG-06','VIG-07','VIG-08','VIG-09','VIG-10','VIG-11','VB1','VB2','VB3','VB9','VB10','VC2']);
 const ORIGEN = 'Vigilant Tellado: perímetre estàtic adaptat a Sóc de Poble';
 // VIG-05 · Exempcions justificades (IDEA-13): cap d'estos hosts es contacta mai des de producció.
 const EXEMPT_HOST = new Map([
@@ -177,11 +177,17 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   const dies=[ara,new Date(ara.getTime()-86400000)].map(d=>`${String(d.getFullYear()).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`);
   const higiene=dies.map(d=>`.immunitari/higiene/${d}.json`).filter(p=>llig(p)!==null);
   anota('VC2','baixa',higiene.length?'ok':'falla',higiene,'Comprovar que el cron ha deixat informe hui o ahir.');
+  // R32.14: mostrar el catàleg sense amagar els destins runtime originals.
+  const tellado = avaluaPerimetreTellado(root);
+  const catalegDinamic = tellado.catalegDinamic;
+  anota('VIG-11','mitjana',catalegDinamic.pendents?'falla':catalegDinamic.observades?'informa':tellado.fitxersEscanejats?'ok':'no-mesurat',
+    catalegDinamic.revisions.map(r=>({fitxer:r.fitxer,id:r.id,linia:r.linia})),
+    `${catalegDinamic.cobertes}/${catalegDinamic.observades} signatures runtime catalogades; ${catalegDinamic.pendents} pendents. ${tellado.totalDesconeguts} destins/signatures continuen desconeguts a la porta; una revisió de comportament no resol la URL ni autoritza l'eixida.`);
   if(enllacos.length) anota('VIG-SYMLINK','alta','no-mesurat',enllacos,'Els enllaços no es travessen; revisar-los en el paquet.');
   const recompte={ok:0,falla:0,'no-mesurat':0,informa:0,avisos:0,bloquejants:0};
   for(const c of comprovacions) {recompte[c.estat]++;if(c.estat==='falla') {if(c.avis) recompte.avisos++;else if(['critica','alta'].includes(c.severitat)) recompte.bloquejants++;}}
   const git=llegeixGit(root);
-  return {esquema:'sdp.vigilant.v1',arrel:root,commit:git.commit,branca:git.branca,mode:'estatic',readOnly:true,origen:git.origen,...(git.motiu?{motiuGit:git.motiu}:{}),data:ara.toISOString(),comprovacions,recompte};
+  return {esquema:'sdp.vigilant.v1',arrel:root,commit:git.commit,branca:git.branca,mode:'estatic',readOnly:true,origen:git.origen,...(git.motiu?{motiuGit:git.motiu}:{}),data:ara.toISOString(),comprovacions,recompte,catalegDinamic};
 }
 export const codiVigilant = informe => informe.recompte.bloquejants ? 1 : 0;
 export function main(argv) {

@@ -14,6 +14,8 @@ vi.mock('./config.js', () => ({ getClient: async () => ({ storage: { from: (buck
 vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => m.usuari }));
 
 import { errorDePujada, uploadToStorage } from './storage.js';
+import { webpDeMida } from '../../../tests/helpers/contenidorsMedia.js';
+import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, esBackendInabastable } from '../errorsBackend.js';
 
 const LITERAL_SOL = 'No s’ha pogut pujar el fitxer';
@@ -236,7 +238,7 @@ describe('uploadToStorage · privacitat del rebuig', () => {
   test('un 403 de Storage ix amb codi neutral; ni el missatge ni la consola porten ruta, uid o poble', async () => {
     const cru = errorApi('new row violates row-level security policy', 403, '403', 'AccessDenied');
     m.upload.mockResolvedValue({ data: null, error: cru });
-    const fitxer = new Blob(['x'], { type: 'image/webp' });
+    const fitxer = new Blob([WEBP_NET], { type: 'image/webp' });
     const error = await uploadToStorage(fitxer, { carpeta: 'avatars' }, { tenantId: POBLE }).catch((e) => e);
 
     const [bucket, ruta] = m.upload.mock.calls[0];
@@ -261,7 +263,7 @@ describe('uploadToStorage · privacitat del rebuig', () => {
     const cru = errorApi(`Object upload failed at ${privat}`, 400, '400');
     cru[camp] = privat;
     m.upload.mockResolvedValue({ data: null, error: cru });
-    const error = await uploadToStorage(new Blob(['x'], { type: 'image/webp' }), { carpeta: 'avatars' }, { tenantId: POBLE }).catch((e) => e);
+    const error = await uploadToStorage(new Blob([WEBP_NET], { type: 'image/webp' }), { carpeta: 'avatars' }, { tenantId: POBLE }).catch((e) => e);
     expect(error).toMatchObject({ codi: CODI_MITJANS.DESCONEGUT, status: 400, cause: cru });
     expect(avis).toHaveBeenCalledTimes(1);
     const consola = JSON.stringify(avis.mock.calls);
@@ -285,9 +287,21 @@ describe('uploadToStorage · privacitat del rebuig', () => {
     expect(avis).not.toHaveBeenCalled();
   });
 
+  test('R32.14: notes privades conserven 25MiB; la porta pública conserva 5MiB', async () => {
+    m.upload.mockResolvedValue({ data: { path: 'x' }, error: null });
+    const file = new Blob([webpDeMida(6_000_000)], { type: 'image/webp' });
+    const result = await uploadToStorage(file, { carpeta: 'notes' }, { tenantId: POBLE });
+    expect(result.url.startsWith(`sdp-media://mitjans_privats/${POBLE}/${UID}/notes/`)).toBe(true);
+    expect(m.upload).toHaveBeenCalledTimes(1);
+    await expect(uploadToStorage(file, { carpeta: 'avatars' }, { tenantId: POBLE })).rejects.toThrow('Mida de fitxer no admesa');
+    const overPrivateLimit = new Blob([new Uint8Array(26_214_401)], { type: 'image/webp' });
+    await expect(uploadToStorage(overPrivateLimit, { carpeta: 'notes' }, { tenantId: POBLE })).rejects.toThrow('Mida de fitxer no admesa');
+    expect(m.upload).toHaveBeenCalledTimes(1);
+  });
+
   test('una pujada acceptada no avisa i torna la referència opaca', async () => {
     m.upload.mockResolvedValue({ data: { path: 'x' }, error: null });
-    const resultat = await uploadToStorage(new Blob(['x'], { type: 'image/webp' }), { carpeta: 'avatars' }, { tenantId: POBLE });
+    const resultat = await uploadToStorage(new Blob([WEBP_NET], { type: 'image/webp' }), { carpeta: 'avatars' }, { tenantId: POBLE });
     expect(resultat.url.startsWith(`sdp-media://mitjans/${POBLE}/${UID}/avatars/`)).toBe(true);
     expect(avis).not.toHaveBeenCalled();
   });

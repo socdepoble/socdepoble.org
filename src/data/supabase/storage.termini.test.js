@@ -11,6 +11,7 @@
    pendent després de deu minuts de rellotge fals. */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { StorageClient } from '@supabase/storage-js';
+import { webpDeMida } from '../../../tests/helpers/contenidorsMedia.js';
 
 const m = vi.hoisted(() => ({ firma: vi.fn(), baixa: vi.fn(), puja: vi.fn(), llista: vi.fn(), esborra: vi.fn(), usuari: null, client: null, peticions: [], trosExif: 0 }));
 /* Gauntlet R22 (ronda 3, dades-06) · El tros de l'EXIF, en fred: tarda més que els 50 ms reals que la promoció
@@ -49,7 +50,7 @@ const REF_PRIVADA = `sdp-media://mitjans_privats/${RUTA_PRIVADA}`;
 const REF_AVATAR = `sdp-media://mitjans/${POBLE}/${UID}/avatars/4b5c6d7e-8f90-4a1b-8c2d-3e4f5a6b7c8d.webp`;
 const pendentsDeProva = new Set();
 const penjada = () => new Promise(resol => pendentsDeProva.add(() => resol({ data:null, error:new DOMException('Fi del transport de prova','AbortError') })));
-const webp = (bytes) => new Blob([new Uint8Array(bytes)], { type: 'image/webp' });
+const webp = (bytes) => new Blob([webpDeMida(bytes)], { type: 'image/webp' });
 
 let avis;
 beforeEach(() => {
@@ -87,9 +88,12 @@ const comprovaInabastable = (error, prefix) => {
 
 describe('pujada (uploadToStorage)', () => {
   test('el termini creix amb la mida: pendent just abans, «el servidor no respon» just després', async () => {
-    m.puja.mockImplementation(penjada);
+    let arranca; const iniciada = new Promise(r => { arranca = r; });
+    m.puja.mockImplementation((...args) => { arranca(); return penjada(...args); });
     const fitxer = webp(2_000_000);
     const pujada = uploadToStorage(fitxer, { carpeta: 'avatars' }, CONFIG);
+    // La validació local acaba abans de començar a mesurar el transport.
+    await iniciada;
     const termini = tempsLimitPujada(fitxer.size);
     expect(termini).toBeGreaterThan(12_000);
     expect((await estatDespres(pujada, termini - 1)).nom).toBe('pendent');

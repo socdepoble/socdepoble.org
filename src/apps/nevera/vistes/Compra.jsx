@@ -95,7 +95,7 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
     return <ColumnaColleccio titol={tx.llistaDesconegudaTitol} linies={[]} textos={textosLlistaDesconegudaDe(idioma)} primer={COMPRA.primer} tram={COMPRA.tram} />;
   }
   /* REGLA D'OR 1 (261004) · Cada targeta, amb la boina de qui signa l'article (autoria.js). */
-  const linies = liniesVestides(estat, liniesOrdenades(estat, llista.id), { autoria: autoriaDArticle });
+  const linies = liniesVestides(estat, liniesOrdenades(estat, llista.id), { autoria: autoriaDArticle, idioma });
   return (
     <ColumnaColleccio
       forma="targetes"
@@ -144,7 +144,7 @@ export function ColumnaCatalegCompra({ params }) {
   const deMercadona = esLlistaMercadona(llista);
   const { dades: catalegMercadona, error: errorMercadona } = useMercadona(deMercadona || Boolean((obert || fitxa)?.startsWith('mer-')));
   const linies = perArticle(llista);
-  const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio };
+  const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio, idioma };
   const productes = deMercadona ? ARTICLES_PRODUCTES : productesALaGraella(estat, llista?.id, obert || fitxa);
   const vestits = articlesVestits(estat, { ...vestit, productes, autoria: autoriaDArticle })
     .filter((article) => !deMercadona || article.id.startsWith('mer-') || linies.has(article.id));
@@ -161,8 +161,8 @@ export function ColumnaCatalegCompra({ params }) {
         /* REGLA D'OR 1 (261004) · La boina de la targeta, com les de la graella (vestits.js). */
         autoria: autoriaDArticle(article),
         /* Integració final (261004, F04) · El subtítol i l'entradeta, com les de la graella. */
-        subtitol: subtitolDe(article),
-        entradeta: entradetaDe(article)
+        subtitol: subtitolDe(article, idioma),
+        entradeta: entradetaDe(article, idioma)
       };
     })
   }] : [];
@@ -174,7 +174,7 @@ export function ColumnaCatalegCompra({ params }) {
       ometDataNoIndicada
       titol={tx.cataleg}
       avis={deMercadona ? <AvisCatalegMercadona dades={catalegMercadona} error={errorMercadona} /> : null}
-      categories={seccionsDe(estat, llista?.id)}
+      categories={seccionsDe(estat, llista?.id, { idioma })}
       articles={articles}
       destacats={destacats}
       commutable

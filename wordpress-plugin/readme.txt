@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.19
+Stable tag: 1.1.20
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,10 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.20 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.12 de Sóc de Poble, la que explica la seua pàgina «Versions»: la Gestoria en cinc llengües, el Rebost llegible en pantalles estretes i la Wiki sense taules amples.
+* **Adjunts revisats abans d'enviar-se:** les fotos, els vídeos i la majoria dels àudios del Xat es comproven abans de pujar-los; un fitxer tallat o que no és el que diu no s'envia.
+
 = 1.1.19 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.11 de Sóc de Poble, la que explica la seua pàgina «Versions»: El Bar i Mercaderies en cinc llengües, la notificació de contingut il·lícit (LSSI, art. 16) als perfils i a les fitxes, i una pàgina d'error 404 que orienta.
 * **Paquet del directori més lleuger:** les il·lustracions dels articles del Mur ja no viatgen dins del paquet de WordPress.org; el navegador les carrega de socdepoble.org, com ja fa amb les fotos dels pobles, i el paquet queda per davall del límit de 10 MB del directori.
@@ -238,6 +242,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.20 =
+Visor al dia amb la versió 1.2.12 de Sóc de Poble: la Gestoria en cinc llengües, el Rebost en pantalles estretes, la Wiki sense taules amples i els adjunts del Xat revisats abans d'enviar-se.
 
 = 1.1.19 =
 Visor al dia amb la versió 1.2.11 de Sóc de Poble: El Bar i Mercaderies en cinc llengües, la notificació de contingut il·lícit i una pàgina 404 que orienta; el paquet del directori carrega les il·lustracions del Mur de socdepoble.org.

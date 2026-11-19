@@ -12,6 +12,7 @@
 import {
   Apple, Beef, Candy, CupSoda, Flower2, House, Milk, PawPrint, Pill, Snowflake, Soup, Tag, Wheat, Croissant
 } from 'lucide-react';
+import { nomCategoriaNevera, textosCasaNevera, textosEntradetaNevera } from '../i18nNevera.js';
 import {
   ARTICLES_PRODUCTES, CATEGORIES, articlePerId, articlesDe, categoriesDeLlista, clauDeNom, productesEnUs, textQuantitat
 } from '../nucli/index.js';
@@ -34,17 +35,22 @@ const SENSE_AUTORIA = () => undefined;
 const NOMS_SECCIO = new Map(CATEGORIES.map((categoria) => [categoria.id, categoria.nom]));
 
 /** La secció d'un article, per al subtítol de la targeta, o undefined. */
-export const subtitolDe = (article) => NOMS_SECCIO.get(article?.categoriaId) || undefined;
+export const subtitolDe = (article, idioma = 'ca') => (
+  idioma && idioma !== 'ca'
+    ? (nomCategoriaNevera(article?.categoriaId, idioma) || NOMS_SECCIO.get(article?.categoriaId) || undefined)
+    : (NOMS_SECCIO.get(article?.categoriaId) || undefined)
+);
 
 /** L'entradeta d'un article propi: cap lloc ni dispositiu, que una còpia recuperada no garantix. */
 const ENTRADETA_PROPI = 'Article propi';
 
 /** D'on ix un article, per a l'entradeta de la targeta, o undefined sense article. */
-export function entradetaDe(article) {
+export function entradetaDe(article, idioma = 'ca') {
   if (!article) return undefined;
-  if (article.propi) return ENTRADETA_PROPI;
-  if (article.font) return detallDeProducte(article) || 'Producte de botiga';
-  return 'Article de base del catàleg';
+  const tx = idioma && idioma !== 'ca' ? textosEntradetaNevera(idioma) : null;
+  if (article.propi) return tx ? tx.propi : ENTRADETA_PROPI;
+  if (article.font) return detallDeProducte(article) || (tx ? tx.botiga : 'Producte de botiga');
+  return tx ? tx.base : 'Article de base del catàleg';
 }
 
 /* Cap color per categoria (disseny de l'esquelet): la icona i el nom la distingixen. */
@@ -69,11 +75,17 @@ const ICONES = Object.freeze({
 export const iconaDeSeccio = (categoriaId) => (Object.hasOwn(ICONES, categoriaId) ? ICONES[categoriaId] : undefined);
 
 /** El que hi ha a casa, dit amb paraules (mai només amb color). */
-export const TEXTOS_CASA = Object.freeze({ 'hi-ha': 'N’hi ha', 'se-n-acaba': 'Se n’acaba', acabat: 'S’ha acabat' });
+export const TEXTOS_CASA = textosCasaNevera('ca');
+export const textosCasa = (idioma = 'ca') => (idioma && idioma !== 'ca' ? textosCasaNevera(idioma) : TEXTOS_CASA);
 
 /** Les seccions d'una llista amb la seua icona: { id, nom, icona, ordre, visible }. */
 export function seccionsDe(estat, llistaId, opcions) {
-  return categoriesDeLlista(estat, llistaId, opcions).map((categoria) => ({ ...categoria, icona: ICONES[categoria.id] }));
+  const idioma = opcions?.idioma;
+  return categoriesDeLlista(estat, llistaId, opcions).map((categoria) => ({
+    ...categoria,
+    ...(idioma && idioma !== 'ca' ? { nom: nomCategoriaNevera(categoria.id, idioma) || categoria.nom } : null),
+    icona: ICONES[categoria.id]
+  }));
 }
 
 const MARQUES_GRAN_SUPERFICIE = new Set(['mercadona', 'hacendado', 'bosque verde', 'deliplus', 'compy']);
@@ -102,7 +114,7 @@ export const nomArticleVisible = (article) => (
  * la targeta, qui signa l'article; la passa la vista (autoriaDArticle,
  * autoria.js), que és qui entra a la plataforma. Sense, cap boina.
  */
-export function articlesVestits(estat, { aLaLlista = new Set(), secundari = () => undefined, productes = [], autoria = SENSE_AUTORIA } = {}) {
+export function articlesVestits(estat, { aLaLlista = new Set(), secundari = () => undefined, productes = [], autoria = SENSE_AUTORIA, idioma = 'ca' } = {}) {
   return [...articlesDe(estat), ...productes].map((article) => ({
     id: article.id,
     nom: nomArticleVisible(article),
@@ -110,8 +122,8 @@ export function articlesVestits(estat, { aLaLlista = new Set(), secundari = () =
     secundari: secundari(article) || undefined,
     estat: aLaLlista.has(article.id) ? 'en-colleccio' : 'normal',
     autoria: autoria(article),
-    subtitol: subtitolDe(article),
-    entradeta: entradetaDe(article)
+    subtitol: subtitolDe(article, idioma),
+    entradeta: entradetaDe(article, idioma)
   }));
 }
 
@@ -173,7 +185,7 @@ export function suggerimentsVestits(estat, { aLaLlista = new Set(), secundari } 
  * targeta, qui signa l'article de la línia; la passa la vista (autoria.js).
  * Les línies de sempre tampoc la llegixen.
  */
-export function liniesVestides(estat, files, { detall = (fila) => fila.especificacio, autoria = SENSE_AUTORIA } = {}) {
+export function liniesVestides(estat, files, { detall = (fila) => fila.especificacio, autoria = SENSE_AUTORIA, idioma = 'ca' } = {}) {
   return files.map((fila) => {
     const article = articlePerId(estat, fila.articleId);
     return {
@@ -183,8 +195,8 @@ export function liniesVestides(estat, files, { detall = (fila) => fila.especific
       detall: detall(fila) || undefined,
       icona: iconaDeSeccio(article?.categoriaId),
       autoria: autoria(article),
-      subtitol: subtitolDe(article),
-      entradeta: entradetaDe(article)
+      subtitol: subtitolDe(article, idioma),
+      entradeta: entradetaDe(article, idioma)
     };
   });
 }

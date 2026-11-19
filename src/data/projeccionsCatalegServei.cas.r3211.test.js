@@ -31,7 +31,7 @@ test('storage failure saving op blocks all dispatch and preserves the draft',asy
 });
 test('legacy confirmed publication with unknown token cannot become create-only CAS',async()=>{
  const f=fixture();const legacy=f.crea({versionada:false,publica:async sub=>sub});await legacy.prepara();await legacy.desa(FONT,['bar']);await legacy.sincronitza();legacy.tanca();
- const s=f.crea();await s.prepara();await s.desa({...FONT,title:'new'},['bar']);await expect(s.sincronitza()).rejects.toMatchObject({codi:'versio-desconeguda'});expect(f.publica).not.toHaveBeenCalled();expect((await s.llista())[0].font.title).toBe('new');s.tanca();
+ const s=f.crea();await s.prepara();await s.desa({...FONT,title:'new'},['bar']);await expect(s.sincronitza()).rejects.toMatchObject({codi:'incidencia-versio',incidencies:[{audiencia:'privada',codi:'versio-desconeguda'}]});expect(f.publica).not.toHaveBeenCalled();expect((await s.llista())[0].font.title).toBe('new');s.tanca();
 });
 test('a persisted CAS row cannot downgrade to legacy after reload, pending or already confirmed',async()=>{
  for(const pending of [true,false]){const f=fixture();let s=f.crea();await s.prepara();await s.desa(FONT,['bar']);if(pending){f.lose();await expect(s.sincronitza()).rejects.toThrow('lost ACK');}else{await s.sincronitza();await s.desa({...FONT,title:'next'},['bar']);}s.tanca();

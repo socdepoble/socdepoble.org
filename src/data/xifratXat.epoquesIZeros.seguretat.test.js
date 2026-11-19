@@ -22,6 +22,7 @@ import { MOTIU_EPOCA, ROL_EPOCA } from './xifratXatFormats.js';
 import { creaMagatzemXat } from './xifratXatMagatzem.js';
 import { aBase64url, deBase64url } from './xifratXatCripto.js';
 import { creaIdbFalsEstructurat } from '../../tests/helpers/idbFalsEstructurat.js';
+import { jpegDeMida } from '../../tests/helpers/contenidorsMedia.js';
 
 const cripto = globalThis.crypto;
 const A = 'aaaaaaaa-1111-4111-8111-111111111111';
@@ -38,7 +39,7 @@ const ambitEntitat = (u) => JSON.stringify(['backend-sintetic', u, `entitat::${O
 const FIL_AB = Object.freeze({ id: FIL, tipus: 'directe', altres: [{ id: A, tipus: 'persona' }] });
 const totZero = (bytes) => bytes.every((x) => x === 0);
 const uuid = (n) => `10000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
-const foto = () => new Blob([cripto.getRandomValues(new Uint8Array(3000))], { type: 'image/jpeg' });
+const foto = () => new Blob([jpegDeMida(3000)], { type: 'image/jpeg' });
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -451,7 +452,7 @@ describe('Cicle 4 · el clar d’un adjunt i la FK d’una fila rebuda, a zero s
     const servidor = creaServidor();
     const a = await creaPart(servidor, A);
     await creaPart(servidor, B);
-    const llegit = () => cripto.getRandomValues(new Uint8Array(3000)).buffer;
+    const llegit = () => jpegDeMida(3000).buffer;
 
     // Control: publicat, el clar llegit també ix a zero.
     const bo = llegit();

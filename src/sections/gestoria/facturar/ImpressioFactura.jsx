@@ -43,6 +43,7 @@ import { Interruptor } from '../../../components/PedraSeca/organismes/formulari.
 import { RETOL_QR, modelDeFactura } from './nucli/impressio.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+import { tf, tg } from '../i18nGestoria.js';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /** La classe de l'<html> mentre hi ha una factura per imprimir. */
@@ -172,7 +173,7 @@ function FullFactura({ model, refFull }) {
  * La factura d'un registre d'alta, amb els seus controls.
  * @param {{ registre: object, anulada?: boolean, onTanca: () => void, imprimix?: () => void }} props
  */
-export function ImpressioFactura({ registre, anulada = false, onTanca, imprimix = imprimixPerDefecte }) {
+export function ImpressioFactura({ registre, anulada = false, onTanca, imprimix = imprimixPerDefecte, idioma = 'ca' }) {
   const [ambQr, setAmbQr] = useState(true);
   const idTitol = useId();
   const titol = useRef(null);
@@ -215,10 +216,10 @@ export function ImpressioFactura({ registre, anulada = false, onTanca, imprimix 
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-factura" aria-labelledby={idTitol}>
       <div className="sdp-gestoria-factura__barra">
-        <h3 id={idTitol} ref={titol} tabIndex={-1} className="sdp-gestoria-panell__subtitol">{`La factura ${registre.numSerie}`}</h3>
+        <h3 id={idTitol} ref={titol} tabIndex={-1} className="sdp-gestoria-panell__subtitol">{tf(idioma, 'facturaTitol', registre.numSerie)}</h3>
         <div className="sdp-gestoria-panell__accions">
-          <Boto varietat="primari" icona={Printer} onClick={imprimix} disabled={!lectura.model}>Imprimeix o desa en PDF</Boto>
-          <Boto varietat="secundari" onClick={onTanca}>Tanca la factura</Boto>
+          <Boto varietat="primari" icona={Printer} onClick={imprimix} disabled={!lectura.model}>{tg(idioma, 'Imprimeix o desa en PDF')}</Boto>
+          <Boto varietat="secundari" onClick={onTanca}>{tg(idioma, 'Tanca la factura')}</Boto>
         </div>
         <details className="sdp-gestoria-panell__documents">
           <summary>Detalls tècnics: el QR i la menció VERI*FACTU</summary>

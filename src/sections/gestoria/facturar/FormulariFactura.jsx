@@ -55,31 +55,33 @@ import {
 import { AvisDeZona, ErrorsDelFormulari } from './peces.jsx';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+import { localitzaOpcionsGestoria, tf, tg } from '../i18nGestoria.js';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
-function Linia({ linia, numero, ivaInclos, diferencies, onCanvia, onLleva }) {
+function Linia({ linia, numero, ivaInclos, diferencies, onCanvia, onLleva, idioma = 'ca' }) {
   const canvia = (camp) => (event) => onCanvia(camp, event.target.value);
+  const opcionsIva = useMemo(() => localitzaOpcionsGestoria(OPCIONS_IVA, idioma), [idioma]);
   return (
-    <GrupCamps llegenda={`Línia ${numero}`}>
-      <Camp etiqueta="Concepte" obligatori>
+    <GrupCamps llegenda={tf(idioma, 'liniaNum', numero)}>
+      <Camp etiqueta={tg(idioma, 'Concepte')} obligatori>
         <CampText value={linia.concepte} spellCheck={false} onChange={canvia('concepte')} />
       </Camp>
-      <Camp etiqueta="Quantitat" obligatori>
+      <Camp etiqueta={tg(idioma, 'Quantitat')} obligatori>
         <CampText value={linia.quantitat} inputMode="decimal" onChange={canvia('quantitat')} />
       </Camp>
-      <Camp etiqueta={ivaInclos ? 'Preu per unitat, amb l’IVA' : 'Preu per unitat, sense l’IVA'} obligatori
-        ajuda={diferencies ? 'En euros, amb coma per als cèntims; el que resta, en negatiu: -12,50.' : 'En euros, amb coma per als cèntims: 12,50.'}>
+      <Camp etiqueta={tg(idioma, ivaInclos ? 'Preu per unitat, amb l’IVA' : 'Preu per unitat, sense l’IVA')} obligatori
+        ajuda={tg(idioma, diferencies ? 'En euros, amb coma per als cèntims; el que resta, en negatiu: -12,50.' : 'En euros, amb coma per als cèntims: 12,50.')}>
         <CampText value={linia.preu} inputMode="decimal" onChange={canvia('preu')} />
       </Camp>
-      <Camp etiqueta="IVA">
-        <Selector value={linia.tipusIva} opcions={OPCIONS_IVA} onChange={canvia('tipusIva')} />
+      <Camp etiqueta={tg(idioma, 'IVA')}>
+        <Selector value={linia.tipusIva} opcions={opcionsIva} onChange={canvia('tipusIva')} />
       </Camp>
-      {onLleva ? <Boto varietat="fantasma" onClick={onLleva}>{`Lleva la línia ${numero}`}</Boto> : null}
+      {onLleva ? <Boto varietat="fantasma" onClick={onLleva}>{tf(idioma, 'llevaLinia', numero)}</Boto> : null}
     </GrupCamps>
   );
 }
 
-export function FormulariFactura({ f }) {
+export function FormulariFactura({ f, idioma = 'ca' }) {
   const [formulari, setFormulari] = useState(() => facturaBuida(f.dataDeHui()));
   const [numero, setNumero] = useState({ numero: null, error: null });
   const [errors, setErrors] = useState([]);
@@ -110,12 +112,16 @@ export function FormulariFactura({ f }) {
   const corregibles = useMemo(() => rectificables(f.cadena), [f.cadena]);
   const avisClient = useMemo(() => avisDelClient(formulari, f.cadena), [formulari, f.cadena]);
   const clients = useMemo(() => clientsDelLlibre(f.cadena), [f.cadena]);
+  const opcionsTipus = useMemo(() => localitzaOpcionsGestoria(OPCIONS_TIPUS, idioma), [idioma]);
+  const opcionsCausa = useMemo(() => localitzaOpcionsGestoria(OPCIONS_CAUSA, idioma), [idioma]);
+  const opcionsModalitat = useMemo(() => localitzaOpcionsGestoria(OPCIONS_MODALITAT, idioma), [idioma]);
+  const opcionsRetencio = useMemo(() => localitzaOpcionsGestoria(OPCIONS_RETENCIO, idioma), [idioma]);
   const ambClient = tipus !== 'F2' && tipus !== 'R5';
   const rectificativa = formulari.tipus === 'R';
   const mesOpcions = mesOpcionsDe(formulari);
   /* PODER 2: a la rectificativa, el client va darrere de la factura que corregix (commutaRectificada). */
   const opcionsClient = rectificativa || !clients.length ? null : [
-    { valor: '', etiqueta: 'Cap: un client nou' },
+    { valor: '', etiqueta: tg(idioma, 'Cap: un client nou') },
     ...clients.map((c) => ({ valor: c.clau, etiqueta: c.etiqueta }))
   ];
 
@@ -174,46 +180,43 @@ export function FormulariFactura({ f }) {
      factura perduda i la còpia bona ja no es podria restaurar. Primer s'arregla el llibre. */
   if (f.bloquejatPerCadena) {
     return (
-      <Alerta to="error" viva={false} titol="Ara no es pot emetre cap factura">
+      <Alerta to="error" viva={false} titol={tg(idioma, 'Ara no es pot emetre cap factura')}>
         <p ref={adoptaEstilsDiferits}>
-          La cadena del llibre té incidències (pas 4). Si tens una còpia bona del llibre, restaura-la al pas 5:
-          quan la cadena torne a ser correcta, podràs tornar a emetre.
+          {tg(idioma, 'La cadena del llibre té incidències (pas 4). Si tens una còpia bona del llibre, restaura-la al pas 5: quan la cadena torne a ser correcta, podràs tornar a emetre.')}
         </p>
       </Alerta>
     );
   }
   if (!f.potEmetre) {
     return f.errorEmissio
-      ? <ErrorsDelFormulari titol="Amb estes dades no es pot emetre" errors={[f.errorEmissio.message]} />
-      : <p ref={adoptaEstilsDiferits}>Per a emetre factures, primer cal desar les dades de l’empresa (pas 1) i les factures d’abans (pas 2).</p>;
+      ? <ErrorsDelFormulari titol={tg(idioma, 'Amb estes dades no es pot emetre')} errors={[f.errorEmissio.message]} />
+      : <p ref={adoptaEstilsDiferits}>{tg(idioma, 'Per a emetre factures, primer cal desar les dades de l’empresa (pas 1) i les factures d’abans (pas 2).')}</p>;
   }
 
   return (
     <form ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" noValidate onSubmit={revisa}>
-      <h3 className="sdp-gestoria-panell__subtitol">Qui factura?</h3>
+      <h3 className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Qui factura?')}</h3>
       <dl className="sdp-gestoria-panell__dades">
-        <div><dt>Nom legal</dt><dd>{f.config.nom}</dd></div>
-        <div><dt>NIF</dt><dd>{f.config.nif}</dd></div>
+        <div><dt>{tg(idioma, 'Nom legal')}</dt><dd>{f.config.nom}</dd></div>
+        <div><dt>{tg(idioma, 'NIF')}</dt><dd>{f.config.nif}</dd></div>
       </dl>
-      {/* Prompt 261014_1605, G1: amb factures emeses el NIF ja no es canvia (PasPerfil, PERFIL_FIXAT del
-          magatzem del perfil); la nota no promet el que el pas 1 no deixa fer. */}
       <p className="sdp-gestoria-panell__nota">
-        {f.perfilFixat
+        {tg(idioma, f.perfilFixat
           ? 'Són les dades de l’empresa del pas 1: el nom legal es canvia allí; el NIF ja no, perquè hi ha factures emeses.'
-          : 'Són les dades de l’empresa del pas 1: es canvien allí.'}
+          : 'Són les dades de l’empresa del pas 1: es canvien allí.')}
       </p>
 
-      <h3 className="sdp-gestoria-panell__subtitol">A qui i què?</h3>
+      <h3 className="sdp-gestoria-panell__subtitol">{tg(idioma, 'A qui i què?')}</h3>
       <details className="sdp-gestoria-panell__documents" open={mesOpcionsObertes || mesOpcions.obertes}
         onToggle={(event) => setMesOpcionsObertes(event.currentTarget.open)}>
-        <summary>{mesOpcions.resum}</summary>
+        <summary>{tg(idioma, mesOpcions.resum)}</summary>
         <div className="sdp-gestoria-panell__bloc">
-          <GrupOpcions llegenda="Quina factura fas?" valor={formulari.tipus} aspecte="targetes" textTriada="Triada"
-            opcions={OPCIONS_TIPUS} onCanvi={(valor) => setFormulari((abans) => ({ ...abans, tipus: valor, substituides: [], rectificades: [] }))} />
-          <Camp etiqueta="Data de l’operació (opcional)" ajuda="Només si la venda o el servei és d’un altre dia que la factura.">
+          <GrupOpcions llegenda={tg(idioma, 'Quina factura fas?')} valor={formulari.tipus} aspecte="targetes" textTriada={tg(idioma, 'Triada')}
+            opcions={opcionsTipus} onCanvi={(valor) => setFormulari((abans) => ({ ...abans, tipus: valor, substituides: [], rectificades: [] }))} />
+          <Camp etiqueta={tg(idioma, 'Data de l’operació (opcional)')} ajuda={tg(idioma, 'Només si la venda o el servei és d’un altre dia que la factura.')}>
             <CampText tipus="date" value={formulari.dataOperacio} onChange={(event) => posa('dataOperacio', event.target.value)} />
           </Camp>
-          <Camp etiqueta="Descripció de l’operació (opcional)" ajuda="Si la deixes buida, és el concepte de la primera línia.">
+          <Camp etiqueta={tg(idioma, 'Descripció de l’operació (opcional)')} ajuda={tg(idioma, 'Si la deixes buida, és el concepte de la primera línia.')}>
             <CampText value={formulari.descripcio} spellCheck={false} onChange={(event) => posa('descripcio', event.target.value)} />
           </Camp>
         </div>
@@ -232,43 +235,42 @@ export function FormulariFactura({ f }) {
               <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">Corregix tiquets: serà una rectificativa de factura simplificada (R5).</p>
             ) : (
               <Camp etiqueta="Per què la corregixes">
-                <Selector value={formulari.causa} opcions={OPCIONS_CAUSA} onChange={(event) => posa('causa', event.target.value)} />
+                <Selector value={formulari.causa} opcions={opcionsCausa} onChange={(event) => posa('causa', event.target.value)} />
               </Camp>
             )}
-            <GrupOpcions llegenda="Com la corregixes?" valor={formulari.modalitat} opcions={OPCIONS_MODALITAT}
+            <GrupOpcions llegenda="Com la corregixes?" valor={formulari.modalitat} opcions={opcionsModalitat}
               onCanvi={(valor) => posa('modalitat', valor)} />
           </>
         ) : <p ref={adoptaEstilsDiferits}>No hi ha cap factura al llibre que es puga rectificar.</p>
       ) : null}
 
       {ambClient ? (
-        <GrupCamps llegenda="El client">
+        <GrupCamps llegenda={tg(idioma, 'El client')}>
           {opcionsClient ? (
-            <Camp etiqueta="Client d’una factura anterior (opcional)" ajuda="Tria’l i s’ompliran les seues dades, que pots canviar abans d’emetre.">
+            <Camp etiqueta={tg(idioma, 'Client d’una factura anterior (opcional)')} ajuda={tg(idioma, 'Tria’l i s’ompliran les seues dades, que pots canviar abans d’emetre.')}>
               <Selector value={clauDelClient(clients, formulari.client)} opcions={opcionsClient} onChange={triaClient} />
             </Camp>
           ) : null}
-          <Camp etiqueta="NIF del client" obligatori>
+          <Camp etiqueta={tg(idioma, 'NIF del client')} obligatori>
             <CampText value={formulari.client.nif} autoComplete="off" spellCheck={false} onChange={posaClient('nif')} />
           </Camp>
-          <Camp etiqueta="Nom o raó social" obligatori>
+          <Camp etiqueta={tg(idioma, 'Nom o raó social')} obligatori>
             <CampText value={formulari.client.nom} autoComplete="off" spellCheck={false} onChange={posaClient('nom')} />
           </Camp>
-          <Camp etiqueta="Adreça" obligatori>
+          <Camp etiqueta={tg(idioma, 'Adreça')} obligatori>
             <CampText value={formulari.client.adreca} autoComplete="off" spellCheck={false} onChange={posaClient('adreca')} />
           </Camp>
-          <Camp etiqueta="Codi postal" obligatori>
+          <Camp etiqueta={tg(idioma, 'Codi postal')} obligatori>
             <CampText value={formulari.client.codiPostal} inputMode="numeric" autoComplete="off" spellCheck={false} onChange={posaClient('codiPostal')} />
           </Camp>
-          <Camp etiqueta="Població" obligatori>
+          <Camp etiqueta={tg(idioma, 'Població')} obligatori>
             <CampText value={formulari.client.poblacio} autoComplete="off" spellCheck={false} onChange={posaClient('poblacio')} />
           </Camp>
         </GrupCamps>
       ) : (
-        <Casella etiqueta="Els preus ja porten l’IVA (com en un tiquet de caixa)" checked={formulari.ivaInclos}
+        <Casella etiqueta={tg(idioma, 'Els preus ja porten l’IVA (com en un tiquet de caixa)')} checked={formulari.ivaInclos}
           onChange={(event) => posa('ivaInclos', event.target.checked)} />
       )}
-      {/* Davall dels camps, perquè no els moga mentre s'escriu (correcció de la revisió, 261009). */}
       {ambClient && avisClient ? (
         <Alerta to="avis" titol="Este client no és el de la factura que corregixes"
           accions={<Boto varietat="secundari" onClick={() => copiaClient(avisClient.client)}>Copia el client de la factura</Boto>}>
@@ -288,52 +290,52 @@ export function FormulariFactura({ f }) {
 
       {formulari.linies.map((linia, i) => (
         <Linia key={i} linia={linia} numero={i + 1} ivaInclos={!ambClient && formulari.ivaInclos}
-          diferencies={rectificativa && formulari.modalitat === 'I'}
+          diferencies={rectificativa && formulari.modalitat === 'I'} idioma={idioma}
           onCanvia={posaLinia(i)} onLleva={formulari.linies.length > 1 ? llevaLinia(i) : null} />
       ))}
       <div className="sdp-gestoria-panell__accions-fila">
-        <Boto varietat="secundari" onClick={() => posa('linies', [...formulari.linies, liniaBuida()])}>Afig una línia</Boto>
+        <Boto varietat="secundari" onClick={() => posa('linies', [...formulari.linies, liniaBuida()])}>{tg(idioma, 'Afig una línia')}</Boto>
       </div>
       {ambClient ? (
-        <Camp etiqueta="Retenció d’IRPF" ajuda="Si factures una activitat professional a una empresa o a un professional, et retenen una part.">
-          <Selector value={formulari.retencio} opcions={OPCIONS_RETENCIO} onChange={(event) => posa('retencio', event.target.value)} />
+        <Camp etiqueta={tg(idioma, 'Retenció d’IRPF')} ajuda={tg(idioma, 'Si factures una activitat professional a una empresa o a un professional, et retenen una part.')}>
+          <Selector value={formulari.retencio} opcions={opcionsRetencio} onChange={(event) => posa('retencio', event.target.value)} />
         </Camp>
       ) : null}
 
-      <h3 className="sdp-gestoria-panell__subtitol">Revisa i emet</h3>
-      <Camp etiqueta="Data de la factura" obligatori ajuda="Com a molt, la d’avui.">
+      <h3 className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Revisa i emet')}</h3>
+      <Camp etiqueta={tg(idioma, 'Data de la factura')} obligatori ajuda={tg(idioma, 'Com a molt, la d’avui.')}>
         <CampText tipus="date" value={formulari.dataExpedicio} min={f.config.facturacio.dataPas} max={f.dataDeHui()}
           onChange={(event) => posa('dataExpedicio', event.target.value)} />
       </Camp>
       <dl className="sdp-gestoria-panell__dades">
         <div>
-          <dt>Número que tindrà</dt>
-          <dd aria-live="polite">{numero.numero ?? (numero.error ? 'No se’n pot donar cap' : 'Calculant…')}</dd>
+          <dt>{tg(idioma, 'Número que tindrà')}</dt>
+          <dd aria-live="polite">{numero.numero ?? tg(idioma, numero.error ? 'No se’n pot donar cap' : 'Calculant…')}</dd>
         </div>
       </dl>
       {numero.error ? <ErrorsDelFormulari titol="Amb esta data no es pot emetre" errors={[numero.error.message]} /> : null}
 
       {totals ? (
         <dl ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__dades">
-          <div><dt>Base imposable</dt><dd>{euros(totals.baseTotal)}</dd></div>
-          <div><dt>IVA</dt><dd>{euros(totals.quotaTotal)}</dd></div>
-          <div><dt>Total</dt><dd>{euros(totals.importTotal)}</dd></div>
-          {totals.retencio ? <div ref={adoptaEstilsDiferits}><dt>{`Retenció d’IRPF (${totals.retencio.percentatge} %)`}</dt><dd>{euros(-totals.retencio.import)}</dd></div> : null}
-          {totals.retencio ? <div ref={adoptaEstilsDiferits}><dt>Total a pagar</dt><dd>{euros(totals.liquid)}</dd></div> : null}
+          <div><dt>{tg(idioma, 'Base imposable')}</dt><dd>{euros(totals.baseTotal)}</dd></div>
+          <div><dt>{tg(idioma, 'IVA')}</dt><dd>{euros(totals.quotaTotal)}</dd></div>
+          <div><dt>{tg(idioma, 'Total')}</dt><dd>{euros(totals.importTotal)}</dd></div>
+          {totals.retencio ? <div ref={adoptaEstilsDiferits}><dt>{`${tg(idioma, 'Retenció d’IRPF')} (${totals.retencio.percentatge} %)`}</dt><dd>{euros(-totals.retencio.import)}</dd></div> : null}
+          {totals.retencio ? <div ref={adoptaEstilsDiferits}><dt>{tg(idioma, 'Total a pagar')}</dt><dd>{euros(totals.liquid)}</dd></div> : null}
         </dl>
-      ) : <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">El total apareix quan la factura està completa.</p>}
+      ) : <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{tg(idioma, 'El total apareix quan la factura està completa.')}</p>}
 
-      <ErrorsDelFormulari titol="Falta alguna cosa a la factura" errors={errors} />
+      <ErrorsDelFormulari titol={tg(idioma, 'Falta alguna cosa a la factura')} errors={errors} />
       <AvisDeZona avis={f.avis} zona="factura" onTanca={f.tancaAvis} />
       <div className="sdp-gestoria-panell__accions" ref={accions}>
-        <Boto varietat="primari" tipus="submit" carregant={f.ocupat === 'emetent'} disabled={Boolean(f.ocupat)}>Revisa i emet la factura</Boto>
+        <Boto varietat="primari" tipus="submit" carregant={f.ocupat === 'emetent'} disabled={Boolean(f.ocupat)}>{tg(idioma, 'Revisa i emet la factura')}</Boto>
       </div>
 
       <DialegConfirmacio obert={Boolean(confirmant)} onTanca={() => setConfirmant(null)} onConfirma={emet}
-        titol={confirmant ? `Emets la factura ${confirmant.numero}?` : 'Emets la factura?'}
-        descripcio="Una factura emesa entra al llibre i ja no s’esborra: si cal, es rectifica o s’anul·la."
-        etiquetaConfirma="Sí, emet-la" etiquetaCancela="Encara no" carregant={f.ocupat === 'emetent'}>
-        {confirmant?.total !== null && confirmant?.total !== undefined ? <p ref={adoptaEstilsDiferits}>{`Total: ${euros(confirmant.total)}.`}</p> : null}
+        titol={tf(idioma, 'emetsFactura', confirmant?.numero ?? null)}
+        descripcio={tg(idioma, 'Una factura emesa entra al llibre i ja no s’esborra: si cal, es rectifica o s’anul·la.')}
+        etiquetaConfirma={tg(idioma, 'Sí, emet-la')} etiquetaCancela={tg(idioma, 'Encara no')} carregant={f.ocupat === 'emetent'}>
+        {confirmant?.total !== null && confirmant?.total !== undefined ? <p ref={adoptaEstilsDiferits}>{`${tg(idioma, 'Total')}: ${euros(confirmant.total)}.`}</p> : null}
         {confirmant?.liquid !== null && confirmant?.liquid !== undefined ? <p ref={adoptaEstilsDiferits}>{`A pagar, amb la retenció: ${euros(confirmant.liquid)}.`}</p> : null}
       </DialegConfirmacio>
     </form>

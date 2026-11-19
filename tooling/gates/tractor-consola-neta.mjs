@@ -52,6 +52,7 @@ export async function auditaConsola(root, { ara = Date.now(), estricte = false, 
   const rebuts = rebutsAcreditats(root, ara);
   return {
     schema: 'sdp.consola-neta.v1', valid: motorValid && (!estricte || imatgesValides), mode: estricte ? 'estricte' : 'motor',
+    tornsHistoricsPreRebut: mapa.tornsHistoricsPreRebut,
     motor: { valid: motorValid, skills: skills.length, roges: skills.filter(n => avisos.some(a => a.node === n.id && a.severitat === 'alta')).length,
       orfenes: avisos.filter(a => a.codi === 'orfe').length, dimensions: dimensions.length, dimensionsValides,
       fontsGenerades: fonts.derivades, perdutsVersionats: perduts, perdutsReferenciats, avisos },

@@ -12,6 +12,7 @@ import { validatePublicCredentials } from '../src/config/publicCredentials.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable } from '../src/data/errorsBackend.js';
 import { tempsLimitPujada } from '../src/data/xatMultimedia.js';
 import { controlStorageDe, informaReconciliacioStorage } from '../src/data/supabase/controlStorage.js';
+import { PNG_NET } from './helpers/mitjansPublicsNets.js';
 
 function fixture(t) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-consolidacio-')));
@@ -165,7 +166,11 @@ test('credencials: claus privades/malformades i URLs insegures rebutjades', () =
 
 async function isolated(rel, deps) {
   globalThis.__SDP_TEST_DEPS = deps;
-  const src = fs.readFileSync(path.join(ROOT, rel), 'utf8').replace(/^import .*;\r?\n/gm, '');
+  // El mòdul aïllat és data:, per això el nou import diferit del validador
+  // real necessita una URL absoluta. No es mockeja ni es lleva la porta.
+  const mediaValidator = pathToFileURL(path.join(ROOT, 'src/utils/validadorContenidorsMedia.js')).href;
+  const src = fs.readFileSync(path.join(ROOT, rel), 'utf8').replace(/^import .*;\r?\n/gm, '')
+    .replaceAll("import('../../utils/validadorContenidorsMedia.js')", `import(${JSON.stringify(mediaValidator)})`);
   return import('data:text/javascript;base64,' + Buffer.from(`const {${Object.keys(deps).join(',')}} = globalThis.__SDP_TEST_DEPS;\n${src}\n// ${Math.random()}`).toString('base64'));
 }
 test('transport: rebutja secrets abans de fetch i no seguix redireccions', async t => {
@@ -213,7 +218,7 @@ test('storage: poble explícit, carpetes validades i prefix coherent amb RLS', a
     // Lot 2 P1-27 · storage.js importa ara la sessió capturada i el sostre físic compartit.
     capturaSessio: () => () => {}, controlStorageDe, informaReconciliacioStorage,
   });
-  const blob = new Blob(['x'], {type:'image/png'});
+  const blob = new Blob([PNG_NET], {type:'image/png'});
   await assert.rejects(storage.uploadToStorage(blob, {carpeta:'notes'}));
   await assert.rejects(storage.uploadToStorage(blob, {carpeta:'../notes',tenantId:tenant}));
   const result = await storage.uploadToStorage(blob, {carpeta:'notes'}, {tenantId:tenant});

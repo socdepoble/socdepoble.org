@@ -46,6 +46,7 @@ import { EstatBuit } from '../../../components/PedraSeca/atoms/estats.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { Histograma } from '../../../components/PedraSeca/organismes/Histograma.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
+import { tg } from '../i18nGestoria.js';
 import { formatData, nomMes } from '../nucli/dates.js';
 import { formatImport } from '../nucli/diners.js';
 import { MONEDA_TAULER } from './nucli/resumTauler.js';
@@ -60,7 +61,7 @@ const nomDelMes = (m) => `${nomMes(m.mes, 'ca', { majuscula: true })} ${m.any}`;
 const COBERTURA = Object.freeze({ completa: 'Mes sencer', parcial: 'Part del mes', cap: 'Sense extractes' });
 
 /* El valor d'un instrument: amb l'ull tancat, amagat si té xifra o si el seu perquè és privat. */
-function Instrument({ instrument, visible, onObri }) {
+function Instrument({ instrument, visible, onObri, idioma = 'ca' }) {
   const amagat = !visible && (Boolean(instrument.xifra) || instrument.privat);
   const ambValor = amagat || Boolean(instrument.xifra);
   return (
@@ -69,7 +70,7 @@ function Instrument({ instrument, visible, onObri }) {
         <button type="button" className="sdp-gestoria-comprimida__obri" onClick={() => onObri?.(instrument.targeta)}>{instrument.titol}</button>
       </dt>
       <dd className={ambValor ? 'sdp-gestoria-cabina__valor' : 'sdp-gestoria-cabina__motiu'}>
-        {amagat ? <Xifra xifra={{ tipus: instrument.tipus }} visible={false} /> : <XifraDeFila targeta={instrument} visible={visible} />}
+        {amagat ? <Xifra xifra={{ tipus: instrument.tipus }} visible={false} idioma={idioma} /> : <XifraDeFila targeta={instrument} visible={visible} idioma={idioma} />}
       </dd>
       <dd className="sdp-gestoria-cabina__nota">{instrument.explica}</dd>
       {visible && instrument.avis ? <dd ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__avis">{instrument.avis}</dd> : null}
@@ -78,15 +79,15 @@ function Instrument({ instrument, visible, onObri }) {
 }
 
 /* Els dos gràfics del flux: només amb l'ull obert, i només els mesos amb moviments (un mes sense no és cap zero). */
-function GrafiquesFlux({ mesos, maxim, visible }) {
+function GrafiquesFlux({ mesos, maxim, visible, idioma = 'ca' }) {
   const ambXifres = mesos.filter((m) => enter(m.entrades) && enter(m.eixides));
   if (!ambXifres.length) {
-    return <EstatBuit icona={FileSearch} titol="Encara no hi ha cap mes amb moviments en euros" />;
+    return <EstatBuit icona={FileSearch} titol={tg(idioma, 'Encara no hi ha cap mes amb moviments en euros')} />;
   }
   if (!visible) {
     return (
-      <EstatBuit icona={EyeOff} titol="Gràfics amagats">
-        Prem l’ull de la boina per a veure’ls: l’alçada de les barres diu les xifres.
+      <EstatBuit icona={EyeOff} titol={tg(idioma, 'Gràfics amagats')}>
+        {tg(idioma, 'Prem l’ull de la boina per a veure’ls: l’alçada de les barres diu les xifres.')}
       </EstatBuit>
     );
   }
@@ -99,40 +100,40 @@ function GrafiquesFlux({ mesos, maxim, visible }) {
   const format = (valor) => formatImport(Math.round(valor));
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__grafics">
-      <Histograma titol="Entrades per mes" barres={barres('entrades')} maxim={maxim ?? undefined} valors={false} formatValor={format}
+      <Histograma titol={tg(idioma, 'Entrades per mes')} barres={barres('entrades')} maxim={maxim ?? undefined} valors={false} formatValor={format}
         className="sdp-gestoria-cabina__entrades" />
-      <Histograma titol="Eixides per mes" barres={barres('eixides')} maxim={maxim ?? undefined} valors={false} formatValor={format}
+      <Histograma titol={tg(idioma, 'Eixides per mes')} barres={barres('eixides')} maxim={maxim ?? undefined} valors={false} formatValor={format}
         className="sdp-gestoria-cabina__eixides" />
     </div>
   );
 }
 
 /* Una cel·la d'import del flux: sense extractes, «Sense dades»; cobert i sense moviments, el perquè; si no, la xifra. */
-function CellaFlux({ mes, valor, visible }) {
+function CellaFlux({ mes, valor, visible, idioma = 'ca' }) {
   const xifra = IMPORT(valor);
   if (xifra || mes.cobertura === 'cap') {
-    return <td ref={adoptaEstilsDiferits} className={xifra ? 'sdp-num' : 'sdp-gestoria-comprimida__motiu'}><Xifra xifra={xifra} visible={visible} /></td>;
+    return <td ref={adoptaEstilsDiferits} className={xifra ? 'sdp-num' : 'sdp-gestoria-comprimida__motiu'}><Xifra xifra={xifra} visible={visible} idioma={idioma} /></td>;
   }
-  return <td ref={adoptaEstilsDiferits} className="sdp-gestoria-comprimida__motiu"><span className="sdp-gestoria-comprimida__sense">Sense moviments</span></td>;
+  return <td ref={adoptaEstilsDiferits} className="sdp-gestoria-comprimida__motiu"><span className="sdp-gestoria-comprimida__sense">{tg(idioma, 'Sense moviments')}</span></td>;
 }
 
 /* La Taula de cada mes, amb el net: el que el gràfic no pinta (un net negatiu) també hi és. */
-function TaulaFlux({ mesos, visible }) {
+function TaulaFlux({ mesos, visible, idioma = 'ca' }) {
   return (
-    <Taula titol="Taula · Flux de caixa per mes" densa className="sdp-gestoria-comprimida">
+    <Taula titol={tg(idioma, 'Taula · Flux de caixa per mes')} densa className="sdp-gestoria-comprimida">
       <thead ref={adoptaEstilsDiferits}>
         <tr>
-          <th scope="col">Mes</th><th scope="col">Cobertura</th><th scope="col">Entrades</th><th scope="col">Eixides</th><th scope="col">Net</th>
+          <th scope="col">{tg(idioma, 'Mes')}</th><th scope="col">{tg(idioma, 'Cobertura')}</th><th scope="col">{tg(idioma, 'Entrades')}</th><th scope="col">{tg(idioma, 'Eixides')}</th><th scope="col">{tg(idioma, 'Net')}</th>
         </tr>
       </thead>
       <tbody>
         {mesos.map((m) => (
           <tr ref={adoptaEstilsDiferits} key={m.clau}>
             <th scope="row">{nomDelMes(m)}</th>
-            <td>{COBERTURA[m.cobertura]}</td>
-            <CellaFlux mes={m} valor={m.entrades} visible={visible} />
-            <CellaFlux mes={m} valor={m.eixides} visible={visible} />
-            <CellaFlux mes={m} valor={m.net} visible={visible} />
+            <td>{tg(idioma, COBERTURA[m.cobertura])}</td>
+            <CellaFlux mes={m} valor={m.entrades} visible={visible} idioma={idioma} />
+            <CellaFlux mes={m} valor={m.eixides} visible={visible} idioma={idioma} />
+            <CellaFlux mes={m} valor={m.net} visible={visible} idioma={idioma} />
           </tr>
         ))}
       </tbody>
@@ -163,26 +164,26 @@ const SENSE_PAGAMENT = Object.freeze({
 });
 
 /* La cel·la del pagament: amb un únic càrrec que hi casa, el dia i l'import (amagat); si no, per què no n'hi ha. */
-function CellaPagament({ mes, visible }) {
+function CellaPagament({ mes, visible, idioma = 'ca' }) {
   if (!mes.pagament) {
     const motiu = SENSE_PAGAMENT[mes.sensePagament] ?? (mes.banc === 'sense-extracte' ? SENSE_PAGAMENT['sense-extracte'] : '—');
-    return <td ref={adoptaEstilsDiferits} className="sdp-gestoria-comprimida__motiu"><span className="sdp-gestoria-comprimida__sense">{motiu}</span></td>;
+    return <td ref={adoptaEstilsDiferits} className="sdp-gestoria-comprimida__motiu"><span className="sdp-gestoria-comprimida__sense">{tg(idioma, motiu)}</span></td>;
   }
   return (
     <td ref={adoptaEstilsDiferits} className="sdp-num">
       <span>{formatData(mes.pagament.data, 'dd/mm/aaaa')} · </span>
-      <Xifra xifra={IMPORT(mes.pagament.centims)} visible={visible} />
+      <Xifra xifra={IMPORT(mes.pagament.centims)} visible={visible} idioma={idioma} />
     </td>
   );
 }
 
 /* La secció «Factures que falten»: indicis per a revisar, mai veredictes. */
-function FacturesQueFalten({ falten, visible }) {
+function FacturesQueFalten({ falten, visible, idioma = 'ca' }) {
   if (!falten || falten.estat === 'sense-full') {
-    return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">Analitza el trimestre al Full trimestral: amb les seues factures i els extractes del banc, ací es diu quines factures habituals podrien faltar.</p>;
+    return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">{tg(idioma, 'Analitza el trimestre al Full trimestral: amb les seues factures i els extractes del banc, ací es diu quines factures habituals podrien faltar.')}</p>;
   }
   if (falten.estat === 'error') {
-    return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">No s’ha pogut creuar el Full trimestral amb els extractes: revisa’ls al Full.</p>;
+    return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">{tg(idioma, 'No s’ha pogut creuar el Full trimestral amb els extractes: revisa’ls al Full.')}</p>;
   }
   const { resultat } = falten;
   const files = (resultat?.linies ?? []).flatMap((linia) => (linia.mesos ?? [])
@@ -192,10 +193,10 @@ function FacturesQueFalten({ falten, visible }) {
     <>
       <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">{`Del Full del ${falten.t}T ${falten.any}, amb els extractes que has triat. Són indicis per a revisar: la gestoria decidix el trimestre de cada factura.`}</p>
       {files.length ? (
-        <Taula titol="Taula · Factures que falten" densa className="sdp-gestoria-comprimida">
+        <Taula titol={tg(idioma, 'Taula · Factures que falten')} densa className="sdp-gestoria-comprimida">
           <thead ref={adoptaEstilsDiferits}>
             <tr>
-              <th scope="col">Proveïdor</th><th scope="col">Mes</th><th scope="col">Estat</th><th scope="col">Càrrec al banc</th><th scope="col">On demanar-la</th>
+              <th scope="col">{tg(idioma, 'Proveïdor')}</th><th scope="col">{tg(idioma, 'Mes')}</th><th scope="col">{tg(idioma, 'Estat')}</th><th scope="col">{tg(idioma, 'Càrrec al banc')}</th><th scope="col">{tg(idioma, 'On demanar-la')}</th>
             </tr>
           </thead>
           <tbody>
@@ -203,18 +204,18 @@ function FacturesQueFalten({ falten, visible }) {
               <tr ref={adoptaEstilsDiferits} key={`${linia.clau}-${mes.mes}`}>
                 <th scope="row">{linia.nom}</th>
                 <td>{nomDeClauMes(mes.mes)}</td>
-                <td>{ESTATS_QUE_FALTEN[mes.estat]}</td>
-                <CellaPagament mes={mes} visible={visible} />
-                <td>{linia.domini ?? 'La seua àrea de clients o el correu'}</td>
+                <td>{tg(idioma, ESTATS_QUE_FALTEN[mes.estat])}</td>
+                <CellaPagament mes={mes} visible={visible} idioma={idioma} />
+                <td>{linia.domini ?? tg(idioma, 'La seua àrea de clients o el correu')}</td>
               </tr>
             ))}
           </tbody>
         </Taula>
       ) : (
-        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">Cap proveïdor habitual no té cap mes sense factura amb les dades d’este Full.</p>
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">{tg(idioma, 'Cap proveïdor habitual no té cap mes sense factura amb les dades d’este Full.')}</p>
       )}
       {resultat?.incidencies?.length ? (
-        <Alerta to="info" viva={false} titol="Altres indicis del trimestre">
+        <Alerta to="info" viva={false} titol={tg(idioma, 'Altres indicis del trimestre')}>
           <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__avisos">
             {resultat.incidencies.map((inc, i) => <li ref={adoptaEstilsDiferits} key={`${inc.codi}-${i}`}>{inc.missatge}</li>)}
           </ul>
@@ -232,35 +233,35 @@ function FacturesQueFalten({ falten, visible }) {
  *   facturesQueFalten ({ estat: 'sense-full' | 'error' | 'fet', any, t, resultat }); `plantilla`: el node de la
  *   «Plantilla Gestoria» que dona la closca
  */
-export function CabinaAvio({ dades, visible = false, onObri, falten = null, plantilla = null }) {
+export function CabinaAvio({ dades, visible = false, onObri, falten = null, plantilla = null, idioma = 'ca' }) {
   const id = useId();
   const { cabina } = dades;
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina" aria-labelledby={`${id}-cabina`}>
-      <h2 id={`${id}-cabina`} className="sdp-gestoria-tauler__titol">Quadre de comandament</h2>
-      <AvisosComptes avisos={dades.avisos ?? []} />
+      <h2 id={`${id}-cabina`} className="sdp-gestoria-tauler__titol">{tg(idioma, 'Quadre de comandament')}</h2>
+      <AvisosComptes avisos={dades.avisos ?? []} idioma={idioma} />
       <p className="sdp-gestoria-cabina__nota">{cabina.referencia}</p>
-      {cabina.avisFrescor ? <Alerta to="avis" viva={false} titol="Extractes antics">{cabina.avisFrescor}</Alerta> : null}
+      {cabina.avisFrescor ? <Alerta to="avis" viva={false} titol={tg(idioma, 'Extractes antics')}>{cabina.avisFrescor}</Alerta> : null}
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-instruments`}>
-        <h3 id={`${id}-instruments`} className="sdp-gestoria-cabina__seccio">Instruments</h3>
+        <h3 id={`${id}-instruments`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Instruments')}</h3>
         <dl className="sdp-gestoria-cabina__instruments">
           {cabina.instruments.map((instrument) => (
-            <Instrument key={instrument.id} instrument={instrument} visible={visible} onObri={onObri} />
+            <Instrument key={instrument.id} instrument={instrument} visible={visible} onObri={onObri} idioma={idioma} />
           ))}
         </dl>
         {cabina.notes.map((nota) => <p ref={adoptaEstilsDiferits} key={nota} className="sdp-gestoria-cabina__nota">{nota}</p>)}
       </section>
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-flux`}>
-        <h3 id={`${id}-flux`} className="sdp-gestoria-cabina__seccio">Flux de caixa per mes</h3>
+        <h3 id={`${id}-flux`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Flux de caixa per mes')}</h3>
         <p className="sdp-gestoria-cabina__nota">{cabina.notaFlux}</p>
-        <GrafiquesFlux mesos={cabina.mesos} maxim={cabina.maxim} visible={visible} />
-        {cabina.mesos.length ? <TaulaFlux mesos={cabina.mesos} visible={visible} /> : null}
+        <GrafiquesFlux mesos={cabina.mesos} maxim={cabina.maxim} visible={visible} idioma={idioma} />
+        {cabina.mesos.length ? <TaulaFlux mesos={cabina.mesos} visible={visible} idioma={idioma} /> : null}
       </section>
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-venciments`}>
-        <h3 id={`${id}-venciments`} className="sdp-gestoria-cabina__seccio">Venciments</h3>
+        <h3 id={`${id}-venciments`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Venciments')}</h3>
         {cabina.venciments.length ? (
           <div ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__venciments">
             {cabina.venciments.map((v) => (
@@ -268,19 +269,19 @@ export function CabinaAvio({ dades, visible = false, onObri, falten = null, plan
             ))}
           </div>
         ) : (
-          <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">Sense el dia d’avui no es poden dir els venciments.</p>
+          <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">{tg(idioma, 'Sense el dia d’avui no es poden dir els venciments.')}</p>
         )}
         <p className="sdp-gestoria-cabina__nota">{cabina.notaTerminis}</p>
       </section>
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-falten`}>
-        <h3 id={`${id}-falten`} className="sdp-gestoria-cabina__seccio">Factures que falten</h3>
-        <FacturesQueFalten falten={falten} visible={visible} />
+        <h3 id={`${id}-falten`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Factures que falten')}</h3>
+        <FacturesQueFalten falten={falten} visible={visible} idioma={idioma} />
       </section>
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-plantilla`}>
-        <h3 id={`${id}-plantilla`} className="sdp-gestoria-cabina__seccio">Plantilla Gestoria</h3>
-        {plantilla ?? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">El full de la gestoria el prepara el Full trimestral.</p>}
+        <h3 id={`${id}-plantilla`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Plantilla Gestoria')}</h3>
+        {plantilla ?? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">{tg(idioma, 'El full de la gestoria el prepara el Full trimestral.')}</p>}
       </section>
     </section>
   );

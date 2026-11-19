@@ -15,17 +15,41 @@ Qui mana, qui conversa, qui vigila i quins candats hi ha al Mas, llegit amb la p
 
 La pestanya «Actores» d'Emowe dibuixa el que hi ha **al voltant dels agents**: **qui mana**, **per on es parla**, qui treballa sol, qui reparteix la faena, qui vigila, quins candats hi ha i sobre quin sòl treballen. Ho detecta per **presència de fitxers i binaris**, **sense llegir contingut privat**. El que existix ho pinta amb traç ple i el que falta, amb traç discontinu. Així la mateixa fila és **inventari i full de ruta** alhora.
 
-| Capa (Emowe) | Al Mas | Font |
-|---|---|---|
-| qui mana | el Mestre | — |
-| els que conversen | IAIA MarIA (Antigravity), Claude (Claude Code) i Codex | `.agents/QUI_SOC.md`, `.agents/consell.json` |
-| el consell extern | les dotze membres del Consell, a través de petorretes | `.agents/consell.json` |
-| el tauler | l'Escriptori (`04_escriptori/`) i els registres de torn (`.agents/runtime/turns/`) | cicle de vida documental |
-| el repartidor | no n'hi ha: cada torn l'obri una persona | — |
-| el vigilant | cap de viu: el Reflex daemon apuntava a un script que mai ha existit i es desinstal·la (26-09, pla `260926_1200_pla_implementacio_infraestructura_fons`); el candidat amb script és `porta-plantilla-viva.mjs --vigila` | [[02_calendari]] |
-| el planificador | launchd (Plaquetes) | [[02_calendari]] |
-| els candats | hooks de Claude Code (`.claude/settings.json`); hooks d'Antigravity declarats sense consumidor acreditat (`.agents/hooks.json`); pre-commit de git | [[01_fluxos_skills]] |
-| el sòl | la Wiki (`_wiki_de_poble/`) i el codi | — |
+### Qui mana
+
+Al Mas governa **el Mestre** (direcció humana directa, sense fitxer intermedi).
+
+### Els que conversen
+
+Són la **IAIA MarIA (Antigravity)**, **Claude (Claude Code)** i **Codex**, declarats a `.agents/QUI_SOC.md` i `.agents/consell.json`.
+
+### El consell extern
+
+Agrupa **les dotze membres del Consell**, convocades a través de petorretes segons `.agents/consell.json`.
+
+### El tauler
+
+Correspon a l'**Escriptori** (`04_escriptori/`) i als **registres de torn** (`.agents/runtime/turns/`) del **cicle de vida documental**.
+
+### El repartidor
+
+**No n'hi ha** cap d'automàtic: **cada torn l'obri una persona**.
+
+### El vigilant
+
+**Cap de viu**: el Reflex daemon apuntava a un script que mai ha existit i es desinstal·la (26-09, pla `260926_1200_pla_implementacio_infraestructura_fons`); el **candidat amb script** és `porta-plantilla-viva.mjs --vigila` (font: [[02_calendari]]).
+
+### El planificador
+
+S'executa mitjançant `launchd` (**Plaquetes**), documentat a [[02_calendari]].
+
+### Els candats
+
+Inclouen els **hooks de Claude Code** (`.claude/settings.json`), els **hooks d'Antigravity** declarats sense consumidor acreditat (`.agents/hooks.json`) i el **pre-commit de git** (font: [[01_fluxos_skills]]).
+
+### El sòl
+
+És el repositori compartit format per la **Wiki** (`_wiki_de_poble/`) i el **codi**.
 
 ## Principi: candats independents de l'arnés
 
@@ -78,14 +102,29 @@ La frontissa detecta el que s'ha perdut, però no pot recuperar el que mai s'ha 
 
 La [[00_portada]] fixa el contracte de cada mètrica: fórmula, font, denominador, abast, data i prova reproduïble. Si falta una peça, el valor és `N/A`. Primeres mètriques proposades:
 
-| Mètrica | Numerador / denominador | Font | Estat |
-|---|---|---|---|
-| Conformitat documental de l'Escriptori | documents de l'Escriptori que passen `document.mjs check` / documents de l'Escriptori | `tooling/gates/porta-documents.mjs` | mesurable hui |
-| Integritat del contingut estructural | claus amb empremta aprovada / unió de claus requerides i registrades | `tooling/gates/frontissa-contingut.mjs` | instrument disponible; valor del diagnòstic de cada execució |
-| Vigilants vius | llançadors amb script existent i activitat recent / llançadors declarats | [[02_calendari]] | `N/A` fins que existisca el registre ampliat |
-| Disparadors útils | skills amb disparador que no és el seu propi nom / skills del cens | `.agents/skills_index.json` | mesurable hui |
-| Cadena de portes amb notícies | portes que s'executen fins al final / portes declarades | `tooling/gates/run-portes.mjs` | mesurable hui |
-| Frescor de la instantània | minuts des de l'última instantània automàtica | Time Machine | `N/A` fins que existisca |
+### Conformitat documental de l'Escriptori
+
+**Numerador / denominador:** documents de l'Escriptori que passen `document.mjs check` dividits pels **documents totals de l'Escriptori**. **Font:** `tooling/gates/porta-documents.mjs` · **Estat:** **mesurable hui**.
+
+### Integritat del contingut estructural
+
+**Numerador / denominador:** **claus amb empremta aprovada** dividides per la **unió de claus requerides i registrades**. **Font:** `tooling/gates/frontissa-contingut.mjs` · **Estat:** **instrument disponible**; valor del diagnòstic de cada execució.
+
+### Vigilants vius
+
+**Numerador / denominador:** **llançadors amb script existent i activitat recent** dividits pels **llançadors declarats**. **Font:** [[02_calendari]] · **Estat:** `N/A` fins que existisca el registre ampliat.
+
+### Disparadors útils
+
+**Numerador / denominador:** **skills amb disparador** que no és el seu propi nom dividides per les **skills del cens**. **Font:** `.agents/skills_index.json` · **Estat:** **mesurable hui**.
+
+### Cadena de portes amb notícies
+
+**Numerador / denominador:** **portes que s'executen fins al final** dividides per les **portes declarades**. **Font:** `tooling/gates/run-portes.mjs` · **Estat:** **mesurable hui**.
+
+### Frescor de la instantània
+
+**Numerador / denominador:** **minuts transcorreguts** des de l'última instantània automàtica. **Font:** **Time Machine** · **Estat:** `N/A` fins que existisca.
 
 Una porta que no s'executa no és verda: està **sense notícies**, i la Consola la pinta així.
 

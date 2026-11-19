@@ -25,6 +25,7 @@ import { numerosDelText, resumDelLlegat, titolDelLlegat } from './nucli/formular
 import { AvisDeZona, ErrorsDelFormulari, llegixText } from './peces.jsx';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+import { tg } from '../i18nGestoria.js';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* Els números no reconeguts que es mostren; la resta es compten. */
@@ -41,14 +42,14 @@ function NoReconeguts({ llista }) {
   );
 }
 
-function ResumLlegat({ llegat }) {
+function ResumLlegat({ llegat, idioma }) {
   const linies = resumDelLlegat(llegat);
   return linies.length
     ? <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__avisos">{linies.map((linia) => <li ref={adoptaEstilsDiferits} key={linia}>{linia}</li>)}</ul>
-    : <p ref={adoptaEstilsDiferits}>No hi havia factures d’abans: el programa comença de zero.</p>;
+    : <p ref={adoptaEstilsDiferits}>{tg(idioma, 'No hi havia factures d’abans: el programa comença de zero.')}</p>;
 }
 
-export function PasLlegat({ f }) {
+export function PasLlegat({ f, idioma = 'ca' }) {
   const [obert, setObert] = useState(() => !f.llegat);
   const [text, setText] = useState('');
   const [errors, setErrors] = useState([]);
@@ -85,18 +86,18 @@ export function PasLlegat({ f }) {
     setObert(true);
   };
 
-  if (!f.config) return <p ref={adoptaEstilsDiferits}>Primer cal desar les dades de l’empresa (pas 1).</p>;
+  if (!f.config) return <p ref={adoptaEstilsDiferits}>{tg(idioma, 'Primer cal desar les dades de l’empresa (pas 1).')}</p>;
 
   if (f.llegat && !obert) {
     return (
       <>
         <details ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__documents">
-          <summary>{titolDelLlegat(f.llegat)}</summary>
+          <summary>{tg(idioma, titolDelLlegat(f.llegat))}</summary>
           <div className="sdp-gestoria-panell__bloc">
-            <ResumLlegat llegat={f.llegat} />
+            <ResumLlegat llegat={f.llegat} idioma={idioma} />
             <NoReconeguts llista={f.llegat.noReconeguts} />
             <div className="sdp-gestoria-panell__accions">
-              <Boto varietat="secundari" onClick={reobri}>Torna a carregar les factures d’abans</Boto>
+              <Boto varietat="secundari" onClick={reobri}>{tg(idioma, 'Torna a carregar les factures d’abans')}</Boto>
             </div>
           </div>
         </details>
@@ -108,42 +109,40 @@ export function PasLlegat({ f }) {
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc">
       <p>
-        Si abans facturaves amb un altre programa, posa ací els números d’aquelles factures. El programa no
-        els continua: obri una sèrie nova i deixa tancades les d’abans, perquè cap número no es puga confondre.
+        {tg(idioma, 'Si abans facturaves amb un altre programa, posa ací els números d’aquelles factures. El programa no els continua: obri una sèrie nova i deixa tancades les d’abans, perquè cap número no es puga confondre.')}
       </p>
       {f.perfilFixat ? (
         <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">
-          Ja has emés factures amb este programa: ara només pots afegir-hi factures d’abans. Torna a posar-hi
-          totes les que ja havies declarat, i les que falten.
+          {tg(idioma, 'Ja has emés factures amb este programa: ara només pots afegir-hi factures d’abans. Torna a posar-hi totes les que ja havies declarat, i les que falten.')}
         </p>
       ) : null}
-      <Camp etiqueta="Números de les factures d’abans" ajuda="Un per línia, tal com eixien a les factures (per exemple «F26 0001»).">
+      <Camp etiqueta={tg(idioma, 'Números de les factures d’abans')} ajuda={tg(idioma, 'Un per línia, tal com eixien a les factures (per exemple «F26 0001»).')}>
         <AreaText files={6} value={text} spellCheck={false} onChange={(event) => setText(event.target.value)} />
       </Camp>
-      <Camp etiqueta="O carrega’ls d’un fitxer de text (opcional)" ajuda="Un fitxer .txt o .csv amb els números.">
-        <CampText tipus="file" accept=".txt,.csv,text/plain,text/csv" textBoto="Tria el fitxer" onChange={carrega} />
+      <Camp etiqueta={tg(idioma, 'O carrega’ls d’un fitxer de text (opcional)')} ajuda={tg(idioma, 'Un fitxer .txt o .csv amb els números.')}>
+        <CampText tipus="file" accept=".txt,.csv,text/plain,text/csv" textBoto={tg(idioma, 'Tria el fitxer')} onChange={carrega} />
       </Camp>
       {quants && previ.llegat ? (
         <>
           <p ref={adoptaEstilsDiferits}>{`Has posat ${quants === 1 ? 'un número' : `${quants} números`}. Quedaran així:`}</p>
-          <ResumLlegat llegat={previ.llegat} />
+          <ResumLlegat llegat={previ.llegat} idioma={idioma} />
           <NoReconeguts llista={previ.llegat.noReconeguts} />
         </>
       ) : null}
-      <ErrorsDelFormulari titol="No s’han pogut llegir les factures d’abans" errors={previ.error ? [previ.error.message, ...errors] : errors} />
-      <ErrorsDelFormulari titol="Així es perdrien factures d’abans ja declarades" errors={perdudes} />
+      <ErrorsDelFormulari titol={tg(idioma, 'No s’han pogut llegir les factures d’abans')} errors={previ.error ? [previ.error.message, ...errors] : errors} />
+      <ErrorsDelFormulari titol={tg(idioma, 'Així es perdrien factures d’abans ja declarades')} errors={perdudes} />
       <AvisDeZona avis={f.avis} zona="llegat" onTanca={f.tancaAvis} />
       <div className="sdp-gestoria-panell__accions">
         <Boto varietat="primari" disabled={!quants || !previ.llegat || perdudes.length > 0} carregant={f.ocupat === 'llegat'}
           onClick={() => desa(previ.llegat)}>
-          Desa les factures d’abans
+          {tg(idioma, 'Desa les factures d’abans')}
         </Boto>
         {f.perfilFixat ? null : (
           <Boto varietat="secundari" disabled={f.ocupat === 'llegat'} onClick={() => desa(sembraLlegat([]))}>
-            No en tinc: comence de zero
+            {tg(idioma, 'No en tinc: comence de zero')}
           </Boto>
         )}
-        {f.llegat ? <Boto varietat="secundari" onClick={() => setObert(false)}>Deixa-ho com estava</Boto> : null}
+        {f.llegat ? <Boto varietat="secundari" onClick={() => setObert(false)}>{tg(idioma, 'Deixa-ho com estava')}</Boto> : null}
       </div>
     </div>
   );

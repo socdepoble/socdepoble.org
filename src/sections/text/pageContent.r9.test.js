@@ -215,7 +215,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.9 · La crònica de les Onades R32.10, R32.11 i R32.12 obri /versions, davant de la crònica R32.7, R32.8 i R32.9.
     // Onada v1.2.10 · La crònica de la segona part de R32.11 i R32.12 obri /versions, davant de la crònica R32.10, R32.11 i R32.12.
     // Onada v1.2.11 · La crònica de les Onades R32.13 i R32.14 obri /versions, davant de la segona part de R32.11 i R32.12.
-    expect([...versions.querySelectorAll('h3')].slice(0, 23).map((h3) => h3.textContent)).toEqual([
+    // Onada v1.2.12 · La crònica de les Onades R32.14 i R32.15 obri /versions, davant de la crònica R32.13 i R32.14.
+    expect([...versions.querySelectorAll('h3')].slice(0, 24).map((h3) => h3.textContent)).toEqual([
+      '19 de novembre de 2026, nit · Onades R32.14 i R32.15 · La Gestoria en cinc llengües, el Rebost en pantalles estretes i una Wiki sense taules amples',
       '19 de novembre de 2026, vesprada · Onades R32.13 i R32.14 · El Bar en cinc llengües, l’avís de contingut il·lícit i un connector de WordPress més lleuger',
       '19 de novembre de 2026 · Onades R32.11 i R32.12, segona part · La guia de tot el que pots fer, la data de cada targeta segons el tipus i l’Arbre Genealògic amb frase de pas',
       '18 de novembre de 2026, nit · Onades R32.10, R32.11 i R32.12 · L’Avisador renovat, l’assistència als esdeveniments i les accions del Xat dins de la sessió',

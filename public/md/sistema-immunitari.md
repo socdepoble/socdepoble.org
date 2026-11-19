@@ -45,13 +45,25 @@ Si la **recepta s'edita a mà** després de l'aprovació, el **hash divergix** i
 
 ## Les cinc línies roges (executables, no declarades)
 
-| # | Línia roja | On es força al codi |
-|---|---|---|
-| R1 | El mode autònom només tria, no aplica | `--autonom` o `PLAQUETES_AUTONOM` limita la recepta a les tasques de nivell L0/L1 de `.agents/cron/registre_tasques.json` (una tasca que no hi consta compta com L3); `aplica` continua exigint aprovació i lease |
-| R2 | Atòmic i verificable | `aplica` exigix arbre Git net, recalcula el pla des de la recepta aprovada i l'executa amb `tooling/gates/executor-mutacio.mjs` |
-| R3 | Res s'esborra mai | `aplica` només admet `LAPIDA` i `ADOPTA`; qualsevol altra operació ix amb error i zero efectes |
-| R4 | El reparador no s'opera a si mateix | `confined()` rebutja `.git`, `.sdp-reflex`, `scripts/`, symlinks i hardlinks; els objectius han de ser Wiki viva (mai `90_arxiu_historic` ni `01_produccio`) |
-| R5 | Canaris i zones delegades intocables | Config: `ignoraObjectius`, `exclouFonts` i `hubsTaxonomics` amb `hubsDelegats` — informe sí, bisturí no |
+### R1 · El mode autònom només tria, no aplica
+
+Al codi, `--autonom` o `PLAQUETES_AUTONOM` **limita la recepta** a les tasques de nivell **L0/L1** de `.agents/cron/registre_tasques.json` (una tasca que no hi consta compta com a **L3**); l'ordre `aplica` continua **exigint aprovació humana i lease**.
+
+### R2 · Atòmic i verificable
+
+L'ordre `aplica` exigix un **arbre Git net**, **recalcula el pla** des de la recepta aprovada i l'executa exclusivament amb `tooling/gates/executor-mutacio.mjs`.
+
+### R3 · Res s'esborra mai
+
+L'ordre `aplica` només admet les operacions `LAPIDA` i `ADOPTA`; **qualsevol altra operació** ix amb **codi d'error i zero efectes** sobre el disc.
+
+### R4 · El reparador no s'opera a si mateix
+
+La guarda `confined()` rebutja `.git`, `.sdp-reflex`, `scripts/`, **symlinks i hardlinks**; els objectius han de pertànyer a la **Wiki viva** (**mai** `90_arxiu_historic` ni `01_produccio`).
+
+### R5 · Canaris i zones delegades intocables
+
+La configuració blinda `ignoraObjectius`, `exclouFonts` i `hubsTaxonomics` amb `hubsDelegats`: les Plaquetes emeten **informe sí, bisturí no**.
 
 ## Operacions del catàleg v1.1
 

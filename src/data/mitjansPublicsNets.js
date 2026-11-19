@@ -2,6 +2,7 @@
    Valida el contenidor (no és un descodificador de píxels) i elimina tots els
    blocs de metadades. Formats animats o desconeguts es rebutgen. */
 const MAX_BYTES = 5_242_880;
+const MAX_BYTES_VALIDACIO = 150_000_000;
 const MAX_PIXELS = 100_000_000;
 const error = () => Object.assign(new TypeError('La imatge no es pot publicar sense metadades amb este format.'), { codi: 'mitja-no-sanejable' });
 const exigix = condicio => { if (!condicio) throw error(); };
@@ -180,10 +181,17 @@ export function portaBlocExif(bytes) {
   return false;
 }
 
-export function netejaImatgePublica(bytes, mime) {
-  exigix(bytes instanceof Uint8Array && bytes.length > 0 && bytes.length <= MAX_BYTES);
+/** Estructura/CRC compartits. El transport conserva el seu sostre propi;
+ * la publicació pública continua limitada a 5 MiB en netejaImatgePublica. */
+export function validaEstructuraImatge(bytes, mime) {
+  exigix(bytes instanceof Uint8Array && bytes.length > 0 && bytes.length <= MAX_BYTES_VALIDACIO);
   const formats = { 'image/jpeg': [jpeg, 'jpg'], 'image/png': [png, 'png'], 'image/webp': [webp, 'webp'] };
   const format = Object.hasOwn(formats, mime) ? formats[mime] : null;
   exigix(format);
   return { bytes: format[0](bytes), mime, extensio: format[1] };
+}
+
+export function netejaImatgePublica(bytes, mime) {
+  exigix(bytes instanceof Uint8Array && bytes.length > 0 && bytes.length <= MAX_BYTES);
+  return validaEstructuraImatge(bytes, mime);
 }

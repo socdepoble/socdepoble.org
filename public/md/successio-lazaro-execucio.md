@@ -44,15 +44,27 @@ La governança executiva viu fora de la Wiki, a `AGENTS.md` i `.agents/`. Les Me
 
 ## Activadors i nivells
 
-Una absència prolongada, pèrdua de repositori, ruptura de context o auditoria de continuïtat pot justificar el diagnòstic. Cap activador temporal executa accions per si mateix.
+Una **absència prolongada**, **pèrdua de repositori**, **ruptura de context** o **auditoria de continuïtat** pot justificar el diagnòstic. Cap activador temporal executa accions per si mateix.
 
-| Nivell | Finalitat | Capacitat per defecte |
-|---|---|---|
-| 0 · normal | Comprovar salut | Només lectura |
-| 1 · observació | Inventariar buits i contradiccions | Només lectura |
-| 2 · conservació | Preparar correccions acotades | Proposta i pla |
-| 3 · reconstrucció | Restaurar des d'evidència validada | Aprovació humana i Reflex d'alt risc |
-| 4 · llegat | Preservar i documentar per al futur | Decisió humana explícita |
+### Nivell 0 · Normal
+
+Té com a finalitat **comprovar la salut ordinària** del sistema amb capacitat per defecte de **només lectura**.
+
+### Nivell 1 · Observació
+
+Serveix per a **inventariar buits i contradiccions** documentals o tècniques mantenint capacitat estricta de **només lectura**.
+
+### Nivell 2 · Conservació
+
+Permet **preparar correccions acotades** limitant la capacitat per defecte a l'emissió de **proposta i pla**.
+
+### Nivell 3 · Reconstrucció
+
+Activa la **restauració des d'evidència validada**, exigint sempre **aprovació humana** i **Reflex d'alt risc**.
+
+### Nivell 4 · Llegat
+
+Orientat a **preservar i documentar per al futur** el patrimoni del projecte sota **decisió humana explícita**.
 
 ## Procediment Lázaro
 

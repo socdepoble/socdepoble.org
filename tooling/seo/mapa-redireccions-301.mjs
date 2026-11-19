@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** R32.13 · Explicit historical URL -> verified final page inventory.
+/** R32.14 · Explicit historical URL -> verified final page inventory.
  * Expected O(number of URLs + total UTF-8 URI bytes), using Map/Set lookup;
  * no sorting, recursive traversal, URL fetches or guessed slug destinations.
  * CLI: mapa-redireccions-301.mjs input.json [--format all|firebase|wordpress|nginx]
@@ -20,10 +20,14 @@ const BAD_SEGMENT = /\/\.{1,2}(?:\/|$)|\/\//;
 const ASCII_PATH = /^\/[A-Za-z0-9._~/-]*$/;
 const UNICODE_PATH = /^\/[\p{L}\p{M}\p{N}._~/-]*$/u;
 const IGNORABLE_UNICODE = /\p{Default_Ignorable_Code_Point}/u;
+const CANONICAL_ASCII_SOURCE = /^https:\/\/socdepoble\.(?:net|com)\/[A-Za-z0-9._~/-]*(?:\?(?:p|page_id|attachment_id)=[1-9][0-9]{0,18})?$/;
 const QUERY_ID = /^(?:p|page_id|attachment_id)=[1-9][0-9]{0,18}$/;
 const own = (o, k) => Object.hasOwn(o, k);
-const record = o => o !== null && typeof o === 'object' && !Array.isArray(o)
-  && (Object.getPrototypeOf(o) === Object.prototype || Object.getPrototypeOf(o) === null);
+const record = o => {
+  if (o === null || typeof o !== 'object' || Array.isArray(o)) return false;
+  const prototype = Object.getPrototypeOf(o);
+  return prototype === Object.prototype || prototype === null;
+};
 
 /** Canonical URI transport syntax; no silent WHATWG dot/slash normalization.
  * Common ASCII is checked in C++ regex scans. Percent paths use a bounded slow
@@ -57,6 +61,7 @@ function blogPath(pathname) {
  */
 export function normalitzaOrigen301(value) {
   if (typeof value !== 'string' || value.length > MAX_URL || value.length < 10) return null;
+  if (CANONICAL_ASCII_SOURCE.test(value) && value.indexOf('//', 8) === -1 && value.indexOf('/.') === -1) return value;
   const start = value.startsWith('https://') ? 8 : value.startsWith('http://') ? 7 : 0;
   if (!start) return null;
   let slash = value.indexOf('/', start);
@@ -112,6 +117,71 @@ function orderedBijective(input) {
   return { valid: true, count: input.redireccions.length, destinations: input.destinsDisponibles.length, errors: [], mode: 'ordered-bijective-ascii' };
 }
 
+/** Numeric tails are common in imported CMS URLs. A bounded direct bucket
+ * avoids hashing the full URI in that case. Two prefix bits distinguish common
+ * .net/.com numeric tails; they never prove equality. Each bucket retains its
+ * exact string; colliding prefixes/hosts/leading zeros use the native Set, so
+ * a suffix is never evidence of equality. Non-numeric and large IDs use Set
+ * immediately. All operations remain expected O(bytes + rows), including an
+ * adversary making every URI collide in the same suffix bucket. */
+class UriIndex {
+  constructor(capacity) {
+    this.limit = capacity + 1;
+    this.slots = new Int32Array(Math.max(1, this.limit * 4));
+    this.values = new Array(capacity);
+    this.next = 0;
+    this.collisions = new Set();
+    this.size = 0;
+  }
+  bucket(value) {
+    let index = value.length - 1, digit = value.charCodeAt(index) - 48;
+    if (digit < 0 || digit > 9) return -1;
+    let number = 0, scale = 1;
+    while (index >= 0 && digit >= 0 && digit <= 9) {
+      number += digit * scale;
+      if (number >= this.limit || scale > this.limit) return -1;
+      scale *= 10;
+      digit = value.charCodeAt(--index) - 48;
+    }
+    // Position 19 is n/c in canonical https://socdepoble.net/.com. Short
+    // strings produce NaN here, whose bitwise conversion is deterministically 0.
+    return number * 4 + (value.charCodeAt(19) & 3);
+  }
+  has(value) {
+    if (typeof value !== 'string') return false;
+    const bucket = this.bucket(value);
+    if (bucket < 0) return this.collisions.has(value);
+    const slot = this.slots[bucket];
+    return slot > 0 ? this.values[slot - 1] === value : slot < 0 && this.collisions.has(value);
+  }
+  add(value) {
+    const bucket = this.bucket(value);
+    if (bucket < 0) {
+      const before = this.collisions.size;
+      this.collisions.add(value);
+      this.size += this.collisions.size - before;
+      return;
+    }
+    const slot = this.slots[bucket];
+    if (!slot) {
+      this.values[this.next] = value;
+      this.slots[bucket] = ++this.next;
+      this.size++;
+    } else if (slot > 0) {
+      const before = this.values[slot - 1];
+      if (before === value) return;
+      this.collisions.add(before);
+      this.collisions.add(value);
+      this.slots[bucket] = -1;
+      this.size++;
+    } else {
+      const before = this.collisions.size;
+      this.collisions.add(value);
+      this.size += this.collisions.size - before;
+    }
+  }
+}
+
 /** Complete raw verification, with destination-index construction included.
  * First-error result avoids allocating attacker-controlled error lists. Every
  * successful call rechecks each source and destination: no trusted-object cache.
@@ -123,24 +193,28 @@ export function verificaMapaRedireccions301(input) {
     || input.redireccions.length > MAX_ROWS || input.destinsDisponibles.length > MAX_ROWS) return failure('inventari_invalid');
   const ordered = orderedBijective(input);
   if (ordered) return ordered;
-  const destinations = new Set();
+  const destinations = new UriIndex(input.destinsDisponibles.length);
   for (let i = 0; i < input.destinsDisponibles.length; i++) {
     const route = normalitzaDesti301(input.destinsDisponibles[i]);
     if (!route) return failure('inventari_destins_invalid', i);
-    if (destinations.has(route)) return failure('desti_duplicat', i);
     destinations.add(route);
+    if (destinations.size !== i + 1) return failure('desti_duplicat', i);
   }
-  const sources = new Set();
+  const sources = new UriIndex(input.redireccions.length);
   for (let i = 0; i < input.redireccions.length; i++) {
     const rule = input.redireccions[i];
     if (!record(rule) || !own(rule, 'source') || !own(rule, 'destination') || rule.status !== 301) return failure('regla_invalida', i);
     const source = normalitzaOrigen301(rule.source);
     if (!source) return failure('origen_invalid', i);
-    const destination = normalitzaDesti301(rule.destination);
-    if (!destination) return failure('desti_extern_cadena_o_bucle', i);
-    if (!destinations.has(destination)) return failure('desti_no_verificat', i);
-    if (sources.has(source)) return failure('origen_duplicat_o_conflictiu', i);
+    // Membership in the freshly validated canonical inventory also proves
+    // syntax; normalize only when the raw destination is not already a member.
+    if (!destinations.has(rule.destination)) {
+      const destination = normalitzaDesti301(rule.destination);
+      if (!destination) return failure('desti_extern_cadena_o_bucle', i);
+      if (!destinations.has(destination)) return failure('desti_no_verificat', i);
+    }
     sources.add(source);
+    if (sources.size !== i + 1) return failure('origen_duplicat_o_conflictiu', i);
   }
   if (input.origensEsperats !== undefined) {
     if (!Array.isArray(input.origensEsperats) || input.origensEsperats.length > MAX_ROWS) return failure('corpus_invalid');
@@ -261,7 +335,7 @@ export function importaInventariHistoric301(articles, destinsDisponibles, option
  * Ordered and general cases are separate; passing one never certifies the other.
  */
 export function benchmark301({ shape = 'general', count = 100000, samples = 9 } = {}) {
-  if (!['ordered', 'general'].includes(shape) || !Number.isInteger(count) || count < 1 || count > MAX_ROWS
+  if (!['ordered', 'general', 'general-shuffled'].includes(shape) || !Number.isInteger(count) || count < 1 || count > MAX_ROWS
     || !Number.isInteger(samples) || samples < 3 || samples > 31) throw new TypeError('Benchmark invàlid.');
   const input = { redireccions: [], destinsDisponibles: [] };
   const fixtureStarted = performance.now();
@@ -271,9 +345,20 @@ export function benchmark301({ shape = 'general', count = 100000, samples = 9 } 
     const destination = `/page/article-${id}`;
     const host = shape === 'ordered' ? 'socdepoble.net' : i % 2 ? 'socdepoble.net' : 'socdepoble.com';
     input.destinsDisponibles.push(destination);
-    const source = `https://${host}/article-${id}`;
+    const query = shape === 'general-shuffled' && i % 4 === 0;
+    const source = query ? `https://${host}/index.php?${['p', 'page_id', 'attachment_id'][i % 3]}=${i + 1}` : `https://${host}/article-${id}`;
     input.redireccions.push({ source, destination, status: 301 });
     totalUriCharacters += source.length + destination.length * 2;
+  }
+  // Fixed seeded Fisher-Yates. Preserve the old 'general' profile for honest
+  // comparison; this additional profile actually permutes rows and inventory.
+  if (shape === 'general-shuffled') {
+    let seed = 3214;
+    for (const list of [input.redireccions, input.destinsDisponibles]) for (let i = list.length - 1; i > 0; i--) {
+      seed = Math.imul(seed, 1664525) + 1013904223 | 0;
+      const j = (seed >>> 0) % (i + 1);
+      [list[i], list[j]] = [list[j], list[i]];
+    }
   }
   const fixtureMs = performance.now() - fixtureStarted;
   const timings = [];
@@ -289,13 +374,14 @@ export function benchmark301({ shape = 'general', count = 100000, samples = 9 } 
   return { schema: 'sdp.redirect301.benchmark.v1', shape, mode, urls: count, uniqueDestinations: count,
     fixtureMs, totalUriCharacters, samplesMs: timings, medianMs, minimumMs: Math.min(...timings), maximumMs: Math.max(...timings),
     targetMs: 25, targetMet: medianMs < 25,
-    timingIncludes: 'every raw URI/schema check, duplicate detection and destination membership; no caches',
+    workload: { shuffledRows: shape === 'general-shuffled', shuffledInventory: shape === 'general-shuffled', queryRows: shape === 'general-shuffled' ? Math.ceil(count / 4) : 0, seed: shape === 'general-shuffled' ? 3214 : null },
+    timingIncludes: 'every raw URI/schema check, duplicate detection and fresh destination-index construction; no caches',
     limits: 'Ordered bijective ASCII timing does not certify arbitrary unordered, Unicode or many-to-one input.' };
 }
 
 export function main(args = process.argv.slice(2), io = process) {
   if (args[0] === '--benchmark') {
-    if (args.length > 2) throw new TypeError('Ús: --benchmark [ordered|general]');
+    if (args.length > 2) throw new TypeError('Ús: --benchmark [ordered|general|general-shuffled]');
     const report = benchmark301({ shape: args[1] ?? 'general' });
     io.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return report.targetMet ? 0 : 1;

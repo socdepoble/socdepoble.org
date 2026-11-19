@@ -37,6 +37,7 @@ const UI_GESTORIA = [
 
 const BASE_GESTORIA = [
   'src/sections/gestoria/font/fontNavegador.js',
+  'src/sections/gestoria/i18nGestoria.js',
   'src/sections/gestoria/nucli/auditoria.js',
   'src/sections/gestoria/nucli/cataleg.js',
   'src/sections/gestoria/nucli/csv.js',
@@ -138,6 +139,7 @@ const UI_TAULER = [
 ];
 
 const NUCLI_TAULER = [
+  'src/sections/gestoria/i18nGestoria.js',
   'src/sections/gestoria/impostos/nucli/impostos.js',
   'src/sections/gestoria/nucli/c43.js',
   'src/sections/gestoria/nucli/cataleg.js',

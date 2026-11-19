@@ -13,16 +13,37 @@ La Consola és un **contracte de mesura i decisió**, no una pantalla màgica ni
 
 ## Estat verificat de la baseline
 
-| Senyal | Estat | Autoritat i límit |
-|---|---|---|
-| Integritat de frontmatter i graf operatiu | Implementada | `tractor-frontmatter.mjs` (`npm run porta:frontmatter`) valida contra `tooling/wiki/schema.json`; `porta:scc`, `porta:orfandat` i `porta:teixit` vigilen el graf; `autoneteja_wiki.mjs` audita i planifica migracions reversibles. |
-| Porta abans del commit | Versionada | `.husky/pre-commit` executa primer la frontissa de contingut, la taxonomia i la plantilla viva, i després `git-staged.mjs`. La CI i la protecció de branca encara no estan acreditades. |
-| Índex/ontologia derivats | Implementats | `compile-wiki-to-app.mjs`, `npm run rag:build` i `npm run slugs:build`; són memòria cau regenerable, no font de veritat. |
-| “IT” de tres components del CLI | Retirat com a porta | `sdp check` falla tancat perquè combinava proxies incomplets i podia donar puntuació a un corpus buit. El codi antic només és material d'estudi; no representa el [[index_trellat|marc humà complet]]. |
-| Accessibilitat i Web Vitals | Sense telemetria integrada | Necessiten navegador real, corpus de casos i resultats conservats. La doctrina del dispositiu de referència (A10) es va retirar amb l'[[ADR-2026-08-ONLINE-FIRST]]. |
-| Resiliència sense connexió | Implementació parcial, sense mètrica global | Les dades compartides continuen online-first. El codi inclou dades del dispositiu (`src/utils/magatzemLocal.js`) i closca de `/app/*` (`src/pwa/registre.js`, `public/sw.js`). L'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] en documenta la implementació parcial i una proposta d'abast pendent de signatura; això no acredita resiliència de tot el sistema ni convergència CRDT. |
-| Tombstones CRDT | No aplicable | No hi ha motor CRDT actiu ([[arquitectura_sistema_nervios]] el descriu com a visió futura); no s'inventa una càrrega percentual. |
-| Panell web de salut i ritual setmanal | Mapa i instantània implementats; ritual no acreditat | `tooling/brain/mapa-consola.mjs` genera el mapa. `tooling/vite/consola-iaia.mjs` el servix en viu al servidor local de desenvolupament i emet una instantània web sanejada de les quatre fonts a `__iaia/*.json`. `src/sections/consola/fontsConsola.js` distingix les dues lectures: la publicada no activa escriptures. La instantània no és telemetria en viu ni prova que el ritual setmanal s'execute. |
+### Integritat de frontmatter i graf operatiu
+
+**Estat:** **Implementada**. `tractor-frontmatter.mjs` (`npm run porta:frontmatter`) valida cada fitxer contra `tooling/wiki/schema.json`; `porta:scc`, `porta:orfandat` i `porta:teixit` vigilen el **graf operatiu**; i `autoneteja_wiki.mjs` audita i planifica **migracions reversibles**.
+
+### Porta abans del commit
+
+**Estat:** **Versionada**. `.husky/pre-commit` executa primer la **frontissa de contingut**, la **taxonomia** i la **plantilla viva**, i després `git-staged.mjs`. La **CI** i la **protecció de branca** encara no estan acreditades.
+
+### Índex i ontologia derivats
+
+**Estat:** **Implementats**. Els generadors `compile-wiki-to-app.mjs`, `npm run rag:build` i `npm run slugs:build` produïxen **memòria cau regenerable**, mai **font de veritat**.
+
+### «IT» de tres components del CLI
+
+**Estat:** **Retirat com a porta**. `sdp check` **falla tancat** perquè combinava proxies incomplets i podia donar puntuació a un **corpus buit**. El codi antic només és material d'estudi i no representa el [[index_trellat|marc humà complet]].
+
+### Accessibilitat i Web Vitals
+
+**Estat:** **Sense telemetria integrada**. Necessiten **navegador real**, **corpus de casos** i **resultats conservats**. La doctrina del dispositiu de referència (A10) es va retirar amb l'[[ADR-2026-08-ONLINE-FIRST]].
+
+### Resiliència sense connexió
+
+**Estat:** **Implementació parcial, sense mètrica global**. Les dades compartides continuen **online-first**. El codi inclou **dades del dispositiu** (`src/utils/magatzemLocal.js`) i **closca de `/app/*`** (`src/pwa/registre.js`, `public/sw.js`). L'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] en documenta la implementació parcial i una proposta d'abast pendent de signatura; això **no acredita resiliència** de tot el sistema ni convergència CRDT.
+
+### Tombstones CRDT
+
+**Estat:** **No aplicable**. No hi ha cap **motor CRDT actiu** ([[arquitectura_sistema_nervios]] el descriu com a visió futura), de manera que **no s'inventa cap càrrega percentual**.
+
+### Panell web de salut i ritual setmanal
+
+**Estat:** **Mapa i instantània implementats; ritual no acreditat**. `tooling/brain/mapa-consola.mjs` genera el mapa; `tooling/vite/consola-iaia.mjs` el servix en viu al servidor local de desenvolupament i emet una **instantània web sanejada** de les quatre fonts a `__iaia/*.json`. `src/sections/consola/fontsConsola.js` distingix les dues lectures: la publicada **no activa escriptures**. La instantània no és **telemetria en viu** ni prova que el **ritual setmanal** s'execute.
 
 ## Fonts de veritat
 

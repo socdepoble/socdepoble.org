@@ -36,26 +36,47 @@ import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import DialegAprovacio, { textError } from './DialegAprovacio.jsx';
 
+const codiDe = (idioma) => {
+  const c = String(idioma || 'ca').toLowerCase().split('-')[0];
+  return ['ca', 'es', 'en', 'eu', 'gl'].includes(c) ? c : 'ca';
+};
+
+const TEXTOS_DEV = import.meta.env.DEV === true ? Object.freeze({
+  ca: Object.freeze({ lloc: 'al panell de Tractors', boto: 'Obri el panell de Tractors' }),
+  es: Object.freeze({ lloc: 'en el panel de Tractores', boto: 'Abrir el panel de Tractores' }),
+  en: Object.freeze({ lloc: 'in the Tractors panel', boto: 'Open Tractors panel' }),
+  eu: Object.freeze({ lloc: 'Traktoreen panelean', boto: 'Ireki Traktoreen panela' }),
+  gl: Object.freeze({ lloc: 'no panel de Tractores', boto: 'Abrir o panel de Tractores' })
+}) : null;
+
+const TEXTOS_PROD = Object.freeze({
+  ca: Object.freeze({ lloc: 'en este navegador', llig: 'Llig la fitxa i aprova’l', revoca: 'Revoca l’aprovació', de: (nom) => `de «${nom}»` }),
+  es: Object.freeze({ lloc: 'en este navegador', llig: 'Leer la ficha y aprobarlo', revoca: 'Revocar la aprobación', de: (nom) => `de «${nom}»` }),
+  en: Object.freeze({ lloc: 'in this browser', llig: 'Read spec sheet & approve', revoca: 'Revoke approval', de: (nom) => `for “${nom}”` }),
+  eu: Object.freeze({ lloc: 'nabigatzaile honetan', llig: 'Irakurri fitxa eta onartu', revoca: 'Baliogabetu onespena', de: (nom) => `«${nom}» traktorearena` }),
+  gl: Object.freeze({ lloc: 'neste navegador', llig: 'Ler a ficha e aprobalo', revoca: 'Revogar a aprobación', de: (nom) => `de «${nom}»` })
+});
+
 /**
  * On s'aprova, per a les frases de les portes: «al panell de Tractors» al
  * servidor de desenvolupament i «en este navegador» a la web publicada.
  * @returns {string}
  */
-export function onSAprova() {
-  return import.meta.env.DEV === true ? 'al panell de Tractors' : 'en este navegador';
+export function onSAprova(idioma = 'ca') {
+  const llengua = codiDe(idioma);
+  return import.meta.env.DEV === true ? TEXTOS_DEV[llengua].lloc : TEXTOS_PROD[llengua].lloc;
 }
 
 /**
  * L'acció de l'avís «Cal aprovar el tractor».
- * @param {{ porta?: object|null, id: string, onObreTractors?: () => void, varietat?: string }} p `porta`: el de
- *   useTractors (el mateix que llig l'estat de la pantalla); `id`: el tractor; `onObreTractors`: el camí al panell
- *   (només en DEV)
+ * @param {{ porta?: object|null, id: string, onObreTractors?: () => void, varietat?: string, idioma?: string }} p
  */
-export function AccioAprovacio({ porta = null, id, onObreTractors, varietat = 'primari' }) {
+export function AccioAprovacio({ porta = null, id, onObreTractors, varietat = 'primari', idioma = 'ca' }) {
+  const llengua = codiDe(idioma);
   if (import.meta.env.DEV === true) {
-    return <Boto varietat={varietat} onClick={onObreTractors}>Obri el panell de Tractors</Boto>;
+    return <Boto varietat={varietat} onClick={onObreTractors}>{TEXTOS_DEV[llengua].boto}</Boto>;
   }
-  return <AprovaEnEsteNavegador porta={porta} id={id} varietat={varietat} />;
+  return <AprovaEnEsteNavegador porta={porta} id={id} varietat={varietat} idioma={llengua} />;
 }
 
 /* El botó i el diàleg. DialegAprovacio es munta sempre i canvia de `key` a
@@ -63,11 +84,12 @@ export function AccioAprovacio({ porta = null, id, onObreTractors, varietat = 'p
    torna al botó. Aprovada, la pantalla deixa de pintar l'avís i el botó se'n
    va amb ell. Sense porta o sense el tractor al catàleg, cap botó: res a
    aprovar, i res que prometa. */
-function AprovaEnEsteNavegador({ porta, id, varietat }) {
+function AprovaEnEsteNavegador({ porta, id, varietat, idioma = 'ca' }) {
   const [obert, setObert] = useState(false);
   const [obertures, setObertures] = useState(0);
   const fila = filaDe(porta, id);
   if (!fila || typeof porta.aprova !== 'function') return null;
+  const tx = TEXTOS_PROD[codiDe(idioma)];
 
   const obri = () => {
     setObertures((n) => n + 1);
@@ -81,9 +103,10 @@ function AprovaEnEsteNavegador({ porta, id, varietat }) {
 
   return (
     <>
-      <Boto varietat={varietat} onClick={obri} disabled={!fila.empremta}>Llig la fitxa i aprova’l</Boto>
+      <Boto varietat={varietat} onClick={obri} disabled={!fila.empremta}>{tx.llig}</Boto>
       <DialegAprovacio key={obertures} obert={obert} manifest={fila.manifest} empremta={fila.empremta}
-        webauthn={porta.webauthn === true} fitxa={fila.fitxa ?? ''} onTanca={() => setObert(false)} onAprova={aprova} />
+        webauthn={porta.webauthn === true} fitxa={fila.fitxa ?? ''} idioma={idioma}
+        onTanca={() => setObert(false)} onAprova={aprova} />
     </>
   );
 }
@@ -97,21 +120,23 @@ function filaDe(porta, id) {
  * Fora de DEV, amb el tractor aprovat: el botó que en revoca l'aprovació en este navegador. Revocar és
  * immediat, com al panell, i no esborra res més: tornar-lo a aprovar demana llegir i signar de nou. En DEV, o
  * sense una aprovació vigent, res.
- * @param {{ porta?: object|null, id: string }} p
+ * @param {{ porta?: object|null, id: string, idioma?: string }} p
  */
-export function RevocaAprovacio({ porta = null, id }) {
+export function RevocaAprovacio({ porta = null, id, idioma = 'ca' }) {
   const [revocant, setRevocant] = useState(false);
   const [error, setError] = useState(null);
   if (import.meta.env.DEV === true) return null;
   const fila = filaDe(porta, id);
   if (!fila || fila.estat !== 'aprovat' || typeof porta.revoca !== 'function') return null;
+  const llengua = codiDe(idioma);
+  const tx = TEXTOS_PROD[llengua];
   const revoca = async () => {
     setRevocant(true);
     setError(null);
     try {
       await porta.revoca(id);
     } catch (e) {
-      setError(textError(e));
+      setError(textError(e, llengua));
     } finally {
       setRevocant(false);
     }
@@ -119,7 +144,7 @@ export function RevocaAprovacio({ porta = null, id }) {
   return (
     <>
       <Boto varietat="secundari" onClick={revoca} carregant={revocant}>
-        Revoca l’aprovació{' '}<span className="sdp-nomes-lector">{`de «${fila.manifest?.nom ?? id}»`}</span>
+        {tx.revoca}{' '}<span className="sdp-nomes-lector">{tx.de(fila.manifest?.nom ?? id)}</span>
       </Boto>
       {error ? <Alerta to="error" titol={error.titol}>{error.detall || null}</Alerta> : null}
     </>

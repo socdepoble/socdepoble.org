@@ -43,6 +43,7 @@ import { Taula } from '../../components/PedraSeca/organismes/Taula.jsx';
 import { Camp, CampText, Casella, GrupCamps, Selector } from '../../components/PedraSeca/organismes/formulari.jsx';
 import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../tractors/AprovacioEnLinia.jsx';
 import EnviamentGestoria from './enviament/EnviamentGestoria.jsx';
+import { tg, tf } from './i18nGestoria.js';
 import { formatData } from './nucli/dates.js';
 import { formatImport } from './nucli/diners.js';
 import { maquetaFull } from './nucli/fullModel.js';
@@ -375,7 +376,7 @@ function PasAEuros({ nomFila, onAplica, onCancella }) {
   );
 }
 
-function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdita, onPassaAEuros, onExclou, onAfegix }) {
+function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdita, onPassaAEuros, onExclou, onAfegix, idioma = 'ca' }) {
   const idTitol = useId();
   const seccio = useRef(null);
   /* La fila on es demana el total en euros (G3T-15), o null. */
@@ -390,23 +391,23 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
   }, [tornaFocus]);
   const ingres = tipus === 'ingres';
   const sumes = totals(factures);
-  const titol = ingres ? 'Ingressos' : 'Despeses';
+  const titol = tg(idioma, ingres ? 'Ingressos' : 'Despeses');
   const altre = ingres ? 'despeses' : 'ingressos';
   const estrangeres = estrangeresPerFactura(incidencies);
   return (
     <section ref={seccio} className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
       <h3 ref={adoptaEstilsDiferits} id={idTitol} className="sdp-gestoria-panell__subtitol">{`${titol} (${factures.length})`}</h3>
-      <Taula titol={`${titol} de la proposta`} densa className="sdp-gestoria-panell__taula">
+      <Taula titol={idioma === 'ca' ? `${titol} de la proposta` : titol} densa className="sdp-gestoria-panell__taula">
         <thead>
           <tr>
-            {COLUMNES.map((c) => <th ref={adoptaEstilsDiferits} key={c.camp ?? c.clau} scope="col">{c.titol}</th>)}
-            <th scope="col">Estat</th>
-            <th scope="col">Accions</th>
+            {COLUMNES.map((c) => <th ref={adoptaEstilsDiferits} key={c.camp ?? c.clau} scope="col">{tg(idioma, c.titol)}</th>)}
+            <th scope="col">{tg(idioma, 'Estat')}</th>
+            <th scope="col">{tg(idioma, 'Accions')}</th>
           </tr>
         </thead>
         <tbody>
           {factures.length === 0 ? (
-            <tr ref={adoptaEstilsDiferits}><td colSpan={COLUMNES.length + 2}>{ingres ? 'Cap ingrés.' : 'Cap despesa.'}</td></tr>
+            <tr ref={adoptaEstilsDiferits}><td colSpan={COLUMNES.length + 2}>{tg(idioma, ingres ? 'Cap ingrés.' : 'Cap despesa.')}</td></tr>
           ) : factures.map((f, i) => {
             const nomFila = `${ingres ? 'l’ingrés' : 'la despesa'} ${i + 1}${f.num ? ` («${f.num}»)` : ''}`;
             const baixes = Object.entries(f.confianca ?? {}).filter(([, nivell]) => nivell === 'baixa').map(([camp]) => ETIQUETES_CAMP[camp] ?? camp);
@@ -425,7 +426,7 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
                   return (
                     <td ref={adoptaEstilsDiferits} key={c.camp} className="sdp-gestoria-panell__cel" data-tipus={c.tipus}>
                       <CelEditable
-                        etiqueta={`${c.titol}, ${ingres ? 'ingrés' : 'despesa'} ${i + 1}`}
+                        etiqueta={`${tg(idioma, c.titol)}, ${ingres ? 'ingrés' : 'despesa'} ${i + 1}`}
                         valor={valorDe(f, c)}
                         tipus={c.tipus}
                         mida={c.mida}
@@ -436,7 +437,7 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
                   );
                 })}
                 <td className="sdp-gestoria-panell__cel">
-                  <Insignia to={f.estat === 'completa' ? 'exit' : 'avis'}>{f.estat === 'completa' ? 'Completa' : 'Pendent'}</Insignia>
+                  <Insignia to={f.estat === 'completa' ? 'exit' : 'avis'}>{tg(idioma, f.estat === 'completa' ? 'Completa' : 'Pendent')}</Insignia>
                   {enAltraMoneda(f) ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{`Imports en ${nomMoneda(f.moneda)}.`}</p> : null}
                   {estrangera ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{condicioEstrangera(f, estrangera)}</p> : null}
                   {baixes.length > 0 ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{`Confiança baixa: ${baixes.join(', ')}.`}</p> : null}
@@ -473,7 +474,7 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
                       aria-label={`Mou a ${altre} ${nomFila}`}>
                       {`Mou a ${altre}`}
                     </Boto>
-                    <Boto varietat="secundari" onClick={() => onExclou(f.id)} aria-label={`Exclou ${nomFila}`}>Exclou</Boto>
+                    <Boto varietat="secundari" onClick={() => onExclou(f.id)} aria-label={idioma === 'ca' ? `Exclou ${nomFila}` : `${tg(idioma, 'Exclou')} ${nomFila}`}>{tg(idioma, 'Exclou')}</Boto>
                   </div>
                 </td>
               </tr>
@@ -484,7 +485,7 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
           {/* Les sumes de sempre (totals() de model.js) davall de la seua columna; els percentatges i la Quota IRPF,
               que totals() no suma, queden buits. */}
           <tr>
-            <th scope="row" colSpan={COLUMNES_DAVANT_BASE}>Totals</th>
+            <th scope="row" colSpan={COLUMNES_DAVANT_BASE}>{tg(idioma, 'Totals')}</th>
             {COLUMNES.slice(COLUMNES_DAVANT_BASE).map((c) => (CAMPS_SUMATS.includes(c.camp)
               ? <td ref={adoptaEstilsDiferits} key={c.camp} className="sdp-gestoria-panell__cel" data-tipus="import">{formatImport(sumes[c.camp])}</td>
               : <td ref={adoptaEstilsDiferits} key={c.camp ?? c.clau} />))}
@@ -493,13 +494,13 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
         </tfoot>
       </Taula>
       <div className="sdp-gestoria-panell__accions">
-        <Boto varietat="secundari" onClick={onAfegix}>{ingres ? 'Afig un ingrés' : 'Afig una despesa'}</Boto>
+        <Boto varietat="secundari" onClick={onAfegix}>{tg(idioma, ingres ? 'Afig un ingrés' : 'Afig una despesa')}</Boto>
       </div>
     </section>
   );
 }
 
-function Incidencies({ incidencies }) {
+function Incidencies({ incidencies, idioma = 'ca' }) {
   const idTitol = useId();
   const estrangeres = estrangeresPerFactura(incidencies);
   const deLEstranger = incidencies.filter((inc) => esDeLEstranger(inc, estrangeres));
@@ -514,7 +515,7 @@ function Incidencies({ incidencies }) {
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
       <h3 id={idTitol} className="sdp-gestoria-panell__subtitol">{`Incidències (${incidencies.length})`}</h3>
-      <p className="sdp-gestoria-panell__nota">Són indicis per a revisar, no veredictes fiscals: la paraula final és teua i de la teua gestoria.</p>
+      <p className="sdp-gestoria-panell__nota">{tg(idioma, 'Són indicis per a revisar, no veredictes fiscals: la paraula final és teua i de la teua gestoria.')}</p>
       {/* Un fet, no un veredicte: mai no es declara el trimestre «complet» (auditoria.js:6-7). */}
       {incidencies.length > 0 && !ambAltes ? (
         <p ref={adoptaEstilsDiferits}>
@@ -522,7 +523,7 @@ function Incidencies({ incidencies }) {
             ? ' Les operacions amb l’estranger són informatives: les confirma la gestoria.' : ''}`}
         </p>
       ) : null}
-      {incidencies.length === 0 ? <p ref={adoptaEstilsDiferits}>Cap incidència detectada a la carpeta.</p> : grups.map((grup) => {
+      {incidencies.length === 0 ? <p ref={adoptaEstilsDiferits}>{tg(idioma, 'Cap incidència detectada a la carpeta.')}</p> : grups.map((grup) => {
         if (grup.del.length === 0) return null;
         return (
           <div ref={adoptaEstilsDiferits} key={grup.clau} className="sdp-gestoria-panell__grup">
@@ -606,15 +607,15 @@ function TaulaDocuments({ documents }) {
 }
 
 /* Un pas numerat: secció amb títol h2 i la seua insígnia d'estat. */
-function Pas({ numero, titol, estat, refTitol, children }) {
+function Pas({ numero, titol, estat, refTitol, idioma = 'ca', children }) {
   const idTitol = useId();
   const insignia = { fet: { to: 'exit', text: 'Fet' }, actiu: { to: 'info', text: 'Ara' }, bloquejat: { to: 'neutre', text: 'Encara no' } }[estat];
   return (
     <li ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__pas" data-estat={estat}>
       <section aria-labelledby={idTitol}>
         <div className="sdp-gestoria-panell__cap">
-          <h2 id={idTitol} ref={refTitol} tabIndex={-1} className="sdp-gestoria-panell__titol">{`${numero}. ${titol}`}</h2>
-          <Insignia to={insignia.to}>{insignia.text}</Insignia>
+          <h2 id={idTitol} ref={refTitol} tabIndex={-1} className="sdp-gestoria-panell__titol">{`${numero}. ${tg(idioma, titol)}`}</h2>
+          <Insignia to={insignia.to}>{tg(idioma, insignia.text)}</Insignia>
         </div>
         <div className="sdp-gestoria-panell__cos">{children}</div>
       </section>
@@ -623,7 +624,7 @@ function Pas({ numero, titol, estat, refTitol, children }) {
 }
 
 /* L'error es mostra al pas on s'ha produït (`accions`); si eixe pas no es veu, dalt de tot. */
-function ErrorDe({ error, accions, visibles, onTanca, onObreTractors, porta }) {
+function ErrorDe({ error, accions, visibles, onTanca, onObreTractors, porta, idioma = 'ca' }) {
   if (!error) return null;
   if (accions ? !accions.includes(error.accio) : visibles.includes(error.accio)) return null;
   /* L'aprovació que ha fallat: la del correu al seu pas, la del full a la resta. */
@@ -631,14 +632,14 @@ function ErrorDe({ error, accions, visibles, onTanca, onObreTractors, porta }) {
   return (
     <Alerta to={error.to === 'info' ? 'info' : 'error'} titol={error.titol} onTanca={onTanca}
       accions={error.aprovacio && onObreTractors
-        ? <AccioAprovacio porta={porta} id={tractor} onObreTractors={onObreTractors} varietat="secundari" /> : null}>
+        ? <AccioAprovacio porta={porta} id={tractor} onObreTractors={onObreTractors} varietat="secundari" idioma={idioma} /> : null}>
       {error.detall || null}
     </Alerta>
   );
 }
 
 export default function PanellGestoria({
-  obteAprovacio, estatTractors, onObreTractors, porta = null, subtle, inflate, entorn, avui, descarrega = descarregaPerDefecte, onFactures
+  obteAprovacio, estatTractors, onObreTractors, porta = null, subtle, inflate, entorn, avui, descarrega = descarregaPerDefecte, onFactures, idioma = 'ca'
 }) {
   const g = useGestoria({ obteAprovacio, subtle, inflate, entorn, avui });
   const [hui] = useState(() => dataDeAvui(typeof avui === 'function' ? avui() : new Date()) ?? dataDeAvui(new Date()));
@@ -759,84 +760,79 @@ export default function PanellGestoria({
   const visibles = [
     facturesAprovat && 'carpeta', proposta && g.analisi && 'correu', proposta && 'proposta', proposta && 'fitxers'
   ].filter(Boolean);
-  const errors = { error: g.error, visibles, onTanca: g.tancaError, onObreTractors, porta };
+  const errors = { error: g.error, visibles, onTanca: g.tancaError, onObreTractors, porta, idioma };
 
   return (
     <div ref={arrel} className="sdp-gestoria-panell">
       <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__barra">
         <p>
-          Prepara el full trimestral per a la gestoria a partir de la teua carpeta de factures. L’anàlisi es fa
-          en este ordinador: les factures no es pugen enlloc ni es guarden al navegador. Només el correu del pas 5,
-          si el prepares tu, ix cap a la gestoria.
+          {tg(idioma, 'Prepara el full trimestral per a la gestoria a partir de la teua carpeta de factures. L’anàlisi es fa en este ordinador: les factures no es pugen enlloc ni es guarden al navegador. Només el correu del pas 5, si el prepares tu, ix cap a la gestoria.')}
         </p>
-        <Boto varietat="perill" onClick={() => setDesenxufant(true)}>Desenxufa</Boto>
+        <Boto varietat="perill" onClick={() => setDesenxufant(true)}>{tg(idioma, 'Desenxufa')}</Boto>
       </div>
       <p role="status" className="sdp-gestoria-panell__avis">{g.avis}</p>
       <ErrorDe {...errors} />
 
       <ol className="sdp-gestoria-panell__passos">
-        <Pas numero={1} titol="Aprovació dels tractors" estat={estatPas(facturesAprovat, true)}>
+        <Pas numero={1} titol="Aprovació dels tractors" estat={estatPas(facturesAprovat, true)} idioma={idioma}>
           <ul className="sdp-gestoria-panell__tractors">
             {[[TRACTOR_FACTURES, factures], [TRACTOR_CORREUS, correus]].map(([manifest, estat]) => {
               const insignia = INSIGNIA_TRACTOR[estat?.estat] ?? INSIGNIA_TRACTOR.desconegut;
               return (
                 <li ref={adoptaEstilsDiferits} key={manifest.id} className="sdp-gestoria-panell__tractor">
-                  <span className="sdp-gestoria-panell__tractor-nom">{manifest.nom}</span>
-                  <Insignia to={insignia.to}>{insignia.text}</Insignia>
+                  <span className="sdp-gestoria-panell__tractor-nom">{tg(idioma, manifest.nom)}</span>
+                  <Insignia to={insignia.to}>{tg(idioma, insignia.text)}</Insignia>
                   {estat?.curta ? <code ref={adoptaEstilsDiferits}>{estat.curta}</code> : null}
-                  <RevocaAprovacio porta={porta} id={manifest.id} />
+                  <RevocaAprovacio porta={porta} id={manifest.id} idioma={idioma} />
                 </li>
               );
             })}
           </ul>
           {facturesAprovat ? (
-            <p ref={adoptaEstilsDiferits}>El tractor de factures està aprovat: pots triar la carpeta.</p>
+            <p ref={adoptaEstilsDiferits}>{tg(idioma, 'El tractor de factures està aprovat: pots triar la carpeta.')}</p>
           ) : (
-            <Alerta to="avis" viva={false} titol="Cal aprovar el tractor de factures"
-              accions={<AccioAprovacio porta={porta} id={TRACTOR_FACTURES.id} onObreTractors={onObreTractors} />}>
+            <Alerta to="avis" viva={false} titol={tg(idioma, 'Cal aprovar el tractor de factures')}
+              accions={<AccioAprovacio porta={porta} id={TRACTOR_FACTURES.id} onObreTractors={onObreTractors} idioma={idioma} />}>
               <p ref={adoptaEstilsDiferits}>
-                Abans de llegir cap factura, llig la fitxa de «{TRACTOR_FACTURES.nom}» i aprova’n la versió exacta
-                {` ${onSAprova()}`}. Sense eixa aprovació no es pot continuar.
+                {tf(idioma, 'portaFactures', tg(idioma, TRACTOR_FACTURES.nom), onSAprova(idioma))}
               </p>
             </Alerta>
           )}
           {facturesAprovat && !correusAprovat ? (
             <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">
-              El creuament amb el correu és opcional. Per a fer-lo, aprova també «{TRACTOR_CORREUS.nom}».
+              {tf(idioma, 'notaCorreuOpcional', tg(idioma, TRACTOR_CORREUS.nom))}
             </p>
           ) : null}
         </Pas>
 
-        <Pas numero={2} titol="Carpeta i trimestre" estat={estatPas(Boolean(proposta), facturesAprovat)}>
+        <Pas numero={2} titol="Carpeta i trimestre" estat={estatPas(Boolean(proposta), facturesAprovat)} idioma={idioma}>
           {facturesAprovat ? (
             <>
-              <GrupCamps llegenda="Trimestre que prepares">
-                <Camp etiqueta="Any">
+              <GrupCamps llegenda={tg(idioma, 'Trimestre que prepares')}>
+                <Camp etiqueta={tg(idioma, 'Any')}>
                   <Selector value={String(periode.any)} disabled={ocupat}
                     opcions={anys.map((a) => ({ valor: String(a), etiqueta: String(a) }))}
                     onChange={(event) => setPeriode((p) => ({ ...p, any: Number(event.target.value) }))} />
                 </Camp>
-                <Camp etiqueta="Trimestre">
+                <Camp etiqueta={tg(idioma, 'Trimestre')}>
                   <Selector value={String(periode.t)} disabled={ocupat}
                     opcions={[1, 2, 3, 4].map((t) => ({ valor: String(t), etiqueta: `${t}T` }))}
                     onChange={(event) => setPeriode((p) => ({ ...p, t: Number(event.target.value) }))} />
                 </Camp>
               </GrupCamps>
-              <Alerta to="info" viva={false} titol="L’anàlisi no ix d’este ordinador">
-                El navegador només dona a esta pàgina la carpeta que tries, i només per a llegir-la. Les factures
-                viuen en memòria fins que prems «Desenxufa» o tanques la pestanya. L’únic pas que ix d’este
-                ordinador és el correu per a la gestoria, que inicies tu al pas 5.
+              <Alerta to="info" viva={false} titol={tg(idioma, 'L’anàlisi no ix d’este ordinador')}>
+                {tg(idioma, 'El navegador només dona a esta pàgina la carpeta que tries, i només per a llegir-la. Les factures viuen en memòria fins que prems «Desenxufa» o tanques la pestanya. L’únic pas que ix d’este ordinador és el correu per a la gestoria, que inicies tu al pas 5.')}
               </Alerta>
               {g.potTriarCarpeta ? (
                 <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
                   <Boto varietat={g.teCarpeta ? 'secundari' : 'primari'} onClick={g.triaCarpeta} disabled={ocupat}
                     carregant={g.ocupat === 'carpeta'}>
-                    {g.teCarpeta ? 'Tria una altra carpeta' : 'Tria la carpeta de factures'}
+                    {tg(idioma, g.teCarpeta ? 'Tria una altra carpeta' : 'Tria la carpeta de factures')}
                   </Boto>
                 </div>
               ) : (
-                <Camp etiqueta="Tria la carpeta de factures"
-                  ajuda="Este navegador no obri el selector de carpetes: tria-la amb este botó. Res es puja enlloc.">
+                <Camp etiqueta={tg(idioma, 'Tria la carpeta de factures')}
+                  ajuda={tg(idioma, 'Este navegador no obri el selector de carpetes: tria-la amb este botó. Res es puja enlloc.')}>
                   <CampText tipus="file" webkitdirectory="" multiple disabled={ocupat}
                     onChange={(event) => g.usaFitxers(event.target.files)} />
                 </Camp>
@@ -852,28 +848,27 @@ export default function PanellGestoria({
               <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
                 <Boto varietat="primari" onClick={analitzaTrimestre} disabled={!g.teCarpeta || ocupat}
                   carregant={g.ocupat === 'analisi'}>
-                  {`Analitza el ${periode.t}T de ${periode.any}`}
+                  {tf(idioma, 'analitzaTrimestre', periode.t, periode.any)}
                 </Boto>
               </div>
               {g.ocupat === 'analisi' ? (
                 <div ref={adoptaEstilsDiferits} role="status" className="sdp-gestoria-panell__progres">
-                  <Progres etiqueta={ETIQUETES_FASE[progres?.fase] ?? 'Preparant l’anàlisi'}
+                  <Progres etiqueta={tg(idioma, ETIQUETES_FASE[progres?.fase] ?? 'Preparant l’anàlisi')}
                     valor={progres ? progres.fet : null} max={progres?.total > 0 ? progres.total : 1} />
                 </div>
               ) : null}
               <ErrorDe {...errors} accions={['carpeta']} />
             </>
-          ) : <p ref={adoptaEstilsDiferits}>Primer cal aprovar el tractor de factures (pas 1).</p>}
+          ) : <p ref={adoptaEstilsDiferits}>{tg(idioma, 'Primer cal aprovar el tractor de factures (pas 1).')}</p>}
         </Pas>
 
-        <Pas numero={3} titol="Revisió" estat={estatPas(false, Boolean(proposta))} refTitol={refRevisio}>
+        <Pas numero={3} titol="Revisió" estat={estatPas(false, Boolean(proposta))} refTitol={refRevisio} idioma={idioma}>
           {proposta && g.analisi ? (
             <>
               <Cobertura cobertura={g.analisi.cobertura} />
               {g.analisi.cobertura.correu === 'no-revisat' ? (
-                <Alerta to="avis" viva={false} titol="Correu no revisat">
-                  Sense creuar el correu, les factures que falten es busquen només a la carpeta i a l’historial:
-                  esta revisió no pot ser completa.
+                <Alerta to="avis" viva={false} titol={tg(idioma, 'Correu no revisat')}>
+                  {tg(idioma, 'Sense creuar el correu, les factures que falten es busquen només a la carpeta i a l’historial: esta revisió no pot ser completa.')}
                 </Alerta>
               ) : null}
               {g.analisi.avisos.length > 0 ? (
@@ -881,15 +876,15 @@ export default function PanellGestoria({
                   {g.analisi.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
                 </ul>
               ) : null}
-              <Camp etiqueta="Titular del full" ajuda="El nom que encapçala el full i els fitxers." obligatori>
+              <Camp etiqueta={tg(idioma, 'Titular del full')} ajuda={tg(idioma, 'El nom que encapçala el full i els fitxers.')} obligatori>
                 <CampText value={proposta.titular} autoComplete="off" onChange={(event) => g.editaTitular(event.target.value)} />
               </Camp>
-              <Incidencies incidencies={incidencies} />
+              <Incidencies incidencies={incidencies} idioma={idioma} />
               <TaulaDocuments documents={g.analisi.documents} />
               <TaulaFactures tipus="ingres" factures={proposta.ingressos} incidencies={incidencies} totalsEditats={g.totalsEditats}
-                onEdita={g.editaFactura} onPassaAEuros={g.passaAEuros} onExclou={g.exclouFactura} onAfegix={() => afegix('ingres')} />
+                onEdita={g.editaFactura} onPassaAEuros={g.passaAEuros} onExclou={g.exclouFactura} onAfegix={() => afegix('ingres')} idioma={idioma} />
               <TaulaFactures tipus="despesa" factures={proposta.despeses} incidencies={incidencies} totalsEditats={g.totalsEditats}
-                onEdita={g.editaFactura} onPassaAEuros={g.passaAEuros} onExclou={g.exclouFactura} onAfegix={() => afegix('despesa')} />
+                onEdita={g.editaFactura} onPassaAEuros={g.passaAEuros} onExclou={g.exclouFactura} onAfegix={() => afegix('despesa')} idioma={idioma} />
               {g.excloses.length > 0 ? (
                 <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-label="Factures excloses">
                   <p className="sdp-gestoria-panell__nota">{`Excloses de la proposta (${g.excloses.length}): no aniran al full.`}</p>
@@ -907,24 +902,22 @@ export default function PanellGestoria({
                 </section>
               ) : null}
               <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-labelledby={idCorreu}>
-                <h3 id={idCorreu} className="sdp-gestoria-panell__subtitol">Creua amb el correu</h3>
+                <h3 id={idCorreu} className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Creua amb el correu')}</h3>
                 <p>
-                  Opcional. Amb una exportació del correu del trimestre (.mbox o .eml) es busquen les factures que
-                  t’han arribat per correu i no són a la carpeta. Només se’n lligen el remitent, l’assumpte, la data i
-                  el nom dels adjunts.
+                  {tg(idioma, 'Opcional. Amb una exportació del correu del trimestre (.mbox o .eml) es busquen les factures que t’han arribat per correu i no són a la carpeta. Només se’n lligen el remitent, l’assumpte, la data i el nom dels adjunts.')}
                 </p>
                 {correusAprovat ? (
-                  <Camp etiqueta="Exportació del correu (.mbox o .eml)">
+                  <Camp etiqueta={tg(idioma, 'Exportació del correu (.mbox o .eml)')}>
                     <CampText tipus="file" accept=".mbox,.eml,message/rfc822,application/mbox" multiple disabled={ocupat}
                       onChange={(event) => g.creuaCorreus(event.target.files)} />
                   </Camp>
                 ) : (
-                  <Alerta to="info" viva={false} titol="Cal aprovar el tractor del correu"
-                    accions={<AccioAprovacio porta={porta} id={TRACTOR_CORREUS.id} onObreTractors={onObreTractors} varietat="secundari" />}>
-                    Per a creuar el correu, aprova abans «{TRACTOR_CORREUS.nom}» {onSAprova()}.
+                  <Alerta to="info" viva={false} titol={tg(idioma, 'Cal aprovar el tractor del correu')}
+                    accions={<AccioAprovacio porta={porta} id={TRACTOR_CORREUS.id} onObreTractors={onObreTractors} varietat="secundari" idioma={idioma} />}>
+                    Per a creuar el correu, aprova abans «{tg(idioma, TRACTOR_CORREUS.nom)}» {onSAprova(idioma)}.
                   </Alerta>
                 )}
-                {g.ocupat === 'correu' ? <Carregant etiqueta="Creuant el correu…" /> : null}
+                {g.ocupat === 'correu' ? <Carregant etiqueta={tg(idioma, 'Creuant el correu…')} /> : null}
                 {g.correu?.avisos.length ? (
                   <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__avisos">
                     {g.correu.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
@@ -933,42 +926,42 @@ export default function PanellGestoria({
                 <ErrorDe {...errors} accions={['correu']} />
               </section>
             </>
-          ) : <p ref={adoptaEstilsDiferits}>Quan analitzes la carpeta, ací veuràs la proposta per a revisar-la i corregir-la.</p>}
+          ) : <p ref={adoptaEstilsDiferits}>{tg(idioma, 'Quan analitzes la carpeta, ací veuràs la proposta per a revisar-la i corregir-la.')}</p>}
         </Pas>
 
-        <Pas numero={4} titol="Proposta del full" estat={estatPas(Boolean(entregables), Boolean(proposta))}>
+        <Pas numero={4} titol="Proposta del full" estat={estatPas(Boolean(entregables), Boolean(proposta))} idioma={idioma}>
           {proposta ? (
             <>
-              <h3 ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__subtitol">Vista prèvia del full</h3>
+              <h3 ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Vista prèvia del full')}</h3>
               {vista.full ? (
-                <VistaPreviaFull full={vista.full} titol={`Vista prèvia del full del ${proposta.t}T de ${proposta.any}`} />
+                <VistaPreviaFull full={vista.full} titol={idioma === 'ca' ? `Vista prèvia del full del ${proposta.t}T de ${proposta.any}` : tg(idioma, 'Vista prèvia del full')} idioma={idioma} />
               ) : <Alerta to="error">{`No es pot maquetar el full: ${vista.error}`}</Alerta>}
-              <Casella etiqueta="He revisat la proposta"
-                ajuda="Les dades, les incidències i el full tal com el veurà la gestoria. Si canvies res, l’hauràs de tornar a revisar."
+              <Casella etiqueta={tg(idioma, 'He revisat la proposta')}
+                ajuda={tg(idioma, 'Les dades, les incidències i el full tal com el veurà la gestoria. Si canvies res, l’hauràs de tornar a revisar.')}
                 checked={estaRevisada} disabled={ocupat}
                 onChange={(event) => setRevisada(event.target.checked ? versio : null)} />
               {altes.length > 0 ? (
-                <Casella etiqueta="Genera-la igualment: les incidències queden anotades"
+                <Casella etiqueta={tg(idioma, 'Genera-la igualment: les incidències queden anotades')}
                   ajuda={`Hi ha ${plural(altes.length, 'una incidència', 'incidències')} d’alta severitat. Si la generes, l’aprovació en guarda la llista.`}
                   checked={estaAcceptada} disabled={ocupat}
                   onChange={(event) => setAcceptada(event.target.checked ? versio : null)} />
               ) : null}
               <p id={idAjudaGenera} className="sdp-gestoria-panell__nota">
                 {potGenerar || g.ocupat
-                  ? 'En prémer el botó aproves esta proposta exacta: qualsevol canvi posterior l’anul·la.'
+                  ? tg(idioma, 'En prémer el botó aproves esta proposta exacta: qualsevol canvi posterior l’anul·la.')
                   : 'Per a generar el full, marca «He revisat la proposta»'
                     + `${altes.length > 0 ? ' i «Genera-la igualment»' : ''}.`}
               </p>
               <div className="sdp-gestoria-panell__accions">
                 <Boto varietat="primari" onClick={generaFull} disabled={!potGenerar} aria-describedby={idAjudaGenera}
                   carregant={g.ocupat === 'aprovacio' || g.ocupat === 'generant'}>
-                  Genera el full
+                  {tg(idioma, 'Genera el full')}
                 </Boto>
               </div>
               <ErrorDe {...errors} accions={['proposta', 'fitxers']} />
               {entregables ? (
                 <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-labelledby={idFitxers}>
-                  <h3 id={idFitxers} ref={refFitxers} tabIndex={-1} className="sdp-gestoria-panell__subtitol">Fitxers generats</h3>
+                  <h3 id={idFitxers} ref={refFitxers} tabIndex={-1} className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Fitxers generats')}</h3>
                   <ul className="sdp-gestoria-panell__fitxers">
                     {FORMATS_ENTREGABLE.map((format) => (
                       <li ref={adoptaEstilsDiferits} key={format} className="sdp-gestoria-panell__fitxer-generat">
@@ -976,7 +969,7 @@ export default function PanellGestoria({
                         <span className="sdp-gestoria-panell__nota">{`SHA-256 ${entregables.empremtes[format].slice(0, 12)}…`}</span>
                         <div className="sdp-gestoria-panell__accions">
                           <Boto varietat={format === 'xlsx' ? 'primari' : 'secundari'} onClick={() => descarregaFitxer(format)}>
-                            {format === 'xlsx' ? 'Descarrega l’XLSX' : 'Descarrega el CSV'}
+                            {tg(idioma, format === 'xlsx' ? 'Descarrega l’XLSX' : 'Descarrega el CSV')}
                           </Boto>
                           {g.potEscriure ? (
                             <Boto varietat="secundari" onClick={() => g.desaAlTrimestre(format)} disabled={ocupat}
@@ -1002,23 +995,24 @@ export default function PanellGestoria({
                 </section>
               ) : null}
             </>
-          ) : <p ref={adoptaEstilsDiferits}>Quan hi haja una proposta, ací la veuràs tal com la rebrà la gestoria.</p>}
+          ) : <p ref={adoptaEstilsDiferits}>{tg(idioma, 'Quan hi haja una proposta, ací la veuràs tal com la rebrà la gestoria.')}</p>}
         </Pas>
 
-        <Pas numero={5} titol="Envia a la gestoria" estat={estatPas(false, Boolean(entregables))}>
+        <Pas numero={5} titol="Envia a la gestoria" estat={estatPas(false, Boolean(entregables))} idioma={idioma}>
           {entregables && proposta ? (
             <EnviamentGestoria key={entregables.empremtes.xlsx} any={proposta.any} t={proposta.t} adjunts={adjunts}
-              inicials={{ nom: proposta.titular }} nivellTitol={3} />
-          ) : <p ref={adoptaEstilsDiferits}>Quan hages generat el full, ací podràs preparar el correu. L’enviament el fas sempre tu.</p>}
+              inicials={{ nom: proposta.titular }} nivellTitol={3} idioma={idioma} />
+          ) : <p ref={adoptaEstilsDiferits}>{tg(idioma, 'Quan hages generat el full, ací podràs preparar el correu. L’enviament el fas sempre tu.')}</p>}
         </Pas>
       </ol>
 
       <DialegConfirmacio
         obert={desenxufant}
         destructiu
-        titol="Vols desenxufar la Gestoria?"
-        descripcio="S’oblidaran la carpeta, la proposta, el correu creuat i els fulls generats que no hages descarregat o desat. No s’esborra cap fitxer teu."
-        etiquetaConfirma="Sí, desenxufa"
+        titol={tg(idioma, 'Vols desenxufar la Gestoria?')}
+        descripcio={tg(idioma, 'S’oblidaran la carpeta, la proposta, el correu creuat i els fulls generats que no hages descarregat o desat. No s’esborra cap fitxer teu.')}
+        etiquetaConfirma={tg(idioma, 'Sí, desenxufa')}
+        etiquetaCancela={idioma === 'ca' ? undefined : tg(idioma, 'Cancel·la')}
         onTanca={() => setDesenxufant(false)}
         onConfirma={desenxufa}
       />
@@ -1026,12 +1020,12 @@ export default function PanellGestoria({
         obert={Boolean(g.sobreescriure)}
         destructiu
         carregant={g.ocupat === 'desant'}
-        titol="Ja hi ha este fitxer a la carpeta"
+        titol={tg(idioma, 'Ja hi ha este fitxer a la carpeta')}
         descripcio={g.sobreescriure
           ? `Ja hi ha «${g.sobreescriure.nom}» a la carpeta del trimestre. Si el substituïxes, el d’abans es perd.`
           : undefined}
-        etiquetaConfirma="Sí, substituïx-lo"
-        etiquetaCancela="No, deixa’l"
+        etiquetaConfirma={tg(idioma, 'Sí, substituïx-lo')}
+        etiquetaCancela={tg(idioma, 'No, deixa’l')}
         onTanca={g.cancellaSobreescriure}
         onConfirma={() => g.desaAlTrimestre(g.sobreescriure.format, { sobreescriu: true })}
       />

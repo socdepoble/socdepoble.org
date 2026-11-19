@@ -520,6 +520,51 @@
   .sdp-targeta-colleccio__fletxa { grid-row: 1 / span 3; grid-column: 2; justify-self: end; color: var(--sdp-text-suau); }
   .sdp-targeta-colleccio__imatge + .sdp-targeta-colleccio__fletxa { display: none; }
 
+  /* Onada R32.14 · T3-UI-01 · A 320×700 les barres fixes comprimien el cos del
+     catàleg i partien el nom de la llista en 3 línies estretes dins del peu.
+     En <= 25rem (400 px), s'ajusta el coixí, l'acció del peu envolta de forma
+     neta sense estrangular l'etiqueta i, en pantalles estretes i baixes
+     (<= 46rem), el marc desplaça eines + cos mantenint el peu enganxat a baix. */
+  @media (max-width: 25rem) {
+    .sdp-marc-columna__eines {
+      gap: var(--sdp-space-2);
+      padding: var(--sdp-space-2) var(--sdp-space-3);
+    }
+    .sdp-marc-columna__cos {
+      padding: var(--sdp-space-3);
+    }
+    .sdp-marc-columna__peu {
+      padding: var(--sdp-space-2) var(--sdp-space-3);
+    }
+    .sdp-barra-resum--peu {
+      flex-wrap: wrap;
+      padding: var(--sdp-space-2) var(--sdp-space-3);
+    }
+    .sdp-barra-resum__obri {
+      flex-wrap: wrap;
+      row-gap: var(--sdp-space-1);
+      padding: var(--sdp-space-2) var(--sdp-space-3);
+    }
+    .sdp-barra-resum__obri > .sdp-barra-resum__etiqueta {
+      flex: 1 1 7rem;
+    }
+  }
+
+  @media (max-width: 25rem) and (max-height: 46rem) {
+    .sdp-marc-columna {
+      overflow-y: auto;
+    }
+    .sdp-marc-columna__cos {
+      flex: 1 0 auto;
+      overflow-y: visible;
+    }
+    .sdp-marc-columna__peu {
+      position: sticky;
+      inset-block-end: 0;
+      z-index: 1;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .sdp-seccio__fletxa { transition: none; }
   }

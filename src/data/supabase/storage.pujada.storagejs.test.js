@@ -16,6 +16,7 @@ vi.mock('./config.js', () => ({ getClient: async () => ({ storage: new StorageCl
 vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => ({ id: m.uid }) }));
 
 import { uploadToStorage } from './storage.js';
+import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, esBackendInabastable } from '../errorsBackend.js';
 
 const UID = m.uid;
@@ -79,7 +80,7 @@ describe('errorDePujada amb l’error que construïx storage-js 2.112.4', () => 
 
   test.each(CASOS)('%s', async (_nom, resposta, codi, status) => {
     m.fetch = resposta;
-    const error = await uploadToStorage(new Blob(['SENTINELLA_CRU_7f3a'], { type: 'image/webp' }), { carpeta: 'avatars' }, { tenantId: POBLE }).catch((e) => e);
+    const error = await uploadToStorage(new Blob([WEBP_NET], { type: 'image/webp' }), { carpeta: 'avatars' }, { tenantId: POBLE }).catch((e) => e);
     expect(error.cause?.__isStorageError).toBe(true);
     expect({ codi: error.codi, status: error.status }).toEqual({ codi, status });
     expect(error.message.startsWith(PREFIX)).toBe(true);

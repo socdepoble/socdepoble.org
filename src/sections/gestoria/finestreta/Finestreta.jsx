@@ -69,7 +69,8 @@ import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
 import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/AprovacioEnLinia.jsx';
 import { cofreDeLaGestoria, persistenciaDelCofre } from '../cofre/cofre.js';
 import PortaCofre from '../cofre/PortaCofre.jsx';
-import { ETIQUETA_BETA_OBERTA } from '../insigniaBetaOberta.js';
+import { tg, tf } from '../i18nGestoria.js';
+import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta } from '../insigniaBetaOberta.js';
 import { formatImport } from '../nucli/diners.js';
 import { TRACTOR_IDENTITAT } from '../tractors.js';
 import { MOTIUS } from './nucli/filtreDocuments.js';
@@ -197,8 +198,10 @@ function avuiDe(rellotge) {
 }
 
 /** L'autoria de la boina: la persona de la sessió (sempre amb la seua pàgina) o la veritat, sense configurar. */
-export function autorDe(titular) {
-  if (!titular || typeof titular.nom !== 'string' || titular.nom.trim() === '') return TITULAR_FINESTRETA;
+export function autorDe(titular, idioma = 'ca') {
+  if (!titular || typeof titular.nom !== 'string' || titular.nom.trim() === '') {
+    return idioma === 'ca' ? TITULAR_FINESTRETA : { ...TITULAR_FINESTRETA, nom: tg(idioma, TITULAR_FINESTRETA.nom) };
+  }
   return { nom: titular.nom, poble: typeof titular.poble === 'string' ? titular.poble : '', avatar: titular.avatar ?? null, href: '/el-meu-perfil' };
 }
 
@@ -239,23 +242,24 @@ function obriPaperPerDefecte(url) {
 /* L'ull de privacitat de la boina: un sol control, amb aria-pressed (premut = els valors es veuen). La mateixa
    pell i el mateix comportament que UllPrivacitat del Tauler (classe sdp-gestoria-ull), sense importar-lo: la
    fitxa d'identitat no penja del codi del banc ni del seu tractor. */
-function UllDades({ visible, onCommuta }) {
+function UllDades({ visible, onCommuta, idioma = 'ca' }) {
   const Icona = visible ? Eye : EyeOff;
+  const etiq = tg(idioma, 'Mostra les dades');
   return (
     <button ref={adoptaEstilsDiferits} type="button" className="sdp-gestoria-ull" aria-pressed={visible ? 'true' : 'false'}
-      aria-label="Mostra les dades" title="Mostra les dades" onClick={onCommuta}>
+      aria-label={etiq} title={etiq} onClick={onCommuta}>
       <Icona size={20} aria-hidden="true" focusable="false" />
     </button>
   );
 }
 
 /* Un valor: amagat fins que la persona prem l'ull (no és al DOM). */
-function Valor({ text, visible }) {
+function Valor({ text, visible, idioma = 'ca' }) {
   if (visible) return <span ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__valor">{text}</span>;
   return (
     <span ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__amagat">
       <EyeOff size={16} aria-hidden="true" focusable="false" />
-      Valor amagat
+      {tg(idioma, 'Valor amagat')}
     </span>
   );
 }
@@ -362,12 +366,12 @@ function Origens({ fonts, paper }) {
 }
 
 /* Una secció amb el seu títol (h2): cap títol porta dades. */
-function Seccio({ titol, ajuda, children }) {
+function Seccio({ titol, ajuda, idioma = 'ca', children }) {
   const id = useId();
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__seccio" aria-labelledby={id}>
-      <h2 id={id} className="sdp-gestoria-finestreta__titol">{titol}</h2>
-      {ajuda ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">{ajuda}</p> : null}
+      <h2 id={id} className="sdp-gestoria-finestreta__titol">{tg(idioma, titol)}</h2>
+      {ajuda ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">{tg(idioma, ajuda)}</p> : null}
       {children}
     </section>
   );
@@ -385,41 +389,38 @@ const campsOrdenats = (camps, filtre) => Object.entries(camps ?? {}).filter(([, 
   .sort(([a], [b]) => ORDRE_CAMPS.indexOf(a) - ORDRE_CAMPS.indexOf(b));
 
 /* La porta del tractor. */
-function PortaIdentitat({ h, onObreTractors }) {
-  if (h.porta.carregant) return <Carregant etiqueta="Llegint les aprovacions dels tractors…" />;
+function PortaIdentitat({ h, onObreTractors, idioma = 'ca' }) {
+  if (h.porta.carregant) return <Carregant etiqueta={tg(idioma, 'Llegint les aprovacions dels tractors…')} />;
   /* Aprovat: fora de DEV, «Revoca l’aprovació» (en DEV, res: es revoca al panell). */
-  if (h.aprovat) return <RevocaAprovacio porta={h.porta} id={TRACTOR_IDENTITAT.id} />;
-  const estat = ESTATS_TRACTOR[h.fila?.estat] ?? ESTATS_TRACTOR.pendent;
+  if (h.aprovat) return <RevocaAprovacio porta={h.porta} id={TRACTOR_IDENTITAT.id} idioma={idioma} />;
+  const estat = tg(idioma, ESTATS_TRACTOR[h.fila?.estat] ?? ESTATS_TRACTOR.pendent);
   return (
-    <Alerta to="avis" titol="Cal aprovar el tractor"
-      accions={<AccioAprovacio porta={h.porta} id={TRACTOR_IDENTITAT.id} onObreTractors={onObreTractors} />}>
-      {`La Fitxa d’identitat llig els teus papers amb el tractor «Gestoria · Fitxa d’identitat i Finestreta», que ${estat}. `}
-      {`Aprova’l amb la teua signatura ${onSAprova()}: sense, cap paper es llig.`}
+    <Alerta to="avis" titol={tg(idioma, 'Cal aprovar el tractor')}
+      accions={<AccioAprovacio porta={h.porta} id={TRACTOR_IDENTITAT.id} onObreTractors={onObreTractors} idioma={idioma} />}>
+      {tf(idioma, 'portaIdentitat', estat, onSAprova(idioma))}
       {h.porta.error ? ` ${h.porta.error}` : ''}
     </Alerta>
   );
 }
 
 /* Pas 1: la carpeta arrel de la Gestoria. */
-function SeccioCarpeta({ h, onOblida }) {
+function SeccioCarpeta({ h, onOblida, idioma = 'ca' }) {
   const ocupat = Boolean(h.ocupat) || !h.fitxaLlegida;
   return (
-    <Seccio titol="Tria la carpeta" ajuda="La carpeta arrel de la Gestoria, la que conté 01_Identitat_Legal i 03_Burocracia. Abans d’obrir cap paper, et diré quins llegiré i quins no.">
-      <Alerta to="info" viva={false} titol="Els papers no ixen d’este ordinador">
-        Es lligen en la memòria d’esta pàgina i se’n descarten els bytes i el text en acabar: només queden les propostes,
-        que no es desen fins que les confirmes. Mai s’obrin els de salut, banc, credencials, renda, herència, el model 145
-        ni les imatges.
+    <Seccio titol="Tria la carpeta" ajuda="La carpeta arrel de la Gestoria, la que conté 01_Identitat_Legal i 03_Burocracia. Abans d’obrir cap paper, et diré quins llegiré i quins no." idioma={idioma}>
+      <Alerta to="info" viva={false} titol={tg(idioma, 'Els papers no ixen d’este ordinador')}>
+        {tg(idioma, 'Es lligen en la memòria d’esta pàgina i se’n descarten els bytes i el text en acabar: només queden les propostes, que no es desen fins que les confirmes. Mai s’obrin els de salut, banc, credencials, renda, herència, el model 145 ni les imatges.')}
       </Alerta>
       {h.potTriarCarpeta ? (
         <div ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__accions">
           <Boto varietat={h.teCarpeta ? 'secundari' : 'primari'} icona={FolderOpen} onClick={() => h.triaCarpeta()} disabled={ocupat}
             carregant={h.ocupat === 'carpeta'}>
-            {h.teCarpeta ? 'Tria una altra carpeta' : 'Tria la carpeta arrel de la Gestoria'}
+            {tg(idioma, h.teCarpeta ? 'Tria una altra carpeta' : 'Tria la carpeta arrel de la Gestoria')}
           </Boto>
         </div>
       ) : (
-        <Camp etiqueta="Tria la carpeta arrel de la Gestoria"
-          ajuda="Este navegador no obri el selector de carpetes: tria-la amb este botó. Res es puja enlloc.">
+        <Camp etiqueta={tg(idioma, 'Tria la carpeta arrel de la Gestoria')}
+          ajuda={tg(idioma, 'Este navegador no obri el selector de carpetes: tria-la amb este botó. Res es puja enlloc.')}>
           {/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): la carpeta arrel porta la identitat legal; la
               línia d'estat del selector només en diu el recompte. Els noms van només a la taula «Què llegiré i què no». */}
           <CampText tipus="file" webkitdirectory="" multiple nomsVisibles={false} disabled={ocupat}
@@ -429,11 +430,11 @@ function SeccioCarpeta({ h, onOblida }) {
       {h.teCarpeta ? (
         <div ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__accions">
           <p className="sdp-gestoria-finestreta__nota">{h.nomCarpeta ? `Carpeta triada: «${h.nomCarpeta}».` : 'Carpeta triada.'}</p>
-          <Boto varietat="secundari" onClick={onOblida}>Oblida la carpeta</Boto>
+          <Boto varietat="secundari" onClick={onOblida}>{tg(idioma, 'Oblida la carpeta')}</Boto>
         </div>
       ) : null}
-      {h.ocupat === 'planificant' ? <Carregant etiqueta="Mirant els noms dels papers…" /> : null}
-      {h.error ? <Alerta to="error" titol="No s’ha pogut continuar">{h.error}</Alerta> : null}
+      {h.ocupat === 'planificant' ? <Carregant etiqueta={tg(idioma, 'Mirant els noms dels papers…')} /> : null}
+      {h.error ? <Alerta to="error" titol={tg(idioma, 'No s’ha pogut continuar')}>{h.error}</Alerta> : null}
     </Seccio>
   );
 }
@@ -660,7 +661,7 @@ function SeccioPropostes({ h, visible, obriPaper, onAnuncia }) {
 }
 
 /* Un valor a mà per a un camp que cap paper proposa (el contacte, per exemple). */
-function FormulariAMa({ h, onAnuncia }) {
+function FormulariAMa({ h, onAnuncia, idioma = 'ca' }) {
   const [camp, setCamp] = useState('');
   const [text, setText] = useState('');
   const [error, setError] = useState('');
@@ -678,21 +679,28 @@ function FormulariAMa({ h, onAnuncia }) {
       setText('');
     }
   };
+  const opcionsLoc = idioma === 'ca'
+    ? OPCIONS_A_MA
+    : [
+      { valor: '', etiqueta: tg(idioma, 'Tria el camp') },
+      ...ORDRE_CAMPS.filter((c) => Object.prototype.hasOwnProperty.call(ROLS, CAMPS_IDENTITAT[c].rol))
+        .map((c) => ({ valor: c, etiqueta: `${tg(idioma, ROLS[CAMPS_IDENTITAT[c].rol])} · ${tg(idioma, ETIQUETES_CAMPS[c] ?? c)}` }))
+    ];
   return (
     <form ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__a-ma" onSubmit={afig}>
-      <Camp etiqueta="Camp que vols entrar a mà">
-        <Selector opcions={OPCIONS_A_MA} value={camp} onChange={(event) => { setCamp(event.target.value); setError(''); }} />
+      <Camp etiqueta={tg(idioma, 'Camp que vols entrar a mà')}>
+        <Selector opcions={opcionsLoc} value={camp} onChange={(event) => { setCamp(event.target.value); setError(''); }} />
       </Camp>
-      <Camp etiqueta="Valor" ajuda="Un import, en euros (1.234,56); una data, dd/mm/aaaa." error={error || undefined}>
+      <Camp etiqueta={tg(idioma, 'Valor')} ajuda={tg(idioma, 'Un import, en euros (1.234,56); una data, dd/mm/aaaa.')} error={error || undefined}>
         <CampText value={text} spellCheck={false} autoComplete="off" onChange={(event) => setText(event.target.value)} maxLength={200} />
       </Camp>
-      <Boto tipus="submit" varietat="secundari" icona={PenLine}>Afig-lo a la fitxa</Boto>
+      <Boto tipus="submit" varietat="secundari" icona={PenLine}>{tg(idioma, 'Afig-lo a la fitxa')}</Boto>
     </form>
   );
 }
 
 /* Pas 4: la teua fitxa, només els valors confirmats (els que es desen xifrats); «D’on ix», com a les propostes. */
-function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
+function SeccioFitxa({ h, visible, obriPaper, onAnuncia, idioma = 'ca' }) {
   const [corregint, setCorregint] = useState(null);
   const paper = { h, visible, obriPaper, onAnuncia };
   const grups = portadorsDe(h.fitxa)
@@ -706,28 +714,28 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
     }
   };
   return (
-    <Seccio titol="La teua fitxa" ajuda="Només els valors que has confirmat o entrat a mà. Es desen xifrats al cofre d’este navegador, amb el paper d’on ixen.">
+    <Seccio titol="La teua fitxa" ajuda="Només els valors que has confirmat o entrat a mà. Es desen xifrats al cofre d’este navegador, amb el paper d’on ixen." idioma={idioma}>
       {!h.desaBlocat && h.errorPersistencia ? <Alerta to="avis" titol="El cofre">{h.errorPersistencia}</Alerta> : null}
       {grups.length ? grups.map((g) => (
-        <Taula key={g.id} titol={`La teua fitxa · ${g.nom}`} densa>
+        <Taula key={g.id} titol={`${tg(idioma, 'La teua fitxa')} · ${g.nom}`} densa>
           <thead ref={adoptaEstilsDiferits}>
-            <tr><th scope="col">Camp</th><th scope="col">Valor</th><th scope="col">D’on ix</th><th scope="col">Confirmat</th><th scope="col">Què fas</th></tr>
+            <tr><th scope="col">Camp</th><th scope="col">{tg(idioma, 'Valor')}</th><th scope="col">{tg(idioma, 'D’on ix')}</th><th scope="col">Confirmat</th><th scope="col">Què fas</th></tr>
           </thead>
           <tbody>
             {g.files.flatMap(([camp, valor]) => {
-              const etiqueta = ETIQUETES_CAMPS[camp] ?? camp;
+              const etiqueta = tg(idioma, ETIQUETES_CAMPS[camp] ?? camp);
               const clau = `${g.id}|${camp}`;
               const files = [(
                 <tr ref={adoptaEstilsDiferits} key={clau}>
                   <th scope="row">{etiqueta}</th>
-                  <td><Valor text={valorEnText(camp, valor.valor)} visible={visible} /></td>
+                  <td><Valor text={valorEnText(camp, valor.valor)} visible={visible} idioma={idioma} /></td>
                   <td><Origens fonts={valor.fonts} paper={paper} /></td>
                   <td>{diaDe(valor.confirmat)}</td>
                   <td>
                     <div className="sdp-gestoria-finestreta__accions">
-                      <Boto varietat="fantasma" icona={PenLine} aria-label={`Corregix ${etiqueta}`} onClick={() => setCorregint(clau)}>Corregix</Boto>
-                      <Boto varietat="fantasma" icona={X} aria-label={`Lleva ${etiqueta}`}
-                        onClick={() => fet(h.rebutja({ titular: g.id, camp }), `Llevat de la fitxa: ${etiqueta}.`)}>Lleva</Boto>
+                      <Boto varietat="fantasma" icona={PenLine} aria-label={`${tg(idioma, 'Corregix')} ${etiqueta}`} onClick={() => setCorregint(clau)}>{tg(idioma, 'Corregix')}</Boto>
+                      <Boto varietat="fantasma" icona={X} aria-label={`${tg(idioma, 'Lleva')} ${etiqueta}`}
+                        onClick={() => fet(h.rebutja({ titular: g.id, camp }), `Llevat de la fitxa: ${etiqueta}.`)}>{tg(idioma, 'Lleva')}</Boto>
                     </div>
                   </td>
                 </tr>
@@ -736,7 +744,7 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
                 files.push(
                   <tr ref={adoptaEstilsDiferits} key={`${clau}-alt-${i}`}>
                     <th scope="row"><Insignia to="avis">{`Un paper diu una altra cosa · ${etiqueta}`}</Insignia></th>
-                    <td><Valor text={valorEnText(camp, alternativa.valor)} visible={visible} /></td>
+                    <td><Valor text={valorEnText(camp, alternativa.valor)} visible={visible} idioma={idioma} /></td>
                     <td><Origens fonts={alternativa.fonts} paper={paper} /></td>
                     <td>—</td>
                     <td>
@@ -770,20 +778,20 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
           </tbody>
         </Taula>
       )) : (
-        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">Encara no hi ha cap valor confirmat.</p>
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">{tg(idioma, 'Encara no hi ha cap valor confirmat.')}</p>
       )}
-      <FormulariAMa h={h} onAnuncia={onAnuncia} />
+      <FormulariAMa h={h} onAnuncia={onAnuncia} idioma={idioma} />
     </Seccio>
   );
 }
 
 /* Un formulari de la Finestreta: els camps, el seu estat, «Copia» i l'esborrany per imprimir. */
-function PanellFormulari({ form, fitxa, opcions, visible, onCopia, onImprimix }) {
+function PanellFormulari({ form, fitxa, opcions, visible, onCopia, onImprimix, idioma = 'ca' }) {
   const omplert = useMemo(() => omplixFormulari(form, fitxa, opcions), [form, fitxa, opcions]);
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__formulari">
       <p className="sdp-gestoria-finestreta__nota">{`${form.font.norma}. ${form.font.consulta}.`}</p>
-      <p className="sdp-gestoria-finestreta__nota"><Insignia to="avis">{VERIFICAR}</Insignia></p>
+      <p className="sdp-gestoria-finestreta__nota"><Insignia to="avis">{tg(idioma, VERIFICAR)}</Insignia></p>
       <p className="sdp-gestoria-finestreta__nota">
         {omplert.falten
           ? `Falten ${omplert.falten === 1 ? '1 camp' : `${omplert.falten} camps`} que la fitxa podria omplir; ${omplert.aMa === 1 ? '1 l’escrius' : `${omplert.aMa} els escrius`} tu.`
@@ -791,7 +799,7 @@ function PanellFormulari({ form, fitxa, opcions, visible, onCopia, onImprimix })
       </p>
       <Taula titol={`Camps · ${form.nom}`} densa>
         <thead>
-          <tr><th scope="col">Camp</th><th scope="col">Valor</th><th scope="col">Estat</th><th scope="col">Copia</th></tr>
+          <tr><th scope="col">Camp</th><th scope="col">{tg(idioma, 'Valor')}</th><th scope="col">{tg(idioma, 'Estat')}</th><th scope="col">{tg(idioma, 'Copia')}</th></tr>
         </thead>
         <tbody>
           {omplert.camps.map((c) => {
@@ -799,11 +807,11 @@ function PanellFormulari({ form, fitxa, opcions, visible, onCopia, onImprimix })
             return (
               <tr ref={adoptaEstilsDiferits} key={c.id}>
                 <th scope="row">{c.obligatori ? c.etiqueta : `${c.etiqueta} (opcional)`}</th>
-                <td>{c.estat === 'llest' && !c.perLaPersona ? <Valor text={String(c.valor)} visible={visible} /> : '—'}</td>
-                <td><Insignia to={estat.to}>{estat.text}</Insignia></td>
+                <td>{c.estat === 'llest' && !c.perLaPersona ? <Valor text={String(c.valor)} visible={visible} idioma={idioma} /> : '—'}</td>
+                <td><Insignia to={estat.to}>{tg(idioma, estat.text)}</Insignia></td>
                 <td>
                   {c.estat === 'llest' && !c.perLaPersona ? (
-                    <Boto varietat="fantasma" icona={Copy} aria-label={`Copia «${c.etiqueta}»`} onClick={() => onCopia(c)}>Copia</Boto>
+                    <Boto varietat="fantasma" icona={Copy} aria-label={`${tg(idioma, 'Copia')} «${c.etiqueta}»`} onClick={() => onCopia(c)}>{tg(idioma, 'Copia')}</Boto>
                   ) : null}
                 </td>
               </tr>
@@ -812,9 +820,9 @@ function PanellFormulari({ form, fitxa, opcions, visible, onCopia, onImprimix })
         </tbody>
       </Taula>
       <div className="sdp-gestoria-finestreta__accions">
-        <Boto varietat="secundari" icona={Printer} disabled={!visible} onClick={onImprimix}>Esborrany per imprimir</Boto>
+        <Boto varietat="secundari" icona={Printer} disabled={!visible} onClick={onImprimix}>{tg(idioma, 'Esborrany per imprimir')}</Boto>
         <p className="sdp-gestoria-finestreta__nota">
-          {visible ? 'Imprimix esta pàgina: és un esborrany per a copiar, no el model de l’organisme.' : 'Obri l’ull de la barra perquè l’esborrany porte els valors.'}
+          {tg(idioma, visible ? 'Imprimix esta pàgina: és un esborrany per a copiar, no el model de l’organisme.' : 'Obri l’ull de la barra perquè l’esborrany porte els valors.')}
         </p>
       </div>
     </div>
@@ -822,7 +830,7 @@ function PanellFormulari({ form, fitxa, opcions, visible, onCopia, onImprimix })
 }
 
 /* Pas 5: la Finestreta, una pestanya per formulari. */
-function SeccioFinestreta({ h, visible, avui, copia, imprimix, onAnuncia }) {
+function SeccioFinestreta({ h, visible, avui, copia, imprimix, onAnuncia, idioma = 'ca' }) {
   const [tribut, setTribut] = useState('');
   const [representacio, setRepresentacio] = useState('');
   const tributs = h.fitxa.tributs;
@@ -850,9 +858,11 @@ function SeccioFinestreta({ h, visible, avui, copia, imprimix, onAnuncia }) {
     }
   };
   return (
-    <Seccio titol="Finestreta" ajuda="Els formularis s’omplin NOMÉS amb els valors confirmats de la teua fitxa, cadascun validat amb el tipus del camp: un NIF no entra mai en un camp de nom.">
-      <Alerta to="avis" viva={false} titol="L’app no signa ni presenta res">
-        {`${AVIS_SENSE_SIGNAR} Cada formulari és «${VERIFICAR}»: comprova’l a la seu de l’organisme abans de copiar-hi res. La signatura, l’exposició, la sol·licitud i l’IBAN els escrius sempre tu.`}
+    <Seccio titol="Finestreta" ajuda="Els formularis s’omplin NOMÉS amb els valors confirmats de la teua fitxa, cadascun validat amb el tipus del camp: un NIF no entra mai en un camp de nom." idioma={idioma}>
+      <Alerta to="avis" viva={false} titol={tg(idioma, 'L’app no signa ni presenta res')}>
+        {idioma === 'ca'
+          ? `${AVIS_SENSE_SIGNAR} Cada formulari és «${VERIFICAR}»: comprova’l a la seu de l’organisme abans de copiar-hi res. La signatura, l’exposició, la sol·licitud i l’IBAN els escrius sempre tu.`
+          : `${tg(idioma, AVIS_SENSE_SIGNAR)} (${tg(idioma, VERIFICAR)}).`}
       </Alerta>
       {tributs.length > 1 ? (
         <Camp etiqueta="Objecte tributari dels formularis">
@@ -866,38 +876,27 @@ function SeccioFinestreta({ h, visible, avui, copia, imprimix, onAnuncia }) {
             onChange={(event) => setRepresentacio(event.target.value)} />
         </Camp>
       ) : null}
-      <Pestanyes etiqueta="Formularis de la Finestreta" pestanyes={FORMULARIS.map((form) => ({
+      <Pestanyes etiqueta={tg(idioma, 'Formularis de la Finestreta')} pestanyes={FORMULARIS.map((form) => ({
         id: form.id,
         etiqueta: form.nom,
         contingut: (
           <PanellFormulari form={form} fitxa={h.fitxa} opcions={form.id === 'representacio-entitat' ? opcionsRepresentacio : opcions} visible={visible}
-            onCopia={copiaCamp} onImprimix={imprimixFormulari} />
+            onCopia={copiaCamp} onImprimix={imprimixFormulari} idioma={idioma} />
         )
       }))} />
     </Seccio>
   );
 }
 
-/**
- * La vista «Identitat i Finestreta» SENSE la porta del cofre: la fan servir
- * l'export per defecte (que hi passa la persistència del cofre i la porta) i
- * les proves. `porta(contingut)`, si n'hi ha, embolcalla tot el que va davall
- * del títol (Finestreta hi posa PortaCofre).
- * @param {{ titular?: { nom: string, avatar?: string|null, poble?: string }|null, magatzem?: object, subtle?: SubtleCrypto,
- *   tractors?: object[], entorn?: object, rellotge?: () => number, inflate?: Function|null,
- *   persistencia?: { llig: Function, desa: Function, subscriu?: Function }, copia?: (text: string) => Promise<void>,
- *   imprimix?: () => void, obriPaper?: (url: string) => void,
- *   porta?: (contingut: import('react').ReactNode) => import('react').ReactNode }} props
- */
 export function VistaFinestreta({
   titular = null, magatzem, subtle, tractors, entorn, rellotge, inflate, persistencia, copia = copiaPerDefecte, imprimix = imprimixPerDefecte,
-  obriPaper = obriPaperPerDefecte, porta = null
+  obriPaper = obriPaperPerDefecte, porta = null, idioma = 'ca'
 }) {
   const navigate = useNavigate();
   const h = useFinestreta({ magatzem, subtle, tractors, entorn, rellotge, inflate, persistencia });
   const [visible, setVisible] = useState(false);
   const [anunci, setAnunci] = useState('');
-  const autor = autorDe(titular);
+  const autor = autorDe(titular, idioma);
   const avui = avuiDe(rellotge);
 
   /* Una lectura nova, un oblit o el bloqueig del cofre tornen a tancar l'ull. */
@@ -916,36 +915,44 @@ export function VistaFinestreta({
   /* Amb el cofre bloquejat no hi ha res a mostrar: la boina va sense l'ull. */
   const boina = h.persistenciaBloquejada ? null : (
     <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina">
-      <UllDades visible={visible} onCommuta={() => setVisible((abans) => !abans)} />
+      <UllDades visible={visible} onCommuta={() => setVisible((abans) => !abans)} idioma={idioma} />
     </span>
   );
 
   const contingut = (
     <>
-      <PortaIdentitat h={h} onObreTractors={() => navigate(CONSULTA_TRACTORS_IDENTITAT)} />
+      <PortaIdentitat h={h} onObreTractors={() => navigate(CONSULTA_TRACTORS_IDENTITAT)} idioma={idioma} />
       {h.desaBlocat && h.errorPersistencia ? <Alerta to="error" titol="La fitxa desada">{h.errorPersistencia}</Alerta> : null}
-      {!h.fitxaLlegida ? <Carregant etiqueta="Obrint la teua fitxa…" /> : null}
-      {h.aprovat ? <SeccioCarpeta h={h} onOblida={oblida} /> : null}
+      {!h.fitxaLlegida ? <Carregant etiqueta={tg(idioma, 'Obrint la teua fitxa…')} /> : null}
+      {h.aprovat ? <SeccioCarpeta h={h} onOblida={oblida} idioma={idioma} /> : null}
       {h.aprovat && h.pla ? <SeccioPla h={h} onAnuncia={setAnunci} /> : null}
       {h.aprovat && h.lectura ? <ResumLectura lectura={h.lectura} /> : null}
       {/* La fitxa i la Finestreta també són codi del tractor: sense la seua aprovació, no es pinten. */}
       {h.aprovat ? <SeccioPropostes h={h} visible={visible} obriPaper={obriPaper} onAnuncia={setAnunci} /> : null}
-      {h.aprovat && h.fitxaLlegida ? <SeccioFitxa h={h} visible={visible} obriPaper={obriPaper} onAnuncia={setAnunci} /> : null}
+      {h.aprovat && h.fitxaLlegida ? <SeccioFitxa h={h} visible={visible} obriPaper={obriPaper} onAnuncia={setAnunci} idioma={idioma} /> : null}
       {h.aprovat && h.fitxaLlegida ? (
-        <SeccioFinestreta h={h} visible={visible} avui={avui} copia={copia} imprimix={imprimix} onAnuncia={setAnunci} />
+        <SeccioFinestreta h={h} visible={visible} avui={avui} copia={copia} imprimix={imprimix} onAnuncia={setAnunci} idioma={idioma} />
       ) : null}
       {h.aprovat && !h.teCarpeta && !h.lectura && h.fitxaLlegida && !h.porta.carregant ? (
-        <EstatBuit icona={FolderOpen} titol="Encara no has triat cap carpeta">
-          Tria la carpeta arrel de la Gestoria: primer et diré quins papers llegiré i quins no, i només després els llegiré.
+        <EstatBuit icona={FolderOpen} titol={tg(idioma, 'Encara no has triat cap carpeta')}>
+          {tg(idioma, 'Tria la carpeta arrel de la Gestoria: primer et diré quins papers llegiré i quins no, i només després els llegiré.')}
         </EstatBuit>
       ) : null}
     </>
   );
 
+  const etiquetesLoc = idioma === 'ca'
+    ? ETIQUETES
+    : [
+      { text: tg(idioma, 'GESTORIA'), className: 'sdp-badge-system' },
+      { text: tg(idioma, 'Identitat i Finestreta'), className: 'sdp-badge-category' },
+      etiquetaBetaOberta(idioma)
+    ];
+
   return (
-    <PaginaApp title="Identitat i Finestreta" subtitle="La teua fitxa legal, privada, i els tràmits preparats per a copiar"
-      lead="Els teus papers d’identitat, llegits en este ordinador: confirmes cada dada, es desa xifrada al cofre i la Finestreta te-la prepara per a copiar-la als tràmits. No signa ni presenta res."
-      author={autor} barActions={boina} labels={ETIQUETES} rellotgeViu rellotge={rellotge}
+    <PaginaApp title={tg(idioma, 'Identitat i Finestreta')} subtitle={tg(idioma, 'La teua fitxa legal, privada, i els tràmits preparats per a copiar')}
+      lead={tg(idioma, 'Els teus papers d’identitat, llegits en este ordinador: confirmes cada dada, es desa xifrada al cofre i la Finestreta te-la prepara per a copiar-la als tràmits. No signa ni presenta res.')}
+      author={autor} barActions={boina} labels={etiquetesLoc} rellotgeViu rellotge={rellotge}
       showComment={false} showShare={false} showConnect={false}>
       <p ref={adoptaEstilsDiferits} role="status" aria-live="polite" className="sdp-nomes-lector">{anunci}</p>
       {typeof porta === 'function' ? porta(contingut) : contingut}
@@ -953,23 +960,13 @@ export function VistaFinestreta({
   );
 }
 
-/**
- * La vista «Identitat i Finestreta» de la ruta: darrere del cofre xifrat. La
- * Fitxa d'identitat viu xifrada a la col·lecció 'identitat' de l'únic cofre
- * de l'app; en eixir de la vista, el cofre es bloqueja (la clau i tot el que
- * és desxifrat fora de la memòria).
- * @param {{ cofre?: object, titular?: object|null, magatzem?: object, subtle?: SubtleCrypto, tractors?: object[], entorn?: object,
- *   rellotge?: () => number, inflate?: Function|null, descarrega?: Function, copia?: Function, imprimix?: Function,
- *   obriPaper?: Function }} props
- *   `cofre`: per a les proves (creaCofreLocal); sense, el de l'app (cofreDeLaGestoria)
- */
 export default function Finestreta({ cofre: cofreDeFora = null, descarrega, ...props }) {
   const [cofre] = useState(() => cofreDeFora ?? cofreDeLaGestoria());
   const persistencia = useMemo(() => persistenciaDelCofre(cofre, COLLECCIO_IDENTITAT), [cofre]);
   useEffect(() => () => cofre.bloqueja('eixida'), [cofre]);
-  const { rellotge } = props;
+  const { rellotge, idioma = 'ca' } = props;
   const porta = useCallback((contingut) => (
-    <PortaCofre cofre={cofre} descarrega={descarrega} rellotge={rellotge}>{() => contingut}</PortaCofre>
-  ), [cofre, descarrega, rellotge]);
+    <PortaCofre cofre={cofre} descarrega={descarrega} rellotge={rellotge} idioma={idioma}>{() => contingut}</PortaCofre>
+  ), [cofre, descarrega, rellotge, idioma]);
   return <VistaFinestreta {...props} persistencia={persistencia} porta={porta} />;
 }

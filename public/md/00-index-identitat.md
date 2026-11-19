@@ -16,18 +16,39 @@ Porta d'entrada a la identitat de Sóc de Poble. Penja de l'índex mestre i reun
 
 ## Huit dimensions sobre sis carpetes
 
-El registre executable és `.agents/cervell.json`. No es reanomenen carpetes.
+El **registre executable** és `.agents/cervell.json`. **No es reanomenen carpetes**.
 
-| Dimensió | Ruta vigent | Funció |
-| --- | --- | --- |
-| Identitat | `01_ser/` | Missió, llengua i cultura |
-| Coneixement | `02_saber/` | Arquitectura i criteris consultius |
-| Governança | `AGENTS.md` i `.agents/` | Autoritat amb abast explícit |
-| Procediments | `.agents/skills/` i `tooling/` | Passos executables |
-| Plantilles | `03_actuar/plantilles/` | Contractes de generació |
-| Treball actiu | `04_escriptori/` | Documents en revisió |
-| Evidència | `10_actes/` i `.agents/runtime/` | Actes, torns i contractes |
-| Història | `90_arxiu_historic/` | Memòria consultiva fora de RAG automàtic |
+### Identitat (`01_ser/`)
+
+Custodia la **missió**, la **llengua** i la **cultura** fundacional del projecte dins de la ruta vigent `01_ser/`.
+
+### Coneixement (`02_saber/`)
+
+Reunix l'**arquitectura** documentada i els **criteris consultius** del sistema a la carpeta vigent `02_saber/`.
+
+### Governança (`AGENTS.md` i `.agents/`)
+
+Fixa l'**autoritat operativa** amb **abast explícit** a través de `AGENTS.md` i el directori `.agents/`.
+
+### Procediments (`.agents/skills/` i `tooling/`)
+
+Conté els **passos executables**, les **skills actives** i els **tractors deterministes** allotjats a `.agents/skills/` i `tooling/`.
+
+### Plantilles (`03_actuar/plantilles/`)
+
+Definix els **contractes de generació documental** verificables dins de la ruta vigent `03_actuar/plantilles/`.
+
+### Treball actiu (`04_escriptori/`)
+
+Allotja els **documents de torn en revisió** i la coordinació viva de la jornada a `04_escriptori/`.
+
+### Evidència (`10_actes/` i `.agents/runtime/`)
+
+Conserva les **actes**, els **registres de torn** i els **rebuts de contracte** dins de `10_actes/` i `.agents/runtime/`.
+
+### Història (`90_arxiu_historic/`)
+
+Preserva la **memòria consultiva** d'etapes tancades a `90_arxiu_historic/`, mantinguda sempre **fora del RAG automàtic**.
 
 ## Documents Troncals
 

@@ -54,19 +54,49 @@ Esta peça de la Consola respon a una pregunta: **quines skills tenim de veres i
 
 ## Semàfor adaptat
 
-| Avís | Regla | Font |
-|---|---|---|
-| frontmatter invàlid | no passa `tooling/wiki/schema.json` | porta de frontmatter |
-| nom diferent de la carpeta | el `name` no coincidix amb el nom de la carpeta | catàleg |
-| fora del cens | apareix en un cens (`skills_index.json`, `.claude/skills/`, segell…) i falta en un altre | comparació |
-| disparador decoratiu | `triggers_on` buit o igual a «skill» + el nom | `.agents/skills_index.json` |
-| disparador ample | algun disparador té menys de 4 lletres o és una paraula comuna | `.agents/skills_index.json` |
-| orfe | cap aresta entrant declarada o derivada | mapa ([[01_fluxos_skills]]) |
-| pes | més de 3.000 paraules o de 4.000 tokens estimats | fitxer |
-| lliçons acumulades | nombre d'entrades a «Lliçons del Mestre»; si creix, la skill aprén acumulant lliçons, no reescrivint-se | fitxer |
-| segell | la skill ha canviat després de l'últim segell | `.agents/SKILLS_SEAL.json` |
-| crida a una skill inexistent | un document o una skill cita una skill que no té carpeta a `.agents/skills/` | text + disc |
-| skill fora de l'índex | té carpeta a `.agents/skills/` però no és a `.agents/skills_index.json` | disc + índex |
+### Frontmatter invàlid
+
+**Regla:** el document no supera la validació contra `tooling/wiki/schema.json`. **Font:** **porta de frontmatter**.
+
+### Nom diferent de la carpeta
+
+**Regla:** el camp `name` del frontmatter **no coincidix** amb el **nom físic de la carpeta**. **Font:** **catàleg**.
+
+### Fora del cens
+
+**Regla:** apareix en un cens (`skills_index.json`, `.claude/skills/`, segell…) i **falta en un altre**. **Font:** **comparació creuada**.
+
+### Disparador decoratiu
+
+**Regla:** `triggers_on` està **buit** o és igual a «skill» més el propi nom. **Font:** `.agents/skills_index.json`.
+
+### Disparador ample
+
+**Regla:** algun disparador té **menys de 4 lletres** o és una **paraula comuna** amb alt soroll. **Font:** `.agents/skills_index.json`.
+
+### Orfe
+
+**Regla:** no té **cap aresta entrant** declarada ni derivada. **Font:** **mapa** ([[01_fluxos_skills]]).
+
+### Pes
+
+**Regla:** supera les **3.000 paraules** o els **4.000 tokens estimats**. **Font:** **fitxer**.
+
+### Lliçons acumulades
+
+**Regla:** compta el nombre d'entrades a «**Lliçons del Mestre**»; si creix, la skill aprén acumulant lliçons, no reescrivint-se. **Font:** **fitxer**.
+
+### Segell
+
+**Regla:** la skill ha canviat al disc **després de l'últim segell** registrat. **Font:** `.agents/SKILLS_SEAL.json`.
+
+### Crida a una skill inexistent
+
+**Regla:** un document o una skill cita una skill que **no té carpeta** a `.agents/skills/`. **Font:** **text + disc**.
+
+### Skill fora de l'índex
+
+**Regla:** té carpeta física a `.agents/skills/` però **no consta** a `.agents/skills_index.json`. **Font:** **disc + índex**.
 
 La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista derivada. L'índex és una còpia regenerable i pot quedar ranci: el 24-09 ho estava.
 

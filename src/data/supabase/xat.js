@@ -1,3 +1,4 @@
+import { previaFilServidor } from './previaFilServidor.js';
 /**
  * @module supabase/xat
  * @description Adaptador del Xat (F0): escriptura només per RPC idempotent,
@@ -286,11 +287,7 @@ const mapejaFil = (f, usuariId = null) => ({
   comEntitat: Boolean(f.comEntitat ?? f.com_entitat),
   imatgeUrl: f.imatge_url ?? f.imatgeUrl ?? null,
   actualitzatAl: f.actualitzat_al ?? null,
-  ultimText: f.ultim_text ?? null,
-  /* xat_fils_meus v5 (2610220240): el tipus de l'últim, per a dir «Foto adjunta» quan no porta peu. */
-  ultimTipus: f.ultim_tipus ?? f.ultimTipus ?? null,
-  ultimAl: f.ultim_al ?? null,
-  ultimAutorId: f.ultim_autor_id ?? null,
+  ...previaFilServidor(f),
   ultimSeq: numero(f.ultim_seq) ?? 0,
   llegitFinsSeq: numero(f.llegit_fins_seq) ?? 0,
   rebutFinsSeq: numero(f.rebut_fins_seq) ?? 0,

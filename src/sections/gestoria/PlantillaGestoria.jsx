@@ -39,13 +39,14 @@ import { EyeOff, FileSearch } from 'lucide-react';
 import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
 import { EstatBuit } from '../../components/PedraSeca/atoms/estats.jsx';
 import EnviamentGestoria from './enviament/EnviamentGestoria.jsx';
+import { tg } from './i18nGestoria.js';
 import { descarregaPerDefecte } from './PanellGestoria.jsx';
 import VistaPreviaFull from './VistaPreviaFull.jsx';
 import { adoptaFullDiferit } from '../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../css/diferit-gestoria.css?inline';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
-export function PlantillaGestoria({ full = null, visible = false, descarrega = descarregaPerDefecte, onObreFull }) {
+export function PlantillaGestoria({ full = null, visible = false, descarrega = descarregaPerDefecte, onObreFull, idioma = 'ca' }) {
   const entregables = full?.entregables ?? null;
   const [anunci, setAnunci] = useState('');
   const [correuObert, setCorreuObert] = useState(false);
@@ -61,11 +62,10 @@ export function PlantillaGestoria({ full = null, visible = false, descarrega = d
 
   if (!entregables) {
     return (
-      <EstatBuit icona={FileSearch} titol="Encara no hi ha cap full generat"
+      <EstatBuit icona={FileSearch} titol={tg(idioma, 'Encara no hi ha cap full generat')}
         accio={typeof onObreFull === 'function'
-          ? <Boto varietat="primari" onClick={() => onObreFull()}>Obri el Full trimestral</Boto> : null}>
-        Al Full trimestral, analitza el trimestre, revisa la proposta i prem «Genera el full»: ací el veuràs tal com
-        el rebrà la gestoria, i el podràs descarregar o preparar-ne el correu.
+          ? <Boto varietat="primari" onClick={() => onObreFull()}>{tg(idioma, 'Obri el Full trimestral')}</Boto> : null}>
+        {tg(idioma, 'Al Full trimestral, analitza el trimestre, revisa la proposta i prem «Genera el full»: ací el veuràs tal com el rebrà la gestoria, i el podràs descarregar o preparar-ne el correu.')}
       </EstatBuit>
     );
   }
@@ -87,24 +87,24 @@ export function PlantillaGestoria({ full = null, visible = false, descarrega = d
       <p ref={adoptaEstilsDiferits} role="status" className="sdp-nomes-lector">{anunci}</p>
       <p className="sdp-gestoria-cabina__nota">{`El full generat del ${full.t}T de ${full.any}: és el que es descarrega i s’adjunta.`}</p>
       {visible ? (
-        <VistaPreviaFull full={entregables.full} titol="Taula · Plantilla Gestoria" />
+        <VistaPreviaFull full={entregables.full} titol={tg(idioma, 'Taula · Plantilla Gestoria')} idioma={idioma} />
       ) : (
-        <EstatBuit icona={EyeOff} titol="Full amagat">
-          Prem l’ull de la boina per a veure’l: el full porta imports, noms i NIF.
+        <EstatBuit icona={EyeOff} titol={tg(idioma, 'Full amagat')}>
+          {tg(idioma, 'Prem l’ull de la boina per a veure’l: el full porta imports, noms i NIF.')}
         </EstatBuit>
       )}
       <div className="sdp-gestoria-panell__accions">
         <code>{nom}</code>
-        <Boto varietat="primari" onClick={descarregaXlsx}>Descarrega l’XLSX</Boto>
+        <Boto varietat="primari" onClick={descarregaXlsx}>{tg(idioma, 'Descarrega l’XLSX')}</Boto>
         <Boto varietat="secundari" aria-expanded={correuObert} aria-controls={correuObert ? idCorreu : undefined}
           onClick={() => setCorreuObert((obert) => !obert)}>
-          Prepara el correu per a la gestoria
+          {tg(idioma, 'Prepara el correu per a la gestoria')}
         </Boto>
       </div>
       {correuObert ? (
         <div ref={adoptaEstilsDiferits} id={idCorreu}>
           <EnviamentGestoria key={entregables.empremtes.xlsx} any={full.any} t={full.t} adjunts={adjunts}
-            inicials={{ nom: full.titular ?? '' }} nivellTitol={4} descarrega={descarrega} />
+            inicials={{ nom: full.titular ?? '' }} nivellTitol={4} descarrega={descarrega} idioma={idioma} />
         </div>
       ) : null}
     </>

@@ -63,8 +63,8 @@
  *
  * Els literals que el text cita entre cometes són els que pinta l'app,
  * comprovats al codi el 261010:
- *   rebost · «N’hi ha», «Se n’acaba» i «S’ha acabat» (apps/nevera/vistes/
- *            vestits.js, TEXTOS_CASA); «El que tens a casa», «No el
+ *   rebost · «N’hi ha», «Se n’acaba» i «S’ha acabat» (apps/nevera/
+ *            i18nNevera.js, des de R32.14); «El que tens a casa», «No el
  *            seguisques», «Cal comprar» i «Afig-ho tot» (vistes/Casa.jsx);
  *            «La compra» i «Ajustos» (manifest.js, entrades); la còpia que
  *            es descarrega i es recupera (vistes/Ajustos.jsx). Gratuïta,

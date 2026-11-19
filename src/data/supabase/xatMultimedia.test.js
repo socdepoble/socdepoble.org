@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { webcrypto } from 'node:crypto';
+import { mp4DeMida } from '../../../tests/helpers/contenidorsMedia.js';
 import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 import { publicaAdjuntXat, quotaXat, urlAdjuntXat } from './xatMultimedia.js';
 import { ERRORS_ADJUNT_XAT, MISSATGE_QUOTA_XAT, tempsLimitPujada } from '../xatMultimedia.js';
@@ -89,7 +90,7 @@ test('el temps límit de la pujada és proporcional a la mida i allibera la rese
   expect(tempsLimitPujada(4)).toBe(31_000);
   expect(tempsLimitPujada(20_000_000)).toBe(430_000);
   vi.useFakeTimers();
-  const gran = { id: ID, fitxer: new Blob([new Uint8Array(5_000_000)], { type: 'video/mp4' }), tipus: 'video', duradaMs: 9_000 };
+  const gran = { id: ID, fitxer: new Blob([mp4DeMida(5_000_000)], { type: 'video/mp4' }), tipus: 'video', duradaMs: 9_000 };
   fetch.mockImplementationOnce((_url, { signal }) => new Promise((_resolve, reject) => { signal.addEventListener('abort', () => reject(new DOMException('cancel·lat', 'AbortError'))); }));
   let acabat = null;
   const resultat = publicaAdjuntXat(FIL, gran).catch((e) => { acabat = e; return e; });
@@ -159,7 +160,7 @@ test('amb onProgres, cancel·lar avorta el XHR i no publica', async () => {
 test('amb onProgres, el temps límit proporcional talla igual i diu temps-esgotat', async () => {
   vi.useFakeTimers();
   ambXhr(() => {});
-  const gran = { id: ID, fitxer: new Blob([new Uint8Array(5_000_000)], { type: 'video/mp4' }), tipus: 'video', duradaMs: 9_000 };
+  const gran = { id: ID, fitxer: new Blob([mp4DeMida(5_000_000)], { type: 'video/mp4' }), tipus: 'video', duradaMs: 9_000 };
   let acabat = null;
   const resultat = publicaAdjuntXat(FIL, gran, { onProgres: vi.fn() }).catch((e) => { acabat = e; return e; });
   await vi.advanceTimersByTimeAsync(tempsLimitPujada(5_000_000) - 1);

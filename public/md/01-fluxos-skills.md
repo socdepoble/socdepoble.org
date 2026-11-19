@@ -42,19 +42,37 @@ Font estudiada: `mapa_agentes.py` v0.1 (1.341 línies), a `04_escriptori/02_inve
   - l'`entrada` de `.agents/cervell.json`.
 
   Amb la regla d'Emowe, justament les skills nucli eixirien com a orfes.
-- **El que ja sabem no cal endevinar-ho.** Tenim arestes deterministes que Emowe no pot vore; les recull la taula de sota.
+- **El que ja sabem no cal endevinar-ho.** Tenim **arestes deterministes** que Emowe no pot vore; es detallen tot seguit.
 
 ## Arestes que ja tenim declarades
 
-| Aresta | Font de veritat | Confiança |
-|---|---|---|
-| ruta documental → plantilla → skill | `.agents/protocolledge.json` (13 rutes) | declarat |
-| arrencada → skill | `@`-imports de `CLAUDE.md`; `entrada` de `.agents/cervell.json` | declarat |
-| petició → skill | `triggers_on` → `.agents/skills_index.json` → `tooling/session/persona_router.mjs` | declarat (la coincidència amb la petició és textual) |
-| esdeveniment de l'arnés → script | `hooks` de `.claude/settings.json` | declarat |
-| ordre npm → script | `scripts` de `package.json` | declarat |
-| tasca programada → script | plist de launchd, fora del repositori | derivat |
-| document → document | enllaços wiki de les seccions de Vincles | declarat com a enllaç, no com a crida |
+### Ruta documental → plantilla → skill
+
+**Font de veritat:** `.agents/protocolledge.json` (**13 rutes** canòniques). **Nivell de confiança:** **declarat**.
+
+### Arrencada → skill
+
+**Font de veritat:** `@`-imports de `CLAUDE.md` i l'`entrada` de `.agents/cervell.json`. **Nivell de confiança:** **declarat**.
+
+### Petició → skill
+
+**Font de veritat:** `triggers_on` → `.agents/skills_index.json` → `tooling/session/persona_router.mjs`. **Nivell de confiança:** **declarat** (la coincidència amb la petició és textual).
+
+### Esdeveniment de l'arnés → script
+
+**Font de veritat:** bloc `hooks` de `.claude/settings.json`. **Nivell de confiança:** **declarat**.
+
+### Ordre npm → script
+
+**Font de veritat:** camp `scripts` de `package.json`. **Nivell de confiança:** **declarat**.
+
+### Tasca programada → script
+
+**Font de veritat:** fitxers `plist` de `launchd`, ubicats **fora del repositori**. **Nivell de confiança:** **derivat**.
+
+### Document → document
+
+**Font de veritat:** **enllaços wiki** de les seccions de `Vincles`. **Nivell de confiança:** **declarat com a enllaç**, no com a crida executiva.
 
 `.agents/hooks.json` declara hooks per a Antigravity, però el mateix fitxer avisa que no hi ha cap consumidor acreditat. La Consola ha de pintar eixes arestes amb traç discontinu.
 

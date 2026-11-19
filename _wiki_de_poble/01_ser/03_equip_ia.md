@@ -24,22 +24,55 @@ El primer bloc d'[ESTAT.md](../../.agents/ESTAT.md) informa del treball vigent. 
 
 ## Cens vigent
 
-Esta taula és una projecció de les membres amb `actiu: true` de [consell.json](../../.agents/consell.json). El perfil de referència orienta el repartiment de tasques; l'encàrrec autoritzat concreta la funció en cada treball.
+Este bloc vertical és una projecció de les membres amb `actiu: true` de [consell.json](../../.agents/consell.json). El **perfil de referència** orienta el repartiment de tasques; l'**encàrrec autoritzat** concreta la funció en cada treball.
 
-| Identificador | Membre actiu del cens | Perfil de referència | Enllaç oficial |
-| --- | --- | --- | --- |
-| z-ai | Z.ai | Ingesta massiva | [Z.ai](https://z.ai/) |
-| qwen | Qwen | Arquitectura i codi | [Qwen](https://chat.qwenlm.ai/) |
-| deepseek | Deepseek | Caça de bugs | [Deepseek](https://chat.deepseek.com/) |
-| dola | Dola | Calendari | [Dola](https://dola.com/chat/) |
-| kimi | Kimi | Documents llargs i subvencions | [Kimi](https://kimi.ai) |
-| claude | Claude | Seient Núm. 5 · Auditor sènior i estil | [Claude](https://claude.ai/) |
-| perplexity | Perplexity | Verificació de fets | [Perplexity](https://www.perplexity.ai/) |
-| mistral | Mistral Vibe | Contrapunt europeu i codi obert | [Mistral Vibe](https://chat.mistral.ai/) |
-| grok | Grok | Pluja d'idees salvatge | [Grok](https://grok.com/) |
-| gemini | Gemini | Motor sensorial i orquestració | [Gemini](https://gemini.google.com/) |
-| copilot | Copilot | Autocompletat a la trinxera | [Copilot](https://copilot.microsoft.com/) |
-| chatgpt | ChatGPT Codex | Segona opinió generalista i auditories de codi | [ChatGPT Codex](https://chatgpt.com/) |
+### Z.ai (`z-ai`)
+
+**Perfil de referència:** Ingesta massiva · **Enllaç oficial:** [Z.ai](https://z.ai/)
+
+### Qwen (`qwen`)
+
+**Perfil de referència:** Arquitectura i codi · **Enllaç oficial:** [Qwen](https://chat.qwenlm.ai/)
+
+### Deepseek (`deepseek`)
+
+**Perfil de referència:** Caça de bugs · **Enllaç oficial:** [Deepseek](https://chat.deepseek.com/)
+
+### Dola (`dola`)
+
+**Perfil de referència:** Calendari · **Enllaç oficial:** [Dola](https://dola.com/chat/)
+
+### Kimi (`kimi`)
+
+**Perfil de referència:** Documents llargs i subvencions · **Enllaç oficial:** [Kimi](https://kimi.ai)
+
+### Claude (`claude`)
+
+**Perfil de referència:** Seient Núm. 5 · Auditor sènior i estil · **Enllaç oficial:** [Claude](https://claude.ai/)
+
+### Perplexity (`perplexity`)
+
+**Perfil de referència:** Verificació de fets · **Enllaç oficial:** [Perplexity](https://www.perplexity.ai/)
+
+### Mistral Vibe (`mistral`)
+
+**Perfil de referència:** Contrapunt europeu i codi obert · **Enllaç oficial:** [Mistral Vibe](https://chat.mistral.ai/)
+
+### Grok (`grok`)
+
+**Perfil de referència:** Pluja d'idees salvatge · **Enllaç oficial:** [Grok](https://grok.com/)
+
+### Gemini (`gemini`)
+
+**Perfil de referència:** Motor sensorial i orquestració · **Enllaç oficial:** [Gemini](https://gemini.google.com/)
+
+### Copilot (`copilot`)
+
+**Perfil de referència:** Autocompletat a la trinxera · **Enllaç oficial:** [Copilot](https://copilot.microsoft.com/)
+
+### ChatGPT Codex (`chatgpt`)
+
+**Perfil de referència:** Segona opinió generalista i auditories de codi · **Enllaç oficial:** [ChatGPT Codex](https://chatgpt.com/)
 
 ## Memòria narrativa
 

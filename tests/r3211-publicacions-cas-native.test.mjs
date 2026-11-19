@@ -62,7 +62,7 @@ async function advisoryBarrier(observer, holder, waiter, key) {
 }
 
 test('R32.11 CAS general · native PostgreSQL independent sessions and transaction outcomes', { timeout: 180000 }, async t => {
-  const cluster = await startLocalPostgres();
+  const cluster = await startLocalPostgres({ dataRoot: '/tmp/sdp_r32_14_pg' });
   const db = cluster.db;
   const manualSHA = sha256(manual);
   try {
@@ -71,7 +71,17 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
     assert.equal((await db.query('SELECT inet_server_addr() AS addr')).rows[0].addr, null);
     t.diagnostic(JSON.stringify({ version, connection: 'disposable Unix socket; listen_addresses empty', manualSHA }));
     const plan = creaPlaMigracions(), hydration = await preparaHidratacio();
-    assert.equal(plan.migrations.length, 124);
+    assert.equal(plan.migrations.length, 125);
+    const preview = plan.migrations.filter(row => row.version === '20261119143000');
+    assert.deepEqual(preview.map(({ version, file, sha256: hash }) => [version, file, hash]), [
+      ['20261119143000', '20261119143000_r32_14_xat_fils_previa_sense_amagats.sql', 'a030604331e272f6560579c264d94f6ac763d2faa1e94db5e5a3fdfe154dd1b0']
+    ]);
+    // The 124 pre-R32.14 sources retain the exact A-03 ledger; no old source is repinned.
+    const historical = plan.migrations.filter(row => row.version !== '20261119143000');
+    assert.equal(historical.length, 124);
+    assert.equal(sha256([...historical].sort((a, b) => Buffer.compare(Buffer.from(a.version), Buffer.from(b.version)))
+      .map(({ version: v, file, sha256: hash }) => `${v}\t${file}\t${hash}`).join('\n')),
+    '8446cad1c497adbc31a4903d9161479ba1eef081de6445cbe148fb615a961277');
     await db.query(generaSql(plan, hydration, { advisoryLock: false }));
     await db.query(manual);
     const tenant = hydration.municipalityId;
@@ -208,7 +218,10 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
       const receipts = (await db.query('SELECT * FROM private.publicacions_cas_rebuts ORDER BY operation_id')).rows;
       await db.query(manual);
       assert.deepEqual((await db.query('SELECT * FROM private.publicacions_cas_rebuts ORDER BY operation_id')).rows, receipts);
-      assert.equal((await db.query('SELECT count(*)::int AS n FROM node0.schema_migrations')).rows[0].n, 124);
+      const installed = (await db.query('SELECT version,file,sha256 FROM node0.schema_migrations ORDER BY version COLLATE "C"')).rows;
+      assert.equal(installed.length, 125);
+      assert.deepEqual(installed, [...plan.migrations].sort((a, b) => Buffer.compare(Buffer.from(a.version), Buffer.from(b.version)))
+        .map(({ version: v, file, sha256: hash }) => ({ version: v, file, sha256: hash })));
       assert.equal(sha256(readFileSync(MANUAL_URL)), manualSHA);
     });
   } finally { await cluster.close(); }

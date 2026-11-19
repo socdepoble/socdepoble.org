@@ -126,7 +126,8 @@ import { Camp, CampText } from '../../../components/PedraSeca/organismes/formula
 import { PaginaApp } from '../../../components/PedraSeca/organismes/PaginaApp.jsx';
 import ContenidorGestoria, { CONSULTA_TRACTORS } from '../ContenidorGestoria.jsx';
 import { PanellEscaner } from '../escaner/PanellEscaner.jsx';
-import { ETIQUETA_BETA_OBERTA } from '../insigniaBetaOberta.js';
+import { tg, tf, localitzaDadesTauler } from '../i18nGestoria.js';
+import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta } from '../insigniaBetaOberta.js';
 import { useEscaner } from '../escaner/useEscaner.js';
 import { facturesQueFalten } from '../nucli/facturesQueFalten.js';
 import { PlantillaGestoria } from '../PlantillaGestoria.jsx';
@@ -230,10 +231,10 @@ export function pastillaDeSincronitzacio(ms) {
  * @param {{ nom?: string, poble?: string, avatar?: string|null, href?: string|null }|null} identitat
  * @returns {{ nom: string, poble: string, avatar: string|null, href: string, configurat: boolean }}
  */
-export function titularDe(identitat) {
+export function titularDe(identitat, idioma = 'ca') {
   const nom = typeof identitat?.nom === 'string' ? identitat.nom.trim() : '';
   return {
-    nom: nom || TITULAR_SENSE_CONFIGURAR,
+    nom: nom || tg(idioma, TITULAR_SENSE_CONFIGURAR),
     poble: typeof identitat?.poble === 'string' ? identitat.poble : '',
     avatar: identitat?.avatar ?? null,
     href: identitat?.href || RUTA_TITULAR,
@@ -273,13 +274,13 @@ const mateixDia = (x, y) => Boolean(x && y && x.a === y.a && x.m === y.m && x.d 
  * @param {{ a: number, m: number, d: number }|null} hui el dia d'avui de la closca
  * @returns {{ time: string, date: string, dateTime: string, etiqueta: string }|null}
  */
-export function pastillaDeLectura(ms, hui) {
+export function pastillaDeLectura(ms, hui, idioma = 'ca') {
   const pastilla = pastillaDeSincronitzacio(ms);
   if (!pastilla) return null;
   return {
     ...pastilla,
     date: mateixDia(diaDe(new Date(ms)), hui) ? '' : pastilla.date,
-    etiqueta: `Dades llegides a les ${pastilla.time} del ${pastilla.date}`
+    etiqueta: tf(idioma, 'dadesLlegides', pastilla.time, pastilla.date)
   };
 }
 
@@ -287,18 +288,18 @@ export function pastillaDeLectura(ms, hui) {
  * Les dues portes del titular, al Tauler mentre la boina diu «Titular sense
  * configurar». El títol és un paràgraf (Alerta): l'Índex no el recull.
  */
-function PortesDelTitular({ hrefEntrada, onConfigura, onEntra }) {
+function PortesDelTitular({ hrefEntrada, onConfigura, onEntra, idioma = 'ca' }) {
   return (
-    <Alerta to="info" titol="Qui porta esta gestoria?" viva={false}
+    <Alerta to="info" titol={tg(idioma, 'Qui porta esta gestoria?')} viva={false}
       accions={(
         <>
-          <Boto varietat="primari" onClick={onConfigura}>Configura el titular</Boto>
-          {hrefEntrada ? <Boto varietat="secundari" onClick={onEntra}>Entra al compte</Boto> : null}
+          <Boto varietat="primari" onClick={onConfigura}>{tg(idioma, 'Configura el titular')}</Boto>
+          {hrefEntrada ? <Boto varietat="secundari" onClick={onEntra}>{tg(idioma, 'Entra al compte')}</Boto> : null}
         </>
       )}>
-      {hrefEntrada
+      {tg(idioma, hrefEntrada
         ? 'Pots dir ací el nom i la població (només en este ordinador i mentre la Gestoria està oberta) o entrar al teu compte, que en acabar et torna al Tauler.'
-        : 'Pots dir ací el nom i la població: només en este ordinador i mentre la Gestoria està oberta.'}
+        : 'Pots dir ací el nom i la població: només en este ordinador i mentre la Gestoria està oberta.')}
     </Alerta>
   );
 }
@@ -308,16 +309,16 @@ function PortesDelTitular({ hrefEntrada, onConfigura, onEntra }) {
  * dependre de cap lectura del banc ni del tractor (GES-06, auditoria de Codex
  * 261012_2022): «Oblida les dades» només hi és quan hi ha una lectura.
  */
-function TitularDEstaPagina({ onCanvia, onOblida }) {
+function TitularDEstaPagina({ onCanvia, onOblida, idioma = 'ca' }) {
   return (
-    <Alerta to="info" titol="Titular d’esta pàgina" viva={false}
+    <Alerta to="info" titol={tg(idioma, 'Titular d’esta pàgina')} viva={false}
       accions={(
         <>
-          <Boto varietat="secundari" onClick={onCanvia}>Canvia el titular</Boto>
-          <Boto varietat="secundari" onClick={onOblida}>Oblida el titular</Boto>
+          <Boto varietat="secundari" onClick={onCanvia}>{tg(idioma, 'Canvia el titular')}</Boto>
+          <Boto varietat="secundari" onClick={onOblida}>{tg(idioma, 'Oblida el titular')}</Boto>
         </>
       )}>
-      Només viu en la memòria d’esta pàgina: no és cap compte i no ix d’este ordinador.
+      {tg(idioma, 'Només viu en la memòria d’esta pàgina: no és cap compte i no ix d’este ordinador.')}
     </Alerta>
   );
 }
@@ -332,7 +333,7 @@ function TitularDEstaPagina({ onCanvia, onOblida }) {
  */
 export default function ShellGestoria({
   magatzem, subtle, tractors, entorn, rellotge, inflate, avui, descarrega, titular: titularPropi = null,
-  modulActiu, hrefEntrada = null, hrefIdentitat = null, hrefFull = null
+  modulActiu, hrefEntrada = null, hrefIdentitat = null, hrefFull = null, idioma = 'ca'
 }) {
   const navigate = useNavigate();
   const tauler = useTauler({ magatzem, subtle, tractors, entorn, rellotge });
@@ -402,18 +403,18 @@ export default function ShellGestoria({
      la boina porta a l'entrada que dona l'amfitrió (sense sessió) o al perfil. */
   const deLaSessio = titularPropi ? { ...titularPropi, href: titularPropi.href || RUTA_TITULAR } : null;
   const identitat = deLaSessio ?? titularLocal ?? tauler.lectura?.identitat ?? null;
-  const titular = titularDe({ ...identitat, href: identitat?.href || hrefEntrada || undefined });
+  const titular = titularDe({ ...identitat, href: identitat?.href || hrefEntrada || undefined }, idioma);
   const pastilla = pastillaDeSincronitzacio(tauler.llegit);
-  const lectura = pastillaDeLectura(tauler.llegit, hui);
+  const lectura = pastillaDeLectura(tauler.llegit, hui, idioma);
   /* Les xifres es tornen a calcular quan arriba (o s'oblida) una lectura, quan
      el Full trimestral passa (o retira) les seues factures o quan la persona
      tria un altre trimestre, i no a cada pintada. */
-  const dades = useMemo(() => dadesDelTauler({
+  const dades = useMemo(() => localitzaDadesTauler(dadesDelTauler({
     lectura: tauler.lectura,
     factures: full ? [...full.factures, ...full.historial] : [],
     periode: periodeTriat ?? (full ? { any: full.any, t: full.t } : null),
     avui: hui
-  }), [tauler.lectura, full, periodeTriat, hui]);
+  }), idioma), [tauler.lectura, full, periodeTriat, hui, idioma]);
 
   /* Quan el Full analitza un trimestre nou, l'acte més recent de la persona és eixe: el selector torna a seguir-lo. */
   useEffect(() => {
@@ -508,7 +509,7 @@ export default function ShellGestoria({
   /* La boina: l'ull i el xip de la darrera lectura. El rellotge viu l'afig PaginaApp darrere, a l'extrem dret. */
   const accionsBoina = (
     <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina">
-      <UllPrivacitat visible={visible} onCommuta={() => setVisible((abans) => !abans)} etiqueta="Mostra les xifres" />
+      <UllPrivacitat visible={visible} onCommuta={() => setVisible((abans) => !abans)} etiqueta="Mostra les xifres" idioma={idioma} />
       {lectura ? (
         <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina__lectura">
           <DateTimeControl time={lectura.time} date={lectura.date} dateTime={lectura.dateTime} label={lectura.etiqueta} />
@@ -519,24 +520,24 @@ export default function ShellGestoria({
   /* Les targetes dels Bancs i dels Impostos pinten la vista que el seu commutador oferix (la Cabina és del Tauler). */
   const vistaPanell = vistaDelModul(vista, VISTES_PANELL);
   const comuns = { titular, pastilla, visible, generacio: tauler.generacio, vista: vistaPanell, onObri: obriTargeta,
-    onAvis: avisaAccio, ambAccionsPrivades: true };
+    onAvis: avisaAccio, ambAccionsPrivades: true, idioma };
   const actual = MODULS_GESTORIA.find((m) => m.id === modul) ?? MODULS_GESTORIA[0];
   /* No es pinta ni un detall ni un avís del mòdul anterior, tampoc abans
      que l'efecte de navegació els buide. La lectura financera es conserva. */
   const targeta = oberta?.modul === modul ? dades.targetes.find((t) => t.id === oberta.id) ?? null : null;
   const avisActual = avis?.modul === modul ? avis.text : '';
-  const porta = <PortaTauler tauler={tauler} onObreTractors={obreTractors} onOblida={oblida} />;
+  const porta = <PortaTauler tauler={tauler} onObreTractors={obreTractors} onOblida={oblida} idioma={idioma} />;
   const contextTauler = (
-    <ContextTrimestre dades={dades} visible={visible} vista={vista} onCanviaVista={setVista} vistes={VISTES_TAULER} periode={ambPeriode} />
+    <ContextTrimestre dades={dades} visible={visible} vista={vista} onCanviaVista={setVista} vistes={VISTES_TAULER} periode={ambPeriode} idioma={idioma} />
   );
-  const context = <ContextTrimestre dades={dades} visible={visible} vista={vista} onCanviaVista={setVista} periode={ambPeriode} />;
+  const context = <ContextTrimestre dades={dades} visible={visible} vista={vista} onCanviaVista={setVista} periode={ambPeriode} idioma={idioma} />;
   /* La pista de l'Escàner cap a «Identitat i Finestreta»: només si el pont en dona la ruta. */
   const obreIdentitat = hrefIdentitat ? () => navigate(hrefIdentitat) : undefined;
   const portesDelTitular = titular.configurat ? null : (
-    <PortesDelTitular hrefEntrada={hrefEntrada} onConfigura={() => setConfigurant(true)} onEntra={() => navigate(hrefEntrada)} />
+    <PortesDelTitular hrefEntrada={hrefEntrada} onConfigura={() => setConfigurant(true)} onEntra={() => navigate(hrefEntrada)} idioma={idioma} />
   );
   const titularDEstaPagina = !titularPropi && titularLocal
-    ? <TitularDEstaPagina onCanvia={() => setConfigurant(true)} onOblida={oblidaTitular} />
+    ? <TitularDEstaPagina onCanvia={() => setConfigurant(true)} onOblida={oblidaTitular} idioma={idioma} />
     : null;
 
   const contingut = {
@@ -544,27 +545,31 @@ export default function ShellGestoria({
       <>
         {portesDelTitular}{titularDEstaPagina}{contextTauler}{porta}
         {vista === 'cabina' ? (
-          <CabinaAvio dades={dades} visible={visible} onObri={obriTargeta} falten={falten}
-            plantilla={<PlantillaGestoria full={full} visible={visible} descarrega={descarrega} onObreFull={obreFull} />} />
-        ) : <VistaTauler dades={dades} comuns={comuns} />}
+          <CabinaAvio dades={dades} visible={visible} onObri={obriTargeta} falten={falten} idioma={idioma}
+            plantilla={<PlantillaGestoria full={full} visible={visible} descarrega={descarrega} onObreFull={obreFull} idioma={idioma} />} />
+        ) : <VistaTauler dades={dades} comuns={comuns} idioma={idioma} />}
       </>
     ),
     bancs: <>
-      <ContextTrimestre dades={dades} visible={visible} vista={vista} onCanviaVista={setVista} />
-      {porta}<VistaBancs dades={dades} comuns={comuns} />
+      <ContextTrimestre dades={dades} visible={visible} vista={vista} onCanviaVista={setVista} idioma={idioma} />
+      {porta}<VistaBancs dades={dades} comuns={comuns} idioma={idioma} />
     </>,
-    impostos: <>{context}<VistaImpostos dades={dades} comuns={comuns} /></>,
+    impostos: <>{context}<VistaImpostos dades={dades} comuns={comuns} idioma={idioma} /></>,
     full: (
       <ContenidorGestoria magatzem={magatzem} subtle={subtle} tractors={tractors} entorn={entorn} rellotge={rellotge}
-        inflate={inflate} avui={avui} descarrega={descarrega} onFactures={setFull} />
+        inflate={inflate} avui={avui} descarrega={descarrega} onFactures={setFull} idioma={idioma} />
     ),
     escaner: (
       <PanellEscaner escaner={escaner} tauler={tauler} dades={dades} visible={visible} onObreTractors={obreTractors}
-        onObreIdentitat={obreIdentitat} />
+        onObreIdentitat={obreIdentitat} idioma={idioma} />
     )
-  }[actual.id] ?? <ModulEnObres modul={actual} />;
+  }[actual.id] ?? <ModulEnObres modul={actual} idioma={idioma} />;
 
-  const salutacio = 'Ací tens la realitat de la teua empresa, calculada en este ordinador amb els extractes que tries.';
+  const salutacio = tg(idioma, 'Ací tens la realitat de la teua empresa, calculada en este ordinador amb els extractes que tries.');
+  const etiquetesPanell = idioma === 'ca' ? ETIQUETES_PANELL : ETIQUETES_PANELL.map((e) => ({ ...e, text: tg(idioma, e.text) }));
+  const etiquetesPagina = actual.enObres
+    ? [...etiquetesPanell, idioma === 'ca' ? ETIQUETA_EN_OBRES : { ...ETIQUETA_EN_OBRES, text: tg(idioma, ETIQUETA_EN_OBRES.text) }]
+    : idioma === 'ca' ? ETIQUETES_OBERTES : [...etiquetesPanell, etiquetaBetaOberta(idioma)];
 
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-closca">
@@ -572,13 +577,13 @@ export default function ShellGestoria({
         {targeta ? (
           <PaginaTargeta targeta={targeta} titular={titular} visible={visible}
             barActions={accionsBoina} rellotgeViu rellotge={rellotge} onTorna={tornaAlModul} refTitol={refTitol}
-            onAvis={avisaAccio} avis={avisActual ? <Alerta to="info" onTanca={() => setAvis(null)}>{avisActual}</Alerta> : null} />
+            onAvis={avisaAccio} avis={avisActual ? <Alerta to="info" onTanca={() => setAvis(null)}>{avisActual}</Alerta> : null} idioma={idioma} />
         ) : (
-          <PaginaApp title={actual.titol} subtitle={actual.subtitol}
-            lead={actual.id === 'tauler' ? (titular.configurat ? `Hola, ${titular.nom}! ${salutacio}` : salutacio) : actual.enObres ? EN_OBRES : undefined}
+          <PaginaApp title={tg(idioma, actual.titol)} subtitle={tg(idioma, actual.subtitol)}
+            lead={actual.id === 'tauler' ? (titular.configurat ? tf(idioma, 'salutacioTitular', titular.nom, salutacio) : salutacio) : actual.enObres ? tg(idioma, EN_OBRES) : undefined}
             author={titular} barActions={accionsBoina} rellotgeViu rellotge={rellotge}
-            labels={actual.enObres ? [...ETIQUETES_PANELL, ETIQUETA_EN_OBRES] : ETIQUETES_OBERTES}
-            refTitol={refTitol} {...barraPrivada(avisaAccio)}>
+            labels={etiquetesPagina}
+            refTitol={refTitol} {...barraPrivada(avisaAccio, idioma)}>
             {avisActual ? <Alerta to="info" onTanca={() => setAvis(null)}>{avisActual}</Alerta> : null}
             {contingut}
           </PaginaApp>
@@ -586,22 +591,22 @@ export default function ShellGestoria({
       </div>
       {/* Només mentre és obert: el seu encapçalament no ha d'arribar mai a l'Índex de la pàgina. */}
       {configurant ? (
-        <Dialeg obert onTanca={() => setConfigurant(false)} titol="Configura el titular" mida="s"
+        <Dialeg obert onTanca={() => setConfigurant(false)} titol={tg(idioma, 'Configura el titular')} mida="s"
           accions={(
             <>
-              <Boto varietat="secundari" onClick={() => setConfigurant(false)}>Cancel·la</Boto>
-              <Boto varietat="primari" tipus="submit" form={idFormTitular}>Desa</Boto>
+              <Boto varietat="secundari" onClick={() => setConfigurant(false)}>{tg(idioma, 'Cancel·la')}</Boto>
+              <Boto varietat="primari" tipus="submit" form={idFormTitular}>{tg(idioma, 'Desa')}</Boto>
             </>
           )}>
           <form ref={adoptaEstilsDiferits} id={idFormTitular} className="sdp-gestoria-titular" onSubmit={desaTitular}>
-            <Camp etiqueta="Nom" obligatori>
+            <Camp etiqueta={tg(idioma, 'Nom')} obligatori>
               <CampText name="nom" autoComplete="name" defaultValue={titularLocal?.nom ?? ''} />
             </Camp>
-            <Camp etiqueta="Població" ajuda="Opcional.">
+            <Camp etiqueta={tg(idioma, 'Població')} ajuda={tg(idioma, 'Opcional.')}>
               <CampText name="poble" autoComplete="address-level2" defaultValue={titularLocal?.poble ?? ''} />
             </Camp>
             <p className="sdp-gestoria-titular__nota">
-              Només es guarda en la memòria d’esta pàgina: no ix d’este ordinador, no és cap compte i «Oblida el titular» o «Oblida les dades» l’esborren.
+              {tg(idioma, 'Només es guarda en la memòria d’esta pàgina: no ix d’este ordinador, no és cap compte i «Oblida el titular» o «Oblida les dades» l’esborren.')}
             </p>
           </form>
         </Dialeg>

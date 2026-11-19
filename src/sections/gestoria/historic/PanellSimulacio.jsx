@@ -20,6 +20,7 @@ import { AccordionItem } from '../../../components/PedraSeca/organismes/Accordio
 import { Camp, CampText, Casella, GrupCamps } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
 import { CAMPS_PARAMETRES, ETIQUETA_NO_VERIFICAT, totalDeLAny } from '../impostos/nucli/simulacio.js';
+import { tg } from '../i18nGestoria.js';
 import { formatData } from '../nucli/dates.js';
 import { Xifra } from '../tauler/Tauler.jsx';
 import { CAMPS_SUPOSITS } from './nucli/operacions.js';
@@ -34,13 +35,13 @@ export const importDe = (valor) => (Number.isSafeInteger(valor) ? { tipus: 'impo
 export const recompteDe = (valor) => (Number.isSafeInteger(valor) ? { tipus: 'recompte', valor } : null);
 
 /** Un percentatge, amagat amb l'ull tancat i «Sense dades» si no se sap. */
-export function Percentatge({ valor, visible = false }) {
-  if (typeof valor !== 'number' || !Number.isFinite(valor)) return <span ref={adoptaEstilsDiferits}>Sense dades</span>;
+export function Percentatge({ valor, visible = false, idioma = 'ca' }) {
+  if (typeof valor !== 'number' || !Number.isFinite(valor)) return <span ref={adoptaEstilsDiferits}>{tg(idioma, 'Sense dades')}</span>;
   if (!visible) {
     return (
       <span ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__amagat">
         <EyeOff size={20} aria-hidden="true" focusable="false" />
-        <span>Xifra amagada</span>
+        <span>{tg(idioma, 'Xifra amagada')}</span>
       </span>
     );
   }
@@ -132,7 +133,7 @@ function ImpostosDeLAny({ any, visible }) {
 }
 
 /* Els escenaris: dos percentatges i el que canvien els impostos. */
-function Escenaris({ h, visible }) {
+function Escenaris({ h, visible, idioma = 'ca' }) {
   const { facturacio, despesaIa } = h.configuracio.escenari;
   const [errors, setErrors] = useState({});
   const canvia = (clau) => (event) => {
@@ -142,12 +143,12 @@ function Escenaris({ h, visible }) {
   };
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__any">
-      <h3 className="sdp-gestoria-historic__subtitol">Escenaris</h3>
+      <h3 className="sdp-gestoria-historic__subtitol">{tg(idioma, 'Escenaris')}</h3>
       <div className="sdp-gestoria-historic__graella">
-        <Camp etiqueta="Facturació (% de canvi)" ajuda="10 vol dir facturar un 10 % més; -20, un 20 % menys." error={errors.facturacio || undefined}>
+        <Camp etiqueta={tg(idioma, 'Facturació (% de canvi)')} ajuda="10 vol dir facturar un 10 % més; -20, un 20 % menys." error={errors.facturacio || undefined}>
           <CampText tipus="number" step="1" min="-100" max="1000" defaultValue={facturacio} onChange={canvia('facturacio')} />
         </Camp>
-        <Camp etiqueta="Despesa en IA (% de canvi)" ajuda="-30 vol dir gastar un 30 % menys en IA." error={errors.despesaIa || undefined}>
+        <Camp etiqueta={tg(idioma, 'Despesa en IA (% de canvi)')} ajuda="-30 vol dir gastar un 30 % menys en IA." error={errors.despesaIa || undefined}>
           <CampText tipus="number" step="1" min="-100" max="1000" defaultValue={despesaIa} onChange={canvia('despesaIa')} />
         </Camp>
       </div>
@@ -155,19 +156,19 @@ function Escenaris({ h, visible }) {
         <Taula titol="El que canvia amb l’escenari" densa>
           <thead ref={adoptaEstilsDiferits}>
             <tr>
-              <th scope="col">Any</th><th scope="col">IVA (303)</th><th scope="col">IRPF (130)</th><th scope="col">Renda</th>
-              <th scope="col">Impostos en total</th><th scope="col">Rendiment</th>
+              <th scope="col">{tg(idioma, 'Any')}</th><th scope="col">IVA (303)</th><th scope="col">IRPF (130)</th><th scope="col">Renda</th>
+              <th scope="col">Impostos en total</th><th scope="col">{tg(idioma, 'Rendiment')}</th>
             </tr>
           </thead>
           <tbody>
             {h.comparacio.map((c) => (
               <tr ref={adoptaEstilsDiferits} key={c.any}>
                 <th scope="row">{c.any}</th>
-                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.iva)} visible={visible} /></td>
-                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.irpf130)} visible={visible} /></td>
-                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.renda)} visible={visible} /></td>
-                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.total)} visible={visible} /></td>
-                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.rendiment)} visible={visible} /></td>
+                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.iva)} visible={visible} idioma={idioma} /></td>
+                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.irpf130)} visible={visible} idioma={idioma} /></td>
+                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.renda)} visible={visible} idioma={idioma} /></td>
+                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.total)} visible={visible} idioma={idioma} /></td>
+                <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.rendiment)} visible={visible} idioma={idioma} /></td>
               </tr>
             ))}
           </tbody>
@@ -178,9 +179,9 @@ function Escenaris({ h, visible }) {
 }
 
 /* Les suposicions de les operacions del banc. */
-function Suposits({ h }) {
+function Suposits({ h, idioma = 'ca' }) {
   return (
-    <GrupCamps llegenda="Suposicions sobre els moviments del banc">
+    <GrupCamps llegenda={tg(idioma, 'Suposicions sobre els moviments del banc')}>
       {CAMPS_SUPOSITS.map(({ clau, nom, unitat }) => (unitat === 'boolea' ? (
         <Casella key={clau} etiqueta={nom} checked={Boolean(h.suposits[clau])} onChange={(event) => h.canviaSuposit(clau, event.target.checked)} />
       ) : (
@@ -323,13 +324,13 @@ function ParametresDeLAny({ h, any }) {
  * Les simulacions.
  * @param {{ h: object, visible: boolean }} p `h`: el de useHistoric
  */
-export function PanellSimulacio({ h, visible }) {
+export function PanellSimulacio({ h, visible, idioma = 'ca' }) {
   const id = useId();
   const banc = h.banc;
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__seccio" aria-labelledby={id}>
-      <h2 id={id} className="sdp-gestoria-historic__titol">Simulacions d’impostos</h2>
-      <Alerta to="avis" titol={ETIQUETA_NO_VERIFICAT} viva={false}>
+      <h2 id={id} className="sdp-gestoria-historic__titol">{tg(idioma, 'Simulacions d’impostos')}</h2>
+      <Alerta to="avis" titol={tg(idioma, ETIQUETA_NO_VERIFICAT)} viva={false}>
         Calculat amb els moviments del banc i les suposicions de baix: cada despesa necessita la seua factura per a deduir-se, les entrades
         sense un altre origen conegut compten com a cobraments de clients (per prudència, l’estimació en pot eixir alta) i la renda només
         compta l’activitat econòmica, sense altres rendes, reduccions ni deduccions. No és cap declaració.
@@ -339,18 +340,18 @@ export function PanellSimulacio({ h, visible }) {
         /* Els recomptes també són xifres de la persona: amb l'ull tancat, amagats. */
         <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">
           {'Despeses sense proveïdor conegut, que van sense IVA deduïble: '}
-          <Xifra xifra={recompteDe(banc.senseTractament)} visible={visible} />
+          <Xifra xifra={recompteDe(banc.senseTractament)} visible={visible} idioma={idioma} />
           {'. Eixides que no compten com a despesa (transferències, altres o per revisar): '}
-          <Xifra xifra={recompteDe(banc.noDeduibles)} visible={visible} />
+          <Xifra xifra={recompteDe(banc.noDeduibles)} visible={visible} idioma={idioma} />
           {'.'}
         </p>
       ) : null}
       {(h.simulacio?.anys ?? []).map((any) => <ImpostosDeLAny key={any.any} any={any} visible={visible} />)}
       {/* La clau `carregada` torna a pintar els camps quan arriba la configuració desada. */}
-      <Escenaris key={`escenari-${h.carregada}`} h={h} visible={visible} />
+      <Escenaris key={`escenari-${h.carregada}`} h={h} visible={visible} idioma={idioma} />
       <div className="sdp-gestoria-historic__any">
-        <h3 className="sdp-gestoria-historic__subtitol">Paràmetres i suposicions</h3>
-        <Suposits key={`suposits-${h.carregada}`} h={h} />
+        <h3 className="sdp-gestoria-historic__subtitol">{tg(idioma, 'Paràmetres i suposicions')}</h3>
+        <Suposits key={`suposits-${h.carregada}`} h={h} idioma={idioma} />
         {(h.simulacio?.anys ?? h.serie?.anys ?? []).map((any) => <ParametresDeLAny key={`${any.any}-${h.carregada}`} h={h} any={any.any} />)}
       </div>
     </section>
