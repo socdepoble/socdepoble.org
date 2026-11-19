@@ -3,7 +3,8 @@
  *
  * Ordre del Mestre (261006, TPV Universal): una app no toca mai la sessió. No
  * importa SessionContext ni el backend (fronteres.test.js, Model B) i no veu
- * el JWT, ni l'usuari, ni el rol de plataforma. La plataforma traduïx
+ * el JWT, ni l'usuari, ni el rol de plataforma (IDEA-265, 261118: el Lector en rep
+ * només el booleà de superadmin; vegeu «El booleà de superadmin»). La plataforma traduïx
  * `permisos.escriure` del manifest a `potEscriure` i, dins de l'app, li dona
  * això i res més. Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla
  * 261013_1405, front B: la boina de la Gestoria porta el titular de la
@@ -27,6 +28,8 @@
  *                  que construïx RequireAuth (rutaDEntrada);
  *     titular      { nom, avatar, poble } de la persona de la sessió, o null
  *                  (ordre del Mestre, 13-10-2026; vegeu «El titular», més avall)
+ *     esSuperadmin NOMÉS a les apps d'APPS_AMB_SUPERADMIN (IDEA-265, 261118; vegeu
+ *                  «El booleà de superadmin», més avall); a la resta, la clau no hi és
  *   })
  *
  *   EL MOTIU (ordres del Mestre, 261006: offline prioritari, el permís per a
@@ -133,6 +136,14 @@
  *     l'avatar (text o null; el filtra la peça en pintar-lo) i el poble (text
  *     o ''). Cap id, correu, rol, kind ni testimoni. No va mai a la URL ni a
  *     cap emmagatzematge: el pont només el torna.
+ *   · EL BOOLEÀ DE SUPERADMIN (IDEA-265, 261118: la carpeta «Observatori I+D ·
+ *     Mestres» del Lector). Una desena clau, `esSuperadmin`, només per a les
+ *     apps internes d'APPS_AMB_SUPERADMIN; a la resta la clau ni hi és. És el
+ *     booleà de la sessió, mai el rol cru: cert només amb teSessio i el
+ *     superadmin de la instantània (en la renovació del JWT del mateix compte,
+ *     el de l'últim 'dins', com el permís 'superadmin'); en el dubte, fals.
+ *     Només decidix el que es MOSTRA: les dades continuen protegides al
+ *     servidor. Afegir-hi una app és decisió del Mestre.
  *   · Cap crida al port del backend ni a la xarxa: només llig la instantània
  *     de la ruta, el navegador i el que hi ha desat en este dispositiu.
  *   · Proves: ProveidorPlataforma amb `entorn.sessio` ({ estat, esSuperadmin?,
@@ -163,6 +174,8 @@ export const ESTAT = Object.freeze({ COMPROVANT: 'comprovant', DINS: 'dins', FOR
 export const MOTIUS = Object.freeze([
   'lliure', 'sessio', 'mode-proves', 'fora-de-linia', 'comprovant-desada', 'comprovant', 'sense-permis', 'sense-sessio'
 ]);
+/** IDEA-265 (261118) · Les apps que reben el booleà de superadmin (vegeu la capçalera). */
+export const APPS_AMB_SUPERADMIN = Object.freeze(['lector']);
 const MOTIUS_QUE_ESCRIUEN = new Set(['lliure', 'sessio', 'mode-proves', 'fora-de-linia', 'comprovant-desada']);
 const MODES_DE_PROVES = new Set(['seed', 'local']);
 
@@ -312,6 +325,8 @@ export function useSessioApp() {
      a l'app interna que el declara (vegeu «El titular», a la capçalera). */
   const ambTitular = manifest.permisos?.titular === 'sessio';
   const titularDeLaRuta = deLaRuta?.titular ?? null;
+  /* IDEA-265 (261118) · El booleà de superadmin, només a les apps de la llista (vegeu la capçalera). */
+  const ambSuperadmin = manifest.origen === 'interna' && APPS_AMB_SUPERADMIN.includes(manifest.id);
 
   return useMemo(() => {
     const motiu = motiuDe({ escriure, teSessio, esSuperadmin, estat, enLinia, modeProves, recuperable });
@@ -330,7 +345,9 @@ export function useSessioApp() {
       modeProves,
       marca,
       rutaEntrada: rutaDEntrada({ mode: 'entrar', tornar: desti }),
-      titular
+      titular,
+      ...(ambSuperadmin ? { esSuperadmin: teSessio && esSuperadmin === true } : {})
     });
-  }, [deLEntorn, estat, teSessio, esSuperadmin, enLinia, modeProves, recuperable, marcaDeLaRuta, escriure, desti, ambTitular, titularDeLaRuta]);
+  }, [deLEntorn, estat, teSessio, esSuperadmin, enLinia, modeProves, recuperable, marcaDeLaRuta, escriure, desti, ambTitular, titularDeLaRuta,
+    ambSuperadmin]);
 }

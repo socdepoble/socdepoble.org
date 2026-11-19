@@ -81,6 +81,18 @@
  * fonts (useFontsPersonals.js): pendents amb la llavor o un port propi; amb el
  * servei de notícies, llegides per ell (T5b, 261024), i també s'hi afigen des
  * de la gestió de fonts de l'arbre (Codex D-06, 261024).
+ *
+ * IDEA-265 (261118) · La carpeta «Observatori I+D · Mestres» (observatori.js), només per a qui és
+ * superadmin: el booleà del pont de sessió (useSessioApp().esSuperadmin, que la plataforma només
+ * dona al Lector), mai el rol cru. Només amb el port del servei: el catàleg la porta i la ronda la
+ * demana quan el booleà és cert (fontRemota.js · observatori), i un canvi del booleà fa una ronda
+ * nova. La lectura d'un article seu porta el veredicte i «Promou al Llibre Mestre»
+ * (vistes/Observatori.jsx). És el que es MOSTRA, i només quan el catàleg del servei ja declara la
+ * font: hui no la declara ni el client del navegador (src/data/adaptadors/noticies/client.js, que
+ * només demana els ids del seu catàleg) ni la funció del backend, i fins que les dues peces la
+ * porten (el backend, només a superadmins) la carpeta no ix. A qui no és superadmin, «Per a després»
+ * no li mostra els articles de l'observatori que s'hagen desat en este navegador
+ * (estatSenseObservatori).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from '../../app/contexts/RouterContext';
@@ -92,6 +104,7 @@ import { creaFontsPersonals, destinacioDe } from './fontsPersonals.js';
 import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { creaMagatzemLector } from './magatzem.js';
 import { SENSE_MITJANS, mitjansDe } from './mitjans.js';
+import { estatSenseObservatori } from './observatori.js';
 import { HUI } from './nucli/index.js';
 import { CAMI_FONTS_VELL, CAMI_TOTES, RUTES_NOTICIES } from './rutes.js';
 import { useFontsPersonals } from './useFontsPersonals.js';
@@ -110,10 +123,15 @@ const LLAVOR_ACTIVA = import.meta.env.VITE_SDP_LECTOR_LLAVOR === '1';
    les categories del poble, la destinació d'enllaços (una sola vegada). */
 const fontDeLaLlavor = (rellotge) => (LLAVOR_ACTIVA ? creaFontNoticies(creaAdaptadorLlavor({ ara: rellotge() })) : null);
 /* T5 (261024) · El port de les fonts del servei, o null sense el servei de la plataforma.
-   T5b (261024) · `persona()`: el que ha triat la persona ({ noSeguides, personals }) o null. */
-const fontDelServei = (servei, persona) => (servei ? creaFontNoticies(creaAdaptadorRemot({ servei, persona })) : null);
-/* La tria de la persona que canvia el que es demana: les fonts apagades i les personals (ids). */
-const clauDeLaTria = (noSeguides, personals) => `${[...noSeguides].sort().join(' ')}|${personals.map((font) => font.id).join(' ')}`;
+   T5b (261024) · `persona()`: el que ha triat la persona ({ noSeguides, personals }) o null.
+   IDEA-265 (261118) · `observatori()`: si qui mira veu la carpeta de l'observatori. */
+const fontDelServei = (servei, persona, observatori) => (servei
+  ? creaFontNoticies(creaAdaptadorRemot({ servei, persona, observatori }))
+  : null);
+/* La tria de la persona que canvia el que es demana: les fonts apagades i les personals (ids) i,
+   IDEA-265, si veu l'observatori. */
+const clauDeLaTria = (noSeguides, personals, observatori) => `${[...noSeguides].sort().join(' ')}|${personals.map((font) => font.id).join(' ')}`
+  + (observatori ? '|observatori' : '');
 /* Ordre del Mestre (261024, 15:05; Codex D-06) · Les fonts personals s'afigen des de la gestió de
    fonts de l'arbre amb l'API de sempre (fontsPersonals.js · afigFontPersonal: la validació, el disc
    i una sola transacció), sobre el magatzem de l'app. L'API tanca el seu magatzem en acabar cada
@@ -176,8 +194,13 @@ function LectorAmbFont({ magatzem: magatzemPropi, font: fontPropia, servei, rell
      disc no s'ha llegit (l'estat i les fonts personals; un error de les personals també val),
      null, i la primera ronda espera. */
   const persona = useRef(null);
-  const [font] = useState(() => fontPropia || fontDelServei(servei, () => persona.current));
+  /* IDEA-265 (261118) · El booleà de superadmin del pont (fals mentre el rol no s'ha resolt): es llig
+     en cada ronda, i s'actualitza abans que la ronda isca, com `persona`. */
+  const { enLinia, esSuperadmin = false } = useSessioApp();
+  const veuObservatori = useRef(false);
+  const [font] = useState(() => fontPropia || fontDelServei(servei, () => persona.current, () => veuObservatori.current));
   const delServei = !fontPropia;
+  const observatori = delServei && esSuperadmin === true;
   /* 261024 (Lector; interfície amb el servei) · El servei diu si hi és i si llig les fonts
      personals (servei.estat()). Sense estat() (un servei de proves), es dona per encés. Amb les
      personals apagades al servei, la gestió de fonts diu la veritat: queden guardades ací i es
@@ -193,11 +216,11 @@ function LectorAmbFont({ magatzem: magatzemPropi, font: fontPropia, servei, rell
   const propies = personals.fonts;
   useEffect(() => {
     persona.current = llesta ? { noSeguides, personals: propies } : null;
-  }, [llesta, noSeguides, propies]);
-  const tria = llesta ? clauDeLaTria(noSeguides, propies) : '';
+    veuObservatori.current = observatori;
+  }, [llesta, noSeguides, propies, observatori]);
+  const tria = llesta ? clauDeLaTria(noSeguides, propies, observatori) : '';
   /* T5 (261024) · Sense xarxa, les fonts no poden respondre: la vista ho diu així, i quan torna
      la xarxa useNoticies les torna a demanar. */
-  const { enLinia } = useSessioApp();
   const noticies = useNoticies(font, enLinia, delServei ? { preparat: llesta, clau: tria } : undefined);
   /* Correcció L-07 (261024 Lector final) · L'estat del servei no és una foto del muntatge. El client
      torna a preguntar després d'una fallada de pas (fora de línia, o una resposta que no és la
@@ -259,9 +282,16 @@ function LectorAmbFont({ magatzem: magatzemPropi, font: fontPropia, servei, rell
   const { ara } = instant;
   /* El fus de qui llig, en minuts respecte d'UTC (+120 a l'estiu de València). */
   const desfas = -new Date(ara).getTimezoneOffset();
+  /* IDEA-265 · Qui no veu l'observatori no en veu cap desat (només la vista; les accions, les de sempre). */
+  const lectorVist = useMemo(() => {
+    const estatVist = observatori ? lector.estat : estatSenseObservatori(lector.estat);
+    return estatVist === lector.estat ? lector : { ...lector, estat: estatVist };
+  }, [lector, observatori]);
   const valor = useMemo(() => (lector.estat ? {
-    lector, personals, noticies, font, ara, desfas, ruta, idioma, enLinia, llegixPersonals, delServei, estatServei, mitjans, afigFont
-  } : null), [lector, personals, noticies, font, ara, desfas, ruta, idioma, enLinia, llegixPersonals, delServei, estatServei, mitjans, afigFont]);
+    lector: lectorVist, personals, noticies, font, ara, desfas, ruta, idioma, enLinia, llegixPersonals, delServei, estatServei, mitjans, afigFont,
+    observatori
+  } : null), [lector, lectorVist, personals, noticies, font, ara, desfas, ruta, idioma, enLinia, llegixPersonals, delServei, estatServei, mitjans,
+    afigFont, observatori]);
 
   if (!valor) return <Carregant etiqueta={tx.obrintLector} />;
   /* Ordre del Mestre (261024, 15:05) · «El Lector ha de ser exclusivament un UniversalWorkspace

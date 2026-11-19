@@ -231,7 +231,7 @@ import AvisOblitXat from './components/AvisOblitXat.jsx';
 import { capturaSessio, getDefaultUserId, sessioRecuperable } from '../../data/identitat.js';
 /* v1.2.8 · Només la projecció pura és estàtica; el motor d'accions i serveiXat.js es carreguen en diferit
    (pes de l'arrencada estàtica del connector de WordPress). */
-import { projectaAccionsMissatges } from '../../data/xat/projeccioAccionsMissatges.js';
+import { projectaAccionsMissatges, previesSenseAmagats } from '../../data/xat/projeccioAccionsMissatges.js';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
@@ -2459,10 +2459,6 @@ export function XatProvider({ children, config }) {
     const llistables = ambIAIA.some(esXatPublicDePaginaIAIA) ? ambIAIA.filter((f) => !esXatPublicDePaginaIAIA(f)) : ambIAIA;
     return senseDirectesBloquejats(llistables, esPersonaBloquejada);
   }, [filsAmbSilencis, iaiaApagada, esPersonaBloquejada]);
-  /* Fase D (261020, tasca 2) · La llista que es VEU, amb la vista prèvia
-     d'una persona bloquejada amagada. Internament (missatgesDerivats,
-     comunitats, la cerca de fils per id) es continua llegint filsVisibles. */
-  const filsAmbBloquejos = useMemo(() => anotaFilsBloquejats(filsVisibles, esPersonaBloquejada), [filsVisibles, esPersonaBloquejada]);
   /* Onada 6 (tasca 12) · Cert si `filId` és un xat de la IAIA que s'amaga
      perquè està apagada: XatSection en trau qui hi era dins, en lloc d'un 404. */
   const esFilAmagat = useCallback((filId) => {
@@ -2472,9 +2468,12 @@ export function XatProvider({ children, config }) {
     return esXatDeLaIAIA(fil);
   }, [iaiaApagada, fils, visitants]);
 
-  const missatgesDerivats = useMemo(() => {
+  const { missatgesDerivats, missatgesAnotats } = useMemo(() => {
     const ids = new Set([...Object.keys(missatgesPerFil), ...Object.keys(pendentsPerFil)]);
     const resultat = {};
+    /* D-v128-2-PREVIA · Els mateixos missatges ABANS de la projecció de les accions (encara amb els
+       amagats): previesSenseAmagats hi busca l'últim que encara veus. */
+    const anotatsPerFil = {};
     for (const id of ids) {
       const fil = filsVisibles.find((f) => f.id === id);
       /* Fase D (261020, tasca 2) · Els d'una persona bloquejada, anotats i
@@ -2487,15 +2486,30 @@ export function XatProvider({ children, config }) {
       /* R24 · xat_entrega (P2-9) · Si el servidor no informa de l'entrega, la marca ho diu. */
       const rebutsConeguts = !fil || fil.esPropi || fil.rebutsConeguts !== false;
       const combinats = combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], llegitAltres, rebutAltres, rebutsConeguts);
-      resultat[id] = projectaAccionsMissatges(anotaMissatgesBloquejats(
+      anotatsPerFil[id] = anotaMissatgesBloquejats(
         cablejatRural.current?.projecta(combinats, fil) ?? combinats,
         esPersonaBloquejada
-      ), estatAccions.perMissatge);
+      );
+      resultat[id] = projectaAccionsMissatges(anotatsPerFil[id], estatAccions.perMissatge);
     }
-    return resultat;
+    return { missatgesDerivats: resultat, missatgesAnotats: anotatsPerFil };
     /* R32 (xat_tros_paralel) · versioRural: el cablejat de la ref ha arribat. */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missatgesPerFil, pendentsPerFil, filsVisibles, esPersonaBloquejada, versioRural, estatAccions.perMissatge]);
+
+  /* D-v128-2-PREVIA · Les vistes prèvies de chatThreads (la llista, «Reenvia a…», la cerca del Xat, /cerca)
+     i de comunitats (FitxaComunitat, VistaComunitats) no ensenyen un missatge carregat i amagat amb
+     «Elimina per a mi»: l'últim que encara veus, o la vista prèvia buida. La MATEIXA llista si no n'hi ha
+     cap d'amagat. Va abans dels bloquejos: l'autor corregit també hi compta. */
+  const filsAmbPrevia = useMemo(
+    () => previesSenseAmagats(filsVisibles, missatgesAnotats, estatAccions.perMissatge, joId),
+    [filsVisibles, missatgesAnotats, estatAccions.perMissatge, joId]
+  );
+  /* Fase D (261020, tasca 2) · La llista que es VEU, amb la vista prèvia
+     d'una persona bloquejada amagada. Internament (missatgesDerivats, la
+     cerca de fils per id) es continua llegint filsVisibles; comunitats llig
+     filsAmbPrevia. */
+  const filsAmbBloquejos = useMemo(() => anotaFilsBloquejats(filsAmbPrevia, esPersonaBloquejada), [filsAmbPrevia, esPersonaBloquejada]);
 
   /* Decisió 1 del Mestre (261007) · El que es VEU penja de l'àmbit de dades,
      no del testimoni d'operació. Amb un àmbit nou, res no es veu fins que la
@@ -2585,7 +2599,9 @@ export function XatProvider({ children, config }) {
     [paginacio, dins]
   );
   const totalNoLlegits = useMemo(() => (visible ? sumaNoLlegits(filsComptats) : 0), [visible, filsComptats]);
-  const comunitats = useMemo(() => (visible ? agrupaComunitats(filsVisibles) : CAP), [visible, filsVisibles]);
+  /* D-v128-2-PREVIA · Les files de la comunitat amb la vista prèvia corregida (filsAmbPrevia conserva
+     ultimAl, ultimSeq i els no llegits: l'ordre i les insígnies no canvien). */
+  const comunitats = useMemo(() => (visible ? agrupaComunitats(filsAmbPrevia) : CAP), [visible, filsAmbPrevia]);
   const contactesFrequents = useMemo(() => (visible ? calculaContactesFrequents(filsComptats, null, joId) : CAP), [visible, filsComptats, joId]);
   const filAmagat = useCallback((filId) => (dins() ? esFilAmagat(filId) : false), [dins, esFilAmagat]);
   /* Gauntlet 261025_0545 (XC-14) · Contracte amb la vista. Abans, mentre la

@@ -131,6 +131,8 @@
     padding: 0;
     list-style: none;
   }
+  /* DT-LLISTES-D1 (D-v128-3) · Abans, a la llista compartida de modules.css; la mateixa capa i especificitat. */
+  .sdp-gestoria-panell__passos > li { margin-block: 0; }
   .sdp-gestoria-panell__pas {
     margin: 0;
     padding: var(--sdp-space-4);

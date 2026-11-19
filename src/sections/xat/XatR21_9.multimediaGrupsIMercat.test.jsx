@@ -372,7 +372,7 @@ describe('T2 · Mercat sense HTML cru, sense slugs/ids i pastilles Apple de 28px
     });
     const props = propsDeTargetaDeProducte(item, t);
     expect(props.body).toBe('Collita pròpia 1a extracció en fred.');
-    expect(props.labels.map((l) => l.text)).toEqual(['Mercat', '2 variants', 'Alimentació', 'Oli Verge Extra']);
+    expect(props.labels.map((l) => l.text)).toEqual(['Mercat', 'Alimentació', 'Oli Verge Extra', '2 variants']);
     expect(item.category_slug).toBe('alimentacio');
   });
 

@@ -88,3 +88,31 @@ test('host document policy excludes runner tests but still flags arbitrary produ
   fs.writeFileSync(path.join(root, 'src/main.jsx'), "import './hooks/head.test.js';");
   assert.match(runPedra(), /LLEI_06_ENCAPSULAMENT\s+3/, 'test modules imported by a production entry remain audited');
 });
+
+/* D-R30-LLEI06 · PageFrame és la porta única del <body> de la SPA: el permís
+   cobrix un sol document.body seu; qualsevol accés de més en PageFrame i
+   qualsevol altre mòdul que toque l'amfitrió continuen atrapats. */
+test('host document policy allows one document.body in PageFrame only, and the ratchet holds LLEI_06 and LLEI_02 at 0', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-pageframe-contract-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(root, 'src/components/universal'), { recursive: true });
+  const runPedra = () => spawnSync(process.execPath, [path.join(ROOT, 'tooling/brain/tractor-pedra-seca.mjs')], { cwd: root, encoding: 'utf8' }).stdout;
+  fs.writeFileSync(path.join(root, 'src/components/universal/PageFrame.jsx'), 'export const capa = () => document.body;');
+  assert.match(runPedra(), /LLEI_06_ENCAPSULAMENT\s+0\b/);
+  fs.writeFileSync(path.join(root, 'src/components/universal/PageFrame.jsx'), [
+    'export const capa = () => document.body;',
+    "export const bloqueja = () => { document.body.style.overflow = 'hidden'; };",
+    "export const marca = () => document.documentElement.classList.add('x');"
+  ].join('\n'));
+  assert.match(runPedra(), /LLEI_06_ENCAPSULAMENT\s+2\b/, 'accesses beyond the single body in PageFrame are still flagged');
+  fs.writeFileSync(path.join(root, 'src/components/universal/PageFrame.jsx'),
+    "export const capa = () => document.body;\nexport const marca = () => document.documentElement.classList.add('x');");
+  assert.match(runPedra(), /LLEI_06_ENCAPSULAMENT\s+1\b/, 'the body quota does not cover documentElement');
+  fs.writeFileSync(path.join(root, 'src/components/universal/PageFrame.jsx'), 'export const capa = () => document.body;');
+  fs.writeFileSync(path.join(root, 'src/components/universal/Altre.jsx'), 'export const capa = () => document.body;');
+  assert.match(runPedra(), /LLEI_06_ENCAPSULAMENT\s+1\b/, 'another module that touches the host body is still flagged');
+
+  const deute = JSON.parse(fs.readFileSync(path.join(ROOT, '.agents/deute/.pedra-seca-deute.json'), 'utf8'));
+  assert.deepEqual(deute.LLEI_06_ENCAPSULAMENT, { max: 0, coneguts: [] });
+  assert.deepEqual(deute.LLEI_02_TOKEN_FANTASMA, { max: 0, coneguts: [] });
+});

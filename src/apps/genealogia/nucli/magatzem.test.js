@@ -6,7 +6,7 @@
 import { describe, expect, test } from 'vitest';
 import { creaIdbFals } from '../../../utils/__fixtures__/navegadorFals.js';
 import { ANY, ARA, arbre, complet, persona, rel, uid } from './__fixtures__/arbreSintetic.js';
-import { CLAUS_META, NOM_BASE, carregaArbre, carregaMeta, creaMagatzemGenealogia, desaArbre, desaMeta, esborraArbre, llistaArbres } from '../magatzem.js';
+import { CLAUS_META, NOM_BASE, VERSIO_BASE, carregaArbre, carregaMeta, creaMagatzemGenealogia, desaArbre, desaMeta, esborraArbre, llistaArbres } from '../magatzem.js';
 import { creaArbre } from './model.js';
 
 const crea = (idb) => creaMagatzemGenealogia({ idb, navegador: null, Canal: null, anyActual: ANY });
@@ -21,7 +21,7 @@ describe('amb IndexedDB', () => {
     await desaArbre(primer, c);
     const llegit = await carregaArbre(crea(fals.idb), c.arbre.id);
     expect(llegit).toEqual(c);
-    expect(fals.registre.obrides.every(([nom, versio]) => nom === NOM_BASE && versio === 1)).toBe(true);
+    expect(fals.registre.obrides.every(([nom, versio]) => nom === NOM_BASE && versio === VERSIO_BASE)).toBe(true);
     expect(fals.registre.obertes).toBe(0);
   });
 
@@ -36,7 +36,8 @@ describe('amb IndexedDB', () => {
     await expect(magatzem.desa('relacions', { ...rel(10, 'progenitor', 1, 2), tipus: 'cosi' })).rejects.toThrow(TypeError);
     await expect(desaMeta(magatzem, 'secret', 'x')).rejects.toThrow(/desconeguda/);
     await expect(desaMeta(magatzem, 'avis', { acceptatA: 'ahir', versio: 1 })).rejects.toThrow(TypeError);
-    expect(CLAUS_META).toEqual(['avis', 'arbreActiu', 'ultimaCopia']);
+    expect(CLAUS_META).toEqual(['avis', 'arbreActiu', 'ultimaCopia', 'xifrat']);
+    await expect(desaMeta(magatzem, 'xifrat', { versio: 1, sal: 'curta', iteracions: 1000 })).rejects.toThrow(TypeError);
   });
 
   test('desaArbre esborra les persones i relacions que ja no hi són, i no toca els altres arbres', async () => {

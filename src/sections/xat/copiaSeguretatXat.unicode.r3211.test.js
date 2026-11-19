@@ -57,7 +57,10 @@ test('real backup form retains the original admitted secret after canonical comp
   expect(motor.exporta.mock.calls[0][0].contrasenya).toBe(original);
 });
 
-test('known JSX boundary: a hostile repetition still reaches native NFC when the primary password is admitted', () => {
+/* v1.2.10 · Gemini R32.12 (lot 03, normalitzaEntradaUi.js) tanca este límit conegut: la repetició hostil es refusa pel
+   pressupost de marques combinants abans d'arribar al normalize natiu. La prova passa de documentar el defecte a vigilar-ne
+   el tancament. */
+test('R32.12: a hostile repetition is refused before native NFC when the primary password is admitted', () => {
   const motor = formulari();
   escriu('Contrasenya de la còpia', valida); escriu('Repetix la contrasenya', hostil);
   const native = String.prototype.normalize;
@@ -66,7 +69,7 @@ test('known JSX boundary: a hostile repetition still reaches native NFC when the
     return String(this) === hostil ? hostil : native.call(this, forma);
   });
   fireEvent.click(screen.getByRole('button', { name: 'Prepara la còpia' }));
-  expect(spy.mock.contexts.some((text) => String(text) === hostil)).toBe(true);
+  expect(spy.mock.contexts.some((text) => String(text) === hostil)).toBe(false);
   expect(screen.getByLabelText('Repetix la contrasenya').getAttribute('aria-invalid')).toBe('true');
   expect(motor.exporta).not.toHaveBeenCalled();
 });

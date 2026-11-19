@@ -120,7 +120,7 @@ function creaMon({ lots = [], push = () => ({ estat: 201 }), base = () => null, 
             acceptats: cos.p_resultats.filter((r) => r.resultat === 'acceptat').length,
             reintentats: cos.p_resultats.filter((r) => r.resultat === 'reintenta').length });
         }
-        if (u.pathname === '/rest/v1/rpc/xat_push_credencial') return Response.json(null);
+        if (u.pathname === '/rest/v1/rpc/xat_push_credencial_v2') return Response.json(null);
         return new Response('{}', { status: 404 });
       }
       mon.push.push(crida);
@@ -739,19 +739,22 @@ describe('els enviadors natius (S3, preparats i inactius)', () => {
     await gestorDe(mon, { creaEnviadorsNatius: async (deps) => {
       rpc = deps.rpc;
       const abans = mon.crides.length;
-      expect(await rpc('xat_push_credencial', { p_proveidor: 'apns' })).toBeNull();
+      expect(await rpc('xat_push_credencial_v2', { p_proveidor: 'apns', p_empremta: '0123456789abcdef' })).toBeNull();
       crida = mon.crides[abans];
       return {};
     } })(peticio());
-    expect(crida.url).toBe(`${URL_SB}/rest/v1/rpc/xat_push_credencial`);
-    expect(crida.cos).toEqual({ p_proveidor: 'apns' });
+    expect(crida.url).toBe(`${URL_SB}/rest/v1/rpc/xat_push_credencial_v2`);
+    expect(crida.cos).toEqual({ p_proveidor: 'apns', p_empremta: '0123456789abcdef' });
     expect(crida.capcaleres).toMatchObject({ apikey: CLAU_LEGADA });
     await expect(rpc('pg_sleep', {})).rejects.toMatchObject({ codi: 'rpc' });
     await expect(rpc('xat_push_desa', {})).rejects.toMatchObject({ codi: 'rpc' });
+    /* P1-74 (A-03): el worker ja no crida les v1 de la caché (una fila per proveïdor). */
+    await expect(rpc('xat_push_credencial', {})).rejects.toMatchObject({ codi: 'rpc' });
+    await expect(rpc('xat_push_desa_credencial', {})).rejects.toMatchObject({ codi: 'rpc' });
     const despres = mon.crides.length;
-    await expect(rpc('xat_push_credencial', {})).rejects.toMatchObject({ codi: 'temps' });
+    await expect(rpc('xat_push_credencial_v2', {})).rejects.toMatchObject({ codi: 'temps' });
     expect(mon.crides).toHaveLength(despres);
-    expect(RPC_DEL_WORKER).toEqual(['xat_push_neteja', 'xat_push_reclama_v2', 'xat_push_confirma_v2', 'xat_push_credencial', 'xat_push_desa_credencial']);
+    expect(RPC_DEL_WORKER).toEqual(['xat_push_neteja', 'xat_push_reclama_v2', 'xat_push_confirma_v2', 'xat_push_credencial_v2', 'xat_push_desa_credencial_v2']);
   });
 
   test('cada enviador natiu rep només { tipus, adreca, llengua } validats', async () => {
@@ -1015,7 +1018,7 @@ describe('la frontera', () => {
   const GENERATS = new Set(['src/data/wikiManifest.js']);
   const sensComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
 
-  /* Gauntlet R10 · VFC-05 · La frontera cobrix les cinc RPC del worker, també xat_push_desa_credencial (la
+  /* Gauntlet R10 · VFC-05 · La frontera cobrix les cinc RPC del worker, també xat_push_desa_credencial_v2 (la
      dels enviadors natius, natius.js), i no les del client (xat_push_desa i xat_push_retira, de
      dispositiusAvisos.js) ni la funció privada de validació que els comentaris de src/ citen. */
   const RPC_FRONTERA = /xat_push_(?:reclama|confirma|expulsa|neteja|(?:desa_)?credencial)/;
@@ -1023,7 +1026,7 @@ describe('la frontera', () => {
 
   test('VFC-05 · la frontera cobrix cada RPC de RPC_DEL_WORKER i deixa passar les del client', () => {
     for (const nom of RPC_DEL_WORKER) expect(nom).toMatch(RPC_FRONTERA);
-    expect(RPC_DEL_WORKER).toContain('xat_push_desa_credencial');
+    expect(RPC_DEL_WORKER).toContain('xat_push_desa_credencial_v2');
     for (const nom of ['xat_push_desa', 'xat_push_retira', 'private.xat_push_adreca_valida']) expect(nom).not.toMatch(FRONTERA);
   });
 

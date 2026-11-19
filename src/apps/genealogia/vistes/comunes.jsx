@@ -10,14 +10,17 @@
  *   CasellaVius           la casella d'incloure persones vives, desmarcada per defecte
  *   BotoCopia             copia un text amb navigator.clipboard (l'app no envia res)
  *   CarregaPrivada        un clic: el meu arbre privat (.json o .ged), llegit i desat en este dispositiu
+ *   PortaFrase            amb la base xifrada i tancada, demana la frase de pas abans de res (P1-81)
+ *   ProteccioFrase        al panell dels arbres: posar, llevar o tancar la frase de pas (P1-81)
  *   EnllacBoto, useNavegaGenealogia, useEstret
  * Cap classe pròpia, cap style i cap full CSS: la geometria és de Pedra Seca.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Lock } from 'lucide-react';
 import { Link, useNavigate } from '../../../app/contexts/RouterContext';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import {
-  Accions, Alerta, Boto, Camp, CampFitxer, CampText, Casella, DialegConfirmacio, GrupCamps, GrupOpcions, Insignia, MarcColumna, Pila, Selector
+  Accions, Alerta, Boto, Camp, CampFitxer, CampText, Casella, DialegConfirmacio, EstatBuit, GrupCamps, GrupOpcions, Insignia, MarcColumna, Pila, Selector
 } from '../../../components/PedraSeca/index.js';
 import { useApp, useClosaAplicacio } from '../../plataforma/index.js';
 import { llegeixFitxerArbre, lligTextFitxerArbre } from '../gedcom/index.js';
@@ -128,6 +131,132 @@ export function CarregaPrivada() {
         </Alerta>
       ) : null}
       {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
+    </Pila>
+  );
+}
+
+/* El text del primer error d'una operació { ok, errors }. */
+const textPrimer = (errors, idioma) => textError(errors?.[0]?.clau ?? 'invalid', idioma);
+
+/**
+ * P1-81 / IDEA-253 · la frase de pas opcional. La frase no es desa enlloc i el
+ * camp es buida després de cada intent; tot passa per useGenealogia.
+ * PortaFrase és la porta de la base xifrada: fins que no s'obri, no es veu cap
+ * arbre. Es pinta fora de la closca, i per això `idioma` arriba per props.
+ */
+export function PortaFrase({ idioma = 'ca' }) {
+  const g = useGenealogia();
+  const [frase, setFrase] = useState('');
+  const [error, setError] = useState(null);
+  const [ocupat, setOcupat] = useState(false);
+  const obri = async (event) => {
+    event.preventDefault();
+    if (ocupat) return;
+    setOcupat(true);
+    try {
+      const resultat = await g.desbloqueja(frase);
+      setError(resultat.ok ? null : textPrimer(resultat.errors, idioma));
+    } catch (e) {
+      setError(textError(e, idioma));
+    } finally {
+      setFrase('');
+      setOcupat(false);
+    }
+  };
+  return (
+    <EstatBuit icona={Lock} titol={t(idioma, 'xifrat.porta.titol')} accio={(
+      <form onSubmit={obri} noValidate aria-label={t(idioma, 'xifrat.porta.titol')}>
+        <Pila gap={2}>
+          <Camp etiqueta={t(idioma, 'xifrat.frase')} error={error}>
+            <CampText tipus="password" autoComplete="current-password" value={frase} disabled={ocupat}
+              onChange={(event) => setFrase(event.target.value)} />
+          </Camp>
+          <Accions>
+            <Boto varietat="primari" tipus="submit" disabled={ocupat || !frase}>{t(idioma, 'xifrat.porta.obri')}</Boto>
+          </Accions>
+        </Pila>
+      </form>
+    )}>
+      {t(idioma, 'xifrat.porta.text')}
+    </EstatBuit>
+  );
+}
+
+/** Al panell: amb la base en clar, posar-hi una frase; xifrada, tancar-la o llevar la frase. */
+export function ProteccioFrase() {
+  const g = useGenealogia();
+  const tx = useT();
+  const idioma = useIdioma();
+  const [frase, setFrase] = useState('');
+  const [repetida, setRepetida] = useState('');
+  const [error, setError] = useState(null);
+  const [ocupat, setOcupat] = useState(false);
+  if (!g.persistent) return null;
+
+  const executa = async (operacio) => {
+    if (ocupat) return;
+    setOcupat(true);
+    try {
+      const resultat = await operacio(frase);
+      setError(resultat.ok ? null : textPrimer(resultat.errors, idioma));
+    } catch (e) {
+      setError(textError(e, idioma));
+    } finally {
+      setFrase('');
+      setRepetida('');
+      setOcupat(false);
+    }
+  };
+  const activa = (event) => {
+    event.preventDefault();
+    if (frase !== repetida) {
+      setError(tx('xifrat.noCoincidix'));
+      return;
+    }
+    executa(g.activaXifrat);
+  };
+  const desactiva = (event) => {
+    event.preventDefault();
+    executa(g.desactivaXifrat);
+  };
+  const desactivat = g.nomesLectura || ocupat;
+
+  if (!g.xifrat) {
+    return (
+      <form onSubmit={activa} noValidate aria-label={tx('xifrat.activa.titol')}>
+        <Pila gap={2}>
+          <Camp etiqueta={tx('xifrat.activa.titol')} ajuda={tx('xifrat.activa.ajuda')} error={error}>
+            <CampText tipus="password" autoComplete="new-password" value={frase} disabled={desactivat}
+              onChange={(event) => setFrase(event.target.value)} />
+          </Camp>
+          <Camp etiqueta={tx('xifrat.repetix')}>
+            <CampText tipus="password" autoComplete="new-password" value={repetida} disabled={desactivat}
+              onChange={(event) => setRepetida(event.target.value)} />
+          </Camp>
+          <Accions>
+            <Boto varietat="secundari" tipus="submit" disabled={desactivat || !frase}>{tx('xifrat.activa.boto')}</Boto>
+          </Accions>
+        </Pila>
+      </form>
+    );
+  }
+  return (
+    <Pila gap={2}>
+      <Alerta to="info" viva={false} titol={tx('xifrat.actiu.titol')}
+        accions={<Boto varietat="secundari" disabled={ocupat} onClick={() => g.bloqueja()}>{tx('xifrat.bloqueja')}</Boto>}>
+        {tx('xifrat.actiu.text')}
+      </Alerta>
+      <form onSubmit={desactiva} noValidate aria-label={tx('xifrat.desactiva.boto')}>
+        <Pila gap={2}>
+          <Camp etiqueta={tx('xifrat.frase')} error={error}>
+            <CampText tipus="password" autoComplete="current-password" value={frase} disabled={desactivat}
+              onChange={(event) => setFrase(event.target.value)} />
+          </Camp>
+          <Accions>
+            <Boto varietat="secundari" tipus="submit" disabled={desactivat || !frase}>{tx('xifrat.desactiva.boto')}</Boto>
+          </Accions>
+        </Pila>
+      </form>
     </Pila>
   );
 }
@@ -339,6 +468,7 @@ export function PanellArbres() {
           <Alerta to="avis" titol={tx('panell.memoria.titol')}>{tx('panell.memoria.text')}</Alerta>
         )}
         {g.nomesLectura ? <Alerta to="avis" titol={tx('panell.lectura.titol')}>{tx('panell.lectura.text')}</Alerta> : null}
+        <ProteccioFrase />
         {g.complet && g.complet.persones.length > 0 ? (
           <Alerta to="info" viva={false} titol={tx('panell.copia.titol')}
             accions={<EnllacBoto a={ruta('intercanvi')}>{tx('panell.copia.boto')}</EnllacBoto>}>

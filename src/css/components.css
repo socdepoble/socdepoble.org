@@ -36,7 +36,7 @@
   /* Separació vertical dels grups d'accions de l'administració (abans style en línia). */
   .sdp-admin-actions-inline--separat { margin-top: 0.5rem; }
   .sdp-admin-actions-inline--separat-ampli { margin-top: 1rem; }
-  .sdp-admin-accio-fitxer, .sdp-fila-seleccionable { cursor: pointer; }
+  .sdp-admin-accio-fitxer { cursor: pointer; }
   .sdp-superficie { background: var(--sdp-fons-superficie); }
   /* IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · El bloc d'accions canònic
      (composicio · Accions): centrat i a 24px del text de dalt i del de baix.

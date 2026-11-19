@@ -3,7 +3,8 @@
    vives: res ix d'este dispositiu. Es llig el text de TOTS els fitxers de
    producció de l'app i de les utilitats de src/utils que importen, i es
    comprova la frontera: ni xarxa, ni backend, ni telemetria, ni cap model
-   d'IA; IndexedDB només a magatzem.js de l'arrel (per utils/magatzemLocal.js); les
+   d'IA; IndexedDB només a magatzem.js de l'arrel (per utils/magatzemLocal.js); WebCrypto
+   només a nucli/xifratLocal.js (P1-81); les
    adreces de fitxer només a gedcom/descarrega.js; cap HTML injectat; les úniques
    adreces https són les dels arxius oficials de la llista blanca; i el build
    de producció amb VITE_SDP_APP_GENEALOGIA=0 no porta l'app. Els patrons es
@@ -135,6 +136,18 @@ describe('res ix d’este dispositiu', () => {
     }
     expect(ambVetats).toEqual([]);
     expect(fora).toEqual([]);
+  });
+
+  test('WebCrypto (subtle) només a nucli/xifratLocal.js, i el xifrat no surt de l’app (P1-81)', () => {
+    const patro = new RegExp(['\\.sub', 'tle\\b'].join(''));
+    const usen = CODI.filter(([, codi]) => patro.test(codi)).map(([ruta]) => ruta);
+    expect(usen).toEqual([`${APP}/nucli/xifratLocal.js`]);
+    /* El sobre es fa amb AES-GCM i PBKDF2, i el magatzem el fa servir (no és decoratiu). */
+    const xifrat = llig(`${APP}/nucli/xifratLocal.js`);
+    expect(xifrat).toContain("name: 'AES-GCM'");
+    expect(xifrat).toContain("name: 'PBKDF2'");
+    expect(especificadors(xifrat)).toEqual([]);
+    expect(especificadors(llig(`${APP}/magatzem.js`))).toContain('./nucli/xifratLocal.js');
   });
 
   test('les úniques adreces https són les dels arxius oficials de la llista blanca', () => {

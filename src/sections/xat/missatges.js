@@ -270,10 +270,13 @@ export function derivaEstat(m, llegitPelsAltresFinsSeq, rebutPelsAltresFinsSeq =
  * altres).
  */
 export function estatDeLUltim(fil, joId) {
-  if (!fil || !joId || fil.ultimAutorId == null || String(fil.ultimAutorId) !== String(joId) || !fil.ultimSeq) return null;
+  /* D-v128-2-PREVIA · Si la vista prèvia s'ha corregit perquè l'últim estava amagat, les marques són les del
+     missatge que s'ensenya (`seqPrevia`), no les de l'amagat (`ultimSeq`). */
+  const seq = fil?.seqPrevia !== undefined ? fil.seqPrevia : fil?.ultimSeq;
+  if (!fil || !joId || fil.ultimAutorId == null || String(fil.ultimAutorId) !== String(joId) || !seq) return null;
   const llegit = fil.esPropi ? Math.max(numero(fil.llegitFinsSeq), numero(fil.ultimSeq)) : fil.llegitPelsAltresFinsSeq;
   const rebut = fil.esPropi ? 0 : numero(fil.rebutPelsAltresFinsSeq);
-  return derivaEstat({ sender: 'me', seq: fil.ultimSeq }, llegit, rebut);
+  return derivaEstat({ sender: 'me', seq }, llegit, rebut);
 }
 
 /** Missatges del servidor (per `seq`) amb l'estat derivat i, al final, els pendents i fallits.

@@ -9,6 +9,8 @@ vi.mock('../../../app/contexts/RouterContext', () => ({
 
 vi.mock('../../../app/contexts/RouterContext.jsx', () => ({
   Link: ({ to, children, className }) => <a href={to} className={className}>{children}</a>,
+  /* IDEA-125 · Les targetes del Banc (UniversalCard) demanen useNavigate. */
+  useNavigate: () => vi.fn(),
 }));
 
 import { LaboratoriTaxonomiaDoctoral } from './LaboratoriTaxonomiaDoctoral.jsx';

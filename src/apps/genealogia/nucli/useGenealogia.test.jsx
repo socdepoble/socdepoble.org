@@ -4,7 +4,8 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { ARA, comptador, uid } from './__fixtures__/arbreSintetic.js';
-import { creaMagatzemGenealogia } from '../magatzem.js';
+import { creaIdbFals } from '../../../utils/__fixtures__/navegadorFals.js';
+import { NOM_BASE, creaMagatzemGenealogia } from '../magatzem.js';
 import { creaArbre, creaPersona } from './model.js';
 import { ProveidorGenealogia, useGenealogia } from './useGenealogia.jsx';
 
@@ -102,4 +103,130 @@ describe('ProveidorGenealogia', () => {
     await act(() => result.current.esborraArbre(primer));
     expect(result.current.arbres.map((a) => a.titol)).toEqual(['Importat']);
   });
+});
+
+/* P1-81 · la base xifrada amb frase de pas, des del proveïdor: el disc (IDB fals)
+   no porta cap nom, les escriptures es tornen a xifrar, i la clau es descarta en
+   bloquejar i en pagehide. Iteracions de producció: cada derivació tarda una mica. */
+describe('ProveidorGenealogia · base xifrada (P1-81)', () => {
+  const FRASE = 'quatre paraules ben llargues';
+
+  test('activa, escriu xifrat, bloqueja, desbloqueja, es tanca en pagehide i es desactiva', async () => {
+    const fals = creaIdbFals();
+    const magatzem = creaMagatzemGenealogia({ idb: fals.idb, navegador: null, Canal: null, anyActual: 2026 });
+    const nouId = comptador();
+    const wrapper = ({ children }) => (
+      <ProveidorGenealogia magatzem={magatzem} rellotge={RELLOTGE} nouId={nouId}>{children}</ProveidorGenealogia>
+    );
+    const { result } = renderHook(() => useGenealogia(), { wrapper });
+    const disc = () => JSON.stringify(['arbres', 'persones', 'relacions', 'entrevistes', 'meta', 'cofre'].map((s) => fals.files(NOM_BASE, s)));
+    await waitFor(() => expect(result.current.carregat).toBe(true));
+    expect(result.current).toMatchObject({ xifrat: false, bloquejat: false });
+    await act(() => result.current.creaArbre({ titol: 'Família de prova' }));
+    await act(() => result.current.desaPersona({ nom: 'Vicenta', cognom1: 'Ferrer' }));
+    expect(disc()).toMatch(/Vicenta/);
+
+    let r;
+    await act(async () => { r = await result.current.activaXifrat('curta'); });
+    expect(r).toEqual({ ok: false, errors: [{ camp: null, clau: 'frase-curta' }] });
+    await act(async () => { r = await result.current.activaXifrat(FRASE); });
+    expect(r).toEqual({ ok: true, errors: [] });
+    expect(result.current).toMatchObject({ xifrat: true, bloquejat: false });
+    expect(result.current.complet.persones.map((p) => p.nom)).toEqual(['Vicenta']);
+    expect(disc()).not.toMatch(/Vicenta|Ferrer|Família/);
+
+    await act(() => result.current.desaPersona({ nom: 'Rosalia', cognom1: 'Ferrer' }));
+    expect(result.current.complet.persones.map((p) => p.nom).sort()).toEqual(['Rosalia', 'Vicenta']);
+    expect(disc()).not.toMatch(/Rosalia|Vicenta|Ferrer/);
+
+    await act(() => result.current.bloqueja());
+    expect(result.current).toMatchObject({ xifrat: true, bloquejat: true, complet: null, arbres: [] });
+    await act(async () => { r = await result.current.desbloqueja('una altra frase incorrecta'); });
+    expect(r).toEqual({ ok: false, errors: [{ camp: null, clau: 'frase-incorrecta' }] });
+    expect(result.current.bloquejat).toBe(true);
+    await act(async () => { r = await result.current.desbloqueja(FRASE); });
+    expect(r.ok).toBe(true);
+    expect(result.current.bloquejat).toBe(false);
+    expect(result.current.complet.persones.map((p) => p.nom).sort()).toEqual(['Rosalia', 'Vicenta']);
+
+    await act(async () => { window.dispatchEvent(new Event('pagehide')); });
+    await waitFor(() => expect(result.current.bloquejat).toBe(true));
+    expect(result.current.complet).toBeNull();
+
+    await act(async () => { r = await result.current.desactivaXifrat(FRASE); });
+    expect(r).toEqual({ ok: true, errors: [] });
+    expect(result.current).toMatchObject({ xifrat: false, bloquejat: false });
+    expect(result.current.complet.persones.map((p) => p.nom).sort()).toEqual(['Rosalia', 'Vicenta']);
+    expect(fals.files(NOM_BASE, 'cofre')).toEqual([]);
+  }, 30000);
+
+  function muntaXifrat() {
+    const fals = creaIdbFals();
+    const magatzem = creaMagatzemGenealogia({ idb: fals.idb, navegador: null, Canal: null, anyActual: 2026 });
+    const nouId = comptador();
+    const wrapper = ({ children }) => (
+      <ProveidorGenealogia magatzem={magatzem} rellotge={RELLOTGE} nouId={nouId}>{children}</ProveidorGenealogia>
+    );
+    return { fals, magatzem, ...renderHook(() => useGenealogia(), { wrapper }) };
+  }
+  const noms = (result) => result.current.complet?.persones.map((p) => p.nom).sort() ?? null;
+
+  test('es tanca encara que el disc no es puga llegir (bloqueja i pagehide)', async () => {
+    const { magatzem, result } = muntaXifrat();
+    await waitFor(() => expect(result.current.carregat).toBe(true));
+    await act(() => result.current.creaArbre({ titol: 'Família de prova' }));
+    await act(() => result.current.desaPersona({ nom: 'Vicenta', cognom1: 'Ferrer' }));
+    await act(() => result.current.activaXifrat(FRASE));
+    expect(noms(result)).toEqual(['Vicenta']);
+    const bolca = magatzem.bolca;
+    const trenca = () => {
+      magatzem.bolca = () => Promise.reject(Object.assign(new Error('IndexedDB no disponible'), { codi: 'NO_DISPONIBLE' }));
+    };
+
+    trenca();
+    await act(() => result.current.bloqueja());
+    expect(result.current).toMatchObject({ xifrat: true, bloquejat: true, complet: null, arbres: [] });
+    expect(result.current.error?.codi).toBe('NO_DISPONIBLE');
+
+    magatzem.bolca = bolca;
+    await act(() => result.current.desbloqueja(FRASE));
+    expect(noms(result)).toEqual(['Vicenta']);
+    trenca();
+    await act(async () => { window.dispatchEvent(new Event('pagehide')); });
+    expect(result.current).toMatchObject({ xifrat: true, bloquejat: true, complet: null, arbres: [] });
+    magatzem.bolca = bolca;
+  }, 30000);
+
+  test('dos desats seguits: un xifrat que acaba tard no trepitja el més nou', async () => {
+    const { result } = muntaXifrat();
+    await waitFor(() => expect(result.current.carregat).toBe(true));
+    await act(() => result.current.creaArbre({ titol: 'Família de prova' }));
+    await act(() => result.current.activaXifrat(FRASE));
+    const subtle = globalThis.crypto.subtle;
+    const encrypt = subtle.encrypt.bind(subtle);
+    let primer = true;
+    const espia = vi.spyOn(subtle, 'encrypt').mockImplementation(async (...args) => {
+      if (primer) {
+        primer = false;
+        await new Promise((resol) => { setTimeout(resol, 60); });
+      }
+      return encrypt(...args);
+    });
+    let a;
+    let b;
+    try {
+      await act(async () => {
+        const pere = result.current.desaPersona({ nom: 'Pere', cognom1: 'Ferrer' });
+        await new Promise((resol) => { setTimeout(resol, 5); });
+        const rosalia = result.current.desaPersona({ nom: 'Rosalia', cognom1: 'Ferrer' });
+        [a, b] = await Promise.all([pere, rosalia]);
+      });
+    } finally {
+      espia.mockRestore();
+    }
+    expect([a.ok, b.ok]).toEqual([true, true]);
+    await act(() => result.current.bloqueja());
+    await act(() => result.current.desbloqueja(FRASE));
+    expect(noms(result)).toEqual(['Pere', 'Rosalia']);
+  }, 30000);
 });

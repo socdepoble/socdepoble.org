@@ -3,7 +3,7 @@
  * del web, mesurat sobre el build de veres.
  *
  *   node tooling/gates/pressupost-paquet.mjs [--dist dist] [--sostre 250000]
- *     [--sostre-arrencada <bytes>] [--json]
+ *     [--sostre-arrencada <bytes>] [--icones] [--json]
  *
  * Llig dist/index.html (el de `vite build`, abans del prerender social), hi
  * pren l'entrada (el <script type="module" src>) i els trossos que l'HTML fa
@@ -22,7 +22,13 @@
  * diccionari valencià, i fixar-ne un per defecte és una decisió a banda.
  * Per què una porta i no només la prova: src/config/paquetDArrencada.test.js
  * només coneix els mòduls pesants que nomena; un import estàtic nou a la
- * closca, no. Ací es veu en bytes. Només llig: no escriu res. */
+ * closca, no. Ací es veu en bytes.
+ * P-E (IDEA-260 c) · Amb --icones, també revisa els trossos de les icones de
+ * lucide-react (assets/<icona>-<hash>.js, amb els noms de
+ * node_modules/lucide-react/dist/esm/icons): cap no importa del tros
+ * d'entrada, i almenys un importa del tros 'lucide-nucli' (trossDArrencada).
+ * Si no, les icones tornen a canviar de nom a cada desplegament: codi 1.
+ * Només llig: no escriu res. */
 import fs from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -107,15 +113,44 @@ export function mesura(dist, { sostre = SOSTRE_PER_DEFECTE, sostreArrencada = nu
   };
 }
 
+/* Un tros de Rollup: «<nom>-<hash de 8>.js». Un import estàtic minificat:
+   from"./x.js" o import"./x.js" (els import() dinàmics no compten). */
+const TROS = /^(.+)-[A-Za-z0-9_-]{8}\.js$/;
+const IMPORT_ESTATIC = /(?:\bfrom|\bimport)\s*["']\.\/([^"'/]+)["']/g;
+const DEL_NUCLI_DE_LUCIDE = /^lucide-nucli-[A-Za-z0-9_-]{8}\.js$/;
+
+/** Els noms de les icones de lucide-react (sense el barril icons/index.mjs). */
+export function iconesDeLucide(arrel) {
+  const carpeta = path.join(arrel, 'node_modules/lucide-react/dist/esm/icons');
+  if (!fs.existsSync(carpeta)) throw new ErrorDUs(`no hi ha ${carpeta}: no se saben els noms de les icones`);
+  return new Set(fs.readdirSync(carpeta).filter((f) => f.endsWith('.mjs') && f !== 'index.mjs').map((f) => f.slice(0, -4)));
+}
+
+/** P-E (IDEA-260 c) · Quins trossos d'icona importen del tros d'entrada i quants del nucli de lucide. */
+export function revisaIcones(dist, { icones, entrada }) {
+  const assets = path.join(dist, 'assets');
+  const nomDeLEntrada = path.posix.basename(String(entrada).replace(/[?#].*$/, ''));
+  const trossos = fs.readdirSync(assets).filter((f) => icones.has(TROS.exec(f)?.[1])).sort();
+  const ambLEntrada = [];
+  let ambElNucli = 0;
+  for (const tros of trossos) {
+    const importats = [...fs.readFileSync(path.join(assets, tros), 'utf8').matchAll(IMPORT_ESTATIC)].map((m) => m[1]);
+    if (importats.includes(nomDeLEntrada)) ambLEntrada.push(tros);
+    if (importats.some((nom) => DEL_NUCLI_DE_LUCIDE.test(nom))) ambElNucli += 1;
+  }
+  return { trossos: trossos.length, ambLEntrada, ambElNucli, correcte: ambLEntrada.length === 0 && ambElNucli > 0 };
+}
+
 function llegixOpcions(args) {
-  const opcions = { dist: 'dist', sostre: SOSTRE_PER_DEFECTE, sostreArrencada: null, json: false };
+  const opcions = { dist: 'dist', sostre: SOSTRE_PER_DEFECTE, sostreArrencada: null, icones: false, json: false };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '--json') opcions.json = true;
+    else if (arg === '--icones') opcions.icones = true;
     else if (arg === '--dist' && args[i + 1]) opcions.dist = args[++i];
     else if (arg === '--sostre' && /^\d+$/.test(args[i + 1] || '')) opcions.sostre = Number(args[++i]);
     else if (arg === '--sostre-arrencada' && /^\d+$/.test(args[i + 1] || '')) opcions.sostreArrencada = Number(args[++i]);
-    else throw new ErrorDUs(`opció desconeguda o sense valor: ${arg} (ús: --dist <dir> --sostre <bytes> --sostre-arrencada <bytes> --json)`);
+    else throw new ErrorDUs(`opció desconeguda o sense valor: ${arg} (ús: --dist <dir> --sostre <bytes> --sostre-arrencada <bytes> --icones --json)`);
   }
   return opcions;
 }
@@ -126,9 +161,11 @@ export function main(args = process.argv.slice(2), { cwd = process.cwd(), out = 
   let resultat;
   try {
     opcions = llegixOpcions(args);
-    resultat = mesura(path.resolve(cwd, opcions.dist), { sostre: opcions.sostre, sostreArrencada: opcions.sostreArrencada });
+    const dist = path.resolve(cwd, opcions.dist);
+    resultat = mesura(dist, { sostre: opcions.sostre, sostreArrencada: opcions.sostreArrencada });
+    if (opcions.icones) resultat.icones = revisaIcones(dist, { icones: iconesDeLucide(cwd), entrada: resultat.entrada.recurs });
   } catch (error) {
-    // Qualsevol error abans de mesurar és 2: el codi 1 només vol dir «passa del sostre».
+    // Qualsevol error abans de mesurar és 2: el codi 1 només vol dir «passa del sostre» (o, amb --icones, que les icones no depenen del nucli de lucide).
     err(error instanceof ErrorDUs ? `${PREFIX} ${error.message}` : `${PREFIX} no s'ha pogut llegir el dist/: ${error?.message ?? error}`);
     return 2;
   }
@@ -138,6 +175,7 @@ export function main(args = process.argv.slice(2), { cwd = process.cwd(), out = 
     const { entrada, arrencada, precarregues, sostre, sostreArrencada } = resultat;
     out(`${PREFIX} Entrada ${entrada.recurs}: ${entrada.bytes} B, ${entrada.gzip} B gzip -9 (sostre ${sostre} B).`);
     out(`${PREFIX} Arrencada estàtica, entrada i ${precarregues.length} modulepreload: ${arrencada.bytes} B, ${arrencada.gzip} B gzip -9${sostreArrencada === null ? '' : ` (sostre ${sostreArrencada} B)`}.`);
+    if (resultat.icones) out(`${PREFIX} Icones de lucide: ${resultat.icones.trossos} trossos, ${resultat.icones.ambElNucli} importen de lucide-nucli i ${resultat.icones.ambLEntrada.length} de l'entrada.`);
   }
   let codi = 0;
   if (!resultat.dinsDelSostre) {
@@ -146,6 +184,11 @@ export function main(args = process.argv.slice(2), { cwd = process.cwd(), out = 
   }
   if (!resultat.arrencadaDinsDelSostre) {
     err(`${PREFIX} L'arrencada estàtica passa del sostre en ${resultat.arrencada.gzip - resultat.sostreArrencada} B gzip -9. Algun tros d'arrencada (react, estils, dompurify, ca) ha crescut o n'hi ha un de nou.`);
+    codi = 1;
+  }
+  if (resultat.icones && !resultat.icones.correcte) {
+    const { ambLEntrada } = resultat.icones;
+    err(`${PREFIX} Els trossos de les icones no depenen només del nucli de lucide${ambLEntrada.length ? ` (importen de l'entrada: ${ambLEntrada.slice(0, 5).join(', ')}${ambLEntrada.length > 5 ? '…' : ''})` : ' (cap importa de lucide-nucli)'}: canviaran de nom a cada desplegament. Vegeu la regla 'lucide-nucli' de tooling/vite/trossos-arrencada.mjs.`);
     codi = 1;
   }
   return codi;

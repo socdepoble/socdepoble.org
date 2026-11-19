@@ -93,6 +93,7 @@ import { esperaDeLaLlista, useXat } from './XatContext';
 import { useRitmeXat } from './useRitmeXat.js';
 import { derivaEstat } from './missatges.js';
 import { TEXTOS_ARXIVA } from './arxivaXat.js';
+import { textAccioMissatgeXat } from './i18nAccionsMissatgeXat.js';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../notes/NotesDataContext';
@@ -1192,8 +1193,8 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
 
   const notificaErrorAccio = useCallback((error) => {
     if (!mounted.current || error?.name === 'AbortError') return;
-    showToast(textDErrorDelXat(error, t, error?.message || t('section.xat.accioError', "No s'ha pogut completar l'acció.")), 'error');
-  }, [showToast, t]);
+    showToast(textDErrorDelXat(error, t, error?.message || textAccioMissatgeXat(locale, 'accioError')), 'error');
+  }, [showToast, t, locale]);
 
   const handleAlternaReaccio = useCallback((msg, emoji) => {
     if (typeof alternaReaccio !== 'function' || !filActiuId) return;
@@ -1265,13 +1266,13 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
       const fallits = resultats.filter((r) => r?.estat === 'error');
       const confirmats = resultats.filter((r) => r?.estat === 'confirmat');
       if (fallits.length > 0 && confirmats.length === 0) {
-        notificaErrorAccio(fallits[0]?.error || new Error(t('section.xat.missatge.reenviaError', "No s'ha pogut reenviar el missatge.")));
+        notificaErrorAccio(fallits[0]?.error || new Error(textAccioMissatgeXat(locale, 'reenviaError')));
         return;
       }
       if (fallits.length > 0) {
-        showToast(t('section.xat.missatge.reenviaParcial', "Alguns missatges no s'han pogut reenviar."), 'info');
+        showToast(textAccioMissatgeXat(locale, 'reenviaParcial'), 'info');
       } else {
-        showToast(t('section.xat.missatge.reenviat', 'Missatge reenviat'), 'success');
+        showToast(textAccioMissatgeXat(locale, 'reenviat'), 'success');
       }
       const unicDestiId = destins.length === 1 ? String(destins[0]?.id ?? destins[0] ?? '') : '';
       if (unicDestiId && unicDestiId !== filOrigenId) {
@@ -1280,7 +1281,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     } catch (error) {
       if (vigent()) notificaErrorAccio(error);
     }
-  }, [reenviaAConverses, filActiuId, ambFilDelMissatge, ambitEstable, notificaErrorAccio, t, showToast, navigate, consulta]);
+  }, [reenviaAConverses, filActiuId, ambFilDelMissatge, ambitEstable, notificaErrorAccio, locale, showToast, navigate, consulta]);
 
   /* Escape també ix de la selecció de xats (T68). S'escolta a `window`, que
      rep l'esdeveniment DARRERE de tots els menús (que l'escolten al document

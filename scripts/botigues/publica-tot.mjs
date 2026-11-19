@@ -35,9 +35,10 @@
  *       Va ABANS de npm run build (el build el copia a dist/), i mai en la mateixa ordre que
  *       --publica-apk. Abans d'escriure: la versió és la de package.json, cap build passa de
  *       VERSIO_CLIENT_NATIU, i el build ja es DONA al canal que obri el botó de l'App: Google Play el
- *       té «completed» en alguna pista (l'API, només lectura) i el d'iOS és al registre de pujades de
- *       producció (l'App Store). Si no, l'App avisaria d'una versió que la botiga encara no dona, a
- *       cada obertura. Mai baixa, llevat de --corregeix-ard (l'única manera de desfer una errada).
+ *       té «completed» a la pista production (l'API, només lectura; la prova interna només la reben
+ *       els provadors de Play, no tots els Android) i el d'iOS és al registre de pujades de producció
+ *       (l'App Store). Si no, l'App avisaria d'una versió que la botiga encara no dona, a cada
+ *       obertura. Mai baixa, llevat de --corregeix-ard (l'única manera de desfer una errada).
  *   --sincronitza-proves --versio X.Y.Z [--build-testflight M] [--build-apk N] [--corregeix-ard]
  *       Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026: actualització automàtica real als
  *       mòbils de prova) · escriu els canals de proves del manifest, amb les mateixes garanties que
@@ -76,7 +77,7 @@ import {
   empremtaDeKeytool, esDins, executa, jdkPerAGradle, llegixRegistre, normalitzaEmpremta, plega, rutaDe, sha256DeFitxer
 } from './entorn.mjs';
 import { arrelComprovada, llegixClauPlay, preflight } from './preflight.mjs';
-import { ESTATS_PLAY, consultaLlancament, netejaText, main as pujaAndroid } from './puja-android.mjs';
+import { ESTATS_PLAY, PISTES, consultaLlancament, netejaText, main as pujaAndroid } from './puja-android.mjs';
 import { main as pujaIos } from './puja-ios.mjs';
 import { VERSIO_CLIENT_NATIU } from './versio-client.mjs';
 import { CANALS_JARVIS, recullEmpaquetats } from '../../tooling/vite/consola-iaia.mjs';
@@ -142,9 +143,20 @@ export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, pl
   const higiene = inspeccionaHigienePaquets(arrel);
   const valors = pre.valors ?? {};
 
-  const passos = [];
+  /* R32.3-PEIX-ARD · L'ordre del pla: primer les compilacions i pujades natives (el preflight de cada
+     una vol l'arbre net); després els anuncis que escriuen public/.well-known/ard.json, versionat
+     (a producció, --sincronitza-ard, i l'anunci de TestFlight), perquè cap compilació nativa vinga
+     darrere d'un arbre brut; després «npm run build» (que copia ard.json a dist/ i buida dist/) i el
+     connector WordPress, al mateix lloc que abans; i al final el que necessita eixe dist/ (l'APK
+     directe i el seu anunci). Un --sincronitza-ard posterior al build no arribaria a l'App fins al
+     desplegament següent. */
+  const natius = [];
+  const anuncis = [];
+  const web = [];
+  const despresDelBuild = [];
+  const produccio = canal === CANALS.PRODUCCIO;
   if (plataformes.includes('web')) {
-    passos.push({
+    web.push({
       plataforma: 'web',
       accio: 'Compilar i desplegar PWA + Open Data + ActivityPub a socdepoble.org',
       ordre: ORDRE_WEB
@@ -152,49 +164,67 @@ export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, pl
   }
   if (plataformes.includes('wordpress')) {
     const vWp = empaquetats.plataformes?.wordpress?.versions?.[0] ?? '1.1.11';
-    passos.push({
+    web.push({
       plataforma: 'wordpress',
       accio: `Empaquetar connector WordPress v${vWp} (sense banners de vitrina dins del ZIP · IDEA-62)`,
       ordre: `SDP_RELEASE=1 SDP_VERSIO=${vWp} npm run build:wp && SDP_RELEASE=1 SDP_VERSIO=${vWp} npm run build:wp:directori && node wordpress-plugin/eines/empaqueta.mjs --directori`
     });
   }
   if (plataformes.includes('android')) {
-    passos.push({
+    natius.push({
       plataforma: 'android',
       accio: `Compilar i signar AAB (${v}+${b}) per a Google Play (${canal}) + APK directe universal (${NOM_APK_PUBLIC})`,
       ordre: `node scripts/botigues/publica-tot.mjs --versio ${v} --build ${b} --plataforma android --canal ${canal} --compila`
     });
     /* R32.3 · La pujada per l'API REST de Google Play (sense fastlane) i l'APK públic. */
-    passos.push({
+    natius.push({
       plataforma: 'android',
-      accio: `Pujar l'AAB a Google Play per l'API REST v3 (pista ${canal === CANALS.PRODUCCIO ? 'production' : 'internal'}, esborrany; a la prova interna, --desplega el deixa desplegat) amb el «sí» del Mestre`,
+      accio: `Pujar l'AAB a Google Play per l'API REST v3 (pista ${produccio ? 'production' : 'internal'}, esborrany; a la prova interna, --desplega el deixa desplegat) amb el «sí» del Mestre`,
       ordre: `node scripts/botigues/puja-android.mjs --versio ${v} --build ${b} --canal ${canal} --confirma=<«sí» del Mestre>`
     });
-    passos.push({
+    /* R32.3-PEIX-ARD · Només a producció: un build de la prova interna no s'anuncia a tots els Android. */
+    if (produccio) {
+      anuncis.push({
+        plataforma: 'android',
+        accio: `Quan Google Play done el versionCode ${b} a la pista production («completed»: promogut a Play Console i desplegat al 100 %), anunciar-lo a les Apps de Google Play (androidBuild a public/.well-known/ard.json) ABANS de «npm run build» i del desplegament web`,
+        ordre: `${ORDRE_SINCRONITZA_ARD} --versio ${v} --build ${b}`
+      });
+    }
+    despresDelBuild.push({
       plataforma: 'android',
       accio: `Publicar l'APK directe a /descarregues/${NOM_APK_PUBLIC}: entre «npm run build» (que buida dist/) i l'rsync de dist/ al Node 0 (socdepoble.cat), que és qui el servix; Firebase no el puja i hi redirigix (302)`,
       ordre: `${ORDRE_PUBLICA_APK} --versio ${v} --build ${b}`
     });
     /* v1.2.7 · P0-123 · Les Apps d'instal·lació directa s'assabenten de l'APK nou pel manifest. */
-    passos.push({
+    despresDelBuild.push({
       plataforma: 'android',
       accio: `Anunciar l'APK publicat a les Apps d'instal·lació directa (apkDirectBuild i apkSha256 NOMÉS a dist/.well-known/ard.json: un build nou el retira amb l'APK): després de --publica-apk i ABANS de l'rsync de dist/ al Node 0 i de firebase deploy d'eixe dist/, sense cap build entremig`,
       ordre: `${ORDRE_SINCRONITZA_PROVES} --versio ${v} --build-apk ${b}`
     });
   }
   if (plataformes.includes('ios')) {
-    passos.push({
+    natius.push({
       plataforma: 'ios',
       accio: `Arxivar, exportar i verificar IPA (${v}+${b}) per a App Store Connect / TestFlight (${canal})`,
       ordre: `node scripts/botigues/puja-ios.mjs --versio ${v} --build ${b} --canal ${canal} --compila`
     });
+    /* R32.3-PEIX-ARD · Només a producció, i abans de l'anunci de TestFlight, que no avança mentre un
+       build de producció més baix espera l'App Store. */
+    if (produccio) {
+      anuncis.push({
+        plataforma: 'ios',
+        accio: `Quan Apple publique el build ${b} a l'App Store (la pujada de producció ha de ser al registre de pujades; que Apple ja el dona es comprova a App Store Connect), anunciar-lo a les Apps de l'App Store (iosBuild a public/.well-known/ard.json) ABANS de «npm run build» i del desplegament web`,
+        ordre: `${ORDRE_SINCRONITZA_ARD} --versio ${v} --build-ios ${b}`
+      });
+    }
     /* v1.2.7 · P0-123 · Les Apps de TestFlight s'assabenten del build nou pel manifest. */
-    passos.push({
+    anuncis.push({
       plataforma: 'ios',
       accio: 'Anunciar el build pujat a les Apps de TestFlight (testflightIosBuild a ard.json): després de la pujada de puja-ios.mjs --confirma, que l\'apunta al registre, i mai mentre un build de producció més baix espera l\'App Store (App Review); la web el publica en el desplegament següent',
       ordre: `${ORDRE_SINCRONITZA_PROVES} --versio ${v} --build-testflight ${b}`
     });
   }
+  const passos = [...natius, ...anuncis, ...web, ...despresDelBuild];
 
   const carpetaAndroid = path.resolve(arrel, '..', '_builds_de_poble', 'android');
   const apks = (empaquetats.plataformes?.android?.artefactes ?? []).filter((nom) => nom.endsWith('.apk'));
@@ -305,6 +335,8 @@ export async function compilaApkDirecte({ arrel, valors, jdkHome, versio, build,
 export const DESCARREGUES_DIST = Object.freeze(['dist', 'descarregues']);
 export const ORDRE_PUBLICA_APK = 'node scripts/botigues/publica-tot.mjs --publica-apk';
 export const ORDRE_SINCRONITZA_PROVES = 'node scripts/botigues/publica-tot.mjs --sincronitza-proves';
+/** R32.3-PEIX-ARD · L'anunci a les Apps de les botigues (public/.well-known/ard.json), abans de npm run build. */
+export const ORDRE_SINCRONITZA_ARD = 'node scripts/botigues/publica-tot.mjs --sincronitza-ard';
 const APK_DE_BUILD = /^(\d{6})_socdepoble_(\d+\.\d+\.\d+)\+([1-9]\d{0,8})\.apk$/;
 /** Els build-tools de l'SDK d'Android (on viu apksigner). */
 export const BUILD_TOOLS_ANDROID = path.join(os.homedir(), 'Library', 'Android', 'sdk', 'build-tools');
@@ -568,8 +600,10 @@ export function escriuManifestVersio({
 /**
  * Elefant R32.3 · Si els builds que anunciarà ard.json ja els dona el canal que obri el botó de l'App:
  *  · Android (Google Play): l'API REST (consultaLlancament, només lectura) ha de tindre el versionCode
- *    en un llançament «completed» d'alguna pista (internal o production): un esborrany, un desplegament
- *    per fases o un llançament aturat no es dona a tothom;
+ *    en un llançament «completed» de la pista production. R32.3-PEIX-ARD · La prova interna (internal)
+ *    només la reben els provadors de Play, i androidBuild s'anuncia a tots els Android: una pista
+ *    internal «completed» no hi compta. Un esborrany, un desplegament per fases o un llançament aturat
+ *    tampoc es donen a tothom. Es pregunta per les dues pistes perquè l'error explique on és el build;
  *  · iOS (l'App Store): el registre de pujades (SDP_BUILDS_DIR/pujades.jsonl) ha de tindre el build al
  *    canal de producció (TestFlight no és l'App Store). Que Apple ja l'haja publicat ho mira el Mestre.
  * `consulta` és consultaLlancament (les proves hi passen les adreces locals). Mai llança.
@@ -588,9 +622,10 @@ export async function comprovaDisponibilitat({ arrel, valors = {}, androidBuild 
     else {
       try {
         const trobats = await consulta({ ...opcionsPlay, clau: clau.clau, paquet, build: String(androidBuild) });
-        const desplegat = trobats.find((t) => t.status === ESTATS_PLAY.DESPLEGAT);
-        if (desplegat) avisos.push(`Google Play dona el versionCode ${androidBuild} a la pista ${desplegat.pista} (completed)`);
-        else if (trobats.length) mal(EIXIDA.ARBRE, `Google Play té el versionCode ${androidBuild} però no el dona a tothom (${trobats.map((t) => `${t.pista}: ${t.status}`).join(', ')}): desplega'l a Play Console (o puja amb --desplega a la prova interna) i torna-hi`);
+        const produccio = PISTES[CANALS.PRODUCCIO];
+        const desplegat = trobats.find((t) => t.pista === produccio && t.status === ESTATS_PLAY.DESPLEGAT);
+        if (desplegat) avisos.push(`Google Play dona el versionCode ${androidBuild} a la pista ${produccio} (completed)`);
+        else if (trobats.length) mal(EIXIDA.ARBRE, `Google Play té el versionCode ${androidBuild} però no el dona a tots els Android (${trobats.map((t) => `${t.pista}: ${t.status}`).join(', ')}): ard.json (androidBuild) només anuncia un build de la pista ${produccio} «completed»; promou-lo a ${produccio} a Play Console, desplega'l al 100 % i torna-hi`);
         else mal(EIXIDA.ARBRE, `Google Play no té el versionCode ${androidBuild} a cap pista (internal, production): primer puja-android.mjs --confirma`);
       } catch (error) {
         mal(EIXIDA.EXTERNA, `Google Play no ha respost (${netejaText(error?.message ?? error)}): no s'anuncia cap build sense saber si es dona`);

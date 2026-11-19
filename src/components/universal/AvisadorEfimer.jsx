@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 
-export function AvisadorEfimer({ missatge, tipus, durada = 3000, onClose }) {
+export function AvisadorEfimer({ missatge, durada = 3000, onClose }) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function AvisadorEfimer({ missatge, tipus, durada = 3000, onClose }) {
 
   return (
     <div 
-      className={`sdp-avisador-efimer ${tipus ? `sdp-avisador--${tipus}` : ''}`}
+      className="sdp-avisador-efimer"
       role="alert" 
       aria-live="assertive"
     >

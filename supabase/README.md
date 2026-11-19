@@ -94,6 +94,9 @@ description: "Documentació canònica de Sóc de Poble."
   «Baixa, purga i consentiment».
 
 - `migrations/2609262232_copyright_editor.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   Drets d'autor lliures de l'editor (límit de 256 caràcters compartit amb el
   client): afig la columna `copyright text not null default ''` amb el seu
   `CHECK (char_length(copyright) <= 256)` a `public.notes`, `public.profiles`
@@ -112,6 +115,9 @@ description: "Documentació canònica de Sóc de Poble."
   `xat_fils_meus` v2. Vegeu «Xat F0: seq, marques i RPC».
 
 - `migrations/2609271400_notes_paperera.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   Paperera i arxiu del bloc de notes (`public.notes`): afig l'ajust
   `dies_paperera_notes = 30` a `private.ajustos`, les columnes `status`
   (`activa`, `paperera`, `arxivada`; CHECK `notes_status_valid`) i
@@ -141,6 +147,9 @@ description: "Documentació canònica de Sóc de Poble."
   el 261009 segons la capçalera de 2610241410.
 
 - `migrations/2609272201_grups_mare.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   Coherència entre RPC i RLS en crear un grup amb entitat mare: redefinix
   `private.can_create_group(p_parent_organization_id uuid, p_tenant_id uuid)`
   (`SECURITY DEFINER`, `search_path = ''`) exigint que
@@ -260,6 +269,9 @@ description: "Documentació canònica de Sóc de Poble."
   aplicada: l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610072230_mur_imatges_propies.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   Decisió 3 del Mestre (261007 · Privacitat d'IP al Mur): prohibix imatges
   externes de tercers a `public.section_submissions` per a les seccions
   `mur`, `mercat` i `events`. Crea `private.origens_mitjans_propis()`,
@@ -444,6 +456,9 @@ description: "Documentació canònica de Sóc de Poble."
   column is_public set default false`.
 
 - `migrations/2610181915_organitzacions_correu_i_membres.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   Ordre del Mestre (18-10-2026): el correu de contacte d'una organització
   (`contact_email`, privat, i `public_email`, l'opt-in) amb les RPC
   `contacte_organitzacio` i `desa_contacte_organitzacio`, i la gestió de
@@ -458,6 +473,9 @@ description: "Documentació canònica de Sóc de Poble."
   tanca. Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610201500_moderacio_denuncies_i_bloquejos.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   Pla 261020_1300 (Tasca 2; App Store 1.2 i Google Play UGC): la moderació
   del contingut dels veïns. Crea `public.denuncies` (una fila per denúncia
   d'una publicació, un producte, un acte, un missatge, una persona o una
@@ -518,6 +536,9 @@ description: "Documentació canònica de Sóc de Poble."
   Mestre, mai un agent**.
 
 - `migrations/2610220240_xat_adjunts_i_quota.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   Gauntlet 261022_0225 (Tasca 3; disseny de GPT Codex, reparat per la crítica
   de Claude, F1-F14 i revisió R1-R8): els adjunts privats del xat (foto, nota
   de veu i vídeo de fins a 10 s) i la quota rural de 20 MB per persona. Crea
@@ -579,6 +600,9 @@ description: "Documentació canònica de Sóc de Poble."
   imatges de Supabase són locals i, si no, la fixture, i diu quina ha corregut.
 
 - `migrations/2610241400_normes_exigides_ugc.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   T2 (P0-18; auditoria Codex 261024_1315 C-02; Google Play UGC i App Store
   1.2): el servidor exigix les normes de convivència abans d'admetre
   publicacions i missatges dels veïns. Crea `private.versio_normes_vigent()`
@@ -648,6 +672,9 @@ description: "Documentació canònica de Sóc de Poble."
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610241420_revocacio_apple.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   T1 (P0-04; App Store 5.1.1(v), Apple TN3194; auditoria Codex 261024_1315
   C-01): la custòdia i la revocació de Sign in with Apple quan una persona es
   dona de baixa. Crea `private.autoritzacions_apple` (el refresh token
@@ -679,6 +706,9 @@ description: "Documentació canònica de Sóc de Poble."
   Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610241430_seguiments.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   T6b (IDEA-14; decisió del Mestre, 261024): «Connectar / Seguir», el
   seguiment d'un sol sentit. Pots seguir una veïna o una entitat; qui és
   seguit ho sap i veu qui el seguix; cap algoritme. Crea `public.seguiments`
@@ -755,6 +785,9 @@ description: "Documentació canònica de Sóc de Poble."
   qui la seguix, també si és d'un altre poble.
 
 - `migrations/2610241440_baixa_completa_ugc_i_fitxers.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   T8 (P0-20; pla 261024_1315; auditoria Codex 261024_1315 C-06): la baixa
   completa. Torna a crear `private.purga_una_baixa`, la de 2609282100 literal
   amb tres canvis i prou (els comprova
@@ -800,6 +833,9 @@ description: "Documentació canònica de Sóc de Poble."
   Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610242320_correu_propietaria_nomes_titular.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   C11-02 (auditoria Codex 261024_2254, CWE-200; full de ruta P1-11 del
   Mestre): `contacte_organitzacio` (2610181915) tornava a QUALSEVOL persona
   que administra l'organització, com a `correu_per_defecte`, el correu d'accés
@@ -819,6 +855,9 @@ description: "Documentació canònica de Sóc de Poble."
   Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610250100_seguiments_des_d_entitat.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025, àudios
   00:53-00:55): connectar des d'una entitat (B2B rural). Qui administra una
   organització (owner o admin) la connecta, com a eixa organització, amb una
@@ -872,6 +911,9 @@ description: "Documentació canònica de Sóc de Poble."
   l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610250300_titular_public.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   IDEA-22, punt 2 (Directiva del Mestre, àudios 01:14-01:16; pla
   261025_0200): a `/connectar`, amb una entitat, la seua persona titular,
   NOMÉS si ella ho ha triat (opt-in). Cap lectura no torna qui administra una
@@ -904,6 +946,9 @@ description: "Documentació canònica de Sóc de Poble."
   Mestre, mai un agent**.
 
 - `migrations/2610281730_membres_concurrents_i_correu_public.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   P1-13 (C11-03 i C11-05; auditoria Codex 261024_2254 i 261028_1611 C28-08;
   pla 261028_1526, §3.6.1). **C11-03**: `desa_membre_organitzacio`
   (2610181915) bloquejava la fila de la persona amb `select … for update`,
@@ -992,6 +1037,9 @@ description: "Documentació canònica de Sóc de Poble."
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610290400_xat_e2ee_claus_i_sobres.sql`
+  Estat vigent: aplicada a producció segons el bolcat del 13-11-2026 (deriva R22;
+  vegeu la taula canònica). L'estat que esta vinyeta diu més avall és el de quan
+  es va escriure.
   P1-12 i IDEA-48 · E2EE-1a (`disseny_final_e2ee.md` v1.1.0, §7.2 primera
   fila, §7.3, §7.4 i §7.9; `esmenes_qa_261029.md` §13.1 R3, R5, R8 i R9;
   auditoria Codex 261029_0340 E2EE-I03; pla 261029_0216, T7). El servidor del
@@ -1137,10 +1185,11 @@ description: "Documentació canònica de Sóc de Poble."
   funcions, pures i sense accés a dades, passen a SECURITY DEFINER amb el
   mateix `search_path` i només `service_role` rep EXECUTE. Va just després de
   2610311800 i s'ha de tornar a aplicar si mai es reaplica el 2610311800.
-  Idempotent i en una sola transacció. **Estat remot no acreditat**: l'acta
-  261101_0334 la dona aplicada, però la lectura REST no veu
-  `private.xat_lot3_b64`. Ho pot acreditar la columna `te_esmena_2610312000`
-  del Pas 0. Cap agent no l'aplica.
+  Idempotent i en una sola transacció. **Aplicada a producció** segons el
+  bolcat del 13-11-2026 (deriva R22: els 2 objectes coincidents); l'acta
+  261101_0334 també la dona aplicada, tot i que la lectura REST no veu
+  `private.xat_lot3_b64`. La columna `te_esmena_2610312000` del Pas 0 ho torna
+  a comprovar. Cap agent no l'aplica.
 
 - `migrations/2611011500_autoria_ajuntament_mateix_poble.sql`
   D-6 (informe 261101_0409; assalt 261101_1246, T7): un ajuntament només
@@ -1606,7 +1655,7 @@ description: "Documentació canònica de Sóc de Poble."
 
 - `migrations/2611091500_sessions_i_curadoria_cultural.sql`
 
-  **Estat remot no acreditat sencer** (radiografia del Mestre del 16-11-2026 14:54: `private.pot_curar_cultura()`, que només crea esta migració, existix a producció, però ningú n'ha comparat el cos amb Git, i l'ESTAT del 10-11-2026 ja hi trobava objectes de curadoria abans d'aplicar res: conciliar-la abans de reaplicar-la). Ordre: després de `2610061448` (guarda privada de superadmin amb aal2) i `2611082238` (contracte de resum de sessions preservat). Cap rol de curadoria s’assigna automàticament. Esmena SEG-R15b-01 i SEG-R15b-04 (9-11-2026): directori per persona i camí amb correu emmascarat i auditoria append-only; normes de convivència i quatre ulls a la safata cultural.
+  **Estat remot no acreditat sencer** (radiografia del Mestre del 16-11-2026 14:54: `private.pot_curar_cultura()`, que només crea esta migració, existix a producció, però ningú n'ha comparat el cos amb Git, i l'ESTAT del 10-11-2026 ja hi trobava objectes de curadoria abans d'aplicar res: conciliar-la abans de reaplicar-la). El bolcat del 13-11-2026 sí que les compara: `private.pot_curar_cultura()` i `revisa_aportacio_cultural(uuid,text,text)` no coincidixen amb cap versió de Git, i la resta, 56 objectes, sí (deriva R22; vegeu la taula canònica). Ordre: després de `2610061448` (guarda privada de superadmin amb aal2) i `2611082238` (contracte de resum de sessions preservat). Cap rol de curadoria s’assigna automàticament. Esmena SEG-R15b-01 i SEG-R15b-04 (9-11-2026): directori per persona i camí amb correu emmascarat i auditoria append-only; normes de convivència i quatre ulls a la safata cultural.
 
 - `migrations/2611110010_autoria_256_caracters.sql`
 
@@ -1771,6 +1820,10 @@ description: "Documentació canònica de Sóc de Poble."
 
   R32.8 (kit de Codex R32.8, integrat a l'Onada v1.2.8). Depén de `20261116040000` (search_path buit i RPCs E2EE vigents) i de `public.xat_adjunts`. Additiva: quota acumulada de 250 MB per persona, vídeo fins a 60 s i ubicació explícita; la RPC de tres arguments conserva OID, cos, owner i ACL, i la sobrecàrrega de quatre arguments no té valors per defecte. No amplia el bucket de 20 MB ni la mida per tipus ni toca RLS/ACL existents. S'ha d'aplicar abans del client que envia `p_ubicacio`. **NO aplicada: l'aplica el Mestre.** Prova executable: `tests/r328-xat-quota-video-ubicacio-postgres.test.mjs`.
 
+- `migrations/20261118230000_a03_xat_push_credencials_per_configuracio.sql`
+
+  P1-74 (A-03). Depén de `2611020417`. Additiva: crea `private.xat_push_credencials_v2` (una credencial nativa per proveïdor i empremta pública de la configuració, RLS sense cap política) i les RPC `public.xat_push_credencial_v2(text, text)` i `public.xat_push_desa_credencial_v2(text, text, text, timestamptz)`, només per a `service_role`, amb `search_path` buit, les mateixes comprovacions que les v1 (`SDP-PUSH-005`), «desa només si dura més» dins de cada configuració, esborrat de les caducades del proveïdor en desar i un sostre de quatre vives per proveïdor (`SDP-PUSH-014`). No toca la taula ni les RPC v1: un worker que encara no s'ha tornat a desplegar continua amb la seua fila única, i rotar `SDP_APNS_*` o `SDP_FCM_COMPTE_SERVEI` ja no obliga a apagar el cron (vegeu «Funció `notifica-xat`»). S'aplica abans de desplegar el `natius.js` que crida les `_v2`. Idempotent. **NO aplicada: l'aplica el Mestre.** Proves: `tests/a03-push-credencials-postgres.test.mjs` (PGlite explícit), `supabase/functions/notifica-xat/natius.test.js` («A-03: dues configuracions natives alhora») i `src/data/supabase/xatAvisosPush.migracio.test.js`.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1884,75 +1937,77 @@ verificador sense avisos.
 
 ### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + marató 2611012257 i 2611020106 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
+Rebuts de l'«Estat declarat» (`P0-05` / `P2-10`): «bolcat del 13-11-2026» i «deriva R22» remeten al veredicte per migració de `../_investigacio_ia_de_poble/261113_1520_r22_fable_auditoria_extrema_claude/supabase_viu/ref_local/deriva.md` (bolcats de producció del 13-11-2026, de 15:24 a 15:47 CET, contra les migracions del commit `a599251d3`). «Coincidents» són objectes amb l'estat exacte que deixa la migració; «superats», amb el d'una posterior. Una fila només es declara aplicada pel bolcat si hi té algun objecte coincident. Les files posteriors a eixe bolcat citen el seu propi rebut. Una fila sense rebut continua «no acreditat»: el «70/70» de l'acta 261102_1456 cita el verificador estàtic («70 migracions en el manifest · 0 violacions»), que no es connecta a cap base. L'estat vigent és el d'esta taula: el «NO aplicada» o «no acreditat» d'una vinyeta és l'estat de quan es va escriure, i les vinyetes que el bolcat ha superat ho diuen en la seua primera línia.
+
 | Ordre | Versió | Fitxer a `supabase/migrations/` | Estat declarat | Objectiu resumit |
 | :---: | :--- | :--- | :--- | :--- |
-| 01 | `2609080000` | `2609080000_initial_schema.sql` | Estat remot no acreditat; comprovar abans d’aplicar | initial schema |
-| 02 | `2609080100` | `2609080100_xat_v2.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat v2 |
-| 03 | `2609080200` | `2609080200_xat_v2_correccions.sql` | Estat remot no acreditat; comprovar abans d’aplicar. T2 del 13-11-2026: parcial (sense `trg_rate_limit_xat`); no la torneu a aplicar, el remei és `20261113112500` | xat v2 correccions |
-| 04 | `2609080300` | `2609080300_xat_v2_membres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat v2 membres |
-| 05 | `2609110600` | `2609110600_perfil_avatar_i_permisos.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil avatar i permisos |
-| 06 | `2609121500` | `2609121500_correccio_privacitat_perfils.sql` | Estat remot no acreditat; comprovar abans d’aplicar | correccio privacitat perfils |
-| 07 | `2609121600` | `2609121600_admin_panel.sql` | Estat remot no acreditat sencer (lectura REST del 6-11: `admin_list_users()` existix, 401 42501; `admin_list_organizations()` donava 404 PGRST202 a les 22:08 CET i respon 401 42501 a les 23:22 i a les 23:53, sense cap migració nova al repositori); no la torneu a aplicar sencera. T2 del 13-11-2026: sense `admin_list_users()` sense arguments, que retira `20261113112500` | admin panel |
-| 08 | `2609130500` | `2609130500_bucket_mitjans.sql` | Estat remot no acreditat; comprovar abans d’aplicar | bucket mitjans |
-| 09 | `2609140000` | `2609140000_schema_notes.sql` | Estat remot no acreditat; comprovar abans d’aplicar | schema notes |
-| 10 | `2609140100` | `2609140100_auditoria_rls_fixes.sql` | Estat remot no acreditat; comprovar abans d’aplicar | auditoria rls fixes |
-| 11 | `2609150000` | `2609150000_seguretat_profunda_deepseek.sql` | Estat remot no acreditat; comprovar abans d’aplicar | seguretat profunda deepseek |
-| 12 | `2609160600` | `2609160600_politiques_superadmin_organitzacions.sql` | Estat remot no acreditat; comprovar abans d’aplicar | politiques superadmin organitzacions |
-| 13 | `2609162300` | `2609162300_correccions_mur_i_xat.sql` | Estat remot no acreditat; comprovar abans d’aplicar | correccions mur i xat |
-| 14 | `2609191650` | `2609191650_bucket_mitjans_privats.sql` | Estat remot no acreditat; comprovar abans d’aplicar | bucket mitjans privats |
-| 15 | `2609200300` | `2609200300_blindatge_storage_i_contingut.sql` | Estat remot no acreditat; comprovar abans d’aplicar. T2 del 13-11-2026: parcial (sense les polítiques «sdp mitjans …»); no la torneu a aplicar, el remei és `20261113112500` | blindatge storage i contingut |
-| 16 | `2609200600` | `2609200600_xat_limit_correccio.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat limit correccio |
-| 17 | `2609211820` | `2609211820_fix_security_definer.sql` | Estat remot no acreditat; comprovar abans d’aplicar | fix security definer |
-| 18 | `2609261200` | `2609261200_publicacions_autoria.sql` | Estat remot no acreditat; comprovar abans d’aplicar | publicacions autoria |
-| 19 | `2609261500` | `2609261500_identitat_perfil_f1.sql` | Estat remot no acreditat; comprovar abans d’aplicar | identitat perfil f1 |
-| 20 | `2609262232` | `2609262232_copyright_editor.sql` | Estat remot no acreditat; comprovar abans d’aplicar | copyright editor |
-| 21 | `2609270200` | `2609270200_xat_f0_fonament.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat f0 fonament |
-| 22 | `2609271400` | `2609271400_notes_paperera.sql` | Estat remot no acreditat; comprovar abans d’aplicar | notes paperera |
-| 23 | `2609272100` | `2609272100_notes_origen.sql` | Estat remot no acreditat; comprovar abans d’aplicar | notes origen |
-| 24 | `2609272200` | `2609272200_xat_entitats.sql` | Aplicada al node remot el 261009 (declarat en esta llista) | xat entitats |
-| 25 | `2609272201` | `2609272201_grups_mare.sql` | Estat remot no acreditat; comprovar abans d’aplicar | grups mare |
-| 26 | `2609281500` | `2609281500_lema_entradilla_256.sql` | Estat remot no acreditat; comprovar abans d’aplicar | lema entradilla 256 |
-| 27 | `2609282035` | `2609282035_perfil_emoticona.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil emoticona |
-| 28 | `2609282100` | `2609282100_xat_de_pagina.sql` | Aplicada al node remot el 261009 (declarat en esta llista) | xat de pagina |
-| 29 | `2609291200` | `2609291200_baixa_icon_copyright.sql` | Estat remot no acreditat; comprovar abans d’aplicar | baixa icon copyright |
-| 30 | `2609291210` | `2609291210_xat_cerca_accents.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat cerca accents |
-| 31 | `2609291230` | `2609291230_xat_realtime_lectura.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat realtime lectura |
-| 32 | `2610021520` | `2610021520_perfil_public.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil public |
-| 33 | `2610042330` | `2610042330_xat_pagina_iaia.sql` | Aplicada al node remot el 261009 (declarat en esta llista) | xat pagina iaia |
-| 34 | `2610042350` | `2610042350_convergencia_perfil_i_create_organization.sql` | Estat remot no acreditat; comprovar abans d’aplicar | convergencia perfil i create organization |
-| 35 | `2610061448` | `2610061448_superadmin_aal2.sql` | Estat remot no acreditat; comprovar abans d’aplicar | superadmin aal2 |
-| 36 | `2610061450` | `2610061450_capcalera_client_ip.sql` | Estat remot no acreditat; Onada R22: producció té la de 2609261500 (esquerra de `x-forwarded-for`), recomanada sencera després de `20261114000100` | capcalera client ip |
-| 37 | `2610072230` | `2610072230_mur_imatges_propies.sql` | Estat remot no acreditat; comprovar abans d’aplicar | mur imatges propies |
-| 38 | `2610081400` | `2610081400_grups_sense_mare.sql` | Estat remot no acreditat; Onada R22 (R04): producció té la `can_create_group` de 2609272201, sencera després de `20261114000100` | grups sense mare |
-| 39 | `2610081401` | `2610081401_organitzacions_poble.sql` | Estat remot no acreditat; comprovar abans d’aplicar | organitzacions poble |
-| 40 | `2610081402` | `2610081402_membres_organitzacio.sql` | Estat remot no acreditat; comprovar abans d’aplicar | membres organitzacio |
-| 41 | `2610081543` | `2610081543_xat_consentiment_i_metadades.sql` | Estat remot no acreditat; Onada R22 (R03): MAI sencera, la substituïx `20261114000100` | xat consentiment i metadades |
-| 42 | `2610090100` | `2610090100_convergencia_xat_de_pagina.sql` | Aplicada al node remot el 261009 (declarat en esta llista) | convergencia xat de pagina |
-| 43 | `2610101900` | `2610101900_personalitzacio_superadmin.sql` | Estat remot no acreditat; comprovar abans d’aplicar | personalitzacio superadmin |
-| 44 | `2610160250` | `2610160250_perfil_update_propi.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil update propi |
-| 45 | `2610181800` | `2610181800_perfil_public_per_defecte.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil public per defecte |
-| 46 | `2610181915` | `2610181915_organitzacions_correu_i_membres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | organitzacions correu i membres |
-| 47 | `2610201500` | `2610201500_moderacio_denuncies_i_bloquejos.sql` | Estat remot no acreditat; comprovar abans d’aplicar | moderacio denuncies i bloquejos |
-| 48 | `2610211715` | `2610211715_revoca_correu_organitzacions.sql` | Estat remot no acreditat; comprovar abans d’aplicar | revoca correu organitzacions |
-| 49 | `2610220240` | `2610220240_xat_adjunts_i_quota.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat adjunts i quota |
-| 50 | `2610241400` | `2610241400_normes_exigides_ugc.sql` | Estat remot no acreditat; comprovar abans d’aplicar | normes exigides ugc |
-| 51 | `2610241410` | `2610241410_exporta_dades_moderacio.sql` | Estat remot no acreditat; comprovar abans d’aplicar | exporta dades moderacio |
-| 52 | `2610241420` | `2610241420_revocacio_apple.sql` | Estat remot no acreditat; comprovar abans d’aplicar | revocacio apple |
-| 53 | `2610241430` | `2610241430_seguiments.sql` | Aplicada al node remot el 261103 (70/70 verificat pel Mestre) | seguiments |
-| 54 | `2610241440` | `2610241440_baixa_completa_ugc_i_fitxers.sql` | Estat remot no acreditat; comprovar abans d’aplicar | baixa completa ugc i fitxers |
-| 55 | `2610242320` | `2610242320_correu_propietaria_nomes_titular.sql` | Aplicada al node remot el 261103 (70/70 verificat pel Mestre) | correu propietaria nomes titular |
-| 56 | `2610250100` | `2610250100_seguiments_des_d_entitat.sql` | Aplicada al node remot el 261103 (70/70 verificat pel Mestre) | seguiments des d entitat |
-| 57 | `2610250300` | `2610250300_titular_public.sql` | Estat remot no acreditat; comprovar abans d’aplicar | titular public |
-| 58 | `2610281730` | `2610281730_membres_concurrents_i_correu_public.sql` | Estat remot no acreditat; comprovar abans d’aplicar | membres concurrents i correu public |
-| 59 | `2610282100` | `2610282100_usuari_i_poble_canonic.sql` | Aplicada al node remot el 261103 (70/70 verificat pel Mestre) | usuari i poble canonic |
-| 60 | `2610290400` | `2610290400_xat_e2ee_claus_i_sobres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat e2ee claus i sobres |
+| 01 | `2609080000` | `2609080000_initial_schema.sql` | Estat remot no acreditat sencer: parcial al bolcat del 13-11-2026 (`profiles`, `towns` i `organizations` ja existien amb una altra forma; deriva R22: 133 coincidents, 35 superats per migracions posteriors, 2 que hi falten, 15 que no coincidixen amb cap versió de Git) | initial schema |
+| 02 | `2609080100` | `2609080100_xat_v2.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 31 coincidents, 16 superats per migracions posteriors) | xat v2 |
+| 03 | `2609080200` | `2609080200_xat_v2_correccions.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 10 coincidents, 7 superats per migracions posteriors), després del remei `20261113112500`. T2 del 13-11-2026: parcial (sense `trg_rate_limit_xat`); no la torneu a aplicar, el remei és `20261113112500` | xat v2 correccions |
+| 04 | `2609080300` | `2609080300_xat_v2_membres.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 2 coincidents, 1 superat per migracions posteriors) | xat v2 membres |
+| 05 | `2609110600` | `2609110600_perfil_avatar_i_permisos.sql` | Estat remot no acreditat: el bolcat del 13-11-2026 només hi troba objectes en l'estat de migracions posteriors (deriva R22: 0 coincidents, 2 superats per migracions posteriors, 6 que no coincidixen amb cap versió de Git; la deriva la dona aplicada); comprovar abans d’aplicar | perfil avatar i permisos |
+| 06 | `2609121500` | `2609121500_correccio_privacitat_perfils.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 1 coincident, 2 superats per migracions posteriors) | correccio privacitat perfils |
+| 07 | `2609121600` | `2609121600_admin_panel.sql` | Estat remot no acreditat sencer (lectura REST del 6-11: `admin_list_users()` existix, 401 42501; `admin_list_organizations()` donava 404 PGRST202 a les 22:08 CET i respon 401 42501 a les 23:22 i a les 23:53, sense cap migració nova al repositori); no la torneu a aplicar sencera. T2 del 13-11-2026: sense `admin_list_users()` sense arguments, que retira `20261113112500`. El bolcat del 13-11-2026 hi troba 1 objecte superat i 1 que no coincidix amb cap versió de Git (deriva R22) | admin panel |
+| 08 | `2609130500` | `2609130500_bucket_mitjans.sql` | Estat remot no acreditat sencer: parcial al bolcat del 13-11-2026 (el bucket `mitjans` no té ni `file_size_limit` ni `allowed_mime_types`; les polítiques hi són, superades per R22.0) | bucket mitjans |
+| 09 | `2609140000` | `2609140000_schema_notes.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 23 coincidents, 1 superat per migracions posteriors, 5 que no coincidixen amb cap versió de Git) | schema notes |
+| 10 | `2609140100` | `2609140100_auditoria_rls_fixes.sql` | Estat remot no acreditat sencer: parcial al bolcat del 13-11-2026 (`authenticated` conserva REFERENCES, TRIGGER i TRUNCATE sobre `app_content`; `touch_notes_updated_at()` no és SECURITY DEFINER) | auditoria rls fixes |
+| 11 | `2609150000` | `2609150000_seguretat_profunda_deepseek.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 8 coincidents, 8 superats per migracions posteriors, 1 que no coincidix amb cap versió de Git) | seguretat profunda deepseek |
+| 12 | `2609160600` | `2609160600_politiques_superadmin_organitzacions.sql` | Estat remot no acreditat sencer: parcial al bolcat del 13-11-2026 (falta «profiles read own» amb `(select auth.uid())`: hi ha la de 2609150000) | politiques superadmin organitzacions |
+| 13 | `2609162300` | `2609162300_correccions_mur_i_xat.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 1 coincident, 1 superat per migracions posteriors) | correccions mur i xat |
+| 14 | `2609191650` | `2609191650_bucket_mitjans_privats.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 3 coincidents, 1 superat per migracions posteriors) | bucket mitjans privats |
+| 15 | `2609200300` | `2609200300_blindatge_storage_i_contingut.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 12 coincidents, 5 superats per migracions posteriors), després del remei `20261113112500`. T2 del 13-11-2026: parcial (sense les polítiques «sdp mitjans …»); no la torneu a aplicar, el remei és `20261113112500` | blindatge storage i contingut |
+| 16 | `2609200600` | `2609200600_xat_limit_correccio.sql` | Estat remot no acreditat: el bolcat del 13-11-2026 només hi troba objectes en l'estat de migracions posteriors (deriva R22: 0 coincidents, 1 superat per migracions posteriors; la deriva la dona aplicada); comprovar abans d’aplicar | xat limit correccio |
+| 17 | `2609211820` | `2609211820_fix_security_definer.sql` | Estat remot no acreditat; comprovar abans d’aplicar (sense empremta d'esquema al bolcat del 13-11-2026, deriva R22) | fix security definer |
+| 18 | `2609261200` | `2609261200_publicacions_autoria.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 1 coincident, 6 superats per migracions posteriors) | publicacions autoria |
+| 19 | `2609261500` | `2609261500_identitat_perfil_f1.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 122 coincidents, 10 superats per migracions posteriors, 3 que no coincidixen amb cap versió de Git) | identitat perfil f1 |
+| 20 | `2609262232` | `2609262232_copyright_editor.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 6 coincidents, 1 superat per migracions posteriors, 1 que no coincidix amb cap versió de Git) | copyright editor |
+| 21 | `2609270200` | `2609270200_xat_f0_fonament.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 68 coincidents, 9 superats per migracions posteriors) | xat f0 fonament |
+| 22 | `2609271400` | `2609271400_notes_paperera.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 8 coincidents) | notes paperera |
+| 23 | `2609272100` | `2609272100_notes_origen.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 2 coincidents) | notes origen |
+| 24 | `2609272200` | `2609272200_xat_entitats.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 15 coincidents, 8 superats per migracions posteriors) | xat entitats |
+| 25 | `2609272201` | `2609272201_grups_mare.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 1 coincident) | grups mare |
+| 26 | `2609281500` | `2609281500_lema_entradilla_256.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 4 coincidents) | lema entradilla 256 |
+| 27 | `2609282035` | `2609282035_perfil_emoticona.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 1 coincident, 1 que no coincidix amb cap versió de Git) | perfil emoticona |
+| 28 | `2609282100` | `2609282100_xat_de_pagina.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 14 coincidents, 7 superats per migracions posteriors) | xat de pagina |
+| 29 | `2609291200` | `2609291200_baixa_icon_copyright.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 1 coincident, 1 superat per migracions posteriors) | baixa icon copyright |
+| 30 | `2609291210` | `2609291210_xat_cerca_accents.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 2 coincidents) | xat cerca accents |
+| 31 | `2609291230` | `2609291230_xat_realtime_lectura.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 1 coincident) | xat realtime lectura |
+| 32 | `2610021520` | `2610021520_perfil_public.sql` | Estat remot no acreditat: el bolcat del 13-11-2026 només hi troba objectes en l'estat de migracions posteriors (deriva R22: 0 coincidents, 1 superat per migracions posteriors; la deriva la dona aplicada); comprovar abans d’aplicar | perfil public |
+| 33 | `2610042330` | `2610042330_xat_pagina_iaia.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 1 coincident, 1 superat per migracions posteriors) | xat pagina iaia |
+| 34 | `2610042350` | `2610042350_convergencia_perfil_i_create_organization.sql` | Estat remot no acreditat; comprovar abans d’aplicar (sense empremta d'esquema al bolcat del 13-11-2026, deriva R22) | convergencia perfil i create organization |
+| 35 | `2610061448` | `2610061448_superadmin_aal2.sql` | NO aplicada al bolcat del 13-11-2026 (deriva R22: `private.es_superadmin()` no exigix aal2) | superadmin aal2 |
+| 36 | `2610061450` | `2610061450_capcalera_client_ip.sql` | NO aplicada al bolcat del 13-11-2026 (deriva R22: `private.capcalera_client(text)` és la de 2609261500, esquerra de `x-forwarded-for`); Onada R22: recomanada sencera després de `20261114000100` | capcalera client ip |
+| 37 | `2610072230` | `2610072230_mur_imatges_propies.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 4 coincidents, 1 superat per migracions posteriors) | mur imatges propies |
+| 38 | `2610081400` | `2610081400_grups_sense_mare.sql` | NO aplicada al bolcat del 13-11-2026 (deriva R22: `private.can_create_group` és la de 2609272201 i «members create organizations», la de 2609080000); Onada R22 (R04): sencera després de `20261114000100` | grups sense mare |
+| 39 | `2610081401` | `2610081401_organitzacions_poble.sql` | Estat remot no acreditat sencer: parcial al bolcat del 13-11-2026 (columnes i vista sí; falta el CHECK `organizations_town_name_llargaria`) | organitzacions poble |
+| 40 | `2610081402` | `2610081402_membres_organitzacio.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 14 coincidents, 2 superats per migracions posteriors, 1 que no coincidix amb cap versió de Git) | membres organitzacio |
+| 41 | `2610081543` | `2610081543_xat_consentiment_i_metadades.sql` | NO aplicada al bolcat del 13-11-2026 (deriva R22: `membres_del_poble` i `xat_envia` són les anteriors); Onada R22 (R03): MAI sencera, la substituïx `20261114000100` | xat consentiment i metadades |
+| 42 | `2610090100` | `2610090100_convergencia_xat_de_pagina.sql` | Estat remot no acreditat: sense empremta d'esquema al bolcat del 13-11-2026 (deriva R22); la vinyeta la dona aplicada pel Mestre el 261009, sense cap rebut | convergencia xat de pagina |
+| 43 | `2610101900` | `2610101900_personalitzacio_superadmin.sql` | NO aplicada al bolcat del 13-11-2026 (deriva R22: 17 objectes absents; les 3 polítiques que coincidixen les torna a crear idèntiques 2611121830) | personalitzacio superadmin |
+| 44 | `2610160250` | `2610160250_perfil_update_propi.sql` | Estat remot no acreditat: el bolcat del 13-11-2026 només hi troba 1 objecte que no coincidix amb cap versió de Git (la deriva R22 la dona aplicada) | perfil update propi |
+| 45 | `2610181800` | `2610181800_perfil_public_per_defecte.sql` | Estat remot no acreditat: el bolcat del 13-11-2026 només hi troba 1 objecte que no coincidix amb cap versió de Git (la deriva R22 la dona aplicada) | perfil public per defecte |
+| 46 | `2610181915` | `2610181915_organitzacions_correu_i_membres.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 2 coincidents, 2 superats per migracions posteriors, 1 que no coincidix amb cap versió de Git) | organitzacions correu i membres |
+| 47 | `2610201500` | `2610201500_moderacio_denuncies_i_bloquejos.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 72 coincidents, 2 superats per migracions posteriors) | moderacio denuncies i bloquejos |
+| 48 | `2610211715` | `2610211715_revoca_correu_organitzacions.sql` | Estat remot no acreditat; comprovar abans d’aplicar (sense empremta d'esquema al bolcat del 13-11-2026, deriva R22); el Llibre P0-01 la dona executada pel Mestre el 21-10, sense empremta al bolcat | revoca correu organitzacions |
+| 49 | `2610220240` | `2610220240_xat_adjunts_i_quota.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 40 coincidents, 8 superats per migracions posteriors) | xat adjunts i quota |
+| 50 | `2610241400` | `2610241400_normes_exigides_ugc.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 7 coincidents) | normes exigides ugc |
+| 51 | `2610241410` | `2610241410_exporta_dades_moderacio.sql` | Estat remot no acreditat: el bolcat del 13-11-2026 només hi troba objectes en l'estat de migracions posteriors (deriva R22: 0 coincidents, 1 superat per migracions posteriors; la deriva la dona aplicada); comprovar abans d’aplicar | exporta dades moderacio |
+| 52 | `2610241420` | `2610241420_revocacio_apple.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 32 coincidents) | revocacio apple |
+| 53 | `2610241430` | `2610241430_seguiments.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 32 coincidents, 8 superats per migracions posteriors) | seguiments |
+| 54 | `2610241440` | `2610241440_baixa_completa_ugc_i_fitxers.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 5 coincidents, 5 superats per migracions posteriors) | baixa completa ugc i fitxers |
+| 55 | `2610242320` | `2610242320_correu_propietaria_nomes_titular.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 1 coincident) | correu propietaria nomes titular |
+| 56 | `2610250100` | `2610250100_seguiments_des_d_entitat.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 22 coincidents) | seguiments des d entitat |
+| 57 | `2610250300` | `2610250300_titular_public.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 6 coincidents) | titular public |
+| 58 | `2610281730` | `2610281730_membres_concurrents_i_correu_public.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 2 coincidents, 1 superat per migracions posteriors) | membres concurrents i correu public |
+| 59 | `2610282100` | `2610282100_usuari_i_poble_canonic.sql` | Estat remot no acreditat sencer: aplicada tret del CHECK `towns_comarca_llargaria` (bolcat del 13-11-2026; deriva R22: 35 coincidents, 1 superat per migracions posteriors, 1 que hi falta, 3 que no coincidixen amb cap versió de Git) | usuari i poble canonic |
+| 60 | `2610290400` | `2610290400_xat_e2ee_claus_i_sobres.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 150 coincidents) | xat e2ee claus i sobres |
 | 61 | `2610311500` | `2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql` | Aplicada a producció (lectura REST del 6-11: `transfereix_propietat_organitzacio(uuid, uuid)` existix, 401 42501; acta 261101_0334) | commutacio grup empresa i transferencia propietat |
 | 62 | `2610311800` | `2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql` | Aplicada a producció (lectura REST del 6-11: la taula `xat_epoques` existix, 401 42501; acta 261101_0334) | e2ee fases 1b 1c rpcs i adjunts |
-| 63 | `2610311900` | `2610311900_exporta_dades_filtre_servidor_rgpd.sql` | Estat remot no acreditat (l'acta 261101_0334 la dona aplicada; la lectura REST no veu el cos d'`exporta_les_meues_dades()`); ho pot acreditar el Pas 0 | filtre RGPD al servidor |
-| 64 | `2610312000` | `2610312000_e2ee_lot3_validadors_service_role.sql` | Estat remot no acreditat (l'acta 261101_0334 la dona aplicada; la lectura REST no veu `private.xat_lot3_b64`); ho pot acreditar la columna `te_esmena_2610312000` del Pas 0 | validadors E2EE per a service_role |
+| 63 | `2610311900` | `2610311900_exporta_dades_filtre_servidor_rgpd.sql` | Estat remot no acreditat (l'acta 261101_0334 la dona aplicada; la lectura REST no veu el cos d'`exporta_les_meues_dades()`); ho pot acreditar el Pas 0. El bolcat del 13-11-2026 no la pot acreditar: només hi troba l'objecte en l'estat d'una migració posterior (deriva R22: 0 coincidents, 1 superat per migracions posteriors) | filtre RGPD al servidor |
+| 64 | `2610312000` | `2610312000_e2ee_lot3_validadors_service_role.sql` | Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 2 coincidents); l'acta 261101_0334 també la dona aplicada (la lectura REST no veu `private.xat_lot3_b64`) | validadors E2EE per a service_role |
 | 65 | `2611011500` | `2611011500_autoria_ajuntament_mateix_poble.sql` | Aplicada a producció (lectura REST del 6-11: `pot_signar_com_organitzacio(uuid, uuid)` existix, 401 42501, i la signatura vella `(uuid)` ja no, 404 PGRST202; acta 261102_1456) | autoria d'ajuntament al seu poble (D-6) |
 | 66 | `2611011510` | `2611011510_versio_minima_client.sql` | Aplicada a producció (lectura REST del 6-11: `versio_minima_client('android')` respon 200 a anon; acta 261102_1456) | versió mínima de l'app nativa (P0-23) |
-| 67 | `2611011800` | `2611011800_contracte_exportacio_federacio_v1.sql` | Aplicada segons l'acta 261102_1456 (sense lectura REST: els seus objectes no són visibles per a anon) | contracte v1 de l'exportació de federació (P2-09) |
+| 67 | `2611011800` | `2611011800_contracte_exportacio_federacio_v1.sql` | Aplicada segons l'acta 261102_1456 (sense lectura REST: els seus objectes no són visibles per a anon); el bolcat del 13-11-2026 també la troba aplicada (deriva R22: 1 coincident, 1 superat per migracions posteriors) | contracte v1 de l'exportació de federació (P2-09) |
 | 68 | `2611012257` | `2611012257_politica_privacitat_2_3.sql` | Aplicada a producció (lectura REST del 6-11: `politiques_privacitat` té la 2.3 amb l'empremta `abd827d0…` d'esta migració; acta 261102_1456, amb un altre nom de fitxer) | política de privacitat 2.3 segellada (T11-05) |
 | 69 | `2611020106` | `2611020106_ap_inbox_persistencia_i_cua.sql` | Aplicada a producció (lectura REST del 6-11: `ap_alertes_vigents(timestamptz)` existix, 401 42501; acta 261102_1456, amb un altre nom de fitxer) | persistència de la inbox ActivityPub i cua d'eixida (P1-23 fase 2) |
 | 70 | `2611020417` | `2611020417_xat_avisos_push.sql` | Aplicada a producció (acta 261102_1456; lectura REST del 6-11: la taula existix) | avisos push del Xat: aparells, silenci i cua (B8) |
@@ -1965,23 +2020,23 @@ verificador sense avisos.
 | 77 | `2611052345` | `2611052345_admin_usuaris_i_organitzacions.sql` | Aplicada a producció (lectura REST del 6-11: `admin_llista_usuaris_registrats`, `admin_convida_a_entitat`, `admin_connecta_usuari` i `les_meues_invitacions_admin` existixen, 401 42501; aplicada pel Mestre el 6-11) | perfils consentits amb correu emmascarat; invitació de membre amb acceptació pròpia, sense autoassignació ni escalada; auditoria immutable |
 | 78 | `2611060010` | `2611060010_restauracio_municipal_opendata.sql` | Aplicada a producció (lectura REST del 6-11: `llegix_municipi_open_data_per_slug` respon 200 a anon; aplicada pel Mestre el 6-11) | upsert atòmic Open Data 1.2.0 per tenant, lectura pública fitada i conflictes globals; independent de la 77, no esborra dades absents |
 | 79 | `2611061520` | `2611061520_politica_privacitat_2_5.sql` | Aplicada a producció (lectura REST del 6-11: `politiques_privacitat` té la 2.5, vigent des del 2026-11-05T23:00Z, amb l'empremta `ea13f0c4…` d'esta migració; aplicada pel Mestre el 6-11) | política 2.5: avisos push del xat, 2.3 i 2.4 intactes (Onada R9) |
-| 80 | `2611070600` | `2611070600_seed_revisions.sql` | **NO aplicada: l'aplica el Mestre** | P1-75: revisió vigent de llavor, CAS per peça i autoria autoritativa |
-| 81 | `2611080430` | `2611080430_iaia_xat.sql` | **NO aplicada: proposta R54 en còpia** | Principal IAIA no interactiu i binding explícit; lease, revocació i resposta de bot posterior al commit |
+| 80 | `2611070600` | `2611070600_seed_revisions.sql` | **NO aplicada: l'aplica el Mestre**; evidència contradictòria: el bolcat del 13-11-2026 hi troba 30 objectes coincidents (deriva R22); conciliar amb el Pas 0 | P1-75: revisió vigent de llavor, CAS per peça i autoria autoritativa |
+| 81 | `2611080430` | `2611080430_iaia_xat.sql` | **NO aplicada: proposta R54 en còpia**; evidència contradictòria: el bolcat del 13-11-2026 hi troba 57 objectes coincidents (deriva R22); conciliar amb el Pas 0 | Principal IAIA no interactiu i binding explícit; lease, revocació i resposta de bot posterior al commit |
 | 82 | `2611080431` | `2611080431_xat_push_leases.sql` | Aplicada a producció (radiografia del Mestre del 16-11-2026 14:54: `private.xat_push_lliuraments` existix, captura 261116_1454) | Cua durable per aparell, ACK CAS, reintent, baixa amb identitat i despertador posterior al commit |
-| 83 | `2611080432` | `2611080432_xat_lliurament_i_presencia.sql` | **NO aplicada: proposta R54 en còpia** | Entrega/lectura de persones i presència efímera; exclusió només del bot autoritatiu |
+| 83 | `2611080432` | `2611080432_xat_lliurament_i_presencia.sql` | **NO aplicada: proposta R54 en còpia**; evidència contradictòria: el bolcat del 13-11-2026 hi troba 18 objectes coincidents (deriva R22); conciliar amb el Pas 0 | Entrega/lectura de persones i presència efímera; exclusió només del bot autoritatiu |
 | 84 | `2611080440` | `2611080440_politica_privacitat_2_6.sql` | **NO aplicada: l’aplica el Mestre** | Text 2.6 append-only; altes aturades fins al gate HTML/hash/versió vigent |
-| 85 | `2611082238` | `2611082238_admin_resum_sessions_dispositius.sql` | **NO aplicada: l'aplica el Mestre** | R13-C7: recomptes de persones amb sessió activa per camí (24 h, 7 i 14 dies), superadmin amb aal2 |
-| 86 | `2611091500` | `2611091500_sessions_i_curadoria_cultural.sql` | Estat remot no acreditat sencer (radiografia del Mestre del 16-11-2026 14:54: `private.pot_curar_cultura()` existix, cos sense comparar amb Git; conciliar-la abans de reaplicar-la) | Directori filtrable per persona i camí, superadmin aal2: correu emmascarat (màscara de la 77), sense identificador de sessió ni UUID de persona, només perfils amb consentiment i sense baixa, una fila d’auditoria append-only per consulta; safata cultural privada, permisos declarats, normes de convivència exigides, rol de curadoria aal2, ningú decidix una aportació pròpia, RLS; aprovació sense ingestió automàtica |
-| 87 | `2611110010` | `2611110010_autoria_256_caracters.sql` | **NO aplicada: proposta R17.2** | Autoria de fins a 256 caràcters més la marca de drets a Notes, Perfil i organitzacions |
+| 85 | `2611082238` | `2611082238_admin_resum_sessions_dispositius.sql` | **NO aplicada: l'aplica el Mestre**; evidència contradictòria: el bolcat del 13-11-2026 hi troba 1 objecte coincident (deriva R22); conciliar amb el Pas 0 | R13-C7: recomptes de persones amb sessió activa per camí (24 h, 7 i 14 dies), superadmin amb aal2 |
+| 86 | `2611091500` | `2611091500_sessions_i_curadoria_cultural.sql` | Estat remot no acreditat sencer: el bolcat del 13-11-2026 hi troba 56 objectes coincidents, però `private.pot_curar_cultura()` (la guarda de curadoria) i `revisa_aportacio_cultural(uuid,text,text)` no coincidixen amb cap versió de Git (deriva R22), i `private.es_superadmin()`, de què depén la guarda, no exigix aal2 (2610061448 encara no aplicada); la radiografia del Mestre del 16-11-2026 14:54 hi troba `private.pot_curar_cultura()` (captura 261116_1454): conciliar estes dues funcions abans de reaplicar-la i d'encendre `VITE_SDP_CURADORIA_CULTURAL` | Directori filtrable per persona i camí, superadmin aal2: correu emmascarat (màscara de la 77), sense identificador de sessió ni UUID de persona, només perfils amb consentiment i sense baixa, una fila d’auditoria append-only per consulta; safata cultural privada, permisos declarats, normes de convivència exigides, rol de curadoria aal2, ningú decidix una aportació pròpia, RLS; aprovació sense ingestió automàtica |
+| 87 | `2611110010` | `2611110010_autoria_256_caracters.sql` | **NO aplicada: proposta R17.2**; confirmada al bolcat del 13-11-2026: els tres CHECK `*_copyright_longitud` són els de 2609262232 (deriva R22) | Autoria de fins a 256 caràcters més la marca de drets a Notes, Perfil i organitzacions |
 | 88 | `2611110100` | `2611110100_cua_purga_storage_ugc.sql` | Aplicada a producció el 13-11-2026 al T2 (pas 2, SHA-256 `fa6e25fc…` igual al de Git; registre `sessio_sql_t2_261113.md`, Nota d'auditoria §16); el worker `purga-fitxers` no estava desplegat | P0-20: registre i cua de purga d’objectes UGC amb comprovació de propietat i versió |
 | 89 | `2611110110` | `2611110110_revisions_patrimoni_viu.sql` | Aplicada a producció el 16-11-2026 pel Mestre, amb el disparador `revisions_patrimoni_quota` d'R29 (`pas3_patrimoni_quota_ok = true`, captura 261116_1503) | P1-75: campanyes anuals, mesures primitives, lectura pública amb autoria interna, escriptura autoritzada i control de versió |
 | 90 | `2611110455` | `2611110455_revisions_editorials_wp.sql` | Aplicada a producció el 16-11-2026 a les 15:02 pel Mestre (receptari SQL R30/R31, captura 261116_1503) | P0-111: sincronització de revisions editorials WordPress (`superadmin` + `aal2`), autoria `Associació El Rentonar` als 20 ítems del catàleg d’arbres |
 | 91 | `2611111735` | `2611111735_copublicacio_registrada.sql` | Aplicada a producció el 13-11-2026 al T2 (pas 3, SHA-256 `a8770935…` igual al de Git); la radiografia del Mestre del 16-11-2026 14:54 hi troba `private.copub_compte_actiu(uuid)` (captura 261116_1454) | R19: publicadors registrats, traspàs, reversió i historial privat amb CAS i AAL2. |
-| 92 | `2611112005` | `2611112005_mur_lectura_publica_foraster.sql` | Aplicada segons l'ESTAT de l'11-11-2026 a les 21:21 (Mestre i MarIA; sense lectura REST) | P0 Mur Foraster: lectura pública de `mur`, `mercat`, `events` i `multimedia`; `notes` privades; UUID d'autoria llegible per a `anon`; esborranys exposats segons Codex R20, correcció additiva 2611112149 |
+| 92 | `2611112005` | `2611112005_mur_lectura_publica_foraster.sql` | Aplicada segons l'ESTAT de l'11-11-2026 a les 21:21 (Mestre i MarIA; sense lectura REST); el bolcat del 13-11-2026 hi troba els seus 11 objectes en l'estat de migracions posteriors (deriva R22: 0 coincidents, 11 superats) | P0 Mur Foraster: lectura pública de `mur`, `mercat`, `events` i `multimedia`; `notes` privades; UUID d'autoria llegible per a `anon`; esborranys exposats segons Codex R20, correcció additiva 2611112149 |
 | 93 | `2611112149` | `2611112149_mur_estat_public_i_padro.sql` | Aplicada a producció el 13-11-2026 al T2 (pas 5, SHA-256 `12bd594e…` igual al de Git); no la torneu a aplicar aïllada: tornaria enrere `private.copub_recurs` de 2611121430 | Frontera pública coherent entre SELECT i padró; marques privades o d'esborrany dominen, assaig natiu sense omissions |
 | 94 | `2611121430` | `2611121430_mur_foraster_projeccio_publica_opcio_a.sql` | Aplicada a producció el 13-11-2026 al T2 (pas 6, SHA-256 `41a56b24…` igual al de Git); la radiografia del Mestre del 16-11-2026 14:54 hi troba `private.mur_anti_resurreccio()` amb el cos auditat (captura 261116_1454) | Opció A: projecció pública mínima, revocació CAS durable, moderació AAL2 i padró coherent; PostgreSQL 18.6 local |
 | 95 | `2611121630` | `2611121630_xat_propi.sql` | Aplicada a producció el 13-11-2026 al T2 (pas 4, SHA-256 `d714656b…` igual al de Git), abans d'R24; no la torneu a aplicar: tornaria enrere `xat_fils_meus` de 20261114061000 (conflicte amb el receptari del 16-11, vegeu la vinyeta) | Fil propi únic, RLS privada, lectura automàtica i zero auto-push |
-| 96 | `2611121700` | `2611121700_purga_agents_app_content_i_hidratacio_canonica.sql` | Estat remot no acreditat; candidata R21.5 | Purga per identitat i hidratació canònica, dades legítimes preservades |
+| 96 | `2611121700` | `2611121700_purga_agents_app_content_i_hidratacio_canonica.sql` | Estat remot no acreditat; candidata R21.5. Només dades: el bolcat del 13-11-2026 no la pot acreditar (deriva R22); cal la sonda S7 | Purga per identitat i hidratació canònica, dades legítimes preservades |
 | 97 | `2611121830` | `2611121830_frontera_contingut_editorial_i_notes_privades.sql` | Aplicada a producció el 13-11-2026 al T2 (pas 1, SHA-256 `be47c0e7…` igual al de Git) | Frontera pública de nou claus i Notes privades, amb la guarda vigent de superadmin (AAL2 quan s'aplique 2610061448) |
 | 98 | `2611121850` | `2611121850_mur_text_dates_i_contactes.sql` | Aplicada a producció el 13-11-2026 al T2 (pas 7, SHA-256 `3661300e…` igual al de Git) | Dates vàlides i rangs del Mur sense regressió de redacció de contactes |
 | 99 | `2611122200` | `2611122200_mur_membres_i_actes_v2.sql` | Aplicada a producció el 13-11-2026 al T2 (pas 9, versió corregida, SHA-256 `398caea4…` igual al de Git) | Lectura anònima i de membres, actes atòmics, denúncia i bloqueig per UUID |
@@ -2009,6 +2064,7 @@ verificador sense avisos.
 | 121 | `20261117150000` | `20261117150000_r324_copublicacio_pagina_sistema_nervios.sql` | **NO aplicada: R32.4, l'aplica el Mestre** | La pàgina pública `/page/sistema-nervios` entra al registre del paquet de copublicació: una fila, additiva i idempotent |
 | 122 | `20261117173000` | `20261117173000_r32_7_xat_reaccions_destacats_fixats_amagats.sql` | **NO aplicada: R32.7, l'aplica el Mestre** | Reaccions, destacats, fixats i «esborra per a mi» del xat sobre missatges visibles, sense contingut ni seq nous |
 | 123 | `20261117193000` | `20261117193000_r32_8_xat_quota_250mb_video_60s_i_ubicacio.sql` | **NO aplicada: R32.8, l'aplica el Mestre** | Quota acumulada de 250 MB, vídeo fins a 60 s i ubicació explícita als adjunts del xat, additiva i sense canvis de RLS/ACL |
+| 124 | `20261118230000` | `20261118230000_a03_xat_push_credencials_per_configuracio.sql` | **NO aplicada: P1-74 (A-03), l'aplica el Mestre** | Caché de credencials natives per proveïdor i configuració: rotació de `SDP_APNS_*` o `SDP_FCM_COMPTE_SERVEI` sense apagar el cron; v1 intacta |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -2063,8 +2119,8 @@ no exigix que les candidates encara no integrades existisquen en R1.
   dona aplicada (vegeu la taula canònica).
 - `migrations/2610312000_e2ee_lot3_validadors_service_role.sql`: esmena de
   Claude al Lot 3 perquè `service_role` puga escriure `xat_fils`/`xat_missatges`
-  amb les CHECK del 2610311800. Documentada a la llista; estat remot no
-  acreditat: l'acta 261101_0334 la dona aplicada (vegeu la taula canònica).
+  amb les CHECK del 2610311800. Documentada a la llista; aplicada a producció
+  segons el bolcat del 13-11-2026 (vegeu la taula canònica).
 - `2610311600`: era un bloc diagnòstic il·lustratiu del Kit 1 de Gemini,
   substituït per les sondes d’este README; **no és una migració independent**
   (confirmació del Mestre en Lot 6). No es compta com a fitxer SQL.
@@ -2703,7 +2759,7 @@ Fitxers: `supabase/functions/notifica-xat/index.ts` (l'embolcall Deno, que
 només li passa les variables de baix), `gestor.js`, `webpush.js` i
 `natius.js` (la lògica, provada a `gestor.test.js`, `webpush.test.js`,
 `natius.test.js` i `paritat.test.js`). Necessita
-`migrations/2611020417_xat_avisos_push.sql` i `migrations/2611080431_xat_push_leases.sql` aplicades. El contracte0417 és històric; R54 exigix lease/ACK v2, sense fallbackv1.
+`migrations/2611020417_xat_avisos_push.sql` i `migrations/2611080431_xat_push_leases.sql` aplicades. El contracte0417 és històric; R54 exigix lease/ACK v2, sense fallbackv1. Els natius, a més, necessiten `migrations/20261118230000_a03_xat_push_credencials_per_configuracio.sql` (P1-74, A-03): sense ella, APNs i FCM responen «reintenta» i el web continua igual.
 
 Què fa cada passada (un POST amb la capçalera `x-sdp-cron`):
 
@@ -2780,6 +2836,29 @@ Programació: Integrations → Cron → Create job → Supabase Edge Function
 `notifica-xat`, POST, horari `15 seconds`, capçalera
 `x-sdp-cron: <SDP_CRON_SECRET>`, cos `{}` i un temps d'espera de 60 s.
 Verificació (lectura): `select jobname, schedule from cron.job;`.
+
+Rotació dels secrets natius sense apagar el cron (P1-74, A-03). La caché de
+credencials (`private.xat_push_credencials_v2`) guarda una fila per proveïdor
+i empremta: 16 caràcters hexadecimals que el worker calcula de la
+configuració pública (APNs: l'equip, el kid i la pública de la `.p8`; FCM: el
+correu i el projecte del compte de servei). Mentre conviuen treballadors amb
+la configuració vella i amb la nova, cadascun usa la seua fila i ningú no
+refà el JWT d'APNs ni el testimoni d'OAuth a cada passada. L'ordre:
+
+1. Aplicar la migració `20261118230000` (una vegada; el worker d'abans
+   continua amb les RPC v1 i la seua fila única).
+2. Desplegar `notifica-xat`, `notifica-xat-desperta` i `iaia` amb el
+   `natius.js` que crida les `_v2`.
+3. Crear la clau APNs nova (o la clau o el compte de servei de FCM nou)
+   mentre la vella continua vàlida.
+4. Posar tots els secrets del canvi en una sola crida, perquè cap instància
+   no en veja una barreja:
+   `supabase secrets set SDP_APNS_CLAU_ID=<…> SDP_APNS_CLAU_P8=<…> --project-ref <ref>`
+   (o `SDP_FCM_COMPTE_SERVEI=<…>`).
+5. Tornar a desplegar les tres funcions.
+6. Revocar la clau vella a Apple o a Google només després. La seua fila
+   caduca sola (65 minuts com a molt) i la base no en guarda més de quatre
+   de vives per proveïdor (`SDP-PUSH-014`).
 
 Lectura per al Mestre (cap adreça):
 
@@ -3180,7 +3259,7 @@ La 2611082238 conserva intacta la RPC agregada `admin_resum_sessions_dispositius
 
 Les RPC `estat_curadoria_cultural`, `llista_aportacions_culturals`, `envia_aportacio_cultural` i `revisa_aportacio_cultural` distingixen revisió d’ingestió: `aprovat` no publica res ni incorpora l’aportació a cap servei, i esta migració no connecta cap ingestió. El client només anuncia la capacitat `curadoriaCultural` amb la bandera de build `VITE_SDP_CURADORIA_CULTURAL=1`, que s’ha d’encendre només després d’aplicar esta migració; apagada, /page/nodrir-la-iaia ho diu, no fa cap petició i no recull res. Sense servidor, migració o permís, la interfície mostra l’estat pendent; no fabrica una safata buida ni un èxit. Esta tanda només aporta text/enllaços, sense pujada binària o d’àudio.
 
-Cap rebut acredita que la migració s’haja executat sencera contra producció. La radiografia del Mestre del 16-11-2026 a les 14:54 (captura `261116_1454`) hi troba `private.pot_curar_cultura()`, sense comparar-ne el cos amb Git: l'estat remot no està acreditat sencer i cal conciliar-la abans de reaplicar-la. La prova seca `tests/migracions-r15-prevol.test.mjs` l’executa en PostgreSQL WASM (PGlite) amb una fixture sintètica de GoTrue; no acredita Supabase. Requerix revisió i verificació SQL real pel carril integrador. Les proves de transport amb dobles del servidor no acrediten permisos desplegats, assignacions de rol ni ingestió remota.
+Cap rebut acredita que la migració s’haja executat sencera contra producció. La radiografia del Mestre del 16-11-2026 a les 14:54 (captura `261116_1454`) hi troba `private.pot_curar_cultura()`, sense comparar-ne el cos amb Git: l'estat remot no està acreditat sencer i cal conciliar-la abans de reaplicar-la. El bolcat del 13-11-2026 sí que les compara: `private.pot_curar_cultura()` i `revisa_aportacio_cultural(uuid,text,text)` no coincidixen amb cap versió de Git, i la resta, 56 objectes, sí (deriva R22; vegeu la taula canònica). La prova seca `tests/migracions-r15-prevol.test.mjs` l’executa en PostgreSQL WASM (PGlite) amb una fixture sintètica de GoTrue; no acredita Supabase. Requerix revisió i verificació SQL real pel carril integrador. Les proves de transport amb dobles del servidor no acrediten permisos desplegats, assignacions de rol ni ingestió remota.
 
 ## Vincles
 
@@ -3190,7 +3269,7 @@ Cap rebut acredita que la migració s’haja executat sencera contra producció.
 ## R32.11 · CAS general preparat, activació manual pendent
 
 `snippets/r32_11_publicacions_cas.sql` és un paquet **manual, no aplicat a
-Producció i fora del catàleg de 123 migracions**. Implementa la RPC nova
+Producció i fora del catàleg de 124 migracions**. Implementa la RPC nova
 `publica_section_submission_cas(uuid,uuid,text,jsonb,text,text,uuid,boolean,timestamptz,uuid)`.
 El token nul només crea; un token llegit actualitza exactament eixa revisió.
 L'opID lliga una petició immutable i permet recuperar un ACK perdut. Un replay
@@ -3257,7 +3336,7 @@ PG18 representa els huit `NOT NULL` també en `pg_constraint`; es comprova
 exactament una restricció validada, enforced i local per cada columna
 acreditada. PG17 conserva la comprovació `attnotnull` sense eixes files
 addicionals. Les altres cinc restriccions continuen fixades i no s’accepten
-columnes, restriccions ni metadades inesperades. Prova: 
+columnes, restriccions ni metadades inesperades. Prova:
 `node --test tests/r3211-publicacions-cas-native.test.mjs`, només amb la
 fixture de clúster descartable per socket Unix; no acredita Auth/JWT signat,
 PostgREST ni cap desplegament remot.

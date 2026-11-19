@@ -7,7 +7,7 @@ import { aBase64url, deBase64url } from '../xifratXatCripto.js';
  * Opac vol dir: cap desxifrat. Els bytea de lectures RLS es recodifiquen estrictament. Cada mètode
  * és una RPC amb els seus paràmetres; els resultats es mapegen de snake_case
  * a la forma del port i prou. Les RPC d'identitat, frase, claus i llibreta
- * són de la migració 2610290400 (E2EE-1a); les d'estat, èpoques, sobres,
+ * són de la migració 2610290400 (E2EE-1a). Les d'estat, èpoques, sobres,
  * enviament, reembolcall, invitació i adjunts són de l'1b/1c (§7.4), encara
  * no al repositori: fins que s'apliquen, PostgREST respon «funció absent»
  * (PGRST202) i ací ix com a `codi: 'sense-capacitat-e2ee'`, mai com un èxit.

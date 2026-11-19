@@ -1,0 +1,16 @@
+/* Full diferit (D-v128-2, lot 4): el menú «Opcions del missatge» obert cap amunt.
+   Bombolla.jsx només posa .sdp-xat-menu--amunt quan el menú no cap davall de la bombolla i damunt
+   hi cap sencer (oberturaMenu.js); l'adopta (src/config/fullDiferit.js) a la mateixa mesura, abans
+   del pintat. Sense el modificador, el menú es pinta com sempre (modules.css). NO s'importa des
+   d'index.css. Mateixa cascada: @layer components, amb més especificitat que les regles base del
+   menú (modules.css, «.sdp-xat-bombolla__accions > .sdp-xat-menu» i les de pantalla estreta). */
+@layer components {
+  .sdp-xat-bombolla__accions > .sdp-xat-menu.sdp-xat-menu--amunt {
+    top: auto;
+    bottom: calc(100% + var(--sdp-space-1));
+    transform-origin: bottom right;
+  }
+  .sdp-xat-item--altre .sdp-xat-bombolla__accions > .sdp-xat-menu.sdp-xat-menu--amunt { transform-origin: bottom left; }
+  .sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-bombolla__accions > .sdp-xat-menu.sdp-xat-menu--amunt { transform-origin: bottom right; }
+  .sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-bombolla__accions > .sdp-xat-menu.sdp-xat-menu--amunt { transform-origin: bottom left; }
+}

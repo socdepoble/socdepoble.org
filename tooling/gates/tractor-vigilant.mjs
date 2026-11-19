@@ -15,6 +15,73 @@ const SENSIBLE = /(?:^|\/)(?:\.env[^/]*|\.git[^/]*|debug\.log|error_log|phpinfo\
 const EXECUTABLE = /\.(php[0-9]?|phtml|phar|sh|py|pl|cgi)$/i;
 const NOU = new Set(['VIG-01','VIG-02','VIG-03','VIG-04','VIG-05','VIG-06','VIG-07','VIG-08','VIG-09','VIG-10','VB1','VB2','VB3','VB9','VB10','VC2']);
 const ORIGEN = 'Vigilant Tellado: perímetre estàtic adaptat a Sóc de Poble';
+// VIG-05 · Exempcions justificades (IDEA-13): cap d'estos hosts es contacta mai des de producció.
+const EXEMPT_HOST = new Map([
+  ['localhost','servidor de desenvolupament local'],['127.0.0.1','bucle local IPv4'],['[::1]','bucle local IPv6'],
+  ['www.w3.org','espai de noms XML/SVG; és un identificador, no es baixa'],['schema.org','vocabulari JSON-LD; identificador'],
+  ['purl.org','espai de noms Dublin Core; identificador'],['rs.tdwg.org','termes Darwin Core; identificador'],
+  ['datacite.org','esquema DataCite; identificador'],['schemas.openxmlformats.org','espais de noms OOXML dins dels .xlsx'],
+  ['schemas.google.com','espai de noms Atom de Blogger; identificador'],['webfinger.net','rel de WebFinger; identificador'],
+  ['nodeinfo.diaspora.software','esquema NodeInfo; identificador'],['docs.oasis-open.org','espai de noms OASIS; identificador'],
+]);
+// RFC 6761: dominis reservats que no resolen mai a Internet (bases de new URL i proves).
+const TLD_RESERVAT = /\.(?:invalid|test|example|localhost)$/;
+// IRI d'entitat de Wikidata: identificador de dades enllaçades, no un recurs que es baixe.
+const IRI_WIKIDATA = /^\/entity\/Q\d+$/;
+// Espècimen de pesca del catàleg de disseny: l'enllaç insegur és el contingut que s'hi mostra.
+const EXEMPT_FITXER = p => p.startsWith('src/sections/disseny/cataleg/');
+export function urlHttpReal(brut) {
+  const net=brut.replace(/[),;.]+$/,'').replace(/^(http:\/\/(?:\[[^\]/]*\]|[^/?#:[]+)):(?:\*|\$\{[^}]*\})/,'$1');
+  let url;try {url=new URL(net);}catch {return true;}
+  const host=url.hostname;
+  if(EXEMPT_HOST.has(host)||TLD_RESERVAT.test(host)) return false;
+  // Un host d'una sola etiqueta (p. ex. «insegur») no és encaminable a Internet.
+  if(host&&!host.startsWith('[')&&!host.includes('.')) return false;
+  return !(host==='www.wikidata.org'&&IRI_WIKIDATA.test(url.pathname));
+}
+// VIG-04 · Artefactes que el build escriu després de l'inventari i que no viatgen als paquets:
+// seo-routes.json el genera `npm run build:seo` (build-seo-manifest.mjs) i el vigila la Porta Build.
+const POSTERIORS_AL_INVENTARI = new Set(['wordpress-plugin/dist/seo-routes.json']);
+// El manifest de Vite (DIRECTORI_DE_VITE de vite.standalone.config.js) és una traça del mateix build
+// que manifestDeReleasePlugin deixa fora de l'inventari a posta: no és cap resta.
+const TRACA_DE_VITE = '.vite/';
+// IDEA-13 · Commit i origen llegits dels fitxers de .git, sense executar git ni tocar la xarxa.
+const llegeixPetit=p=>{try {const e=fs.statSync(p);return e.isFile()&&e.size<=4*1024*1024?fs.readFileSync(p,'utf8'):null;}catch {return null;}};
+const HASH=/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+export function llegeixGit(root) {
+  const buit=motiu=>({commit:null,branca:null,origen:null,motiu});
+  const dotgit=path.join(root,'.git');let gitdir;
+  try {gitdir=fs.statSync(dotgit).isDirectory()?dotgit:null;}catch {return buit('L’arrel no té .git.');}
+  if(!gitdir) {const m=/^gitdir:[ \t]*(.+?)[ \t]*$/m.exec(llegeixPetit(dotgit)||'');if(!m) return buit('El fitxer .git no apunta cap gitdir.');gitdir=path.resolve(root,m[1]);}
+  const commondir=llegeixPetit(path.join(gitdir,'commondir'))?.trim();const comu=commondir?path.resolve(gitdir,commondir):gitdir;
+  const head=llegeixPetit(path.join(gitdir,'HEAD'))?.trim();
+  if(!head) return buit('No es pot llegir HEAD.');
+  let commit=null,branca=null;
+  if(HASH.test(head)) commit=head;
+  else {
+    const ref=/^ref:\s*(refs\/[-\w./]+)$/.exec(head)?.[1];
+    if(!ref||ref.split('/').some(t=>t==='..'||t==='.'||!t)) return buit('HEAD no és cap referència vàlida.');
+    if(ref.startsWith('refs/heads/')) branca=ref.slice(11);
+    for(const dir of [gitdir,comu]) {const v=llegeixPetit(path.join(dir,ref))?.trim();if(v&&HASH.test(v)) {commit=v;break;}}
+    if(!commit) for(const linia of (llegeixPetit(path.join(comu,'packed-refs'))||'').split('\n')) {const [h,nom]=linia.trim().split(/\s+/);if(nom===ref&&HASH.test(h||'')) {commit=h;break;}}
+  }
+  if(!commit) return {...buit('La referència de HEAD no té cap commit.'),branca};
+  // Config INI mínima: [remote "x"] url i [branch "b"] remote.
+  const remots=new Map(),branques=new Map();let seccio=null;
+  for(const linia of (llegeixPetit(path.join(comu,'config'))||'').split('\n')) {
+    const cap=/^\s*\[\s*(remote|branch)\s+"([^"]+)"\s*\]/.exec(linia);
+    if(cap) {seccio=cap;continue;}
+    if(/^\s*\[/.test(linia)) {seccio=null;continue;}
+    const kv=/^\s*(url|remote)\s*=\s*(.*?)\s*$/i.exec(linia);
+    if(!seccio||!kv) continue;
+    if(seccio[1]==='remote'&&kv[1].toLowerCase()==='url'&&!remots.has(seccio[2])) remots.set(seccio[2],kv[2]);
+    if(seccio[1]==='branch'&&kv[1].toLowerCase()==='remote') branques.set(seccio[2],kv[2]);
+  }
+  const remot=[branca&&branques.get(branca),'upstream','origin',remots.keys().next().value].find(n=>n&&remots.has(n));
+  // Mai cap credencial a l'informe: fora usuari:testimoni@, consulta i fragment.
+  const origen=remot?{remot,url:remots.get(remot).replace(/\/\/[^@/]+@/,'//').replace(/[?#].*$/,'')}:null;
+  return {commit,branca,origen,motiu:null};
+}
 function fitxers(root, rel, incidencies) {
   const abs=path.join(root,rel);if(!fs.existsSync(abs)) return null;
   const estat=fs.lstatSync(abs);if(estat.isSymbolicLink()) {incidencies.push(rel);return [];}
@@ -31,7 +98,7 @@ function fitxers(root, rel, incidencies) {
 export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   const root=fs.realpathSync(arrel);if(!fs.statSync(root).isDirectory()) throw new TypeError('Arrel invàlida.');
   const comprovacions=[],enllacos=[];
-  const anota=(id,severitat,estat,files=[],proposta='')=>comprovacions.push({id,capa:id.startsWith('VA')?'A':id.startsWith('VC')?'C':'B',origen_tellado:ORIGEN,estat,severitat,avis:NOU.has(id),evidencia:files.map(fitxer=>({fitxer})),proposta});
+  const anota=(id,severitat,estat,files=[],proposta='')=>comprovacions.push({id,capa:id.startsWith('VA')?'A':id.startsWith('VC')?'C':'B',origen_tellado:ORIGEN,estat,severitat,avis:NOU.has(id),evidencia:files.map(f=>typeof f==='string'?{fitxer:f}:f),proposta});
   const llig=rel=>{ const parts=rel.split('/');let cursor=root;
     for(const part of parts) {cursor=path.join(cursor,part);if(!fs.existsSync(cursor)||fs.lstatSync(cursor).isSymbolicLink()) return null;}
     if(!fs.statSync(cursor).isFile() || fs.statSync(cursor).size>8*1024*1024) return null;
@@ -47,25 +114,38 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   const perillos=php.filter(p=>{const s=llig(p)||'';return /eval\s*\(\s*(?:base64_decode|gzinflate|str_rot13|gzuncompress)|assert\s*\(\s*\$_(?:POST|GET|REQUEST)|preg_replace\s*\(\s*['"][^'"\n]{0,200}\/e['"]|\$(?:[a-f0-9]{16,})\b|\b(?:create_function|shell_exec|passthru|proc_open|system|popen)\s*\(/i.test(s);});
   anota('VIG-03','critica',perillos.length?'falla':php.length?'ok':'no-mesurat',perillos,'Revisar manualment el PHP assenyalat; cap codi s’executa.');
   // L’inventari no es certifica si la release no aporta el format conegut.
+  // IDEA-13: «alterats» (JSON o entrada invàlids, llistat absent o hash diferent, orfe posterior a l'inventari) falla;
+  // els orfes anteriors a l'inventari són restes d'un build local ranci i només informen, com una versió desfasada.
   const inventaris=tots.filter(p=>p.endsWith('/sdp-inventari.json'));
-  let mesurats=0;const errors=[];
+  let mesurats=0;const alterats=[],rancis=[];
+  let versioPaquet=null;try {versioPaquet=JSON.parse(llig('package.json'))?.version??null;}catch {versioPaquet=null;}
   for(const p of inventaris) {
-    let inv;try {inv=JSON.parse(llig(p));}catch {errors.push(p);continue;}
+    let inv;try {inv=JSON.parse(llig(p));}catch {alterats.push(p);continue;}
     if(!Array.isArray(inv?.fitxers)) continue;
     mesurats++;
     const base=path.posix.dirname(p),noms=new Set();
     for(const f of inv.fitxers) {
-      if(!f || typeof f.cami!=='string'||!/^[-a-zA-Z0-9_./]+$/.test(f.cami)||f.cami.split('/').some(t=>t==='..'||t==='.'||!t)||!/^([a-f0-9]{64})$/.test(f.sha256||'')) {errors.push(p);continue;}
+      if(!f || typeof f.cami!=='string'||!/^[-a-zA-Z0-9_./]+$/.test(f.cami)||f.cami.split('/').some(t=>t==='..'||t==='.'||!t)||!/^([a-f0-9]{64})$/.test(f.sha256||'')) {alterats.push(p);continue;}
       const rel=path.posix.join(base,f.cami);noms.add(rel);
-      const bytes=llig(rel);if(bytes===null||createHash('sha256').update(fs.readFileSync(path.join(root,rel))).digest('hex')!==f.sha256) errors.push(rel);
+      const bytes=llig(rel);if(bytes===null||createHash('sha256').update(fs.readFileSync(path.join(root,rel))).digest('hex')!==f.sha256) alterats.push(rel);
     }
-    errors.push(...tots.filter(f=>f.startsWith(base+'/')&&!noms.has(f)&&!['sdp-inventari.json','sdp-release.json'].includes(path.posix.basename(f))));
+    const momentInventari=fs.statSync(path.join(root,p)).mtimeMs;
+    const orfes=tots.filter(f=>f.startsWith(base+'/')&&!noms.has(f)&&!['sdp-inventari.json','sdp-release.json'].includes(path.posix.basename(f))&&!POSTERIORS_AL_INVENTARI.has(f)&&!f.startsWith(`${base}/${TRACA_DE_VITE}`));
+    // Un orfe escrit en el moment de l'inventari o després no ve d'aquell build: s'hi ha injectat.
+    const nous=orfes.filter(f=>fs.lstatSync(path.join(root,f)).mtimeMs>=momentInventari);alterats.push(...nous);
+    let versioRelease=null;try {versioRelease=JSON.parse(llig(path.posix.join(base,'sdp-release.json')))?.versio??null;}catch {versioRelease=null;}
+    // Un build no-release porta `${package.version}-dev` (versioDelBuild): només eixe es compara amb package.json.
+    // Una release porta SDP_VERSIO, la línia del connector, i la versió la valida empaqueta.mjs, no esta porta.
+    const desfasada=typeof versioRelease==='string'&&typeof versioPaquet==='string'&&versioRelease.endsWith('-dev')&&versioRelease!==`${versioPaquet}-dev`;
+    const nRancis=orfes.length-nous.length;
+    if(nRancis||desfasada) rancis.push({fitxer:base,rancis:nRancis,versioRelease,versioPaquet});
   }
-  anota('VIG-04','alta',errors.length?'falla':mesurats?'ok':'no-mesurat',errors,'Validar també sdp-release amb la porta d’empaquetat; no substituïx la comprovació de release.');
+  anota('VIG-04','alta',alterats.length?'falla':rancis.length?'informa':mesurats?'ok':'no-mesurat',alterats.length?alterats:rancis,alterats.length||!rancis.length?'Validar també sdp-release amb la porta d’empaquetat; no substituïx la comprovació de release.':'Build local ranci (orfes anteriors a l’inventari o versió -dev desfasada): buidar l’outDir (build de release, SDP_MITJANS=externs o esborrar la carpeta) i tornar a compilar; un build:wp normal no buida la carpeta. L’empaquetador ja deixa fora del zip el que l’inventari no nomena.');
   const src=(fitxers(root,'src',enllacos)||[]).filter(p=>/\.(jsx?|mjs)$/.test(p)&&!p.includes('.test.')&&!p.includes('/__fixtures__/')&&!p.startsWith('src/data/wiki'));
   const fonts=[...src,...php,'index.html','vercel.json','firebase.json'].filter(p=>llig(p)!==null);
-  const mixt=fonts.filter(p=>[...(llig(p)||'').matchAll(/http:\/\/[^\s"'<>`]+/g)].some(m=>{try{return !['localhost','127.0.0.1','[::1]','www.w3.org','schema.org','webfinger.net','nodeinfo.diaspora.software','docs.oasis-open.org'].includes(new URL(m[0]).hostname);}catch{return true;}}));
-  anota('VIG-05','mitjana',mixt.length?'falla':fonts.length?'ok':'no-mesurat',mixt,'Revisar URL no locals. Els espais de noms estàndard estan exempts.');
+  // Els comentaris no es servixen ni es baixen: el lexer de la porta Tellado els buida abans de buscar URL.
+  const mixt=fonts.filter(p=>!EXEMPT_FITXER(p)&&[...netejaComentarisLineal(llig(p)||'',path.posix.extname(p)).matchAll(/http:\/\/[^\s"'<>`]+/g)].some(m=>urlHttpReal(m[0])));
+  anota('VIG-05','mitjana',mixt.length?'falla':fonts.length?'ok':'no-mesurat',mixt,'Revisar URL no locals. Els hosts locals, els dominis reservats (RFC 6761) i els espais de noms estàndard estan exempts.');
   const html=llig('index.html');const externs=[...php,...(html===null?[]:['index.html'])].filter(p=>/(?:src|href)\s*=\s*['"]https:\/\/(?:fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com|cdn\.jsdelivr\.net)/i.test(llig(p)||''));
   anota('VIG-06','alta',externs.length?'falla':html!==null?'ok':'no-mesurat',externs,'Comprovar declaració External services abans d’autoritzar el recurs.');
   const mantFitxers=[...php,...(['wp-content/maintenance.php','public/maintenance.php'].filter(p=>llig(p)!==null))].filter(p=>/(?:^|\/)(?:maintenance\.php|[^/]*manteniment[^/]*503[^/]*\.php)$/i.test(p));
@@ -100,7 +180,8 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   if(enllacos.length) anota('VIG-SYMLINK','alta','no-mesurat',enllacos,'Els enllaços no es travessen; revisar-los en el paquet.');
   const recompte={ok:0,falla:0,'no-mesurat':0,informa:0,avisos:0,bloquejants:0};
   for(const c of comprovacions) {recompte[c.estat]++;if(c.estat==='falla') {if(c.avis) recompte.avisos++;else if(['critica','alta'].includes(c.severitat)) recompte.bloquejants++;}}
-  return {esquema:'sdp.vigilant.v1',arrel:root,commit:null,mode:'estatic',readOnly:true,origen:null,data:ara.toISOString(),comprovacions,recompte};
+  const git=llegeixGit(root);
+  return {esquema:'sdp.vigilant.v1',arrel:root,commit:git.commit,branca:git.branca,mode:'estatic',readOnly:true,origen:git.origen,...(git.motiu?{motiuGit:git.motiu}:{}),data:ara.toISOString(),comprovacions,recompte};
 }
 export const codiVigilant = informe => informe.recompte.bloquejants ? 1 : 0;
 export function main(argv) {

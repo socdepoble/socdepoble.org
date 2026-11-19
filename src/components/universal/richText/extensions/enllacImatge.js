@@ -25,10 +25,15 @@ const esControlOEspai = (car) => car.codePointAt(0) < 0x21 || car.codePointAt(0)
 /** L'href d'una imatge si és segur de pintar; si no, null. */
 export function hrefDeImatge(valor) {
   if (typeof valor !== 'string') return null;
-  const segur = hrefSegur(valor);
-  if (segur) return segur;
   const adreca = valor.trim();
-  if (!adreca || Array.from(adreca).some(esControlOEspai)) return null;
+  // Estos dos esquemes no poden passar hrefSegur (relatius o HTTPS).
+  // Van al mateix control de baix, sense repetir el parseig i l'escaneig.
+  if (!/^(?:http:|mailto:)/i.test(adreca)) {
+    const segur = hrefSegur(valor);
+    if (segur) return segur;
+  }
+  if (!adreca) return null;
+  for (const car of adreca) if (esControlOEspai(car)) return null;
   try {
     const url = new URL(adreca);
     return PROTOCOLS_AFEGITS.has(url.protocol) && !url.username && !url.password ? adreca : null;

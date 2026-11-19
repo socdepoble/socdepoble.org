@@ -1124,18 +1124,15 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   color: var(--sdp-accio-text);
 }
 @media (max-width: 640px) {
-  .page-title:has(~ .onboarding-vista),
-  .page-title:has(~ * .onboarding-vista) {
+  .sdp-universal-page-container--onboarding > .page-title {
     padding-block: var(--sdp-space-2);
     margin-block-end: var(--sdp-space-2);
   }
-  .page-title:has(~ .onboarding-vista) img,
-  .page-title:has(~ * .onboarding-vista) img {
+  .sdp-universal-page-container--onboarding > .page-title img {
     max-height: var(--sdp-touch);
     width: auto;
   }
-  .page-title:has(~ .onboarding-vista) h1,
-  .page-title:has(~ * .onboarding-vista) h1 {
+  .sdp-universal-page-container--onboarding > .page-title h1 {
     font-size: var(--sdp-text-h3);
     margin-block: var(--sdp-space-1) 0;
   }
@@ -4921,7 +4918,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-missatges > .sdp-xat-item:first-child .sdp-xat-reaccions-paleta-wrap {
     inset-block-start: calc(var(--sdp-space-8) + var(--sdp-space-1));
   }
-  .sdp-especimen__mostra > .sdp-xat-missatges:has(.sdp-xat-item--obert) {
+  .sdp-especimen__mostra > .sdp-xat-missatges.sdp-xat-missatges--obert {
     min-block-size: 44rem;
   }
   .sdp-xat-item--meu .sdp-xat-reaccions-paleta-wrap {
@@ -11600,7 +11597,10 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 /* DT-LLISTES-D1 · Cada llista de components gestiona el seu espai amb gap.
-   El marge de la prosa no s’afig als seus fills (cens Ronda 2). */
+   El marge de la prosa no s’afig als seus fills (cens Ronda 2).
+   D-v128-3 · La llista dels passos de la Gestoria (.sdp-gestoria-panell__passos) té la seua
+   regla al full diferit (diferit-gestoria.css); a l’arrencada només hi queda
+   l’excepció de la factura en paper (vegeu «Excepció a la dieta», més amunt). */
 @layer components {
   :is(
     .perfil-multimedia__graella,
@@ -11623,7 +11623,6 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-emojis-xl__graella,
     .sdp-estil__historial,
     .sdp-estil__parells,
-    .sdp-gestoria-panell__passos,
     .sdp-histograma__barres,
     .sdp-llista-nodes,
     .sdp-rajoles,
@@ -11938,6 +11937,14 @@ details[open] summary.accordion-header svg:last-child {
     gap: var(--sdp-space-3);
   }
 
+  /* IDEA-125 · La graella del Banc d'Importació és una llista (<ul>) de UniversalCard: sense pics
+     ni sagnat de llista. */
+  .sdp-admin-importacio__llista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
   .sdp-admin-taxonomia__card,
   .sdp-admin-importacio__card,
   .sdp-card {
@@ -12014,20 +12021,13 @@ details[open] summary.accordion-header svg:last-child {
     border-bottom: 0;
   }
 
-  .sdp-fila-seleccionable {
-    cursor: pointer;
-    transition: background-color var(--sdp-t);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .sdp-fila-seleccionable:hover {
-      background: var(--sdp-fons-subtil);
-    }
-  }
-
-  .sdp-fila-seleccionable.is-selected,
-  .is-selected {
-    background: var(--sdp-accio-subtil);
+  /* IDEA-125 · Les regles de la fila seleccionable (.sdp-fila-seleccionable, .is-selected) eren de la
+     taula del Banc d'Importació, l'única que les portava. Ara cada article és una UniversalCard amb
+     element principal: aria-current va a la capa de l'enllaç (.sp-card-link-overlay, inset 0) i la
+     marca de l'article triat hi va dibuixada per dins, sense fons que tape el text, com a la rajola
+     del Catàleg. Cap :has() (línia base, tests/lint_logica_usuari). */
+  .sdp-admin-importacio__llista .sp-card-link-overlay[aria-current="true"] {
+    box-shadow: inset 0 0 0 2px var(--sdp-accio);
   }
 
   .sdp-admin-importacio__layout {

@@ -264,6 +264,27 @@ describe('IDEA-278 · GinySalutDispositiuJarvis (6 estats UI ECC, revelació in-
     await waitFor(() => expect(seccio.getAttribute('data-estat-ui')).toBe('partial'));
     expect(within(seccio).getAllByText(TX.estatBloquejat).length).toBeGreaterThan(0);
   });
+
+  /* R32.3 · Peix: IndexedDB o storage.estimate() que mai resolen no deixen el giny en «carregant» per sempre. */
+  test('una lectura que mai resol passa a error honest després del topall', async () => {
+    const srv = serveiMock();
+    srv.lligSalutEmmagatzematgeDispositiu.mockImplementation(() => new Promise(() => {}));
+    render(<GinySalutDispositiuJarvis idioma="ca" servei={srv} topallMs={30} />);
+    expect(estatDe()).toBe('loading');
+    await waitFor(() => expect(estatDe()).toBe('error'));
+    expect(screen.getByTestId('giny-salut-dispositiu-jarvis').textContent).toContain(TX.estatError);
+    expect(srv.lligSalutEmmagatzematgeDispositiu.mock.calls[0][0].signal.aborted).toBe(true);
+  });
+
+  test('un historial que mai resol no bloqueja el giny', async () => {
+    const srv = serveiMock();
+    srv.historialNetegesLocals.mockImplementation(() => new Promise(() => {}));
+    render(<GinySalutDispositiuJarvis idioma="ca" servei={srv} topallMs={30} />);
+    await waitFor(() => expect(estatDe()).toBe('ready'));
+    expect(screen.getByText(TX.historialNoDisponible)).toBeTruthy();
+    expect(screen.queryByText(TX.historialCap)).toBeNull();
+    expect(srv.historialNetegesLocals.mock.calls[0][0].signal.aborted).toBe(true);
+  });
 });
 
 describe('R32.2 · ARBITRATGE-EGM-01 · el giny i el servei de Codex: cap èxit perquè la Promise resolga', () => {

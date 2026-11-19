@@ -219,6 +219,9 @@ export const RUTA_CALENDARI = '/calendari';
 /** Què fa el clic de la pastilla en lectura: el nom accessible ho diu. */
 export const ACCIO_PASTILLA_CALENDARI = 'Obri el calendari d’eixe mes';
 
+/** P0-77 / IDEA-208 (R16-P) · La pastilla d'un acte porta al seu DIA. */
+export const ACCIO_PASTILLA_DIA = 'Obri el calendari d’eixe dia';
+
 /* Un mes «AAAA-MM»: la regla del ?mes= de /calendari, la mateixa del ?date=
    (agendaMur.js · cursorDeClau, calendari-5): quatre xifres d'any a partir
    del 1000 (Date llig «0026» com el 1926) i un mes del 01 al 12. La pàgina el
@@ -256,8 +259,10 @@ export function rutaCalendariDelMes(mes) {
  * que existix al calendari, amb la regla del ?date= (agendaMur.js ·
  * cursorDeClau, calendari-5: any de quatre xifres a partir del 1000; el 30 de
  * febrer no és el 2 de març). Sense una clau vàlida, el Calendari tal qual.
- * La pastilla de data no la fa servir: continua portant al MES (ordre del
- * Mestre, 261001, carril A).
+ * La pastilla de data d'una publicació continua portant al MES (ordre del
+ * Mestre, 261001, carril A); la d'un acte, des de l'ordre del Mestre del
+ * 261109 (P0-77 / IDEA-208, R16-P), també fa servir esta ruta: el dia de
+ * l'acte (pastillaCalendari.js · usePastillaDelDia).
  */
 export function rutaCalendariDeLaData(clau) {
   const parts = typeof clau === 'string' ? DIA_ISO.exec(clau) : null;
@@ -271,11 +276,12 @@ export function rutaCalendariDeLaData(clau) {
  * on porta. WCAG 2.5.3 (el nom conté el text visible, en el mateix ordre):
  * la pastilla pinta primer l'hora i després el dia (DateTimeControl), i el
  * nom també. «19:22 30/09/26 · Obri el calendari d’eixe mes». Una pastilla de
- * només dia no diu cap hora.
+ * només dia no diu cap hora. `accio`: on porta (per defecte, al mes; la d'un
+ * acte, ACCIO_PASTILLA_DIA).
  */
-export function etiquetaPastillaCalendari({ time, date } = {}) {
+export function etiquetaPastillaCalendari({ time, date } = {}, accio = ACCIO_PASTILLA_CALENDARI) {
   const quan = [time, date].filter((valor) => typeof valor === 'string' && valor.trim()).join(' ');
-  return quan ? `${quan} · ${ACCIO_PASTILLA_CALENDARI}` : ACCIO_PASTILLA_CALENDARI;
+  return quan ? `${quan} · ${accio}` : accio;
 }
 
 /**

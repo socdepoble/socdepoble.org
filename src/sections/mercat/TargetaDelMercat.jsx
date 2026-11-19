@@ -32,6 +32,7 @@ import { UniversalCard } from '../../components/PedraSeca';
 import { objecteDe, rutaConnectarObjecte } from '../../config/navigation';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
 import { propsDeTargetaDeProducte } from './targetaDeProducte.js';
@@ -72,7 +73,10 @@ export function TargetaDelMercat({ item }) {
      Comentar obri el seu xat comú. Lògica d'Usuari (T4, T5):
      Connectar recorda d'on ve. */
   const producte = objecteDe(item, 'mercat');
-  const props = propsDeTargetaDeProducte(item, t);
+  /* R22 · Les fitxes de /pobles, per a la pastilla del poble (la darrera).
+     Fora del proveïdor, cap fitxa: cap pastilla de poble. */
+  const { towns } = useCoreContent();
+  const props = propsDeTargetaDeProducte(item, t, { towns });
 
   return (
     <UniversalCard

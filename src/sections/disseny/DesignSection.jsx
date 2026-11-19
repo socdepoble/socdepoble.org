@@ -2,13 +2,14 @@
 import { Suspense, useCallback, useMemo } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
-import { useUIActionsOpcional } from '../../app/contexts/UIContext';
+import { useUIActionsOpcional, useUIStateOpcional } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Carregant } from '../../components/PedraSeca';
 import { LayoutGrid, Component } from 'lucide-react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import { COPYRIGHT_SDP, dataHoraDeBarra, pindolesUniques } from '../../components/universal/editorial.js';
 import { CATALOG_DETAIL_LOADERS } from './cataleg/detailRegistry';
+import { ETIQUETES_MARC_ESPECIMEN, localitzaItemCataleg, normalitzaLlenguaDisseny } from './cataleg/i18nControlsBarra.js';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
 /* T51 · La data de la versió del catàleg viu al costat del manifest
    (cataleg/versio.js), on la veu qui edita el catàleg i l'ha de posar al dia. */
@@ -86,9 +87,10 @@ function seoDelDetall(item, pageCopy, language = 'ca') {
     const metadades = metadadesDePagina(copyDeLaPortada(pageCopy, language), opcionsDeLaImatgeSocial());
     return { title: metadades.title, description: metadades.description, image: metadades.image || resolveAsset(CAP_SOCIAL_BASE.image.url) };
   }
+  const itemLocalitzat = localitzaItemCataleg(item, language);
   return {
-    title: textPla(item.title, LIMIT_TITOL),
-    description: textPla(item.lead || entradillaEnCurs(etiquetaCategoria(item)), LIMIT_DESCRIPCIO)
+    title: textPla(itemLocalitzat.title, LIMIT_TITOL),
+    description: textPla(itemLocalitzat.lead || entradillaEnCurs(itemLocalitzat.categoriaLabel || etiquetaCategoria(itemLocalitzat)), LIMIT_DESCRIPCIO)
   };
 }
 
@@ -138,37 +140,58 @@ function CatalogDetail({ item }) {
   // Sense fitxa editorial (lead) l'espècimen es presenta «En curs». T51 · la
   // seua data és la de la versió del catàleg (VERSIO_CATALEG), o la pròpia
   // quan el manifest la porte.
-  const categoria = etiquetaCategoria(item);
-  const enCurs = !item.lead;
-  const data = dataHoraDeBarra({ creat: item.creat, modificat: item.modificat || VERSIO_CATALEG });
+  const itemLocalitzat = localitzaItemCataleg(item, language);
+  const categoria = itemLocalitzat.categoriaLabel || etiquetaCategoria(itemLocalitzat);
+  const enCurs = !itemLocalitzat.lead;
+  const etiquetesMarc = ETIQUETES_MARC_ESPECIMEN[normalitzaLlenguaDisseny(language)];
+  const data = dataHoraDeBarra({ creat: itemLocalitzat.creat, modificat: itemLocalitzat.modificat || VERSIO_CATALEG });
   return (
     <UniversalPage
       chrome="context"
-      title={item.title}
-      subtitle={item.subtitle || categoria}
-      lead={item.lead || entradillaEnCurs(categoria)}
+      title={itemLocalitzat.title}
+      subtitle={itemLocalitzat.subtitle || categoria}
+      lead={itemLocalitzat.lead || entradillaEnCurs(categoria)}
       showLogos={true}
       labels={pindolesUniques([
         categoria && { text: categoria, className: 'sdp-badge-system' },
         enCurs && { text: 'En curs', className: 'sdp-badge-category' },
-        ...(item.tags || []).map((tag) => ({ text: tag, className: 'sdp-badge-tag' }))
+        ...(itemLocalitzat.tags || []).map((tag) => ({ text: tag, className: 'sdp-badge-tag' }))
       ])}
       copyright={COPYRIGHT_SDP}
+      {...(itemLocalitzat.contentLanguage ? {
+        llenguaDelContingut: itemLocalitzat.contentLanguage,
+        peuDePagina: <PeuEditorialIdioma />,
+        etiquetaPeuDePagina: etiquetaPeuEditorialIdioma(tPortada),
+      } : null)}
       {...data}
     >
-      <Suspense fallback={<Carregant etiqueta="Carregant l’espècimen…" />}>
+      <Suspense fallback={<Carregant etiqueta={etiquetesMarc.carregant} />}>
         <Detail />
       </Suspense>
     </UniversalPage>
   );
 }
 
-function useLlenguaOpcional() {
+function useAccionsOpcionalSegur() {
   try {
-    return useUIActionsOpcional()?.language || 'ca';
+    return useUIActionsOpcional();
   } catch {
-    return 'ca';
+    return null;
   }
+}
+
+function useEstatOpcionalSegur() {
+  try {
+    return useUIStateOpcional();
+  } catch {
+    return null;
+  }
+}
+
+function useLlenguaOpcional() {
+  const accions = useAccionsOpcionalSegur();
+  const estat = useEstatOpcionalSegur();
+  return accions?.language || estat?.language || 'ca';
 }
 
 export default function DesignSection() {
@@ -180,6 +203,10 @@ export default function DesignSection() {
   const { pageCopy } = useCoreContent();
   const language = useLlenguaOpcional();
   const portada = copyDeLaPortada(pageCopy, language);
+  const itemsLocalitzats = useMemo(
+    () => CATALOG_ITEMS.map((item) => localitzaItemCataleg(item, language)),
+    [language]
+  );
   const model = useMemo(() => ({
     status: 'ready',
     /* Onada R29 · R29-02-1 · El catàleg és estàtic i complet (CATALOG_ITEMS i la portada): un ?item= que
@@ -195,9 +222,9 @@ export default function DesignSection() {
         subtitle: portada.subtitle,
         image: portada.image
       },
-      ...CATALOG_ITEMS
+      ...itemsLocalitzats
     ]
-  }), [portada]);
+  }), [portada, itemsLocalitzats]);
 
   const handleSelectionChange = useCallback((selection, meta) => {
     const currentCategory = params.get('categoria');

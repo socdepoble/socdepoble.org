@@ -41,6 +41,7 @@ import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { Pestanyes } from '../../components/PedraSeca/organismes/Pestanyes.jsx';
 import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { poblesAmbNaixement } from '../pobles/clauDelPoble.js';
+import { pobleDeLElement } from '../pobles/etiquetaDelPoble.js';
 import { objecteDelPobleXat } from '../pobles/xatDelPoble.js';
 import { CamiTerritorial } from '../pobles/TerritoriDelPoble.jsx';
 /* VQ · Fase 3a de l'eina de pobles nous (261030): la regla pura de si la
@@ -520,12 +521,16 @@ function CompraDelProducte({ item, t, onAfegeixAlCabas }) {
 
 /* Pla 2000 (punt 1) · `onAfegeixAlCabas` és opcional: sense, el botó del
    cabàs no fa res, com abans (CompraDelProducte). */
-export function buildMercatDetailSectionMeta({ marketItems = [], t, onAfegeixAlCabas }) {
+/* R22 (Llibre Mestre, «4a Etiqueta Geogràfica Final») · `towns`, les fitxes de
+   /pobles: getPoble torna la del producte, i la pàgina hi pinta la pastilla
+   del poble com a última etiqueta (elementDeSeccio.js · paginaDElement). */
+export function buildMercatDetailSectionMeta({ marketItems = [], t, onAfegeixAlCabas, towns = [] }) {
   return {
     title: t('section.detail.mercat.title', 'Mercat'),
     label: t('nav.mercat', 'Mercat'),
     listPath: '/mercat',
     getAuthorHref: rutaDePerfilPublicDAutor,
+    getPoble: (item) => pobleDeLElement(item, towns),
     items: marketItems,
     getTitle: (item) => item.title || t('section.detail.mercat.itemTitle', 'Producte'),
     getSubtitle: (item) => item.subtitle || senseHtmlCru(item.description) || item.summary || '',
@@ -1051,7 +1056,7 @@ export function buildEventsDetailSectionMeta({ events = [], t }) {
 export function buildDetailSectionMeta({ events, feedPosts, marketItems, mediaItems, notes, towns, t, rol }) {
   return {
     mur: buildMurDetailSectionMeta({ feedPosts, t }),
-    mercat: buildMercatDetailSectionMeta({ marketItems, t }),
+    mercat: buildMercatDetailSectionMeta({ marketItems, t, towns }),
     events: buildEventsDetailSectionMeta({ events, t }),
     /* Onada 6 · Les publicacions del Mur, per al naixement de cada poble. */
     pobles: buildPoblesDetailSectionMeta({ towns, t, publicacions: { feedPosts, marketItems, events } }),

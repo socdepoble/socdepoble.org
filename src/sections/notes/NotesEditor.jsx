@@ -43,6 +43,7 @@ import { NOTA_TUTORIAL } from './notaTutorial.js';
 import { proposaCard } from './proposaCard.js';
 import { memoriaOralDelBloc } from './memoriaOralDelBloc.js';
 import RevisorEditorialNode0Panel from './RevisorEditorialNode0Panel.jsx';
+import FitxaRevisioImportacioWp from './FitxaRevisioImportacioWp.jsx';
 import { BlocModeTraduccio } from '../../components/universal/traduccio/BlocModeTraduccio.jsx';
 import { ambModeTraduccio, modeDeLaPublicacio } from '../../components/universal/traduccio/modesTraduccioLocals.js';
 import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
@@ -702,7 +703,15 @@ export default function NotesEditor({ activeNote, onToast = null }) {
         potEditar={potEditar} motiu={motiuModeTraduccio || null} />
     );
   }, [notaEnEdicio, citaOrigen, senseSessio, esSandbox, nomesLectura, motiuModeTraduccio, idiomaRevisor, modePublicat, modeTraduccioNomesLocal]);
-  const ranuraRevisio = useMemo(() => (revisorEditorial || blocTraduccio ? <>{revisorEditorial}{blocTraduccio}</> : null), [revisorEditorial, blocTraduccio]);
+  /* IDEA-125 · La nota en revisió d'una pàgina importada de WordPress (ImportacioPaginaWpNotes la
+     marca amb `importacioWp`) porta, a la mateixa ranura i davant de tot, la fitxa de revisió
+     d'importació: el mateix estat i la mateixa nota que el Banc d'Importació, en els dos sentits. */
+  const wpIdImportacio = notaEnEdicio?.importacioWp?.wp_id ?? null;
+  const fitxaImportacio = useMemo(() => (wpIdImportacio == null ? null : (
+    <FitxaRevisioImportacioWp key={`importacio:${wpIdImportacio}`} wpId={wpIdImportacio} disabled={nomesLectura} />
+  )), [wpIdImportacio, nomesLectura]);
+  const ranuraRevisio = useMemo(() => (fitxaImportacio || revisorEditorial || blocTraduccio
+    ? <>{fitxaImportacio}{revisorEditorial}{blocTraduccio}</> : null), [fitxaImportacio, revisorEditorial, blocTraduccio]);
 
   /* Onada R20 (Bucle 1) · Secció i poble publicats com a primitius estables fora
      de notesAdapter perquè nous arrays buits de useMur() no refacen l'adaptador. */

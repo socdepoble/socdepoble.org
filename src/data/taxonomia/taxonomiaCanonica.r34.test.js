@@ -51,8 +51,9 @@ test('R34 · un config antic migra alias coneguts sense tocar textos privats ni 
  expect(etiquetesBase({v:1,etiquetes:['Noves tecnologies','reivindicant','PROJECTE TIC']})).toEqual(NOMS_ETIQUETES_CANONIQUES_49);
 });
 
-test('R32.9 · les 34 pàgines conserven labels canònics en 5 idiomes; sistema-nervios viu al llibre',()=>{
- expect(Object.keys(PAGE_COPY)).toHaveLength(34);
+test('R32.9 + IDEA-287 · les 35 pàgines conserven labels canònics en 5 idiomes; sistema-nervios viu al llibre',()=>{
+ expect(Object.keys(PAGE_COPY)).toHaveLength(35);
+ expect(CLASSIFICACIO_PAGINES_PUBLIQUES['tot-el-que-pots-fer']).toEqual(['comunitat-rural','Documentació']);
  expect(PAGE_COPY).not.toHaveProperty('sistema-nervios');
  expect(CLASSIFICACIO_PAGINES_PUBLIQUES).not.toHaveProperty('sistema-nervios');
  expect(PAGE_COPY.dispositius.title).toBe('Compatibilitat de connexió');

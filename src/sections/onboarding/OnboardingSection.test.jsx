@@ -646,3 +646,36 @@ test('261002 · RequireAuth: la seua entrada (/registre?mode=entrar&tornar=<pàg
   arribaLaSessio(rerender, arbre);
   esPerfil();
 });
+
+/* Onada v1.2.10 · L'entrada envia la contrasenya en NFC. Un compte creat abans amb un accent escrit en dues peces
+   (NFD) la té crua al servidor: si el servidor respon «credencials», un sol reintent amb la crua; mai amb altres errors. */
+async function entraAmb(contrasenya) {
+  render(<OnboardingSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar', exact: true }));
+  fireEvent.change(screen.getByLabelText('Correu electrònic'), { target: { name: 'email', value: 'ana@poble.test' } });
+  fireEvent.change(screen.getByLabelText('Contrasenya'), { target: { name: 'password', value: contrasenya } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Entrar al compte' })); });
+}
+const CLAU_NFD_ENTRADA = 'cànter-olivera-2026';
+const CLAU_NFC_ENTRADA = 'cànter-olivera-2026';
+const CONFIG_ENTRADA = { tenantId: '00000000-0000-4000-8000-000000000000' };
+
+test('Onada v1.2.10 · un compte vell amb accent en NFD entra: primer NFC i, si són «credencials», un reintent amb la crua', async () => {
+  m.entra.mockRejectedValueOnce(errorAmbCodi(CODI_ENTRADA.CREDENCIALS)).mockResolvedValueOnce({ access_token: 'jwt', user: { id: 'U' } });
+  await entraAmb(CLAU_NFD_ENTRADA);
+  expect(m.entra.mock.calls).toEqual([['ana@poble.test', CLAU_NFC_ENTRADA, CONFIG_ENTRADA], ['ana@poble.test', CLAU_NFD_ENTRADA, CONFIG_ENTRADA]]);
+  expect(m.toast).toHaveBeenCalledWith('Benvingut de nou al Mas!', 'success');
+});
+
+test('Onada v1.2.10 · sense reintent quan la crua ja és NFC o quan l’error no és de credencials', async () => {
+  m.entra.mockRejectedValue(errorAmbCodi(CODI_ENTRADA.CREDENCIALS));
+  await entraAmb(CLAU_NFC_ENTRADA);
+  expect(m.entra).toHaveBeenCalledTimes(1);
+  cleanup();
+  m.entra.mockReset();
+  m.entra.mockRejectedValue(errorAmbCodi(CODI_ENTRADA.MASSA_INTENTS));
+  await entraAmb(CLAU_NFD_ENTRADA);
+  expect(m.entra).toHaveBeenCalledTimes(1);
+  expect(m.entra).toHaveBeenCalledWith('ana@poble.test', CLAU_NFC_ENTRADA, CONFIG_ENTRADA);
+  expect(m.toast).not.toHaveBeenCalled();
+});

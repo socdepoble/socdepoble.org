@@ -4,10 +4,17 @@
  * 261103: «Quan s'esborra una Card/publicació s'esborren totes les seues
  * targetes i la seua pàgina corresponent de tots els llocs automàticament»).
  *
- * Quan s'esborra una publicació (directament o en esborrar la nota que la va
+ * Este registre NO esborra res del servidor: només amaga la publicació en esta
+ * pestanya i en este navegador (memòria + localStorage). La retirada al
+ * servidor la fa el port (`revocaPublicacioMur` / `revoca_publicacio_de_nota`,
+ * capacitat `revocacioPublicacions`), i el registre s'anota després de la seua
+ * confirmació (`copublicacioMur.js · amagaLaRetirada`;
+ * `NotesContext · retiraPublicacionsDeLaNota`).
+ *
+ * Quan es retira una publicació (directament o en esborrar la nota que la va
  * originar):
- *  1. S'elimina del servidor (`DELETE /rest/v1/section_submissions`) quan és
- *     una fila remota.
+ *  1. El port la retira del servidor quan és una fila remota (fora d'este
+ *     mòdul).
  *  2. S'anota la seua clau (`${seccio}:${id}`) en este registre (memòria +
  *     localStorage) i es notifica a tots els subscriptors (`MurContext`,
  *     `MultimediaContext`, `ItemDetailSection`, `PerfilPublicSection`,

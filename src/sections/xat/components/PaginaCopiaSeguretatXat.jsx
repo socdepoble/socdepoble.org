@@ -84,8 +84,9 @@ import {
   llegixArxiuCopiaSeguretatXat,
 } from '../../../data/xat/copiaSeguretatPortatil.js';
 import { useXat } from '../XatContext';
+import { normalitzaNfcSeguraUi, superaPressupostMarques } from '../../../utils/normalitzaEntradaUi.js';
 import {
-  MIN_CARACTERS_CONTRASENYA, TEXTOS_COPIA, abastDeLaCopia, contingutDeLaCopia, contrasenyaProuLlarga, criptoDisponible, errorDeLaCopia,
+  MIN_CARACTERS_CONTRASENYA, TEXTOS_COPIA, abastDeLaCopia, contingutDeLaCopia, criptoDisponible, errorDeLaCopia,
   formataData, formataNombre, resumDeLaCopia, textAmb,
 } from '../copiaSeguretatXat.js';
 
@@ -242,13 +243,24 @@ function FormulariDesa({ t, abast, contingut, locale, natiu, navegador, motor })
   const prepara = async (event) => {
     event.preventDefault();
     if (ocupat) return;
-    if (!contrasenyaProuLlarga(contrasenya)) {
+    const clauNfc = normalitzaNfcSeguraUi(contrasenya, { maxLongitud: 1024 });
+    if (clauNfc === null) {
+      const parell = superaPressupostMarques(contrasenya) || contrasenya.length > 1024
+        ? TEXTOS_COPIA.errorFormat
+        : TEXTOS_COPIA.errorCurta;
+      setErrors({ contrasenya: textAmb(parell, t, { n: MIN_CARACTERS_CONTRASENYA }) });
+      setEstat(null);
+      enfocaControl(campContrasenya.current);
+      return;
+    }
+    if (clauNfc.trim().length < MIN_CARACTERS_CONTRASENYA) {
       setErrors({ contrasenya: textAmb(TEXTOS_COPIA.errorCurta, t, { n: MIN_CARACTERS_CONTRASENYA }) });
       setEstat(null);
       enfocaControl(campContrasenya.current);
       return;
     }
-    if (contrasenya.normalize('NFC') !== repeticio.normalize('NFC')) {
+    const repeticioNfc = normalitzaNfcSeguraUi(repeticio, { maxLongitud: 1024 });
+    if (repeticioNfc === null || clauNfc !== repeticioNfc) {
       setErrors({ repeticio: textAmb(TEXTOS_COPIA.errorDiferents, t) });
       setEstat(null);
       enfocaControl(campRepeticio.current);
@@ -261,6 +273,9 @@ function FormulariDesa({ t, abast, contingut, locale, natiu, navegador, motor })
          partida de contingutDeLaCopia: el motor la declara «parcial» i no promet cap seq que no porta. */
       const desDeSeqPerFil = contingut?.desDeSeqPerFil && typeof contingut.desDeSeqPerFil === 'object' ? contingut.desDeSeqPerFil : null;
       const { text } = await motor.exporta({
+        /* v1.2.10 (arbitratge Codex R32.11 ↔ Gemini R32.12) · La comparació va en NFC fitat (normalitzaEntradaUi.js), però el
+           secret viatja tal com s'ha admés: el motor (copiaSeguretatPortatil.js · bytesContrasenya) és l'únic que el passa a
+           NFC per a derivar la clau, i la interfície no transforma secrets. */
         usuariId: abast.usuariId, tenantId: abast.tenantId, fils, missatges, contrasenya, ...(desDeSeqPerFil ? { desDeSeqPerFil } : {})
       });
       if (!viu.current) return;
@@ -483,6 +498,13 @@ function FormulariComprova({ t, abast, locale, motor }) {
       enfocaControl(campContrasenya.current);
       return;
     }
+    const clauNfc = normalitzaNfcSeguraUi(contrasenya, { maxLongitud: 1024 });
+    if (clauNfc === null) {
+      setErrorContrasenya(textAmb(TEXTOS_COPIA.errorIncorrecta, t));
+      setEstat(null);
+      enfocaControl(campContrasenya.current);
+      return;
+    }
     setErrorContrasenya(null);
     setEstat({ tipus: 'ocupat' });
     try {
@@ -490,6 +512,7 @@ function FormulariComprova({ t, abast, locale, motor }) {
       const resultat = await motor.importa(arxiu.bytes, {
         usuariIdEsperat: abast.usuariId,
         tenantIdEsperat: abast.tenantId,
+        /* El secret tal com s'ha admés: el motor el normalitza (vegeu exporta). */
         contrasenya,
       });
       if (!viu.current) return;

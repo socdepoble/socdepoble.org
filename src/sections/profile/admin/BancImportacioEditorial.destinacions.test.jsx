@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({ sessio: null, desa: vi.fn(), autoritzat: true }));
-vi.mock('../../../app/contexts/RouterContext.jsx', () => ({ Link: ({ to, children, ...props }) => <a href={to} {...props}>{children}</a> }));
+vi.mock('../../../app/contexts/RouterContext.jsx', () => ({ Link: ({ to, children, ...props }) => <a href={to} {...props}>{children}</a>, useNavigate: () => vi.fn() }));
 vi.mock('../../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => m.sessio }));
 vi.mock('../../../hooks/useProjeccionsCataleg.js', () => ({ useProjeccionsCataleg: () => ({ desa: m.desa, autoritzat: m.autoritzat }) }));
 
@@ -20,7 +20,7 @@ afterEach(cleanup);
 
 function seleccionaArbres() {
   fireEvent.change(screen.getByRole('textbox', { name: /Cerca per títol/ }), { target: { value: '619' } });
-  fireEvent.click(screen.getByRole('row', { name: /619.*Catàleg d’Arbres/ }));
+  fireEvent.click(screen.getByRole('button', { name: /^Catàleg d’Arbres/ }));
 }
 
 test('la cerca troba el mateix original, i la destinació es conserva després de reobrir', () => {
@@ -140,7 +140,7 @@ test('CENS02 · en columna única (<960px) o amb Inspeccionar, porta la vista i 
     expect(scrollApp).toHaveBeenCalled();
     expect(scrollHost).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /Tornar a la taula d’articles/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Tornar a la llista d’articles/ }));
     expect(document.activeElement?.getAttribute('data-testid')).toBe('importacio-barra-proxima');
     expect(scrollHost).not.toHaveBeenCalled();
   } finally {

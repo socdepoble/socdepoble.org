@@ -40,7 +40,7 @@
         "destination": "/.well-known/webfinger/la-torre-de-les-macanes.json"
       },
       {
-        "source": "!/@(assets|fonts|ap|opendata|nodeinfo|.well-known)/**",
+        "source": "!/@(assets|fonts|ap|opendata|nodeinfo|.well-known|md)/**",
         "destination": "/index.html"
       }
     ],
@@ -237,6 +237,15 @@
           {
             "key": "Content-Type",
             "value": "text/plain; charset=utf-8"
+          }
+        ]
+      },
+      {
+        "source": "/md/*.md",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "text/markdown; charset=utf-8"
           }
         ]
       },

@@ -264,3 +264,37 @@ test('CEV-3 cau en les cinc llengües si el text de node-zero passa a set escole
   const files = res.infraccions.filter((row) => row.llei === 'CEV-3').map((row) => row.fitxer);
   assert.deepEqual(files, ['ca', 'es', 'en', 'eu', 'gl'].map((lang) => `PAGE_COPY.node-zero.${lang}`));
 });
+
+/* P0-CONSOLIDACIO-3-CATEDRES (Emowe/Tellado) · CEV-4 vigila que public/llms.txt i la
+   llista de public/md siguen la projecció de publication-policy.mjs (genera-llms.mjs).
+   L'arrel mutada porta una còpia real de la Wiki pública: la projecció no seguix
+   enllaços simbòlics. */
+function ambWikiReal(arrel) {
+  fs.unlinkSync(path.join(arrel, '_wiki_de_poble'));
+  for (const nom of ['00_index.md', '01_ser', '02_saber', '03_actuar']) {
+    fs.cpSync(path.join(ARREL, '_wiki_de_poble', nom), path.join(arrel, '_wiki_de_poble', nom), { recursive: true });
+  }
+  return arrel;
+}
+const infraccionsLlms = (res) => res.infraccions.filter((row) => row.llei === 'CEV-4' && /^public\/(?:llms\.txt|md)$/.test(row.fitxer));
+
+test('CEV-4 · llms.txt editat a mà o un .md que no és cap document públic posen roja la porta', async (t) => {
+  const llms = fs.readFileSync(path.join(ARREL, 'public/llms.txt'), 'utf8');
+  const control = ambWikiReal(creaArrelMutada(t, { 'public/llms.txt': llms }));
+  assert.deepEqual(infraccionsLlms(await avaluaCoherenciaEditorial({ arrel: control })), []);
+
+  const ama = ambWikiReal(creaArrelMutada(t, { 'public/llms.txt': `${llms}- [A mà](https://socdepoble.org/mur): línia afegida a mà\n` }));
+  const resAMa = await avaluaCoherenciaEditorial({ arrel: ama });
+  assert.equal(resAMa.lleisVerdes.includes('CEV-4'), false);
+  assert.deepEqual(infraccionsLlms(resAMa).map((row) => row.fitxer), ['public/llms.txt']);
+  assert.match(infraccionsLlms(resAMa)[0].detall, /editat a mà/);
+
+  // Una substitució d'un .md real fa de public/md una carpeta pròpia de l'arrel mutada (mai el repositori).
+  const unMd = fs.readdirSync(path.join(ARREL, 'public/md'))[0];
+  const sobrer = ambWikiReal(creaArrelMutada(t, { [`public/md/${unMd}`]: fs.readFileSync(path.join(ARREL, 'public/md', unMd), 'utf8') }));
+  assert.equal(fs.lstatSync(path.join(sobrer, 'public/md')).isSymbolicLink(), false);
+  fs.writeFileSync(path.join(sobrer, 'public/md/document-privat.md'), '# Privat\n');
+  const resSobrer = await avaluaCoherenciaEditorial({ arrel: sobrer });
+  assert.deepEqual(infraccionsLlms(resSobrer).map((row) => row.fitxer), ['public/md']);
+  assert.match(infraccionsLlms(resSobrer)[0].detall, /sobren: document-privat\.md/);
+});

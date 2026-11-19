@@ -45,7 +45,9 @@ const entradaDeSilenciInvalida = (filId, durada) => typeof durada !== 'string' |
 const silenciInvalid = () => Object.assign(new Error('No es pot silenciar: la durada o la conversa no són vàlides.'), { code: 'SILENCI_INVALID', codi: 'SILENCI_INVALID', retriable: false });
 
 export function creaConversesLocal(e) {
-  const xat = createLocalXatAdapter();
+  /* C3-PADRO-LOCAL · El xat coneix les entitats públiques del mateix
+     directori que l'adaptador servix (dades.entitats), no només la llavor. */
+  const xat = createLocalXatAdapter({ directori: () => e.perfils.listPublicOrganizations() });
 
   async function enviaMissatge(filId, cos, config = {}) {
     return e.copia(await xat.enviaMissatge(filId, cos, e.ci(config)));

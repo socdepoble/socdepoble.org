@@ -330,7 +330,9 @@ const EXCLOSES_DE_PAGE=Object.freeze({
   /* P0-SEO-UNIVERSAL (13-11-2026) · El motiu de veres de 'node-zero': pageContent.r10.js i pageContent.fediversityR20.js
      en recomponen l'entradeta en execució, i el productor (AST) en llegiria el literal: un head distint del del client.
      Les tres claus tenen ara la seua exempció amb motiu a tooling/seo/exempcions-socials.mjs (la Porta de cobertura). */
-  'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers'
+  'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers',
+  /* IDEA-287 · La guia pas a pas: exempció 'pendent' a tooling/seo/exempcions-socials.mjs fins que tinga variant social. */
+  'tot-el-que-pots-fer':'guia pas a pas de les eines (/page/tot-el-que-pots-fer): la portada encara no té variant social JPEG'
   /* P0-60 / IDEA-191 (ordre del Mestre, 08-11-2026 17:09) · L'herbari, el banc de llavors, les rutes de
      poble i els arbres monumentals ja porten la seua il·lustració Ibáñez (la variant social és a
      VARIANTS_SOCIALS) i entren a PAGINES_INFORMATIVES; /page/anatomia-rural és l'àlies de l'article

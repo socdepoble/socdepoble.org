@@ -24,6 +24,9 @@
  *             per a una adreça de font, o null si el servei no la dona
  *   afigFont  fontsPersonals.js · afigFontPersonal sobre el magatzem de l'app
  *             (la gestió de fonts de l'arbre, GestioFonts.jsx)
+ *   observatori IDEA-265 (261118) · cert si qui mira és superadmin i el port és el del
+ *             servei: la carpeta «Observatori I+D · Mestres» i, a la lectura d'un article
+ *             seu, el veredicte i «Promou al Llibre Mestre» (Observatori.jsx)
  */
 import { createContext, useContext } from 'react';
 

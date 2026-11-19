@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.17
+Stable tag: 1.1.18
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,10 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.18 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.10 de Sóc de Poble, la que explica la seua pàgina «Versions»: la guia «Tot el que pots fer a Sóc de Poble, pas a pas», la Constitució en cinc llengües i la data de cada targeta del Mur segons el tipus de publicació.
+* **Paquet publicable amb credencials reals:** el paquet d'una versió publicable ja no es construïx amb la clau de mostra de les proves automàtiques.
+
 = 1.1.17 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.9 de Sóc de Poble, la que explica la seua pàgina «Versions»: l'Avisador renovat, l'assistència als esdeveniments i el bàner que porta del Xat a la pàgina d'origen.
 * **Estils en obrir cada part:** una part dels estils de la Gestoria, del TPV, de Connectar, del Calendari i de l'explorador de la Consola es carrega quan s'obri eixa part, no en arrencar.
@@ -230,6 +234,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.18 =
+Visor al dia amb la versió 1.2.10 de Sóc de Poble: la guia «Tot el que pots fer», la Constitució en cinc llengües i la data de cada targeta del Mur segons el tipus; el paquet publicable exigix credencials reals.
 
 = 1.1.17 =
 Visor al dia amb la versió 1.2.9 de Sóc de Poble: l'Avisador renovat, l'assistència als esdeveniments i el bàner de referència al Xat; una part dels estils de cinc parts es carrega en obrir-les.

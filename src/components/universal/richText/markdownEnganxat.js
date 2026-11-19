@@ -45,7 +45,11 @@ export function urlWebSegura(valor) {
   return hrefDeImatge(adreca);
 }
 
-const enllac = (href, text = href) => `<a href="${escapa(href)}">${escapa(text)}</a>`;
+const enllac = (href, text = href) => {
+  const adreca = escapa(href);
+  // Les URL automàtiques pinten la mateixa cadena en atribut i text.
+  return `<a href="${adreca}">${text === href ? adreca : escapa(text)}</a>`;
+};
 
 /* ── Línies de bloc ─────────────────────────────────────────────────────── */
 
@@ -156,6 +160,7 @@ const EMFASI = [
 ];
 
 function emfasiLineal(text, marca, amplaria, etiqueta, html) {
+  if (!text.includes(marca)) return text;
   const parts = [];
   const frontera = marca === '_';
   let copiat = 0;
@@ -201,19 +206,24 @@ function emfasiLineal(text, marca, amplaria, etiqueta, html) {
    només s'afigen, mai canvien. Reusar el resultat evita validar i escapar milers
    de vegades una mateixa URL o imatge literal. La memòria és local a la fase i
    a la línia, amb un màxim fix de 64 tokens; la cua expulsa el més antic perquè
-   un prefix de tokens únics no anul·le el guany de les repeticions següents. */
+   un prefix de tokens únics no anul·le el guany de les repeticions següents.
+   La cua circular conserva el FIFO sense crear un iterador per expulsió. */
 function repeticionsDeToken(transforma) {
   let anterior;
   let resultatAnterior;
   let recents;
+  let cua;
+  let seguent = 0;
   return (tot, a, b, c) => {
     if (tot === anterior) return resultatAnterior;
     let resultat = recents?.get(tot);
     if (resultat === undefined) {
       resultat = transforma(tot, a, b, c);
-      recents ||= new Map();
-      if (recents.size === 64) recents.delete(recents.keys().next().value);
+      if (!recents) { recents = new Map(); cua = []; }
+      if (recents.size === 64) recents.delete(cua[seguent]);
       recents.set(tot, resultat);
+      cua[seguent] = tot;
+      seguent = (seguent + 1) % 64;
     }
     anterior = tot;
     resultatAnterior = resultat;

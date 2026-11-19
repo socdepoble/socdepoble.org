@@ -18,6 +18,17 @@ const LOCK = BLOQUEIG_PURGA_MEMORIA_CAU;
 const byteValid = (n) => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
 const errorCodi = (codi, cause) => Object.assign(new Error(codi, { cause }), { codi });
 function avortat(signal) { if (signal?.aborted) throw signal.reason ?? errorCodi('AVORTAT'); }
+/* R32.3 · Peix: una API del navegador que mai resol (IndexedDB, storage.estimate, Cache API) no reté
+   el diagnòstic quan el senyal avorta; la promesa original es deixa córrer sense esperar-la. */
+function ambSenyal(promesa, signal) {
+  if (!signal) return promesa;
+  return new Promise((resolve, reject) => {
+    const atura = () => reject(signal.reason ?? errorCodi('AVORTAT'));
+    if (signal.aborted) { Promise.resolve(promesa).catch(() => {}); atura(); return; }
+    signal.addEventListener('abort', atura, { once: true });
+    Promise.resolve(promesa).then(resolve, reject).finally(() => signal.removeEventListener('abort', atura));
+  });
+}
 function esRecursPublic(peticio, origen) {
   try {
     const u = new URL(peticio.url);
@@ -101,19 +112,19 @@ export function creaServeiSalutEmmagatzematgeDispositiu({
   const confirmats = recursosConfirmats(manifestRegenerable, origen);
   let historial;
   const magatzem = () => (historial ??= magatzemHistorial ?? historialPerDefecte(navegador));
-  async function estimacio() {
+  async function estimacio(signal) {
     let usage = null; let quota = null; let persistent = null;
     const avisos = [];
     try {
       if (typeof navegador?.storage?.estimate === 'function') {
-        const r = await navegador.storage.estimate();
+        const r = await ambSenyal(navegador.storage.estimate(), signal);
         usage = byteValid(r?.usage) ? r.usage : null;
         quota = byteValid(r?.quota) ? r.quota : null;
       } else avisos.push('ESTIMACIO_NO_DISPONIBLE');
     } catch { avisos.push('ESTIMACIO_FALLIDA'); }
     try {
       if (typeof navegador?.storage?.persisted === 'function') {
-        const p = await navegador.storage.persisted();
+        const p = await ambSenyal(navegador.storage.persisted(), signal);
         persistent = typeof p === 'boolean' ? p : null;
       }
     } catch { avisos.push('PERSISTENCIA_DESCONEGUDA'); }
@@ -132,19 +143,19 @@ export function creaServeiSalutEmmagatzematgeDispositiu({
     if (confirmats.size === 0) avisos.push('CAP_PRODUCTOR_REGENERABLE_CONFIRMAT');
     if (typeof memories?.keys !== 'function' || !origen) return { categories, avisos: [...avisos, 'CACHE_NO_DISPONIBLE'] };
     avortat(signal);
-    const noms = await memories.keys();
+    const noms = await ambSenyal(memories.keys(), signal);
     for (const nom of RETIRADES.filter((n) => noms.includes(n))) {
       avortat(signal);
       // has() evita crear una cache absent amb open().
-      if (typeof memories.has !== 'function' || !await memories.has(nom)) continue;
-      const cache = await memories.open(nom);
-      const claus = await cache.keys();
+      if (typeof memories.has !== 'function' || !await ambSenyal(memories.has(nom), signal)) continue;
+      const cache = await ambSenyal(memories.open(nom), signal);
+      const claus = await ambSenyal(cache.keys(), signal);
       if (claus.length > MAX_ENTRADES) { avisos.push('CACHE_MASSA_GRAN'); continue; }
       let bytes = 0; let completa = confirmats.size > 0; const recursos = [];
       for (const clau of claus) {
         avortat(signal);
         if (!esRecursPublic(clau, origen)) { completa = false; continue; }
-        const mida = await mesuraCos(await cache.match(clau), signal, clau);
+        const mida = await mesuraCos(await ambSenyal(cache.match(clau), signal), signal, clau);
         if (mida === null || bytes + mida.bytes > MAX_BYTES) { completa = false; continue; }
         bytes += mida.bytes;
         const confirmat = confirmats.get(clau.url);
@@ -158,13 +169,14 @@ export function creaServeiSalutEmmagatzematgeDispositiu({
     }
     return { categories, avisos };
   }
-  async function historialNetegesLocals() {
+  async function historialNetegesLocals({ signal } = {}) {
+    avortat(signal);
     const m = magatzem();
-    const registres = await m.totes('historial');
-    return { registres, persistent: (await m.estatPersistencia()).persistent };
+    const registres = await ambSenyal(m.totes('historial'), signal);
+    return { registres, persistent: (await ambSenyal(m.estatPersistencia(), signal)).persistent };
   }
   async function lligSalutEmmagatzematgeDispositiu(opcions = {}) {
-    const e = await estimacio();
+    const e = await estimacio(opcions.signal);
     try {
       const { categories, avisos } = await inventari(opcions);
       return { ...e, categories, avisos: [...e.avisos, ...avisos] };
@@ -191,4 +203,4 @@ let servei;
 const perDefecte = () => (servei ??= creaServeiSalutEmmagatzematgeDispositiu());
 export const lligSalutEmmagatzematgeDispositiu = (opcions) => perDefecte().lligSalutEmmagatzematgeDispositiu(opcions);
 export const purgaMemoriaCauRegenerable = (opcions) => perDefecte().purgaMemoriaCauRegenerable(opcions);
-export const historialNetegesLocals = () => perDefecte().historialNetegesLocals();
+export const historialNetegesLocals = (opcions) => perDefecte().historialNetegesLocals(opcions);

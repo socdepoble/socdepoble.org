@@ -44,7 +44,6 @@ export function NotificationProvider({ children, targetNode }) {
       <AvisadorEfimer
         key={toast.id}
         missatge={toast.missatge}
-        tipus={toast.tipus}
         durada={toast.durada}
         onClose={closeToast}
       />

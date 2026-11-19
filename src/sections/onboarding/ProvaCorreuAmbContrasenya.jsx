@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { VERSIO_POLITICA_PRIVACITAT as VERSION, RUTA_POLITICA_PRIVACITAT } from '../../config/politicaPrivacitat.js';
+import { normalitzaNfcSeguraUi } from '../../utils/normalitzaEntradaUi.js';
 import { textosOnboardingExtra } from './i18nOnboardingExtra.js';
 
 function useIdiomaProvaCorreu() {
@@ -45,7 +46,9 @@ export function ProvaCorreuAmbContrasenya({ token, onConfirma, mode = 'verify-em
   async function submit(event) {
     event.preventDefault();
     if (sending.current) return;
-    if ((requiresConsent && (!accepted || version !== VERSION)) || pwd.length < 12 || pwd !== again) {
+    const pwdNfc = normalitzaNfcSeguraUi(pwd, { maxLongitud: 256 });
+    const againNfc = normalitzaNfcSeguraUi(again, { maxLongitud: 256 });
+    if ((requiresConsent && (!accepted || version !== VERSION)) || !pwdNfc || !againNfc || pwdNfc.length < 12 || pwdNfc !== againNfc) {
       setMessage(tx.provaErrorValidacio);
       return;
     }
@@ -55,7 +58,7 @@ export function ProvaCorreuAmbContrasenya({ token, onConfirma, mode = 'verify-em
     setBusy(true);
     setMessage('');
     try {
-      const result = await onConfirma(token, pwd, requiresConsent ? { accepta_rgpd: true, versio_politica: version } : null, { signal: control.signal });
+      const result = await onConfirma(token, pwdNfc, requiresConsent ? { accepta_rgpd: true, versio_politica: version } : null, { signal: control.signal });
       if (result?.login_required !== true || !(result.verified === true || result.password_changed === true)) throw Error('email_proof_unconfirmed');
       if (alive.current && !control.signal.aborted) setMessage(tx.provaExit);
     } catch (error) {

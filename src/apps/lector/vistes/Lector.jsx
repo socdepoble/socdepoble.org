@@ -45,6 +45,10 @@
  * del vídeo i amb el referent retallat a l'origen. I sempre, l'enllaç a
  * l'original. Amb el servei, la portada és la imatge que dona el servei (mai
  * l'origen de la font); sense, la de sempre, amb el filtre de l'amfitrió.
+ *
+ * IDEA-265 (261118) · Un article de la carpeta «Observatori I+D · Mestres», només per a
+ * superadmins, porta davant del contingut el seu veredicte i «Promou al Llibre Mestre»
+ * (Observatori.jsx). La resta d'articles, la lectura de sempre.
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Bookmark, BookmarkCheck, CirclePlay, ExternalLink, MailOpen, Play, X } from 'lucide-react';
@@ -59,6 +63,7 @@ import { AvisLector } from './comunes.jsx';
 import { Contingut } from './Contingut.jsx';
 import { useVistaLector } from './context.js';
 import { NOTICIES, rutaDeSeleccio } from './navegacio.js';
+import { ObservatoriDeLArticle } from './Observatori.jsx';
 
 /* L'element enfocat, llegit a l'arrel del node (dins del Shadow DOM de l'encastat, document.activeElement és l'amfitrió). */
 export function focusActiu(node) {
@@ -270,6 +275,7 @@ function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) 
           {tx.mitjansAPartText}
         </Alerta>
       ) : null}
+      <ObservatoriDeLArticle article={article} />
       {video ? <VideoDeLArticle key={video.id} video={video} titol={senseFinal(article.titol)} tx={tx} /> : null}
       {article.contingutHtml ? <Contingut html={article.contingutHtml} /> : <p>{article.resum}</p>}
       {article.enllac ? (

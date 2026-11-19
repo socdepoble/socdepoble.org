@@ -17,11 +17,16 @@ import { fotoDeLaTargeta } from './imatgesDeProducte.js';
 import { formataEtiquetaHumana, senseHtmlCru } from './etiquetesMercat.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { fontVideoPropia } from '../../utils/sanitize.js';
+import { etiquetaDelPoble, pobleDeLElement } from '../pobles/etiquetaDelPoble.js';
 
 /* Sense traductor, la reserva en valencià. */
 const senseTraduccio = (_clau, reserva) => reserva;
 
-export function propsDeTargetaDeProducte(item, t = senseTraduccio) {
+/* R22 (Llibre Mestre, «4a Etiqueta Geogràfica Final») · `towns`, les fitxes
+   de /pobles (useCoreContent): la pastilla del poble, la de més a la dreta,
+   només ix quan el poble de la publicació casa amb una fitxa. Sense fitxes
+   (l'espècimen del catàleg, fora de l'App), les etiquetes de sempre. */
+export function propsDeTargetaDeProducte(item, t = senseTraduccio, { towns } = {}) {
   /* Ordre del Mestre, 261001 · La boina del producte, amb el format i el
      lector únics (editorial.js · dataDElement), els mateixos que la seua
      targeta al Mur (TargetaDelMur.jsx): «dd/mm/aa» i «hh:mm», i el dateTime
@@ -79,9 +84,13 @@ export function propsDeTargetaDeProducte(item, t = senseTraduccio) {
       : null),
     labels: [
       { text: t('section.mercat.kicker', 'Mercat'), className: 'sdp-badge-system' },
-      item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,
       item.category_slug ? { text: formataEtiquetaHumana(item.category_slug), className: 'sdp-badge-category' } : null,
-      item.tag ? { text: formataEtiquetaHumana(item.tag), className: 'sdp-badge-tag' } : null
+      item.tag ? { text: formataEtiquetaHumana(item.tag), className: 'sdp-badge-tag' } : null,
+      /* R22 · Ordre canònic [Mercat] → [categoria curta] → [subfamília humana] → [poble]:
+         el recompte de variants no s'interposa; va just davant del poble. */
+      item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,
+      /* R22 · El poble, sempre l'últim: porta a /pobles/<slug>, no al perfil de qui ven (authorHref). */
+      etiquetaDelPoble(pobleDeLElement(item, towns))
     ].filter(Boolean),
     location: item.author_location || item.population || 'La Torre de les Maçanes',
     mainHref: getSectionItemPath('mercat', item.id),

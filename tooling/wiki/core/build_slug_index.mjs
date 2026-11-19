@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { parseFrontmatter } from '../lib/frontmatter.mjs';
-import { publicWikiFiles, readPublicWikiFile, publicMetadata } from '../lib/publication-policy.mjs';
+import { publicWikiFiles, readPublicWikiFile, publicMetadata, slugDeDocument } from '../lib/publication-policy.mjs';
 
 export async function buildSlugIndex(root, options = {}) {
   const files = options.files || publicWikiFiles(root, { extensions: ['.md'] });
@@ -22,8 +22,7 @@ export async function buildSlugIndex(root, options = {}) {
     // Extreiem metadata d'interès per l'índex semàntic
     const meta = parsed.data || {};
     if (!publicMetadata(meta)) continue;
-    const title = meta.title || meta.name || file.split('/').pop().replace('.md', '');
-    const slug = meta.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const { title, slug } = slugDeDocument(meta, file);
     const id = meta.id || slug;
     
     slugIndex.push({

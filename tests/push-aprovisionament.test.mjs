@@ -134,6 +134,9 @@ test('staging inclou la revocació R31 amb bytes exactes, activació separada i 
   const p = path.join(f.dir, 'staged/schema.sql');
   assert.ok(MIGRACIONS.includes('20261116031000_r31_push_sessio_i_revocacio.sql'));
   assert.ok(MIGRACIONS.indexOf('2611080431_xat_push_leases.sql') < MIGRACIONS.indexOf('20261116031000_r31_push_sessio_i_revocacio.sql'));
+  // P1-74 (A-03): les RPC _v2 que crida natius.js entren al mateix schema.sql, després de la v1 (2611020417).
+  assert.ok(MIGRACIONS.includes('20261118230000_a03_xat_push_credencials_per_configuracio.sql'));
+  assert.ok(MIGRACIONS.indexOf('2611020417_xat_avisos_push.sql') < MIGRACIONS.indexOf('20261118230000_a03_xat_push_credencials_per_configuracio.sql'));
   assert.equal(fs.readFileSync(p, 'utf8'), MIGRACIONS.map(n => fs.readFileSync(path.join(root, 'supabase/migrations', n), 'utf8')).join('\n'));
   assert.match(fs.readFileSync(path.join(f.dir, 'staged/activa.sql'), 'utf8'), /push_schema_incomplete/);
   fs.appendFileSync(p, '-- drift');

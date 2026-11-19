@@ -163,4 +163,28 @@ describe('JARVIS: diagnòstic sense capacitat de supressió', () => {
     await expect(e.crea().purgaMemoriaCauRegenerable({signal:ctrl.signal})).rejects.toThrow('ABORT_DIAGNOSTIC');
     expect(x.c.match).toHaveBeenCalledTimes(1);expect(x.c.delete).not.toHaveBeenCalled();expect(e.magatzemHistorial.desa).not.toHaveBeenCalled();
   });
+  /* R32.3 · Peix: una API que mai resol no reté el diagnòstic quan el senyal avorta (topall del giny). */
+  const correAmbAvort = async (executa) => {
+    const ctrl=new AbortController();const operacio=executa(ctrl.signal);
+    const abortTimer=setTimeout(()=>ctrl.abort(Object.assign(new Error('TEMPS_ESGOTAT'),{codi:'TEMPS_ESGOTAT'})),0);
+    let timeout;
+    try {
+      await expect(Promise.race([operacio,new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('HANG')),500);})])).rejects.toThrow('TEMPS_ESGOTAT');
+    } finally {clearTimeout(abortTimer);clearTimeout(timeout);}
+  };
+  it('storage.estimate() penjat no deixa la lectura penjada quan el senyal avorta',async()=>{
+    const e=entorn();const x=e.cache('sdp-pwa-recursos-v0',[[URL_RECURS,'123']]);
+    e.navegador.storage.estimate.mockImplementation(()=>new Promise(()=>{}));
+    await correAmbAvort((signal)=>e.crea().lligSalutEmmagatzematgeDispositiu({signal}));
+    expect(e.memories.open).not.toHaveBeenCalled();expect(x.c.delete).not.toHaveBeenCalled();
+  });
+  it('Cache API penjada no deixa la lectura penjada quan el senyal avorta',async()=>{
+    const e=entorn();e.memories.keys.mockImplementation(()=>new Promise(()=>{}));
+    await correAmbAvort((signal)=>e.crea().lligSalutEmmagatzematgeDispositiu({signal}));
+  });
+  it('un historial IndexedDB penjat no queda penjat quan el senyal avorta',async()=>{
+    const e=entorn();e.magatzemHistorial.totes=vi.fn(()=>new Promise(()=>{}));
+    await correAmbAvort((signal)=>e.crea().historialNetegesLocals({signal}));
+    expect(e.magatzemHistorial.desa).not.toHaveBeenCalled();
+  });
 });

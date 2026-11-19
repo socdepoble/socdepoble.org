@@ -58,6 +58,7 @@ import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { portadaDeLaPublicacio } from '../../data/mapejadorSeccions.js';
 import { TIPUS_ALERTA } from './alertesMunicipals.js';
+import { arquetipDeLaData } from './arquetipDeData.js';
 import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { CLASSE_DE_LA_TARGETA, DistintiuAlertaMunicipal } from './AlertaMunicipal.jsx';
 /* IDEA-61 (T0, prompt 261102_1532) · L'àmbit d'una fitxa del Flux Universal
@@ -343,6 +344,14 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
       date={data.date}
       time={data.time}
       dateTime={data.dateTime}
+      /* P0-77 / IDEA-208 (R16-P; ordre del Mestre, 261109 20:57) · Un avís
+         efímer (busco gos, claus trobades, avís d'aigua, una fitxa
+         d'Animalets d'animal perdut o trobat, una alerta municipal) porta la
+         data com un <time> informatiu, sense clic: les seues accions són
+         Comentar (el xat) i Compartir, al peu. Les etiquetes i la modalitat
+         es lligen de l'original, no de les localitzades. La resta, la pastilla
+         de sempre, cap al mes del Calendari. */
+      onDateTime={arquetipDeLaData(original, { alertaMunicipal }) === 'efimer' ? false : undefined}
       /* T39 · els drets triats a la publicació (payload.copyright); el
          text de sèrie, només per a la llavor i les d'abans de T39. */
       copyright={item.copyright || (item._murPublic ? undefined : COPYRIGHT_SDP)}

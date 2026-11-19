@@ -42,7 +42,7 @@
  * l'espècimen. Sense, /disseny/fonaments/xat tenia quatre H1 (el de la pàgina
  * i tres de mostra). El píxel no canvia: el nom és el mateix <strong>.
  */
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import { Accions, Avatar, Boto } from '../../../../components/PedraSeca/index.js';
 import { AppGridContext } from '../../../../components/layout/AppGridShell.jsx';
@@ -489,6 +489,18 @@ function ConversaEspill11OpcionsDeMostra() {
   }));
   const [destacats, setDestacats] = useState(() => ({}));
   const [fixatId, setFixatId] = useState(null);
+  const [capesObertes, setCapesObertes] = useState(() => new Set());
+
+  const gestionaCapaFlotant = useCallback((clau, oberta) => {
+    setCapesObertes((prev) => {
+      const teClau = prev.has(clau);
+      if (oberta === teClau) return prev;
+      const seguent = new Set(prev);
+      if (oberta) seguent.add(clau);
+      else seguent.delete(clau);
+      return seguent;
+    });
+  }, []);
 
   const alternaReaccio = (msg, emoji) => {
     setReaccionsMapa((prev) => {
@@ -512,7 +524,10 @@ function ConversaEspill11OpcionsDeMostra() {
         onSeleccionar={() => setAvis('Activaria la selecció de missatges.')}
         t={t}
       />
-      <ol className="sdp-xat-missatges" aria-label="Conversa d’espill amb avatars de 44 px, reaccions i menú de 11 opcions">
+      <ol
+        className={capesObertes.size > 0 ? 'sdp-xat-missatges sdp-xat-missatges--obert' : 'sdp-xat-missatges'}
+        aria-label="Conversa d’espill amb avatars de 44 px, reaccions i menú de 11 opcions"
+      >
         {filesDe(MISSATGES_ESPILL_R32_7).map(({ clau, msg, primerDelGrup }) => (
           <Bombolla
             key={clau}
@@ -523,6 +538,7 @@ function ConversaEspill11OpcionsDeMostra() {
             nomPropi="Javi Llinares"
             usuariAdjunts="javi-llinares"
             reaccions={reaccionsMapa[msg.id] || null}
+            onCapaFlotantCanvia={gestionaCapaFlotant}
             destacat={Boolean(destacats[msg.id])}
             fixat={fixatId === msg.id}
             nomAutor={msg.sender === 'other' ? msg.author : ''}

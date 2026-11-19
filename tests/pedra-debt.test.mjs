@@ -101,3 +101,53 @@ test('tractor ENTRADES_DE_BUILD equal the Vite configs at the root, and every on
   const configs = fs.readdirSync(ROOT).filter((nom) => /^vite(?:\.[\w-]+)?\.config\.js$/.test(nom));
   assert.deepEqual([...deBuild].sort(), configs.sort());
 });
+
+/* R30-LLEI08-LLEI01 · Una plantilla tallada (`… ${t ? `b--${t}` : ''}`) no deixa operadors
+   com a classes («.?»), i un prefix interpolat (`sdp-ombra-${n}`) té regla si el full en
+   definix algun membre (.sdp-ombra-1). Un prefix sense cap membre amb regla continua orfe. */
+test('LLEI 1: tokens that are not class names are ignored and a prefix family with a rule is covered', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-familia-classes-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(root, 'src'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.agents/deute'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.agents/deute/.pedra-seca-deute.json'), '{}');
+  fs.writeFileSync(path.join(root, 'src/main.jsx'),
+    'export const x = (n, t) => <div className={`a sdp-ombra-${n} sdp-sense-regla-${n} ${t ? `b--${t}` : \'\'}`} />;');
+  fs.writeFileSync(path.join(root, 'src/style.css'), '.a {} .sdp-ombra-1 {} .b--x {}');
+  const run = spawnSync(process.execPath, [path.join(ROOT, 'tooling/brain/tractor-pedra-seca.mjs'), '--detall'], { cwd: root, encoding: 'utf8' });
+  assert.equal(run.status, 1, 'el prefix sense cap membre amb regla és una infracció nova');
+  assert.match(run.stdout, /\.sdp-sense-regla-\s+→/);
+  assert.doesNotMatch(run.stdout, /\.\?\s+→/);
+  assert.doesNotMatch(run.stdout, /\.sdp-ombra-\s+→/);
+  assert.doesNotMatch(run.stdout, /\.b--\s+→/);
+});
+
+/* R30-LLEI08-LLEI01 · El servidor del Node 0 és una arrel de la LLEI 8: el que importa de
+   src/ (pontMastodon.js) no és orfe. Un fitxer solt de src/ ho continua sent. */
+test('LLEI 8: the Node 0 server scripts root the graph; a loose src file stays orphan', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-arrel-servidor-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  for (const dir of ['src', 'nix', 'tooling/node0', '.agents/deute']) fs.mkdirSync(path.join(root, dir), { recursive: true });
+  fs.writeFileSync(path.join(root, '.agents/deute/.pedra-seca-deute.json'), '{}');
+  fs.writeFileSync(path.join(root, 'nix/start-node0.mjs'), "export async function main() { const { main: start } = await import('../tooling/node0/s.mjs'); return start(); }");
+  fs.writeFileSync(path.join(root, 'tooling/node0/s.mjs'), "import { x } from '../../src/x.js'; export const main = () => x;");
+  fs.writeFileSync(path.join(root, 'src/x.js'), 'export const x = 1;');
+  fs.writeFileSync(path.join(root, 'src/y.js'), 'export const y = 1;');
+  const run = spawnSync(process.execPath, [path.join(ROOT, 'tooling/brain/tractor-pedra-seca.mjs'), '--detall'], { cwd: root, encoding: 'utf8' });
+  assert.equal(run.status, 1, 'amb el deute buit, l’orfe és una infracció nova');
+  assert.match(run.stdout, /src\/y\.js/);
+  assert.doesNotMatch(run.stdout, /src\/x\.js/);
+});
+
+/* R30-LLEI08-LLEI01 · Les arrels de servidor són els scripts dels ExecStart de
+   nix/node0.nix, ni més ni menys, i tots existixen. */
+test('tractor ENTRADES_DE_SERVIDOR equal the ExecStart scripts of nix/node0.nix, and every one exists', () => {
+  const llig = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+  const literal = /const ENTRADES_DE_SERVIDOR = \[([^\]]*)\];/.exec(llig('tooling/brain/tractor-pedra-seca.mjs'))?.[1];
+  assert.ok(literal, 'el literal de ENTRADES_DE_SERVIDOR');
+  const deServidor = [...literal.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  const execStart = [...llig('nix/node0.nix').matchAll(/ExecStart\s*=\s*"[^"]*\$\{source\}\/([^"\s]+)"/g)].map((m) => m[1]);
+  assert.ok(execStart.length > 0, 'els ExecStart de nix/node0.nix');
+  assert.deepEqual([...deServidor].sort(), [...execStart].sort());
+  for (const entrada of deServidor) assert.ok(fs.existsSync(path.join(ROOT, entrada)), `${entrada}: entrada morta`);
+});

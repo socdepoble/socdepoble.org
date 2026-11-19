@@ -486,6 +486,10 @@ export function UniversalCard({
   ambModeracio = false,
   onPin,
   onDateTime,
+  /* P0-77 / IDEA-208 (R16-P) · El nom accessible d'una pastilla amb
+     onDateTime propi, quan qui pinta la targeta sap on porta (EventCard: «…
+     · Obri el calendari d’eixe dia»). Sense, el de sempre. */
+  etiquetaData,
   onTranslate,
   onComment,
   onShare,
@@ -631,7 +635,7 @@ export function UniversalCard({
      de sempre; onDateTime={false}, un <time> sense clic. */
   const pastillaPropia = onDateTime === false || Boolean(onDateTime);
   const handleDateTime = onDateTime === false ? undefined : (onDateTime || alCalendari.onClick);
-  const nomPastilla = pastillaPropia ? undefined : alCalendari.etiqueta;
+  const nomPastilla = etiquetaData ?? (pastillaPropia ? undefined : alCalendari.etiqueta);
 
   /* Visibilitat calculada sobre el que de veritat es pinta (correcció 3). */
   const teAutor = Boolean(author || safeAvatarUrl || location);

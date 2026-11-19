@@ -7,11 +7,37 @@
  *   s'adopta a l'arrel on es munta el primer espècimen (useFullDiferit, abans del primer pintat).
  */
 import { useRef } from 'react';
+import { useUIActionsOpcional, useUIStateOpcional } from '../../../app/contexts/UIContext.jsx';
 import { useFullDiferit } from '../../../config/fullDiferit.js';
 import cssEspecimens from '../../../css/diferit-especimens.css?inline';
+import { ETIQUETES_MARC_ESPECIMEN, normalitzaLlenguaDisseny } from './i18nControlsBarra.js';
+
+function useAccionsDissenySegur() {
+  try {
+    return useUIActionsOpcional();
+  } catch {
+    return null;
+  }
+}
+
+function useEstatDissenySegur() {
+  try {
+    return useUIStateOpcional();
+  } catch {
+    return null;
+  }
+}
+
+export function useLlenguaDisseny() {
+  const accions = useAccionsDissenySegur();
+  const estat = useEstatDissenySegur();
+  return normalitzaLlenguaDisseny(accions?.language || estat?.language || 'ca');
+}
 
 export function Especimen({ id, nom, fitxer, children, descripcio, contracte = [], a11y = [], fes = [], noFacis = [] }) {
   const arrel = useRef(null);
+  const llengua = useLlenguaDisseny();
+  const etiquetes = ETIQUETES_MARC_ESPECIMEN[llengua];
   useFullDiferit(arrel, 'especimens', cssEspecimens);
   return (
     <section ref={arrel} className="sdp-especimen" id={id} aria-labelledby={`${id}-nom`}>
@@ -27,8 +53,8 @@ export function Especimen({ id, nom, fitxer, children, descripcio, contracte = [
       {contracte.length ? (
         <div className="sdp-especimen__contracte" role="region" aria-labelledby={`${id}-contracte ${id}-nom`} tabIndex={0}>
         <table>
-          <caption id={`${id}-contracte`}>Contracte</caption>
-          <thead><tr><th scope="col">Prop</th><th scope="col">Tipus</th><th scope="col">Per defecte</th><th scope="col">Què fa</th></tr></thead>
+          <caption id={`${id}-contracte`}>{etiquetes.contracte}</caption>
+          <thead><tr><th scope="col">{etiquetes.prop}</th><th scope="col">{etiquetes.tipus}</th><th scope="col">{etiquetes.defecte}</th><th scope="col">{etiquetes.queFa}</th></tr></thead>
           <tbody>
             {contracte.map(([prop, tipus, defecte, que]) => (
               <tr key={prop}><td><code>{prop}</code></td><td><code>{tipus}</code></td><td>{defecte ?? '—'}</td><td>{que}</td></tr>
@@ -39,14 +65,14 @@ export function Especimen({ id, nom, fitxer, children, descripcio, contracte = [
       ) : null}
       {a11y.length ? (
         <>
-          <h4>Accessibilitat</h4>
+          <h4>{etiquetes.a11y}</h4>
           <ul>{a11y.map((t) => <li key={t}>{t}</li>)}</ul>
         </>
       ) : null}
       {fes.length || noFacis.length ? (
         <div className="sdp-especimen__regles">
-          <div className="sdp-especimen__fes"><h4>Fes</h4><ul>{fes.map((t) => <li key={t}>{t}</li>)}</ul></div>
-          <div className="sdp-especimen__no"><h4>No facis</h4><ul>{noFacis.map((t) => <li key={t}>{t}</li>)}</ul></div>
+          <div className="sdp-especimen__fes"><h4>{etiquetes.fes}</h4><ul>{fes.map((t) => <li key={t}>{t}</li>)}</ul></div>
+          <div className="sdp-especimen__no"><h4>{etiquetes.noFacis}</h4><ul>{noFacis.map((t) => <li key={t}>{t}</li>)}</ul></div>
         </div>
       ) : null}
     </section>

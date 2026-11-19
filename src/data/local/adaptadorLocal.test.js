@@ -156,6 +156,33 @@ describe('Xat', () => {
     await expect(a.creaFilDirecte('persona-de-fora', null, {})).rejects.toEqual(ambCodi('SDP-XAT-004'));
   });
 
+  /* C3-PADRO-LOCAL · El xat d'un adaptador local llig les entitats del seu
+     directori públic, no només ENTITATS_SEED: una entitat pública declarada a
+     dades.entitats obri el directe; una privada o desconeguda continua sent
+     forastera (SDP-XAT-004), sense cap redirecció a Sóc de Poble. */
+  test('C3-PADRO-LOCAL · una entitat pública declarada a dades.entitats obri el directe; privada o desconeguda continua SDP-XAT-004, mai Sóc de Poble', async () => {
+    const coop = { id: 'org-coop', slug: 'coop', name: 'La Cooperativa', kind: 'entity', town_name: 'La Torre de les Maçanes', visibility: 'public' };
+    const privada = { ...coop, id: 'org-privada', slug: 'privada', visibility: 'private' };
+    const tenantId = globalThis.crypto.randomUUID();
+    const a = creaAdaptadorLocal({ mode: 'local', tenantId, dades: { entitats: [coop, privada] } });
+    entra(a);
+    expect(await a.loadPerfilPublic('org-coop', {})).toMatchObject({ tipus: 'entitat', id: 'org-coop' });
+    const filId = await a.creaFilDirecte('org-coop', null, {});
+    expect(await a.creaFilDirecte('org-coop', null, {})).toBe(filId);
+    expect((await a.loadFils()).find((f) => f.id === filId)).toMatchObject({
+      tipus: 'entitat', entitatId: 'org-coop', entitatNom: 'La Cooperativa',
+      altres: [expect.objectContaining({ id: 'org-coop', tipus: 'entitat' })]
+    });
+    await expect(a.creaFilDirecte('org-privada', null, {})).rejects.toEqual(ambCodi('SDP-XAT-004'));
+    await expect(a.creaFilDirecte('org-inexistent', null, {})).rejects.toEqual(ambCodi('SDP-XAT-004'));
+    expect((await a.loadFils()).some((f) => f.entitatId === ENTITAT_PILOT)).toBe(false);
+    /* El directori és el de cada adaptador i es consulta en viu: una altra
+       instància del mateix poble (el mateix tenantId, per tant el mateix
+       magatzem del xat) que no la declara no l'obri pel magatzem compartit. */
+    const b = creaAdaptadorLocal({ mode: 'local', tenantId });
+    await expect(b.creaFilDirecte('org-coop', null, {})).rejects.toEqual(ambCodi('SDP-XAT-004'));
+  });
+
   cobrix(['appendChatMessages'], 'appendChatMessages envia en ordre, amb seq ascendent, i reenviar la llista no duplica', async () => {
     const a = creaAdaptadorLocal({ mode: 'local' });
     entra(a);

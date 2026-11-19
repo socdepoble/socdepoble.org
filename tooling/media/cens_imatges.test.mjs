@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { censImatges, usosDe, main, plaConsola } from './cens_imatges.mjs';
@@ -128,7 +129,7 @@ test('pla dels quatre esborranys declara acceptació i conserva les rutes actual
 /* P1-29 (B10 marató 261101_2143) · Opcions completes: cap taula real s'hi cola, i main pot donar 0. */
 const completes = (opcions, extra = {}) => ({
   ...opcions, cens: [{ src: '/assets/viu.jpg', titol: 'Viu', ambit: 'contingut', origen: 'ia' }], excloses: {}, alies: {},
-  correccions: {}, acreditats: [], pares: [], svgs: {}, trazabilitat: {}, ...extra
+  correccions: {}, acreditats: [], pares: [], svgs: {}, trazabilitat: {}, mitjansWp: {}, variantsSocials: {}, ...extra
 });
 const captura = () => {
   const linies = [];
@@ -208,4 +209,131 @@ test('motiu trencat: control 0; «còpia de» un original absent 1', (t) => {
   assert.equal(main([], { arrel, sortida: trencat.sortida, opcions: dolent }), 1, trencat.text());
   assert.match(trencat.text(), /0 sense acreditar; motius trencats: 1\./);
   assert.match(trencat.text(), /motiu trencat \(excloses\): \/assets\/copia\.jpg → \/assets\/absent\.jpg absent/);
+});
+
+/* P1-29 (261118) · Procedència de les importacions de WordPress i de les variants socials; llista de redundants. */
+test('importació de WordPress: procedència del registre verificada; bytes divergents ixen amb 1; sense registre, desconeguda', (t) => {
+  const { arrel, escriu, opcions } = fixture(t);
+  const src = '/assets/importacio-wp/wp-a.jpg';
+  const url = 'https://socdepoble.net/wp-content/uploads/a.jpg';
+  const bytes = Buffer.from('bytes-wp-a');
+  escriu(`public${src}`, bytes);
+  const registre = { [url]: { path: src, sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length } };
+  const opts = completes(opcions, { mitjansWp: registre });
+  const bo = censImatges(arrel, opts);
+  const wp = bo.imatges.find((i) => i.src === src);
+  assert.equal(wp.categoria, 'importacio_wp');
+  assert.deepEqual(wp.procedencia, { font: 'importacio_wp', origen: url, verificat: true });
+  assert.equal(bo.resum.perCategoria.desconeguda, undefined);
+  assert.equal(bo.resum.importacioWpDivergents, 0);
+  assert.equal(main([], { arrel, sortida: captura().sortida, opcions: opts }), 0);
+  escriu(`public${src}`, 'altres-bytes');
+  const dolent = censImatges(arrel, opts);
+  assert.equal(dolent.imatges.find((i) => i.src === src).procedencia.verificat, false);
+  assert.equal(dolent.resum.importacioWpDivergents, 1);
+  const informe = captura();
+  assert.equal(main([], { arrel, sortida: informe.sortida, opcions: opts }), 1);
+  assert.match(informe.text(), /importació WordPress divergent del registre \(SHA-256 o pes\): \/assets\/importacio-wp\/wp-a\.jpg/);
+  const control = censImatges(arrel, completes(opcions)).imatges.find((i) => i.src === src);
+  assert.equal(control.categoria, 'desconeguda');
+  assert.equal(control.procedencia, null);
+});
+
+test('variant social: hereta la procedència de l’arrel de l’original sense canviar arrel ni duplicats', (t) => {
+  const { arrel, escriu, opcions } = fixture(t);
+  const variant = '/assets/viu-social-1200x630.jpg';
+  escriu(`public${variant}`, 'bytes-variant');
+  const base = {
+    cens: [{ src: '/assets/viu.jpg', titol: 'Viu', origen: 'foto', ambit: 'poble', poble: 'tibi' }],
+    trazabilitat: { '/assets/viu.jpg': { commit: 'abc1234' } },
+    excloses: { [variant]: 'targeta social dedicada (1200×630) de /assets/viu.jpg' }
+  };
+  const sense = censImatges(arrel, completes(opcions, base));
+  const amb = censImatges(arrel, completes(opcions, { ...base, variantsSocials: { '/assets/viu.jpg': variant } }));
+  assert.equal(sense.imatges.find((i) => i.src === variant).procedencia, null);
+  const v = amb.imatges.find((i) => i.src === variant);
+  assert.deepEqual(v.procedencia, {
+    font: 'variant_social', de: '/assets/viu.jpg', origen: 'foto', ambit: 'poble', poble: 'tibi', commit: 'abc1234'
+  });
+  assert.equal(v.arrelCens, variant);
+  assert.equal(v.assetIdArrel, idDelCens(variant));
+  assert.deepEqual(amb.duplicats, sense.duplicats);
+  /* La reserva .webp d'urlSocialDe: l'original .jpg del mapa no és al disc, però sí la seua bessona. */
+  escriu('public/assets/viu.webp', 'bytes-viu-webp');
+  fs.rmSync(path.join(arrel, 'public/assets/viu.jpg'));
+  const webp = censImatges(arrel, completes(opcions, {
+    ...base, cens: [], excloses: { [variant]: base.excloses[variant] }, variantsSocials: { '/assets/viu.jpg': variant }
+  })).imatges.find((i) => i.src === variant);
+  assert.deepEqual(webp.procedencia, { font: 'variant_social', de: '/assets/viu.webp' });
+});
+
+test('llista de redundants: conserva l’arrel que usa el codi, els declarats a part i res no es mou', (t) => {
+  const { arrel, escriu, opcions } = fixture(t);
+  escriu('public/assets/copia.jpg', 'bytes-original');
+  escriu('public/assets/a.jpg', 'bytes-declarats');
+  escriu('public/assets/b.jpg', 'bytes-declarats');
+  escriu('src/pagina.js', "const src = '/assets/viu.jpg';");
+  const declarats = { tipus: 'semantic_arxiu', fitxers: ['/assets/a.jpg', '/assets/b.jpg'], motiu: 'prova', decisio: 'pendent_mestre' };
+  const opts = completes(opcions, {
+    cens: [{ src: '/assets/viu.jpg', titol: 'Viu' }, { src: '/assets/a.jpg', titol: 'A' }, { src: '/assets/b.jpg', titol: 'B' }],
+    excloses: { '/assets/copia.jpg': 'còpia de /assets/viu.jpg' }, acreditats: [declarats]
+  });
+  const abans = fs.readdirSync(path.join(arrel, 'public/assets')).sort();
+  const a = censImatges(arrel, opts);
+  const bytes = Buffer.byteLength('bytes-original');
+  const hash = (text) => createHash('sha256').update(text).digest('hex');
+  /* /assets/copia.jpg va primer en ordre; es conserva /assets/viu.jpg, la seua arrel amb camí literal al codi. */
+  assert.deepEqual(a.redundants, [{
+    sha256: hash('bytes-original'), conserva: '/assets/viu.jpg', redundants: ['/assets/copia.jpg'], bytes, citadesPelCodi: []
+  }]);
+  assert.deepEqual(a.redundantsDeclarats, [{
+    sha256: hash('bytes-declarats'), conserva: '/assets/a.jpg', redundants: ['/assets/b.jpg'],
+    bytes: Buffer.byteLength('bytes-declarats'), citadesPelCodi: [], decisio: 'pendent_mestre'
+  }]);
+  const informe = captura();
+  assert.equal(main([], { arrel, sortida: informe.sortida, opcions: opts }), 0, informe.text());
+  assert.match(informe.text(), new RegExp(`Còpies redundants: 1 grups amb membre a conservar proposat \\(1 còpies, ${bytes} bytes; 0 citades pel codi, caldria repuntar-les abans de retirar-les\\) i 1 declarats a decisió del Mestre; cap fitxer mogut ni esborrat\\.`));
+  assert.deepEqual(fs.readdirSync(path.join(arrel, 'public/assets')).sort(), abans);
+});
+
+test('redundants: la bessona de l’arrel es conserva amb el seu original, i la citada pel codi es marca', (t) => {
+  const { arrel, escriu, opcions } = fixture(t);
+  /* a.png és còpia de l'arrel b.png; les bessones .webp també són idèntiques entre elles. a.* va primer en ordre. */
+  escriu('public/assets/a.png', 'bytes-png');
+  escriu('public/assets/b.png', 'bytes-png');
+  escriu('public/assets/a.webp', 'bytes-webp-ab');
+  escriu('public/assets/b.webp', 'bytes-webp-ab');
+  escriu('src/pagina.js', "const src = '/assets/a.webp';");
+  const opts = completes(opcions, {
+    cens: [{ src: '/assets/b.png', titol: 'B' }], excloses: { '/assets/a.png': 'còpia de /assets/b.png' }
+  });
+  const a = censImatges(arrel, opts);
+  assert.deepEqual(a.redundants.map(({ conserva, redundants, citadesPelCodi }) => ({ conserva, redundants, citadesPelCodi }))
+    .sort((x, y) => (x.conserva < y.conserva ? -1 : 1)), [
+    { conserva: '/assets/b.png', redundants: ['/assets/a.png'], citadesPelCodi: [] },
+    { conserva: '/assets/b.webp', redundants: ['/assets/a.webp'], citadesPelCodi: ['/assets/a.webp'] }
+  ]);
+  const informe = captura();
+  assert.equal(main([], { arrel, sortida: informe.sortida, opcions: opts }), 0, informe.text());
+  assert.match(informe.text(), /; 1 citades pel codi, caldria repuntar-les abans de retirar-les\)/);
+  assert.match(informe.text(), /redundant citada pel codi: \/assets\/a\.webp \(es conserva \/assets\/b\.webp\)/);
+});
+
+test('redundants d’una parella del cens: es conserva la primària encara que vaja segona i el codi cite la secundària', (t) => {
+  const { arrel, escriu, opcions } = fixture(t);
+  escriu('public/assets/z.jpg', 'bytes-parella');
+  escriu('public/assets/m.jpg', 'bytes-parella');
+  escriu('public/assets/z.webp', 'bytes-parella-webp');
+  escriu('public/assets/m.webp', 'bytes-parella-webp');
+  escriu('src/pagina.js', "const a = '/assets/m.jpg'; const b = '/assets/m.webp';");
+  const a = censImatges(arrel, completes(opcions, {
+    cens: [{ src: '/assets/z.jpg', titol: 'Z' }, { src: '/assets/m.jpg', titol: 'M' }],
+    pares: [{ primaria: '/assets/z.jpg', secundaria: '/assets/m.jpg' }]
+  }));
+  assert.deepEqual(a.duplicats.map((g) => g.acreditacio), ['parella_cens', 'parella_cens']);
+  assert.deepEqual(a.redundants.map(({ conserva, redundants, citadesPelCodi }) => ({ conserva, redundants, citadesPelCodi }))
+    .sort((x, y) => (x.conserva < y.conserva ? -1 : 1)), [
+    { conserva: '/assets/z.jpg', redundants: ['/assets/m.jpg'], citadesPelCodi: ['/assets/m.jpg'] },
+    { conserva: '/assets/z.webp', redundants: ['/assets/m.webp'], citadesPelCodi: ['/assets/m.webp'] }
+  ]);
 });

@@ -314,8 +314,11 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
      Onada R21 (v1.2.0 · WP 1.1.13) · El readme de la 1.1.12 ja en feia 32.740 B (28 de marge):
      les notes obligatòries de la 1.1.13 (Changelog i Upgrade Notice, prova de dalt) no hi caben
      sense esborrar història publicada. El sostre passa de 32 a 36 KB; el límit real continua
-     sent el de paraules. */
-  assert.ok(Buffer.byteLength(readme) < 36864, 'readme de menys de 36 KB');
+     sent el de paraules.
+     Onada v1.2.10 (WP 1.1.18) · El readme de la 1.1.17 ja en feia 36.662 B (202 de marge): les
+     notes obligatòries de la 1.1.18 no hi caben sense esborrar història publicada. El sostre passa
+     de 36 a 40 KB; el límit real continua sent el de paraules (Changelog, unes 1.000 de 5.000). */
+  assert.ok(Buffer.byteLength(readme) < 40960, 'readme de menys de 40 KB');
   // E-10: WordPress.org pinta «Donate link» com un botó de donació, i cap pàgina de socdepoble.org no permet donar.
   assert.equal(capcalera(readme, 'Donate link'), null, 'sense Donate link fins que hi haja una pàgina de donacions real');
   const etiquetes = capcalera(readme, 'Tags').split(',').map((e) => e.trim()).filter(Boolean);

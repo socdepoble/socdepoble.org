@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { discoverNodeTests, validateManifest, runNodeSuite, runCi } from '../tooling/tests/run-node-tests.mjs';
+import { discoverNodeTests, validateManifest, runNodeSuite, runCi, resolvePglite, pgliteDebt } from '../tooling/tests/run-node-tests.mjs';
 import { passos, seleccionaPassos } from '../tooling/gates/run-portes.mjs';
 
 const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -67,6 +67,100 @@ test('cada corredor selecciona els fitxers exactes i conserva els codis de falla
   }
   assert.equal(runNodeSuite(root, catalog, 'primary', () => ({ status: null, signal: 'SIGTERM' })), 1);
   assert.throws(() => runNodeSuite(root, catalog, 'absent'), /desconeguda/);
+});
+
+// El literal es compon perquè esta prova no entre ella mateixa al cens PGlite.
+const LECTURA_PGLITE = `const m = process.env.${'SDP_PGLITE_MODULE'};\n`;
+const capturador = () => { const text = []; return { text, write: (chunk) => { text.push(String(chunk)); return true; } }; };
+
+test('PGlite absent: el deute es compta i es nomena, també per imports relatius, i el verd es conserva', (t) => {
+  const { root, manifest } = fixture(t);
+  fs.writeFileSync(path.join(root, 'tests/a.test.mjs'), LECTURA_PGLITE);
+  fs.writeFileSync(path.join(root, 'tooling/gates/helper.mjs'), LECTURA_PGLITE);
+  fs.writeFileSync(path.join(root, 'tooling/gates/c.test.mjs'), "import './helper.mjs';\n");
+  const catalog = validateManifest(root, manifest);
+  const debt = pgliteDebt(root, catalog.files, resolvePglite(root, {}));
+  assert.deepEqual(debt.dependents, ['tests/a.test.mjs', 'tooling/gates/c.test.mjs']);
+  assert.deepEqual(debt.omitted, debt.dependents);
+  assert.match(debt.motiu, /falta SDP_PGLITE_MODULE/);
+  const out = capturador();
+  let calls = 0;
+  const code = runNodeSuite(root, catalog, 'primary', () => { calls += 1; return { status: 0 }; }, { pglite: resolvePglite(root, {}), out });
+  assert.equal(code, 0);
+  assert.equal(calls, 1);
+  assert.match(out.text.join(''), /Deute PGlite: 1\/1 .*tests\/a\.test\.mjs/);
+  assert.match(out.text.at(-1), /^Deute PGlite: /, 'el deute ha de ser l’última línia del resum');
+});
+
+test('cens PGlite: un ajudant compartit amb cicle es llig una sola vegada per cens', (t) => {
+  const { root, manifest } = fixture(t);
+  fs.writeFileSync(path.join(root, 'tests/a.test.mjs'), "import './comu.mjs';\n");
+  fs.writeFileSync(path.join(root, 'tests/nested/b.test.mjs'), "import '../comu.mjs';\n");
+  fs.writeFileSync(path.join(root, 'tooling/gates/c.test.mjs'), "import '../../tests/comu.mjs';\n");
+  fs.writeFileSync(path.join(root, 'tests/comu.mjs'), "import './cicle.mjs';\n");
+  fs.writeFileSync(path.join(root, 'tests/cicle.mjs'), "import './comu.mjs';\nimport './pg.mjs';\n");
+  fs.writeFileSync(path.join(root, 'tests/pg.mjs'), LECTURA_PGLITE);
+  const catalog = validateManifest(root, manifest);
+  const lectures = new Map();
+  const original = fs.readFileSync;
+  t.mock.method(fs, 'readFileSync', function (ruta, ...resta) {
+    const relatiu = path.relative(root, String(ruta));
+    lectures.set(relatiu, (lectures.get(relatiu) ?? 0) + 1);
+    return original.call(this, ruta, ...resta);
+  });
+  const debt = pgliteDebt(root, catalog.files, resolvePglite(root, {}));
+  assert.deepEqual(debt.dependents, ['tests/a.test.mjs', 'tests/nested/b.test.mjs', 'tooling/gates/c.test.mjs']);
+  for (const ajudant of ['tests/comu.mjs', 'tests/cicle.mjs', 'tests/pg.mjs']) assert.equal(lectures.get(ajudant), 1, ajudant);
+});
+
+test('mode estricte PGlite: amb omissions falla sense llançar cap prova', (t) => {
+  const { root, manifest } = fixture(t);
+  fs.writeFileSync(path.join(root, 'tests/a.test.mjs'), LECTURA_PGLITE);
+  const catalog = validateManifest(root, manifest);
+  const err = capturador();
+  let calls = 0;
+  const code = runNodeSuite(root, catalog, 'primary', () => { calls += 1; return { status: 0 }; }, {
+    pglite: resolvePglite(root, {}), strict: true, out: capturador(), err
+  });
+  assert.equal(code, 1);
+  assert.equal(calls, 0);
+  assert.match(err.text.join(''), /tests\/a\.test\.mjs/);
+});
+
+test('un mòdul PGlite indicat però absent continua sent deute', (t) => {
+  const { root, manifest } = fixture(t);
+  fs.writeFileSync(path.join(root, 'tests/a.test.mjs'), LECTURA_PGLITE);
+  const catalog = validateManifest(root, manifest);
+  const resolved = resolvePglite(root, { SDP_PGLITE_MODULE: path.join(root, 'absent.js') });
+  assert.equal(resolved.existeix, false);
+  const debt = pgliteDebt(root, catalog.files, resolved);
+  assert.deepEqual(debt.omitted, ['tests/a.test.mjs']);
+  assert.match(debt.motiu, /no existix/);
+});
+
+test('un mòdul PGlite configurat buida el deute i arriba al procés fill', (t) => {
+  const { root, manifest } = fixture(t);
+  fs.writeFileSync(path.join(root, 'tests/a.test.mjs'), LECTURA_PGLITE);
+  fs.mkdirSync(path.join(root, 'fake-pglite'));
+  fs.writeFileSync(path.join(root, 'fake-pglite/index.js'), 'export class PGlite {}\n');
+  const catalog = validateManifest(root, manifest);
+  const pglite = resolvePglite(root, {}, 'fake-pglite/index.js');
+  assert.deepEqual(pgliteDebt(root, catalog.files, pglite).omitted, []);
+  const invocations = [];
+  const code = runNodeSuite(root, catalog, 'primary', (...args) => { invocations.push(args); return { status: 5 }; }, {
+    pglite, strict: true, out: capturador()
+  });
+  assert.equal(code, 5);
+  assert.equal(invocations.length, 1);
+  assert.equal(invocations[0][2].env.SDP_PGLITE_MODULE, path.join(root, 'fake-pglite/index.js'));
+  const perUrl = resolvePglite(root, { SDP_PGLITE_MODULE: pathToFileURL(path.join(root, 'fake-pglite/index.js')).href });
+  assert.equal(perUrl.existeix, true);
+});
+
+test('el mòdul PGlite només admet ruta local o file URL', (t) => {
+  const { root } = fixture(t);
+  assert.throws(() => resolvePglite(root, { SDP_PGLITE_MODULE: 'https://x/y.js' }), /ruta local o file URL/);
+  assert.throws(() => resolvePglite(root, { SDP_PGLITE_MODULE: 'file:///tmp/x.js?v=1' }), /query ni fragment/);
 });
 
 test('CI executa Node i Vitest run, també amb Node roig, i qualsevol fallada conserva exit 1', (t) => {

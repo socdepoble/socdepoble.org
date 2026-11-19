@@ -4,7 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { analitzaFeed } from '../../../src/apps/lector/nucli/analitzador.js';
+import { VEREDICTES } from '../../../src/apps/lector/observatori.js';
 import {
+  VEREDICTES_VALIDATS,
   coerceixRespostaSedas,
   descarregaFeedSegur,
   executaCicleObservatori,
@@ -178,4 +180,9 @@ test('bústia local (.eml), deduplicació SHA-256, Oblit Saludable i compatibili
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
+});
+
+test('IDEA-265: la llista de veredictes del Lector (src/apps/lector/observatori.js) és la del motor', () => {
+  /* El Lector no pot importar tooling/ (frontera.test.js) i en porta una còpia: esta prova la vigila. */
+  assert.deepEqual([...VEREDICTES], [...VEREDICTES_VALIDATS]);
 });

@@ -86,7 +86,9 @@ const PAGES=[
  ['la-iaia-sabuda','patrimoni-cultura','Documentació'],
  // Onada R14 · /page/receptes, el receptari «Què dinem?».
  ['receptes','patrimoni-cultura','Patrimoni'],
- ['dispositius','tecnologia-lliure','Documentació']
+ ['dispositius','tecnologia-lliure','Documentació'],
+ // IDEA-287 · /page/tot-el-que-pots-fer, la guia pas a pas de les eines.
+ ['tot-el-que-pots-fer','comunitat-rural','Documentació']
 ];
 // P6 · les huit pàgines d'acció (publicar i saber-ne més del Panell): cap etiqueta, en cap llengua.
 const ACTION_PAGES=['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge'];
@@ -133,10 +135,10 @@ const sentinels=()=>({
 });
 
 describe('R41 independent public-page contract',()=>{
- it('R32.9: 34 public keys (26 classified + 8 action pages); the merged chapter has no fossil page entry',()=>{
-  expect(PAGES).toHaveLength(26);expect(ACTION_PAGES).toHaveLength(8);
+ it('R32.9 + IDEA-287: 35 public keys (27 classified + 8 action pages); the merged chapter has no fossil page entry',()=>{
+  expect(PAGES).toHaveLength(27);expect(ACTION_PAGES).toHaveLength(8);
   expect(PAGE_COPY).not.toHaveProperty('sistema-nervios');
-  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(34);
+  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(35);
   expect(Object.keys(PAGE_COPY).sort()).toEqual(keys.sort());
   expect(Object.keys(CATEGORIES)).toHaveLength(6);expect(new Set(TAGS_49).size).toBe(49);
  });

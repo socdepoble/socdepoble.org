@@ -30,6 +30,7 @@ import { ArrowLeft, KeyRound, LockKeyhole, LogOut, Send } from 'lucide-react';
 import { Alerta, Boto, ControlContrasenya, UniversalCard } from '../../components/PedraSeca/index.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { createTranslator } from '../../config/i18n.js';
+import { normalitzaNfcSeguraUi } from '../../utils/normalitzaEntradaUi.js';
 import {
   LONGITUD_MINIMA_CONTRASENYA, codiDEntrada, esCorreuValid, missatgeDEntrada, toDeLErrorDEntrada, validaContrasenyaNova
 } from './onboardingModel.js';
@@ -244,7 +245,8 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
     setEnviant(true);
     setError(null);
     try {
-      await onDesa(fields.password);
+      const pwdNfc = normalitzaNfcSeguraUi(fields.password, { maxLongitud: 256 }) ?? fields.password;
+      await onDesa(pwdNfc);
     } catch (err) {
       if (viu.current) {
         setError({ text: missatgeDEntrada(err), codi: codiDEntrada(err) });

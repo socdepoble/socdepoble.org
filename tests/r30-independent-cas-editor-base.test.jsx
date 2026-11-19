@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ list: vi.fn(), save: vi.fn() }));
 vi.mock('../src/data/backendPort.js', () => ({ teCapacitat: () => true, llistaRevisionsEditorialsWp: (...a) => m.list(...a), desaRevisioEditorialWp: (...a) => m.save(...a) }));
-vi.mock('../src/app/contexts/RouterContext.jsx', () => ({ Link: ({ to, children, ...p }) => <a href={to} {...p}>{children}</a> }));
+vi.mock('../src/app/contexts/RouterContext.jsx', () => ({ Link: ({ to, children, ...p }) => <a href={to} {...p}>{children}</a>, useNavigate: () => vi.fn() }));
 vi.mock('../src/app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => null }));
 vi.mock('../src/hooks/useProjeccionsCataleg.js', () => ({ useProjeccionsCataleg: () => ({ autoritzat: false }) }));
 import BancImportacioEditorial from '../src/sections/profile/admin/BancImportacioEditorial.jsx';
@@ -15,7 +15,7 @@ test('revisió independent: la versió esperada és la llegida per l’editora a
  render(<BancImportacioEditorial />);
  await waitFor(()=>expect(resolve).toBeTypeOf("function"));
  fireEvent.change(screen.getByRole('textbox',{name:/Cerca per títol/}),{target:{value:'619'}});
- fireEvent.click(screen.getByRole('row',{name:/619.*Catàleg d’Arbres/}));
+ fireEvent.click(screen.getByRole('button',{name:/^Catàleg d’Arbres/}));
  fireEvent.change(screen.getByLabelText(/Anotacions del Mestre/),{target:{value:'La meua edició sobre v1'}});
  await act(async()=>{resolve([{wpId:619,estat:'aprovat',nota:'Text canviat per altra editora',actualitzatA:second}]);});
  fireEvent.click(screen.getByRole('button',{name:/Aprovar i desar nota/}));

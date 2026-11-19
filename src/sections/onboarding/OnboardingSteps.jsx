@@ -13,6 +13,7 @@ import { RUTA_POLITICA_PRIVACITAT, VERSIO_POLITICA_PRIVACITAT } from '../../conf
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
+import { normalitzaNfcSeguraUi } from '../../utils/normalitzaEntradaUi.js';
 
 /* Gauntlet 261025_0545 (TE-01) · El formulari parla la llengua triada: els
    textos passen pel traductor `t` (el de la interfície, des
@@ -156,7 +157,9 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
       const username = usernameTocat ? normalitzaUsername(fields.username) : '';
       const motiuUsername = username ? validaUsername(username) : null;
       if (motiuUsername) nextErrors.username = motiuUsername;
-      if (fields.password !== fields.confirmPassword) {
+      const pwdNfc = normalitzaNfcSeguraUi(fields.password, { maxLongitud: 256 });
+      const confirmNfc = normalitzaNfcSeguraUi(fields.confirmPassword, { maxLongitud: 256 });
+      if (pwdNfc === null || confirmNfc === null || pwdNfc !== confirmNfc) {
         nextErrors.confirmPassword = t('section.login.registre.errorContrasenyes', 'Les contrasenyes no coincidixen');
       }
       if (!fields.rgpd) {
@@ -166,19 +169,23 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
       if (Object.keys(nextErrors).length) return;
       enviant.current = true;
       try {
-        await onRegister({ ...fields, username, poble: pobleTriat });
+        await onRegister({ ...fields, password: pwdNfc, confirmPassword: confirmNfc, username, poble: pobleTriat });
         /* Les dues: un reintent no hereta mitja parella de contrasenyes. */
         setFields((current) => ({ ...current, password: '', confirmPassword: '' }));
       } finally { enviant.current = false; }
     } else {
       const nextErrors = {};
       const email = fields.email.trim();
+      const pwdNfc = fields.password ? normalitzaNfcSeguraUi(fields.password, { maxLongitud: 256 }) : '';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = t('section.login.registre.errorCorreu', 'Escriu un correu electrònic vàlid.');
-      if (!fields.password) nextErrors.password = t('section.login.registre.errorContrasenya', 'Contrasenya obligatòria');
+      if (!fields.password || pwdNfc === null) nextErrors.password = t('section.login.registre.errorContrasenya', 'Contrasenya obligatòria');
       setErrors(nextErrors);
       if (Object.keys(nextErrors).length) return;
       enviant.current = true;
-      try { await onLogin({ email, password: fields.password }); }
+      /* Onada v1.2.10 · Un compte creat abans amb un accent escrit en dues peces (NFD) guarda la contrasenya
+         tal com es va escriure: si la forma NFC no casa, l'entrada torna a provar una sola vegada amb la crua. */
+      const crua = pwdNfc !== fields.password ? { passwordCrua: fields.password } : {};
+      try { await onLogin({ email, password: pwdNfc, ...crua }); }
       finally { enviant.current = false; }
     }
   };

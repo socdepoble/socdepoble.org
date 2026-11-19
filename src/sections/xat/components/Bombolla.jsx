@@ -13,7 +13,7 @@
  *   · Previsualització compacta amb miniatura quadrada dreta per a enllaços
  *     interns de Sóc de Poble.
  */
-import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Ban,
@@ -52,8 +52,10 @@ import AdjuntXat from './AdjuntXat.jsx';
 /* v1.2.7 (integració, sostre d'arrencada del connector) · D-R27-1 (opció b) · El contenidor
    .sdp-xat-bombolla-wrap--veu viu al full diferit del reproductor: la bombolla d'una nota de veu
    l'adopta ella mateixa abans del primer pintat, com AdjuntXat. */
-import { useFullDiferit } from '../../../config/fullDiferit.js';
+import { adoptaFullDiferit, useFullDiferit } from '../../../config/fullDiferit.js';
 import cssXatVeu from '../../../css/diferit-xat-veu.css?inline';
+import cssXatMenu from '../../../css/diferit-xat-menu.css?inline';
+import { limitsVisibles, triaOberturaMenu } from './oberturaMenu.js';
 import CaraXat from './CaraXat.jsx';
 import { toDeLlavor } from '../../../components/PedraSeca/atoms/Avatar.jsx';
 import { mouFocusDelMenu } from './Compositor.jsx';
@@ -239,12 +241,15 @@ function Bombolla({
   caraPropia = null, nomPropi = '', rutaPropia = null,
   reaccions = null, destacat = false, fixat = false,
   onResponEnPrivat = null, onReacciona = null, onDestaca = null, onFixa = null,
-  onReenvia = null, onEnviaPrivat = null, onElimina = null, onSelecciona = null
+  onReenvia = null, onEnviaPrivat = null, onElimina = null, onSelecciona = null,
+  onCapaFlotantCanvia = null
 }) {
   const [menuObert, setMenuObert] = useState(false);
+  const [menuAmunt, setMenuAmunt] = useState(false);
   const [paletaOberta, setPaletaOberta] = useState(false);
   const [catalegEmojisObert, setCatalegEmojisObert] = useState(false);
   const menuRef = useRef(null);
+  const menuLlistaRef = useRef(null);
   const botoRef = useRef(null);
   const paletaRef = useRef(null);
   const botoReaccioRef = useRef(null);
@@ -291,6 +296,17 @@ function Bombolla({
   const menuVisible = menuObert && teMenu;
   const teExteriors = !triable && obertContingut && (potReaccionar || potReenviar);
   const paletaVisible = paletaOberta && potReaccionar && !triable;
+  const capaFlotantOberta = menuVisible || paletaVisible;
+
+  useEffect(() => {
+    if (typeof onCapaFlotantCanvia !== 'function') return undefined;
+    const clau = missatge.id ?? missatge.seq ?? null;
+    if (clau == null) return undefined;
+    onCapaFlotantCanvia(clau, capaFlotantOberta);
+    return () => {
+      if (capaFlotantOberta) onCapaFlotantCanvia(clau, false);
+    };
+  }, [onCapaFlotantCanvia, missatge.id, missatge.seq, capaFlotantOberta]);
 
   useEffect(() => { if (!teMenu && menuObert) setMenuObert(false); }, [teMenu, menuObert]);
   useEffect(() => {
@@ -340,6 +356,32 @@ function Bombolla({
       arrel.removeEventListener('keydown', tancaEsc);
     };
   }, [menuVisible, tancaMenu, teCapaDamunt]);
+
+  /* D-v128-2 · En obrir-se, el menú es mesura cap avall (el pintat de sempre). Si la llista o la
+     pantalla el retallen, s'obri cap amunt o puja el just, abans del pintat (oberturaMenu.js).
+     Amb onCapaFlotantCanvia (l'espècimen de /disseny) el pare ja li fa lloc i no es mou. */
+  useLayoutEffect(() => {
+    if (!menuVisible) { setMenuAmunt(false); return; }
+    if (typeof onCapaFlotantCanvia === 'function') return;
+    const menu = menuLlistaRef.current;
+    const ancora = menuRef.current;
+    const limits = menu ? limitsVisibles(menu) : null;
+    if (!menu || !ancora || !limits) return;
+    const ancoraDalt = ancora.getBoundingClientRect().top;
+    const { amunt, dalt, sostre } = triaOberturaMenu({
+      ancoraDalt,
+      menuDalt: ancoraDalt + menu.offsetTop,
+      alcada: menu.offsetHeight,
+      limitDalt: limits.dalt,
+      limitBaix: limits.baix,
+      separacio: 4   // --sdp-space-1
+    });
+    if (dalt != null) menu.style.top = `${dalt}px`;
+    if (sostre != null) menu.style.maxBlockSize = `${sostre}px`;
+    if (!amunt) return;
+    adoptaFullDiferit(menu, 'xat-menu', cssXatMenu);
+    setMenuAmunt(true);
+  }, [menuVisible, onCapaFlotantCanvia]);
 
   useEffect(() => {
     if (!paletaVisible) return undefined;
@@ -441,7 +483,6 @@ function Bombolla({
   } : {};
 
   const esVeu = !esborrat && !tancat && missatge.tipus === 'veu' && Boolean(missatge.metadades?.adjunt?.id);
-  const capaFlotantOberta = menuVisible || paletaVisible;
 
   const itemClass = [
     'sdp-xat-item',
@@ -658,7 +699,7 @@ function Bombolla({
                 </span>
               </button>
               {menuVisible ? (
-                <div className="sdp-xat-menu" role="menu" onKeyDown={alTeclatDelMenu}>
+                <div ref={menuLlistaRef} className={menuAmunt ? 'sdp-xat-menu sdp-xat-menu--amunt' : 'sdp-xat-menu'} role="menu" onKeyDown={alTeclatDelMenu}>
                   {potRespondre ? (
                     <button
                       type="button"

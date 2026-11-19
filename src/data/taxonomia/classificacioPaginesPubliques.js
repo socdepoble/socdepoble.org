@@ -33,7 +33,9 @@ export const CLASSIFICACIO_PAGINES_PUBLIQUES=Object.freeze({
  // Onada R14 · El receptari «Què dinem?» (Muro, El Comtat, 2019): cultura i patrimoni del poble.
  'la-iaia-sabuda':['patrimoni-cultura','Documentació'],
  receptes:['patrimoni-cultura','Patrimoni'],
- dispositius:['tecnologia-lliure','Documentació']
+ dispositius:['tecnologia-lliure','Documentació'],
+ // IDEA-287 · La guia pas a pas de totes les eines (pageContent.potsFer.js).
+ 'tot-el-que-pots-fer':['comunitat-rural','Documentació']
 });
 
 const clausDePaginesPubliques=new WeakMap();

@@ -10,9 +10,15 @@
    fulles sense efectes (no importen res del projecte); si un dia en
    importaren, Rollup ho ficaria al tros i ho avançaria. Ho guarda
    paquetDArrencada.test.js.
-   lucide-react no hi va: un tros comú arrossegaria a l'arrencada les icones
-   de totes les vistes diferides. react-dom/server i test-utils tampoc: si
-   una vista diferida els importara, no han de baixar a l'arrencada. La
+   P-E (IDEA-260 c) · Del paquet lucide-react només hi va el nucli
+   (createLucideIcon, Icon, defaultAttributes, context i shared/), al tros
+   'lucide-nucli': és una fulla que només depén de React i no té efectes.
+   Les icones (icons/*.mjs) importen d'este tros i no del de l'entrada, i
+   no canvien de nom a cada desplegament mentre no canvien lucide ni React.
+   Les icones, el barril lucide-react.mjs i DynamicIcon continuen com
+   decidix Rollup: un tros comú arrossegaria a l'arrencada les icones de
+   totes les vistes diferides. react-dom/server i test-utils tampoc hi van:
+   si una vista diferida els importara, no han de baixar a l'arrencada. La
    resta, com decidix Rollup.
    wikiManifest.js ja era un tros diferit (cap importació estàtica des de
    l'entrada). Pur: el prova src/config/paquetDArrencada.test.js. */
@@ -21,6 +27,7 @@ export function trossDArrencada(id) {
   if (/\/node_modules\/react-dom\/(?:server|test-utils|cjs\/react-dom-(?:server|test-utils))/.test(cami)) return undefined;
   if (/\/node_modules\/(react|react-dom|scheduler)\//.test(cami)) return 'react';
   if (/\/node_modules\/dompurify\//.test(cami)) return 'dompurify';
+  if (/\/node_modules\/lucide-react\/dist\/esm\/(?:(?:createLucideIcon|Icon|defaultAttributes|context)\.mjs$|shared\/)/.test(cami)) return 'lucide-nucli';
   if (cami.includes('/node_modules/')) return undefined;
   if (cami.endsWith('/src/css/index.css?inline')) return 'estils';
   if (cami.endsWith('/src/config/idiomes/ca.js')) return 'ca';

@@ -169,6 +169,7 @@
             npm run build:tokens
             npm run rag:build
             npm run slugs:build
+            npm run llms:build
             npm run build:web
             node tooling/seo/projeccio-publica.mjs --root . --origin "$SDP_ORIGEN" --out node_modules/.cache/sdp-social/snapshot.json
             node tooling/seo/prerender-social.mjs --root . --dist dist --origin "$SDP_ORIGEN" --snapshot node_modules/.cache/sdp-social/snapshot.json

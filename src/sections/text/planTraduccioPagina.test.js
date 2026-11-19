@@ -12,13 +12,14 @@ const revisades = () => Object.fromEntries(LLENGUES.map((llengua) => [llengua, {
 const pagina = (extra) => ({ title: 'Títol ca', subtitle: 'Subtítol ca', html: '<p>Cos ca</p>', labels: ['Patrimoni'], source_language: 'ca', ...extra });
 
 describe('planTraduccioPagina', () => {
-  test('sense translation_mode propi, null: el camí de sempre per a les 34 pàgines, inclosa la compatibilitat de dispositius d’R17.2B; el sistema nerviós redirigix a la Wiki en R32.9', () => {
+  test('sense translation_mode propi, null: el camí de sempre per a les 35 pàgines, inclosa la compatibilitat de dispositius d’R17.2B i la guia pas a pas d’IDEA-287; el sistema nerviós redirigix a la Wiki en R32.9', () => {
     expect(planTraduccioPagina(pagina({}), 'en')).toBeNull();
     expect(planTraduccioPagina(Object.create({ translation_mode: 'none' }), 'en')).toBeNull();
     for (const brossa of [null, undefined, 'pàgina', [], 0]) expect(planTraduccioPagina(brossa, 'en')).toBeNull();
     const claus = Object.keys(PAGE_COPY);
-    expect(claus.length).toBe(34);
+    expect(claus.length).toBe(35);
     expect(claus).toContain('dispositius');
+    expect(claus).toContain('tot-el-que-pots-fer');
     expect(claus).not.toContain('sistema-nervios');
     expect(claus.filter((clau) => planTraduccioPagina(PAGE_COPY[clau], 'en') !== null)).toEqual([]);
   });

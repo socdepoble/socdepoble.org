@@ -8,6 +8,14 @@
  * cosa, esta ho torna a llegir. Res d'açò ix del dispositiu. Els errors van
  * a la interfície com a codis (el `codi` del magatzem o 'invalid').
  *
+ * Base xifrada (P1-81): si el disc porta la meta 'xifrat', `bloquejat` és
+ * true fins que `desbloqueja(frase)` obri el cofre en un magatzem de memòria.
+ * Llavors totes les operacions treballen sobre eixe magatzem i cada escriptura
+ * es torna a xifrar al disc (desaCofre), d'una en una i en ordre. La clau
+ * només viu en memòria i es descarta en `bloqueja()`, en desmuntar i en
+ * `pagehide`; en tancar, l'estat desxifrat es buida abans de tornar a llegir
+ * el disc (encara que la lectura falle, la vista queda tancada).
+ *
  *   <ProveidorGenealogia magatzem? rellotge? nouId? versioAvis?> … </ProveidorGenealogia>
  *   const genealogia = useGenealogia();
  */
@@ -16,8 +24,9 @@ import { detectaDuplicats, fusionaDuplicats } from './duplicats.js';
 import { detectaContradiccions } from './cronologia.js';
 import { aplicaEntrevista, enrere as enrereEntrevista, estatInicialEntrevista, pasActual, respon as responEntrevista, salta as saltaEntrevista, treuResposta as treuRespostaEntrevista } from './entrevista.js';
 import {
-  activaArbre, actualitzaArbre, arbreDesactualitzat, carregaEstatGenealogia, creaMagatzemGenealogia,
-  desaArbre, desaMeta, esborraArbre as esborraArbreDelMagatzem, igualRegistre
+  activaArbre, activaXifrat as activaXifratDelMagatzem, actualitzaArbre, arbreDesactualitzat, carregaEstatGenealogia,
+  creaMagatzemGenealogia, desaArbre, desaCofre, desaMeta, desactivaXifrat as desactivaXifratDelMagatzem,
+  esborraArbre as esborraArbreDelMagatzem, igualRegistre, obreCofre, obreCofreAmbClau
 } from '../magatzem.js';
 import { arbreBuit, creaArbre as creaArbreModel, netejaArbre, netejaPersona, netejaRelacio } from './model.js';
 import { estatDeVincle } from './parentiu.js';
@@ -31,6 +40,12 @@ const NOU_ID = () => globalThis.crypto.randomUUID();
 /* La versió de l'avís de privacitat; AppGenealogia hi passa la de textos.js (VERSIO_AVIS). */
 export const VERSIO_AVIS_PER_DEFECTE = 1;
 
+const nomesLectura = () => Object.assign(new Error('Una altra pestanya està escrivint: esta només pot llegir.'), { codi: 'NOMES_LECTURA' });
+/* Codis del cofre que volen dir «esta clau ja no obri el disc»: es bloqueja. */
+const CODIS_COFRE_PERDUT = new Set(['frase-incorrecta', 'no-xifrat', 'sobre-invalid']);
+/* L'estat d'una base xifrada tancada: cap dada desxifrada (el disc només té la meta 'xifrat'). */
+const ESTAT_TANCAT = Object.freeze({ meta: Object.freeze({ avis: null, arbreActiu: null, ultimaCopia: null }), arbres: [], complet: null, xifrat: true, bloquejat: true });
+
 /* Un error de validació (TypeError del model) o del magatzem, en codis. */
 function aErrors(error) {
   if (error?.codi) return [{ camp: null, clau: error.codi }];
@@ -41,68 +56,154 @@ function aErrors(error) {
 export function ProveidorGenealogia({ magatzem: propi, rellotge = RELLOTGE, nouId = NOU_ID, versioAvis = VERSIO_AVIS_PER_DEFECTE, children }) {
   const anyActual = rellotge().getFullYear();
   const [magatzem] = useState(() => propi || creaMagatzemGenealogia({ anyActual }));
-  const [estat, setEstat] = useState({ carregat: false, error: null, meta: null, arbres: [], complet: null });
+  const [estat, setEstat] = useState({ carregat: false, error: null, meta: null, arbres: [], complet: null, xifrat: false, bloquejat: false });
   const [mode, setMode] = useState(magatzem.mode);
   const [persistent, setPersistent] = useState(magatzem.persistent);
   const viu = useRef(true);
   /* L'arbre triat en esta pestanya (també en una pestanya que només llig). */
   const triat = useRef(null);
+  /* La base xifrada oberta: { memoria, clau, sal }, o null. Només en memòria. */
+  const [sessio, setSessio] = useState(null);
+  const sessioRef = useRef(null);
+  const posaSessio = useCallback((nova) => {
+    const vella = sessioRef.current;
+    if (vella && vella !== nova) vella.memoria.tanca();
+    sessioRef.current = nova;
+    setSessio(nova);
+  }, []);
+  /* Tanca la base xifrada: descarta la sessió i buida ARA l'estat desxifrat,
+     sense esperar la lectura del disc (que pot fallar o tardar). */
+  const tancaSessio = useCallback(() => {
+    posaSessio(null);
+    setEstat((abans) => (abans.xifrat ? { ...abans, ...ESTAT_TANCAT } : abans));
+  }, [posaSessio]);
 
   const tokenLectura = useRef(0);
-  const recarrega = useCallback(async () => {
+  /* `rellegix`: torna a desxifrar el disc (una altra pestanya l'ha canviat). */
+  const recarrega = useCallback(async ({ rellegix = false } = {}) => {
     const token = ++tokenLectura.current;
     try {
-      const llegit = await carregaEstatGenealogia(magatzem, triat.current);
+      let llegit = await carregaEstatGenealogia(magatzem, triat.current);
+      let oberta = sessioRef.current;
+      if (oberta && !llegit.xifrat) {
+        oberta = null;
+        posaSessio(null);
+      } else if (oberta && rellegix) {
+        try {
+          oberta = await obreCofreAmbClau(magatzem, oberta.clau, { anyActual });
+        } catch (error) {
+          if (!CODIS_COFRE_PERDUT.has(error?.codi)) throw error;
+          oberta = null;
+        }
+        if (token !== tokenLectura.current) {
+          if (oberta && oberta !== sessioRef.current) oberta.memoria.tanca();
+          return;
+        }
+        posaSessio(oberta);
+      }
+      if (oberta) llegit = { ...await carregaEstatGenealogia(oberta.memoria, triat.current), xifrat: true };
+      const bloquejat = llegit.xifrat && !oberta;
       if (viu.current && token === tokenLectura.current) setEstat((abans) => ({
-        carregat: true, error: null, ...llegit,
+        carregat: true, error: null, ...llegit, bloquejat,
         complet: igualRegistre(abans.complet, llegit.complet) ? abans.complet : llegit.complet
       }));
     } catch (error) {
-      if (viu.current && token === tokenLectura.current) setEstat((abans) => ({ ...abans, carregat: Boolean(abans.meta), error }));
+      /* Sense sessió oberta, una base xifrada continua tancada encara que la lectura falle. */
+      const tancada = !sessioRef.current;
+      if (viu.current && token === tokenLectura.current) setEstat((abans) => (abans.xifrat && tancada
+        ? { ...abans, ...ESTAT_TANCAT, error }
+        : { ...abans, carregat: Boolean(abans.meta), error }));
     }
-  }, [magatzem]);
+  }, [magatzem, anyActual, posaSessio]);
 
   useEffect(() => {
     viu.current = true;
     let pendent = false;
-    const refresca = () => {
+    let rellegixPendent = false;
+    /* Amb la base xifrada, `rellegix` torna a desxifrar el disc: ho ha canviat
+       una altra pestanya. La que escriu no ho fa en tornar a la pestanya, perquè
+       la seua memòria ja és la més nova. */
+    const refresca = (rellegix = false) => {
+      rellegixPendent ||= rellegix;
       if (pendent) return;
       pendent = true;
       queueMicrotask(() => {
         pendent = false;
-        if (viu.current) recarrega();
+        const ara = rellegixPendent;
+        rellegixPendent = false;
+        if (viu.current) recarrega({ rellegix: ara });
       });
     };
     const desfes = magatzem.subscriu((avis) => {
-      if (avis.tipus === 'canvi' && avis.local === false) refresca();
+      if (avis.tipus === 'canvi' && avis.local === false) refresca(true);
       else if (avis.tipus === 'mode') {
         setMode(avis.mode);
-        refresca();
+        refresca(true);
       } else if (avis.tipus === 'persistent') setPersistent(avis.persistent);
     });
     // També hi ha navegadors sense BroadcastChannel: revisa l'estat en tornar a la pestanya.
     const finestra = globalThis.window;
-    finestra?.addEventListener('focus', refresca);
+    const enFocus = () => refresca(magatzem.mode !== 'escriptora');
+    /* En amagar la pàgina, la base xifrada es tanca: la clau no queda en memòria. */
+    const enAmagar = () => {
+      if (!sessioRef.current) return;
+      tancaSessio();
+      if (viu.current) recarrega();
+    };
+    finestra?.addEventListener('focus', enFocus);
+    finestra?.addEventListener('pagehide', enAmagar);
     magatzem.obtinBloqueig().then((nou) => { if (viu.current) setMode(nou); });
     recarrega();
     return () => {
       viu.current = false;
       tokenLectura.current += 1;
-      finestra?.removeEventListener('focus', refresca);
+      finestra?.removeEventListener('focus', enFocus);
+      finestra?.removeEventListener('pagehide', enAmagar);
       desfes();
+      sessioRef.current?.memoria.tanca();
+      sessioRef.current = null;
       magatzem.tanca();
     };
-  }, [magatzem, recarrega]);
+  }, [magatzem, recarrega, posaSessio, tancaSessio]);
 
   const { complet, meta, arbres } = estat;
   const ara = useCallback(() => rellotge().toISOString(), [rellotge]);
 
+  /* Amb la base xifrada oberta, el que s'ha escrit en memòria es torna a
+     xifrar al disc; si no es pot, la memòria es refà des del disc. Si la
+     sessió ha canviat mentre s'escrivia, no es desa res: 'desactualitzat'.
+     Els desats van en cua (foto, xifrat i escriptura, un darrere de l'altre):
+     un xifrat que acaba tard no pot trepitjar una foto més nova. Cada desat
+     comprova que el cofre del disc és el que esta sessió va llegir o escriure
+     (l'IV); si una altra pestanya l'ha canviat, 'desactualitzat'. */
+  const cuaCofre = useRef(Promise.resolve());
+  const persistix = useCallback((oberta = sessioRef.current) => {
+    if (!oberta) return Promise.resolve();
+    const torn = cuaCofre.current.then(async () => {
+      if (oberta !== sessioRef.current) {
+        await recarrega();
+        throw arbreDesactualitzat();
+      }
+      try {
+        oberta.iv = await desaCofre(magatzem, oberta.memoria, oberta.clau, { sal: oberta.sal, iv: oberta.iv });
+      } catch (error) {
+        await recarrega({ rellegix: true });
+        throw error;
+      }
+    });
+    cuaCofre.current = torn.catch(() => {});
+    return torn;
+  }, [magatzem, recarrega]);
+
   /* Cada escriptura torna a llegir-ho tot: la font de veritat és el magatzem. */
   const escriu = useCallback(async (fn) => {
+    const oberta = sessioRef.current;
+    if (oberta && magatzem.mode === 'lectora') throw nomesLectura();
     const resultat = await fn();
+    await persistix(oberta);
     await recarrega();
     return resultat;
-  }, [recarrega]);
+  }, [magatzem, persistix, recarrega]);
 
   const alertes = useMemo(() => (complet ? detectaContradiccions(complet, { anyActual }) : []), [complet, anyActual]);
   const duplicats = useMemo(() => detectaDuplicats(complet), [complet]);
@@ -110,16 +211,18 @@ export function ProveidorGenealogia({ magatzem: propi, rellotge = RELLOTGE, nouI
   const vius = useMemo(() => (complet ? idsVius(complet, { anyActual }) : new Set()), [complet, anyActual]);
 
   const operacions = useMemo(() => {
+    /* On es llig i s'escriu: la memòria de la base xifrada oberta o el disc. */
+    const dades = sessio?.memoria ?? magatzem;
     const ambArbre = (fn) => (complet ? fn(complet) : Promise.resolve({ ok: false, errors: [{ camp: 'arbre', clau: 'sense-arbre' }] }));
     const tocaArbre = (actual) => ({ ...actual.arbre, modificat: ara() });
-    const mutaArbre = (arbreId, calcula) => escriu(() => actualitzaArbre(magatzem, arbreId, calcula));
+    const mutaArbre = (arbreId, calcula) => escriu(() => actualitzaArbre(dades, arbreId, calcula));
     const comprovaRegistre = (esperat, vigent) => {
       if (!igualRegistre(esperat, vigent)) throw arbreDesactualitzat();
     };
 
     async function nouArbre(titol) {
       const arbre = creaArbreModel({ id: nouId(), titol, ara: ara() });
-      await desaArbre(magatzem, arbreBuit(arbre), { activa: true, nou: true });
+      await desaArbre(dades, arbreBuit(arbre), { activa: true, nou: true });
       triat.current = arbre.id;
       return arbre;
     }
@@ -148,7 +251,7 @@ export function ProveidorGenealogia({ magatzem: propi, rellotge = RELLOTGE, nouI
           const arbre = creaArbreModel({ id: nouId(), titol: '', ara: marca });
           const nou = construeix(arbreBuit(arbre));
           if (nou) await escriu(async () => {
-            await desaArbre(magatzem, nou, { activa: true, nou: true, nomesPrimer: true });
+            await desaArbre(dades, nou, { activa: true, nou: true, nomesPrimer: true });
             triat.current = arbre.id;
           });
         }
@@ -159,7 +262,7 @@ export function ProveidorGenealogia({ magatzem: propi, rellotge = RELLOTGE, nouI
     }
 
     return {
-      acceptaAvis: () => escriu(() => desaMeta(magatzem, 'avis', { acceptatA: ara(), versio: versioAvis })),
+      acceptaAvis: () => escriu(() => desaMeta(dades, 'avis', { acceptatA: ara(), versio: versioAvis })),
 
       /** Crea un arbre buit, el fa actiu i en torna l'id. */
       creaArbre: ({ titol = '' } = {}) => escriu(async () => (await nouArbre(titol)).id),
@@ -169,7 +272,8 @@ export function ProveidorGenealogia({ magatzem: propi, rellotge = RELLOTGE, nouI
         const anterior = triat.current;
         triat.current = arbreId;
         try {
-          await activaArbre(magatzem, arbreId);
+          await activaArbre(dades, arbreId);
+          await persistix();
         } catch (error) {
           if (error?.codi !== 'NOMES_LECTURA') {
             if (triat.current === arbreId) triat.current = anterior;
@@ -182,7 +286,7 @@ export function ProveidorGenealogia({ magatzem: propi, rellotge = RELLOTGE, nouI
 
       esborraArbre: (arbreId, { esperat = complet?.arbre.id === arbreId ? complet : undefined } = {}) => escriu(async () => {
         if (esperat && complet?.arbre.id !== arbreId) throw arbreDesactualitzat();
-        await esborraArbreDelMagatzem(magatzem, arbreId, esperat);
+        await esborraArbreDelMagatzem(dades, arbreId, esperat);
         if (triat.current === arbreId) triat.current = null;
       }),
 
@@ -317,30 +421,74 @@ export function ProveidorGenealogia({ magatzem: propi, rellotge = RELLOTGE, nouI
             relacions: entrant.relacions.map((r) => ({ ...r, arbreId })),
             entrevista: entrant.entrevista ? { ...entrant.entrevista, arbreId } : null
           };
-          await escriu(() => desaArbre(magatzem, remapat, { activa: true, esperat }));
+          await escriu(() => desaArbre(dades, remapat, { activa: true, esperat }));
           return arbreId;
         }
         if (modeImportacio !== 'nou') throw errorCamp('mode');
         await escriu(async () => {
-          await desaArbre(magatzem, entrant, { activa: true, nou: true });
+          await desaArbre(dades, entrant, { activa: true, nou: true });
           triat.current = entrant.arbre.id;
         });
         return entrant.arbre.id;
       },
 
       /** Anota que s'ha fet una còpia (per al recordatori). */
-      marcaCopia: () => escriu(() => desaMeta(magatzem, 'ultimaCopia', ara())),
+      marcaCopia: () => escriu(() => desaMeta(dades, 'ultimaCopia', ara())),
 
       demanaPersistencia: () => magatzem.demanaPersistencia(),
-      estatPersistencia: () => magatzem.estatPersistencia()
+      estatPersistencia: () => magatzem.estatPersistencia(),
+
+      /** Obri la base xifrada amb la frase. Torna { ok, errors } ('frase-incorrecta'…). */
+      desbloqueja: async (frase) => {
+        try {
+          posaSessio(await obreCofre(magatzem, frase, { anyActual }));
+          await recarrega();
+          return { ok: true, errors: [] };
+        } catch (error) {
+          return { ok: false, errors: aErrors(error) };
+        }
+      },
+
+      /** Tanca la base xifrada: la clau i les dades desxifrades es descarten. */
+      bloqueja: async () => {
+        tancaSessio();
+        await recarrega();
+      },
+
+      /** Xifra la base d'este dispositiu amb una frase de pas (la regla del cofre: exigixFrase) i la deixa oberta. */
+      activaXifrat: async (frase) => {
+        try {
+          if (magatzem.mode === 'lectora') throw nomesLectura();
+          const clau = await activaXifratDelMagatzem(magatzem, frase);
+          posaSessio(await obreCofreAmbClau(magatzem, clau, { anyActual }));
+          await recarrega();
+          return { ok: true, errors: [] };
+        } catch (error) {
+          return { ok: false, errors: aErrors(error) };
+        }
+      },
+
+      /** Torna a deixar la base en clar (cal la frase). */
+      desactivaXifrat: async (frase) => {
+        try {
+          await desactivaXifratDelMagatzem(magatzem, frase);
+          posaSessio(null);
+          await recarrega();
+          return { ok: true, errors: [] };
+        } catch (error) {
+          return { ok: false, errors: aErrors(error) };
+        }
+      }
     };
-  }, [complet, magatzem, nouId, ara, anyActual, versioAvis, escriu, recarrega]);
+  }, [complet, magatzem, sessio, nouId, ara, anyActual, versioAvis, escriu, persistix, recarrega, posaSessio, tancaSessio]);
 
   const valor = useMemo(() => ({
     carregat: estat.carregat,
     error: estat.error,
     persistent,
     mode,
+    xifrat: estat.xifrat,
+    bloquejat: estat.bloquejat,
     nomesLectura: mode === 'lectora',
     anyActual,
     avisAcceptat: Boolean(meta?.avis && meta.avis.versio >= versioAvis),

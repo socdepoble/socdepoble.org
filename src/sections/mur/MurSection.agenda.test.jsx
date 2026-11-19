@@ -293,8 +293,10 @@ test('T5 · clicar la pastilla d’un acte no el fa desaparéixer, encara que la
   /* Ordre del Mestre, 261001 (tasca 4 i carril A) · la pastilla obri el
      Calendari en el seu mes, amb totes les targetes d'eixe mes (abans
      '/mur?date=…' i després '/calendari?date=…'); el filtre ?date= del Mur
-     continua viu. */
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?mes=2026-10');
+     continua viu.
+     P0-77 / IDEA-208 (R16-P; ordre del Mestre, 261109) · La d'un ACTE porta
+     al seu dia, a la vista Mes del Calendari. */
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?vista=mes&date=2026-10-01');
   cleanup();
 
   for (const dia of ['2026-10-01', '2026-10-03']) {

@@ -57,7 +57,7 @@ export default function EspecimenEmoticonaBarra() {
         descripcio="La barra taronja té tres columnes: autoria, l’espai central i les accions amb la data. Al centre viu l’emoticona del document. El mode es deduïx de la presència d’onObri, com la bola del món: amb ell és edició i sense, lectura. A la barra taronja, la ploma blanca (lucide Feather) és este botó: vol dir «triar l’emoticona» i es veu en edició mentre no n’hi ha cap. Fora de la barra, la botonera de classificació de davall del títol també la mostra al seu botó Emoticona quan no n’hi ha cap. L’autodesament ja no la fa servir: el seu glif és el núvol (CloudUpload)."
         contracte={[
           ['emoticona', 'string', "''", 'El camp CRU del document: un sol emoji o res. Mai el model de vista de la llista, que porta la 🪶 de reserva.'],
-          ['onObri', 'fn | null', 'null', 'Amb ell, edició: un <button aria-haspopup="dialog"> que obri el diàleg d’emoticona del pare. Sense, lectura.'],
+          ['onObri', 'fn | null', 'null', 'Amb ell, edició: un <button aria-haspopup="dialog"> que obri el selector d’emoticona del pare (com al Perfil o ací mateix). Al Bloc de Notes s’hi passa null (lectura) mentre els emojis del cos s’obrin en la subvista de columna completa PaginaEmojis.'],
           ['emoticonaDeBarra', '({ mode, icon }) => { mostra, glif, triada }', '—', "Funció pura (utils/emoji.js): mostra és 'boto', 'glif' o 'res'. La fa servir també la caputxa de la UniversalCard."],
         ]}
         a11y={[

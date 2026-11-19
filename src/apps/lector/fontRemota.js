@@ -45,9 +45,18 @@
  *     ronda, la mateixa memòria i les mateixes caigudes. Sense feedPersonal, no hi
  *     entren: queden a la gestió de fonts, pendents.
  * Sense `persona`, o mentre torna null, es seguixen totes i cap personal.
+ *
+ * IDEA-265 (261118) · L'OBSERVATORI. `observatori()` (el posa AppLector amb el booleà de superadmin
+ * de la plataforma) diu, en cada crida, si qui mira veu la carpeta «Observatori I+D · Mestres»
+ * (observatori.js). Si la veu i el catàleg del servei ja declara la font, el catàleg porta la carpeta
+ * i la font, i la font es demana al servei pel seu id com qualsevol altra (hui el client del
+ * navegador no la declara: no ix); si no, el catàleg no en porta cap rastre (tampoc si el servei
+ * l'enviara), la ronda no la demana mai i un enllaç a un article seu no s'obri, ni de la memòria.
+ * Sense `observatori`, ningú no la veu.
  */
 import { MOTIUS_NOTICIES } from './fontNoticies.js';
 import { analitzaFeed } from './nucli/index.js';
+import { catalegAmbObservatori, esDeLObservatori } from './observatori.js';
 
 export const TTL_MS = 10 * 60 * 1000;
 export const CONCURRENCIA = 4;
@@ -92,8 +101,17 @@ function resumDe(article) {
   return resum;
 }
 
+/* Si qui mira veu l'observatori. Mai llança: en el dubte, no. */
+function veuObservatori(observatori) {
+  try {
+    return typeof observatori === 'function' && observatori() === true;
+  } catch {
+    return false;
+  }
+}
+
 export function creaAdaptadorRemot({
-  servei, persona = null, ttlMs = TTL_MS, concurrencia = CONCURRENCIA, terminiMs = TERMINI_RONDA_MS, ara = () => Date.now()
+  servei, persona = null, observatori = null, ttlMs = TTL_MS, concurrencia = CONCURRENCIA, terminiMs = TERMINI_RONDA_MS, ara = () => Date.now()
 } = {}) {
   if (typeof servei?.fonts !== 'function' || typeof servei?.feed !== 'function') {
     throw new TypeError('L’adaptador remot necessita el servei de notícies de la plataforma.');
@@ -141,10 +159,14 @@ export function creaAdaptadorRemot({
 
   function llistaFonts() {
     const { personals } = personaDe(persona);
-    return catalegDelServei().then(({ categories, fonts }) => ({
-      categories: [...categories],
-      fonts: [...fonts.map((font) => ({ ...font })), ...fontsPersonals(personals, fonts)]
-    }));
+    const visible = veuObservatori(observatori);
+    return catalegDelServei().then((cru) => {
+      const { categories, fonts } = catalegAmbObservatori(cru, visible);
+      return {
+        categories: [...categories],
+        fonts: [...fonts.map((font) => ({ ...font })), ...fontsPersonals(personals, fonts)]
+      };
+    });
   }
 
   /* Els articles d'una font: de la memòria, si encara valen; si no, del servei. */
@@ -230,6 +252,7 @@ export function creaAdaptadorRemot({
   }
 
   async function article(id) {
+    if (esDeLObservatori(id) && !veuObservatori(observatori)) return null;
     const desat = delaMemoria(id);
     if (desat) return desat;
     const { fonts } = await llistaFonts();

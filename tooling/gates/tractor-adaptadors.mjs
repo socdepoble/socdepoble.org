@@ -16,7 +16,6 @@ import { fileURLToPath } from 'url';
  */
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { R } from '../lib/arrel.mjs';
 
 export async function run() {
@@ -44,7 +43,8 @@ export async function run() {
   const dirFix = join(ARREL, 'tests/frontissa/fixtures/sollutia');
   const fixtures = existsSync(dirFix) ? readdirSync(dirFix).filter((f) => f.endsWith('.json')) : [];
   if (fixtures.length) {
-    const { RECURSOS } = await import(pathToFileURL(join(ARREL, 'src/data/adaptadors/sollutia/recursos.js')));
+    // R30-LLEI08-LLEI01 · Camí literal: el graf de la LLEI 8 (tractor-pedra-seca) veu que esta porta el carrega.
+    const { RECURSOS } = await import('../../src/data/adaptadors/sollutia/recursos.js');
     for (const fx of fixtures) {
       const { recurs, forma } = JSON.parse(readFileSync(join(dirFix, fx), 'utf8'));
       const r = RECURSOS[recurs];

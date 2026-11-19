@@ -74,6 +74,10 @@ export const DEUTE_ACCEPTAT = Object.freeze([]);
 const PROHIBICIO = /\b(?:mai|prohibi\w*|cap\s+component)\b/iu;
 /* `node ./tooling/…` és el mateix motor que `node tooling/…`: el prefix `./` no entra a la captura (B10G-B-ARB-04). */
 
+const RE_ESPAI_SHELL = /\s/;
+const RE_MOTOR_EVAL = /^(?:--eval|--print)=/;
+const RE_MOTOR_DINAMIC = /[$`*?{}[\]]/;
+const RE_MOTOR_JS = /\.[cm]?js$/;
 const RE_NPM = /\bnpm\s+run\s+([A-Za-z0-9:_-]+)/g;
 const RE_VAR = /var\(\s*(--sdp-[a-z0-9-]+)\s*[,)]/g;
 const RE_SPAN = /`([^`]+)`/g;
@@ -154,8 +158,9 @@ function paraulesShell(text, inici, pressupost) {
       continue;
     }
     if (c === '"' || c === "'") { afigTram(i); quote = c; tram = i + 1; continue; }
-    if (';|&<>`'.includes(c)) break;
-    if (/\s/.test(c)) { acabaParaula(i); tram = i + 1; }
+    if (c === ';' || c === '|' || c === '&' || c === '<' || c === '>' || c === '`') break;
+    const unitat = text.charCodeAt(i);
+    if (unitat === 0x20 || unitat >= 0x09 && unitat <= 0x0d || unitat > 0x7f && RE_ESPAI_SHELL.test(c)) { acabaParaula(i); tram = i + 1; }
   }
   acabaParaula(i);
   return { out, opac: Boolean(quote) };
@@ -178,7 +183,7 @@ function motorsNode(text) {
     let i = 0;
     for (; i < words.out.length; i++) {
       const arg = words.out[i];
-      if (['-e', '--eval', '-p', '--print'].includes(arg) || /^(?:--eval|--print)=/.test(arg)) { i = words.out.length; break; }
+      if (['-e', '--eval', '-p', '--print'].includes(arg) || RE_MOTOR_EVAL.test(arg)) { i = words.out.length; break; }
       if (arg === '--') { i++; break; }
       if (!arg.startsWith('-')) break;
       if (['-r', '--require', '--import', '--loader', '--experimental-loader', '--conditions', '--input-type', '--inspect-port', '--test-name-pattern', '--test-skip-pattern', '--test-reporter', '--test-reporter-destination'].includes(arg)) i++;
@@ -188,14 +193,18 @@ function motorsNode(text) {
       if (!afig({ opac: 'node --test sense fitxers literals: descoberta no resolta' })) return sortides;
       continue;
     }
+    // La mateixa cadena es classifica igual dins d’esta llista; les eixides
+    // ja eren úniques. No es memoïtza cap inspecció del sistema de fitxers.
+    const rawVistos = new Set();
     for (const raw of targets) {
-      if (!raw) continue;
-      const dinamic = /[$`*?{}[\]]/.test(raw);
-      if (!testMode && !dinamic && !raw.includes('/') && !/\.[cm]?js$/.test(raw)) continue; // Ordinary prose after node is not an invocation.
+      if (!raw || rawVistos.has(raw)) continue;
+      rawVistos.add(raw);
+      const dinamic = RE_MOTOR_DINAMIC.test(raw);
+      if (!testMode && !dinamic && !raw.includes('/') && !RE_MOTOR_JS.test(raw)) continue; // Ordinary prose after node is not an invocation.
       if (raw.length > LIMITS_MOTORS.longitudRuta) { afig({ opac: LIMIT_RUTA }); return sortides; }
       if (dinamic) { if (!afig({ opac: `motor dinàmic o glob no verificable ${raw}` })) return sortides; continue; }
       // Repeticions en la mateixa línia produïen les mateixes empremtes/línia.
-      if (!afig({ ruta: raw.replace(/^\.\//, '') })) return sortides;
+      if (!afig({ ruta: raw.startsWith('./') ? raw.slice(2) : raw })) return sortides;
     }
   }
   return sortides;

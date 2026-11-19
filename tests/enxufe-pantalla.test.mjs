@@ -284,7 +284,10 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
      com a història. */
   /* Onada v1.2.9 · La 1.1.17 obri el registre amb la negreta feta etiqueta, i la 1.1.15 continua darrere, íntegra,
      com a història (cap 1.1.16 al readme: el pla de la v1.2.9 salta a la 1.1.17). */
-  assert.ok(changelog.startsWith('<h4>1.1.17</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.9 de Sóc de Poble'), 'v1.2.9: la 1.1.17 obri el registre');
+  /* Onada v1.2.10 · La 1.1.18 obri el registre amb la negreta feta etiqueta, i la 1.1.17 continua darrere, íntegra,
+     com a història. */
+  assert.ok(changelog.startsWith('<h4>1.1.18</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.10 de Sóc de Poble'), 'v1.2.10: la 1.1.18 obri el registre');
+  assert.ok(changelog.includes('</ul><h4>1.1.17</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.9 de Sóc de Poble'), 'v1.2.10: la 1.1.17 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.15</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de les Onades R26 i R27'), 'v1.2.9: la 1.1.15 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.14</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi més recent'), 'R27: la 1.1.14 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.13</h4><ul><li><strong>Traductor més protegit:</strong> el servei de traducció del lloc'), 'R21: la 1.1.13 es queda al registre');

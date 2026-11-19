@@ -901,8 +901,14 @@ test('el readme del directori declara el servidor de mitjans en lloc del canal p
      Gauntlet 261101 · X-E-readme (E-11): de 28 a 32 KB amb la documentació per a
      desenvolupadors recuperada a la PMF.
      Onada R21 (WP 1.1.13): de 32 a 36 KB amb les notes obligatòries de la 1.1.13, com a
-     enxufe-plugin.test.mjs. */
-  assert.ok(Buffer.byteLength(amb) < 36864, 'el readme del directori continua dins del límit');
+     enxufe-plugin.test.mjs.
+     Onada v1.2.10 (WP 1.1.18): de 36 a 40 KB, el mateix sostre que enxufe-plugin.test.mjs posa
+     al readme de la font, del qual esta variant ix (36.973 B amb les notes de la 1.1.18, 109 per
+     damunt dels 36 KB). Passar la història antiga a un changelog.txt no és cap retall senzill: el
+     «Mostra els detalls» de l'administració llig només readme.txt i enxufe-pantalla.test.mjs hi
+     fixa la història publicada des de la 1.1.10. El límit de WordPress.org continua sent el de
+     paraules per secció. */
+  assert.ok(Buffer.byteLength(amb) < 40960, 'el readme del directori continua dins del límit');
 });
 
 /* Gauntlet 261030, cicle 3 (vq-wordpress-readme-sense-wikimedia) · El panell

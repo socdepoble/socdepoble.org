@@ -110,7 +110,12 @@ function comprovaEstatsR10(text){
  }
  expect(vadmin).toContain("`select has_function_privilege('authenticated', 'public.admin_list_users()', 'EXECUTE');`");
  // B4V-T3 · La 2610311900 i la 2610312000: l'acta 261101_0334 les dona aplicades, anon no les veu.
- for(const [v,peca] of [['2610311900',"el cos d'`exporta_les_meues_dades()`"],['2610312000','`te_esmena_2610312000`']]){
+ // P0-05/P2-10: la 2610312000 l'acredita el bolcat del 13-11-2026 (deriva R22: 2 coincidents); la 2610311900, no.
+ const f2000=files.get('2610312000')?.estat??'',v2000=vinyeta('2610312000');
+ expect(f2000).toMatch(/^Aplicada a producció segons el bolcat del 13-11-2026 \(deriva R22: 2 coincidents\)/);
+ expect(v2000).toContain('**Aplicada a producció** segons el bolcat del 13-11-2026 (deriva R22: els 2 objectes coincidents)');
+ for(const t of [f2000,v2000]){expect(t).toContain("l'acta 261101_0334");expect(t).not.toMatch(/NO aplicada|candidat|no executat|no acreditat/);}
+ for(const [v,peca] of [['2610311900',"el cos d'`exporta_les_meues_dades()`"]]){
   const fila=files.get(v)?.estat??'',vin=vinyeta(v);
   expect(fila,v).toMatch(/^Estat remot no acreditat \(l'acta 261101_0334 la dona aplicada; la lectura REST no veu /);
   expect(vin,v).toContain("**Estat remot no acreditat**: l'acta 261101_0334 la dona aplicada");

@@ -51,8 +51,9 @@ export const NOTIFICA = Object.freeze({
 });
 
 /* Les úniques RPC que pot cridar el worker (també els enviadors natius, per a
-   la caché de credencials): les cinc de service_role de la migració. */
-export const RPC_DEL_WORKER = Object.freeze(['xat_push_neteja', 'xat_push_reclama_v2', 'xat_push_confirma_v2', 'xat_push_credencial', 'xat_push_desa_credencial']);
+   la caché de credencials): les cinc de service_role de les migracions (la
+   caché, per configuració: les _v2 de 20261118230000, P1-74 A-03). */
+export const RPC_DEL_WORKER = Object.freeze(['xat_push_neteja', 'xat_push_reclama_v2', 'xat_push_confirma_v2', 'xat_push_credencial_v2', 'xat_push_desa_credencial_v2']);
 
 /* La llengua de l'avís natiu (la de la fila; el web la tria el navegador). */
 export const LLENGUES_AVIS = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);

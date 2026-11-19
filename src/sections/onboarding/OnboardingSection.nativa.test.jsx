@@ -103,6 +103,7 @@ describe('a la web, res no canvia', () => {
         title: 'Benvinguda al Mas Electrònic',
         showLogos: true,
         chrome: 'system',
+        className: 'sdp-universal-page-container--onboarding',
         // Gauntlet 261030 (cicle 2, decisió 7) · L'alta mostra el correu de la persona: Traduir no hi envia res.
         traduccio: false
       });
@@ -122,7 +123,13 @@ describe('la capçalera i l’explicació d’Entrar a l’app nativa', () => {
   test('a iOS: amb el logotip però sense etiquetes ni entradeta, i la targeta nativa abans del formulari de correu', async () => {
     enNatiu('ios', ['apple', 'google']);
     await pinta();
-    expect(m.pagina).toEqual({ title: 'Benvinguda al Mas Electrònic', showLogos: true, chrome: 'system', traduccio: false });
+    expect(m.pagina).toEqual({
+      title: 'Benvinguda al Mas Electrònic',
+      showLogos: true,
+      chrome: 'system',
+      className: 'sdp-universal-page-container--onboarding',
+      traduccio: false
+    });
     const targeta = apple().closest('section');
     const correu = screen.getByLabelText('Correu electrònic');
     expect(targeta.compareDocumentPosition(correu) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -147,7 +154,13 @@ describe('la capçalera i l’explicació d’Entrar a l’app nativa', () => {
   test('a Android sense cap proveïdor: ni targeta nativa, ni Google web, ni cap divisor; només el correu', async () => {
     enNatiu('android', []);
     await pinta();
-    expect(m.pagina).toEqual({ title: 'Benvinguda al Mas Electrònic', showLogos: true, chrome: 'system', traduccio: false });
+    expect(m.pagina).toEqual({
+      title: 'Benvinguda al Mas Electrònic',
+      showLogos: true,
+      chrome: 'system',
+      className: 'sdp-universal-page-container--onboarding',
+      traduccio: false
+    });
     expect(document.querySelector('.onboarding-entrada-nativa')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Entrar amb Google' })).toBeNull();
     expect(screen.queryByText('O amb el teu correu')).toBeNull();

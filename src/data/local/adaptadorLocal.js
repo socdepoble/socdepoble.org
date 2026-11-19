@@ -353,13 +353,16 @@ export function creaAdaptadorLocal({
   const DESFES_SI_ES_REBUTJA = Object.freeze({
     subscribeToXat: (alta) => metodes.unsubscribeFromXat(alta?.subscription)
   });
-  /* PC155-01-A1 · Els mètodes que capturen l'abast EN CRIDAR, abans de la
-     microtasca de la guarda, com l'adaptador Supabase (capturaSessio síncron a
-     sessioDelCompte): un canvi de sessió en el mateix tic de la crida ja no
-     entra al mètode. La resta de mètodes és l'opció C (seguiment de P2-08). */
-  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades', 'loadProjeccionsCataleg', ...ADMINISTRATIUS, ...METODES_CONNEXIONS, ...Object.keys(CAPTURA_REVISIONS_PATRIMONI), ...Object.keys(CAPTURA_COPUBLICACIO),
-    /* R24 · CODEX-R24-03 · El vot i l'aportació porten l'autoria de la sessió: la de la crida. */
-    'votaVariantIsoglossaPoble', 'desaAportacioVeuPoble']);
+  /* PC155-01-A1 + P2-08 opció C · Tots els mètodes guardats capturen l'abast
+     EN CRIDAR, abans de la microtasca de la guarda, com l'adaptador Supabase
+     (capturaSessio síncron a sessioDelCompte): un canvi de persona o d'entrada
+     en el mateix tic no entra al mètode, i en vol no en lliura el resultat.
+     Fora queden logout (tampoc no captura en Supabase) i la baixa d'un canal,
+     que s'ha de poder fer també després. demanaBaixa captura i mira l'abast en
+     cridar i abans d'entrar (una baixa d'Anna no cau mai sobre Berta), però no
+     en tornar: tanca la sessió a posta. */
+  const SENSE_ABAST_EN_CRIDAR = new Set(['logout', 'unsubscribeFromXat']);
+  const SENSE_ABAST_EN_TORNAR = new Set(['demanaBaixa']);
   /* La guarda transversal: un adaptador tancat no respon, i una crida
      síncrona que llança es torna un rebuig. El senyal i el tancament es miren
      en cridar i, de nou, just abans d'entrar al magatzem (la microtasca
@@ -367,13 +370,14 @@ export function creaAdaptadorLocal({
      s'avorta o l'adaptador es tanca mentre treballa, el resultat no ix (tampoc
      el d'una lectura); l'efecte ja pot estar fet, com en un servidor, però una
      alta de canal es desfà. El canvi de persona el mira el mètode que espera,
-     amb e.abast() (PC155-01: l'exportació); els d'AMB_ABAST_EN_CRIDAR, a més,
-     des de la crida i abans d'entrar (PC155-01-A1). */
+     amb e.abast() (PC155-01: l'exportació); la guarda, a més, des de la crida,
+     abans d'entrar i en tornar, llevat de SENSE_ABAST_EN_CRIDAR i, en tornar,
+     de SENSE_ABAST_EN_TORNAR (P2-08 opció C). */
   const guardat = (nom, fn) => (...entrades) => {
     let args, abastCrida;
     try {
       if (tancat) throw errorTancat();
-      abastCrida = AMB_ABAST_EN_CRIDAR.has(nom) ? abast() : null;
+      abastCrida = SENSE_ABAST_EN_CRIDAR.has(nom) ? null : abast();
       if (Object.hasOwn(CAPTURA_REVISIONS_PATRIMONI, nom)) {
         args = [CAPTURA_REVISIONS_PATRIMONI[nom](entrades[0]), entrades[1]];
       } else if (Object.hasOwn(CAPTURA_COPUBLICACIO, nom)) {
@@ -393,12 +397,14 @@ export function creaAdaptadorLocal({
     try { comprova(); } catch (error) { return Promise.reject(error); }
     const desfes = Object.hasOwn(DESFES_SI_ES_REBUTJA, nom) ? DESFES_SI_ES_REBUTJA[nom] : null;
     return Promise.resolve().then(() => { comprova(); return fn(...args); }).then(async (valor) => {
-      abastCrida?.();
+      /* P2-08 opció C · Un canvi d'abast tampoc no deixa viva una alta: es desfà abans de rebutjar. */
+      let fora = null;
+      if (!SENSE_ABAST_EN_TORNAR.has(nom)) try { abastCrida?.(); } catch (error) { fora = error; }
       const avortat = estaAvortat();
       /* PC155-01 · Tancat, cap resultat ix, tampoc el d'una lectura sense desfes. */
-      if (!avortat && !tancat) return valor;
+      if (!fora && !avortat && !tancat) return valor;
       if (desfes) await Promise.resolve().then(() => desfes(valor)).catch(() => {});
-      throw avortat ? cancelacio() : errorTancat();
+      throw fora ?? (avortat ? cancelacio() : errorTancat());
     });
   };
   const publics = {};

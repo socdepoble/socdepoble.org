@@ -83,6 +83,7 @@ const REQUIRED_HOOKS = new Map([
   ['pre-commit', [
     /^exec node tooling\/gates\/git-staged\.mjs$/m,
   ]],
+  ['commit-msg', [/^exec node tooling\/wiki\/reflex_petorreta\.mjs pending-tree >\/dev\/null$/m]],
   ['post-commit', [/^exec node tooling\/wiki\/reflex_petorreta\.mjs consume-commit$/m]],
   ['pre-merge-commit', [/^exec sh \.husky\/pre-commit$/m]],
   ['pre-applypatch', [/^exec sh \.husky\/pre-commit$/m]],
@@ -106,6 +107,7 @@ const CRITICAL_SEED_PATHS = [
   '.agents/skills/sdp-workflow/SKILL.md',
   '.github/workflows/wiki-integrity.yml',
   '.husky/pre-commit',
+  '.husky/commit-msg',
   '.husky/post-commit',
   '.husky/pre-merge-commit',
   '.husky/pre-applypatch',
@@ -1422,6 +1424,73 @@ export async function consumeCommitReceipt(receiptPath) {
   }
 }
 
+/* Avortament canònic d'una lease segellada que no es pot consumir: un pre-commit fallit, una
+   tasca abandonada, un procés mort. No falsifica el consum: el rebut queda `aborted`, sense
+   `consumedAt` ni `commit`, i els validadors existents (que només admeten `sealed`) ja el
+   rebutgen per a verify, consume, consume-commit, pending-tree i un segon abort. Els rebuts
+   tancats, manipulats o que no són la lease activa no es reescriuen mai (loadConsumableReceipt).
+   - Commit: només una lease vinculada per `verify --staged` (pendingCommit) pot haver autoritzat
+     un commit; si la història des de headBeforeCommit fins a HEAD conté un commit amb l'arbre
+     vinculat, abort es denega. Les leases sense pendingCommit s'avorten encara que HEAD s'haja
+     mogut per una altra mà (abortHead queda al costat de baselineAtSeal.head com a evidència).
+   - Commit en curs: el hook commit-msg torna a validar la lease (pending-tree) després de
+     l'editor, de manera que un abort mentre l'editor del missatge és obert fa fallar el commit.
+     Queda una finestra de mil·lisegons, sense pausa humana, entre commit-msg i l'escriptura
+     de la ref; un commit amb --no-verify salta tots els hooks i no el veu cap lease.
+   - Mutacions: una mutació completada exigix `consume`. Si un claim queda `claimed` (procés
+     mort entre claim i complete), abort no diu que no hi ha hagut efecte: compara els scopes
+     amb el segellat i ho deixa signat al rebut (abortScopesChanged, abortScopeDigest). */
+export async function abortReceipt(receiptPath, { reason } = {}) {
+  const motiu = typeof reason === 'string' ? reason.trim() : '';
+  if (!motiu) throw new Error('abort exigix un motiu explícit: --reason=<text>.');
+  assertNoSensitiveText(motiu, 'el motiu d’avortament');
+  const releaseLock = await acquireExclusive(ACTIVE_LOCK, 'Avortament del Reflex bloquejat');
+  try {
+    const loaded = await loadConsumableReceipt(receiptPath);
+    const { receipt } = loaded;
+    const head = (await git(['rev-parse', 'HEAD'])).trim();
+    const pending = receipt.pendingCommit;
+    if (pending?.tree && pending?.headBeforeCommit && head !== pending.headBeforeCommit) {
+      const produced = (await git(['log', '--format=%H %T', `${pending.headBeforeCommit}..HEAD`]))
+        .split('\n').map((line) => line.trim().split(' '))
+        .find(([, tree]) => tree === pending.tree)?.[0];
+      if (produced === head) {
+        throw new Error(`HEAD (${head}) té l’arbre vinculat per esta lease: no s’avorta una lease que ha produït un commit; tanca-la amb \`consume-commit\`.`);
+      }
+      if (produced) {
+        throw new Error(`El commit ${produced}, entre el HEAD vinculat i l’actual, té l’arbre vinculat per esta lease: no s’avorta; cal diagnosticar-la a mà.`);
+      }
+    }
+    const completed = Object.entries(receipt.claims || {})
+      .filter(([, claim]) => claim.status === 'completed')
+      .map(([operation]) => operation);
+    if (completed.length) {
+      throw new Error(`Hi ha mutacions completades (${completed.join(', ')}): cal tancar-la amb \`consume\`, no avortar-la.`);
+    }
+    const scopes = await snapshotScopes(receipt.scopes);
+    const abortedAt = new Date().toISOString();
+    for (const claim of Object.values(receipt.claims || {})) {
+      if (claim.status === 'claimed') {
+        claim.status = 'aborted';
+        claim.abortedAt = abortedAt;
+      }
+    }
+    delete receipt.signature;
+    receipt.status = 'aborted';
+    receipt.abortedAt = abortedAt;
+    receipt.abortReason = motiu;
+    receipt.abortHead = head;
+    receipt.abortScopeDigest = scopes.digest;
+    receipt.abortScopesChanged = scopes.digest !== receipt.scopeSnapshotAtSeal?.digest;
+    receipt.signature = sign(receipt, loaded.secret);
+    await atomicJson(loaded.absolute, receipt);
+    await fs.rm(ACTIVE_FILE, { force: true });
+    return receipt;
+  } finally {
+    await releaseLock();
+  }
+}
+
 async function initReflex() {
   for (const hook of REQUIRED_HOOKS.keys()) {
     const file = path.join(PROJECT_DIR, '.husky', hook);
@@ -1552,6 +1621,7 @@ function parseCli(argv) {
     else if (arg.startsWith('--manifest=')) options.manifestPath = path.resolve(arg.slice(11));
     else if (arg.startsWith('--receipt=')) options.receiptPath = path.resolve(arg.slice(10));
     else if (arg.startsWith('--destination=')) options.destination = path.resolve(arg.slice(14));
+    else if (arg.startsWith('--reason=')) options.reason = arg.slice(9);
     else throw new Error(`Argument desconegut: ${arg}`);
   }
   return options;
@@ -1592,6 +1662,7 @@ async function main() {
     if (options.staged) result = await bindStagedTree(result, staged);
   } else if (options.command === 'consume') result = await consumeReceipt(options.receiptPath);
   else if (options.command === 'consume-commit') result = await consumeCommitReceipt(options.receiptPath);
+  else if (options.command === 'abort') result = await abortReceipt(options.receiptPath, { reason: options.reason });
   else if (options.command === 'pending-tree') result = await pendingTreeForReceipt(options.receiptPath);
   else if (options.command === 'materialize-tree') {
     result = await materializePendingTree(options.receiptPath, options.destination);
@@ -1614,6 +1685,9 @@ async function main() {
   }
   else throw new Error(`Comanda desconeguda: ${options.command}`);
 
+  if (options.command === 'abort' && result.abortScopesChanged) {
+    console.error('⚠️ [REFLEX] Els scopes han canviat des del segellat: la lease avortada pot haver deixat efectes (abortScopesChanged). Diagnostica’ls abans de tornar-hi.');
+  }
   if (options.command === 'open' && !options.json) printRules(result);
   else if (options.command === 'pending-tree' && !options.json) console.log(result.tree);
   else if (options.json) {

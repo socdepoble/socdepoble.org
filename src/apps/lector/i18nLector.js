@@ -157,6 +157,14 @@ export const TEXTOS_LECTOR = Object.freeze({
     noticiaJaNoHiEs: 'Esta notícia ja no hi és',
     fontJaNoLaPublica: 'La font ja no la publica.',
     article: 'Article',
+    /* Observatori.jsx (IDEA-265, 261118): només per a superadmins */
+    observatori: Object.freeze({
+      veredicte: (nom) => `Veredicte: ${nom}`,
+      veredictes: Object.freeze({ DESCARTAR: 'Descartar', GUARDAR_VIGILANT_WP: 'Vigilant WP', PROPOSAR_IDEA_SISTEMA: 'Idea de sistema' }),
+      promou: 'Promou al Llibre Mestre',
+      copiada: 'Fitxa copiada. Revisa-la i enganxa-la al Llibre Mestre.',
+      noCopiada: 'No s’ha pogut copiar la fitxa.',
+    }),
   }),
   es: Object.freeze({
     obrintLector: 'Abriendo el lector…',
@@ -301,6 +309,13 @@ export const TEXTOS_LECTOR = Object.freeze({
     noticiaJaNoHiEs: 'Esta noticia ya no está disponible',
     fontJaNoLaPublica: 'La fuente ya no la publica.',
     article: 'Artículo',
+    observatori: Object.freeze({
+      veredicte: (nom) => `Veredicto: ${nom}`,
+      veredictes: Object.freeze({ DESCARTAR: 'Descartar', GUARDAR_VIGILANT_WP: 'Vigilar WP', PROPOSAR_IDEA_SISTEMA: 'Idea de sistema' }),
+      promou: 'Promover al Libro Maestro',
+      copiada: 'Ficha copiada. Revísala y pégala en el Libro Maestro.',
+      noCopiada: 'No se ha podido copiar la ficha.',
+    }),
   }),
   en: Object.freeze({
     obrintLector: 'Opening reader…',
@@ -445,6 +460,13 @@ export const TEXTOS_LECTOR = Object.freeze({
     noticiaJaNoHiEs: 'This article is no longer available',
     fontJaNoLaPublica: 'The source no longer publishes it.',
     article: 'Article',
+    observatori: Object.freeze({
+      veredicte: (nom) => `Verdict: ${nom}`,
+      veredictes: Object.freeze({ DESCARTAR: 'Discard', GUARDAR_VIGILANT_WP: 'Watch WP', PROPOSAR_IDEA_SISTEMA: 'System idea' }),
+      promou: 'Promote to the Master Book',
+      copiada: 'Entry copied. Review it and paste it into the Master Book.',
+      noCopiada: 'The entry could not be copied.',
+    }),
   }),
   eu: Object.freeze({
     obrintLector: 'Irakurgailua irekitzen…',
@@ -589,6 +611,13 @@ export const TEXTOS_LECTOR = Object.freeze({
     noticiaJaNoHiEs: 'Albiste hau ez dago jada',
     fontJaNoLaPublica: 'Iturriak ez du jada argitaratzen.',
     article: 'Artikulua',
+    observatori: Object.freeze({
+      veredicte: (nom) => `Epaia: ${nom}`,
+      veredictes: Object.freeze({ DESCARTAR: 'Baztertu', GUARDAR_VIGILANT_WP: 'WP zaindu', PROPOSAR_IDEA_SISTEMA: 'Sistemaren ideia' }),
+      promou: 'Sustatu Liburu Nagusira',
+      copiada: 'Fitxa kopiatu da. Berrikusi eta itsatsi Liburu Nagusian.',
+      noCopiada: 'Ezin izan da fitxa kopiatu.',
+    }),
   }),
   gl: Object.freeze({
     obrintLector: 'Abrindo o lector…',
@@ -733,6 +762,13 @@ export const TEXTOS_LECTOR = Object.freeze({
     noticiaJaNoHiEs: 'Esta nova xa non está',
     fontJaNoLaPublica: 'A fonte xa non a publica.',
     article: 'Artigo',
+    observatori: Object.freeze({
+      veredicte: (nom) => `Veredicto: ${nom}`,
+      veredictes: Object.freeze({ DESCARTAR: 'Descartar', GUARDAR_VIGILANT_WP: 'Vixiar WP', PROPOSAR_IDEA_SISTEMA: 'Idea de sistema' }),
+      promou: 'Promover ao Libro Mestre',
+      copiada: 'Ficha copiada. Revísaa e pégaa no Libro Mestre.',
+      noCopiada: 'Non se puido copiar a ficha.',
+    }),
   }),
 });
 

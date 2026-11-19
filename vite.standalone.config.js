@@ -102,6 +102,9 @@ export const PROPIS_DEL_LLOC = Object.freeze({
   arrel: Object.freeze([
     'robots.txt',  // del domini socdepoble.org: l'amfitrió té el seu
     'llms.txt',    // guia d'agents del domini socdepoble.org, no de l'amfitrió
+    'md',          // P0-CONSOLIDACIO-3-CATEDRES · còpia Markdown de la Wiki que
+                   // enllaça llms.txt (tooling/seo/genera-llms.mjs): del domini
+                   // socdepoble.org, com llms.txt; l'app ja porta la Wiki
     'sitemap.xml', // rutes de socdepoble.org, no de l'amfitrió
     'auth',        // relé OAuth: només es servix des de auth.socdepoble.org
     'enxufe',      // canal de releases (stable.json i la signatura): és el
@@ -693,7 +696,7 @@ export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isCI = !!process.env.CI;
   const supabaseUrl = env.VITE_SUPABASE_URL || (isCI ? 'https://mock.supabase.co' : undefined);
-  const anonKey = env.VITE_SUPABASE_ANON_KEY || (isCI ? 'mock-anon-key' : undefined);
+  const anonKey = env.VITE_SUPABASE_ANON_KEY || (isCI ? 'sb_publishable_ci_mock' : undefined);
   validatePublicCredentials(supabaseUrl, anonKey);
 
   /* Release: `SDP_RELEASE=1 SDP_VERSIO=x.y.z npm run build:wp`, amb les VITE_*
@@ -716,6 +719,7 @@ export default defineConfig(({ mode, command }) => {
   if (release) {
     const errors = errorsDeRelease({ versio, node });
     if (errors.length) throw new Error(`[sdp-release] Este build no es pot publicar:\n- ${errors.join('\n- ')}`);
+    validatePublicCredentials(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
   }
   const generat = env.SOURCE_DATE_EPOCH ? new Date(Number(env.SOURCE_DATE_EPOCH) * 1000).toISOString() : undefined;
   /* Encàrrec 261019_1425 · En porten el directori (origen extern i bessones) i

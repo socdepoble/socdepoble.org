@@ -34,6 +34,27 @@ const AVISOS_NO_VERIFICATS = Object.freeze(['CACHE_AMB_DADES_NO_VERIFICADES', 'C
 
 const esByteValid = (n) => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
 
+/* R32.3 · Peix: un IndexedDB o un storage.estimate() que mai resolen no poden deixar el giny en «carregant»
+   per sempre. Cada lectura té el seu topall i el seu AbortController fill del cicle de muntatge. */
+const TOPALL_DIAGNOSTIC_MS = 8000;
+
+function ambTopall(executa, signalCicle, ms) {
+  const ctrl = new AbortController();
+  return new Promise((resolve, reject) => {
+    let temporitzador = null;
+    const allibera = () => { clearTimeout(temporitzador); signalCicle.removeEventListener('abort', perCicle); };
+    const atura = (motiu) => { allibera(); ctrl.abort(motiu); reject(motiu); };
+    function perCicle() { atura(signalCicle.reason); }
+    if (signalCicle.aborted) { perCicle(); return; }
+    signalCicle.addEventListener('abort', perCicle, { once: true });
+    temporitzador = setTimeout(() => atura(Object.assign(new Error('TEMPS_ESGOTAT'), { codi: 'TEMPS_ESGOTAT' })), ms);
+    Promise.resolve().then(() => executa(ctrl.signal)).then(
+      (valor) => { allibera(); resolve(valor); },
+      (err) => { allibera(); reject(err); },
+    );
+  });
+}
+
 function nomCategoriaHumana(categoria, tx) {
   switch (categoria?.id) {
     case 'claus-e2ee': return tx.categoriaClausE2ee;
@@ -53,7 +74,7 @@ function etiquetaEstatCategoria(categoria, tx, idioma) {
   return tx.etiquetaConservat;
 }
 
-export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei = null }) {
+export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei = null, topallMs = TOPALL_DIAGNOSTIC_MS }) {
   const accionsUi = useUIActions?.() || {};
   const idiomaActiu = idiomaProp || accionsUi.language || 'ca';
   const tx = useMemo(() => resolTextosSalutDispositiu(idiomaActiu), [idiomaActiu]);
@@ -87,10 +108,12 @@ export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei =
     try {
       const srv = await resolServeiSalut(servei);
       if (!vigent()) return;
+      /* Una lectura penjada esgota el topall i passa a error honest amb «Tornar a provar»;
+         un historial penjat només el marca com a no disponible, sense bloquejar la lectura. */
       const [dadesSalut, dadesHistorial] = await Promise.all([
-        srv.lligSalutEmmagatzematgeDispositiu({ signal }),
+        ambTopall((senyal) => srv.lligSalutEmmagatzematgeDispositiu({ signal: senyal }), signal, topallMs),
         typeof srv.historialNetegesLocals === 'function'
-          ? Promise.resolve().then(() => srv.historialNetegesLocals())
+          ? ambTopall((senyal) => srv.historialNetegesLocals({ signal: senyal }), signal, topallMs)
             .catch(() => ({ registres: [], persistent: false, disponible: false }))
           : Promise.resolve({ registres: [], persistent: false, disponible: false }),
       ]);
@@ -108,7 +131,7 @@ export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei =
       setErrorActiu(true);
       setFase('error');
     }
-  }, [servei]);
+  }, [servei, topallMs]);
 
   useEffect(() => {
     const ctrl = new AbortController();

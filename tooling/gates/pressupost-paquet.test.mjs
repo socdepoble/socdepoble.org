@@ -12,7 +12,7 @@ import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SOSTRE_PER_DEFECTE, main, mesura, recursosDArrencada } from './pressupost-paquet.mjs';
+import { SOSTRE_PER_DEFECTE, iconesDeLucide, main, mesura, recursosDArrencada, revisaIcones } from './pressupost-paquet.mjs';
 
 const PORTA = fileURLToPath(new URL('./pressupost-paquet.mjs', import.meta.url));
 const gz = (bytes) => gzipSync(bytes, { level: 9 }).length;
@@ -139,4 +139,64 @@ test('com a ordre de veres: el codi d’eixida del procés és el de la porta, i
   const sense = spawnSync(process.execPath, [PORTA, '--dist', path.join(dist, 'no-hi-es')], { encoding: 'utf8' });
   assert.equal(sense.status, 2);
   assert.match(sense.stderr, /cal fer abans el build/);
+});
+
+/* P-E (IDEA-260 c) · --icones: una arrel fingida amb tres icones de lucide (i
+   el barril icons/index.mjs, que no compta) i un dist/ amb els trossos
+   minificats com els escriu Rollup. */
+function arrelAmbIcones(t, trossos) {
+  const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-pressupost-icones-'));
+  t.after(() => fs.rmSync(arrel, { recursive: true, force: true }));
+  const icones = path.join(arrel, 'node_modules/lucide-react/dist/esm/icons');
+  fs.mkdirSync(icones, { recursive: true });
+  for (const nom of ['house', 'plus', 'arrow-up-right', 'index']) fs.writeFileSync(path.join(icones, `${nom}.mjs`), '');
+  const dist = distDeProva(t);
+  for (const [nom, text] of Object.entries(trossos)) fs.writeFileSync(path.join(dist, 'assets', nom), text);
+  return { arrel, dist };
+}
+const DEL_NUCLI = 'import{c as e}from"./lucide-nucli-Zx9_-aB1.js";const a=[];const o=e("x",a);export{o as X};';
+const DE_L_ENTRADA = 'import{aW as e}from"./index-AbCd1234.js";const a=[];const o=e("x",a);export{o as X};';
+
+test('els noms de les icones són els de icons/*.mjs, sense el barril index', (t) => {
+  const { arrel } = arrelAmbIcones(t, {});
+  assert.deepEqual([...iconesDeLucide(arrel)].sort(), ['arrow-up-right', 'house', 'plus']);
+});
+
+test('--icones: les icones que importen del nucli de lucide passen (codi 0)', (t) => {
+  const { arrel, dist } = arrelAmbIcones(t, {
+    'house-Ab12Cd34.js': DEL_NUCLI,
+    'arrow-up-right-x_-9ZZZZ.js': DEL_NUCLI,
+    // Un tros de l'app amb un nom que no és d'icona pot importar de l'entrada.
+    'calendari-Qw12Er34.js': 'import{a}from"./index-AbCd1234.js";'
+  });
+  const informe = revisaIcones(dist, { icones: iconesDeLucide(arrel), entrada: '/assets/index-AbCd1234.js' });
+  assert.deepEqual(informe, { trossos: 2, ambLEntrada: [], ambElNucli: 2, correcte: true });
+  const eixida = [];
+  assert.equal(main(['--dist', dist, '--icones'], { cwd: arrel, out: (l) => eixida.push(l), err: () => {} }), 0);
+  assert.match(eixida.join('\n'), /Icones de lucide: 2 trossos, 2 importen de lucide-nucli i 0 de l'entrada/);
+});
+
+test("--icones: una icona que importa del tros d'entrada fa caure la porta (codi 1) i la nomena", (t) => {
+  const { arrel, dist } = arrelAmbIcones(t, { 'house-Ab12Cd34.js': DEL_NUCLI, 'plus-Zz99Yy88.js': DE_L_ENTRADA });
+  const errors = [];
+  assert.equal(main(['--dist', dist, '--icones'], { cwd: arrel, out: () => {}, err: (l) => errors.push(l) }), 1);
+  assert.match(errors.join('\n'), /importen de l'entrada: plus-Zz99Yy88\.js/);
+  // Sense --icones, la porta no les mira.
+  assert.equal(main(['--dist', dist], { cwd: arrel, out: () => {}, err: () => {} }), 0);
+});
+
+test('--icones: sense cap icona que importe de lucide-nucli la prova seria buida (codi 1)', (t) => {
+  const { arrel, dist } = arrelAmbIcones(t, {});
+  const errors = [];
+  assert.equal(main(['--dist', dist, '--icones'], { cwd: arrel, out: () => {}, err: (l) => errors.push(l) }), 1);
+  assert.match(errors.join('\n'), /cap importa de lucide-nucli/);
+});
+
+test('--icones sense lucide-react instal·lat és un error d\'ús (codi 2), mai un sostre passat', (t) => {
+  const dist = distDeProva(t);
+  const buida = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-pressupost-sense-lucide-'));
+  t.after(() => fs.rmSync(buida, { recursive: true, force: true }));
+  const errors = [];
+  assert.equal(main(['--dist', dist, '--icones'], { cwd: buida, out: () => {}, err: (l) => errors.push(l) }), 2);
+  assert.match(errors.join('\n'), /no se saben els noms de les icones/);
 });

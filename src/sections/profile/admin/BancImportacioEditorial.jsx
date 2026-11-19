@@ -2,16 +2,19 @@ import { consultaRevisioEditorialWp, llegeixEstatRevisioEditorial } from '../../
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
+import { UniversalCard } from '../../../components/PedraSeca/organismes/UniversalCard.jsx';
+import { encapcalamentDeTargeta } from '../../../components/universal/editorial.js';
 import { Camp, CampText, Selector } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { Link } from '../../../app/contexts/RouterContext.jsx';
 import { useSessioOpcional } from '../../../app/contexts/SessionContext.jsx';
+import { useUIActionsOpcional } from '../../../app/contexts/UIContext.jsx';
 import { useProjeccionsCataleg } from '../../../hooks/useProjeccionsCataleg.js';
 import { esPaginaTrilogiaIMoliWp } from '../../../data/importacio/paginesTrilogiaIMoliWp.js';
 import { rutaWorkspaceWp } from '../../../data/importacio/destinacionsWorkspaceWp.js';
+import { ETIQUETES_ESTAT_REVISIO_WP, desaRevisio, notificaRevisio, subscriu } from '../../../data/importacio/revisioImportacioWpStore.js';
 import { desplacaDinsApp, enfocaSenseSalt } from '../../../utils/desplacamentProxim.js';
 import {
   CASOS_US_EDITORIALS,
-  desaRevisioArticleImportatAmbServidor,
   desaDestinacioArticleImportat,
   fontReferenciaArticleImportat,
   LIMIT_BYTES_IMPORTACIO_EDITORIAL,
@@ -22,11 +25,7 @@ import {
   sincronitzaRevisionsEditorialsWpAmbServidor
 } from '../../../utils/transformadorEditorialWpBlogger.js';
 
-const ETIQUETA_ESTAT = Object.freeze({
-  pendent_admin: { label: '⏳ Pendent de revisió', to: 'avis' },
-  aprovat: { label: '✅ Revisió aprovada', to: 'exit' },
-  amb_observacions: { label: '📝 Amb observacions', to: 'primari' }
-});
+const ETIQUETA_ESTAT = ETIQUETES_ESTAT_REVISIO_WP;
 
 const DESTINACIONS = Object.freeze([
   { valor: 'mur', etiqueta: 'Mur' },
@@ -38,6 +37,9 @@ const DESTINACIONS = Object.freeze([
 
 export function BancImportacioEditorial() {
   const sessio = useSessioOpcional();
+  /* Les marques honestes de la targeta parlen la llengua de la interfície; sense UIProvider
+     (proves del banc) `t` és undefined i el helper torna al valencià de sempre. */
+  const t = useUIActionsOpcional()?.t;
   const potPublicar = Boolean(sessio?.currentUser?.id && sessio?.estat === 'dins');
   const publicacio = useProjeccionsCataleg({ enabled: potPublicar });
   const [versio, setVersio] = useState(0);
@@ -62,7 +64,7 @@ export function BancImportacioEditorial() {
   const lecturaXml = useRef(0);
   const inspectorRef = useRef(null);
   const titolInspectorRef = useRef(null);
-  const taulaCapRef = useRef(null);
+  const llistaCapRef = useRef(null);
   const saltPendentRef = useRef(false);
   useEffect(() => { muntat.current = true; return () => { muntat.current = false; seleccioViva.current = null; lecturaXml.current += 1; saltPendentRef.current = false; }; }, []);
 
@@ -71,10 +73,14 @@ export function BancImportacioEditorial() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stats = useMemo(() => estadistiquesRevisioImportacio(), [versio]);
 
+  /* IDEA-125 · El Banc escolta el mateix registre que la fitxa de revisió del Bloc de notes
+     (revisioImportacioWpStore.js): un canvi fet allà, o en una altra pestanya, es veu ací. */
+  useEffect(() => subscriu(() => { if (muntat.current) setVersio((v) => v + 1); }), []);
+
   useEffect(() => {
     let viu = true;
     sincronitzaRevisionsEditorialsWpAmbServidor().then((res) => {
-      if (viu && res?.sincronitzat) setVersio((v) => v + 1);
+      if (viu && res?.sincronitzat) notificaRevisio();
     });
     return () => {
       viu = false;
@@ -116,7 +122,7 @@ export function BancImportacioEditorial() {
     setRevisant(true); setAvisRevisio('');
     const token = actualitzatEsperat === undefined && baseEdicio.current?.id === wpId
       ? baseEdicio.current.token : actualitzatEsperat;
-    const resultat = await desaRevisioArticleImportatAmbServidor(wpId, {
+    const resultat = await desaRevisio(wpId, {
       estat, nota: nota ?? item?.nota_revisio ?? '',
       autoria: item?.author || undefined,
       desti: item?.destinacio_workspace || item?.verticalProposada || undefined
@@ -160,9 +166,9 @@ export function BancImportacioEditorial() {
     enfocaSenseSalt(titolInspectorRef.current || inspectorRef.current);
   };
 
-  const tornaALaTaula = () => {
-    desplacaDinsApp(taulaCapRef.current);
-    enfocaSenseSalt(taulaCapRef.current);
+  const tornaALaLlista = () => {
+    desplacaDinsApp(llistaCapRef.current);
+    enfocaSenseSalt(llistaCapRef.current);
   };
 
   useEffect(() => {
@@ -349,10 +355,10 @@ export function BancImportacioEditorial() {
         </div>
 
         <div className="sdp-admin-importacio__layout">
-          <div className="sdp-admin-taxonomia__table-wrap">
+          <div>
             {seleccionat && (
               <div
-                ref={taulaCapRef}
+                ref={llistaCapRef}
                 tabIndex={-1}
                 className="sdp-admin-importacio__barra-proxima"
                 data-testid="importacio-barra-proxima"
@@ -368,49 +374,38 @@ export function BancImportacioEditorial() {
                 </Boto>
               </div>
             )}
-            <table className="sdp-admin-table">
-              <thead>
-                <tr>
-                  <th>WP ID / Data</th>
-                  <th>Títol i URL Canònica Sóc de Poble</th>
-                  <th>Casos d’ús detectats</th>
-                  <th>Estat</th>
-                  <th>Acció ràpida</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibles.map((art) => {
-                  const badgeEstat = ETIQUETA_ESTAT[art.estat_revisio] || ETIQUETA_ESTAT.pendent_admin;
-                  const actiu = seleccionat?.wp_id === art.wp_id;
-                  return (
-                    <tr
-                      key={art.wp_id}
-                      className={actiu ? 'is-selected sdp-fila-seleccionable' : 'sdp-fila-seleccionable'}
-                      onClick={() => seleccionaArticle(art)}
-                    >
-                      <td>
-                        <code>#{art.wp_id}</code>
-                        <div className="sdp-muted">{String(art.date || '').slice(0, 10)}</div>
-                      </td>
-                      <td>
-                        <strong>{art.title}</strong>
-                        <div className="sdp-muted">
-                          <Link to={art.ruta_canonica}>{art.ruta_canonica}</Link>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="sdp-admin-pills">
-                          {art.casos_us_meta.map((cas) => (
-                            <span key={cas.id} className="sdp-admin-pill" title={cas.descripcio}>
-                              {cas.icona} {cas.titol}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td>
+            {/* IDEA-125 · Ordre del Mestre (261106 16:21) · Cada article és la nostra UniversalCard,
+                no una fila de taula: en mòbil la taula de 5 columnes no hi cabia. La graella
+                (.sdp-admin-taxonomia__grid) fa una columna a 375 px. Tota la targeta tria l'article;
+                les accions ràpides van a la ranura `accio`, germana del vel i damunt seu: el seu clic
+                no arriba al botó de la targeta i no canvia la tria. */}
+            <ul className="sdp-admin-taxonomia__grid sdp-admin-importacio__llista" aria-label="Articles importats">
+              {visibles.map((art) => {
+                const badgeEstat = ETIQUETA_ESTAT[art.estat_revisio] || ETIQUETA_ESTAT.pendent_admin;
+                const actiu = seleccionat?.wp_id === art.wp_id;
+                return (
+                  <li key={art.wp_id}>
+                    {/* LU02 · La capçalera ix de la font editorial compartida amb les dades de l'article
+                        importat: l'autoria (`author`), el poble principal (`poblePrincipal`) i la data
+                        d'origen de WordPress (`date`). Si en falta cap, el marcador honest «no indicat»;
+                        cap data inventada. La pastilla és un <time> sense clic: el Banc revisa
+                        esborranys i no envia al Calendari. */}
+                    <UniversalCard
+                      {...encapcalamentDeTargeta(art, { location: art.poblePrincipal, t })}
+                      onDateTime={false}
+                      headingLevel="h4"
+                      title={art.title}
+                      subtitle={`#${art.wp_id} · ${String(art.date || '').slice(0, 10)}`}
+                      body={<>
+                        <code>{art.ruta_canonica}</code>{' '}
                         <Insignia to={badgeEstat.to}>{badgeEstat.label}</Insignia>
-                      </td>
-                      <td onClick={(e) => e.stopPropagation()}>
+                      </>}
+                      labels={art.casos_us_meta.map((cas) => `${cas.icona} ${cas.titol}`)}
+                      actual={actiu}
+                      onMainClick={() => seleccionaArticle(art)}
+                      hasFooter={false}
+                      etiquetesAmbAccio
+                      accio={(
                         <div className="sdp-admin-actions-inline">
                           <Link className="sdp-boto sdp-boto--secundari" to={art.ruta_canonica}>
                             👁️ Veure pàgina
@@ -428,12 +423,12 @@ export function BancImportacioEditorial() {
                             Inspeccionar
                           </Boto>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      )}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
 
             <div className="sdp-admin-pagination">
               <Boto
@@ -473,9 +468,9 @@ export function BancImportacioEditorial() {
                 <Boto
                   varietat="fantasma"
                   className="sdp-admin-importacio__tornar-llista"
-                  onClick={tornaALaTaula}
+                  onClick={tornaALaLlista}
                 >
-                  ↑ Tornar a la taula d’articles
+                  ↑ Tornar a la llista d’articles
                 </Boto>
               </div>
               <p><strong>{seleccionat.title}</strong></p>

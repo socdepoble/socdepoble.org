@@ -67,9 +67,11 @@ test('dist, sense barra final i sense URL netes', () => {
    O4-CLAUDE-3 · O3-GEMINI-1 (261102) hi afig /opendata/ i /nodeinfo/: com a
    /ap/, un fitxer que no és al build dona el 404 de Firebase, mai l'index.html
    amb 200 etiquetat de JSON per les capçaleres d'eixos camins (prova de
-   /opendata/ i de /ap/, més avall). */
-test('la reescriptura de l’SPA, l’última i sense assets, fonts, /ap/, /opendata/, /nodeinfo/ ni /.well-known/; davant, les de WebFinger', () => {
-  expect(hosting.rewrites.at(-1)).toEqual({ source: '!/@(assets|fonts|ap|opendata|nodeinfo|.well-known)/**', destination: '/index.html' });
+   /opendata/ i de /ap/, més avall).
+   P0-CONSOLIDACIO-3-CATEDRES · I /md/, la còpia Markdown de la Wiki que enllaça
+   llms.txt: un .md que no és al build dona 404, no l'index.html (prova de /md/, més avall). */
+test('la reescriptura de l’SPA, l’última i sense assets, fonts, /ap/, /opendata/, /nodeinfo/, /.well-known/ ni /md/; davant, les de WebFinger', () => {
+  expect(hosting.rewrites.at(-1)).toEqual({ source: '!/@(assets|fonts|ap|opendata|nodeinfo|.well-known|md)/**', destination: '/index.html' });
   /* Decisió del Mestre del 31-10-2026 (Ronda 2): només el projecte i La Torre
      (amb el seu àlies) es troben per WebFinger; cap poble de mostra. */
   expect(hosting.rewrites.slice(0, -1).map((r) => [Object.keys(r).sort(), r.destination])).toEqual([
@@ -213,9 +215,10 @@ test('P1-23 · /ap/**: application/activity+json, CORS i Cache-Control curt, l�
   // i (O4-CLAUDE-3) les dades obertes, davant de /ap/** (prova de /opendata/, més avall). Inventari exacte a propòsit:
   // G-D-01: la regla pròpia d'ActivityStreams és darrere de la de JSON.
   // R8-L2 (Onada R9, ordre del Mestre del 261106): les sumes .sha256, en text pla (prova pròpia, més avall).
+  // P0-CONSOLIDACIO-3-CATEDRES: la còpia Markdown de la Wiki, en text/markdown (prova pròpia, més avall).
   expect(hosting.headers.filter((r) => r.headers.some((h) => h.key === 'Content-Type')).map((r) => r.source ?? 'regex:webfinger'))
     .toEqual(['/.well-known/host-meta', 'regex:webfinger', '/.well-known/nodeinfo', '/nodeinfo/2.1.json',
-      '/opendata/*.jsonld', '/opendata/*.json', '/opendata/activitystreams.json', '**/*.sha256', '/ap/**']);
+      '/opendata/*.jsonld', '/opendata/*.json', '/opendata/activitystreams.json', '**/*.sha256', '/md/*.md', '/ap/**']);
   // Cap redirecció (Onada v1.2.6: les úniques són les de l'APK, a /descarregues/) ni cap reescriptura casa amb /ap/:
   // ni els camins que el build publica ni els que no hi són (Firebase hi torna el seu 404).
   for (const cami of [
@@ -334,6 +337,31 @@ test('R8-L2 · cada .sha256 publicat ix com a text/plain; charset=utf-8, sense t
     '/opendata/municipi.jsonld', '/opendata/activitystreams.json', '/ap/actors/socdepoble.json', '/index.html', '/assets/index-abcdef12.js']) {
     expect(hosting.headers.filter((r) => r.source === '**/*.sha256').some((r) => casaRegla(r, cami)), cami).toBe(false);
   }
+});
+
+/* P0-CONSOLIDACIO-3-CATEDRES (Emowe/Tellado) · public/md/<slug>.md, la còpia
+   Markdown de la Wiki que enllaça llms.txt (tooling/seo/genera-llms.mjs), ix com
+   a text/markdown en UTF-8 amb la CSP i les capçaleres globals, i un .md que no
+   hi és dona el 404 de Firebase, mai l'index.html de l'SPA amb 200. */
+test('P0-CONSOLIDACIO-3-CATEDRES · /md/*.md: text/markdown; charset=utf-8, sense SPA, davant de /ap/**', () => {
+  const regles = hosting.headers.filter((r) => r.source === '/md/*.md');
+  expect(regles).toEqual([{ source: '/md/*.md', headers: [{ key: 'Content-Type', value: 'text/markdown; charset=utf-8' }] }]);
+  const posicio = (font) => hosting.headers.findIndex((r) => r.source === font);
+  expect(posicio('/md/*.md')).toBeLessThan(posicio('/ap/**'));
+  const efectives = (cami) => Object.fromEntries(hosting.headers.filter((r) => casaRegla(r, cami)).flatMap((r) => r.headers.map((h) => [h.key, h.value])));
+  const publics = existsSync(path.join(process.cwd(), 'public/md')) ? readdirSync(path.join(process.cwd(), 'public/md')).map((f) => `/md/${f}`) : [];
+  expect(publics.length).toBeGreaterThan(0);
+  for (const cami of [...publics, '/md/no-existix.md']) {
+    expect(efectives(cami)['Content-Type'], cami).toBe('text/markdown; charset=utf-8');
+    expect(Object.keys(efectives(cami)), cami).toEqual(expect.arrayContaining(['Content-Security-Policy', ...Object.keys(CAPCALERES_GLOBALS)]));
+    expect(reescritA(cami), cami).toBeUndefined();
+  }
+  // Les rutes de l'app que només comencen igual continuen a l'SPA, i cap altre camí no pren text/markdown.
+  for (const cami of ['/mdx', '/mur', '/llms.txt', '/opendata/llicencies.md']) {
+    expect(regles.some((r) => casaRegla(r, cami)), cami).toBe(false);
+  }
+  expect(reescritA('/mdx')).toBe('/index.html');
+  expect(readFileSync(path.join(process.cwd(), 'src/app/App.jsx'), 'utf8')).not.toMatch(/path="\/?md(?:\/|")/);
 });
 
 /* P1-23 · WebFinger al lloc estàtic (ordre del Mestre del 30-10-2026:

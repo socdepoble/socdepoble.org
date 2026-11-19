@@ -71,8 +71,11 @@ const SOSTRE_DEL_TROS_D_ENTRADA = 1690000;
    El valor és el tros d'entrada sencer d'abans d'R17 (build real del 261111,
    tests/standalone-build.test.mjs, que el llig d'ací): partir l'entrada no pot
    fer créixer l'arrencada. La mesura amb els trossos va donar 1.733.512 B
-   (entrada 741.904 B). Només pot baixar. */
-const SOSTRE_DE_L_ARRENCADA_ESTATICA = 1737422;
+   (entrada 741.904 B). Només pot baixar.
+   D-v128-3 (el màxim del llibre mestre, 1.660.000 B) · Baixat de 1.737.422 a 1.660.000 B. Build real de
+   l'arbre v1.2.10 (261119, compilaDeVeritat de tests/standalone-build.test.mjs i npm run build:wp):
+   1.588.981 B, després de la dieta CSS R32.11 i la factoria del motor d'accions diferida. */
+const SOSTRE_DE_L_ARRENCADA_ESTATICA = 1660000;
 
 /* Les apps opcionals: el seu codi no ha de ser cap tros del nucli. */
 const CARPETES_DE_LES_APPS = Object.freeze([
@@ -205,13 +208,16 @@ describe.skipIf(!HI_HA_BUILD)(`pressupost de pes del nucli (wordpress-plugin/dis
     expect(deLArrencada.reduce((suma, cami) => suma + midaDe(cami), 0)).toBeLessThanOrEqual(SOSTRE_DE_L_ARRENCADA_ESTATICA);
   });
 
-  /* [DEFECTE] Deute conegut: el CSS de la Gestoria (modules.css) va inlinat
-     amb tota la cascada (index.css?inline) i es baixa a l'arrencada (des de
-     R17, al tros «estils»). Quan la fase 2 de l'ADR-2026-12 el traga al full
-     del mòdul, esta prova s'ha de girar: cap `sdp-gestoria` a l'arrencada. */
-  test('el CSS de la Gestoria ja no viatja a l’arrencada (diferit-gestoria.css)', () => {
+  /* El CSS de la Gestoria viu al seu full diferit (diferit-gestoria.css, dieta R32.11). L'única excepció
+     declarada és la factura en paper de modules.css («Excepció a la dieta», v1.2.9): la còpia per a
+     imprimir penja del <body> i la regla @media print depén de <html> i <body>. D-v128-3 · La prova la
+     descompta sencera, una sola vegada i tal com la minifica el build, i no admet cap altre `sdp-gestoria`. */
+  const EXCEPCIO_DE_LA_FACTURA_EN_PAPER = /\.sdp-gestoria-factura-impresa\{display:none\}@media print\{[^@]*?\.sdp-gestoria-factura__totals\{break-inside:avoid\}\}/g;
+  test('el CSS de la Gestoria ja no viatja a l’arrencada (diferit-gestoria.css), fora de la factura en paper', () => {
     const arrencada = deLArrencada.map((cami) => readFileSync(path.join(DIST, cami), 'utf8')).join('\n');
-    expect(arrencada.split('sdp-gestoria').length - 1).toBe(0);
+    expect(arrencada.match(EXCEPCIO_DE_LA_FACTURA_EN_PAPER) ?? [], 'l’excepció de la factura en paper, una sola vegada').toHaveLength(1);
+    const senseExcepcio = arrencada.replace(EXCEPCIO_DE_LA_FACTURA_EN_PAPER, '');
+    expect(senseExcepcio.match(/sdp-gestoria[\w-]*/g) ?? []).toEqual([]);
   });
 
   test('els mitjans de la Gestoria respecten el perfil: locals o externs resolts, mai absents sense origen', () => {

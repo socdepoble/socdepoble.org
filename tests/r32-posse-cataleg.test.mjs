@@ -25,8 +25,10 @@ const rows=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.versio
 const rows120=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261117150000')<=0&&row.version!=='20261117140000');
 // El catàleg de la v1.2.7 es fixa també fins a 20261117150000: el 120 d'R32.4 més 20261117140000.
 const rows121=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261117150000')<=0);
-// El catàleg de la v1.2.8 és el complet real: el 121 més 20261117173000 (R32.7) i 20261117193000 (R32.8).
-const rows123=creaPlaMigracions().migrations;
+// El catàleg de la v1.2.8 es fixa fins a 20261117193000: el 121 més 20261117173000 (R32.7) i 20261117193000 (R32.8).
+const rows123=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261117193000')<=0);
+// P1-74 (A-03): el complet real és el 123 més 20261118230000 (la caché de credencials natives per configuració).
+const rows124=creaPlaMigracions().migrations;
 // El 120 del kit R32.5 de Codex: els 119 d'R32.2 més 20261117140000, sense 20261117150000.
 const kitR325=rows121.filter(row=>row.version!=='20261117150000');
 const r32=new Set(['20261116170000','20261116170100','20261116170200']);
@@ -66,6 +68,8 @@ const PIN120='120:91dabe476f642579862bffbb10b8d56f946722b8efd65deedf43e7f8fbae9f
 const PIN121='121:851f46d48edca7e5147c8075469a0f5c46992f7e033ca87996b51fa1df1241e0';
 // 123 calculat des dels bytes reals del catàleg (el 121 de la v1.2.7 més les dues de Codex R32.7 i R32.8).
 const PIN123='123:1de4ff25c313f242b463d00445377f5692f87b762927a13e1ed20464ab1f0bab';
+// 124 calculat des dels bytes reals del catàleg (el 123 de la v1.2.8 més 20261118230000, P1-74 A-03).
+const PIN124='124:8446cad1c497adbc31a4903d9161479ba1eef081de6445cbe148fb615a961277';
 // Perfil 120 del kit R32.5 de Codex, calculat sobre la v1.2.5 (sense 20261117150000): no és canònic.
 const PIN_EXPERIMENTAL_120='120:3e45e1da922cb8a51c43ae23504b4e279eae11f0db7f1046b1f31156800edb85';
 // Perfil experimental del kit R32 de Codex, calculat amb la versió anterior de 20261116170000: no és canònic.
@@ -121,11 +125,18 @@ test('v1.2.8 adds only the R32.7 and R32.8 sources to the 121 and pins the exact
  assert.deepEqual(nous,['20261117173000','20261117193000']);
  assert.equal(rows123.length,123);
  assert.equal(`123:${ledgerHash(rows123)}`,PIN123);
- assert.deepEqual(pins,[...oldPins,PIN119,PIN120,PIN121,PIN123]);
+ assert.deepEqual(pins.slice(0,oldPins.length+4),[...oldPins,PIN119,PIN120,PIN121,PIN123]);
+});
+test('P1-74 (A-03) adds only 20261118230000 to the 123 and pins the exact 124',()=>{
+ const nous=rows124.filter(row=>!rows123.some(anterior=>anterior.version===row.version)).map(row=>row.version);
+ assert.deepEqual(nous,['20261118230000']);
+ assert.equal(rows124.length,124);
+ assert.equal(`124:${ledgerHash(rows124)}`,PIN124);
+ assert.deepEqual(pins,[...oldPins,PIN119,PIN120,PIN121,PIN123,PIN124]);
 });
 
-test('the real installer accepts 114,116,119,120,121 and rejects exact-count drift, the R32.5 kit 120 and every 117 profile',async()=>{
- for(const entries of[historical,base116,rows,rows120,rows121,rows123])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
+test('the real installer accepts 114,116,119,120,121,123,124 and rejects exact-count drift, the R32.5 kit 120 and every 117 profile',async()=>{
+ for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
  const corrupt120=structuredClone(rows120);corrupt120.at(-1).sha256='0'.repeat(64);
  for(const state of[ready(corrupt120),{...ready(rows120),migrations:119},{...ready(rows),migrations:120}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
  const corrupt121=structuredClone(rows121);corrupt121.find(row=>row.version==='20261117140000').sha256='0'.repeat(64);

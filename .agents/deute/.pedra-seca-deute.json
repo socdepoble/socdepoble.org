@@ -1,29 +1,20 @@
 {
   "LLEI_01_CLASSE_ORFENA": {
-    "max": 15,
+    "max": 8,
     "coneguts": [
-      ".?  →  src/components/universal/AvisadorEfimer.jsx",
-      ".editor-content  →  src/components/universal/richText/useUniversalRichText.js",
-      ".page-content  →  src/components/universal/richText/useUniversalRichText.js",
       ".page-content-quote  →  src/sections/text/legalContent.js",
       ".sdp-embed-video  →  src/utils/transformadorEditorialWpBlogger.js",
       ".sdp-esquelet  →  src/components/PedraSeca/atoms/estats.jsx",
       ".sdp-imatge-cos  →  src/components/universal/richText/extensions/index.js",
       ".sdp-molla  →  src/components/PedraSeca/organismes/navegacio.jsx",
-      ".sdp-ombra-  →  src/components/PedraSeca/composicio/index.jsx",
       ".sdp-pestanyes  →  src/components/PedraSeca/organismes/Pestanyes.jsx",
       ".sdp-pindola--vertical  →  src/components/PedraSeca/molecules/Botonera.jsx",
-      ".sdp-radi-  →  src/components/PedraSeca/composicio/index.jsx",
-      ".sdp-targeta-enllac-extern  →  src/utils/transformadorEditorialWpBlogger.js",
-      ".sdp-text-cos  →  src/components/universal/richText/useUniversalRichText.js",
-      ".toc-level-  →  src/components/universal/PageFrame.jsx"
+      ".sdp-targeta-enllac-extern  →  src/utils/transformadorEditorialWpBlogger.js"
     ]
   },
   "LLEI_02_TOKEN_FANTASMA": {
-    "max": 1,
-    "coneguts": [
-      "--mida  →  src/css/base.css"
-    ]
+    "max": 0,
+    "coneguts": []
   },
   "LLEI_03_ESTIL_EN_LINIA": {
     "max": 0,
@@ -42,25 +33,18 @@
     "coneguts": []
   },
   "LLEI_06_ENCAPSULAMENT": {
-    "max": 1,
-    "coneguts": [
-      "src/components/universal/PageFrame.jsx  →  document.body"
-    ]
+    "max": 0,
+    "coneguts": []
   },
   "LLEI_07_PARITAT_I18N": {
     "max": 0,
     "coneguts": []
   },
   "LLEI_08_SUBARBRE_ORFE": {
-    "max": 9,
+    "max": 4,
     "coneguts": [
       "src/components/PedraSeca/hooks/useTraduccioTargeta.js",
       "src/components/universal/PanellCrom.jsx",
-      "src/data/adaptadors/sollutia/recursos.js",
-      "src/data/federacio/pontMastodon.js",
-      "src/data/local/adaptadorNodeZeroHttp.js",
-      "src/data/local/arrencadaNodeZero.js",
-      "src/data/local/sessioNodeZeroHttp.js",
       "src/sections/onboarding/ProvaCorreuAmbContrasenya.jsx",
       "src/sections/onboarding/correuBenvinguda.js"
     ]

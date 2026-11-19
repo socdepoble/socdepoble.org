@@ -43,6 +43,7 @@ import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
+import { etiquetaDelPoble } from '../pobles/etiquetaDelPoble.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { CATEGORIES_CANONIQUES_BASE } from '../../data/taxonomia/vocabulariCanonic.js';
 /* P1-f (Onada R6 · Bloc 2) · El transformador (i el tesaurus de ~450 KB) arriba a demanda: mai al chunk comú. */
@@ -243,6 +244,20 @@ function etiquetesDelDetall(section, item) {
   ];
 }
 
+/* R22 (Llibre Mestre, «4a Etiqueta Geogràfica Final») · La pastilla del poble
+   va sempre l'última, enllaçada a /pobles/<slug>. Només la porten les seccions
+   que saben trobar la fitxa del poble (getPoble): hui, només el Mercat. El
+   Mur i l'Agenda queden pendents del Mestre: una publicació de sistema hi
+   cauria al poble per defecte (clauDelPoble.js · esDeSistema) i la pastilla
+   afirmaria un poble que no és el seu. Una pastilla que ja porta al mateix
+   poble no es repetix. */
+function etiquetesAmbElPoble(section, item) {
+  const etiquetes = etiquetesDelDetall(section, item);
+  const delPoble = typeof section?.getPoble === 'function' ? etiquetaDelPoble(section.getPoble(item)) : null;
+  if (!delPoble) return etiquetes;
+  return [...etiquetes.filter((l) => !(l && typeof l === 'object' && l.href === delPoble.href)), delPoble];
+}
+
 /* P0-27 / IDEA-102 (R7, substituïx AH-20 / IDEA-77) · El quadrat de 128×128 px
    d'un acte d'agenda (SquareBadge) es pinta a la UniversalPage en una fila
    pròpia (.sdp-pagina-insignia) davall de l'entradilla, no a header.page-title.
@@ -327,7 +342,7 @@ export function paginaDElement(section, item) {
         { text: textNet(item.provincia), className: 'sdp-badge-category' },
         { text: textNet(item.comarca), className: 'sdp-badge-tag' }
       ].filter((label) => label.text)
-      : etiquetesDelDetall(section, item),
+      : etiquetesAmbElPoble(section, item),
     /* T39 · els drets triats a la publicació; el text de sèrie, només si no en porta.
        Onada 5 · El d'un poble és el de la Viquipèdia (CC BY-SA), el de la seua targeta. */
     copyright: item.copyright || (esPoble ? COPYRIGHT_VIQUIPEDIA : COPYRIGHT_SDP),

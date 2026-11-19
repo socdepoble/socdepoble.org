@@ -61,6 +61,16 @@ describe('trossDArrencada (vite.config.js)', () => {
     // IDEA-116 (Onada R9, R9V-C2-01) · la primera publicació del Mur no baixa a l'arrencada: tros diferit.
     ['/x/src/sections/mur/articles/novesTecnologiesCulturaRuralContent.js', null],
     ['/x/node_modules/lucide-react/dist/esm/icons/house.mjs', null],
+    // P-E (IDEA-260 c) · El nucli de lucide va al seu tros; les icones, el barril i DynamicIcon, no.
+    ['/x/node_modules/lucide-react/dist/esm/createLucideIcon.mjs', 'lucide-nucli'],
+    ['/x/node_modules/lucide-react/dist/esm/Icon.mjs', 'lucide-nucli'],
+    ['/x/node_modules/lucide-react/dist/esm/defaultAttributes.mjs', 'lucide-nucli'],
+    ['/x/node_modules/lucide-react/dist/esm/context.mjs', 'lucide-nucli'],
+    ['/x/node_modules/lucide-react/dist/esm/shared/src/utils/mergeClasses.mjs', 'lucide-nucli'],
+    ['C:\\x\\node_modules\\lucide-react\\dist\\esm\\Icon.mjs', 'lucide-nucli'],
+    ['/x/node_modules/lucide-react/dist/esm/icons/plus.mjs', null],
+    ['/x/node_modules/lucide-react/dist/esm/lucide-react.mjs', null],
+    ['/x/node_modules/lucide-react/dist/esm/DynamicIcon.mjs', null],
     ['/x/node_modules/react-is/index.js', null],
     ['/x/node_modules/@tiptap/core/dist/index.js', null],
     ['/x/node_modules/some-pkg/node_modules/react/index.js', 'react'],
@@ -126,6 +136,18 @@ console.log(JSON.stringify({
       .filter((nom) => nom !== 'loose-envify');
     expect(['react', 'react-dom', 'scheduler'].flatMap(dependencies).filter((nom) => !['react', 'scheduler'].includes(nom))).toEqual([]);
     expect(dependencies('dompurify')).toEqual([]);
+    /* P-E (IDEA-260 c) · El nucli de lucide només importa React (i els seus
+       fitxers relatius, que també són del tros), i el paquet no té dependències. */
+    const LUCIDE = path.join(ARREL, 'node_modules/lucide-react/dist/esm');
+    const nucliDeLucide = ['createLucideIcon.mjs', 'Icon.mjs', 'defaultAttributes.mjs', 'context.mjs',
+      ...fs.readdirSync(path.join(LUCIDE, 'shared'), { recursive: true }).filter((f) => f.endsWith('.mjs')).map((f) => `shared/${f.split(path.sep).join('/')}`)];
+    const deFora = nucliDeLucide.flatMap((f) => especificadors(path.join(LUCIDE, f)).map((edge) => edge.especificador)).filter((e) => !e.startsWith('.'));
+    expect([...new Set(deFora)]).toEqual(['react']);
+    const relatius = nucliDeLucide.flatMap((f) => especificadors(path.join(LUCIDE, f))
+      .filter((edge) => edge.especificador.startsWith('.')).map((edge) => path.posix.join(path.posix.dirname(f), edge.especificador)));
+    expect(relatius.length).toBeGreaterThan(0);
+    expect(relatius.filter((r) => !nucliDeLucide.includes(r))).toEqual([]);
+    expect(dependencies('lucide-react')).toEqual([]);
   });
 });
 

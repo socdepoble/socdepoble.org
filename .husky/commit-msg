@@ -1,0 +1,5 @@
+#!/bin/sh
+# SDP-REFLEX-HOOK:v2:commit-msg
+# Després de l'editor del missatge, abans que Git escriga el commit: la lease que el
+# pre-commit va vincular ha de seguir vigent. Un abort amb l'editor obert fa fallar el commit.
+exec node tooling/wiki/reflex_petorreta.mjs pending-tree >/dev/null

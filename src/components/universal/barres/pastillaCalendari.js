@@ -43,7 +43,7 @@
  */
 import { createContext, useContext } from 'react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
-import { etiquetaPastillaCalendari, mesDeLaPastilla, rutaCalendariDelMes } from '../editorial.js';
+import { ACCIO_PASTILLA_DIA, RUTA_CALENDARI, etiquetaPastillaCalendari, mesDeLaPastilla, rutaCalendariDeLaData, rutaCalendariDelMes } from '../editorial.js';
 
 /**
  * Dins de la pàgina /calendari (CalendariSection): `true` (el calendari d'ara)
@@ -51,21 +51,24 @@ import { etiquetaPastillaCalendari, mesDeLaPastilla, rutaCalendariDelMes } from 
  */
 export const DinsDelCalendari = createContext(false);
 
+/* El navegador del router, o null fora d'un Router. */
+function useNavegaSiHiHaRouter() {
+  try {
+    /* useNavigate() llança fora d'un Router (EventCard dins de proves o d'amfitrions
+       sense router); el cas depén de l'arbre, no de l'estat, i l'ordre dels hooks
+       no canvia entre renders. */
+    return useNavigate();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * `{ onClick, etiqueta }` per a DateTimeControl (onClick i label) a partir de
  * la mateixa pastilla que es pinta: `{ time, date, dateTime }`.
  */
 export function usePastillaCalendari({ time, date, dateTime } = {}) {
-  let navigate = null;
-  try {
-    /* useNavigate() llança fora d'un Router (EventCard dins de proves o d'amfitrions
-       sense router); el cas depén de l'arbre, no de l'estat, i l'ordre dels hooks
-       no canvia entre renders. */
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    navigate = useNavigate();
-  } catch {
-    navigate = null;
-  }
+  const navigate = useNavegaSiHiHaRouter();
   const dinsDelCalendari = useContext(DinsDelCalendari);
   const mes = mesDeLaPastilla({ dateTime, date });
   const onClick = (event) => {
@@ -80,5 +83,35 @@ export function usePastillaCalendari({ time, date, dateTime } = {}) {
   return {
     onClick: mes ? onClick : null,
     etiqueta: mes ? etiquetaPastillaCalendari({ time, date }) : [time, date].filter(value => typeof value === 'string' && value.trim()).join(' ')
+  };
+}
+
+/**
+ * P0-77 / IDEA-208 (R16-P; ordre del Mestre, 261109 20:57) · La pastilla d'un
+ * ACTE porta al seu dia: «si es un evento […] el botón de la fecha del evento
+ * es pinchable y distinto a la card». Derogat, només per als actes, el carril
+ * A del 261001 (al mes): una publicació continua portant al mes
+ * (usePastillaCalendari). `dia`: la clau 'AAAA-MM-DD' de l'acte, la mateixa
+ * que pinta la pastilla; la ruta és la de l'etiqueta «Agenda»
+ * (rutaCalendariDeLaData, la vista Mes amb el dia triat). El clic, com el de
+ * la pastilla del mes: preventDefault, stopPropagation (no obri la targeta) i,
+ * dins del Calendari, reemplaça l'entrada de l'historial. Sense un dia que
+ * existisca, `onClick` és null i qui pinta la targeta torna a la del mes.
+ */
+export function usePastillaDelDia({ dia, time, date } = {}) {
+  const navigate = useNavegaSiHiHaRouter();
+  const dinsDelCalendari = useContext(DinsDelCalendari);
+  const ruta = rutaCalendariDeLaData(dia);
+  const valid = ruta !== RUTA_CALENDARI;
+  const onClick = (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (typeof navigate !== 'function') return;
+    if (dinsDelCalendari) navigate(ruta, { replace: true });
+    else navigate(ruta);
+  };
+  return {
+    onClick: valid ? onClick : null,
+    etiqueta: valid ? etiquetaPastillaCalendari({ time, date }, ACCIO_PASTILLA_DIA) : undefined
   };
 }

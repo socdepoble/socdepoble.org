@@ -198,3 +198,112 @@ describe('en el mateix tic de la crida (PC155-01-A1)', () => {
     await a.destroy();
   });
 });
+
+describe('opció C (P2-08): tots els mètodes', () => {
+  /* La guarda captura l'abast en cridar per a tots els mètodes, no sols per a
+     l'exportació i una llista tancada: ací, mètodes de Notes i del Xat que
+     abans no el capturaven. La baixa d'un canal en queda fora a posta. */
+  const buidaAvisos = () => new Promise((resol) => { setTimeout(resol, 0); });
+
+  test('loadNotes d’Anna en vol i entra Berta: AbortError, la nota d’Anna no ix', async () => {
+    const { lectura, inici, magatzem } = magatzemRetingut();
+    const a = creaAdaptadorLocal({ mode: 'local', magatzemNotes: magatzem });
+    entra(a, ANNA);
+    const pendent = a.loadNotes(ANNA, { noteId: 'nota-anna' });
+    await inici.p;
+    entra(a, BERTA);
+    lectura.resol({ 'nota-anna': NOTA_ANNA });
+    await expect(pendent).rejects.toMatchObject({ name: 'AbortError' });
+    await a.destroy();
+  });
+
+  test('createNote d’Anna i entra Berta en el mateix tic: AbortError, i Berta no la té', async () => {
+    const a = creaAdaptadorLocal({ mode: 'local' });
+    entra(a, ANNA);
+    const pendent = a.createNote({ title: 'Privada d’Anna', content: 'secret d’Anna', folderId: 'f-notes' }, {});
+    entra(a, BERTA);
+    await expect(pendent).rejects.toMatchObject({ name: 'AbortError' });
+    expect((await a.loadNotes(BERTA, {})).notes).toEqual([]);
+    await a.destroy();
+  });
+
+  test('control: sense canvi, el mateix loadNotes retingut lliura la nota', async () => {
+    const { lectura, inici, magatzem } = magatzemRetingut();
+    const a = creaAdaptadorLocal({ mode: 'local', magatzemNotes: magatzem });
+    entra(a, ANNA);
+    const pendent = a.loadNotes(ANNA, { noteId: 'nota-anna' });
+    await inici.p;
+    lectura.resol({ 'nota-anna': NOTA_ANNA });
+    expect((await pendent).notes.map((n) => n.id)).toEqual(['nota-anna']);
+    await a.destroy();
+  });
+
+  test('control: una renovació del testimoni d’Anna en vol no rebutja el loadNotes', async () => {
+    const { lectura, inici, magatzem } = magatzemRetingut();
+    const a = creaAdaptadorLocal({ mode: 'local', magatzemNotes: magatzem });
+    entra(a, ANNA);
+    const pendent = a.loadNotes(ANNA, { noteId: 'nota-anna' });
+    await inici.p;
+    entra(a, ANNA, { renovacio: true });
+    lectura.resol({ 'nota-anna': NOTA_ANNA });
+    expect((await pendent).notes.map((n) => n.id)).toEqual(['nota-anna']);
+    await a.destroy();
+  });
+
+  test('una alta del Xat d’Anna que acaba amb Berta ja dins es desfà abans de rebutjar', async () => {
+    const a = creaAdaptadorLocal({ mode: 'local' });
+    entra(a, ANNA);
+    const filId = await a.creaFilDirecte('0001', null, {});
+    const avisos = vi.fn();
+    const alta = a.subscribeToXat(filId, avisos, {});
+    /* La guarda ja ha entrat al mètode quan canvia la persona. */
+    queueMicrotask(() => entra(a, BERTA));
+    await expect(alta).rejects.toMatchObject({ name: 'AbortError' });
+    entra(a, ANNA);
+    await a.enviaMissatge(filId, { id: 'alta-desfeta', text: 'Hola' }, {});
+    await buidaAvisos();
+    expect(avisos).not.toHaveBeenCalled();
+    /* Una alta sense canvi sí que rep l'avís: la prova mossega. */
+    const vius = vi.fn();
+    await a.subscribeToXat(filId, vius, {});
+    await a.enviaMissatge(filId, { id: 'alta-viva', text: 'Hola' }, {});
+    await buidaAvisos();
+    expect(vius).toHaveBeenCalled();
+    await a.destroy();
+  });
+
+  test('demanaBaixa d’Anna i entra Berta en el mateix tic: AbortError, i Berta no té cap baixa', async () => {
+    const a = creaAdaptadorLocal({ mode: 'local' });
+    entra(a, ANNA);
+    const baixa = a.demanaBaixa({ motiu: 'Anna' });
+    entra(a, BERTA);
+    await expect(baixa).rejects.toMatchObject({ name: 'AbortError' });
+    expect((await a.estatBaixa()).demanada).toBe(false);
+    await a.destroy();
+  });
+
+  test('control: demanaBaixa sense canvi es fa i tanca la sessió sense rebutjar', async () => {
+    const a = creaAdaptadorLocal({ mode: 'local' });
+    entra(a, ANNA);
+    await expect(a.demanaBaixa({ motiu: 'Anna' })).resolves.toMatchObject({ demanada: true });
+    entra(a, ANNA);
+    expect((await a.estatBaixa()).demanada).toBe(true);
+    await a.destroy();
+  });
+
+  test('la baixa d’un canal no depén de la persona: es fa també si entra Berta en el mateix tic', async () => {
+    const a = creaAdaptadorLocal({ mode: 'local' });
+    entra(a, ANNA);
+    const filId = await a.creaFilDirecte('0001', null, {});
+    const avisos = vi.fn();
+    const { subscription } = await a.subscribeToXat(filId, avisos, {});
+    const baixa = a.unsubscribeFromXat(subscription);
+    entra(a, BERTA);
+    await expect(baixa).resolves.toBeUndefined();
+    entra(a, ANNA);
+    await a.enviaMissatge(filId, { id: 'despres-de-la-baixa', text: 'Hola' }, {});
+    await buidaAvisos();
+    expect(avisos).not.toHaveBeenCalled();
+    await a.destroy();
+  });
+});

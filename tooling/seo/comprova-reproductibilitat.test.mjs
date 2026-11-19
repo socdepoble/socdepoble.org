@@ -152,7 +152,8 @@ test('font i recepta: el flake i el comprovador diuen el mateix, i la recepta no
   assert.deepEqual(ordres.at(-1), ['node', 'tooling/seo/genera-federacio.mjs', '--desti', 'dist', '--origen', '{origen}', '--servidor']);
   assert.deepEqual(receptaPerNom('vite', FLAKE), [['npm', 'run', 'build:web']]);
   // P1-20 · D15 (T4a, 261101) · El build web i, darrere, la porta del pressupost del tros d'entrada (només llig dist/).
-  assert.equal(PAQUET.scripts['build:web'], 'vite build && node tooling/gates/pressupost-paquet.mjs --dist dist');
+  // P-E (IDEA-260 c) · Amb --icones, la mateixa porta comprova també els trossos d'icones.
+  assert.equal(PAQUET.scripts['build:web'], 'vite build && node tooling/gates/pressupost-paquet.mjs --dist dist --icones');
   assert.throws(() => receptaPerNom('docker', FLAKE), /Recepta desconeguda/);
 });
 

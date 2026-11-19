@@ -1,4 +1,6 @@
 import React from 'react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import {
@@ -75,7 +77,7 @@ describe('FEDI-24 · Esborrat en cascada mecànica de Cards i Pàgines + retirad
     expect(result.current.perfilJavi.mercat.elements).toEqual([]);
   });
 
-  test('esborraPublicacio elimina a l’instant la Card del Mur/Mercat i del Perfil de l’autor', async () => {
+  test('marcaPublicacioEsborrada (el camí de copublicacioMur i NotesContext) elimina a l’instant la Card del Mur/Mercat i del Perfil de l’autor', async () => {
     m.load.mockResolvedValue({
       feedPosts: [
         { id: 'post-javi-1', type: 'post', title: 'Bàndol de prova', author_id: 'javillinares', author_name: 'Javi Llinares' }
@@ -98,20 +100,29 @@ describe('FEDI-24 · Esborrat en cascada mecànica de Cards i Pàgines + retirad
     expect(result.current.perfilJavi.mercat.elements.map((e) => e.id)).toEqual(['mercat:prod-javi-1']);
     expect(result.current.perfilJavi.mur.elements.map((e) => e.id)).toEqual(['mur:post-javi-1']);
 
-    await act(async () => {
-      await result.current.mur.esborraPublicacio('mercat', 'prod-javi-1');
-    });
+    act(() => { marcaPublicacioEsborrada('mercat', 'prod-javi-1'); });
 
     expect(result.current.mur.marketItems).toEqual([]);
     expect(result.current.mur.sortedMarketItems).toEqual([]);
     expect(result.current.perfilJavi.mercat.elements).toEqual([]);
 
-    await act(async () => {
-      await result.current.mur.esborraPublicacio('mur', 'post-javi-1');
-    });
+    act(() => { marcaPublicacioEsborrada('mur', 'post-javi-1'); });
 
     expect(result.current.mur.feedPosts).toEqual([]);
     expect(result.current.perfilJavi.mur.elements).toEqual([]);
+  });
+
+  /* R20-ESBORRA-MUR · El Mur no exposa cap esborrat que només amague en local,
+     i la capçalera del registre no promet cap DELETE al servidor que no fa. */
+  test('R20-ESBORRA-MUR: el Mur no promet cap esborrat que no fa', async () => {
+    m.load.mockResolvedValue({ feedPosts: [], events: [], marketItems: [] });
+    const { result } = renderHook(() => ({ mur: useMur() }), { wrapper });
+    await waitFor(() => expect(result.current.mur.status).toBe('ready'));
+    expect(result.current.mur).not.toHaveProperty('esborraPublicacio');
+
+    const src = readFileSync(path.join(process.cwd(), 'src/data/publicacionsEsborrades.js'), 'utf8');
+    expect(src).not.toMatch(/DELETE \/rest\/v1\/section_submissions/);
+    expect(src).toMatch(/revocaPublicacioMur/);
   });
 
   test('marcaPublicacioEsborrada i restauraPublicacioEsborrada filtren i restauren qualsevol publicació no canònica', () => {

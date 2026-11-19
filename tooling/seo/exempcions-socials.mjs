@@ -68,6 +68,8 @@ export const EXEMPCIONS_SOCIALS = Object.freeze([
     motiu: 'Espai de curadoria amb rol verificat i safata privada: una prova vigent (build-social-manifest.test.mjs) diu que no té head públic; el Mestre decidix.'}),
   exempcio({ruta: '/page/node-zero', classe: 'pendent', revisio: REVISIO,
     motiu: 'El seu text el recomponen en execució pageContent.r10.js i pageContent.fediversityR20.js: el productor (AST) en donaria un head distint del del client.'}),
+  exempcio({ruta: '/page/tot-el-que-pots-fer', classe: 'pendent', revisio: 'IDEA-287',
+    motiu: 'La guia pas a pas de les eines té el head al client (TextSection), però el productor (AST) no llig pageContent.potsFer.js i la seua portada encara no té variant social JPEG: ho decidix el Mestre.'}),
   exempcio({ruta: '/page/notes_shared', classe: 'pendent', revisio: REVISIO,
     motiu: 'Còpia antiga de la fitxa del Bloc de notes, amb el logotip SVG com a imatge: no és cap presentació pròpia.'}),
   exempcio({ruta: '/page/avisador', classe: 'pendent', revisio: REVISIO,

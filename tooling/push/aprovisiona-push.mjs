@@ -9,12 +9,16 @@ export const MIGRACIONS = Object.freeze([
   '2611020417_xat_avisos_push.sql',
   '2611080431_xat_push_leases.sql',
   '2611080432_xat_lliurament_i_presencia.sql',
-  '20261116031000_r31_push_sessio_i_revocacio.sql'
+  '20261116031000_r31_push_sessio_i_revocacio.sql',
+  // P1-74 (A-03): natius.js només crida les RPC _v2 de credencials; sense ella, APNs i FCM responen «reintenta».
+  '20261118230000_a03_xat_push_credencials_per_configuracio.sql'
 ]);
 const fail = code => { throw Object.assign(new Error(code), { safeCode: code }); };
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 const own = (o, k) => Object.hasOwn(o, k);
 const MAX = 65536;
+// schema.sql concatena les migracions (cadascuna dins de MAX): amb la d'A-03 ja passa de 64 KiB.
+const MAX_SCHEMA = 262144;
 function parentsSafe(file) {
   let p = path.resolve(file);
   while (true) {
@@ -26,12 +30,12 @@ function parentsSafe(file) {
     else p = next;
   }
 }
-function read(file, { privateFile = false } = {}) {
+function read(file, { privateFile = false, max = MAX } = {}) {
   parentsSafe(file);
   const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
   try {
     const s = fs.fstatSync(fd);
-    if (!s.isFile() || s.nlink !== 1 || s.size > MAX) fail('unsafe_file');
+    if (!s.isFile() || s.nlink !== 1 || s.size > max) fail('unsafe_file');
     if (privateFile && ((s.mode & 0o077) || s.uid !== process.getuid())) fail('unsafe_private_mode');
     return fs.readFileSync(fd, 'utf8');
   } finally { fs.closeSync(fd); }
@@ -206,10 +210,11 @@ export function stage(options) {
   const files = { 'edge.secrets.env': secretText };
   // No blind db push. Exact migration bytes only, preserving their transactions.
   files['schema.sql'] = MIGRACIONS.map(n => read(path.join(options.root, 'supabase/migrations', n))).join('\n');
+  if (Buffer.byteLength(files['schema.sql']) > MAX_SCHEMA) fail('unsafe_file');
   files['activa.sql'] = "begin;\nset local lock_timeout='5s';\nset local statement_timeout='15s';\ndo $$ begin\nif to_regprocedure('public.xat_push_desperta_v2(uuid,uuid)') is null or to_regprocedure('public.xat_ritme(uuid)') is null or not exists(select 1 from pg_catalog.pg_constraint where conrelid='public.xat_dispositius_push'::regclass and conname='xat_dispositius_push_sessio_fk' and confrelid='auth.sessions'::regclass and confdeltype='c' and convalidated) or not exists(select 1 from pg_catalog.pg_trigger where tgrelid='public.xat_dispositius_push'::regclass and tgname='xat_push_vincula_sessio_r31' and tgenabled<>'D') then raise exception 'push_schema_incomplete'; end if;\nend $$;\ninsert into private.ajustos(clau,valor) values ('push_xat_actiu','si') on conflict(clau) do update set valor=excluded.valor;\ncommit;\n";
   if (fs.existsSync(out)) {
     privateDir(out);
-    if (Object.keys(files).some(name => read(path.join(out, name), { privateFile: true }) !== files[name])) fail('stage_drift');
+    if (Object.keys(files).some(name => read(path.join(out, name), { privateFile: true, max: name === 'schema.sql' ? MAX_SCHEMA : MAX }) !== files[name])) fail('stage_drift');
     return { ...report, staged: true, reused: true };
   }
   fs.mkdirSync(out, { mode: 0o700 });

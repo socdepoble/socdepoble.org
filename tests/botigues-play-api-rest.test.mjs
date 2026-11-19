@@ -1072,6 +1072,33 @@ test('R32.3 · publica-tot: --publica-apk i --sincronitza-ard van sols, mai junt
   assert.match(resum.passos[2].accio, /entre «npm run build» \(que buida dist\/\) i l'rsync de dist\/ al Node 0 \(socdepoble\.cat\)/);
   assert.match(resum.passos[2].accio, /Firebase no el puja i hi redirigix \(302\)/);
   assert.equal(resum.preflight.linies.some((l) => /fastlane/.test(l) && !/sense fastlane/.test(l)), false);
+  // R32.3-PEIX-ARD · A la prova interna, el pla no anuncia res a ard.json (només ho fa production).
+  assert.ok(!resum.passos.some((pas) => pas.ordre.includes('--sincronitza-ard')), 'cap --sincronitza-ard a la prova interna');
+
+  /* R32.3-PEIX-ARD · A producció, el pla omnicanal encadena --sincronitza-ard (Android i iOS) després de
+     cada pujada i ABANS de «npm run build»; l'APK directe, que necessita el dist/ d'eixe build, després. */
+  const totes = publica.resumOmnicanal(ARREL, { versio: '1.2.5', build: '10', plataforma: 'totes', canal: 'produccio', env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') } });
+  const index = (re) => totes.passos.findIndex((pas) => re.test(pas.ordre));
+  const iBuild = index(/^npm run build /);
+  const iArdAndroid = index(/--sincronitza-ard --versio 1\.2\.5 --build 10$/);
+  const iArdIos = index(/--sincronitza-ard --versio 1\.2\.5 --build-ios 10$/);
+  assert.ok(iBuild > 0, 'hi ha el pas web');
+  assert.ok(iArdAndroid >= 0 && iArdAndroid < iBuild, `ARD d'Android (${iArdAndroid}) abans de npm run build (${iBuild})`);
+  assert.ok(iArdIos >= 0 && iArdIos < iBuild, `ARD d'iOS (${iArdIos}) abans de npm run build (${iBuild})`);
+  assert.ok(index(/puja-android\.mjs/) < iArdAndroid, 'després de la pujada a Google Play');
+  assert.ok(index(/puja-ios\.mjs/) < iArdIos, 'després de la pujada a l\'App Store');
+  assert.ok(iArdIos < index(/--build-testflight 10$/), 'abans de l\'anunci de TestFlight');
+  assert.ok(index(/--publica-apk --versio/) > iBuild && index(/--build-apk 10$/) > index(/--publica-apk --versio/), 'l\'APK directe, després del build');
+  assert.match(totes.passos[iArdAndroid].accio, /pista production/);
+  /* Revisió adversarial · ard.json és versionat: escriure'l deixa l'arbre brut i el preflight de
+     puja-ios.mjs (i de qualsevol compilació o pujada nativa) ja no deixaria seguir. Cap pas natiu
+     va darrere del primer anunci. I el connector WordPress, com abans, després del pas web. */
+  const iPrimerAnunci = totes.passos.findIndex((pas) => /--sincronitza-(ard|proves)/.test(pas.ordre));
+  const natius = totes.passos.map((pas, i) => (/--compila|puja-(android|ios)\.mjs/.test(pas.ordre) ? i : -1)).filter((i) => i >= 0);
+  assert.equal(natius.length, 3, 'compila Android, puja Android, compila iOS');
+  assert.ok(natius.every((i) => i < iPrimerAnunci), `cap pas natiu (${natius}) després del primer anunci (${iPrimerAnunci})`);
+  assert.ok(index(/npm run build:wp /) > iBuild, 'el connector WordPress, després del pas web');
+  assert.equal(totes.passos.filter((pas) => pas.ordre.includes('npm run build ')).length, 1, 'un sol build web');
 
   /* Elefant (contraexemple del Peix silent_failure_hunter) · Abans, «--sincronitza-ard --publica-apk» sense
      dist/index.html escrivia ard.json i després eixia amb 7. Ara van en ordres a banda: res s'escriu. */
@@ -1096,7 +1123,7 @@ test('R32.3 · Elefant · --sincronitza-ard només anuncia el build que la botig
   const manifest = path.join(TEMPORAL, 'ard-cli.json');
   const sim = await simulador();
   const posaPlay = (pistes) => { sim.play.publicat = pistes; };
-  const llancament = (status, codi = build) => ({ track: 'internal', releases: [{ name: 'x', versionCodes: [String(codi)], status }] });
+  const llancament = (status, codi = build, track = 'internal') => ({ track, releases: [{ name: 'x', versionCodes: [String(codi)], status }] });
   const play = { endpoints: sim.endpoints, espera: async () => {} };
   const ard = (args, entorn, mes = {}) => ambPantalla(() => publica.main(['--sincronitza-ard', '--versio', versio, ...args], { env: entorn.env, play, manifest, ...mes }));
   try {
@@ -1109,14 +1136,31 @@ test('R32.3 · Elefant · --sincronitza-ard només anuncia el build que la botig
     posaPlay({ internal: llancament('draft') });
     r = await ard(['--build', String(build)], android);
     assert.equal(r.codi, e.EIXIDA.ARBRE);
-    assert.match(r.vist, /no el dona a tothom \(internal: draft\): desplega'l a Play Console/);
+    assert.match(r.vist, /no el dona a tots els Android \(internal: draft\): .*promou-lo a production a Play Console/);
     assert.equal(fs.readFileSync(manifest, 'utf8'), inicial, 'res escrit');
     assert.ok(!sim.ops().includes('commit'), 'la consulta és de lectura');
-    // 2. Desplegat a la prova interna: s'escriu.
+    /* 2. R32.3-PEIX-ARD · Desplegat NOMÉS a la prova interna: no s'escriu, perquè androidBuild
+       s'anuncia a tots els Android i la pista internal només la reben els provadors de Play. */
     posaPlay({ internal: llancament('completed') });
     r = await ard(['--build', String(build)], android);
+    assert.equal(r.codi, e.EIXIDA.ARBRE, r.vist);
+    assert.match(r.vist, /no el dona a tots els Android \(internal: completed\)/);
+    assert.match(r.vist, /només anuncia un build de la pista production «completed»/);
+    assert.equal(fs.readFileSync(manifest, 'utf8'), inicial, 'la prova interna no s\'anuncia');
+    // A production, un esborrany o un desplegament per fases tampoc es donen a tots.
+    for (const status of ['draft', 'inProgress']) {
+      posaPlay({ internal: llancament('completed'), production: llancament(status, build, 'production') });
+      r = await ard(['--build', String(build)], android);
+      assert.equal(r.codi, e.EIXIDA.ARBRE, `${status}: ${r.vist}`);
+      assert.match(r.vist, new RegExp(`no el dona a tots els Android \\(internal: completed, production: ${status}\\)`));
+      assert.equal(fs.readFileSync(manifest, 'utf8'), inicial, `${status}: res escrit`);
+    }
+    assert.ok(!sim.ops().includes('commit'), 'la consulta és de lectura');
+    // Desplegat a production («completed»): s'escriu.
+    posaPlay({ internal: llancament('completed'), production: llancament('completed', build, 'production') });
+    r = await ard(['--build', String(build)], android);
     assert.equal(r.codi, e.EIXIDA.BE, r.vist);
-    assert.match(r.vist, new RegExp(`Google Play dona el versionCode ${build} a la pista internal \\(completed\\)`));
+    assert.match(r.vist, new RegExp(`Google Play dona el versionCode ${build} a la pista production \\(completed\\)`));
     const escrit = JSON.parse(fs.readFileSync(manifest, 'utf8'));
     assert.deepEqual([escrit.version, escrit.androidBuild, escrit.iosBuild, escrit.entries[0].version], [versio, build, build - 1, versio]);
     // 3. Les guardes pures paren abans de preguntar a Play: un build per damunt de VERSIO_CLIENT_NATIU, una altra versió.
@@ -1130,8 +1174,12 @@ test('R32.3 · Elefant · --sincronitza-ard només anuncia el build que la botig
     r = await ard(['--build', String(build - 1)], android);
     assert.match(r.vist, /no es baixa a .*--corregeix-ard/);
     assert.deepEqual(sim.crides, [], 'cap crida a Play');
-    // 4. --corregeix-ard baixa, però només a un build que Play dona.
+    // 4. --corregeix-ard baixa, però només a un build que Play dona a production (la prova interna no hi compta).
     posaPlay({ internal: llancament('completed', build - 1) });
+    r = await ard(['--build', String(build - 1), '--corregeix-ard'], android);
+    assert.equal(r.codi, e.EIXIDA.ARBRE, r.vist);
+    assert.equal(JSON.parse(fs.readFileSync(manifest, 'utf8')).androidBuild, build, 'no baixa a un build només intern');
+    posaPlay({ production: llancament('completed', build - 1, 'production') });
     r = await ard(['--build', String(build - 1), '--corregeix-ard'], android);
     assert.equal(r.codi, e.EIXIDA.BE, r.vist);
     assert.match(r.vist, /! --corregeix-ard: .* s'ha corregit a mà/);

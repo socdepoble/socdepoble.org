@@ -1,0 +1,126 @@
+# auditoria_canonica
+
+> Protocol de lectura per auditar l’arquitectura 4+2, el frontmatter v2 i el graf sense modificar la Wiki.
+
+- Document a la Wiki de Poble: https://socdepoble.org/wikidepoble?item=auditoria_canonica
+- Llicència de sèrie del contingut: CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+---
+
+<!-- SDP:EIXIDA
+type: informe
+status: esborrany
+description: "<12-220 caràcters: què s'audita i amb quina evidència>"
+tags: [auditoria]
+-->
+# Auditoria canònica de la Wiki
+
+Esta guia és consultiva i de només lectura. Els resultats els calcula el codi vigent; la guia no pot substituir els scripts ni declarar salut si una comprovació falla.
+
+
+## Registre
+
+| Camp | Valor |
+| --- | --- |
+| Identificador | [pendent] |
+| Versió | [pendent] |
+| Entorn | [pendent] |
+| Creació | [pendent] |
+| Modificació | [pendent] |
+| Propietari | [pendent] |
+| Aprovació humana | [pendent] |
+| Model IA | [pendent] |
+| Tokens consumits | [pendent] |
+
+## Acte reflex
+
+La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
+
+## Historial
+
+[pendent]
+
+## Troballes
+
+[pendent]
+
+### Guia editorial de la plantilla
+
+
+### Fonts de veritat
+
+AGENTS.md governa l’operació. .agents/protocolledge.json declara rutes, versions, tipus de sortida i seccions. tooling/wiki/schema.json governa totes les metadades; no es mantenen enums paral·lels en aquesta guia. tooling/documental/core.mjs i turns.mjs comproven el contracte i el rebut persistent.
+
+### Abast obligatori
+
+Inventariar les **carpetes reals de la Wiki** i distingir **contingut operatiu**, 04_escriptori i 90_arxiu_historic. No deduir salut d’una **taxonomia històrica**. Els **camps obligatoris i opcionals** són **exclusivament els de schema.json**, inclosos tags, visibility i reflex; revisat **no està admés** mentre no forme part de l’esquema.
+
+### Graf
+
+- Separa sempre el graf operatiu del graf físic complet.
+- Un orfe amb contingut és una troballa, no una autorització d’esborrat.
+- Distingix enllaç no resolt, destí ambigu, buit físic, mirror, vendor i arxiu.
+
+### Coherència executable
+
+- Verifica que cada script citat existisca en una ruta activa.
+- No presentes scripts de `90_arxiu_historic` com a eines disponibles.
+- Contrasta les garanties documentals amb dependències, configuració, tests i codi observable.
+
+### Comandes canòniques
+
+```bash
+npm run porta:documents -- --all
+npm run porta:frontmatter
+npm run porta:cognitiu
+npm run porta:llaurador
+npm run porta:reflex
+```
+
+Per a consum mecànic, l’auditoria estructural admet JSON:
+
+```bash
+npm run porta
+```
+
+Un error d’execució, lectura, parseig o Git és un resultat fallit. Mai es transforma en «zero incidències».
+
+### Contracte d’informe
+
+Cada troballa ha d’incloure:
+
+- fitxer o scope afectat;
+- evidència reproduïble;
+- severitat justificada;
+- font de veritat amb què entra en conflicte;
+- proposta conservadora;
+- `requires_human_decision: true` quan la intenció no es puga deduir.
+
+No s’assigna una puntuació inventada ni s’activa un bloqueig per una fórmula sense dades. Els bloquejos reals provenen de portes executables, errors crítics demostrats o una decisió humana de governança.
+
+### Frontera d’efectes
+
+Auditar no autoritza esborrar, arxivar ni corregir contingut alié. Les comprovacions amb `--check` no han de modificar fitxers; qualsevol canvi necessari s’ha de registrar i verificar dins de l’abast aprovat.
+
+
+### Sinapsis
+
+- [[doc_governanca]]
+- [[forja_to_core]]
+- [[02_genotip]]
+
+
+## Verificació
+
+[pendent]
+
+## Límits
+
+[pendent]
+
+## Vincles
+
+- [[00_index]]
+- [[00_index_maquina]]
+- [[doc_governanca]]
+- [[00_arquitectura_tecnica_unificada]]

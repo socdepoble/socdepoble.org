@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {runInNewContext} from 'node:vm';
-import { creaSessioNodeZeroHttp } from '../src/data/local/sessioNodeZeroHttp.js';
+import { creaSessioNodeZeroHttp } from '../src/data/node0/sessioNodeZeroHttp.js';
 
 const ENDPOINT='https://socdepoble.cat/api/v1/node0', ORIGIN='https://socdepoble.cat';
 const ACTOR='11111111-1111-4111-8111-111111111111';

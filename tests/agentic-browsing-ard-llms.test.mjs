@@ -310,6 +310,7 @@ test('llms.txt queda exclòs del paquet WordPress/natiu i admés per l’inventa
   const fixture = {
     'index.html': '<!doctype html><title>Sóc de Poble</title>',
     'llms.txt': fs.readFileSync(path.join(ARREL, 'public/llms.txt'), 'utf8'),
+    'md/document-obert.md': '# Document Obert\n',
     'manifest.webmanifest': '{"name":"Sóc de Poble","start_url":"/"}',
     '.well-known/ard.json': fs.readFileSync(path.join(ARREL, 'public/.well-known/ard.json'), 'utf8'),
     '.well-known/host-meta': '<XRD/>',
@@ -330,6 +331,25 @@ test('llms.txt queda exclòs del paquet WordPress/natiu i admés per l’inventa
   const camins = inv.fitxers.map((f) => f.cami);
   assert.ok(camins.includes('llms.txt'));
   assert.ok(camins.includes('.well-known/ard.json'));
+  assert.ok(camins.includes('md/document-obert.md'), 'la còpia Markdown de la Wiki és un directori admés');
+});
+
+/* P0-CONSOLIDACIO-3-CATEDRES (Emowe/Tellado) · llms.txt enllaça la còpia Markdown
+   pública de la Wiki (tooling/seo/genera-llms.mjs): cada enllaç /md/ és un fitxer
+   de public/md, cada fitxer de public/md és a llms.txt i a slugIndex.json, i la
+   carpeta no viatja al connector WordPress ni a l'app nativa. */
+test('llms.txt i public/md: cap enllaç orfe, cap fitxer orfe, el mateix slug que slugIndex.json i fora dels paquets', () => {
+  const txt = fs.readFileSync(path.join(ARREL, 'public/llms.txt'), 'utf8');
+  const enllacats = [...txt.matchAll(/\]\(https:\/\/socdepoble\.org\/md\/([^)]+)\)/g)].map((m) => m[1]).sort();
+  const carpeta = path.join(ARREL, 'public/md');
+  assert.equal(fs.lstatSync(carpeta).isDirectory(), true, 'public/md és una carpeta real');
+  const alDisc = fs.readdirSync(carpeta).filter((nom) => !nom.startsWith('.')).sort();
+  assert.ok(alDisc.length > 0, 'la Wiki pública té documents');
+  assert.deepEqual(enllacats, alDisc, 'cada enllaç /md/ de llms.txt és un fitxer de public/md i a l’inrevés');
+  const slugs = JSON.parse(fs.readFileSync(path.join(ARREL, 'public/slugIndex.json'), 'utf8')).map((d) => `${d.slug}.md`).sort();
+  assert.deepEqual(alDisc, slugs, 'public/md té un fitxer per cada document de slugIndex.json, ni més ni menys');
+  assert.match(txt, /\n## Wiki de Poble \(Markdown\)\n/);
+  assert.equal(PROPIS_DEL_LLOC.arrel.includes('md'), true, 'public/md és propi del domini socdepoble.org');
 });
 
 test('DateTimeControl i SelectorDataHora mantenen separació textual per complir WCAG 2.5.3 label-content-name-mismatch', () => {

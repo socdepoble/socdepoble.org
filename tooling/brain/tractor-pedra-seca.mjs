@@ -48,6 +48,13 @@ const ENTRADES = ['src/main.jsx', 'src/embed.jsx', 'src/natiu/entrada.jsx', 'too
  *  auditable cap prova (L06). La paritat la fixa tests/pedra-debt.test.mjs. */
 const ENTRADES_DE_BUILD = ['vite.config.js', 'vite.modul.config.js', 'vite.natiu.config.js', 'vite.standalone.config.js'];
 
+/** R30-LLEI08-LLEI01 · Els scripts que els serveis systemd del Node 0 executen
+ *  (ExecStart de nix/node0.nix: la porta de l'esquema i el servidor) també són
+ *  arrels de la LLEI 8: el codi de src/ que importen (pontMastodon.js) corre al
+ *  servidor, no és codi mort. Com els configs de Vite, només compten per a la
+ *  LLEI 8 i es lligen com a text. La paritat la fixa tests/pedra-debt.test.mjs. */
+const ENTRADES_DE_SERVIDOR = ['nix/bootstrap-node0.mjs', 'nix/start-node0.mjs'];
+
 /** Fitxers autoritzats a tocar el document amfitrió. */
 const PERMIS_DOCUMENT = ['src/PedraSecaEmbed.jsx', 'src/config/theme.js',
   // Propietari únic SEO: registerSeo exigix manageDocumentHead i rebutja embed/iframe.
@@ -61,6 +68,16 @@ const PERMIS_DOCUMENT = ['src/PedraSecaEmbed.jsx', 'src/config/theme.js',
   /* Decisió del Mestre (31-10-2026, part C) · Còpia d'impressió penjada del
      <body> i classe a <html> mentre la vista és oberta (modules.css, @media print). */
   'src/sections/gestoria/facturar/ImpressioFactura.jsx'];
+
+/** Permisos acotats: el fitxer continua auditat i només se li perdonen tants
+ *  accessos de cada tipus com diu la quota; el que sobra es registra.
+ *  D-R30-LLEI06 (proposta 261118, pendent de la signatura del Mestre) · PageFrame
+ *  és la porta única del <body> de la SPA: destiDeLIndex (l'Índex i capaDeDalt)
+ *  hi penja la capa; encastat va a .sdp-root, mai al body de l'amfitrió. Un sol
+ *  document.body; cap head ni documentElement. */
+const PERMIS_DOCUMENT_ACOTAT = {
+  'src/components/universal/PageFrame.jsx': { body: 1 }
+};
 
 /** Selectors de control sotmesos a la Llei de Vida. */
 const CONTROLS = [
@@ -146,6 +163,8 @@ function classesEscrites(fitxers) {
     const { brut: t, net, prosa } = fo;
     const afig = (c, idx, htmlDelPaper = false) => {
       if (!c || c.includes('$') || c.includes('{')) return;
+      // R30-LLEI08-LLEI01 · Un operador d'una expressió tallada («?», «:») no és cap classe.
+      if (!/^-?[_a-zA-Z][\w-]*$/.test(c)) return;
       // Part C · El full <style> propi d'un document autònom d'esta font dona regla a
       // l'HTML d'eixe document (class="…"), mai al className del JSX de la mateixa font.
       if (htmlDelPaper && fo.estilsPropis.has(c)) return;
@@ -256,13 +275,17 @@ const CONVENCIONS_DE_CLASSE = {
   'language-': 'WHATWG HTML, element <code>: la llengua del codi es marca amb una classe «language-…» per als ressaltadors i els lectors de diagrames'
 };
 const esConvencio = (c) => Object.keys(CONVENCIONS_DE_CLASSE).some((prefix) => c.startsWith(prefix));
+/* R30-LLEI08-LLEI01 · `sdp-ombra-${eleva}` deixa el prefix «sdp-ombra-»: la família
+   té regla si algun full definix una classe més llarga que comença igual (.sdp-ombra-1).
+   Un prefix sense cap membre amb regla continua sent orfe. */
+const familiaAmbRegla = (c) => c.endsWith('-') && [...totCss.classes].some((k) => k.length > c.length && k.startsWith(c));
 /* Decisió del Mestre (31-10-2026, part C) · Classes d'estat que cap full no estila,
    amb el seu motiu escrit: es retiren quan passen a atribut data-. */
 const EXCEPCIONS_CLASSE = {
   'sdp-workspace--compacte': "ganxo d'estat del mode compacte de UniversalWorkspace (proves i documentació del component); passar-lo a data-compacte demana una prop nova d'AppGridShell i la fitxa contracte_graella.md és de la zona humana"
 };
 for (const [c, ocurrencies] of escrites)
-  if (!totCss.classes.has(c) && !esConvencio(c) && !EXCEPCIONS_CLASSE[c])
+  if (!totCss.classes.has(c) && !familiaAmbRegla(c) && !esConvencio(c) && !EXCEPCIONS_CLASSE[c])
     registra('LLEI_01_CLASSE_ORFENA', `.${c}  →  ${ocurrencies[0]}${ocurrencies.length > 1 ? ` (+${ocurrencies.length - 1})` : ''}`);
 
 /* LLEI 2 · TOKEN FANTASMA — var(--x) sense declaració enlloc. */
@@ -331,9 +354,13 @@ for (const f of JSX) {
   const fo = font(f);
   if (fo === null) continue;
   const t = fo.brut;
-  for (const m of fo.net.matchAll(/document\.(documentElement|head|body)/g))
+  const quota = { ...PERMIS_DOCUMENT_ACOTAT[f] };
+  for (const m of fo.net.matchAll(/document\.(documentElement|head|body)/g)) {
     // Part C · «actiu === document.body» pregunta on és el focus: compara, no toca.
-    if (!fo.comparacions.has(m.index)) registra('LLEI_06_ENCAPSULAMENT', `${f}:${liniaDe(t, m.index)}  →  document.${m[1]}`);
+    if (fo.comparacions.has(m.index)) continue;
+    if (quota[m[1]] > 0) { quota[m[1]] -= 1; continue; }
+    registra('LLEI_06_ENCAPSULAMENT', `${f}:${liniaDe(t, m.index)}  →  document.${m[1]}`);
+  }
 }
 
 /* LLEI 7 · PARITAT D'IDIOMES.
@@ -460,7 +487,7 @@ const entradesCli = Object.entries(scriptsNpm)
   .filter(([nom]) => nom !== 'test' && !nom.startsWith('test:'))
   .flatMap(([, ordre]) => typeof ordre !== 'string' ? []
     : [...ordre.matchAll(/^\s*node\s+(tooling\/[\w./-]+\.(?:mjs|js))(?=\s|$)/g)].map((m) => m[1]));
-const delBuild = grafDesDe([...ENTRADES_DE_BUILD, ...entradesCli]);
+const delBuild = grafDesDe([...ENTRADES_DE_BUILD, ...ENTRADES_DE_SERVIDOR, ...entradesCli]);
 for (const f of [...JSX, ...CSS_TOTS])
   if (!accessible.has(f) && !delBuild.has(f) && f !== FULL_OMBRA && !EXCEPCIONS_ORFE[f] && !/\.test\.[jt]sx?$/.test(f) && !esFixtureDeProva(f)) // les proves són entrades de vitest
     registra('LLEI_08_SUBARBRE_ORFE', f);

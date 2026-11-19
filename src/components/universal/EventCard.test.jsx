@@ -181,8 +181,9 @@ describe('l’enllaç de tota la targeta', () => {
 /* Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16: «El botó
    "Agenda" de la targeta portarà a la data específica del Calendari») ·
    L'etiqueta «Agenda» d'un acte porta a la vista Mes del Calendari amb el dia
-   de l'acte triat (el de la seua insígnia), amb el Link del router. La
-   pastilla continua portant al mes (ordre del Mestre, 261001, carril A). */
+   de l'acte triat (el de la seua insígnia), amb el Link del router.
+   P0-77 / IDEA-208 (R16-P; ordre del Mestre, 261109) · Derogat per als actes
+   el carril A del 261001: la pastilla també porta al dia de l'acte. */
 describe('Onada 6 · l’etiqueta «Agenda» porta al dia de l’acte', () => {
   const agenda = () => [...arrel.querySelectorAll('.sp-card-labels li')].find((li) => li.textContent === 'Agenda');
 
@@ -193,9 +194,9 @@ describe('Onada 6 · l’etiqueta «Agenda» porta al dia de l’acte', () => {
     expect(li.className).toBe('sp-card-label sdp-badge-category sp-card-label--enllac');
     const enllac = li.querySelector('a');
     expect([enllac.getAttribute('href'), enllac.className, enllac.textContent]).toEqual(['/calendari?vista=mes&date=2026-11-14', 'sp-card-label', 'Agenda']);
-    // La pastilla no canvia: el mes.
+    // P0-77 / IDEA-208 (R16-P) · La pastilla de l'acte, al mateix dia.
     act(() => { arrel.querySelector('.btn-date-time').click(); });
-    expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?mes=2026-11');
+    expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?vista=mes&date=2026-11-14');
   });
 
   test('el dia és el de la insígnia, en hora local, també a la vora de la mitjanit', () => {

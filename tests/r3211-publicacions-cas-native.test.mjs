@@ -71,7 +71,7 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
     assert.equal((await db.query('SELECT inet_server_addr() AS addr')).rows[0].addr, null);
     t.diagnostic(JSON.stringify({ version, connection: 'disposable Unix socket; listen_addresses empty', manualSHA }));
     const plan = creaPlaMigracions(), hydration = await preparaHidratacio();
-    assert.equal(plan.migrations.length, 123);
+    assert.equal(plan.migrations.length, 124);
     await db.query(generaSql(plan, hydration, { advisoryLock: false }));
     await db.query(manual);
     const tenant = hydration.municipalityId;
@@ -208,7 +208,7 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
       const receipts = (await db.query('SELECT * FROM private.publicacions_cas_rebuts ORDER BY operation_id')).rows;
       await db.query(manual);
       assert.deepEqual((await db.query('SELECT * FROM private.publicacions_cas_rebuts ORDER BY operation_id')).rows, receipts);
-      assert.equal((await db.query('SELECT count(*)::int AS n FROM node0.schema_migrations')).rows[0].n, 123);
+      assert.equal((await db.query('SELECT count(*)::int AS n FROM node0.schema_migrations')).rows[0].n, 124);
       assert.equal(sha256(readFileSync(MANUAL_URL)), manualSHA);
     });
   } finally { await cluster.close(); }

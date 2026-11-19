@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CAPACITATS, CONTRACTE_NUCLI } from '../src/data/contracte.js';
-import { BACKEND_ID_NODE_ZERO, CONVIDAT_NODE_ZERO, URL_NODE_ZERO, creaAdaptadorNodeZeroHttp, normalitzaEndpointNodeZero } from '../src/data/local/adaptadorNodeZeroHttp.js';
+import { BACKEND_ID_NODE_ZERO, CONVIDAT_NODE_ZERO, URL_NODE_ZERO, creaAdaptadorNodeZeroHttp, normalitzaEndpointNodeZero } from '../src/data/node0/adaptadorNodeZeroHttp.js';
 
 const json = (value, init = {}) => new Response(JSON.stringify(value), { headers: { 'Content-Type': 'application/json' }, ...init });
 const buit = { towns: [], pages: [], agents: [] };

@@ -97,6 +97,16 @@ export function publicMetadata(attributes = {}) {
   return !['arxivat', 'quarantena'].includes(attributes.status);
 }
 
+/** P0-CONSOLIDACIO-3-CATEDRES · Títol i slug d'un document públic de la Wiki.
+ * Una sola regla per a slugIndex.json (build_slug_index.mjs) i per a la
+ * projecció Markdown de llms.txt (tooling/seo/genera-llms.mjs): així cada
+ * /md/<slug>.md té el mateix slug que el seu document a slugIndex.json. */
+export function slugDeDocument(meta, file) {
+  const title = meta.title || meta.name || file.split('/').pop().replace('.md', '');
+  const slug = meta.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return { title, slug };
+}
+
 /** Rebutja symlinks en qualsevol component sota root, inclòs el fitxer final.
  * L'arrel proporcionada pel caller es resol primer (p. ex. /tmp a macOS).
  */

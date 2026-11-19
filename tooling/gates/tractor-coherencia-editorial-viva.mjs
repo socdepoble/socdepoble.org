@@ -18,7 +18,11 @@
  *           al substantiu de cada llengua, en xifra o en lletra, React major real i
  *           vigència ADR-2026-10 a 00_arquitectura_tecnica_unificada.md).
  *   CEV-4 · Zero lèxic prohibit (Llei 0) en PAGE_COPY (5 llengües), articles vius,
- *           public/llms.txt i Wiki viva (01_ser, 02_saber, 03_actuar).
+ *           public/llms.txt, public/md/*.md i Wiki viva (01_ser, 02_saber, 03_actuar).
+ *           I llms.txt és la projecció de publication-policy.mjs (genera-llms.mjs):
+ *           el text de public/llms.txt i la llista de fitxers de public/md han de
+ *           ser els de la projecció (P0-CONSOLIDACIO-3-CATEDRES). El cos de cada .md
+ *           el comprova sencer «genera-llms.mjs --comprova», no esta porta.
  *   CEV-5 · Paritat estructural i rutes internes verificades en les 5 llengües
  *           (ca, es, en, eu, gl), sense marcadors {placeholder} oblidats ni hrefs trencats.
  *   CEV-6 · Propagació editorial per dominis (--changed f1,f2 o --git-diff [ref],
@@ -31,6 +35,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { PROJECT_DIR, WIKI_DIR } from '../wiki/lib/project_paths.mjs';
 import { esMain } from '../lib/arrel.mjs';
+import { projectaLlms, RUTA_LLMS, CARPETA_MD } from '../seo/genera-llms.mjs';
 
 const ESQUEMA_ESPERAT = 'sdp.coherencia-editorial-viva.v1';
 const MAPA_REL = '.agents/coherencia-editorial-mapa.json';
@@ -435,6 +440,35 @@ export async function avaluaCoherenciaEditorial({
       const hit = regla.re.exec(llmsTxt);
       if (hit) falla('CEV-4', 'public/llms.txt', `[${regla.id}] «${hit[0]}» — ${regla.motiu}`);
     }
+  }
+
+  /* P0-CONSOLIDACIO-3-CATEDRES · La còpia Markdown de la Wiki passa pel mateix
+     lèxic que la Wiki (sense blocs de codi), i llms.txt no s'edita a mà: el seu
+     text i la llista de public/md són els de la projecció de publication-policy.mjs. */
+  const carpetaMd = R(CARPETA_MD);
+  /* Els noms amb punt inicial (.DS_Store del Finder) els governa .gitignore, no la projecció. */
+  const mdAlDisc = fs.existsSync(carpetaMd) ? fs.readdirSync(carpetaMd).filter((n) => !n.startsWith('.')).sort() : [];
+  for (const nom of mdAlDisc.filter((n) => n.endsWith('.md'))) {
+    const net = llevaBlocsCodiMarkdown(fs.readFileSync(path.join(carpetaMd, nom), 'utf8'));
+    for (const regla of reglesLexic) {
+      const hit = regla.re.exec(net);
+      if (hit) falla('CEV-4', `${CARPETA_MD}/${nom}`, `[${regla.id}] «${hit[0]}» — ${regla.motiu}`);
+    }
+  }
+  try {
+    const projeccio = projectaLlms({ root: arrel });
+    const llmsAlDisc = fs.existsSync(R(RUTA_LLMS)) ? fs.readFileSync(R(RUTA_LLMS), 'utf8') : null;
+    if (llmsAlDisc !== projeccio.llms) {
+      falla('CEV-4', RUTA_LLMS, 'llms.txt editat a mà o desfasat: no és la projecció de publication-policy.mjs (npm run llms:build)');
+    }
+    const esperats = [...projeccio.fitxers.keys()].map((slug) => `${slug}.md`).sort();
+    const sobren = mdAlDisc.filter((nom) => !esperats.includes(nom));
+    const falten = esperats.filter((nom) => !mdAlDisc.includes(nom));
+    if (sobren.length || falten.length) {
+      falla('CEV-4', CARPETA_MD, `${CARPETA_MD} no és la projecció pública (sobren: ${sobren.join(', ') || 'cap'}; falten: ${falten.join(', ') || 'cap'}; npm run llms:build)`);
+    }
+  } catch (e) {
+    falla('CEV-4', RUTA_LLMS, `La projecció de llms.txt no es pot calcular: ${e.message}`);
   }
 
   const wikiViva = [

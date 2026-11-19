@@ -494,7 +494,12 @@ describe('P1-68 · paritat amb el client', () => {
     expect(plegat.lligadures).toEqual(LLIGADURES_USERNAME.map(([de, a]) => [de, a]));
     expect(PLEGA.cos).toContain("'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'");
     expect(PLEGA.cos).toContain("regexp_replace(normalize(coalesce(p_text, ''), NFC), '([lL])[.·‧∙]([lL])', '\\1\\2', 'g')");
-    expect(MODEL).toContain(".normalize('NFC').replace(/([lL])[.·‧∙]([lL])/g, '$1$2')");
+    /* v1.2.10 · Gemini R32.12 (lot 03): el client passa per normalitzaNfcSeguraUi, que per a una entrada
+       ben formada (512 unitats com a molt, 64 marques combinants seguides com a molt) torna el mateix
+       normalize('NFC') que el SQL; una entrada hostil dona '' i el client no proposa cap usuari. */
+    expect(MODEL).toContain("normalitzaNfcSeguraUi(String(text ?? ''), { maxLongitud: 512 })");
+    expect(MODEL).toContain("nfc.replace(/([lL])[.·‧∙]([lL])/g, '$1$2')");
+    expect(readFileSync(path.join(ARREL, 'src/utils/normalitzaEntradaUi.js'), 'utf8')).toContain("return valor.normalize('NFC');");
     expect(PLEGA.cos).not.toMatch(/\blower\(|unaccent|nfd/i);
   });
 

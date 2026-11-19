@@ -1,0 +1,57 @@
+# arquitectura_sistema_nervios
+
+> Descriu com a visió futura una sincronització CRDT/P2P i explicita que Y.js i WebRTC no estan implementats.
+
+- Document a la Wiki de Poble: https://socdepoble.org/wikidepoble?item=arquitectura_sistema_nervios
+- Llicència de sèrie del contingut: CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+---
+
+# Sistema nerviós CRDT/P2P — visió futura
+
+Esta pàgina és una hipòtesi de disseny, no la descripció de la baseline. El
+projecte actual no declara Y.js com a dependència, no implementa un protocol de
+sincronització WebRTC i no ha demostrat convergència entre dispositius.
+
+## Problema que la visió vol resoldre
+
+Diverses persones podrien editar dades mentre estan sense connexió i
+retrobar-se després. Una arquitectura futura hauria de preservar cada canvi,
+resoldre conflictes de manera explicable i funcionar en dispositius modestos
+sense convertir un servei central en propietari de la dada.
+
+Un CRDT és una família possible de solucions, però no elimina per si mateix la
+necessitat d'identitat, permisos, xifratge, transport, persistència, migracions,
+recollida de fem ni recuperació davant corrupció. WebRTC també necessita
+senyalització, gestió de NAT, autenticació i un model d'amenaça.
+
+## Porta de maduresa
+
+Abans de promoure esta visió a `canonic` i “implementat” cal:
+
+1. ADR amb alternatives, abast i propietari, que revise l'[[ADR-2026-08-ONLINE-FIRST]], la qual hui descarta la reconciliació offline i el CRDT;
+2. prototip localitzat en el repositori i dependències declarades;
+3. proves de convergència, partició, duplicació, ordre i esborrat;
+4. identitat, permisos, xifratge i tractament de dispositius perduts;
+5. proves multidispositiu de desconnexió i reconnexió en Safari i en dispositius modestos;
+6. pressupost de memòria, tombstones i migració/marxa arrere;
+7. observabilitat i procediment de recuperació reproduïble.
+
+Fins aleshores, la **realitat verificable** és la descrita en
+[[00_arquitectura_tecnica_unificada]]: **React/Vite** i una arquitectura online-first
+amb el Supabase de Sóc de Poble com a **font de veritat** ([[ADR-2026-08-ONLINE-FIRST]]),
+integrat amb Sollutia pel **Model B** ([[ADR-2026-09-SOLLUTIA-MODEL-B]]). Dexie es va
+retirar. El codi torna a incloure PWA, IndexedDB per a **dades del dispositiu** i
+una closca de `/app/*` sense xarxa. L'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] en
+documenta la implementació parcial i la proposta d'abast, encara **pendent de
+signatura**. Estes excepcions **no implementen reconciliació de dades compartides**,
+sincronització en segon pla ni CRDT.
+
+## Vincles
+
+- [[00_index]]
+- [[00_arquitectura_tecnica_unificada]]
+- [[ADR-2026-08-ONLINE-FIRST]]
+- [[ADR-2026-09-SOLLUTIA-MODEL-B]]
+- [[ADR-2026-10-APPS-DEL-DISPOSITIU]]
+- [[arquitectura_l_anima]]

@@ -57,8 +57,10 @@ test('Pedra Seca: cap style= ni :has() als fitxers del carril A', () => {
   assert.deepEqual(dolents, []);
 });
 
-/* La pastilla ja no porta al dia: cap fitxer de src/ nomena les peces velles
-   (rutaCalendariDelDia, diaDeLaPastilla), que s'han retirat d'editorial.js. */
+/* La pastilla d'una publicació ja no porta al dia: cap fitxer de src/ nomena
+   les peces velles (rutaCalendariDelDia, diaDeLaPastilla), que s'han retirat
+   d'editorial.js. La d'un acte sí que porta al seu dia (P0-77 / IDEA-208,
+   ordre del Mestre, 261109 20:57), amb peces noves (usePastillaDelDia). */
 test('cap rastre de les peces velles de la pastilla (rutaCalendariDelDia, diaDeLaPastilla)', () => {
   const fitxers = fs.readdirSync(path.join(ARREL, 'src'), { recursive: true })
     .map((f) => `src/${String(f).split(path.sep).join('/')}`)

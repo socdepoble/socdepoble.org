@@ -17,8 +17,8 @@
  *
  * El que el Llibre demana i el model encara no té (telèfon, carrer i
  * horaris) no s'inventa: quan existisquen, entren ací. En remot, el correu
- * públic depén de la projecció de la migració 2610281730 (C11-05), no
- * aplicada: fins llavors la targeta porta el nom, el poble i la web.
+ * públic depén de la projecció de la migració 2610281730 (C11-05); un
+ * servidor sense ella dona la targeta amb el nom, el poble i la web.
  *
  * Pur, llevat de desaVcard (Blob i un enllaç temporal, com la còpia de les
  * dades de «Privacitat i dades»), que rep el document i URL injectables.

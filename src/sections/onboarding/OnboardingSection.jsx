@@ -439,7 +439,15 @@ export default function OnboardingSection() {
     const op = obriIntent('register');
     setErrorEntrada(null);
     try {
-      await loginWithPassword(fields.email, fields.password, externalConfig);
+      try {
+        await loginWithPassword(fields.email, fields.password, externalConfig);
+      } catch (err) {
+        /* Onada v1.2.10 · La contrasenya ix en NFC. Un compte d'abans amb un accent en dues peces (NFD) la té
+           crua al servidor: només si el servidor diu «credencials» i la crua és diferent, un sol reintent amb ella. */
+        const crua = fields.passwordCrua;
+        if (!op.viu() || err?.code !== CODI_ENTRADA.CREDENCIALS || typeof crua !== 'string' || !crua || crua === fields.password) throw err;
+        await loginWithPassword(fields.email, crua, externalConfig);
+      }
       if (!op.viu()) return;
       showToast(tr('section.login.benvinguda.deNou', 'Benvingut de nou al Mas!'), 'success');
       window.dispatchEvent(new CustomEvent('sdp:auth-change'));
@@ -681,6 +689,7 @@ export default function OnboardingSection() {
       title={titolPagina}
       {...capcalera}
       chrome="system"
+      className="sdp-universal-page-container--onboarding"
       traduccio={false}
     >
       <div className="content-wrapper onboarding-vista">

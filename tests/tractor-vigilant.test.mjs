@@ -87,3 +87,55 @@ test('VA2: una cadena que imita «\'permission_callback\' =>» no compensa un en
  write('wordpress-plugin/a.php',"<?php\ndefined( 'ABSPATH' ) || exit;\nregister_rest_route( 'sdp/v1', '/r', array(\n array( 'methods' => 'GET', 'callback' => 'sdp_a', 'permission_callback' => 'sdp_pot' ),\n array( 'methods' => 'POST', 'callback' => 'sdp_b', 'summary' => \"'permission_callback' => cap\" ),\n) );\n");
  const r=analitzaVigilant(root);assert.equal(regla(r,'VA2').estat,'falla');assert.equal(codiVigilant(r),1);
 });
+/* IDEA-13 · commit i origen llegits de .git sense executar git; VIG-05 sense soroll; VIG-04 distingix ranci de manipulat. */
+test('IDEA-13: commit, branca i origen ixen dels fitxers de .git (worktree, packed-refs) sense cap credencial',t=>{
+ const {root,write}=fixture(t);const hex='0123456789abcdef0123456789abcdef01234567';
+ const gd=path.join(root,'gd');write('.git',`gitdir: ${gd}\n`);write('gd/HEAD','ref: refs/heads/r26\n');write('gd/commondir','c\n');
+ write('gd/c/packed-refs',`# pack-refs with: peeled\n${hex} refs/heads/r26\n`);
+ write('gd/c/config','[core]\n\tbare = false\n[remote "fork"]\n\turl = https://github.com/f/y.git\n[branch "r26"]\n\tremote = upstream\n[remote "upstream"]\n\turl = https://tok@github.com/x/y.git\n');
+ const r=analitzaVigilant(root);
+ assert.equal(r.commit,hex);assert.equal(r.branca,'r26');assert.deepEqual(r.origen,{remot:'upstream',url:'https://github.com/x/y.git'});
+ assert.ok(!JSON.stringify(r).includes('tok'));assert.equal(r.motiuGit,undefined);
+});
+test('IDEA-13: sense .git, commit i origen són null i el motiu ho diu; mai un commit fabricat',t=>{
+ const {root}=fixture(t);const r=analitzaVigilant(root);
+ assert.equal(r.commit,null);assert.equal(r.origen,null);assert.equal(typeof r.motiuGit,'string');
+});
+test('VIG-05: comentaris, hosts locals amb port comodí, dominis reservats, espais de noms i hosts d\'una etiqueta no fan soroll',t=>{
+ const {root,write}=fixture(t);
+ write('src/a.js',"// http://localhost:3340)\nconst u=new URL(p,'http://x.invalid');\nconst csp=\"connect-src http://localhost:*;\";\nconst d=`http://localhost:${port}/x`;\nconst ns='http://schemas.openxmlformats.org/x';\nconst e='http://insegur';\nconst q='http://www.wikidata.org/entity/Q11573';\n");
+ write('src/sections/disseny/cataleg/detalls/Especimen.jsx',"const t='Compte amb este enllaç: http://xn--pple-43d.com/entra';\n");
+ assert.equal(regla(analitzaVigilant(root),'VIG-05').estat,'ok');
+ write('src/b.js',"const h='<a href=\"http://zona14.org\">';\n");
+ const r=analitzaVigilant(root);assert.equal(regla(r,'VIG-05').estat,'falla');assert.deepEqual(regla(r,'VIG-05').evidencia,[{fitxer:'src/b.js'}]);
+ write('src/b.js',"const w='http://www.wikidata.org/wiki/Special:Search';\n");
+ assert.deepEqual(regla(analitzaVigilant(root),'VIG-05').evidencia,[{fitxer:'src/b.js'}]);
+});
+const inventariDe=(write,fitxers)=>{write('dist/sdp-inventari.json',JSON.stringify({fitxers:Object.entries(fitxers).map(([cami,text])=>({cami,sha256:createHash('sha256').update(text).digest('hex')}))}));};
+test('VIG-04: un orfe anterior a l\'inventari és build ranci i només informa, amb una sola evidència resumida',t=>{
+ const {root,write}=fixture(t);write('dist/a.txt','abc');write('dist/trossos/vell.js','vell');inventariDe(write,{'a.txt':'abc'});
+ const antic=new Date(Date.now()-3600_000);fs.utimesSync(path.join(root,'dist/trossos/vell.js'),antic,antic);
+ const r=analitzaVigilant(root),c=regla(r,'VIG-04');
+ assert.equal(c.estat,'informa');assert.equal(c.evidencia.length,1);assert.equal(c.evidencia[0].fitxer,'dist');assert.equal(c.evidencia[0].rancis,1);assert.equal(codiVigilant(r),0);
+});
+test('VIG-04: un build fresc (versió `${package}-dev`, .vite/manifest.json escrit abans de l\'inventari) és ok; una release no es compara amb package.json',t=>{
+ const {root,write}=fixture(t);write('package.json',JSON.stringify({version:'1.2.9'}));write('dist/a.txt','abc');write('dist/.vite/manifest.json','{}');
+ const abans=new Date(Date.now()-1000);fs.utimesSync(path.join(root,'dist/.vite/manifest.json'),abans,abans);
+ inventariDe(write,{'a.txt':'abc'});write('dist/sdp-release.json',JSON.stringify({versio:'1.2.9-dev'}));
+ const fresc=regla(analitzaVigilant(root),'VIG-04');assert.equal(fresc.estat,'ok');assert.doesNotMatch(fresc.proposta,/ranci/);
+ write('dist/sdp-release.json',JSON.stringify({versio:'1.1.17'}));
+ assert.equal(regla(analitzaVigilant(root),'VIG-04').estat,'ok');
+});
+test('VIG-04: una versió -dev desfasada respecte de package.json informa',t=>{
+ const {root,write}=fixture(t);write('package.json',JSON.stringify({version:'1.2.9'}));write('dist/a.txt','abc');inventariDe(write,{'a.txt':'abc'});
+ write('dist/sdp-release.json',JSON.stringify({versio:'1.2.0-dev'}));
+ const c=regla(analitzaVigilant(root),'VIG-04');
+ assert.equal(c.estat,'informa');assert.deepEqual(c.evidencia,[{fitxer:'dist',rancis:0,versioRelease:'1.2.0-dev',versioPaquet:'1.2.9'}]);
+});
+test('VIG-04: un hash canviat o un orfe posterior a l\'inventari és manipulació i falla',t=>{
+ const {root,write}=fixture(t);write('dist/a.txt','abc');write('dist/trossos/vell.js','vell');inventariDe(write,{'a.txt':'abc'});
+ const antic=new Date(Date.now()-3600_000);fs.utimesSync(path.join(root,'dist/trossos/vell.js'),antic,antic);
+ write('dist/a.txt','abd');let c=regla(analitzaVigilant(root),'VIG-04');assert.equal(c.estat,'falla');assert.deepEqual(c.evidencia,[{fitxer:'dist/a.txt'}]);
+ write('dist/a.txt','abc');const nou=new Date(Date.now()+3600_000);write('dist/injectat.js','x');fs.utimesSync(path.join(root,'dist/injectat.js'),nou,nou);
+ c=regla(analitzaVigilant(root),'VIG-04');assert.equal(c.estat,'falla');assert.deepEqual(c.evidencia,[{fitxer:'dist/injectat.js'}]);
+});

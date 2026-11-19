@@ -1,5 +1,6 @@
 import { CODI_ENTRADA, esBackendInabastable } from '../../data/errorsBackend.js';
 import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
+import { normalitzaNfcSeguraUi } from '../../utils/normalitzaEntradaUi.js';
 export {
   REMITENT_CORREU_CANONIC,
   NOM_REMITENT_CANONIC,
@@ -25,8 +26,10 @@ export function esCorreuValid(email) {
  */
 export function validaContrasenyaNova({ password, confirmPassword }) {
   const errors = {};
-  if (String(password || '').length < LONGITUD_MINIMA_CONTRASENYA) errors.password = MISSATGE_CONTRASENYA_CURTA;
-  if (String(password || '') !== String(confirmPassword || '')) errors.confirmPassword = 'Les contrasenyes no coincidixen';
+  const pwdNfc = normalitzaNfcSeguraUi(String(password ?? ''), { maxLongitud: 256 });
+  const confirmNfc = normalitzaNfcSeguraUi(String(confirmPassword ?? ''), { maxLongitud: 256 });
+  if (!pwdNfc || pwdNfc.length < LONGITUD_MINIMA_CONTRASENYA) errors.password = MISSATGE_CONTRASENYA_CURTA;
+  if (pwdNfc === null || confirmNfc === null || pwdNfc !== confirmNfc) errors.confirmPassword = 'Les contrasenyes no coincidixen';
   return errors;
 }
 
@@ -112,7 +115,9 @@ const PLEGAT_USERNAME = new Map([...ACCENTS_USERNAME.de].map((lletra, i) => [lle
    les lligadures, els accents i les majúscules ASCII. Cap altra minúscula: un
    lower() que depenga del locale (İ, K) no coincidiria amb el del servidor. */
 function plegaUsername(text) {
-  let valor = String(text ?? '').normalize('NFC').replace(/([lL])[.·‧∙]([lL])/g, '$1$2');
+  const nfc = normalitzaNfcSeguraUi(String(text ?? ''), { maxLongitud: 512 });
+  if (nfc === null) return '';
+  let valor = nfc.replace(/([lL])[.·‧∙]([lL])/g, '$1$2');
   for (const [de, a] of LLIGADURES_USERNAME) valor = valor.split(de).join(a);
   return [...valor].map((lletra) => PLEGAT_USERNAME.get(lletra) ?? lletra).join('').replace(/[A-Z]/g, (lletra) => lletra.toLowerCase());
 }
@@ -234,7 +239,8 @@ export function validateRegistration({ name, email, password }) {
     errors.email = 'Escriu un correu electrònic vàlid.';
   }
 
-  if (String(password || '').length < LONGITUD_MINIMA_CONTRASENYA) {
+  const pwdNfc = normalitzaNfcSeguraUi(String(password ?? ''), { maxLongitud: 256 });
+  if (!pwdNfc || pwdNfc.length < LONGITUD_MINIMA_CONTRASENYA) {
     errors.password = MISSATGE_CONTRASENYA_CURTA;
   }
 

@@ -15,9 +15,19 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: detalls/EspecimenBandaBetaMicroApp.jsx i manifest.js, 2026-11-18T20:57:20+01:00,
- * Onada v1.2.9 (revisió de la crònica a l'arbre r26-fusio): l'Avisador ja no munta la banda de fase beta ni té
- * manifest amb avisBeta, i l'espècimen de la banda i les paraules clau del manifest deixen de nomenar-lo.
+ * Darrera posada al dia: detalls/EspecimenUniversalCard.jsx i detalls/EspecimenXat.jsx, 2026-11-19T01:59:30+01:00,
+ * Onada v1.2.10 (integració del 19-11-2026 dels ítems del Llibre Mestre): el contracte de la UniversalCard diu què
+ * fa la data al Mur segons l'arquetip (arquetipDeData.js, P0-77) i documenta etiquetaData, i la conversa d'espill
+ * del Xat marca la llista mentre hi ha una capa flotant oberta (onCapaFlotantCanvia).
+ * Versió anterior: Especimen.jsx, Llinatge.jsx, i18nControlsBarra.js, manifest.js,
+ * detalls/EspecimenControlsBarra.jsx, detalls/EspecimenEmoticonaBarra.jsx, detalls/EspecimenTraspasCopublicacio.jsx
+ * i detalls/EspecimenBandaBetaMicroApp.jsx, 2026-11-18T20:57:20+01:00, dos canvis del mateix dia reunits a
+ * l'arbre r26-fusio: l'Onada R32.12 de Gemini (pla 261118_1937, Lot 01, fet a les 20:20 i integrat després de
+ * v1.2.9) porta la paritat 5 llengües (ca, es, en, eu, gl), la jerarquia H3 + negretes d'escaneig (Llei 35) i la
+ * Llei 32 a fonaments-controls-barra, la documentació viva de BarraNegra, BarraBlava amb MenuTraduir, BarraTaronja
+ * amb PaginaEmojis i el peu de la UniversalCard, i el co-publicador de mostra Oli de La Torre; i la revisió de la
+ * crònica de v1.2.9 (20:57): l'Avisador ja no munta la banda de fase beta ni té manifest amb avisBeta, i l'espècimen
+ * de la banda i les paraules clau del manifest deixen de nomenar-lo.
  * Versió anterior: detalls/EspecimenBandaBetaMicroApp.jsx, detalls/EspecimenEnquadrament.jsx,
  * detalls/EspecimenMenu.jsx, detalls/EspecimenPantallaCompleta.jsx, detalls/EspecimenXat.jsx i manifest.js,
  * 2026-11-18T20:21:21+01:00, Onada v1.2.9 (integració dels lots de Gemini R32.10 i R32.11 a l'arbre r26-fusio):
@@ -393,4 +403,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-18T20:57:20+01:00';
+export const VERSIO_CATALEG = '2026-11-19T01:59:30+01:00';

@@ -26,6 +26,9 @@
  *                            'sessio', 'mode-proves', 'fora-de-linia' o
  *                            'comprovant-desada' (escriu); 'comprovant',
  *                            'sense-permis' o 'sense-sessio' (no)
+ *                            IDEA-265 (261118) · i, només a les apps
+ *                            d'APPS_AMB_SUPERADMIN (el Lector), esSuperadmin:
+ *                            el booleà, mai el rol cru
  *   useServeiNoticies()    · T5 (261024, nucli 1.3.0) · el servei de notícies del
  *                            poble que la plataforma dona a l'app ({ fonts(),
  *                            feed(id, { signal }) }), o null; l'app no en sap

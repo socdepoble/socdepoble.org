@@ -43,7 +43,7 @@ import { marcaDeLActor, titularDeLActor } from './fontSessio.js';
 import { useSessioApp } from './index.js';
 import { creaRegistre } from './registreApps.js';
 import RutaApps from './RutaApps.jsx';
-import { ESTAT, MOTIUS, NOM_SENSE_NOM, esModeDeProves, marcaNeta, motiuDe, titularNet } from './sessioApp.js';
+import { APPS_AMB_SUPERADMIN, ESTAT, MOTIUS, NOM_SENSE_NOM, esModeDeProves, marcaNeta, motiuDe, titularNet } from './sessioApp.js';
 
 /* undefined: el context de veres (sense proveïdor, null). Un valor: el que
    tornaria el proveïdor. `organitzacions`: les pertinences que torna el port
@@ -930,5 +930,57 @@ describe('la forma i la tornada', () => {
     expect(container.querySelector('.sdp-app-portal > ul.sdp-app-portal__llista')).not.toBeNull();
     expect(container.querySelector('section.sdp-app-portal__testers')).toBeNull();
     expect(container.textContent).not.toContain('socdepoble-testers');
+  });
+});
+
+/* IDEA-265 (261118) · La carpeta «Observatori I+D · Mestres» del Lector: una desena clau,
+   esSuperadmin, només a les apps d'APPS_AMB_SUPERADMIN. El booleà, mai el rol cru, i en el dubte fals. */
+describe('el booleà de superadmin, només a les apps de la llista', () => {
+  async function muntaLaLlistada(sessio) {
+    muntaPlataforma('/app/lector/inici', {
+      registre: creaRegistre({ internes: [manifestDeProva({ id: 'lector', carrega: () => Promise.resolve({ default: Sonda }) })] }),
+      entorn: { ...ENTORN_OBERT, sessio }
+    });
+    await screen.findByTestId('sessio');
+    return vist;
+  }
+
+  test.each([
+    [{ estat: 'dins', esSuperadmin: true }, true],
+    [{ estat: 'dins', esSuperadmin: false }, false],
+    [{ estat: 'dins', esSuperadmin: 'si' }, false],
+    [{ estat: 'comprovant', esSuperadmin: true }, false],
+    [{ estat: 'fora', esSuperadmin: true }, false]
+  ])('al Lector, amb %j → %s', async (sessio, esperat) => {
+    const vista = await muntaLaLlistada(sessio);
+    expect(APPS_AMB_SUPERADMIN).toEqual(['lector']);
+    expect(Object.keys(vista).sort()).toEqual([...CLAUS, 'esSuperadmin'].sort());
+    expect(vista.esSuperadmin).toBe(esperat);
+  });
+
+  test('a una app que no és de la llista, la clau ni hi és, encara que siga superadmin', async () => {
+    const vista = await munta({ sessio: { estat: 'dins', esSuperadmin: true } });
+    expect(Object.keys(vista).sort()).toEqual(CLAUS);
+    expect('esSuperadmin' in vista).toBe(false);
+  });
+
+  test('de la sessió de veres, el booleà i mai el rol cru; en la renovació del mateix compte es conserva, d’un altre no', async () => {
+    const relligLector = () => act(async () => {
+      window.history.pushState(null, '', '/app/lector/inici');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    m.sessio = { ...SESSIO_DINS, esSuperadmin: true };
+    muntaPlataforma('/app/lector/inici', {
+      registre: creaRegistre({ internes: [manifestDeProva({ id: 'lector', carrega: () => Promise.resolve({ default: Sonda }) })] })
+    });
+    await screen.findByTestId('sessio');
+    expect(vist.esSuperadmin).toBe(true);
+    expect(JSON.stringify(vist)).not.toContain('superadmin-sonda');
+    m.sessio = { ...SESSIO_DINS, estat: 'comprovant', esSuperadmin: false };
+    await relligLector();
+    expect(vist.esSuperadmin).toBe(true);
+    m.sessio = { ...SESSIO_DINS, estat: 'comprovant', esSuperadmin: false, currentUser: { id: 'usuari-sonda-2' } };
+    await relligLector();
+    expect(vist.esSuperadmin).toBe(false);
   });
 });

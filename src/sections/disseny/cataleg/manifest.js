@@ -138,12 +138,12 @@ const FONAMENTS = [
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · s'hi afig RellotgeViu, la data i
      l'hora d'ara, vives, a la dreta de la barra taronja de les apps que la demanen. */
   especimen('fonaments', 'controls-barra', 'Controls de barra', 'Navegació, autoria i accions', ['atom', 'barra', 'icona'],
-    'Les dues barres de color de PageFrame, ja components propis (BarraBlava i BarraTaronja), i els àtoms que les omplin. La capçalera i el peu de la UniversalCard fan servir els mateixos àtoms.',
-    "pin ancorar data hora pastilla rellotge viu ara minut BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl · RellotgeViu"),
+    'Les barres de Sóc de Poble separen el crom fix de la closca (BarraNegra) de la navegació i l’autoria de cada pàgina (BarraBlava amb MenuTraduir i BarraTaronja amb EmoticonaBarra / PaginaEmojis) i del peu de la UniversalCard, compartint una sola família d’àtoms tàctils.',
+    "pin ancorar data hora pastilla rellotge viu ara minut BarraNegra BarraBlava BarraTaronja MenuTraduir PaginaEmojis UniversalCard IconButton ActionControl DateTimeControl RellotgeViu"),
   /* T51 (ordre del Mestre, 260928) · l'espai central de la barra taronja. */
   especimen('fonaments', 'emoticona-barra', 'Emoticona de la barra', 'EmoticonaBarra · l’espai central de la barra taronja (T51)', ['molecula', 'barra', 'emoticona'],
-    'Al centre de la barra taronja. En edició, el botó que obri el diàleg d’emoticona: la ploma blanca mentre no n’hi ha cap. En lectura, només l’emoticona triada; sense, la cel·la queda buida.',
-    'ploma emoji emoticona triar centre'),
+    'Al centre de la barra taronja. En edició amb obridor (Perfil), el botó d’emoticona amb la ploma blanca mentre no n’hi ha cap; al Bloc de Notes va en lectura mentre el cos obri PaginaEmojis a columna completa. En lectura, només l’emoticona triada; sense, la cel·la queda buida.',
+    'ploma emoji emoticona triar centre PaginaEmojis'),
   especimen('fonaments', 'avatar', 'Avatar', 'PedraSeca/atoms/Avatar.jsx', ['atom', 'persona'],
     'La cara d’una persona o d’una entitat, en mides tancades i sempre quadrada. Sense foto, les inicials.'),
   especimen('fonaments', 'botonera', 'Botonera', 'PedraSeca/molecules/Botonera.jsx', ['molecula', 'navegacio', 'pindola'],
@@ -206,7 +206,7 @@ const ESTRUCTURA = [
   especimen('estructura', 'gestor', 'Gestor', 'Una graella de tres columnes', ['plantilla', 'columnes'],
     'La graella de tres columnes: mesura el seu contenidor i passa d’ample a mitjà i a estret. UniversalWorkspace l’omple; AppGridColumn en fa les capçaleres i AppGridResizer, els separadors.', "AppGridShell · graella de tres columnes"),
   especimen('estructura', 'universalworkspace', 'UniversalWorkspace', 'Carpetes, llista i detall', ['plantilla', 'espai', 'columnes'],
-    'Un espai comú per a Notes, Disseny, Wiki, Perfil i Admin: rep dades i munta navegació, llista i detall. El Xat usa AppGridShell directament. Cada secció aporta les seues dades.',
+    'Un espai comú per a Notes, Disseny, Wiki, Perfil i Admin: rep dades i munta navegació, llista i detall. El Xat utilitza AppGridShell directament. Cada secció aporta les seues dades.',
     "universal workspace Espai de treball de tres columnes"),
   especimen('estructura', 'columnes', 'Columnes', 'AppGridColumn · capçaleres de columna', ['plantilla', 'columnes', 'capcalera'],
     'La capçalera única de cada columna d’AppGridShell, en les seues variants: oberta, replegable sencera, amb el grup plegable i carril plegat.'),
@@ -331,7 +331,7 @@ const SUPERPOSICIONS = [
   especimen('superposicions', 'pista', 'Pista', 'PedraSeca/molecules/Pista.jsx', ['molecula'],
     'Ajuda que es toca: substituïx els títols emergents, que no existixen en pantalla tàctil.'),
   especimen('superposicions', 'menu', 'Menu', 'PedraSeca/molecules/Dropdown.jsx', ['molecula'],
-    'Menú contextual. Deute: l’amplada mínima arriba com a estil en línia i el focus no es mou amb fletxes.'),
+    'Menú contextual amb navegació completa per teclat (ArrowDown, ArrowUp, Home, End), tancament LIFO amb Escape, retorn de focus al disparador i amplada per variable CSS sense estils en línia.'),
   /* Onada 3B (Pedra Seca §9) · el diàleg «Nova conversa» del Xat. */
   especimen('superposicions', 'xat-nova-conversa', 'Xat · Nova conversa', 'DialegNovaConversa', ['organisme', 'xat', 'dialeg'],
     'El diàleg del «+» del Xat: el cercador, «Nou grup» i «Nova comunitat» amb el panell honest, els contactes freqüents i la gent del poble per lletres.',
@@ -373,7 +373,7 @@ export const CATALOG_ITEMS = [
     'Reconstrucció didàctica d’un pou de neu: secció de maçoneria, sis estrats, corriola i drenatge. Explosió amb molles, càmera ajustable i model físic estimat.', 'neu gel pou anatomy lathe tube webgl'),
   ...FONAMENTS,
   /* La 🌻 que portava a mà ara ix d'ICONES_ESPECIMENS, com la de la resta. */
-  especimen('emoticones', 'xl', 'Emojis XL', 'Emoticones del poble per famílies', ['emoticona', 'cataleg', 'accessibilitat'],
+  especimen('emoticones', 'xl', 'Emojis XL', 'Emoticones de poble per famílies', ['emoticona', 'cataleg', 'accessibilitat'],
     'Un directori d’emoticones grans amb el seu nom: natura, eines, persones, documents i vida al poble. Cada família es pot desplegar amb el teclat.',
     'emoji emojis emoticones natura rural eines persones documents'),
   especimen('inventari', 'global', 'Inventari Global', 'Taula de components', ['inventari', 'llista'],

@@ -16,7 +16,11 @@ function EsborranyWp({ pagina, base, sessio, ambit, authority }) {
     id: `wp-revisio-${pagina.slug}`, title: pagina.title, subtitle: '', lead: '', content: pagina.htmlNet,
     heroImage: '', copyright: `Font: socdepoble.net · WP #${pagina.wp_id} · Data original: ${pagina.created_at} · Drets de l’original pendents de verificar.`,
     folderId: 'f-mur', categories: [CATEGORIA_GENERAL], tags: [], isPublished: false, revision: 0, contentLoaded: true,
-    createdAt: pagina.created_at
+    createdAt: pagina.created_at,
+    /* IDEA-125 · L'origen WordPress de l'esborrany: NotesEditor hi pinta la fitxa de revisió
+       d'importació a l'«Edició avançada». No viatja a la nota creada (campsPrivatsPaginaWp només
+       copia els camps de la llista). */
+    importacioWp: { wp_id: pagina.wp_id, slug: pagina.slug }
   }));
   const [approved, setApproved] = useState(false), [message, setMessage] = useState(''), [busy, setBusy] = useState(false);
   const [createdId, setCreatedId] = useState(null);

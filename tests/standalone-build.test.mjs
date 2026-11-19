@@ -152,8 +152,9 @@ test('la llista d\'exclusions és curta, congelada i no toca els recursos de l\'
   // sw.js i manifest.webmanifest: la PWA de l'entrada pròpia (Fase 0, 261003).
   // Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · i les icones de 192 i 512 que només llig eixe manifest.
   // O3-GEMINI-1 (261102) · _headers i _redirects: regles del domini per a Netlify/Cloudflare.
+  // P0-CONSOLIDACIO-3-CATEDRES · md/: la còpia Markdown de la Wiki que enllaça llms.txt.
   assert.deepEqual([...PROPIS_DEL_LLOC.arrel].sort(), ['_headers', '_redirects', 'auth', 'enxufe', 'icona-app-192.png', 'icona-app-512.png',
-    'llms.txt', 'manifest.webmanifest', 'robots.txt', 'sitemap.xml', 'sw.js']);
+    'llms.txt', 'manifest.webmanifest', 'md', 'robots.txt', 'sitemap.xml', 'sw.js']);
   for (const rel of ['rag-index.json', 'slugIndex.json', 'assets', 'fonts', 'components']) {
     assert.ok(!PROPIS_DEL_LLOC.arrel.includes(rel), rel);
   }
@@ -556,6 +557,107 @@ test('SDP_RELEASE=1 falla abans de compilar amb un node de desenvolupament i bui
   });
 });
 
+/* R32.11 · CI sense .env: l'única reserva és de validació, mai un node de
+   Producció. Cada sonda importa la config per URL absoluta des d'un cwd buit
+   en un procés fill; no canvia cwd/env globals ni mostra valors de claus. */
+function sondaCiSenseEnv(t, valors = {}) {
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-wp-ci-env-buit-'));
+  t.after(() => fs.rmSync(carpeta, { recursive: true, force: true }));
+  assert.deepEqual(fs.readdirSync(carpeta), []);
+  const cwdAnterior = process.cwd();
+  const env = Object.fromEntries(Object.entries(process.env).filter(([clau]) =>
+    !clau.startsWith('VITE_') && !clau.startsWith('SDP_')
+    && !['CI', 'NODE_ENV', 'NODE_OPTIONS', 'NODE_PATH', 'SOURCE_DATE_EPOCH'].includes(clau)));
+  for (const [clau, valor] of Object.entries(valors)) if (valor !== undefined) env[clau] = valor;
+  const codi = `
+    import fs from 'node:fs';
+    import path from 'node:path';
+    const resultat = { construida: false, senseOrigenRemot: false, desenvolupament: false,
+      senseTenant: false, manifestSenseClaus: false, releaseRefusada: false,
+      credencialRefusada: false, errorInesperat: false };
+    try {
+      const m = await import(process.argv[1]);
+      try {
+        const cfg = m.default({ mode: 'production', command: 'build' });
+        resultat.construida = true;
+        const plugin = cfg.plugins.flat(Infinity).find(p => p?.name === 'sdp-manifest-release');
+        const dir = path.join(process.cwd(), 'dist-fixture');
+        fs.mkdirSync(dir);
+        plugin.configResolved({ root: process.cwd(), build: { outDir: dir }, logger: { info() {} } });
+        plugin.writeBundle({}, {
+          loader: { type: 'asset', fileName: m.ENTRADA_DEL_PAQUET, source: 'void 0;' },
+          entry: { type: 'chunk', isEntry: true, fileName: 'trossos/soc-de-poble-CI_fixture.js', code: 'void 0;' }
+        });
+        const node = JSON.parse(fs.readFileSync(path.join(dir, m.FITXER_RELEASE), 'utf8')).node;
+        resultat.senseOrigenRemot = node.origen === null;
+        resultat.desenvolupament = node.desenvolupament === true;
+        resultat.senseTenant = node.tenant === null;
+        resultat.manifestSenseClaus = !/anon|publishable|secret|key/i.test(JSON.stringify(node));
+      } catch (error) {
+        const text = String(error?.message ?? '');
+        resultat.releaseRefusada = text.includes('[sdp-release]') && text.includes('VITE_SUPABASE_URL');
+        resultat.credencialRefusada = /Falta URL o clau pública|URL de Supabase invàlida|Cal un origen HTTPS|Format de clau pública no admés|Clau JWT il·legible|El navegador només admet/.test(text);
+        resultat.errorInesperat = !resultat.releaseRefusada && !resultat.credencialRefusada;
+      }
+    } catch { resultat.errorInesperat = true; }
+    process.stdout.write(JSON.stringify(resultat));
+  `;
+  const fill = spawnSync(process.execPath, ['--input-type=module', '-e', codi,
+    new URL('../vite.standalone.config.js', import.meta.url).href],
+  { cwd: carpeta, env, encoding: 'utf8', timeout: 15000, maxBuffer: 16 * 1024 });
+  assert.equal(process.cwd(), cwdAnterior, 'la sonda no canvia el cwd del runner');
+  assert.equal(fill.error, undefined, 'el procés de la sonda ha de completar');
+  assert.equal(fill.signal, null);
+  assert.equal(fill.status, 0);
+  assert.equal(fill.stderr, '', 'la sonda només emet el JSON booleà');
+  const resultat = JSON.parse(fill.stdout);
+  assert.ok(Object.values(resultat).every(v => typeof v === 'boolean'));
+  return resultat;
+}
+
+const CI_REFUSADA = Object.freeze({ construida: false, senseOrigenRemot: false,
+  desenvolupament: false, senseTenant: false, manifestSenseClaus: false,
+  releaseRefusada: false, credencialRefusada: true, errorInesperat: false });
+
+test('R32.11 CI WP · sense .env ni VITE_* construïx el perfil de prova i segella sense origen real', t => {
+  assert.deepEqual(sondaCiSenseEnv(t, { CI: 'true' }), {
+    construida: true, senseOrigenRemot: true, desenvolupament: true, senseTenant: true,
+    manifestSenseClaus: true, releaseRefusada: false, credencialRefusada: false, errorInesperat: false
+  });
+});
+
+test('R32.11 CI WP · la reserva sense URL real continua sense poder construir una release', t => {
+  assert.deepEqual(sondaCiSenseEnv(t, { CI: 'true', SDP_RELEASE: '1', SDP_VERSIO: '0.2.0',
+    VITE_DATA_MODE: 'remote', VITE_TENANT_ID: TENANT }),
+  { ...CI_REFUSADA, releaseRefusada: true, credencialRefusada: false });
+});
+
+test('R32.11 CI WP · una clau explícita invàlida o privilegiada no usa la reserva', t => {
+  const jwt = rol => `e30.${Buffer.from(JSON.stringify({ role: rol })).toString('base64url')}.c2ln`;
+  for (const clau of ['invalid-fixture', jwt('service_role'), jwt('authenticated')]) {
+    assert.deepEqual(sondaCiSenseEnv(t, { CI: 'true', VITE_SUPABASE_URL: 'https://fixture.invalid',
+      VITE_SUPABASE_ANON_KEY: clau }), CI_REFUSADA);
+  }
+});
+
+test('R32.11 CI WP · fora de CI no apareix cap credencial de reserva', t => {
+  assert.deepEqual(sondaCiSenseEnv(t), CI_REFUSADA);
+});
+
+/* La reserva deCI només pot validar un perfil no publicable. Amb URL i
+   tenant explícits, una release també necessita la clau explícita de l'entorn. */
+test('R32.11 release WP · CI amb URL pública no substituïx una clau absent o buida per la reserva', t => {
+  const release = { CI: 'true', SDP_RELEASE: '1', SDP_VERSIO: '0.2.0',
+    VITE_SUPABASE_URL: 'https://abc.supabase.co', VITE_DATA_MODE: 'remote', VITE_TENANT_ID: TENANT };
+  for (const clau of [undefined, '']) {
+    assert.deepEqual(sondaCiSenseEnv(t, { ...release, VITE_SUPABASE_ANON_KEY: clau }), CI_REFUSADA);
+  }
+  assert.deepEqual(sondaCiSenseEnv(t, { ...release, VITE_SUPABASE_ANON_KEY: 'sb_publishable_release_fixture' }), {
+    construida: true, senseOrigenRemot: false, desenvolupament: false, senseTenant: false,
+    manifestSenseClaus: true, releaseRefusada: false, credencialRefusada: false, errorInesperat: false
+  });
+});
+
 /* ───────────── Paquet trossejat (decisió 5 del Mestre, 261007) ─────────────
    «Paquet WordPress de 4,4 MB: CODE SPLITTING OBLIGATORI.» El paquet de
    l'amfitrió és un carregador clàssic menut (soc-de-poble.standalone.js) que
@@ -596,8 +698,9 @@ const SOSTRE_DE_L_ENTRADA = constantDePesDelNucli('SOSTRE_DEL_TROS_D_ENTRADA');
    trossos d'arrencada isquen de l'entrada no fa que el pes s'amague en germans. */
 const SOSTRE_DE_L_ARRENCADA = constantDePesDelNucli('SOSTRE_DE_L_ARRENCADA_ESTATICA');
 /* Els noms que trossDArrencadaDelPaquet dona als trossos: els de trossDArrencada
-   (tooling/vite/trossos-arrencada.mjs) sense «pobles-aplec». */
-const NOMS_D_ARRENCADA = new Set(['react', 'dompurify', 'estils', 'ca', 'navegacio', 'entrada-nativa']);
+   (tooling/vite/trossos-arrencada.mjs) sense «pobles-aplec». P-E (IDEA-260 c):
+   el paquet també hereta el nucli de lucide («lucide-nucli»). */
+const NOMS_D_ARRENCADA = new Set(['react', 'dompurify', 'estils', 'ca', 'navegacio', 'entrada-nativa', 'lucide-nucli']);
 
 test('trossDArrencadaDelPaquet: la funció del web i del natiu, sense el grup de dades «pobles-aplec»', () => {
   const ARR = '/proj';
@@ -609,6 +712,8 @@ test('trossDArrencadaDelPaquet: la funció del web i del natiu, sense el grup de
     [`${ARR}/src/config/idiomes/ca.js`, 'ca'],
     [`${ARR}/src/config/idiomes/es.js`, undefined],
     [`${ARR}/src/hooks/useScrollDeNavegacio.js`, 'navegacio'],
+    [`${ARR}/node_modules/lucide-react/dist/esm/createLucideIcon.mjs`, 'lucide-nucli'],
+    [`${ARR}/node_modules/lucide-react/dist/esm/icons/plus.mjs`, undefined],
     [`${ARR}/src/sections/pobles/poblesAplecViquipedia.js`, undefined],
     [`${ARR}/src/sections/mur/articles/aplec2023Content.js`, undefined],
     [`${ARR}/src/data/taxonomia/vocabulariCanonic.js`, undefined],

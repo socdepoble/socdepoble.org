@@ -91,10 +91,12 @@ function world({ active = true, authenticated = true, shouldWake = true, envPatc
         }
         if (name === 'xat_push_neteja') return json({ dispositius: 0, cua: 0 });
         if (name === 'xat_push_reclama_v2') return json(w.batches.shift() ?? { protocol: 'lease-v2', missatges: 0, treballs: 0, retallats: 0, dispositius: [] });
-        if (name === 'xat_push_credencial') return json(w.cache.get(body.p_proveidor) ?? null);
-        if (name === 'xat_push_desa_credencial') {
+        // P1-74 (A-03): one cached credential per provider and public configuration fingerprint.
+        if (name === 'xat_push_credencial_v2') return json(w.cache.get(`${body.p_proveidor}|${body.p_empremta}`) ?? null);
+        if (name === 'xat_push_desa_credencial_v2') {
+          assert.match(body.p_empremta, /^[0-9a-f]{16}$/, 'credential cache keyed by a 16-hex public fingerprint');
           w.credentials.push({ provider: body.p_proveidor, expires: body.p_caduca_al });
-          w.cache.set(body.p_proveidor, body.p_valor);
+          w.cache.set(`${body.p_proveidor}|${body.p_empremta}`, body.p_valor);
           return json(true);
         }
         if (name === 'xat_push_confirma_v2') {

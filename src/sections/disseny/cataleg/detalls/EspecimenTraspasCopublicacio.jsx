@@ -15,10 +15,10 @@ const CO_PUBLICADORS_2 = Object.freeze([
     rol_publicacio: 'principal'
   }),
   Object.freeze({
-    actor_id: 'b2c87505-53b1-4108-902f-2313e77b9968',
-    slug_ruta: '/rentonar',
-    nom: 'Rentonar',
-    avatar_url: '',
+    actor_id: '3073b933-69fc-4c3e-80dc-b0df9c6b8391',
+    slug_ruta: '/empresa/olidelatorre',
+    nom: 'Oli de La Torre',
+    avatar_url: '/assets/uploads/brain/oli_de_la_torre_logo.webp',
     poble_nom: 'La Torre de les Maçanes',
     rol_publicacio: 'copublicador'
   })
@@ -27,10 +27,10 @@ const CO_PUBLICADORS_2 = Object.freeze([
 const CO_PUBLICADORS_3 = Object.freeze([
   ...CO_PUBLICADORS_2,
   Object.freeze({
-    actor_id: '3073b933-69fc-4c3e-80dc-b0df9c6b8391',
-    slug_ruta: '/empresa/olidelatorre',
-    nom: 'Oli de La Torre',
-    avatar_url: '/assets/uploads/brain/oli_de_la_torre_logo.webp',
+    actor_id: 'c4110000-4000-4000-8000-000000000003',
+    slug_ruta: '/perfil/c4110000-4000-4000-8000-000000000003',
+    nom: 'Cooperativa Agrícola de La Torre',
+    avatar_url: '',
     poble_nom: 'La Torre de les Maçanes',
     rol_publicacio: 'copublicador'
   })
@@ -72,7 +72,7 @@ export default function EspecimenTraspasCopublicacio() {
         ]}
         a11y={[
           'Cada entitat co-publicadora té el seu propi enllaç enfocable amb alçària mínima de 48 px (--sdp-touch).',
-          'L’avatar compost és ortogonal (border-radius: 0) i usa inicials d’alt contrast AAA quan l’entitat encara no té logotip.',
+          'L’avatar compost és ortogonal (border-radius: 0) i utilitza inicials d’alt contrast AAA quan l’entitat encara no té logotip.',
           'Cap finestra modal flotant per a configurar l’autoria: tots els controls viuen en el flux de lectura.'
         ]}
         fes={[

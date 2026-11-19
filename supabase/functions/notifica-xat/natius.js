@@ -16,13 +16,17 @@
    és «config» (pausa) el que ve de la credencial pròpia: APNs 403 i FCM 401
    o 403 sense codi d'aparell.
    La credencial de cada proveïdor (el JWT d'APNs, el testimoni d'OAuth de
-   FCM) es demana a xat_push_credencial i, si no n'hi ha, es fa i es desa amb
-   xat_push_desa_credencial, com a molt una vegada per passada: APNs respon
-   429 si el JWT es refà més d'una vegada cada 20 minuts (R3). La desada va
-   lligada a la clau que la va fer (G1-B-doctr-02): el JWT d'APNs ha de dur
-   el kid i l'equip d'ara i verificar amb la .p8 d'ara, i el testimoni de FCM
-   porta davant l'empremta del compte de servei. Si no casa, se'n fa una de
-   nova, que la base accepta perquè dura més.
+   FCM) es demana a xat_push_credencial_v2 i, si no n'hi ha, es fa i es desa
+   amb xat_push_desa_credencial_v2, com a molt una vegada per passada: APNs
+   respon 429 si el JWT es refà més d'una vegada cada 20 minuts (R3). Les
+   dues RPC van per (proveïdor, empremta): l'empremta pública de la
+   configuració d'ara (P1-74, A-03), perquè dues configuracions alhora (una
+   rotació de SDP_APNS_* o de SDP_FCM_COMPTE_SERVEI amb el cron encés)
+   tinguen cadascuna la seua fila i no es substituïsquen a cada passada. La
+   desada continua lligada a la clau que la va fer (G1-B-doctr-02): el JWT
+   d'APNs ha de dur el kid i l'equip d'ara i verificar amb la .p8 d'ara, i el
+   testimoni de FCM porta davant l'empremta del compte de servei. Si no casa,
+   se'n fa una de nova, que la base accepta perquè dura més.
    Pur i sense dependències: fetch, WebCrypto, TextEncoder, TextDecoder,
    URLSearchParams, AbortController, setTimeout i atob/btoa, que tenen igual
    Deno (index.ts) i Node (Vitest). Mai Buffer ni Deno.*. Totes les URL són
@@ -398,39 +402,68 @@ export async function jwtApnsDeLaClau(jwt, { equip, clauId, verificadora = null 
   }
 }
 
-/* La pública de la .p8 d'ara, per a reconéixer els JWT desats. Si el runtime
-   no la pot derivar, null: llavors només es miren el kid i l'equip. */
-async function verificadoraApns(p8, subtle) {
+const aHex = (bytes) => Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+
+/* Els 8 primers bytes de SHA-256(text) en hexadecimal: 16 caràcters. */
+async function empremtaDe(text, subtle) {
+  return aHex(new Uint8Array(await subtle.digest('SHA-256', new TextEncoder().encode(text)))).slice(0, 16);
+}
+
+/* Les coordenades de la pública de la .p8 d'ara, o null si el runtime no la
+   pot derivar. */
+async function publicaApns(p8, subtle) {
   try {
     const extraible = await subtle.importKey('pkcs8', pemAPkcs8(p8), ECDSA_P256, true, ['sign']);
     const { x, y } = await subtle.exportKey('jwk', extraible);
-    return await subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', x, y }, ECDSA_P256, false, ['verify']);
+    return typeof x === 'string' && typeof y === 'string' ? { x, y } : null;
   } catch {
     return null;
   }
 }
 
-/* L'empremta del compte de servei que va davant del testimoni de FCM desat:
-   els 8 primers bytes de SHA-256(«correu|projecte») en hexadecimal. No és cap
-   secret i canvia si canvia el compte o el projecte. */
-async function empremtaFcm({ correu, projecte }, subtle) {
-  const resum = new Uint8Array(await subtle.digest('SHA-256', new TextEncoder().encode(`${correu}|${projecte}`)));
-  return Array.from(resum.subarray(0, 8), (b) => b.toString(16).padStart(2, '0')).join('');
+/* La verificadora dels JWT desats, feta amb la pública de la .p8 d'ara. Sense
+   pública, null: llavors només es miren el kid i l'equip. */
+async function verificadoraApns(publica, subtle) {
+  if (!publica) return null;
+  try {
+    return await subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', x: publica.x, y: publica.y }, ECDSA_P256, false, ['verify']);
+  } catch {
+    return null;
+  }
 }
 
-/* La credencial vigent (xat_push_credencial) si és de la clau d'ara, o una de
-   nova, desada. `deLaClau(desada)` torna la credencial que s'usa, o null si
-   no és d'esta clau; `perDesar(valor)`, el text que es desa. La nova dura
-   més que la d'una clau vella, així que la base la substituïx (G1-B-doctr-02).
+/* P1-74 (A-03) · L'empremta de la configuració d'APNs que tria la fila de la
+   caché: l'equip, el kid i la pública de la .p8, que és tot el que fa el JWT
+   (l'entorn i el topic no hi entren: el mateix JWT val per a tots dos, i
+   separar-los en faria més d'un per clau). Si el runtime no pot derivar la
+   pública, s'usa el SHA-256 del DER: la clau privada mai entra en clar al
+   text de l'empremta. */
+async function empremtaApns({ equip, clauId, p8, publica }, subtle) {
+  const clau = publica ? `${publica.x}|${publica.y}` : `der:${aHex(new Uint8Array(await subtle.digest('SHA-256', pemAPkcs8(p8))))}`;
+  return empremtaDe(`${equip}|${clauId}|${clau}`, subtle);
+}
+
+/* L'empremta del compte de servei que va davant del testimoni de FCM desat i
+   que tria la fila de la caché: SHA-256(«correu|projecte»). No és cap secret i
+   canvia si canvia el compte o el projecte. Una clau nova del mateix compte
+   no la canvia: el testimoni d'OAuth és del compte, no de la clau. */
+const empremtaFcm = ({ correu, projecte }, subtle) => empremtaDe(`${correu}|${projecte}`, subtle);
+
+/* La credencial vigent de la configuració d'ara (la fila de la seua
+   `empremta`) si és de la clau d'ara, o una de nova, desada. Una altra
+   configuració viva té una altra fila i no la toca (A-03). `deLaClau(desada)`
+   torna la credencial que s'usa, o null si no és d'esta clau;
+   `perDesar(valor)`, el text que es desa. La nova dura més que la d'una clau
+   vella, així que la base la substituïx (G1-B-doctr-02).
    Si la base no respon, «reintenta» i no se n'usa cap sense desar (un JWT
    d'APNs refet a cada passada portaria al 429 d'Apple). Si el desament torna
    fals, una altra passada n'ha desada una que dura més: es rellig i s'usa
    eixa si és d'esta clau; si no, o si la relectura falla, també «reintenta»
    (ARB-N02-02). L'única que s'usa sense desar és la de FCM massa curta (o
    massa llarga per a dur l'empremta). */
-async function obteCredencial({ proveidor, rpc, fabrica, deLaClau, perDesar, avisa }) {
+async function obteCredencial({ proveidor, empremta, rpc, fabrica, deLaClau, perDesar, avisa }) {
   const llig = async () => {
-    try { return await rpc('xat_push_credencial', { p_proveidor: proveidor }); } catch { throw errorDe('reintenta'); }
+    try { return await rpc('xat_push_credencial_v2', { p_proveidor: proveidor, p_empremta: empremta }); } catch { throw errorDe('reintenta'); }
   };
   const desada = await llig();
   const vigent = await deLaClau(desada);
@@ -444,7 +477,7 @@ async function obteCredencial({ proveidor, rpc, fabrica, deLaClau, perDesar, avi
   if (caducaAlMs === null || !credencialValida(text)) return valor;
   let desat;
   try {
-    desat = await rpc('xat_push_desa_credencial', { p_proveidor: proveidor, p_valor: text, p_caduca_al: new Date(caducaAlMs).toISOString() });
+    desat = await rpc('xat_push_desa_credencial_v2', { p_proveidor: proveidor, p_empremta: empremta, p_valor: text, p_caduca_al: new Date(caducaAlMs).toISOString() });
   } catch {
     throw errorDe('reintenta');
   }
@@ -455,11 +488,11 @@ async function obteCredencial({ proveidor, rpc, fabrica, deLaClau, perDesar, avi
 }
 
 /* Una sola promesa per proveïdor i passada: els treballadors alhora no la refan. */
-function credencialDeLaPassada({ proveidor, rpc, fabrica, deLaClau, perDesar, avisa }) {
+function credencialDeLaPassada({ proveidor, empremta, rpc, fabrica, deLaClau, perDesar, avisa }) {
   let promesa = null;
   return () => {
     if (!promesa) {
-      promesa = obteCredencial({ proveidor, rpc, fabrica, deLaClau, perDesar, avisa });
+      promesa = obteCredencial({ proveidor, empremta, rpc, fabrica, deLaClau, perDesar, avisa });
       promesa.catch((error) => avisa(`[notifica-xat] ${proveidor}: sense credencial (${error?.codi === 'config' ? 'config' : 'reintenta'}).`));
     }
     return promesa;
@@ -497,9 +530,15 @@ async function preparaApns({ env, fetch, subtle, ara, rpc, topallMs, avisa }) {
     return null;
   }
 
-  const verificadora = await verificadoraApns(p8, subtle);
+  const publica = await publicaApns(p8, subtle);
+  const verificadora = await verificadoraApns(publica, subtle);
+  let empremta;
+  try { empremta = await empremtaApns({ equip, clauId, p8, publica }, subtle); } catch {
+    avisa('[notifica-xat] APNs inactiu: sense SHA-256 per a l’empremta de la configuració.');
+    return null;
+  }
   const credencial = credencialDeLaPassada({
-    proveidor: 'apns', rpc, avisa,
+    proveidor: 'apns', empremta, rpc, avisa,
     deLaClau: async (desada) => ((await jwtApnsDeLaClau(desada, { equip, clauId, verificadora }, subtle)) ? desada : null),
     perDesar: (valor) => valor,
     fabrica: async () => {
@@ -531,11 +570,12 @@ async function preparaFcm({ env, fetch, subtle, ara, rpc, topallMs, avisa }) {
     return null;
   }
   const { projecte, correu } = compte;
-  let prefix;
-  try { prefix = `${await empremtaFcm(compte, subtle)}.`; } catch {
+  let empremta;
+  try { empremta = await empremtaFcm(compte, subtle); } catch {
     avisa('[notifica-xat] FCM inactiu: sense SHA-256 per a l’empremta del compte.');
     return null;
   }
+  const prefix = `${empremta}.`;
   /* El testimoni desat només val si porta l'empremta del compte d'ara; viatja sense. */
   const deLaClau = (desada) => {
     if (!credencialValida(desada) || !desada.startsWith(prefix)) return null;
@@ -544,7 +584,7 @@ async function preparaFcm({ env, fetch, subtle, ara, rpc, topallMs, avisa }) {
   };
 
   const credencial = credencialDeLaPassada({
-    proveidor: 'fcm', rpc, avisa, deLaClau,
+    proveidor: 'fcm', empremta, rpc, avisa, deLaClau,
     perDesar: (valor) => `${prefix}${valor}`,
     fabrica: async () => {
       const instant = ara();

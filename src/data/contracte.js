@@ -872,8 +872,12 @@ export const LIMIT_DADES_OBERTES = 5000;
    de Codex i Gemini (accions del xat, vídeo i ubicació, consola, Wiki al Mur i columnes plegades).
    Onada v1.2.9 (ordre del Mestre 18-11-2026, nit) · Versió unificada 1.2.9 amb el build 14: integra R32.10 i R32.11
    de Codex i Gemini, l'arbre viu de MarIA i l'Avisador de l'Onada R32.12 (accions del xat al motor de la sessió,
-   assistència als esdeveniments, bàner de referència al Xat i fulls d'estil diferits). */
-export const VERSIO_CLIENT_NATIU = 14;
+   assistència als esdeveniments, bàner de referència al Xat i fulls d'estil diferits).
+   Onada v1.2.10 · Onades R32.11 i R32.12, segona part (ordre del Mestre 19-11-2026; el nom que diu la crònica de
+   /versions) · Versió unificada 1.2.10 amb el build 15: integra els lots 14–18 de
+   Codex R32.11, Gemini R32.12 (pla 261118_1937) i 24 ítems del Llibre Mestre (guia «Tot el que pots fer», data de
+   les targetes per tipus, Arbre Genealògic amb frase de pas, Constitució en cinc llengües i entrades en NFC fitat). */
+export const VERSIO_CLIENT_NATIU = 15;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

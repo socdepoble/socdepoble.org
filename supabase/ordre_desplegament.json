@@ -232,7 +232,8 @@
       "descripcio": "Desplegar supabase/functions/notifica-xat (secrets SDP_CRON_SECRET, SDP_PUSH_ACTIU i SDP_PUSH_VAPID_*) i programar-la; només després, posar push_xat_actiu = si a private.ajustos. R54: aturar cron antic, publicar el treballador lease-v2 després de0431 i reprendre el cron només després de la verificació; cap fallbackv1.",
       "despres": [
         "2611020417",
-        "2611080431"
+        "2611080431",
+        "20261118230000"
       ],
       "abans": [],
       "font": "README «Funció notifica-xat»"
@@ -242,7 +243,8 @@
       "tipus": "funcio",
       "descripcio": "Desplegar relay JWT verificat, wake SQL recent i treballador en procés amb waitUntil; cap secret al client.",
       "despres": [
-        "2611080431"
+        "2611080431",
+        "20261118230000"
       ],
       "abans": [],
       "font": "README R54"
@@ -253,7 +255,8 @@
       "descripcio": "Desplegar IAIA autenticada, model configurat i callback postcommit; binding Beta explícit, no inferit de seed.",
       "despres": [
         "2611080430",
-        "2611080431"
+        "2611080431",
+        "20261118230000"
       ],
       "abans": [],
       "font": "README R54"

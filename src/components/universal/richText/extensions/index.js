@@ -501,6 +501,11 @@ export function extensionsRiques({
     SdpImage.configure({
       inline: false,
       allowBase64: true,
+      /* R30-LLEI08-LLEI01 · «sdp-imatge-cos» no té regla pròpia, però la seua
+         presència trau la imatge desada de la regla d'ample complet de les
+         imatges sense classe (src/css/base.css, `img:not([class])`): sense la
+         classe, cada imatge nova del cos es pintaria a tota la columna i les
+         publicacions velles i noves no casarien (Llei del Píxel). Es queda. */
       HTMLAttributes: { class: 'sdp-imatge-cos', loading: 'lazy', decoding: 'async' }
     }),
     SlashMenu.configure({

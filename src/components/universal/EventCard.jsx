@@ -5,6 +5,7 @@ import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
 import { ofereixTraduir, planTraduccioPublicacio, propia } from './traduccio/planTraduccioPublicacio.js';
 import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
+import { usePastillaDelDia } from './barres/pastillaCalendari.js';
 
 export { insigniaDeCalendari };
 
@@ -49,8 +50,9 @@ const CLASSE_ETIQUETA_ENLLACADA = 'sp-card-label--enllac';
  * L'etiqueta «Agenda» d'un acte porta al Calendari en el dia de l'acte (el de
  * la seua insígnia, `dia` 'AAAA-MM-DD'): la vista Mes amb el dia triat i les
  * seues targetes davall (editorial.js · rutaCalendariDeLaData). Sense dia (cap
- * acte vàlid), l'etiqueta de sempre, sense enllaç. La pastilla de data
- * continua portant al mes (ordre del Mestre, 261001, carril A).
+ * acte vàlid), l'etiqueta de sempre, sense enllaç. Des del 261109 (P0-77 /
+ * IDEA-208, R16-P), la pastilla de data de l'acte també porta al seu dia
+ * (usePastillaDelDia); la d'una publicació continua portant al mes.
  */
 export function etiquetaAgendaDelDia(dia) {
   const ruta = rutaCalendariDeLaData(dia);
@@ -114,6 +116,15 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
   const avisUnic = avisTraduccio ?? avis;
   const data = dataDeLActe(esdeveniment, item);
   const insignia = insigniaDeCalendari(esdeveniment, data.dateTime, item);
+  /* P0-77 / IDEA-208 (R16-P; ordre del Mestre, 261109 20:57) · La pastilla
+     d'un acte porta al DIA que pinta (el de l'acte, del model) i no obri la
+     targeta. Quan la boina porta la data de publicació
+     (boinaDataPublicacio) o no hi ha model d'acte, la pastilla no diu el dia
+     de l'acte: la del mes, com sempre. */
+  const diaDeLActe = esdeveniment && item?.boinaDataPublicacio !== true && typeof data.dateTime === 'string'
+    ? data.dateTime.slice(0, 10)
+    : null;
+  const alDia = usePastillaDelDia({ dia: diaDeLActe, time: data.time, date: data.date });
 
   // Use entradilla if available, then lead, then description (unless omitted for protagonist video cards)
   const entradilla = item.ometEntradillaTargeta === true
@@ -161,6 +172,8 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       date={data.date}
       time={data.time}
       dateTime={data.dateTime}
+      onDateTime={alDia.onClick || undefined}
+      etiquetaData={alDia.onClick ? alDia.etiqueta : undefined}
       copyright={item.copyright || COPYRIGHT_SDP}
       calendarBadge={insignia}
       labels={labels}

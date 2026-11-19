@@ -5,10 +5,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Boto } from '../../../components/PedraSeca/index.js';
 import { indexsDeText, paraulesDeFrase } from '../../../data/xifratXatAlta.js';
+import { normalitzaNfcSeguraUi, plegaParaulaCerimoniaSegura } from '../../../utils/normalitzaEntradaUi.js';
 
 const T_RESERVA = (_clau, reserva) => reserva;
 const POSICIONS = [0, 2, 5];
-const normalitza = text => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim();
+const coincideixParaula = (escrita, esperada) => {
+  const p1 = plegaParaulaCerimoniaSegura(escrita);
+  const p2 = plegaParaulaCerimoniaSegura(esperada);
+  return Boolean(p1) && p1 === p2;
+};
 
 export default function CerimoniesXat({ control, filId, t = T_RESERVA }) {
   const [ocupat, setOcupat] = useState(false);
@@ -45,11 +50,17 @@ export default function CerimoniesXat({ control, filId, t = T_RESERVA }) {
     return new Promise(resolve => { pendent.current = resolve; });
   }));
   const restaura = () => executa(async () => {
-    const indexs = await indexsDeText(frase);
+    const fraseNfc = normalitzaNfcSeguraUi(frase, { maxLongitud: 2048 });
+    if (!fraseNfc || !fraseNfc.trim()) {
+      const err = new Error('Frase de recuperació no vàlida.');
+      err.code = 'FRASE_INVALIDA';
+      throw err;
+    }
+    const indexs = await indexsDeText(fraseNfc);
     setFrase('');
     try { await control.restauraFrase(indexs); } finally { indexs.fill(0); }
   });
-  const correcte = paraules && POSICIONS.every((p, i) => normalitza(comprovacio[i]) === normalitza(paraules[p]));
+  const correcte = Boolean(paraules) && POSICIONS.every((p, i) => coincideixParaula(comprovacio[i], paraules[p]));
   return <section data-sdp-e2ee="true" translate="no">
     <h3>{t('section.xat.cerimonia.titol', 'Claus i recuperació del xat')}</h3>
     <p>{t('perfil.confianca.targeta.subtitol', 'La frase té 6 paraules. La recuperació social necessita 3 persones de confiança.')}</p>

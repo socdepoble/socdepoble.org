@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ save: vi.fn(), read: vi.fn() }));
 vi.mock('../../../utils/revisioEditorialWp.js', async importOriginal => ({ ...await importOriginal(), consultaRevisioEditorialWp: (...a) => m.read(...a), desaRevisioArticleImportatAmbServidor: (...a) => m.save(...a), sincronitzaRevisionsEditorialsWpAmbServidor: async () => ({ sincronitzat: false }) }));
-vi.mock('../../../app/contexts/RouterContext.jsx', () => ({ Link: ({ to, children, ...p }) => <a href={to} {...p}>{children}</a> }));
+vi.mock('../../../app/contexts/RouterContext.jsx', () => ({ Link: ({ to, children, ...p }) => <a href={to} {...p}>{children}</a>, useNavigate: () => vi.fn() }));
 vi.mock('../../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => null }));
 vi.mock('../../../hooks/useProjeccionsCataleg.js', () => ({ useProjeccionsCataleg: () => ({ autoritzat: false }) }));
 import BancImportacioEditorial from './BancImportacioEditorial.jsx';
@@ -32,7 +32,7 @@ test('canviar d’article durant el desat no projecta el conflicte vell sobre el
  fireEvent.change(screen.getByLabelText(/Anotacions del Mestre/), { target: { value: 'Nota d’A' } });
  fireEvent.click(screen.getByRole('button', { name: /Aprovar i desar nota/ }));
  fireEvent.change(screen.getByRole('textbox', { name: /Cerca per títol/ }), { target: { value: '619' } });
- fireEvent.click(screen.getByRole('row', { name: /619.*Catàleg d’Arbres/ }));
+ fireEvent.click(screen.getByRole('button', { name: /^Catàleg d’Arbres/ }));
  resolve({ remot: false, conflicte: true });
  await waitFor(() => expect(screen.getByRole('button', { name: /Aprovar i desar nota/ }).disabled).toBe(false));
  expect(screen.queryByRole('alert')).toBeNull();

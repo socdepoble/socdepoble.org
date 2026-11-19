@@ -6,9 +6,13 @@
  * veure un arbre és `node --test tests/<fitxer>.test.mjs`. Esta prova no
  * escriu res: recorre els directoris de TARGETS i els imprimix per stdout.
  *
+ * H13 (IDEA-62): cada directori de TARGETS ha d'existir. Abans, un TARGET
+ * mort (src/context) només imprimia [ERR ENOENT] i la prova passava.
+ *
  * Ús:  node --test tests/inventari-directoris.test.mjs
  */
 import { test } from 'node:test';
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -53,6 +57,13 @@ const TARGETS = [
   ['src/hooks', 0, []],
 ];
 
+/** H13 · Els TARGETS que no són un directori. `esDirectori(rel)` és l'oracle (injectable). */
+export function targetsAbsents(targets, esDirectori) {
+  return targets.map(([dir]) => dir).filter((dir) => !esDirectori(dir));
+}
+
+const esDirectoriReal = (rel) => Boolean(fs.statSync(path.join(ROOT, rel), { throwIfNoEntry: false })?.isDirectory());
+
 function countLines(file) {
   try { return String(fs.readFileSync(file, 'utf8').split('\n').length); } catch { return '?'; }
 }
@@ -80,6 +91,12 @@ function walk(dir, depth, maxDepth, skip) {
   }
   return out;
 }
+
+test('H13 · tots els TARGETS existixen com a directori', () => {
+  assert.deepEqual(targetsAbsents(TARGETS, esDirectoriReal), [], 'TARGETS amb una ruta que no és un directori: esmena-la o lleva-la');
+  // La guarda mossega: una ruta morta o un fitxer no passen per directori.
+  assert.deepEqual(targetsAbsents([['src', 0, []], ['src/context', 0, []], ['package.json', 0, []]], esDirectoriReal), ['src/context', 'package.json']);
+});
 
 test('inventari de directoris (lectura)', () => {
   const chunks = [];

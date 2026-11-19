@@ -100,7 +100,7 @@ export const TRADUCCIONS_PROJECTE_R32_10 = Object.freeze({
       <p>El compromiso con la <strong>privacidad</strong> y el software libre continúa: <strong>sin cookies</strong> comerciales ni <strong>telemetría</strong> invasiva. Los <strong>datos pertenecen</strong> a quien los crea, y cada persona debe entender qué comparte y con quién.</p>
 
       <h3>Calidad que se prueba en el campo</h3>
-      <p>Una aplicación rural debe poder usarse con <strong>teléfonos humildes</strong> y en situaciones de la <strong>vida real</strong>: leer al <strong>sol</strong>, encontrar <strong>botones</strong> grandes y saber qué ocurre tras cada toque.</p>
+      <p>Una aplicación rural debe poder <strong>utilizarse</strong> con <strong>teléfonos humildes</strong> y en situaciones de la <strong>vida real</strong>: leer al <strong>sol</strong>, encontrar <strong>botones</strong> grandes y recibir una <strong>respuesta clara</strong> tras cada toque.</p>
 ${BLOC_PROJECTE_R32_10.es}
       <h3>Las cuatro infografías históricas</h3>
       <p>Conservamos las cuatro <strong>infografías</strong> históricas porque explican la <strong>semilla</strong> del proyecto: los <strong>valores</strong> compartidos, el mapa colaborativo, el apoyo al <strong>emprendimiento</strong> rural y la vida social de los pueblos. Son documentos de <strong>su momento</strong> y no deben leerse como una lista de funciones ya disponibles.</p>${infografiesHtml([
@@ -133,9 +133,9 @@ ${BLOC_PROJECTE_R32_10.es}
 
       <h3>Sharing knowledge as well</h3>
       ${TARGETA_ANIMA_TRADUIDA}
-      <p>Design rules, the <strong>Wiki</strong>, the <strong>Constitution</strong> and source code explain how we build the project and why each decision is made. Written, accessible decisions ensure <strong>maintenance</strong> never depends on a single person’s or machine’s memory.</p>
-      <p>Today we collaborate with <strong>artificial intelligence</strong> tools such as <a href="/anima">MarIA</a>, Claude and Codex. To help responsibly, they read our written rules, <strong>Pedra Seca</strong> design and <strong>Trellat</strong> —working with care, clarity and common sense.</p>
-      <p>We also document everything so <strong>any skilled person</strong> can <strong>carry on</strong> the work if AI tools become unavailable or <strong>too expensive</strong>, preserving the project’s <strong>identity</strong> without vendor lock-in.</p>
+      <p><strong>Design rules</strong>, the <strong>Wiki</strong>, the <strong>Constitution</strong> and <strong>source code</strong> explain how we build the project and why each choice is made. <strong>Written decisions</strong> ensure <strong>maintenance</strong> never depends on a single person’s or machine’s memory.</p>
+      <p>Today we collaborate with <strong>artificial intelligence</strong> tools such as <a href="/anima"><strong>MarIA</strong></a>, <strong>Claude</strong> and <strong>Codex</strong>. To help responsibly, they read our <strong>written rules</strong>, <strong>Pedra Seca</strong> design and <strong>Trellat</strong> —working with care, clarity and common sense.</p>
+      <p>We also document everything so <strong>any skilled person</strong> can <strong>carry on</strong> the work if AI tools become unavailable or <strong>too expensive</strong>, preserving the project’s <strong>identity</strong> without <strong>vendor lock-in</strong>.</p>
 
       <h3>Open networks across villages</h3>
       <p>We <strong>do not want</strong> a <strong>giant platform</strong> that traps people’s attention. We aim to open doors to the <strong>Fediverse</strong> and foster <strong>communication across communities</strong>.</p>
@@ -179,8 +179,8 @@ ${BLOC_PROJECTE_R32_10.en}
     lead: 'Sóc de Poble herrietan informazioa partekatzeko eta bizitza zaintzeko gogotik sortu zen. Hau da gure historia, gaur ditugun tresnak eta eraiki nahi dugun etorkizuna.',
     imageAlt: 'Konektatutako landa-herri baten ilustrazioa',
     html: `\n      <h3>Herriarentzako tresna bat</h3>
-      <p>Sóc de Poble herriak eta bertan bizi diren pertsonak <strong>konektatzeko</strong> pentsatutako <strong>sare sozial</strong> zibiko bat da. Informazioa <strong>datu-monopolio</strong> handien menpe egon gabe partekatu nahi dugu, <strong>adineko pertsona batek</strong> pantaila ukitu eta zer egin jakin dezan.</p>
-      <p>Gure <strong>zeruertza</strong> internetik gabeko <strong>autonomia</strong> da: gailuek datuak gorde eta konexioa itzultzean adostea. Etorkizuneko ikuspegia da oraindik; gaur egun, Sóc de Pobleren funtzio partekatuek <strong>konexioa behar dute</strong>.</p>
+      <p>Sóc de Poble herriak eta bertan bizi diren pertsonak <strong>konektatzeko</strong> pentsatutako <strong>sare sozial</strong> zibiko bat da. Informazioa <strong>datu-monopolio</strong> handien menpe egon gabe <strong>partekatu</strong> nahi dugu, <strong>adineko pertsona batek</strong> pantaila ukitu eta zer egin jakin dezan.</p>
+      <p>Gure <strong>zeruertza</strong> internetik gabeko <strong>autonomia</strong> da: <strong>gailuek</strong> datuak gorde eta konexioa itzultzean adostea. <strong>Etorkizuneko ikuspegia</strong> da oraindik; gaur egun, Sóc de Pobleren funtzio partekatuek <strong>konexioa behar dute</strong>.</p>
 
       <h3>Nola konektatzen garen gaur</h3>
       <p><strong>Aplikazioa</strong> eta <strong>datuak</strong> <strong>pieza bereizi</strong> gisa eraikitzen ditugu: pantaila aurrealdea da eta atzean <strong>konektore</strong> batek informazioa irakurri eta gordetzen du.</p>

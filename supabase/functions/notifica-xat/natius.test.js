@@ -59,7 +59,7 @@ beforeAll(async () => {
   const derEc = new Uint8Array(await subtle.exportKey('pkcs8', ec.privateKey));
   EC = { publica: ec.publicKey, der: derEc, pem: aPem(derEc) };
   EC_ALTRE = { pem: aPem(new Uint8Array(await subtle.exportKey('pkcs8', altre.privateKey))) };
-  EC_SEGONA = { pem: aPem(new Uint8Array(await subtle.exportKey('pkcs8', segona.privateKey))) };
+  EC_SEGONA = { publica: segona.publicKey, pem: aPem(new Uint8Array(await subtle.exportKey('pkcs8', segona.privateKey))) };
   RSA = { publica: rsa.publicKey, pem: aPem(new Uint8Array(await subtle.exportKey('pkcs8', rsa.privateKey))) };
   DESADA_APNS = await jwtApns({ equip: EQUIP, clauId: CLAU_ID, clauPem: EC.pem, ara: ARA - 10 * 60 * 1000 });
 });
@@ -120,8 +120,9 @@ function creaMon({ credencial = null, desa = true, apns = () => ({ estat: 200 })
     crides: [],
     rpc: async (nom, cos) => {
       mon.rpcs.push({ nom, cos });
-      if (nom === 'xat_push_credencial') return typeof credencial === 'function' ? credencial(cos, mon) : credencial;
-      if (nom === 'xat_push_desa_credencial') return typeof desa === 'function' ? desa(cos, mon) : desa;
+      /* Les v1 (sense empremta) només hi són perquè la prova A-03 es puga passar contra el worker d'abans. */
+      if (nom === 'xat_push_credencial_v2' || nom === 'xat_push_credencial') return typeof credencial === 'function' ? credencial(cos, mon) : credencial;
+      if (nom === 'xat_push_desa_credencial_v2' || nom === 'xat_push_desa_credencial') return typeof desa === 'function' ? desa(cos, mon) : desa;
       throw new Error('rpc desconeguda');
     },
     fetch: async (url, opcions = {}) => {
@@ -533,8 +534,8 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
     const { apns } = await enviadorsDe(mon, envApns(), { subtle: espia.subtle });
     expect(await apns({ adreca: IOS_T, llengua: 'ca' })).toEqual({ resultat: 'enviat', estat: 200 });
     expect(espia.compte.signatures).toBe(0);
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial']);
-    expect(mon.rpcs[0].cos).toEqual({ p_proveidor: 'apns' });
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2']);
+    expect(mon.rpcs[0].cos).toEqual({ p_proveidor: 'apns', p_empremta: expect.stringMatching(/^[0-9a-f]{16}$/) });
     expect(mon.crides[0].opcions.headers.authorization).toBe(`bearer ${DESADA_APNS}`);
   });
 
@@ -545,9 +546,10 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
     const resultats = await Promise.all(Array.from({ length: 10 }, () => apns({ adreca: IOS_T, llengua: 'es' })));
     expect(resultats.every((r) => r.resultat === 'enviat')).toBe(true);
     expect(espia.compte.signatures).toBe(1);
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial', 'xat_push_desa_credencial']);
-    const { p_proveidor: proveidor, p_valor: valor, p_caduca_al: caducaAl } = mon.rpcs[1].cos;
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2', 'xat_push_desa_credencial_v2']);
+    const { p_proveidor: proveidor, p_empremta: empremta, p_valor: valor, p_caduca_al: caducaAl } = mon.rpcs[1].cos;
     expect(proveidor).toBe('apns');
+    expect(empremta).toBe(mon.rpcs[0].cos.p_empremta);
     expect(caducaAl).toBe(new Date(ARA + 3000 * 1000).toISOString());
     expect(Date.parse(caducaAl) - ARA).toBeLessThanOrEqual(50 * 60 * 1000);
     expect(await verificaEs256(valor, EC.publica)).toBe(true);
@@ -560,13 +562,13 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
     const mon = creaMon({ credencial: () => (++lectures === 1 ? null : DESADA_APNS), desa: false });
     const { apns } = await enviadorsDe(mon, envApns());
     await apns({ adreca: IOS_T, llengua: 'ca' });
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial', 'xat_push_desa_credencial', 'xat_push_credencial']);
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2', 'xat_push_desa_credencial_v2', 'xat_push_credencial_v2']);
     expect(mon.crides[0].opcions.headers.authorization).toBe(`bearer ${DESADA_APNS}`);
   });
 
   test.each([
-    ['la lectura falla', { credencial: () => { throw new Error('base'); } }, ['xat_push_credencial'], 0],
-    ['el desament falla', { desa: () => { throw new Error('base'); } }, ['xat_push_credencial', 'xat_push_desa_credencial'], 1]
+    ['la lectura falla', { credencial: () => { throw new Error('base'); } }, ['xat_push_credencial_v2'], 0],
+    ['el desament falla', { desa: () => { throw new Error('base'); } }, ['xat_push_credencial_v2', 'xat_push_desa_credencial_v2'], 1]
   ])('APNs: si %s, reintenta i no s’envia res amb una credencial sense desar', async (_, opcions, rpcs, signatures) => {
     const espia = subtleQueCompta();
     const mon = creaMon(opcions);
@@ -592,7 +594,7 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
     const resultats = [];
     for (let i = 0; i < 3; i++) resultats.push(await apns({ adreca: IOS_T, llengua: 'ca' }));
     expect(resultats).toEqual(Array(3).fill({ resultat: 'reintenta', estat: 0 }));
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial', 'xat_push_desa_credencial', 'xat_push_credencial']);
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2', 'xat_push_desa_credencial_v2', 'xat_push_credencial_v2']);
     expect(espia.compte.signatures).toBe(1);
     expect(mon.crides).toEqual([]);
   });
@@ -600,10 +602,10 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
   /* ARB-N02-01: la promesa és una per passada també quan falla. Els aparells
      SEQÜENCIALS (no alhora) no tornen a demanar la credencial. */
   test.each([
-    ['APNs amb la lectura de la base caiguda', 'apns', { credencial: () => { throw new Error('base'); } }, 'reintenta', ['xat_push_credencial'], 0],
-    ['FCM amb l’OAuth a 503', 'fcm', { oauth: () => ({ estat: 503 }) }, 'reintenta', ['xat_push_credencial'], 1],
-    ['FCM amb l’OAuth rebutjat (400)', 'fcm', { oauth: () => ({ estat: 400, cos: { error: 'invalid_grant' } }) }, 'config', ['xat_push_credencial'], 1],
-    ['FCM amb el desament caigut', 'fcm', { desa: () => { throw new Error('base'); } }, 'reintenta', ['xat_push_credencial', 'xat_push_desa_credencial'], 1]
+    ['APNs amb la lectura de la base caiguda', 'apns', { credencial: () => { throw new Error('base'); } }, 'reintenta', ['xat_push_credencial_v2'], 0],
+    ['FCM amb l’OAuth a 503', 'fcm', { oauth: () => ({ estat: 503 }) }, 'reintenta', ['xat_push_credencial_v2'], 1],
+    ['FCM amb l’OAuth rebutjat (400)', 'fcm', { oauth: () => ({ estat: 400, cos: { error: 'invalid_grant' } }) }, 'config', ['xat_push_credencial_v2'], 1],
+    ['FCM amb el desament caigut', 'fcm', { desa: () => { throw new Error('base'); } }, 'reintenta', ['xat_push_credencial_v2', 'xat_push_desa_credencial_v2'], 1]
   ])('%s: tres aparells seqüencials, una sola lectura, un sol intercanvi i un sol avís', async (_, proveidor, opcions, esperat, rpcs, intercanvis) => {
     const mon = creaMon(opcions);
     const enviadors = await enviadorsDe(mon, proveidor === 'apns' ? envApns() : envFcm());
@@ -623,7 +625,7 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
     const { apns } = await enviadorsDe(mon, envApns(), { subtle: espia.subtle });
     expect((await apns({ adreca: IOS_T, llengua: 'ca' })).resultat).toBe('enviat');
     expect(espia.compte.signatures).toBe(1);
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial', 'xat_push_desa_credencial']);
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2', 'xat_push_desa_credencial_v2']);
   });
 
   test('FCM amb una credencial vigent: cap JWT ni cap intercanvi OAuth', async () => {
@@ -633,7 +635,7 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
     expect(await fcm({ adreca: AND_T, llengua: 'gl' })).toEqual({ resultat: 'enviat', estat: 200 });
     expect(espia.compte.signatures).toBe(0);
     expect(cridesA(mon, FCM.TOKEN)).toEqual([]);
-    expect(mon.rpcs).toEqual([{ nom: 'xat_push_credencial', cos: { p_proveidor: 'fcm' } }]);
+    expect(mon.rpcs).toEqual([{ nom: 'xat_push_credencial_v2', cos: { p_proveidor: 'fcm', p_empremta: await empremtaFcm() } }]);
   });
 
   test.each([[3599, 3299], [7200, 3300], [1000, 700]])('FCM sense credencial: amb expires_in %i la desa amb %i s de vida', async (expira, vida) => {
@@ -641,8 +643,8 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
     const { fcm } = await enviadorsDe(mon, envFcm());
     await Promise.all([1, 2, 3, 4].map(() => fcm({ adreca: AND_T, llengua: 'ca' })));
     expect(cridesA(mon, FCM.TOKEN)).toHaveLength(1);
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial', 'xat_push_desa_credencial']);
-    expect(mon.rpcs[1].cos).toEqual({ p_proveidor: 'fcm', p_valor: `${await empremtaFcm()}.${ACCES}`, p_caduca_al: new Date(ARA + vida * 1000).toISOString() });
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2', 'xat_push_desa_credencial_v2']);
+    expect(mon.rpcs[1].cos).toEqual({ p_proveidor: 'fcm', p_empremta: await empremtaFcm(), p_valor: `${await empremtaFcm()}.${ACCES}`, p_caduca_al: new Date(ARA + vida * 1000).toISOString() });
     expect(cridesA(mon, FCM.MISSATGES).map((c) => c.opcions.headers.authorization)).toEqual(Array(4).fill(`Bearer ${ACCES}`));
   });
 
@@ -650,7 +652,7 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
     const mon = creaMon({ oauth: () => ({ estat: 200, cos: { access_token: ACCES, expires_in: 200 } }) });
     const { fcm } = await enviadorsDe(mon, envFcm());
     expect((await fcm({ adreca: AND_T, llengua: 'ca' })).resultat).toBe('enviat');
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial']);
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2']);
   });
 
   test('FCM amb l’OAuth rebutjat: config per a tots, un sol intercanvi i cap enviament', async () => {
@@ -660,7 +662,7 @@ describe('la caché de credencials: com a molt una per proveïdor i passada (R3)
     expect(resultats).toEqual(Array(3).fill({ resultat: 'config', estat: 0 }));
     expect(cridesA(mon, FCM.TOKEN)).toHaveLength(1);
     expect(cridesA(mon, FCM.MISSATGES)).toEqual([]);
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial']);
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2']);
   });
 
   test('el token_uri del compte de servei no es busca mai: l’intercanvi va sempre a FCM.TOKEN', async () => {
@@ -703,7 +705,7 @@ describe('G1-B-doctr-02: la credencial desada va lligada a la clau que la va fer
     const mon = creaMon(base);
     const { apns } = await enviadorsDe(mon, envApns());
     expect(await apns({ adreca: IOS_T, llengua: 'ca' })).toEqual({ resultat: 'enviat', estat: 200 });
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial', 'xat_push_desa_credencial']);
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2', 'xat_push_desa_credencial_v2']);
     const nova = mon.rpcs[1].cos.p_valor;
     expect(nova).not.toBe(vella);
     expect(llegixJwt(nova).capcalera).toEqual({ alg: 'ES256', kid: CLAU_ID });
@@ -718,12 +720,12 @@ describe('G1-B-doctr-02: la credencial desada va lligada a la clau que la va fer
     const base = baseDeCredencials();
     const primera = creaMon(base);
     await (await enviadorsDe(primera, envApns())).apns({ adreca: IOS_T, llengua: 'ca' });
-    expect(nomsRpc(primera)).toEqual(['xat_push_credencial', 'xat_push_desa_credencial']);
+    expect(nomsRpc(primera)).toEqual(['xat_push_credencial_v2', 'xat_push_desa_credencial_v2']);
     const espia = subtleQueCompta();
     const segona = creaMon(base);
     const { apns } = await enviadorsDe(segona, envApns(), { subtle: espia.subtle, ara: () => ARA + 60 * 1000 });
     expect(await apns({ adreca: IOS_T, llengua: 'ca' })).toEqual({ resultat: 'enviat', estat: 200 });
-    expect(nomsRpc(segona)).toEqual(['xat_push_credencial']);
+    expect(nomsRpc(segona)).toEqual(['xat_push_credencial_v2']);
     expect(espia.compte.signatures).toBe(0);
     expect(segona.crides[0].opcions.headers.authorization).toBe(`bearer ${base.b.fila.valor}`);
   });
@@ -734,7 +736,7 @@ describe('G1-B-doctr-02: la credencial desada va lligada a la clau que la va fer
     const mon = creaMon({ credencial: DESADA_APNS });
     const { apns } = await enviadorsDe(mon, envApns(), { subtle: senseExportar });
     expect(await apns({ adreca: IOS_T, llengua: 'ca' })).toEqual({ resultat: 'enviat', estat: 200 });
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial']);
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2']);
     expect(espia.compte.signatures).toBe(0);
   });
 
@@ -772,7 +774,7 @@ describe('G1-B-doctr-02: la credencial desada va lligada a la clau que la va fer
     const mon = creaMon({ credencial: vella, desa: false });
     const { apns } = await enviadorsDe(mon, envApns());
     expect(await apns({ adreca: IOS_T, llengua: 'ca' })).toEqual({ resultat: 'reintenta', estat: 0 });
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial', 'xat_push_desa_credencial', 'xat_push_credencial']);
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2', 'xat_push_desa_credencial_v2', 'xat_push_credencial_v2']);
     expect(mon.crides).toEqual([]);
   });
 
@@ -787,7 +789,7 @@ describe('G1-B-doctr-02: la credencial desada va lligada a la clau que la va fer
     const { fcm } = await enviadorsDe(ambB, { SDP_FCM_COMPTE_SERVEI: compte(COMPTE_B) }, { ara: () => ARA + 60 * 1000 });
     expect(await fcm({ adreca: AND_T, llengua: 'ca' })).toEqual({ resultat: 'enviat', estat: 200 });
     expect(cridesA(ambB, FCM.TOKEN)).toHaveLength(1);
-    expect(nomsRpc(ambB)).toEqual(['xat_push_credencial', 'xat_push_desa_credencial']);
+    expect(nomsRpc(ambB)).toEqual(['xat_push_credencial_v2', 'xat_push_desa_credencial_v2']);
     expect(base.b.fila.valor).toBe(`${await empremtaFcm(COMPTE_B.client_email, COMPTE_B.project_id)}.${ACCES_NOU}`);
     expect(cridesA(ambB, FCM.MISSATGES).map((c) => [c.url, c.opcions.headers.authorization])).toEqual([[`${FCM.MISSATGES}/${COMPTE_B.project_id}/messages:send`, `Bearer ${ACCES_NOU}`]]);
   });
@@ -807,7 +809,7 @@ describe('G1-B-doctr-02: la credencial desada va lligada a la clau que la va fer
     const mon = creaMon({ oauth: () => ({ estat: 200, cos: { access_token: llarg, expires_in: 3599 } }) });
     const { fcm } = await enviadorsDe(mon, envFcm());
     expect(await fcm({ adreca: AND_T, llengua: 'ca' })).toEqual({ resultat: 'enviat', estat: 200 });
-    expect(nomsRpc(mon)).toEqual(['xat_push_credencial']);
+    expect(nomsRpc(mon)).toEqual(['xat_push_credencial_v2']);
     expect(cridesA(mon, FCM.MISSATGES)[0].opcions.headers.authorization).toBe(`Bearer ${llarg}`);
   });
 
@@ -821,6 +823,127 @@ describe('G1-B-doctr-02: la credencial desada va lligada a la clau que la va fer
     expect(await fcm({ adreca: AND_T, llengua: 'ca' })).toEqual({ resultat: 'enviat', estat: 200 });
     expect(cridesA(mon, FCM.TOKEN)).toHaveLength(1);
     expect(mon.rpcs[1].cos.p_valor).toBe(`${await empremtaFcm()}.${ACCES}`);
+  });
+});
+
+/* P1-74 (A-03) · Dues configuracions natives alhora: durant una rotació de
+   SDP_APNS_* o de SDP_FCM_COMPTE_SERVEI conviuen passades amb la configuració
+   vella (A) i amb la nova (B). Amb una sola fila per proveïdor, cada passada
+   troba la credencial de l'altra, en fa una de nova i la substituïx: un JWT
+   d'APNs a cada passada (el 429 d'Apple) i un intercanvi OAuth a cada passada.
+   Amb la caché per (proveïdor, empremta) cada configuració fa la seua una
+   sola vegada i les passades següents només la lligen. */
+describe('A-03: dues configuracions natives alhora', () => {
+  const CLAU_ID_B = 'CLAU000002';
+  const ACCES_B = `ya29.canari-acces-b_${'b'.repeat(40)}`;
+  const COMPTE_B = { project_id: 'sdp-altre-456', client_email: 'avisos@sdp-altre-456.iam.gserviceaccount.com' };
+  const ORDRE = ['A', 'B', 'A', 'B'];
+  /* La base en memòria amb la semàntica de 20261118230000: una fila per
+     «proveïdor|empremta», desada només si dura més. Una crida sense empremta
+     (les RPC v1) cau a la fila única d'abans. */
+  const baseV2 = () => {
+    const files = new Map();
+    const clau = (cos) => `${cos.p_proveidor}|${cos.p_empremta ?? ''}`;
+    return {
+      files,
+      credencial: (cos) => files.get(clau(cos))?.valor ?? null,
+      desa: (cos) => {
+        const actual = files.get(clau(cos));
+        if (actual && Date.parse(actual.caducaAl) >= Date.parse(cos.p_caduca_al)) return false;
+        files.set(clau(cos), { valor: cos.p_valor, caducaAl: cos.p_caduca_al });
+        return true;
+      }
+    };
+  };
+  const sensSecrets = (passades, extra = []) => {
+    const text = registre.linies.join('\n');
+    expect(text).not.toMatch(/eyJ|ya29|BEGIN|MII|canari/);
+    for (const { mon } of passades) for (const r of mon.rpcs) if (r.cos.p_valor) expect(text).not.toContain(r.cos.p_valor);
+    for (const valor of extra) expect(text).not.toContain(valor);
+  };
+
+  test('APNs: A, B, A, B fan un sol JWT per configuració (2, no 4) i cada petició va amb el de la seua', async () => {
+    const base = baseV2();
+    const espia = subtleQueCompta();
+    const configs = {
+      A: { env: envApns(), kid: CLAU_ID, publica: () => EC.publica },
+      B: { env: envApns({ SDP_APNS_CLAU_ID: CLAU_ID_B, SDP_APNS_CLAU_P8: EC_SEGONA.pem }), kid: CLAU_ID_B, publica: () => EC_SEGONA.publica }
+    };
+    const passades = [];
+    for (const [i, nom] of ORDRE.entries()) {
+      const mon = creaMon(base);
+      const { apns } = await enviadorsDe(mon, configs[nom].env, { subtle: espia.subtle, ara: () => ARA + i * 60 * 1000 });
+      expect(await apns({ adreca: IOS_T, llengua: 'ca' })).toEqual({ resultat: 'enviat', estat: 200 });
+      passades.push({ nom, mon });
+    }
+    expect(espia.compte.signatures).toBe(2);
+    expect(passades.map(({ mon }) => nomsRpc(mon))).toEqual([
+      ['xat_push_credencial_v2', 'xat_push_desa_credencial_v2'],
+      ['xat_push_credencial_v2', 'xat_push_desa_credencial_v2'],
+      ['xat_push_credencial_v2'],
+      ['xat_push_credencial_v2']
+    ]);
+    for (const { nom, mon } of passades) {
+      expect(mon.crides).toHaveLength(1);
+      const jwt = mon.crides[0].opcions.headers.authorization.replace(/^bearer /, '');
+      expect(llegixJwt(jwt).capcalera).toEqual({ alg: 'ES256', kid: configs[nom].kid });
+      expect(await verificaEs256(jwt, configs[nom].publica())).toBe(true);
+    }
+    const empremtes = passades.map(({ mon }) => mon.rpcs[0].cos.p_empremta);
+    for (const e of empremtes) expect(e).toMatch(/^[0-9a-f]{16}$/);
+    expect(empremtes[2]).toBe(empremtes[0]);
+    expect(empremtes[3]).toBe(empremtes[1]);
+    expect(empremtes[1]).not.toBe(empremtes[0]);
+    expect(passades[0].mon.rpcs[1].cos.p_empremta).toBe(empremtes[0]);
+    expect([...base.files.keys()].sort()).toEqual([`apns|${empremtes[0]}`, `apns|${empremtes[1]}`].sort());
+    sensSecrets(passades, [IOS_T]);
+  });
+
+  test('APNs: l’empremta no depén de l’entorn ni del topic (el mateix JWT val per a tots dos) i sí de l’equip i de la .p8', async () => {
+    const empremta = async (env, extra = {}) => {
+      const mon = creaMon();
+      const { apns } = await enviadorsDe(mon, env, extra);
+      await apns({ adreca: IOS_T, llengua: 'ca' });
+      return mon.rpcs[0].cos.p_empremta;
+    };
+    const a = await empremta(envApns());
+    expect(await empremta(envApns({ SDP_APNS_ENTORN: 'sandbox', SDP_APNS_TOPIC: 'org.socdepoble.altra' }))).toBe(a);
+    expect(await empremta(envApns({ SDP_APNS_EQUIP: 'ALTRE12345' }))).not.toBe(a);
+    expect(await empremta(envApns({ SDP_APNS_CLAU_P8: EC_SEGONA.pem }))).not.toBe(a);
+    /* Sense poder derivar la pública, l'empremta ix del SHA-256 del DER: estable, però una altra. */
+    const senseExportar = { importKey: (...x) => subtle.importKey(...x), digest: (...x) => subtle.digest(...x), sign: (...x) => subtle.sign(...x), verify: (...x) => subtle.verify(...x), exportKey: () => Promise.reject(new Error('no exportable')) };
+    const der = await empremta(envApns(), { subtle: senseExportar });
+    expect(der).toMatch(/^[0-9a-f]{16}$/);
+    expect(await empremta(envApns(), { subtle: senseExportar })).toBe(der);
+    expect(der).not.toBe(a);
+  });
+
+  test('FCM: A, B, A, B fan un sol intercanvi OAuth per compte i cada enviament va amb el testimoni del seu', async () => {
+    const base = baseV2();
+    const configs = {
+      A: { env: envFcm(), acces: ACCES, projecte: PROJECTE, empremta: await empremtaFcm() },
+      B: { env: { SDP_FCM_COMPTE_SERVEI: compte(COMPTE_B) }, acces: ACCES_B, projecte: COMPTE_B.project_id, empremta: await empremtaFcm(COMPTE_B.client_email, COMPTE_B.project_id) }
+    };
+    const passades = [];
+    for (const [i, nom] of ORDRE.entries()) {
+      const c = configs[nom];
+      const mon = creaMon({ ...base, oauth: () => ({ estat: 200, cos: { access_token: c.acces, expires_in: 3599 } }) });
+      const { fcm } = await enviadorsDe(mon, c.env, { ara: () => ARA + i * 60 * 1000 });
+      expect(await fcm({ adreca: AND_T, llengua: 'ca' })).toEqual({ resultat: 'enviat', estat: 200 });
+      passades.push({ nom, mon });
+    }
+    expect(passades.map(({ mon }) => cridesA(mon, FCM.TOKEN).length)).toEqual([1, 1, 0, 0]);
+    expect(passades.slice(2).map(({ mon }) => nomsRpc(mon))).toEqual([['xat_push_credencial_v2'], ['xat_push_credencial_v2']]);
+    for (const { nom, mon } of passades) {
+      const c = configs[nom];
+      expect(mon.rpcs[0].cos).toEqual({ p_proveidor: 'fcm', p_empremta: c.empremta });
+      expect(cridesA(mon, FCM.MISSATGES).map((x) => [x.url, x.opcions.headers.authorization])).toEqual([[`${FCM.MISSATGES}/${c.projecte}/messages:send`, `Bearer ${c.acces}`]]);
+    }
+    expect(configs.A.empremta).toMatch(/^[0-9a-f]{16}$/);
+    expect(configs.B.empremta).not.toBe(configs.A.empremta);
+    expect(base.files.get(`fcm|${configs.A.empremta}`).valor).toBe(`${configs.A.empremta}.${ACCES}`);
+    expect(base.files.get(`fcm|${configs.B.empremta}`).valor).toBe(`${configs.B.empremta}.${ACCES_B}`);
+    sensSecrets(passades, [AND_T, ACCES, ACCES_B]);
   });
 });
 
@@ -953,8 +1076,8 @@ describe('integració amb el gestor real: mai expulsar per un error de configura
             if(retired.length)mon.expulsats.push(retired);
             return Response.json({expulsats:retired.length});
           }
-          if (nom === 'xat_push_credencial') return Response.json(null);
-          if (nom === 'xat_push_desa_credencial') return Response.json(true);
+          if (nom === 'xat_push_credencial_v2') return Response.json(null);
+          if (nom === 'xat_push_desa_credencial_v2') return Response.json(true);
           return new Response('{}', { status: 404 });
         }
         if (url === FCM.TOKEN) { mon.oauth.push(url); return Response.json({ access_token: ACCES, expires_in: 3599 }); }
@@ -1090,9 +1213,10 @@ describe('integració amb el gestor real: mai expulsar per un error de configura
     expect(cos).toMatchObject({ enviats: 4, expulsats: 0 });
     const credencials = mon.base.filter((b) => b.nom.startsWith('xat_push_') && b.nom.includes('credencial'));
     expect(credencials.map((b) => `${b.nom} ${b.cos.p_proveidor}`).sort()).toEqual([
-      'xat_push_credencial apns', 'xat_push_credencial fcm', 'xat_push_desa_credencial apns', 'xat_push_desa_credencial fcm'
+      'xat_push_credencial_v2 apns', 'xat_push_credencial_v2 fcm', 'xat_push_desa_credencial_v2 apns', 'xat_push_desa_credencial_v2 fcm'
     ]);
     for (const b of credencials) expect(b.capcaleres.apikey).toBe('eyJhbGciOiJIUzI1NiJ9.servei.sintetic');
+    for (const b of credencials) expect(b.cos.p_empremta).toMatch(/^[0-9a-f]{16}$/);
     expect(mon.oauth).toHaveLength(1);
     expect(registre.linies.join('\n')).toContain('apns enviat 200=2');
     sensCanaris(mon, cos);

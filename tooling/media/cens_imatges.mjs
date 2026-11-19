@@ -14,6 +14,10 @@
  * acreditar o un motiu d'àlies que nomena un original absent. No és porta del
  * hook (D-5: l'escaneig del corpus tarda ~67 s); la unicitat la vigila la prova
  * primària duplicats_assets.test.mjs.
+ * P1-29 (261118) · Les imatges importades de WordPress prenen la procedència del
+ * registre MITJANS_WP_LOCALS (URL d'origen, verificada per SHA-256 i pes; ix amb 1
+ * si no casa) i les variants socials, la de l'original de VARIANTS_SOCIALS. La
+ * llista de còpies redundants només proposa quina conservar: no mou ni esborra res.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -26,6 +30,8 @@ import {
   TRAZABILITAT_RONDA1_CENS, idDelCens
 } from '../../src/sections/multimedia/censImatges.js';
 import { IMATGES_CONSOLA } from '../../src/sections/consola/imatgesConsola.js';
+import { MITJANS_WP_LOCALS } from '../../src/data/importacio/paginesTrilogiaIMoliWp.mitjans.js';
+import { VARIANTS_SOCIALS } from '../../src/config/imatgeSocial.js';
 import {
   CORRECCIONS_D_ALIES, DUPLICATS_ACREDITATS, arrelDelCens, classificaDuplicats, contextDelCens, motiusTrencats
 } from './duplicats_assets.mjs';
@@ -153,10 +159,43 @@ function procedenciaDe(src, arrelCens, { entrades, trazabilitat, svgs }) {
   return svg ? { font: 'svg_documentat', ambit: svg.ambit, ...(svg.commit ? { commit: svg.commit } : {}) } : null;
 }
 
+/** variant social → original, amb la mateixa reserva .webp d'urlSocialDe: si l'original
+ *  .png/.jpg/.jpeg no és al disc i la seua bessona .webp sí, l'original és la bessona. */
+function originalsDeVariants(variantsSocials, presents) {
+  return new Map(Object.entries(variantsSocials).map(([original, variant]) => {
+    const webp = original.replace(/\.(?:png|jpe?g)$/i, '.webp');
+    return [variant, !presents.has(original) && presents.has(webp) ? webp : original];
+  }));
+}
+
+const RANG_US = { codi_literal: 0, codi_dinamic_possible: 1, codi_nom_possible: 2 };
+const rangUs = (img) => RANG_US[img?.estat] ?? 3;
+
+/** Per grup de bytes idèntics, quin membre conservar. Cada membre es jutja per l'asset que representa
+ *  (ell o, si és bessona WebP, el seu original, amb l'ús de les dues): primer la primària d'una parella
+ *  del cens, després el que és la seua pròpia arrel (o la bessona directa d'esta), després l'ús del codi
+ *  (camí literal, dinàmic, nom) i, a igualtat, l'ordre de l'original. Així un original i la seua bessona
+ *  reben la mateixa proposta en els seus grups. Només proposa. */
+function membreAConservar(fitxers, perSrc, { bessonaDeOriginal, primaries }) {
+  const clau = (src) => {
+    const img = perSrc.get(src);
+    const base = img.bessonaDe ?? src;
+    const asset = [base, bessonaDeOriginal.get(base)].filter((s) => perSrc.has(s)).map((s) => perSrc.get(s));
+    const propi = base === img.arrelCens;
+    return [propi && primaries.has(base) ? 0 : 1, propi ? 0 : 1, Math.min(rangUs(img), ...asset.map(rangUs)), base, src];
+  };
+  const compara = (a, b) => a.reduce((r, v, k) => r || ordena(v, b[k]), 0);
+  return fitxers.map((src) => ({ src, clau: clau(src) })).sort((a, b) => compara(a.clau, b.clau))[0].src;
+}
+
+/** El codi en cita el camí mateix (no l'heretat de l'original): esborrar-lo trencaria eixa referència. */
+const citatPelCodi = (img) => img.usos.some((u) => u.capa === 'codi' && u.evidencia === 'cami' && !u.via);
+
 export function censImatges(arrel, {
   cens = CENS_IMATGES, excloses = EXCLOSES, alies = ALIES_DEL_CENS, arrels = ARRELS_REFERENCIES,
   correccions = CORRECCIONS_D_ALIES, acreditats = DUPLICATS_ACREDITATS,
-  pares = PARES_IDENTIQUES_ACREDITADES_CENS, svgs = SVG_DOCUMENTATS_ARXIU, trazabilitat = TRAZABILITAT_RONDA1_CENS
+  pares = PARES_IDENTIQUES_ACREDITADES_CENS, svgs = SVG_DOCUMENTATS_ARXIU, trazabilitat = TRAZABILITAT_RONDA1_CENS,
+  mitjansWp = MITJANS_WP_LOCALS, variantsSocials = VARIANTS_SOCIALS
 } = {}) {
   const { tots: inventari, imatges: llegides } = recorreAssets(arrel, { ambMides: true });
   const imatges = llegides.map((i) => ({ ...i, cami: i.src.slice(1) }));
@@ -176,6 +215,9 @@ export function censImatges(arrel, {
   /* La mateixa relació de bessones per a l'estat i per a l'arrel transitiva. */
   const ctx = contextDelCens({ presents, cens, excloses, svgs, correccions,
     bessonaDe: new Map([...originalDe].map(([bessona, original]) => [`/${bessona}`, `/${original}`])) });
+  const wpPerCami = new Map(Object.entries(mitjansWp).map(([url, m]) => [m.path, { url, ...m }]));
+  const originalDeVariant = originalsDeVariants(variantsSocials, presents);
+  const taules = { entrades, trazabilitat, svgs };
   const files = imatges.map(({ src, cami, bytes, sha256: hash, dimensions }) => {
     const original = originalDe.get(cami);
     const base = original ? `/${original}` : src;
@@ -186,15 +228,25 @@ export function censImatges(arrel, {
     const heretats = original ? usos.get(original).map((u) => ({ ...u, via: `/${original}` })) : [];
     const totes = [...directes, ...heretats];
     const vives = totes.filter((u) => u.capa === 'codi');
+    const wp = wpPerCami.get(src);
     const categoria = entrades.has(src) ? 'cens' : Object.hasOwn(excloses, src) ? 'exclosa' : original ? 'bessona'
-      : src.startsWith('/assets/system/') ? 'sistema' : src.endsWith('.svg') ? 'svg' : 'desconeguda';
+      : src.startsWith('/assets/system/') ? 'sistema' : src.endsWith('.svg') ? 'svg' : wp ? 'importacio_wp' : 'desconeguda';
+    let procedencia = procedenciaDe(src, arrelCens, taules);
+    if (!procedencia && wp) {
+      procedencia = { font: 'importacio_wp', origen: wp.url, verificat: wp.sha256 === hash && wp.bytes === bytes };
+    }
+    if (!procedencia && originalDeVariant.has(src)) {
+      const de = originalDeVariant.get(src);
+      /* La de l'arrel de l'original, sense la seua font: la font d'esta és la variant. */
+      procedencia = { ...procedenciaDe(de, arrelDelCens(de, ctx), taules), font: 'variant_social', de };
+    }
     const estat = vives.some((u) => u.evidencia === 'cami') ? 'codi_literal'
       : vives.some((u) => u.evidencia === 'dinamica') ? 'codi_dinamic_possible'
         : vives.length ? 'codi_nom_possible' : totes.some((u) => u.capa === 'dades') ? 'nomes_dades'
           : entrada || totes.some((u) => u.capa === 'galeria') ? 'nomes_galeria'
             : totes.some((u) => u.capa === 'prova') ? 'nomes_proves' : 'sense_referencia';
     return { src, bytes, sha256: hash, dimensions, categoria, estat, assetId: idDelCens(canonic),
-      assetIdArrel: idDelCens(arrelCens), arrelCens, procedencia: procedenciaDe(src, arrelCens, { entrades, trazabilitat, svgs }),
+      assetIdArrel: idDelCens(arrelCens), arrelCens, procedencia,
       canonic, ...(original ? { bessonaDe: `/${original}` } : {}), ...(entrada ? { titol: entrada.titol } : {}),
       ...(Object.hasOwn(excloses, src) ? { motiuExclusio: excloses[src] } : {}), usos: totes };
   });
@@ -210,6 +262,21 @@ export function censImatges(arrel, {
   const perAcreditacio = recompte(duplicats, 'acreditacio');
   const senseUsViu = files.filter((i) => !i.usos.some((u) => u.capa === 'codi')).map((i) => i.src);
   const absentsDelCens = cens.filter((e) => !presents.has(e.src)).map((e) => e.src).sort(ordena);
+  const importacioWpDivergents = files.filter((i) => i.procedencia?.font === 'importacio_wp' && !i.procedencia.verificat)
+    .map((i) => i.src);
+  const perSrc = new Map(files.map((i) => [i.src, i]));
+  const declaracioDe = new Map(acreditats.map((d) => [[...d.fitxers].sort(ordena).join('|'), d]));
+  const bessonaDeOriginal = new Map(files.filter((i) => i.bessonaDe).map((i) => [i.bessonaDe, i.src]));
+  const primaries = new Set(pares.map((p) => p.primaria));
+  const redundantDe = (g) => {
+    const conserva = membreAConservar(g.fitxers, perSrc, { bessonaDeOriginal, primaries });
+    const redundants = g.fitxers.filter((src) => src !== conserva);
+    return { sha256: g.sha256, conserva, redundants, bytes: g.bytesRedundants,
+      citadesPelCodi: redundants.filter((src) => citatPelCodi(perSrc.get(src))) };
+  };
+  const redundants = duplicats.filter((g) => g.acreditacio !== 'declarat').map(redundantDe);
+  const redundantsDeclarats = duplicats.filter((g) => g.acreditacio === 'declarat')
+    .map((g) => ({ ...redundantDe(g), decisio: declaracioDe.get(g.fitxers.join('|'))?.decisio ?? 'pendent_mestre' }));
   return {
     schema: 'sdp.cens-imatges.v1',
     metode: { arrelAssets: 'public/assets', inventari: 'Tots els fitxers regulars, inclosos ocults i carpetes de nom reservat; symlinks rebutjats en qualsevol component.', arrelsReferencies: [...arrels], fonts: fonts.length,
@@ -222,8 +289,9 @@ export function censImatges(arrel, {
       bytesRedundants: duplicats.reduce((n, g) => n + g.bytesRedundants, 0), senseUsViuIdentificat: senseUsViu.length,
       absentsDelCens: absentsDelCens.length, fontsOmeses: omeses.length,
       duplicatsPerAcreditacio: perAcreditacio, duplicatsNoAcreditats: perAcreditacio.no_acreditat || 0,
-      motiusTrencats: trencats.length },
-    imatges: files, senseUsViuIdentificat: senseUsViu, duplicats, motiusTrencats: trencats, absentsDelCens,
+      motiusTrencats: trencats.length, importacioWpDivergents: importacioWpDivergents.length },
+    imatges: files, senseUsViuIdentificat: senseUsViu, duplicats, redundants, redundantsDeclarats, motiusTrencats: trencats,
+    importacioWpDivergents, absentsDelCens,
     fontsOmeses: omeses, plaConsola: plaConsola()
   };
 }
@@ -231,6 +299,7 @@ export function censImatges(arrel, {
 export function informeCens(resultat) {
   const { resum: r } = resultat;
   const acreditacio = (k) => r.duplicatsPerAcreditacio?.[k] || 0;
+  const redundants = resultat.redundants || [];
   return [
     `[cens:imatges] ${r.fitxersAssets} fitxers d’assets; ${r.imatges} imatges (${r.bytes} bytes).`,
     `Categories: ${Object.entries(r.perCategoria).map(([k, v]) => `${k} ${v}`).join(' · ')}.`,
@@ -241,6 +310,9 @@ export function informeCens(resultat) {
     ...(resultat.duplicats || []).filter((g) => g.acreditacio === 'no_acreditat')
       .map((g) => `  sense acreditar: ${g.fitxers.join(' = ')} (arrels: ${g.arrels.join(', ')})`),
     ...(resultat.motiusTrencats || []).map((m) => `  motiu trencat (${m.font}): ${m.src} → ${m.original} absent`),
+    `Còpies redundants: ${redundants.length} grups amb membre a conservar proposat (${redundants.reduce((n, g) => n + g.redundants.length, 0)} còpies, ${redundants.reduce((n, g) => n + g.bytes, 0)} bytes; ${redundants.reduce((n, g) => n + (g.citadesPelCodi?.length || 0), 0)} citades pel codi, caldria repuntar-les abans de retirar-les) i ${(resultat.redundantsDeclarats || []).length} declarats a decisió del Mestre; cap fitxer mogut ni esborrat.`,
+    ...redundants.flatMap((g) => (g.citadesPelCodi || []).map((src) => `  redundant citada pel codi: ${src} (es conserva ${g.conserva})`)),
+    ...(resultat.importacioWpDivergents || []).map((src) => `  importació WordPress divergent del registre (SHA-256 o pes): ${src}`),
     `Cens de producte: ${r.absentsDelCens} absents; ${r.fontsOmeses} fonts omeses. Detall complet: --json.`,
     ...resultat.senseUsViuIdentificat.map((src) => `  ${src}`),
     'Pla de Consola: quatre obres pròpies pendents (actors, salut, fluxos, calendari); cap píxel modificat.',
@@ -257,7 +329,8 @@ export function main(argv = process.argv.slice(2), { arrel = null, sortida = con
     const resultat = censImatges(arrel || arrelSegura(), opcions);
     sortida.log(argv.includes('--json') ? JSON.stringify(resultat, null, 2) : informeCens(resultat));
     const { resum: r } = resultat;
-    return resultat.absentsDelCens.length || resultat.fontsOmeses.length || r.duplicatsNoAcreditats || r.motiusTrencats ? 1 : 0;
+    return resultat.absentsDelCens.length || resultat.fontsOmeses.length || r.duplicatsNoAcreditats || r.motiusTrencats
+      || r.importacioWpDivergents ? 1 : 0;
   } catch (e) { sortida.error(`[cens:imatges] ${e.message}`); return 1; }
 }
 

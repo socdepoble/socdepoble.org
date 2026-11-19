@@ -14,7 +14,9 @@ import manifestGenealogia from './manifest.js';
 import AppGenealogia from './AppGenealogia.jsx';
 import { RUTES_GENEALOGIA } from './rutesGenealogia.js';
 import { TEXTOS, VERSIO_AVIS, nomVisible, t, textAlerta, textCodiLectura, textError } from './textos.js';
-import { carregaArbre, creaMagatzemGenealogia, desaArbre, desaMeta, llistaArbres } from './magatzem.js';
+import { activaXifrat, carregaArbre, creaMagatzemGenealogia, desaArbre, desaMeta, llistaArbres } from './magatzem.js';
+import { MIN_ITERACIONS } from './nucli/xifratLocal.js';
+import { creaIdbFals } from '../../utils/__fixtures__/navegadorFals.js';
 import { ARBRE_ID, complet, persona, rel, uid } from './nucli/__fixtures__/arbreSintetic.js';
 
 const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
@@ -422,4 +424,28 @@ test('Persones mostra una proposta de duplicat i sols fusiona després de confir
   fireEvent.click(within(dialeg).getByRole('button', { name: 'Confirma la fusió' }));
   await screen.findByText('S’han unit les dues fitxes.');
   expect((await carregaArbre(magatzem, ARBRE_ID)).persones).toMatchObject([{ id: uid(1), notes: 'Nota de prova' }]);
+});
+
+/* P1-81 · amb la base xifrada, la porta de la frase va abans de tot: cap nom
+   a la pantalla fins que la frase és la bona; després, el panell ho diu. */
+describe('la base xifrada (P1-81)', () => {
+  test('la porta de la frase: frase errònia, frase bona i el panell que ho diu', async () => {
+    magatzem = creaMagatzemGenealogia({ idb: creaIdbFals().idb, navegador: null, Canal: null, anyActual: 2026 });
+    await sembraArbre();
+    await acceptaAvis();
+    await activaXifrat(magatzem, 'quatre paraules ben llargues', { iteracions: MIN_ITERACIONS });
+    munta('/app/genealogia/arbre');
+    expect(await screen.findByText(t('ca', 'xifrat.porta.titol'))).toBeTruthy();
+    expect(screen.queryByText(/Inventada|Exemple/)).toBeNull();
+    const camp = screen.getByLabelText(t('ca', 'xifrat.frase'));
+    fireEvent.change(camp, { target: { value: 'una altra frase incorrecta' } });
+    fireEvent.click(screen.getByRole('button', { name: t('ca', 'xifrat.porta.obri') }));
+    expect(await screen.findByText(t('ca', 'error.frase-incorrecta'))).toBeTruthy();
+    expect(screen.queryByText(/Inventada|Exemple/)).toBeNull();
+    fireEvent.change(screen.getByLabelText(t('ca', 'xifrat.frase')), { target: { value: 'quatre paraules ben llargues' } });
+    fireEvent.click(screen.getByRole('button', { name: t('ca', 'xifrat.porta.obri') }));
+    expect(await screen.findByText(t('ca', 'xifrat.actiu.titol'))).toBeTruthy();
+    expect(screen.getAllByText(/Exemple/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(t('ca', 'xifrat.porta.titol'))).toBeNull();
+  }, 20000);
 });

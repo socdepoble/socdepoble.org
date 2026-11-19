@@ -180,6 +180,7 @@
     "tooling/gates/teclat-superficies.test.mjs",
     "tooling/instalador/inventari-estatic.test.mjs",
     "tooling/media/sentinella-video-aplec2023.test.mjs",
+    "tooling/seo/genera-llms.test.mjs",
     "tooling/seo/genera-opendata.test.mjs",
     "tooling/seo/projeccio-publica.test.mjs",
     "tooling/vite/fotos-parroquia-privades.r15_2.test.mjs",
@@ -261,7 +262,9 @@
     "tooling/tests/document-parsers.r32_11.test.mjs",
     "tooling/tests/document-link-scanners.r32_11.test.mjs",
     "tooling/tests/data-text-scanner.r32_11.test.mjs",
-    "tests/r3211-fronteres-skills-lineal.test.mjs"
+    "tests/r3211-fronteres-skills-lineal.test.mjs",
+    "tests/a03-push-credencials-postgres.test.mjs",
+    "tests/membres-i-seguiments-concurrents-postgres.test.mjs"
   ],
   "files": [
     {
@@ -1465,6 +1468,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/supabase-readme-rebuts.test.mjs",
+      "suite": "primary",
+      "reason": "P0-05/P2-10: cada fila de la taula canònica de supabase/README.md cita un rebut de lectura de la base (deriva R22, T2, captures); l'arbre real en lectura, cap xarxa ni base de dades."
+    },
+    {
       "path": "tests/t11-arxiu-fossils-bundle.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable de l’arxiu dels set fòssils: CLI amb fixture sintètica i invariants d’absència al corpus viu i preservació byte a byte dels originals."
@@ -1713,6 +1721,11 @@
       "path": "tooling/seo/genera-federacio.test.mjs",
       "suite": "primary",
       "reason": "P1-23 · generador estàtic de la federació ActivityPub (fase 1, lectura): fonts públiques del repositori amb la frontera de publication-policy, seed de mostra sense dades, origen del build, determinisme, escriptura sense restes ni enllaços i CLI sobre un mkdtemp; cap xarxa."
+    },
+    {
+      "path": "tooling/seo/genera-llms.test.mjs",
+      "suite": "primary",
+      "reason": "P0-CONSOLIDACIO-3-CATEDRES · llms.txt i /md/<slug>.md des de publication-policy: un sol document públic entre privat, arxivat, escriptori, petorreta i enllaç simbòlic, slug de slugIndex, camins emmascarats, cap clau extra del frontmatter i CLI --escriu/--comprova sobre un mkdtemp; cap xarxa."
     },
     {
       "path": "tooling/seo/genera-opendata.test.mjs",
@@ -2202,7 +2215,7 @@
     {
       "path": "tests/botigues-play-api-rest.test.mjs",
       "suite": "primary",
-      "reason": "Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Client REST de la Google Play Developer API v3 de scripts/botigues/puja-android.mjs (sense fastlane, commit d'un sol intent amb verificació de l'estat a Play i eixida 11 si és desconegut), consultaLlancament de només lectura, clau del compte de servei de preflight.mjs, APK públic verificat amb apksigner i --sincronitza-ard de publica-tot.mjs contra un Google Play local amb estat (127.0.0.1). Clau RSA generada al vol, mkdtemp, cap xarxa de fora."
+      "reason": "Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Client REST de la Google Play Developer API v3 de scripts/botigues/puja-android.mjs (sense fastlane, commit d'un sol intent amb verificació de l'estat a Play i eixida 11 si és desconegut), consultaLlancament de només lectura, clau del compte de servei de preflight.mjs, APK públic verificat amb apksigner i --sincronitza-ard de publica-tot.mjs contra un Google Play local amb estat (127.0.0.1): R32.3-PEIX-ARD, només la pista production «completed» s'anuncia a tots els Android i el pla omnicanal de producció l'encadena abans de npm run build. Clau RSA generada al vol, mkdtemp, cap xarxa de fora."
     },
     {
       "path": "tests/tractors-fail-closed.r324.test.mjs",
@@ -2318,6 +2331,17 @@
       "path": "tests/r3211-fronteres-skills-lineal.test.mjs",
       "suite": "primary",
       "reason": "R32.11 P1-30: pressupost lèxic lineal i diagnòstic incomplet failclosed; 64KiB i regressió F1-F5 sense excepcions."
+    },
+    {
+      "path": "tests/a03-push-credencials-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "P1-74 (A-03): caché de credencials natives per (proveïdor, empremta) sobre PGlite real; v1 intacta, sostre de quatre vives i només service_role."
+    },
+    {
+      "path": "tests/membres-i-seguiments-concurrents-postgres.test.mjs",
+      "suite": "primary",
+      "kind": "postgres",
+      "reason": "P1-13 / P2-10: dues sessions reals de PostgreSQL natiu sobre els panys sdp-orgowner/sdp-orgmem (C11-03) i la quota de 30 altes per hora de segueix, en els dos ordres entre el camí personal i el de l’entitat; la línia base SDP_MEMBRES_CONCURRENTS_BASELINE=1 ha de fallar."
     }
   ]
 }

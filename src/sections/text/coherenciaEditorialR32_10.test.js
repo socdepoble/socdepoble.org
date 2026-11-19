@@ -110,9 +110,11 @@ describe('Onada R32.10 · Lot 04 · Coherència Editorial Viva en 5 llengües i 
     const vistaBotigues = ['VistaBotiguesSistema.jsx', 'i18nBotiguesSistema.js']
       .map((nom) => readFileSync(path.join(process.cwd(), 'src/sections/botigues', nom), 'utf8')).join('\n');
     expect(vistaBotigues).toContain("import { textosBotiguesSistema } from './i18nBotiguesSistema.js';");
+    const i18nBotigues = readFileSync(path.join(process.cwd(), 'src/sections/botigues/i18nBotiguesSistema.js'), 'utf8');
     const metaBotigues = readFileSync(path.join(process.cwd(), 'src/sections/botigues/botiguesSistemaMeta.js'), 'utf8');
-    expect(vistaBotigues).toContain('els serveis de Sóc de Poble');
+    expect(`${vistaBotigues}\n${i18nBotigues}`).toContain('els serveis de Sóc de Poble');
     expect(vistaBotigues).not.toMatch(PATRO_PROHIBIT_LLEI_32);
+    expect(i18nBotigues).not.toMatch(PATRO_PROHIBIT_LLEI_32);
     expect(metaBotigues).toContain('serveis de Sóc de Poble');
     expect(metaBotigues).not.toMatch(PATRO_PROHIBIT_LLEI_32);
   });

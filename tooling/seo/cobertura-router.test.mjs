@@ -60,15 +60,15 @@ test('la Porta sobre l’arbre de veres és verda, i diu les exemptes, les pende
     assert.ok(cobertes.has(ruta), ruta);
   }
   assert.deepEqual(resultat.pendents.map(e => e.ruta).sort(), ['/animalets/:itemId', '/calendari/:itemId', '/habitatge/:itemId', '/mapa/:itemId', '/page/:slug/:itemSlug',
-    '/page/avisador', '/page/la-iaia-sabuda', '/page/node-zero', '/page/notes_shared', '/receptes/:itemId', '/treball/:itemId', '/vehicle/:itemId']);
+    '/page/avisador', '/page/la-iaia-sabuda', '/page/node-zero', '/page/notes_shared', '/page/tot-el-que-pots-fer', '/receptes/:itemId', '/treball/:itemId', '/vehicle/:itemId']);
   for (const pendent of resultat.pendents) assert.ok(pendent.revisio, pendent.ruta);
   assert.deepEqual(resultat.diferenciaDePrivades, ['accedir', 'admin', 'control-xat', 'crear-compte', 'el-meu-perfil', 'entrar', 'utilitats']);
   for (const exempcio of EXEMPCIONS_SOCIALS) {
     assert.ok(CLASSES_D_EXEMPCIO.includes(exempcio.classe) && exempcio.motiu.trim().length >= 20 && Object.isFrozen(exempcio), exempcio.ruta);
     assert.ok(!/\*\*|\?|\(/.test(exempcio.ruta), `${exempcio.ruta}: cap comodí propi`);
   }
-  // Les 34 claus de PAGE_COPY (i les de PAGE_ROUTE_MAP) tenen entrada, àlies o exempció per instància.
-  assert.ok(base.instancies >= 34 + 10 + 15);
+  // Les 35 claus de PAGE_COPY (IDEA-287: la guia pas a pas) i les de PAGE_ROUTE_MAP tenen entrada, àlies o exempció per instància.
+  assert.ok(base.instancies >= 35 + 10 + 15);
 });
 
 /* ── Mutants de les lleis: sobre les dades de l'arbre de veres, canviades en memòria ─────────────────── */
@@ -77,7 +77,7 @@ async function aplica(muta) {
   const {router, manifest} = base;
   const dades = {router: copia(router), manifest: copia(manifest), exempcions: EXEMPCIONS_SOCIALS.map(e => ({...e})), instancies: [], redireccionsDePagina: {'/page/dispositius': '/dispositius',
     '/page/iaia-sabuda': '/page/la-iaia-sabuda', '/page/nodrir-la-iaia': '/page/la-iaia-sabuda'}, servidor: ['perfil', 'notes', 'xat'], sintetic: undefined};
-  for (const cami of ['/page/dispositius', '/page/iaia-sabuda', '/page/nodrir-la-iaia', '/page/la-iaia-sabuda', '/page/node-zero', '/page/notes_shared', '/page/projecte']) dades.instancies.push({cami, familia: '/page/:slug'});
+  for (const cami of ['/page/dispositius', '/page/iaia-sabuda', '/page/nodrir-la-iaia', '/page/la-iaia-sabuda', '/page/node-zero', '/page/notes_shared', '/page/projecte', '/page/tot-el-que-pots-fer']) dades.instancies.push({cami, familia: '/page/:slug'});
   muta(dades);
   const client = new Set(dades.router.privades);
   const indexable = cami => !client.has(String(cami).replace(/^\/+/, '').split(/[/?#]/)[0]);

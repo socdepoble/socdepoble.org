@@ -209,7 +209,7 @@ export function useUniversalRichText({
          contingut o un cos que ja no és verge seguixen el camí de sempre. */
   const editorRef = useRef(null);
   const editorProps = useMemo(() => ({
-    attributes: { class: 'editor-content page-content sdp-text-cos sdp-prose' },
+    attributes: { class: 'sdp-prose' },
     handleDrop: (view, _event, slice, moved) => {
       const viu = editorRef.current;
       if (moved || !slice?.size || !viu || !buidaLlavorVerge(viu)) return false;

@@ -174,7 +174,7 @@ export function creaCompteLocal(e) {
        en el mateix tram que exigixSessio, i els seguiments amb el context de
        la persona capturada, mai el de la sessió viva. El format no canvia.
        La guarda de l'adaptador ja ha mirat l'abast de la crida abans d'entrar
-       ací (AMB_ABAST_EN_CRIDAR, PC155-01-A1). */
+       ací (la captura en cridar: PC155-01-A1 i P2-08 opció C). */
     async exportaLesMeuesDades(config = {}) {
       const usuari = exigixSessio();
       const persona = String(usuari.id);

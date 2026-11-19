@@ -1,10 +1,13 @@
 /** Higiene estructural del repositori · IDEA-62 (T4, prompt 261102_1532).
  *
- *  Nou regles que hui són verdes (H1-H9), cadascuna una funció pura exportada
- *  (infraccionsHn) que la sonda final prova amb llistes sintètiques: la guarda
- *  ha de mossegar. Les regles que hui fallen NO entren ací: són diferides, amb
- *  evidència, al dipòsit per a MarIA
- *  _wiki_de_poble/04_escriptori/02_investigacio_ia/261102_1640_claude/governanca/LLEGIM_HIGIENE.txt
+ *  Regles H1-H15, cadascuna una funció pura exportada (infraccionsHn) que la
+ *  sonda final prova amb llistes sintètiques: la guarda ha de mossegar. H1b
+ *  (.DS-Store amb guió) i H10-H14 eren diferides al dipòsit
+ *  261102_1640_claude/governanca/LLEGIM_HIGIENE.txt (hui a
+ *  _investigacio_ia_de_poble/261103_onada6_assimilats/); entren quan el deute
+ *  s'ha retirat (IDEA-62, v1.2.10). H15 (.keep orfes) és la proposta opcional
+ *  del mateix registre. Els residus que encara esperen una decisió del Mestre
+ *  (H10 i H12) van en llistes de deute conegut, tancades: qualsevol cas nou cau.
  *
  *  Zero dependències de npm: node:test, node:fs, node:path, node:child_process,
  *  node:url i node:assert/strict. Les regles (git) lligen l'índex amb
@@ -18,6 +21,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import * as empaquetador from '../wordpress-plugin/eines/empaqueta.mjs';
 import * as brossaArrel from '../tooling/higiene/neteja_brossa_arrel.mjs';
@@ -71,6 +75,11 @@ function recorre(rel, acc = [], saltaRutes = new Set()) {
     }
   }
   return acc;
+}
+
+/** sha256 d'un fitxer (hex). */
+function sha256(rel) {
+  return createHash('sha256').update(fs.readFileSync(path.join(ARREL, rel))).digest('hex');
 }
 
 /** Entrades de primer nivell d'una carpeta (noms), ordenades. */
@@ -132,15 +141,16 @@ function assertaBuit(infraccions, regla) {
 
 const nomDe = (ruta) => ruta.replace(/\/$/, '').split('/').at(-1);
 
-/* ─────────────────────────── Regles pures (H1-H9) ─────────────────────────── */
+/* ─────────────────────────── Regles pures (H1-H15) ─────────────────────────── */
 
-/* H1b (diferida, dipòsit): els 69 «.DS-Store» amb guió de public/ no entren ací. */
+/* H1b · El Finder també deixa «.DS-Store» amb guió (69 a public/ fins a la v1.2.10). */
+const RE_FINDER_H1 = /^\.DS[-_]Store$/;
 const RE_EXT_H1 = /\.(?:orig|rej|log|bak|zip|apk|aab|jks|keystore|p12|mobileprovision)$/i;
-export const H1 = Object.freeze({ id: 'H1', titol: 'cap fitxer seguit per git és brossa del sistema o un artefacte (.DS_Store, ._*, .orig, .rej, .log, .bak, .zip, .apk, .aab, .jks, .keystore, .p12, .mobileprovision)', ubicacio: 'fora de l\'índex: git rm --cached i patró a .gitignore; els artefactes van a wordpress-plugin/builds/ o a 01_produccio/ sense versionar' });
+export const H1 = Object.freeze({ id: 'H1', titol: 'cap fitxer seguit per git és brossa del sistema o un artefacte (.DS_Store, .DS-Store, ._*, .orig, .rej, .log, .bak, .zip, .apk, .aab, .jks, .keystore, .p12, .mobileprovision)', ubicacio: 'fora de l\'índex: git rm --cached i patró a .gitignore; els artefactes van a wordpress-plugin/builds/ o a 01_produccio/ sense versionar' });
 export function infraccionsH1(rutes) {
   return rutes.filter((r) => {
     const nom = nomDe(r);
-    return nom === '.DS_Store' || nom.startsWith('._') || RE_EXT_H1.test(nom);
+    return RE_FINDER_H1.test(nom) || nom.startsWith('._') || RE_EXT_H1.test(nom);
   });
 }
 
@@ -174,8 +184,8 @@ export function infraccionsH4(entrades) {
   return entrades.filter((n) => !n.startsWith('.') && !PERMESES_WP.has(n) && !EIXIDES_BUILD_WP.has(n));
 }
 
-/* H14 (diferida, dipòsit): els banner-*.png no es prohibixen ací. */
-const RE_VITRINA_H5 = /(^|\/)(icon-\d+x\d+\.png|icon\.svg|screenshot-\d+\.(png|jpe?g))$/;
+/* H14 · Els bàners de la vitrina tampoc entren a l'adaptador (empaqueta.mjs ja no els llista). */
+const RE_VITRINA_H5 = /(^|\/)(banner-\d+x\d+\.(png|jpe?g)|icon-\d+x\d+\.png|icon\.svg|screenshot-\d+\.(png|jpe?g))$/;
 const RE_DESENVOLUPAMENT_H5 = /\.(test\.[a-z]+|md|log|orig|sql)$/;
 export const H5 = Object.freeze({ id: 'H5', titol: 'cap actiu de vitrina, fitxer de desenvolupament ni ocult entre els fitxers de l\'adaptador (fitxersAdaptador)', ubicacio: 'la vitrina viu a wordpress-plugin/assets/ (fora d\'ADAPTADOR); proves i documentació a tests/ i a la Wiki; cap segment que comence per «.»' });
 export function infraccionsH5(rels) {
@@ -202,8 +212,10 @@ export function infraccionsH7(rutes) {
     const nom = segs.at(-1);
     switch (segs[0]) {
       /* O3-GEMINI-1 (261102) · Els .md de primer nivell de public/opendata/ són recursos
-         del Data Package (llicencies.md, memoria.md), no documentació: el manifest els cita. */
-      case 'public': return /\.test\./.test(nom) || (/\.md$/i.test(nom) && !(segs.length === 3 && segs[1] === 'opendata')) || segs.includes('__fixtures__');
+         del Data Package (llicencies.md, memoria.md), no documentació: el manifest els cita.
+         P0-CONSOLIDACIO-3-CATEDRES · Els .md de primer nivell de public/md/ tampoc: són la
+         projecció pública de la Wiki que genera tooling/seo/genera-llms.mjs (/md/<slug>.md). */
+      case 'public': return /\.test\./.test(nom) || (/\.md$/i.test(nom) && !(segs.length === 3 && ['opendata', 'md'].includes(segs[1]))) || segs.includes('__fixtures__');
       case 'src': return /\.test\.mjs$/.test(nom);
       case 'tooling': return /\.test\.jsx?$/.test(nom);
       case 'wordpress-plugin': return /\.test\./.test(nom);
@@ -238,6 +250,50 @@ export const H9 = Object.freeze({ id: 'H9', titol: 'cap fitxer solt de l\'arrel 
 /* Mateix perímetre que candidats() de l'eina: fitxers solts que no comencen per «.». */
 export function infraccionsH9(noms) {
   return noms.filter((n) => !n.startsWith('.') && PATRONS_BROSSA.some((re) => re.test(n)));
+}
+
+/* H10 · Els .sql versionats viuen a supabase/ i a tests/fixtures/, més les carpetes d'eines que
+   en porten de legítims (esquemes de Node 0, auditoria de lectura, corpus i verificació). */
+export const PERMESOS_H10 = Object.freeze(['supabase/', 'tests/fixtures/', 'tooling/node0/', 'tooling/auditoria/', 'tooling/cultura/', 'scripts/supabase/']);
+/* Deute conegut, tancat: el paquet de migracions del 260927 que ningú llig (només el cita el
+   comentari de supabase/migrations/2610090100_convergencia_xat_de_pagina.sql:11). Arxivar-lo o
+   retirar-lo és decisió del Mestre (IDEA-62); quan isca de l'índex, esta llista es buida. */
+export const DEUTE_H10 = Object.freeze(new Set(['wordpress-plugin/builds/migracions_pendents.sql']));
+export const H10 = Object.freeze({ id: 'H10', titol: 'cap .sql seguit per git fora de les carpetes de migracions, proves i eines de base de dades', ubicacio: `les migracions a supabase/migrations/; les proves a tests/fixtures/; les eines a ${PERMESOS_H10.slice(2).join(', ')}; la resta a l'arxiu històric via Olivera` });
+export function infraccionsH10(rutes, deute = DEUTE_H10) {
+  return rutes.filter((r) => /\.sql$/i.test(r) && !PERMESOS_H10.some((p) => r.startsWith(p)) && !deute.has(r));
+}
+
+export const H11 = Object.freeze({ id: 'H11', titol: 'cap sonda ni esborrany (scratch*, probe_*) seguit per git dins de tooling/', ubicacio: 'les sondes van a la carpeta temporal de la sessió o a l\'Escriptori; una eina que es queda porta un nom que diga què fa' });
+export function infraccionsH11(rutes) {
+  return rutes.filter((r) => r.startsWith('tooling/') && /^(scratch|probe_)/i.test(nomDe(r)));
+}
+
+/* H12 · Duplicats byte a byte entre la vitrina (wordpress-plugin/assets/) i public/. La vitrina SVN
+   de WordPress.org exigix la seua còpia; quina còpia de public/ és la font és decisió del Mestre.
+   Deute conegut, tancat: còpia de public/ → peça de la vitrina que duplica. */
+export const DEUTE_H12 = Object.freeze(new Map([
+  ['public/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', 'wordpress-plugin/assets/icon.svg'],
+  ['public/assets/uploads/empresa/soc-de-poble/avatars/logo-socdepoble-cuadrat-verd.svg', 'wordpress-plugin/assets/icon.svg'],
+]));
+export const H12 = Object.freeze({ id: 'H12', titol: 'cap fitxer de public/ és còpia byte a byte d\'una peça de wordpress-plugin/assets/ fora del deute conegut', ubicacio: 'la vitrina viu només a wordpress-plugin/assets/; l\'app enllaça una sola còpia a public/assets/' });
+/** vitrina i publics: [{ ruta, hash }]. Torna «public → vitrina» per a cada duplicat no conegut. */
+export function infraccionsH12(vitrina, publics, deute = DEUTE_H12) {
+  const perHash = new Map(vitrina.map((v) => [v.hash, v.ruta]));
+  return publics
+    .filter((p) => perHash.has(p.hash) && deute.get(p.ruta) !== perHash.get(p.hash))
+    .map((p) => `${p.ruta} = ${perHash.get(p.hash)}`);
+}
+
+export const H15 = Object.freeze({ id: 'H15', titol: 'cap .keep seguit per git en una carpeta sense cap altre fitxer seguit', ubicacio: 'una carpeta buida no es versiona: es crea quan arriba el primer fitxer de veritat' });
+export function infraccionsH15(rutes) {
+  const ambContingut = new Set();
+  for (const r of rutes) {
+    if (nomDe(r) === '.keep') continue;
+    const segs = r.split('/');
+    for (let i = 0; i < segs.length; i += 1) ambContingut.add(segs.slice(0, i).join('/'));
+  }
+  return rutes.filter((r) => nomDe(r) === '.keep' && !ambContingut.has(r.split('/').slice(0, -1).join('/')));
 }
 
 /* ─────────────────────────── Proves sobre el món real ─────────────────────────── */
@@ -336,11 +392,45 @@ test('H9 · cap brossa solta a l\'arrel del repositori', () => {
   assertaBuit(infraccionsH9(noms), H9);
 });
 
+test('H10 · cap .sql seguit per git fora de supabase/, tests/fixtures/ i les eines de base de dades', (t) => {
+  const llista = ambGit(t);
+  if (!llista) return;
+  for (const r of DEUTE_H10) assert.ok(llista.includes(r), `${r} ja no és a l'índex: lleva'l de DEUTE_H10`);
+  assertaBuit(infraccionsH10(llista), H10);
+});
+
+test('H11 · cap scratch*/probe_* seguit per git dins de tooling/', (t) => {
+  const llista = ambGit(t);
+  if (!llista) return;
+  assertaBuit(infraccionsH11(llista), H11);
+});
+
+test('H12 · cap còpia de la vitrina de WordPress.org dins de public/ fora del deute conegut', (t) => {
+  const llista = ambGit(t);
+  if (!llista) return;
+  const vitrina = llista.filter((r) => r.startsWith('wordpress-plugin/assets/') && !nomDe(r).startsWith('.'));
+  assert.ok(vitrina.includes('wordpress-plugin/assets/icon.svg'), 'la vitrina ha de tindre icon.svg');
+  const mides = new Set(vitrina.map((r) => fs.statSync(path.join(ARREL, r)).size));
+  // Només es calcula el hash dels fitxers de public/ amb la mida d'alguna peça de la vitrina.
+  const publics = llista
+    .filter((r) => r.startsWith('public/') && mides.has(fs.statSync(path.join(ARREL, r), { throwIfNoEntry: false })?.size))
+    .map((ruta) => ({ ruta, hash: sha256(ruta) }));
+  assertaBuit(infraccionsH12(vitrina.map((ruta) => ({ ruta, hash: sha256(ruta) })), publics), H12);
+});
+
+test('H15 · cap .keep orfe seguit per git', (t) => {
+  const llista = ambGit(t);
+  if (!llista) return;
+  assertaBuit(infraccionsH15(llista), H15);
+});
+
 /* ─────────────────────────── La guarda mossega ─────────────────────────── */
 
 test('la guarda mossega (sonda)', () => {
   assert.deepEqual(infraccionsH1(['a/.DS_Store', 'b/._resource', 'builds/x.ZIP', 'android/clau.keystore', 'src/ok.js']),
     ['a/.DS_Store', 'b/._resource', 'builds/x.ZIP', 'android/clau.keystore']);
+  // H1b: el «.DS-Store» amb guió també és brossa del Finder; un nom que només el conté, no.
+  assert.deepEqual(infraccionsH1(['public/a/.DS-Store', 'public/b/.DS_Store.txt', 'src/ok.js']), ['public/a/.DS-Store']);
   assert.deepEqual(infraccionsH2(['dist/index.html', 'ios/App/Pods/x.m', 'android/app/build/a', 'src/ok.js']),
     ['dist/index.html', 'ios/App/Pods/x.m', 'android/app/build/a']);
   assert.deepEqual(infraccionsH3(['.env', 'bot/.env.local', '.env.example', '.env.botigues.example', '.env.example.local', 'src/env.js']),
@@ -348,6 +438,9 @@ test('la guarda mossega (sonda)', () => {
   assert.deepEqual(infraccionsH4(['assets', 'vendor', '.DS_Store', 'dist', 'node_modules', 'readme.txt']), ['vendor', 'node_modules']);
   assert.deepEqual(infraccionsH5(['assets/icon.svg', 'readme.md', 'includes/.amagat.php', 'includes/x.test.js', 'includes/ok.php']),
     ['assets/icon.svg', 'readme.md', 'includes/.amagat.php', 'includes/x.test.js']);
+  // H14: els bàners de la vitrina (png|jpg) tampoc entren a l'adaptador.
+  assert.deepEqual(infraccionsH5(['assets/banner-772x250.png', 'assets/banner-1544x500.jpg', 'includes/ok.php', 'includes/banner.php']),
+    ['assets/banner-772x250.png', 'assets/banner-1544x500.jpg']);
   assert.deepEqual(infraccionsH6(
     ['banner-772x250.png', 'banner-1544x500.jpg', 'logo.png', 'icon-64x64.png', 'screenshot-1.png', 'screenshot-2.gif', 'banner-772x250.webp', 'blueprints'],
     ['blueprint.json', 'notes.md'],
@@ -356,8 +449,10 @@ test('la guarda mossega (sonda)', () => {
     'public/x.test.js', 'public/notes.md', 'public/__fixtures__/', 'public/__fixtures__/a.json', 'src/a.test.mjs', 'src/sections/android/x.test.mjs',
     'tooling/b.test.js', 'tooling/c.test.jsx', 'wordpress-plugin/d.test.php', 'src/ok.test.js', 'public/foto.jpg', 'tooling/ok.test.mjs',
     'public/opendata/llicencies.md', 'public/opendata/sub/notes.md', 'public/opendata/x.test.js', 'public/docs/opendata/notes.md',
+    'public/md/00-index.md', 'public/md/sub/notes.md', 'public/md/x.test.js', 'public/docs/md/notes.md',
   ]), ['public/x.test.js', 'public/notes.md', 'public/__fixtures__/', 'public/__fixtures__/a.json', 'src/a.test.mjs', 'src/sections/android/x.test.mjs', 'tooling/b.test.js', 'tooling/c.test.jsx', 'wordpress-plugin/d.test.php',
-    'public/opendata/sub/notes.md', 'public/opendata/x.test.js', 'public/docs/opendata/notes.md']);
+    'public/opendata/sub/notes.md', 'public/opendata/x.test.js', 'public/docs/opendata/notes.md',
+    'public/md/sub/notes.md', 'public/md/x.test.js', 'public/docs/md/notes.md']);
   // A3: el recorregut salta per nom només node_modules i .git, i per ruta exacta les eixides de build.
   assert.equal(salta('src/sections/android', 'android', SALTATS_H7), false);
   assert.equal(salta('public/build', 'build', SALTATS_H7), false);
@@ -382,6 +477,27 @@ test('la guarda mossega (sonda)', () => {
     'src/pwa/h.js → ../data/local/notes.js',
   ]);
   assert.deepEqual(infraccionsH9(['probe_x.mjs', 'eixida.log', 'README.md', 'pegat.patch', '.env.local']), ['probe_x.mjs', 'eixida.log', 'pegat.patch']);
+  assert.deepEqual(infraccionsH10([
+    'wordpress-plugin/builds/x.sql', 'supabase/migrations/a.sql', 'tooling/node0/schema-node0.sql', 'tests/fixtures/b.SQL',
+    'src/esquema.SQL', 'wordpress-plugin/builds/migracions_pendents.sql', 'tooling/altre/c.sql', 'src/ok.js',
+  ]), ['wordpress-plugin/builds/x.sql', 'src/esquema.SQL', 'tooling/altre/c.sql']);
+  // Sense el deute conegut, el paquet de migracions també cau.
+  assert.deepEqual(infraccionsH10(['wordpress-plugin/builds/migracions_pendents.sql'], new Set()), ['wordpress-plugin/builds/migracions_pendents.sql']);
+  assert.deepEqual(infraccionsH11(['tooling/scratch_x.mjs', 'tooling/sub/probe_y.mjs', 'tooling/Scratchpad.js', 'tooling/ok.mjs', 'tooling/sonda_probe_z.mjs', 'scratch_arrel.mjs']),
+    ['tooling/scratch_x.mjs', 'tooling/sub/probe_y.mjs', 'tooling/Scratchpad.js']);
+  const vitrina = [{ ruta: 'wordpress-plugin/assets/icon.svg', hash: 'h1' }, { ruta: 'wordpress-plugin/assets/banner-772x250.png', hash: 'h2' }];
+  assert.deepEqual(infraccionsH12(vitrina, [
+    { ruta: 'public/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', hash: 'h1' },
+    { ruta: 'public/assets/nou/logo.svg', hash: 'h1' },
+    { ruta: 'public/assets/banner.png', hash: 'h2' },
+    { ruta: 'public/assets/altre.png', hash: 'h3' },
+  ]), ['public/assets/nou/logo.svg = wordpress-plugin/assets/icon.svg', 'public/assets/banner.png = wordpress-plugin/assets/banner-772x250.png']);
+  // El deute conegut només tolera la parella exacta: si la còpia canvia de peça, cau.
+  assert.deepEqual(infraccionsH12(vitrina, [{ ruta: 'public/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', hash: 'h2' }]),
+    ['public/assets/system/ui/logo-socdepoble-cuadrat-verd.svg = wordpress-plugin/assets/banner-772x250.png']);
+  assert.deepEqual(infraccionsH15([
+    'public/assets/pages/01_chat/.keep', 'public/a/.keep', 'public/a/foto.webp', 'public/b/.keep', 'public/b/sub/x.png', '.keep', 'README.md',
+  ]), ['public/assets/pages/01_chat/.keep']);
 
   // senseComentaris: correcte sobre un fitxer gran, conserva la llargària i les URL amb «//».
   // L'escàner és lineal per construcció; el llindar ample només caça una regressió grossa (A5).

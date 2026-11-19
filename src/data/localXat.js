@@ -99,6 +99,10 @@ function creaMagatzem(config, jo, teSessio) {
     noms: new Map(Object.entries(XAT_SEED_NOMS)),
     membres: XAT_SEED_MEMBRES.map((membre) => ({ ...membre })),
     entitats: new Map(ENTITATS_SEED.map((e) => [e.id, { id: e.id, nom: e.name, avatarUrl: e.logo_url, slug: e.slug }])),
+    /* C3-PADRO-LOCAL · Les entitats que hi ha entrat el directori d'un
+       adaptador (no les de la llavor): només en donen el nom i l'avatar dels
+       fils; per a obrir-ne un de nou cal tornar a trobar-les al directori. */
+    entitatsDelDirectori: new Set(),
     teSessio
   };
   if (normalizeBackendConfig(config).dataMode !== 'seed') return estat;
@@ -442,7 +446,31 @@ function jaEnviat(estat, id, jo) {
   return null;
 }
 
-export function createLocalXatAdapter() {
+/**
+ * C3-PADRO-LOCAL · Com crea_fil_directe, que obri qualsevol organització
+ * pública del poble: una entitat de la llavor sempre; una altra, només si el
+ * directori públic de l'adaptador (si en té) porta una fila amb eixe id, i
+ * llavors entra al padró d'entitats del magatzem perquè el fil en tinga el
+ * nom. La consulta és en viu i només per id: el magatzem es compartix entre
+ * adaptadors del mateix poble i una entrada vella no obri res. Sense
+ * directori, com abans: només la llavor.
+ */
+function esEntitatOberta(estat, clau, directori) {
+  if (estat.entitats.has(clau) && !estat.entitatsDelDirectori.has(clau)) return true;
+  if (typeof directori !== 'function') return false;
+  const org = (directori() || []).find((fila) => fila && String(fila.id) === clau);
+  if (!org) return false;
+  estat.entitats.set(clau, { id: clau, nom: org.name, avatarUrl: org.logo_url || null, slug: org.slug || null });
+  estat.entitatsDelDirectori.add(clau);
+  return true;
+}
+
+/**
+ * @param {{ directori?: (() => object[]) | null }} [opcions] `directori`
+ *   torna les files del directori públic (listPublicOrganizations); el
+ *   singleton `localXat` no en porta.
+ */
+export function createLocalXatAdapter({ directori = null } = {}) {
   return {
     async loadFils(config = {}) {
       const { estat, jo } = magatzem(config);
@@ -585,10 +613,11 @@ export function createLocalXatAdapter() {
         if (titol) fil.titol = titol;
         return fil.id;
       }
-      if (!estat.membres.some((membre) => membre.usuariId === altre) && !estat.entitats.has(altre)) throw errorForastera();
+      const entitat = esEntitatOberta(estat, altre, directori);
+      if (!estat.membres.some((membre) => membre.usuariId === altre) && !entitat) throw errorForastera();
       const existent = filAmb(estat, jo, altre);
       if (existent) return existent;
-      if (estat.entitats.has(altre)) {
+      if (entitat) {
         return creaFil(estat, 'entitat', altre, [participantNou(null, jo), participantNou(null, altre, { esEntitat: true })]).id;
       }
       if (esIAIA(altre)) {

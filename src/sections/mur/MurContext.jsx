@@ -14,7 +14,6 @@ import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.
 import { filtraElementsBloquejats } from '../../config/moderacio.js';
 import {
   filtraPublicacionsEsborrades,
-  marcaPublicacioEsborrada,
   restauraPublicacioEsborrada,
   subscriuPublicacionsEsborrades,
   versioPublicacionsEsborrades
@@ -211,12 +210,6 @@ export function MurProvider({ children, config }) {
     versioRevisionsEditorials
   );
 
-  const esborraPublicacio = useCallback(async (seccio, id) => {
-    if (nomesLectura) throw new ErrorIdentitatDeLectura();
-    if (!seccio || !id) return false;
-    return marcaPublicacioEsborrada(seccio, id);
-  }, [nomesLectura]);
-
   /* Decisió 4 · L'àmbit d'AÏLLAMENT de les pàgines extres: el mateix que
      buida useScopedResource (la clau d'àmbit, la configuració i l'actor de la
      petició). El controlador viu amb l'àmbit: un canvi l'avorta. */
@@ -361,14 +354,13 @@ export function MurProvider({ children, config }) {
       sortedEvents: sortPinnedContent(elsEvents),
       sortedMarketItems: sortPinnedContent(marketItems),
       sendSectionSubmission,
-      esborraPublicacio,
       refresh,
       carregaMes,
       hiHaMes,
       carregantMes,
       errorMes
     };
-  }, [status, error, errorRevalidacio, seccions, esElementBloquejat, versioEsborrades, versioRevisions, sendSectionSubmission, esborraPublicacio, refresh, carregaMes, hiHaMes, carregantMes, errorMes]);
+  }, [status, error, errorRevalidacio, seccions, esElementBloquejat, versioEsborrades, versioRevisions, sendSectionSubmission, refresh, carregaMes, hiHaMes, carregantMes, errorMes]);
 
   useRecarregaExterna(refresh);
 
@@ -379,7 +371,6 @@ export function useMur() {
   return useContext(MurContext) || {
     status: 'loading', feedPosts: [], events: [], marketItems: [], sortedFeedPosts: [], sortedEvents: [], sortedMarketItems: [],
     sendSectionSubmission: async () => { throw new Error('El Mur no està llest o no té dades disponibles.'); },
-    esborraPublicacio: async () => false,
     carregaMes: async () => false, hiHaMes: () => false, carregantMes: () => false, errorMes: () => null
   };
 }

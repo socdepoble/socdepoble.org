@@ -123,11 +123,12 @@ describe('2610312000 · esmena D1: validadors per a service_role (fitxer, NO apl
 
 /* Onada R10 · B4 segona ronda (B4V-T3) · La lectura REST del 6-11-2026 (només GET amb la clau anònima) troba la
    taula xat_epoques (401 42501), que només crea la 2610311800. La 2610312000 només canvia dues funcions de
-   private, que anon no veu: l'acta 261101_0334 la dona aplicada, i la fila ho diu sense donar-la per acreditada. */
+   private, que anon no veu: l'acta 261101_0334 la dona aplicada, i la fila ho diu sense donar-la per acreditada.
+   P0-05/P2-10: el bolcat del 13-11-2026 (deriva R22) hi troba els seus 2 objectes coincidents, i la fila ho cita. */
 describe('supabase/README.md · el catàleg en diu l’estat remot que acredita la lectura', () => {
   test.each([
     ['2610311800', NOM_1800, '| Aplicada a producció (lectura REST del 6-11: la taula `xat_epoques` existix, 401 42501; acta 261101_0334) |'],
-    ['2610312000', NOM_2000, "| Estat remot no acreditat (l'acta 261101_0334 la dona aplicada; la lectura REST no veu `private.xat_lot3_b64`); ho pot acreditar la columna `te_esmena_2610312000` del Pas 0 |"]
+    ['2610312000', NOM_2000, "| Aplicada a producció segons el bolcat del 13-11-2026 (deriva R22: 2 coincidents); l'acta 261101_0334 també la dona aplicada (la lectura REST no veu `private.xat_lot3_b64`) |"]
   ])('%s consta amb el seu estat i la seua evidència', (versio, nom, estat) => {
     expect(README).toContain(`migrations/${nom}`);
     const fila = README.split('\n').find((linia) => linia.startsWith('|') && linia.includes(`\`${versio}\``));

@@ -38,10 +38,10 @@
       "data": "2026-11-14"
     },
     "constitucio": {
-      "sha256": "e74f1b491cb58f4284aeeb71008c65ab86af49a562694551a33deadadb986510",
-      "html": 8850,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "fb062e98d0f8837fb6a4630decad037e41d698cfd800acf5046987a7cee1538b",
+      "html": 9147,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "data": "2026-11-19"
     },
     "descarregues": {
       "sha256": "eaabe17bdb30b847fb0414b8c3639a3b231a25670deb66e5511d9d3fd0f8732c",
@@ -56,10 +56,10 @@
       "data": "2026-11-14"
     },
     "disseny": {
-      "sha256": "5e64912232d93a68c278e9622cab11fc484895aa7f9c8da7ab53ec589f1a2b01",
-      "html": 6301,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
-      "data": "2026-11-18"
+      "sha256": "a2ac3f169b88a8eac605cfc45321f254dffd9ec2baebf96758d4866a444031cd",
+      "html": 8512,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "data": "2026-11-19"
     },
     "drets-autor": {
       "sha256": "9020a79830c55c088b6fa867fc1bf7a5f56c91656c3fc28b3e12269902ce767c",
@@ -68,16 +68,16 @@
       "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "21de3909c234d9054fd377c0d43f0ac629f3108d39c5f9ff49a5e1a1bb6e1cfb",
+      "sha256": "fe53c0f09781aded878cc016d10adcf7b87843991b3e198d17ba0a73f4fc6c87",
       "html": 21957,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
-      "data": "2026-11-18"
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "data": "2026-11-19"
     },
     "fediversity": {
-      "sha256": "56c9f7d45091abf8bce646b879d29d02d0db5ccb4179441d2938d3ea6cb3c85d",
+      "sha256": "8bd349973f154c012f6adf569ef3ee785321047909010ec81a78dc67ecb12ee4",
       "html": 65296,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
-      "data": "2026-11-18"
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "data": "2026-11-19"
     },
     "habitatge": {
       "sha256": "bf9ee48a8ca1eca44eb3e22a053bcc7626b72bd3321b9bf624e690cb3c97463a",
@@ -104,10 +104,10 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "5563adc37c0969b4947c4a2463ddd067238d1a4ab623d8b4f0931b2eab57331d",
+      "sha256": "4a6cc179c348d0de3158b4a1b5fff81272900ce71b988bca6d5f98caa64a58f0",
       "html": 28676,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
-      "data": "2026-11-18"
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "data": "2026-11-19"
     },
     "notes": {
       "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",
@@ -116,10 +116,10 @@
       "data": "2026-11-14"
     },
     "projecte": {
-      "sha256": "bb4887fb39a6c66605472da1bc953ad0ac9fcf3e3d765c191928d784104aac36",
-      "html": 12744,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
-      "data": "2026-11-18"
+      "sha256": "018d39c4e10f09b3ae3a42b49165a9de1a56ffa1c308d9b9a8c9ef0f62ecab57",
+      "html": 12761,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "data": "2026-11-19"
     },
     "publicar_mapa": {
       "sha256": "14420b6cf28a3cf1f93dc0a25e634bba12ac63b92f2377e9fb9ebbb2ed2b8046",
@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "391b379d96fb25d253791465ab45bda70eebece7a7c29290e1ff5c4764ce8f90",
-      "html": 122081,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
-      "data": "2026-11-18"
+      "sha256": "40af37c9b06f424e16e541207ed3195b9892399623b247a461571c6b5fd3392d",
+      "html": 127986,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "data": "2026-11-19"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

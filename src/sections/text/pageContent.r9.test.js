@@ -213,7 +213,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.7 · La crònica de les Onades R32.5 i R32.6 obri /versions, davant de la crònica R32.4.
     // Onada v1.2.8 · La crònica de les Onades R32.7, R32.8 i R32.9 obri /versions, davant de la crònica R32.5 i R32.6.
     // Onada v1.2.9 · La crònica de les Onades R32.10, R32.11 i R32.12 obri /versions, davant de la crònica R32.7, R32.8 i R32.9.
-    expect([...versions.querySelectorAll('h3')].slice(0, 21).map((h3) => h3.textContent)).toEqual([
+    // Onada v1.2.10 · La crònica de la segona part de R32.11 i R32.12 obri /versions, davant de la crònica R32.10, R32.11 i R32.12.
+    expect([...versions.querySelectorAll('h3')].slice(0, 22).map((h3) => h3.textContent)).toEqual([
+      '19 de novembre de 2026 · Onades R32.11 i R32.12, segona part · La guia de tot el que pots fer, la data de cada targeta segons el tipus i l’Arbre Genealògic amb frase de pas',
       '18 de novembre de 2026, nit · Onades R32.10, R32.11 i R32.12 · L’Avisador renovat, l’assistència als esdeveniments i les accions del Xat dins de la sessió',
       '18 de novembre de 2026 · Onades R32.7, R32.8 i R32.9 · Reaccions i missatges fixats al Xat, vídeos comprimits al navegador i capítols de la Wiki al Mur',
       '17 de novembre de 2026, nit · Onades R32.5 i R32.6 · L’avís d’actualització d’un toc, les fotos del mòbil al Xat i la fase beta a les aplicacions en proves',
@@ -465,7 +467,8 @@ describe('Gauntlet R9 · G1-01, G1-06 i G3-N02 · el balanç diu què falta de v
       'A migración 2611061520 está pendente de aplicar.', // MV5
       'Les RPC de la 2611031700 queden per aplicar.',
       'La 2610311800 està pendent.',
-      'NO-DISPONIBLE: 2610282100 pendent.'
+      // P0-05/P2-10: la 2610282100 ja no consta «Aplicada» (falta el CHECK de comarca); l'exemple usa una aplicada.
+      'NO-DISPONIBLE: 2610250100 pendent.'
     ]) expect(negacionsAplicades(frase), frase).toHaveLength(1);
     for (const frase of [
       'Les sol·licituds pendents es lligen amb la seua RPC.',
@@ -502,7 +505,7 @@ describe('Gauntlet R9 · G1-01, G1-06 i G3-N02 · el balanç diu què falta de v
     expect(push).toContain("2610201500. Després: el desplegament de notifica-xat i el cron; només\n-- després, 'push_xat_actiu' = 'si'");
     const funcio = JSON.parse(llegix('supabase/ordre_desplegament.json')).portes.find((p) => p.id === 'funcio-notifica-xat');
     expect(funcio.descripcio).toContain('només després, posar push_xat_actiu = si');
-    expect(funcio.despres).toEqual(['2611020417','2611080431']);
+    expect(funcio.despres).toEqual(['2611020417','2611080431','20261118230000']);
     expect(llegix('src/main.jsx')).toContain('import.meta.env.VITE_PUSH_VAPID_PUBLICA');
   });
 });
